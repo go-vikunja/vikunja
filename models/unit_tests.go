@@ -32,7 +32,9 @@ func createTestEngine(fixturesDir string) error {
 	x.SetMapper(core.GonicMapper{})
 
 	// Sync dat shit
-	x.Sync(&User{})
+	if err = x.StoreEngine("InnoDB").Sync2(tables...); err != nil {
+		return fmt.Errorf("sync database struct error: %v", err)
+	}
 
 	// Show SQL-Queries if nessecary
 	if os.Getenv("UNIT_TESTS_VERBOSE") == "1" {
