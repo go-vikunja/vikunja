@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"fmt"
 )
 
 // UserAddOrUpdate is the handler to add a user
@@ -51,8 +50,6 @@ func UserAddOrUpdate(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, models.Message{"Could not check if the user exists."})
 	}
-
-	fmt.Println(exists)
 
 	// Insert or update the user
 	var newUser models.User

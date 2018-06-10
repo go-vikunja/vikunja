@@ -8,7 +8,11 @@ import (
 	_ "github.com/mattn/go-sqlite3" // Because.
 )
 
-var x *xorm.Engine
+var (
+	x *xorm.Engine
+
+	tables []interface{}
+)
 
 func getEngine() (*xorm.Engine, error) {
 	// Use Mysql if set
@@ -26,6 +30,13 @@ func getEngine() (*xorm.Engine, error) {
 	return xorm.NewEngine("sqlite3", path)
 }
 
+func init() {
+	tables = append(tables,
+		new(User),
+		new(List),
+	)
+}
+
 // SetEngine sets the xorm.Engine
 func SetEngine() (err error) {
 	x, err = getEngine()
@@ -40,7 +51,9 @@ func SetEngine() (err error) {
 	x.SetMapper(core.GonicMapper{})
 
 	// Sync dat shit
-	x.Sync(&User{})
+	if err = x.StoreEngine("InnoDB").Sync2(tables...); err != nil {
+		return fmt.Errorf("sync database struct error: %v", err)
+	}
 
 	x.ShowSQL(Config.Database.ShowQueries)
 

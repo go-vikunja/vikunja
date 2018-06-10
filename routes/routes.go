@@ -50,4 +50,7 @@ func RegisterRoutes(e *echo.Echo) {
 	// Authetification
 	a.Use(middleware.JWT(models.Config.JWTLoginSecret))
 	a.POST("/tokenTest", apiv1.CheckToken)
+
+	a.PUT("/lists", apiv1.AddOrUpdateList)
+	a.POST("/lists/:id", apiv1.AddOrUpdateList)
 }

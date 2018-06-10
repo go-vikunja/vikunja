@@ -123,3 +123,23 @@ func IsErrIDCannotBeZero(err error) bool {
 func (err ErrIDCannotBeZero) Error() string {
 	return fmt.Sprintf("ID cannot be 0")
 }
+
+// ===========
+// List errors
+// ===========
+
+
+// ErrListDoesNotExist represents a "ErrListDoesNotExist" kind of error. Used if the list does not exist.
+type ErrListDoesNotExist struct{
+	ID int64
+}
+
+// IsErrListDoesNotExist checks if an error is a ErrListDoesNotExist.
+func IsErrListDoesNotExist(err error) bool {
+	_, ok := err.(ErrListDoesNotExist)
+	return ok
+}
+
+func (err ErrListDoesNotExist) Error() string {
+	return fmt.Sprintf("List does not exist [ID: %d]", err.ID)
+}
