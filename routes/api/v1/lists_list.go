@@ -1,11 +1,12 @@
 package v1
 
 import (
-	"github.com/labstack/echo"
 	"git.kolaente.de/konrad/list/models"
+	"github.com/labstack/echo"
 	"net/http"
 )
 
+// GetListsByUser gets all lists a user owns
 func GetListsByUser(c echo.Context) error {
 
 	currentUser, err := models.GetCurrentUser(c)

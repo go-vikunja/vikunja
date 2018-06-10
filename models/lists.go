@@ -34,7 +34,7 @@ func GetListByID(id int64) (list List, err error) {
 	return list, nil
 }
 
-//
+// GetListsByUser gets all lists a user owns
 func GetListsByUser(user *User) (lists []*List, err error) {
 	fullUser, _, err := GetUserByID(user.ID)
 	if err != nil {
@@ -51,25 +51,4 @@ func GetListsByUser(user *User) (lists []*List, err error) {
 	}
 
 	return
-}
-
-// CreateOrUpdateList updates a list or creates it if it doesn't exist
-func CreateOrUpdateList(list *List) (err error) {
-	// Check if it exists
-	_, err = GetListByID(list.ID)
-	if err != nil {
-		return
-	}
-
-	list.OwnerID = list.Owner.ID
-
-	if list.ID == 0 {
-		_, err = x.Insert(list)
-	} else {
-		_, err = x.ID(list.ID).Update(list)
-		return
-	}
-
-	return
-
 }
