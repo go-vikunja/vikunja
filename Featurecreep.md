@@ -10,6 +10,7 @@
 * ID
 * Text
 * Description
+* Status (done, not done)
 * Fälligkeitsdatum
 * Erinnerungsdatum (und zeit)
 * Zuständig (später, mit teilen)

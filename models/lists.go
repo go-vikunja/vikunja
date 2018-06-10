@@ -9,6 +9,8 @@ type List struct {
 	Owner       User   `xorm:"-" json:"owner"`
 	Created     int64  `xorm:"created" json:"created"`
 	Updated     int64  `xorm:"updated" json:"updated"`
+
+	Items []*ListItem `xorm:"-"`
 }
 
 // GetListByID returns a list by its ID
@@ -30,6 +32,12 @@ func GetListByID(id int64) (list List, err error) {
 	}
 
 	list.Owner = user
+
+	items, err := GetItemsByListID(list.ID)
+	if err != nil {
+		return
+	}
+	list.Items = items
 
 	return list, nil
 }

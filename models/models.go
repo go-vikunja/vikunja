@@ -34,6 +34,7 @@ func init() {
 	tables = append(tables,
 		new(User),
 		new(List),
+		new(ListItem),
 	)
 }
 
