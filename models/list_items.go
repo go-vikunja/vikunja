@@ -13,7 +13,7 @@ type ListItem struct {
 	Created      int64  `xorm:"created" json:"created"`
 	Updated      int64  `xorm:"updated" json:"updated"`
 
-	CreatedBy User `xorm:"-"`
+	CreatedBy User `xorm:"-" json:"createdBy"`
 }
 
 // TableName returns the table name for listitems
@@ -21,7 +21,46 @@ func (ListItem) TableName() string {
 	return "items"
 }
 
+// GetItemsByListID gets all todoitems for a list
 func GetItemsByListID(listID int64) (items []*ListItem, err error) {
 	err = x.Where("list_id = ?", listID).Find(&items)
+	if err != nil {
+		return
+	}
+
+	// Get all users and put them into the array
+	var userIDs []int64
+	for _, i := range items {
+		found := false
+		for _, u := range userIDs {
+			if i.CreatedByID == u {
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			userIDs = append(userIDs, i.CreatedByID)
+		}
+	}
+
+	var users []User
+	err = x.In("id", userIDs).Find(&users)
+	if err != nil {
+		return
+	}
+
+	for in, item := range items {
+		for _, user := range users {
+			if item.CreatedByID == user.ID {
+				items[in].CreatedBy = user
+				break
+			}
+		}
+
+		// obsfucate the user password
+		items[in].CreatedBy.Password = ""
+	}
+
 	return
 }

@@ -29,7 +29,16 @@ Ab v0.3 können wir mit clients anfangen.
 #### v0.1
 
 * [ ] Listen erstellen/bearbeiten/löschen
+  * [x] Ansehen
+    * [x] Übersicht
+    * [x] Einzelne liste mit allen todopunkten
+  * [x] Erstellen
+  * [x] Bearbeiten
+  * [ ] Löschen
 * [ ] Todopunkte hinzufügen/abhaken/löschen
+  * [x] Erstellen
+  * [ ] Bearbeiten (abhaken)
+  * [ ] Löschen
 
 #### v0.2
 

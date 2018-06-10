@@ -142,3 +142,16 @@ func IsErrListDoesNotExist(err error) bool {
 func (err ErrListDoesNotExist) Error() string {
 	return fmt.Sprintf("List does not exist [ID: %d]", err.ID)
 }
+
+// ErrListItemCannotBeEmpty represents a "ErrListDoesNotExist" kind of error. Used if the list does not exist.
+type ErrListItemCannotBeEmpty struct{}
+
+// IsErrListItemCannotBeEmpty checks if an error is a ErrListDoesNotExist.
+func IsErrListItemCannotBeEmpty(err error) bool {
+	_, ok := err.(ErrListItemCannotBeEmpty)
+	return ok
+}
+
+func (err ErrListItemCannotBeEmpty) Error() string {
+	return fmt.Sprintf("List item text cannot be empty.")
+}
