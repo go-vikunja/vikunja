@@ -1,7 +1,5 @@
 -
   id: 1
-  name: 'John Doe'
   username: 'user1'
   password: '1234'
   email: 'johndoe@example.com'
-  is_admin:  true
