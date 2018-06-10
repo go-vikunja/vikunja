@@ -1,4 +1,4 @@
-package routes
+package v1
 
 import (
 	"crypto/md5"
@@ -29,11 +29,9 @@ func Login(c echo.Context) error {
 
 	// Set claims
 	claims := token.Claims.(jwt.MapClaims)
-	claims["name"] = user.Name
 	claims["username"] = user.Username
 	claims["email"] = user.Email
 	claims["id"] = user.ID
-	claims["admin"] = user.IsAdmin
 	claims["exp"] = time.Now().Add(time.Hour * 72).Unix()
 
 	avatar := md5.Sum([]byte(user.Email))

@@ -15,11 +15,9 @@ type UserLogin struct {
 // User holds information about an user
 type User struct {
 	ID       int64  `xorm:"int(11) autoincr not null unique pk" json:"id"`
-	Name     string `xorm:"varchar(250)" json:"name"`
 	Username string `xorm:"varchar(250) not null unique" json:"username"`
 	Password string `xorm:"varchar(250) not null" json:"password"`
 	Email    string `xorm:"varchar(250)" json:"email"`
-	IsAdmin  bool   `xorm:"tinyint(1) not null" json:"isAdmin"`
 	Created  int64  `xorm:"created" json:"created"`
 	Updated  int64  `xorm:"updated" json:"updated"`
 }
@@ -84,7 +82,6 @@ func GetCurrentUser(c echo.Context) (user User, err error) {
 	}
 	user = User{
 		ID:       int64(userID),
-		Name:     claims["name"].(string),
 		Email:    claims["email"].(string),
 		Username: claims["username"].(string),
 	}

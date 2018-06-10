@@ -39,10 +39,12 @@ func RegisterRoutes(e *echo.Echo) {
 
 	// CORS_SHIT
 	a.OPTIONS("/login", SetCORSHeader)
+	a.OPTIONS("/register", SetCORSHeader)
 	a.OPTIONS("/users", SetCORSHeader)
 	a.OPTIONS("/users/:id", SetCORSHeader)
 
-	a.POST("/login", Login)
+	a.POST("/login", apiv1.Login)
+	a.POST("/register", apiv1.UserAddOrUpdate)
 
 	// ===== Routes with Authetification =====
 	// Authetification

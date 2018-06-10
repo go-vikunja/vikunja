@@ -37,7 +37,7 @@ func main() {
 	}
 
 	// Version notification
-	fmt.Println("Library version", Version)
+	fmt.Println("List version", Version)
 
 	// Start the webserver
 	e := routes.NewEcho()
@@ -45,7 +45,7 @@ func main() {
 	// Start server
 	go func() {
 		if err := e.Start(models.Config.Interface); err != nil {
-			e.Logger.Info("shutting down the server")
+			e.Logger.Info("shutting down...")
 		}
 	}()
 

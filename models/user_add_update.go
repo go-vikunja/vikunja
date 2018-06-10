@@ -5,7 +5,7 @@ import (
 )
 
 // CreateUser creates a new user and inserts it into the database
-func CreateUser(user User, doer *User) (newUser User, err error) {
+func CreateUser(user User) (newUser User, err error) {
 
 	newUser = user
 
@@ -16,7 +16,7 @@ func CreateUser(user User, doer *User) (newUser User, err error) {
 
 	// Check if the user already existst with that username
 	existingUser, exists, err := GetUser(User{Username: newUser.Username})
-	if err != nil {
+	if err != nil && !IsErrUserDoesNotExist(err){
 		return User{}, err
 	}
 	if exists {
@@ -25,7 +25,7 @@ func CreateUser(user User, doer *User) (newUser User, err error) {
 
 	// Check if the user already existst with that email
 	existingUser, exists, err = GetUser(User{Email: newUser.Email})
-	if err != nil {
+	if err != nil && !IsErrUserDoesNotExist(err) {
 		return User{}, err
 	}
 	if exists {
@@ -60,7 +60,7 @@ func hashPassword(password string) (string, error) {
 }
 
 // UpdateUser updates a user
-func UpdateUser(user User, doer *User) (updatedUser User, err error) {
+func UpdateUser(user User) (updatedUser User, err error) {
 
 	// Check if it exists
 	theUser, exists, err := GetUserByID(user.ID)
