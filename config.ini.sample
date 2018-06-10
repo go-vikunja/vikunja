@@ -1,0 +1,14 @@
+[General]
+JWTSecret = blablaGEHEMIN§)!§
+; The interface on which to run the webserver
+Interface = :8080
+
+[Database]
+Type = mysql
+User = root
+Password = supersecret
+Host = 127.0.0.1
+Database = library
+ShowQueries = false
+; When using sqlite, this is the path where to store the data
+; Path = ./library.db
