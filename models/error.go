@@ -128,9 +128,8 @@ func (err ErrIDCannotBeZero) Error() string {
 // List errors
 // ===========
 
-
 // ErrListDoesNotExist represents a "ErrListDoesNotExist" kind of error. Used if the list does not exist.
-type ErrListDoesNotExist struct{
+type ErrListDoesNotExist struct {
 	ID int64
 }
 

@@ -1,5 +1,6 @@
 package models
 
+// List represents a list of items
 type List struct {
 	ID          int64  `xorm:"int(11) autoincr not null unique pk" json:"id"`
 	Title       string `xorm:"varchar(250)" json:"title"`
@@ -10,7 +11,8 @@ type List struct {
 	Updated     int64  `xorm:"updated" json:"updated"`
 }
 
-func GetListByID(id int64) (list List, err error){
+// GetListByID returns a list by its ID
+func GetListByID(id int64) (list List, err error) {
 	list.ID = id
 	exists, err := x.Get(&list)
 	if err != nil {
@@ -32,6 +34,7 @@ func GetListByID(id int64) (list List, err error){
 	return list, nil
 }
 
+// CreateOrUpdateList updates a list or creates it if it doesn't exist
 func CreateOrUpdateList(list *List) (err error) {
 	// Check if it exists
 	_, err = GetListByID(list.ID)

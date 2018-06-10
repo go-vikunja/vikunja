@@ -1,13 +1,13 @@
 package v1
 
 import (
-	"net/http"
-	"github.com/labstack/echo"
 	"git.kolaente.de/konrad/list/models"
+	"github.com/labstack/echo"
+	"net/http"
 	"strconv"
-	"fmt"
 )
 
+// AddOrUpdateList Adds or updates a new list
 func AddOrUpdateList(c echo.Context) error {
 
 	// Get the list
@@ -36,9 +36,8 @@ func AddOrUpdateList(c echo.Context) error {
 		if err != nil {
 			if models.IsErrListDoesNotExist(err) {
 				return c.JSON(http.StatusBadRequest, models.Message{"The list does not exist."})
-			} else {
-				return c.JSON(http.StatusInternalServerError, models.Message{"Could not check if the list exists."})
 			}
+			return c.JSON(http.StatusInternalServerError, models.Message{"Could not check if the list exists."})
 		}
 	}
 
