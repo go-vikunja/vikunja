@@ -42,6 +42,8 @@ func RegisterRoutes(e *echo.Echo) {
 	a.OPTIONS("/register", SetCORSHeader)
 	a.OPTIONS("/users", SetCORSHeader)
 	a.OPTIONS("/users/:id", SetCORSHeader)
+	a.OPTIONS("/lists", SetCORSHeader)
+	a.OPTIONS("/lists/:id", SetCORSHeader)
 
 	a.POST("/login", apiv1.Login)
 	a.POST("/register", apiv1.UserAddOrUpdate)
@@ -52,5 +54,6 @@ func RegisterRoutes(e *echo.Echo) {
 	a.POST("/tokenTest", apiv1.CheckToken)
 
 	a.PUT("/lists", apiv1.AddOrUpdateList)
+	a.GET("/lists", apiv1.GetListsByUser)
 	a.POST("/lists/:id", apiv1.AddOrUpdateList)
 }
