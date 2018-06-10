@@ -8,7 +8,6 @@ func ListUsers(searchterm string) (users []User, err error) {
 	} else {
 		err = x.
 			Where("username LIKE ?", "%"+searchterm+"%").
-			Or("name LIKE ?", "%"+searchterm+"%").
 			Find(&users)
 	}
 
