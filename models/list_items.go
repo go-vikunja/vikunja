@@ -65,9 +65,33 @@ func GetItemsByListID(listID int64) (items []*ListItem, err error) {
 	return
 }
 
-// DeleteListItemByID deletes a list item by its ID
-func DeleteListItemByIDtemByID(itemID int64) (err error) {
-	_, err = x.ID(itemID).Delete(ListItem{})
+func GetListItemByID(listItemID int64) (listItem ListItem, err error) {
+	exists, err := x.ID(listItemID).Get(&listItem)
+	if err != nil {
+		return ListItem{}, err
+	}
 
+	if !exists {
+		return ListItem{}, ErrListItemDoesNotExist{listItemID}
+	}
+
+	return
+}
+
+// DeleteListItemByID deletes a list item by its ID
+func DeleteListItemByID(itemID int64, doer *User) (err error) {
+
+	// Check if it exists
+	listitem, err := GetListItemByID(itemID)
+	if err != nil {
+		return
+	}
+
+	// Check if the user hat the right to delete that item
+	if listitem.CreatedByID != doer.ID {
+		return
+	}
+
+	_, err = x.ID(itemID).Delete(ListItem{})
 	return
 }

@@ -16,11 +16,6 @@ func GetListsByUser(c echo.Context) error {
 
 	allLists, err := models.GetListsByUser(&currentUser)
 	if err != nil {
-
-		if models.IsErrListDoesNotExist(err) {
-
-		}
-
 		return c.JSON(http.StatusInternalServerError, models.Message{"Could not get lists."})
 	}
 
