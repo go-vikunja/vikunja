@@ -40,6 +40,8 @@ Ab v0.3 können wir mit clients anfangen.
   * [ ] Bearbeiten (abhaken)
   * [x] Löschen
 
+* [ ] Swaggerdocs !!!!
+
 #### v0.2
 
 * [ ] Listen teilbar

@@ -58,6 +58,7 @@ func RegisterRoutes(e *echo.Echo) {
 	a.GET("/lists/:id", apiv1.GetListByID)
 	a.POST("/lists/:id", apiv1.AddOrUpdateList)
 	a.PUT("/lists/:id", apiv1.AddOrUpdateListItem)
+	a.DELETE("/lists/:id", apiv1.DeleteListByID)
 
 	a.DELETE("/item/:id", apiv1.DeleteListItemByIDtemByID)
 }
