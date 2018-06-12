@@ -35,12 +35,12 @@ Ab v0.3 können wir mit clients anfangen.
   * [x] Erstellen
   * [x] Bearbeiten
   * [x] Löschen
-* [ ] Todopunkte hinzufügen/abhaken/löschen
+* [x] Todopunkte hinzufügen/abhaken/löschen
   * [x] Erstellen
-  * [ ] Bearbeiten (abhaken)
+  * [x] Bearbeiten (abhaken)
   * [x] Löschen
 
-* [ ] Überall nochmal überprüfen dass der Nutzer auch das Recht hat die Liste zu löschen
+* [x] Überall nochmal überprüfen dass der Nutzer auch das Recht hat die Liste zu löschen
 
 * [ ] Swaggerdocs !!!!
 

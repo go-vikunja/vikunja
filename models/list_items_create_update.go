@@ -3,11 +3,6 @@ package models
 // CreateOrUpdateListItem adds or updates a todo item to a list
 func CreateOrUpdateListItem(item *ListItem) (err error) {
 
-	// Check if we have at least a text
-	if item.Text == "" {
-		return ErrListItemCannotBeEmpty{}
-	}
-
 	// Check if the list exists
 	_, err = GetListByID(item.ListID)
 	if err != nil {
@@ -30,6 +25,11 @@ func CreateOrUpdateListItem(item *ListItem) (err error) {
 		_, err = x.Insert(item)
 		if err != nil {
 			return
+		}
+
+		// Check if we have at least a text
+		if item.Text == "" {
+			return ErrListItemCannotBeEmpty{}
 		}
 	}
 
