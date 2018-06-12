@@ -64,3 +64,10 @@ func GetItemsByListID(listID int64) (items []*ListItem, err error) {
 
 	return
 }
+
+// DeleteListItemByID deletes a list item by its ID
+func DeleteListItemByIDtemByID(itemID int64) (err error) {
+	_, err = x.ID(itemID).Delete(ListItem{})
+
+	return
+}

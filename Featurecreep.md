@@ -38,11 +38,15 @@ Ab v0.3 können wir mit clients anfangen.
 * [ ] Todopunkte hinzufügen/abhaken/löschen
   * [x] Erstellen
   * [ ] Bearbeiten (abhaken)
-  * [ ] Löschen
+  * [x] Löschen
 
 #### v0.2
 
 * [ ] Listen teilbar
+  * [ ] Mit anderen Nutzern
+  * [ ] Mit Link
+    * [ ] Offen
+    * [ ] Passwortgeschützt
 
 #### v0.3
 
