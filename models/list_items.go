@@ -75,6 +75,12 @@ func GetListItemByID(listItemID int64) (listItem ListItem, err error) {
 		return ListItem{}, ErrListItemDoesNotExist{listItemID}
 	}
 
+	user, _, err := GetUserByID(listItem.CreatedByID)
+	if err != nil {
+		return
+	}
+	listItem.CreatedBy = user
+
 	return
 }
 
