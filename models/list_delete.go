@@ -1,11 +1,15 @@
 package models
 
-func DeleteListByID(listID int64) (err error) {
+func DeleteListByID(listID int64, doer *User) (err error) {
 
 	// Check if the list exists
-	_, err = GetListByID(listID)
+	list, err := GetListByID(listID)
 	if err != nil {
 		return
+	}
+
+	if list.Owner.ID != doer.ID {
+		return ErrNeedToBeListOwner{ListID:listID, UserID:doer.ID}
 	}
 
 	// Delete the list

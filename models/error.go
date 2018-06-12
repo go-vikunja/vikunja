@@ -143,6 +143,27 @@ func (err ErrListDoesNotExist) Error() string {
 	return fmt.Sprintf("List does not exist [ID: %d]", err.ID)
 }
 
+// ErrNeedToBeListOwner represents an error, where the user is not the owner of that list (used i.e. when deleting a list)
+type ErrNeedToBeListOwner struct {
+	ListID int64
+	UserID int64
+}
+
+// IsErrListDoesNotExist checks if an error is a ErrListDoesNotExist.
+func IsErrNeedToBeListOwner(err error) bool {
+	_, ok := err.(ErrNeedToBeListOwner)
+	return ok
+}
+
+func (err ErrNeedToBeListOwner) Error() string {
+	return fmt.Sprintf("You need to be list owner to do that [ListID: %d, UserID: %d]", err.ListID, err.UserID)
+}
+
+
+// ================
+// List item errors
+// ================
+
 // ErrListItemCannotBeEmpty represents a "ErrListDoesNotExist" kind of error. Used if the list does not exist.
 type ErrListItemCannotBeEmpty struct{}
 

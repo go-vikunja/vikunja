@@ -16,8 +16,22 @@ func DeleteListByID(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, models.Message{"Invalid ID."})
 	}
 
-	err = models.DeleteListByID(itemID)
+	// Check if the user has the right to delete that list
+	user, err := models.GetCurrentUser(c)
 	if err != nil {
+		return c.JSON(http.StatusInternalServerError, models.Message{"An error occured."})
+	}
+
+	err = models.DeleteListByID(itemID, &user)
+	if err != nil {
+		if models.IsErrNeedToBeListOwner(err) {
+			return c.JSON(http.StatusForbidden, models.Message{"You need to be the list owner to delete a list."})
+		}
+
+		if models.IsErrListDoesNotExist(err) {
+			return c.JSON(http.StatusNotFound, models.Message{"This list does not exist."})
+		}
+
 		return c.JSON(http.StatusInternalServerError, models.Message{"An error occured."})
 	}
 
