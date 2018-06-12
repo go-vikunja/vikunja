@@ -41,7 +41,7 @@ Ab v0.3 können wir mit clients anfangen.
   * [x] Löschen
 
 * [x] Überall nochmal überprüfen dass der Nutzer auch das Recht hat die Liste zu löschen
-
+* [ ] "Apiformat" Methoden, damit in der Ausgabe zb kein Passwort drin ist..., oder created/updated von Nutzern
 * [ ] Swaggerdocs !!!!
 
 #### v0.2
@@ -62,7 +62,18 @@ Ab v0.3 können wir mit clients anfangen.
 
 ## Clients
 
-* [ ] Webapp (vue.js)
+* [ ] Webapp (vue.js) + Bulma
 * [ ] "Native" Clients (auf dem Rechner installiert (mit elektron oder so? Oder native?)
-* [ ] Android (Flutter oder React Native)
-* [ ] iOS (mit Framework????)
+* [ ] Android (Flutter)
+* [ ] iOS (mit Framework???? (Ging das nich auch mit Flutter?))
+
+## Anderes
+
+* [ ] CI aufsetzen
+* [ ] Tests schreiben
+* [ ] Ne Instanz mit den docs aufsetzen
+* [ ] Namen finden
+* [ ] Alle Packages umziehen
+
+* [ ] mgl. zum Emailmaskieren haben (in den Nutzereinstellungen, wenn man seine Email nicht an alle Welt rausposaunen will)
+* [ ] Mgl. zum Accountlöschen haben (so richtig krass mit emailverifiezierung und dass alle Privaten Listen gelöscht werden und man alle geteilten entweder wem übertragen muss oder  auf provat stellen)
