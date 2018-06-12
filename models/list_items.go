@@ -89,7 +89,7 @@ func DeleteListItemByID(itemID int64, doer *User) (err error) {
 
 	// Check if the user hat the right to delete that item
 	if listitem.CreatedByID != doer.ID {
-		return
+		return ErrNeedToBeItemOwner{ItemID:itemID, UserID: doer.ID}
 	}
 
 	_, err = x.ID(itemID).Delete(ListItem{})

@@ -192,3 +192,18 @@ func (err ErrListItemDoesNotExist) Error() string {
 	return fmt.Sprintf("List item does not exist. [ID: %d]", err.ID)
 }
 
+// ErrNeedToBeItemOwner represents an error, where the user is not the owner of that item (used i.e. when deleting a list)
+type ErrNeedToBeItemOwner struct {
+	ItemID int64
+	UserID int64
+}
+
+// IsErrNeedToBeItemOwner checks if an error is a ErrNeedToBeItemOwner.
+func IsErrNeedToBeItemOwner(err error) bool {
+	_, ok := err.(ErrNeedToBeItemOwner)
+	return ok
+}
+
+func (err ErrNeedToBeItemOwner) Error() string {
+	return fmt.Sprintf("You need to be item owner to do that [ItemID: %d, UserID: %d]", err.ItemID, err.UserID)
+}

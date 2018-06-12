@@ -28,6 +28,10 @@ func DeleteListItemByIDtemByID(c echo.Context) error {
 			return c.JSON(http.StatusNotFound, models.Message{"List item does not exist."})
 		}
 
+		if models.IsErrNeedToBeItemOwner(err) {
+			return c.JSON(http.StatusForbidden, models.Message{"You need to own the list item in order to be able to delete it."})
+		}
+
 		return c.JSON(http.StatusInternalServerError, models.Message{"An error occured."})
 	}
 
