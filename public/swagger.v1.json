@@ -1,0 +1,615 @@
+{
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "swagger": "2.0",
+  "info": {
+    "description": "This documentation describes the List API.",
+    "title": "List API.",
+    "license": {
+      "name": "GPLv3"
+    },
+    "version": "0.1"
+  },
+  "basePath": "/api/v1",
+  "paths": {
+    "/item/{itemID}": {
+      "put": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "lists"
+        ],
+        "summary": "Updates a list item",
+        "operationId": "updateListItem",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "ID of the item to update",
+            "name": "itemID",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/ListItem"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/ListItem"
+          },
+          "400": {
+            "$ref": "#/responses/Message"
+          },
+          "500": {
+            "$ref": "#/responses/Message"
+          }
+        }
+      },
+      "delete": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "lists"
+        ],
+        "summary": "Deletes a list item",
+        "operationId": "deleteListItem",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "ID of the list item to delete",
+            "name": "itemID",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/Message"
+          },
+          "400": {
+            "$ref": "#/responses/Message"
+          },
+          "403": {
+            "$ref": "#/responses/Message"
+          },
+          "404": {
+            "$ref": "#/responses/Message"
+          },
+          "500": {
+            "$ref": "#/responses/Message"
+          }
+        }
+      }
+    },
+    "/lists": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "lists"
+        ],
+        "summary": "Gets all lists owned by the current user",
+        "operationId": "getLists",
+        "responses": {
+          "200": {
+            "$ref": "#/responses/List"
+          },
+          "500": {
+            "$ref": "#/responses/Message"
+          }
+        }
+      },
+      "put": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "lists"
+        ],
+        "summary": "Creates a new list owned by the currently logged in user",
+        "operationId": "addList",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/List"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/List"
+          },
+          "400": {
+            "$ref": "#/responses/Message"
+          },
+          "403": {
+            "$ref": "#/responses/Message"
+          },
+          "500": {
+            "$ref": "#/responses/Message"
+          }
+        }
+      }
+    },
+    "/lists/{listID}": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "lists"
+        ],
+        "summary": "gets one list with all todo items",
+        "operationId": "getList",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "ID of the list to show",
+            "name": "listID",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/List"
+          },
+          "400": {
+            "$ref": "#/responses/Message"
+          },
+          "500": {
+            "$ref": "#/responses/Message"
+          }
+        }
+      },
+      "put": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "lists"
+        ],
+        "summary": "Adds an item to a list",
+        "operationId": "addListItem",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "ID of the list to use",
+            "name": "listID",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/ListItem"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/ListItem"
+          },
+          "400": {
+            "$ref": "#/responses/Message"
+          },
+          "500": {
+            "$ref": "#/responses/Message"
+          }
+        }
+      },
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "lists"
+        ],
+        "summary": "Updates a list",
+        "operationId": "upadteList",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "ID of the list to update",
+            "name": "listID",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/List"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/List"
+          },
+          "400": {
+            "$ref": "#/responses/Message"
+          },
+          "403": {
+            "$ref": "#/responses/Message"
+          },
+          "500": {
+            "$ref": "#/responses/Message"
+          }
+        }
+      },
+      "delete": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "lists"
+        ],
+        "summary": "Deletes a list with all items on it",
+        "operationId": "deleteList",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "ID of the list to delete",
+            "name": "listID",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/Message"
+          },
+          "400": {
+            "$ref": "#/responses/Message"
+          },
+          "403": {
+            "$ref": "#/responses/Message"
+          },
+          "404": {
+            "$ref": "#/responses/Message"
+          },
+          "500": {
+            "$ref": "#/responses/Message"
+          }
+        }
+      }
+    },
+    "/login": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "user"
+        ],
+        "summary": "Logs a user in. Returns a JWT-Token to authenticate requests",
+        "operationId": "login",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/UserLogin"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/Token"
+          },
+          "400": {
+            "$ref": "#/responses/Message"
+          },
+          "403": {
+            "$ref": "#/responses/Message"
+          }
+        }
+      }
+    },
+    "/register": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "user"
+        ],
+        "summary": "Creates a new user account",
+        "operationId": "register",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/ApiUserPassword"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/User"
+          },
+          "400": {
+            "$ref": "#/responses/Message"
+          },
+          "500": {
+            "$ref": "#/responses/Message"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "ApiUserPassword": {
+      "type": "object",
+      "title": "ApiUserPassword represents a user object without timestamps and a json password field.",
+      "properties": {
+        "email": {
+          "type": "string",
+          "x-go-name": "Email"
+        },
+        "id": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "ID"
+        },
+        "password": {
+          "type": "string",
+          "x-go-name": "Password"
+        },
+        "username": {
+          "type": "string",
+          "x-go-name": "Username"
+        }
+      },
+      "x-go-package": "git.kolaente.de/konrad/list/models"
+    },
+    "List": {
+      "description": "List represents a list of items",
+      "type": "object",
+      "properties": {
+        "created": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "Created"
+        },
+        "description": {
+          "type": "string",
+          "x-go-name": "Description"
+        },
+        "id": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "ID"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ListItem"
+          },
+          "x-go-name": "Items"
+        },
+        "owner": {
+          "$ref": "#/definitions/User"
+        },
+        "title": {
+          "type": "string",
+          "x-go-name": "Title"
+        },
+        "updated": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "Updated"
+        }
+      },
+      "x-go-package": "git.kolaente.de/konrad/list/models"
+    },
+    "ListItem": {
+      "description": "ListItem represents an item in a todolist",
+      "type": "object",
+      "properties": {
+        "created": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "Created"
+        },
+        "createdBy": {
+          "$ref": "#/definitions/User"
+        },
+        "description": {
+          "type": "string",
+          "x-go-name": "Description"
+        },
+        "done": {
+          "type": "boolean",
+          "x-go-name": "Done"
+        },
+        "dueDate": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "DueDateUnix"
+        },
+        "id": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "ID"
+        },
+        "listID": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "ListID"
+        },
+        "reminderDate": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "ReminderUnix"
+        },
+        "text": {
+          "type": "string",
+          "x-go-name": "Text"
+        },
+        "updated": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "Updated"
+        }
+      },
+      "x-go-package": "git.kolaente.de/konrad/list/models"
+    },
+    "Message": {
+      "description": "Message is a standard message",
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string",
+          "x-go-name": "Message"
+        }
+      },
+      "x-go-package": "git.kolaente.de/konrad/list/models"
+    },
+    "User": {
+      "description": "User holds information about an user",
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "x-go-name": "Email"
+        },
+        "id": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "ID"
+        },
+        "username": {
+          "type": "string",
+          "x-go-name": "Username"
+        }
+      },
+      "x-go-package": "git.kolaente.de/konrad/list/models"
+    },
+    "UserLogin": {
+      "description": "UserLogin Object to recive user credentials in JSON format",
+      "type": "object",
+      "properties": {
+        "password": {
+          "type": "string",
+          "x-go-name": "Password"
+        },
+        "username": {
+          "type": "string",
+          "x-go-name": "Username"
+        }
+      },
+      "x-go-package": "git.kolaente.de/konrad/list/models"
+    }
+  },
+  "responses": {
+    "List": {
+      "description": "List",
+      "schema": {
+        "$ref": "#/definitions/List"
+      }
+    },
+    "ListItem": {
+      "description": "ListItem",
+      "schema": {
+        "$ref": "#/definitions/ListItem"
+      }
+    },
+    "Message": {
+      "description": "Message",
+      "schema": {
+        "$ref": "#/definitions/Message"
+      }
+    },
+    "Token": {
+      "description": "Token",
+      "schema": {
+        "type": "object",
+        "required": [
+          "token"
+        ],
+        "properties": {
+          "token": {
+            "description": "The token",
+            "type": "string",
+            "x-go-name": "Token"
+          }
+        }
+      }
+    },
+    "User": {
+      "description": "User Object",
+      "schema": {
+        "$ref": "#/definitions/User"
+      }
+    },
+    "parameterBodies": {
+      "description": "parameterBodies",
+      "schema": {
+        "$ref": "#/definitions/ListItem"
+      }
+    }
+  },
+  "securityDefinitions": {
+    "AuthorizationHeaderToken": {
+      "type": "apiKey",
+      "name": "Authorization",
+      "in": "header"
+    }
+  },
+  "security": [
+    {
+      "AuthorizationHeaderToken": []
+    }
+  ]
+}
