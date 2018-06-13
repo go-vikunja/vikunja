@@ -5,7 +5,7 @@ type List struct {
 	ID          int64  `xorm:"int(11) autoincr not null unique pk" json:"id"`
 	Title       string `xorm:"varchar(250)" json:"title"`
 	Description string `xorm:"varchar(1000)" json:"description"`
-	OwnerID     int64  `xorm:"int(11)" json:"ownerID"`
+	OwnerID     int64  `xorm:"int(11)" json:"-"`
 	Owner       User   `xorm:"-" json:"owner"`
 	Created     int64  `xorm:"created" json:"created"`
 	Updated     int64  `xorm:"updated" json:"updated"`

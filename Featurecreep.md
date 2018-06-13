@@ -41,7 +41,7 @@ Ab v0.3 können wir mit clients anfangen.
   * [x] Löschen
 
 * [x] Überall nochmal überprüfen dass der Nutzer auch das Recht hat die Liste zu löschen
-* [ ] "Apiformat" Methoden, damit in der Ausgabe zb kein Passwort drin ist..., oder created/updated von Nutzern
+* [ ] "Apiformat" Methoden, damit in der Ausgabe zb kein Passwort drin ist..., oder created/updated von Nutzern... oder ownerID nicht drin ist sondern nur das ownerobject
 * [ ] Swaggerdocs !!!!
 
 #### v0.2

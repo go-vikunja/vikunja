@@ -1,7 +1,7 @@
 package models
 
 // CreateOrUpdateListItem adds or updates a todo item to a list
-func CreateOrUpdateListItem(item *ListItem) (err error) {
+func CreateOrUpdateListItem(item *ListItem) (newItem *ListItem, err error) {
 
 	// Check if the list exists
 	_, err = GetListByID(item.ListID)
@@ -30,9 +30,12 @@ func CreateOrUpdateListItem(item *ListItem) (err error) {
 
 		// Check if we have at least a text
 		if item.Text == "" {
-			return ErrListItemCannotBeEmpty{}
+			return newItem, ErrListItemCannotBeEmpty{}
 		}
 	}
 
-	return
+	// Get the new/updated item
+	finalItem, err := GetListItemByID(item.ID)
+
+	return &finalItem, err
 }

@@ -16,10 +16,10 @@ type UserLogin struct {
 type User struct {
 	ID       int64  `xorm:"int(11) autoincr not null unique pk" json:"id"`
 	Username string `xorm:"varchar(250) not null unique" json:"username"`
-	Password string `xorm:"varchar(250) not null" json:"password"`
+	Password string `xorm:"varchar(250) not null" json:"-"`
 	Email    string `xorm:"varchar(250)" json:"email"`
-	Created  int64  `xorm:"created" json:"created"`
-	Updated  int64  `xorm:"updated" json:"updated"`
+	Created  int64  `xorm:"created" json:"-"`
+	Updated  int64  `xorm:"updated" json:"-"`
 }
 
 // TableName returns the table name for users

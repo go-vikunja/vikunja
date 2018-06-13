@@ -57,7 +57,7 @@ func updateOrCreateListItemHelper(listID, itemID int64, c echo.Context) error {
 		listItem.ID = itemID
 	}
 
-	err := models.CreateOrUpdateListItem(listItem)
+	finalItem, err := models.CreateOrUpdateListItem(listItem)
 	if err != nil {
 		if models.IsErrListDoesNotExist(err) {
 			return c.JSON(http.StatusBadRequest, models.Message{"The list does not exist."})
@@ -72,5 +72,5 @@ func updateOrCreateListItemHelper(listID, itemID int64, c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, models.Message{"An error occured."})
 	}
 
-	return c.JSON(http.StatusOK, listItem)
+	return c.JSON(http.StatusOK, finalItem)
 }
