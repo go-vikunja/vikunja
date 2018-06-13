@@ -42,7 +42,12 @@ Ab v0.3 können wir mit clients anfangen.
 
 * [x] Überall nochmal überprüfen dass der Nutzer auch das Recht hat die Liste zu löschen
 * [ ] "Apiformat" Methoden, damit in der Ausgabe zb kein Passwort drin ist..., oder created/updated von Nutzern... oder ownerID nicht drin ist sondern nur das ownerobject
-* [ ] Swaggerdocs !!!!
+* [x] Swaggerdocs !!!!
+* [ ] Rechte überprüfen (in extra Funktion auslagern, dann wird das einfacher später):
+  * [ ] Listen erstellen
+  * [ ] Listen bearbeiten (nur eigene im Moment)
+  * [ ] Listenpunkte hinzufügen
+  * [ ] Listenpunkte bearbeiten
 
 #### v0.2
 
@@ -74,6 +79,7 @@ Ab v0.3 können wir mit clients anfangen.
 * [ ] Ne Instanz mit den docs aufsetzen
 * [ ] Namen finden
 * [ ] Alle Packages umziehen
+* [ ] Swagger UI aufsetzen
 
 * [ ] mgl. zum Emailmaskieren haben (in den Nutzereinstellungen, wenn man seine Email nicht an alle Welt rausposaunen will)
 * [ ] Mgl. zum Accountlöschen haben (so richtig krass mit emailverifiezierung und dass alle Privaten Listen gelöscht werden und man alle geteilten entweder wem übertragen muss oder  auf provat stellen)
