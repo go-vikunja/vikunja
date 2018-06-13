@@ -17,20 +17,22 @@ func CreateOrUpdateListItem(item *ListItem) (newItem *ListItem, err error) {
 	item.CreatedByID = item.CreatedBy.ID
 	item.CreatedBy = user
 
+	// TODO: Check if the user has the right to add/update an item to that list
+
 	if item.ID != 0 {
 		_, err = x.ID(item.ID).Update(item)
 		if err != nil {
 			return
 		}
 	} else {
-		_, err = x.Insert(item)
-		if err != nil {
-			return
-		}
-
 		// Check if we have at least a text
 		if item.Text == "" {
 			return newItem, ErrListItemCannotBeEmpty{}
+		}
+
+		_, err = x.Insert(item)
+		if err != nil {
+			return
 		}
 	}
 

@@ -12,6 +12,26 @@ import (
 
 // Login is the login handler
 func Login(c echo.Context) error {
+	// swagger:operation POST /login user login
+	// ---
+	// summary: Logs a user in. Returns a JWT-Token to authenticate requests
+	// consumes:
+	// - application/json
+	// produces:
+	// - application/json
+	// parameters:
+	// - name: body
+	//   in: body
+	//   schema:
+	//     "$ref": "#/definitions/UserLogin"
+	// responses:
+	//   "200":
+	//     "$ref": "#/responses/Token"
+	//   "400":
+	//     "$ref": "#/responses/Message"
+	//   "403":
+	//     "$ref": "#/responses/Message"
+
 	u := new(models.UserLogin)
 	if err := c.Bind(u); err != nil {
 		return c.JSON(http.StatusBadRequest, models.Message{"Please provide a username and password."})

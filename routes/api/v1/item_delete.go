@@ -1,13 +1,38 @@
 package v1
 
 import (
-	"github.com/labstack/echo"
-	"strconv"
-	"net/http"
 	"git.kolaente.de/konrad/list/models"
+	"github.com/labstack/echo"
+	"net/http"
+	"strconv"
 )
 
 func DeleteListItemByIDtemByID(c echo.Context) error {
+	// swagger:operation DELETE /item/{itemID} lists deleteListItem
+	// ---
+	// summary: Deletes a list item
+	// consumes:
+	// - application/json
+	// produces:
+	// - application/json
+	// parameters:
+	// - name: itemID
+	//   in: path
+	//   description: ID of the list item to delete
+	//   type: string
+	//   required: true
+	// responses:
+	//   "200":
+	//     "$ref": "#/responses/Message"
+	//   "400":
+	//     "$ref": "#/responses/Message"
+	//   "403":
+	//     "$ref": "#/responses/Message"
+	//   "404":
+	//     "$ref": "#/responses/Message"
+	//   "500":
+	//     "$ref": "#/responses/Message"
+
 	// Check if we have our ID
 	id := c.Param("id")
 	// Make int

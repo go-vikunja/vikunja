@@ -27,6 +27,23 @@ func (User) TableName() string {
 	return "users"
 }
 
+// ApiUserPassword represents a user object without timestamps and a json password field.
+type ApiUserPassword struct {
+	ID       int64  `json:"id"`
+	Username string `json:"username"`
+	Password string `json:"password"`
+	Email    string `json:"email"`
+}
+
+func (apiUser *ApiUserPassword) APIFormat() User {
+	return User{
+		ID:       apiUser.ID,
+		Username: apiUser.Username,
+		Password: apiUser.Password,
+		Email:    apiUser.Email,
+	}
+}
+
 // GetUserByID gets informations about a user by its ID
 func GetUserByID(id int64) (user User, exists bool, err error) {
 	// Apparently xorm does otherwise look for all users but return only one, which leads to returing one even if the ID is 0

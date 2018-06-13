@@ -1,36 +1,47 @@
 package v1
 
 import (
-	"encoding/json"
 	"git.kolaente.de/konrad/list/models"
 	"github.com/labstack/echo"
 	"net/http"
 	"strconv"
-	"strings"
 )
 
-// UserAddOrUpdate is the handler to add a user
-func UserAddOrUpdate(c echo.Context) error {
+func RegisterUser(c echo.Context) error {
+
+	// swagger:operation POST /register user register
+	// ---
+	// summary: Creates a new user account
+	// consumes:
+	// - application/json
+	// produces:
+	// - application/json
+	// parameters:
+	// - name: body
+	//   in: body
+	//   schema:
+	//     "$ref": "#/definitions/ApiUserPassword"
+	// responses:
+	//   "200":
+	//     "$ref": "#/responses/User"
+	//   "400":
+	//     "$ref": "#/responses/Message"
+	//   "500":
+	//     "$ref": "#/responses/Message"
+
+	return userAddOrUpdate(c)
+}
+
+// userAddOrUpdate is the handler to add a user
+func userAddOrUpdate(c echo.Context) error {
 
 	// TODO: prevent everyone from updating users
 
 	// Check for Request Content
-	userFromString := c.FormValue("user")
-	var datUser *models.User
+	var datUser *models.ApiUserPassword
 
-	if userFromString == "" {
-		// b := new(models.User)
-		if err := c.Bind(&datUser); err != nil {
-			return c.JSON(http.StatusBadRequest, models.Message{"No user model provided."})
-		}
-	} else {
-		// Decode the JSON
-		dec := json.NewDecoder(strings.NewReader(userFromString))
-		err := dec.Decode(&datUser)
-
-		if err != nil {
-			return c.JSON(http.StatusBadRequest, models.Message{"Error decoding user: " + err.Error()})
-		}
+	if err := c.Bind(&datUser); err != nil {
+		return c.JSON(http.StatusBadRequest, models.Message{"No user model provided."})
 	}
 
 	// Check if we have an ID other than the one in the struct
@@ -54,9 +65,9 @@ func UserAddOrUpdate(c echo.Context) error {
 	// Insert or update the user
 	var newUser models.User
 	if exists {
-		newUser, err = models.UpdateUser(*datUser)
+		newUser, err = models.UpdateUser(datUser.APIFormat())
 	} else {
-		newUser, err = models.CreateUser(*datUser)
+		newUser, err = models.CreateUser(datUser.APIFormat())
 	}
 
 	if err != nil {
@@ -87,9 +98,6 @@ func UserAddOrUpdate(c echo.Context) error {
 
 		return c.JSON(http.StatusInternalServerError, models.Message{"Error"})
 	}
-
-	// Obfuscate his password
-	newUser.Password = ""
 
 	return c.JSON(http.StatusOK, newUser)
 }

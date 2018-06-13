@@ -159,7 +159,6 @@ func (err ErrNeedToBeListOwner) Error() string {
 	return fmt.Sprintf("You need to be list owner to do that [ListID: %d, UserID: %d]", err.ListID, err.UserID)
 }
 
-
 // ================
 // List item errors
 // ================
@@ -178,7 +177,7 @@ func (err ErrListItemCannotBeEmpty) Error() string {
 }
 
 // ErrListItemCannotBeEmpty represents a "ErrListDoesNotExist" kind of error. Used if the list does not exist.
-type ErrListItemDoesNotExist struct{
+type ErrListItemDoesNotExist struct {
 	ID int64
 }
 

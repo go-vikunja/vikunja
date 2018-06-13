@@ -154,3 +154,26 @@ release-os-package:
 .PHONY: release-zip
 release-zip:
 	$(foreach file,$(wildcard $(DIST)/release/$(EXECUTABLE)-*),cd $(file); zip -r ../../zip/$(shell basename $(file)).zip *; cd ../../../; )
+
+.PHONY: generate-swagger
+generate-swagger:
+	@hash swagger > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
+		$(GO) get -u github.com/go-swagger/go-swagger/cmd/swagger; \
+	fi
+	swagger generate spec -o ./public/swagger.v1.json
+
+.PHONY: swagger-check
+swagger-check: generate-swagger
+	@diff=$$(git diff public/swagger.v1.json); \
+	if [ -n "$$diff" ]; then \
+		echo "Please run 'make generate-swagger' and commit the result:"; \
+		echo "$${diff}"; \
+		exit 1; \
+	fi;
+
+.PHONY: swagger-validate
+swagger-validate:
+	@hash swagger > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
+		$(GO) get -u github.com/go-swagger/go-swagger/cmd/swagger; \
+	fi
+	swagger validate ./public/swagger.v1.json

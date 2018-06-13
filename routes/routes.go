@@ -1,3 +1,28 @@
+// Package v1 List API.
+//
+// This documentation describes the List API.
+//
+//     Schemes: http, https
+//     BasePath: /api/v1
+//     Version: 0.1
+//     License: GPLv3
+//
+//     Consumes:
+//     - application/json
+//
+//     Produces:
+//     - application/json
+//
+//     Security:
+//     - AuthorizationHeaderToken :
+//
+//     SecurityDefinitions:
+//     AuthorizationHeaderToken:
+//          type: apiKey
+//          name: Authorization
+//          in: header
+//
+// swagger:meta
 package routes
 
 import (
@@ -6,6 +31,7 @@ import (
 
 	"git.kolaente.de/konrad/list/models"
 	apiv1 "git.kolaente.de/konrad/list/routes/api/v1"
+	_ "git.kolaente.de/konrad/list/routes/api/v1/swagger" // for docs generation
 )
 
 // NewEcho registers a new Echo instance
@@ -23,6 +49,7 @@ func NewEcho() *echo.Echo {
 // RegisterRoutes registers all routes for the application
 func RegisterRoutes(e *echo.Echo) {
 
+	// Middleware for cors
 	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			res := c.Response()
@@ -46,17 +73,17 @@ func RegisterRoutes(e *echo.Echo) {
 	a.OPTIONS("/lists/:id", SetCORSHeader)
 
 	a.POST("/login", apiv1.Login)
-	a.POST("/register", apiv1.UserAddOrUpdate)
+	a.POST("/register", apiv1.RegisterUser)
 
 	// ===== Routes with Authetification =====
 	// Authetification
 	a.Use(middleware.JWT(models.Config.JWTLoginSecret))
 	a.POST("/tokenTest", apiv1.CheckToken)
 
-	a.PUT("/lists", apiv1.AddOrUpdateList)
 	a.GET("/lists", apiv1.GetListsByUser)
+	a.PUT("/lists", apiv1.AddList)
 	a.GET("/lists/:id", apiv1.GetListByID)
-	a.POST("/lists/:id", apiv1.AddOrUpdateList)
+	a.POST("/lists/:id", apiv1.UpdateList)
 	a.PUT("/lists/:id", apiv1.AddListItem)
 	a.DELETE("/lists/:id", apiv1.DeleteListByID)
 
