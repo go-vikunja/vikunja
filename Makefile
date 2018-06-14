@@ -160,11 +160,11 @@ generate-swagger:
 	@hash swagger > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
 		$(GO) get -u github.com/go-swagger/go-swagger/cmd/swagger; \
 	fi
-	swagger generate spec -o ./public/swagger.v1.json
+	swagger generate spec -o ./public/swagger/swagger.v1.json
 
 .PHONY: swagger-check
 swagger-check: generate-swagger
-	@diff=$$(git diff public/swagger.v1.json); \
+	@diff=$$(git diff public/swagger/swagger.v1.json); \
 	if [ -n "$$diff" ]; then \
 		echo "Please run 'make generate-swagger' and commit the result:"; \
 		echo "$${diff}"; \
@@ -176,4 +176,4 @@ swagger-validate:
 	@hash swagger > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
 		$(GO) get -u github.com/go-swagger/go-swagger/cmd/swagger; \
 	fi
-	swagger validate ./public/swagger.v1.json
+	swagger validate ./public/swagger/swagger.v1.json

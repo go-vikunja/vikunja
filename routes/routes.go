@@ -61,6 +61,9 @@ func RegisterRoutes(e *echo.Echo) {
 		}
 	})
 
+	// Swagger UI
+	e.Static("/swagger", "public/swagger")
+
 	// API Routes
 	a := e.Group("/api/v1")
 
