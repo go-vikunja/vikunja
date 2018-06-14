@@ -100,7 +100,7 @@ Oder noch Besser: Man kann globale Rechte pro Namespace vergeben, die man dann w
 
 Rechte:
   Erstmal nur 3: Lesen, Schreiben, Admin. Admins dürfen auch Namen ändern, Teams verwalten, neue Listen anlegen, etc.
-  Owner haben immer Adminrechte.
+  Owner haben immer Adminrechte. Später sollte es auch möglich sein, den ownership an andere zur übertragen.s
   
 Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
 
@@ -111,12 +111,15 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
   * [ ] Ansehen
   * [ ] Bearbeiten
   * [ ] Löschen
+  
+  Ein zu lösendes Problem: Wie regelt man die Berechtigungen um Teams zu verwalten?
+  
 * [ ] Namespaces
   * [ ] Erstellen
   * [ ] Ansehen
   * [ ] Bearbeiten
   * [ ] Löschen
-  * [ ] Teams hinzufügen
+  * [ ] Teams hinzufügen. Der Nutzer kriegt nur Teams angezeigt die er erstellt hat.
 * [ ] Listen
   * [ ] Listen zu einem Namespace hinzufügen
 

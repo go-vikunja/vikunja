@@ -35,6 +35,11 @@ func init() {
 		new(User),
 		new(List),
 		new(ListItem),
+		new(Team),
+		new(TeamMember),
+		new(TeamList),
+		new(TeamNamespace),
+		new(Namespace),
 	)
 }
 
