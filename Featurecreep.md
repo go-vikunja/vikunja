@@ -48,6 +48,77 @@ Ab v0.3 können wir mit clients anfangen.
   * [ ] Listen bearbeiten (nur eigene im Moment)
   * [ ] Listenpunkte hinzufügen
   * [ ] Listenpunkte bearbeiten
+  
+Neues Konzept: _Namespaces_
+
+Ein Namespace kann Listen haben, es gibt mindestens einen Besiter pro Namespace. Wenn ein neuer Nutzer angelegt wird,
+wird automatisch einer für den Nutzer erstellt.
+
+Es gibt Lese- und Schreibrechte pro Namespace und Nutzer.
+
+Namespace: 
+  * ID
+  * Name
+  * OwnerID
+  * Timestamps
+  
+Teams:
+  * ID
+  * Name
+  * Description
+  * Rights (Selbsthochzählende Konstanten als json-array abspeichern)
+  * CreatedByUser
+  * Timestamps
+  
+TeamMembers:
+  * ID
+  * TeamID
+  * MemberID
+  * Timestamps
+  
+TeamNamespaces:
+  * ID
+  * TeamID
+  * NamespaceID
+  * Timestamps
+  
+TeamLists: 
+  * ID
+  * TeamID
+  * ListID
+  * Timestamps
+
+(+Check ob das Team schon Zugriff auf den Namespace hat und dafür sorgen dass das sich nicht überschneidet)
+Bsp: wenn ein Namespace-Team Schreibrechte hat, soll es nicht möglich sein dieses Team mit Schreibrechten
+zur Liste hinzuzufügen. Wenn das Team im Namespace aber nur Leserechte Hat soll es möglich sein dieses Team 
+als Schreibend zur Liste hinzuzufügen.
+
+Oder noch Besser: Man kann globale Rechte pro Namespace vergeben, die man dann wieder feinjustieren kann pro Liste.
+                  Es soll aber nicht mgl. sein, ein Team zu einer Liste hinzuzufügen was nicht im Namespace ist. 
+                  Es muss also möglich sein, Teams zum Namespace hinzuzufügen die keinerlei Rechte haben (damit man
+                  denen dann wieder pro Liste welche geben kann) 
+
+Rechte:
+  Erstmal nur 3: Lesen, Schreiben, Admin. Admins dürfen auch Namen ändern, Teams verwalten, neue Listen anlegen, etc.
+  Owner haben immer Adminrechte.
+  
+Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
+
+#### Neues Todo
+
+* [ ] Teams
+  * [ ] Erstellen
+  * [ ] Ansehen
+  * [ ] Bearbeiten
+  * [ ] Löschen
+* [ ] Namespaces
+  * [ ] Erstellen
+  * [ ] Ansehen
+  * [ ] Bearbeiten
+  * [ ] Löschen
+  * [ ] Teams hinzufügen
+* [ ] Listen
+  * [ ] Listen zu einem Namespace hinzufügen
 
 #### v0.2
 
@@ -56,6 +127,8 @@ Ab v0.3 können wir mit clients anfangen.
   * [ ] Mit Link
     * [ ] Offen
     * [ ] Passwortgeschützt
+    
+    Wenn man Listen mit nem Nutzer teilt, wird ein Team für diesen Nutzer erstellt, falls er nicht bereits in einem ist.
 
 #### v0.3
 
@@ -76,10 +149,9 @@ Ab v0.3 können wir mit clients anfangen.
 
 * [ ] CI aufsetzen
 * [ ] Tests schreiben
-* [ ] Ne Instanz mit den docs aufsetzen
 * [ ] Namen finden
 * [ ] Alle Packages umziehen
-* [ ] Swagger UI aufsetzen
+* [x] Swagger UI aufsetzen
 
 * [ ] mgl. zum Emailmaskieren haben (in den Nutzereinstellungen, wenn man seine Email nicht an alle Welt rausposaunen will)
 * [ ] Mgl. zum Accountlöschen haben (so richtig krass mit emailverifiezierung und dass alle Privaten Listen gelöscht werden und man alle geteilten entweder wem übertragen muss oder  auf provat stellen)
