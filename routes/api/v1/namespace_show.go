@@ -7,24 +7,23 @@ import (
 	"strconv"
 )
 
-// GetListByID Adds or updates a new list
-func GetListByID(c echo.Context) error {
-	// swagger:operation GET /lists/{listID} lists getList
+func ShowNamespace(c echo.Context) error {
+	// swagger:operation GET /namespaces/{namespaceID} namespaces getNamespace
 	// ---
-	// summary: gets one list with all todo items
+	// summary: gets one namespace with all todo items
 	// consumes:
 	// - application/json
 	// produces:
 	// - application/json
 	// parameters:
-	// - name: listID
+	// - name: namespaceID
 	//   in: path
-	//   description: ID of the list to show
+	//   description: ID of the namespace to show
 	//   type: string
 	//   required: true
 	// responses:
 	//   "200":
-	//     "$ref": "#/responses/List"
+	//     "$ref": "#/responses/Namespace"
 	//   "400":
 	//     "$ref": "#/responses/Message"
 	//   "500":
@@ -33,21 +32,21 @@ func GetListByID(c echo.Context) error {
 	// Check if we have our ID
 	id := c.Param("id")
 	// Make int
-	listID, err := strconv.ParseInt(id, 10, 64)
+	namespaceID, err := strconv.ParseInt(id, 10, 64)
 
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, models.Message{"Invalid ID."})
 	}
 
-	// Get the list
-	list, err := models.GetListByID(listID)
+	// Get the namespace
+	namespace, err := models.GetNamespaceByID(namespaceID)
 	if err != nil {
-		if models.IsErrListDoesNotExist(err) {
-			return c.JSON(http.StatusBadRequest, models.Message{"The list does not exist."})
+		if models.IsErrNamespaceDoesNotExist(err) {
+			return c.JSON(http.StatusBadRequest, models.Message{"The namespace does not exist."})
 		}
 
 		return c.JSON(http.StatusInternalServerError, models.Message{"An error occured."})
 	}
 
-	return c.JSON(http.StatusOK, list)
+	return c.JSON(http.StatusOK, namespace)
 }

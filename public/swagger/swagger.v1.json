@@ -352,6 +352,143 @@
         }
       }
     },
+    "/namespaces": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "namespaces"
+        ],
+        "summary": "Get all namespaces the currently logged in user has at least read access",
+        "operationId": "getNamespaces",
+        "responses": {
+          "200": {
+            "$ref": "#/responses/Namespace"
+          },
+          "500": {
+            "$ref": "#/responses/Message"
+          }
+        }
+      },
+      "put": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "namespaces"
+        ],
+        "summary": "Creates a new namespace owned by the currently logged in user",
+        "operationId": "addNamespace",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/Namespace"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/Namespace"
+          },
+          "400": {
+            "$ref": "#/responses/Message"
+          },
+          "403": {
+            "$ref": "#/responses/Message"
+          },
+          "500": {
+            "$ref": "#/responses/Message"
+          }
+        }
+      }
+    },
+    "/namespaces/{namespaceID}": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "namespaces"
+        ],
+        "summary": "gets one namespace with all todo items",
+        "operationId": "getNamespace",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "ID of the namespace to show",
+            "name": "namespaceID",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/Namespace"
+          },
+          "400": {
+            "$ref": "#/responses/Message"
+          },
+          "500": {
+            "$ref": "#/responses/Message"
+          }
+        }
+      },
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "namespaces"
+        ],
+        "summary": "Updates a namespace",
+        "operationId": "upadteNamespace",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "ID of the namespace to update",
+            "name": "namespaceID",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/Namespace"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/Namespace"
+          },
+          "400": {
+            "$ref": "#/responses/Message"
+          },
+          "403": {
+            "$ref": "#/responses/Message"
+          },
+          "500": {
+            "$ref": "#/responses/Message"
+          }
+        }
+      }
+    },
     "/register": {
       "post": {
         "consumes": [

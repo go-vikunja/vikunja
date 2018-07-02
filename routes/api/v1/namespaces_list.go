@@ -1,8 +1,8 @@
 package v1
 
 import (
-	"github.com/labstack/echo"
 	"git.kolaente.de/konrad/list/models"
+	"github.com/labstack/echo"
 	"net/http"
 )
 
@@ -19,7 +19,6 @@ func GetAllNamespacesByCurrentUser(c echo.Context) error {
 	//     "$ref": "#/responses/Namespace"
 	//   "500":
 	//     "$ref": "#/responses/Message"
-
 
 	user, err := models.GetCurrentUser(c)
 	if err != nil {

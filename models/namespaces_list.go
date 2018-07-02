@@ -36,11 +36,8 @@ func GetAllNamespacesByUserID(userID int64) (namespaces []*Namespace, err error)
 
 	// Get all namespaces of teams that user is part of
 	/*err = x.Table("namespaces").
-		Join("INNER", ).
-		Find(namespaces)*/
-
-
-
+	Join("INNER", ).
+	Find(namespaces)*/
 
 	return
 }
