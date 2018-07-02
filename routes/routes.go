@@ -93,7 +93,7 @@ func RegisterRoutes(e *echo.Echo) {
 	a.DELETE("/item/:id", apiv1.DeleteListItemByIDtemByID)
 	a.POST("/item/:id", apiv1.UpdateListItem)
 
-	a.GET("/namespaces")
+	a.GET("/namespaces", apiv1.GetAllNamespacesByCurrentUser)
 	a.PUT("/namespaces", apiv1.AddNamespace)
 	a.GET("/namespaces/:id")
 	a.POST("/namespaces/:id", apiv1.UpdateNamespace)

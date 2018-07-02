@@ -207,7 +207,6 @@ func (err ErrNeedToBeItemOwner) Error() string {
 	return fmt.Sprintf("You need to be item owner to do that [ItemID: %d, UserID: %d]", err.ItemID, err.UserID)
 }
 
-
 // =================
 // Namespace errors
 // =================
@@ -230,7 +229,7 @@ func (err ErrNamespaceDoesNotExist) Error() string {
 // ErrNeedToBeNamespaceOwner represents an error, where the user is not the owner of that namespace (used i.e. when deleting a namespace)
 type ErrNeedToBeNamespaceOwner struct {
 	NamespaceID int64
-	UserID int64
+	UserID      int64
 }
 
 // IsErrNamespaceDoesNotExist checks if an error is a ErrNamespaceDoesNotExist.

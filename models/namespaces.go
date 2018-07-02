@@ -44,7 +44,6 @@ func (user *User) IsNamespaceAdmin(namespace *Namespace) (ok bool, err error) {
 
 	// Check if that user is in a team which has admin rights to that namespace
 
-
 	return
 }
 
@@ -55,7 +54,6 @@ func (user *User) HasNamespaceAccess(namespace *Namespace) (has bool, err error)
 	}
 
 	// Check if the user is in a team which has access to the namespace
-
 
 	return
 }
@@ -68,7 +66,7 @@ func GetNamespaceByID(id int64) (namespace *Namespace, err error) {
 	}
 
 	if !exists {
-		return namespace, ErrNamespaceDoesNotExist{ID:id}
+		return namespace, ErrNamespaceDoesNotExist{ID: id}
 	}
 
 	// Get the namespace Owner
@@ -78,29 +76,4 @@ func GetNamespaceByID(id int64) (namespace *Namespace, err error) {
 	}
 
 	return namespace, err
-}
-
-// CreateOrUpdateNamespace does what it says
-func CreateOrUpdateNamespace(namespace *Namespace) (err error) {
-	// Check if the User exists
-	_, _, err = GetUserByID(namespace.Owner.ID)
-	if err != nil {
-		return
-	}
-
-	namespace.OwnerID = namespace.Owner.ID
-
-	if namespace.ID == 0 {
-		_, err = x.Insert(namespace)
-		if err != nil {
-			return
-		}
-	} else {
-		_, err = x.ID(namespace.ID).Update(namespace)
-		if err != nil {
-			return
-		}
-	}
-
-	return
 }

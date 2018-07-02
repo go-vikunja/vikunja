@@ -64,7 +64,6 @@ func (TeamList) TableName() string {
 	return "team_list"
 }
 
-
 func GetAllTeamsByNamespaceID(id int64) (teams []*Team, err error) {
 	err = x.Table("teams").
 		Join("INNER", "team_namespaces", "teams.id = team_id").
