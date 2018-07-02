@@ -156,5 +156,6 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
 * [ ] Alle Packages umziehen
 * [x] Swagger UI aufsetzen
 
+* [ ] Globale Limits für anlegbare Listen + Namespaces
 * [ ] mgl. zum Emailmaskieren haben (in den Nutzereinstellungen, wenn man seine Email nicht an alle Welt rausposaunen will)
 * [ ] Mgl. zum Accountlöschen haben (so richtig krass mit emailverifiezierung und dass alle Privaten Listen gelöscht werden und man alle geteilten entweder wem übertragen muss oder  auf provat stellen)

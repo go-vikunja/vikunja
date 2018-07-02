@@ -206,3 +206,39 @@ func IsErrNeedToBeItemOwner(err error) bool {
 func (err ErrNeedToBeItemOwner) Error() string {
 	return fmt.Sprintf("You need to be item owner to do that [ItemID: %d, UserID: %d]", err.ItemID, err.UserID)
 }
+
+
+// =================
+// Namespace errors
+// =================
+
+// ErrNamespaceDoesNotExist represents a "ErrNamespaceDoesNotExist" kind of error. Used if the namespace does not exist.
+type ErrNamespaceDoesNotExist struct {
+	ID int64
+}
+
+// IsErrNamespaceDoesNotExist checks if an error is a ErrNamespaceDoesNotExist.
+func IsErrNamespaceDoesNotExist(err error) bool {
+	_, ok := err.(ErrNamespaceDoesNotExist)
+	return ok
+}
+
+func (err ErrNamespaceDoesNotExist) Error() string {
+	return fmt.Sprintf("Namespace does not exist [ID: %d]", err.ID)
+}
+
+// ErrNeedToBeNamespaceOwner represents an error, where the user is not the owner of that namespace (used i.e. when deleting a namespace)
+type ErrNeedToBeNamespaceOwner struct {
+	NamespaceID int64
+	UserID int64
+}
+
+// IsErrNamespaceDoesNotExist checks if an error is a ErrNamespaceDoesNotExist.
+func IsErrNeedToBeNamespaceOwner(err error) bool {
+	_, ok := err.(ErrNeedToBeNamespaceOwner)
+	return ok
+}
+
+func (err ErrNeedToBeNamespaceOwner) Error() string {
+	return fmt.Sprintf("You need to be namespace owner to do that [NamespaceID: %d, UserID: %d]", err.NamespaceID, err.UserID)
+}

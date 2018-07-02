@@ -5,9 +5,9 @@ type Namespace struct {
 	ID          int64  `xorm:"int(11) autoincr not null unique pk" json:"id"`
 	Name        string `xorm:"varchar(250) autoincr not null" json:"name"`
 	Description string `xorm:"varchar(700) autoincr not null" json:"description"`
-	OwnerID     int64  `xorm:"int(11) autoincr not null" json:"owner_id"`
+	OwnerID     int64  `xorm:"int(11) autoincr not null" json:"-"`
 
-	Owner User `xorm:"-"`
+	Owner User `xorm:"-" json:"owner"`
 
 	Created int64 `xorm:"created" json:"created"`
 	Updated int64 `xorm:"updated" json:"updated"`
@@ -36,7 +36,7 @@ const (
 	NamespaceRightAdmin
 )
 
-func (user User) IsNamespaceAdmin(namespace Namespace) (ok bool, err error) {
+func (user *User) IsNamespaceAdmin(namespace *Namespace) (ok bool, err error) {
 	// Owners always have admin rights
 	if user.ID == namespace.Owner.ID {
 		return true, nil
@@ -48,6 +48,38 @@ func (user User) IsNamespaceAdmin(namespace Namespace) (ok bool, err error) {
 	return
 }
 
+func (user *User) HasNamespaceAccess(namespace *Namespace) (has bool, err error) {
+	// Owners always have access
+	if user.ID == namespace.Owner.ID {
+		return true, nil
+	}
+
+	// Check if the user is in a team which has access to the namespace
+
+
+	return
+}
+
+func GetNamespaceByID(id int64) (namespace *Namespace, err error) {
+	namespace.ID = id
+	exists, err := x.Get(namespace)
+	if err != nil {
+		return namespace, err
+	}
+
+	if !exists {
+		return namespace, ErrNamespaceDoesNotExist{ID:id}
+	}
+
+	// Get the namespace Owner
+	namespace.Owner, _, err = GetUserByID(namespace.Owner.ID)
+	if err != nil {
+		return namespace, err
+	}
+
+	return namespace, err
+}
+
 // CreateOrUpdateNamespace does what it says
 func CreateOrUpdateNamespace(namespace *Namespace) (err error) {
 	// Check if the User exists
@@ -55,6 +87,8 @@ func CreateOrUpdateNamespace(namespace *Namespace) (err error) {
 	if err != nil {
 		return
 	}
+
+	namespace.OwnerID = namespace.Owner.ID
 
 	if namespace.ID == 0 {
 		_, err = x.Insert(namespace)
