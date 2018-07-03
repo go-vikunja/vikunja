@@ -96,8 +96,8 @@ func RegisterRoutes(e *echo.Echo) {
 	a.GET("/namespaces", apiv1.GetAllNamespacesByCurrentUser)
 	a.PUT("/namespaces", apiv1.AddNamespace)
 	a.GET("/namespaces/:id", apiv1.ShowNamespace)
-	//a.GET("/namespaces/:id/lists") // Gets all lists for that namespace
 	a.POST("/namespaces/:id", apiv1.UpdateNamespace)
-	//a.PUT("/namespaces/:id") // Creates a new list in that namespace
 	// a.DELETE("/namespaces/:id") // Deletes a namespace with all lists
+	a.GET("/namespaces/:id/lists", apiv1.GetListsByNamespaceID)
+	//a.PUT("/namespaces/:id/lists") // Creates a new list in that namespace
 }

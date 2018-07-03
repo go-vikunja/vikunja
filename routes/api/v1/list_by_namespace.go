@@ -1,16 +1,16 @@
 package v1
 
 import (
-	"git.kolaente.de/konrad/list/models"
 	"github.com/labstack/echo"
-	"net/http"
 	"strconv"
+	"net/http"
+	"git.kolaente.de/konrad/list/models"
 )
 
-func ShowNamespace(c echo.Context) error {
-	// swagger:operation GET /namespaces/{namespaceID} namespaces getNamespace
+func GetListsByNamespaceID(c echo.Context) error {
+	// swagger:operation GET /namespaces/{namespaceID}/lists namespaces getNamespaces
 	// ---
-	// summary: gets one namespace with all todo items
+	// summary: gets all lists belonging to that namespace
 	// consumes:
 	// - application/json
 	// produces:
@@ -18,7 +18,7 @@ func ShowNamespace(c echo.Context) error {
 	// parameters:
 	// - name: namespaceID
 	//   in: path
-	//   description: ID of the namespace to show
+	//   description: ID of the namespace
 	//   type: string
 	//   required: true
 	// responses:
@@ -28,6 +28,8 @@ func ShowNamespace(c echo.Context) error {
 	//     "$ref": "#/responses/Message"
 	//   "500":
 	//     "$ref": "#/responses/Message"
+
+
 
 	// Check if we have our ID
 	id := c.Param("id")
@@ -51,15 +53,16 @@ func ShowNamespace(c echo.Context) error {
 		return c.JSON(http.StatusForbidden, models.Message{"You don't have access to this namespace."})
 	}
 
-	// Get the namespace
-	namespace, err := models.GetNamespaceByID(namespaceID)
+	// Get the lists
+	lists, err := models.GetListsByNamespaceID(namespaceID)
 	if err != nil {
+
 		if models.IsErrNamespaceDoesNotExist(err) {
-			return c.JSON(http.StatusBadRequest, models.Message{"The namespace does not exist."})
+			return c.JSON(http.StatusNotFound, models.Message{"Namespace not found."})
 		}
 
 		return c.JSON(http.StatusInternalServerError, models.Message{"An error occured."})
 	}
 
-	return c.JSON(http.StatusOK, namespace)
+	return c.JSON(http.StatusOK, lists)
 }
