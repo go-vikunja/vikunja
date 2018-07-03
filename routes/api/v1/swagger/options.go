@@ -19,4 +19,7 @@ type swaggerParameterBodies struct {
 
 	// in:body
 	ListItem models.ListItem
+
+	// in:body
+	Namespace models.Namespace
 }

@@ -50,3 +50,14 @@ type swaggerResponseLIstItem struct {
 	// in:body
 	Body models.ListItem `json:"body"`
 }
+
+// ================
+// Namespace definitions
+// ================
+
+// Namespace
+// swagger:response Namespace
+type swaggerResponseNamespace struct {
+	// in:body
+	Body models.Namespace `json:"body"`
+}

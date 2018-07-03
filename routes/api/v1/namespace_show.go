@@ -43,7 +43,7 @@ func ShowNamespace(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, models.Message{"An error occured."})
 	}
-	has, err := user.HasNamespaceAccess(&models.Namespace{ID:namespaceID})
+	has, err := user.HasNamespaceAccess(&models.Namespace{ID: namespaceID})
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, models.Message{"An error occured."})
 	}

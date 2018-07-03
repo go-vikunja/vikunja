@@ -112,13 +112,17 @@ func addOrUpdateNamespace(c echo.Context) error {
 			return c.JSON(http.StatusInternalServerError, models.Message{"An error occured."})
 		}
 	} else {
-		// Check if the user owns the namespace
+		// Check if the user has admin access to the namespace
 		oldNamespace, err := models.GetNamespaceByID(namespace.ID)
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, models.Message{"An error occured."})
 		}
-		if user.ID != oldNamespace.Owner.ID {
-			return c.JSON(http.StatusForbidden, models.Message{"You cannot edit a namespace you don't own."})
+		has, err := user.IsNamespaceAdmin(oldNamespace)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, models.Message{"An error occured."})
+		}
+		if !has {
+			return c.JSON(http.StatusForbidden, models.Message{"You need to be namespace admin to edit a namespace."})
 		}
 
 		err = models.CreateOrUpdateNamespace(namespace)

@@ -10,7 +10,7 @@ type List struct {
 	Created     int64  `xorm:"created" json:"created"`
 	Updated     int64  `xorm:"updated" json:"updated"`
 
-	Owner       User   `xorm:"-" json:"owner"`
+	Owner User        `xorm:"-" json:"owner"`
 	Items []*ListItem `xorm:"-" json:"items"`
 }
 

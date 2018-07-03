@@ -489,6 +489,41 @@
         }
       }
     },
+    "/namespaces/{namespaceID}/lists": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "namespaces"
+        ],
+        "summary": "gets all lists belonging to that namespace",
+        "operationId": "getListsByNamespace",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "ID of the namespace",
+            "name": "namespaceID",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/Namespace"
+          },
+          "400": {
+            "$ref": "#/responses/Message"
+          },
+          "500": {
+            "$ref": "#/responses/Message"
+          }
+        }
+      }
+    },
     "/register": {
       "post": {
         "consumes": [
@@ -653,6 +688,39 @@
       },
       "x-go-package": "git.kolaente.de/konrad/list/models"
     },
+    "Namespace": {
+      "description": "Namespace holds informations about a namespace",
+      "type": "object",
+      "properties": {
+        "created": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "Created"
+        },
+        "description": {
+          "type": "string",
+          "x-go-name": "Description"
+        },
+        "id": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "ID"
+        },
+        "name": {
+          "type": "string",
+          "x-go-name": "Name"
+        },
+        "owner": {
+          "$ref": "#/definitions/User"
+        },
+        "updated": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "Updated"
+        }
+      },
+      "x-go-package": "git.kolaente.de/konrad/list/models"
+    },
     "User": {
       "description": "User holds information about an user",
       "type": "object",
@@ -708,6 +776,12 @@
         "$ref": "#/definitions/Message"
       }
     },
+    "Namespace": {
+      "description": "Namespace",
+      "schema": {
+        "$ref": "#/definitions/Namespace"
+      }
+    },
     "Token": {
       "description": "Token",
       "schema": {
@@ -733,7 +807,7 @@
     "parameterBodies": {
       "description": "parameterBodies",
       "schema": {
-        "$ref": "#/definitions/ListItem"
+        "$ref": "#/definitions/Namespace"
       }
     }
   },

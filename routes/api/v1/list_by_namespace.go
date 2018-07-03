@@ -1,14 +1,14 @@
 package v1
 
 import (
-	"github.com/labstack/echo"
-	"strconv"
-	"net/http"
 	"git.kolaente.de/konrad/list/models"
+	"github.com/labstack/echo"
+	"net/http"
+	"strconv"
 )
 
 func GetListsByNamespaceID(c echo.Context) error {
-	// swagger:operation GET /namespaces/{namespaceID}/lists namespaces getNamespaces
+	// swagger:operation GET /namespaces/{namespaceID}/lists namespaces getListsByNamespace
 	// ---
 	// summary: gets all lists belonging to that namespace
 	// consumes:
@@ -29,8 +29,6 @@ func GetListsByNamespaceID(c echo.Context) error {
 	//   "500":
 	//     "$ref": "#/responses/Message"
 
-
-
 	// Check if we have our ID
 	id := c.Param("id")
 	// Make int
@@ -45,7 +43,7 @@ func GetListsByNamespaceID(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, models.Message{"An error occured."})
 	}
-	has, err := user.HasNamespaceAccess(&models.Namespace{ID:namespaceID})
+	has, err := user.HasNamespaceAccess(&models.Namespace{ID: namespaceID})
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, models.Message{"An error occured."})
 	}
