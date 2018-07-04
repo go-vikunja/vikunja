@@ -4,7 +4,6 @@ import (
 	"git.kolaente.de/konrad/list/models"
 	"github.com/labstack/echo"
 	"net/http"
-	"fmt"
 )
 
 func GetListsByNamespaceID(c echo.Context) error {
@@ -47,7 +46,6 @@ func GetListsByNamespaceID(c echo.Context) error {
 		if models.IsErrNamespaceDoesNotExist(err) {
 			return c.JSON(http.StatusNotFound, models.Message{"Namespace not found."})
 		}
-		fmt.Println(err)
 		return c.JSON(http.StatusInternalServerError, models.Message{"An error occured."})
 	}
 	return c.JSON(http.StatusOK, lists)
