@@ -88,8 +88,10 @@ func addOrUpdateList(c echo.Context) error {
 
 	// Check if the list exists
 	// ID = 0 means new list, no error
+	var oldList models.List
+	var err error
 	if list.ID != 0 {
-		_, err := models.GetListByID(list.ID)
+		oldList, err = models.GetListByID(list.ID)
 		if err != nil {
 			if models.IsErrListDoesNotExist(err) {
 				return c.JSON(http.StatusBadRequest, models.Message{"The list does not exist."})
@@ -113,10 +115,6 @@ func addOrUpdateList(c echo.Context) error {
 		}
 	} else {
 		// Check if the user owns the list
-		oldList, err := models.GetListByID(list.ID)
-		if err != nil {
-			return c.JSON(http.StatusInternalServerError, models.Message{"An error occured."})
-		}
 		if user.ID != oldList.Owner.ID {
 			return c.JSON(http.StatusForbidden, models.Message{"You cannot edit a list you don't own."})
 		}

@@ -5,7 +5,6 @@ import (
 	"github.com/labstack/echo"
 	"net/http"
 	"strconv"
-	"fmt"
 )
 
 func AddNamespace(c echo.Context) error {
@@ -125,8 +124,6 @@ func addOrUpdateNamespace(c echo.Context) error {
 		if !has {
 			return c.JSON(http.StatusForbidden, models.Message{"You need to be namespace admin to edit a namespace."})
 		}
-
-		fmt.Println(namespace)
 
 		err = models.CreateOrUpdateNamespace(namespace)
 		if err != nil {

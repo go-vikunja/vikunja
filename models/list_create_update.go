@@ -8,14 +8,24 @@ func CreateOrUpdateList(list *List) (err error) {
 		return
 	}
 
+	// Check if the user exists
+	list.Owner, _, err = GetUserByID(list.Owner.ID)
+	if err != nil {
+		return
+	}
 	list.OwnerID = list.Owner.ID
 
 	if list.ID == 0 {
 		_, err = x.Insert(list)
 	} else {
 		_, err = x.ID(list.ID).Update(list)
+	}
+
+	if err != nil {
 		return
 	}
+
+	*list, err = GetListByID(list.ID)
 
 	return
 

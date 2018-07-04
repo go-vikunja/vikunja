@@ -3,9 +3,9 @@ package models
 // Namespace holds informations about a namespace
 type Namespace struct {
 	ID          int64  `xorm:"int(11) autoincr not null unique pk" json:"id"`
-	Name        string `xorm:"varchar(250) autoincr not null" json:"name"`
-	Description string `xorm:"varchar(700) autoincr not null" json:"description"`
-	OwnerID     int64  `xorm:"int(11) autoincr not null" json:"-"`
+	Name        string `xorm:"varchar(250)" json:"name"`
+	Description string `xorm:"varchar(1000)" json:"description"`
+	OwnerID     int64  `xorm:"int(11) not null" json:"-"`
 
 	Owner User `xorm:"-" json:"owner"`
 
@@ -58,9 +58,9 @@ func (user *User) HasNamespaceAccess(namespace *Namespace) (has bool, err error)
 	return
 }
 
-func GetNamespaceByID(id int64) (namespace *Namespace, err error) {
+func GetNamespaceByID(id int64) (namespace Namespace, err error) {
 	namespace.ID = id
-	exists, err := x.Get(namespace)
+	exists, err := x.Get(&namespace)
 	if err != nil {
 		return namespace, err
 	}
@@ -70,7 +70,7 @@ func GetNamespaceByID(id int64) (namespace *Namespace, err error) {
 	}
 
 	// Get the namespace Owner
-	namespace.Owner, _, err = GetUserByID(namespace.Owner.ID)
+	namespace.Owner, _, err = GetUserByID(namespace.OwnerID)
 	if err != nil {
 		return namespace, err
 	}

@@ -7,29 +7,30 @@ type List struct {
 	Description string `xorm:"varchar(1000)" json:"description"`
 	OwnerID     int64  `xorm:"int(11)" json:"-"`
 	NamespaceID int64  `xorm:"int(11)" json:"-"`
-	Created     int64  `xorm:"created" json:"created"`
-	Updated     int64  `xorm:"updated" json:"updated"`
 
 	Owner User        `xorm:"-" json:"owner"`
 	Items []*ListItem `xorm:"-" json:"items"`
+
+	Created     int64  `xorm:"created" json:"created"`
+	Updated     int64  `xorm:"updated" json:"updated"`
 }
 
 // GetListByID returns a list by its ID
-func GetListByID(id int64) (list *List, err error) {
+func GetListByID(id int64) (list List, err error) {
 	list.ID = id
 	exists, err := x.Get(&list)
 	if err != nil {
-		return &List{}, err
+		return List{}, err
 	}
 
 	if !exists {
-		return &List{}, ErrListDoesNotExist{ID: id}
+		return List{}, ErrListDoesNotExist{ID: id}
 	}
 
 	// Get the list owner
 	user, _, err := GetUserByID(list.OwnerID)
 	if err != nil {
-		return &List{}, err
+		return List{}, err
 	}
 
 	list.Owner = user
