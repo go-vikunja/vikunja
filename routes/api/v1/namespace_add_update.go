@@ -117,12 +117,13 @@ func addOrUpdateNamespace(c echo.Context) error {
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, models.Message{"An error occured."})
 		}
-		has, err := user.IsNamespaceAdmin(&oldNamespace)
+		err = user.IsNamespaceAdmin(&oldNamespace)
 		if err != nil {
+			if models.IsErrUserNeedsToBeNamespaceAdmin(err) {
+				return c.JSON(http.StatusForbidden, models.Message{"You need to be namespace admin to edit a namespace."})
+			}
+
 			return c.JSON(http.StatusInternalServerError, models.Message{"An error occured."})
-		}
-		if !has {
-			return c.JSON(http.StatusForbidden, models.Message{"You need to be namespace admin to edit a namespace."})
 		}
 
 		err = models.CreateOrUpdateNamespace(namespace)

@@ -11,8 +11,8 @@ type List struct {
 	Owner User        `xorm:"-" json:"owner"`
 	Items []*ListItem `xorm:"-" json:"items"`
 
-	Created     int64  `xorm:"created" json:"created"`
-	Updated     int64  `xorm:"updated" json:"updated"`
+	Created int64 `xorm:"created" json:"created"`
+	Updated int64 `xorm:"updated" json:"updated"`
 }
 
 // GetListByID returns a list by its ID

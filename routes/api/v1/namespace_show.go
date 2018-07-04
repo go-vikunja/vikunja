@@ -55,9 +55,6 @@ func getNamespace(c echo.Context) (namespace models.Namespace, err error) {
 	// Get the namespace
 	namespace, err = models.GetNamespaceByID(namespaceID)
 	if err != nil {
-		if models.IsErrNamespaceDoesNotExist(err) {
-			return
-		}
 		return
 	}
 

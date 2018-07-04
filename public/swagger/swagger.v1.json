@@ -487,6 +487,45 @@
             "$ref": "#/responses/Message"
           }
         }
+      },
+      "delete": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "namespaces"
+        ],
+        "summary": "Deletes a namespace with all lists",
+        "operationId": "deleteNamespace",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "ID of the namespace to delete",
+            "name": "namespaceID",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/Message"
+          },
+          "400": {
+            "$ref": "#/responses/Message"
+          },
+          "403": {
+            "$ref": "#/responses/Message"
+          },
+          "404": {
+            "$ref": "#/responses/Message"
+          },
+          "500": {
+            "$ref": "#/responses/Message"
+          }
+        }
       }
     },
     "/namespaces/{namespaceID}/lists": {

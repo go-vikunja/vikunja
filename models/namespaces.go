@@ -36,15 +36,15 @@ const (
 	NamespaceRightAdmin
 )
 
-func (user *User) IsNamespaceAdmin(namespace *Namespace) (ok bool, err error) {
+func (user *User) IsNamespaceAdmin(namespace *Namespace) (err error) {
 	// Owners always have admin rights
 	if user.ID == namespace.Owner.ID {
-		return true, nil
+		return nil
 	}
 
 	// Check if that user is in a team which has admin rights to that namespace
 
-	return
+	return ErrUserNeedsToBeNamespaceAdmin{UserID: user.ID, NamespaceID: namespace.ID}
 }
 
 func (user *User) HasNamespaceAccess(namespace *Namespace) (err error) {
@@ -55,7 +55,7 @@ func (user *User) HasNamespaceAccess(namespace *Namespace) (err error) {
 
 	// Check if the user is in a team which has access to the namespace
 
-	return ErrUserDoesNotHaveAccessToNamespace{UserID:user.ID, NamespaceID:namespace.ID}
+	return ErrUserDoesNotHaveAccessToNamespace{UserID: user.ID, NamespaceID: namespace.ID}
 }
 
 func GetNamespaceByID(id int64) (namespace Namespace, err error) {
