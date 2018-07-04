@@ -29,37 +29,47 @@ func ShowNamespace(c echo.Context) error {
 	//   "500":
 	//     "$ref": "#/responses/Message"
 
+	namespace, err := getNamespace(c)
+	if err != nil {
+		if models.IsErrNamespaceDoesNotExist(err) {
+			return c.JSON(http.StatusNotFound, models.Message{"Namespace not found."})
+		}
+		if models.IsErrUserDoesNotHaveAccessToNamespace(err) {
+			return c.JSON(http.StatusForbidden, models.Message{"You don't have access to this namespace."})
+		}
+		return c.JSON(http.StatusInternalServerError, models.Message{"An error occured."})
+	}
+
+	return c.JSON(http.StatusOK, namespace)
+}
+
+func getNamespace(c echo.Context) (namespace models.Namespace, err error) {
 	// Check if we have our ID
 	id := c.Param("id")
 	// Make int
 	namespaceID, err := strconv.ParseInt(id, 10, 64)
-
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, models.Message{"Invalid ID."})
+		return
 	}
 
 	// Get the namespace
-	namespace, err := models.GetNamespaceByID(namespaceID)
+	namespace, err = models.GetNamespaceByID(namespaceID)
 	if err != nil {
 		if models.IsErrNamespaceDoesNotExist(err) {
-			return c.JSON(http.StatusBadRequest, models.Message{"The namespace does not exist."})
+			return
 		}
-		return c.JSON(http.StatusInternalServerError, models.Message{"An error occured."})
+		return
 	}
 
 	// Check if the user has acces to that namespace
 	user, err := models.GetCurrentUser(c)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, models.Message{"An error occured."})
+		return
 	}
-
-	has, err := user.HasNamespaceAccess(&namespace)
+	err = user.HasNamespaceAccess(&namespace)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, models.Message{"An error occured."})
-	}
-	if !has {
-		return c.JSON(http.StatusForbidden, models.Message{"You don't have access to this namespace."})
+		return
 	}
 
-	return c.JSON(http.StatusOK, namespace)
+	return
 }

@@ -241,3 +241,21 @@ func IsErrNeedToBeNamespaceOwner(err error) bool {
 func (err ErrNeedToBeNamespaceOwner) Error() string {
 	return fmt.Sprintf("You need to be namespace owner to do that [NamespaceID: %d, UserID: %d]", err.NamespaceID, err.UserID)
 }
+
+// ErrUserDoesNotHaveAccessToNamespace represents an error, where the user is not the owner of that namespace (used i.e. when deleting a namespace)
+type ErrUserDoesNotHaveAccessToNamespace struct {
+	NamespaceID int64
+	UserID      int64
+}
+
+// IsErrUserDoesNotHaveAccessToNamespace checks if an error is a ErrNamespaceDoesNotExist.
+func IsErrUserDoesNotHaveAccessToNamespace(err error) bool {
+	_, ok := err.(ErrUserDoesNotHaveAccessToNamespace)
+	return ok
+}
+
+func (err ErrUserDoesNotHaveAccessToNamespace) Error() string {
+	return fmt.Sprintf("You need to be namespace owner to do that [NamespaceID: %d, UserID: %d]", err.NamespaceID, err.UserID)
+}
+
+

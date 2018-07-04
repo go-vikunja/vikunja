@@ -4,7 +4,7 @@ import (
 	"git.kolaente.de/konrad/list/models"
 	"github.com/labstack/echo"
 	"net/http"
-	"strconv"
+	"fmt"
 )
 
 func GetListsByNamespaceID(c echo.Context) error {
@@ -29,38 +29,26 @@ func GetListsByNamespaceID(c echo.Context) error {
 	//   "500":
 	//     "$ref": "#/responses/Message"
 
-	// Check if we have our ID
-	id := c.Param("id")
-	// Make int
-	namespaceID, err := strconv.ParseInt(id, 10, 64)
-
+	// Get our namespace
+	namespace, err := getNamespace(c)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, models.Message{"Invalid ID."})
-	}
-
-	// Check if the user has acces to that namespace
-	user, err := models.GetCurrentUser(c)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, models.Message{"An error occured."})
-	}
-	has, err := user.HasNamespaceAccess(&models.Namespace{ID: namespaceID})
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, models.Message{"An error occured."})
-	}
-	if !has {
-		return c.JSON(http.StatusForbidden, models.Message{"You don't have access to this namespace."})
-	}
-
-	// Get the lists
-	lists, err := models.GetListsByNamespaceID(namespaceID)
-	if err != nil {
-
 		if models.IsErrNamespaceDoesNotExist(err) {
 			return c.JSON(http.StatusNotFound, models.Message{"Namespace not found."})
 		}
-
+		if models.IsErrUserDoesNotHaveAccessToNamespace(err) {
+			return c.JSON(http.StatusForbidden, models.Message{"You don't have access to this namespace."})
+		}
 		return c.JSON(http.StatusInternalServerError, models.Message{"An error occured."})
 	}
 
+	// Get the lists
+	lists, err := models.GetListsByNamespaceID(namespace.ID)
+	if err != nil {
+		if models.IsErrNamespaceDoesNotExist(err) {
+			return c.JSON(http.StatusNotFound, models.Message{"Namespace not found."})
+		}
+		fmt.Println(err)
+		return c.JSON(http.StatusInternalServerError, models.Message{"An error occured."})
+	}
 	return c.JSON(http.StatusOK, lists)
 }

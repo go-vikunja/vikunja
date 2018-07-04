@@ -47,15 +47,15 @@ func (user *User) IsNamespaceAdmin(namespace *Namespace) (ok bool, err error) {
 	return
 }
 
-func (user *User) HasNamespaceAccess(namespace *Namespace) (has bool, err error) {
+func (user *User) HasNamespaceAccess(namespace *Namespace) (err error) {
 	// Owners always have access
 	if user.ID == namespace.Owner.ID {
-		return true, nil
+		return nil
 	}
 
 	// Check if the user is in a team which has access to the namespace
 
-	return
+	return ErrUserDoesNotHaveAccessToNamespace{UserID:user.ID, NamespaceID:namespace.ID}
 }
 
 func GetNamespaceByID(id int64) (namespace Namespace, err error) {

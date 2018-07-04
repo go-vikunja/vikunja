@@ -65,10 +65,6 @@ func GetListsByUser(user *User) (lists []*List, err error) {
 }
 
 func GetListsByNamespaceID(nID int64) (lists []*List, err error) {
-	exists, err := x.Where("namespace_id = ?", nID).Get(lists)
-	if !exists {
-		return lists, ErrNamespaceDoesNotExist{}
-	}
-
-	return
+	err = x.Where("namespace_id = ?", nID).Find(&lists)
+	return lists, err
 }

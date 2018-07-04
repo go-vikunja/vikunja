@@ -10,12 +10,11 @@ func CreateOrUpdateListItem(item *ListItem) (newItem *ListItem, err error) {
 	}
 
 	// Check if the user exists
-	user, _, err := GetUserByID(item.CreatedBy.ID)
+	item.CreatedBy, _, err = GetUserByID(item.CreatedBy.ID)
 	if err != nil {
 		return
 	}
 	item.CreatedByID = item.CreatedBy.ID
-	item.CreatedBy = user
 
 	// TODO: Check if the user has the right to add/update an item to that list
 

@@ -115,9 +115,9 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
   Ein zu lösendes Problem: Wie regelt man die Berechtigungen um Teams zu verwalten?
   
 * [ ] Namespaces
-  * [ ] Erstellen
-  * [ ] Ansehen
-  * [ ] Bearbeiten
+  * [x] Erstellen
+  * [x] Ansehen
+  * [x] Bearbeiten
   * [ ] Löschen
   * [ ] Teams hinzufügen. Der Nutzer kriegt nur Teams angezeigt die er erstellt hat.
 * [ ] Listen
@@ -157,5 +157,6 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
 * [x] Swagger UI aufsetzen
 
 * [ ] Globale Limits für anlegbare Listen + Namespaces
+* [ ] Mgl., dass die Instanz geschlossen ist, also sich keiner registrieren kann, und man sich einloggen muss
 * [ ] mgl. zum Emailmaskieren haben (in den Nutzereinstellungen, wenn man seine Email nicht an alle Welt rausposaunen will)
 * [ ] Mgl. zum Accountlöschen haben (so richtig krass mit emailverifiezierung und dass alle Privaten Listen gelöscht werden und man alle geteilten entweder wem übertragen muss oder  auf provat stellen)
