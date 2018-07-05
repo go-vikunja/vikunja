@@ -255,7 +255,7 @@ func IsErrUserDoesNotHaveAccessToNamespace(err error) bool {
 }
 
 func (err ErrUserDoesNotHaveAccessToNamespace) Error() string {
-	return fmt.Sprintf("You need to be namespace owner to do that [NamespaceID: %d, UserID: %d]", err.NamespaceID, err.UserID)
+	return fmt.Sprintf("You need to have access to this namespace to do that [NamespaceID: %d, UserID: %d]", err.NamespaceID, err.UserID)
 }
 
 // ErrUserNeedsToBeNamespaceAdmin represents an error, where the user is not the owner of that namespace (used i.e. when deleting a namespace)
@@ -271,5 +271,21 @@ func IsErrUserNeedsToBeNamespaceAdmin(err error) bool {
 }
 
 func (err ErrUserNeedsToBeNamespaceAdmin) Error() string {
-	return fmt.Sprintf("You need to be namespace owner to do that [NamespaceID: %d, UserID: %d]", err.NamespaceID, err.UserID)
+	return fmt.Sprintf("You need to be namespace admin to do that [NamespaceID: %d, UserID: %d]", err.NamespaceID, err.UserID)
+}
+
+// ErrUserDoesNotHaveWriteAccessToNamespace represents an error, where the user is not the owner of that namespace (used i.e. when deleting a namespace)
+type ErrUserDoesNotHaveWriteAccessToNamespace struct {
+	NamespaceID int64
+	UserID      int64
+}
+
+// IsErrUserDoesNotHaveWriteAccessToNamespace checks if an error is a ErrNamespaceDoesNotExist.
+func IsErrUserDoesNotHaveWriteAccessToNamespace(err error) bool {
+	_, ok := err.(ErrUserDoesNotHaveWriteAccessToNamespace)
+	return ok
+}
+
+func (err ErrUserDoesNotHaveWriteAccessToNamespace) Error() string {
+	return fmt.Sprintf("You need to have write access to this namespace to do that [NamespaceID: %d, UserID: %d]", err.NamespaceID, err.UserID)
 }

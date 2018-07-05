@@ -84,7 +84,6 @@ func RegisterRoutes(e *echo.Echo) {
 	a.POST("/tokenTest", apiv1.CheckToken)
 
 	a.GET("/lists", apiv1.GetListsByUser)
-	a.PUT("/lists", apiv1.AddList)
 	a.GET("/lists/:id", apiv1.GetListByID)
 	a.POST("/lists/:id", apiv1.UpdateList)
 	a.PUT("/lists/:id", apiv1.AddListItem)
@@ -99,5 +98,5 @@ func RegisterRoutes(e *echo.Echo) {
 	a.POST("/namespaces/:id", apiv1.UpdateNamespace)
 	a.DELETE("/namespaces/:id", apiv1.DeleteNamespaceByID)
 	a.GET("/namespaces/:id/lists", apiv1.GetListsByNamespaceID)
-	//a.PUT("/namespaces/:id/lists") // Creates a new list in that namespace
+	a.PUT("/namespaces/:id/lists", apiv1.AddList)
 }

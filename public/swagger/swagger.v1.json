@@ -122,42 +122,6 @@
             "$ref": "#/responses/Message"
           }
         }
-      },
-      "put": {
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "tags": [
-          "lists"
-        ],
-        "summary": "Creates a new list owned by the currently logged in user",
-        "operationId": "addList",
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "schema": {
-              "$ref": "#/definitions/List"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "$ref": "#/responses/List"
-          },
-          "400": {
-            "$ref": "#/responses/Message"
-          },
-          "403": {
-            "$ref": "#/responses/Message"
-          },
-          "500": {
-            "$ref": "#/responses/Message"
-          }
-        }
       }
     },
     "/lists/{listID}": {
@@ -555,6 +519,50 @@
             "$ref": "#/responses/Namespace"
           },
           "400": {
+            "$ref": "#/responses/Message"
+          },
+          "500": {
+            "$ref": "#/responses/Message"
+          }
+        }
+      },
+      "put": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "lists"
+        ],
+        "summary": "Creates a new list owned by the currently logged in user in that namespace",
+        "operationId": "addList",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "ID of the namespace that list should belong to",
+            "name": "namespaceID",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/List"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/List"
+          },
+          "400": {
+            "$ref": "#/responses/Message"
+          },
+          "403": {
             "$ref": "#/responses/Message"
           },
           "500": {

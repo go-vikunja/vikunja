@@ -58,6 +58,18 @@ func (user *User) HasNamespaceAccess(namespace *Namespace) (err error) {
 	return ErrUserDoesNotHaveAccessToNamespace{UserID: user.ID, NamespaceID: namespace.ID}
 }
 
+func (user *User) HasNamespaceWriteAccess(namespace *Namespace) (err error) {
+
+	// Owners always have access
+	if user.ID == namespace.Owner.ID {
+		return nil
+	}
+
+	// Check if the user is in a team which has write access to the namespace
+
+	return ErrUserDoesNotHaveAccessToNamespace{UserID: user.ID, NamespaceID: namespace.ID}
+}
+
 func GetNamespaceByID(id int64) (namespace Namespace, err error) {
 	namespace.ID = id
 	exists, err := x.Get(&namespace)

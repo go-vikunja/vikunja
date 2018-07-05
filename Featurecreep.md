@@ -118,7 +118,7 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
   * [x] Erstellen
   * [x] Ansehen
   * [x] Bearbeiten
-  * [ ] Löschen
+  * [x] Löschen
   * [ ] Teams hinzufügen. Der Nutzer kriegt nur Teams angezeigt die er erstellt hat.
   * [x] Alle Listen eines Namespaces anzeigen
 * [ ] Listen
