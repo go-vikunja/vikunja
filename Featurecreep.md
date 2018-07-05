@@ -41,13 +41,7 @@ Ab v0.3 können wir mit clients anfangen.
   * [x] Löschen
 
 * [x] Überall nochmal überprüfen dass der Nutzer auch das Recht hat die Liste zu löschen
-* [ ] "Apiformat" Methoden, damit in der Ausgabe zb kein Passwort drin ist..., oder created/updated von Nutzern... oder ownerID nicht drin ist sondern nur das ownerobject
 * [x] Swaggerdocs !!!!
-* [ ] Rechte überprüfen (in extra Funktion auslagern, dann wird das einfacher später):
-  * [ ] Listen erstellen
-  * [ ] Listen bearbeiten (nur eigene im Moment)
-  * [ ] Listenpunkte hinzufügen
-  * [ ] Listenpunkte bearbeiten
   
 Neues Konzept: _Namespaces_
 
@@ -121,8 +115,8 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
   * [x] Löschen
   * [ ] Teams hinzufügen. Der Nutzer kriegt nur Teams angezeigt die er erstellt hat.
   * [x] Alle Listen eines Namespaces anzeigen
-* [ ] Listen
-  * [ ] Listen zu einem Namespace hinzufügen
+* [x] Listen
+  * [x] Listen zu einem Namespace hinzufügen
 
 #### v0.2
 
@@ -157,6 +151,15 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
 * [ ] Alle Packages umziehen
 * [x] Swagger UI aufsetzen
 * [ ] Bessere Fehlermeldungen wenn das Model was ankommt falsch ist und nicht geparst werden kann
+* [ ] Endpoints neu organisieren? Also zb `namespaces/:nID/lists/:lID/items/:iID` statt einzelnen Endpoints für alles
+
+* [ ] "Apiformat" Methoden, damit in der Ausgabe zb kein Passwort drin ist..., oder created/updated von Nutzern... oder ownerID nicht drin ist sondern nur das ownerobject
+* [ ] Rechte überprüfen (in extra Funktion auslagern, dann wird das einfacher später):
+  * [ ] Listen erstellen
+  * [ ] Listen bearbeiten (nur eigene im Moment)
+  * [ ] Listenpunkte hinzufügen
+  * [ ] Listenpunkte bearbeiten
+
 
 * [ ] Globale Limits für anlegbare Listen + Namespaces
 * [ ] Mgl., dass die Instanz geschlossen ist, also sich keiner registrieren kann, und man sich einloggen muss
