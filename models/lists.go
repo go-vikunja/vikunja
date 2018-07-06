@@ -17,24 +17,20 @@ type List struct {
 
 // GetListByID returns a list by its ID
 func GetListByID(id int64) (list List, err error) {
-	list.ID = id
-	exists, err := x.Get(&list)
+	exists, err := x.ID(id).Get(&list) // tName ist hässlich, geht das nicht auch anders?
 	if err != nil {
-		return List{}, err
+		return list, err
 	}
 
 	if !exists {
-		return List{}, ErrListDoesNotExist{ID: id}
+		return list, ErrListDoesNotExist{ID: id}
 	}
 
 	// Get the list owner
-	user, _, err := GetUserByID(list.OwnerID)
+	list.Owner, _, err = GetUserByID(list.OwnerID)
 	if err != nil {
 		return List{}, err
 	}
-
-	list.Owner = user
-	list.Owner.Password = ""
 
 	items, err := GetItemsByListID(list.ID)
 	if err != nil {
