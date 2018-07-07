@@ -15,6 +15,15 @@ type List struct {
 	Updated int64 `xorm:"updated" json:"updated"`
 }
 
+func (l *List) AfterLoad() {
+
+	// Get the owner
+	l.Owner, _, _ = GetUserByID(l.OwnerID)
+
+	// Get the list items
+	l.Items, _ = GetItemsByListID(l.ID)
+}
+
 // GetListByID returns a list by its ID
 func GetListByID(id int64) (list List, err error) {
 	exists, err := x.ID(id).Get(&list) // tName ist hässlich, geht das nicht auch anders?
@@ -26,17 +35,11 @@ func GetListByID(id int64) (list List, err error) {
 		return list, ErrListDoesNotExist{ID: id}
 	}
 
-	// Get the list owner
-	list.Owner, _, err = GetUserByID(list.OwnerID)
-	if err != nil {
-		return List{}, err
-	}
-
-	items, err := GetItemsByListID(list.ID)
+	/*items, err := GetItemsByListID(list.ID)
 	if err != nil {
 		return
 	}
-	list.Items = items
+	list.Items = items*/
 
 	return list, nil
 }

@@ -14,3 +14,16 @@ func GetIntURLParam(param string, c echo.Context) (intParam int64, err error) {
 
 	return intParam, err
 }
+
+func GetByID(id int64, result interface{}) (err error) {
+	exists, err := x.ID(id).Get(result)
+	if err != nil {
+		return err
+	}
+
+	if !exists {
+		return ErrListDoesNotExist{}
+	}
+
+	return
+}

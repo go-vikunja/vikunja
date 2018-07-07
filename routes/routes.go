@@ -84,7 +84,13 @@ func RegisterRoutes(e *echo.Echo) {
 	a.POST("/tokenTest", apiv1.CheckToken)
 
 	a.GET("/lists", apiv1.GetListsByUser)
-	a.GET("/lists/:id", apiv1.GetListByID)
+	//a.GET("/lists/:id", apiv1.GetListByID)
+	listHandler := &apiv1.CRUDWebHandler{
+		CObject: &apiv1.DefaultCRUD{
+			Target: &models.List{},
+		},
+	}
+	a.GET("/lists/:id", listHandler.ReadOneWeb)
 	a.POST("/lists/:id", apiv1.UpdateList)
 	a.PUT("/lists/:id", apiv1.AddListItem)
 	a.DELETE("/lists/:id", apiv1.DeleteListByID)
