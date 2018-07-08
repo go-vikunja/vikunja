@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"github.com/labstack/echo"
 	"strconv"
 )
@@ -25,5 +26,11 @@ func GetByID(id int64, result interface{}) (err error) {
 		return ErrListDoesNotExist{}
 	}
 
+	return
+}
+
+func GetAllByUser(user *User, result interface{}) (err error) {
+	fmt.Println(result)
+	err = x.Where("owner_id = ", user.ID).Find(result)
 	return
 }

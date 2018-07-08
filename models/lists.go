@@ -13,6 +13,8 @@ type List struct {
 
 	Created int64 `xorm:"created" json:"created"`
 	Updated int64 `xorm:"updated" json:"updated"`
+
+	CRUDable `xorm:"-" json:"-"`
 }
 
 func (l *List) AfterLoad() {
@@ -34,12 +36,6 @@ func GetListByID(id int64) (list List, err error) {
 	if !exists {
 		return list, ErrListDoesNotExist{ID: id}
 	}
-
-	/*items, err := GetItemsByListID(list.ID)
-	if err != nil {
-		return
-	}
-	list.Items = items*/
 
 	return list, nil
 }
@@ -66,4 +62,36 @@ func GetListsByUser(user *User) (lists []*List, err error) {
 func GetListsByNamespaceID(nID int64) (lists []*List, err error) {
 	err = x.Where("namespace_id = ?", nID).Find(&lists)
 	return lists, err
+}
+
+func (list *List) ReadAll(user *User) (interface{}, error) {
+	lists := Lists{}
+	err := lists.ReadAll(user)
+	return lists, err
+}
+
+type Lists []List
+
+func (lists *Lists) ReadAll(user *User) (err error) {
+	fullUser, _, err := GetUserByID(user.ID)
+	if err != nil {
+		return
+	}
+
+	err = x.Select("list.*").
+		Join("LEFT", "team_list", "list.id = team_list.list_id").
+		Join("LEFT", "team_members", "team_members.team_id = team_list.team_id").
+		Where("team_members.user_id = ?", fullUser.ID).
+		Or("list.owner_id = ?", fullUser.ID).
+		Find(lists)
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+func (l *List) ReadOne(id int64) (err error) {
+	*l, err = GetListByID(id)
+	return
 }

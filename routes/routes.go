@@ -30,6 +30,7 @@ import (
 	"github.com/labstack/echo/middleware"
 
 	"git.kolaente.de/konrad/list/models"
+	CRUD "git.kolaente.de/konrad/list/routes/CRUD"
 	apiv1 "git.kolaente.de/konrad/list/routes/api/v1"
 	_ "git.kolaente.de/konrad/list/routes/api/v1/swagger" // for docs generation
 )
@@ -83,12 +84,10 @@ func RegisterRoutes(e *echo.Echo) {
 	a.Use(middleware.JWT(models.Config.JWTLoginSecret))
 	a.POST("/tokenTest", apiv1.CheckToken)
 
-	a.GET("/lists", apiv1.GetListsByUser)
-	listHandler := &apiv1.CRUDWebHandler{
-		CObject: &apiv1.DefaultCRUD{
-			Target: &models.List{},
-		},
+	listHandler := &CRUD.CRUDWebHandler{
+		CObject: &models.List{},
 	}
+	a.GET("/lists", listHandler.ReadAllWeb)
 	a.GET("/lists/:id", listHandler.ReadOneWeb)
 	a.POST("/lists/:id", apiv1.UpdateList)
 	a.PUT("/lists/:id", apiv1.AddListItem)
