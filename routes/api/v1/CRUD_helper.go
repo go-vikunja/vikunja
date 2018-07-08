@@ -28,7 +28,7 @@ func (d *DefaultCRUD) Read(id int64) (err error) {
 
 // This does web stuff, aka returns json etc. Uses DefaultCRUD Methods to get the data
 type CRUDWebHandler struct {
-	CObject CRUD
+	CObject *DefaultCRUD
 }
 
 // This does json, handles the request
@@ -52,6 +52,5 @@ func (c *CRUDWebHandler) ReadOneWeb(ctx echo.Context) error {
 		return ctx.JSON(http.StatusInternalServerError, models.Message{"An error occured."})
 	}
 
-	// TODO how can we return c.CObject.Targetdirectly?
-	return ctx.JSON(http.StatusOK, c.CObject)
+	return ctx.JSON(http.StatusOK, c.CObject.Target)
 }
