@@ -150,6 +150,8 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
 * [ ] Namen finden
 * [ ] Alle Packages umziehen
 * [x] Swagger UI aufsetzen
+* [ ] Cacher konfigurierbar
+* [ ] Überall echo.NewHTTPError statt c.JSON(Message{}) benutzen
 * [ ] Bessere Fehlermeldungen wenn das Model was ankommt falsch ist und nicht geparst werden kann
 * [ ] Endpoints neu organisieren? Also zb `namespaces/:nID/lists/:lID/items/:iID` statt einzelnen Endpoints für alles
 

@@ -1,7 +1,6 @@
 package v1
 
 import (
-	"git.kolaente.de/konrad/list/models"
 	"github.com/labstack/echo"
 	"net/http"
 )
@@ -21,7 +20,7 @@ func GetListsByUser(c echo.Context) error {
 	//   "500":
 	//     "$ref": "#/responses/Message"
 
-	currentUser, err := models.GetCurrentUser(c)
+	/*currentUser, err := models.GetCurrentUser(c)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, models.Message{"Could not determine the current user."})
 	}
@@ -29,7 +28,7 @@ func GetListsByUser(c echo.Context) error {
 	allLists, err := models.GetListsByUser(&currentUser)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, models.Message{"Could not get lists."})
-	}
+	}*/
 
-	return c.JSON(http.StatusOK, allLists)
+	return c.JSON(http.StatusOK, nil)
 }

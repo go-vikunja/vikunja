@@ -17,6 +17,10 @@ type List struct {
 	CRUDable `xorm:"-" json:"-"`
 }
 
+// Lists is a multiple of list
+type Lists []List
+
+// AfterLoad loads the owner and list items
 func (l *List) AfterLoad() {
 
 	// Get the owner
@@ -28,7 +32,7 @@ func (l *List) AfterLoad() {
 
 // GetListByID returns a list by its ID
 func GetListByID(id int64) (list List, err error) {
-	exists, err := x.ID(id).Get(&list) // tName ist hässlich, geht das nicht auch anders?
+	exists, err := x.ID(id).Get(&list)
 	if err != nil {
 		return list, err
 	}
@@ -40,57 +44,31 @@ func GetListByID(id int64) (list List, err error) {
 	return list, nil
 }
 
-// GetListsByUser gets all lists a user owns
-func GetListsByUser(user *User) (lists []*List, err error) {
-	fullUser, _, err := GetUserByID(user.ID)
-	if err != nil {
-		return
-	}
-
-	err = x.Where("owner_id = ?", user.ID).Find(&lists)
-	if err != nil {
-		return
-	}
-
-	for in := range lists {
-		lists[in].Owner = fullUser
-	}
-
-	return
-}
-
 func GetListsByNamespaceID(nID int64) (lists []*List, err error) {
 	err = x.Where("namespace_id = ?", nID).Find(&lists)
 	return lists, err
 }
 
+// ReadAll gets all List a user has access to
 func (list *List) ReadAll(user *User) (interface{}, error) {
 	lists := Lists{}
-	err := lists.ReadAll(user)
-	return lists, err
-}
-
-type Lists []List
-
-func (lists *Lists) ReadAll(user *User) (err error) {
 	fullUser, _, err := GetUserByID(user.ID)
 	if err != nil {
-		return
+		return lists, err
 	}
 
+	// TODO: namespaces...
 	err = x.Select("list.*").
 		Join("LEFT", "team_list", "list.id = team_list.list_id").
 		Join("LEFT", "team_members", "team_members.team_id = team_list.team_id").
 		Where("team_members.user_id = ?", fullUser.ID).
 		Or("list.owner_id = ?", fullUser.ID).
-		Find(lists)
-	if err != nil {
-		return
-	}
+		Find(&lists)
 
-	return
+	return lists, err
 }
 
+// ReadOne gets one list by its ID
 func (l *List) ReadOne(id int64) (err error) {
 	*l, err = GetListByID(id)
 	return

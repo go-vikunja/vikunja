@@ -41,7 +41,7 @@ func NewEcho() *echo.Echo {
 
 	// Logger
 	e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
-		Format: "${time_rfc3339}: ${remote_ip} ${method} ${status} ${uri} ${latency_human} - ${user_agent}\n",
+		Format: "${time_rfc3339_nano}: ${remote_ip} ${method} ${status} ${uri} ${latency_human} - ${user_agent}\n",
 	}))
 
 	return e
@@ -49,6 +49,9 @@ func NewEcho() *echo.Echo {
 
 // RegisterRoutes registers all routes for the application
 func RegisterRoutes(e *echo.Echo) {
+
+
+	// TODO: Use proper cors middleware by echo
 
 	// Middleware for cors
 	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {

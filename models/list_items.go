@@ -28,6 +28,11 @@ func GetItemsByListID(listID int64) (items []*ListItem, err error) {
 		return
 	}
 
+	// No need to iterate over users if the list doesn't has items
+	if len(items) == 0 {
+		return
+	}
+
 	// Get all users and put them into the array
 	var userIDs []int64
 	for _, i := range items {

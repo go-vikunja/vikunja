@@ -44,8 +44,6 @@ func (c *CRUDWebHandler) ReadAllWeb(ctx echo.Context) error {
 		return ctx.JSON(http.StatusInternalServerError, models.Message{"Could not determine the current user."})
 	}
 
-	//c.CObject.IsAdmin()
-
 	lists, err := c.CObject.ReadAll(&currentUser)
 	if err != nil {
 		fmt.Println(err)
