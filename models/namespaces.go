@@ -11,6 +11,9 @@ type Namespace struct {
 
 	Created int64 `xorm:"created" json:"created"`
 	Updated int64 `xorm:"updated" json:"updated"`
+
+	CRUDable `xorm:"-" json:"-"`
+	Rights `xorm:"-" json:"-"`
 }
 
 // TableName makes beautiful table names
@@ -56,6 +59,14 @@ func (user *User) HasNamespaceAccess(namespace *Namespace) (err error) {
 	// Check if the user is in a team which has access to the namespace
 
 	return ErrUserDoesNotHaveAccessToNamespace{UserID: user.ID, NamespaceID: namespace.ID}
+}
+
+func (n *Namespace) CanWrite(user *User) bool {
+	if err := user.HasNamespaceAccess(n); err != nil {
+		return false
+	}
+
+	return true
 }
 
 func (user *User) HasNamespaceWriteAccess(namespace *Namespace) (err error) {

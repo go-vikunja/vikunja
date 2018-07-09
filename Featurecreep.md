@@ -145,6 +145,11 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
 
 ## Anderes
 
+* [ ] Refactor!!!! Alle Funktionen raus, die nicht mehr grbaucht werden + Funktionen vereinfachen/zusammenführen.
+Wenn ein Objekt 5x hin und hergereicht wird, und jedesmal nur geringfügig was dran geändert wird sollte das
+doch auch in einer Funktion machbar sein.
+    * [ ] ganz viel in eigene neue Dateien + Packages auslagern, am besten eine package pro model mit allen methoden etc.
+    * [ ] Bessere Lösung der Rechteüberprüfung überlegen?
 * [ ] CI aufsetzen
 * [ ] Tests schreiben
 * [ ] Namen finden

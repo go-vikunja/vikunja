@@ -9,7 +9,7 @@ func DeleteListByID(listID int64, doer *User) (err error) {
 	}
 
 	if list.Owner.ID != doer.ID {
-		return ErrNeedToBeListOwner{ListID: listID, UserID: doer.ID}
+		return ErrNeedToBeListAdmin{ListID: listID, UserID: doer.ID}
 	}
 
 	// Delete the list

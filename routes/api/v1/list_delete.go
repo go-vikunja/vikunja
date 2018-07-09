@@ -49,7 +49,7 @@ func DeleteListByID(c echo.Context) error {
 
 	err = models.DeleteListByID(itemID, &user)
 	if err != nil {
-		if models.IsErrNeedToBeListOwner(err) {
+		if models.IsErrNeedToBeListAdmin(err) {
 			return c.JSON(http.StatusForbidden, models.Message{"You need to be the list owner to delete a list."})
 		}
 

@@ -15,6 +15,7 @@ type List struct {
 	Updated int64 `xorm:"updated" json:"updated"`
 
 	CRUDable `xorm:"-" json:"-"`
+	Rights `xorm:"-" json:"-"`
 }
 
 // Lists is a multiple of list
@@ -72,4 +73,20 @@ func (list *List) ReadAll(user *User) (interface{}, error) {
 func (l *List) ReadOne(id int64) (err error) {
 	*l, err = GetListByID(id)
 	return
+}
+
+func (l *List) IsAdmin(user *User) bool {
+	// Owners are always admins
+	if l.Owner.ID == user.ID {
+		return true
+	}
+
+	// Check Team rights
+	// aka "is the user in a team which has admin rights?"
+	// TODO
+
+	// Check Namespace rights
+	// TODO
+
+	return false
 }

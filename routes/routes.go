@@ -92,7 +92,7 @@ func RegisterRoutes(e *echo.Echo) {
 	}
 	a.GET("/lists", listHandler.ReadAllWeb)
 	a.GET("/lists/:id", listHandler.ReadOneWeb)
-	a.POST("/lists/:id", apiv1.UpdateList)
+	a.POST("/lists/:id", listHandler.UpdateWeb)
 	a.PUT("/lists/:id", apiv1.AddListItem)
 	a.DELETE("/lists/:id", apiv1.DeleteListByID)
 
@@ -105,5 +105,5 @@ func RegisterRoutes(e *echo.Echo) {
 	a.POST("/namespaces/:id", apiv1.UpdateNamespace)
 	a.DELETE("/namespaces/:id", apiv1.DeleteNamespaceByID)
 	a.GET("/namespaces/:id/lists", apiv1.GetListsByNamespaceID)
-	a.PUT("/namespaces/:id/lists", apiv1.AddList)
+	a.PUT("/namespaces/:id/lists", listHandler.CreateWeb)
 }

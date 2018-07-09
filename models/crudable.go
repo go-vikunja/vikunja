@@ -1,9 +1,9 @@
 package models
 
 type CRUDable interface {
-	Create()
+	Create(*User) (error)
 	ReadOne(int64) error
 	ReadAll(*User) (interface{}, error)
-	Update()
+	Update(int64, *User) error
 	Delete()
 }
