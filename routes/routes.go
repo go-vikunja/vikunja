@@ -31,9 +31,9 @@ import (
 	"github.com/labstack/echo/middleware"
 
 	"git.kolaente.de/konrad/list/models"
-	crud "git.kolaente.de/konrad/list/routes/crud"
 	apiv1 "git.kolaente.de/konrad/list/routes/api/v1"
 	_ "git.kolaente.de/konrad/list/routes/api/v1/swagger" // for docs generation
+	"git.kolaente.de/konrad/list/routes/crud"
 )
 
 // NewEcho registers a new Echo instance

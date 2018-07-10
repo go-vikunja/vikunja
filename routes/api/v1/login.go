@@ -32,14 +32,13 @@ func Login(c echo.Context) error {
 	//   "403":
 	//     "$ref": "#/responses/Message"
 
-	u := new(models.UserLogin)
-	if err := c.Bind(u); err != nil {
+	u := models.UserLogin{}
+	if err := c.Bind(&u); err != nil {
 		return c.JSON(http.StatusBadRequest, models.Message{"Please provide a username and password."})
 	}
 
 	// Check user
-	user, err := models.CheckUserCredentials(u)
-
+	user, err := models.CheckUserCredentials(&u)
 	if err != nil {
 		return c.JSON(http.StatusUnauthorized, models.Message{"Wrong username or password."})
 	}
