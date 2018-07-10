@@ -1,5 +1,6 @@
 package models
 
+// DeleteNamespaceByID deletes a namespace and takes its id as an argument
 func DeleteNamespaceByID(namespaceID int64, doer *User) (err error) {
 
 	// Check if the namespace exists

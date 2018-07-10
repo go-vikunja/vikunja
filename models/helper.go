@@ -1,11 +1,11 @@
 package models
 
 import (
-	"fmt"
 	"github.com/labstack/echo"
 	"strconv"
 )
 
+// GetIntURLParam is a helper method which returns an int from an url param
 func GetIntURLParam(param string, c echo.Context) (intParam int64, err error) {
 
 	id := c.Param(param)
@@ -16,6 +16,7 @@ func GetIntURLParam(param string, c echo.Context) (intParam int64, err error) {
 	return intParam, err
 }
 
+// GetByID gets an object by its ID
 func GetByID(id int64, result interface{}) (err error) {
 	exists, err := x.ID(id).Get(result)
 	if err != nil {
@@ -26,11 +27,5 @@ func GetByID(id int64, result interface{}) (err error) {
 		return ErrListDoesNotExist{}
 	}
 
-	return
-}
-
-func GetAllByUser(user *User, result interface{}) (err error) {
-	fmt.Println(result)
-	err = x.Where("owner_id = ", user.ID).Find(result)
 	return
 }

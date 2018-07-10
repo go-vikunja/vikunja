@@ -149,7 +149,7 @@ type ErrNeedToBeListAdmin struct {
 	UserID int64
 }
 
-// IsErrListDoesNotExist checks if an error is a ErrListDoesNotExist.
+// IsErrNeedToBeListAdmin checks if an error is a ErrListDoesNotExist.
 func IsErrNeedToBeListAdmin(err error) bool {
 	_, ok := err.(ErrNeedToBeListAdmin)
 	return ok
@@ -176,12 +176,12 @@ func (err ErrListItemCannotBeEmpty) Error() string {
 	return fmt.Sprintf("List item text cannot be empty.")
 }
 
-// ErrListItemCannotBeEmpty represents a "ErrListDoesNotExist" kind of error. Used if the list does not exist.
+// ErrListItemDoesNotExist represents a "ErrListDoesNotExist" kind of error. Used if the list does not exist.
 type ErrListItemDoesNotExist struct {
 	ID int64
 }
 
-// IsErrListItemCannotBeEmpty checks if an error is a ErrListDoesNotExist.
+// IsErrListItemDoesNotExist checks if an error is a ErrListDoesNotExist.
 func IsErrListItemDoesNotExist(err error) bool {
 	_, ok := err.(ErrListItemDoesNotExist)
 	return ok
@@ -232,7 +232,7 @@ type ErrNeedToBeNamespaceOwner struct {
 	UserID      int64
 }
 
-// IsErrNamespaceDoesNotExist checks if an error is a ErrNamespaceDoesNotExist.
+// IsErrNeedToBeNamespaceOwner checks if an error is a ErrNamespaceDoesNotExist.
 func IsErrNeedToBeNamespaceOwner(err error) bool {
 	_, ok := err.(ErrNeedToBeNamespaceOwner)
 	return ok
@@ -289,4 +289,3 @@ func IsErrUserDoesNotHaveWriteAccessToNamespace(err error) bool {
 func (err ErrUserDoesNotHaveWriteAccessToNamespace) Error() string {
 	return fmt.Sprintf("You need to have write access to this namespace to do that [NamespaceID: %d, UserID: %d]", err.NamespaceID, err.UserID)
 }
-

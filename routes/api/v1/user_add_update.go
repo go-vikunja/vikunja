@@ -7,6 +7,7 @@ import (
 	"strconv"
 )
 
+// RegisterUser ...
 func RegisterUser(c echo.Context) error {
 
 	// swagger:operation POST /register user register
@@ -20,7 +21,7 @@ func RegisterUser(c echo.Context) error {
 	// - name: body
 	//   in: body
 	//   schema:
-	//     "$ref": "#/definitions/ApiUserPassword"
+	//     "$ref": "#/definitions/APIUserPassword"
 	// responses:
 	//   "200":
 	//     "$ref": "#/responses/User"
@@ -38,7 +39,7 @@ func userAddOrUpdate(c echo.Context) error {
 	// TODO: prevent everyone from updating users
 
 	// Check for Request Content
-	var datUser *models.ApiUserPassword
+	var datUser *models.APIUserPassword
 
 	if err := c.Bind(&datUser); err != nil {
 		return c.JSON(http.StatusBadRequest, models.Message{"No user model provided."})

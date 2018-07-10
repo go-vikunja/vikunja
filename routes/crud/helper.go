@@ -1,4 +1,4 @@
-package CRUD
+package crud
 
 import (
 	"fmt"
@@ -7,16 +7,17 @@ import (
 	"net/http"
 )
 
+// WebHandler defines the webhandler object
 // This does web stuff, aka returns json etc. Uses CRUDable Methods to get the data
-type CRUDWebHandler struct {
-	CObject interface{
+type WebHandler struct {
+	CObject interface {
 		models.CRUDable
 		models.Rights
 	}
 }
 
-// This does json, handles the request
-func (c *CRUDWebHandler) ReadOneWeb(ctx echo.Context) error {
+// ReadOneWeb is the webhandler to get one object
+func (c *WebHandler) ReadOneWeb(ctx echo.Context) error {
 
 	// Get the ID
 	id, err := models.GetIntURLParam("id", ctx)
@@ -39,8 +40,8 @@ func (c *CRUDWebHandler) ReadOneWeb(ctx echo.Context) error {
 	return ctx.JSON(http.StatusOK, c.CObject)
 }
 
-// ReadAllWeb returns all elements of a type
-func (c *CRUDWebHandler) ReadAllWeb(ctx echo.Context) error {
+// ReadAllWeb is the webhandler to get all objects of a type
+func (c *WebHandler) ReadAllWeb(ctx echo.Context) error {
 	currentUser, err := models.GetCurrentUser(ctx)
 	if err != nil {
 		return ctx.JSON(http.StatusInternalServerError, models.Message{"Could not determine the current user."})
@@ -56,7 +57,7 @@ func (c *CRUDWebHandler) ReadAllWeb(ctx echo.Context) error {
 }
 
 // UpdateWeb is the webhandler to update an object
-func (c *CRUDWebHandler) UpdateWeb(ctx echo.Context) error {
+func (c *WebHandler) UpdateWeb(ctx echo.Context) error {
 	// Get the object
 	if err := ctx.Bind(&c.CObject); err != nil {
 		return ctx.JSON(http.StatusBadRequest, models.Message{"No model provided."})
@@ -88,7 +89,7 @@ func (c *CRUDWebHandler) UpdateWeb(ctx echo.Context) error {
 }
 
 // CreateWeb is the handler to create an object
-func (c *CRUDWebHandler) CreateWeb(ctx echo.Context) error {
+func (c *WebHandler) CreateWeb(ctx echo.Context) error {
 	// Get the object
 	if err := ctx.Bind(&c.CObject); err != nil {
 		return ctx.JSON(http.StatusBadRequest, models.Message{"No model provided."})
@@ -111,7 +112,7 @@ func (c *CRUDWebHandler) CreateWeb(ctx echo.Context) error {
 }
 
 // DeleteWeb is the web handler to delete something
-func (c *CRUDWebHandler) DeleteWeb(ctx echo.Context) error {
+func (c *WebHandler) DeleteWeb(ctx echo.Context) error {
 	// Get the ID
 	id, err := models.GetIntURLParam("id", ctx)
 	if err != nil {

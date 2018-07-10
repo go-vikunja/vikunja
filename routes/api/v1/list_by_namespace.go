@@ -6,6 +6,7 @@ import (
 	"net/http"
 )
 
+// GetListsByNamespaceID is the web handler to delete a namespace
 func GetListsByNamespaceID(c echo.Context) error {
 	// swagger:operation GET /namespaces/{namespaceID}/lists namespaces getListsByNamespace
 	// ---

@@ -12,7 +12,7 @@ type swaggerParameterBodies struct {
 	UserLogin models.UserLogin
 
 	// in:body
-	ApiUserPassword models.ApiUserPassword
+	APIUserPassword models.APIUserPassword
 
 	// in:body
 	List models.List

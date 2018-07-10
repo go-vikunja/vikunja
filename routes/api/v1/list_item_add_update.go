@@ -7,6 +7,7 @@ import (
 	"strconv"
 )
 
+// AddListItem ...
 func AddListItem(c echo.Context) error {
 	// swagger:operation PUT /lists/{listID} lists addListItem
 	// ---
@@ -46,6 +47,7 @@ func AddListItem(c echo.Context) error {
 	return updateOrCreateListItemHelper(listID, 0, c)
 }
 
+// UpdateListItem ...
 func UpdateListItem(c echo.Context) error {
 	// swagger:operation PUT /item/{itemID} lists updateListItem
 	// ---

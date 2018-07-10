@@ -15,7 +15,7 @@ type List struct {
 	Updated int64 `xorm:"updated" json:"updated"`
 
 	CRUDable `xorm:"-" json:"-"`
-	Rights `xorm:"-" json:"-"`
+	Rights   `xorm:"-" json:"-"`
 }
 
 // Lists is a multiple of list
@@ -45,13 +45,14 @@ func GetListByID(id int64) (list List, err error) {
 	return list, nil
 }
 
+// GetListsByNamespaceID gets all lists in a namespace
 func GetListsByNamespaceID(nID int64) (lists []*List, err error) {
 	err = x.Where("namespace_id = ?", nID).Find(&lists)
 	return lists, err
 }
 
 // ReadAll gets all List a user has access to
-func (list *List) ReadAll(user *User) (interface{}, error) {
+func (l *List) ReadAll(user *User) (interface{}, error) {
 	lists := Lists{}
 	fullUser, _, err := GetUserByID(user.ID)
 	if err != nil {
@@ -75,6 +76,7 @@ func (l *List) ReadOne(id int64) (err error) {
 	return
 }
 
+// IsAdmin returns whether the user has admin rights on the list or not
 func (l *List) IsAdmin(user *User) bool {
 	// Owners are always admins
 	if l.Owner.ID == user.ID {

@@ -13,7 +13,7 @@ type Namespace struct {
 	Updated int64 `xorm:"updated" json:"updated"`
 
 	CRUDable `xorm:"-" json:"-"`
-	Rights `xorm:"-" json:"-"`
+	Rights   `xorm:"-" json:"-"`
 }
 
 // TableName makes beautiful table names
@@ -39,6 +39,7 @@ const (
 	NamespaceRightAdmin
 )
 
+// IsNamespaceAdmin returns whether the usre has admin rights in a namespace
 func (user *User) IsNamespaceAdmin(namespace *Namespace) (err error) {
 	// Owners always have admin rights
 	if user.ID == namespace.Owner.ID {
@@ -50,6 +51,7 @@ func (user *User) IsNamespaceAdmin(namespace *Namespace) (err error) {
 	return ErrUserNeedsToBeNamespaceAdmin{UserID: user.ID, NamespaceID: namespace.ID}
 }
 
+// HasNamespaceAccess checks if the User has namespace read access
 func (user *User) HasNamespaceAccess(namespace *Namespace) (err error) {
 	// Owners always have access
 	if user.ID == namespace.Owner.ID {
@@ -61,6 +63,7 @@ func (user *User) HasNamespaceAccess(namespace *Namespace) (err error) {
 	return ErrUserDoesNotHaveAccessToNamespace{UserID: user.ID, NamespaceID: namespace.ID}
 }
 
+// CanWrite checks if a user has write access to a namespace
 func (n *Namespace) CanWrite(user *User) bool {
 	if err := user.HasNamespaceAccess(n); err != nil {
 		return false
@@ -69,6 +72,7 @@ func (n *Namespace) CanWrite(user *User) bool {
 	return true
 }
 
+// HasNamespaceWriteAccess checks if a user has write access to a namespace
 func (user *User) HasNamespaceWriteAccess(namespace *Namespace) (err error) {
 
 	// Owners always have access
@@ -81,6 +85,7 @@ func (user *User) HasNamespaceWriteAccess(namespace *Namespace) (err error) {
 	return ErrUserDoesNotHaveAccessToNamespace{UserID: user.ID, NamespaceID: namespace.ID}
 }
 
+// GetNamespaceByID returns a namespace object by its ID
 func GetNamespaceByID(id int64) (namespace Namespace, err error) {
 	namespace.ID = id
 	exists, err := x.Get(&namespace)

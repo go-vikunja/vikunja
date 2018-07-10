@@ -34,7 +34,7 @@ func (TeamMember) TableName() string {
 	return "team_members"
 }
 
-// TeamNamespaces defines the relationship between a Team and a Namespace
+// TeamNamespace defines the relationship between a Team and a Namespace
 type TeamNamespace struct {
 	ID          int64 `xorm:"int(11) autoincr not null unique pk"`
 	TeamID      int64 `xorm:"int(11) autoincr not null"`
@@ -64,6 +64,7 @@ func (TeamList) TableName() string {
 	return "team_list"
 }
 
+// GetAllTeamsByNamespaceID returns all teams for a namespace
 func GetAllTeamsByNamespaceID(id int64) (teams []*Team, err error) {
 	err = x.Table("teams").
 		Join("INNER", "team_namespaces", "teams.id = team_id").

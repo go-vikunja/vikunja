@@ -6,6 +6,7 @@ import (
 	"net/http"
 )
 
+// AddList ...
 func AddList(c echo.Context) error {
 	// swagger:operation PUT /namespaces/{namespaceID}/lists lists addList
 	// ---
@@ -86,6 +87,7 @@ func AddList(c echo.Context) error {
 	return c.JSON(http.StatusOK, list)
 }
 
+// UpdateList ...
 func UpdateList(c echo.Context) error {
 	// swagger:operation POST /lists/{listID} lists upadteList
 	// ---

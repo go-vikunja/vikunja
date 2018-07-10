@@ -7,6 +7,7 @@ import (
 	"strconv"
 )
 
+// DeleteListItemByIDtemByID is the web handler to delete a list item
 func DeleteListItemByIDtemByID(c echo.Context) error {
 	// swagger:operation DELETE /item/{itemID} lists deleteListItem
 	// ---

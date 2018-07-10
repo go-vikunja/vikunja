@@ -1,5 +1,6 @@
 package models
 
+// Delete implements the delete method of CRUDable
 func (l *List) Delete(id int64, doer *User) (err error) {
 	// Check if the list exists
 	list, err := GetListByID(id)
@@ -14,7 +15,7 @@ func (l *List) Delete(id int64, doer *User) (err error) {
 	}
 
 	if !list.IsAdmin(&user) {
-		return ErrNeedToBeListAdmin{ListID:id, UserID:user.ID}
+		return ErrNeedToBeListAdmin{ListID: id, UserID: user.ID}
 	}
 
 	// Delete the list

@@ -27,15 +27,16 @@ func (User) TableName() string {
 	return "users"
 }
 
-// ApiUserPassword represents a user object without timestamps and a json password field.
-type ApiUserPassword struct {
+// APIUserPassword represents a user object without timestamps and a json password field.
+type APIUserPassword struct {
 	ID       int64  `json:"id"`
 	Username string `json:"username"`
 	Password string `json:"password"`
 	Email    string `json:"email"`
 }
 
-func (apiUser *ApiUserPassword) APIFormat() User {
+// APIFormat formats an API User into a normal user struct
+func (apiUser *APIUserPassword) APIFormat() User {
 	return User{
 		ID:       apiUser.ID,
 		Username: apiUser.Username,

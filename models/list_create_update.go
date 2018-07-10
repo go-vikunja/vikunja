@@ -19,7 +19,8 @@ func CreateOrUpdateList(list *List) (err error) {
 
 }
 
-func (l *List) Update(id int64, doer *User) (err error)  {
+// Update implements the update method of CRUDable
+func (l *List) Update(id int64, doer *User) (err error) {
 	l.ID = id
 
 	// Check if it exists
@@ -35,12 +36,13 @@ func (l *List) Update(id int64, doer *User) (err error)  {
 	}
 
 	if !oldList.IsAdmin(&user) {
-		return ErrNeedToBeListAdmin{ListID:id, UserID:user.ID}
+		return ErrNeedToBeListAdmin{ListID: id, UserID: user.ID}
 	}
 
 	return CreateOrUpdateList(l)
 }
 
+// Create implements the create method of CRUDable
 func (l *List) Create(doer *User) (err error) {
 	// Check rights
 	user, _, err := GetUserByID(doer.ID)
@@ -54,7 +56,7 @@ func (l *List) Create(doer *User) (err error) {
 		return
 	}
 	if !namespace.CanWrite(doer) {
-		return ErrUserDoesNotHaveWriteAccessToNamespace{UserID:user.ID, NamespaceID:namespace.ID}
+		return ErrUserDoesNotHaveWriteAccessToNamespace{UserID: user.ID, NamespaceID: namespace.ID}
 	}
 
 	l.Owner.ID = user.ID

@@ -6,6 +6,7 @@ import (
 	"net/http"
 )
 
+// GetAllNamespacesByCurrentUser ...
 func GetAllNamespacesByCurrentUser(c echo.Context) error {
 	// swagger:operation GET /namespaces namespaces getNamespaces
 	// ---

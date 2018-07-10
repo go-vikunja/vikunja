@@ -70,6 +70,7 @@ func GetItemsByListID(listID int64) (items []*ListItem, err error) {
 	return
 }
 
+// GetListItemByID returns all items a list has
 func GetListItemByID(listItemID int64) (listItem ListItem, err error) {
 	exists, err := x.ID(listItemID).Get(&listItem)
 	if err != nil {

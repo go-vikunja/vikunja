@@ -7,6 +7,7 @@ import (
 	"strconv"
 )
 
+// AddNamespace ...
 func AddNamespace(c echo.Context) error {
 	// swagger:operation PUT /namespaces namespaces addNamespace
 	// ---
@@ -33,6 +34,7 @@ func AddNamespace(c echo.Context) error {
 	return addOrUpdateNamespace(c)
 }
 
+// UpdateNamespace ...
 func UpdateNamespace(c echo.Context) error {
 	// swagger:operation POST /namespaces/{namespaceID} namespaces upadteNamespace
 	// ---

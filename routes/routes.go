@@ -1,3 +1,5 @@
+package routes
+
 // Package v1 List API.
 //
 // This documentation describes the List API.
@@ -23,14 +25,13 @@
 //          in: header
 //
 // swagger:meta
-package routes
 
 import (
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 
 	"git.kolaente.de/konrad/list/models"
-	CRUD "git.kolaente.de/konrad/list/routes/CRUD"
+	crud "git.kolaente.de/konrad/list/routes/crud"
 	apiv1 "git.kolaente.de/konrad/list/routes/api/v1"
 	_ "git.kolaente.de/konrad/list/routes/api/v1/swagger" // for docs generation
 )
@@ -49,7 +50,6 @@ func NewEcho() *echo.Echo {
 
 // RegisterRoutes registers all routes for the application
 func RegisterRoutes(e *echo.Echo) {
-
 
 	// TODO: Use proper cors middleware by echo
 
@@ -87,7 +87,7 @@ func RegisterRoutes(e *echo.Echo) {
 	a.Use(middleware.JWT(models.Config.JWTLoginSecret))
 	a.POST("/tokenTest", apiv1.CheckToken)
 
-	listHandler := &CRUD.CRUDWebHandler{
+	listHandler := &crud.WebHandler{
 		CObject: &models.List{},
 	}
 	a.GET("/lists", listHandler.ReadAllWeb)

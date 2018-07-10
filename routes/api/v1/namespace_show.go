@@ -7,6 +7,7 @@ import (
 	"strconv"
 )
 
+// ShowNamespace ...
 func ShowNamespace(c echo.Context) error {
 	// swagger:operation GET /namespaces/{namespaceID} namespaces getNamespace
 	// ---

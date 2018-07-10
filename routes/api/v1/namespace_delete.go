@@ -7,6 +7,7 @@ import (
 	"strconv"
 )
 
+// DeleteNamespaceByID ...
 func DeleteNamespaceByID(c echo.Context) error {
 	// swagger:operation DELETE /namespaces/{namespaceID} namespaces deleteNamespace
 	// ---
