@@ -1,10 +1,11 @@
 package v1
 
 import (
-	"git.kolaente.de/konrad/list/models"
+//	"git.kolaente.de/konrad/list/models"
 	"github.com/labstack/echo"
+//	"net/http"
+//	"strconv"
 	"net/http"
-	"strconv"
 )
 
 func DeleteListByID(c echo.Context) error {
@@ -33,6 +34,7 @@ func DeleteListByID(c echo.Context) error {
 	//   "500":
 	//     "$ref": "#/responses/Message"
 
+	/*
 	// Check if we have our ID
 	id := c.Param("id")
 	// Make int
@@ -47,7 +49,7 @@ func DeleteListByID(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, models.Message{"An error occured."})
 	}
 
-	err = models.DeleteListByID(itemID, &user)
+//	err = models.DeleteListByID(itemID, &user)
 	if err != nil {
 		if models.IsErrNeedToBeListAdmin(err) {
 			return c.JSON(http.StatusForbidden, models.Message{"You need to be the list owner to delete a list."})
@@ -61,4 +63,7 @@ func DeleteListByID(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, models.Message{"The list was deleted with success."})
+	*/
+
+	return echo.NewHTTPError(http.StatusNotImplemented)
 }

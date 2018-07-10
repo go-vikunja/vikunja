@@ -1,25 +1,29 @@
 package models
 
-func DeleteListByID(listID int64, doer *User) (err error) {
-
+func (l *List) Delete(id int64, doer *User) (err error) {
 	// Check if the list exists
-	list, err := GetListByID(listID)
+	list, err := GetListByID(id)
 	if err != nil {
 		return
 	}
 
-	if list.Owner.ID != doer.ID {
-		return ErrNeedToBeListAdmin{ListID: listID, UserID: doer.ID}
+	// Check rights
+	user, _, err := GetUserByID(doer.ID)
+	if err != nil {
+		return
+	}
+
+	if !list.IsAdmin(&user) {
+		return ErrNeedToBeListAdmin{ListID:id, UserID:user.ID}
 	}
 
 	// Delete the list
-	_, err = x.ID(listID).Delete(&List{})
+	_, err = x.ID(id).Delete(&List{})
 	if err != nil {
 		return
 	}
 
 	// Delete all todoitems on that list
-	_, err = x.Where("list_id = ?", listID).Delete(&ListItem{})
-
+	_, err = x.Where("list_id = ?", id).Delete(&ListItem{})
 	return
 }

@@ -94,7 +94,7 @@ func RegisterRoutes(e *echo.Echo) {
 	a.GET("/lists/:id", listHandler.ReadOneWeb)
 	a.POST("/lists/:id", listHandler.UpdateWeb)
 	a.PUT("/lists/:id", apiv1.AddListItem)
-	a.DELETE("/lists/:id", apiv1.DeleteListByID)
+	a.DELETE("/lists/:id", listHandler.DeleteWeb)
 
 	a.DELETE("/item/:id", apiv1.DeleteListItemByIDtemByID)
 	a.POST("/item/:id", apiv1.UpdateListItem)
