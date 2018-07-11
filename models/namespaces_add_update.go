@@ -4,7 +4,7 @@ package models
 func (n *Namespace) Create(doer *User, _ int64) (err error) {
 	// Check if we have at least a name
 	if n.Name == "" {
-		return ErrNamespaceNameCannotBeEmpty{NamespaceID:0, UserID:doer.ID}
+		return ErrNamespaceNameCannotBeEmpty{NamespaceID: 0, UserID: doer.ID}
 	}
 
 	// Check if the User exists
@@ -23,7 +23,7 @@ func (n *Namespace) Create(doer *User, _ int64) (err error) {
 func (n *Namespace) Update(id int64, doer *User) (err error) {
 	// Check if we have at least a name
 	if n.Name == "" {
-		return ErrNamespaceNameCannotBeEmpty{NamespaceID:id, UserID:doer.ID}
+		return ErrNamespaceNameCannotBeEmpty{NamespaceID: id, UserID: doer.ID}
 	}
 	n.ID = id
 
@@ -48,7 +48,7 @@ func (n *Namespace) Update(id int64, doer *User) (err error) {
 	}
 
 	if !currentNamespace.IsAdmin(&user) {
-		return ErrNeedToBeNamespaceAdmin{NamespaceID:id, UserID:doer.ID}
+		return ErrNeedToBeNamespaceAdmin{NamespaceID: id, UserID: doer.ID}
 	}
 
 	// Do the actual update

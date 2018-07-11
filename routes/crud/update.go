@@ -32,7 +32,6 @@ func (c *WebHandler) UpdateWeb(ctx echo.Context) error {
 			return echo.NewHTTPError(http.StatusForbidden, "You need to be list admin to do that.")
 		}
 
-
 		if models.IsErrNamespaceDoesNotExist(err) {
 			return echo.NewHTTPError(http.StatusNotFound, "The namespace does not exist.")
 		}

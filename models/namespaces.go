@@ -51,6 +51,7 @@ func (user *User) IsNamespaceAdmin(namespace *Namespace) (err error) {
 	return ErrUserNeedsToBeNamespaceAdmin{UserID: user.ID, NamespaceID: namespace.ID}
 }
 
+// IsAdmin returns true or false if the user is admin on that namespace or not
 func (n *Namespace) IsAdmin(user *User) bool {
 
 	// Owners always have admin rights
