@@ -122,6 +122,7 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
 
 * [ ] Listen teilbar
   * [ ] Mit anderen Nutzern
+  * [ ] Teams
   * [ ] Mit Link
     * [ ] Offen
     * [ ] Passwortgeschützt
@@ -149,7 +150,8 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
 Wenn ein Objekt 5x hin und hergereicht wird, und jedesmal nur geringfügig was dran geändert wird sollte das
 doch auch in einer Funktion machbar sein.
     * [ ] ganz viel in eigene neue Dateien + Packages auslagern, am besten eine package pro model mit allen methoden etc.
-    * [ ] Bessere Lösung der Rechteüberprüfung überlegen?
+    * [ ] Alle alten dinger die nicht mehr gebraucht werden, weg.
+        * [ ] Die alten handlerfunktionen alle in eine datei packen und erstmal "lagern", erstmal brauchen wir die noch für swagger.
 * [ ] CI aufsetzen
 * [ ] Tests schreiben
 * [ ] Namen finden
@@ -158,15 +160,16 @@ doch auch in einer Funktion machbar sein.
 * [ ] Cacher konfigurierbar
 * [ ] Überall echo.NewHTTPError statt c.JSON(Message{}) benutzen
 * [ ] Bessere Fehlermeldungen wenn das Model was ankommt falsch ist und nicht geparst werden kann
+* [ ] Fehlerhandling irgendwie besser machen. Zb mit "World error messages"? Sprich, die Methode ruft einfach auf obs die entsprechende Fehlermeldung gibt und zeigt sonst 500 an.
 * [ ] Endpoints neu organisieren? Also zb `namespaces/:nID/lists/:lID/items/:iID` statt einzelnen Endpoints für alles
 
 * [ ] "Apiformat" Methoden, damit in der Ausgabe zb kein Passwort drin ist..., oder created/updated von Nutzern... oder ownerID nicht drin ist sondern nur das ownerobject
-* [ ] Rechte überprüfen (in extra Funktion auslagern, dann wird das einfacher später):
+* [ ] Rechte überprüfen:
   * [ ] Listen erstellen
   * [ ] Listen bearbeiten (nur eigene im Moment)
   * [ ] Listenpunkte hinzufügen
   * [ ] Listenpunkte bearbeiten
-
+* [ ] An "accepted" für post/put payloads schrauben, man soll da zb keine id/created/updated/etc übergeben können.
 
 * [ ] Globale Limits für anlegbare Listen + Namespaces
 * [ ] Mgl., dass die Instanz geschlossen ist, also sich keiner registrieren kann, und man sich einloggen muss
