@@ -51,6 +51,19 @@ func (user *User) IsNamespaceAdmin(namespace *Namespace) (err error) {
 	return ErrUserNeedsToBeNamespaceAdmin{UserID: user.ID, NamespaceID: namespace.ID}
 }
 
+func (n *Namespace) IsAdmin(user *User) bool {
+
+	// Owners always have admin rights
+	if user.ID == n.Owner.ID {
+		return true
+	}
+
+	// Check if that user is in a team which has admin rights to that namespace
+	// TODO
+
+	return false
+}
+
 // HasNamespaceAccess checks if the User has namespace read access
 func (user *User) HasNamespaceAccess(namespace *Namespace) (err error) {
 	// Owners always have access
@@ -65,24 +78,12 @@ func (user *User) HasNamespaceAccess(namespace *Namespace) (err error) {
 
 // CanWrite checks if a user has write access to a namespace
 func (n *Namespace) CanWrite(user *User) bool {
-	if err := user.HasNamespaceAccess(n); err != nil {
-		return false
+	// Owners always have access
+	if user.ID == n.Owner.ID {
+		return true
 	}
 
 	return true
-}
-
-// HasNamespaceWriteAccess checks if a user has write access to a namespace
-func (user *User) HasNamespaceWriteAccess(namespace *Namespace) (err error) {
-
-	// Owners always have access
-	if user.ID == namespace.Owner.ID {
-		return nil
-	}
-
-	// Check if the user is in a team which has write access to the namespace
-
-	return ErrUserDoesNotHaveAccessToNamespace{UserID: user.ID, NamespaceID: namespace.ID}
 }
 
 // GetNamespaceByID returns a namespace object by its ID

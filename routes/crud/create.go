@@ -44,9 +44,6 @@ func (c *WebHandler) CreateWeb(ctx echo.Context) error {
 			return echo.NewHTTPError(http.StatusForbidden, "You need to have write access on that list.")
 		}
 
-		if models.IsErrNamespaceDoesNotExist(err) {
-			return echo.NewHTTPError(http.StatusBadRequest, "The namespace does not exist.")
-		}
 		if models.IsErrNamespaceNameCannotBeEmpty(err) {
 			return echo.NewHTTPError(http.StatusNotFound, "The namespace name cannot be empty.")
 		}

@@ -1,7 +1,6 @@
 package v1
 
 import (
-	"git.kolaente.de/konrad/list/models"
 	"github.com/labstack/echo"
 	"net/http"
 )
@@ -36,55 +35,7 @@ func AddList(c echo.Context) error {
 	//   "500":
 	//     "$ref": "#/responses/Message"
 
-	// Get the list
-	var list *models.List
-
-	if err := c.Bind(&list); err != nil {
-		return c.JSON(http.StatusBadRequest, models.Message{"No list model provided."})
-	}
-
-	// Get the namespace ID
-	var err error
-	list.NamespaceID, err = models.GetIntURLParam("nID", c)
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, models.Message{"Invalid namespace ID."})
-	}
-
-	// Get the current user for later checks
-	user, err := models.GetCurrentUser(c)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, models.Message{"An error occured."})
-	}
-	list.Owner = user
-
-	// Get the namespace
-	namespace, err := models.GetNamespaceByID(list.NamespaceID)
-	if err != nil {
-		if models.IsErrNamespaceDoesNotExist(err) {
-			return c.JSON(http.StatusNotFound, models.Message{"Namespace not found."})
-		}
-		return c.JSON(http.StatusInternalServerError, models.Message{"An error occured."})
-	}
-
-	// Check if the user has write acces to that namespace
-	err = user.HasNamespaceWriteAccess(&namespace)
-	if err != nil {
-		if models.IsErrUserDoesNotHaveAccessToNamespace(err) {
-			return c.JSON(http.StatusForbidden, models.Message{"You don't have access to this namespace."})
-		}
-		if models.IsErrUserDoesNotHaveWriteAccessToNamespace(err) {
-			return c.JSON(http.StatusForbidden, models.Message{"You don't have write access to this namespace."})
-		}
-		return c.JSON(http.StatusInternalServerError, models.Message{"An error occured."})
-	}
-
-	// Create the new list
-	err = models.CreateOrUpdateList(list)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, models.Message{"An error occured."})
-	}
-
-	return c.JSON(http.StatusOK, list)
+	return echo.NewHTTPError(http.StatusNotImplemented)
 }
 
 // UpdateList ...
@@ -116,51 +67,5 @@ func UpdateList(c echo.Context) error {
 	//   "500":
 	//     "$ref": "#/responses/Message"
 
-	// Get the list
-	var list *models.List
-
-	if err := c.Bind(&list); err != nil {
-		return c.JSON(http.StatusBadRequest, models.Message{"No list model provided."})
-	}
-
-	// Get the list ID
-	var err error
-	list.ID, err = models.GetIntURLParam("id", c)
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, models.Message{"Invalid ID."})
-	}
-
-	// Check if the list exists
-	// ID = 0 means new list, no error
-	var oldList models.List
-	if list.ID != 0 {
-		oldList, err = models.GetListByID(list.ID)
-		if err != nil {
-			if models.IsErrListDoesNotExist(err) {
-				return c.JSON(http.StatusBadRequest, models.Message{"The list does not exist."})
-			}
-			return c.JSON(http.StatusInternalServerError, models.Message{"Could not check if the list exists."})
-		}
-	}
-
-	// Get the current user for later checks
-	user, err := models.GetCurrentUser(c)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, models.Message{"An error occured."})
-	}
-	list.Owner = user
-
-	// Check if the user owns the list
-	// TODO use list function for that
-	if user.ID != oldList.Owner.ID {
-		return c.JSON(http.StatusForbidden, models.Message{"You cannot edit a list you don't own."})
-	}
-
-	// Update the list
-	err = models.CreateOrUpdateList(list)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, models.Message{"An error occured."})
-	}
-
-	return c.JSON(http.StatusOK, list)
+	return echo.NewHTTPError(http.StatusNotImplemented)
 }

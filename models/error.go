@@ -321,3 +321,35 @@ func IsErrNamespaceNameCannotBeEmpty(err error) bool {
 func (err ErrNamespaceNameCannotBeEmpty) Error() string {
 	return fmt.Sprintf("Namespace name cannot be emtpy [NamespaceID: %d, UserID: %d]", err.NamespaceID, err.UserID)
 }
+
+// ErrNamespaceOwnerCannotBeEmpty represents an error, where a namespace owner is empty.
+type ErrNamespaceOwnerCannotBeEmpty struct {
+	NamespaceID int64
+	UserID      int64
+}
+
+// IsErrNamespaceOwnerCannotBeEmpty checks if an error is a ErrNamespaceDoesNotExist.
+func IsErrNamespaceOwnerCannotBeEmpty(err error) bool {
+	_, ok := err.(ErrNamespaceOwnerCannotBeEmpty)
+	return ok
+}
+
+func (err ErrNamespaceOwnerCannotBeEmpty) Error() string {
+	return fmt.Sprintf("Namespace owner cannot be emtpy [NamespaceID: %d, UserID: %d]", err.NamespaceID, err.UserID)
+}
+
+// ErrNeedToBeNamespaceAdmin represents an error, where the user is not the admin of that namespace (used i.e. when deleting a namespace)
+type ErrNeedToBeNamespaceAdmin struct {
+	NamespaceID int64
+	UserID      int64
+}
+
+// IsErrNeedToBeNamespaceAdmin checks if an error is a ErrNamespaceDoesNotExist.
+func IsErrNeedToBeNamespaceAdmin(err error) bool {
+	_, ok := err.(ErrNeedToBeNamespaceAdmin)
+	return ok
+}
+
+func (err ErrNeedToBeNamespaceAdmin) Error() string {
+	return fmt.Sprintf("You need to be namespace owner to do that [NamespaceID: %d, UserID: %d]", err.NamespaceID, err.UserID)
+}

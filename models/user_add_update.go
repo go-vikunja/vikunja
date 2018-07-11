@@ -51,7 +51,8 @@ func CreateUser(user User) (newUser User, err error) {
 	}
 
 	// Create the user's namespace
-	err = CreateOrUpdateNamespace(&Namespace{Name: newUserOut.Username, Description: newUserOut.Username + "'s namespace.", Owner: newUserOut})
+	newN := &Namespace{Name: newUserOut.Username, Description: newUserOut.Username + "'s namespace.", Owner: newUserOut}
+	err = newN.Create(&newUserOut, 0)
 	if err != nil {
 		return User{}, err
 	}

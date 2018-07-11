@@ -1,36 +1,6 @@
 package models
 
-// CreateOrUpdateNamespace does what it says
-func CreateOrUpdateNamespace(namespace *Namespace) (err error) {
-	// Check if the namespace exists
-	_, err = GetNamespaceByID(namespace.ID)
-	if err != nil {
-		return
-	}
-
-	// Check if the User exists
-	namespace.Owner, _, err = GetUserByID(namespace.Owner.ID)
-	if err != nil {
-		return
-	}
-	namespace.OwnerID = namespace.Owner.ID
-
-	if namespace.ID == 0 {
-		_, err = x.Insert(namespace)
-	} else {
-		_, err = x.ID(namespace.ID).Update(namespace)
-	}
-
-	if err != nil {
-		return
-	}
-
-	// Get the new one
-	*namespace, err = GetNamespaceByID(namespace.ID)
-
-	return
-}
-
+// Create implements the creation method via the interface
 func (n *Namespace) Create(doer *User, _ int64) (err error) {
 	// Check if we have at least a name
 	if n.Name == "" {
@@ -46,5 +16,42 @@ func (n *Namespace) Create(doer *User, _ int64) (err error) {
 
 	// Insert
 	_, err = x.Insert(n)
+	return
+}
+
+// Update implements the update method via the interface
+func (n *Namespace) Update(id int64, doer *User) (err error) {
+	// Check if we have at least a name
+	if n.Name == "" {
+		return ErrNamespaceNameCannotBeEmpty{NamespaceID:id, UserID:doer.ID}
+	}
+	n.ID = id
+
+	// Check if the namespace exists
+	currentNamespace, err := GetNamespaceByID(id)
+	if err != nil {
+		return
+	}
+
+	// Check if the (new) owner exists
+	if currentNamespace.OwnerID != n.OwnerID {
+		n.Owner, _, err = GetUserByID(doer.ID)
+		if err != nil {
+			return
+		}
+	}
+
+	// Check rights
+	user, _, err := GetUserByID(doer.ID)
+	if err != nil {
+		return
+	}
+
+	if !currentNamespace.IsAdmin(&user) {
+		return ErrNeedToBeNamespaceAdmin{NamespaceID:id, UserID:doer.ID}
+	}
+
+	// Do the actual update
+	_, err = x.ID(currentNamespace.ID).Update(n)
 	return
 }

@@ -1,10 +1,8 @@
 package v1
 
 import (
-	"git.kolaente.de/konrad/list/models"
 	"github.com/labstack/echo"
 	"net/http"
-	"strconv"
 )
 
 // AddNamespace ...
@@ -64,75 +62,4 @@ func UpdateNamespace(c echo.Context) error {
 	//     "$ref": "#/responses/Message"
 
 	return echo.NewHTTPError(http.StatusNotImplemented)
-}
-
-// AddOrUpdateNamespace Adds or updates a new namespace
-func addOrUpdateNamespace(c echo.Context) error {
-
-	// Get the namespace
-	var namespace *models.Namespace
-
-	if err := c.Bind(&namespace); err != nil {
-		return c.JSON(http.StatusBadRequest, models.Message{"No namespace model provided."})
-	}
-
-	// Check if we have an ID other than the one in the struct
-	id := c.Param("id")
-	if id != "" {
-		// Make int
-		namespaceID, err := strconv.ParseInt(id, 10, 64)
-
-		if err != nil {
-			return c.JSON(http.StatusBadRequest, models.Message{"Invalid ID."})
-		}
-		namespace.ID = namespaceID
-	}
-
-	// Check if the namespace exists
-	// ID = 0 means new namespace, no error
-	if namespace.ID != 0 {
-		_, err := models.GetNamespaceByID(namespace.ID)
-		if err != nil {
-			if models.IsErrNamespaceDoesNotExist(err) {
-				return c.JSON(http.StatusBadRequest, models.Message{"The namespace does not exist."})
-			}
-			return c.JSON(http.StatusInternalServerError, models.Message{"Could not check if the namespace exists."})
-		}
-	}
-
-	// Get the current user for later checks
-	user, err := models.GetCurrentUser(c)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, models.Message{"An error occured."})
-	}
-	namespace.Owner = user
-
-	// update or create...
-	if namespace.ID == 0 {
-		err = models.CreateOrUpdateNamespace(namespace)
-		if err != nil {
-			return c.JSON(http.StatusInternalServerError, models.Message{"An error occured."})
-		}
-	} else {
-		// Check if the user has admin access to the namespace
-		oldNamespace, err := models.GetNamespaceByID(namespace.ID)
-		if err != nil {
-			return c.JSON(http.StatusInternalServerError, models.Message{"An error occured."})
-		}
-		err = user.IsNamespaceAdmin(&oldNamespace)
-		if err != nil {
-			if models.IsErrUserNeedsToBeNamespaceAdmin(err) {
-				return c.JSON(http.StatusForbidden, models.Message{"You need to be namespace admin to edit a namespace."})
-			}
-
-			return c.JSON(http.StatusInternalServerError, models.Message{"An error occured."})
-		}
-
-		err = models.CreateOrUpdateNamespace(namespace)
-		if err != nil {
-			return c.JSON(http.StatusInternalServerError, models.Message{"An error occured."})
-		}
-	}
-
-	return c.JSON(http.StatusOK, namespace)
 }
