@@ -105,3 +105,51 @@ func GetNamespaceByID(id int64) (namespace Namespace, err error) {
 
 	return namespace, err
 }
+
+// ReadAll gets all namespaces a user has access to
+func (n *Namespace) ReadAll(doer *User) (interface{}, error) {
+
+	all := []*Namespace{}
+
+	// TODO respect individual rights
+	err := x.Select("namespaces.*").
+		Table("namespaces").
+		Join("LEFT", "team_namespaces", "namespaces.id = team_namespaces.namespace_id").
+		Join("LEFT", "team_members", "team_members.team_id = team_namespaces.team_id").
+		Where("team_members.user_id = ?", doer.ID).
+		Or("namespaces.owner_id = ?", doer.ID).
+		GroupBy("namespaces.id").
+		Find(&all)
+
+	if err != nil {
+		return all, err
+	}
+
+	// Get all users
+	users := []*User{}
+	err = x.Select("users.*").
+		Table("namespaces").
+		Join("LEFT", "team_namespaces", "namespaces.id = team_namespaces.namespace_id").
+		Join("LEFT", "team_members", "team_members.team_id = team_namespaces.team_id").
+		Join("INNER", "users", "users.id = namespaces.owner_id").
+		Where("team_members.user_id = ?", doer.ID).
+		Or("namespaces.owner_id = ?", doer.ID).
+		GroupBy("users.id").
+		Find(&users)
+
+	if err != nil {
+		return all, err
+	}
+
+	// Put user objects in our namespace list
+	for i, n := range all {
+		for _, u := range users {
+			if n.OwnerID == u.ID {
+				all[i].Owner = *u
+				break
+			}
+		}
+	}
+
+	return all, nil
+}

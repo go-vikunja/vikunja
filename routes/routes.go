@@ -103,7 +103,10 @@ func RegisterRoutes(e *echo.Echo) {
 	a.DELETE("/items/:id", itemHandler.DeleteWeb)
 	a.POST("/items/:id", itemHandler.UpdateWeb)
 
-	a.GET("/namespaces", apiv1.GetAllNamespacesByCurrentUser)
+	namespaceHandler := &crud.WebHandler{
+		CObject: &models.Namespace{},
+	}
+	a.GET("/namespaces", namespaceHandler.ReadAllWeb)
 	a.PUT("/namespaces", apiv1.AddNamespace)
 	a.GET("/namespaces/:id", apiv1.ShowNamespace)
 	a.POST("/namespaces/:id", apiv1.UpdateNamespace)

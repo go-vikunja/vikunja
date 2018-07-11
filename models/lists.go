@@ -51,7 +51,7 @@ func GetListsByNamespaceID(nID int64) (lists []*List, err error) {
 	return lists, err
 }
 
-// ReadAll gets all List a user has access to
+// ReadAll gets all lists a user has access to
 func (l *List) ReadAll(user *User) (interface{}, error) {
 	lists := Lists{}
 	fullUser, _, err := GetUserByID(user.ID)
