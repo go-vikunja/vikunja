@@ -93,9 +93,13 @@ func RegisterRoutes(e *echo.Echo) {
 	a.GET("/lists", listHandler.ReadAllWeb)
 	a.GET("/lists/:id", listHandler.ReadOneWeb)
 	a.POST("/lists/:id", listHandler.UpdateWeb)
-	a.PUT("/lists/:id", apiv1.AddListItem)
 	a.DELETE("/lists/:id", listHandler.DeleteWeb)
+	a.PUT("/namespaces/:id/lists", listHandler.CreateWeb)
 
+	itemHandler := &crud.WebHandler{
+		CObject: &models.ListItem{},
+	}
+	a.PUT("/lists/:id", itemHandler.CreateWeb)
 	a.DELETE("/item/:id", apiv1.DeleteListItemByIDtemByID)
 	a.POST("/item/:id", apiv1.UpdateListItem)
 
@@ -105,5 +109,4 @@ func RegisterRoutes(e *echo.Echo) {
 	a.POST("/namespaces/:id", apiv1.UpdateNamespace)
 	a.DELETE("/namespaces/:id", apiv1.DeleteNamespaceByID)
 	a.GET("/namespaces/:id/lists", apiv1.GetListsByNamespaceID)
-	a.PUT("/namespaces/:id/lists", listHandler.CreateWeb)
 }

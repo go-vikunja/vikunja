@@ -43,7 +43,7 @@ func (l *List) Update(id int64, doer *User) (err error) {
 }
 
 // Create implements the create method of CRUDable
-func (l *List) Create(doer *User) (err error) {
+func (l *List) Create(doer *User, id int64) (err error) {
 	// Check rights
 	user, _, err := GetUserByID(doer.ID)
 	if err != nil {

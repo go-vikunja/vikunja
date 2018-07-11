@@ -159,6 +159,22 @@ func (err ErrNeedToBeListAdmin) Error() string {
 	return fmt.Sprintf("You need to be list owner to do that [ListID: %d, UserID: %d]", err.ListID, err.UserID)
 }
 
+// ErrNeedToBeListWriter represents an error, where the user is not the owner of that list (used i.e. when deleting a list)
+type ErrNeedToBeListWriter struct {
+	ListID int64
+	UserID int64
+}
+
+// IsErrNeedToBeListWriter checks if an error is a ErrListDoesNotExist.
+func IsErrNeedToBeListWriter(err error) bool {
+	_, ok := err.(ErrNeedToBeListWriter)
+	return ok
+}
+
+func (err ErrNeedToBeListWriter) Error() string {
+	return fmt.Sprintf("You need to have write acces to the list to do that [ListID: %d, UserID: %d]", err.ListID, err.UserID)
+}
+
 // ================
 // List item errors
 // ================

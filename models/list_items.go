@@ -14,6 +14,9 @@ type ListItem struct {
 	Updated      int64  `xorm:"updated" json:"updated"`
 
 	CreatedBy User `xorm:"-" json:"createdBy"`
+
+	CRUDable `xorm:"-" json:"-"`
+	Rights   `xorm:"-" json:"-"`
 }
 
 // TableName returns the table name for listitems

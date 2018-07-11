@@ -90,5 +90,33 @@ func (l *List) IsAdmin(user *User) bool {
 	// Check Namespace rights
 	// TODO
 
+	// Check individual rights
+	// TODO
+
+	return false
+}
+
+// CanWrite return whether the user can write on that list or not
+func (l *List) CanWrite(user *User) bool {
+	// Admins always have write access
+	if l.IsAdmin(user) {
+		return true
+	}
+
+	// Owners always have write access
+	if l.Owner.ID == user.ID {
+		return true
+	}
+
+	// Check Namespace rights
+	// TODO
+	// TODO find a way to prioritize: what happens if a user has namespace write access but is not in that list?
+
+	// Check Team rights
+	// TODO
+
+	// Check individual rights
+	// TODO
+
 	return false
 }

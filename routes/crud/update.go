@@ -1,9 +1,9 @@
 package crud
 
 import (
+	"git.kolaente.de/konrad/list/models"
 	"github.com/labstack/echo"
 	"net/http"
-	"git.kolaente.de/konrad/list/models"
 )
 
 // UpdateWeb is the webhandler to update an object

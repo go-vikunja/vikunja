@@ -1,9 +1,9 @@
 package crud
 
 import (
+	"git.kolaente.de/konrad/list/models"
 	"github.com/labstack/echo"
 	"net/http"
-	"git.kolaente.de/konrad/list/models"
 )
 
 // DeleteWeb is the web handler to delete something

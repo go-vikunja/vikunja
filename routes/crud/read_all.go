@@ -1,10 +1,10 @@
 package crud
 
 import (
-	"github.com/labstack/echo"
-	"net/http"
 	"fmt"
 	"git.kolaente.de/konrad/list/models"
+	"github.com/labstack/echo"
+	"net/http"
 )
 
 // ReadAllWeb is the webhandler to get all objects of a type

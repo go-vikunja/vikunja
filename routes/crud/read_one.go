@@ -1,8 +1,8 @@
 package crud
 
 import (
-	"github.com/labstack/echo"
 	"git.kolaente.de/konrad/list/models"
+	"github.com/labstack/echo"
 	"net/http"
 )
 
