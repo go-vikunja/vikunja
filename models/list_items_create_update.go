@@ -1,64 +1,42 @@
 package models
 
-// CreateOrUpdateListItem adds or updates a todo item to a list
-func CreateOrUpdateListItem(item *ListItem) (newItem *ListItem, err error) {
-
-	// Check if the list exists
-	_, err = GetListByID(item.ListID)
-	if err != nil {
-		return
-	}
-
-	// Check if the user exists
-	item.CreatedBy, _, err = GetUserByID(item.CreatedBy.ID)
-	if err != nil {
-		return
-	}
-	item.CreatedByID = item.CreatedBy.ID
-
-	if item.ID != 0 {
-		_, err = x.ID(item.ID).Update(item)
-		if err != nil {
-			return
-		}
-	} else {
-		// Check if we have at least a text
-		if item.Text == "" {
-			return newItem, ErrListItemCannotBeEmpty{}
-		}
-
-		_, err = x.Insert(item)
-		if err != nil {
-			return
-		}
-	}
-
-	// Get the new/updated item
-	finalItem, err := GetListItemByID(item.ID)
-
-	return &finalItem, err
-}
-
 // Create is the implementation to create a list item
 func (i *ListItem) Create(doer *User, lID int64) (err error) {
 	i.ListID = lID
+	i.ID = 0
 
+	return createOrUpdateListItem(i, doer, lID)
+}
+
+// Update updates a list item
+func (i *ListItem) Update(ID int64, doer *User) (err error) {
+	i.ID = ID
+
+	// Get the full item
+	fullItem, err := GetListItemByID(ID)
+	if err != nil {
+		return
+	}
+
+	return createOrUpdateListItem(i, doer, fullItem.ListID)
+}
+
+// Helper function for creation or updating of new lists as both methods share most of their logic
+func createOrUpdateListItem(i *ListItem, doer *User, lID int64) (err error) {
 	// Check rights
 	user, _, err := GetUserByID(doer.ID)
 	if err != nil {
 		return
 	}
-	i.CreatedBy = user // Needed because we return the full item object
-	i.CreatedByID = user.ID
 
 	// Get the list to check if the user has the right to write to that list
-	list, err := GetListByID(lID)
+	list, err := GetListByID(lID) // TODO: Get the list with one query by item ID
 	if err != nil {
 		return
 	}
 
 	if !list.CanWrite(&user) {
-		return ErrNeedToBeListWriter{ListID: lID, UserID: user.ID}
+		return ErrNeedToBeListWriter{ListID: i.ListID, UserID: user.ID}
 	}
 
 	// Check if we have at least a text
@@ -66,9 +44,13 @@ func (i *ListItem) Create(doer *User, lID int64) (err error) {
 		return ErrListItemCannotBeEmpty{}
 	}
 
-	_, err = x.Insert(i)
-	if err != nil {
-		return
+	// Do the update
+	if i.ID != 0 {
+		_, err = x.ID(i.ID).Update(i)
+	} else {
+		i.CreatedByID = user.ID
+		i.CreatedBy = user
+		_, err = x.Insert(i)
 	}
 
 	return

@@ -101,7 +101,7 @@ func RegisterRoutes(e *echo.Echo) {
 	}
 	a.PUT("/lists/:id", itemHandler.CreateWeb)
 	a.DELETE("/item/:id", apiv1.DeleteListItemByIDtemByID)
-	a.POST("/item/:id", apiv1.UpdateListItem)
+	a.POST("/item/:id", itemHandler.UpdateWeb)
 
 	a.GET("/namespaces", apiv1.GetAllNamespacesByCurrentUser)
 	a.PUT("/namespaces", apiv1.AddNamespace)

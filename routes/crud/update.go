@@ -4,6 +4,7 @@ import (
 	"git.kolaente.de/konrad/list/models"
 	"github.com/labstack/echo"
 	"net/http"
+	"fmt"
 )
 
 // UpdateWeb is the webhandler to update an object
@@ -28,6 +29,7 @@ func (c *WebHandler) UpdateWeb(ctx echo.Context) error {
 	// Do the update
 	err = c.CObject.Update(id, &currentUser)
 	if err != nil {
+		fmt.Println(err)
 		if models.IsErrNeedToBeListAdmin(err) {
 			return echo.NewHTTPError(http.StatusForbidden, "You need to be list admin to do that.")
 		}
