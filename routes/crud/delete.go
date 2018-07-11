@@ -11,7 +11,7 @@ func (c *WebHandler) DeleteWeb(ctx echo.Context) error {
 	// Get the ID
 	id, err := models.GetIntURLParam("id", ctx)
 	if err != nil {
-		return ctx.JSON(http.StatusBadRequest, models.Message{"Invalid ID."})
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID.")
 	}
 
 	// Check if the user has the right to delete

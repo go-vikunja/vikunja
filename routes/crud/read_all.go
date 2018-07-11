@@ -10,12 +10,12 @@ import (
 func (c *WebHandler) ReadAllWeb(ctx echo.Context) error {
 	currentUser, err := models.GetCurrentUser(ctx)
 	if err != nil {
-		return ctx.JSON(http.StatusInternalServerError, models.Message{"Could not determine the current user."})
+		return echo.NewHTTPError(http.StatusInternalServerError, "Could not determine the current user.")
 	}
 
 	lists, err := c.CObject.ReadAll(&currentUser)
 	if err != nil {
-		return ctx.JSON(http.StatusInternalServerError, models.Message{"Could not get."})
+		return echo.NewHTTPError(http.StatusInternalServerError, "An error occured.")
 	}
 
 	return ctx.JSON(http.StatusOK, lists)

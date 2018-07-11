@@ -12,7 +12,7 @@ func (c *WebHandler) ReadOneWeb(ctx echo.Context) error {
 	// Get the ID
 	id, err := models.GetIntURLParam("id", ctx)
 	if err != nil {
-		return ctx.JSON(http.StatusBadRequest, models.Message{"Invalid ID."})
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID.")
 	}
 
 	// TODO check rights
@@ -21,10 +21,10 @@ func (c *WebHandler) ReadOneWeb(ctx echo.Context) error {
 	err = c.CObject.ReadOne(id)
 	if err != nil {
 		if models.IsErrListDoesNotExist(err) {
-			return ctx.JSON(http.StatusNotFound, models.Message{"Not found."})
+			return echo.NewHTTPError(http.StatusNotFound)
 		}
 
-		return ctx.JSON(http.StatusInternalServerError, models.Message{"An error occured."})
+		return echo.NewHTTPError(http.StatusInternalServerError, "An error occured.")
 	}
 
 	return ctx.JSON(http.StatusOK, c.CObject)

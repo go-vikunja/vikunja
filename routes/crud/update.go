@@ -11,19 +11,19 @@ import (
 func (c *WebHandler) UpdateWeb(ctx echo.Context) error {
 	// Get the object
 	if err := ctx.Bind(&c.CObject); err != nil {
-		return ctx.JSON(http.StatusBadRequest, models.Message{"No model provided."})
+		return echo.NewHTTPError(http.StatusBadRequest, "No or invalid model provided.")
 	}
 
 	// Get the ID
 	id, err := models.GetIntURLParam("id", ctx)
 	if err != nil {
-		return ctx.JSON(http.StatusBadRequest, models.Message{"Invalid ID."})
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID.")
 	}
 
 	// Check if the user has the right to do that
 	currentUser, err := models.GetCurrentUser(ctx)
 	if err != nil {
-		return ctx.JSON(http.StatusInternalServerError, models.Message{"Could not determine the current user."})
+		return echo.NewHTTPError(http.StatusInternalServerError, "Could not determine the current user.")
 	}
 
 	// Do the update

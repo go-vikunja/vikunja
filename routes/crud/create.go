@@ -10,7 +10,7 @@ import (
 func (c *WebHandler) CreateWeb(ctx echo.Context) error {
 	// Get the object
 	if err := ctx.Bind(&c.CObject); err != nil {
-		return ctx.JSON(http.StatusBadRequest, models.Message{"No model provided."})
+		return echo.NewHTTPError(http.StatusBadRequest, "No or invalid model provided.")
 	}
 
 	// Get the user to pass for later checks
