@@ -23,20 +23,11 @@ func (i *ListItem) Update(ID int64, doer *User) (err error) {
 
 // Helper function for creation or updating of new lists as both methods share most of their logic
 func createOrUpdateListItem(i *ListItem, doer *User, lID int64) (err error) {
+
 	// Check rights
-	user, _, err := GetUserByID(doer.ID)
+	user, err := listItemPreCheck(i, doer, lID)
 	if err != nil {
 		return
-	}
-
-	// Get the list to check if the user has the right to write to that list
-	list, err := GetListByID(lID) // TODO: Get the list with one query by item ID
-	if err != nil {
-		return
-	}
-
-	if !list.CanWrite(&user) {
-		return ErrNeedToBeListWriter{ListID: i.ListID, UserID: user.ID}
 	}
 
 	// Check if we have at least a text
@@ -51,6 +42,28 @@ func createOrUpdateListItem(i *ListItem, doer *User, lID int64) (err error) {
 		i.CreatedByID = user.ID
 		i.CreatedBy = user
 		_, err = x.Insert(i)
+	}
+
+	return
+}
+
+// This helper function checks if the user has the right to edit a list item.
+// It is used in Create/Update/Delete.
+func listItemPreCheck(i *ListItem, doer *User, lID int64) (user User, err error) {
+	// Check rights
+	user, _, err = GetUserByID(doer.ID)
+	if err != nil {
+		return
+	}
+
+	// Get the list to check if the user has the right to write to that list
+	list, err := GetListByID(lID) // TODO: Get the list with one query by item ID
+	if err != nil {
+		return
+	}
+
+	if !list.CanWrite(&user) {
+		return user, ErrNeedToBeListWriter{ListID: i.ListID, UserID: user.ID}
 	}
 
 	return

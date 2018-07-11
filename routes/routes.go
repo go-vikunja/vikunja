@@ -100,8 +100,8 @@ func RegisterRoutes(e *echo.Echo) {
 		CObject: &models.ListItem{},
 	}
 	a.PUT("/lists/:id", itemHandler.CreateWeb)
-	a.DELETE("/item/:id", apiv1.DeleteListItemByIDtemByID)
-	a.POST("/item/:id", itemHandler.UpdateWeb)
+	a.DELETE("/items/:id", itemHandler.DeleteWeb)
+	a.POST("/items/:id", itemHandler.UpdateWeb)
 
 	a.GET("/namespaces", apiv1.GetAllNamespacesByCurrentUser)
 	a.PUT("/namespaces", apiv1.AddNamespace)
