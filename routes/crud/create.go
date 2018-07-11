@@ -20,7 +20,7 @@ func (c *WebHandler) CreateWeb(ctx echo.Context) error {
 	}
 
 	// Get an ID if we have one
-	var id int64 = 0
+	var id int64
 	if ctx.Param("id") != "" {
 		id, err = models.GetIntURLParam("id", ctx)
 		if err != nil {
