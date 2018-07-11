@@ -31,7 +31,7 @@ func AddNamespace(c echo.Context) error {
 	//   "500":
 	//     "$ref": "#/responses/Message"
 
-	return addOrUpdateNamespace(c)
+	return echo.NewHTTPError(http.StatusNotImplemented)
 }
 
 // UpdateNamespace ...
@@ -63,7 +63,7 @@ func UpdateNamespace(c echo.Context) error {
 	//   "500":
 	//     "$ref": "#/responses/Message"
 
-	return addOrUpdateNamespace(c)
+	return echo.NewHTTPError(http.StatusNotImplemented)
 }
 
 // AddOrUpdateNamespace Adds or updates a new namespace

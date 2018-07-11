@@ -107,7 +107,7 @@ func RegisterRoutes(e *echo.Echo) {
 		CObject: &models.Namespace{},
 	}
 	a.GET("/namespaces", namespaceHandler.ReadAllWeb)
-	a.PUT("/namespaces", apiv1.AddNamespace)
+	a.PUT("/namespaces", namespaceHandler.CreateWeb)
 	a.GET("/namespaces/:id", apiv1.ShowNamespace)
 	a.POST("/namespaces/:id", apiv1.UpdateNamespace)
 	a.DELETE("/namespaces/:id", apiv1.DeleteNamespaceByID)

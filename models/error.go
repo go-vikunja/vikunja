@@ -305,3 +305,19 @@ func IsErrUserDoesNotHaveWriteAccessToNamespace(err error) bool {
 func (err ErrUserDoesNotHaveWriteAccessToNamespace) Error() string {
 	return fmt.Sprintf("You need to have write access to this namespace to do that [NamespaceID: %d, UserID: %d]", err.NamespaceID, err.UserID)
 }
+
+// ErrNamespaceNameCannotBeEmpty represents an error, where a namespace name is empty.
+type ErrNamespaceNameCannotBeEmpty struct {
+	NamespaceID int64
+	UserID      int64
+}
+
+// IsErrNamespaceNameCannotBeEmpty checks if an error is a ErrNamespaceDoesNotExist.
+func IsErrNamespaceNameCannotBeEmpty(err error) bool {
+	_, ok := err.(ErrNamespaceNameCannotBeEmpty)
+	return ok
+}
+
+func (err ErrNamespaceNameCannotBeEmpty) Error() string {
+	return fmt.Sprintf("Namespace name cannot be emtpy [NamespaceID: %d, UserID: %d]", err.NamespaceID, err.UserID)
+}

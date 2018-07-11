@@ -30,3 +30,21 @@ func CreateOrUpdateNamespace(namespace *Namespace) (err error) {
 
 	return
 }
+
+func (n *Namespace) Create(doer *User, _ int64) (err error) {
+	// Check if we have at least a name
+	if n.Name == "" {
+		return ErrNamespaceNameCannotBeEmpty{NamespaceID:0, UserID:doer.ID}
+	}
+
+	// Check if the User exists
+	n.Owner, _, err = GetUserByID(doer.ID)
+	if err != nil {
+		return
+	}
+	n.OwnerID = n.Owner.ID
+
+	// Insert
+	_, err = x.Insert(n)
+	return
+}
