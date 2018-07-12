@@ -20,15 +20,5 @@ func GetListsByUser(c echo.Context) error {
 	//   "500":
 	//     "$ref": "#/responses/Message"
 
-	/*currentUser, err := models.GetCurrentUser(c)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, models.Message{"Could not determine the current user."})
-	}
-
-	allLists, err := models.GetListsByUser(&currentUser)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, models.Message{"Could not get lists."})
-	}*/
-
 	return c.JSON(http.StatusOK, nil)
 }

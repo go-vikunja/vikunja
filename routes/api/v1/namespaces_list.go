@@ -21,17 +21,4 @@ func GetAllNamespacesByCurrentUser(c echo.Context) error {
 	//     "$ref": "#/responses/Message"
 
 	return echo.NewHTTPError(http.StatusNotImplemented)
-	/*
-
-		user, err := models.GetCurrentUser(c)
-		if err != nil {
-			return c.JSON(http.StatusInternalServerError, models.Message{"Could not get the current user."})
-		}
-
-		namespaces, err := models.GetAllNamespacesByUserID(user.ID)
-		if err != nil {
-			return c.JSON(http.StatusInternalServerError, models.Message{"Could not get namespaces."})
-		}
-
-		return c.JSON(http.StatusOK, namespaces)*/
 }

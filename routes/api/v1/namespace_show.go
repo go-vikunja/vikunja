@@ -1,10 +1,8 @@
 package v1
 
 import (
-	"git.kolaente.de/konrad/list/models"
 	"github.com/labstack/echo"
 	"net/http"
-	"strconv"
 )
 
 // ShowNamespace ...
@@ -31,31 +29,4 @@ func ShowNamespace(c echo.Context) error {
 	//     "$ref": "#/responses/Message"
 
 	return echo.NewHTTPError(http.StatusNotImplemented)
-}
-
-func getNamespace(c echo.Context) (namespace models.Namespace, err error) {
-	// Check if we have our ID
-	id := c.Param("id")
-	// Make int
-	namespaceID, err := strconv.ParseInt(id, 10, 64)
-	if err != nil {
-		return
-	}
-
-	// Get the namespace
-	namespace, err = models.GetNamespaceByID(namespaceID)
-	if err != nil {
-		return
-	}
-
-	// Check if the user has acces to that namespace
-	user, err := models.GetCurrentUser(c)
-	if err != nil {
-		return
-	}
-	if !namespace.CanRead(&user) {
-		return
-	}
-
-	return
 }
