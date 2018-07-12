@@ -53,7 +53,6 @@ func GetListsByNamespaceID(c echo.Context) error {
 	return c.JSON(http.StatusOK, lists)
 }
 
-
 func getNamespace(c echo.Context) (namespace models.Namespace, err error) {
 	// Check if we have our ID
 	id := c.Param("id")
