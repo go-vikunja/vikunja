@@ -7,4 +7,5 @@ type Rights interface {
 	CanRead(*User) bool
 	CanDelete(*User) bool
 	CanUpdate(*User, int64) bool
+	CanCreate(*User, int64) bool
 }

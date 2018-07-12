@@ -28,6 +28,11 @@ func (c *WebHandler) CreateWeb(ctx echo.Context) error {
 		}
 	}
 
+	// Check rights
+	if !c.CObject.CanCreate(&currentUser, id) {
+		return echo.NewHTTPError(http.StatusForbidden)
+	}
+
 	// Create
 	err = c.CObject.Create(&currentUser, id)
 	if err != nil {

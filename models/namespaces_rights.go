@@ -87,3 +87,9 @@ func (n *Namespace) CanUpdate(user *User, id int64) bool {
 	nn, _ := GetNamespaceByID(id)
 	return nn.IsAdmin(user)
 }
+
+// CanCreate checks if the user can create a new namespace
+func (n *Namespace) CanCreate(user *User, id int64) bool {
+	// This is currently a dummy function, later on we could imagine global limits etc.
+	return true
+}
