@@ -1,29 +1,26 @@
 package models
 
-// DeleteNamespaceByID deletes a namespace and takes its id as an argument
-func DeleteNamespaceByID(namespaceID int64, doer *User) (err error) {
+// Delete deletes a namespace
+func (n *Namespace) Delete(id int64) (err error) {
 
 	// Check if the namespace exists
-	namespace, err := GetNamespaceByID(namespaceID)
-	if err != nil {
-		return
-	}
-
-	// Check if the user is namespace admin
-	err = doer.IsNamespaceAdmin(&namespace)
+	_, err = GetNamespaceByID(id)
 	if err != nil {
 		return
 	}
 
 	// Delete the namespace
-	_, err = x.ID(namespaceID).Delete(&Namespace{})
+	_, err = x.ID(id).Delete(&Namespace{})
 	if err != nil {
 		return
 	}
 
 	// Delete all lists with their items
-	lists, err := GetListsByNamespaceID(namespaceID)
+	lists, err := GetListsByNamespaceID(id)
 	var listIDs []int64
+	// We need to do that for here because we need the list ids to delete two times:
+	// 1) to delete the lists itself
+	// 2) to delete the list items
 	for _, list := range lists {
 		listIDs = append(listIDs, list.ID)
 	}

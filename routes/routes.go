@@ -110,6 +110,6 @@ func RegisterRoutes(e *echo.Echo) {
 	a.PUT("/namespaces", namespaceHandler.CreateWeb)
 	a.GET("/namespaces/:id", namespaceHandler.ReadOneWeb)
 	a.POST("/namespaces/:id", namespaceHandler.UpdateWeb)
-	a.DELETE("/namespaces/:id", apiv1.DeleteNamespaceByID)
+	a.DELETE("/namespaces/:id", namespaceHandler.DeleteWeb)
 	a.GET("/namespaces/:id/lists", apiv1.GetListsByNamespaceID)
 }
