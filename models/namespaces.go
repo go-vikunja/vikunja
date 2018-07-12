@@ -21,6 +21,11 @@ func (Namespace) TableName() string {
 	return "namespaces"
 }
 
+// AfterLoad gets the owner
+func (n *Namespace) AfterLoad() {
+	n.Owner, _, _ = GetUserByID(n.OwnerID)
+}
+
 // NamespaceRight defines the rights teams can have for namespaces
 type NamespaceRight int
 
@@ -106,6 +111,20 @@ func GetNamespaceByID(id int64) (namespace Namespace, err error) {
 	}
 
 	return namespace, err
+}
+
+// ReadOne gets one namespace
+func (n *Namespace) ReadOne(id int64) (err error) {
+	exists, err := x.ID(id).Get(n)
+	if err != nil {
+		return
+	}
+
+	if !exists {
+		return ErrNamespaceDoesNotExist{ID: id}
+	}
+
+	return
 }
 
 // ReadAll gets all namespaces a user has access to
