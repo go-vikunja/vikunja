@@ -51,8 +51,8 @@ func SetEngine() (err error) {
 	}
 
 	// Cache
-	cacher := xorm.NewLRUCacher(xorm.NewMemoryStore(), 1000)
-	x.SetDefaultCacher(cacher)
+	//cacher := xorm.NewLRUCacher(xorm.NewMemoryStore(), 1000)
+	//x.SetDefaultCacher(cacher)
 
 	x.SetMapper(core.GonicMapper{})
 
