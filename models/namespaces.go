@@ -70,18 +70,6 @@ func (n *Namespace) IsAdmin(user *User) bool {
 	return false
 }
 
-// HasNamespaceAccess checks if the User has namespace read access
-func (user *User) HasNamespaceAccess(namespace *Namespace) (err error) {
-	// Owners always have access
-	if user.ID == namespace.Owner.ID {
-		return nil
-	}
-
-	// Check if the user is in a team which has access to the namespace
-
-	return ErrUserDoesNotHaveAccessToNamespace{UserID: user.ID, NamespaceID: namespace.ID}
-}
-
 // CanWrite checks if a user has write access to a namespace
 func (n *Namespace) CanWrite(user *User) bool {
 	// Owners always have access
@@ -115,7 +103,8 @@ func GetNamespaceByID(id int64) (namespace Namespace, err error) {
 
 // ReadOne gets one namespace
 func (n *Namespace) ReadOne(id int64) (err error) {
-	exists, err := x.ID(id).Get(n)
+	getN := Namespace{}
+	exists, err := x.ID(id).Get(&getN)
 	if err != nil {
 		return
 	}
@@ -123,6 +112,8 @@ func (n *Namespace) ReadOne(id int64) (err error) {
 	if !exists {
 		return ErrNamespaceDoesNotExist{ID: id}
 	}
+
+	*n = getN
 
 	return
 }
@@ -173,4 +164,26 @@ func (n *Namespace) ReadAll(doer *User) (interface{}, error) {
 	}
 
 	return all, nil
+}
+
+func (n *Namespace) CanRead(user *User) bool {
+	// Owners always have access
+	if user.ID == n.Owner.ID {
+		return true
+	}
+
+	// Check if the user is in a team which has access to the namespace
+	all := Namespace{}
+	// TODO respect individual rights
+	exists, _ := x.Select("namespaces.*").
+		Table("namespaces").
+		Join("LEFT", "team_namespaces", "namespaces.id = team_namespaces.namespace_id").
+		Join("LEFT", "team_members", "team_members.team_id = team_namespaces.team_id").
+		Where("team_members.user_id = ?", user.ID).
+		Or("namespaces.owner_id = ?", user.ID).
+		And("namespaces.id = ?", n.ID).
+		GroupBy("namespaces.id").
+		Get(&all)
+
+	return exists
 }

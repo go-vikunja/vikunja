@@ -1,7 +1,6 @@
 package crud
 
 import (
-	"fmt"
 	"git.kolaente.de/konrad/list/models"
 	"github.com/labstack/echo"
 	"net/http"
@@ -16,9 +15,6 @@ func (c *WebHandler) ReadOneWeb(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID.")
 	}
 
-	// TODO check rights
-	//c.CObject.CanRead(doer)
-
 	// Get our object
 	err = c.CObject.ReadOne(id)
 	if err != nil {
@@ -30,9 +26,17 @@ func (c *WebHandler) ReadOneWeb(ctx echo.Context) error {
 			return echo.NewHTTPError(http.StatusNotFound)
 		}
 
-		fmt.Println(err)
-
 		return echo.NewHTTPError(http.StatusInternalServerError, "An error occured.")
+	}
+
+	// Check rights
+	// We can only check the rights on a full object, which is why we need to check it afterwards
+	currentUser, err := models.GetCurrentUser(ctx)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Could not determine the current user.")
+	}
+	if !c.CObject.CanRead(&currentUser) {
+		return echo.NewHTTPError(http.StatusForbidden, "You don't have the right to see this")
 	}
 
 	return ctx.JSON(http.StatusOK, c.CObject)

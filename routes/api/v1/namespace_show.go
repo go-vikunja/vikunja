@@ -30,18 +30,7 @@ func ShowNamespace(c echo.Context) error {
 	//   "500":
 	//     "$ref": "#/responses/Message"
 
-	namespace, err := getNamespace(c)
-	if err != nil {
-		if models.IsErrNamespaceDoesNotExist(err) {
-			return c.JSON(http.StatusNotFound, models.Message{"Namespace not found."})
-		}
-		if models.IsErrUserDoesNotHaveAccessToNamespace(err) {
-			return c.JSON(http.StatusForbidden, models.Message{"You don't have access to this namespace."})
-		}
-		return c.JSON(http.StatusInternalServerError, models.Message{"An error occured."})
-	}
-
-	return c.JSON(http.StatusOK, namespace)
+	return echo.NewHTTPError(http.StatusNotImplemented)
 }
 
 func getNamespace(c echo.Context) (namespace models.Namespace, err error) {
@@ -64,8 +53,7 @@ func getNamespace(c echo.Context) (namespace models.Namespace, err error) {
 	if err != nil {
 		return
 	}
-	err = user.HasNamespaceAccess(&namespace)
-	if err != nil {
+	if !namespace.CanRead(&user) {
 		return
 	}
 
