@@ -126,12 +126,14 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
   * [ ] Mit Link
     * [ ] Offen
     * [ ] Passwortgeschützt
+* [ ] Rechtemanagement (Und damit Unterscheidung zwischen Ownern und Mitgleidern)
     
-    Wenn man Listen mit nem Nutzer teilt, wird ein Team für diesen Nutzer erstellt, falls er nicht bereits in einem ist.
+    ?? Wenn man Listen mit nem Nutzer teilt, wird ein Team für diesen Nutzer erstellt, falls er nicht bereits in einem ist.
 
 #### v0.3
 
-* [ ] Rechtemanagement (Und damit Unterscheidung zwischen Ownern und Mitgleidern)
+* [ ] Labels
+* [ ] Priorities
 
 #### v0.4 
 
@@ -151,24 +153,25 @@ Wenn ein Objekt 5x hin und hergereicht wird, und jedesmal nur geringfügig was d
 doch auch in einer Funktion machbar sein.
     * [ ] ganz viel in eigene neue Dateien + Packages auslagern, am besten eine package pro model mit allen methoden etc.
     * [ ] Alle alten dinger die nicht mehr gebraucht werden, weg.
-        * [ ] Die alten handlerfunktionen alle in eine datei packen und erstmal "lagern", erstmal brauchen wir die noch für swagger.
-* [ ] CI aufsetzen
+        * [x] Die alten handlerfunktionen alle in eine datei packen und erstmal "lagern", erstmal brauchen wir die noch für swagger.
+* [ ] Drone aufsetzen
 * [ ] Tests schreiben
 * [ ] Namen finden
 * [ ] Alle Packages umziehen
 * [x] Swagger UI aufsetzen
 * [ ] Cacher konfigurierbar
-* [ ] Überall echo.NewHTTPError statt c.JSON(Message{}) benutzen
+* [ ] Deps nach dep umziehen
+* [x] Überall echo.NewHTTPError statt c.JSON(Message{}) benutzen
 * [ ] Bessere Fehlermeldungen wenn das Model was ankommt falsch ist und nicht geparst werden kann
 * [ ] Fehlerhandling irgendwie besser machen. Zb mit "World error messages"? Sprich, die Methode ruft einfach auf obs die entsprechende Fehlermeldung gibt und zeigt sonst 500 an.
 * [ ] Endpoints neu organisieren? Also zb `namespaces/:nID/lists/:lID/items/:iID` statt einzelnen Endpoints für alles
 
 * [ ] "Apiformat" Methoden, damit in der Ausgabe zb kein Passwort drin ist..., oder created/updated von Nutzern... oder ownerID nicht drin ist sondern nur das ownerobject
-* [ ] Rechte überprüfen:
-  * [ ] Listen erstellen
-  * [ ] Listen bearbeiten (nur eigene im Moment)
-  * [ ] Listenpunkte hinzufügen
-  * [ ] Listenpunkte bearbeiten
+* [x] Rechte überprüfen:
+  * [x] Listen erstellen
+  * [x] Listen bearbeiten (nur eigene im Moment)
+  * [x] Listenpunkte hinzufügen
+  * [x] Listenpunkte bearbeiten
 * [ ] An "accepted" für post/put payloads schrauben, man soll da zb keine id/created/updated/etc übergeben können.
 
 * [ ] Globale Limits für anlegbare Listen + Namespaces
