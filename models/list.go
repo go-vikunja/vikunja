@@ -18,9 +18,6 @@ type List struct {
 	Rights   `xorm:"-" json:"-"`
 }
 
-// Lists is a multiple of list
-type Lists []List
-
 // AfterLoad loads the owner and list items
 func (l *List) AfterLoad() {
 
@@ -53,7 +50,7 @@ func GetListsByNamespaceID(nID int64) (lists []*List, err error) {
 
 // ReadAll gets all lists a user has access to
 func (l *List) ReadAll(user *User) (interface{}, error) {
-	lists := Lists{}
+	lists := []List{}
 	fullUser, _, err := GetUserByID(user.ID)
 	if err != nil {
 		return lists, err
