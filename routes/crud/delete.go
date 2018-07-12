@@ -23,7 +23,7 @@ func (c *WebHandler) DeleteWeb(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusForbidden)
 	}
 
-	err = c.CObject.Delete(id, &user)
+	err = c.CObject.Delete(id)
 	if err != nil {
 		if models.IsErrNeedToBeListAdmin(err) {
 			return echo.NewHTTPError(http.StatusForbidden, "You need to be the list admin to delete a list.")

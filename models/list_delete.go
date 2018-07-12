@@ -1,7 +1,7 @@
 package models
 
 // Delete implements the delete method of CRUDable
-func (l *List) Delete(id int64, doer *User) (err error) {
+func (l *List) Delete(id int64) (err error) {
 	// Check if the list exists
 	_, err = GetListByID(id)
 	if err != nil {

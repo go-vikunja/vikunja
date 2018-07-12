@@ -1,7 +1,7 @@
 package models
 
 // Delete implements the delete method for listItem
-func (i *ListItem) Delete(id int64, doer *User) (err error) {
+func (i *ListItem) Delete(id int64) (err error) {
 
 	// Check if it exists
 	_, err = GetListItemByID(id)
