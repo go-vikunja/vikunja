@@ -4,13 +4,7 @@ package models
 func (i *ListItem) Delete(id int64, doer *User) (err error) {
 
 	// Check if it exists
-	listitem, err := GetListItemByID(id)
-	if err != nil {
-		return
-	}
-
-	// Check if the user hat the right to delete that item
-	_, err = listItemPreCheck(i, doer, listitem.ListID)
+	_, err = GetListItemByID(id)
 	if err != nil {
 		return
 	}

@@ -79,3 +79,8 @@ func (l *List) CanRead(user *User) bool {
 
 	return false
 }
+
+// CanDelete checks if the user can delete a list
+func (l *List) CanDelete(doer *User) (bool) {
+	return l.IsAdmin(doer)
+}

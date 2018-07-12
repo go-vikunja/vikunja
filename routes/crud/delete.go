@@ -19,6 +19,9 @@ func (c *WebHandler) DeleteWeb(ctx echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
+	if !c.CObject.CanDelete(&user) {
+		return echo.NewHTTPError(http.StatusForbidden)
+	}
 
 	err = c.CObject.Delete(id, &user)
 	if err != nil {
