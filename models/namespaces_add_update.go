@@ -20,10 +20,10 @@ func (n *Namespace) Create(doer *User, _ int64) (err error) {
 }
 
 // Update implements the update method via the interface
-func (n *Namespace) Update(id int64, doer *User) (err error) {
+func (n *Namespace) Update(id int64) (err error) {
 	// Check if we have at least a name
 	if n.Name == "" {
-		return ErrNamespaceNameCannotBeEmpty{NamespaceID: id, UserID: doer.ID}
+		return ErrNamespaceNameCannotBeEmpty{NamespaceID: id}
 	}
 	n.ID = id
 
@@ -35,20 +35,10 @@ func (n *Namespace) Update(id int64, doer *User) (err error) {
 
 	// Check if the (new) owner exists
 	if currentNamespace.OwnerID != n.OwnerID {
-		n.Owner, _, err = GetUserByID(doer.ID)
+		n.Owner, _, err = GetUserByID(n.OwnerID)
 		if err != nil {
 			return
 		}
-	}
-
-	// Check rights
-	user, _, err := GetUserByID(doer.ID)
-	if err != nil {
-		return
-	}
-
-	if !currentNamespace.IsAdmin(&user) {
-		return ErrNeedToBeNamespaceAdmin{NamespaceID: id, UserID: doer.ID}
 	}
 
 	// Do the actual update

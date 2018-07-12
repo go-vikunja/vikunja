@@ -20,23 +20,13 @@ func CreateOrUpdateList(list *List) (err error) {
 }
 
 // Update implements the update method of CRUDable
-func (l *List) Update(id int64, doer *User) (err error) {
+func (l *List) Update(id int64) (err error) {
 	l.ID = id
 
 	// Check if it exists
-	oldList, err := GetListByID(l.ID)
+	_, err = GetListByID(l.ID)
 	if err != nil {
 		return
-	}
-
-	// Check rights
-	user, _, err := GetUserByID(doer.ID)
-	if err != nil {
-		return
-	}
-
-	if !oldList.IsAdmin(&user) {
-		return ErrNeedToBeListAdmin{ListID: id, UserID: user.ID}
 	}
 
 	return CreateOrUpdateList(l)

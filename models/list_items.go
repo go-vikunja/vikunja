@@ -92,10 +92,3 @@ func GetListItemByID(listItemID int64) (listItem ListItem, err error) {
 
 	return
 }
-
-// CanDelete checks if the user can delete an item
-func (i *ListItem) CanDelete(doer *User) (bool) {
-	// A user can delete an item if he has write acces to its list
-	list, _ := GetListByID(i.ListID)
-	return list.CanWrite(doer)
-}

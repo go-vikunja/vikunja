@@ -24,9 +24,12 @@ func (c *WebHandler) UpdateWeb(ctx echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Could not determine the current user.")
 	}
+	if !c.CObject.CanUpdate(&currentUser, id) {
+		return echo.NewHTTPError(http.StatusForbidden)
+	}
 
 	// Do the update
-	err = c.CObject.Update(id, &currentUser)
+	err = c.CObject.Update(id)
 	if err != nil {
 		if models.IsErrNeedToBeListAdmin(err) {
 			return echo.NewHTTPError(http.StatusForbidden, "You need to be list admin to do that.")

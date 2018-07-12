@@ -81,3 +81,9 @@ func (n *Namespace) CanRead(user *User) bool {
 
 	return exists
 }
+
+// CanUpdate checks if the user can update the namespace
+func (n *Namespace) CanUpdate(user *User, id int64) bool {
+	nn, _ := GetNamespaceByID(id)
+	return nn.IsAdmin(user)
+}
