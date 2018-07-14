@@ -4,10 +4,15 @@ import (
 	"git.kolaente.de/konrad/list/models"
 	"github.com/labstack/echo"
 	"net/http"
+	"reflect"
 )
 
 // UpdateWeb is the webhandler to update an object
 func (c *WebHandler) UpdateWeb(ctx echo.Context) error {
+	// Re-initialize our model
+	p := reflect.ValueOf(c.CObject).Elem()
+	p.Set(reflect.Zero(p.Type()))
+
 	// Get the object
 	if err := ctx.Bind(&c.CObject); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "No or invalid model provided.")

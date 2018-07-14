@@ -84,15 +84,3 @@ func GetAllTeamsByNamespaceID(id int64) (teams []*Team, err error) {
 
 	return
 }
-
-// Empty empties a struct. Because we heavily use pointers, the old values remain in the struct.
-// If you then update by not providing evrything, you have i.e. the old description still in the
-// newly created team,  but you didn't provided one.
-func (t *Team) Empty() {
-	t.ID = 0
-	t.CreatedByID = 0
-	t.CreatedBy = &User{}
-	t.Name = ""
-	t.Description = ""
-	t.Members = []*User{}
-}
