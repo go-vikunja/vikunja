@@ -7,14 +7,16 @@ func (t *Team) Create(doer *User, _ int64) (err error) {
 		return ErrTeamNameCannotBeEmpty{}
 	}
 
-	// Set the id to 0, otherwise the creation fails because of double keys
 	t.CreatedByID = doer.ID
-	t.CreatedBy = doer
+	t.CreatedBy = *doer
 
 	_, err = x.Insert(t)
 	if err != nil {
 		return
 	}
 
+	// Insert the current user as member and admin
+	tm := TeamMember{TeamID: t.ID, UserID: doer.ID, IsAdmin: true}
+	err = tm.Create(doer, t.ID)
 	return
 }

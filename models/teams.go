@@ -7,7 +7,7 @@ type Team struct {
 	Description string `xorm:"varchar(250)" json:"description"`
 	CreatedByID int64  `xorm:"int(11) not null" json:"-"`
 
-	CreatedBy *User   `xorm:"-" json:"created_by"`
+	CreatedBy User    `xorm:"-" json:"created_by"`
 	Members   []*User `xorm:"-" json:"members"`
 
 	Created int64 `xorm:"created" json:"created"`
@@ -25,17 +25,21 @@ func (Team) TableName() string {
 // AfterLoad gets the created by user object
 func (t *Team) AfterLoad() {
 	// Get the owner
-	*t.CreatedBy, _, _ = GetUserByID(t.CreatedByID)
+	t.CreatedBy, _, _ = GetUserByID(t.CreatedByID)
 }
 
 // TeamMember defines the relationship between a user and a team
 type TeamMember struct {
-	ID     int64 `xorm:"int(11) autoincr not null unique pk" json:"id"`
-	TeamID int64 `xorm:"int(11) not null" json:"team_id"`
-	UserID int64 `xorm:"int(11) not null" json:"user_id"`
+	ID      int64 `xorm:"int(11) autoincr not null unique pk" json:"id"`
+	TeamID  int64 `xorm:"int(11) not null" json:"team_id"`
+	UserID  int64 `xorm:"int(11) not null" json:"user_id"`
+	IsAdmin bool  `xorm:"tinyint(1)" json:"is_admin"`
 
 	Created int64 `xorm:"created" json:"created"`
 	Updated int64 `xorm:"updated" json:"updated"`
+
+	CRUDable `xorm:"-" json:"-"`
+	Rights   `xorm:"-" json:"-"`
 }
 
 // TableName makes beautiful table names
@@ -81,6 +85,19 @@ func GetAllTeamsByNamespaceID(id int64) (teams []*Team, err error) {
 		Join("INNER", "team_namespaces", "teams.id = team_id").
 		Where("teams.namespace_id = ?", id).
 		Find(teams)
+
+	return
+}
+
+// GetTeamByID gets a team by its ID
+func GetTeamByID(id int64) (team Team, err error) {
+	exists, err := x.Where("id = ?", id).Get(&team)
+	if err != nil {
+		return
+	}
+	if !exists {
+		return team, ErrTeamDoesNotExist{id}
+	}
 
 	return
 }

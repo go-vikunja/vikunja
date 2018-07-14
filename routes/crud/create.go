@@ -58,6 +58,10 @@ func (c *WebHandler) CreateWeb(ctx echo.Context) error {
 			return echo.NewHTTPError(http.StatusNotFound, "The namespace name cannot be empty.")
 		}
 
+		if models.IsErrTeamNameCannotBeEmpty(err) {
+			return echo.NewHTTPError(http.StatusBadRequest, "The team name cannot be empty.")
+		}
+
 		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
 

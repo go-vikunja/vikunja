@@ -358,7 +358,7 @@ func (err ErrNeedToBeNamespaceAdmin) Error() string {
 // Team errors
 // ============
 
-// ErrTeamNameCannotBeEmpty represents an error, where a namespace owner is empty.
+// ErrTeamNameCannotBeEmpty represents an error where a team name is empty.
 type ErrTeamNameCannotBeEmpty struct {
 	TeamID int64
 }
@@ -371,4 +371,19 @@ func IsErrTeamNameCannotBeEmpty(err error) bool {
 
 func (err ErrTeamNameCannotBeEmpty) Error() string {
 	return fmt.Sprintf("Team name cannot be empty [Team ID: %d]", err.TeamID)
+}
+
+// ErrTeamDoesNotExist represents an error where a team does not exist
+type ErrTeamDoesNotExist struct {
+	TeamID int64
+}
+
+// IsErrTeamDoesNotExist checks if an error is ErrTeamDoesNotExist.
+func IsErrTeamDoesNotExist(err error) bool {
+	_, ok := err.(ErrTeamDoesNotExist)
+	return ok
+}
+
+func (err ErrTeamDoesNotExist) Error() string {
+	return fmt.Sprintf("Team does not exist [Team ID: %d]", err.TeamID)
 }

@@ -120,5 +120,5 @@ func RegisterRoutes(e *echo.Echo) {
 	a.GET("/teams/:id", teamHandler.ReadOneWeb)
 	a.PUT("/teams", teamHandler.CreateWeb)
 	a.POST("/teams/:id", teamHandler.UpdateWeb)
-	a.POST("/teams/:id", teamHandler.DeleteWeb)
+	a.DELETE("/teams/:id", teamHandler.DeleteWeb)
 }
