@@ -1,10 +1,10 @@
 package crud
 
 import (
+	"fmt"
 	"git.kolaente.de/konrad/list/models"
 	"github.com/labstack/echo"
 	"net/http"
-	"fmt"
 )
 
 // CreateWeb is the handler to create an object

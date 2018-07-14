@@ -1,5 +1,6 @@
 package models
 
+// Create is the handler to create a team
 func (t *Team) Create(doer *User, _ int64) (err error) {
 	// Check if we have a name
 	if t.Name == "" {
