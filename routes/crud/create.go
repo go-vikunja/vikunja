@@ -4,10 +4,14 @@ import (
 	"git.kolaente.de/konrad/list/models"
 	"github.com/labstack/echo"
 	"net/http"
+	"fmt"
 )
 
 // CreateWeb is the handler to create an object
 func (c *WebHandler) CreateWeb(ctx echo.Context) error {
+	// Re-initialize our model
+	c.CObject.Empty()
+
 	// Get the object
 	if err := ctx.Bind(&c.CObject); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "No or invalid model provided.")
@@ -52,6 +56,8 @@ func (c *WebHandler) CreateWeb(ctx echo.Context) error {
 		if models.IsErrNamespaceNameCannotBeEmpty(err) {
 			return echo.NewHTTPError(http.StatusNotFound, "The namespace name cannot be empty.")
 		}
+
+		fmt.Println(err)
 
 		return echo.NewHTTPError(http.StatusInternalServerError)
 	}

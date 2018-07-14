@@ -353,3 +353,22 @@ func IsErrNeedToBeNamespaceAdmin(err error) bool {
 func (err ErrNeedToBeNamespaceAdmin) Error() string {
 	return fmt.Sprintf("You need to be namespace owner to do that [NamespaceID: %d, UserID: %d]", err.NamespaceID, err.UserID)
 }
+
+// ============
+// Team errors
+// ============
+
+// ErrTeamNameCannotBeEmpty represents an error, where a namespace owner is empty.
+type ErrTeamNameCannotBeEmpty struct {
+	TeamID int64
+}
+
+// IsErrTeamNameCannotBeEmpty checks if an error is a ErrNamespaceDoesNotExist.
+func IsErrTeamNameCannotBeEmpty(err error) bool {
+	_, ok := err.(ErrTeamNameCannotBeEmpty)
+	return ok
+}
+
+func (err ErrTeamNameCannotBeEmpty) Error() string {
+	return fmt.Sprintf("Team name cannot be empty [Team ID: %d]", err.TeamID)
+}

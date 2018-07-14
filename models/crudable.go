@@ -7,4 +7,8 @@ type CRUDable interface {
 	ReadAll(*User) (interface{}, error)
 	Update(int64) error
 	Delete(int64) error
+
+	// This method is needed, because old values would otherwise remain in the struct.
+	// TODO find a way of not needing an extra function
+	Empty()
 }
