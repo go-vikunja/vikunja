@@ -100,13 +100,13 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
 
 #### Neues Todo
 
-* [ ] Teams
-  * [ ] Erstellen
-  * [ ] Ansehen
-  * [ ] Bearbeiten
-  * [ ] Löschen
+* [x] Teams
+  * [x] Erstellen
+  * [x] Ansehen
+  * [x] Bearbeiten
+  * [x] Löschen
   
-  Ein zu lösendes Problem: Wie regelt man die Berechtigungen um Teams zu verwalten?
+  ~~Ein zu lösendes Problem: Wie regelt man die Berechtigungen um Teams zu verwalten?~~
   
 * [ ] Namespaces
   * [x] Erstellen
@@ -142,7 +142,7 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
 ## Clients
 
 * [ ] Webapp (vue.js) + Bulma
-* [ ] "Native" Clients (auf dem Rechner installiert (mit elektron oder so? Oder native?)
+* [ ] "Native" Clients (auf dem Rechner installiert (mit elektron oder so? Oder native mit qt oder so?)
 * [ ] Android (Flutter)
 * [ ] iOS (mit Framework???? (Ging das nich auch mit Flutter?))
 
@@ -160,7 +160,7 @@ doch auch in einer Funktion machbar sein.
 * [ ] Alle Packages umziehen
 * [x] Swagger UI aufsetzen
 * [ ] Cacher konfigurierbar
-* [ ] Deps nach dep umziehen
+* [ ] Deps nach mod (dem nachfolger von dep) umziehen, blocked by Go 1.11
 * [x] Überall echo.NewHTTPError statt c.JSON(Message{}) benutzen
 * [ ] Bessere Fehlermeldungen wenn das Model was ankommt falsch ist und nicht geparst werden kann
 * [ ] Fehlerhandling irgendwie besser machen. Zb mit "World error messages"? Sprich, die Methode ruft einfach auf obs die entsprechende Fehlermeldung gibt und zeigt sonst 500 an.
