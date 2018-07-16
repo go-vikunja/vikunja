@@ -1,5 +1,6 @@
 package models
 
+// Delete deletes a team
 func (t *Team) Delete(id int64) (err error) {
 
 	// Check if the team exists

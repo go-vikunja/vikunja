@@ -54,6 +54,7 @@ func (TeamMember) TableName() string {
 	return "team_members"
 }
 
+// TeamUser is the team member type
 type TeamUser struct {
 	User    `xorm:"extends"`
 	IsAdmin bool `json:"is_admin"`

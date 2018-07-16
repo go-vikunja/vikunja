@@ -18,13 +18,13 @@ func (t *Team) CanUpdate(user *User, id int64) bool {
 	return exists
 }
 
-// CanDelete
+// CanDelete checks if a user can delete a team
 func (t *Team) CanDelete(user *User, id int64) bool {
 	t.ID = id
 	return t.IsAdmin(user)
 }
 
-// IsAdmin
+// IsAdmin returns true when the user is admin of a team
 func (t *Team) IsAdmin(user *User) bool {
 	exists, _ := x.Where("team_id = ?", t.ID).
 		And("user_id = ?", user.ID).
@@ -33,6 +33,7 @@ func (t *Team) IsAdmin(user *User) bool {
 	return exists
 }
 
+// CanRead returns true if the user has read access to the team
 func (t *Team) CanRead(user *User) bool {
 	// Check if the user is in the team
 	exists, _ := x.Where("team_id = ?", t.ID).
