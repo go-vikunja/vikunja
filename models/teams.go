@@ -120,3 +120,15 @@ func (t *Team) ReadOne(id int64) (err error) {
 	*t, err = GetTeamByID(id)
 	return
 }
+
+// ReadAll gets all teams the user is part of
+func (t *Team) ReadAll(user *User) (teams interface{}, err error) {
+	all := []*Team{}
+	err = x.Select("teams.*").
+		Table("teams").
+		Join("INNER", "team_members", "team_members.team_id = teams.id").
+		Where("team_members.user_id = ?", user.ID).
+		Find(&all)
+
+	return all, err
+}
