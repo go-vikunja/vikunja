@@ -7,8 +7,8 @@ type Team struct {
 	Description string `xorm:"varchar(250)" json:"description"`
 	CreatedByID int64  `xorm:"int(11) not null" json:"-"`
 
-	CreatedBy User    `xorm:"-" json:"created_by"`
-	Members   []*User `xorm:"-" json:"members"`
+	CreatedBy User        `xorm:"-" json:"created_by"`
+	Members   []*TeamUser `xorm:"-" json:"members"`
 
 	Created int64 `xorm:"created" json:"created"`
 	Updated int64 `xorm:"updated" json:"updated"`
@@ -26,6 +26,13 @@ func (Team) TableName() string {
 func (t *Team) AfterLoad() {
 	// Get the owner
 	t.CreatedBy, _, _ = GetUserByID(t.CreatedByID)
+
+	// Get all members
+	x.Select("*").
+		Table("users").
+		Join("INNER", "team_members", "team_members.user_id = users.id").
+		Where("team_id = ?", t.ID).
+		Find(&t.Members)
 }
 
 // TeamMember defines the relationship between a user and a team
@@ -45,6 +52,11 @@ type TeamMember struct {
 // TableName makes beautiful table names
 func (TeamMember) TableName() string {
 	return "team_members"
+}
+
+type TeamUser struct {
+	User    `xorm:"extends"`
+	IsAdmin bool `json:"is_admin"`
 }
 
 // TeamNamespace defines the relationship between a Team and a Namespace
@@ -99,5 +111,11 @@ func GetTeamByID(id int64) (team Team, err error) {
 		return team, ErrTeamDoesNotExist{id}
 	}
 
+	return
+}
+
+// ReadOne implements the CRUD method to get one team
+func (t *Team) ReadOne(id int64) (err error) {
+	*t, err = GetTeamByID(id)
 	return
 }

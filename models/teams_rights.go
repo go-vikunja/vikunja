@@ -32,3 +32,11 @@ func (t *Team) IsAdmin(user *User) bool {
 		Get(&TeamMember{})
 	return exists
 }
+
+func (t *Team) CanRead(user *User) bool {
+	// Check if the user is in the team
+	exists, _ := x.Where("team_id = ?", t.ID).
+		And("user_id = ?", user.ID).
+		Get(&TeamMember{})
+	return exists
+}
