@@ -17,3 +17,18 @@ func (t *Team) CanUpdate(user *User, id int64) bool {
 
 	return exists
 }
+
+// CanDelete
+func (t *Team) CanDelete(user *User, id int64) bool {
+	t.ID = id
+	return t.IsAdmin(user)
+}
+
+// IsAdmin
+func (t *Team) IsAdmin(user *User) bool {
+	exists, _ := x.Where("team_id = ?", t.ID).
+		And("user_id = ?", user.ID).
+		And("is_admin = ?", true).
+		Get(&TeamMember{})
+	return exists
+}

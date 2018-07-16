@@ -33,6 +33,10 @@ func (c *WebHandler) DeleteWeb(ctx echo.Context) error {
 			return echo.NewHTTPError(http.StatusNotFound, "This list does not exist.")
 		}
 
+		if models.IsErrTeamDoesNotExist(err) {
+			return echo.NewHTTPError(http.StatusNotFound, "This team does not exist.")
+		}
+
 		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
 
