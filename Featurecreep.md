@@ -133,7 +133,7 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
 *Routen*
 
 * [ ] `namespaces/:id/teams`
-    * [ ] Create
+    * [x] Create
     * [ ] ReadAll
     * [ ] Delete
 * [ ] `lists/:id/teams`

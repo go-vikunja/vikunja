@@ -387,3 +387,18 @@ func IsErrTeamDoesNotExist(err error) bool {
 func (err ErrTeamDoesNotExist) Error() string {
 	return fmt.Sprintf("Team does not exist [Team ID: %d]", err.TeamID)
 }
+
+// ErrInvalidTeamRight represents an error where a team right is invalid
+type ErrInvalidTeamRight struct {
+	Right NamespaceRight
+}
+
+// IsErrInvalidTeamRight checks if an error is ErrInvalidTeamRight.
+func IsErrInvalidTeamRight(err error) bool {
+	_, ok := err.(ErrInvalidTeamRight)
+	return ok
+}
+
+func (err ErrInvalidTeamRight) Error() string {
+	return fmt.Sprintf("The right is invalid [Right: %d]", err.Right)
+}

@@ -113,6 +113,13 @@ func RegisterRoutes(e *echo.Echo) {
 	a.DELETE("/namespaces/:id", namespaceHandler.DeleteWeb)
 	a.GET("/namespaces/:id/lists", apiv1.GetListsByNamespaceID)
 
+	namespaceTeamHandler := &crud.WebHandler{
+		CObject: &models.TeamNamespace{},
+	}
+	a.GET("/namespaces/:id/teams", namespaceTeamHandler.ReadAllWeb)
+	a.PUT("/namespaces/:id/teams", namespaceTeamHandler.CreateWeb)
+	a.DELETE("/namespaces/:nid/teams/:id", namespaceTeamHandler.DeleteWeb)
+
 	teamHandler := &crud.WebHandler{
 		CObject: &models.Team{},
 	}

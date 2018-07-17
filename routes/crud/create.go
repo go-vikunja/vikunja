@@ -1,6 +1,7 @@
 package crud
 
 import (
+	"fmt"
 	"git.kolaente.de/konrad/list/models"
 	"github.com/labstack/echo"
 	"net/http"
@@ -61,6 +62,8 @@ func (c *WebHandler) CreateWeb(ctx echo.Context) error {
 		if models.IsErrTeamNameCannotBeEmpty(err) {
 			return echo.NewHTTPError(http.StatusBadRequest, "The team name cannot be empty.")
 		}
+
+		fmt.Println(err)
 
 		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
