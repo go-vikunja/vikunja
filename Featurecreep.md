@@ -167,7 +167,7 @@ doch auch in einer Funktion machbar sein.
         * [x] Die alten handlerfunktionen alle in eine datei packen und erstmal "lagern", erstmal brauchen wir die noch für swagger.
 * [ ] Drone aufsetzen
 * [ ] Tests schreiben
-* [ ] Namen finden
+* [x] Namen finden
 * [ ] Alle Packages umziehen
 * [x] Swagger UI aufsetzen
 * [ ] Cacher konfigurierbar
