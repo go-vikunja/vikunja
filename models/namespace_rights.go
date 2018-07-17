@@ -12,23 +12,11 @@ const (
 const (
 	// Can read lists in a namespace
 	NamespaceRightRead NamespaceRight = iota
-	// Cat write items in a namespace like lists and todo items
+	// Can write items in a namespace like lists and todo items. Cannot create new lists.
 	NamespaceRightWrite
 	// Can manage a namespace, can do everything
 	NamespaceRightAdmin
 )
-
-// IsNamespaceAdmin returns whether the usre has admin rights in a namespace
-func (user *User) IsNamespaceAdmin(namespace *Namespace) (err error) {
-	// Owners always have admin rights
-	if user.ID == namespace.Owner.ID {
-		return nil
-	}
-
-	// Check if that user is in a team which has admin rights to that namespace
-
-	return ErrUserNeedsToBeNamespaceAdmin{UserID: user.ID, NamespaceID: namespace.ID}
-}
 
 // IsAdmin returns true or false if the user is admin on that namespace or not
 func (n *Namespace) IsAdmin(user *User) bool {

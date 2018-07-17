@@ -130,6 +130,17 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
     
     ?? Wenn man Listen mit nem Nutzer teilt, wird ein Team für diesen Nutzer erstellt, falls er nicht bereits in einem ist.
 
+*Routen*
+
+* [ ] `namespaces/:id/teams`
+    * [ ] Create
+    * [ ] ReadAll
+    * [ ] Delete
+* [ ] `lists/:id/teams`
+    * [ ] Create
+    * [ ] ReadAll
+    * [ ] Delete
+
 #### v0.3
 
 * [ ] Labels

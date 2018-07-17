@@ -62,10 +62,10 @@ type TeamUser struct {
 
 // TeamNamespace defines the relationship between a Team and a Namespace
 type TeamNamespace struct {
-	ID          int64   `xorm:"int(11) autoincr not null unique pk" json:"id"`
-	TeamID      int64   `xorm:"int(11) not null" json:"team_id"`
-	NamespaceID int64   `xorm:"int(11) not null" json:"namespace_id"`
-	Rights      []int64 `xorm:"varchar(250)" json:"rights"`
+	ID          int64          `xorm:"int(11) autoincr not null unique pk" json:"id"`
+	TeamID      int64          `xorm:"int(11) not null" json:"team_id"`
+	NamespaceID int64          `xorm:"int(11) not null" json:"namespace_id"`
+	Rights      NamespaceRight `xorm:"int(11)" json:"rights"`
 
 	Created int64 `xorm:"created" json:"created"`
 	Updated int64 `xorm:"updated" json:"updated"`
@@ -78,10 +78,10 @@ func (TeamNamespace) TableName() string {
 
 // TeamList defines the relation between a team and a list
 type TeamList struct {
-	ID     int64   `xorm:"int(11) autoincr not null unique pk" json:"id"`
-	TeamID int64   `xorm:"int(11) not null" json:"team_id"`
-	ListID int64   `xorm:"int(11) not null" json:"list_id"`
-	Rights []int64 `xorm:"varchar(250)" json:"rights"`
+	ID     int64 `xorm:"int(11) autoincr not null unique pk" json:"id"`
+	TeamID int64 `xorm:"int(11) not null" json:"team_id"`
+	ListID int64 `xorm:"int(11) not null" json:"list_id"`
+	Rights int   `xorm:"varchar(250)" json:"rights"`
 
 	Created int64 `xorm:"created" json:"created"`
 	Updated int64 `xorm:"updated" json:"updated"`
