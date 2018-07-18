@@ -34,6 +34,7 @@ import (
 	apiv1 "git.kolaente.de/konrad/list/routes/api/v1"
 	_ "git.kolaente.de/konrad/list/routes/api/v1/swagger" // for docs generation
 	"git.kolaente.de/konrad/list/routes/crud"
+	"net/http"
 )
 
 // NewEcho registers a new Echo instance
@@ -82,6 +83,27 @@ func RegisterRoutes(e *echo.Echo) {
 	a.POST("/login", apiv1.Login)
 	a.POST("/register", apiv1.RegisterUser)
 
+	a.POST("/test/:infi/:Käsebrot/blub/:gedöns", func(c echo.Context) error {
+
+		type testStruct struct {
+			Integ  int64  `param:"infi" form:"infi"`
+			Cheese string `param:"Käsebrot"`
+			Kram   string `param:"gedöns"`
+			Other  string
+			Whooo  int64
+			Blub   float64
+			Test   string `form:"test"`
+		}
+
+		t := testStruct{}
+
+		if err := crud.ParamBinder(&t, c); err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, "No or invalid model provided.")
+		}
+
+		return c.JSON(http.StatusOK, &t)
+	})
+
 	// ===== Routes with Authetification =====
 	// Authetification
 	a.Use(middleware.JWT(models.Config.JWTLoginSecret))
@@ -116,9 +138,9 @@ func RegisterRoutes(e *echo.Echo) {
 	namespaceTeamHandler := &crud.WebHandler{
 		CObject: &models.TeamNamespace{},
 	}
-	a.GET("/namespaces/:id/teams", namespaceTeamHandler.ReadAllWeb)
-	a.PUT("/namespaces/:namespaceid/teams", namespaceTeamHandler.CreateWeb)
-	a.DELETE("/namespaces/:namespaceid/teams/:teamid", namespaceTeamHandler.DeleteWeb)
+	a.GET("/namespaces/:namespace/teams", namespaceTeamHandler.ReadAllWeb)
+	a.PUT("/namespaces/:namespace/teams", namespaceTeamHandler.CreateWeb)
+	a.DELETE("/namespaces/:namespace/teams/:team", namespaceTeamHandler.DeleteWeb)
 
 	teamHandler := &crud.WebHandler{
 		CObject: &models.Team{},
