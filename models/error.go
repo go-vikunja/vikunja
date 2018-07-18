@@ -354,6 +354,22 @@ func (err ErrNeedToBeNamespaceAdmin) Error() string {
 	return fmt.Sprintf("You need to be namespace owner to do that [NamespaceID: %d, UserID: %d]", err.NamespaceID, err.UserID)
 }
 
+// ErrNeedToHaveNamespaceReadAccess represents an error, where the user is not the owner of that namespace (used i.e. when deleting a namespace)
+type ErrNeedToHaveNamespaceReadAccess struct {
+	NamespaceID int64
+	UserID      int64
+}
+
+// IsErrNeedToHaveNamespaceReadAccess checks if an error is a ErrNamespaceDoesNotExist.
+func IsErrNeedToHaveNamespaceReadAccess(err error) bool {
+	_, ok := err.(ErrNeedToHaveNamespaceReadAccess)
+	return ok
+}
+
+func (err ErrNeedToHaveNamespaceReadAccess) Error() string {
+	return fmt.Sprintf("You need to be namespace owner to do that [NamespaceID: %d, UserID: %d]", err.NamespaceID, err.UserID)
+}
+
 // ============
 // Team errors
 // ============

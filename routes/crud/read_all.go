@@ -14,6 +14,12 @@ func (c *WebHandler) ReadAllWeb(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Could not determine the current user.")
 	}
 
+	// Get the object & bind params to struct
+	if err := ParamBinder(c.CObject, ctx); err != nil {
+		fmt.Println(err)
+		return echo.NewHTTPError(http.StatusBadRequest, "No or invalid model provided.")
+	}
+
 	lists, err := c.CObject.ReadAll(&currentUser)
 	if err != nil {
 		fmt.Println(err)
