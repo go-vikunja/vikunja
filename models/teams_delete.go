@@ -1,33 +1,33 @@
 package models
 
 // Delete deletes a team
-func (t *Team) Delete(id int64) (err error) {
+func (t *Team) Delete() (err error) {
 
 	// Check if the team exists
-	_, err = GetTeamByID(id)
+	_, err = GetTeamByID(t.ID)
 	if err != nil {
 		return
 	}
 
 	// Delete the team
-	_, err = x.ID(id).Delete(&Team{})
+	_, err = x.ID(t.ID).Delete(&Team{})
 	if err != nil {
 		return
 	}
 
 	// Delete team members
-	_, err = x.Where("team_id = ?", id).Delete(&TeamMember{})
+	_, err = x.Where("team_id = ?", t.ID).Delete(&TeamMember{})
 	if err != nil {
 		return
 	}
 
 	// Delete team <-> namespace relations
-	_, err = x.Where("team_id = ?", id).Delete(&TeamNamespace{})
+	_, err = x.Where("team_id = ?", t.ID).Delete(&TeamNamespace{})
 	if err != nil {
 		return
 	}
 
 	// Delete team <-> lists relations
-	_, err = x.Where("team_id = ?", id).Delete(&TeamList{})
+	_, err = x.Where("team_id = ?", t.ID).Delete(&TeamList{})
 	return
 }

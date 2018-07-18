@@ -19,8 +19,8 @@ func (t *Team) CanUpdate(user *User, id int64) bool {
 }
 
 // CanDelete checks if a user can delete a team
-func (t *Team) CanDelete(user *User, id int64) bool {
-	t.ID = id
+func (t *Team) CanDelete(user *User) bool {
+	//t.ID = id
 	return t.IsAdmin(user)
 }
 

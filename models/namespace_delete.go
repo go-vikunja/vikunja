@@ -1,22 +1,22 @@
 package models
 
 // Delete deletes a namespace
-func (n *Namespace) Delete(id int64) (err error) {
+func (n *Namespace) Delete() (err error) {
 
 	// Check if the namespace exists
-	_, err = GetNamespaceByID(id)
+	_, err = GetNamespaceByID(n.ID)
 	if err != nil {
 		return
 	}
 
 	// Delete the namespace
-	_, err = x.ID(id).Delete(&Namespace{})
+	_, err = x.ID(n.ID).Delete(&Namespace{})
 	if err != nil {
 		return
 	}
 
 	// Delete all lists with their items
-	lists, err := GetListsByNamespaceID(id)
+	lists, err := GetListsByNamespaceID(n.ID)
 	var listIDs []int64
 	// We need to do that for here because we need the list ids to delete two times:
 	// 1) to delete the lists itself

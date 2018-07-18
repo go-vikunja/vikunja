@@ -77,8 +77,8 @@ func (n *Namespace) CanUpdate(user *User, id int64) bool {
 }
 
 // CanDelete checks if the user can delete a namespace
-func (n *Namespace) CanDelete(user *User, id int64) bool {
-	nn, _ := GetNamespaceByID(id)
+func (n *Namespace) CanDelete(user *User) bool {
+	nn, _ := GetNamespaceByID(n.ID)
 	return nn.IsAdmin(user)
 }
 

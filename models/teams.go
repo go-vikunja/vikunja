@@ -2,7 +2,7 @@ package models
 
 // Team holds a team object
 type Team struct {
-	ID          int64  `xorm:"int(11) autoincr not null unique pk" json:"id"`
+	ID          int64  `xorm:"int(11) autoincr not null unique pk" json:"id" param:"teamid"`
 	Name        string `xorm:"varchar(250) not null" json:"name"`
 	Description string `xorm:"varchar(250)" json:"description"`
 	CreatedByID int64  `xorm:"int(11) not null" json:"-"`

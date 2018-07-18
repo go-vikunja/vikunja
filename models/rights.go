@@ -5,7 +5,7 @@ type Rights interface {
 	IsAdmin(*User) bool
 	CanWrite(*User) bool
 	CanRead(*User) bool
-	CanDelete(*User, int64) bool
+	CanDelete(*User) bool
 	CanUpdate(*User, int64) bool
 	CanCreate(*User, int64) bool
 }

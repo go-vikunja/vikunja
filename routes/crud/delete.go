@@ -4,14 +4,19 @@ import (
 	"git.kolaente.de/konrad/list/models"
 	"github.com/labstack/echo"
 	"net/http"
+	"fmt"
 )
 
 // DeleteWeb is the web handler to delete something
 func (c *WebHandler) DeleteWeb(ctx echo.Context) error {
 	// Get the ID
-	id, err := models.GetIntURLParam("id", ctx)
+	/*id, err := models.GetIntURLParam("id", ctx)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID.")
+	}*/
+	// Bind params to struct
+	if err := ParamBinder(c.CObject, ctx); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid URL param.")
 	}
 
 	// Check if the user has the right to delete
@@ -19,12 +24,15 @@ func (c *WebHandler) DeleteWeb(ctx echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
-	if !c.CObject.CanDelete(&user, id) {
+	if !c.CObject.CanDelete(&user) {
 		return echo.NewHTTPError(http.StatusForbidden)
 	}
 
-	err = c.CObject.Delete(id)
+	err = c.CObject.Delete()
 	if err != nil {
+
+		fmt.Println(err)
+
 		if models.IsErrNeedToBeListAdmin(err) {
 			return echo.NewHTTPError(http.StatusForbidden, "You need to be the list admin to delete a list.")
 		}

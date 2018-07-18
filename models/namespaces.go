@@ -2,7 +2,7 @@ package models
 
 // Namespace holds informations about a namespace
 type Namespace struct {
-	ID          int64  `xorm:"int(11) autoincr not null unique pk" json:"id"`
+	ID          int64  `xorm:"int(11) autoincr not null unique pk" json:"id" param:"nid"`
 	Name        string `xorm:"varchar(250)" json:"name"`
 	Description string `xorm:"varchar(1000)" json:"description"`
 	OwnerID     int64  `xorm:"int(11) not null" json:"-"`

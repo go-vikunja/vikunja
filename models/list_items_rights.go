@@ -1,9 +1,9 @@
 package models
 
 // CanDelete checks if the user can delete an item
-func (i *ListItem) CanDelete(doer *User, id int64) bool {
+func (i *ListItem) CanDelete(doer *User) bool {
 	// Get the item
-	lI, _ := GetListItemByID(id)
+	lI, _ := GetListItemByID(i.ID)
 
 	// A user can delete an item if he has write acces to its list
 	list, _ := GetListByID(lI.ListID)
