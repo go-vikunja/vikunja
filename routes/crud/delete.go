@@ -4,7 +4,6 @@ import (
 	"git.kolaente.de/konrad/list/models"
 	"github.com/labstack/echo"
 	"net/http"
-	"fmt"
 )
 
 // DeleteWeb is the web handler to delete something
@@ -25,8 +24,6 @@ func (c *WebHandler) DeleteWeb(ctx echo.Context) error {
 
 	err = c.CObject.Delete()
 	if err != nil {
-
-		fmt.Println(err)
 
 		if models.IsErrNeedToBeListAdmin(err) {
 			return echo.NewHTTPError(http.StatusForbidden, "You need to be the list admin to delete a list.")

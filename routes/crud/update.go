@@ -1,7 +1,6 @@
 package crud
 
 import (
-	"fmt"
 	"git.kolaente.de/konrad/list/models"
 	"github.com/labstack/echo"
 	"net/http"
@@ -50,8 +49,6 @@ func (c *WebHandler) UpdateWeb(ctx echo.Context) error {
 		if models.IsErrNamespaceOwnerCannotBeEmpty(err) {
 			return echo.NewHTTPError(http.StatusBadRequest, "The namespace owner cannot be empty.")
 		}
-
-		fmt.Println(err)
 
 		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
