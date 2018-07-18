@@ -118,7 +118,7 @@ func RegisterRoutes(e *echo.Echo) {
 	}
 	a.GET("/namespaces/:id/teams", namespaceTeamHandler.ReadAllWeb)
 	a.PUT("/namespaces/:id/teams", namespaceTeamHandler.CreateWeb)
-	a.DELETE("/namespaces/:nid/teams/:id", namespaceTeamHandler.DeleteWeb)
+	a.DELETE("/namespaces/:nid/teams/:teamid", namespaceTeamHandler.DeleteWeb)
 
 	teamHandler := &crud.WebHandler{
 		CObject: &models.Team{},
