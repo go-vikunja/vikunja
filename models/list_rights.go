@@ -93,8 +93,8 @@ func (l *List) CanUpdate(doer *User, id int64) bool {
 }
 
 // CanCreate checks if the user can update a list
-func (l *List) CanCreate(doer *User, nID int64) bool {
+func (l *List) CanCreate(doer *User) bool {
 	// A user can create a list if he has write access to the namespace
-	n, _ := GetNamespaceByID(nID)
+	n, _ := GetNamespaceByID(l.NamespaceID)
 	return n.CanWrite(doer)
 }

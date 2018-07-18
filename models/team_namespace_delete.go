@@ -18,7 +18,7 @@ func (tn *TeamNamespace) Delete() (err error) {
 	// Delete the relation
 	_, err = x.Where("team_id = ?", tn.TeamID).
 		And("namespace_id = ?", tn.NamespaceID).
-		Delete(tn)
+		Delete(TeamNamespace{})
 
 	return
 }

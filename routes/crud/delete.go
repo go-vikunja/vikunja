@@ -9,11 +9,6 @@ import (
 
 // DeleteWeb is the web handler to delete something
 func (c *WebHandler) DeleteWeb(ctx echo.Context) error {
-	// Get the ID
-	/*id, err := models.GetIntURLParam("id", ctx)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID.")
-	}*/
 	// Bind params to struct
 	if err := ParamBinder(c.CObject, ctx); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid URL param.")

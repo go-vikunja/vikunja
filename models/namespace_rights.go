@@ -83,7 +83,7 @@ func (n *Namespace) CanDelete(user *User) bool {
 }
 
 // CanCreate checks if the user can create a new namespace
-func (n *Namespace) CanCreate(user *User, id int64) bool {
+func (n *Namespace) CanCreate(user *User) bool {
 	// This is currently a dummy function, later on we could imagine global limits etc.
 	return true
 }

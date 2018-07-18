@@ -1,7 +1,7 @@
 package models
 
 // Create is the handler to create a team
-func (t *Team) Create(doer *User, _ int64) (err error) {
+func (t *Team) Create(doer *User) (err error) {
 	// Check if we have a name
 	if t.Name == "" {
 		return ErrTeamNameCannotBeEmpty{}
@@ -17,6 +17,6 @@ func (t *Team) Create(doer *User, _ int64) (err error) {
 
 	// Insert the current user as member and admin
 	tm := TeamMember{TeamID: t.ID, UserID: doer.ID, IsAdmin: true}
-	err = tm.Create(doer, t.ID)
+	err = tm.Create(doer)
 	return
 }

@@ -14,8 +14,9 @@ func (c *WebHandler) CreateWeb(ctx echo.Context) error {
 	p := reflect.ValueOf(c.CObject).Elem()
 	p.Set(reflect.Zero(p.Type()))
 
-	// Get the object
-	if err := ctx.Bind(&c.CObject); err != nil {
+	// Get the object & bind params to struct
+	if err := ParamBinder(c.CObject, ctx); err != nil {
+		fmt.Println(err)
 		return echo.NewHTTPError(http.StatusBadRequest, "No or invalid model provided.")
 	}
 
@@ -26,21 +27,21 @@ func (c *WebHandler) CreateWeb(ctx echo.Context) error {
 	}
 
 	// Get an ID if we have one
-	var id int64
+	/*var id int64
 	if ctx.Param("id") != "" {
 		id, err = models.GetIntURLParam("id", ctx)
 		if err != nil {
 			return echo.NewHTTPError(http.StatusBadRequest, "Bad id.")
 		}
-	}
+	}*/
 
 	// Check rights
-	if !c.CObject.CanCreate(&currentUser, id) {
+	if !c.CObject.CanCreate(&currentUser) {
 		return echo.NewHTTPError(http.StatusForbidden)
 	}
 
 	// Create
-	err = c.CObject.Create(&currentUser, id)
+	err = c.CObject.Create(&currentUser)
 	if err != nil {
 		if models.IsErrListDoesNotExist(err) {
 			return echo.NewHTTPError(http.StatusBadRequest, "The list does not exist.")

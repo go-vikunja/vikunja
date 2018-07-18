@@ -1,7 +1,7 @@
 package models
 
 // Create implements the creation method via the interface
-func (n *Namespace) Create(doer *User, _ int64) (err error) {
+func (n *Namespace) Create(doer *User) (err error) {
 	// Check if we have at least a name
 	if n.Name == "" {
 		return ErrNamespaceNameCannotBeEmpty{NamespaceID: 0, UserID: doer.ID}

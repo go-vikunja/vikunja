@@ -6,7 +6,7 @@ type List struct {
 	Title       string `xorm:"varchar(250)" json:"title"`
 	Description string `xorm:"varchar(1000)" json:"description"`
 	OwnerID     int64  `xorm:"int(11)" json:"-"`
-	NamespaceID int64  `xorm:"int(11)" json:"-"`
+	NamespaceID int64  `xorm:"int(11)" json:"-" param:"nid"`
 
 	Owner User        `xorm:"-" json:"owner"`
 	Items []*ListItem `xorm:"-" json:"items"`

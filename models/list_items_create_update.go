@@ -1,8 +1,8 @@
 package models
 
 // Create is the implementation to create a list item
-func (i *ListItem) Create(doer *User, lID int64) (err error) {
-	i.ListID = lID
+func (i *ListItem) Create(doer *User) (err error) {
+	//i.ListID = lID
 	i.ID = 0
 
 	return createOrUpdateListItem(i, doer)

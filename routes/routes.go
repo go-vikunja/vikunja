@@ -94,12 +94,12 @@ func RegisterRoutes(e *echo.Echo) {
 	a.GET("/lists/:id", listHandler.ReadOneWeb)
 	a.POST("/lists/:id", listHandler.UpdateWeb)
 	a.DELETE("/lists/:listid", listHandler.DeleteWeb)
-	a.PUT("/namespaces/:id/lists", listHandler.CreateWeb)
+	a.PUT("/namespaces/:nid/lists", listHandler.CreateWeb)
 
 	itemHandler := &crud.WebHandler{
 		CObject: &models.ListItem{},
 	}
-	a.PUT("/lists/:id", itemHandler.CreateWeb)
+	a.PUT("/lists/:listid", itemHandler.CreateWeb)
 	a.DELETE("/items/:listitemid", itemHandler.DeleteWeb)
 	a.POST("/items/:id", itemHandler.UpdateWeb)
 
@@ -117,8 +117,8 @@ func RegisterRoutes(e *echo.Echo) {
 		CObject: &models.TeamNamespace{},
 	}
 	a.GET("/namespaces/:id/teams", namespaceTeamHandler.ReadAllWeb)
-	a.PUT("/namespaces/:id/teams", namespaceTeamHandler.CreateWeb)
-	a.DELETE("/namespaces/:nid/teams/:teamid", namespaceTeamHandler.DeleteWeb)
+	a.PUT("/namespaces/:namespaceid/teams", namespaceTeamHandler.CreateWeb)
+	a.DELETE("/namespaces/:namespaceid/teams/:teamid", namespaceTeamHandler.DeleteWeb)
 
 	teamHandler := &crud.WebHandler{
 		CObject: &models.Team{},
