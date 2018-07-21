@@ -108,12 +108,12 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
   
   ~~Ein zu lösendes Problem: Wie regelt man die Berechtigungen um Teams zu verwalten?~~
   
-* [ ] Namespaces
+* [x] Namespaces
   * [x] Erstellen
   * [x] Ansehen
   * [x] Bearbeiten
   * [x] Löschen
-  * [ ] Teams hinzufügen. Der Nutzer kriegt nur Teams angezeigt die er erstellt hat.
+  * [x] Teams hinzufügen. Der Nutzer kriegt nur Teams angezeigt die er erstellt hat.
   * [x] Alle Listen eines Namespaces anzeigen
 * [x] Listen
   * [x] Listen zu einem Namespace hinzufügen

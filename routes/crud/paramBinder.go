@@ -10,6 +10,18 @@ import (
 
 const paramTagName = "param"
 
+/////////////////////////
+// HOW THIS BINDER WORKS
+/////////////////////////
+// This binder binds all values inside the url to their respective fields in a struct. Those fields need to have a tag
+// "param" with the name of the url placeholder which must be the same as in routes.
+//
+// Whenever one of the standard CRUD methods is invoked, this binder is called, which enables one handler method
+// to handle all kinds of different urls with different parameters.
+/////////////////////////
+
+// ParamBinder binds parameters to a struct.
+// Currently a working implementation, waiting to implement this officially into echo.
 func ParamBinder(i interface{}, c echo.Context) (err error) {
 
 	// Default binder
@@ -77,9 +89,7 @@ func ParamBinder(i interface{}, c echo.Context) (err error) {
 	return
 }
 
-// This is kind of ugly, more a "feature proof", copied from the echo source code.
-// Workaround until the pr to implement this nativly in echo is merged.
-
+// Binder represents a binder
 type Binder struct{}
 
 func (b *Binder) bindData(ptr interface{}, data map[string][]string, tag string) error {
@@ -227,6 +237,7 @@ func setFloatField(value string, bitSize int, field reflect.Value) error {
 	return err
 }
 
+// BindUnmarshaler type
 type BindUnmarshaler interface {
 	// UnmarshalParam decodes and assigns a value from an form or query param.
 	UnmarshalParam(param string) error

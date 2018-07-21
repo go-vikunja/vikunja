@@ -1,10 +1,10 @@
 package crud
 
 import (
+	"fmt"
 	"git.kolaente.de/konrad/list/models"
 	"github.com/labstack/echo"
 	"net/http"
-	"fmt"
 )
 
 // ReadOneWeb is the webhandler to get one object

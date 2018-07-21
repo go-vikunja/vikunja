@@ -1,5 +1,6 @@
 package models
 
+// ReadAll implements the method to read all teams of a namespace
 func (tn *TeamNamespace) ReadAll(user *User) (interface{}, error) {
 	// Check if the user can read the namespace
 	n, err := GetNamespaceByID(tn.NamespaceID)
@@ -7,7 +8,7 @@ func (tn *TeamNamespace) ReadAll(user *User) (interface{}, error) {
 		return nil, err
 	}
 	if !n.CanRead(user) {
-		return nil, ErrNeedToHaveNamespaceReadAccess{NamespaceID:tn.NamespaceID, UserID:user.ID}
+		return nil, ErrNeedToHaveNamespaceReadAccess{NamespaceID: tn.NamespaceID, UserID: user.ID}
 	}
 
 	// Get the teams
