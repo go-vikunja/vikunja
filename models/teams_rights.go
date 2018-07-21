@@ -7,10 +7,10 @@ func (t *Team) CanCreate(user *User) bool {
 }
 
 // CanUpdate checks if the user can update a team
-func (t *Team) CanUpdate(user *User, id int64) bool {
+func (t *Team) CanUpdate(user *User) bool {
 
 	// Check if the current user is in the team and has admin rights in it
-	exists, _ := x.Where("team_id = ?", id).
+	exists, _ := x.Where("team_id = ?", t.ID).
 		And("user_id = ?", user.ID).
 		And("is_admin = ?", true).
 		Get(&TeamMember{})

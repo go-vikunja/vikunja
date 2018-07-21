@@ -9,11 +9,9 @@ func (i *ListItem) Create(doer *User) (err error) {
 }
 
 // Update updates a list item
-func (i *ListItem) Update(ID int64) (err error) {
-	i.ID = ID
-
+func (i *ListItem) Update() (err error) {
 	// Check if the item exists
-	_, err = GetListItemByID(ID)
+	_, err = GetListItemByID(i.ID)
 	if err != nil {
 		return
 	}

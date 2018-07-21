@@ -11,9 +11,9 @@ func (i *ListItem) CanDelete(doer *User) bool {
 }
 
 // CanUpdate determines if a user has the right to update a list item
-func (i *ListItem) CanUpdate(doer *User, id int64) bool {
+func (i *ListItem) CanUpdate(doer *User) bool {
 	// Get the item
-	lI, _ := GetListItemByID(id)
+	lI, _ := GetListItemByID(i.ID)
 
 	// A user can update an item if he has write acces to its list
 	list, _ := GetListByID(lI.ListID)

@@ -13,15 +13,9 @@ func (c *WebHandler) UpdateWeb(ctx echo.Context) error {
 	p := reflect.ValueOf(c.CObject).Elem()
 	p.Set(reflect.Zero(p.Type()))
 
-	// Get the object
-	if err := ctx.Bind(&c.CObject); err != nil {
+	// Get the object & bind params to struct
+	if err := ParamBinder(c.CObject, ctx); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "No or invalid model provided.")
-	}
-
-	// Get the ID
-	id, err := models.GetIntURLParam("id", ctx)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID.")
 	}
 
 	// Check if the user has the right to do that
@@ -29,12 +23,12 @@ func (c *WebHandler) UpdateWeb(ctx echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Could not determine the current user.")
 	}
-	if !c.CObject.CanUpdate(&currentUser, id) {
+	if !c.CObject.CanUpdate(&currentUser) {
 		return echo.NewHTTPError(http.StatusForbidden)
 	}
 
 	// Do the update
-	err = c.CObject.Update(id)
+	err = c.CObject.Update()
 	if err != nil {
 		if models.IsErrNeedToBeListAdmin(err) {
 			return echo.NewHTTPError(http.StatusForbidden, "You need to be list admin to do that.")

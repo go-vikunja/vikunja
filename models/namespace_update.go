@@ -1,15 +1,14 @@
 package models
 
 // Update implements the update method via the interface
-func (n *Namespace) Update(id int64) (err error) {
+func (n *Namespace) Update() (err error) {
 	// Check if we have at least a name
 	if n.Name == "" {
-		return ErrNamespaceNameCannotBeEmpty{NamespaceID: id}
+		return ErrNamespaceNameCannotBeEmpty{NamespaceID: n.ID}
 	}
-	n.ID = id
 
 	// Check if the namespace exists
-	currentNamespace, err := GetNamespaceByID(id)
+	currentNamespace, err := GetNamespaceByID(n.ID)
 	if err != nil {
 		return
 	}

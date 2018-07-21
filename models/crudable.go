@@ -5,6 +5,6 @@ type CRUDable interface {
 	Create(*User) error
 	ReadOne() error
 	ReadAll(*User) (interface{}, error)
-	Update(int64) error
+	Update() error
 	Delete() error
 }

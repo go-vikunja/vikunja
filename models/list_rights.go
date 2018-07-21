@@ -87,8 +87,8 @@ func (l *List) CanDelete(doer *User) bool {
 }
 
 // CanUpdate checks if the user can update a list
-func (l *List) CanUpdate(doer *User, id int64) bool {
-	list, _ := GetListByID(id)
+func (l *List) CanUpdate(doer *User) bool {
+	list, _ := GetListByID(l.ID)
 	return list.CanWrite(doer)
 }
 

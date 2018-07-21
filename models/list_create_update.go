@@ -20,9 +20,7 @@ func CreateOrUpdateList(list *List) (err error) {
 }
 
 // Update implements the update method of CRUDable
-func (l *List) Update(id int64) (err error) {
-	l.ID = id
-
+func (l *List) Update() (err error) {
 	// Check if it exists
 	_, err = GetListByID(l.ID)
 	if err != nil {
