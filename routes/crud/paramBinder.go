@@ -10,16 +10,6 @@ import (
 
 const paramTagName = "param"
 
-/////////////////////////
-// HOW THIS BINDER WORKS
-/////////////////////////
-// This binder binds all values inside the url to their respective fields in a struct. Those fields need to have a tag
-// "param" with the name of the url placeholder which must be the same as in routes.
-//
-// Whenever one of the standard CRUD methods is invoked, this binder is called, which enables one handler method
-// to handle all kinds of different urls with different parameters.
-/////////////////////////
-
 // ParamBinder binds parameters to a struct.
 // Currently a working implementation, waiting to implement this officially into echo.
 func ParamBinder(i interface{}, c echo.Context) (err error) {
