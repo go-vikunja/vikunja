@@ -5,6 +5,7 @@ import (
 	"github.com/labstack/echo"
 	"reflect"
 	"strconv"
+	"strings"
 )
 
 const paramTagName = "param"
@@ -21,7 +22,11 @@ func ParamBinder(i interface{}, c echo.Context) (err error) {
 	paramValues := c.ParamValues()
 	paramVars := make(map[string][]string)
 	for in, name := range paramNames {
-		paramVars[name] = append(paramVars[name], paramValues[in])
+		// Hotfix for an echo bug where a param name would show up which dont exist
+		names := strings.Split(name, ",")
+		for _, n := range names {
+			paramVars[n] = append(paramVars[name], paramValues[in])
+		}
 	}
 
 	b := Binder{}

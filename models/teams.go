@@ -2,7 +2,7 @@ package models
 
 // Team holds a team object
 type Team struct {
-	ID          int64  `xorm:"int(11) autoincr not null unique pk" json:"id" param:"teamid"`
+	ID          int64  `xorm:"int(11) autoincr not null unique pk" json:"id" param:"team"`
 	Name        string `xorm:"varchar(250) not null" json:"name"`
 	Description string `xorm:"varchar(250)" json:"description"`
 	CreatedByID int64  `xorm:"int(11) not null" json:"-"`
@@ -100,8 +100,8 @@ func GetTeamByID(id int64) (team Team, err error) {
 }
 
 // ReadOne implements the CRUD method to get one team
-func (t *Team) ReadOne(id int64) (err error) {
-	*t, err = GetTeamByID(id)
+func (t *Team) ReadOne() (err error) {
+	*t, err = GetTeamByID(t.ID)
 	return
 }
 

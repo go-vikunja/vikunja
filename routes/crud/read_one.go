@@ -4,19 +4,19 @@ import (
 	"git.kolaente.de/konrad/list/models"
 	"github.com/labstack/echo"
 	"net/http"
+	"fmt"
 )
 
 // ReadOneWeb is the webhandler to get one object
 func (c *WebHandler) ReadOneWeb(ctx echo.Context) error {
 
-	// Get the ID
-	id, err := models.GetIntURLParam("id", ctx)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID.")
+	// Get the object & bind params to struct
+	if err := ParamBinder(c.CObject, ctx); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "No or invalid model provided.")
 	}
 
 	// Get our object
-	err = c.CObject.ReadOne(id)
+	err := c.CObject.ReadOne()
 	if err != nil {
 		if models.IsErrListDoesNotExist(err) {
 			return echo.NewHTTPError(http.StatusNotFound)
@@ -25,6 +25,12 @@ func (c *WebHandler) ReadOneWeb(ctx echo.Context) error {
 		if models.IsErrNamespaceDoesNotExist(err) {
 			return echo.NewHTTPError(http.StatusNotFound)
 		}
+
+		if models.IsErrTeamDoesNotExist(err) {
+			return echo.NewHTTPError(http.StatusNotFound)
+		}
+
+		fmt.Println(err)
 
 		return echo.NewHTTPError(http.StatusInternalServerError, "An error occured.")
 	}

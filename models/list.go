@@ -2,11 +2,11 @@ package models
 
 // List represents a list of items
 type List struct {
-	ID          int64  `xorm:"int(11) autoincr not null unique pk" json:"id" param:"listid"`
+	ID          int64  `xorm:"int(11) autoincr not null unique pk" json:"id" param:"list"`
 	Title       string `xorm:"varchar(250)" json:"title"`
 	Description string `xorm:"varchar(1000)" json:"description"`
 	OwnerID     int64  `xorm:"int(11)" json:"-"`
-	NamespaceID int64  `xorm:"int(11)" json:"-" param:"nid"`
+	NamespaceID int64  `xorm:"int(11)" json:"-" param:"namespace"`
 
 	Owner User        `xorm:"-" json:"owner"`
 	Items []*ListItem `xorm:"-" json:"items"`
@@ -75,7 +75,7 @@ func (l *List) ReadAll(user *User) (interface{}, error) {
 }
 
 // ReadOne gets one list by its ID
-func (l *List) ReadOne(id int64) (err error) {
-	*l, err = GetListByID(id)
+func (l *List) ReadOne() (err error) {
+	*l, err = GetListByID(l.ID)
 	return
 }

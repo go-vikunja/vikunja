@@ -2,7 +2,7 @@ package models
 
 // Namespace holds informations about a namespace
 type Namespace struct {
-	ID          int64  `xorm:"int(11) autoincr not null unique pk" json:"id" param:"nid"`
+	ID          int64  `xorm:"int(11) autoincr not null unique pk" json:"id" param:"namespace"`
 	Name        string `xorm:"varchar(250)" json:"name"`
 	Description string `xorm:"varchar(1000)" json:"description"`
 	OwnerID     int64  `xorm:"int(11) not null" json:"-"`
@@ -48,15 +48,15 @@ func GetNamespaceByID(id int64) (namespace Namespace, err error) {
 }
 
 // ReadOne gets one namespace
-func (n *Namespace) ReadOne(id int64) (err error) {
+func (n *Namespace) ReadOne() (err error) {
 	getN := Namespace{}
-	exists, err := x.ID(id).Get(&getN)
+	exists, err := x.ID(n.ID).Get(&getN)
 	if err != nil {
 		return
 	}
 
 	if !exists {
-		return ErrNamespaceDoesNotExist{ID: id}
+		return ErrNamespaceDoesNotExist{ID: n.ID}
 	}
 
 	*n = getN

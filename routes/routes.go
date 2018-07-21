@@ -113,27 +113,27 @@ func RegisterRoutes(e *echo.Echo) {
 		CObject: &models.List{},
 	}
 	a.GET("/lists", listHandler.ReadAllWeb)
-	a.GET("/lists/:id", listHandler.ReadOneWeb)
-	a.POST("/lists/:id", listHandler.UpdateWeb)
-	a.DELETE("/lists/:listid", listHandler.DeleteWeb)
-	a.PUT("/namespaces/:nid/lists", listHandler.CreateWeb)
+	a.GET("/lists/:list", listHandler.ReadOneWeb)
+	a.POST("/lists/:list", listHandler.UpdateWeb)
+	a.DELETE("/lists/:list", listHandler.DeleteWeb)
+	a.PUT("/namespaces/:namespace/lists", listHandler.CreateWeb)
 
 	itemHandler := &crud.WebHandler{
 		CObject: &models.ListItem{},
 	}
-	a.PUT("/lists/:listid", itemHandler.CreateWeb)
-	a.DELETE("/items/:listitemid", itemHandler.DeleteWeb)
-	a.POST("/items/:id", itemHandler.UpdateWeb)
+	a.PUT("/lists/:list", itemHandler.CreateWeb)
+	a.DELETE("/items/:listitem", itemHandler.DeleteWeb)
+	a.POST("/items/:listitem", itemHandler.UpdateWeb)
 
 	namespaceHandler := &crud.WebHandler{
 		CObject: &models.Namespace{},
 	}
 	a.GET("/namespaces", namespaceHandler.ReadAllWeb)
 	a.PUT("/namespaces", namespaceHandler.CreateWeb)
-	a.GET("/namespaces/:id", namespaceHandler.ReadOneWeb)
-	a.POST("/namespaces/:id", namespaceHandler.UpdateWeb)
-	a.DELETE("/namespaces/:nid", namespaceHandler.DeleteWeb)
-	a.GET("/namespaces/:id/lists", apiv1.GetListsByNamespaceID)
+	a.GET("/namespaces/:namespace", namespaceHandler.ReadOneWeb)
+	a.POST("/namespaces/:namespace", namespaceHandler.UpdateWeb)
+	a.DELETE("/namespaces/:namespace", namespaceHandler.DeleteWeb)
+	a.GET("/namespaces/:namespace/lists", apiv1.GetListsByNamespaceID)
 
 	namespaceTeamHandler := &crud.WebHandler{
 		CObject: &models.TeamNamespace{},
@@ -146,8 +146,8 @@ func RegisterRoutes(e *echo.Echo) {
 		CObject: &models.Team{},
 	}
 	a.GET("/teams", teamHandler.ReadAllWeb)
-	a.GET("/teams/:id", teamHandler.ReadOneWeb)
+	a.GET("/teams/:team", teamHandler.ReadOneWeb)
 	a.PUT("/teams", teamHandler.CreateWeb)
-	a.POST("/teams/:id", teamHandler.UpdateWeb)
-	a.DELETE("/teams/:teamid", teamHandler.DeleteWeb)
+	a.POST("/teams/:team", teamHandler.UpdateWeb)
+	a.DELETE("/teams/:team", teamHandler.DeleteWeb)
 }

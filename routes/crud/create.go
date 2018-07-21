@@ -24,15 +24,6 @@ func (c *WebHandler) CreateWeb(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Could not determine the current user.")
 	}
 
-	// Get an ID if we have one
-	/*var id int64
-	if ctx.Param("id") != "" {
-		id, err = models.GetIntURLParam("id", ctx)
-		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "Bad id.")
-		}
-	}*/
-
 	// Check rights
 	if !c.CObject.CanCreate(&currentUser) {
 		return echo.NewHTTPError(http.StatusForbidden)
