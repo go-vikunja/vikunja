@@ -9,9 +9,7 @@ func (n *Namespace) IsAdmin(user *User) bool {
 	}
 
 	// Check if that user is in a team which has admin rights to that namespace
-	// TODO
-
-	return false
+	return n.checkTeamRights(user, TeamRightAdmin)
 }
 
 // CanWrite checks if a user has write access to a namespace
@@ -21,7 +19,13 @@ func (n *Namespace) CanWrite(user *User) bool {
 		return true
 	}
 
-	return true
+	// Admins always have write access
+	if n.IsAdmin(user) {
+		return true
+	}
+
+	// Check if that user is in a team which has write rights to that namespace
+	return n.checkTeamRights(user, TeamRightWrite)
 }
 
 // CanRead checks if a user has read access to that namespace
@@ -37,19 +41,7 @@ func (n *Namespace) CanRead(user *User) bool {
 	}
 
 	// Check if the user is in a team which has access to the namespace
-	all := Namespace{}
-	// TODO respect individual rights
-	exists, _ := x.Select("namespaces.*").
-		Table("namespaces").
-		Join("LEFT", "team_namespaces", "namespaces.id = team_namespaces.namespace_id").
-		Join("LEFT", "team_members", "team_members.team_id = team_namespaces.team_id").
-		Where("team_members.user_id = ?", user.ID).
-		Or("namespaces.owner_id = ?", user.ID).
-		And("namespaces.id = ?", n.ID).
-		GroupBy("namespaces.id").
-		Get(&all)
-
-	return exists
+	return n.checkTeamRights(user, TeamRightRead)
 }
 
 // CanUpdate checks if the user can update the namespace
@@ -68,4 +60,20 @@ func (n *Namespace) CanDelete(user *User) bool {
 func (n *Namespace) CanCreate(user *User) bool {
 	// This is currently a dummy function, later on we could imagine global limits etc.
 	return true
+}
+
+func (n *Namespace) checkTeamRights(user *User, r TeamRight) bool {
+	exists, err := x.Select("namespaces.*").
+		Table("namespaces").
+		Join("LEFT", "team_namespaces", "namespaces.id = team_namespaces.namespace_id").
+		Join("LEFT", "team_members", "team_members.team_id = team_namespaces.team_id").
+		Where("team_members.user_id = ?  AND team_namespaces.right = ?", user.ID, r).
+		Or("namespaces.owner_id = ?", user.ID).
+		Get(&Namespace{})
+
+	if err != nil {
+		return false
+	}
+
+	return exists
 }
