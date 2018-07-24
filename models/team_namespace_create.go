@@ -19,7 +19,7 @@ func (tn *TeamNamespace) Create(doer *User) (err error) {
 	if err != nil {
 		return
 	}
-	
+
 	// Check if the team already has access to the namespace
 	exists, err := x.Where("team_id = ?", tn.TeamID).
 		And("namespace_id = ?", tn.NamespaceID).

@@ -136,10 +136,10 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
     * [x] Create
     * [x] ReadAll
     * [x] Delete
-* [ ] `lists/:id/teams`
-    * [ ] Create
-    * [ ] ReadAll
-    * [ ] Delete
+* [x] `lists/:id/teams`
+    * [x] Create
+    * [x] ReadAll
+    * [x] Delete
 
 #### v0.3
 

@@ -178,7 +178,7 @@ func (err ErrNeedToBeListWriter) Error() string {
 // ErrNeedToHaveListReadAccess represents an error, where the user dont has read access to that List
 type ErrNeedToHaveListReadAccess struct {
 	ListID int64
-	UserID      int64
+	UserID int64
 }
 
 // IsErrNeedToHaveListReadAccess checks if an error is a ErrListDoesNotExist.
@@ -438,7 +438,7 @@ func (err ErrInvalidTeamRight) Error() string {
 // ErrTeamAlreadyHasAccess represents an error where a team already has access to a list/namespace
 type ErrTeamAlreadyHasAccess struct {
 	TeamID int64
-	ID int64
+	ID     int64
 }
 
 // IsErrTeamAlreadyHasAccess checks if an error is ErrTeamAlreadyHasAccess.
