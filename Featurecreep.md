@@ -126,8 +126,11 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
   * [ ] Mit Link
     * [ ] Offen
     * [ ] Passwortgeschützt
-* [ ] Rechtemanagement (Und damit Unterscheidung zwischen Ownern und Mitgleidern)
+* [x] Rechtemanagement (Und damit Unterscheidung zwischen Ownern und Mitgleidern)
     
+* [ ] Mange Team members
+  * [ ] Hinzufügen
+  * [ ] Löschen
     ?? Wenn man Listen mit nem Nutzer teilt, wird ein Team für diesen Nutzer erstellt, falls er nicht bereits in einem ist.
 
 *Routen*
