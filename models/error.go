@@ -175,6 +175,22 @@ func (err ErrNeedToBeListWriter) Error() string {
 	return fmt.Sprintf("You need to have write acces to the list to do that [ListID: %d, UserID: %d]", err.ListID, err.UserID)
 }
 
+// ErrNeedToHaveListReadAccess represents an error, where the user dont has read access to that List
+type ErrNeedToHaveListReadAccess struct {
+	ListID int64
+	UserID      int64
+}
+
+// IsErrNeedToHaveListReadAccess checks if an error is a ErrListDoesNotExist.
+func IsErrNeedToHaveListReadAccess(err error) bool {
+	_, ok := err.(ErrNeedToHaveListReadAccess)
+	return ok
+}
+
+func (err ErrNeedToHaveListReadAccess) Error() string {
+	return fmt.Sprintf("You need to be List owner to do that [ListID: %d, UserID: %d]", err.ListID, err.UserID)
+}
+
 // ================
 // List item errors
 // ================
@@ -406,7 +422,7 @@ func (err ErrTeamDoesNotExist) Error() string {
 
 // ErrInvalidTeamRight represents an error where a team right is invalid
 type ErrInvalidTeamRight struct {
-	Right NamespaceRight
+	Right TeamRight
 }
 
 // IsErrInvalidTeamRight checks if an error is ErrInvalidTeamRight.

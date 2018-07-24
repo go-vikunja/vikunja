@@ -125,6 +125,13 @@ func RegisterRoutes(e *echo.Echo) {
 	a.DELETE("/items/:listitem", itemHandler.DeleteWeb)
 	a.POST("/items/:listitem", itemHandler.UpdateWeb)
 
+	listTeamHandler := &crud.WebHandler{
+		CObject: &models.TeamList{},
+	}
+	a.GET("/lists/:list/teams", listTeamHandler.ReadAllWeb)
+	a.PUT("/lists/:list/teams", listTeamHandler.CreateWeb)
+	a.DELETE("/lists/:list/teams/:team", listTeamHandler.DeleteWeb)
+
 	namespaceHandler := &crud.WebHandler{
 		CObject: &models.Namespace{},
 	}

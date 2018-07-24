@@ -60,22 +60,6 @@ type TeamUser struct {
 	IsAdmin bool `json:"is_admin"`
 }
 
-// TeamList defines the relation between a team and a list
-type TeamList struct {
-	ID     int64 `xorm:"int(11) autoincr not null unique pk" json:"id"`
-	TeamID int64 `xorm:"int(11) not null" json:"team_id"`
-	ListID int64 `xorm:"int(11) not null" json:"list_id"`
-	Rights int   `xorm:"varchar(250)" json:"rights"`
-
-	Created int64 `xorm:"created" json:"created"`
-	Updated int64 `xorm:"updated" json:"updated"`
-}
-
-// TableName makes beautiful table names
-func (TeamList) TableName() string {
-	return "team_list"
-}
-
 // GetAllTeamsByNamespaceID returns all teams for a namespace
 func GetAllTeamsByNamespaceID(id int64) (teams []*Team, err error) {
 	err = x.Table("teams").

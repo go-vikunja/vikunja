@@ -1,5 +1,31 @@
 package models
 
+// TeamRight defines the rights teams can have for lists/namespaces
+type TeamRight int
+
+// define unknown team right
+const (
+	TeamRightUnknown = -1
+)
+
+// Enumerate all the team rights
+const (
+	// Can read lists in a Team
+	TeamRightRead TeamRight = iota
+	// Can write items in a Team like lists and todo items. Cannot create new lists.
+	TeamRightWrite
+	// Can manage a list/namespace, can do everything
+	TeamRightAdmin
+)
+
+func (r TeamRight) isValid() error {
+	if r != TeamRightAdmin && r != TeamRightRead && r != TeamRightWrite {
+		return ErrInvalidTeamRight{r}
+	}
+
+	return nil
+}
+
 // CanCreate checks if the user can create a new team
 func (t *Team) CanCreate(user *User) bool {
 	// This is currently a dummy function, later on we could imagine global limits etc.

@@ -38,6 +38,7 @@ func (l *List) Create(doer *User) (err error) {
 		return
 	}
 
+	l.OwnerID = user.ID
 	l.Owner.ID = user.ID
 	l.ID = 0 // Otherwise only the first time a new list would be created
 

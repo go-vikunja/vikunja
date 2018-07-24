@@ -1,23 +1,5 @@
 package models
 
-// NamespaceRight defines the rights teams can have for namespaces
-type NamespaceRight int
-
-// define unknown namespace right
-const (
-	NamespaceRightUnknown = -1
-)
-
-// Enumerate all the namespace rights
-const (
-	// Can read lists in a namespace
-	NamespaceRightRead NamespaceRight = iota
-	// Can write items in a namespace like lists and todo items. Cannot create new lists.
-	NamespaceRightWrite
-	// Can manage a namespace, can do everything
-	NamespaceRightAdmin
-)
-
 // IsAdmin returns true or false if the user is admin on that namespace or not
 func (n *Namespace) IsAdmin(user *User) bool {
 
