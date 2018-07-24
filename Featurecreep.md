@@ -120,9 +120,9 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
 
 #### v0.2
 
-* [ ] Listen teilbar
+* [x] Listen teilbar
   * [ ] Mit anderen Nutzern
-  * [ ] Teams
+  * [x] Teams
   * [ ] Mit Link
     * [ ] Offen
     * [ ] Passwortgeschützt

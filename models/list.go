@@ -69,6 +69,7 @@ func (l *List) ReadAll(user *User) (interface{}, error) {
 		Where("tm.user_id = ?", fullUser.ID).
 		Or("tm2.user_id = ?", fullUser.ID).
 		Or("l.owner_id = ?", fullUser.ID).
+		GroupBy("l.id").
 		Find(&lists)
 
 	return lists, err

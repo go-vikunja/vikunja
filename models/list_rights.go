@@ -7,17 +7,7 @@ func (l *List) IsAdmin(user *User) bool {
 		return true
 	}
 
-	// Check Team rights
-	// aka "is the user in a team which has admin rights?"
-	// TODO
-
-	// Check Namespace rights
-	// TODO
-
-	// Check individual rights
-	// TODO
-
-	return false
+	return l.checkListTeamRight(user, TeamRightAdmin)
 }
 
 // CanWrite return whether the user can write on that list or not
@@ -32,17 +22,7 @@ func (l *List) CanWrite(user *User) bool {
 		return true
 	}
 
-	// Check Namespace rights
-	// TODO
-	// TODO find a way to prioritize: what happens if a user has namespace write access but is not in that list?
-
-	// Check Team rights
-	// TODO
-
-	// Check individual rights
-	// TODO
-
-	return false
+	return l.checkListTeamRight(user, TeamRightWrite)
 }
 
 // CanRead checks if a user has read access to a list
@@ -57,27 +37,7 @@ func (l *List) CanRead(user *User) bool {
 		return true
 	}
 
-	// Check Namespace rights
-	exists, _ := x.Select("list.*").
-		Table("namespaces").
-		Join("INNER", "list", "list.namespace_id = namespaces.id").
-		Join("INNER", "team_namespaces", "team_namespaces.namespace_id = namespaces.id").
-		Join("INNER", "team_members", "team_members.team_id = team_namespaces.team_id").
-		Where("team_members.user_id = ?", user.ID).
-		And("list.id = ?", l.ID).
-		Get(&List{})
-
-	if exists {
-		return true
-	}
-
-	// Check Team rights
-	// TODO
-
-	// Check individual rights
-	// TODO
-
-	return false
+	return l.checkListTeamRight(user, TeamRightRead)
 }
 
 // CanDelete checks if the user can delete a list
@@ -97,4 +57,22 @@ func (l *List) CanCreate(doer *User) bool {
 	// A user can create a list if he has write access to the namespace
 	n, _ := GetNamespaceByID(l.NamespaceID)
 	return n.CanWrite(doer)
+}
+
+func (l *List) checkListTeamRight(user *User, r TeamRight) bool {
+	exists, err := x.Select("l.*").
+		Table("list").
+		Alias("l").
+		Join("LEFT", []string{"team_namespaces", "tn"}, "tn.namespace_id = tn.id").
+		Join("LEFT", []string{"team_members", "tm"}, "tm.team_id = tn.team_id").
+		Join("LEFT", []string{"team_list", "tl"}, "l.id = tl.list_id").
+		Join("LEFT", []string{"team_members", "tm2"}, "tm2.team_id = tl.team_id").
+		Where("((tm.user_id = ? AND tn.right = ?) OR (tm2.user_id = ? AND tl.rights = ?)) AND l.id = ?",
+		user.ID, r, user.ID, r, l.ID).
+		Get(&List{})
+	if err != nil {
+		return false
+	}
+
+	return exists
 }
