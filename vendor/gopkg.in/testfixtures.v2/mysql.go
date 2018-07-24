@@ -40,7 +40,8 @@ func (h *MySQL) tableNames(q queryable) ([]string, error) {
 	query := `
 		SELECT table_name
 		FROM information_schema.tables
-		WHERE table_schema=?;
+		WHERE table_schema = ?
+		  AND table_type = 'BASE TABLE';
 	`
 	dbName, err := h.databaseName(q)
 	if err != nil {

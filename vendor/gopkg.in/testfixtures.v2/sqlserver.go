@@ -3,6 +3,7 @@ package testfixtures
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 )
 
 // SQLServer is the helper for SQL Server for this package.
@@ -28,8 +29,12 @@ func (*SQLServer) paramType() int {
 	return paramTypeQuestion
 }
 
-func (*SQLServer) quoteKeyword(str string) string {
-	return fmt.Sprintf("[%s]", str)
+func (*SQLServer) quoteKeyword(s string) string {
+	parts := strings.Split(s, ".")
+	for i, p := range parts {
+		parts[i] = fmt.Sprintf(`[%s]`, p)
+	}
+	return strings.Join(parts, ".")
 }
 
 func (*SQLServer) databaseName(q queryable) (string, error) {
@@ -39,7 +44,7 @@ func (*SQLServer) databaseName(q queryable) (string, error) {
 }
 
 func (*SQLServer) tableNames(q queryable) ([]string, error) {
-	rows, err := q.Query("SELECT table_name FROM information_schema.tables")
+	rows, err := q.Query("SELECT table_schema + '.' + table_name FROM information_schema.tables")
 	if err != nil {
 		return nil, err
 	}
@@ -59,14 +64,14 @@ func (*SQLServer) tableNames(q queryable) ([]string, error) {
 	return tables, nil
 }
 
-func (*SQLServer) tableHasIdentityColumn(q queryable, tableName string) bool {
+func (h *SQLServer) tableHasIdentityColumn(q queryable, tableName string) bool {
 	sql := `
 		SELECT COUNT(*)
 		FROM SYS.IDENTITY_COLUMNS
-		WHERE OBJECT_NAME(OBJECT_ID) = ?
+		WHERE OBJECT_ID = OBJECT_ID(?)
 	`
 	var count int
-	q.QueryRow(sql, tableName).Scan(&count)
+	q.QueryRow(sql, h.quoteKeyword(tableName)).Scan(&count)
 	return count > 0
 
 }
@@ -119,4 +124,12 @@ func (h *SQLServer) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction)
 	}
 
 	return tx.Commit()
+}
+
+// splitter is a batchSplitter interface implementation. We need it for
+// SQL Server because commands like a `CREATE SCHEMA...` and a `CREATE TABLE...`
+// could not be executed in the same batch.
+// See https://docs.microsoft.com/en-us/previous-versions/sql/sql-server-2008-r2/ms175502(v=sql.105)#rules-for-using-batches
+func (*SQLServer) splitter() []byte {
+	return []byte("GO\n")
 }

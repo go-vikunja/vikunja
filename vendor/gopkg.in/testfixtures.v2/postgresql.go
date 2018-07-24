@@ -62,13 +62,12 @@ func (h *PostgreSQL) tableNames(q queryable) ([]string, error) {
 	var tables []string
 
 	sql := `
-	         SELECT pg_namespace.nspname || '.' || pg_class.relname
-		 FROM pg_class
-		 INNER JOIN pg_namespace ON pg_namespace.oid = pg_class.relnamespace
-		 WHERE pg_class.relkind = 'r'
-		 AND
-		 pg_namespace.nspname NOT IN ('pg_catalog', 'information_schema')
-		 AND pg_namespace.nspname NOT LIKE 'pg_toast%';
+	        SELECT pg_namespace.nspname || '.' || pg_class.relname
+		FROM pg_class
+		INNER JOIN pg_namespace ON pg_namespace.oid = pg_class.relnamespace
+		WHERE pg_class.relkind = 'r'
+		  AND pg_namespace.nspname NOT IN ('pg_catalog', 'information_schema')
+		  AND pg_namespace.nspname NOT LIKE 'pg_toast%';
 	`
 	rows, err := q.Query(sql)
 	if err != nil {
@@ -121,11 +120,10 @@ func (*PostgreSQL) getNonDeferrableConstraints(q queryable) ([]pgConstraint, err
 	var constraints []pgConstraint
 
 	sql := `
-		SELECT table_schema || '.' || table_name,
-		constraint_name
+		SELECT table_schema || '.' || table_name, constraint_name
 		FROM information_schema.table_constraints
 		WHERE constraint_type = 'FOREIGN KEY'
-		AND is_deferrable = 'NO'
+		  AND is_deferrable = 'NO'
   	`
 	rows, err := q.Query(sql)
 	if err != nil {
@@ -269,8 +267,8 @@ func (h *PostgreSQL) afterLoad(q queryable) error {
 
 func (h *PostgreSQL) getChecksum(q queryable, tableName string) (string, error) {
 	sqlStr := fmt.Sprintf(`
-		SELECT md5(CAST((array_agg(t.*)) AS TEXT))
-		FROM %s AS t
+			SELECT md5(CAST((array_agg(t.*)) AS TEXT))
+			FROM %s AS t
 		`,
 		h.quoteKeyword(tableName),
 	)

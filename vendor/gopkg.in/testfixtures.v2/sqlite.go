@@ -29,7 +29,7 @@ func (*SQLite) tableNames(q queryable) ([]string, error) {
 	query := `
 		SELECT name
 		FROM sqlite_master
-		WHERE type='table';
+		WHERE type = 'table';
 	`
 	rows, err := q.Query(query)
 	if err != nil {

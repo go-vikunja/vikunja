@@ -1,62 +1,64 @@
 # github.com/go-task/task
 
-dl-deps:
-  desc: Download cli deps
-  cmds:
-    - go get -u github.com/golang/lint/golint
-    - go get -u github.com/go-task/task/cmd/task
+version: '2'
 
-lint:
-  desc: Runs golint
-  cmds:
-    - golint .
+tasks:
+  dl-deps:
+    desc: Download cli deps
+    cmds:
+      - go get -u github.com/golang/lint/golint
 
-test-free:
-  desc: Test free databases (PG, MySQL and SQLite)
-  cmds:
-    - task: test-pg
-    - task: test-mysql
-    - task: test-sqlite
+  lint:
+    desc: Runs golint
+    cmds:
+      - golint .
 
-test-all:
-  desc: Test all databases (PG, MySQL, SQLite, SQLServer and Oracle)
-  cmds:
-    - task: test-pg
-    - task: test-mysql
-    - task: test-sqlite
-    - task: test-sqlserver
-    - task: test-oracle
+  test-free:
+    desc: Test free databases (PG, MySQL and SQLite)
+    cmds:
+      - task: test-pg
+      - task: test-mysql
+      - task: test-sqlite
 
-test-pg:
-  desc: Test PostgreSQL
-  cmds:
-    - task: test-db
-      vars: {DATABASE: postgresql}
+  test-all:
+    desc: Test all databases (PG, MySQL, SQLite, SQLServer and Oracle)
+    cmds:
+      - task: test-pg
+      - task: test-mysql
+      - task: test-sqlite
+      - task: test-sqlserver
+      - task: test-oracle
 
-test-mysql:
-  desc: Test MySQL
-  cmds:
-    - task: test-db
-      vars: {DATABASE: mysql}
+  test-pg:
+    desc: Test PostgreSQL
+    cmds:
+      - task: test-db
+        vars: {DATABASE: postgresql}
 
-test-sqlite:
-  desc: Test SQLite
-  cmds:
-    - task: test-db
-      vars: {DATABASE: sqlite}
+  test-mysql:
+    desc: Test MySQL
+    cmds:
+      - task: test-db
+        vars: {DATABASE: mysql}
 
-test-sqlserver:
-  desc: Test SQLServer
-  cmds:
-    - task: test-db
-      vars: {DATABASE: sqlserver}
+  test-sqlite:
+    desc: Test SQLite
+    cmds:
+      - task: test-db
+        vars: {DATABASE: sqlite}
 
-test-oracle:
-  desc: Test Oracle
-  cmds:
-    - task: test-db
-      vars: {DATABASE: oracle}
+  test-sqlserver:
+    desc: Test SQLServer
+    cmds:
+      - task: test-db
+        vars: {DATABASE: sqlserver}
 
-test-db:
-  cmds:
-    - go test -v -tags {{.DATABASE}}
+  test-oracle:
+    desc: Test Oracle
+    cmds:
+      - task: test-db
+        vars: {DATABASE: oracle}
+
+  test-db:
+    cmds:
+      - go test -v -tags {{.DATABASE}}

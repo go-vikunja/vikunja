@@ -32,6 +32,16 @@ type queryable interface {
 	QueryRow(string, ...interface{}) *sql.Row
 }
 
+// batchSplitter is an interface with method which returns byte slice for
+// splitting SQL batches. This need to split sql statements and run its
+// separately.
+//
+// For Microsoft SQL Server batch splitter is "GO". For details see
+// https://docs.microsoft.com/en-us/sql/t-sql/language-elements/sql-server-utilities-statements-go
+type batchSplitter interface {
+	splitter() []byte
+}
+
 var (
 	_ Helper = &MySQL{}
 	_ Helper = &PostgreSQL{}
