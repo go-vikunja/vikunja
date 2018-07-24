@@ -53,6 +53,10 @@ func (c *WebHandler) CreateWeb(ctx echo.Context) error {
 			return echo.NewHTTPError(http.StatusBadRequest, "The team name cannot be empty.")
 		}
 
+		if models.IsErrTeamAlreadyHasAccess(err) {
+			return echo.NewHTTPError(http.StatusBadRequest, "This team already has access.")
+		}
+
 		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
 

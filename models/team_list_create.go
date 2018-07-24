@@ -20,6 +20,17 @@ func (tl *TeamList) Create(doer *User) (err error) {
 		return
 	}
 
+	// Check if the team is already on the list
+	exists, err := x.Where("team_id = ?", tl.TeamID).
+		And("list_id = ?", tl.ListID).
+		Get(&TeamList{})
+	if err != nil {
+		return
+	}
+	if exists {
+		return ErrTeamAlreadyHasAccess{tl.TeamID, tl.ListID}
+	}
+
 	// Insert the new team
 	_, err = x.Insert(tl)
 	return

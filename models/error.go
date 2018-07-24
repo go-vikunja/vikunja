@@ -434,3 +434,19 @@ func IsErrInvalidTeamRight(err error) bool {
 func (err ErrInvalidTeamRight) Error() string {
 	return fmt.Sprintf("The right is invalid [Right: %d]", err.Right)
 }
+
+// ErrTeamAlreadyHasAccess represents an error where a team already has access to a list/namespace
+type ErrTeamAlreadyHasAccess struct {
+	TeamID int64
+	ID int64
+}
+
+// IsErrTeamAlreadyHasAccess checks if an error is ErrTeamAlreadyHasAccess.
+func IsErrTeamAlreadyHasAccess(err error) bool {
+	_, ok := err.(ErrTeamAlreadyHasAccess)
+	return ok
+}
+
+func (err ErrTeamAlreadyHasAccess) Error() string {
+	return fmt.Sprintf("This team already has access. [Team ID: %d, ID: %d]", err.TeamID, err.ID)
+}
