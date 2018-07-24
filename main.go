@@ -11,12 +11,6 @@ import (
 	"time"
 )
 
-// UserLogin Object to recive user credentials in JSON format
-type UserLogin struct {
-	Username string `json:"username" form:"username"`
-	Password string `json:"password" form:"password"`
-}
-
 // Version sets the version to be printed to the user. Gets overwritten by "make release" or "make build" with last git commit or tag.
 var Version = "0.1"
 
@@ -37,7 +31,7 @@ func main() {
 	}
 
 	// Version notification
-	fmt.Println("List version", Version)
+	fmt.Println("Vikunja version", Version)
 
 	// Start the webserver
 	e := routes.NewEcho()
