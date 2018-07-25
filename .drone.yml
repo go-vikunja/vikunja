@@ -9,7 +9,7 @@ clone:
     tags: true
 
 pipeline:
-  build-backend:
+  build:
     image: webhippie/golang:edge
     pull: true
     group: build
@@ -24,7 +24,7 @@ pipeline:
     when:
       event: [ push, tag, pull_request ]
 
-  test-backend:
+  test:
       image: webhippie/golang:edge
       pull: true
       environment:
