@@ -1,8 +1,8 @@
 package v1
 
 import (
-	"fmt"
 	"code.vikunja.io/api/models"
+	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo"
 )

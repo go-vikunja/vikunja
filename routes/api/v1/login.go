@@ -1,9 +1,9 @@
 package v1
 
 import (
+	"code.vikunja.io/api/models"
 	"crypto/md5"
 	"encoding/hex"
-	"code.vikunja.io/api/models"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo"
 	"net/http"

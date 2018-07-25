@@ -21,7 +21,7 @@ EXTRA_GOFLAGS ?=
 
 LDFLAGS := -X "main.Version=$(shell git describe --tags --always | sed 's/-/+/' | sed 's/^v//')" -X "main.Tags=$(TAGS)"
 
-PACKAGES ?= $(filter-out code.vikunja.io/api/integrations,$(shell go vikunja ./... | grep -v /vendor/))
+PACKAGES ?= $(filter-out code.vikunja.io/api/integrations,$(shell go list ./... | grep -v /vendor/))
 SOURCES ?= $(shell find . -name "*.go" -type f)
 
 TAGS ?=

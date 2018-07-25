@@ -1,8 +1,8 @@
 package crud
 
 import (
-	"fmt"
 	"code.vikunja.io/api/models"
+	"fmt"
 	"github.com/labstack/echo"
 	"net/http"
 )
