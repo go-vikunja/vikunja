@@ -181,6 +181,8 @@ doch auch in einer Funktion machbar sein.
 * [ ] Endpoints neu organisieren? Also zb `namespaces/:nID/lists/:lID/items/:iID` statt einzelnen Endpoints für alles
 * [ ] Wenn die ID bei irgendeiner GetByID... Methode < 1 ist soll ein error not exist geworfen werden
 * [ ] Validation der ankommenden structs
+* [ ] Viper für config einbauen und ini rauswerfen
+* [ ] Docs für installationsanleitung
 
 * [ ] "Apiformat" Methoden, damit in der Ausgabe zb kein Passwort drin ist..., oder created/updated von Nutzern... oder ownerID nicht drin ist sondern nur das ownerobject
 * [x] Rechte überprüfen:
