@@ -1,0 +1,10 @@
+### Authorization by token, part 1. Retrieve and save token.
+POST http://localhost:8080/api/v1/login
+Content-Type: application/json
+
+{
+  "user": "user",
+  "password": "1234"
+}
+
+> {% client.global.set("auth_token", response.body.token); %}
