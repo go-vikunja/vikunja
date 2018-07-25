@@ -91,19 +91,11 @@ $(EXECUTABLE): $(SOURCES)
 	go build $(GOFLAGS) $(EXTRA_GOFLAGS) -tags '$(TAGS)' -ldflags '-s -w $(LDFLAGS)' -o $@
 
 .PHONY: release
-release: release-dirs release-windows release-linux release-darwin release-frontend release-copy release-check release-os-package
+release: release-dirs release-windows release-linux release-darwin release-copy release-check release-os-package release-zip
 
 .PHONY: release-dirs
 release-dirs:
 	mkdir -p $(DIST)/binaries $(DIST)/release $(DIST)/zip
-
-.PHONY: release-frontend
-release-frontend:
-	mv frontend/siteconfig.json frontend/siteconfig.json.old; \
-    echo '{"API_URL": "/api/v1/"}' > frontend/siteconfig.json; \
-	npm --prefix frontend run build; \
-	rm frontend/dist/siteconfig.json; \
-	mv frontend/siteconfig.json.old frontend/siteconfig.json;
 
 .PHONY: release-windows
 release-windows:
@@ -138,8 +130,8 @@ endif
 .PHONY: release-copy
 release-copy:
 	$(foreach file,$(wildcard $(DIST)/binaries/$(EXECUTABLE)-*),cp $(file) $(DIST)/release/$(notdir $(file));)
-	mkdir $(DIST)/release/frontend
-	cp frontend/dist $(DIST)/release/frontend/ -R
+	mkdir $(DIST)/release/public
+	cp public/ $(DIST)/release/ -R
 
 .PHONY: release-check
 release-check:
@@ -148,8 +140,8 @@ release-check:
 
 .PHONY: release-os-package
 release-os-package:
-	$(foreach file,$(filter-out %.sha256,$(wildcard $(DIST)/release/$(EXECUTABLE)-*)),mkdir $(file)-full;mv $(file) $(file)-full/;	mv $(file).sha256 $(file)-full/; cp config.ini.sample $(file)-full/config.ini; cp $(DIST)/release/frontend $(file)-full/ -R; cp LICENSE $(file)-full/; )
-	rm $(DIST)/release/frontend -rf
+	$(foreach file,$(filter-out %.sha256,$(wildcard $(DIST)/release/$(EXECUTABLE)-*)),mkdir $(file)-full;mv $(file) $(file)-full/;	mv $(file).sha256 $(file)-full/; cp config.ini.sample $(file)-full/config.ini; cp $(DIST)/release/public $(file)-full/ -R; cp LICENSE $(file)-full/; )
+	rm $(DIST)/release/public -rf
 
 .PHONY: release-zip
 release-zip:

@@ -1,0 +1,134 @@
+workspace:
+  base: /srv/app
+  path: src/code.vikunja.io/api
+
+clone:
+  git:
+    image: plugins/git
+    depth: 50
+    tags: true
+
+pipeline:
+  build-backend:
+    image: webhippie/golang:edge
+    pull: true
+    group: build
+    environment:
+      TAGS: bindata sqlite
+      GOPATH: /srv/app
+    commands:
+      - make clean
+      - make lint
+      - make fmt-check
+      - make build
+    when:
+      event: [ push, tag, pull_request ]
+
+  test-backend:
+      image: webhippie/golang:edge
+      pull: true
+      environment:
+        GOPATH: /srv/app
+      commands:
+        - make test
+      when:
+        event: [ push, tag, pull_request ]
+
+# Build a release when tagging
+  before-static-build:
+    image: karalabe/xgo-latest:latest
+    pull: true
+    environment:
+      TAGS: bindata sqlite
+      GOPATH: /srv/app
+    commands:
+      - make release-dirs
+    when:
+      event: [tag, push]
+
+  static-build-windows:
+    image: karalabe/xgo-latest:latest
+    pull: true
+    group: build-static
+    environment:
+      TAGS: bindata sqlite
+      GOPATH: /srv/app
+    commands:
+      - make release-windows
+    when:
+      event: [tag, push]
+
+  static-build-linux:
+    image: karalabe/xgo-latest:latest
+    pull: true
+    group: build-static
+    environment:
+      TAGS: bindata sqlite
+      GOPATH: /srv/app
+    commands:
+      - make release-linux
+    when:
+      event: [tag, push]
+
+  static-build-darwin:
+    image: karalabe/xgo-latest:latest
+    pull: true
+    group: build-static
+    environment:
+      TAGS: bindata sqlite
+      GOPATH: /srv/app
+    commands:
+      - make release-darwin
+    when:
+      event: [tag, push]
+
+#  static-build-frontend:
+#    image: webhippie/nodejs:current
+#    pull: true
+#    group: build-static
+#    commands:
+#      - make release-frontend
+#    when:
+#      event: [push, tag ]
+
+  after-build-static:
+    image: karalabe/xgo-latest:latest
+    pull: true
+    environment:
+      TAGS: bindata sqlite
+      GOPATH: /srv/app
+    commands:
+      - make release-copy
+      - make release-check
+      - make release-os-package
+      - make release-zip
+    when:
+      event: [tag, push]
+
+# Push the releases to our pseudo-s3-bucket
+  release:
+    image: plugins/s3:1
+    pull: true
+    secrets: [ aws_access_key_id, aws_secret_access_key ]
+    bucket: vikunja
+    endpoint: https://storage.kolaente.de
+    path_style: true
+    strip_prefix: dist/zip/
+    source: dist/zip/*
+    target: /${DRONE_TAG##v}
+    when:
+      event: [ tag ]
+
+  release:
+    image: plugins/s3:1
+    pull: true
+    secrets: [ aws_access_key_id, aws_secret_access_key ]
+    bucket: vikunja
+    endpoint: https://storage.kolaente.de
+    path_style: true
+    strip_prefix: dist/zip/
+    source: dist/zip/*
+    target: /master
+    when:
+      event: [ push ]
+      branch: [ master ]

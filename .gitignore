@@ -3,3 +3,4 @@ config.ini
 *.db
 Run
 vikunja
+dist/
