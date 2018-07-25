@@ -1,7 +1,7 @@
 package crud
 
 import (
-	"git.kolaente.de/konrad/list/models"
+	"code.vikunja.io/api/models"
 )
 
 // WebHandler defines the webhandler object

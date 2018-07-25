@@ -2,7 +2,7 @@ package v1
 
 import (
 	"fmt"
-	"git.kolaente.de/konrad/list/models"
+	"code.vikunja.io/api/models"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo"
 )

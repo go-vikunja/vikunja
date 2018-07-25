@@ -1,6 +1,6 @@
 package swagger
 
-import "git.kolaente.de/konrad/list/models"
+import "code.vikunja.io/api/models"
 
 // Message
 // swagger:response Message

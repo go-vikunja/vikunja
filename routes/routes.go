@@ -30,10 +30,10 @@ import (
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 
-	"git.kolaente.de/konrad/list/models"
-	apiv1 "git.kolaente.de/konrad/list/routes/api/v1"
-	_ "git.kolaente.de/konrad/list/routes/api/v1/swagger" // for docs generation
-	"git.kolaente.de/konrad/list/routes/crud"
+	"code.vikunja.io/api/models"
+	apiv1 "code.vikunja.io/api/routes/api/v1"
+	_ "code.vikunja.io/api/routes/api/v1/swagger" // for docs generation
+	"code.vikunja.io/api/routes/crud"
 	"net/http"
 )
 

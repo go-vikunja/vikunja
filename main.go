@@ -1,8 +1,8 @@
 package main
 
 import (
-	"git.kolaente.de/konrad/list/models"
-	"git.kolaente.de/konrad/list/routes"
+	"code.vikunja.io/api/models"
+	"code.vikunja.io/api/routes"
 
 	"context"
 	"fmt"

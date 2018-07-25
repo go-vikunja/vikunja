@@ -176,7 +176,7 @@ doch auch in einer Funktion machbar sein.
 * [ ] Cacher konfigurierbar
 * [ ] Deps nach mod (dem nachfolger von dep) umziehen, blocked by Go 1.11
 * [x] Überall echo.NewHTTPError statt c.JSON(Message{}) benutzen
-* [ ] Bessere Fehlermeldungen wenn das Model was ankommt falsch ist und nicht geparst werden kann
+* [x] Bessere Fehlermeldungen wenn das Model was ankommt falsch ist und nicht geparst werden kann
 * [ ] Fehlerhandling irgendwie besser machen. Zb mit "World error messages"? Sprich, die Methode ruft einfach auf obs die entsprechende Fehlermeldung gibt und zeigt sonst 500 an.
 * [ ] Endpoints neu organisieren? Also zb `namespaces/:nID/lists/:lID/items/:iID` statt einzelnen Endpoints für alles
 * [ ] Wenn die ID bei irgendeiner GetByID... Methode < 1 ist soll ein error not exist geworfen werden

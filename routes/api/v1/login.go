@@ -3,7 +3,7 @@ package v1
 import (
 	"crypto/md5"
 	"encoding/hex"
-	"git.kolaente.de/konrad/list/models"
+	"code.vikunja.io/api/models"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo"
 	"net/http"

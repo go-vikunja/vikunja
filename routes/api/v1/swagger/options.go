@@ -1,6 +1,6 @@
 package swagger
 
-import "git.kolaente.de/konrad/list/models"
+import "code.vikunja.io/api/models"
 
 // not actually a response, just a hack to get go-swagger to include definitions
 // of the various XYZOption structs

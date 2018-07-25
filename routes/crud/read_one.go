@@ -2,7 +2,7 @@ package crud
 
 import (
 	"fmt"
-	"git.kolaente.de/konrad/list/models"
+	"code.vikunja.io/api/models"
 	"github.com/labstack/echo"
 	"net/http"
 )
