@@ -1,12 +1,12 @@
 DIST := dist
-IMPORT := git.kolaente.de/konrad/list
+IMPORT := code.vikunja.io/api
 
 SED_INPLACE := sed -i
 
 ifeq ($(OS), Windows_NT)
-	EXECUTABLE := list.exe
+	EXECUTABLE := vikunja.exe
 else
-	EXECUTABLE := list
+	EXECUTABLE := vikunja
 	UNAME_S := $(shell uname -s)
 	ifeq ($(UNAME_S),Darwin)
 		SED_INPLACE := sed -i ''
@@ -21,7 +21,7 @@ EXTRA_GOFLAGS ?=
 
 LDFLAGS := -X "main.Version=$(shell git describe --tags --always | sed 's/-/+/' | sed 's/^v//')" -X "main.Tags=$(TAGS)"
 
-PACKAGES ?= $(filter-out git.kolaente.de/konrad/list/integrations,$(shell go list ./... | grep -v /vendor/))
+PACKAGES ?= $(filter-out code.vikunja.io/api/integrations,$(shell go vikunja ./... | grep -v /vendor/))
 SOURCES ?= $(shell find . -name "*.go" -type f)
 
 TAGS ?=
@@ -29,9 +29,9 @@ TAGS ?=
 TMPDIR := $(shell mktemp -d 2>/dev/null || mktemp -d -t 'kasino-temp')
 
 ifeq ($(OS), Windows_NT)
-	EXECUTABLE := list.exe
+	EXECUTABLE := vikunja.exe
 else
-	EXECUTABLE := list
+	EXECUTABLE := vikunja
 endif
 
 ifneq ($(DRONE_TAG),)
@@ -110,7 +110,7 @@ release-windows:
 	@hash xgo > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
 		go get -u github.com/karalabe/xgo; \
 	fi
-	xgo -dest $(DIST)/binaries -tags 'netgo $(TAGS)' -ldflags '-linkmode external -extldflags "-static" $(LDFLAGS)' -targets 'windows/*' -out list-$(VERSION) .
+	xgo -dest $(DIST)/binaries -tags 'netgo $(TAGS)' -ldflags '-linkmode external -extldflags "-static" $(LDFLAGS)' -targets 'windows/*' -out vikunja-$(VERSION) .
 ifeq ($(CI),drone)
 	mv /build/* $(DIST)/binaries
 endif
@@ -120,7 +120,7 @@ release-linux:
 	@hash xgo > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
 		go get -u github.com/karalabe/xgo; \
 	fi
-	xgo -dest $(DIST)/binaries -tags 'netgo $(TAGS)' -ldflags '-linkmode external -extldflags "-static" $(LDFLAGS)' -targets 'linux/*' -out list-$(VERSION) .
+	xgo -dest $(DIST)/binaries -tags 'netgo $(TAGS)' -ldflags '-linkmode external -extldflags "-static" $(LDFLAGS)' -targets 'linux/*' -out vikunja-$(VERSION) .
 ifeq ($(CI),drone)
 	mv /build/* $(DIST)/binaries
 endif
@@ -130,7 +130,7 @@ release-darwin:
 	@hash xgo > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
 		go get -u github.com/karalabe/xgo; \
 	fi
-	xgo -dest $(DIST)/binaries -tags 'netgo $(TAGS)' -ldflags '$(LDFLAGS)' -targets 'darwin/*' -out list-$(VERSION) .
+	xgo -dest $(DIST)/binaries -tags 'netgo $(TAGS)' -ldflags '$(LDFLAGS)' -targets 'darwin/*' -out vikunja-$(VERSION) .
 ifeq ($(CI),drone)
 	mv /build/* $(DIST)/binaries
 endif
