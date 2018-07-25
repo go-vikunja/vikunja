@@ -168,10 +168,10 @@ doch auch in einer Funktion machbar sein.
     * [ ] ganz viel in eigene neue Dateien + Packages auslagern, am besten eine package pro model mit allen methoden etc.
     * [ ] Alle alten dinger die nicht mehr gebraucht werden, weg.
         * [x] Die alten handlerfunktionen alle in eine datei packen und erstmal "lagern", erstmal brauchen wir die noch für swagger.
-* [ ] Drone aufsetzen
+* [x] Drone aufsetzen
 * [ ] Tests schreiben
 * [x] Namen finden
-* [ ] Alle Packages umziehen
+* [x] Alle Packages umziehen
 * [x] Swagger UI aufsetzen
 * [ ] Cacher konfigurierbar
 * [ ] Deps nach mod (dem nachfolger von dep) umziehen, blocked by Go 1.11
