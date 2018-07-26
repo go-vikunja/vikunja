@@ -1,8 +1,8 @@
 package models
 
 import (
-	"testing"
 	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 func TestList_Create(t *testing.T) {
@@ -15,7 +15,7 @@ func TestList_Create(t *testing.T) {
 
 	// Dummy list for testing
 	dummylist := List{
-		Title: "test",
+		Title:       "test",
 		Description: "Lorem Ipsum",
 		NamespaceID: 1,
 	}
@@ -28,7 +28,7 @@ func TestList_Create(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Get the list
-	newdummy := List{ID:dummylist.ID}
+	newdummy := List{ID: dummylist.ID}
 	err = newdummy.ReadOne()
 	assert.NoError(t, err)
 	assert.Equal(t, dummylist.Title, newdummy.Title)
@@ -50,10 +50,9 @@ func TestList_Create(t *testing.T) {
 	err = dummylist.Delete()
 	assert.NoError(t, err)
 
-
 	// Check creation with a nonexistant namespace
 	list3 := List{
-		Title: "test",
+		Title:       "test",
 		Description: "Lorem Ipsum",
 		NamespaceID: 876694,
 	}
