@@ -3,6 +3,11 @@ package models
 // CreateOrUpdateList updates a list or creates it if it doesn't exist
 func CreateOrUpdateList(list *List) (err error) {
 
+	// Check we have at least a title
+	if list.Title == "" {
+		return ErrListTitleCannotBeEmpty{}
+	}
+
 	if list.ID == 0 {
 		_, err = x.Insert(list)
 	} else {

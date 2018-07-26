@@ -191,6 +191,19 @@ func (err ErrNeedToHaveListReadAccess) Error() string {
 	return fmt.Sprintf("You need to be List owner to do that [ListID: %d, UserID: %d]", err.ListID, err.UserID)
 }
 
+// ErrListTitleCannotBeEmpty represents a "ErrListTitleCannotBeEmpty" kind of error. Used if the list does not exist.
+type ErrListTitleCannotBeEmpty struct{}
+
+// IsErrListTitleCannotBeEmpty checks if an error is a ErrListTitleCannotBeEmpty.
+func IsErrListTitleCannotBeEmpty(err error) bool {
+	_, ok := err.(ErrListTitleCannotBeEmpty)
+	return ok
+}
+
+func (err ErrListTitleCannotBeEmpty) Error() string {
+	return fmt.Sprintf("List item text cannot be empty.")
+}
+
 // ================
 // List item errors
 // ================

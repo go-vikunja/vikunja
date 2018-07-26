@@ -35,6 +35,9 @@ func (c *WebHandler) CreateWeb(ctx echo.Context) error {
 		if models.IsErrListDoesNotExist(err) {
 			return echo.NewHTTPError(http.StatusBadRequest, "The list does not exist.")
 		}
+		if models.IsErrListTitleCannotBeEmpty(err) {
+			return echo.NewHTTPError(http.StatusBadRequest, "You must provide at least a list title.")
+		}
 		if models.IsErrListItemCannotBeEmpty(err) {
 			return echo.NewHTTPError(http.StatusBadRequest, "You must provide at least a list item text.")
 		}
