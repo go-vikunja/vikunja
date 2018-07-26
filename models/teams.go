@@ -37,10 +37,10 @@ func (t *Team) AfterLoad() {
 
 // TeamMember defines the relationship between a user and a team
 type TeamMember struct {
-	ID      int64 `xorm:"int(11) autoincr not null unique pk" json:"id"`
-	TeamID  int64 `xorm:"int(11) not null" json:"team_id" param:"team"`
-	UserID  int64 `xorm:"int(11) not null" json:"user_id" param:"user"`
-	Admin bool  `xorm:"tinyint(1)" json:"admin"`
+	ID     int64 `xorm:"int(11) autoincr not null unique pk" json:"id"`
+	TeamID int64 `xorm:"int(11) not null" json:"team_id" param:"team"`
+	UserID int64 `xorm:"int(11) not null" json:"user_id" param:"user"`
+	Admin  bool  `xorm:"tinyint(1)" json:"admin"`
 
 	Created int64 `xorm:"created" json:"created"`
 	Updated int64 `xorm:"updated" json:"updated"`
@@ -56,7 +56,7 @@ func (TeamMember) TableName() string {
 
 // TeamUser is the team member type
 type TeamUser struct {
-	User    `xorm:"extends"`
+	User  `xorm:"extends"`
 	Admin bool `json:"admin"`
 }
 

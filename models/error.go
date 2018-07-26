@@ -454,7 +454,7 @@ func (err ErrTeamAlreadyHasAccess) Error() string {
 // ErrUserIsMemberOfTeam represents an error where a user is already member of a team.
 type ErrUserIsMemberOfTeam struct {
 	TeamID int64
-	UserID     int64
+	UserID int64
 }
 
 // IsErrUserIsMemberOfTeam checks if an error is ErrUserIsMemberOfTeam.
