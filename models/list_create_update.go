@@ -8,6 +8,12 @@ func CreateOrUpdateList(list *List) (err error) {
 		return ErrListTitleCannotBeEmpty{}
 	}
 
+	// Check if the namespace exists
+	_, err = GetNamespaceByID(list.NamespaceID)
+	if err != nil {
+		return err
+	}
+
 	if list.ID == 0 {
 		_, err = x.Insert(list)
 	} else {
