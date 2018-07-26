@@ -56,6 +56,9 @@ func (c *WebHandler) CreateWeb(ctx echo.Context) error {
 		if models.IsErrTeamAlreadyHasAccess(err) {
 			return echo.NewHTTPError(http.StatusBadRequest, "This team already has access.")
 		}
+		if models.IsErrUserIsMemberOfTeam(err) {
+			return echo.NewHTTPError(http.StatusBadRequest, "This user is already a member of that team.")
+		}
 
 		return echo.NewHTTPError(http.StatusInternalServerError)
 	}

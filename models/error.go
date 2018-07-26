@@ -450,3 +450,19 @@ func IsErrTeamAlreadyHasAccess(err error) bool {
 func (err ErrTeamAlreadyHasAccess) Error() string {
 	return fmt.Sprintf("This team already has access. [Team ID: %d, ID: %d]", err.TeamID, err.ID)
 }
+
+// ErrUserIsMemberOfTeam represents an error where a user is already member of a team.
+type ErrUserIsMemberOfTeam struct {
+	TeamID int64
+	UserID     int64
+}
+
+// IsErrUserIsMemberOfTeam checks if an error is ErrUserIsMemberOfTeam.
+func IsErrUserIsMemberOfTeam(err error) bool {
+	_, ok := err.(ErrUserIsMemberOfTeam)
+	return ok
+}
+
+func (err ErrUserIsMemberOfTeam) Error() string {
+	return fmt.Sprintf("This user is already a member of that team. [Team ID: %d, User ID: %d]", err.TeamID, err.UserID)
+}
