@@ -17,7 +17,11 @@ func TestList_Create(t *testing.T) {
 	dummylist := List{
 		Title: "test",
 		Description: "Lorem Ipsum",
+		NamespaceID: 1,
 	}
+
+	// Check if the user can create
+	assert.True(t, dummylist.CanCreate(&doer))
 
 	// Create it
 	err = dummylist.Create(&doer)
@@ -31,9 +35,30 @@ func TestList_Create(t *testing.T) {
 	assert.Equal(t, dummylist.Description, newdummy.Description)
 	assert.Equal(t, dummylist.OwnerID, doer.ID)
 
+	// Check if the user can see it
+	assert.True(t, dummylist.CanRead(&doer))
+
 	// Check failing with no title
 	list2 := List{}
 	err = list2.Create(&doer)
 	assert.Error(t, err)
 	assert.True(t, IsErrListTitleCannotBeEmpty(err))
+
+	// Delete it
+	assert.True(t, dummylist.CanDelete(&doer))
+
+	err = dummylist.Delete()
+	assert.NoError(t, err)
+
+
+	// Check creation with a nonexistant namespace
+	list3 := List{
+		Title: "test",
+		Description: "Lorem Ipsum",
+		NamespaceID: 876694,
+	}
+
+	err = list3.Create(&doer)
+	assert.Error(t, err)
+	assert.True(t, IsErrNamespaceDoesNotExist(err))
 }
