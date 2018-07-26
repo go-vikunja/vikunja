@@ -157,4 +157,10 @@ func RegisterRoutes(e *echo.Echo) {
 	a.PUT("/teams", teamHandler.CreateWeb)
 	a.POST("/teams/:team", teamHandler.UpdateWeb)
 	a.DELETE("/teams/:team", teamHandler.DeleteWeb)
+
+	teamMemberHandler := &crud.WebHandler{
+		CObject: &models.TeamMember{},
+	}
+	a.PUT("/teams/:team/members", teamMemberHandler.CreateWeb)
+	a.DELETE("/teams/:team/members/:user", teamMemberHandler.DeleteWeb)
 }

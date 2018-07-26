@@ -16,7 +16,7 @@ func (t *Team) Create(doer *User) (err error) {
 	}
 
 	// Insert the current user as member and admin
-	tm := TeamMember{TeamID: t.ID, UserID: doer.ID, IsAdmin: true}
+	tm := TeamMember{TeamID: t.ID, UserID: doer.ID, Admin: true}
 	err = tm.Create(doer)
 	return
 }
