@@ -55,6 +55,7 @@ clean:
 .PHONY: test
 test:
 	go test -cover -coverprofile cover.out $(PACKAGES)
+	go tool cover -html=cover.out -o cover.html
 
 required-gofmt-version:
 	@go version  | grep -q '\(1.7\|1.8\|1.9\|1.10\)' || { echo "We require go version 1.7, 1.8, 1.9 or 1.10 to format code" >&2 && exit 1; }

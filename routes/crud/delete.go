@@ -37,6 +37,10 @@ func (c *WebHandler) DeleteWeb(ctx echo.Context) error {
 			return echo.NewHTTPError(http.StatusNotFound, "This team does not exist.")
 		}
 
+		if models.IsErrCannotDeleteLastTeamMember(err) {
+			return echo.NewHTTPError(http.StatusBadRequest, "You cannot delete the last member of a team.")
+		}
+
 		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
 

@@ -36,7 +36,7 @@ func TestTeam_Create(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, reflect.TypeOf(ts).Kind(), reflect.Slice)
 	s := reflect.ValueOf(ts)
-	assert.Equal(t, 1, s.Len())
+	assert.Equal(t, 2, s.Len())
 
 	// Check inserting it with an empty name
 	dummyteam.Name = ""

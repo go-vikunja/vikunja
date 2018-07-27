@@ -479,3 +479,19 @@ func IsErrUserIsMemberOfTeam(err error) bool {
 func (err ErrUserIsMemberOfTeam) Error() string {
 	return fmt.Sprintf("This user is already a member of that team. [Team ID: %d, User ID: %d]", err.TeamID, err.UserID)
 }
+
+// ErrCannotDeleteLastTeamMember represents an error where a user wants to delete the last member of a team (probably himself)
+type ErrCannotDeleteLastTeamMember struct {
+	TeamID int64
+	UserID int64
+}
+
+// IsErrCannotDeleteLastTeamMember checks if an error is ErrCannotDeleteLastTeamMember.
+func IsErrCannotDeleteLastTeamMember(err error) bool {
+	_, ok := err.(ErrCannotDeleteLastTeamMember)
+	return ok
+}
+
+func (err ErrCannotDeleteLastTeamMember) Error() string {
+	return fmt.Sprintf("This user is already a member of that team. [Team ID: %d, User ID: %d]", err.TeamID, err.UserID)
+}
