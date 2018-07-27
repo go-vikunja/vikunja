@@ -38,17 +38,33 @@ func TestList_Create(t *testing.T) {
 	// Check if the user can see it
 	assert.True(t, dummylist.CanRead(&doer))
 
-	// Check failing with no title
-	list2 := List{}
-	err = list2.Create(&doer)
-	assert.Error(t, err)
-	assert.True(t, IsErrListTitleCannotBeEmpty(err))
+	// Try updating a list
+	assert.True(t, dummylist.CanUpdate(&doer))
+	dummylist.Description = "Lorem Ipsum dolor sit amet."
+	err = dummylist.Update()
+	assert.NoError(t, err)
 
 	// Delete it
 	assert.True(t, dummylist.CanDelete(&doer))
 
 	err = dummylist.Delete()
 	assert.NoError(t, err)
+
+	// Try updating a nonexistant list
+	err = dummylist.Update()
+	assert.Error(t, err)
+	assert.True(t, IsErrListDoesNotExist(err))
+
+	// Delete a nonexistant list
+	err = dummylist.Delete()
+	assert.Error(t, err)
+	assert.True(t, IsErrListDoesNotExist(err))
+
+	// Check failing with no title
+	list2 := List{}
+	err = list2.Create(&doer)
+	assert.Error(t, err)
+	assert.True(t, IsErrListTitleCannotBeEmpty(err))
 
 	// Check creation with a nonexistant namespace
 	list3 := List{
@@ -60,4 +76,10 @@ func TestList_Create(t *testing.T) {
 	err = list3.Create(&doer)
 	assert.Error(t, err)
 	assert.True(t, IsErrNamespaceDoesNotExist(err))
+
+	// Try creating with a nonexistant owner
+	nUser := &User{ID: 9482385}
+	err = dummylist.Create(nUser)
+	assert.Error(t, err)
+	assert.True(t, IsErrUserDoesNotExist(err))
 }
