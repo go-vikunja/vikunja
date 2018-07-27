@@ -1,9 +1,9 @@
 package models
 
 import (
-	"testing"
 	"github.com/stretchr/testify/assert"
 	"reflect"
+	"testing"
 )
 
 func TestList_ReadAll(t *testing.T) {
@@ -27,7 +27,7 @@ func TestList_ReadAll(t *testing.T) {
 	assert.Equal(t, s.Len(), 1)
 
 	// Try getting lists for a nonexistant user
-	_, err = lists2.ReadAll(&User{ID:984234})
+	_, err = lists2.ReadAll(&User{ID: 984234})
 	assert.Error(t, err)
 	assert.True(t, IsErrUserDoesNotExist(err))
 }

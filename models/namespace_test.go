@@ -1,9 +1,9 @@
 package models
 
 import (
-	"testing"
 	"github.com/stretchr/testify/assert"
 	"reflect"
+	"testing"
 )
 
 func TestNamespace_Create(t *testing.T) {
@@ -12,7 +12,7 @@ func TestNamespace_Create(t *testing.T) {
 
 	// Dummy namespace
 	dummynamespace := Namespace{
-		Name:"Test",
+		Name:        "Test",
 		Description: "Lorem Ipsum",
 	}
 
@@ -27,7 +27,7 @@ func TestNamespace_Create(t *testing.T) {
 
 	// check if it really exists
 	assert.True(t, dummynamespace.CanRead(&doer))
-	newOne := Namespace{ID:dummynamespace.ID}
+	newOne := Namespace{ID: dummynamespace.ID}
 	err = newOne.ReadOne()
 	assert.NoError(t, err)
 	assert.Equal(t, newOne.Name, "Test")
@@ -63,7 +63,7 @@ func TestNamespace_Create(t *testing.T) {
 	assert.True(t, IsErrNamespaceNameCannotBeEmpty(err))
 
 	// Try updating a nonexistant one
-	n := Namespace{ID:284729, Name:"Lorem"}
+	n := Namespace{ID: 284729, Name: "Lorem"}
 	err = n.Update()
 	assert.Error(t, err)
 	assert.True(t, IsErrNamespaceDoesNotExist(err))
