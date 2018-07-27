@@ -1,16 +1,16 @@
 package models
 
 import (
-	"testing"
 	"github.com/stretchr/testify/assert"
 	"reflect"
+	"testing"
 )
 
 func TestTeam_Create(t *testing.T) {
 	//Dummyteam
 	dummyteam := Team{
-		Name:"Testteam293",
-		Description:"Lorem Ispum",
+		Name:        "Testteam293",
+		Description: "Lorem Ispum",
 	}
 
 	// Doer
@@ -23,7 +23,7 @@ func TestTeam_Create(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Check if it was inserted and we're admin
-	tm := Team{ID:dummyteam.ID}
+	tm := Team{ID: dummyteam.ID}
 	err = tm.ReadOne()
 	assert.NoError(t, err)
 	assert.Equal(t, 1, len(tm.Members))
