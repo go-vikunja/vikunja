@@ -1,13 +1,12 @@
 package models
 
 import (
-	"fmt"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
 func TestListItem_Create(t *testing.T) {
-	assert.NoError(t, PrepareTestDatabase())
+	//assert.NoError(t, PrepareTestDatabase())
 
 	// Fake list item
 	listitem := ListItem{
@@ -71,6 +70,5 @@ func TestListItem_Create(t *testing.T) {
 	listitem.ListID = 1
 	err = listitem.Create(nUser)
 	assert.Error(t, err)
-	fmt.Println(err)
 	assert.True(t, IsErrUserDoesNotExist(err))
 }

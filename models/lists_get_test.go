@@ -8,7 +8,7 @@ import (
 
 func TestList_ReadAll(t *testing.T) {
 	// Create test database
-	assert.NoError(t, PrepareTestDatabase())
+	//assert.NoError(t, PrepareTestDatabase())
 
 	// Get all lists for our namespace
 	lists, err := GetListsByNamespaceID(1)

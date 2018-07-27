@@ -7,7 +7,7 @@ import (
 
 func TestCreateUser(t *testing.T) {
 	// Create test database
-	assert.NoError(t, PrepareTestDatabase())
+	//assert.NoError(t, PrepareTestDatabase())
 
 	// Get our doer
 	doer, _, err := GetUserByID(1)
