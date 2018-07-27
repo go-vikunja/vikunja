@@ -5,3 +5,4 @@ config.ini
 Run
 vikunja
 dist/
+cover.*

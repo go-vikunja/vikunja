@@ -183,6 +183,7 @@ doch auch in einer Funktion machbar sein.
 * [ ] Validation der ankommenden structs
 * [ ] Viper für config einbauen und ini rauswerfen
 * [ ] Docs für installationsanleitung
+* [ ] Tests für Rechtekram
 
 * [ ] "Apiformat" Methoden, damit in der Ausgabe zb kein Passwort drin ist..., oder created/updated von Nutzern... oder ownerID nicht drin ist sondern nur das ownerobject
 * [x] Rechte überprüfen:

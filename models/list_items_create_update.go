@@ -27,6 +27,12 @@ func createOrUpdateListItem(i *ListItem, doer *User) (err error) {
 		return ErrListItemCannotBeEmpty{}
 	}
 
+	// Check if the list exists
+	_, err = GetListByID(i.ListID)
+	if err != nil {
+		return
+	}
+
 	// Do the update
 	if i.ID != 0 {
 		_, err = x.ID(i.ID).Update(i)
