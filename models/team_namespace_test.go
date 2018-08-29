@@ -1,17 +1,17 @@
 package models
 
 import (
-	"testing"
 	"github.com/stretchr/testify/assert"
 	"reflect"
+	"testing"
 )
 
 func TestTeamNamespace(t *testing.T) {
 	// Dummy team <-> namespace relation
 	tn := TeamNamespace{
-		TeamID: 1,
+		TeamID:      1,
 		NamespaceID: 1,
-		Right: TeamRightAdmin,
+		Right:       TeamRightAdmin,
 	}
 
 	dummyuser, _, err := GetUserByID(1)

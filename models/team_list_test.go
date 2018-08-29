@@ -1,9 +1,9 @@
 package models
 
 import (
-	"testing"
 	"github.com/stretchr/testify/assert"
 	"reflect"
+	"testing"
 )
 
 func TestTeamList(t *testing.T) {
@@ -11,7 +11,7 @@ func TestTeamList(t *testing.T) {
 	tl := TeamList{
 		TeamID: 1,
 		ListID: 1,
-		Right: TeamRightAdmin,
+		Right:  TeamRightAdmin,
 	}
 
 	// Dummyuser

@@ -133,12 +133,11 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
 #### v0.2
 
 * [x] Listen teilbar
-
       * [ ] Mit anderen Nutzern
       * [x] Teams
       * [ ] Mit Link
-      	* [ ] Offen
-      	* [ ] Passwortgeschützt
+            * [ ] Offen
+            * [ ] Passwortgeschützt
 * [x] Rechtemanagement (Und damit Unterscheidung zwischen Ownern und Mitgleidern)
 * [x] Mange Team members
       * [x] Hinzufügen
