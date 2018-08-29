@@ -61,3 +61,36 @@ type swaggerResponseNamespace struct {
 	// in:body
 	Body models.Namespace `json:"body"`
 }
+
+// ================
+// Team definitions
+// ================
+
+// Team
+// swagger:response Team
+type swaggerResponseTeam struct {
+	// in:body
+	Body models.Team `json:"body"`
+}
+
+// TeamMember
+// swagger:response TeamMember
+type swaggerResponseTeamMember struct {
+	// in:body
+	Body models.TeamMember `json:"body"`
+}
+
+// TeamList
+// swagger:response TeamList
+type swaggerResponseTeamList struct {
+	// in:body
+	Body models.TeamList `json:"body"`
+}
+
+// TeamNamespace
+// swagger:response TeamNamespace
+type swaggerResponseTeamNamespace struct {
+	// in:body
+	Body models.TeamNamespace `json:"body"`
+}
+

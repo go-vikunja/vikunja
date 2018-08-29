@@ -22,4 +22,16 @@ type swaggerParameterBodies struct {
 
 	// in:body
 	Namespace models.Namespace
+
+	// in:body
+	Team models.Team
+
+	// in:body
+	TeamMember models.TeamMember
+
+	// in:body
+	TeamList models.TeamList
+
+	// in:body
+	TeamNamespace models.TeamNamespace
 }
