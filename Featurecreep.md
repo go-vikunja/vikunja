@@ -17,7 +17,6 @@
 * Liste wo der Punkt drauf ist
 * Timestamps
 
-
 ### Websockets
 
 Das ganze soll als Websocket zur verfg gestellt werden, der dann automatisch bescheidsagt wenn sich was ändert. Benachrichtigungen machen clients.
@@ -29,20 +28,24 @@ Ab v0.3 können wir mit clients anfangen.
 #### v0.1
 
 * [x] Listen erstellen/bearbeiten/löschen
-  * [x] Ansehen
-    * [x] Übersicht
-    * [x] Einzelne liste mit allen todopunkten
-  * [x] Erstellen
-  * [x] Bearbeiten
-  * [x] Löschen
+
+      * [x] Ansehen
+      * [x] Übersicht
+      * [x] Einzelne liste mit allen todopunkten
+      * [x] Erstellen
+      * [x] Bearbeiten
+      * [x] Löschen
+
 * [x] Todopunkte hinzufügen/abhaken/löschen
-  * [x] Erstellen
-  * [x] Bearbeiten (abhaken)
-  * [x] Löschen
+
+      * [x] Erstellen
+      * [x] Bearbeiten (abhaken)
+      * [x] Löschen
 
 * [x] Überall nochmal überprüfen dass der Nutzer auch das Recht hat die Liste zu löschen
+
 * [x] Swaggerdocs !!!!
-  
+
 Neues Konzept: _Namespaces_
 
 Ein Namespace kann Listen haben, es gibt mindestens einen Besiter pro Namespace. Wenn ein neuer Nutzer angelegt wird,
@@ -51,36 +54,41 @@ wird automatisch einer für den Nutzer erstellt.
 Es gibt Lese- und Schreibrechte pro Namespace und Nutzer.
 
 Namespace: 
-  * ID
-  * Name
-  * OwnerID
-  * Timestamps
-  
+
+* ID
+* Name
+* OwnerID
+* Timestamps
+
 Teams:
-  * ID
-  * Name
-  * Description
-  * Rights (Selbsthochzählende Konstanten als json-array abspeichern)
-  * CreatedByUser
-  * Timestamps
-  
+
+* ID
+* Name
+* Description
+* Rights (Selbsthochzählende Konstanten als json-array abspeichern)
+* CreatedByUser
+* Timestamps
+
 TeamMembers:
-  * ID
-  * TeamID
-  * MemberID
-  * Timestamps
-  
+
+* ID
+* TeamID
+* MemberID
+* Timestamps
+
 TeamNamespaces:
-  * ID
-  * TeamID
-  * NamespaceID
-  * Timestamps
-  
+
+* ID
+* TeamID
+* NamespaceID
+* Timestamps
+
 TeamLists: 
-  * ID
-  * TeamID
-  * ListID
-  * Timestamps
+
+* ID
+* TeamID
+* ListID
+* Timestamps
 
 (+Check ob das Team schon Zugriff auf den Namespace hat und dafür sorgen dass das sich nicht überschneidet)
 Bsp: wenn ein Namespace-Team Schreibrechte hat, soll es nicht möglich sein dieses Team mit Schreibrechten
@@ -95,60 +103,64 @@ Oder noch Besser: Man kann globale Rechte pro Namespace vergeben, die man dann w
 Rechte:
   Erstmal nur 3: Lesen, Schreiben, Admin. Admins dürfen auch Namen ändern, Teams verwalten, neue Listen anlegen, etc.
   Owner haben immer Adminrechte. Später sollte es auch möglich sein, den ownership an andere zur übertragen.s
-  
+
 Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
 
 #### Neues Todo
 
 * [x] Teams
-  * [x] Erstellen
-  * [x] Ansehen
-  * [x] Bearbeiten
-  * [x] Löschen
-  
-  ~~Ein zu lösendes Problem: Wie regelt man die Berechtigungen um Teams zu verwalten?~~
-  
+
+      * [x] Erstellen
+      * [x] Ansehen
+      * [x] Bearbeiten
+      * [x] Löschen
+
+      ~~Ein zu lösendes Problem: Wie regelt man die Berechtigungen um Teams zu verwalten?~~
+
 * [x] Namespaces
-  * [x] Erstellen
-  * [x] Ansehen
-  * [x] Bearbeiten
-  * [x] Löschen
-  * [x] Teams hinzufügen. Der Nutzer kriegt nur Teams angezeigt die er erstellt hat.
-  * [x] Alle Listen eines Namespaces anzeigen
+
+      * [x] Erstellen
+      * [x] Ansehen
+      * [x] Bearbeiten
+      * [x] Löschen
+      * [x] Teams hinzufügen. Der Nutzer kriegt nur Teams angezeigt die er erstellt hat.
+      * [x] Alle Listen eines Namespaces anzeigen
+
 * [x] Listen
-  * [x] Listen zu einem Namespace hinzufügen
+
+      * [x] Listen zu einem Namespace hinzufügen
 
 #### v0.2
 
 * [x] Listen teilbar
-  * [ ] Mit anderen Nutzern
-  * [x] Teams
-  * [ ] Mit Link
-    * [ ] Offen
-    * [ ] Passwortgeschützt
+
+      * [ ] Mit anderen Nutzern
+      * [x] Teams
+      * [ ] Mit Link
+      	* [ ] Offen
+      	* [ ] Passwortgeschützt
 * [x] Rechtemanagement (Und damit Unterscheidung zwischen Ownern und Mitgleidern)
-    
 * [x] Mange Team members
-  * [x] Hinzufügen
-  * [x] Löschen
+      * [x] Hinzufügen
+      * [x] Löschen
 
 *Routen*
 
 * [x] `namespaces/:id/teams`
-    * [x] Create
-    * [x] ReadAll
-    * [x] Delete
+      * [x] Create
+      * [x] ReadAll
+      * [x] Delete
 * [x] `lists/:id/teams`
-    * [x] Create
-    * [x] ReadAll
-    * [x] Delete
+      * [x] Create
+      * [x] ReadAll
+      * [x] Delete
 
 #### v0.3
 
 * [ ] Labels
 * [ ] Priorities
 
-#### v0.4 
+#### v0.4
 
 * [ ] Websocket?
 
@@ -162,11 +174,11 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
 ## Anderes
 
 * [ ] Refactor!!!! Alle Funktionen raus, die nicht mehr grbaucht werden + Funktionen vereinfachen/zusammenführen.
-Wenn ein Objekt 5x hin und hergereicht wird, und jedesmal nur geringfügig was dran geändert wird sollte das
-doch auch in einer Funktion machbar sein.
-    * [ ] ganz viel in eigene neue Dateien + Packages auslagern, am besten eine package pro model mit allen methoden etc.
-    * [ ] Alle alten dinger die nicht mehr gebraucht werden, weg.
-        * [x] Die alten handlerfunktionen alle in eine datei packen und erstmal "lagern", erstmal brauchen wir die noch für swagger.
+      Wenn ein Objekt 5x hin und hergereicht wird, und jedesmal nur geringfügig was dran geändert wird sollte das
+      doch auch in einer Funktion machbar sein.
+      * [ ] ganz viel in eigene neue Dateien + Packages auslagern, am besten eine package pro model mit allen methoden etc.
+      * [ ] Alle alten dinger die nicht mehr gebraucht werden, weg.
+            * [x] Die alten handlerfunktionen alle in eine datei packen und erstmal "lagern", erstmal brauchen wir die noch für swagger.
 * [x] Drone aufsetzen
 * [ ] Tests schreiben
 * [x] Namen finden
@@ -183,16 +195,14 @@ doch auch in einer Funktion machbar sein.
 * [ ] Viper für config einbauen und ini rauswerfen
 * [ ] Docs für installationsanleitung
 * [ ] Tests für Rechtekram
-
 * [ ] "Apiformat" Methoden, damit in der Ausgabe zb kein Passwort drin ist..., oder created/updated von Nutzern... oder ownerID nicht drin ist sondern nur das ownerobject
 * [x] Rechte überprüfen:
-  * [x] Listen erstellen
-  * [x] Listen bearbeiten (nur eigene im Moment)
-  * [x] Listenpunkte hinzufügen
-  * [x] Listenpunkte bearbeiten
+      * [x] Listen erstellen
+      * [x] Listen bearbeiten (nur eigene im Moment)
+      * [x] Listenpunkte hinzufügen
+      * [x] Listenpunkte bearbeiten
 * [ ] An "accepted" für post/put payloads schrauben, man soll da zb keine id/created/updated/etc übergeben können.
-
 * [ ] Globale Limits für anlegbare Listen + Namespaces
 * [ ] Mgl., dass die Instanz geschlossen ist, also sich keiner registrieren kann, und man sich einloggen muss
 * [ ] mgl. zum Emailmaskieren haben (in den Nutzereinstellungen, wenn man seine Email nicht an alle Welt rausposaunen will)
-* [ ] Mgl. zum Accountlöschen haben (so richtig krass mit emailverifiezierung und dass alle Privaten Listen gelöscht werden und man alle geteilten entweder wem übertragen muss oder  auf provat stellen)
+* [ ] Mgl. zum Accountlöschen haben (so richtig krass mit emailverifiezierung und dass alle Privaten Listen gelöscht werden und man alle geteilten entweder wem übertragen muss oder  auf privat stellen)
