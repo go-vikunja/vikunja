@@ -1,24 +1,6 @@
 {
-  "consumes": [
-    "application/json"
-  ],
-  "produces": [
-    "application/json"
-  ],
-  "schemes": [
-    "http",
-    "https"
-  ],
   "swagger": "2.0",
-  "info": {
-    "description": "This documentation describes the List API.",
-    "title": "List API.",
-    "license": {
-      "name": "GPLv3"
-    },
-    "version": "0.1"
-  },
-  "basePath": "/api/v1",
+  "info": {},
   "paths": {
     "/item/{itemID}": {
       "put": {
@@ -589,7 +571,7 @@
             "name": "body",
             "in": "body",
             "schema": {
-              "$ref": "#/definitions/ApiUserPassword"
+              "$ref": "#/definitions/APIUserPassword"
             }
           }
         ],
@@ -608,9 +590,9 @@
     }
   },
   "definitions": {
-    "ApiUserPassword": {
+    "APIUserPassword": {
       "type": "object",
-      "title": "ApiUserPassword represents a user object without timestamps and a json password field.",
+      "title": "APIUserPassword represents a user object without timestamps and a json password field.",
       "properties": {
         "email": {
           "type": "string",
@@ -630,7 +612,7 @@
           "x-go-name": "Username"
         }
       },
-      "x-go-package": "git.kolaente.de/konrad/list/models"
+      "x-go-package": "code.vikunja.io/api/models"
     },
     "List": {
       "description": "List represents a list of items",
@@ -670,7 +652,7 @@
           "x-go-name": "Updated"
         }
       },
-      "x-go-package": "git.kolaente.de/konrad/list/models"
+      "x-go-package": "code.vikunja.io/api/models"
     },
     "ListItem": {
       "description": "ListItem represents an item in a todolist",
@@ -722,7 +704,7 @@
           "x-go-name": "Updated"
         }
       },
-      "x-go-package": "git.kolaente.de/konrad/list/models"
+      "x-go-package": "code.vikunja.io/api/models"
     },
     "Message": {
       "description": "Message is a standard message",
@@ -733,7 +715,7 @@
           "x-go-name": "Message"
         }
       },
-      "x-go-package": "git.kolaente.de/konrad/list/models"
+      "x-go-package": "code.vikunja.io/api/models"
     },
     "Namespace": {
       "description": "Namespace holds informations about a namespace",
@@ -766,7 +748,7 @@
           "x-go-name": "Updated"
         }
       },
-      "x-go-package": "git.kolaente.de/konrad/list/models"
+      "x-go-package": "code.vikunja.io/api/models"
     },
     "User": {
       "description": "User holds information about an user",
@@ -786,7 +768,7 @@
           "x-go-name": "Username"
         }
       },
-      "x-go-package": "git.kolaente.de/konrad/list/models"
+      "x-go-package": "code.vikunja.io/api/models"
     },
     "UserLogin": {
       "description": "UserLogin Object to recive user credentials in JSON format",
@@ -801,7 +783,7 @@
           "x-go-name": "Username"
         }
       },
-      "x-go-package": "git.kolaente.de/konrad/list/models"
+      "x-go-package": "code.vikunja.io/api/models"
     }
   },
   "responses": {
@@ -857,17 +839,5 @@
         "$ref": "#/definitions/Namespace"
       }
     }
-  },
-  "securityDefinitions": {
-    "AuthorizationHeaderToken": {
-      "type": "apiKey",
-      "name": "Authorization",
-      "in": "header"
-    }
-  },
-  "security": [
-    {
-      "AuthorizationHeaderToken": []
-    }
-  ]
+  }
 }

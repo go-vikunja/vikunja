@@ -34,7 +34,6 @@ import (
 	apiv1 "code.vikunja.io/api/routes/api/v1"
 	_ "code.vikunja.io/api/routes/api/v1/swagger" // for docs generation
 	"code.vikunja.io/api/routes/crud"
-	"net/http"
 )
 
 // NewEcho registers a new Echo instance
@@ -82,27 +81,6 @@ func RegisterRoutes(e *echo.Echo) {
 
 	a.POST("/login", apiv1.Login)
 	a.POST("/register", apiv1.RegisterUser)
-
-	a.POST("/test/:infi/:Käsebrot/blub/:gedöns", func(c echo.Context) error {
-
-		type testStruct struct {
-			Integ  int64  `param:"infi" form:"infi"`
-			Cheese string `param:"Käsebrot"`
-			Kram   string `param:"gedöns"`
-			Other  string
-			Whooo  int64
-			Blub   float64
-			Test   string `form:"test"`
-		}
-
-		t := testStruct{}
-
-		if err := crud.ParamBinder(&t, c); err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "No or invalid model provided.")
-		}
-
-		return c.JSON(http.StatusOK, &t)
-	})
 
 	// ===== Routes with Authetification =====
 	// Authetification
