@@ -1,6 +1,6 @@
 package models
 
-// ReadAll implements the method to read all teams of a namespace
+// ReadAll implements the method to read all teams of a list
 func (tl *TeamList) ReadAll(user *User) (interface{}, error) {
 	// Check if the user can read the namespace
 	l, err := GetListByID(tl.ListID)

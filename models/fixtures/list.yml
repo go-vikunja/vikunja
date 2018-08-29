@@ -4,3 +4,9 @@
   description: Lorem Ipsum
   owner_id: 1
   namespace_id: 1
+-
+  id: 2
+  title: Test2
+  description: Lorem Ipsum
+  owner_id: 3
+  namespace_id: 1

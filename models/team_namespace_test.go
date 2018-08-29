@@ -3,6 +3,7 @@ package models
 import (
 	"testing"
 	"github.com/stretchr/testify/assert"
+	"reflect"
 )
 
 func TestTeamNamespace(t *testing.T) {
@@ -48,8 +49,11 @@ func TestTeamNamespace(t *testing.T) {
 	assert.True(t, IsErrNamespaceDoesNotExist(err))
 
 	// Check readall
-	_, err = tn.ReadAll(&dummyuser)
+	teams, err := tn.ReadAll(&dummyuser)
 	assert.NoError(t, err)
+	assert.Equal(t, reflect.TypeOf(teams).Kind(), reflect.Slice)
+	s := reflect.ValueOf(teams)
+	assert.Equal(t, s.Len(), 1)
 
 	// Check readall for a nonexistant namespace
 	_, err = tn4.ReadAll(&dummyuser)

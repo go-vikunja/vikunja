@@ -60,16 +60,6 @@ type TeamUser struct {
 	Admin bool `json:"admin"`
 }
 
-// GetAllTeamsByNamespaceID returns all teams for a namespace
-func GetAllTeamsByNamespaceID(id int64) (teams []*Team, err error) {
-	err = x.Table("teams").
-		Join("INNER", "team_namespaces", "teams.id = team_id").
-		Where("teams.namespace_id = ?", id).
-		Find(teams)
-
-	return
-}
-
 // GetTeamByID gets a team by its ID
 func GetTeamByID(id int64) (team Team, err error) {
 	exists, err := x.Where("id = ?", id).Get(&team)
