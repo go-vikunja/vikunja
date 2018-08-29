@@ -1,5 +1,3 @@
-package routes
-
 // Package v1 List API.
 //
 // This documentation describes the List API.
@@ -25,6 +23,8 @@ package routes
 //          in: header
 //
 // swagger:meta
+
+package routes
 
 import (
 	"github.com/labstack/echo"

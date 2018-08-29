@@ -93,4 +93,3 @@ type swaggerResponseTeamNamespace struct {
 	// in:body
 	Body models.TeamNamespace `json:"body"`
 }
-
