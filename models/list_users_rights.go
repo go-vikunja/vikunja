@@ -32,3 +32,10 @@ func (lu *ListUser) CanCreate(doer *User) bool {
 	l, _ := GetListByID(lu.ListID)
 	return l.CanWrite(doer)
 }
+
+// CanDelete checks if the user can delete a user <-> list relation
+func (lu *ListUser) CanDelete(doer *User) bool {
+	// Get the list and check if the user has write access on it
+	l, _ := GetListByID(lu.ListID)
+	return l.CanWrite(doer)
+}

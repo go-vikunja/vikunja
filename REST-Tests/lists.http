@@ -25,6 +25,33 @@ Authorization: Bearer {{auth_token}}
 
 ###
 
+# Get all teams who have access to that list
+GET http://localhost:8080/api/v1/lists/10/teams
+Authorization: Bearer {{auth_token}}
+
+###
+
+# Give a team access to that list
+PUT http://localhost:8080/api/v1/lists/10/teams
+Authorization: Bearer {{auth_token}}
+Content-Type: application/json
+
+{"team_id":2, "right": 1}
+
+###
+
+# Delete a team from a list
+DELETE http://localhost:8080/api/v1/lists/10235/teams/1
+Authorization: Bearer {{auth_token}}
+
+###
+
+# Delete a team from a list
+DELETE http://localhost:8080/api/v1/lists/10235/teams/1
+Authorization: Bearer {{auth_token}}
+
+###
+
 # Get all users who have access to that list
 GET http://localhost:8080/api/v1/lists/10/users
 Authorization: Bearer {{auth_token}}
@@ -37,5 +64,11 @@ Authorization: Bearer {{auth_token}}
 Content-Type: application/json
 
 {"user_id":2, "right": 5}
+
+###
+
+# Delete a user from a list
+DELETE http://localhost:8080/api/v1/lists/10/users/2
+Authorization: Bearer {{auth_token}}
 
 ###

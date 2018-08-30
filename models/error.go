@@ -530,3 +530,19 @@ func IsErrUserAlreadyHasAccess(err error) bool {
 func (err ErrUserAlreadyHasAccess) Error() string {
 	return fmt.Sprintf("This user already has access to that list. [User ID: %d, List ID: %d]", err.UserID, err.ListID)
 }
+
+// ErrUserDoesNotHaveAccessToList represents an error, where the user is not the owner of that List (used i.e. when deleting a List)
+type ErrUserDoesNotHaveAccessToList struct {
+	ListID int64
+	UserID int64
+}
+
+// IsErrUserDoesNotHaveAccessToList checks if an error is a ErrListDoesNotExist.
+func IsErrUserDoesNotHaveAccessToList(err error) bool {
+	_, ok := err.(ErrUserDoesNotHaveAccessToList)
+	return ok
+}
+
+func (err ErrUserDoesNotHaveAccessToList) Error() string {
+	return fmt.Sprintf("You need to have access to this List to do that [ListID: %d, UserID: %d]", err.ListID, err.UserID)
+}
