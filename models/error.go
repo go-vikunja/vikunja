@@ -399,6 +399,22 @@ func (err ErrNeedToHaveNamespaceReadAccess) Error() string {
 	return fmt.Sprintf("You need to be namespace owner to do that [NamespaceID: %d, UserID: %d]", err.NamespaceID, err.UserID)
 }
 
+// ErrTeamDoesNotHaveAccessToNamespace represents an error, where the Team is not the owner of that namespace (used i.e. when deleting a namespace)
+type ErrTeamDoesNotHaveAccessToNamespace struct {
+	NamespaceID int64
+	TeamID      int64
+}
+
+// IsErrTeamDoesNotHaveAccessToNamespace checks if an error is a ErrNamespaceDoesNotExist.
+func IsErrTeamDoesNotHaveAccessToNamespace(err error) bool {
+	_, ok := err.(ErrTeamDoesNotHaveAccessToNamespace)
+	return ok
+}
+
+func (err ErrTeamDoesNotHaveAccessToNamespace) Error() string {
+	return fmt.Sprintf("You need to have access to this namespace to do that [NamespaceID: %d, TeamID: %d]", err.NamespaceID, err.TeamID)
+}
+
 // ============
 // Team errors
 // ============
@@ -494,6 +510,22 @@ func IsErrCannotDeleteLastTeamMember(err error) bool {
 
 func (err ErrCannotDeleteLastTeamMember) Error() string {
 	return fmt.Sprintf("This user is already a member of that team. [Team ID: %d, User ID: %d]", err.TeamID, err.UserID)
+}
+
+// ErrTeamDoesNotHaveAccessToList represents an error, where the Team is not the owner of that List (used i.e. when deleting a List)
+type ErrTeamDoesNotHaveAccessToList struct {
+	ListID int64
+	TeamID int64
+}
+
+// IsErrTeamDoesNotHaveAccessToList checks if an error is a ErrListDoesNotExist.
+func IsErrTeamDoesNotHaveAccessToList(err error) bool {
+	_, ok := err.(ErrTeamDoesNotHaveAccessToList)
+	return ok
+}
+
+func (err ErrTeamDoesNotHaveAccessToList) Error() string {
+	return fmt.Sprintf("You need to have access to this List to do that [ListID: %d, TeamID: %d]", err.ListID, err.TeamID)
 }
 
 // ====================
