@@ -1,30 +1,30 @@
 package models
 
-// Create is the implementation to create a list item
-func (i *ListItem) Create(doer *User) (err error) {
+// Create is the implementation to create a list task
+func (i *ListTask) Create(doer *User) (err error) {
 	//i.ListID = lID
 	i.ID = 0
 
-	return createOrUpdateListItem(i, doer)
+	return createOrUpdateListTask(i, doer)
 }
 
-// Update updates a list item
-func (i *ListItem) Update() (err error) {
-	// Check if the item exists
-	_, err = GetListItemByID(i.ID)
+// Update updates a list task
+func (i *ListTask) Update() (err error) {
+	// Check if the task exists
+	_, err = GetListTaskByID(i.ID)
 	if err != nil {
 		return
 	}
 
-	return createOrUpdateListItem(i, &User{})
+	return createOrUpdateListTask(i, &User{})
 }
 
 // Helper function for creation or updating of new lists as both methods share most of their logic
-func createOrUpdateListItem(i *ListItem, doer *User) (err error) {
+func createOrUpdateListTask(i *ListTask, doer *User) (err error) {
 
 	// Check if we have at least a text
 	if i.Text == "" {
-		return ErrListItemCannotBeEmpty{}
+		return ErrListTaskCannotBeEmpty{}
 	}
 
 	// Check if the list exists

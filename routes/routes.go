@@ -96,12 +96,12 @@ func RegisterRoutes(e *echo.Echo) {
 	a.DELETE("/lists/:list", listHandler.DeleteWeb)
 	a.PUT("/namespaces/:namespace/lists", listHandler.CreateWeb)
 
-	itemHandler := &crud.WebHandler{
-		CObject: &models.ListItem{},
+	taskHandler := &crud.WebHandler{
+		CObject: &models.ListTask{},
 	}
-	a.PUT("/lists/:list", itemHandler.CreateWeb)
-	a.DELETE("/items/:listitem", itemHandler.DeleteWeb)
-	a.POST("/items/:listitem", itemHandler.UpdateWeb)
+	a.PUT("/lists/:list", taskHandler.CreateWeb)
+	a.DELETE("/tasks/:listtask", taskHandler.DeleteWeb)
+	a.POST("/tasks/:listtask", taskHandler.UpdateWeb)
 
 	listTeamHandler := &crud.WebHandler{
 		CObject: &models.TeamList{},

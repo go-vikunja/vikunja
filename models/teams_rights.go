@@ -12,7 +12,7 @@ const (
 const (
 	// Can read lists in a Team
 	TeamRightRead TeamRight = iota
-	// Can write items in a Team like lists and todo items. Cannot create new lists.
+	// Can write tasks in a Team like lists and todo tasks. Cannot create new lists.
 	TeamRightWrite
 	// Can manage a list/namespace, can do everything
 	TeamRightAdmin

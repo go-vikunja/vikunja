@@ -2,87 +2,6 @@
   "swagger": "2.0",
   "info": {},
   "paths": {
-    "/items/{itemID}": {
-      "post": {
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "tags": [
-          "lists"
-        ],
-        "summary": "Updates a list item",
-        "operationId": "updateListItem",
-        "parameters": [
-          {
-            "type": "string",
-            "description": "ID of the item to update",
-            "name": "itemID",
-            "in": "path",
-            "required": true
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "schema": {
-              "$ref": "#/definitions/ListItem"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "$ref": "#/responses/ListItem"
-          },
-          "400": {
-            "$ref": "#/responses/Message"
-          },
-          "500": {
-            "$ref": "#/responses/Message"
-          }
-        }
-      },
-      "delete": {
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "tags": [
-          "lists"
-        ],
-        "summary": "Deletes a list item",
-        "operationId": "deleteListItem",
-        "parameters": [
-          {
-            "type": "string",
-            "description": "ID of the list item to delete",
-            "name": "itemID",
-            "in": "path",
-            "required": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "$ref": "#/responses/Message"
-          },
-          "400": {
-            "$ref": "#/responses/Message"
-          },
-          "403": {
-            "$ref": "#/responses/Message"
-          },
-          "404": {
-            "$ref": "#/responses/Message"
-          },
-          "500": {
-            "$ref": "#/responses/Message"
-          }
-        }
-      }
-    },
     "/lists": {
       "get": {
         "consumes": [
@@ -117,7 +36,7 @@
         "tags": [
           "lists"
         ],
-        "summary": "gets one list with all todo items",
+        "summary": "gets one list with all todo tasks",
         "operationId": "getList",
         "parameters": [
           {
@@ -150,8 +69,8 @@
         "tags": [
           "lists"
         ],
-        "summary": "Adds an item to a list",
-        "operationId": "addListItem",
+        "summary": "Adds an task to a list",
+        "operationId": "addListTask",
         "parameters": [
           {
             "type": "string",
@@ -164,13 +83,13 @@
             "name": "body",
             "in": "body",
             "schema": {
-              "$ref": "#/definitions/ListItem"
+              "$ref": "#/definitions/ListTask"
             }
           }
         ],
         "responses": {
           "200": {
-            "$ref": "#/responses/ListItem"
+            "$ref": "#/responses/ListTask"
           },
           "400": {
             "$ref": "#/responses/Message"
@@ -233,7 +152,7 @@
         "tags": [
           "lists"
         ],
-        "summary": "Deletes a list with all items on it",
+        "summary": "Deletes a list with all tasks on it",
         "operationId": "deleteList",
         "parameters": [
           {
@@ -485,7 +404,7 @@
         "tags": [
           "namespaces"
         ],
-        "summary": "gets one namespace with all todo items",
+        "summary": "gets one namespace with all todo tasks",
         "operationId": "getNamespace",
         "parameters": [
           {
@@ -829,6 +748,87 @@
         }
       }
     },
+    "/tasks/{taskID}": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "lists"
+        ],
+        "summary": "Updates a list task",
+        "operationId": "updateListTask",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "ID of the task to update",
+            "name": "taskID",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/ListTask"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/ListTask"
+          },
+          "400": {
+            "$ref": "#/responses/Message"
+          },
+          "500": {
+            "$ref": "#/responses/Message"
+          }
+        }
+      },
+      "delete": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "lists"
+        ],
+        "summary": "Deletes a list task",
+        "operationId": "deleteListTask",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "ID of the list task to delete",
+            "name": "taskID",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/Message"
+          },
+          "400": {
+            "$ref": "#/responses/Message"
+          },
+          "403": {
+            "$ref": "#/responses/Message"
+          },
+          "404": {
+            "$ref": "#/responses/Message"
+          },
+          "500": {
+            "$ref": "#/responses/Message"
+          }
+        }
+      }
+    },
     "/teams": {
       "get": {
         "consumes": [
@@ -1125,7 +1125,7 @@
       "x-go-package": "code.vikunja.io/api/models"
     },
     "List": {
-      "description": "List represents a list of items",
+      "description": "List represents a list of tasks",
       "type": "object",
       "properties": {
         "created": {
@@ -1142,15 +1142,15 @@
           "format": "int64",
           "x-go-name": "ID"
         },
-        "items": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/ListItem"
-          },
-          "x-go-name": "Items"
-        },
         "owner": {
           "$ref": "#/definitions/User"
+        },
+        "tasks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ListTask"
+          },
+          "x-go-name": "Tasks"
         },
         "title": {
           "type": "string",
@@ -1164,8 +1164,8 @@
       },
       "x-go-package": "code.vikunja.io/api/models"
     },
-    "ListItem": {
-      "description": "ListItem represents an item in a todolist",
+    "ListTask": {
+      "description": "ListTask represents an task in a todolist",
       "type": "object",
       "properties": {
         "created": {
@@ -1479,10 +1479,10 @@
         "$ref": "#/definitions/List"
       }
     },
-    "ListItem": {
-      "description": "ListItem",
+    "ListTask": {
+      "description": "ListTask",
       "schema": {
-        "$ref": "#/definitions/ListItem"
+        "$ref": "#/definitions/ListTask"
       }
     },
     "Message": {

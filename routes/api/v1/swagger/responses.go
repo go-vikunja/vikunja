@@ -44,11 +44,11 @@ type swaggerResponseLIst struct {
 	Body models.List `json:"body"`
 }
 
-// ListItem
-// swagger:response ListItem
-type swaggerResponseLIstItem struct {
+// ListTask
+// swagger:response ListTask
+type swaggerResponseLIstTask struct {
 	// in:body
-	Body models.ListItem `json:"body"`
+	Body models.ListTask `json:"body"`
 }
 
 // ================

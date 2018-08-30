@@ -14,7 +14,7 @@ func (l *List) Delete() (err error) {
 		return
 	}
 
-	// Delete all todoitems on that list
-	_, err = x.Where("list_id = ?", l.ID).Delete(&ListItem{})
+	// Delete all todotasks on that list
+	_, err = x.Where("list_id = ?", l.ID).Delete(&ListTask{})
 	return
 }

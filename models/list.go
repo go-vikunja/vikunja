@@ -1,6 +1,6 @@
 package models
 
-// List represents a list of items
+// List represents a list of tasks
 type List struct {
 	ID          int64  `xorm:"int(11) autoincr not null unique pk" json:"id" param:"list"`
 	Title       string `xorm:"varchar(250)" json:"title"`
@@ -9,7 +9,7 @@ type List struct {
 	NamespaceID int64  `xorm:"int(11)" json:"-" param:"namespace"`
 
 	Owner User        `xorm:"-" json:"owner"`
-	Items []*ListItem `xorm:"-" json:"items"`
+	Tasks []*ListTask `xorm:"-" json:"tasks"`
 
 	Created int64 `xorm:"created" json:"created"`
 	Updated int64 `xorm:"updated" json:"updated"`
@@ -18,14 +18,14 @@ type List struct {
 	Rights   `xorm:"-" json:"-"`
 }
 
-// AfterLoad loads the owner and list items
+// AfterLoad loads the owner and list tasks
 func (l *List) AfterLoad() {
 
 	// Get the owner
 	l.Owner, _, _ = GetUserByID(l.OwnerID)
 
-	// Get the list items
-	l.Items, _ = GetItemsByListID(l.ID)
+	// Get the list tasks
+	l.Tasks, _ = GetTasksByListID(l.ID)
 }
 
 // GetListByID returns a list by its ID

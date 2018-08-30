@@ -1,14 +1,14 @@
 package models
 
-// Delete implements the delete method for listItem
-func (i *ListItem) Delete() (err error) {
+// Delete implements the delete method for listTask
+func (i *ListTask) Delete() (err error) {
 
 	// Check if it exists
-	_, err = GetListItemByID(i.ID)
+	_, err = GetListTaskByID(i.ID)
 	if err != nil {
 		return
 	}
 
-	_, err = x.ID(i.ID).Delete(ListItem{})
+	_, err = x.ID(i.ID).Delete(ListTask{})
 	return
 }

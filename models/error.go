@@ -201,55 +201,55 @@ func IsErrListTitleCannotBeEmpty(err error) bool {
 }
 
 func (err ErrListTitleCannotBeEmpty) Error() string {
-	return fmt.Sprintf("List item text cannot be empty.")
+	return fmt.Sprintf("List task text cannot be empty.")
 }
 
 // ================
-// List item errors
+// List task errors
 // ================
 
-// ErrListItemCannotBeEmpty represents a "ErrListDoesNotExist" kind of error. Used if the list does not exist.
-type ErrListItemCannotBeEmpty struct{}
+// ErrListTaskCannotBeEmpty represents a "ErrListDoesNotExist" kind of error. Used if the list does not exist.
+type ErrListTaskCannotBeEmpty struct{}
 
-// IsErrListItemCannotBeEmpty checks if an error is a ErrListDoesNotExist.
-func IsErrListItemCannotBeEmpty(err error) bool {
-	_, ok := err.(ErrListItemCannotBeEmpty)
+// IsErrListTaskCannotBeEmpty checks if an error is a ErrListDoesNotExist.
+func IsErrListTaskCannotBeEmpty(err error) bool {
+	_, ok := err.(ErrListTaskCannotBeEmpty)
 	return ok
 }
 
-func (err ErrListItemCannotBeEmpty) Error() string {
-	return fmt.Sprintf("List item text cannot be empty.")
+func (err ErrListTaskCannotBeEmpty) Error() string {
+	return fmt.Sprintf("List task text cannot be empty.")
 }
 
-// ErrListItemDoesNotExist represents a "ErrListDoesNotExist" kind of error. Used if the list does not exist.
-type ErrListItemDoesNotExist struct {
+// ErrListTaskDoesNotExist represents a "ErrListDoesNotExist" kind of error. Used if the list does not exist.
+type ErrListTaskDoesNotExist struct {
 	ID int64
 }
 
-// IsErrListItemDoesNotExist checks if an error is a ErrListDoesNotExist.
-func IsErrListItemDoesNotExist(err error) bool {
-	_, ok := err.(ErrListItemDoesNotExist)
+// IsErrListTaskDoesNotExist checks if an error is a ErrListDoesNotExist.
+func IsErrListTaskDoesNotExist(err error) bool {
+	_, ok := err.(ErrListTaskDoesNotExist)
 	return ok
 }
 
-func (err ErrListItemDoesNotExist) Error() string {
-	return fmt.Sprintf("List item does not exist. [ID: %d]", err.ID)
+func (err ErrListTaskDoesNotExist) Error() string {
+	return fmt.Sprintf("List task does not exist. [ID: %d]", err.ID)
 }
 
-// ErrNeedToBeItemOwner represents an error, where the user is not the owner of that item (used i.e. when deleting a list)
-type ErrNeedToBeItemOwner struct {
-	ItemID int64
+// ErrNeedToBeTaskOwner represents an error, where the user is not the owner of that task (used i.e. when deleting a list)
+type ErrNeedToBeTaskOwner struct {
+	TaskID int64
 	UserID int64
 }
 
-// IsErrNeedToBeItemOwner checks if an error is a ErrNeedToBeItemOwner.
-func IsErrNeedToBeItemOwner(err error) bool {
-	_, ok := err.(ErrNeedToBeItemOwner)
+// IsErrNeedToBeTaskOwner checks if an error is a ErrNeedToBeTaskOwner.
+func IsErrNeedToBeTaskOwner(err error) bool {
+	_, ok := err.(ErrNeedToBeTaskOwner)
 	return ok
 }
 
-func (err ErrNeedToBeItemOwner) Error() string {
-	return fmt.Sprintf("You need to be item owner to do that [ItemID: %d, UserID: %d]", err.ItemID, err.UserID)
+func (err ErrNeedToBeTaskOwner) Error() string {
+	return fmt.Sprintf("You need to be task owner to do that [TaskID: %d, UserID: %d]", err.TaskID, err.UserID)
 }
 
 // =================

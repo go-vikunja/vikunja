@@ -34,7 +34,7 @@ func init() {
 	tables = append(tables,
 		new(User),
 		new(List),
-		new(ListItem),
+		new(ListTask),
 		new(Team),
 		new(TeamMember),
 		new(TeamList),

@@ -18,7 +18,7 @@ type swaggerParameterBodies struct {
 	List models.List
 
 	// in:body
-	ListItem models.ListItem
+	ListTask models.ListTask
 
 	// in:body
 	Namespace models.Namespace

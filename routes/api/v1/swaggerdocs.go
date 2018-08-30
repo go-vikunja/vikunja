@@ -1,16 +1,16 @@
 package v1
 
-// swagger:operation DELETE /items/{itemID} lists deleteListItem
+// swagger:operation DELETE /tasks/{taskID} lists deleteListTask
 // ---
-// summary: Deletes a list item
+// summary: Deletes a list task
 // consumes:
 // - application/json
 // produces:
 // - application/json
 // parameters:
-// - name: itemID
+// - name: taskID
 //   in: path
-//   description: ID of the list item to delete
+//   description: ID of the list task to delete
 //   type: string
 //   required: true
 // responses:
@@ -27,7 +27,7 @@ package v1
 
 // swagger:operation DELETE /lists/{listID} lists deleteList
 // ---
-// summary: Deletes a list with all items on it
+// summary: Deletes a list with all tasks on it
 // consumes:
 // - application/json
 // produces:
@@ -50,9 +50,9 @@ package v1
 //   "500":
 //     "$ref": "#/responses/Message"
 
-// swagger:operation PUT /lists/{listID} lists addListItem
+// swagger:operation PUT /lists/{listID} lists addListTask
 // ---
-// summary: Adds an item to a list
+// summary: Adds an task to a list
 // consumes:
 // - application/json
 // produces:
@@ -66,35 +66,35 @@ package v1
 // - name: body
 //   in: body
 //   schema:
-//     "$ref": "#/definitions/ListItem"
+//     "$ref": "#/definitions/ListTask"
 // responses:
 //   "200":
-//     "$ref": "#/responses/ListItem"
+//     "$ref": "#/responses/ListTask"
 //   "400":
 //     "$ref": "#/responses/Message"
 //   "500":
 //     "$ref": "#/responses/Message"
 
-// swagger:operation POST /items/{itemID} lists updateListItem
+// swagger:operation POST /tasks/{taskID} lists updateListTask
 // ---
-// summary: Updates a list item
+// summary: Updates a list task
 // consumes:
 // - application/json
 // produces:
 // - application/json
 // parameters:
-// - name: itemID
+// - name: taskID
 //   in: path
-//   description: ID of the item to update
+//   description: ID of the task to update
 //   type: string
 //   required: true
 // - name: body
 //   in: body
 //   schema:
-//     "$ref": "#/definitions/ListItem"
+//     "$ref": "#/definitions/ListTask"
 // responses:
 //   "200":
-//     "$ref": "#/responses/ListItem"
+//     "$ref": "#/responses/ListTask"
 //   "400":
 //     "$ref": "#/responses/Message"
 //   "500":
@@ -102,7 +102,7 @@ package v1
 
 // swagger:operation GET /lists/{listID} lists getList
 // ---
-// summary: gets one list with all todo items
+// summary: gets one list with all todo tasks
 // consumes:
 // - application/json
 // produces:
@@ -321,7 +321,7 @@ package v1
 
 // swagger:operation GET /namespaces/{namespaceID} namespaces getNamespace
 // ---
-// summary: gets one namespace with all todo items
+// summary: gets one namespace with all todo tasks
 // consumes:
 // - application/json
 // produces:

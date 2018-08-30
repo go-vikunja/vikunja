@@ -1,14 +1,14 @@
 package models
 
-// ListItem represents an item in a todolist
-type ListItem struct {
-	ID           int64  `xorm:"int(11) autoincr not null unique pk" json:"id" param:"listitem"`
+// ListTask represents an task in a todolist
+type ListTask struct {
+	ID           int64  `xorm:"int(11) autoincr not null unique pk" json:"id" param:"listtask"`
 	Text         string `xorm:"varchar(250)" json:"text"`
 	Description  string `xorm:"varchar(250)" json:"description"`
 	Done         bool   `json:"done"`
 	DueDateUnix  int64  `xorm:"int(11)" json:"dueDate"`
 	ReminderUnix int64  `xorm:"int(11)" json:"reminderDate"`
-	CreatedByID  int64  `xorm:"int(11)" json:"-"` // ID of the user who put that item on the list
+	CreatedByID  int64  `xorm:"int(11)" json:"-"` // ID of the user who put that task on the list
 	ListID       int64  `xorm:"int(11)" json:"listID" param:"list"`
 	Created      int64  `xorm:"created" json:"created"`
 	Updated      int64  `xorm:"updated" json:"updated"`
@@ -19,26 +19,26 @@ type ListItem struct {
 	Rights   `xorm:"-" json:"-"`
 }
 
-// TableName returns the table name for listitems
-func (ListItem) TableName() string {
-	return "items"
+// TableName returns the table name for listtasks
+func (ListTask) TableName() string {
+	return "tasks"
 }
 
-// GetItemsByListID gets all todoitems for a list
-func GetItemsByListID(listID int64) (items []*ListItem, err error) {
-	err = x.Where("list_id = ?", listID).Find(&items)
+// GetTasksByListID gets all todotasks for a list
+func GetTasksByListID(listID int64) (tasks []*ListTask, err error) {
+	err = x.Where("list_id = ?", listID).Find(&tasks)
 	if err != nil {
 		return
 	}
 
-	// No need to iterate over users if the list doesn't has items
-	if len(items) == 0 {
+	// No need to iterate over users if the list doesn't has tasks
+	if len(tasks) == 0 {
 		return
 	}
 
 	// Get all users and put them into the array
 	var userIDs []int64
-	for _, i := range items {
+	for _, i := range tasks {
 		found := false
 		for _, u := range userIDs {
 			if i.CreatedByID == u {
@@ -58,37 +58,37 @@ func GetItemsByListID(listID int64) (items []*ListItem, err error) {
 		return
 	}
 
-	for in, item := range items {
+	for in, task := range tasks {
 		for _, user := range users {
-			if item.CreatedByID == user.ID {
-				items[in].CreatedBy = user
+			if task.CreatedByID == user.ID {
+				tasks[in].CreatedBy = user
 				break
 			}
 		}
 
 		// obsfucate the user password
-		items[in].CreatedBy.Password = ""
+		tasks[in].CreatedBy.Password = ""
 	}
 
 	return
 }
 
-// GetListItemByID returns all items a list has
-func GetListItemByID(listItemID int64) (listItem ListItem, err error) {
-	exists, err := x.ID(listItemID).Get(&listItem)
+// GetListTaskByID returns all tasks a list has
+func GetListTaskByID(listTaskID int64) (listTask ListTask, err error) {
+	exists, err := x.ID(listTaskID).Get(&listTask)
 	if err != nil {
-		return ListItem{}, err
+		return ListTask{}, err
 	}
 
 	if !exists {
-		return ListItem{}, ErrListItemDoesNotExist{listItemID}
+		return ListTask{}, ErrListTaskDoesNotExist{listTaskID}
 	}
 
-	user, _, err := GetUserByID(listItem.CreatedByID)
+	user, _, err := GetUserByID(listTask.CreatedByID)
 	if err != nil {
 		return
 	}
-	listItem.CreatedBy = user
+	listTask.CreatedBy = user
 
 	return
 }

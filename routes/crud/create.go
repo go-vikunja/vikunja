@@ -38,8 +38,8 @@ func (c *WebHandler) CreateWeb(ctx echo.Context) error {
 		if models.IsErrListTitleCannotBeEmpty(err) {
 			return echo.NewHTTPError(http.StatusBadRequest, "You must provide at least a list title.")
 		}
-		if models.IsErrListItemCannotBeEmpty(err) {
-			return echo.NewHTTPError(http.StatusBadRequest, "You must provide at least a list item text.")
+		if models.IsErrListTaskCannotBeEmpty(err) {
+			return echo.NewHTTPError(http.StatusBadRequest, "You must provide at least a list task text.")
 		}
 		if models.IsErrUserDoesNotExist(err) {
 			return echo.NewHTTPError(http.StatusBadRequest, "The user does not exist.")

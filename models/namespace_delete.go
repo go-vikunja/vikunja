@@ -15,18 +15,18 @@ func (n *Namespace) Delete() (err error) {
 		return
 	}
 
-	// Delete all lists with their items
+	// Delete all lists with their tasks
 	lists, err := GetListsByNamespaceID(n.ID)
 	var listIDs []int64
 	// We need to do that for here because we need the list ids to delete two times:
 	// 1) to delete the lists itself
-	// 2) to delete the list items
+	// 2) to delete the list tasks
 	for _, list := range lists {
 		listIDs = append(listIDs, list.ID)
 	}
 
-	// Delete items
-	_, err = x.In("list_id", listIDs).Delete(&ListItem{})
+	// Delete tasks
+	_, err = x.In("list_id", listIDs).Delete(&ListTask{})
 	if err != nil {
 		return
 	}
