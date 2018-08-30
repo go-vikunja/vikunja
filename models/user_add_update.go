@@ -84,27 +84,27 @@ func UpdateUser(user User) (updatedUser User, err error) {
 		return User{}, err
 	}
 
-		// Check if we have at least a username
-		if user.Username == "" {
-			//return User{}, ErrNoUsername{user.ID}
-			user.Username = theUser.Username // Dont change the username if we dont have one
-		}
+	// Check if we have at least a username
+	if user.Username == "" {
+		//return User{}, ErrNoUsername{user.ID}
+		user.Username = theUser.Username // Dont change the username if we dont have one
+	}
 
-		user.Password = theUser.Password // set the password to the one in the database to not accedently resetting it
+	user.Password = theUser.Password // set the password to the one in the database to not accedently resetting it
 
-		// Update it
-		_, err = x.Id(user.ID).Update(user)
-		if err != nil {
-			return User{}, err
-		}
+	// Update it
+	_, err = x.Id(user.ID).Update(user)
+	if err != nil {
+		return User{}, err
+	}
 
-		// Get the newly updated user
-		updatedUser, err = GetUserByID(user.ID)
-		if err != nil {
-			return User{}, err
-		}
+	// Get the newly updated user
+	updatedUser, err = GetUserByID(user.ID)
+	if err != nil {
+		return User{}, err
+	}
 
-		return updatedUser, err
+	return updatedUser, err
 }
 
 // UpdateUserPassword updates the password of a user

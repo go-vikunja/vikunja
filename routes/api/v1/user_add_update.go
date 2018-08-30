@@ -61,10 +61,10 @@ func userAddOrUpdate(c echo.Context) error {
 	var exists bool
 	_, err := models.GetUserByID(datUser.ID)
 	if err != nil {
-			if models.IsErrUserDoesNotExist(err) {
-				exists = true
-			} else {
-				return c.JSON(http.StatusInternalServerError, models.Message{"Could not check if the user exists."})
+		if models.IsErrUserDoesNotExist(err) {
+			exists = true
+		} else {
+			return c.JSON(http.StatusInternalServerError, models.Message{"Could not check if the user exists."})
 		}
 	}
 

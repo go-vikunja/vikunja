@@ -22,7 +22,7 @@ type List struct {
 func (l *List) AfterLoad() {
 
 	// Get the owner
-	l.Owner, _= GetUserByID(l.OwnerID)
+	l.Owner, _ = GetUserByID(l.OwnerID)
 
 	// Get the list tasks
 	l.Tasks, _ = GetTasksByListID(l.ID)
