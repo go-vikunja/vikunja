@@ -25,7 +25,7 @@ func (Team) TableName() string {
 // AfterLoad gets the created by user object
 func (t *Team) AfterLoad() {
 	// Get the owner
-	t.CreatedBy, _, _ = GetUserByID(t.CreatedByID)
+	t.CreatedBy, _ = GetUserByID(t.CreatedByID)
 
 	// Get all members
 	x.Select("*").

@@ -10,7 +10,7 @@ func TestCreateUser(t *testing.T) {
 	//assert.NoError(t, PrepareTestDatabase())
 
 	// Get our doer
-	doer, _, err := GetUserByID(1)
+	doer, err := GetUserByID(1)
 	assert.NoError(t, err)
 
 	// Our dummy user for testing
@@ -60,19 +60,16 @@ func TestCreateUser(t *testing.T) {
 	assert.True(t, IsErrNoUsernamePassword(err))
 
 	// Check if he exists
-	theuser, exists, err := GetUser(createdUser)
+	theuser, err := GetUser(createdUser)
 	assert.NoError(t, err)
-	assert.True(t, exists)
 
 	// Get by his ID
-	_, exists, err = GetUserByID(theuser.ID)
+	_, err = GetUserByID(theuser.ID)
 	assert.NoError(t, err)
-	assert.True(t, exists)
 
 	// Passing 0 as ID should return an empty user
-	_, exists, err = GetUserByID(0)
+	_, err = GetUserByID(0)
 	assert.NoError(t, err)
-	assert.False(t, exists)
 
 	// Check the user credentials
 	user, err := CheckUserCredentials(&UserLogin{"testuu", "1234"})

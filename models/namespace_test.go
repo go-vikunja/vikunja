@@ -17,7 +17,7 @@ func TestNamespace_Create(t *testing.T) {
 	}
 
 	// Doer
-	doer, _, err := GetUserByID(1)
+	doer, err := GetUserByID(1)
 	assert.NoError(t, err)
 
 	// Try creating it

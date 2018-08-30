@@ -15,18 +15,27 @@ func CreateUser(user User) (newUser User, err error) {
 	}
 
 	// Check if the user already existst with that username
-	existingUser, exists, err := GetUser(User{Username: newUser.Username})
-	if err != nil && !IsErrUserDoesNotExist(err) {
-		return User{}, err
+	var exists bool
+	existingUser, err := GetUser(User{Username: newUser.Username})
+	if err != nil {
+		if IsErrUserDoesNotExist(err) {
+			exists = true
+		} else {
+			return User{}, err
+		}
 	}
 	if exists {
 		return User{}, ErrUsernameExists{existingUser.ID, existingUser.Username}
 	}
 
 	// Check if the user already existst with that email
-	existingUser, exists, err = GetUser(User{Email: newUser.Email})
+	existingUser, err = GetUser(User{Email: newUser.Email})
 	if err != nil && !IsErrUserDoesNotExist(err) {
-		return User{}, err
+		if IsErrUserDoesNotExist(err) {
+			exists = true
+		} else {
+			return User{}, err
+		}
 	}
 	if exists {
 		return User{}, ErrUserEmailExists{existingUser.ID, existingUser.Email}
@@ -45,7 +54,7 @@ func CreateUser(user User) (newUser User, err error) {
 	}
 
 	// Get the  full new User
-	newUserOut, _, err := GetUser(newUser)
+	newUserOut, err := GetUser(newUser)
 	if err != nil {
 		return User{}, err
 	}
@@ -70,12 +79,11 @@ func hashPassword(password string) (string, error) {
 func UpdateUser(user User) (updatedUser User, err error) {
 
 	// Check if it exists
-	theUser, exists, err := GetUserByID(user.ID)
+	theUser, err := GetUserByID(user.ID)
 	if err != nil {
 		return User{}, err
 	}
 
-	if exists {
 		// Check if we have at least a username
 		if user.Username == "" {
 			//return User{}, ErrNoUsername{user.ID}
@@ -91,28 +99,21 @@ func UpdateUser(user User) (updatedUser User, err error) {
 		}
 
 		// Get the newly updated user
-		updatedUser, _, err = GetUserByID(user.ID)
+		updatedUser, err = GetUserByID(user.ID)
 		if err != nil {
 			return User{}, err
 		}
 
 		return updatedUser, err
-	}
-
-	return User{}, ErrUserDoesNotExist{user.ID}
 }
 
 // UpdateUserPassword updates the password of a user
 func UpdateUserPassword(userID int64, newPassword string, doer *User) (err error) {
 
 	// Get all user details
-	user, exists, err := GetUserByID(userID)
+	user, err := GetUserByID(userID)
 	if err != nil {
 		return err
-	}
-
-	if !exists {
-		return ErrUserDoesNotExist{userID}
 	}
 
 	// Hash the new password and set it

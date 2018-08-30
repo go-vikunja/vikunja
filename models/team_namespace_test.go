@@ -14,7 +14,7 @@ func TestTeamNamespace(t *testing.T) {
 		Right:       TeamRightAdmin,
 	}
 
-	dummyuser, _, err := GetUserByID(1)
+	dummyuser, err := GetUserByID(1)
 	assert.NoError(t, err)
 
 	// Test normal creation

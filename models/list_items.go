@@ -84,7 +84,7 @@ func GetListTaskByID(listTaskID int64) (listTask ListTask, err error) {
 		return ListTask{}, ErrListTaskDoesNotExist{listTaskID}
 	}
 
-	user, _, err := GetUserByID(listTask.CreatedByID)
+	user, err := GetUserByID(listTask.CreatedByID)
 	if err != nil {
 		return
 	}

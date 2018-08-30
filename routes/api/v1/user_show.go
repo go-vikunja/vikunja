@@ -25,15 +25,13 @@ func UserShow(c echo.Context) error {
 	}
 
 	// Get User Infos
-	userInfos, exists, err := models.GetUserByID(userID)
+	userInfos, err := models.GetUserByID(userID)
 
 	if err != nil {
+		if models.IsErrUserDoesNotExist(err) {
+			return c.JSON(http.StatusNotFound, models.Message{"The user does not exist."})
+		}
 		return c.JSON(http.StatusInternalServerError, models.Message{"Error getting user infos."})
-	}
-
-	// Check if it exists
-	if !exists {
-		return c.JSON(http.StatusNotFound, models.Message{"User not found."})
 	}
 
 	// Obfucate his password

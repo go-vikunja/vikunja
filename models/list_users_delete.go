@@ -4,7 +4,7 @@ package models
 func (lu *ListUser) Delete() (err error) {
 
 	// Check if the user exists
-	_, _, err = GetUserByID(lu.UserID)
+	_, err = GetUserByID(lu.UserID)
 	if err != nil {
 		return
 	}

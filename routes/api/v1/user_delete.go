@@ -22,14 +22,13 @@ func UserDelete(c echo.Context) error {
 	}
 
 	// Check if the user exists
-	_, exists, err := models.GetUserByID(userID)
+	_, err = models.GetUserByID(userID)
 
 	if err != nil {
+		if models.IsErrUserDoesNotExist(err) {
+			return c.JSON(http.StatusNotFound, models.Message{"The user does not exist."})
+		}
 		return c.JSON(http.StatusInternalServerError, models.Message{"Could not get user."})
-	}
-
-	if !exists {
-		return c.JSON(http.StatusNotFound, models.Message{"The user does not exist."})
 	}
 
 	// Get the doer options

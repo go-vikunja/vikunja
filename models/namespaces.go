@@ -23,7 +23,7 @@ func (Namespace) TableName() string {
 
 // AfterLoad gets the owner
 func (n *Namespace) AfterLoad() {
-	n.Owner, _, _ = GetUserByID(n.OwnerID)
+	n.Owner, _ = GetUserByID(n.OwnerID)
 }
 
 // GetNamespaceByID returns a namespace object by its ID
@@ -39,7 +39,7 @@ func GetNamespaceByID(id int64) (namespace Namespace, err error) {
 	}
 
 	// Get the namespace Owner
-	namespace.Owner, _, err = GetUserByID(namespace.OwnerID)
+	namespace.Owner, err = GetUserByID(namespace.OwnerID)
 	if err != nil {
 		return namespace, err
 	}

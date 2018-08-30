@@ -10,7 +10,7 @@ func TestList_Create(t *testing.T) {
 	//assert.NoError(t, PrepareTestDatabase())
 
 	// Get our doer
-	doer, _, err := GetUserByID(1)
+	doer, err := GetUserByID(1)
 	assert.NoError(t, err)
 
 	// Dummy list for testing

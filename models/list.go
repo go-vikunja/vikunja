@@ -22,7 +22,7 @@ type List struct {
 func (l *List) AfterLoad() {
 
 	// Get the owner
-	l.Owner, _, _ = GetUserByID(l.OwnerID)
+	l.Owner, _= GetUserByID(l.OwnerID)
 
 	// Get the list tasks
 	l.Tasks, _ = GetTasksByListID(l.ID)
@@ -51,7 +51,7 @@ func GetListsByNamespaceID(nID int64) (lists []*List, err error) {
 // ReadAll gets all lists a user has access to
 func (l *List) ReadAll(user *User) (interface{}, error) {
 	lists := []List{}
-	fullUser, _, err := GetUserByID(user.ID)
+	fullUser, err := GetUserByID(user.ID)
 	if err != nil {
 		return lists, err
 	}

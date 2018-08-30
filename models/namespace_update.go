@@ -15,7 +15,7 @@ func (n *Namespace) Update() (err error) {
 
 	// Check if the (new) owner exists
 	if currentNamespace.OwnerID != n.OwnerID {
-		n.Owner, _, err = GetUserByID(n.OwnerID)
+		n.Owner, err = GetUserByID(n.OwnerID)
 		if err != nil {
 			return
 		}

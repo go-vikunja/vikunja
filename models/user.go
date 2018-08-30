@@ -46,38 +46,34 @@ func (apiUser *APIUserPassword) APIFormat() User {
 }
 
 // GetUserByID gets informations about a user by its ID
-func GetUserByID(id int64) (user User, exists bool, err error) {
+func GetUserByID(id int64) (user User, err error) {
 	// Apparently xorm does otherwise look for all users but return only one, which leads to returing one even if the ID is 0
 	if id == 0 {
-		return User{}, false, nil
+		return User{}, nil
 	}
 
 	return GetUser(User{ID: id})
 }
 
 // GetUser gets a user object
-func GetUser(user User) (userOut User, exists bool, err error) {
+func GetUser(user User) (userOut User, err error) {
 	userOut = user
-	exists, err = x.Get(&userOut)
+	exists, err := x.Get(&userOut)
 
 	if !exists {
-		return User{}, false, ErrUserDoesNotExist{}
+		return User{}, ErrUserDoesNotExist{}
 	}
 
-	return userOut, exists, err
+	return userOut, err
 }
 
 // CheckUserCredentials checks user credentials
 func CheckUserCredentials(u *UserLogin) (User, error) {
 
 	// Check if the user exists
-	user, exists, err := GetUser(User{Username: u.Username})
+	user, err := GetUser(User{Username: u.Username})
 	if err != nil {
 		return User{}, err
-	}
-
-	if !exists {
-		return User{}, ErrUserDoesNotExist{}
 	}
 
 	// Check the users password

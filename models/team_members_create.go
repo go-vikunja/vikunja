@@ -9,7 +9,7 @@ func (tm *TeamMember) Create(doer *User) (err error) {
 	}
 
 	// Check if the user exists
-	_, _, err = GetUserByID(tm.UserID)
+	_, err = GetUserByID(tm.UserID)
 	if err != nil {
 		return
 	}

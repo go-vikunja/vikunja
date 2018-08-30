@@ -15,7 +15,7 @@ func TestTeamList(t *testing.T) {
 	}
 
 	// Dummyuser
-	user, _, err := GetUserByID(1)
+	user, err := GetUserByID(1)
 	assert.NoError(t, err)
 
 	// Check normal creation

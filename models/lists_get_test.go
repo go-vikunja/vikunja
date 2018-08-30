@@ -16,7 +16,7 @@ func TestList_ReadAll(t *testing.T) {
 	assert.Equal(t, len(lists), 2)
 
 	// Get all lists our user has access to
-	user, _, err := GetUserByID(1)
+	user, err := GetUserByID(1)
 	assert.NoError(t, err)
 
 	lists2 := List{}

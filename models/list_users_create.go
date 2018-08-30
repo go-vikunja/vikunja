@@ -15,7 +15,7 @@ func (ul *ListUser) Create(user *User) (err error) {
 	}
 
 	// Check if the user exists
-	if _, _, err = GetUserByID(ul.UserID); err != nil {
+	if _, err = GetUserByID(ul.UserID); err != nil {
 		return err
 	}
 

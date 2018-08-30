@@ -16,7 +16,7 @@ func TestListTask_Create(t *testing.T) {
 	}
 
 	// Add one point to a list
-	doer, _, err := GetUserByID(1)
+	doer, err := GetUserByID(1)
 	assert.NoError(t, err)
 
 	assert.True(t, listtask.CanCreate(&doer))

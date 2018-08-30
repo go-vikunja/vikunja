@@ -37,7 +37,7 @@ func createOrUpdateListTask(i *ListTask, doer *User) (err error) {
 	if i.ID != 0 {
 		_, err = x.ID(i.ID).Update(i)
 	} else {
-		user, _, err := GetUserByID(doer.ID)
+		user, err := GetUserByID(doer.ID)
 		if err != nil {
 			return err
 		}

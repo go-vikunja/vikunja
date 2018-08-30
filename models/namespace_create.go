@@ -9,7 +9,7 @@ func (n *Namespace) Create(doer *User) (err error) {
 	n.ID = 0 // This would otherwise prevent the creation of new lists after one was created
 
 	// Check if the User exists
-	n.Owner, _, err = GetUserByID(doer.ID)
+	n.Owner, err = GetUserByID(doer.ID)
 	if err != nil {
 		return
 	}
