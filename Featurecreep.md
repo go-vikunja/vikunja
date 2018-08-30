@@ -134,10 +134,14 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
 
 * [x] Listen teilbar
       * [ ] Mit anderen Nutzern
+      // TODO: bei canRead/etc die Einträge beachten
+	    * [ ] Namespaces
+        * [ ] Teams 
       * [x] Teams
       * [ ] Mit Link
             * [ ] Offen
             * [ ] Passwortgeschützt
+
 * [x] Rechtemanagement (Und damit Unterscheidung zwischen Ownern und Mitgleidern)
 * [x] Mange Team members
       * [x] Hinzufügen
