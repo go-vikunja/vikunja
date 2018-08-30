@@ -40,6 +40,7 @@ func init() {
 		new(TeamList),
 		new(TeamNamespace),
 		new(Namespace),
+		new(ListUser),
 	)
 }
 

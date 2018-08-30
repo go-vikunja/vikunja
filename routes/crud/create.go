@@ -63,6 +63,13 @@ func (c *WebHandler) CreateWeb(ctx echo.Context) error {
 			return echo.NewHTTPError(http.StatusBadRequest, "This user is already a member of that team.")
 		}
 
+		if models.IsErrUserAlreadyHasAccess(err) {
+			return echo.NewHTTPError(http.StatusBadRequest, "This user already has access to this list.")
+		}
+		if models.IsErrInvalidUserRight(err) {
+			return echo.NewHTTPError(http.StatusBadRequest, "The right is invalid.")
+		}
+
 		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
 

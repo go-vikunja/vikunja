@@ -495,3 +495,38 @@ func IsErrCannotDeleteLastTeamMember(err error) bool {
 func (err ErrCannotDeleteLastTeamMember) Error() string {
 	return fmt.Sprintf("This user is already a member of that team. [Team ID: %d, User ID: %d]", err.TeamID, err.UserID)
 }
+
+// ====================
+// User <-> List errors
+// ====================
+
+// ErrInvalidUserRight represents an error where a user right is invalid
+type ErrInvalidUserRight struct {
+	Right UserRight
+}
+
+// IsErrInvalidUserRight checks if an error is ErrInvalidUserRight.
+func IsErrInvalidUserRight(err error) bool {
+	_, ok := err.(ErrInvalidUserRight)
+	return ok
+}
+
+func (err ErrInvalidUserRight) Error() string {
+	return fmt.Sprintf("The right is invalid [Right: %d]", err.Right)
+}
+
+// ErrUserAlreadyHasAccess represents an error where a user already has access to a list/namespace
+type ErrUserAlreadyHasAccess struct {
+	UserID int64
+	ListID int64
+}
+
+// IsErrUserAlreadyHasAccess checks if an error is ErrUserAlreadyHasAccess.
+func IsErrUserAlreadyHasAccess(err error) bool {
+	_, ok := err.(ErrUserAlreadyHasAccess)
+	return ok
+}
+
+func (err ErrUserAlreadyHasAccess) Error() string {
+	return fmt.Sprintf("This user already has access to that list. [User ID: %d, List ID: %d]", err.UserID, err.ListID)
+}

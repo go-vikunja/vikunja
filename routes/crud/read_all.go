@@ -20,6 +20,10 @@ func (c *WebHandler) ReadAllWeb(ctx echo.Context) error {
 
 	lists, err := c.CObject.ReadAll(&currentUser)
 	if err != nil {
+		if models.IsErrNeedToHaveListReadAccess(err) {
+			return echo.NewHTTPError(http.StatusForbidden, "You need to have read access to this list.")
+		}
+
 		return echo.NewHTTPError(http.StatusInternalServerError, "An error occured.")
 	}
 
