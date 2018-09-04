@@ -81,6 +81,6 @@ func TestTeamList(t *testing.T) {
 	// Delete with a nonexistant list
 	err = tl4.Delete()
 	assert.Error(t, err)
-	assert.True(t, IsErrListDoesNotExist(err))
+	assert.True(t, IsErrTeamDoesNotHaveAccessToList(err))
 
 }

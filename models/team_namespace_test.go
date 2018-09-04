@@ -79,6 +79,6 @@ func TestTeamNamespace(t *testing.T) {
 	// Try deleting with a nonexistant namespace
 	err = tn4.Delete()
 	assert.Error(t, err)
-	assert.True(t, IsErrNamespaceDoesNotExist(err))
+	assert.True(t, IsErrTeamDoesNotHaveAccessToNamespace(err))
 
 }

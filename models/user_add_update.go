@@ -15,24 +15,25 @@ func CreateUser(user User) (newUser User, err error) {
 	}
 
 	// Check if the user already existst with that username
-	var exists bool
+	exists := true
 	existingUser, err := GetUser(User{Username: newUser.Username})
 	if err != nil {
 		if IsErrUserDoesNotExist(err) {
-			exists = true
+			exists = false
 		} else {
 			return User{}, err
 		}
 	}
 	if exists {
-		return User{}, ErrUsernameExists{existingUser.ID, existingUser.Username}
+		return User{}, ErrUsernameExists{newUser.ID, newUser.Username}
 	}
 
 	// Check if the user already existst with that email
+	exists = true
 	existingUser, err = GetUser(User{Email: newUser.Email})
-	if err != nil && !IsErrUserDoesNotExist(err) {
+	if err != nil {
 		if IsErrUserDoesNotExist(err) {
-			exists = true
+			exists = false
 		} else {
 			return User{}, err
 		}
