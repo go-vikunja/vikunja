@@ -2,7 +2,6 @@ package crud
 
 import (
 	"code.vikunja.io/api/models"
-	"fmt"
 	"github.com/labstack/echo"
 	"net/http"
 )
@@ -25,7 +24,6 @@ func (c *WebHandler) DeleteWeb(ctx echo.Context) error {
 
 	err = c.CObject.Delete()
 	if err != nil {
-		fmt.Println(err)
 		if models.IsErrNeedToBeListAdmin(err) {
 			return echo.NewHTTPError(http.StatusForbidden, "You need to be the list admin to delete a list.")
 		}
@@ -47,6 +45,10 @@ func (c *WebHandler) DeleteWeb(ctx echo.Context) error {
 
 		if models.IsErrUserDoesNotHaveAccessToList(err) {
 			return echo.NewHTTPError(http.StatusBadRequest, "This user does not have access to the list.")
+		}
+
+		if models.IsErrUserDoesNotHaveAccessToNamespace(err) {
+			return echo.NewHTTPError(http.StatusBadRequest, "This user does not have access to the namespace.")
 		}
 
 		return echo.NewHTTPError(http.StatusInternalServerError)

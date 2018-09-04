@@ -66,6 +66,9 @@ func (c *WebHandler) CreateWeb(ctx echo.Context) error {
 		if models.IsErrUserAlreadyHasAccess(err) {
 			return echo.NewHTTPError(http.StatusBadRequest, "This user already has access to this list.")
 		}
+		if models.IsErrUserAlreadyHasNamespaceAccess(err) {
+			return echo.NewHTTPError(http.StatusBadRequest, "This user already has access to this namespace.")
+		}
 		if models.IsErrInvalidUserRight(err) {
 			return echo.NewHTTPError(http.StatusBadRequest, "The right is invalid.")
 		}

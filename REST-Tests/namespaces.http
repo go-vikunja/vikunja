@@ -1,3 +1,26 @@
 # Get all namespaces
 GET http://localhost:8080/api/v1/namespaces
 Authorization: Bearer {{auth_token}}
+
+###
+
+# Get all users who have access to that namespace
+GET http://localhost:8080/api/v1/namespaces/1/users
+Authorization: Bearer {{auth_token}}
+
+###
+
+# Give a user access to that namespace
+PUT http://localhost:8080/api/v1/namespaces/1/users
+Authorization: Bearer {{auth_token}}
+Content-Type: application/json
+
+{"user_id":2, "right": 0}
+
+###
+
+# Delete a user from a namespace
+DELETE http://localhost:8080/api/v1/namespaces/1/users/2
+Authorization: Bearer {{auth_token}}
+
+###

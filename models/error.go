@@ -415,6 +415,22 @@ func (err ErrTeamDoesNotHaveAccessToNamespace) Error() string {
 	return fmt.Sprintf("You need to have access to this namespace to do that [NamespaceID: %d, TeamID: %d]", err.NamespaceID, err.TeamID)
 }
 
+// ErrUserAlreadyHasNamespaceAccess represents an error where a user already has access to a namespace
+type ErrUserAlreadyHasNamespaceAccess struct {
+	UserID      int64
+	NamespaceID int64
+}
+
+// IsErrUserAlreadyHasNamespaceAccess checks if an error is ErrUserAlreadyHasNamespaceAccess.
+func IsErrUserAlreadyHasNamespaceAccess(err error) bool {
+	_, ok := err.(ErrUserAlreadyHasNamespaceAccess)
+	return ok
+}
+
+func (err ErrUserAlreadyHasNamespaceAccess) Error() string {
+	return fmt.Sprintf("This user already has access to that namespace. [User ID: %d, Namespace ID: %d]", err.UserID, err.NamespaceID)
+}
+
 // ============
 // Team errors
 // ============
