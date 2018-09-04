@@ -7,6 +7,8 @@ func (l *List) IsAdmin(user *User) bool {
 		return true
 	}
 
+	// Check individual rights
+
 	return l.checkListTeamRight(user, TeamRightAdmin)
 }
 
@@ -16,6 +18,8 @@ func (l *List) CanWrite(user *User) bool {
 	if l.Owner.ID == user.ID {
 		return true
 	}
+
+	// Check individual rights
 
 	// Admins always have write access
 	if l.IsAdmin(user) {
@@ -31,6 +35,8 @@ func (l *List) CanRead(user *User) bool {
 	if l.Owner.ID == user.ID {
 		return true
 	}
+
+	// Check individual rights
 
 	// Admins always have read access
 	if l.IsAdmin(user) {
