@@ -16,6 +16,8 @@
     "@vue/cli-plugin-eslint": "^3.0.1",
     "@vue/cli-service": "^3.0.1",
     "axios": "^0.18.0",
+    "node-sass": "^4.9.3",
+    "sass-loader": "^7.1.0",
     "vue-router": "^3.0.1",
     "vue-template-compiler": "^2.5.17"
   },
