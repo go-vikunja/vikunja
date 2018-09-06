@@ -55,7 +55,7 @@ func GetListsByNamespaceID(c echo.Context) error {
 
 func getNamespace(c echo.Context) (namespace models.Namespace, err error) {
 	// Check if we have our ID
-	id := c.Param("id")
+	id := c.Param("namespace")
 	// Make int
 	namespaceID, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
