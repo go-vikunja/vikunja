@@ -1,7 +1,9 @@
 <template>
 	<div>
 	<h3>Hiiiii</h3>
-		<span v-if="authenticated">Logged in</span>
+		<span v-if="authenticated">Logged in
+		<button v-on:click="logout()" class="button">Logout</button>
+		</span>
 	</div>
 </template>
 
@@ -20,6 +22,11 @@
             // Check if the user is already logged in, if so, redirect him to the homepage
             if (!auth.user.authenticated) {
                 router.push({name: 'login'})
+            }
+        },
+        methods: {
+            logout () {
+                auth.logout()
             }
         },
     }
