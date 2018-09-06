@@ -8,7 +8,7 @@ func (n *Namespace) IsAdmin(user *User) bool {
 	}
 
 	// Check user rights
-	if n.checkUserRights(user, UserRightAdmin){
+	if n.checkUserRights(user, UserRightAdmin) {
 		return true
 	}
 
@@ -24,7 +24,7 @@ func (n *Namespace) CanWrite(user *User) bool {
 	}
 
 	// Check user rights
-	if n.checkUserRights(user, UserRightWrite){
+	if n.checkUserRights(user, UserRightWrite) {
 		return true
 	}
 
@@ -40,7 +40,7 @@ func (n *Namespace) CanRead(user *User) bool {
 	}
 
 	// Check user rights
-	if n.checkUserRights(user, UserRightRead){
+	if n.checkUserRights(user, UserRightRead) {
 		return true
 	}
 
@@ -71,8 +71,8 @@ func (n *Namespace) checkTeamRights(user *User, r TeamRight) bool {
 		Table("namespaces").
 		Join("LEFT", "team_namespaces", "namespaces.id = team_namespaces.namespace_id").
 		Join("LEFT", "team_members", "team_members.team_id = team_namespaces.team_id").
-		Where("namespaces.id = ? " +
-			"AND ((team_members.user_id = ?  AND team_namespaces.right = ?) " +
+		Where("namespaces.id = ? "+
+			"AND ((team_members.user_id = ?  AND team_namespaces.right = ?) "+
 			"OR namespaces.owner_id = ? ", n.ID, user.ID, r, user.ID).
 		Get(&Namespace{})
 
@@ -87,8 +87,8 @@ func (n *Namespace) checkUserRights(user *User, r UserRight) bool {
 	exists, err := x.Select("namespaces.*").
 		Table("namespaces").
 		Join("LEFT", "users_namespace", "users_namespace.namespace_id = namespaces.id").
-		Where("namespaces.id = ? " +
-			"OR namespaces.owner_id = ? " +
+		Where("namespaces.id = ? "+
+			"OR namespaces.owner_id = ? "+
 			"OR (users_namespace.user_id = ? AND users_namespace.right = ?))", n.ID, user.ID, user.ID, r).
 		Get(&Namespace{})
 
