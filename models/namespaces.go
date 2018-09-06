@@ -74,8 +74,10 @@ func (n *Namespace) ReadAll(doer *User) (interface{}, error) {
 		Table("namespaces").
 		Join("LEFT", "team_namespaces", "namespaces.id = team_namespaces.namespace_id").
 		Join("LEFT", "team_members", "team_members.team_id = team_namespaces.team_id").
+		Join("LEFT", "users_namespace", "users_namespace.namespace_id = namespaces.id").
 		Where("team_members.user_id = ?", doer.ID).
 		Or("namespaces.owner_id = ?", doer.ID).
+		Or("users_namespace.user_id = ?", doer.ID).
 		GroupBy("namespaces.id").
 		Find(&all)
 
