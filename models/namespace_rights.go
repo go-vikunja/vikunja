@@ -87,8 +87,8 @@ func (n *Namespace) checkUserRights(user *User, r UserRight) bool {
 	exists, err := x.Select("namespaces.*").
 		Table("namespaces").
 		Join("LEFT", "users_namespace", "users_namespace.namespace_id = namespaces.id").
-		Where("namespaces.id = ? "+
-			"OR namespaces.owner_id = ? "+
+		Where("namespaces.id = ? AND ("+
+			"namespaces.owner_id = ? "+
 			"OR (users_namespace.user_id = ? AND users_namespace.right = ?))", n.ID, user.ID, user.ID, r).
 		Get(&Namespace{})
 
