@@ -8,21 +8,22 @@ func (l *List) IsAdmin(user *User) bool {
 	}
 
 	// Check individual rights
+	if l.checkListUserRight(user, UserRightAdmin) {
+		return true
+	}
 
 	return l.checkListTeamRight(user, TeamRightAdmin)
 }
 
 // CanWrite return whether the user can write on that list or not
 func (l *List) CanWrite(user *User) bool {
-	// Owners always have write access
-	if l.Owner.ID == user.ID {
+	// Admins always have write access
+	if l.IsAdmin(user) {
 		return true
 	}
 
 	// Check individual rights
-
-	// Admins always have write access
-	if l.IsAdmin(user) {
+	if l.checkListUserRight(user, UserRightWrite) {
 		return true
 	}
 
@@ -31,15 +32,13 @@ func (l *List) CanWrite(user *User) bool {
 
 // CanRead checks if a user has read access to a list
 func (l *List) CanRead(user *User) bool {
-	// Owners always have read access
-	if l.Owner.ID == user.ID {
+	// Admins always have read access
+	if l.IsAdmin(user) {
 		return true
 	}
 
 	// Check individual rights
-
-	// Admins always have read access
-	if l.IsAdmin(user) {
+	if l.checkListUserRight(user, UserRightRead) {
 		return true
 	}
 
@@ -75,6 +74,22 @@ func (l *List) checkListTeamRight(user *User, r TeamRight) bool {
 		Join("LEFT", []string{"team_members", "tm2"}, "tm2.team_id = tl.team_id").
 		Where("((tm.user_id = ? AND tn.right = ?) OR (tm2.user_id = ? AND tl.rights = ?)) AND l.id = ?",
 			user.ID, r, user.ID, r, l.ID).
+		Get(&List{})
+	if err != nil {
+		return false
+	}
+
+	return exists
+}
+
+func (l *List) checkListUserRight(user *User, r UserRight) bool {
+	exists, err := x.Select("l.*").
+		Table("list").
+		Alias("l").
+		Join("LEFT", []string{"users_namespace", "un"}, "un.namespace_id = l.namespace_id").
+		Join("LEFT", []string{"users_list", "ul"}, "ul.list_id = l.id").
+		Where("(ul.user_id = ? AND ul.right = ?) AND l.id = ?",
+			user.ID, r, l.ID).
 		Get(&List{})
 	if err != nil {
 		return false

@@ -4,18 +4,24 @@ Authorization: Bearer {{auth_token}}
 
 ###
 
+# Get one namespaces
+GET http://localhost:8080/api/v1/namespaces/12
+Authorization: Bearer {{auth_token}}
+
+###
+
 # Get all users who have access to that namespace
-GET http://localhost:8080/api/v1/namespaces/1/users
+GET http://localhost:8080/api/v1/namespaces/12/users
 Authorization: Bearer {{auth_token}}
 
 ###
 
 # Give a user access to that namespace
-PUT http://localhost:8080/api/v1/namespaces/1/users
+PUT http://localhost:8080/api/v1/namespaces/12/users
 Authorization: Bearer {{auth_token}}
 Content-Type: application/json
 
-{"user_id":2, "right": 0}
+{"user_id":3, "right": 0}
 
 ###
 

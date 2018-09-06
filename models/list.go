@@ -66,9 +66,13 @@ func (l *List) ReadAll(user *User) (interface{}, error) {
 		Join("LEFT", []string{"team_members", "tm"}, "tm.team_id = tn.team_id").
 		Join("LEFT", []string{"team_list", "tl"}, "l.id = tl.list_id").
 		Join("LEFT", []string{"team_members", "tm2"}, "tm2.team_id = tl.team_id").
+		Join("LEFT", []string{"users_list", "ul"}, "ul.list_id = l.id").
+		Join("LEFT", []string{"users_namespace", "un"}, "un.namespace_id = l.namespace_id").
 		Where("tm.user_id = ?", fullUser.ID).
 		Or("tm2.user_id = ?", fullUser.ID).
 		Or("l.owner_id = ?", fullUser.ID).
+		Or("ul.user_id = ?", fullUser.ID).
+		Or("un.user_id = ?", fullUser.ID).
 		GroupBy("l.id").
 		Find(&lists)
 
