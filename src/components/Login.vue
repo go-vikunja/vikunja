@@ -1,20 +1,35 @@
 <template>
-	<div>
-		<h2>
-			Login
-		</h2>
-		<form id="loginform" @submit.prevent="submit">
-			<input type="text" name="username" placeholder="Username" v-model="credentials.username" required>
-			<input type="password" name="password" placeholder="Password" v-model="credentials.password" required>
-			<button type="submit" class="ui fluid large blue submit button">Login</button>
-			<div class="ui info message" v-if="loading">
-				<icon name="refresh" spin></icon>&nbsp;&nbsp;
-				Loading...
+	<div class="container has-text-centered">
+		<div class="column is-4 is-offset-4">
+			<h2 class="title">Login</h2>
+			<div class="box">
+				<form id="loginform" @submit.prevent="submit">
+					<div class="field">
+						<div class="control">
+							<input type="text" class="input" name="username" placeholder="Username" v-model="credentials.username" required>
+						</div>
+					</div>
+					<div class="field">
+						<div class="control">
+							<input type="password" class="input" name="password" placeholder="Password" v-model="credentials.password" required>
+						</div>
+					</div>
+
+					<div class="field is-grouped">
+						<div class="control">
+							<button type="submit" class="button is-link">Login</button>
+						</div>
+					</div>
+					<div class="notification is-info" v-if="loading">
+						Loading...
+					</div>
+					<div class="notification is-danger" v-if="error">
+						{{ error }}
+					</div>
+				</form>
+
 			</div>
-			<div class="ui error message" v-if="error" style="display: block;">
-				{{ error }}
-			</div>
-		</form>
+		</div>
 	</div>
 </template>
 
