@@ -38,7 +38,7 @@ export default {
         if (e.response) {
           context.error = e.response.data.message
           if (e.response.status === 401) {
-            context.error = context.translate('login').wrong
+            context.error = 'Wrong username or password.'
           }
         }
       })
