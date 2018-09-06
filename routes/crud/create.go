@@ -76,5 +76,5 @@ func (c *WebHandler) CreateWeb(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
 
-	return ctx.JSON(http.StatusOK, c.CObject)
+	return ctx.JSON(http.StatusCreated, c.CObject)
 }
