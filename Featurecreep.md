@@ -133,9 +133,8 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
 #### v0.2
 
 * [x] Listen teilbar
-      * [ ] Mit anderen Nutzern
-      // TODO: bei canRead/etc die Einträge beachten
-	    * [ ] Namespaces
+      * [x] Mit anderen Nutzern
+	    * [x Namespaces
       * [x] Teams
       * [ ] Mit Link
             * [ ] Offen
@@ -182,7 +181,7 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
       * [ ] Alle alten dinger die nicht mehr gebraucht werden, weg.
             * [x] Die alten handlerfunktionen alle in eine datei packen und erstmal "lagern", erstmal brauchen wir die noch für swagger.
 * [x] Drone aufsetzen
-* [ ] Tests schreiben
+* [x] Tests schreiben
 * [x] Namen finden
 * [x] Alle Packages umziehen
 * [x] Swagger UI aufsetzen

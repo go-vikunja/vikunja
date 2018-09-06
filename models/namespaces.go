@@ -69,7 +69,6 @@ func (n *Namespace) ReadAll(doer *User) (interface{}, error) {
 
 	all := []*Namespace{}
 
-	// TODO respect individual rights
 	err := x.Select("namespaces.*").
 		Table("namespaces").
 		Join("LEFT", "team_namespaces", "namespaces.id = team_namespaces.namespace_id").
