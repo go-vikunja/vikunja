@@ -51,47 +51,16 @@ func NewEcho() *echo.Echo {
 // RegisterRoutes registers all routes for the application
 func RegisterRoutes(e *echo.Echo) {
 
-	// TODO: Use proper cors middleware by echo
-
-	// Middleware for cors
-	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			res := c.Response()
-			res.Header().Set("Access-Control-Allow-Origin", "*")
-			res.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE")
-			res.Header().Set("Access-Control-Allow-Headers", "authorization,content-type")
-			res.Header().Set("Access-Control-Expose-Headers", "authorization,content-type")
-			return next(c)
-		}
-	})
+	// CORS_SHIT
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: []string{"*"},
+	}))
 
 	// Swagger UI
 	e.Static("/swagger", "public/swagger")
 
 	// API Routes
 	a := e.Group("/api/v1")
-
-	// CORS_SHIT
-	a.OPTIONS("/login", SetCORSHeader)
-	a.OPTIONS("/register", SetCORSHeader)
-	a.OPTIONS("/users", SetCORSHeader)
-	a.OPTIONS("/users/:id", SetCORSHeader)
-	a.OPTIONS("/lists", SetCORSHeader)
-	a.OPTIONS("/lists/:id", SetCORSHeader)
-	a.OPTIONS("/lists/:id/teams", SetCORSHeader)
-	a.OPTIONS("/lists/:id/teams/:id", SetCORSHeader)
-	a.OPTIONS("/lists/:id/users", SetCORSHeader)
-	a.OPTIONS("/lists/:id/users/:id", SetCORSHeader)
-	a.OPTIONS("/namespaces", SetCORSHeader)
-	a.OPTIONS("/namespaces/:id", SetCORSHeader)
-	a.OPTIONS("/namespaces/:id/lists", SetCORSHeader)
-	a.OPTIONS("/namespaces/:id/users", SetCORSHeader)
-	a.OPTIONS("/namespaces/:id/users/:id", SetCORSHeader)
-	a.OPTIONS("/tasks/:id", SetCORSHeader)
-	a.OPTIONS("/tasks", SetCORSHeader)
-	a.OPTIONS("/teams", SetCORSHeader)
-	a.OPTIONS("/teams/:id", SetCORSHeader)
-	a.OPTIONS("/teams/:id/members", SetCORSHeader)
 
 	a.POST("/login", apiv1.Login)
 	a.POST("/register", apiv1.RegisterUser)

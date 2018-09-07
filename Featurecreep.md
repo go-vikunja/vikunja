@@ -187,6 +187,7 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
 * [x] Namen finden
 * [x] Alle Packages umziehen
 * [x] Swagger UI aufsetzen
++ [x] CORS fixen
 * [ ] Cacher konfigurierbar
 * [ ] Deps nach mod (dem nachfolger von dep) umziehen, blocked by Go 1.11
 * [x] Überall echo.NewHTTPError statt c.JSON(Message{}) benutzen
