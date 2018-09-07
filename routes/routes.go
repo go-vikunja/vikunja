@@ -78,6 +78,8 @@ func RegisterRoutes(e *echo.Echo) {
 	a.OPTIONS("/users/:id", SetCORSHeader)
 	a.OPTIONS("/lists", SetCORSHeader)
 	a.OPTIONS("/lists/:id", SetCORSHeader)
+	a.OPTIONS("/namespaces", SetCORSHeader)
+	a.OPTIONS("/namespaces/:id", SetCORSHeader)
 
 	a.POST("/login", apiv1.Login)
 	a.POST("/register", apiv1.RegisterUser)
