@@ -156,6 +156,8 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
       * [x] ReadAll
       * [x] Delete
 
+* [ ] /namespaces soll zumindest auch die namen (+id) der dazugehörigen Listen rausgeben
+
 #### v0.3
 
 * [ ] Labels
