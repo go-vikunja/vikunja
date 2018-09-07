@@ -9,7 +9,8 @@
   },
   "dependencies": {
     "bulma": "^0.7.1",
-    "vue": "^2.5.17"
+    "vue": "^2.5.17",
+    "vue-notification": "^1.3.13"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "^3.0.1",
