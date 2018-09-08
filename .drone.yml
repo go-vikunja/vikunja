@@ -7,6 +7,7 @@ clone:
     depth: 50
     tags: true
 
+pipeline:
   build:
     image: node
     pull: true
