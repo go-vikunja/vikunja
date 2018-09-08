@@ -25,14 +25,6 @@
   version = "v1.4.7"
 
 [[projects]]
-  digest = "1:fe8a03a8222d5b913f256972933d26d24ad7c8286692a42943bc01633cc8fce3"
-  name = "github.com/go-ini/ini"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "358ee7663966325963d4e8b2e1fbd570c5195153"
-  version = "v1.38.1"
-
-[[projects]]
   digest = "1:d2b67246c3fa959edfa1be84b407cf0a0a4cabbace0843814b1729b5af808d9e"
   name = "github.com/go-sql-driver/mysql"
   packages = ["."]
@@ -279,7 +271,6 @@
   analyzer-version = 1
   input-imports = [
     "github.com/dgrijalva/jwt-go",
-    "github.com/go-ini/ini",
     "github.com/go-sql-driver/mysql",
     "github.com/go-xorm/core",
     "github.com/go-xorm/xorm",

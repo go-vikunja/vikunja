@@ -24,11 +24,6 @@
 #   go-tests = true
 #   unused-packages = true
 
-
-[[constraint]]
-  name = "github.com/go-ini/ini"
-  version = "1.38.1"
-
 [[constraint]]
   name = "github.com/go-xorm/core"
   version = "0.5.7"
