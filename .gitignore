@@ -4,6 +4,5 @@ config.yml
 config.yaml
 *.db
 Run
-vikunja
 dist/
 cover.*
