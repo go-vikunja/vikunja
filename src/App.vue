@@ -51,7 +51,9 @@
             }
         },
         created() {
-            this.loadNamespaces()
+            if (this.user.authenticated) {
+                this.loadNamespaces()
+			}
         },
         methods: {
             logout() {
