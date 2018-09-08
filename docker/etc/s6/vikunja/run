@@ -1,6 +1,0 @@
-#!/bin/bash
-[[ -f ./setup ]] && source ./setup
-
-pushd /app/vikunja > /dev/null
-    exec su-exec $USER /app/vikunja/vikunja
-popd

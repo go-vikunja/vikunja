@@ -10,8 +10,8 @@ ENV TAGS "sqlite"
 RUN apk --no-cache add build-base git
 
 #Setup repo
-COPY . ${GOPATH}/src/code.vikunja.io/vikunja
-WORKDIR ${GOPATH}/src/code.vikunja.io/vikunja
+COPY . ${GOPATH}/src/code.vikunja.io/api
+WORKDIR ${GOPATH}/src/code.vikunja.io/api
 
 #Checkout version if set
 RUN if [ -n "${VIKUNJA_VERSION}" ]; then git checkout "${VIKUNJA_VERSION}"; fi \
@@ -33,9 +33,11 @@ RUN apk --no-cache add \
     su-exec \
     tzdata
 
-ENTRYPOINT ["/usr/bin/entrypoint"]
-CMD ["/bin/s6-svscan", "/etc/s6"]
+
 
 COPY docker /
-COPY --from=build-env /go/src/code.vikunja.io/vikunja/vikunja /app/vikunja/vikunja
-RUN ln -s /app/vikunja/vikunja /usr/local/bin/vikunja
+COPY --from=build-env /go/src/code.vikunja.io/api/vikunja /app/vikunja/api
+#RUN ln -s /app/vikunja/vikunja /usr/local/bin/vikunja
+
+ENTRYPOINT ["/bin/s6-svscan", "/etc/services.d"]
+CMD []
