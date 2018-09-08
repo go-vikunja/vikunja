@@ -64,3 +64,13 @@ pipeline:
       event: [ push ]
       branch: [ master ]
 
+  # Build the docker image and push it to docker hub
+  docker:
+    image: plugins/docker
+    pull: true
+    secrets: [ docker_username, docker_password ]
+    repo: vikunja/frontend
+    auto_tag: true
+    when:
+      event: [ push, tag ]
+      branch: [ master ]
