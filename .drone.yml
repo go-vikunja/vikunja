@@ -105,6 +105,16 @@ pipeline:
     when:
       event: [tag, push]
 
+  docker:
+    image: plugins/docker
+    pull: true
+    secrets: [ docker_username, docker_password ]
+    repo: vikunja/api
+    auto_tag: true
+    when:
+      event: [ push, tag ]
+      branch: [ master ]
+
 # Push the releases to our pseudo-s3-bucket
   release:
     image: plugins/s3:1
