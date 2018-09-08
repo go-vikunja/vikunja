@@ -38,7 +38,7 @@ pipeline:
       - cd ..
     when:
       event: [push]
-        branch: [ master ]
+      branch: [ master ]
 
   # Push the releases to our pseudo-s3-bucket
   release:
