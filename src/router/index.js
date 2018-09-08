@@ -5,6 +5,8 @@ import HomeComponent from '@/components/Home'
 // User Handling
 import LoginComponent from '@/components/user/Login'
 import RegisterComponent from '@/components/user/Register'
+// List Handling
+import ShowListComponent from '@/components/lists/ShowList'
 
 Vue.use(Router)
 
@@ -24,6 +26,11 @@ export default new Router({
       path: '/register',
       name: 'register',
       component: RegisterComponent
+    },
+    {
+      path: '/lists/:id',
+      name: 'showList',
+      component: ShowListComponent
     }
   ]
 })
