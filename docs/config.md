@@ -1,3 +1,27 @@
+# Configuration options
+
+You can either use a `config.yml` file in the root directory of vikunja or set all config option with 
+environment variables. If you have both, the value set in the config file is used.
+
+Variables are nested in the `config.yml`, these nested variables become `VIKUNJA_FIRST_CHILD` when configuring via
+environment variables. So setting
+
+```bash
+export VIKUNJA_FIRST_CHILD=true
+```
+
+is the same as defining it in a `config.yml` like so:
+
+```yaml
+first:
+    child: true
+```
+
+# Default configuration with explanations
+
+This is the same as the `config.yaml` file you'll find in the root of vikunja.
+
+```yaml
 service:
   # This token is used to verify issued JWT tokens.
   # Default is a random token which will be generated at each startup of vikunja.
@@ -21,3 +45,4 @@ database:
   Path: "./vikunja.db"
   # Whether to show mysql queries or not. Useful for debugging.
   showqueries: "false"
+```
