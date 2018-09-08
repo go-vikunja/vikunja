@@ -141,7 +141,7 @@ release-check:
 
 .PHONY: release-os-package
 release-os-package:
-	$(foreach file,$(filter-out %.sha256,$(wildcard $(DIST)/release/$(EXECUTABLE)-*)),mkdir $(file)-full;mv $(file) $(file)-full/;	mv $(file).sha256 $(file)-full/; cp config.ini.sample $(file)-full/config.ini; cp $(DIST)/release/public $(file)-full/ -R; cp LICENSE $(file)-full/; )
+	$(foreach file,$(filter-out %.sha256,$(wildcard $(DIST)/release/$(EXECUTABLE)-*)),mkdir $(file)-full;mv $(file) $(file)-full/;	mv $(file).sha256 $(file)-full/; cp config.yml.sample $(file)-full/config.yml; cp $(DIST)/release/public $(file)-full/ -R; cp LICENSE $(file)-full/; )
 	rm $(DIST)/release/public -rf
 
 .PHONY: release-zip
