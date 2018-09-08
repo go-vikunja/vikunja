@@ -42,7 +42,7 @@ func InitConfig() (err error) {
 		fmt.Println("Using defaults.")
 	}
 
-	return
+	return nil
 }
 
 func random(length int) (string, error) {
