@@ -34,7 +34,8 @@ RUN apk --no-cache add \
     tzdata
 
 COPY docker /
-COPY --from=build-env /go/src/code.vikunja.io/api/vikunja /app/vikunja/api
+COPY --from=build-env /go/src/code.vikunja.io/api/public /app/vikunja/
+COPY --from=build-env /go/src/code.vikunja.io/api/vikunja /app/vikunja/vikunja
 
 ENTRYPOINT ["/bin/s6-svscan", "/etc/services.d"]
 CMD []
