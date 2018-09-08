@@ -29,16 +29,16 @@ pipeline:
     when:
       event: [tag]
 
-    static:
-      image: karalabe/xgo-latest:latest
-      pull: true
-      commands:
-        - cd dist
-        - zip -r ../vikunja-frontend-master.zip *
-        - cd ..
-      when:
-        event: [push]
-          branch: [ master ]
+  static:
+    image: karalabe/xgo-latest:latest
+    pull: true
+    commands:
+      - cd dist
+      - zip -r ../vikunja-frontend-master.zip *
+      - cd ..
+    when:
+      event: [push]
+        branch: [ master ]
 
   # Push the releases to our pseudo-s3-bucket
   release:
