@@ -4,10 +4,10 @@ import (
 	"crypto/rand"
 	"fmt"
 	"github.com/spf13/viper"
-	"os"
 	"strings"
 )
 
+// InitConfig initializes the config, sets defaults etc.
 func InitConfig() (err error) {
 
 	// Set defaults
@@ -51,36 +51,4 @@ func random(length int) (string, error) {
 	}
 
 	return fmt.Sprintf("%X", b), nil
-}
-
-// SetConfig initianlises the config and publishes it for other functions to use
-func SetConfig() (err error) {
-
-	// File Checks
-	if _, err := os.Stat("config.ini"); os.IsNotExist(err) {
-		return err
-	}
-
-	// Load the config
-	//cfg, err := ini.Load("config.ini")
-	if err != nil {
-		return err
-	}
-
-	// Map the config to our struct
-	//err = cfg.MapTo(Config)
-	if err != nil {
-		return err
-	}
-
-	// Set default value for interface to listen on
-	/*Config.Interface = cfg.Section("General").Key("Interface").String()
-	if Config.Interface == "" {
-		Config.Interface = ":8080"
-	}
-
-	// JWT secret
-	Config.JWTLoginSecret = []byte(cfg.Section("General").Key("JWTSecret").String())*/
-
-	return nil
 }
