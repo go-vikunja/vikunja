@@ -18,6 +18,7 @@
 					<div class="field is-grouped">
 						<div class="control">
 							<button type="submit" class="button is-link">Login</button>
+							<router-link :to="{ name: 'register' }" class="button">Register</router-link>
 						</div>
 					</div>
 					<div class="notification is-info" v-if="loading">
@@ -34,8 +35,8 @@
 </template>
 
 <script>
-    import auth from '../auth'
-    import router from '../router'
+    import auth from '../../auth'
+    import router from '../../router'
 
     export default {
         data() {
@@ -70,5 +71,7 @@
 </script>
 
 <style scoped>
-
+	.button {
+		margin: 0 0.4em 0 0;
+	}
 </style>

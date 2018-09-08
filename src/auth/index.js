@@ -44,6 +44,29 @@ export default {
       })
   },
 
+  register (context, creds, redirect) {
+    HTTP.post('register', {
+      username: creds.username,
+      email: creds.email,
+      password: creds.password
+    })
+      .then(response => {
+          // eslint-disable-next-line
+        console.log(response)
+          this.login(context, creds, redirect)
+      })
+      .catch(e => {
+        // Hide the loader
+        context.loading = false
+        if (e.response) {
+          context.error = e.response.data.message
+          if (e.response.status === 401) {
+            context.error = 'Wrong username or password.'
+          }
+        }
+      })
+  },
+
   logout () {
     localStorage.removeItem('token')
     router.push({ name: 'login' })
