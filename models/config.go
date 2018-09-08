@@ -38,7 +38,8 @@ func InitConfig() (err error) {
 	viper.SetConfigName("config")
 	err = viper.ReadInConfig()
 	if err != nil {
-		return
+		fmt.Println(err)
+		fmt.Println("Using defaults.")
 	}
 
 	return
