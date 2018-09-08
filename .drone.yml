@@ -15,6 +15,7 @@ pipeline:
     commands:
       - npm install
       - npm run lint
+      - "echo '{\"VIKUNJA_API_BASE_URL\": \"api/v1/\"}' > /srv/app/src/public/config.json" # Override config
       - npm run build
     when:
       event: [push, tag, pull_request]
