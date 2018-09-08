@@ -7,7 +7,7 @@ ARG VIKUNJA_VERSION
 ENV TAGS "sqlite"
 
 #Build deps
-RUN apk --no-cache add build-base
+RUN apk --no-cache add build-base git
 
 #Setup repo
 COPY . ${GOPATH}/src/code.vikunja.io/vikunja
@@ -15,7 +15,7 @@ WORKDIR ${GOPATH}/src/code.vikunja.io/vikunja
 
 #Checkout version if set
 RUN if [ -n "${VIKUNJA_VERSION}" ]; then git checkout "${VIKUNJA_VERSION}"; fi \
- && make clean generate build
+ && make clean build
 
 FROM alpine:3.7
 LABEL maintainer="maintainers@vikunja.io"
