@@ -24,21 +24,31 @@ pipeline:
     pull: true
     commands:
       - cd dist
-      - zip -r ../vikunja-frontend.zip *
+      - zip -r ../vikunja-frontend-${DRONE_TAG##v}.zip *
       - cd ..
     when:
-      event: [tag, push]
+      event: [tag]
+
+    static:
+      image: karalabe/xgo-latest:latest
+      pull: true
+      commands:
+        - cd dist
+        - zip -r ../vikunja-frontend-master.zip *
+        - cd ..
+      when:
+        event: [push]
+          branch: [ master ]
 
   # Push the releases to our pseudo-s3-bucket
   release:
     image: plugins/s3:1
     pull: true
     secrets: [ aws_access_key_id, aws_secret_access_key ]
-    bucket: vikunja
+    bucket: vikunja-frontend
     endpoint: https://storage.kolaente.de
     path_style: true
-    source: vikunja-frontend.zip
-    target: /${DRONE_TAG##v}
+    source: vikunja-frontend-${DRONE_TAG##v}.zip
     when:
       event: [ tag ]
 
@@ -46,11 +56,10 @@ pipeline:
     image: plugins/s3:1
     pull: true
     secrets: [ aws_access_key_id, aws_secret_access_key ]
-    bucket: vikunja
+    bucket: vikunja-frontend
     endpoint: https://storage.kolaente.de
     path_style: true
-    source: vikunja-frontend.zip
-    target: /master
+    source: vikunja-frontend-master.zip
     when:
       event: [ push ]
       branch: [ master ]
