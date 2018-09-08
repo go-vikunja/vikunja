@@ -71,9 +71,6 @@
             submit() {
                 this.loading = true
 
-				// eslint-disable-next-line
-				console.log(this.credentials)
-
                 this.error = ''
 
 				if (this.credentials.password2 !== this.credentials.password) {
