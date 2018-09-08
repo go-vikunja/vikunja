@@ -6,6 +6,7 @@ import (
 	"github.com/go-xorm/core"
 	"github.com/go-xorm/xorm"
 	_ "github.com/mattn/go-sqlite3" // Because.
+	"github.com/spf13/viper"
 )
 
 var (
@@ -16,14 +17,18 @@ var (
 
 func getEngine() (*xorm.Engine, error) {
 	// Use Mysql if set
-	if Config.Database.Type == "mysql" {
-		connStr := fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8&parseTime=true",
-			Config.Database.User, Config.Database.Password, Config.Database.Host, Config.Database.Database)
+	if viper.GetString("database.type") == "mysql" {
+		connStr := fmt.Sprintf(
+			"%s:%s@tcp(%s)/%s?charset=utf8&parseTime=true",
+			viper.GetString("database.user"),
+			viper.GetString("database.password"),
+			viper.GetString("database.host"),
+			viper.GetString("database.database"))
 		return xorm.NewEngine("mysql", connStr)
 	}
 
 	// Otherwise use sqlite
-	path := Config.Database.Path
+	path := viper.GetString("database.path")
 	if path == "" {
 		path = "./db.db"
 	}
@@ -63,7 +68,7 @@ func SetEngine() (err error) {
 		return fmt.Errorf("sync database struct error: %v", err)
 	}
 
-	x.ShowSQL(Config.Database.ShowQueries)
+	x.ShowSQL(viper.GetBool("database.showqueries"))
 
 	return nil
 }

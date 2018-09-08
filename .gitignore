@@ -1,6 +1,7 @@
 .idea/
 .idea/*/*
-config.ini
+config.yml
+config.yaml
 *.db
 Run
 vikunja

@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo"
+	"github.com/spf13/viper"
 	"net/http"
 	"time"
 )
@@ -57,7 +58,7 @@ func Login(c echo.Context) error {
 	claims["avatar"] = hex.EncodeToString(avatar[:])
 
 	// Generate encoded token and send it as response.
-	t, err := token.SignedString(models.Config.JWTLoginSecret)
+	t, err := token.SignedString([]byte(viper.GetString("service.JWTSecret")))
 	if err != nil {
 		return err
 	}

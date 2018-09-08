@@ -1,0 +1,14 @@
+service:
+  JWTSecret: "blablaGEHEMIN§)!§"
+  # The interface on which to run the webserver
+  interface: ":8080"
+
+database:
+  type: "sqlite"
+  user: "root"
+  password: "supersecret"
+  host: "127.0.0.1"
+  database: "vikunja"
+  showqueries: "true"
+  # When using sqlite, this is the path where to store the data
+  Path: "./vikunja.db"

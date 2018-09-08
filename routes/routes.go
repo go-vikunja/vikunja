@@ -34,6 +34,7 @@ import (
 	apiv1 "code.vikunja.io/api/routes/api/v1"
 	_ "code.vikunja.io/api/routes/api/v1/swagger" // for docs generation
 	"code.vikunja.io/api/routes/crud"
+	"github.com/spf13/viper"
 )
 
 // NewEcho registers a new Echo instance
@@ -67,7 +68,7 @@ func RegisterRoutes(e *echo.Echo) {
 
 	// ===== Routes with Authetification =====
 	// Authetification
-	a.Use(middleware.JWT(models.Config.JWTLoginSecret))
+	a.Use(middleware.JWT([]byte(viper.GetString("service.JWTSecret"))))
 	a.POST("/tokenTest", apiv1.CheckToken)
 
 	listHandler := &crud.WebHandler{

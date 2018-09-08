@@ -19,6 +19,9 @@ func MainTest(m *testing.M, pathToRoot string) {
 		os.Exit(1)
 	}
 
+	// Create test database
+	PrepareTestDatabase()
+
 	os.Exit(m.Run())
 }
 

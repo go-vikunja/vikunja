@@ -6,6 +6,7 @@ import (
 
 	"context"
 	"fmt"
+	"github.com/spf13/viper"
 	"os"
 	"os/signal"
 	"time"
@@ -17,7 +18,7 @@ var Version = "0.1"
 func main() {
 
 	// Init Config
-	err := models.SetConfig()
+	err := models.InitConfig()
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -38,7 +39,7 @@ func main() {
 	routes.RegisterRoutes(e)
 	// Start server
 	go func() {
-		if err := e.Start(models.Config.Interface); err != nil {
+		if err := e.Start(viper.GetString("service.interface")); err != nil {
 			e.Logger.Info("shutting down...")
 		}
 	}()
