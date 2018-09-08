@@ -33,12 +33,14 @@
 				<router-view/>
 			</div>
 		</div>
+		<notifications position="bottom left" />
 	</div>
 </template>
 
 <script>
     import auth from './auth'
     import {HTTP} from './http-common'
+	import message from './message'
 
     export default {
         name: 'app',
@@ -78,20 +80,20 @@
                                     this.$set(this.namespaces[n], 'lists', response.data)
                                 })
                                 .catch(e => {
-                                    this.loading = false
-                                    // eslint-disable-next-line
-                                    console.log(e)
+                                    this.handleError(e)
                                 })
                         }
 
                         this.loading = false
                     })
                     .catch(e => {
-                        this.loading = false
-                        // eslint-disable-next-line
-                        console.log(e)
+                        this.handleError(e)
                     })
             },
+            handleError(e) {
+                this.loading = false
+                message.error(e, this)
+            }
         },
     }
 </script>

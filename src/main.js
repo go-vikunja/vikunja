@@ -7,6 +7,10 @@ import '../node_modules/bulma/bulma.sass'
 
 Vue.config.productionTip = false
 
+// Notifications
+import Notifications from 'vue-notification'
+Vue.use(Notifications)
+
 // Check the user's auth status when the app starts
 auth.checkAuth()
 
