@@ -1,34 +1,26 @@
 <template>
 	<div id="app" class="container">
-		<nav class="navbar" role="navigation" aria-label="main navigation">
-		<div class="navbar-menu">
-			<div class="navbar-brand">
-				<div class="navbar-item logo">
-					<img src="logo-full.svg"/>
+		<nav class="navbar" role="navigation" aria-label="main navigation" v-if="user.authenticated">
+			<div class="navbar-menu">
+				<div class="navbar-brand">
+					<div class="navbar-item logo">
+						<img src="logo-full.svg"/>
+					</div>
+				</div>
+
+				<div class="navbar-end">
+					<span class="navbar-item">{{user.infos.username}}</span>
+					<span class="navbar-item image">
+						<img :src="gravatar()" class="is-rounded" alt=""/>
+					</span>
+					<a v-on:click="logout()" class="navbar-item is-right logout-icon">
+						<span class="icon is-medium">
+							<icon icon="sign-out-alt" size="2x"/>
+						</span>
+					</a>
 				</div>
 			</div>
-
-			<div class="navbar-end">
-				<span class="navbar-item">{{user.infos.username}}</span>
-				<span class="navbar-item image">
-					<img :src="gravatar()" class="is-rounded" alt=""/>
-				</span>
-				<a v-on:click="logout()" class="navbar-item is-right logout-icon">
-					<span class="icon is-medium">
-						<icon icon="sign-out-alt" size="2x"/>
-					</span>
-				</a>
-			</div>
-		</div>
 		</nav>
-		<div class="columns" v-if="user.authenticated">
-			<div class="column">
-
-			</div>
-			<div class="column is-2 is-right has-text-right">
-
-			</div>
-		</div>
 		<div class="column is-centered">
 			<div class="box" v-if="user.authenticated">
 				<div class="container">
@@ -221,6 +213,7 @@
 	/* Navbar */
 	.navbar{
 		background: none !important;
+		padding-top: 0.5rem;
 	}
 
 	.logo {
