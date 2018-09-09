@@ -57,6 +57,10 @@
                 this.loadNamespaces()
 			}
         },
+        watch: {
+            // call the method again if the route changes
+            '$route': 'loadNamespacesIfNeeded'
+        },
         methods: {
             logout() {
                 auth.logout()
@@ -90,6 +94,11 @@
                         this.handleError(e)
                     })
             },
+			loadNamespacesIfNeeded(e){
+                if (this.user.authenticated && e.name === 'home') {
+                    this.loadNamespaces()
+                }
+			},
             handleError(e) {
                 this.loading = false
                 message.error(e, this)
