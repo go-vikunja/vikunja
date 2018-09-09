@@ -1,7 +1,33 @@
 <template>
 	<div id="app" class="container">
-		<div class="column is-centered" v-if="user.authenticated">
-			<button v-on:click="logout()" class="button is-right">Logout</button>
+		<nav class="navbar" role="navigation" aria-label="main navigation">
+		<div class="navbar-menu">
+			<div class="navbar-brand">
+				<div class="navbar-item logo">
+					<img src="logo-full.svg"/>
+				</div>
+			</div>
+
+			<div class="navbar-end">
+				<span class="navbar-item">{{user.infos.username}}</span>
+				<span class="navbar-item image">
+					<img :src="gravatar()" class="is-rounded" alt=""/>
+				</span>
+				<a v-on:click="logout()" class="navbar-item is-right logout-icon">
+					<span class="icon is-medium">
+						<icon icon="sign-out-alt" size="2x"/>
+					</span>
+				</a>
+			</div>
+		</div>
+		</nav>
+		<div class="columns" v-if="user.authenticated">
+			<div class="column">
+
+			</div>
+			<div class="column is-2 is-right has-text-right">
+
+			</div>
 		</div>
 		<div class="column is-centered">
 			<div class="box" v-if="user.authenticated">
@@ -65,6 +91,9 @@
             logout() {
                 auth.logout()
             },
+			gravatar() {
+                return 'https://www.gravatar.com/avatar/' + this.user.infos.avatar + '?s=50'
+			},
             loadNamespaces() {
                 this.loading = true
                 this.namespaces = []
@@ -107,7 +136,7 @@
     }
 </script>
 
-<style>
+<style lang="scss" >
 	*, *:focus, *:active{
 		outline: none;
 	}
@@ -181,6 +210,26 @@
 		}
 		100%{
 			transform: rotate(360deg);
+		}
+	}
+
+	/* Logout-icon */
+	.logout-icon {
+		padding-right: 2em !important;
+	}
+
+	/* Navbar */
+	.navbar{
+		background: none !important;
+	}
+
+	.logo {
+
+		padding-left: 2rem !important;
+
+		img {
+			max-height: 3rem !important;
+			margin-right: 1rem;
 		}
 	}
 </style>
