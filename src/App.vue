@@ -138,7 +138,7 @@
     }
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
 	/* Logout-icon */
 	.logout-icon {
 		padding-right: 2em !important;

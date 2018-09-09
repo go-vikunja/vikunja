@@ -51,8 +51,6 @@
 
                 HTTP.put(`namespaces/` + this.$route.params.id + `/lists`, this.list, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
                     .then(() => {
-                        this.loading = false
-						//this.$parent.namespaces[this.$route.params.id].lists.push(response.data)
 						this.$parent.loadNamespaces()
 						this.handleSuccess({message: 'The list was successfully created.'})
                     })
