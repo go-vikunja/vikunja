@@ -128,7 +128,9 @@
     }
 </script>
 
-<style lang="scss" >
+<style lang="scss">
+	@import url('/fonts/fonts.css');
+
 	*, *:focus, *:active{
 		outline: none;
 	}
@@ -136,6 +138,11 @@
 	body {
 		background: #f5f5f5;
 		min-height: 100vh;
+	}
+
+	h1,h2,h3,h4,h5,h6{
+		font-family: 'Quicksand', sans-serif;
+		font-weight: 400 !important;
 	}
 
 	/* spinner */
