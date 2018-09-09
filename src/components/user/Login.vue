@@ -1,6 +1,7 @@
 <template>
 	<div class="container has-text-centered">
 		<div class="column is-4 is-offset-4">
+			<img src="logo-full.svg"/>
 			<h2 class="title">Login</h2>
 			<div class="box">
 				<form id="loginform" @submit.prevent="submit">
@@ -17,12 +18,9 @@
 
 					<div class="field is-grouped">
 						<div class="control">
-							<button type="submit" class="button is-link">Login</button>
+							<button type="submit" class="button is-primary" v-bind:class="{ 'is-loading': loading}">Login</button>
 							<router-link :to="{ name: 'register' }" class="button">Register</router-link>
 						</div>
-					</div>
-					<div class="notification is-info" v-if="loading">
-						Loading...
 					</div>
 					<div class="notification is-danger" v-if="error">
 						{{ error }}
