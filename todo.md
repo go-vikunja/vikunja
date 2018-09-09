@@ -1,9 +1,9 @@
 # Todo
 
-* [ ] Header-menu
-    * [ ] Logout nach rechts, mit icon statt button
-    * [ ] Logo oben links
-    * [ ] Benutzernamen neben logout
+* [x] Header-menu
+    * [x] Logout nach rechts, mit icon statt button
+    * [x] Logo oben links
+    * [x] Benutzernamen neben logout
 * [ ] Die Listenauswahl sollte highlighten welche Liste man grade ausgewählt hat
 * [ ] Bei jedem Namespace sollte rechts neben dem Namen ein Zahnrad zum Bearbeiten sein, das tauscht dann den view mit der aktuellen Liste
 * [ ] Über Namespaces btn zum neuen Namespace anlegen, daneben einen zum neue Listen anlegen
