@@ -25,21 +25,19 @@
 				<div class="box">
 					<div class="columns">
 						<div class="column is-3">
-							<div class="buttons">
-								<a class="button is-success">
+								<a class="button is-success is-fullwidth button-bottom">
 									<span class="icon is-small">
 										<icon icon="plus"/>
 									</span>
 									New Namespace
 								</a>
-							</div>
 							<aside class="menu">
 								<p class="menu-label" v-if="loading">Loading...</p>
 								<template v-for="n in namespaces">
 									<p class="menu-label" :key="n.id">
 										{{n.name}}
 									</p>
-									<router-link :to="{ name: 'newList', params: { id: n.id} }" class="button is-success" :key="n.id + 'newList'">
+									<router-link :to="{ name: 'newList', params: { id: n.id} }" class="button is-success is-fullwidth button-bottom" :key="n.id + 'newList'">
 										<span class="icon is-small">
 											<icon icon="list-ol"/>
 										</span>
@@ -140,7 +138,7 @@
     }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 	/* Logout-icon */
 	.logout-icon {
 		padding-right: 2em !important;
@@ -170,5 +168,10 @@
 	/* List active link */
 	.menu-list a.router-link-active{
 		background: darken(#fff, 5%);
+	}
+
+	/* menu buttons */
+	.button-bottom {
+		margin-bottom: 1rem;
 	}
 </style>
