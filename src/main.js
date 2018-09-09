@@ -3,7 +3,7 @@ import App from './App.vue'
 import router from './router'
 import auth from './auth'
 
-import '../node_modules/bulma/bulma.sass'
+import './vikunja.scss'
 
 Vue.config.productionTip = false
 
