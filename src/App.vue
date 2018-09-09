@@ -1,13 +1,12 @@
 <template>
 	<div id="app" class="container">
 		<nav class="navbar" role="navigation" aria-label="main navigation" v-if="user.authenticated">
-			<div class="navbar-menu">
-				<div class="navbar-brand">
-					<div class="navbar-item logo">
-						<img src="logo-full.svg"/>
-					</div>
+			<div class="navbar-brand">
+				<div class="navbar-item logo">
+					<img src="logo-full.svg"/>
 				</div>
-
+			</div>
+			<div class="navbar-menu">
 				<div class="navbar-end">
 					<span class="navbar-item">{{user.infos.username}}</span>
 					<span class="navbar-item image">
