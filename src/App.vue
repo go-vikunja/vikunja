@@ -21,8 +21,8 @@
 			</div>
 		</nav>
 		<div class="column is-centered">
-			<div class="box" v-if="user.authenticated">
-				<div class="container">
+			<div v-if="user.authenticated">
+				<div class="box">
 					<div class="columns">
 						<div class="column is-3">
 							<div class="buttons">
@@ -53,7 +53,7 @@
 								</template>
 							</aside>
 						</div>
-						<div class="column">
+						<div class="column is-9">
 							<router-view/>
 						</div>
 					</div>
