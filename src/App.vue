@@ -32,12 +32,6 @@
 									</span>
 									New Namespace
 								</a>
-								<a class="button is-success">
-									<span class="icon is-small">
-										<icon icon="list-ol"/>
-									</span>
-									New List
-								</a>
 							</div>
 							<aside class="menu">
 								<p class="menu-label" v-if="loading">Loading...</p>
@@ -45,6 +39,12 @@
 									<p class="menu-label" :key="n.id">
 										{{n.name}}
 									</p>
+									<router-link :to="{ name: 'newList', params: { id: n.id} }" class="button is-success" :key="n.id + 'newList'">
+										<span class="icon is-small">
+											<icon icon="list-ol"/>
+										</span>
+											New List
+									</router-link>
 									<ul class="menu-list" :key="n.id + 'child'">
 										<li v-for="l in n.lists" :key="l.id">
 											<router-link :to="{ name: 'showList', params: { id: l.id} }">{{l.title}}</router-link>
