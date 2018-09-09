@@ -25,7 +25,21 @@
 			<div class="box" v-if="user.authenticated">
 				<div class="container">
 					<div class="columns">
-						<div class="column is-2">
+						<div class="column is-3">
+							<div class="buttons">
+								<a class="button is-success">
+									<span class="icon is-small">
+										<icon icon="plus"/>
+									</span>
+									New Namespace
+								</a>
+								<a class="button is-success">
+									<span class="icon is-small">
+										<icon icon="list-ol"/>
+									</span>
+									New List
+								</a>
+							</div>
 							<aside class="menu">
 								<p class="menu-label" v-if="loading">Loading...</p>
 								<template v-for="n in namespaces">
@@ -40,7 +54,7 @@
 								</template>
 							</aside>
 						</div>
-						<div class="column is-10">
+						<div class="column">
 							<router-view/>
 						</div>
 					</div>
@@ -55,7 +69,6 @@
 </template>
 
 <script>
-	// <button class="button is-success" v-on:click="loadNamespaces()">Load Namespaces</button>
     import auth from './auth'
     import {HTTP} from './http-common'
 	import message from './message'
@@ -231,5 +244,10 @@
 			max-height: 3rem !important;
 			margin-right: 1rem;
 		}
+	}
+
+	/* Buttons icons */
+	.button .icon.is-small{
+		margin-right: 0.05rem !important;
 	}
 </style>
