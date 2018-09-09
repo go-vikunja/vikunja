@@ -1,9 +1,7 @@
 <template>
-	<div>
-	<h3>Hiiiii</h3>
-		<span v-if="authenticated">Logged in
-		<button v-on:click="logout()" class="button">Logout</button>
-		</span>
+	<div class="content has-text-centered">
+		<h2>Hi {{user.infos.username}}!</h2>
+		<p>Click on a list or namespace on the left to get started.</p>
 	</div>
 </template>
 
@@ -13,11 +11,11 @@
 
     export default {
         name: "Home",
-		data() {
+        data() {
             return {
-                authenticated: auth.user.authenticated
+                user: auth.user
             }
-		},
+        },
         beforeMount() {
             // Check if the user is already logged in, if so, redirect him to the homepage
             if (!auth.user.authenticated) {
@@ -25,7 +23,7 @@
             }
         },
         methods: {
-            logout () {
+            logout() {
                 auth.logout()
             }
         },
