@@ -247,7 +247,12 @@
 	}
 
 	/* Buttons icons */
-	.button .icon.is-small{
+	.button .icon.is-small {
 		margin-right: 0.05rem !important;
+	}
+
+	/* List active link */
+	.menu-list a.router-link-active{
+		background: darken(#fff, 5%);
 	}
 </style>
