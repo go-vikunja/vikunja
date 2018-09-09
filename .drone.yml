@@ -75,3 +75,14 @@ pipeline:
     when:
       event: [ push, tag ]
       branch: [ master ]
+
+  rancher:
+    image: peloton/drone-rancher
+    url: http://server01.kolaente.de:8080/v1
+    secrets: [ RANCHER_ACCESS_KEY, RANCHER_SECRET_KEY ]
+    service: vikunja-dev/frontend
+    docker_image: vikunja/frontend
+    confirm: true
+    when:
+      event: [ push, tag ]
+      branch: [ master ]
