@@ -45,6 +45,11 @@ func (i *ListTask) Update() (err error) {
 		return err
 	}
 
+	// And because a false is considered to be a null value, we need to explicitly check that case here.
+	if i.Done == false {
+		ot.Done = false
+	}
+
 	_, err = x.ID(i.ID).Cols("text", "description", "done", "due_date_unix", "reminder_unix").Update(ot)
 	*i = ot
 	return
