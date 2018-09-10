@@ -30,7 +30,7 @@
 
 			<div class="box tasks">
 				<label class="task" v-for="l in list.tasks" v-bind:key="l.id" v-bind:for="l.id">
-					<input type="checkbox" v-bind:id="l.id">
+					<input @change="markAsDone" type="checkbox" v-bind:id="l.id">
 					{{l.text}}
 				</label>
 			</div>
@@ -98,6 +98,21 @@
 
                 this.newTask = ''
             },
+			markAsDone(e) {
+
+                this.loading = true
+
+                HTTP.post(`tasks/` + e.target.id, {done: !e.target.checked}, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
+                    .then(response => {
+                        // eslint-disable-next-line
+                        console.log(response)
+                        //this.list.tasks.push(response.data)
+                        this.handleSuccess({message: 'The task was successfully marked as done.'})
+                    })
+                    .catch(e => {
+                        this.handleError(e)
+                    })
+			},
             handleError(e) {
                 this.loading = false
                 message.error(e, this)
