@@ -29,12 +29,22 @@ func (i *ListTask) Create(doer *User) (err error) {
 // Update updates a list task
 func (i *ListTask) Update() (err error) {
 	// Check if the task exists
-	_, err = GetListTaskByID(i.ID)
+	ot, err := GetListTaskByID(i.ID)
 	if err != nil {
 		return
 	}
 
-	// Do the update
-	_, err = x.ID(i.ID).Update(i)
-	return err
+	// If we dont have a text, use the one from the original task
+	if i.Text == "" {
+		i.Text = ot.Text
+	}
+
+	// For whatever reason, xorm dont detect if done is updated, so we need to update this every time by hand
+	if i.Done != ot.Done {
+		_, err = x.ID(i.ID).Cols("done").Update(i)
+		return
+	} else {
+		_, err = x.ID(i.ID).Update(i)
+		return
+	}
 }
