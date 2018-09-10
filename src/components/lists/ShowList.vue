@@ -28,7 +28,7 @@
 				</div>
 			</form>
 
-			<div class="box tasks" v-if="this.list.tasks.length > 0">
+			<div class="box tasks" v-if="this.list.tasks && this.list.tasks.length > 0">
 				<label class="task" v-for="l in list.tasks" v-bind:key="l.id" v-bind:for="l.id">
 					<input @change="markAsDone" type="checkbox" v-bind:id="l.id" v-bind:checked="l.done">
 					{{l.text}}
