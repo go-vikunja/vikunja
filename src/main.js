@@ -17,12 +17,16 @@ import { faSignOutAlt } from '@fortawesome/free-solid-svg-icons'
 import { faPlus } from '@fortawesome/free-solid-svg-icons'
 import { faListOl } from '@fortawesome/free-solid-svg-icons'
 import { faTasks } from '@fortawesome/free-solid-svg-icons'
+import { faCog } from '@fortawesome/free-solid-svg-icons'
+import { faAngleRight } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
 library.add(faSignOutAlt)
 library.add(faPlus)
 library.add(faListOl)
 library.add(faTasks)
+library.add(faCog)
+library.add(faAngleRight)
 
 Vue.component('icon', FontAwesomeIcon)
 
