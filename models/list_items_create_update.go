@@ -1,5 +1,9 @@
 package models
 
+import (
+	"github.com/imdario/mergo"
+)
+
 // Create is the implementation to create a list task
 func (i *ListTask) Create(doer *User) (err error) {
 	i.ID = 0
@@ -34,17 +38,14 @@ func (i *ListTask) Update() (err error) {
 		return
 	}
 
-	// If we dont have a text, use the one from the original task
-	if i.Text == "" {
-		i.Text = ot.Text
-	}
-
 	// For whatever reason, xorm dont detect if done is updated, so we need to update this every time by hand
-	if i.Done != ot.Done {
-		_, err = x.ID(i.ID).Cols("done").Update(i)
-		return
+	// Which is why we merge the actual task struct with the one we got from the user.
+	// The user struct ovverrides values in the actual one.
+	if err := mergo.Merge(&ot, i, mergo.WithOverride); err != nil {
+		return err
 	}
 
-	_, err = x.ID(i.ID).Update(i)
+	_, err = x.ID(i.ID).Cols("text", "description", "done", "due_date_unix", "reminder_unix").Update(ot)
+	*i = ot
 	return
 }
