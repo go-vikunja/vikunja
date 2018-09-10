@@ -107,12 +107,8 @@
     import router from '../../router'
     import {HTTP} from '../../http-common'
     import message from '../../message'
-    import Datepicker from 'vue-bulma-datepicker'
 
     export default {
-        components: {
-            Datepicker
-		},
         data() {
             return {
                 listID: this.$route.params.id,
