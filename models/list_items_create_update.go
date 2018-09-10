@@ -43,8 +43,8 @@ func (i *ListTask) Update() (err error) {
 	if i.Done != ot.Done {
 		_, err = x.ID(i.ID).Cols("done").Update(i)
 		return
-	} else {
-		_, err = x.ID(i.ID).Update(i)
-		return
 	}
+
+	_, err = x.ID(i.ID).Update(i)
+	return
 }
