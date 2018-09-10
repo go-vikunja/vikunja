@@ -110,7 +110,7 @@
 								break
 							}
 						}
-                        this.handleSuccess({message: 'The task was successfully marked as done.'})
+                        this.handleSuccess({message: 'The task was successfully ' + (e.target.checked ? 'un-' :'') + 'marked as done.'})
                     })
                     .catch(e => {
                         this.handleError(e)
