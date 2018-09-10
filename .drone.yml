@@ -143,3 +143,15 @@ pipeline:
     when:
       event: [ push, tag ]
       branch: [ master ]
+
+# Update the instance on try.vikunja.io
+  rancher:
+    image: peloton/drone-rancher
+    url: http://server01.kolaente.de:8080/v1
+    secrets: [ RANCHER_ACCESS_KEY, RANCHER_SECRET_KEY ]
+    service: vikunja-dev/api
+    docker_image: vikunja/api
+    confirm: true
+    when:
+      event: [ push, tag ]
+      branch: [ master ]
