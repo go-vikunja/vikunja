@@ -11,5 +11,8 @@
 * [ ] Tasks:
     * [x] Oben großes Eingabefeld zum Punkte hinzufügen
     * [x] Tasks in voller Breite drunter anzeigen
-    * [ ] Tasks bearbeiten geht mit Zahnrad rechts, da druffklicken, dann geht von Links eine card rein (halbe breite der Tasklist) mit den Optionen
+    * [x] Tasks bearbeiten geht mit Zahnrad rechts, da druffklicken, dann geht von Links eine card rein (halbe breite der Tasklist) mit den Optionen
+      * [ ] Datetimepicker einbauen für Daten etc. (vue-datepicker)
+    * [ ] Bug fixen der auf try dafür sorgt dass beim Abhaken die checkbox nicht geupdated wird
+* [x] Hintergrund durch das mit den Lamas von Freepick austauschen
 * [ ] Lizenz einfügen!
