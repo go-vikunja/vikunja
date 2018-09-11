@@ -10,6 +10,7 @@ import ShowListComponent from '@/components/lists/ShowList'
 import NewListComponent from '@/components/lists/NewList'
 // Namespace Handling
 import NewNamespaceComponent from '@/components/namespaces/NewNamespace'
+import EditNamespaceComponent from '@/components/namespaces/EditNamespace'
 
 Vue.use(Router)
 
@@ -44,6 +45,11 @@ export default new Router({
       path: '/namespaces/new',
       name: 'newNamespace',
       component: NewNamespaceComponent
+    },
+    {
+      path: '/namespaces/:id/edit',
+      name: 'editNamespace',
+      component: EditNamespaceComponent
     }
   ]
 })

@@ -35,6 +35,9 @@
 								<p class="menu-label" v-if="loading">Loading...</p>
 								<template v-for="n in namespaces">
 									<p class="menu-label" :key="n.id">
+										<router-link :to="{name: 'editNamespace', params: {id: n.id} }" class="icon nsettings">
+											<icon icon="cog"/>
+										</router-link>
 										{{n.name}}
 									</p>
 									<router-link :to="{ name: 'newList', params: { id: n.id} }" class="button is-success is-fullwidth button-bottom" :key="n.id + 'newList'">
@@ -168,5 +171,11 @@
 	/* menu buttons */
 	.button-bottom {
 		margin-bottom: 1rem;
+	}
+
+	/* Namespace settings */
+	.nsettings{
+		vertical-align: middle;
+		float: right;
 	}
 </style>
