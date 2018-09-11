@@ -6,7 +6,7 @@
     * [x] Benutzernamen neben logout
 * [x] Die Listenauswahl sollte highlighten welche Liste man grade ausgewählt hat
 * [ ] Bei jedem Namespace sollte rechts neben dem Namen ein Zahnrad zum Bearbeiten sein, das tauscht dann den view mit der aktuellen Liste
-* [ ] Über Namespaces btn zum neuen Namespace anlegen mit popup zum Namen eingeben
+* [x] Über Namespaces btn zum neuen Namespace anlegen mit popup zum Namen eingeben
 * [x] Btn zum Liste hinzufügen
 * [x] Tasks:
     * [x] Oben großes Eingabefeld zum Punkte hinzufügen
