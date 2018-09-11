@@ -171,7 +171,7 @@
 
                 HTTP.post(`tasks/` + e.target.id, {done: e.target.checked}, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
                     .then(response => {
-                        this.updateTaskByID(e.target.id, response.data)
+                        this.updateTaskByID(parseInt(e.target.id), response.data)
                         this.handleSuccess({message: 'The task was successfully ' + (e.target.checked ? 'un-' :'') + 'marked as done.'})
                     })
                     .catch(e => {
