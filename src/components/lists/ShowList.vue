@@ -75,7 +75,15 @@
 										<div class="field">
 											<label class="label" for="taskduedate">Due Date</label>
 											<div class="control">
-												<input :class="{ 'disabled': loading}" :disabled="loading" type="date" class="input" id="taskduedate" placeholder="The tasks due date is here..." v-model="taskEditTask.dueDate">
+												<flat-pickr
+														:class="{ 'disabled': loading}"
+														class="input"
+														:disabled="loading"
+														v-model="taskEditTask.dueDate"
+														:config="flatPickerConfig"
+														id="taskduedate"
+														placeholder="The tasks due date is here...">
+												</flat-pickr>
 											</div>
 										</div>
 									</div>
@@ -83,7 +91,15 @@
 										<div class="field">
 											<label class="label" for="taskreminderdate">Reminder Date</label>
 											<div class="control">
-												<input :class="{ 'disabled': loading}" :disabled="loading" type="date" class="input" id="taskreminderdate" placeholder="The tasks reminder date is here..." v-model="taskEditTask.reminderDate">
+												<flat-pickr
+														:class="{ 'disabled': loading}"
+														class="input"
+														:disabled="loading"
+														v-model="taskEditTask.reminderDate"
+														:config="flatPickerConfig"
+														id="taskreminderdate"
+														placeholder="The tasks reminder date is here...">
+												</flat-pickr>
 											</div>
 										</div>
 									</div>
@@ -107,6 +123,8 @@
     import router from '../../router'
     import {HTTP} from '../../http-common'
     import message from '../../message'
+    import flatPickr from 'vue-flatpickr-component';
+    import 'flatpickr/dist/flatpickr.css';
 
     export default {
         data() {
@@ -118,8 +136,18 @@
                 loading: false,
 				isTaskEdit: false,
 				taskEditTask: {},
+                flatPickerConfig:{
+                    altFormat: 'j M Y H:i',
+                    altInput: true,
+                    dateFormat: 'Y-m-d H:i',
+					enableTime: true,
+                    defaultDate: new Date(),
+				},
             }
         },
+		components: {
+			flatPickr
+		},
         beforeMount() {
             // Check if the user is already logged in, if so, redirect him to the homepage
             if (!auth.user.authenticated) {
@@ -141,6 +169,15 @@
                 HTTP.get(`lists/` + this.$route.params.id, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
                     .then(response => {
                         this.loading = false
+
+						// Make date objects from timestamps
+                        for (const t in response.data.tasks) {
+                            let dueDate = new Date(response.data.tasks[t].dueDate * 1000)
+                            let reminderDate = new Date(response.data.tasks[t].reminderDate * 1000)
+							response.data.tasks[t].dueDate = dueDate
+							response.data.tasks[t].reminderDate = reminderDate
+                        }
+
                         // This adds a new elemednt "list" to our object which contains all lists
                         this.$set(this, 'list', response.data)
                         if (this.list.tasks === null) {
@@ -200,7 +237,12 @@
 
                 HTTP.post(`tasks/` + this.taskEditTask.id, this.taskEditTask, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
                     .then(response => {
+                        response.data.dueDate = new Date(response.data.dueDate * 1000)
+                        response.data.reminderDate = new Date(response.data.reminderDate * 1000)
+						// Update the task in the list
                         this.updateTaskByID(this.taskEditTask.id, response.data)
+                        // Also update the current taskedit object so the ui changes
+                        this.$set(this, 'taskEditTask', response.data)
                         this.handleSuccess({message: 'The task was successfully updated.'})
                     })
                     .catch(e => {
