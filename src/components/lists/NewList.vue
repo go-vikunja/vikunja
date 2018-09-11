@@ -46,8 +46,6 @@
         methods: {
             newList() {
                 this.loading = true
-                // eslint-disable-next-line
-                console.log(this.list)
 
                 HTTP.put(`namespaces/` + this.$route.params.id + `/lists`, this.list, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
                     .then(() => {
