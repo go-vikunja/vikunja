@@ -3,7 +3,7 @@
 		<nav class="navbar" role="navigation" aria-label="main navigation" v-if="user.authenticated">
 			<div class="navbar-brand">
 				<div class="navbar-item logo">
-					<img src="logo-full.svg"/>
+					<img src="images/logo-full.svg"/>
 				</div>
 			</div>
 			<div class="navbar-menu">

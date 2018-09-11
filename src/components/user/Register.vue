@@ -1,7 +1,7 @@
 <template>
 	<div class="container has-text-centered">
 		<div class="column is-4 is-offset-4">
-			<img src="logo-full.svg"/>
+			<img src="images/logo-full.svg"/>
 			<h2 class="title">Register</h2>
 			<div class="box">
 				<form id="registerform" @submit.prevent="submit">
