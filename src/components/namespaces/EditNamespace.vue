@@ -20,13 +20,22 @@
 							<textarea :class="{ 'disabled': loading}" :disabled="loading" class="textarea" placeholder="The namespaces description goes here..." id="namespacedescription" v-model="namespace.description"></textarea>
 						</div>
 					</div>
-
-
-					<button type="submit" class="button is-success is-fullwidth" :class="{ 'is-loading': loading}">
-						Save
-					</button>
-
 				</form>
+
+				<div class="columns bigbuttons">
+					<div class="column">
+						<button @click="submit()" class="button is-success is-fullwidth" :class="{ 'is-loading': loading}">
+							Save
+						</button>
+					</div>
+					<div class="column is-1">
+						<button @click="deleteNamespace()" class="button is-danger is-fullwidth" :class="{ 'is-loading': loading}">
+							<span class="icon is-small">
+								<icon icon="trash-alt"/>
+							</span>
+						</button>
+					</div>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -91,6 +100,21 @@
                         this.handleError(e)
                     })
             },
+            deleteNamespace() {
+				// TODO: add better looking modal to ask the user if he is sure
+				if (!confirm('Are you sure you want to delete this namespace and all of its contents? This includes lists & tasks and CANNOT BE UNDONE!')) {
+					return
+				}
+
+                HTTP.delete(`namespaces/` + this.$route.params.id, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
+                    .then(() => {
+                        this.handleSuccess({message: 'The namespace was successfully deleted.'})
+                        router.push({name: 'home'})
+                    })
+                    .catch(e => {
+                        this.handleError(e)
+                    })
+			},
             handleError(e) {
                 this.loading = false
                 message.error(e, this)
@@ -104,5 +128,7 @@
 </script>
 
 <style scoped>
-
+	.bigbuttons{
+		margin-top: 0.5rem;
+	}
 </style>
