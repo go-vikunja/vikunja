@@ -25,12 +25,12 @@
 				<div class="box">
 					<div class="columns">
 						<div class="column is-3">
-								<a class="button is-success is-fullwidth button-bottom">
+								<router-link :to="{name: 'newNamespace'}" class="button is-success is-fullwidth button-bottom">
 									<span class="icon is-small">
-										<icon icon="plus"/>
+										<icon icon="layer-group"/>
 									</span>
 									New Namespace
-								</a>
+								</router-link>
 							<aside class="menu">
 								<p class="menu-label" v-if="loading">Loading...</p>
 								<template v-for="n in namespaces">

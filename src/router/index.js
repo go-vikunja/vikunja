@@ -8,6 +8,8 @@ import RegisterComponent from '@/components/user/Register'
 // List Handling
 import ShowListComponent from '@/components/lists/ShowList'
 import NewListComponent from '@/components/lists/NewList'
+// Namespace Handling
+import NewNamespaceComponent from '@/components/namespaces/NewNamespace'
 
 Vue.use(Router)
 
@@ -34,9 +36,14 @@ export default new Router({
       component: ShowListComponent
     },
     {
-      path: '/namespaces/:id',
+      path: '/namespaces/:id/list',
       name: 'newList',
       component: NewListComponent
+    },
+    {
+      path: '/namespaces/new',
+      name: 'newNamespace',
+      component: NewNamespaceComponent
     }
   ]
 })
