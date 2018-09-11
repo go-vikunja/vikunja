@@ -60,13 +60,13 @@
 								<div class="field">
 									<label class="label" for="tasktext">Task Text</label>
 									<div class="control">
-										<input class="input" type="text" id="tasktext" placeholder="The task text is here..." v-model="taskEditTask.text">
+										<input :class="{ 'disabled': loading}" :disabled="loading" class="input" type="text" id="tasktext" placeholder="The task text is here..." v-model="taskEditTask.text">
 									</div>
 								</div>
 								<div class="field">
 									<label class="label" for="taskdescription">Description</label>
 									<div class="control">
-										<textarea class="textarea" placeholder="The tasks description goes here..." id="taskdescription" v-model="taskEditTask.description"></textarea>
+										<textarea :class="{ 'disabled': loading}" :disabled="loading" class="textarea" placeholder="The tasks description goes here..." id="taskdescription" v-model="taskEditTask.description"></textarea>
 									</div>
 								</div>
 
@@ -75,7 +75,7 @@
 										<div class="field">
 											<label class="label" for="taskduedate">Due Date</label>
 											<div class="control">
-												<input type="date" class="input" id="taskduedate" placeholder="The tasks due date is here..." v-model="taskEditTask.dueDate">
+												<input :class="{ 'disabled': loading}" :disabled="loading" type="date" class="input" id="taskduedate" placeholder="The tasks due date is here..." v-model="taskEditTask.dueDate">
 											</div>
 										</div>
 									</div>
@@ -83,13 +83,13 @@
 										<div class="field">
 											<label class="label" for="taskreminderdate">Reminder Date</label>
 											<div class="control">
-												<input type="date" class="input" id="taskreminderdate" placeholder="The tasks reminder date is here..." v-model="taskEditTask.reminderDate">
+												<input :class="{ 'disabled': loading}" :disabled="loading" type="date" class="input" id="taskreminderdate" placeholder="The tasks reminder date is here..." v-model="taskEditTask.reminderDate">
 											</div>
 										</div>
 									</div>
 								</div>
 
-								<button type="submit" class="button is-success is-fullwidth">
+								<button type="submit" class="button is-success is-fullwidth" :class="{ 'is-loading': loading}">
 									Save
 								</button>
 
