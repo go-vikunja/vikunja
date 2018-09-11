@@ -144,12 +144,7 @@
 		padding-right: 2em !important;
 	}
 
-	/* Navbar */
-	.navbar{
-		background: none !important;
-		padding-top: 0.5rem;
-	}
-
+	/* Logo */
 	.logo {
 
 		padding-left: 2rem !important;
