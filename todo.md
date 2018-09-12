@@ -5,10 +5,10 @@
     * [x] Logo oben links
     * [x] Benutzernamen neben logout
 * [x] Die Listenauswahl sollte highlighten welche Liste man grade ausgewählt hat
-* [ ] Namespaces
+* [x] Namespaces
     * [x] Bei jedem Namespace sollte rechts neben dem Namen ein Zahnrad zum Bearbeiten sein, das tauscht dann den view mit der aktuellen Liste
     * [x] Über Namespaces btn zum neuen Namespace anlegen mit popup zum Namen eingeben
-    * [ ] Namespace löschen btn bei bearbeiten
+    * [x] Namespace löschen btn bei bearbeiten
 * [ ] Listen
     * [x] Btn zum Liste hinzufügen
     * [ ] Zahnrad zum Liste bearbeiten
