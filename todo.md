@@ -13,12 +13,12 @@
     * [x] Btn zum Liste hinzufügen
     * [x] Zahnrad zum Liste bearbeiten
     * [x] Btn zum Liste löschen bei bearbeiten
-* [ ] Tasks:
+* [x] Tasks:
     * [x] Oben großes Eingabefeld zum Punkte hinzufügen
     * [x] Tasks in voller Breite drunter anzeigen
     * [x] Tasks bearbeiten geht mit Zahnrad rechts, da druffklicken, dann geht von Links eine card rein (halbe breite der Tasklist) mit den Optionen
       * [x] Datetimepicker einbauen für Daten etc. (flatpickr)
     * [x] Bug fixen der auf try dafür sorgt dass beim Abhaken die checkbox nicht geupdated wird
-    * [ ] Task löschen btn bei bearbeiten
+    * [x] Task löschen btn bei bearbeiten
 * [x] Hintergrund durch das mit den Lamas von Freepick austauschen
 * [ ] Lizenz einfügen!
