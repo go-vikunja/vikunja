@@ -3,6 +3,10 @@ import App from './App.vue'
 import router from './router'
 import auth from './auth'
 
+// Register the modal
+import Modal from './components/modal/Modal'
+Vue.component('modal', Modal)
+
 import './vikunja.scss'
 
 Vue.config.productionTip = false
