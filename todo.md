@@ -28,7 +28,6 @@
         * [ ] In der UI klarmachen, wenn der Nutzer admin ist (möglicherweise braucht das noch ne Änderung im Backend)
         * [ ] Einzelne Teams ansehbar
             * [ ] In den Teams, in denen der Nutzer admin ist, Bearbeitung ermöglichen
-    
 
 * [ ] Sharingshit
     * [ ] Listen für Nutzer
