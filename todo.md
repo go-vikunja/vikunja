@@ -22,3 +22,28 @@
     * [x] Task löschen btn bei bearbeiten
 * [x] Hintergrund durch das mit den Lamas von Freepick austauschen
 * [ ] Lizenz einfügen!
+
+* [ ] Teams
+    * [ ] Alle Teams auflisten, auf die der Nutzer Zugriff hat
+        * [ ] In der UI klarmachen, wenn der Nutzer admin ist (möglicherweise braucht das noch ne Änderung im Backend)
+        * [ ] Einzelne Teams ansehbar
+            * [ ] In den Teams, in denen der Nutzer admin ist, Bearbeitung ermöglichen
+    
+
+* [ ] Sharingshit
+    * [ ] Listen für Nutzer
+        * [ ] freigeben
+        * [ ] entfernen
+        * [ ] Einstellmglkt für Rechte
+    * [ ] Listen für Teams
+        * [ ] freigeben
+        * [ ] entfernen
+        * [ ] Einstellmglkt für Rechte
+    * [ ] Namespaces für Nutzer
+        * [ ] freigeben
+        * [ ] entfernen
+        * [ ] Einstellmglkt für Rechte
+    * [ ] Namespaces für Teams
+        * [ ] freigeben
+        * [ ] entfernen
+        * [ ] Einstellmglkt für Rechte
