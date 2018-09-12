@@ -157,6 +157,7 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
       * [x] Delete
 
 * [ ] /namespaces soll zumindest auch die namen (+id) der dazugehörigen Listen rausgeben
+* [ ] Endpoint um nach Usern zu suchen, erstmal nur mit Nutzernamen, später mit setting ob auch mit email gesucht werden darf
 
 ## Feature-Ideen
 
