@@ -74,7 +74,7 @@ func (l *List) checkListTeamRight(user *User, r TeamRight) bool {
 		Join("LEFT", []string{"team_members", "tm2"}, "tm2.team_id = tl.team_id").
 		Where("((tm.user_id = ? AND tn.right = ?) OR (tm2.user_id = ? AND tl.rights = ?)) AND l.id = ?",
 			user.ID, r, user.ID, r, l.ID).
-		Get(&List{})
+		Exist(&List{})
 	if err != nil {
 		return false
 	}
@@ -88,9 +88,13 @@ func (l *List) checkListUserRight(user *User, r UserRight) bool {
 		Alias("l").
 		Join("LEFT", []string{"users_namespace", "un"}, "un.namespace_id = l.namespace_id").
 		Join("LEFT", []string{"users_list", "ul"}, "ul.list_id = l.id").
-		Where("(ul.user_id = ? AND ul.right = ?) AND l.id = ?",
-			user.ID, r, l.ID).
-		Get(&List{})
+		Join("LEFT", []string{"namespaces", "n"}, "n.id = l.namespace_id").
+		Where("((ul.user_id = ? AND ul.right = ?) " +
+			"OR (un.user_id = ? AND un.right = ?) " +
+			"OR n.owner_id = ?)" +
+			"AND l.id = ?",
+			user.ID, r, user.ID, r, user.ID, l.ID).
+		Exist(&List{})
 	if err != nil {
 		return false
 	}
