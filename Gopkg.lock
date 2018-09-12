@@ -73,6 +73,14 @@
   version = "v1.0.0"
 
 [[projects]]
+  digest = "1:8eb1de8112c9924d59bf1d3e5c26f5eaa2bfc2a5fcbb92dc1c2e4546d695f277"
+  name = "github.com/imdario/mergo"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "9f23e2d6bd2a77f959b2bf6acdbefd708a83a4a4"
+  version = "v0.3.6"
+
+[[projects]]
   digest = "1:82c5850e702ccef3976cdfdf737725013587c64e02e5ecae57e86431163b27aa"
   name = "github.com/labstack/echo"
   packages = [
@@ -274,6 +282,7 @@
     "github.com/go-sql-driver/mysql",
     "github.com/go-xorm/core",
     "github.com/go-xorm/xorm",
+    "github.com/imdario/mergo",
     "github.com/labstack/echo",
     "github.com/labstack/echo/middleware",
     "github.com/mattn/go-sqlite3",
