@@ -29,7 +29,7 @@
 						</button>
 					</div>
 					<div class="column is-1">
-						<button @click="deleteNamespace()" class="button is-danger is-fullwidth" :class="{ 'is-loading': loading}">
+						<button @click="showDeleteModal = true" class="button is-danger is-fullwidth" :class="{ 'is-loading': loading}">
 							<span class="icon is-small">
 								<icon icon="trash-alt"/>
 							</span>
@@ -38,6 +38,15 @@
 				</div>
 			</div>
 		</div>
+
+		<modal
+				v-if="showDeleteModal"
+				@close="showDeleteModal = false"
+				v-on:submit="deleteNamespace()">
+			<span slot="header">Delete the namespace</span>
+			<p slot="text">Are you sure you want to delete this namespace and all of its contents?
+				<br/>This includes lists & tasks and <b>CANNOT BE UNDONE!</b></p>
+		</modal>
 	</div>
 </template>
 
@@ -54,6 +63,7 @@
                 namespace: {title: '', description:''},
                 error: '',
                 loading: false,
+                showDeleteModal: false,
             }
         },
         beforeMount() {
@@ -101,11 +111,6 @@
                     })
             },
             deleteNamespace() {
-				// TODO: add better looking modal to ask the user if he is sure
-				if (!confirm('Are you sure you want to delete this namespace and all of its contents? This includes lists & tasks and CANNOT BE UNDONE!')) {
-					return
-				}
-
                 HTTP.delete(`namespaces/` + this.$route.params.id, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
                     .then(() => {
                         this.handleSuccess({message: 'The namespace was successfully deleted.'})
