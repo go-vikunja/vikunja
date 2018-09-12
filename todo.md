@@ -9,10 +9,10 @@
     * [x] Bei jedem Namespace sollte rechts neben dem Namen ein Zahnrad zum Bearbeiten sein, das tauscht dann den view mit der aktuellen Liste
     * [x] Über Namespaces btn zum neuen Namespace anlegen mit popup zum Namen eingeben
     * [x] Namespace löschen btn bei bearbeiten
-* [ ] Listen
+* [x] Listen
     * [x] Btn zum Liste hinzufügen
-    * [ ] Zahnrad zum Liste bearbeiten
-    * [ ] Btn zum Liste löschen bei bearbeiten
+    * [x] Zahnrad zum Liste bearbeiten
+    * [x] Btn zum Liste löschen bei bearbeiten
 * [ ] Tasks:
     * [x] Oben großes Eingabefeld zum Punkte hinzufügen
     * [x] Tasks in voller Breite drunter anzeigen

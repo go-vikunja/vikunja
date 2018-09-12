@@ -7,6 +7,9 @@
 			</div>
 		</div>
 		<div class="content">
+			<router-link :to="{ name: 'editList', params: { id: list.id } }" class="icon settings is-medium">
+				<icon icon="cog" size="2x"/>
+			</router-link>
 			<h1>{{ list.title }}</h1>
 		</div>
 		<form @submit.prevent="addTask()">
@@ -304,5 +307,10 @@
 	.taskedit{
 		min-height: calc(100% - 1rem);
 		margin-top: 1rem;
+	}
+
+	.settings{
+		float: right;
+		color: rgb(74, 74, 74);
 	}
 </style>

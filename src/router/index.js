@@ -8,6 +8,7 @@ import RegisterComponent from '@/components/user/Register'
 // List Handling
 import ShowListComponent from '@/components/lists/ShowList'
 import NewListComponent from '@/components/lists/NewList'
+import EditListComponent from '@/components/lists/EditList'
 // Namespace Handling
 import NewNamespaceComponent from '@/components/namespaces/NewNamespace'
 import EditNamespaceComponent from '@/components/namespaces/EditNamespace'
@@ -35,6 +36,11 @@ export default new Router({
       path: '/lists/:id',
       name: 'showList',
       component: ShowListComponent
+    },
+    {
+      path: '/lists/:id/edit',
+      name: 'editList',
+      component: EditListComponent
     },
     {
       path: '/namespaces/:id/list',
