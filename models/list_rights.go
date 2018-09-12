@@ -89,9 +89,9 @@ func (l *List) checkListUserRight(user *User, r UserRight) bool {
 		Join("LEFT", []string{"users_namespace", "un"}, "un.namespace_id = l.namespace_id").
 		Join("LEFT", []string{"users_list", "ul"}, "ul.list_id = l.id").
 		Join("LEFT", []string{"namespaces", "n"}, "n.id = l.namespace_id").
-		Where("((ul.user_id = ? AND ul.right = ?) " +
-			"OR (un.user_id = ? AND un.right = ?) " +
-			"OR n.owner_id = ?)" +
+		Where("((ul.user_id = ? AND ul.right = ?) "+
+			"OR (un.user_id = ? AND un.right = ?) "+
+			"OR n.owner_id = ?)"+
 			"AND l.id = ?",
 			user.ID, r, user.ID, r, user.ID, l.ID).
 		Exist(&List{})
