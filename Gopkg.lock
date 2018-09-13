@@ -25,6 +25,17 @@
   version = "v1.4.7"
 
 [[projects]]
+  digest = "1:0594af97b2f4cec6554086eeace6597e20a4b69466eb4ada25adf9f4300dddd2"
+  name = "github.com/garyburd/redigo"
+  packages = [
+    "internal",
+    "redis",
+  ]
+  pruneopts = "UT"
+  revision = "a69d19351219b6dd56f274f96d85a7014a2ec34e"
+  version = "v1.6.0"
+
+[[projects]]
   digest = "1:d2b67246c3fa959edfa1be84b407cf0a0a4cabbace0843814b1729b5af808d9e"
   name = "github.com/go-sql-driver/mysql"
   packages = ["."]
@@ -52,6 +63,14 @@
   packages = ["."]
   pruneopts = "UT"
   revision = "29d4a0330a00b9be468b70e3fb0f74109348c358"
+
+[[projects]]
+  branch = "master"
+  digest = "1:d4a957ebe4ccebc299c1f6b6a78a0713af379721980cf14990b8ab8fa93cd92d"
+  name = "github.com/go-xorm/xorm-redis-cache"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "859b313566b2ef090319245fd4fe7692f25dbd79"
 
 [[projects]]
   digest = "1:c0d19ab64b32ce9fe5cf4ddceba78d5bc9807f0016db6b1183599da3dcc24d10"
@@ -282,6 +301,7 @@
     "github.com/go-sql-driver/mysql",
     "github.com/go-xorm/core",
     "github.com/go-xorm/xorm",
+    "github.com/go-xorm/xorm-redis-cache",
     "github.com/imdario/mergo",
     "github.com/labstack/echo",
     "github.com/labstack/echo/middleware",

@@ -206,7 +206,7 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
 
 ### Short Term
 
-* [ ] Cacher konfigurierbar
+* [x] Cacher konfigurierbar
 * [ ] Validation der ankommenden structs, am besten mit https://github.com/go-validator/validator
 * [ ] Wenn die ID bei irgendeiner GetByID... Methode < 1 ist soll ein error not exist geworfen werden
 

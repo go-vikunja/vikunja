@@ -27,6 +27,12 @@ func InitConfig() (err error) {
 	viper.SetDefault("database.database", "vikunja")
 	viper.SetDefault("database.path", "./vikunja.db")
 	viper.SetDefault("database.showqueries", false)
+	// Cacher
+	viper.SetDefault("cache.enabled", false)
+	viper.SetDefault("cache.type", "memory")
+	viper.SetDefault("cache.maxelementsize", 1000)
+	viper.SetDefault("cache.redishost", "localhost:6379")
+	viper.SetDefault("cache.redispassword", "")
 
 	// Init checking for environment variables
 	viper.SetEnvPrefix("vikunja")

@@ -6,7 +6,10 @@ import (
 	"github.com/go-xorm/core"
 	"github.com/go-xorm/xorm"
 	_ "github.com/mattn/go-sqlite3" // Because.
+	xrc "github.com/go-xorm/xorm-redis-cache"
+
 	"github.com/spf13/viper"
+	"encoding/gob"
 )
 
 var (
@@ -58,8 +61,21 @@ func SetEngine() (err error) {
 	}
 
 	// Cache
-	//cacher := xorm.NewLRUCacher(xorm.NewMemoryStore(), 1000)
-	//x.SetDefaultCacher(cacher)
+	if viper.GetBool("cache.enabled") {
+		switch viper.GetString("cache.type") {
+		case "memory":
+			cacher := xorm.NewLRUCacher(xorm.NewMemoryStore(), viper.GetInt("cache.maxelementsize"))
+			x.SetDefaultCacher(cacher)
+			break
+		case "redis":
+			cacher := xrc.NewRedisCacher(viper.GetString("cache.redishost"), viper.GetString("cache.redispassword"), xrc.DEFAULT_EXPIRATION, x.Logger())
+			x.SetDefaultCacher(cacher)
+			gob.Register(tables)
+			break
+		default:
+			fmt.Println("Did not find a valid cache type. Caching disabled. Please refer to the docs for poosible cache types.")
+		}
+	}
 
 	x.SetMapper(core.GonicMapper{})
 
