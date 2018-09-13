@@ -157,15 +157,17 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
       * [x] Delete
 
 * [ ] /namespaces soll zumindest auch die namen (+id) der dazugehörigen Listen rausgeben
+* [ ] Endpoint um nach Usern zu suchen, erstmal nur mit Nutzernamen, später mit setting ob auch mit email gesucht werden darf
 
-#### v0.3
+## Feature-Ideen
 
 * [ ] Labels
 * [ ] Priorities
-
-#### v0.4
-
-* [ ] Websocket?
+* [ ] Assignees
+* [ ] Subtasks
+* [ ] Attachments
+* [ ] Repeating tasks
+* [ ] Tagesübersicht ("Was ist heute/diese Woche due?") -> Machen letztenendes die Clients, wir brauchen nur nen endpoint, der alle tasks auskotzt, der Client macht dann die Sortierung.
 
 ## Clients
 
@@ -188,25 +190,31 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
 * [x] Alle Packages umziehen
 * [x] Swagger UI aufsetzen
 + [x] CORS fixen
-* [ ] Cacher konfigurierbar
-* [ ] Deps nach mod (dem nachfolger von dep) umziehen, blocked by Go 1.11
 * [x] Überall echo.NewHTTPError statt c.JSON(Message{}) benutzen
 * [x] Bessere Fehlermeldungen wenn das Model was ankommt falsch ist und nicht geparst werden kann
 * [ ] Fehlerhandling irgendwie besser machen. Zb mit "World error messages"? Sprich, die Methode ruft einfach auf obs die entsprechende Fehlermeldung gibt und zeigt sonst 500 an.
 * [ ] Endpoints neu organisieren? Also zb `namespaces/:nID/lists/:lID/items/:iID` statt einzelnen Endpoints für alles
-* [ ] Wenn die ID bei irgendeiner GetByID... Methode < 1 ist soll ein error not exist geworfen werden
-* [ ] Validation der ankommenden structs
-* [ ] Viper für config einbauen und ini rauswerfen
-* [ ] Docs für installationsanleitung
-* [ ] Tests für Rechtekram
-* [ ] "Apiformat" Methoden, damit in der Ausgabe zb kein Passwort drin ist..., oder created/updated von Nutzern... oder ownerID nicht drin ist sondern nur das ownerobject
+* [x] Viper für config einbauen und ini rauswerfen
+* [x] Docs für installationsanleitung
+* [x] Tests für Rechtekram
+* [x] "Apiformat" Methoden, damit in der Ausgabe zb kein Passwort drin ist..., oder created/updated von Nutzern... oder ownerID nicht drin ist sondern nur das ownerobject
 * [x] Rechte überprüfen:
       * [x] Listen erstellen
       * [x] Listen bearbeiten (nur eigene im Moment)
       * [x] Listenpunkte hinzufügen
       * [x] Listenpunkte bearbeiten
+
+### Short Term
+
+* [ ] Cacher konfigurierbar
+* [ ] Validation der ankommenden structs, am besten mit https://github.com/go-validator/validator
+* [ ] Wenn die ID bei irgendeiner GetByID... Methode < 1 ist soll ein error not exist geworfen werden
+
+### Later/Nice to have
+
 * [ ] An "accepted" für post/put payloads schrauben, man soll da zb keine id/created/updated/etc übergeben können.
 * [ ] Globale Limits für anlegbare Listen + Namespaces
 * [ ] Mgl., dass die Instanz geschlossen ist, also sich keiner registrieren kann, und man sich einloggen muss
 * [ ] mgl. zum Emailmaskieren haben (in den Nutzereinstellungen, wenn man seine Email nicht an alle Welt rausposaunen will)
 * [ ] Mgl. zum Accountlöschen haben (so richtig krass mit emailverifiezierung und dass alle Privaten Listen gelöscht werden und man alle geteilten entweder wem übertragen muss oder  auf privat stellen)
+* [ ] Deps nach mod (dem nachfolger von dep) umziehen, blocked by Go 1.11
