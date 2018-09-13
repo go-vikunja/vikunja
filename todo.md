@@ -24,11 +24,12 @@
 * [ ] Lizenz einfügen!
 
 * [ ] Teams
+    * [ ] Mglkt zum Erstellen von neuen Teams
     * [ ] Alle Teams auflisten, auf die der Nutzer Zugriff hat
         * [ ] In der UI klarmachen, wenn der Nutzer admin ist (möglicherweise braucht das noch ne Änderung im Backend)
         * [ ] Einzelne Teams ansehbar
             * [ ] In den Teams, in denen der Nutzer admin ist, Bearbeitung ermöglichen
-    
+	    * [ ] Löschen ermöglichen
 
 * [ ] Sharingshit
     * [ ] Listen für Nutzer
