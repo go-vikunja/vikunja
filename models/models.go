@@ -5,11 +5,11 @@ import (
 	_ "github.com/go-sql-driver/mysql" // Because.
 	"github.com/go-xorm/core"
 	"github.com/go-xorm/xorm"
-	_ "github.com/mattn/go-sqlite3" // Because.
 	xrc "github.com/go-xorm/xorm-redis-cache"
+	_ "github.com/mattn/go-sqlite3" // Because.
 
-	"github.com/spf13/viper"
 	"encoding/gob"
+	"github.com/spf13/viper"
 )
 
 var (
