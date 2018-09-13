@@ -30,6 +30,10 @@ func (l *List) AfterLoad() {
 
 // GetListByID returns a list by its ID
 func GetListByID(id int64) (list List, err error) {
+	if id < 1 {
+		return list, ErrListDoesNotExist{ID: id}
+	}
+
 	exists, err := x.ID(id).Get(&list)
 	if err != nil {
 		return list, err

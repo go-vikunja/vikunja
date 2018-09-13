@@ -28,6 +28,10 @@ func (n *Namespace) AfterLoad() {
 
 // GetNamespaceByID returns a namespace object by its ID
 func GetNamespaceByID(id int64) (namespace Namespace, err error) {
+	if id < 1 {
+		return namespace, ErrNamespaceDoesNotExist{ID: id}
+	}
+
 	namespace.ID = id
 	exists, err := x.Get(&namespace)
 	if err != nil {

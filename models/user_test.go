@@ -67,9 +67,10 @@ func TestCreateUser(t *testing.T) {
 	_, err = GetUserByID(theuser.ID)
 	assert.NoError(t, err)
 
-	// Passing 0 as ID should return an empty user
+	// Passing 0 as ID should return an error
 	_, err = GetUserByID(0)
-	assert.NoError(t, err)
+	assert.Error(t, err)
+	assert.True(t, IsErrUserDoesNotExist(err))
 
 	// Check the user credentials
 	user, err := CheckUserCredentials(&UserLogin{"testuu", "1234"})

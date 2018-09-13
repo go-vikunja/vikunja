@@ -75,6 +75,10 @@ func GetTasksByListID(listID int64) (tasks []*ListTask, err error) {
 
 // GetListTaskByID returns all tasks a list has
 func GetListTaskByID(listTaskID int64) (listTask ListTask, err error) {
+	if listTaskID < 1 {
+		return ListTask{}, ErrListTaskDoesNotExist{listTaskID}
+	}
+
 	exists, err := x.ID(listTaskID).Get(&listTask)
 	if err != nil {
 		return ListTask{}, err

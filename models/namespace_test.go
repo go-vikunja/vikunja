@@ -40,7 +40,8 @@ func TestNamespace_Create(t *testing.T) {
 
 	// Try inserting one with a nonexistant user
 	nUser := &User{ID: 9482385}
-	err = dummynamespace.Create(nUser)
+	dnsp2 := dummynamespace
+	err = dnsp2.Create(nUser)
 	assert.Error(t, err)
 	assert.True(t, IsErrUserDoesNotExist(err))
 
@@ -88,5 +89,5 @@ func TestNamespace_Create(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, reflect.TypeOf(nsps).Kind(), reflect.Slice)
 	s := reflect.ValueOf(nsps)
-	assert.Equal(t, s.Len(), 2)
+	assert.Equal(t, 1, s.Len())
 }

@@ -48,8 +48,8 @@ func (apiUser *APIUserPassword) APIFormat() User {
 // GetUserByID gets informations about a user by its ID
 func GetUserByID(id int64) (user User, err error) {
 	// Apparently xorm does otherwise look for all users but return only one, which leads to returing one even if the ID is 0
-	if id == 0 {
-		return User{}, nil
+	if id < 1 {
+		return User{}, ErrUserDoesNotExist{}
 	}
 
 	return GetUser(User{ID: id})

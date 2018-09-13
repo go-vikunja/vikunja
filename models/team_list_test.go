@@ -4,7 +4,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"reflect"
 	"testing"
-	"fmt"
 )
 
 func TestTeamList(t *testing.T) {
@@ -72,7 +71,6 @@ func TestTeamList(t *testing.T) {
 	tl6 := tl
 	tl6.ListID = 3
 	_, err = tl6.ReadAll(&user)
-	fmt.Println(tl6)
 	assert.Error(t, err)
 	assert.True(t, IsErrNeedToHaveListReadAccess(err))
 

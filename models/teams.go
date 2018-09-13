@@ -62,6 +62,10 @@ type TeamUser struct {
 
 // GetTeamByID gets a team by its ID
 func GetTeamByID(id int64) (team Team, err error) {
+	if id < 1 {
+		return team, ErrTeamDoesNotExist{id}
+	}
+
 	exists, err := x.Where("id = ?", id).Get(&team)
 	if err != nil {
 		return
