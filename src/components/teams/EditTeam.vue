@@ -114,8 +114,8 @@
                         this.$set(this, 'team', response.data)
 						let members = response.data.members
 						for (const m in members) {
-						    if (members[m].id === this.user.infos.id && members[m].admin) {
-						        this.userIsAdmin = true
+							if (members[m].id === this.user.infos.id && members[m].admin) {
+								this.userIsAdmin = true
 							}
 						}
                         this.loading = false
