@@ -15,6 +15,7 @@ import EditNamespaceComponent from '@/components/namespaces/EditNamespace'
 // Team Handling
 import ListTeamsComponent from '@/components/teams/ListTeams'
 import EditTeamComponent from '@/components/teams/EditTeam'
+import NewTeamComponent from '@/components/teams/NewTeam'
 
 Vue.use(Router)
 
@@ -64,6 +65,11 @@ export default new Router({
       path: '/teams',
       name: 'listTeams',
       component: ListTeamsComponent
+    },
+    {
+      path: '/teams/new',
+      name: 'newTeam',
+      component: NewTeamComponent
     },
     {
       path: '/teams/:id/edit',

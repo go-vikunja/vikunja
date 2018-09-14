@@ -1,5 +1,8 @@
 <template>
 	<div class="content">
+		<router-link :to="{name:'newTeam'}" class="button is-success button-right" >
+			New Team
+		</router-link>
 		<h1>Teams</h1>
 		<ul class="teams box">
 			<li v-for="t in teams" :key="t.id">
@@ -57,6 +60,10 @@
 </script>
 
 <style lang="scss" scoped>
+	.button-right{
+		float: right;
+	}
+
 	ul.teams{
 
 		padding: 0;
