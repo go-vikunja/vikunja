@@ -24,8 +24,8 @@
 * [ ] Hintergrundbild als Vektor, sonst sieht das uaf mobilgeräten kacke aus
 * [ ] Lizenz einfügen!
 
-* [ ] Teams
-    * [ ] Mglkt zum Erstellen von neuen Teams
+* [x] Teams
+    * [x] Mglkt zum Erstellen von neuen Teams
     * [x] Alle Teams auflisten, auf die der Nutzer Zugriff hat
         * [x] In der UI klarmachen, wenn der Nutzer admin ist (möglicherweise braucht das noch ne Änderung im Backend)
         * [x] Einzelne Teams ansehbar
