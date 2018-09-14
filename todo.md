@@ -21,6 +21,7 @@
     * [x] Bug fixen der auf try dafür sorgt dass beim Abhaken die checkbox nicht geupdated wird
     * [x] Task löschen btn bei bearbeiten
 * [x] Hintergrund durch das mit den Lamas von Freepick austauschen
+* [ ] Hintergrundbild als Vektor, sonst sieht das uaf mobilgeräten kacke aus
 * [ ] Lizenz einfügen!
 
 * [ ] Teams
