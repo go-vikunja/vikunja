@@ -37,21 +37,24 @@
 								</span>
 								New Namespace
 							</router-link>
-							<aside class="menu">
+							<aside class="menu namespaces-lists">
 								<p class="menu-label" v-if="loading">Loading...</p>
 								<template v-for="n in namespaces">
-									<p class="menu-label" :key="n.id">
-										<router-link :to="{name: 'editNamespace', params: {id: n.id} }" class="icon nsettings">
-											<icon icon="cog"/>
+									<div :key="n.id">
+										<router-link :to="{name: 'editNamespace', params: {id: n.id} }" class="button nsettings">
+												<span class="icon">
+													<icon icon="cog"/>
+												</span>
 										</router-link>
-										{{n.name}}
-									</p>
-									<router-link :to="{ name: 'newList', params: { id: n.id} }" class="button is-success is-fullwidth button-bottom" :key="n.id + 'newList'">
-										<span class="icon is-small">
-											<icon icon="list-ol"/>
-										</span>
-											New List
-									</router-link>
+										<router-link :to="{ name: 'newList', params: { id: n.id} }" class="button is-success nsettings" :key="n.id + 'newList'">
+												<span class="icon">
+													<icon icon="plus"/>
+												</span>
+										</router-link>
+										<div class="menu-label">
+											{{n.name}}
+										</div>
+									</div>
 									<ul class="menu-list" :key="n.id + 'child'">
 										<li v-for="l in n.lists" :key="l.id">
 											<router-link :to="{ name: 'showList', params: { id: l.id} }">{{l.title}}</router-link>
@@ -179,9 +182,21 @@
 		margin-bottom: 1rem;
 	}
 
-	/* Namespace settings */
-	.nsettings{
-		vertical-align: middle;
-		float: right;
+	/* Namespaces list */
+	.namespaces-lists{
+		.menu-label {
+			font-size: 1em;
+			font-weight: 400;
+			min-height: 2.5em;
+			padding-top: 0.3em;
+		}
+
+		/* Namespace settings */
+		.button{
+			vertical-align: middle;
+			float: right;
+			margin-left: 0.5rem;
+			min-width: 2.648em;
+		}
 	}
 </style>
