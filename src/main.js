@@ -26,6 +26,8 @@ import { faAngleRight } from '@fortawesome/free-solid-svg-icons'
 import { faLayerGroup } from '@fortawesome/free-solid-svg-icons'
 import { faTrashAlt } from '@fortawesome/free-solid-svg-icons'
 import { faUsers } from '@fortawesome/free-solid-svg-icons'
+import { faUser } from '@fortawesome/free-solid-svg-icons'
+import { faLock } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
 library.add(faSignOutAlt)
@@ -37,6 +39,8 @@ library.add(faAngleRight)
 library.add(faLayerGroup)
 library.add(faTrashAlt)
 library.add(faUsers)
+library.add(faUser)
+library.add(faLock)
 
 Vue.component('icon', FontAwesomeIcon)
 

@@ -47,21 +47,53 @@
 					Team Members
 				</p>
 			</header>
-			<div class="card-content content">
-				<table>
-					<tr v-for="m in team.members" :key="m.id">
-						<td>{{m.username}}</td>
-						<td>
-							<template v-if="m.id === user.infos.id">
-								<b class="is-success">You</b>
-							</template>
-						</td>
-						<td><template v-if="m.admin">Is Admin</template><template v-else>Normal Member</template></td>
-					</tr>
+			<div class="card-content content team-members">
+				<table class="table is-striped is-hoverable is-fullwidth">
+					<tbody>
+						<tr v-for="m in team.members" :key="m.id">
+							<td>{{m.username}}</td>
+							<td>
+								<template v-if="m.id === user.infos.id">
+									<b class="is-success">You</b>
+								</template>
+							</td>
+							<td class="type">
+								<template v-if="m.admin">
+									<span class="icon is-small">
+										<icon icon="lock"/>
+									</span>
+									Admin
+								</template>
+								<template v-else>
+									<span class="icon is-small">
+										<icon icon="user"/>
+									</span>
+									Member
+								</template>
+							</td>
+							<td class="actions" v-if="userIsAdmin">
+								<button @click="toggleUserType(m.id, m.admin)" class="button buttonright is-primary" v-if="m.id !== user.infos.id">
+									Make
+									<template v-if="!m.admin">
+										Admin
+									</template>
+									<template v-else>
+										Member
+									</template>
+								</button>
+								<button @click="userToDelete = m.id; showUserDeleteModal()" class="button is-danger" v-if="m.id !== user.infos.id">
+									<span class="icon is-small">
+										<icon icon="trash-alt"/>
+									</span>
+								</button>
+							</td>
+						</tr>
+					</tbody>
 				</table>
 			</div>
 		</div>
 
+		<!-- Team delete modal -->
 		<modal
 				v-if="showDeleteModal"
 				@close="showDeleteModal = false"
@@ -69,6 +101,16 @@
 			<span slot="header">Delete the team</span>
 			<p slot="text">Are you sure you want to delete this team and all of its members?<br/>
 				All team members will loose access to lists and namespaces shared with this team.<br/>
+				<b>This CANNOT BE UNDONE!</b></p>
+		</modal>
+		<!-- User delete modal -->
+		<modal
+				v-if="showUserDeleteModal"
+				@close="showUserDeleteModal = false"
+				v-on:submit="deleteUser(this.userToDelete)">
+			<span slot="header">Remove a user from the team</span>
+			<p slot="text">Are you sure you want to remove this user from the team?<br/>
+				He will loose access to all lists and namespaces this team has access to.<br/>
 				<b>This CANNOT BE UNDONE!</b></p>
 		</modal>
 	</div>
@@ -88,8 +130,10 @@
                 error: '',
                 loading: false,
                 showDeleteModal: false,
+				showUserDeleteModal: false,
 				user: auth.user,
 				userIsAdmin: false,
+				userToDelete: 0,
             }
         },
         beforeMount() {
@@ -152,6 +196,33 @@
                         this.handleError(e)
                     })
 			},
+			deleteUser() {
+				HTTP.delete(`teams/` + this.$route.params.id + `/members/` + this.userToDelete, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
+					.then(() => {
+						this.handleSuccess({message: 'The user was successfully deleted from the team.'})
+						this.loadTeam()
+					})
+					.catch(e => {
+						this.handleError(e)
+					})
+			},
+			addUser(userid, admin) {
+				if(admin === null) {
+					admin = false
+				}
+				HTTP.put(`teams/` + this.$route.params.id + `/members`, {admin: admin, user_id: userid}, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
+					.then(() => {
+						this.handleSuccess({message: 'The team was successfully added.'})
+					})
+					.catch(e => {
+						this.handleError(e)
+					})
+			},
+			toggleUserType(userid, current) {
+				this.userToDelete = userid
+				this.deleteUser()
+				this.addUser(userid, !current)
+			},
             handleError(e) {
                 this.loading = false
                 message.error(e, this)
@@ -164,12 +235,34 @@
     }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 	.bigbuttons{
 		margin-top: 0.5rem;
 	}
 
 	.card{
 		margin-bottom: 1rem;
+
+		.table{
+			td{
+				vertical-align: middle;
+			}
+
+			td.type, td.actions{
+				width: 200px;
+			}
+
+			td.actions{
+				text-align: right;
+			}
+		}
+	}
+
+	.buttonright {
+		margin-right: 0.5rem;
+	}
+
+	.team-members{
+		padding: 0;
 	}
 </style>
