@@ -48,6 +48,24 @@
 				</p>
 			</header>
 			<div class="card-content content team-members">
+				<form @submit.prevent="addUser()" class="add-member-form">
+					<div class="field is-grouped">
+						<p class="control has-icons-left is-expanded" v-bind:class="{ 'is-loading': loading}">
+							<input class="input" v-bind:class="{ 'disabled': loading}" v-model.number="newUser.id" type="text" placeholder="Add a new user...">
+							<span class="icon is-small is-left">
+								<icon icon="user"/>
+							</span>
+						</p>
+						<p class="control">
+							<button type="submit" class="button is-success">
+								<span class="icon is-small">
+									<icon icon="plus"/>
+								</span>
+								Add
+							</button>
+						</p>
+					</div>
+				</form>
 				<table class="table is-striped is-hoverable is-fullwidth">
 					<tbody>
 						<tr v-for="m in team.members" :key="m.id">
@@ -81,7 +99,7 @@
 										Member
 									</template>
 								</button>
-								<button @click="userToDelete = m.id; showUserDeleteModal()" class="button is-danger" v-if="m.id !== user.infos.id">
+								<button @click="userToDelete = m.id; showUserDeleteModal = true" class="button is-danger" v-if="m.id !== user.infos.id">
 									<span class="icon is-small">
 										<icon icon="trash-alt"/>
 									</span>
@@ -107,7 +125,7 @@
 		<modal
 				v-if="showUserDeleteModal"
 				@close="showUserDeleteModal = false"
-				v-on:submit="deleteUser(this.userToDelete)">
+				v-on:submit="deleteUser()">
 			<span slot="header">Remove a user from the team</span>
 			<p slot="text">Are you sure you want to remove this user from the team?<br/>
 				He will loose access to all lists and namespaces this team has access to.<br/>
@@ -134,6 +152,7 @@
 				user: auth.user,
 				userIsAdmin: false,
 				userToDelete: 0,
+				newUser: {id:0},
             }
         },
         beforeMount() {
@@ -199,6 +218,7 @@
 			deleteUser() {
 				HTTP.delete(`teams/` + this.$route.params.id + `/members/` + this.userToDelete, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
 					.then(() => {
+						this.showUserDeleteModal = false;
 						this.handleSuccess({message: 'The user was successfully deleted from the team.'})
 						this.loadTeam()
 					})
@@ -206,13 +226,14 @@
 						this.handleError(e)
 					})
 			},
-			addUser(userid, admin) {
+			addUser(admin) {
 				if(admin === null) {
 					admin = false
 				}
-				HTTP.put(`teams/` + this.$route.params.id + `/members`, {admin: admin, user_id: userid}, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
+				HTTP.put(`teams/` + this.$route.params.id + `/members`, {admin: admin, user_id: this.newUser.id}, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
 					.then(() => {
-						this.handleSuccess({message: 'The team was successfully added.'})
+						this.loadTeam()
+						this.handleSuccess({message: 'The team member was successfully added.'})
 					})
 					.catch(e => {
 						this.handleError(e)
@@ -220,8 +241,9 @@
 			},
 			toggleUserType(userid, current) {
 				this.userToDelete = userid
+				this.newUser.id = userid
 				this.deleteUser()
-				this.addUser(userid, !current)
+				this.addUser(!current)
 			},
             handleError(e) {
                 this.loading = false
@@ -243,7 +265,13 @@
 	.card{
 		margin-bottom: 1rem;
 
+		.add-member-form {
+			margin: 1rem;
+		}
+
 		.table{
+			border-top: 1px solid darken(#fff, 15%);
+
 			td{
 				vertical-align: middle;
 			}
