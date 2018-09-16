@@ -23,6 +23,7 @@
 * [x] Hintergrund durch das mit den Lamas von Freepick austauschen
 * [ ] Google fonts raus (sollen von lokal geladen werden)
 * [ ] Lizenz einfügen!
+* [ ] Badges einfügen
 
 * [x] Teams
     * [x] Mglkt zum Erstellen von neuen Teams
