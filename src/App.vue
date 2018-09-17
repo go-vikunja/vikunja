@@ -41,12 +41,12 @@
 								<p class="menu-label" v-if="loading">Loading...</p>
 								<template v-for="n in namespaces">
 									<div :key="n.id">
-										<router-link :to="{name: 'editNamespace', params: {id: n.id} }" class="button nsettings">
+										<router-link :to="{name: 'editNamespace', params: {id: n.id} }" class="nsettings">
 												<span class="icon">
 													<icon icon="cog"/>
 												</span>
 										</router-link>
-										<router-link :to="{ name: 'newList', params: { id: n.id} }" class="button is-success nsettings" :key="n.id + 'newList'">
+										<router-link :to="{ name: 'newList', params: { id: n.id} }" class="is-success nsettings" :key="n.id + 'newList'">
 												<span class="icon">
 													<icon icon="plus"/>
 												</span>
@@ -175,11 +175,12 @@
 		}
 
 		/* Namespace settings */
-		.button{
+		.nsettings{
 			vertical-align: middle;
 			float: right;
 			margin-left: 0.5rem;
 			min-width: 2.648em;
+			color: rgb(74, 74, 74);
 		}
 	}
 </style>
