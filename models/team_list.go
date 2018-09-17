@@ -20,6 +20,6 @@ func (TeamList) TableName() string {
 }
 
 type teamWithRight struct {
-	Team `xorm:"extends"`
+	Team  `xorm:"extends"`
 	Right TeamRight `json:"right"`
 }
