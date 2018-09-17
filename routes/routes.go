@@ -57,11 +57,11 @@ func RegisterRoutes(e *echo.Echo) {
 		AllowOrigins: []string{"*"},
 	}))
 
-	// Swagger UI
-	e.Static("/swagger", "public/swagger")
-
 	// API Routes
 	a := e.Group("/api/v1")
+
+	// Swagger UI
+	a.Static("/swagger", "public/swagger")
 
 	a.POST("/login", apiv1.Login)
 	a.POST("/register", apiv1.RegisterUser)
