@@ -71,7 +71,12 @@ func (n *Namespace) ReadOne() (err error) {
 // ReadAll gets all namespaces a user has access to
 func (n *Namespace) ReadAll(doer *User) (interface{}, error) {
 
-	all := []*Namespace{}
+	type namespaceWithLists struct {
+		Namespace `xorm:"extends"`
+		Lists     []*List `xorm:"-" json:"lists"`
+	}
+
+	all := []*namespaceWithLists{}
 
 	err := x.Select("namespaces.*").
 		Table("namespaces").
@@ -104,12 +109,36 @@ func (n *Namespace) ReadAll(doer *User) (interface{}, error) {
 		return all, err
 	}
 
-	// Put user objects in our namespace list
+	// Make a list of namespace ids
+	var namespaceids []int64
+	for _, nsp := range all {
+		namespaceids = append(namespaceids, nsp.ID)
+	}
+
+	// Get all lists
+	lists := []*List{}
+	err = x.Table(&lists).
+		In("namespace_id", namespaceids).
+		Find(&lists)
+	if err != nil {
+		return all, err
+	}
+
+	// Put objects in our namespace list
 	for i, n := range all {
+
+		// Users
 		for _, u := range users {
 			if n.OwnerID == u.ID {
 				all[i].Owner = *u
 				break
+			}
+		}
+
+		// List infos
+		for _, l := range lists {
+			if n.ID == l.NamespaceID {
+				all[i].Lists = append(all[i].Lists, l)
 			}
 		}
 	}
