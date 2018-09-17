@@ -11,10 +11,14 @@ func (ul *ListUser) ReadAll(user *User) (interface{}, error) {
 		return nil, ErrNeedToHaveListReadAccess{}
 	}
 
+	type userWithRight struct {
+		User  `xorm:"extends"`
+		Right UserRight `json:"right"`
+	}
+
 	// Get all users
-	all := []*User{}
+	all := []*userWithRight{}
 	err = x.
-		Select("users.*").
 		Join("INNER", "users_list", "user_id = users.id").
 		Where("users_list.list_id = ?", ul.ListID).
 		Find(&all)
