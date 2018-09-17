@@ -12,9 +12,8 @@ func (tl *TeamList) ReadAll(user *User) (interface{}, error) {
 	}
 
 	// Get the teams
-	all := []*Team{}
-
-	err = x.Select("teams.*").
+	all := []*teamWithRight{}
+	err = x.
 		Table("teams").
 		Join("INNER", "team_list", "team_id = teams.id").
 		Where("team_list.list_id = ?", tl.ListID).

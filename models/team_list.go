@@ -18,3 +18,8 @@ type TeamList struct {
 func (TeamList) TableName() string {
 	return "team_list"
 }
+
+type teamWithRight struct {
+	Team `xorm:"extends"`
+	Right TeamRight `json:"right"`
+}
