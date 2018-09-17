@@ -11,11 +11,6 @@ func (ul *ListUser) ReadAll(user *User) (interface{}, error) {
 		return nil, ErrNeedToHaveListReadAccess{}
 	}
 
-	type userWithRight struct {
-		User  `xorm:"extends"`
-		Right UserRight `json:"right"`
-	}
-
 	// Get all users
 	all := []*userWithRight{}
 	err = x.

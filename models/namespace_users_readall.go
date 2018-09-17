@@ -12,9 +12,8 @@ func (un *NamespaceUser) ReadAll(user *User) (interface{}, error) {
 	}
 
 	// Get all users
-	all := []*User{}
+	all := []*userWithRight{}
 	err = x.
-		Select("users.*").
 		Join("INNER", "users_namespace", "user_id = users.id").
 		Where("users_namespace.namespace_id = ?", un.NamespaceID).
 		Find(&all)

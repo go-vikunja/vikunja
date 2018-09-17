@@ -18,3 +18,8 @@ type ListUser struct {
 func (ListUser) TableName() string {
 	return "users_list"
 }
+
+type userWithRight struct {
+	User  `xorm:"extends"`
+	Right UserRight `json:"right"`
+}
