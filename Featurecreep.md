@@ -211,6 +211,7 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
 * [x] Wenn die ID bei irgendeiner GetByID... Methode < 1 ist soll ein error not exist geworfen werden
 * [ ] Bei den Structs "AfterLoad" raus, das verbraucht bei Gruppenabfragen zu viele SQL-Abfragen -> Die sollen einfach die entsprechenden Read()-Methoden verwenden (Krassestes bsp. ist GET /namespaces mit so ca 50 Abfragen)
 * [ ] Methode einbauen, um mit einem gültigen token ein neues gültiges zu kriegen
+* [ ] Wir brauchen noch ne gute idee, wie man die listen kriegt, auf die man nur so Zugriff hat
 
 ### Later/Nice to have
 
