@@ -48,7 +48,7 @@
 				</p>
 			</header>
 			<div class="card-content content team-members">
-				<form @submit.prevent="addUser()" class="add-member-form">
+				<form @submit.prevent="addUser()" class="add-member-form" v-if="userIsAdmin">
 					<div class="field is-grouped">
 						<p class="control has-icons-left is-expanded" v-bind:class="{ 'is-loading': loading}">
 							<input class="input" v-bind:class="{ 'disabled': loading}" v-model.number="newUser.id" type="text" placeholder="Add a new user...">
