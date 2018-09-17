@@ -156,7 +156,7 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
       * [x] ReadAll
       * [x] Delete
 
-* [ ] /namespaces soll zumindest auch die namen (+id) der dazugehörigen Listen rausgeben
+* [x] /namespaces soll zumindest auch die namen (+id) der dazugehörigen Listen rausgeben
 * [ ] Endpoint um nach Usern zu suchen, erstmal nur mit Nutzernamen, später mit setting ob auch mit email gesucht werden darf
 
 ## Feature-Ideen
@@ -209,6 +209,7 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
 * [x] Cacher konfigurierbar
 * [ ] Validation der ankommenden structs, am besten mit https://github.com/go-validator/validator
 * [x] Wenn die ID bei irgendeiner GetByID... Methode < 1 ist soll ein error not exist geworfen werden
+* [ ] Bei den Structs "AfterLoad" raus, das verbraucht bei Gruppenabfragen zu viele SQL-Abfragen -> Die sollen einfach die entsprechenden Read()-Methoden verwenden (Krassestes bsp. ist GET /namespaces mit so ca 50 Abfragen)
 
 ### Later/Nice to have
 
