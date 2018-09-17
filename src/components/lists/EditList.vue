@@ -91,9 +91,9 @@
 							</template>
 						</td>
 						<td class="actions" v-if="userIsAdmin">
-							<button @click="toggleUserType(u.id, u.admin)" class="button buttonright is-primary" v-if="u.id !== user.infos.id">
+							<button @click="toggleUserType(u.id, (u.right === 2))" class="button buttonright is-primary" v-if="u.id !== user.infos.id">
 								Make
-								<template v-if="!u.admin">
+								<template v-if="u.right === 2">
 									Admin
 								</template>
 								<template v-else>
@@ -120,6 +120,17 @@
 			<p slot="text">Are you sure you want to delete this list and all of its contents?
 				<br/>This includes all tasks and <b>CANNOT BE UNDONE!</b></p>
 		</modal>
+
+		<!-- User delete modal -->
+		<modal
+				v-if="showUserDeleteModal"
+				@close="showUserDeleteModal = false"
+				v-on:submit="deleteUser()">
+			<span slot="header">Remove a user from the team</span>
+			<p slot="text">Are you sure you want to remove this user from the team?<br/>
+				He will loose access to all lists and namespaces this team has access to.<br/>
+				<b>This CANNOT BE UNDONE!</b></p>
+		</modal>
 	</div>
 </template>
 
@@ -140,7 +151,9 @@
 				listUsers: [],
 				user: auth.user,
 				userIsAdmin: false,
-				newUser: {user_id: 0}
+				newUser: {user_id: 0},
+				showUserDeleteModal: false,
+				userToDelete: 0,
             }
         },
         beforeMount() {
@@ -215,6 +228,17 @@
                         this.handleError(e)
                     })
             },
+			deleteUser() {
+				HTTP.delete(`lists/` + this.$route.params.id + `/users/` + this.userToDelete, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
+					.then(() => {
+						this.showUserDeleteModal = false;
+						this.handleSuccess({message: 'The user was successfully deleted from the list.'})
+						this.loadUsers()
+					})
+					.catch(e => {
+						this.handleError(e)
+					})
+			},
 			addUser(admin) {
 				if(admin === null) {
 					admin = false
@@ -232,6 +256,12 @@
 					.catch(e => {
 						this.handleError(e)
 					})
+			},
+			toggleUserType(userid, current) {
+				this.userToDelete = userid
+				this.newUser.user_id = userid
+				this.deleteUser()
+				this.addUser(!current)
 			},
             handleError(e) {
                 this.loading = false
