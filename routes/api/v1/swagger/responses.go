@@ -93,3 +93,17 @@ type swaggerResponseTeamNamespace struct {
 	// in:body
 	Body models.TeamNamespace `json:"body"`
 }
+
+// UserList
+// swagger:response UserList
+type swaggerResponseUserList struct {
+	// in:body
+	Body models.ListUser `json:"body"`
+}
+
+// UserNamespace
+// swagger:response UserNamespace
+type swaggerResponseUserNamespace struct {
+	// in:body
+	Body models.NamespaceUser `json:"body"`
+}

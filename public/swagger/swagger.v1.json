@@ -191,7 +191,7 @@
           "application/json"
         ],
         "tags": [
-          "teams"
+          "sharing"
         ],
         "summary": "gets all teams which have access to the list",
         "operationId": "getTeamsByList",
@@ -224,14 +224,14 @@
           "application/json"
         ],
         "tags": [
-          "teams"
+          "sharing"
         ],
         "summary": "adds a team to a list",
         "operationId": "addTeamToList",
         "parameters": [
           {
             "type": "string",
-            "description": "ID of the list to show",
+            "description": "ID of the list to use",
             "name": "listID",
             "in": "path",
             "required": true
@@ -266,14 +266,14 @@
           "application/json"
         ],
         "tags": [
-          "teams"
+          "sharing"
         ],
         "summary": "removes a team from a list",
         "operationId": "deleteTeamFromList",
         "parameters": [
           {
             "type": "string",
-            "description": "ID of the list",
+            "description": "ID of the list to use",
             "name": "listID",
             "in": "path",
             "required": true
@@ -282,6 +282,123 @@
             "type": "string",
             "description": "ID of the team to remove",
             "name": "teamID",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/Message"
+          },
+          "400": {
+            "$ref": "#/responses/Message"
+          },
+          "500": {
+            "$ref": "#/responses/Message"
+          }
+        }
+      }
+    },
+    "/lists/{listID}/users": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "sharing"
+        ],
+        "summary": "gets all users which have access to the list",
+        "operationId": "getUsersByList",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "ID of the list to show",
+            "name": "listID",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/User"
+          },
+          "400": {
+            "$ref": "#/responses/Message"
+          },
+          "500": {
+            "$ref": "#/responses/Message"
+          }
+        }
+      },
+      "put": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "sharing"
+        ],
+        "summary": "adds a user to a list",
+        "operationId": "addUserToList",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "ID of the list to use",
+            "name": "listID",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/UserList"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/UserList"
+          },
+          "400": {
+            "$ref": "#/responses/Message"
+          },
+          "500": {
+            "$ref": "#/responses/Message"
+          }
+        }
+      }
+    },
+    "/lists/{listID}/users/{userID}": {
+      "delete": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "sharing"
+        ],
+        "summary": "removes a user from a list",
+        "operationId": "deleteUserFromList",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "ID of the list to use",
+            "name": "listID",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "ID of the user to remove",
+            "name": "userID",
             "in": "path",
             "required": true
           }
@@ -598,7 +715,7 @@
           "application/json"
         ],
         "tags": [
-          "teams"
+          "sharing"
         ],
         "summary": "gets all teams which have access to that namespace",
         "operationId": "getNamespaceTeams",
@@ -631,14 +748,14 @@
           "application/json"
         ],
         "tags": [
-          "teams"
+          "sharing"
         ],
         "summary": "Gives a team access to a namespace",
-        "operationId": "addTeamToNamespace",
+        "operationId": "giveTeamAccessToNamespace",
         "parameters": [
           {
             "type": "string",
-            "description": "ID of the namespace that list should belong to",
+            "description": "ID of the namespace to use",
             "name": "namespaceID",
             "in": "path",
             "required": true
@@ -677,14 +794,14 @@
           "application/json"
         ],
         "tags": [
-          "teams"
+          "sharing"
         ],
         "summary": "Removes a team from a namespace",
         "operationId": "removeTeamFromNamespace",
         "parameters": [
           {
             "type": "string",
-            "description": "ID of the namespace",
+            "description": "ID of the namespace to use",
             "name": "namespaceID",
             "in": "path",
             "required": true
@@ -693,6 +810,130 @@
             "type": "string",
             "description": "ID of the team you want to remove",
             "name": "teamID",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/Message"
+          },
+          "400": {
+            "$ref": "#/responses/Message"
+          },
+          "403": {
+            "$ref": "#/responses/Message"
+          },
+          "500": {
+            "$ref": "#/responses/Message"
+          }
+        }
+      }
+    },
+    "/namespaces/{namespaceID}/users": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "sharing"
+        ],
+        "summary": "gets all users which have access to that namespace",
+        "operationId": "getNamespaceUsers",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "ID of the namespace to show",
+            "name": "namespaceID",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/User"
+          },
+          "400": {
+            "$ref": "#/responses/Message"
+          },
+          "500": {
+            "$ref": "#/responses/Message"
+          }
+        }
+      },
+      "put": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "sharing"
+        ],
+        "summary": "Gives a user access to a namespace",
+        "operationId": "giveUserAccessToNamespace",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "ID of the namespace to use",
+            "name": "namespaceID",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/UserNamespace"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/UserNamespace"
+          },
+          "400": {
+            "$ref": "#/responses/Message"
+          },
+          "403": {
+            "$ref": "#/responses/Message"
+          },
+          "500": {
+            "$ref": "#/responses/Message"
+          }
+        }
+      }
+    },
+    "/namespaces/{namespaceID}/users/{userID}": {
+      "delete": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "sharing"
+        ],
+        "summary": "Removes a user from a namespace",
+        "operationId": "removeUserFromNamespace",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "ID of the namespace to use",
+            "name": "namespaceID",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "ID of the user you want to remove",
+            "name": "userID",
             "in": "path",
             "required": true
           }
@@ -1216,6 +1457,41 @@
       },
       "x-go-package": "code.vikunja.io/api/models"
     },
+    "ListUser": {
+      "description": "ListUser represents a list \u003c-\u003e user relation",
+      "type": "object",
+      "properties": {
+        "created": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "Created"
+        },
+        "id": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "ID"
+        },
+        "list_id": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "ListID"
+        },
+        "right": {
+          "$ref": "#/definitions/UserRight"
+        },
+        "updated": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "Updated"
+        },
+        "user_id": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "UserID"
+        }
+      },
+      "x-go-package": "code.vikunja.io/api/models"
+    },
     "Message": {
       "description": "Message is a standard message",
       "type": "object",
@@ -1256,6 +1532,41 @@
           "type": "integer",
           "format": "int64",
           "x-go-name": "Updated"
+        }
+      },
+      "x-go-package": "code.vikunja.io/api/models"
+    },
+    "NamespaceUser": {
+      "description": "NamespaceUser represents a namespace \u003c-\u003e user relation",
+      "type": "object",
+      "properties": {
+        "created": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "Created"
+        },
+        "id": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "ID"
+        },
+        "namespace_id": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "NamespaceID"
+        },
+        "right": {
+          "$ref": "#/definitions/UserRight"
+        },
+        "updated": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "Updated"
+        },
+        "user_id": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "UserID"
         }
       },
       "x-go-package": "code.vikunja.io/api/models"
@@ -1470,6 +1781,12 @@
         }
       },
       "x-go-package": "code.vikunja.io/api/models"
+    },
+    "UserRight": {
+      "description": "UserRight defines the rights users can have for lists/namespaces",
+      "type": "integer",
+      "format": "int64",
+      "x-go-package": "code.vikunja.io/api/models"
     }
   },
   "responses": {
@@ -1543,10 +1860,22 @@
         "$ref": "#/definitions/User"
       }
     },
+    "UserList": {
+      "description": "UserList",
+      "schema": {
+        "$ref": "#/definitions/ListUser"
+      }
+    },
+    "UserNamespace": {
+      "description": "UserNamespace",
+      "schema": {
+        "$ref": "#/definitions/NamespaceUser"
+      }
+    },
     "parameterBodies": {
       "description": "parameterBodies",
       "schema": {
-        "$ref": "#/definitions/TeamNamespace"
+        "$ref": "#/definitions/NamespaceUser"
       }
     }
   }

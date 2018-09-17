@@ -34,4 +34,10 @@ type swaggerParameterBodies struct {
 
 	// in:body
 	TeamNamespace models.TeamNamespace
+
+	// in:body
+	ListUser models.ListUser
+
+	// in:body
+	NamespaceUser models.NamespaceUser
 }

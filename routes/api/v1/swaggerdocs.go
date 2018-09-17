@@ -149,62 +149,6 @@ package v1
 //   "500":
 //     "$ref": "#/responses/Message"
 
-// swagger:operation PUT /namespaces/{namespaceID}/teams teams addTeamToNamespace
-// ---
-// summary: Gives a team access to a namespace
-// consumes:
-// - application/json
-// produces:
-// - application/json
-// parameters:
-// - name: namespaceID
-//   in: path
-//   description: ID of the namespace that list should belong to
-//   type: string
-//   required: true
-// - name: body
-//   in: body
-//   required: true
-//   schema:
-//     "$ref": "#/definitions/TeamNamespace"
-// responses:
-//   "200":
-//     "$ref": "#/responses/TeamNamespace"
-//   "400":
-//     "$ref": "#/responses/Message"
-//   "403":
-//     "$ref": "#/responses/Message"
-//   "500":
-//     "$ref": "#/responses/Message"
-
-// swagger:operation DELETE /namespaces/{namespaceID}/teams/{teamID} teams removeTeamFromNamespace
-// ---
-// summary: Removes a team from a namespace
-// consumes:
-// - application/json
-// produces:
-// - application/json
-// parameters:
-// - name: namespaceID
-//   in: path
-//   description: ID of the namespace
-//   type: string
-//   required: true
-// - name: teamID
-//   in: path
-//   description: ID of the team you want to remove
-//   type: string
-//   required: true
-// responses:
-//   "200":
-//     "$ref": "#/responses/Message"
-//   "400":
-//     "$ref": "#/responses/Message"
-//   "403":
-//     "$ref": "#/responses/Message"
-//   "500":
-//     "$ref": "#/responses/Message"
-
 // swagger:operation POST /lists/{listID} lists upadteList
 // ---
 // summary: Updates a list
@@ -361,27 +305,6 @@ package v1
 //   "500":
 //     "$ref": "#/responses/Message"
 
-// swagger:operation GET /namespaces/{namespaceID}/teams teams getNamespaceTeams
-// ---
-// summary: gets all teams which have access to that namespace
-// consumes:
-// - application/json
-// produces:
-// - application/json
-// parameters:
-// - name: namespaceID
-//   in: path
-//   description: ID of the namespace to show
-//   type: string
-//   required: true
-// responses:
-//   "200":
-//     "$ref": "#/responses/Team"
-//   "400":
-//     "$ref": "#/responses/Message"
-//   "500":
-//     "$ref": "#/responses/Message"
-
 // swagger:operation GET /namespaces namespaces getNamespaces
 // ---
 // summary: Get all namespaces the currently logged in user has at least read access
@@ -392,78 +315,6 @@ package v1
 // responses:
 //   "200":
 //     "$ref": "#/responses/Namespace"
-//   "500":
-//     "$ref": "#/responses/Message"
-
-// swagger:operation GET /lists/{listID}/teams teams getTeamsByList
-// ---
-// summary: gets all teams which have access to the list
-// consumes:
-// - application/json
-// produces:
-// - application/json
-// parameters:
-// - name: listID
-//   in: path
-//   description: ID of the list to show
-//   type: string
-//   required: true
-// responses:
-//   "200":
-//     "$ref": "#/responses/Team"
-//   "400":
-//     "$ref": "#/responses/Message"
-//   "500":
-//     "$ref": "#/responses/Message"
-
-// swagger:operation PUT /lists/{listID}/teams teams addTeamToList
-// ---
-// summary: adds a team to a list
-// consumes:
-// - application/json
-// produces:
-// - application/json
-// parameters:
-// - name: listID
-//   in: path
-//   description: ID of the list to show
-//   type: string
-//   required: true
-// - name: body
-//   in: body
-//   schema:
-//     "$ref": "#/definitions/TeamList"
-// responses:
-//   "200":
-//     "$ref": "#/responses/TeamList"
-//   "400":
-//     "$ref": "#/responses/Message"
-//   "500":
-//     "$ref": "#/responses/Message"
-
-// swagger:operation DELETE /lists/{listID}/teams/{teamID} teams deleteTeamFromList
-// ---
-// summary: removes a team from a list
-// consumes:
-// - application/json
-// produces:
-// - application/json
-// parameters:
-// - name: listID
-//   in: path
-//   description: ID of the list
-//   type: string
-//   required: true
-// - name: teamID
-//   in: path
-//   description: ID of the team to remove
-//   type: string
-//   required: true
-// responses:
-//   "200":
-//     "$ref": "#/responses/Message"
-//   "400":
-//     "$ref": "#/responses/Message"
 //   "500":
 //     "$ref": "#/responses/Message"
 
@@ -621,6 +472,304 @@ package v1
 // - name: userID
 //   in: path
 //   description: ID of the user you want to remove from the team
+//   type: string
+//   required: true
+// responses:
+//   "200":
+//     "$ref": "#/responses/Message"
+//   "400":
+//     "$ref": "#/responses/Message"
+//   "403":
+//     "$ref": "#/responses/Message"
+//   "500":
+//     "$ref": "#/responses/Message"
+
+// swagger:operation GET /namespaces/{namespaceID}/teams sharing getNamespaceTeams
+// ---
+// summary: gets all teams which have access to that namespace
+// consumes:
+// - application/json
+// produces:
+// - application/json
+// parameters:
+// - name: namespaceID
+//   in: path
+//   description: ID of the namespace to show
+//   type: string
+//   required: true
+// responses:
+//   "200":
+//     "$ref": "#/responses/Team"
+//   "400":
+//     "$ref": "#/responses/Message"
+//   "500":
+//     "$ref": "#/responses/Message"
+
+// swagger:operation GET /lists/{listID}/teams sharing getTeamsByList
+// ---
+// summary: gets all teams which have access to the list
+// consumes:
+// - application/json
+// produces:
+// - application/json
+// parameters:
+// - name: listID
+//   in: path
+//   description: ID of the list to show
+//   type: string
+//   required: true
+// responses:
+//   "200":
+//     "$ref": "#/responses/Team"
+//   "400":
+//     "$ref": "#/responses/Message"
+//   "500":
+//     "$ref": "#/responses/Message"
+
+// swagger:operation PUT /lists/{listID}/teams sharing addTeamToList
+// ---
+// summary: adds a team to a list
+// consumes:
+// - application/json
+// produces:
+// - application/json
+// parameters:
+// - name: listID
+//   in: path
+//   description: ID of the list to use
+//   type: string
+//   required: true
+// - name: body
+//   in: body
+//   schema:
+//     "$ref": "#/definitions/TeamList"
+// responses:
+//   "200":
+//     "$ref": "#/responses/TeamList"
+//   "400":
+//     "$ref": "#/responses/Message"
+//   "500":
+//     "$ref": "#/responses/Message"
+
+// swagger:operation DELETE /lists/{listID}/teams/{teamID} sharing deleteTeamFromList
+// ---
+// summary: removes a team from a list
+// consumes:
+// - application/json
+// produces:
+// - application/json
+// parameters:
+// - name: listID
+//   in: path
+//   description: ID of the list to use
+//   type: string
+//   required: true
+// - name: teamID
+//   in: path
+//   description: ID of the team to remove
+//   type: string
+//   required: true
+// responses:
+//   "200":
+//     "$ref": "#/responses/Message"
+//   "400":
+//     "$ref": "#/responses/Message"
+//   "500":
+//     "$ref": "#/responses/Message"
+
+// swagger:operation PUT /namespaces/{namespaceID}/teams sharing giveTeamAccessToNamespace
+// ---
+// summary: Gives a team access to a namespace
+// consumes:
+// - application/json
+// produces:
+// - application/json
+// parameters:
+// - name: namespaceID
+//   in: path
+//   description: ID of the namespace to use
+//   type: string
+//   required: true
+// - name: body
+//   in: body
+//   required: true
+//   schema:
+//     "$ref": "#/definitions/TeamNamespace"
+// responses:
+//   "200":
+//     "$ref": "#/responses/TeamNamespace"
+//   "400":
+//     "$ref": "#/responses/Message"
+//   "403":
+//     "$ref": "#/responses/Message"
+//   "500":
+//     "$ref": "#/responses/Message"
+
+// swagger:operation DELETE /namespaces/{namespaceID}/teams/{teamID} sharing removeTeamFromNamespace
+// ---
+// summary: Removes a team from a namespace
+// consumes:
+// - application/json
+// produces:
+// - application/json
+// parameters:
+// - name: namespaceID
+//   in: path
+//   description: ID of the namespace to use
+//   type: string
+//   required: true
+// - name: teamID
+//   in: path
+//   description: ID of the team you want to remove
+//   type: string
+//   required: true
+// responses:
+//   "200":
+//     "$ref": "#/responses/Message"
+//   "400":
+//     "$ref": "#/responses/Message"
+//   "403":
+//     "$ref": "#/responses/Message"
+//   "500":
+//     "$ref": "#/responses/Message"
+
+// swagger:operation GET /lists/{listID}/users sharing getUsersByList
+// ---
+// summary: gets all users which have access to the list
+// consumes:
+// - application/json
+// produces:
+// - application/json
+// parameters:
+// - name: listID
+//   in: path
+//   description: ID of the list to show
+//   type: string
+//   required: true
+// responses:
+//   "200":
+//     "$ref": "#/responses/User"
+//   "400":
+//     "$ref": "#/responses/Message"
+//   "500":
+//     "$ref": "#/responses/Message"
+
+// swagger:operation PUT /lists/{listID}/users sharing addUserToList
+// ---
+// summary: adds a user to a list
+// consumes:
+// - application/json
+// produces:
+// - application/json
+// parameters:
+// - name: listID
+//   in: path
+//   description: ID of the list to use
+//   type: string
+//   required: true
+// - name: body
+//   in: body
+//   schema:
+//     "$ref": "#/definitions/UserList"
+// responses:
+//   "200":
+//     "$ref": "#/responses/UserList"
+//   "400":
+//     "$ref": "#/responses/Message"
+//   "500":
+//     "$ref": "#/responses/Message"
+
+// swagger:operation DELETE /lists/{listID}/users/{userID} sharing deleteUserFromList
+// ---
+// summary: removes a user from a list
+// consumes:
+// - application/json
+// produces:
+// - application/json
+// parameters:
+// - name: listID
+//   in: path
+//   description: ID of the list to use
+//   type: string
+//   required: true
+// - name: userID
+//   in: path
+//   description: ID of the user to remove
+//   type: string
+//   required: true
+// responses:
+//   "200":
+//     "$ref": "#/responses/Message"
+//   "400":
+//     "$ref": "#/responses/Message"
+//   "500":
+//     "$ref": "#/responses/Message"
+
+// swagger:operation GET /namespaces/{namespaceID}/users sharing getNamespaceUsers
+// ---
+// summary: gets all users which have access to that namespace
+// consumes:
+// - application/json
+// produces:
+// - application/json
+// parameters:
+// - name: namespaceID
+//   in: path
+//   description: ID of the namespace to show
+//   type: string
+//   required: true
+// responses:
+//   "200":
+//     "$ref": "#/responses/User"
+//   "400":
+//     "$ref": "#/responses/Message"
+//   "500":
+//     "$ref": "#/responses/Message"
+
+// swagger:operation PUT /namespaces/{namespaceID}/users sharing giveUserAccessToNamespace
+// ---
+// summary: Gives a user access to a namespace
+// consumes:
+// - application/json
+// produces:
+// - application/json
+// parameters:
+// - name: namespaceID
+//   in: path
+//   description: ID of the namespace to use
+//   type: string
+//   required: true
+// - name: body
+//   in: body
+//   required: true
+//   schema:
+//     "$ref": "#/definitions/UserNamespace"
+// responses:
+//   "200":
+//     "$ref": "#/responses/UserNamespace"
+//   "400":
+//     "$ref": "#/responses/Message"
+//   "403":
+//     "$ref": "#/responses/Message"
+//   "500":
+//     "$ref": "#/responses/Message"
+
+// swagger:operation DELETE /namespaces/{namespaceID}/users/{userID} sharing removeUserFromNamespace
+// ---
+// summary: Removes a user from a namespace
+// consumes:
+// - application/json
+// produces:
+// - application/json
+// parameters:
+// - name: namespaceID
+//   in: path
+//   description: ID of the namespace to use
+//   type: string
+//   required: true
+// - name: userID
+//   in: path
+//   description: ID of the user you want to remove
 //   type: string
 //   required: true
 // responses:
