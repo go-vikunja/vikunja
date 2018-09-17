@@ -212,7 +212,8 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
 * [ ] Bei den Structs "AfterLoad" raus, das verbraucht bei Gruppenabfragen zu viele SQL-Abfragen -> Die sollen einfach die entsprechenden Read()-Methoden verwenden (Krassestes bsp. ist GET /namespaces mit so ca 50 Abfragen)
 * [ ] Methode einbauen, um mit einem gültigen token ein neues gültiges zu kriegen
 * [ ] Wir brauchen noch ne gute idee, wie man die listen kriegt, auf die man nur so Zugriff hat
-* [ ] /users sollte die rechte mit ausgeben
+* [ ] /users sollte die Rechte mit ausgeben
+* [ ] Nen endpoint um /teams/members /list/users etc die Rechte updazudaten ohne erst zu löschen und dann neu einzufügen
 
 ### Later/Nice to have
 
