@@ -23,7 +23,8 @@
 * [x] Hintergrund durch das mit den Lamas von Freepick austauschen
 * [ ] Google fonts raus (sollen von lokal geladen werden)
 * [ ] Lizenz einfügen!
-* [ ] Badges einfügen
+* [x] Badges einfügen
+* [ ] Runterladelink erwähnen
 
 * [x] Teams
     * [x] Mglkt zum Erstellen von neuen Teams
@@ -34,10 +35,10 @@
 	    * [x] Löschen ermöglichen
 
 * [ ] Sharingshit
-    * [ ] Listen für Nutzer
-        * [ ] freigeben
-        * [ ] entfernen
-        * [ ] Einstellmglkt für Rechte
+    * [x] Listen für Nutzer
+        * [x] freigeben
+        * [x] entfernen
+        * [x] Einstellmglkt für Rechte
     * [ ] Listen für Teams
         * [ ] freigeben
         * [ ] entfernen
