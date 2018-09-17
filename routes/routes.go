@@ -139,4 +139,6 @@ func RegisterRoutes(e *echo.Echo) {
 	}
 	a.PUT("/teams/:team/members", teamMemberHandler.CreateWeb)
 	a.DELETE("/teams/:team/members/:user", teamMemberHandler.DeleteWeb)
+
+	a.GET("/user", apiv1.UserShow)
 }
