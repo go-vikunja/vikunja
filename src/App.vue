@@ -113,24 +113,7 @@
                 this.namespaces = []
                 HTTP.get(`namespaces`, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
                     .then(response => {
-
-                        let nps = response.data
-
-                        // Loop through the namespaces and get their lists
-                        for (const n in nps) {
-
-                            this.namespaces.push(nps[n])
-
-                            HTTP.get(`namespaces/` + nps[n].id + `/lists`, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
-                                .then(response => {
-                                    // This adds a new element "list" to our object which contains all lists
-                                    this.$set(this.namespaces[n], 'lists', response.data)
-                                })
-                                .catch(e => {
-                                    this.handleError(e)
-                                })
-                        }
-
+						this.$set(this, 'namespaces', response.data)
                         this.loading = false
                     })
                     .catch(e => {
