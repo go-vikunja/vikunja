@@ -39,10 +39,10 @@
         * [x] freigeben
         * [x] entfernen
         * [x] Einstellmglkt für Rechte
-    * [ ] Listen für Teams
-        * [ ] freigeben
-        * [ ] entfernen
-        * [ ] Einstellmglkt für Rechte
+    * [x] Listen für Teams
+        * [x] freigeben
+        * [x] entfernen
+        * [x] Einstellmglkt für Rechte
     * [ ] Namespaces für Nutzer
         * [ ] freigeben
         * [ ] entfernen
