@@ -183,4 +183,37 @@
 			color: rgb(74, 74, 74);
 		}
 	}
+
+   .bigbuttons{
+		margin-top: 0.5rem;
+   }
+
+	.card{
+		margin-bottom: 1rem;
+
+		.add-user-form, .add-team-form {
+			margin: 1rem;
+		}
+
+		.table{
+			border-top: 1px solid darken(#fff, 15%);
+
+			td{
+				vertical-align: middle;
+			}
+
+			td.type, td.actions{
+				width: 200px;
+			}
+
+			td.actions{
+				text-align: right;
+			}
+		}
+	}
+
+	.users-list, .teams-list,
+	.users-namespace, .teams-namespace{
+		padding: 0 !important;
+	}
 </style>
