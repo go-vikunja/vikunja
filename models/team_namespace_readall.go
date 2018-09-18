@@ -12,10 +12,9 @@ func (tn *TeamNamespace) ReadAll(user *User) (interface{}, error) {
 	}
 
 	// Get the teams
-	all := []*Team{}
+	all := []*teamWithRight{}
 
-	err = x.Select("teams.*").
-		Table("teams").
+	err = x.Table("teams").
 		Join("INNER", "team_namespaces", "team_id = teams.id").
 		Where("team_namespaces.namespace_id = ?", tn.NamespaceID).
 		Find(&all)
