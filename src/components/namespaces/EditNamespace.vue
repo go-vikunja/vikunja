@@ -77,27 +77,33 @@
 							</template>
 						</td>
 						<td class="type">
-							<template v-if="u.admin">
+							<template v-if="u.right === 2">
 									<span class="icon is-small">
 										<icon icon="lock"/>
 									</span>
 								Admin
 							</template>
+							<template v-else-if="u.right === 1">
+									<span class="icon is-small">
+										<icon icon="pen"/>
+									</span>
+								Write
+							</template>
 							<template v-else>
 									<span class="icon is-small">
-										<icon icon="user"/>
+										<icon icon="users"/>
 									</span>
-								Member
+								Read-only
 							</template>
 						</td>
 						<td class="actions" v-if="userIsAdmin">
 							<button @click="toggleUserType(u.id, (u.right === 2))" class="button buttonright is-primary" v-if="u.id !== user.infos.id">
 								Make
 								<template v-if="u.right === 2">
-									Admin
+									Member
 								</template>
 								<template v-else>
-									Member
+									Admin
 								</template>
 							</button>
 							<button @click="userToDelete = u.id; showUserDeleteModal = true" class="button is-danger" v-if="u.id !== user.infos.id">
