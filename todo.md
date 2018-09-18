@@ -21,10 +21,11 @@
     * [x] Bug fixen der auf try dafür sorgt dass beim Abhaken die checkbox nicht geupdated wird
     * [x] Task löschen btn bei bearbeiten
 * [x] Hintergrund durch das mit den Lamas von Freepick austauschen
+* [x] Badges einfügen
 * [ ] Google fonts raus (sollen von lokal geladen werden)
 * [ ] Lizenz einfügen!
-* [x] Badges einfügen
 * [ ] Runterladelink erwähnen
+* [ ] Den Kram für Teams & user managen in ne eigene Komponente auslagern, das ist ja fast das selbe
 
 * [x] Teams
     * [x] Mglkt zum Erstellen von neuen Teams
@@ -34,7 +35,7 @@
             * [x] In den Teams, in denen der Nutzer admin ist, Bearbeitung ermöglichen
 	    * [x] Löschen ermöglichen
 
-* [ ] Sharingshit
+* [x] Sharingshit
     * [x] Listen für Nutzer
         * [x] freigeben
         * [x] entfernen
@@ -43,11 +44,11 @@
         * [x] freigeben
         * [x] entfernen
         * [x] Einstellmglkt für Rechte
-    * [ ] Namespaces für Nutzer
-        * [ ] freigeben
-        * [ ] entfernen
-        * [ ] Einstellmglkt für Rechte
-    * [ ] Namespaces für Teams
-        * [ ] freigeben
-        * [ ] entfernen
-        * [ ] Einstellmglkt für Rechte
+    * [x] Namespaces für Nutzer
+        * [x] freigeben
+        * [x] entfernen
+        * [x] Einstellmglkt für Rechte
+    * [x] Namespaces für Teams
+        * [x] freigeben
+        * [x] entfernen
+        * [x] Einstellmglkt für Rechte
