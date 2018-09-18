@@ -241,7 +241,6 @@
 				userToDelete: 0,
 
 				listTeams: [],
-				teamIsAdmin: false,
 				newTeam: {team_id: 0},
 				showTeamDeleteModal: false,
 				teamToDelete: 0,
@@ -278,18 +277,6 @@
                         this.handleError(e)
                     })
             },
-			loadUsers() {
-				// Get all users with access to the list
-				HTTP.get(`lists/` + this.$route.params.id + `/users`, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
-					.then(response => {
-						response.data.push(this.list.owner)
-						this.$set(this, 'listUsers', response.data)
-						this.loading = false
-					})
-					.catch(e => {
-						this.handleError(e)
-					})
-			},
             submit() {
                 this.loading = true
 
@@ -320,6 +307,18 @@
                         this.handleError(e)
                     })
             },
+			loadUsers() {
+				// Get all users with access to the list
+				HTTP.get(`lists/` + this.$route.params.id + `/users`, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
+					.then(response => {
+						response.data.push(this.list.owner)
+						this.$set(this, 'listUsers', response.data)
+						this.loading = false
+					})
+					.catch(e => {
+						this.handleError(e)
+					})
+			},
 			deleteUser() {
 				HTTP.delete(`lists/` + this.$route.params.id + `/users/` + this.userToDelete, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
 					.then(() => {
@@ -411,37 +410,3 @@
         }
     }
 </script>
-
-<style lang="scss" scoped>
-	.bigbuttons{
-		margin-top: 0.5rem;
-	}
-
-	.card{
-		margin-bottom: 1rem;
-
-		.add-user-form, .add-team-form {
-			margin: 1rem;
-		}
-
-		.table{
-			border-top: 1px solid darken(#fff, 15%);
-
-			td{
-				vertical-align: middle;
-			}
-
-			td.type, td.actions{
-				width: 200px;
-			}
-
-			td.actions{
-				text-align: right;
-			}
-		}
-	}
-
-	.users-list, .teams-list{
-		padding: 0;
-	}
-</style>
