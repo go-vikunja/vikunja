@@ -179,6 +179,32 @@
 	}
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
+	.card{
+		margin-bottom: 1rem;
 
+		.add-user-form {
+			margin: 1rem;
+		}
+
+		.table{
+			border-top: 1px solid darken(#fff, 15%);
+
+			td{
+				vertical-align: middle;
+			}
+
+			td.type, td.actions{
+				width: 200px;
+			}
+
+			td.actions{
+				text-align: right;
+			}
+		}
+	}
+
+	.users-list, .users-namespace{
+		padding: 0 !important;
+	}
 </style>
