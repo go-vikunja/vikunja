@@ -22,10 +22,10 @@
     * [x] Task löschen btn bei bearbeiten
 * [x] Hintergrund durch das mit den Lamas von Freepick austauschen
 * [x] Badges einfügen
+* [X] Lizenz einfügen!
+* [X] Runterladelink erwähnen
+* [x] Den Kram für Teams & user managen in ne eigene Komponente auslagern, das ist ja fast das selbe
 * [ ] Google fonts raus (sollen von lokal geladen werden)
-* [ ] Lizenz einfügen!
-* [ ] Runterladelink erwähnen
-* [ ] Den Kram für Teams & user managen in ne eigene Komponente auslagern, das ist ja fast das selbe
 
 * [x] Teams
     * [x] Mglkt zum Erstellen von neuen Teams
