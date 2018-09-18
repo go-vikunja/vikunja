@@ -11,7 +11,9 @@
 * Create TODO lists with tasks
   * Reminder for tasks
 * Namespaces: A "group" which bundels multiple lists
-* Share lists and namespaces with teams with granular permissions
+* Share lists and namespaces with teams and users with granular permissions
+
+Try it under [try.vikunja.io](https://try.vikunja.io)!
 
 ### Roadmap
 
