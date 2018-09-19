@@ -93,6 +93,7 @@ func RegisterRoutes(e *echo.Echo) {
 	a.GET("/lists/:list/teams", listTeamHandler.ReadAllWeb)
 	a.PUT("/lists/:list/teams", listTeamHandler.CreateWeb)
 	a.DELETE("/lists/:list/teams/:team", listTeamHandler.DeleteWeb)
+	a.POST("/lists/:list/teams/:team", listTeamHandler.UpdateWeb)
 
 	listUserHandler := &crud.WebHandler{
 		CObject: &models.ListUser{},
