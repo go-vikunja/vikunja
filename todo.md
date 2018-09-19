@@ -52,3 +52,4 @@
         * [x] freigeben
         * [x] entfernen
         * [x] Einstellmglkt für Rechte
+* [x] Den Sharing-Updateshit mit der neuen methode machen (post)

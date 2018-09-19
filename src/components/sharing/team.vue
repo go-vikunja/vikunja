@@ -160,10 +160,19 @@
 					})
 			},
 			toggleTeamType(teamid, current) {
-				this.teamToDelete = teamid
-				this.newTeam.team_id = teamid
-				this.deleteTeam()
-				this.addTeam(!current)
+				let right = 0
+				if (!current) {
+					right = 2
+				}
+
+				HTTP.post(this.typeString + `s/` + this.id + `/teams/` + teamid, {right: right}, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
+					.then(() => {
+						this.loadTeams()
+						this.handleSuccess({message: 'The team right was successfully updated.'})
+					})
+					.catch(e => {
+						this.handleError(e)
+					})
 			},
 			handleError(e) {
 				this.loading = false

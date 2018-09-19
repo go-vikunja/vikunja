@@ -162,10 +162,19 @@
 					})
 			},
 			toggleUserType(userid, current) {
-				this.userToDelete = userid
-				this.newUser.user_id = userid
-				this.deleteUser()
-				this.addUser(!current)
+				let right = 0
+				if (!current) {
+					right = 2
+				}
+
+				HTTP.post(this.typeString + `s/` + this.id + `/users/` + userid, {right: right}, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
+					.then(() => {
+						this.loadUsers()
+						this.handleSuccess({message: 'The user right was successfully updated.'})
+					})
+					.catch(e => {
+						this.handleError(e)
+					})
 			},
 			handleError(e) {
 				this.loading = false
