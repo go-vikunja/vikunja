@@ -781,3 +781,135 @@ package v1
 //     "$ref": "#/responses/Message"
 //   "500":
 //     "$ref": "#/responses/Message"
+
+// swagger:operation POST /namespaces/{namespaceID}/users/{userID} sharing updateUserAccessToNamespace
+// ---
+// summary: Updates a users access to a namespace
+// consumes:
+// - application/json
+// produces:
+// - application/json
+// parameters:
+// - name: namespaceID
+//   in: path
+//   description: ID of the namespace to use
+//   type: string
+//   required: true
+// - name: userID
+//   in: path
+//   description: ID of the user to use
+//   type: string
+//   required: true
+// - name: body
+//   in: body
+//   required: true
+//   schema:
+//     "$ref": "#/definitions/NamespaceUser"
+// responses:
+//   "200":
+//     "$ref": "#/responses/NamespaceUser"
+//   "400":
+//     "$ref": "#/responses/Message"
+//   "403":
+//     "$ref": "#/responses/Message"
+//   "500":
+//     "$ref": "#/responses/Message"
+
+// swagger:operation POST /namespaces/{namespaceID}/teams/{teamID} sharing updateTeamAccessToNamespace
+// ---
+// summary: Updates a teams access to a namespace
+// consumes:
+// - application/json
+// produces:
+// - application/json
+// parameters:
+// - name: namespaceID
+//   in: path
+//   description: ID of the namespace to use
+//   type: string
+//   required: true
+// - name: teamID
+//   in: path
+//   description: ID of the team to use
+//   type: string
+//   required: true
+// - name: body
+//   in: body
+//   required: true
+//   schema:
+//     "$ref": "#/definitions/TeamNamespace"
+// responses:
+//   "200":
+//     "$ref": "#/responses/TeamNamespace"
+//   "400":
+//     "$ref": "#/responses/Message"
+//   "403":
+//     "$ref": "#/responses/Message"
+//   "500":
+//     "$ref": "#/responses/Message"
+
+// swagger:operation POST /lists/{listID}/users/{userID} sharing updateUserAccessToList
+// ---
+// summary: Updates a users access to a list
+// consumes:
+// - application/json
+// produces:
+// - application/json
+// parameters:
+// - name: listID
+//   in: path
+//   description: ID of the list to use
+//   type: string
+//   required: true
+// - name: userID
+//   in: path
+//   description: ID of the user to use
+//   type: string
+//   required: true
+// - name: body
+//   in: body
+//   required: true
+//   schema:
+//     "$ref": "#/definitions/UserList"
+// responses:
+//   "200":
+//     "$ref": "#/responses/UserList"
+//   "400":
+//     "$ref": "#/responses/Message"
+//   "403":
+//     "$ref": "#/responses/Message"
+//   "500":
+//     "$ref": "#/responses/Message"
+
+// swagger:operation POST /lists/{listID}/teams/{teamID} sharing updateTeamAccessToList
+// ---
+// summary: Updates a teams access to a list
+// consumes:
+// - application/json
+// produces:
+// - application/json
+// parameters:
+// - name: listID
+//   in: path
+//   description: ID of the list to use
+//   type: string
+//   required: true
+// - name: teamID
+//   in: path
+//   description: ID of the team to use
+//   type: string
+//   required: true
+// - name: body
+//   in: body
+//   required: true
+//   schema:
+//     "$ref": "#/definitions/TeamList"
+// responses:
+//   "200":
+//     "$ref": "#/responses/TeamList"
+//   "400":
+//     "$ref": "#/responses/Message"
+//   "403":
+//     "$ref": "#/responses/Message"
+//   "500":
+//     "$ref": "#/responses/Message"
