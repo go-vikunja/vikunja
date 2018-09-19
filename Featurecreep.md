@@ -214,7 +214,7 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
 * [x] /users sollte die Rechte mit ausgeben
 * [x] Nen endpoint um /teams/members /list/users etc die Rechte updazudaten ohne erst zu löschen und dann neu einzufügen
 * [ ] Search endpoints /users?s=name und /teams?s=name, erstmal nur mit Namen suchen. -> Interface erweitern mit ner Funktion Search?
-* [ ] namespaces & listen updaten geht nicht, gibt nen 500er zurück
+* [x] namespaces & listen updaten geht nicht, gibt nen 500er zurück
 * [x] Logging für alle Fehler irgendwohin, da gibts bestimmt ne coole library für
 
 ### Later/Nice to have
