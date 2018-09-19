@@ -68,11 +68,20 @@ Authorization: Bearer {{auth_token}}
 ###
 
 # Give a user access to that list
-PUT http://localhost:8080/api/v1/lists/28/users
+PUT http://localhost:8080/api/v1/lists/30/users
 Authorization: Bearer {{auth_token}}
 Content-Type: application/json
 
 {"user_id":3, "right":1}
+
+###
+
+# Update a users access to that list
+POST http://localhost:8080/api/v1/lists/30/users/3
+Authorization: Bearer {{auth_token}}
+Content-Type: application/json
+
+{"right":2}
 
 ###
 
