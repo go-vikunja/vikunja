@@ -20,6 +20,7 @@ pipeline:
       - make clean
       - make lint
       - make fmt-check
+      - make swagger-check
       - make build
     when:
       event: [ push, tag, pull_request ]
