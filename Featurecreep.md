@@ -213,8 +213,10 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
 * [ ] Methode einbauen, um mit einem gültigen token ein neues gültiges zu kriegen
 * [ ] Wir brauchen noch ne gute idee, wie man die listen kriegt, auf die man nur so Zugriff hat (ohne namespace)
 * [x] /users sollte die Rechte mit ausgeben
-* [ ] Nen endpoint um /teams/members /list/users etc die Rechte updazudaten ohne erst zu löschen und dann neu einzufügen
+* [x] Nen endpoint um /teams/members /list/users etc die Rechte updazudaten ohne erst zu löschen und dann neu einzufügen
 * [ ] Search endpoints /users?s=name und /teams?s=name, erstmal nur mit Namen suchen. -> Interface erweitern mit ner Funktion Search?
+* [ ] namespaces & listen updaten geht nicht, gibt nen 500er zurück
+* [ ] Logging für alle Fehler irgendwohin, da gibts bestimmt ne coole library für
 
 ### Later/Nice to have
 
