@@ -13,3 +13,10 @@ func (nu *NamespaceUser) CanDelete(doer *User) bool {
 	n, _ := GetNamespaceByID(nu.NamespaceID)
 	return n.CanWrite(doer)
 }
+
+// CanUpdate checks if the user can update a user <-> namespace relation
+func (nu *NamespaceUser) CanUpdate(doer *User) bool {
+	// Get the namespace and check if the user has write access on it
+	n, _ := GetNamespaceByID(nu.NamespaceID)
+	return n.CanWrite(doer)
+}
