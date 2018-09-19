@@ -9,9 +9,11 @@ func CreateOrUpdateList(list *List) (err error) {
 	}
 
 	// Check if the namespace exists
-	_, err = GetNamespaceByID(list.NamespaceID)
-	if err != nil {
-		return err
+	if list.NamespaceID != 0 {
+		_, err = GetNamespaceByID(list.NamespaceID)
+		if err != nil {
+			return err
+		}
 	}
 
 	if list.ID == 0 {
