@@ -11,3 +11,9 @@ func (tn *TeamNamespace) CanDelete(user *User) bool {
 	n, _ := GetNamespaceByID(tn.NamespaceID)
 	return n.IsAdmin(user)
 }
+
+// CanUpdate checks if a user can update a team from a namespace. Only namespace admins can do that.
+func (tn *TeamNamespace) CanUpdate(user *User) bool {
+	n, _ := GetNamespaceByID(tn.NamespaceID)
+	return n.IsAdmin(user)
+}

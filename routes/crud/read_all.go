@@ -24,6 +24,10 @@ func (c *WebHandler) ReadAllWeb(ctx echo.Context) error {
 			return echo.NewHTTPError(http.StatusForbidden, "You need to have read access to this list.")
 		}
 
+		if models.IsErrNamespaceDoesNotExist(err) {
+			return echo.NewHTTPError(http.StatusNotFound, "This namespace does not exist.")
+		}
+
 		return echo.NewHTTPError(http.StatusInternalServerError, "An error occured.")
 	}
 

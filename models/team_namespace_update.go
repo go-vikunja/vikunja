@@ -1,7 +1,7 @@
 package models
 
-// Update updates a team <-> list relation
-func (tl *TeamList) Update() (err error) {
+// Update updates a team <-> namespace relation
+func (tl *TeamNamespace) Update() (err error) {
 
 	// Check if the right is valid
 	if err := tl.Right.isValid(); err != nil {
@@ -9,7 +9,7 @@ func (tl *TeamList) Update() (err error) {
 	}
 
 	_, err = x.
-		Where("list_id = ? AND team_id = ?", tl.ListID, tl.TeamID).
+		Where("namespace_id = ? AND team_id = ?", tl.TeamID, tl.TeamID).
 		Cols("right").
 		Update(tl)
 	return
