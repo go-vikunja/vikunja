@@ -5,7 +5,6 @@ import (
 	"code.vikunja.io/api/routes"
 
 	"context"
-	"fmt"
 	"github.com/spf13/viper"
 	"os"
 	"os/signal"
@@ -17,22 +16,25 @@ var Version = "0.1"
 
 func main() {
 
+	// Init logging
+	models.InitLogger()
+
 	// Init Config
 	err := models.InitConfig()
 	if err != nil {
-		fmt.Println(err)
+		models.Log.Error(err.Error())
 		os.Exit(1)
 	}
 
 	// Set Engine
 	err = models.SetEngine()
 	if err != nil {
-		fmt.Println(err)
+		models.Log.Error(err.Error())
 		os.Exit(1)
 	}
 
 	// Version notification
-	fmt.Println("Vikunja version", Version)
+	models.Log.Infof("Vikunja version %s", Version)
 
 	// Start the webserver
 	e := routes.NewEcho()
@@ -51,7 +53,7 @@ func main() {
 	<-quit
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	fmt.Println("Shutting down...")
+	models.Log.Infof("Sutting down...")
 	if err := e.Shutdown(ctx); err != nil {
 		e.Logger.Fatal(err)
 	}

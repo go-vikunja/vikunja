@@ -157,7 +157,6 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
       * [x] Delete
 
 * [x] /namespaces soll zumindest auch die namen (+id) der dazugehörigen Listen rausgeben
-* [ ] Endpoint um nach Usern zu suchen, erstmal nur mit Nutzernamen, später mit setting ob auch mit email gesucht werden darf
 
 ## Feature-Ideen
 
@@ -216,7 +215,7 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
 * [x] Nen endpoint um /teams/members /list/users etc die Rechte updazudaten ohne erst zu löschen und dann neu einzufügen
 * [ ] Search endpoints /users?s=name und /teams?s=name, erstmal nur mit Namen suchen. -> Interface erweitern mit ner Funktion Search?
 * [ ] namespaces & listen updaten geht nicht, gibt nen 500er zurück
-* [ ] Logging für alle Fehler irgendwohin, da gibts bestimmt ne coole library für
+* [x] Logging für alle Fehler irgendwohin, da gibts bestimmt ne coole library für
 
 ### Later/Nice to have
 

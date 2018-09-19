@@ -26,12 +26,15 @@ func (c *WebHandler) CreateWeb(ctx echo.Context) error {
 
 	// Check rights
 	if !c.CObject.CanCreate(&currentUser) {
+		models.Log.Noticef("%s [ID: %d] tried to create while not having the rights for it", currentUser.Username, currentUser.ID)
 		return echo.NewHTTPError(http.StatusForbidden)
 	}
 
 	// Create
 	err = c.CObject.Create(&currentUser)
 	if err != nil {
+		models.Log.Error(err.Error())
+
 		if models.IsErrListDoesNotExist(err) {
 			return echo.NewHTTPError(http.StatusBadRequest, "The list does not exist.")
 		}

@@ -19,11 +19,14 @@ func (c *WebHandler) DeleteWeb(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
 	if !c.CObject.CanDelete(&user) {
+		models.Log.Noticef("%s [ID: %d] tried to delete while not having the rights for it", user.Username, user.ID)
 		return echo.NewHTTPError(http.StatusForbidden)
 	}
 
 	err = c.CObject.Delete()
 	if err != nil {
+		models.Log.Error(err.Error())
+
 		if models.IsErrNeedToBeListAdmin(err) {
 			return echo.NewHTTPError(http.StatusForbidden, "You need to be the list admin to delete a list.")
 		}

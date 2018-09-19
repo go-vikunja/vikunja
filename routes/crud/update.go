@@ -24,12 +24,15 @@ func (c *WebHandler) UpdateWeb(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Could not determine the current user.")
 	}
 	if !c.CObject.CanUpdate(&currentUser) {
+		models.Log.Noticef("%s [ID: %d] tried to update while not having the rights for it", currentUser.Username, currentUser.ID)
 		return echo.NewHTTPError(http.StatusForbidden)
 	}
 
 	// Do the update
 	err = c.CObject.Update()
 	if err != nil {
+		models.Log.Error(err.Error())
+
 		if models.IsErrNeedToBeListAdmin(err) {
 			return echo.NewHTTPError(http.StatusForbidden, "You need to be list admin to do that.")
 		}

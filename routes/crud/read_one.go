@@ -2,7 +2,6 @@ package crud
 
 import (
 	"code.vikunja.io/api/models"
-	"fmt"
 	"github.com/labstack/echo"
 	"net/http"
 )
@@ -18,6 +17,8 @@ func (c *WebHandler) ReadOneWeb(ctx echo.Context) error {
 	// Get our object
 	err := c.CObject.ReadOne()
 	if err != nil {
+		models.Log.Error(err.Error())
+
 		if models.IsErrListDoesNotExist(err) {
 			return echo.NewHTTPError(http.StatusNotFound)
 		}
@@ -30,8 +31,6 @@ func (c *WebHandler) ReadOneWeb(ctx echo.Context) error {
 			return echo.NewHTTPError(http.StatusNotFound)
 		}
 
-		fmt.Println(err)
-
 		return echo.NewHTTPError(http.StatusInternalServerError, "An error occured.")
 	}
 
@@ -42,6 +41,7 @@ func (c *WebHandler) ReadOneWeb(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Could not determine the current user.")
 	}
 	if !c.CObject.CanRead(&currentUser) {
+		models.Log.Noticef("%s [ID: %d] tried to read while not having the rights for it", currentUser.Username, currentUser.ID)
 		return echo.NewHTTPError(http.StatusForbidden, "You don't have the right to see this")
 	}
 

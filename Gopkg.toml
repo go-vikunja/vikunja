@@ -51,3 +51,7 @@
 [[constraint]]
   name = "github.com/imdario/mergo"
   version = "0.3.6"
+
+[[constraint]]
+  name = "github.com/op/go-logging"
+  version = "1.0.0"
