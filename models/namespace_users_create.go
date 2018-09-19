@@ -3,6 +3,9 @@ package models
 // Create creates a new namespace <-> user relation
 func (un *NamespaceUser) Create(user *User) (err error) {
 
+	// Reset the id
+	un.ID = 0
+
 	// Check if the right is valid
 	if err := un.Right.isValid(); err != nil {
 		return err
