@@ -206,16 +206,16 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
 ### Short Term
 
 * [x] Cacher konfigurierbar
-* [ ] Validation der ankommenden structs, am besten mit https://github.com/go-validator/validator
 * [x] Wenn die ID bei irgendeiner GetByID... Methode < 1 ist soll ein error not exist geworfen werden
+* [x] /users sollte die Rechte mit ausgeben
+* [x] Nen endpoint um /teams/members /list/users etc die Rechte updazudaten ohne erst zu löschen und dann neu einzufügen
+* [x] namespaces & listen updaten geht nicht, gibt nen 500er zurück
+* [x] Logging für alle Fehler irgendwohin, da gibts bestimmt ne coole library für
+* [ ] Search endpoints /users?s=name und /teams?s=name, erstmal nur mit Namen suchen. -> Interface erweitern mit ner Funktion Search?
 * [ ] Bei den Structs "AfterLoad" raus, das verbraucht bei Gruppenabfragen zu viele SQL-Abfragen -> Die sollen einfach die entsprechenden Read()-Methoden verwenden (Krassestes bsp. ist GET /namespaces mit so ca 50 Abfragen)
 * [ ] Methode einbauen, um mit einem gültigen token ein neues gültiges zu kriegen
 * [ ] Wir brauchen noch ne gute idee, wie man die listen kriegt, auf die man nur so Zugriff hat (ohne namespace)
-* [x] /users sollte die Rechte mit ausgeben
-* [x] Nen endpoint um /teams/members /list/users etc die Rechte updazudaten ohne erst zu löschen und dann neu einzufügen
-* [ ] Search endpoints /users?s=name und /teams?s=name, erstmal nur mit Namen suchen. -> Interface erweitern mit ner Funktion Search?
-* [x] namespaces & listen updaten geht nicht, gibt nen 500er zurück
-* [x] Logging für alle Fehler irgendwohin, da gibts bestimmt ne coole library für
+* [ ] Validation der ankommenden structs, am besten mit https://github.com/go-validator/validator
 
 ### Later/Nice to have
 
