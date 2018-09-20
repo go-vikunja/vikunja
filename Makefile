@@ -151,7 +151,7 @@ release-zip:
 .PHONY: generate-swagger
 generate-swagger:
 	@hash swagger > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
-		$(GO) get -u github.com/go-swagger/go-swagger/cmd/swagger; \
+		go get -u github.com/go-swagger/go-swagger/cmd/swagger; \
 	fi
 	swagger generate spec -o ./public/swagger/swagger.v1.json
 
@@ -167,6 +167,6 @@ swagger-check: generate-swagger
 .PHONY: swagger-validate
 swagger-validate:
 	@hash swagger > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
-		$(GO) get -u github.com/go-swagger/go-swagger/cmd/swagger; \
+		go get -u github.com/go-swagger/go-swagger/cmd/swagger; \
 	fi
 	swagger validate ./public/swagger/swagger.v1.json
