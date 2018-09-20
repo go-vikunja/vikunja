@@ -1558,7 +1558,7 @@
         "operationId": "list",
         "parameters": [
           {
-            "description": "The searchterm to filter users",
+            "description": "A searchterm to search for a user by its username",
             "name": "s",
             "in": "query"
           }
