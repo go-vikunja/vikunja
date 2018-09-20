@@ -1,0 +1,11 @@
+
+# Get all users
+GET http://localhost:8080/api/v1/users
+Authorization: Bearer {{auth_token}}
+
+######
+# Search for a user
+GET http://localhost:8080/api/v1/users?s=3
+Authorization: Bearer {{auth_token}}
+
+###

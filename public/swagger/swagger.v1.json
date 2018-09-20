@@ -1542,6 +1542,39 @@
           }
         }
       }
+    },
+    "/users": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "user"
+        ],
+        "summary": "Lists all users",
+        "operationId": "list",
+        "parameters": [
+          {
+            "description": "The searchterm to filter users",
+            "name": "s",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/User"
+          },
+          "400": {
+            "$ref": "#/responses/Message"
+          },
+          "500": {
+            "$ref": "#/responses/Message"
+          }
+        }
+      }
     }
   },
   "definitions": {

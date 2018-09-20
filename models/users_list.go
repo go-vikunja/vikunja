@@ -11,11 +11,6 @@ func ListUsers(searchterm string) (users []User, err error) {
 			Find(&users)
 	}
 
-	// Obfuscate the password. Selecting everything except the password didn't work.
-	for i := range users {
-		users[i].Password = ""
-	}
-
 	if err != nil {
 		return []User{}, err
 	}

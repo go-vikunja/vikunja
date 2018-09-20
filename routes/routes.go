@@ -71,6 +71,10 @@ func RegisterRoutes(e *echo.Echo) {
 	a.Use(middleware.JWT([]byte(viper.GetString("service.JWTSecret"))))
 	a.POST("/tokenTest", apiv1.CheckToken)
 
+	// User stuff
+	a.GET("/user", apiv1.UserShow)
+	a.GET("/users", apiv1.UserList)
+
 	listHandler := &crud.WebHandler{
 		CObject: &models.List{},
 	}
@@ -143,6 +147,4 @@ func RegisterRoutes(e *echo.Echo) {
 	}
 	a.PUT("/teams/:team/members", teamMemberHandler.CreateWeb)
 	a.DELETE("/teams/:team/members/:user", teamMemberHandler.DeleteWeb)
-
-	a.GET("/user", apiv1.UserShow)
 }
