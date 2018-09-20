@@ -53,3 +53,4 @@
         * [x] entfernen
         * [x] Einstellmglkt für Rechte
 * [x] Den Sharing-Updateshit mit der neuen methode machen (post)
+* [ ] User suchen einbauen, mit neuem endpoint
