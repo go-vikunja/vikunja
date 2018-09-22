@@ -160,4 +160,4 @@ pipeline:
 # Tell people vikunja was updated
   telegram:
     image: appleboy/drone-telegram
-
+    secrets: [ TELEGRAM_TOKEN, TELEGRAM_TO ]
