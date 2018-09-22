@@ -53,4 +53,6 @@
         * [x] entfernen
         * [x] Einstellmglkt für Rechte
 * [x] Den Sharing-Updateshit mit der neuen methode machen (post)
-* [ ] User suchen einbauen, mit neuem endpoint
+* [x] User suchen einbauen, mit neuem endpoint
+* [ ] Zurück zu Home (wenn man auf das Logo klickt)
+* [ ] Erklärungen zu was wie funktioniert -> wiki?
