@@ -26,7 +26,7 @@ func (i *ListTask) Create(doer *User) (err error) {
 
 	i.CreatedByID = user.ID
 	i.CreatedBy = user
-	_, err = x.Cols("text","description","done","due_date_unix","reminder_unix","created_by_id","list_id","created","updated").Insert(i)
+	_, err = x.Cols("text", "description", "done", "due_date_unix", "reminder_unix", "created_by_id", "list_id", "created", "updated").Insert(i)
 	return err
 }
 
