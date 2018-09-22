@@ -156,3 +156,8 @@ pipeline:
     when:
       event: [ push, tag ]
       branch: [ master ]
+
+# Tell people vikunja was updated
+  telegram:
+    image: appleboy/drone-telegram
+
