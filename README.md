@@ -7,7 +7,8 @@
 [![Download](https://img.shields.io/badge/download-v0.1-brightgreen.svg)](https://storage.kolaente.de/minio/vikunja/)
 [![Docker Pulls](https://img.shields.io/docker/pulls/vikunja/api.svg)](https://hub.docker.com/r/vikunja/api/)
 [![Swagger Docs](https://img.shields.io/badge/swagger-docs-brightgreen.svg)](https://try.vikunja.io/api/v1/swagger)
-
+[![Go Report Card](https://goreportcard.com/badge/git.kolaente.de/vikunja/api)](https://goreportcard.com/report/git.kolaente.de/vikunja/api
+)
 ## Features
 
 * Create TODO lists with tasks
