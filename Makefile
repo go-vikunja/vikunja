@@ -170,3 +170,24 @@ swagger-validate:
 		go get -u github.com/go-swagger/go-swagger/cmd/swagger; \
 	fi
 	swagger validate ./public/swagger/swagger.v1.json
+
+.PHONY: misspell-check
+misspell-check:
+	@hash misspell > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
+		go get -u github.com/client9/misspell/cmd/misspell; \
+	fi
+	for S in $(GOFILES); do misspell -error $$S || exit 1; done;
+
+.PHONY: ineffassign-check
+ineffassign-check:
+	@hash ineffassign > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
+		go get -u github.com/gordonklaus/ineffassign; \
+	fi
+	for S in $(GOFILES); do ineffassign $$S || exit 1; done;
+
+.PHONY: gocyclo-check
+gocyclo-check:
+	@hash gocyclo > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
+		go get github.com/fzipp/gocyclo; \
+	fi
+	for S in $(GOFILES); do gocyclo -over 14 $$S || exit 1; done;

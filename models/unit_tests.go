@@ -39,7 +39,7 @@ func createTestEngine(fixturesDir string) error {
 		return fmt.Errorf("sync database struct error: %v", err)
 	}
 
-	// Show SQL-Queries if nessecary
+	// Show SQL-Queries if necessary
 	if os.Getenv("UNIT_TESTS_VERBOSE") == "1" {
 		x.ShowSQL(true)
 	}

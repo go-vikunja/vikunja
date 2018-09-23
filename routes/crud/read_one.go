@@ -31,7 +31,7 @@ func (c *WebHandler) ReadOneWeb(ctx echo.Context) error {
 			return echo.NewHTTPError(http.StatusNotFound)
 		}
 
-		return echo.NewHTTPError(http.StatusInternalServerError, "An error occured.")
+		return echo.NewHTTPError(http.StatusInternalServerError, "An error occurred.")
 	}
 
 	// Check rights

@@ -30,6 +30,9 @@ func UserChangePassword(c echo.Context) error {
 
 	// Check if the user is itself
 	userJWTinfo, err := models.GetCurrentUser(c)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, models.Message{"Error getting current user."})
+	}
 
 	if userJWTinfo.ID != userID {
 		return echo.ErrUnauthorized

@@ -348,7 +348,7 @@ func IsErrNamespaceNameCannotBeEmpty(err error) bool {
 }
 
 func (err ErrNamespaceNameCannotBeEmpty) Error() string {
-	return fmt.Sprintf("Namespace name cannot be emtpy [NamespaceID: %d, UserID: %d]", err.NamespaceID, err.UserID)
+	return fmt.Sprintf("Namespace name cannot be empty [NamespaceID: %d, UserID: %d]", err.NamespaceID, err.UserID)
 }
 
 // ErrNamespaceOwnerCannotBeEmpty represents an error, where a namespace owner is empty.
@@ -364,7 +364,7 @@ func IsErrNamespaceOwnerCannotBeEmpty(err error) bool {
 }
 
 func (err ErrNamespaceOwnerCannotBeEmpty) Error() string {
-	return fmt.Sprintf("Namespace owner cannot be emtpy [NamespaceID: %d, UserID: %d]", err.NamespaceID, err.UserID)
+	return fmt.Sprintf("Namespace owner cannot be empty [NamespaceID: %d, UserID: %d]", err.NamespaceID, err.UserID)
 }
 
 // ErrNeedToBeNamespaceAdmin represents an error, where the user is not the admin of that namespace (used i.e. when deleting a namespace)

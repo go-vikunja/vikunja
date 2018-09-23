@@ -32,7 +32,7 @@ func UserList(c echo.Context) error {
 	users, err := models.ListUsers(s)
 	if err != nil {
 		models.Log.Error(err.Error())
-		return echo.NewHTTPError(http.StatusInternalServerError, "An error occured.")
+		return echo.NewHTTPError(http.StatusInternalServerError, "An error occurred.")
 	}
 
 	// Obfuscate the mailadresses

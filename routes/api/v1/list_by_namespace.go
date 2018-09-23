@@ -39,7 +39,7 @@ func GetListsByNamespaceID(c echo.Context) error {
 		if models.IsErrUserDoesNotHaveAccessToNamespace(err) {
 			return c.JSON(http.StatusForbidden, models.Message{"You don't have access to this namespace."})
 		}
-		return c.JSON(http.StatusInternalServerError, models.Message{"An error occured."})
+		return c.JSON(http.StatusInternalServerError, models.Message{"An error occurred."})
 	}
 
 	// Get the lists
@@ -48,7 +48,7 @@ func GetListsByNamespaceID(c echo.Context) error {
 		if models.IsErrNamespaceDoesNotExist(err) {
 			return c.JSON(http.StatusNotFound, models.Message{"Namespace not found."})
 		}
-		return c.JSON(http.StatusInternalServerError, models.Message{"An error occured."})
+		return c.JSON(http.StatusInternalServerError, models.Message{"An error occurred."})
 	}
 	return c.JSON(http.StatusOK, lists)
 }

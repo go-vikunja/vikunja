@@ -30,7 +30,7 @@ func (c *WebHandler) ReadAllWeb(ctx echo.Context) error {
 			return echo.NewHTTPError(http.StatusNotFound, "This namespace does not exist.")
 		}
 
-		return echo.NewHTTPError(http.StatusInternalServerError, "An error occured.")
+		return echo.NewHTTPError(http.StatusInternalServerError, "An error occurred.")
 	}
 
 	return ctx.JSON(http.StatusOK, lists)
