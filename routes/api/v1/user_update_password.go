@@ -6,6 +6,7 @@ import (
 	"net/http"
 )
 
+// UserPassword holds a user password. Used to update it.
 type UserPassword struct {
 	Password string `json:"password"`
 }
