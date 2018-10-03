@@ -88,3 +88,65 @@ h1,h2,h3,h4,h5,h6{
     transform: rotate(360deg);
   }
 }
+
+/* Logout-icon */
+.logout-icon {
+  padding-right: 2em !important;
+}
+
+/* Logo */
+.logo {
+
+  padding-left: 2rem !important;
+
+  img {
+    max-height: 3rem !important;
+    margin-right: 1rem;
+  }
+}
+
+/* Buttons icons */
+.button .icon.is-small {
+  margin-right: 0.05rem !important;
+}
+
+/* List active link */
+.menu-list a.router-link-active{
+  background: darken(#fff, 5%);
+}
+
+/* menu buttons */
+.button-bottom {
+  margin-bottom: 1rem;
+}
+
+/* Namespaces list */
+.namespaces-lists{
+  .menu-label {
+    font-size: 1em;
+    font-weight: 400;
+    min-height: 2.5em;
+    padding-top: 0.3em;
+  }
+
+  /* Namespace settings */
+  .nsettings{
+    vertical-align: middle;
+    float: right;
+    margin-left: 0.5rem;
+    min-width: 2.648em;
+    color: rgb(74, 74, 74);
+  }
+}
+
+.bigbuttons{
+  margin-top: 0.5rem;
+}
+
+.card{
+  margin-bottom: 1rem;
+}
+
+.buttonright {
+  margin-right: 0.5rem;
+}

@@ -258,10 +258,6 @@
 </script>
 
 <style lang="scss" scoped>
-	.bigbuttons{
-		margin-top: 0.5rem;
-	}
-
 	.card{
 		margin-bottom: 1rem;
 
@@ -284,10 +280,6 @@
 				text-align: right;
 			}
 		}
-	}
-
-	.buttonright {
-		margin-right: 0.5rem;
 	}
 
 	.team-members{
