@@ -2,9 +2,9 @@
 	<div id="app" class="container">
 		<nav class="navbar" role="navigation" aria-label="main navigation" v-if="user.authenticated">
 			<div class="navbar-brand">
-				<div class="navbar-item logo">
+				<router-link :to="{name: 'home'}" class="navbar-item logo">
 					<img src="images/logo-full.svg"/>
-				</div>
+				</router-link>
 			</div>
 			<div class="navbar-menu">
 				<div class="navbar-end">
