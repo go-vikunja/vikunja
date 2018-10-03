@@ -1543,6 +1543,70 @@
         }
       }
     },
+    "/user": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "user"
+        ],
+        "summary": "Shows the current user",
+        "operationId": "showUser",
+        "responses": {
+          "200": {
+            "$ref": "#/responses/User"
+          },
+          "400": {
+            "$ref": "#/responses/Message"
+          },
+          "500": {
+            "$ref": "#/responses/Message"
+          }
+        }
+      }
+    },
+    "/user/password": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "user"
+        ],
+        "summary": "Shows the current user",
+        "operationId": "updatePassword",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/Password"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/Message"
+          },
+          "400": {
+            "$ref": "#/responses/Message"
+          },
+          "404": {
+            "$ref": "#/responses/Message"
+          },
+          "500": {
+            "$ref": "#/responses/Message"
+          }
+        }
+      }
+    },
     "/users": {
       "get": {
         "consumes": [
