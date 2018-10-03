@@ -1,77 +1,61 @@
 package v1
 
 import (
-	"net/http"
-	"strconv"
-
 	"code.vikunja.io/api/models"
 	"github.com/labstack/echo"
+	"net/http"
 )
 
-type datPassword struct {
+type UserPassword struct {
 	Password string `json:"password"`
 }
 
-// UserChangePassword is the handler to add a user
+// UserChangePassword is the handler to change a users password
 func UserChangePassword(c echo.Context) error {
-
-	// Get the ID
-	user := c.Param("id")
-
-	if user == "" {
-		return c.JSON(http.StatusBadRequest, models.Message{"User ID cannot be empty."})
-	}
-
-	// Make int
-	userID, err := strconv.ParseInt(user, 10, 64)
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, models.Message{"User ID is invalid."})
-	}
+	// swagger:operation POST /user/password user updatePassword
+	// ---
+	// summary: Shows the current user
+	// consumes:
+	// - application/json
+	// produces:
+	// - application/json
+	// parameters:
+	// - name: body
+	//   in: body
+	//   schema:
+	//     "$ref": "#/definitions/Password"
+	// responses:
+	//   "200":
+	//     "$ref": "#/responses/Message"
+	//   "400":
+	//     "$ref": "#/responses/Message"
+	//   "404":
+	//     "$ref": "#/responses/Message"
+	//   "500":
+	//     "$ref": "#/responses/Message"
 
 	// Check if the user is itself
-	userJWTinfo, err := models.GetCurrentUser(c)
+	doer, err := models.GetCurrentUser(c)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, models.Message{"Error getting current user."})
-	}
-
-	if userJWTinfo.ID != userID {
-		return echo.ErrUnauthorized
+		return echo.NewHTTPError(http.StatusInternalServerError, "Error getting current user.")
 	}
 
 	// Check for Request Content
-	pwFromString := c.FormValue("password")
-	var datPw datPassword
-
-	if pwFromString == "" {
-		if err := c.Bind(&datPw); err != nil {
-			return c.JSON(http.StatusBadRequest, models.Message{"No password provided."})
-		}
-	} else {
-		// Take the value directly from the input
-		datPw.Password = pwFromString
+	var newPW UserPassword
+	if err := c.Bind(&newPW); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "No password provided.")
 	}
 
-	// Get User Infos
-	_, err = models.GetUserByID(userID)
-
+	// Update the password
+	err = models.UpdateUserPassword(&doer, newPW.Password)
 	if err != nil {
 		if models.IsErrUserDoesNotExist(err) {
-			return c.JSON(http.StatusNotFound, models.Message{"The user does not exist."})
+			return echo.NewHTTPError(http.StatusNotFound, "The user does not exist.")
 		}
-		return c.JSON(http.StatusInternalServerError, models.Message{"Error getting user infos."})
+
+		models.Log.Error("Error updating a users password, user: %d", doer.ID)
+		return echo.NewHTTPError(http.StatusInternalServerError, "An error occurred.")
 	}
 
-	// Get the doer options
-	doer, err := models.GetCurrentUser(c)
-	if err != nil {
-		return err
-	}
-
-	err = models.UpdateUserPassword(userID, datPw.Password, &doer)
-
-	if err != nil {
-		return err
-	}
-
-	return c.JSON(http.StatusOK, models.Message{"The password was updated successfully"})
+	return c.JSON(http.StatusOK, models.Message{"The password was updated successfully."})
 }

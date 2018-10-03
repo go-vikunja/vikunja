@@ -109,10 +109,10 @@ func UpdateUser(user User) (updatedUser User, err error) {
 }
 
 // UpdateUserPassword updates the password of a user
-func UpdateUserPassword(userID int64, newPassword string, doer *User) (err error) {
+func UpdateUserPassword(user *User, newPassword string) (err error) {
 
 	// Get all user details
-	user, err := GetUserByID(userID)
+	theUser, err := GetUserByID(user.ID)
 	if err != nil {
 		return err
 	}
@@ -122,10 +122,10 @@ func UpdateUserPassword(userID int64, newPassword string, doer *User) (err error
 	if err != nil {
 		return err
 	}
-	user.Password = hashed
+	theUser.Password = hashed
 
 	// Update it
-	_, err = x.Id(user.ID).Update(user)
+	_, err = x.Id(user.ID).Update(theUser)
 	if err != nil {
 		return err
 	}

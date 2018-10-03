@@ -99,7 +99,7 @@ func TestCreateUser(t *testing.T) {
 
 	// Update a users password
 	newpassword := "55555"
-	err = UpdateUserPassword(theuser.ID, newpassword, &doer)
+	err = UpdateUserPassword(&theuser, newpassword)
 	assert.NoError(t, err)
 
 	// Check if it was changed
@@ -116,7 +116,7 @@ func TestCreateUser(t *testing.T) {
 	assert.True(t, len(all) > 0)
 
 	// Try updating the password of a nonexistent user (should fail)
-	err = UpdateUserPassword(9999, newpassword, &doer)
+	err = UpdateUserPassword(&User{ID: 9999}, newpassword)
 	assert.Error(t, err)
 	assert.True(t, IsErrUserDoesNotExist(err))
 

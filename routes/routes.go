@@ -73,6 +73,7 @@ func RegisterRoutes(e *echo.Echo) {
 
 	// User stuff
 	a.GET("/user", apiv1.UserShow)
+	a.POST("/user/password", apiv1.UserChangePassword)
 	a.GET("/users", apiv1.UserList)
 
 	listHandler := &crud.WebHandler{
