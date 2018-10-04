@@ -8,7 +8,8 @@ import (
 
 // UserPassword holds a user password. Used to update it.
 type UserPassword struct {
-	Password string `json:"password"`
+	OldPassword string `json:"old_password"`
+	NewPassword string `json:"new_password"`
 }
 
 // UserChangePassword is the handler to change a users password
@@ -47,14 +48,21 @@ func UserChangePassword(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "No password provided.")
 	}
 
+	// Check the current password
+	if _, err = models.CheckUserCredentials(&models.UserLogin{Username:doer.Username,Password:newPW.OldPassword}); err != nil {
+		if models.IsErrUserDoesNotExist(err) {
+			return echo.NewHTTPError(http.StatusNotFound, "The user does not exist.")
+		}
+		return c.JSON(http.StatusUnauthorized, models.Message{"Wrong password."})
+	}
+
 	// Update the password
-	err = models.UpdateUserPassword(&doer, newPW.Password)
-	if err != nil {
+	if err = models.UpdateUserPassword(&doer, newPW.NewPassword); err != nil {
 		if models.IsErrUserDoesNotExist(err) {
 			return echo.NewHTTPError(http.StatusNotFound, "The user does not exist.")
 		}
 
-		models.Log.Error("Error updating a users password, user: %d", doer.ID)
+		models.Log.Error("Error updating a users password, user: %d, err: %s", doer.ID, err)
 		return echo.NewHTTPError(http.StatusInternalServerError, "An error occurred.")
 	}
 
