@@ -5,8 +5,8 @@ type List struct {
 	ID          int64  `xorm:"int(11) autoincr not null unique pk" json:"id" param:"list"`
 	Title       string `xorm:"varchar(250)" json:"title"`
 	Description string `xorm:"varchar(1000)" json:"description"`
-	OwnerID     int64  `xorm:"int(11)" json:"-"`
-	NamespaceID int64  `xorm:"int(11)" json:"-" param:"namespace"`
+	OwnerID     int64  `xorm:"int(11) INDEX" json:"-"`
+	NamespaceID int64  `xorm:"int(11) INDEX" json:"-" param:"namespace"`
 
 	Owner User        `xorm:"-" json:"owner"`
 	Tasks []*ListTask `xorm:"-" json:"tasks"`

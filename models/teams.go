@@ -5,7 +5,7 @@ type Team struct {
 	ID          int64  `xorm:"int(11) autoincr not null unique pk" json:"id" param:"team"`
 	Name        string `xorm:"varchar(250) not null" json:"name"`
 	Description string `xorm:"varchar(250)" json:"description"`
-	CreatedByID int64  `xorm:"int(11) not null" json:"-"`
+	CreatedByID int64  `xorm:"int(11) not null INDEX" json:"-"`
 
 	CreatedBy User        `xorm:"-" json:"created_by"`
 	Members   []*TeamUser `xorm:"-" json:"members"`
@@ -38,9 +38,9 @@ func (t *Team) AfterLoad() {
 // TeamMember defines the relationship between a user and a team
 type TeamMember struct {
 	ID     int64 `xorm:"int(11) autoincr not null unique pk" json:"id"`
-	TeamID int64 `xorm:"int(11) not null" json:"team_id" param:"team"`
-	UserID int64 `xorm:"int(11) not null" json:"user_id" param:"user"`
-	Admin  bool  `xorm:"tinyint(1)" json:"admin"`
+	TeamID int64 `xorm:"int(11) not null INDEX" json:"team_id" param:"team"`
+	UserID int64 `xorm:"int(11) not null INDEX" json:"user_id" param:"user"`
+	Admin  bool  `xorm:"tinyint(1) INDEX" json:"admin"`
 
 	Created int64 `xorm:"created" json:"created"`
 	Updated int64 `xorm:"updated" json:"updated"`
