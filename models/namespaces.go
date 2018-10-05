@@ -48,18 +48,7 @@ func GetNamespaceByID(id int64) (namespace Namespace, err error) {
 
 // ReadOne gets one namespace
 func (n *Namespace) ReadOne() (err error) {
-	getN := Namespace{}
-	exists, err := x.ID(n.ID).Get(&getN)
-	if err != nil {
-		return
-	}
-
-	if !exists {
-		return ErrNamespaceDoesNotExist{ID: n.ID}
-	}
-
-	*n = getN
-
+	*n, err = GetNamespaceByID(n.ID)
 	return
 }
 
