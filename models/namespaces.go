@@ -21,11 +21,6 @@ func (Namespace) TableName() string {
 	return "namespaces"
 }
 
-// AfterLoad gets the owner
-func (n *Namespace) AfterLoad() {
-	n.Owner, _ = GetUserByID(n.OwnerID)
-}
-
 // GetNamespaceByID returns a namespace object by its ID
 func GetNamespaceByID(id int64) (namespace Namespace, err error) {
 	if id < 1 {
@@ -123,6 +118,9 @@ func (n *Namespace) ReadAll(doer *User) (interface{}, error) {
 	if err != nil {
 		return all, err
 	}
+
+	// More details for the lists
+	addListDetails(lists)
 
 	// Put objects in our namespace list
 	for i, n := range all {

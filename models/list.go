@@ -18,16 +18,6 @@ type List struct {
 	Rights   `xorm:"-" json:"-"`
 }
 
-// AfterLoad loads the owner and list tasks
-func (l *List) AfterLoad() {
-
-	// Get the owner
-	l.Owner, _ = GetUserByID(l.OwnerID)
-
-	// Get the list tasks
-	l.Tasks, _ = GetTasksByListID(l.ID)
-}
-
 // GetListByID returns a list by its ID
 func GetListByID(id int64) (list List, err error) {
 	if id < 1 {
@@ -43,7 +33,16 @@ func GetListByID(id int64) (list List, err error) {
 		return list, ErrListDoesNotExist{ID: id}
 	}
 
-	return list, nil
+	// Get list tasks
+	list.Tasks, err = GetTasksByListID(list.ID)
+	if err != nil {
+		return list, err
+	}
+
+	// Get list owner
+	list.Owner, err = GetUserByID(list.OwnerID)
+
+	return list, err
 }
 
 // GetListsByNamespaceID gets all lists in a namespace
@@ -54,7 +53,7 @@ func GetListsByNamespaceID(nID int64) (lists []*List, err error) {
 
 // ReadAll gets all lists a user has access to
 func (l *List) ReadAll(user *User) (interface{}, error) {
-	lists := []List{}
+	lists := []*List{}
 	fullUser, err := GetUserByID(user.ID)
 	if err != nil {
 		return lists, err
@@ -80,11 +79,58 @@ func (l *List) ReadAll(user *User) (interface{}, error) {
 		GroupBy("l.id").
 		Find(&lists)
 
+	// Add more list details
+	addListDetails(lists)
+
 	return lists, err
 }
 
 // ReadOne gets one list by its ID
 func (l *List) ReadOne() (err error) {
 	*l, err = GetListByID(l.ID)
+	return
+}
+
+// Adds owner user objects and list tasks to all lists in the slice
+func addListDetails(lists []*List) (err error) {
+	var listIDs []int64
+	var ownerIDs []int64
+	for _, l := range lists {
+		listIDs = append(listIDs, l.ID)
+		ownerIDs = append(ownerIDs, l.OwnerID)
+	}
+
+	// Get all tasks
+	tasks := []*ListTask{}
+	err = x.In("list_id", listIDs).Find(&tasks)
+	if err != nil {
+		return
+	}
+
+	// Get all list owners
+	owners := []*User{}
+	err = x.In("id", ownerIDs).Find(&owners)
+	if err != nil {
+		return
+	}
+
+	// Build it all into the lists slice
+	for in, list := range lists {
+		// Owner
+		for _, owner := range owners {
+			if list.OwnerID == owner.ID {
+				lists[in].Owner = *owner
+				break
+			}
+		}
+
+		// Tasks
+		for _, task := range tasks {
+			if task.ListID == list.ID {
+				lists[in].Tasks = append(lists[in].Tasks, task)
+			}
+		}
+	}
+
 	return
 }
