@@ -49,7 +49,7 @@ func UserChangePassword(c echo.Context) error {
 	}
 
 	// Check the current password
-	if _, err = models.CheckUserCredentials(&models.UserLogin{Username:doer.Username,Password:newPW.OldPassword}); err != nil {
+	if _, err = models.CheckUserCredentials(&models.UserLogin{Username: doer.Username, Password: newPW.OldPassword}); err != nil {
 		if models.IsErrUserDoesNotExist(err) {
 			return echo.NewHTTPError(http.StatusNotFound, "The user does not exist.")
 		}
