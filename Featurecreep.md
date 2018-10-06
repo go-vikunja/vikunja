@@ -191,7 +191,7 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
 + [x] CORS fixen
 * [x] Überall echo.NewHTTPError statt c.JSON(Message{}) benutzen
 * [x] Bessere Fehlermeldungen wenn das Model was ankommt falsch ist und nicht geparst werden kann
-* [ ] Fehlerhandling irgendwie besser machen. Zb mit "World error messages"? Sprich, die Methode ruft einfach auf obs die entsprechende Fehlermeldung gibt und zeigt sonst 500 an.
+* [x] Fehlerhandling irgendwie besser machen. Zb mit "World error messages"? Sprich, die Methode ruft einfach auf obs die entsprechende Fehlermeldung gibt und zeigt sonst 500 an.
 * [ ] Endpoints neu organisieren? Also zb `namespaces/:nID/lists/:lID/items/:iID` statt einzelnen Endpoints für alles
 * [x] Viper für config einbauen und ini rauswerfen
 * [x] Docs für installationsanleitung
@@ -211,7 +211,7 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
 * [x] Nen endpoint um /teams/members /list/users etc die Rechte updazudaten ohne erst zu löschen und dann neu einzufügen
 * [x] namespaces & listen updaten geht nicht, gibt nen 500er zurück
 * [x] Logging für alle Fehler irgendwohin, da gibts bestimmt ne coole library für
-* [ ] Ne extra funktion für list exists machen, damit die nicht immer über GetListByID gehen, um sql-abfragen zu sparen
+* [x] Ne extra funktion für list exists machen, damit die nicht immer über GetListByID gehen, um sql-abfragen zu sparen
 * [ ] Search endpoints /users?s=name und /teams?s=name, erstmal nur mit Namen suchen.
 * [ ] Userstuff aufräumen, auf neuen Handler umziehen?
 * [x] Bei den Structs "AfterLoad" raus, das verbraucht bei Gruppenabfragen zu viele SQL-Abfragen -> Die sollen einfach die entsprechenden Read()-Methoden verwenden (Krassestes bsp. ist GET /namespaces mit so ca 50 Abfragen)
