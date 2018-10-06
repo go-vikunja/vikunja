@@ -2,6 +2,7 @@ package v1
 
 import (
 	"code.vikunja.io/api/models"
+	"code.vikunja.io/api/routes/crud"
 	"github.com/labstack/echo"
 	"net/http"
 	"strconv"
@@ -77,32 +78,7 @@ func userAddOrUpdate(c echo.Context) error {
 	}
 
 	if err != nil {
-		// Check for user already exists
-		if models.IsErrUsernameExists(err) {
-			return c.JSON(http.StatusBadRequest, models.Message{"A user with this username already exists."})
-		}
-
-		// Check for user with that email already exists
-		if models.IsErrUserEmailExists(err) {
-			return c.JSON(http.StatusBadRequest, models.Message{"A user with this email address already exists."})
-		}
-
-		// Check for no username provided
-		if models.IsErrNoUsername(err) {
-			return c.JSON(http.StatusBadRequest, models.Message{"Please specify a username."})
-		}
-
-		// Check for no username or password provided
-		if models.IsErrNoUsernamePassword(err) {
-			return c.JSON(http.StatusBadRequest, models.Message{"Please specify a username and a password."})
-		}
-
-		// Check for user does not exist
-		if models.IsErrUserDoesNotExist(err) {
-			return c.JSON(http.StatusBadRequest, models.Message{"The user does not exist."})
-		}
-
-		return c.JSON(http.StatusInternalServerError, models.Message{"Error"})
+		return crud.HandleHTTPError(err)
 	}
 
 	return c.JSON(http.StatusOK, newUser)

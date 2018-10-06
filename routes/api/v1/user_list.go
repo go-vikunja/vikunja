@@ -2,6 +2,7 @@ package v1
 
 import (
 	"code.vikunja.io/api/models"
+	"code.vikunja.io/api/routes/crud"
 	"github.com/labstack/echo"
 	"net/http"
 )
@@ -31,8 +32,7 @@ func UserList(c echo.Context) error {
 	s := c.QueryParam("s")
 	users, err := models.ListUsers(s)
 	if err != nil {
-		models.Log.Error(err.Error())
-		return echo.NewHTTPError(http.StatusInternalServerError, "An error occurred.")
+		return crud.HandleHTTPError(err)
 	}
 
 	// Obfuscate the mailadresses

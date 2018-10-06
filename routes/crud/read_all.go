@@ -20,17 +20,7 @@ func (c *WebHandler) ReadAllWeb(ctx echo.Context) error {
 
 	lists, err := c.CObject.ReadAll(&currentUser)
 	if err != nil {
-		models.Log.Error(err.Error())
-
-		if models.IsErrNeedToHaveListReadAccess(err) {
-			return echo.NewHTTPError(http.StatusForbidden, "You need to have read access to this list.")
-		}
-
-		if models.IsErrNamespaceDoesNotExist(err) {
-			return echo.NewHTTPError(http.StatusNotFound, "This namespace does not exist.")
-		}
-
-		return echo.NewHTTPError(http.StatusInternalServerError, "An error occurred.")
+		return HandleHTTPError(err)
 	}
 
 	return ctx.JSON(http.StatusOK, lists)

@@ -5,7 +5,7 @@ Authorization: Bearer {{auth_token}}
 ###
 
 # Get one namespaces
-GET http://localhost:8080/api/v1/namespaces/12
+GET http://localhost:8080/api/v1/namespaces/125476
 Authorization: Bearer {{auth_token}}
 
 ###

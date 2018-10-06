@@ -17,21 +17,7 @@ func (c *WebHandler) ReadOneWeb(ctx echo.Context) error {
 	// Get our object
 	err := c.CObject.ReadOne()
 	if err != nil {
-		models.Log.Error(err.Error())
-
-		if models.IsErrListDoesNotExist(err) {
-			return echo.NewHTTPError(http.StatusNotFound)
-		}
-
-		if models.IsErrNamespaceDoesNotExist(err) {
-			return echo.NewHTTPError(http.StatusNotFound)
-		}
-
-		if models.IsErrTeamDoesNotExist(err) {
-			return echo.NewHTTPError(http.StatusNotFound)
-		}
-
-		return echo.NewHTTPError(http.StatusInternalServerError, "An error occurred.")
+		return HandleHTTPError(err)
 	}
 
 	// Check rights

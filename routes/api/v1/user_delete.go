@@ -2,6 +2,7 @@ package v1
 
 import (
 	"code.vikunja.io/api/models"
+	"code.vikunja.io/api/routes/crud"
 	"github.com/labstack/echo"
 	"net/http"
 	"strconv"
@@ -41,15 +42,7 @@ func UserDelete(c echo.Context) error {
 	err = models.DeleteUserByID(userID, &doer)
 
 	if err != nil {
-		if models.IsErrIDCannotBeZero(err) {
-			return c.JSON(http.StatusBadRequest, models.Message{"Id cannot be 0"})
-		}
-
-		if models.IsErrCannotDeleteLastUser(err) {
-			return c.JSON(http.StatusBadRequest, models.Message{"Cannot delete last user."})
-		}
-
-		return c.JSON(http.StatusInternalServerError, models.Message{"Could not delete user."})
+		return crud.HandleHTTPError(err)
 	}
 
 	return c.JSON(http.StatusOK, models.Message{"success"})

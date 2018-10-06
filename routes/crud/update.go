@@ -31,23 +31,7 @@ func (c *WebHandler) UpdateWeb(ctx echo.Context) error {
 	// Do the update
 	err = c.CObject.Update()
 	if err != nil {
-		models.Log.Error(err.Error())
-
-		if models.IsErrNeedToBeListAdmin(err) {
-			return echo.NewHTTPError(http.StatusForbidden, "You need to be list admin to do that.")
-		}
-
-		if models.IsErrNamespaceDoesNotExist(err) {
-			return echo.NewHTTPError(http.StatusNotFound, "The namespace does not exist.")
-		}
-		if models.IsErrNamespaceNameCannotBeEmpty(err) {
-			return echo.NewHTTPError(http.StatusBadRequest, "The namespace name cannot be empty.")
-		}
-		if models.IsErrNamespaceOwnerCannotBeEmpty(err) {
-			return echo.NewHTTPError(http.StatusBadRequest, "The namespace owner cannot be empty.")
-		}
-
-		return echo.NewHTTPError(http.StatusInternalServerError)
+		return HandleHTTPError(err)
 	}
 
 	return ctx.JSON(http.StatusOK, c.CObject)

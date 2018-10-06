@@ -25,36 +25,7 @@ func (c *WebHandler) DeleteWeb(ctx echo.Context) error {
 
 	err = c.CObject.Delete()
 	if err != nil {
-		models.Log.Error(err.Error())
-
-		if models.IsErrNeedToBeListAdmin(err) {
-			return echo.NewHTTPError(http.StatusForbidden, "You need to be the list admin to delete a list.")
-		}
-
-		if models.IsErrListDoesNotExist(err) {
-			return echo.NewHTTPError(http.StatusNotFound, "This list does not exist.")
-		}
-		if models.IsErrTeamDoesNotHaveAccessToList(err) {
-			return echo.NewHTTPError(http.StatusBadRequest, "This team does not have access to the list.")
-		}
-
-		if models.IsErrTeamDoesNotExist(err) {
-			return echo.NewHTTPError(http.StatusNotFound, "This team does not exist.")
-		}
-
-		if models.IsErrCannotDeleteLastTeamMember(err) {
-			return echo.NewHTTPError(http.StatusBadRequest, "You cannot delete the last member of a team.")
-		}
-
-		if models.IsErrUserDoesNotHaveAccessToList(err) {
-			return echo.NewHTTPError(http.StatusBadRequest, "This user does not have access to the list.")
-		}
-
-		if models.IsErrUserDoesNotHaveAccessToNamespace(err) {
-			return echo.NewHTTPError(http.StatusBadRequest, "This user does not have access to the namespace.")
-		}
-
-		return echo.NewHTTPError(http.StatusInternalServerError)
+		return HandleHTTPError(err)
 	}
 
 	return ctx.JSON(http.StatusOK, models.Message{"Successfully deleted."})

@@ -33,50 +33,7 @@ func (c *WebHandler) CreateWeb(ctx echo.Context) error {
 	// Create
 	err = c.CObject.Create(&currentUser)
 	if err != nil {
-		models.Log.Error(err.Error())
-
-		if models.IsErrListDoesNotExist(err) {
-			return echo.NewHTTPError(http.StatusBadRequest, "The list does not exist.")
-		}
-		if models.IsErrListTitleCannotBeEmpty(err) {
-			return echo.NewHTTPError(http.StatusBadRequest, "You must provide at least a list title.")
-		}
-		if models.IsErrListTaskCannotBeEmpty(err) {
-			return echo.NewHTTPError(http.StatusBadRequest, "You must provide at least a list task text.")
-		}
-		if models.IsErrUserDoesNotExist(err) {
-			return echo.NewHTTPError(http.StatusBadRequest, "The user does not exist.")
-		}
-		if models.IsErrNeedToBeListWriter(err) {
-			return echo.NewHTTPError(http.StatusForbidden, "You need to have write access on that list.")
-		}
-
-		if models.IsErrNamespaceNameCannotBeEmpty(err) {
-			return echo.NewHTTPError(http.StatusNotFound, "The namespace name cannot be empty.")
-		}
-
-		if models.IsErrTeamNameCannotBeEmpty(err) {
-			return echo.NewHTTPError(http.StatusBadRequest, "The team name cannot be empty.")
-		}
-
-		if models.IsErrTeamAlreadyHasAccess(err) {
-			return echo.NewHTTPError(http.StatusBadRequest, "This team already has access.")
-		}
-		if models.IsErrUserIsMemberOfTeam(err) {
-			return echo.NewHTTPError(http.StatusBadRequest, "This user is already a member of that team.")
-		}
-
-		if models.IsErrUserAlreadyHasAccess(err) {
-			return echo.NewHTTPError(http.StatusBadRequest, "This user already has access to this list.")
-		}
-		if models.IsErrUserAlreadyHasNamespaceAccess(err) {
-			return echo.NewHTTPError(http.StatusBadRequest, "This user already has access to this namespace.")
-		}
-		if models.IsErrInvalidUserRight(err) {
-			return echo.NewHTTPError(http.StatusBadRequest, "The right is invalid.")
-		}
-
-		return echo.NewHTTPError(http.StatusInternalServerError)
+		return HandleHTTPError(err)
 	}
 
 	return ctx.JSON(http.StatusCreated, c.CObject)

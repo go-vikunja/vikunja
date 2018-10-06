@@ -2,6 +2,7 @@ package v1
 
 import (
 	"code.vikunja.io/api/models"
+	"code.vikunja.io/api/routes/crud"
 	"github.com/labstack/echo"
 	"net/http"
 )
@@ -25,18 +26,12 @@ func UserShow(c echo.Context) error {
 
 	userInfos, err := models.GetCurrentUser(c)
 	if err != nil {
-		if models.IsErrUserDoesNotExist(err) {
-			return echo.NewHTTPError(http.StatusNotFound, "The user does not exist.")
-		}
-		return echo.NewHTTPError(http.StatusInternalServerError, "Error getting user infos.")
+		return echo.NewHTTPError(http.StatusInternalServerError, "Error getting current user.")
 	}
 
 	user, err := models.GetUserByID(userInfos.ID)
 	if err != nil {
-		if models.IsErrUserDoesNotExist(err) {
-			return echo.NewHTTPError(http.StatusNotFound, "The user does not exist.")
-		}
-		return echo.NewHTTPError(http.StatusInternalServerError, "Error getting user infos.")
+		return crud.HandleHTTPError(err)
 	}
 
 	return c.JSON(http.StatusOK, user)
