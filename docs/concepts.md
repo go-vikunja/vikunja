@@ -6,7 +6,7 @@ functions and respective web handlers, all represented through interfaces.
 ## CRUDable
 
 This interface defines methods to Create/Read/ReadAll/Update/Delete something. In order to use the common web
-handler, the struct must implement this and the `rights` interface.
+handler, the struct must implement this and the `Rights` interface.
 
 The interface is defined as followed:
 
@@ -54,9 +54,12 @@ type Rights interface {
 ```
 
 When using the standard web handler, all methods except `CanRead()` are called before their `CRUD` counterparts. `CanRead()`
-is called after `Read()` was invoked as this would otherwise mean getting an object from the db to check if the user has the
+is called after `ReadOne()` was invoked as this would otherwise mean getting an object from the db to check if the user has the
 right to see it and then getting it again if thats the case. Calling the function afterwards means we only have to get the
 object once. 
 
 ## Standard web handler
 
+## Errors
+
+Error types with their messages and http-codes are set in `models/error.go`. If the error type implements `HTTPError`, the server returns a user-friendly error message when this error occours. This means it returns a good HTTP status code, a message, and an error code. The error code should be unique across all error codes and can be used on the client to show a localized error message or do other stuff based on the exact error the server returns. That way the client won't have to "guess" that the error message remains the same over multiple versions of Vikunja.
