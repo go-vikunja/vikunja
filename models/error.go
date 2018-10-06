@@ -69,29 +69,6 @@ func (err ErrUserEmailExists) HTTPError() HTTPError {
 	return HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrorCodeUserEmailExists, Message: "A user with this email address already exists."}
 }
 
-// ErrNoUsername represents a "UsernameAlreadyExists" kind of error.
-type ErrNoUsername struct {
-	UserID int64
-}
-
-// IsErrNoUsername checks if an error is a ErrUsernameExists.
-func IsErrNoUsername(err error) bool {
-	_, ok := err.(ErrNoUsername)
-	return ok
-}
-
-func (err ErrNoUsername) Error() string {
-	return fmt.Sprintf("No username provided [user id: %d]", err.UserID)
-}
-
-// ErrCodeNoUsername holds the unique world-error code of this error
-const ErrCodeNoUsername = 1003
-
-// HTTPError holds the http error description
-func (err ErrNoUsername) HTTPError() HTTPError {
-	return HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrCodeNoUsername, Message: "Please specify a username."}
-}
-
 // ErrNoUsernamePassword represents a "NoUsernamePassword" kind of error.
 type ErrNoUsernamePassword struct{}
 
@@ -230,54 +207,6 @@ func (err ErrListDoesNotExist) HTTPError() HTTPError {
 	return HTTPError{HTTPCode: http.StatusNotFound, Code: ErrCodeListDoesNotExist, Message: "This list does not exist."}
 }
 
-// ErrNeedToBeListAdmin represents an error, where the user is not the owner of that list (used i.e. when deleting a list)
-type ErrNeedToBeListAdmin struct {
-	ListID int64
-	UserID int64
-}
-
-// IsErrNeedToBeListAdmin checks if an error is a ErrListDoesNotExist.
-func IsErrNeedToBeListAdmin(err error) bool {
-	_, ok := err.(ErrNeedToBeListAdmin)
-	return ok
-}
-
-func (err ErrNeedToBeListAdmin) Error() string {
-	return fmt.Sprintf("User needs to be list admin to do this [ListID: %d, UserID: %d]", err.ListID, err.UserID)
-}
-
-// ErrCodeNeedToBeListAdmin holds the unique world-error code of this error
-const ErrCodeNeedToBeListAdmin = 3002
-
-// HTTPError holds the http error description
-func (err ErrNeedToBeListAdmin) HTTPError() HTTPError {
-	return HTTPError{HTTPCode: http.StatusForbidden, Code: ErrCodeNeedToBeListAdmin, Message: "You need to be list admin to do this."}
-}
-
-// ErrNeedToBeListWriter represents an error, where the user is not the owner of that list (used i.e. when deleting a list)
-type ErrNeedToBeListWriter struct {
-	ListID int64
-	UserID int64
-}
-
-// IsErrNeedToBeListWriter checks if an error is a ErrListDoesNotExist.
-func IsErrNeedToBeListWriter(err error) bool {
-	_, ok := err.(ErrNeedToBeListWriter)
-	return ok
-}
-
-func (err ErrNeedToBeListWriter) Error() string {
-	return fmt.Sprintf("User needs to have write access to that list [ListID: %d, UserID: %d]", err.ListID, err.UserID)
-}
-
-// ErrCodeNeedToBeListWriter holds the unique world-error code of this error
-const ErrCodeNeedToBeListWriter = 3003
-
-// HTTPError holds the http error description
-func (err ErrNeedToBeListWriter) HTTPError() HTTPError {
-	return HTTPError{HTTPCode: http.StatusForbidden, Code: ErrCodeNeedToBeListWriter, Message: "You need to have write access on that list."}
-}
-
 // ErrNeedToHaveListReadAccess represents an error, where the user dont has read access to that List
 type ErrNeedToHaveListReadAccess struct {
 	ListID int64
@@ -371,30 +300,6 @@ func (err ErrListTaskDoesNotExist) HTTPError() HTTPError {
 	return HTTPError{HTTPCode: http.StatusNotFound, Code: ErrCodeListTaskDoesNotExist, Message: "This list task does not exist"}
 }
 
-// ErrNeedToBeTaskOwner represents an error, where the user is not the owner of that task (used i.e. when deleting a list)
-type ErrNeedToBeTaskOwner struct {
-	TaskID int64
-	UserID int64
-}
-
-// IsErrNeedToBeTaskOwner checks if an error is a ErrNeedToBeTaskOwner.
-func IsErrNeedToBeTaskOwner(err error) bool {
-	_, ok := err.(ErrNeedToBeTaskOwner)
-	return ok
-}
-
-func (err ErrNeedToBeTaskOwner) Error() string {
-	return fmt.Sprintf("User needs to be task owner to do that [TaskID: %d, UserID: %d]", err.TaskID, err.UserID)
-}
-
-// ErrCodeNeedToBeTaskOwner holds the unique world-error code of this error
-const ErrCodeNeedToBeTaskOwner = 4003
-
-// HTTPError holds the http error description
-func (err ErrNeedToBeTaskOwner) HTTPError() HTTPError {
-	return HTTPError{HTTPCode: http.StatusForbidden, Code: ErrCodeNeedToBeTaskOwner, Message: "You need to be task owner to do that."}
-}
-
 // =================
 // Namespace errors
 // =================
@@ -422,30 +327,6 @@ func (err ErrNamespaceDoesNotExist) HTTPError() HTTPError {
 	return HTTPError{HTTPCode: http.StatusNotFound, Code: ErrCodeNamespaceDoesNotExist, Message: "Namespace not found."}
 }
 
-// ErrNeedToBeNamespaceOwner represents an error, where the user is not the owner of that namespace (used i.e. when deleting a namespace)
-type ErrNeedToBeNamespaceOwner struct {
-	NamespaceID int64
-	UserID      int64
-}
-
-// IsErrNeedToBeNamespaceOwner checks if an error is a ErrNamespaceDoesNotExist.
-func IsErrNeedToBeNamespaceOwner(err error) bool {
-	_, ok := err.(ErrNeedToBeNamespaceOwner)
-	return ok
-}
-
-func (err ErrNeedToBeNamespaceOwner) Error() string {
-	return fmt.Sprintf("User needs to be namespace owner [NamespaceID: %d, UserID: %d]", err.NamespaceID, err.UserID)
-}
-
-// ErrCodeNeedToBeNamespaceOwner holds the unique world-error code of this error
-const ErrCodeNeedToBeNamespaceOwner = 5002
-
-// HTTPError holds the http error description
-func (err ErrNeedToBeNamespaceOwner) HTTPError() HTTPError {
-	return HTTPError{HTTPCode: http.StatusForbidden, Code: ErrCodeNeedToBeNamespaceOwner, Message: "You need to be namespace owner to do this."}
-}
-
 // ErrUserDoesNotHaveAccessToNamespace represents an error, where the user is not the owner of that namespace (used i.e. when deleting a namespace)
 type ErrUserDoesNotHaveAccessToNamespace struct {
 	NamespaceID int64
@@ -470,54 +351,6 @@ func (err ErrUserDoesNotHaveAccessToNamespace) HTTPError() HTTPError {
 	return HTTPError{HTTPCode: http.StatusForbidden, Code: ErrCodeUserDoesNotHaveAccessToNamespace, Message: "This user does not have access to the namespace."}
 }
 
-// ErrUserNeedsToBeNamespaceAdmin represents an error, where the user is not the owner of that namespace (used i.e. when deleting a namespace)
-type ErrUserNeedsToBeNamespaceAdmin struct {
-	NamespaceID int64
-	UserID      int64
-}
-
-// IsErrUserNeedsToBeNamespaceAdmin checks if an error is a ErrNamespaceDoesNotExist.
-func IsErrUserNeedsToBeNamespaceAdmin(err error) bool {
-	_, ok := err.(ErrUserNeedsToBeNamespaceAdmin)
-	return ok
-}
-
-func (err ErrUserNeedsToBeNamespaceAdmin) Error() string {
-	return fmt.Sprintf("User needs to be namespace admin [NamespaceID: %d, UserID: %d]", err.NamespaceID, err.UserID)
-}
-
-// ErrCodeUserNeedsToBeNamespaceAdmin holds the unique world-error code of this error
-const ErrCodeUserNeedsToBeNamespaceAdmin = 5004
-
-// HTTPError holds the http error description
-func (err ErrUserNeedsToBeNamespaceAdmin) HTTPError() HTTPError {
-	return HTTPError{HTTPCode: http.StatusForbidden, Code: ErrCodeUserNeedsToBeNamespaceAdmin, Message: "You need to be namespace admin to do this."}
-}
-
-// ErrUserDoesNotHaveWriteAccessToNamespace represents an error, where the user is not the owner of that namespace (used i.e. when deleting a namespace)
-type ErrUserDoesNotHaveWriteAccessToNamespace struct {
-	NamespaceID int64
-	UserID      int64
-}
-
-// IsErrUserDoesNotHaveWriteAccessToNamespace checks if an error is a ErrNamespaceDoesNotExist.
-func IsErrUserDoesNotHaveWriteAccessToNamespace(err error) bool {
-	_, ok := err.(ErrUserDoesNotHaveWriteAccessToNamespace)
-	return ok
-}
-
-func (err ErrUserDoesNotHaveWriteAccessToNamespace) Error() string {
-	return fmt.Sprintf("User needs to have write access to the namespace [NamespaceID: %d, UserID: %d]", err.NamespaceID, err.UserID)
-}
-
-// ErrCodeUserDoesNotHaveWriteAccessToNamespace holds the unique world-error code of this error
-const ErrCodeUserDoesNotHaveWriteAccessToNamespace = 5005
-
-// HTTPError holds the http error description
-func (err ErrUserDoesNotHaveWriteAccessToNamespace) HTTPError() HTTPError {
-	return HTTPError{HTTPCode: http.StatusForbidden, Code: ErrCodeUserDoesNotHaveWriteAccessToNamespace, Message: "You need to have write access to this namespace to do this."}
-}
-
 // ErrNamespaceNameCannotBeEmpty represents an error, where a namespace name is empty.
 type ErrNamespaceNameCannotBeEmpty struct {
 	NamespaceID int64
@@ -540,54 +373,6 @@ const ErrCodeNamespaceNameCannotBeEmpty = 5006
 // HTTPError holds the http error description
 func (err ErrNamespaceNameCannotBeEmpty) HTTPError() HTTPError {
 	return HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrCodeNamespaceNameCannotBeEmpty, Message: "The namespace name cannot be empty."}
-}
-
-// ErrNamespaceOwnerCannotBeEmpty represents an error, where a namespace owner is empty.
-type ErrNamespaceOwnerCannotBeEmpty struct {
-	NamespaceID int64
-	UserID      int64
-}
-
-// IsErrNamespaceOwnerCannotBeEmpty checks if an error is a ErrNamespaceDoesNotExist.
-func IsErrNamespaceOwnerCannotBeEmpty(err error) bool {
-	_, ok := err.(ErrNamespaceOwnerCannotBeEmpty)
-	return ok
-}
-
-func (err ErrNamespaceOwnerCannotBeEmpty) Error() string {
-	return fmt.Sprintf("Namespace owner cannot be empty [NamespaceID: %d, UserID: %d]", err.NamespaceID, err.UserID)
-}
-
-// ErrCodeNamespaceOwnerCannotBeEmpty holds the unique world-error code of this error
-const ErrCodeNamespaceOwnerCannotBeEmpty = 5007
-
-// HTTPError holds the http error description
-func (err ErrNamespaceOwnerCannotBeEmpty) HTTPError() HTTPError {
-	return HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrCodeNamespaceOwnerCannotBeEmpty, Message: "The namespace owner cannot be empty."}
-}
-
-// ErrNeedToBeNamespaceAdmin represents an error, where the user is not the admin of that namespace (used i.e. when deleting a namespace)
-type ErrNeedToBeNamespaceAdmin struct {
-	NamespaceID int64
-	UserID      int64
-}
-
-// IsErrNeedToBeNamespaceAdmin checks if an error is a ErrNamespaceDoesNotExist.
-func IsErrNeedToBeNamespaceAdmin(err error) bool {
-	_, ok := err.(ErrNeedToBeNamespaceAdmin)
-	return ok
-}
-
-func (err ErrNeedToBeNamespaceAdmin) Error() string {
-	return fmt.Sprintf("User needs to be namespace admin [NamespaceID: %d, UserID: %d]", err.NamespaceID, err.UserID)
-}
-
-// ErrCodeNeedToBeNamespaceAdmin holds the unique world-error code of this error
-const ErrCodeNeedToBeNamespaceAdmin = 5008
-
-// HTTPError holds the http error description
-func (err ErrNeedToBeNamespaceAdmin) HTTPError() HTTPError {
-	return HTTPError{HTTPCode: http.StatusForbidden, Code: ErrCodeNeedToBeNamespaceAdmin, Message: "You need to be namespace owner to do this."}
 }
 
 // ErrNeedToHaveNamespaceReadAccess represents an error, where the user is not the owner of that namespace (used i.e. when deleting a namespace)
