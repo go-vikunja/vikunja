@@ -63,3 +63,14 @@ object once.
 ## Errors
 
 Error types with their messages and http-codes are set in `models/error.go`. If the error type implements `HTTPError`, the server returns a user-friendly error message when this error occours. This means it returns a good HTTP status code, a message, and an error code. The error code should be unique across all error codes and can be used on the client to show a localized error message or do other stuff based on the exact error the server returns. That way the client won't have to "guess" that the error message remains the same over multiple versions of Vikunja.
+
+An `HTTPError` is defined as follows:
+
+```go
+type HTTPError struct {
+	HTTPCode int    `json:"-"` // Can be any valid HTTP status code, I'd reccomend to use the constants of the http package.
+	Code     int    `json:"code"` // Must be a uniqe int identifier for this specific error. I'd reccomend defining a constant for this.
+	Message  string `json:"message"` // A user-readable message what went wrong.
+}
+```
+
