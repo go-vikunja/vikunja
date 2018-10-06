@@ -14,8 +14,8 @@ func (i *ListTask) Create(doer *User) (err error) {
 	}
 
 	// Check if the list exists
-	_, err = GetListByID(i.ListID)
-	if err != nil {
+	l := &List{ID: i.ListID}
+	if err = l.GetSimpleByID(); err != nil {
 		return
 	}
 

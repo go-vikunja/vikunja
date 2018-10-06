@@ -3,8 +3,7 @@ package models
 // Delete implements the delete method of CRUDable
 func (l *List) Delete() (err error) {
 	// Check if the list exists
-	_, err = GetListByID(l.ID)
-	if err != nil {
+	if err = l.GetSimpleByID(); err != nil {
 		return
 	}
 

@@ -9,8 +9,8 @@ func (ul *ListUser) Create(user *User) (err error) {
 	}
 
 	// Check if the list exists
-	l, err := GetListByID(ul.ListID)
-	if err != nil {
+	l := &List{ID: ul.ListID}
+	if err = l.GetSimpleByID(); err != nil {
 		return
 	}
 

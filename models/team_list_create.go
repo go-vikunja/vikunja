@@ -15,9 +15,9 @@ func (tl *TeamList) Create(doer *User) (err error) {
 	}
 
 	// Check if the list exists
-	_, err = GetListByID(tl.ListID)
-	if err != nil {
-		return
+	l := &List{ID: tl.ListID}
+	if err := l.GetSimpleByID(); err != nil {
+		return err
 	}
 
 	// Check if the team is already on the list

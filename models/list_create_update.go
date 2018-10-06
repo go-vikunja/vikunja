@@ -26,8 +26,7 @@ func CreateOrUpdateList(list *List) (err error) {
 		return
 	}
 
-	*list, err = GetListByID(list.ID)
-
+	err = list.ReadOne()
 	return
 
 }
@@ -35,8 +34,7 @@ func CreateOrUpdateList(list *List) (err error) {
 // Update implements the update method of CRUDable
 func (l *List) Update() (err error) {
 	// Check if it exists
-	_, err = GetListByID(l.ID)
-	if err != nil {
+	if err = l.GetSimpleByID(); err != nil {
 		return
 	}
 

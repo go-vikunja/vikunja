@@ -6,7 +6,8 @@ func (i *ListTask) CanDelete(doer *User) bool {
 	lI, _ := GetListTaskByID(i.ID)
 
 	// A user can delete an task if he has write acces to its list
-	list, _ := GetListByID(lI.ListID)
+	list := &List{ID: lI.ListID}
+	list.ReadOne()
 	return list.CanWrite(doer)
 }
 
@@ -16,13 +17,15 @@ func (i *ListTask) CanUpdate(doer *User) bool {
 	lI, _ := GetListTaskByID(i.ID)
 
 	// A user can update an task if he has write acces to its list
-	list, _ := GetListByID(lI.ListID)
+	list := &List{ID: lI.ListID}
+	list.ReadOne()
 	return list.CanWrite(doer)
 }
 
 // CanCreate determines if a user has the right to create a list task
 func (i *ListTask) CanCreate(doer *User) bool {
 	// A user can create an task if he has write acces to its list
-	list, _ := GetListByID(i.ListID)
+	list := &List{ID: i.ListID}
+	list.ReadOne()
 	return list.CanWrite(doer)
 }

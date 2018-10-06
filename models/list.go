@@ -18,33 +18,6 @@ type List struct {
 	Rights   `xorm:"-" json:"-"`
 }
 
-// GetListByID returns a list by its ID
-func GetListByID(id int64) (list List, err error) {
-	if id < 1 {
-		return list, ErrListDoesNotExist{ID: id}
-	}
-
-	exists, err := x.ID(id).Get(&list)
-	if err != nil {
-		return list, err
-	}
-
-	if !exists {
-		return list, ErrListDoesNotExist{ID: id}
-	}
-
-	// Get list tasks
-	list.Tasks, err = GetTasksByListID(list.ID)
-	if err != nil {
-		return list, err
-	}
-
-	// Get list owner
-	list.Owner, err = GetUserByID(list.OwnerID)
-
-	return list, err
-}
-
 // GetListsByNamespaceID gets all lists in a namespace
 func GetListsByNamespaceID(nID int64) (lists []*List, err error) {
 	err = x.Where("namespace_id = ?", nID).Find(&lists)
@@ -87,7 +60,41 @@ func (l *List) ReadAll(user *User) (interface{}, error) {
 
 // ReadOne gets one list by its ID
 func (l *List) ReadOne() (err error) {
-	*l, err = GetListByID(l.ID)
+	err = l.GetSimpleByID()
+	if err != nil {
+		return err
+	}
+
+	// Get list tasks
+	l.Tasks, err = GetTasksByListID(l.ID)
+	if err != nil {
+		return err
+	}
+
+	// Get list owner
+	l.Owner, err = GetUserByID(l.OwnerID)
+	return
+}
+
+// GetSimple gets a list with only the basic items, aka no tasks or user objects. Returns an error if the list does not exist.
+func (l *List) GetSimpleByID() (err error) {
+	if l.ID < 1 {
+		return ErrListDoesNotExist{ID: l.ID}
+	}
+
+	// We need to re-init our list object, because otherwise xorm creates a "where for every item in that list object,
+	// leading to not finding anything if the id is good, but for example the title is different.
+	id := l.ID
+	*l = List{}
+	exists, err := x.Where("id = ?", id).Get(l)
+	if err != nil {
+		return
+	}
+
+	if !exists {
+		return ErrListDoesNotExist{ID: l.ID}
+	}
+
 	return
 }
 
