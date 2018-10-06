@@ -80,7 +80,7 @@ func (n *Namespace) checkTeamRights(user *User, r TeamRight) bool {
 		Join("LEFT", "team_namespaces", "namespaces.id = team_namespaces.namespace_id").
 		Join("LEFT", "team_members", "team_members.team_id = team_namespaces.team_id").
 		Where("namespaces.id = ? "+
-			"AND ((team_members.user_id = ?  AND team_namespaces.right = ?) "+
+			"AND (team_members.user_id = ?  AND team_namespaces.right = ?) "+
 			"OR namespaces.owner_id = ? ", n.ID, user.ID, r, user.ID).
 		Get(&Namespace{})
 	if err != nil {

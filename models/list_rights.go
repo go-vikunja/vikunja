@@ -78,7 +78,7 @@ func (l *List) checkListTeamRight(user *User, r TeamRight) bool {
 		Join("LEFT", []string{"team_members", "tm"}, "tm.team_id = tn.team_id").
 		Join("LEFT", []string{"team_list", "tl"}, "l.id = tl.list_id").
 		Join("LEFT", []string{"team_members", "tm2"}, "tm2.team_id = tl.team_id").
-		Where("((tm.user_id = ? AND tn.right = ?) OR (tm2.user_id = ? AND tl.rights = ?)) AND l.id = ?",
+		Where("((tm.user_id = ? AND tn.right = ?) OR (tm2.user_id = ? AND tl.right = ?)) AND l.id = ?",
 			user.ID, r, user.ID, r, l.ID).
 		Exist(&List{})
 	if err != nil {

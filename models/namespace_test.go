@@ -52,7 +52,7 @@ func TestNamespace_Create(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Try updating one with a nonexistant owner
-	dummynamespace.OwnerID = 94829838572
+	dummynamespace.Owner.ID = 94829838572
 	err = dummynamespace.Update()
 	assert.Error(t, err)
 	assert.True(t, IsErrUserDoesNotExist(err))
