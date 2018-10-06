@@ -34,7 +34,7 @@ func IsErrUsernameExists(err error) bool {
 }
 
 func (err ErrUsernameExists) Error() string {
-	return fmt.Sprintf("a user with this username does already exist [user id: %d, username: %s]", err.UserID, err.Username)
+	return fmt.Sprintf("User with that username already exists [user id: %d, username: %s]", err.UserID, err.Username)
 }
 
 // ErrorCodeUsernameExists holds the unique world-error code of this error
@@ -58,7 +58,7 @@ func IsErrUserEmailExists(err error) bool {
 }
 
 func (err ErrUserEmailExists) Error() string {
-	return fmt.Sprintf("a user with this email does already exist [user id: %d, email: %s]", err.UserID, err.Email)
+	return fmt.Sprintf("User with that email already exists [user id: %d, email: %s]", err.UserID, err.Email)
 }
 
 // ErrorCodeUserEmailExists holds the unique world-error code of this error
@@ -81,7 +81,7 @@ func IsErrNoUsername(err error) bool {
 }
 
 func (err ErrNoUsername) Error() string {
-	return fmt.Sprintf("you need to specify a username [user id: %d]", err.UserID)
+	return fmt.Sprintf("No username provided [user id: %d]", err.UserID)
 }
 
 // ErrCodeNoUsername holds the unique world-error code of this error
@@ -102,7 +102,7 @@ func IsErrNoUsernamePassword(err error) bool {
 }
 
 func (err ErrNoUsernamePassword) Error() string {
-	return fmt.Sprintf("you need to specify a username and a password")
+	return fmt.Sprintf("No username and password provided")
 }
 
 // ErrCodeNoUsernamePassword holds the unique world-error code of this error
@@ -125,7 +125,7 @@ func IsErrUserDoesNotExist(err error) bool {
 }
 
 func (err ErrUserDoesNotExist) Error() string {
-	return fmt.Sprintf("this user does not exist [user id: %d]", err.UserID)
+	return fmt.Sprintf("User does not exist [user id: %d]", err.UserID)
 }
 
 // ErrCodeUserDoesNotExist holds the unique world-error code of this error
@@ -146,7 +146,7 @@ func IsErrCouldNotGetUserID(err error) bool {
 }
 
 func (err ErrCouldNotGetUserID) Error() string {
-	return fmt.Sprintf("could not get user ID")
+	return fmt.Sprintf("Could not get user ID")
 }
 
 // ErrCodeCouldNotGetUserID holds the unique world-error code of this error
@@ -167,7 +167,7 @@ func IsErrCannotDeleteLastUser(err error) bool {
 }
 
 func (err ErrCannotDeleteLastUser) Error() string {
-	return fmt.Sprintf("cannot delete last user")
+	return fmt.Sprintf("Cannot delete last user")
 }
 
 // ErrCodeCannotDeleteLastUser holds the unique world-error code of this error
@@ -192,7 +192,7 @@ func IsErrIDCannotBeZero(err error) bool {
 }
 
 func (err ErrIDCannotBeZero) Error() string {
-	return fmt.Sprintf("ID cannot be 0")
+	return fmt.Sprintf("ID cannot be empty or 0")
 }
 
 // ErrCodeIDCannotBeZero holds the unique world-error code of this error
@@ -243,7 +243,7 @@ func IsErrNeedToBeListAdmin(err error) bool {
 }
 
 func (err ErrNeedToBeListAdmin) Error() string {
-	return fmt.Sprintf("You need to be list owner to do that [ListID: %d, UserID: %d]", err.ListID, err.UserID)
+	return fmt.Sprintf("User needs to be list admin to do this [ListID: %d, UserID: %d]", err.ListID, err.UserID)
 }
 
 // ErrCodeNeedToBeListAdmin holds the unique world-error code of this error
@@ -251,7 +251,7 @@ const ErrCodeNeedToBeListAdmin = 3002
 
 // HTTPError holds the http error description
 func (err ErrNeedToBeListAdmin) HTTPError() HTTPError {
-	return HTTPError{HTTPCode: http.StatusForbidden, Code: ErrCodeNeedToBeListAdmin, Message: "You need to be the list admin of that list."}
+	return HTTPError{HTTPCode: http.StatusForbidden, Code: ErrCodeNeedToBeListAdmin, Message: "You need to be list admin to do this."}
 }
 
 // ErrNeedToBeListWriter represents an error, where the user is not the owner of that list (used i.e. when deleting a list)
@@ -267,7 +267,7 @@ func IsErrNeedToBeListWriter(err error) bool {
 }
 
 func (err ErrNeedToBeListWriter) Error() string {
-	return fmt.Sprintf("You need to have write acces to the list to do that [ListID: %d, UserID: %d]", err.ListID, err.UserID)
+	return fmt.Sprintf("User needs to have write access to that list [ListID: %d, UserID: %d]", err.ListID, err.UserID)
 }
 
 // ErrCodeNeedToBeListWriter holds the unique world-error code of this error
@@ -291,7 +291,7 @@ func IsErrNeedToHaveListReadAccess(err error) bool {
 }
 
 func (err ErrNeedToHaveListReadAccess) Error() string {
-	return fmt.Sprintf("You need to be List owner to do that [ListID: %d, UserID: %d]", err.ListID, err.UserID)
+	return fmt.Sprintf("User needs to have read access to that list [ListID: %d, UserID: %d]", err.ListID, err.UserID)
 }
 
 // ErrCodeNeedToHaveListReadAccess holds the unique world-error code of this error
@@ -312,7 +312,7 @@ func IsErrListTitleCannotBeEmpty(err error) bool {
 }
 
 func (err ErrListTitleCannotBeEmpty) Error() string {
-	return fmt.Sprintf("List task text cannot be empty.")
+	return fmt.Sprintf("List title cannot be empty.")
 }
 
 // ErrCodeListTitleCannotBeEmpty holds the unique world-error code of this error
@@ -384,7 +384,7 @@ func IsErrNeedToBeTaskOwner(err error) bool {
 }
 
 func (err ErrNeedToBeTaskOwner) Error() string {
-	return fmt.Sprintf("You need to be task owner to do that [TaskID: %d, UserID: %d]", err.TaskID, err.UserID)
+	return fmt.Sprintf("User needs to be task owner to do that [TaskID: %d, UserID: %d]", err.TaskID, err.UserID)
 }
 
 // ErrCodeNeedToBeTaskOwner holds the unique world-error code of this error
@@ -435,7 +435,7 @@ func IsErrNeedToBeNamespaceOwner(err error) bool {
 }
 
 func (err ErrNeedToBeNamespaceOwner) Error() string {
-	return fmt.Sprintf("You need to be namespace owner to do that [NamespaceID: %d, UserID: %d]", err.NamespaceID, err.UserID)
+	return fmt.Sprintf("User needs to be namespace owner [NamespaceID: %d, UserID: %d]", err.NamespaceID, err.UserID)
 }
 
 // ErrCodeNeedToBeNamespaceOwner holds the unique world-error code of this error
@@ -459,7 +459,7 @@ func IsErrUserDoesNotHaveAccessToNamespace(err error) bool {
 }
 
 func (err ErrUserDoesNotHaveAccessToNamespace) Error() string {
-	return fmt.Sprintf("You need to have access to this namespace to do that [NamespaceID: %d, UserID: %d]", err.NamespaceID, err.UserID)
+	return fmt.Sprintf("User does not have access to the namespace [NamespaceID: %d, UserID: %d]", err.NamespaceID, err.UserID)
 }
 
 // ErrCodeUserDoesNotHaveAccessToNamespace holds the unique world-error code of this error
@@ -483,7 +483,7 @@ func IsErrUserNeedsToBeNamespaceAdmin(err error) bool {
 }
 
 func (err ErrUserNeedsToBeNamespaceAdmin) Error() string {
-	return fmt.Sprintf("You need to be namespace admin to do that [NamespaceID: %d, UserID: %d]", err.NamespaceID, err.UserID)
+	return fmt.Sprintf("User needs to be namespace admin [NamespaceID: %d, UserID: %d]", err.NamespaceID, err.UserID)
 }
 
 // ErrCodeUserNeedsToBeNamespaceAdmin holds the unique world-error code of this error
@@ -507,7 +507,7 @@ func IsErrUserDoesNotHaveWriteAccessToNamespace(err error) bool {
 }
 
 func (err ErrUserDoesNotHaveWriteAccessToNamespace) Error() string {
-	return fmt.Sprintf("You need to have write access to this namespace to do that [NamespaceID: %d, UserID: %d]", err.NamespaceID, err.UserID)
+	return fmt.Sprintf("User needs to have write access to the namespace [NamespaceID: %d, UserID: %d]", err.NamespaceID, err.UserID)
 }
 
 // ErrCodeUserDoesNotHaveWriteAccessToNamespace holds the unique world-error code of this error
@@ -579,7 +579,7 @@ func IsErrNeedToBeNamespaceAdmin(err error) bool {
 }
 
 func (err ErrNeedToBeNamespaceAdmin) Error() string {
-	return fmt.Sprintf("You need to be namespace owner to do that [NamespaceID: %d, UserID: %d]", err.NamespaceID, err.UserID)
+	return fmt.Sprintf("User needs to be namespace admin [NamespaceID: %d, UserID: %d]", err.NamespaceID, err.UserID)
 }
 
 // ErrCodeNeedToBeNamespaceAdmin holds the unique world-error code of this error
@@ -603,7 +603,7 @@ func IsErrNeedToHaveNamespaceReadAccess(err error) bool {
 }
 
 func (err ErrNeedToHaveNamespaceReadAccess) Error() string {
-	return fmt.Sprintf("You need to have namespace read access to do that [NamespaceID: %d, UserID: %d]", err.NamespaceID, err.UserID)
+	return fmt.Sprintf("User does not have access to that namespace [NamespaceID: %d, UserID: %d]", err.NamespaceID, err.UserID)
 }
 
 // ErrCodeNeedToHaveNamespaceReadAccess holds the unique world-error code of this error
@@ -627,7 +627,7 @@ func IsErrTeamDoesNotHaveAccessToNamespace(err error) bool {
 }
 
 func (err ErrTeamDoesNotHaveAccessToNamespace) Error() string {
-	return fmt.Sprintf("You need to have access to this namespace to do that [NamespaceID: %d, TeamID: %d]", err.NamespaceID, err.TeamID)
+	return fmt.Sprintf("Team does not have access to that namespace [NamespaceID: %d, TeamID: %d]", err.NamespaceID, err.TeamID)
 }
 
 // ErrCodeTeamDoesNotHaveAccessToNamespace holds the unique world-error code of this error
@@ -651,7 +651,7 @@ func IsErrUserAlreadyHasNamespaceAccess(err error) bool {
 }
 
 func (err ErrUserAlreadyHasNamespaceAccess) Error() string {
-	return fmt.Sprintf("This user already has access to that namespace. [User ID: %d, Namespace ID: %d]", err.UserID, err.NamespaceID)
+	return fmt.Sprintf("User already has access to that namespace. [User ID: %d, Namespace ID: %d]", err.UserID, err.NamespaceID)
 }
 
 // ErrCodeUserAlreadyHasNamespaceAccess holds the unique world-error code of this error
@@ -724,7 +724,7 @@ func IsErrInvalidTeamRight(err error) bool {
 }
 
 func (err ErrInvalidTeamRight) Error() string {
-	return fmt.Sprintf("The right is invalid [Right: %d]", err.Right)
+	return fmt.Sprintf("Team right invalid [Right: %d]", err.Right)
 }
 
 // ErrCodeInvalidTeamRight holds the unique world-error code of this error
@@ -748,7 +748,7 @@ func IsErrTeamAlreadyHasAccess(err error) bool {
 }
 
 func (err ErrTeamAlreadyHasAccess) Error() string {
-	return fmt.Sprintf("This team already has access. [Team ID: %d, ID: %d]", err.TeamID, err.ID)
+	return fmt.Sprintf("Team already has access. [Team ID: %d, ID: %d]", err.TeamID, err.ID)
 }
 
 // ErrCodeTeamAlreadyHasAccess holds the unique world-error code of this error
@@ -772,7 +772,7 @@ func IsErrUserIsMemberOfTeam(err error) bool {
 }
 
 func (err ErrUserIsMemberOfTeam) Error() string {
-	return fmt.Sprintf("This user is already a member of that team. [Team ID: %d, User ID: %d]", err.TeamID, err.UserID)
+	return fmt.Sprintf("User is already a member of that team. [Team ID: %d, User ID: %d]", err.TeamID, err.UserID)
 }
 
 // ErrCodeUserIsMemberOfTeam holds the unique world-error code of this error
@@ -820,7 +820,7 @@ func IsErrTeamDoesNotHaveAccessToList(err error) bool {
 }
 
 func (err ErrTeamDoesNotHaveAccessToList) Error() string {
-	return fmt.Sprintf("You need to have access to this List to do that [ListID: %d, TeamID: %d]", err.ListID, err.TeamID)
+	return fmt.Sprintf("Team does not have access to the list [ListID: %d, TeamID: %d]", err.ListID, err.TeamID)
 }
 
 // ErrCodeTeamDoesNotHaveAccessToList holds the unique world-error code of this error
@@ -847,7 +847,7 @@ func IsErrInvalidUserRight(err error) bool {
 }
 
 func (err ErrInvalidUserRight) Error() string {
-	return fmt.Sprintf("The right is invalid [Right: %d]", err.Right)
+	return fmt.Sprintf("User right is invalid [Right: %d]", err.Right)
 }
 
 // ErrCodeInvalidUserRight holds the unique world-error code of this error
@@ -871,7 +871,7 @@ func IsErrUserAlreadyHasAccess(err error) bool {
 }
 
 func (err ErrUserAlreadyHasAccess) Error() string {
-	return fmt.Sprintf("This user already has access to that list. [User ID: %d, List ID: %d]", err.UserID, err.ListID)
+	return fmt.Sprintf("User already has access to that list. [User ID: %d, List ID: %d]", err.UserID, err.ListID)
 }
 
 // ErrCodeUserAlreadyHasAccess holds the unique world-error code of this error
@@ -895,7 +895,7 @@ func IsErrUserDoesNotHaveAccessToList(err error) bool {
 }
 
 func (err ErrUserDoesNotHaveAccessToList) Error() string {
-	return fmt.Sprintf("You need to have access to this List to do that [ListID: %d, UserID: %d]", err.ListID, err.UserID)
+	return fmt.Sprintf("User does not have access to the list [ListID: %d, UserID: %d]", err.ListID, err.UserID)
 }
 
 // ErrCodeUserDoesNotHaveAccessToList holds the unique world-error code of this error
