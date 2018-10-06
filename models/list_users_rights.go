@@ -31,7 +31,7 @@ func (lu *ListUser) CanCreate(doer *User) bool {
 	// Get the list and check if the user has write access on it
 	l := List{ID: lu.ListID}
 	if err := l.GetSimpleByID(); err != nil {
-		Log.Error("Error occured during CanCreate for ListUser: %s", err)
+		Log.Error("Error occurred during CanCreate for ListUser: %s", err)
 		return false
 	}
 	return l.CanWrite(doer)
@@ -42,7 +42,7 @@ func (lu *ListUser) CanDelete(doer *User) bool {
 	// Get the list and check if the user has write access on it
 	l := List{ID: lu.ListID}
 	if err := l.GetSimpleByID(); err != nil {
-		Log.Error("Error occured during CanDelete for ListUser: %s", err)
+		Log.Error("Error occurred during CanDelete for ListUser: %s", err)
 		return false
 	}
 	return l.CanWrite(doer)
@@ -53,7 +53,7 @@ func (lu *ListUser) CanUpdate(doer *User) bool {
 	// Get the list and check if the user has write access on it
 	l := List{ID: lu.ListID}
 	if err := l.GetSimpleByID(); err != nil {
-		Log.Error("Error occured during CanUpdate for ListUser: %s", err)
+		Log.Error("Error occurred during CanUpdate for ListUser: %s", err)
 		return false
 	}
 	return l.CanWrite(doer)

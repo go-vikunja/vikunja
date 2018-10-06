@@ -48,7 +48,7 @@ func (l *List) CanRead(user *User) bool {
 // CanDelete checks if the user can delete a list
 func (l *List) CanDelete(doer *User) bool {
 	if err := l.GetSimpleByID(); err != nil {
-		Log.Error("Error occured during CanDelete for List: %s", err)
+		Log.Error("Error occurred during CanDelete for List: %s", err)
 		return false
 	}
 	return l.IsAdmin(doer)
@@ -57,7 +57,7 @@ func (l *List) CanDelete(doer *User) bool {
 // CanUpdate checks if the user can update a list
 func (l *List) CanUpdate(doer *User) bool {
 	if err := l.GetSimpleByID(); err != nil {
-		Log.Error("Error occured during CanUpdate for List: %s", err)
+		Log.Error("Error occurred during CanUpdate for List: %s", err)
 		return false
 	}
 	return l.CanWrite(doer)

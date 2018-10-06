@@ -76,7 +76,7 @@ func (l *List) ReadOne() (err error) {
 	return
 }
 
-// GetSimple gets a list with only the basic items, aka no tasks or user objects. Returns an error if the list does not exist.
+// GetSimpleByID gets a list with only the basic items, aka no tasks or user objects. Returns an error if the list does not exist.
 func (l *List) GetSimpleByID() (err error) {
 	if l.ID < 1 {
 		return ErrListDoesNotExist{ID: l.ID}

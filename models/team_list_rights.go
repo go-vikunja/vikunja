@@ -4,7 +4,7 @@ package models
 func (tl *TeamList) CanCreate(user *User) bool {
 	l := List{ID: tl.ListID}
 	if err := l.GetSimpleByID(); err != nil {
-		Log.Error("Error occured during CanCreate for TeamList: %s", err)
+		Log.Error("Error occurred during CanCreate for TeamList: %s", err)
 		return false
 	}
 	return l.IsAdmin(user)
@@ -14,7 +14,7 @@ func (tl *TeamList) CanCreate(user *User) bool {
 func (tl *TeamList) CanDelete(user *User) bool {
 	l := List{ID: tl.ListID}
 	if err := l.GetSimpleByID(); err != nil {
-		Log.Error("Error occured during CanDelete for TeamList: %s", err)
+		Log.Error("Error occurred during CanDelete for TeamList: %s", err)
 		return false
 	}
 	return l.IsAdmin(user)
@@ -24,7 +24,7 @@ func (tl *TeamList) CanDelete(user *User) bool {
 func (tl *TeamList) CanUpdate(user *User) bool {
 	l := List{ID: tl.ListID}
 	if err := l.GetSimpleByID(); err != nil {
-		Log.Error("Error occured during CanUpdate for TeamList: %s", err)
+		Log.Error("Error occurred during CanUpdate for TeamList: %s", err)
 		return false
 	}
 	return l.IsAdmin(user)
