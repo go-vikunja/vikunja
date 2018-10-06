@@ -50,13 +50,21 @@ func (n *Namespace) CanRead(user *User) bool {
 
 // CanUpdate checks if the user can update the namespace
 func (n *Namespace) CanUpdate(user *User) bool {
-	nn, _ := GetNamespaceByID(n.ID)
+	nn, err := GetNamespaceByID(n.ID)
+	if err != nil {
+		Log.Error("Error occurred during CanUpdate for Namespace: %s", err)
+		return false
+	}
 	return nn.IsAdmin(user)
 }
 
 // CanDelete checks if the user can delete a namespace
 func (n *Namespace) CanDelete(user *User) bool {
-	nn, _ := GetNamespaceByID(n.ID)
+	nn, err := GetNamespaceByID(n.ID)
+	if err != nil {
+		Log.Error("Error occurred during CanDelete for Namespace: %s", err)
+		return false
+	}
 	return nn.IsAdmin(user)
 }
 
@@ -75,8 +83,8 @@ func (n *Namespace) checkTeamRights(user *User, r TeamRight) bool {
 			"AND ((team_members.user_id = ?  AND team_namespaces.right = ?) "+
 			"OR namespaces.owner_id = ? ", n.ID, user.ID, r, user.ID).
 		Get(&Namespace{})
-
 	if err != nil {
+		Log.Error("Error occurred during checkTeamRights for Namespace: %s, TeamRight: %d", err, r)
 		return false
 	}
 
@@ -91,8 +99,8 @@ func (n *Namespace) checkUserRights(user *User, r UserRight) bool {
 			"namespaces.owner_id = ? "+
 			"OR (users_namespace.user_id = ? AND users_namespace.right = ?))", n.ID, user.ID, user.ID, r).
 		Get(&Namespace{})
-
 	if err != nil {
+		Log.Error("Error occurred during checkUserRights for Namespace: %s, UserRight: %d", err, r)
 		return false
 	}
 

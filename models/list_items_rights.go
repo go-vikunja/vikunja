@@ -3,7 +3,11 @@ package models
 // CanDelete checks if the user can delete an task
 func (i *ListTask) CanDelete(doer *User) bool {
 	// Get the task
-	lI, _ := GetListTaskByID(i.ID)
+	lI, err := GetListTaskByID(i.ID)
+	if err != nil {
+		Log.Error("Error occurred during CanDelete for ListTask: %s", err)
+		return false
+	}
 
 	// A user can delete an task if he has write acces to its list
 	list := &List{ID: lI.ListID}
@@ -14,7 +18,11 @@ func (i *ListTask) CanDelete(doer *User) bool {
 // CanUpdate determines if a user has the right to update a list task
 func (i *ListTask) CanUpdate(doer *User) bool {
 	// Get the task
-	lI, _ := GetListTaskByID(i.ID)
+	lI, err := GetListTaskByID(i.ID)
+	if err != nil {
+		Log.Error("Error occurred during CanDelete for ListTask: %s", err)
+		return false
+	}
 
 	// A user can update an task if he has write acces to its list
 	list := &List{ID: lI.ListID}

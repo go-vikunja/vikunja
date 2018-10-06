@@ -82,6 +82,7 @@ func (l *List) checkListTeamRight(user *User, r TeamRight) bool {
 			user.ID, r, user.ID, r, l.ID).
 		Exist(&List{})
 	if err != nil {
+		Log.Error("Error occurred during checkListTeamRight for List: %s", err)
 		return false
 	}
 
@@ -102,6 +103,7 @@ func (l *List) checkListUserRight(user *User, r UserRight) bool {
 			user.ID, r, user.ID, r, user.ID, l.ID).
 		Exist(&List{})
 	if err != nil {
+		Log.Error("Error occurred during checkListUserRight for List: %s", err)
 		return false
 	}
 
