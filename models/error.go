@@ -756,7 +756,7 @@ const ErrCodeTeamAlreadyHasAccess = 6004
 
 // HTTPError holds the http error description
 func (err ErrTeamAlreadyHasAccess) HTTPError() HTTPError {
-	return HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrCodeTeamAlreadyHasAccess, Message: "This team already has access."}
+	return HTTPError{HTTPCode: http.StatusConflict, Code: ErrCodeTeamAlreadyHasAccess, Message: "This team already has access."}
 }
 
 // ErrUserIsMemberOfTeam represents an error where a user is already member of a team.
