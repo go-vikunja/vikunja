@@ -27,6 +27,7 @@ func InitConfig() (err error) {
 	viper.SetDefault("database.database", "vikunja")
 	viper.SetDefault("database.path", "./vikunja.db")
 	viper.SetDefault("database.showqueries", false)
+	viper.SetDefault("database.openconnections", 100)
 	// Cacher
 	viper.SetDefault("cache.enabled", false)
 	viper.SetDefault("cache.type", "memory")

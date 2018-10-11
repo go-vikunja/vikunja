@@ -45,6 +45,9 @@ database:
   Path: "./vikunja.db"
   # Whether to show mysql queries or not. Useful for debugging.
   showqueries: "false"
+  # Sets the max open connections to the database. Only used when using mysql.
+  openconnections: 100
+
 
 cache:
   # If cache is enabled or not

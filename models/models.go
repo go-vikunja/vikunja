@@ -27,7 +27,9 @@ func getEngine() (*xorm.Engine, error) {
 			viper.GetString("database.password"),
 			viper.GetString("database.host"),
 			viper.GetString("database.database"))
-		return xorm.NewEngine("mysql", connStr)
+		e, err := xorm.NewEngine("mysql", connStr)
+		e.SetMaxOpenConns(viper.GetInt("database.openconnections"))
+		return e, err
 	}
 
 	// Otherwise use sqlite
