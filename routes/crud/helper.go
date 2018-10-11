@@ -22,7 +22,7 @@ type CObject interface {
 func HandleHTTPError(err error) *echo.HTTPError {
 	if a, has := err.(models.HTTPErrorProcessor); has {
 		errDetails := a.HTTPError()
-		return echo.NewHTTPError(errDetails.Code, errDetails)
+		return echo.NewHTTPError(errDetails.HTTPCode, errDetails)
 	}
 	models.Log.Error(err.Error())
 	return echo.NewHTTPError(http.StatusInternalServerError)
