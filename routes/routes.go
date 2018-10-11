@@ -77,7 +77,9 @@ func RegisterRoutes(e *echo.Echo) {
 	a.GET("/users", apiv1.UserList)
 
 	listHandler := &crud.WebHandler{
-		CObject: &models.List{},
+		EmptyStruct: func() crud.CObject {
+			return &models.List{}
+		},
 	}
 	a.GET("/lists", listHandler.ReadAllWeb)
 	a.GET("/lists/:list", listHandler.ReadOneWeb)
@@ -86,14 +88,18 @@ func RegisterRoutes(e *echo.Echo) {
 	a.PUT("/namespaces/:namespace/lists", listHandler.CreateWeb)
 
 	taskHandler := &crud.WebHandler{
-		CObject: &models.ListTask{},
+		EmptyStruct: func() crud.CObject {
+			return &models.ListTask{}
+		},
 	}
 	a.PUT("/lists/:list", taskHandler.CreateWeb)
 	a.DELETE("/tasks/:listtask", taskHandler.DeleteWeb)
 	a.POST("/tasks/:listtask", taskHandler.UpdateWeb)
 
 	listTeamHandler := &crud.WebHandler{
-		CObject: &models.TeamList{},
+		EmptyStruct: func() crud.CObject {
+			return &models.TeamList{}
+		},
 	}
 	a.GET("/lists/:list/teams", listTeamHandler.ReadAllWeb)
 	a.PUT("/lists/:list/teams", listTeamHandler.CreateWeb)
@@ -101,7 +107,9 @@ func RegisterRoutes(e *echo.Echo) {
 	a.POST("/lists/:list/teams/:team", listTeamHandler.UpdateWeb)
 
 	listUserHandler := &crud.WebHandler{
-		CObject: &models.ListUser{},
+		EmptyStruct: func() crud.CObject {
+			return &models.ListUser{}
+		},
 	}
 	a.GET("/lists/:list/users", listUserHandler.ReadAllWeb)
 	a.PUT("/lists/:list/users", listUserHandler.CreateWeb)
@@ -109,7 +117,9 @@ func RegisterRoutes(e *echo.Echo) {
 	a.POST("/lists/:list/users/:user", listUserHandler.UpdateWeb)
 
 	namespaceHandler := &crud.WebHandler{
-		CObject: &models.Namespace{},
+		EmptyStruct: func() crud.CObject {
+			return &models.Namespace{}
+		},
 	}
 	a.GET("/namespaces", namespaceHandler.ReadAllWeb)
 	a.PUT("/namespaces", namespaceHandler.CreateWeb)
@@ -119,7 +129,9 @@ func RegisterRoutes(e *echo.Echo) {
 	a.GET("/namespaces/:namespace/lists", apiv1.GetListsByNamespaceID)
 
 	namespaceTeamHandler := &crud.WebHandler{
-		CObject: &models.TeamNamespace{},
+		EmptyStruct: func() crud.CObject {
+			return &models.TeamNamespace{}
+		},
 	}
 	a.GET("/namespaces/:namespace/teams", namespaceTeamHandler.ReadAllWeb)
 	a.PUT("/namespaces/:namespace/teams", namespaceTeamHandler.CreateWeb)
@@ -127,7 +139,9 @@ func RegisterRoutes(e *echo.Echo) {
 	a.POST("/namespaces/:namespace/teams/:team", namespaceTeamHandler.UpdateWeb)
 
 	namespaceUserHandler := &crud.WebHandler{
-		CObject: &models.NamespaceUser{},
+		EmptyStruct: func() crud.CObject {
+			return &models.NamespaceUser{}
+		},
 	}
 	a.GET("/namespaces/:namespace/users", namespaceUserHandler.ReadAllWeb)
 	a.PUT("/namespaces/:namespace/users", namespaceUserHandler.CreateWeb)
@@ -135,7 +149,9 @@ func RegisterRoutes(e *echo.Echo) {
 	a.POST("/namespaces/:namespace/users/:user", namespaceUserHandler.UpdateWeb)
 
 	teamHandler := &crud.WebHandler{
-		CObject: &models.Team{},
+		EmptyStruct: func() crud.CObject {
+			return &models.Team{}
+		},
 	}
 	a.GET("/teams", teamHandler.ReadAllWeb)
 	a.GET("/teams/:team", teamHandler.ReadOneWeb)
@@ -144,7 +160,9 @@ func RegisterRoutes(e *echo.Echo) {
 	a.DELETE("/teams/:team", teamHandler.DeleteWeb)
 
 	teamMemberHandler := &crud.WebHandler{
-		CObject: &models.TeamMember{},
+		EmptyStruct: func() crud.CObject {
+			return &models.TeamMember{}
+		},
 	}
 	a.PUT("/teams/:team/members", teamMemberHandler.CreateWeb)
 	a.DELETE("/teams/:team/members/:user", teamMemberHandler.DeleteWeb)

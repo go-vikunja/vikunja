@@ -9,10 +9,13 @@ import (
 // WebHandler defines the webhandler object
 // This does web stuff, aka returns json etc. Uses CRUDable Methods to get the data
 type WebHandler struct {
-	CObject interface {
-		models.CRUDable
-		models.Rights
-	}
+	EmptyStruct func() CObject
+}
+
+// CObject is the definition of our object, holds the structs
+type CObject interface {
+	models.CRUDable
+	models.Rights
 }
 
 // HandleHTTPError does what it says

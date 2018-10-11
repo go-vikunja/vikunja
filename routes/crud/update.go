@@ -4,17 +4,16 @@ import (
 	"code.vikunja.io/api/models"
 	"github.com/labstack/echo"
 	"net/http"
-	"reflect"
 )
 
 // UpdateWeb is the webhandler to update an object
 func (c *WebHandler) UpdateWeb(ctx echo.Context) error {
-	// Re-initialize our model
-	p := reflect.ValueOf(c.CObject).Elem()
-	p.Set(reflect.Zero(p.Type()))
+
+	// Get our model
+	currentStruct := c.EmptyStruct()
 
 	// Get the object & bind params to struct
-	if err := ParamBinder(c.CObject, ctx); err != nil {
+	if err := ParamBinder(currentStruct, ctx); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "No or invalid model provided.")
 	}
 
@@ -23,16 +22,16 @@ func (c *WebHandler) UpdateWeb(ctx echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Could not determine the current user.")
 	}
-	if !c.CObject.CanUpdate(&currentUser) {
+	if !currentStruct.CanUpdate(&currentUser) {
 		models.Log.Noticef("%s [ID: %d] tried to update while not having the rights for it", currentUser.Username, currentUser.ID)
 		return echo.NewHTTPError(http.StatusForbidden)
 	}
 
 	// Do the update
-	err = c.CObject.Update()
+	err = currentStruct.Update()
 	if err != nil {
 		return HandleHTTPError(err)
 	}
 
-	return ctx.JSON(http.StatusOK, c.CObject)
+	return ctx.JSON(http.StatusOK, currentStruct)
 }

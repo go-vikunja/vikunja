@@ -8,8 +8,12 @@ import (
 
 // DeleteWeb is the web handler to delete something
 func (c *WebHandler) DeleteWeb(ctx echo.Context) error {
+
+	// Get our model
+	currentStruct := c.EmptyStruct()
+
 	// Bind params to struct
-	if err := ParamBinder(c.CObject, ctx); err != nil {
+	if err := ParamBinder(currentStruct, ctx); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid URL param.")
 	}
 
@@ -18,12 +22,12 @@ func (c *WebHandler) DeleteWeb(ctx echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
-	if !c.CObject.CanDelete(&user) {
+	if !currentStruct.CanDelete(&user) {
 		models.Log.Noticef("%s [ID: %d] tried to delete while not having the rights for it", user.Username, user.ID)
 		return echo.NewHTTPError(http.StatusForbidden)
 	}
 
-	err = c.CObject.Delete()
+	err = currentStruct.Delete()
 	if err != nil {
 		return HandleHTTPError(err)
 	}
