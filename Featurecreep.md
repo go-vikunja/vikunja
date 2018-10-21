@@ -220,15 +220,19 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
 * [ ] Search endpoints /users?s=name und /teams?s=name, erstmal nur mit Namen suchen.
 	-> Search methode in den Handler einbauen und dann die Endpoints entsprechend anpassen
 	-> Macht Sinn das in ne eigene Methode umzubauen weil der query dazu leicht anders ist und man das auch nicht sooo einfach integrieren kann (so nach dem Motto einfach nen Searchstring anhängen)
-* [ ] Userstuff aufräumen
-	-> Soweit es geht und Sinnvoll ist auf den neuen Handler umziehen
-		-> Login/Register/Password-reset geht natürlich nicht
-		-> Bleibt noch Profile abrufen und Einstellungen -> Macht also keinen Sinn das auf den neuen Handler umzuziehen
 * [ ] Methode einbauen, um mit einem gültigen token ein neues gültiges zu kriegen
 * [ ] Wir brauchen noch ne gute idee, wie man die listen kriegt, auf die man nur so Zugriff hat (ohne namespace)
 * [ ] Validation der ankommenden structs, am besten mit https://github.com/go-validator/validator
 * [ ] Pagination
 	* Sollte in der Config definierbar sein, wie viel pro Seite angezeigt werden soll, die CRUD-Methoden übergeben dann ein "gibt mir die Seite sowieso" an die CRUDable-Funktionenen, die müssen das dann Auswerten. Geht leider nicht anders, wenn man erst 2342352 Einträge hohlt und die dann nachträglich auf 200 begrenzt ist das ne massive Ressourcenverschwendung.
+
+#### Userstuff
+
+* [ ] Userstuff aufräumen
+	-> Soweit es geht und Sinnvoll ist auf den neuen Handler umziehen
+		-> Login/Register/Password-reset geht natürlich nicht
+		-> Bleibt noch Profile abrufen und Einstellungen -> Macht also keinen Sinn das auf den neuen Handler umzuziehen
+* [ ] Email-Verifizierung beim Registrieren
 
 ### Later/Nice to have
 
