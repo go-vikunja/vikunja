@@ -167,6 +167,9 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
 * [ ] Attachments
 * [ ] Repeating tasks
 * [ ] Tagesübersicht ("Was ist heute/diese Woche due?") -> Machen letztenendes die Clients, wir brauchen nur nen endpoint, der alle tasks auskotzt, der Client macht dann die Sortierung.
+	* [ ] Mit definierbarem Bereich, sollte aber trotzdem der server machen, so à la "Gib mir alles für diesen Monat"
+* [ ] Namespaces in Namespaces (in Namespaces in Namespaces in Namespaces...)
+	* [ ] Rechtemanagement dafür wird schwierig
 
 ## Clients
 
@@ -212,13 +215,20 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
 * [x] namespaces & listen updaten geht nicht, gibt nen 500er zurück
 * [x] Logging für alle Fehler irgendwohin, da gibts bestimmt ne coole library für
 * [x] Ne extra funktion für list exists machen, damit die nicht immer über GetListByID gehen, um sql-abfragen zu sparen
-* [ ] Search endpoints /users?s=name und /teams?s=name, erstmal nur mit Namen suchen.
-* [ ] Userstuff aufräumen, auf neuen Handler umziehen?
+* [x] Rausfinden warum xorm teilweise beim einfügen IDs mit einfügen will -> Das schlägt dann wegen duplicate fehl
 * [x] Bei den Structs "AfterLoad" raus, das verbraucht bei Gruppenabfragen zu viele SQL-Abfragen -> Die sollen einfach die entsprechenden Read()-Methoden verwenden (Krassestes bsp. ist GET /namespaces mit so ca 50 Abfragen)
+* [ ] Search endpoints /users?s=name und /teams?s=name, erstmal nur mit Namen suchen.
+	-> Search methode in den Handler einbauen und dann die Endpoints entsprechend anpassen
+	-> Macht Sinn das in ne eigene Methode umzubauen weil der query dazu leicht anders ist und man das auch nicht sooo einfach integrieren kann (so nach dem Motto einfach nen Searchstring anhängen)
+* [ ] Userstuff aufräumen
+	-> Soweit es geht und Sinnvoll ist auf den neuen Handler umziehen
+		-> Login/Register/Password-reset geht natürlich nicht
+		-> Bleibt noch Profile abrufen und Einstellungen -> Macht also keinen Sinn das auf den neuen Handler umzuziehen
 * [ ] Methode einbauen, um mit einem gültigen token ein neues gültiges zu kriegen
 * [ ] Wir brauchen noch ne gute idee, wie man die listen kriegt, auf die man nur so Zugriff hat (ohne namespace)
 * [ ] Validation der ankommenden structs, am besten mit https://github.com/go-validator/validator
-* [ ] Rausfinden warum xorm teilweise beim einfügen IDs mit einfügen will -> Das schlägt dann wegen duplicate fehl
+* [ ] Pagination
+	* Sollte in der Config definierbar sein, wie viel pro Seite angezeigt werden soll, die CRUD-Methoden übergeben dann ein "gibt mir die Seite sowieso" an die CRUDable-Funktionenen, die müssen das dann Auswerten. Geht leider nicht anders, wenn man erst 2342352 Einträge hohlt und die dann nachträglich auf 200 begrenzt ist das ne massive Ressourcenverschwendung.
 
 ### Later/Nice to have
 
