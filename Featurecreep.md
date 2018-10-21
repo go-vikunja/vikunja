@@ -225,6 +225,7 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
 * [ ] Validation der ankommenden structs, am besten mit https://github.com/go-validator/validator
 * [ ] Pagination
 	* Sollte in der Config definierbar sein, wie viel pro Seite angezeigt werden soll, die CRUD-Methoden übergeben dann ein "gibt mir die Seite sowieso" an die CRUDable-Funktionenen, die müssen das dann Auswerten. Geht leider nicht anders, wenn man erst 2342352 Einträge hohlt und die dann nachträglich auf 200 begrenzt ist das ne massive Ressourcenverschwendung.
+* [ ] Testing mit locust: https://locust.io/
 
 #### Userstuff
 
