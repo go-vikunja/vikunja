@@ -33,6 +33,7 @@
         * [x] Einzelne Teams ansehbar
             * [x] In den Teams, in denen der Nutzer admin ist, Bearbeitung ermöglichen
 	    * [x] Löschen ermöglichen
+    * [ ] Beim Team bearbeiten Nutzer suchen einbauen
 
 * [x] Sharingshit
     * [x] Listen für Nutzer
@@ -56,3 +57,4 @@
 * [ ] Zurück zu Home (wenn man auf das Logo klickt)
 * [ ] Erklärungen zu was wie funktioniert -> wiki?
 * [ ] Google fonts raus (sollen von lokal geladen werden)
+* [ ] Ladeanimationen erst nach 100ms anzeigen, sonst wird das überflüssigerweise angezeigt
