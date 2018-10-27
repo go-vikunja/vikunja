@@ -134,25 +134,45 @@ func (err ErrCouldNotGetUserID) HTTPError() HTTPError {
 	return HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrCodeCouldNotGetUserID, Message: "Could not get user id."}
 }
 
-// ErrCannotDeleteLastUser represents a "ErrCannotDeleteLastUser" kind of error.
-type ErrCannotDeleteLastUser struct{}
-
-// IsErrCannotDeleteLastUser checks if an error is a ErrCannotDeleteLastUser.
-func IsErrCannotDeleteLastUser(err error) bool {
-	_, ok := err.(ErrCannotDeleteLastUser)
-	return ok
+// ErrNoPasswordResetToken represents an error where no password reset token exists for that user
+type ErrNoPasswordResetToken struct {
+	UserID int64
 }
 
-func (err ErrCannotDeleteLastUser) Error() string {
-	return fmt.Sprintf("Cannot delete last user")
+func (err ErrNoPasswordResetToken) Error() string {
+	return fmt.Sprintf("No token to reset a password [UserID: %d]", err.UserID)
 }
 
-// ErrCodeCannotDeleteLastUser holds the unique world-error code of this error
-const ErrCodeCannotDeleteLastUser = 1007
+// ErrCodeNoPasswordResetToken holds the unique world-error code of this error
+const ErrCodeNoPasswordResetToken = 1008
 
 // HTTPError holds the http error description
-func (err ErrCannotDeleteLastUser) HTTPError() HTTPError {
-	return HTTPError{HTTPCode: http.StatusConflict, Code: ErrCodeCannotDeleteLastUser, Message: "Cannot delete the last user on the server."}
+func (err ErrNoPasswordResetToken) HTTPError() HTTPError {
+	return HTTPError{HTTPCode: http.StatusPreconditionFailed, Code: ErrCodeNoPasswordResetToken, Message: "No token to reset a user's password provided."}
+}
+
+// ErrInvalidPasswordResetToken is an error where the password reset token is invalid
+type ErrInvalidPasswordResetToken struct {
+	UserID int64
+	Token  string
+}
+
+func (err ErrInvalidPasswordResetToken) Error() string {
+	return fmt.Sprintf("Invalid token to reset a password [UserID: %d, Token: %s]", err.UserID, err.Token)
+}
+
+// ErrCodeInvalidPasswordResetToken holds the unique world-error code of this error
+const ErrCodeInvalidPasswordResetToken = 1009
+
+// HTTPError holds the http error description
+func (err ErrInvalidPasswordResetToken) HTTPError() HTTPError {
+	return HTTPError{HTTPCode: http.StatusPreconditionFailed, Code: ErrCodeInvalidPasswordResetToken, Message: "Invalid token to reset a user's password provided."}
+}
+
+// IsErrInvalidPasswordResetToken checks if an error is a ErrInvalidPasswordResetToken.
+func IsErrInvalidPasswordResetToken(err error) bool {
+	_, ok := err.(ErrInvalidPasswordResetToken)
+	return ok
 }
 
 // ===================

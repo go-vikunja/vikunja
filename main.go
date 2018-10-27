@@ -2,6 +2,7 @@ package main
 
 import (
 	"code.vikunja.io/api/models"
+	"code.vikunja.io/api/models/mail"
 	"code.vikunja.io/api/routes"
 
 	"context"
@@ -32,6 +33,9 @@ func main() {
 		models.Log.Error(err.Error())
 		os.Exit(1)
 	}
+
+	// Start the mail daemon
+	mail.StartMailDaemon()
 
 	// Version notification
 	models.Log.Infof("Vikunja version %s", Version)

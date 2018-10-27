@@ -1607,6 +1607,82 @@
         }
       }
     },
+    "/user/password/reset": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "user"
+        ],
+        "summary": "Resets a users password",
+        "operationId": "updatePassword",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/PasswordReset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/Message"
+          },
+          "400": {
+            "$ref": "#/responses/Message"
+          },
+          "404": {
+            "$ref": "#/responses/Message"
+          },
+          "500": {
+            "$ref": "#/responses/Message"
+          }
+        }
+      }
+    },
+    "/user/password/token": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "user"
+        ],
+        "summary": "Requests a token to reset a users password",
+        "operationId": "requestUpdatePasswordToken",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/PasswordTokenRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/Message"
+          },
+          "400": {
+            "$ref": "#/responses/Message"
+          },
+          "404": {
+            "$ref": "#/responses/Message"
+          },
+          "500": {
+            "$ref": "#/responses/Message"
+          }
+        }
+      }
+    },
     "/users": {
       "get": {
         "consumes": [
@@ -1868,6 +1944,37 @@
           "type": "integer",
           "format": "int64",
           "x-go-name": "UserID"
+        }
+      },
+      "x-go-package": "code.vikunja.io/api/models"
+    },
+    "PasswordReset": {
+      "description": "PasswordReset holds the data to reset a password",
+      "type": "object",
+      "properties": {
+        "new_password": {
+          "type": "string",
+          "x-go-name": "NewPassword"
+        },
+        "token": {
+          "type": "string",
+          "x-go-name": "Token"
+        },
+        "user_id": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "UserID"
+        }
+      },
+      "x-go-package": "code.vikunja.io/api/models"
+    },
+    "PasswordTokenRequest": {
+      "description": "PasswordTokenRequest defines the request format for password reset resqest",
+      "type": "object",
+      "properties": {
+        "user_name": {
+          "type": "string",
+          "x-go-name": "Username"
         }
       },
       "x-go-package": "code.vikunja.io/api/models"
@@ -2176,7 +2283,7 @@
     "parameterBodies": {
       "description": "parameterBodies",
       "schema": {
-        "$ref": "#/definitions/NamespaceUser"
+        "$ref": "#/definitions/PasswordTokenRequest"
       }
     }
   }

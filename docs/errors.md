@@ -9,7 +9,8 @@ This document describes the different errors Vikunja can return.
 | 1004 | 400 | No username and password specified. |
 | 1005 | 404 | The user does not exist. |
 | 1006 | 400 | Could not get the user id. |
-| 1007 | 409 | Cannot delete the last user on the system. |
+| 1008 | 412 | No password reset token provided. |
+| 1009 | 412 | Invalid password reset token. |
 | 2001 | 400 | ID cannot be empty or 0. |
 | 3001 | 404 | The list does not exist. |
 | 3004 | 403 | The user needs to have read permissions on that list to perform that action. |

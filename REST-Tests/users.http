@@ -21,4 +21,24 @@ Content-Type: application/json
   "new_password": "1234"
 }
 
+### Request a password to reset a password
+POST http://localhost:8080/api/v1/user/password/token
+Content-Type: application/json
+Accept: application/json
+
+{
+  "user_name": "user"
+}
+
+### Request a password to reset a password
+POST http://localhost:8080/api/v1/user/password/reset
+Content-Type: application/json
+Accept: application/json
+
+{
+  "user_id": 1,
+  "token": "syPYBkzonBbWEXtHQlMDwDMWfsGgkeHWYRBncIDtVBrizTHBGDPnNbpjwtKtKfutUuzCTfQcXLTFgVTzDsmHcPxvrQxlKTmjPyyDLEEwnHkRntsweFyrymjfhiqZwwPCsPLegtnruaaFerjPNgmCXPVjsSGSDWjQcJsVgkljgjeeRwowxYQxMZeLlVHitEHkNfXnXUeEQmPmGLwPuGBGEXhHJpsckYwkOQTulJzDSrsynzNaHRbxQfdxthToFOzidOKzJKdesQKIocTfSDPXzvVKdlSPkZRiyNIbFxoiIWRGQFSHltmqzDwxudwcDbMMwaLQloUWZahhfkFRPKLoFQQezPgYecIihrewglYvQOZfNISKAWyHyWfOBWAkrtGODpuJlTLZwImYzNSX",
+  "new_password": "1234"
+}
+
 ###

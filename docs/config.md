@@ -29,6 +29,8 @@ service:
   JWTSecret: "cei6gaezoosah2bao3ieZohkae5aicah"
   # The interface on which to run the webserver
   interface: ":3456"
+  # The URL of the frontend, used to send password reset emails.
+  frontendurl: ""
 
 database:
   # Database type to use. Supported types are mysql and sqlite.
@@ -60,4 +62,22 @@ cache:
   redishost: 'localhost:6379'
   # When using redis, this is the password used to authenicate against the redis server
   redispassword: ''
+
+mailer:
+  # SMTP Host
+  host: ""
+  # SMTP Host port
+  port: 587
+  # SMTP username
+  username: "user"
+  # SMTP password
+  password: ""
+  # Wether to skip verification of the tls certificate on the server
+  skiptlsverify: false
+  # The default from address when sending emails
+  fromemail: "mail@vikunja"
+  # The length of the mail queue.
+  queuelength: 100
+  # The timeout in seconds after which the current open connection to the mailserver will be closed.
+  queuetimeout: 30
 ```

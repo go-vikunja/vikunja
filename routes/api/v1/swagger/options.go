@@ -40,4 +40,10 @@ type swaggerParameterBodies struct {
 
 	// in:body
 	NamespaceUser models.NamespaceUser
+
+	// in:body
+	PasswordReset models.PasswordReset
+
+	// in:body
+	PasswordTokenRequest models.PasswordTokenRequest
 }

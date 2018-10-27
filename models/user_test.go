@@ -1,6 +1,7 @@
 package models
 
 import (
+	"code.vikunja.io/api/models/utils"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -20,24 +21,12 @@ func TestCreateUser(t *testing.T) {
 		Email:    "noone@example.com",
 	}
 
-	// Delete every preexisting user to have a fresh start
-	_, err = x.Where("1 = 1").Delete(&User{})
-	assert.NoError(t, err)
-
-	allusers, err := ListUsers("")
-	assert.NoError(t, err)
-	for _, user := range allusers {
-		// Delete it
-		err := DeleteUserByID(user.ID, &doer)
-		assert.NoError(t, err)
-	}
-
 	// Create a new user
 	createdUser, err := CreateUser(dummyuser)
 	assert.NoError(t, err)
 
 	// Create a second new user
-	createdUser2, err := CreateUser(User{Username: dummyuser.Username + "2", Email: dummyuser.Email + "m", Password: dummyuser.Password})
+	_, err = CreateUser(User{Username: dummyuser.Username + "2", Email: dummyuser.Email + "m", Password: dummyuser.Password})
 	assert.NoError(t, err)
 
 	// Check if it fails to create the same user again
@@ -128,9 +117,39 @@ func TestCreateUser(t *testing.T) {
 	err = DeleteUserByID(0, &doer)
 	assert.Error(t, err)
 	assert.True(t, IsErrIDCannotBeZero(err))
+}
 
-	// Try delete the last user (Should fail)
-	err = DeleteUserByID(createdUser2.ID, &doer)
+func TestUserPasswordReset(t *testing.T) {
+	// Request a new token
+	tr := &PasswordTokenRequest{
+		UserID: 1,
+	}
+	err := RequestUserPasswordResetToken(tr)
+	assert.NoError(t, err)
+
+	// Get the token / inside the user object
+	userWithToken, err := GetUserByID(1)
+	assert.NoError(t, err)
+
+	// Try resetting it
+	reset := &PasswordReset{
+		UserID: 1,
+		Token:  userWithToken.PasswordResetToken,
+	}
+
+	// Try resetting it without a password
+	reset.NewPassword = ""
+	err = UserPasswordReset(reset)
+	assert.True(t, IsErrNoUsernamePassword(err))
+
+	// Reset it
+	reset.NewPassword = "1234"
+	err = UserPasswordReset(reset)
+	assert.NoError(t, err)
+
+	// Try resetting it with a wrong token
+	reset.Token = utils.MakeRandomString(400)
+	err = UserPasswordReset(reset)
 	assert.Error(t, err)
-	assert.True(t, IsErrCannotDeleteLastUser(err))
+	assert.True(t, IsErrInvalidPasswordResetToken(err))
 }

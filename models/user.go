@@ -18,8 +18,11 @@ type User struct {
 	Username string `xorm:"varchar(250) not null unique" json:"username"`
 	Password string `xorm:"varchar(250) not null" json:"-"`
 	Email    string `xorm:"varchar(250)" json:"email"`
-	Created  int64  `xorm:"created" json:"-"`
-	Updated  int64  `xorm:"updated" json:"-"`
+
+	PasswordResetToken string `xorm:"varchar(450)" json:"-"`
+
+	Created int64 `xorm:"created" json:"-"`
+	Updated int64 `xorm:"updated" json:"-"`
 }
 
 // TableName returns the table name for users
@@ -61,7 +64,7 @@ func GetUser(user User) (userOut User, err error) {
 	exists, err := x.Get(&userOut)
 
 	if !exists {
-		return User{}, ErrUserDoesNotExist{}
+		return User{}, ErrUserDoesNotExist{UserID: user.ID}
 	}
 
 	return userOut, err

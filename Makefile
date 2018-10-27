@@ -16,7 +16,7 @@ endif
 GOFILES := $(shell find . -name "*.go" -type f ! -path "./vendor/*" ! -path "*/bindata.go")
 GOFMT ?= gofmt -s
 
-GOFLAGS := -i -v
+GOFLAGS := -v
 EXTRA_GOFLAGS ?=
 
 LDFLAGS := -X "main.Version=$(shell git describe --tags --always | sed 's/-/+/' | sed 's/^v//')" -X "main.Tags=$(TAGS)"
@@ -49,7 +49,7 @@ all: build
 
 .PHONY: clean
 clean:
-	go clean -i ./...
+	go clean ./...
 	rm -rf $(EXECUTABLE) $(DIST) $(BINDATA)
 
 .PHONY: test
@@ -133,6 +133,8 @@ release-copy:
 	$(foreach file,$(wildcard $(DIST)/binaries/$(EXECUTABLE)-*),cp $(file) $(DIST)/release/$(notdir $(file));)
 	mkdir $(DIST)/release/public
 	cp public/ $(DIST)/release/ -R
+	mkdir $(DIST)/release/templates
+	cp templates/ $(DIST)/templates/ -R
 
 .PHONY: release-check
 release-check:
@@ -141,7 +143,7 @@ release-check:
 
 .PHONY: release-os-package
 release-os-package:
-	$(foreach file,$(filter-out %.sha256,$(wildcard $(DIST)/release/$(EXECUTABLE)-*)),mkdir $(file)-full;mv $(file) $(file)-full/;	mv $(file).sha256 $(file)-full/; cp config.yml.sample $(file)-full/config.yml; cp $(DIST)/release/public $(file)-full/ -R; cp LICENSE $(file)-full/; )
+	$(foreach file,$(filter-out %.sha256,$(wildcard $(DIST)/release/$(EXECUTABLE)-*)),mkdir $(file)-full;mv $(file) $(file)-full/;	mv $(file).sha256 $(file)-full/; cp config.yml.sample $(file)-full/config.yml; cp $(DIST)/release/public $(file)-full/ -R; cp $(DIST)/release/templates $(file)-full/ -R; cp LICENSE $(file)-full/; )
 	rm $(DIST)/release/public -rf
 
 .PHONY: release-zip

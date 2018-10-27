@@ -17,8 +17,10 @@ func InitConfig() (err error) {
 		return err
 	}
 
+	// Service
 	viper.SetDefault("service.JWTSecret", random)
 	viper.SetDefault("service.interface", ":3456")
+	viper.SetDefault("service.frontendurl", "")
 	// Database
 	viper.SetDefault("database.type", "sqlite")
 	viper.SetDefault("database.host", "localhost")
@@ -34,6 +36,15 @@ func InitConfig() (err error) {
 	viper.SetDefault("cache.maxelementsize", 1000)
 	viper.SetDefault("cache.redishost", "localhost:6379")
 	viper.SetDefault("cache.redispassword", "")
+	// Mailer
+	viper.SetDefault("mailer.host", "")
+	viper.SetDefault("mailer.port", "587")
+	viper.SetDefault("mailer.user", "user")
+	viper.SetDefault("mailer.password", "")
+	viper.SetDefault("mailer.skiptlsverify", false)
+	viper.SetDefault("mailer.fromemail", "mail@vikunja")
+	viper.SetDefault("mailer.queuelength", 100)
+	viper.SetDefault("mailer.queuetimeout", 30)
 
 	// Init checking for environment variables
 	viper.SetEnvPrefix("vikunja")
