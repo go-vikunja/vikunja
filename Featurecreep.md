@@ -233,7 +233,7 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
 	-> Soweit es geht und Sinnvoll ist auf den neuen Handler umziehen
 		-> Login/Register/Password-reset geht natürlich nicht
 		-> Bleibt noch Profile abrufen und Einstellungen -> Macht also keinen Sinn das auf den neuen Handler umzuziehen
-* [ ] Email-Verifizierung beim Registrieren
+* [x] Email-Verifizierung beim Registrieren
 * [x] Password Reset -> Link via email oder so
 * [ ] Settings
 

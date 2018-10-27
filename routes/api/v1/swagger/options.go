@@ -46,4 +46,7 @@ type swaggerParameterBodies struct {
 
 	// in:body
 	PasswordTokenRequest models.PasswordTokenRequest
+
+	// in:body
+	EmailConfirm models.EmailConfirm
 }

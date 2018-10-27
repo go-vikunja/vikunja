@@ -67,6 +67,7 @@ func RegisterRoutes(e *echo.Echo) {
 	a.POST("/register", apiv1.RegisterUser)
 	a.POST("/user/password/token", apiv1.UserRequestResetPasswordToken)
 	a.POST("/user/password/reset", apiv1.UserResetPassword)
+	a.POST("/user/confirm", apiv1.UserConfirmEmail)
 
 	// ===== Routes with Authetification =====
 	// Authetification

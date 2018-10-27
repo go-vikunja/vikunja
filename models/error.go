@@ -174,6 +174,29 @@ func IsErrInvalidPasswordResetToken(err error) bool {
 	return ok
 }
 
+// ErrInvalidEmailConfirmToken is an error where the email confirm token is invalid
+type ErrInvalidEmailConfirmToken struct {
+	Token string
+}
+
+func (err ErrInvalidEmailConfirmToken) Error() string {
+	return fmt.Sprintf("Invalid email confirm token [Token: %s]", err.Token)
+}
+
+// ErrCodeInvalidEmailConfirmToken holds the unique world-error code of this error
+const ErrCodeInvalidEmailConfirmToken = 1010
+
+// HTTPError holds the http error description
+func (err ErrInvalidEmailConfirmToken) HTTPError() HTTPError {
+	return HTTPError{HTTPCode: http.StatusPreconditionFailed, Code: ErrCodeInvalidEmailConfirmToken, Message: "Invalid email confirm token."}
+}
+
+// IsErrInvalidEmailConfirmToken checks if an error is a ErrInvalidEmailConfirmToken.
+func IsErrInvalidEmailConfirmToken(err error) bool {
+	_, ok := err.(ErrInvalidEmailConfirmToken)
+	return ok
+}
+
 // ===================
 // Empty things errors
 // ===================

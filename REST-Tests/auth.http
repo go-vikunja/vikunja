@@ -9,17 +9,15 @@ Content-Type: application/json
 
 > {% client.global.set("auth_token", response.body.token); %}
 
-###
-
-## Register
+### Register
 
 POST http://localhost:8080/api/v1/register
 Content-Type: application/json
 
 {
-  "username": "user3",
+  "username": "user4",
   "password": "1234",
-  "email": "3@knt.li"
+  "email": "4@knt.li"
 }
 
 ###

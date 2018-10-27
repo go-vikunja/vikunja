@@ -18,8 +18,10 @@ type User struct {
 	Username string `xorm:"varchar(250) not null unique" json:"username"`
 	Password string `xorm:"varchar(250) not null" json:"-"`
 	Email    string `xorm:"varchar(250)" json:"email"`
+	IsActive bool   `json:"-"`
 
 	PasswordResetToken string `xorm:"varchar(450)" json:"-"`
+	EmailConfirmToken  string `xorm:"varchar(450)" json:"-"`
 
 	Created int64 `xorm:"created" json:"-"`
 	Updated int64 `xorm:"updated" json:"-"`

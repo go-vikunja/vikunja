@@ -1,6 +1,8 @@
 package models
 
 import (
+	"code.vikunja.io/api/models/mail"
+	"code.vikunja.io/api/models/utils"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -48,6 +50,12 @@ func CreateUser(user User) (newUser User, err error) {
 		return User{}, err
 	}
 
+	// Generate a confirm token
+	newUser.EmailConfirmToken = utils.MakeRandomString(400)
+
+	// The new user should not be activated until it confirms his mail address
+	newUser.IsActive = false
+
 	// Insert it
 	_, err = x.Insert(newUser)
 	if err != nil {
@@ -66,6 +74,13 @@ func CreateUser(user User) (newUser User, err error) {
 	if err != nil {
 		return User{}, err
 	}
+
+	// Send the user a mail with a link to confirm the mail
+	data := map[string]interface{}{
+		"User": newUserOut,
+	}
+
+	mail.SendMailWithTemplate(user.Email, newUserOut.Username+" + Vikunja = <3", "confirm-email", data)
 
 	return newUserOut, err
 }
