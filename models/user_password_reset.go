@@ -7,7 +7,6 @@ import (
 
 // PasswordReset holds the data to reset a password
 type PasswordReset struct {
-	UserID      int64  `json:"user_id"`
 	Token       string `json:"token"`
 	NewPassword string `json:"new_password"`
 }
@@ -20,20 +19,15 @@ func UserPasswordReset(reset *PasswordReset) (err error) {
 		return ErrNoUsernamePassword{}
 	}
 
-	// Check if the user exists
-	user, err := GetUserByID(reset.UserID)
-	if err != nil {
-		return
-	}
-
 	// Check if we have a token
-	exists, err := x.Where("password_reset_token = ? AND id = ?", reset.Token, user.ID).Exist(&User{})
+	var user User
+	exists, err := x.Where("password_reset_token = ?", reset.Token).Get(&user)
 	if err != nil {
 		return
 	}
 
 	if !exists {
-		return ErrInvalidPasswordResetToken{UserID: reset.UserID, Token: reset.Token}
+		return ErrInvalidPasswordResetToken{Token: reset.Token}
 	}
 
 	// Hash the password

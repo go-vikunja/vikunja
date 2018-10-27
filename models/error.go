@@ -153,12 +153,11 @@ func (err ErrNoPasswordResetToken) HTTPError() HTTPError {
 
 // ErrInvalidPasswordResetToken is an error where the password reset token is invalid
 type ErrInvalidPasswordResetToken struct {
-	UserID int64
-	Token  string
+	Token string
 }
 
 func (err ErrInvalidPasswordResetToken) Error() string {
-	return fmt.Sprintf("Invalid token to reset a password [UserID: %d, Token: %s]", err.UserID, err.Token)
+	return fmt.Sprintf("Invalid token to reset a password [Token: %s]", err.Token)
 }
 
 // ErrCodeInvalidPasswordResetToken holds the unique world-error code of this error
@@ -166,7 +165,7 @@ const ErrCodeInvalidPasswordResetToken = 1009
 
 // HTTPError holds the http error description
 func (err ErrInvalidPasswordResetToken) HTTPError() HTTPError {
-	return HTTPError{HTTPCode: http.StatusPreconditionFailed, Code: ErrCodeInvalidPasswordResetToken, Message: "Invalid token to reset a user's password provided."}
+	return HTTPError{HTTPCode: http.StatusPreconditionFailed, Code: ErrCodeInvalidPasswordResetToken, Message: "Invalid token to reset a user's password."}
 }
 
 // IsErrInvalidPasswordResetToken checks if an error is a ErrInvalidPasswordResetToken.
