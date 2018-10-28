@@ -5,6 +5,8 @@ FROM golang:1.11-alpine3.7 AS build-env
 
 ARG VIKUNJA_VERSION
 ENV TAGS "sqlite"
+ENV GO111MODULE=on
+ENV GOFLAGS=-mod=vendor
 
 #Build deps
 RUN apk --no-cache add build-base git
