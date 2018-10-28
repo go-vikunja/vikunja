@@ -10,17 +10,15 @@ clone:
 
 pipeline:
   build:
-    image: webhippie/golang:edge
+    image: vikunja/golang-build:latest
     pull: true
     group: build
     environment:
       TAGS: bindata sqlite
-      GOPATH: /srv/app
     commands:
-      - make clean
       - make lint
       - make fmt-check
-      - make swagger-check
+      # - make swagger-check # Inactive until go-swagger works with go modules
       - make ineffassign-check
       - make misspell-check
       - make build

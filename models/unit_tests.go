@@ -1,6 +1,7 @@
 package models
 
 import (
+	"code.vikunja.io/api/models/mail"
 	"fmt"
 	"github.com/go-xorm/core"
 	"github.com/go-xorm/xorm"
@@ -10,6 +11,10 @@ import (
 	"testing"
 )
 
+// IsTesting is set to true when we're running tests.
+// We don't have a good solution to test email sending yet, so we disable email sending when testing
+var IsTesting bool
+
 // MainTest creates the test engine
 func MainTest(m *testing.M, pathToRoot string) {
 	var err error
@@ -18,6 +23,11 @@ func MainTest(m *testing.M, pathToRoot string) {
 		fmt.Fprintf(os.Stderr, "Error creating test engine: %v\n", err)
 		os.Exit(1)
 	}
+
+	IsTesting = true
+
+	// Start the pseudo mail queue
+	mail.StartMailDaemon()
 
 	// Create test database
 	PrepareTestDatabase()

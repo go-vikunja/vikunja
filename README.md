@@ -32,6 +32,8 @@ Try it under [try.vikunja.io](https://try.vikunja.io)!
 
 ## Development
 
+We use go modules to vendor libraries for Vikunja, so you'll need at least go `1.11`.
+
 To contribute to Vikunja, fork the project and work on the master branch.
 
 Some internal packages are referenced using their respective package URL. This can become problematic. To “trick” the Go tool into thinking this is a clone from the official repository, download the source code into `$GOPATH/code.vikunja.io/api`. Fork the Vikunja repository, it should then be possible to switch the source directory on the command line.
@@ -44,7 +46,7 @@ To be able to create pull requests, the forked repository should be added as a r
 
 ```bash
 git remote rename origin upstream
-git remote add origin git@git.kolaente.de:<USERNAME>/vikunja.git
+git remote add origin git@git.kolaente.de:<USERNAME>/api.git
 git fetch --all --prune
 ```
 

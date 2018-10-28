@@ -122,7 +122,7 @@ func TestCreateUser(t *testing.T) {
 func TestUserPasswordReset(t *testing.T) {
 	// Request a new token
 	tr := &PasswordTokenRequest{
-		UserID: 1,
+		Username: "user1",
 	}
 	err := RequestUserPasswordResetToken(tr)
 	assert.NoError(t, err)
