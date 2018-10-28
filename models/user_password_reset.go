@@ -42,6 +42,11 @@ func UserPasswordReset(reset *PasswordReset) (err error) {
 		return
 	}
 
+	// Dont send a mail if we're testing
+	if IsTesting {
+		return
+	}
+
 	// Send a mail to the user to notify it his password was changed.
 	data := map[string]interface{}{
 		"User": user,
@@ -71,6 +76,11 @@ func RequestUserPasswordResetToken(tr *PasswordTokenRequest) (err error) {
 	// Save it
 	_, err = x.Where("id = ?", user.ID).Update(&user)
 	if err != nil {
+		return
+	}
+
+	// Dont send a mail if we're testing
+	if IsTesting {
 		return
 	}
 

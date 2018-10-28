@@ -16,7 +16,7 @@ endif
 GOFILES := $(shell find . -name "*.go" -type f ! -path "./vendor/*" ! -path "*/bindata.go")
 GOFMT ?= gofmt -s
 
-GOFLAGS := -v
+GOFLAGS := -v -mod=vendor
 EXTRA_GOFLAGS ?=
 
 LDFLAGS := -X "main.Version=$(shell git describe --tags --always | sed 's/-/+/' | sed 's/^v//')" -X "main.Tags=$(TAGS)"
@@ -44,6 +44,8 @@ else
 	endif
 endif
 
+VERSION := $(shell echo $(VERSION) | sed 's/\//\-/g')
+
 .PHONY: all
 all: build
 
@@ -58,12 +60,12 @@ test:
 	go tool cover -html=cover.out -o cover.html
 
 required-gofmt-version:
-	@go version  | grep -q '\(1.7\|1.8\|1.9\|1.10\|1.11\)' || { echo "We require go version 1.7, 1.8, 1.9 or 1.10 to format code" >&2 && exit 1; }
+	@go version  | grep -q '\(1.7\|1.8\|1.9\|1.10\|1.11\)' || { echo "We require go version 1.7, 1.8, 1.9, 1.10 or 1.11 to format code" >&2 && exit 1; }
 
 .PHONY: lint
 lint:
 	@hash golint > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
-		go get -u golang.org/x/lint/golint; \
+		go install $(GOFLAGS) golang.org/x/lint/golint; \
 	fi
 	for PKG in $(PACKAGES); do golint -set_exit_status $$PKG || exit 1; done;
 
@@ -101,7 +103,7 @@ release-dirs:
 .PHONY: release-windows
 release-windows:
 	@hash xgo > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
-		go get -u github.com/karalabe/xgo; \
+		go install $(GOFLAGS) github.com/karalabe/xgo; \
 	fi
 	xgo -dest $(DIST)/binaries -tags 'netgo $(TAGS)' -ldflags '-linkmode external -extldflags "-static" $(LDFLAGS)' -targets 'windows/*' -out vikunja-$(VERSION) .
 ifeq ($(CI),drone)
@@ -111,7 +113,7 @@ endif
 .PHONY: release-linux
 release-linux:
 	@hash xgo > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
-		go get -u github.com/karalabe/xgo; \
+		go install $(GOFLAGS) github.com/karalabe/xgo; \
 	fi
 	xgo -dest $(DIST)/binaries -tags 'netgo $(TAGS)' -ldflags '-linkmode external -extldflags "-static" $(LDFLAGS)' -targets 'linux/*' -out vikunja-$(VERSION) .
 ifeq ($(CI),drone)
@@ -121,7 +123,7 @@ endif
 .PHONY: release-darwin
 release-darwin:
 	@hash xgo > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
-		go get -u github.com/karalabe/xgo; \
+		go install $(GOFLAGS) github.com/karalabe/xgo; \
 	fi
 	xgo -dest $(DIST)/binaries -tags 'netgo $(TAGS)' -ldflags '$(LDFLAGS)' -targets 'darwin/*' -out vikunja-$(VERSION) .
 ifeq ($(CI),drone)
@@ -153,7 +155,7 @@ release-zip:
 .PHONY: generate-swagger
 generate-swagger:
 	@hash swagger > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
-		go get -u github.com/go-swagger/go-swagger/cmd/swagger; \
+		go install $(GOFLAGS) github.com/go-swagger/go-swagger/cmd/swagger; \
 	fi
 	swagger generate spec -o ./public/swagger/swagger.v1.json
 
@@ -169,27 +171,27 @@ swagger-check: generate-swagger
 .PHONY: swagger-validate
 swagger-validate:
 	@hash swagger > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
-		go get -u github.com/go-swagger/go-swagger/cmd/swagger; \
+		go install $(GOFLAGS) github.com/go-swagger/go-swagger/cmd/swagger; \
 	fi
 	swagger validate ./public/swagger/swagger.v1.json
 
 .PHONY: misspell-check
 misspell-check:
 	@hash misspell > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
-		go get -u github.com/client9/misspell/cmd/misspell; \
+		go install $(GOFLAGS) github.com/client9/misspell/cmd/misspell; \
 	fi
 	for S in $(GOFILES); do misspell -error $$S || exit 1; done;
 
 .PHONY: ineffassign-check
 ineffassign-check:
 	@hash ineffassign > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
-		go get -u github.com/gordonklaus/ineffassign; \
+		go install $(GOFLAGS) github.com/gordonklaus/ineffassign; \
 	fi
 	for S in $(GOFILES); do ineffassign $$S || exit 1; done;
 
 .PHONY: gocyclo-check
 gocyclo-check:
 	@hash gocyclo > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
-		go get github.com/fzipp/gocyclo; \
+		go install $(GOFLAGS) github.com/fzipp/gocyclo; \
 	fi
 	for S in $(GOFILES); do gocyclo -over 14 $$S || exit 1; done;

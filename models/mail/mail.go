@@ -13,13 +13,13 @@ var Queue chan *gomail.Message
 
 // StartMailDaemon starts the mail daemon
 func StartMailDaemon() {
+	Queue = make(chan *gomail.Message, viper.GetInt("mailer.queuelength"))
+
 	if viper.GetString("mailer.host") == "" {
 		//models.Log.Warning("Mailer seems to be not configured! Please see the config docs for more details.")
 		fmt.Println("Mailer seems to be not configured! Please see the config docs for more details.")
 		return
 	}
-
-	Queue = make(chan *gomail.Message, viper.GetInt("mailer.queuelength"))
 
 	go func() {
 		d := gomail.NewDialer(viper.GetString("mailer.host"), viper.GetInt("mailer.port"), viper.GetString("mailer.username"), viper.GetString("mailer.password"))
