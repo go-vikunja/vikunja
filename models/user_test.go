@@ -133,7 +133,6 @@ func TestUserPasswordReset(t *testing.T) {
 
 	// Try resetting it
 	reset := &PasswordReset{
-		UserID: 1,
 		Token:  userWithToken.PasswordResetToken,
 	}
 

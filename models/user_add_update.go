@@ -75,6 +75,11 @@ func CreateUser(user User) (newUser User, err error) {
 		return User{}, err
 	}
 
+	// Dont send a mail if we're testing
+	if IsTesting {
+		return newUserOut, err
+	}
+
 	// Send the user a mail with a link to confirm the mail
 	data := map[string]interface{}{
 		"User": newUserOut,
