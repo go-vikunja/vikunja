@@ -1,9 +1,11 @@
 package main
 
 import (
-	"code.vikunja.io/api/models"
-	"code.vikunja.io/api/models/mail"
-	"code.vikunja.io/api/routes"
+	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/mail"
+	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/routes"
 
 	"context"
 	"github.com/spf13/viper"
@@ -18,19 +20,19 @@ var Version = "0.1"
 func main() {
 
 	// Init logging
-	models.InitLogger()
+	log.InitLogger()
 
 	// Init Config
-	err := models.InitConfig()
+	err := config.InitConfig()
 	if err != nil {
-		models.Log.Error(err.Error())
+		log.Log.Error(err.Error())
 		os.Exit(1)
 	}
 
 	// Set Engine
 	err = models.SetEngine()
 	if err != nil {
-		models.Log.Error(err.Error())
+		log.Log.Error(err.Error())
 		os.Exit(1)
 	}
 
@@ -38,7 +40,7 @@ func main() {
 	mail.StartMailDaemon()
 
 	// Version notification
-	models.Log.Infof("Vikunja version %s", Version)
+	log.Log.Infof("Vikunja version %s", Version)
 
 	// Start the webserver
 	e := routes.NewEcho()
@@ -57,7 +59,7 @@ func main() {
 	<-quit
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	models.Log.Infof("Sutting down...")
+	log.Log.Infof("Shutting down...")
 	if err := e.Shutdown(ctx); err != nil {
 		e.Logger.Fatal(err)
 	}
