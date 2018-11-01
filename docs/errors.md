@@ -11,6 +11,9 @@ This document describes the different errors Vikunja can return.
 | 1006 | 400 | Could not get the user id. |
 | 1008 | 412 | No password reset token provided. |
 | 1009 | 412 | Invalid password reset token. |
+| 1010 | 412 | Invalid email confirm token. |
+| 1011 | 412 | Wrong username or password. |
+| 1012 | 412 | Email address of the user not confirmed. |
 | 2001 | 400 | ID cannot be empty or 0. |
 | 3001 | 404 | The list does not exist. |
 | 3004 | 403 | The user needs to have read permissions on that list to perform that action. |

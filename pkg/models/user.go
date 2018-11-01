@@ -74,17 +74,23 @@ func GetUser(user User) (userOut User, err error) {
 
 // CheckUserCredentials checks user credentials
 func CheckUserCredentials(u *UserLogin) (User, error) {
-
 	// Check if the user exists
 	user, err := GetUser(User{Username: u.Username})
 	if err != nil {
 		return User{}, err
 	}
 
+	// User is invalid if it needs to verify its email address
+	if !user.IsActive {
+		return User{}, ErrEmailNotConfirmed{UserID: user.ID}
+	}
+
 	// Check the users password
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(u.Password))
-
 	if err != nil {
+		if err == bcrypt.ErrMismatchedHashAndPassword {
+			return User{}, ErrWrongUsernameOrPassword{}
+		}
 		return User{}, err
 	}
 

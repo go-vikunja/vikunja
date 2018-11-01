@@ -61,14 +61,22 @@ func TestCreateUser(t *testing.T) {
 	assert.Error(t, err)
 	assert.True(t, IsErrUserDoesNotExist(err))
 
-	// Check the user credentials
+	// Check the user credentials with an unverified email
 	user, err := CheckUserCredentials(&UserLogin{"testuu", "1234"})
+	assert.Error(t, err)
+	assert.True(t, IsErrEmailNotConfirmed(err))
+
+	// Update everything and check again
+	_, err = x.Cols("is_active").Where("true").Update(User{IsActive: true})
+	assert.NoError(t, err)
+	user, err = CheckUserCredentials(&UserLogin{"testuu", "1234"})
 	assert.NoError(t, err)
 	assert.Equal(t, "testuu", user.Username)
 
 	// Check wrong password (should also fail)
 	_, err = CheckUserCredentials(&UserLogin{"testuu", "12345"})
 	assert.Error(t, err)
+	assert.True(t, IsErrWrongUsernameOrPassword(err))
 
 	// Check usercredentials for a nonexistent user (should fail)
 	_, err = CheckUserCredentials(&UserLogin{"dfstestuu", "1234"})

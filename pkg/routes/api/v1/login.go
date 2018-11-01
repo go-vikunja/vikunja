@@ -2,6 +2,7 @@ package v1
 
 import (
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/routes/crud"
 	"crypto/md5"
 	"encoding/hex"
 	"github.com/dgrijalva/jwt-go"
@@ -41,7 +42,7 @@ func Login(c echo.Context) error {
 	// Check user
 	user, err := models.CheckUserCredentials(&u)
 	if err != nil {
-		return c.JSON(http.StatusUnauthorized, models.Message{"Wrong username or password."})
+		return crud.HandleHTTPError(err)
 	}
 
 	// Create token

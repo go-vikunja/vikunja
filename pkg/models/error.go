@@ -197,6 +197,51 @@ func IsErrInvalidEmailConfirmToken(err error) bool {
 	return ok
 }
 
+// ErrWrongUsernameOrPassword is an error where the email was not confirmed
+type ErrWrongUsernameOrPassword struct {
+}
+
+func (err ErrWrongUsernameOrPassword) Error() string {
+	return fmt.Sprintf("Wrong username or password")
+}
+
+// ErrCodeWrongUsernameOrPassword holds the unique world-error code of this error
+const ErrCodeWrongUsernameOrPassword = 1011
+
+// HTTPError holds the http error description
+func (err ErrWrongUsernameOrPassword) HTTPError() HTTPError {
+	return HTTPError{HTTPCode: http.StatusPreconditionFailed, Code: ErrCodeWrongUsernameOrPassword, Message: "Wrong username or password."}
+}
+
+// IsErrWrongUsernameOrPassword checks if an error is a IsErrEmailNotConfirmed.
+func IsErrWrongUsernameOrPassword(err error) bool {
+	_, ok := err.(ErrWrongUsernameOrPassword)
+	return ok
+}
+
+// ErrEmailNotConfirmed is an error where the email was not confirmed
+type ErrEmailNotConfirmed struct {
+	UserID int64
+}
+
+func (err ErrEmailNotConfirmed) Error() string {
+	return fmt.Sprintf("Email is not confirmed [UserID: %d]", err.UserID)
+}
+
+// ErrCodeEmailNotConfirmed holds the unique world-error code of this error
+const ErrCodeEmailNotConfirmed = 1012
+
+// HTTPError holds the http error description
+func (err ErrEmailNotConfirmed) HTTPError() HTTPError {
+	return HTTPError{HTTPCode: http.StatusPreconditionFailed, Code: ErrCodeEmailNotConfirmed, Message: "Please confirm your email address."}
+}
+
+// IsErrEmailNotConfirmed checks if an error is a IsErrEmailNotConfirmed.
+func IsErrEmailNotConfirmed(err error) bool {
+	_, ok := err.(ErrEmailNotConfirmed)
+	return ok
+}
+
 // ===================
 // Empty things errors
 // ===================
