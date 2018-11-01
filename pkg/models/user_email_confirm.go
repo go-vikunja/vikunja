@@ -8,6 +8,12 @@ type EmailConfirm struct {
 // UserEmailConfirm handles the confirmation of an email address
 func UserEmailConfirm(c *EmailConfirm) (err error) {
 
+	// Check if we have an email confirm token
+	if c.Token == "" {
+		return ErrInvalidEmailConfirmToken{}
+	}
+
+	// Check if the token is valid
 	user := User{}
 	has, err := x.Where("email_confirm_token = ?", c.Token).Get(&user)
 	if err != nil {
