@@ -2,6 +2,9 @@
 	<div>
 		<h2 class="title">Login</h2>
 		<div class="box">
+			<div v-if="confirmedEmailSuccess" class="notification is-success has-text-centered">
+				You successfully confirmed your email! You can log in now.
+			</div>
 			<form id="loginform" @submit.prevent="submit">
 				<div class="field">
 					<div class="control">
@@ -32,6 +35,7 @@
 <script>
     import auth from '../../auth'
     import router from '../../router'
+    import {HTTP} from '../../http-common'
 
     export default {
         data() {
@@ -41,10 +45,27 @@
                     password: ''
                 },
                 error: '',
+                confirmedEmailSuccess: false,
                 loading: false
             }
         },
         beforeMount() {
+            // Try to verify the email
+			let emailVerifyToken = localStorage.getItem('emailConfirmToken')
+			if (emailVerifyToken !== '') {
+				this.loading = true
+				HTTP.post(`user/confirm`, {token: emailVerifyToken})
+					.then(() => {
+                        localStorage.removeItem('emailConfirmToken')
+                        this.loading = false
+                        this.confirmedEmailSuccess = true
+                    })
+                    .catch(e => {
+                        this.loading = false
+                        this.error = e.response.data.message
+                    })
+			}
+
             // Check if the user is already logged in, if so, redirect him to the homepage
             if (auth.user.authenticated) {
                 router.push({name: 'home'})
