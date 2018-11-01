@@ -74,6 +74,11 @@ func GetUser(user User) (userOut User, err error) {
 
 // CheckUserCredentials checks user credentials
 func CheckUserCredentials(u *UserLogin) (User, error) {
+	// Check if we have any credentials
+	if u.Password == "" || u.Username == "" {
+		return User{}, ErrNoUsernamePassword{}
+	}
+
 	// Check if the user exists
 	user, err := GetUser(User{Username: u.Username})
 	if err != nil {
