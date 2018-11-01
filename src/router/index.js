@@ -5,6 +5,8 @@ import HomeComponent from '@/components/Home'
 // User Handling
 import LoginComponent from '@/components/user/Login'
 import RegisterComponent from '@/components/user/Register'
+import PasswordResetComponent from '@/components/user/PasswordReset'
+import GetPasswordResetComponent from '@/components/user/RequestPasswordReset'
 // List Handling
 import ShowListComponent from '@/components/lists/ShowList'
 import NewListComponent from '@/components/lists/NewList'
@@ -20,6 +22,7 @@ import NewTeamComponent from '@/components/teams/NewTeam'
 Vue.use(Router)
 
 export default new Router({
+  mode:'history',
   routes: [
     {
       path: '/',
@@ -30,6 +33,16 @@ export default new Router({
       path: '/login',
       name: 'login',
       component: LoginComponent
+    },
+    {
+      path: '/get-password-reset',
+      name: 'getPasswordReset',
+      component: GetPasswordResetComponent
+    },
+    {
+      path: '/password-reset',
+      name: 'passwordReset',
+      component: PasswordResetComponent
     },
     {
       path: '/register',

@@ -1,46 +1,42 @@
 <template>
-	<div class="container has-text-centered">
-		<div class="column is-4 is-offset-4">
-			<img src="images/logo-full.svg"/>
-			<h2 class="title">Register</h2>
-			<div class="box">
-				<form id="registerform" @submit.prevent="submit">
-					<div class="field">
-						<div class="control">
-							<input type="text" class="input" name="username" placeholder="Username" v-model="credentials.username" required>
-						</div>
+	<div>
+		<h2 class="title">Register</h2>
+		<div class="box">
+			<form id="registerform" @submit.prevent="submit">
+				<div class="field">
+					<div class="control">
+						<input type="text" class="input" name="username" placeholder="Username" v-model="credentials.username" required>
 					</div>
-					<div class="field">
-						<div class="control">
-							<input type="text" class="input" name="email" placeholder="E-mail address" v-model="credentials.email" required>
-						</div>
+				</div>
+				<div class="field">
+					<div class="control">
+						<input type="text" class="input" name="email" placeholder="E-mail address" v-model="credentials.email" required>
 					</div>
-					<div class="field">
-						<div class="control">
-							<input type="password" class="input" name="password1" placeholder="Password" v-model="credentials.password" required>
-						</div>
+				</div>
+				<div class="field">
+					<div class="control">
+						<input type="password" class="input" name="password1" placeholder="Password" v-model="credentials.password" required>
 					</div>
-					<div class="field">
-						<div class="control">
-							<input type="password" class="input" name="password2" placeholder="Retype password" v-model="credentials.password2" required>
-						</div>
+				</div>
+				<div class="field">
+					<div class="control">
+						<input type="password" class="input" name="password2" placeholder="Retype password" v-model="credentials.password2" required>
 					</div>
+				</div>
 
-					<div class="field is-grouped">
-						<div class="control">
-							<button type="submit" class="button is-primary" v-bind:class="{ 'is-loading': loading}">Register</button>
-							<router-link :to="{ name: 'login' }" class="button">Login</router-link>
-						</div>
+				<div class="field is-grouped">
+					<div class="control">
+						<button type="submit" class="button is-primary" v-bind:class="{ 'is-loading': loading}">Register</button>
+						<router-link :to="{ name: 'login' }" class="button">Login</router-link>
 					</div>
-					<div class="notification is-info" v-if="loading">
-						Loading...
-					</div>
-					<div class="notification is-danger" v-if="error">
-						{{ error }}
-					</div>
-				</form>
-
-			</div>
+				</div>
+				<div class="notification is-info" v-if="loading">
+					Loading...
+				</div>
+				<div class="notification is-danger" v-if="error">
+					{{ error }}
+				</div>
+			</form>
 		</div>
 	</div>
 </template>

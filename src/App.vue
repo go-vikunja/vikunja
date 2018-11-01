@@ -70,7 +70,12 @@
 				</div>
 			</div>
 			<div v-else>
-				<router-view/>
+				<div class="container has-text-centered">
+					<div class="column is-4 is-offset-4">
+						<img src="images/logo-full.svg"/>
+							<router-view/>
+					</div>
+				</div>
 			</div>
 		</div>
 		<notifications position="bottom left" />
@@ -81,6 +86,7 @@
     import auth from './auth'
     import {HTTP} from './http-common'
 	import message from './message'
+    import router from './router'
 
     export default {
         name: 'app',
@@ -92,6 +98,14 @@
                 namespaces: [],
             }
         },
+		beforeMount() {
+            // Password reset
+            if(this.$route.query.userPasswordReset !== undefined) {
+				localStorage.removeItem('passwordResetToken') // Delete an eventually preexisting old token
+				localStorage.setItem('passwordResetToken', this.$route.query.userPasswordReset)
+                router.push({name: 'passwordReset'})
+			}
+		},
         created() {
             if (this.user.authenticated) {
                 this.loadNamespaces()

@@ -58,3 +58,7 @@
 * [ ] Erklärungen zu was wie funktioniert -> wiki?
 * [ ] Google fonts raus (sollen von lokal geladen werden)
 * [ ] Ladeanimationen erst nach 100ms anzeigen, sonst wird das überflüssigerweise angezeigt
+
+* [ ] Userstuff
+    * [ ] Email-Verification
+    * [x] Password forgot
