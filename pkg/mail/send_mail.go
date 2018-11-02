@@ -94,7 +94,6 @@ func SendMailWithTemplate(to, subject, tpl string, data map[string]interface{}) 
 		HTMLMessage: htmlContent.String(),
 		ContentType: ContentTypeMultipart,
 		Boundary:    boundary,
-		Headers:     []*header{{Field: "MIME-Version", Content: "1.0"}},
 	}
 
 	SendMail(opts)
