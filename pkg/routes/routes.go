@@ -99,6 +99,13 @@ func RegisterRoutes(e *echo.Echo) {
 	a.DELETE("/tasks/:listtask", taskHandler.DeleteWeb)
 	a.POST("/tasks/:listtask", taskHandler.UpdateWeb)
 
+	listTaskHandler := &crud.WebHandler{
+		EmptyStruct: func() crud.CObject {
+			return &models.ListTasksDummy{}
+		},
+	}
+	a.GET("/tasks", listTaskHandler.ReadAllWeb)
+
 	listTeamHandler := &crud.WebHandler{
 		EmptyStruct: func() crud.CObject {
 			return &models.TeamList{}

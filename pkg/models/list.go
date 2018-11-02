@@ -1,5 +1,7 @@
 package models
 
+import "sort"
+
 // List represents a list of tasks
 type List struct {
 	ID          int64  `xorm:"int(11) autoincr not null unique pk" json:"id" param:"list"`
@@ -26,31 +28,10 @@ func GetListsByNamespaceID(nID int64) (lists []*List, err error) {
 
 // ReadAll gets all lists a user has access to
 func (l *List) ReadAll(u *User) (interface{}, error) {
-	lists := []*List{}
-	fullUser, err := GetUserByID(u.ID)
+	lists, err := getRawListsForUser(u)
 	if err != nil {
-		return lists, err
+		return nil, err
 	}
-
-	// Gets all Lists where the user is either owner or in a team which has access to the list
-	// Or in a team which has namespace read access
-	err = x.Select("l.*").
-		Table("list").
-		Alias("l").
-		Join("INNER", []string{"namespaces", "n"}, "l.namespace_id = n.id").
-		Join("LEFT", []string{"team_namespaces", "tn"}, "tn.namespace_id = n.id").
-		Join("LEFT", []string{"team_members", "tm"}, "tm.team_id = tn.team_id").
-		Join("LEFT", []string{"team_list", "tl"}, "l.id = tl.list_id").
-		Join("LEFT", []string{"team_members", "tm2"}, "tm2.team_id = tl.team_id").
-		Join("LEFT", []string{"users_list", "ul"}, "ul.list_id = l.id").
-		Join("LEFT", []string{"users_namespace", "un"}, "un.namespace_id = l.namespace_id").
-		Where("tm.user_id = ?", fullUser.ID).
-		Or("tm2.user_id = ?", fullUser.ID).
-		Or("l.owner_id = ?", fullUser.ID).
-		Or("ul.user_id = ?", fullUser.ID).
-		Or("un.user_id = ?", fullUser.ID).
-		GroupBy("l.id").
-		Find(&lists)
 
 	// Add more list details
 	AddListDetails(lists)
@@ -98,6 +79,36 @@ func (l *List) GetSimpleByID() (err error) {
 	return
 }
 
+// Gets the lists only, without any tasks or so
+func getRawListsForUser(u *User) (lists []*List, err error) {
+	fullUser, err := GetUserByID(u.ID)
+	if err != nil {
+		return lists, err
+	}
+
+	// Gets all Lists where the user is either owner or in a team which has access to the list
+	// Or in a team which has namespace read access
+	err = x.Select("l.*").
+		Table("list").
+		Alias("l").
+		Join("INNER", []string{"namespaces", "n"}, "l.namespace_id = n.id").
+		Join("LEFT", []string{"team_namespaces", "tn"}, "tn.namespace_id = n.id").
+		Join("LEFT", []string{"team_members", "tm"}, "tm.team_id = tn.team_id").
+		Join("LEFT", []string{"team_list", "tl"}, "l.id = tl.list_id").
+		Join("LEFT", []string{"team_members", "tm2"}, "tm2.team_id = tl.team_id").
+		Join("LEFT", []string{"users_list", "ul"}, "ul.list_id = l.id").
+		Join("LEFT", []string{"users_namespace", "un"}, "un.namespace_id = l.namespace_id").
+		Where("tm.user_id = ?", fullUser.ID).
+		Or("tm2.user_id = ?", fullUser.ID).
+		Or("l.owner_id = ?", fullUser.ID).
+		Or("ul.user_id = ?", fullUser.ID).
+		Or("un.user_id = ?", fullUser.ID).
+		GroupBy("l.id").
+		Find(&lists)
+
+	return lists, err
+}
+
 // AddListDetails adds owner user objects and list tasks to all lists in the slice
 func AddListDetails(lists []*List) (err error) {
 	var listIDs []int64
@@ -140,4 +151,39 @@ func AddListDetails(lists []*List) (err error) {
 	}
 
 	return
+}
+
+// ListTasksDummy is a dummy we use to be able to use the crud handler
+type ListTasksDummy struct {
+	CRUDable
+	Rights
+}
+
+// ReadAll gets all tasks for a user
+func (lt *ListTasksDummy) ReadAll(u *User) (interface{}, error) {
+
+	// Get all lists
+	lists, err := getRawListsForUser(u)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get all list IDs and get the tasks
+	var listIDs []int64
+	for _, l := range lists {
+		listIDs = append(listIDs, l.ID)
+	}
+
+	// Then return all tasks for that lists
+	var tasks []*ListTask
+	if err := x.In("list_id", listIDs).Find(&tasks); err != nil {
+		return nil, err
+	}
+
+	// Sort it by due date
+	sort.Slice(tasks, func(i, j int) bool {
+		return tasks[i].DueDateUnix > tasks[j].DueDateUnix
+	})
+
+	return tasks, err
 }

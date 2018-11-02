@@ -99,3 +99,9 @@ DELETE http://localhost:8080/api/v1/lists/28/users/3
 Authorization: Bearer {{auth_token}}
 
 ###
+
+# Get all pending tasks
+GET http://localhost:8080/api/v1/tasks
+Authorization: Bearer {{auth_token}}
+
+###

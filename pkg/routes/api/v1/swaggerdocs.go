@@ -913,3 +913,18 @@ package v1
 //     "$ref": "#/responses/Message"
 //   "500":
 //     "$ref": "#/responses/Message"
+
+// swagger:operation GET /tasks lists getPendingTasks
+// ---
+// summary: gets all tasks for the currently authenticated user
+// consumes:
+// - application/json
+// produces:
+// - application/json
+// responses:
+//   "200":
+//     "$ref": "#/responses/ListTask"
+//   "400":
+//     "$ref": "#/responses/Message"
+//   "500":
+//     "$ref": "#/responses/Message"
