@@ -69,7 +69,7 @@ func SendMailWithTemplate(to, subject, tpl string, data map[string]interface{}) 
 	var plainContent bytes.Buffer
 
 	t := &Template{
-		Templates: template.Must(template.ParseGlob("templates/mail/*.tmpl")),
+		Templates: template.Must(template.ParseGlob(viper.GetString("service.rootpath") + "/templates/mail/*.tmpl")),
 	}
 
 	boundary := "np" + utils.MakeRandomString(13)

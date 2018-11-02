@@ -61,7 +61,7 @@ func RegisterRoutes(e *echo.Echo) {
 	a := e.Group("/api/v1")
 
 	// Swagger UI
-	a.Static("/swagger", "public/swagger")
+	a.Static("/swagger", viper.GetString("service.rootpath")+"/public/swagger")
 
 	a.POST("/login", apiv1.Login)
 	a.POST("/register", apiv1.RegisterUser)

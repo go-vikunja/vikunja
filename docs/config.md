@@ -31,6 +31,8 @@ service:
   interface: ":3456"
   # The URL of the frontend, used to send password reset emails.
   frontendurl: ""
+  # The base path on the file system where the binary and assets are
+  rootpath: <the path of the executable>
 
 database:
   # Database type to use. Supported types are mysql and sqlite.

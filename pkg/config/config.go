@@ -4,6 +4,8 @@ import (
 	"crypto/rand"
 	"fmt"
 	"github.com/spf13/viper"
+	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -21,6 +23,12 @@ func InitConfig() (err error) {
 	viper.SetDefault("service.JWTSecret", random)
 	viper.SetDefault("service.interface", ":3456")
 	viper.SetDefault("service.frontendurl", "")
+	ex, err := os.Executable()
+	if err != nil {
+		panic(err)
+	}
+	exPath := filepath.Dir(ex)
+	viper.SetDefault("service.rootpath", exPath)
 	// Database
 	viper.SetDefault("database.type", "sqlite")
 	viper.SetDefault("database.host", "localhost")
