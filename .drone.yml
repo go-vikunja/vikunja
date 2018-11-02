@@ -26,10 +26,8 @@ pipeline:
       event: [ push, tag, pull_request ]
 
   test:
-      image: webhippie/golang:edge
+      image: vikunja/golang-build:latest
       pull: true
-      environment:
-        GOPATH: /srv/app
       commands:
         - make test
       when:
