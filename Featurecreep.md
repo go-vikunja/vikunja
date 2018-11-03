@@ -236,6 +236,11 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
 * [x] Email-Verifizierung beim Registrieren
 * [x] Password Reset -> Link via email oder so
 * [ ] Settings
+* [ ] CalDAV
+  * [x] Basics
+  * [ ] Reminders
+  * [ ] Discovery, stichwort PROPFIND 
+
 
 ### Later/Nice to have
 

@@ -9,7 +9,7 @@ github.com/client9/misspell/cmd/misspell
 github.com/client9/misspell
 # github.com/davecgh/go-spew v1.1.1
 github.com/davecgh/go-spew/spew
-# github.com/dgrijalva/jwt-go v0.0.0-20170608005149-a539ee1a749a
+# github.com/dgrijalva/jwt-go v3.2.0+incompatible
 github.com/dgrijalva/jwt-go
 # github.com/fsnotify/fsnotify v1.4.7
 github.com/fsnotify/fsnotify
@@ -93,10 +93,10 @@ github.com/karalabe/xgo
 github.com/kr/pretty
 # github.com/kr/text v0.1.0
 github.com/kr/text
-# github.com/labstack/echo v3.1.0+incompatible
+# github.com/labstack/echo v0.0.0-20180911044237-1abaa3049251
 github.com/labstack/echo
 github.com/labstack/echo/middleware
-# github.com/labstack/gommon v0.0.0-20170925052817-57409ada9da0
+# github.com/labstack/gommon v0.0.0-20180312174116-6fe1405d73ec
 github.com/labstack/gommon/log
 github.com/labstack/gommon/color
 github.com/labstack/gommon/bytes
@@ -107,9 +107,9 @@ github.com/magiconair/properties
 github.com/mailru/easyjson/jlexer
 github.com/mailru/easyjson/jwriter
 github.com/mailru/easyjson/buffer
-# github.com/mattn/go-colorable v0.0.0-20170816031813-ad5389df28cd
+# github.com/mattn/go-colorable v0.0.9
 github.com/mattn/go-colorable
-# github.com/mattn/go-isatty v0.0.0-20170925054904-a5cdd64afdee
+# github.com/mattn/go-isatty v0.0.3
 github.com/mattn/go-isatty
 # github.com/mattn/go-sqlite3 v1.9.0
 github.com/mattn/go-sqlite3
@@ -140,7 +140,7 @@ github.com/toqueteos/webbrowser
 github.com/valyala/bytebufferpool
 # github.com/valyala/fasttemplate v0.0.0-20170224212429-dcecefd839c4
 github.com/valyala/fasttemplate
-# golang.org/x/crypto v0.0.0-20170930174604-9419663f5a44
+# golang.org/x/crypto v0.0.0-20180312195533-182114d58262
 golang.org/x/crypto/bcrypt
 golang.org/x/crypto/acme/autocert
 golang.org/x/crypto/blowfish

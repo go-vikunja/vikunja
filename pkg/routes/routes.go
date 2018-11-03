@@ -41,6 +41,8 @@ import (
 func NewEcho() *echo.Echo {
 	e := echo.New()
 
+	e.HideBanner = true
+
 	// Logger
 	e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
 		Format: "${time_rfc3339_nano}: ${remote_ip} ${method} ${status} ${uri} ${latency_human} - ${user_agent}\n",
@@ -68,6 +70,9 @@ func RegisterRoutes(e *echo.Echo) {
 	a.POST("/user/password/token", apiv1.UserRequestResetPasswordToken)
 	a.POST("/user/password/reset", apiv1.UserResetPassword)
 	a.POST("/user/confirm", apiv1.UserConfirmEmail)
+
+	// Caldav, with auth
+	a.GET("/tasks/caldav", apiv1.Caldav)
 
 	// ===== Routes with Authetification =====
 	// Authetification

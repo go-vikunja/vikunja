@@ -3,6 +3,7 @@ package middleware
 import (
 	"encoding/base64"
 	"strconv"
+	"strings"
 
 	"github.com/labstack/echo"
 )
@@ -23,11 +24,11 @@ type (
 	}
 
 	// BasicAuthValidator defines a function to validate BasicAuth credentials.
-	BasicAuthValidator func(string, string, echo.Context) (error, bool)
+	BasicAuthValidator func(string, string, echo.Context) (bool, error)
 )
 
 const (
-	basic        = "Basic"
+	basic        = "basic"
 	defaultRealm = "Restricted"
 )
 
@@ -54,7 +55,7 @@ func BasicAuth(fn BasicAuthValidator) echo.MiddlewareFunc {
 func BasicAuthWithConfig(config BasicAuthConfig) echo.MiddlewareFunc {
 	// Defaults
 	if config.Validator == nil {
-		panic("basic-auth middleware requires a validator function")
+		panic("echo: basic-auth middleware requires a validator function")
 	}
 	if config.Skipper == nil {
 		config.Skipper = DefaultBasicAuthConfig.Skipper
@@ -72,7 +73,7 @@ func BasicAuthWithConfig(config BasicAuthConfig) echo.MiddlewareFunc {
 			auth := c.Request().Header.Get(echo.HeaderAuthorization)
 			l := len(basic)
 
-			if len(auth) > l+1 && auth[:l] == basic {
+			if len(auth) > l+1 && strings.ToLower(auth[:l]) == basic {
 				b, err := base64.StdEncoding.DecodeString(auth[l+1:])
 				if err != nil {
 					return err
@@ -81,20 +82,19 @@ func BasicAuthWithConfig(config BasicAuthConfig) echo.MiddlewareFunc {
 				for i := 0; i < len(cred); i++ {
 					if cred[i] == ':' {
 						// Verify credentials
-						err, valid := config.Validator(cred[:i], cred[i+1:], c)
+						valid, err := config.Validator(cred[:i], cred[i+1:], c)
 						if err != nil {
 							return err
 						} else if valid {
 							return next(c)
 						}
+						break
 					}
 				}
 			}
 
-			realm := ""
-			if config.Realm == defaultRealm {
-				realm = defaultRealm
-			} else {
+			realm := defaultRealm
+			if config.Realm != defaultRealm {
 				realm = strconv.Quote(config.Realm)
 			}
 

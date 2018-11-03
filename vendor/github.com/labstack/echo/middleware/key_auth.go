@@ -20,7 +20,8 @@ type (
 		// Possible values:
 		// - "header:<name>"
 		// - "query:<name>"
-		KeyLookup string `json:"key_lookup"`
+		// - "form:<name>"
+		KeyLookup string `yaml:"key_lookup"`
 
 		// AuthScheme to be used in the Authorization header.
 		// Optional. Default value "Bearer".
@@ -32,7 +33,7 @@ type (
 	}
 
 	// KeyAuthValidator defines a function to validate KeyAuth credentials.
-	KeyAuthValidator func(string, echo.Context) (error, bool)
+	KeyAuthValidator func(string, echo.Context) (bool, error)
 
 	keyExtractor func(echo.Context) (string, error)
 )
@@ -72,7 +73,7 @@ func KeyAuthWithConfig(config KeyAuthConfig) echo.MiddlewareFunc {
 		config.KeyLookup = DefaultKeyAuthConfig.KeyLookup
 	}
 	if config.Validator == nil {
-		panic("key-auth middleware requires a validator function")
+		panic("echo: key-auth middleware requires a validator function")
 	}
 
 	// Initialize
@@ -81,6 +82,8 @@ func KeyAuthWithConfig(config KeyAuthConfig) echo.MiddlewareFunc {
 	switch parts[0] {
 	case "query":
 		extractor = keyFromQuery(parts[1])
+	case "form":
+		extractor = keyFromForm(parts[1])
 	}
 
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
@@ -94,7 +97,7 @@ func KeyAuthWithConfig(config KeyAuthConfig) echo.MiddlewareFunc {
 			if err != nil {
 				return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 			}
-			err, valid := config.Validator(key, c)
+			valid, err := config.Validator(key, c)
 			if err != nil {
 				return err
 			} else if valid {
@@ -111,14 +114,14 @@ func keyFromHeader(header string, authScheme string) keyExtractor {
 	return func(c echo.Context) (string, error) {
 		auth := c.Request().Header.Get(header)
 		if auth == "" {
-			return "", errors.New("Missing key in request header")
+			return "", errors.New("missing key in request header")
 		}
 		if header == echo.HeaderAuthorization {
 			l := len(authScheme)
 			if len(auth) > l+1 && auth[:l] == authScheme {
 				return auth[l+1:], nil
 			}
-			return "", errors.New("Invalid key in the request header")
+			return "", errors.New("invalid key in the request header")
 		}
 		return auth, nil
 	}
@@ -129,7 +132,18 @@ func keyFromQuery(param string) keyExtractor {
 	return func(c echo.Context) (string, error) {
 		key := c.QueryParam(param)
 		if key == "" {
-			return "", errors.New("Missing key in the query string")
+			return "", errors.New("missing key in the query string")
+		}
+		return key, nil
+	}
+}
+
+// keyFromForm returns a `keyExtractor` that extracts key from the form.
+func keyFromForm(param string) keyExtractor {
+	return func(c echo.Context) (string, error) {
+		key := c.FormValue(param)
+		if key == "" {
+			return "", errors.New("missing key in the form")
 		}
 		return key, nil
 	}

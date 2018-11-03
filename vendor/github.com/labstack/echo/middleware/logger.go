@@ -26,15 +26,18 @@ type (
 		// - time_unix_nano
 		// - time_rfc3339
 		// - time_rfc3339_nano
+		// - time_custom
 		// - id (Request ID)
 		// - remote_ip
 		// - uri
 		// - host
 		// - method
 		// - path
+		// - protocol
 		// - referer
 		// - user_agent
 		// - status
+		// - error
 		// - latency (In nanoseconds)
 		// - latency_human (Human readable)
 		// - bytes_in (Bytes received)
@@ -46,7 +49,10 @@ type (
 		// Example "${remote_ip} ${status}"
 		//
 		// Optional. Default value DefaultLoggerConfig.Format.
-		Format string `json:"format"`
+		Format string `yaml:"format"`
+
+		// Optional. Default value DefaultLoggerConfig.CustomTimeFormat.
+		CustomTimeFormat string `yaml:"custom_time_format"`
 
 		// Output is a writer where logs in JSON format are written.
 		// Optional. Default value os.Stdout.
@@ -63,11 +69,12 @@ var (
 	DefaultLoggerConfig = LoggerConfig{
 		Skipper: DefaultSkipper,
 		Format: `{"time":"${time_rfc3339_nano}","id":"${id}","remote_ip":"${remote_ip}","host":"${host}",` +
-			`"method":"${method}","uri":"${uri}","status":${status}, "latency":${latency},` +
+			`"method":"${method}","uri":"${uri}","status":${status},"error":"${error}","latency":${latency},` +
 			`"latency_human":"${latency_human}","bytes_in":${bytes_in},` +
 			`"bytes_out":${bytes_out}}` + "\n",
-		Output:  os.Stdout,
-		colorer: color.New(),
+		CustomTimeFormat: "2006-01-02 15:04:05.00000",
+		Output:           os.Stdout,
+		colorer:          color.New(),
 	}
 )
 
@@ -126,6 +133,8 @@ func LoggerWithConfig(config LoggerConfig) echo.MiddlewareFunc {
 					return buf.WriteString(time.Now().Format(time.RFC3339))
 				case "time_rfc3339_nano":
 					return buf.WriteString(time.Now().Format(time.RFC3339Nano))
+				case "time_custom":
+					return buf.WriteString(time.Now().Format(config.CustomTimeFormat))
 				case "id":
 					id := req.Header.Get(echo.HeaderXRequestID)
 					if id == "" {
@@ -146,6 +155,8 @@ func LoggerWithConfig(config LoggerConfig) echo.MiddlewareFunc {
 						p = "/"
 					}
 					return buf.WriteString(p)
+				case "protocol":
+					return buf.WriteString(req.Proto)
 				case "referer":
 					return buf.WriteString(req.Referer())
 				case "user_agent":
@@ -162,6 +173,10 @@ func LoggerWithConfig(config LoggerConfig) echo.MiddlewareFunc {
 						s = config.colorer.Cyan(n)
 					}
 					return buf.WriteString(s)
+				case "error":
+					if err != nil {
+						return buf.WriteString(err.Error())
+					}
 				case "latency":
 					l := stop.Sub(start)
 					return buf.WriteString(strconv.FormatInt(int64(l), 10))
@@ -183,6 +198,11 @@ func LoggerWithConfig(config LoggerConfig) echo.MiddlewareFunc {
 						return buf.Write([]byte(c.QueryParam(tag[6:])))
 					case strings.HasPrefix(tag, "form:"):
 						return buf.Write([]byte(c.FormValue(tag[5:])))
+					case strings.HasPrefix(tag, "cookie:"):
+						cookie, err := c.Cookie(tag[7:])
+						if err == nil {
+							return buf.Write([]byte(cookie.Value))
+						}
 					}
 				}
 				return 0, nil

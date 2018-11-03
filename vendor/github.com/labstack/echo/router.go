@@ -1,13 +1,11 @@
 package echo
 
-import "strings"
-
 type (
 	// Router is the registry of all registered routes for an `Echo` instance for
 	// request matching and URL path parameter parsing.
 	Router struct {
 		tree   *node
-		routes map[string]Route
+		routes map[string]*Route
 		echo   *Echo
 	}
 	node struct {
@@ -23,15 +21,16 @@ type (
 	kind          uint8
 	children      []*node
 	methodHandler struct {
-		connect HandlerFunc
-		delete  HandlerFunc
-		get     HandlerFunc
-		head    HandlerFunc
-		options HandlerFunc
-		patch   HandlerFunc
-		post    HandlerFunc
-		put     HandlerFunc
-		trace   HandlerFunc
+		connect  HandlerFunc
+		delete   HandlerFunc
+		get      HandlerFunc
+		head     HandlerFunc
+		options  HandlerFunc
+		patch    HandlerFunc
+		post     HandlerFunc
+		propfind HandlerFunc
+		put      HandlerFunc
+		trace    HandlerFunc
 	}
 )
 
@@ -47,7 +46,7 @@ func NewRouter(e *Echo) *Router {
 		tree: &node{
 			methodHandler: new(methodHandler),
 		},
-		routes: map[string]Route{},
+		routes: map[string]*Route{},
 		echo:   e,
 	}
 }
@@ -61,8 +60,8 @@ func (r *Router) Add(method, path string, h HandlerFunc) {
 	if path[0] != '/' {
 		path = "/" + path
 	}
-	ppath := path        // Pristine path
 	pnames := []string{} // Param names
+	ppath := path        // Pristine path
 
 	for i, l := 0, len(path); i < l; i++ {
 		if path[i] == ':' {
@@ -101,7 +100,7 @@ func (r *Router) insert(method, path string, h HandlerFunc, t kind, ppath string
 
 	cn := r.tree // Current node as root
 	if cn == nil {
-		panic("echo ⇛ invalid method")
+		panic("echo: invalid method")
 	}
 	search := path
 
@@ -175,12 +174,6 @@ func (r *Router) insert(method, path string, h HandlerFunc, t kind, ppath string
 				if len(cn.pnames) == 0 { // Issue #729
 					cn.pnames = pnames
 				}
-				for i, n := range pnames {
-					// Param name aliases
-					if i < len(cn.pnames) && !strings.Contains(cn.pnames[i], n) {
-						cn.pnames[i] += "," + n
-					}
-				}
 			}
 		}
 		return
@@ -233,22 +226,24 @@ func (n *node) findChildByKind(t kind) *node {
 
 func (n *node) addHandler(method string, h HandlerFunc) {
 	switch method {
-	case GET:
-		n.methodHandler.get = h
-	case POST:
-		n.methodHandler.post = h
-	case PUT:
-		n.methodHandler.put = h
-	case DELETE:
-		n.methodHandler.delete = h
-	case PATCH:
-		n.methodHandler.patch = h
-	case OPTIONS:
-		n.methodHandler.options = h
-	case HEAD:
-		n.methodHandler.head = h
 	case CONNECT:
 		n.methodHandler.connect = h
+	case DELETE:
+		n.methodHandler.delete = h
+	case GET:
+		n.methodHandler.get = h
+	case HEAD:
+		n.methodHandler.head = h
+	case OPTIONS:
+		n.methodHandler.options = h
+	case PATCH:
+		n.methodHandler.patch = h
+	case POST:
+		n.methodHandler.post = h
+	case PROPFIND:
+		n.methodHandler.propfind = h
+	case PUT:
+		n.methodHandler.put = h
 	case TRACE:
 		n.methodHandler.trace = h
 	}
@@ -256,22 +251,24 @@ func (n *node) addHandler(method string, h HandlerFunc) {
 
 func (n *node) findHandler(method string) HandlerFunc {
 	switch method {
-	case GET:
-		return n.methodHandler.get
-	case POST:
-		return n.methodHandler.post
-	case PUT:
-		return n.methodHandler.put
-	case DELETE:
-		return n.methodHandler.delete
-	case PATCH:
-		return n.methodHandler.patch
-	case OPTIONS:
-		return n.methodHandler.options
-	case HEAD:
-		return n.methodHandler.head
 	case CONNECT:
 		return n.methodHandler.connect
+	case DELETE:
+		return n.methodHandler.delete
+	case GET:
+		return n.methodHandler.get
+	case HEAD:
+		return n.methodHandler.head
+	case OPTIONS:
+		return n.methodHandler.options
+	case PATCH:
+		return n.methodHandler.patch
+	case POST:
+		return n.methodHandler.post
+	case PROPFIND:
+		return n.methodHandler.propfind
+	case PUT:
+		return n.methodHandler.put
 	case TRACE:
 		return n.methodHandler.trace
 	default:
@@ -394,7 +391,7 @@ func (r *Router) Find(method, path string, c Context) {
 		if cn = cn.findChildByKind(akind); cn == nil {
 			if nn != nil {
 				cn = nn
-				nn = nil // Next
+				nn = cn.parent // Next (Issue #954)
 				search = ns
 				if nk == pkind {
 					goto Param

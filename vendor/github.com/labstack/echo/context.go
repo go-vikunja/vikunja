@@ -31,6 +31,9 @@ type (
 		// IsTLS returns true if HTTP connection is TLS otherwise false.
 		IsTLS() bool
 
+		// IsWebSocket returns true if HTTP connection is WebSocket otherwise false.
+		IsWebSocket() bool
+
 		// Scheme returns the HTTP protocol scheme, `http` or `https`.
 		Scheme() string
 
@@ -203,6 +206,13 @@ const (
 	indexPage     = "index.html"
 )
 
+func (c *context) writeContentType(value string) {
+	header := c.Response().Header()
+	if header.Get(HeaderContentType) == "" {
+		header.Set(HeaderContentType, value)
+	}
+}
+
 func (c *context) Request() *http.Request {
 	return c.request
 }
@@ -219,11 +229,28 @@ func (c *context) IsTLS() bool {
 	return c.request.TLS != nil
 }
 
+func (c *context) IsWebSocket() bool {
+	upgrade := c.request.Header.Get(HeaderUpgrade)
+	return upgrade == "websocket" || upgrade == "Websocket"
+}
+
 func (c *context) Scheme() string {
 	// Can't use `r.Request.URL.Scheme`
 	// See: https://groups.google.com/forum/#!topic/golang-nuts/pMUkBlQBDF0
 	if c.IsTLS() {
 		return "https"
+	}
+	if scheme := c.request.Header.Get(HeaderXForwardedProto); scheme != "" {
+		return scheme
+	}
+	if scheme := c.request.Header.Get(HeaderXForwardedProtocol); scheme != "" {
+		return scheme
+	}
+	if ssl := c.request.Header.Get(HeaderXForwardedSsl); ssl == "on" {
+		return "https"
+	}
+	if scheme := c.request.Header.Get(HeaderXUrlScheme); scheme != "" {
+		return scheme
 	}
 	return "http"
 }
@@ -253,13 +280,6 @@ func (c *context) Param(name string) string {
 		if i < len(c.pvalues) {
 			if n == name {
 				return c.pvalues[i]
-			}
-
-			// Param name with aliases
-			for _, p := range strings.Split(n, ",") {
-				if p == name {
-					return c.pvalues[i]
-				}
 			}
 		}
 	}
@@ -385,7 +405,8 @@ func (c *context) String(code int, s string) (err error) {
 }
 
 func (c *context) JSON(code int, i interface{}) (err error) {
-	if c.echo.Debug {
+	_, pretty := c.QueryParams()["pretty"]
+	if c.echo.Debug || pretty {
 		return c.JSONPretty(code, i, "  ")
 	}
 	b, err := json.Marshal(i)
@@ -416,7 +437,7 @@ func (c *context) JSONP(code int, callback string, i interface{}) (err error) {
 }
 
 func (c *context) JSONPBlob(code int, callback string, b []byte) (err error) {
-	c.response.Header().Set(HeaderContentType, MIMEApplicationJavaScriptCharsetUTF8)
+	c.writeContentType(MIMEApplicationJavaScriptCharsetUTF8)
 	c.response.WriteHeader(code)
 	if _, err = c.response.Write([]byte(callback + "(")); err != nil {
 		return
@@ -429,7 +450,8 @@ func (c *context) JSONPBlob(code int, callback string, b []byte) (err error) {
 }
 
 func (c *context) XML(code int, i interface{}) (err error) {
-	if c.echo.Debug {
+	_, pretty := c.QueryParams()["pretty"]
+	if c.echo.Debug || pretty {
 		return c.XMLPretty(code, i, "  ")
 	}
 	b, err := xml.Marshal(i)
@@ -448,7 +470,7 @@ func (c *context) XMLPretty(code int, i interface{}, indent string) (err error) 
 }
 
 func (c *context) XMLBlob(code int, b []byte) (err error) {
-	c.response.Header().Set(HeaderContentType, MIMEApplicationXMLCharsetUTF8)
+	c.writeContentType(MIMEApplicationXMLCharsetUTF8)
 	c.response.WriteHeader(code)
 	if _, err = c.response.Write([]byte(xml.Header)); err != nil {
 		return
@@ -458,28 +480,23 @@ func (c *context) XMLBlob(code int, b []byte) (err error) {
 }
 
 func (c *context) Blob(code int, contentType string, b []byte) (err error) {
-	c.response.Header().Set(HeaderContentType, contentType)
+	c.writeContentType(contentType)
 	c.response.WriteHeader(code)
 	_, err = c.response.Write(b)
 	return
 }
 
 func (c *context) Stream(code int, contentType string, r io.Reader) (err error) {
-	c.response.Header().Set(HeaderContentType, contentType)
+	c.writeContentType(contentType)
 	c.response.WriteHeader(code)
 	_, err = io.Copy(c.response, r)
 	return
 }
 
 func (c *context) File(file string) (err error) {
-	file, err = url.QueryUnescape(file) // Issue #839
-	if err != nil {
-		return
-	}
-
 	f, err := os.Open(file)
 	if err != nil {
-		return ErrNotFound
+		return NotFoundHandler(c)
 	}
 	defer f.Close()
 
@@ -488,7 +505,7 @@ func (c *context) File(file string) (err error) {
 		file = filepath.Join(file, indexPage)
 		f, err = os.Open(file)
 		if err != nil {
-			return ErrNotFound
+			return NotFoundHandler(c)
 		}
 		defer f.Close()
 		if fi, err = f.Stat(); err != nil {
@@ -499,18 +516,17 @@ func (c *context) File(file string) (err error) {
 	return
 }
 
-func (c *context) Attachment(file, name string) (err error) {
+func (c *context) Attachment(file, name string) error {
 	return c.contentDisposition(file, name, "attachment")
 }
 
-func (c *context) Inline(file, name string) (err error) {
+func (c *context) Inline(file, name string) error {
 	return c.contentDisposition(file, name, "inline")
 }
 
-func (c *context) contentDisposition(file, name, dispositionType string) (err error) {
-	c.response.Header().Set(HeaderContentDisposition, fmt.Sprintf("%s; filename=%s", dispositionType, name))
-	c.File(file)
-	return
+func (c *context) contentDisposition(file, name, dispositionType string) error {
+	c.response.Header().Set(HeaderContentDisposition, fmt.Sprintf("%s; filename=%q", dispositionType, name))
+	return c.File(file)
 }
 
 func (c *context) NoContent(code int) error {

@@ -161,7 +161,11 @@ type ListTasksDummy struct {
 
 // ReadAll gets all tasks for a user
 func (lt *ListTasksDummy) ReadAll(u *User) (interface{}, error) {
+	return GetTasksByUser(u)
+}
 
+//GetTasksByUser returns all tasks for a user
+func GetTasksByUser(u *User) (tasks []*ListTask, err error) {
 	// Get all lists
 	lists, err := getRawListsForUser(u)
 	if err != nil {
@@ -175,7 +179,6 @@ func (lt *ListTasksDummy) ReadAll(u *User) (interface{}, error) {
 	}
 
 	// Then return all tasks for that lists
-	var tasks []*ListTask
 	if err := x.In("list_id", listIDs).Find(&tasks); err != nil {
 		return nil, err
 	}
