@@ -1,11 +1,5 @@
 <template>
-	<div>
-		<div class="full-loader-wrapper" v-if="loading">
-			<div class="half-circle-spinner">
-				<div class="circle circle-1"></div>
-				<div class="circle circle-2"></div>
-			</div>
-		</div>
+	<div class="loader-container" v-bind:class="{ 'is-loading': loading}">
 		<div class="content">
 			<router-link :to="{ name: 'editList', params: { id: list.id } }" class="icon settings is-medium">
 				<icon icon="cog" size="2x"/>

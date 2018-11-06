@@ -1,5 +1,5 @@
 <template>
-	<div class="content">
+	<div class="content loader-container" v-bind:class="{ 'is-loading': loading}">
 		<router-link :to="{name:'newTeam'}" class="button is-success button-right" >
 			New Team
 		</router-link>

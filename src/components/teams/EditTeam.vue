@@ -1,5 +1,5 @@
 <template>
-	<div>
+	<div class="loader-container" v-bind:class="{ 'is-loading': loading}">
 		<div class="card" v-if="userIsAdmin">
 			<header class="card-header">
 				<p class="card-header-title">
