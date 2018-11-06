@@ -52,7 +52,7 @@
         beforeMount() {
             // Try to verify the email
 			let emailVerifyToken = localStorage.getItem('emailConfirmToken')
-			if (emailVerifyToken !== '') {
+			if (emailVerifyToken) {
 				this.loading = true
 				HTTP.post(`user/confirm`, {token: emailVerifyToken})
 					.then(() => {
