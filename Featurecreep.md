@@ -166,10 +166,10 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
 * [ ] Subtasks
 * [ ] Attachments
 * [ ] Repeating tasks
-* [ ] Tagesübersicht ("Was ist heute/diese Woche due?") -> Machen letztenendes die Clients, wir brauchen nur nen endpoint, der alle tasks auskotzt, der Client macht dann die Sortierung.
-	* [ ] Mit definierbarem Bereich, sollte aber trotzdem der server machen, so à la "Gib mir alles für diesen Monat"
+* [x] Tagesübersicht ("Was ist heute/diese Woche due?") -> Machen letztenendes die Clients, wir brauchen nur nen endpoint, der alle tasks auskotzt, der Client macht dann die Sortierung.
+* [ ] Tasks innerhalb eines definierbarem Bereich, sollte aber trotzdem der server machen, so à la "Gib mir alles für diesen Monat"
 * [ ] Namespaces in Namespaces (in Namespaces in Namespaces in Namespaces...)
-	* [ ] Rechtemanagement dafür wird schwierig
+	* Rechtemanagement dafür wird schwierig
 
 ## Clients
 
@@ -180,12 +180,12 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
 
 ## Anderes
 
-* [ ] Refactor!!!! Alle Funktionen raus, die nicht mehr grbaucht werden + Funktionen vereinfachen/zusammenführen.
+* [x] Refactor!!!! Alle Funktionen raus, die nicht mehr grbaucht werden + Funktionen vereinfachen/zusammenführen.
       Wenn ein Objekt 5x hin und hergereicht wird, und jedesmal nur geringfügig was dran geändert wird sollte das
       doch auch in einer Funktion machbar sein.
-      * [ ] ganz viel in eigene neue Dateien + Packages auslagern, am besten eine package pro model mit allen methoden etc.
-      * [ ] Alle alten dinger die nicht mehr gebraucht werden, weg.
-            * [x] Die alten handlerfunktionen alle in eine datei packen und erstmal "lagern", erstmal brauchen wir die noch für swagger.
+      * [x] ganz viel in eigene neue Dateien + Packages auslagern, am besten eine package pro model mit allen methoden etc.
+      * [x] Alle alten dinger die nicht mehr gebraucht werden, weg.
+      * [x] Die alten handlerfunktionen alle in eine datei packen und erstmal "lagern", erstmal brauchen wir die noch für swagger.
 * [x] Drone aufsetzen
 * [x] Tests schreiben
 * [x] Namen finden
@@ -217,15 +217,20 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
 * [x] Ne extra funktion für list exists machen, damit die nicht immer über GetListByID gehen, um sql-abfragen zu sparen
 * [x] Rausfinden warum xorm teilweise beim einfügen IDs mit einfügen will -> Das schlägt dann wegen duplicate fehl
 * [x] Bei den Structs "AfterLoad" raus, das verbraucht bei Gruppenabfragen zu viele SQL-Abfragen -> Die sollen einfach die entsprechenden Read()-Methoden verwenden (Krassestes bsp. ist GET /namespaces mit so ca 50 Abfragen)
-* [ ] Search endpoints /users?s=name und /teams?s=name, erstmal nur mit Namen suchen.
-	-> Search methode in den Handler einbauen und dann die Endpoints entsprechend anpassen
-	-> Macht Sinn das in ne eigene Methode umzubauen weil der query dazu leicht anders ist und man das auch nicht sooo einfach integrieren kann (so nach dem Motto einfach nen Searchstring anhängen)
-* [ ] Methode einbauen, um mit einem gültigen token ein neues gültiges zu kriegen
+* [ ] Search endpoints /users?s=name und /teams?s=name, erstmal nur mit Namen suchen, später einstellbar auch mit email.
+	-> Search methode in den Handler einbauen und dann die Endpoints entsprechend anpassen integrieren kann (so nach dem Motto einfach nen Searchstring anhängen)
 * [ ] Wir brauchen noch ne gute idee, wie man die listen kriegt, auf die man nur so Zugriff hat (ohne namespace)
-* [ ] Validation der ankommenden structs, am besten mit https://github.com/go-validator/validator
+    * Dazu am Besten nen pseudonamespace anlegen (id -1 oder so), der hat das dann alles
+* [ ] Validation der ankommenden structs, am besten mit https://github.com/go-validator/validator oder mit dem Ding von echo
 * [ ] Pagination
 	* Sollte in der Config definierbar sein, wie viel pro Seite angezeigt werden soll, die CRUD-Methoden übergeben dann ein "gibt mir die Seite sowieso" an die CRUDable-Funktionenen, die müssen das dann Auswerten. Geht leider nicht anders, wenn man erst 2342352 Einträge hohlt und die dann nachträglich auf 200 begrenzt ist das ne massive Ressourcenverschwendung.
 * [ ] Testing mit locust: https://locust.io/
+* [ ] Methode einbauen, um mit einem gültigen token ein neues gültiges zu kriegen
+* [ ] Testen, ob man über die Routen methode von echo irgendwie ein swagger spec generieren könnte
+* [ ] CalDAV
+  * [x] Basics
+  * [x] Reminders
+  * [ ] Discovery, stichwort PROPFIND 
 
 #### Userstuff
 
@@ -236,10 +241,6 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
 * [x] Email-Verifizierung beim Registrieren
 * [x] Password Reset -> Link via email oder so
 * [ ] Settings
-* [ ] CalDAV
-  * [x] Basics
-  * [ ] Reminders
-  * [ ] Discovery, stichwort PROPFIND 
 
 
 ### Later/Nice to have
@@ -249,4 +250,4 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
 * [ ] Mgl., dass die Instanz geschlossen ist, also sich keiner registrieren kann, und man sich einloggen muss
 * [ ] mgl. zum Emailmaskieren haben (in den Nutzereinstellungen, wenn man seine Email nicht an alle Welt rausposaunen will)
 * [ ] Mgl. zum Accountlöschen haben (so richtig krass mit emailverifiezierung und dass alle Privaten Listen gelöscht werden und man alle geteilten entweder wem übertragen muss oder  auf privat stellen)
-* [ ] Deps nach mod (dem nachfolger von dep) umziehen, blocked by Go 1.11
+* [x] Deps nach mod (dem nachfolger von dep) umziehen, blocked by Go 1.11
