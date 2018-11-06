@@ -54,10 +54,13 @@
         * [x] Einstellmglkt für Rechte
 * [x] Den Sharing-Updateshit mit der neuen methode machen (post)
 * [x] User suchen einbauen, mit neuem endpoint
-* [ ] Zurück zu Home (wenn man auf das Logo klickt)
+* [x] Zurück zu Home (wenn man auf das Logo klickt)
 * [ ] Erklärungen zu was wie funktioniert -> wiki?
 * [ ] Google fonts raus (sollen von lokal geladen werden)
 * [ ] Ladeanimationen erst nach 100ms anzeigen, sonst wird das überflüssigerweise angezeigt
+* [ ] Btns für Teams und neuer Namespace nach oben in die Leiste verschieben
+* [ ] Links an den Freigewordenen Platz Menüpunkte machen à la "Heute"/Morgen/Diese Woche etc. Da kommt dann alles rein was dann due ist.
+* [ ] Andere Icons?
 
 * [x] Userstuff
     * [x] Email-Verification
