@@ -60,7 +60,8 @@
 * [ ] Ladeanimationen erst nach 100ms anzeigen, sonst wird das überflüssigerweise angezeigt
 * [ ] Btns für Teams und neuer Namespace nach oben in die Leiste verschieben
 * [ ] Links an den Freigewordenen Platz Menüpunkte machen à la "Heute"/Morgen/Diese Woche etc. Da kommt dann alles rein was dann due ist.
-* [ ] Andere Icons?
+* [ ] Andere Icons? --> Freepikkram
+* [ ] Fertige Tasks schöner visualisieren
 
 * [x] Userstuff
     * [x] Email-Verification
