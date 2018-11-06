@@ -150,3 +150,45 @@ h1,h2,h3,h4,h5,h6{
 .buttonright {
   margin-right: 0.5rem;
 }
+
+.tasks {
+  margin-top: 1rem;
+  padding: 0;
+  text-align: left;
+
+  .task {
+    display: block;
+    padding: 0.5rem 1rem;
+    border-bottom: 1px solid darken(#fff, 10%);
+
+    label{
+      width: 96%;
+      display: inline-block;
+      cursor: pointer;
+    }
+
+    input[type="checkbox"] {
+      vertical-align: middle;
+    }
+
+    .settings{
+      float: right;
+      width: 4%;
+      cursor: pointer;
+    }
+  }
+
+  .task:last-child {
+    border-bottom: none;
+  }
+}
+
+.taskedit{
+  min-height: calc(100% - 1rem);
+  margin-top: 1rem;
+}
+
+.settings{
+  float: right;
+  color: rgb(74, 74, 74);
+}
