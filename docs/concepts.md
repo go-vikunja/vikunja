@@ -14,7 +14,7 @@ The interface is defined as followed:
 type CRUDable interface {
 	Create(*User) error
 	ReadOne() error
-	ReadAll(*User) (interface{}, error)
+	ReadAll(*User, int) (interface{}, error)
 	Update() error
 	Delete() error
 }
@@ -35,6 +35,19 @@ In that case, it takes the `ID` saved in the struct instance, gets the full list
 All functions should behave like this, if they create or update something, they should return the created/updated struct
 instance. The only exception is `ReadAll()` which returns an interface. Usually this is an array, because, well you cannot
 make an array of a set type (If you know a way to do this, don't hesitate to drop me a message).
+
+### Pagination
+
+When using the `ReadAll`-method, the second parameter contains the requested page. Your function should return only the number of results
+corresponding to that page. The number of items per page is definied in the config as `service.pagecount` (Get it with `viper.GetInt("service.pagecount")`).
+
+These can be calculated in combination with a helper function, `getLimitFromPageIndex(pageIndex)` which returns
+SQL-needed `limit` (max-length) and `offset` parameters. You can feed this function directly into xorm's `Limit`-Function like so:
+
+```go
+lists := []List{}
+err := x.Limit(getLimitFromPageIndex(pageIndex)).Find(&lists)
+```
 
 ## Rights
 
