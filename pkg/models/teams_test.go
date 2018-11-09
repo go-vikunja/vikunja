@@ -32,7 +32,7 @@ func TestTeam_Create(t *testing.T) {
 	assert.True(t, dummyteam.CanRead(&doer))
 
 	// Get all teams the user is part of
-	ts, err := tm.ReadAll(&doer, 1)
+	ts, err := tm.ReadAll("", &doer, 1)
 	assert.NoError(t, err)
 	assert.Equal(t, reflect.TypeOf(ts).Kind(), reflect.Slice)
 	s := reflect.ValueOf(ts)

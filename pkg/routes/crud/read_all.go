@@ -37,7 +37,10 @@ func (c *WebHandler) ReadAllWeb(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Bad page requested.")
 	}
 
-	lists, err := currentStruct.ReadAll(&currentUser, pageNumber)
+	// Search
+	search := ctx.QueryParam("s")
+
+	lists, err := currentStruct.ReadAll(search, &currentUser, pageNumber)
 	if err != nil {
 		return HandleHTTPError(err)
 	}

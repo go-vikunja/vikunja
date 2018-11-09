@@ -1,7 +1,7 @@
 package models
 
 // ReadAll gets all users who have access to a namespace
-func (un *NamespaceUser) ReadAll(u *User, page int) (interface{}, error) {
+func (un *NamespaceUser) ReadAll(search string, u *User, page int) (interface{}, error) {
 	// Check if the user has access to the namespace
 	l, err := GetNamespaceByID(un.NamespaceID)
 	if err != nil {
@@ -17,6 +17,7 @@ func (un *NamespaceUser) ReadAll(u *User, page int) (interface{}, error) {
 		Join("INNER", "users_namespace", "user_id = users.id").
 		Where("users_namespace.namespace_id = ?", un.NamespaceID).
 		Limit(getLimitFromPageIndex(page)).
+		Where("users.username LIKE ?", "%"+search+"%").
 		Find(&all)
 
 	return all, err

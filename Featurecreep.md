@@ -217,8 +217,7 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
 * [x] Ne extra funktion für list exists machen, damit die nicht immer über GetListByID gehen, um sql-abfragen zu sparen
 * [x] Rausfinden warum xorm teilweise beim einfügen IDs mit einfügen will -> Das schlägt dann wegen duplicate fehl
 * [x] Bei den Structs "AfterLoad" raus, das verbraucht bei Gruppenabfragen zu viele SQL-Abfragen -> Die sollen einfach die entsprechenden Read()-Methoden verwenden (Krassestes bsp. ist GET /namespaces mit so ca 50 Abfragen)
-* [ ] Search endpoints /users?s=name und /teams?s=name, erstmal nur mit Namen suchen, später einstellbar auch mit email.
-	-> Search methode in den Handler einbauen und dann die Endpoints entsprechend anpassen integrieren kann (so nach dem Motto einfach nen Searchstring anhängen)
+* [x] General search endpoints
 * [ ] Wir brauchen noch ne gute idee, wie man die listen kriegt, auf die man nur so Zugriff hat (ohne namespace)
     * Dazu am Besten nen pseudonamespace anlegen (id -1 oder so), der hat das dann alles
 * [ ] Validation der ankommenden structs, am besten mit https://github.com/go-validator/validator oder mit dem Ding von echo

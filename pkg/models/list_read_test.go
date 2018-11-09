@@ -20,14 +20,14 @@ func TestList_ReadAll(t *testing.T) {
 	assert.NoError(t, err)
 
 	lists2 := List{}
-	lists3, err := lists2.ReadAll(&u, 1)
+	lists3, err := lists2.ReadAll("", &u, 1)
 	assert.NoError(t, err)
 	assert.Equal(t, reflect.TypeOf(lists3).Kind(), reflect.Slice)
 	s := reflect.ValueOf(lists3)
 	assert.Equal(t, s.Len(), 1)
 
 	// Try getting lists for a nonexistant user
-	_, err = lists2.ReadAll(&User{ID: 984234}, 1)
+	_, err = lists2.ReadAll("", &User{ID: 984234}, 1)
 	assert.Error(t, err)
 	assert.True(t, IsErrUserDoesNotExist(err))
 }

@@ -27,8 +27,8 @@ func GetListsByNamespaceID(nID int64) (lists []*List, err error) {
 }
 
 // ReadAll gets all lists a user has access to
-func (l *List) ReadAll(u *User, page int) (interface{}, error) {
-	lists, err := getRawListsForUser(u, page)
+func (l *List) ReadAll(search string, u *User, page int) (interface{}, error) {
+	lists, err := getRawListsForUser(search, u, page)
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +80,7 @@ func (l *List) GetSimpleByID() (err error) {
 }
 
 // Gets the lists only, without any tasks or so
-func getRawListsForUser(u *User, page int) (lists []*List, err error) {
+func getRawListsForUser(search string, u *User, page int) (lists []*List, err error) {
 	fullUser, err := GetUserByID(u.ID)
 	if err != nil {
 		return lists, err
@@ -105,6 +105,7 @@ func getRawListsForUser(u *User, page int) (lists []*List, err error) {
 		Or("un.user_id = ?", fullUser.ID).
 		GroupBy("l.id").
 		Limit(getLimitFromPageIndex(page)).
+		Where("l.title LIKE ?", "%"+search+"%").
 		Find(&lists)
 
 	return lists, err
@@ -161,14 +162,14 @@ type ListTasksDummy struct {
 }
 
 // ReadAll gets all tasks for a user
-func (lt *ListTasksDummy) ReadAll(u *User, page int) (interface{}, error) {
-	return GetTasksByUser(u, page)
+func (lt *ListTasksDummy) ReadAll(search string, u *User, page int) (interface{}, error) {
+	return GetTasksByUser(search, u, page)
 }
 
 //GetTasksByUser returns all tasks for a user
-func GetTasksByUser(u *User, page int) (tasks []*ListTask, err error) {
+func GetTasksByUser(search string, u *User, page int) (tasks []*ListTask, err error) {
 	// Get all lists
-	lists, err := getRawListsForUser(u, page)
+	lists, err := getRawListsForUser(search, u, page)
 	if err != nil {
 		return nil, err
 	}

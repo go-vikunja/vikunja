@@ -49,20 +49,20 @@ func TestTeamNamespace(t *testing.T) {
 	assert.True(t, IsErrNamespaceDoesNotExist(err))
 
 	// Check readall
-	teams, err := tn.ReadAll(&dummyuser, 1)
+	teams, err := tn.ReadAll("", &dummyuser, 1)
 	assert.NoError(t, err)
 	assert.Equal(t, reflect.TypeOf(teams).Kind(), reflect.Slice)
 	s := reflect.ValueOf(teams)
 	assert.Equal(t, s.Len(), 1)
 
 	// Check readall for a nonexistant namespace
-	_, err = tn4.ReadAll(&dummyuser, 1)
+	_, err = tn4.ReadAll("", &dummyuser, 1)
 	assert.Error(t, err)
 	assert.True(t, IsErrNamespaceDoesNotExist(err))
 
 	// Check with no right to read the namespace
 	nouser := &User{ID: 393}
-	_, err = tn.ReadAll(nouser, 1)
+	_, err = tn.ReadAll("", nouser, 1)
 	assert.Error(t, err)
 	assert.True(t, IsErrNeedToHaveNamespaceReadAccess(err))
 

@@ -84,13 +84,14 @@ func (t *Team) ReadOne() (err error) {
 }
 
 // ReadAll gets all teams the user is part of
-func (t *Team) ReadAll(user *User, page int) (teams interface{}, err error) {
+func (t *Team) ReadAll(search string, user *User, page int) (teams interface{}, err error) {
 	all := []*Team{}
 	err = x.Select("teams.*").
 		Table("teams").
 		Join("INNER", "team_members", "team_members.team_id = teams.id").
 		Where("team_members.user_id = ?", user.ID).
 		Limit(getLimitFromPageIndex(page)).
+		Where("teams.name LIKE ?", "%"+search+"%").
 		Find(&all)
 
 	return all, err

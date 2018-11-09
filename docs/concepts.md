@@ -14,7 +14,7 @@ The interface is defined as followed:
 type CRUDable interface {
 	Create(*User) error
 	ReadOne() error
-	ReadAll(*User, int) (interface{}, error)
+	ReadAll(string, *User, int) (interface{}, error)
 	Update() error
 	Delete() error
 }
@@ -38,7 +38,7 @@ make an array of a set type (If you know a way to do this, don't hesitate to dro
 
 ### Pagination
 
-When using the `ReadAll`-method, the second parameter contains the requested page. Your function should return only the number of results
+When using the `ReadAll`-method, the third parameter contains the requested page. Your function should return only the number of results
 corresponding to that page. The number of items per page is definied in the config as `service.pagecount` (Get it with `viper.GetInt("service.pagecount")`).
 
 These can be calculated in combination with a helper function, `getLimitFromPageIndex(pageIndex)` which returns
@@ -48,6 +48,14 @@ SQL-needed `limit` (max-length) and `offset` parameters. You can feed this funct
 lists := []List{}
 err := x.Limit(getLimitFromPageIndex(pageIndex)).Find(&lists)
 ```
+
+### Search
+
+When using the `ReadAll`-method, the first parameter is a search term which should be used to search items of your struct. You define the critera.
+
+Users can then pass the `?s=something` parameter to the url to search.
+
+As the logic for "give me everything" and "give me everything where the name contains 'something'" is mostly the same, we made the decision to design the function like this, in order to keep the places with mostly the same logic as few as possible. Also just adding `?s=query` to the url one already knows and uses is a lot more convenient.
 
 ## Rights
 
