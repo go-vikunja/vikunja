@@ -29,6 +29,7 @@ func InitConfig() (err error) {
 	}
 	exPath := filepath.Dir(ex)
 	viper.SetDefault("service.rootpath", exPath)
+	viper.SetDefault("service.pagecount", 50)
 	// Database
 	viper.SetDefault("database.type", "sqlite")
 	viper.SetDefault("database.host", "localhost")

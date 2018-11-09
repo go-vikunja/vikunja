@@ -90,3 +90,15 @@ func SetEngine() (err error) {
 
 	return nil
 }
+
+func getLimitFromPageIndex(page int) (limit, start int) {
+
+	// Get everything when page index is -1
+	if page < 0 {
+		return 0, 0
+	}
+
+	limit = viper.GetInt("service.pagecount")
+	start = limit * (page - 1)
+	return
+}

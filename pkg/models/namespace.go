@@ -53,7 +53,7 @@ func (n *Namespace) ReadOne() (err error) {
 }
 
 // ReadAll gets all namespaces a user has access to
-func (n *Namespace) ReadAll(doer *User) (interface{}, error) {
+func (n *Namespace) ReadAll(doer *User, page int) (interface{}, error) {
 
 	type namespaceWithLists struct {
 		Namespace `xorm:"extends"`
@@ -71,6 +71,7 @@ func (n *Namespace) ReadAll(doer *User) (interface{}, error) {
 		Or("namespaces.owner_id = ?", doer.ID).
 		Or("users_namespace.user_id = ?", doer.ID).
 		GroupBy("namespaces.id").
+		Limit(getLimitFromPageIndex(page)).
 		Find(&all)
 
 	if err != nil {

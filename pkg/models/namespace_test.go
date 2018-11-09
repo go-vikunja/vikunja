@@ -85,7 +85,7 @@ func TestNamespace_Create(t *testing.T) {
 	assert.True(t, IsErrNamespaceDoesNotExist(err))
 
 	// Get all namespaces of a user
-	nsps, err := n.ReadAll(&doer)
+	nsps, err := n.ReadAll(&doer, 1)
 	assert.NoError(t, err)
 	assert.Equal(t, reflect.TypeOf(nsps).Kind(), reflect.Slice)
 	s := reflect.ValueOf(nsps)

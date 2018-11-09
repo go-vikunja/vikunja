@@ -7,6 +7,8 @@ service:
   interface: ":3456"
   # The URL of the frontend, used to send password reset emails.
   frontendurl: ""
+  # The number of items which gets returned per page
+  pagecount: 50
 
 database:
   # Database type to use. Supported types are mysql and sqlite.

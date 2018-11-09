@@ -33,6 +33,8 @@ service:
   frontendurl: ""
   # The base path on the file system where the binary and assets are
   rootpath: <the path of the executable>
+  # The number of items which gets returned per page
+  pagecount: 50
 
 database:
   # Database type to use. Supported types are mysql and sqlite.

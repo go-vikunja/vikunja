@@ -1,9 +1,11 @@
 package crud
 
 import (
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"github.com/labstack/echo"
 	"net/http"
+	"strconv"
 )
 
 // ReadAllWeb is the webhandler to get all objects of a type
@@ -21,7 +23,21 @@ func (c *WebHandler) ReadAllWeb(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "No or invalid model provided.")
 	}
 
-	lists, err := currentStruct.ReadAll(&currentUser)
+	// Pagination
+	page := ctx.QueryParam("page")
+	if page == "" {
+		page = "1"
+	}
+	pageNumber, err := strconv.Atoi(page)
+	if err != nil {
+		log.Log.Error(err.Error())
+		return echo.NewHTTPError(http.StatusBadRequest, "Bad page requested.")
+	}
+	if pageNumber < 0 {
+		return echo.NewHTTPError(http.StatusBadRequest, "Bad page requested.")
+	}
+
+	lists, err := currentStruct.ReadAll(&currentUser, pageNumber)
 	if err != nil {
 		return HandleHTTPError(err)
 	}
