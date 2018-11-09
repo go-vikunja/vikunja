@@ -63,6 +63,16 @@
 * [ ] Andere Icons? --> Freepikkram
 * [ ] Fertige Tasks schöner visualisieren
 
+* [ ] Search everything
+  * [ ] Lists
+  * [ ] Tasks
+  * [ ] Namespaces
+  * [ ] Teams
+  * [ ] Users with access on a list
+  * [ ] Users with access to a namespace
+  * [ ] Teams with access to a list
+  * [ ] Teams with access to a namespace
+
 * [x] Userstuff
     * [x] Email-Verification
     * [x] Password forgot
