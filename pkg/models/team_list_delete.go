@@ -1,6 +1,18 @@
 package models
 
 // Delete deletes a team <-> list relation based on the list & team id
+// @Summary Delete a team from a list
+// @Description Delets a team from a list. The team won't have access to the list anymore.
+// @tags sharing
+// @Produce json
+// @Security ApiKeyAuth
+// @Param listID path int true "List ID"
+// @Param teamID path int true "Team ID"
+// @Success 200 {object} models.Message "The team was successfully deleted."
+// @Failure 403 {object} models.HTTPError "The user does not have access to the list"
+// @Failure 404 {object} models.HTTPError "Team or list does not exist."
+// @Failure 500 {object} models.Message "Internal error"
+// @Router /lists/{listID}/teams/{teamID} [delete]
 func (tl *TeamList) Delete() (err error) {
 
 	// Check if the team exists

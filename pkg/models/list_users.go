@@ -19,7 +19,8 @@ func (ListUser) TableName() string {
 	return "users_list"
 }
 
-type userWithRight struct {
+// UserWithRight represents a user in combination with the right it can have on a list/namespace
+type UserWithRight struct {
 	User  `xorm:"extends"`
 	Right UserRight `json:"right"`
 }

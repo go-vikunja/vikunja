@@ -78,12 +78,34 @@ func GetTeamByID(id int64) (team Team, err error) {
 }
 
 // ReadOne implements the CRUD method to get one team
+// @Summary Gets one team
+// @Description Returns a team by its ID.
+// @tags team
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param id path int true "Team ID"
+// @Success 200 {object} models.Team "The team"
+// @Failure 403 {object} models.HTTPError "The user does not have access to the team"
+// @Failure 500 {object} models.Message "Internal error"
+// @Router /lists/{id} [get]
 func (t *Team) ReadOne() (err error) {
 	*t, err = GetTeamByID(t.ID)
 	return
 }
 
 // ReadAll gets all teams the user is part of
+// @Summary Get teams
+// @Description Returns all teams the current user is part of.
+// @tags team
+// @Accept json
+// @Produce json
+// @Param p query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
+// @Param s query string false "Search teams by its name."
+// @Security ApiKeyAuth
+// @Success 200 {array} models.Team "The teams."
+// @Failure 500 {object} models.Message "Internal error"
+// @Router /teams [get]
 func (t *Team) ReadAll(search string, user *User, page int) (teams interface{}, err error) {
 	all := []*Team{}
 	err = x.Select("teams.*").

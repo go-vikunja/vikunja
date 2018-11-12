@@ -8,29 +8,17 @@ import (
 )
 
 // UserResetPassword is the handler to change a users password
+// @Summary Resets a password
+// @Description Resets a user email with a previously reset token.
+// @tags user
+// @Accept json
+// @Produce json
+// @Param credentials body models.PasswordReset true "The token with the new password."
+// @Success 200 {object} models.Message
+// @Failure 400 {object} models.HTTPError "Bad token provided."
+// @Failure 500 {object} models.Message "Internal error"
+// @Router /user/password/reset [post]
 func UserResetPassword(c echo.Context) error {
-	// swagger:operation POST /user/password/reset user updatePassword
-	// ---
-	// summary: Resets a users password
-	// consumes:
-	// - application/json
-	// produces:
-	// - application/json
-	// parameters:
-	// - name: body
-	//   in: body
-	//   schema:
-	//     "$ref": "#/definitions/PasswordReset"
-	// responses:
-	//   "200":
-	//     "$ref": "#/responses/Message"
-	//   "400":
-	//     "$ref": "#/responses/Message"
-	//   "404":
-	//     "$ref": "#/responses/Message"
-	//   "500":
-	//     "$ref": "#/responses/Message"
-
 	// Check for Request Content
 	var pwReset models.PasswordReset
 	if err := c.Bind(&pwReset); err != nil {
@@ -46,33 +34,21 @@ func UserResetPassword(c echo.Context) error {
 }
 
 // UserRequestResetPasswordToken is the handler to change a users password
+// @Summary Request password reset token
+// @Description Requests a token to reset a users password. The token is sent via email.
+// @tags user
+// @Accept json
+// @Produce json
+// @Param credentials body models.PasswordTokenRequest true "The username of the user to request a token for."
+// @Success 200 {object} models.Message
+// @Failure 404 {object} models.HTTPError "The user does not exist."
+// @Failure 500 {object} models.Message "Internal error"
+// @Router /user/password/token [post]
 func UserRequestResetPasswordToken(c echo.Context) error {
-	// swagger:operation POST /user/password/token user requestUpdatePasswordToken
-	// ---
-	// summary: Requests a token to reset a users password
-	// consumes:
-	// - application/json
-	// produces:
-	// - application/json
-	// parameters:
-	// - name: body
-	//   in: body
-	//   schema:
-	//     "$ref": "#/definitions/PasswordTokenRequest"
-	// responses:
-	//   "200":
-	//     "$ref": "#/responses/Message"
-	//   "400":
-	//     "$ref": "#/responses/Message"
-	//   "404":
-	//     "$ref": "#/responses/Message"
-	//   "500":
-	//     "$ref": "#/responses/Message"
-
 	// Check for Request Content
 	var pwTokenReset models.PasswordTokenRequest
 	if err := c.Bind(&pwTokenReset); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "No user ID provided.")
+		return echo.NewHTTPError(http.StatusBadRequest, "No username provided.")
 	}
 
 	err := models.RequestUserPasswordResetToken(&pwTokenReset)

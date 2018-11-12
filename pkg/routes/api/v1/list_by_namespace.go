@@ -8,28 +8,20 @@ import (
 )
 
 // GetListsByNamespaceID is the web handler to delete a namespace
+// TODO: depricate this in favour of namespace.ReadOne() <-- should also return the lists
+// @Summary Get all lists in a namespace
+// @Description Returns all lists inside of a namespace.
+// @tags namespace
+// @Accept json
+// @Produce json
+// @Param id path int true "Namespace ID"
+// @Security ApiKeyAuth
+// @Success 200 {array} models.List "The lists."
+// @Failure 403 {object} models.Message "No access to that namespace."
+// @Failure 404 {object} models.Message "The namespace does not exist."
+// @Failure 500 {object} models.Message "Internal error"
+// @Router /namespaces/{id}/lists [get]
 func GetListsByNamespaceID(c echo.Context) error {
-	// swagger:operation GET /namespaces/{namespaceID}/lists namespaces getListsByNamespace
-	// ---
-	// summary: gets all lists belonging to that namespace
-	// consumes:
-	// - application/json
-	// produces:
-	// - application/json
-	// parameters:
-	// - name: namespaceID
-	//   in: path
-	//   description: ID of the namespace
-	//   type: string
-	//   required: true
-	// responses:
-	//   "200":
-	//     "$ref": "#/responses/Namespace"
-	//   "400":
-	//     "$ref": "#/responses/Message"
-	//   "500":
-	//     "$ref": "#/responses/Message"
-
 	// Get our namespace
 	namespace, err := getNamespace(c)
 	if err != nil {

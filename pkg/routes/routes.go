@@ -1,28 +1,12 @@
-// Package v1 List API.
-//
-// This documentation describes the List API.
-//
-//     Schemes: http, https
-//     BasePath: /api/v1
-//     Version: 0.1
-//     License: GPLv3
-//
-//     Consumes:
-//     - application/json
-//
-//     Produces:
-//     - application/json
-//
-//     Security:
-//     - AuthorizationHeaderToken :
-//
-//     SecurityDefinitions:
-//     AuthorizationHeaderToken:
-//          type: apiKey
-//          name: Authorization
-//          in: header
-//
-// swagger:meta
+// @title Vikunja API
+// @license.name GPLv3
+// @BasePath /api/v1
+
+// @securityDefinitions.basic BasicAuth
+
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name Authorization
 
 package routes
 
@@ -30,9 +14,10 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
+	"github.com/swaggo/echo-swagger"
 
+	_ "code.vikunja.io/api/docs" // To generate swagger docs
 	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
-	_ "code.vikunja.io/api/pkg/routes/api/v1/swagger" // for docs generation
 	"code.vikunja.io/api/pkg/routes/crud"
 	"github.com/spf13/viper"
 )
@@ -63,7 +48,7 @@ func RegisterRoutes(e *echo.Echo) {
 	a := e.Group("/api/v1")
 
 	// Swagger UI
-	a.Static("/swagger", viper.GetString("service.rootpath")+"/public/swagger")
+	a.GET("/swagger/*", echoSwagger.WrapHandler)
 
 	a.POST("/login", apiv1.Login)
 	a.POST("/register", apiv1.RegisterUser)
@@ -101,15 +86,9 @@ func RegisterRoutes(e *echo.Echo) {
 		},
 	}
 	a.PUT("/lists/:list", taskHandler.CreateWeb)
+	a.GET("/tasks", taskHandler.ReadAllWeb)
 	a.DELETE("/tasks/:listtask", taskHandler.DeleteWeb)
 	a.POST("/tasks/:listtask", taskHandler.UpdateWeb)
-
-	listTaskHandler := &crud.WebHandler{
-		EmptyStruct: func() crud.CObject {
-			return &models.ListTasksDummy{}
-		},
-	}
-	a.GET("/tasks", listTaskHandler.ReadAllWeb)
 
 	listTeamHandler := &crud.WebHandler{
 		EmptyStruct: func() crud.CObject {

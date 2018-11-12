@@ -8,27 +8,18 @@ import (
 )
 
 // UserList gets all information about a user
+// @Summary Get users
+// @Description Lists all users (without emailadresses). Also possible to search for a specific user.
+// @tags user
+// @Accept json
+// @Produce json
+// @Param s query string false "Search for a user by its name."
+// @Security ApiKeyAuth
+// @Success 200 {array} models.User "All (found) users."
+// @Failure 400 {object} models.HTTPError "Something's invalid."
+// @Failure 500 {object} models.Message "Internal server error."
+// @Router /users [get]
 func UserList(c echo.Context) error {
-
-	// swagger:operation GET /users user list
-	// ---
-	// summary: Lists all users
-	// consumes:
-	// - application/json
-	// produces:
-	// - application/json
-	// parameters:
-	// - name: s
-	//   description: A searchterm to search for a user by its username
-	//   in: query
-	// responses:
-	//   "200":
-	//     "$ref": "#/responses/User"
-	//   "400":
-	//     "$ref": "#/responses/Message"
-	//   "500":
-	//     "$ref": "#/responses/Message"
-
 	s := c.QueryParam("s")
 	users, err := models.ListUsers(s)
 	if err != nil {

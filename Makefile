@@ -152,28 +152,21 @@ release-os-package:
 release-zip:
 	$(foreach file,$(wildcard $(DIST)/release/$(EXECUTABLE)-*),cd $(file); zip -r ../../zip/$(shell basename $(file)).zip *; cd ../../../; )
 
-.PHONY: generate-swagger
-generate-swagger:
-	@hash swagger > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
-		go install $(GOFLAGS) github.com/go-swagger/go-swagger/cmd/swagger; \
-	fi
-	swagger generate spec -o ./public/swagger/swagger.v1.json
-
-.PHONY: swagger-check
-swagger-check: generate-swagger
-	@diff=$$(git diff public/swagger/swagger.v1.json); \
+.PHONY: got-swag
+got-swag: do-the-swag
+	@diff=$$(git diff docs/swagger/swagger.json); \
 	if [ -n "$$diff" ]; then \
-		echo "Please run 'make generate-swagger' and commit the result:"; \
+		echo "Please run 'make do-the-swag' and commit the result:"; \
 		echo "$${diff}"; \
 		exit 1; \
 	fi;
 
-.PHONY: swagger-validate
-swagger-validate:
-	@hash swagger > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
-		go install $(GOFLAGS) github.com/go-swagger/go-swagger/cmd/swagger; \
+.PHONY: do-the-swag
+do-the-swag:
+	@hash swag > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
+		go install $(GOFLAGS) github.com/swaggo/swag/cmd/swag; \
 	fi
-	swagger validate ./public/swagger/swagger.v1.json
+	swag init -g pkg/routes/routes.go;
 
 .PHONY: misspell-check
 misspell-check:

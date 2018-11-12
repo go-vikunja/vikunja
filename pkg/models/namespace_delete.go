@@ -1,6 +1,17 @@
 package models
 
 // Delete deletes a namespace
+// @Summary Deletes a namespace
+// @Description Delets a namespace
+// @tags namespace
+// @Produce json
+// @Security ApiKeyAuth
+// @Param id path int true "Namespace ID"
+// @Success 200 {object} models.Message "The namespace was successfully deleted."
+// @Failure 400 {object} models.HTTPError "Invalid namespace object provided."
+// @Failure 403 {object} models.HTTPError "The user does not have access to the namespace"
+// @Failure 500 {object} models.Message "Internal error"
+// @Router /namespaces/{id} [delete]
 func (n *Namespace) Delete() (err error) {
 
 	// Check if the namespace exists

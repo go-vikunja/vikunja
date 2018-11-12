@@ -1,0 +1,2171 @@
+basePath: /api/v1
+definitions:
+  models.APIUserPassword:
+    properties:
+      email:
+        type: string
+      id:
+        type: integer
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+  models.EmailConfirm:
+    properties:
+      token:
+        type: string
+    type: object
+  models.HTTPError:
+    properties:
+      code:
+        type: integer
+      message:
+        type: string
+    type: object
+  models.List:
+    properties:
+      created:
+        type: integer
+      description:
+        type: string
+      id:
+        type: integer
+      owner:
+        $ref: '#/definitions/models.User'
+        type: object
+      tasks:
+        items:
+          $ref: '#/definitions/models.ListTask'
+        type: array
+      title:
+        type: string
+      updated:
+        type: integer
+    type: object
+  models.ListTask:
+    properties:
+      created:
+        type: integer
+      createdBy:
+        $ref: '#/definitions/models.User'
+        type: object
+      description:
+        type: string
+      done:
+        type: boolean
+      dueDate:
+        type: integer
+      id:
+        type: integer
+      listID:
+        type: integer
+      reminderDate:
+        type: integer
+      text:
+        type: string
+      updated:
+        type: integer
+    type: object
+  models.ListUser:
+    properties:
+      created:
+        type: integer
+      id:
+        type: integer
+      list_id:
+        type: integer
+      right:
+        type: integer
+      updated:
+        type: integer
+      user_id:
+        type: integer
+    type: object
+  models.Message:
+    properties:
+      message:
+        type: string
+    type: object
+  models.Namespace:
+    properties:
+      created:
+        type: integer
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      owner:
+        $ref: '#/definitions/models.User'
+        type: object
+      updated:
+        type: integer
+    type: object
+  models.NamespaceUser:
+    properties:
+      created:
+        type: integer
+      id:
+        type: integer
+      namespace_id:
+        type: integer
+      right:
+        type: integer
+      updated:
+        type: integer
+      user_id:
+        type: integer
+    type: object
+  models.NamespaceWithLists:
+    properties:
+      created:
+        type: integer
+      description:
+        type: string
+      id:
+        type: integer
+      lists:
+        items:
+          $ref: '#/definitions/models.List'
+        type: array
+      name:
+        type: string
+      owner:
+        $ref: '#/definitions/models.User'
+        type: object
+      updated:
+        type: integer
+    type: object
+  models.PasswordReset:
+    properties:
+      new_password:
+        type: string
+      token:
+        type: string
+    type: object
+  models.PasswordTokenRequest:
+    properties:
+      user_name:
+        type: string
+    type: object
+  models.Team:
+    properties:
+      created:
+        type: integer
+      created_by:
+        $ref: '#/definitions/models.User'
+        type: object
+      description:
+        type: string
+      id:
+        type: integer
+      members:
+        items:
+          $ref: '#/definitions/models.TeamUser'
+        type: array
+      name:
+        type: string
+      updated:
+        type: integer
+    type: object
+  models.TeamList:
+    properties:
+      created:
+        type: integer
+      id:
+        type: integer
+      list_id:
+        type: integer
+      right:
+        type: integer
+      team_id:
+        type: integer
+      updated:
+        type: integer
+    type: object
+  models.TeamMember:
+    properties:
+      admin:
+        type: boolean
+      created:
+        type: integer
+      id:
+        type: integer
+      team_id:
+        type: integer
+      updated:
+        type: integer
+      user_id:
+        type: integer
+    type: object
+  models.TeamNamespace:
+    properties:
+      created:
+        type: integer
+      id:
+        type: integer
+      namespace_id:
+        type: integer
+      right:
+        type: integer
+      team_id:
+        type: integer
+      updated:
+        type: integer
+    type: object
+  models.TeamUser:
+    properties:
+      admin:
+        type: boolean
+      email:
+        type: string
+      id:
+        type: integer
+      username:
+        type: string
+    type: object
+  models.TeamWithRight:
+    properties:
+      created:
+        type: integer
+      created_by:
+        $ref: '#/definitions/models.User'
+        type: object
+      description:
+        type: string
+      id:
+        type: integer
+      members:
+        items:
+          $ref: '#/definitions/models.TeamUser'
+        type: array
+      name:
+        type: string
+      right:
+        type: integer
+      updated:
+        type: integer
+    type: object
+  models.User:
+    properties:
+      email:
+        type: string
+      id:
+        type: integer
+      username:
+        type: string
+    type: object
+  models.UserLogin:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+  models.UserWithRight:
+    properties:
+      email:
+        type: string
+      id:
+        type: integer
+      right:
+        type: integer
+      username:
+        type: string
+    type: object
+  v1.Token:
+    properties:
+      token:
+        type: string
+    type: object
+  v1.UserPassword:
+    properties:
+      new_password:
+        type: string
+      old_password:
+        type: string
+    type: object
+host: '{{.Host}}'
+info:
+  contact: {}
+  description: '{{.Description}}'
+  license:
+    name: GPLv3
+  title: Vikunja API
+  version: '{{.Version}}'
+paths:
+  /lists:
+    get:
+      consumes:
+      - application/json
+      description: Returns all lists a user has access to.
+      parameters:
+      - description: The page number. Used for pagination. If not provided, the first
+          page of results is returned.
+        in: query
+        name: p
+        type: integer
+      - description: Search lists by title.
+        in: query
+        name: s
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The lists
+          schema:
+            items:
+              $ref: '#/definitions/models.List'
+            type: array
+        "403":
+          description: The user does not have access to the list
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+            type: object
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get all lists a user has access to
+      tags:
+      - list
+  /lists/{id}:
+    delete:
+      description: Delets a list
+      parameters:
+      - description: List ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The list was successfully deleted.
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+        "400":
+          description: Invalid list object provided.
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+            type: object
+        "403":
+          description: The user does not have access to the list
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+            type: object
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Deletes a list
+      tags:
+      - list
+    get:
+      consumes:
+      - application/json
+      description: Returns a team by its ID.
+      parameters:
+      - description: Team ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The team
+          schema:
+            $ref: '#/definitions/models.Team'
+            type: object
+        "403":
+          description: The user does not have access to the team
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+            type: object
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Gets one team
+      tags:
+      - team
+    post:
+      consumes:
+      - application/json
+      description: Updates a list. This does not include adding a task (see below).
+      parameters:
+      - description: List ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: The list with updated values you want to update.
+        in: body
+        name: list
+        required: true
+        schema:
+          $ref: '#/definitions/models.List'
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The updated list.
+          schema:
+            $ref: '#/definitions/models.List'
+            type: object
+        "400":
+          description: Invalid list object provided.
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+            type: object
+        "403":
+          description: The user does not have access to the list
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+            type: object
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Updates a list
+      tags:
+      - list
+    put:
+      consumes:
+      - application/json
+      description: Inserts a task into a list.
+      parameters:
+      - description: List ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: The task object
+        in: body
+        name: task
+        required: true
+        schema:
+          $ref: '#/definitions/models.ListTask'
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The created task object.
+          schema:
+            $ref: '#/definitions/models.ListTask'
+            type: object
+        "400":
+          description: Invalid task object provided.
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+            type: object
+        "403":
+          description: The user does not have access to the list
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+            type: object
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Create a task
+      tags:
+      - task
+  /lists/{id}/teams:
+    get:
+      consumes:
+      - application/json
+      description: Returns a list with all teams which have access on a given list.
+      parameters:
+      - description: List ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: The page number. Used for pagination. If not provided, the first
+          page of results is returned.
+        in: query
+        name: p
+        type: integer
+      - description: Search teams by its name.
+        in: query
+        name: s
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The teams with their right.
+          schema:
+            items:
+              $ref: '#/definitions/models.TeamWithRight'
+            type: array
+        "403":
+          description: No right to see the list.
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+            type: object
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get teams on a list
+      tags:
+      - sharing
+    put:
+      consumes:
+      - application/json
+      description: Gives a team access to a list.
+      parameters:
+      - description: List ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: The team you want to add to the list.
+        in: body
+        name: list
+        required: true
+        schema:
+          $ref: '#/definitions/models.TeamList'
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The created team<->list relation.
+          schema:
+            $ref: '#/definitions/models.TeamList'
+            type: object
+        "400":
+          description: Invalid team list object provided.
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+            type: object
+        "403":
+          description: The user does not have access to the list
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+            type: object
+        "404":
+          description: The team does not exist.
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+            type: object
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Add a team to a list
+      tags:
+      - sharing
+  /lists/{id}/users:
+    get:
+      consumes:
+      - application/json
+      description: Returns a list with all users which have access on a given list.
+      parameters:
+      - description: List ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: The page number. Used for pagination. If not provided, the first
+          page of results is returned.
+        in: query
+        name: p
+        type: integer
+      - description: Search users by its name.
+        in: query
+        name: s
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The users with the right they have.
+          schema:
+            items:
+              $ref: '#/definitions/models.UserWithRight'
+            type: array
+        "403":
+          description: No right to see the list.
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+            type: object
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get users on a list
+      tags:
+      - sharing
+    put:
+      consumes:
+      - application/json
+      description: Gives a user access to a list.
+      parameters:
+      - description: List ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: The user you want to add to the list.
+        in: body
+        name: list
+        required: true
+        schema:
+          $ref: '#/definitions/models.ListUser'
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The created user<->list relation.
+          schema:
+            $ref: '#/definitions/models.ListUser'
+            type: object
+        "400":
+          description: Invalid user list object provided.
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+            type: object
+        "403":
+          description: The user does not have access to the list
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+            type: object
+        "404":
+          description: The user does not exist.
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+            type: object
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Add a user to a list
+      tags:
+      - sharing
+  /lists/{listID}/teams/{teamID}:
+    delete:
+      description: Delets a team from a list. The team won't have access to the list
+        anymore.
+      parameters:
+      - description: List ID
+        in: path
+        name: listID
+        required: true
+        type: integer
+      - description: Team ID
+        in: path
+        name: teamID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The team was successfully deleted.
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+        "403":
+          description: The user does not have access to the list
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+            type: object
+        "404":
+          description: Team or list does not exist.
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+            type: object
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Delete a team from a list
+      tags:
+      - sharing
+    post:
+      consumes:
+      - application/json
+      description: Update a team <-> list relation. Mostly used to update the right
+        that team has.
+      parameters:
+      - description: List ID
+        in: path
+        name: listID
+        required: true
+        type: integer
+      - description: Team ID
+        in: path
+        name: teamID
+        required: true
+        type: integer
+      - description: The team you want to update.
+        in: body
+        name: list
+        required: true
+        schema:
+          $ref: '#/definitions/models.TeamList'
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The updated team <-> list relation.
+          schema:
+            $ref: '#/definitions/models.TeamList'
+            type: object
+        "403":
+          description: The user does not have admin-access to the list
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+            type: object
+        "404":
+          description: Team or list does not exist.
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+            type: object
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update a team <-> list relation
+      tags:
+      - sharing
+  /lists/{listID}/users/{userID}:
+    delete:
+      description: Delets a user from a list. The user won't have access to the list
+        anymore.
+      parameters:
+      - description: List ID
+        in: path
+        name: listID
+        required: true
+        type: integer
+      - description: User ID
+        in: path
+        name: userID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The user was successfully removed from the list.
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+        "403":
+          description: The user does not have access to the list
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+            type: object
+        "404":
+          description: user or list does not exist.
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+            type: object
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Delete a user from a list
+      tags:
+      - sharing
+    post:
+      consumes:
+      - application/json
+      description: Update a user <-> list relation. Mostly used to update the right
+        that user has.
+      parameters:
+      - description: List ID
+        in: path
+        name: listID
+        required: true
+        type: integer
+      - description: User ID
+        in: path
+        name: userID
+        required: true
+        type: integer
+      - description: The user you want to update.
+        in: body
+        name: list
+        required: true
+        schema:
+          $ref: '#/definitions/models.ListUser'
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The updated user <-> list relation.
+          schema:
+            $ref: '#/definitions/models.ListUser'
+            type: object
+        "403":
+          description: The user does not have admin-access to the list
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+            type: object
+        "404":
+          description: User or list does not exist.
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+            type: object
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update a user <-> list relation
+      tags:
+      - sharing
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: Logs a user in. Returns a JWT-Token to authenticate further requests.
+      parameters:
+      - description: The login credentials
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/models.UserLogin'
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1.Token'
+            type: object
+        "400":
+          description: Invalid user password model.
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+        "403":
+          description: Invalid username or password.
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+      summary: Login
+      tags:
+      - user
+  /namespace/{id}:
+    post:
+      consumes:
+      - application/json
+      description: Updates a namespace.
+      parameters:
+      - description: Namespace ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: The namespace with updated values you want to update.
+        in: body
+        name: namespace
+        required: true
+        schema:
+          $ref: '#/definitions/models.Namespace'
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The updated namespace.
+          schema:
+            $ref: '#/definitions/models.Namespace'
+            type: object
+        "400":
+          description: Invalid namespace object provided.
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+            type: object
+        "403":
+          description: The user does not have access to the namespace
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+            type: object
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Updates a namespace
+      tags:
+      - namespace
+  /namespaces:
+    get:
+      consumes:
+      - application/json
+      description: Returns all namespaces a user has access to.
+      parameters:
+      - description: The page number. Used for pagination. If not provided, the first
+          page of results is returned.
+        in: query
+        name: p
+        type: integer
+      - description: Search namespaces by name.
+        in: query
+        name: s
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The Namespaces.
+          schema:
+            items:
+              $ref: '#/definitions/models.NamespaceWithLists'
+            type: array
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get all namespaces a user has access to
+      tags:
+      - namespace
+    put:
+      consumes:
+      - application/json
+      description: Creates a new namespace.
+      parameters:
+      - description: The namespace you want to create.
+        in: body
+        name: namespace
+        required: true
+        schema:
+          $ref: '#/definitions/models.Namespace'
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The created namespace.
+          schema:
+            $ref: '#/definitions/models.Namespace'
+            type: object
+        "400":
+          description: Invalid namespace object provided.
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+            type: object
+        "403":
+          description: The user does not have access to the namespace
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+            type: object
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Creates a new namespace
+      tags:
+      - namespace
+  /namespaces/{id}:
+    delete:
+      description: Delets a namespace
+      parameters:
+      - description: Namespace ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The namespace was successfully deleted.
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+        "400":
+          description: Invalid namespace object provided.
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+            type: object
+        "403":
+          description: The user does not have access to the namespace
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+            type: object
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Deletes a namespace
+      tags:
+      - namespace
+    get:
+      consumes:
+      - application/json
+      description: Returns a namespace by its ID.
+      parameters:
+      - description: Namespace ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The Namespace
+          schema:
+            $ref: '#/definitions/models.Namespace'
+            type: object
+        "403":
+          description: The user does not have access to that namespace.
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+            type: object
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Gets one namespace
+      tags:
+      - namespace
+  /namespaces/{id}/lists:
+    get:
+      consumes:
+      - application/json
+      description: Returns all lists inside of a namespace.
+      parameters:
+      - description: Namespace ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The lists.
+          schema:
+            items:
+              $ref: '#/definitions/models.List'
+            type: array
+        "403":
+          description: No access to that namespace.
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+        "404":
+          description: The namespace does not exist.
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get all lists in a namespace
+      tags:
+      - namespace
+  /namespaces/{id}/teams:
+    get:
+      consumes:
+      - application/json
+      description: Returns a namespace with all teams which have access on a given
+        namespace.
+      parameters:
+      - description: Namespace ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: The page number. Used for pagination. If not provided, the first
+          page of results is returned.
+        in: query
+        name: p
+        type: integer
+      - description: Search teams by its name.
+        in: query
+        name: s
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The teams with the right they have.
+          schema:
+            items:
+              $ref: '#/definitions/models.TeamWithRight'
+            type: array
+        "403":
+          description: No right to see the namespace.
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+            type: object
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get teams on a namespace
+      tags:
+      - sharing
+    put:
+      consumes:
+      - application/json
+      description: Gives a team access to a namespace.
+      parameters:
+      - description: Namespace ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: The team you want to add to the namespace.
+        in: body
+        name: namespace
+        required: true
+        schema:
+          $ref: '#/definitions/models.TeamNamespace'
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The created team<->namespace relation.
+          schema:
+            $ref: '#/definitions/models.TeamNamespace'
+            type: object
+        "400":
+          description: Invalid team namespace object provided.
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+            type: object
+        "403":
+          description: The team does not have access to the namespace
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+            type: object
+        "404":
+          description: The team does not exist.
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+            type: object
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Add a team to a namespace
+      tags:
+      - sharing
+  /namespaces/{id}/users:
+    get:
+      consumes:
+      - application/json
+      description: Returns a namespace with all users which have access on a given
+        namespace.
+      parameters:
+      - description: Namespace ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: The page number. Used for pagination. If not provided, the first
+          page of results is returned.
+        in: query
+        name: p
+        type: integer
+      - description: Search users by its name.
+        in: query
+        name: s
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The users with the right they have.
+          schema:
+            items:
+              $ref: '#/definitions/models.UserWithRight'
+            type: array
+        "403":
+          description: No right to see the namespace.
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+            type: object
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get users on a namespace
+      tags:
+      - sharing
+    put:
+      consumes:
+      - application/json
+      description: Gives a user access to a namespace.
+      parameters:
+      - description: Namespace ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: The user you want to add to the namespace.
+        in: body
+        name: namespace
+        required: true
+        schema:
+          $ref: '#/definitions/models.NamespaceUser'
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The created user<->namespace relation.
+          schema:
+            $ref: '#/definitions/models.NamespaceUser'
+            type: object
+        "400":
+          description: Invalid user namespace object provided.
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+            type: object
+        "403":
+          description: The user does not have access to the namespace
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+            type: object
+        "404":
+          description: The user does not exist.
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+            type: object
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Add a user to a namespace
+      tags:
+      - sharing
+  /namespaces/{namespaceID}/lists:
+    put:
+      consumes:
+      - application/json
+      description: Creates a new list in a given namespace. The user needs write-access
+        to the namespace.
+      parameters:
+      - description: Namespace ID
+        in: path
+        name: namespaceID
+        required: true
+        type: integer
+      - description: The list you want to create.
+        in: body
+        name: list
+        required: true
+        schema:
+          $ref: '#/definitions/models.List'
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The created list.
+          schema:
+            $ref: '#/definitions/models.List'
+            type: object
+        "400":
+          description: Invalid list object provided.
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+            type: object
+        "403":
+          description: The user does not have access to the list
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+            type: object
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Creates a new list
+      tags:
+      - list
+  /namespaces/{namespaceID}/teams/{teamID}:
+    delete:
+      description: Delets a team from a namespace. The team won't have access to the
+        namespace anymore.
+      parameters:
+      - description: Namespace ID
+        in: path
+        name: namespaceID
+        required: true
+        type: integer
+      - description: team ID
+        in: path
+        name: teamID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The team was successfully deleted.
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+        "403":
+          description: The team does not have access to the namespace
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+            type: object
+        "404":
+          description: team or namespace does not exist.
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+            type: object
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Delete a team from a namespace
+      tags:
+      - sharing
+    post:
+      consumes:
+      - application/json
+      description: Update a team <-> namespace relation. Mostly used to update the
+        right that team has.
+      parameters:
+      - description: Namespace ID
+        in: path
+        name: namespaceID
+        required: true
+        type: integer
+      - description: Team ID
+        in: path
+        name: teamID
+        required: true
+        type: integer
+      - description: The team you want to update.
+        in: body
+        name: namespace
+        required: true
+        schema:
+          $ref: '#/definitions/models.TeamNamespace'
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The updated team <-> namespace relation.
+          schema:
+            $ref: '#/definitions/models.TeamNamespace'
+            type: object
+        "403":
+          description: The team does not have admin-access to the namespace
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+            type: object
+        "404":
+          description: Team or namespace does not exist.
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+            type: object
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update a team <-> namespace relation
+      tags:
+      - sharing
+  /namespaces/{namespaceID}/users/{userID}:
+    delete:
+      description: Delets a user from a namespace. The user won't have access to the
+        namespace anymore.
+      parameters:
+      - description: Namespace ID
+        in: path
+        name: namespaceID
+        required: true
+        type: integer
+      - description: user ID
+        in: path
+        name: userID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The user was successfully deleted.
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+        "403":
+          description: The user does not have access to the namespace
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+            type: object
+        "404":
+          description: user or namespace does not exist.
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+            type: object
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Delete a user from a namespace
+      tags:
+      - sharing
+    post:
+      consumes:
+      - application/json
+      description: Update a user <-> namespace relation. Mostly used to update the
+        right that user has.
+      parameters:
+      - description: Namespace ID
+        in: path
+        name: namespaceID
+        required: true
+        type: integer
+      - description: User ID
+        in: path
+        name: userID
+        required: true
+        type: integer
+      - description: The user you want to update.
+        in: body
+        name: namespace
+        required: true
+        schema:
+          $ref: '#/definitions/models.NamespaceUser'
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The updated user <-> namespace relation.
+          schema:
+            $ref: '#/definitions/models.NamespaceUser'
+            type: object
+        "403":
+          description: The user does not have admin-access to the namespace
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+            type: object
+        "404":
+          description: User or namespace does not exist.
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+            type: object
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update a user <-> namespace relation
+      tags:
+      - sharing
+  /register:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new user account.
+      parameters:
+      - description: The user credentials
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/models.APIUserPassword'
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+            type: object
+        "400":
+          description: No or invalid user register object provided / User already
+            exists.
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+            type: object
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+      summary: Register
+      tags:
+      - user
+  /tasks:
+    get:
+      consumes:
+      - application/json
+      description: Returns all tasks on any list the user has access to.
+      parameters:
+      - description: The page number. Used for pagination. If not provided, the first
+          page of results is returned.
+        in: query
+        name: p
+        type: integer
+      - description: Search tasks by task text.
+        in: query
+        name: s
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The tasks
+          schema:
+            items:
+              $ref: '#/definitions/models.List'
+            type: array
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get tasks
+      tags:
+      - task
+  /tasks/{id}:
+    delete:
+      description: Deletes a task from a list. This does not mean "mark it done".
+      parameters:
+      - description: Task ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The created task object.
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+        "400":
+          description: Invalid task ID provided.
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+            type: object
+        "403":
+          description: The user does not have access to the list
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+            type: object
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Delete a task
+      tags:
+      - task
+    post:
+      consumes:
+      - application/json
+      description: Updates a task. This includes marking it as done.
+      parameters:
+      - description: Task ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: The task object
+        in: body
+        name: task
+        required: true
+        schema:
+          $ref: '#/definitions/models.ListTask'
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The updated task object.
+          schema:
+            $ref: '#/definitions/models.ListTask'
+            type: object
+        "400":
+          description: Invalid task object provided.
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+            type: object
+        "403":
+          description: The user does not have access to the task (aka its list)
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+            type: object
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update a task
+      tags:
+      - task
+  /tasks/caldav:
+    get:
+      description: Returns a calDAV-parsable format with all tasks as calendar events.
+        Only returns tasks with a due date. Also creates reminders when the task has
+        one.
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: The caldav events.
+          schema:
+            type: string
+        "403":
+          description: Unauthorized.
+          schema:
+            type: string
+      security:
+      - BasicAuth: []
+      summary: CalDAV-readable format with all tasks as calendar events.
+      tags:
+      - task
+  /teams:
+    get:
+      consumes:
+      - application/json
+      description: Returns all teams the current user is part of.
+      parameters:
+      - description: The page number. Used for pagination. If not provided, the first
+          page of results is returned.
+        in: query
+        name: p
+        type: integer
+      - description: Search teams by its name.
+        in: query
+        name: s
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The teams.
+          schema:
+            items:
+              $ref: '#/definitions/models.Team'
+            type: array
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get teams
+      tags:
+      - team
+    put:
+      consumes:
+      - application/json
+      description: Creates a new team in a given namespace. The user needs write-access
+        to the namespace.
+      parameters:
+      - description: The team you want to create.
+        in: body
+        name: team
+        required: true
+        schema:
+          $ref: '#/definitions/models.Team'
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The created team.
+          schema:
+            $ref: '#/definitions/models.Team'
+            type: object
+        "400":
+          description: Invalid team object provided.
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+            type: object
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Creates a new team
+      tags:
+      - team
+  /teams/{id}:
+    delete:
+      description: Delets a team. This will also remove the access for all users in
+        that team.
+      parameters:
+      - description: Team ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The team was successfully deleted.
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+        "400":
+          description: Invalid team object provided.
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+            type: object
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Deletes a team
+      tags:
+      - team
+    post:
+      consumes:
+      - application/json
+      description: Updates a team.
+      parameters:
+      - description: Team ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: The team with updated values you want to update.
+        in: body
+        name: team
+        required: true
+        schema:
+          $ref: '#/definitions/models.Team'
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The updated team.
+          schema:
+            $ref: '#/definitions/models.Team'
+            type: object
+        "400":
+          description: Invalid team object provided.
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+            type: object
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Updates a team
+      tags:
+      - team
+  /teams/{id}/members:
+    put:
+      consumes:
+      - application/json
+      description: Add a user to a team.
+      parameters:
+      - description: Team ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: The user to be added to a team.
+        in: body
+        name: team
+        required: true
+        schema:
+          $ref: '#/definitions/models.TeamMember'
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The newly created member object
+          schema:
+            $ref: '#/definitions/models.TeamMember'
+            type: object
+        "400":
+          description: Invalid member object provided.
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+            type: object
+        "403":
+          description: The user does not have access to the team
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+            type: object
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Add a user to a team
+      tags:
+      - team
+  /teams/{id}/members/{userID}:
+    delete:
+      description: Remove a user from a team. This will also revoke any access this
+        user might have via that team.
+      parameters:
+      - description: Team ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: User ID
+        in: path
+        name: userID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The user was successfully removed from the team.
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Remove a user from a team
+      tags:
+      - team
+  /user:
+    get:
+      consumes:
+      - application/json
+      description: Returns the current user object.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+            type: object
+        "404":
+          description: User does not exist.
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+            type: object
+        "500":
+          description: Internal server error.
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get user information
+      tags:
+      - user
+  /user/confirm:
+    post:
+      consumes:
+      - application/json
+      description: Confirms the email of a newly registered user.
+      parameters:
+      - description: The token.
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/models.EmailConfirm'
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+        "412":
+          description: Bad token provided.
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+            type: object
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+      summary: Confirm the email of a new user
+      tags:
+      - user
+  /user/password:
+    post:
+      consumes:
+      - application/json
+      description: Lets the current user change its password.
+      parameters:
+      - description: The current and new password.
+        in: body
+        name: userPassword
+        required: true
+        schema:
+          $ref: '#/definitions/v1.UserPassword'
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+        "400":
+          description: Something's invalid.
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+            type: object
+        "404":
+          description: User does not exist.
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+            type: object
+        "500":
+          description: Internal server error.
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Change password
+      tags:
+      - user
+  /user/password/reset:
+    post:
+      consumes:
+      - application/json
+      description: Resets a user email with a previously reset token.
+      parameters:
+      - description: The token with the new password.
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/models.PasswordReset'
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+        "400":
+          description: Bad token provided.
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+            type: object
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+      summary: Resets a password
+      tags:
+      - user
+  /user/password/token:
+    post:
+      consumes:
+      - application/json
+      description: Requests a token to reset a users password. The token is sent via
+        email.
+      parameters:
+      - description: The username of the user to request a token for.
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/models.PasswordTokenRequest'
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+        "404":
+          description: The user does not exist.
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+            type: object
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+      summary: Request password reset token
+      tags:
+      - user
+  /users:
+    get:
+      consumes:
+      - application/json
+      description: Lists all users (without emailadresses). Also possible to search
+        for a specific user.
+      parameters:
+      - description: Search for a user by its name.
+        in: query
+        name: s
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: All (found) users.
+          schema:
+            items:
+              $ref: '#/definitions/models.User'
+            type: array
+        "400":
+          description: Something's invalid.
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+            type: object
+        "500":
+          description: Internal server error.
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get users
+      tags:
+      - user
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+  BasicAuth:
+    type: basic
+swagger: "2.0"

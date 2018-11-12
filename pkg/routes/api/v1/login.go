@@ -12,28 +12,23 @@ import (
 	"time"
 )
 
-// Login is the login handler
-func Login(c echo.Context) error {
-	// swagger:operation POST /login user login
-	// ---
-	// summary: Logs a user in. Returns a JWT-Token to authenticate requests
-	// consumes:
-	// - application/json
-	// produces:
-	// - application/json
-	// parameters:
-	// - name: body
-	//   in: body
-	//   schema:
-	//     "$ref": "#/definitions/UserLogin"
-	// responses:
-	//   "200":
-	//     "$ref": "#/responses/Token"
-	//   "400":
-	//     "$ref": "#/responses/Message"
-	//   "403":
-	//     "$ref": "#/responses/Message"
+// Token represents an authentification token
+type Token struct {
+	Token string `json:"token"`
+}
 
+// Login is the login handler
+// @Summary Login
+// @Description Logs a user in. Returns a JWT-Token to authenticate further requests.
+// @tags user
+// @Accept json
+// @Produce json
+// @Param credentials body models.UserLogin true "The login credentials"
+// @Success 200 {object} v1.Token
+// @Failure 400 {object} models.Message "Invalid user password model."
+// @Failure 403 {object} models.Message "Invalid username or password."
+// @Router /login [post]
+func Login(c echo.Context) error {
 	u := models.UserLogin{}
 	if err := c.Bind(&u); err != nil {
 		return c.JSON(http.StatusBadRequest, models.Message{"Please provide a username and password."})
@@ -64,7 +59,5 @@ func Login(c echo.Context) error {
 		return err
 	}
 
-	return c.JSON(http.StatusOK, map[string]string{
-		"token": t,
-	})
+	return c.JSON(http.StatusOK, Token{Token: t})
 }

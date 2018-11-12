@@ -1,6 +1,20 @@
 package models
 
 // Create creates a new list <-> user relation
+// @Summary Add a user to a list
+// @Description Gives a user access to a list.
+// @tags sharing
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param id path int true "List ID"
+// @Param list body models.ListUser true "The user you want to add to the list."
+// @Success 200 {object} models.ListUser "The created user<->list relation."
+// @Failure 400 {object} models.HTTPError "Invalid user list object provided."
+// @Failure 404 {object} models.HTTPError "The user does not exist."
+// @Failure 403 {object} models.HTTPError "The user does not have access to the list"
+// @Failure 500 {object} models.Message "Internal error"
+// @Router /lists/{id}/users [put]
 func (ul *ListUser) Create(u *User) (err error) {
 
 	// Check if the right is valid

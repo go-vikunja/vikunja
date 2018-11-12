@@ -10,18 +10,15 @@ import (
 )
 
 // Caldav returns a caldav-readable format with all tasks
+// @Summary CalDAV-readable format with all tasks as calendar events.
+// @Description Returns a calDAV-parsable format with all tasks as calendar events. Only returns tasks with a due date. Also creates reminders when the task has one.
+// @tags task
+// @Produce text/plain
+// @Security BasicAuth
+// @Success 200 {string} string "The caldav events."
+// @Failure 403 {string} string "Unauthorized."
+// @Router /tasks/caldav [get]
 func Caldav(c echo.Context) error {
-
-	// swagger:operation GET /tasks/caldav list caldavTasks
-	// ---
-	// summary: Get all tasks as caldav
-	// responses:
-	//   "200":
-	//     "$ref": "#/responses/Message"
-	//   "400":
-	//     "$ref": "#/responses/Message"
-	//   "500":
-	//     "$ref": "#/responses/Message"
 
 	// Request basic auth
 	user, pass, ok := c.Request().BasicAuth()

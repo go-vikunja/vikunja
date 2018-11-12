@@ -27,6 +27,18 @@ func GetListsByNamespaceID(nID int64) (lists []*List, err error) {
 }
 
 // ReadAll gets all lists a user has access to
+// @Summary Get all lists a user has access to
+// @Description Returns all lists a user has access to.
+// @tags list
+// @Accept json
+// @Produce json
+// @Param p query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
+// @Param s query string false "Search lists by title."
+// @Security ApiKeyAuth
+// @Success 200 {array} models.List "The lists"
+// @Failure 403 {object} models.HTTPError "The user does not have access to the list"
+// @Failure 500 {object} models.Message "Internal error"
+// @Router /lists [get]
 func (l *List) ReadAll(search string, u *User, page int) (interface{}, error) {
 	lists, err := getRawListsForUser(search, u, page)
 	if err != nil {
@@ -40,6 +52,17 @@ func (l *List) ReadAll(search string, u *User, page int) (interface{}, error) {
 }
 
 // ReadOne gets one list by its ID
+// @Summary Gets one list
+// @Description Returns a list by its ID.
+// @tags list
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param id path int true "List ID"
+// @Success 200 {object} models.List "The list"
+// @Failure 403 {object} models.HTTPError "The user does not have access to the list"
+// @Failure 500 {object} models.Message "Internal error"
+// @Router /lists/{id} [get]
 func (l *List) ReadOne() (err error) {
 	err = l.GetSimpleByID()
 	if err != nil {
@@ -155,21 +178,26 @@ func AddListDetails(lists []*List) (err error) {
 	return
 }
 
-// ListTasksDummy is a dummy we use to be able to use the crud handler
-type ListTasksDummy struct {
-	CRUDable
-	Rights
-}
-
 // ReadAll gets all tasks for a user
-func (lt *ListTasksDummy) ReadAll(search string, u *User, page int) (interface{}, error) {
+// @Summary Get tasks
+// @Description Returns all tasks on any list the user has access to.
+// @tags task
+// @Accept json
+// @Produce json
+// @Param p query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
+// @Param s query string false "Search tasks by task text."
+// @Security ApiKeyAuth
+// @Success 200 {array} models.List "The tasks"
+// @Failure 500 {object} models.Message "Internal error"
+// @Router /tasks [get]
+func (lt *ListTask) ReadAll(search string, u *User, page int) (interface{}, error) {
 	return GetTasksByUser(search, u, page)
 }
 
 //GetTasksByUser returns all tasks for a user
 func GetTasksByUser(search string, u *User, page int) (tasks []*ListTask, err error) {
 	// Get all lists
-	lists, err := getRawListsForUser(search, u, page)
+	lists, err := getRawListsForUser("", u, page)
 	if err != nil {
 		return nil, err
 	}
@@ -181,7 +209,7 @@ func GetTasksByUser(search string, u *User, page int) (tasks []*ListTask, err er
 	}
 
 	// Then return all tasks for that lists
-	if err := x.In("list_id", listIDs).Find(&tasks); err != nil {
+	if err := x.In("list_id", listIDs).Where("text LIKE ?", "%"+search+"%").Find(&tasks); err != nil {
 		return nil, err
 	}
 

@@ -3,11 +3,13 @@ module code.vikunja.io/api
 require (
 	cloud.google.com/go v0.30.0 // indirect
 	github.com/BurntSushi/toml v0.3.1 // indirect
+	github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc
 	github.com/client9/misspell v0.3.4
 	github.com/denisenkom/go-mssqldb v0.0.0-20180901172138-1eb28afdf9b6 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/fzipp/gocyclo v0.0.0-20150627053110-6acd4345c835
 	github.com/garyburd/redigo v1.6.0 // indirect
+	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/go-openapi/analysis v0.17.2 // indirect
 	github.com/go-openapi/errors v0.17.2 // indirect
 	github.com/go-openapi/inflect v0.17.2 // indirect
@@ -38,9 +40,14 @@ require (
 	github.com/mattn/go-oci8 v0.0.0-20181011085415-1a014d1384b5 // indirect
 	github.com/mattn/go-sqlite3 v1.9.0
 	github.com/op/go-logging v0.0.0-20160211212156-b2cb9fa56473
+	github.com/pkg/errors v0.8.0 // indirect
 	github.com/spf13/viper v1.2.0
 	github.com/stretchr/testify v1.2.2
+	github.com/swaggo/echo-swagger v0.0.0-20180315045949-97f46bb9e5a5
+	github.com/swaggo/files v0.0.0-20180215091130-49c8a91ea3fa // indirect
+	github.com/swaggo/swag v1.3.3-0.20181109030545-8f09470d62b2
 	github.com/toqueteos/webbrowser v1.1.0 // indirect
+	github.com/urfave/cli v1.20.0 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/ziutek/mymysql v1.5.4 // indirect
 	golang.org/x/crypto v0.0.0-20180312195533-182114d58262

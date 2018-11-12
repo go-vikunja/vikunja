@@ -19,7 +19,8 @@ func (TeamList) TableName() string {
 	return "team_list"
 }
 
-type teamWithRight struct {
+// TeamWithRight represents a team, combined with rights.
+type TeamWithRight struct {
 	Team  `xorm:"extends"`
 	Right TeamRight `json:"right"`
 }

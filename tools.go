@@ -7,8 +7,9 @@ package tools
 import (
 	_ "github.com/client9/misspell/cmd/misspell"
 	_ "github.com/fzipp/gocyclo"
-	_ "github.com/go-swagger/go-swagger/cmd/swagger"
 	_ "github.com/gordonklaus/ineffassign"
 	_ "github.com/karalabe/xgo"
+	_ "github.com/swaggo/echo-swagger"
+	_ "github.com/swaggo/swag/cmd/swag"
 	_ "golang.org/x/lint/golint"
 )

@@ -1,6 +1,18 @@
 package models
 
 // Delete deletes a namespace <-> user relation
+// @Summary Delete a user from a namespace
+// @Description Delets a user from a namespace. The user won't have access to the namespace anymore.
+// @tags sharing
+// @Produce json
+// @Security ApiKeyAuth
+// @Param namespaceID path int true "Namespace ID"
+// @Param userID path int true "user ID"
+// @Success 200 {object} models.Message "The user was successfully deleted."
+// @Failure 403 {object} models.HTTPError "The user does not have access to the namespace"
+// @Failure 404 {object} models.HTTPError "user or namespace does not exist."
+// @Failure 500 {object} models.Message "Internal error"
+// @Router /namespaces/{namespaceID}/users/{userID} [delete]
 func (nu *NamespaceUser) Delete() (err error) {
 
 	// Check if the user exists

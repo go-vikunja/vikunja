@@ -18,7 +18,7 @@ pipeline:
     commands:
       - make lint
       - make fmt-check
-      # - make swagger-check # Inactive until go-swagger works with go modules
+      # - make got-swag # Commented out until we figured out how to get this working on drone
       - make ineffassign-check
       - make misspell-check
       - make build

@@ -2,6 +2,9 @@
 github.com/PuerkitoBio/purell
 # github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578
 github.com/PuerkitoBio/urlesc
+# github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc
+github.com/alecthomas/template
+github.com/alecthomas/template/parse
 # github.com/asaskevich/govalidator v0.0.0-20180720115003-f9ffefc3facf
 github.com/asaskevich/govalidator
 # github.com/client9/misspell v0.3.4
@@ -18,6 +21,8 @@ github.com/fzipp/gocyclo
 # github.com/garyburd/redigo v1.6.0
 github.com/garyburd/redigo/redis
 github.com/garyburd/redigo/internal
+# github.com/ghodss/yaml v1.0.0
+github.com/ghodss/yaml
 # github.com/globalsign/mgo v0.0.0-20180905125535-1ca0a4f7cbcb
 github.com/globalsign/mgo/bson
 github.com/globalsign/mgo/internal/json
@@ -119,6 +124,8 @@ github.com/mitchellh/mapstructure
 github.com/op/go-logging
 # github.com/pelletier/go-toml v1.2.0
 github.com/pelletier/go-toml
+# github.com/pkg/errors v0.8.0
+github.com/pkg/errors
 # github.com/pmezard/go-difflib v1.0.0
 github.com/pmezard/go-difflib/difflib
 # github.com/spf13/afero v1.1.2
@@ -134,8 +141,18 @@ github.com/spf13/pflag
 github.com/spf13/viper
 # github.com/stretchr/testify v1.2.2
 github.com/stretchr/testify/assert
+# github.com/swaggo/echo-swagger v0.0.0-20180315045949-97f46bb9e5a5
+github.com/swaggo/echo-swagger
+# github.com/swaggo/files v0.0.0-20180215091130-49c8a91ea3fa
+github.com/swaggo/files
+# github.com/swaggo/swag v1.3.3-0.20181109030545-8f09470d62b2
+github.com/swaggo/swag/cmd/swag
+github.com/swaggo/swag
+github.com/swaggo/swag/gen
 # github.com/toqueteos/webbrowser v1.1.0
 github.com/toqueteos/webbrowser
+# github.com/urfave/cli v1.20.0
+github.com/urfave/cli
 # github.com/valyala/bytebufferpool v1.0.0
 github.com/valyala/bytebufferpool
 # github.com/valyala/fasttemplate v0.0.0-20170224212429-dcecefd839c4
@@ -149,6 +166,9 @@ golang.org/x/crypto/acme
 golang.org/x/lint/golint
 golang.org/x/lint
 # golang.org/x/net v0.0.0-20181005035420-146acd28ed58
+golang.org/x/net/webdav
+golang.org/x/net/context
+golang.org/x/net/webdav/internal/xml
 golang.org/x/net/idna
 # golang.org/x/sys v0.0.0-20180906133057-8cf3aee42992
 golang.org/x/sys/unix
@@ -159,14 +179,14 @@ golang.org/x/text/width
 golang.org/x/text/secure/bidirule
 golang.org/x/text/unicode/bidi
 # golang.org/x/tools v0.0.0-20181026183834-f60e5f99f081
+golang.org/x/tools/go/loader
 golang.org/x/tools/go/ast/astutil
 golang.org/x/tools/go/gcexportdata
-golang.org/x/tools/go/internal/gcimporter
-golang.org/x/tools/imports
-golang.org/x/tools/go/loader
-golang.org/x/tools/internal/gopathwalk
 golang.org/x/tools/go/buildutil
 golang.org/x/tools/go/internal/cgo
+golang.org/x/tools/go/internal/gcimporter
+golang.org/x/tools/imports
+golang.org/x/tools/internal/gopathwalk
 golang.org/x/tools/internal/fastwalk
 # gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc
 gopkg.in/alexcesaro/quotedprintable.v3

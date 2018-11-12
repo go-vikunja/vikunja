@@ -32,6 +32,19 @@ func CreateOrUpdateList(list *List) (err error) {
 }
 
 // Update implements the update method of CRUDable
+// @Summary Updates a list
+// @Description Updates a list. This does not include adding a task (see below).
+// @tags list
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param id path int true "List ID"
+// @Param list body models.List true "The list with updated values you want to update."
+// @Success 200 {object} models.List "The updated list."
+// @Failure 400 {object} models.HTTPError "Invalid list object provided."
+// @Failure 403 {object} models.HTTPError "The user does not have access to the list"
+// @Failure 500 {object} models.Message "Internal error"
+// @Router /lists/{id} [post]
 func (l *List) Update() (err error) {
 	// Check if it exists
 	if err = l.GetSimpleByID(); err != nil {
@@ -42,6 +55,19 @@ func (l *List) Update() (err error) {
 }
 
 // Create implements the create method of CRUDable
+// @Summary Creates a new list
+// @Description Creates a new list in a given namespace. The user needs write-access to the namespace.
+// @tags list
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param namespaceID path int true "Namespace ID"
+// @Param list body models.List true "The list you want to create."
+// @Success 200 {object} models.List "The created list."
+// @Failure 400 {object} models.HTTPError "Invalid list object provided."
+// @Failure 403 {object} models.HTTPError "The user does not have access to the list"
+// @Failure 500 {object} models.Message "Internal error"
+// @Router /namespaces/{namespaceID}/lists [put]
 func (l *List) Create(doer *User) (err error) {
 	// Check rights
 	u, err := GetUserByID(doer.ID)

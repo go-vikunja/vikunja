@@ -8,29 +8,17 @@ import (
 )
 
 // UserConfirmEmail is the handler to confirm a user email
+// @Summary Confirm the email of a new user
+// @Description Confirms the email of a newly registered user.
+// @tags user
+// @Accept json
+// @Produce json
+// @Param credentials body models.EmailConfirm true "The token."
+// @Success 200 {object} models.Message
+// @Failure 412 {object} models.HTTPError "Bad token provided."
+// @Failure 500 {object} models.Message "Internal error"
+// @Router /user/confirm [post]
 func UserConfirmEmail(c echo.Context) error {
-	// swagger:operation POST /user/confirm user confirmEmail
-	// ---
-	// summary: Confirms a users email address
-	// consumes:
-	// - application/json
-	// produces:
-	// - application/json
-	// parameters:
-	// - name: body
-	//   in: body
-	//   schema:
-	//     "$ref": "#/definitions/EmailConfirm"
-	// responses:
-	//   "200":
-	//     "$ref": "#/responses/Message"
-	//   "400":
-	//     "$ref": "#/responses/Message"
-	//   "404":
-	//     "$ref": "#/responses/Message"
-	//   "500":
-	//     "$ref": "#/responses/Message"
-
 	// Check for Request Content
 	var emailConfirm models.EmailConfirm
 	if err := c.Bind(&emailConfirm); err != nil {

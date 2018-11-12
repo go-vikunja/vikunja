@@ -1,6 +1,7 @@
 package main
 
 import (
+	"code.vikunja.io/api/docs"
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/mail"
@@ -41,6 +42,9 @@ func main() {
 
 	// Version notification
 	log.Log.Infof("Vikunja version %s", Version)
+
+	// Additional swagger information
+	docs.SwaggerInfo.Version = Version
 
 	// Start the webserver
 	e := routes.NewEcho()

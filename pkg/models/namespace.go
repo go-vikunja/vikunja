@@ -47,20 +47,43 @@ func GetNamespaceByID(id int64) (namespace Namespace, err error) {
 }
 
 // ReadOne gets one namespace
+// @Summary Gets one namespace
+// @Description Returns a namespace by its ID.
+// @tags namespace
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param id path int true "Namespace ID"
+// @Success 200 {object} models.Namespace "The Namespace"
+// @Failure 403 {object} models.HTTPError "The user does not have access to that namespace."
+// @Failure 500 {object} models.Message "Internal error"
+// @Router /namespaces/{id} [get]
 func (n *Namespace) ReadOne() (err error) {
 	*n, err = GetNamespaceByID(n.ID)
 	return
 }
 
+// NamespaceWithLists represents a namespace with list meta informations
+type NamespaceWithLists struct {
+	Namespace `xorm:"extends"`
+	Lists     []*List `xorm:"-" json:"lists"`
+}
+
 // ReadAll gets all namespaces a user has access to
+// @Summary Get all namespaces a user has access to
+// @Description Returns all namespaces a user has access to.
+// @tags namespace
+// @Accept json
+// @Produce json
+// @Param p query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
+// @Param s query string false "Search namespaces by name."
+// @Security ApiKeyAuth
+// @Success 200 {array} models.NamespaceWithLists "The Namespaces."
+// @Failure 500 {object} models.Message "Internal error"
+// @Router /namespaces [get]
 func (n *Namespace) ReadAll(search string, doer *User, page int) (interface{}, error) {
 
-	type namespaceWithLists struct {
-		Namespace `xorm:"extends"`
-		Lists     []*List `xorm:"-" json:"lists"`
-	}
-
-	all := []*namespaceWithLists{}
+	all := []*NamespaceWithLists{}
 
 	err := x.Select("namespaces.*").
 		Table("namespaces").

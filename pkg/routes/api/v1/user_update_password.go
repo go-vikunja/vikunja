@@ -14,29 +14,19 @@ type UserPassword struct {
 }
 
 // UserChangePassword is the handler to change a users password
+// @Summary Change password
+// @Description Lets the current user change its password.
+// @tags user
+// @Accept json
+// @Produce json
+// @Param userPassword body v1.UserPassword true "The current and new password."
+// @Security ApiKeyAuth
+// @Success 200 {object} models.Message
+// @Failure 400 {object} models.HTTPError "Something's invalid."
+// @Failure 404 {object} models.HTTPError "User does not exist."
+// @Failure 500 {object} models.Message "Internal server error."
+// @Router /user/password [post]
 func UserChangePassword(c echo.Context) error {
-	// swagger:operation POST /user/password user updatePassword
-	// ---
-	// summary: Shows the current user
-	// consumes:
-	// - application/json
-	// produces:
-	// - application/json
-	// parameters:
-	// - name: body
-	//   in: body
-	//   schema:
-	//     "$ref": "#/definitions/Password"
-	// responses:
-	//   "200":
-	//     "$ref": "#/responses/Message"
-	//   "400":
-	//     "$ref": "#/responses/Message"
-	//   "404":
-	//     "$ref": "#/responses/Message"
-	//   "500":
-	//     "$ref": "#/responses/Message"
-
 	// Check if the user is itself
 	doer, err := models.GetCurrentUser(c)
 	if err != nil {
