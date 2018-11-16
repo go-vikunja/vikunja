@@ -218,22 +218,22 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
 * [x] Rausfinden warum xorm teilweise beim einfügen IDs mit einfügen will -> Das schlägt dann wegen duplicate fehl
 * [x] Bei den Structs "AfterLoad" raus, das verbraucht bei Gruppenabfragen zu viele SQL-Abfragen -> Die sollen einfach die entsprechenden Read()-Methoden verwenden (Krassestes bsp. ist GET /namespaces mit so ca 50 Abfragen)
 * [x] General search endpoints
-* [ ] Wir brauchen noch ne gute idee, wie man die listen kriegt, auf die man nur so Zugriff hat (ohne namespace)
-    * Dazu am Besten nen pseudonamespace anlegen (id -1 oder so), der hat das dann alles
 * [x] Validation der ankommenden structs, am besten mit https://github.com/go-validator/validator oder mit dem Ding von echo
 * [x] Pagination
 	* Sollte in der Config definierbar sein, wie viel pro Seite angezeigt werden soll, die CRUD-Methoden übergeben dann ein "gibt mir die Seite sowieso" an die CRUDable-Funktionenen, die müssen das dann Auswerten. Geht leider nicht anders, wenn man erst 2342352 Einträge hohlt und die dann nachträglich auf 200 begrenzt ist das ne massive Ressourcenverschwendung.
-* [ ] Testing mit locust: https://locust.io/
-* [ ] Methode einbauen, um mit einem gültigen token ein neues gültiges zu kriegen
 * [x] Testen, ob man über die Routen methode von echo irgendwie ein swagger spec generieren könnte -> Andere Swagger library
 * [ ] CalDAV
   * [x] Basics
   * [x] Reminders
   * [ ] Discovery, stichwort PROPFIND 
+* [ ] Wir brauchen noch ne gute idee, wie man die listen kriegt, auf die man nur so Zugriff hat (ohne namespace)
+    * Dazu am Besten nen pseudonamespace anlegen (id -1 oder so), der hat das dann alles
+* [ ] Testing mit locust: https://locust.io/
+* [ ] Methode einbauen, um mit einem gültigen token ein neues gültiges zu kriegen
 
 #### Userstuff
 
-* [ ] Userstuff aufräumen
+* [x] Userstuff aufräumen
 	-> Soweit es geht und Sinnvoll ist auf den neuen Handler umziehen
 		-> Login/Register/Password-reset geht natürlich nicht
 		-> Bleibt noch Profile abrufen und Einstellungen -> Macht also keinen Sinn das auf den neuen Handler umzuziehen
@@ -244,7 +244,6 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
 
 ### Later/Nice to have
 
-* [ ] An "accepted" für post/put payloads schrauben, man soll da zb keine id/created/updated/etc übergeben können.
 * [ ] Globale Limits für anlegbare Listen + Namespaces
 * [ ] Mgl., dass die Instanz geschlossen ist, also sich keiner registrieren kann, und man sich einloggen muss
 * [ ] mgl. zum Emailmaskieren haben (in den Nutzereinstellungen, wenn man seine Email nicht an alle Welt rausposaunen will)
