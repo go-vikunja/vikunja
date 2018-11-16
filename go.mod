@@ -4,6 +4,7 @@ require (
 	cloud.google.com/go v0.30.0 // indirect
 	github.com/BurntSushi/toml v0.3.1 // indirect
 	github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc
+	github.com/asaskevich/govalidator v0.0.0-20180720115003-f9ffefc3facf
 	github.com/client9/misspell v0.3.4
 	github.com/denisenkom/go-mssqldb v0.0.0-20180901172138-1eb28afdf9b6 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
@@ -19,8 +20,10 @@ require (
 	github.com/go-openapi/strfmt v0.17.2 // indirect
 	github.com/go-openapi/swag v0.17.2 // indirect
 	github.com/go-openapi/validate v0.17.2 // indirect
+	github.com/go-playground/locales v0.12.1 // indirect
+	github.com/go-playground/universal-translator v0.16.0 // indirect
 	github.com/go-sql-driver/mysql v0.0.0-20171007150158-ee359f95877b
-	github.com/go-swagger/go-swagger v0.17.2
+	github.com/go-swagger/go-swagger v0.17.2 // indirect
 	github.com/go-xorm/builder v0.0.0-20170519032130-c8871c857d25 // indirect
 	github.com/go-xorm/core v0.5.8
 	github.com/go-xorm/tests v0.5.6 // indirect

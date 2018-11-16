@@ -1,11 +1,11 @@
 # Get all lists
-GET http://localhost:8080/api/v1/lists?page=0
+GET http://localhost:8080/api/v1/lists
 Authorization: Bearer {{auth_token}}
 
 ###
 
 # Get one list
-GET http://localhost:8080/api/v1/lists/2
+GET http://localhost:8080/api/v1/lists/1
 Authorization: Bearer {{auth_token}}
 
 ###
@@ -15,7 +15,10 @@ PUT http://localhost:8080/api/v1/namespaces/1/lists
 Authorization: Bearer {{auth_token}}
 Content-Type: application/json
 
-{}
+{
+  "title": "sc",
+  "created": 0
+}
 
 ###
 

@@ -23,48 +23,16 @@ github.com/garyburd/redigo/redis
 github.com/garyburd/redigo/internal
 # github.com/ghodss/yaml v1.0.0
 github.com/ghodss/yaml
-# github.com/globalsign/mgo v0.0.0-20180905125535-1ca0a4f7cbcb
-github.com/globalsign/mgo/bson
-github.com/globalsign/mgo/internal/json
-# github.com/go-openapi/analysis v0.17.2
-github.com/go-openapi/analysis
-github.com/go-openapi/analysis/internal
-# github.com/go-openapi/errors v0.17.2
-github.com/go-openapi/errors
-# github.com/go-openapi/inflect v0.17.2
-github.com/go-openapi/inflect
 # github.com/go-openapi/jsonpointer v0.17.0
 github.com/go-openapi/jsonpointer
 # github.com/go-openapi/jsonreference v0.17.0
 github.com/go-openapi/jsonreference
-# github.com/go-openapi/loads v0.17.2
-github.com/go-openapi/loads
-github.com/go-openapi/loads/fmts
-# github.com/go-openapi/runtime v0.17.2
-github.com/go-openapi/runtime/middleware
-github.com/go-openapi/runtime
-github.com/go-openapi/runtime/logger
-github.com/go-openapi/runtime/middleware/denco
-github.com/go-openapi/runtime/middleware/header
-github.com/go-openapi/runtime/middleware/untyped
-github.com/go-openapi/runtime/security
 # github.com/go-openapi/spec v0.17.2
 github.com/go-openapi/spec
-# github.com/go-openapi/strfmt v0.17.2
-github.com/go-openapi/strfmt
 # github.com/go-openapi/swag v0.17.2
 github.com/go-openapi/swag
-# github.com/go-openapi/validate v0.17.2
-github.com/go-openapi/validate
 # github.com/go-sql-driver/mysql v0.0.0-20171007150158-ee359f95877b
 github.com/go-sql-driver/mysql
-# github.com/go-swagger/go-swagger v0.17.2
-github.com/go-swagger/go-swagger/cmd/swagger
-github.com/go-swagger/go-swagger/cmd/swagger/commands
-github.com/go-swagger/go-swagger/cmd/swagger/commands/generate
-github.com/go-swagger/go-swagger/cmd/swagger/commands/initcmd
-github.com/go-swagger/go-swagger/generator
-github.com/go-swagger/go-swagger/scan
 # github.com/go-xorm/builder v0.0.0-20170519032130-c8871c857d25
 github.com/go-xorm/builder
 # github.com/go-xorm/core v0.5.8
@@ -75,8 +43,6 @@ github.com/go-xorm/xorm
 github.com/go-xorm/xorm-redis-cache
 # github.com/gordonklaus/ineffassign v0.0.0-20180909121442-1003c8bd00dc
 github.com/gordonklaus/ineffassign
-# github.com/gorilla/handlers v1.4.0
-github.com/gorilla/handlers
 # github.com/hashicorp/hcl v1.0.0
 github.com/hashicorp/hcl
 github.com/hashicorp/hcl/hcl/printer
@@ -90,14 +56,8 @@ github.com/hashicorp/hcl/json/scanner
 github.com/hashicorp/hcl/json/token
 # github.com/imdario/mergo v0.3.6
 github.com/imdario/mergo
-# github.com/jessevdk/go-flags v1.4.0
-github.com/jessevdk/go-flags
 # github.com/karalabe/xgo v0.0.0-20181007145344-72da7d1d3970
 github.com/karalabe/xgo
-# github.com/kr/pretty v0.1.0
-github.com/kr/pretty
-# github.com/kr/text v0.1.0
-github.com/kr/text
 # github.com/labstack/echo v0.0.0-20180911044237-1abaa3049251
 github.com/labstack/echo
 github.com/labstack/echo/middleware
@@ -149,8 +109,6 @@ github.com/swaggo/files
 github.com/swaggo/swag/cmd/swag
 github.com/swaggo/swag
 github.com/swaggo/swag/gen
-# github.com/toqueteos/webbrowser v1.1.0
-github.com/toqueteos/webbrowser
 # github.com/urfave/cli v1.20.0
 github.com/urfave/cli
 # github.com/valyala/bytebufferpool v1.0.0
@@ -185,9 +143,6 @@ golang.org/x/tools/go/gcexportdata
 golang.org/x/tools/go/buildutil
 golang.org/x/tools/go/internal/cgo
 golang.org/x/tools/go/internal/gcimporter
-golang.org/x/tools/imports
-golang.org/x/tools/internal/gopathwalk
-golang.org/x/tools/internal/fastwalk
 # gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc
 gopkg.in/alexcesaro/quotedprintable.v3
 # gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df

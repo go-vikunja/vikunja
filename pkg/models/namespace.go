@@ -3,14 +3,14 @@ package models
 // Namespace holds informations about a namespace
 type Namespace struct {
 	ID          int64  `xorm:"int(11) autoincr not null unique pk" json:"id" param:"namespace"`
-	Name        string `xorm:"varchar(250)" json:"name"`
-	Description string `xorm:"varchar(1000)" json:"description"`
+	Name        string `xorm:"varchar(250)" json:"name" valid:"required,runelength(5|250)"`
+	Description string `xorm:"varchar(1000)" json:"description" valid:"runelength(0|250)"`
 	OwnerID     int64  `xorm:"int(11) not null INDEX" json:"-"`
 
 	Owner User `xorm:"-" json:"owner"`
 
-	Created int64 `xorm:"created" json:"created"`
-	Updated int64 `xorm:"updated" json:"updated"`
+	Created int64 `xorm:"created" json:"created" valid:"range(0|0)"`
+	Updated int64 `xorm:"updated" json:"updated" valid:"range(0|0)"`
 
 	CRUDable `xorm:"-" json:"-"`
 	Rights   `xorm:"-" json:"-"`

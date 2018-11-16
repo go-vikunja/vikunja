@@ -11,16 +11,41 @@
 package routes
 
 import (
-	"code.vikunja.io/api/pkg/models"
-	"github.com/labstack/echo"
-	"github.com/labstack/echo/middleware"
-	"github.com/swaggo/echo-swagger"
-
 	_ "code.vikunja.io/api/docs" // To generate swagger docs
+	"code.vikunja.io/api/pkg/models"
 	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
 	"code.vikunja.io/api/pkg/routes/crud"
+	"github.com/asaskevich/govalidator"
+	"github.com/labstack/echo"
+	"github.com/labstack/echo/middleware"
 	"github.com/spf13/viper"
+	"github.com/swaggo/echo-swagger"
 )
+
+// CustomValidator is a dummy struct to use govalidator with echo
+type CustomValidator struct{}
+
+// Validate validates stuff
+func (cv *CustomValidator) Validate(i interface{}) error {
+	if _, err := govalidator.ValidateStruct(i); err != nil {
+
+		var errs []string
+		for field, e := range govalidator.ErrorsByField(err) {
+			errs = append(errs, field+": "+e)
+		}
+
+		httperr := models.ValidationHTTPError{
+			models.HTTPError{
+				Code:    models.ErrCodeInvalidData,
+				Message: "Invalid Data",
+			},
+			errs,
+		}
+
+		return httperr
+	}
+	return nil
+}
 
 // NewEcho registers a new Echo instance
 func NewEcho() *echo.Echo {
@@ -32,6 +57,9 @@ func NewEcho() *echo.Echo {
 	e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
 		Format: "${time_rfc3339_nano}: ${remote_ip} ${method} ${status} ${uri} ${latency_human} - ${user_agent}\n",
 	}))
+
+	// Validation
+	e.Validator = &CustomValidator{}
 
 	return e
 }

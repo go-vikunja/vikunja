@@ -267,6 +267,43 @@ func (err ErrIDCannotBeZero) HTTPError() HTTPError {
 	return HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrCodeIDCannotBeZero, Message: "The ID cannot be empty or 0."}
 }
 
+// ErrInvalidData represents a "ErrInvalidData" kind of error. Used when a struct is invalid -> validation failed.
+type ErrInvalidData struct {
+	Message string
+}
+
+// IsErrInvalidData checks if an error is a ErrIDCannotBeZero.
+func IsErrInvalidData(err error) bool {
+	_, ok := err.(ErrInvalidData)
+	return ok
+}
+
+func (err ErrInvalidData) Error() string {
+	return fmt.Sprintf("Struct is invalid. %s", err.Message)
+}
+
+// ErrCodeInvalidData holds the unique world-error code of this error
+const ErrCodeInvalidData = 2002
+
+// HTTPError holds the http error description
+func (err ErrInvalidData) HTTPError() HTTPError {
+	return HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrCodeInvalidData, Message: err.Message}
+}
+
+// ValidationHTTPError is the http error when a validation fails
+type ValidationHTTPError struct {
+	HTTPError
+	InvalidFields []string `json:"invalid_fields"`
+}
+
+// Error implements the Error type (so we can return it as type error)
+func (err ValidationHTTPError) Error() string {
+	theErr := ErrInvalidData{
+		Message: err.Message,
+	}
+	return theErr.Error()
+}
+
 // ===========
 // List errors
 // ===========

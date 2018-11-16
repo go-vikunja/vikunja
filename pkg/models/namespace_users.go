@@ -5,10 +5,10 @@ type NamespaceUser struct {
 	ID          int64     `xorm:"int(11) autoincr not null unique pk" json:"id" param:"namespace"`
 	UserID      int64     `xorm:"int(11) not null INDEX" json:"user_id" param:"user"`
 	NamespaceID int64     `xorm:"int(11) not null INDEX" json:"namespace_id" param:"namespace"`
-	Right       UserRight `xorm:"int(11) INDEX" json:"right"`
+	Right       UserRight `xorm:"int(11) INDEX" json:"right" valid:"length(0|2)"`
 
-	Created int64 `xorm:"created" json:"created"`
-	Updated int64 `xorm:"updated" json:"updated"`
+	Created int64 `xorm:"created" json:"created" valid:"range(0|0)"`
+	Updated int64 `xorm:"updated" json:"updated" valid:"range(0|0)"`
 
 	CRUDable `xorm:"-" json:"-"`
 	Rights   `xorm:"-" json:"-"`

@@ -17,6 +17,11 @@ func (c *WebHandler) CreateWeb(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "No or invalid model provided.")
 	}
 
+	// Validate the struct
+	if err := ctx.Validate(currentStruct); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err)
+	}
+
 	// Get the user to pass for later checks
 	currentUser, err := models.GetCurrentUser(ctx)
 	if err != nil {

@@ -220,12 +220,12 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
 * [x] General search endpoints
 * [ ] Wir brauchen noch ne gute idee, wie man die listen kriegt, auf die man nur so Zugriff hat (ohne namespace)
     * Dazu am Besten nen pseudonamespace anlegen (id -1 oder so), der hat das dann alles
-* [ ] Validation der ankommenden structs, am besten mit https://github.com/go-validator/validator oder mit dem Ding von echo
+* [x] Validation der ankommenden structs, am besten mit https://github.com/go-validator/validator oder mit dem Ding von echo
 * [x] Pagination
 	* Sollte in der Config definierbar sein, wie viel pro Seite angezeigt werden soll, die CRUD-Methoden übergeben dann ein "gibt mir die Seite sowieso" an die CRUDable-Funktionenen, die müssen das dann Auswerten. Geht leider nicht anders, wenn man erst 2342352 Einträge hohlt und die dann nachträglich auf 200 begrenzt ist das ne massive Ressourcenverschwendung.
 * [ ] Testing mit locust: https://locust.io/
 * [ ] Methode einbauen, um mit einem gültigen token ein neues gültiges zu kriegen
-* [ ] Testen, ob man über die Routen methode von echo irgendwie ein swagger spec generieren könnte
+* [x] Testen, ob man über die Routen methode von echo irgendwie ein swagger spec generieren könnte -> Andere Swagger library
 * [ ] CalDAV
   * [x] Basics
   * [x] Reminders

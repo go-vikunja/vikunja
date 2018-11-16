@@ -5,16 +5,16 @@ import "sort"
 // List represents a list of tasks
 type List struct {
 	ID          int64  `xorm:"int(11) autoincr not null unique pk" json:"id" param:"list"`
-	Title       string `xorm:"varchar(250)" json:"title"`
-	Description string `xorm:"varchar(1000)" json:"description"`
+	Title       string `xorm:"varchar(250)" json:"title" valid:"required,runelength(5|250)"`
+	Description string `xorm:"varchar(1000)" json:"description" valid:"runelength(0|1000)"`
 	OwnerID     int64  `xorm:"int(11) INDEX" json:"-"`
 	NamespaceID int64  `xorm:"int(11) INDEX" json:"-" param:"namespace"`
 
 	Owner User        `xorm:"-" json:"owner"`
 	Tasks []*ListTask `xorm:"-" json:"tasks"`
 
-	Created int64 `xorm:"created" json:"created"`
-	Updated int64 `xorm:"updated" json:"updated"`
+	Created int64 `xorm:"created" json:"created" valid:"range(0|0)"`
+	Updated int64 `xorm:"updated" json:"updated" valid:"range(0|0)"`
 
 	CRUDable `xorm:"-" json:"-"`
 	Rights   `xorm:"-" json:"-"`

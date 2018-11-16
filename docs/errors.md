@@ -15,6 +15,7 @@ This document describes the different errors Vikunja can return.
 | 1011 | 412 | Wrong username or password. |
 | 1012 | 412 | Email address of the user not confirmed. |
 | 2001 | 400 | ID cannot be empty or 0. |
+| 2002 | 400 | Some of the request data was invalid. The response contains an aditional array with all invalid fields. |
 | 3001 | 404 | The list does not exist. |
 | 3004 | 403 | The user needs to have read permissions on that list to perform that action. |
 | 3005 | 400 | The list title cannot be empty. |

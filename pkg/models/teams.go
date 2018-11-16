@@ -3,15 +3,15 @@ package models
 // Team holds a team object
 type Team struct {
 	ID          int64  `xorm:"int(11) autoincr not null unique pk" json:"id" param:"team"`
-	Name        string `xorm:"varchar(250) not null" json:"name"`
-	Description string `xorm:"varchar(250)" json:"description"`
+	Name        string `xorm:"varchar(250) not null" json:"name" valid:"required,runelength(5|250)"`
+	Description string `xorm:"varchar(250)" json:"description" valid:"runelength(0|250)"`
 	CreatedByID int64  `xorm:"int(11) not null INDEX" json:"-"`
 
 	CreatedBy User        `xorm:"-" json:"created_by"`
 	Members   []*TeamUser `xorm:"-" json:"members"`
 
-	Created int64 `xorm:"created" json:"created"`
-	Updated int64 `xorm:"updated" json:"updated"`
+	Created int64 `xorm:"created" json:"created" valid:"range(0|0)"`
+	Updated int64 `xorm:"updated" json:"updated" valid:"range(0|0)"`
 
 	CRUDable `xorm:"-" json:"-"`
 	Rights   `xorm:"-" json:"-"`
@@ -42,8 +42,8 @@ type TeamMember struct {
 	UserID int64 `xorm:"int(11) not null INDEX" json:"user_id" param:"user"`
 	Admin  bool  `xorm:"tinyint(1) INDEX" json:"admin"`
 
-	Created int64 `xorm:"created" json:"created"`
-	Updated int64 `xorm:"updated" json:"updated"`
+	Created int64 `xorm:"created" json:"created" valid:"range(0|0)"`
+	Updated int64 `xorm:"updated" json:"updated" valid:"range(0|0)"`
 
 	CRUDable `xorm:"-" json:"-"`
 	Rights   `xorm:"-" json:"-"`

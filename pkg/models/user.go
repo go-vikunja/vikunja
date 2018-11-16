@@ -15,16 +15,16 @@ type UserLogin struct {
 // User holds information about an user
 type User struct {
 	ID       int64  `xorm:"int(11) autoincr not null unique pk" json:"id"`
-	Username string `xorm:"varchar(250) not null unique" json:"username"`
+	Username string `xorm:"varchar(250) not null unique" json:"username" valid:"length(5|250)"`
 	Password string `xorm:"varchar(250) not null" json:"-"`
-	Email    string `xorm:"varchar(250)" json:"email"`
+	Email    string `xorm:"varchar(250)" json:"email" valid:"email,length(0|250)"`
 	IsActive bool   `json:"-"`
 
 	PasswordResetToken string `xorm:"varchar(450)" json:"-"`
 	EmailConfirmToken  string `xorm:"varchar(450)" json:"-"`
 
-	Created int64 `xorm:"created" json:"-"`
-	Updated int64 `xorm:"updated" json:"-"`
+	Created int64 `xorm:"created" json:"created" valid:"range(0|0)"`
+	Updated int64 `xorm:"updated" json:"updated" valid:"range(0|0)"`
 }
 
 // TableName returns the table name for users
