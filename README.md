@@ -4,11 +4,11 @@
 
 [![Build Status](https://drone.kolaente.de/api/badges/vikunja/api/status.svg)](https://drone.kolaente.de/vikunja/api)
 [![License: LGPL v3](https://img.shields.io/badge/License-LGPL%20v3-blue.svg)](LICENSE)
-[![Download](https://img.shields.io/badge/download-v0.3-brightgreen.svg)](https://storage.kolaente.de/minio/vikunja/)
+[![Download](https://img.shields.io/badge/download-v0.4-brightgreen.svg)](https://storage.kolaente.de/minio/vikunja/)
 [![Docker Pulls](https://img.shields.io/docker/pulls/vikunja/api.svg)](https://hub.docker.com/r/vikunja/api/)
 [![Swagger Docs](https://img.shields.io/badge/swagger-docs-brightgreen.svg)](https://try.vikunja.io/api/v1/swagger)
-[![Go Report Card](https://goreportcard.com/badge/git.kolaente.de/vikunja/api)](https://goreportcard.com/report/git.kolaente.de/vikunja/api
-)
+[![Go Report Card](https://goreportcard.com/badge/git.kolaente.de/vikunja/api)](https://goreportcard.com/report/git.kolaente.de/vikunja/api)
+
 ## Features
 
 * Create TODO lists with tasks
@@ -20,15 +20,22 @@ Try it under [try.vikunja.io](https://try.vikunja.io)!
 
 ### Roadmap
 
+> I know, it's still a long way to go. I'm currently working on a lot of "basic" features, the exiting things will come later. Don't worry, they'll come.
+
 * [ ] Labels for todo lists and tasks
 * [ ] Prioritize tasks
+* [ ] Assign users to tasks
+* [ ] Subtasks
+* [ ] Repeating tasks
+* [ ] Attachments on tasks
+* [ ] Get all tasks for you per interval (day/month/period)
+* [x] Get tasks via caldav
 * [ ] More sharing features
   * [ ] Share with individual users
   * [ ] Share via a world-readable link with or without password, like Nextcloud
 
-* [ ] Mobile apps (seperate repo)
-* [ ] Webapp (seperate repo)
-* [ ] "Native" clients (will probably be something with electron)
+* [ ] [Mobile apps](https://code.vikunja.io/app) (seperate repo)
+* [ ] [Webapp](https://code.vikunja.io/frontend) (seperate repo)
 
 ## Development
 
