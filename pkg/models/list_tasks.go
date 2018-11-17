@@ -3,13 +3,13 @@ package models
 // ListTask represents an task in a todolist
 type ListTask struct {
 	ID           int64  `xorm:"int(11) autoincr not null unique pk" json:"id" param:"listtask"`
-	Text         string `xorm:"varchar(250)" json:"text" valid:"required,runelength(5|250)"`
+	Text         string `xorm:"varchar(250)" json:"text" valid:"runelength(5|250)"`
 	Description  string `xorm:"varchar(250)" json:"description" valid:"runelength(0|250)"`
 	Done         bool   `xorm:"INDEX" json:"done"`
 	DueDateUnix  int64  `xorm:"int(11) INDEX" json:"dueDate"`
 	ReminderUnix int64  `xorm:"int(11) INDEX" json:"reminderDate"`
 	CreatedByID  int64  `xorm:"int(11)" json:"-"` // ID of the user who put that task on the list
-	ListID       int64  `xorm:"int(11) INDEX" json:"listID" param:"list" valid:"required"`
+	ListID       int64  `xorm:"int(11) INDEX" json:"listID" param:"list"`
 
 	Created int64 `xorm:"created" json:"created" valid:"range(0|0)"`
 	Updated int64 `xorm:"updated" json:"updated" valid:"range(0|0)"`
