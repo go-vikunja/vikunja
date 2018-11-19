@@ -226,7 +226,7 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
   * [x] Basics
   * [x] Reminders
   * [ ] Discovery, stichwort PROPFIND 
-* [ ] Wir brauchen noch ne gute idee, wie man die listen kriegt, auf die man nur so Zugriff hat (ohne namespace)
+* [x] Wir brauchen noch ne gute idee, wie man die listen kriegt, auf die man nur so Zugriff hat (ohne namespace)
     * Dazu am Besten nen pseudonamespace anlegen (id -1 oder so), der hat das dann alles
 * [ ] Testing mit locust: https://locust.io/
 * [ ] Methode einbauen, um mit einem gültigen token ein neues gültiges zu kriegen

@@ -1,5 +1,7 @@
 package models
 
+import "time"
+
 // Namespace holds informations about a namespace
 type Namespace struct {
 	ID          int64  `xorm:"int(11) autoincr not null unique pk" json:"id" param:"namespace"`
@@ -85,6 +87,20 @@ func (n *Namespace) ReadAll(search string, doer *User, page int) (interface{}, e
 
 	all := []*NamespaceWithLists{}
 
+	// Create our pseudo-namespace to hold the shared lists
+	// We want this one at the beginning, which is why we create it here
+	all = append(all, &NamespaceWithLists{
+		Namespace{
+			ID:          -1,
+			Name:        "Shared Lists",
+			Description: "Lists of other users shared with you via teams or directly.",
+			Owner:       *doer,
+			Created:     time.Now().Unix(),
+			Updated:     time.Now().Unix(),
+		},
+		[]*List{},
+	})
+
 	err := x.Select("namespaces.*").
 		Table("namespaces").
 		Join("LEFT", "team_namespaces", "namespaces.id = team_namespaces.namespace_id").
@@ -97,7 +113,6 @@ func (n *Namespace) ReadAll(search string, doer *User, page int) (interface{}, e
 		Limit(getLimitFromPageIndex(page)).
 		Where("namespaces.name LIKE ?", "%"+search+"%").
 		Find(&all)
-
 	if err != nil {
 		return all, err
 	}
@@ -131,6 +146,34 @@ func (n *Namespace) ReadAll(search string, doer *User, page int) (interface{}, e
 		Find(&lists)
 	if err != nil {
 		return all, err
+	}
+
+	// Get all lists individually shared with our user (not via a namespace)
+	individualLists := []*List{}
+	err = x.Select("l.*").
+		Table("list").
+		Alias("l").
+		Join("LEFT", []string{"team_list", "tl"}, "l.id = tl.list_id").
+		Join("LEFT", []string{"team_members", "tm"}, "tm.team_id = tl.team_id").
+		Join("LEFT", []string{"users_list", "ul"}, "ul.list_id = l.id").
+		Where("tm.user_id = ?", doer.ID).
+		Or("ul.user_id = ?", doer.ID).
+		GroupBy("l.id").
+		Find(&individualLists)
+	if err != nil {
+		return nil, err
+	}
+
+	// Make the namespace -1 so we now later which one it was
+	// + Append it to all lists we already have
+	for _, l := range individualLists {
+		l.NamespaceID = -1
+		lists = append(lists, l)
+	}
+
+	// Remove the pseudonamespace if we don't have any shared lists
+	if len(individualLists) == 0 {
+		all = append(all[:0], all[1:]...)
 	}
 
 	// More details for the lists
