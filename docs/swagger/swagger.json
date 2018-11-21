@@ -78,7 +78,7 @@
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Returns a team by its ID.",
+                "description": "Returns a list by its ID.",
                 "consumes": [
                     "application/json"
                 ],
@@ -86,13 +86,13 @@
                     "application/json"
                 ],
                 "tags": [
-                    "team"
+                    "list"
                 ],
-                "summary": "Gets one team",
+                "summary": "Gets one list",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "Team ID",
+                        "description": "List ID",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -100,14 +100,14 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "The team",
+                        "description": "The list",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.Team"
+                            "$ref": "#/definitions/models.List"
                         }
                     },
                     "403": {
-                        "description": "The user does not have access to the team",
+                        "description": "The user does not have access to the list",
                         "schema": {
                             "type": "object",
                             "$ref": "#/definitions/models.HTTPError"
@@ -2875,8 +2875,11 @@
                 "listID": {
                     "type": "integer"
                 },
-                "reminderDate": {
-                    "type": "integer"
+                "reminderDates": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
                 },
                 "text": {
                     "type": "string"
@@ -3118,10 +3121,16 @@
                 "admin": {
                     "type": "boolean"
                 },
+                "created": {
+                    "type": "integer"
+                },
                 "email": {
                     "type": "string"
                 },
                 "id": {
+                    "type": "integer"
+                },
+                "updated": {
                     "type": "integer"
                 },
                 "username": {
@@ -3165,10 +3174,16 @@
         "models.User": {
             "type": "object",
             "properties": {
+                "created": {
+                    "type": "integer"
+                },
                 "email": {
                     "type": "string"
                 },
                 "id": {
+                    "type": "integer"
+                },
+                "updated": {
                     "type": "integer"
                 },
                 "username": {
@@ -3190,6 +3205,9 @@
         "models.UserWithRight": {
             "type": "object",
             "properties": {
+                "created": {
+                    "type": "integer"
+                },
                 "email": {
                     "type": "string"
                 },
@@ -3197,6 +3215,9 @@
                     "type": "integer"
                 },
                 "right": {
+                    "type": "integer"
+                },
+                "updated": {
                     "type": "integer"
                 },
                 "username": {

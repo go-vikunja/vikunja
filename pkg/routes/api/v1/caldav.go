@@ -54,8 +54,10 @@ func Caldav(c echo.Context) error {
 				EndUnix:       t.DueDateUnix + hour,
 			}
 
-			if t.ReminderUnix != 0 {
-				event.Alarms = append(event.Alarms, caldav.Alarm{TimeUnix: t.ReminderUnix})
+			if len(t.RemindersUnix) > 0 {
+				for _, rem := range t.RemindersUnix {
+					event.Alarms = append(event.Alarms, caldav.Alarm{TimeUnix: rem})
+				}
 			}
 
 			caldavTasks = append(caldavTasks, event)
