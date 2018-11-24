@@ -62,6 +62,7 @@
 * [ ] Links an den Freigewordenen Platz Menüpunkte machen à la "Heute"/Morgen/Diese Woche etc. Da kommt dann alles rein was dann due ist.
 * [ ] Andere Icons? --> Freepikkram
 * [ ] Fertige Tasks schöner visualisieren
+  * [ ] Alles abgehakte ausblenden, mit btn zum wieder einblenden
 
 * [ ] Search everything
   * [ ] Lists

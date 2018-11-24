@@ -38,7 +38,9 @@
             }
         },
 		created() {
-			this.loadPendingTasks()
+			if (auth.user.authenticated) {
+				this.loadPendingTasks()
+			}
 		},
         methods: {
             logout() {
