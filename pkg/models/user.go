@@ -23,8 +23,8 @@ type User struct {
 	PasswordResetToken string `xorm:"varchar(450)" json:"-"`
 	EmailConfirmToken  string `xorm:"varchar(450)" json:"-"`
 
-	Created int64 `xorm:"created" json:"created" valid:"range(0|0)"`
-	Updated int64 `xorm:"updated" json:"updated" valid:"range(0|0)"`
+	Created int64 `xorm:"created" json:"created"`
+	Updated int64 `xorm:"updated" json:"updated"`
 }
 
 // TableName returns the table name for users

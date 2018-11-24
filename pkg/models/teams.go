@@ -10,8 +10,8 @@ type Team struct {
 	CreatedBy User        `xorm:"-" json:"created_by"`
 	Members   []*TeamUser `xorm:"-" json:"members"`
 
-	Created int64 `xorm:"created" json:"created" valid:"range(0|0)"`
-	Updated int64 `xorm:"updated" json:"updated" valid:"range(0|0)"`
+	Created int64 `xorm:"created" json:"created"`
+	Updated int64 `xorm:"updated" json:"updated"`
 
 	CRUDable `xorm:"-" json:"-"`
 	Rights   `xorm:"-" json:"-"`
@@ -42,8 +42,8 @@ type TeamMember struct {
 	UserID int64 `xorm:"int(11) not null INDEX" json:"user_id" param:"user"`
 	Admin  bool  `xorm:"tinyint(1) INDEX" json:"admin"`
 
-	Created int64 `xorm:"created" json:"created" valid:"range(0|0)"`
-	Updated int64 `xorm:"updated" json:"updated" valid:"range(0|0)"`
+	Created int64 `xorm:"created" json:"created"`
+	Updated int64 `xorm:"updated" json:"updated"`
 
 	CRUDable `xorm:"-" json:"-"`
 	Rights   `xorm:"-" json:"-"`

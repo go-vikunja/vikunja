@@ -7,8 +7,8 @@ type TeamList struct {
 	ListID int64     `xorm:"int(11) not null INDEX" json:"list_id" param:"list"`
 	Right  TeamRight `xorm:"int(11) INDEX" json:"right" valid:"length(0|2)"`
 
-	Created int64 `xorm:"created" json:"created" valid:"range(0|0)"`
-	Updated int64 `xorm:"updated" json:"updated" valid:"range(0|0)"`
+	Created int64 `xorm:"created" json:"created"`
+	Updated int64 `xorm:"updated" json:"updated"`
 
 	CRUDable `xorm:"-" json:"-"`
 	Rights   `xorm:"-" json:"-"`
