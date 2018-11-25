@@ -10,7 +10,7 @@ type List struct {
 	OwnerID     int64  `xorm:"int(11) INDEX" json:"-"`
 	NamespaceID int64  `xorm:"int(11) INDEX" json:"-" param:"namespace"`
 
-	Owner User        `xorm:"-" json:"owner"`
+	Owner User        `xorm:"-" json:"owner" valid:"-"`
 	Tasks []*ListTask `xorm:"-" json:"tasks"`
 
 	Created int64 `xorm:"created" json:"created"`

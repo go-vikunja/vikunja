@@ -9,7 +9,7 @@ type Namespace struct {
 	Description string `xorm:"varchar(1000)" json:"description" valid:"runelength(0|250)"`
 	OwnerID     int64  `xorm:"int(11) not null INDEX" json:"-"`
 
-	Owner User `xorm:"-" json:"owner"`
+	Owner User `xorm:"-" json:"owner" valid:"-"`
 
 	Created int64 `xorm:"created" json:"created"`
 	Updated int64 `xorm:"updated" json:"updated"`

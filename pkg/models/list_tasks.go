@@ -14,7 +14,7 @@ type ListTask struct {
 	Created int64 `xorm:"created" json:"created"`
 	Updated int64 `xorm:"updated" json:"updated"`
 
-	CreatedBy User `xorm:"-" json:"createdBy"`
+	CreatedBy User `xorm:"-" json:"createdBy" valid:"-"`
 
 	CRUDable `xorm:"-" json:"-"`
 	Rights   `xorm:"-" json:"-"`

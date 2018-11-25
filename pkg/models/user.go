@@ -15,7 +15,7 @@ type UserLogin struct {
 // User holds information about an user
 type User struct {
 	ID       int64  `xorm:"int(11) autoincr not null unique pk" json:"id"`
-	Username string `xorm:"varchar(250) not null unique" json:"username" valid:"length(5|250)"`
+	Username string `xorm:"varchar(250) not null unique" json:"username" valid:"length(3|250)"`
 	Password string `xorm:"varchar(250) not null" json:"-"`
 	Email    string `xorm:"varchar(250)" json:"email" valid:"email,length(0|250)"`
 	IsActive bool   `json:"-"`
