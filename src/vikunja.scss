@@ -119,6 +119,29 @@ h1,h2,h3,h4,h5,h6{
 .taskedit{
   min-height: calc(100% - 1rem);
   margin-top: 1rem;
+
+  .reminder-input{
+    margin: 0;
+
+    &:last-child {
+      margin-bottom: 0.75rem;
+    }
+
+    a {
+      color: $red;
+      vertical-align: sub;
+    }
+
+    input {
+      width: 90%;
+      border: none;
+
+      &:focus {
+        border: none;
+        box-shadow: none;
+      }
+    }
+  }
 }
 
 .settings{

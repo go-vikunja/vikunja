@@ -67,38 +67,33 @@
 									</div>
 								</div>
 
-								<div class="columns">
-									<div class="column">
-										<div class="field">
-											<label class="label" for="taskduedate">Due Date</label>
-											<div class="control">
-												<flat-pickr
-														:class="{ 'disabled': loading}"
-														class="input"
-														:disabled="loading"
-														v-model="taskEditTask.dueDate"
-														:config="flatPickerConfig"
-														id="taskduedate"
-														placeholder="The tasks due date is here...">
-												</flat-pickr>
-											</div>
-										</div>
-									</div>
-									<div class="column">
-										<div class="field">
-											<label class="label" for="taskreminderdate">Reminder Date</label>
-											<div class="control">
-												<flat-pickr
-														:class="{ 'disabled': loading}"
-														class="input"
-														:disabled="loading"
-														v-model="taskEditTask.reminderDate"
-														:config="flatPickerConfig"
-														id="taskreminderdate"
-														placeholder="The tasks reminder date is here...">
-												</flat-pickr>
-											</div>
-										</div>
+								<b>Reminder Dates</b>
+								<div class="reminder-input" v-for="(r, index) in taskEditTask.reminderDates" v-bind:key="index">
+									<flat-pickr
+										:class="{ 'disabled': loading}"
+										:disabled="loading"
+										:v-model="taskEditTask.reminderDates"
+										:config="flatPickerConfig"
+										:id="'taskreminderdate' + index"
+										:value="r"
+										:data-index="index"
+										placeholder="Add a new reminder...">
+									</flat-pickr>
+									<a  v-if="index !== (taskEditTask.reminderDates.length - 1)" @click="removeReminderByIndex(index)"><icon icon="times"></icon></a>
+								</div>
+
+								<div class="field">
+									<label class="label" for="taskduedate">Due Date</label>
+									<div class="control">
+										<flat-pickr
+											:class="{ 'disabled': loading}"
+											class="input"
+											:disabled="loading"
+											v-model="taskEditTask.dueDate"
+											:config="flatPickerConfig"
+											id="taskduedate"
+											placeholder="The tasks due date is here...">
+										</flat-pickr>
 									</div>
 								</div>
 
@@ -133,12 +128,14 @@
                 loading: false,
 				isTaskEdit: false,
 				taskEditTask: {},
+				lastReminder: 0,
                 flatPickerConfig:{
                     altFormat: 'j M Y H:i',
                     altInput: true,
                     dateFormat: 'Y-m-d H:i',
 					enableTime: true,
-                    defaultDate: new Date(),
+					onOpen: this.updateLastReminderDate,
+					onClose: this.addReminderDate,
 				},
             }
         },
@@ -170,9 +167,15 @@
 						// Make date objects from timestamps
                         for (const t in response.data.tasks) {
                             let dueDate = new Date(response.data.tasks[t].dueDate * 1000)
-                            let reminderDate = new Date(response.data.tasks[t].reminderDate * 1000)
-							response.data.tasks[t].dueDate = dueDate
-							response.data.tasks[t].reminderDate = reminderDate
+							if (dueDate === 0) {
+								response.data.tasks[t].dueDate = null
+							} else {
+								response.data.tasks[t].dueDate = dueDate
+							}
+
+							for (const rd in response.data.tasks[t].reminderDates) {
+								response.data.tasks[t].reminderDates[rd] = new Date(response.data.tasks[t].reminderDates[rd] * 1000)
+							}
                         }
 
                         // This adds a new elemednt "list" to our object which contains all lists
@@ -213,13 +216,19 @@
                     })
 			},
 			editTask(id) {
-                // Find the slected task and set it to the current object
+                // Find the selected task and set it to the current object
                 for (const t in this.list.tasks) {
                     if (this.list.tasks[t].id === id) {
                         this.taskEditTask = this.list.tasks[t]
                         break
                     }
                 }
+
+                if (this.taskEditTask.reminderDates === null) {
+					this.taskEditTask.reminderDates = []
+				}
+				this.taskEditTask.reminderDates = this.removeNullsFromArray(this.taskEditTask.reminderDates)
+                this.taskEditTask.reminderDates.push(null)
 
 				this.isTaskEdit = true
 			},
@@ -228,18 +237,25 @@
 
 				// Convert the date in a unix timestamp
 				let duedate = (+ new Date(this.taskEditTask.dueDate)) / 1000
-				let reminderdate = (+ new Date(this.taskEditTask.reminderDate)) / 1000
 				this.taskEditTask.dueDate = duedate
-				this.taskEditTask.reminderDate = reminderdate
+
+				// remove all nulls
+				this.taskEditTask.reminderDates = this.removeNullsFromArray(this.taskEditTask.reminderDates)
+				// Make normal timestamps from js timestamps
+				for (const t in this.taskEditTask.reminderDates) {
+					this.taskEditTask.reminderDates[t] = Math.round(this.taskEditTask.reminderDates[t] / 1000)
+				}
 
                 HTTP.post(`tasks/` + this.taskEditTask.id, this.taskEditTask, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
                     .then(response => {
                         response.data.dueDate = new Date(response.data.dueDate * 1000)
-                        response.data.reminderDate = new Date(response.data.reminderDate * 1000)
+						response.data.reminderDates = this.makeJSReminderDatesAfterUpdate(response.data.reminderDates)
+
 						// Update the task in the list
                         this.updateTaskByID(this.taskEditTask.id, response.data)
-                        // Also update the current taskedit object so the ui changes
-                        this.$set(this, 'taskEditTask', response.data)
+
+						// Also update the current taskedit object so the ui changes
+						this.$set(this, 'taskEditTask', response.data)
                         this.handleSuccess({message: 'The task was successfully updated.'})
                     })
                     .catch(e => {
@@ -249,10 +265,56 @@
 			updateTaskByID(id, updatedTask) {
                 for (const t in this.list.tasks) {
                     if (this.list.tasks[t].id === id) {
+						//updatedTask.reminderDates = this.makeJSReminderDatesAfterUpdate(updatedTask.reminderDates)
                         this.$set(this.list.tasks, t, updatedTask)
                         break
                     }
                 }
+			},
+			updateLastReminderDate(selectedDates) {
+				this.lastReminder = +new Date(selectedDates[0])
+			},
+			addReminderDate(selectedDates, dateStr, instance) {
+				let newDate = +new Date(selectedDates[0])
+
+				// Don't update if nothing changed
+				if (newDate === this.lastReminder) {
+					return
+				}
+
+				let index = parseInt(instance.input.dataset.index)
+				this.taskEditTask.reminderDates[index] = newDate
+
+				let lastIndex = this.taskEditTask.reminderDates.length - 1
+				// put a new null at the end if we changed something
+				if (lastIndex === index && !isNaN(newDate)) {
+					this.taskEditTask.reminderDates.push(null)
+				}
+			},
+			removeReminderByIndex(index) {
+				this.taskEditTask.reminderDates.splice(index, 1)
+				// Reset the last to 0 to have the "add reminder" button
+				this.taskEditTask.reminderDates[this.taskEditTask.reminderDates.length - 1] = null
+			},
+			removeNullsFromArray(array) {
+				for (const index in array) {
+					if (array[index] === null) {
+						array.splice(index, 1)
+					}
+				}
+				return array
+			},
+			makeJSReminderDatesAfterUpdate(dates) {
+				// Make js timestamps from normal timestamps
+				for (const rd in dates) {
+					dates[rd] = +new Date(dates[rd] * 1000)
+				}
+
+				if (dates == null) {
+					dates = []
+				}
+				dates.push(null)
+				return dates
 			},
             handleError(e) {
                 this.loading = false
