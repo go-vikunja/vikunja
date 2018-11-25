@@ -78,7 +78,7 @@
 								</div>
 
 								<b>Reminder Dates</b>
-								<div class="reminder-input" v-for="(r, index) in taskEditTask.reminderDates" v-bind:key="index">
+								<div class="reminder-input" :class="{ 'overdue': (r < nowUnix && index !== (taskEditTask.reminderDates.length - 1))}" v-for="(r, index) in taskEditTask.reminderDates" v-bind:key="index">
 									<flat-pickr
 										:class="{ 'disabled': loading}"
 										:disabled="loading"
@@ -89,7 +89,7 @@
 										:data-index="index"
 										placeholder="Add a new reminder...">
 									</flat-pickr>
-									<a  v-if="index !== (taskEditTask.reminderDates.length - 1)" @click="removeReminderByIndex(index)"><icon icon="times"></icon></a>
+									<a v-if="index !== (taskEditTask.reminderDates.length - 1)" @click="removeReminderByIndex(index)"><icon icon="times"></icon></a>
 								</div>
 
 								<div class="field">
@@ -139,6 +139,7 @@
 				isTaskEdit: false,
 				taskEditTask: {},
 				lastReminder: 0,
+				nowUnix: new Date(),
                 flatPickerConfig:{
                     altFormat: 'j M Y H:i',
                     altInput: true,
