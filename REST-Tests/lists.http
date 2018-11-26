@@ -114,3 +114,12 @@ GET http://localhost:8080/api/v1/tasks/caldav
 #Authorization: Bearer {{auth_token}}
 
 ###
+
+# Update a task
+POST http://localhost:8080/api/v1/tasks/27
+Authorization: Bearer {{auth_token}}
+Content-Type: application/json
+
+{"done":true}
+
+###

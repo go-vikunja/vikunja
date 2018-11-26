@@ -55,7 +55,7 @@ func (i *ListTask) Create(doer *User) (err error) {
 
 	i.CreatedByID = u.ID
 	i.CreatedBy = u
-	_, err = x.Cols("text", "description", "done", "due_date_unix", "reminder_unix", "created_by_id", "list_id", "created", "updated").Insert(i)
+	_, err = x.Insert(i)
 	return err
 }
 
@@ -80,6 +80,17 @@ func (i *ListTask) Update() (err error) {
 		return
 	}
 
+	// When a repeating task is marked, as done, we update all deadlines and reminders and set it as undone
+	if !ot.Done && i.Done && ot.RepeatAfter > 0 {
+		ot.DueDateUnix = ot.DueDateUnix + ot.RepeatAfter
+
+		for in, r := range ot.RemindersUnix {
+			ot.RemindersUnix[in] = r + ot.RepeatAfter
+		}
+
+		i.Done = false
+	}
+
 	// For whatever reason, xorm dont detect if done is updated, so we need to update this every time by hand
 	// Which is why we merge the actual task struct with the one we got from the
 	// The user struct overrides values in the actual one.
@@ -92,7 +103,7 @@ func (i *ListTask) Update() (err error) {
 		ot.Done = false
 	}
 
-	_, err = x.ID(i.ID).Cols("text", "description", "done", "due_date_unix", "reminders_unix").Update(ot)
+	_, err = x.ID(i.ID).Cols("text", "description", "done", "due_date_unix", "reminders_unix", "repeat_after").Update(ot)
 	*i = ot
 	return
 }

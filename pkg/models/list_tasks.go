@@ -26,6 +26,7 @@ type ListTask struct {
 	RemindersUnix []int64 `xorm:"JSON TEXT" json:"reminderDates"`
 	CreatedByID   int64   `xorm:"int(11)" json:"-"` // ID of the user who put that task on the list
 	ListID        int64   `xorm:"int(11) INDEX" json:"listID" param:"list"`
+	RepeatAfter   int64   `xorm:"int(11) INDEX" json:"repeatAfter"`
 
 	Created int64 `xorm:"created" json:"created"`
 	Updated int64 `xorm:"updated" json:"updated"`

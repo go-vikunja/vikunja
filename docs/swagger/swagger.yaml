@@ -64,6 +64,8 @@ definitions:
         items:
           type: integer
         type: array
+      repeatAfter:
+        type: integer
       text:
         type: string
       updated:
@@ -389,9 +391,9 @@ paths:
     get:
       consumes:
       - application/json
-      description: Returns a list by its ID.
+      description: Returns a team by its ID.
       parameters:
-      - description: List ID
+      - description: Team ID
         in: path
         name: id
         required: true
@@ -400,12 +402,12 @@ paths:
       - application/json
       responses:
         "200":
-          description: The list
+          description: The team
           schema:
-            $ref: '#/definitions/models.List'
+            $ref: '#/definitions/models.Team'
             type: object
         "403":
-          description: The user does not have access to the list
+          description: The user does not have access to the team
           schema:
             $ref: '#/definitions/models.HTTPError'
             type: object
@@ -416,9 +418,9 @@ paths:
             type: object
       security:
       - ApiKeyAuth: []
-      summary: Gets one list
+      summary: Gets one team
       tags:
-      - list
+      - team
     post:
       consumes:
       - application/json
