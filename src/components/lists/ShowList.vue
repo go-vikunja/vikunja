@@ -107,6 +107,26 @@
 									</div>
 								</div>
 
+								<div class="field">
+									<label class="label" for="">Repeat after</label>
+									<div class="control repeat-after-input columns">
+										<div class="column">
+											<input class="input" placeholder="Specify an amount..." v-model="repeatAfter.amount"/>
+										</div>
+										<div class="column">
+											<div class="select">
+												<select v-model="repeatAfter.type">
+													<option value="hours">Hours</option>
+													<option value="days">Days</option>
+													<option value="weeks">Weeks</option>
+													<option value="months">Months</option>
+													<option value="years">Years</option>
+												</select>
+											</div>
+										</div>
+									</div>
+								</div>
+
 								<button type="submit" class="button is-success is-fullwidth" :class="{ 'is-loading': loading}">
 									Save
 								</button>
@@ -140,6 +160,7 @@
 				taskEditTask: {},
 				lastReminder: 0,
 				nowUnix: new Date(),
+				repeatAfter: {type: 'days', amount: null},
                 flatPickerConfig:{
                     altFormat: 'j M Y H:i',
                     altInput: true,
@@ -241,6 +262,29 @@
 				this.taskEditTask.reminderDates = this.removeNullsFromArray(this.taskEditTask.reminderDates)
                 this.taskEditTask.reminderDates.push(null)
 
+				// Re-convert the the amount from seconds to be used with our form
+				let repeatAfterHours = (this.taskEditTask.repeatAfter / 60) / 60
+				// if its dividable by 24, its something with days
+				if (repeatAfterHours % 24 === 0) {
+					let repeatAfterDays = repeatAfterHours / 24
+					if (repeatAfterDays % 7 === 0) {
+						this.repeatAfter.type = 'weeks'
+						this.repeatAfter.amount = repeatAfterDays / 7
+					} else if (repeatAfterDays % 30 === 0) {
+						this.repeatAfter.type = 'months'
+						this.repeatAfter.amount = repeatAfterDays / 30
+					} else if (repeatAfterDays % 365 === 0) {
+						this.repeatAfter.type = 'years'
+						this.repeatAfter.amount = repeatAfterDays / 365
+					} else {
+						this.repeatAfter.type = 'days'
+						this.repeatAfter.amount = repeatAfterDays
+					}
+				} else {
+					// otherwise hours
+					this.repeatAfter.type = 'hours'
+					this.repeatAfter.amount = repeatAfterHours
+				}
 				this.isTaskEdit = true
 			},
 			editTaskSubmit() {
@@ -256,6 +300,29 @@
 				for (const t in this.taskEditTask.reminderDates) {
 					this.taskEditTask.reminderDates[t] = Math.round(this.taskEditTask.reminderDates[t] / 1000)
 				}
+
+				// Make the repeating amount to seconds
+				let repeatAfterSeconds = 0
+				if (this.repeatAfter.amount !== null || this.repeatAfter.amount !== 0) {
+					switch (this.repeatAfter.type) {
+						case 'hours':
+							repeatAfterSeconds = this.repeatAfter.amount * 60 * 60
+							break;
+						case 'days':
+							repeatAfterSeconds = this.repeatAfter.amount * 60 * 60 * 24
+							break;
+						case 'weeks':
+							repeatAfterSeconds = this.repeatAfter.amount * 60 * 60 * 24 * 7
+							break;
+						case 'months':
+							repeatAfterSeconds = this.repeatAfter.amount * 60 * 60 * 24 * 30
+							break;
+						case 'years':
+							repeatAfterSeconds = this.repeatAfter.amount * 60 * 60 * 24 * 365
+							break;
+					}
+				}
+				this.taskEditTask.repeatAfter = repeatAfterSeconds
 
                 HTTP.post(`tasks/` + this.taskEditTask.id, this.taskEditTask, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
                     .then(response => {
