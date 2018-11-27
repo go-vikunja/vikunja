@@ -190,12 +190,10 @@
         methods: {
             loadList() {
                 this.isTaskEdit = false
-                this.loading = true
+				const cancel = message.setLoading(this)
 
                 HTTP.get(`lists/` + this.$route.params.id, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
                     .then(response => {
-                        this.loading = false
-
 						// Make date objects from timestamps
                         for (const t in response.data.tasks) {
                             let dueDate = new Date(response.data.tasks[t].dueDate * 1000)
@@ -215,36 +213,41 @@
                         if (this.list.tasks === null) {
                             this.list.tasks = []
                         }
+						cancel() // cancel the timer
                     })
                     .catch(e => {
                         this.handleError(e)
+						cancel()
                     })
             },
             addTask() {
-                this.loading = true
+				const cancel = message.setLoading(this)
 
                 HTTP.put(`lists/` + this.$route.params.id, {text: this.newTask}, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
                     .then(response => {
                         this.list.tasks.push(response.data)
                         this.handleSuccess({message: 'The task was successfully created.'})
+						cancel() // cancel the timer
                     })
                     .catch(e => {
                         this.handleError(e)
+						cancel()
                     })
 
                 this.newTask = ''
             },
 			markAsDone(e) {
-
-                this.loading = true
+				const cancel = message.setLoading(this)
 
                 HTTP.post(`tasks/` + e.target.id, {done: e.target.checked}, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
                     .then(response => {
                         this.updateTaskByID(parseInt(e.target.id), response.data)
                         this.handleSuccess({message: 'The task was successfully ' + (e.target.checked ? 'un-' :'') + 'marked as done.'})
+						cancel() // To not set the spinner to loading when the request is made in less than 100ms, would lead to loading infinitly.
                     })
                     .catch(e => {
                         this.handleError(e)
+						cancel
                     })
 			},
 			editTask(id) {
@@ -288,7 +291,7 @@
 				this.isTaskEdit = true
 			},
 			editTaskSubmit() {
-                this.loading = true
+				const cancel = message.setLoading(this)
 
 				// Convert the date in a unix timestamp
 				let duedate = (+ new Date(this.taskEditTask.dueDate)) / 1000
@@ -335,9 +338,11 @@
 						// Also update the current taskedit object so the ui changes
 						this.$set(this, 'taskEditTask', response.data)
                         this.handleSuccess({message: 'The task was successfully updated.'})
+						cancel() // cancel the timers
                     })
                     .catch(e => {
                         this.handleError(e)
+						cancel()
                     })
 			},
 			updateTaskByID(id, updatedTask) {
@@ -395,11 +400,9 @@
 				return dates
 			},
             handleError(e) {
-                this.loading = false
                 message.error(e, this)
             },
             handleSuccess(e) {
-                this.loading = false
                 message.success(e, this)
             }
         }

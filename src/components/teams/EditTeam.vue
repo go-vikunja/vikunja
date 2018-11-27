@@ -170,7 +170,7 @@
         },
 		methods: {
             loadTeam() {
-                this.loading = true
+				const cancel = message.setLoading(this)
 
                 HTTP.get(`teams/` + this.$route.params.id, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
                     .then(response => {
@@ -181,14 +181,14 @@
 								this.userIsAdmin = true
 							}
 						}
-                        this.loading = false
+                        cancel()
                     })
                     .catch(e => {
                         this.handleError(e)
                     })
             },
             submit() {
-                this.loading = true
+				const cancel = message.setLoading(this)
 
                 HTTP.post(`teams/` + this.$route.params.id, this.team, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
                     .then(response => {
@@ -200,33 +200,42 @@
                             }
                         }
                         this.handleSuccess({message: 'The team was successfully updated.'})
+						cancel()
                     })
                     .catch(e => {
                         this.handleError(e)
+						cancel()
                     })
             },
             deleteTeam() {
+				const cancel = message.setLoading(this)
                 HTTP.delete(`teams/` + this.$route.params.id, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
                     .then(() => {
                         this.handleSuccess({message: 'The team was successfully deleted.'})
+						cancel()
                         router.push({name: 'home'})
                     })
                     .catch(e => {
+						cancel()
                         this.handleError(e)
                     })
 			},
 			deleteUser() {
+				const cancel = message.setLoading(this)
 				HTTP.delete(`teams/` + this.$route.params.id + `/members/` + this.userToDelete, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
 					.then(() => {
 						this.showUserDeleteModal = false;
 						this.handleSuccess({message: 'The user was successfully deleted from the team.'})
 						this.loadTeam()
+						cancel()
 					})
 					.catch(e => {
+						cancel()
 						this.handleError(e)
 					})
 			},
 			addUser(admin) {
+				const cancel = message.setLoading(this)
 				if(admin === null) {
 					admin = false
 				}
@@ -234,9 +243,11 @@
 					.then(() => {
 						this.loadTeam()
 						this.handleSuccess({message: 'The team member was successfully added.'})
+						cancel()
 					})
 					.catch(e => {
 						this.handleError(e)
+						cancel()
 					})
 			},
 			toggleUserType(userid, current) {
@@ -246,11 +257,9 @@
 				this.addUser(!current)
 			},
             handleError(e) {
-                this.loading = false
                 message.error(e, this)
             },
             handleSuccess(e) {
-                this.loading = false
                 message.success(e, this)
             }
 		}

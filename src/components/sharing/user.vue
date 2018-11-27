@@ -142,28 +142,34 @@
 		},
 		methods: {
 			loadUsers() {
+				const cancel = message.setLoading(this)
 				HTTP.get(this.typeString + `s/` + this.id + `/users`, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
 					.then(response => {
 						//response.data.push(this.list.owner)
 						this.$set(this, 'users', response.data)
-						this.loading = false
+						cancel()
 					})
 					.catch(e => {
 						this.handleError(e)
+						cancel()
 					})
 			},
 			deleteUser() {
+				const cancel = message.setLoading(this)
 				HTTP.delete(this.typeString + `s/` + this.id + `/users/` + this.userToDelete, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
 					.then(() => {
 						this.showUserDeleteModal = false;
 						this.handleSuccess({message: 'The user was successfully deleted from the ' + this.typeString + '.'})
 						this.loadUsers()
+						cancel()
 					})
 					.catch(e => {
 						this.handleError(e)
+						cancel()
 					})
 			},
 			addUser(admin) {
+				const cancel = message.setLoading(this)
 				if(admin === null) {
 					admin = false
 				}
@@ -179,12 +185,15 @@
 						this.loadUsers()
 						this.newUser = {}
 						this.handleSuccess({message: 'The user was successfully added.'})
+						cancel()
 					})
 					.catch(e => {
 						this.handleError(e)
+						cancel()
 					})
 			},
 			toggleUserType(userid, current) {
+				const cancel = message.setLoading(this)
 				let right = 0
 				if (!current) {
 					right = 2
@@ -194,16 +203,18 @@
 					.then(() => {
 						this.loadUsers()
 						this.handleSuccess({message: 'The user right was successfully updated.'})
+						cancel()
 					})
 					.catch(e => {
 						this.handleError(e)
+						cancel()
 					})
 			},
 			findUsers(query) {
-				this.loading = true;
+				const cancel = message.setLoading(this)
 				if(query === '') {
 					this.$set(this, 'foundUsers', [])
-					this.loading = false
+					cancel()
 					return
 				}
 
@@ -220,10 +231,11 @@
 							})
 						}
 
-						this.loading = false
+						cancel()
 					})
 					.catch(e => {
 						this.handleError(e)
+						cancel()
 					})
 			},
 			clearAll () {
@@ -233,11 +245,9 @@
 				return `and ${count} others`
 			},
 			handleError(e) {
-				this.loading = false
 				message.error(e, this)
 			},
 			handleSuccess(e) {
-				this.loading = false
 				message.success(e, this)
 			}
 		},

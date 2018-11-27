@@ -38,6 +38,7 @@
 
 <script>
     import {HTTP} from '../../http-common'
+	import message from '../../message'
 
     export default {
         data() {
@@ -53,11 +54,11 @@
         },
         methods: {
             submit() {
-                this.loading = true
+				const cancel = message.setLoading(this)
                 this.error = ''
 
                 if (this.credentials.password2 !== this.credentials.password) {
-                    this.loading = false
+                    cancel()
                     this.error = 'Passwords don\'t match'
                     return
                 }
@@ -71,17 +72,17 @@
                     .then(response => {
 						this.handleSuccess(response)
                         localStorage.removeItem('passwordResetToken')
+						cancel()
                     })
                     .catch(e => {
                         this.error = e.response.data.message
+						cancel()
                     })
             },
             handleError(e) {
-                this.loading = false
                 this.error = e.response.data.message
             },
             handleSuccess(e) {
-                this.loading = false
                 this.successMessage = e.data.message
             }
         }

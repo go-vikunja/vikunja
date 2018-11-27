@@ -36,6 +36,7 @@
     import auth from '../../auth'
     import router from '../../router'
     import {HTTP} from '../../http-common'
+	import message from '../../message'
 
     export default {
         data() {
@@ -53,15 +54,15 @@
             // Try to verify the email
 			let emailVerifyToken = localStorage.getItem('emailConfirmToken')
 			if (emailVerifyToken) {
-				this.loading = true
+				const cancel = message.setLoading(this)
 				HTTP.post(`user/confirm`, {token: emailVerifyToken})
 					.then(() => {
                         localStorage.removeItem('emailConfirmToken')
-                        this.loading = false
                         this.confirmedEmailSuccess = true
+						cancel()
                     })
                     .catch(e => {
-                        this.loading = false
+                        cancel()
                         this.error = e.response.data.message
                     })
 			}

@@ -57,14 +57,17 @@
                 auth.logout()
             },
 			loadPendingTasks() {
-				this.loading = true
+				const cancel = message.setLoading(this)
 				HTTP.get(`tasks`, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
 					.then(response => {
 						this.tasks = response.data
 						this.tasks.sort(this.sortyByDeadline)
+						cancel()
 						this.loading = false
 					})
 					.catch(e => {
+						cancel()
+						this.loading = false
 						this.handleError(e)
 					})
             },
@@ -78,7 +81,6 @@
 				router.push({name: 'showList', params: {id: lid}})
 			},
 			handleError(e) {
-				this.loading = false
 				message.error(e, this)
 			}
         },

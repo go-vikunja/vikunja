@@ -45,23 +45,23 @@
 		},
 		methods: {
 			newTeam() {
-				this.loading = true
+				const cancel = message.setLoading(this)
 
 				HTTP.put(`teams`, this.team, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
 					.then(response => {
 						router.push({name:'editTeam', params:{id: response.data.id}})
 						this.handleSuccess({message: 'The team was successfully created.'})
+						cancel()
 					})
 					.catch(e => {
+						cancel()
 						this.handleError(e)
 					})
 			},
 			handleError(e) {
-				this.loading = false
 				message.error(e, this)
 			},
 			handleSuccess(e) {
-				this.loading = false
 				message.success(e, this)
 			}
 		}

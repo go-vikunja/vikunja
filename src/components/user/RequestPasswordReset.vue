@@ -31,6 +31,7 @@
 
 <script>
     import {HTTP} from '../../http-common'
+	import message from '../../message'
 
     export default {
         data() {
@@ -43,7 +44,7 @@
         },
         methods: {
             submit() {
-                this.loading = true
+				const cancel = message.setLoading(this)
                 this.error = ''
                 let credentials = {
                     user_name: this.username,
@@ -51,15 +52,15 @@
 
                 HTTP.post(`user/password/token`, credentials)
                     .then(() => {
-                        this.loading = false
+						cancel()
 						this.isSuccess = true
                     })
                     .catch(e => {
+						cancel()
                         this.handleError(e)
                     })
             },
             handleError(e) {
-                this.loading = false
                 this.error = e.response.data.message
             },
         }
