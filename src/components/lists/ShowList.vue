@@ -247,7 +247,7 @@
                     })
                     .catch(e => {
                         this.handleError(e)
-						cancel
+						cancel()
                     })
 			},
 			editTask(id) {
