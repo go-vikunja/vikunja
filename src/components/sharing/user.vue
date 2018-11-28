@@ -150,8 +150,8 @@
 						cancel()
 					})
 					.catch(e => {
-						this.handleError(e)
 						cancel()
+						this.handleError(e)
 					})
 			},
 			deleteUser() {
@@ -164,8 +164,8 @@
 						cancel()
 					})
 					.catch(e => {
-						this.handleError(e)
 						cancel()
+						this.handleError(e)
 					})
 			},
 			addUser(admin) {
@@ -188,8 +188,8 @@
 						cancel()
 					})
 					.catch(e => {
-						this.handleError(e)
 						cancel()
+						this.handleError(e)
 					})
 			},
 			toggleUserType(userid, current) {
@@ -206,8 +206,8 @@
 						cancel()
 					})
 					.catch(e => {
-						this.handleError(e)
 						cancel()
+						this.handleError(e)
 					})
 			},
 			findUsers(query) {
@@ -234,8 +234,8 @@
 						cancel()
 					})
 					.catch(e => {
-						this.handleError(e)
 						cancel()
+						this.handleError(e)
 					})
 			},
 			clearAll () {

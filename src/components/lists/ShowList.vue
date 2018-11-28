@@ -216,8 +216,8 @@
 						cancel() // cancel the timer
                     })
                     .catch(e => {
-                        this.handleError(e)
-						cancel()
+                        cancel()
+						this.handleError(e)
                     })
             },
             addTask() {
@@ -230,8 +230,8 @@
 						cancel() // cancel the timer
                     })
                     .catch(e => {
-                        this.handleError(e)
-						cancel()
+                        cancel()
+						this.handleError(e)
                     })
 
                 this.newTask = ''
@@ -246,8 +246,8 @@
 						cancel() // To not set the spinner to loading when the request is made in less than 100ms, would lead to loading infinitly.
                     })
                     .catch(e => {
-                        this.handleError(e)
-						cancel()
+                        cancel()
+						this.handleError(e)
                     })
 			},
 			editTask(id) {
@@ -341,8 +341,8 @@
 						cancel() // cancel the timers
                     })
                     .catch(e => {
-                        this.handleError(e)
-						cancel()
+                        cancel()
+						this.handleError(e)
                     })
 			},
 			updateTaskByID(id, updatedTask) {

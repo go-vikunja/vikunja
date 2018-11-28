@@ -128,8 +128,8 @@
 						cancel()
 					})
 					.catch(e => {
-						this.handleError(e)
 						cancel()
+						this.handleError(e)
 					})
 			},
 			deleteTeam() {
@@ -142,8 +142,8 @@
 						cancel()
 					})
 					.catch(e => {
-						this.handleError(e)
 						cancel()
+						this.handleError(e)
 					})
 			},
 			addTeam(admin) {
@@ -163,8 +163,8 @@
 						cancel()
 					})
 					.catch(e => {
-						this.handleError(e)
 						cancel()
+						this.handleError(e)
 					})
 			},
 			toggleTeamType(teamid, current) {
@@ -181,8 +181,8 @@
 						cancel()
 					})
 					.catch(e => {
-						this.handleError(e)
 						cancel()
+						this.handleError(e)
 					})
 			},
 			handleError(e) {

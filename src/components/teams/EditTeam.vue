@@ -203,8 +203,8 @@
 						cancel()
                     })
                     .catch(e => {
-                        this.handleError(e)
-						cancel()
+                        cancel()
+						this.handleError(e)
                     })
             },
             deleteTeam() {
@@ -246,8 +246,8 @@
 						cancel()
 					})
 					.catch(e => {
-						this.handleError(e)
 						cancel()
+						this.handleError(e)
 					})
 			},
 			toggleUserType(userid, current) {

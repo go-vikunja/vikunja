@@ -129,8 +129,8 @@
 						cancel()
                     })
                     .catch(e => {
-                        this.handleError(e)
-						cancel()
+                        cancel()
+						this.handleError(e)
                     })
             },
             deleteList() {
@@ -142,8 +142,8 @@
                         router.push({name: 'home'})
                     })
                     .catch(e => {
-                        this.handleError(e)
-						cancel()
+                        cancel()
+						this.handleError(e)
                     })
             },
             handleError(e) {

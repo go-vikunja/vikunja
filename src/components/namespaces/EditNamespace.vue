@@ -108,8 +108,8 @@
 						cancel()
                     })
                     .catch(e => {
-                        this.handleError(e)
-						cancel()
+                        cancel()
+						this.handleError(e)
                     })
             },
             submit() {
@@ -128,8 +128,8 @@
 						cancel()
                     })
                     .catch(e => {
-                        this.handleError(e)
-						cancel()
+                        cancel()
+						this.handleError(e)
                     })
             },
             deleteNamespace() {
@@ -141,8 +141,8 @@
 						router.push({name: 'home'})
                     })
                     .catch(e => {
-                        this.handleError(e)
-						cancel()
+                        cancel()
+						this.handleError(e)
                     })
 			},
             handleError(e) {
