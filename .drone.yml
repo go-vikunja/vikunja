@@ -86,3 +86,17 @@ pipeline:
     when:
       event: [ push, tag ]
       branch: [ master ]
+
+# Update the mirror on github
+  github_mirror:
+    image: appleboy/drone-git-push
+    branch: master
+    remote: git@github.com:go-vikunja/frontend.git
+    remote_name: github
+    local_branch: master
+    followtags: true
+    force: false
+    commit: false
+    when:
+      event: [ push, tag ]
+      branch: [ master ]
