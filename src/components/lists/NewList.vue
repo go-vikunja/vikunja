@@ -45,23 +45,23 @@
         },
         methods: {
             newList() {
-                this.loading = true
+				const cancel = message.setLoading(this)
 
                 HTTP.put(`namespaces/` + this.$route.params.id + `/lists`, this.list, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
                     .then(() => {
 						this.$parent.loadNamespaces()
 						this.handleSuccess({message: 'The list was successfully created.'})
+						cancel()
                     })
                     .catch(e => {
-                        this.handleError(e)
+                        cancel()
+						this.handleError(e)
                     })
             },
             handleError(e) {
-                this.loading = false
                 message.error(e, this)
             },
             handleSuccess(e) {
-                this.loading = false
                 message.success(e, this)
             }
         }

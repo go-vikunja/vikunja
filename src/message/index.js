@@ -1,4 +1,12 @@
 export default {
+	setLoading(context) {
+		const timeout = setTimeout(function () {
+			context.loading = true
+		}, 100);
+		return () => {
+			clearTimeout(timeout);
+		};
+	},
     error(e, context) {
         // Build the notification text from error response
         let err = e.message
@@ -12,6 +20,8 @@ export default {
             title: 'Error',
             text: err
         })
+
+		context.loading = false
     },
     success(e, context) {
         // Build the notification text from error response
@@ -26,6 +36,8 @@ export default {
             title: 'Success',
             text: err
         })
+
+		context.loading = false
     },
 
 }

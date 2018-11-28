@@ -97,7 +97,7 @@
         },
 		methods: {
             loadNamespace() {
-                this.loading = true
+				const cancel = message.setLoading(this)
 
                 HTTP.get(`namespaces/` + this.$route.params.id, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
                     .then(response => {
@@ -105,14 +105,15 @@
 						if (response.data.owner.id === this.user.infos.id) {
 							this.userIsAdmin = true
 						}
-                        this.loading = false
+						cancel()
                     })
                     .catch(e => {
-                        this.handleError(e)
+                        cancel()
+						this.handleError(e)
                     })
             },
             submit() {
-                this.loading = true
+				const cancel = message.setLoading(this)
 
                 HTTP.post(`namespaces/` + this.$route.params.id, this.namespace, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
                     .then(response => {
@@ -124,27 +125,30 @@
                             }
                         }
                         this.handleSuccess({message: 'The namespace was successfully updated.'})
+						cancel()
                     })
                     .catch(e => {
-                        this.handleError(e)
+                        cancel()
+						this.handleError(e)
                     })
             },
             deleteNamespace() {
+				const cancel = message.setLoading(this)
                 HTTP.delete(`namespaces/` + this.$route.params.id, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
                     .then(() => {
                         this.handleSuccess({message: 'The namespace was successfully deleted.'})
-                        router.push({name: 'home'})
+                        cancel()
+						router.push({name: 'home'})
                     })
                     .catch(e => {
-                        this.handleError(e)
+                        cancel()
+						this.handleError(e)
                     })
 			},
             handleError(e) {
-                this.loading = false
                 message.error(e, this)
             },
             handleSuccess(e) {
-                this.loading = false
                 message.success(e, this)
             }
 		}

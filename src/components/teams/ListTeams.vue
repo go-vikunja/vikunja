@@ -40,19 +40,18 @@
         },
 		methods: {
 			loadTeams() {
-                this.loading = true
+				const cancel = message.setLoading(this)
 
                 HTTP.get(`teams`, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
                     .then(response => {
                         this.$set(this, 'teams', response.data)
-                        this.loading = false
+                        cancel()
                     })
                     .catch(e => {
                         this.handleError(e)
                     })
 			},
             handleError(e) {
-                this.loading = false
                 message.error(e, this)
             },
 		}

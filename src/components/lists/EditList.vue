@@ -97,7 +97,7 @@
         },
         methods: {
             loadList() {
-                this.loading = true
+                const cancel = message.setLoading(this)
 
                 HTTP.get(`lists/` + this.$route.params.id, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
                     .then(response => {
@@ -105,14 +105,14 @@
 						if (response.data.owner.id === this.user.infos.id) {
 							this.userIsAdmin = true
 						}
-                        this.loading = false
+                        cancel()
                     })
                     .catch(e => {
                         this.handleError(e)
                     })
             },
             submit() {
-                this.loading = true
+				const cancel = message.setLoading(this)
 
                 HTTP.post(`lists/` + this.$route.params.id, this.list, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
                     .then(response => {
@@ -126,27 +126,30 @@
                             }
                         }
                         this.handleSuccess({message: 'The list was successfully updated.'})
+						cancel()
                     })
                     .catch(e => {
-                        this.handleError(e)
+                        cancel()
+						this.handleError(e)
                     })
             },
             deleteList() {
+				const cancel = message.setLoading(this)
                 HTTP.delete(`lists/` + this.$route.params.id, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
                     .then(() => {
                         this.handleSuccess({message: 'The list was successfully deleted.'})
+						cancel()
                         router.push({name: 'home'})
                     })
                     .catch(e => {
-                        this.handleError(e)
+                        cancel()
+						this.handleError(e)
                     })
             },
             handleError(e) {
-                this.loading = false
                 message.error(e, this)
             },
             handleSuccess(e) {
-                this.loading = false
                 message.success(e, this)
             }
         }

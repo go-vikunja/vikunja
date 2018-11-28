@@ -29,6 +29,7 @@ import { faUsers } from '@fortawesome/free-solid-svg-icons'
 import { faUser } from '@fortawesome/free-solid-svg-icons'
 import { faLock } from '@fortawesome/free-solid-svg-icons'
 import { faPen } from '@fortawesome/free-solid-svg-icons'
+import { faTimes } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
 library.add(faSignOutAlt)
@@ -43,6 +44,7 @@ library.add(faUsers)
 library.add(faUser)
 library.add(faLock)
 library.add(faPen)
+library.add(faTimes)
 
 Vue.component('icon', FontAwesomeIcon)
 

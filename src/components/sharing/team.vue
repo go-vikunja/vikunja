@@ -121,27 +121,33 @@
 		},
 		methods: {
 			loadTeams() {
+				const cancel = message.setLoading(this)
 				HTTP.get(this.typeString + `s/` + this.id + `/teams`, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
 					.then(response => {
 						this.$set(this, 'listTeams', response.data)
-						this.loading = false
+						cancel()
 					})
 					.catch(e => {
+						cancel()
 						this.handleError(e)
 					})
 			},
 			deleteTeam() {
+				const cancel = message.setLoading(this)
 				HTTP.delete(this.typeString + `s/` + this.id + `/teams/` + this.teamToDelete, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
 					.then(() => {
 						this.showTeamDeleteModal = false;
 						this.handleSuccess({message: 'The team was successfully deleted from the ' + this.typeString + '.'})
 						this.loadTeams()
+						cancel()
 					})
 					.catch(e => {
+						cancel()
 						this.handleError(e)
 					})
 			},
 			addTeam(admin) {
+				const cancel = message.setLoading(this)
 				if(admin === null) {
 					admin = false
 				}
@@ -154,12 +160,15 @@
 					.then(() => {
 						this.loadTeams()
 						this.handleSuccess({message: 'The team was successfully added.'})
+						cancel()
 					})
 					.catch(e => {
+						cancel()
 						this.handleError(e)
 					})
 			},
 			toggleTeamType(teamid, current) {
+				const cancel = message.setLoading(this)
 				let right = 0
 				if (!current) {
 					right = 2
@@ -169,17 +178,17 @@
 					.then(() => {
 						this.loadTeams()
 						this.handleSuccess({message: 'The team right was successfully updated.'})
+						cancel()
 					})
 					.catch(e => {
+						cancel()
 						this.handleError(e)
 					})
 			},
 			handleError(e) {
-				this.loading = false
 				message.error(e, this)
 			},
 			handleSuccess(e) {
-				this.loading = false
 				message.success(e, this)
 			}
 		},

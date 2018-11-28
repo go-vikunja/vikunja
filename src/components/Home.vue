@@ -7,9 +7,19 @@
 		<div class="box tasks" v-if="tasks && tasks.length > 0">
 			<div @click="gotoList(l.listID)" class="task" v-for="l in tasks" v-bind:key="l.id" v-if="!l.done">
 				<label v-bind:for="l.id">
-					<input type="checkbox" v-bind:id="l.id" disabled>
-					{{l.text}}
-					<i v-if="l.dueDate > 0"> - Due on {{formatUnixDate(l.dueDate)}}</i>
+					<div class="fancycheckbox">
+						<input @change="markAsDone" type="checkbox" v-bind:id="l.id" v-bind:checked="l.done" style="display: none;" disabled>
+						<label  v-bind:for="l.id" class="check">
+							<svg width="18px" height="18px" viewBox="0 0 18 18">
+								<path d="M1,9 L1,3.5 C1,2 2,1 3.5,1 L14.5,1 C16,1 17,2 17,3.5 L17,14.5 C17,16 16,17 14.5,17 L3.5,17 C2,17 1,16 1,14.5 L1,9 Z"></path>
+								<polyline points="1 9 7 14 15 4"></polyline>
+							</svg>
+						</label>
+					</div>
+					<span class="tasktext">
+						{{l.text}}
+						<i v-if="l.dueDate > 0"> - Due on {{formatUnixDate(l.dueDate)}}</i>
+					</span>
 				</label>
 			</div>
 		</div>
@@ -38,21 +48,26 @@
             }
         },
 		created() {
-			this.loadPendingTasks()
+			if (auth.user.authenticated) {
+				this.loadPendingTasks()
+			}
 		},
         methods: {
             logout() {
                 auth.logout()
             },
 			loadPendingTasks() {
-				this.loading = true
+				const cancel = message.setLoading(this)
 				HTTP.get(`tasks`, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
 					.then(response => {
 						this.tasks = response.data
 						this.tasks.sort(this.sortyByDeadline)
+						cancel()
 						this.loading = false
 					})
 					.catch(e => {
+						cancel()
+						this.loading = false
 						this.handleError(e)
 					})
             },
@@ -66,7 +81,6 @@
 				router.push({name: 'showList', params: {id: lid}})
 			},
 			handleError(e) {
-				this.loading = false
 				message.error(e, this)
 			}
         },
