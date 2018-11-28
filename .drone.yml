@@ -163,17 +163,3 @@ pipeline:
       {{repo.owner}}/{{repo.name}}: \[{{build.status}}] Build {{build.number}}
       {{commit.author}} pushed to {{commit.branch}} {{commit.sha}}: `{{commit.message}}`
       Build started at {{datetime build.started "2006-Jan-02T15:04:05Z" "GMT+2"}} finished at {{datetime build.finished "2006-Jan-02T15:04:05Z" "GMT+2"}}.
-  
-# Update the mirror on github
-  github_mirror:
-    image: appleboy/drone-git-push
-    branch: master
-    remote: git@github.com:go-vikunja/api.git
-    remote_name: github
-    local_branch: master
-    followtags: true
-    force: false
-    commit: false
-    when:
-      event: [ push, tag ]
-      branch: [ master ]
