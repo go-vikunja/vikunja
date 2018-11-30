@@ -26,12 +26,12 @@ Try it under [try.vikunja.io](https://try.vikunja.io)!
 * [ ] Prioritize tasks
 * [ ] Assign users to tasks
 * [ ] Subtasks
-* [ ] Repeating tasks
+* [x] Repeating tasks
 * [ ] Attachments on tasks
 * [ ] Get all tasks for you per interval (day/month/period)
 * [x] Get tasks via caldav
 * [ ] More sharing features
-  * [ ] Share with individual users
+  * [x] Share with individual users
   * [ ] Share via a world-readable link with or without password, like Nextcloud
 
 * [ ] [Mobile apps](https://code.vikunja.io/app) (seperate repo)
