@@ -14,47 +14,53 @@
 //  You should have received a copy of the GNU General Public License
 //  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package crud
+package handler
 
 import (
-	"code.vikunja.io/api/pkg/log"
-	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/web"
 	"github.com/labstack/echo"
+	"github.com/op/go-logging"
 	"net/http"
+	"strconv"
 )
 
-// CreateWeb is the handler to create an object
-func (c *WebHandler) CreateWeb(ctx echo.Context) error {
+// ReadAllWeb is the webhandler to get all objects of a type
+func (c *WebHandler) ReadAllWeb(ctx echo.Context) error {
 	// Get our model
 	currentStruct := c.EmptyStruct()
+
+	authprovider := ctx.Get("AuthProvider").(*web.Auths)
+	currentAuth, err := authprovider.AuthObject(ctx)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Could not determine the current user.")
+	}
 
 	// Get the object & bind params to struct
 	if err := ParamBinder(currentStruct, ctx); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "No or invalid model provided.")
 	}
 
-	// Validate the struct
-	if err := ctx.Validate(currentStruct); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err)
+	// Pagination
+	page := ctx.QueryParam("page")
+	if page == "" {
+		page = "1"
 	}
-
-	// Get the user to pass for later checks
-	currentUser, err := models.GetCurrentUser(ctx)
+	pageNumber, err := strconv.Atoi(page)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Could not determine the current user.")
+		ctx.Get("LoggingProvider").(*logging.Logger).Error(err.Error())
+		return echo.NewHTTPError(http.StatusBadRequest, "Bad page requested.")
+	}
+	if pageNumber < 0 {
+		return echo.NewHTTPError(http.StatusBadRequest, "Bad page requested.")
 	}
 
-	// Check rights
-	if !currentStruct.CanCreate(&currentUser) {
-		log.Log.Noticef("%s [ID: %d] tried to create while not having the rights for it", currentUser.Username, currentUser.ID)
-		return echo.NewHTTPError(http.StatusForbidden)
-	}
+	// Search
+	search := ctx.QueryParam("s")
 
-	// Create
-	err = currentStruct.Create(&currentUser)
+	lists, err := currentStruct.ReadAll(search, currentAuth, pageNumber)
 	if err != nil {
-		return HandleHTTPError(err)
+		return HandleHTTPError(err, ctx)
 	}
 
-	return ctx.JSON(http.StatusCreated, currentStruct)
+	return ctx.JSON(http.StatusOK, lists)
 }

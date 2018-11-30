@@ -16,6 +16,8 @@
 
 package models
 
+import "code.vikunja.io/web"
+
 // Create implements the create method to assign a user to a team
 // @Summary Add a user to a team
 // @Description Add a user to a team.
@@ -30,7 +32,8 @@ package models
 // @Failure 403 {object} models.HTTPError "The user does not have access to the team"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /teams/{id}/members [put]
-func (tm *TeamMember) Create(doer *User) (err error) {
+func (tm *TeamMember) Create(a web.Auth) (err error) {
+
 	// Check if the team extst
 	_, err = GetTeamByID(tm.TeamID)
 	if err != nil {

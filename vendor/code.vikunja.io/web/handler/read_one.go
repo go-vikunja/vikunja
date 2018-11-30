@@ -14,12 +14,12 @@
 //  You should have received a copy of the GNU General Public License
 //  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package crud
+package handler
 
 import (
-	"code.vikunja.io/api/pkg/log"
-	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/web"
 	"github.com/labstack/echo"
+	"github.com/op/go-logging"
 	"net/http"
 )
 
@@ -36,17 +36,18 @@ func (c *WebHandler) ReadOneWeb(ctx echo.Context) error {
 	// Get our object
 	err := currentStruct.ReadOne()
 	if err != nil {
-		return HandleHTTPError(err)
+		return HandleHTTPError(err, ctx)
 	}
 
 	// Check rights
 	// We can only check the rights on a full object, which is why we need to check it afterwards
-	currentUser, err := models.GetCurrentUser(ctx)
+	authprovider := ctx.Get("AuthProvider").(*web.Auths)
+	currentAuth, err := authprovider.AuthObject(ctx)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Could not determine the current user.")
 	}
-	if !currentStruct.CanRead(&currentUser) {
-		log.Log.Noticef("%s [ID: %d] tried to read while not having the rights for it", currentUser.Username, currentUser.ID)
+	if !currentStruct.CanRead(currentAuth) {
+		ctx.Get("LoggingProvider").(*logging.Logger).Noticef("Tried to read one while not having the rights for it", currentAuth)
 		return echo.NewHTTPError(http.StatusForbidden, "You don't have the right to see this")
 	}
 

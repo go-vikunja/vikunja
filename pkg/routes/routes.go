@@ -44,9 +44,11 @@ package routes
 
 import (
 	_ "code.vikunja.io/api/docs" // To generate swagger docs
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
-	"code.vikunja.io/api/pkg/routes/crud"
+	"code.vikunja.io/web"
+	"code.vikunja.io/web/handler"
 	"github.com/asaskevich/govalidator"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
@@ -67,7 +69,7 @@ func (cv *CustomValidator) Validate(i interface{}) error {
 		}
 
 		httperr := models.ValidationHTTPError{
-			models.HTTPError{
+			web.HTTPError{
 				Code:    models.ErrCodeInvalidData,
 				Message: "Invalid Data",
 			},
@@ -122,6 +124,20 @@ func RegisterRoutes(e *echo.Echo) {
 	// ===== Routes with Authetification =====
 	// Authetification
 	a.Use(middleware.JWT([]byte(viper.GetString("service.JWTSecret"))))
+
+	// Put the authprovider in the context to be able to use it later
+	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			c.Set("AuthProvider", &web.Auths{
+				AuthObject: func(echo.Context) (web.Auth, error) {
+					return models.GetCurrentUser(c)
+				},
+			})
+			c.Set("LoggingProvider", &log.Log)
+			return next(c)
+		}
+	})
+
 	a.POST("/tokenTest", apiv1.CheckToken)
 
 	// User stuff
@@ -129,8 +145,8 @@ func RegisterRoutes(e *echo.Echo) {
 	a.POST("/user/password", apiv1.UserChangePassword)
 	a.GET("/users", apiv1.UserList)
 
-	listHandler := &crud.WebHandler{
-		EmptyStruct: func() crud.CObject {
+	listHandler := &handler.WebHandler{
+		EmptyStruct: func() handler.CObject {
 			return &models.List{}
 		},
 	}
@@ -140,8 +156,8 @@ func RegisterRoutes(e *echo.Echo) {
 	a.DELETE("/lists/:list", listHandler.DeleteWeb)
 	a.PUT("/namespaces/:namespace/lists", listHandler.CreateWeb)
 
-	taskHandler := &crud.WebHandler{
-		EmptyStruct: func() crud.CObject {
+	taskHandler := &handler.WebHandler{
+		EmptyStruct: func() handler.CObject {
 			return &models.ListTask{}
 		},
 	}
@@ -150,8 +166,8 @@ func RegisterRoutes(e *echo.Echo) {
 	a.DELETE("/tasks/:listtask", taskHandler.DeleteWeb)
 	a.POST("/tasks/:listtask", taskHandler.UpdateWeb)
 
-	listTeamHandler := &crud.WebHandler{
-		EmptyStruct: func() crud.CObject {
+	listTeamHandler := &handler.WebHandler{
+		EmptyStruct: func() handler.CObject {
 			return &models.TeamList{}
 		},
 	}
@@ -160,8 +176,8 @@ func RegisterRoutes(e *echo.Echo) {
 	a.DELETE("/lists/:list/teams/:team", listTeamHandler.DeleteWeb)
 	a.POST("/lists/:list/teams/:team", listTeamHandler.UpdateWeb)
 
-	listUserHandler := &crud.WebHandler{
-		EmptyStruct: func() crud.CObject {
+	listUserHandler := &handler.WebHandler{
+		EmptyStruct: func() handler.CObject {
 			return &models.ListUser{}
 		},
 	}
@@ -170,8 +186,8 @@ func RegisterRoutes(e *echo.Echo) {
 	a.DELETE("/lists/:list/users/:user", listUserHandler.DeleteWeb)
 	a.POST("/lists/:list/users/:user", listUserHandler.UpdateWeb)
 
-	namespaceHandler := &crud.WebHandler{
-		EmptyStruct: func() crud.CObject {
+	namespaceHandler := &handler.WebHandler{
+		EmptyStruct: func() handler.CObject {
 			return &models.Namespace{}
 		},
 	}
@@ -182,8 +198,8 @@ func RegisterRoutes(e *echo.Echo) {
 	a.DELETE("/namespaces/:namespace", namespaceHandler.DeleteWeb)
 	a.GET("/namespaces/:namespace/lists", apiv1.GetListsByNamespaceID)
 
-	namespaceTeamHandler := &crud.WebHandler{
-		EmptyStruct: func() crud.CObject {
+	namespaceTeamHandler := &handler.WebHandler{
+		EmptyStruct: func() handler.CObject {
 			return &models.TeamNamespace{}
 		},
 	}
@@ -192,8 +208,8 @@ func RegisterRoutes(e *echo.Echo) {
 	a.DELETE("/namespaces/:namespace/teams/:team", namespaceTeamHandler.DeleteWeb)
 	a.POST("/namespaces/:namespace/teams/:team", namespaceTeamHandler.UpdateWeb)
 
-	namespaceUserHandler := &crud.WebHandler{
-		EmptyStruct: func() crud.CObject {
+	namespaceUserHandler := &handler.WebHandler{
+		EmptyStruct: func() handler.CObject {
 			return &models.NamespaceUser{}
 		},
 	}
@@ -202,8 +218,8 @@ func RegisterRoutes(e *echo.Echo) {
 	a.DELETE("/namespaces/:namespace/users/:user", namespaceUserHandler.DeleteWeb)
 	a.POST("/namespaces/:namespace/users/:user", namespaceUserHandler.UpdateWeb)
 
-	teamHandler := &crud.WebHandler{
-		EmptyStruct: func() crud.CObject {
+	teamHandler := &handler.WebHandler{
+		EmptyStruct: func() handler.CObject {
 			return &models.Team{}
 		},
 	}
@@ -213,8 +229,8 @@ func RegisterRoutes(e *echo.Echo) {
 	a.POST("/teams/:team", teamHandler.UpdateWeb)
 	a.DELETE("/teams/:team", teamHandler.DeleteWeb)
 
-	teamMemberHandler := &crud.WebHandler{
-		EmptyStruct: func() crud.CObject {
+	teamMemberHandler := &handler.WebHandler{
+		EmptyStruct: func() handler.CObject {
 			return &models.TeamMember{}
 		},
 	}

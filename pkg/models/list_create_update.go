@@ -16,6 +16,8 @@
 
 package models
 
+import "code.vikunja.io/web"
+
 // CreateOrUpdateList updates a list or creates it if it doesn't exist
 func CreateOrUpdateList(list *List) (err error) {
 
@@ -84,7 +86,12 @@ func (l *List) Update() (err error) {
 // @Failure 403 {object} models.HTTPError "The user does not have access to the list"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces/{namespaceID}/lists [put]
-func (l *List) Create(doer *User) (err error) {
+func (l *List) Create(a web.Auth) (err error) {
+	doer, err := getUserWithError(a)
+	if err != nil {
+		return err
+	}
+
 	// Check rights
 	u, err := GetUserByID(doer.ID)
 	if err != nil {

@@ -18,7 +18,7 @@ package v1
 
 import (
 	"code.vikunja.io/api/pkg/models"
-	"code.vikunja.io/api/pkg/routes/crud"
+	"code.vikunja.io/web/handler"
 	"github.com/labstack/echo"
 	"net/http"
 	"strconv"
@@ -55,10 +55,10 @@ func UserDelete(c echo.Context) error {
 	}
 
 	// Delete it
-	err = models.DeleteUserByID(userID, &doer)
+	err = models.DeleteUserByID(userID, doer)
 
 	if err != nil {
-		return crud.HandleHTTPError(err)
+		return handler.HandleHTTPError(err, c)
 	}
 
 	return c.JSON(http.StatusOK, models.Message{"success"})

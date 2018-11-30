@@ -103,7 +103,7 @@ type (
 	// MiddlewareFunc defines a function to process middleware.
 	MiddlewareFunc func(HandlerFunc) HandlerFunc
 
-	// HandlerFunc defines a function to serve HTTP requests.
+	// HandlerFunc defines a function to server HTTP requests.
 	HandlerFunc func(Context) error
 
 	// HTTPErrorHandler is a centralized HTTP error handler.
@@ -217,7 +217,7 @@ const (
 )
 
 const (
-	Version = "3.3.6"
+	Version = "3.3.5"
 	website = "https://echo.labstack.com"
 	// http://patorjk.com/software/taag/#p=display&f=Small%20Slant&t=Echo
 	banner = `
@@ -326,7 +326,7 @@ func (e *Echo) DefaultHTTPErrorHandler(err error, c Context) {
 		code = he.Code
 		msg = he.Message
 		if he.Internal != nil {
-			err = fmt.Errorf("%v, %v", err, he.Internal)
+			msg = fmt.Sprintf("%v, %v", err, he.Internal)
 		}
 	} else if e.Debug {
 		msg = err.Error()
@@ -336,6 +336,8 @@ func (e *Echo) DefaultHTTPErrorHandler(err error, c Context) {
 	if _, ok := msg.(string); ok {
 		msg = Map{"message": msg}
 	}
+
+	e.Logger.Error(err)
 
 	// Send response
 	if !c.Response().Committed {
@@ -460,11 +462,11 @@ func static(i i, prefix, root string) *Route {
 	return i.GET(prefix+"/*", h)
 }
 
-// File registers a new route with path to serve a static file with optional route-level middleware.
-func (e *Echo) File(path, file string, m ...MiddlewareFunc) *Route {
+// File registers a new route with path to serve a static file.
+func (e *Echo) File(path, file string) *Route {
 	return e.GET(path, func(c Context) error {
 		return c.File(file)
-	}, m...)
+	})
 }
 
 // Add registers a new route for an HTTP method and path with matching handler
@@ -557,17 +559,26 @@ func (e *Echo) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	c := e.pool.Get().(*context)
 	c.Reset(r, w)
 
+	m := r.Method
 	h := NotFoundHandler
 
 	if e.premiddleware == nil {
-		e.router.Find(r.Method, getPath(r), c)
+		path := r.URL.RawPath
+		if path == "" {
+			path = r.URL.Path
+		}
+		e.router.Find(m, getPath(r), c)
 		h = c.Handler()
 		for i := len(e.middleware) - 1; i >= 0; i-- {
 			h = e.middleware[i](h)
 		}
 	} else {
 		h = func(c Context) error {
-			e.router.Find(r.Method, getPath(r), c)
+			path := r.URL.RawPath
+			if path == "" {
+				path = r.URL.Path
+			}
+			e.router.Find(m, getPath(r), c)
 			h := c.Handler()
 			for i := len(e.middleware) - 1; i >= 0; i-- {
 				h = e.middleware[i](h)

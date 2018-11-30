@@ -14,12 +14,12 @@
 //  You should have received a copy of the GNU General Public License
 //  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package crud
+package handler
 
 import (
-	"code.vikunja.io/api/pkg/log"
-	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/web"
 	"github.com/labstack/echo"
+	"github.com/op/go-logging"
 	"net/http"
 )
 
@@ -31,16 +31,16 @@ type WebHandler struct {
 
 // CObject is the definition of our object, holds the structs
 type CObject interface {
-	models.CRUDable
-	models.Rights
+	web.CRUDable
+	web.Rights
 }
 
 // HandleHTTPError does what it says
-func HandleHTTPError(err error) *echo.HTTPError {
-	if a, has := err.(models.HTTPErrorProcessor); has {
+func HandleHTTPError(err error, ctx echo.Context) *echo.HTTPError {
+	if a, has := err.(web.HTTPErrorProcessor); has {
 		errDetails := a.HTTPError()
 		return echo.NewHTTPError(errDetails.HTTPCode, errDetails)
 	}
-	log.Log.Error(err.Error())
+	ctx.Get("LoggingProvider").(*logging.Logger).Error(err.Error())
 	return echo.NewHTTPError(http.StatusInternalServerError)
 }

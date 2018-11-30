@@ -16,6 +16,8 @@
 
 package models
 
+import "code.vikunja.io/web"
+
 // TeamNamespace defines the relationship between a Team and a Namespace
 type TeamNamespace struct {
 	ID          int64     `xorm:"int(11) autoincr not null unique pk" json:"id"`
@@ -26,8 +28,8 @@ type TeamNamespace struct {
 	Created int64 `xorm:"created" json:"created"`
 	Updated int64 `xorm:"updated" json:"updated"`
 
-	CRUDable `xorm:"-" json:"-"`
-	Rights   `xorm:"-" json:"-"`
+	web.CRUDable `xorm:"-" json:"-"`
+	web.Rights   `xorm:"-" json:"-"`
 }
 
 // TableName makes beautiful table names

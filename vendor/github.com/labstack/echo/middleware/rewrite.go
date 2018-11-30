@@ -57,8 +57,7 @@ func RewriteWithConfig(config RewriteConfig) echo.MiddlewareFunc {
 
 	// Initialize
 	for k, v := range config.Rules {
-		k = strings.Replace(k, "*", "(.*)", -1)
-		k = k + "$"
+		k = strings.Replace(k, "*", "(\\S*)", -1)
 		config.rulesRegex[regexp.MustCompile(k)] = v
 	}
 
@@ -75,9 +74,9 @@ func RewriteWithConfig(config RewriteConfig) echo.MiddlewareFunc {
 				replacer := captureTokens(k, req.URL.Path)
 				if replacer != nil {
 					req.URL.Path = replacer.Replace(v)
-					break
 				}
 			}
+
 			return next(c)
 		}
 	}

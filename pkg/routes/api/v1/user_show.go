@@ -18,7 +18,7 @@ package v1
 
 import (
 	"code.vikunja.io/api/pkg/models"
-	"code.vikunja.io/api/pkg/routes/crud"
+	"code.vikunja.io/web/handler"
 	"github.com/labstack/echo"
 	"net/http"
 )
@@ -42,7 +42,7 @@ func UserShow(c echo.Context) error {
 
 	user, err := models.GetUserByID(userInfos.ID)
 	if err != nil {
-		return crud.HandleHTTPError(err)
+		return handler.HandleHTTPError(err, c)
 	}
 
 	return c.JSON(http.StatusOK, user)

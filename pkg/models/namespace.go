@@ -16,7 +16,10 @@
 
 package models
 
-import "time"
+import (
+	"code.vikunja.io/web"
+	"time"
+)
 
 // Namespace holds informations about a namespace
 type Namespace struct {
@@ -30,8 +33,8 @@ type Namespace struct {
 	Created int64 `xorm:"created" json:"created"`
 	Updated int64 `xorm:"updated" json:"updated"`
 
-	CRUDable `xorm:"-" json:"-"`
-	Rights   `xorm:"-" json:"-"`
+	web.CRUDable `xorm:"-" json:"-"`
+	web.Rights   `xorm:"-" json:"-"`
 }
 
 // TableName makes beautiful table names
@@ -99,7 +102,11 @@ type NamespaceWithLists struct {
 // @Success 200 {array} models.NamespaceWithLists "The Namespaces."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces [get]
-func (n *Namespace) ReadAll(search string, doer *User, page int) (interface{}, error) {
+func (n *Namespace) ReadAll(search string, a web.Auth, page int) (interface{}, error) {
+	doer, err := getUserWithError(a)
+	if err != nil {
+		return nil, err
+	}
 
 	all := []*NamespaceWithLists{}
 
@@ -117,7 +124,7 @@ func (n *Namespace) ReadAll(search string, doer *User, page int) (interface{}, e
 		[]*List{},
 	})
 
-	err := x.Select("namespaces.*").
+	err = x.Select("namespaces.*").
 		Table("namespaces").
 		Join("LEFT", "team_namespaces", "namespaces.id = team_namespaces.namespace_id").
 		Join("LEFT", "team_members", "team_members.team_id = team_namespaces.team_id").

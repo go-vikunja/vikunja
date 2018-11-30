@@ -16,6 +16,8 @@
 
 package models
 
+import "code.vikunja.io/web"
+
 // Create creates a new team <-> list relation
 // @Summary Add a team to a list
 // @Description Gives a team access to a list.
@@ -31,7 +33,7 @@ package models
 // @Failure 403 {object} models.HTTPError "The user does not have access to the list"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{id}/teams [put]
-func (tl *TeamList) Create(doer *User) (err error) {
+func (tl *TeamList) Create(a web.Auth) (err error) {
 
 	// Check if the rights are valid
 	if err = tl.Right.isValid(); err != nil {

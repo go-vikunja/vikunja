@@ -94,10 +94,6 @@ func CORSWithConfig(config CORSConfig) echo.MiddlewareFunc {
 
 			// Check allowed origins
 			for _, o := range config.AllowOrigins {
-				if o == "*" && config.AllowCredentials {
-					allowOrigin = origin
-					break
-				}
 				if o == "*" || o == origin {
 					allowOrigin = o
 					break

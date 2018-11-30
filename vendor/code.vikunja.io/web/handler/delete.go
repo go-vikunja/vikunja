@@ -14,14 +14,18 @@
 //  You should have received a copy of the GNU General Public License
 //  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package crud
+package handler
 
 import (
-	"code.vikunja.io/api/pkg/log"
-	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/web"
 	"github.com/labstack/echo"
+	"github.com/op/go-logging"
 	"net/http"
 )
+
+type message struct {
+	Message string `json:"message"`
+}
 
 // DeleteWeb is the web handler to delete something
 func (c *WebHandler) DeleteWeb(ctx echo.Context) error {
@@ -35,19 +39,20 @@ func (c *WebHandler) DeleteWeb(ctx echo.Context) error {
 	}
 
 	// Check if the user has the right to delete
-	currentUser, err := models.GetCurrentUser(ctx)
+	authprovider := ctx.Get("AuthProvider").(*web.Auths)
+	currentAuth, err := authprovider.AuthObject(ctx)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
-	if !currentStruct.CanDelete(&currentUser) {
-		log.Log.Noticef("%s [ID: %d] tried to delete while not having the rights for it", currentUser.Username, currentUser.ID)
+	if !currentStruct.CanDelete(currentAuth) {
+		ctx.Get("LoggingProvider").(*logging.Logger).Noticef("Tried to delete while not having the rights for it", currentAuth)
 		return echo.NewHTTPError(http.StatusForbidden)
 	}
 
 	err = currentStruct.Delete()
 	if err != nil {
-		return HandleHTTPError(err)
+		return HandleHTTPError(err, ctx)
 	}
 
-	return ctx.JSON(http.StatusOK, models.Message{"Successfully deleted."})
+	return ctx.JSON(http.StatusOK, message{"Successfully deleted."})
 }

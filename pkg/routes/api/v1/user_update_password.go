@@ -18,7 +18,7 @@ package v1
 
 import (
 	"code.vikunja.io/api/pkg/models"
-	"code.vikunja.io/api/pkg/routes/crud"
+	"code.vikunja.io/web/handler"
 	"github.com/labstack/echo"
 	"net/http"
 )
@@ -57,12 +57,12 @@ func UserChangePassword(c echo.Context) error {
 
 	// Check the current password
 	if _, err = models.CheckUserCredentials(&models.UserLogin{Username: doer.Username, Password: newPW.OldPassword}); err != nil {
-		return crud.HandleHTTPError(err)
+		return handler.HandleHTTPError(err, c)
 	}
 
 	// Update the password
-	if err = models.UpdateUserPassword(&doer, newPW.NewPassword); err != nil {
-		return crud.HandleHTTPError(err)
+	if err = models.UpdateUserPassword(doer, newPW.NewPassword); err != nil {
+		return handler.HandleHTTPError(err, c)
 	}
 
 	return c.JSON(http.StatusOK, models.Message{"The password was updated successfully."})

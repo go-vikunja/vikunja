@@ -18,16 +18,18 @@ package models
 
 import (
 	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/web"
 )
 
 // CanCreate checks if the user can create a new team
-func (t *Team) CanCreate(u *User) bool {
+func (t *Team) CanCreate(a web.Auth) bool {
 	// This is currently a dummy function, later on we could imagine global limits etc.
 	return true
 }
 
 // CanUpdate checks if the user can update a team
-func (t *Team) CanUpdate(u *User) bool {
+func (t *Team) CanUpdate(a web.Auth) bool {
+	u := getUserForRights(a)
 
 	// Check if the current user is in the team and has admin rights in it
 	exists, err := x.Where("team_id = ?", t.ID).
@@ -43,12 +45,14 @@ func (t *Team) CanUpdate(u *User) bool {
 }
 
 // CanDelete checks if a user can delete a team
-func (t *Team) CanDelete(u *User) bool {
-	return t.IsAdmin(u)
+func (t *Team) CanDelete(a web.Auth) bool {
+	return t.IsAdmin(a)
 }
 
 // IsAdmin returns true when the user is admin of a team
-func (t *Team) IsAdmin(u *User) bool {
+func (t *Team) IsAdmin(a web.Auth) bool {
+	u := getUserForRights(a)
+
 	exists, err := x.Where("team_id = ?", t.ID).
 		And("user_id = ?", u.ID).
 		And("admin = ?", true).
@@ -61,7 +65,9 @@ func (t *Team) IsAdmin(u *User) bool {
 }
 
 // CanRead returns true if the user has read access to the team
-func (t *Team) CanRead(user *User) bool {
+func (t *Team) CanRead(a web.Auth) bool {
+	user := getUserForRights(a)
+
 	// Check if the user is in the team
 	exists, err := x.Where("team_id = ?", t.ID).
 		And("user_id = ?", user.ID).

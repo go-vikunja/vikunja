@@ -18,10 +18,13 @@ package models
 
 import (
 	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/web"
 )
 
 // IsAdmin returns true or false if the user is admin on that namespace or not
-func (n *Namespace) IsAdmin(u *User) bool {
+func (n *Namespace) IsAdmin(a web.Auth) bool {
+	u := getUserForRights(a)
+
 	// Owners always have admin rights
 	if u.ID == n.Owner.ID {
 		return true
@@ -37,7 +40,9 @@ func (n *Namespace) IsAdmin(u *User) bool {
 }
 
 // CanWrite checks if a user has write access to a namespace
-func (n *Namespace) CanWrite(u *User) bool {
+func (n *Namespace) CanWrite(a web.Auth) bool {
+	u := getUserForRights(a)
+
 	// Admins always have write access
 	if n.IsAdmin(u) {
 		return true
@@ -53,7 +58,9 @@ func (n *Namespace) CanWrite(u *User) bool {
 }
 
 // CanRead checks if a user has read access to that namespace
-func (n *Namespace) CanRead(u *User) bool {
+func (n *Namespace) CanRead(a web.Auth) bool {
+	u := getUserForRights(a)
+
 	// Admins always have read access
 	if n.IsAdmin(u) {
 		return true
@@ -69,7 +76,9 @@ func (n *Namespace) CanRead(u *User) bool {
 }
 
 // CanUpdate checks if the user can update the namespace
-func (n *Namespace) CanUpdate(u *User) bool {
+func (n *Namespace) CanUpdate(a web.Auth) bool {
+	u := getUserForRights(a)
+
 	nn, err := GetNamespaceByID(n.ID)
 	if err != nil {
 		log.Log.Error("Error occurred during CanUpdate for Namespace: %s", err)
@@ -79,7 +88,9 @@ func (n *Namespace) CanUpdate(u *User) bool {
 }
 
 // CanDelete checks if the user can delete a namespace
-func (n *Namespace) CanDelete(u *User) bool {
+func (n *Namespace) CanDelete(a web.Auth) bool {
+	u := getUserForRights(a)
+
 	nn, err := GetNamespaceByID(n.ID)
 	if err != nil {
 		log.Log.Error("Error occurred during CanDelete for Namespace: %s", err)
@@ -89,7 +100,7 @@ func (n *Namespace) CanDelete(u *User) bool {
 }
 
 // CanCreate checks if the user can create a new namespace
-func (n *Namespace) CanCreate(u *User) bool {
+func (n *Namespace) CanCreate(a web.Auth) bool {
 	// This is currently a dummy function, later on we could imagine global limits etc.
 	return true
 }
@@ -99,9 +110,9 @@ func (n *Namespace) checkTeamRights(u *User, r TeamRight) bool {
 		Table("namespaces").
 		Join("LEFT", "team_namespaces", "namespaces.id = team_namespaces.namespace_id").
 		Join("LEFT", "team_members", "team_members.team_id = team_namespaces.team_id").
-		Where("namespaces.id = ? "+
-			"AND (team_members.user_id = ?  AND team_namespaces.right = ?) "+
-			"OR namespaces.owner_id = ? ", n.ID, u.ID, r, u.ID).
+		Where("namespaces.id = ? AND ("+
+			"(team_members.user_id = ? AND team_namespaces.right = ?) "+
+			"OR namespaces.owner_id = ?)", n.ID, u.ID, r, u.ID).
 		Get(&Namespace{})
 	if err != nil {
 		log.Log.Error("Error occurred during checkTeamRights for Namespace: %s, TeamRight: %d", err, r)
@@ -116,8 +127,8 @@ func (n *Namespace) checkUserRights(u *User, r UserRight) bool {
 		Table("namespaces").
 		Join("LEFT", "users_namespace", "users_namespace.namespace_id = namespaces.id").
 		Where("namespaces.id = ? AND ("+
-			"namespaces.owner_id = ? "+
-			"OR (users_namespace.user_id = ? AND users_namespace.right = ?))", n.ID, u.ID, u.ID, r).
+			"(users_namespace.user_id = ? AND users_namespace.right = ?) "+
+			"OR namespaces.owner_id = ?)", n.ID, u.ID, r, u.ID).
 		Get(&Namespace{})
 	if err != nil {
 		log.Log.Error("Error occurred during checkUserRights for Namespace: %s, UserRight: %d", err, r)

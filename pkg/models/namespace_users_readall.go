@@ -16,6 +16,8 @@
 
 package models
 
+import "code.vikunja.io/web"
+
 // ReadAll gets all users who have access to a namespace
 // @Summary Get users on a namespace
 // @Description Returns a namespace with all users which have access on a given namespace.
@@ -30,7 +32,12 @@ package models
 // @Failure 403 {object} models.HTTPError "No right to see the namespace."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces/{id}/users [get]
-func (un *NamespaceUser) ReadAll(search string, u *User, page int) (interface{}, error) {
+func (un *NamespaceUser) ReadAll(search string, a web.Auth, page int) (interface{}, error) {
+	u, err := getUserWithError(a)
+	if err != nil {
+		return nil, err
+	}
+
 	// Check if the user has access to the namespace
 	l, err := GetNamespaceByID(un.NamespaceID)
 	if err != nil {

@@ -18,10 +18,13 @@ package models
 
 import (
 	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/web"
 )
 
 // CanCreate checks if the user can create a team <-> list relation
-func (tl *TeamList) CanCreate(u *User) bool {
+func (tl *TeamList) CanCreate(a web.Auth) bool {
+	u := getUserForRights(a)
+
 	l := List{ID: tl.ListID}
 	if err := l.GetSimpleByID(); err != nil {
 		log.Log.Error("Error occurred during CanCreate for TeamList: %s", err)
@@ -31,7 +34,9 @@ func (tl *TeamList) CanCreate(u *User) bool {
 }
 
 // CanDelete checks if the user can delete a team <-> list relation
-func (tl *TeamList) CanDelete(user *User) bool {
+func (tl *TeamList) CanDelete(a web.Auth) bool {
+	user := getUserForRights(a)
+
 	l := List{ID: tl.ListID}
 	if err := l.GetSimpleByID(); err != nil {
 		log.Log.Error("Error occurred during CanDelete for TeamList: %s", err)
@@ -41,7 +46,9 @@ func (tl *TeamList) CanDelete(user *User) bool {
 }
 
 // CanUpdate checks if the user can update a team <-> list relation
-func (tl *TeamList) CanUpdate(user *User) bool {
+func (tl *TeamList) CanUpdate(a web.Auth) bool {
+	user := getUserForRights(a)
+
 	l := List{ID: tl.ListID}
 	if err := l.GetSimpleByID(); err != nil {
 		log.Log.Error("Error occurred during CanUpdate for TeamList: %s", err)

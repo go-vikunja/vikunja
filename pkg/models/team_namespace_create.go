@@ -16,6 +16,8 @@
 
 package models
 
+import "code.vikunja.io/web"
+
 // Create creates a new team <-> namespace relation
 // @Summary Add a team to a namespace
 // @Description Gives a team access to a namespace.
@@ -31,7 +33,7 @@ package models
 // @Failure 403 {object} models.HTTPError "The team does not have access to the namespace"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces/{id}/teams [put]
-func (tn *TeamNamespace) Create(doer *User) (err error) {
+func (tn *TeamNamespace) Create(a web.Auth) (err error) {
 
 	// Check if the rights are valid
 	if err = tn.Right.isValid(); err != nil {

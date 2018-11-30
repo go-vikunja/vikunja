@@ -16,6 +16,8 @@
 
 package models
 
+import "code.vikunja.io/web"
+
 // Create implements the creation method via the interface
 // @Summary Creates a new namespace
 // @Description Creates a new namespace.
@@ -29,7 +31,12 @@ package models
 // @Failure 403 {object} models.HTTPError "The user does not have access to the namespace"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces [put]
-func (n *Namespace) Create(doer *User) (err error) {
+func (n *Namespace) Create(a web.Auth) (err error) {
+	doer, err := getUserWithError(a)
+	if err != nil {
+		return err
+	}
+
 	// Check if we have at least a name
 	if n.Name == "" {
 		return ErrNamespaceNameCannotBeEmpty{NamespaceID: 0, UserID: doer.ID}

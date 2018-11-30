@@ -18,10 +18,13 @@ package models
 
 import (
 	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/web"
 )
 
 // IsAdmin returns whether the user has admin rights on the list or not
-func (l *List) IsAdmin(u *User) bool {
+func (l *List) IsAdmin(a web.Auth) bool {
+	u := getUserForRights(a)
+
 	// Owners are always admins
 	if l.Owner.ID == u.ID {
 		return true
@@ -36,7 +39,9 @@ func (l *List) IsAdmin(u *User) bool {
 }
 
 // CanWrite return whether the user can write on that list or not
-func (l *List) CanWrite(user *User) bool {
+func (l *List) CanWrite(a web.Auth) bool {
+	user := getUserForRights(a)
+
 	// Admins always have write access
 	if l.IsAdmin(user) {
 		return true
@@ -51,7 +56,9 @@ func (l *List) CanWrite(user *User) bool {
 }
 
 // CanRead checks if a user has read access to a list
-func (l *List) CanRead(user *User) bool {
+func (l *List) CanRead(a web.Auth) bool {
+	user := getUserForRights(a)
+
 	// Admins always have read access
 	if l.IsAdmin(user) {
 		return true
@@ -66,7 +73,9 @@ func (l *List) CanRead(user *User) bool {
 }
 
 // CanDelete checks if the user can delete a list
-func (l *List) CanDelete(doer *User) bool {
+func (l *List) CanDelete(a web.Auth) bool {
+	doer := getUserForRights(a)
+
 	if err := l.GetSimpleByID(); err != nil {
 		log.Log.Error("Error occurred during CanDelete for List: %s", err)
 		return false
@@ -75,7 +84,9 @@ func (l *List) CanDelete(doer *User) bool {
 }
 
 // CanUpdate checks if the user can update a list
-func (l *List) CanUpdate(doer *User) bool {
+func (l *List) CanUpdate(a web.Auth) bool {
+	doer := getUserForRights(a)
+
 	if err := l.GetSimpleByID(); err != nil {
 		log.Log.Error("Error occurred during CanUpdate for List: %s", err)
 		return false
@@ -84,10 +95,10 @@ func (l *List) CanUpdate(doer *User) bool {
 }
 
 // CanCreate checks if the user can update a list
-func (l *List) CanCreate(doer *User) bool {
+func (l *List) CanCreate(a web.Auth) bool {
 	// A user can create a list if he has write access to the namespace
 	n, _ := GetNamespaceByID(l.NamespaceID)
-	return n.CanWrite(doer)
+	return n.CanWrite(a)
 }
 
 func (l *List) checkListTeamRight(user *User, r TeamRight) bool {

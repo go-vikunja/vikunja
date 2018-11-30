@@ -18,10 +18,13 @@ package models
 
 import (
 	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/web"
 )
 
 // CanCreate checks if the user can create a new user <-> namespace relation
-func (nu *NamespaceUser) CanCreate(doer *User) bool {
+func (nu *NamespaceUser) CanCreate(a web.Auth) bool {
+	doer := getUserForRights(a)
+
 	// Get the namespace and check if the user has write access on it
 	n, err := GetNamespaceByID(nu.NamespaceID)
 	if err != nil {
@@ -32,7 +35,9 @@ func (nu *NamespaceUser) CanCreate(doer *User) bool {
 }
 
 // CanDelete checks if the user can delete a user <-> namespace relation
-func (nu *NamespaceUser) CanDelete(doer *User) bool {
+func (nu *NamespaceUser) CanDelete(a web.Auth) bool {
+	doer := getUserForRights(a)
+
 	// Get the namespace and check if the user has write access on it
 	n, err := GetNamespaceByID(nu.NamespaceID)
 	if err != nil {
@@ -43,7 +48,9 @@ func (nu *NamespaceUser) CanDelete(doer *User) bool {
 }
 
 // CanUpdate checks if the user can update a user <-> namespace relation
-func (nu *NamespaceUser) CanUpdate(doer *User) bool {
+func (nu *NamespaceUser) CanUpdate(a web.Auth) bool {
+	doer := getUserForRights(a)
+
 	// Get the namespace and check if the user has write access on it
 	n, err := GetNamespaceByID(nu.NamespaceID)
 	if err != nil {

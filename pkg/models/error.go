@@ -1,5 +1,5 @@
 //  Vikunja is a todo-list application to facilitate your life.
-//  Copyright 2018 Vikunja and contributors. All rights reserved.
+//  Copyright 2018 Vikunja and contributors. All web.Rights reserved.
 //
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -17,21 +17,10 @@
 package models
 
 import (
+	"code.vikunja.io/web"
 	"fmt"
 	"net/http"
 )
-
-// HTTPErrorProcessor is executed when the defined error is thrown, it will make sure the user sees an appropriate error message and http status code
-type HTTPErrorProcessor interface {
-	HTTPError() HTTPError
-}
-
-// HTTPError holds informations about an http error
-type HTTPError struct {
-	HTTPCode int    `json:"-"`
-	Code     int    `json:"code"`
-	Message  string `json:"message"`
-}
 
 // =====================
 // User Operation Errors
@@ -57,8 +46,8 @@ func (err ErrUsernameExists) Error() string {
 const ErrorCodeUsernameExists = 1001
 
 // HTTPError holds the http error description
-func (err ErrUsernameExists) HTTPError() HTTPError {
-	return HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrorCodeUsernameExists, Message: "A user with this username already exists."}
+func (err ErrUsernameExists) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrorCodeUsernameExists, Message: "A user with this username already exists."}
 }
 
 // ErrUserEmailExists represents a "UserEmailExists" kind of error.
@@ -81,8 +70,8 @@ func (err ErrUserEmailExists) Error() string {
 const ErrorCodeUserEmailExists = 1002
 
 // HTTPError holds the http error description
-func (err ErrUserEmailExists) HTTPError() HTTPError {
-	return HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrorCodeUserEmailExists, Message: "A user with this email address already exists."}
+func (err ErrUserEmailExists) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrorCodeUserEmailExists, Message: "A user with this email address already exists."}
 }
 
 // ErrNoUsernamePassword represents a "NoUsernamePassword" kind of error.
@@ -102,8 +91,8 @@ func (err ErrNoUsernamePassword) Error() string {
 const ErrCodeNoUsernamePassword = 1004
 
 // HTTPError holds the http error description
-func (err ErrNoUsernamePassword) HTTPError() HTTPError {
-	return HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrCodeNoUsernamePassword, Message: "Please specify a username and a password."}
+func (err ErrNoUsernamePassword) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrCodeNoUsernamePassword, Message: "Please specify a username and a password."}
 }
 
 // ErrUserDoesNotExist represents a "UserDoesNotExist" kind of error.
@@ -125,8 +114,8 @@ func (err ErrUserDoesNotExist) Error() string {
 const ErrCodeUserDoesNotExist = 1005
 
 // HTTPError holds the http error description
-func (err ErrUserDoesNotExist) HTTPError() HTTPError {
-	return HTTPError{HTTPCode: http.StatusNotFound, Code: ErrCodeUserDoesNotExist, Message: "The user does not exist."}
+func (err ErrUserDoesNotExist) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusNotFound, Code: ErrCodeUserDoesNotExist, Message: "The user does not exist."}
 }
 
 // ErrCouldNotGetUserID represents a "ErrCouldNotGetUserID" kind of error.
@@ -146,8 +135,8 @@ func (err ErrCouldNotGetUserID) Error() string {
 const ErrCodeCouldNotGetUserID = 1006
 
 // HTTPError holds the http error description
-func (err ErrCouldNotGetUserID) HTTPError() HTTPError {
-	return HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrCodeCouldNotGetUserID, Message: "Could not get user id."}
+func (err ErrCouldNotGetUserID) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrCodeCouldNotGetUserID, Message: "Could not get user id."}
 }
 
 // ErrNoPasswordResetToken represents an error where no password reset token exists for that user
@@ -163,8 +152,8 @@ func (err ErrNoPasswordResetToken) Error() string {
 const ErrCodeNoPasswordResetToken = 1008
 
 // HTTPError holds the http error description
-func (err ErrNoPasswordResetToken) HTTPError() HTTPError {
-	return HTTPError{HTTPCode: http.StatusPreconditionFailed, Code: ErrCodeNoPasswordResetToken, Message: "No token to reset a user's password provided."}
+func (err ErrNoPasswordResetToken) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusPreconditionFailed, Code: ErrCodeNoPasswordResetToken, Message: "No token to reset a user's password provided."}
 }
 
 // ErrInvalidPasswordResetToken is an error where the password reset token is invalid
@@ -180,8 +169,8 @@ func (err ErrInvalidPasswordResetToken) Error() string {
 const ErrCodeInvalidPasswordResetToken = 1009
 
 // HTTPError holds the http error description
-func (err ErrInvalidPasswordResetToken) HTTPError() HTTPError {
-	return HTTPError{HTTPCode: http.StatusPreconditionFailed, Code: ErrCodeInvalidPasswordResetToken, Message: "Invalid token to reset a user's password."}
+func (err ErrInvalidPasswordResetToken) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusPreconditionFailed, Code: ErrCodeInvalidPasswordResetToken, Message: "Invalid token to reset a user's password."}
 }
 
 // IsErrInvalidPasswordResetToken checks if an error is a ErrInvalidPasswordResetToken.
@@ -203,8 +192,8 @@ func (err ErrInvalidEmailConfirmToken) Error() string {
 const ErrCodeInvalidEmailConfirmToken = 1010
 
 // HTTPError holds the http error description
-func (err ErrInvalidEmailConfirmToken) HTTPError() HTTPError {
-	return HTTPError{HTTPCode: http.StatusPreconditionFailed, Code: ErrCodeInvalidEmailConfirmToken, Message: "Invalid email confirm token."}
+func (err ErrInvalidEmailConfirmToken) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusPreconditionFailed, Code: ErrCodeInvalidEmailConfirmToken, Message: "Invalid email confirm token."}
 }
 
 // IsErrInvalidEmailConfirmToken checks if an error is a ErrInvalidEmailConfirmToken.
@@ -225,8 +214,8 @@ func (err ErrWrongUsernameOrPassword) Error() string {
 const ErrCodeWrongUsernameOrPassword = 1011
 
 // HTTPError holds the http error description
-func (err ErrWrongUsernameOrPassword) HTTPError() HTTPError {
-	return HTTPError{HTTPCode: http.StatusPreconditionFailed, Code: ErrCodeWrongUsernameOrPassword, Message: "Wrong username or password."}
+func (err ErrWrongUsernameOrPassword) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusPreconditionFailed, Code: ErrCodeWrongUsernameOrPassword, Message: "Wrong username or password."}
 }
 
 // IsErrWrongUsernameOrPassword checks if an error is a IsErrEmailNotConfirmed.
@@ -248,8 +237,8 @@ func (err ErrEmailNotConfirmed) Error() string {
 const ErrCodeEmailNotConfirmed = 1012
 
 // HTTPError holds the http error description
-func (err ErrEmailNotConfirmed) HTTPError() HTTPError {
-	return HTTPError{HTTPCode: http.StatusPreconditionFailed, Code: ErrCodeEmailNotConfirmed, Message: "Please confirm your email address."}
+func (err ErrEmailNotConfirmed) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusPreconditionFailed, Code: ErrCodeEmailNotConfirmed, Message: "Please confirm your email address."}
 }
 
 // IsErrEmailNotConfirmed checks if an error is a IsErrEmailNotConfirmed.
@@ -279,8 +268,8 @@ func (err ErrIDCannotBeZero) Error() string {
 const ErrCodeIDCannotBeZero = 2001
 
 // HTTPError holds the http error description
-func (err ErrIDCannotBeZero) HTTPError() HTTPError {
-	return HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrCodeIDCannotBeZero, Message: "The ID cannot be empty or 0."}
+func (err ErrIDCannotBeZero) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrCodeIDCannotBeZero, Message: "The ID cannot be empty or 0."}
 }
 
 // ErrInvalidData represents a "ErrInvalidData" kind of error. Used when a struct is invalid -> validation failed.
@@ -302,13 +291,13 @@ func (err ErrInvalidData) Error() string {
 const ErrCodeInvalidData = 2002
 
 // HTTPError holds the http error description
-func (err ErrInvalidData) HTTPError() HTTPError {
-	return HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrCodeInvalidData, Message: err.Message}
+func (err ErrInvalidData) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrCodeInvalidData, Message: err.Message}
 }
 
 // ValidationHTTPError is the http error when a validation fails
 type ValidationHTTPError struct {
-	HTTPError
+	web.HTTPError
 	InvalidFields []string `json:"invalid_fields"`
 }
 
@@ -343,8 +332,8 @@ func (err ErrListDoesNotExist) Error() string {
 const ErrCodeListDoesNotExist = 3001
 
 // HTTPError holds the http error description
-func (err ErrListDoesNotExist) HTTPError() HTTPError {
-	return HTTPError{HTTPCode: http.StatusNotFound, Code: ErrCodeListDoesNotExist, Message: "This list does not exist."}
+func (err ErrListDoesNotExist) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusNotFound, Code: ErrCodeListDoesNotExist, Message: "This list does not exist."}
 }
 
 // ErrNeedToHaveListReadAccess represents an error, where the user dont has read access to that List
@@ -367,8 +356,8 @@ func (err ErrNeedToHaveListReadAccess) Error() string {
 const ErrCodeNeedToHaveListReadAccess = 3004
 
 // HTTPError holds the http error description
-func (err ErrNeedToHaveListReadAccess) HTTPError() HTTPError {
-	return HTTPError{HTTPCode: http.StatusForbidden, Code: ErrCodeNeedToHaveListReadAccess, Message: "You need to have read access to this list."}
+func (err ErrNeedToHaveListReadAccess) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusForbidden, Code: ErrCodeNeedToHaveListReadAccess, Message: "You need to have read access to this list."}
 }
 
 // ErrListTitleCannotBeEmpty represents a "ErrListTitleCannotBeEmpty" kind of error. Used if the list does not exist.
@@ -388,8 +377,8 @@ func (err ErrListTitleCannotBeEmpty) Error() string {
 const ErrCodeListTitleCannotBeEmpty = 3005
 
 // HTTPError holds the http error description
-func (err ErrListTitleCannotBeEmpty) HTTPError() HTTPError {
-	return HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrCodeListTitleCannotBeEmpty, Message: "You must provide at least a list title."}
+func (err ErrListTitleCannotBeEmpty) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrCodeListTitleCannotBeEmpty, Message: "You must provide at least a list title."}
 }
 
 // ================
@@ -413,8 +402,8 @@ func (err ErrListTaskCannotBeEmpty) Error() string {
 const ErrCodeListTaskCannotBeEmpty = 4001
 
 // HTTPError holds the http error description
-func (err ErrListTaskCannotBeEmpty) HTTPError() HTTPError {
-	return HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrCodeListTaskCannotBeEmpty, Message: "You must provide at least a list task text."}
+func (err ErrListTaskCannotBeEmpty) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrCodeListTaskCannotBeEmpty, Message: "You must provide at least a list task text."}
 }
 
 // ErrListTaskDoesNotExist represents a "ErrListDoesNotExist" kind of error. Used if the list does not exist.
@@ -436,8 +425,8 @@ func (err ErrListTaskDoesNotExist) Error() string {
 const ErrCodeListTaskDoesNotExist = 4002
 
 // HTTPError holds the http error description
-func (err ErrListTaskDoesNotExist) HTTPError() HTTPError {
-	return HTTPError{HTTPCode: http.StatusNotFound, Code: ErrCodeListTaskDoesNotExist, Message: "This list task does not exist"}
+func (err ErrListTaskDoesNotExist) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusNotFound, Code: ErrCodeListTaskDoesNotExist, Message: "This list task does not exist"}
 }
 
 // =================
@@ -463,8 +452,8 @@ func (err ErrNamespaceDoesNotExist) Error() string {
 const ErrCodeNamespaceDoesNotExist = 5001
 
 // HTTPError holds the http error description
-func (err ErrNamespaceDoesNotExist) HTTPError() HTTPError {
-	return HTTPError{HTTPCode: http.StatusNotFound, Code: ErrCodeNamespaceDoesNotExist, Message: "Namespace not found."}
+func (err ErrNamespaceDoesNotExist) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusNotFound, Code: ErrCodeNamespaceDoesNotExist, Message: "Namespace not found."}
 }
 
 // ErrUserDoesNotHaveAccessToNamespace represents an error, where the user is not the owner of that namespace (used i.e. when deleting a namespace)
@@ -487,8 +476,8 @@ func (err ErrUserDoesNotHaveAccessToNamespace) Error() string {
 const ErrCodeUserDoesNotHaveAccessToNamespace = 5003
 
 // HTTPError holds the http error description
-func (err ErrUserDoesNotHaveAccessToNamespace) HTTPError() HTTPError {
-	return HTTPError{HTTPCode: http.StatusForbidden, Code: ErrCodeUserDoesNotHaveAccessToNamespace, Message: "This user does not have access to the namespace."}
+func (err ErrUserDoesNotHaveAccessToNamespace) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusForbidden, Code: ErrCodeUserDoesNotHaveAccessToNamespace, Message: "This user does not have access to the namespace."}
 }
 
 // ErrNamespaceNameCannotBeEmpty represents an error, where a namespace name is empty.
@@ -511,8 +500,8 @@ func (err ErrNamespaceNameCannotBeEmpty) Error() string {
 const ErrCodeNamespaceNameCannotBeEmpty = 5006
 
 // HTTPError holds the http error description
-func (err ErrNamespaceNameCannotBeEmpty) HTTPError() HTTPError {
-	return HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrCodeNamespaceNameCannotBeEmpty, Message: "The namespace name cannot be empty."}
+func (err ErrNamespaceNameCannotBeEmpty) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrCodeNamespaceNameCannotBeEmpty, Message: "The namespace name cannot be empty."}
 }
 
 // ErrNeedToHaveNamespaceReadAccess represents an error, where the user is not the owner of that namespace (used i.e. when deleting a namespace)
@@ -535,8 +524,8 @@ func (err ErrNeedToHaveNamespaceReadAccess) Error() string {
 const ErrCodeNeedToHaveNamespaceReadAccess = 5009
 
 // HTTPError holds the http error description
-func (err ErrNeedToHaveNamespaceReadAccess) HTTPError() HTTPError {
-	return HTTPError{HTTPCode: http.StatusForbidden, Code: ErrCodeNeedToHaveNamespaceReadAccess, Message: "You need to have namespace read access to do this."}
+func (err ErrNeedToHaveNamespaceReadAccess) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusForbidden, Code: ErrCodeNeedToHaveNamespaceReadAccess, Message: "You need to have namespace read access to do this."}
 }
 
 // ErrTeamDoesNotHaveAccessToNamespace represents an error, where the Team is not the owner of that namespace (used i.e. when deleting a namespace)
@@ -559,8 +548,8 @@ func (err ErrTeamDoesNotHaveAccessToNamespace) Error() string {
 const ErrCodeTeamDoesNotHaveAccessToNamespace = 5010
 
 // HTTPError holds the http error description
-func (err ErrTeamDoesNotHaveAccessToNamespace) HTTPError() HTTPError {
-	return HTTPError{HTTPCode: http.StatusForbidden, Code: ErrCodeTeamDoesNotHaveAccessToNamespace, Message: "You need to have access to this namespace to do this."}
+func (err ErrTeamDoesNotHaveAccessToNamespace) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusForbidden, Code: ErrCodeTeamDoesNotHaveAccessToNamespace, Message: "You need to have access to this namespace to do this."}
 }
 
 // ErrUserAlreadyHasNamespaceAccess represents an error where a user already has access to a namespace
@@ -583,8 +572,8 @@ func (err ErrUserAlreadyHasNamespaceAccess) Error() string {
 const ErrCodeUserAlreadyHasNamespaceAccess = 5011
 
 // HTTPError holds the http error description
-func (err ErrUserAlreadyHasNamespaceAccess) HTTPError() HTTPError {
-	return HTTPError{HTTPCode: http.StatusConflict, Code: ErrCodeUserAlreadyHasNamespaceAccess, Message: "This user already has access to this namespace."}
+func (err ErrUserAlreadyHasNamespaceAccess) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusConflict, Code: ErrCodeUserAlreadyHasNamespaceAccess, Message: "This user already has access to this namespace."}
 }
 
 // ============
@@ -610,8 +599,8 @@ func (err ErrTeamNameCannotBeEmpty) Error() string {
 const ErrCodeTeamNameCannotBeEmpty = 6001
 
 // HTTPError holds the http error description
-func (err ErrTeamNameCannotBeEmpty) HTTPError() HTTPError {
-	return HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrCodeTeamNameCannotBeEmpty, Message: "The team name cannot be empty"}
+func (err ErrTeamNameCannotBeEmpty) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrCodeTeamNameCannotBeEmpty, Message: "The team name cannot be empty"}
 }
 
 // ErrTeamDoesNotExist represents an error where a team does not exist
@@ -633,8 +622,8 @@ func (err ErrTeamDoesNotExist) Error() string {
 const ErrCodeTeamDoesNotExist = 6002
 
 // HTTPError holds the http error description
-func (err ErrTeamDoesNotExist) HTTPError() HTTPError {
-	return HTTPError{HTTPCode: http.StatusNotFound, Code: ErrCodeTeamDoesNotExist, Message: "This team does not exist."}
+func (err ErrTeamDoesNotExist) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusNotFound, Code: ErrCodeTeamDoesNotExist, Message: "This team does not exist."}
 }
 
 // ErrInvalidTeamRight represents an error where a team right is invalid
@@ -656,8 +645,8 @@ func (err ErrInvalidTeamRight) Error() string {
 const ErrCodeInvalidTeamRight = 6003
 
 // HTTPError holds the http error description
-func (err ErrInvalidTeamRight) HTTPError() HTTPError {
-	return HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrCodeInvalidTeamRight, Message: "The team right is invalid."}
+func (err ErrInvalidTeamRight) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrCodeInvalidTeamRight, Message: "The team right is invalid."}
 }
 
 // ErrTeamAlreadyHasAccess represents an error where a team already has access to a list/namespace
@@ -680,8 +669,8 @@ func (err ErrTeamAlreadyHasAccess) Error() string {
 const ErrCodeTeamAlreadyHasAccess = 6004
 
 // HTTPError holds the http error description
-func (err ErrTeamAlreadyHasAccess) HTTPError() HTTPError {
-	return HTTPError{HTTPCode: http.StatusConflict, Code: ErrCodeTeamAlreadyHasAccess, Message: "This team already has access."}
+func (err ErrTeamAlreadyHasAccess) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusConflict, Code: ErrCodeTeamAlreadyHasAccess, Message: "This team already has access."}
 }
 
 // ErrUserIsMemberOfTeam represents an error where a user is already member of a team.
@@ -704,8 +693,8 @@ func (err ErrUserIsMemberOfTeam) Error() string {
 const ErrCodeUserIsMemberOfTeam = 6005
 
 // HTTPError holds the http error description
-func (err ErrUserIsMemberOfTeam) HTTPError() HTTPError {
-	return HTTPError{HTTPCode: http.StatusConflict, Code: ErrCodeUserIsMemberOfTeam, Message: "This user is already a member of that team."}
+func (err ErrUserIsMemberOfTeam) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusConflict, Code: ErrCodeUserIsMemberOfTeam, Message: "This user is already a member of that team."}
 }
 
 // ErrCannotDeleteLastTeamMember represents an error where a user wants to delete the last member of a team (probably himself)
@@ -728,8 +717,8 @@ func (err ErrCannotDeleteLastTeamMember) Error() string {
 const ErrCodeCannotDeleteLastTeamMember = 6006
 
 // HTTPError holds the http error description
-func (err ErrCannotDeleteLastTeamMember) HTTPError() HTTPError {
-	return HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrCodeCannotDeleteLastTeamMember, Message: "You cannot delete the last member of a team."}
+func (err ErrCannotDeleteLastTeamMember) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrCodeCannotDeleteLastTeamMember, Message: "You cannot delete the last member of a team."}
 }
 
 // ErrTeamDoesNotHaveAccessToList represents an error, where the Team is not the owner of that List (used i.e. when deleting a List)
@@ -752,8 +741,8 @@ func (err ErrTeamDoesNotHaveAccessToList) Error() string {
 const ErrCodeTeamDoesNotHaveAccessToList = 6007
 
 // HTTPError holds the http error description
-func (err ErrTeamDoesNotHaveAccessToList) HTTPError() HTTPError {
-	return HTTPError{HTTPCode: http.StatusForbidden, Code: ErrCodeTeamDoesNotHaveAccessToList, Message: "This team does not have access to the list."}
+func (err ErrTeamDoesNotHaveAccessToList) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusForbidden, Code: ErrCodeTeamDoesNotHaveAccessToList, Message: "This team does not have access to the list."}
 }
 
 // ====================
@@ -779,8 +768,8 @@ func (err ErrInvalidUserRight) Error() string {
 const ErrCodeInvalidUserRight = 7001
 
 // HTTPError holds the http error description
-func (err ErrInvalidUserRight) HTTPError() HTTPError {
-	return HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrCodeInvalidUserRight, Message: "The user right is invalid."}
+func (err ErrInvalidUserRight) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrCodeInvalidUserRight, Message: "The user right is invalid."}
 }
 
 // ErrUserAlreadyHasAccess represents an error where a user already has access to a list/namespace
@@ -803,8 +792,8 @@ func (err ErrUserAlreadyHasAccess) Error() string {
 const ErrCodeUserAlreadyHasAccess = 7002
 
 // HTTPError holds the http error description
-func (err ErrUserAlreadyHasAccess) HTTPError() HTTPError {
-	return HTTPError{HTTPCode: http.StatusConflict, Code: ErrCodeUserAlreadyHasAccess, Message: "This user already has access to this list."}
+func (err ErrUserAlreadyHasAccess) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusConflict, Code: ErrCodeUserAlreadyHasAccess, Message: "This user already has access to this list."}
 }
 
 // ErrUserDoesNotHaveAccessToList represents an error, where the user is not the owner of that List (used i.e. when deleting a List)
@@ -827,6 +816,6 @@ func (err ErrUserDoesNotHaveAccessToList) Error() string {
 const ErrCodeUserDoesNotHaveAccessToList = 7003
 
 // HTTPError holds the http error description
-func (err ErrUserDoesNotHaveAccessToList) HTTPError() HTTPError {
-	return HTTPError{HTTPCode: http.StatusForbidden, Code: ErrCodeUserDoesNotHaveAccessToList, Message: "This user does not have access to the list."}
+func (err ErrUserDoesNotHaveAccessToList) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusForbidden, Code: ErrCodeUserDoesNotHaveAccessToList, Message: "This user does not have access to the list."}
 }

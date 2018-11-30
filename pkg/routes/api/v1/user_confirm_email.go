@@ -18,7 +18,7 @@ package v1
 
 import (
 	"code.vikunja.io/api/pkg/models"
-	"code.vikunja.io/api/pkg/routes/crud"
+	"code.vikunja.io/web/handler"
 	"github.com/labstack/echo"
 	"net/http"
 )
@@ -43,7 +43,7 @@ func UserConfirmEmail(c echo.Context) error {
 
 	err := models.UserEmailConfirm(&emailConfirm)
 	if err != nil {
-		return crud.HandleHTTPError(err)
+		return handler.HandleHTTPError(err, c)
 	}
 
 	return c.JSON(http.StatusOK, models.Message{"The email was confirmed successfully."})

@@ -16,6 +16,8 @@
 
 package models
 
+import "code.vikunja.io/web"
+
 // ReadAll implements the method to read all teams of a list
 // @Summary Get teams on a list
 // @Description Returns a list with all teams which have access on a given list.
@@ -30,7 +32,12 @@ package models
 // @Failure 403 {object} models.HTTPError "No right to see the list."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{id}/teams [get]
-func (tl *TeamList) ReadAll(search string, u *User, page int) (interface{}, error) {
+func (tl *TeamList) ReadAll(search string, a web.Auth, page int) (interface{}, error) {
+	u, err := getUserWithError(a)
+	if err != nil {
+		return nil, err
+	}
+
 	// Check if the user can read the namespace
 	l := &List{ID: tl.ListID}
 	if err := l.GetSimpleByID(); err != nil {
@@ -42,7 +49,7 @@ func (tl *TeamList) ReadAll(search string, u *User, page int) (interface{}, erro
 
 	// Get the teams
 	all := []*TeamWithRight{}
-	err := x.
+	err = x.
 		Table("teams").
 		Join("INNER", "team_list", "team_id = teams.id").
 		Where("team_list.list_id = ?", tl.ListID).

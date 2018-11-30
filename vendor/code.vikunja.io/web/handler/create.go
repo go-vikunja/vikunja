@@ -14,18 +14,17 @@
 //  You should have received a copy of the GNU General Public License
 //  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package crud
+package handler
 
 import (
-	"code.vikunja.io/api/pkg/log"
-	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/web"
 	"github.com/labstack/echo"
+	"github.com/op/go-logging"
 	"net/http"
 )
 
-// UpdateWeb is the webhandler to update an object
-func (c *WebHandler) UpdateWeb(ctx echo.Context) error {
-
+// CreateWeb is the handler to create an object
+func (c *WebHandler) CreateWeb(ctx echo.Context) error {
 	// Get our model
 	currentStruct := c.EmptyStruct()
 
@@ -39,21 +38,24 @@ func (c *WebHandler) UpdateWeb(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err)
 	}
 
-	// Check if the user has the right to do that
-	currentUser, err := models.GetCurrentUser(ctx)
+	// Get the user to pass for later checks
+	authprovider := ctx.Get("AuthProvider").(*web.Auths)
+	currentAuth, err := authprovider.AuthObject(ctx)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Could not determine the current user.")
 	}
-	if !currentStruct.CanUpdate(&currentUser) {
-		log.Log.Noticef("%s [ID: %d] tried to update while not having the rights for it", currentUser.Username, currentUser.ID)
+
+	// Check rights
+	if !currentStruct.CanCreate(currentAuth) {
+		ctx.Get("LoggingProvider").(*logging.Logger).Noticef("Tried to create while not having the rights for it", currentAuth)
 		return echo.NewHTTPError(http.StatusForbidden)
 	}
 
-	// Do the update
-	err = currentStruct.Update()
+	// Create
+	err = currentStruct.Create(currentAuth)
 	if err != nil {
-		return HandleHTTPError(err)
+		return HandleHTTPError(err, ctx)
 	}
 
-	return ctx.JSON(http.StatusOK, currentStruct)
+	return ctx.JSON(http.StatusCreated, currentStruct)
 }

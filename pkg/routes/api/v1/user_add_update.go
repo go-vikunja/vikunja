@@ -18,7 +18,7 @@ package v1
 
 import (
 	"code.vikunja.io/api/pkg/models"
-	"code.vikunja.io/api/pkg/routes/crud"
+	"code.vikunja.io/web/handler"
 	"github.com/labstack/echo"
 	"net/http"
 )
@@ -44,7 +44,7 @@ func RegisterUser(c echo.Context) error {
 	// Insert the user
 	newUser, err := models.CreateUser(datUser.APIFormat())
 	if err != nil {
-		return crud.HandleHTTPError(err)
+		return handler.HandleHTTPError(err, c)
 	}
 
 	return c.JSON(http.StatusOK, newUser)

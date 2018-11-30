@@ -16,6 +16,8 @@
 
 package models
 
+import "code.vikunja.io/web"
+
 // Create creates a new list <-> user relation
 // @Summary Add a user to a list
 // @Description Gives a user access to a list.
@@ -31,7 +33,7 @@ package models
 // @Failure 403 {object} models.HTTPError "The user does not have access to the list"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{id}/users [put]
-func (ul *ListUser) Create(u *User) (err error) {
+func (ul *ListUser) Create(a web.Auth) (err error) {
 
 	// Check if the right is valid
 	if err := ul.Right.isValid(); err != nil {

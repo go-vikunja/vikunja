@@ -18,6 +18,7 @@ module code.vikunja.io/api
 
 require (
 	cloud.google.com/go v0.30.0 // indirect
+	code.vikunja.io/web v0.0.0-20181130221802-d23d2a4c1efb
 	github.com/BurntSushi/toml v0.3.1 // indirect
 	github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc
 	github.com/asaskevich/govalidator v0.0.0-20180720115003-f9ffefc3facf
@@ -40,13 +41,13 @@ require (
 	github.com/imdario/mergo v0.3.6
 	github.com/joho/godotenv v1.3.0 // indirect
 	github.com/karalabe/xgo v0.0.0-20181007145344-72da7d1d3970
-	github.com/labstack/echo v0.0.0-20180911044237-1abaa3049251
-	github.com/labstack/gommon v0.0.0-20180312174116-6fe1405d73ec
+	github.com/labstack/echo v3.3.5+incompatible
+	github.com/labstack/gommon v0.2.8
 	github.com/lib/pq v1.0.0 // indirect
 	github.com/mattn/go-oci8 v0.0.0-20181011085415-1a014d1384b5 // indirect
 	github.com/mattn/go-sqlite3 v1.9.0
 	github.com/mitchellh/mapstructure v1.1.2 // indirect
-	github.com/op/go-logging v0.0.0-20160211212156-b2cb9fa56473
+	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/pkg/errors v0.8.0 // indirect
 	github.com/spf13/viper v1.2.0
 	github.com/stretchr/testify v1.2.2
@@ -55,9 +56,8 @@ require (
 	github.com/swaggo/gin-swagger v1.0.0 // indirect
 	github.com/swaggo/swag v1.3.3-0.20181109030545-8f09470d62b2
 	github.com/urfave/cli v1.20.0 // indirect
-	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/ziutek/mymysql v1.5.4 // indirect
-	golang.org/x/crypto v0.0.0-20180312195533-182114d58262
+	golang.org/x/crypto v0.0.0-20181127143415-eb0de9b17e85
 	golang.org/x/lint v0.0.0-20181026193005-c67002cb31c3
 	golang.org/x/tools v0.0.0-20181026183834-f60e5f99f081 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect

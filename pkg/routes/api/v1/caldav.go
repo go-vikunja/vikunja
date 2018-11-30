@@ -19,7 +19,7 @@ package v1
 import (
 	"code.vikunja.io/api/pkg/caldav"
 	"code.vikunja.io/api/pkg/models"
-	"code.vikunja.io/api/pkg/routes/crud"
+	"code.vikunja.io/web/handler"
 	"github.com/labstack/echo"
 	"net/http"
 	"time"
@@ -54,7 +54,7 @@ func Caldav(c echo.Context) error {
 	// Get all tasks for that user
 	tasks, err := models.GetTasksByUser("", &u, -1)
 	if err != nil {
-		return crud.HandleHTTPError(err)
+		return handler.HandleHTTPError(err, c)
 	}
 
 	hour := int64(time.Hour.Seconds())

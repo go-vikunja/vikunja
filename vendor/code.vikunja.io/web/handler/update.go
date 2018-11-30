@@ -14,52 +14,47 @@
 //  You should have received a copy of the GNU General Public License
 //  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package crud
+package handler
 
 import (
-	"code.vikunja.io/api/pkg/log"
-	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/web"
 	"github.com/labstack/echo"
+	"github.com/op/go-logging"
 	"net/http"
-	"strconv"
 )
 
-// ReadAllWeb is the webhandler to get all objects of a type
-func (c *WebHandler) ReadAllWeb(ctx echo.Context) error {
+// UpdateWeb is the webhandler to update an object
+func (c *WebHandler) UpdateWeb(ctx echo.Context) error {
+
 	// Get our model
 	currentStruct := c.EmptyStruct()
-
-	currentUser, err := models.GetCurrentUser(ctx)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Could not determine the current user.")
-	}
 
 	// Get the object & bind params to struct
 	if err := ParamBinder(currentStruct, ctx); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "No or invalid model provided.")
 	}
 
-	// Pagination
-	page := ctx.QueryParam("page")
-	if page == "" {
-		page = "1"
+	// Validate the struct
+	if err := ctx.Validate(currentStruct); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err)
 	}
-	pageNumber, err := strconv.Atoi(page)
+
+	// Check if the user has the right to do that
+	authprovider := ctx.Get("AuthProvider").(*web.Auths)
+	currentAuth, err := authprovider.AuthObject(ctx)
 	if err != nil {
-		log.Log.Error(err.Error())
-		return echo.NewHTTPError(http.StatusBadRequest, "Bad page requested.")
+		return echo.NewHTTPError(http.StatusInternalServerError, "Could not determine the current user.")
 	}
-	if pageNumber < 0 {
-		return echo.NewHTTPError(http.StatusBadRequest, "Bad page requested.")
+	if !currentStruct.CanUpdate(currentAuth) {
+		ctx.Get("LoggingProvider").(*logging.Logger).Noticef("Tried to update while not having the rights for it", currentAuth)
+		return echo.NewHTTPError(http.StatusForbidden)
 	}
 
-	// Search
-	search := ctx.QueryParam("s")
-
-	lists, err := currentStruct.ReadAll(search, &currentUser, pageNumber)
+	// Do the update
+	err = currentStruct.Update()
 	if err != nil {
-		return HandleHTTPError(err)
+		return HandleHTTPError(err, ctx)
 	}
 
-	return ctx.JSON(http.StatusOK, lists)
+	return ctx.JSON(http.StatusOK, currentStruct)
 }

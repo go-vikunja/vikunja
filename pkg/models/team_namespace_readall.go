@@ -16,6 +16,8 @@
 
 package models
 
+import "code.vikunja.io/web"
+
 // ReadAll implements the method to read all teams of a namespace
 // @Summary Get teams on a namespace
 // @Description Returns a namespace with all teams which have access on a given namespace.
@@ -30,7 +32,12 @@ package models
 // @Failure 403 {object} models.HTTPError "No right to see the namespace."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces/{id}/teams [get]
-func (tn *TeamNamespace) ReadAll(search string, user *User, page int) (interface{}, error) {
+func (tn *TeamNamespace) ReadAll(search string, a web.Auth, page int) (interface{}, error) {
+	user, err := getUserWithError(a)
+	if err != nil {
+		return nil, err
+	}
+
 	// Check if the user can read the namespace
 	n, err := GetNamespaceByID(tn.NamespaceID)
 	if err != nil {

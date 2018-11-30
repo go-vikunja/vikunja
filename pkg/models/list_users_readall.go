@@ -16,6 +16,8 @@
 
 package models
 
+import "code.vikunja.io/web"
+
 // ReadAll gets all users who have access to a list
 // @Summary Get users on a list
 // @Description Returns a list with all users which have access on a given list.
@@ -30,7 +32,12 @@ package models
 // @Failure 403 {object} models.HTTPError "No right to see the list."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{id}/users [get]
-func (ul *ListUser) ReadAll(search string, u *User, page int) (interface{}, error) {
+func (ul *ListUser) ReadAll(search string, a web.Auth, page int) (interface{}, error) {
+	u, err := getUserWithError(a)
+	if err != nil {
+		return nil, err
+	}
+
 	// Check if the user has access to the list
 	l := &List{ID: ul.ListID}
 	if err := l.GetSimpleByID(); err != nil {
@@ -42,7 +49,7 @@ func (ul *ListUser) ReadAll(search string, u *User, page int) (interface{}, erro
 
 	// Get all users
 	all := []*UserWithRight{}
-	err := x.
+	err = x.
 		Join("INNER", "users_list", "user_id = users.id").
 		Where("users_list.list_id = ?", ul.ListID).
 		Limit(getLimitFromPageIndex(page)).

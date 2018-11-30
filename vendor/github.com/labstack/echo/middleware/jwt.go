@@ -16,16 +16,6 @@ type (
 		// Skipper defines a function to skip middleware.
 		Skipper Skipper
 
-		// BeforeFunc defines a function which is executed just before the middleware.
-		BeforeFunc BeforeFunc
-
-		// SuccessHandler defines a function which is executed for a valid token.
-		SuccessHandler JWTSuccessHandler
-
-		// ErrorHandler defines a function which is executed for an invalid token.
-		// It may be used to define a custom JWT error.
-		ErrorHandler JWTErrorHandler
-
 		// Signing key to validate token.
 		// Required.
 		SigningKey interface{}
@@ -58,12 +48,6 @@ type (
 		keyFunc jwt.Keyfunc
 	}
 
-	// JWTSuccessHandler defines a function which is executed for a valid token.
-	JWTSuccessHandler func(echo.Context)
-
-	// JWTErrorHandler defines a function which is executed for an invalid token.
-	JWTErrorHandler func(error) error
-
 	jwtExtractor func(echo.Context) (string, error)
 )
 
@@ -75,6 +59,7 @@ const (
 // Errors
 var (
 	ErrJWTMissing = echo.NewHTTPError(http.StatusBadRequest, "missing or malformed jwt")
+	ErrJWTInvalid = echo.NewHTTPError(http.StatusUnauthorized, "invalid or expired jwt")
 )
 
 var (
@@ -152,15 +137,8 @@ func JWTWithConfig(config JWTConfig) echo.MiddlewareFunc {
 				return next(c)
 			}
 
-			if config.BeforeFunc != nil {
-				config.BeforeFunc(c)
-			}
-
 			auth, err := extractor(c)
 			if err != nil {
-				if config.ErrorHandler != nil {
-					return config.ErrorHandler(err)
-				}
 				return err
 			}
 			token := new(jwt.Token)
@@ -175,17 +153,11 @@ func JWTWithConfig(config JWTConfig) echo.MiddlewareFunc {
 			if err == nil && token.Valid {
 				// Store user information from token into context.
 				c.Set(config.ContextKey, token)
-				if config.SuccessHandler != nil {
-					config.SuccessHandler(c)
-				}
 				return next(c)
 			}
-			if config.ErrorHandler != nil {
-				return config.ErrorHandler(err)
-			}
 			return &echo.HTTPError{
-				Code:     http.StatusUnauthorized,
-				Message:  "invalid or expired jwt",
+				Code:     ErrJWTInvalid.Code,
+				Message:  ErrJWTInvalid.Message,
 				Internal: err,
 			}
 		}

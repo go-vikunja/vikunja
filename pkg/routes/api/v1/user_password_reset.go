@@ -18,7 +18,7 @@ package v1
 
 import (
 	"code.vikunja.io/api/pkg/models"
-	"code.vikunja.io/api/pkg/routes/crud"
+	"code.vikunja.io/web/handler"
 	"github.com/labstack/echo"
 	"net/http"
 )
@@ -43,7 +43,7 @@ func UserResetPassword(c echo.Context) error {
 
 	err := models.UserPasswordReset(&pwReset)
 	if err != nil {
-		return crud.HandleHTTPError(err)
+		return handler.HandleHTTPError(err, c)
 	}
 
 	return c.JSON(http.StatusOK, models.Message{"The password was updated successfully."})
@@ -69,7 +69,7 @@ func UserRequestResetPasswordToken(c echo.Context) error {
 
 	err := models.RequestUserPasswordResetToken(&pwTokenReset)
 	if err != nil {
-		return crud.HandleHTTPError(err)
+		return handler.HandleHTTPError(err, c)
 	}
 
 	return c.JSON(http.StatusOK, models.Message{"Token was sent."})

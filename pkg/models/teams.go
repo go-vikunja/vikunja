@@ -16,6 +16,8 @@
 
 package models
 
+import "code.vikunja.io/web"
+
 // Team holds a team object
 type Team struct {
 	ID          int64  `xorm:"int(11) autoincr not null unique pk" json:"id" param:"team"`
@@ -29,8 +31,8 @@ type Team struct {
 	Created int64 `xorm:"created" json:"created"`
 	Updated int64 `xorm:"updated" json:"updated"`
 
-	CRUDable `xorm:"-" json:"-"`
-	Rights   `xorm:"-" json:"-"`
+	web.CRUDable `xorm:"-" json:"-"`
+	web.Rights   `xorm:"-" json:"-"`
 }
 
 // TableName makes beautiful table names
@@ -61,8 +63,8 @@ type TeamMember struct {
 	Created int64 `xorm:"created" json:"created"`
 	Updated int64 `xorm:"updated" json:"updated"`
 
-	CRUDable `xorm:"-" json:"-"`
-	Rights   `xorm:"-" json:"-"`
+	web.CRUDable `xorm:"-" json:"-"`
+	web.Rights   `xorm:"-" json:"-"`
 }
 
 // TableName makes beautiful table names
@@ -122,7 +124,12 @@ func (t *Team) ReadOne() (err error) {
 // @Success 200 {array} models.Team "The teams."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /teams [get]
-func (t *Team) ReadAll(search string, user *User, page int) (teams interface{}, err error) {
+func (t *Team) ReadAll(search string, a web.Auth, page int) (interface{}, error) {
+	user, err := getUserWithError(a)
+	if err != nil {
+		return nil, err
+	}
+
 	all := []*Team{}
 	err = x.Select("teams.*").
 		Table("teams").

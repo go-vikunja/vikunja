@@ -17,6 +17,7 @@
 package models
 
 import (
+	"code.vikunja.io/web"
 	"github.com/imdario/mergo"
 )
 
@@ -34,7 +35,12 @@ import (
 // @Failure 403 {object} models.HTTPError "The user does not have access to the list"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{id} [put]
-func (i *ListTask) Create(doer *User) (err error) {
+func (i *ListTask) Create(a web.Auth) (err error) {
+	doer, err := getUserWithError(a)
+	if err != nil {
+		return err
+	}
+
 	i.ID = 0
 
 	// Check if we have at least a text

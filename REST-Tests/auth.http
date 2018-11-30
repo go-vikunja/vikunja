@@ -3,7 +3,7 @@ POST http://localhost:8080/api/v1/login
 Content-Type: application/json
 
 {
-  "username": "user",
+  "username": "user5",
   "password": "1234"
 }
 
@@ -15,9 +15,9 @@ POST http://localhost:8080/api/v1/register
 Content-Type: application/json
 
 {
-  "username": "user4",
+  "username": "user5",
   "password": "1234",
-  "email": "4@knt.li"
+  "email": "5@knt.li"
 }
 
 ###

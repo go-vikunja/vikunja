@@ -16,6 +16,8 @@
 
 package models
 
+import "code.vikunja.io/web"
+
 // ListTask represents an task in a todolist
 type ListTask struct {
 	ID            int64   `xorm:"int(11) autoincr not null unique pk" json:"id" param:"listtask"`
@@ -33,8 +35,8 @@ type ListTask struct {
 
 	CreatedBy User `xorm:"-" json:"createdBy" valid:"-"`
 
-	CRUDable `xorm:"-" json:"-"`
-	Rights   `xorm:"-" json:"-"`
+	web.CRUDable `xorm:"-" json:"-"`
+	web.Rights   `xorm:"-" json:"-"`
 }
 
 // TableName returns the table name for listtasks

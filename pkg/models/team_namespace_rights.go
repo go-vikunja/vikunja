@@ -18,10 +18,13 @@ package models
 
 import (
 	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/web"
 )
 
 // CanCreate checks if one can create a new team <-> namespace relation
-func (tn *TeamNamespace) CanCreate(user *User) bool {
+func (tn *TeamNamespace) CanCreate(a web.Auth) bool {
+	user := getUserForRights(a)
+
 	n, err := GetNamespaceByID(tn.NamespaceID)
 	if err != nil {
 		log.Log.Error("Error occurred during CanCreate for TeamNamespace: %s", err)
@@ -31,7 +34,9 @@ func (tn *TeamNamespace) CanCreate(user *User) bool {
 }
 
 // CanDelete checks if a user can remove a team from a namespace. Only namespace admins can do that.
-func (tn *TeamNamespace) CanDelete(user *User) bool {
+func (tn *TeamNamespace) CanDelete(a web.Auth) bool {
+	user := getUserForRights(a)
+
 	n, err := GetNamespaceByID(tn.NamespaceID)
 	if err != nil {
 		log.Log.Error("Error occurred during CanDelete for TeamNamespace: %s", err)
@@ -41,7 +46,9 @@ func (tn *TeamNamespace) CanDelete(user *User) bool {
 }
 
 // CanUpdate checks if a user can update a team from a  Only namespace admins can do that.
-func (tn *TeamNamespace) CanUpdate(user *User) bool {
+func (tn *TeamNamespace) CanUpdate(a web.Auth) bool {
+	user := getUserForRights(a)
+
 	n, err := GetNamespaceByID(tn.NamespaceID)
 	if err != nil {
 		log.Log.Error("Error occurred during CanUpdate for TeamNamespace: %s", err)

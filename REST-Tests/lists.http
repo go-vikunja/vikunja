@@ -5,25 +5,24 @@ Authorization: Bearer {{auth_token}}
 ###
 
 # Get one list
-GET http://localhost:8080/api/v1/lists/1
+GET http://localhost:8080/api/v1/lists/15
 Authorization: Bearer {{auth_token}}
 
 ###
 
 # Add a new list
-PUT http://localhost:8080/api/v1/namespaces/1/lists
+PUT http://localhost:8080/api/v1/namespaces/6/lists
 Authorization: Bearer {{auth_token}}
 Content-Type: application/json
 
 {
-  "title": "sc",
-  "created": 0
+  "title": "sffffc me only"
 }
 
 ###
 
-# Add a new list
-PUT http://localhost:8080/api/v1/lists/1
+# Add a new item
+PUT http://localhost:8080/api/v1/lists/14
 Authorization: Bearer {{auth_token}}
 Content-Type: application/json
 
@@ -31,8 +30,8 @@ Content-Type: application/json
 
 ###
 
-# Delete a list from a list
-DELETE http://localhost:8080/api/v1/lists/28
+# Delete a task from a list
+DELETE http://localhost:8080/api/v1/lists/14
 Authorization: Bearer {{auth_token}}
 
 ###
@@ -116,7 +115,7 @@ GET http://localhost:8080/api/v1/tasks/caldav
 ###
 
 # Update a task
-POST http://localhost:8080/api/v1/tasks/27
+POST http://localhost:8080/api/v1/tasks/30
 Authorization: Bearer {{auth_token}}
 Content-Type: application/json
 

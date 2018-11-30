@@ -16,6 +16,8 @@
 
 package models
 
+import "code.vikunja.io/web"
+
 // Create creates a new namespace <-> user relation
 // @Summary Add a user to a namespace
 // @Description Gives a user access to a namespace.
@@ -31,8 +33,7 @@ package models
 // @Failure 403 {object} models.HTTPError "The user does not have access to the namespace"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces/{id}/users [put]
-func (un *NamespaceUser) Create(u *User) (err error) {
-
+func (un *NamespaceUser) Create(a web.Auth) (err error) {
 	// Reset the id
 	un.ID = 0
 

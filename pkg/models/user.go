@@ -17,9 +17,13 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/web"
+	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo"
 	"golang.org/x/crypto/bcrypt"
+	"reflect"
 )
 
 // UserLogin Object to recive user credentials in JSON format
@@ -41,11 +45,32 @@ type User struct {
 
 	Created int64 `xorm:"created" json:"created"`
 	Updated int64 `xorm:"updated" json:"updated"`
+
+	web.Auth `xorm:"-" json:"-"`
 }
+
+// AuthDummy implements the auth of the crud handler
+func (User) AuthDummy() {}
 
 // TableName returns the table name for users
 func (User) TableName() string {
 	return "users"
+}
+
+func getUserForRights(a web.Auth) *User {
+	u, err := getUserWithError(a)
+	if err != nil {
+		log.Log.Error(err.Error())
+	}
+	return u
+}
+
+func getUserWithError(a web.Auth) (*User, error) {
+	u, is := a.(*User)
+	if !is {
+		return &User{}, fmt.Errorf("user is not user element, is %s", reflect.TypeOf(a))
+	}
+	return u, nil
 }
 
 // APIUserPassword represents a user object without timestamps and a json password field.
@@ -119,14 +144,14 @@ func CheckUserCredentials(u *UserLogin) (User, error) {
 }
 
 // GetCurrentUser returns the current user based on its jwt token
-func GetCurrentUser(c echo.Context) (user User, err error) {
+func GetCurrentUser(c echo.Context) (user *User, err error) {
 	jwtinf := c.Get("user").(*jwt.Token)
 	claims := jwtinf.Claims.(jwt.MapClaims)
 	userID, ok := claims["id"].(float64)
 	if !ok {
 		return user, ErrCouldNotGetUserID{}
 	}
-	user = User{
+	user = &User{
 		ID:       int64(userID),
 		Email:    claims["email"].(string),
 		Username: claims["username"].(string),

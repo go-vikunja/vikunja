@@ -16,7 +16,10 @@
 
 package models
 
-import "sort"
+import (
+	"code.vikunja.io/web"
+	"sort"
+)
 
 // List represents a list of tasks
 type List struct {
@@ -32,8 +35,8 @@ type List struct {
 	Created int64 `xorm:"created" json:"created"`
 	Updated int64 `xorm:"updated" json:"updated"`
 
-	CRUDable `xorm:"-" json:"-"`
-	Rights   `xorm:"-" json:"-"`
+	web.CRUDable `xorm:"-" json:"-"`
+	web.Rights   `xorm:"-" json:"-"`
 }
 
 // GetListsByNamespaceID gets all lists in a namespace
@@ -55,7 +58,12 @@ func GetListsByNamespaceID(nID int64) (lists []*List, err error) {
 // @Failure 403 {object} models.HTTPError "The user does not have access to the list"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists [get]
-func (l *List) ReadAll(search string, u *User, page int) (interface{}, error) {
+func (l *List) ReadAll(search string, a web.Auth, page int) (interface{}, error) {
+	u, err := getUserWithError(a)
+	if err != nil {
+		return nil, err
+	}
+
 	lists, err := getRawListsForUser(search, u, page)
 	if err != nil {
 		return nil, err
@@ -206,7 +214,12 @@ func AddListDetails(lists []*List) (err error) {
 // @Success 200 {array} models.List "The tasks"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks [get]
-func (lt *ListTask) ReadAll(search string, u *User, page int) (interface{}, error) {
+func (lt *ListTask) ReadAll(search string, a web.Auth, page int) (interface{}, error) {
+	u, err := getUserWithError(a)
+	if err != nil {
+		return nil, err
+	}
+
 	return GetTasksByUser(search, u, page)
 }
 
