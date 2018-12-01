@@ -31,8 +31,8 @@ import (
 // @Param id path int true "List ID"
 // @Param task body models.ListTask true "The task object"
 // @Success 200 {object} models.ListTask "The created task object."
-// @Failure 400 {object} models.HTTPError "Invalid task object provided."
-// @Failure 403 {object} models.HTTPError "The user does not have access to the list"
+// @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid task object provided."
+// @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have access to the list"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{id} [put]
 func (i *ListTask) Create(a web.Auth) (err error) {
@@ -75,8 +75,8 @@ func (i *ListTask) Create(a web.Auth) (err error) {
 // @Param id path int true "Task ID"
 // @Param task body models.ListTask true "The task object"
 // @Success 200 {object} models.ListTask "The updated task object."
-// @Failure 400 {object} models.HTTPError "Invalid task object provided."
-// @Failure 403 {object} models.HTTPError "The user does not have access to the task (aka its list)"
+// @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid task object provided."
+// @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have access to the task (aka its list)"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{id} [post]
 func (i *ListTask) Update() (err error) {

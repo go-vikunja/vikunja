@@ -27,8 +27,8 @@ import "code.vikunja.io/web"
 // @Security ApiKeyAuth
 // @Param namespace body models.Namespace true "The namespace you want to create."
 // @Success 200 {object} models.Namespace "The created namespace."
-// @Failure 400 {object} models.HTTPError "Invalid namespace object provided."
-// @Failure 403 {object} models.HTTPError "The user does not have access to the namespace"
+// @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid namespace object provided."
+// @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have access to the namespace"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces [put]
 func (n *Namespace) Create(a web.Auth) (err error) {

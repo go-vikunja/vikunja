@@ -31,7 +31,7 @@ import (
 // @Produce json
 // @Security ApiKeyAuth
 // @Success 200 {object} models.User
-// @Failure 404 {object} models.HTTPError "User does not exist."
+// @Failure 404 {object} code.vikunja.io/web.HTTPError "User does not exist."
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /user [get]
 func UserShow(c echo.Context) error {

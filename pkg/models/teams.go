@@ -104,7 +104,7 @@ func GetTeamByID(id int64) (team Team, err error) {
 // @Security ApiKeyAuth
 // @Param id path int true "Team ID"
 // @Success 200 {object} models.Team "The team"
-// @Failure 403 {object} models.HTTPError "The user does not have access to the team"
+// @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have access to the team"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{id} [get]
 func (t *Team) ReadOne() (err error) {

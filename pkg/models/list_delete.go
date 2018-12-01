@@ -16,6 +16,8 @@
 
 package models
 
+import _ "code.vikunja.io/web" // For swaggerdocs generation
+
 // Delete implements the delete method of CRUDable
 // @Summary Deletes a list
 // @Description Delets a list
@@ -24,8 +26,8 @@ package models
 // @Security ApiKeyAuth
 // @Param id path int true "List ID"
 // @Success 200 {object} models.Message "The list was successfully deleted."
-// @Failure 400 {object} models.HTTPError "Invalid list object provided."
-// @Failure 403 {object} models.HTTPError "The user does not have access to the list"
+// @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid list object provided."
+// @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have access to the list"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{id} [delete]
 func (l *List) Delete() (err error) {

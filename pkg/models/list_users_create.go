@@ -28,9 +28,9 @@ import "code.vikunja.io/web"
 // @Param id path int true "List ID"
 // @Param list body models.ListUser true "The user you want to add to the list."
 // @Success 200 {object} models.ListUser "The created user<->list relation."
-// @Failure 400 {object} models.HTTPError "Invalid user list object provided."
-// @Failure 404 {object} models.HTTPError "The user does not exist."
-// @Failure 403 {object} models.HTTPError "The user does not have access to the list"
+// @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid user list object provided."
+// @Failure 404 {object} code.vikunja.io/web.HTTPError "The user does not exist."
+// @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have access to the list"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{id}/users [put]
 func (ul *ListUser) Create(a web.Auth) (err error) {

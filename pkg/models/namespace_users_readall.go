@@ -29,7 +29,7 @@ import "code.vikunja.io/web"
 // @Param s query string false "Search users by its name."
 // @Security ApiKeyAuth
 // @Success 200 {array} models.UserWithRight "The users with the right they have."
-// @Failure 403 {object} models.HTTPError "No right to see the namespace."
+// @Failure 403 {object} code.vikunja.io/web.HTTPError "No right to see the namespace."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces/{id}/users [get]
 func (un *NamespaceUser) ReadAll(search string, a web.Auth, page int) (interface{}, error) {

@@ -28,9 +28,9 @@ import "code.vikunja.io/web"
 // @Param id path int true "Namespace ID"
 // @Param namespace body models.NamespaceUser true "The user you want to add to the namespace."
 // @Success 200 {object} models.NamespaceUser "The created user<->namespace relation."
-// @Failure 400 {object} models.HTTPError "Invalid user namespace object provided."
-// @Failure 404 {object} models.HTTPError "The user does not exist."
-// @Failure 403 {object} models.HTTPError "The user does not have access to the namespace"
+// @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid user namespace object provided."
+// @Failure 404 {object} code.vikunja.io/web.HTTPError "The user does not exist."
+// @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have access to the namespace"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces/{id}/users [put]
 func (un *NamespaceUser) Create(a web.Auth) (err error) {

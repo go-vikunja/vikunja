@@ -16,6 +16,8 @@
 
 package models
 
+import _ "code.vikunja.io/web" // For swaggerdocs generation
+
 // Update is the handler to create a team
 // @Summary Updates a team
 // @Description Updates a team.
@@ -26,7 +28,7 @@ package models
 // @Param id path int true "Team ID"
 // @Param team body models.Team true "The team with updated values you want to update."
 // @Success 200 {object} models.Team "The updated team."
-// @Failure 400 {object} models.HTTPError "Invalid team object provided."
+// @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid team object provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /teams/{id} [post]
 func (t *Team) Update() (err error) {

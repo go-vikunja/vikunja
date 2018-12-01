@@ -31,7 +31,7 @@ import (
 // @Produce json
 // @Param credentials body models.APIUserPassword true "The user credentials"
 // @Success 200 {object} models.User
-// @Failure 400 {object} models.HTTPError "No or invalid user register object provided / User already exists."
+// @Failure 400 {object} code.vikunja.io/web.HTTPError "No or invalid user register object provided / User already exists."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /register [post]
 func RegisterUser(c echo.Context) error {

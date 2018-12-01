@@ -32,7 +32,7 @@ import (
 // @Param s query string false "Search for a user by its name."
 // @Security ApiKeyAuth
 // @Success 200 {array} models.User "All (found) users."
-// @Failure 400 {object} models.HTTPError "Something's invalid."
+// @Failure 400 {object} code.vikunja.io/web.HTTPError "Something's invalid."
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /users [get]
 func UserList(c echo.Context) error {

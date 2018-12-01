@@ -29,7 +29,7 @@ import "code.vikunja.io/web"
 // @Param s query string false "Search teams by its name."
 // @Security ApiKeyAuth
 // @Success 200 {array} models.TeamWithRight "The teams with their right."
-// @Failure 403 {object} models.HTTPError "No right to see the list."
+// @Failure 403 {object} code.vikunja.io/web.HTTPError "No right to see the list."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{id}/teams [get]
 func (tl *TeamList) ReadAll(search string, a web.Auth, page int) (interface{}, error) {

@@ -54,7 +54,7 @@ require (
 	github.com/swaggo/echo-swagger v0.0.0-20180315045949-97f46bb9e5a5
 	github.com/swaggo/files v0.0.0-20180215091130-49c8a91ea3fa // indirect
 	github.com/swaggo/gin-swagger v1.0.0 // indirect
-	github.com/swaggo/swag v1.3.3-0.20181109030545-8f09470d62b2
+	github.com/swaggo/swag v1.4.1-0.20181129020348-1c8533a91397
 	github.com/urfave/cli v1.20.0 // indirect
 	github.com/ziutek/mymysql v1.5.4 // indirect
 	golang.org/x/crypto v0.0.0-20181127143415-eb0de9b17e85

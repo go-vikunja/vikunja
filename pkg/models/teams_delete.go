@@ -16,6 +16,8 @@
 
 package models
 
+import _ "code.vikunja.io/web" // For swaggerdocs generation
+
 // Delete deletes a team
 // @Summary Deletes a team
 // @Description Delets a team. This will also remove the access for all users in that team.
@@ -24,7 +26,7 @@ package models
 // @Security ApiKeyAuth
 // @Param id path int true "Team ID"
 // @Success 200 {object} models.Message "The team was successfully deleted."
-// @Failure 400 {object} models.HTTPError "Invalid team object provided."
+// @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid team object provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /teams/{id} [delete]
 func (t *Team) Delete() (err error) {

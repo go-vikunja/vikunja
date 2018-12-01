@@ -28,9 +28,9 @@ import "code.vikunja.io/web"
 // @Param id path int true "Namespace ID"
 // @Param namespace body models.TeamNamespace true "The team you want to add to the namespace."
 // @Success 200 {object} models.TeamNamespace "The created team<->namespace relation."
-// @Failure 400 {object} models.HTTPError "Invalid team namespace object provided."
-// @Failure 404 {object} models.HTTPError "The team does not exist."
-// @Failure 403 {object} models.HTTPError "The team does not have access to the namespace"
+// @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid team namespace object provided."
+// @Failure 404 {object} code.vikunja.io/web.HTTPError "The team does not exist."
+// @Failure 403 {object} code.vikunja.io/web.HTTPError "The team does not have access to the namespace"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces/{id}/teams [put]
 func (tn *TeamNamespace) Create(a web.Auth) (err error) {

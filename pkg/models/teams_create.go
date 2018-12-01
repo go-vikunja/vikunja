@@ -27,7 +27,7 @@ import "code.vikunja.io/web"
 // @Security ApiKeyAuth
 // @Param team body models.Team true "The team you want to create."
 // @Success 200 {object} models.Team "The created team."
-// @Failure 400 {object} models.HTTPError "Invalid team object provided."
+// @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid team object provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /teams [put]
 func (t *Team) Create(a web.Auth) (err error) {

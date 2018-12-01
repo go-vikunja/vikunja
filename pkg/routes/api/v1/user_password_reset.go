@@ -31,7 +31,7 @@ import (
 // @Produce json
 // @Param credentials body models.PasswordReset true "The token with the new password."
 // @Success 200 {object} models.Message
-// @Failure 400 {object} models.HTTPError "Bad token provided."
+// @Failure 400 {object} code.vikunja.io/web.HTTPError "Bad token provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /user/password/reset [post]
 func UserResetPassword(c echo.Context) error {
@@ -57,7 +57,7 @@ func UserResetPassword(c echo.Context) error {
 // @Produce json
 // @Param credentials body models.PasswordTokenRequest true "The username of the user to request a token for."
 // @Success 200 {object} models.Message
-// @Failure 404 {object} models.HTTPError "The user does not exist."
+// @Failure 404 {object} code.vikunja.io/web.HTTPError "The user does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /user/password/token [post]
 func UserRequestResetPasswordToken(c echo.Context) error {

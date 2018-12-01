@@ -59,8 +59,8 @@ func CreateOrUpdateList(list *List) (err error) {
 // @Param id path int true "List ID"
 // @Param list body models.List true "The list with updated values you want to update."
 // @Success 200 {object} models.List "The updated list."
-// @Failure 400 {object} models.HTTPError "Invalid list object provided."
-// @Failure 403 {object} models.HTTPError "The user does not have access to the list"
+// @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid list object provided."
+// @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have access to the list"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{id} [post]
 func (l *List) Update() (err error) {
@@ -82,8 +82,8 @@ func (l *List) Update() (err error) {
 // @Param namespaceID path int true "Namespace ID"
 // @Param list body models.List true "The list you want to create."
 // @Success 200 {object} models.List "The created list."
-// @Failure 400 {object} models.HTTPError "Invalid list object provided."
-// @Failure 403 {object} models.HTTPError "The user does not have access to the list"
+// @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid list object provided."
+// @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have access to the list"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces/{namespaceID}/lists [put]
 func (l *List) Create(a web.Auth) (err error) {

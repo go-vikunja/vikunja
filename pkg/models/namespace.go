@@ -76,7 +76,7 @@ func GetNamespaceByID(id int64) (namespace Namespace, err error) {
 // @Security ApiKeyAuth
 // @Param id path int true "Namespace ID"
 // @Success 200 {object} models.Namespace "The Namespace"
-// @Failure 403 {object} models.HTTPError "The user does not have access to that namespace."
+// @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have access to that namespace."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces/{id} [get]
 func (n *Namespace) ReadOne() (err error) {

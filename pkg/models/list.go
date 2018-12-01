@@ -55,7 +55,7 @@ func GetListsByNamespaceID(nID int64) (lists []*List, err error) {
 // @Param s query string false "Search lists by title."
 // @Security ApiKeyAuth
 // @Success 200 {array} models.List "The lists"
-// @Failure 403 {object} models.HTTPError "The user does not have access to the list"
+// @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have access to the list"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists [get]
 func (l *List) ReadAll(search string, a web.Auth, page int) (interface{}, error) {
@@ -84,7 +84,7 @@ func (l *List) ReadAll(search string, a web.Auth, page int) (interface{}, error)
 // @Security ApiKeyAuth
 // @Param id path int true "List ID"
 // @Success 200 {object} models.List "The list"
-// @Failure 403 {object} models.HTTPError "The user does not have access to the list"
+// @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have access to the list"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{id} [get]
 func (l *List) ReadOne() (err error) {

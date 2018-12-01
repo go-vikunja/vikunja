@@ -16,6 +16,8 @@
 
 package models
 
+import _ "code.vikunja.io/web" // For swaggerdocs generation
+
 // Update updates a team <-> namespace relation
 // @Summary Update a team <-> namespace relation
 // @Description Update a team <-> namespace relation. Mostly used to update the right that team has.
@@ -27,8 +29,8 @@ package models
 // @Param namespace body models.TeamNamespace true "The team you want to update."
 // @Security ApiKeyAuth
 // @Success 200 {object} models.TeamNamespace "The updated team <-> namespace relation."
-// @Failure 403 {object} models.HTTPError "The team does not have admin-access to the namespace"
-// @Failure 404 {object} models.HTTPError "Team or namespace does not exist."
+// @Failure 403 {object} code.vikunja.io/web.HTTPError "The team does not have admin-access to the namespace"
+// @Failure 404 {object} code.vikunja.io/web.HTTPError "Team or namespace does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces/{namespaceID}/teams/{teamID} [post]
 func (tl *TeamNamespace) Update() (err error) {

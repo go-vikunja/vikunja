@@ -109,8 +109,10 @@ github.com/swaggo/files v0.0.0-20180215091130-49c8a91ea3fa h1:194s4modF+3X3POBfG
 github.com/swaggo/files v0.0.0-20180215091130-49c8a91ea3fa/go.mod h1:gxQT6pBGRuIGunNf/+tSOB5OHvguWi8Tbt82WOkf35E=
 github.com/swaggo/gin-swagger v1.0.0 h1:k6Nn1jV49u+SNIWt7kejQS/iENZKZVMCNQrKOYatNF8=
 github.com/swaggo/gin-swagger v1.0.0/go.mod h1:Mt37wE46iUaTAOv+HSnHbJYssKGqbS25X19lNF4YpBo=
-github.com/swaggo/swag v1.3.3-0.20181109030545-8f09470d62b2 h1:HMUGTfTJJZ2fRHar570Q2SdUhiCEGwcRRJ2doOOnCJE=
-github.com/swaggo/swag v1.3.3-0.20181109030545-8f09470d62b2/go.mod h1:hog2WgeMOrQ/LvQ+o1YGTeT+vWVrbi0SiIslBtxKTyM=
+github.com/swaggo/swag v1.4.0 h1:exX5ES4CdJWCCKmVPE+FAIN66cnHeMHU3i2SCMibBZc=
+github.com/swaggo/swag v1.4.0/go.mod h1:hog2WgeMOrQ/LvQ+o1YGTeT+vWVrbi0SiIslBtxKTyM=
+github.com/swaggo/swag v1.4.1-0.20181129020348-1c8533a91397 h1:xhlin3d0mSsxQlwxS+fHILT6PgG4Cmc2OZgzZL2bemI=
+github.com/swaggo/swag v1.4.1-0.20181129020348-1c8533a91397/go.mod h1:hog2WgeMOrQ/LvQ+o1YGTeT+vWVrbi0SiIslBtxKTyM=
 github.com/urfave/cli v1.20.0 h1:fDqGv3UG/4jbVl/QkFwEdddtEDjh/5Ov6X+0B/3bPaw=
 github.com/urfave/cli v1.20.0/go.mod h1:70zkFmudgCuE/ngEzBv17Jvp/497gISqfk5gWijbERA=
 github.com/valyala/bytebufferpool v1.0.0 h1:GqA5TC/0021Y/b9FG4Oi9Mr3q7XYx6KllzawFIhcdPw=

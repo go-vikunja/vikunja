@@ -16,6 +16,8 @@
 
 package models
 
+import _ "code.vikunja.io/web" // For swaggerdocs generation
+
 // Delete deletes a list <-> user relation
 // @Summary Delete a user from a list
 // @Description Delets a user from a list. The user won't have access to the list anymore.
@@ -25,8 +27,8 @@ package models
 // @Param listID path int true "List ID"
 // @Param userID path int true "User ID"
 // @Success 200 {object} models.Message "The user was successfully removed from the list."
-// @Failure 403 {object} models.HTTPError "The user does not have access to the list"
-// @Failure 404 {object} models.HTTPError "user or list does not exist."
+// @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have access to the list"
+// @Failure 404 {object} code.vikunja.io/web.HTTPError "user or list does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{listID}/users/{userID} [delete]
 func (lu *ListUser) Delete() (err error) {

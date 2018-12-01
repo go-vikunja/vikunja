@@ -16,6 +16,8 @@
 
 package models
 
+import _ "code.vikunja.io/web" // For swaggerdocs generation
+
 // Delete deletes a namespace
 // @Summary Deletes a namespace
 // @Description Delets a namespace
@@ -24,8 +26,8 @@ package models
 // @Security ApiKeyAuth
 // @Param id path int true "Namespace ID"
 // @Success 200 {object} models.Message "The namespace was successfully deleted."
-// @Failure 400 {object} models.HTTPError "Invalid namespace object provided."
-// @Failure 403 {object} models.HTTPError "The user does not have access to the namespace"
+// @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid namespace object provided."
+// @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have access to the namespace"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces/{id} [delete]
 func (n *Namespace) Delete() (err error) {

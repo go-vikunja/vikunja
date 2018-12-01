@@ -16,6 +16,8 @@
 
 package models
 
+import _ "code.vikunja.io/web" // For swaggerdocs generation
+
 // Update updates a user <-> namespace relation
 // @Summary Update a user <-> namespace relation
 // @Description Update a user <-> namespace relation. Mostly used to update the right that user has.
@@ -27,8 +29,8 @@ package models
 // @Param namespace body models.NamespaceUser true "The user you want to update."
 // @Security ApiKeyAuth
 // @Success 200 {object} models.NamespaceUser "The updated user <-> namespace relation."
-// @Failure 403 {object} models.HTTPError "The user does not have admin-access to the namespace"
-// @Failure 404 {object} models.HTTPError "User or namespace does not exist."
+// @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have admin-access to the namespace"
+// @Failure 404 {object} code.vikunja.io/web.HTTPError "User or namespace does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces/{namespaceID}/users/{userID} [post]
 func (nu *NamespaceUser) Update() (err error) {

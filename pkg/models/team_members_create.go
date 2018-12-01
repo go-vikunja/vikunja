@@ -28,8 +28,8 @@ import "code.vikunja.io/web"
 // @Param id path int true "Team ID"
 // @Param team body models.TeamMember true "The user to be added to a team."
 // @Success 200 {object} models.TeamMember "The newly created member object"
-// @Failure 400 {object} models.HTTPError "Invalid member object provided."
-// @Failure 403 {object} models.HTTPError "The user does not have access to the team"
+// @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid member object provided."
+// @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have access to the team"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /teams/{id}/members [put]
 func (tm *TeamMember) Create(a web.Auth) (err error) {

@@ -16,6 +16,8 @@
 
 package models
 
+import _ "code.vikunja.io/web" // For swaggerdocs generation
+
 // Delete implements the delete method for listTask
 // @Summary Delete a task
 // @Description Deletes a task from a list. This does not mean "mark it done".
@@ -24,8 +26,8 @@ package models
 // @Security ApiKeyAuth
 // @Param id path int true "Task ID"
 // @Success 200 {object} models.Message "The created task object."
-// @Failure 400 {object} models.HTTPError "Invalid task ID provided."
-// @Failure 403 {object} models.HTTPError "The user does not have access to the list"
+// @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid task ID provided."
+// @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have access to the list"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{id} [delete]
 func (i *ListTask) Delete() (err error) {

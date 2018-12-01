@@ -58,7 +58,7 @@
                         "description": "The user does not have access to the list",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HTTPError"
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
@@ -110,7 +110,7 @@
                         "description": "The user does not have access to the team",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HTTPError"
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
@@ -170,14 +170,14 @@
                         "description": "Invalid task object provided.",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HTTPError"
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "403": {
                         "description": "The user does not have access to the list",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HTTPError"
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
@@ -237,14 +237,14 @@
                         "description": "Invalid list object provided.",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HTTPError"
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "403": {
                         "description": "The user does not have access to the list",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HTTPError"
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
@@ -291,14 +291,14 @@
                         "description": "Invalid list object provided.",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HTTPError"
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "403": {
                         "description": "The user does not have access to the list",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HTTPError"
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
@@ -364,7 +364,7 @@
                         "description": "No right to see the list.",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HTTPError"
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
@@ -424,21 +424,21 @@
                         "description": "Invalid team list object provided.",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HTTPError"
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "403": {
                         "description": "The user does not have access to the list",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HTTPError"
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "404": {
                         "description": "The team does not exist.",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HTTPError"
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
@@ -504,7 +504,7 @@
                         "description": "No right to see the list.",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HTTPError"
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
@@ -564,21 +564,21 @@
                         "description": "Invalid user list object provided.",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HTTPError"
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "403": {
                         "description": "The user does not have access to the list",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HTTPError"
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "404": {
                         "description": "The user does not exist.",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HTTPError"
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
@@ -647,14 +647,14 @@
                         "description": "The user does not have admin-access to the list",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HTTPError"
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "404": {
                         "description": "Team or list does not exist.",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HTTPError"
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
@@ -708,14 +708,14 @@
                         "description": "The user does not have access to the list",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HTTPError"
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "404": {
                         "description": "Team or list does not exist.",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HTTPError"
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
@@ -784,14 +784,14 @@
                         "description": "The user does not have admin-access to the list",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HTTPError"
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "404": {
                         "description": "User or list does not exist.",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HTTPError"
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
@@ -845,14 +845,14 @@
                         "description": "The user does not have access to the list",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HTTPError"
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "404": {
                         "description": "user or list does not exist.",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HTTPError"
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
@@ -964,14 +964,14 @@
                         "description": "Invalid namespace object provided.",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HTTPError"
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "403": {
                         "description": "The user does not have access to the namespace",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HTTPError"
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
@@ -1076,14 +1076,14 @@
                         "description": "Invalid namespace object provided.",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HTTPError"
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "403": {
                         "description": "The user does not have access to the namespace",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HTTPError"
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
@@ -1135,7 +1135,7 @@
                         "description": "The user does not have access to that namespace.",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HTTPError"
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
@@ -1182,14 +1182,14 @@
                         "description": "Invalid namespace object provided.",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HTTPError"
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "403": {
                         "description": "The user does not have access to the namespace",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HTTPError"
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
@@ -1316,7 +1316,7 @@
                         "description": "No right to see the namespace.",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HTTPError"
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
@@ -1376,21 +1376,21 @@
                         "description": "Invalid team namespace object provided.",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HTTPError"
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "403": {
                         "description": "The team does not have access to the namespace",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HTTPError"
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "404": {
                         "description": "The team does not exist.",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HTTPError"
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
@@ -1456,7 +1456,7 @@
                         "description": "No right to see the namespace.",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HTTPError"
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
@@ -1516,21 +1516,21 @@
                         "description": "Invalid user namespace object provided.",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HTTPError"
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "403": {
                         "description": "The user does not have access to the namespace",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HTTPError"
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "404": {
                         "description": "The user does not exist.",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HTTPError"
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
@@ -1592,14 +1592,14 @@
                         "description": "Invalid list object provided.",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HTTPError"
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "403": {
                         "description": "The user does not have access to the list",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HTTPError"
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
@@ -1668,14 +1668,14 @@
                         "description": "The team does not have admin-access to the namespace",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HTTPError"
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "404": {
                         "description": "Team or namespace does not exist.",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HTTPError"
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
@@ -1729,14 +1729,14 @@
                         "description": "The team does not have access to the namespace",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HTTPError"
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "404": {
                         "description": "team or namespace does not exist.",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HTTPError"
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
@@ -1805,14 +1805,14 @@
                         "description": "The user does not have admin-access to the namespace",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HTTPError"
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "404": {
                         "description": "User or namespace does not exist.",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HTTPError"
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
@@ -1866,14 +1866,14 @@
                         "description": "The user does not have access to the namespace",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HTTPError"
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "404": {
                         "description": "user or namespace does not exist.",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HTTPError"
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
@@ -1923,7 +1923,7 @@
                         "description": "No or invalid user register object provided / User already exists.",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HTTPError"
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
@@ -2068,14 +2068,14 @@
                         "description": "Invalid task object provided.",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HTTPError"
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "403": {
                         "description": "The user does not have access to the task (aka its list)",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HTTPError"
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
@@ -2122,14 +2122,14 @@
                         "description": "Invalid task ID provided.",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HTTPError"
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "403": {
                         "description": "The user does not have access to the list",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HTTPError"
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
@@ -2234,7 +2234,7 @@
                         "description": "Invalid team object provided.",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HTTPError"
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
@@ -2296,7 +2296,7 @@
                         "description": "Invalid team object provided.",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HTTPError"
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
@@ -2343,7 +2343,7 @@
                         "description": "Invalid team object provided.",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HTTPError"
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
@@ -2405,14 +2405,14 @@
                         "description": "Invalid member object provided.",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HTTPError"
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "403": {
                         "description": "The user does not have access to the team",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HTTPError"
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
@@ -2504,7 +2504,7 @@
                         "description": "User does not exist.",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HTTPError"
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
@@ -2554,7 +2554,7 @@
                         "description": "Bad token provided.",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HTTPError"
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
@@ -2609,14 +2609,14 @@
                         "description": "Something's invalid.",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HTTPError"
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "404": {
                         "description": "User does not exist.",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HTTPError"
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
@@ -2666,7 +2666,7 @@
                         "description": "Bad token provided.",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HTTPError"
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
@@ -2716,7 +2716,7 @@
                         "description": "The user does not exist.",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HTTPError"
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
@@ -2769,7 +2769,7 @@
                         "description": "Something's invalid.",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.HTTPError"
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
@@ -2805,17 +2805,6 @@
             "type": "object",
             "properties": {
                 "token": {
-                    "type": "string"
-                }
-            }
-        },
-        "models.HTTPError": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "integer"
-                },
-                "message": {
                     "type": "string"
                 }
             }
