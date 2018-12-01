@@ -53,12 +53,18 @@ definitions:
         type: integer
       listID:
         type: integer
+      parentTaskID:
+        type: integer
       reminderDates:
         items:
           type: integer
         type: array
       repeatAfter:
         type: integer
+      subtasks:
+        items:
+          $ref: '#/definitions/models.ListTask'
+        type: array
       text:
         type: string
       updated:

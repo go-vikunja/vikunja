@@ -163,7 +163,7 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
 * [ ] Labels
 * [ ] Priorities
 * [ ] Assignees
-* [ ] Subtasks
+* [x] Subtasks
 * [ ] Attachments
 * [x] Repeating tasks
 * [x] Tagesübersicht ("Was ist heute/diese Woche due?") -> Machen letztenendes die Clients, wir brauchen nur nen endpoint, der alle tasks auskotzt, der Client macht dann die Sortierung.

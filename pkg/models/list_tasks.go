@@ -29,6 +29,9 @@ type ListTask struct {
 	CreatedByID   int64   `xorm:"int(11)" json:"-"` // ID of the user who put that task on the list
 	ListID        int64   `xorm:"int(11) INDEX" json:"listID" param:"list"`
 	RepeatAfter   int64   `xorm:"int(11) INDEX" json:"repeatAfter"`
+	ParentTaskID  int64   `xorm:"int(11) INDEX" json:"parentTaskID"`
+
+	Subtasks []*ListTask `xorm:"-" json:"subtasks"`
 
 	Created int64 `xorm:"created" json:"created"`
 	Updated int64 `xorm:"updated" json:"updated"`
@@ -56,6 +59,9 @@ func GetTasksByListID(listID int64) (tasks []*ListTask, err error) {
 		return
 	}
 
+	// make a map so we can put in subtasks more easily
+	taskMap := make(map[int64]*ListTask)
+
 	// Get all users and put them into the array
 	var userIDs []int64
 	for _, i := range tasks {
@@ -70,6 +76,8 @@ func GetTasksByListID(listID int64) (tasks []*ListTask, err error) {
 		if !found {
 			userIDs = append(userIDs, i.CreatedByID)
 		}
+
+		taskMap[i.ID] = i
 	}
 
 	var users []User
@@ -78,16 +86,28 @@ func GetTasksByListID(listID int64) (tasks []*ListTask, err error) {
 		return
 	}
 
-	for in, task := range tasks {
+	// Add all user objects to the appropriate tasks
+	for _, task := range taskMap {
+
+		// Make created by user objects
 		for _, u := range users {
 			if task.CreatedByID == u.ID {
-				tasks[in].CreatedBy = u
+				taskMap[task.ID].CreatedBy = u
 				break
 			}
 		}
 
-		// obsfucate the user password
-		tasks[in].CreatedBy.Password = ""
+		// Reorder all subtasks
+		if task.ParentTaskID != 0 {
+			taskMap[task.ParentTaskID].Subtasks = append(taskMap[task.ParentTaskID].Subtasks, task)
+			delete(taskMap, task.ID)
+		}
+	}
+
+	// make a complete slice from the map
+	tasks = []*ListTask{}
+	for _, t := range taskMap {
+		tasks = append(tasks, t)
 	}
 
 	return

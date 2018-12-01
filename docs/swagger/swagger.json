@@ -2864,6 +2864,9 @@
                 "listID": {
                     "type": "integer"
                 },
+                "parentTaskID": {
+                    "type": "integer"
+                },
                 "reminderDates": {
                     "type": "array",
                     "items": {
@@ -2872,6 +2875,12 @@
                 },
                 "repeatAfter": {
                     "type": "integer"
+                },
+                "subtasks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.ListTask"
+                    }
                 },
                 "text": {
                     "type": "string"

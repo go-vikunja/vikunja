@@ -25,7 +25,7 @@ Try it under [try.vikunja.io](https://try.vikunja.io)!
 * [ ] Labels for todo lists and tasks
 * [ ] Prioritize tasks
 * [ ] Assign users to tasks
-* [ ] Subtasks
+* [x] Subtasks
 * [x] Repeating tasks
 * [ ] Attachments on tasks
 * [ ] Get all tasks for you per interval (day/month/period)

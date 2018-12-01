@@ -3,8 +3,8 @@ POST http://localhost:8080/api/v1/login
 Content-Type: application/json
 
 {
-  "username": "user5",
-  "password": "1234"
+  "username": "user",
+  "password": "12345"
 }
 
 > {% client.global.set("auth_token", response.body.token); %}
