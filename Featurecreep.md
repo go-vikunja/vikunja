@@ -160,13 +160,13 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
 
 ## Feature-Ideen
 
-* [ ] Labels
-* [ ] Priorities
-* [ ] Assignees
-* [x] Subtasks
-* [ ] Attachments
+* [x] Priorities
 * [x] Repeating tasks
 * [x] Tagesübersicht ("Was ist heute/diese Woche due?") -> Machen letztenendes die Clients, wir brauchen nur nen endpoint, der alle tasks auskotzt, der Client macht dann die Sortierung.
+* [x] Subtasks
+* [ ] Assignees
+* [ ] Attachments
+* [ ] Labels
 * [ ] Tasks innerhalb eines definierbarem Bereich, sollte aber trotzdem der server machen, so à la "Gib mir alles für diesen Monat"
 * [ ] Namespaces in Namespaces (in Namespaces in Namespaces in Namespaces...)
 	* Rechtemanagement dafür wird schwierig

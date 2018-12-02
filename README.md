@@ -22,14 +22,14 @@ Try it under [try.vikunja.io](https://try.vikunja.io)!
 
 > I know, it's still a long way to go. I'm currently working on a lot of "basic" features, the exiting things will come later. Don't worry, they'll come.
 
-* [ ] Labels for todo lists and tasks
-* [ ] Prioritize tasks
-* [ ] Assign users to tasks
+* [x] Prioritize tasks
 * [x] Subtasks
 * [x] Repeating tasks
-* [ ] Attachments on tasks
-* [ ] Get all tasks for you per interval (day/month/period)
 * [x] Get tasks via caldav
+* [ ] Labels for todo lists and tasks
+* [ ] Assign users to tasks
+* [ ] Attachments on tasks
+* [ ] Get all your tasks for an interval (day/month/period)
 * [ ] More sharing features
   * [x] Share with individual users
   * [ ] Share via a world-readable link with or without password, like Nextcloud

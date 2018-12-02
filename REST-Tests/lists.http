@@ -112,6 +112,12 @@ Authorization: Bearer {{auth_token}}
 
 ###
 
+# Get all pending tasks with priorities
+GET http://localhost:8080/api/v1/tasks/desc
+Authorization: Bearer {{auth_token}}
+
+###
+
 # Get all pending tasks in caldav
 GET http://localhost:8080/api/v1/tasks/caldav
 #Authorization: Bearer {{auth_token}}

@@ -16,7 +16,9 @@
 
 package models
 
-import "code.vikunja.io/web"
+import (
+	"code.vikunja.io/web"
+)
 
 // ListTask represents an task in a todolist
 type ListTask struct {
@@ -30,6 +32,8 @@ type ListTask struct {
 	ListID        int64   `xorm:"int(11) INDEX" json:"listID" param:"list"`
 	RepeatAfter   int64   `xorm:"int(11) INDEX" json:"repeatAfter"`
 	ParentTaskID  int64   `xorm:"int(11) INDEX" json:"parentTaskID"`
+	Priority      int64   `xorm:"int(11)" json:"priority"`
+	Sorting       string  `xorm:"-" json:"-" param:"sort"` // Parameter to sort by
 
 	Subtasks []*ListTask `xorm:"-" json:"subtasks"`
 

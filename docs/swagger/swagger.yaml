@@ -55,6 +55,8 @@ definitions:
         type: integer
       parentTaskID:
         type: integer
+      priority:
+        type: integer
       reminderDates:
         items:
           type: integer
@@ -390,9 +392,9 @@ paths:
     get:
       consumes:
       - application/json
-      description: Returns a team by its ID.
+      description: Returns a list by its ID.
       parameters:
-      - description: Team ID
+      - description: List ID
         in: path
         name: id
         required: true
@@ -401,12 +403,12 @@ paths:
       - application/json
       responses:
         "200":
-          description: The team
+          description: The list
           schema:
-            $ref: '#/definitions/models.Team'
+            $ref: '#/definitions/models.List'
             type: object
         "403":
-          description: The user does not have access to the team
+          description: The user does not have access to the list
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
             type: object
@@ -417,9 +419,9 @@ paths:
             type: object
       security:
       - ApiKeyAuth: []
-      summary: Gets one team
+      summary: Gets one list
       tags:
-      - team
+      - list
     post:
       consumes:
       - application/json
@@ -1724,6 +1726,46 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Update a task
+      tags:
+      - task
+  /tasks/{sortby}:
+    get:
+      consumes:
+      - application/json
+      description: Returns all tasks on any list the user has access to.
+      parameters:
+      - description: The page number. Used for pagination. If not provided, the first
+          page of results is returned.
+        in: query
+        name: p
+        type: integer
+      - description: Search tasks by task text.
+        in: query
+        name: s
+        type: string
+      - description: The sorting parameter. Possible values to sort by are priority,
+          prioritydesc, priorityasc, dueadate, dueadatedesc, dueadateasc.
+        in: path
+        name: sortby
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The tasks
+          schema:
+            items:
+              $ref: '#/definitions/models.List'
+            type: array
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get tasks sorted
       tags:
       - task
   /tasks/caldav:

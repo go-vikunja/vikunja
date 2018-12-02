@@ -52,7 +52,7 @@ func Caldav(c echo.Context) error {
 	}
 
 	// Get all tasks for that user
-	tasks, err := models.GetTasksByUser("", &u, -1)
+	tasks, err := models.GetTasksByUser("", &u, -1, models.SortTasksByUnsorted)
 	if err != nil {
 		return handler.HandleHTTPError(err, c)
 	}
