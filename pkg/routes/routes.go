@@ -162,8 +162,8 @@ func RegisterRoutes(e *echo.Echo) {
 		},
 	}
 	a.PUT("/lists/:list", taskHandler.CreateWeb)
-	a.GET("/tasks", taskHandler.ReadAllWeb)
-	a.GET("/tasks/:sort", taskHandler.ReadAllWeb)
+	a.GET("/tasks/all", taskHandler.ReadAllWeb)
+	a.GET("/tasks/all/:sort", taskHandler.ReadAllWeb)
 	a.DELETE("/tasks/:listtask", taskHandler.DeleteWeb)
 	a.POST("/tasks/:listtask", taskHandler.UpdateWeb)
 
