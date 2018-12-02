@@ -1,4 +1,4 @@
-# code.vikunja.io/web v0.0.0-20181130221802-d23d2a4c1efb
+# code.vikunja.io/web v0.0.0-20181130231148-b061c20192fb
 code.vikunja.io/web
 code.vikunja.io/web/handler
 # github.com/PuerkitoBio/purell v1.1.0
