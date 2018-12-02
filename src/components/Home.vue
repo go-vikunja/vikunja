@@ -58,7 +58,7 @@
             },
 			loadPendingTasks() {
 				const cancel = message.setLoading(this)
-				HTTP.get(`tasks`, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
+				HTTP.get(`tasks/all`, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
 					.then(response => {
 						this.tasks = response.data
 						this.tasks.sort(this.sortyByDeadline)
