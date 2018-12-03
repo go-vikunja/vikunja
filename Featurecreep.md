@@ -205,6 +205,7 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
       * [x] Listen bearbeiten (nur eigene im Moment)
       * [x] Listenpunkte hinzufügen
       * [x] Listenpunkte bearbeiten
+* [ ] Der -1 namespace sollte auch seperat angesprochen werden können, gibt sonst probleme mit der app.
 
 ### Short Term
 
