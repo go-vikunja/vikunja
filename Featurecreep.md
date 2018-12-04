@@ -205,7 +205,7 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
       * [x] Listen bearbeiten (nur eigene im Moment)
       * [x] Listenpunkte hinzufügen
       * [x] Listenpunkte bearbeiten
-* [ ] Der -1 namespace sollte auch seperat angesprochen werden können, gibt sonst probleme mit der app.
+* [x] Der -1 namespace sollte auch seperat angesprochen werden können, gibt sonst probleme mit der app.
 
 ### Short Term
 
@@ -245,6 +245,12 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
 
 ### Later/Nice to have
 
+* [ ] Websockets
+    * sollen den geupdaten Kram an alle anderen user schicken
+    * Ein Channel in dem socket pro liste ... oder pro user?
+    * Erst an die anderen Schicken wenn der write in die Datenbank erfolgeich war
+    * Ein Nutzer authentifiziert sich mit jwt und bekommt dann zugriff auf alle rooms mit listen auf die er Zugriff hat
+        * Unterscheidung nach lesen und Schreiben 
 * [ ] Globale Limits für anlegbare Listen + Namespaces
 * [ ] Mgl., dass die Instanz geschlossen ist, also sich keiner registrieren kann, und man sich einloggen muss
 * [ ] mgl. zum Emailmaskieren haben (in den Nutzereinstellungen, wenn man seine Email nicht an alle Welt rausposaunen will)
