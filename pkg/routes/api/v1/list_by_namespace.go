@@ -51,7 +51,12 @@ func GetListsByNamespaceID(c echo.Context) error {
 	}
 
 	// Get the lists
-	lists, err := models.GetListsByNamespaceID(namespace.ID)
+	doer, err := models.GetCurrentUser(c)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, models.Message{"An error occurred."})
+	}
+
+	lists, err := models.GetListsByNamespaceID(namespace.ID, doer)
 	if err != nil {
 		if models.IsErrNamespaceDoesNotExist(err) {
 			return c.JSON(http.StatusNotFound, models.Message{"Namespace not found."})
@@ -67,6 +72,11 @@ func getNamespace(c echo.Context) (namespace models.Namespace, err error) {
 	// Make int
 	namespaceID, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
+		return
+	}
+
+	if namespaceID == -1 {
+		namespace = models.PseudoNamespace
 		return
 	}
 

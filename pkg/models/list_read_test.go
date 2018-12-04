@@ -27,7 +27,7 @@ func TestList_ReadAll(t *testing.T) {
 	//assert.NoError(t, PrepareTestDatabase())
 
 	// Get all lists for our namespace
-	lists, err := GetListsByNamespaceID(1)
+	lists, err := GetListsByNamespaceID(1, &User{})
 	assert.NoError(t, err)
 	assert.Equal(t, len(lists), 2)
 

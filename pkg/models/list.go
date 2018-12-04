@@ -39,8 +39,27 @@ type List struct {
 }
 
 // GetListsByNamespaceID gets all lists in a namespace
-func GetListsByNamespaceID(nID int64) (lists []*List, err error) {
-	err = x.Where("namespace_id = ?", nID).Find(&lists)
+func GetListsByNamespaceID(nID int64, doer *User) (lists []*List, err error) {
+	if nID == -1 {
+		err = x.Select("l.*").
+			Table("list").
+			Alias("l").
+			Join("LEFT", []string{"team_list", "tl"}, "l.id = tl.list_id").
+			Join("LEFT", []string{"team_members", "tm"}, "tm.team_id = tl.team_id").
+			Join("LEFT", []string{"users_list", "ul"}, "ul.list_id = l.id").
+			Where("tm.user_id = ?", doer.ID).
+			Or("ul.user_id = ?", doer.ID).
+			GroupBy("l.id").
+			Find(&lists)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		err = x.Where("namespace_id = ?", nID).Find(&lists)
+	}
+
+	// get more list details
+	err = AddListDetails(lists)
 	return lists, err
 }
 

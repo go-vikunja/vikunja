@@ -37,6 +37,15 @@ type Namespace struct {
 	web.Rights   `xorm:"-" json:"-"`
 }
 
+// PseudoNamespace is a pseudo namespace used to hold shared lists
+var PseudoNamespace = Namespace{
+	ID:          -1,
+	Name:        "Shared Lists",
+	Description: "Lists of other users shared with you via teams or directly.",
+	Created:     time.Now().Unix(),
+	Updated:     time.Now().Unix(),
+}
+
 // TableName makes beautiful table names
 func (Namespace) TableName() string {
 	return "namespaces"
@@ -44,11 +53,17 @@ func (Namespace) TableName() string {
 
 // GetNamespaceByID returns a namespace object by its ID
 func GetNamespaceByID(id int64) (namespace Namespace, err error) {
-	if id < 1 {
+	if id == 0 {
 		return namespace, ErrNamespaceDoesNotExist{ID: id}
 	}
 
 	namespace.ID = id
+	// Get the namesapce with shared lists
+	if id == -1 {
+		namespace = PseudoNamespace
+		return namespace, err
+	}
+
 	exists, err := x.Get(&namespace)
 	if err != nil {
 		return namespace, err
@@ -112,15 +127,10 @@ func (n *Namespace) ReadAll(search string, a web.Auth, page int) (interface{}, e
 
 	// Create our pseudo-namespace to hold the shared lists
 	// We want this one at the beginning, which is why we create it here
+	pseudonamespace := PseudoNamespace
+	pseudonamespace.Owner = *doer
 	all = append(all, &NamespaceWithLists{
-		Namespace{
-			ID:          -1,
-			Name:        "Shared Lists",
-			Description: "Lists of other users shared with you via teams or directly.",
-			Owner:       *doer,
-			Created:     time.Now().Unix(),
-			Updated:     time.Now().Unix(),
-		},
+		pseudonamespace,
 		[]*List{},
 	})
 
