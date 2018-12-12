@@ -1,0 +1,377 @@
+GET http://localhost:8080/api/v1/tasks/all/desc
+Authorization: Bearer {{auth_token}}
+
+###
+
+GET http://localhost:8080/api/v1/tasks/all/desc
+Authorization: Bearer {{auth_token}}
+
+###
+
+GET http://localhost:8080/api/v1/tasks/all/desc
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdmF0YXIiOiIzMGZhZDIzZGQ2NWRmYzFlY2IwYWZkZWQ1YzIzZDNhZiIsImVtYWlsIjoia0BrbnQubGkiLCJleHAiOjE1NDQwMjc1NDIsImlkIjoxLCJ1c2VybmFtZSI6InVzZXIifQ.c1cZOuURFtFrv-kJLWBkYNjWzAwrZqLk-HQEiB8xqzI
+
+<> 2018-12-02T073018.200.json
+
+###
+
+POST http://localhost:8080/api/v1/tasks/32
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdmF0YXIiOiIzMGZhZDIzZGQ2NWRmYzFlY2IwYWZkZWQ1YzIzZDNhZiIsImVtYWlsIjoia0BrbnQubGkiLCJleHAiOjE1NDQwMjc1NDIsImlkIjoxLCJ1c2VybmFtZSI6InVzZXIifQ.c1cZOuURFtFrv-kJLWBkYNjWzAwrZqLk-HQEiB8xqzI
+Content-Type: application/json
+
+{"done":true}
+
+<> 2018-12-02T073000.200.json
+
+###
+
+GET http://localhost:8080/api/v1/tasks/all/desc
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdmF0YXIiOiIzMGZhZDIzZGQ2NWRmYzFlY2IwYWZkZWQ1YzIzZDNhZiIsImVtYWlsIjoia0BrbnQubGkiLCJleHAiOjE1NDQwMjc1NDIsImlkIjoxLCJ1c2VybmFtZSI6InVzZXIifQ.c1cZOuURFtFrv-kJLWBkYNjWzAwrZqLk-HQEiB8xqzI
+
+<> 2018-12-02T072958.200.json
+
+###
+
+GET http://localhost:8080/api/v1/tasks/desc
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdmF0YXIiOiIzMGZhZDIzZGQ2NWRmYzFlY2IwYWZkZWQ1YzIzZDNhZiIsImVtYWlsIjoia0BrbnQubGkiLCJleHAiOjE1NDQwMjc1NDIsImlkIjoxLCJ1c2VybmFtZSI6InVzZXIifQ.c1cZOuURFtFrv-kJLWBkYNjWzAwrZqLk-HQEiB8xqzI
+
+<> 2018-12-02T072850.200.json
+
+###
+
+POST http://localhost:8080/api/v1/task/32
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdmF0YXIiOiIzMGZhZDIzZGQ2NWRmYzFlY2IwYWZkZWQ1YzIzZDNhZiIsImVtYWlsIjoia0BrbnQubGkiLCJleHAiOjE1NDQwMjc1NDIsImlkIjoxLCJ1c2VybmFtZSI6InVzZXIifQ.c1cZOuURFtFrv-kJLWBkYNjWzAwrZqLk-HQEiB8xqzI
+Content-Type: application/json
+
+{"done":true}
+
+<> 2018-12-02T072847.200.json
+
+###
+
+POST http://localhost:8080/api/v1/tasks/32
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdmF0YXIiOiIzMGZhZDIzZGQ2NWRmYzFlY2IwYWZkZWQ1YzIzZDNhZiIsImVtYWlsIjoia0BrbnQubGkiLCJleHAiOjE1NDQwMjc1NDIsImlkIjoxLCJ1c2VybmFtZSI6InVzZXIifQ.c1cZOuURFtFrv-kJLWBkYNjWzAwrZqLk-HQEiB8xqzI
+Content-Type: application/json
+
+{"done":true}
+
+###
+
+POST http://localhost:8080/api/v1/tasks/32
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdmF0YXIiOiIzMGZhZDIzZGQ2NWRmYzFlY2IwYWZkZWQ1YzIzZDNhZiIsImVtYWlsIjoia0BrbnQubGkiLCJleHAiOjE1NDQwMjc1NDIsImlkIjoxLCJ1c2VybmFtZSI6InVzZXIifQ.c1cZOuURFtFrv-kJLWBkYNjWzAwrZqLk-HQEiB8xqzI
+Content-Type: application/json
+
+{"done":true}
+
+###
+
+POST http://localhost:8080/api/v1/tasks/32
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdmF0YXIiOiIzMGZhZDIzZGQ2NWRmYzFlY2IwYWZkZWQ1YzIzZDNhZiIsImVtYWlsIjoia0BrbnQubGkiLCJleHAiOjE1NDQwMjc1NDIsImlkIjoxLCJ1c2VybmFtZSI6InVzZXIifQ.c1cZOuURFtFrv-kJLWBkYNjWzAwrZqLk-HQEiB8xqzI
+Content-Type: application/json
+
+{"done":true}
+
+###
+
+POST http://localhost:8080/api/v1/tasks/32
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdmF0YXIiOiIzMGZhZDIzZGQ2NWRmYzFlY2IwYWZkZWQ1YzIzZDNhZiIsImVtYWlsIjoia0BrbnQubGkiLCJleHAiOjE1NDQwMjc1NDIsImlkIjoxLCJ1c2VybmFtZSI6InVzZXIifQ.c1cZOuURFtFrv-kJLWBkYNjWzAwrZqLk-HQEiB8xqzI
+Content-Type: application/json
+
+{"done":true}
+
+<> 2018-12-02T071606.403.json
+
+###
+
+GET http://localhost:8080/api/v1/tasks/desc
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdmF0YXIiOiIzMGZhZDIzZGQ2NWRmYzFlY2IwYWZkZWQ1YzIzZDNhZiIsImVtYWlsIjoia0BrbnQubGkiLCJleHAiOjE1NDQwMjc1NDIsImlkIjoxLCJ1c2VybmFtZSI6InVzZXIifQ.c1cZOuURFtFrv-kJLWBkYNjWzAwrZqLk-HQEiB8xqzI
+
+<> 2018-12-02T071601.200.json
+
+###
+
+POST http://localhost:8080/api/v1/tasks/32
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdmF0YXIiOiIzMGZhZDIzZGQ2NWRmYzFlY2IwYWZkZWQ1YzIzZDNhZiIsImVtYWlsIjoia0BrbnQubGkiLCJleHAiOjE1NDQwMjc1NDIsImlkIjoxLCJ1c2VybmFtZSI6InVzZXIifQ.c1cZOuURFtFrv-kJLWBkYNjWzAwrZqLk-HQEiB8xqzI
+Content-Type: application/json
+
+{"done":true}
+
+<> 2018-12-02T071251.200.json
+
+###
+
+GET http://localhost:8080/api/v1/tasks/desc
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdmF0YXIiOiIzMGZhZDIzZGQ2NWRmYzFlY2IwYWZkZWQ1YzIzZDNhZiIsImVtYWlsIjoia0BrbnQubGkiLCJleHAiOjE1NDQwMjc1NDIsImlkIjoxLCJ1c2VybmFtZSI6InVzZXIifQ.c1cZOuURFtFrv-kJLWBkYNjWzAwrZqLk-HQEiB8xqzI
+
+<> 2018-12-02T071248.400.json
+
+###
+
+GET http://localhost:8080/api/v1/tasks/desc
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdmF0YXIiOiIzMGZhZDIzZGQ2NWRmYzFlY2IwYWZkZWQ1YzIzZDNhZiIsImVtYWlsIjoia0BrbnQubGkiLCJleHAiOjE1NDQwMjc1NDIsImlkIjoxLCJ1c2VybmFtZSI6InVzZXIifQ.c1cZOuURFtFrv-kJLWBkYNjWzAwrZqLk-HQEiB8xqzI
+
+###
+
+GET http://localhost:8080/api/v1/tasks/desc
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdmF0YXIiOiIzMGZhZDIzZGQ2NWRmYzFlY2IwYWZkZWQ1YzIzZDNhZiIsImVtYWlsIjoia0BrbnQubGkiLCJleHAiOjE1NDQwMjc1NDIsImlkIjoxLCJ1c2VybmFtZSI6InVzZXIifQ.c1cZOuURFtFrv-kJLWBkYNjWzAwrZqLk-HQEiB8xqzI
+
+<> 2018-12-02T065458.400.json
+
+###
+
+GET http://localhost:8080/api/v1/tasks/desc
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdmF0YXIiOiIzMGZhZDIzZGQ2NWRmYzFlY2IwYWZkZWQ1YzIzZDNhZiIsImVtYWlsIjoia0BrbnQubGkiLCJleHAiOjE1NDQwMjc1NDIsImlkIjoxLCJ1c2VybmFtZSI6InVzZXIifQ.c1cZOuURFtFrv-kJLWBkYNjWzAwrZqLk-HQEiB8xqzI
+
+<> 2018-12-02T065440.400.json
+
+###
+
+POST http://localhost:8080/api/v1/tasks/32
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdmF0YXIiOiIzMGZhZDIzZGQ2NWRmYzFlY2IwYWZkZWQ1YzIzZDNhZiIsImVtYWlsIjoia0BrbnQubGkiLCJleHAiOjE1NDQwMjc1NDIsImlkIjoxLCJ1c2VybmFtZSI6InVzZXIifQ.c1cZOuURFtFrv-kJLWBkYNjWzAwrZqLk-HQEiB8xqzI
+Content-Type: application/json
+
+{"done":true}
+
+<> 2018-12-02T065438.200.json
+
+###
+
+GET http://localhost:8080/api/v1/tasks/desc
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdmF0YXIiOiIzMGZhZDIzZGQ2NWRmYzFlY2IwYWZkZWQ1YzIzZDNhZiIsImVtYWlsIjoia0BrbnQubGkiLCJleHAiOjE1NDQwMjc1NDIsImlkIjoxLCJ1c2VybmFtZSI6InVzZXIifQ.c1cZOuURFtFrv-kJLWBkYNjWzAwrZqLk-HQEiB8xqzI
+
+<> 2018-12-02T065435.400.json
+
+###
+
+GET http://localhost:8080/api/v1/tasks/desc
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdmF0YXIiOiIzMGZhZDIzZGQ2NWRmYzFlY2IwYWZkZWQ1YzIzZDNhZiIsImVtYWlsIjoia0BrbnQubGkiLCJleHAiOjE1NDQwMjc1NDIsImlkIjoxLCJ1c2VybmFtZSI6InVzZXIifQ.c1cZOuURFtFrv-kJLWBkYNjWzAwrZqLk-HQEiB8xqzI
+
+<> 2018-12-02T064124.400.json
+
+###
+
+GET http://localhost:8080/api/v1/tasks/desc
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdmF0YXIiOiIzMGZhZDIzZGQ2NWRmYzFlY2IwYWZkZWQ1YzIzZDNhZiIsImVtYWlsIjoia0BrbnQubGkiLCJleHAiOjE1NDQwMjc1NDIsImlkIjoxLCJ1c2VybmFtZSI6InVzZXIifQ.c1cZOuURFtFrv-kJLWBkYNjWzAwrZqLk-HQEiB8xqzI
+
+<> 2018-12-02T064042.400.json
+
+###
+
+GET http://localhost:8080/api/v1/tasks/desc
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdmF0YXIiOiIzMGZhZDIzZGQ2NWRmYzFlY2IwYWZkZWQ1YzIzZDNhZiIsImVtYWlsIjoia0BrbnQubGkiLCJleHAiOjE1NDQwMjc1NDIsImlkIjoxLCJ1c2VybmFtZSI6InVzZXIifQ.c1cZOuURFtFrv-kJLWBkYNjWzAwrZqLk-HQEiB8xqzI
+
+<> 2018-12-02T063953.400.json
+
+###
+
+GET http://localhost:8080/api/v1/tasks/desc
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdmF0YXIiOiIzMGZhZDIzZGQ2NWRmYzFlY2IwYWZkZWQ1YzIzZDNhZiIsImVtYWlsIjoia0BrbnQubGkiLCJleHAiOjE1NDQwMjc1NDIsImlkIjoxLCJ1c2VybmFtZSI6InVzZXIifQ.c1cZOuURFtFrv-kJLWBkYNjWzAwrZqLk-HQEiB8xqzI
+
+<> 2018-12-02T062746.400.json
+
+###
+
+GET http://localhost:8080/api/v1/tasks/caldav
+
+<> 2018-12-02T062517.401.txt
+
+###
+
+GET http://localhost:8080/api/v1/tasks/caldav
+
+<> 2018-12-02T062309.401.txt
+
+###
+
+GET http://localhost:8080/api/v1/tasks/caldav
+
+<> 2018-12-02T062247.401.txt
+
+###
+
+GET http://localhost:8080/api/v1/tasks/desc
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdmF0YXIiOiIzMGZhZDIzZGQ2NWRmYzFlY2IwYWZkZWQ1YzIzZDNhZiIsImVtYWlsIjoia0BrbnQubGkiLCJleHAiOjE1NDQwMjc1NDIsImlkIjoxLCJ1c2VybmFtZSI6InVzZXIifQ.c1cZOuURFtFrv-kJLWBkYNjWzAwrZqLk-HQEiB8xqzI
+
+###
+
+GET http://localhost:8080/api/v1/tasks/desc
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdmF0YXIiOiIzMGZhZDIzZGQ2NWRmYzFlY2IwYWZkZWQ1YzIzZDNhZiIsImVtYWlsIjoia0BrbnQubGkiLCJleHAiOjE1NDQwMjc1NDIsImlkIjoxLCJ1c2VybmFtZSI6InVzZXIifQ.c1cZOuURFtFrv-kJLWBkYNjWzAwrZqLk-HQEiB8xqzI
+
+<> 2018-12-02T061843.400.json
+
+###
+
+GET http://localhost:8080/api/v1/tasks/desc
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdmF0YXIiOiIzMGZhZDIzZGQ2NWRmYzFlY2IwYWZkZWQ1YzIzZDNhZiIsImVtYWlsIjoia0BrbnQubGkiLCJleHAiOjE1NDQwMjc1NDIsImlkIjoxLCJ1c2VybmFtZSI6InVzZXIifQ.c1cZOuURFtFrv-kJLWBkYNjWzAwrZqLk-HQEiB8xqzI
+
+<> 2018-12-02T061607.400.json
+
+###
+
+GET http://localhost:8080/api/v1/tasks/desc
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdmF0YXIiOiIzMGZhZDIzZGQ2NWRmYzFlY2IwYWZkZWQ1YzIzZDNhZiIsImVtYWlsIjoia0BrbnQubGkiLCJleHAiOjE1NDQwMjc1NDIsImlkIjoxLCJ1c2VybmFtZSI6InVzZXIifQ.c1cZOuURFtFrv-kJLWBkYNjWzAwrZqLk-HQEiB8xqzI
+
+<> 2018-12-02T061248.400.json
+
+###
+
+GET http://localhost:8080/api/v1/tasks/desc
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdmF0YXIiOiIzMGZhZDIzZGQ2NWRmYzFlY2IwYWZkZWQ1YzIzZDNhZiIsImVtYWlsIjoia0BrbnQubGkiLCJleHAiOjE1NDQwMjc1NDIsImlkIjoxLCJ1c2VybmFtZSI6InVzZXIifQ.c1cZOuURFtFrv-kJLWBkYNjWzAwrZqLk-HQEiB8xqzI
+
+<> 2018-12-02T061147.400.json
+
+###
+
+GET http://localhost:8080/api/v1/tasks/desc
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdmF0YXIiOiIzMGZhZDIzZGQ2NWRmYzFlY2IwYWZkZWQ1YzIzZDNhZiIsImVtYWlsIjoia0BrbnQubGkiLCJleHAiOjE1NDQwMjc1NDIsImlkIjoxLCJ1c2VybmFtZSI6InVzZXIifQ.c1cZOuURFtFrv-kJLWBkYNjWzAwrZqLk-HQEiB8xqzI
+
+<> 2018-12-02T061105.400.json
+
+###
+
+POST http://localhost:8080/api/v1/tasks/32
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdmF0YXIiOiIzMGZhZDIzZGQ2NWRmYzFlY2IwYWZkZWQ1YzIzZDNhZiIsImVtYWlsIjoia0BrbnQubGkiLCJleHAiOjE1NDQwMjc1NDIsImlkIjoxLCJ1c2VybmFtZSI6InVzZXIifQ.c1cZOuURFtFrv-kJLWBkYNjWzAwrZqLk-HQEiB8xqzI
+Content-Type: application/json
+
+{"done":true}
+
+<> 2018-12-02T060901.200.json
+
+###
+
+POST http://localhost:8080/api/v1/tasks/32
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdmF0YXIiOiIzMGZhZDIzZGQ2NWRmYzFlY2IwYWZkZWQ1YzIzZDNhZiIsImVtYWlsIjoia0BrbnQubGkiLCJleHAiOjE1NDQwMjc1NDIsImlkIjoxLCJ1c2VybmFtZSI6InVzZXIifQ.c1cZOuURFtFrv-kJLWBkYNjWzAwrZqLk-HQEiB8xqzI
+Content-Type: application/json
+
+{"done":true}
+
+<> 2018-12-02T060830.200.json
+
+###
+
+POST http://localhost:8080/api/v1/tasks/32
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdmF0YXIiOiIzMGZhZDIzZGQ2NWRmYzFlY2IwYWZkZWQ1YzIzZDNhZiIsImVtYWlsIjoia0BrbnQubGkiLCJleHAiOjE1NDQwMjc1NDIsImlkIjoxLCJ1c2VybmFtZSI6InVzZXIifQ.c1cZOuURFtFrv-kJLWBkYNjWzAwrZqLk-HQEiB8xqzI
+Content-Type: application/json
+
+{"done":true}
+
+<> 2018-12-02T060433.200.json
+
+###
+
+POST http://localhost:8080/api/v1/tasks/32
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdmF0YXIiOiIzMGZhZDIzZGQ2NWRmYzFlY2IwYWZkZWQ1YzIzZDNhZiIsImVtYWlsIjoia0BrbnQubGkiLCJleHAiOjE1NDQwMjc1NDIsImlkIjoxLCJ1c2VybmFtZSI6InVzZXIifQ.c1cZOuURFtFrv-kJLWBkYNjWzAwrZqLk-HQEiB8xqzI
+Content-Type: application/json
+
+{"done":true}
+
+<> 2018-12-02T060426.200.json
+
+###
+
+GET http://localhost:8080/api/v1/tasks/desc
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdmF0YXIiOiIzMGZhZDIzZGQ2NWRmYzFlY2IwYWZkZWQ1YzIzZDNhZiIsImVtYWlsIjoia0BrbnQubGkiLCJleHAiOjE1NDQwMjc1NDIsImlkIjoxLCJ1c2VybmFtZSI6InVzZXIifQ.c1cZOuURFtFrv-kJLWBkYNjWzAwrZqLk-HQEiB8xqzI
+
+<> 2018-12-02T060351.400.json
+
+###
+
+GET http://localhost:8080/api/v1/tasks/desc
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdmF0YXIiOiIzMGZhZDIzZGQ2NWRmYzFlY2IwYWZkZWQ1YzIzZDNhZiIsImVtYWlsIjoia0BrbnQubGkiLCJleHAiOjE1NDQwMjc1NDIsImlkIjoxLCJ1c2VybmFtZSI6InVzZXIifQ.c1cZOuURFtFrv-kJLWBkYNjWzAwrZqLk-HQEiB8xqzI
+
+<> 2018-12-02T060309.400.json
+
+###
+
+GET http://localhost:8080/api/v1/tasks/desc
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdmF0YXIiOiIzMGZhZDIzZGQ2NWRmYzFlY2IwYWZkZWQ1YzIzZDNhZiIsImVtYWlsIjoia0BrbnQubGkiLCJleHAiOjE1NDQwMjc1NDIsImlkIjoxLCJ1c2VybmFtZSI6InVzZXIifQ.c1cZOuURFtFrv-kJLWBkYNjWzAwrZqLk-HQEiB8xqzI
+
+<> 2018-12-02T060035.400.json
+
+###
+
+GET http://localhost:8080/api/v1/tasks/desc
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdmF0YXIiOiIzMGZhZDIzZGQ2NWRmYzFlY2IwYWZkZWQ1YzIzZDNhZiIsImVtYWlsIjoia0BrbnQubGkiLCJleHAiOjE1NDQwMjc1NDIsImlkIjoxLCJ1c2VybmFtZSI6InVzZXIifQ.c1cZOuURFtFrv-kJLWBkYNjWzAwrZqLk-HQEiB8xqzI
+
+<> 2018-12-02T055859.400.json
+
+###
+
+GET http://localhost:8080/api/v1/tasks/desc
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdmF0YXIiOiIzMGZhZDIzZGQ2NWRmYzFlY2IwYWZkZWQ1YzIzZDNhZiIsImVtYWlsIjoia0BrbnQubGkiLCJleHAiOjE1NDQwMjc1NDIsImlkIjoxLCJ1c2VybmFtZSI6InVzZXIifQ.c1cZOuURFtFrv-kJLWBkYNjWzAwrZqLk-HQEiB8xqzI
+
+###
+
+GET http://localhost:8080/api/v1/tasks/desc
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdmF0YXIiOiIzMGZhZDIzZGQ2NWRmYzFlY2IwYWZkZWQ1YzIzZDNhZiIsImVtYWlsIjoia0BrbnQubGkiLCJleHAiOjE1NDQwMjc1NDIsImlkIjoxLCJ1c2VybmFtZSI6InVzZXIifQ.c1cZOuURFtFrv-kJLWBkYNjWzAwrZqLk-HQEiB8xqzI
+
+<> 2018-12-02T055220.400.json
+
+###
+
+GET http://localhost:8080/api/v1/tasks/desc
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdmF0YXIiOiIzMGZhZDIzZGQ2NWRmYzFlY2IwYWZkZWQ1YzIzZDNhZiIsImVtYWlsIjoia0BrbnQubGkiLCJleHAiOjE1NDQwMjc1NDIsImlkIjoxLCJ1c2VybmFtZSI6InVzZXIifQ.c1cZOuURFtFrv-kJLWBkYNjWzAwrZqLk-HQEiB8xqzI
+
+<> 2018-12-02T055156.400.json
+
+###
+
+GET http://localhost:8080/api/v1/tasks/desc
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdmF0YXIiOiIzMGZhZDIzZGQ2NWRmYzFlY2IwYWZkZWQ1YzIzZDNhZiIsImVtYWlsIjoia0BrbnQubGkiLCJleHAiOjE1NDQwMjc1NDIsImlkIjoxLCJ1c2VybmFtZSI6InVzZXIifQ.c1cZOuURFtFrv-kJLWBkYNjWzAwrZqLk-HQEiB8xqzI
+
+<> 2018-12-02T055141.400.json
+
+###
+
+POST http://localhost:8080/api/v1/tasks/32
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdmF0YXIiOiIzMGZhZDIzZGQ2NWRmYzFlY2IwYWZkZWQ1YzIzZDNhZiIsImVtYWlsIjoia0BrbnQubGkiLCJleHAiOjE1NDQwMjc1NDIsImlkIjoxLCJ1c2VybmFtZSI6InVzZXIifQ.c1cZOuURFtFrv-kJLWBkYNjWzAwrZqLk-HQEiB8xqzI
+Content-Type: application/json
+
+{"done":true}
+
+<> 2018-12-02T054720.200.json
+
+###
+
+GET http://localhost:8080/api/v1/tasks/desc
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdmF0YXIiOiIzMGZhZDIzZGQ2NWRmYzFlY2IwYWZkZWQ1YzIzZDNhZiIsImVtYWlsIjoia0BrbnQubGkiLCJleHAiOjE1NDQwMjc1NDIsImlkIjoxLCJ1c2VybmFtZSI6InVzZXIifQ.c1cZOuURFtFrv-kJLWBkYNjWzAwrZqLk-HQEiB8xqzI
+
+<> 2018-12-02T054300.400.json
+
+###
+
+GET http://localhost:8080/api/v1/tasks/desc
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdmF0YXIiOiIzMGZhZDIzZGQ2NWRmYzFlY2IwYWZkZWQ1YzIzZDNhZiIsImVtYWlsIjoia0BrbnQubGkiLCJleHAiOjE1NDQwMjc1NDIsImlkIjoxLCJ1c2VybmFtZSI6InVzZXIifQ.c1cZOuURFtFrv-kJLWBkYNjWzAwrZqLk-HQEiB8xqzI
+
+<> 2018-12-02T053807.400.json
+
+###
+
+POST http://localhost:8080/api/v1/tasks/32
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdmF0YXIiOiIzMGZhZDIzZGQ2NWRmYzFlY2IwYWZkZWQ1YzIzZDNhZiIsImVtYWlsIjoia0BrbnQubGkiLCJleHAiOjE1NDQwMjc1NDIsImlkIjoxLCJ1c2VybmFtZSI6InVzZXIifQ.c1cZOuURFtFrv-kJLWBkYNjWzAwrZqLk-HQEiB8xqzI
+Content-Type: application/json
+
+{"done":true}
+
+<> 2018-12-02T053636.200.json
+
+###
+
+POST http://localhost:8080/api/v1/tasks/32
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdmF0YXIiOiIzMGZhZDIzZGQ2NWRmYzFlY2IwYWZkZWQ1YzIzZDNhZiIsImVtYWlsIjoia0BrbnQubGkiLCJleHAiOjE1NDQwMjc1NDIsImlkIjoxLCJ1c2VybmFtZSI6InVzZXIifQ.c1cZOuURFtFrv-kJLWBkYNjWzAwrZqLk-HQEiB8xqzI
+Content-Type: application/json
+
+{"done":true}
+
+###
+
+POST http://localhost:8080/api/v1/tasks/32
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdmF0YXIiOiIzMGZhZDIzZGQ2NWRmYzFlY2IwYWZkZWQ1YzIzZDNhZiIsImVtYWlsIjoia0BrbnQubGkiLCJleHAiOjE1NDQwMjc1NDIsImlkIjoxLCJ1c2VybmFtZSI6InVzZXIifQ.c1cZOuURFtFrv-kJLWBkYNjWzAwrZqLk-HQEiB8xqzI
+Content-Type: application/json
+
+{"done":true}
+
+<> 2018-12-02T053519.403.json
+
+###
+
