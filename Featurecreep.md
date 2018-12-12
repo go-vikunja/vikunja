@@ -235,6 +235,15 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
 * [x] Password Reset -> Link via email oder so
 * [ ] Settings
 
+### Docs
+
+* [ ] Bauanleitung in die Readme/docs
+* [ ] Anleitung zum Makefile
+* [ ] Struktur erklären
+* [ ] Deploy in die docs
+  * [ ] Docker
+  * [ ] Native
+* [ ] Docs aufsetzen
 
 ### Later/Nice to have
 
