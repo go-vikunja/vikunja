@@ -164,12 +164,6 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
 * [x] Repeating tasks
 * [x] Tagesübersicht ("Was ist heute/diese Woche due?") -> Machen letztenendes die Clients, wir brauchen nur nen endpoint, der alle tasks auskotzt, der Client macht dann die Sortierung.
 * [x] Subtasks
-* [ ] Assignees
-* [ ] Attachments
-* [ ] Labels
-* [ ] Tasks innerhalb eines definierbarem Bereich, sollte aber trotzdem der server machen, so à la "Gib mir alles für diesen Monat"
-* [ ] Namespaces in Namespaces (in Namespaces in Namespaces in Namespaces...)
-	* Rechtemanagement dafür wird schwierig
 
 ## Clients
 
@@ -195,7 +189,6 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
 * [x] Überall echo.NewHTTPError statt c.JSON(Message{}) benutzen
 * [x] Bessere Fehlermeldungen wenn das Model was ankommt falsch ist und nicht geparst werden kann
 * [x] Fehlerhandling irgendwie besser machen. Zb mit "World error messages"? Sprich, die Methode ruft einfach auf obs die entsprechende Fehlermeldung gibt und zeigt sonst 500 an.
-* [ ] Endpoints neu organisieren? Also zb `namespaces/:nID/lists/:lID/items/:iID` statt einzelnen Endpoints für alles
 * [x] Viper für config einbauen und ini rauswerfen
 * [x] Docs für installationsanleitung
 * [x] Tests für Rechtekram
@@ -229,7 +222,7 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
   * [ ] Discovery, stichwort PROPFIND 
 * [x] Wir brauchen noch ne gute idee, wie man die listen kriegt, auf die man nur so Zugriff hat (ohne namespace)
     * Dazu am Besten nen pseudonamespace anlegen (id -1 oder so), der hat das dann alles
-* [ ] Testing mit locust: https://locust.io/
+* [x] Testing mit locust: https://locust.io/
 * [ ] Methode einbauen, um mit einem gültigen token ein neues gültiges zu kriegen
 
 #### Userstuff
@@ -245,7 +238,9 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
 
 ### Later/Nice to have
 
+* [x] Deps nach mod umziehen
 * [ ] Websockets
+    * Nur lesend? (-> Updates wie bisher)
     * sollen den geupdaten Kram an alle anderen user schicken
     * Ein Channel in dem socket pro liste ... oder pro user?
     * Erst an die anderen Schicken wenn der write in die Datenbank erfolgeich war
@@ -255,6 +250,14 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
 * [ ] Mgl., dass die Instanz geschlossen ist, also sich keiner registrieren kann, und man sich einloggen muss
 * [ ] mgl. zum Emailmaskieren haben (in den Nutzereinstellungen, wenn man seine Email nicht an alle Welt rausposaunen will)
 * [ ] Mgl. zum Accountlöschen haben (so richtig krass mit emailverifiezierung und dass alle Privaten Listen gelöscht werden und man alle geteilten entweder wem übertragen muss oder  auf privat stellen)
-* [ ] IMAP-Integration -> Man schickt eine email an Vikunja und es macht daraus dann nen task
+* [ ] IMAP-Integration -> Man schickt eine email an Vikunja und es macht daraus dann nen task -> Achtung missbrauchsmöglichkeiten
 * [ ] In und Out webhooks, mit Templates vom Payload
-* [x] Deps nach mod (dem nachfolger von dep) umziehen, blocked by Go 1.11
+* [ ] Start/Enddatum für Tasks
+* [ ] Timeline/Calendar view -> Dazu tasks die in einem Bestimmten Bereich due sind, macht dann das Frontend
+* [ ] "Smart Lists", Listen nach bestimmten Kriterien gefiltert -> nur UI?
+* [ ] "Performance-Statistik" -> Wie viele Tasks man in bestimmten Zeiträumen so geschafft hat etc
+* [ ] Activity Feed, so à la "der und der hat das und das gemacht etc"
+* [ ] Assignees
+* [ ] Attachments
+* [ ] Labels
+* [ ] Tasks innerhalb eines definierbarem Bereich, sollte aber trotzdem der server machen, so à la "Gib mir alles für diesen Monat"
