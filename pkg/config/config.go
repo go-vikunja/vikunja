@@ -17,6 +17,7 @@
 package config
 
 import (
+	"code.vikunja.io/api/pkg/log"
 	"crypto/rand"
 	"fmt"
 	"github.com/spf13/viper"
@@ -26,13 +27,13 @@ import (
 )
 
 // InitConfig initializes the config, sets defaults etc.
-func InitConfig() (err error) {
+func init() {
 
 	// Set defaults
 	// Service config
 	random, err := random(32)
 	if err != nil {
-		return err
+		log.Log.Fatal(err.Error())
 	}
 
 	// Service
@@ -46,6 +47,7 @@ func InitConfig() (err error) {
 	exPath := filepath.Dir(ex)
 	viper.SetDefault("service.rootpath", exPath)
 	viper.SetDefault("service.pagecount", 50)
+	viper.SetDefault("service.enablemetrics", false)
 	// Database
 	viper.SetDefault("database.type", "sqlite")
 	viper.SetDefault("database.host", "localhost")
@@ -59,8 +61,6 @@ func InitConfig() (err error) {
 	viper.SetDefault("cache.enabled", false)
 	viper.SetDefault("cache.type", "memory")
 	viper.SetDefault("cache.maxelementsize", 1000)
-	viper.SetDefault("cache.redishost", "localhost:6379")
-	viper.SetDefault("cache.redispassword", "")
 	// Mailer
 	viper.SetDefault("mailer.host", "")
 	viper.SetDefault("mailer.port", "587")
@@ -70,6 +70,11 @@ func InitConfig() (err error) {
 	viper.SetDefault("mailer.fromemail", "mail@vikunja")
 	viper.SetDefault("mailer.queuelength", 100)
 	viper.SetDefault("mailer.queuetimeout", 30)
+	// Redis
+	viper.SetDefault("redis.enabled", false)
+	viper.SetDefault("redis.host", "localhost:6379")
+	viper.SetDefault("redis.password", "")
+	viper.SetDefault("redis.db", 0)
 
 	// Init checking for environment variables
 	viper.SetEnvPrefix("vikunja")
@@ -81,11 +86,9 @@ func InitConfig() (err error) {
 	viper.SetConfigName("config")
 	err = viper.ReadInConfig()
 	if err != nil {
-		fmt.Println(err)
-		fmt.Println("Using defaults.")
+		log.Log.Info(err)
+		log.Log.Info("Using defaults.")
 	}
-
-	return nil
 }
 
 func random(length int) (string, error) {

@@ -16,7 +16,10 @@
 
 package models
 
-import _ "code.vikunja.io/web" // For swaggerdocs generation
+import (
+	"code.vikunja.io/api/pkg/metrics"
+	_ "code.vikunja.io/web" // For swaggerdocs generation
+)
 
 // Delete implements the delete method for listTask
 // @Summary Delete a task
@@ -38,6 +41,10 @@ func (i *ListTask) Delete() (err error) {
 		return
 	}
 
-	_, err = x.ID(i.ID).Delete(ListTask{})
+	if _, err = x.ID(i.ID).Delete(ListTask{}); err != nil {
+		return err
+	}
+
+	metrics.UpdateCount(-1, metrics.TaskCountKey)
 	return
 }

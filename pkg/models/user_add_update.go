@@ -18,6 +18,7 @@ package models
 
 import (
 	"code.vikunja.io/api/pkg/mail"
+	"code.vikunja.io/api/pkg/metrics"
 	"code.vikunja.io/api/pkg/utils"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -77,6 +78,9 @@ func CreateUser(user User) (newUser User, err error) {
 	if err != nil {
 		return User{}, err
 	}
+
+	// Update the metrics
+	metrics.UpdateCount(1, metrics.ActiveUsersKey)
 
 	// Get the  full new User
 	newUserOut, err := GetUser(newUser)

@@ -17,14 +17,13 @@
 package models
 
 import (
+	"encoding/gob"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql" // Because.
 	"github.com/go-xorm/core"
 	"github.com/go-xorm/xorm"
 	xrc "github.com/go-xorm/xorm-redis-cache"
 	_ "github.com/mattn/go-sqlite3" // Because.
-
-	"encoding/gob"
 	"github.com/spf13/viper"
 )
 
@@ -86,7 +85,7 @@ func SetEngine() (err error) {
 			x.SetDefaultCacher(cacher)
 			break
 		case "redis":
-			cacher := xrc.NewRedisCacher(viper.GetString("cache.redishost"), viper.GetString("cache.redispassword"), xrc.DEFAULT_EXPIRATION, x.Logger())
+			cacher := xrc.NewRedisCacher(viper.GetString("redis.host"), viper.GetString("redis.password"), xrc.DEFAULT_EXPIRATION, x.Logger())
 			x.SetDefaultCacher(cacher)
 			gob.Register(tables)
 			break
@@ -117,4 +116,9 @@ func getLimitFromPageIndex(page int) (limit, start int) {
 	limit = viper.GetInt("service.pagecount")
 	start = limit * (page - 1)
 	return
+}
+
+// GetTotalCount returns the total amount of something
+func GetTotalCount(counting interface{}) (count int64, err error) {
+	return x.Count(counting)
 }

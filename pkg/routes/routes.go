@@ -45,6 +45,7 @@ package routes
 import (
 	_ "code.vikunja.io/api/docs" // To generate swagger docs
 	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/metrics"
 	"code.vikunja.io/api/pkg/models"
 	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
 	"code.vikunja.io/web"
@@ -52,6 +53,7 @@ import (
 	"github.com/asaskevich/govalidator"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/viper"
 	"github.com/swaggo/echo-swagger"
 )
@@ -112,6 +114,54 @@ func RegisterRoutes(e *echo.Echo) {
 	// Swagger UI
 	a.GET("/swagger/*", echoSwagger.WrapHandler)
 
+	// Prometheus endpoint
+	if viper.GetBool("service.enablemetrics") {
+
+		if !viper.GetBool("redis.enabled") {
+			log.Log.Fatal("You have to enable redis in order to use metrics")
+		}
+
+		type countable struct {
+			Rediskey string
+			Type     interface{}
+		}
+
+		for _, c := range []countable{
+			{
+				metrics.ListCountKey,
+				models.List{},
+			},
+			{
+				metrics.UserCountKey,
+				models.User{},
+			},
+			{
+				metrics.NamespaceCountKey,
+				models.Namespace{},
+			},
+			{
+				metrics.TaskCountKey,
+				models.ListTask{},
+			},
+			{
+				metrics.TeamCountKey,
+				models.Team{},
+			},
+		} {
+			// Set initial totals
+			total, err := models.GetTotalCount(c.Type)
+			if err != nil {
+				log.Log.Fatalf("Could not set initial count for %v, error was %s", c.Type, err)
+			}
+			if err := metrics.SetCount(total, c.Rediskey); err != nil {
+				log.Log.Fatalf("Could not set initial count for %v, error was %s", c.Type, err)
+			}
+		}
+
+		a.GET("/metrics", echo.WrapHandler(promhttp.Handler()))
+	}
+
+	// User stuff
 	a.POST("/login", apiv1.Login)
 	a.POST("/register", apiv1.RegisterUser)
 	a.POST("/user/password/token", apiv1.UserRequestResetPasswordToken)
@@ -137,6 +187,21 @@ func RegisterRoutes(e *echo.Echo) {
 			return next(c)
 		}
 	})
+
+	// Middleware to collect metrics
+	if viper.GetBool("service.enablemetrics") {
+		a.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
+			return func(c echo.Context) error {
+
+				// Update currently active users
+				if err := models.UpdateActiveUsersFromContext(c); err != nil {
+					log.Log.Error(err)
+					return next(c)
+				}
+				return next(c)
+			}
+		})
+	}
 
 	a.POST("/tokenTest", apiv1.CheckToken)
 

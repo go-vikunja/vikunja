@@ -30,6 +30,7 @@ require (
 	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/go-openapi/spec v0.17.2 // indirect
 	github.com/go-openapi/swag v0.17.2 // indirect
+	github.com/go-redis/redis v6.14.2+incompatible
 	github.com/go-sql-driver/mysql v0.0.0-20171007150158-ee359f95877b
 	github.com/go-xorm/builder v0.0.0-20170519032130-c8871c857d25 // indirect
 	github.com/go-xorm/core v0.5.8
@@ -49,6 +50,7 @@ require (
 	github.com/mitchellh/mapstructure v1.1.2 // indirect
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/pkg/errors v0.8.0 // indirect
+	github.com/prometheus/client_golang v0.9.2
 	github.com/spf13/viper v1.2.0
 	github.com/stretchr/testify v1.2.2
 	github.com/swaggo/echo-swagger v0.0.0-20180315045949-97f46bb9e5a5

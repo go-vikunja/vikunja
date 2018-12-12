@@ -18,12 +18,14 @@ package models
 
 import (
 	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/metrics"
 	"code.vikunja.io/web"
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo"
 	"golang.org/x/crypto/bcrypt"
 	"reflect"
+	"time"
 )
 
 // UserLogin Object to recive user credentials in JSON format
@@ -158,4 +160,31 @@ func GetCurrentUser(c echo.Context) (user *User, err error) {
 	}
 
 	return
+}
+
+// UpdateActiveUsersFromContext updates the currently active users in redis
+func UpdateActiveUsersFromContext(c echo.Context) (err error) {
+	user, err := GetCurrentUser(c)
+	if err != nil {
+		return err
+	}
+
+	allActiveUsers, err := metrics.GetActiveUsers()
+	if err != nil {
+		return
+	}
+
+	var uupdated bool
+	for in, u := range allActiveUsers {
+		if u.UserID == user.ID {
+			allActiveUsers[in].LastSeen = time.Now()
+			uupdated = true
+		}
+	}
+
+	if !uupdated {
+		allActiveUsers = append(allActiveUsers, &metrics.ActiveUser{UserID: user.ID, LastSeen: time.Now()})
+	}
+
+	return metrics.SetActiveUsers(allActiveUsers)
 }

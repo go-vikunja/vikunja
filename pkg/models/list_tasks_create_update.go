@@ -17,6 +17,7 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/metrics"
 	"code.vikunja.io/web"
 	"github.com/imdario/mergo"
 )
@@ -61,8 +62,12 @@ func (i *ListTask) Create(a web.Auth) (err error) {
 
 	i.CreatedByID = u.ID
 	i.CreatedBy = u
-	_, err = x.Insert(i)
-	return err
+	if _, err = x.Insert(i); err != nil {
+		return err
+	}
+
+	metrics.UpdateCount(1, metrics.TaskCountKey)
+	return
 }
 
 // Update updates a list task

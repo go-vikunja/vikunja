@@ -16,7 +16,10 @@
 
 package models
 
-import _ "code.vikunja.io/web" // For swaggerdocs generation
+import (
+	"code.vikunja.io/api/pkg/metrics"
+	_ "code.vikunja.io/web" // For swaggerdocs generation
+)
 
 // Delete implements the delete method of CRUDable
 // @Summary Deletes a list
@@ -41,6 +44,7 @@ func (l *List) Delete() (err error) {
 	if err != nil {
 		return
 	}
+	metrics.UpdateCount(-1, metrics.ListCountKey)
 
 	// Delete all todotasks on that list
 	_, err = x.Where("list_id = ?", l.ID).Delete(&ListTask{})

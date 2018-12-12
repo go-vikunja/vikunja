@@ -16,6 +16,8 @@
 
 package models
 
+import "code.vikunja.io/api/pkg/metrics"
+
 // DeleteUserByID deletes a user by its ID
 func DeleteUserByID(id int64, doer *User) error {
 	// Check if the id is 0
@@ -29,6 +31,9 @@ func DeleteUserByID(id int64, doer *User) error {
 	if err != nil {
 		return err
 	}
+
+	// Update the metrics
+	metrics.UpdateCount(-1, metrics.ActiveUsersKey)
 
 	return err
 }

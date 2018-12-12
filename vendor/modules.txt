@@ -10,6 +10,8 @@ github.com/alecthomas/template
 github.com/alecthomas/template/parse
 # github.com/asaskevich/govalidator v0.0.0-20180720115003-f9ffefc3facf
 github.com/asaskevich/govalidator
+# github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973
+github.com/beorn7/perks/quantile
 # github.com/client9/misspell v0.3.4
 github.com/client9/misspell/cmd/misspell
 github.com/client9/misspell
@@ -34,6 +36,15 @@ github.com/go-openapi/jsonreference
 github.com/go-openapi/spec
 # github.com/go-openapi/swag v0.17.2
 github.com/go-openapi/swag
+# github.com/go-redis/redis v6.14.2+incompatible
+github.com/go-redis/redis
+github.com/go-redis/redis/internal
+github.com/go-redis/redis/internal/consistenthash
+github.com/go-redis/redis/internal/hashtag
+github.com/go-redis/redis/internal/pool
+github.com/go-redis/redis/internal/proto
+github.com/go-redis/redis/internal/singleflight
+github.com/go-redis/redis/internal/util
 # github.com/go-sql-driver/mysql v0.0.0-20171007150158-ee359f95877b
 github.com/go-sql-driver/mysql
 # github.com/go-xorm/builder v0.0.0-20170519032130-c8871c857d25
@@ -44,6 +55,8 @@ github.com/go-xorm/core
 github.com/go-xorm/xorm
 # github.com/go-xorm/xorm-redis-cache v0.0.0-20180727005610-859b313566b2
 github.com/go-xorm/xorm-redis-cache
+# github.com/golang/protobuf v1.2.0
+github.com/golang/protobuf/proto
 # github.com/gordonklaus/ineffassign v0.0.0-20180909121442-1003c8bd00dc
 github.com/gordonklaus/ineffassign
 # github.com/hashicorp/hcl v1.0.0
@@ -81,6 +94,8 @@ github.com/mattn/go-colorable
 github.com/mattn/go-isatty
 # github.com/mattn/go-sqlite3 v1.9.0
 github.com/mattn/go-sqlite3
+# github.com/matttproud/golang_protobuf_extensions v1.0.1
+github.com/matttproud/golang_protobuf_extensions/pbutil
 # github.com/mitchellh/mapstructure v1.1.2
 github.com/mitchellh/mapstructure
 # github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
@@ -91,6 +106,22 @@ github.com/pelletier/go-toml
 github.com/pkg/errors
 # github.com/pmezard/go-difflib v1.0.0
 github.com/pmezard/go-difflib/difflib
+# github.com/prometheus/client_golang v0.9.2
+github.com/prometheus/client_golang/prometheus
+github.com/prometheus/client_golang/prometheus/promauto
+github.com/prometheus/client_golang/prometheus/promhttp
+github.com/prometheus/client_golang/prometheus/internal
+# github.com/prometheus/client_model v0.0.0-20180712105110-5c3871d89910
+github.com/prometheus/client_model/go
+# github.com/prometheus/common v0.0.0-20181126121408-4724e9255275
+github.com/prometheus/common/expfmt
+github.com/prometheus/common/model
+github.com/prometheus/common/internal/bitbucket.org/ww/goautoneg
+# github.com/prometheus/procfs v0.0.0-20181204211112-1dc9a6cbc91a
+github.com/prometheus/procfs
+github.com/prometheus/procfs/nfs
+github.com/prometheus/procfs/xfs
+github.com/prometheus/procfs/internal/util
 # github.com/spf13/afero v1.1.2
 github.com/spf13/afero
 github.com/spf13/afero/mem
@@ -126,7 +157,7 @@ golang.org/x/crypto/acme
 # golang.org/x/lint v0.0.0-20181026193005-c67002cb31c3
 golang.org/x/lint/golint
 golang.org/x/lint
-# golang.org/x/net v0.0.0-20181005035420-146acd28ed58
+# golang.org/x/net v0.0.0-20181201002055-351d144fa1fc
 golang.org/x/net/webdav
 golang.org/x/net/context
 golang.org/x/net/webdav/internal/xml

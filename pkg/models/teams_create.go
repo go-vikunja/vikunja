@@ -16,7 +16,10 @@
 
 package models
 
-import "code.vikunja.io/web"
+import (
+	"code.vikunja.io/api/pkg/metrics"
+	"code.vikunja.io/web"
+)
 
 // Create is the handler to create a team
 // @Summary Creates a new team
@@ -51,6 +54,10 @@ func (t *Team) Create(a web.Auth) (err error) {
 
 	// Insert the current user as member and admin
 	tm := TeamMember{TeamID: t.ID, UserID: doer.ID, Admin: true}
-	err = tm.Create(doer)
+	if err = tm.Create(doer); err != nil {
+		return err
+	}
+
+	metrics.UpdateCount(1, metrics.TeamCountKey)
 	return
 }

@@ -17,6 +17,8 @@
 package models
 
 import (
+	_ "code.vikunja.io/api/pkg/config" // To trigger its init() which initializes the config
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/mail"
 	"fmt"
 	"github.com/go-xorm/core"
@@ -36,8 +38,7 @@ func MainTest(m *testing.M, pathToRoot string) {
 	var err error
 	fixturesDir := filepath.Join(pathToRoot, "models", "fixtures")
 	if err = createTestEngine(fixturesDir); err != nil {
-		fmt.Fprintf(os.Stderr, "Error creating test engine: %v\n", err)
-		os.Exit(1)
+		log.Log.Fatalf("Error creating test engine: %v\n", err)
 	}
 
 	IsTesting = true
@@ -46,7 +47,9 @@ func MainTest(m *testing.M, pathToRoot string) {
 	mail.StartMailDaemon()
 
 	// Create test database
-	PrepareTestDatabase()
+	if err = PrepareTestDatabase(); err != nil {
+		log.Log.Fatal(err.Error())
+	}
 
 	os.Exit(m.Run())
 }

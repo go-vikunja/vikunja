@@ -16,7 +16,10 @@
 
 package models
 
-import "code.vikunja.io/web"
+import (
+	"code.vikunja.io/api/pkg/metrics"
+	"code.vikunja.io/web"
+)
 
 // Create implements the creation method via the interface
 // @Summary Creates a new namespace
@@ -51,6 +54,10 @@ func (n *Namespace) Create(a web.Auth) (err error) {
 	n.OwnerID = n.Owner.ID
 
 	// Insert
-	_, err = x.Insert(n)
+	if _, err = x.Insert(n); err != nil {
+		return err
+	}
+
+	metrics.UpdateCount(1, metrics.NamespaceCountKey)
 	return
 }

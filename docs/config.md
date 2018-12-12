@@ -35,6 +35,9 @@ service:
   rootpath: <the path of the executable>
   # The number of items which gets returned per page
   pagecount: 50
+  # If set to true, enables a /metrics endpoint for prometheus to collect metrics about the system
+  # You'll need to use redis for this in order to enable common metrics over multiple nodes
+  enablemetrics: false
 
 database:
   # Database type to use. Supported types are mysql and sqlite.
@@ -54,18 +57,23 @@ database:
   # Sets the max open connections to the database. Only used when using mysql.
   openconnections: 100
 
-
 cache:
   # If cache is enabled or not
   enabled: false
-  # Cache type. Possible values are memory or redis
+  # Cache type. Possible values are memory or redis, you'll need to enable redis below when using redis
   type: memory
   # When using memory this defines the maximum size an element can take
   maxelementsize: 1000
-  # When using redis, this is the host of the redis server including its port.
+
+redis:
+  # Whether to enable redis or not
+  enabled: false
+  # The host of the redis server including its port.
   redishost: 'localhost:6379'
-  # When using redis, this is the password used to authenicate against the redis server
+  # The password used to authenicate against the redis server
   redispassword: ''
+  # 0 means default database
+  db: 0
 
 mailer:
   # SMTP Host

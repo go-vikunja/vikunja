@@ -16,7 +16,10 @@
 
 package models
 
-import "code.vikunja.io/web"
+import (
+	"code.vikunja.io/api/pkg/metrics"
+	"code.vikunja.io/web"
+)
 
 // CreateOrUpdateList updates a list or creates it if it doesn't exist
 func CreateOrUpdateList(list *List) (err error) {
@@ -36,6 +39,7 @@ func CreateOrUpdateList(list *List) (err error) {
 
 	if list.ID == 0 {
 		_, err = x.Insert(list)
+		metrics.UpdateCount(1, metrics.ListCountKey)
 	} else {
 		_, err = x.ID(list.ID).Update(list)
 	}

@@ -16,7 +16,10 @@
 
 package models
 
-import _ "code.vikunja.io/web" // For swaggerdocs generation
+import (
+	"code.vikunja.io/api/pkg/metrics"
+	_ "code.vikunja.io/web" // For swaggerdocs generation
+)
 
 // Delete deletes a namespace
 // @Summary Deletes a namespace
@@ -65,6 +68,8 @@ func (n *Namespace) Delete() (err error) {
 	if err != nil {
 		return
 	}
+
+	metrics.UpdateCount(-1, metrics.NamespaceCountKey)
 
 	return
 }

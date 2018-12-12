@@ -16,7 +16,10 @@
 
 package models
 
-import _ "code.vikunja.io/web" // For swaggerdocs generation
+import (
+	"code.vikunja.io/api/pkg/metrics"
+	_ "code.vikunja.io/web" // For swaggerdocs generation
+)
 
 // Delete deletes a team
 // @Summary Deletes a team
@@ -57,5 +60,10 @@ func (t *Team) Delete() (err error) {
 
 	// Delete team <-> lists relations
 	_, err = x.Where("team_id = ?", t.ID).Delete(&TeamList{})
+	if err != nil {
+		return
+	}
+
+	metrics.UpdateCount(-1, metrics.TeamCountKey)
 	return
 }

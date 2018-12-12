@@ -18,12 +18,11 @@ package main
 
 import (
 	"code.vikunja.io/api/docs"
-	"code.vikunja.io/api/pkg/config"
+	_ "code.vikunja.io/api/pkg/config" // To trigger its init() which initializes the config
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/mail"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/routes"
-
 	"context"
 	"github.com/spf13/viper"
 	"os"
@@ -39,18 +38,10 @@ func main() {
 	// Init logging
 	log.InitLogger()
 
-	// Init Config
-	err := config.InitConfig()
-	if err != nil {
-		log.Log.Error(err.Error())
-		os.Exit(1)
-	}
-
 	// Set Engine
-	err = models.SetEngine()
+	err := models.SetEngine()
 	if err != nil {
-		log.Log.Error(err.Error())
-		os.Exit(1)
+		log.Log.Fatal(err.Error())
 	}
 
 	// Start the mail daemon
