@@ -133,8 +133,6 @@ endif
 .PHONY: release-copy
 release-copy:
 	$(foreach file,$(wildcard $(DIST)/binaries/$(EXECUTABLE)-*),cp $(file) $(DIST)/release/$(notdir $(file));)
-	mkdir $(DIST)/release/public
-	cp public/ $(DIST)/release/ -R
 	mkdir $(DIST)/release/templates
 	cp templates/ $(DIST)/templates/ -R
 
@@ -142,11 +140,9 @@ release-copy:
 release-check:
 	cd $(DIST)/release; $(foreach file,$(wildcard $(DIST)/release/$(EXECUTABLE)-*),sha256sum $(notdir $(file)) > $(notdir $(file)).sha256;)
 
-
 .PHONY: release-os-package
 release-os-package:
-	$(foreach file,$(filter-out %.sha256,$(wildcard $(DIST)/release/$(EXECUTABLE)-*)),mkdir $(file)-full;mv $(file) $(file)-full/;	mv $(file).sha256 $(file)-full/; cp config.yml.sample $(file)-full/config.yml; cp $(DIST)/release/public $(file)-full/ -R; cp $(DIST)/release/templates $(file)-full/ -R; cp LICENSE $(file)-full/; )
-	rm $(DIST)/release/public -rf
+	$(foreach file,$(filter-out %.sha256,$(wildcard $(DIST)/release/$(EXECUTABLE)-*)),mkdir $(file)-full;mv $(file) $(file)-full/;	mv $(file).sha256 $(file)-full/; cp config.yml.sample $(file)-full/config.yml; cp $(DIST)/release/templates $(file)-full/ -R; cp LICENSE $(file)-full/; )
 
 .PHONY: release-zip
 release-zip:

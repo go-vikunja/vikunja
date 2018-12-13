@@ -36,7 +36,6 @@ RUN apk --no-cache add \
     tzdata
 
 COPY docker /
-COPY --from=build-env /go/src/code.vikunja.io/api/public /app/vikunja/public
 COPY --from=build-env /go/src/code.vikunja.io/api/templates /app/vikunja/templates
 COPY --from=build-env /go/src/code.vikunja.io/api/vikunja /app/vikunja/vikunja
 

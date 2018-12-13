@@ -238,6 +238,7 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
 ### Docs
 
 * [ ] Bauanleitung in die Readme/docs
+  * [ ] Auch noch nen "link" zum Featurecreep
 * [ ] Anleitung zum Makefile
 * [ ] Struktur erklären
 * [ ] Deploy in die docs
