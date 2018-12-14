@@ -30,7 +30,8 @@ import (
 var (
 	x *xorm.Engine
 
-	tables []interface{}
+	tables            []interface{}
+	tablesWithPointer []interface{}
 )
 
 func getEngine() (*xorm.Engine, error) {
@@ -68,6 +69,19 @@ func init() {
 		new(ListUser),
 		new(NamespaceUser),
 	)
+
+	tablesWithPointer = append(tables,
+		&User{},
+		&List{},
+		&ListTask{},
+		&Team{},
+		&TeamMember{},
+		&TeamList{},
+		&TeamNamespace{},
+		&Namespace{},
+		&ListUser{},
+		&NamespaceUser{},
+	)
 }
 
 // SetEngine sets the xorm.Engine
@@ -88,6 +102,7 @@ func SetEngine() (err error) {
 			cacher := xrc.NewRedisCacher(viper.GetString("redis.host"), viper.GetString("redis.password"), xrc.DEFAULT_EXPIRATION, x.Logger())
 			x.SetDefaultCacher(cacher)
 			gob.Register(tables)
+			gob.Register(tablesWithPointer) // Need to register tables with pointer as well...
 			break
 		default:
 			fmt.Println("Did not find a valid cache type. Caching disabled. Please refer to the docs for poosible cache types.")

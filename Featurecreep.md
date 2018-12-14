@@ -235,6 +235,11 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
 * [x] Password Reset -> Link via email oder so
 * [ ] Settings
 
+### Bugfixes
+
+* [ ] Panic wenn mailer nicht erreichbar -> Als workaround mailer deaktivierbar machen, bzw keine mails verschicken
+* [ ] "unexpected EOF"
+
 ### Docs
 
 * [ ] Bauanleitung in die Readme/docs
