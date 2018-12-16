@@ -8,3 +8,8 @@
   name: testnamespace2
   description: Lorem Ipsum
   owner_id: 2
+-
+  id: 3
+  name: testnamespace3
+  description: Lorem Ipsum
+  owner_id: 3

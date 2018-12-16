@@ -1,0 +1,41 @@
+- id: 1
+  text: 'task #1'
+  created_by_id: 1
+  list_id: 1
+  created: 1543626724
+  updated: 1543626724
+- id: 2
+  text: 'task #2 done'
+  done: true
+  created_by_id: 1
+  list_id: 1
+  created: 1543626724
+  updated: 1543626724
+- id: 3
+  text: 'task #3 high prio'
+  created_by_id: 1
+  list_id: 1
+  created: 1543626724
+  updated: 1543626724
+  priority: 100
+- id: 4
+  text: 'task #4 low prio'
+  created_by_id: 1
+  list_id: 1
+  created: 1543626724
+  updated: 1543626724
+  priority: 1
+- id: 5
+  text: 'task #5 higher due date'
+  created_by_id: 1
+  list_id: 1
+  created: 1543626724
+  updated: 1543626724
+  due_date_unix: 1543636724
+- id: 6
+  text: 'task #6 lower due date'
+  created_by_id: 1
+  list_id: 1
+  created: 1543626724
+  updated: 1543626724
+  due_date_unix: 1543616724

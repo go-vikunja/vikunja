@@ -8,6 +8,7 @@
 [![Docker Pulls](https://img.shields.io/docker/pulls/vikunja/api.svg)](https://hub.docker.com/r/vikunja/api/)
 [![Swagger Docs](https://img.shields.io/badge/swagger-docs-brightgreen.svg)](https://try.vikunja.io/api/v1/swagger)
 [![Go Report Card](https://goreportcard.com/badge/git.kolaente.de/vikunja/api)](https://goreportcard.com/report/git.kolaente.de/vikunja/api)
+[![cover.run](https://cover.run/go/code.vikunja.io/api.svg?style=flat&tag=golang-1.10)](https://cover.run/go?tag=golang-1.10&repo=code.vikunja.io%2Fapi) 
 
 ## Features
 

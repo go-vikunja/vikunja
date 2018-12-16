@@ -105,5 +105,5 @@ func TestNamespace_Create(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, reflect.TypeOf(nsps).Kind(), reflect.Slice)
 	s := reflect.ValueOf(nsps)
-	assert.Equal(t, 1, s.Len())
+	assert.Equal(t, 3, s.Len())
 }

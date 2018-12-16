@@ -17,8 +17,10 @@
 package models
 
 import (
+	"code.vikunja.io/web"
 	"github.com/stretchr/testify/assert"
 	"reflect"
+	"runtime"
 	"testing"
 )
 
@@ -96,5 +98,79 @@ func TestTeamNamespace(t *testing.T) {
 	err = tn4.Delete()
 	assert.Error(t, err)
 	assert.True(t, IsErrTeamDoesNotHaveAccessToNamespace(err))
+}
 
+func TestTeamNamespace_Update(t *testing.T) {
+	type fields struct {
+		ID          int64
+		TeamID      int64
+		NamespaceID int64
+		Right       TeamRight
+		Created     int64
+		Updated     int64
+		CRUDable    web.CRUDable
+		Rights      web.Rights
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		wantErr bool
+		errType func(err error) bool
+	}{
+		{
+			name: "Test Update Normally",
+			fields: fields{
+				NamespaceID: 3,
+				TeamID:      1,
+				Right:       TeamRightAdmin,
+			},
+		},
+		{
+			name: "Test Update to write",
+			fields: fields{
+				NamespaceID: 3,
+				TeamID:      1,
+				Right:       TeamRightWrite,
+			},
+		},
+		{
+			name: "Test Update to Read",
+			fields: fields{
+				NamespaceID: 3,
+				TeamID:      1,
+				Right:       TeamRightRead,
+			},
+		},
+		{
+			name: "Test Update with invalid right",
+			fields: fields{
+				NamespaceID: 3,
+				TeamID:      1,
+				Right:       500,
+			},
+			wantErr: true,
+			errType: IsErrInvalidTeamRight,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tl := &TeamNamespace{
+				ID:          tt.fields.ID,
+				TeamID:      tt.fields.TeamID,
+				NamespaceID: tt.fields.NamespaceID,
+				Right:       tt.fields.Right,
+				Created:     tt.fields.Created,
+				Updated:     tt.fields.Updated,
+				CRUDable:    tt.fields.CRUDable,
+				Rights:      tt.fields.Rights,
+			}
+			err := tl.Update()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("TeamNamespace.Update() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if (err != nil) && tt.wantErr && !tt.errType(err) {
+				t.Errorf("TeamNamespace.Update() Wrong error type! Error = %v, want = %v", err, runtime.FuncForPC(reflect.ValueOf(tt.errType).Pointer()).Name())
+			}
+		})
+	}
 }

@@ -26,7 +26,7 @@ func (l *List) IsAdmin(a web.Auth) bool {
 	u := getUserForRights(a)
 
 	// Owners are always admins
-	if l.Owner.ID == u.ID {
+	if l.OwnerID == u.ID {
 		return true
 	}
 

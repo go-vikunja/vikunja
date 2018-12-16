@@ -17,8 +17,10 @@
 package models
 
 import (
+	"code.vikunja.io/web"
 	"github.com/stretchr/testify/assert"
 	"reflect"
+	"runtime"
 	"testing"
 )
 
@@ -85,7 +87,7 @@ func TestTeamList(t *testing.T) {
 
 	// Test read all for a list where the user not has access
 	tl6 := tl
-	tl6.ListID = 3
+	tl6.ListID = 4
 	_, err = tl6.ReadAll("", &u, 1)
 	assert.Error(t, err)
 	assert.True(t, IsErrNeedToHaveListReadAccess(err))
@@ -104,5 +106,79 @@ func TestTeamList(t *testing.T) {
 	err = tl4.Delete()
 	assert.Error(t, err)
 	assert.True(t, IsErrTeamDoesNotHaveAccessToList(err))
+}
 
+func TestTeamList_Update(t *testing.T) {
+	type fields struct {
+		ID       int64
+		TeamID   int64
+		ListID   int64
+		Right    TeamRight
+		Created  int64
+		Updated  int64
+		CRUDable web.CRUDable
+		Rights   web.Rights
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		wantErr bool
+		errType func(err error) bool
+	}{
+		{
+			name: "Test Update Normally",
+			fields: fields{
+				ListID: 3,
+				TeamID: 1,
+				Right:  TeamRightAdmin,
+			},
+		},
+		{
+			name: "Test Update to write",
+			fields: fields{
+				ListID: 3,
+				TeamID: 1,
+				Right:  TeamRightWrite,
+			},
+		},
+		{
+			name: "Test Update to Read",
+			fields: fields{
+				ListID: 3,
+				TeamID: 1,
+				Right:  TeamRightRead,
+			},
+		},
+		{
+			name: "Test Update with invalid right",
+			fields: fields{
+				ListID: 3,
+				TeamID: 1,
+				Right:  500,
+			},
+			wantErr: true,
+			errType: IsErrInvalidTeamRight,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tl := &TeamList{
+				ID:       tt.fields.ID,
+				TeamID:   tt.fields.TeamID,
+				ListID:   tt.fields.ListID,
+				Right:    tt.fields.Right,
+				Created:  tt.fields.Created,
+				Updated:  tt.fields.Updated,
+				CRUDable: tt.fields.CRUDable,
+				Rights:   tt.fields.Rights,
+			}
+			err := tl.Update()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("TeamList.Update() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if (err != nil) && tt.wantErr && !tt.errType(err) {
+				t.Errorf("TeamList.Update() Wrong error type! Error = %v, want = %v", err, runtime.FuncForPC(reflect.ValueOf(tt.errType).Pointer()).Name())
+			}
+		})
+	}
 }

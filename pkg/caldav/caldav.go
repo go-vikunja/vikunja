@@ -93,7 +93,8 @@ END:VCALENDAR` // Need a line break
 }
 
 func makeCalDavTimeFromUnixTime(unixtime int64) (caldavtime string) {
-	tm := time.Unix(unixtime, 0)
+	tz, _ := time.LoadLocation("UTC")
+	tm := time.Unix(unixtime, 0).In(tz)
 	return tm.Format("20060102T150405")
 }
 

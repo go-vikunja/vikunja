@@ -44,7 +44,7 @@ func (ul *ListUser) ReadAll(search string, a web.Auth, page int) (interface{}, e
 		return nil, err
 	}
 	if !l.CanRead(u) {
-		return nil, ErrNeedToHaveListReadAccess{}
+		return nil, ErrNeedToHaveListReadAccess{UserID: u.ID, ListID: ul.ListID}
 	}
 
 	// Get all users

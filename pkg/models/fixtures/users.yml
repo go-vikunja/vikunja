@@ -13,3 +13,9 @@
   username: 'user3'
   password: '1234'
   email: 'johndoe@example.com'
+-
+  id: 4
+  username: 'user4'
+  password: '1234'
+  email: 'johndoe@example.com'
+  email_confirm_token: tiepiQueed8ahc7zeeFe1eveiy4Ein8osooxegiephauph2Ael

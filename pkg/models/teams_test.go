@@ -47,6 +47,11 @@ func TestTeam_Create(t *testing.T) {
 	assert.True(t, tm.Members[0].Admin)
 	assert.True(t, dummyteam.CanRead(&doer))
 
+	// Try getting a team with an ID < 0
+	_, err = GetTeamByID(-1)
+	assert.Error(t, err)
+	assert.True(t, IsErrTeamDoesNotExist(err))
+
 	// Get all teams the user is part of
 	ts, err := tm.ReadAll("", &doer, 1)
 	assert.NoError(t, err)

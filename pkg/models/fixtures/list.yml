@@ -16,3 +16,9 @@
   description: Lorem Ipsum
   owner_id: 3
   namespace_id: 2
+-
+  id: 4
+  title: Test4
+  description: Lorem Ipsum
+  owner_id: 3
+  namespace_id: 3
