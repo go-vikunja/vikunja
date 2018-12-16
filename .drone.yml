@@ -44,6 +44,7 @@ pipeline:
       - make release-dirs
     when:
       event: [tag, push]
+      branch: [ master ]
 
   static-build-windows:
     image: karalabe/xgo-latest:latest
@@ -56,6 +57,7 @@ pipeline:
       - make release-windows
     when:
       event: [tag, push]
+      branch: [ master ]
 
   static-build-linux:
     image: karalabe/xgo-latest:latest
@@ -68,6 +70,7 @@ pipeline:
       - make release-linux
     when:
       event: [tag, push]
+      branch: [ master ]
 
   static-build-darwin:
     image: karalabe/xgo-latest:latest
@@ -80,15 +83,7 @@ pipeline:
       - make release-darwin
     when:
       event: [tag, push]
-
-#  static-build-frontend:
-#    image: webhippie/nodejs:current
-#    pull: true
-#    group: build-static
-#    commands:
-#      - make release-frontend
-#    when:
-#      event: [push, tag ]
+      branch: [ master ]
 
   after-build-static:
     image: karalabe/xgo-latest:latest
@@ -103,6 +98,7 @@ pipeline:
       - make release-zip
     when:
       event: [tag, push]
+      branch: [ master ]
 
 # Push the releases to our pseudo-s3-bucket
   release:
