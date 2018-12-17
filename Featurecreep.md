@@ -238,7 +238,7 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
 ### Bugfixes
 
 * [ ] Panic wenn mailer nicht erreichbar -> Als workaround mailer deaktivierbar machen, bzw keine mails verschicken
-* [ ] "unexpected EOF"
+* [x] "unexpected EOF"
 
 ### Docs
 

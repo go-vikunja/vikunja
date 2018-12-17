@@ -158,6 +158,11 @@ func RegisterRoutes(e *echo.Echo) {
 			}
 		}
 
+		// init active users, sometimes we'll have garbage from previous runs in redis instead
+		if err := metrics.SetActiveUsers([]*metrics.ActiveUser{}); err != nil {
+			log.Log.Fatalf("Could not set initial count for active users, error was %s", err)
+		}
+
 		a.GET("/metrics", echo.WrapHandler(promhttp.Handler()))
 	}
 
