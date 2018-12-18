@@ -276,3 +276,4 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
 * [ ] Attachments
 * [ ] Labels
 * [ ] Tasks innerhalb eines definierbarem Bereich, sollte aber trotzdem der server machen, so à la "Gib mir alles für diesen Monat"
+* [ ] Task-Templates innerhalb namespaces und Listen (-> Mehrere, die auswählbar sind)
