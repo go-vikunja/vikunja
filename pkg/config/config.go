@@ -40,6 +40,7 @@ func init() {
 	viper.SetDefault("service.JWTSecret", random)
 	viper.SetDefault("service.interface", ":3456")
 	viper.SetDefault("service.frontendurl", "")
+
 	ex, err := os.Executable()
 	if err != nil {
 		panic(err)
@@ -82,6 +83,8 @@ func init() {
 	viper.AutomaticEnv()
 
 	// Load the config file
+	viper.AddConfigPath(exPath)
+	viper.AddConfigPath(viper.GetString("service.rootpath"))
 	viper.AddConfigPath(".")
 	viper.SetConfigName("config")
 	err = viper.ReadInConfig()

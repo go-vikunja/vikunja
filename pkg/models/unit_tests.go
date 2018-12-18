@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"github.com/go-xorm/core"
 	"github.com/go-xorm/xorm"
+	"github.com/spf13/viper"
 	"gopkg.in/testfixtures.v2"
 	"os"
 	"path/filepath"
@@ -36,7 +37,7 @@ var IsTesting bool
 // MainTest creates the test engine
 func MainTest(m *testing.M, pathToRoot string) {
 	var err error
-	fixturesDir := filepath.Join(pathToRoot, "models", "fixtures")
+	fixturesDir := filepath.Join(pathToRoot, "pkg", "models", "fixtures")
 	if err = createTestEngine(fixturesDir); err != nil {
 		log.Log.Fatalf("Error creating test engine: %v\n", err)
 	}
@@ -48,7 +49,7 @@ func MainTest(m *testing.M, pathToRoot string) {
 
 	// Create test database
 	if err = PrepareTestDatabase(); err != nil {
-		log.Log.Fatal(err.Error())
+		log.Log.Fatalf("Error preparing test database: %v", err.Error())
 	}
 
 	os.Exit(m.Run())
@@ -56,24 +57,39 @@ func MainTest(m *testing.M, pathToRoot string) {
 
 func createTestEngine(fixturesDir string) error {
 	var err error
-	x, err = xorm.NewEngine("sqlite3", "file::memory:?cache=shared")
-	//x, err = xorm.NewEngine("sqlite3", "db.db")
-	if err != nil {
-		return err
-	}
-	x.SetMapper(core.GonicMapper{})
+	// If set, use the config we provided instead of normal
+	if os.Getenv("VIKUNJA_TESTS_USE_CONFIG") == "1" {
+		err = SetEngine()
+		if err != nil {
+			return err
+		}
+	} else {
+		x, err = xorm.NewEngine("sqlite3", "file::memory:?cache=shared")
+		if err != nil {
+			return err
+		}
 
-	// Sync dat shit
-	if err = x.StoreEngine("InnoDB").Sync2(tables...); err != nil {
-		return fmt.Errorf("sync database struct error: %v", err)
+		x.SetMapper(core.GonicMapper{})
+
+		// Sync dat shit
+		if err := x.StoreEngine("InnoDB").Sync2(tables...); err != nil {
+			return fmt.Errorf("sync database struct error: %v", err)
+		}
+
+		// Show SQL-Queries if necessary
+		if os.Getenv("UNIT_TESTS_VERBOSE") == "1" {
+			x.ShowSQL(true)
+		}
 	}
 
-	// Show SQL-Queries if necessary
-	if os.Getenv("UNIT_TESTS_VERBOSE") == "1" {
-		x.ShowSQL(true)
+	var fixturesHelper testfixtures.Helper
+	if viper.GetString("database.type") == "mysql" {
+		fixturesHelper = &testfixtures.MySQL{}
+	} else {
+		fixturesHelper = &testfixtures.SQLite{}
 	}
 
-	return InitFixtures(&testfixtures.SQLite{}, fixturesDir)
+	return InitFixtures(fixturesHelper, fixturesDir)
 }
 
 // PrepareTestDatabase load test fixtures into test database

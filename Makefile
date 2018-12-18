@@ -21,7 +21,7 @@ EXTRA_GOFLAGS ?=
 
 LDFLAGS := -X "main.Version=$(shell git describe --tags --always | sed 's/-/+/' | sed 's/^v//')" -X "main.Tags=$(TAGS)"
 
-PACKAGES ?= $(filter-out code.vikunja.io/api/integrations,$(shell go list ./... | grep -v /vendor/))
+PACKAGES ?= $(filter-out code.vikunja.io/api/integrations,$(shell go list -mod=vendor ./... | grep -v /vendor/))
 SOURCES ?= $(shell find . -name "*.go" -type f)
 
 TAGS ?=
@@ -56,7 +56,7 @@ clean:
 
 .PHONY: test
 test:
-	go test -cover -coverprofile cover.out $(PACKAGES)
+	VIKUNJA_SERVICE_ROOTPATH=$(shell pwd) go test $(GOFLAGS) -cover -coverprofile cover.out $(PACKAGES)
 	go tool cover -html=cover.out -o cover.html
 
 required-gofmt-version:

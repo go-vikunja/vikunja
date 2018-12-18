@@ -45,7 +45,7 @@ github.com/go-redis/redis/internal/pool
 github.com/go-redis/redis/internal/proto
 github.com/go-redis/redis/internal/singleflight
 github.com/go-redis/redis/internal/util
-# github.com/go-sql-driver/mysql v0.0.0-20171007150158-ee359f95877b
+# github.com/go-sql-driver/mysql v1.4.1
 github.com/go-sql-driver/mysql
 # github.com/go-xorm/builder v0.0.0-20170519032130-c8871c857d25
 github.com/go-xorm/builder
@@ -92,7 +92,7 @@ github.com/mailru/easyjson/buffer
 github.com/mattn/go-colorable
 # github.com/mattn/go-isatty v0.0.4
 github.com/mattn/go-isatty
-# github.com/mattn/go-sqlite3 v1.9.0
+# github.com/mattn/go-sqlite3 v1.10.0
 github.com/mattn/go-sqlite3
 # github.com/matttproud/golang_protobuf_extensions v1.0.1
 github.com/matttproud/golang_protobuf_extensions/pbutil
@@ -149,7 +149,7 @@ github.com/urfave/cli
 github.com/valyala/bytebufferpool
 # github.com/valyala/fasttemplate v0.0.0-20170224212429-dcecefd839c4
 github.com/valyala/fasttemplate
-# golang.org/x/crypto v0.0.0-20181127143415-eb0de9b17e85
+# golang.org/x/crypto v0.0.0-20181203042331-505ab145d0a9
 golang.org/x/crypto/bcrypt
 golang.org/x/crypto/acme/autocert
 golang.org/x/crypto/blowfish
@@ -157,7 +157,7 @@ golang.org/x/crypto/acme
 # golang.org/x/lint v0.0.0-20181026193005-c67002cb31c3
 golang.org/x/lint/golint
 golang.org/x/lint
-# golang.org/x/net v0.0.0-20181201002055-351d144fa1fc
+# golang.org/x/net v0.0.0-20181217023233-e147a9138326
 golang.org/x/net/webdav
 golang.org/x/net/context
 golang.org/x/net/webdav/internal/xml
@@ -177,11 +177,13 @@ golang.org/x/tools/go/gcexportdata
 golang.org/x/tools/go/buildutil
 golang.org/x/tools/go/internal/cgo
 golang.org/x/tools/go/internal/gcimporter
+# google.golang.org/appengine v1.3.0
+google.golang.org/appengine/cloudsql
 # gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc
 gopkg.in/alexcesaro/quotedprintable.v3
 # gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 gopkg.in/gomail.v2
-# gopkg.in/testfixtures.v2 v2.4.5
+# gopkg.in/testfixtures.v2 v2.5.3
 gopkg.in/testfixtures.v2
-# gopkg.in/yaml.v2 v2.2.1
+# gopkg.in/yaml.v2 v2.2.2
 gopkg.in/yaml.v2

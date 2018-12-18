@@ -16,10 +16,11 @@ A MySQL-Driver for Go's [database/sql](https://golang.org/pkg/database/sql/) pac
       * [Parameters](#parameters)
       * [Examples](#examples)
     * [Connection pool and timeouts](#connection-pool-and-timeouts)
+    * [context.Context Support](#contextcontext-support)
+    * [ColumnType Support](#columntype-support)
     * [LOAD DATA LOCAL INFILE support](#load-data-local-infile-support)
     * [time.Time support](#timetime-support)
     * [Unicode support](#unicode-support)
-    * [context.Context Support](#contextcontext-support)
   * [Testing / Development](#testing--development)
   * [License](#license)
 
@@ -39,7 +40,7 @@ A MySQL-Driver for Go's [database/sql](https://golang.org/pkg/database/sql/) pac
   * Optional placeholder interpolation
 
 ## Requirements
-  * Go 1.5 or higher
+  * Go 1.7 or higher. We aim to support the 3 latest versions of Go.
   * MySQL (4.1+), MariaDB, Percona Server, Google CloudSQL or Sphinx (2.2.3+)
 
 ---------------------------------------
@@ -232,10 +233,10 @@ Please keep in mind, that param values must be [url.QueryEscape](https://golang.
 ##### `maxAllowedPacket`
 ```
 Type:          decimal number
-Default:       0
+Default:       4194304
 ```
 
-Max packet size allowed in bytes. Use `maxAllowedPacket=0` to automatically fetch the `max_allowed_packet` variable from server.
+Max packet size allowed in bytes. The default value is 4 MiB and should be adjusted to match the server settings. `maxAllowedPacket=0` can be used to automatically fetch the `max_allowed_packet` variable from server *on every connection*.
 
 ##### `multiStatements`
 
@@ -258,6 +259,7 @@ Default:        false
 ```
 
 `parseTime=true` changes the output type of `DATE` and `DATETIME` values to `time.Time` instead of `[]byte` / `string`
+The date or datetime like `0000-00-00 00:00:00` is converted into zero value of `time.Time`.
 
 
 ##### `readTimeout`
@@ -278,7 +280,7 @@ Default:        false
 ```
 
 
-`rejectreadOnly=true` causes the driver to reject read-only connections. This
+`rejectReadOnly=true` causes the driver to reject read-only connections. This
 is for a possible race condition during an automatic failover, where the mysql
 client gets connected to a read-only replica after the failover.
 
@@ -292,6 +294,24 @@ for example, using a manual failover on AWS Aurora's MySQL-compatible cluster.
 If you are not relying on read-only transactions to reject writes that aren't
 supposed to happen, setting this on some MySQL providers (such as AWS Aurora)
 is safer for failovers.
+
+Note that ERROR 1290 can be returned for a `read-only` server and this option will
+cause a retry for that error. However the same error number is used for some
+other cases. You should ensure your application will never cause an ERROR 1290
+except for `read-only` mode when enabling this option.
+
+
+##### `serverPubKey`
+
+```
+Type:           string
+Valid Values:   <name>
+Default:        none
+```
+
+Server public keys can be registered with [`mysql.RegisterServerPubKey`](https://godoc.org/github.com/go-sql-driver/mysql#RegisterServerPubKey), which can then be used by the assigned name in the DSN.
+Public keys are used to transmit encrypted data, e.g. for authentication.
+If the server's public key is known, it should be set manually to avoid expensive and potentially insecure transmissions of the public key from the server to the client each time it is required.
 
 
 ##### `timeout`
@@ -400,6 +420,13 @@ user:password@/
 ### Connection pool and timeouts
 The connection pool is managed by Go's database/sql package. For details on how to configure the size of the pool and how long connections stay in the pool see `*DB.SetMaxOpenConns`, `*DB.SetMaxIdleConns`, and `*DB.SetConnMaxLifetime` in the [database/sql documentation](https://golang.org/pkg/database/sql/). The read, write, and dial timeouts for each individual connection are configured with the DSN parameters [`readTimeout`](#readtimeout), [`writeTimeout`](#writetimeout), and [`timeout`](#timeout), respectively.
 
+## `ColumnType` Support
+This driver supports the [`ColumnType` interface](https://golang.org/pkg/database/sql/#ColumnType) introduced in Go 1.8, with the exception of [`ColumnType.Length()`](https://golang.org/pkg/database/sql/#ColumnType.Length), which is currently not supported.
+
+## `context.Context` Support
+Go 1.8 added `database/sql` support for `context.Context`. This driver supports query timeouts and cancellation via contexts.
+See [context support in the database/sql package](https://golang.org/doc/go1.8#database_sql) for more details.
+
 
 ### `LOAD DATA LOCAL INFILE` support
 For this feature you need direct access to the package. Therefore you must change the import path (no `_`):
@@ -432,10 +459,6 @@ Other collations / charsets can be set using the [`collation`](#collation) DSN p
 Version 1.0 of the driver recommended adding `&charset=utf8` (alias for `SET NAMES utf8`) to the DSN to enable proper UTF-8 support. This is not necessary anymore. The [`collation`](#collation) parameter should be preferred to set another collation / charset than the default.
 
 See http://dev.mysql.com/doc/refman/5.7/en/charset-unicode.html for more details on MySQL's Unicode support.
-
-## `context.Context` Support
-Go 1.8 added `database/sql` support for `context.Context`. This driver supports query timeouts and cancellation via contexts.
-See [context support in the database/sql package](https://golang.org/doc/go1.8#database_sql) for more details.
 
 ## Testing / Development
 To run the driver tests you may need to adjust the configuration. See the [Testing Wiki-Page](https://github.com/go-sql-driver/mysql/wiki/Testing "Testing") for details.

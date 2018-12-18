@@ -10,6 +10,7 @@ package mysql
 
 import (
 	"bytes"
+	"crypto/rsa"
 	"crypto/tls"
 	"errors"
 	"fmt"
@@ -41,6 +42,8 @@ type Config struct {
 	Collation        string            // Connection collation
 	Loc              *time.Location    // Location for time.Time values
 	MaxAllowedPacket int               // Max packet size allowed
+	ServerPubKey     string            // Server public key name
+	pubKey           *rsa.PublicKey    // Server public key
 	TLSConfig        string            // TLS configuration name
 	tls              *tls.Config       // TLS configuration
 	Timeout          time.Duration     // Dial timeout
@@ -64,6 +67,7 @@ func NewConfig() *Config {
 	return &Config{
 		Collation:            defaultCollation,
 		Loc:                  time.UTC,
+		MaxAllowedPacket:     defaultMaxAllowedPacket,
 		AllowNativePasswords: true,
 	}
 }
@@ -91,6 +95,15 @@ func (cfg *Config) normalize() error {
 
 	} else if cfg.Net == "tcp" {
 		cfg.Addr = ensureHavePort(cfg.Addr)
+	}
+
+	if cfg.tls != nil {
+		if cfg.tls.ServerName == "" && !cfg.tls.InsecureSkipVerify {
+			host, _, err := net.SplitHostPort(cfg.Addr)
+			if err == nil {
+				cfg.tls.ServerName = host
+			}
+		}
 	}
 
 	return nil
@@ -244,6 +257,16 @@ func (cfg *Config) FormatDSN() string {
 		}
 	}
 
+	if len(cfg.ServerPubKey) > 0 {
+		if hasParam {
+			buf.WriteString("&serverPubKey=")
+		} else {
+			hasParam = true
+			buf.WriteString("?serverPubKey=")
+		}
+		buf.WriteString(url.QueryEscape(cfg.ServerPubKey))
+	}
+
 	if cfg.Timeout > 0 {
 		if hasParam {
 			buf.WriteString("&timeout=")
@@ -274,7 +297,7 @@ func (cfg *Config) FormatDSN() string {
 		buf.WriteString(cfg.WriteTimeout.String())
 	}
 
-	if cfg.MaxAllowedPacket > 0 {
+	if cfg.MaxAllowedPacket != defaultMaxAllowedPacket {
 		if hasParam {
 			buf.WriteString("&maxAllowedPacket=")
 		} else {
@@ -397,7 +420,6 @@ func parseDSNParams(cfg *Config, params string) (err error) {
 
 		// cfg params
 		switch value := param[1]; param[0] {
-
 		// Disable INFILE whitelist / enable all files
 		case "allowAllFiles":
 			var isBool bool
@@ -503,6 +525,20 @@ func parseDSNParams(cfg *Config, params string) (err error) {
 				return errors.New("invalid bool value: " + value)
 			}
 
+		// Server public key
+		case "serverPubKey":
+			name, err := url.QueryUnescape(value)
+			if err != nil {
+				return fmt.Errorf("invalid value for server pub key name: %v", err)
+			}
+
+			if pubKey := getServerPubKey(name); pubKey != nil {
+				cfg.ServerPubKey = name
+				cfg.pubKey = pubKey
+			} else {
+				return errors.New("invalid value / unknown server pub key name: " + name)
+			}
+
 		// Strict mode
 		case "strict":
 			panic("strict mode has been removed. See https://github.com/go-sql-driver/mysql/wiki/strict-mode")
@@ -521,10 +557,6 @@ func parseDSNParams(cfg *Config, params string) (err error) {
 				if boolValue {
 					cfg.TLSConfig = "true"
 					cfg.tls = &tls.Config{}
-					host, _, err := net.SplitHostPort(cfg.Addr)
-					if err == nil {
-						cfg.tls.ServerName = host
-					}
 				} else {
 					cfg.TLSConfig = "false"
 				}
@@ -538,13 +570,6 @@ func parseDSNParams(cfg *Config, params string) (err error) {
 				}
 
 				if tlsConfig := getTLSConfigClone(name); tlsConfig != nil {
-					if len(tlsConfig.ServerName) == 0 && !tlsConfig.InsecureSkipVerify {
-						host, _, err := net.SplitHostPort(cfg.Addr)
-						if err == nil {
-							tlsConfig.ServerName = host
-						}
-					}
-
 					cfg.TLSConfig = name
 					cfg.tls = tlsConfig
 				} else {

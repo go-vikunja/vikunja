@@ -19,7 +19,7 @@ first:
 
 # Default configuration with explanations
 
-This is the same as the `config.yaml` file you'll find in the root of vikunja.
+This is the same as the `config.yml.sample` file you'll find in the root of vikunja.
 
 ```yaml
 service:
@@ -31,7 +31,9 @@ service:
   interface: ":3456"
   # The URL of the frontend, used to send password reset emails.
   frontendurl: ""
-  # The base path on the file system where the binary and assets are
+  # The base path on the file system where the binary and assets are.
+  # Vikunja will also look in this path for a config file, so you could provide only this variable to point to a folder
+  # with a config file which will then be used.
   rootpath: <the path of the executable>
   # The number of items which gets returned per page
   pagecount: 50

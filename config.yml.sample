@@ -7,11 +7,15 @@ service:
   interface: ":3456"
   # The URL of the frontend, used to send password reset emails.
   frontendurl: ""
+  # The base path on the file system where the binary and assets are.
+  # Vikunja will also look in this path for a config file, so you could provide only this variable to point to a folder
+  # with a config file which will then be used.
+  rootpath: <the path of the executable>
   # The number of items which gets returned per page
   pagecount: 50
   # If set to true, enables a /metrics endpoint for prometheus to collect metrics about the system
   # You'll need to use redis for this in order to enable common metrics over multiple nodes
-  enablemetrics: true
+  enablemetrics: false
 
 database:
   # Database type to use. Supported types are mysql and sqlite.
@@ -31,6 +35,14 @@ database:
   # Sets the max open connections to the database. Only used when using mysql.
   openconnections: 100
 
+cache:
+  # If cache is enabled or not
+  enabled: false
+  # Cache type. Possible values are memory or redis, you'll need to enable redis below when using redis
+  type: memory
+  # When using memory this defines the maximum size an element can take
+  maxelementsize: 1000
+
 redis:
   # Whether to enable redis or not
   enabled: false
@@ -41,24 +53,20 @@ redis:
   # 0 means default database
   db: 0
 
-cache:
-  # If cache is enabled or not
-  enabled: false
-  # Cache type. Possible values are memory or redis, you'll need to enable redis below when using redis
-  type: memory
-  # When using memory this defines the maximum size an element can take
-  maxelementsize: 1000
-
 mailer:
   # SMTP Host
-  host: ''
+  host: ""
   # SMTP Host port
   port: 587
   # SMTP username
-  username: 'user'
+  username: "user"
   # SMTP password
-  password: ''
+  password: ""
   # Wether to skip verification of the tls certificate on the server
   skiptlsverify: false
   # The default from address when sending emails
-  fromemail: 'mail@vikunja'
+  fromemail: "mail@vikunja"
+  # The length of the mail queue.
+  queuelength: 100
+  # The timeout in seconds after which the current open connection to the mailserver will be closed.
+  queuetimeout: 30

@@ -8,6 +8,13 @@ clone:
     depth: 50
     tags: true
 
+services:
+  database:
+    image: mariadb:10
+    environment:
+      - MYSQL_ROOT_PASSWORD=vikunjatest
+      - MYSQL_DATABASE=vikunjatest
+
 pipeline:
   build:
     image: vikunja/golang-build:latest
@@ -27,7 +34,36 @@ pipeline:
 
   test:
       image: vikunja/golang-build:latest
+      group: test
       pull: true
+      commands:
+        - make test
+      when:
+        event: [ push, tag, pull_request ]
+
+  test-sqlite:
+      image: vikunja/golang-build:latest
+      group: test
+      pull: true
+      environment:
+        - VIKUNJA_TESTS_USE_CONFIG=1
+        - VIKUNJA_DATABASE_TYPE=sqlite
+      commands:
+        - make test
+      when:
+        event: [ push, tag, pull_request ]
+
+  test-mysql:
+      image: vikunja/golang-build:latest
+      group: test
+      pull: true
+      environment:
+        - VIKUNJA_TESTS_USE_CONFIG=1
+        - VIKUNJA_DATABASE_TYPE=mysql
+        - VIKUNJA_DATABASE_HOST=database
+        - VIKUNJA_DATABASE_USER=root
+        - VIKUNJA_DATABASE_PASSWORD=vikunjatest
+        - VIKUNJA_DATABASE_DATABASE=vikunjatest
       commands:
         - make test
       when:
@@ -159,3 +195,6 @@ pipeline:
       {{repo.owner}}/{{repo.name}}: \[{{build.status}}] Build {{build.number}}
       {{commit.author}} pushed to {{commit.branch}} {{commit.sha}}: `{{commit.message}}`
       Build started at {{datetime build.started "2006-Jan-02T15:04:05Z" "GMT+2"}} finished at {{datetime build.finished "2006-Jan-02T15:04:05Z" "GMT+2"}}.
+    when:
+      event: [ push, tag ]
+      branch: [ master ]
