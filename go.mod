@@ -39,6 +39,7 @@ require (
 	github.com/gordonklaus/ineffassign v0.0.0-20180909121442-1003c8bd00dc
 	github.com/imdario/mergo v0.3.6
 	github.com/karalabe/xgo v0.0.0-20181007145344-72da7d1d3970
+	github.com/kr/pretty v0.1.0 // indirect
 	github.com/labstack/echo v3.3.5+incompatible
 	github.com/labstack/gommon v0.2.8
 	github.com/mattn/go-oci8 v0.0.0-20181130072307-052f5d97b9b6 // indirect
