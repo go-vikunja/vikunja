@@ -44,6 +44,7 @@
   * [ ] Alles abgehakte ausblenden, mit btn zum wieder einblenden
 * [x] Den Sharing-Updateshit mit der neuen methode machen (post)
 * [x] User suchen einbauen, mit neuem endpoint
+* [ ] Wenn man den Namen einer Liste updated wird der Name in der List nicht upgedated
 
 ## Funktionen aus der API
 
@@ -83,8 +84,7 @@
   * [ ] Users with access to a namespace
   * [ ] Teams with access to a list
   * [ ] Teams with access to a namespace
-* [ ] Subtasks
-  * [ ] Subtasks genauso verwalten können wie richtige Tasks
+* [x] Subtasks
 * [ ] Priorities
   * [ ] Sachen mit hoher Prio irgendwie hervorheben (rotes Dreieck zb)
 * [ ] Listen Kopieren

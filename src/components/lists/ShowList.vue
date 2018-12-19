@@ -9,7 +9,7 @@
 		<form @submit.prevent="addTask()">
 			<div class="field is-grouped">
 				<p class="control has-icons-left is-expanded" v-bind:class="{ 'is-loading': loading}">
-					<input class="input" v-bind:class="{ 'disabled': loading}" v-model="newTask" type="text" placeholder="Add a new task...">
+					<input class="input" v-bind:class="{ 'disabled': loading}" v-model="newTask.text" type="text" placeholder="Add a new task...">
 					<span class="icon is-small is-left">
 						<icon icon="tasks"/>
 					</span>
@@ -63,7 +63,7 @@
 					</header>
 					<div class="card-content">
 						<div class="content">
-							<form  @submit.prevent="editTaskSubmit()">
+							<form @submit.prevent="editTaskSubmit()">
 								<div class="field">
 									<label class="label" for="tasktext">Task Text</label>
 									<div class="control">
@@ -127,6 +127,35 @@
 									</div>
 								</div>
 
+								<div class="field">
+									<label class="label" for="subtasks">Subtasks</label>
+									<div class="control subtasks">
+
+										<div class="tasks noborder" v-if="taskEditTask.subtasks && taskEditTask.subtasks.length > 0">
+											<div class="task" v-for="s in taskEditTask.subtasks" v-bind:key="s.id">
+												<label v-bind:for="s.id">
+													<div class="fancycheckbox">
+														<input @change="markAsDone" type="checkbox" v-bind:id="s.id" v-bind:checked="s.done" style="display: none;">
+														<label  v-bind:for="s.id" class="check">
+															<svg width="18px" height="18px" viewBox="0 0 18 18">
+																<path d="M1,9 L1,3.5 C1,2 2,1 3.5,1 L14.5,1 C16,1 17,2 17,3.5 L17,14.5 C17,16 16,17 14.5,17 L3.5,17 C2,17 1,16 1,14.5 L1,9 Z"></path>
+																<polyline points="1 9 7 14 15 4"></polyline>
+															</svg>
+														</label>
+													</div>
+													<span class="tasktext">
+														{{s.text}}
+													</span>
+												</label>
+											</div>
+										</div>
+
+										<input :class="{ 'disabled': loading}" :disabled="loading" class="input" type="text" id="tasktext" placeholder="New subtask" v-model="newTask.text"/>
+										<a class="button" @click="addSubtask()"><icon icon="plus"></icon></a>
+
+									</div>
+								</div>
+
 								<button type="submit" class="button is-success is-fullwidth" :class="{ 'is-loading': loading}">
 									Save
 								</button>
@@ -153,11 +182,13 @@
             return {
                 listID: this.$route.params.id,
                 list: {},
-                newTask: '',
+                newTask: {text: ''},
                 error: '',
                 loading: false,
 				isTaskEdit: false,
-				taskEditTask: {},
+				taskEditTask: {
+					subtasks: [],
+				},
 				lastReminder: 0,
 				nowUnix: new Date(),
 				repeatAfter: {type: 'days', amount: null},
@@ -194,8 +225,8 @@
 
                 HTTP.get(`lists/` + this.$route.params.id, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
                     .then(response => {
-						// Make date objects from timestamps
                         for (const t in response.data.tasks) {
+							// Make date objects from timestamps
                             let dueDate = new Date(response.data.tasks[t].dueDate * 1000)
 							if (dueDate === 0) {
 								response.data.tasks[t].dueDate = null
@@ -205,6 +236,11 @@
 
 							for (const rd in response.data.tasks[t].reminderDates) {
 								response.data.tasks[t].reminderDates[rd] = new Date(response.data.tasks[t].reminderDates[rd] * 1000)
+							}
+
+							// Make subtasks into empty array if null
+							if (response.data.tasks[t].subtasks === null) {
+								response.data.tasks[t].subtasks = []
 							}
                         }
 
@@ -223,9 +259,9 @@
             addTask() {
 				const cancel = message.setLoading(this)
 
-                HTTP.put(`lists/` + this.$route.params.id, {text: this.newTask}, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
+                HTTP.put(`lists/` + this.$route.params.id, this.newTask, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
                     .then(response => {
-                        this.list.tasks.push(response.data)
+						this.addTaskToList(response.data)
                         this.handleSuccess({message: 'The task was successfully created.'})
 						cancel() // cancel the timer
                     })
@@ -234,8 +270,27 @@
 						this.handleError(e)
                     })
 
-                this.newTask = ''
+                this.newTask = {}
             },
+			addTaskToList(task) {
+				// If it's a subtask, add it to its parent, otherwise append it to the list of tasks
+				if (task.parentTaskID === 0) {
+					this.list.tasks.push(task)
+				} else {
+					for (const t in this.list.tasks) {
+						if (this.list.tasks[t].id === task.parentTaskID) {
+							this.list.tasks[t].subtasks.push(task)
+							break
+						}
+					}
+				}
+
+				// Update the current edit task if needed
+				if (task.ParentTask === this.taskEditTask.id) {
+					this.taskEditTask.subtasks.push(task)
+				}
+
+			},
 			markAsDone(e) {
 				const cancel = message.setLoading(this)
 
@@ -288,6 +343,11 @@
 					this.repeatAfter.type = 'hours'
 					this.repeatAfter.amount = repeatAfterHours
 				}
+
+				if(this.taskEditTask.subtasks === null) {
+					this.taskEditTask.subtasks = [];
+				}
+
 				this.isTaskEdit = true
 			},
 			editTaskSubmit() {
@@ -345,13 +405,25 @@
 						this.handleError(e)
                     })
 			},
+			addSubtask() {
+				this.newTask.parentTaskID = this.taskEditTask.id
+				this.addTask()
+			},
 			updateTaskByID(id, updatedTask) {
                 for (const t in this.list.tasks) {
                     if (this.list.tasks[t].id === id) {
-						//updatedTask.reminderDates = this.makeJSReminderDatesAfterUpdate(updatedTask.reminderDates)
                         this.$set(this.list.tasks, t, updatedTask)
                         break
                     }
+
+					if (this.list.tasks[t].id === updatedTask.parentTaskID) {
+						for (const s in this.list.tasks[t].subtasks) {
+							if (this.list.tasks[t].subtasks[s].id === updatedTask.id) {
+								this.$set(this.list.tasks[t].subtasks, s, updatedTask)
+								break
+							}
+						}
+					}
                 }
 			},
 			updateLastReminderDate(selectedDates) {

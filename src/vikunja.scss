@@ -84,6 +84,10 @@ h1,h2,h3,h4,h5,h6{
   margin-right: 0.5rem;
 }
 
+.tasks.noborder{
+  margin: 1rem -0.5rem;
+}
+
 .tasks {
   margin-top: 1rem;
   padding: 0;
@@ -123,6 +127,16 @@ h1,h2,h3,h4,h5,h6{
 .taskedit{
   min-height: calc(100% - 1rem);
   margin-top: 1rem;
+
+  .subtasks {
+    input {
+      width: auto;
+    }
+
+    .button {
+      float:right;
+    }
+  }
 
   .reminder-input{
     margin: 0;
