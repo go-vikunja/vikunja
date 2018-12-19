@@ -26,14 +26,26 @@
 * [x] Runterladelink erwähnen
 * [x] Den Kram für Teams & user managen in ne eigene Komponente auslagern, das ist ja fast das selbe
 
-* [x] Teams
-    * [x] Mglkt zum Erstellen von neuen Teams
-    * [x] Alle Teams auflisten, auf die der Nutzer Zugriff hat
-        * [x] In der UI klarmachen, wenn der Nutzer admin ist (möglicherweise braucht das noch ne Änderung im Backend)
-        * [x] Einzelne Teams ansehbar
-            * [x] In den Teams, in denen der Nutzer admin ist, Bearbeitung ermöglichen
-	    * [x] Löschen ermöglichen
-    * [ ] Beim Team bearbeiten Nutzer suchen einbauen
+* [ ] Erklärungen zu was wie funktioniert -> wiki?
+
+## Eye-Candy
+
+* [x] Zurück zu Home (wenn man auf das Logo klickt)
+* [ ] Google fonts raus (sollen von lokal geladen werden)
+* [ ] Ladeanimationen erst nach 100ms anzeigen, sonst wird das überflüssigerweise angezeigt
+* [ ] Btns für Teams und neuer Namespace nach oben in die Leiste verschieben
+* [ ] Links an den Freigewordenen Platz Menüpunkte machen à la "Heute"/Morgen/Diese Woche etc. Da kommt dann alles rein was dann due ist.
+* [ ] Andere Icons? --> Freepikkram
+
+## Funktionales
+
+* [ ] Beim Team bearbeiten Nutzer suchen einbauen
+* [ ] Fertige Tasks schöner visualisieren
+  * [ ] Alles abgehakte ausblenden, mit btn zum wieder einblenden
+* [x] Den Sharing-Updateshit mit der neuen methode machen (post)
+* [x] User suchen einbauen, mit neuem endpoint
+
+## Funktionen aus der API
 
 * [x] Sharingshit
     * [x] Listen für Nutzer
@@ -52,18 +64,16 @@
         * [x] freigeben
         * [x] entfernen
         * [x] Einstellmglkt für Rechte
-* [x] Den Sharing-Updateshit mit der neuen methode machen (post)
-* [x] User suchen einbauen, mit neuem endpoint
-* [x] Zurück zu Home (wenn man auf das Logo klickt)
-* [ ] Erklärungen zu was wie funktioniert -> wiki?
-* [ ] Google fonts raus (sollen von lokal geladen werden)
-* [ ] Ladeanimationen erst nach 100ms anzeigen, sonst wird das überflüssigerweise angezeigt
-* [ ] Btns für Teams und neuer Namespace nach oben in die Leiste verschieben
-* [ ] Links an den Freigewordenen Platz Menüpunkte machen à la "Heute"/Morgen/Diese Woche etc. Da kommt dann alles rein was dann due ist.
-* [ ] Andere Icons? --> Freepikkram
-* [ ] Fertige Tasks schöner visualisieren
-  * [ ] Alles abgehakte ausblenden, mit btn zum wieder einblenden
-
+* [x] Userstuff
+    * [x] Email-Verification
+    * [x] Password forgot
+* [x] Teams
+    * [x] Mglkt zum Erstellen von neuen Teams
+    * [x] Alle Teams auflisten, auf die der Nutzer Zugriff hat
+        * [x] In der UI klarmachen, wenn der Nutzer admin ist (möglicherweise braucht das noch ne Änderung im Backend)
+        * [x] Einzelne Teams ansehbar
+            * [x] In den Teams, in denen der Nutzer admin ist, Bearbeitung ermöglichen
+	    * [x] Löschen ermöglichen
 * [ ] Search everything
   * [ ] Lists
   * [ ] Tasks
@@ -73,7 +83,22 @@
   * [ ] Users with access to a namespace
   * [ ] Teams with access to a list
   * [ ] Teams with access to a namespace
+* [ ] Subtasks
+  * [ ] Subtasks genauso verwalten können wie richtige Tasks
+* [ ] Priorities
+  * [ ] Sachen mit hoher Prio irgendwie hervorheben (rotes Dreieck zb)
+* [ ] Listen Kopieren
+* [ ] "Move to Vikunja" -> Migrator von Wunderlist/todoist/etc
 
-* [x] Userstuff
-    * [x] Email-Verification
-    * [x] Password forgot
+## Waiting for backend
+
+* [ ] Assignees
+* [ ] Timeline/Calendar view
+* [ ] In und Out webhooks, mit Templates vom Payload
+* [ ] Start/Enddatum für Tasks
+* [ ] Timeline/Calendar view -> Dazu tasks die in einem Bestimmten Bereich due sind, macht dann das Frontend
+* [ ] "Smart Lists", Listen nach bestimmten Kriterien gefiltert -> nur UI?
+* [ ] "Performance-Statistik" -> Wie viele Tasks man in bestimmten Zeiträumen so geschafft hat etc
+* [ ] Activity Feed, so à la "der und der hat das und das gemacht etc"
+* [ ] Attachments for tasks
+* [ ] Labels
