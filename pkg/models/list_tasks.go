@@ -18,6 +18,7 @@ package models
 
 import (
 	"code.vikunja.io/web"
+	"sort"
 )
 
 // ListTask represents an task in a todolist
@@ -64,7 +65,7 @@ func GetTasksByListID(listID int64) (tasks []*ListTask, err error) {
 	}
 
 	// make a map so we can put in subtasks more easily
-	taskMap := make(map[int64]*ListTask)
+	taskMap := make(map[int64]*ListTask, len(tasks))
 
 	// Get all users and put them into the array
 	var userIDs []int64
@@ -113,6 +114,13 @@ func GetTasksByListID(listID int64) (tasks []*ListTask, err error) {
 	for _, t := range taskMap {
 		tasks = append(tasks, t)
 	}
+
+	// Sort the output. In Go, contents on a map are put on that map in no particular order.
+	// Because of this, tasks are not sorted anymore in the output, this leads to confiusion.
+	// To avoid all this, we need to sort the slice afterwards
+	sort.Slice(tasks, func(i, j int) bool {
+		return tasks[i].ID < tasks[j].ID
+	})
 
 	return
 }
