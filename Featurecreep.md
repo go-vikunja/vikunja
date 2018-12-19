@@ -237,9 +237,9 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
 
 ### Bugfixes
 
-* [ ] Panic wenn mailer nicht erreichbar -> Als workaround mailer deaktivierbar machen, bzw keine mails verschicken
+* [x] Panic wenn mailer nicht erreichbar -> Als workaround mailer deaktivierbar machen, bzw keine mails verschicken
 * [x] "unexpected EOF"
-* [ ] Beim Login & Password reset gibt die API zurück dass der Nutzer nicht existiert
+* [x] Beim Login & Password reset gibt die API zurück dass der Nutzer nicht existiert
 
 ### Docs
 

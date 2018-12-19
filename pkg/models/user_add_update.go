@@ -20,6 +20,7 @@ import (
 	"code.vikunja.io/api/pkg/mail"
 	"code.vikunja.io/api/pkg/metrics"
 	"code.vikunja.io/api/pkg/utils"
+	"github.com/spf13/viper"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -67,11 +68,13 @@ func CreateUser(user User) (newUser User, err error) {
 		return User{}, err
 	}
 
-	// Generate a confirm token
-	newUser.EmailConfirmToken = utils.MakeRandomString(400)
-
-	// The new user should not be activated until it confirms his mail address
-	newUser.IsActive = false
+	newUser.IsActive = true
+	if viper.GetBool("mailer.enabled") {
+		// The new user should not be activated until it confirms his mail address
+		newUser.IsActive = false
+		// Generate a confirm token
+		newUser.EmailConfirmToken = utils.MakeRandomString(400)
+	}
 
 	// Insert it
 	_, err = x.Insert(newUser)
@@ -96,7 +99,7 @@ func CreateUser(user User) (newUser User, err error) {
 	}
 
 	// Dont send a mail if we're testing
-	if IsTesting {
+	if !viper.GetBool("mailer.enabled") {
 		return newUserOut, err
 	}
 

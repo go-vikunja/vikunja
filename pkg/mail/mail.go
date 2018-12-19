@@ -31,6 +31,10 @@ var Queue chan *gomail.Message
 func StartMailDaemon() {
 	Queue = make(chan *gomail.Message, viper.GetInt("mailer.queuelength"))
 
+	if !viper.GetBool("mailer.enabled") {
+		return
+	}
+
 	if viper.GetString("mailer.host") == "" {
 		log.Log.Warning("Mailer seems to be not configured! Please see the config docs for more details.")
 		return

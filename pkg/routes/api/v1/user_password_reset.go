@@ -67,6 +67,10 @@ func UserRequestResetPasswordToken(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "No username provided.")
 	}
 
+	if err := c.Validate(pwTokenReset); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err)
+	}
+
 	err := models.RequestUserPasswordResetToken(&pwTokenReset)
 	if err != nil {
 		return handler.HandleHTTPError(err, c)

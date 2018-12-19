@@ -63,6 +63,7 @@ func init() {
 	viper.SetDefault("cache.type", "memory")
 	viper.SetDefault("cache.maxelementsize", 1000)
 	// Mailer
+	viper.SetDefault("mailer.enabled", false)
 	viper.SetDefault("mailer.host", "")
 	viper.SetDefault("mailer.port", "587")
 	viper.SetDefault("mailer.user", "user")

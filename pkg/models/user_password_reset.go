@@ -19,6 +19,7 @@ package models
 import (
 	"code.vikunja.io/api/pkg/mail"
 	"code.vikunja.io/api/pkg/utils"
+	"github.com/spf13/viper"
 )
 
 // PasswordReset holds the data to reset a password
@@ -59,7 +60,7 @@ func UserPasswordReset(reset *PasswordReset) (err error) {
 	}
 
 	// Dont send a mail if we're testing
-	if IsTesting {
+	if !viper.GetBool("mailer.enabled") {
 		return
 	}
 
@@ -75,13 +76,13 @@ func UserPasswordReset(reset *PasswordReset) (err error) {
 
 // PasswordTokenRequest defines the request format for password reset resqest
 type PasswordTokenRequest struct {
-	Username string `json:"user_name"`
+	Email string `json:"email" valid:"email,length(0|250)"`
 }
 
 // RequestUserPasswordResetToken inserts a random token to reset a users password into the databsse
 func RequestUserPasswordResetToken(tr *PasswordTokenRequest) (err error) {
 	// Check if the user exists
-	user, err := GetUser(User{Username: tr.Username})
+	user, err := GetUser(User{Email: tr.Email})
 	if err != nil {
 		return
 	}
@@ -96,7 +97,7 @@ func RequestUserPasswordResetToken(tr *PasswordTokenRequest) (err error) {
 	}
 
 	// Dont send a mail if we're testing
-	if IsTesting {
+	if !viper.GetBool("mailer.enabled") {
 		return
 	}
 

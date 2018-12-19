@@ -54,6 +54,8 @@ redis:
   db: 0
 
 mailer:
+  # Whether to enable the mailer or not. If it is disabled, all users are enabled right away and password reset is not possible.
+  enabled: false
   # SMTP Host
   host: ""
   # SMTP Host port

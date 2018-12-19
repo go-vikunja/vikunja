@@ -78,7 +78,7 @@ func TestCreateUser(t *testing.T) {
 	assert.True(t, IsErrUserDoesNotExist(err))
 
 	// Check the user credentials with an unverified email
-	user, err := CheckUserCredentials(&UserLogin{"testuu", "1234"})
+	user, err := CheckUserCredentials(&UserLogin{"user5", "1234"})
 	assert.Error(t, err)
 	assert.True(t, IsErrEmailNotConfirmed(err))
 
@@ -97,7 +97,7 @@ func TestCreateUser(t *testing.T) {
 	// Check usercredentials for a nonexistent user (should fail)
 	_, err = CheckUserCredentials(&UserLogin{"dfstestuu", "1234"})
 	assert.Error(t, err)
-	assert.True(t, IsErrUserDoesNotExist(err))
+	assert.True(t, IsErrWrongUsernameOrPassword(err))
 
 	// Update the user
 	uuser, err := UpdateUser(User{ID: theuser.ID, Password: "444444"})
@@ -146,7 +146,7 @@ func TestCreateUser(t *testing.T) {
 func TestUserPasswordReset(t *testing.T) {
 	// Request a new token
 	tr := &PasswordTokenRequest{
-		Username: "user1",
+		Email: "user1@example.com",
 	}
 	err := RequestUserPasswordResetToken(tr)
 	assert.NoError(t, err)

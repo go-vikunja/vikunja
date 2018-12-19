@@ -27,7 +27,7 @@ Content-Type: application/json
 Accept: application/json
 
 {
-  "user_name": "user"
+  "email": "k@knt.li"
 }
 
 ### Request a token to reset a password

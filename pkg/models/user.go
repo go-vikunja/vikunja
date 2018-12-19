@@ -78,9 +78,9 @@ func getUserWithError(a web.Auth) (*User, error) {
 // APIUserPassword represents a user object without timestamps and a json password field.
 type APIUserPassword struct {
 	ID       int64  `json:"id"`
-	Username string `json:"username"`
-	Password string `json:"password"`
-	Email    string `json:"email"`
+	Username string `json:"username" valid:"length(3|250)"`
+	Password string `json:"password" valid:"length(8|250)"`
+	Email    string `json:"email" valid:"email,length(0|250)"`
 }
 
 // APIFormat formats an API User into a normal user struct
@@ -125,7 +125,9 @@ func CheckUserCredentials(u *UserLogin) (User, error) {
 	// Check if the user exists
 	user, err := GetUser(User{Username: u.Username})
 	if err != nil {
-		return User{}, err
+		// hashing the password takes a long time, so we hash something to not make it clear if the username was wrong
+		bcrypt.GenerateFromPassword([]byte(u.Username), 14)
+		return User{}, ErrWrongUsernameOrPassword{}
 	}
 
 	// User is invalid if it needs to verify its email address

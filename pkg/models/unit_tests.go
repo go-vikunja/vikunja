@@ -30,10 +30,6 @@ import (
 	"testing"
 )
 
-// IsTesting is set to true when we're running tests.
-// We don't have a good solution to test email sending yet, so we disable email sending when testing
-var IsTesting bool
-
 // MainTest creates the test engine
 func MainTest(m *testing.M, pathToRoot string) {
 	var err error
@@ -41,8 +37,6 @@ func MainTest(m *testing.M, pathToRoot string) {
 	if err = createTestEngine(fixturesDir); err != nil {
 		log.Log.Fatalf("Error creating test engine: %v\n", err)
 	}
-
-	IsTesting = true
 
 	// Start the pseudo mail queue
 	mail.StartMailDaemon()
