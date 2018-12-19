@@ -4,7 +4,8 @@ export default {
 			context.loading = true
 		}, 100);
 		return () => {
-			clearTimeout(timeout);
+			clearTimeout(timeout)
+			context.loading = false
 		};
 	},
     error(e, context) {
