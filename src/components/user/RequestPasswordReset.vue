@@ -5,7 +5,7 @@
 			<form id="loginform" @submit.prevent="submit" v-if="!isSuccess">
 				<div class="field">
 					<div class="control">
-						<input type="text" class="input" name="username" placeholder="Username" v-model="username" required>
+						<input type="text" class="input" name="email" placeholder="Email-Adress" v-model="email" required>
 					</div>
 				</div>
 
@@ -36,7 +36,7 @@
     export default {
         data() {
             return {
-                username: '',
+                email: '',
                 error: '',
                 isSuccess: false,
                 loading: false
@@ -47,7 +47,7 @@
 				const cancel = message.setLoading(this)
                 this.error = ''
                 let credentials = {
-                    user_name: this.username,
+                    email: this.email,
                 }
 
                 HTTP.post(`user/password/token`, credentials)
