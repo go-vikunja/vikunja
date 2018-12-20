@@ -24,7 +24,7 @@ h1,h2,h3,h4,h5,h6{
 
 /* Logout-icon */
 .logout-icon {
-  padding-right: 2em !important;
+  margin-right: 0.85em !important;
 }
 
 /* Logo */
@@ -51,6 +51,10 @@ h1,h2,h3,h4,h5,h6{
 /* menu buttons */
 .button-bottom {
   margin-bottom: 1rem;
+}
+
+.navbar-menu .navbar-item .icon{
+  margin: 0 0.5em;
 }
 
 /* Namespaces list */
