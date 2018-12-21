@@ -70,6 +70,7 @@ $ swag init
 
 - [gin](http://github.com/swaggo/gin-swagger)
 - [echo](http://github.com/swaggo/echo-swagger)
+- [buffalo](https://github.com/swaggo/buffalo-swagger)
 - [net/http](https://github.com/swaggo/http-swagger)
 
 ## How to use it with Gin
@@ -176,8 +177,8 @@ import (
 func main() {
 
 	// programatically set swagger info
-	docs.Title = "Swagger Example API"
-	docs.Description = "This is a sample server Petstore server."
+	docs.SwaggerInfo.Title = "Swagger Example API"
+	docs.SwaggerInfo.Description = "This is a sample server Petstore server."
 	docs.SwaggerInfo.Version = "1.0"
 	docs.SwaggerInfo.Host = "petstore.swagger.io"
 	docs.SwaggerInfo.BasePath = "/v2"

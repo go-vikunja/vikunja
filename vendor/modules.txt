@@ -139,7 +139,7 @@ github.com/stretchr/testify/assert
 github.com/swaggo/echo-swagger
 # github.com/swaggo/files v0.0.0-20180215091130-49c8a91ea3fa
 github.com/swaggo/files
-# github.com/swaggo/swag v1.4.1-0.20181129020348-1c8533a91397
+# github.com/swaggo/swag v1.4.1-0.20181210033626-0e12fd5eb026
 github.com/swaggo/swag/cmd/swag
 github.com/swaggo/swag
 github.com/swaggo/swag/gen

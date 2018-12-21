@@ -163,6 +163,9 @@ do-the-swag:
 		go install $(GOFLAGS) github.com/swaggo/swag/cmd/swag; \
 	fi
 	swag init -g pkg/routes/routes.go;
+	# Fix the generated swagger file, currently a workaround until swaggo can properly use go mod
+	sed -i '/"definitions": {/a "code.vikunja.io.web.HTTPError": {"type": "object","properties": {"code": {"type": "integer"},"message": {"type": "string"}}},' docs/docs.go;
+	sed -i 's/code.vikunja.io\/web.HTTPError/code.vikunja.io.web.HTTPError/g' docs/docs.go;
 
 .PHONY: misspell-check
 misspell-check:

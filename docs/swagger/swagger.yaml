@@ -152,7 +152,7 @@ definitions:
     type: object
   models.PasswordTokenRequest:
     properties:
-      user_name:
+      email:
         type: string
     type: object
   models.Team:

@@ -3074,7 +3074,7 @@
         "models.PasswordTokenRequest": {
             "type": "object",
             "properties": {
-                "user_name": {
+                "email": {
                     "type": "string"
                 }
             }
