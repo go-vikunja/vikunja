@@ -255,6 +255,9 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
 ### Later/Nice to have
 
 * [x] Deps nach mod umziehen
+* [x] Start/Enddatum für Tasks
+* [x] Timeline/Calendar view -> Dazu tasks die in einem Bestimmten Bereich due sind, macht dann das Frontend
+* [x] Tasks innerhalb eines definierbarem Bereich, sollte aber trotzdem der server machen, so à la "Gib mir alles für diesen Monat"
 * [ ] Websockets
     * Nur lesend? (-> Updates wie bisher)
     * sollen den geupdaten Kram an alle anderen user schicken
@@ -268,15 +271,12 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
 * [ ] Mgl. zum Accountlöschen haben (so richtig krass mit emailverifiezierung und dass alle Privaten Listen gelöscht werden und man alle geteilten entweder wem übertragen muss oder  auf privat stellen)
 * [ ] IMAP-Integration -> Man schickt eine email an Vikunja und es macht daraus dann nen task -> Achtung missbrauchsmöglichkeiten
 * [ ] In und Out webhooks, mit Templates vom Payload
-* [x] Start/Enddatum für Tasks
-* [ ] Timeline/Calendar view -> Dazu tasks die in einem Bestimmten Bereich due sind, macht dann das Frontend
 * [ ] "Smart Lists", Listen nach bestimmten Kriterien gefiltert -> nur UI?
 * [ ] "Performance-Statistik" -> Wie viele Tasks man in bestimmten Zeiträumen so geschafft hat etc
 * [ ] Activity Feed, so à la "der und der hat das und das gemacht etc"
 * [ ] Assignees
 * [ ] Attachments
 * [ ] Labels
-* [ ] Tasks innerhalb eines definierbarem Bereich, sollte aber trotzdem der server machen, so à la "Gib mir alles für diesen Monat"
 * [ ] Task-Templates innerhalb namespaces und Listen (-> Mehrere, die auswählbar sind)
 * [ ] Bulk-edit -> Transactions
 * [ ] Ein Task muss von mehreren Assignees abgehakt werden bis er als done markiert wird

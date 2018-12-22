@@ -34,9 +34,12 @@ type ListTask struct {
 	RepeatAfter   int64   `xorm:"int(11) INDEX" json:"repeatAfter"`
 	ParentTaskID  int64   `xorm:"int(11) INDEX" json:"parentTaskID"`
 	Priority      int64   `xorm:"int(11)" json:"priority"`
-	Sorting       string  `xorm:"-" json:"-" param:"sort"` // Parameter to sort by
 	StartDateUnix int64   `xorm:"int(11) INDEX" json:"startDate"`
 	EndDateUnix   int64   `xorm:"int(11) INDEX" json:"endDate"`
+
+	Sorting           string `xorm:"-" json:"-" param:"sort"` // Parameter to sort by
+	StartDateSortUnix int64  `xorm:"-" json:"-" param:"startdatefilter"`
+	EndDateSortUnix   int64  `xorm:"-" json:"-" param:"enddatefilter"`
 
 	Subtasks []*ListTask `xorm:"-" json:"subtasks"`
 

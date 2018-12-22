@@ -1,5 +1,6 @@
 .idea/
 .idea/*/*
+.idea/httpRequests
 config.yml
 config.yaml
 *.db

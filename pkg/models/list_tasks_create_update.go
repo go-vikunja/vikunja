@@ -114,7 +114,18 @@ func (i *ListTask) Update() (err error) {
 		ot.Done = false
 	}
 
-	_, err = x.ID(i.ID).Cols("text", "description", "done", "due_date_unix", "reminders_unix", "repeat_after").Update(ot)
+	_, err = x.ID(i.ID).
+		Cols("text",
+			"description",
+			"done",
+			"due_date_unix",
+			"reminders_unix",
+			"repeat_after",
+			"parent_task_id",
+			"priority",
+			"start_date_unix",
+			"end_date_unix").
+		Update(ot)
 	*i = ot
 	return
 }

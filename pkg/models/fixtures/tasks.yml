@@ -39,3 +39,25 @@
   created: 1543626724
   updated: 1543626724
   due_date_unix: 1543616724
+- id: 7
+  text: 'task #7 with start date'
+  created_by_id: 1
+  list_id: 1
+  created: 1543626724
+  updated: 1543626724
+  start_date_unix: 1544600000
+- id: 8
+  text: 'task #8 with end date'
+  created_by_id: 1
+  list_id: 1
+  created: 1543626724
+  updated: 1543626724
+  end_date_unix: 1544700000
+- id: 9
+  text: 'task #9 with start and end date'
+  created_by_id: 1
+  list_id: 1
+  created: 1543626724
+  updated: 1543626724
+  start_date_unix: 1544600000
+  end_date_unix: 1544700000

@@ -6,7 +6,10 @@
 
 package models
 
-import "code.vikunja.io/web"
+import (
+	"code.vikunja.io/web"
+	"time"
+)
 
 // SortBy declares constants to sort
 type SortBy int
@@ -73,11 +76,11 @@ func (lt *ListTask) ReadAll(search string, a web.Auth, page int) (interface{}, e
 		sortby = SortTasksByUnsorted
 	}
 
-	return GetTasksByUser(search, u, page, sortby)
+	return GetTasksByUser(search, u, page, sortby, time.Unix(lt.StartDateSortUnix, 0), time.Unix(lt.EndDateSortUnix, 0))
 }
 
 //GetTasksByUser returns all tasks for a user
-func GetTasksByUser(search string, u *User, page int, sortby SortBy) (tasks []*ListTask, err error) {
+func GetTasksByUser(search string, u *User, page int, sortby SortBy, startDate time.Time, endDate time.Time) (tasks []*ListTask, err error) {
 	// Get all lists
 	lists, err := getRawListsForUser("", u, page)
 	if err != nil {
@@ -103,8 +106,36 @@ func GetTasksByUser(search string, u *User, page int, sortby SortBy) (tasks []*L
 	}
 
 	// Then return all tasks for that lists
-	if err := x.In("list_id", listIDs).Where("text LIKE ?", "%"+search+"%").OrderBy(orderby).Find(&tasks); err != nil {
-		return nil, err
+	if startDate.Unix() != 0 || endDate.Unix() != 0 {
+
+		startDateUnix := time.Now().Unix()
+		if startDate.Unix() != 0 {
+			startDateUnix = startDate.Unix()
+		}
+
+		endDateUnix := time.Now().Unix()
+		if endDate.Unix() != 0 {
+			endDateUnix = endDate.Unix()
+		}
+
+		if err := x.In("list_id", listIDs).
+			Where("text LIKE ?", "%"+search+"%").
+			And("((due_date_unix BETWEEN ? AND ?) OR "+
+				"(start_date_unix BETWEEN ? and ?) OR "+
+				"(end_date_unix BETWEEN ? and ?))", startDateUnix, endDateUnix, startDateUnix, endDateUnix, startDateUnix, endDateUnix).
+			And("(parent_task_id = 0 OR parent_task_id IS NULL)").
+			OrderBy(orderby).
+			Find(&tasks); err != nil {
+			return nil, err
+		}
+	} else {
+		if err := x.In("list_id", listIDs).
+			Where("text LIKE ?", "%"+search+"%").
+			And("(parent_task_id = 0 OR parent_task_id IS NULL)").
+			OrderBy(orderby).
+			Find(&tasks); err != nil {
+			return nil, err
+		}
 	}
 
 	return tasks, err
