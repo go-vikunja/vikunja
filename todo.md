@@ -85,6 +85,7 @@
   * [ ] Teams with access to a list
   * [ ] Teams with access to a namespace
 * [x] Subtasks
+* [x] Start/Enddatum für Tasks
 * [ ] Priorities
   * [ ] Sachen mit hoher Prio irgendwie hervorheben (rotes Dreieck zb)
 * [ ] Listen Kopieren
@@ -95,7 +96,6 @@
 * [ ] Assignees
 * [ ] Timeline/Calendar view
 * [ ] In und Out webhooks, mit Templates vom Payload
-* [ ] Start/Enddatum für Tasks
 * [ ] Timeline/Calendar view -> Dazu tasks die in einem Bestimmten Bereich due sind, macht dann das Frontend
 * [ ] "Smart Lists", Listen nach bestimmten Kriterien gefiltert -> nur UI?
 * [ ] "Performance-Statistik" -> Wie viele Tasks man in bestimmten Zeiträumen so geschafft hat etc

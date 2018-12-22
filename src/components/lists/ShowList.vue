@@ -108,6 +108,34 @@
 								</div>
 
 								<div class="field">
+									<label class="label" for="">Duration</label>
+									<div class="control columns">
+										<div class="column">
+											<flat-pickr
+													:class="{ 'disabled': loading}"
+													class="input"
+													:disabled="loading"
+													v-model="taskEditTask.startDate"
+													:config="flatPickerConfig"
+													id="taskduedate"
+													placeholder="Start date">
+											</flat-pickr>
+										</div>
+										<div class="column">
+											<flat-pickr
+													:class="{ 'disabled': loading}"
+													class="input"
+													:disabled="loading"
+													v-model="taskEditTask.endDate"
+													:config="flatPickerConfig"
+													id="taskduedate"
+													placeholder="Start date">
+											</flat-pickr>
+										</div>
+									</div>
+								</div>
+
+								<div class="field">
 									<label class="label" for="">Repeat after</label>
 									<div class="control repeat-after-input columns">
 										<div class="column">
@@ -339,8 +367,10 @@
 				const cancel = message.setLoading(this)
 
 				// Convert the date in a unix timestamp
-				let duedate = (+ new Date(this.taskEditTask.dueDate)) / 1000
-				this.taskEditTask.dueDate = duedate
+				this.taskEditTask.dueDate = (+ new Date(this.taskEditTask.dueDate)) / 1000
+				this.taskEditTask.startDate = (+ new Date(this.taskEditTask.startDate)) / 1000
+				this.taskEditTask.endDate = (+ new Date(this.taskEditTask.endDate)) / 1000
+
 
 				// remove all nulls
 				this.taskEditTask.reminderDates = this.removeNullsFromArray(this.taskEditTask.reminderDates)
@@ -381,7 +411,7 @@
                         this.updateTaskByID(this.taskEditTask.id, response.data)
 
 						// Also update the current taskedit object so the ui changes
-						this.$set(this, 'taskEditTask', response.data)
+						this.$set(this, 'taskEditTask', this.fixStuffComingFromAPI(response.data))
                         this.handleSuccess({message: 'The task was successfully updated.'})
 						cancel() // cancel the timers
                     })
@@ -413,22 +443,28 @@
 			},
 			fixStuffComingFromAPI(task) {
 				// Make date objects from timestamps
-				let dueDate = new Date(task.dueDate * 1000)
-				if (dueDate === 0) {
-					task.dueDate = null
-				} else {
-					task.dueDate = dueDate
-				}
+				task.dueDate = this.parseDateIfNessecary(task.dueDate)
+				task.startDate = this.parseDateIfNessecary(task.startDate)
+				task.endDate = this.parseDateIfNessecary(task.endDate)
 
 				for (const rd in task.reminderDates) {
-					task.reminderDates[rd] = new Date(task.reminderDates[rd] * 1000)
-					}
+					task.reminderDates[rd] = this.parseDateIfNessecary(task.reminderDates[rd])
+				}
 
 				// Make subtasks into empty array if null
 				if (task.subtasks === null) {
 					task.subtasks = []
 				}
 				return task
+			},
+			parseDateIfNessecary(dateUnix) {
+				let dateobj = (+new Date(dateUnix * 1000))
+				if (dateobj === 0 || dateUnix === 0) {
+					dateUnix = null
+				} else {
+					dateUnix = dateobj
+				}
+				return dateUnix
 			},
 			updateLastReminderDate(selectedDates) {
 				this.lastReminder = +new Date(selectedDates[0])
