@@ -226,22 +226,7 @@
                 HTTP.get(`lists/` + this.$route.params.id, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
                     .then(response => {
                         for (const t in response.data.tasks) {
-							// Make date objects from timestamps
-                            let dueDate = new Date(response.data.tasks[t].dueDate * 1000)
-							if (dueDate === 0) {
-								response.data.tasks[t].dueDate = null
-							} else {
-								response.data.tasks[t].dueDate = dueDate
-							}
-
-							for (const rd in response.data.tasks[t].reminderDates) {
-								response.data.tasks[t].reminderDates[rd] = new Date(response.data.tasks[t].reminderDates[rd] * 1000)
-							}
-
-							// Make subtasks into empty array if null
-							if (response.data.tasks[t].subtasks === null) {
-								response.data.tasks[t].subtasks = []
-							}
+							response.data.tasks[t] = this.fixStuffComingFromAPI(response.data.tasks[t])
                         }
 
                         // This adds a new elemednt "list" to our object which contains all lists
@@ -412,7 +397,7 @@
 			updateTaskByID(id, updatedTask) {
                 for (const t in this.list.tasks) {
                     if (this.list.tasks[t].id === id) {
-                        this.$set(this.list.tasks, t, updatedTask)
+                        this.$set(this.list.tasks, t, this.fixStuffComingFromAPI(updatedTask))
                         break
                     }
 
@@ -425,6 +410,25 @@
 						}
 					}
                 }
+			},
+			fixStuffComingFromAPI(task) {
+				// Make date objects from timestamps
+				let dueDate = new Date(task.dueDate * 1000)
+				if (dueDate === 0) {
+					task.dueDate = null
+				} else {
+					task.dueDate = dueDate
+				}
+
+				for (const rd in task.reminderDates) {
+					task.reminderDates[rd] = new Date(task.reminderDates[rd] * 1000)
+					}
+
+				// Make subtasks into empty array if null
+				if (task.subtasks === null) {
+					task.subtasks = []
+				}
+				return task
 			},
 			updateLastReminderDate(selectedDates) {
 				this.lastReminder = +new Date(selectedDates[0])
