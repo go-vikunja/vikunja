@@ -268,7 +268,7 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
 * [ ] Mgl. zum Accountlöschen haben (so richtig krass mit emailverifiezierung und dass alle Privaten Listen gelöscht werden und man alle geteilten entweder wem übertragen muss oder  auf privat stellen)
 * [ ] IMAP-Integration -> Man schickt eine email an Vikunja und es macht daraus dann nen task -> Achtung missbrauchsmöglichkeiten
 * [ ] In und Out webhooks, mit Templates vom Payload
-* [ ] Start/Enddatum für Tasks
+* [x] Start/Enddatum für Tasks
 * [ ] Timeline/Calendar view -> Dazu tasks die in einem Bestimmten Bereich due sind, macht dann das Frontend
 * [ ] "Smart Lists", Listen nach bestimmten Kriterien gefiltert -> nur UI?
 * [ ] "Performance-Statistik" -> Wie viele Tasks man in bestimmten Zeiträumen so geschafft hat etc

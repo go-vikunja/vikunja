@@ -35,6 +35,8 @@ type ListTask struct {
 	ParentTaskID  int64   `xorm:"int(11) INDEX" json:"parentTaskID"`
 	Priority      int64   `xorm:"int(11)" json:"priority"`
 	Sorting       string  `xorm:"-" json:"-" param:"sort"` // Parameter to sort by
+	StartDateUnix int64   `xorm:"int(11) INDEX" json:"startDate"`
+	EndDateUnix   int64   `xorm:"int(11) INDEX" json:"endDate"`
 
 	Subtasks []*ListTask `xorm:"-" json:"subtasks"`
 
