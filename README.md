@@ -27,16 +27,28 @@ Try it under [try.vikunja.io](https://try.vikunja.io)!
 * [x] Subtasks
 * [x] Repeating tasks
 * [x] Get tasks via caldav
+* [x] Get all your tasks for an interval (day/month/period)
 * [ ] Labels for todo lists and tasks
 * [ ] Assign users to tasks
 * [ ] Attachments on tasks
-* [ ] Get all your tasks for an interval (day/month/period)
 * [ ] More sharing features
   * [x] Share with individual users
   * [ ] Share via a world-readable link with or without password, like Nextcloud
+* [ ] Read-only websocket to notify multiple clients of updates when something was changed
+* [ ] "Smart Lists" - Create lists based on filters
+* [ ] IMAP-Integration - Send an email to Vikunja to create a new task
+* [ ] Webhooks - Trigger other events when an action is done (like completing a task)
+* [ ] Performace statistics - Get an overview and beautiful charts about what you got done this month
+* [ ] Activity feeds - Get a quick overview about who did what
+* [ ] Bulk-edit multiple tasks at once
+* [ ] Team-efforts - Requiring a task to be marked as done by multiple members until it's done
+* [ ] Global limits for namespaces/lists/tasks
+* [ ] Disable registration, making an instance "invite-only" 
 
-* [ ] [Mobile apps](https://code.vikunja.io/app) (seperate repo)
-* [ ] [Webapp](https://code.vikunja.io/frontend) (seperate repo)
+See (Featurecreep.md)[Featurecreep.md] for even more! (mostly ideas, for now)
+
+* [ ] [Mobile apps](https://code.vikunja.io/app) (seperate repo) *In Progress*
+* [ ] [Webapp](https://code.vikunja.io/frontend) (seperate repo) *In Progress*
 
 ## Development
 

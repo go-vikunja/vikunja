@@ -1,162 +1,7 @@
 # Featurecreep
 
-* Listen erstellen, ändern, löschen
-* Todopunkte zu Listen hinzufügen, bearbeiten, löschen
-* Listen teilen (Email/Benutzername angeben, oder öffentlicher link (+einstellbar ob mit registrierung oder nicht, oder passwortgeschützt)
-* Rechtemanagement
-
-### Todopunkte
-
-* ID
-* Text
-* Description
-* Status (done, not done)
-* Fälligkeitsdatum
-* Erinnerungsdatum (und zeit)
-* Zuständig (später, mit teilen)
-* Liste wo der Punkt drauf ist
-* Timestamps
-
-### Websockets
-
-Das ganze soll als Websocket zur verfg gestellt werden, der dann automatisch bescheidsagt wenn sich was ändert. Benachrichtigungen machen clients.
-
-## API-Roadmap
-
-Ab v0.3 können wir mit clients anfangen.
-
-#### v0.1
-
-* [x] Listen erstellen/bearbeiten/löschen
-
-      * [x] Ansehen
-      * [x] Übersicht
-      * [x] Einzelne liste mit allen todopunkten
-      * [x] Erstellen
-      * [x] Bearbeiten
-      * [x] Löschen
-
-* [x] Todopunkte hinzufügen/abhaken/löschen
-
-      * [x] Erstellen
-      * [x] Bearbeiten (abhaken)
-      * [x] Löschen
-
-* [x] Überall nochmal überprüfen dass der Nutzer auch das Recht hat die Liste zu löschen
-
-* [x] Swaggerdocs !!!!
-
-Neues Konzept: _Namespaces_
-
-Ein Namespace kann Listen haben, es gibt mindestens einen Besiter pro Namespace. Wenn ein neuer Nutzer angelegt wird,
-wird automatisch einer für den Nutzer erstellt.
-
-Es gibt Lese- und Schreibrechte pro Namespace und Nutzer.
-
-Namespace: 
-
-* ID
-* Name
-* OwnerID
-* Timestamps
-
-Teams:
-
-* ID
-* Name
-* Description
-* Rights (Selbsthochzählende Konstanten als json-array abspeichern)
-* CreatedByUser
-* Timestamps
-
-TeamMembers:
-
-* ID
-* TeamID
-* MemberID
-* Timestamps
-
-TeamNamespaces:
-
-* ID
-* TeamID
-* NamespaceID
-* Timestamps
-
-TeamLists: 
-
-* ID
-* TeamID
-* ListID
-* Timestamps
-
-(+Check ob das Team schon Zugriff auf den Namespace hat und dafür sorgen dass das sich nicht überschneidet)
-Bsp: wenn ein Namespace-Team Schreibrechte hat, soll es nicht möglich sein dieses Team mit Schreibrechten
-zur Liste hinzuzufügen. Wenn das Team im Namespace aber nur Leserechte Hat soll es möglich sein dieses Team 
-als Schreibend zur Liste hinzuzufügen.
-
-Oder noch Besser: Man kann globale Rechte pro Namespace vergeben, die man dann wieder feinjustieren kann pro Liste.
-                  Es soll aber nicht mgl. sein, ein Team zu einer Liste hinzuzufügen was nicht im Namespace ist. 
-                  Es muss also möglich sein, Teams zum Namespace hinzuzufügen die keinerlei Rechte haben (damit man
-                  denen dann wieder pro Liste welche geben kann) 
-
-Rechte:
-  Erstmal nur 3: Lesen, Schreiben, Admin. Admins dürfen auch Namen ändern, Teams verwalten, neue Listen anlegen, etc.
-  Owner haben immer Adminrechte. Später sollte es auch möglich sein, den ownership an andere zur übertragen.s
-
-Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
-
-#### Neues Todo
-
-* [x] Teams
-
-      * [x] Erstellen
-      * [x] Ansehen
-      * [x] Bearbeiten
-      * [x] Löschen
-
-      ~~Ein zu lösendes Problem: Wie regelt man die Berechtigungen um Teams zu verwalten?~~
-
-* [x] Namespaces
-
-      * [x] Erstellen
-      * [x] Ansehen
-      * [x] Bearbeiten
-      * [x] Löschen
-      * [x] Teams hinzufügen. Der Nutzer kriegt nur Teams angezeigt die er erstellt hat.
-      * [x] Alle Listen eines Namespaces anzeigen
-
-* [x] Listen
-
-      * [x] Listen zu einem Namespace hinzufügen
-
-#### v0.2
-
-* [x] Listen teilbar
-      * [x] Mit anderen Nutzern
-	    * [x Namespaces
-      * [x] Teams
-      * [ ] Mit Link
-            * [ ] Offen
-            * [ ] Passwortgeschützt
-
-* [x] Rechtemanagement (Und damit Unterscheidung zwischen Ownern und Mitgleidern)
-* [x] Mange Team members
-      * [x] Hinzufügen
-      * [x] Löschen
-
-*Routen*
-
-* [x] `namespaces/:id/teams`
-      * [x] Create
-      * [x] ReadAll
-      * [x] Delete
-* [x] `lists/:id/teams`
-      * [x] Create
-      * [x] ReadAll
-      * [x] Delete
-
-* [x] /namespaces soll zumindest auch die namen (+id) der dazugehörigen Listen rausgeben
+This is the place where I write down ideas to work on at some point. 
+Sorry for some of them being in German, I'll tranlate them at some point.
 
 ## Feature-Ideen
 
@@ -168,7 +13,7 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
 ## Clients
 
 * [ ] Webapp (vue.js) + Bulma
-* [ ] "Native" Clients (auf dem Rechner installiert (mit elektron oder so? Oder native mit qt oder so?)
+* [ ] "Native" Clients (auf dem Rechner installiert (mit electron oder so? Oder native mit qt oder so?)
 * [ ] Android (Flutter)
 * [ ] iOS (mit Framework???? (Ging das nich auch mit Flutter?))
 
@@ -223,7 +68,6 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
 * [x] Wir brauchen noch ne gute idee, wie man die listen kriegt, auf die man nur so Zugriff hat (ohne namespace)
     * Dazu am Besten nen pseudonamespace anlegen (id -1 oder so), der hat das dann alles
 * [x] Testing mit locust: https://locust.io/
-* [ ] Methode einbauen, um mit einem gültigen token ein neues gültiges zu kriegen
 
 #### Userstuff
 
@@ -247,6 +91,7 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
   * [ ] Auch noch nen "link" zum Featurecreep
 * [ ] Anleitung zum Makefile
 * [ ] Struktur erklären
+* [ ] Backups
 * [ ] Deploy in die docs
   * [ ] Docker
   * [ ] Native
@@ -280,3 +125,4 @@ Teams sind global, d.h. Ein Team kann mehrere Namespaces verwalten.
 * [ ] Task-Templates innerhalb namespaces und Listen (-> Mehrere, die auswählbar sind)
 * [ ] Bulk-edit -> Transactions
 * [ ] Ein Task muss von mehreren Assignees abgehakt werden bis er als done markiert wird
+* [ ] Methode einbauen, um mit einem gültigen token ein neues gültiges zu kriegen
