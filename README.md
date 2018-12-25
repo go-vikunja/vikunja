@@ -45,7 +45,7 @@ Try it under [try.vikunja.io](https://try.vikunja.io)!
 * [ ] Global limits for namespaces/lists/tasks
 * [ ] Disable registration, making an instance "invite-only" 
 
-See (Featurecreep.md)[Featurecreep.md] for even more! (mostly ideas, for now)
+See [Featurecreep.md](Featurecreep.md) for even more! (mostly ideas, for now)
 
 * [ ] [Mobile apps](https://code.vikunja.io/app) (seperate repo) *In Progress*
 * [ ] [Webapp](https://code.vikunja.io/frontend) (seperate repo) *In Progress*
