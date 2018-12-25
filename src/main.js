@@ -30,6 +30,11 @@ import { faUser } from '@fortawesome/free-solid-svg-icons'
 import { faLock } from '@fortawesome/free-solid-svg-icons'
 import { faPen } from '@fortawesome/free-solid-svg-icons'
 import { faTimes } from '@fortawesome/free-solid-svg-icons'
+import { faTachometerAlt } from '@fortawesome/free-solid-svg-icons'
+import { faCalendar } from '@fortawesome/free-solid-svg-icons'
+import { faBars } from '@fortawesome/free-solid-svg-icons'
+import { faPowerOff } from '@fortawesome/free-solid-svg-icons'
+import { faTimesCircle } from '@fortawesome/free-regular-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
 library.add(faSignOutAlt)
@@ -45,8 +50,27 @@ library.add(faUser)
 library.add(faLock)
 library.add(faPen)
 library.add(faTimes)
+library.add(faTachometerAlt)
+library.add(faCalendar)
+library.add(faTimesCircle)
+library.add(faBars)
+library.add(faPowerOff)
 
 Vue.component('icon', FontAwesomeIcon)
+
+// Tooltip
+import VTooltip from 'v-tooltip'
+Vue.use(VTooltip)
+
+// Set focus
+Vue.directive('focus', {
+	// When the bound element is inserted into the DOM...
+	inserted: function (el) {
+		// Focus the element
+		el.focus()
+	}
+})
+
 
 // Check the user's auth status when the app starts
 auth.checkAuth()

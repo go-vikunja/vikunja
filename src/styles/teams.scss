@@ -1,0 +1,25 @@
+ul.teams{
+  padding: 0;
+  margin-left: 0;
+  overflow: hidden;
+
+  li{
+    list-style: none;
+    margin: 0;
+    border-bottom: 1px solid $border;
+
+    a{
+      color: #363636;
+      display: block;
+      padding: 0.5rem 1rem;
+
+      &:hover{
+        background: darken(#fff, 2%);
+      }
+    }
+  }
+
+  li:last-child{
+    border-bottom: none;
+  }
+}

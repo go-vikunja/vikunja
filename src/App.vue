@@ -1,84 +1,101 @@
 <template>
 	<div id="app">
-		<nav class="navbar is-dark" role="navigation" aria-label="main navigation" v-if="user.authenticated">
-			<div class="container">
-				<div class="navbar-brand">
-					<router-link :to="{name: 'home'}" class="navbar-item logo">
-						<img src="images/logo-full-white.svg"/>
-					</router-link>
-				</div>
-				<div class="navbar-menu">
-					<div class="navbar-end">
-						<router-link :to="{name: 'listTeams'}" class="navbar-item">
-							<span class="icon is-small">
-								<icon icon="users"/>
-							</span>
-							Teams
-						</router-link>
-						<router-link :to="{name: 'newNamespace'}" class="navbar-item">
-							<span class="icon is-small">
-								<icon icon="layer-group"/>
-							</span>
-							New Namespace
-						</router-link>
-						<span class="navbar-item">{{user.infos.username}}</span>
-						<span class="navbar-item image">
-							<img :src="gravatar()" class="is-rounded" alt=""/>
-						</span>
-						<a v-on:click="logout()" class="navbar-item is-right logout-icon">
-							<span class="icon is-medium">
-								<icon icon="sign-out-alt" size="2x"/>
-							</span>
-						</a>
-					</div>
-				</div>
+		<nav class="navbar is-dark is-fixed-top" role="navigation" aria-label="main navigation" v-if="user.authenticated">
+			<div class="navbar-brand">
+				<router-link :to="{name: 'home'}" class="navbar-item logo">
+					<img src="/images/logo-full-white.svg"/>
+				</router-link>
 			</div>
 		</nav>
-		<div class="column is-centered container">
-			<div class="box shadow" v-if="user.authenticated">
-				<div class="columns">
-					<div class="column is-3">
-						<aside class="menu namespaces-lists">
-							<p class="menu-label" v-if="loading">Loading...</p>
-							<template v-for="n in namespaces">
-								<div :key="n.id">
-									<router-link :to="{name: 'editNamespace', params: {id: n.id} }" class="nsettings" v-if="n.id > 0">
-											<span class="icon">
-												<icon icon="cog"/>
-											</span>
-									</router-link>
-									<router-link :to="{ name: 'newList', params: { id: n.id} }" class="is-success nsettings" :key="n.id + 'newList'" v-if="n.id > 0">
-											<span class="icon">
-												<icon icon="plus"/>
-											</span>
-									</router-link>
-									<div class="menu-label">
-										{{n.name}}
-									</div>
+		<div v-if="user.authenticated">
+			<a @click="mobileMenuActive = true" class="mobilemenu-show-button" v-if="!mobileMenuActive"><icon icon="bars"></icon></a>
+			<a @click="mobileMenuActive = false" class="mobilemenu-hide-button" v-if="mobileMenuActive"><icon icon="times"></icon></a>
+			<div class="app-container">
+				<div class="namespace-container" :class="{'is-active': mobileMenuActive}">
+					<div class="menu top-menu">
+						<ul class="menu-list user">
+							<li>
+								<img :src="gravatar()" class="is-rounded" alt=""/>
+								<span class="username">{{user.infos.username}}</span>
+								<a @click="logout()" class="logout-icon">
+									<span class="icon is-medium">
+										<icon icon="power-off" size="2x"/>
+									</span>
+								</a>
+							</li>
+						</ul>
+					</div>
+					<div class="menu top-menu">
+						<ul class="menu-list">
+							<li>
+								<router-link :to="{ name: 'home'}">
+									<span class="icon">
+										<icon icon="calendar"/>
+									</span>
+									Overview
+								</router-link>
+							</li>
+							<li>
+								<router-link :to="{ name: 'listTeams'}">
+									<span class="icon">
+										<icon icon="users"/>
+									</span>
+									Teams
+								</router-link>
+							</li>
+							<li>
+								<router-link :to="{ name: 'newNamespace'}">
+									<span class="icon">
+										<icon icon="layer-group"/>
+									</span>
+									New Namespace
+								</router-link>
+							</li>
+						</ul>
+					</div>
+					<aside class="menu namespaces-lists">
+						<div class="spinner" :class="{ 'is-loading': loading}"></div>
+						<template v-for="n in namespaces">
+							<div :key="n.id">
+								<router-link v-tooltip.right="'Settings'" :to="{name: 'editNamespace', params: {id: n.id} }" class="nsettings" v-if="n.id > 0">
+										<span class="icon">
+											<icon icon="cog"/>
+										</span>
+								</router-link>
+								<router-link v-tooltip="'Add a new list in the ' + n.name + ' namespace'" :to="{ name: 'newList', params: { id: n.id} }" class="nsettings" :key="n.id + 'newList'" v-if="n.id > 0">
+										<span class="icon">
+											<icon icon="plus"/>
+										</span>
+								</router-link>
+								<div class="menu-label">
+									{{n.name}}
 								</div>
-								<ul class="menu-list" :key="n.id + 'child'">
-									<li v-for="l in n.lists" :key="l.id">
-										<router-link :to="{ name: 'showList', params: { id: l.id} }">{{l.title}}</router-link>
-									</li>
-								</ul>
-							</template>
-						</aside>
-					</div>
-					<div class="column is-9">
-						<router-view/>
-					</div>
+							</div>
+							<ul class="menu-list" :key="n.id + 'child'">
+								<li v-for="l in n.lists" :key="l.id">
+									<router-link :to="{ name: 'showList', params: { id: l.id} }">{{l.title}}</router-link>
+								</li>
+							</ul>
+						</template>
+					</aside>
 				</div>
-			</div>
-			<div v-else>
-				<div class="container has-text-centered">
-					<div class="column is-4 is-offset-4">
-						<img src="images/logo-full.svg"/>
-							<router-view/>
-					</div>
+				<div class="app-content" :class="{'fullpage-overlay': fullpage}">
+					<a class="mobile-overlay" v-if="mobileMenuActive" @click="mobileMenuActive = false"></a>
+					<transition name="fade">
+						<router-view/>
+					</transition>
 				</div>
 			</div>
 		</div>
-		<notifications position="bottom left" />
+		<div v-else>
+			<div class="container has-text-centered">
+				<div class="column is-4 is-offset-4">
+					<img src="/images/logo-full.svg"/>
+						<router-view/>
+				</div>
+			</div>
+		</div>
+	<notifications position="bottom left" />
 	</div>
 </template>
 
@@ -96,6 +113,8 @@
                 user: auth.user,
                 loading: false,
                 namespaces: [],
+				mobileMenuActive: false,
+				fullpage: false,
             }
         },
 		beforeMount() {
@@ -119,7 +138,7 @@
         },
         watch: {
             // call the method again if the route changes
-            '$route': 'loadNamespacesIfNeeded'
+            '$route': 'doStuffAfterRoute'
         },
         methods: {
             logout() {
@@ -129,14 +148,14 @@
                 return 'https://www.gravatar.com/avatar/' + this.user.infos.avatar + '?s=50'
 			},
             loadNamespaces() {
-                this.loading = true
-                this.namespaces = []
+				const cancel = message.setLoading(this)
                 HTTP.get(`namespaces`, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
                     .then(response => {
 						this.$set(this, 'namespaces', response.data)
-                        this.loading = false
+                        cancel()
                     })
                     .catch(e => {
+						cancel()
                         this.handleError(e)
                     })
             },
@@ -145,8 +164,15 @@
                     this.loadNamespaces()
                 }
 			},
+			doStuffAfterRoute(e) {
+				this.fullpage = false;
+				this.loadNamespacesIfNeeded(e)
+				this.mobileMenuActive = false
+			},
+			setFullPage() {
+				this.fullpage = true;
+			},
             handleError(e) {
-                this.loading = false
                 message.error(e, this)
             }
         },

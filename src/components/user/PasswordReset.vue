@@ -5,7 +5,7 @@
 			<form id="form" @submit.prevent="submit" v-if="!successMessage">
 				<div class="field">
 					<div class="control">
-						<input type="password" class="input" name="password1" placeholder="Password" v-model="credentials.password" required>
+						<input v-focus type="password" class="input" name="password1" placeholder="Password" v-model="credentials.password" required>
 					</div>
 				</div>
 				<div class="field">

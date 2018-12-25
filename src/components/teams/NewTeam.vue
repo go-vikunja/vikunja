@@ -1,16 +1,17 @@
 <template>
-	<div class="content">
+	<div class="fullpage">
+		<a class="close" @click="back()">
+			<icon :icon="['far', 'times-circle']">
+			</icon>
+		</a>
 		<h3>Create a new team</h3>
-		<form @submit.prevent="newTeam">
+		<form @submit.prevent="newTeam" @keyup.esc="back()">
 			<div class="field is-grouped">
-				<p class="control has-icons-left is-expanded" v-bind:class="{ 'is-loading': loading}">
-					<input class="input" v-bind:class="{ 'disabled': loading}" v-model="team.name" type="text" placeholder="The team's name goes here...">
-					<span class="icon is-small is-left">
-						<icon icon="users"/>
-					</span>
+				<p class="control is-expanded" v-bind:class="{ 'is-loading': loading}">
+					<input v-focus class="input" v-bind:class="{ 'disabled': loading}" v-model="team.name" type="text" placeholder="The team's name goes here...">
 				</p>
 				<p class="control">
-					<button type="submit" class="button is-success">
+					<button type="submit" class="button is-success noshadow">
 						<span class="icon is-small">
 							<icon icon="plus"/>
 						</span>
@@ -43,6 +44,9 @@
 				router.push({name: 'home'})
 			}
 		},
+		created() {
+			this.$parent.setFullPage();
+		},
 		methods: {
 			newTeam() {
 				const cancel = message.setLoading(this)
@@ -58,6 +62,9 @@
 						this.handleError(e)
 					})
 			},
+			back() {
+				router.go(-1)
+			},
 			handleError(e) {
 				message.error(e, this)
 			},
@@ -67,7 +74,3 @@
 		}
 	}
 </script>
-
-<style scoped>
-
-</style>

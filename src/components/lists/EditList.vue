@@ -1,5 +1,5 @@
 <template>
-	<div class="loader-container" v-bind:class="{ 'is-loading': loading}">
+	<div class="loader-container" :class="{ 'is-loading': loading}">
 		<div class="card">
 			<header class="card-header">
 				<p class="card-header-title">
@@ -12,7 +12,7 @@
 						<div class="field">
 							<label class="label" for="listtext">List Name</label>
 							<div class="control">
-								<input :class="{ 'disabled': loading}" :disabled="loading" class="input" type="text" id="listtext" placeholder="The list title goes here..." v-model="list.title">
+								<input v-focus :class="{ 'disabled': loading}" :disabled="loading" class="input" type="text" id="listtext" placeholder="The list title goes here..." v-model="list.title">
 							</div>
 						</div>
 						<div class="field">
@@ -25,7 +25,7 @@
 
 					<div class="columns bigbuttons">
 						<div class="column">
-							<button @click="submit()" class="button is-success is-fullwidth" :class="{ 'is-loading': loading}">
+							<button @click="submit()" class="button is-primary is-fullwidth" :class="{ 'is-loading': loading}">
 								Save
 							</button>
 						</div>
@@ -48,7 +48,7 @@
 		<modal
 				v-if="showDeleteModal"
 				@close="showDeleteModal = false"
-				v-on:submit="deleteList()">
+				@submit="deleteList()">
 			<span slot="header">Delete the list</span>
 			<p slot="text">Are you sure you want to delete this list and all of its contents?
 				<br/>This includes all tasks and <b>CANNOT BE UNDONE!</b></p>

@@ -1,0 +1,26 @@
+
+$black:        hsl(0, 0%, 4%) !default
+
+$orange: #ff851b;
+$green: #00CE6E;
+$blue: #5974d9;
+$red: #ff4136;
+$primary: #198CFF !default;
+$dark: lighten($black, 8);
+
+$info-invert: #fff;
+$family-sans-serif: 'Open Sans', Helvetica, Arial, sans-serif;
+$thickness: 1px;
+$pagination-current-border: darken($primary, 5);
+$navbar-item-active-color: $primary;
+$dropdown-content-shadow: none;
+$navbar-dropdown-boxed-shadow: $dropdown-content-shadow;
+$bulmaswatch-import-font: false !default;
+
+$vikunja-font: 'Quicksand', sans-serif;
+$vikunja-light-text: darken(#fff, 10%);
+$vikunja-blue: #7F23FF;// #7F23FF; // #5974d9
+$vikunja-green: #4DB788;
+$navbar-padding: 1.5em;
+
+$transition: 150ms ease;

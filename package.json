@@ -8,7 +8,9 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
+    "@fortawesome/free-regular-svg-icons": "^5.6.3",
     "bulma": "^0.7.1",
+    "v-tooltip": "^2.0.0-rc.33",
     "vue": "^2.5.17"
   },
   "devDependencies": {

@@ -31,20 +31,19 @@
 ## Eye-Candy
 
 * [x] Zurück zu Home (wenn man auf das Logo klickt)
-* [ ] Google fonts raus (sollen von lokal geladen werden)
+* [x] Google fonts raus (sollen von lokal geladen werden)
 * [x] Ladeanimationen erst nach 100ms anzeigen, sonst wird das überflüssigerweise angezeigt
 * [x] Btns für Teams und neuer Namespace nach oben in die Leiste verschieben
-* [ ] Links an den Freigewordenen Platz Menüpunkte machen à la "Heute"/Morgen/Diese Woche etc. Da kommt dann alles rein was dann due ist.
-* [ ] Andere Icons? --> Freepikkram
 
 ## Funktionales
 
-* [ ] Beim Team bearbeiten Nutzer suchen einbauen
-* [ ] Fertige Tasks schöner visualisieren
-  * [ ] Alles abgehakte ausblenden, mit btn zum wieder einblenden
 * [x] Den Sharing-Updateshit mit der neuen methode machen (post)
 * [x] User suchen einbauen, mit neuem endpoint
+* [x] Fertige Tasks schöner visualisieren
+  * [x] Alles abgehakte ausblenden, mit btn zum wieder einblenden
+* [ ] Beim Team bearbeiten Nutzer suchen einbauen
 * [ ] Wenn man den Namen einer Liste updated wird der Name in der List nicht upgedated
+* [ ] Links an den Freigewordenen Platz Menüpunkte machen à la "Heute"/Morgen/Diese Woche etc. Da kommt dann alles rein was dann due ist.
 
 ## Funktionen aus der API
 
@@ -90,13 +89,12 @@
   * [ ] Sachen mit hoher Prio irgendwie hervorheben (rotes Dreieck zb)
 * [ ] Listen Kopieren
 * [ ] "Move to Vikunja" -> Migrator von Wunderlist/todoist/etc
+* [ ] Timeline/Calendar view -> Dazu tasks die in einem Bestimmten Bereich due sind, macht dann das Frontend
 
 ## Waiting for backend
 
 * [ ] Assignees
-* [ ] Timeline/Calendar view
 * [ ] In und Out webhooks, mit Templates vom Payload
-* [ ] Timeline/Calendar view -> Dazu tasks die in einem Bestimmten Bereich due sind, macht dann das Frontend
 * [ ] "Smart Lists", Listen nach bestimmten Kriterien gefiltert -> nur UI?
 * [ ] "Performance-Statistik" -> Wie viele Tasks man in bestimmten Zeiträumen so geschafft hat etc
 * [ ] Activity Feed, so à la "der und der hat das und das gemacht etc"

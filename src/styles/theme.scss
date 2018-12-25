@@ -1,0 +1,230 @@
+@import url('/fonts/fonts.css');
+@import 'variables';
+@import "../../node_modules/bulma/bulma";
+
+*, *:hover, *:active, *:focus{
+  outline: none;
+}
+
+.button {
+  transition: all $transition;
+  border: 0;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  font-weight: bold;
+  height: 2.648em;
+
+  box-shadow: 0.3em 0.3em 1em lighten($dark, 75);
+  &.is-hovered,
+  &:hover {
+    box-shadow: 0.6em 0.6em 1em lighten($dark, 75);
+  }
+
+  &.is-active,
+  &.is-focused,
+  &:active,
+  &:focus,
+  &:focus:not(:active) {
+    box-shadow: 0.1em 0.1em 0.7em lighten($dark, 75) !important;
+  }
+
+  @each $name, $pair in $colors {
+    $color: nth($pair, 1);
+
+    &.is-#{$name} {
+      box-shadow: 0.3em 0.3em 1em lighten($color, 30);
+
+      &.is-hovered,
+      &:hover {
+        box-shadow: 0.6em 0.6em 1em lighten($color, 30);
+      }
+
+      &.is-active,
+      &.is-focused,
+      &:active,
+      &:focus,
+      &:focus:not(:active) {
+        box-shadow: 0.1em 0.1em 0.7em lighten($color, 30) !important;
+      }
+    }
+  }
+
+  &.noshadow{
+    &,
+    &.is-hovered,
+    &:hover,
+    &.is-active,
+    &.is-focused,
+    &:active,
+    &:focus,
+    &:focus:not(:active) {
+      box-shadow: none;
+    }
+  }
+}
+
+.input,
+.textarea {
+  transition: all $transition;
+  box-shadow: none;
+
+  &.is-active,
+  &.is-focused,
+  &:active,
+  &:focus {
+    box-shadow: none;
+  }
+
+  @each $name, $pair in $colors {
+    $color: nth($pair, 1);
+    $color-invert: nth($pair, 2);
+
+    &.is-#{$name} {
+      &.is-active,
+      &.is-focused,
+      &:active,
+      &:focus,
+      &:focus:not(:active) {
+        border-color: darken($color, 10);
+      }
+    }
+  }
+}
+
+.select:after {
+  margin-top: -0.575em;
+}
+
+.select select {
+  border-width: $thickness;
+
+  &:not([multiple]) {
+    height: calc(2.25em + #{$thickness});
+  }
+
+  &.is-active,
+  &.is-focused,
+  &:active,
+  &:focus,
+  &:focus:not(:active) {
+    box-shadow: none;
+  }
+}
+
+.field.has-addons {
+  .control .select select {
+    height: 2.25em;
+  }
+}
+
+.notification {
+  border: $thickness solid $border;
+
+  @each $name, $pair in $colors {
+    $color: nth($pair, 1);
+
+    &.is-#{$name} {
+      border-color: darken($color, 5);
+    }
+  }
+}
+
+.progress {
+  border-radius: $radius-large;
+}
+
+.card {
+  background-color: rgba($grey-lighter, 0.075);
+  border-radius: $radius;
+  margin-bottom: 1rem;
+
+  .card-image {
+    img {
+      border-radius: $radius $radius 0 0;
+    }
+  }
+
+  .card-header {
+    box-shadow: none;
+    border-bottom: 1px solid $grey-lighter;
+    border-radius: $radius $radius 0 0;
+  }
+}
+
+.box,.card{
+  border: $thickness solid $border;
+  box-shadow: 0.3em 0.3em 0.8em darken($light, 6);
+}
+
+.message {
+  .message-body {
+    border: $thickness solid;
+  }
+}
+
+.hero {
+  .navbar {
+    border: none;
+    box-shadow: none;
+  }
+  @each $name, $pair in $colors {
+    $color: nth($pair, 1);
+    $color-invert: nth($pair, 2);
+
+    &.is-#{$name} {
+      .navbar {
+        box-shadow: none;
+      }
+    }
+  }
+  @include touch {
+    .navbar-menu {
+      box-shadow: none;
+    }
+  }
+}
+
+.navbar {
+  z-index: 2;
+
+  @each $name, $pair in $colors {
+    $color: nth($pair, 1);
+    $color-invert: nth($pair, 2);
+
+    &.is-#{$name} {
+      border-color: darken($color, 5);
+    }
+  }
+  .navbar-dropdown {
+    box-shadow: $navbar-dropdown-boxed-shadow;
+    top: 101%;
+  }
+}
+
+.pagination-link,
+.pagination-next,
+.pagination-previous {
+  border-width: $thickness;
+}
+
+body {
+  background: url('../public/images/llama.svg') no-repeat bottom left fixed darken(#fff, 4);
+  min-height: 100vh;
+}
+
+h1,h2,h3,h4,h5,h6{
+  font-family: $vikunja-font;
+  font-weight: 400 !important;
+}
+
+.bigbuttons{
+  margin-top: 0.5rem;
+}
+
+.control.has-icons-left .icon, .control.has-icons-right .icon {
+  z-index: 0;
+}
+
+.buttonright {
+  margin-right: 0.5rem;
+}

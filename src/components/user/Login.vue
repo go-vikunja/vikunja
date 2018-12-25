@@ -8,7 +8,7 @@
 			<form id="loginform" @submit.prevent="submit">
 				<div class="field">
 					<div class="control">
-						<input type="text" class="input" name="username" placeholder="Username" v-model="credentials.username" required>
+						<input v-focus type="text" class="input" name="username" placeholder="Username" v-model="credentials.username" required>
 					</div>
 				</div>
 				<div class="field">

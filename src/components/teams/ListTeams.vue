@@ -1,6 +1,9 @@
 <template>
 	<div class="content loader-container" v-bind:class="{ 'is-loading': loading}">
 		<router-link :to="{name:'newTeam'}" class="button is-success button-right" >
+			<span class="icon is-small">
+				<icon icon="plus"/>
+			</span>
 			New Team
 		</router-link>
 		<h1>Teams</h1>
@@ -57,35 +60,3 @@
 		}
     }
 </script>
-
-<style lang="scss" scoped>
-	.button-right{
-		float: right;
-	}
-
-	ul.teams{
-
-		padding: 0;
-		margin-left: 0;
-
-		li{
-			list-style: none;
-			margin: 0;
-			border-bottom: 1px solid darken(#fff, 25%);
-
-			a{
-				color: #363636;
-				display: block;
-				padding: 0.5rem 1rem;
-
-				&:hover{
-					background: darken(#fff, 2%);
-				}
-			}
-		}
-
-		li:last-child{
-			border-bottom: none;
-		}
-	}
-</style>

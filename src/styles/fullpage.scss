@@ -1,0 +1,57 @@
+.fullpage{
+  position: fixed;
+  text-align: center;
+  top: 0;
+  z-index: 50;
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  padding: 15vh 20vh;
+  background: $vikunja-blue;
+  color: $vikunja-light-text;
+  font-size: 2em;
+
+  @media screen and (max-width: $tablet) {
+    padding: 20vw 10vw;
+  }
+
+  input{
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid darken($vikunja-blue, 10);
+    color: $vikunja-light-text;
+    padding: 1em 0.5em;
+    font-size: 1.5em;
+    border-radius: 0;
+
+    &::placeholder{
+      color: $vikunja-light-text;
+    }
+  }
+
+  .button {
+    font-size: 1em;
+    margin-top: 4px;
+  }
+
+  h3{
+    font-size: 1.5em;
+  }
+
+  .close {
+    position: fixed;
+    top: 5vh;
+    right: 6vh;
+    color: $vikunja-light-text;
+  }
+
+  .small{
+    margin-top: 1em;
+    font-size: 0.5em;
+  }
+}
+
+.fullpage-overlay{
+  z-index: 6 !important;
+}

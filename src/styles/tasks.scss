@@ -1,0 +1,101 @@
+.settings{
+  float: right;
+  color: rgb(74, 74, 74);
+}
+
+.tasks {
+  margin-top: 1rem;
+  padding: 0;
+  text-align: left;
+  max-width: 80vw;
+
+  @media screen and (min-width: $tablet) {
+    &.short {
+      max-width: 53vw;
+    }
+  }
+  
+  @media screen and (max-width: $tablet) {
+    max-width: 100%;
+  }
+
+  &.noborder{
+    margin: 1rem -0.5rem;
+  }
+
+  .task {
+    display: block;
+    padding: 0.5rem 1rem;
+    border-bottom: 1px solid darken(#fff, 10%);
+
+    label{
+      width: 96%;
+      display: inline-block;
+      cursor: pointer;
+
+      .tasktext {
+        vertical-align: top;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        display: inline-block;
+        width: 94%;
+
+        @media screen and (max-width: $tablet) {
+          width: 89%;
+        }
+
+        &.done{
+          text-decoration: line-through;
+          color: $grey;
+        }
+      }
+    }
+
+    input[type="checkbox"] {
+      vertical-align: middle;
+    }
+
+    .settings{
+      float: right;
+      width: 4%;
+      cursor: pointer;
+    }
+  }
+
+  .task:last-child {
+    border-bottom: none;
+  }
+}
+
+.taskedit{
+  min-height: calc(100% - 1rem);
+  margin-top: 1rem;
+
+  .reminder-input{
+    margin: 0;
+
+    &.overdue input{
+      color: $red;
+    }
+
+    &:last-child {
+      margin-bottom: 0.75rem;
+    }
+
+    a {
+      color: $red;
+      vertical-align: sub;
+    }
+
+    input {
+      width: 90%;
+      border: none;
+
+      &:focus {
+        border: none;
+        box-shadow: none;
+      }
+    }
+  }
+}

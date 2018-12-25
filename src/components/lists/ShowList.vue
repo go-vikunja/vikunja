@@ -1,5 +1,5 @@
 <template>
-	<div class="loader-container" v-bind:class="{ 'is-loading': loading}">
+	<div class="loader-container" :class="{ 'is-loading': loading}">
 		<div class="content">
 			<router-link :to="{ name: 'editList', params: { id: list.id } }" class="icon settings is-medium">
 				<icon icon="cog" size="2x"/>
@@ -8,8 +8,8 @@
 		</div>
 		<form @submit.prevent="addTask()">
 			<div class="field is-grouped">
-				<p class="control has-icons-left is-expanded" v-bind:class="{ 'is-loading': loading}">
-					<input class="input" v-bind:class="{ 'disabled': loading}" v-model="newTask.text" type="text" placeholder="Add a new task...">
+				<p class="control has-icons-left is-expanded" :class="{ 'is-loading': loading}">
+					<input v-focus class="input" :class="{ 'disabled': loading}" v-model="newTask.text" type="text" placeholder="Add a new task...">
 					<span class="icon is-small is-left">
 						<icon icon="tasks"/>
 					</span>
@@ -27,19 +27,19 @@
 
 		<div class="columns">
 			<div class="column">
-				<div class="box tasks" v-if="this.list.tasks && this.list.tasks.length > 0">
-					<div class="task" v-for="l in list.tasks" v-bind:key="l.id">
-						<label v-bind:for="l.id">
+				<div class="tasks" v-if="this.list.tasks && this.list.tasks.length > 0" :class="{'short': isTaskEdit}">
+					<div class="task" v-for="l in list.tasks" :key="l.id">
+						<label :for="l.id">
 							<div class="fancycheckbox">
-								<input @change="markAsDone" type="checkbox" v-bind:id="l.id" v-bind:checked="l.done" style="display: none;">
-								<label  v-bind:for="l.id" class="check">
+								<input @change="markAsDone" type="checkbox" :id="l.id" :checked="l.done" style="display: none;">
+								<label :for="l.id" class="check">
 									<svg width="18px" height="18px" viewBox="0 0 18 18">
 										<path d="M1,9 L1,3.5 C1,2 2,1 3.5,1 L14.5,1 C16,1 17,2 17,3.5 L17,14.5 C17,16 16,17 14.5,17 L3.5,17 C2,17 1,16 1,14.5 L1,9 Z"></path>
 										<polyline points="1 9 7 14 15 4"></polyline>
 									</svg>
 								</label>
 							</div>
-							<span class="tasktext">
+							<span class="tasktext" :class="{ 'done': l.done}">
 								{{l.text}}
 							</span>
 						</label>
@@ -67,7 +67,7 @@
 								<div class="field">
 									<label class="label" for="tasktext">Task Text</label>
 									<div class="control">
-										<input :class="{ 'disabled': loading}" :disabled="loading" class="input" type="text" id="tasktext" placeholder="The task text is here..." v-model="taskEditTask.text">
+										<input v-focus :class="{ 'disabled': loading}" :disabled="loading" class="input" type="text" id="tasktext" placeholder="The task text is here..." v-model="taskEditTask.text">
 									</div>
 								</div>
 								<div class="field">
@@ -78,7 +78,7 @@
 								</div>
 
 								<b>Reminder Dates</b>
-								<div class="reminder-input" :class="{ 'overdue': (r < nowUnix && index !== (taskEditTask.reminderDates.length - 1))}" v-for="(r, index) in taskEditTask.reminderDates" v-bind:key="index">
+								<div class="reminder-input" :class="{ 'overdue': (r < nowUnix && index !== (taskEditTask.reminderDates.length - 1))}" v-for="(r, index) in taskEditTask.reminderDates" :key="index">
 									<flat-pickr
 										:class="{ 'disabled': loading}"
 										:disabled="loading"
@@ -129,7 +129,7 @@
 													v-model="taskEditTask.endDate"
 													:config="flatPickerConfig"
 													id="taskduedate"
-													placeholder="Start date">
+													placeholder="End date">
 											</flat-pickr>
 										</div>
 									</div>
@@ -141,7 +141,7 @@
 										<div class="column">
 											<input class="input" placeholder="Specify an amount..." v-model="repeatAfter.amount"/>
 										</div>
-										<div class="column">
+										<div class="column is-3">
 											<div class="select">
 												<select v-model="repeatAfter.type">
 													<option value="hours">Hours</option>
@@ -157,30 +157,31 @@
 
 								<div class="field">
 									<label class="label" for="subtasks">Subtasks</label>
-									<div class="control subtasks">
-
-										<div class="tasks noborder" v-if="taskEditTask.subtasks && taskEditTask.subtasks.length > 0">
-											<div class="task" v-for="s in taskEditTask.subtasks" v-bind:key="s.id">
-												<label v-bind:for="s.id">
-													<div class="fancycheckbox">
-														<input @change="markAsDone" type="checkbox" v-bind:id="s.id" v-bind:checked="s.done" style="display: none;">
-														<label  v-bind:for="s.id" class="check">
-															<svg width="18px" height="18px" viewBox="0 0 18 18">
-																<path d="M1,9 L1,3.5 C1,2 2,1 3.5,1 L14.5,1 C16,1 17,2 17,3.5 L17,14.5 C17,16 16,17 14.5,17 L3.5,17 C2,17 1,16 1,14.5 L1,9 Z"></path>
-																<polyline points="1 9 7 14 15 4"></polyline>
-															</svg>
-														</label>
-													</div>
-													<span class="tasktext">
-														{{s.text}}
-													</span>
-												</label>
-											</div>
+									<div class="tasks noborder" v-if="taskEditTask.subtasks && taskEditTask.subtasks.length > 0">
+										<div class="task" v-for="s in taskEditTask.subtasks" :key="s.id">
+											<label :for="s.id">
+												<div class="fancycheckbox">
+													<input @change="markAsDone" type="checkbox" :id="s.id" :checked="s.done" style="display: none;">
+													<label  :for="s.id" class="check">
+														<svg width="18px" height="18px" viewBox="0 0 18 18">
+															<path d="M1,9 L1,3.5 C1,2 2,1 3.5,1 L14.5,1 C16,1 17,2 17,3.5 L17,14.5 C17,16 16,17 14.5,17 L3.5,17 C2,17 1,16 1,14.5 L1,9 Z"></path>
+															<polyline points="1 9 7 14 15 4"></polyline>
+														</svg>
+													</label>
+												</div>
+												<span class="tasktext" :class="{ 'done': s.done}">
+													{{s.text}}
+												</span>
+											</label>
 										</div>
-
-										<input :class="{ 'disabled': loading}" :disabled="loading" class="input" type="text" id="tasktext" placeholder="New subtask" v-model="newTask.text"/>
+									</div>
+								</div>
+								<div class="field has-addons">
+									<div class="control is-expanded">
+										<input @keyup.enter="addSubtask()" :class="{ 'disabled': loading}" :disabled="loading" class="input" type="text" id="tasktext" placeholder="New subtask" v-model="newTask.text"/>
+									</div>
+									<div class="control">
 										<a class="button" @click="addSubtask()"><icon icon="plus"></icon></a>
-
 									</div>
 								</div>
 
@@ -258,6 +259,7 @@
                         }
 
                         // This adds a new elemednt "list" to our object which contains all lists
+						response.data.tasks = this.sortTasks(response.data.tasks)
                         this.$set(this, 'list', response.data)
                         if (this.list.tasks === null) {
                             this.list.tasks = []
@@ -302,21 +304,30 @@
 				if (task.ParentTask === this.taskEditTask.id) {
 					this.taskEditTask.subtasks.push(task)
 				}
-
+				this.list.tasks = this.sortTasks(this.list.tasks)
 			},
 			markAsDone(e) {
-				const cancel = message.setLoading(this)
+				let context = this
+				if (e.target.checked) {
+					setTimeout(doTheDone, 300); // Delay it to show the animation when marking a task as done
+				} else {
+					doTheDone() // Don't delay it when un-marking it as it doesn't have an animation the other way around
+				}
 
-                HTTP.post(`tasks/` + e.target.id, {done: e.target.checked}, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
-                    .then(response => {
-                        this.updateTaskByID(parseInt(e.target.id), response.data)
-                        this.handleSuccess({message: 'The task was successfully ' + (e.target.checked ? 'un-' :'') + 'marked as done.'})
-						cancel() // To not set the spinner to loading when the request is made in less than 100ms, would lead to loading infinitly.
-                    })
-                    .catch(e => {
-                        cancel()
-						this.handleError(e)
-                    })
+				function doTheDone() {
+					const cancel = message.setLoading(context)
+
+					HTTP.post(`tasks/` + e.target.id, {done: e.target.checked}, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
+						.then(response => {
+							context.updateTaskByID(parseInt(e.target.id), response.data)
+							context.handleSuccess({message: 'The task was successfully ' + (e.target.checked ? '' : 'un-') + 'marked as done.'})
+							cancel() // To not set the spinner to loading when the request is made in less than 100ms, would lead to loading infinitly.
+						})
+						.catch(e => {
+							cancel()
+							context.handleError(e)
+						})
+				}
 			},
 			editTask(id) {
                 // Find the selected task and set it to the current object
@@ -371,7 +382,6 @@
 				this.taskEditTask.startDate = (+ new Date(this.taskEditTask.startDate)) / 1000
 				this.taskEditTask.endDate = (+ new Date(this.taskEditTask.endDate)) / 1000
 
-
 				// remove all nulls
 				this.taskEditTask.reminderDates = this.removeNullsFromArray(this.taskEditTask.reminderDates)
 				// Make normal timestamps from js timestamps
@@ -404,14 +414,12 @@
 
                 HTTP.post(`tasks/` + this.taskEditTask.id, this.taskEditTask, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
                     .then(response => {
-                        response.data.dueDate = new Date(response.data.dueDate * 1000)
-						response.data.reminderDates = this.makeJSReminderDatesAfterUpdate(response.data.reminderDates)
-
-						// Update the task in the list
+                        // Update the task in the list
                         this.updateTaskByID(this.taskEditTask.id, response.data)
 
 						// Also update the current taskedit object so the ui changes
-						this.$set(this, 'taskEditTask', this.fixStuffComingFromAPI(response.data))
+						response.data.reminderDates.push(null) // To be able to add a new one
+						this.$set(this, 'taskEditTask', response.data)
                         this.handleSuccess({message: 'The task was successfully updated.'})
 						cancel() // cancel the timers
                     })
@@ -440,6 +448,7 @@
 						}
 					}
                 }
+				this.list.tasks = this.sortTasks(this.list.tasks)
 			},
 			fixStuffComingFromAPI(task) {
 				// Make date objects from timestamps
@@ -455,7 +464,20 @@
 				if (task.subtasks === null) {
 					task.subtasks = []
 				}
+
 				return task
+			},
+			sortTasks(tasks) {
+				if (tasks === null) {
+					return tasks
+				}
+				return tasks.sort(function(a,b) {
+					if (a.done < b.done)
+						return -1
+					if (a.done > b.done)
+						return 1
+					return 0
+				})
 			},
 			parseDateIfNessecary(dateUnix) {
 				let dateobj = (+new Date(dateUnix * 1000))
@@ -498,18 +520,6 @@
 					}
 				}
 				return array
-			},
-			makeJSReminderDatesAfterUpdate(dates) {
-				// Make js timestamps from normal timestamps
-				for (const rd in dates) {
-					dates[rd] = +new Date(dates[rd] * 1000)
-				}
-
-				if (dates == null) {
-					dates = []
-				}
-				dates.push(null)
-				return dates
 			},
             handleError(e) {
                 message.error(e, this)

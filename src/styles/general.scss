@@ -1,0 +1,312 @@
+
+/* Logo */
+.logo {
+
+  padding-left: 2rem !important;
+
+  img {
+    max-height: 3rem !important;
+    margin-right: 1rem;
+  }
+}
+
+/* Buttons icons */
+.button .icon.is-small {
+  margin-right: 0.05rem !important;
+}
+
+/* menu buttons */
+.button-bottom {
+  margin-bottom: 1rem;
+}
+
+.navbar-menu .navbar-item .icon{
+  margin: 0 0.5em;
+}
+
+.navbar{
+  z-index: 4 !important;
+}
+
+.app-container{
+  min-height: calc(100vh - 65px);
+  @media screen and (max-width: $tablet) {
+    padding-top: $navbar-height + 0.75rem;
+  }
+
+  .namespace-container{
+    background: $vikunja-blue;
+    box-shadow: 0 0 1em darken(#fff, 30%);
+    z-index: 3;
+    color: $vikunja-light-text;
+    padding: 0;
+    transition: all $transition;
+    position: fixed;
+    bottom: 0;
+    top: $navbar-height + 0.75rem;
+    overflow-x: auto;
+    width: 17vw;
+
+    @media screen and (max-width: $tablet) {
+      padding: 0 0 1em;
+      left: -147vw;
+      top: 0;
+      bottom: 0;
+      width: 70vw;
+      z-index: 5;
+
+      &.is-active {
+        left: 0;
+      }
+    }
+
+    .namespaces-lists{
+      border-top: 1px solid darken($vikunja-blue, 6);
+    }
+
+    .menu{
+      .menu-label {
+        font-size: 1em;
+        font-weight: 400;
+        min-height: 2.5em;
+        padding-top: $navbar-padding * 0.3;
+
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        overflow: hidden;
+      }
+
+      .nsettings{
+        vertical-align: middle;
+        float: right;
+        margin-left: 0.5rem;
+        min-width: 2.648em;
+        padding-top: 5px;
+      }
+
+      .menu-label {
+        font-weight: bold;
+        font-family: $vikunja-font;
+      }
+
+      .menu-label,.nsettings,.menu-list a{
+        color: $vikunja-light-text;
+      }
+
+      .menu-label{
+        padding-left: $navbar-padding;
+      }
+
+      .menu-list {
+        li {
+          height: 36px;
+        }
+
+        a {
+          padding-left: $navbar-padding * 2;
+          transition: all 0.2s ease;
+
+          white-space: nowrap;
+          text-overflow: ellipsis;
+          overflow: hidden;
+          display: inline-block;
+          width: 100%;
+
+          .icon {
+            height: 1rem;
+            vertical-align: middle;
+            padding-bottom: 4px;
+            padding-right: 0.5em;
+          }
+
+          &.router-link-exact-active {
+            background: darken($vikunja-blue, 5%);
+          }
+
+          &:hover {
+            background: darken($vikunja-blue, 3%);
+          }
+        }
+
+        &.user{
+          padding: 0 0.5em 1em 1em;
+          border-bottom: 1px solid #6d04ff;
+
+          li{
+            height: auto;
+          }
+
+          img.is-rounded{
+            border-radius: 100%;
+            vertical-align: middle;
+            margin-top: -20px;
+            display: inline-block;
+          }
+
+          .username{
+            font-family: $vikunja-font;
+            font-weight: bold;
+            font-size: 1.5em;
+            padding-left: 0.5em;
+            margin-top: 20px;
+
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            width: calc(100% - 103px - 1em);
+            display: inline-block;
+          }
+
+          a.logout-icon{
+            float: right;
+            width: 53px;
+            margin-top: 15px;
+
+            &:hover, &:focus{
+              color: lighten($light, 80);
+              background: transparent;
+            }
+          }
+        }
+      }
+    }
+
+    .top-menu {
+      margin: $navbar-padding 0;
+
+      .menu-list a {
+        padding-left: $navbar-padding;
+      }
+    }
+  }
+
+  .app-content{
+    padding: $navbar-height + 1.5rem 1.5em 0 1.5em;
+    z-index: 2;
+    background: url('../public/images/llama-upside-down.svg') no-repeat top right darken(#fff, 4);
+    margin-left: 17vw;
+
+    @media screen and (max-width: $tablet) {
+      margin-left: 0;
+      padding-top: 1.5em;
+      min-height: calc(100vh - 4rem);
+    }
+
+    .card{
+      background: #fff;
+    }
+  }
+}
+
+.mobilemenu-hide-button,.mobilemenu-show-button{
+  display: none;
+  position: fixed;
+  z-index: 5;
+  font-weight: bold;
+  font-size: 2em;
+  color: $light;
+  &:hover, &:focus{
+    color: $light;
+  }
+}
+
+.mobilemenu-hide-button{
+  color: $dark;
+  &:hover, &:focus{
+    color: $dark;
+  }
+}
+
+.mobile-overlay{
+  display: none;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(250,250,250,0.8);
+  z-index: 4;
+  opacity: 0;
+  transition: all $transition;
+}
+
+@media screen and (max-width: $tablet) {
+  .mobilemenu-hide-button{
+    display: block;
+    top: 1vh;
+    right: 4vh;
+  }
+
+  .mobilemenu-show-button{
+    display: block;
+    top: 1vh;
+    left: 4vh;
+  }
+
+  .mobile-overlay{
+    display: block;
+    opacity: 1;
+  }
+
+  .navbar.is-dark .navbar-brand > .navbar-item{
+    margin: 0 auto;
+  }
+}
+
+/* Logout-icon */
+.logout-icon {
+  margin-right: 0.85em !important;
+}
+
+/* Loading spinner */
+.loader-container {
+  &.is-loading {
+    position: relative;
+    pointer-events: none;
+    opacity: 0.5;
+    &:after {
+      @include loader;
+      position: absolute;
+      top: calc(50% - 2.5em);
+      left: calc(50% - 2.5em);
+      width: 5em;
+      height: 5em;
+      border-width: 0.25em;
+    }
+  }
+}
+
+.spinner{
+  &.is-loading {
+    pointer-events: none;
+    &:after {
+      @include loader;
+      width: 2em;
+      height: 2em;
+      margin-left: calc(50% - 1em);
+      position: absolute;
+      margin-top: 1em;
+      z-index: 999;
+      border-width: 0.25em;
+    }
+  }
+}
+
+.notifications{
+  left: 0.5em !important;
+  bottom: 1em !important;
+
+  .notification-wrapper .notification{
+    -webkit-border-radius: 0;
+    -moz-border-radius: 0;
+    border-radius: 0;
+    border-top-width: 0;
+    border-right-width: 0;
+    border-bottom-width: 0;
+    border-left-width: 0.4em;
+  }
+}
+
+.button-right{
+  float: right;
+}

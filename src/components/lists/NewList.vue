@@ -1,16 +1,17 @@
 <template>
-	<div class="content">
+	<div class="fullpage">
+		<a class="close" @click="back()">
+			<icon :icon="['far', 'times-circle']">
+			</icon>
+		</a>
 		<h3>Create a new list</h3>
-		<form @submit.prevent="newList">
+		<form @submit.prevent="newList" @keyup.esc="back()">
 			<div class="field is-grouped">
-				<p class="control has-icons-left is-expanded" v-bind:class="{ 'is-loading': loading}">
-					<input class="input" v-bind:class="{ 'disabled': loading}" v-model="list.title" type="text" placeholder="The list's name goes here...">
-					<span class="icon is-small is-left">
-						<icon icon="list-ol"/>
-					</span>
+				<p class="control is-expanded" :class="{ 'is-loading': loading}">
+					<input v-focus class="input" :class="{ 'disabled': loading}" v-model="list.title" type="text" placeholder="The list's name goes here...">
 				</p>
 				<p class="control">
-					<button type="submit" class="button is-success">
+					<button type="submit" class="button is-success noshadow">
 						<span class="icon is-small">
 							<icon icon="plus"/>
 						</span>
@@ -43,21 +44,28 @@
                 router.push({name: 'home'})
             }
         },
+		created() {
+			this.$parent.setFullPage();
+		},
         methods: {
             newList() {
 				const cancel = message.setLoading(this)
 
                 HTTP.put(`namespaces/` + this.$route.params.id + `/lists`, this.list, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
-                    .then(() => {
+                    .then(response => {
 						this.$parent.loadNamespaces()
 						this.handleSuccess({message: 'The list was successfully created.'})
 						cancel()
+						router.push({name: 'showList', params: {id: response.data.id}})
                     })
                     .catch(e => {
                         cancel()
 						this.handleError(e)
                     })
             },
+			back() {
+				router.go(-1)
+			},
             handleError(e) {
                 message.error(e, this)
             },
@@ -67,7 +75,3 @@
         }
     }
 </script>
-
-<style scoped>
-
-</style>

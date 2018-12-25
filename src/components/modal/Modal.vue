@@ -10,8 +10,8 @@
 						<slot name="text"></slot>
 					</div>
 					<div class="actions">
-						<button class="button is-danger is-inverted" @click="$emit('close')">Cancel</button>
-						<button class="button is-success is-inverted" @click="$emit('submit')">Do it!</button>
+						<button class="button is-danger is-inverted noshadow" @click="$emit('close')">Cancel</button>
+						<button class="button is-success noshadow" @click="$emit('submit')">Do it!</button>
 					</div>
 				</div>
 			</div>
@@ -22,9 +22,6 @@
 <script>
     export default {
         name: 'modal',
-        props: {
-            header: ''
-        },
         mounted: function () {
             document.addEventListener('keydown', (e) => {
                 // Close the model when escape is pressed

@@ -12,7 +12,7 @@
 						<div class="field">
 							<label class="label" for="namespacetext">Namespace Name</label>
 							<div class="control">
-								<input :class="{ 'disabled': loading}" :disabled="loading" class="input" type="text" id="namespacetext" placeholder="The namespace text is here..." v-model="namespace.name">
+								<input v-focus :class="{ 'disabled': loading}" :disabled="loading" class="input" type="text" id="namespacetext" placeholder="The namespace text is here..." v-model="namespace.name">
 							</div>
 						</div>
 						<div class="field">
@@ -25,7 +25,7 @@
 
 					<div class="columns bigbuttons">
 						<div class="column">
-							<button @click="submit()" class="button is-success is-fullwidth" :class="{ 'is-loading': loading}">
+							<button @click="submit()" class="button is-primary is-fullwidth" :class="{ 'is-loading': loading}">
 								Save
 							</button>
 						</div>

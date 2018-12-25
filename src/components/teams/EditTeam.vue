@@ -12,7 +12,7 @@
 						<div class="field">
 							<label class="label" for="teamtext">Team Name</label>
 							<div class="control">
-								<input :class="{ 'disabled': loading}" :disabled="loading" class="input" type="text" id="teamtext" placeholder="The team text is here..." v-model="team.name">
+								<input v-focus :class="{ 'disabled': loading}" :disabled="loading" class="input" type="text" id="teamtext" placeholder="The team text is here..." v-model="team.name">
 							</div>
 						</div>
 						<div class="field">
@@ -276,6 +276,8 @@
 
 		.table{
 			border-top: 1px solid darken(#fff, 15%);
+			border-radius: 4px;
+			overflow: hidden;
 
 			td{
 				vertical-align: middle;

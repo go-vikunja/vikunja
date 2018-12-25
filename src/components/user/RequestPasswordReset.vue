@@ -5,7 +5,7 @@
 			<form id="loginform" @submit.prevent="submit" v-if="!isSuccess">
 				<div class="field">
 					<div class="control">
-						<input type="text" class="input" name="email" placeholder="Email-Adress" v-model="email" required>
+						<input v-focus type="text" class="input" name="email" placeholder="Email-Adress" v-model="email" required>
 					</div>
 				</div>
 
