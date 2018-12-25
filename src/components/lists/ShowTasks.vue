@@ -62,12 +62,14 @@
 				HTTP.get(url, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
 					.then(response => {
 						// Filter all done tasks
-						for (const index in response.data) {
-							if (response.data[index].done !== true) {
-								this.hasUndoneTasks = true
+						if (response.data !== null) {
+							for (const index in response.data) {
+								if (response.data[index].done !== true) {
+									this.hasUndoneTasks = true
+								}
 							}
+							response.data.sort(this.sortyByDeadline)
 						}
-						response.data.sort(this.sortyByDeadline)
 						this.$set(this, 'tasks', response.data)
 						cancel()
 					})
