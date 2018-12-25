@@ -85,6 +85,7 @@
   * [ ] Teams with access to a namespace
 * [x] Subtasks
 * [x] Start/Enddatum für Tasks
+* [x] Tasks in time range
 * [ ] Priorities
   * [ ] Sachen mit hoher Prio irgendwie hervorheben (rotes Dreieck zb)
 * [ ] Listen Kopieren

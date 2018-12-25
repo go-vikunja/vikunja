@@ -7,6 +7,11 @@ import auth from './auth'
 import Modal from './components/modal/Modal'
 Vue.component('modal', Modal)
 
+// Register the task overview component
+import TaskOverview from './components/lists/ShowTasks'
+Vue.component('TaskOverview', TaskOverview)
+
+// Add CSS
 import './vikunja.scss'
 
 Vue.config.productionTip = false
@@ -34,7 +39,9 @@ import { faTachometerAlt } from '@fortawesome/free-solid-svg-icons'
 import { faCalendar } from '@fortawesome/free-solid-svg-icons'
 import { faBars } from '@fortawesome/free-solid-svg-icons'
 import { faPowerOff } from '@fortawesome/free-solid-svg-icons'
+import { faCalendarWeek } from '@fortawesome/free-solid-svg-icons'
 import { faTimesCircle } from '@fortawesome/free-regular-svg-icons'
+import { faCalendarAlt } from '@fortawesome/free-regular-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
 library.add(faSignOutAlt)
@@ -55,6 +62,8 @@ library.add(faCalendar)
 library.add(faTimesCircle)
 library.add(faBars)
 library.add(faPowerOff)
+library.add(faCalendarWeek)
+library.add(faCalendarAlt)
 
 Vue.component('icon', FontAwesomeIcon)
 
