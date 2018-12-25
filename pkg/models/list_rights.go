@@ -75,22 +75,12 @@ func (l *List) CanRead(a web.Auth) bool {
 // CanDelete checks if the user can delete a list
 func (l *List) CanDelete(a web.Auth) bool {
 	doer := getUserForRights(a)
-
-	if err := l.GetSimpleByID(); err != nil {
-		log.Log.Error("Error occurred during CanDelete for List: %s", err)
-		return false
-	}
 	return l.IsAdmin(doer)
 }
 
 // CanUpdate checks if the user can update a list
 func (l *List) CanUpdate(a web.Auth) bool {
 	doer := getUserForRights(a)
-
-	if err := l.GetSimpleByID(); err != nil {
-		log.Log.Error("Error occurred during CanUpdate for List: %s", err)
-		return false
-	}
 	return l.CanWrite(doer)
 }
 

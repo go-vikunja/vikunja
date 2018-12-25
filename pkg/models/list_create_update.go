@@ -69,10 +69,10 @@ func CreateOrUpdateList(list *List) (err error) {
 // @Router /lists/{id} [post]
 func (l *List) Update() (err error) {
 	// Check if it exists
-	if err = l.GetSimpleByID(); err != nil {
+	lorig := List{ID: l.ID}
+	if err = lorig.GetSimpleByID(); err != nil {
 		return
 	}
-
 	return CreateOrUpdateList(l)
 }
 
