@@ -41,9 +41,9 @@
 * [x] User suchen einbauen, mit neuem endpoint
 * [x] Fertige Tasks schöner visualisieren
   * [x] Alles abgehakte ausblenden, mit btn zum wieder einblenden
+* [x] Wenn man den Namen einer Liste updated wird der Name in der List nicht upgedated
+* [x] Links an den Freigewordenen Platz Menüpunkte machen à la "Heute"/Morgen/Diese Woche etc. Da kommt dann alles rein was dann due ist.
 * [ ] Beim Team bearbeiten Nutzer suchen einbauen
-* [ ] Wenn man den Namen einer Liste updated wird der Name in der List nicht upgedated
-* [ ] Links an den Freigewordenen Platz Menüpunkte machen à la "Heute"/Morgen/Diese Woche etc. Da kommt dann alles rein was dann due ist.
 
 ## Funktionen aus der API
 
