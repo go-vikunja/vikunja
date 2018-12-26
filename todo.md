@@ -43,8 +43,10 @@
   * [x] Alles abgehakte ausblenden, mit btn zum wieder einblenden
 * [x] Wenn man den Namen einer Liste updated wird der Name in der List nicht upgedated
 * [x] Links an den Freigewordenen Platz Menüpunkte machen à la "Heute"/Morgen/Diese Woche etc. Da kommt dann alles rein was dann due ist.
+* [x] Wenn ein Task due ist das auch in der Übersicht anzeigen
+  * [x] Overdue rot anzeigen
 * [ ] Beim Team bearbeiten Nutzer suchen einbauen
-
+  
 ## Funktionen aus der API
 
 * [x] Sharingshit

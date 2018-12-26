@@ -21,7 +21,7 @@
 					</div>
 					<span class="tasktext">
 							{{l.text}}
-							<i v-if="l.dueDate > 0"> - Due on {{formatUnixDate(l.dueDate)}}</i>
+							<i v-if="l.dueDate > 0" :class="{'overdue': (new Date(l.dueDate * 1000) <= new Date())}"> - Due on {{formatUnixDate(l.dueDate)}}</i>
 						</span>
 				</label>
 			</div>

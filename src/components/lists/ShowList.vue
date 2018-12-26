@@ -41,6 +41,7 @@
 							</div>
 							<span class="tasktext" :class="{ 'done': l.done}">
 								{{l.text}}
+							<i v-if="l.dueDate > 0" :class="{'overdue': (l.dueDate <= new Date())}"> - Due on {{new Date(l.dueDate).toLocaleString()}}</i>
 							</span>
 						</label>
 						<div @click="editTask(l.id)" class="icon settings">
@@ -520,6 +521,9 @@
 					}
 				}
 				return array
+			},
+			formatUnixDate(dateUnix) {
+				return (new Date(dateUnix)).toLocaleString()
 			},
             handleError(e) {
                 message.error(e, this)
