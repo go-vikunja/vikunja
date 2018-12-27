@@ -10,13 +10,6 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [x] Tagesübersicht ("Was ist heute/diese Woche due?") -> Machen letztenendes die Clients, wir brauchen nur nen endpoint, der alle tasks auskotzt, der Client macht dann die Sortierung.
 * [x] Subtasks
 
-## Clients
-
-* [ ] Webapp (vue.js) + Bulma
-* [ ] "Native" Clients (auf dem Rechner installiert (mit electron oder so? Oder native mit qt oder so?)
-* [ ] Android (Flutter)
-* [ ] iOS (mit Framework???? (Ging das nich auch mit Flutter?))
-
 ## Anderes
 
 * [x] Refactor!!!! Alle Funktionen raus, die nicht mehr grbaucht werden + Funktionen vereinfachen/zusammenführen.
@@ -78,6 +71,9 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [x] Email-Verifizierung beim Registrieren
 * [x] Password Reset -> Link via email oder so
 * [ ] Settings
+  * [ ] Password update
+  * [ ] Email update
+  * [ ] Ob man über email oder Benutzernamen gefunden werden darf
 
 ### Bugfixes
 
@@ -88,41 +84,43 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 ### Docs
 
 * [ ] Bauanleitung in die Readme/docs
-  * [ ] Auch noch nen "link" zum Featurecreep
+  * [x] Auch noch nen "link" zum Featurecreep
 * [ ] Anleitung zum Makefile
 * [ ] Struktur erklären
 * [ ] Backups
 * [ ] Deploy in die docs
   * [ ] Docker
-  * [ ] Native
+  * [ ] Native (systemd + nginx/apache)
 * [ ] Docs aufsetzen
 
-### Later/Nice to have
+### Tasks
 
-* [x] Deps nach mod umziehen
 * [x] Start/Enddatum für Tasks
 * [x] Timeline/Calendar view -> Dazu tasks die in einem Bestimmten Bereich due sind, macht dann das Frontend
 * [x] Tasks innerhalb eines definierbarem Bereich, sollte aber trotzdem der server machen, so à la "Gib mir alles für diesen Monat"
-* [ ] Websockets
-    * Nur lesend? (-> Updates wie bisher)
-    * sollen den geupdaten Kram an alle anderen user schicken
-    * Ein Channel in dem socket pro liste ... oder pro user?
-    * Erst an die anderen Schicken wenn der write in die Datenbank erfolgeich war
-    * Ein Nutzer authentifiziert sich mit jwt und bekommt dann zugriff auf alle rooms mit listen auf die er Zugriff hat
-        * Unterscheidung nach lesen und Schreiben 
+* [ ] Labels
+* [ ] Assignees
+* [ ] Bulk-edit -> Transactions
+* [ ] Attachments
+* [ ] Task-Templates innerhalb namespaces und Listen (-> Mehrere, die auswählbar sind)
+* [ ] Ein Task muss von mehreren Assignees abgehakt werden bis er als done markiert wird
+* [ ] Besseres Rechtesystem, damit man so fine-graded sachen machen kann wie "Der da darf aber nur Tasks hinzufügen, aber keine abhaken"
+
+### General features
+
+* [x] Deps nach mod umziehen
 * [ ] Globale Limits für anlegbare Listen + Namespaces
+* [ ] "Smart Lists", Listen nach bestimmten Kriterien gefiltert -> nur UI?
+* [ ] "Performance-Statistik" -> Wie viele Tasks man in bestimmten Zeiträumen so geschafft hat etc
+* [ ] IMAP-Integration -> Man schickt eine email an Vikunja und es macht daraus dann nen task -> Achtung missbrauchsmöglichkeiten
+* [ ] In und Out webhooks, mit Templates vom Payload
+* [ ] Reminders via mail
+* [ ] Activity Feed, so à la "der und der hat das und das gemacht etc"
+* [ ] ~~Websockets~~ SSE https://github.com/kljensen/golang-html5-sse-example
+      * User authenticates (with jwt)
+      * When updating/creating/etc an event struct is sent to the broker
+      * The broker has a list of subscribed users
+      * It then checks who is allowed to the see the event it recieved and sends it
 * [ ] Mgl., dass die Instanz geschlossen ist, also sich keiner registrieren kann, und man sich einloggen muss
 * [ ] mgl. zum Emailmaskieren haben (in den Nutzereinstellungen, wenn man seine Email nicht an alle Welt rausposaunen will)
 * [ ] Mgl. zum Accountlöschen haben (so richtig krass mit emailverifiezierung und dass alle Privaten Listen gelöscht werden und man alle geteilten entweder wem übertragen muss oder  auf privat stellen)
-* [ ] IMAP-Integration -> Man schickt eine email an Vikunja und es macht daraus dann nen task -> Achtung missbrauchsmöglichkeiten
-* [ ] In und Out webhooks, mit Templates vom Payload
-* [ ] "Smart Lists", Listen nach bestimmten Kriterien gefiltert -> nur UI?
-* [ ] "Performance-Statistik" -> Wie viele Tasks man in bestimmten Zeiträumen so geschafft hat etc
-* [ ] Activity Feed, so à la "der und der hat das und das gemacht etc"
-* [ ] Assignees
-* [ ] Attachments
-* [ ] Labels
-* [ ] Task-Templates innerhalb namespaces und Listen (-> Mehrere, die auswählbar sind)
-* [ ] Bulk-edit -> Transactions
-* [ ] Ein Task muss von mehreren Assignees abgehakt werden bis er als done markiert wird
-* [ ] Methode einbauen, um mit einem gültigen token ein neues gültiges zu kriegen
