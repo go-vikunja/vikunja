@@ -21,6 +21,8 @@ This document describes the different errors Vikunja can return.
 | 3005 | 400 | The list title cannot be empty. |
 | 4001 | 400 | The list task text cannot be empty. |
 | 4002 | 404 | The list task does not exist. |
+| 4003 | 403 | All bulk editing tasks must belong to the same list. |
+| 4004 | 403 | Need at least one task when bulk editing tasks. |
 | 5001 | 404 | The namspace does not exist. | 
 | 5003 | 403 | The user does not have access to the specified namespace. |
 | 5006 | 400 | The namespace name cannot be empty. |

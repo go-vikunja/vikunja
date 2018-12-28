@@ -429,6 +429,51 @@ func (err ErrListTaskDoesNotExist) HTTPError() web.HTTPError {
 	return web.HTTPError{HTTPCode: http.StatusNotFound, Code: ErrCodeListTaskDoesNotExist, Message: "This list task does not exist"}
 }
 
+// ErrBulkTasksMustBeInSameList represents a "ErrBulkTasksMustBeInSameList" kind of error.
+type ErrBulkTasksMustBeInSameList struct {
+	ShouldBeID int64
+	IsID       int64
+}
+
+// IsErrBulkTasksMustBeInSameList checks if an error is a ErrBulkTasksMustBeInSameList.
+func IsErrBulkTasksMustBeInSameList(err error) bool {
+	_, ok := err.(ErrBulkTasksMustBeInSameList)
+	return ok
+}
+
+func (err ErrBulkTasksMustBeInSameList) Error() string {
+	return fmt.Sprintf("All bulk editing tasks must be in the same list. [Should be: %d, is: %d]", err.ShouldBeID, err.IsID)
+}
+
+// ErrCodeBulkTasksMustBeInSameList holds the unique world-error code of this error
+const ErrCodeBulkTasksMustBeInSameList = 4003
+
+// HTTPError holds the http error description
+func (err ErrBulkTasksMustBeInSameList) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrCodeBulkTasksMustBeInSameList, Message: "All tasks must be in the same list."}
+}
+
+// ErrBulkTasksNeedAtLeastOne represents a "ErrBulkTasksNeedAtLeastOne" kind of error.
+type ErrBulkTasksNeedAtLeastOne struct{}
+
+// IsErrBulkTasksNeedAtLeastOne checks if an error is a ErrBulkTasksNeedAtLeastOne.
+func IsErrBulkTasksNeedAtLeastOne(err error) bool {
+	_, ok := err.(ErrBulkTasksNeedAtLeastOne)
+	return ok
+}
+
+func (err ErrBulkTasksNeedAtLeastOne) Error() string {
+	return fmt.Sprintf("Need at least one task when bulk editing tasks")
+}
+
+// ErrCodeBulkTasksNeedAtLeastOne holds the unique world-error code of this error
+const ErrCodeBulkTasksNeedAtLeastOne = 4004
+
+// HTTPError holds the http error description
+func (err ErrBulkTasksNeedAtLeastOne) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrCodeBulkTasksNeedAtLeastOne, Message: "Need at least one tasks to do bulk editing."}
+}
+
 // =================
 // Namespace errors
 // =================

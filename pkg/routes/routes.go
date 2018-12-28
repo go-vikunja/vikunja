@@ -222,6 +222,13 @@ func RegisterRoutes(e *echo.Echo) {
 	a.DELETE("/tasks/:listtask", taskHandler.DeleteWeb)
 	a.POST("/tasks/:listtask", taskHandler.UpdateWeb)
 
+	bulkTaskHandler := &handler.WebHandler{
+		EmptyStruct: func() handler.CObject {
+			return &models.BulkTask{}
+		},
+	}
+	a.POST("/tasks/bulk", bulkTaskHandler.UpdateWeb)
+
 	listTeamHandler := &handler.WebHandler{
 		EmptyStruct: func() handler.CObject {
 			return &models.TeamList{}

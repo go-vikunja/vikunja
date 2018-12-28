@@ -91,16 +91,8 @@ func (i *ListTask) Update() (err error) {
 		return
 	}
 
-	// When a repeating task is marked, as done, we update all deadlines and reminders and set it as undone
-	if !ot.Done && i.Done && ot.RepeatAfter > 0 {
-		ot.DueDateUnix = ot.DueDateUnix + ot.RepeatAfter
-
-		for in, r := range ot.RemindersUnix {
-			ot.RemindersUnix[in] = r + ot.RepeatAfter
-		}
-
-		i.Done = false
-	}
+	// When a repeating task is marked as done, we update all deadlines and reminders and set it as undone
+	updateDone(&ot, i)
 
 	// For whatever reason, xorm dont detect if done is updated, so we need to update this every time by hand
 	// Which is why we merge the actual task struct with the one we got from the
@@ -128,4 +120,16 @@ func (i *ListTask) Update() (err error) {
 		Update(ot)
 	*i = ot
 	return
+}
+
+func updateDone(oldTask *ListTask, newTask *ListTask) {
+	if !oldTask.Done && newTask.Done && oldTask.RepeatAfter > 0 {
+		oldTask.DueDateUnix = oldTask.DueDateUnix + oldTask.RepeatAfter // assuming we'll save the old task (merged)
+
+		for in, r := range oldTask.RemindersUnix {
+			oldTask.RemindersUnix[in] = r + oldTask.RepeatAfter
+		}
+
+		newTask.Done = false
+	}
 }

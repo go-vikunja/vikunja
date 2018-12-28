@@ -153,3 +153,46 @@ func GetListTaskByID(listTaskID int64) (listTask ListTask, err error) {
 
 	return
 }
+
+// GetTasksByIDs returns all tasks for a list of ids
+func (bt *BulkTask) GetTasksByIDs() (err error) {
+	for _, id := range bt.IDs {
+		if id < 1 {
+			return ErrListTaskDoesNotExist{id}
+		}
+	}
+
+	err = x.In("id", bt.IDs).Find(&bt.Tasks)
+	if err != nil {
+		return err
+	}
+
+	// We use a map, to avoid looping over two slices at once
+	var usermapids = make(map[int64]bool) // Bool ist just something, doesn't acutually matter
+	for _, list := range bt.Tasks {
+		usermapids[list.CreatedByID] = true
+	}
+
+	// Make a slice from the map
+	var userids []int64
+	for uid := range usermapids {
+		userids = append(userids, uid)
+	}
+
+	// Get all users for the tasks
+	var users []*User
+	err = x.In("id", userids).Find(&users)
+	if err != nil {
+		return err
+	}
+
+	for in, task := range bt.Tasks {
+		for _, u := range users {
+			if task.CreatedByID == u.ID {
+				bt.Tasks[in].CreatedBy = *u
+			}
+		}
+	}
+
+	return
+}
