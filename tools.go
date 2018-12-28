@@ -29,4 +29,9 @@ import (
 	_ "github.com/swaggo/echo-swagger"
 	_ "github.com/swaggo/swag/cmd/swag"
 	_ "golang.org/x/lint/golint"
+
+	_ "github.com/jgautheron/goconst/cmd/goconst"
+	_ "honnef.co/go/tools/cmd/gosimple"
+	_ "honnef.co/go/tools/cmd/staticcheck"
+	_ "honnef.co/go/tools/cmd/unused"
 )

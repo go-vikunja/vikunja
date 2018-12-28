@@ -124,3 +124,11 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [ ] Mgl., dass die Instanz geschlossen ist, also sich keiner registrieren kann, und man sich einloggen muss
 * [ ] mgl. zum Emailmaskieren haben (in den Nutzereinstellungen, wenn man seine Email nicht an alle Welt rausposaunen will)
 * [ ] Mgl. zum Accountlöschen haben (so richtig krass mit emailverifiezierung und dass alle Privaten Listen gelöscht werden und man alle geteilten entweder wem übertragen muss oder  auf privat stellen)
+
+### Linters
+
+* [x] goconst
+* [ ] Gosimple -> waiting for mod
+* [ ] Staticcheck -> waiting for mod
+* [ ] unused -> waiting for mod
+* [ ] gosec -> waiting for mod

@@ -28,6 +28,7 @@ pipeline:
       # - make got-swag # Commented out until we figured out how to get this working on drone
       - make ineffassign-check
       - make misspell-check
+      - make goconst-check
       - make build
     when:
       event: [ push, tag, pull_request ]

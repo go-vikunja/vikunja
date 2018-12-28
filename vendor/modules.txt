@@ -72,8 +72,14 @@ github.com/hashicorp/hcl/json/scanner
 github.com/hashicorp/hcl/json/token
 # github.com/imdario/mergo v0.3.6
 github.com/imdario/mergo
+# github.com/jgautheron/goconst v0.0.0-20170703170152-9740945f5dcb
+github.com/jgautheron/goconst/cmd/goconst
+github.com/jgautheron/goconst
 # github.com/karalabe/xgo v0.0.0-20181007145344-72da7d1d3970
 github.com/karalabe/xgo
+# github.com/kisielk/gotool v1.0.0
+github.com/kisielk/gotool
+github.com/kisielk/gotool/internal/load
 # github.com/labstack/echo v3.3.5+incompatible
 github.com/labstack/echo
 github.com/labstack/echo/middleware
@@ -174,6 +180,7 @@ golang.org/x/text/unicode/bidi
 golang.org/x/tools/go/loader
 golang.org/x/tools/go/ast/astutil
 golang.org/x/tools/go/gcexportdata
+golang.org/x/tools/go/types/typeutil
 golang.org/x/tools/go/buildutil
 golang.org/x/tools/go/internal/cgo
 golang.org/x/tools/go/internal/gcimporter
@@ -187,3 +194,15 @@ gopkg.in/gomail.v2
 gopkg.in/testfixtures.v2
 # gopkg.in/yaml.v2 v2.2.2
 gopkg.in/yaml.v2
+# honnef.co/go/tools v0.0.0-20180920025451-e3ad64cb4ed3
+honnef.co/go/tools/cmd/gosimple
+honnef.co/go/tools/cmd/unused
+honnef.co/go/tools/lint/lintutil
+honnef.co/go/tools/simple
+honnef.co/go/tools/unused
+honnef.co/go/tools/lint
+honnef.co/go/tools/version
+honnef.co/go/tools/internal/sharedcheck
+honnef.co/go/tools/lint/lintdsl
+honnef.co/go/tools/ssa
+honnef.co/go/tools/ssa/ssautil

@@ -23,7 +23,6 @@ require (
 	github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc
 	github.com/asaskevich/govalidator v0.0.0-20180720115003-f9ffefc3facf
 	github.com/client9/misspell v0.3.4
-	github.com/cweill/gotests v1.5.2 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/fzipp/gocyclo v0.0.0-20150627053110-6acd4345c835
 	github.com/garyburd/redigo v1.6.0 // indirect
@@ -39,7 +38,9 @@ require (
 	github.com/go-xorm/xorm-redis-cache v0.0.0-20180727005610-859b313566b2
 	github.com/gordonklaus/ineffassign v0.0.0-20180909121442-1003c8bd00dc
 	github.com/imdario/mergo v0.3.6
+	github.com/jgautheron/goconst v0.0.0-20170703170152-9740945f5dcb
 	github.com/karalabe/xgo v0.0.0-20181007145344-72da7d1d3970
+	github.com/kisielk/gotool v1.0.0 // indirect
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/labstack/echo v3.3.5+incompatible
 	github.com/labstack/gommon v0.2.8
@@ -68,4 +69,5 @@ require (
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 	gopkg.in/testfixtures.v2 v2.5.3
 	gopkg.in/yaml.v2 v2.2.2 // indirect
+	honnef.co/go/tools v0.0.0-20180920025451-e3ad64cb4ed3
 )

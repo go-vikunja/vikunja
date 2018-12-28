@@ -187,3 +187,39 @@ gocyclo-check:
 		go install $(GOFLAGS) github.com/fzipp/gocyclo; \
 	fi
 	for S in $(GOFILES); do gocyclo -over 14 $$S || exit 1; done;
+
+.PHONY: gosimple-check
+gosimple-check:
+	@hash gosimple > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
+		go get honnef.co/go/tools/cmd/gosimple; \
+	fi
+	for S in $(PACKAGES); do gosimple $$S || exit 1; done;
+
+.PHONY: static-check
+static-check:
+	@hash gocyclo > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
+		go get honnef.co/go/tools/cmd/staticcheck; \
+	fi
+	staticcheck;
+
+.PHONY: unused-check
+unused-check:
+	@hash unused > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
+		go get honnef.co/go/tools/cmd/unused; \
+	fi
+	unused;
+
+.PHONY: gosec-check
+gosec-check:
+	@hash ./bin/gosec > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
+		curl -sfL https://raw.githubusercontent.com/securego/gosec/master/install.sh | sh -s 1.2.0; \
+	fi
+	for S in $(PACKAGES); do ./bin/gosec $$S || exit 1; done;
+
+.PHONY: goconst-check
+goconst-check:
+	@hash goconst > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
+		go get github.com/jgautheron/goconst/cmd/goconst; \
+	fi
+	for S in $(PACKAGES); do goconst $$S || exit 1; done;
+
