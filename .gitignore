@@ -8,3 +8,5 @@ Run
 dist/
 cover.*
 /vikunja
+Test_*
+bin/
