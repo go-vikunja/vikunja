@@ -22,11 +22,11 @@ import (
 )
 
 // CanDelete checks if the user can delete an task
-func (i *ListTask) CanDelete(a web.Auth) bool {
+func (t *ListTask) CanDelete(a web.Auth) bool {
 	doer := getUserForRights(a)
 
 	// Get the task
-	lI, err := GetListTaskByID(i.ID)
+	lI, err := GetListTaskByID(t.ID)
 	if err != nil {
 		log.Log.Error("Error occurred during CanDelete for ListTask: %s", err)
 		return false
@@ -39,11 +39,11 @@ func (i *ListTask) CanDelete(a web.Auth) bool {
 }
 
 // CanUpdate determines if a user has the right to update a list task
-func (i *ListTask) CanUpdate(a web.Auth) bool {
+func (t *ListTask) CanUpdate(a web.Auth) bool {
 	doer := getUserForRights(a)
 
 	// Get the task
-	lI, err := GetListTaskByID(i.ID)
+	lI, err := GetListTaskByID(t.ID)
 	if err != nil {
 		log.Log.Error("Error occurred during CanDelete for ListTask: %s", err)
 		return false
@@ -56,11 +56,11 @@ func (i *ListTask) CanUpdate(a web.Auth) bool {
 }
 
 // CanCreate determines if a user has the right to create a list task
-func (i *ListTask) CanCreate(a web.Auth) bool {
+func (t *ListTask) CanCreate(a web.Auth) bool {
 	doer := getUserForRights(a)
 
 	// A user can create an task if he has write acces to its list
-	l := &List{ID: i.ListID}
+	l := &List{ID: t.ListID}
 	l.ReadOne()
 	return l.CanWrite(doer)
 }

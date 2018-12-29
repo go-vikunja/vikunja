@@ -95,6 +95,11 @@ func (bt *BulkTask) Update() (err error) {
 		// When a repeating task is marked as done, we update all deadlines and reminders and set it as undone
 		updateDone(oldtask, &bt.ListTask)
 
+		// Update the assignees
+		if err := oldtask.updateTaskAssignees(bt.Assignees); err != nil {
+			return err
+		}
+
 		// For whatever reason, xorm dont detect if done is updated, so we need to update this every time by hand
 		// Which is why we merge the actual task struct with the one we got from the
 		// The user struct overrides values in the actual one.

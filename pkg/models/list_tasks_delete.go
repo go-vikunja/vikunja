@@ -33,15 +33,20 @@ import (
 // @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have access to the list"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{id} [delete]
-func (i *ListTask) Delete() (err error) {
+func (t *ListTask) Delete() (err error) {
 
 	// Check if it exists
-	_, err = GetListTaskByID(i.ID)
+	_, err = GetListTaskByID(t.ID)
 	if err != nil {
 		return
 	}
 
-	if _, err = x.ID(i.ID).Delete(ListTask{}); err != nil {
+	if _, err = x.ID(t.ID).Delete(ListTask{}); err != nil {
+		return err
+	}
+
+	// Delete assignees
+	if _, err = x.Where("task_id = ?", t.ID).Delete(ListTaskAssginee{}); err != nil {
 		return err
 	}
 

@@ -13,6 +13,10 @@ definitions:
     type: object
   models.BulkTask:
     properties:
+      assignees:
+        items:
+          $ref: '#/definitions/models.User'
+        type: array
       created:
         type: integer
       createdBy:
@@ -82,6 +86,10 @@ definitions:
     type: object
   models.ListTask:
     properties:
+      assignees:
+        items:
+          $ref: '#/definitions/models.User'
+        type: array
       created:
         type: integer
       createdBy:

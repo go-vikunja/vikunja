@@ -2998,6 +2998,12 @@
         "models.BulkTask": {
             "type": "object",
             "properties": {
+                "assignees": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.User"
+                    }
+                },
                 "created": {
                     "type": "integer"
                 },
@@ -3102,6 +3108,12 @@
         "models.ListTask": {
             "type": "object",
             "properties": {
+                "assignees": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.User"
+                    }
+                },
                 "created": {
                     "type": "integer"
                 },

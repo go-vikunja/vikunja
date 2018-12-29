@@ -69,7 +69,12 @@ func (l *List) CanRead(a web.Auth) bool {
 		return true
 	}
 
-	return l.checkListTeamRight(user, TeamRightRead)
+	if l.checkListTeamRight(user, TeamRightRead) {
+		return true
+	}
+
+	// Users who are able to write should also be able to read
+	return l.CanWrite(a)
 }
 
 // CanDelete checks if the user can delete a list

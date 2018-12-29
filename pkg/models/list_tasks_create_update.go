@@ -36,21 +36,21 @@ import (
 // @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have access to the list"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{id} [put]
-func (i *ListTask) Create(a web.Auth) (err error) {
+func (t *ListTask) Create(a web.Auth) (err error) {
 	doer, err := getUserWithError(a)
 	if err != nil {
 		return err
 	}
 
-	i.ID = 0
+	t.ID = 0
 
 	// Check if we have at least a text
-	if i.Text == "" {
+	if t.Text == "" {
 		return ErrListTaskCannotBeEmpty{}
 	}
 
 	// Check if the list exists
-	l := &List{ID: i.ListID}
+	l := &List{ID: t.ListID}
 	if err = l.GetSimpleByID(); err != nil {
 		return
 	}
@@ -60,9 +60,14 @@ func (i *ListTask) Create(a web.Auth) (err error) {
 		return err
 	}
 
-	i.CreatedByID = u.ID
-	i.CreatedBy = u
-	if _, err = x.Insert(i); err != nil {
+	t.CreatedByID = u.ID
+	t.CreatedBy = u
+	if _, err = x.Insert(t); err != nil {
+		return err
+	}
+
+	// Update the assignees
+	if err := t.updateTaskAssignees(t.Assignees); err != nil {
 		return err
 	}
 
@@ -84,29 +89,34 @@ func (i *ListTask) Create(a web.Auth) (err error) {
 // @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have access to the task (aka its list)"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{id} [post]
-func (i *ListTask) Update() (err error) {
+func (t *ListTask) Update() (err error) {
 	// Check if the task exists
-	ot, err := GetListTaskByID(i.ID)
+	ot, err := GetListTaskByID(t.ID)
 	if err != nil {
 		return
 	}
 
 	// When a repeating task is marked as done, we update all deadlines and reminders and set it as undone
-	updateDone(&ot, i)
+	updateDone(&ot, t)
+
+	// Update the assignees
+	if err := ot.updateTaskAssignees(t.Assignees); err != nil {
+		return err
+	}
 
 	// For whatever reason, xorm dont detect if done is updated, so we need to update this every time by hand
 	// Which is why we merge the actual task struct with the one we got from the
 	// The user struct overrides values in the actual one.
-	if err := mergo.Merge(&ot, i, mergo.WithOverride); err != nil {
+	if err := mergo.Merge(&ot, t, mergo.WithOverride); err != nil {
 		return err
 	}
 
 	// And because a false is considered to be a null value, we need to explicitly check that case here.
-	if i.Done == false {
+	if t.Done == false {
 		ot.Done = false
 	}
 
-	_, err = x.ID(i.ID).
+	_, err = x.ID(t.ID).
 		Cols("text",
 			"description",
 			"done",
@@ -118,7 +128,7 @@ func (i *ListTask) Update() (err error) {
 			"start_date_unix",
 			"end_date_unix").
 		Update(ot)
-	*i = ot
+	*t = ot
 	return
 }
 
@@ -132,4 +142,74 @@ func updateDone(oldTask *ListTask, newTask *ListTask) {
 
 		newTask.Done = false
 	}
+}
+
+// Create a bunch of task assignees
+func (t *ListTask) updateTaskAssignees(assignees []*User) (err error) {
+
+	// Get old assignees to delete
+	var found bool
+	var assigneesToDelete []int64
+	for _, oldAssignee := range t.Assignees {
+		found = false
+		for _, newAssignee := range assignees {
+			if newAssignee.ID == oldAssignee.ID {
+				found = true // If a new assignee is already in the list with old assignees
+				break
+			}
+		}
+
+		// Put all assignees which are only on the old list to the trash
+		if !found {
+			assigneesToDelete = append(assigneesToDelete, oldAssignee.ID)
+		}
+	}
+
+	// Delete all assignees not passed
+	if len(assigneesToDelete) > 0 {
+		_, err = x.In("user_id", assigneesToDelete).
+			And("task_id = ?", t.ID).
+			Delete(ListTaskAssginee{})
+		if err != nil {
+			return err
+		}
+	}
+
+	// Get the list to perform later checks
+	list := List{ID: t.ListID}
+	err = list.ReadOne()
+	if err != nil {
+		return
+	}
+
+	// Loop through our users and add them
+AddNewAssignee:
+	for _, u := range assignees {
+		// Check if the user is already assigned and assign him only if not
+		for _, oldAssignee := range t.Assignees {
+			if oldAssignee.ID == u.ID {
+				// continue outer loop
+				continue AddNewAssignee
+			}
+		}
+
+		// Check if the user exists and has access to the list
+		newAssignee, err := GetUserByID(u.ID)
+		if err != nil {
+			return err
+		}
+		if !list.CanRead(&newAssignee) {
+			return ErrUserDoesNotHaveAccessToList{list.ID, u.ID}
+		}
+
+		_, err = x.Insert(ListTaskAssginee{
+			TaskID: t.ID,
+			UserID: u.ID,
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	return
 }

@@ -15,7 +15,7 @@ POST http://localhost:8080/api/v1/register
 Content-Type: application/json
 
 {
-  "username": "user5",
+  "username": "user",
   "password": "1234",
   "email": "5@knt.li"
 }

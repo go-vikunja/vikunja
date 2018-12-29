@@ -1,35 +1,34 @@
 # Get all lists
-GET http://localhost:8080/api/v1/namespaces/1/lists
+GET http://localhost:8080/api/v1/namespaces/1
 Authorization: Bearer {{auth_token}}
 
 ###
 
 # Get one list
-GET http://localhost:8080/api/v1/lists/1163
+GET http://localhost:8080/api/v1/lists/1172
 Authorization: Bearer {{auth_token}}
 
 ###
 
 # Add a new list
-PUT http://localhost:8080/api/v1/namespaces/6/lists
+PUT http://localhost:8080/api/v1/namespaces/1/lists
 Authorization: Bearer {{auth_token}}
 Content-Type: application/json
 
 {
-  "title": "sffffc me only"
+  "title": "test"
 }
 
 ###
 
 # Add a new item
-PUT http://localhost:8080/api/v1/lists/15
+PUT http://localhost:8080/api/v1/lists/1
 Authorization: Bearer {{auth_token}}
 Content-Type: application/json
 
 {
-  "text": "this is a subtask 2",
-  "description": "Schinken",
-  "parentTaskID": 34
+  "text": "Task",
+  "description": "Schinken"
 }
 
 ###
@@ -83,11 +82,11 @@ Authorization: Bearer {{auth_token}}
 ###
 
 # Give a user access to that list
-PUT http://localhost:8080/api/v1/lists/30/users
+PUT http://localhost:8080/api/v1/lists/1172/users
 Authorization: Bearer {{auth_token}}
 Content-Type: application/json
 
-{"user_id":3, "right":1}
+{"user_id":1, "right":1}
 
 ###
 
@@ -131,11 +130,13 @@ GET http://localhost:8080/api/v1/tasks/caldav
 ###
 
 # Update a task
-POST http://localhost:8080/api/v1/tasks/3491
+POST http://localhost:8080/api/v1/tasks/1
 Authorization: Bearer {{auth_token}}
 Content-Type: application/json
 
-{"startDate":1546804000, "endDate": 1546805000}
+{"assignees":[
+  {"id": 1}
+]}
 
 ###
 

@@ -36,6 +36,7 @@ type ListTask struct {
 	Priority      int64   `xorm:"int(11)" json:"priority"`
 	StartDateUnix int64   `xorm:"int(11) INDEX" json:"startDate"`
 	EndDateUnix   int64   `xorm:"int(11) INDEX" json:"endDate"`
+	Assignees     []*User `xorm:"-" json:"assignees"`
 
 	Sorting           string `xorm:"-" json:"-" param:"sort"` // Parameter to sort by
 	StartDateSortUnix int64  `xorm:"-" json:"-" param:"startdatefilter"`
@@ -57,6 +58,25 @@ func (ListTask) TableName() string {
 	return "tasks"
 }
 
+// ListTaskAssginee represents an assignment of a user to a task
+type ListTaskAssginee struct {
+	ID      int64 `xorm:"int(11) autoincr not null unique pk"`
+	TaskID  int64 `xorm:"int(11) not null"`
+	UserID  int64 `xorm:"int(11) not null"`
+	Created int64 `xorm:"created"`
+}
+
+// TableName makes a pretty table name
+func (ListTaskAssginee) TableName() string {
+	return "task_assignees"
+}
+
+// ListTaskAssigneeWithUser is a helper type to deal with user joins
+type ListTaskAssigneeWithUser struct {
+	TaskID int64
+	User   `xorm:"extends"`
+}
+
 // GetTasksByListID gets all todotasks for a list
 func GetTasksByListID(listID int64) (tasks []*ListTask, err error) {
 	err = x.Where("list_id = ?", listID).Find(&tasks)
@@ -72,9 +92,11 @@ func GetTasksByListID(listID int64) (tasks []*ListTask, err error) {
 	// make a map so we can put in subtasks more easily
 	taskMap := make(map[int64]*ListTask, len(tasks))
 
-	// Get all users and put them into the array
+	// Get all users & task ids and put them into the array
 	var userIDs []int64
+	var taskIDs []int64
 	for _, i := range tasks {
+		taskIDs = append(taskIDs, i.ID)
 		found := false
 		for _, u := range userIDs {
 			if i.CreatedByID == u {
@@ -88,6 +110,18 @@ func GetTasksByListID(listID int64) (tasks []*ListTask, err error) {
 		}
 
 		taskMap[i.ID] = i
+	}
+
+	// Get all assignees
+	taskAssignees, err := getRawTaskAssigneesForTasks(taskIDs)
+	if err != nil {
+		return
+	}
+	// Put the assignees in the task map
+	for _, a := range taskAssignees {
+		if a != nil {
+			taskMap[a.TaskID].Assignees = append(taskMap[a.TaskID].Assignees, &a.User)
+		}
 	}
 
 	var users []User
@@ -130,6 +164,16 @@ func GetTasksByListID(listID int64) (tasks []*ListTask, err error) {
 	return
 }
 
+func getRawTaskAssigneesForTasks(taskIDs []int64) (taskAssignees []*ListTaskAssigneeWithUser, err error) {
+	taskAssignees = []*ListTaskAssigneeWithUser{nil}
+	err = x.Table("task_assignees").
+		Select("task_id, users.*").
+		In("task_id", taskIDs).
+		Join("INNER", "users", "task_assignees.user_id = users.id").
+		Find(&taskAssignees)
+	return
+}
+
 // GetListTaskByID returns all tasks a list has
 func GetListTaskByID(listTaskID int64) (listTask ListTask, err error) {
 	if listTaskID < 1 {
@@ -150,6 +194,17 @@ func GetListTaskByID(listTaskID int64) (listTask ListTask, err error) {
 		return
 	}
 	listTask.CreatedBy = u
+
+	// Get assignees
+	taskAssignees, err := getRawTaskAssigneesForTasks([]int64{listTaskID})
+	if err != nil {
+		return
+	}
+	for _, u := range taskAssignees {
+		if u != nil {
+			listTask.Assignees = append(listTask.Assignees, &u.User)
+		}
+	}
 
 	return
 }
