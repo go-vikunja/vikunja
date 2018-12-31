@@ -1,0 +1,12 @@
+- id: 1
+  title: 'Label #1'
+  created_by_id: 1
+- id: 2
+  title: 'Label #2'
+  created_by_id: 1
+- id: 3
+  title: 'Label #3 - other user'
+  created_by_id: 2
+- id: 4
+  title: 'Label #4 - visible via other task'
+  created_by_id: 2

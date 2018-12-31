@@ -23,6 +23,7 @@ This document describes the different errors Vikunja can return.
 | 4002 | 404 | The list task does not exist. |
 | 4003 | 403 | All bulk editing tasks must belong to the same list. |
 | 4004 | 403 | Need at least one task when bulk editing tasks. |
+| 4005 | 403 | The user does not have the right to see the task. |
 | 5001 | 404 | The namspace does not exist. | 
 | 5003 | 403 | The user does not have access to the specified namespace. |
 | 5006 | 400 | The namespace name cannot be empty. |
@@ -39,3 +40,5 @@ This document describes the different errors Vikunja can return.
 | 7001 | 400 | The user right is invalid. |
 | 7002 | 409 | The user already has access to that list. |
 | 7003 | 403 | The user does not have access to that list. |
+| 8001 | 403 | This label already exists on that task. |
+| 8002 | 404 | The label does not exist. |

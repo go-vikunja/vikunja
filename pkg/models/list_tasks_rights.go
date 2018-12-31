@@ -43,15 +43,19 @@ func (t *ListTask) CanUpdate(a web.Auth) bool {
 	doer := getUserForRights(a)
 
 	// Get the task
-	lI, err := GetListTaskByID(t.ID)
+	lI, err := getTaskByIDSimple(t.ID)
 	if err != nil {
-		log.Log.Error("Error occurred during CanDelete for ListTask: %s", err)
+		log.Log.Error("Error occurred during CanUpdate (getTaskByIDSimple) for ListTask: %s", err)
 		return false
 	}
 
 	// A user can update an task if he has write acces to its list
 	l := &List{ID: lI.ListID}
-	l.ReadOne()
+	err = l.GetSimpleByID()
+	if err != nil {
+		log.Log.Error("Error occurred during CanUpdate (ReadOne) for ListTask: %s", err)
+		return false
+	}
 	return l.CanWrite(doer)
 }
 
@@ -63,4 +67,11 @@ func (t *ListTask) CanCreate(a web.Auth) bool {
 	l := &List{ID: t.ListID}
 	l.ReadOne()
 	return l.CanWrite(doer)
+}
+
+// CanRead determines if a user can read a task
+func (t *ListTask) CanRead(a web.Auth) bool {
+	// A user can read a task if it has access to the list
+	list := &List{ID: t.ListID}
+	return list.CanRead(a)
 }

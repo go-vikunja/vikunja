@@ -100,7 +100,7 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [x] Tasks innerhalb eines definierbarem Bereich, sollte aber trotzdem der server machen, so à la "Gib mir alles für diesen Monat"
 * [x] Bulk-edit -> Transactions
 * [x] Assignees
-* [ ] Labels
+* [x] Labels
 * [ ] Attachments
 * [ ] Task-Templates innerhalb namespaces und Listen (-> Mehrere, die auswählbar sind)
 * [ ] Ein Task muss von mehreren Assignees abgehakt werden bis er als done markiert wird
@@ -109,6 +109,8 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 ### General features
 
 * [x] Deps nach mod umziehen
+* [ ] Performance bei rechtchecks verbessern
+  * User & Teamright sollte sich für n rechte in einer Funktion testen lassen
 * [ ] Globale Limits für anlegbare Listen + Namespaces
 * [ ] "Smart Lists", Listen nach bestimmten Kriterien gefiltert -> nur UI?
 * [ ] "Performance-Statistik" -> Wie viele Tasks man in bestimmten Zeiträumen so geschafft hat etc

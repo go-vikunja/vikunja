@@ -474,6 +474,34 @@ func (err ErrBulkTasksNeedAtLeastOne) HTTPError() web.HTTPError {
 	return web.HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrCodeBulkTasksNeedAtLeastOne, Message: "Need at least one tasks to do bulk editing."}
 }
 
+// ErrNoRightToSeeTask represents an error where a user does not have the right to see a task
+type ErrNoRightToSeeTask struct {
+	TaskID int64
+	UserID int64
+}
+
+// IsErrNoRightToSeeTask checks if an error is ErrNoRightToSeeTask.
+func IsErrNoRightToSeeTask(err error) bool {
+	_, ok := err.(ErrNoRightToSeeTask)
+	return ok
+}
+
+func (err ErrNoRightToSeeTask) Error() string {
+	return fmt.Sprintf("User does not have the right to see the task [TaskID: %v, UserID: %v]", err.TaskID, err.UserID)
+}
+
+// ErrCodeNoRightToSeeTask holds the unique world-error code of this error
+const ErrCodeNoRightToSeeTask = 4005
+
+// HTTPError holds the http error description
+func (err ErrNoRightToSeeTask) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusForbidden,
+		Code:     ErrCodeNoRightToSeeTask,
+		Message:  "You don't have the right to see this task.",
+	}
+}
+
 // =================
 // Namespace errors
 // =================
@@ -863,4 +891,63 @@ const ErrCodeUserDoesNotHaveAccessToList = 7003
 // HTTPError holds the http error description
 func (err ErrUserDoesNotHaveAccessToList) HTTPError() web.HTTPError {
 	return web.HTTPError{HTTPCode: http.StatusForbidden, Code: ErrCodeUserDoesNotHaveAccessToList, Message: "This user does not have access to the list."}
+}
+
+// =============
+// Label errors
+// =============
+
+// ErrLabelIsAlreadyOnTask represents an error where a label is already bound to a task
+type ErrLabelIsAlreadyOnTask struct {
+	LabelID int64
+	TaskID  int64
+}
+
+// IsErrLabelIsAlreadyOnTask checks if an error is ErrLabelIsAlreadyOnTask.
+func IsErrLabelIsAlreadyOnTask(err error) bool {
+	_, ok := err.(ErrLabelIsAlreadyOnTask)
+	return ok
+}
+
+func (err ErrLabelIsAlreadyOnTask) Error() string {
+	return fmt.Sprintf("Label already exists on task [TaskID: %v, LabelID: %v]", err.TaskID, err.LabelID)
+}
+
+// ErrCodeLabelIsAlreadyOnTask holds the unique world-error code of this error
+const ErrCodeLabelIsAlreadyOnTask = 8001
+
+// HTTPError holds the http error description
+func (err ErrLabelIsAlreadyOnTask) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeLabelIsAlreadyOnTask,
+		Message:  "This label already exists on the task.",
+	}
+}
+
+// ErrLabelDoesNotExist represents an error where a label does not exist
+type ErrLabelDoesNotExist struct {
+	LabelID int64
+}
+
+// IsErrLabelDoesNotExist checks if an error is ErrLabelDoesNotExist.
+func IsErrLabelDoesNotExist(err error) bool {
+	_, ok := err.(ErrLabelDoesNotExist)
+	return ok
+}
+
+func (err ErrLabelDoesNotExist) Error() string {
+	return fmt.Sprintf("Label does not exist [LabelID: %v]", err.LabelID)
+}
+
+// ErrCodeLabelDoesNotExist holds the unique world-error code of this error
+const ErrCodeLabelDoesNotExist = 8002
+
+// HTTPError holds the http error description
+func (err ErrLabelDoesNotExist) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusNotFound,
+		Code:     ErrCodeLabelDoesNotExist,
+		Message:  "This label does not exist.",
+	}
 }

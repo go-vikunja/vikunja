@@ -31,7 +31,7 @@ require (
 	github.com/go-openapi/swag v0.17.2 // indirect
 	github.com/go-redis/redis v6.14.2+incompatible
 	github.com/go-sql-driver/mysql v1.4.1
-	github.com/go-xorm/builder v0.0.0-20170519032130-c8871c857d25 // indirect
+	github.com/go-xorm/builder v0.0.0-20170519032130-c8871c857d25
 	github.com/go-xorm/core v0.5.8
 	github.com/go-xorm/tests v0.5.6 // indirect
 	github.com/go-xorm/xorm v0.0.0-20170930012613-29d4a0330a00

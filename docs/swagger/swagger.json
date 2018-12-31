@@ -12,6 +12,301 @@
     "host": "{{.Host}}",
     "basePath": "/api/v1",
     "paths": {
+        "/labels": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Returns all labels which are either created by the user or associated with a task the user has at least read-access to.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "labels"
+                ],
+                "summary": "Get all labels a user has access to",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "The page number. Used for pagination. If not provided, the first page of results is returned.",
+                        "name": "p",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search labels by label text.",
+                        "name": "s",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The labels",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Label"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Creates a new label.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "labels"
+                ],
+                "summary": "Create a label",
+                "parameters": [
+                    {
+                        "description": "The label object",
+                        "name": "label",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/models.Label"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The created label object.",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/models.Label"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid label object provided.",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/labels/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Returns one label by its ID.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "labels"
+                ],
+                "summary": "Gets one label",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Label ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The label",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/models.Label"
+                        }
+                    },
+                    "403": {
+                        "description": "The user does not have access to the label",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Label not found",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Update an existing label. The user needs to be the creator of the label to be able to do this.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "labels"
+                ],
+                "summary": "Update a label",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Label ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "The label object",
+                        "name": "label",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/models.Label"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The created label object.",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/models.Label"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid label object provided.",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                        }
+                    },
+                    "403": {
+                        "description": "Not allowed to update the label.",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Label not found.",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Delete an existing label. The user needs to be the creator of the label to be able to do this.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "labels"
+                ],
+                "summary": "Delete a label",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Label ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The label was successfully deleted.",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/models.Label"
+                        }
+                    },
+                    "403": {
+                        "description": "Not allowed to delete the label.",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Label not found.",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
         "/lists": {
             "get": {
                 "security": [
@@ -2336,6 +2631,205 @@
                 }
             }
         },
+        "/tasks/{task}/labels": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Returns all labels which are assicociated with a given task.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "labels"
+                ],
+                "summary": "Get all labels on a task",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Task ID",
+                        "name": "task",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "The page number. Used for pagination. If not provided, the first page of results is returned.",
+                        "name": "p",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search labels by label text.",
+                        "name": "s",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The labels",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Label"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Add a label to a task. The user needs to have write-access to the list to be able do this.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "labels"
+                ],
+                "summary": "Add a label to a task",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Task ID",
+                        "name": "task",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "The label object",
+                        "name": "label",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/models.Label"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The created label relation object.",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/models.Label"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid label object provided.",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                        }
+                    },
+                    "403": {
+                        "description": "Not allowed to add the label.",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "The label does not exist.",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/tasks/{task}/labels/{label}": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Remove a label from a task. The user needs to have write-access to the list to be able do this.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "labels"
+                ],
+                "summary": "Remove a label from a task",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Task ID",
+                        "name": "task",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Label ID",
+                        "name": "label",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The label was successfully removed.",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/models.Label"
+                        }
+                    },
+                    "403": {
+                        "description": "Not allowed to remove the label.",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Label not found.",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
         "/teams": {
             "get": {
                 "security": [
@@ -3026,6 +3520,12 @@
                 "id": {
                     "type": "integer"
                 },
+                "labels": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Label"
+                    }
+                },
                 "listID": {
                     "type": "integer"
                 },
@@ -3072,6 +3572,33 @@
             "properties": {
                 "token": {
                     "type": "string"
+                }
+            }
+        },
+        "models.Label": {
+            "type": "object",
+            "properties": {
+                "created": {
+                    "type": "integer"
+                },
+                "created_by": {
+                    "type": "object",
+                    "$ref": "#/definitions/models.User"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "hex_color": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "updated": {
+                    "type": "integer"
                 }
             }
         },
@@ -3135,6 +3662,12 @@
                 },
                 "id": {
                     "type": "integer"
+                },
+                "labels": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Label"
+                    }
                 },
                 "listID": {
                     "type": "integer"

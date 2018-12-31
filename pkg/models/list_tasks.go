@@ -23,20 +23,21 @@ import (
 
 // ListTask represents an task in a todolist
 type ListTask struct {
-	ID            int64   `xorm:"int(11) autoincr not null unique pk" json:"id" param:"listtask"`
-	Text          string  `xorm:"varchar(250)" json:"text" valid:"runelength(3|250)"`
-	Description   string  `xorm:"varchar(250)" json:"description" valid:"runelength(0|250)"`
-	Done          bool    `xorm:"INDEX" json:"done"`
-	DueDateUnix   int64   `xorm:"int(11) INDEX" json:"dueDate"`
-	RemindersUnix []int64 `xorm:"JSON TEXT" json:"reminderDates"`
-	CreatedByID   int64   `xorm:"int(11)" json:"-"` // ID of the user who put that task on the list
-	ListID        int64   `xorm:"int(11) INDEX" json:"listID" param:"list"`
-	RepeatAfter   int64   `xorm:"int(11) INDEX" json:"repeatAfter"`
-	ParentTaskID  int64   `xorm:"int(11) INDEX" json:"parentTaskID"`
-	Priority      int64   `xorm:"int(11)" json:"priority"`
-	StartDateUnix int64   `xorm:"int(11) INDEX" json:"startDate"`
-	EndDateUnix   int64   `xorm:"int(11) INDEX" json:"endDate"`
-	Assignees     []*User `xorm:"-" json:"assignees"`
+	ID            int64    `xorm:"int(11) autoincr not null unique pk" json:"id" param:"listtask"`
+	Text          string   `xorm:"varchar(250)" json:"text" valid:"runelength(3|250)"`
+	Description   string   `xorm:"varchar(250)" json:"description" valid:"runelength(0|250)"`
+	Done          bool     `xorm:"INDEX" json:"done"`
+	DueDateUnix   int64    `xorm:"int(11) INDEX" json:"dueDate"`
+	RemindersUnix []int64  `xorm:"JSON TEXT" json:"reminderDates"`
+	CreatedByID   int64    `xorm:"int(11)" json:"-"` // ID of the user who put that task on the list
+	ListID        int64    `xorm:"int(11) INDEX" json:"listID" param:"list"`
+	RepeatAfter   int64    `xorm:"int(11) INDEX" json:"repeatAfter"`
+	ParentTaskID  int64    `xorm:"int(11) INDEX" json:"parentTaskID"`
+	Priority      int64    `xorm:"int(11)" json:"priority"`
+	StartDateUnix int64    `xorm:"int(11) INDEX" json:"startDate"`
+	EndDateUnix   int64    `xorm:"int(11) INDEX" json:"endDate"`
+	Assignees     []*User  `xorm:"-" json:"assignees"`
+	Labels        []*Label `xorm:"-" json:"labels"`
 
 	Sorting           string `xorm:"-" json:"-" param:"sort"` // Parameter to sort by
 	StartDateSortUnix int64  `xorm:"-" json:"-" param:"startdatefilter"`
@@ -61,8 +62,8 @@ func (ListTask) TableName() string {
 // ListTaskAssginee represents an assignment of a user to a task
 type ListTaskAssginee struct {
 	ID      int64 `xorm:"int(11) autoincr not null unique pk"`
-	TaskID  int64 `xorm:"int(11) not null"`
-	UserID  int64 `xorm:"int(11) not null"`
+	TaskID  int64 `xorm:"int(11) INDEX not null"`
+	UserID  int64 `xorm:"int(11) INDEX not null"`
 	Created int64 `xorm:"created"`
 }
 
@@ -79,37 +80,24 @@ type ListTaskAssigneeWithUser struct {
 
 // GetTasksByListID gets all todotasks for a list
 func GetTasksByListID(listID int64) (tasks []*ListTask, err error) {
-	err = x.Where("list_id = ?", listID).Find(&tasks)
+	// make a map so we can put in a lot of other stuff more easily
+	taskMap := make(map[int64]*ListTask, len(tasks))
+	err = x.Where("list_id = ?", listID).Find(&taskMap)
 	if err != nil {
 		return
 	}
 
-	// No need to iterate over users if the list doesn't has tasks
-	if len(tasks) == 0 {
+	// No need to iterate over users and stuff if the list doesn't has tasks
+	if len(taskMap) == 0 {
 		return
 	}
-
-	// make a map so we can put in subtasks more easily
-	taskMap := make(map[int64]*ListTask, len(tasks))
 
 	// Get all users & task ids and put them into the array
 	var userIDs []int64
 	var taskIDs []int64
-	for _, i := range tasks {
+	for _, i := range taskMap {
 		taskIDs = append(taskIDs, i.ID)
-		found := false
-		for _, u := range userIDs {
-			if i.CreatedByID == u {
-				found = true
-				break
-			}
-		}
-
-		if !found {
-			userIDs = append(userIDs, i.CreatedByID)
-		}
-
-		taskMap[i.ID] = i
+		userIDs = append(userIDs, i.CreatedByID)
 	}
 
 	// Get all assignees
@@ -124,7 +112,18 @@ func GetTasksByListID(listID int64) (tasks []*ListTask, err error) {
 		}
 	}
 
-	var users []User
+	// Get all labels for the tasks
+	labels, err := getLabelsByTaskIDs("", &User{}, -1, taskIDs, false)
+	if err != nil {
+		return
+	}
+	for _, l := range labels {
+		if l != nil {
+			taskMap[l.TaskID].Labels = append(taskMap[l.TaskID].Labels, &l.Label)
+		}
+	}
+
+	users := make(map[int64]*User)
 	err = x.In("id", userIDs).Find(&users)
 	if err != nil {
 		return
@@ -134,12 +133,7 @@ func GetTasksByListID(listID int64) (tasks []*ListTask, err error) {
 	for _, task := range taskMap {
 
 		// Make created by user objects
-		for _, u := range users {
-			if task.CreatedByID == u.ID {
-				taskMap[task.ID].CreatedBy = u
-				break
-			}
-		}
+		taskMap[task.ID].CreatedBy = *users[task.CreatedByID]
 
 		// Reorder all subtasks
 		if task.ParentTaskID != 0 {
@@ -154,7 +148,7 @@ func GetTasksByListID(listID int64) (tasks []*ListTask, err error) {
 		tasks = append(tasks, t)
 	}
 
-	// Sort the output. In Go, contents on a map are put on that map in no particular order.
+	// Sort the output. In Go, contents on a map are put on that map in no particular order (saved on heap).
 	// Because of this, tasks are not sorted anymore in the output, this leads to confiusion.
 	// To avoid all this, we need to sort the slice afterwards
 	sort.Slice(tasks, func(i, j int) bool {
@@ -174,19 +168,27 @@ func getRawTaskAssigneesForTasks(taskIDs []int64) (taskAssignees []*ListTaskAssi
 	return
 }
 
-// GetListTaskByID returns all tasks a list has
-func GetListTaskByID(listTaskID int64) (listTask ListTask, err error) {
-	if listTaskID < 1 {
-		return ListTask{}, ErrListTaskDoesNotExist{listTaskID}
+func getTaskByIDSimple(taskID int64) (task ListTask, err error) {
+	if taskID < 1 {
+		return ListTask{}, ErrListTaskDoesNotExist{taskID}
 	}
 
-	exists, err := x.ID(listTaskID).Get(&listTask)
+	exists, err := x.ID(taskID).Get(&task)
 	if err != nil {
 		return ListTask{}, err
 	}
 
 	if !exists {
-		return ListTask{}, ErrListTaskDoesNotExist{listTaskID}
+		return ListTask{}, ErrListTaskDoesNotExist{taskID}
+	}
+	return
+}
+
+// GetListTaskByID returns all tasks a list has
+func GetListTaskByID(listTaskID int64) (listTask ListTask, err error) {
+	listTask, err = getTaskByIDSimple(listTaskID)
+	if err != nil {
+		return
 	}
 
 	u, err := GetUserByID(listTask.CreatedByID)

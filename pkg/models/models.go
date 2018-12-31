@@ -69,6 +69,8 @@ func init() {
 		new(ListUser),
 		new(NamespaceUser),
 		new(ListTaskAssginee),
+		new(Label),
+		new(LabelTask),
 	)
 
 	tablesWithPointer = append(tables,
@@ -83,6 +85,8 @@ func init() {
 		&ListUser{},
 		&NamespaceUser{},
 		&ListTaskAssginee{},
+		&Label{},
+		&LabelTask{},
 	)
 }
 

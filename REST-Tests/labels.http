@@ -1,0 +1,56 @@
+# Get all labels
+GET http://localhost:8080/api/v1/labels
+Authorization: Bearer {{auth_token}}
+
+###
+# Add a new label
+PUT http://localhost:8080/api/v1/labels
+Authorization: Bearer {{auth_token}}
+Content-Type: application/json
+
+{
+  "title": "test5"
+}
+
+###
+# Delete a label
+DELETE http://localhost:8080/api/v1/labels/6
+Authorization: Bearer {{auth_token}}
+
+###
+# Update a label
+POST http://localhost:8080/api/v1/labels/1
+Authorization: Bearer {{auth_token}}
+Content-Type: application/json
+
+{
+  "title": "testschinkenbrot",
+  "description": "käsebrot"
+}
+
+###
+# Get one label
+GET http://localhost:8080/api/v1/labels/1
+Authorization: Bearer {{auth_token}}
+
+###
+# Get all labels on a task
+GET http://localhost:8080/api/v1/tasks/3565/labels
+Authorization: Bearer {{auth_token}}
+
+###
+# Add a new label to a task
+PUT http://localhost:8080/api/v1/tasks/3565/labels
+Authorization: Bearer {{auth_token}}
+Content-Type: application/json
+
+{
+  "label_id": 1
+}
+
+###
+# Delete a label from a task
+DELETE http://localhost:8080/api/v1/tasks/3565/labels/1
+Authorization: Bearer {{auth_token}}
+
+###

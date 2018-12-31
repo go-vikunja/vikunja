@@ -32,6 +32,10 @@ definitions:
         type: integer
       id:
         type: integer
+      labels:
+        items:
+          $ref: '#/definitions/models.Label'
+        type: array
       listID:
         type: integer
       parentTaskID:
@@ -63,6 +67,24 @@ definitions:
     properties:
       token:
         type: string
+    type: object
+  models.Label:
+    properties:
+      created:
+        type: integer
+      created_by:
+        $ref: '#/definitions/models.User'
+        type: object
+      description:
+        type: string
+      hex_color:
+        type: string
+      id:
+        type: integer
+      title:
+        type: string
+      updated:
+        type: integer
     type: object
   models.List:
     properties:
@@ -105,6 +127,10 @@ definitions:
         type: integer
       id:
         type: integer
+      labels:
+        items:
+          $ref: '#/definitions/models.Label'
+        type: array
       listID:
         type: integer
       parentTaskID:
@@ -369,6 +395,205 @@ info:
   title: Vikunja API
   version: '{{.Version}}'
 paths:
+  /labels:
+    get:
+      consumes:
+      - application/json
+      description: Returns all labels which are either created by the user or associated
+        with a task the user has at least read-access to.
+      parameters:
+      - description: The page number. Used for pagination. If not provided, the first
+          page of results is returned.
+        in: query
+        name: p
+        type: integer
+      - description: Search labels by label text.
+        in: query
+        name: s
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The labels
+          schema:
+            items:
+              $ref: '#/definitions/models.Label'
+            type: array
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get all labels a user has access to
+      tags:
+      - labels
+    put:
+      consumes:
+      - application/json
+      description: Creates a new label.
+      parameters:
+      - description: The label object
+        in: body
+        name: label
+        required: true
+        schema:
+          $ref: '#/definitions/models.Label'
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The created label object.
+          schema:
+            $ref: '#/definitions/models.Label'
+            type: object
+        "400":
+          description: Invalid label object provided.
+          schema:
+            $ref: '#/definitions/code.vikunja.io/web.HTTPError'
+            type: object
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Create a label
+      tags:
+      - labels
+  /labels/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete an existing label. The user needs to be the creator of the
+        label to be able to do this.
+      parameters:
+      - description: Label ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The label was successfully deleted.
+          schema:
+            $ref: '#/definitions/models.Label'
+            type: object
+        "403":
+          description: Not allowed to delete the label.
+          schema:
+            $ref: '#/definitions/code.vikunja.io/web.HTTPError'
+            type: object
+        "404":
+          description: Label not found.
+          schema:
+            $ref: '#/definitions/code.vikunja.io/web.HTTPError'
+            type: object
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Delete a label
+      tags:
+      - labels
+    get:
+      consumes:
+      - application/json
+      description: Returns one label by its ID.
+      parameters:
+      - description: Label ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The label
+          schema:
+            $ref: '#/definitions/models.Label'
+            type: object
+        "403":
+          description: The user does not have access to the label
+          schema:
+            $ref: '#/definitions/code.vikunja.io/web.HTTPError'
+            type: object
+        "404":
+          description: Label not found
+          schema:
+            $ref: '#/definitions/code.vikunja.io/web.HTTPError'
+            type: object
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Gets one label
+      tags:
+      - labels
+    put:
+      consumes:
+      - application/json
+      description: Update an existing label. The user needs to be the creator of the
+        label to be able to do this.
+      parameters:
+      - description: Label ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: The label object
+        in: body
+        name: label
+        required: true
+        schema:
+          $ref: '#/definitions/models.Label'
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The created label object.
+          schema:
+            $ref: '#/definitions/models.Label'
+            type: object
+        "400":
+          description: Invalid label object provided.
+          schema:
+            $ref: '#/definitions/code.vikunja.io/web.HTTPError'
+            type: object
+        "403":
+          description: Not allowed to update the label.
+          schema:
+            $ref: '#/definitions/code.vikunja.io/web.HTTPError'
+            type: object
+        "404":
+          description: Label not found.
+          schema:
+            $ref: '#/definitions/code.vikunja.io/web.HTTPError'
+            type: object
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update a label
+      tags:
+      - labels
   /lists:
     get:
       consumes:
@@ -1750,6 +1975,141 @@ paths:
       summary: Update a task
       tags:
       - task
+  /tasks/{task}/labels:
+    get:
+      consumes:
+      - application/json
+      description: Returns all labels which are assicociated with a given task.
+      parameters:
+      - description: Task ID
+        in: path
+        name: task
+        required: true
+        type: integer
+      - description: The page number. Used for pagination. If not provided, the first
+          page of results is returned.
+        in: query
+        name: p
+        type: integer
+      - description: Search labels by label text.
+        in: query
+        name: s
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The labels
+          schema:
+            items:
+              $ref: '#/definitions/models.Label'
+            type: array
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get all labels on a task
+      tags:
+      - labels
+    put:
+      consumes:
+      - application/json
+      description: Add a label to a task. The user needs to have write-access to the
+        list to be able do this.
+      parameters:
+      - description: Task ID
+        in: path
+        name: task
+        required: true
+        type: integer
+      - description: The label object
+        in: body
+        name: label
+        required: true
+        schema:
+          $ref: '#/definitions/models.Label'
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The created label relation object.
+          schema:
+            $ref: '#/definitions/models.Label'
+            type: object
+        "400":
+          description: Invalid label object provided.
+          schema:
+            $ref: '#/definitions/code.vikunja.io/web.HTTPError'
+            type: object
+        "403":
+          description: Not allowed to add the label.
+          schema:
+            $ref: '#/definitions/code.vikunja.io/web.HTTPError'
+            type: object
+        "404":
+          description: The label does not exist.
+          schema:
+            $ref: '#/definitions/code.vikunja.io/web.HTTPError'
+            type: object
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Add a label to a task
+      tags:
+      - labels
+  /tasks/{task}/labels/{label}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove a label from a task. The user needs to have write-access
+        to the list to be able do this.
+      parameters:
+      - description: Task ID
+        in: path
+        name: task
+        required: true
+        type: integer
+      - description: Label ID
+        in: path
+        name: label
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The label was successfully removed.
+          schema:
+            $ref: '#/definitions/models.Label'
+            type: object
+        "403":
+          description: Not allowed to remove the label.
+          schema:
+            $ref: '#/definitions/code.vikunja.io/web.HTTPError'
+            type: object
+        "404":
+          description: Label not found.
+          schema:
+            $ref: '#/definitions/code.vikunja.io/web.HTTPError'
+            type: object
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Remove a label from a task
+      tags:
+      - labels
   /tasks/all:
     get:
       consumes:

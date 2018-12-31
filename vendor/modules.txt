@@ -196,13 +196,20 @@ gopkg.in/testfixtures.v2
 gopkg.in/yaml.v2
 # honnef.co/go/tools v0.0.0-20180920025451-e3ad64cb4ed3
 honnef.co/go/tools/cmd/gosimple
+honnef.co/go/tools/cmd/staticcheck
 honnef.co/go/tools/cmd/unused
 honnef.co/go/tools/lint/lintutil
 honnef.co/go/tools/simple
+honnef.co/go/tools/staticcheck
 honnef.co/go/tools/unused
 honnef.co/go/tools/lint
 honnef.co/go/tools/version
 honnef.co/go/tools/internal/sharedcheck
 honnef.co/go/tools/lint/lintdsl
+honnef.co/go/tools/deprecated
+honnef.co/go/tools/functions
 honnef.co/go/tools/ssa
+honnef.co/go/tools/staticcheck/vrp
 honnef.co/go/tools/ssa/ssautil
+honnef.co/go/tools/callgraph
+honnef.co/go/tools/callgraph/static
