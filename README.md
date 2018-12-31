@@ -28,8 +28,8 @@ Try it under [try.vikunja.io](https://try.vikunja.io)!
 * [x] Repeating tasks
 * [x] Get tasks via caldav
 * [x] Get all your tasks for an interval (day/month/period)
-* [ ] Labels for todo lists and tasks
-* [ ] Assign users to tasks
+* [x] Labels for tasks
+* [x] Assign users to tasks
 * [ ] Attachments on tasks
 * [ ] More sharing features
   * [x] Share with individual users

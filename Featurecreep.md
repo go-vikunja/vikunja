@@ -100,6 +100,7 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [x] Tasks innerhalb eines definierbarem Bereich, sollte aber trotzdem der server machen, so à la "Gib mir alles für diesen Monat"
 * [x] Bulk-edit -> Transactions
 * [x] Assignees
+  * [ ] Wegen Performance auf eigene endpoints umziehen, wie labels
 * [x] Labels
 * [ ] Attachments
 * [ ] Task-Templates innerhalb namespaces und Listen (-> Mehrere, die auswählbar sind)
