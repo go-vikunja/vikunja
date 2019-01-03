@@ -26,7 +26,7 @@ import (
 // @Description Deletes a task from a list. This does not mean "mark it done".
 // @tags task
 // @Produce json
-// @Security ApiKeyAuth
+// @Security JWTKeyAuth
 // @Param id path int true "Task ID"
 // @Success 200 {object} models.Message "The created task object."
 // @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid task ID provided."

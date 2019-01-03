@@ -24,7 +24,7 @@ import _ "code.vikunja.io/web" // For swaggerdocs generation
 // @tags team
 // @Accept json
 // @Produce json
-// @Security ApiKeyAuth
+// @Security JWTKeyAuth
 // @Param id path int true "Team ID"
 // @Param team body models.Team true "The team with updated values you want to update."
 // @Success 200 {object} models.Team "The updated team."

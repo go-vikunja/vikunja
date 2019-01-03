@@ -24,7 +24,7 @@ import "code.vikunja.io/web"
 // @tags sharing
 // @Accept json
 // @Produce json
-// @Security ApiKeyAuth
+// @Security JWTKeyAuth
 // @Param id path int true "List ID"
 // @Param list body models.ListUser true "The user you want to add to the list."
 // @Success 200 {object} models.ListUser "The created user<->list relation."

@@ -59,7 +59,7 @@ func CreateOrUpdateList(list *List) (err error) {
 // @tags list
 // @Accept json
 // @Produce json
-// @Security ApiKeyAuth
+// @Security JWTKeyAuth
 // @Param id path int true "List ID"
 // @Param list body models.List true "The list with updated values you want to update."
 // @Success 200 {object} models.List "The updated list."
@@ -82,7 +82,7 @@ func (l *List) Update() (err error) {
 // @tags list
 // @Accept json
 // @Produce json
-// @Security ApiKeyAuth
+// @Security JWTKeyAuth
 // @Param namespaceID path int true "Namespace ID"
 // @Param list body models.List true "The list you want to create."
 // @Success 200 {object} models.List "The created list."

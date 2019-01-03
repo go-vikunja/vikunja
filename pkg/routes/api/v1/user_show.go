@@ -29,7 +29,7 @@ import (
 // @tags user
 // @Accept json
 // @Produce json
-// @Security ApiKeyAuth
+// @Security JWTKeyAuth
 // @Success 200 {object} models.User
 // @Failure 404 {object} code.vikunja.io/web.HTTPError "User does not exist."
 // @Failure 500 {object} models.Message "Internal server error."

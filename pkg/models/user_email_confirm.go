@@ -18,6 +18,7 @@ package models
 
 // EmailConfirm holds the token to confirm a mail address
 type EmailConfirm struct {
+	// The email confirm token sent via email.
 	Token string `json:"token"`
 }
 

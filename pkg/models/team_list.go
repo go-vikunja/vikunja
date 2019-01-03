@@ -20,12 +20,18 @@ import "code.vikunja.io/web"
 
 // TeamList defines the relation between a team and a list
 type TeamList struct {
-	ID     int64     `xorm:"int(11) autoincr not null unique pk" json:"id"`
-	TeamID int64     `xorm:"int(11) not null INDEX" json:"team_id" param:"team"`
-	ListID int64     `xorm:"int(11) not null INDEX" json:"list_id" param:"list"`
-	Right  TeamRight `xorm:"int(11) INDEX" json:"right" valid:"length(0|2)"`
+	// The unique, numeric id of this list <-> team relation.
+	ID int64 `xorm:"int(11) autoincr not null unique pk" json:"id"`
+	// The team id.
+	TeamID int64 `xorm:"int(11) not null INDEX" json:"team_id" param:"team"`
+	// The list id.
+	ListID int64 `xorm:"int(11) not null INDEX" json:"list_id" param:"list"`
+	// The right this team has. 0 = Read only, 1 = Read & Write, 2 = Admin. See the docs for more details.
+	Right TeamRight `xorm:"int(11) INDEX" json:"right" valid:"length(0|2)" maximum:"2" default:"0"`
 
+	// A unix timestamp when this relation was created. You cannot change this value.
 	Created int64 `xorm:"created" json:"created"`
+	// A unix timestamp when this relation was last updated. You cannot change this value.
 	Updated int64 `xorm:"updated" json:"updated"`
 
 	web.CRUDable `xorm:"-" json:"-"`

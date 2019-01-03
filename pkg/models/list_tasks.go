@@ -23,31 +23,48 @@ import (
 
 // ListTask represents an task in a todolist
 type ListTask struct {
-	ID            int64    `xorm:"int(11) autoincr not null unique pk" json:"id" param:"listtask"`
-	Text          string   `xorm:"varchar(250)" json:"text" valid:"runelength(3|250)"`
-	Description   string   `xorm:"varchar(250)" json:"description" valid:"runelength(0|250)"`
-	Done          bool     `xorm:"INDEX" json:"done"`
-	DueDateUnix   int64    `xorm:"int(11) INDEX" json:"dueDate"`
-	RemindersUnix []int64  `xorm:"JSON TEXT" json:"reminderDates"`
-	CreatedByID   int64    `xorm:"int(11)" json:"-"` // ID of the user who put that task on the list
-	ListID        int64    `xorm:"int(11) INDEX" json:"listID" param:"list"`
-	RepeatAfter   int64    `xorm:"int(11) INDEX" json:"repeatAfter"`
-	ParentTaskID  int64    `xorm:"int(11) INDEX" json:"parentTaskID"`
-	Priority      int64    `xorm:"int(11)" json:"priority"`
-	StartDateUnix int64    `xorm:"int(11) INDEX" json:"startDate"`
-	EndDateUnix   int64    `xorm:"int(11) INDEX" json:"endDate"`
-	Assignees     []*User  `xorm:"-" json:"assignees"`
-	Labels        []*Label `xorm:"-" json:"labels"`
+	// The unique, numeric id of this task.
+	ID int64 `xorm:"int(11) autoincr not null unique pk" json:"id" param:"listtask"`
+	// The task text. This is what you'll see in the list.
+	Text string `xorm:"varchar(250)" json:"text" valid:"runelength(3|250)" minLength:"3" maxLength:"250"`
+	// The task description.
+	Description string `xorm:"varchar(250)" json:"description" valid:"runelength(0|250)" maxLength:"250"`
+	Done        bool   `xorm:"INDEX" json:"done"`
+	// A unix timestamp when the task is due.
+	DueDateUnix int64 `xorm:"int(11) INDEX" json:"dueDate"`
+	// An array of unix timestamps when the user wants to be reminded of the task.
+	RemindersUnix []int64 `xorm:"JSON TEXT" json:"reminderDates"`
+	CreatedByID   int64   `xorm:"int(11)" json:"-"` // ID of the user who put that task on the list
+	// The list this task belongs to.
+	ListID int64 `xorm:"int(11) INDEX" json:"listID" param:"list"`
+	// An amount in seconds this task repeats itself. If this is set, when marking the task as done, it will mark itself as "undone" and then increase all remindes and the due date by its amount.
+	RepeatAfter int64 `xorm:"int(11) INDEX" json:"repeatAfter"`
+	// If the task is a subtask, this is the id of its parent.
+	ParentTaskID int64 `xorm:"int(11) INDEX" json:"parentTaskID"`
+	// The task priority. Can be anything you want, it is possible to sort by this later.
+	Priority int64 `xorm:"int(11)" json:"priority"`
+	// When this task starts.
+	StartDateUnix int64 `xorm:"int(11) INDEX" json:"startDate"`
+	// When this task ends.
+	EndDateUnix int64 `xorm:"int(11) INDEX" json:"endDate"`
+	// An array of users who are assigned to this task
+	Assignees []*User `xorm:"-" json:"assignees"`
+	// An array of labels which are associated with this task.
+	Labels []*Label `xorm:"-" json:"labels"`
 
 	Sorting           string `xorm:"-" json:"-" param:"sort"` // Parameter to sort by
 	StartDateSortUnix int64  `xorm:"-" json:"-" param:"startdatefilter"`
 	EndDateSortUnix   int64  `xorm:"-" json:"-" param:"enddatefilter"`
 
+	// An array of subtasks.
 	Subtasks []*ListTask `xorm:"-" json:"subtasks"`
 
+	// A unix timestamp when this task was created. You cannot change this value.
 	Created int64 `xorm:"created" json:"created"`
+	// A unix timestamp when this task was last updated. You cannot change this value.
 	Updated int64 `xorm:"updated" json:"updated"`
 
+	// The user who initially created the task.
 	CreatedBy User `xorm:"-" json:"createdBy" valid:"-"`
 
 	web.CRUDable `xorm:"-" json:"-"`

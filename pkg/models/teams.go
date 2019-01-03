@@ -20,15 +20,22 @@ import "code.vikunja.io/web"
 
 // Team holds a team object
 type Team struct {
-	ID          int64  `xorm:"int(11) autoincr not null unique pk" json:"id" param:"team"`
-	Name        string `xorm:"varchar(250) not null" json:"name" valid:"required,runelength(5|250)"`
-	Description string `xorm:"varchar(250)" json:"description" valid:"runelength(0|250)"`
+	// The unique, numeric id of this team.
+	ID int64 `xorm:"int(11) autoincr not null unique pk" json:"id" param:"team"`
+	// The name of this team.
+	Name string `xorm:"varchar(250) not null" json:"name" valid:"required,runelength(5|250)" minLength:"5" maxLength:"250"`
+	// The team's description.
+	Description string `xorm:"varchar(250)" json:"description" valid:"runelength(0|250)" minLength:"0" maxLength:"250"`
 	CreatedByID int64  `xorm:"int(11) not null INDEX" json:"-"`
 
-	CreatedBy User        `xorm:"-" json:"created_by"`
-	Members   []*TeamUser `xorm:"-" json:"members"`
+	// The user who created this team.
+	CreatedBy User `xorm:"-" json:"created_by"`
+	// An array of all members in this team.
+	Members []*TeamUser `xorm:"-" json:"members"`
 
+	// A unix timestamp when this relation was created. You cannot change this value.
 	Created int64 `xorm:"created" json:"created"`
+	// A unix timestamp when this relation was last updated. You cannot change this value.
 	Updated int64 `xorm:"updated" json:"updated"`
 
 	web.CRUDable `xorm:"-" json:"-"`
@@ -55,13 +62,17 @@ func (t *Team) AfterLoad() {
 
 // TeamMember defines the relationship between a user and a team
 type TeamMember struct {
-	ID     int64 `xorm:"int(11) autoincr not null unique pk" json:"id"`
+	// The unique, numeric id of this team member relation.
+	ID int64 `xorm:"int(11) autoincr not null unique pk" json:"id"`
+	// The team id.
 	TeamID int64 `xorm:"int(11) not null INDEX" json:"team_id" param:"team"`
+	// The id of the member.
 	UserID int64 `xorm:"int(11) not null INDEX" json:"user_id" param:"user"`
-	Admin  bool  `xorm:"tinyint(1) INDEX" json:"admin"`
+	// Whether or not the member is an admin of the team. See the docs for more about what a team admin can do
+	Admin bool `xorm:"tinyint(1) INDEX" json:"admin"`
 
+	// A unix timestamp when this relation was created. You cannot change this value.
 	Created int64 `xorm:"created" json:"created"`
-	Updated int64 `xorm:"updated" json:"updated"`
 
 	web.CRUDable `xorm:"-" json:"-"`
 	web.Rights   `xorm:"-" json:"-"`
@@ -74,7 +85,8 @@ func (TeamMember) TableName() string {
 
 // TeamUser is the team member type
 type TeamUser struct {
-	User  `xorm:"extends"`
+	User `xorm:"extends"`
+	// Whether or not the member is an admin of the team. See the docs for more about what a team admin can do
 	Admin bool `json:"admin"`
 }
 
@@ -101,7 +113,7 @@ func GetTeamByID(id int64) (team Team, err error) {
 // @tags team
 // @Accept json
 // @Produce json
-// @Security ApiKeyAuth
+// @Security JWTKeyAuth
 // @Param id path int true "Team ID"
 // @Success 200 {object} models.Team "The team"
 // @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have access to the team"
@@ -120,7 +132,7 @@ func (t *Team) ReadOne() (err error) {
 // @Produce json
 // @Param p query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
 // @Param s query string false "Search teams by its name."
-// @Security ApiKeyAuth
+// @Security JWTKeyAuth
 // @Success 200 {array} models.Team "The teams."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /teams [get]

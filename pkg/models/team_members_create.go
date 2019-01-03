@@ -24,7 +24,7 @@ import "code.vikunja.io/web"
 // @tags team
 // @Accept json
 // @Produce json
-// @Security ApiKeyAuth
+// @Security JWTKeyAuth
 // @Param id path int true "Team ID"
 // @Param team body models.TeamMember true "The user to be added to a team."
 // @Success 200 {object} models.TeamMember "The newly created member object"

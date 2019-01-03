@@ -23,7 +23,7 @@ import _ "code.vikunja.io/web" // For swaggerdocs generation
 // @Description Delets a team from a list. The team won't have access to the list anymore.
 // @tags sharing
 // @Produce json
-// @Security ApiKeyAuth
+// @Security JWTKeyAuth
 // @Param listID path int true "List ID"
 // @Param teamID path int true "Team ID"
 // @Success 200 {object} models.Message "The team was successfully deleted."

@@ -27,7 +27,7 @@ import (
 // @tags namespace
 // @Accept json
 // @Produce json
-// @Security ApiKeyAuth
+// @Security JWTKeyAuth
 // @Param namespace body models.Namespace true "The namespace you want to create."
 // @Success 200 {object} models.Namespace "The created namespace."
 // @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid namespace object provided."

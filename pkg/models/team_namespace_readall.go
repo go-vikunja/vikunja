@@ -27,7 +27,7 @@ import "code.vikunja.io/web"
 // @Param id path int true "Namespace ID"
 // @Param p query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
 // @Param s query string false "Search teams by its name."
-// @Security ApiKeyAuth
+// @Security JWTKeyAuth
 // @Success 200 {array} models.TeamWithRight "The teams with the right they have."
 // @Failure 403 {object} code.vikunja.io/web.HTTPError "No right to see the namespace."
 // @Failure 500 {object} models.Message "Internal error"

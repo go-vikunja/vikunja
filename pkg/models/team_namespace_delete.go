@@ -23,7 +23,7 @@ import _ "code.vikunja.io/web" // For swaggerdocs generation
 // @Description Delets a team from a namespace. The team won't have access to the namespace anymore.
 // @tags sharing
 // @Produce json
-// @Security ApiKeyAuth
+// @Security JWTKeyAuth
 // @Param namespaceID path int true "Namespace ID"
 // @Param teamID path int true "team ID"
 // @Success 200 {object} models.Message "The team was successfully deleted."

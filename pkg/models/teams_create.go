@@ -27,7 +27,7 @@ import (
 // @tags team
 // @Accept json
 // @Produce json
-// @Security ApiKeyAuth
+// @Security JWTKeyAuth
 // @Param team body models.Team true "The team you want to create."
 // @Success 200 {object} models.Team "The created team."
 // @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid team object provided."

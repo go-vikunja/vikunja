@@ -27,7 +27,7 @@ import (
 // @tags labels
 // @Accept json
 // @Produce json
-// @Security ApiKeyAuth
+// @Security JWTKeyAuth
 // @Param task path int true "Task ID"
 // @Param label path int true "Label ID"
 // @Success 200 {object} models.Label "The label was successfully removed."
@@ -46,7 +46,7 @@ func (l *LabelTask) Delete() (err error) {
 // @tags labels
 // @Accept json
 // @Produce json
-// @Security ApiKeyAuth
+// @Security JWTKeyAuth
 // @Param task path int true "Task ID"
 // @Param label body models.Label true "The label object"
 // @Success 200 {object} models.Label "The created label relation object."
@@ -79,7 +79,7 @@ func (l *LabelTask) Create(a web.Auth) (err error) {
 // @Param task path int true "Task ID"
 // @Param p query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
 // @Param s query string false "Search labels by label text."
-// @Security ApiKeyAuth
+// @Security JWTKeyAuth
 // @Success 200 {array} models.Label "The labels"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{task}/labels [get]

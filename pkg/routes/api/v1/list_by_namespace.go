@@ -31,7 +31,7 @@ import (
 // @Accept json
 // @Produce json
 // @Param id path int true "Namespace ID"
-// @Security ApiKeyAuth
+// @Security JWTKeyAuth
 // @Success 200 {array} models.List "The lists."
 // @Failure 403 {object} models.Message "No access to that namespace."
 // @Failure 404 {object} models.Message "The namespace does not exist."

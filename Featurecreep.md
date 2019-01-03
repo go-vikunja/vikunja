@@ -85,12 +85,18 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 
 * [ ] Bauanleitung in die Readme/docs
   * [x] Auch noch nen "link" zum Featurecreep
+* [x] Redocs
+* [x] Swaggerdocs verbessern
+  * [x] Descriptions in structs
+  * [x] Maxlength specify etc. (see swaggo docs)
+* [x] Rights
+* [x] API
 * [ ] Anleitung zum Makefile
 * [ ] Struktur erklären
-* [ ] Backups
 * [ ] Deploy in die docs
   * [ ] Docker
   * [ ] Native (systemd + nginx/apache)
+* [ ] Backups
 * [ ] Docs aufsetzen
 
 ### Tasks
@@ -128,6 +134,10 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [ ] mgl. zum Emailmaskieren haben (in den Nutzereinstellungen, wenn man seine Email nicht an alle Welt rausposaunen will)
 * [ ] Mgl. zum Accountlöschen haben (so richtig krass mit emailverifiezierung und dass alle Privaten Listen gelöscht werden und man alle geteilten entweder wem übertragen muss oder  auf privat stellen)
 * [ ] /info endpoint, in dem dann zb die limits und version etc steht
+* [ ] Deprecate /namespaces/{id}/lists in favour of namespace.ReadOne() <-- should also return the lists
+* [ ] Description of web.HTTPError
+* [ ] Rights methods should return errors
+* [ ] Re-check all `{List|Namespace}{User|Team}` if really all parameters need to be exposed via json or are overwritten via param anyway.
 
 ### Linters
 

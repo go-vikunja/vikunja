@@ -26,7 +26,7 @@ import (
 // @Description Delets a namespace
 // @tags namespace
 // @Produce json
-// @Security ApiKeyAuth
+// @Security JWTKeyAuth
 // @Param id path int true "Namespace ID"
 // @Success 200 {object} models.Message "The namespace was successfully deleted."
 // @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid namespace object provided."

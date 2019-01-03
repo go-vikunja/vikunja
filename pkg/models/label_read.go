@@ -29,7 +29,7 @@ import (
 // @Produce json
 // @Param p query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
 // @Param s query string false "Search labels by label text."
-// @Security ApiKeyAuth
+// @Security JWTKeyAuth
 // @Success 200 {array} models.Label "The labels"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /labels [get]
@@ -55,7 +55,7 @@ func (l *Label) ReadAll(search string, a web.Auth, page int) (ls interface{}, er
 // @Accept json
 // @Produce json
 // @Param id path int true "Label ID"
-// @Security ApiKeyAuth
+// @Security JWTKeyAuth
 // @Success 200 {object} models.Label "The label"
 // @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have access to the label"
 // @Failure 404 {object} code.vikunja.io/web.HTTPError "Label not found"

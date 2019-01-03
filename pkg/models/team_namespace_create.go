@@ -24,7 +24,7 @@ import "code.vikunja.io/web"
 // @tags sharing
 // @Accept json
 // @Produce json
-// @Security ApiKeyAuth
+// @Security JWTKeyAuth
 // @Param id path int true "Namespace ID"
 // @Param namespace body models.TeamNamespace true "The team you want to add to the namespace."
 // @Success 200 {object} models.TeamNamespace "The created team<->namespace relation."

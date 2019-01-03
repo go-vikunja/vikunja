@@ -22,15 +22,22 @@ import (
 
 // Label represents a label
 type Label struct {
-	ID          int64  `xorm:"int(11) autoincr not null unique pk" json:"id" param:"label"`
-	Title       string `xorm:"varchar(250) not null" json:"title" valid:"runelength(3|250)"`
-	Description string `xorm:"varchar(250)" json:"description" valid:"runelength(0|250)"`
-	HexColor    string `xorm:"varchar(6)" json:"hex_color" valid:"runelength(0|6)"`
+	// The unique, numeric id of this label.
+	ID int64 `xorm:"int(11) autoincr not null unique pk" json:"id" param:"label"`
+	// The title of the lable. You'll see this one on tasks associated with it.
+	Title string `xorm:"varchar(250) not null" json:"title" valid:"runelength(3|250)" minLength:"3" maxLength:"250"`
+	// The label description.
+	Description string `xorm:"varchar(250)" json:"description" valid:"runelength(0|250)" maxLength:"250"`
+	// The color this label has
+	HexColor string `xorm:"varchar(6)" json:"hex_color" valid:"runelength(0|6)" maxLength:"6"`
 
 	CreatedByID int64 `xorm:"int(11) not null" json:"-"`
-	CreatedBy   *User `xorm:"-" json:"created_by"`
+	// The user who created this label
+	CreatedBy *User `xorm:"-" json:"created_by"`
 
+	// A unix timestamp when this label was created. You cannot change this value.
 	Created int64 `xorm:"created" json:"created"`
+	// A unix timestamp when this label was last updated. You cannot change this value.
 	Updated int64 `xorm:"updated" json:"updated"`
 
 	web.CRUDable `xorm:"-" json:"-"`
@@ -44,9 +51,12 @@ func (Label) TableName() string {
 
 // LabelTask represents a relation between a label and a task
 type LabelTask struct {
-	ID      int64 `xorm:"int(11) autoincr not null unique pk" json:"id"`
-	TaskID  int64 `xorm:"int(11) INDEX not null" json:"-" param:"listtask"`
+	// The unique, numeric id of this label.
+	ID     int64 `xorm:"int(11) autoincr not null unique pk" json:"id"`
+	TaskID int64 `xorm:"int(11) INDEX not null" json:"-" param:"listtask"`
+	// The label id you want to associate with a task.
 	LabelID int64 `xorm:"int(11) INDEX not null" json:"label_id" param:"label"`
+	// A unix timestamp when this task was created. You cannot change this value.
 	Created int64 `xorm:"created" json:"created"`
 
 	web.CRUDable `xorm:"-" json:"-"`

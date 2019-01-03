@@ -24,7 +24,9 @@ import (
 
 // PasswordReset holds the data to reset a password
 type PasswordReset struct {
-	Token       string `json:"token"`
+	// The previously issued reset token.
+	Token string `json:"token"`
+	// The new password for this user.
 	NewPassword string `json:"new_password"`
 }
 
@@ -76,7 +78,7 @@ func UserPasswordReset(reset *PasswordReset) (err error) {
 
 // PasswordTokenRequest defines the request format for password reset resqest
 type PasswordTokenRequest struct {
-	Email string `json:"email" valid:"email,length(0|250)"`
+	Email string `json:"email" valid:"email,length(0|250)" maxLength:"250"`
 }
 
 // RequestUserPasswordResetToken inserts a random token to reset a users password into the databsse

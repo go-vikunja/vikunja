@@ -1,11 +1,16 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "{{.Description}}",
+        "description": "This is the documentation for the [Vikunja](http://vikunja.io) API. Vikunja is a cross-plattform Todo-application with a lot of features, such as sharing lists with users or teams. \u003c!-- ReDoc-Inject: \u003csecurity-definitions\u003e --\u003e\n# Authorization\n**JWT-Auth:** Main authorization method, used for most of the requests. Needs ` + \"`\" + `Authorization: Bearer \u003cjwt-token\u003e` + \"`\" + `-header to authenticate successfully.\n\n**BasicAuth:** Only used when requesting tasks via caldav.\n\u003c!-- ReDoc-Inject: \u003csecurity-definitions\u003e --\u003e",
         "title": "Vikunja API",
-        "contact": {},
+        "contact": {
+            "name": "General Vikunja contact",
+            "url": "http://vikunja.io/en/contact/",
+            "email": "hello@vikunja.io"
+        },
         "license": {
-            "name": "GPLv3"
+            "name": "GPLv3",
+            "url": "http://code.vikunja.io/api/src/branch/master/LICENSE"
         },
         "version": "{{.Version}}"
     },
@@ -16,7 +21,7 @@
             "get": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "JWTKeyAuth": []
                     }
                 ],
                 "description": "Returns all labels which are either created by the user or associated with a task the user has at least read-access to.",
@@ -66,7 +71,7 @@
             "put": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "JWTKeyAuth": []
                     }
                 ],
                 "description": "Creates a new label.",
@@ -121,7 +126,7 @@
             "get": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "JWTKeyAuth": []
                     }
                 ],
                 "description": "Returns one label by its ID.",
@@ -178,7 +183,7 @@
             "put": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "JWTKeyAuth": []
                     }
                 ],
                 "description": "Update an existing label. The user needs to be the creator of the label to be able to do this.",
@@ -252,7 +257,7 @@
             "delete": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "JWTKeyAuth": []
                     }
                 ],
                 "description": "Delete an existing label. The user needs to be the creator of the label to be able to do this.",
@@ -311,7 +316,7 @@
             "get": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "JWTKeyAuth": []
                     }
                 ],
                 "description": "Returns all lists a user has access to.",
@@ -370,10 +375,10 @@
             "get": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "JWTKeyAuth": []
                     }
                 ],
-                "description": "Returns a list by its ID.",
+                "description": "Returns a team by its ID.",
                 "consumes": [
                     "application/json"
                 ],
@@ -381,13 +386,13 @@
                     "application/json"
                 ],
                 "tags": [
-                    "list"
+                    "team"
                 ],
-                "summary": "Gets one list",
+                "summary": "Gets one team",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "List ID",
+                        "description": "Team ID",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -395,14 +400,14 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "The list",
+                        "description": "The team",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.List"
+                            "$ref": "#/definitions/models.Team"
                         }
                     },
                     "403": {
-                        "description": "The user does not have access to the list",
+                        "description": "The user does not have access to the team",
                         "schema": {
                             "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
@@ -420,7 +425,7 @@
             "put": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "JWTKeyAuth": []
                     }
                 ],
                 "description": "Inserts a task into a list.",
@@ -487,7 +492,7 @@
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "JWTKeyAuth": []
                     }
                 ],
                 "description": "Updates a list. This does not include adding a task (see below).",
@@ -554,7 +559,7 @@
             "delete": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "JWTKeyAuth": []
                     }
                 ],
                 "description": "Delets a list",
@@ -610,7 +615,7 @@
             "get": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "JWTKeyAuth": []
                     }
                 ],
                 "description": "Returns a list with all teams which have access on a given list.",
@@ -674,7 +679,7 @@
             "put": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "JWTKeyAuth": []
                     }
                 ],
                 "description": "Gives a team access to a list.",
@@ -750,7 +755,7 @@
             "get": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "JWTKeyAuth": []
                     }
                 ],
                 "description": "Returns a list with all users which have access on a given list.",
@@ -814,7 +819,7 @@
             "put": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "JWTKeyAuth": []
                     }
                 ],
                 "description": "Gives a user access to a list.",
@@ -890,7 +895,7 @@
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "JWTKeyAuth": []
                     }
                 ],
                 "description": "Update a team \u003c-\u003e list relation. Mostly used to update the right that team has.",
@@ -964,7 +969,7 @@
             "delete": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "JWTKeyAuth": []
                     }
                 ],
                 "description": "Delets a team from a list. The team won't have access to the list anymore.",
@@ -1027,7 +1032,7 @@
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "JWTKeyAuth": []
                     }
                 ],
                 "description": "Update a user \u003c-\u003e list relation. Mostly used to update the right that user has.",
@@ -1101,7 +1106,7 @@
             "delete": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "JWTKeyAuth": []
                     }
                 ],
                 "description": "Delets a user from a list. The user won't have access to the list anymore.",
@@ -1214,7 +1219,7 @@
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "JWTKeyAuth": []
                     }
                 ],
                 "description": "Updates a namespace.",
@@ -1283,7 +1288,7 @@
             "get": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "JWTKeyAuth": []
                     }
                 ],
                 "description": "Returns all namespaces a user has access to.",
@@ -1333,7 +1338,7 @@
             "put": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "JWTKeyAuth": []
                     }
                 ],
                 "description": "Creates a new namespace.",
@@ -1395,7 +1400,7 @@
             "get": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "JWTKeyAuth": []
                     }
                 ],
                 "description": "Returns a namespace by its ID.",
@@ -1445,7 +1450,7 @@
             "delete": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "JWTKeyAuth": []
                     }
                 ],
                 "description": "Delets a namespace",
@@ -1501,7 +1506,7 @@
             "get": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "JWTKeyAuth": []
                     }
                 ],
                 "description": "Returns all lists inside of a namespace.",
@@ -1562,7 +1567,7 @@
             "get": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "JWTKeyAuth": []
                     }
                 ],
                 "description": "Returns a namespace with all teams which have access on a given namespace.",
@@ -1626,7 +1631,7 @@
             "put": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "JWTKeyAuth": []
                     }
                 ],
                 "description": "Gives a team access to a namespace.",
@@ -1702,7 +1707,7 @@
             "get": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "JWTKeyAuth": []
                     }
                 ],
                 "description": "Returns a namespace with all users which have access on a given namespace.",
@@ -1766,7 +1771,7 @@
             "put": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "JWTKeyAuth": []
                     }
                 ],
                 "description": "Gives a user access to a namespace.",
@@ -1842,7 +1847,7 @@
             "put": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "JWTKeyAuth": []
                     }
                 ],
                 "description": "Creates a new list in a given namespace. The user needs write-access to the namespace.",
@@ -1911,7 +1916,7 @@
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "JWTKeyAuth": []
                     }
                 ],
                 "description": "Update a team \u003c-\u003e namespace relation. Mostly used to update the right that team has.",
@@ -1985,7 +1990,7 @@
             "delete": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "JWTKeyAuth": []
                     }
                 ],
                 "description": "Delets a team from a namespace. The team won't have access to the namespace anymore.",
@@ -2048,7 +2053,7 @@
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "JWTKeyAuth": []
                     }
                 ],
                 "description": "Update a user \u003c-\u003e namespace relation. Mostly used to update the right that user has.",
@@ -2122,7 +2127,7 @@
             "delete": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "JWTKeyAuth": []
                     }
                 ],
                 "description": "Delets a user from a namespace. The user won't have access to the namespace anymore.",
@@ -2235,7 +2240,7 @@
             "get": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "JWTKeyAuth": []
                     }
                 ],
                 "description": "Returns all tasks on any list the user has access to.",
@@ -2287,7 +2292,7 @@
             "get": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "JWTKeyAuth": []
                     }
                 ],
                 "description": "Returns all tasks on any list the user has access to.",
@@ -2346,7 +2351,7 @@
             "get": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "JWTKeyAuth": []
                     }
                 ],
                 "description": "Returns all tasks on any list the user has access to.",
@@ -2419,7 +2424,7 @@
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "JWTKeyAuth": []
                     }
                 ],
                 "description": "Updates a bunch of tasks at once. This includes marking them as done. Note: although you could supply another ID, it will be ignored. Use task_ids instead.",
@@ -2512,7 +2517,7 @@
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "JWTKeyAuth": []
                     }
                 ],
                 "description": "Updates a task. This includes marking it as done.",
@@ -2579,7 +2584,7 @@
             "delete": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "JWTKeyAuth": []
                     }
                 ],
                 "description": "Deletes a task from a list. This does not mean \"mark it done\".",
@@ -2635,7 +2640,7 @@
             "get": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "JWTKeyAuth": []
                     }
                 ],
                 "description": "Returns all labels which are assicociated with a given task.",
@@ -2692,7 +2697,7 @@
             "put": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "JWTKeyAuth": []
                     }
                 ],
                 "description": "Add a label to a task. The user needs to have write-access to the list to be able do this.",
@@ -2768,7 +2773,7 @@
             "delete": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "JWTKeyAuth": []
                     }
                 ],
                 "description": "Remove a label from a task. The user needs to have write-access to the list to be able do this.",
@@ -2834,7 +2839,7 @@
             "get": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "JWTKeyAuth": []
                     }
                 ],
                 "description": "Returns all teams the current user is part of.",
@@ -2884,7 +2889,7 @@
             "put": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "JWTKeyAuth": []
                     }
                 ],
                 "description": "Creates a new team in a given namespace. The user needs write-access to the namespace.",
@@ -2939,7 +2944,7 @@
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "JWTKeyAuth": []
                     }
                 ],
                 "description": "Updates a team.",
@@ -2999,7 +3004,7 @@
             "delete": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "JWTKeyAuth": []
                     }
                 ],
                 "description": "Delets a team. This will also remove the access for all users in that team.",
@@ -3048,7 +3053,7 @@
             "put": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "JWTKeyAuth": []
                     }
                 ],
                 "description": "Add a user to a team.",
@@ -3117,7 +3122,7 @@
             "delete": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "JWTKeyAuth": []
                     }
                 ],
                 "description": "Remove a user from a team. This will also revoke any access this user might have via that team.",
@@ -3166,7 +3171,7 @@
             "get": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "JWTKeyAuth": []
                     }
                 ],
                 "description": "Returns the current user object.",
@@ -3259,7 +3264,7 @@
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "JWTKeyAuth": []
                     }
                 ],
                 "description": "Lets the current user change its password.",
@@ -3421,7 +3426,7 @@
             "get": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "JWTKeyAuth": []
                     }
                 ],
                 "description": "Lists all users (without emailadresses). Also possible to search for a specific user.",
@@ -3476,16 +3481,25 @@
             "type": "object",
             "properties": {
                 "email": {
-                    "type": "string"
+                    "description": "The user's email address",
+                    "type": "string",
+                    "maxLength": 250
                 },
                 "id": {
+                    "description": "The unique, numeric id of this user.",
                     "type": "integer"
                 },
                 "password": {
-                    "type": "string"
+                    "description": "The user's password in clear text. Only used when registering the user.",
+                    "type": "string",
+                    "maxLength": 250,
+                    "minLength": 8
                 },
                 "username": {
-                    "type": "string"
+                    "description": "The username of the username. Is always unique.",
+                    "type": "string",
+                    "maxLength": 250,
+                    "minLength": 3
                 }
             }
         },
@@ -3493,76 +3507,97 @@
             "type": "object",
             "properties": {
                 "assignees": {
+                    "description": "An array of users who are assigned to this task",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/models.User"
                     }
                 },
                 "created": {
+                    "description": "A unix timestamp when this task was created. You cannot change this value.",
                     "type": "integer"
                 },
                 "createdBy": {
+                    "description": "The user who initially created the task.",
                     "type": "object",
                     "$ref": "#/definitions/models.User"
                 },
                 "description": {
-                    "type": "string"
+                    "description": "The task description.",
+                    "type": "string",
+                    "maxLength": 250
                 },
                 "done": {
                     "type": "boolean"
                 },
                 "dueDate": {
+                    "description": "A unix timestamp when the task is due.",
                     "type": "integer"
                 },
                 "endDate": {
+                    "description": "When this task ends.",
                     "type": "integer"
                 },
                 "id": {
+                    "description": "The unique, numeric id of this task.",
                     "type": "integer"
                 },
                 "labels": {
+                    "description": "An array of labels which are associated with this task.",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/models.Label"
                     }
                 },
                 "listID": {
+                    "description": "The list this task belongs to.",
                     "type": "integer"
                 },
                 "parentTaskID": {
+                    "description": "If the task is a subtask, this is the id of its parent.",
                     "type": "integer"
                 },
                 "priority": {
+                    "description": "The task priority. Can be anything you want, it is possible to sort by this later.",
                     "type": "integer"
                 },
                 "reminderDates": {
+                    "description": "An array of unix timestamps when the user wants to be reminded of the task.",
                     "type": "array",
                     "items": {
                         "type": "integer"
                     }
                 },
                 "repeatAfter": {
+                    "description": "An amount in seconds this task repeats itself. If this is set, when marking the task as done, it will mark itself as \"undone\" and then increase all remindes and the due date by its amount.",
                     "type": "integer"
                 },
                 "startDate": {
+                    "description": "When this task starts.",
                     "type": "integer"
                 },
                 "subtasks": {
+                    "description": "An array of subtasks.",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/models.ListTask"
                     }
                 },
                 "task_ids": {
+                    "description": "A list of task ids to update",
                     "type": "array",
                     "items": {
                         "type": "integer"
                     }
                 },
                 "text": {
-                    "type": "string"
+                    "description": "The task text. This is what you'll see in the list.",
+                    "type": "string",
+                    "maxLength": 250,
+                    "minLength": 3
                 },
                 "updated": {
+                    "description": "A unix timestamp when this task was last updated. You cannot change this value.",
                     "type": "integer"
                 }
             }
@@ -3571,6 +3606,7 @@
             "type": "object",
             "properties": {
                 "token": {
+                    "description": "The email confirm token sent via email.",
                     "type": "string"
                 }
             }
@@ -3579,25 +3615,36 @@
             "type": "object",
             "properties": {
                 "created": {
+                    "description": "A unix timestamp when this label was created. You cannot change this value.",
                     "type": "integer"
                 },
                 "created_by": {
+                    "description": "The user who created this label",
                     "type": "object",
                     "$ref": "#/definitions/models.User"
                 },
                 "description": {
-                    "type": "string"
+                    "description": "The label description.",
+                    "type": "string",
+                    "maxLength": 250
                 },
                 "hex_color": {
-                    "type": "string"
+                    "description": "The color this label has",
+                    "type": "string",
+                    "maxLength": 6
                 },
                 "id": {
+                    "description": "The unique, numeric id of this label.",
                     "type": "integer"
                 },
                 "title": {
-                    "type": "string"
+                    "description": "The title of the lable. You'll see this one on tasks associated with it.",
+                    "type": "string",
+                    "maxLength": 250,
+                    "minLength": 3
                 },
                 "updated": {
+                    "description": "A unix timestamp when this label was last updated. You cannot change this value.",
                     "type": "integer"
                 }
             }
@@ -3606,28 +3653,38 @@
             "type": "object",
             "properties": {
                 "created": {
+                    "description": "A unix timestamp when this list was created. You cannot change this value.",
                     "type": "integer"
                 },
                 "description": {
-                    "type": "string"
+                    "description": "The description of the list.",
+                    "type": "string",
+                    "maxLength": 1000
                 },
                 "id": {
+                    "description": "The unique, numeric id of this list.",
                     "type": "integer"
                 },
                 "owner": {
+                    "description": "The user who created this list.",
                     "type": "object",
                     "$ref": "#/definitions/models.User"
                 },
                 "tasks": {
+                    "description": "An array of tasks which belong to the list.",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/models.ListTask"
                     }
                 },
                 "title": {
-                    "type": "string"
+                    "description": "The title of the list. You'll see this in the namespace overview.",
+                    "type": "string",
+                    "maxLength": 250,
+                    "minLength": 3
                 },
                 "updated": {
+                    "description": "A unix timestamp when this list was last updated. You cannot change this value.",
                     "type": "integer"
                 }
             }
@@ -3636,70 +3693,90 @@
             "type": "object",
             "properties": {
                 "assignees": {
+                    "description": "An array of users who are assigned to this task",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/models.User"
                     }
                 },
                 "created": {
+                    "description": "A unix timestamp when this task was created. You cannot change this value.",
                     "type": "integer"
                 },
                 "createdBy": {
+                    "description": "The user who initially created the task.",
                     "type": "object",
                     "$ref": "#/definitions/models.User"
                 },
                 "description": {
-                    "type": "string"
+                    "description": "The task description.",
+                    "type": "string",
+                    "maxLength": 250
                 },
                 "done": {
                     "type": "boolean"
                 },
                 "dueDate": {
+                    "description": "A unix timestamp when the task is due.",
                     "type": "integer"
                 },
                 "endDate": {
+                    "description": "When this task ends.",
                     "type": "integer"
                 },
                 "id": {
+                    "description": "The unique, numeric id of this task.",
                     "type": "integer"
                 },
                 "labels": {
+                    "description": "An array of labels which are associated with this task.",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/models.Label"
                     }
                 },
                 "listID": {
+                    "description": "The list this task belongs to.",
                     "type": "integer"
                 },
                 "parentTaskID": {
+                    "description": "If the task is a subtask, this is the id of its parent.",
                     "type": "integer"
                 },
                 "priority": {
+                    "description": "The task priority. Can be anything you want, it is possible to sort by this later.",
                     "type": "integer"
                 },
                 "reminderDates": {
+                    "description": "An array of unix timestamps when the user wants to be reminded of the task.",
                     "type": "array",
                     "items": {
                         "type": "integer"
                     }
                 },
                 "repeatAfter": {
+                    "description": "An amount in seconds this task repeats itself. If this is set, when marking the task as done, it will mark itself as \"undone\" and then increase all remindes and the due date by its amount.",
                     "type": "integer"
                 },
                 "startDate": {
+                    "description": "When this task starts.",
                     "type": "integer"
                 },
                 "subtasks": {
+                    "description": "An array of subtasks.",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/models.ListTask"
                     }
                 },
                 "text": {
-                    "type": "string"
+                    "description": "The task text. This is what you'll see in the list.",
+                    "type": "string",
+                    "maxLength": 250,
+                    "minLength": 3
                 },
                 "updated": {
+                    "description": "A unix timestamp when this task was last updated. You cannot change this value.",
                     "type": "integer"
                 }
             }
@@ -3708,21 +3785,29 @@
             "type": "object",
             "properties": {
                 "created": {
+                    "description": "A unix timestamp when this relation was created. You cannot change this value.",
                     "type": "integer"
                 },
                 "id": {
+                    "description": "The unique, numeric id of this list \u003c-\u003e user relation.",
                     "type": "integer"
                 },
                 "list_id": {
+                    "description": "The list id.",
                     "type": "integer"
                 },
                 "right": {
-                    "type": "integer"
+                    "description": "The right this user has. 0 = Read only, 1 = Read \u0026 Write, 2 = Admin. See the docs for more details.",
+                    "type": "integer",
+                    "default": 0,
+                    "maximum": 2
                 },
                 "updated": {
+                    "description": "A unix timestamp when this relation was last updated. You cannot change this value.",
                     "type": "integer"
                 },
                 "user_id": {
+                    "description": "The user id.",
                     "type": "integer"
                 }
             }
@@ -3731,6 +3816,7 @@
             "type": "object",
             "properties": {
                 "message": {
+                    "description": "A standard message.",
                     "type": "string"
                 }
             }
@@ -3739,22 +3825,31 @@
             "type": "object",
             "properties": {
                 "created": {
+                    "description": "A unix timestamp when this namespace was created. You cannot change this value.",
                     "type": "integer"
                 },
                 "description": {
-                    "type": "string"
+                    "description": "The description of the namespace",
+                    "type": "string",
+                    "maxLength": 250
                 },
                 "id": {
+                    "description": "The unique, numeric id of this namespace.",
                     "type": "integer"
                 },
                 "name": {
-                    "type": "string"
+                    "description": "The name of this namespace.",
+                    "type": "string",
+                    "maxLength": 250,
+                    "minLength": 5
                 },
                 "owner": {
+                    "description": "The user who owns this namespace",
                     "type": "object",
                     "$ref": "#/definitions/models.User"
                 },
                 "updated": {
+                    "description": "A unix timestamp when this namespace was last updated. You cannot change this value.",
                     "type": "integer"
                 }
             }
@@ -3763,21 +3858,29 @@
             "type": "object",
             "properties": {
                 "created": {
+                    "description": "A unix timestamp when this relation was created. You cannot change this value.",
                     "type": "integer"
                 },
                 "id": {
+                    "description": "The unique, numeric id of this namespace \u003c-\u003e user relation.",
                     "type": "integer"
                 },
                 "namespace_id": {
+                    "description": "The namespace id",
                     "type": "integer"
                 },
                 "right": {
-                    "type": "integer"
+                    "description": "The right this user has. 0 = Read only, 1 = Read \u0026 Write, 2 = Admin. See the docs for more details.",
+                    "type": "integer",
+                    "default": 0,
+                    "maximum": 2
                 },
                 "updated": {
+                    "description": "A unix timestamp when this relation was last updated. You cannot change this value.",
                     "type": "integer"
                 },
                 "user_id": {
+                    "description": "The user id.",
                     "type": "integer"
                 }
             }
@@ -3786,12 +3889,16 @@
             "type": "object",
             "properties": {
                 "created": {
+                    "description": "A unix timestamp when this namespace was created. You cannot change this value.",
                     "type": "integer"
                 },
                 "description": {
-                    "type": "string"
+                    "description": "The description of the namespace",
+                    "type": "string",
+                    "maxLength": 250
                 },
                 "id": {
+                    "description": "The unique, numeric id of this namespace.",
                     "type": "integer"
                 },
                 "lists": {
@@ -3801,13 +3908,18 @@
                     }
                 },
                 "name": {
-                    "type": "string"
+                    "description": "The name of this namespace.",
+                    "type": "string",
+                    "maxLength": 250,
+                    "minLength": 5
                 },
                 "owner": {
+                    "description": "The user who owns this namespace",
                     "type": "object",
                     "$ref": "#/definitions/models.User"
                 },
                 "updated": {
+                    "description": "A unix timestamp when this namespace was last updated. You cannot change this value.",
                     "type": "integer"
                 }
             }
@@ -3816,9 +3928,11 @@
             "type": "object",
             "properties": {
                 "new_password": {
+                    "description": "The new password for this user.",
                     "type": "string"
                 },
                 "token": {
+                    "description": "The previously issued reset token.",
                     "type": "string"
                 }
             }
@@ -3827,7 +3941,8 @@
             "type": "object",
             "properties": {
                 "email": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 250
                 }
             }
         },
@@ -3835,28 +3950,39 @@
             "type": "object",
             "properties": {
                 "created": {
+                    "description": "A unix timestamp when this relation was created. You cannot change this value.",
                     "type": "integer"
                 },
                 "created_by": {
+                    "description": "The user who created this team.",
                     "type": "object",
                     "$ref": "#/definitions/models.User"
                 },
                 "description": {
-                    "type": "string"
+                    "description": "The team's description.",
+                    "type": "string",
+                    "maxLength": 250,
+                    "minLength": 0
                 },
                 "id": {
+                    "description": "The unique, numeric id of this team.",
                     "type": "integer"
                 },
                 "members": {
+                    "description": "An array of all members in this team.",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/models.TeamUser"
                     }
                 },
                 "name": {
-                    "type": "string"
+                    "description": "The name of this team.",
+                    "type": "string",
+                    "maxLength": 250,
+                    "minLength": 5
                 },
                 "updated": {
+                    "description": "A unix timestamp when this relation was last updated. You cannot change this value.",
                     "type": "integer"
                 }
             }
@@ -3865,21 +3991,29 @@
             "type": "object",
             "properties": {
                 "created": {
+                    "description": "A unix timestamp when this relation was created. You cannot change this value.",
                     "type": "integer"
                 },
                 "id": {
+                    "description": "The unique, numeric id of this list \u003c-\u003e team relation.",
                     "type": "integer"
                 },
                 "list_id": {
+                    "description": "The list id.",
                     "type": "integer"
                 },
                 "right": {
-                    "type": "integer"
+                    "description": "The right this team has. 0 = Read only, 1 = Read \u0026 Write, 2 = Admin. See the docs for more details.",
+                    "type": "integer",
+                    "default": 0,
+                    "maximum": 2
                 },
                 "team_id": {
+                    "description": "The team id.",
                     "type": "integer"
                 },
                 "updated": {
+                    "description": "A unix timestamp when this relation was last updated. You cannot change this value.",
                     "type": "integer"
                 }
             }
@@ -3888,21 +4022,23 @@
             "type": "object",
             "properties": {
                 "admin": {
+                    "description": "Whether or not the member is an admin of the team. See the docs for more about what a team admin can do",
                     "type": "boolean"
                 },
                 "created": {
+                    "description": "A unix timestamp when this relation was created. You cannot change this value.",
                     "type": "integer"
                 },
                 "id": {
+                    "description": "The unique, numeric id of this team member relation.",
                     "type": "integer"
                 },
                 "team_id": {
-                    "type": "integer"
-                },
-                "updated": {
+                    "description": "The team id.",
                     "type": "integer"
                 },
                 "user_id": {
+                    "description": "The id of the member.",
                     "type": "integer"
                 }
             }
@@ -3911,21 +4047,25 @@
             "type": "object",
             "properties": {
                 "created": {
+                    "description": "A unix timestamp when this relation was created. You cannot change this value.",
                     "type": "integer"
                 },
                 "id": {
+                    "description": "The unique, numeric id of this namespace \u003c-\u003e team relation.",
                     "type": "integer"
                 },
                 "namespace_id": {
+                    "description": "The namespace id.",
                     "type": "integer"
                 },
                 "right": {
-                    "type": "integer"
+                    "description": "The right this team has. 0 = Read only, 1 = Read \u0026 Write, 2 = Admin. See the docs for more details.",
+                    "type": "integer",
+                    "default": 0,
+                    "maximum": 2
                 },
                 "team_id": {
-                    "type": "integer"
-                },
-                "updated": {
+                    "description": "The team id.",
                     "type": "integer"
                 }
             }
@@ -3934,22 +4074,31 @@
             "type": "object",
             "properties": {
                 "admin": {
+                    "description": "Whether or not the member is an admin of the team. See the docs for more about what a team admin can do",
                     "type": "boolean"
                 },
                 "created": {
+                    "description": "A unix timestamp when this task was created. You cannot change this value.",
                     "type": "integer"
                 },
                 "email": {
-                    "type": "string"
+                    "description": "The user's email address",
+                    "type": "string",
+                    "maxLength": 250
                 },
                 "id": {
+                    "description": "The unique, numeric id of this user.",
                     "type": "integer"
                 },
                 "updated": {
+                    "description": "A unix timestamp when this task was last updated. You cannot change this value.",
                     "type": "integer"
                 },
                 "username": {
-                    "type": "string"
+                    "description": "The username of the username. Is always unique.",
+                    "type": "string",
+                    "maxLength": 250,
+                    "minLength": 3
                 }
             }
         },
@@ -3957,31 +4106,42 @@
             "type": "object",
             "properties": {
                 "created": {
+                    "description": "A unix timestamp when this relation was created. You cannot change this value.",
                     "type": "integer"
                 },
                 "created_by": {
+                    "description": "The user who created this team.",
                     "type": "object",
                     "$ref": "#/definitions/models.User"
                 },
                 "description": {
-                    "type": "string"
+                    "description": "The team's description.",
+                    "type": "string",
+                    "maxLength": 250,
+                    "minLength": 0
                 },
                 "id": {
+                    "description": "The unique, numeric id of this team.",
                     "type": "integer"
                 },
                 "members": {
+                    "description": "An array of all members in this team.",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/models.TeamUser"
                     }
                 },
                 "name": {
-                    "type": "string"
+                    "description": "The name of this team.",
+                    "type": "string",
+                    "maxLength": 250,
+                    "minLength": 5
                 },
                 "right": {
                     "type": "integer"
                 },
                 "updated": {
+                    "description": "A unix timestamp when this relation was last updated. You cannot change this value.",
                     "type": "integer"
                 }
             }
@@ -3990,19 +4150,27 @@
             "type": "object",
             "properties": {
                 "created": {
+                    "description": "A unix timestamp when this task was created. You cannot change this value.",
                     "type": "integer"
                 },
                 "email": {
-                    "type": "string"
+                    "description": "The user's email address",
+                    "type": "string",
+                    "maxLength": 250
                 },
                 "id": {
+                    "description": "The unique, numeric id of this user.",
                     "type": "integer"
                 },
                 "updated": {
+                    "description": "A unix timestamp when this task was last updated. You cannot change this value.",
                     "type": "integer"
                 },
                 "username": {
-                    "type": "string"
+                    "description": "The username of the username. Is always unique.",
+                    "type": "string",
+                    "maxLength": 250,
+                    "minLength": 3
                 }
             }
         },
@@ -4010,9 +4178,11 @@
             "type": "object",
             "properties": {
                 "password": {
+                    "description": "The password for the user.",
                     "type": "string"
                 },
                 "username": {
+                    "description": "The username used to log in.",
                     "type": "string"
                 }
             }
@@ -4021,22 +4191,30 @@
             "type": "object",
             "properties": {
                 "created": {
+                    "description": "A unix timestamp when this task was created. You cannot change this value.",
                     "type": "integer"
                 },
                 "email": {
-                    "type": "string"
+                    "description": "The user's email address",
+                    "type": "string",
+                    "maxLength": 250
                 },
                 "id": {
+                    "description": "The unique, numeric id of this user.",
                     "type": "integer"
                 },
                 "right": {
                     "type": "integer"
                 },
                 "updated": {
+                    "description": "A unix timestamp when this task was last updated. You cannot change this value.",
                     "type": "integer"
                 },
                 "username": {
-                    "type": "string"
+                    "description": "The username of the username. Is always unique.",
+                    "type": "string",
+                    "maxLength": 250,
+                    "minLength": 3
                 }
             }
         },
@@ -4061,13 +4239,13 @@
         }
     },
     "securityDefinitions": {
-        "ApiKeyAuth": {
+        "BasicAuth": {
+            "type": "basic"
+        },
+        "JWTKeyAuth": {
             "type": "apiKey",
             "name": "Authorization",
             "in": "header"
-        },
-        "BasicAuth": {
-            "type": "basic"
         }
     }
 }

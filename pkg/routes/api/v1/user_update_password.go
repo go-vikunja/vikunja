@@ -36,7 +36,7 @@ type UserPassword struct {
 // @Accept json
 // @Produce json
 // @Param userPassword body v1.UserPassword true "The current and new password."
-// @Security ApiKeyAuth
+// @Security JWTKeyAuth
 // @Success 200 {object} models.Message
 // @Failure 400 {object} code.vikunja.io/web.HTTPError "Something's invalid."
 // @Failure 404 {object} code.vikunja.io/web.HTTPError "User does not exist."

@@ -22,16 +22,23 @@ import (
 
 // List represents a list of tasks
 type List struct {
-	ID          int64  `xorm:"int(11) autoincr not null unique pk" json:"id" param:"list"`
-	Title       string `xorm:"varchar(250)" json:"title" valid:"required,runelength(3|250)"`
-	Description string `xorm:"varchar(1000)" json:"description" valid:"runelength(0|1000)"`
+	// The unique, numeric id of this list.
+	ID int64 `xorm:"int(11) autoincr not null unique pk" json:"id" param:"list"`
+	// The title of the list. You'll see this in the namespace overview.
+	Title string `xorm:"varchar(250)" json:"title" valid:"required,runelength(3|250)" minLength:"3" maxLength:"250"`
+	// The description of the list.
+	Description string `xorm:"varchar(1000)" json:"description" valid:"runelength(0|1000)" maxLength:"1000"`
 	OwnerID     int64  `xorm:"int(11) INDEX" json:"-"`
 	NamespaceID int64  `xorm:"int(11) INDEX" json:"-" param:"namespace"`
 
-	Owner User        `xorm:"-" json:"owner" valid:"-"`
+	// The user who created this list.
+	Owner User `xorm:"-" json:"owner" valid:"-"`
+	// An array of tasks which belong to the list.
 	Tasks []*ListTask `xorm:"-" json:"tasks"`
 
+	// A unix timestamp when this list was created. You cannot change this value.
 	Created int64 `xorm:"created" json:"created"`
+	// A unix timestamp when this list was last updated. You cannot change this value.
 	Updated int64 `xorm:"updated" json:"updated"`
 
 	web.CRUDable `xorm:"-" json:"-"`
@@ -71,7 +78,7 @@ func GetListsByNamespaceID(nID int64, doer *User) (lists []*List, err error) {
 // @Produce json
 // @Param p query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
 // @Param s query string false "Search lists by title."
-// @Security ApiKeyAuth
+// @Security JWTKeyAuth
 // @Success 200 {array} models.List "The lists"
 // @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have access to the list"
 // @Failure 500 {object} models.Message "Internal error"
@@ -99,7 +106,7 @@ func (l *List) ReadAll(search string, a web.Auth, page int) (interface{}, error)
 // @tags list
 // @Accept json
 // @Produce json
-// @Security ApiKeyAuth
+// @Security JWTKeyAuth
 // @Param id path int true "List ID"
 // @Success 200 {object} models.List "The list"
 // @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have access to the list"

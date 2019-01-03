@@ -23,7 +23,7 @@ import _ "code.vikunja.io/web" // For swaggerdocs generation
 // @Description Delets a user from a namespace. The user won't have access to the namespace anymore.
 // @tags sharing
 // @Produce json
-// @Security ApiKeyAuth
+// @Security JWTKeyAuth
 // @Param namespaceID path int true "Namespace ID"
 // @Param userID path int true "user ID"
 // @Success 200 {object} models.Message "The user was successfully deleted."

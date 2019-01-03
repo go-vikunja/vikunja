@@ -15,12 +15,24 @@
 //  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 // @title Vikunja API
-// @license.name GPLv3
+// @description This is the documentation for the [Vikunja](http://vikunja.io) API. Vikunja is a cross-plattform Todo-application with a lot of features, such as sharing lists with users or teams. <!-- ReDoc-Inject: <security-definitions> -->
+// @description # Authorization
+// @description **JWT-Auth:** Main authorization method, used for most of the requests. Needs ` + "`" + `Authorization: Bearer <jwt-token>` + "`" + `-header to authenticate successfully.
+// @description
+// @description **BasicAuth:** Only used when requesting tasks via caldav.
+// @description <!-- ReDoc-Inject: <security-definitions> -->
 // @BasePath /api/v1
+
+// @license.url http://code.vikunja.io/api/src/branch/master/LICENSE
+// @license.name GPLv3
+
+// @contact.url http://vikunja.io/en/contact/
+// @contact.name General Vikunja contact
+// @contact.email hello@vikunja.io
 
 // @securityDefinitions.basic BasicAuth
 
-// @securityDefinitions.apikey ApiKeyAuth
+// @securityDefinitions.apikey JWTKeyAuth
 // @in header
 // @name Authorization
 
@@ -39,7 +51,6 @@ import (
 	"github.com/labstack/echo/middleware"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/viper"
-	"github.com/swaggo/echo-swagger"
 )
 
 // CustomValidator is a dummy struct to use govalidator with echo
@@ -95,8 +106,9 @@ func RegisterRoutes(e *echo.Echo) {
 	// API Routes
 	a := e.Group("/api/v1")
 
-	// Swagger UI
-	a.GET("/swagger/*", echoSwagger.WrapHandler)
+	// Docs
+	a.GET("/docs.json", apiv1.DocsJSON)
+	a.GET("/docs", apiv1.RedocUI)
 
 	// Prometheus endpoint
 	if viper.GetBool("service.enablemetrics") {

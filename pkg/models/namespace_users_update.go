@@ -27,7 +27,7 @@ import _ "code.vikunja.io/web" // For swaggerdocs generation
 // @Param namespaceID path int true "Namespace ID"
 // @Param userID path int true "User ID"
 // @Param namespace body models.NamespaceUser true "The user you want to update."
-// @Security ApiKeyAuth
+// @Security JWTKeyAuth
 // @Success 200 {object} models.NamespaceUser "The updated user <-> namespace relation."
 // @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have admin-access to the namespace"
 // @Failure 404 {object} code.vikunja.io/web.HTTPError "User or namespace does not exist."

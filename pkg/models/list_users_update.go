@@ -27,7 +27,7 @@ import _ "code.vikunja.io/web" // For swaggerdocs generation
 // @Param listID path int true "List ID"
 // @Param userID path int true "User ID"
 // @Param list body models.ListUser true "The user you want to update."
-// @Security ApiKeyAuth
+// @Security JWTKeyAuth
 // @Success 200 {object} models.ListUser "The updated user <-> list relation."
 // @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have admin-access to the list"
 // @Failure 404 {object} code.vikunja.io/web.HTTPError "User or list does not exist."

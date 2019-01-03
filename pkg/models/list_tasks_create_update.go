@@ -28,7 +28,7 @@ import (
 // @tags task
 // @Accept json
 // @Produce json
-// @Security ApiKeyAuth
+// @Security JWTKeyAuth
 // @Param id path int true "List ID"
 // @Param task body models.ListTask true "The task object"
 // @Success 200 {object} models.ListTask "The created task object."
@@ -81,7 +81,7 @@ func (t *ListTask) Create(a web.Auth) (err error) {
 // @tags task
 // @Accept json
 // @Produce json
-// @Security ApiKeyAuth
+// @Security JWTKeyAuth
 // @Param id path int true "Task ID"
 // @Param task body models.ListTask true "The task object"
 // @Success 200 {object} models.ListTask "The updated task object."

@@ -23,14 +23,20 @@ import (
 
 // Namespace holds informations about a namespace
 type Namespace struct {
-	ID          int64  `xorm:"int(11) autoincr not null unique pk" json:"id" param:"namespace"`
-	Name        string `xorm:"varchar(250)" json:"name" valid:"required,runelength(5|250)"`
-	Description string `xorm:"varchar(1000)" json:"description" valid:"runelength(0|250)"`
+	// The unique, numeric id of this namespace.
+	ID int64 `xorm:"int(11) autoincr not null unique pk" json:"id" param:"namespace"`
+	// The name of this namespace.
+	Name string `xorm:"varchar(250)" json:"name" valid:"required,runelength(5|250)" minLength:"5" maxLength:"250"`
+	// The description of the namespace
+	Description string `xorm:"varchar(1000)" json:"description" valid:"runelength(0|250)" maxLength:"250"`
 	OwnerID     int64  `xorm:"int(11) not null INDEX" json:"-"`
 
+	// The user who owns this namespace
 	Owner User `xorm:"-" json:"owner" valid:"-"`
 
+	// A unix timestamp when this namespace was created. You cannot change this value.
 	Created int64 `xorm:"created" json:"created"`
+	// A unix timestamp when this namespace was last updated. You cannot change this value.
 	Updated int64 `xorm:"updated" json:"updated"`
 
 	web.CRUDable `xorm:"-" json:"-"`
@@ -88,7 +94,7 @@ func GetNamespaceByID(id int64) (namespace Namespace, err error) {
 // @tags namespace
 // @Accept json
 // @Produce json
-// @Security ApiKeyAuth
+// @Security JWTKeyAuth
 // @Param id path int true "Namespace ID"
 // @Success 200 {object} models.Namespace "The Namespace"
 // @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have access to that namespace."
@@ -113,7 +119,7 @@ type NamespaceWithLists struct {
 // @Produce json
 // @Param p query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
 // @Param s query string false "Search namespaces by name."
-// @Security ApiKeyAuth
+// @Security JWTKeyAuth
 // @Success 200 {array} models.NamespaceWithLists "The Namespaces."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces [get]

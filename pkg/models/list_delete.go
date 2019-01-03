@@ -26,7 +26,7 @@ import (
 // @Description Delets a list
 // @tags list
 // @Produce json
-// @Security ApiKeyAuth
+// @Security JWTKeyAuth
 // @Param id path int true "List ID"
 // @Success 200 {object} models.Message "The list was successfully deleted."
 // @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid list object provided."

@@ -24,7 +24,7 @@ import "code.vikunja.io/web"
 // @tags labels
 // @Accept json
 // @Produce json
-// @Security ApiKeyAuth
+// @Security JWTKeyAuth
 // @Param label body models.Label true "The label object"
 // @Success 200 {object} models.Label "The created label object."
 // @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid label object provided."
@@ -49,7 +49,7 @@ func (l *Label) Create(a web.Auth) (err error) {
 // @tags labels
 // @Accept json
 // @Produce json
-// @Security ApiKeyAuth
+// @Security JWTKeyAuth
 // @Param id path int true "Label ID"
 // @Param label body models.Label true "The label object"
 // @Success 200 {object} models.Label "The created label object."
@@ -74,7 +74,7 @@ func (l *Label) Update() (err error) {
 // @tags labels
 // @Accept json
 // @Produce json
-// @Security ApiKeyAuth
+// @Security JWTKeyAuth
 // @Param id path int true "Label ID"
 // @Success 200 {object} models.Label "The label was successfully deleted."
 // @Failure 403 {object} code.vikunja.io/web.HTTPError "Not allowed to delete the label."

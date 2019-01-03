@@ -24,7 +24,7 @@ import _ "code.vikunja.io/web" // For swaggerdocs generation
 // @tags namespace
 // @Accept json
 // @Produce json
-// @Security ApiKeyAuth
+// @Security JWTKeyAuth
 // @Param id path int true "Namespace ID"
 // @Param namespace body models.Namespace true "The namespace with updated values you want to update."
 // @Success 200 {object} models.Namespace "The updated namespace."

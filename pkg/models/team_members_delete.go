@@ -21,7 +21,7 @@ package models
 // @Description Remove a user from a team. This will also revoke any access this user might have via that team.
 // @tags team
 // @Produce json
-// @Security ApiKeyAuth
+// @Security JWTKeyAuth
 // @Param id path int true "Team ID"
 // @Param userID path int true "User ID"
 // @Success 200 {object} models.Message "The user was successfully removed from the team."

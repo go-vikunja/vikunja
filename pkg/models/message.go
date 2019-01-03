@@ -18,5 +18,6 @@ package models
 
 // Message is a standard message
 type Message struct {
+	// A standard message.
 	Message string `json:"message"`
 }

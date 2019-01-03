@@ -30,7 +30,7 @@ import (
 // @Accept json
 // @Produce json
 // @Param s query string false "Search for a user by its name."
-// @Security ApiKeyAuth
+// @Security JWTKeyAuth
 // @Success 200 {array} models.User "All (found) users."
 // @Failure 400 {object} code.vikunja.io/web.HTTPError "Something's invalid."
 // @Failure 500 {object} models.Message "Internal server error."

@@ -26,7 +26,7 @@ import (
 // @Description Delets a team. This will also remove the access for all users in that team.
 // @tags team
 // @Produce json
-// @Security ApiKeyAuth
+// @Security JWTKeyAuth
 // @Param id path int true "Team ID"
 // @Success 200 {object} models.Message "The team was successfully deleted."
 // @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid team object provided."

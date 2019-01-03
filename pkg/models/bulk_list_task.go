@@ -24,6 +24,7 @@ import (
 
 // BulkTask is the definition of a bulk update task
 type BulkTask struct {
+	// A list of task ids to update
 	IDs   []int64     `json:"task_ids"`
 	Tasks []*ListTask `json:"-"`
 	ListTask
@@ -73,7 +74,7 @@ func (bt *BulkTask) CanUpdate(a web.Auth) bool {
 // @tags task
 // @Accept json
 // @Produce json
-// @Security ApiKeyAuth
+// @Security JWTKeyAuth
 // @Param task body models.BulkTask true "The task object. Looks like a normal task, the only difference is it uses an array of list_ids to update."
 // @Success 200 {object} models.ListTask "The updated task object."
 // @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid task object provided."

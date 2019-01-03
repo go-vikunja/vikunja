@@ -27,7 +27,7 @@ import _ "code.vikunja.io/web" // For swaggerdocs generation
 // @Param listID path int true "List ID"
 // @Param teamID path int true "Team ID"
 // @Param list body models.TeamList true "The team you want to update."
-// @Security ApiKeyAuth
+// @Security JWTKeyAuth
 // @Success 200 {object} models.TeamList "The updated team <-> list relation."
 // @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have admin-access to the list"
 // @Failure 404 {object} code.vikunja.io/web.HTTPError "Team or list does not exist."

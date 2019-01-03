@@ -20,12 +20,18 @@ import "code.vikunja.io/web"
 
 // ListUser represents a list <-> user relation
 type ListUser struct {
-	ID     int64     `xorm:"int(11) autoincr not null unique pk" json:"id" param:"namespace"`
-	UserID int64     `xorm:"int(11) not null INDEX" json:"user_id" param:"user"`
-	ListID int64     `xorm:"int(11) not null INDEX" json:"list_id" param:"list"`
-	Right  UserRight `xorm:"int(11) INDEX" json:"right" valid:"length(0|2)"`
+	// The unique, numeric id of this list <-> user relation.
+	ID int64 `xorm:"int(11) autoincr not null unique pk" json:"id" param:"namespace"`
+	// The user id.
+	UserID int64 `xorm:"int(11) not null INDEX" json:"user_id" param:"user"`
+	// The list id.
+	ListID int64 `xorm:"int(11) not null INDEX" json:"list_id" param:"list"`
+	// The right this user has. 0 = Read only, 1 = Read & Write, 2 = Admin. See the docs for more details.
+	Right UserRight `xorm:"int(11) INDEX" json:"right" valid:"length(0|2)" maximum:"2" default:"0"`
 
+	// A unix timestamp when this relation was created. You cannot change this value.
 	Created int64 `xorm:"created" json:"created"`
+	// A unix timestamp when this relation was last updated. You cannot change this value.
 	Updated int64 `xorm:"updated" json:"updated"`
 
 	web.CRUDable `xorm:"-" json:"-"`

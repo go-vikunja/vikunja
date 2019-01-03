@@ -30,22 +30,29 @@ import (
 
 // UserLogin Object to recive user credentials in JSON format
 type UserLogin struct {
+	// The username used to log in.
 	Username string `json:"username" form:"username"`
+	// The password for the user.
 	Password string `json:"password" form:"password"`
 }
 
 // User holds information about an user
 type User struct {
-	ID       int64  `xorm:"int(11) autoincr not null unique pk" json:"id"`
-	Username string `xorm:"varchar(250) not null unique" json:"username" valid:"length(3|250)"`
+	// The unique, numeric id of this user.
+	ID int64 `xorm:"int(11) autoincr not null unique pk" json:"id"`
+	// The username of the username. Is always unique.
+	Username string `xorm:"varchar(250) not null unique" json:"username" valid:"length(3|250)" minLength:"3" maxLength:"250"`
 	Password string `xorm:"varchar(250) not null" json:"-"`
-	Email    string `xorm:"varchar(250)" json:"email" valid:"email,length(0|250)"`
+	// The user's email address
+	Email    string `xorm:"varchar(250)" json:"email" valid:"email,length(0|250)" maxLength:"250"`
 	IsActive bool   `json:"-"`
 
 	PasswordResetToken string `xorm:"varchar(450)" json:"-"`
 	EmailConfirmToken  string `xorm:"varchar(450)" json:"-"`
 
+	// A unix timestamp when this task was created. You cannot change this value.
 	Created int64 `xorm:"created" json:"created"`
+	// A unix timestamp when this task was last updated. You cannot change this value.
 	Updated int64 `xorm:"updated" json:"updated"`
 
 	web.Auth `xorm:"-" json:"-"`
@@ -77,10 +84,14 @@ func getUserWithError(a web.Auth) (*User, error) {
 
 // APIUserPassword represents a user object without timestamps and a json password field.
 type APIUserPassword struct {
-	ID       int64  `json:"id"`
-	Username string `json:"username" valid:"length(3|250)"`
-	Password string `json:"password" valid:"length(8|250)"`
-	Email    string `json:"email" valid:"email,length(0|250)"`
+	// The unique, numeric id of this user.
+	ID int64 `json:"id"`
+	// The username of the username. Is always unique.
+	Username string `json:"username" valid:"length(3|250)" minLength:"3" maxLength:"250"`
+	// The user's password in clear text. Only used when registering the user.
+	Password string `json:"password" valid:"length(8|250)" minLength:"8" maxLength:"250"`
+	// The user's email address
+	Email string `json:"email" valid:"email,length(0|250)" maxLength:"250"`
 }
 
 // APIFormat formats an API User into a normal user struct

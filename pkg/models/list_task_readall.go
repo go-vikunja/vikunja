@@ -32,7 +32,7 @@ const (
 // @Param p query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
 // @Param s query string false "Search tasks by task text."
 // @Param sortby path string true "The sorting parameter. Possible values to sort by are priority, prioritydesc, priorityasc, dueadate, dueadatedesc, dueadateasc."
-// @Security ApiKeyAuth
+// @Security JWTKeyAuth
 // @Success 200 {array} models.List "The tasks"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/all/{sortby} [get]
@@ -51,7 +51,7 @@ func dummy() {
 // @Param sortby path string true "The sorting parameter. Possible values to sort by are priority, prioritydesc, priorityasc, dueadate, dueadatedesc, dueadateasc."
 // @Param startdate path string true "The start date parameter. Expects a unix timestamp."
 // @Param enddate path string true "The end date parameter. Expects a unix timestamp."
-// @Security ApiKeyAuth
+// @Security JWTKeyAuth
 // @Success 200 {array} models.List "The tasks"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/all/{sortby}/{startdate}/{enddate} [get]
@@ -67,7 +67,7 @@ func dummy2() {
 // @Produce json
 // @Param p query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
 // @Param s query string false "Search tasks by task text."
-// @Security ApiKeyAuth
+// @Security JWTKeyAuth
 // @Success 200 {array} models.List "The tasks"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/all [get]

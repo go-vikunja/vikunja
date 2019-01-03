@@ -23,7 +23,7 @@ import _ "code.vikunja.io/web" // For swaggerdocs generation
 // @Description Delets a user from a list. The user won't have access to the list anymore.
 // @tags sharing
 // @Produce json
-// @Security ApiKeyAuth
+// @Security JWTKeyAuth
 // @Param listID path int true "List ID"
 // @Param userID path int true "User ID"
 // @Success 200 {object} models.Message "The user was successfully removed from the list."
