@@ -83,8 +83,15 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 
 ### Docs
 
-* [ ] Bauanleitung in die Readme/docs
+* [ ] Readme
   * [x] Auch noch nen "link" zum Featurecreep
+  * [ ] ToC
+  * [ ] Logo
+  * [ ] How to build -> Docs
+  * [ ] How to use -> Docs
+  * [ ] How to dev -> Docs
+  * [ ] License
+  * [ ] Contributing
 * [x] Redocs
 * [x] Swaggerdocs verbessern
   * [x] Descriptions in structs
@@ -93,6 +100,8 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [x] API
 * [ ] Anleitung zum Makefile
 * [ ] Struktur erklären
+* [ ] How to build from source
+* [ ] Dev instructions (tests, makefile, mod, structure, etc.)
 * [ ] Deploy in die docs
   * [ ] Docker
   * [ ] Native (systemd + nginx/apache)
