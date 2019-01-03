@@ -115,8 +115,14 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [x] Tasks innerhalb eines definierbarem Bereich, sollte aber trotzdem der server machen, so à la "Gib mir alles für diesen Monat"
 * [x] Bulk-edit -> Transactions
 * [x] Assignees
+  * [ ] Check if something changed at all before running everything
+  * [ ] Don't use `list.ReadOne()`, gets too much unnessecary shit
   * [ ] Wegen Performance auf eigene endpoints umziehen, wie labels
+  * [ ] "One endpoint to rule them all" -> Array-addable
 * [x] Labels
+  * [ ] Check if something changed at all before running everything
+  * [ ] Editable via task edit, like assignees
+  * [ ] "One endpoint to rule them all" -> Array-addable
 * [ ] Attachments
 * [ ] Task-Templates innerhalb namespaces und Listen (-> Mehrere, die auswählbar sind)
 * [ ] Ein Task muss von mehreren Assignees abgehakt werden bis er als done markiert wird
