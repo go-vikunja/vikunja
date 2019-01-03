@@ -19,7 +19,7 @@ GOFMT ?= gofmt -s
 GOFLAGS := -v -mod=vendor
 EXTRA_GOFLAGS ?=
 
-LDFLAGS := -X "main.Version=$(shell git describe --tags --always | sed 's/-/+/' | sed 's/^v//')" -X "main.Tags=$(TAGS)"
+LDFLAGS := -X "main.Version=$(shell git describe --tags --always --abbrev=10 | sed 's/-/+/' | sed 's/^v//' | sed 's/-g/-/')" -X "main.Tags=$(TAGS)"
 
 PACKAGES ?= $(filter-out code.vikunja.io/api/integrations,$(shell go list -mod=vendor ./... | grep -v /vendor/))
 SOURCES ?= $(shell find . -name "*.go" -type f)
