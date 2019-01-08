@@ -2636,6 +2636,189 @@
                 }
             }
         },
+        "/tasks/{taskID}/assignees": {
+            "put": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Adds a new assignee to a task. The assignee needs to have access to the list, the doer must be able to edit this task.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "assignees"
+                ],
+                "summary": "Add a new assignee to a task",
+                "parameters": [
+                    {
+                        "description": "The assingee object",
+                        "name": "assignee",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/models.ListTaskAssginee"
+                        }
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Task ID",
+                        "name": "taskID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The created assingee object.",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/models.ListTaskAssginee"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid assignee object provided.",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/tasks/{taskID}/assignees/bulk": {
+            "put": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Adds new assignees to a task. The assignee needs to have access to the list, the doer must be able to edit this task. Every user not in the list will be unassigned from the task, pass an empty array to unassign everyone.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "assignees"
+                ],
+                "summary": "Add new assignees to a task",
+                "parameters": [
+                    {
+                        "description": "The array of assignees",
+                        "name": "assignee",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/models.BulkAssignees"
+                        }
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Task ID",
+                        "name": "taskID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The created assingees object.",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/models.ListTaskAssginee"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid assignee object provided.",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/tasks/{taskID}/assignees/{userID}": {
+            "delete": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Un-assign a user from a task.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "assignees"
+                ],
+                "summary": "Delete an assignee",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Task ID",
+                        "name": "taskID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Assignee user ID",
+                        "name": "userID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The assignee was successfully deleted.",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "403": {
+                        "description": "Not allowed to delete the assignee.",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
         "/tasks/{task}/labels": {
             "get": {
                 "security": [
@@ -3503,6 +3686,18 @@
                 }
             }
         },
+        "models.BulkAssignees": {
+            "type": "object",
+            "properties": {
+                "assignees": {
+                    "description": "A list with all assignees",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.User"
+                    }
+                }
+            }
+        },
         "models.BulkTask": {
             "type": "object",
             "properties": {
@@ -3777,6 +3972,17 @@
                 },
                 "updated": {
                     "description": "A unix timestamp when this task was last updated. You cannot change this value.",
+                    "type": "integer"
+                }
+            }
+        },
+        "models.ListTaskAssginee": {
+            "type": "object",
+            "properties": {
+                "created": {
+                    "type": "integer"
+                },
+                "user_id": {
                     "type": "integer"
                 }
             }
@@ -4066,6 +4272,10 @@
                 },
                 "team_id": {
                     "description": "The team id.",
+                    "type": "integer"
+                },
+                "updated": {
+                    "description": "A unix timestamp when this relation was last updated. You cannot change this value.",
                     "type": "integer"
                 }
             }

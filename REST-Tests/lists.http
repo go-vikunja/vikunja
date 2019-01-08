@@ -130,13 +130,17 @@ GET http://localhost:8080/api/v1/tasks/caldav
 ###
 
 # Update a task
-POST http://localhost:8080/api/v1/tasks/1
+POST http://localhost:8080/api/v1/tasks/3565
 Authorization: Bearer {{auth_token}}
 Content-Type: application/json
 
-{"assignees":[
-  {"id": 1}
-]}
+{
+  "assignees": [
+    {
+      "id": 1
+    }
+  ]
+}
 
 ###
 
@@ -148,6 +152,24 @@ Content-Type: application/json
 {
   "task_ids": [3518,3519,3521],
   "text":"bulkupdated"
+}
+
+###
+# Get all assignees
+GET http://localhost:8080/api/v1/tasks/3565/assignees
+Authorization: Bearer {{auth_token}}
+
+###
+
+# Add a bunch of assignees
+PUT http://localhost:8080/api/v1/tasks/3565/assignees/bulk
+Authorization: Bearer {{auth_token}}
+Content-Type: application/json
+
+{
+  "assignees": [
+    {"id": 17}
+  ]
 }
 
 ###

@@ -241,6 +241,22 @@ func RegisterRoutes(e *echo.Echo) {
 	}
 	a.POST("/tasks/bulk", bulkTaskHandler.UpdateWeb)
 
+	assigneeTaskHandler := &handler.WebHandler{
+		EmptyStruct: func() handler.CObject {
+			return &models.ListTaskAssginee{}
+		},
+	}
+	a.PUT("/tasks/:listtask/assignees", assigneeTaskHandler.CreateWeb)
+	a.DELETE("/tasks/:listtask/assignees/:user", assigneeTaskHandler.DeleteWeb)
+	a.GET("/tasks/:listtask/assignees", assigneeTaskHandler.ReadAllWeb)
+
+	bulkAssigneeHandler := &handler.WebHandler{
+		EmptyStruct: func() handler.CObject {
+			return &models.BulkAssignees{}
+		},
+	}
+	a.PUT("/tasks/:listtask/assignees/bulk", bulkAssigneeHandler.CreateWeb)
+
 	labelTaskHandler := &handler.WebHandler{
 		EmptyStruct: func() handler.CObject {
 			return &models.LabelTask{}

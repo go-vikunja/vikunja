@@ -151,6 +151,28 @@ func (l *List) GetSimpleByID() (err error) {
 	return
 }
 
+// GetListSimplByTaskID gets a list by a task id
+func GetListSimplByTaskID(taskID int64) (l *List, err error) {
+	// We need to re-init our list object, because otherwise xorm creates a "where for every item in that list object,
+	// leading to not finding anything if the id is good, but for example the title is different.
+	var list List
+	exists, err := x.
+		Select("list.*").
+		Table(List{}).
+		Join("INNER", "tasks", "list.id = tasks.list_id").
+		Where("tasks.id = ?", taskID).
+		Get(&list)
+	if err != nil {
+		return
+	}
+
+	if !exists {
+		return &List{}, ErrListDoesNotExist{ID: l.ID}
+	}
+
+	return &list, nil
+}
+
 // Gets the lists only, without any tasks or so
 func getRawListsForUser(search string, u *User, page int) (lists []*List, err error) {
 	fullUser, err := GetUserByID(u.ID)

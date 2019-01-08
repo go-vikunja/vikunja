@@ -21,6 +21,14 @@ definitions:
         minLength: 3
         type: string
     type: object
+  models.BulkAssignees:
+    properties:
+      assignees:
+        description: A list with all assignees
+        items:
+          $ref: '#/definitions/models.User'
+        type: array
+    type: object
   models.BulkTask:
     properties:
       assignees:
@@ -242,6 +250,13 @@ definitions:
       updated:
         description: A unix timestamp when this task was last updated. You cannot
           change this value.
+        type: integer
+    type: object
+  models.ListTaskAssginee:
+    properties:
+      created:
+        type: integer
+      user_id:
         type: integer
     type: object
   models.ListUser:
@@ -474,6 +489,10 @@ definitions:
         type: integer
       team_id:
         description: The team id.
+        type: integer
+      updated:
+        description: A unix timestamp when this relation was last updated. You cannot
+          change this value.
         type: integer
     type: object
   models.TeamUser:
@@ -2341,6 +2360,130 @@ paths:
       summary: Remove a label from a task
       tags:
       - labels
+  /tasks/{taskID}/assignees:
+    put:
+      consumes:
+      - application/json
+      description: Adds a new assignee to a task. The assignee needs to have access
+        to the list, the doer must be able to edit this task.
+      parameters:
+      - description: The assingee object
+        in: body
+        name: assignee
+        required: true
+        schema:
+          $ref: '#/definitions/models.ListTaskAssginee'
+          type: object
+      - description: Task ID
+        in: path
+        name: taskID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The created assingee object.
+          schema:
+            $ref: '#/definitions/models.ListTaskAssginee'
+            type: object
+        "400":
+          description: Invalid assignee object provided.
+          schema:
+            $ref: '#/definitions/code.vikunja.io/web.HTTPError'
+            type: object
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+      security:
+      - JWTKeyAuth: []
+      summary: Add a new assignee to a task
+      tags:
+      - assignees
+  /tasks/{taskID}/assignees/{userID}:
+    delete:
+      consumes:
+      - application/json
+      description: Un-assign a user from a task.
+      parameters:
+      - description: Task ID
+        in: path
+        name: taskID
+        required: true
+        type: integer
+      - description: Assignee user ID
+        in: path
+        name: userID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The assignee was successfully deleted.
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+        "403":
+          description: Not allowed to delete the assignee.
+          schema:
+            $ref: '#/definitions/code.vikunja.io/web.HTTPError'
+            type: object
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+      security:
+      - JWTKeyAuth: []
+      summary: Delete an assignee
+      tags:
+      - assignees
+  /tasks/{taskID}/assignees/bulk:
+    put:
+      consumes:
+      - application/json
+      description: Adds new assignees to a task. The assignee needs to have access
+        to the list, the doer must be able to edit this task. Every user not in the
+        list will be unassigned from the task, pass an empty array to unassign everyone.
+      parameters:
+      - description: The array of assignees
+        in: body
+        name: assignee
+        required: true
+        schema:
+          $ref: '#/definitions/models.BulkAssignees'
+          type: object
+      - description: Task ID
+        in: path
+        name: taskID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The created assingees object.
+          schema:
+            $ref: '#/definitions/models.ListTaskAssginee'
+            type: object
+        "400":
+          description: Invalid assignee object provided.
+          schema:
+            $ref: '#/definitions/code.vikunja.io/web.HTTPError'
+            type: object
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+      security:
+      - JWTKeyAuth: []
+      summary: Add new assignees to a task
+      tags:
+      - assignees
   /tasks/all:
     get:
       consumes:

@@ -76,25 +76,6 @@ func (ListTask) TableName() string {
 	return "tasks"
 }
 
-// ListTaskAssginee represents an assignment of a user to a task
-type ListTaskAssginee struct {
-	ID      int64 `xorm:"int(11) autoincr not null unique pk"`
-	TaskID  int64 `xorm:"int(11) INDEX not null"`
-	UserID  int64 `xorm:"int(11) INDEX not null"`
-	Created int64 `xorm:"created"`
-}
-
-// TableName makes a pretty table name
-func (ListTaskAssginee) TableName() string {
-	return "task_assignees"
-}
-
-// ListTaskAssigneeWithUser is a helper type to deal with user joins
-type ListTaskAssigneeWithUser struct {
-	TaskID int64
-	User   `xorm:"extends"`
-}
-
 // GetTasksByListID gets all todotasks for a list
 func GetTasksByListID(listID int64) (tasks []*ListTask, err error) {
 	// make a map so we can put in a lot of other stuff more easily
@@ -172,16 +153,6 @@ func GetTasksByListID(listID int64) (tasks []*ListTask, err error) {
 		return tasks[i].ID < tasks[j].ID
 	})
 
-	return
-}
-
-func getRawTaskAssigneesForTasks(taskIDs []int64) (taskAssignees []*ListTaskAssigneeWithUser, err error) {
-	taskAssignees = []*ListTaskAssigneeWithUser{nil}
-	err = x.Table("task_assignees").
-		Select("task_id, users.*").
-		In("task_id", taskIDs).
-		Join("INNER", "users", "task_assignees.user_id = users.id").
-		Find(&taskAssignees)
 	return
 }
 
