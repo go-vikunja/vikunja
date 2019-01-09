@@ -951,3 +951,31 @@ func (err ErrLabelDoesNotExist) HTTPError() web.HTTPError {
 		Message:  "This label does not exist.",
 	}
 }
+
+// ErrUserHasNoAccessToLabel represents an error where a user does not have the right to see a label
+type ErrUserHasNoAccessToLabel struct {
+	LabelID int64
+	UserID  int64
+}
+
+// IsErrUserHasNoAccessToLabel checks if an error is ErrUserHasNoAccessToLabel.
+func IsErrUserHasNoAccessToLabel(err error) bool {
+	_, ok := err.(ErrUserHasNoAccessToLabel)
+	return ok
+}
+
+func (err ErrUserHasNoAccessToLabel) Error() string {
+	return fmt.Sprintf("The user does not have access to this label [LabelID: %v, UserID: %v]", err.LabelID, err.UserID)
+}
+
+// ErrCodeUserHasNoAccessToLabel holds the unique world-error code of this error
+const ErrCodeUserHasNoAccessToLabel = 8003
+
+// HTTPError holds the http error description
+func (err ErrUserHasNoAccessToLabel) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusForbidden,
+		Code:     ErrCodeUserHasNoAccessToLabel,
+		Message:  "You don't have access to this label.",
+	}
+}

@@ -120,9 +120,9 @@ Sorry for some of them being in German, I'll tranlate them at some point.
   * [x] Wegen Performance auf eigene endpoints umziehen, wie labels
   * [x] "One endpoint to rule them all" -> Array-addable
 * [x] Labels
-  * [ ] Check if something changed at all before running everything
-  * [ ] Editable via task edit, like assignees
-  * [ ] "One endpoint to rule them all" -> Array-addable
+  * [x] Check if something changed at all before running everything
+  * [x] Editable via task edit, like assignees
+  * [x] "One endpoint to rule them all" -> Array-addable
 * [ ] Attachments
 * [ ] Task-Templates innerhalb namespaces und Listen (-> Mehrere, die auswählbar sind)
 * [ ] Ein Task muss von mehreren Assignees abgehakt werden bis er als done markiert wird
@@ -153,6 +153,10 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [ ] Description of web.HTTPError
 * [ ] Rights methods should return errors
 * [ ] Re-check all `{List|Namespace}{User|Team}` if really all parameters need to be exposed via json or are overwritten via param anyway.
+
+### Refactor 
+
+* [ ] ListTaskRights, sollte überall gleich funktionieren, gibt ja mittlerweile auch eine Methode um liste von nem Task aus zu kriegen oder so
 
 ### Linters
 

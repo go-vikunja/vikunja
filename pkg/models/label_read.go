@@ -45,7 +45,12 @@ func (l *Label) ReadAll(search string, a web.Auth, page int) (ls interface{}, er
 		return nil, err
 	}
 
-	return getLabelsByTaskIDs(search, u, page, taskIDs, true)
+	return getLabelsByTaskIDs(&LabelByTaskIDsOptions{
+		Search:          search,
+		User:            u,
+		TaskIDs:         taskIDs,
+		GetUnusedLabels: true,
+	})
 }
 
 // ReadOne gets one label

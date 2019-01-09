@@ -111,7 +111,7 @@ func GetTasksByListID(listID int64) (tasks []*ListTask, err error) {
 	}
 
 	// Get all labels for the tasks
-	labels, err := getLabelsByTaskIDs("", &User{}, -1, taskIDs, false)
+	labels, err := getLabelsByTaskIDs(&LabelByTaskIDsOptions{TaskIDs: taskIDs})
 	if err != nil {
 		return
 	}
@@ -194,6 +194,17 @@ func GetListTaskByID(listTaskID int64) (listTask ListTask, err error) {
 		if u != nil {
 			listTask.Assignees = append(listTask.Assignees, &u.User)
 		}
+	}
+
+	// Get task labels
+	taskLabels, err := getLabelsByTaskIDs(&LabelByTaskIDsOptions{
+		TaskIDs: []int64{listTaskID},
+	})
+	if err != nil {
+		return
+	}
+	for _, label := range taskLabels {
+		listTask.Labels = append(listTask.Labels, &label.Label)
 	}
 
 	return

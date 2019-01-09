@@ -232,7 +232,7 @@ type BulkAssignees struct {
 // @Success 200 {object} models.ListTaskAssginee "The created assingees object."
 // @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid assignee object provided."
 // @Failure 500 {object} models.Message "Internal error"
-// @Router /tasks/{taskID}/assignees/bulk [put]
+// @Router /tasks/{taskID}/assignees/bulk [post]
 func (ba *BulkAssignees) Create(a web.Auth) (err error) {
 	task, err := GetListTaskByID(ba.TaskID) // We need to use the full method here because we need all current assignees.
 	if err != nil {

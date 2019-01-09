@@ -42,3 +42,4 @@ This document describes the different errors Vikunja can return.
 | 7003 | 403 | The user does not have access to that list. |
 | 8001 | 403 | This label already exists on that task. |
 | 8002 | 404 | The label does not exist. |
+| 8003 | 403 | The user does not have access to this label. |

@@ -146,6 +146,15 @@ definitions:
           change this value.
         type: integer
     type: object
+  models.LabelTaskBulk:
+    properties:
+      labels:
+        description: All labels you want to update at once. Works exactly like you
+          would update labels while updateing a list.
+        items:
+          $ref: '#/definitions/models.Label'
+        type: array
+    type: object
   models.List:
     properties:
       created:
@@ -923,9 +932,9 @@ paths:
     get:
       consumes:
       - application/json
-      description: Returns a team by its ID.
+      description: Returns a list by its ID.
       parameters:
-      - description: Team ID
+      - description: List ID
         in: path
         name: id
         required: true
@@ -934,12 +943,12 @@ paths:
       - application/json
       responses:
         "200":
-          description: The team
+          description: The list
           schema:
-            $ref: '#/definitions/models.Team'
+            $ref: '#/definitions/models.List'
             type: object
         "403":
-          description: The user does not have access to the team
+          description: The user does not have access to the list
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
             type: object
@@ -950,9 +959,9 @@ paths:
             type: object
       security:
       - JWTKeyAuth: []
-      summary: Gets one team
+      summary: Gets one list
       tags:
-      - team
+      - list
     post:
       consumes:
       - application/json
@@ -2183,7 +2192,9 @@ paths:
     post:
       consumes:
       - application/json
-      description: Updates a task. This includes marking it as done.
+      description: Updates a task. This includes marking it as done. Assignees you
+        pass will be updated, see their individual endpoints for more details on how
+        this is done. To update labels, see the description of the endpoint.
       parameters:
       - description: Task ID
         in: path
@@ -2442,12 +2453,13 @@ paths:
       tags:
       - assignees
   /tasks/{taskID}/assignees/bulk:
-    put:
+    post:
       consumes:
       - application/json
-      description: Adds new assignees to a task. The assignee needs to have access
-        to the list, the doer must be able to edit this task. Every user not in the
-        list will be unassigned from the task, pass an empty array to unassign everyone.
+      description: Adds multiple new assignees to a task. The assignee needs to have
+        access to the list, the doer must be able to edit this task. Every user not
+        in the list will be unassigned from the task, pass an empty array to unassign
+        everyone.
       parameters:
       - description: The array of assignees
         in: body
@@ -2481,9 +2493,50 @@ paths:
             type: object
       security:
       - JWTKeyAuth: []
-      summary: Add new assignees to a task
+      summary: Add multiple new assignees to a task
       tags:
       - assignees
+  /tasks/{taskID}/labels/bulk:
+    post:
+      consumes:
+      - application/json
+      description: Adds multiple new labels to a task.
+      parameters:
+      - description: The array of labels
+        in: body
+        name: label
+        required: true
+        schema:
+          $ref: '#/definitions/models.LabelTaskBulk'
+          type: object
+      - description: Task ID
+        in: path
+        name: taskID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The updated labels object.
+          schema:
+            $ref: '#/definitions/models.LabelTaskBulk'
+            type: object
+        "400":
+          description: Invalid label object provided.
+          schema:
+            $ref: '#/definitions/code.vikunja.io/web.HTTPError'
+            type: object
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+      security:
+      - JWTKeyAuth: []
+      summary: Add multiple new labels to a task
+      tags:
+      - labels
   /tasks/all:
     get:
       consumes:

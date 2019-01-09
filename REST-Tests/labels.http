@@ -54,3 +54,17 @@ DELETE http://localhost:8080/api/v1/tasks/3565/labels/1
 Authorization: Bearer {{auth_token}}
 
 ###
+# Add a new label to a task
+POST http://localhost:8080/api/v1/tasks/3565/labels/bulk
+Authorization: Bearer {{auth_token}}
+Content-Type: application/json
+
+{
+  "labels": [
+    {"id": 1},
+    {"id": 2},
+    {"id": 3}
+  ]
+}
+
+###

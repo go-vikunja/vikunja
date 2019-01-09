@@ -135,10 +135,9 @@ Authorization: Bearer {{auth_token}}
 Content-Type: application/json
 
 {
-  "assignees": [
-    {
-      "id": 1
-    }
+  "labels": [
+    {"id": 1},
+    {"id": 2}
   ]
 }
 

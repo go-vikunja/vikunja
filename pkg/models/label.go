@@ -48,22 +48,3 @@ type Label struct {
 func (Label) TableName() string {
 	return "labels"
 }
-
-// LabelTask represents a relation between a label and a task
-type LabelTask struct {
-	// The unique, numeric id of this label.
-	ID     int64 `xorm:"int(11) autoincr not null unique pk" json:"id"`
-	TaskID int64 `xorm:"int(11) INDEX not null" json:"-" param:"listtask"`
-	// The label id you want to associate with a task.
-	LabelID int64 `xorm:"int(11) INDEX not null" json:"label_id" param:"label"`
-	// A unix timestamp when this task was created. You cannot change this value.
-	Created int64 `xorm:"created" json:"created"`
-
-	web.CRUDable `xorm:"-" json:"-"`
-	web.Rights   `xorm:"-" json:"-"`
-}
-
-// TableName makes a pretty table name
-func (LabelTask) TableName() string {
-	return "label_task"
-}

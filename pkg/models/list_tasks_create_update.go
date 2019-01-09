@@ -77,7 +77,7 @@ func (t *ListTask) Create(a web.Auth) (err error) {
 
 // Update updates a list task
 // @Summary Update a task
-// @Description Updates a task. This includes marking it as done.
+// @Description Updates a task. This includes marking it as done. Assignees you pass will be updated, see their individual endpoints for more details on how this is done. To update labels, see the description of the endpoint.
 // @tags task
 // @Accept json
 // @Produce json
@@ -103,6 +103,23 @@ func (t *ListTask) Update() (err error) {
 	if err := ot.updateTaskAssignees(t.Assignees); err != nil {
 		return err
 	}
+
+	// Update the labels
+	//
+	// Maybe FIXME:
+	// I've disabled this for now, because it requires significant changes in the way we do updates (using the
+	// Update() function. We need a user object in updateTaskLabels to check if the user has the right to see
+	// the label it is currently adding. To do this, we'll need to update the webhandler to let it pass the current
+	// user object (like it's already the case with the create method). However when we change it, that'll break
+	// a lot of existing code which we'll then need to refactor.
+	// This is why.
+	//
+	//if err := ot.updateTaskLabels(t.Labels); err != nil {
+	//	return err
+	//}
+	// set the labels to ot.Labels because our updateTaskLabels function puts the full label objects in it pretty nicely
+	// We also set this here to prevent it being overwritten later on.
+	//t.Labels = ot.Labels
 
 	// For whatever reason, xorm dont detect if done is updated, so we need to update this every time by hand
 	// Which is why we merge the actual task struct with the one we got from the

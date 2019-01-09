@@ -29,12 +29,12 @@ func (lt *LabelTask) CanCreate(a web.Auth) bool {
 		return false
 	}
 
-	return label.hasAccessToLabel(a) && lt.canDoLabelTask(a)
+	return label.hasAccessToLabel(a) && canDoLabelTask(lt.TaskID, a)
 }
 
 // CanDelete checks if a user can delete a label from a task
 func (lt *LabelTask) CanDelete(a web.Auth) bool {
-	if !lt.canDoLabelTask(a) {
+	if !canDoLabelTask(lt.TaskID, a) {
 		return false
 	}
 
@@ -48,12 +48,17 @@ func (lt *LabelTask) CanDelete(a web.Auth) bool {
 	return exists
 }
 
+// CanCreate determines if a user can update a labeltask
+func (ltb *LabelTaskBulk) CanCreate(a web.Auth) bool {
+	return canDoLabelTask(ltb.TaskID, a)
+}
+
 // Helper function to check if a user can write to a task
 // + is able to see the label
 // always the same check for either deleting or adding a label to a task
-func (lt *LabelTask) canDoLabelTask(a web.Auth) bool {
+func canDoLabelTask(taskID int64, a web.Auth) bool {
 	// A user can add a label to a task if he can write to the task
-	task, err := getTaskByIDSimple(lt.TaskID)
+	task, err := getTaskByIDSimple(taskID)
 	if err != nil {
 		log.Log.Error("Error occurred during canDoLabelTask for LabelTask: %v", err)
 		return false

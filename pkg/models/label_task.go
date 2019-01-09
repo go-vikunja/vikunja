@@ -21,6 +21,25 @@ import (
 	"github.com/go-xorm/builder"
 )
 
+// LabelTask represents a relation between a label and a task
+type LabelTask struct {
+	// The unique, numeric id of this label.
+	ID     int64 `xorm:"int(11) autoincr not null unique pk" json:"id"`
+	TaskID int64 `xorm:"int(11) INDEX not null" json:"-" param:"listtask"`
+	// The label id you want to associate with a task.
+	LabelID int64 `xorm:"int(11) INDEX not null" json:"label_id" param:"label"`
+	// A unix timestamp when this task was created. You cannot change this value.
+	Created int64 `xorm:"created" json:"created"`
+
+	web.CRUDable `xorm:"-" json:"-"`
+	web.Rights   `xorm:"-" json:"-"`
+}
+
+// TableName makes a pretty table name
+func (LabelTask) TableName() string {
+	return "label_task"
+}
+
 // Delete deletes a label on a task
 // @Summary Remove a label from a task
 // @Description Remove a label from a task. The user needs to have write-access to the list to be able do this.
@@ -35,8 +54,8 @@ import (
 // @Failure 404 {object} code.vikunja.io/web.HTTPError "Label not found."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{task}/labels/{label} [delete]
-func (l *LabelTask) Delete() (err error) {
-	_, err = x.Delete(&LabelTask{LabelID: l.LabelID, TaskID: l.TaskID})
+func (lt *LabelTask) Delete() (err error) {
+	_, err = x.Delete(&LabelTask{LabelID: lt.LabelID, TaskID: lt.TaskID})
 	return err
 }
 
@@ -55,19 +74,19 @@ func (l *LabelTask) Delete() (err error) {
 // @Failure 404 {object} code.vikunja.io/web.HTTPError "The label does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{task}/labels [put]
-func (l *LabelTask) Create(a web.Auth) (err error) {
+func (lt *LabelTask) Create(a web.Auth) (err error) {
 	// Check if the label is already added
-	exists, err := x.Exist(&LabelTask{LabelID: l.LabelID, TaskID: l.TaskID})
+	exists, err := x.Exist(&LabelTask{LabelID: lt.LabelID, TaskID: lt.TaskID})
 	if err != nil {
 		return err
 	}
 	if exists {
-		return ErrLabelIsAlreadyOnTask{l.LabelID, l.TaskID}
+		return ErrLabelIsAlreadyOnTask{lt.LabelID, lt.TaskID}
 	}
 
 	// Insert it
-	_, err = x.Insert(l)
-	return err
+	_, err = x.Insert(lt)
+	return
 }
 
 // ReadAll gets all labels on a task
@@ -83,38 +102,54 @@ func (l *LabelTask) Create(a web.Auth) (err error) {
 // @Success 200 {array} models.Label "The labels"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{task}/labels [get]
-func (l *LabelTask) ReadAll(search string, a web.Auth, page int) (labels interface{}, err error) {
+func (lt *LabelTask) ReadAll(search string, a web.Auth, page int) (labels interface{}, err error) {
 	u, err := getUserWithError(a)
 	if err != nil {
 		return nil, err
 	}
 
 	// Check if the user has the right to see the task
-	task, err := GetListTaskByID(l.TaskID)
+	task, err := GetListTaskByID(lt.TaskID)
 	if err != nil {
 		return nil, err
 	}
 
 	if !task.CanRead(a) {
-		return nil, ErrNoRightToSeeTask{l.TaskID, u.ID}
+		return nil, ErrNoRightToSeeTask{lt.TaskID, u.ID}
 	}
 
-	return getLabelsByTaskIDs(search, u, page, []int64{l.TaskID}, false)
+	return getLabelsByTaskIDs(&LabelByTaskIDsOptions{
+		User:    u,
+		Search:  search,
+		Page:    page,
+		TaskIDs: []int64{lt.TaskID},
+	})
 }
 
+// Helper struct, contains the label + its task ID
 type labelWithTaskID struct {
 	TaskID int64
 	Label  `xorm:"extends"`
 }
 
+// LabelByTaskIDsOptions is a struct to not clutter the function with too many optional parameters.
+type LabelByTaskIDsOptions struct {
+	User            *User
+	Search          string
+	Page            int
+	TaskIDs         []int64
+	GetUnusedLabels bool
+}
+
 // Helper function to get all labels for a set of tasks
 // Used when getting all labels for one task as well when getting all lables
-func getLabelsByTaskIDs(search string, u *User, page int, taskIDs []int64, getUnusedLabels bool) (ls []*labelWithTaskID, err error) {
-	// Incl unused labels
+func getLabelsByTaskIDs(opts *LabelByTaskIDsOptions) (ls []*labelWithTaskID, err error) {
+	// Include unused labels. Needed to be able to show a list of all unused labels a user
+	// has access to.
 	var uidOrNil interface{}
 	var requestOrNil interface{}
-	if getUnusedLabels {
-		uidOrNil = u.ID
+	if opts.GetUnusedLabels {
+		uidOrNil = opts.User.ID
 		requestOrNil = "label_task.label_id != null OR labels.created_by_id = ?"
 	}
 
@@ -124,10 +159,10 @@ func getLabelsByTaskIDs(search string, u *User, page int, taskIDs []int64, getUn
 		Select("labels.*, label_task.task_id").
 		Join("LEFT", "label_task", "label_task.label_id = labels.id").
 		Where(requestOrNil, uidOrNil).
-		Or(builder.In("label_task.task_id", taskIDs)).
-		And("labels.title LIKE ?", "%"+search+"%").
+		Or(builder.In("label_task.task_id", opts.TaskIDs)).
+		And("labels.title LIKE ?", "%"+opts.Search+"%").
 		GroupBy("labels.id").
-		Limit(getLimitFromPageIndex(page)).
+		Limit(getLimitFromPageIndex(opts.Page)).
 		Find(&labels)
 	if err != nil {
 		return nil, err
@@ -150,4 +185,121 @@ func getLabelsByTaskIDs(search string, u *User, page int, taskIDs []int64, getUn
 	}
 
 	return labels, err
+}
+
+// Create or update a bunch of task labels
+func (t *ListTask) updateTaskLabels(creator web.Auth, labels []*Label) (err error) {
+
+	// If we don't have any new labels, delete everything right away. Saves us some hassle.
+	if len(labels) == 0 && len(t.Labels) > 0 {
+		_, err = x.Where("task_id = ?", t.ID).
+			Delete(LabelTask{})
+		return err
+	}
+
+	// If we didn't change anything (from 0 to zero) don't do anything.
+	if len(labels) == 0 && len(t.Labels) == 0 {
+		return nil
+	}
+
+	// Make a hashmap of the new labels for easier comparison
+	newLabels := make(map[int64]*Label, len(labels))
+	var allLabelIDs []int64
+	for _, newLabel := range labels {
+		newLabels[newLabel.ID] = newLabel
+		allLabelIDs = append(allLabelIDs, newLabel.ID)
+	}
+
+	// Get old labels to delete
+	var found bool
+	var labelsToDelete []int64
+	oldLabels := make(map[int64]*Label, len(t.Labels))
+	allLabels := t.Labels
+	t.Labels = []*Label{} // We re-empty our labels struct here because we want it to be fully empty so we can put in all the actual labels.
+	for _, oldLabel := range allLabels {
+		found = false
+		if newLabels[oldLabel.ID] != nil {
+			found = true // If a new label is already in the list with old labels
+		}
+
+		// Put all labels which are only on the old list to the trash
+		if !found {
+			labelsToDelete = append(labelsToDelete, oldLabel.ID)
+		} else {
+			t.Labels = append(t.Labels, oldLabel)
+		}
+
+		// Put it in a list with all old labels, just using the loop here
+		oldLabels[oldLabel.ID] = oldLabel
+	}
+
+	// Delete all labels not passed
+	if len(labelsToDelete) > 0 {
+		_, err = x.In("label_id", labelsToDelete).
+			And("task_id = ?", t.ID).
+			Delete(LabelTask{})
+		if err != nil {
+			return err
+		}
+	}
+
+	// Loop through our labels and add them
+	for _, l := range labels {
+		// Check if the label is already added on the task and only add it if not
+		if oldLabels[l.ID] != nil {
+			// continue outer loop
+			continue
+		}
+
+		// Add the new label
+		label, err := getLabelByIDSimple(l.ID)
+		if err != nil {
+			return err
+		}
+
+		// Check if the user has the rights to see the label he is about to add
+		if !label.hasAccessToLabel(creator) {
+			user, _ := creator.(*User)
+			return ErrUserHasNoAccessToLabel{LabelID: l.ID, UserID: user.ID}
+		}
+
+		// Insert it
+		_, err = x.Insert(&LabelTask{LabelID: l.ID, TaskID: t.ID})
+		if err != nil {
+			return err
+		}
+		t.Labels = append(t.Labels, label)
+	}
+	return
+}
+
+// LabelTaskBulk is a helper struct to update a bunch of labels at once
+type LabelTaskBulk struct {
+	// All labels you want to update at once. Works exactly like you would update labels while updateing a list.
+	Labels []*Label `json:"labels"`
+	TaskID int64    `json:"-" param:"listtask"`
+
+	web.CRUDable `json:"-"`
+	web.Rights   `json:"-"`
+}
+
+// Create updates a bunch of labels on a task at once
+// @Summary Add multiple new labels to a task
+// @Description Adds multiple new labels to a task.
+// @tags labels
+// @Accept json
+// @Produce json
+// @Security JWTKeyAuth
+// @Param label body models.LabelTaskBulk true "The array of labels"
+// @Param taskID path int true "Task ID"
+// @Success 200 {object} models.LabelTaskBulk "The updated labels object."
+// @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid label object provided."
+// @Failure 500 {object} models.Message "Internal error"
+// @Router /tasks/{taskID}/labels/bulk [post]
+func (ltb *LabelTaskBulk) Create(a web.Auth) (err error) {
+	task, err := GetListTaskByID(ltb.TaskID)
+	if err != nil {
+		return
+	}
+	return task.updateTaskLabels(a, task.Labels)
 }
