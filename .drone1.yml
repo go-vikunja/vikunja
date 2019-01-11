@@ -1,0 +1,242 @@
+kind: pipeline
+name: testing
+
+workspace:
+  base: /srv/app
+  path: src/code.vikunja.io/api
+
+clone:
+  git:
+    depth: 50
+
+services:
+  - name: test-db
+    image: mariadb:10
+    environment:
+      MYSQL_ROOT_PASSWORD: vikunjatest
+      MYSQL_DATABASE: vikunjatest
+
+steps:
+  - name: fetch-tags
+    image: docker:git
+    commands:
+      - git fetch --tags
+    when:
+      event: [ tag ]
+
+  - name: build
+    image: vikunja/golang-build:latest
+    pull: true
+    environment:
+      TAGS: bindata sqlite
+    commands:
+      - make lint
+      - make fmt-check
+      # - make got-swag # Commented out until we figured out how to get this working on drone
+      - make ineffassign-check
+      - make misspell-check
+      - make goconst-check
+      - make build
+    when:
+      event: [ push, tag, pull_request ]
+
+  - name: test
+    image: vikunja/golang-build:latest
+    pull: true
+    commands:
+      - make test
+    depends_on: [ build ]
+    when:
+      event: [ push, tag, pull_request ]
+
+  - name: test-sqlite
+    image: vikunja/golang-build:latest
+    pull: true
+    environment:
+      VIKUNJA_TESTS_USE_CONFIG: 1
+      VIKUNJA_DATABASE_TYPE: sqlite
+    commands:
+      - make test
+    depends_on: [ build ]
+    when:
+      event: [ push, tag, pull_request ]
+
+  - name: test-mysql
+    image: vikunja/golang-build:latest
+    pull: true
+    environment:
+      VIKUNJA_TESTS_USE_CONFIG: 1
+      VIKUNJA_DATABASE_TYPE: mysql
+      VIKUNJA_DATABASE_HOST: test-db
+      VIKUNJA_DATABASE_USER: root
+      VIKUNJA_DATABASE_PASSWORD: vikunjatest
+      VIKUNJA_DATABASE_DATABASE: vikunjatest
+    commands:
+      - make test
+    depends_on: [ build ]
+    when:
+      event: [ push, tag, pull_request ]
+
+---
+# Build a release when tagging
+kind: pipeline
+name: deploy
+depends_on:
+  - testing
+
+workspace:
+  base: /srv/app
+  path: src/code.vikunja.io/api
+
+clone:
+  git:
+    depth: 50
+
+trigger:
+  branch:
+    - master
+  event:
+    - push
+    - tag
+
+steps:
+  - name: fetch-tags
+    image: docker:git
+    commands:
+      - git fetch --tags
+    when:
+      event: [ tag ]
+
+  - name: before-static-build
+    image: karalabe/xgo-latest:latest
+    pull: true
+    commands:
+      - make release-dirs
+
+  - name: static-build-windows
+    image: karalabe/xgo-latest:latest
+    pull: true
+    environment:
+      TAGS: bindata sqlite
+      GOPATH: /srv/app
+    commands:
+      - make release-windows
+    depends_on: [ before-static-build ]
+
+  - name: static-build-linux
+    image: karalabe/xgo-latest:latest
+    pull: true
+    environment:
+      TAGS: bindata sqlite
+      GOPATH: /srv/app
+    commands:
+      - make release-linux
+    depends_on: [ before-static-build ]
+
+  - name: static-build-darwin
+    image: karalabe/xgo-latest:latest
+    pull: true
+    environment:
+      TAGS: bindata sqlite
+      GOPATH: /srv/app
+    commands:
+      - make release-darwin
+    depends_on: [ before-static-build ]
+
+  - name: after-build-static
+    image: karalabe/xgo-latest:latest
+    pull: true
+    depends_on:
+      - static-build-windows
+      - static-build-linux
+      - static-build-darwin
+    commands:
+      - make release-copy
+      - make release-check
+      - make release-os-package
+      - make release-zip
+
+# Push the releases to our pseudo-s3-bucket
+  - name: release-version
+    image: plugins/s3:1
+    pull: true
+    settings:
+      bucket: vikunja
+      access_key:
+        from_secret: aws_access_key_id
+      secret_key:
+        from_secret: aws_secret_access_key
+      endpoint: https://storage.kolaente.de
+      path_style: true
+      strip_prefix: dist/zip/
+      source: dist/zip/*
+      target: /${DRONE_TAG##v}
+    depends_on: [ after-build-static ]
+    when:
+      event: [ tag ]
+
+  - name: release-latest
+    image: plugins/s3:1
+    pull: true
+    settings:
+      bucket: vikunja
+      access_key:
+        from_secret: aws_access_key_id
+      secret_key:
+        from_secret: aws_secret_access_key
+      endpoint: https://storage.kolaente.de
+      path_style: true
+      strip_prefix: dist/zip/
+      source: dist/zip/*
+      target: /${DRONE_TAG##v}
+    depends_on: [ after-build-static ]
+    when:
+      event: [ push ]
+      branch: [ master ]
+
+# Build the docker image and push it to docker hub
+  - name: docker
+    image: plugins/docker
+    pull: true
+    settings:
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
+      repo: vikunja/api
+      auto_tag: true
+
+# Update the instance on try.vikunja.io
+  - name: rancher
+    image: peloton/drone-rancher
+    settings:
+      url: http://server01.kolaente.de:8080/v1
+      access_key:
+        from_secret: RANCHER_ACCESS_KEY
+      secret_key:
+        from_secret: RANCHER_SECRET_KEY
+      service: vikunja-dev/api
+      docker_image: vikunja/api
+      confirm: true
+    depends_on: [ docker ]
+
+# Tell people vikunja was updated
+  - name: telegram
+    image: appleboy/drone-telegram
+    settings:
+      token:
+        from_secret: TELEGRAM_TOKEN
+      to:
+        from_secret: TELEGRAM_TO
+      message: >
+        {{repo.owner}}/{{repo.name}}: \[{{build.status}}] Build {{build.number}}
+        {{commit.author}} pushed to {{commit.branch}} {{commit.sha}}: `{{commit.message}}`
+        Build started at {{datetime build.started "2006-Jan-02T15:04:05Z" "GMT+2"}} finished at {{datetime build.finished "2006-Jan-02T15:04:05Z" "GMT+2"}}.
+    depends_on:
+      - rancher
+      - release-version
+      - release-latest
+    when:
+      status:
+        - success
+        - failure
