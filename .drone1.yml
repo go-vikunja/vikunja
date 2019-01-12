@@ -156,6 +156,16 @@ steps:
       - make release-os-package
       - make release-zip
 
+  - name: sign-release
+    image: plugins/gpgsign
+    settings:
+      key:
+        from_secret: gpg_privkey
+      passphrase:
+        from_secret: gpg_password
+      files:
+        - dist/zip/*.zip
+
 # Push the releases to our pseudo-s3-bucket
   - name: release-version
     image: plugins/s3:1
