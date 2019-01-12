@@ -164,7 +164,7 @@ steps:
       passphrase:
         from_secret: gpg_password
       files:
-        - dist/zip/*.zip
+        - dist/zip/*
 
 # Push the releases to our pseudo-s3-bucket
   - name: release-version
