@@ -158,6 +158,7 @@ steps:
 
   - name: sign-release
     image: plugins/gpgsign
+    depends_on: [ after-build-static ]
     settings:
       key:
         from_secret: gpg_privkey
@@ -181,7 +182,7 @@ steps:
       strip_prefix: dist/zip/
       source: dist/zip/*
       target: /${DRONE_TAG##v}/
-    depends_on: [ after-build-static ]
+    depends_on: [ sign-release ]
     when:
       event: [ tag ]
 
