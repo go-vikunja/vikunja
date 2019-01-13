@@ -157,7 +157,8 @@ steps:
       - make release-zip
 
   - name: sign-release
-    image: plugins/gpgsign
+    image: plugins/gpgsign:1
+    pull: true
     depends_on: [ after-build-static ]
     settings:
       key:
@@ -166,6 +167,7 @@ steps:
         from_secret: gpg_password
       files:
         - dist/zip/*
+      detach_sign: true
 
 # Push the releases to our pseudo-s3-bucket
   - name: release-version
