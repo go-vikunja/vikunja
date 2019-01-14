@@ -137,7 +137,8 @@ steps:
     image: karalabe/xgo-latest:latest
     pull: true
     environment:
-      TAGS: bindata sqlite#      GOPATH: /srv/app
+      TAGS: bindata sqlite
+      GOPATH: /srv/app
     commands:
       - make release-darwin
     depends_on: [ before-static-build ]
