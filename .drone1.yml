@@ -147,8 +147,8 @@ steps:
     pull: true
     depends_on:
       - static-build-windows
-      - static-build-linux
-      - static-build-darwin
+#      - static-build-linux
+#      - static-build-darwin
     commands:
       - make release-copy
       - make release-check
@@ -167,15 +167,15 @@ steps:
       files:
         - dist/zip/*
       detach_sign: true
-#
-#  - name: debugging
-#    image: alpine
-#    pull: true
-#    depends_on: [ sign-release ]
-#    commands:
-#      - ls
-#      - ls dist/zip
-#      - ls dist
+
+  - name: debugging
+    image: alpine
+    pull: true
+    depends_on: [ sign-release ]
+    commands:
+      - ls
+      - ls dist/zip
+      - ls dist
 
 # Push the releases to our pseudo-s3-bucket
   - name: release-version
