@@ -191,6 +191,10 @@ steps:
   - name: release-latest
     image: plugins/s3:1
     pull: true
+    commands:
+      - ls
+      - ls dist/zip
+      - ls dist
     settings:
       bucket: vikunja
       access_key:

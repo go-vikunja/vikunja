@@ -133,7 +133,7 @@ endif
 .PHONY: release-copy
 release-copy:
 	$(foreach file,$(wildcard $(DIST)/binaries/$(EXECUTABLE)-*),cp $(file) $(DIST)/release/$(notdir $(file));)
-	mkdir $(DIST)/release/templates
+	mkdir $(DIST)/release/templates -p
 	cp templates/ $(DIST)/templates/ -R
 
 .PHONY: release-check
