@@ -123,25 +123,24 @@ steps:
       - make release-windows
     depends_on: [ before-static-build ]
 
-  - name: static-build-linux
-    image: karalabe/xgo-latest:latest
-    pull: true
-    environment:
-      TAGS: bindata sqlite
-      GOPATH: /srv/app
-    commands:
-      - make release-linux
-    depends_on: [ before-static-build ]
-
-  - name: static-build-darwin
-    image: karalabe/xgo-latest:latest
-    pull: true
-    environment:
-      TAGS: bindata sqlite
-      GOPATH: /srv/app
-    commands:
-      - make release-darwin
-    depends_on: [ before-static-build ]
+#  - name: static-build-linux
+#    image: karalabe/xgo-latest:latest
+#    pull: true
+#    environment:
+#      TAGS: bindata sqlite
+#      GOPATH: /srv/app
+#    commands:
+#      - make release-linux
+#    depends_on: [ before-static-build ]
+#
+#  - name: static-build-darwin
+#    image: karalabe/xgo-latest:latest
+#    pull: true
+#    environment:
+#      TAGS: bindata sqlite#      GOPATH: /srv/app
+#    commands:
+#      - make release-darwin
+#    depends_on: [ before-static-build ]
 
   - name: after-build-static
     image: karalabe/xgo-latest:latest
@@ -169,6 +168,15 @@ steps:
         - dist/zip/*
       detach_sign: true
 
+  - name: debugging
+    image: alpine
+    pull: true
+    depends_on: [ sign-release ]
+    commands:
+      - ls
+      - ls dist/zip
+      - ls dist
+
 # Push the releases to our pseudo-s3-bucket
   - name: release-version
     image: plugins/s3:1
@@ -191,10 +199,6 @@ steps:
   - name: release-latest
     image: plugins/s3:1
     pull: true
-    commands:
-      - ls
-      - ls dist/zip
-      - ls dist
     settings:
       bucket: vikunja
       access_key:
@@ -210,50 +214,50 @@ steps:
     when:
       event: [ push ]
       branch: [ master ]
-
-# Build the docker image and push it to docker hub
-  - name: docker
-    image: plugins/docker
-    pull: true
-    settings:
-      username:
-        from_secret: docker_username
-      password:
-        from_secret: docker_password
-      repo: vikunja/api
-      auto_tag: true
-
-# Update the instance on try.vikunja.io
-  - name: rancher
-    image: peloton/drone-rancher
-    settings:
-      url: http://server01.kolaente.de:8080/v1
-      access_key:
-        from_secret: RANCHER_ACCESS_KEY
-      secret_key:
-        from_secret: RANCHER_SECRET_KEY
-      service: vikunja-dev/api
-      docker_image: vikunja/api
-      confirm: true
-    depends_on: [ docker ]
-
-# Tell people vikunja was updated
-  - name: telegram
-    image: appleboy/drone-telegram
-    settings:
-      token:
-        from_secret: TELEGRAM_TOKEN
-      to:
-        from_secret: TELEGRAM_TO
-      message: >
-        {{repo.owner}}/{{repo.name}}: \[{{build.status}}] Build {{build.number}}
-        {{commit.author}} pushed to {{commit.branch}} {{commit.sha}}: `{{commit.message}}`
-        Build started at {{datetime build.started "2006-Jan-02T15:04:05Z" "GMT+2"}} finished at {{datetime build.finished "2006-Jan-02T15:04:05Z" "GMT+2"}}.
-    depends_on:
-      - rancher
-      - release-version
-      - release-latest
-    when:
-      status:
-        - success
-        - failure
+#
+## Build the docker image and push it to docker hub
+#  - name: docker
+#    image: plugins/docker
+#    pull: true
+#    settings:
+#      username:
+#        from_secret: docker_username
+#      password:
+#        from_secret: docker_password
+#      repo: vikunja/api
+#      auto_tag: true
+#
+## Update the instance on try.vikunja.io
+#  - name: rancher
+#    image: peloton/drone-rancher
+#    settings:
+#      url: http://server01.kolaente.de:8080/v1
+#      access_key:
+#        from_secret: RANCHER_ACCESS_KEY
+#      secret_key:
+#        from_secret: RANCHER_SECRET_KEY
+#      service: vikunja-dev/api
+#      docker_image: vikunja/api
+#      confirm: true
+#    depends_on: [ docker ]
+#
+## Tell people vikunja was updated
+#  - name: telegram
+#    image: appleboy/drone-telegram
+#    settings:
+#      token:
+#        from_secret: TELEGRAM_TOKEN
+#      to:
+#        from_secret: TELEGRAM_TO
+#      message: >
+#        {{repo.owner}}/{{repo.name}}: \[{{build.status}}] Build {{build.number}}
+#        {{commit.author}} pushed to {{commit.branch}} {{commit.sha}}: `{{commit.message}}`
+#        Build started at {{datetime build.started "2006-Jan-02T15:04:05Z" "GMT+2"}} finished at {{datetime build.finished "2006-Jan-02T15:04:05Z" "GMT+2"}}.
+#    depends_on:
+#      - rancher
+#      - release-version
+#      - release-latest
+#    when:
+#      status:
+#        - success
+#        - failure
