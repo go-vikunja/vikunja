@@ -156,7 +156,7 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 
 ### Refactor 
 
-* [ ] ListTaskRights, sollte überall gleich funktionieren, gibt ja mittlerweile auch eine Methode um liste von nem Task aus zu kriegen oder so
+* [x] ListTaskRights, sollte überall gleich funktionieren, gibt ja mittlerweile auch eine Methode um liste von nem Task aus zu kriegen oder so
 
 ### Linters
 

@@ -71,14 +71,14 @@ func dummy2() {
 // @Success 200 {array} models.List "The tasks"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/all [get]
-func (lt *ListTask) ReadAll(search string, a web.Auth, page int) (interface{}, error) {
+func (t *ListTask) ReadAll(search string, a web.Auth, page int) (interface{}, error) {
 	u, err := getUserWithError(a)
 	if err != nil {
 		return nil, err
 	}
 
 	var sortby SortBy
-	switch lt.Sorting {
+	switch t.Sorting {
 	case "priority":
 		sortby = SortTasksByPriorityDesc
 	case "prioritydesc":
@@ -95,7 +95,7 @@ func (lt *ListTask) ReadAll(search string, a web.Auth, page int) (interface{}, e
 		sortby = SortTasksByUnsorted
 	}
 
-	return GetTasksByUser(search, u, page, sortby, time.Unix(lt.StartDateSortUnix, 0), time.Unix(lt.EndDateSortUnix, 0))
+	return GetTasksByUser(search, u, page, sortby, time.Unix(t.StartDateSortUnix, 0), time.Unix(t.EndDateSortUnix, 0))
 }
 
 //GetTasksByUser returns all tasks for a user

@@ -23,49 +23,25 @@ import (
 
 // CanDelete checks if the user can delete an task
 func (t *ListTask) CanDelete(a web.Auth) bool {
-	doer := getUserForRights(a)
-
-	// Get the task
-	lI, err := GetListTaskByID(t.ID)
-	if err != nil {
-		log.Log.Error("Error occurred during CanDelete for ListTask: %s", err)
-		return false
-	}
-
-	// A user can delete an task if he has write acces to its list
-	l := &List{ID: lI.ListID}
-	l.ReadOne()
-	return l.CanWrite(doer)
+	return t.canDoListTask(a)
 }
 
 // CanUpdate determines if a user has the right to update a list task
 func (t *ListTask) CanUpdate(a web.Auth) bool {
-	doer := getUserForRights(a)
-
-	// Get the task
-	lI, err := getTaskByIDSimple(t.ID)
-	if err != nil {
-		log.Log.Error("Error occurred during CanUpdate (getTaskByIDSimple) for ListTask: %s", err)
-		return false
-	}
-
-	// A user can update an task if he has write acces to its list
-	l := &List{ID: lI.ListID}
-	err = l.GetSimpleByID()
-	if err != nil {
-		log.Log.Error("Error occurred during CanUpdate (ReadOne) for ListTask: %s", err)
-		return false
-	}
-	return l.CanWrite(doer)
+	return t.canDoListTask(a)
 }
 
 // CanCreate determines if a user has the right to create a list task
 func (t *ListTask) CanCreate(a web.Auth) bool {
 	doer := getUserForRights(a)
 
-	// A user can create an task if he has write acces to its list
+	// A user can do a task if he has write acces to its list
 	l := &List{ID: t.ListID}
-	l.ReadOne()
+	err := l.GetSimpleByID()
+	if err != nil {
+		log.Log.Error("Error occurred during CanDelete for ListTask: %s", err)
+		return false
+	}
 	return l.CanWrite(doer)
 }
 
@@ -73,5 +49,31 @@ func (t *ListTask) CanCreate(a web.Auth) bool {
 func (t *ListTask) CanRead(a web.Auth) bool {
 	// A user can read a task if it has access to the list
 	list := &List{ID: t.ListID}
+	err := list.GetSimpleByID()
+	if err != nil {
+		log.Log.Error("Error occurred during CanRead for ListTask: %s", err)
+		return false
+	}
 	return list.CanRead(a)
+}
+
+// Helper function to check if a user can do stuff on a list task
+func (t *ListTask) canDoListTask(a web.Auth) bool {
+	doer := getUserForRights(a)
+
+	// Get the task
+	lI, err := getTaskByIDSimple(t.ID)
+	if err != nil {
+		log.Log.Error("Error occurred during canDoListTask (getTaskByIDSimple) for ListTask: %s", err)
+		return false
+	}
+
+	// A user can do a task if he has write acces to its list
+	l := &List{ID: lI.ListID}
+	err = l.GetSimpleByID()
+	if err != nil {
+		log.Log.Error("Error occurred during CanDelete for ListTask: %s", err)
+		return false
+	}
+	return l.CanWrite(doer)
 }
