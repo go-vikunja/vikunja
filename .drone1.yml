@@ -210,7 +210,7 @@ steps:
       strip_prefix: dist/zip/
       source: dist/zip/*
       target: /master/
-    depends_on: [ after-build-static ]
+    depends_on: [ sign-release ]
     when:
       event: [ push ]
       branch: [ master ]
