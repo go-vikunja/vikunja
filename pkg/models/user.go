@@ -31,19 +31,19 @@ import (
 // UserLogin Object to recive user credentials in JSON format
 type UserLogin struct {
 	// The username used to log in.
-	Username string `json:"username" form:"username"`
+	Username string `json:"username"`
 	// The password for the user.
-	Password string `json:"password" form:"password"`
+	Password string `json:"password"`
 }
 
 // User holds information about an user
 type User struct {
 	// The unique, numeric id of this user.
 	ID int64 `xorm:"int(11) autoincr not null unique pk" json:"id"`
-	// The username of the username. Is always unique.
+	// The username of the user. Is always unique.
 	Username string `xorm:"varchar(250) not null unique" json:"username" valid:"length(3|250)" minLength:"3" maxLength:"250"`
 	Password string `xorm:"varchar(250) not null" json:"-"`
-	// The user's email address
+	// The user's email address.
 	Email    string `xorm:"varchar(250)" json:"email" valid:"email,length(0|250)" maxLength:"250"`
 	IsActive bool   `json:"-"`
 

@@ -1,7 +1,7 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "This is the documentation for the [Vikunja](http://vikunja.io) API. Vikunja is a cross-plattform Todo-application with a lot of features, such as sharing lists with users or teams. \u003c!-- ReDoc-Inject: \u003csecurity-definitions\u003e --\u003e\n# Authorization\n**JWT-Auth:** Main authorization method, used for most of the requests. Needs ` + \"`\" + `Authorization: Bearer \u003cjwt-token\u003e` + \"`\" + `-header to authenticate successfully.\n\n**BasicAuth:** Only used when requesting tasks via caldav.\n\u003c!-- ReDoc-Inject: \u003csecurity-definitions\u003e --\u003e",
+        "description": "\u003c!-- ReDoc-Inject: \u003csecurity-definitions\u003e --\u003e",
         "title": "Vikunja API",
         "contact": {
             "name": "General Vikunja contact",
@@ -24,7 +24,7 @@
                         "JWTKeyAuth": []
                     }
                 ],
-                "description": "Returns all labels which are either created by the user or associated with a task the user has at least read-access to.",
+                "description": "Returns an array with all assignees for this task.",
                 "consumes": [
                     "application/json"
                 ],
@@ -32,9 +32,9 @@
                     "application/json"
                 ],
                 "tags": [
-                    "labels"
+                    "assignees"
                 ],
-                "summary": "Get all labels a user has access to",
+                "summary": "Get all assignees for a task",
                 "parameters": [
                     {
                         "type": "integer",
@@ -44,18 +44,18 @@
                     },
                     {
                         "type": "string",
-                        "description": "Search labels by label text.",
+                        "description": "Search assignees by their username.",
                         "name": "s",
                         "in": "query"
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "The labels",
+                        "description": "The assignees",
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/models.Label"
+                                "$ref": "#/definitions/models.User"
                             }
                         }
                     },
@@ -3785,6 +3785,7 @@
                     "maxLength": 250
                 },
                 "done": {
+                    "description": "Whether a task is done or not.",
                     "type": "boolean"
                 },
                 "dueDate": {
@@ -3805,10 +3806,6 @@
                     "items": {
                         "$ref": "#/definitions/models.Label"
                     }
-                },
-                "listID": {
-                    "description": "The list this task belongs to.",
-                    "type": "integer"
                 },
                 "parentTaskID": {
                     "description": "If the task is a subtask, this is the id of its parent.",
@@ -3983,6 +3980,7 @@
                     "maxLength": 250
                 },
                 "done": {
+                    "description": "Whether a task is done or not.",
                     "type": "boolean"
                 },
                 "dueDate": {
@@ -4003,10 +4001,6 @@
                     "items": {
                         "$ref": "#/definitions/models.Label"
                     }
-                },
-                "listID": {
-                    "description": "The list this task belongs to.",
-                    "type": "integer"
                 },
                 "parentTaskID": {
                     "description": "If the task is a subtask, this is the id of its parent.",
@@ -4072,10 +4066,6 @@
                     "description": "The unique, numeric id of this list \u003c-\u003e user relation.",
                     "type": "integer"
                 },
-                "list_id": {
-                    "description": "The list id.",
-                    "type": "integer"
-                },
                 "right": {
                     "description": "The right this user has. 0 = Read only, 1 = Read \u0026 Write, 2 = Admin. See the docs for more details.",
                     "type": "integer",
@@ -4086,7 +4076,7 @@
                     "description": "A unix timestamp when this relation was last updated. You cannot change this value.",
                     "type": "integer"
                 },
-                "user_id": {
+                "userID": {
                     "description": "The user id.",
                     "type": "integer"
                 }
@@ -4145,10 +4135,6 @@
                     "description": "The unique, numeric id of this namespace \u003c-\u003e user relation.",
                     "type": "integer"
                 },
-                "namespace_id": {
-                    "description": "The namespace id",
-                    "type": "integer"
-                },
                 "right": {
                     "description": "The right this user has. 0 = Read only, 1 = Read \u0026 Write, 2 = Admin. See the docs for more details.",
                     "type": "integer",
@@ -4159,7 +4145,7 @@
                     "description": "A unix timestamp when this relation was last updated. You cannot change this value.",
                     "type": "integer"
                 },
-                "user_id": {
+                "userID": {
                     "description": "The user id.",
                     "type": "integer"
                 }
@@ -4233,7 +4219,7 @@
                     "description": "A unix timestamp when this relation was created. You cannot change this value.",
                     "type": "integer"
                 },
-                "created_by": {
+                "createdBy": {
                     "description": "The user who created this team.",
                     "type": "object",
                     "$ref": "#/definitions/models.User"
@@ -4278,17 +4264,13 @@
                     "description": "The unique, numeric id of this list \u003c-\u003e team relation.",
                     "type": "integer"
                 },
-                "list_id": {
-                    "description": "The list id.",
-                    "type": "integer"
-                },
                 "right": {
                     "description": "The right this team has. 0 = Read only, 1 = Read \u0026 Write, 2 = Admin. See the docs for more details.",
                     "type": "integer",
                     "default": 0,
                     "maximum": 2
                 },
-                "team_id": {
+                "teamID": {
                     "description": "The team id.",
                     "type": "integer"
                 },
@@ -4313,11 +4295,7 @@
                     "description": "The unique, numeric id of this team member relation.",
                     "type": "integer"
                 },
-                "team_id": {
-                    "description": "The team id.",
-                    "type": "integer"
-                },
-                "user_id": {
+                "userID": {
                     "description": "The id of the member.",
                     "type": "integer"
                 }
@@ -4334,17 +4312,13 @@
                     "description": "The unique, numeric id of this namespace \u003c-\u003e team relation.",
                     "type": "integer"
                 },
-                "namespace_id": {
-                    "description": "The namespace id.",
-                    "type": "integer"
-                },
                 "right": {
                     "description": "The right this team has. 0 = Read only, 1 = Read \u0026 Write, 2 = Admin. See the docs for more details.",
                     "type": "integer",
                     "default": 0,
                     "maximum": 2
                 },
-                "team_id": {
+                "teamID": {
                     "description": "The team id.",
                     "type": "integer"
                 },
@@ -4366,7 +4340,7 @@
                     "type": "integer"
                 },
                 "email": {
-                    "description": "The user's email address",
+                    "description": "The user's email address.",
                     "type": "string",
                     "maxLength": 250
                 },
@@ -4379,7 +4353,7 @@
                     "type": "integer"
                 },
                 "username": {
-                    "description": "The username of the username. Is always unique.",
+                    "description": "The username of the user. Is always unique.",
                     "type": "string",
                     "maxLength": 250,
                     "minLength": 3
@@ -4393,7 +4367,7 @@
                     "description": "A unix timestamp when this relation was created. You cannot change this value.",
                     "type": "integer"
                 },
-                "created_by": {
+                "createdBy": {
                     "description": "The user who created this team.",
                     "type": "object",
                     "$ref": "#/definitions/models.User"
@@ -4438,7 +4412,7 @@
                     "type": "integer"
                 },
                 "email": {
-                    "description": "The user's email address",
+                    "description": "The user's email address.",
                     "type": "string",
                     "maxLength": 250
                 },
@@ -4451,7 +4425,7 @@
                     "type": "integer"
                 },
                 "username": {
-                    "description": "The username of the username. Is always unique.",
+                    "description": "The username of the user. Is always unique.",
                     "type": "string",
                     "maxLength": 250,
                     "minLength": 3
@@ -4479,7 +4453,7 @@
                     "type": "integer"
                 },
                 "email": {
-                    "description": "The user's email address",
+                    "description": "The user's email address.",
                     "type": "string",
                     "maxLength": 250
                 },
@@ -4495,7 +4469,7 @@
                     "type": "integer"
                 },
                 "username": {
-                    "description": "The username of the username. Is always unique.",
+                    "description": "The username of the user. Is always unique.",
                     "type": "string",
                     "maxLength": 250,
                     "minLength": 3

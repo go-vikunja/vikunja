@@ -29,14 +29,15 @@ type ListTask struct {
 	Text string `xorm:"varchar(250)" json:"text" valid:"runelength(3|250)" minLength:"3" maxLength:"250"`
 	// The task description.
 	Description string `xorm:"varchar(250)" json:"description" valid:"runelength(0|250)" maxLength:"250"`
-	Done        bool   `xorm:"INDEX" json:"done"`
+	// Whether a task is done or not.
+	Done bool `xorm:"INDEX" json:"done"`
 	// A unix timestamp when the task is due.
 	DueDateUnix int64 `xorm:"int(11) INDEX" json:"dueDate"`
 	// An array of unix timestamps when the user wants to be reminded of the task.
 	RemindersUnix []int64 `xorm:"JSON TEXT" json:"reminderDates"`
 	CreatedByID   int64   `xorm:"int(11)" json:"-"` // ID of the user who put that task on the list
 	// The list this task belongs to.
-	ListID int64 `xorm:"int(11) INDEX" json:"listID" param:"list"`
+	ListID int64 `xorm:"int(11) INDEX" json:"-" param:"list"`
 	// An amount in seconds this task repeats itself. If this is set, when marking the task as done, it will mark itself as "undone" and then increase all remindes and the due date by its amount.
 	RepeatAfter int64 `xorm:"int(11) INDEX" json:"repeatAfter"`
 	// If the task is a subtask, this is the id of its parent.

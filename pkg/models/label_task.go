@@ -24,7 +24,7 @@ import (
 // LabelTask represents a relation between a label and a task
 type LabelTask struct {
 	// The unique, numeric id of this label.
-	ID     int64 `xorm:"int(11) autoincr not null unique pk" json:"id"`
+	ID     int64 `xorm:"int(11) autoincr not null unique pk" json:"-"`
 	TaskID int64 `xorm:"int(11) INDEX not null" json:"-" param:"listtask"`
 	// The label id you want to associate with a task.
 	LabelID int64 `xorm:"int(11) INDEX not null" json:"label_id" param:"label"`

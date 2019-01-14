@@ -29,7 +29,7 @@ type Team struct {
 	CreatedByID int64  `xorm:"int(11) not null INDEX" json:"-"`
 
 	// The user who created this team.
-	CreatedBy User `xorm:"-" json:"created_by"`
+	CreatedBy User `xorm:"-" json:"createdBy"`
 	// An array of all members in this team.
 	Members []*TeamUser `xorm:"-" json:"members"`
 
@@ -65,9 +65,9 @@ type TeamMember struct {
 	// The unique, numeric id of this team member relation.
 	ID int64 `xorm:"int(11) autoincr not null unique pk" json:"id"`
 	// The team id.
-	TeamID int64 `xorm:"int(11) not null INDEX" json:"team_id" param:"team"`
+	TeamID int64 `xorm:"int(11) not null INDEX" json:"-" param:"team"`
 	// The id of the member.
-	UserID int64 `xorm:"int(11) not null INDEX" json:"user_id" param:"user"`
+	UserID int64 `xorm:"int(11) not null INDEX" json:"userID" param:"user"`
 	// Whether or not the member is an admin of the team. See the docs for more about what a team admin can do
 	Admin bool `xorm:"tinyint(1) INDEX" json:"admin"`
 

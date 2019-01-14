@@ -49,6 +49,7 @@ definitions:
         maxLength: 250
         type: string
       done:
+        description: Whether a task is done or not.
         type: boolean
       dueDate:
         description: A unix timestamp when the task is due.
@@ -64,9 +65,6 @@ definitions:
         items:
           $ref: '#/definitions/models.Label'
         type: array
-      listID:
-        description: The list this task belongs to.
-        type: integer
       parentTaskID:
         description: If the task is a subtask, this is the id of its parent.
         type: integer
@@ -207,6 +205,7 @@ definitions:
         maxLength: 250
         type: string
       done:
+        description: Whether a task is done or not.
         type: boolean
       dueDate:
         description: A unix timestamp when the task is due.
@@ -222,9 +221,6 @@ definitions:
         items:
           $ref: '#/definitions/models.Label'
         type: array
-      listID:
-        description: The list this task belongs to.
-        type: integer
       parentTaskID:
         description: If the task is a subtask, this is the id of its parent.
         type: integer
@@ -277,9 +273,6 @@ definitions:
       id:
         description: The unique, numeric id of this list <-> user relation.
         type: integer
-      list_id:
-        description: The list id.
-        type: integer
       right:
         default: 0
         description: The right this user has. 0 = Read only, 1 = Read & Write, 2 =
@@ -290,7 +283,7 @@ definitions:
         description: A unix timestamp when this relation was last updated. You cannot
           change this value.
         type: integer
-      user_id:
+      userID:
         description: The user id.
         type: integer
     type: object
@@ -336,9 +329,6 @@ definitions:
       id:
         description: The unique, numeric id of this namespace <-> user relation.
         type: integer
-      namespace_id:
-        description: The namespace id
-        type: integer
       right:
         default: 0
         description: The right this user has. 0 = Read only, 1 = Read & Write, 2 =
@@ -349,7 +339,7 @@ definitions:
         description: A unix timestamp when this relation was last updated. You cannot
           change this value.
         type: integer
-      user_id:
+      userID:
         description: The user id.
         type: integer
     type: object
@@ -405,7 +395,7 @@ definitions:
         description: A unix timestamp when this relation was created. You cannot change
           this value.
         type: integer
-      created_by:
+      createdBy:
         $ref: '#/definitions/models.User'
         description: The user who created this team.
         type: object
@@ -441,16 +431,13 @@ definitions:
       id:
         description: The unique, numeric id of this list <-> team relation.
         type: integer
-      list_id:
-        description: The list id.
-        type: integer
       right:
         default: 0
         description: The right this team has. 0 = Read only, 1 = Read & Write, 2 =
           Admin. See the docs for more details.
         maximum: 2
         type: integer
-      team_id:
+      teamID:
         description: The team id.
         type: integer
       updated:
@@ -471,10 +458,7 @@ definitions:
       id:
         description: The unique, numeric id of this team member relation.
         type: integer
-      team_id:
-        description: The team id.
-        type: integer
-      user_id:
+      userID:
         description: The id of the member.
         type: integer
     type: object
@@ -487,16 +471,13 @@ definitions:
       id:
         description: The unique, numeric id of this namespace <-> team relation.
         type: integer
-      namespace_id:
-        description: The namespace id.
-        type: integer
       right:
         default: 0
         description: The right this team has. 0 = Read only, 1 = Read & Write, 2 =
           Admin. See the docs for more details.
         maximum: 2
         type: integer
-      team_id:
+      teamID:
         description: The team id.
         type: integer
       updated:
@@ -515,7 +496,7 @@ definitions:
           this value.
         type: integer
       email:
-        description: The user's email address
+        description: The user's email address.
         maxLength: 250
         type: string
       id:
@@ -526,7 +507,7 @@ definitions:
           change this value.
         type: integer
       username:
-        description: The username of the username. Is always unique.
+        description: The username of the user. Is always unique.
         maxLength: 250
         minLength: 3
         type: string
@@ -537,7 +518,7 @@ definitions:
         description: A unix timestamp when this relation was created. You cannot change
           this value.
         type: integer
-      created_by:
+      createdBy:
         $ref: '#/definitions/models.User'
         description: The user who created this team.
         type: object
@@ -573,7 +554,7 @@ definitions:
           this value.
         type: integer
       email:
-        description: The user's email address
+        description: The user's email address.
         maxLength: 250
         type: string
       id:
@@ -584,7 +565,7 @@ definitions:
           change this value.
         type: integer
       username:
-        description: The username of the username. Is always unique.
+        description: The username of the user. Is always unique.
         maxLength: 250
         minLength: 3
         type: string
@@ -605,7 +586,7 @@ definitions:
           this value.
         type: integer
       email:
-        description: The user's email address
+        description: The user's email address.
         maxLength: 250
         type: string
       id:
@@ -618,7 +599,7 @@ definitions:
           change this value.
         type: integer
       username:
-        description: The username of the username. Is always unique.
+        description: The username of the user. Is always unique.
         maxLength: 250
         minLength: 3
         type: string
@@ -641,13 +622,7 @@ info:
     email: hello@vikunja.io
     name: General Vikunja contact
     url: http://vikunja.io/en/contact/
-  description: |-
-    This is the documentation for the [Vikunja](http://vikunja.io) API. Vikunja is a cross-plattform Todo-application with a lot of features, such as sharing lists with users or teams. <!-- ReDoc-Inject: <security-definitions> -->
-    # Authorization
-    **JWT-Auth:** Main authorization method, used for most of the requests. Needs ` + "`" + `Authorization: Bearer <jwt-token>` + "`" + `-header to authenticate successfully.
-
-    **BasicAuth:** Only used when requesting tasks via caldav.
-    <!-- ReDoc-Inject: <security-definitions> -->
+  description: '<!-- ReDoc-Inject: <security-definitions> -->'
   license:
     name: GPLv3
     url: http://code.vikunja.io/api/src/branch/master/LICENSE
@@ -658,15 +633,14 @@ paths:
     get:
       consumes:
       - application/json
-      description: Returns all labels which are either created by the user or associated
-        with a task the user has at least read-access to.
+      description: Returns an array with all assignees for this task.
       parameters:
       - description: The page number. Used for pagination. If not provided, the first
           page of results is returned.
         in: query
         name: p
         type: integer
-      - description: Search labels by label text.
+      - description: Search assignees by their username.
         in: query
         name: s
         type: string
@@ -674,10 +648,10 @@ paths:
       - application/json
       responses:
         "200":
-          description: The labels
+          description: The assignees
           schema:
             items:
-              $ref: '#/definitions/models.Label'
+              $ref: '#/definitions/models.User'
             type: array
         "500":
           description: Internal error
@@ -686,9 +660,9 @@ paths:
             type: object
       security:
       - JWTKeyAuth: []
-      summary: Get all labels a user has access to
+      summary: Get all assignees for a task
       tags:
-      - labels
+      - assignees
     put:
       consumes:
       - application/json
