@@ -150,13 +150,16 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [ ] Mgl. zum Accountlöschen haben (so richtig krass mit emailverifiezierung und dass alle Privaten Listen gelöscht werden und man alle geteilten entweder wem übertragen muss oder  auf privat stellen)
 * [ ] /info endpoint, in dem dann zb die limits und version etc steht
 * [ ] Deprecate /namespaces/{id}/lists in favour of namespace.ReadOne() <-- should also return the lists
-* [ ] Description of web.HTTPError
-* [ ] Rights methods should return errors
-* [ ] Re-check all `{List|Namespace}{User|Team}` if really all parameters need to be exposed via json or are overwritten via param anyway.
 
 ### Refactor 
 
 * [x] ListTaskRights, sollte überall gleich funktionieren, gibt ja mittlerweile auch eine Methode um liste von nem Task aus zu kriegen oder so
+* [ ] Re-check all `{List|Namespace}{User|Team}` if really all parameters need to be exposed via json or are overwritten via param anyway.
+
+### Vikunja web
+
+* [ ] Description of web.HTTPError
+* [ ] Rights methods should return errors
 
 ### Linters
 
