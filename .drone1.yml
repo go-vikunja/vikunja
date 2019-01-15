@@ -6,8 +6,7 @@ workspace:
   path: src/code.vikunja.io/api
 
 clone:
-  git:
-    depth: 50
+  depth: 50
 
 services:
   - name: test-db
@@ -89,8 +88,7 @@ workspace:
   path: src/code.vikunja.io/api
 
 clone:
-  git:
-    depth: 50
+  depth: 50
 
 trigger:
   branch:
