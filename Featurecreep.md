@@ -140,12 +140,13 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [ ] In und Out webhooks, mit Templates vom Payload
 * [ ] Reminders via mail
 * [ ] Activity Feed, so à la "der und der hat das und das gemacht etc"
+  * [ ] Per list
+  * [ ] For the current user
 * [ ] ~~Websockets~~ SSE https://github.com/kljensen/golang-html5-sse-example
       * User authenticates (with jwt)
       * When updating/creating/etc an event struct is sent to the broker
       * The broker has a list of subscribed users
       * It then checks who is allowed to the see the event it recieved and sends it
-* [ ] Mgl., dass die Instanz geschlossen ist, also sich keiner registrieren kann, und man sich einloggen muss
 * [ ] mgl. zum Emailmaskieren haben (in den Nutzereinstellungen, wenn man seine Email nicht an alle Welt rausposaunen will)
 * [ ] Mgl. zum Accountlöschen haben (so richtig krass mit emailverifiezierung und dass alle Privaten Listen gelöscht werden und man alle geteilten entweder wem übertragen muss oder  auf privat stellen)
 * [ ] /info endpoint, in dem dann zb die limits und version etc steht
@@ -163,3 +164,32 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [ ] Staticcheck -> waiting for mod
 * [ ] unused -> waiting for mod
 * [ ] gosec -> waiting for mod
+
+### Later
+
+* [ ] Plugins
+* [ ] Rename Namespaces?
+* [ ] Namespaces to collections and n-n (one list can be in multiple collections)?
+* [ ] Per-User limits of lists/namespaces
+* [ ] Admin-Interface to do stuff like settings and user management
+  * [ ] Enable/Disable users
+  * [ ] Better rights, fine-graded
+  * [ ] Enable/disable allowing user adding to lists/namespaces for specific lists or namespaces
+  * [ ] Admins should be able to see and mange all the boards
+* [ ] Limit registration to users with a defined email domain
+* [ ] Close the instance, either no registration or only one with defined email
+* [ ] 2fa
+* [ ] Custom fields for tasks
+* [ ] Sorting lists by members, tasks, teams, last modified, etc
+* [ ] "Favourite lists" -> A user can favourize boards which will then show up in a pseudonamespace
+* [ ] Public lists
+* [ ] Internal lists -> Only registered users can see the list
+* [ ] Rights management for both public and internal lists
+* [ ] Add new users via to a list which don't have an account yet, they'd get a link to sign up for vikunja.
+  * [ ]  Respect registration email domain limits
+* [ ] Export all data from Vikunja to json
+* [ ] Watch a list -> Will get notification for everything
+* [ ] Archive a task instead of deleting
+* [ ] Task dependencies
+* [ ] Time tracking (possible plugin)
+* [ ] IFTTT
