@@ -205,6 +205,25 @@ steps:
       docker_image: vikunja/api
       confirm: true
     depends_on: [ docker ]
+
+  - name: telegram
+    image: appleboy/drone-telegram
+    depends_on:
+      - rancher
+      - release-latest
+    settings:
+      token:
+        from_secret: TELEGRAM_TOKEN
+      to:
+        from_secret: TELEGRAM_TO
+      message: >
+        {{repo.owner}}/{{repo.name}}: \[{{build.status}}] Build {{build.number}}
+        {{commit.author}} pushed to {{commit.branch}} {{commit.sha}}: `{{commit.message}}`
+        Build started at {{datetime build.started "2006-Jan-02T15:04:05Z" "GMT+2"}} finished at {{datetime build.finished "2006-Jan-02T15:04:05Z" "GMT+2"}}.
+    when:
+      status:
+        - success
+        - failure
 ---
 ########
 # Build a release when tagging
@@ -324,34 +343,11 @@ steps:
       repo: vikunja/api
       auto_tag: true
 
-# Update the instance on try.vikunja.io
-  - name: rancher
-    image: peloton/drone-rancher
-    settings:
-      url: http://server01.kolaente.de:8080/v1
-      access_key:
-        from_secret: RANCHER_ACCESS_KEY
-      secret_key:
-        from_secret: RANCHER_SECRET_KEY
-      service: vikunja-dev/api
-      docker_image: vikunja/api
-      confirm: true
-    depends_on: [ docker ]
-
----
-#############
-# Tell people vikunja was updated
-#############
-
-kind: pipeline
-name: notify
-depends_on:
-  - deploy-version
-  - deploy-master
-
-steps:
   - name: telegram
     image: appleboy/drone-telegram
+    depends_on:
+      - docker
+      - release-version
     settings:
       token:
         from_secret: TELEGRAM_TOKEN
