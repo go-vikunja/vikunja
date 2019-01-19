@@ -133,7 +133,6 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [x] Deps nach mod umziehen
 * [ ] Performance bei rechtchecks verbessern
   * User & Teamright sollte sich für n rechte in einer Funktion testen lassen
-* [ ] Globale Limits für anlegbare Listen + Namespaces
 * [ ] "Smart Lists", Listen nach bestimmten Kriterien gefiltert -> nur UI?
 * [ ] "Performance-Statistik" -> Wie viele Tasks man in bestimmten Zeiträumen so geschafft hat etc
 * [ ] IMAP-Integration -> Man schickt eine email an Vikunja und es macht daraus dann nen task -> Achtung missbrauchsmöglichkeiten
@@ -165,6 +164,19 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [ ] unused -> waiting for mod
 * [ ] gosec -> waiting for mod
 
+### More server settings
+
+* [ ] Caldav disable/enable
+* [ ] Assignees disable/enable
+* [ ] List/Namespace limits
+* [ ] Attachements disable/enable
+* [ ] Attachements size
+* [ ] Templates disable/enable
+* [ ] Stats disable/enable
+* [ ] Activity notifications disable/enable
+* [ ] IMAP integration disable/enable
+* [ ] Reminders via mail disable/enable
+
 ### Later
 
 * [ ] Plugins
@@ -188,7 +200,7 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [ ] Add new users via to a list which don't have an account yet, they'd get a link to sign up for vikunja.
   * [ ]  Respect registration email domain limits
 * [ ] Export all data from Vikunja to json
-* [ ] Watch a list -> Will get notification for everything
+* [ ] Watch a (n internal) list -> Will get notification for everything
 * [ ] Archive a task instead of deleting
 * [ ] Task dependencies
 * [ ] Time tracking (possible plugin)
