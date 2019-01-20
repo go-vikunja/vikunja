@@ -17,6 +17,15 @@ first:
     child: true
 ```
 
+## Config file locations
+
+Vikunja will search on various places for a config file:
+
+* Next to the location of the binary
+* In the `service.rootpath` location set in a config (remember you can set config arguments via environment variables)
+* In `/etc/vikunja`
+* In `~/.config/vikunja`
+
 # Default configuration with explanations
 
 This is the same as the `config.yml.sample` file you'll find in the root of vikunja.

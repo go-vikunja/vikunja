@@ -84,8 +84,9 @@ func init() {
 	viper.AutomaticEnv()
 
 	// Load the config file
-	viper.AddConfigPath(exPath)
 	viper.AddConfigPath(viper.GetString("service.rootpath"))
+	viper.AddConfigPath("/etc/vikunja/")
+	viper.AddConfigPath("~/.config/vikunja")
 	viper.AddConfigPath(".")
 	viper.SetConfigName("config")
 	err = viper.ReadInConfig()
