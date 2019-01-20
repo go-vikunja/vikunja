@@ -26,8 +26,6 @@ SOURCES ?= $(shell find . -name "*.go" -type f)
 
 TAGS ?=
 
-TMPDIR := $(shell mktemp -d 2>/dev/null || mktemp -d -t 'kasino-temp')
-
 ifeq ($(OS), Windows_NT)
 	EXECUTABLE := vikunja.exe
 else
