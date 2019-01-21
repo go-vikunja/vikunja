@@ -42,6 +42,18 @@ else
 	endif
 endif
 
+ifeq ($(DRONE_WORKSPACE),'')
+	BINLOCATION := $(EXECUTABLE)
+else
+    BINLOCATION := $(DIST)/binaries/$(EXECUTABLE)-$(VERSION)-linux-amd64
+endif
+
+ifeq ($(VERSION),master)
+    PKGVERSION := $(shell git describe --tags --always --abbrev=10 | sed 's/-/+/' | sed 's/^v//' | sed 's/-g/-/')
+else
+    PKGVERSION := $(VERSION)
+endif
+
 VERSION := $(shell echo $(VERSION) | sed 's/\//\-/g')
 
 .PHONY: all
@@ -104,9 +116,6 @@ release-windows:
 		go install $(GOFLAGS) github.com/karalabe/xgo; \
 	fi
 	xgo -dest $(DIST)/binaries -tags 'netgo $(TAGS)' -ldflags '-linkmode external -extldflags "-static" $(LDFLAGS)' -targets 'windows/*' -out vikunja-$(VERSION) .
-ifneq ($(DRONE_WORKSPACE),'')
-	mv /build/* $(DIST)/binaries
-endif
 
 .PHONY: release-linux
 release-linux:
@@ -114,9 +123,6 @@ release-linux:
 		go install $(GOFLAGS) github.com/karalabe/xgo; \
 	fi
 	xgo -dest $(DIST)/binaries -tags 'netgo $(TAGS)' -ldflags '-linkmode external -extldflags "-static" $(LDFLAGS)' -targets 'linux/*' -out vikunja-$(VERSION) .
-ifneq ($(DRONE_WORKSPACE),'')
-	mv /build/* $(DIST)/binaries
-endif
 
 .PHONY: release-darwin
 release-darwin:
@@ -124,9 +130,6 @@ release-darwin:
 		go install $(GOFLAGS) github.com/karalabe/xgo; \
 	fi
 	xgo -dest $(DIST)/binaries -tags 'netgo $(TAGS)' -ldflags '$(LDFLAGS)' -targets 'darwin/*' -out vikunja-$(VERSION) .
-ifneq ($(DRONE_WORKSPACE),'')
-	mv /build/* $(DIST)/binaries
-endif
 
 .PHONY: release-copy
 release-copy:
@@ -145,6 +148,15 @@ release-os-package:
 .PHONY: release-zip
 release-zip:
 	$(foreach file,$(wildcard $(DIST)/release/$(EXECUTABLE)-*),cd $(file); zip -r ../../zip/$(shell basename $(file)).zip *; cd ../../../; )
+
+# Builds a deb package using fpm from a previously created binary (using make build)
+.PHONY: build-deb
+build-deb:
+	fpm -s dir -t deb --url https://vikunja.io -n vikunja -v $(PKGVERSION) --license GPLv3 --directories /opt/vikunja --after-install ./build/after-install.sh --description 'Vikunja is an open-source todo application, written in Go. It lets you create lists,tasks and share them via teams or directly between users.' -m maintainers@vikunja.io ./$(BINLOCATION)=/opt/vikunja/vikunja ./templates=/opt/vikunja ./config.yml.sample=/etc/vikunja/config.yml;
+
+.PHONY: reprepro
+reprepro:
+	reprepro_expect debian includedeb strech ./$(EXECUTABLE)_$(PKGVERSION)_amd64.deb
 
 .PHONY: got-swag
 got-swag: do-the-swag

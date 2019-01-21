@@ -2,7 +2,7 @@ service:
   # This token is used to verify issued JWT tokens.
   # Default is a random token which will be generated at each startup of vikunja.
   # (This means all already issued tokens will be invalid once you restart vikunja)
-  JWTSecret: "cei6gaezoosah2bao3ieZohkae5aicah"
+  JWTSecret: "<jwt-secret>"
   # The interface on which to run the webserver
   interface: ":3456"
   # The URL of the frontend, used to send password reset emails.
@@ -10,7 +10,7 @@ service:
   # The base path on the file system where the binary and assets are.
   # Vikunja will also look in this path for a config file, so you could provide only this variable to point to a folder
   # with a config file which will then be used.
-  rootpath: <the path of the executable>
+  rootpath: <rootpath>
   # The number of items which gets returned per page
   pagecount: 50
   # If set to true, enables a /metrics endpoint for prometheus to collect metrics about the system

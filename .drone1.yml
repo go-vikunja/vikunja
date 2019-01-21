@@ -111,30 +111,30 @@ steps:
     image: karalabe/xgo-latest:latest
     pull: true
     environment:
-      TAGS: bindata sqlite
       GOPATH: /srv/app
     commands:
       - make release-windows
+      - mv /build/* $(DIST)/binaries
     depends_on: [ before-static-build ]
 
   - name: static-build-linux
     image: karalabe/xgo-latest:latest
     pull: true
     environment:
-      TAGS: bindata sqlite
       GOPATH: /srv/app
     commands:
       - make release-linux
+      - mv /build/* $(DIST)/binaries
     depends_on: [ before-static-build ]
 
   - name: static-build-darwin
     image: karalabe/xgo-latest:latest
     pull: true
     environment:
-      TAGS: bindata sqlite
       GOPATH: /srv/app
     commands:
       - make release-darwin
+      - mv /build/* $(DIST)/binaries
     depends_on: [ before-static-build ]
 
   - name: after-build-static
@@ -179,6 +179,49 @@ steps:
       source: dist/zip/*
       target: /master/
     depends_on: [ sign-release ]
+
+  # Build a debian package and push it to our bucket
+  - name: build-deb
+    image: kolaente/fpm
+    pull: true
+    commands:
+      - make build-deb
+    depends_on: [ static-build-linux ]
+
+  - name: deb-structure
+    image: kolaente/reprepro
+    pull: true
+    environment:
+      GPG_PRIVATE_KEY:
+        from_secret: gpg_privatekey
+    commands:
+      - export GPG_TTY=$(tty)
+      - gpg -qk
+      - echo "use-agent" >>  ~/.gnupg/gpg.conf
+      - gpgconf --kill gpg-agent
+      - echo $GPG_PRIVATE_KEY > ~/frederik.gpg
+      - gpg --import ~/frederik.gpg
+      - mkdir debian/conf -p
+      - cp build/reprepro-dist-conf debian/conf/distributions
+      - make reprepro
+    depends_on: [ build-deb ]
+
+  # Push the releases to our pseudo-s3-bucket
+  - name: release-deb
+    image: plugins/s3:1
+    pull: true
+    settings:
+      bucket: vikunja-deb
+      access_key:
+        from_secret: aws_access_key_id
+      secret_key:
+        from_secret: aws_secret_access_key
+      endpoint: https://storage.kolaente.de
+      path_style: true
+      strip_prefix: debian
+      source: debian/*
+      target: /
+    depends_on: [ deb-structure ]
 
 # Build the docker image and push it to docker hub
   - name: docker
@@ -262,30 +305,30 @@ steps:
     image: karalabe/xgo-latest:latest
     pull: true
     environment:
-      TAGS: bindata sqlite
       GOPATH: /srv/app
     commands:
       - make release-windows
+      - mv /build/* $(DIST)/binaries
     depends_on: [ before-static-build ]
 
   - name: static-build-linux
     image: karalabe/xgo-latest:latest
     pull: true
     environment:
-      TAGS: bindata sqlite
       GOPATH: /srv/app
     commands:
       - make release-linux
+      - mv /build/* $(DIST)/binaries
     depends_on: [ before-static-build ]
 
   - name: static-build-darwin
     image: karalabe/xgo-latest:latest
     pull: true
     environment:
-      TAGS: bindata sqlite
       GOPATH: /srv/app
     commands:
       - make release-darwin
+      - mv /build/* $(DIST)/binaries
     depends_on: [ before-static-build ]
 
   - name: after-build-static
@@ -330,6 +373,49 @@ steps:
       source: dist/zip/*
       target: /${DRONE_TAG##v}/
     depends_on: [ sign-release ]
+
+  # Build a debian package and push it to our bucket
+  - name: build-deb
+    image: kolaente/fpm
+    pull: true
+    commands:
+      - make build-deb
+    depends_on: [ static-build-linux ]
+
+  - name: deb-structure
+    image: kolaente/reprepro
+    pull: true
+    environment:
+      GPG_PRIVATE_KEY:
+        from_secret: gpg_privatekey
+    commands:
+      - export GPG_TTY=$(tty)
+      - gpg -qk
+      - echo "use-agent" >>  ~/.gnupg/gpg.conf
+      - gpgconf --kill gpg-agent
+      - echo $GPG_PRIVATE_KEY > ~/frederik.gpg
+      - gpg --import ~/frederik.gpg
+      - mkdir debian/conf -p
+      - cp build/reprepro-dist-conf debian/conf/distributions
+      - make reprepro
+    depends_on: [ build-deb ]
+
+  # Push the releases to our pseudo-s3-bucket
+  - name: release-deb
+    image: plugins/s3:1
+    pull: true
+    settings:
+      bucket: vikunja-deb
+      access_key:
+        from_secret: aws_access_key_id
+      secret_key:
+        from_secret: aws_secret_access_key
+      endpoint: https://storage.kolaente.de
+      path_style: true
+      strip_prefix: debian
+      source: debian/*
+      target: /
+    depends_on: [ deb-structure ]
 
 # Build the docker image and push it to docker hub
   - name: docker

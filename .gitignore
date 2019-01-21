@@ -10,3 +10,6 @@ cover.*
 /vikunja
 Test_*
 bin/
+secrets
+*.deb
+debian/
