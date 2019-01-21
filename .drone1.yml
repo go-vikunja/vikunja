@@ -114,7 +114,7 @@ steps:
       GOPATH: /srv/app
     commands:
       - make release-windows
-      - mv /build/* $(DIST)/binaries
+      - mv /build/* binaries/
     depends_on: [ before-static-build ]
 
   - name: static-build-linux
@@ -124,7 +124,7 @@ steps:
       GOPATH: /srv/app
     commands:
       - make release-linux
-      - mv /build/* $(DIST)/binaries
+      - mv /build/* binaries/
     depends_on: [ before-static-build ]
 
   - name: static-build-darwin
@@ -134,7 +134,7 @@ steps:
       GOPATH: /srv/app
     commands:
       - make release-darwin
-      - mv /build/* $(DIST)/binaries
+      - mv /build/* binaries/
     depends_on: [ before-static-build ]
 
   - name: after-build-static
@@ -308,7 +308,7 @@ steps:
       GOPATH: /srv/app
     commands:
       - make release-windows
-      - mv /build/* $(DIST)/binaries
+      - mv /build/* binaries/
     depends_on: [ before-static-build ]
 
   - name: static-build-linux
@@ -318,7 +318,7 @@ steps:
       GOPATH: /srv/app
     commands:
       - make release-linux
-      - mv /build/* $(DIST)/binaries
+      - mv /build/* binaries/
     depends_on: [ before-static-build ]
 
   - name: static-build-darwin
@@ -328,7 +328,7 @@ steps:
       GOPATH: /srv/app
     commands:
       - make release-darwin
-      - mv /build/* $(DIST)/binaries
+      - mv /build/* binaries/
     depends_on: [ before-static-build ]
 
   - name: after-build-static
