@@ -29,7 +29,7 @@ func TestListUser_Create(t *testing.T) {
 		ID       int64
 		UserID   int64
 		ListID   int64
-		Right    UserRight
+		Right    Right
 		Created  int64
 		Updated  int64
 		CRUDable web.CRUDable
@@ -69,7 +69,7 @@ func TestListUser_Create(t *testing.T) {
 				Right:  500,
 			},
 			wantErr: true,
-			errType: IsErrInvalidUserRight,
+			errType: IsErrInvalidRight,
 		},
 		{
 			name: "ListUsers Create with inexisting list",
@@ -127,7 +127,7 @@ func TestListUser_ReadAll(t *testing.T) {
 		ID       int64
 		UserID   int64
 		ListID   int64
-		Right    UserRight
+		Right    Right
 		Created  int64
 		Updated  int64
 		CRUDable web.CRUDable
@@ -162,7 +162,7 @@ func TestListUser_ReadAll(t *testing.T) {
 						Password: "1234",
 						Email:    "user1@example.com",
 					},
-					Right: UserRightRead,
+					Right: RightRead,
 				},
 				{
 					User: User{
@@ -171,7 +171,7 @@ func TestListUser_ReadAll(t *testing.T) {
 						Password: "1234",
 						Email:    "user2@example.com",
 					},
-					Right: UserRightRead,
+					Right: RightRead,
 				},
 			},
 		},
@@ -218,7 +218,7 @@ func TestListUser_Update(t *testing.T) {
 		ID       int64
 		UserID   int64
 		ListID   int64
-		Right    UserRight
+		Right    Right
 		Created  int64
 		Updated  int64
 		CRUDable web.CRUDable
@@ -235,7 +235,7 @@ func TestListUser_Update(t *testing.T) {
 			fields: fields{
 				ListID: 3,
 				UserID: 1,
-				Right:  UserRightAdmin,
+				Right:  RightAdmin,
 			},
 		},
 		{
@@ -243,7 +243,7 @@ func TestListUser_Update(t *testing.T) {
 			fields: fields{
 				ListID: 3,
 				UserID: 1,
-				Right:  UserRightWrite,
+				Right:  RightWrite,
 			},
 		},
 		{
@@ -251,7 +251,7 @@ func TestListUser_Update(t *testing.T) {
 			fields: fields{
 				ListID: 3,
 				UserID: 1,
-				Right:  UserRightRead,
+				Right:  RightRead,
 			},
 		},
 		{
@@ -262,7 +262,7 @@ func TestListUser_Update(t *testing.T) {
 				Right:  500,
 			},
 			wantErr: true,
-			errType: IsErrInvalidUserRight,
+			errType: IsErrInvalidRight,
 		},
 	}
 	for _, tt := range tests {
@@ -293,7 +293,7 @@ func TestListUser_Delete(t *testing.T) {
 		ID       int64
 		UserID   int64
 		ListID   int64
-		Right    UserRight
+		Right    Right
 		Created  int64
 		Updated  int64
 		CRUDable web.CRUDable

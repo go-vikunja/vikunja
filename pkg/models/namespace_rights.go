@@ -19,84 +19,29 @@ package models
 import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/web"
+	"github.com/go-xorm/builder"
 )
-
-// IsAdmin returns true or false if the user is admin on that namespace or not
-func (n *Namespace) IsAdmin(a web.Auth) bool {
-	u := getUserForRights(a)
-
-	// Owners always have admin rights
-	if u.ID == n.Owner.ID {
-		return true
-	}
-
-	// Check user rights
-	if n.checkUserRights(u, UserRightAdmin) {
-		return true
-	}
-
-	// Check if that user is in a team which has admin rights to that namespace
-	return n.checkTeamRights(u, TeamRightAdmin)
-}
 
 // CanWrite checks if a user has write access to a namespace
 func (n *Namespace) CanWrite(a web.Auth) bool {
 	u := getUserForRights(a)
-
-	// Admins always have write access
-	if n.IsAdmin(u) {
-		return true
-	}
-
-	// Check user rights
-	if n.checkUserRights(u, UserRightWrite) {
-		return true
-	}
-
-	// Check if that user is in a team which has write rights to that namespace
-	return n.checkTeamRights(u, TeamRightWrite)
+	return n.isOwner(u) || n.checkRight(u, RightWrite, RightAdmin)
 }
 
 // CanRead checks if a user has read access to that namespace
 func (n *Namespace) CanRead(a web.Auth) bool {
 	u := getUserForRights(a)
-
-	// Admins always have read access
-	if n.IsAdmin(u) {
-		return true
-	}
-
-	// Check user rights
-	if n.checkUserRights(u, UserRightRead) {
-		return true
-	}
-
-	// Check if the user is in a team which has access to the namespace
-	return n.checkTeamRights(u, TeamRightRead)
+	return n.isOwner(u) || n.checkRight(u, RightRead, RightWrite, RightAdmin)
 }
 
 // CanUpdate checks if the user can update the namespace
 func (n *Namespace) CanUpdate(a web.Auth) bool {
-	u := getUserForRights(a)
-
-	nn, err := GetNamespaceByID(n.ID)
-	if err != nil {
-		log.Log.Error("Error occurred during CanUpdate for Namespace: %s", err)
-		return false
-	}
-	return nn.IsAdmin(u)
+	return n.IsAdmin(a)
 }
 
 // CanDelete checks if the user can delete a namespace
 func (n *Namespace) CanDelete(a web.Auth) bool {
-	u := getUserForRights(a)
-
-	nn, err := GetNamespaceByID(n.ID)
-	if err != nil {
-		log.Log.Error("Error occurred during CanDelete for Namespace: %s", err)
-		return false
-	}
-	return nn.IsAdmin(u)
+	return n.IsAdmin(a)
 }
 
 // CanCreate checks if the user can create a new namespace
@@ -105,33 +50,66 @@ func (n *Namespace) CanCreate(a web.Auth) bool {
 	return true
 }
 
-func (n *Namespace) checkTeamRights(u *User, r TeamRight) bool {
-	exists, err := x.Select("namespaces.*").
-		Table("namespaces").
-		Join("LEFT", "team_namespaces", "namespaces.id = team_namespaces.namespace_id").
-		Join("LEFT", "team_members", "team_members.team_id = team_namespaces.team_id").
-		Where("namespaces.id = ? AND ("+
-			"(team_members.user_id = ? AND team_namespaces.right = ?) "+
-			"OR namespaces.owner_id = ?)", n.ID, u.ID, r, u.ID).
-		Get(&Namespace{})
-	if err != nil {
-		log.Log.Error("Error occurred during checkTeamRights for Namespace: %s, TeamRight: %d", err, r)
-		return false
-	}
-
-	return exists
+// IsAdmin returns true or false if the user is admin on that namespace or not
+func (n *Namespace) IsAdmin(a web.Auth) bool {
+	u := getUserForRights(a)
+	return n.isOwner(u) || n.checkRight(u, RightAdmin)
 }
 
-func (n *Namespace) checkUserRights(u *User, r UserRight) bool {
+// Small helper function to check if a user owns the namespace
+func (n *Namespace) isOwner(user *User) bool {
+	return n.OwnerID == user.ID
+}
+
+func (n *Namespace) checkRight(user *User, rights ...Right) bool {
+
+	/*
+		The following loop creates an sql condition like this one:
+
+		namespaces.owner_id = 1 OR
+		(users_namespace.user_id = 1 AND users_namespace.right = 1) OR
+		(team_members.user_id = 1 AND team_namespaces.right = 1) OR
+
+
+		for each passed right. That way, we can check with a single sql query (instead if 8)
+		if the user has the right to see the list or not.
+	*/
+
+	var conds []builder.Cond
+	conds = append(conds, builder.Eq{"namespaces.owner_id": user.ID})
+	for _, r := range rights {
+		// User conditions
+		// If the namespace was shared directly with the user and the user has the right
+		conds = append(conds, builder.And(
+			builder.Eq{"users_namespace.user_id": user.ID},
+			builder.Eq{"users_namespace.right": r},
+		))
+
+		// Team rights
+		// If the namespace was shared directly with the team and the team has the right
+		conds = append(conds, builder.And(
+			builder.Eq{"team_members.user_id": user.ID},
+			builder.Eq{"team_namespaces.right": r},
+		))
+	}
+
 	exists, err := x.Select("namespaces.*").
 		Table("namespaces").
+		// User stuff
 		Join("LEFT", "users_namespace", "users_namespace.namespace_id = namespaces.id").
-		Where("namespaces.id = ? AND ("+
-			"(users_namespace.user_id = ? AND users_namespace.right = ?) "+
-			"OR namespaces.owner_id = ?)", n.ID, u.ID, r, u.ID).
-		Get(&Namespace{})
+		// Teams stuff
+		Join("LEFT", "team_namespaces", "namespaces.id = team_namespaces.namespace_id").
+		Join("LEFT", "team_members", "team_members.team_id = team_namespaces.team_id").
+		// The actual condition
+		Where(builder.And(
+			builder.Or(
+				conds...,
+			),
+			builder.Eq{"namespaces.id": n.ID},
+		)).
+		Exist(&List{})
 	if err != nil {
-		log.Log.Error("Error occurred during checkUserRights for Namespace: %s, UserRight: %d", err, r)
+		log.Log.Error("Error occurred during checkRight for namespace: %s", err)
 		return false
 	}
 

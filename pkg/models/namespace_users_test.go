@@ -30,7 +30,7 @@ func TestNamespaceUser_Create(t *testing.T) {
 		ID          int64
 		UserID      int64
 		NamespaceID int64
-		Right       UserRight
+		Right       Right
 		Created     int64
 		Updated     int64
 		CRUDable    web.CRUDable
@@ -70,7 +70,7 @@ func TestNamespaceUser_Create(t *testing.T) {
 				Right:       500,
 			},
 			wantErr: true,
-			errType: IsErrInvalidUserRight,
+			errType: IsErrInvalidRight,
 		},
 		{
 			name: "NamespaceUsers Create with inexisting list",
@@ -128,7 +128,7 @@ func TestNamespaceUser_ReadAll(t *testing.T) {
 		ID          int64
 		UserID      int64
 		NamespaceID int64
-		Right       UserRight
+		Right       Right
 		Created     int64
 		Updated     int64
 		CRUDable    web.CRUDable
@@ -163,7 +163,7 @@ func TestNamespaceUser_ReadAll(t *testing.T) {
 						Password: "1234",
 						Email:    "user1@example.com",
 					},
-					Right: UserRightRead,
+					Right: RightRead,
 				},
 				{
 					User: User{
@@ -172,7 +172,7 @@ func TestNamespaceUser_ReadAll(t *testing.T) {
 						Password: "1234",
 						Email:    "user2@example.com",
 					},
-					Right: UserRightRead,
+					Right: RightRead,
 				},
 			},
 		},
@@ -220,7 +220,7 @@ func TestNamespaceUser_Update(t *testing.T) {
 		ID          int64
 		UserID      int64
 		NamespaceID int64
-		Right       UserRight
+		Right       Right
 		Created     int64
 		Updated     int64
 		CRUDable    web.CRUDable
@@ -237,7 +237,7 @@ func TestNamespaceUser_Update(t *testing.T) {
 			fields: fields{
 				NamespaceID: 3,
 				UserID:      1,
-				Right:       UserRightAdmin,
+				Right:       RightAdmin,
 			},
 		},
 		{
@@ -245,7 +245,7 @@ func TestNamespaceUser_Update(t *testing.T) {
 			fields: fields{
 				NamespaceID: 3,
 				UserID:      1,
-				Right:       UserRightWrite,
+				Right:       RightWrite,
 			},
 		},
 		{
@@ -253,7 +253,7 @@ func TestNamespaceUser_Update(t *testing.T) {
 			fields: fields{
 				NamespaceID: 3,
 				UserID:      1,
-				Right:       UserRightRead,
+				Right:       RightRead,
 			},
 		},
 		{
@@ -264,7 +264,7 @@ func TestNamespaceUser_Update(t *testing.T) {
 				Right:       500,
 			},
 			wantErr: true,
-			errType: IsErrInvalidUserRight,
+			errType: IsErrInvalidRight,
 		},
 	}
 	for _, tt := range tests {
@@ -295,7 +295,7 @@ func TestNamespaceUser_Delete(t *testing.T) {
 		ID          int64
 		UserID      int64
 		NamespaceID int64
-		Right       UserRight
+		Right       Right
 		Created     int64
 		Updated     int64
 		CRUDable    web.CRUDable

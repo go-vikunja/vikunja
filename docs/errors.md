@@ -32,14 +32,13 @@ This document describes the different errors Vikunja can return.
 | 5011 | 409 | This user has already access to that namespace. |
 | 6001 | 400 | The team name cannot be emtpy. |
 | 6002 | 404 | The team does not exist. |
-| 6003 | 400 | The provided team right is invalid. |
 | 6004 | 409 | The team already has access to that namespace or list. |
 | 6005 | 409 | The user is already a member of that team. |
 | 6006 | 400 | Cannot delete the last team member. |
 | 6007 | 403 | The team does not have access to the list to perform that action. |
-| 7001 | 400 | The user right is invalid. |
 | 7002 | 409 | The user already has access to that list. |
 | 7003 | 403 | The user does not have access to that list. |
 | 8001 | 403 | This label already exists on that task. |
 | 8002 | 404 | The label does not exist. |
 | 8003 | 403 | The user does not have access to this label. |
+| 9001 | 403 | The right is invalid. | 

@@ -27,7 +27,7 @@ type NamespaceUser struct {
 	// The namespace id
 	NamespaceID int64 `xorm:"int(11) not null INDEX" json:"-" param:"namespace"`
 	// The right this user has. 0 = Read only, 1 = Read & Write, 2 = Admin. See the docs for more details.
-	Right UserRight `xorm:"int(11) INDEX" json:"right" valid:"length(0|2)" maximum:"2" default:"0"`
+	Right Right `xorm:"int(11) INDEX" json:"right" valid:"length(0|2)" maximum:"2" default:"0"`
 
 	// A unix timestamp when this relation was created. You cannot change this value.
 	Created int64 `xorm:"created" json:"created"`

@@ -27,7 +27,7 @@ type ListUser struct {
 	// The list id.
 	ListID int64 `xorm:"int(11) not null INDEX" json:"-" param:"list"`
 	// The right this user has. 0 = Read only, 1 = Read & Write, 2 = Admin. See the docs for more details.
-	Right UserRight `xorm:"int(11) INDEX" json:"right" valid:"length(0|2)" maximum:"2" default:"0"`
+	Right Right `xorm:"int(11) INDEX" json:"right" valid:"length(0|2)" maximum:"2" default:"0"`
 
 	// A unix timestamp when this relation was created. You cannot change this value.
 	Created int64 `xorm:"created" json:"created"`
@@ -46,5 +46,5 @@ func (ListUser) TableName() string {
 // UserWithRight represents a user in combination with the right it can have on a list/namespace
 type UserWithRight struct {
 	User  `xorm:"extends"`
-	Right UserRight `json:"right"`
+	Right Right `json:"right"`
 }

@@ -27,7 +27,7 @@ func TestNamespaceUser_CanDoSomething(t *testing.T) {
 		ID          int64
 		UserID      int64
 		NamespaceID int64
-		Right       UserRight
+		Right       Right
 		Created     int64
 		Updated     int64
 		CRUDable    web.CRUDable

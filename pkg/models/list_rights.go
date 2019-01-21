@@ -19,74 +19,35 @@ package models
 import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/web"
+	"github.com/go-xorm/builder"
 )
-
-// IsAdmin returns whether the user has admin rights on the list or not
-func (l *List) IsAdmin(a web.Auth) bool {
-	u := getUserForRights(a)
-
-	// Owners are always admins
-	if l.OwnerID == u.ID {
-		return true
-	}
-
-	// Check individual rights
-	if l.checkListUserRight(u, UserRightAdmin) {
-		return true
-	}
-
-	return l.checkListTeamRight(u, TeamRightAdmin)
-}
 
 // CanWrite return whether the user can write on that list or not
 func (l *List) CanWrite(a web.Auth) bool {
 	user := getUserForRights(a)
 
-	// Admins always have write access
-	if l.IsAdmin(user) {
-		return true
-	}
-
-	// Check individual rights
-	if l.checkListUserRight(user, UserRightWrite) {
-		return true
-	}
-
-	return l.checkListTeamRight(user, TeamRightWrite)
+	// Check all the things
+	// Check if the user is either owner or can write to the list
+	return l.isOwner(user) || l.checkRight(user, RightWrite, RightAdmin)
 }
 
 // CanRead checks if a user has read access to a list
 func (l *List) CanRead(a web.Auth) bool {
 	user := getUserForRights(a)
 
-	// Admins always have read access
-	if l.IsAdmin(user) {
-		return true
-	}
+	// Check all the things
+	// Check if the user is either owner or can read
+	return l.isOwner(user) || l.checkRight(user, RightRead, RightWrite, RightAdmin)
+}
 
-	// Check individual rights
-	if l.checkListUserRight(user, UserRightRead) {
-		return true
-	}
-
-	if l.checkListTeamRight(user, TeamRightRead) {
-		return true
-	}
-
-	// Users who are able to write should also be able to read
+// CanUpdate checks if the user can update a list
+func (l *List) CanUpdate(a web.Auth) bool {
 	return l.CanWrite(a)
 }
 
 // CanDelete checks if the user can delete a list
 func (l *List) CanDelete(a web.Auth) bool {
-	doer := getUserForRights(a)
-	return l.IsAdmin(doer)
-}
-
-// CanUpdate checks if the user can update a list
-func (l *List) CanUpdate(a web.Auth) bool {
-	doer := getUserForRights(a)
-	return l.CanWrite(doer)
+	return l.IsAdmin(a)
 }
 
 // CanCreate checks if the user can update a list
@@ -96,40 +57,83 @@ func (l *List) CanCreate(a web.Auth) bool {
 	return n.CanWrite(a)
 }
 
-func (l *List) checkListTeamRight(user *User, r TeamRight) bool {
+// IsAdmin returns whether the user has admin rights on the list or not
+func (l *List) IsAdmin(a web.Auth) bool {
+	user := getUserForRights(a)
+
+	// Check all the things
+	// Check if the user is either owner or can write to the list
+	// Owners are always admins
+	return l.isOwner(user) || l.checkRight(user, RightAdmin)
+}
+
+// Little helper function to check if a user is list owner
+func (l *List) isOwner(u *User) bool {
+	return l.OwnerID == u.ID
+}
+
+// Checks n different rights for any given user
+func (l *List) checkRight(user *User, rights ...Right) bool {
+
+	/*
+			The following loop creates an sql condition like this one:
+
+		    (ul.user_id = 1 AND ul.right = 1) OR (un.user_id = 1 AND un.right = 1) OR
+			(tm.user_id = 1 AND tn.right = 1) OR (tm2.user_id = 1 AND tl.right = 1) OR
+
+			for each passed right. That way, we can check with a single sql query (instead if 8)
+			if the user has the right to see the list or not.
+	*/
+
+	var conds []builder.Cond
+	for _, r := range rights {
+		// User conditions
+		// If the list was shared directly with the user and the user has the right
+		conds = append(conds, builder.And(
+			builder.Eq{"ul.user_id": user.ID},
+			builder.Eq{"ul.right": r},
+		))
+		// If the namespace this list belongs to was shared directly with the user and the user has the right
+		conds = append(conds, builder.And(
+			builder.Eq{"un.user_id": user.ID},
+			builder.Eq{"un.right": r},
+		))
+
+		// Team rights
+		// If the list was shared directly with the team and the team has the right
+		conds = append(conds, builder.And(
+			builder.Eq{"tm2.user_id": user.ID},
+			builder.Eq{"tl.right": r},
+		))
+		// If the namespace this list belongs to was shared directly with the team and the team has the right
+		conds = append(conds, builder.And(
+			builder.Eq{"tm.user_id": user.ID},
+			builder.Eq{"tn.right": r},
+		))
+	}
+
 	exists, err := x.Select("l.*").
 		Table("list").
 		Alias("l").
+		// User stuff
+		Join("LEFT", []string{"users_namespace", "un"}, "un.namespace_id = l.namespace_id").
+		Join("LEFT", []string{"users_list", "ul"}, "ul.list_id = l.id").
+		Join("LEFT", []string{"namespaces", "n"}, "n.id = l.namespace_id").
+		// Team stuff
 		Join("LEFT", []string{"team_namespaces", "tn"}, " l.namespace_id = tn.namespace_id").
 		Join("LEFT", []string{"team_members", "tm"}, "tm.team_id = tn.team_id").
 		Join("LEFT", []string{"team_list", "tl"}, "l.id = tl.list_id").
 		Join("LEFT", []string{"team_members", "tm2"}, "tm2.team_id = tl.team_id").
-		Where("((tm.user_id = ? AND tn.right = ?) OR (tm2.user_id = ? AND tl.right = ?)) AND l.id = ?",
-			user.ID, r, user.ID, r, l.ID).
+		// The actual condition
+		Where(builder.And(
+			builder.Or(
+				conds...,
+			),
+			builder.Eq{"l.id": l.ID},
+		)).
 		Exist(&List{})
 	if err != nil {
-		log.Log.Error("Error occurred during checkListTeamRight for List: %s", err)
-		return false
-	}
-
-	return exists
-}
-
-func (l *List) checkListUserRight(user *User, r UserRight) bool {
-	exists, err := x.Select("l.*").
-		Table("list").
-		Alias("l").
-		Join("LEFT", []string{"users_namespace", "un"}, "un.namespace_id = l.namespace_id").
-		Join("LEFT", []string{"users_list", "ul"}, "ul.list_id = l.id").
-		Join("LEFT", []string{"namespaces", "n"}, "n.id = l.namespace_id").
-		Where("((ul.user_id = ? AND ul.right = ?) "+
-			"OR (un.user_id = ? AND un.right = ?) "+
-			"OR n.owner_id = ?)"+
-			"AND l.id = ?",
-			user.ID, r, user.ID, r, user.ID, l.ID).
-		Exist(&List{})
-	if err != nil {
-		log.Log.Error("Error occurred during checkListUserRight for List: %s", err)
+		log.Log.Error("Error occurred during checkRight for list: %s", err)
 		return false
 	}
 

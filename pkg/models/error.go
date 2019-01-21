@@ -699,29 +699,6 @@ func (err ErrTeamDoesNotExist) HTTPError() web.HTTPError {
 	return web.HTTPError{HTTPCode: http.StatusNotFound, Code: ErrCodeTeamDoesNotExist, Message: "This team does not exist."}
 }
 
-// ErrInvalidTeamRight represents an error where a team right is invalid
-type ErrInvalidTeamRight struct {
-	Right TeamRight
-}
-
-// IsErrInvalidTeamRight checks if an error is ErrInvalidTeamRight.
-func IsErrInvalidTeamRight(err error) bool {
-	_, ok := err.(ErrInvalidTeamRight)
-	return ok
-}
-
-func (err ErrInvalidTeamRight) Error() string {
-	return fmt.Sprintf("Team right invalid [Right: %d]", err.Right)
-}
-
-// ErrCodeInvalidTeamRight holds the unique world-error code of this error
-const ErrCodeInvalidTeamRight = 6003
-
-// HTTPError holds the http error description
-func (err ErrInvalidTeamRight) HTTPError() web.HTTPError {
-	return web.HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrCodeInvalidTeamRight, Message: "The team right is invalid."}
-}
-
 // ErrTeamAlreadyHasAccess represents an error where a team already has access to a list/namespace
 type ErrTeamAlreadyHasAccess struct {
 	TeamID int64
@@ -821,29 +798,6 @@ func (err ErrTeamDoesNotHaveAccessToList) HTTPError() web.HTTPError {
 // ====================
 // User <-> List errors
 // ====================
-
-// ErrInvalidUserRight represents an error where a user right is invalid
-type ErrInvalidUserRight struct {
-	Right UserRight
-}
-
-// IsErrInvalidUserRight checks if an error is ErrInvalidUserRight.
-func IsErrInvalidUserRight(err error) bool {
-	_, ok := err.(ErrInvalidUserRight)
-	return ok
-}
-
-func (err ErrInvalidUserRight) Error() string {
-	return fmt.Sprintf("User right is invalid [Right: %d]", err.Right)
-}
-
-// ErrCodeInvalidUserRight holds the unique world-error code of this error
-const ErrCodeInvalidUserRight = 7001
-
-// HTTPError holds the http error description
-func (err ErrInvalidUserRight) HTTPError() web.HTTPError {
-	return web.HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrCodeInvalidUserRight, Message: "The user right is invalid."}
-}
 
 // ErrUserAlreadyHasAccess represents an error where a user already has access to a list/namespace
 type ErrUserAlreadyHasAccess struct {
@@ -977,5 +931,36 @@ func (err ErrUserHasNoAccessToLabel) HTTPError() web.HTTPError {
 		HTTPCode: http.StatusForbidden,
 		Code:     ErrCodeUserHasNoAccessToLabel,
 		Message:  "You don't have access to this label.",
+	}
+}
+
+// ========
+//  Rights
+// ========
+
+// ErrInvalidRight represents an error where a right is invalid
+type ErrInvalidRight struct {
+	Right Right
+}
+
+// IsErrInvalidRight checks if an error is ErrInvalidRight.
+func IsErrInvalidRight(err error) bool {
+	_, ok := err.(ErrInvalidRight)
+	return ok
+}
+
+func (err ErrInvalidRight) Error() string {
+	return fmt.Sprintf(" right invalid [Right: %d]", err.Right)
+}
+
+// ErrCodeInvalidRight holds the unique world-error code of this error
+const ErrCodeInvalidRight = 9001
+
+// HTTPError holds the http error description
+func (err ErrInvalidRight) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeInvalidRight,
+		Message:  "The right is invalid.",
 	}
 }

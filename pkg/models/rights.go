@@ -1,5 +1,5 @@
 //  Vikunja is a todo-list application to facilitate your life.
-//  Copyright 2018 Vikunja and contributors. All rights reserved.
+//  Copyright 2019 Vikunja and contributors. All rights reserved.
 //
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -16,27 +16,27 @@
 
 package models
 
-// UserRight defines the rights users can have for lists/namespaces
-type UserRight int
+// Right defines the rights users/teams can have for lists/namespaces
+type Right int
 
-// define unknown user right
+// define unknown right
 const (
-	UserRightUnknown = -1
+	RightUnknown = -1
 )
 
-// Enumerate all the user rights
+// Enumerate all the team rights
 const (
-	// Can read lists in a User
-	UserRightRead UserRight = iota
-	// Can write tasks in a User like lists and todo tasks. Cannot create new lists.
-	UserRightWrite
+	// Can read lists in a
+	RightRead Right = iota
+	// Can write in a like lists and todo tasks. Cannot create new lists.
+	RightWrite
 	// Can manage a list/namespace, can do everything
-	UserRightAdmin
+	RightAdmin
 )
 
-func (r UserRight) isValid() error {
-	if r != UserRightAdmin && r != UserRightRead && r != UserRightWrite {
-		return ErrInvalidUserRight{r}
+func (r Right) isValid() error {
+	if r != RightAdmin && r != RightRead && r != RightWrite {
+		return ErrInvalidRight{r}
 	}
 
 	return nil

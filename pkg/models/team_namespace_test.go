@@ -29,7 +29,7 @@ func TestTeamNamespace(t *testing.T) {
 	tn := TeamNamespace{
 		TeamID:      1,
 		NamespaceID: 1,
-		Right:       TeamRightAdmin,
+		Right:       RightAdmin,
 	}
 
 	dummyuser, err := GetUserByID(1)
@@ -47,10 +47,10 @@ func TestTeamNamespace(t *testing.T) {
 
 	// Test with invalid team right
 	tn2 := tn
-	tn2.Right = TeamRightUnknown
+	tn2.Right = RightUnknown
 	err = tn2.Create(&dummyuser)
 	assert.Error(t, err)
-	assert.True(t, IsErrInvalidTeamRight(err))
+	assert.True(t, IsErrInvalidRight(err))
 
 	// Check with inexistant team
 	tn3 := tn
@@ -105,7 +105,7 @@ func TestTeamNamespace_Update(t *testing.T) {
 		ID          int64
 		TeamID      int64
 		NamespaceID int64
-		Right       TeamRight
+		Right       Right
 		Created     int64
 		Updated     int64
 		CRUDable    web.CRUDable
@@ -122,7 +122,7 @@ func TestTeamNamespace_Update(t *testing.T) {
 			fields: fields{
 				NamespaceID: 3,
 				TeamID:      1,
-				Right:       TeamRightAdmin,
+				Right:       RightAdmin,
 			},
 		},
 		{
@@ -130,7 +130,7 @@ func TestTeamNamespace_Update(t *testing.T) {
 			fields: fields{
 				NamespaceID: 3,
 				TeamID:      1,
-				Right:       TeamRightWrite,
+				Right:       RightWrite,
 			},
 		},
 		{
@@ -138,7 +138,7 @@ func TestTeamNamespace_Update(t *testing.T) {
 			fields: fields{
 				NamespaceID: 3,
 				TeamID:      1,
-				Right:       TeamRightRead,
+				Right:       RightRead,
 			},
 		},
 		{
@@ -149,7 +149,7 @@ func TestTeamNamespace_Update(t *testing.T) {
 				Right:       500,
 			},
 			wantErr: true,
-			errType: IsErrInvalidTeamRight,
+			errType: IsErrInvalidRight,
 		},
 	}
 	for _, tt := range tests {

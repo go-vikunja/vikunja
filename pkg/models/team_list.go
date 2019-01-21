@@ -27,7 +27,7 @@ type TeamList struct {
 	// The list id.
 	ListID int64 `xorm:"int(11) not null INDEX" json:"-" param:"list"`
 	// The right this team has. 0 = Read only, 1 = Read & Write, 2 = Admin. See the docs for more details.
-	Right TeamRight `xorm:"int(11) INDEX" json:"right" valid:"length(0|2)" maximum:"2" default:"0"`
+	Right Right `xorm:"int(11) INDEX" json:"right" valid:"length(0|2)" maximum:"2" default:"0"`
 
 	// A unix timestamp when this relation was created. You cannot change this value.
 	Created int64 `xorm:"created" json:"created"`
@@ -46,5 +46,5 @@ func (TeamList) TableName() string {
 // TeamWithRight represents a team, combined with rights.
 type TeamWithRight struct {
 	Team  `xorm:"extends"`
-	Right TeamRight `json:"right"`
+	Right Right `json:"right"`
 }

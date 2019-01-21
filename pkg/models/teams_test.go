@@ -92,15 +92,15 @@ func TestTeam_Create(t *testing.T) {
 	assert.True(t, IsErrTeamDoesNotExist(err))
 }
 
-func TestIsErrInvalidTeamRight(t *testing.T) {
-	assert.NoError(t, TeamRightAdmin.isValid())
-	assert.NoError(t, TeamRightRead.isValid())
-	assert.NoError(t, TeamRightWrite.isValid())
+func TestIsErrInvalidRight(t *testing.T) {
+	assert.NoError(t, RightAdmin.isValid())
+	assert.NoError(t, RightRead.isValid())
+	assert.NoError(t, RightWrite.isValid())
 
 	// Check invalid
-	var tr TeamRight
+	var tr Right
 	tr = 938
 	err := tr.isValid()
 	assert.Error(t, err)
-	assert.True(t, IsErrInvalidTeamRight(err))
+	assert.True(t, IsErrInvalidRight(err))
 }

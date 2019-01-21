@@ -29,7 +29,7 @@ func TestTeamList(t *testing.T) {
 	tl := TeamList{
 		TeamID: 1,
 		ListID: 1,
-		Right:  TeamRightAdmin,
+		Right:  RightAdmin,
 	}
 
 	// Dummyuser
@@ -48,10 +48,10 @@ func TestTeamList(t *testing.T) {
 
 	// Check with wrong rights
 	tl2 := tl
-	tl2.Right = TeamRightUnknown
+	tl2.Right = RightUnknown
 	err = tl2.Create(&u)
 	assert.Error(t, err)
-	assert.True(t, IsErrInvalidTeamRight(err))
+	assert.True(t, IsErrInvalidRight(err))
 
 	// Check with inexistant team
 	tl3 := tl
@@ -113,7 +113,7 @@ func TestTeamList_Update(t *testing.T) {
 		ID       int64
 		TeamID   int64
 		ListID   int64
-		Right    TeamRight
+		Right    Right
 		Created  int64
 		Updated  int64
 		CRUDable web.CRUDable
@@ -130,7 +130,7 @@ func TestTeamList_Update(t *testing.T) {
 			fields: fields{
 				ListID: 3,
 				TeamID: 1,
-				Right:  TeamRightAdmin,
+				Right:  RightAdmin,
 			},
 		},
 		{
@@ -138,7 +138,7 @@ func TestTeamList_Update(t *testing.T) {
 			fields: fields{
 				ListID: 3,
 				TeamID: 1,
-				Right:  TeamRightWrite,
+				Right:  RightWrite,
 			},
 		},
 		{
@@ -146,7 +146,7 @@ func TestTeamList_Update(t *testing.T) {
 			fields: fields{
 				ListID: 3,
 				TeamID: 1,
-				Right:  TeamRightRead,
+				Right:  RightRead,
 			},
 		},
 		{
@@ -157,7 +157,7 @@ func TestTeamList_Update(t *testing.T) {
 				Right:  500,
 			},
 			wantErr: true,
-			errType: IsErrInvalidTeamRight,
+			errType: IsErrInvalidRight,
 		},
 	}
 	for _, tt := range tests {

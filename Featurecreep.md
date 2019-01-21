@@ -131,8 +131,9 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 ### General features
 
 * [x] Deps nach mod umziehen
-* [ ] Performance bei rechtchecks verbessern
+* [x] Performance bei rechtchecks verbessern
   * User & Teamright sollte sich für n rechte in einer Funktion testen lassen
+* [ ] Endpoint um die Rechte mit Beschreibung und code zu kriegen
 * [ ] "Smart Lists", Listen nach bestimmten Kriterien gefiltert -> nur UI?
 * [ ] "Performance-Statistik" -> Wie viele Tasks man in bestimmten Zeiträumen so geschafft hat etc
 * [ ] IMAP-Integration -> Man schickt eine email an Vikunja und es macht daraus dann nen task -> Achtung missbrauchsmöglichkeiten
