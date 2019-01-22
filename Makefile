@@ -116,6 +116,9 @@ release-windows:
 		go install $(GOFLAGS) github.com/karalabe/xgo; \
 	fi
 	xgo -dest $(DIST)/binaries -tags 'netgo $(TAGS)' -ldflags '-linkmode external -extldflags "-static" $(LDFLAGS)' -targets 'windows/*' -out vikunja-$(VERSION) .
+ifneq ($(DRONE_WORKSPACE),'')
+	mv /build/* $(DIST)/binaries
+endif
 
 .PHONY: release-linux
 release-linux:
@@ -123,6 +126,9 @@ release-linux:
 		go install $(GOFLAGS) github.com/karalabe/xgo; \
 	fi
 	xgo -dest $(DIST)/binaries -tags 'netgo $(TAGS)' -ldflags '-linkmode external -extldflags "-static" $(LDFLAGS)' -targets 'linux/*' -out vikunja-$(VERSION) .
+ifneq ($(DRONE_WORKSPACE),'')
+	mv /build/* $(DIST)/binaries
+endif
 
 .PHONY: release-darwin
 release-darwin:
@@ -130,6 +136,9 @@ release-darwin:
 		go install $(GOFLAGS) github.com/karalabe/xgo; \
 	fi
 	xgo -dest $(DIST)/binaries -tags 'netgo $(TAGS)' -ldflags '$(LDFLAGS)' -targets 'darwin/*' -out vikunja-$(VERSION) .
+ifneq ($(DRONE_WORKSPACE),'')
+	mv /build/* $(DIST)/binaries
+endif
 
 .PHONY: release-copy
 release-copy:
