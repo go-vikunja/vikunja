@@ -201,7 +201,7 @@ steps:
       - mkdir debian/conf -p
       - cp build/reprepro-dist-conf debian/conf/distributions
       - make reprepro
-      - tree debian
+      - ls debian/*/*/*/*/*
     depends_on: [ build-deb ]
 
   # Push the releases to our pseudo-s3-bucket
