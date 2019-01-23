@@ -201,7 +201,6 @@ steps:
       - mkdir debian/conf -p
       - cp build/reprepro-dist-conf debian/conf/distributions
       - make reprepro
-      - ls debian/*/*/*/*/*
     depends_on: [ build-deb ]
 
   # Push the releases to our pseudo-s3-bucket
@@ -408,7 +407,7 @@ steps:
       endpoint: https://storage.kolaente.de
       path_style: true
       strip_prefix: debian
-      source: debian/*
+      source: debian/*/*/*/*/*
       target: /
     depends_on: [ deb-structure ]
 
