@@ -13,3 +13,4 @@ bin/
 secrets
 *.deb
 debian/
+logs/

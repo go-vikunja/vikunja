@@ -1,4 +1,4 @@
-# code.vikunja.io/web v0.0.0-20181130231148-b061c20192fb
+# code.vikunja.io/web v0.0.0-20190123142349-c30ef6073334
 code.vikunja.io/web
 code.vikunja.io/web/handler
 # github.com/PuerkitoBio/purell v1.1.0
@@ -139,7 +139,7 @@ github.com/spf13/jwalterweatherman
 github.com/spf13/pflag
 # github.com/spf13/viper v1.2.0
 github.com/spf13/viper
-# github.com/stretchr/testify v1.2.2
+# github.com/stretchr/testify v1.3.0
 github.com/stretchr/testify/assert
 # github.com/swaggo/swag v1.4.1-0.20181210033626-0e12fd5eb026
 github.com/swaggo/swag/cmd/swag
@@ -151,7 +151,7 @@ github.com/urfave/cli
 github.com/valyala/bytebufferpool
 # github.com/valyala/fasttemplate v0.0.0-20170224212429-dcecefd839c4
 github.com/valyala/fasttemplate
-# golang.org/x/crypto v0.0.0-20181203042331-505ab145d0a9
+# golang.org/x/crypto v0.0.0-20190123085648-057139ce5d2b
 golang.org/x/crypto/bcrypt
 golang.org/x/crypto/acme/autocert
 golang.org/x/crypto/blowfish
@@ -161,7 +161,7 @@ golang.org/x/lint/golint
 golang.org/x/lint
 # golang.org/x/net v0.0.0-20181217023233-e147a9138326
 golang.org/x/net/idna
-# golang.org/x/sys v0.0.0-20181128092732-4ed8d59d0b35
+# golang.org/x/sys v0.0.0-20190123074212-c6b37f3e9285
 golang.org/x/sys/unix
 # golang.org/x/text v0.3.0
 golang.org/x/text/transform

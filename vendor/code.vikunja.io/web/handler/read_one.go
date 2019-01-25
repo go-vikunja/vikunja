@@ -18,7 +18,6 @@ package handler
 import (
 	"code.vikunja.io/web"
 	"github.com/labstack/echo"
-	"github.com/op/go-logging"
 	"net/http"
 )
 
@@ -46,7 +45,7 @@ func (c *WebHandler) ReadOneWeb(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Could not determine the current user.")
 	}
 	if !currentStruct.CanRead(currentAuth) {
-		ctx.Get("LoggingProvider").(*logging.Logger).Noticef("Tried to read one while not having the rights for it", currentAuth)
+		getLogger(ctx).Noticef("Tried to read one while not having the rights for it (User: %v)", currentAuth)
 		return echo.NewHTTPError(http.StatusForbidden, "You don't have the right to see this")
 	}
 

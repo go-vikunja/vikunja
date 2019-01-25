@@ -53,7 +53,7 @@ func (operation *Operation) ParseComment(comment string, astFile *ast.File) erro
 		if operation.Description == "" {
 			operation.Description = lineRemainder
 		} else {
-			operation.Description += "\n" + lineRemainder
+			operation.Description += "<br>" + lineRemainder
 		}
 	case "@summary":
 		operation.Summary = lineRemainder

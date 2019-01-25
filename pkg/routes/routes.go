@@ -49,6 +49,7 @@ import (
 	"github.com/asaskevich/govalidator"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
+	elog "github.com/labstack/gommon/log"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/viper"
 )
@@ -84,10 +85,22 @@ func NewEcho() *echo.Echo {
 
 	e.HideBanner = true
 
+	if l, ok := e.Logger.(*elog.Logger); ok {
+		if viper.GetString("log.echo") == "off" {
+			l.SetLevel(elog.OFF)
+		}
+		l.EnableColor()
+		l.SetHeader(log.ErrFmt)
+		l.SetOutput(log.GetLogWriter("echo"))
+	}
+
 	// Logger
-	e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
-		Format: "${time_rfc3339_nano}: ${remote_ip} ${method} ${status} ${uri} ${latency_human} - ${user_agent}\n",
-	}))
+	if viper.GetString("log.http") != "off" {
+		e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
+			Format: log.WebFmt + "\n",
+			Output: log.GetLogWriter("http"),
+		}))
+	}
 
 	// Validation
 	e.Validator = &CustomValidator{}

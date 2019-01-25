@@ -35,7 +35,7 @@ var Version = "0.1"
 
 func main() {
 
-	// Init logging
+	// Set logger
 	log.InitLogger()
 
 	// Set Engine

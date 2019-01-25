@@ -18,7 +18,6 @@ package handler
 import (
 	"code.vikunja.io/web"
 	"github.com/labstack/echo"
-	"github.com/op/go-logging"
 	"net/http"
 	"strconv"
 )
@@ -46,7 +45,7 @@ func (c *WebHandler) ReadAllWeb(ctx echo.Context) error {
 	}
 	pageNumber, err := strconv.Atoi(page)
 	if err != nil {
-		ctx.Get("LoggingProvider").(*logging.Logger).Error(err.Error())
+		getLogger(ctx).Error(err.Error())
 		return echo.NewHTTPError(http.StatusBadRequest, "Bad page requested.")
 	}
 	if pageNumber < 0 {

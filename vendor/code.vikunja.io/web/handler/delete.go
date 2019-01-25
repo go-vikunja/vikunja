@@ -18,7 +18,6 @@ package handler
 import (
 	"code.vikunja.io/web"
 	"github.com/labstack/echo"
-	"github.com/op/go-logging"
 	"net/http"
 )
 
@@ -44,7 +43,7 @@ func (c *WebHandler) DeleteWeb(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
 	if !currentStruct.CanDelete(currentAuth) {
-		ctx.Get("LoggingProvider").(*logging.Logger).Noticef("Tried to delete while not having the rights for it", currentAuth)
+		getLogger(ctx).Noticef("Tried to delete while not having the rights for it (User: %v)", currentAuth)
 		return echo.NewHTTPError(http.StatusForbidden)
 	}
 

@@ -18,7 +18,6 @@ package handler
 import (
 	"code.vikunja.io/web"
 	"github.com/labstack/echo"
-	"github.com/op/go-logging"
 	"net/http"
 )
 
@@ -46,7 +45,7 @@ func (c *WebHandler) CreateWeb(ctx echo.Context) error {
 
 	// Check rights
 	if !currentStruct.CanCreate(currentAuth) {
-		ctx.Get("LoggingProvider").(*logging.Logger).Noticef("Tried to create while not having the rights for it", currentAuth)
+		getLogger(ctx).Noticef("Tried to create while not having the rights for it (User: %v)", currentAuth)
 		return echo.NewHTTPError(http.StatusForbidden)
 	}
 

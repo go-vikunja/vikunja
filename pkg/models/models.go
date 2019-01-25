@@ -17,6 +17,7 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/log"
 	"encoding/gob"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql" // Because.
@@ -111,7 +112,7 @@ func SetEngine() (err error) {
 			gob.Register(tablesWithPointer) // Need to register tables with pointer as well...
 			break
 		default:
-			fmt.Println("Did not find a valid cache type. Caching disabled. Please refer to the docs for poosible cache types.")
+			log.Log.Info("Did not find a valid cache type. Caching disabled. Please refer to the docs for poosible cache types.")
 		}
 	}
 
@@ -122,7 +123,8 @@ func SetEngine() (err error) {
 		return fmt.Errorf("sync database struct error: %v", err)
 	}
 
-	x.ShowSQL(viper.GetBool("database.showqueries"))
+	x.ShowSQL(viper.GetString("log.database") != "off")
+	x.SetLogger(xorm.NewSimpleLogger(log.GetLogWriter("database")))
 
 	return nil
 }

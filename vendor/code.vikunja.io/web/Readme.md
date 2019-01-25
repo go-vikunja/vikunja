@@ -22,6 +22,7 @@ implementations thus leading to much flexibility.
 ## Table of contents
 
 * [Installation](#installation)
+* [Todos](#todos)
 * [CRUDable](#crudable)
 * [Rights](#rights)
 * [Handler Config](#handler-config)
@@ -34,6 +35,12 @@ implementations thus leading to much flexibility.
 * [Standard web handler](#standard-web-handler)
 * [Errors](#errors)
 * [URL param binder](#how-the-url-param-binder-works)
+
+### TODOs
+
+* [ ] Description of web.HTTPError
+* [ ] Rights methods should return errors (I know, this will break a lot of existing stuff)
+* [ ] Improve docs
 
 ## Installation
 

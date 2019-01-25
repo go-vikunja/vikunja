@@ -56,7 +56,6 @@ func init() {
 	viper.SetDefault("database.password", "")
 	viper.SetDefault("database.database", "vikunja")
 	viper.SetDefault("database.path", "./vikunja.db")
-	viper.SetDefault("database.showqueries", false)
 	viper.SetDefault("database.openconnections", 100)
 	// Cacher
 	viper.SetDefault("cache.enabled", false)
@@ -77,6 +76,14 @@ func init() {
 	viper.SetDefault("redis.host", "localhost:6379")
 	viper.SetDefault("redis.password", "")
 	viper.SetDefault("redis.db", 0)
+	// Logger
+	viper.SetDefault("log.enabled", true)
+	viper.SetDefault("log.errors", "stdout")
+	viper.SetDefault("log.standard", "stdout")
+	viper.SetDefault("log.database", "off")
+	viper.SetDefault("log.http", "stdout")
+	viper.SetDefault("log.echo", "off")
+	viper.SetDefault("log.path", viper.GetString("service.rootpath")+"/logs")
 
 	// Init checking for environment variables
 	viper.SetEnvPrefix("vikunja")

@@ -40,6 +40,11 @@ func HandleHTTPError(err error, ctx echo.Context) *echo.HTTPError {
 		errDetails := a.HTTPError()
 		return echo.NewHTTPError(errDetails.HTTPCode, errDetails)
 	}
-	ctx.Get("LoggingProvider").(*logging.Logger).Error(err.Error())
+	getLogger(ctx).Error(err.Error())
 	return echo.NewHTTPError(http.StatusInternalServerError)
+}
+
+// Helper function to get the logger
+func getLogger(ctx echo.Context) *logging.Logger {
+	return ctx.Get("LoggingProvider").(*logging.Logger)
 }
