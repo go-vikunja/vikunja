@@ -103,21 +103,20 @@ mailer:
   queuelength: 100
   # The timeout in seconds after which the current open connection to the mailserver will be closed.
   queuetimeout: 30
-  
+
 log:
   # A folder where all the logfiles should go.
-  path: service.rootpath + "/logs"
+  path: <rootpath>logs
   # Whether to show any logging at all or none
   enabled: true
-  # Where the error log should go. Possible values are stdout, file or off to disable error logging.
+  # Where the error log should go. Possible values are stdout, stderr, file or off to disable error logging.
   errors: "stdout"
-  # Where the normal log should go. Possible values are stdout, file or off to disable standard logging.
+  # Where the normal log should go. Possible values are stdout, stderr, file or off to disable standard logging.
   standard: "stdout"
-  # Whether or not to log database queries. Useful for debugging. Possible values are stdout, file or off to disable database logging.
+  # Whether or not to log database queries. Useful for debugging. Possible values are stdout, stderr, file or off to disable database logging.
   database: "off"
-  # Whether to log http requests or not. Possible values are stdout, file or off to disable http logging.
+  # Whether to log http requests or not. Possible values are stdout, stderr, file or off to disable http logging.
   http: "stdout"
-  # Echo has its own logging which usually is unnessecary, which is why it is disabled by default. Possible values are stdout, file or off to disable standard logging.
+  # Echo has its own logging which usually is unnessecary, which is why it is disabled by default. Possible values are stdout, stderr, file or off to disable standard logging.
   echo: "off"
-
 ```

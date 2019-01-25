@@ -83,6 +83,7 @@ func InitLogger() {
 
 // GetLogWriter returns the writer to where the normal log goes, depending on the config
 func GetLogWriter(logfile string) (writer io.Writer) {
+	writer = os.Stderr // Set the default case to prevent nil pointer panics
 	switch viper.GetString("log." + logfile) {
 	case "file":
 		f, err := os.OpenFile(viper.GetString("log.path")+"/"+logfile+".log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
@@ -91,6 +92,8 @@ func GetLogWriter(logfile string) (writer io.Writer) {
 		}
 		writer = f
 		break
+	case "stderr":
+		writer = os.Stderr
 	case "stdout":
 	default:
 		writer = os.Stdout
