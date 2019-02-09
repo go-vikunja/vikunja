@@ -46,7 +46,8 @@
 * [x] Wenn ein Task due ist das auch in der Übersicht anzeigen
   * [x] Overdue rot anzeigen
 * [ ] Beim Team bearbeiten Nutzer suchen einbauen
-  
+* [ ] Keyboard shortcuts
+
 ## Funktionen aus der API
 
 * [x] Sharingshit
