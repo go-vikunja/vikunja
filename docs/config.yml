@@ -1,0 +1,39 @@
+baseurl: https://vikunja.io/docs/
+title: Vikunja
+theme: vikunja
+enableRobotsTXT: true
+canonifyURLs: true
+
+pygmentsUseClasses: true
+
+permalinks:
+  post: /:year/:month/:title/
+  doc: /:slug/
+  page: /:slug/
+  default: /:slug/
+
+params:
+  description: The to-do app to organize your life
+  author: The Vikunja Authors
+  website: https://vikunja.io
+  fanthomEnabled: false
+  fathomUrl: fathom.kolaente.de
+  fathomSiteID: RYKSD
+
+menu:
+  page:
+    - name: Home
+      url: https://vikunja.io/en/
+      weight: 10
+    - name: Features
+      url: https://vikunja.io/en/features
+      weight: 20
+    - name: Download
+      url: https://vikunja.io/en/download
+      weight: 30
+    - name: Docs
+      url: https://vikunja.io/docs
+      weight: 40
+    - name: Code
+      url: https://code.vikunja.io/
+      weight: 50

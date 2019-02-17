@@ -3,6 +3,7 @@
 .idea/httpRequests
 config.yml
 config.yaml
+!docs/config.yml
 *.db
 Run
 dist/
@@ -14,3 +15,5 @@ secrets
 *.deb
 debian/
 logs/
+docs/public/
+docs/resources/

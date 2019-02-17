@@ -441,3 +441,59 @@ steps:
       status:
         - success
         - failure
+
+---
+kind: pipeline
+name: deploy-docs
+
+workspace:
+  base: /srv/app
+  path: src/code.vikunja.io/api
+
+clone:
+  depth: 50
+
+trigger:
+  event:
+    - push
+  branch:
+    - master
+
+steps:
+  - name: submodules
+    image: docker:git
+    commands:
+      - git submodule update --init
+      - git submodule update --recursive --remote
+
+  - name: build
+    image: monachus/hugo:v0.54.0
+    pull: true
+    commands:
+      - cd docs
+      - hugo
+      - mv public/docs/* public # Hugo seems to be not capable of setting a different theme for a home page, so we do this ugly hack to fix it.
+
+  - name: docker
+    image: plugins/docker
+    pull: true
+    settings:
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
+      repo: vikunja/docs
+      context: docs/
+      dockerfile: docs/Dockerfile
+
+  - name: rancher
+    image: peloton/drone-rancher
+    settings:
+      url: http://server01.kolaente.de:8080/v1
+      access_key:
+        from_secret: RANCHER_ACCESS_KEY
+      secret_key:
+        from_secret: RANCHER_SECRET_KEY
+      service: vikunja-website/docs
+      docker_image: vikunja/docs
+      confirm: true

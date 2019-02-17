@@ -17,12 +17,12 @@
 package main
 
 import (
-	"code.vikunja.io/api/docs"
 	_ "code.vikunja.io/api/pkg/config" // To trigger its init() which initializes the config
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/mail"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/routes"
+	"code.vikunja.io/api/pkg/swagger"
 	"context"
 	"github.com/spf13/viper"
 	"os"
@@ -51,7 +51,7 @@ func main() {
 	log.Log.Infof("Vikunja version %s", Version)
 
 	// Additional swagger information
-	docs.SwaggerInfo.Version = Version
+	swagger.SwaggerInfo.Version = Version
 
 	// Start the webserver
 	e := routes.NewEcho()

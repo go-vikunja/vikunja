@@ -1,3 +1,13 @@
+---
+date: "2019-02-12:00:00+02:00"
+title: "Rights"
+draft: false
+type: "doc"
+menu:
+  sidebar:
+    parent: "usage"
+---
+
 # List and namespace rights for teams and users
 
 Whenever you share a list or namespace with a user or team, you can specify a `rights` parameter. 

@@ -69,9 +69,6 @@ test:
 	VIKUNJA_SERVICE_ROOTPATH=$(shell pwd) go test $(GOFLAGS) -cover -coverprofile cover.out $(PACKAGES)
 	go tool cover -html=cover.out -o cover.html
 
-required-gofmt-version:
-	@go version  | grep -q '\(1.7\|1.8\|1.9\|1.10\|1.11\)' || { echo "We require go version 1.7, 1.8, 1.9, 1.10 or 1.11 to format code" >&2 && exit 1; }
-
 .PHONY: lint
 lint:
 	@hash golint > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
@@ -80,11 +77,11 @@ lint:
 	for PKG in $(PACKAGES); do golint -set_exit_status $$PKG || exit 1; done;
 
 .PHONY: fmt
-fmt: required-gofmt-version
+fmt:
 	$(GOFMT) -w $(GOFILES)
 
 .PHONY: fmt-check
-fmt-check: required-gofmt-version
+fmt-check:
 	# get all go files and run go fmt on them
 	@diff=$$($(GOFMT) -d $(GOFILES)); \
 	if [ -n "$$diff" ]; then \
@@ -92,10 +89,6 @@ fmt-check: required-gofmt-version
 		echo "$${diff}"; \
 		exit 1; \
 	fi;
-
-.PHONY: install
-install: $(wildcard *.go)
-	go install -v -tags '$(TAGS)' -ldflags '-s -w $(LDFLAGS)'
 
 .PHONY: build
 build: $(EXECUTABLE)
@@ -181,11 +174,13 @@ do-the-swag:
 	@hash swag > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
 		go install $(GOFLAGS) github.com/swaggo/swag/cmd/swag; \
 	fi
-	swag init -g pkg/routes/routes.go;
+	swag init -g pkg/routes/routes.go -s ./pkg/swagger;
 	# Fix the generated swagger file, currently a workaround until swaggo can properly use go mod
 	sed -i '/"definitions": {/a "code.vikunja.io.web.HTTPError": {"type": "object","properties": {"code": {"type": "integer"},"message": {"type": "string"}}},' docs/docs.go;
 	sed -i 's/code.vikunja.io\/web.HTTPError/code.vikunja.io.web.HTTPError/g' docs/docs.go;
-	sed -i 's/` + \\"`\\" + `/` + "`" + `/g' docs/docs.go; # Replace replacements
+	sed -i 's/package\ docs/package\ swagger/g' docs/docs.go;
+	sed -i 's/` + \\"`\\" + `/` + "`" + `/g' docs/docs.go;
+	mv ./docs/docs.go ./pkg/swagger/docs.go;
 
 .PHONY: misspell-check
 misspell-check:
@@ -208,26 +203,12 @@ gocyclo-check:
 	fi
 	for S in $(GOFILES); do gocyclo -over 14 $$S || exit 1; done;
 
-.PHONY: gosimple-check
-gosimple-check:
-	@hash gosimple > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
-		go get honnef.co/go/tools/cmd/gosimple; \
-	fi
-	for S in $(PACKAGES); do gosimple $$S || exit 1; done;
-
 .PHONY: static-check
 static-check:
 	@hash gocyclo > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
-		go get honnef.co/go/tools/cmd/staticcheck; \
+		go install $(GOFLAGS) honnef.co/go/tools/cmd/staticcheck; \
 	fi
-	staticcheck;
-
-.PHONY: unused-check
-unused-check:
-	@hash unused > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
-		go get honnef.co/go/tools/cmd/unused; \
-	fi
-	unused;
+	staticcheck $(PACKAGES);
 
 .PHONY: gosec-check
 gosec-check:
@@ -242,4 +223,3 @@ goconst-check:
 		go get github.com/jgautheron/goconst/cmd/goconst; \
 	fi
 	for S in $(PACKAGES); do goconst $$S || exit 1; done;
-

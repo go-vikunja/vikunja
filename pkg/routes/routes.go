@@ -39,11 +39,11 @@
 package routes
 
 import (
-	_ "code.vikunja.io/api/docs" // To generate swagger docs
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/metrics"
 	"code.vikunja.io/api/pkg/models"
 	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
+	_ "code.vikunja.io/api/pkg/swagger" // To generate swagger docs
 	"code.vikunja.io/web"
 	"code.vikunja.io/web/handler"
 	"github.com/asaskevich/govalidator"

@@ -1,0 +1,3 @@
+[submodule "docs/themes/vikunja"]
+	path = docs/themes/vikunja
+    url = https://git.kolaente.de/vikunja/theme.git

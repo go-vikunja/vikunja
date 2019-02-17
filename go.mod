@@ -67,5 +67,5 @@ require (
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 	gopkg.in/testfixtures.v2 v2.5.3
 	gopkg.in/yaml.v2 v2.2.2 // indirect
-	honnef.co/go/tools v0.0.0-20180920025451-e3ad64cb4ed3
+	honnef.co/go/tools v0.0.0-20190128043916-71123fcbb8fe
 )

@@ -3,49 +3,43 @@
 This is the place where I write down ideas to work on at some point. 
 Sorry for some of them being in German, I'll tranlate them at some point.
 
-## Feature-Ideen
+## Feature Ideas
 
 * [x] Priorities
 * [x] Repeating tasks
-* [x] Tagesübersicht ("Was ist heute/diese Woche due?") -> Machen letztenendes die Clients, wir brauchen nur nen endpoint, der alle tasks auskotzt, der Client macht dann die Sortierung.
+* [x] Get all tasks which are due between two given dates
 * [x] Subtasks
 
 ## Anderes
 
-* [x] Refactor!!!! Alle Funktionen raus, die nicht mehr grbaucht werden + Funktionen vereinfachen/zusammenführen.
-      Wenn ein Objekt 5x hin und hergereicht wird, und jedesmal nur geringfügig was dran geändert wird sollte das
-      doch auch in einer Funktion machbar sein.
-      * [x] ganz viel in eigene neue Dateien + Packages auslagern, am besten eine package pro model mit allen methoden etc.
-      * [x] Alle alten dinger die nicht mehr gebraucht werden, weg.
-      * [x] Die alten handlerfunktionen alle in eine datei packen und erstmal "lagern", erstmal brauchen wir die noch für swagger.
-* [x] Drone aufsetzen
-* [x] Tests schreiben
-* [x] Namen finden
-* [x] Alle Packages umziehen
-* [x] Swagger UI aufsetzen
-+ [x] CORS fixen
-* [x] Überall echo.NewHTTPError statt c.JSON(Message{}) benutzen
-* [x] Bessere Fehlermeldungen wenn das Model was ankommt falsch ist und nicht geparst werden kann
-* [x] Fehlerhandling irgendwie besser machen. Zb mit "World error messages"? Sprich, die Methode ruft einfach auf obs die entsprechende Fehlermeldung gibt und zeigt sonst 500 an.
-* [x] Viper für config einbauen und ini rauswerfen
-* [x] Docs für installationsanleitung
-* [x] Tests für Rechtekram
-* [x] "Apiformat" Methoden, damit in der Ausgabe zb kein Passwort drin ist..., oder created/updated von Nutzern... oder ownerID nicht drin ist sondern nur das ownerobject
-* [x] Rechte überprüfen:
-      * [x] Listen erstellen
-      * [x] Listen bearbeiten (nur eigene im Moment)
-      * [x] Listenpunkte hinzufügen
-      * [x] Listenpunkte bearbeiten
-* [x] Der -1 namespace sollte auch seperat angesprochen werden können, gibt sonst probleme mit der app.
+* [x] Refactor!!!! Delete everything not being used anymore, simplify. 
+* [x] Drone
+* [x] Tests
+* [x] Find a nme
+* [x] Move packages to a better structure
+* [x] Swagger UI
++ [x] Fix CORS
+* [x] Use echo.NewHTTPError instead of c.JSON(Message{})
+* [x] Better error messages when the model which is sent to the server is wrong
+* [x] Better error handling to show useful error messages and status codes
+* [x] Viper for config instead of ini
+* [x] Docs for installing
+* [x] Tests for rights managemnt
+* [x] Rights checks:
+      * [x] Create lists
+      * [x] Edit lists
+      * [x] Add tasks
+      * [x] Edit tasks
+* [x] The -1 namespace should also be accessible seperately
 
 ### Short Term
 
-* [x] Cacher konfigurierbar
-* [x] Wenn die ID bei irgendeiner GetByID... Methode < 1 ist soll ein error not exist geworfen werden
-* [x] /users sollte die Rechte mit ausgeben
-* [x] Nen endpoint um /teams/members /list/users etc die Rechte updazudaten ohne erst zu löschen und dann neu einzufügen
-* [x] namespaces & listen updaten geht nicht, gibt nen 500er zurück
-* [x] Logging für alle Fehler irgendwohin, da gibts bestimmt ne coole library für
+* [x] Cacher configurable
+* [x] Should throw an error when an id < 1
+* [x] /users should also return the rights
+* [x] Extra endpoint /teams/members /list/users to update rights without needing to remove and re-add them
+* [x] namespaces & listen update does not work, returns 500
+* [x] Logging for all errors somewhere
 * [x] Ne extra funktion für list exists machen, damit die nicht immer über GetListByID gehen, um sql-abfragen zu sparen
 * [x] Rausfinden warum xorm teilweise beim einfügen IDs mit einfügen will -> Das schlägt dann wegen duplicate fehl
 * [x] Bei den Structs "AfterLoad" raus, das verbraucht bei Gruppenabfragen zu viele SQL-Abfragen -> Die sollen einfach die entsprechenden Read()-Methoden verwenden (Krassestes bsp. ist GET /namespaces mit so ca 50 Abfragen)
@@ -83,30 +77,28 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 
 ### Docs
 
-* [ ] Readme
+* [x] Readme
   * [x] Auch noch nen "link" zum Featurecreep
-  * [ ] ToC
-  * [ ] Logo
-  * [ ] How to build -> Docs
-  * [ ] How to use -> Docs
-  * [ ] How to dev -> Docs
-  * [ ] License
-  * [ ] Contributing
+  * [x] ToC
+  * [x] Logo
+  * [x] How to build -> Docs
+  * [x] How to dev -> Docs
+  * [x] License
+  * [x] Contributing
 * [x] Redocs
 * [x] Swaggerdocs verbessern
   * [x] Descriptions in structs
   * [x] Maxlength specify etc. (see swaggo docs)
 * [x] Rights
 * [x] API
-* [ ] Anleitung zum Makefile
-* [ ] Struktur erklären
-* [ ] How to build from source
-* [ ] Dev instructions (tests, makefile, mod, structure, etc.)
-* [ ] Deploy in die docs
-  * [ ] Docker
-  * [ ] Native (systemd + nginx/apache)
-* [ ] Backups
-* [ ] Docs aufsetzen
+* [x] Anleitung zum Makefile
+* [x] How to build from source
+* [x] Struktur erklären
+* [x] Deploy in die docs
+  * [x] Docker
+  * [x] Native (systemd + nginx/apache)
+* [x] Backups
+* [x] Docs aufsetzen
 
 ### Tasks
 
@@ -127,6 +119,10 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [ ] Task-Templates innerhalb namespaces und Listen (-> Mehrere, die auswählbar sind)
 * [ ] Ein Task muss von mehreren Assignees abgehakt werden bis er als done markiert wird
 * [ ] Besseres Rechtesystem, damit man so fine-graded sachen machen kann wie "Der da darf aber nur Tasks hinzufügen, aber keine abhaken"
+  * [ ] Roles which enable or disable chaning certain fields of a task -> includes custm fields
+* [ ] Custom fields: Templates at List > Namespace > Global level, overwriting each other
+* [ ] Related tasks -> settable with a "kind" of relation like blocked, or just related or so
+* [ ] Description should be longtext
 
 ### General features
 
@@ -134,7 +130,7 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [x] Performance bei rechtchecks verbessern
   * User & Teamright sollte sich für n rechte in einer Funktion testen lassen
 * [ ] Endpoint um die Rechte mit Beschreibung und code zu kriegen
-* [ ] "Smart Lists", Listen nach bestimmten Kriterien gefiltert -> nur UI?
+* [ ] "Smart Lists", Listen nach bestimmten Kriterien gefiltert -> speichern und im pseudonamespace
 * [ ] "Performance-Statistik" -> Wie viele Tasks man in bestimmten Zeiträumen so geschafft hat etc
 * [ ] IMAP-Integration -> Man schickt eine email an Vikunja und es macht daraus dann nen task -> Achtung missbrauchsmöglichkeiten
 * [ ] In und Out webhooks, mit Templates vom Payload
@@ -143,19 +139,30 @@ Sorry for some of them being in German, I'll tranlate them at some point.
   * [ ] Per list
   * [ ] For the current user
 * [ ] ~~Websockets~~ SSE https://github.com/kljensen/golang-html5-sse-example
-      * User authenticates (with jwt)
-      * When updating/creating/etc an event struct is sent to the broker
-      * The broker has a list of subscribed users
-      * It then checks who is allowed to the see the event it recieved and sends it
+  * User authenticates (with jwt)
+  * When updating/creating/etc an event struct is sent to the broker
+  * The broker has a list of subscribed users
+  * It then checks who is allowed to the see the event it recieved and sends it
+  * [ ] Being able to define filters for notifications or turn them silent completely -> Probably frontend only
 * [ ] mgl. zum Emailmaskieren haben (in den Nutzereinstellungen, wenn man seine Email nicht an alle Welt rausposaunen will)
 * [ ] Mgl. zum Accountlöschen haben (so richtig krass mit emailverifiezierung und dass alle Privaten Listen gelöscht werden und man alle geteilten entweder wem übertragen muss oder  auf privat stellen)
 * [ ] /info endpoint, in dem dann zb die limits und version etc steht
 * [ ] Deprecate /namespaces/{id}/lists in favour of namespace.ReadOne() <-- should also return the lists
+* [ ] Bindata for templates
+* [ ] `GetUserByID` and the likes should return pointers
+* [ ] Colors for lists and namespaces -> Up to the frontend to implement these
+* [ ] Some kind of milestones for tasks
+* [ ] Create tasks from a text/markdown file (probably frontend only)
+* [ ] Label-view: Get a bunch of tasks by label
+* [ ] Better caldav support (VTODO)
+* [ ] Debian package should have a service file
+* [ ] Downloads should be served via nginx (with theme?), minio should only be used for pushing artifacts.
 
 ### Refactor 
 
 * [x] ListTaskRights, sollte überall gleich funktionieren, gibt ja mittlerweile auch eine Methode um liste von nem Task aus zu kriegen oder so
 * [x] Re-check all `{List|Namespace}{User|Team}` if really all parameters need to be exposed via json or are overwritten via param anyway.
+* [ ] Things like list/task order should use queries and not url params
 
 ### Linters
 
@@ -206,3 +213,25 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [ ] Task dependencies
 * [ ] Time tracking (possible plugin)
 * [ ] IFTTT
+* [ ] More sharing features (all of these with the already existing permissions)
+  * [ ] Invite users per mail
+  * [ ] Share a link with/without password
+* [ ] Comments on tasks
+* [ ] @mention users in tasks or comments to get them notified
+* [ ] Summary of tasks to do in a configurable interval (every day/week or so)
+* [ ] Importer (maybe frontend only)
+  * [ ] Trello
+  * [ ] Wunderlist
+  * [ ] Zenkit
+  * [ ] Asana
+  * [ ] Microsoft Todo
+  * [ ] Nozbe
+  * [ ] Lanes
+  * [ ] Nirvana
+  * [ ] Good ol' Caldav (Tasks)
+* [ ] More auth providers
+  * [ ] LDAP/AD
+  * [ ] Kerberos
+  * [ ] SAML (what?)
+  * [ ] smtp
+  * [ ] OpenID

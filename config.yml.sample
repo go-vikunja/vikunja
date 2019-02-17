@@ -45,9 +45,9 @@ redis:
   # Whether to enable redis or not
   enabled: false
   # The host of the redis server including its port.
-  redishost: 'localhost:6379'
+  host: 'localhost:6379'
   # The password used to authenicate against the redis server
-  redispassword: ''
+  password: ''
   # 0 means default database
   db: 0
 

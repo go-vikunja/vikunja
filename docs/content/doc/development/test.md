@@ -1,10 +1,20 @@
+---
+date: "2019-02-12:00:00+02:00"
+title: "Testing"
+draft: false
+type: "doc"
+menu:
+  sidebar:
+    parent: "development"
+---
+
 # Testing
 
-You can run unit tests with our `Makefile` with
+You can run unit tests with [our `Makefile`]({{< ref "make.md">}}) with
 
-```bash
+{{< highlight bash >}}
 make test
-```
+{{< /highlight >}}
 
 ### Running tests with config
 

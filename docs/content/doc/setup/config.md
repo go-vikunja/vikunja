@@ -1,3 +1,13 @@
+---
+date: "2019-02-12:00:00+02:00"
+title: "Config options"
+draft: false
+type: "doc"
+menu:
+  sidebar:
+    parent: "setup"
+---
+
 # Configuration options
 
 You can either use a `config.yml` file in the root directory of vikunja or set all config option with 
@@ -6,16 +16,16 @@ environment variables. If you have both, the value set in the config file is use
 Variables are nested in the `config.yml`, these nested variables become `VIKUNJA_FIRST_CHILD` when configuring via
 environment variables. So setting
 
-```bash
+{{< highlight bash >}}
 export VIKUNJA_FIRST_CHILD=true
-```
+{{< /highlight >}}
 
 is the same as defining it in a `config.yml` like so:
 
-```yaml
+{{< highlight yaml >}}
 first:
     child: true
-```
+{{< /highlight >}}
 
 ## Config file locations
 
@@ -30,7 +40,7 @@ Vikunja will search on various places for a config file:
 
 This is the same as the `config.yml.sample` file you'll find in the root of vikunja.
 
-```yaml
+{{< highlight yaml >}}
 service:
   # This token is used to verify issued JWT tokens.
   # Default is a random token which will be generated at each startup of vikunja.
@@ -78,9 +88,9 @@ redis:
   # Whether to enable redis or not
   enabled: false
   # The host of the redis server including its port.
-  redishost: 'localhost:6379'
+  host: 'localhost:6379'
   # The password used to authenicate against the redis server
-  redispassword: ''
+  password: ''
   # 0 means default database
   db: 0
 
@@ -119,4 +129,4 @@ log:
   http: "stdout"
   # Echo has its own logging which usually is unnessecary, which is why it is disabled by default. Possible values are stdout, stderr, file or off to disable standard logging.
   echo: "off"
-```
+{{< /highlight >}}

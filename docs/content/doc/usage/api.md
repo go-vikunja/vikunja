@@ -1,3 +1,13 @@
+---
+date: "2019-02-12:00:00+02:00"
+title: "API Documentation"
+draft: false
+type: "doc"
+menu:
+  sidebar:
+    parent: "usage"
+---
+
 # API Documentation
 
 You can find the api docs under `http://vikunja.tld/api/v1/docs` of your instance. 
