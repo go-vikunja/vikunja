@@ -23,42 +23,6 @@ const (
 	SortTasksByPriorityDesc
 )
 
-// ReadAllWithPriority gets all tasks for a user, sorted
-// @Summary Get tasks sorted
-// @Description Returns all tasks on any list the user has access to.
-// @tags task
-// @Accept json
-// @Produce json
-// @Param p query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
-// @Param s query string false "Search tasks by task text."
-// @Param sortby path string true "The sorting parameter. Possible values to sort by are priority, prioritydesc, priorityasc, dueadate, dueadatedesc, dueadateasc."
-// @Security JWTKeyAuth
-// @Success 200 {array} models.List "The tasks"
-// @Failure 500 {object} models.Message "Internal error"
-// @Router /tasks/all/{sortby} [get]
-func dummy() {
-	// Dummy function for swaggo to pick up the docs comment
-}
-
-// ReadAllWithPriorityAndDateRange gets all tasks for a user, sorted
-// @Summary Get tasks sorted and within a date range
-// @Description Returns all tasks on any list the user has access to.
-// @tags task
-// @Accept json
-// @Produce json
-// @Param p query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
-// @Param s query string false "Search tasks by task text."
-// @Param sortby path string true "The sorting parameter. Possible values to sort by are priority, prioritydesc, priorityasc, dueadate, dueadatedesc, dueadateasc."
-// @Param startdate path string true "The start date parameter. Expects a unix timestamp."
-// @Param enddate path string true "The end date parameter. Expects a unix timestamp."
-// @Security JWTKeyAuth
-// @Success 200 {array} models.List "The tasks"
-// @Failure 500 {object} models.Message "Internal error"
-// @Router /tasks/all/{sortby}/{startdate}/{enddate} [get]
-func dummy2() {
-	// Dummy function for swaggo to pick up the docs comment
-}
-
 // ReadAll gets all tasks for a user
 // @Summary Get tasks
 // @Description Returns all tasks on any list the user has access to.
@@ -67,6 +31,9 @@ func dummy2() {
 // @Produce json
 // @Param p query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
 // @Param s query string false "Search tasks by task text."
+// @Param sort query string false "The sorting parameter. Possible values to sort by are priority, prioritydesc, priorityasc, dueadate, dueadatedesc, dueadateasc."
+// @Param startdate query int false "The start date parameter to filter by. Expects a unix timestamp."
+// @Param enddate query int false "The end date parameter to filter by. Expects a unix timestamp."
 // @Security JWTKeyAuth
 // @Success 200 {array} models.List "The tasks"
 // @Failure 500 {object} models.Message "Internal error"

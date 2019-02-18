@@ -45,17 +45,17 @@ type ListTask struct {
 	// The task priority. Can be anything you want, it is possible to sort by this later.
 	Priority int64 `xorm:"int(11)" json:"priority"`
 	// When this task starts.
-	StartDateUnix int64 `xorm:"int(11) INDEX" json:"startDate"`
+	StartDateUnix int64 `xorm:"int(11) INDEX" json:"startDate" query:"-"`
 	// When this task ends.
-	EndDateUnix int64 `xorm:"int(11) INDEX" json:"endDate"`
+	EndDateUnix int64 `xorm:"int(11) INDEX" json:"endDate" query:"-"`
 	// An array of users who are assigned to this task
 	Assignees []*User `xorm:"-" json:"assignees"`
 	// An array of labels which are associated with this task.
 	Labels []*Label `xorm:"-" json:"labels"`
 
-	Sorting           string `xorm:"-" json:"-" param:"sort"` // Parameter to sort by
-	StartDateSortUnix int64  `xorm:"-" json:"-" param:"startdatefilter"`
-	EndDateSortUnix   int64  `xorm:"-" json:"-" param:"enddatefilter"`
+	Sorting           string `xorm:"-" json:"-" query:"sort"` // Parameter to sort by
+	StartDateSortUnix int64  `xorm:"-" json:"-" query:"startdate"`
+	EndDateSortUnix   int64  `xorm:"-" json:"-" query:"enddate"`
 
 	// An array of subtasks.
 	Subtasks []*ListTask `xorm:"-" json:"subtasks"`

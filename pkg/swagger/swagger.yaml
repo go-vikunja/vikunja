@@ -622,7 +622,13 @@ info:
     email: hello@vikunja.io
     name: General Vikunja contact
     url: http://vikunja.io/en/contact/
-  description: '<!-- ReDoc-Inject: <security-definitions> -->'
+  description: |-
+    This is the documentation for the [Vikunja](http://vikunja.io) API. Vikunja is a cross-plattform Todo-application with a lot of features, such as sharing lists with users or teams. <!-- ReDoc-Inject: <security-definitions> -->
+    # Authorization
+    **JWT-Auth:** Main authorization method, used for most of the requests. Needs ` + "`" + `Authorization: Bearer <jwt-token>` + "`" + `-header to authenticate successfully.
+
+    **BasicAuth:** Only used when requesting tasks via caldav.
+    <!-- ReDoc-Inject: <security-definitions> -->
   license:
     name: GPLv3
     url: http://code.vikunja.io/api/src/branch/master/LICENSE
@@ -633,15 +639,14 @@ paths:
     get:
       consumes:
       - application/json
-      description: Returns all labels which are either created by the user or associated
-        with a task the user has at least read-access to.
+      description: Returns an array with all assignees for this task.
       parameters:
       - description: The page number. Used for pagination. If not provided, the first
           page of results is returned.
         in: query
         name: p
         type: integer
-      - description: Search labels by label text.
+      - description: Search assignees by their username.
         in: query
         name: s
         type: string
@@ -649,10 +654,10 @@ paths:
       - application/json
       responses:
         "200":
-          description: The labels
+          description: The assignees
           schema:
             items:
-              $ref: '#/definitions/models.Label'
+              $ref: '#/definitions/models.User'
             type: array
         "500":
           description: Internal error
@@ -661,9 +666,9 @@ paths:
             type: object
       security:
       - JWTKeyAuth: []
-      summary: Get all labels a user has access to
+      summary: Get all assignees for a task
       tags:
-      - labels
+      - assignees
     put:
       consumes:
       - application/json
@@ -907,9 +912,9 @@ paths:
     get:
       consumes:
       - application/json
-      description: Returns a list by its ID.
+      description: Returns a team by its ID.
       parameters:
-      - description: List ID
+      - description: Team ID
         in: path
         name: id
         required: true
@@ -918,12 +923,12 @@ paths:
       - application/json
       responses:
         "200":
-          description: The list
+          description: The team
           schema:
-            $ref: '#/definitions/models.List'
+            $ref: '#/definitions/models.Team'
             type: object
         "403":
-          description: The user does not have access to the list
+          description: The user does not have access to the team
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
             type: object
@@ -934,9 +939,9 @@ paths:
             type: object
       security:
       - JWTKeyAuth: []
-      summary: Gets one list
+      summary: Gets one team
       tags:
-      - list
+      - team
     post:
       consumes:
       - application/json
@@ -2527,6 +2532,19 @@ paths:
         in: query
         name: s
         type: string
+      - description: The sorting parameter. Possible values to sort by are priority,
+          prioritydesc, priorityasc, dueadate, dueadatedesc, dueadateasc.
+        in: query
+        name: sort
+        type: string
+      - description: The start date parameter to filter by. Expects a unix timestamp.
+        in: query
+        name: startdate
+        type: integer
+      - description: The end date parameter to filter by. Expects a unix timestamp.
+        in: query
+        name: enddate
+        type: integer
       produces:
       - application/json
       responses:
@@ -2544,96 +2562,6 @@ paths:
       security:
       - JWTKeyAuth: []
       summary: Get tasks
-      tags:
-      - task
-  /tasks/all/{sortby}:
-    get:
-      consumes:
-      - application/json
-      description: Returns all tasks on any list the user has access to.
-      parameters:
-      - description: The page number. Used for pagination. If not provided, the first
-          page of results is returned.
-        in: query
-        name: p
-        type: integer
-      - description: Search tasks by task text.
-        in: query
-        name: s
-        type: string
-      - description: The sorting parameter. Possible values to sort by are priority,
-          prioritydesc, priorityasc, dueadate, dueadatedesc, dueadateasc.
-        in: path
-        name: sortby
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: The tasks
-          schema:
-            items:
-              $ref: '#/definitions/models.List'
-            type: array
-        "500":
-          description: Internal error
-          schema:
-            $ref: '#/definitions/models.Message'
-            type: object
-      security:
-      - JWTKeyAuth: []
-      summary: Get tasks sorted
-      tags:
-      - task
-  /tasks/all/{sortby}/{startdate}/{enddate}:
-    get:
-      consumes:
-      - application/json
-      description: Returns all tasks on any list the user has access to.
-      parameters:
-      - description: The page number. Used for pagination. If not provided, the first
-          page of results is returned.
-        in: query
-        name: p
-        type: integer
-      - description: Search tasks by task text.
-        in: query
-        name: s
-        type: string
-      - description: The sorting parameter. Possible values to sort by are priority,
-          prioritydesc, priorityasc, dueadate, dueadatedesc, dueadateasc.
-        in: path
-        name: sortby
-        required: true
-        type: string
-      - description: The start date parameter. Expects a unix timestamp.
-        in: path
-        name: startdate
-        required: true
-        type: string
-      - description: The end date parameter. Expects a unix timestamp.
-        in: path
-        name: enddate
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: The tasks
-          schema:
-            items:
-              $ref: '#/definitions/models.List'
-            type: array
-        "500":
-          description: Internal error
-          schema:
-            $ref: '#/definitions/models.Message'
-            type: object
-      security:
-      - JWTKeyAuth: []
-      summary: Get tasks sorted and within a date range
       tags:
       - task
   /tasks/bulk:

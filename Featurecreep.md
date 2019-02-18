@@ -162,7 +162,7 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 
 * [x] ListTaskRights, sollte überall gleich funktionieren, gibt ja mittlerweile auch eine Methode um liste von nem Task aus zu kriegen oder so
 * [x] Re-check all `{List|Namespace}{User|Team}` if really all parameters need to be exposed via json or are overwritten via param anyway.
-* [ ] Things like list/task order should use queries and not url params
+* [x] Things like list/task order should use queries and not url params
 * [ ] Fix lint errors
 
 ### Linters
