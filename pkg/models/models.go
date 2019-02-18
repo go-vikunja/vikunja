@@ -95,7 +95,7 @@ func init() {
 func SetEngine() (err error) {
 	x, err = getEngine()
 	if err != nil {
-		return fmt.Errorf("Failed to connect to database: %v", err)
+		return fmt.Errorf("failed to connect to database: %v", err)
 	}
 
 	// Cache
@@ -104,13 +104,11 @@ func SetEngine() (err error) {
 		case "memory":
 			cacher := xorm.NewLRUCacher(xorm.NewMemoryStore(), viper.GetInt("cache.maxelementsize"))
 			x.SetDefaultCacher(cacher)
-			break
 		case "redis":
 			cacher := xrc.NewRedisCacher(viper.GetString("redis.host"), viper.GetString("redis.password"), xrc.DEFAULT_EXPIRATION, x.Logger())
 			x.SetDefaultCacher(cacher)
 			gob.Register(tables)
 			gob.Register(tablesWithPointer) // Need to register tables with pointer as well...
-			break
 		default:
 			log.Log.Info("Did not find a valid cache type. Caching disabled. Please refer to the docs for poosible cache types.")
 		}

@@ -58,11 +58,11 @@ func GetListsByNamespaceID(nID int64, doer *User) (lists []*List, err error) {
 			Or("ul.user_id = ?", doer.ID).
 			GroupBy("l.id").
 			Find(&lists)
-		if err != nil {
-			return nil, err
-		}
 	} else {
 		err = x.Where("namespace_id = ?", nID).Find(&lists)
+	}
+	if err != nil {
+		return nil, err
 	}
 
 	// get more list details

@@ -103,10 +103,21 @@ func IsZero(expr ast.Expr) bool {
 	return IsIntLiteral(expr, "0")
 }
 
-func TypeOf(j *lint.Job, expr ast.Expr) types.Type          { return j.Program.Info.TypeOf(expr) }
+func TypeOf(j *lint.Job, expr ast.Expr) types.Type {
+	if expr == nil {
+		return nil
+	}
+	return j.NodePackage(expr).TypesInfo.TypeOf(expr)
+}
+
 func IsOfType(j *lint.Job, expr ast.Expr, name string) bool { return IsType(TypeOf(j, expr), name) }
 
-func ObjectOf(j *lint.Job, ident *ast.Ident) types.Object { return j.Program.Info.ObjectOf(ident) }
+func ObjectOf(j *lint.Job, ident *ast.Ident) types.Object {
+	if ident == nil {
+		return nil
+	}
+	return j.NodePackage(ident).TypesInfo.ObjectOf(ident)
+}
 
 func IsInTest(j *lint.Job, node lint.Positioner) bool {
 	// FIXME(dh): this doesn't work for global variables with
@@ -123,14 +134,15 @@ func IsInMain(j *lint.Job, node lint.Positioner) bool {
 	if pkg == nil {
 		return false
 	}
-	return pkg.Pkg.Name() == "main"
+	return pkg.Types.Name() == "main"
 }
 
 func SelectorName(j *lint.Job, expr *ast.SelectorExpr) string {
-	sel := j.Program.Info.Selections[expr]
+	info := j.NodePackage(expr).TypesInfo
+	sel := info.Selections[expr]
 	if sel == nil {
 		if x, ok := expr.X.(*ast.Ident); ok {
-			pkg, ok := j.Program.Info.ObjectOf(x).(*types.PkgName)
+			pkg, ok := info.ObjectOf(x).(*types.PkgName)
 			if !ok {
 				// This shouldn't happen
 				return fmt.Sprintf("%s.%s", x.Name, expr.Sel.Name)
@@ -143,11 +155,11 @@ func SelectorName(j *lint.Job, expr *ast.SelectorExpr) string {
 }
 
 func IsNil(j *lint.Job, expr ast.Expr) bool {
-	return j.Program.Info.Types[expr].IsNil()
+	return j.NodePackage(expr).TypesInfo.Types[expr].IsNil()
 }
 
 func BoolConst(j *lint.Job, expr ast.Expr) bool {
-	val := j.Program.Info.ObjectOf(expr.(*ast.Ident)).(*types.Const).Val()
+	val := j.NodePackage(expr).TypesInfo.ObjectOf(expr.(*ast.Ident)).(*types.Const).Val()
 	return constant.BoolVal(val)
 }
 
@@ -160,7 +172,7 @@ func IsBoolConst(j *lint.Job, expr ast.Expr) bool {
 	if !ok {
 		return false
 	}
-	obj := j.Program.Info.ObjectOf(ident)
+	obj := j.NodePackage(expr).TypesInfo.ObjectOf(ident)
 	c, ok := obj.(*types.Const)
 	if !ok {
 		return false
@@ -176,7 +188,7 @@ func IsBoolConst(j *lint.Job, expr ast.Expr) bool {
 }
 
 func ExprToInt(j *lint.Job, expr ast.Expr) (int64, bool) {
-	tv := j.Program.Info.Types[expr]
+	tv := j.NodePackage(expr).TypesInfo.Types[expr]
 	if tv.Value == nil {
 		return 0, false
 	}
@@ -187,7 +199,7 @@ func ExprToInt(j *lint.Job, expr ast.Expr) (int64, bool) {
 }
 
 func ExprToString(j *lint.Job, expr ast.Expr) (string, bool) {
-	val := j.Program.Info.Types[expr].Value
+	val := j.NodePackage(expr).TypesInfo.Types[expr].Value
 	if val == nil {
 		return "", false
 	}
@@ -220,17 +232,35 @@ func IsGoVersion(j *lint.Job, minor int) bool {
 	return j.Program.GoVersion >= minor
 }
 
+func CallNameAST(j *lint.Job, call *ast.CallExpr) string {
+	switch fun := call.Fun.(type) {
+	case *ast.SelectorExpr:
+		fn, ok := ObjectOf(j, fun.Sel).(*types.Func)
+		if !ok {
+			return ""
+		}
+		return fn.FullName()
+	case *ast.Ident:
+		obj := ObjectOf(j, fun)
+		switch obj := obj.(type) {
+		case *types.Func:
+			return obj.FullName()
+		case *types.Builtin:
+			return obj.Name()
+		default:
+			return ""
+		}
+	default:
+		return ""
+	}
+}
+
 func IsCallToAST(j *lint.Job, node ast.Node, name string) bool {
 	call, ok := node.(*ast.CallExpr)
 	if !ok {
 		return false
 	}
-	sel, ok := call.Fun.(*ast.SelectorExpr)
-	if !ok {
-		return false
-	}
-	fn, ok := j.Program.Info.ObjectOf(sel.Sel).(*types.Func)
-	return ok && fn.FullName() == name
+	return CallNameAST(j, call) == name
 }
 
 func IsCallToAnyAST(j *lint.Job, node ast.Node, names ...string) bool {
@@ -279,4 +309,71 @@ func Inspect(node ast.Node, fn func(node ast.Node) bool) {
 		return
 	}
 	ast.Inspect(node, fn)
+}
+
+func GroupSpecs(j *lint.Job, specs []ast.Spec) [][]ast.Spec {
+	if len(specs) == 0 {
+		return nil
+	}
+	fset := j.Program.SSA.Fset
+	groups := make([][]ast.Spec, 1)
+	groups[0] = append(groups[0], specs[0])
+
+	for _, spec := range specs[1:] {
+		g := groups[len(groups)-1]
+		if fset.PositionFor(spec.Pos(), false).Line-1 !=
+			fset.PositionFor(g[len(g)-1].End(), false).Line {
+
+			groups = append(groups, nil)
+		}
+
+		groups[len(groups)-1] = append(groups[len(groups)-1], spec)
+	}
+
+	return groups
+}
+
+func IsObject(obj types.Object, name string) bool {
+	var path string
+	if pkg := obj.Pkg(); pkg != nil {
+		path = pkg.Path() + "."
+	}
+	return path+obj.Name() == name
+}
+
+type Field struct {
+	Var  *types.Var
+	Tag  string
+	Path []int
+}
+
+// FlattenFields recursively flattens T and embedded structs,
+// returning a list of fields. If multiple fields with the same name
+// exist, all will be returned.
+func FlattenFields(T *types.Struct) []Field {
+	return flattenFields(T, nil, nil)
+}
+
+func flattenFields(T *types.Struct, path []int, seen map[types.Type]bool) []Field {
+	if seen == nil {
+		seen = map[types.Type]bool{}
+	}
+	if seen[T] {
+		return nil
+	}
+	seen[T] = true
+	var out []Field
+	for i := 0; i < T.NumFields(); i++ {
+		field := T.Field(i)
+		tag := T.Tag(i)
+		np := append(path[:len(path):len(path)], i)
+		if field.Anonymous() {
+			if s, ok := Dereference(field.Type()).Underlying().(*types.Struct); ok {
+				out = append(out, flattenFields(s, np, seen)...)
+			}
+		} else {
+			out = append(out, Field{field, tag, np})
+		}
+	}
+	return out
 }

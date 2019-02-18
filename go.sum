@@ -205,3 +205,5 @@ honnef.co/go/tools v0.0.0-20180920025451-e3ad64cb4ed3 h1:LyX67rVB0kBUFoROrQfzKwd
 honnef.co/go/tools v0.0.0-20180920025451-e3ad64cb4ed3/go.mod h1:rf3lG4BRIbNafJWhAfAdb/ePZxsR/4RtNHQocxwk9r4=
 honnef.co/go/tools v0.0.0-20190128043916-71123fcbb8fe h1:/GZ/onp6W295MEgrIwtlbnxmFSKGavFp7/D7tMVyuaM=
 honnef.co/go/tools v0.0.0-20190128043916-71123fcbb8fe/go.mod h1:rf3lG4BRIbNafJWhAfAdb/ePZxsR/4RtNHQocxwk9r4=
+honnef.co/go/tools v0.0.0-20190215041234-466a0476246c h1:z+UFwlQ7KVwdlQTE5JjvDvfZmyyAVrEiiwau20b7X8k=
+honnef.co/go/tools v0.0.0-20190215041234-466a0476246c/go.mod h1:rf3lG4BRIbNafJWhAfAdb/ePZxsR/4RtNHQocxwk9r4=

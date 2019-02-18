@@ -1,23 +1,30 @@
-// staticcheck detects a myriad of bugs and inefficiencies in your
-// code.
+// staticcheck analyses Go code and makes it better.
 package main // import "honnef.co/go/tools/cmd/staticcheck"
 
 import (
 	"os"
 
+	"honnef.co/go/tools/lint"
 	"honnef.co/go/tools/lint/lintutil"
+	"honnef.co/go/tools/simple"
 	"honnef.co/go/tools/staticcheck"
+	"honnef.co/go/tools/stylecheck"
+	"honnef.co/go/tools/unused"
 )
 
 func main() {
 	fs := lintutil.FlagSet("staticcheck")
-	gen := fs.Bool("generated", false, "Check generated code")
 	fs.Parse(os.Args[1:])
-	c := staticcheck.NewChecker()
-	c.CheckGenerated = *gen
-	cfg := lintutil.CheckerConfig{
-		Checker:     c,
-		ExitNonZero: true,
+
+	checkers := []lint.Checker{
+		simple.NewChecker(),
+		staticcheck.NewChecker(),
+		stylecheck.NewChecker(),
 	}
-	lintutil.ProcessFlagSet([]lintutil.CheckerConfig{cfg}, fs)
+
+	uc := unused.NewChecker(unused.CheckAll)
+	uc.ConsiderReflection = true
+	checkers = append(checkers, unused.NewLintChecker(uc))
+
+	lintutil.ProcessFlagSet(checkers, fs)
 }

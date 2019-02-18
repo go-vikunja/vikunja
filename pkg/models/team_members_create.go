@@ -49,6 +49,9 @@ func (tm *TeamMember) Create(a web.Auth) (err error) {
 	// Check if that user is already part of the team
 	exists, err := x.Where("team_id = ? AND user_id = ?", tm.TeamID, tm.UserID).
 		Get(&TeamMember{})
+	if err != nil {
+		return
+	}
 	if exists {
 		return ErrUserIsMemberOfTeam{tm.TeamID, tm.UserID}
 	}

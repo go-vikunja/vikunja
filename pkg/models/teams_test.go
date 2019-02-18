@@ -98,8 +98,7 @@ func TestIsErrInvalidRight(t *testing.T) {
 	assert.NoError(t, RightWrite.isValid())
 
 	// Check invalid
-	var tr Right
-	tr = 938
+	var tr Right = 938
 	err := tr.isValid()
 	assert.Error(t, err)
 	assert.True(t, IsErrInvalidRight(err))

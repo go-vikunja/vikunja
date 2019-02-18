@@ -204,10 +204,8 @@ func (t *ListTask) updateTaskLabels(creator web.Auth, labels []*Label) (err erro
 
 	// Make a hashmap of the new labels for easier comparison
 	newLabels := make(map[int64]*Label, len(labels))
-	var allLabelIDs []int64
 	for _, newLabel := range labels {
 		newLabels[newLabel.ID] = newLabel
-		allLabelIDs = append(allLabelIDs, newLabel.ID)
 	}
 
 	// Get old labels to delete

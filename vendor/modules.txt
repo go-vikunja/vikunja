@@ -1,6 +1,8 @@
 # code.vikunja.io/web v0.0.0-20190123142349-c30ef6073334
 code.vikunja.io/web
 code.vikunja.io/web/handler
+# github.com/BurntSushi/toml v0.3.1
+github.com/BurntSushi/toml
 # github.com/PuerkitoBio/purell v1.1.0
 github.com/PuerkitoBio/purell
 # github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578
@@ -77,9 +79,6 @@ github.com/jgautheron/goconst/cmd/goconst
 github.com/jgautheron/goconst
 # github.com/karalabe/xgo v0.0.0-20181007145344-72da7d1d3970
 github.com/karalabe/xgo
-# github.com/kisielk/gotool v1.0.0
-github.com/kisielk/gotool
-github.com/kisielk/gotool/internal/load
 # github.com/labstack/echo v3.3.5+incompatible
 github.com/labstack/echo
 github.com/labstack/echo/middleware
@@ -173,10 +172,14 @@ golang.org/x/text/unicode/bidi
 golang.org/x/tools/go/loader
 golang.org/x/tools/go/ast/astutil
 golang.org/x/tools/go/gcexportdata
+golang.org/x/tools/go/packages
 golang.org/x/tools/go/types/typeutil
 golang.org/x/tools/go/buildutil
 golang.org/x/tools/go/internal/cgo
 golang.org/x/tools/go/internal/gcimporter
+golang.org/x/tools/internal/gopathwalk
+golang.org/x/tools/internal/semver
+golang.org/x/tools/internal/fastwalk
 # google.golang.org/appengine v1.3.0
 google.golang.org/appengine/cloudsql
 # gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc
@@ -187,22 +190,25 @@ gopkg.in/gomail.v2
 gopkg.in/testfixtures.v2
 # gopkg.in/yaml.v2 v2.2.2
 gopkg.in/yaml.v2
-# honnef.co/go/tools v0.0.0-20180920025451-e3ad64cb4ed3
-honnef.co/go/tools/cmd/gosimple
+# honnef.co/go/tools v0.0.0-20190215041234-466a0476246c
 honnef.co/go/tools/cmd/staticcheck
-honnef.co/go/tools/cmd/unused
+honnef.co/go/tools/lint
 honnef.co/go/tools/lint/lintutil
 honnef.co/go/tools/simple
 honnef.co/go/tools/staticcheck
+honnef.co/go/tools/stylecheck
 honnef.co/go/tools/unused
-honnef.co/go/tools/lint
+honnef.co/go/tools/config
+honnef.co/go/tools/ssa
+honnef.co/go/tools/ssa/ssautil
+honnef.co/go/tools/lint/lintutil/format
 honnef.co/go/tools/version
+honnef.co/go/tools/arg
 honnef.co/go/tools/internal/sharedcheck
 honnef.co/go/tools/lint/lintdsl
 honnef.co/go/tools/deprecated
 honnef.co/go/tools/functions
-honnef.co/go/tools/ssa
+honnef.co/go/tools/ssautil
 honnef.co/go/tools/staticcheck/vrp
-honnef.co/go/tools/ssa/ssautil
 honnef.co/go/tools/callgraph
 honnef.co/go/tools/callgraph/static

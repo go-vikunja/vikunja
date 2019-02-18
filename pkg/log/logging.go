@@ -91,7 +91,6 @@ func GetLogWriter(logfile string) (writer io.Writer) {
 			log.Fatal(err)
 		}
 		writer = f
-		break
 	case "stderr":
 		writer = os.Stderr
 	case "stdout":

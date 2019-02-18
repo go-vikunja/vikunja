@@ -49,6 +49,9 @@ func (n *Namespace) Delete() (err error) {
 
 	// Delete all lists with their tasks
 	lists, err := GetListsByNamespaceID(n.ID, &User{})
+	if err != nil {
+		return
+	}
 	var listIDs []int64
 	// We need to do that for here because we need the list ids to delete two times:
 	// 1) to delete the lists itself

@@ -109,7 +109,7 @@ func (bt *BulkTask) Update() (err error) {
 		}
 
 		// And because a false is considered to be a null value, we need to explicitly check that case here.
-		if bt.ListTask.Done == false {
+		if !bt.ListTask.Done {
 			oldtask.Done = false
 		}
 

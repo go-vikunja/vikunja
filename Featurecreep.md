@@ -163,15 +163,15 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [x] ListTaskRights, sollte überall gleich funktionieren, gibt ja mittlerweile auch eine Methode um liste von nem Task aus zu kriegen oder so
 * [x] Re-check all `{List|Namespace}{User|Team}` if really all parameters need to be exposed via json or are overwritten via param anyway.
 * [x] Things like list/task order should use queries and not url params
-* [ ] Fix lint errors
+* [x] Fix lint errors
 
 ### Linters
 
 * [x] goconst
-* [ ] Gosimple -> waiting for mod
-* [ ] Staticcheck -> waiting for mod
-* [ ] unused -> waiting for mod
-* [ ] gosec -> waiting for mod
+* [x] Staticcheck -> waiting for mod
+* [x] gocyclo-check
+* [ ] gosec-check -> waiting for mod
+* [x] goconst-check -> waiting for mod
 
 ### More server settings
 

@@ -1,25 +1,22 @@
-// Copyright (c) 2013 The Go Authors. All rights reserved.
-//
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file or at
-// https://developers.google.com/open-source/licenses/bsd.
-
-// Package lint provides the foundation for tools like gosimple.
+// Package lint provides the foundation for tools like staticcheck
 package lint // import "honnef.co/go/tools/lint"
 
 import (
 	"fmt"
 	"go/ast"
-	"go/build"
 	"go/token"
 	"go/types"
+	"io"
+	"os"
 	"path/filepath"
 	"sort"
 	"strings"
 	"sync"
+	"time"
 	"unicode"
 
-	"golang.org/x/tools/go/loader"
+	"golang.org/x/tools/go/packages"
+	"honnef.co/go/tools/config"
 	"honnef.co/go/tools/ssa"
 	"honnef.co/go/tools/ssa/ssautil"
 )
@@ -28,8 +25,10 @@ type Job struct {
 	Program *Program
 
 	checker  string
-	check    string
+	check    Check
 	problems []Problem
+
+	duration time.Duration
 }
 
 type Ignore interface {
@@ -89,7 +88,7 @@ type GlobIgnore struct {
 
 func (gi *GlobIgnore) Match(p Problem) bool {
 	if gi.Pattern != "*" {
-		pkgpath := p.Package.Path()
+		pkgpath := p.Package.Types.Path()
 		if strings.HasSuffix(pkgpath, "_test") {
 			pkgpath = pkgpath[:len(pkgpath)-len("_test")]
 		}
@@ -107,31 +106,44 @@ func (gi *GlobIgnore) Match(p Problem) bool {
 }
 
 type Program struct {
-	SSA  *ssa.Program
-	Prog *loader.Program
-	// TODO(dh): Rename to InitialPackages?
-	Packages         []*Pkg
+	SSA              *ssa.Program
+	InitialPackages  []*Pkg
 	InitialFunctions []*ssa.Function
+	AllPackages      []*packages.Package
 	AllFunctions     []*ssa.Function
 	Files            []*ast.File
-	Info             *types.Info
 	GoVersion        int
 
 	tokenFileMap map[*token.File]*ast.File
 	astFileMap   map[*ast.File]*Pkg
+	packagesMap  map[string]*packages.Package
+
+	genMu        sync.RWMutex
+	generatedMap map[string]bool
+}
+
+func (prog *Program) Fset() *token.FileSet {
+	return prog.InitialPackages[0].Fset
 }
 
 type Func func(*Job)
 
+type Severity uint8
+
+const (
+	Error Severity = iota
+	Warning
+	Ignored
+)
+
 // Problem represents a problem in some source code.
 type Problem struct {
-	pos      token.Pos
 	Position token.Position // position in source file
 	Text     string         // the prose that describes the problem
 	Check    string
 	Checker  string
-	Package  *types.Package
-	Ignored  bool
+	Package  *Pkg
+	Severity Severity
 }
 
 func (p *Problem) String() string {
@@ -145,15 +157,25 @@ type Checker interface {
 	Name() string
 	Prefix() string
 	Init(*Program)
-	Funcs() map[string]Func
+	Checks() []Check
+}
+
+type Check struct {
+	Fn              Func
+	ID              string
+	FilterGenerated bool
 }
 
 // A Linter lints Go source code.
 type Linter struct {
-	Checker       Checker
+	Checkers      []Checker
 	Ignores       []Ignore
 	GoVersion     int
 	ReturnIgnored bool
+	Config        config.Config
+
+	MaxConcurrentJobs int
+	PrintStats        bool
 
 	automaticIgnores []Ignore
 }
@@ -191,36 +213,6 @@ func (j *Job) File(node Positioner) *ast.File {
 	return j.Program.File(node)
 }
 
-// TODO(dh): switch to sort.Slice when Go 1.9 lands.
-type byPosition struct {
-	fset *token.FileSet
-	ps   []Problem
-}
-
-func (ps byPosition) Len() int {
-	return len(ps.ps)
-}
-
-func (ps byPosition) Less(i int, j int) bool {
-	pi, pj := ps.ps[i].Position, ps.ps[j].Position
-
-	if pi.Filename != pj.Filename {
-		return pi.Filename < pj.Filename
-	}
-	if pi.Line != pj.Line {
-		return pi.Line < pj.Line
-	}
-	if pi.Column != pj.Column {
-		return pi.Column < pj.Column
-	}
-
-	return ps.ps[i].Text < ps.ps[j].Text
-}
-
-func (ps byPosition) Swap(i int, j int) {
-	ps.ps[i], ps.ps[j] = ps.ps[j], ps.ps[i]
-}
-
 func parseDirective(s string) (cmd string, args []string) {
 	if !strings.HasPrefix(s, "//lint:") {
 		return "", nil
@@ -230,79 +222,131 @@ func parseDirective(s string) (cmd string, args []string) {
 	return fields[0], fields[1:]
 }
 
-func (l *Linter) Lint(lprog *loader.Program, conf *loader.Config) []Problem {
-	ssaprog := ssautil.CreateProgram(lprog, ssa.GlobalDebug)
+type PerfStats struct {
+	PackageLoading time.Duration
+	SSABuild       time.Duration
+	OtherInitWork  time.Duration
+	CheckerInits   map[string]time.Duration
+	Jobs           []JobStat
+}
+
+type JobStat struct {
+	Job      string
+	Duration time.Duration
+}
+
+func (stats *PerfStats) Print(w io.Writer) {
+	fmt.Fprintln(w, "Package loading:", stats.PackageLoading)
+	fmt.Fprintln(w, "SSA build:", stats.SSABuild)
+	fmt.Fprintln(w, "Other init work:", stats.OtherInitWork)
+
+	fmt.Fprintln(w, "Checker inits:")
+	for checker, d := range stats.CheckerInits {
+		fmt.Fprintf(w, "\t%s: %s\n", checker, d)
+	}
+	fmt.Fprintln(w)
+
+	fmt.Fprintln(w, "Jobs:")
+	sort.Slice(stats.Jobs, func(i, j int) bool {
+		return stats.Jobs[i].Duration < stats.Jobs[j].Duration
+	})
+	var total time.Duration
+	for _, job := range stats.Jobs {
+		fmt.Fprintf(w, "\t%s: %s\n", job.Job, job.Duration)
+		total += job.Duration
+	}
+	fmt.Fprintf(w, "\tTotal: %s\n", total)
+}
+
+func (l *Linter) Lint(initial []*packages.Package, stats *PerfStats) []Problem {
+	allPkgs := allPackages(initial)
+	t := time.Now()
+	ssaprog, _ := ssautil.Packages(allPkgs, ssa.GlobalDebug)
 	ssaprog.Build()
+	if stats != nil {
+		stats.SSABuild = time.Since(t)
+	}
+
+	t = time.Now()
 	pkgMap := map[*ssa.Package]*Pkg{}
 	var pkgs []*Pkg
-	for _, pkginfo := range lprog.InitialPackages() {
-		ssapkg := ssaprog.Package(pkginfo.Pkg)
-		var bp *build.Package
-		if len(pkginfo.Files) != 0 {
-			path := lprog.Fset.Position(pkginfo.Files[0].Pos()).Filename
+	for _, pkg := range initial {
+		ssapkg := ssaprog.Package(pkg.Types)
+		var cfg config.Config
+		if len(pkg.GoFiles) != 0 {
+			path := pkg.GoFiles[0]
 			dir := filepath.Dir(path)
 			var err error
-			ctx := conf.Build
-			if ctx == nil {
-				ctx = &build.Default
-			}
-			bp, err = ctx.ImportDir(dir, 0)
+			// OPT(dh): we're rebuilding the entire config tree for
+			// each package. for example, if we check a/b/c and
+			// a/b/c/d, we'll process a, a/b, a/b/c, a, a/b, a/b/c,
+			// a/b/c/d – we should cache configs per package and only
+			// load the new levels.
+			cfg, err = config.Load(dir)
 			if err != nil {
-				// shouldn't happen
+				// FIXME(dh): we couldn't load the config, what are we
+				// supposed to do? probably tell the user somehow
 			}
+			cfg = cfg.Merge(l.Config)
 		}
+
 		pkg := &Pkg{
-			Package:  ssapkg,
-			Info:     pkginfo,
-			BuildPkg: bp,
+			SSA:     ssapkg,
+			Package: pkg,
+			Config:  cfg,
 		}
 		pkgMap[ssapkg] = pkg
 		pkgs = append(pkgs, pkg)
 	}
+
 	prog := &Program{
-		SSA:          ssaprog,
-		Prog:         lprog,
-		Packages:     pkgs,
-		Info:         &types.Info{},
-		GoVersion:    l.GoVersion,
-		tokenFileMap: map[*token.File]*ast.File{},
-		astFileMap:   map[*ast.File]*Pkg{},
+		SSA:             ssaprog,
+		InitialPackages: pkgs,
+		AllPackages:     allPkgs,
+		GoVersion:       l.GoVersion,
+		tokenFileMap:    map[*token.File]*ast.File{},
+		astFileMap:      map[*ast.File]*Pkg{},
+		generatedMap:    map[string]bool{},
+	}
+	prog.packagesMap = map[string]*packages.Package{}
+	for _, pkg := range allPkgs {
+		prog.packagesMap[pkg.Types.Path()] = pkg
 	}
 
-	initial := map[*types.Package]struct{}{}
+	isInitial := map[*types.Package]struct{}{}
 	for _, pkg := range pkgs {
-		initial[pkg.Info.Pkg] = struct{}{}
+		isInitial[pkg.Types] = struct{}{}
 	}
 	for fn := range ssautil.AllFunctions(ssaprog) {
 		if fn.Pkg == nil {
 			continue
 		}
 		prog.AllFunctions = append(prog.AllFunctions, fn)
-		if _, ok := initial[fn.Pkg.Pkg]; ok {
+		if _, ok := isInitial[fn.Pkg.Pkg]; ok {
 			prog.InitialFunctions = append(prog.InitialFunctions, fn)
 		}
 	}
 	for _, pkg := range pkgs {
-		prog.Files = append(prog.Files, pkg.Info.Files...)
+		prog.Files = append(prog.Files, pkg.Syntax...)
 
-		ssapkg := ssaprog.Package(pkg.Info.Pkg)
-		for _, f := range pkg.Info.Files {
+		ssapkg := ssaprog.Package(pkg.Types)
+		for _, f := range pkg.Syntax {
 			prog.astFileMap[f] = pkgMap[ssapkg]
 		}
 	}
 
-	for _, pkginfo := range lprog.AllPackages {
-		for _, f := range pkginfo.Files {
-			tf := lprog.Fset.File(f.Pos())
+	for _, pkg := range allPkgs {
+		for _, f := range pkg.Syntax {
+			tf := pkg.Fset.File(f.Pos())
 			prog.tokenFileMap[tf] = f
 		}
 	}
 
 	var out []Problem
 	l.automaticIgnores = nil
-	for _, pkginfo := range lprog.InitialPackages() {
-		for _, f := range pkginfo.Files {
-			cm := ast.NewCommentMap(lprog.Fset, f, f.Comments)
+	for _, pkg := range initial {
+		for _, f := range pkg.Syntax {
+			cm := ast.NewCommentMap(pkg.Fset, f, f.Comments)
 			for node, cgs := range cm {
 				for _, cg := range cgs {
 					for _, c := range cg.List {
@@ -315,11 +359,10 @@ func (l *Linter) Lint(lprog *loader.Program, conf *loader.Config) []Problem {
 							if len(args) < 2 {
 								// FIXME(dh): this causes duplicated warnings when using megacheck
 								p := Problem{
-									pos:      c.Pos(),
 									Position: prog.DisplayPosition(c.Pos()),
 									Text:     "malformed linter directive; missing the required reason field?",
 									Check:    "",
-									Checker:  l.Checker.Name(),
+									Checker:  "lint",
 									Package:  nil,
 								}
 								out = append(out, p)
@@ -362,75 +405,84 @@ func (l *Linter) Lint(lprog *loader.Program, conf *loader.Config) []Problem {
 		scopes     int
 	}{}
 	for _, pkg := range pkgs {
-		sizes.types += len(pkg.Info.Info.Types)
-		sizes.defs += len(pkg.Info.Info.Defs)
-		sizes.uses += len(pkg.Info.Info.Uses)
-		sizes.implicits += len(pkg.Info.Info.Implicits)
-		sizes.selections += len(pkg.Info.Info.Selections)
-		sizes.scopes += len(pkg.Info.Info.Scopes)
+		sizes.types += len(pkg.TypesInfo.Types)
+		sizes.defs += len(pkg.TypesInfo.Defs)
+		sizes.uses += len(pkg.TypesInfo.Uses)
+		sizes.implicits += len(pkg.TypesInfo.Implicits)
+		sizes.selections += len(pkg.TypesInfo.Selections)
+		sizes.scopes += len(pkg.TypesInfo.Scopes)
 	}
-	prog.Info.Types = make(map[ast.Expr]types.TypeAndValue, sizes.types)
-	prog.Info.Defs = make(map[*ast.Ident]types.Object, sizes.defs)
-	prog.Info.Uses = make(map[*ast.Ident]types.Object, sizes.uses)
-	prog.Info.Implicits = make(map[ast.Node]types.Object, sizes.implicits)
-	prog.Info.Selections = make(map[*ast.SelectorExpr]*types.Selection, sizes.selections)
-	prog.Info.Scopes = make(map[ast.Node]*types.Scope, sizes.scopes)
-	for _, pkg := range pkgs {
-		for k, v := range pkg.Info.Info.Types {
-			prog.Info.Types[k] = v
-		}
-		for k, v := range pkg.Info.Info.Defs {
-			prog.Info.Defs[k] = v
-		}
-		for k, v := range pkg.Info.Info.Uses {
-			prog.Info.Uses[k] = v
-		}
-		for k, v := range pkg.Info.Info.Implicits {
-			prog.Info.Implicits[k] = v
-		}
-		for k, v := range pkg.Info.Info.Selections {
-			prog.Info.Selections[k] = v
-		}
-		for k, v := range pkg.Info.Info.Scopes {
-			prog.Info.Scopes[k] = v
-		}
-	}
-	l.Checker.Init(prog)
 
-	funcs := l.Checker.Funcs()
-	var keys []string
-	for k := range funcs {
-		keys = append(keys, k)
+	if stats != nil {
+		stats.OtherInitWork = time.Since(t)
 	}
-	sort.Strings(keys)
+
+	for _, checker := range l.Checkers {
+		t := time.Now()
+		checker.Init(prog)
+		if stats != nil {
+			stats.CheckerInits[checker.Name()] = time.Since(t)
+		}
+	}
 
 	var jobs []*Job
-	for _, k := range keys {
-		j := &Job{
-			Program: prog,
-			checker: l.Checker.Name(),
-			check:   k,
+	var allChecks []string
+
+	for _, checker := range l.Checkers {
+		checks := checker.Checks()
+		for _, check := range checks {
+			allChecks = append(allChecks, check.ID)
+			j := &Job{
+				Program: prog,
+				checker: checker.Name(),
+				check:   check,
+			}
+			jobs = append(jobs, j)
 		}
-		jobs = append(jobs, j)
 	}
+
+	max := len(jobs)
+	if l.MaxConcurrentJobs > 0 {
+		max = l.MaxConcurrentJobs
+	}
+
+	sem := make(chan struct{}, max)
 	wg := &sync.WaitGroup{}
 	for _, j := range jobs {
 		wg.Add(1)
 		go func(j *Job) {
 			defer wg.Done()
-			fn := funcs[j.check]
+			sem <- struct{}{}
+			defer func() { <-sem }()
+			fn := j.check.Fn
 			if fn == nil {
 				return
 			}
+			t := time.Now()
 			fn(j)
+			j.duration = time.Since(t)
 		}(j)
 	}
 	wg.Wait()
 
 	for _, j := range jobs {
+		if stats != nil {
+			stats.Jobs = append(stats.Jobs, JobStat{j.check.ID, j.duration})
+		}
 		for _, p := range j.problems {
-			p.Ignored = l.ignore(p)
-			if l.ReturnIgnored || !p.Ignored {
+			allowedChecks := FilterChecks(allChecks, p.Package.Config.Checks)
+
+			if l.ignore(p) {
+				p.Severity = Ignored
+			}
+			// TODO(dh): support globs in check white/blacklist
+			// OPT(dh): this approach doesn't actually disable checks,
+			// it just discards their results. For the moment, that's
+			// fine. None of our checks are super expensive. In the
+			// future, we may want to provide opt-in expensive
+			// analysis, which shouldn't run at all. It may be easiest
+			// to implement this in the individual checks.
+			if (l.ReturnIgnored || p.Severity != Ignored) && allowedChecks[p.Check] {
 				out = append(out, p)
 			}
 		}
@@ -444,39 +496,128 @@ func (l *Linter) Lint(lprog *loader.Program, conf *loader.Config) []Problem {
 		if ig.matched {
 			continue
 		}
-		for _, c := range ig.Checks {
-			idx := strings.IndexFunc(c, func(r rune) bool {
-				return unicode.IsNumber(r)
-			})
-			if idx == -1 {
-				// malformed check name, backing out
+
+		couldveMatched := false
+		for f, pkg := range prog.astFileMap {
+			if prog.Fset().Position(f.Pos()).Filename != ig.File {
 				continue
 			}
-			if c[:idx] != l.Checker.Prefix() {
-				// not for this checker
-				continue
+			allowedChecks := FilterChecks(allChecks, pkg.Config.Checks)
+			for _, c := range ig.Checks {
+				if !allowedChecks[c] {
+					continue
+				}
+				couldveMatched = true
+				break
 			}
-			p := Problem{
-				pos:      ig.pos,
-				Position: prog.DisplayPosition(ig.pos),
-				Text:     "this linter directive didn't match anything; should it be removed?",
-				Check:    "",
-				Checker:  l.Checker.Name(),
-				Package:  nil,
-			}
-			out = append(out, p)
+			break
 		}
+
+		if !couldveMatched {
+			// The ignored checks were disabled for the containing package.
+			// Don't flag the ignore for not having matched.
+			continue
+		}
+		p := Problem{
+			Position: prog.DisplayPosition(ig.pos),
+			Text:     "this linter directive didn't match anything; should it be removed?",
+			Check:    "",
+			Checker:  "lint",
+			Package:  nil,
+		}
+		out = append(out, p)
 	}
 
-	sort.Sort(byPosition{lprog.Fset, out})
-	return out
+	sort.Slice(out, func(i int, j int) bool {
+		pi, pj := out[i].Position, out[j].Position
+
+		if pi.Filename != pj.Filename {
+			return pi.Filename < pj.Filename
+		}
+		if pi.Line != pj.Line {
+			return pi.Line < pj.Line
+		}
+		if pi.Column != pj.Column {
+			return pi.Column < pj.Column
+		}
+
+		return out[i].Text < out[j].Text
+	})
+
+	if l.PrintStats && stats != nil {
+		stats.Print(os.Stderr)
+	}
+
+	if len(out) < 2 {
+		return out
+	}
+
+	uniq := make([]Problem, 0, len(out))
+	uniq = append(uniq, out[0])
+	prev := out[0]
+	for _, p := range out[1:] {
+		if prev.Position == p.Position && prev.Text == p.Text {
+			continue
+		}
+		prev = p
+		uniq = append(uniq, p)
+	}
+
+	return uniq
+}
+
+func FilterChecks(allChecks []string, checks []string) map[string]bool {
+	// OPT(dh): this entire computation could be cached per package
+	allowedChecks := map[string]bool{}
+
+	for _, check := range checks {
+		b := true
+		if len(check) > 1 && check[0] == '-' {
+			b = false
+			check = check[1:]
+		}
+		if check == "*" || check == "all" {
+			// Match all
+			for _, c := range allChecks {
+				allowedChecks[c] = b
+			}
+		} else if strings.HasSuffix(check, "*") {
+			// Glob
+			prefix := check[:len(check)-1]
+			isCat := strings.IndexFunc(prefix, func(r rune) bool { return unicode.IsNumber(r) }) == -1
+
+			for _, c := range allChecks {
+				idx := strings.IndexFunc(c, func(r rune) bool { return unicode.IsNumber(r) })
+				if isCat {
+					// Glob is S*, which should match S1000 but not SA1000
+					cat := c[:idx]
+					if prefix == cat {
+						allowedChecks[c] = b
+					}
+				} else {
+					// Glob is S1*
+					if strings.HasPrefix(c, prefix) {
+						allowedChecks[c] = b
+					}
+				}
+			}
+		} else {
+			// Literal check name
+			allowedChecks[check] = b
+		}
+	}
+	return allowedChecks
+}
+
+func (prog *Program) Package(path string) *packages.Package {
+	return prog.packagesMap[path]
 }
 
 // Pkg represents a package being linted.
 type Pkg struct {
-	*ssa.Package
-	Info     *loader.PackageInfo
-	BuildPkg *build.Package
+	SSA *ssa.Package
+	*packages.Package
+	Config config.Config
 }
 
 type Positioner interface {
@@ -484,52 +625,61 @@ type Positioner interface {
 }
 
 func (prog *Program) DisplayPosition(p token.Pos) token.Position {
-	// The //line compiler directive can be used to change the file
-	// name and line numbers associated with code. This can, for
-	// example, be used by code generation tools. The most prominent
-	// example is 'go tool cgo', which uses //line directives to refer
-	// back to the original source code.
-	//
-	// In the context of our linters, we need to treat these
-	// directives differently depending on context. For cgo files, we
-	// want to honour the directives, so that line numbers are
-	// adjusted correctly. For all other files, we want to ignore the
-	// directives, so that problems are reported at their actual
-	// position and not, for example, a yacc grammar file. This also
-	// affects the ignore mechanism, since it operates on the position
-	// information stored within problems. With this implementation, a
-	// user will ignore foo.go, not foo.y
+	// Only use the adjusted position if it points to another Go file.
+	// This means we'll point to the original file for cgo files, but
+	// we won't point to a YACC grammar file.
 
-	pkg := prog.astFileMap[prog.tokenFileMap[prog.Prog.Fset.File(p)]]
-	bp := pkg.BuildPkg
-	adjPos := prog.Prog.Fset.Position(p)
-	if bp == nil {
-		// couldn't find the package for some reason (deleted? faulty
-		// file system?)
+	pos := prog.Fset().PositionFor(p, false)
+	adjPos := prog.Fset().PositionFor(p, true)
+
+	if filepath.Ext(adjPos.Filename) == ".go" {
 		return adjPos
 	}
-	base := filepath.Base(adjPos.Filename)
-	for _, f := range bp.CgoFiles {
-		if f == base {
-			// this is a cgo file, use the adjusted position
-			return adjPos
-		}
+	return pos
+}
+
+func (prog *Program) isGenerated(path string) bool {
+	// This function isn't very efficient in terms of lock contention
+	// and lack of parallelism, but it really shouldn't matter.
+	// Projects consists of thousands of files, and have hundreds of
+	// errors. That's not a lot of calls to isGenerated.
+
+	prog.genMu.RLock()
+	if b, ok := prog.generatedMap[path]; ok {
+		prog.genMu.RUnlock()
+		return b
 	}
-	// not a cgo file, ignore //line directives
-	return prog.Prog.Fset.PositionFor(p, false)
+	prog.genMu.RUnlock()
+	prog.genMu.Lock()
+	defer prog.genMu.Unlock()
+	// recheck to avoid doing extra work in case of race
+	if b, ok := prog.generatedMap[path]; ok {
+		return b
+	}
+
+	f, err := os.Open(path)
+	if err != nil {
+		return false
+	}
+	defer f.Close()
+	b := isGenerated(f)
+	prog.generatedMap[path] = b
+	return b
 }
 
 func (j *Job) Errorf(n Positioner, format string, args ...interface{}) *Problem {
 	tf := j.Program.SSA.Fset.File(n.Pos())
 	f := j.Program.tokenFileMap[tf]
-	pkg := j.Program.astFileMap[f].Pkg
+	pkg := j.Program.astFileMap[f]
 
 	pos := j.Program.DisplayPosition(n.Pos())
+	if j.Program.isGenerated(pos.Filename) && j.check.FilterGenerated {
+		return nil
+	}
 	problem := Problem{
-		pos:      n.Pos(),
 		Position: pos,
 		Text:     fmt.Sprintf(format, args...),
-		Check:    j.check,
+		Check:    j.check.ID,
 		Checker:  j.checker,
 		Package:  pkg,
 	}
@@ -540,4 +690,17 @@ func (j *Job) Errorf(n Positioner, format string, args ...interface{}) *Problem 
 func (j *Job) NodePackage(node Positioner) *Pkg {
 	f := j.File(node)
 	return j.Program.astFileMap[f]
+}
+
+func allPackages(pkgs []*packages.Package) []*packages.Package {
+	var out []*packages.Package
+	packages.Visit(
+		pkgs,
+		func(pkg *packages.Package) bool {
+			out = append(out, pkg)
+			return true
+		},
+		nil,
+	)
+	return out
 }

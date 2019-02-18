@@ -199,13 +199,15 @@ ineffassign-check:
 .PHONY: gocyclo-check
 gocyclo-check:
 	@hash gocyclo > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
+	    go get -u github.com/fzipp/gocyclo; \
 		go install $(GOFLAGS) github.com/fzipp/gocyclo; \
 	fi
-	for S in $(GOFILES); do gocyclo -over 14 $$S || exit 1; done;
+	for S in $(GOFILES); do gocyclo -over 16 $$S || exit 1; done;
 
 .PHONY: static-check
 static-check:
-	@hash gocyclo > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
+	@hash staticcheck > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
+	    go get -u honnef.co/go/tools; \
 		go install $(GOFLAGS) honnef.co/go/tools/cmd/staticcheck; \
 	fi
 	staticcheck $(PACKAGES);
@@ -220,6 +222,7 @@ gosec-check:
 .PHONY: goconst-check
 goconst-check:
 	@hash goconst > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
-		go get github.com/jgautheron/goconst/cmd/goconst; \
+		go get -u github.com/jgautheron/goconst/cmd/goconst; \
+		go install $(GOFLAGS) github.com/jgautheron/goconst/cmd/goconst; \
 	fi
 	for S in $(PACKAGES); do goconst $$S || exit 1; done;
