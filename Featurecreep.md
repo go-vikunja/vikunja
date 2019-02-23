@@ -74,6 +74,17 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [x] Panic wenn mailer nicht erreichbar -> Als workaround mailer deaktivierbar machen, bzw keine mails verschicken
 * [x] "unexpected EOF"
 * [x] Beim Login & Password reset gibt die API zurück dass der Nutzer nicht existiert
+* [ ] Re-check rights checks to see if all information which is compared against is properly read from the db and not only based on user input
+  * [ ] Lists
+  * [ ] List users
+  * [ ] List Teams
+  * [ ] Labels
+  * [ ] Tasks
+  * [ ] Namespaces
+  * [ ] Namespace users
+  * [ ] Namespace teams
+  * [ ] Teams
+  * [ ] Team member handling
 
 ### Docs
 
