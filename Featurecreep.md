@@ -176,6 +176,9 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [x] Things like list/task order should use queries and not url params
 * [x] Fix lint errors
 * [ ] Reminders should use an extra table so we can make reverse lookups aka "give me all tasks with reminders in this period" which we'll need for things like email reminders notifications
+* [ ] Teams and users should also have uuids (for users these can be the username)
+* [ ] When giving a team or user access to a list/namespace, they should be reffered to by uuid, not numeric id
+* [ ] Adding users to a team should also use uuid
 
 ### Linters
 
