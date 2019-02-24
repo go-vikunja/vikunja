@@ -175,6 +175,7 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [x] Re-check all `{List|Namespace}{User|Team}` if really all parameters need to be exposed via json or are overwritten via param anyway.
 * [x] Things like list/task order should use queries and not url params
 * [x] Fix lint errors
+* [ ] Reminders should use an extra table so we can make reverse lookups aka "give me all tasks with reminders in this period" which we'll need for things like email reminders notifications
 
 ### Linters
 
