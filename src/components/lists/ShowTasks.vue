@@ -32,6 +32,7 @@
 	import router from '../../router'
 	import {HTTP} from '../../http-common'
 	import message from '../../message'
+	import TaskService from '../../services/task'
 
 	export default {
 		name: "ShowTasks",
@@ -39,7 +40,8 @@
 			return {
 				loading: true,
 				tasks: [],
-				hasUndoneTasks: false
+				hasUndoneTasks: false,
+				taskService: TaskService,
 			}
 		},
 		props: {
@@ -48,10 +50,22 @@
 			showAll: Boolean,
 		},
 		created() {
+			this.taskService = new TaskService()
 			this.loadPendingTasks()
 		},
 		methods: {
 			loadPendingTasks() {
+				// We can't really make this code work until 0.6 is released which will make this exact thing a lot easier.
+				// Because the feature we need here (specifying sort order and start/end date via query parameters) is already in master, we'll just wait and use the legacy method until then.
+				/*
+				let taskDummy = new TaskModel() // Used to specify options for the request
+				this.taskService.getAll(taskDummy)
+					.then(r => {
+						this.tasks = r
+					})
+					.catch(e => {
+						message.error(e, this)
+					})*/
 				const cancel = message.setLoading(this)
 
 				let url = `tasks/all/duedate`

@@ -70,7 +70,7 @@
 						</ul>
 					</div>
 					<aside class="menu namespaces-lists">
-						<div class="spinner" :class="{ 'is-loading': loading}"></div>
+						<div class="spinner" :class="{ 'is-loading': namespaceService.loading}"></div>
 						<template v-for="n in namespaces">
 							<div :key="n.id">
 								<router-link v-tooltip.right="'Settings'" :to="{name: 'editNamespace', params: {id: n.id} }" class="nsettings" v-if="n.id > 0">
@@ -116,70 +116,67 @@
 </template>
 
 <script>
-    import auth from './auth'
-    import {HTTP} from './http-common'
+	import auth from './auth'
 	import message from './message'
-    import router from './router'
+	import router from './router'
+	import NamespaceService from './services/namespace'
 
-    export default {
-        name: 'app',
+	export default {
+		name: 'app',
 
-        data() {
-            return {
-                user: auth.user,
-                loading: false,
-                namespaces: [],
+		data() {
+			return {
+				user: auth.user,
+				namespaces: [],
 				mobileMenuActive: false,
 				fullpage: false,
 				currentDate: new Date(),
-            }
-        },
-		beforeMount() {
-            // Password reset
-            if(this.$route.query.userPasswordReset !== undefined) {
-				localStorage.removeItem('passwordResetToken') // Delete an eventually preexisting old token
-				localStorage.setItem('passwordResetToken', this.$route.query.userPasswordReset)
-                router.push({name: 'passwordReset'})
-			}
-            // Email verification
-            if(this.$route.query.userEmailConfirm !== undefined) {
-                localStorage.removeItem('emailConfirmToken') // Delete an eventually preexisting old token
-                localStorage.setItem('emailConfirmToken', this.$route.query.userEmailConfirm)
-                router.push({name: 'login'})
 			}
 		},
-        created() {
-            if (this.user.authenticated) {
-                this.loadNamespaces()
+		beforeMount() {
+			// Password reset
+			if(this.$route.query.userPasswordReset !== undefined) {
+				localStorage.removeItem('passwordResetToken') // Delete an eventually preexisting old token
+				localStorage.setItem('passwordResetToken', this.$route.query.userPasswordReset)
+				router.push({name: 'passwordReset'})
 			}
-        },
-        watch: {
-            // call the method again if the route changes
-            '$route': 'doStuffAfterRoute'
-        },
-        methods: {
-            logout() {
-                auth.logout()
-            },
-			gravatar() {
-                return 'https://www.gravatar.com/avatar/' + this.user.infos.avatar + '?s=50'
+			// Email verification
+			if(this.$route.query.userEmailConfirm !== undefined) {
+				localStorage.removeItem('emailConfirmToken') // Delete an eventually preexisting old token
+				localStorage.setItem('emailConfirmToken', this.$route.query.userEmailConfirm)
+				router.push({name: 'login'})
+			}
+		},
+		created() {
+			if (this.user.authenticated) {
+				this.loadNamespaces()
+			}
+		},
+		watch: {
+			// call the method again if the route changes
+			'$route': 'doStuffAfterRoute'
+		},
+		methods: {
+			logout() {
+				auth.logout()
 			},
-            loadNamespaces() {
-				const cancel = message.setLoading(this)
-                HTTP.get(`namespaces`, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
-                    .then(response => {
-						this.$set(this, 'namespaces', response.data)
-                        cancel()
-                    })
-                    .catch(e => {
-						cancel()
-                        this.handleError(e)
-                    })
-            },
+			gravatar() {
+				return 'https://www.gravatar.com/avatar/' + this.user.infos.avatar + '?s=50'
+			},
+			loadNamespaces() {
+				let namespaceService = new NamespaceService()
+				namespaceService.getAll()
+					.then(r => {
+						this.$set(this, 'namespaces', r)
+					})
+					.catch(e => {
+						message.error(e, this)
+					})
+			},
 			loadNamespacesIfNeeded(e){
-                if (this.user.authenticated && e.name === 'home') {
-                    this.loadNamespaces()
-                }
+				if (this.user.authenticated && e.name === 'home') {
+					this.loadNamespaces()
+				}
 			},
 			doStuffAfterRoute(e) {
 				this.fullpage = false;
@@ -189,9 +186,6 @@
 			setFullPage() {
 				this.fullpage = true;
 			},
-            handleError(e) {
-                message.error(e, this)
-            }
-        },
-    }
+		},
+	}
 </script>

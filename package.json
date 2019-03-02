@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "bulma": "^0.7.1",
+    "lodash": "^4.17.11",
     "v-tooltip": "^2.0.0-rc.33",
     "vue": "^2.5.17"
   },

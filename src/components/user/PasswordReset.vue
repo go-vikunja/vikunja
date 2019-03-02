@@ -16,10 +16,10 @@
 
 				<div class="field is-grouped">
 					<div class="control">
-						<button type="submit" class="button is-primary" v-bind:class="{ 'is-loading': loading}">Reset your password</button>
+						<button type="submit" class="button is-primary" :class="{ 'is-loading': this.passwordResetService.loading}">Reset your password</button>
 					</div>
 				</div>
-				<div class="notification is-info" v-if="loading">
+				<div class="notification is-info" v-if="this.passwordResetService.loading">
 					Loading...
 				</div>
 				<div class="notification is-danger" v-if="error">
@@ -37,56 +37,45 @@
 </template>
 
 <script>
-    import {HTTP} from '../../http-common'
-	import message from '../../message'
+	import PasswordResetModel from '../../models/passwordReset'
+	import PasswordResetService from '../../services/passwordReset'
 
-    export default {
-        data() {
-            return {
-                credentials: {
-                    password: '',
-                    password2: '',
-                },
-                error: '',
-				successMessage: '',
-                loading: false
-            }
-        },
-        methods: {
-            submit() {
-				const cancel = message.setLoading(this)
-                this.error = ''
+	export default {
+		data() {
+			return {
+				passwordResetService: PasswordResetService,
+				credentials: {
+					password: '',
+					password2: '',
+				},
+				error: '',
+				successMessage: ''
+			}
+		},
+		created() {
+			this.passwordResetService = new PasswordResetService()
+		},
+		methods: {
+			submit() {
+				this.error = ''
 
-                if (this.credentials.password2 !== this.credentials.password) {
-                    cancel()
-                    this.error = 'Passwords don\'t match'
-                    return
-                }
-
-				let resetPasswordPayload = {
-                    token: localStorage.getItem('passwordResetToken'),
-					new_password: this.credentials.password
+				if (this.credentials.password2 !== this.credentials.password) {
+					this.error = 'Passwords don\'t match'
+					return
 				}
 
-                HTTP.post(`user/password/reset`, resetPasswordPayload)
-                    .then(response => {
-						this.handleSuccess(response)
-                        localStorage.removeItem('passwordResetToken')
-						cancel()
-                    })
-                    .catch(e => {
-                        this.error = e.response.data.message
-						cancel()
-                    })
-            },
-            handleError(e) {
-                this.error = e.response.data.message
-            },
-            handleSuccess(e) {
-                this.successMessage = e.data.message
-            }
-        }
-    }
+				let passwordReset = new PasswordResetModel({new_password: this.credentials.password})
+				this.passwordResetService.resetPassword(passwordReset)
+					.then(response => {
+						this.successMessage = response.data.message
+						localStorage.removeItem('passwordResetToken')
+					})
+					.catch(e => {
+						this.error = e.response.data.message
+					})
+			}
+		}
+	}
 </script>
 
 <style scoped>

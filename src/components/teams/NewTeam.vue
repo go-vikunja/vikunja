@@ -7,8 +7,8 @@
 		<h3>Create a new team</h3>
 		<form @submit.prevent="newTeam" @keyup.esc="back()">
 			<div class="field is-grouped">
-				<p class="control is-expanded" v-bind:class="{ 'is-loading': loading}">
-					<input v-focus class="input" v-bind:class="{ 'disabled': loading}" v-model="team.name" type="text" placeholder="The team's name goes here...">
+				<p class="control is-expanded" v-bind:class="{ 'is-loading': teamService.loading}">
+					<input v-focus class="input" v-bind:class="{ 'disabled': teamService.loading}" v-model="team.name" type="text" placeholder="The team's name goes here...">
 				</p>
 				<p class="control">
 					<button type="submit" class="button is-success noshadow">
@@ -26,16 +26,16 @@
 <script>
 	import auth from '../../auth'
 	import router from '../../router'
-	import {HTTP} from '../../http-common'
 	import message from '../../message'
+	import TeamModel from '../../models/team'
+	import TeamService from '../../services/team'
 
 	export default {
 		name: "NewTeam",
 		data() {
 			return {
-				team: {title: ''},
-				error: '',
-				loading: false
+				teamService: TeamService,
+				team: TeamModel,
 			}
 		},
 		beforeMount() {
@@ -45,32 +45,23 @@
 			}
 		},
 		created() {
+			this.teamService = new TeamService()
 			this.$parent.setFullPage();
 		},
 		methods: {
 			newTeam() {
-				const cancel = message.setLoading(this)
-
-				HTTP.put(`teams`, this.team, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
+				this.teamService.create(this.team)
 					.then(response => {
-						router.push({name:'editTeam', params:{id: response.data.id}})
-						this.handleSuccess({message: 'The team was successfully created.'})
-						cancel()
+						router.push({name:'editTeam', params:{id: response.id}})
+						message.success({message: 'The team was successfully created.'}, this)
 					})
 					.catch(e => {
-						cancel()
-						this.handleError(e)
+						message.error(e, this)
 					})
 			},
 			back() {
 				router.go(-1)
 			},
-			handleError(e) {
-				message.error(e, this)
-			},
-			handleSuccess(e) {
-				message.success(e, this)
-			}
 		}
 	}
 </script>

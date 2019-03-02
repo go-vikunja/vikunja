@@ -9,8 +9,8 @@
 		<div class="card-content content teams-list">
 			<form @submit.prevent="addTeam()" class="add-team-form" v-if="userIsAdmin">
 				<div class="field is-grouped">
-					<p class="control has-icons-left is-expanded" v-bind:class="{ 'is-loading': loading}">
-						<input class="input" v-bind:class="{ 'disabled': loading}" v-model.number="newTeam.team_id" type="text" placeholder="Add a new team...">
+					<p class="control has-icons-left is-expanded" v-bind:class="{ 'is-loading': this.teamService.loading}">
+						<input class="input" v-bind:class="{ 'disabled': this.teamService.loading}" v-model.number="teamStuffModel.teamID" type="text" placeholder="Add a new team...">
 						<span class="icon is-small is-left">
 								<icon icon="users"/>
 							</span>
@@ -86,9 +86,12 @@
 </template>
 
 <script>
-	import {HTTP} from '../../http-common'
 	import auth from '../../auth'
 	import message from '../../message'
+	import TeamNamespaceService from '../../services/teamNamespace'
+	import TeamNamespaceModel from '../../models/teamNamespace'
+	import TeamListModel from '../../models/teamList'
+	import TeamListService from '../../services/teamList'
 	
 	export default {
 		name: 'team',
@@ -99,11 +102,13 @@
 		},
 		data() {
 			return {
-				loading: false,
+				teamService: Object, // This team service is either a teamNamespaceService or a teamListService, depending on the type we are using
+				teamStuffModel: Object,
+
 				currentUser: auth.user.infos,
 				typeString: '',
 				listTeams: [],
-				newTeam: {team_id: 0},
+				newTeam: {teamID: 0},
 				showTeamDeleteModal: false,
 				teamToDelete: 0,
 			}
@@ -111,8 +116,12 @@
 		created() {
 			if (this.type === 'list') {
 				this.typeString = `list`
+				this.teamService = new TeamListService()
+				this.teamStuffModel = new TeamListModel({listID: this.id})
 			} else if (this.type === 'namespace') {
 				this.typeString = `namespace`
+				this.teamService = new TeamNamespaceService()
+				this.teamStuffModel = new TeamNamespaceModel({namespaceID: this.id})
 			} else {
 				throw new Error('Unknown type: ' + this.type)
 			}
@@ -121,75 +130,61 @@
 		},
 		methods: {
 			loadTeams() {
-				const cancel = message.setLoading(this)
-				HTTP.get(this.typeString + `s/` + this.id + `/teams`, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
-					.then(response => {
-						this.$set(this, 'listTeams', response.data)
-						cancel()
+				this.teamService.getAll(this.teamStuffModel)
+					.then(r => {
+						this.$set(this, 'listTeams', r)
 					})
 					.catch(e => {
-						cancel()
-						this.handleError(e)
+						message.error(e, this)
 					})
 			},
 			deleteTeam() {
-				const cancel = message.setLoading(this)
-				HTTP.delete(this.typeString + `s/` + this.id + `/teams/` + this.teamToDelete, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
+				this.teamService.delete(this.teamStuffModel)
 					.then(() => {
 						this.showTeamDeleteModal = false;
-						this.handleSuccess({message: 'The team was successfully deleted from the ' + this.typeString + '.'})
+						message.success({message: 'The team was successfully deleted from the ' + this.typeString + '.'}, this)
+						// FIXME: this should remove the team from the list instead of loading it again
 						this.loadTeams()
-						cancel()
 					})
 					.catch(e => {
-						cancel()
-						this.handleError(e)
+						message.error(e, this)
 					})
 			},
 			addTeam(admin) {
-				const cancel = message.setLoading(this)
 				if(admin === null) {
 					admin = false
 				}
-				this.newTeam.right = 0
+				this.teamStuffModel.right = 0
 				if (admin) {
-					this.newTeam.right = 2
+					this.teamStuffModel.right = 2
 				}
 
-				HTTP.put(this.typeString + `s/` + this.id + `/teams`, this.newTeam, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
+				this.teamService.create(this.teamStuffModel)
 					.then(() => {
+						// FIXME: this should add the team to the list instead of loading it again
 						this.loadTeams()
-						this.handleSuccess({message: 'The team was successfully added.'})
-						cancel()
+						message.success({message: 'The team was successfully added.'}, this)
 					})
 					.catch(e => {
-						cancel()
-						this.handleError(e)
+						message.error(e, this)
 					})
 			},
 			toggleTeamType(teamid, current) {
-				const cancel = message.setLoading(this)
-				let right = 0
+				this.teamStuffModel.teamID = teamid
+				this.teamStuffModel.right = 0
 				if (!current) {
-					right = 2
+					this.teamStuffModel.right = 2
 				}
 
-				HTTP.post(this.typeString + `s/` + this.id + `/teams/` + teamid, {right: right}, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
+				this.teamService.update(this.teamStuffModel)
 					.then(() => {
+						// FIXME: this should update the team in the list instead of loading it again
 						this.loadTeams()
-						this.handleSuccess({message: 'The team right was successfully updated.'})
-						cancel()
+						message.success({message: 'The team right was successfully updated.'}, this)
 					})
 					.catch(e => {
-						cancel()
-						this.handleError(e)
+						message.error(e, this)
 					})
-			},
-			handleError(e) {
-				message.error(e, this)
-			},
-			handleSuccess(e) {
-				message.success(e, this)
 			}
 		},
 	}

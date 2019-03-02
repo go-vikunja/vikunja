@@ -1,5 +1,5 @@
 <template>
-	<div class="loader-container" v-bind:class="{ 'is-loading': loading}">
+	<div class="loader-container" v-bind:class="{ 'is-loading': teamService.loading}">
 		<div class="card" v-if="userIsAdmin">
 			<header class="card-header">
 				<p class="card-header-title">
@@ -12,25 +12,25 @@
 						<div class="field">
 							<label class="label" for="teamtext">Team Name</label>
 							<div class="control">
-								<input v-focus :class="{ 'disabled': loading}" :disabled="loading" class="input" type="text" id="teamtext" placeholder="The team text is here..." v-model="team.name">
+								<input v-focus :class="{ 'disabled': teamMemberService.loading}" :disabled="teamMemberService.loading" class="input" type="text" id="teamtext" placeholder="The team text is here..." v-model="team.name">
 							</div>
 						</div>
 						<div class="field">
 							<label class="label" for="teamdescription">Description</label>
 							<div class="control">
-								<textarea :class="{ 'disabled': loading}" :disabled="loading" class="textarea" placeholder="The teams description goes here..." id="teamdescription" v-model="team.description"></textarea>
+								<textarea :class="{ 'disabled': teamService.loading}" :disabled="teamService.loading" class="textarea" placeholder="The teams description goes here..." id="teamdescription" v-model="team.description"></textarea>
 							</div>
 						</div>
 					</form>
 
 					<div class="columns bigbuttons">
 						<div class="column">
-							<button @click="submit()" class="button is-success is-fullwidth" :class="{ 'is-loading': loading}">
+							<button @click="submit()" class="button is-success is-fullwidth" :class="{ 'is-loading': teamService.loading}">
 								Save
 							</button>
 						</div>
 						<div class="column is-1">
-							<button @click="showDeleteModal = true" class="button is-danger is-fullwidth" :class="{ 'is-loading': loading}">
+							<button @click="showDeleteModal = true" class="button is-danger is-fullwidth" :class="{ 'is-loading': teamService.loading}">
 								<span class="icon is-small">
 									<icon icon="trash-alt"/>
 								</span>
@@ -50,8 +50,8 @@
 			<div class="card-content content team-members">
 				<form @submit.prevent="addUser()" class="add-member-form" v-if="userIsAdmin">
 					<div class="field is-grouped">
-						<p class="control has-icons-left is-expanded" v-bind:class="{ 'is-loading': loading}">
-							<input class="input" v-bind:class="{ 'disabled': loading}" v-model.number="newUser.id" type="text" placeholder="Add a new user...">
+						<p class="control has-icons-left is-expanded" v-bind:class="{ 'is-loading': teamMemberService.loading}">
+							<input class="input" v-bind:class="{ 'disabled': teamMemberService.loading}" v-model.number="member.id" type="text" placeholder="Add a new user...">
 							<span class="icon is-small is-left">
 								<icon icon="user"/>
 							</span>
@@ -90,7 +90,7 @@
 								</template>
 							</td>
 							<td class="actions" v-if="userIsAdmin">
-								<button @click="toggleUserType(m.id, m.admin)" class="button buttonright is-primary" v-if="m.id !== user.infos.id">
+								<button @click="toggleUserType(m)" class="button buttonright is-primary" v-if="m.id !== user.infos.id">
 									Make
 									<template v-if="!m.admin">
 										Admin
@@ -99,7 +99,7 @@
 										Member
 									</template>
 								</button>
-								<button @click="userToDelete = m.id; showUserDeleteModal = true" class="button is-danger" v-if="m.id !== user.infos.id">
+								<button @click="member = m; showUserDeleteModal = true" class="button is-danger" v-if="m.id !== user.infos.id">
 									<span class="icon is-small">
 										<icon icon="trash-alt"/>
 									</span>
@@ -135,135 +135,115 @@
 </template>
 
 <script>
-    import auth from '../../auth'
-    import router from '../../router'
-    import {HTTP} from '../../http-common'
-    import message from '../../message'
+	import auth from '../../auth'
+	import router from '../../router'
+	import message from '../../message'
+
+	import TeamService from '../../services/team'
+	import TeamModel from '../../models/team'
+	import TeamMemberService from '../../services/teamMember'
+	import TeamMemberModel from '../../models/teamMember'
 	
-    export default {
-        name: "EditTeam",
-        data() {
-            return {
-                team: {title: '', description:''},
-                error: '',
-                loading: false,
-                showDeleteModal: false,
+	export default {
+		name: "EditTeam",
+		data() {
+			return {
+				teamService: TeamService,
+				teamMemberService: TeamMemberService,
+				team: TeamModel,
+				member: TeamMemberModel,
+
+				showDeleteModal: false,
 				showUserDeleteModal: false,
 				user: auth.user,
 				userIsAdmin: false,
-				userToDelete: 0,
-				newUser: {id:0},
-            }
-        },
-        beforeMount() {
-            // Check if the user is already logged in, if so, redirect him to the homepage
-            if (!auth.user.authenticated) {
-                router.push({name: 'home'})
-            }
-        },
-        created() {
-            this.loadTeam()
-        },
-        watch: {
-            // call again the method if the route changes
-            '$route': 'loadTeam'
-        },
+			}
+		},
+		beforeMount() {
+			// Check if the user is already logged in, if so, redirect him to the homepage
+			if (!auth.user.authenticated) {
+				router.push({name: 'home'})
+			}
+		},
+		created() {
+			this.teamService = new TeamService()
+			this.teamMemberService = new TeamMemberService()
+			this.loadTeam()
+		},
+		watch: {
+			// call again the method if the route changes
+			'$route': 'loadTeam'
+		},
 		methods: {
-            loadTeam() {
-				const cancel = message.setLoading(this)
-
-                HTTP.get(`teams/` + this.$route.params.id, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
-                    .then(response => {
-                        this.$set(this, 'team', response.data)
-						let members = response.data.members
+			loadTeam() {
+				this.member = new TeamMemberModel({teamID: this.$route.params.id})
+				this.team = new TeamModel({id: this.$route.params.id})
+				this.teamService.get(this.team)
+					.then(response => {
+						this.$set(this, 'team', response)
+						let members = response.members
 						for (const m in members) {
+							members[m].teamID = this.$route.params.id
 							if (members[m].id === this.user.infos.id && members[m].admin) {
 								this.userIsAdmin = true
 							}
 						}
-                        cancel()
-                    })
-                    .catch(e => {
-                        this.handleError(e)
-                    })
-            },
-            submit() {
-				const cancel = message.setLoading(this)
-
-                HTTP.post(`teams/` + this.$route.params.id, this.team, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
-                    .then(response => {
-                        // Update the team in the parent
-                        for (const n in this.$parent.teams) {
-                            if (this.$parent.teams[n].id === response.data.id) {
-                                response.data.lists = this.$parent.teams[n].lists
-                                this.$set(this.$parent.teams, n, response.data)
-                            }
-                        }
-                        this.handleSuccess({message: 'The team was successfully updated.'})
-						cancel()
-                    })
-                    .catch(e => {
-                        cancel()
-						this.handleError(e)
-                    })
-            },
-            deleteTeam() {
-				const cancel = message.setLoading(this)
-                HTTP.delete(`teams/` + this.$route.params.id, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
-                    .then(() => {
-                        this.handleSuccess({message: 'The team was successfully deleted.'})
-						cancel()
-                        router.push({name: 'home'})
-                    })
-                    .catch(e => {
-						cancel()
-                        this.handleError(e)
-                    })
+					})
+					.catch(e => {
+						message.error(e, this)
+					})
+			},
+			submit() {
+				this.teamService.update(this.team)
+					.then(response => {
+						this.team = response
+						message.success({message: 'The team was successfully updated.'}, this)
+					})
+					.catch(e => {
+						message.error(e, this)
+					})
+			},
+			deleteTeam() {
+				this.teamService.delete(this.team)
+					.then(() => {
+						message.success({message: 'The team was successfully deleted.'}, this)
+						router.push({name: 'listTeams'})
+					})
+					.catch(e => {
+						message.error(e, this)
+					})
 			},
 			deleteUser() {
-				const cancel = message.setLoading(this)
-				HTTP.delete(`teams/` + this.$route.params.id + `/members/` + this.userToDelete, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
+				this.teamMemberService.delete(this.member)
 					.then(() => {
-						this.showUserDeleteModal = false;
-						this.handleSuccess({message: 'The user was successfully deleted from the team.'})
+						message.success({message: 'The user was successfully deleted from the team.'}, this)
 						this.loadTeam()
-						cancel()
 					})
 					.catch(e => {
-						cancel()
-						this.handleError(e)
+						message.error(e, this)
+					})
+					.finally(() => {
+						this.showUserDeleteModal = false
 					})
 			},
-			addUser(admin) {
-				const cancel = message.setLoading(this)
-				if(admin === null) {
-					admin = false
-				}
-				HTTP.put(`teams/` + this.$route.params.id + `/members`, {admin: admin, user_id: this.newUser.id}, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
+			addUser() {
+				this.teamMemberService.create(this.member)
 					.then(() => {
 						this.loadTeam()
-						this.handleSuccess({message: 'The team member was successfully added.'})
-						cancel()
+						message.success({message: 'The team member was successfully added.'}, this)
 					})
 					.catch(e => {
-						cancel()
-						this.handleError(e)
+						message.error(e, this)
 					})
 			},
-			toggleUserType(userid, current) {
-				this.userToDelete = userid
-				this.newUser.id = userid
+			toggleUserType(member) {
+				this.member = member
+				this.member.admin = !member.admin
 				this.deleteUser()
-				this.addUser(!current)
-			},
-            handleError(e) {
-                message.error(e, this)
-            },
-            handleSuccess(e) {
-                message.success(e, this)
-            }
+				this.addUser()
+			}
 		}
-    }
+	}
 </script>
 
 <style lang="scss" scoped>

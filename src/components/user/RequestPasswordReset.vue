@@ -5,13 +5,13 @@
 			<form id="loginform" @submit.prevent="submit" v-if="!isSuccess">
 				<div class="field">
 					<div class="control">
-						<input v-focus type="text" class="input" name="email" placeholder="Email-Adress" v-model="email" required>
+						<input v-focus type="text" class="input" name="email" placeholder="Email-Adress" v-model="passwordReset.email" required>
 					</div>
 				</div>
 
 				<div class="field is-grouped">
 					<div class="control">
-						<button type="submit" class="button is-primary" v-bind:class="{ 'is-loading': loading}">Send me a password reset link</button>
+						<button type="submit" class="button is-primary" v-bind:class="{ 'is-loading': passwordResetService.loading}">Send me a password reset link</button>
 						<router-link :to="{ name: 'login' }" class="button">Login</router-link>
 					</div>
 				</div>
@@ -30,41 +30,35 @@
 </template>
 
 <script>
-    import {HTTP} from '../../http-common'
-	import message from '../../message'
+	import PasswordResetModel from '../../models/passwordReset'
+	import PasswordResetService from '../../services/passwordReset'
 
-    export default {
-        data() {
-            return {
-                email: '',
-                error: '',
-                isSuccess: false,
-                loading: false
-            }
-        },
-        methods: {
-            submit() {
-				const cancel = message.setLoading(this)
-                this.error = ''
-                let credentials = {
-                    email: this.email,
-                }
-
-                HTTP.post(`user/password/token`, credentials)
-                    .then(() => {
-						cancel()
+	export default {
+		data() {
+			return {
+				passwordResetService: PasswordResetService,
+				passwordReset: PasswordResetModel,
+				error: '',
+				isSuccess: false
+			}
+		},
+		created() {
+			this.passwordResetService = new PasswordResetService()
+			this.passwordReset = new PasswordResetModel()
+		},
+		methods: {
+			submit() {
+				this.error = ''
+				this.passwordResetService.requestResetPassword(this.passwordReset)
+					.then(() => {
 						this.isSuccess = true
-                    })
-                    .catch(e => {
-						cancel()
-                        this.handleError(e)
-                    })
-            },
-            handleError(e) {
-                this.error = e.response.data.message
-            },
-        }
-    }
+					})
+					.catch(e => {
+						this.error = e.response.data.message
+					})
+			},
+		}
+	}
 </script>
 
 <style scoped>

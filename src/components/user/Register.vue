@@ -42,50 +42,50 @@
 </template>
 
 <script>
-    import auth from '../../auth'
-    import router from '../../router'
+	import auth from '../../auth'
+	import router from '../../router'
 
-    export default {
-        data() {
-            return {
-                credentials: {
-                    username: '',
+	export default {
+		data() {
+			return {
+				credentials: {
+					username: '',
 					email: '',
-                    password: '',
-                    password2: '',
-                },
-                error: '',
-                loading: false
-            }
-        },
-        beforeMount() {
-            // Check if the user is already logged in, if so, redirect him to the homepage
-            if (auth.user.authenticated) {
-                router.push({name: 'home'})
-            }
-        },
-        methods: {
-            submit() {
-                this.loading = true
+					password: '',
+					password2: '',
+				},
+				error: '',
+				loading: false
+			}
+		},
+		beforeMount() {
+			// Check if the user is already logged in, if so, redirect him to the homepage
+			if (auth.user.authenticated) {
+				router.push({name: 'home'})
+			}
+		},
+		methods: {
+			submit() {
+				this.loading = true
 
-                this.error = ''
+				this.error = ''
 
 				if (this.credentials.password2 !== this.credentials.password) {
-                    this.loading = false
-                    this.error = 'Passwords don\'t match'
+					this.loading = false
+					this.error = 'Passwords don\'t match'
 					return
 				}
 
-                let credentials = {
-                    username: this.credentials.username,
-                    email: this.credentials.email,
-                    password: this.credentials.password
-                }
+				let credentials = {
+					username: this.credentials.username,
+					email: this.credentials.email,
+					password: this.credentials.password
+				}
 
-                auth.register(this, credentials, 'home')
-            }
-        }
-    }
+				auth.register(this, credentials, 'home')
+			}
+		}
+	}
 </script>
 
 <style scoped>

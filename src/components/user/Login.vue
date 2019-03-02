@@ -33,58 +33,59 @@
 </template>
 
 <script>
-    import auth from '../../auth'
-    import router from '../../router'
-    import {HTTP} from '../../http-common'
+	import auth from '../../auth'
+	import router from '../../router'
+	import {HTTP} from '../../http-common'
 	import message from '../../message'
 
-    export default {
-        data() {
-            return {
-                credentials: {
-                    username: '',
-                    password: ''
-                },
-                error: '',
-                confirmedEmailSuccess: false,
-                loading: false
-            }
-        },
-        beforeMount() {
-            // Try to verify the email
+	export default {
+		data() {
+			return {
+				credentials: {
+					username: '',
+					password: ''
+				},
+				error: '',
+				confirmedEmailSuccess: false,
+				loading: false
+			}
+		},
+		beforeMount() {
+			// Try to verify the email
+			// FIXME: Why is this here? Can we find a better place for this?
 			let emailVerifyToken = localStorage.getItem('emailConfirmToken')
 			if (emailVerifyToken) {
 				const cancel = message.setLoading(this)
 				HTTP.post(`user/confirm`, {token: emailVerifyToken})
 					.then(() => {
-                        localStorage.removeItem('emailConfirmToken')
-                        this.confirmedEmailSuccess = true
+						localStorage.removeItem('emailConfirmToken')
+						this.confirmedEmailSuccess = true
 						cancel()
-                    })
-                    .catch(e => {
-                        cancel()
-                        this.error = e.response.data.message
-                    })
+					})
+					.catch(e => {
+						cancel()
+						this.error = e.response.data.message
+					})
 			}
 
-            // Check if the user is already logged in, if so, redirect him to the homepage
-            if (auth.user.authenticated) {
-                router.push({name: 'home'})
-            }
-        },
-        methods: {
-            submit() {
-                this.loading = true
-                this.error = ''
-                let credentials = {
-                    username: this.credentials.username,
-                    password: this.credentials.password
-                }
+			// Check if the user is already logged in, if so, redirect him to the homepage
+			if (auth.user.authenticated) {
+				router.push({name: 'home'})
+			}
+		},
+		methods: {
+			submit() {
+				this.loading = true
+				this.error = ''
+				let credentials = {
+					username: this.credentials.username,
+					password: this.credentials.password
+				}
 
-                auth.login(this, credentials, 'home')
-            }
-        }
-    }
+				auth.login(this, credentials, 'home')
+			}
+		}
+	}
 </script>
 
 <style scoped>

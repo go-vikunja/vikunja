@@ -7,8 +7,8 @@
 		<h3>Create a new namespace</h3>
 		<form @submit.prevent="newNamespace" @keyup.esc="back()">
 			<div class="field is-grouped">
-				<p class="control is-expanded" v-bind:class="{ 'is-loading': loading}">
-					<input v-focus class="input" v-bind:class="{ 'disabled': loading}" v-model="namespace.name" type="text" placeholder="The namespace's name goes here...">
+				<p class="control is-expanded" v-bind:class="{ 'is-loading': namespaceService.loading}">
+					<input v-focus class="input" v-bind:class="{ 'disabled': namespaceService.loading}" v-model="namespace.name" type="text" placeholder="The namespace's name goes here...">
 				</p>
 				<p class="control">
 					<button type="submit" class="button is-success noshadow">
@@ -27,16 +27,16 @@
 <script>
 	import auth from '../../auth'
 	import router from '../../router'
-	import {HTTP} from '../../http-common'
 	import message from '../../message'
+	import NamespaceModel from "../../models/namespace";
+	import NamespaceService from "../../services/namespace";
 
 	export default {
 		name: "NewNamespace",
 		data() {
 			return {
-				namespace: {title: ''},
-				error: '',
-				loading: false
+				namespace: NamespaceModel,
+				namespaceService: NamespaceService,
 			}
 		},
 		beforeMount() {
@@ -46,32 +46,24 @@
 			}
 		},
 		created() {
+			this.namespace = new NamespaceModel()
+			this.namespaceService = new NamespaceService()
 			this.$parent.setFullPage();
 		},
 		methods: {
 			newNamespace() {
-				const cancel = message.setLoading(this)
-
-				HTTP.put(`namespaces`, this.namespace, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
+				this.namespaceService.create(this.namespace)
 					.then(() => {
 						this.$parent.loadNamespaces()
-						this.handleSuccess({message: 'The namespace was successfully created.'})
-						cancel()
+						message.success({message: 'The namespace was successfully created.'}, this)
 						router.push({name: 'home'})
 					})
 					.catch(e => {
-						cancel()
-						this.handleError(e)
+						message.error(e, this)
 					})
 			},
 			back() {
 				router.go(-1)
-			},
-			handleError(e) {
-				message.error(e, this)
-			},
-			handleSuccess(e) {
-				message.success(e, this)
 			}
 		}
 	}

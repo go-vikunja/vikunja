@@ -77,6 +77,9 @@
         * [x] Einzelne Teams ansehbar
             * [x] In den Teams, in denen der Nutzer admin ist, Bearbeitung ermöglichen
 	    * [x] Löschen ermöglichen
+* [x] Subtasks
+* [x] Start/Enddatum für Tasks
+* [x] Tasks in time range
 * [ ] Search everything
   * [ ] Lists
   * [ ] Tasks
@@ -86,21 +89,31 @@
   * [ ] Users with access to a namespace
   * [ ] Teams with access to a list
   * [ ] Teams with access to a namespace
-* [x] Subtasks
-* [x] Start/Enddatum für Tasks
-* [x] Tasks in time range
 * [ ] Priorities
   * [ ] Sachen mit hoher Prio irgendwie hervorheben (rotes Dreieck zb)
-* [ ] Listen Kopieren
-* [ ] "Move to Vikunja" -> Migrator von Wunderlist/todoist/etc
+* [ ] Assignees
+* [ ] Labels
 * [ ] Timeline/Calendar view -> Dazu tasks die in einem Bestimmten Bereich due sind, macht dann das Frontend
+
+## Other features
+
+* [ ] Copy lists
+* [ ] "Move to Vikunja" -> Migrator von Wunderlist/todoist/etc
+
+## Refactor
+
+* [x] Move everything to models
+  * [x] Make sure all loading properties are depending on its service
+* [x] Fix the first request afer login being made with an old token
+* [ ] Team sharing
+  * [ ] Refactor team sharing to not make a new request every time something was changed
+  * [ ] Team sharing should be able to search for a team instead of its ID, like it's the case with users
+  * [ ] Dropdown for rights
 
 ## Waiting for backend
 
-* [ ] Assignees
 * [ ] In und Out webhooks, mit Templates vom Payload
 * [ ] "Smart Lists", Listen nach bestimmten Kriterien gefiltert -> nur UI?
 * [ ] "Performance-Statistik" -> Wie viele Tasks man in bestimmten Zeiträumen so geschafft hat etc
 * [ ] Activity Feed, so à la "der und der hat das und das gemacht etc"
 * [ ] Attachments for tasks
-* [ ] Labels

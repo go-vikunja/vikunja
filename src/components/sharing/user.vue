@@ -9,21 +9,20 @@
 		<div class="card-content content users-list">
 			<form @submit.prevent="addUser()" class="add-user-form" v-if="userIsAdmin">
 				<div class="field is-grouped">
-					<p class="control is-expanded" v-bind:class="{ 'is-loading': loading}">
+					<p class="control is-expanded" v-bind:class="{ 'is-loading': userStuffService.loading}">
 						<multiselect
-								v-model="newUser"
+								v-model="user"
 								:options="foundUsers"
 								:multiple="false"
 								:searchable="true"
-								:loading="loading"
+								:loading="userService.loading"
 								:internal-search="true"
 								@search-change="findUsers"
 								placeholder="Type to search a user"
 								label="username"
-								track-by="user_id">
-
+								track-by="id">
 							<template slot="clear" slot-scope="props">
-								<div class="multiselect__clear" v-if="newUser.id !== 0" @mousedown.prevent.stop="clearAll(props.search)"></div>
+								<div class="multiselect__clear" v-if="user.id !== 0" @mousedown.prevent.stop="clearAll(props.search)"></div>
 							</template>
 							<span slot="noResult">Oops! No users found. Consider changing the search query.</span>
 						</multiselect>
@@ -77,7 +76,7 @@
 								Admin
 							</template>
 						</button>
-						<button @click="userToDelete = u.id; showUserDeleteModal = true" class="button is-danger" v-if="u.id !== currentUser.id">
+						<button @click="user = u; showUserDeleteModal = true" class="button is-danger" v-if="u.id !== currentUser.id">
 									<span class="icon is-small">
 										<icon icon="trash-alt"/>
 									</span>
@@ -100,11 +99,17 @@
 </template>
 
 <script>
-	import {HTTP} from '../../http-common'
 	import auth from '../../auth'
 	import message from '../../message'
 	import multiselect from 'vue-multiselect'
 	import 'vue-multiselect/dist/vue-multiselect.min.css'
+
+	import UserService from '../../services/user'
+	import UserNamespaceModel from '../../models/userNamespace'
+	import UserListModel from '../../models/userList'
+	import UserListService from '../../services/userList'
+	import UserNamespaceService from '../../services/userNamespace'
+	import UserModel from '../../models/user'
 
 	export default {
 		name: 'user',
@@ -115,14 +120,15 @@
 		},
 		data() {
 			return {
-				loading: false,
+				userService: UserService, // To search for users
+				user: UserModel,
+				userStuff: Object, // This will be either UserNamespaceModel or UserListModel
+				userStuffService: Object, // This will be either UserListService or UserNamespaceService
+
 				currentUser: auth.user.infos,
 				typeString: '',
 				showUserDeleteModal: false,
 				users: [],
-				newUser: {username: '', user_id: 0},
-				userToDelete: 0,
-				newUserid: 0,
 				foundUsers: [],
 			}
 		},
@@ -130,10 +136,17 @@
 			multiselect
 		},
 		created() {
+			this.userService = new UserService()
+			this.user = new UserModel()
+
 			if (this.type === 'list') {
 				this.typeString = `list`
+				this.userStuffService = new UserListService()
+				this.userStuff = new UserListModel({listID: this.id})
 			} else if (this.type === 'namespace') {
 				this.typeString = `namespace`
+				this.userStuffService = new UserNamespaceService()
+				this.userStuff = new UserNamespaceModel({namespaceID: this.id})
 			} else {
 				throw new Error('Unknown type: ' + this.type)
 			}
@@ -142,100 +155,76 @@
 		},
 		methods: {
 			loadUsers() {
-				const cancel = message.setLoading(this)
-				HTTP.get(this.typeString + `s/` + this.id + `/users`, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
+				this.userStuffService.getAll(this.userStuff)
 					.then(response => {
-						//response.data.push(this.list.owner)
-						this.$set(this, 'users', response.data)
-						cancel()
+						this.$set(this, 'users', response)
 					})
 					.catch(e => {
-						cancel()
-						this.handleError(e)
+						message.error(e, this)
 					})
 			},
 			deleteUser() {
-				const cancel = message.setLoading(this)
-				HTTP.delete(this.typeString + `s/` + this.id + `/users/` + this.userToDelete, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
+				// The api wants the user id as userID
+				let usr = this.user
+				this.userStuff.userID = usr.id
+
+				this.userStuffService.delete(this.userStuff)
 					.then(() => {
 						this.showUserDeleteModal = false;
-						this.handleSuccess({message: 'The user was successfully deleted from the ' + this.typeString + '.'})
+						message.success({message: 'The user was successfully deleted from the ' + this.typeString + '.'}, this)
 						this.loadUsers()
-						cancel()
 					})
 					.catch(e => {
-						cancel()
-						this.handleError(e)
+						message.error(e, this)
 					})
 			},
-			addUser(admin) {
-				const cancel = message.setLoading(this)
-				if(admin === null) {
-					admin = false
-				}
-				this.newUser.right = 0
+			addUser(admin = false) {
+				this.userStuff.right = 0
 				if (admin) {
-					this.newUser.right = 2
+					this.userStuff.right = 2
 				}
 
+				// The api wants the user id as userID
+				this.userStuff.userID = this.user.id
 				this.$set(this, 'foundUsers', [])
 
-				HTTP.put(this.typeString + `s/` + this.id + `/users`, this.newUser, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
+				this.userStuffService.create(this.userStuff)
 					.then(() => {
 						this.loadUsers()
-						this.newUser = {}
-						this.handleSuccess({message: 'The user was successfully added.'})
-						cancel()
+						message.success({message: 'The user was successfully added.'}, this)
 					})
 					.catch(e => {
-						cancel()
-						this.handleError(e)
+						message.error(e, this)
 					})
 			},
 			toggleUserType(userid, current) {
-				const cancel = message.setLoading(this)
-				let right = 0
+				this.userStuff.userID = userid
+				this.userStuff.right = 0
 				if (!current) {
-					right = 2
+					this.userStuff.right = 2
 				}
 
-				HTTP.post(this.typeString + `s/` + this.id + `/users/` + userid, {right: right}, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
+				this.userStuffService.update(this.userStuff)
 					.then(() => {
 						this.loadUsers()
-						this.handleSuccess({message: 'The user right was successfully updated.'})
-						cancel()
+						message.success({message: 'The user right was successfully updated.'}, this)
 					})
 					.catch(e => {
-						cancel()
-						this.handleError(e)
+						message.error(e, this)
 					})
 			},
 			findUsers(query) {
-				const cancel = message.setLoading(this)
 				if(query === '') {
 					this.$set(this, 'foundUsers', [])
-					cancel()
 					return
 				}
 
-				this.$set(this, 'newUser', {username: '', user_id: 0})
-
-				HTTP.get(`users?s=` + query, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
+				this.userService.getAll({}, {s: query})
 					.then(response => {
-						this.$set(this, 'foundUsers', [])
-
-						for (const u in response.data) {
-							this.foundUsers.push({
-								username: response.data[u].username,
-								user_id: response.data[u].id,
-							})
-						}
-
-						cancel()
+						this.$set(this, 'foundUsers', response)
 					})
 					.catch(e => {
-						cancel()
-						this.handleError(e)
+						message.error(e, this)
 					})
 			},
 			clearAll () {
@@ -244,12 +233,6 @@
 			limitText (count) {
 				return `and ${count} others`
 			},
-			handleError(e) {
-				message.error(e, this)
-			},
-			handleSuccess(e) {
-				message.success(e, this)
-			}
 		},
 	}
 </script>

@@ -1,5 +1,5 @@
 <template>
-	<div class="loader-container" :class="{ 'is-loading': loading}">
+	<div class="loader-container" :class="{ 'is-loading': listService.loading}">
 		<div class="content">
 			<router-link :to="{ name: 'editList', params: { id: list.id } }" class="icon settings is-medium">
 				<icon icon="cog" size="2x"/>
@@ -8,8 +8,8 @@
 		</div>
 		<form @submit.prevent="addTask()">
 			<div class="field is-grouped">
-				<p class="control has-icons-left is-expanded" :class="{ 'is-loading': loading}">
-					<input v-focus class="input" :class="{ 'disabled': loading}" v-model="newTask.text" type="text" placeholder="Add a new task...">
+				<p class="control has-icons-left is-expanded" :class="{ 'is-loading': taskService.loading}">
+					<input v-focus class="input" :class="{ 'disabled': taskService.loading}" v-model="newTask.text" type="text" placeholder="Add a new task...">
 					<span class="icon is-small is-left">
 						<icon icon="tasks"/>
 					</span>
@@ -68,21 +68,21 @@
 								<div class="field">
 									<label class="label" for="tasktext">Task Text</label>
 									<div class="control">
-										<input v-focus :class="{ 'disabled': loading}" :disabled="loading" class="input" type="text" id="tasktext" placeholder="The task text is here..." v-model="taskEditTask.text">
+										<input v-focus :class="{ 'disabled': taskService.loading}" :disabled="taskService.loading" class="input" type="text" id="tasktext" placeholder="The task text is here..." v-model="taskEditTask.text">
 									</div>
 								</div>
 								<div class="field">
 									<label class="label" for="taskdescription">Description</label>
 									<div class="control">
-										<textarea :class="{ 'disabled': loading}" :disabled="loading" class="textarea" placeholder="The tasks description goes here..." id="taskdescription" v-model="taskEditTask.description"></textarea>
+										<textarea :class="{ 'disabled': taskService.loading}" :disabled="taskService.loading" class="textarea" placeholder="The tasks description goes here..." id="taskdescription" v-model="taskEditTask.description"></textarea>
 									</div>
 								</div>
 
 								<b>Reminder Dates</b>
 								<div class="reminder-input" :class="{ 'overdue': (r < nowUnix && index !== (taskEditTask.reminderDates.length - 1))}" v-for="(r, index) in taskEditTask.reminderDates" :key="index">
 									<flat-pickr
-										:class="{ 'disabled': loading}"
-										:disabled="loading"
+										:class="{ 'disabled': taskService.loading}"
+										:disabled="taskService.loading"
 										:v-model="taskEditTask.reminderDates"
 										:config="flatPickerConfig"
 										:id="'taskreminderdate' + index"
@@ -97,9 +97,9 @@
 									<label class="label" for="taskduedate">Due Date</label>
 									<div class="control">
 										<flat-pickr
-											:class="{ 'disabled': loading}"
+											:class="{ 'disabled': taskService.loading}"
 											class="input"
-											:disabled="loading"
+											:disabled="taskService.loading"
 											v-model="taskEditTask.dueDate"
 											:config="flatPickerConfig"
 											id="taskduedate"
@@ -113,9 +113,9 @@
 									<div class="control columns">
 										<div class="column">
 											<flat-pickr
-													:class="{ 'disabled': loading}"
+													:class="{ 'disabled': taskService.loading}"
 													class="input"
-													:disabled="loading"
+													:disabled="taskService.loading"
 													v-model="taskEditTask.startDate"
 													:config="flatPickerConfig"
 													id="taskduedate"
@@ -124,9 +124,9 @@
 										</div>
 										<div class="column">
 											<flat-pickr
-													:class="{ 'disabled': loading}"
+													:class="{ 'disabled': taskService.loading}"
 													class="input"
-													:disabled="loading"
+													:disabled="taskService.loading"
 													v-model="taskEditTask.endDate"
 													:config="flatPickerConfig"
 													id="taskduedate"
@@ -140,11 +140,11 @@
 									<label class="label" for="">Repeat after</label>
 									<div class="control repeat-after-input columns">
 										<div class="column">
-											<input class="input" placeholder="Specify an amount..." v-model="repeatAfter.amount"/>
+											<input class="input" placeholder="Specify an amount..." v-model="taskEditTask.repeatAfter.amount"/>
 										</div>
 										<div class="column is-3">
 											<div class="select">
-												<select v-model="repeatAfter.type">
+												<select v-model="taskEditTask.repeatAfter.type">
 													<option value="hours">Hours</option>
 													<option value="days">Days</option>
 													<option value="weeks">Weeks</option>
@@ -179,14 +179,14 @@
 								</div>
 								<div class="field has-addons">
 									<div class="control is-expanded">
-										<input @keyup.enter="addSubtask()" :class="{ 'disabled': loading}" :disabled="loading" class="input" type="text" id="tasktext" placeholder="New subtask" v-model="newTask.text"/>
+										<input @keyup.enter="addSubtask()" :class="{ 'disabled': taskService.loading}" :disabled="taskService.loading" class="input" type="text" id="tasktext" placeholder="New subtask" v-model="newTask.text"/>
 									</div>
 									<div class="control">
 										<a class="button" @click="addSubtask()"><icon icon="plus"></icon></a>
 									</div>
 								</div>
 
-								<button type="submit" class="button is-success is-fullwidth" :class="{ 'is-loading': loading}">
+								<button type="submit" class="button is-success is-fullwidth" :class="{ 'is-loading': taskService.loading}">
 									Save
 								</button>
 
@@ -200,294 +200,147 @@
 </template>
 
 <script>
-    import auth from '../../auth'
-    import router from '../../router'
-    import {HTTP} from '../../http-common'
-    import message from '../../message'
-    import flatPickr from 'vue-flatpickr-component';
-    import 'flatpickr/dist/flatpickr.css';
+	import auth from '../../auth'
+	import router from '../../router'
+	import message from '../../message'
+	import flatPickr from 'vue-flatpickr-component'
+	import 'flatpickr/dist/flatpickr.css'
 
-    export default {
-        data() {
-            return {
-                listID: this.$route.params.id,
-                list: {},
-                newTask: {text: ''},
-                error: '',
-                loading: false,
+	import ListService from '../../services/list'
+	import TaskService from '../../services/task'
+	import TaskModel from '../../models/task'
+	import ListModel from '../../models/list'
+
+	export default {
+		data() {
+			return {
+				listID: this.$route.params.id,
+				listService: ListService,
+				taskService: TaskService,
+
+				list: {},
+				newTask: TaskModel,
 				isTaskEdit: false,
 				taskEditTask: {
 					subtasks: [],
 				},
 				lastReminder: 0,
 				nowUnix: new Date(),
-				repeatAfter: {type: 'days', amount: null},
-                flatPickerConfig:{
-                    altFormat: 'j M Y H:i',
-                    altInput: true,
-                    dateFormat: 'Y-m-d H:i',
+				flatPickerConfig:{
+					altFormat: 'j M Y H:i',
+					altInput: true,
+					dateFormat: 'Y-m-d H:i',
 					enableTime: true,
 					onOpen: this.updateLastReminderDate,
 					onClose: this.addReminderDate,
 				},
-            }
-        },
+			}
+		},
 		components: {
 			flatPickr
 		},
-        beforeMount() {
-            // Check if the user is already logged in, if so, redirect him to the homepage
-            if (!auth.user.authenticated) {
-                router.push({name: 'home'})
-            }
-        },
-        created() {
-            this.loadList()
-        },
-        watch: {
-            // call again the method if the route changes
-            '$route': 'loadList'
-        },
-        methods: {
-            loadList() {
-                this.isTaskEdit = false
-				const cancel = message.setLoading(this)
+		beforeMount() {
+			// Check if the user is already logged in, if so, redirect him to the homepage
+			if (!auth.user.authenticated) {
+				router.push({name: 'home'})
+			}
+		},
+		created() {
+			this.listService = new ListService()
+			this.taskService = new TaskService()
+			this.newTask = new TaskModel()
+			this.loadList()
+		},
+		watch: {
+			// call again the method if the route changes
+			'$route': 'loadList'
+		},
+		methods: {
+			loadList() {
+				this.isTaskEdit = false
+				// We create an extra list object instead of creating it in this.list because that would trigger a ui update which would result in bad ux.
+				let list = new ListModel({id: this.$route.params.id})
+				this.listService.get(list)
+					.then(r => {
+						this.$set(this, 'list', r)
+					})
+					.catch(e => {
+						message.error(e, this)
+					})
+			},
+			addTask() {
+				this.newTask.listID = this.$route.params.id
+				this.taskService.create(this.newTask)
+					.then(r => {
+						this.list.addTaskToList(r)
+						message.success({message: 'The task was successfully created.'}, this)
+					})
+					.catch(e => {
+						message.error(e, this)
+					})
 
-                HTTP.get(`lists/` + this.$route.params.id, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
-                    .then(response => {
-                        for (const t in response.data.tasks) {
-							response.data.tasks[t] = this.fixStuffComingFromAPI(response.data.tasks[t])
-                        }
-
-                        // This adds a new elemednt "list" to our object which contains all lists
-						response.data.tasks = this.sortTasks(response.data.tasks)
-                        this.$set(this, 'list', response.data)
-                        if (this.list.tasks === null) {
-                            this.list.tasks = []
-                        }
-						cancel() // cancel the timer
-                    })
-                    .catch(e => {
-                        cancel()
-						this.handleError(e)
-                    })
-            },
-            addTask() {
-				const cancel = message.setLoading(this)
-
-                HTTP.put(`lists/` + this.$route.params.id, this.newTask, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
-                    .then(response => {
-						this.addTaskToList(response.data)
-                        this.handleSuccess({message: 'The task was successfully created.'})
-						cancel() // cancel the timer
-                    })
-                    .catch(e => {
-                        cancel()
-						this.handleError(e)
-                    })
-
-                this.newTask = {}
-            },
-			addTaskToList(task) {
-				// If it's a subtask, add it to its parent, otherwise append it to the list of tasks
-				if (task.parentTaskID === 0) {
-					this.list.tasks.push(task)
-				} else {
-					for (const t in this.list.tasks) {
-						if (this.list.tasks[t].id === task.parentTaskID) {
-							this.list.tasks[t].subtasks.push(task)
-							break
-						}
-					}
-				}
-
-				// Update the current edit task if needed
-				if (task.ParentTask === this.taskEditTask.id) {
-					this.taskEditTask.subtasks.push(task)
-				}
-				this.list.tasks = this.sortTasks(this.list.tasks)
+				this.newTask = {}
 			},
 			markAsDone(e) {
-				let context = this
-				if (e.target.checked) {
-					setTimeout(doTheDone, 300); // Delay it to show the animation when marking a task as done
-				} else {
-					doTheDone() // Don't delay it when un-marking it as it doesn't have an animation the other way around
-				}
-
-				function doTheDone() {
-					const cancel = message.setLoading(context)
-
-					HTTP.post(`tasks/` + e.target.id, {done: e.target.checked}, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
-						.then(response => {
-							context.updateTaskByID(parseInt(e.target.id), response.data)
-							context.handleSuccess({message: 'The task was successfully ' + (e.target.checked ? '' : 'un-') + 'marked as done.'})
-							cancel() // To not set the spinner to loading when the request is made in less than 100ms, would lead to loading infinitly.
+				let updateFunc = () => {
+					// We get the task, update the 'done' property and then push it to the api.
+					let task = this.list.getTaskByID(e.target.id)
+					task.done = e.target.checked
+					this.taskService.update(task)
+						.then(r => {
+							this.updateTaskInList(r)
+							message.success({message: 'The task was successfully ' + (task.done ? '' : 'un-') + 'marked as done.'}, this)
 						})
 						.catch(e => {
-							cancel()
-							context.handleError(e)
+							message.error(e, this)
 						})
+				}
+
+				if (e.target.checked) {
+					setTimeout(updateFunc(), 300); // Delay it to show the animation when marking a task as done
+				} else {
+					updateFunc() // Don't delay it when un-marking it as it doesn't have an animation the other way around
 				}
 			},
 			editTask(id) {
-                // Find the selected task and set it to the current object
-                for (const t in this.list.tasks) {
-                    if (this.list.tasks[t].id === id) {
-                        this.taskEditTask = this.list.tasks[t]
-                        break
-                    }
-                }
-
-                if (this.taskEditTask.reminderDates === null) {
-					this.taskEditTask.reminderDates = []
-				}
-				this.taskEditTask.reminderDates = this.removeNullsFromArray(this.taskEditTask.reminderDates)
-                this.taskEditTask.reminderDates.push(null)
-
-				// Re-convert the the amount from seconds to be used with our form
-				let repeatAfterHours = (this.taskEditTask.repeatAfter / 60) / 60
-				// if its dividable by 24, its something with days
-				if (repeatAfterHours % 24 === 0) {
-					let repeatAfterDays = repeatAfterHours / 24
-					if (repeatAfterDays % 7 === 0) {
-						this.repeatAfter.type = 'weeks'
-						this.repeatAfter.amount = repeatAfterDays / 7
-					} else if (repeatAfterDays % 30 === 0) {
-						this.repeatAfter.type = 'months'
-						this.repeatAfter.amount = repeatAfterDays / 30
-					} else if (repeatAfterDays % 365 === 0) {
-						this.repeatAfter.type = 'years'
-						this.repeatAfter.amount = repeatAfterDays / 365
-					} else {
-						this.repeatAfter.type = 'days'
-						this.repeatAfter.amount = repeatAfterDays
-					}
-				} else {
-					// otherwise hours
-					this.repeatAfter.type = 'hours'
-					this.repeatAfter.amount = repeatAfterHours
-				}
-
-				if(this.taskEditTask.subtasks === null) {
-					this.taskEditTask.subtasks = [];
-				}
-
+				// Find the selected task and set it to the current object
+				let theTask = this.list.getTaskByID(id) // Somehow this does not work if we directly assign this to this.taskEditTask
+				this.taskEditTask = theTask
 				this.isTaskEdit = true
 			},
 			editTaskSubmit() {
-				const cancel = message.setLoading(this)
-
-				// Convert the date in a unix timestamp
-				this.taskEditTask.dueDate = (+ new Date(this.taskEditTask.dueDate)) / 1000
-				this.taskEditTask.startDate = (+ new Date(this.taskEditTask.startDate)) / 1000
-				this.taskEditTask.endDate = (+ new Date(this.taskEditTask.endDate)) / 1000
-
-				// remove all nulls
-				this.taskEditTask.reminderDates = this.removeNullsFromArray(this.taskEditTask.reminderDates)
-				// Make normal timestamps from js timestamps
-				for (const t in this.taskEditTask.reminderDates) {
-					this.taskEditTask.reminderDates[t] = Math.round(this.taskEditTask.reminderDates[t] / 1000)
-				}
-
-				// Make the repeating amount to seconds
-				let repeatAfterSeconds = 0
-				if (this.repeatAfter.amount !== null || this.repeatAfter.amount !== 0) {
-					switch (this.repeatAfter.type) {
-						case 'hours':
-							repeatAfterSeconds = this.repeatAfter.amount * 60 * 60
-							break;
-						case 'days':
-							repeatAfterSeconds = this.repeatAfter.amount * 60 * 60 * 24
-							break;
-						case 'weeks':
-							repeatAfterSeconds = this.repeatAfter.amount * 60 * 60 * 24 * 7
-							break;
-						case 'months':
-							repeatAfterSeconds = this.repeatAfter.amount * 60 * 60 * 24 * 30
-							break;
-						case 'years':
-							repeatAfterSeconds = this.repeatAfter.amount * 60 * 60 * 24 * 365
-							break;
-					}
-				}
-				this.taskEditTask.repeatAfter = repeatAfterSeconds
-
-                HTTP.post(`tasks/` + this.taskEditTask.id, this.taskEditTask, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
-                    .then(response => {
-                        // Update the task in the list
-                        this.updateTaskByID(this.taskEditTask.id, response.data)
-
-						// Also update the current taskedit object so the ui changes
-						response.data.reminderDates.push(null) // To be able to add a new one
-						this.$set(this, 'taskEditTask', response.data)
-                        this.handleSuccess({message: 'The task was successfully updated.'})
-						cancel() // cancel the timers
-                    })
-                    .catch(e => {
-                        cancel()
-						this.handleError(e)
-                    })
+				this.taskService.update(this.taskEditTask)
+					.then(r => {
+						this.updateTaskInList(r)
+						this.$set(this, 'taskEditTask', r)
+						message.success({message: 'The task was successfully updated.'}, this)
+					})
+					.catch(e => {
+						message.error(e, this)
+					})
 			},
 			addSubtask() {
 				this.newTask.parentTaskID = this.taskEditTask.id
 				this.addTask()
 			},
-			updateTaskByID(id, updatedTask) {
-                for (const t in this.list.tasks) {
-                    if (this.list.tasks[t].id === id) {
-                        this.$set(this.list.tasks, t, this.fixStuffComingFromAPI(updatedTask))
-                        break
-                    }
+			updateTaskInList(task) {
+				// We need to do the update here in the component, because there is no way of notifiying vue of the change otherwise.
+				for (const t in this.list.tasks) {
+					if (this.list.tasks[t].id === task.id) {
+						this.$set(this.list.tasks, t, task)
+						break
+					}
 
-					if (this.list.tasks[t].id === updatedTask.parentTaskID) {
+					if (this.list.tasks[t].id === task.parentTaskID) {
 						for (const s in this.list.tasks[t].subtasks) {
-							if (this.list.tasks[t].subtasks[s].id === updatedTask.id) {
-								this.$set(this.list.tasks[t].subtasks, s, updatedTask)
+							if (this.list.tasks[t].subtasks[s].id === task.id) {
+								this.$set(this.list.tasks[t].subtasks, s, task)
 								break
 							}
 						}
 					}
-                }
-				this.list.tasks = this.sortTasks(this.list.tasks)
-			},
-			fixStuffComingFromAPI(task) {
-				// Make date objects from timestamps
-				task.dueDate = this.parseDateIfNessecary(task.dueDate)
-				task.startDate = this.parseDateIfNessecary(task.startDate)
-				task.endDate = this.parseDateIfNessecary(task.endDate)
-
-				for (const rd in task.reminderDates) {
-					task.reminderDates[rd] = this.parseDateIfNessecary(task.reminderDates[rd])
 				}
-
-				// Make subtasks into empty array if null
-				if (task.subtasks === null) {
-					task.subtasks = []
-				}
-
-				return task
-			},
-			sortTasks(tasks) {
-				if (tasks === null) {
-					return tasks
-				}
-				return tasks.sort(function(a,b) {
-					if (a.done < b.done)
-						return -1
-					if (a.done > b.done)
-						return 1
-					return 0
-				})
-			},
-			parseDateIfNessecary(dateUnix) {
-				let dateobj = (+new Date(dateUnix * 1000))
-				if (dateobj === 0 || dateUnix === 0) {
-					dateUnix = null
-				} else {
-					dateUnix = dateobj
-				}
-				return dateUnix
+				this.list.sortTasks()
 			},
 			updateLastReminderDate(selectedDates) {
 				this.lastReminder = +new Date(selectedDates[0])
@@ -513,24 +366,7 @@
 				this.taskEditTask.reminderDates.splice(index, 1)
 				// Reset the last to 0 to have the "add reminder" button
 				this.taskEditTask.reminderDates[this.taskEditTask.reminderDates.length - 1] = null
-			},
-			removeNullsFromArray(array) {
-				for (const index in array) {
-					if (array[index] === null) {
-						array.splice(index, 1)
-					}
-				}
-				return array
-			},
-			formatUnixDate(dateUnix) {
-				return (new Date(dateUnix)).toLocaleString()
-			},
-            handleError(e) {
-                message.error(e, this)
-            },
-            handleSuccess(e) {
-                message.success(e, this)
-            }
-        }
-    }
+			}
+		}
+	}
 </script>

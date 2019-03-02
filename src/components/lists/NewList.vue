@@ -7,8 +7,8 @@
 		<h3>Create a new list</h3>
 		<form @submit.prevent="newList" @keyup.esc="back()">
 			<div class="field is-grouped">
-				<p class="control is-expanded" :class="{ 'is-loading': loading}">
-					<input v-focus class="input" :class="{ 'disabled': loading}" v-model="list.title" type="text" placeholder="The list's name goes here...">
+				<p class="control is-expanded" :class="{ 'is-loading': listService.loading}">
+					<input v-focus class="input" :class="{ 'disabled': listService.loading}" v-model="list.title" type="text" placeholder="The list's name goes here...">
 				</p>
 				<p class="control">
 					<button type="submit" class="button is-success noshadow">
@@ -24,54 +24,47 @@
 </template>
 
 <script>
-    import auth from '../../auth'
-    import router from '../../router'
-    import {HTTP} from '../../http-common'
-    import message from '../../message'
+	import auth from '../../auth'
+	import router from '../../router'
+	import message from '../../message'
+	import ListService from '../../services/list'
+	import ListModel from '../../models/list'
 
-    export default {
-        name: "NewList",
-        data() {
-            return {
-                list: {title: ''},
-                error: '',
-                loading: false
-            }
-        },
-        beforeMount() {
-            // Check if the user is already logged in, if so, redirect him to the homepage
-            if (!auth.user.authenticated) {
-                router.push({name: 'home'})
-            }
-        },
+	export default {
+		name: "NewList",
+		data() {
+			return {
+				list: ListModel,
+				listService: ListService,
+			}
+		},
+		beforeMount() {
+			// Check if the user is already logged in, if so, redirect him to the homepage
+			if (!auth.user.authenticated) {
+				router.push({name: 'home'})
+			}
+		},
 		created() {
+			this.list = new ListModel()
+			this.listService = new ListService()
 			this.$parent.setFullPage();
 		},
-        methods: {
-            newList() {
-				const cancel = message.setLoading(this)
-
-                HTTP.put(`namespaces/` + this.$route.params.id + `/lists`, this.list, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
-                    .then(response => {
+		methods: {
+			newList() {
+				this.list.namespaceID = this.$route.params.id
+				this.listService.create(this.list)
+					.then(response => {
 						this.$parent.loadNamespaces()
-						this.handleSuccess({message: 'The list was successfully created.'})
-						cancel()
-						router.push({name: 'showList', params: {id: response.data.id}})
-                    })
-                    .catch(e => {
-                        cancel()
-						this.handleError(e)
-                    })
-            },
+						message.success({message: 'The list was successfully created.'}, this)
+						router.push({name: 'showList', params: {id: response.id}})
+					})
+					.catch(e => {
+						message.error(e, this)
+					})
+			},
 			back() {
 				router.go(-1)
 			},
-            handleError(e) {
-                message.error(e, this)
-            },
-            handleSuccess(e) {
-                message.success(e, this)
-            }
-        }
-    }
+		}
+	}
 </script>

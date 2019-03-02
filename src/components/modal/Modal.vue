@@ -20,17 +20,17 @@
 </template>
 
 <script>
-    export default {
-        name: 'modal',
-        mounted: function () {
-            document.addEventListener('keydown', (e) => {
-                // Close the model when escape is pressed
-                if (e.keyCode === 27) {
-                    this.$emit('close')
-                }
-            })
-        }
-    }
+	export default {
+		name: 'modal',
+		mounted: function () {
+			document.addEventListener('keydown', (e) => {
+				// Close the model when escape is pressed
+				if (e.keyCode === 27) {
+					this.$emit('close')
+				}
+			})
+		}
+	}
 </script>
 
 <style lang="scss">

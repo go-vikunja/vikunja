@@ -1,5 +1,5 @@
 <template>
-	<div class="content loader-container" v-bind:class="{ 'is-loading': loading}">
+	<div class="content loader-container" v-bind:class="{ 'is-loading': teamService.loading}">
 		<router-link :to="{name:'newTeam'}" class="button is-success button-right" >
 			<span class="icon is-small">
 				<icon icon="plus"/>
@@ -18,45 +18,39 @@
 </template>
 
 <script>
-    import auth from '../../auth'
-    import router from '../../router'
-    import {HTTP} from '../../http-common'
-    import message from '../../message'
-
-    export default {
-        name: "ListTeams",
-        data() {
-            return {
-                teams: [],
-                error: '',
-                loading: false,
-            }
-        },
-        beforeMount() {
-            // Check if the user is already logged in, if so, redirect him to the homepage
-            if (!auth.user.authenticated) {
-                router.push({name: 'home'})
-            }
-        },
-        created() {
-            this.loadTeams()
-        },
+	import auth from '../../auth'
+	import router from '../../router'
+	import message from '../../message'
+	import TeamService from '../../services/team'
+	
+	export default {
+		name: "ListTeams",
+		data() {
+			return {
+				teamService: TeamService,
+				teams: [],
+			}
+		},
+		beforeMount() {
+			// Check if the user is already logged in, if so, redirect him to the homepage
+			if (!auth.user.authenticated) {
+				router.push({name: 'home'})
+			}
+		},
+		created() {
+			this.teamService = new TeamService()
+			this.loadTeams()
+		},
 		methods: {
 			loadTeams() {
-				const cancel = message.setLoading(this)
-
-                HTTP.get(`teams`, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
-                    .then(response => {
-                        this.$set(this, 'teams', response.data)
-                        cancel()
-                    })
-                    .catch(e => {
-                        this.handleError(e)
-                    })
+				this.teamService.getAll()
+					.then(response => {
+						this.$set(this, 'teams', response)
+					})
+					.catch(e => {
+						message.error(e, this)
+					})
 			},
-            handleError(e) {
-                message.error(e, this)
-            },
 		}
-    }
+	}
 </script>
