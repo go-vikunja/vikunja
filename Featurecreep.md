@@ -55,6 +55,7 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [x] Wir brauchen noch ne gute idee, wie man die listen kriegt, auf die man nur so Zugriff hat (ohne namespace)
     * Dazu am Besten nen pseudonamespace anlegen (id -1 oder so), der hat das dann alles
 * [x] Testing mit locust: https://locust.io/
+* [ ] Endpoint to get all users who have access to a list - regardless of via team, user share or via namespace
 
 #### Userstuff
 
@@ -180,6 +181,9 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [ ] When giving a team or user access to a list/namespace, they should be reffered to by uuid, not numeric id
 * [ ] Adding users to a team should also use uuid
 * [ ] Check if the team/user really exist before updating them on lists/namespaces
+
+### Fixes
+
 * [ ] Fix priority not updating to 0
 
 ### Linters
