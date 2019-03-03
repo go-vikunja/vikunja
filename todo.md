@@ -105,10 +105,13 @@
 * [x] Move everything to models
   * [x] Make sure all loading properties are depending on its service
 * [x] Fix the first request afer login being made with an old token
-* [ ] Team sharing
-  * [ ] Refactor team sharing to not make a new request every time something was changed
-  * [ ] Team sharing should be able to search for a team instead of its ID, like it's the case with users
-  * [ ] Dropdown for rights
+* [x] Team sharing
+  * [x] Refactor team sharing to not make a new request every time something was changed
+  * [x] Team sharing should be able to search for a team instead of its ID, like it's the case with users
+  * [x] Dropdown for rights
+* [x] Same improvements also for user sharing
+* [x] Use rights const everywhere
+* [x] Styling of the search dropdown to match the rest of the theme
 
 ## Waiting for backend
 

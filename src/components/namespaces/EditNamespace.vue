@@ -41,8 +41,8 @@
 			</div>
 		</div>
 
-		<component :is="manageUsersComponent" :id="namespace.id" type="namespace" :userIsAdmin="userIsAdmin"></component>
-		<component :is="manageTeamsComponent" :id="namespace.id" type="namespace" :userIsAdmin="userIsAdmin"></component>
+		<component :is="manageUsersComponent" :id="namespace.id" type="namespace" shareType="user" :userIsAdmin="userIsAdmin"></component>
+		<component :is="manageTeamsComponent" :id="namespace.id" type="namespace" shareType="team" :userIsAdmin="userIsAdmin"></component>
 
 		<modal
 				v-if="showDeleteModal"
@@ -59,8 +59,8 @@
 	import auth from '../../auth'
 	import router from '../../router'
 	import message from '../../message'
-	import manageusers from '../sharing/user'
-	import manageteams from '../sharing/team'
+	import manageSharing from '../sharing/userTeam'
+
 	import NamespaceService from '../../services/namespace'
 	import NamespaceModel from '../../models/namespace'
 	
@@ -79,8 +79,7 @@
 			}
 		},
 		components: {
-			manageusers,
-			manageteams,
+			manageSharing,
 		},
 		beforeMount() {
 			// Check if the user is already logged in, if so, redirect him to the homepage
@@ -108,8 +107,8 @@
 							this.userIsAdmin = true
 						}
 						// This will trigger the dynamic loading of components once we actually have all the data to pass to them
-						this.manageTeamsComponent = 'manageteams'
-						this.manageUsersComponent = 'manageusers'
+						this.manageTeamsComponent = 'manageSharing'
+						this.manageUsersComponent = 'manageSharing'
 					})
 					.catch(e => {
 						message.error(e, this)

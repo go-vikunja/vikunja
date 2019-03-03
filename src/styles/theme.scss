@@ -28,6 +28,10 @@
     box-shadow: 0.1em 0.1em 0.7em lighten($dark, 75) !important;
   }
 
+  &.icon-only{
+    padding-left: 16px;
+  }
+
   @each $name, $pair in $colors {
     $color: nth($pair, 1);
 

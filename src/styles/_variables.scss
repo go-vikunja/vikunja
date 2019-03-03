@@ -24,3 +24,10 @@ $vikunja-green: #4DB788;
 $navbar-padding: 1.5em;
 
 $transition: 150ms ease;
+
+$multiselect-primary: $green;
+$multiselect-dark: #35495e;
+$multiselect-border: #e8e8e8;
+$multiselect-highlight: $green;
+$multiselect-highlight-negative: $red;
+$multiselect-disabled: darken(#fff, 40);

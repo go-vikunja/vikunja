@@ -128,6 +128,7 @@
 			return {
 				user: auth.user,
 				namespaces: [],
+				namespaceService: NamespaceService,
 				mobileMenuActive: false,
 				fullpage: false,
 				currentDate: new Date(),
@@ -149,6 +150,7 @@
 		},
 		created() {
 			if (this.user.authenticated) {
+				this.namespaceService = new NamespaceService()
 				this.loadNamespaces()
 			}
 		},
@@ -164,8 +166,7 @@
 				return 'https://www.gravatar.com/avatar/' + this.user.infos.avatar + '?s=50'
 			},
 			loadNamespaces() {
-				let namespaceService = new NamespaceService()
-				namespaceService.getAll()
+				this.namespaceService.getAll()
 					.then(r => {
 						this.$set(this, 'namespaces', r)
 					})
