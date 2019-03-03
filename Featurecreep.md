@@ -169,6 +169,7 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [ ] Better caldav support (VTODO)
 * [ ] Debian package should have a service file
 * [ ] Downloads should be served via nginx (with theme?), minio should only be used for pushing artifacts.
+* [ ] User struct should have a field for the avatar url (-> gravatar md5 calculated by the backend)
 
 ### Refactor 
 
@@ -181,6 +182,7 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [ ] When giving a team or user access to a list/namespace, they should be reffered to by uuid, not numeric id
 * [ ] Adding users to a team should also use uuid
 * [ ] Check if the team/user really exist before updating them on lists/namespaces
+* [ ] Check if the email is properly obfuscated everywhere -> alter GetUser() and add a new method GetUserWithEmail
 
 ### Fixes
 
