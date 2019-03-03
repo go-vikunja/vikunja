@@ -207,9 +207,9 @@ export default class AbstractService {
 	 * @param model
 	 * @return {*}
 	 */
-	beforeUpdate(model) {
+/*	beforeUpdate(model) {
 		return model
-	}
+	}*/
 
 	/**
 	 * Default preprocessor for delete requests
@@ -315,7 +315,9 @@ export default class AbstractService {
 		}
 
 		const cancel = this.setLoading()
-		model = this.beforeUpdate(model)
+		if(typeof this.beforeUpdate === 'function') {
+			model = this.beforeUpdate(model)
+		}
 		return this.http.post(this.getReplacedRoute(this.paths.update, model), model)
 			.catch(error => {
 				return this.errorHandler(error)
