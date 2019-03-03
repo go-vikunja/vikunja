@@ -13,11 +13,16 @@
   font-size: 0.85rem;
   font-weight: bold;
   height: 2.648em;
-
   box-shadow: 0.3em 0.3em 1em lighten($dark, 75);
+
   &.is-hovered,
   &:hover {
     box-shadow: 0.6em 0.6em 1em lighten($dark, 75);
+  }
+
+  &.fullheight{
+    padding-right: 7px;
+    height: 100%;
   }
 
   &.is-active,

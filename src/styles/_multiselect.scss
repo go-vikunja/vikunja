@@ -268,6 +268,10 @@ fieldset[disabled] .multiselect {
   margin: 0;
   min-width: 100%;
   vertical-align: top;
+
+  li + li {
+    margin: 0;
+  }
 }
 
 .multiselect--above .multiselect__content-wrapper {

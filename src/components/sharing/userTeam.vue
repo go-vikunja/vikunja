@@ -304,9 +304,6 @@
 			clearAll () {
 				this.$set(this, 'found', [])
 			},
-			limitText (count) {
-				return `and ${count} others`
-			},
 		},
 	}
 </script>

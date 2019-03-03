@@ -184,6 +184,44 @@
 								</div>
 
 								<div class="field">
+									<label class="label" for="">Assignees</label>
+									<ul class="assingees">
+										<li v-for="(a, index) in taskEditTask.assignees" :key="a.id">
+											{{a.username}}
+											<a @click="deleteAssigneeByIndex(index)"><icon icon="times"/></a>
+										</li>
+									</ul>
+								</div>
+
+								<div class="field has-addons">
+									<div class="control is-expanded">
+										<multiselect
+												v-model="newAssignee"
+												:options="foundUsers"
+												:multiple="false"
+												:searchable="true"
+												:loading="userService.loading"
+												:internal-search="true"
+												@search-change="findUser"
+												placeholder="Type to search"
+												label="username"
+												track-by="id">
+											<template slot="clear" slot-scope="props">
+												<div class="multiselect__clear" v-if="newAssignee !== null && newAssignee.id !== 0" @mousedown.prevent.stop="clearAll(props.search)"></div>
+											</template>
+											<span slot="noResult">Oops! No user found. Consider changing the search query.</span>
+										</multiselect>
+									</div>
+									<div class="control">
+										<a @click="addAssignee" class="button is-primary fullheight">
+											<span class="icon is-small">
+												<icon icon="plus"/>
+											</span>
+										</a>
+									</div>
+								</div>
+
+								<div class="field">
 									<label class="label" for="subtasks">Subtasks</label>
 									<div class="tasks noborder" v-if="taskEditTask.subtasks && taskEditTask.subtasks.length > 0">
 										<div class="task" v-for="s in taskEditTask.subtasks" :key="s.id">
@@ -209,7 +247,7 @@
 										<input @keyup.enter="addSubtask()" :class="{ 'disabled': taskService.loading}" :disabled="taskService.loading" class="input" type="text" id="tasktext" placeholder="New subtask" v-model="newTask.text"/>
 									</div>
 									<div class="control">
-										<a class="button" @click="addSubtask()"><icon icon="plus"></icon></a>
+										<a class="button is-primary" @click="addSubtask()"><icon icon="plus"></icon></a>
 									</div>
 								</div>
 
@@ -232,11 +270,15 @@
 	import message from '../../message'
 	import flatPickr from 'vue-flatpickr-component'
 	import 'flatpickr/dist/flatpickr.css'
+	import multiselect from 'vue-multiselect'
+	import {differenceWith} from 'lodash'
 
 	import ListService from '../../services/list'
 	import TaskService from '../../services/task'
 	import TaskModel from '../../models/task'
 	import ListModel from '../../models/list'
+	import UserModel from '../../models/user'
+	import UserService from '../../services/user'
 	import priorities from '../../models/priorities'
 
 	export default {
@@ -263,10 +305,15 @@
 					onOpen: this.updateLastReminderDate,
 					onClose: this.addReminderDate,
 				},
+
+				newAssignee: UserModel,
+				userService: UserService,
+				foundUsers: [],
 			}
 		},
 		components: {
-			flatPickr
+			flatPickr,
+			multiselect,
 		},
 		beforeMount() {
 			// Check if the user is already logged in, if so, redirect him to the homepage
@@ -278,6 +325,8 @@
 			this.listService = new ListService()
 			this.taskService = new TaskService()
 			this.newTask = new TaskModel()
+			this.userService = new UserService()
+			this.newAssignee = new UserModel()
 			this.loadList()
 		},
 		watch: {
@@ -395,7 +444,33 @@
 				this.taskEditTask.reminderDates.splice(index, 1)
 				// Reset the last to 0 to have the "add reminder" button
 				this.taskEditTask.reminderDates[this.taskEditTask.reminderDates.length - 1] = null
-			}
+			},
+			addAssignee() {
+				this.taskEditTask.assignees.push(this.newAssignee)
+			},
+			deleteAssigneeByIndex(index) {
+				this.taskEditTask.assignees.splice(index, 1)
+			},
+			findUser(query) {
+				if(query === '') {
+					this.clearAll()
+					return
+				}
+
+				this.userService.getAll({}, {s: query})
+					.then(response => {
+						// Filter the results to not include users who are already assigned
+						this.$set(this, 'foundUsers', differenceWith(response, this.taskEditTask.assignees, (first, second) => {
+							return first.id === second.id
+						}))
+					})
+					.catch(e => {
+						message.error(e, this)
+					})
+			},
+			clearAll () {
+				this.$set(this, 'foundUsers', [])
+			},
 		}
 	}
 </script>

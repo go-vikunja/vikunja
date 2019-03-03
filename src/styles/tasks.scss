@@ -120,4 +120,23 @@
       width: 100%;
     }
   }
+
+  ul.assingees {
+    list-style: none;
+    margin: 0;
+
+    li{
+      padding: 0.5em 0.5em 0;
+
+      a{
+        float: right;
+        color: $red;
+        transition: all $transition;
+
+        &:hover{
+          color: darken($red, 15);
+        }
+      }
+    }
+  }
 }

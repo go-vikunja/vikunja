@@ -91,7 +91,7 @@
   * [ ] Teams with access to a namespace
 * [x] Priorities
   * [x] Highlight tasks with high priority
-* [ ] Assignees
+* [x] Assignees
 * [ ] Labels
 * [ ] Timeline/Calendar view -> Dazu tasks die in einem Bestimmten Bereich due sind, macht dann das Frontend
 
@@ -120,3 +120,4 @@
 * [ ] "Performance-Statistik" -> Wie viele Tasks man in bestimmten Zeiträumen so geschafft hat etc
 * [ ] Activity Feed, so à la "der und der hat das und das gemacht etc"
 * [ ] Attachments for tasks
+* [ ] Search for users at new task assignees only in users who have access to the list
