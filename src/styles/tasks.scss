@@ -54,6 +54,18 @@
           color: $red;
         }
       }
+
+      .high-priority{
+        color: $red;
+
+        .icon {
+          vertical-align: middle;
+        }
+
+        &.not-so-high {
+          color: $orange;
+        }
+      }
     }
 
     input[type="checkbox"] {
@@ -100,6 +112,12 @@
         border: none;
         box-shadow: none;
       }
+    }
+  }
+
+  .priority-select{
+    .select, select{
+      width: 100%;
     }
   }
 }

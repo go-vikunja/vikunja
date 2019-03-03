@@ -89,8 +89,8 @@
   * [ ] Users with access to a namespace
   * [ ] Teams with access to a list
   * [ ] Teams with access to a namespace
-* [ ] Priorities
-  * [ ] Sachen mit hoher Prio irgendwie hervorheben (rotes Dreieck zb)
+* [x] Priorities
+  * [x] Highlight tasks with high priority
 * [ ] Assignees
 * [ ] Labels
 * [ ] Timeline/Calendar view -> Dazu tasks die in einem Bestimmten Bereich due sind, macht dann das Frontend

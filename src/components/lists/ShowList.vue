@@ -41,7 +41,18 @@
 							</div>
 							<span class="tasktext" :class="{ 'done': l.done}">
 								{{l.text}}
-							<i v-if="l.dueDate > 0" :class="{'overdue': (l.dueDate <= new Date())}"> - Due on {{new Date(l.dueDate).toLocaleString()}}</i>
+								<i v-if="l.dueDate > 0" :class="{'overdue': (l.dueDate <= new Date())}"> - Due on {{new Date(l.dueDate).toLocaleString()}}</i>
+								<span v-if="l.priority >= priorities.HIGH" class="high-priority" :class="{'not-so-high': l.priority === priorities.HIGH}">
+									<span class="icon">
+										<icon icon="exclamation"/>
+									</span>
+									<template v-if="l.priority === priorities.HIGH">High</template>
+									<template v-if="l.priority === priorities.URGENT">Urgent</template>
+									<template v-if="l.priority === priorities.DO_NOW">DO NOW</template>
+									<span class="icon" v-if="l.priority === priorities.DO_NOW">
+										<icon icon="exclamation"/>
+									</span>
+								</span>
 							</span>
 						</label>
 						<div @click="editTask(l.id)" class="icon settings">
@@ -157,6 +168,22 @@
 								</div>
 
 								<div class="field">
+									<label class="label" for="">Priority</label>
+									<div class="control priority-select">
+										<div class="select">
+											<select v-model="taskEditTask.priority">
+												<option :value="priorities.UNSET">Unset</option>
+												<option :value="priorities.LOW">Low</option>
+												<option :value="priorities.MEDIUM">Medium</option>
+												<option :value="priorities.HIGH">High</option>
+												<option :value="priorities.URGENT">Urgent</option>
+												<option :value="priorities.DO_NOW">DO NOW</option>
+											</select>
+										</div>
+									</div>
+								</div>
+
+								<div class="field">
 									<label class="label" for="subtasks">Subtasks</label>
 									<div class="tasks noborder" v-if="taskEditTask.subtasks && taskEditTask.subtasks.length > 0">
 										<div class="task" v-for="s in taskEditTask.subtasks" :key="s.id">
@@ -210,6 +237,7 @@
 	import TaskService from '../../services/task'
 	import TaskModel from '../../models/task'
 	import ListModel from '../../models/list'
+	import priorities from '../../models/priorities'
 
 	export default {
 		data() {
@@ -218,6 +246,7 @@
 				listService: ListService,
 				taskService: TaskService,
 
+				priorities: priorities,
 				list: {},
 				newTask: TaskModel,
 				isTaskEdit: false,
