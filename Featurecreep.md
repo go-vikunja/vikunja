@@ -180,6 +180,7 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [ ] When giving a team or user access to a list/namespace, they should be reffered to by uuid, not numeric id
 * [ ] Adding users to a team should also use uuid
 * [ ] Check if the team/user really exist before updating them on lists/namespaces
+* [ ] Fix priority not updating to 0
 
 ### Linters
 
