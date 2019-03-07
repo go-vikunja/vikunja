@@ -195,6 +195,7 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [x] gocyclo-check
 * [ ] gosec-check -> waiting for mod
 * [x] goconst-check -> waiting for mod
+* [ ] golangci -> docker in drone
 
 ### More server settings
 
