@@ -2141,6 +2141,11 @@ color-convert@^1.9.0, color-convert@^1.9.1:
   dependencies:
     color-name "1.1.3"
 
+color-fns@^0.0.10:
+  version "0.0.10"
+  resolved "https://registry.yarnpkg.com/color-fns/-/color-fns-0.0.10.tgz#b03f34ab3bb3902ac24e7c86ff32d845fbbaf7bf"
+  integrity sha512-QFKowTE9CXCLp09Gz5cQo8VPUP55hf73iHEI52JC3NyKfMpQG2VoLWmTxYeTKH6ngkEnoMrCdEX//M6J4PVQBA==
+
 color-name@1.1.3:
   version "1.1.3"
   resolved "https://registry.yarnpkg.com/color-name/-/color-name-1.1.3.tgz#a7d0558bd89c42f795dd42328f740831ca53bc25"
@@ -8953,6 +8958,13 @@ verror@1.10.0:
     assert-plus "^1.0.0"
     core-util-is "1.0.2"
     extsprintf "^1.2.0"
+
+verte@^0.0.10:
+  version "0.0.10"
+  resolved "https://registry.yarnpkg.com/verte/-/verte-0.0.10.tgz#27e132cfb74a55171602184263417eeb8a5692a5"
+  integrity sha512-h4PCDC8hvH9E+CmUx1K/xT2pZgdZ0oxpgaL23xkJD16jhXTU9c4B6h4RD/fBWeu9CURHgWf6+sf6E9m/wfKbuA==
+  dependencies:
+    color-fns "^0.0.10"
 
 vm-browserify@0.0.4:
   version "0.0.4"

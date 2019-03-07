@@ -19,81 +19,88 @@ import EditNamespaceComponent from '@/components/namespaces/EditNamespace'
 import ListTeamsComponent from '@/components/teams/ListTeams'
 import EditTeamComponent from '@/components/teams/EditTeam'
 import NewTeamComponent from '@/components/teams/NewTeam'
+// Label Handling
+import ListLabelsComponent from '@/components/labels/ListLabels'
 
 Vue.use(Router)
 
 export default new Router({
-  mode:'history',
-  routes: [
-    {
-      path: '/',
-      name: 'home',
-      component: HomeComponent
-    },
-    {
-      path: '/login',
-      name: 'login',
-      component: LoginComponent
-    },
-    {
-      path: '/get-password-reset',
-      name: 'getPasswordReset',
-      component: GetPasswordResetComponent
-    },
-    {
-      path: '/password-reset',
-      name: 'passwordReset',
-      component: PasswordResetComponent
-    },
-    {
-      path: '/register',
-      name: 'register',
-      component: RegisterComponent
-    },
-    {
-      path: '/lists/:id',
-      name: 'showList',
-      component: ShowListComponent
-    },
-    {
-      path: '/lists/:id/edit',
-      name: 'editList',
-      component: EditListComponent
-    },
-    {
-      path: '/namespaces/:id/list',
-      name: 'newList',
-      component: NewListComponent
-    },
-    {
-      path: '/namespaces/new',
-      name: 'newNamespace',
-      component: NewNamespaceComponent
-    },
-    {
-      path: '/namespaces/:id/edit',
-      name: 'editNamespace',
-      component: EditNamespaceComponent
-    },
-    {
-      path: '/teams',
-      name: 'listTeams',
-      component: ListTeamsComponent
-    },
-    {
-      path: '/teams/new',
-      name: 'newTeam',
-      component: NewTeamComponent
-    },
-    {
-      path: '/teams/:id/edit',
-      name: 'editTeam',
-      component: EditTeamComponent
-    },
-    {
-      path: '/tasks/:type',
-      name: 'showTasksInRange',
-      component: ShowTasksInRangeComponent
-    },
-  ]
+	mode: 'history',
+	routes: [
+		{
+			path: '/',
+			name: 'home',
+			component: HomeComponent
+		},
+		{
+			path: '/login',
+			name: 'login',
+			component: LoginComponent
+		},
+		{
+			path: '/get-password-reset',
+			name: 'getPasswordReset',
+			component: GetPasswordResetComponent
+		},
+		{
+			path: '/password-reset',
+			name: 'passwordReset',
+			component: PasswordResetComponent
+		},
+		{
+			path: '/register',
+			name: 'register',
+			component: RegisterComponent
+		},
+		{
+			path: '/lists/:id',
+			name: 'showList',
+			component: ShowListComponent
+		},
+		{
+			path: '/lists/:id/edit',
+			name: 'editList',
+			component: EditListComponent
+		},
+		{
+			path: '/namespaces/:id/list',
+			name: 'newList',
+			component: NewListComponent
+		},
+		{
+			path: '/namespaces/new',
+			name: 'newNamespace',
+			component: NewNamespaceComponent
+		},
+		{
+			path: '/namespaces/:id/edit',
+			name: 'editNamespace',
+			component: EditNamespaceComponent
+		},
+		{
+			path: '/teams',
+			name: 'listTeams',
+			component: ListTeamsComponent
+		},
+		{
+			path: '/teams/new',
+			name: 'newTeam',
+			component: NewTeamComponent
+		},
+		{
+			path: '/teams/:id/edit',
+			name: 'editTeam',
+			component: EditTeamComponent
+		},
+		{
+			path: '/tasks/:type',
+			name: 'showTasksInRange',
+			component: ShowTasksInRangeComponent
+		},
+		{
+			path: '/labels',
+			name: 'listLabels',
+			component: ListLabelsComponent
+		}
+	]
 })

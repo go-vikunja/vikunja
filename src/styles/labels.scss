@@ -1,0 +1,15 @@
+.labels-list {
+  a, a:hover{
+    text-decoration: none;
+  }
+
+  .tag{
+    margin: 0.5em;
+    background: darken($background, 5);
+
+    &.disabled{
+      opacity: 0.7;
+      cursor: default;
+    }
+  }
+}

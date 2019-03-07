@@ -92,7 +92,13 @@
 * [x] Priorities
   * [x] Highlight tasks with high priority
 * [x] Assignees
-* [ ] Labels
+* [x] Labels
+  * User should be able to search for a label
+  * if none is found, "enter" should create and add it to the task
+  * multiselect -> action dispatcher + styling
+  * [x] Label overview + edit
+  	* [x] Only be able to edit labels where the user has the right, disable the others
+  * [x] Delay when searching to not search for the character I entered 5 minutes ago
 * [ ] Timeline/Calendar view -> Dazu tasks die in einem Bestimmten Bereich due sind, macht dann das Frontend
 
 ## Other features

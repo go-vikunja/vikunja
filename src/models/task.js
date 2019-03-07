@@ -1,5 +1,6 @@
 import AbstractModel from './abstractModel';
 import UserModel from './user'
+import LabelModel from "./label";
 
 export default class TaskModel extends AbstractModel {
 	
@@ -24,6 +25,10 @@ export default class TaskModel extends AbstractModel {
 			return new UserModel(a)
 		})
 		this.createdBy = new UserModel(this.createdBy)
+		
+		this.labels = this.labels.map(l => {
+			return new LabelModel(l)
+		})
 	}
 	
 	defaults() {

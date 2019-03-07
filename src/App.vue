@@ -67,6 +67,14 @@
 									New Namespace
 								</router-link>
 							</li>
+							<li>
+								<router-link :to="{ name: 'listLabels'}">
+									<span class="icon">
+										<icon icon="tags"/>
+									</span>
+									Labels
+								</router-link>
+							</li>
 						</ul>
 					</div>
 					<aside class="menu namespaces-lists">

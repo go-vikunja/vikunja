@@ -66,6 +66,10 @@
           color: $orange;
         }
       }
+
+      .tag {
+        margin: 0 0.5em;
+      }
     }
 
     input[type="checkbox"] {
@@ -137,6 +141,15 @@
           color: darken($red, 15);
         }
       }
+    }
+  }
+
+  .tag{
+    margin-right: 0.5em;
+    margin-bottom: 0.5em;
+
+    &:last-child{
+      margin-right: 0;
     }
   }
 }

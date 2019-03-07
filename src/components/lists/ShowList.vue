@@ -41,6 +41,9 @@
 							</div>
 							<span class="tasktext" :class="{ 'done': l.done}">
 								{{l.text}}
+								<span class="tag" v-for="label in l.labels" :style="{'background': label.hex_color, 'color': label.textColor}" :key="label.id">
+									<span>{{ label.title }}</span>
+								</span>
 								<i v-if="l.dueDate > 0" :class="{'overdue': (l.dueDate <= new Date())}"> - Due on {{new Date(l.dueDate).toLocaleString()}}</i>
 								<span v-if="l.priority >= priorities.HIGH" class="high-priority" :class="{'not-so-high': l.priority === priorities.HIGH}">
 									<span class="icon">
@@ -207,7 +210,7 @@
 												label="username"
 												track-by="id">
 											<template slot="clear" slot-scope="props">
-												<div class="multiselect__clear" v-if="newAssignee !== null && newAssignee.id !== 0" @mousedown.prevent.stop="clearAll(props.search)"></div>
+												<div class="multiselect__clear" v-if="newAssignee !== null && newAssignee.id !== 0" @mousedown.prevent.stop="clearAllFoundUsers(props.search)"></div>
 											</template>
 											<span slot="noResult">Oops! No user found. Consider changing the search query.</span>
 										</multiselect>
@@ -218,6 +221,42 @@
 												<icon icon="plus"/>
 											</span>
 										</a>
+									</div>
+								</div>
+
+								<div class="field">
+									<label class="label">Labels</label>
+									<div class="control">
+										<multiselect
+												:multiple="true"
+												:close-on-select="false"
+												:clear-on-select="true"
+												:options-limit="300"
+												:hide-selected="true"
+												v-model="taskEditTask.labels"
+												:options="foundLabels"
+												:searchable="true"
+												:loading="labelService.loading || labelTaskService.loading"
+												:internal-search="true"
+												@search-change="findLabel"
+												@select="addLabel"
+												placeholder="Type to search"
+												label="title"
+												track-by="id"
+												:taggable="true"
+												@tag="createAndAddLabel"
+												tag-placeholder="Add this as new label"
+										>
+											<template slot="tag" slot-scope="{ option, remove }">
+												<span class="tag" :style="{'background': option.hex_color, 'color': option.textColor}">
+													<span>{{ option.title }}</span>
+													<a class="delete is-small" @click="removeLabel(option)"></a>
+												</span>
+											</template>
+											<template slot="clear" slot-scope="props">
+												<div class="multiselect__clear" v-if="taskEditTask.labels.length" @mousedown.prevent.stop="clearAllLabels(props.search)"></div>
+											</template>
+										</multiselect>
 									</div>
 								</div>
 
@@ -280,6 +319,10 @@
 	import UserModel from '../../models/user'
 	import UserService from '../../services/user'
 	import priorities from '../../models/priorities'
+	import LabelTaskService from '../../services/labelTask'
+	import LabelService from '../../services/label'
+	import LabelTaskModel from '../../models/labelTask'
+	import LabelModel from '../../models/label'
 
 	export default {
 		data() {
@@ -309,6 +352,11 @@
 				newAssignee: UserModel,
 				userService: UserService,
 				foundUsers: [],
+
+				labelService: LabelService,
+				labelTaskService: LabelTaskService,
+				foundLabels: [],
+				labelTimeout: null,
 			}
 		},
 		components: {
@@ -327,6 +375,8 @@
 			this.newTask = new TaskModel()
 			this.userService = new UserService()
 			this.newAssignee = new UserModel()
+			this.labelService = new LabelService()
+			this.labelTaskService = new LabelTaskService()
 			this.loadList()
 		},
 		watch: {
@@ -453,7 +503,7 @@
 			},
 			findUser(query) {
 				if(query === '') {
-					this.clearAll()
+					this.clearAllFoundUsers()
 					return
 				}
 
@@ -468,9 +518,73 @@
 						message.error(e, this)
 					})
 			},
-			clearAll () {
+			clearAllFoundUsers () {
 				this.$set(this, 'foundUsers', [])
 			},
+			findLabel(query) {
+				if(query === '') {
+					this.clearAllLabels()
+					return
+				}
+
+				if(this.labelTimeout !== null) {
+					clearTimeout(this.labelTimeout)
+				}
+
+				// Delay the search 300ms to not send a request on every keystroke
+				this.labelTimeout = setTimeout(() => {
+					this.labelService.getAll({}, {s: query})
+						.then(response => {
+							this.$set(this, 'foundLabels', differenceWith(response, this.taskEditTask.labels, (first, second) => {
+								return first.id === second.id
+							}))
+							this.labelTimeout = null
+						})
+						.catch(e => {
+							message.error(e, this)
+						})
+				}, 300)
+			},
+			clearAllLabels () {
+				this.$set(this, 'foundLabels', [])
+			},
+			addLabel(label) {
+				let labelTask = new LabelTaskModel({taskID: this.taskEditTask.id, label_id: label.id})
+				this.labelTaskService.create(labelTask)
+					.then(() => {
+						message.success({message: 'The label was successfully added.'}, this)
+					})
+					.catch(e => {
+						message.error(e, this)
+					})
+			},
+			removeLabel(label) {
+				let labelTask = new LabelTaskModel({taskID: this.taskEditTask.id, label_id: label.id})
+				this.labelTaskService.delete(labelTask)
+					.then(() => {
+						// Remove the label from the list
+						for (const l in this.taskEditTask.labels) {
+							if (this.taskEditTask.labels[l].id === label.id) {
+								this.taskEditTask.labels.splice(l, 1)
+							}
+						}
+						message.success({message: 'The label was successfully removed.'}, this)
+					})
+					.catch(e => {
+						message.error(e, this)
+					})
+			},
+			createAndAddLabel(title) {
+				let newLabel = new LabelModel({title: title})
+				this.labelService.create(newLabel)
+					.then(r => {
+						this.addLabel(r)
+						this.taskEditTask.labels.push(r)
+					})
+					.catch(e => {
+						message.error(e, this)
+					})
+			}
 		}
 	}
 </script>

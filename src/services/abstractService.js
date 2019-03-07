@@ -341,7 +341,7 @@ export default class AbstractService {
 		}
 
 		const cancel = this.setLoading()
-		model = this.beforeUpdate(model)
+		model = this.beforeDelete(model)
 		return this.http.delete(this.getReplacedRoute(this.paths.delete, model), model)
 			.catch(error => {
 				return this.errorHandler(error)
