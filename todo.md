@@ -45,7 +45,7 @@
 * [x] Links an den Freigewordenen Platz Menüpunkte machen à la "Heute"/Morgen/Diese Woche etc. Da kommt dann alles rein was dann due ist.
 * [x] Wenn ein Task due ist das auch in der Übersicht anzeigen
   * [x] Overdue rot anzeigen
-* [ ] Beim Team bearbeiten Nutzer suchen einbauen
+* [x] Beim Team bearbeiten Nutzer suchen einbauen
 * [ ] Keyboard shortcuts
 
 ## Funktionen aus der API
@@ -118,6 +118,7 @@
 * [x] Same improvements also for user sharing
 * [x] Use rights const everywhere
 * [x] Styling of the search dropdown to match the rest of the theme
+* [ ] Use query params when getting tasks in a range
 
 ## Waiting for backend
 
