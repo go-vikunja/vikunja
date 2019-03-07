@@ -158,7 +158,6 @@
 		},
 		created() {
 			if (this.user.authenticated) {
-				this.namespaceService = new NamespaceService()
 				this.loadNamespaces()
 			}
 		},
@@ -174,6 +173,7 @@
 				return 'https://www.gravatar.com/avatar/' + this.user.infos.avatar + '?s=50'
 			},
 			loadNamespaces() {
+				this.namespaceService = new NamespaceService()
 				this.namespaceService.getAll()
 					.then(r => {
 						this.$set(this, 'namespaces', r)
