@@ -24,11 +24,19 @@ import (
 
 // CanWrite return whether the user can write on that list or not
 func (l *List) CanWrite(a web.Auth) bool {
-	user := getUserForRights(a)
 
+	// Get the list and check the right
+	originalList := &List{ID: l.ID}
+	err := originalList.GetSimpleByID()
+	if err != nil {
+		log.Log.Error("Error occurred during CanWrite for List: %s", err)
+		return false
+	}
+
+	user := getUserForRights(a)
 	// Check all the things
 	// Check if the user is either owner or can write to the list
-	return l.isOwner(user) || l.checkRight(user, RightWrite, RightAdmin)
+	return originalList.isOwner(user) || originalList.checkRight(user, RightWrite, RightAdmin)
 }
 
 // CanRead checks if a user has read access to a list
@@ -37,6 +45,8 @@ func (l *List) CanRead(a web.Auth) bool {
 
 	// Check all the things
 	// Check if the user is either owner or can read
+	// We can do this without first looking up the list because CanRead() is called after ReadOne()
+	// So are sure the list exists
 	return l.isOwner(user) || l.checkRight(user, RightRead, RightWrite, RightAdmin)
 }
 
@@ -53,7 +63,7 @@ func (l *List) CanDelete(a web.Auth) bool {
 // CanCreate checks if the user can update a list
 func (l *List) CanCreate(a web.Auth) bool {
 	// A user can create a list if he has write access to the namespace
-	n, _ := GetNamespaceByID(l.NamespaceID)
+	n := &Namespace{ID: l.NamespaceID}
 	return n.CanWrite(a)
 }
 
@@ -61,10 +71,17 @@ func (l *List) CanCreate(a web.Auth) bool {
 func (l *List) IsAdmin(a web.Auth) bool {
 	user := getUserForRights(a)
 
+	originalList := &List{ID: l.ID}
+	err := originalList.GetSimpleByID()
+	if err != nil {
+		log.Log.Error("Error occurred during IsAdmin for List: %s", err)
+		return false
+	}
+
 	// Check all the things
 	// Check if the user is either owner or can write to the list
 	// Owners are always admins
-	return l.isOwner(user) || l.checkRight(user, RightAdmin)
+	return originalList.isOwner(user) || originalList.checkRight(user, RightAdmin)
 }
 
 // Little helper function to check if a user is list owner

@@ -57,35 +57,44 @@ func (Namespace) TableName() string {
 	return "namespaces"
 }
 
+// GetSimpleByID gets a namespace without things like the owner, it more or less only checks if it exists.
+func (n *Namespace) GetSimpleByID() (err error) {
+	if n.ID == 0 {
+		return ErrNamespaceDoesNotExist{ID: n.ID}
+	}
+
+	// Get the namesapce with shared lists
+	if n.ID == -1 {
+		*n = PseudoNamespace
+		return
+	}
+
+	exists, err := x.Get(n)
+	if err != nil {
+		return
+	}
+	if !exists {
+		return ErrNamespaceDoesNotExist{ID: n.ID}
+	}
+
+	return
+}
+
 // GetNamespaceByID returns a namespace object by its ID
 func GetNamespaceByID(id int64) (namespace Namespace, err error) {
-	if id == 0 {
-		return namespace, ErrNamespaceDoesNotExist{ID: id}
-	}
-
-	namespace.ID = id
-	// Get the namesapce with shared lists
-	if id == -1 {
-		namespace = PseudoNamespace
-		return namespace, err
-	}
-
-	exists, err := x.Get(&namespace)
+	namespace = Namespace{ID: id}
+	err = namespace.GetSimpleByID()
 	if err != nil {
-		return namespace, err
-	}
-
-	if !exists {
-		return namespace, ErrNamespaceDoesNotExist{ID: id}
+		return
 	}
 
 	// Get the namespace Owner
 	namespace.Owner, err = GetUserByID(namespace.OwnerID)
 	if err != nil {
-		return namespace, err
+		return
 	}
 
-	return namespace, err
+	return
 }
 
 // ReadOne gets one namespace

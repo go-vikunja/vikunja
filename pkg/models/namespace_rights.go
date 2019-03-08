@@ -24,8 +24,30 @@ import (
 
 // CanWrite checks if a user has write access to a namespace
 func (n *Namespace) CanWrite(a web.Auth) bool {
+
+	// Get the namespace and check the right
+	originalNamespace := &Namespace{ID: n.ID}
+	err := originalNamespace.GetSimpleByID()
+	if err != nil {
+		log.Log.Error("Error occurred during CanWrite for Namespace: %s", err)
+		return false
+	}
+
 	u := getUserForRights(a)
-	return n.isOwner(u) || n.checkRight(u, RightWrite, RightAdmin)
+	return originalNamespace.isOwner(u) || originalNamespace.checkRight(u, RightWrite, RightAdmin)
+}
+
+// IsAdmin returns true or false if the user is admin on that namespace or not
+func (n *Namespace) IsAdmin(a web.Auth) bool {
+	originalNamespace := &Namespace{ID: n.ID}
+	err := originalNamespace.GetSimpleByID()
+	if err != nil {
+		log.Log.Error("Error occurred during IsAdmin for Namespace: %s", err)
+		return false
+	}
+
+	u := getUserForRights(a)
+	return originalNamespace.isOwner(u) || originalNamespace.checkRight(u, RightAdmin)
 }
 
 // CanRead checks if a user has read access to that namespace
@@ -48,12 +70,6 @@ func (n *Namespace) CanDelete(a web.Auth) bool {
 func (n *Namespace) CanCreate(a web.Auth) bool {
 	// This is currently a dummy function, later on we could imagine global limits etc.
 	return true
-}
-
-// IsAdmin returns true or false if the user is admin on that namespace or not
-func (n *Namespace) IsAdmin(a web.Auth) bool {
-	u := getUserForRights(a)
-	return n.isOwner(u) || n.checkRight(u, RightAdmin)
 }
 
 // Small helper function to check if a user owns the namespace

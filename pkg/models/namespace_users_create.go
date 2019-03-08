@@ -33,42 +33,42 @@ import "code.vikunja.io/web"
 // @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have access to the namespace"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces/{id}/users [put]
-func (un *NamespaceUser) Create(a web.Auth) (err error) {
+func (nu *NamespaceUser) Create(a web.Auth) (err error) {
 	// Reset the id
-	un.ID = 0
+	nu.ID = 0
 
 	// Check if the right is valid
-	if err := un.Right.isValid(); err != nil {
+	if err := nu.Right.isValid(); err != nil {
 		return err
 	}
 
 	// Check if the namespace exists
-	l, err := GetNamespaceByID(un.NamespaceID)
+	l, err := GetNamespaceByID(nu.NamespaceID)
 	if err != nil {
 		return
 	}
 
 	// Check if the user exists
-	if _, err = GetUserByID(un.UserID); err != nil {
+	if _, err = GetUserByID(nu.UserID); err != nil {
 		return err
 	}
 
 	// Check if the user already has access or is owner of that namespace
 	// We explicitly DO NOT check for teams here
-	if l.OwnerID == un.UserID {
-		return ErrUserAlreadyHasNamespaceAccess{UserID: un.UserID, NamespaceID: un.NamespaceID}
+	if l.OwnerID == nu.UserID {
+		return ErrUserAlreadyHasNamespaceAccess{UserID: nu.UserID, NamespaceID: nu.NamespaceID}
 	}
 
-	exist, err := x.Where("namespace_id = ? AND user_id = ?", un.NamespaceID, un.UserID).Get(&NamespaceUser{})
+	exist, err := x.Where("namespace_id = ? AND user_id = ?", nu.NamespaceID, nu.UserID).Get(&NamespaceUser{})
 	if err != nil {
 		return
 	}
 	if exist {
-		return ErrUserAlreadyHasNamespaceAccess{UserID: un.UserID, NamespaceID: un.NamespaceID}
+		return ErrUserAlreadyHasNamespaceAccess{UserID: nu.UserID, NamespaceID: nu.NamespaceID}
 	}
 
 	// Insert user <-> namespace relation
-	_, err = x.Insert(un)
+	_, err = x.Insert(nu)
 
 	return
 }

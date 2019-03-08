@@ -17,45 +17,26 @@
 package models
 
 import (
-	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/web"
 )
 
 // CanCreate checks if the user can create a new user <-> list relation
 func (lu *ListUser) CanCreate(a web.Auth) bool {
-	doer := getUserForRights(a)
-
 	// Get the list and check if the user has write access on it
 	l := List{ID: lu.ListID}
-	if err := l.GetSimpleByID(); err != nil {
-		log.Log.Error("Error occurred during CanCreate for ListUser: %s", err)
-		return false
-	}
-	return l.CanWrite(doer)
+	return l.CanWrite(a)
 }
 
 // CanDelete checks if the user can delete a user <-> list relation
 func (lu *ListUser) CanDelete(a web.Auth) bool {
-	doer := getUserForRights(a)
-
 	// Get the list and check if the user has write access on it
 	l := List{ID: lu.ListID}
-	if err := l.GetSimpleByID(); err != nil {
-		log.Log.Error("Error occurred during CanDelete for ListUser: %s", err)
-		return false
-	}
-	return l.CanWrite(doer)
+	return l.CanWrite(a)
 }
 
 // CanUpdate checks if the user can update a user <-> list relation
 func (lu *ListUser) CanUpdate(a web.Auth) bool {
-	doer := getUserForRights(a)
-
 	// Get the list and check if the user has write access on it
 	l := List{ID: lu.ListID}
-	if err := l.GetSimpleByID(); err != nil {
-		log.Log.Error("Error occurred during CanUpdate for ListUser: %s", err)
-		return false
-	}
-	return l.CanWrite(doer)
+	return l.CanWrite(a)
 }

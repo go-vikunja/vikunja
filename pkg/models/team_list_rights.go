@@ -17,7 +17,6 @@
 package models
 
 import (
-	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/web"
 )
 
@@ -26,10 +25,6 @@ func (tl *TeamList) CanCreate(a web.Auth) bool {
 	u := getUserForRights(a)
 
 	l := List{ID: tl.ListID}
-	if err := l.GetSimpleByID(); err != nil {
-		log.Log.Error("Error occurred during CanCreate for TeamList: %s", err)
-		return false
-	}
 	return l.IsAdmin(u)
 }
 
@@ -38,10 +33,6 @@ func (tl *TeamList) CanDelete(a web.Auth) bool {
 	user := getUserForRights(a)
 
 	l := List{ID: tl.ListID}
-	if err := l.GetSimpleByID(); err != nil {
-		log.Log.Error("Error occurred during CanDelete for TeamList: %s", err)
-		return false
-	}
 	return l.IsAdmin(user)
 }
 
@@ -50,9 +41,5 @@ func (tl *TeamList) CanUpdate(a web.Auth) bool {
 	user := getUserForRights(a)
 
 	l := List{ID: tl.ListID}
-	if err := l.GetSimpleByID(); err != nil {
-		log.Log.Error("Error occurred during CanUpdate for TeamList: %s", err)
-		return false
-	}
 	return l.IsAdmin(user)
 }

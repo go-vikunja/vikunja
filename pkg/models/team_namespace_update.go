@@ -33,16 +33,16 @@ import _ "code.vikunja.io/web" // For swaggerdocs generation
 // @Failure 404 {object} code.vikunja.io/web.HTTPError "Team or namespace does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces/{namespaceID}/teams/{teamID} [post]
-func (tl *TeamNamespace) Update() (err error) {
+func (tn *TeamNamespace) Update() (err error) {
 
 	// Check if the right is valid
-	if err := tl.Right.isValid(); err != nil {
+	if err := tn.Right.isValid(); err != nil {
 		return err
 	}
 
 	_, err = x.
-		Where("namespace_id = ? AND team_id = ?", tl.TeamID, tl.TeamID).
+		Where("namespace_id = ? AND team_id = ?", tn.TeamID, tn.TeamID).
 		Cols("right").
-		Update(tl)
+		Update(tn)
 	return
 }

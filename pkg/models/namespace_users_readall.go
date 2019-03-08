@@ -32,14 +32,14 @@ import "code.vikunja.io/web"
 // @Failure 403 {object} code.vikunja.io/web.HTTPError "No right to see the namespace."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces/{id}/users [get]
-func (un *NamespaceUser) ReadAll(search string, a web.Auth, page int) (interface{}, error) {
+func (nu *NamespaceUser) ReadAll(search string, a web.Auth, page int) (interface{}, error) {
 	u, err := getUserWithError(a)
 	if err != nil {
 		return nil, err
 	}
 
 	// Check if the user has access to the namespace
-	l, err := GetNamespaceByID(un.NamespaceID)
+	l, err := GetNamespaceByID(nu.NamespaceID)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +51,7 @@ func (un *NamespaceUser) ReadAll(search string, a web.Auth, page int) (interface
 	all := []*UserWithRight{}
 	err = x.
 		Join("INNER", "users_namespace", "user_id = users.id").
-		Where("users_namespace.namespace_id = ?", un.NamespaceID).
+		Where("users_namespace.namespace_id = ?", nu.NamespaceID).
 		Limit(getLimitFromPageIndex(page)).
 		Where("users.username LIKE ?", "%"+search+"%").
 		Find(&all)

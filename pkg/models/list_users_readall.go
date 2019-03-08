@@ -32,26 +32,26 @@ import "code.vikunja.io/web"
 // @Failure 403 {object} code.vikunja.io/web.HTTPError "No right to see the list."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{id}/users [get]
-func (ul *ListUser) ReadAll(search string, a web.Auth, page int) (interface{}, error) {
+func (lu *ListUser) ReadAll(search string, a web.Auth, page int) (interface{}, error) {
 	u, err := getUserWithError(a)
 	if err != nil {
 		return nil, err
 	}
 
 	// Check if the user has access to the list
-	l := &List{ID: ul.ListID}
+	l := &List{ID: lu.ListID}
 	if err := l.GetSimpleByID(); err != nil {
 		return nil, err
 	}
 	if !l.CanRead(u) {
-		return nil, ErrNeedToHaveListReadAccess{UserID: u.ID, ListID: ul.ListID}
+		return nil, ErrNeedToHaveListReadAccess{UserID: u.ID, ListID: lu.ListID}
 	}
 
 	// Get all users
 	all := []*UserWithRight{}
 	err = x.
 		Join("INNER", "users_list", "user_id = users.id").
-		Where("users_list.list_id = ?", ul.ListID).
+		Where("users_list.list_id = ?", lu.ListID).
 		Limit(getLimitFromPageIndex(page)).
 		Where("users.username LIKE ?", "%"+search+"%").
 		Find(&all)

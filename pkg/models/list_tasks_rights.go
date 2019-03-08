@@ -37,11 +37,6 @@ func (t *ListTask) CanCreate(a web.Auth) bool {
 
 	// A user can do a task if he has write acces to its list
 	l := &List{ID: t.ListID}
-	err := l.GetSimpleByID()
-	if err != nil {
-		log.Log.Error("Error occurred during CanDelete for ListTask: %s", err)
-		return false
-	}
 	return l.CanWrite(doer)
 }
 
@@ -70,10 +65,5 @@ func (t *ListTask) canDoListTask(a web.Auth) bool {
 
 	// A user can do a task if he has write acces to its list
 	l := &List{ID: lI.ListID}
-	err = l.GetSimpleByID()
-	if err != nil {
-		log.Log.Error("Error occurred during CanDelete for ListTask: %s", err)
-		return false
-	}
 	return l.CanWrite(doer)
 }

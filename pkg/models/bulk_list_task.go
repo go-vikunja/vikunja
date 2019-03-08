@@ -61,11 +61,9 @@ func (bt *BulkTask) CanUpdate(a web.Auth) bool {
 		return false
 	}
 
-	doer := getUserForRights(a)
 	// A user can update an task if he has write acces to its list
 	l := &List{ID: bt.Tasks[0].ListID}
-	l.ReadOne()
-	return l.CanWrite(doer)
+	return l.CanWrite(a)
 }
 
 // Update updates a bunch of tasks at once
