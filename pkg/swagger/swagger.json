@@ -378,7 +378,7 @@
                         "JWTKeyAuth": []
                     }
                 ],
-                "description": "Returns a list by its ID.",
+                "description": "Returns a team by its ID.",
                 "consumes": [
                     "application/json"
                 ],
@@ -386,13 +386,13 @@
                     "application/json"
                 ],
                 "tags": [
-                    "list"
+                    "team"
                 ],
-                "summary": "Gets one list",
+                "summary": "Gets one team",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "List ID",
+                        "description": "Team ID",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -400,14 +400,14 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "The list",
+                        "description": "The team",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.List"
+                            "$ref": "#/definitions/models.Team"
                         }
                     },
                     "403": {
-                        "description": "The user does not have access to the list",
+                        "description": "The user does not have access to the team",
                         "schema": {
                             "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
@@ -2284,138 +2284,6 @@
                         "description": "The end date parameter to filter by. Expects a unix timestamp.",
                         "name": "enddate",
                         "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The tasks",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/models.List"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal error",
-                        "schema": {
-                            "type": "object",
-                            "$ref": "#/definitions/models.Message"
-                        }
-                    }
-                }
-            }
-        },
-        "/tasks/all/{sortby}": {
-            "get": {
-                "security": [
-                    {
-                        "JWTKeyAuth": []
-                    }
-                ],
-                "description": "Returns all tasks on any list the user has access to.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "task"
-                ],
-                "summary": "Get tasks sorted",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "The page number. Used for pagination. If not provided, the first page of results is returned.",
-                        "name": "p",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Search tasks by task text.",
-                        "name": "s",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "The sorting parameter. Possible values to sort by are priority, prioritydesc, priorityasc, dueadate, dueadatedesc, dueadateasc.",
-                        "name": "sortby",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The tasks",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/models.List"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal error",
-                        "schema": {
-                            "type": "object",
-                            "$ref": "#/definitions/models.Message"
-                        }
-                    }
-                }
-            }
-        },
-        "/tasks/all/{sortby}/{startdate}/{enddate}": {
-            "get": {
-                "security": [
-                    {
-                        "JWTKeyAuth": []
-                    }
-                ],
-                "description": "Returns all tasks on any list the user has access to.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "task"
-                ],
-                "summary": "Get tasks sorted and within a date range",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "The page number. Used for pagination. If not provided, the first page of results is returned.",
-                        "name": "p",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Search tasks by task text.",
-                        "name": "s",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "The sorting parameter. Possible values to sort by are priority, prioritydesc, priorityasc, dueadate, dueadatedesc, dueadateasc.",
-                        "name": "sortby",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "The start date parameter. Expects a unix timestamp.",
-                        "name": "startdate",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "The end date parameter. Expects a unix timestamp.",
-                        "name": "enddate",
-                        "in": "path",
-                        "required": true
                     }
                 ],
                 "responses": {
