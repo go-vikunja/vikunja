@@ -2,11 +2,11 @@
 	<div>
 		<h3 v-if="showAll">Current tasks</h3>
 		<h3 v-else>Tasks from {{startDate.toLocaleDateString()}} until {{endDate.toLocaleDateString()}}</h3>
-		<template v-if="!loading && (!hasUndoneTasks || !tasks)">
+		<template v-if="!taskService.loading && (!hasUndoneTasks || !tasks)">
 			<h3 class="nothing">Nothing to to - Have a nice day!</h3>
 			<img src="/images/cool.svg" alt=""/>
 		</template>
-		<div class="spinner" :class="{ 'is-loading': loading}"></div>
+		<div class="spinner" :class="{ 'is-loading': taskService.loading}"></div>
 		<div class="tasks" v-if="tasks && tasks.length > 0">
 			<div @click="gotoList(l.listID)" class="task" v-for="l in tasks" :key="l.id" v-if="!l.done">
 				<label :for="l.id">
@@ -41,7 +41,6 @@
 </template>
 <script>
 	import router from '../../router'
-	import {HTTP} from '../../http-common'
 	import message from '../../message'
 	import TaskService from '../../services/task'
 	import priorities from '../../models/priorities'
@@ -50,7 +49,6 @@
 		name: "ShowTasks",
 		data() {
 			return {
-				loading: true,
 				tasks: [],
 				hasUndoneTasks: false,
 				taskService: TaskService,
@@ -68,41 +66,26 @@
 		},
 		methods: {
 			loadPendingTasks() {
-				// We can't really make this code work until 0.6 is released which will make this exact thing a lot easier.
-				// Because the feature we need here (specifying sort order and start/end date via query parameters) is already in master, we'll just wait and use the legacy method until then.
-				/*
-				let taskDummy = new TaskModel() // Used to specify options for the request
-				this.taskService.getAll(taskDummy)
-					.then(r => {
-						this.tasks = r
-					})
-					.catch(e => {
-						message.error(e, this)
-					})*/
-				const cancel = message.setLoading(this)
-
-				let url = `tasks/all/duedate`
+				let params = {'sort': 'duedate'}
 				if (!this.showAll) {
-					url += `/` + Math.round(+ this.startDate / 1000) + `/` + Math.round(+ this.endDate / 1000)
+					params.startdate = Math.round(+ this.startDate / 1000)
+					params.enddate = Math.round(+ this.endDate / 1000)
 				}
 
-				HTTP.get(url, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}})
-					.then(response => {
-						// Filter all done tasks
-						if (response.data !== null) {
-							for (const index in response.data) {
-								if (response.data[index].done !== true) {
+				this.taskService.getAll({}, params)
+					.then(r => {
+						if (r.length > 0) {
+							for (const index in r) {
+								if (r[index].done !== true) {
 									this.hasUndoneTasks = true
 								}
 							}
-							response.data.sort(this.sortyByDeadline)
+							r.sort(this.sortyByDeadline)
 						}
-						this.$set(this, 'tasks', response.data)
-						cancel()
+						this.$set(this, 'tasks', r)
 					})
 					.catch(e => {
-						cancel()
-						this.handleError(e)
+						message.error(e, this)
 					})
 			},
 			formatUnixDate(dateUnix) {
@@ -114,9 +97,6 @@
 			gotoList(lid) {
 				router.push({name: 'showList', params: {id: lid}})
 			},
-			handleError(e) {
-				message.error(e, this)
-			}
 		},
 	}
 </script>

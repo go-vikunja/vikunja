@@ -5,7 +5,7 @@ export default class TaskService extends AbstractService {
 	constructor() {
 		super({
 			create: '/lists/{listID}',
-			getAll: '/tasks/all/{sortBy}/{startDate}/{endDate}',
+			getAll: '/tasks/all',
 			update: '/tasks/{id}',
 			delete: '/tasks/{id}',
 		});
