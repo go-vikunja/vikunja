@@ -144,6 +144,16 @@ definitions:
           change this value.
         type: integer
     type: object
+  models.LabelTask:
+    properties:
+      created:
+        description: A unix timestamp when this task was created. You cannot change
+          this value.
+        type: integer
+      label_id:
+        description: The label id you want to associate with a task.
+        type: integer
+    type: object
   models.LabelTaskBulk:
     properties:
       labels:
@@ -639,15 +649,14 @@ paths:
     get:
       consumes:
       - application/json
-      description: Returns all labels which are either created by the user or associated
-        with a task the user has at least read-access to.
+      description: Returns an array with all assignees for this task.
       parameters:
       - description: The page number. Used for pagination. If not provided, the first
           page of results is returned.
         in: query
         name: p
         type: integer
-      - description: Search labels by label text.
+      - description: Search assignees by their username.
         in: query
         name: s
         type: string
@@ -655,10 +664,10 @@ paths:
       - application/json
       responses:
         "200":
-          description: The labels
+          description: The assignees
           schema:
             items:
-              $ref: '#/definitions/models.Label'
+              $ref: '#/definitions/models.User'
             type: array
         "500":
           description: Internal error
@@ -667,9 +676,9 @@ paths:
             type: object
       security:
       - JWTKeyAuth: []
-      summary: Get all labels a user has access to
+      summary: Get all assignees for a task
       tags:
-      - labels
+      - assignees
     put:
       consumes:
       - application/json
@@ -913,9 +922,9 @@ paths:
     get:
       consumes:
       - application/json
-      description: Returns a team by its ID.
+      description: Returns a list by its ID.
       parameters:
-      - description: Team ID
+      - description: List ID
         in: path
         name: id
         required: true
@@ -924,12 +933,12 @@ paths:
       - application/json
       responses:
         "200":
-          description: The team
+          description: The list
           schema:
-            $ref: '#/definitions/models.Team'
+            $ref: '#/definitions/models.List'
             type: object
         "403":
-          description: The user does not have access to the team
+          description: The user does not have access to the list
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
             type: object
@@ -940,9 +949,9 @@ paths:
             type: object
       security:
       - JWTKeyAuth: []
-      summary: Gets one team
+      summary: Gets one list
       tags:
-      - team
+      - list
     post:
       consumes:
       - application/json
@@ -2272,7 +2281,7 @@ paths:
         name: label
         required: true
         schema:
-          $ref: '#/definitions/models.Label'
+          $ref: '#/definitions/models.LabelTask'
           type: object
       produces:
       - application/json
@@ -2280,7 +2289,7 @@ paths:
         "200":
           description: The created label relation object.
           schema:
-            $ref: '#/definitions/models.Label'
+            $ref: '#/definitions/models.LabelTask'
             type: object
         "400":
           description: Invalid label object provided.
@@ -2330,7 +2339,7 @@ paths:
         "200":
           description: The label was successfully removed.
           schema:
-            $ref: '#/definitions/models.Label'
+            $ref: '#/definitions/models.Message'
             type: object
         "403":
           description: Not allowed to remove the label.

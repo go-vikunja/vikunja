@@ -49,7 +49,7 @@ func (LabelTask) TableName() string {
 // @Security JWTKeyAuth
 // @Param task path int true "Task ID"
 // @Param label path int true "Label ID"
-// @Success 200 {object} models.Label "The label was successfully removed."
+// @Success 200 {object} models.Message "The label was successfully removed."
 // @Failure 403 {object} code.vikunja.io/web.HTTPError "Not allowed to remove the label."
 // @Failure 404 {object} code.vikunja.io/web.HTTPError "Label not found."
 // @Failure 500 {object} models.Message "Internal error"
@@ -67,8 +67,8 @@ func (lt *LabelTask) Delete() (err error) {
 // @Produce json
 // @Security JWTKeyAuth
 // @Param task path int true "Task ID"
-// @Param label body models.Label true "The label object"
-// @Success 200 {object} models.Label "The created label relation object."
+// @Param label body models.LabelTask true "The label object"
+// @Success 200 {object} models.LabelTask "The created label relation object."
 // @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid label object provided."
 // @Failure 403 {object} code.vikunja.io/web.HTTPError "Not allowed to add the label."
 // @Failure 404 {object} code.vikunja.io/web.HTTPError "The label does not exist."
