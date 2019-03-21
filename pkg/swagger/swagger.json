@@ -24,7 +24,7 @@
                         "JWTKeyAuth": []
                     }
                 ],
-                "description": "Returns an array with all assignees for this task.",
+                "description": "Returns all labels which are either created by the user or associated with a task the user has at least read-access to.",
                 "consumes": [
                     "application/json"
                 ],
@@ -32,9 +32,9 @@
                     "application/json"
                 ],
                 "tags": [
-                    "assignees"
+                    "labels"
                 ],
-                "summary": "Get all assignees for a task",
+                "summary": "Get all labels a user has access to",
                 "parameters": [
                     {
                         "type": "integer",
@@ -44,18 +44,18 @@
                     },
                     {
                         "type": "string",
-                        "description": "Search assignees by their username.",
+                        "description": "Search labels by label text.",
                         "name": "s",
                         "in": "query"
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "The assignees",
+                        "description": "The labels",
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/models.User"
+                                "$ref": "#/definitions/models.Label"
                             }
                         }
                     },
@@ -2712,7 +2712,7 @@
                         "JWTKeyAuth": []
                     }
                 ],
-                "description": "Adds multiple new labels to a task.",
+                "description": "Updates all labels on a task. Every label which is not passed but exists on the task will be deleted. Every label which does not exist on the task will be added. All labels which are passed and already exist on the task won't be touched.",
                 "consumes": [
                     "application/json"
                 ],
@@ -2722,7 +2722,7 @@
                 "tags": [
                     "labels"
                 ],
-                "summary": "Add multiple new labels to a task",
+                "summary": "Update all labels on a task.",
                 "parameters": [
                     {
                         "description": "The array of labels",
@@ -3806,7 +3806,7 @@
             "type": "object",
             "properties": {
                 "labels": {
-                    "description": "All labels you want to update at once. Works exactly like you would update labels while updateing a list.",
+                    "description": "All labels you want to update at once.",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/models.Label"

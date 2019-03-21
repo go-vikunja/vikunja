@@ -273,7 +273,7 @@ func (t *ListTask) updateTaskLabels(creator web.Auth, labels []*Label) (err erro
 
 // LabelTaskBulk is a helper struct to update a bunch of labels at once
 type LabelTaskBulk struct {
-	// All labels you want to update at once. Works exactly like you would update labels while updateing a list.
+	// All labels you want to update at once.
 	Labels []*Label `json:"labels"`
 	TaskID int64    `json:"-" param:"listtask"`
 
@@ -282,8 +282,8 @@ type LabelTaskBulk struct {
 }
 
 // Create updates a bunch of labels on a task at once
-// @Summary Add multiple new labels to a task
-// @Description Adds multiple new labels to a task.
+// @Summary Update all labels on a task.
+// @Description Updates all labels on a task. Every label which is not passed but exists on the task will be deleted. Every label which does not exist on the task will be added. All labels which are passed and already exist on the task won't be touched.
 // @tags labels
 // @Accept json
 // @Produce json
