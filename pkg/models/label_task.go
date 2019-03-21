@@ -299,5 +299,5 @@ func (ltb *LabelTaskBulk) Create(a web.Auth) (err error) {
 	if err != nil {
 		return
 	}
-	return task.updateTaskLabels(a, task.Labels)
+	return task.updateTaskLabels(a, ltb.Labels)
 }
