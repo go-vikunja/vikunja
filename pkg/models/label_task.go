@@ -153,7 +153,7 @@ func getLabelsByTaskIDs(opts *LabelByTaskIDsOptions) (ls []*labelWithTaskID, err
 		requestOrNil = "label_task.label_id != null OR labels.created_by_id = ?"
 	}
 
-	// Get all labels associated with these labels
+	// Get all labels associated with these tasks
 	var labels []*labelWithTaskID
 	err = x.Table("labels").
 		Select("labels.*, label_task.task_id").
@@ -161,7 +161,7 @@ func getLabelsByTaskIDs(opts *LabelByTaskIDsOptions) (ls []*labelWithTaskID, err
 		Where(requestOrNil, uidOrNil).
 		Or(builder.In("label_task.task_id", opts.TaskIDs)).
 		And("labels.title LIKE ?", "%"+opts.Search+"%").
-		GroupBy("labels.id").
+		GroupBy("labels.id,label_task.task_id"). // This filters out doubles
 		Limit(getLimitFromPageIndex(opts.Page)).
 		Find(&labels)
 	if err != nil {
