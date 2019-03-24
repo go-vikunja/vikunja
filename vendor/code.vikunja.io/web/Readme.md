@@ -102,10 +102,8 @@ type Rights interface {
 }
 ```
 
-When using the standard web handler, all methods except `CanRead()` are called before their `CRUD` counterparts. `CanRead()`
-is called after `ReadOne()` was invoked as this would otherwise mean getting an object from the db to check if the user has the
-right to see it and then getting it again if thats the case. Calling the function afterwards means we only have to get the
-object once.
+When using the standard web handler, all methods are called before their `CRUD` counterparts.
+Use pointers for methods like `CanRead()` to get the base data of the model first, then check the right and then add addintional data.
 
 ## Handler Config
 

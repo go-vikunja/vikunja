@@ -11,6 +11,8 @@ code.vikunja.io/web v0.0.0-20190324080741-7bd881d9892a h1:nB+kG5/gq0njK9/fEtYgzv
 code.vikunja.io/web v0.0.0-20190324080741-7bd881d9892a/go.mod h1:PmGEu9qI7nbEKDn38H0SWgCoGO4GLdbjdlnWSzFi2PA=
 code.vikunja.io/web v0.0.0-20190324105229-0933ac082307 h1:t2E9v+k56RbvM5WNJF5BFFJDZrzM5l1Ua8qWdZYJAdA=
 code.vikunja.io/web v0.0.0-20190324105229-0933ac082307/go.mod h1:PmGEu9qI7nbEKDn38H0SWgCoGO4GLdbjdlnWSzFi2PA=
+code.vikunja.io/web v0.0.0-20190324123058-62b466dd1311 h1:3VRszH3NCTNUh+8y2ImA50ALJiE1e9KNoowv9y8mzvA=
+code.vikunja.io/web v0.0.0-20190324123058-62b466dd1311/go.mod h1:PmGEu9qI7nbEKDn38H0SWgCoGO4GLdbjdlnWSzFi2PA=
 github.com/BurntSushi/toml v0.3.1 h1:WXkYYl6Yr3qBf1K79EBnL4mak0OimBfB0XUf9Vl28OQ=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/PuerkitoBio/purell v1.1.0 h1:rmGxhojJlM0tuKtfdvliR84CFHljx9ag64t2xmVkjK4=

@@ -45,8 +45,9 @@ func (l *List) CanRead(a web.Auth) (bool, error) {
 	user := getUserForRights(a)
 
 	// Check if the user is either owner or can read
-	// We can do this without first looking up the list because CanRead() is called after ReadOne()
-	// So are sure the list exists
+	if err := l.GetSimpleByID(); err != nil {
+		return false, err
+	}
 	if l.isOwner(user) {
 		return true, nil
 	}

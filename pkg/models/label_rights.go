@@ -69,7 +69,6 @@ func (l *Label) hasAccessToLabel(a web.Auth) (bool, error) {
 		Where("label_task.label_id != null OR labels.created_by_id = ?", u.ID).
 		Or(builder.In("label_task.task_id", taskIDs)).
 		And("labels.id = ?", l.ID).
-		GroupBy("labels.id").
 		Exist(&labels)
 	return has, err
 }
