@@ -40,7 +40,11 @@ func (c *WebHandler) DeleteWeb(ctx echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
-	if !currentStruct.CanDelete(currentAuth) {
+	canDelete, err := currentStruct.CanDelete(currentAuth)
+	if err != nil {
+		return HandleHTTPError(err, ctx)
+	}
+	if canDelete {
 		config.LoggingProvider.Noticef("Tried to create while not having the rights for it (User: %v)", currentAuth)
 		return echo.NewHTTPError(http.StatusForbidden)
 	}

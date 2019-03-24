@@ -17,7 +17,6 @@
 package models
 
 import (
-	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/web"
 	"github.com/imdario/mergo"
 )
@@ -53,12 +52,11 @@ func (bt *BulkTask) checkIfTasksAreOnTheSameList() (err error) {
 }
 
 // CanUpdate checks if a user is allowed to update a task
-func (bt *BulkTask) CanUpdate(a web.Auth) bool {
+func (bt *BulkTask) CanUpdate(a web.Auth) (bool, error) {
 
 	err := bt.checkIfTasksAreOnTheSameList()
 	if err != nil {
-		log.Log.Error("Error occurred during CanUpdate for BulkTask: %s", err)
-		return false
+		return false, err
 	}
 
 	// A user can update an task if he has write acces to its list

@@ -17,31 +17,29 @@
 package models
 
 import (
-	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/web"
 )
 
 // CanCreate checks if a user can add a new assignee
-func (la *ListTaskAssginee) CanCreate(a web.Auth) bool {
+func (la *ListTaskAssginee) CanCreate(a web.Auth) (bool, error) {
 	return canDoListTaskAssingee(la.TaskID, a)
 }
 
 // CanCreate checks if a user can add a new assignee
-func (ba *BulkAssignees) CanCreate(a web.Auth) bool {
+func (ba *BulkAssignees) CanCreate(a web.Auth) (bool, error) {
 	return canDoListTaskAssingee(ba.TaskID, a)
 }
 
 // CanDelete checks if a user can delete an assignee
-func (la *ListTaskAssginee) CanDelete(a web.Auth) bool {
+func (la *ListTaskAssginee) CanDelete(a web.Auth) (bool, error) {
 	return canDoListTaskAssingee(la.TaskID, a)
 }
 
-func canDoListTaskAssingee(taskID int64, a web.Auth) bool {
+func canDoListTaskAssingee(taskID int64, a web.Auth) (bool, error) {
 	// Check if the current user can edit the list
 	list, err := GetListSimplByTaskID(taskID)
 	if err != nil {
-		log.Log.Errorf("Error during canDoListTaskAssingee for ListTaskAssginee: %v", err)
-		return false
+		return false, err
 	}
 	return list.CanCreate(a)
 }

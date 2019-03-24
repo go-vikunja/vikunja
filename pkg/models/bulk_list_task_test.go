@@ -57,7 +57,7 @@ func TestBulkTask_Update(t *testing.T) {
 				Tasks:    tt.fields.Tasks,
 				ListTask: tt.fields.ListTask,
 			}
-			allowed := bt.CanUpdate(tt.fields.User)
+			allowed, _ := bt.CanUpdate(tt.fields.User)
 			if !allowed != tt.wantForbidden {
 				t.Errorf("BulkTask.Update() want forbidden, got %v, want %v", allowed, tt.wantForbidden)
 			}

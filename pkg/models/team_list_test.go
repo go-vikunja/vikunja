@@ -37,7 +37,8 @@ func TestTeamList(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Check normal creation
-	assert.True(t, tl.CanCreate(&u))
+	allowed, _ := tl.CanCreate(&u)
+	assert.True(t, allowed)
 	err = tl.Create(&u)
 	assert.NoError(t, err)
 
@@ -93,7 +94,8 @@ func TestTeamList(t *testing.T) {
 	assert.True(t, IsErrNeedToHaveListReadAccess(err))
 
 	// Delete
-	assert.True(t, tl.CanDelete(&u))
+	allowed, _ = tl.CanDelete(&u)
+	assert.True(t, allowed)
 	err = tl.Delete()
 	assert.NoError(t, err)
 

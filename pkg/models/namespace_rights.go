@@ -17,59 +17,71 @@
 package models
 
 import (
-	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/web"
 	"github.com/go-xorm/builder"
 )
 
 // CanWrite checks if a user has write access to a namespace
-func (n *Namespace) CanWrite(a web.Auth) bool {
+func (n *Namespace) CanWrite(a web.Auth) (bool, error) {
 
 	// Get the namespace and check the right
 	originalNamespace := &Namespace{ID: n.ID}
 	err := originalNamespace.GetSimpleByID()
 	if err != nil {
-		log.Log.Error("Error occurred during CanWrite for Namespace: %s", err)
-		return false
+		return false, err
 	}
 
 	u := getUserForRights(a)
-	return originalNamespace.isOwner(u) || originalNamespace.checkRight(u, RightWrite, RightAdmin)
+	if originalNamespace.isOwner(u) {
+		return true, nil
+	}
+	return originalNamespace.checkRight(u, RightWrite, RightAdmin)
 }
 
 // IsAdmin returns true or false if the user is admin on that namespace or not
-func (n *Namespace) IsAdmin(a web.Auth) bool {
+func (n *Namespace) IsAdmin(a web.Auth) (bool, error) {
 	originalNamespace := &Namespace{ID: n.ID}
 	err := originalNamespace.GetSimpleByID()
 	if err != nil {
-		log.Log.Error("Error occurred during IsAdmin for Namespace: %s", err)
-		return false
+		return false, err
 	}
 
 	u := getUserForRights(a)
-	return originalNamespace.isOwner(u) || originalNamespace.checkRight(u, RightAdmin)
+	if originalNamespace.isOwner(u) {
+		return true, nil
+	}
+	return originalNamespace.checkRight(u, RightAdmin)
 }
 
 // CanRead checks if a user has read access to that namespace
-func (n *Namespace) CanRead(a web.Auth) bool {
+func (n *Namespace) CanRead(a web.Auth) (bool, error) {
+	originalNamespace := &Namespace{ID: n.ID}
+	err := originalNamespace.GetSimpleByID()
+	if err != nil {
+		return false, err
+	}
+
 	u := getUserForRights(a)
-	return n.isOwner(u) || n.checkRight(u, RightRead, RightWrite, RightAdmin)
+	if originalNamespace.isOwner(u) {
+		return true, nil
+	}
+	return n.checkRight(u, RightRead, RightWrite, RightAdmin)
 }
 
 // CanUpdate checks if the user can update the namespace
-func (n *Namespace) CanUpdate(a web.Auth) bool {
+func (n *Namespace) CanUpdate(a web.Auth) (bool, error) {
 	return n.IsAdmin(a)
 }
 
 // CanDelete checks if the user can delete a namespace
-func (n *Namespace) CanDelete(a web.Auth) bool {
+func (n *Namespace) CanDelete(a web.Auth) (bool, error) {
 	return n.IsAdmin(a)
 }
 
 // CanCreate checks if the user can create a new namespace
-func (n *Namespace) CanCreate(a web.Auth) bool {
+func (n *Namespace) CanCreate(a web.Auth) (bool, error) {
 	// This is currently a dummy function, later on we could imagine global limits etc.
-	return true
+	return true, nil
 }
 
 // Small helper function to check if a user owns the namespace
@@ -77,7 +89,7 @@ func (n *Namespace) isOwner(user *User) bool {
 	return n.OwnerID == user.ID
 }
 
-func (n *Namespace) checkRight(user *User, rights ...Right) bool {
+func (n *Namespace) checkRight(user *User, rights ...Right) (bool, error) {
 
 	/*
 		The following loop creates an sql condition like this one:
@@ -124,10 +136,5 @@ func (n *Namespace) checkRight(user *User, rights ...Right) bool {
 			builder.Eq{"namespaces.id": n.ID},
 		)).
 		Exist(&List{})
-	if err != nil {
-		log.Log.Error("Error occurred during checkRight for namespace: %s", err)
-		return false
-	}
-
-	return exists
+	return exists, err
 }

@@ -178,7 +178,8 @@ func TestLabelTask_Create(t *testing.T) {
 				CRUDable: tt.fields.CRUDable,
 				Rights:   tt.fields.Rights,
 			}
-			if !l.CanCreate(tt.args.a) && !tt.wantForbidden {
+			allowed, _ := l.CanCreate(tt.args.a)
+			if !allowed && !tt.wantForbidden {
 				t.Errorf("LabelTask.CanCreate() forbidden, want %v", tt.wantForbidden)
 			}
 			err := l.Create(tt.args.a)
@@ -264,7 +265,8 @@ func TestLabelTask_Delete(t *testing.T) {
 				CRUDable: tt.fields.CRUDable,
 				Rights:   tt.fields.Rights,
 			}
-			if !l.CanDelete(tt.auth) && !tt.wantForbidden {
+			allowed, _ := l.CanDelete(tt.auth)
+			if !allowed && !tt.wantForbidden {
 				t.Errorf("LabelTask.CanDelete() forbidden, want %v", tt.wantForbidden)
 			}
 			err := l.Delete()

@@ -17,51 +17,48 @@
 package models
 
 import (
-	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/web"
 	"github.com/go-xorm/builder"
 )
 
 // CanUpdate checks if a user can update a label
-func (l *Label) CanUpdate(a web.Auth) bool {
+func (l *Label) CanUpdate(a web.Auth) (bool, error) {
 	return l.isLabelOwner(a) // Only owners should be allowed to update a label
 }
 
 // CanDelete checks if a user can delete a label
-func (l *Label) CanDelete(a web.Auth) bool {
+func (l *Label) CanDelete(a web.Auth) (bool, error) {
 	return l.isLabelOwner(a) // Only owners should be allowed to delete a label
 }
 
 // CanRead checks if a user can read a label
-func (l *Label) CanRead(a web.Auth) bool {
+func (l *Label) CanRead(a web.Auth) (bool, error) {
 	return l.hasAccessToLabel(a)
 }
 
 // CanCreate checks if the user can create a label
 // Currently a dummy.
-func (l *Label) CanCreate(a web.Auth) bool {
-	return true
+func (l *Label) CanCreate(a web.Auth) (bool, error) {
+	return true, nil
 }
 
-func (l *Label) isLabelOwner(a web.Auth) bool {
+func (l *Label) isLabelOwner(a web.Auth) (bool, error) {
 	u := getUserForRights(a)
 	lorig, err := getLabelByIDSimple(l.ID)
 	if err != nil {
-		log.Log.Errorf("Error occurred during isLabelOwner for Label: %v", err)
-		return false
+		return false, err
 	}
-	return lorig.CreatedByID == u.ID
+	return lorig.CreatedByID == u.ID, nil
 }
 
 // Helper method to check if a user can see a specific label
-func (l *Label) hasAccessToLabel(a web.Auth) bool {
+func (l *Label) hasAccessToLabel(a web.Auth) (bool, error) {
 	u := getUserForRights(a)
 
 	// Get all tasks
 	taskIDs, err := getUserTaskIDs(u)
 	if err != nil {
-		log.Log.Errorf("Error occurred during hasAccessToLabel for Label: %v", err)
-		return false
+		return false, err
 	}
 
 	// Get all labels associated with these tasks
@@ -74,10 +71,5 @@ func (l *Label) hasAccessToLabel(a web.Auth) bool {
 		And("labels.id = ?", l.ID).
 		GroupBy("labels.id").
 		Exist(&labels)
-	if err != nil {
-		log.Log.Errorf("Error occurred during hasAccessToLabel for Label: %v", err)
-		return false
-	}
-
-	return has
+	return has, err
 }

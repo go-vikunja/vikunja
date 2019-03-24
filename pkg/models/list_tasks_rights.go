@@ -17,22 +17,21 @@
 package models
 
 import (
-	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/web"
 )
 
 // CanDelete checks if the user can delete an task
-func (t *ListTask) CanDelete(a web.Auth) bool {
+func (t *ListTask) CanDelete(a web.Auth) (bool, error) {
 	return t.canDoListTask(a)
 }
 
 // CanUpdate determines if a user has the right to update a list task
-func (t *ListTask) CanUpdate(a web.Auth) bool {
+func (t *ListTask) CanUpdate(a web.Auth) (bool, error) {
 	return t.canDoListTask(a)
 }
 
 // CanCreate determines if a user has the right to create a list task
-func (t *ListTask) CanCreate(a web.Auth) bool {
+func (t *ListTask) CanCreate(a web.Auth) (bool, error) {
 	doer := getUserForRights(a)
 
 	// A user can do a task if he has write acces to its list
@@ -41,26 +40,24 @@ func (t *ListTask) CanCreate(a web.Auth) bool {
 }
 
 // CanRead determines if a user can read a task
-func (t *ListTask) CanRead(a web.Auth) bool {
+func (t *ListTask) CanRead(a web.Auth) (bool, error) {
 	// A user can read a task if it has access to the list
 	list := &List{ID: t.ListID}
 	err := list.GetSimpleByID()
 	if err != nil {
-		log.Log.Error("Error occurred during CanRead for ListTask: %s", err)
-		return false
+		return false, err
 	}
 	return list.CanRead(a)
 }
 
 // Helper function to check if a user can do stuff on a list task
-func (t *ListTask) canDoListTask(a web.Auth) bool {
+func (t *ListTask) canDoListTask(a web.Auth) (bool, error) {
 	doer := getUserForRights(a)
 
 	// Get the task
 	lI, err := getTaskByIDSimple(t.ID)
 	if err != nil {
-		log.Log.Error("Error occurred during canDoListTask (getTaskByIDSimple) for ListTask: %s", err)
-		return false
+		return false, err
 	}
 
 	// A user can do a task if he has write acces to its list

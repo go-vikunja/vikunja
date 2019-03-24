@@ -17,51 +17,61 @@
 package models
 
 import (
-	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/web"
 )
 
 // CanCreate checks if a user can add a label to a task
-func (lt *LabelTask) CanCreate(a web.Auth) bool {
+func (lt *LabelTask) CanCreate(a web.Auth) (bool, error) {
 	label, err := getLabelByIDSimple(lt.LabelID)
 	if err != nil {
-		log.Log.Errorf("Error during CanCreate for LabelTask: %v", err)
-		return false
+		return false, err
 	}
 
-	return label.hasAccessToLabel(a) && canDoLabelTask(lt.TaskID, a)
+	hasAccessTolabel, err := label.hasAccessToLabel(a)
+	if err != nil || !hasAccessTolabel { // If the user doesn't have access to the label, we can error out here
+		return false, err
+	}
+
+	canDoLabelTask, err := canDoLabelTask(lt.TaskID, a)
+	if err != nil {
+		return false, err
+	}
+
+	return hasAccessTolabel && canDoLabelTask, nil
 }
 
 // CanDelete checks if a user can delete a label from a task
-func (lt *LabelTask) CanDelete(a web.Auth) bool {
-	if !canDoLabelTask(lt.TaskID, a) {
-		return false
+func (lt *LabelTask) CanDelete(a web.Auth) (bool, error) {
+	canDoLabelTask, err := canDoLabelTask(lt.TaskID, a)
+	if err != nil {
+		return false, err
+	}
+	if !canDoLabelTask {
+		return false, nil
 	}
 
 	// We don't care here if the label exists or not. The only relevant thing here is if the relation already exists,
 	// throw an error.
 	exists, err := x.Exist(&LabelTask{LabelID: lt.LabelID, TaskID: lt.TaskID})
 	if err != nil {
-		log.Log.Errorf("Error during CanDelete for LabelTask: %v", err)
-		return false
+		return false, err
 	}
-	return exists
+	return exists, err
 }
 
 // CanCreate determines if a user can update a labeltask
-func (ltb *LabelTaskBulk) CanCreate(a web.Auth) bool {
+func (ltb *LabelTaskBulk) CanCreate(a web.Auth) (bool, error) {
 	return canDoLabelTask(ltb.TaskID, a)
 }
 
 // Helper function to check if a user can write to a task
 // + is able to see the label
 // always the same check for either deleting or adding a label to a task
-func canDoLabelTask(taskID int64, a web.Auth) bool {
+func canDoLabelTask(taskID int64, a web.Auth) (bool, error) {
 	// A user can add a label to a task if he can write to the task
 	task, err := getTaskByIDSimple(taskID)
 	if err != nil {
-		log.Log.Error("Error occurred during canDoLabelTask for LabelTask: %v", err)
-		return false
+		return false, err
 	}
 	return task.CanUpdate(a)
 }

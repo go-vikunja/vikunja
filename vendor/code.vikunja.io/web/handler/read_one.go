@@ -42,7 +42,11 @@ func (c *WebHandler) ReadOneWeb(ctx echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Could not determine the current user.")
 	}
-	if !currentStruct.CanRead(currentAuth) {
+	canRead, err := currentStruct.CanRead(currentAuth)
+	if err != nil {
+		return HandleHTTPError(err, ctx)
+	}
+	if canRead {
 		config.LoggingProvider.Noticef("Tried to create while not having the rights for it (User: %v)", currentAuth)
 		return echo.NewHTTPError(http.StatusForbidden, "You don't have the right to see this")
 	}

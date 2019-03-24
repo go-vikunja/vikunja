@@ -21,19 +21,19 @@ import (
 )
 
 // CanCreate checks if the user can create a new user <-> namespace relation
-func (nu *NamespaceUser) CanCreate(a web.Auth) bool {
+func (nu *NamespaceUser) CanCreate(a web.Auth) (bool, error) {
 	n := &Namespace{ID: nu.NamespaceID}
 	return n.CanWrite(a)
 }
 
 // CanDelete checks if the user can delete a user <-> namespace relation
-func (nu *NamespaceUser) CanDelete(a web.Auth) bool {
+func (nu *NamespaceUser) CanDelete(a web.Auth) (bool, error) {
 	n := &Namespace{ID: nu.NamespaceID}
 	return n.CanWrite(a)
 }
 
 // CanUpdate checks if the user can update a user <-> namespace relation
-func (nu *NamespaceUser) CanUpdate(a web.Auth) bool {
+func (nu *NamespaceUser) CanUpdate(a web.Auth) (bool, error) {
 	n := &Namespace{ID: nu.NamespaceID}
 	return n.CanWrite(a)
 }

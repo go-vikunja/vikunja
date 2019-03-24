@@ -34,7 +34,8 @@ func TestTeamMember_Create(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Insert a new team member
-	assert.True(t, dummyteammember.CanCreate(&doer))
+	allowed, _ := dummyteammember.CanCreate(&doer)
+	assert.True(t, allowed)
 	err = dummyteammember.Create(&doer)
 	assert.NoError(t, err)
 
@@ -50,7 +51,8 @@ func TestTeamMember_Create(t *testing.T) {
 	assert.True(t, IsErrUserIsMemberOfTeam(err))
 
 	// Delete it
-	assert.True(t, dummyteammember.CanDelete(&doer))
+	allowed, _ = dummyteammember.CanDelete(&doer)
+	assert.True(t, allowed)
 	err = dummyteammember.Delete()
 	assert.NoError(t, err)
 

@@ -42,7 +42,11 @@ func (c *WebHandler) CreateWeb(ctx echo.Context) error {
 	}
 
 	// Check rights
-	if !currentStruct.CanCreate(currentAuth) {
+	canRead, err := currentStruct.CanCreate(currentAuth)
+	if err != nil {
+		return HandleHTTPError(err, ctx)
+	}
+	if canRead {
 		config.LoggingProvider.Noticef("Tried to create while not having the rights for it (User: %v)", currentAuth)
 		return echo.NewHTTPError(http.StatusForbidden)
 	}

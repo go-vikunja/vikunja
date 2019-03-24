@@ -36,7 +36,8 @@ func TestTeamNamespace(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Test normal creation
-	assert.True(t, tn.CanCreate(&dummyuser))
+	allowed, _ := tn.CanCreate(&dummyuser)
+	assert.True(t, allowed)
 	err = tn.Create(&dummyuser)
 	assert.NoError(t, err)
 
@@ -85,7 +86,8 @@ func TestTeamNamespace(t *testing.T) {
 	assert.True(t, IsErrNeedToHaveNamespaceReadAccess(err))
 
 	// Delete it
-	assert.True(t, tn.CanDelete(&dummyuser))
+	allowed, _ = tn.CanDelete(&dummyuser)
+	assert.True(t, allowed)
 	err = tn.Delete()
 	assert.NoError(t, err)
 

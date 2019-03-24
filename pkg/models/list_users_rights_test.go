@@ -85,13 +85,13 @@ func TestListUser_CanDoSomething(t *testing.T) {
 				CRUDable: tt.fields.CRUDable,
 				Rights:   tt.fields.Rights,
 			}
-			if got := lu.CanCreate(tt.args.a); got != tt.want["CanCreate"] {
+			if got, _ := lu.CanCreate(tt.args.a); got != tt.want["CanCreate"] {
 				t.Errorf("ListUser.CanCreate() = %v, want %v", got, tt.want["CanCreate"])
 			}
-			if got := lu.CanDelete(tt.args.a); got != tt.want["CanDelete"] {
+			if got, _ := lu.CanDelete(tt.args.a); got != tt.want["CanDelete"] {
 				t.Errorf("ListUser.CanDelete() = %v, want %v", got, tt.want["CanDelete"])
 			}
-			if got := lu.CanUpdate(tt.args.a); got != tt.want["CanUpdate"] {
+			if got, _ := lu.CanUpdate(tt.args.a); got != tt.want["CanUpdate"] {
 				t.Errorf("ListUser.CanUpdate() = %v, want %v", got, tt.want["CanUpdate"])
 			}
 		})

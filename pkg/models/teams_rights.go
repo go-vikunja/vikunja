@@ -17,64 +17,47 @@
 package models
 
 import (
-	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/web"
 )
 
 // CanCreate checks if the user can create a new team
-func (t *Team) CanCreate(a web.Auth) bool {
+func (t *Team) CanCreate(a web.Auth) (bool, error) {
 	// This is currently a dummy function, later on we could imagine global limits etc.
-	return true
+	return true, nil
 }
 
 // CanUpdate checks if the user can update a team
-func (t *Team) CanUpdate(a web.Auth) bool {
+func (t *Team) CanUpdate(a web.Auth) (bool, error) {
 	u := getUserForRights(a)
 
 	// Check if the current user is in the team and has admin rights in it
-	exists, err := x.Where("team_id = ?", t.ID).
+	return x.Where("team_id = ?", t.ID).
 		And("user_id = ?", u.ID).
 		And("admin = ?", true).
 		Get(&TeamMember{})
-	if err != nil {
-		log.Log.Error("Error occurred during CanUpdate for Team: %s", err)
-		return false
-	}
-
-	return exists
 }
 
 // CanDelete checks if a user can delete a team
-func (t *Team) CanDelete(a web.Auth) bool {
+func (t *Team) CanDelete(a web.Auth) (bool, error) {
 	return t.IsAdmin(a)
 }
 
 // IsAdmin returns true when the user is admin of a team
-func (t *Team) IsAdmin(a web.Auth) bool {
+func (t *Team) IsAdmin(a web.Auth) (bool, error) {
 	u := getUserForRights(a)
 
-	exists, err := x.Where("team_id = ?", t.ID).
+	return x.Where("team_id = ?", t.ID).
 		And("user_id = ?", u.ID).
 		And("admin = ?", true).
 		Get(&TeamMember{})
-	if err != nil {
-		log.Log.Error("Error occurred during CanUpdate for Team: %s", err)
-		return false
-	}
-	return exists
 }
 
 // CanRead returns true if the user has read access to the team
-func (t *Team) CanRead(a web.Auth) bool {
+func (t *Team) CanRead(a web.Auth) (bool, error) {
 	user := getUserForRights(a)
 
 	// Check if the user is in the team
-	exists, err := x.Where("team_id = ?", t.ID).
+	return x.Where("team_id = ?", t.ID).
 		And("user_id = ?", user.ID).
 		Get(&TeamMember{})
-	if err != nil {
-		log.Log.Error("Error occurred during CanUpdate for Team: %s", err)
-		return false
-	}
-	return exists
 }

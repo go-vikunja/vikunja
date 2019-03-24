@@ -91,7 +91,11 @@ func getNamespace(c echo.Context) (namespace models.Namespace, err error) {
 	if err != nil {
 		return
 	}
-	if !namespace.CanRead(user) {
+	canRead, err := namespace.CanRead(user)
+	if err != nil {
+		return namespace, err
+	}
+	if !canRead {
 		return
 	}
 

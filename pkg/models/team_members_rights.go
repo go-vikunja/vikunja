@@ -17,30 +17,25 @@
 package models
 
 import (
-	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/web"
 )
 
 // CanCreate checks if the user can add a new tem member
-func (tm *TeamMember) CanCreate(a web.Auth) bool {
+func (tm *TeamMember) CanCreate(a web.Auth) (bool, error) {
 	return tm.IsAdmin(a)
 }
 
 // CanDelete checks if the user can delete a new team member
-func (tm *TeamMember) CanDelete(a web.Auth) bool {
+func (tm *TeamMember) CanDelete(a web.Auth) (bool, error) {
 	return tm.IsAdmin(a)
 }
 
 // IsAdmin checks if the user is team admin
-func (tm *TeamMember) IsAdmin(a web.Auth) bool {
+func (tm *TeamMember) IsAdmin(a web.Auth) (bool, error) {
 	u := getUserForRights(a)
 
 	// A user can add a member to a team if he is admin of that team
 	exists, err := x.Where("user_id = ? AND team_id = ? AND admin = ?", u.ID, tm.TeamID, true).
 		Get(&TeamMember{})
-	if err != nil {
-		log.Log.Error("Error occurred during IsAdmin for TeamMember: %s", err)
-		return false
-	}
-	return exists
+	return exists, err
 }

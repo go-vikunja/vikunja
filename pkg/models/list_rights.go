@@ -17,71 +17,76 @@
 package models
 
 import (
-	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/web"
 	"github.com/go-xorm/builder"
 )
 
 // CanWrite return whether the user can write on that list or not
-func (l *List) CanWrite(a web.Auth) bool {
+func (l *List) CanWrite(a web.Auth) (bool, error) {
 
 	// Get the list and check the right
 	originalList := &List{ID: l.ID}
 	err := originalList.GetSimpleByID()
 	if err != nil {
-		log.Log.Error("Error occurred during CanWrite for List: %s", err)
-		return false
+		return false, err
 	}
 
 	user := getUserForRights(a)
-	// Check all the things
 	// Check if the user is either owner or can write to the list
-	return originalList.isOwner(user) || originalList.checkRight(user, RightWrite, RightAdmin)
+	if originalList.isOwner(user) {
+		return true, nil
+	}
+
+	return originalList.checkRight(user, RightWrite, RightAdmin)
 }
 
 // CanRead checks if a user has read access to a list
-func (l *List) CanRead(a web.Auth) bool {
+func (l *List) CanRead(a web.Auth) (bool, error) {
 	user := getUserForRights(a)
 
-	// Check all the things
 	// Check if the user is either owner or can read
 	// We can do this without first looking up the list because CanRead() is called after ReadOne()
 	// So are sure the list exists
-	return l.isOwner(user) || l.checkRight(user, RightRead, RightWrite, RightAdmin)
+	if l.isOwner(user) {
+		return true, nil
+	}
+	return l.checkRight(user, RightRead, RightWrite, RightAdmin)
 }
 
 // CanUpdate checks if the user can update a list
-func (l *List) CanUpdate(a web.Auth) bool {
+func (l *List) CanUpdate(a web.Auth) (bool, error) {
 	return l.CanWrite(a)
 }
 
 // CanDelete checks if the user can delete a list
-func (l *List) CanDelete(a web.Auth) bool {
+func (l *List) CanDelete(a web.Auth) (bool, error) {
 	return l.IsAdmin(a)
 }
 
 // CanCreate checks if the user can update a list
-func (l *List) CanCreate(a web.Auth) bool {
+func (l *List) CanCreate(a web.Auth) (bool, error) {
 	// A user can create a list if he has write access to the namespace
 	n := &Namespace{ID: l.NamespaceID}
 	return n.CanWrite(a)
 }
 
 // IsAdmin returns whether the user has admin rights on the list or not
-func (l *List) IsAdmin(a web.Auth) bool {
+func (l *List) IsAdmin(a web.Auth) (bool, error) {
 	user := getUserForRights(a)
 
 	originalList := &List{ID: l.ID}
 	err := originalList.GetSimpleByID()
 	if err != nil {
-		log.Log.Error("Error occurred during IsAdmin for List: %s", err)
-		return false
+		return false, err
 	}
 
 	// Check all the things
 	// Check if the user is either owner or can write to the list
 	// Owners are always admins
-	return originalList.isOwner(user) || originalList.checkRight(user, RightAdmin)
+	if originalList.isOwner(user) {
+		return true, nil
+	}
+	return originalList.checkRight(user, RightAdmin)
 }
 
 // Little helper function to check if a user is list owner
@@ -90,7 +95,7 @@ func (l *List) isOwner(u *User) bool {
 }
 
 // Checks n different rights for any given user
-func (l *List) checkRight(user *User, rights ...Right) bool {
+func (l *List) checkRight(user *User, rights ...Right) (bool, error) {
 
 	/*
 			The following loop creates an sql condition like this one:
@@ -149,10 +154,5 @@ func (l *List) checkRight(user *User, rights ...Right) bool {
 			builder.Eq{"l.id": l.ID},
 		)).
 		Exist(&List{})
-	if err != nil {
-		log.Log.Error("Error occurred during checkRight for list: %s", err)
-		return false
-	}
-
-	return exists
+	return exists, err
 }

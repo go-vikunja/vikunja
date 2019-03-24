@@ -85,13 +85,13 @@ func TestTeamNamespace_CanDoSomething(t *testing.T) {
 				CRUDable:    tt.fields.CRUDable,
 				Rights:      tt.fields.Rights,
 			}
-			if got := tn.CanCreate(tt.args.a); got != tt.want["CanCreate"] {
+			if got, _ := tn.CanCreate(tt.args.a); got != tt.want["CanCreate"] {
 				t.Errorf("TeamNamespace.CanCreate() = %v, want %v", got, tt.want["CanCreate"])
 			}
-			if got := tn.CanDelete(tt.args.a); got != tt.want["CanDelete"] {
+			if got, _ := tn.CanDelete(tt.args.a); got != tt.want["CanDelete"] {
 				t.Errorf("TeamNamespace.CanDelete() = %v, want %v", got, tt.want["CanDelete"])
 			}
-			if got := tn.CanUpdate(tt.args.a); got != tt.want["CanUpdate"] {
+			if got, _ := tn.CanUpdate(tt.args.a); got != tt.want["CanUpdate"] {
 				t.Errorf("TeamNamespace.CanUpdate() = %v, want %v", got, tt.want["CanUpdate"])
 			}
 		})

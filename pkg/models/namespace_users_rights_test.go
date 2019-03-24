@@ -85,13 +85,13 @@ func TestNamespaceUser_CanDoSomething(t *testing.T) {
 				CRUDable:    tt.fields.CRUDable,
 				Rights:      tt.fields.Rights,
 			}
-			if got := nu.CanCreate(tt.args.a); got != tt.want["CanCreate"] {
+			if got, _ := nu.CanCreate(tt.args.a); got != tt.want["CanCreate"] {
 				t.Errorf("NamespaceUser.CanCreate() = %v, want %v", got, tt.want["CanCreate"])
 			}
-			if got := nu.CanDelete(tt.args.a); got != tt.want["CanDelete"] {
+			if got, _ := nu.CanDelete(tt.args.a); got != tt.want["CanDelete"] {
 				t.Errorf("NamespaceUser.CanDelete() = %v, want %v", got, tt.want["CanDelete"])
 			}
-			if got := nu.CanUpdate(tt.args.a); got != tt.want["CanUpdate"] {
+			if got, _ := nu.CanUpdate(tt.args.a); got != tt.want["CanUpdate"] {
 				t.Errorf("NamespaceUser.CanUpdate() = %v, want %v", got, tt.want["CanUpdate"])
 			}
 		})

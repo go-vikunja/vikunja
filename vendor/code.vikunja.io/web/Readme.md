@@ -38,16 +38,19 @@ other handler implementations, enabling a lot of flexibility while develeoping.
 
 ### TODOs
 
-* [ ] Improve docs/Merge with the ones of Vikunja
-* [ ] Description of web.HTTPError
-* [ ] Rights methods should return errors (I know, this will break a lot of existing stuff)
+* [x] Improve docs/Merge with the ones of Vikunja
+* [x] Description of web.HTTPError
+* [x] Rights methods should return errors (I know, this will break a lot of existing stuff)
 * [ ] optional Before- and after-{load|update|create} methods which do some preprocessing/after processing like making human-readable names from automatically up counting consts
+* [ ] "Magic": Check if a passed struct implements Crudable methods and use a general (user defined) function if not
 
 ## Installation
 
 Using the web handler in your application is pretty straight forward, simply run `go get -u code.vikunja.io/web` and start using it. 
 
 In order to use the common web handler, the struct must implement the `web.CRUDable` and `web.Rights` interface.
+
+To learn how to use the handler, take a look at the [handler config](#handler-config) [defining routes](#defining-routes-using-the-standard-web-handler)
 
 ## CRUDable
 
@@ -82,18 +85,20 @@ way to do this, don't hesitate to [drop me a message](https://vikunja.io/en/cont
 
 ## Rights
 
-This interface defines methods to check for rights on structs. They accept an `Auth`-element as parameter and return a `bool`.
+This interface defines methods to check for rights on structs. They accept an `Auth`-element as parameter and return a `bool` and `error`.
+
+The `error` is handled [as usual](#errors).
 
 The interface is defined as followed:
 
 ```go
 type Rights interface {
-	IsAdmin(Auth) bool
-	CanWrite(Auth) bool
-	CanRead(Auth) bool
-	CanDelete(Auth) bool
-	CanUpdate(Auth) bool
-	CanCreate(Auth) bool
+	IsAdmin(Auth) (bool, error)
+	CanWrite(Auth) (bool, error)
+	CanRead(Auth) (bool, error)
+	CanDelete(Auth) (bool, error)
+	CanUpdate(Auth) (bool, error)
+	CanCreate(Auth) (bool, error)
 }
 ```
 

@@ -21,21 +21,21 @@ import (
 )
 
 // CanCreate checks if the user can create a new user <-> list relation
-func (lu *ListUser) CanCreate(a web.Auth) bool {
+func (lu *ListUser) CanCreate(a web.Auth) (bool, error) {
 	// Get the list and check if the user has write access on it
 	l := List{ID: lu.ListID}
 	return l.CanWrite(a)
 }
 
 // CanDelete checks if the user can delete a user <-> list relation
-func (lu *ListUser) CanDelete(a web.Auth) bool {
+func (lu *ListUser) CanDelete(a web.Auth) (bool, error) {
 	// Get the list and check if the user has write access on it
 	l := List{ID: lu.ListID}
 	return l.CanWrite(a)
 }
 
 // CanUpdate checks if the user can update a user <-> list relation
-func (lu *ListUser) CanUpdate(a web.Auth) bool {
+func (lu *ListUser) CanUpdate(a web.Auth) (bool, error) {
 	// Get the list and check if the user has write access on it
 	l := List{ID: lu.ListID}
 	return l.CanWrite(a)

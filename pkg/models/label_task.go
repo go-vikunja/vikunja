@@ -114,7 +114,11 @@ func (lt *LabelTask) ReadAll(search string, a web.Auth, page int) (labels interf
 		return nil, err
 	}
 
-	if !task.CanRead(a) {
+	canRead, err := task.CanRead(a)
+	if err != nil {
+		return nil, err
+	}
+	if !canRead {
 		return nil, ErrNoRightToSeeTask{lt.TaskID, u.ID}
 	}
 
@@ -256,7 +260,11 @@ func (t *ListTask) updateTaskLabels(creator web.Auth, labels []*Label) (err erro
 		}
 
 		// Check if the user has the rights to see the label he is about to add
-		if !label.hasAccessToLabel(creator) {
+		hasAccessToLabel, err := label.hasAccessToLabel(creator)
+		if err != nil {
+			return err
+		}
+		if !hasAccessToLabel {
 			user, _ := creator.(*User)
 			return ErrUserHasNoAccessToLabel{LabelID: l.ID, UserID: user.ID}
 		}

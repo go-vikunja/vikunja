@@ -43,7 +43,11 @@ func (nu *NamespaceUser) ReadAll(search string, a web.Auth, page int) (interface
 	if err != nil {
 		return nil, err
 	}
-	if !l.CanRead(u) {
+	canRead, err := l.CanRead(u)
+	if err != nil {
+		return nil, err
+	}
+	if !canRead {
 		return nil, ErrNeedToHaveNamespaceReadAccess{}
 	}
 

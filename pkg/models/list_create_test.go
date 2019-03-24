@@ -37,7 +37,8 @@ func TestList_Create(t *testing.T) {
 	}
 
 	// Check if the user can create
-	assert.True(t, dummylist.CanCreate(&doer))
+	allowed, _ := dummylist.CanCreate(&doer)
+	assert.True(t, allowed)
 
 	// Create it
 	err = dummylist.Create(&doer)
@@ -52,16 +53,19 @@ func TestList_Create(t *testing.T) {
 	assert.Equal(t, dummylist.OwnerID, doer.ID)
 
 	// Check if the user can see it
-	assert.True(t, dummylist.CanRead(&doer))
+	allowed, _ = dummylist.CanRead(&doer)
+	assert.True(t, allowed)
 
 	// Try updating a list
-	assert.True(t, dummylist.CanUpdate(&doer))
+	allowed, _ = dummylist.CanUpdate(&doer)
+	assert.True(t, allowed)
 	dummylist.Description = "Lorem Ipsum dolor sit amet."
 	err = dummylist.Update()
 	assert.NoError(t, err)
 
 	// Delete it
-	assert.True(t, dummylist.CanDelete(&doer))
+	allowed, _ = dummylist.CanDelete(&doer)
+	assert.True(t, allowed)
 
 	err = dummylist.Delete()
 	assert.NoError(t, err)

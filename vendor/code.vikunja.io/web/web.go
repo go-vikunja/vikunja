@@ -19,12 +19,12 @@ import "github.com/labstack/echo"
 
 // Rights defines rights methods
 type Rights interface {
-	IsAdmin(Auth) bool
-	CanWrite(Auth) bool
-	CanRead(Auth) bool
-	CanDelete(Auth) bool
-	CanUpdate(Auth) bool
-	CanCreate(Auth) bool
+	IsAdmin(Auth) (bool, error)
+	CanWrite(Auth) (bool, error)
+	CanRead(Auth) (bool, error)
+	CanDelete(Auth) (bool, error)
+	CanUpdate(Auth) (bool, error)
+	CanCreate(Auth) (bool, error)
 }
 
 // CRUDable defines the crud methods

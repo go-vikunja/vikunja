@@ -43,7 +43,11 @@ func (lu *ListUser) ReadAll(search string, a web.Auth, page int) (interface{}, e
 	if err := l.GetSimpleByID(); err != nil {
 		return nil, err
 	}
-	if !l.CanRead(u) {
+	canRead, err := l.CanRead(u)
+	if err != nil {
+		return nil, err
+	}
+	if !canRead {
 		return nil, ErrNeedToHaveListReadAccess{UserID: u.ID, ListID: lu.ListID}
 	}
 

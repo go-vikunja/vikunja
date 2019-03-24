@@ -43,7 +43,11 @@ func (tn *TeamNamespace) ReadAll(search string, a web.Auth, page int) (interface
 	if err != nil {
 		return nil, err
 	}
-	if !n.CanRead(user) {
+	canRead, err := n.CanRead(user)
+	if err != nil {
+		return nil, err
+	}
+	if !canRead {
 		return nil, ErrNeedToHaveNamespaceReadAccess{NamespaceID: tn.NamespaceID, UserID: user.ID}
 	}
 

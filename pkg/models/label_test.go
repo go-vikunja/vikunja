@@ -217,7 +217,8 @@ func TestLabel_ReadOne(t *testing.T) {
 				Rights:      tt.fields.Rights,
 			}
 
-			if !l.CanRead(tt.auth) && !tt.wantForbidden {
+			allowed, _ := l.CanRead(tt.auth)
+			if !allowed && !tt.wantForbidden {
 				t.Errorf("Label.CanRead() forbidden, want %v", tt.wantForbidden)
 			}
 			err := l.ReadOne()
@@ -283,7 +284,8 @@ func TestLabel_Create(t *testing.T) {
 				CRUDable:    tt.fields.CRUDable,
 				Rights:      tt.fields.Rights,
 			}
-			if !l.CanCreate(tt.args.a) && !tt.wantForbidden {
+			allowed, _ := l.CanCreate(tt.args.a)
+			if !allowed && !tt.wantForbidden {
 				t.Errorf("Label.CanCreate() forbidden, want %v", tt.wantForbidden)
 			}
 			if err := l.Create(tt.args.a); (err != nil) != tt.wantErr {
@@ -364,7 +366,8 @@ func TestLabel_Update(t *testing.T) {
 				CRUDable:    tt.fields.CRUDable,
 				Rights:      tt.fields.Rights,
 			}
-			if !l.CanUpdate(tt.auth) && !tt.wantForbidden {
+			allowed, _ := l.CanUpdate(tt.auth)
+			if !allowed && !tt.wantForbidden {
 				t.Errorf("Label.CanUpdate() forbidden, want %v", tt.wantForbidden)
 			}
 			if err := l.Update(); (err != nil) != tt.wantErr {
@@ -441,7 +444,8 @@ func TestLabel_Delete(t *testing.T) {
 				CRUDable:    tt.fields.CRUDable,
 				Rights:      tt.fields.Rights,
 			}
-			if !l.CanDelete(tt.auth) && !tt.wantForbidden {
+			allowed, _ := l.CanDelete(tt.auth)
+			if !allowed && !tt.wantForbidden {
 				t.Errorf("Label.CanDelete() forbidden, want %v", tt.wantForbidden)
 			}
 			if err := l.Delete(); (err != nil) != tt.wantErr {
