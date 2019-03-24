@@ -27,7 +27,7 @@ import (
 )
 
 // InitConfig initializes the config, sets defaults etc.
-func init() {
+func InitConfig() {
 
 	// Set defaults
 	// Service config

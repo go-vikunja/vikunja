@@ -38,6 +38,7 @@ require (
 	github.com/go-xorm/xorm-redis-cache v0.0.0-20180727005610-859b313566b2
 	github.com/gordonklaus/ineffassign v0.0.0-20180909121442-1003c8bd00dc
 	github.com/imdario/mergo v0.3.6
+	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/jgautheron/goconst v0.0.0-20170703170152-9740945f5dcb
 	github.com/karalabe/xgo v0.0.0-20181007145344-72da7d1d3970
 	github.com/kisielk/gotool v1.0.0 // indirect
@@ -48,12 +49,14 @@ require (
 	github.com/mattn/go-isatty v0.0.7 // indirect
 	github.com/mattn/go-oci8 v0.0.0-20181130072307-052f5d97b9b6 // indirect
 	github.com/mattn/go-sqlite3 v1.10.0
+	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/mapstructure v1.1.2 // indirect
 	github.com/onsi/ginkgo v1.7.0 // indirect
 	github.com/onsi/gomega v1.4.3 // indirect
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/pkg/errors v0.8.0 // indirect
 	github.com/prometheus/client_golang v0.9.2
+	github.com/spf13/cobra v0.0.3
 	github.com/spf13/viper v1.2.0
 	github.com/stretchr/objx v0.1.1 // indirect
 	github.com/stretchr/testify v1.3.0

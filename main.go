@@ -16,62 +16,8 @@
 
 package main
 
-import (
-	_ "code.vikunja.io/api/pkg/config" // To trigger its init() which initializes the config
-	"code.vikunja.io/api/pkg/log"
-	"code.vikunja.io/api/pkg/mail"
-	"code.vikunja.io/api/pkg/models"
-	"code.vikunja.io/api/pkg/routes"
-	"code.vikunja.io/api/pkg/swagger"
-	"context"
-	"github.com/spf13/viper"
-	"os"
-	"os/signal"
-	"time"
-)
-
-// Version sets the version to be printed to the user. Gets overwritten by "make release" or "make build" with last git commit or tag.
-var Version = "0.1"
+import "code.vikunja.io/api/pkg/cmd"
 
 func main() {
-
-	// Set logger
-	log.InitLogger()
-
-	// Set Engine
-	err := models.SetEngine()
-	if err != nil {
-		log.Log.Fatal(err.Error())
-	}
-
-	// Start the mail daemon
-	mail.StartMailDaemon()
-
-	// Version notification
-	log.Log.Infof("Vikunja version %s", Version)
-
-	// Additional swagger information
-	swagger.SwaggerInfo.Version = Version
-
-	// Start the webserver
-	e := routes.NewEcho()
-	routes.RegisterRoutes(e)
-	// Start server
-	go func() {
-		if err := e.Start(viper.GetString("service.interface")); err != nil {
-			e.Logger.Info("shutting down...")
-		}
-	}()
-
-	// Wait for interrupt signal to gracefully shutdown the server with
-	// a timeout of 10 seconds.
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, os.Interrupt)
-	<-quit
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	log.Log.Infof("Shutting down...")
-	if err := e.Shutdown(ctx); err != nil {
-		e.Logger.Fatal(err)
-	}
+	cmd.Execute()
 }
