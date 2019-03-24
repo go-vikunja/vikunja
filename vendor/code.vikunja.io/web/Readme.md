@@ -8,8 +8,8 @@ handler functions to parse the request data and call the implemented functions t
 After I implemented some functions, I've decided to save me a lot of hassle and put most of that "parse the request and call a 
 processing function"-logic to a general interface to facilitate development and not having to have a lot of similar code all over the place.
 
-This webhandler was built to be used in a REST-API, it takes and returns JSON, but can also be used in combination with own other handler
-implementations thus leading to much flexibility.
+This webhandler was built to be used in a REST-API, it takes and returns JSON, but can also be used in combination with own 
+other handler implementations, enabling a lot of flexibility while develeoping.
 
 ## Features
 
@@ -32,15 +32,16 @@ implementations thus leading to much flexibility.
 * [Preprocessing](#preprocessing)
   * [Pagination](#pagination)
   * [Search](#search)
-* [Standard web handler](#standard-web-handler)
+* [Standard web handler](#defining-routes-using-the-standard-web-handler)
 * [Errors](#errors)
 * [URL param binder](#how-the-url-param-binder-works)
 
 ### TODOs
 
+* [ ] Improve docs/Merge with the ones of Vikunja
 * [ ] Description of web.HTTPError
 * [ ] Rights methods should return errors (I know, this will break a lot of existing stuff)
-* [ ] Improve docs
+* [ ] optional Before- and after-{load|update|create} methods which do some preprocessing/after processing like making human-readable names from automatically up counting consts
 
 ## Installation
 
@@ -72,11 +73,12 @@ func (l *List) ReadOne() (err error) {
 ```
 
 In that case, it takes the `ID` saved in the struct instance, gets the full list object and fills the original object with it.
-(See parambinder to understand where that `ID` is coming from).
+(See [parambinder](#how-the-url-param-binder-works) to understand where that `ID` is coming from in that specific case).
 
-All functions should behave like this, if they create or update something, they should return the created/updated struct
-instance. The only exception is `ReadAll()` which returns an interface. Usually this is an array, because, well you cannot
-make an array of a set type (If you know a way to do this, don't hesitate to drop me a message).
+All functions should behave like this, if they create or update something, the struct instance they are called on should 
+contain the created/updated struct instance. The only exception is `ReadAll()` which returns an interface. 
+Usually this method returns a slice of results because you cannot make an array of a set type (If you know a 
+way to do this, don't hesitate to [drop me a message](https://vikunja.io/en/contact/)).
 
 ## Rights
 
@@ -113,52 +115,43 @@ To define the thing which gets the appropriate auth object, you need to call a m
 
 #### Logging
 
-You can provide your own instance of `logger.Logger` (using [this package](https://github.com/op/go-logging)) to the handler.
+You can provide your own instance of `logger.Logger` (using [go-logging](https://github.com/op/go-logging)) to the handler.
 It will use this instance to log errors which are not better specified or things like users trying to do something they're
 not allowed to do and so on.
 
 #### Full Example
 
 ```go
-e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
-    return func(c echo.Context) error {
-        c.Set("AuthProvider", &web.Auths{
-            AuthObject: func(echo.Context) (web.Auth, error) {
-                return models.GetCurrentUser(c) // Your functions
-            },
-        })
-        c.Set("LoggingProvider", &log.Log)
-        return next(c)
-    }
+handler.SetAuthProvider(&web.Auths{
+    AuthObject: func(echo.Context) (web.Auth, error) {
+        return models.GetCurrentUser(c) // Your functions
+    },
 })
+handler.SetLoggingProvider(&log.Log)
 ```
 
 ## Preprocessing
 
 ### Pagination
 
-When using the `ReadAll`-method, the third parameter contains the requested page. Your function should return only the number of results
-corresponding to that page. The number of items per page is definied in the config as `service.pagecount` (Get it with `viper.GetInt("service.pagecount")`).
+When using the `ReadAll`-method, the third parameter contains the requested page. 
+Your function should return only the number of results corresponding to that page. 
+The number of items per page should be set by your application elewhere, most likely in its config.
 
-These can be calculated in combination with a helper function, `getLimitFromPageIndex(pageIndex)` which returns
-SQL-needed `limit` (max-length) and `offset` parameters. You can feed this function directly into xorm's `Limit`-Function like so:
-
-```go
-lists := []List{}
-err := x.Limit(getLimitFromPageIndex(pageIndex)).Find(&lists)
-```
+The number of items to return is then usually calculated with some method like `page_number * items_per_page`.
 
 ### Search
 
-When using the `ReadAll`-method, the first parameter is a search term which should be used to search items of your struct. You define the critera.
+When using the `ReadAll`-method, the first parameter is a search term which should be used to search items of your struct. 
+You define the critera inside of that function.
 
-Users can then pass the `?s=something` parameter to the url to search.
+Users can then pass the `?s=something` parameter to the url to search, thats something you should put in your api documentation.
 
-As the logic for "give me everything" and "give me everything where the name contains 'something'" is mostly the same, we made the decision to design 
-the function like this, in order to keep the places with mostly the same logic as few as possible. Also just adding `?s=query` to the url one already 
-knows and uses is a lot more convenient.
+As the logic for "give me everything" and "give me everything where the name contains 'something'" is mostly the same, we made 
+the decision to design the function like this, in order to keep the places with mostly the same logic as few as possible. 
+Also just adding `?s=query` to the url one already knows and uses is a lot more convenient.
 
-## Standard web handler
+## Defining routes using the standard web handler
 
 You can define routes for the standard web handler like so:
 
@@ -166,15 +159,15 @@ You can define routes for the standard web handler like so:
 
 ```go
 listHandler := &crud.WebHandler{
-		EmptyStruct: func() crud.CObject {
-			return &models.List{}
-		},
-	}
-	a.GET("/lists", listHandler.ReadAllWeb)
-	a.GET("/lists/:list", listHandler.ReadOneWeb)
-	a.POST("/lists/:list", listHandler.UpdateWeb)
-	a.DELETE("/lists/:list", listHandler.DeleteWeb)
-	a.PUT("/namespaces/:namespace/lists", listHandler.CreateWeb)
+    EmptyStruct: func() crud.CObject {
+        return &models.List{}
+    },
+}
+a.GET("/lists", listHandler.ReadAllWeb)
+a.GET("/lists/:list", listHandler.ReadOneWeb)
+a.POST("/lists/:list", listHandler.UpdateWeb)
+a.DELETE("/lists/:list", listHandler.DeleteWeb)
+a.PUT("/namespaces/:namespace/lists", listHandler.CreateWeb)
 ```
 
 The handler will take care of everything like parsing the request, checking rights, pretty-print errors and return appropriate responses.
@@ -198,10 +191,12 @@ type HTTPError struct {
 }
 ```
 
+You can learn more about how exactly custom error types are created in the [vikunja docs](https://git.kolaente.de/vikunja/api/src/branch/master/docs/practical-instructions/errors.md).
+
 ## How the url param binder works
 
 The binder binds all values inside the url to their respective fields in a struct. Those fields need to have a tag
-"param" with the name of the url placeholder which must be the same as in routes.
+`param` with the name of the url placeholder which must be the same as in routes.
 
 Whenever one of the standard CRUD methods is invoked, this binder is called, which enables one handler method
 to handle all kinds of different urls with different parameters.

@@ -18,7 +18,7 @@ module code.vikunja.io/api
 
 require (
 	cloud.google.com/go v0.34.0 // indirect
-	code.vikunja.io/web v0.0.0-20190123142349-c30ef6073334
+	code.vikunja.io/web v0.0.0-20190324080741-7bd881d9892a
 	github.com/BurntSushi/toml v0.3.1 // indirect
 	github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc
 	github.com/asaskevich/govalidator v0.0.0-20180720115003-f9ffefc3facf
@@ -42,8 +42,10 @@ require (
 	github.com/karalabe/xgo v0.0.0-20181007145344-72da7d1d3970
 	github.com/kisielk/gotool v1.0.0 // indirect
 	github.com/kr/pretty v0.1.0 // indirect
-	github.com/labstack/echo v3.3.5+incompatible
+	github.com/labstack/echo v3.3.10+incompatible
 	github.com/labstack/gommon v0.2.8
+	github.com/mattn/go-colorable v0.1.1 // indirect
+	github.com/mattn/go-isatty v0.0.7 // indirect
 	github.com/mattn/go-oci8 v0.0.0-20181130072307-052f5d97b9b6 // indirect
 	github.com/mattn/go-sqlite3 v1.10.0
 	github.com/mitchellh/mapstructure v1.1.2 // indirect
@@ -53,14 +55,16 @@ require (
 	github.com/pkg/errors v0.8.0 // indirect
 	github.com/prometheus/client_golang v0.9.2
 	github.com/spf13/viper v1.2.0
+	github.com/stretchr/objx v0.1.1 // indirect
 	github.com/stretchr/testify v1.3.0
 	github.com/swaggo/swag v1.4.1-0.20181210033626-0e12fd5eb026
 	github.com/urfave/cli v1.20.0 // indirect
+	github.com/valyala/fasttemplate v1.0.1 // indirect
 	github.com/ziutek/mymysql v1.5.4 // indirect
-	golang.org/x/crypto v0.0.0-20190123085648-057139ce5d2b
+	golang.org/x/crypto v0.0.0-20190320223903-b7391e95e576
 	golang.org/x/lint v0.0.0-20181026193005-c67002cb31c3
 	golang.org/x/net v0.0.0-20181217023233-e147a9138326 // indirect
-	golang.org/x/sys v0.0.0-20190123074212-c6b37f3e9285 // indirect
+	golang.org/x/sys v0.0.0-20190322080309-f49334f85ddc // indirect
 	golang.org/x/tools v0.0.0-20181026183834-f60e5f99f081 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect

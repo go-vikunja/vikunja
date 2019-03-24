@@ -16,7 +16,6 @@
 package handler
 
 import (
-	"code.vikunja.io/web"
 	"github.com/labstack/echo"
 	"net/http"
 )
@@ -37,15 +36,14 @@ func (c *WebHandler) CreateWeb(ctx echo.Context) error {
 	}
 
 	// Get the user to pass for later checks
-	authprovider := ctx.Get("AuthProvider").(*web.Auths)
-	currentAuth, err := authprovider.AuthObject(ctx)
+	currentAuth, err := config.AuthProvider.AuthObject(ctx)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Could not determine the current user.")
 	}
 
 	// Check rights
 	if !currentStruct.CanCreate(currentAuth) {
-		getLogger(ctx).Noticef("Tried to create while not having the rights for it (User: %v)", currentAuth)
+		config.LoggingProvider.Noticef("Tried to create while not having the rights for it (User: %v)", currentAuth)
 		return echo.NewHTTPError(http.StatusForbidden)
 	}
 

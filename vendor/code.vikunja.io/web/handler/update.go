@@ -16,7 +16,6 @@
 package handler
 
 import (
-	"code.vikunja.io/web"
 	"github.com/labstack/echo"
 	"net/http"
 )
@@ -38,13 +37,12 @@ func (c *WebHandler) UpdateWeb(ctx echo.Context) error {
 	}
 
 	// Check if the user has the right to do that
-	authprovider := ctx.Get("AuthProvider").(*web.Auths)
-	currentAuth, err := authprovider.AuthObject(ctx)
+	currentAuth, err := config.AuthProvider.AuthObject(ctx)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Could not determine the current user.")
 	}
 	if !currentStruct.CanUpdate(currentAuth) {
-		getLogger(ctx).Noticef("Tried to update while not having the rights for it (User: %v)", currentAuth)
+		config.LoggingProvider.Noticef("Tried to create while not having the rights for it (User: %v)", currentAuth)
 		return echo.NewHTTPError(http.StatusForbidden)
 	}
 

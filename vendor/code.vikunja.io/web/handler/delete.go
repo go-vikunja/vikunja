@@ -16,7 +16,6 @@
 package handler
 
 import (
-	"code.vikunja.io/web"
 	"github.com/labstack/echo"
 	"net/http"
 )
@@ -37,13 +36,12 @@ func (c *WebHandler) DeleteWeb(ctx echo.Context) error {
 	}
 
 	// Check if the user has the right to delete
-	authprovider := ctx.Get("AuthProvider").(*web.Auths)
-	currentAuth, err := authprovider.AuthObject(ctx)
+	currentAuth, err := config.AuthProvider.AuthObject(ctx)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
 	if !currentStruct.CanDelete(currentAuth) {
-		getLogger(ctx).Noticef("Tried to delete while not having the rights for it (User: %v)", currentAuth)
+		config.LoggingProvider.Noticef("Tried to create while not having the rights for it (User: %v)", currentAuth)
 		return echo.NewHTTPError(http.StatusForbidden)
 	}
 

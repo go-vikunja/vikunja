@@ -16,7 +16,6 @@
 package handler
 
 import (
-	"code.vikunja.io/web"
 	"github.com/labstack/echo"
 	"net/http"
 	"strconv"
@@ -27,8 +26,7 @@ func (c *WebHandler) ReadAllWeb(ctx echo.Context) error {
 	// Get our model
 	currentStruct := c.EmptyStruct()
 
-	authprovider := ctx.Get("AuthProvider").(*web.Auths)
-	currentAuth, err := authprovider.AuthObject(ctx)
+	currentAuth, err := config.AuthProvider.AuthObject(ctx)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Could not determine the current user.")
 	}
@@ -45,7 +43,7 @@ func (c *WebHandler) ReadAllWeb(ctx echo.Context) error {
 	}
 	pageNumber, err := strconv.Atoi(page)
 	if err != nil {
-		getLogger(ctx).Error(err.Error())
+		config.LoggingProvider.Error(err.Error())
 		return echo.NewHTTPError(http.StatusBadRequest, "Bad page requested.")
 	}
 	if pageNumber < 0 {

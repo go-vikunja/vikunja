@@ -16,7 +16,6 @@
 package handler
 
 import (
-	"code.vikunja.io/web"
 	"github.com/labstack/echo"
 	"net/http"
 )
@@ -39,13 +38,12 @@ func (c *WebHandler) ReadOneWeb(ctx echo.Context) error {
 
 	// Check rights
 	// We can only check the rights on a full object, which is why we need to check it afterwards
-	authprovider := ctx.Get("AuthProvider").(*web.Auths)
-	currentAuth, err := authprovider.AuthObject(ctx)
+	currentAuth, err := config.AuthProvider.AuthObject(ctx)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Could not determine the current user.")
 	}
 	if !currentStruct.CanRead(currentAuth) {
-		getLogger(ctx).Noticef("Tried to read one while not having the rights for it (User: %v)", currentAuth)
+		config.LoggingProvider.Noticef("Tried to create while not having the rights for it (User: %v)", currentAuth)
 		return echo.NewHTTPError(http.StatusForbidden, "You don't have the right to see this")
 	}
 

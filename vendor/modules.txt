@@ -1,4 +1,4 @@
-# code.vikunja.io/web v0.0.0-20190123142349-c30ef6073334
+# code.vikunja.io/web v0.0.0-20190324080741-7bd881d9892a
 code.vikunja.io/web
 code.vikunja.io/web/handler
 # github.com/BurntSushi/toml v0.3.1
@@ -79,7 +79,7 @@ github.com/jgautheron/goconst/cmd/goconst
 github.com/jgautheron/goconst
 # github.com/karalabe/xgo v0.0.0-20181007145344-72da7d1d3970
 github.com/karalabe/xgo
-# github.com/labstack/echo v3.3.5+incompatible
+# github.com/labstack/echo v3.3.10+incompatible
 github.com/labstack/echo
 github.com/labstack/echo/middleware
 # github.com/labstack/gommon v0.2.8
@@ -93,9 +93,9 @@ github.com/magiconair/properties
 github.com/mailru/easyjson/jlexer
 github.com/mailru/easyjson/jwriter
 github.com/mailru/easyjson/buffer
-# github.com/mattn/go-colorable v0.0.9
+# github.com/mattn/go-colorable v0.1.1
 github.com/mattn/go-colorable
-# github.com/mattn/go-isatty v0.0.4
+# github.com/mattn/go-isatty v0.0.7
 github.com/mattn/go-isatty
 # github.com/mattn/go-sqlite3 v1.10.0
 github.com/mattn/go-sqlite3
@@ -148,9 +148,9 @@ github.com/swaggo/swag/gen
 github.com/urfave/cli
 # github.com/valyala/bytebufferpool v1.0.0
 github.com/valyala/bytebufferpool
-# github.com/valyala/fasttemplate v0.0.0-20170224212429-dcecefd839c4
+# github.com/valyala/fasttemplate v1.0.1
 github.com/valyala/fasttemplate
-# golang.org/x/crypto v0.0.0-20190123085648-057139ce5d2b
+# golang.org/x/crypto v0.0.0-20190320223903-b7391e95e576
 golang.org/x/crypto/bcrypt
 golang.org/x/crypto/acme/autocert
 golang.org/x/crypto/blowfish
@@ -160,7 +160,7 @@ golang.org/x/lint/golint
 golang.org/x/lint
 # golang.org/x/net v0.0.0-20181217023233-e147a9138326
 golang.org/x/net/idna
-# golang.org/x/sys v0.0.0-20190123074212-c6b37f3e9285
+# golang.org/x/sys v0.0.0-20190322080309-f49334f85ddc
 golang.org/x/sys/unix
 # golang.org/x/text v0.3.0
 golang.org/x/text/transform

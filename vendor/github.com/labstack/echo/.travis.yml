@@ -1,12 +1,14 @@
 language: go
 go:
-  - 1.9.x
-  - 1.10.x
+  - 1.11.x
   - tip
+env:
+  - GO111MODULE=on
 install:
-  - make dependency
+  - go get -v golang.org/x/lint/golint
 script:
-  - make test
+  - golint -set_exit_status ./...
+  - go test -race -coverprofile=coverage.txt -covermode=atomic ./...
 after_success:
   - bash <(curl -s https://codecov.io/bash)
 matrix:

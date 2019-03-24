@@ -18,7 +18,6 @@ package handler
 import (
 	"code.vikunja.io/web"
 	"github.com/labstack/echo"
-	"github.com/op/go-logging"
 	"net/http"
 )
 
@@ -40,11 +39,6 @@ func HandleHTTPError(err error, ctx echo.Context) *echo.HTTPError {
 		errDetails := a.HTTPError()
 		return echo.NewHTTPError(errDetails.HTTPCode, errDetails)
 	}
-	getLogger(ctx).Error(err.Error())
+	config.LoggingProvider.Error(err.Error())
 	return echo.NewHTTPError(http.StatusInternalServerError)
-}
-
-// Helper function to get the logger
-func getLogger(ctx echo.Context) *logging.Logger {
-	return ctx.Get("LoggingProvider").(*logging.Logger)
 }

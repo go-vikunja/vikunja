@@ -105,6 +105,14 @@ func NewEcho() *echo.Echo {
 	// Validation
 	e.Validator = &CustomValidator{}
 
+	// Handler config
+	handler.SetAuthProvider(&web.Auths{
+		AuthObject: func(c echo.Context) (web.Auth, error) {
+			return models.GetCurrentUser(c)
+		},
+	})
+	handler.SetLoggingProvider(log.Log)
+
 	return e
 }
 
@@ -188,19 +196,6 @@ func RegisterRoutes(e *echo.Echo) {
 	// ===== Routes with Authetification =====
 	// Authetification
 	a.Use(middleware.JWT([]byte(viper.GetString("service.JWTSecret"))))
-
-	// Put the authprovider in the context to be able to use it later
-	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			c.Set("AuthProvider", &web.Auths{
-				AuthObject: func(echo.Context) (web.Auth, error) {
-					return models.GetCurrentUser(c)
-				},
-			})
-			c.Set("LoggingProvider", log.Log)
-			return next(c)
-		}
-	})
 
 	// Middleware to collect metrics
 	if viper.GetBool("service.enablemetrics") {
