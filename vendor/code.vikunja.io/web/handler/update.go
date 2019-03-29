@@ -45,8 +45,8 @@ func (c *WebHandler) UpdateWeb(ctx echo.Context) error {
 	if err != nil {
 		return HandleHTTPError(err, ctx)
 	}
-	if canUpdate {
-		config.LoggingProvider.Noticef("Tried to create while not having the rights for it (User: %v)", currentAuth)
+	if !canUpdate {
+		config.LoggingProvider.Noticef("Tried to update while not having the rights for it (User: %v)", currentAuth)
 		return echo.NewHTTPError(http.StatusForbidden)
 	}
 

@@ -18,7 +18,7 @@ module code.vikunja.io/api
 
 require (
 	cloud.google.com/go v0.34.0 // indirect
-	code.vikunja.io/web v0.0.0-20190324123058-62b466dd1311
+	code.vikunja.io/web v0.0.0-20190329170935-7dc1f4191c49
 	github.com/BurntSushi/toml v0.3.1 // indirect
 	github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc
 	github.com/asaskevich/govalidator v0.0.0-20180720115003-f9ffefc3facf
@@ -64,10 +64,10 @@ require (
 	github.com/urfave/cli v1.20.0 // indirect
 	github.com/valyala/fasttemplate v1.0.1 // indirect
 	github.com/ziutek/mymysql v1.5.4 // indirect
-	golang.org/x/crypto v0.0.0-20190320223903-b7391e95e576
+	golang.org/x/crypto v0.0.0-20190325154230-a5d413f7728c
 	golang.org/x/lint v0.0.0-20181026193005-c67002cb31c3
 	golang.org/x/net v0.0.0-20181217023233-e147a9138326 // indirect
-	golang.org/x/sys v0.0.0-20190322080309-f49334f85ddc // indirect
+	golang.org/x/sys v0.0.0-20190329044733-9eb1bfa1ce65 // indirect
 	golang.org/x/tools v0.0.0-20181026183834-f60e5f99f081 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect

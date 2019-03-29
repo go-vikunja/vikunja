@@ -39,8 +39,8 @@ func (c *WebHandler) ReadOneWeb(ctx echo.Context) error {
 	if err != nil {
 		return HandleHTTPError(err, ctx)
 	}
-	if canRead {
-		config.LoggingProvider.Noticef("Tried to create while not having the rights for it (User: %v)", currentAuth)
+	if !canRead {
+		config.LoggingProvider.Noticef("Tried to read while not having the rights for it (User: %v)", currentAuth)
 		return echo.NewHTTPError(http.StatusForbidden, "You don't have the right to see this")
 	}
 
