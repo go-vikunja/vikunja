@@ -44,16 +44,16 @@ type User struct {
 	Username string `xorm:"varchar(250) not null unique" json:"username" valid:"length(3|250)" minLength:"3" maxLength:"250"`
 	Password string `xorm:"varchar(250) not null" json:"-"`
 	// The user's email address.
-	Email    string `xorm:"varchar(250)" json:"email" valid:"email,length(0|250)" maxLength:"250"`
-	IsActive bool   `json:"-"`
+	Email    string `xorm:"varchar(250) null" json:"email" valid:"email,length(0|250)" maxLength:"250"`
+	IsActive bool   `xorm:"null" json:"-"`
 
-	PasswordResetToken string `xorm:"varchar(450)" json:"-"`
-	EmailConfirmToken  string `xorm:"varchar(450)" json:"-"`
+	PasswordResetToken string `xorm:"varchar(450) null" json:"-"`
+	EmailConfirmToken  string `xorm:"varchar(450) null" json:"-"`
 
 	// A unix timestamp when this task was created. You cannot change this value.
-	Created int64 `xorm:"created" json:"created"`
+	Created int64 `xorm:"created not null" json:"created"`
 	// A unix timestamp when this task was last updated. You cannot change this value.
-	Updated int64 `xorm:"updated" json:"updated"`
+	Updated int64 `xorm:"updated not null" json:"updated"`
 
 	web.Auth `xorm:"-" json:"-"`
 }

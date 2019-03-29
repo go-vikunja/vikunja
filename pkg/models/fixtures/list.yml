@@ -4,27 +4,37 @@
   description: Lorem Ipsum
   owner_id: 1
   namespace_id: 1
+  updated: 0
+  created: 0
 -
   id: 2
   title: Test2
   description: Lorem Ipsum
   owner_id: 3
   namespace_id: 1
+  updated: 0
+  created: 0
 -
   id: 3
   title: Test3
   description: Lorem Ipsum
   owner_id: 3
   namespace_id: 2
+  updated: 0
+  created: 0
 -
   id: 4
   title: Test4
   description: Lorem Ipsum
   owner_id: 3
   namespace_id: 3
+  updated: 0
+  created: 0
 -
   id: 5
   title: Test5
   description: Lorem Ipsum
   owner_id: 5
   namespace_id: 5
+  updated: 0
+  created: 0

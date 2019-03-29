@@ -20,6 +20,7 @@ In general, this api repo has the following structure:
   * `log`
   * `mail`
   * `metrics`
+  * `migration`
   * `models`
   * `red`
   * `routes`
@@ -70,6 +71,13 @@ This package handles all mail sending. To learn how to send a mail, see [sending
 
 This package handles all metrics which are exposed to the prometheus endpoint.
 To learn how it works and how to add new metrics, take a look at [how metrics work]({{< ref "../practical-instructions/metrics.md">}}).
+
+### migration
+
+This package handles all migrations.
+All migrations are stored and executed here.
+
+To learn more, take a look at the [migrations docs]({{< ref "../development/migrations.md">}}).
 
 ### models
 

@@ -17,6 +17,7 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/config"
 	_ "code.vikunja.io/api/pkg/config" // To trigger its init() which initializes the config
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/mail"
@@ -51,11 +52,22 @@ func MainTest(m *testing.M, pathToRoot string) {
 
 func createTestEngine(fixturesDir string) error {
 	var err error
+	var fixturesHelper testfixtures.Helper = &testfixtures.SQLite{}
 	// If set, use the config we provided instead of normal
 	if os.Getenv("VIKUNJA_TESTS_USE_CONFIG") == "1" {
+		config.InitConfig()
 		err = SetEngine()
 		if err != nil {
 			return err
+		}
+
+		err = x.Sync2(GetTables()...)
+		if err != nil {
+			return err
+		}
+
+		if viper.GetString("database.type") == "mysql" {
+			fixturesHelper = &testfixtures.MySQL{}
 		}
 	} else {
 		x, err = xorm.NewEngine("sqlite3", "file::memory:?cache=shared")
@@ -66,7 +78,7 @@ func createTestEngine(fixturesDir string) error {
 		x.SetMapper(core.GonicMapper{})
 
 		// Sync dat shit
-		if err := x.StoreEngine("InnoDB").Sync2(tables...); err != nil {
+		if err := x.Sync2(GetTables()...); err != nil {
 			return fmt.Errorf("sync database struct error: %v", err)
 		}
 
@@ -74,13 +86,6 @@ func createTestEngine(fixturesDir string) error {
 		if os.Getenv("UNIT_TESTS_VERBOSE") == "1" {
 			x.ShowSQL(true)
 		}
-	}
-
-	var fixturesHelper testfixtures.Helper
-	if viper.GetString("database.type") == "mysql" {
-		fixturesHelper = &testfixtures.MySQL{}
-	} else {
-		fixturesHelper = &testfixtures.SQLite{}
 	}
 
 	return InitFixtures(fixturesHelper, fixturesDir)

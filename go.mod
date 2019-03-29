@@ -31,10 +31,10 @@ require (
 	github.com/go-openapi/swag v0.17.2 // indirect
 	github.com/go-redis/redis v6.14.2+incompatible
 	github.com/go-sql-driver/mysql v1.4.1
-	github.com/go-xorm/builder v0.0.0-20170519032130-c8871c857d25
-	github.com/go-xorm/core v0.5.8
+	github.com/go-xorm/builder v0.3.2
+	github.com/go-xorm/core v0.6.0
 	github.com/go-xorm/tests v0.5.6 // indirect
-	github.com/go-xorm/xorm v0.0.0-20170930012613-29d4a0330a00
+	github.com/go-xorm/xorm v0.7.1
 	github.com/go-xorm/xorm-redis-cache v0.0.0-20180727005610-859b313566b2
 	github.com/gordonklaus/ineffassign v0.0.0-20180909121442-1003c8bd00dc
 	github.com/imdario/mergo v0.3.6
@@ -42,19 +42,19 @@ require (
 	github.com/jgautheron/goconst v0.0.0-20170703170152-9740945f5dcb
 	github.com/karalabe/xgo v0.0.0-20181007145344-72da7d1d3970
 	github.com/kisielk/gotool v1.0.0 // indirect
-	github.com/kr/pretty v0.1.0 // indirect
 	github.com/labstack/echo v3.3.10+incompatible
 	github.com/labstack/gommon v0.2.8
 	github.com/mattn/go-colorable v0.1.1 // indirect
 	github.com/mattn/go-isatty v0.0.7 // indirect
 	github.com/mattn/go-oci8 v0.0.0-20181130072307-052f5d97b9b6 // indirect
+	github.com/mattn/go-runewidth v0.0.4 // indirect
 	github.com/mattn/go-sqlite3 v1.10.0
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/mapstructure v1.1.2 // indirect
+	github.com/olekukonko/tablewriter v0.0.1
 	github.com/onsi/ginkgo v1.7.0 // indirect
 	github.com/onsi/gomega v1.4.3 // indirect
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
-	github.com/pkg/errors v0.8.0 // indirect
 	github.com/prometheus/client_golang v0.9.2
 	github.com/spf13/cobra v0.0.3
 	github.com/spf13/viper v1.2.0
@@ -63,16 +63,15 @@ require (
 	github.com/swaggo/swag v1.4.1-0.20181210033626-0e12fd5eb026
 	github.com/urfave/cli v1.20.0 // indirect
 	github.com/valyala/fasttemplate v1.0.1 // indirect
-	github.com/ziutek/mymysql v1.5.4 // indirect
 	golang.org/x/crypto v0.0.0-20190325154230-a5d413f7728c
 	golang.org/x/lint v0.0.0-20181026193005-c67002cb31c3
 	golang.org/x/net v0.0.0-20181217023233-e147a9138326 // indirect
 	golang.org/x/sys v0.0.0-20190329044733-9eb1bfa1ce65 // indirect
 	golang.org/x/tools v0.0.0-20181026183834-f60e5f99f081 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
-	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 	gopkg.in/testfixtures.v2 v2.5.3
 	gopkg.in/yaml.v2 v2.2.2 // indirect
 	honnef.co/go/tools v0.0.0-20190215041234-466a0476246c
+	src.techknowlogick.com/xormigrate v0.0.0-20190321151057-24497c23c09c
 )

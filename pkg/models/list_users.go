@@ -27,12 +27,12 @@ type ListUser struct {
 	// The list id.
 	ListID int64 `xorm:"int(11) not null INDEX" json:"-" param:"list"`
 	// The right this user has. 0 = Read only, 1 = Read & Write, 2 = Admin. See the docs for more details.
-	Right Right `xorm:"int(11) INDEX" json:"right" valid:"length(0|2)" maximum:"2" default:"0"`
+	Right Right `xorm:"int(11) INDEX null" json:"right" valid:"length(0|2)" maximum:"2" default:"0"`
 
 	// A unix timestamp when this relation was created. You cannot change this value.
-	Created int64 `xorm:"created" json:"created"`
+	Created int64 `xorm:"created not null" json:"created"`
 	// A unix timestamp when this relation was last updated. You cannot change this value.
-	Updated int64 `xorm:"updated" json:"updated"`
+	Updated int64 `xorm:"updated not null" json:"updated"`
 
 	web.CRUDable `xorm:"-" json:"-"`
 	web.Rights   `xorm:"-" json:"-"`

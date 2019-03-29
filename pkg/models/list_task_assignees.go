@@ -25,7 +25,7 @@ type ListTaskAssginee struct {
 	ID      int64 `xorm:"int(11) autoincr not null unique pk" json:"-"`
 	TaskID  int64 `xorm:"int(11) INDEX not null" json:"-" param:"listtask"`
 	UserID  int64 `xorm:"int(11) INDEX not null" json:"user_id" param:"user"`
-	Created int64 `xorm:"created"`
+	Created int64 `xorm:"created not null"`
 
 	web.CRUDable `xorm:"-" json:"-"`
 	web.Rights   `xorm:"-" json:"-"`

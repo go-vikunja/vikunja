@@ -25,11 +25,11 @@ type List struct {
 	// The unique, numeric id of this list.
 	ID int64 `xorm:"int(11) autoincr not null unique pk" json:"id" param:"list"`
 	// The title of the list. You'll see this in the namespace overview.
-	Title string `xorm:"varchar(250)" json:"title" valid:"required,runelength(3|250)" minLength:"3" maxLength:"250"`
+	Title string `xorm:"varchar(250) not null" json:"title" valid:"required,runelength(3|250)" minLength:"3" maxLength:"250"`
 	// The description of the list.
-	Description string `xorm:"varchar(1000)" json:"description" valid:"runelength(0|1000)" maxLength:"1000"`
-	OwnerID     int64  `xorm:"int(11) INDEX" json:"-"`
-	NamespaceID int64  `xorm:"int(11) INDEX" json:"-" param:"namespace"`
+	Description string `xorm:"varchar(1000) null" json:"description" valid:"runelength(0|1000)" maxLength:"1000"`
+	OwnerID     int64  `xorm:"int(11) INDEX not null" json:"-"`
+	NamespaceID int64  `xorm:"int(11) INDEX not null" json:"-" param:"namespace"`
 
 	// The user who created this list.
 	Owner User `xorm:"-" json:"owner" valid:"-"`
@@ -37,9 +37,9 @@ type List struct {
 	Tasks []*ListTask `xorm:"-" json:"tasks"`
 
 	// A unix timestamp when this list was created. You cannot change this value.
-	Created int64 `xorm:"created" json:"created"`
+	Created int64 `xorm:"created not null" json:"created"`
 	// A unix timestamp when this list was last updated. You cannot change this value.
-	Updated int64 `xorm:"updated" json:"updated"`
+	Updated int64 `xorm:"updated not null" json:"updated"`
 
 	web.CRUDable `xorm:"-" json:"-"`
 	web.Rights   `xorm:"-" json:"-"`

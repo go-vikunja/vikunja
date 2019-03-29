@@ -1,6 +1,10 @@
 - id: 1
   team_id: 1
   list_id: 3
+  updated: 0
+  created: 0
 - id: 2
   team_id: 2
   list_id: 3
+  updated: 0
+  created: 0

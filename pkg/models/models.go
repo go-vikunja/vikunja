@@ -17,11 +17,10 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
 	"encoding/gob"
-	"fmt"
 	_ "github.com/go-sql-driver/mysql" // Because.
-	"github.com/go-xorm/core"
 	"github.com/go-xorm/xorm"
 	xrc "github.com/go-xorm/xorm-redis-cache"
 	_ "github.com/mattn/go-sqlite3" // Because.
@@ -30,51 +29,11 @@ import (
 
 var (
 	x *xorm.Engine
-
-	tables            []interface{}
-	tablesWithPointer []interface{}
 )
 
-func getEngine() (*xorm.Engine, error) {
-	// Use Mysql if set
-	if viper.GetString("database.type") == "mysql" {
-		connStr := fmt.Sprintf(
-			"%s:%s@tcp(%s)/%s?charset=utf8&parseTime=true",
-			viper.GetString("database.user"),
-			viper.GetString("database.password"),
-			viper.GetString("database.host"),
-			viper.GetString("database.database"))
-		e, err := xorm.NewEngine("mysql", connStr)
-		e.SetMaxOpenConns(viper.GetInt("database.openconnections"))
-		return e, err
-	}
-
-	// Otherwise use sqlite
-	path := viper.GetString("database.path")
-	if path == "" {
-		path = "./db.db"
-	}
-	return xorm.NewEngine("sqlite3", path)
-}
-
-func init() {
-	tables = append(tables,
-		new(User),
-		new(List),
-		new(ListTask),
-		new(Team),
-		new(TeamMember),
-		new(TeamList),
-		new(TeamNamespace),
-		new(Namespace),
-		new(ListUser),
-		new(NamespaceUser),
-		new(ListTaskAssginee),
-		new(Label),
-		new(LabelTask),
-	)
-
-	tablesWithPointer = append(tables,
+// GetTables returns all structs which are also a table.
+func GetTables() []interface{} {
+	return []interface{}{
 		&User{},
 		&List{},
 		&ListTask{},
@@ -88,17 +47,19 @@ func init() {
 		&ListTaskAssginee{},
 		&Label{},
 		&LabelTask{},
-	)
+	}
 }
 
 // SetEngine sets the xorm.Engine
 func SetEngine() (err error) {
-	x, err = getEngine()
+	x, err = db.CreateDBEngine()
 	if err != nil {
-		return fmt.Errorf("failed to connect to database: %v", err)
+		log.Log.Criticalf("Could not connect to db: %v", err.Error())
+		return
 	}
 
 	// Cache
+	// We have to initialize the cache here to avoid import cycles
 	if viper.GetBool("cache.enabled") {
 		switch viper.GetString("cache.type") {
 		case "memory":
@@ -107,22 +68,11 @@ func SetEngine() (err error) {
 		case "redis":
 			cacher := xrc.NewRedisCacher(viper.GetString("redis.host"), viper.GetString("redis.password"), xrc.DEFAULT_EXPIRATION, x.Logger())
 			x.SetDefaultCacher(cacher)
-			gob.Register(tables)
-			gob.Register(tablesWithPointer) // Need to register tables with pointer as well...
+			gob.Register(GetTables())
 		default:
 			log.Log.Info("Did not find a valid cache type. Caching disabled. Please refer to the docs for poosible cache types.")
 		}
 	}
-
-	x.SetMapper(core.GonicMapper{})
-
-	// Sync dat shit
-	if err = x.StoreEngine("InnoDB").Sync2(tables...); err != nil {
-		return fmt.Errorf("sync database struct error: %v", err)
-	}
-
-	x.ShowSQL(viper.GetString("log.database") != "off")
-	x.SetLogger(xorm.NewSimpleLogger(log.GetLogWriter("database")))
 
 	return nil
 }

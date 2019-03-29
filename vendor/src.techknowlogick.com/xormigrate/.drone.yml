@@ -1,0 +1,38 @@
+kind: pipeline
+name: default
+
+workspace:
+  base: /go
+  path: src/src.techknowlogick.com/xormigrate
+
+steps:
+- name: fetch-and-test
+  image: golang:1.12
+  environment:
+    GO111MODULE: on
+  commands:
+    - go get ./...
+    - go test -v -tags sqlite
+    - go test -v -tags mysql
+    - go test -v -tags postgresql
+    - go test -v -tags sqlserver
+
+services:
+- name: pgsql
+  image: postgres:9.5
+  environment:
+    POSTGRES_DB: test
+    POSTGRES_PASSWORD: postgres
+
+- name: mysql
+  image: mysql:5.7
+  environment:
+    MYSQL_DATABASE: test
+    MYSQL_ALLOW_EMPTY_PASSWORD: yes
+
+- name: mssql
+  image: microsoft/mssql-server-linux:latest
+  environment:
+    ACCEPT_EULA: Y
+    SA_PASSWORD: MwantsaSecurePassword1
+    MSSQL_PID: Standard

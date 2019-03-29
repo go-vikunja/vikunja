@@ -8,15 +8,84 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+	"strings"
 	"time"
 
+	"github.com/go-xorm/builder"
 	"github.com/go-xorm/core"
 )
 
+func (session *Session) genQuerySQL(sqlorArgs ...interface{}) (string, []interface{}, error) {
+	if len(sqlorArgs) > 0 {
+		return convertSQLOrArgs(sqlorArgs...)
+	}
+
+	if session.statement.RawSQL != "" {
+		return session.statement.RawSQL, session.statement.RawParams, nil
+	}
+
+	if len(session.statement.TableName()) <= 0 {
+		return "", nil, ErrTableNotFound
+	}
+
+	var columnStr = session.statement.ColumnStr
+	if len(session.statement.selectStr) > 0 {
+		columnStr = session.statement.selectStr
+	} else {
+		if session.statement.JoinStr == "" {
+			if columnStr == "" {
+				if session.statement.GroupByStr != "" {
+					columnStr = session.engine.quoteColumns(session.statement.GroupByStr)
+				} else {
+					columnStr = session.statement.genColumnStr()
+				}
+			}
+		} else {
+			if columnStr == "" {
+				if session.statement.GroupByStr != "" {
+					columnStr = session.engine.quoteColumns(session.statement.GroupByStr)
+				} else {
+					columnStr = "*"
+				}
+			}
+		}
+		if columnStr == "" {
+			columnStr = "*"
+		}
+	}
+
+	if err := session.statement.processIDParam(); err != nil {
+		return "", nil, err
+	}
+
+	condSQL, condArgs, err := builder.ToSQL(session.statement.cond)
+	if err != nil {
+		return "", nil, err
+	}
+
+	args := append(session.statement.joinArgs, condArgs...)
+	sqlStr, err := session.statement.genSelectSQL(columnStr, condSQL, true, true)
+	if err != nil {
+		return "", nil, err
+	}
+	// for mssql and use limit
+	qs := strings.Count(sqlStr, "?")
+	if len(args)*2 == qs {
+		args = append(args, args...)
+	}
+
+	return sqlStr, args, nil
+}
+
 // Query runs a raw sql and return records as []map[string][]byte
-func (session *Session) Query(sqlStr string, args ...interface{}) ([]map[string][]byte, error) {
+func (session *Session) Query(sqlorArgs ...interface{}) ([]map[string][]byte, error) {
 	if session.isAutoClose {
 		defer session.Close()
+	}
+
+	sqlStr, args, err := session.genQuerySQL(sqlorArgs...)
+	if err != nil {
+		return nil, err
 	}
 
 	return session.queryBytes(sqlStr, args...)
@@ -97,6 +166,34 @@ func row2mapStr(rows *core.Rows, fields []string) (resultsMap map[string]string,
 	return result, nil
 }
 
+func row2sliceStr(rows *core.Rows, fields []string) (results []string, err error) {
+	result := make([]string, 0, len(fields))
+	scanResultContainers := make([]interface{}, len(fields))
+	for i := 0; i < len(fields); i++ {
+		var scanResultContainer interface{}
+		scanResultContainers[i] = &scanResultContainer
+	}
+	if err := rows.Scan(scanResultContainers...); err != nil {
+		return nil, err
+	}
+
+	for i := 0; i < len(fields); i++ {
+		rawValue := reflect.Indirect(reflect.ValueOf(scanResultContainers[i]))
+		// if row is null then as empty string
+		if rawValue.Interface() == nil {
+			result = append(result, "")
+			continue
+		}
+
+		if data, err := value2String(&rawValue); err == nil {
+			result = append(result, data)
+		} else {
+			return nil, err
+		}
+	}
+	return result, nil
+}
+
 func rows2Strings(rows *core.Rows) (resultsSlice []map[string]string, err error) {
 	fields, err := rows.Columns()
 	if err != nil {
@@ -113,10 +210,31 @@ func rows2Strings(rows *core.Rows) (resultsSlice []map[string]string, err error)
 	return resultsSlice, nil
 }
 
+func rows2SliceString(rows *core.Rows) (resultsSlice [][]string, err error) {
+	fields, err := rows.Columns()
+	if err != nil {
+		return nil, err
+	}
+	for rows.Next() {
+		record, err := row2sliceStr(rows, fields)
+		if err != nil {
+			return nil, err
+		}
+		resultsSlice = append(resultsSlice, record)
+	}
+
+	return resultsSlice, nil
+}
+
 // QueryString runs a raw sql and return records as []map[string]string
-func (session *Session) QueryString(sqlStr string, args ...interface{}) ([]map[string]string, error) {
+func (session *Session) QueryString(sqlorArgs ...interface{}) ([]map[string]string, error) {
 	if session.isAutoClose {
 		defer session.Close()
+	}
+
+	sqlStr, args, err := session.genQuerySQL(sqlorArgs...)
+	if err != nil {
+		return nil, err
 	}
 
 	rows, err := session.queryRows(sqlStr, args...)
@@ -126,6 +244,26 @@ func (session *Session) QueryString(sqlStr string, args ...interface{}) ([]map[s
 	defer rows.Close()
 
 	return rows2Strings(rows)
+}
+
+// QuerySliceString runs a raw sql and return records as [][]string
+func (session *Session) QuerySliceString(sqlorArgs ...interface{}) ([][]string, error) {
+	if session.isAutoClose {
+		defer session.Close()
+	}
+
+	sqlStr, args, err := session.genQuerySQL(sqlorArgs...)
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := session.queryRows(sqlStr, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	return rows2SliceString(rows)
 }
 
 func row2mapInterface(rows *core.Rows, fields []string) (resultsMap map[string]interface{}, err error) {
@@ -162,9 +300,14 @@ func rows2Interfaces(rows *core.Rows) (resultsSlice []map[string]interface{}, er
 }
 
 // QueryInterface runs a raw sql and return records as []map[string]interface{}
-func (session *Session) QueryInterface(sqlStr string, args ...interface{}) ([]map[string]interface{}, error) {
+func (session *Session) QueryInterface(sqlorArgs ...interface{}) ([]map[string]interface{}, error) {
 	if session.isAutoClose {
 		defer session.Close()
+	}
+
+	sqlStr, args, err := session.genQuerySQL(sqlorArgs...)
+	if err != nil {
+		return nil, err
 	}
 
 	rows, err := session.queryRows(sqlStr, args...)

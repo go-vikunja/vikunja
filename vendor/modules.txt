@@ -49,11 +49,11 @@ github.com/go-redis/redis/internal/singleflight
 github.com/go-redis/redis/internal/util
 # github.com/go-sql-driver/mysql v1.4.1
 github.com/go-sql-driver/mysql
-# github.com/go-xorm/builder v0.0.0-20170519032130-c8871c857d25
+# github.com/go-xorm/builder v0.3.2
 github.com/go-xorm/builder
-# github.com/go-xorm/core v0.5.8
+# github.com/go-xorm/core v0.6.0
 github.com/go-xorm/core
-# github.com/go-xorm/xorm v0.0.0-20170930012613-29d4a0330a00
+# github.com/go-xorm/xorm v0.7.1
 github.com/go-xorm/xorm
 # github.com/go-xorm/xorm-redis-cache v0.0.0-20180727005610-859b313566b2
 github.com/go-xorm/xorm-redis-cache
@@ -99,12 +99,16 @@ github.com/mailru/easyjson/buffer
 github.com/mattn/go-colorable
 # github.com/mattn/go-isatty v0.0.7
 github.com/mattn/go-isatty
+# github.com/mattn/go-runewidth v0.0.4
+github.com/mattn/go-runewidth
 # github.com/mattn/go-sqlite3 v1.10.0
 github.com/mattn/go-sqlite3
 # github.com/matttproud/golang_protobuf_extensions v1.0.1
 github.com/matttproud/golang_protobuf_extensions/pbutil
 # github.com/mitchellh/mapstructure v1.1.2
 github.com/mitchellh/mapstructure
+# github.com/olekukonko/tablewriter v0.0.1
+github.com/olekukonko/tablewriter
 # github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 github.com/op/go-logging
 # github.com/pelletier/go-toml v1.2.0
@@ -216,3 +220,5 @@ honnef.co/go/tools/ssautil
 honnef.co/go/tools/staticcheck/vrp
 honnef.co/go/tools/callgraph
 honnef.co/go/tools/callgraph/static
+# src.techknowlogick.com/xormigrate v0.0.0-20190321151057-24497c23c09c
+src.techknowlogick.com/xormigrate

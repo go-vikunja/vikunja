@@ -69,10 +69,10 @@ type TeamMember struct {
 	// The id of the member.
 	UserID int64 `xorm:"int(11) not null INDEX" json:"userID" param:"user"`
 	// Whether or not the member is an admin of the team. See the docs for more about what a team admin can do
-	Admin bool `xorm:"tinyint(1) INDEX" json:"admin"`
+	Admin bool `xorm:"tinyint(1) INDEX null" json:"admin"`
 
 	// A unix timestamp when this relation was created. You cannot change this value.
-	Created int64 `xorm:"created" json:"created"`
+	Created int64 `xorm:"created not null" json:"created"`
 
 	web.CRUDable `xorm:"-" json:"-"`
 	web.Rights   `xorm:"-" json:"-"`

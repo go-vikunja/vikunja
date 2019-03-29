@@ -27,18 +27,18 @@ type Label struct {
 	// The title of the lable. You'll see this one on tasks associated with it.
 	Title string `xorm:"varchar(250) not null" json:"title" valid:"runelength(3|250)" minLength:"3" maxLength:"250"`
 	// The label description.
-	Description string `xorm:"varchar(250)" json:"description" valid:"runelength(0|250)" maxLength:"250"`
+	Description string `xorm:"varchar(250) null" json:"description" valid:"runelength(0|250)" maxLength:"250"`
 	// The color this label has
-	HexColor string `xorm:"varchar(6)" json:"hex_color" valid:"runelength(0|6)" maxLength:"6"`
+	HexColor string `xorm:"varchar(6) null" json:"hex_color" valid:"runelength(0|6)" maxLength:"6"`
 
 	CreatedByID int64 `xorm:"int(11) not null" json:"-"`
 	// The user who created this label
 	CreatedBy *User `xorm:"-" json:"created_by"`
 
 	// A unix timestamp when this label was created. You cannot change this value.
-	Created int64 `xorm:"created" json:"created"`
+	Created int64 `xorm:"created not null" json:"created"`
 	// A unix timestamp when this label was last updated. You cannot change this value.
-	Updated int64 `xorm:"updated" json:"updated"`
+	Updated int64 `xorm:"updated not null" json:"updated"`
 
 	web.CRUDable `xorm:"-" json:"-"`
 	web.Rights   `xorm:"-" json:"-"`

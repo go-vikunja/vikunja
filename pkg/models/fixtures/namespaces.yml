@@ -3,13 +3,19 @@
   name: testnamespace
   description: Lorem Ipsum
   owner_id: 1
+  updated: 0
+  created: 0
 -
   id: 2
   name: testnamespace2
   description: Lorem Ipsum
   owner_id: 2
+  updated: 0
+  created: 0
 -
   id: 3
   name: testnamespace3
   description: Lorem Ipsum
   owner_id: 3
+  updated: 0
+  created: 0

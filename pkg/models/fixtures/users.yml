@@ -3,22 +3,30 @@
   username: 'user1'
   password: '1234'
   email: 'user1@example.com'
+  updated: 0
+  created: 0
 -
   id: 2
   username: 'user2'
   password: '1234'
   email: 'user2@example.com'
+  updated: 0
+  created: 0
 -
   id: 3
   username: 'user3'
   password: '1234'
   email: 'user3@example.com'
+  updated: 0
+  created: 0
 -
   id: 4
   username: 'user4'
   password: '1234'
   email: 'user4@example.com'
   email_confirm_token: tiepiQueed8ahc7zeeFe1eveiy4Ein8osooxegiephauph2Ael
+  updated: 0
+  created: 0
 -
   id: 5
   username: 'user5'
@@ -26,3 +34,5 @@
   email: 'user4@example.com'
   email_confirm_token: tiepiQueed8ahc7zeeFe1eveiy4Ein8osooxegiephauph2Ael
   is_active: false
+  updated: 0
+  created: 0

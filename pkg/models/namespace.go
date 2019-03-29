@@ -26,18 +26,18 @@ type Namespace struct {
 	// The unique, numeric id of this namespace.
 	ID int64 `xorm:"int(11) autoincr not null unique pk" json:"id" param:"namespace"`
 	// The name of this namespace.
-	Name string `xorm:"varchar(250)" json:"name" valid:"required,runelength(5|250)" minLength:"5" maxLength:"250"`
+	Name string `xorm:"varchar(250) not null" json:"name" valid:"required,runelength(5|250)" minLength:"5" maxLength:"250"`
 	// The description of the namespace
-	Description string `xorm:"varchar(1000)" json:"description" valid:"runelength(0|250)" maxLength:"250"`
+	Description string `xorm:"varchar(1000) null" json:"description" valid:"runelength(0|250)" maxLength:"250"`
 	OwnerID     int64  `xorm:"int(11) not null INDEX" json:"-"`
 
 	// The user who owns this namespace
 	Owner User `xorm:"-" json:"owner" valid:"-"`
 
 	// A unix timestamp when this namespace was created. You cannot change this value.
-	Created int64 `xorm:"created" json:"created"`
+	Created int64 `xorm:"created not null" json:"created"`
 	// A unix timestamp when this namespace was last updated. You cannot change this value.
-	Updated int64 `xorm:"updated" json:"updated"`
+	Updated int64 `xorm:"updated not null" json:"updated"`
 
 	web.CRUDable `xorm:"-" json:"-"`
 	web.Rights   `xorm:"-" json:"-"`
@@ -189,7 +189,7 @@ func (n *Namespace) ReadAll(search string, a web.Auth, page int) (interface{}, e
 
 	// Get all lists
 	lists := []*List{}
-	err = x.Table(&lists).
+	err = x.
 		In("namespace_id", namespaceids).
 		Find(&lists)
 	if err != nil {

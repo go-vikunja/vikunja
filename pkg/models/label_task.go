@@ -29,7 +29,7 @@ type LabelTask struct {
 	// The label id you want to associate with a task.
 	LabelID int64 `xorm:"int(11) INDEX not null" json:"label_id" param:"label"`
 	// A unix timestamp when this task was created. You cannot change this value.
-	Created int64 `xorm:"created" json:"created"`
+	Created int64 `xorm:"created not null" json:"created"`
 
 	web.CRUDable `xorm:"-" json:"-"`
 	web.Rights   `xorm:"-" json:"-"`

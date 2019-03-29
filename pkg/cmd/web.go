@@ -19,6 +19,7 @@ package cmd
 import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/mail"
+	"code.vikunja.io/api/pkg/migration"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/routes"
 	"code.vikunja.io/api/pkg/swagger"
@@ -42,6 +43,9 @@ var webCmd = &cobra.Command{
 
 		// Set logger
 		log.InitLogger()
+
+		// Run the migrations
+		migration.Migrate(nil)
 
 		// Set Engine
 		err := models.SetEngine()
