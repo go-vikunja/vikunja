@@ -51,6 +51,14 @@ This is where most of the magic happens. Most packages with actual code are loca
 
 This folder holds a simple caldav implementation which is responsible for returning the caldav feature.
 
+### cmd
+
+This package contains all cli-related files and functions.
+
+To learn more about how to add a new command, see [the cli docs]({{< ref "cli.md">}}).
+
+To learn more about how to use this cli, see [the cli usage docs]({{< ref "../usage/cli.md">}}).
+
 ### config
 
 This package configures the config. It sets default values and sets up viper and tells it where to look for config files, 
