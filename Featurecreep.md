@@ -86,6 +86,8 @@ Sorry for some of them being in German, I'll tranlate them at some point.
   * [ ] Namespace teams
   * [ ] Teams
   * [ ] Team member handling
+* [ ] Add a `User.AfterLoad()` which obfuscates the email address
+* [ ] Sometimes `done` from a task is not updated (returns `done: false` but `done:true` is being sent to the server)
 
 ### Docs
 
@@ -191,11 +193,11 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 ### Linters
 
 * [x] goconst
-* [x] Staticcheck -> waiting for mod
+* [x] Staticcheck
 * [x] gocyclo-check
 * [ ] gosec-check -> waiting for mod
-* [x] goconst-check -> waiting for mod
-* [ ] golangci -> docker in drone
+* [x] goconst-check
+* [ ] golangci -> docker in drone, will probably make all other linters obsolete
 
 ### More server settings
 
