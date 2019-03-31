@@ -172,6 +172,8 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [ ] Debian package should have a service file
 * [ ] Downloads should be served via nginx (with theme?), minio should only be used for pushing artifacts.
 * [ ] User struct should have a field for the avatar url (-> gravatar md5 calculated by the backend)
+* [ ] All `ReadAll` methods should return the number of items per page, the number of items on this page, the total pages and the items
+      -> Check if there's a way to do that efficently. Maybe only implementing it in the web handler.
 
 ### Refactor 
 
