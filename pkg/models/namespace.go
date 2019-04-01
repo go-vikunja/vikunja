@@ -18,6 +18,7 @@ package models
 
 import (
 	"code.vikunja.io/web"
+	"github.com/imdario/mergo"
 	"time"
 )
 
@@ -69,13 +70,19 @@ func (n *Namespace) GetSimpleByID() (err error) {
 		return
 	}
 
-	exists, err := x.Get(n)
+	namespaceFromDB := &Namespace{}
+	exists, err := x.Where("id = ?", n.ID).Get(namespaceFromDB)
 	if err != nil {
 		return
 	}
 	if !exists {
 		return ErrNamespaceDoesNotExist{ID: n.ID}
 	}
+	// We don't want to override the provided user struct because this would break updating, so we have to merge it
+	if err := mergo.Merge(namespaceFromDB, n, mergo.WithOverride); err != nil {
+		return err
+	}
+	*n = *namespaceFromDB
 
 	return
 }
@@ -90,10 +97,6 @@ func GetNamespaceByID(id int64) (namespace Namespace, err error) {
 
 	// Get the namespace Owner
 	namespace.Owner, err = GetUserByID(namespace.OwnerID)
-	if err != nil {
-		return
-	}
-
 	return
 }
 
@@ -110,7 +113,8 @@ func GetNamespaceByID(id int64) (namespace Namespace, err error) {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces/{id} [get]
 func (n *Namespace) ReadOne() (err error) {
-	*n, err = GetNamespaceByID(n.ID)
+	// Get the namespace Owner
+	n.Owner, err = GetUserByID(n.OwnerID)
 	return
 }
 

@@ -40,9 +40,6 @@ func (tl *TeamList) ReadAll(search string, a web.Auth, page int) (interface{}, e
 
 	// Check if the user can read the namespace
 	l := &List{ID: tl.ListID}
-	if err := l.GetSimpleByID(); err != nil {
-		return nil, err
-	}
 	canRead, err := l.CanRead(u)
 	if err != nil {
 		return nil, err

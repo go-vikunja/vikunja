@@ -23,49 +23,17 @@ import (
 
 // CanWrite checks if a user has write access to a namespace
 func (n *Namespace) CanWrite(a web.Auth) (bool, error) {
-
-	// Get the namespace and check the right
-	originalNamespace := &Namespace{ID: n.ID}
-	err := originalNamespace.GetSimpleByID()
-	if err != nil {
-		return false, err
-	}
-
-	u := getUserForRights(a)
-	if originalNamespace.isOwner(u) {
-		return true, nil
-	}
-	return originalNamespace.checkRight(u, RightWrite, RightAdmin)
+	return n.checkRight(a, RightWrite, RightAdmin)
 }
 
 // IsAdmin returns true or false if the user is admin on that namespace or not
 func (n *Namespace) IsAdmin(a web.Auth) (bool, error) {
-	originalNamespace := &Namespace{ID: n.ID}
-	err := originalNamespace.GetSimpleByID()
-	if err != nil {
-		return false, err
-	}
-
-	u := getUserForRights(a)
-	if originalNamespace.isOwner(u) {
-		return true, nil
-	}
-	return originalNamespace.checkRight(u, RightAdmin)
+	return n.checkRight(a, RightAdmin)
 }
 
 // CanRead checks if a user has read access to that namespace
 func (n *Namespace) CanRead(a web.Auth) (bool, error) {
-	originalNamespace := &Namespace{ID: n.ID}
-	err := originalNamespace.GetSimpleByID()
-	if err != nil {
-		return false, err
-	}
-
-	u := getUserForRights(a)
-	if originalNamespace.isOwner(u) {
-		return true, nil
-	}
-	return n.checkRight(u, RightRead, RightWrite, RightAdmin)
+	return n.checkRight(a, RightRead, RightWrite, RightAdmin)
 }
 
 // CanUpdate checks if the user can update the namespace
@@ -84,12 +52,18 @@ func (n *Namespace) CanCreate(a web.Auth) (bool, error) {
 	return true, nil
 }
 
-// Small helper function to check if a user owns the namespace
-func (n *Namespace) isOwner(user *User) bool {
-	return n.OwnerID == user.ID
-}
+func (n *Namespace) checkRight(a web.Auth, rights ...Right) (bool, error) {
 
-func (n *Namespace) checkRight(user *User, rights ...Right) (bool, error) {
+	// Get the namespace and check the right
+	err := n.GetSimpleByID()
+	if err != nil {
+		return false, err
+	}
+
+	user := getUserForRights(a)
+	if user.ID == n.OwnerID {
+		return true, nil
+	}
 
 	/*
 		The following loop creates an sql condition like this one:

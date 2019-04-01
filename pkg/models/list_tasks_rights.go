@@ -40,13 +40,15 @@ func (t *ListTask) CanCreate(a web.Auth) (bool, error) {
 }
 
 // CanRead determines if a user can read a task
-func (t *ListTask) CanRead(a web.Auth) (bool, error) {
+func (t *ListTask) CanRead(a web.Auth) (canRead bool, err error) {
+	// Get the task, error out if it doesn't exist
+	*t, err = getTaskByIDSimple(t.ID)
+	if err != nil {
+		return
+	}
+
 	// A user can read a task if it has access to the list
 	list := &List{ID: t.ListID}
-	err := list.GetSimpleByID()
-	if err != nil {
-		return false, err
-	}
 	return list.CanRead(a)
 }
 

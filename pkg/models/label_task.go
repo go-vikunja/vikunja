@@ -109,11 +109,7 @@ func (lt *LabelTask) ReadAll(search string, a web.Auth, page int) (labels interf
 	}
 
 	// Check if the user has the right to see the task
-	task, err := GetListTaskByID(lt.TaskID)
-	if err != nil {
-		return nil, err
-	}
-
+	task := ListTask{ID: lt.TaskID}
 	canRead, err := task.CanRead(a)
 	if err != nil {
 		return nil, err

@@ -46,6 +46,9 @@ func TestList_Create(t *testing.T) {
 
 	// Get the list
 	newdummy := List{ID: dummylist.ID}
+	canRead, err := newdummy.CanRead(&doer)
+	assert.NoError(t, err)
+	assert.True(t, canRead)
 	err = newdummy.ReadOne()
 	assert.NoError(t, err)
 	assert.Equal(t, dummylist.Title, newdummy.Title)

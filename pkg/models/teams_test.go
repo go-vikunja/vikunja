@@ -80,13 +80,15 @@ func TestTeam_Create(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Delete it
-	allowed, _ = dummyteam.CanDelete(&doer)
+	allowed, err = dummyteam.CanDelete(&doer)
+	assert.NoError(t, err)
 	assert.True(t, allowed)
 	err = dummyteam.Delete()
 	assert.NoError(t, err)
 
 	// Try deleting a (now) nonexistant team
-	err = dummyteam.Delete()
+	allowed, err = dummyteam.CanDelete(&doer)
+	assert.False(t, allowed)
 	assert.Error(t, err)
 	assert.True(t, IsErrTeamDoesNotExist(err))
 

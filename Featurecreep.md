@@ -75,17 +75,18 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [x] Panic wenn mailer nicht erreichbar -> Als workaround mailer deaktivierbar machen, bzw keine mails verschicken
 * [x] "unexpected EOF"
 * [x] Beim Login & Password reset gibt die API zurück dass der Nutzer nicht existiert
-* [ ] Re-check rights checks to see if all information which is compared against is properly read from the db and not only based on user input
-  * [ ] Lists
-  * [ ] List users
-  * [ ] List Teams
-  * [ ] Labels
-  * [ ] Tasks
-  * [ ] Namespaces
-  * [ ] Namespace users
-  * [ ] Namespace teams
-  * [ ] Teams
-  * [ ] Team member handling
+* [x] Re-check rights checks to see if all information which is compared against is properly read from the db and not only based on user input
+  * [x] Lists
+  * [x] List users
+  * [x] List Teams
+  * [x] Labels
+  * [x] Tasks
+  * [x] Namespaces
+  * [x] Namespace users
+  * [x] Namespace teams
+  * [x] Teams
+  * [x] Team member handling
+  * [x] Also check `ReadOne()` for unnessecary database operations since the inital query is already done in `CanRead()`
 * [x] Add a `User.AfterLoad()` which obfuscates the email address
 * [ ] Sometimes `done` from a task is not updated (returns `done: false` but `done:true` is being sent to the server)
 

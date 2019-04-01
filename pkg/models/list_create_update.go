@@ -48,6 +48,11 @@ func CreateOrUpdateList(list *List) (err error) {
 		return
 	}
 
+	err = list.GetSimpleByID()
+	if err != nil {
+		return
+	}
+
 	err = list.ReadOne()
 	return
 

@@ -39,10 +39,7 @@ func (nu *NamespaceUser) ReadAll(search string, a web.Auth, page int) (interface
 	}
 
 	// Check if the user has access to the namespace
-	l, err := GetNamespaceByID(nu.NamespaceID)
-	if err != nil {
-		return nil, err
-	}
+	l := Namespace{ID: nu.NamespaceID}
 	canRead, err := l.CanRead(u)
 	if err != nil {
 		return nil, err

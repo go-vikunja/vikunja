@@ -113,11 +113,6 @@ func (l *List) ReadAll(search string, a web.Auth, page int) (interface{}, error)
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{id} [get]
 func (l *List) ReadOne() (err error) {
-	err = l.GetSimpleByID()
-	if err != nil {
-		return err
-	}
-
 	// Get list tasks
 	l.Tasks, err = GetTasksByListID(l.ID)
 	if err != nil {

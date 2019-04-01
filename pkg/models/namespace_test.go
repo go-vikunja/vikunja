@@ -43,12 +43,12 @@ func TestNamespace_Create(t *testing.T) {
 	assert.NoError(t, err)
 
 	// check if it really exists
-	allowed, _ = dummynamespace.CanRead(&doer)
-	assert.True(t, allowed)
-	newOne := Namespace{ID: dummynamespace.ID}
-	err = newOne.ReadOne()
+	allowed, err = dummynamespace.CanRead(&doer)
 	assert.NoError(t, err)
-	assert.Equal(t, newOne.Name, "Test")
+	assert.True(t, allowed)
+	err = dummynamespace.ReadOne()
+	assert.NoError(t, err)
+	assert.Equal(t, dummynamespace.Name, "Test")
 
 	// Try creating one without a name
 	n2 := Namespace{}
@@ -64,11 +64,22 @@ func TestNamespace_Create(t *testing.T) {
 	assert.True(t, IsErrUserDoesNotExist(err))
 
 	// Update it
-	allowed, _ = dummynamespace.CanUpdate(&doer)
+	allowed, err = dummynamespace.CanUpdate(&doer)
+	assert.NoError(t, err)
 	assert.True(t, allowed)
 	dummynamespace.Description = "Dolor sit amet."
 	err = dummynamespace.Update()
 	assert.NoError(t, err)
+
+	// Check if it was updated
+	assert.Equal(t, "Dolor sit amet.", dummynamespace.Description)
+	// Get it and check it again
+	allowed, err = dummynamespace.CanRead(&doer)
+	assert.NoError(t, err)
+	assert.True(t, allowed)
+	err = dummynamespace.ReadOne()
+	assert.NoError(t, err)
+	assert.Equal(t, "Dolor sit amet.", dummynamespace.Description)
 
 	// Try updating one with a nonexistant owner
 	dummynamespace.Owner.ID = 94829838572
@@ -89,7 +100,8 @@ func TestNamespace_Create(t *testing.T) {
 	assert.True(t, IsErrNamespaceDoesNotExist(err))
 
 	// Delete it
-	allowed, _ = dummynamespace.CanDelete(&doer)
+	allowed, err = dummynamespace.CanDelete(&doer)
+	assert.NoError(t, err)
 	assert.True(t, allowed)
 	err = dummynamespace.Delete()
 	assert.NoError(t, err)
@@ -100,7 +112,8 @@ func TestNamespace_Create(t *testing.T) {
 	assert.True(t, IsErrNamespaceDoesNotExist(err))
 
 	// Check if it was successfully deleted
-	err = dummynamespace.ReadOne()
+	allowed, err = dummynamespace.CanRead(&doer)
+	assert.False(t, allowed)
 	assert.Error(t, err)
 	assert.True(t, IsErrNamespaceDoesNotExist(err))
 

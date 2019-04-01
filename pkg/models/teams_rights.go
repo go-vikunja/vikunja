@@ -28,13 +28,7 @@ func (t *Team) CanCreate(a web.Auth) (bool, error) {
 
 // CanUpdate checks if the user can update a team
 func (t *Team) CanUpdate(a web.Auth) (bool, error) {
-	u := getUserForRights(a)
-
-	// Check if the current user is in the team and has admin rights in it
-	return x.Where("team_id = ?", t.ID).
-		And("user_id = ?", u.ID).
-		And("admin = ?", true).
-		Get(&TeamMember{})
+	return t.IsAdmin(a)
 }
 
 // CanDelete checks if a user can delete a team
@@ -45,6 +39,12 @@ func (t *Team) CanDelete(a web.Auth) (bool, error) {
 // IsAdmin returns true when the user is admin of a team
 func (t *Team) IsAdmin(a web.Auth) (bool, error) {
 	u := getUserForRights(a)
+
+	// Check if the team exists to be able to return a proper error message if not
+	_, err := GetTeamByID(t.ID)
+	if err != nil {
+		return false, err
+	}
 
 	return x.Where("team_id = ?", t.ID).
 		And("user_id = ?", u.ID).

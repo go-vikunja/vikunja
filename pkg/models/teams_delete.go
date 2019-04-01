@@ -34,12 +34,6 @@ import (
 // @Router /teams/{id} [delete]
 func (t *Team) Delete() (err error) {
 
-	// Check if the team exists
-	_, err = GetTeamByID(t.ID)
-	if err != nil {
-		return
-	}
-
 	// Delete the team
 	_, err = x.ID(t.ID).Delete(&Team{})
 	if err != nil {
