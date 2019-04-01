@@ -86,7 +86,7 @@ Sorry for some of them being in German, I'll tranlate them at some point.
   * [ ] Namespace teams
   * [ ] Teams
   * [ ] Team member handling
-* [ ] Add a `User.AfterLoad()` which obfuscates the email address
+* [x] Add a `User.AfterLoad()` which obfuscates the email address
 * [ ] Sometimes `done` from a task is not updated (returns `done: false` but `done:true` is being sent to the server)
 
 ### Docs

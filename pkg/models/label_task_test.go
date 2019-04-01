@@ -49,7 +49,6 @@ func TestLabelTask_ReadAll(t *testing.T) {
 							ID:       2,
 							Username: "user2",
 							Password: "1234",
-							Email:    "user2@example.com",
 						},
 					},
 				},

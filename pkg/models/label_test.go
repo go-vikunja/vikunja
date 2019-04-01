@@ -46,7 +46,6 @@ func TestLabel_ReadAll(t *testing.T) {
 		ID:       1,
 		Username: "user1",
 		Password: "1234",
-		Email:    "user1@example.com",
 	}
 	tests := []struct {
 		name    string
@@ -87,7 +86,6 @@ func TestLabel_ReadAll(t *testing.T) {
 							ID:       2,
 							Username: "user2",
 							Password: "1234",
-							Email:    "user2@example.com",
 						},
 					},
 				},
@@ -141,7 +139,6 @@ func TestLabel_ReadOne(t *testing.T) {
 		ID:       1,
 		Username: "user1",
 		Password: "1234",
-		Email:    "user1@example.com",
 	}
 	tests := []struct {
 		name          string
@@ -196,7 +193,6 @@ func TestLabel_ReadOne(t *testing.T) {
 					ID:       2,
 					Username: "user2",
 					Password: "1234",
-					Email:    "user2@example.com",
 				},
 			},
 			auth: &User{ID: 1},
