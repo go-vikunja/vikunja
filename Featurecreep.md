@@ -88,7 +88,6 @@ Sorry for some of them being in German, I'll tranlate them at some point.
   * [x] Team member handling
   * [x] Also check `ReadOne()` for unnessecary database operations since the inital query is already done in `CanRead()`
 * [x] Add a `User.AfterLoad()` which obfuscates the email address
-* [ ] Sometimes `done` from a task is not updated (returns `done: false` but `done:true` is being sent to the server)
 
 ### Docs
 
