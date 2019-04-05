@@ -133,6 +133,11 @@ func (t *ListTask) Update() (err error) {
 		ot.Done = false
 	}
 
+	// If the priority is 0, we also need to explicitly check that here
+	if t.Priority == 0 {
+		ot.Priority = 0
+	}
+
 	_, err = x.ID(t.ID).
 		Cols("text",
 			"description",

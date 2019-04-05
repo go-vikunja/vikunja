@@ -88,6 +88,7 @@ Sorry for some of them being in German, I'll tranlate them at some point.
   * [x] Team member handling
   * [x] Also check `ReadOne()` for unnessecary database operations since the inital query is already done in `CanRead()`
 * [x] Add a `User.AfterLoad()` which obfuscates the email address
+* [x] Fix priority not updating to 0
 
 ### Docs
 
@@ -187,10 +188,6 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [ ] Adding users to a team should also use uuid
 * [ ] Check if the team/user really exist before updating them on lists/namespaces
 * [ ] Check if the email is properly obfuscated everywhere -> alter GetUser() and add a new method GetUserWithEmail
-
-### Fixes
-
-* [ ] Fix priority not updating to 0
 
 ### Linters
 
