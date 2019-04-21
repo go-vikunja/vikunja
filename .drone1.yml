@@ -5,9 +5,6 @@ workspace:
   base: /srv/app
   path: src/code.vikunja.io/api
 
-clone:
-  depth: 50
-
 services:
   - name: test-db-unit
     image: mariadb:10
@@ -31,8 +28,6 @@ steps:
   - name: build
     image: vikunja/golang-build:latest
     pull: true
-    environment:
-      TAGS: bindata sqlite
     commands:
       - make lint
       - make fmt-check
@@ -135,9 +130,6 @@ workspace:
   base: /srv/app
   path: src/code.vikunja.io/api
 
-clone:
-  depth: 50
-
 trigger:
   branch:
     - master
@@ -229,6 +221,7 @@ steps:
       - echo $DRONE_TAG
       - echo $DRONE_BRANCH
       - echo $VERSION
+      - pwd
       - git version
       - git describe --tags --always --abbrev=10
       - git describe --tags --always --abbrev=10 | sed 's/-/+/'
@@ -330,9 +323,6 @@ depends_on:
 workspace:
   base: /srv/app
   path: src/code.vikunja.io/api
-
-clone:
-  depth: 50
 
 trigger:
   event:
