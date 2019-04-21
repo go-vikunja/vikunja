@@ -229,6 +229,10 @@ steps:
       - echo $DRONE_TAG
       - echo $DRONE_BRANCH
       - echo $VERSION
+      - git describe --tags --always --abbrev=10
+      - git describe --tags --always --abbrev=10 | sed 's/-/+/'
+      - git describe --tags --always --abbrev=10 | sed 's/-/+/' | sed 's/^v//'
+      - git describe --tags --always --abbrev=10 | sed 's/-/+/' | sed 's/^v//' | sed 's/-g/-/'
       - make build-deb
     depends_on: [ static-build-linux ]
 
