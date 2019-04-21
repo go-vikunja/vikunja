@@ -121,8 +121,8 @@ steps:
 
 kind: pipeline
 name: deploy-master
-#depends_on:
-#  - testing
+depends_on:
+  - testing
 
 workspace:
   base: /srv/app
@@ -222,15 +222,6 @@ steps:
     image: kolaente/fpm
     pull: true
     commands:
-      - echo $DRONE_TAG
-      - echo $DRONE_BRANCH
-      - echo $VERSION
-      - pwd
-      - git version
-      - git describe --tags --always --abbrev=10
-      - git describe --tags --always --abbrev=10 | sed 's/-/+/'
-      - git describe --tags --always --abbrev=10 | sed 's/-/+/' | sed 's/^v//'
-      - git describe --tags --always --abbrev=10 | sed 's/-/+/' | sed 's/^v//' | sed 's/-g/-/'
       - make build-deb
     depends_on: [ static-build-linux ]
 
