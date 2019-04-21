@@ -142,13 +142,13 @@ steps:
       - git fetch --tags
 
   - name: before-static-build
-    image: karalabe/xgo-latest:latest
+    image: src.techknowlogick.com/xgo:latest
     pull: true
     commands:
       - make release-dirs
 
   - name: static-build-windows
-    image: karalabe/xgo-latest:latest
+    image: src.techknowlogick.com/xgo:latest
     pull: true
     environment:
       GOPATH: /srv/app
@@ -157,7 +157,7 @@ steps:
     depends_on: [ before-static-build ]
 
   - name: static-build-linux
-    image: karalabe/xgo-latest:latest
+    image: src.techknowlogick.com/xgo:latest
     pull: true
     environment:
       GOPATH: /srv/app
@@ -166,7 +166,7 @@ steps:
     depends_on: [ before-static-build ]
 
   - name: static-build-darwin
-    image: karalabe/xgo-latest:latest
+    image: src.techknowlogick.com/xgo:latest
     pull: true
     environment:
       GOPATH: /srv/app
@@ -175,7 +175,7 @@ steps:
     depends_on: [ before-static-build ]
 
   - name: after-build-static
-    image: karalabe/xgo-latest:latest
+    image: src.techknowlogick.com/xgo:latest
     pull: true
     depends_on:
       - static-build-windows
@@ -330,13 +330,13 @@ steps:
       - git fetch --tags
 
   - name: before-static-build
-    image: karalabe/xgo-latest:latest
+    image: src.techknowlogick.com/xgo:latest
     pull: true
     commands:
       - make release-dirs
 
   - name: static-build-windows
-    image: karalabe/xgo-latest:latest
+    image: src.techknowlogick.com/xgo:latest
     pull: true
     environment:
       GOPATH: /srv/app
@@ -345,7 +345,7 @@ steps:
     depends_on: [ before-static-build ]
 
   - name: static-build-linux
-    image: karalabe/xgo-latest:latest
+    image: src.techknowlogick.com/xgo:latest
     pull: true
     environment:
       GOPATH: /srv/app
@@ -354,7 +354,7 @@ steps:
     depends_on: [ before-static-build ]
 
   - name: static-build-darwin
-    image: karalabe/xgo-latest:latest
+    image: src.techknowlogick.com/xgo:latest
     pull: true
     environment:
       GOPATH: /srv/app
@@ -363,7 +363,7 @@ steps:
     depends_on: [ before-static-build ]
 
   - name: after-build-static
-    image: karalabe/xgo-latest:latest
+    image: src.techknowlogick.com/xgo:latest
     pull: true
     depends_on:
       - static-build-windows
