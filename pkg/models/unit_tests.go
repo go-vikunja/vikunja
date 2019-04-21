@@ -33,6 +33,13 @@ import (
 
 // MainTest creates the test engine
 func MainTest(m *testing.M, pathToRoot string) {
+	SetupTests(pathToRoot)
+	os.Exit(m.Run())
+}
+
+// SetupTests takes care of seting up the db, fixtures etc.
+// This is an extra function to be able to call the fixtures setup from the integration tests.
+func SetupTests(pathToRoot string) {
 	var err error
 	fixturesDir := filepath.Join(pathToRoot, "pkg", "models", "fixtures")
 	if err = createTestEngine(fixturesDir); err != nil {
@@ -43,11 +50,9 @@ func MainTest(m *testing.M, pathToRoot string) {
 	mail.StartMailDaemon()
 
 	// Create test database
-	if err = PrepareTestDatabase(); err != nil {
+	if err = LoadFixtures(); err != nil {
 		log.Log.Fatalf("Error preparing test database: %v", err.Error())
 	}
-
-	os.Exit(m.Run())
 }
 
 func createTestEngine(fixturesDir string) error {
@@ -89,9 +94,4 @@ func createTestEngine(fixturesDir string) error {
 	}
 
 	return InitFixtures(fixturesHelper, fixturesDir)
-}
-
-// PrepareTestDatabase load test fixtures into test database
-func PrepareTestDatabase() error {
-	return LoadFixtures()
 }

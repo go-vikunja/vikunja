@@ -32,8 +32,8 @@ const (
 // @Param p query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
 // @Param s query string false "Search tasks by task text."
 // @Param sort query string false "The sorting parameter. Possible values to sort by are priority, prioritydesc, priorityasc, dueadate, dueadatedesc, dueadateasc."
-// @Param startdate query int false "The start date parameter to filter by. Expects a unix timestamp."
-// @Param enddate query int false "The end date parameter to filter by. Expects a unix timestamp."
+// @Param startdate query int false "The start date parameter to filter by. Expects a unix timestamp. If no end date, but a start date is specified, the end date is set to the current time."
+// @Param enddate query int false "The end date parameter to filter by. Expects a unix timestamp. If no start date, but an end date is specified, the start date is set to the current time."
 // @Security JWTKeyAuth
 // @Success 200 {array} models.List "The tasks"
 // @Failure 500 {object} models.Message "Internal error"

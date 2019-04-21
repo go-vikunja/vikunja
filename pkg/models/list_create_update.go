@@ -24,11 +24,6 @@ import (
 // CreateOrUpdateList updates a list or creates it if it doesn't exist
 func CreateOrUpdateList(list *List) (err error) {
 
-	// Check we have at least a title
-	if list.Title == "" {
-		return ErrListTitleCannotBeEmpty{}
-	}
-
 	// Check if the namespace exists
 	if list.NamespaceID != 0 {
 		_, err = GetNamespaceByID(list.NamespaceID)
@@ -73,11 +68,6 @@ func CreateOrUpdateList(list *List) (err error) {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{id} [post]
 func (l *List) Update() (err error) {
-	// Check if it exists
-	lorig := List{ID: l.ID}
-	if err = lorig.GetSimpleByID(); err != nil {
-		return
-	}
 	return CreateOrUpdateList(l)
 }
 

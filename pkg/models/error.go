@@ -247,6 +247,48 @@ func IsErrEmailNotConfirmed(err error) bool {
 	return ok
 }
 
+// ErrEmptyNewPassword represents a "EmptyNewPassword" kind of error.
+type ErrEmptyNewPassword struct{}
+
+// IsErrEmptyNewPassword checks if an error is a ErrEmptyNewPassword.
+func IsErrEmptyNewPassword(err error) bool {
+	_, ok := err.(ErrEmptyNewPassword)
+	return ok
+}
+
+func (err ErrEmptyNewPassword) Error() string {
+	return fmt.Sprintf("New password is empty")
+}
+
+// ErrCodeEmptyNewPassword holds the unique world-error code of this error
+const ErrCodeEmptyNewPassword = 1013
+
+// HTTPError holds the http error description
+func (err ErrEmptyNewPassword) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusPreconditionFailed, Code: ErrCodeEmptyNewPassword, Message: "Please specify new password."}
+}
+
+// ErrEmptyOldPassword represents a "EmptyOldPassword" kind of error.
+type ErrEmptyOldPassword struct{}
+
+// IsErrEmptyOldPassword checks if an error is a ErrEmptyOldPassword.
+func IsErrEmptyOldPassword(err error) bool {
+	_, ok := err.(ErrEmptyOldPassword)
+	return ok
+}
+
+func (err ErrEmptyOldPassword) Error() string {
+	return fmt.Sprintf("Old password is empty")
+}
+
+// ErrCodeEmptyOldPassword holds the unique world-error code of this error
+const ErrCodeEmptyOldPassword = 1014
+
+// HTTPError holds the http error description
+func (err ErrEmptyOldPassword) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusPreconditionFailed, Code: ErrCodeEmptyOldPassword, Message: "Please specify old password."}
+}
+
 // ===================
 // Empty things errors
 // ===================
@@ -499,6 +541,33 @@ func (err ErrNoRightToSeeTask) HTTPError() web.HTTPError {
 		HTTPCode: http.StatusForbidden,
 		Code:     ErrCodeNoRightToSeeTask,
 		Message:  "You don't have the right to see this task.",
+	}
+}
+
+// ErrParentTaskCannotBeTheSame represents an error where the user tries to set a tasks parent as the same
+type ErrParentTaskCannotBeTheSame struct {
+	TaskID int64
+}
+
+// IsErrParentTaskCannotBeTheSame checks if an error is ErrParentTaskCannotBeTheSame.
+func IsErrParentTaskCannotBeTheSame(err error) bool {
+	_, ok := err.(ErrParentTaskCannotBeTheSame)
+	return ok
+}
+
+func (err ErrParentTaskCannotBeTheSame) Error() string {
+	return fmt.Sprintf("Tried to set a parents task as the same [TaskID: %v]", err.TaskID)
+}
+
+// ErrCodeParentTaskCannotBeTheSame holds the unique world-error code of this error
+const ErrCodeParentTaskCannotBeTheSame = 4006
+
+// HTTPError holds the http error description
+func (err ErrParentTaskCannotBeTheSame) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusForbidden,
+		Code:     ErrCodeParentTaskCannotBeTheSame,
+		Message:  "You cannot set a parent task to the task itself.",
 	}
 }
 

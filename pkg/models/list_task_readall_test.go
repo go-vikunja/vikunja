@@ -7,9 +7,8 @@
 package models
 
 import (
-	"fmt"
 	"github.com/stretchr/testify/assert"
-	"reflect"
+	"gopkg.in/d4l3k/messagediff.v1"
 	"sort"
 	"testing"
 
@@ -21,6 +20,7 @@ func sortTasksForTesting(by SortBy) (tasks []*ListTask) {
 		{
 			ID:          1,
 			Text:        "task #1",
+			Description: "Lorem Ipsum",
 			CreatedByID: 1,
 			ListID:      1,
 			Created:     1543626724,
@@ -123,6 +123,128 @@ func sortTasksForTesting(by SortBy) (tasks []*ListTask) {
 			Created:     1543626724,
 			Updated:     1543626724,
 		},
+		{
+			ID:          15,
+			Text:        "task #15",
+			CreatedByID: 6,
+			ListID:      6,
+			Created:     1543626724,
+			Updated:     1543626724,
+		},
+		{
+			ID:          16,
+			Text:        "task #16",
+			CreatedByID: 6,
+			ListID:      7,
+			Created:     1543626724,
+			Updated:     1543626724,
+		},
+		{
+			ID:          17,
+			Text:        "task #17",
+			CreatedByID: 6,
+			ListID:      8,
+			Created:     1543626724,
+			Updated:     1543626724,
+		},
+		{
+			ID:          18,
+			Text:        "task #18",
+			CreatedByID: 6,
+			ListID:      9,
+			Created:     1543626724,
+			Updated:     1543626724,
+		},
+		{
+			ID:          19,
+			Text:        "task #19",
+			CreatedByID: 6,
+			ListID:      10,
+			Created:     1543626724,
+			Updated:     1543626724,
+		},
+		{
+			ID:          20,
+			Text:        "task #20",
+			CreatedByID: 6,
+			ListID:      11,
+			Created:     1543626724,
+			Updated:     1543626724,
+		},
+		{
+			ID:          21,
+			Text:        "task #21",
+			CreatedByID: 6,
+			ListID:      12,
+			Created:     1543626724,
+			Updated:     1543626724,
+		},
+		{
+			ID:          22,
+			Text:        "task #22",
+			CreatedByID: 6,
+			ListID:      13,
+			Created:     1543626724,
+			Updated:     1543626724,
+		},
+		{
+			ID:          23,
+			Text:        "task #23",
+			CreatedByID: 6,
+			ListID:      14,
+			Created:     1543626724,
+			Updated:     1543626724,
+		},
+		{
+			ID:          24,
+			Text:        "task #24",
+			CreatedByID: 6,
+			ListID:      15,
+			Created:     1543626724,
+			Updated:     1543626724,
+		},
+		{
+			ID:          25,
+			Text:        "task #25",
+			CreatedByID: 6,
+			ListID:      16,
+			Created:     1543626724,
+			Updated:     1543626724,
+		},
+		{
+			ID:          26,
+			Text:        "task #26",
+			CreatedByID: 6,
+			ListID:      17,
+			Created:     1543626724,
+			Updated:     1543626724,
+		},
+		{
+			ID:            27,
+			Text:          "task #27 with reminders",
+			CreatedByID:   1,
+			RemindersUnix: []int64{1543626724, 1543626824},
+			ListID:        1,
+			Created:       1543626724,
+			Updated:       1543626724,
+		},
+		{
+			ID:          28,
+			Text:        "task #28 with repeat after",
+			CreatedByID: 1,
+			ListID:      1,
+			RepeatAfter: 3600,
+			Created:     1543626724,
+			Updated:     1543626724,
+		},
+		{
+			ID:          30,
+			Text:        "task #30 with assignees",
+			CreatedByID: 1,
+			ListID:      1,
+			Created:     1543626724,
+			Updated:     1543626724,
+		},
 	}
 
 	switch by {
@@ -138,6 +260,10 @@ func sortTasksForTesting(by SortBy) (tasks []*ListTask) {
 		sort.Slice(tasks, func(i, j int) bool {
 			return tasks[i].DueDateUnix > tasks[j].DueDateUnix
 		})
+		// Swap since sqlite seems to sort differently
+		tmp := tasks[5]
+		tasks[5] = tasks[3]
+		tasks[3] = tmp
 	case SortTasksByDueDateAsc:
 		sort.Slice(tasks, func(i, j int) bool {
 			return tasks[i].DueDateUnix < tasks[j].DueDateUnix
@@ -148,7 +274,7 @@ func sortTasksForTesting(by SortBy) (tasks []*ListTask) {
 }
 
 func TestListTask_ReadAll(t *testing.T) {
-	assert.NoError(t, PrepareTestDatabase())
+	assert.NoError(t, LoadFixtures())
 	type fields struct {
 		ID                int64
 		Text              string
@@ -221,6 +347,7 @@ func TestListTask_ReadAll(t *testing.T) {
 				{
 					ID:          1,
 					Text:        "task #1",
+					Description: "Lorem Ipsum",
 					CreatedByID: 1,
 					ListID:      1,
 					Created:     1543626724,
@@ -300,6 +427,127 @@ func TestListTask_ReadAll(t *testing.T) {
 				{
 					ID:          12,
 					Text:        "task #12 basic",
+					CreatedByID: 1,
+					ListID:      1,
+					Created:     1543626724,
+					Updated:     1543626724,
+				}, {
+					ID:          15,
+					Text:        "task #15",
+					CreatedByID: 6,
+					ListID:      6,
+					Created:     1543626724,
+					Updated:     1543626724,
+				},
+				{
+					ID:          16,
+					Text:        "task #16",
+					CreatedByID: 6,
+					ListID:      7,
+					Created:     1543626724,
+					Updated:     1543626724,
+				},
+				{
+					ID:          17,
+					Text:        "task #17",
+					CreatedByID: 6,
+					ListID:      8,
+					Created:     1543626724,
+					Updated:     1543626724,
+				},
+				{
+					ID:          18,
+					Text:        "task #18",
+					CreatedByID: 6,
+					ListID:      9,
+					Created:     1543626724,
+					Updated:     1543626724,
+				},
+				{
+					ID:          19,
+					Text:        "task #19",
+					CreatedByID: 6,
+					ListID:      10,
+					Created:     1543626724,
+					Updated:     1543626724,
+				},
+				{
+					ID:          20,
+					Text:        "task #20",
+					CreatedByID: 6,
+					ListID:      11,
+					Created:     1543626724,
+					Updated:     1543626724,
+				},
+				{
+					ID:          21,
+					Text:        "task #21",
+					CreatedByID: 6,
+					ListID:      12,
+					Created:     1543626724,
+					Updated:     1543626724,
+				},
+				{
+					ID:          22,
+					Text:        "task #22",
+					CreatedByID: 6,
+					ListID:      13,
+					Created:     1543626724,
+					Updated:     1543626724,
+				},
+				{
+					ID:          23,
+					Text:        "task #23",
+					CreatedByID: 6,
+					ListID:      14,
+					Created:     1543626724,
+					Updated:     1543626724,
+				},
+				{
+					ID:          24,
+					Text:        "task #24",
+					CreatedByID: 6,
+					ListID:      15,
+					Created:     1543626724,
+					Updated:     1543626724,
+				},
+				{
+					ID:          25,
+					Text:        "task #25",
+					CreatedByID: 6,
+					ListID:      16,
+					Created:     1543626724,
+					Updated:     1543626724,
+				},
+				{
+					ID:          26,
+					Text:        "task #26",
+					CreatedByID: 6,
+					ListID:      17,
+					Created:     1543626724,
+					Updated:     1543626724,
+				},
+				{
+					ID:            27,
+					Text:          "task #27 with reminders",
+					CreatedByID:   1,
+					RemindersUnix: []int64{1543626724, 1543626824},
+					ListID:        1,
+					Created:       1543626724,
+					Updated:       1543626724,
+				},
+				{
+					ID:          28,
+					Text:        "task #28 with repeat after",
+					CreatedByID: 1,
+					ListID:      1,
+					RepeatAfter: 3600,
+					Created:     1543626724,
+					Updated:     1543626724,
+				},
+				{
+					ID:          30,
+					Text:        "task #30 with assignees",
 					CreatedByID: 1,
 					ListID:      1,
 					Created:     1543626724,
@@ -349,23 +597,29 @@ func TestListTask_ReadAll(t *testing.T) {
 				a:      &User{ID: 1},
 				page:   0,
 			},
-			want:    sortTasksForTesting(SortTasksByDueDateDesc),
-			wantErr: false,
-		},
-		{
-			name: "ReadAll ListTasks sorted by due date asc",
-			fields: fields{
-				Sorting: "duedateasc",
-			},
-			args: args{
-				search: "",
-				a:      &User{ID: 1},
-				page:   0,
-			},
 			want: []*ListTask{
+				{
+					ID:          5,
+					Text:        "task #5 higher due date",
+					CreatedByID: 1,
+					ListID:      1,
+					Created:     1543626724,
+					Updated:     1543626724,
+					DueDateUnix: 1543636724,
+				},
+				{
+					ID:          6,
+					Text:        "task #6 lower due date",
+					CreatedByID: 1,
+					ListID:      1,
+					Created:     1543626724,
+					Updated:     1543626724,
+					DueDateUnix: 1543616724,
+				},
 				{
 					ID:          1,
 					Text:        "task #1",
+					Description: "Lorem Ipsum",
 					CreatedByID: 1,
 					ListID:      1,
 					Created:     1543626724,
@@ -451,6 +705,352 @@ func TestListTask_ReadAll(t *testing.T) {
 					Updated:     1543626724,
 				},
 				{
+					ID:          15,
+					Text:        "task #15",
+					CreatedByID: 6,
+					ListID:      6,
+					Created:     1543626724,
+					Updated:     1543626724,
+				},
+				{
+					ID:          16,
+					Text:        "task #16",
+					CreatedByID: 6,
+					ListID:      7,
+					Created:     1543626724,
+					Updated:     1543626724,
+				},
+				{
+					ID:          17,
+					Text:        "task #17",
+					CreatedByID: 6,
+					ListID:      8,
+					Created:     1543626724,
+					Updated:     1543626724,
+				},
+				{
+					ID:          18,
+					Text:        "task #18",
+					CreatedByID: 6,
+					ListID:      9,
+					Created:     1543626724,
+					Updated:     1543626724,
+				},
+				{
+					ID:          19,
+					Text:        "task #19",
+					CreatedByID: 6,
+					ListID:      10,
+					Created:     1543626724,
+					Updated:     1543626724,
+				},
+				{
+					ID:          20,
+					Text:        "task #20",
+					CreatedByID: 6,
+					ListID:      11,
+					Created:     1543626724,
+					Updated:     1543626724,
+				},
+				{
+					ID:          21,
+					Text:        "task #21",
+					CreatedByID: 6,
+					ListID:      12,
+					Created:     1543626724,
+					Updated:     1543626724,
+				},
+				{
+					ID:          22,
+					Text:        "task #22",
+					CreatedByID: 6,
+					ListID:      13,
+					Created:     1543626724,
+					Updated:     1543626724,
+				},
+				{
+					ID:          23,
+					Text:        "task #23",
+					CreatedByID: 6,
+					ListID:      14,
+					Created:     1543626724,
+					Updated:     1543626724,
+				},
+				{
+					ID:          24,
+					Text:        "task #24",
+					CreatedByID: 6,
+					ListID:      15,
+					Created:     1543626724,
+					Updated:     1543626724,
+				},
+				{
+					ID:          25,
+					Text:        "task #25",
+					CreatedByID: 6,
+					ListID:      16,
+					Created:     1543626724,
+					Updated:     1543626724,
+				},
+				{
+					ID:          26,
+					Text:        "task #26",
+					CreatedByID: 6,
+					ListID:      17,
+					Created:     1543626724,
+					Updated:     1543626724,
+				},
+				{
+					ID:            27,
+					Text:          "task #27 with reminders",
+					CreatedByID:   1,
+					RemindersUnix: []int64{1543626724, 1543626824},
+					ListID:        1,
+					Created:       1543626724,
+					Updated:       1543626724,
+				},
+				{
+					ID:          28,
+					Text:        "task #28 with repeat after",
+					CreatedByID: 1,
+					ListID:      1,
+					RepeatAfter: 3600,
+					Created:     1543626724,
+					Updated:     1543626724,
+				},
+				{
+					ID:          30,
+					Text:        "task #30 with assignees",
+					CreatedByID: 1,
+					ListID:      1,
+					Created:     1543626724,
+					Updated:     1543626724,
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "ReadAll ListTasks sorted by due date asc",
+			fields: fields{
+				Sorting: "duedateasc",
+			},
+			args: args{
+				search: "",
+				a:      &User{ID: 1},
+				page:   0,
+			},
+			want: []*ListTask{
+				{
+					ID:          1,
+					Text:        "task #1",
+					Description: "Lorem Ipsum",
+					CreatedByID: 1,
+					ListID:      1,
+					Created:     1543626724,
+					Updated:     1543626724,
+				},
+				{
+					ID:          2,
+					Text:        "task #2 done",
+					Done:        true,
+					CreatedByID: 1,
+					ListID:      1,
+					Created:     1543626724,
+					Updated:     1543626724,
+				},
+				{
+					ID:          3,
+					Text:        "task #3 high prio",
+					CreatedByID: 1,
+					ListID:      1,
+					Created:     1543626724,
+					Updated:     1543626724,
+					Priority:    100,
+				},
+				{
+					ID:          4,
+					Text:        "task #4 low prio",
+					CreatedByID: 1,
+					ListID:      1,
+					Created:     1543626724,
+					Updated:     1543626724,
+					Priority:    1,
+				},
+				{
+					ID:            7,
+					Text:          "task #7 with start date",
+					CreatedByID:   1,
+					ListID:        1,
+					Created:       1543626724,
+					Updated:       1543626724,
+					StartDateUnix: 1544600000,
+				},
+				{
+					ID:          8,
+					Text:        "task #8 with end date",
+					CreatedByID: 1,
+					ListID:      1,
+					Created:     1543626724,
+					Updated:     1543626724,
+					EndDateUnix: 1544700000,
+				},
+				{
+					ID:            9,
+					Text:          "task #9 with start and end date",
+					CreatedByID:   1,
+					ListID:        1,
+					Created:       1543626724,
+					Updated:       1543626724,
+					StartDateUnix: 1544600000,
+					EndDateUnix:   1544700000,
+				},
+				{
+					ID:          10,
+					Text:        "task #10 basic",
+					CreatedByID: 1,
+					ListID:      1,
+					Created:     1543626724,
+					Updated:     1543626724,
+				},
+				{
+					ID:          11,
+					Text:        "task #11 basic",
+					CreatedByID: 1,
+					ListID:      1,
+					Created:     1543626724,
+					Updated:     1543626724,
+				},
+				{
+					ID:          12,
+					Text:        "task #12 basic",
+					CreatedByID: 1,
+					ListID:      1,
+					Created:     1543626724,
+					Updated:     1543626724,
+				},
+				{
+					ID:          15,
+					Text:        "task #15",
+					CreatedByID: 6,
+					ListID:      6,
+					Created:     1543626724,
+					Updated:     1543626724,
+				},
+				{
+					ID:          16,
+					Text:        "task #16",
+					CreatedByID: 6,
+					ListID:      7,
+					Created:     1543626724,
+					Updated:     1543626724,
+				},
+				{
+					ID:          17,
+					Text:        "task #17",
+					CreatedByID: 6,
+					ListID:      8,
+					Created:     1543626724,
+					Updated:     1543626724,
+				},
+				{
+					ID:          18,
+					Text:        "task #18",
+					CreatedByID: 6,
+					ListID:      9,
+					Created:     1543626724,
+					Updated:     1543626724,
+				},
+				{
+					ID:          19,
+					Text:        "task #19",
+					CreatedByID: 6,
+					ListID:      10,
+					Created:     1543626724,
+					Updated:     1543626724,
+				},
+				{
+					ID:          20,
+					Text:        "task #20",
+					CreatedByID: 6,
+					ListID:      11,
+					Created:     1543626724,
+					Updated:     1543626724,
+				},
+				{
+					ID:          21,
+					Text:        "task #21",
+					CreatedByID: 6,
+					ListID:      12,
+					Created:     1543626724,
+					Updated:     1543626724,
+				},
+				{
+					ID:          22,
+					Text:        "task #22",
+					CreatedByID: 6,
+					ListID:      13,
+					Created:     1543626724,
+					Updated:     1543626724,
+				},
+				{
+					ID:          23,
+					Text:        "task #23",
+					CreatedByID: 6,
+					ListID:      14,
+					Created:     1543626724,
+					Updated:     1543626724,
+				},
+				{
+					ID:          24,
+					Text:        "task #24",
+					CreatedByID: 6,
+					ListID:      15,
+					Created:     1543626724,
+					Updated:     1543626724,
+				},
+				{
+					ID:          25,
+					Text:        "task #25",
+					CreatedByID: 6,
+					ListID:      16,
+					Created:     1543626724,
+					Updated:     1543626724,
+				},
+				{
+					ID:          26,
+					Text:        "task #26",
+					CreatedByID: 6,
+					ListID:      17,
+					Created:     1543626724,
+					Updated:     1543626724,
+				},
+				{
+					ID:            27,
+					Text:          "task #27 with reminders",
+					CreatedByID:   1,
+					RemindersUnix: []int64{1543626724, 1543626824},
+					ListID:        1,
+					Created:       1543626724,
+					Updated:       1543626724,
+				},
+				{
+					ID:          28,
+					Text:        "task #28 with repeat after",
+					CreatedByID: 1,
+					ListID:      1,
+					RepeatAfter: 3600,
+					Created:     1543626724,
+					Updated:     1543626724,
+				},
+				{
+					ID:          30,
+					Text:        "task #30 with assignees",
+					CreatedByID: 1,
+					ListID:      1,
+					Created:     1543626724,
+					Updated:     1543626724,
+				},
+				{
 					ID:          6,
 					Text:        "task #6 lower due date",
 					CreatedByID: 1,
@@ -481,6 +1081,7 @@ func TestListTask_ReadAll(t *testing.T) {
 				a:      &User{ID: 1},
 				page:   0,
 			},
+
 			want:    sortTasksForTesting(SortTasksByDueDateDesc),
 			wantErr: false,
 		},
@@ -612,25 +1213,11 @@ func TestListTask_ReadAll(t *testing.T) {
 			}
 			got, err := lt.ReadAll(tt.args.search, tt.args.a, tt.args.page)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("ListTask.ReadAll() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("Test %s, ListTask.ReadAll() error = %v, wantErr %v", tt.name, err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("ListTask.ReadAll() = %v, want %v", got, tt.want)
-				fmt.Println("Got:")
-				gotslice := got.([]*ListTask)
-				for _, g := range gotslice {
-					fmt.Println(g.Text)
-					//fmt.Println(g.StartDateUnix)
-					//fmt.Println(g.EndDateUnix)
-				}
-				fmt.Println("Want:")
-				wantslice := tt.want.([]*ListTask)
-				for _, w := range wantslice {
-					fmt.Println(w.Text)
-					//fmt.Println(w.StartDateUnix)
-					//fmt.Println(w.EndDateUnix)
-				}
+			if diff, equal := messagediff.PrettyDiff(got, tt.want); !equal {
+				t.Errorf("Test %s, LabelTask.ReadAll() = %v, want %v, diff: %v", tt.name, got, tt.want, diff)
 			}
 		})
 	}

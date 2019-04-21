@@ -24,7 +24,7 @@ import (
 
 func TestCreateUser(t *testing.T) {
 	// Create test database
-	//assert.NoError(t, PrepareTestDatabase())
+	//assert.NoError(t, LoadFixtures())
 
 	// Get our doer
 	doer, err := GetUserByID(1)
@@ -50,7 +50,7 @@ func TestCreateUser(t *testing.T) {
 	assert.Error(t, err)
 
 	// Check if it fails to create a user with just the same username
-	_, err = CreateUser(User{Username: dummyuser.Username, Password: "fsdf"})
+	_, err = CreateUser(User{Username: dummyuser.Username, Password: "12345", Email: "email@example.com"})
 	assert.Error(t, err)
 	assert.True(t, IsErrUsernameExists(err))
 

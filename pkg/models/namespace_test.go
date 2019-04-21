@@ -24,7 +24,7 @@ import (
 
 func TestNamespace_Create(t *testing.T) {
 	// Create test database
-	//assert.NoError(t, PrepareTestDatabase())
+	//assert.NoError(t, LoadFixtures())
 
 	// Dummy namespace
 	dummynamespace := Namespace{
@@ -122,5 +122,5 @@ func TestNamespace_Create(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, reflect.TypeOf(nsps).Kind(), reflect.Slice)
 	s := reflect.ValueOf(nsps)
-	assert.Equal(t, 3, s.Len())
+	assert.Equal(t, 9, s.Len())
 }

@@ -1,5 +1,22 @@
--
-  id: 1
+- id: 1
   name: testteam1
   description: Lorem Ipsum
+  created_by_id: 1
+- id: 2
+  name: testteam2_read_only_on_list6
+  created_by_id: 1
+- id: 3
+  name: testteam3_write_on_list7
+  created_by_id: 1
+- id: 4
+  name: testteam4_admin_on_list8
+  created_by_id: 1
+- id: 5
+  name: testteam2_read_only_on_namespace7
+  created_by_id: 1
+- id: 6
+  name: testteam3_write_on_namespace8
+  created_by_id: 1
+- id: 7
+  name: testteam4_admin_on_namespace9
   created_by_id: 1

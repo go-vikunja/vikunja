@@ -192,6 +192,8 @@ golang.org/x/tools/internal/fastwalk
 google.golang.org/appengine/cloudsql
 # gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc
 gopkg.in/alexcesaro/quotedprintable.v3
+# gopkg.in/d4l3k/messagediff.v1 v1.2.1
+gopkg.in/d4l3k/messagediff.v1
 # gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 gopkg.in/gomail.v2
 # gopkg.in/testfixtures.v2 v2.5.3

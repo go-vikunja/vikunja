@@ -3,7 +3,7 @@ POST http://localhost:8080/api/v1/login
 Content-Type: application/json
 
 {
-  "username": "user",
+  "username": "user6",
   "password": "1234"
 }
 
@@ -19,5 +19,11 @@ Content-Type: application/json
   "password": "1234",
   "email": "5@knt.li"
 }
+
+###
+# Token test
+POST http://localhost:8080/api/v1/tokenTest
+Authorization: Bearer {{auth_token}}
+Content-Type: application/json
 
 ###

@@ -21,7 +21,7 @@ EXTRA_GOFLAGS ?=
 
 LDFLAGS := -X "code.vikunja.io/api/pkg/cmd.Version=$(shell git describe --tags --always --abbrev=10 | sed 's/-/+/' | sed 's/^v//' | sed 's/-g/-/')" -X "main.Tags=$(TAGS)"
 
-PACKAGES ?= $(filter-out code.vikunja.io/api/integrations,$(shell go list -mod=vendor ./... | grep -v /vendor/))
+PACKAGES ?= $(filter-out code.vikunja.io/api/pkg/integrations,$(shell go list -mod=vendor ./... | grep -v /vendor/))
 SOURCES ?= $(shell find . -name "*.go" -type f)
 
 TAGS ?=
@@ -54,8 +54,6 @@ else
     PKGVERSION := $(VERSION)
 endif
 
-VERSION := $(shell echo $(VERSION) | sed 's/\//\-/g')
-
 .PHONY: all
 all: build
 
@@ -68,6 +66,10 @@ clean:
 test:
 	VIKUNJA_SERVICE_ROOTPATH=$(shell pwd) go test $(GOFLAGS) -cover -coverprofile cover.out $(PACKAGES)
 	go tool cover -html=cover.out -o cover.html
+
+.PHONY: integration-test
+integration-test:
+	VIKUNJA_SERVICE_ROOTPATH=$(shell pwd) go test $(GOFLAGS) code.vikunja.io/api/pkg/integrations
 
 .PHONY: lint
 lint:

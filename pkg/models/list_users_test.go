@@ -17,6 +17,7 @@
 package models
 
 import (
+	"gopkg.in/d4l3k/messagediff.v1"
 	"reflect"
 	"runtime"
 	"testing"
@@ -159,7 +160,8 @@ func TestListUser_ReadAll(t *testing.T) {
 					User: User{
 						ID:       1,
 						Username: "user1",
-						Password: "1234",
+						Password: "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
+						IsActive: true,
 					},
 					Right: RightRead,
 				},
@@ -167,7 +169,7 @@ func TestListUser_ReadAll(t *testing.T) {
 					User: User{
 						ID:       2,
 						Username: "user2",
-						Password: "1234",
+						Password: "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
 					},
 					Right: RightRead,
 				},
@@ -204,8 +206,8 @@ func TestListUser_ReadAll(t *testing.T) {
 			if (err != nil) && tt.wantErr && !tt.errType(err) {
 				t.Errorf("ListUser.ReadAll() Wrong error type! Error = %v, want = %v", err, runtime.FuncForPC(reflect.ValueOf(tt.errType).Pointer()).Name())
 			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("ListUser.ReadAll() = %v, want %v", got, tt.want)
+			if diff, equal := messagediff.PrettyDiff(got, tt.want); !equal {
+				t.Errorf("ListUser.ReadAll() = %v, want %v, diff: %v", got, tt.want, diff)
 			}
 		})
 	}

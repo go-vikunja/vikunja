@@ -83,6 +83,10 @@ type PasswordTokenRequest struct {
 
 // RequestUserPasswordResetToken inserts a random token to reset a users password into the databsse
 func RequestUserPasswordResetToken(tr *PasswordTokenRequest) (err error) {
+	if tr.Email == "" {
+		return ErrNoUsernamePassword{}
+	}
+
 	// Check if the user exists
 	user, err := GetUser(User{Email: tr.Email})
 	if err != nil {

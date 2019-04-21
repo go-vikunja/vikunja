@@ -57,10 +57,20 @@ func Login(c echo.Context) error {
 	}
 
 	// Create token
-	token := jwt.New(jwt.SigningMethodHS256)
+	t, err := CreateNewJWTTokenForUser(&user)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, Token{Token: t})
+}
+
+// CreateNewJWTTokenForUser generates and signes a new jwt token for a user. This is a global function to be able to call it from integration tests.
+func CreateNewJWTTokenForUser(user *models.User) (token string, err error) {
+	t := jwt.New(jwt.SigningMethodHS256)
 
 	// Set claims
-	claims := token.Claims.(jwt.MapClaims)
+	claims := t.Claims.(jwt.MapClaims)
 	claims["username"] = user.Username
 	claims["email"] = user.Email
 	claims["id"] = user.ID
@@ -70,10 +80,5 @@ func Login(c echo.Context) error {
 	claims["avatar"] = hex.EncodeToString(avatar[:])
 
 	// Generate encoded token and send it as response.
-	t, err := token.SignedString([]byte(viper.GetString("service.JWTSecret")))
-	if err != nil {
-		return err
-	}
-
-	return c.JSON(http.StatusOK, Token{Token: t})
+	return t.SignedString([]byte(viper.GetString("service.JWTSecret")))
 }

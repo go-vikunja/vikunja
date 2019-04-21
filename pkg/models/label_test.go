@@ -17,6 +17,7 @@
 package models
 
 import (
+	"gopkg.in/d4l3k/messagediff.v1"
 	"reflect"
 	"runtime"
 	"testing"
@@ -45,7 +46,8 @@ func TestLabel_ReadAll(t *testing.T) {
 	user1 := &User{
 		ID:       1,
 		Username: "user1",
-		Password: "1234",
+		Password: "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
+		IsActive: true,
 	}
 	tests := []struct {
 		name    string
@@ -85,7 +87,7 @@ func TestLabel_ReadAll(t *testing.T) {
 						CreatedBy: &User{
 							ID:       2,
 							Username: "user2",
-							Password: "1234",
+							Password: "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
 						},
 					},
 				},
@@ -115,8 +117,8 @@ func TestLabel_ReadAll(t *testing.T) {
 				t.Errorf("Label.ReadAll() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(gotLs, tt.wantLs) {
-				t.Errorf("Label.ReadAll() = %v, want %v", gotLs, tt.wantLs)
+			if diff, equal := messagediff.PrettyDiff(gotLs, tt.wantLs); !equal {
+				t.Errorf("Label.ReadAll() = %v, want %v, diff: %v", gotLs, tt.wantLs, diff)
 			}
 		})
 	}
@@ -138,7 +140,8 @@ func TestLabel_ReadOne(t *testing.T) {
 	user1 := &User{
 		ID:       1,
 		Username: "user1",
-		Password: "1234",
+		Password: "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
+		IsActive: true,
 	}
 	tests := []struct {
 		name          string
@@ -192,7 +195,7 @@ func TestLabel_ReadOne(t *testing.T) {
 				CreatedBy: &User{
 					ID:       2,
 					Username: "user2",
-					Password: "1234",
+					Password: "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
 				},
 			},
 			auth: &User{ID: 1},
@@ -224,8 +227,8 @@ func TestLabel_ReadOne(t *testing.T) {
 			if (err != nil) && tt.wantErr && !tt.errType(err) {
 				t.Errorf("Label.ReadOne() Wrong error type! Error = %v, want = %v", err, runtime.FuncForPC(reflect.ValueOf(tt.errType).Pointer()).Name())
 			}
-			if !reflect.DeepEqual(l, tt.want) && !tt.wantErr && !tt.wantForbidden {
-				t.Errorf("Label.ReadOne() = %v, want %v", l, tt.want)
+			if diff, equal := messagediff.PrettyDiff(l, tt.want); !equal && !tt.wantErr && !tt.wantForbidden {
+				t.Errorf("Label.ReadAll() = %v, want %v, diff: %v", l, tt.want, diff)
 			}
 		})
 	}

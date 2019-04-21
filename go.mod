@@ -69,6 +69,7 @@ require (
 	golang.org/x/sys v0.0.0-20190329044733-9eb1bfa1ce65 // indirect
 	golang.org/x/tools v0.0.0-20181026183834-f60e5f99f081 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
+	gopkg.in/d4l3k/messagediff.v1 v1.2.1
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 	gopkg.in/testfixtures.v2 v2.5.3
 	gopkg.in/yaml.v2 v2.2.2 // indirect

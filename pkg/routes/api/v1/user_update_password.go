@@ -55,6 +55,10 @@ func UserChangePassword(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "No password provided.")
 	}
 
+	if newPW.OldPassword == "" {
+		return handler.HandleHTTPError(models.ErrEmptyOldPassword{}, c)
+	}
+
 	// Check the current password
 	if _, err = models.CheckUserCredentials(&models.UserLogin{Username: doer.Username, Password: newPW.OldPassword}); err != nil {
 		return handler.HandleHTTPError(err, c)

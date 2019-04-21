@@ -96,6 +96,11 @@ func (t *ListTask) Update() (err error) {
 		return
 	}
 
+	// Parent task cannot be the same as the current task
+	if t.ID == t.ParentTaskID {
+		return ErrParentTaskCannotBeTheSame{TaskID: t.ID}
+	}
+
 	// When a repeating task is marked as done, we update all deadlines and reminders and set it as undone
 	updateDone(&ot, t)
 
@@ -128,14 +133,45 @@ func (t *ListTask) Update() (err error) {
 		return err
 	}
 
-	// And because a false is considered to be a null value, we need to explicitly check that case here.
+	//////
+	// Mergo does ignore nil values. Because of that, we need to check all parameters and set the updated to
+	// nil/their nil value in the struct which is inserted.
+	////
+	// Done
 	if !t.Done {
 		ot.Done = false
 	}
-
-	// If the priority is 0, we also need to explicitly check that here
+	// Priority
 	if t.Priority == 0 {
 		ot.Priority = 0
+	}
+	// Description
+	if t.Description == "" {
+		ot.Description = ""
+	}
+	// Due date
+	if t.DueDateUnix == 0 {
+		ot.DueDateUnix = 0
+	}
+	// Reminders
+	if len(t.RemindersUnix) == 0 {
+		ot.RemindersUnix = nil
+	}
+	// Repeat after
+	if t.RepeatAfter == 0 {
+		ot.RepeatAfter = 0
+	}
+	// Parent task
+	if t.ParentTaskID == 0 {
+		ot.ParentTaskID = 0
+	}
+	// Start date
+	if t.StartDateUnix == 0 {
+		ot.StartDateUnix = 0
+	}
+	// End date
+	if t.EndDateUnix == 0 {
+		ot.EndDateUnix = 0
 	}
 
 	_, err = x.ID(t.ID).

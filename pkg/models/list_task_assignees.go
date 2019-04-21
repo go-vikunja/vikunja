@@ -59,6 +59,7 @@ func (t *ListTask) updateTaskAssignees(assignees []*User) (err error) {
 	if len(assignees) == 0 && len(t.Assignees) > 0 {
 		_, err = x.Where("task_id = ?", t.ID).
 			Delete(ListTaskAssginee{})
+		t.setTaskAssignees(assignees)
 		return err
 	}
 
@@ -123,7 +124,17 @@ func (t *ListTask) updateTaskAssignees(assignees []*User) (err error) {
 		}
 	}
 
+	t.setTaskAssignees(assignees)
 	return
+}
+
+// Small helper functions to set the new assignees in various places
+func (t *ListTask) setTaskAssignees(assignees []*User) {
+	if len(assignees) == 0 {
+		t.Assignees = nil
+		return
+	}
+	t.Assignees = assignees
 }
 
 // Delete a task assignee

@@ -24,6 +24,8 @@ This document describes the different errors Vikunja can return.
 | 1010 | 412 | Invalid email confirm token. |
 | 1011 | 412 | Wrong username or password. |
 | 1012 | 412 | Email address of the user not confirmed. |
+| 1013 | 412 | New password is empty. |
+| 1014 | 412 | Old password is empty. |
 | 2001 | 400 | ID cannot be empty or 0. |
 | 2002 | 400 | Some of the request data was invalid. The response contains an aditional array with all invalid fields. |
 | 3001 | 404 | The list does not exist. |

@@ -9,7 +9,12 @@ clone:
   depth: 50
 
 services:
-  - name: test-db
+  - name: test-db-unit
+    image: mariadb:10
+    environment:
+      MYSQL_ROOT_PASSWORD: vikunjatest
+      MYSQL_DATABASE: vikunjatest
+  - name: test-db-integration
     image: mariadb:10
     environment:
       MYSQL_ROOT_PASSWORD: vikunjatest
@@ -68,12 +73,49 @@ steps:
     environment:
       VIKUNJA_TESTS_USE_CONFIG: 1
       VIKUNJA_DATABASE_TYPE: mysql
-      VIKUNJA_DATABASE_HOST: test-db
+      VIKUNJA_DATABASE_HOST: test-db-unit
       VIKUNJA_DATABASE_USER: root
       VIKUNJA_DATABASE_PASSWORD: vikunjatest
       VIKUNJA_DATABASE_DATABASE: vikunjatest
     commands:
       - make test
+    depends_on: [ build ]
+    when:
+      event: [ push, tag, pull_request ]
+
+  - name: integration-test
+    image: vikunja/golang-build:latest
+    pull: true
+    commands:
+      - make integration-test
+    depends_on: [ build ]
+    when:
+      event: [ push, tag, pull_request ]
+
+  - name: integration-test-sqlite
+    image: vikunja/golang-build:latest
+    pull: true
+    environment:
+      VIKUNJA_TESTS_USE_CONFIG: 1
+      VIKUNJA_DATABASE_TYPE: sqlite
+    commands:
+      - make integration-test
+    depends_on: [ build ]
+    when:
+      event: [ push, tag, pull_request ]
+
+  - name: integration-test-mysql
+    image: vikunja/golang-build:latest
+    pull: true
+    environment:
+      VIKUNJA_TESTS_USE_CONFIG: 1
+      VIKUNJA_DATABASE_TYPE: mysql
+      VIKUNJA_DATABASE_HOST: test-db-integration
+      VIKUNJA_DATABASE_USER: root
+      VIKUNJA_DATABASE_PASSWORD: vikunjatest
+      VIKUNJA_DATABASE_DATABASE: vikunjatest
+    commands:
+      - make integration-test
     depends_on: [ build ]
     when:
       event: [ push, tag, pull_request ]
@@ -184,6 +226,9 @@ steps:
     image: kolaente/fpm
     pull: true
     commands:
+      - echo $DRONE_TAG
+      - echo $DRONE_BRANCH
+      - echo $VERSION
       - make build-deb
     depends_on: [ static-build-linux ]
 

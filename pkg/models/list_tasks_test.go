@@ -22,7 +22,7 @@ import (
 )
 
 func TestListTask_Create(t *testing.T) {
-	//assert.NoError(t, PrepareTestDatabase())
+	//assert.NoError(t, LoadFixtures())
 
 	// Fake list task
 	listtask := ListTask{

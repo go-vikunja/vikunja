@@ -34,10 +34,6 @@ import (
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{id} [delete]
 func (l *List) Delete() (err error) {
-	// Check if the list exists
-	if err = l.GetSimpleByID(); err != nil {
-		return
-	}
 
 	// Delete the list
 	_, err = x.ID(l.ID).Delete(&List{})

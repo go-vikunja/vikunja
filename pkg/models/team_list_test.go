@@ -88,7 +88,7 @@ func TestTeamList(t *testing.T) {
 
 	// Test read all for a list where the user not has access
 	tl6 := tl
-	tl6.ListID = 4
+	tl6.ListID = 5
 	_, err = tl6.ReadAll("", &u, 1)
 	assert.Error(t, err)
 	assert.True(t, IsErrNeedToHaveListReadAccess(err))

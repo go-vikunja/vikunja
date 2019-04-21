@@ -23,7 +23,7 @@ import (
 
 func TestList_Create(t *testing.T) {
 	// Create test database
-	//assert.NoError(t, PrepareTestDatabase())
+	//assert.NoError(t, LoadFixtures())
 
 	// Get our doer
 	doer, err := GetUserByID(1)
@@ -77,17 +77,6 @@ func TestList_Create(t *testing.T) {
 	err = dummylist.Update()
 	assert.Error(t, err)
 	assert.True(t, IsErrListDoesNotExist(err))
-
-	// Delete a nonexistant list
-	err = dummylist.Delete()
-	assert.Error(t, err)
-	assert.True(t, IsErrListDoesNotExist(err))
-
-	// Check failing with no title
-	list2 := List{}
-	err = list2.Create(&doer)
-	assert.Error(t, err)
-	assert.True(t, IsErrListTitleCannotBeEmpty(err))
 
 	// Check creation with a nonexistant namespace
 	list3 := List{

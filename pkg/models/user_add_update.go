@@ -30,7 +30,7 @@ func CreateUser(user User) (newUser User, err error) {
 	newUser = user
 
 	// Check if we have all needed informations
-	if newUser.Password == "" || newUser.Username == "" {
+	if newUser.Password == "" || newUser.Username == "" || newUser.Email == "" {
 		return User{}, ErrNoUsernamePassword{}
 	}
 
@@ -153,6 +153,10 @@ func UpdateUser(user User) (updatedUser User, err error) {
 
 // UpdateUserPassword updates the password of a user
 func UpdateUserPassword(user *User, newPassword string) (err error) {
+
+	if newPassword == "" {
+		return ErrEmptyNewPassword{}
+	}
 
 	// Get all user details
 	theUser, err := GetUserByID(user.ID)
