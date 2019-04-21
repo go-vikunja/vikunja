@@ -121,8 +121,8 @@ steps:
 
 kind: pipeline
 name: deploy-master
-depends_on:
-  - testing
+#depends_on:
+#  - testing
 
 workspace:
   base: /srv/app
