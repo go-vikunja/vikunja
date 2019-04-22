@@ -175,6 +175,7 @@ steps:
     environment:
       GOPATH: /srv/app
     commands:
+      - export PATH=$PATH:$GOPATH/bin
       - make release-darwin
     depends_on: [ before-static-build ]
 
