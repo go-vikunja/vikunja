@@ -23,6 +23,7 @@ require (
 	github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc
 	github.com/asaskevich/govalidator v0.0.0-20180720115003-f9ffefc3facf
 	github.com/client9/misspell v0.3.4
+	github.com/d4l3k/messagediff v1.2.1 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/fzipp/gocyclo v0.0.0-20150627053110-6acd4345c835
 	github.com/garyburd/redigo v1.6.0 // indirect
@@ -40,7 +41,7 @@ require (
 	github.com/imdario/mergo v0.3.6
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/jgautheron/goconst v0.0.0-20170703170152-9740945f5dcb
-	github.com/karalabe/xgo v0.0.0-20181007145344-72da7d1d3970
+	github.com/karalabe/xgo v0.0.0-20181007145344-72da7d1d3970 // indirect
 	github.com/kisielk/gotool v1.0.0 // indirect
 	github.com/labstack/echo v3.3.10+incompatible
 	github.com/labstack/gommon v0.2.8
@@ -74,5 +75,6 @@ require (
 	gopkg.in/testfixtures.v2 v2.5.3
 	gopkg.in/yaml.v2 v2.2.2 // indirect
 	honnef.co/go/tools v0.0.0-20190418001031-e561f6794a2a
+	src.techknowlogick.com/xgo v0.0.0-20190415010919-1502273fab15
 	src.techknowlogick.com/xormigrate v0.0.0-20190321151057-24497c23c09c
 )

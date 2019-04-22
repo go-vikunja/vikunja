@@ -146,6 +146,7 @@ steps:
     image: techknowlogick/xgo:latest
     pull: true
     commands:
+      - export PATH=$PATH:$GOPATH/bin
       - make release-dirs
 
   - name: static-build-windows
@@ -154,6 +155,7 @@ steps:
     environment:
       GOPATH: /srv/app
     commands:
+      - export PATH=$PATH:$GOPATH/bin
       - make release-windows
     depends_on: [ before-static-build ]
 
@@ -163,6 +165,7 @@ steps:
     environment:
       GOPATH: /srv/app
     commands:
+      - export PATH=$PATH:$GOPATH/bin
       - make release-linux
     depends_on: [ before-static-build ]
 

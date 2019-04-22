@@ -38,12 +38,12 @@ a single command to compile a Go package to various platforms and architectures.
 Although you could build the container manually, it is available as an automatic
 trusted build from Docker's container registry (not insignificant in size):
 
-    docker pull karalabe/xgo-latest
+    docker pull techknowlogick/xgo:latest
 
 To prevent having to remember a potentially complex Docker command every time,
 a lightweight Go wrapper was written on top of it.
 
-    go get github.com/karalabe/xgo
+    go get src.techknowlogick.com/xgo
 
 ## Usage
 
@@ -202,8 +202,6 @@ versions of the same operating system. This however can lead to issues if a used
 dependency is only supported by more recent systems. As such, `xgo` supports the
 selection of specific platform versions by appending them to the OS target string.
 
- * `--targets=ios-8.1/*`: cross compile to iOS 8.1
- * `--targets=android-16/*`: cross compile to Android Jelly Bean
  * `--targets=darwin-10.9/*`: cross compile to Mac OS X Mavericks
  * `--targets=windows-6.0/*`: cross compile to Windows Vista
 
@@ -211,24 +209,7 @@ The supported platforms are:
 
  * All Android APIs up to Android Lollipop 5.0 ([API level ids](https://source.android.com/source/build-numbers.html))
  * All Windows APIs up to Windows 8.1 limited by `mingw-w64` ([API level ids](https://en.wikipedia.org/wiki/Windows_NT#Releases))
- * OSX APIs in the range of 10.6 - 10.11
- * All iOS APIs up to iOS 9.3
-
-### Mobile libraries
-
-Apart from the usual runnable binaries, `xgo` also supports building library
-archives for Android (`android/aar`) and iOS (`ios/framework`). Opposed to
-`gomobile` however `xgo` does not derive library APIs from the Go code, so
-proper CGO C external methods must be defined within the package.
-
-In the case of Android archives, all architectures will be bundled that are
-supported by the requested Android platform version. For iOS frameworks `xgo`
-will bundle armv7 and arm64 by default, and also the x86_64 simulator builds
-if the iPhoneSimulator.sdk was injected by the user:
-
-* Create a new docker image based on xgo: `FROM karalabe/xgo-latest`
-* Inject the simulator SDK: `ADD iPhoneSimulator9.3.sdk.tar.xz /iPhoneSimulator9.3.sdk.tar.xz`
-* Bootstrap the simulator SDK: `$UPDATE_IOS /iPhoneSimulator9.3.sdk.tar.xz`
+ * OSX APIs in the range of 10.6 - 10.14
 
 ### CGO dependencies
 

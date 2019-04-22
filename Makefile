@@ -108,7 +108,7 @@ release-dirs:
 .PHONY: release-windows
 release-windows:
 	@hash xgo > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
-		go install $(GOFLAGS) github.com/karalabe/xgo; \
+		go install $(GOFLAGS) src.techknowlogick.com/xgo; \
 	fi
 	xgo -dest $(DIST)/binaries -tags 'netgo $(TAGS)' -ldflags '-linkmode external -extldflags "-static" $(LDFLAGS)' -targets 'windows/*' -out vikunja-$(VERSION) .
 ifneq ($(DRONE_WORKSPACE),'')
@@ -118,7 +118,7 @@ endif
 .PHONY: release-linux
 release-linux:
 	@hash xgo > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
-		go install $(GOFLAGS) github.com/karalabe/xgo; \
+		go install $(GOFLAGS) src.techknowlogick.com/xgo; \
 	fi
 	xgo -dest $(DIST)/binaries -tags 'netgo $(TAGS)' -ldflags '-linkmode external -extldflags "-static" $(LDFLAGS)' -targets 'linux/*' -out vikunja-$(VERSION) .
 ifneq ($(DRONE_WORKSPACE),'')
@@ -128,7 +128,7 @@ endif
 .PHONY: release-darwin
 release-darwin:
 	@hash xgo > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
-		go install $(GOFLAGS) github.com/karalabe/xgo; \
+		go install $(GOFLAGS) src.techknowlogick.com/xgo; \
 	fi
 	xgo -dest $(DIST)/binaries -tags 'netgo $(TAGS)' -ldflags '$(LDFLAGS)' -targets 'darwin/*' -out vikunja-$(VERSION) .
 ifneq ($(DRONE_WORKSPACE),'')

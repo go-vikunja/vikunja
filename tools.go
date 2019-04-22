@@ -25,9 +25,9 @@ import (
 	_ "github.com/cweill/gotests/..."
 	_ "github.com/fzipp/gocyclo"
 	_ "github.com/gordonklaus/ineffassign"
-	_ "github.com/karalabe/xgo"
 	_ "github.com/swaggo/swag/cmd/swag"
 	_ "golang.org/x/lint/golint"
+	_ "src.techknowlogick.com/xgo"
 
 	_ "github.com/jgautheron/goconst/cmd/goconst"
 	_ "honnef.co/go/tools/cmd/staticcheck"

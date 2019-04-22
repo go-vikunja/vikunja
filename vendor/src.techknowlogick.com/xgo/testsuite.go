@@ -26,11 +26,10 @@ var layers = []struct {
 	tag string
 	dir string
 }{
-	{"karalabe/xgo-base", "base"},
-	{"karalabe/xgo-1.6.2", "go-1.6.2"},
-	{"karalabe/xgo-1.6.x", "go-1.6.x"},
-	{"karalabe/xgo-latest", "go-latest"},
-	//{"karalabe/xgo-latest-ios", "go-latest-ios"}, // Non-public layer (XCode licensing)
+	{"techknowlogick/xgo:base", "base"},
+	{"techknowlogick/xgo:1.12.4", "go-1.12.4"},
+	{"techknowlogick/xgo:1.12.x", "go-1.12.x"},
+	{"techknowlogick/xgo:latest", "go-latest"},
 }
 
 // tests defaines all the input test cases and associated arguments the cross
@@ -44,12 +43,11 @@ var tests = []struct {
 	{"github.com/karalabe/xgo/tests/embedded_cpp", nil},
 
 	// Baseline projects to ensure minimal requirements
-	//{"github.com/project-iris/iris", nil}, // Deps failed, disable
 	{"github.com/ethereum/go-ethereum/cmd/geth", []string{"--branch", "develop"}},
 
 	// Third party projects using xgo, smoke test that they don't break
 	{"github.com/rwcarlsen/cyan/cmd/cyan", nil},
-	{"github.com/cockroachdb/cockroach", []string{"--targets", "darwin-10.11/amd64"}},
+	{"github.com/cockroachdb/cockroach", []string{"--targets", "darwin-10.6/amd64"}},
 }
 
 func main() {
