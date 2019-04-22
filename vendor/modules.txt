@@ -180,6 +180,7 @@ golang.org/x/text/unicode/bidi
 golang.org/x/tools/go/loader
 golang.org/x/tools/go/ast/astutil
 golang.org/x/tools/go/gcexportdata
+golang.org/x/tools/go/ast/inspector
 golang.org/x/tools/go/packages
 golang.org/x/tools/go/types/typeutil
 golang.org/x/tools/go/buildutil
@@ -200,7 +201,7 @@ gopkg.in/gomail.v2
 gopkg.in/testfixtures.v2
 # gopkg.in/yaml.v2 v2.2.2
 gopkg.in/yaml.v2
-# honnef.co/go/tools v0.0.0-20190215041234-466a0476246c
+# honnef.co/go/tools v0.0.0-20190418001031-e561f6794a2a
 honnef.co/go/tools/cmd/staticcheck
 honnef.co/go/tools/lint
 honnef.co/go/tools/lint/lintutil
@@ -218,8 +219,10 @@ honnef.co/go/tools/internal/sharedcheck
 honnef.co/go/tools/lint/lintdsl
 honnef.co/go/tools/deprecated
 honnef.co/go/tools/functions
+honnef.co/go/tools/printf
 honnef.co/go/tools/ssautil
 honnef.co/go/tools/staticcheck/vrp
+honnef.co/go/tools/go/types/typeutil
 honnef.co/go/tools/callgraph
 honnef.co/go/tools/callgraph/static
 # src.techknowlogick.com/xormigrate v0.0.0-20190321151057-24497c23c09c

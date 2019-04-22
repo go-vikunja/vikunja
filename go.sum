@@ -31,6 +31,7 @@ github.com/client9/misspell v0.3.4 h1:ta993UF76GwbvJcIo3Y68y/M3WxlpEHPWIGDkJYwzJ
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=
 github.com/cockroachdb/apd v1.1.0/go.mod h1:8Sl8LxpKi29FqWXR16WEFZRNSz3SoPzUzeMeY4+DwBQ=
 github.com/cweill/gotests v1.5.2 h1:kKqmKmS2wCV3tuLnfpbiuN8OlkosQZTpCfiqmiuNAsA=
+github.com/cweill/gotests v1.5.3 h1:k3t4wW/x/YNixWZJhUIn+mivmK5iV1tJVOwVYkx0UcU=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
@@ -266,5 +267,7 @@ honnef.co/go/tools v0.0.0-20190128043916-71123fcbb8fe h1:/GZ/onp6W295MEgrIwtlbnx
 honnef.co/go/tools v0.0.0-20190128043916-71123fcbb8fe/go.mod h1:rf3lG4BRIbNafJWhAfAdb/ePZxsR/4RtNHQocxwk9r4=
 honnef.co/go/tools v0.0.0-20190215041234-466a0476246c h1:z+UFwlQ7KVwdlQTE5JjvDvfZmyyAVrEiiwau20b7X8k=
 honnef.co/go/tools v0.0.0-20190215041234-466a0476246c/go.mod h1:rf3lG4BRIbNafJWhAfAdb/ePZxsR/4RtNHQocxwk9r4=
+honnef.co/go/tools v0.0.0-20190418001031-e561f6794a2a h1:LJwr7TCTghdatWv40WobzlKXc9c4s8oGa7QKJUtHhWA=
+honnef.co/go/tools v0.0.0-20190418001031-e561f6794a2a/go.mod h1:rf3lG4BRIbNafJWhAfAdb/ePZxsR/4RtNHQocxwk9r4=
 src.techknowlogick.com/xormigrate v0.0.0-20190321151057-24497c23c09c h1:fTwL7EZ3ouk3xeiPiRBYEjSPWTREb9T57bjzpRBNOpQ=
 src.techknowlogick.com/xormigrate v0.0.0-20190321151057-24497c23c09c/go.mod h1:B2NutmcRaDDw4EGe7DoCwyWCELA8W+KxXPhLtgqFUaU=

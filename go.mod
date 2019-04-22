@@ -73,6 +73,6 @@ require (
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 	gopkg.in/testfixtures.v2 v2.5.3
 	gopkg.in/yaml.v2 v2.2.2 // indirect
-	honnef.co/go/tools v0.0.0-20190215041234-466a0476246c
+	honnef.co/go/tools v0.0.0-20190418001031-e561f6794a2a
 	src.techknowlogick.com/xormigrate v0.0.0-20190321151057-24497c23c09c
 )

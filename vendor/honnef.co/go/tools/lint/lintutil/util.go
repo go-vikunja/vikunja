@@ -17,6 +17,7 @@ import (
 	"os"
 	"regexp"
 	"runtime"
+	"runtime/debug"
 	"runtime/pprof"
 	"strconv"
 	"strings"
@@ -109,6 +110,7 @@ func FlagSet(name string) *flag.FlagSet {
 	flags.Bool("version", false, "Print version and exit")
 	flags.Bool("show-ignored", false, "Don't filter ignored problems")
 	flags.String("f", "text", "Output `format` (valid choices are 'stylish', 'text' and 'json')")
+	flags.String("explain", "", "Print description of `check`")
 
 	flags.Int("debug.max-concurrent-jobs", 0, "Number of jobs to run concurrently")
 	flags.Bool("debug.print-stats", false, "Print debug statistics")
@@ -131,7 +133,22 @@ func FlagSet(name string) *flag.FlagSet {
 	return flags
 }
 
+func findCheck(cs []lint.Checker, check string) (lint.Check, bool) {
+	for _, c := range cs {
+		for _, cc := range c.Checks() {
+			if cc.ID == check {
+				return cc, true
+			}
+		}
+	}
+	return lint.Check{}, false
+}
+
 func ProcessFlagSet(cs []lint.Checker, fs *flag.FlagSet) {
+	if _, ok := os.LookupEnv("GOGC"); !ok {
+		debug.SetGCPercent(50)
+	}
+
 	tags := fs.Lookup("tags").Value.(flag.Getter).Get().(string)
 	ignore := fs.Lookup("ignore").Value.(flag.Getter).Get().(string)
 	tests := fs.Lookup("tests").Value.(flag.Getter).Get().(bool)
@@ -139,6 +156,7 @@ func ProcessFlagSet(cs []lint.Checker, fs *flag.FlagSet) {
 	formatter := fs.Lookup("f").Value.(flag.Getter).Get().(string)
 	printVersion := fs.Lookup("version").Value.(flag.Getter).Get().(bool)
 	showIgnored := fs.Lookup("show-ignored").Value.(flag.Getter).Get().(bool)
+	explain := fs.Lookup("explain").Value.(flag.Getter).Get().(string)
 
 	maxConcurrentJobs := fs.Lookup("debug.max-concurrent-jobs").Value.(flag.Getter).Get().(int)
 	printStats := fs.Lookup("debug.print-stats").Value.(flag.Getter).Get().(bool)
@@ -172,6 +190,20 @@ func ProcessFlagSet(cs []lint.Checker, fs *flag.FlagSet) {
 
 	if printVersion {
 		version.Print()
+		exit(0)
+	}
+
+	if explain != "" {
+		check, ok := findCheck(cs, explain)
+		if !ok {
+			fmt.Fprintln(os.Stderr, "Couldn't find check", explain)
+			exit(1)
+		}
+		if check.Doc == "" {
+			fmt.Fprintln(os.Stderr, explain, "has no documentation")
+			exit(1)
+		}
+		fmt.Println(check.Doc)
 		exit(0)
 	}
 
@@ -279,6 +311,7 @@ func Lint(cs []lint.Checker, paths []string, opt *Options) ([]lint.Problem, erro
 		return nil, err
 	}
 	stats.PackageLoading = time.Since(t)
+	runtime.GC()
 
 	var problems []lint.Problem
 	workingPkgs := make([]*packages.Package, 0, len(pkgs))
@@ -346,7 +379,6 @@ func compileErrors(pkg *packages.Package) []lint.Problem {
 		p := lint.Problem{
 			Position: parsePos(err.Pos),
 			Text:     err.Msg,
-			Checker:  "compiler",
 			Check:    "compile",
 		}
 		ps = append(ps, p)
