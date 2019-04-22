@@ -34,7 +34,8 @@ steps:
       - make misspell-check
       - make goconst-check
       - make gocyclo-check
-      - make static-check
+      # Disabled until the memory leak on their side is resolved. See https://github.com/dominikh/go-tools/issues/419.
+      # - make static-check
       - make build
     when:
       event: [ push, tag, pull_request ]
