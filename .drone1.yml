@@ -143,13 +143,13 @@ steps:
       - git fetch --tags
 
   - name: before-static-build
-    image: src.techknowlogick.com/xgo:latest
+    image: techknowlogick/xgo:latest
     pull: true
     commands:
       - make release-dirs
 
   - name: static-build-windows
-    image: src.techknowlogick.com/xgo:latest
+    image: techknowlogick/xgo:latest
     pull: true
     environment:
       GOPATH: /srv/app
@@ -158,7 +158,7 @@ steps:
     depends_on: [ before-static-build ]
 
   - name: static-build-linux
-    image: src.techknowlogick.com/xgo:latest
+    image: techknowlogick/xgo:latest
     pull: true
     environment:
       GOPATH: /srv/app
@@ -167,7 +167,7 @@ steps:
     depends_on: [ before-static-build ]
 
   - name: static-build-darwin
-    image: src.techknowlogick.com/xgo:latest
+    image: techknowlogick/xgo:latest
     pull: true
     environment:
       GOPATH: /srv/app
@@ -176,7 +176,7 @@ steps:
     depends_on: [ before-static-build ]
 
   - name: after-build-static
-    image: src.techknowlogick.com/xgo:latest
+    image: techknowlogick/xgo:latest
     pull: true
     depends_on:
       - static-build-windows
@@ -331,13 +331,13 @@ steps:
       - git fetch --tags
 
   - name: before-static-build
-    image: src.techknowlogick.com/xgo:latest
+    image: techknowlogick/xgo:latest
     pull: true
     commands:
       - make release-dirs
 
   - name: static-build-windows
-    image: src.techknowlogick.com/xgo:latest
+    image: techknowlogick/xgo:latest
     pull: true
     environment:
       GOPATH: /srv/app
@@ -346,7 +346,7 @@ steps:
     depends_on: [ before-static-build ]
 
   - name: static-build-linux
-    image: src.techknowlogick.com/xgo:latest
+    image: techknowlogick/xgo:latest
     pull: true
     environment:
       GOPATH: /srv/app
@@ -355,7 +355,7 @@ steps:
     depends_on: [ before-static-build ]
 
   - name: static-build-darwin
-    image: src.techknowlogick.com/xgo:latest
+    image: techknowlogick/xgo:latest
     pull: true
     environment:
       GOPATH: /srv/app
@@ -364,7 +364,7 @@ steps:
     depends_on: [ before-static-build ]
 
   - name: after-build-static
-    image: src.techknowlogick.com/xgo:latest
+    image: techknowlogick/xgo:latest
     pull: true
     depends_on:
       - static-build-windows
