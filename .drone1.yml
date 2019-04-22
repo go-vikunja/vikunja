@@ -2,7 +2,7 @@ kind: pipeline
 name: testing
 
 workspace:
-  base: /srv/app
+  base: /go
   path: src/code.vikunja.io/api
 
 services:
@@ -126,7 +126,7 @@ depends_on:
   - testing
 
 workspace:
-  base: /srv/app
+  base: /go
   path: src/code.vikunja.io/api
 
 trigger:
@@ -320,7 +320,7 @@ depends_on:
   - testing
 
 workspace:
-  base: /srv/app
+  base: /go
   path: src/code.vikunja.io/api
 
 trigger:
@@ -488,7 +488,7 @@ kind: pipeline
 name: deploy-docs
 
 workspace:
-  base: /srv/app
+  base: /go
   path: src/code.vikunja.io/api
 
 clone:
