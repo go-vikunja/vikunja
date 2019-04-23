@@ -16,12 +16,17 @@ $navbar-item-active-color: $primary;
 $dropdown-content-shadow: none;
 $navbar-dropdown-boxed-shadow: $dropdown-content-shadow;
 $bulmaswatch-import-font: false !default;
+$light-background: #F1F5F8;
 
 $vikunja-font: 'Quicksand', sans-serif;
 $vikunja-light-text: darken(#fff, 10%);
 $vikunja-blue: #7F23FF;// #7F23FF; // #5974d9
 $vikunja-green: #4DB788;
-$navbar-padding: 1.5em;
+
+$navbar-padding: 2em;
+$vikunja-nav-background: $light-background;
+$vikunja-nav-color: lighten($black, 25);
+$vikunja-nav-selected-width: 0.4em;
 
 $transition: 150ms ease;
 

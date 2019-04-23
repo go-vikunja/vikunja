@@ -42,6 +42,7 @@ import { faPowerOff } from '@fortawesome/free-solid-svg-icons'
 import { faCalendarWeek } from '@fortawesome/free-solid-svg-icons'
 import { faExclamation } from '@fortawesome/free-solid-svg-icons'
 import { faTags } from '@fortawesome/free-solid-svg-icons'
+import { faChevronDown } from '@fortawesome/free-solid-svg-icons'
 import { faTimesCircle } from '@fortawesome/free-regular-svg-icons'
 import { faCalendarAlt } from '@fortawesome/free-regular-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
@@ -68,6 +69,7 @@ library.add(faCalendarWeek)
 library.add(faCalendarAlt)
 library.add(faExclamation)
 library.add(faTags)
+library.add(faChevronDown)
 
 Vue.component('icon', FontAwesomeIcon)
 

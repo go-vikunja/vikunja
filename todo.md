@@ -34,6 +34,8 @@
 * [x] Google fonts raus (sollen von lokal geladen werden)
 * [x] Ladeanimationen erst nach 100ms anzeigen, sonst wird das überflüssigerweise angezeigt
 * [x] Btns für Teams und neuer Namespace nach oben in die Leiste verschieben
+* [ ] Card-like overview of all lists with the first 3-5 tasks, undone first
+* [ ] Be able to collapse all lists in a namespace by clicking on the menu entry
 
 ## Funktionales
 
@@ -99,7 +101,7 @@
   * [x] Label overview + edit
   	* [x] Only be able to edit labels where the user has the right, disable the others
   * [x] Delay when searching to not search for the character I entered 5 minutes ago
-* [ ] Timeline/Calendar view -> Dazu tasks die in einem Bestimmten Bereich due sind, macht dann das Frontend
+* [ ] Timeline/Calendar view -> Get and show tasks in a range
 
 ## Other features
 
@@ -118,7 +120,7 @@
 * [x] Same improvements also for user sharing
 * [x] Use rights const everywhere
 * [x] Styling of the search dropdown to match the rest of the theme
-* [ ] Use query params when getting tasks in a range
+* [x] Use query params when getting tasks in a range
 
 ## Waiting for backend
 

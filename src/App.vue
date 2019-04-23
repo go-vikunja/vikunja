@@ -1,10 +1,34 @@
 <template>
 	<div id="app">
-		<nav class="navbar is-dark is-fixed-top" role="navigation" aria-label="main navigation" v-if="user.authenticated">
+		<nav class="navbar main-theme is-fixed-top" role="navigation" aria-label="main navigation" v-if="user.authenticated">
 			<div class="navbar-brand">
 				<router-link :to="{name: 'home'}" class="navbar-item logo">
-					<img src="/images/logo-full-white.svg"/>
+					<img src="/images/logo-full.svg" alt="Vikunja"/>
 				</router-link>
+			</div>
+			<div class="navbar-end">
+				<div class="user">
+					<img :src="gravatar()" class="avatar" alt=""/>
+					<div class="dropdown is-right is-active">
+						<div class="dropdown-trigger">
+							<button class="button noshadow" @click="userMenuActive = !userMenuActive">
+								<span>{{user.infos.username}}</span>
+								<span class="icon is-small">
+									<icon icon="chevron-down"/>
+								</span>
+							</button>
+						</div>
+						<transition name="fade">
+							<div class="dropdown-menu" v-if="userMenuActive">
+								<div class="dropdown-content">
+									<a @click="logout()" class="dropdown-item">
+										Logout
+									</a>
+								</div>
+							</div>
+						</transition>
+					</div>
+				</div>
 			</div>
 		</nav>
 		<div v-if="user.authenticated">
@@ -12,19 +36,6 @@
 			<a @click="mobileMenuActive = false" class="mobilemenu-hide-button" v-if="mobileMenuActive"><icon icon="times"></icon></a>
 			<div class="app-container">
 				<div class="namespace-container" :class="{'is-active': mobileMenuActive}">
-					<div class="menu top-menu">
-						<ul class="menu-list user">
-							<li>
-								<img :src="gravatar()" class="is-rounded" alt=""/>
-								<span class="username">{{user.infos.username}}</span>
-								<a @click="logout()" class="logout-icon">
-									<span class="icon is-medium">
-										<icon icon="power-off" size="2x"/>
-									</span>
-								</a>
-							</li>
-						</ul>
-					</div>
 					<div class="menu top-menu">
 						<ul class="menu-list">
 							<li>
@@ -140,6 +151,7 @@
 				mobileMenuActive: false,
 				fullpage: false,
 				currentDate: new Date(),
+				userMenuActive: false,
 			}
 		},
 		beforeMount() {

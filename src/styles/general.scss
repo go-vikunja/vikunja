@@ -35,10 +35,9 @@
   }
 
   .namespace-container{
-    background: $vikunja-blue;
-    box-shadow: 0 0 1em darken(#fff, 30%);
+    background: $vikunja-nav-background;
     z-index: 3;
-    color: $vikunja-light-text;
+    color: $vikunja-nav-color;
     padding: 0;
     transition: all $transition;
     position: fixed;
@@ -60,14 +59,10 @@
       }
     }
 
-    .namespaces-lists{
-      border-top: 1px solid darken($vikunja-blue, 6);
-    }
-
     .menu{
       .menu-label {
         font-size: 1em;
-        font-weight: 400;
+        font-weight: 700;
         min-height: 2.5em;
         padding-top: $navbar-padding * 0.3;
 
@@ -90,29 +85,36 @@
       }
 
       .menu-label,.nsettings,.menu-list a{
-        color: $vikunja-light-text;
+        color: $vikunja-nav-color;
       }
 
       .menu-label{
+        color: $grey;
+        font-weight: 500;
         padding-left: $navbar-padding;
       }
 
       .menu-list {
         li {
-          height: 36px;
+          height: 44px;
         }
 
         a {
-          padding-left: $navbar-padding * 2;
+          padding: 0.75em 1em 0.75em $navbar-padding * 1.5;
           transition: all 0.2s ease;
 
+          -webkit-border-radius: 0;
+          -moz-border-radius: 0;
+          border-radius: 0;
           white-space: nowrap;
           text-overflow: ellipsis;
           overflow: hidden;
           display: inline-block;
           width: 100%;
+          border-left: $vikunja-nav-selected-width solid transparent;
 
           .icon {
+            color: lighten($vikunja-nav-color, 20);
             height: 1rem;
             vertical-align: middle;
             padding-bottom: 4px;
@@ -120,62 +122,33 @@
           }
 
           &.router-link-exact-active {
-            background: darken($vikunja-blue, 5%);
+            color: $primary;
+            border-left: $vikunja-nav-selected-width solid darken($primary, 5%);
+            .icon {
+              color: $primary;
+            }
           }
 
           &:hover {
-            background: darken($vikunja-blue, 3%);
-          }
-        }
-
-        &.user{
-          padding: 0 0.5em 1em 1em;
-          border-bottom: 1px solid #6d04ff;
-
-          li{
-            height: auto;
-          }
-
-          img.is-rounded{
-            border-radius: 100%;
-            vertical-align: middle;
-            margin-top: -20px;
-            display: inline-block;
-          }
-
-          .username{
-            font-family: $vikunja-font;
-            font-weight: bold;
-            font-size: 1.5em;
-            padding-left: 0.5em;
-            margin-top: 20px;
-
-            white-space: nowrap;
-            text-overflow: ellipsis;
-            overflow: hidden;
-            width: calc(100% - 103px - 1em);
-            display: inline-block;
-          }
-
-          a.logout-icon{
-            float: right;
-            width: 53px;
-            margin-top: 15px;
-
-            &:hover, &:focus{
-              color: lighten($light, 80);
-              background: transparent;
-            }
+            background: $white;
+            border-left: $vikunja-nav-selected-width solid darken($primary, 3%);
           }
         }
       }
     }
 
     .top-menu {
-      margin: $navbar-padding 0;
+      margin: $navbar-padding / 2 0 $navbar-padding;
 
-      .menu-list a {
-        padding-left: $navbar-padding;
+      .menu-list {
+        li {
+          font-weight: 500;
+          font-family: $vikunja-font;
+        }
+
+        a {
+          padding-left: 2em;
+        }
       }
     }
   }
@@ -183,7 +156,7 @@
   .app-content{
     padding: $navbar-height + 1.5rem 1.5em 0 1.5em;
     z-index: 2;
-    background: url('../public/images/llama-upside-down.svg') no-repeat top right darken(#fff, 4);
+    background: url('../public/images/llama-upside-down.svg') no-repeat top right $light-background;
     margin-left: 17vw;
 
     @media screen and (max-width: $tablet) {
@@ -194,6 +167,54 @@
 
     .card{
       background: #fff;
+    }
+  }
+}
+
+.navbar .user{
+  padding: 1em 0.5em 0;
+
+  span {
+    font-family: $vikunja-font;
+  }
+
+  .avatar {
+    -webkit-border-radius: 100%;
+    -moz-border-radius: 100%;
+    border-radius: 100%;
+    vertical-align: middle;
+    height: 40px;
+  }
+
+  .logout-icon {
+    color: lighten($black, 10);
+
+    .icon {
+      vertical-align: middle;
+    }
+  }
+
+  .fade-enter-active, .fade-leave-active {
+    transition: opacity 150ms;
+  }
+  .fade-enter, .fade-leave-to {
+    opacity: 0;
+  }
+
+  .dropdown-trigger .button {
+    background: none;
+
+    &:focus:not(:active), &:active{
+      outline: none !important;
+      -webkit-box-shadow: none !important;
+      -moz-box-shadow: none !important;
+      box-shadow: none !important;
+    }
+  }
+
+  .dropdown-menu {
+    .dropdown-content {
+      box-shadow: 0.3em 0.3em 0.8em darken($light, 6);
     }
   }
 }
