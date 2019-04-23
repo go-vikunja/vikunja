@@ -1,3 +1,5 @@
+//lint:file-ignore ST1018 The const below is not ours
+
 //  Vikunja is a todo-list application to facilitate your life.
 //  Copyright 2019 Vikunja and contributors. All rights reserved.
 //
@@ -14,7 +16,6 @@
 //  You should have received a copy of the GNU General Public License
 //  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-//lint:file-ignore ST1018 The const below is not ours
 package v1
 
 import (
