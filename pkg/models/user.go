@@ -44,7 +44,7 @@ type User struct {
 	Username string `xorm:"varchar(250) not null unique" json:"username" valid:"length(3|250)" minLength:"3" maxLength:"250"`
 	Password string `xorm:"varchar(250) not null" json:"-"`
 	// The user's email address.
-	Email    string `xorm:"varchar(250) null" json:"email,omitonempty" valid:"email,length(0|250)" maxLength:"250"`
+	Email    string `xorm:"varchar(250) null" json:"email,omitempty" valid:"email,length(0|250)" maxLength:"250"`
 	IsActive bool   `xorm:"null" json:"-"`
 
 	PasswordResetToken string `xorm:"varchar(450) null" json:"-"`

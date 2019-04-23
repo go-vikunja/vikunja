@@ -156,7 +156,7 @@ github.com/urfave/cli
 github.com/valyala/bytebufferpool
 # github.com/valyala/fasttemplate v1.0.1
 github.com/valyala/fasttemplate
-# golang.org/x/crypto v0.0.0-20190325154230-a5d413f7728c
+# golang.org/x/crypto v0.0.0-20190422183909-d864b10871cd
 golang.org/x/crypto/bcrypt
 golang.org/x/crypto/acme/autocert
 golang.org/x/crypto/blowfish
@@ -164,17 +164,17 @@ golang.org/x/crypto/acme
 # golang.org/x/lint v0.0.0-20181026193005-c67002cb31c3
 golang.org/x/lint/golint
 golang.org/x/lint
-# golang.org/x/net v0.0.0-20181217023233-e147a9138326
+# golang.org/x/net v0.0.0-20190420063019-afa5a82059c6
 golang.org/x/net/idna
-# golang.org/x/sys v0.0.0-20190329044733-9eb1bfa1ce65
+# golang.org/x/sys v0.0.0-20190422165155-953cdadca894
 golang.org/x/sys/unix
 # golang.org/x/text v0.3.0
 golang.org/x/text/transform
 golang.org/x/text/unicode/norm
-golang.org/x/text/width
 golang.org/x/text/secure/bidirule
 golang.org/x/text/unicode/bidi
-# golang.org/x/tools v0.0.0-20181026183834-f60e5f99f081
+golang.org/x/text/width
+# golang.org/x/tools v0.0.0-20190422233926-fe54fb35175b
 golang.org/x/tools/go/loader
 golang.org/x/tools/go/ast/astutil
 golang.org/x/tools/go/gcexportdata
@@ -184,6 +184,7 @@ golang.org/x/tools/go/types/typeutil
 golang.org/x/tools/go/buildutil
 golang.org/x/tools/go/internal/cgo
 golang.org/x/tools/go/internal/gcimporter
+golang.org/x/tools/go/internal/packagesdriver
 golang.org/x/tools/internal/gopathwalk
 golang.org/x/tools/internal/semver
 golang.org/x/tools/internal/fastwalk

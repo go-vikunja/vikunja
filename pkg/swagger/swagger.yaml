@@ -631,7 +631,13 @@ info:
     email: hello@vikunja.io
     name: General Vikunja contact
     url: http://vikunja.io/en/contact/
-  description: '<!-- ReDoc-Inject: <security-definitions> -->'
+  description: |-
+    This is the documentation for the [Vikunja](http://vikunja.io) API. Vikunja is a cross-plattform Todo-application with a lot of features, such as sharing lists with users or teams. <!-- ReDoc-Inject: <security-definitions> -->
+    # Authorization
+    **JWT-Auth:** Main authorization method, used for most of the requests. Needs ` + "`" + `Authorization: Bearer <jwt-token>` + "`" + `-header to authenticate successfully.
+
+    **BasicAuth:** Only used when requesting tasks via caldav.
+    <!-- ReDoc-Inject: <security-definitions> -->
   license:
     name: GPLv3
     url: http://code.vikunja.io/api/src/branch/master/LICENSE
@@ -916,9 +922,9 @@ paths:
     get:
       consumes:
       - application/json
-      description: Returns a team by its ID.
+      description: Returns a list by its ID.
       parameters:
-      - description: Team ID
+      - description: List ID
         in: path
         name: id
         required: true
@@ -927,12 +933,12 @@ paths:
       - application/json
       responses:
         "200":
-          description: The team
+          description: The list
           schema:
-            $ref: '#/definitions/models.Team'
+            $ref: '#/definitions/models.List'
             type: object
         "403":
-          description: The user does not have access to the team
+          description: The user does not have access to the list
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
             type: object
@@ -943,9 +949,9 @@ paths:
             type: object
       security:
       - JWTKeyAuth: []
-      summary: Gets one team
+      summary: Gets one list
       tags:
-      - team
+      - list
     post:
       consumes:
       - application/json
@@ -2545,10 +2551,14 @@ paths:
         name: sort
         type: string
       - description: The start date parameter to filter by. Expects a unix timestamp.
+          If no end date, but a start date is specified, the end date is set to the
+          current time.
         in: query
         name: startdate
         type: integer
       - description: The end date parameter to filter by. Expects a unix timestamp.
+          If no start date, but an end date is specified, the start date is set to
+          the current time.
         in: query
         name: enddate
         type: integer

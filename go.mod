@@ -64,11 +64,11 @@ require (
 	github.com/swaggo/swag v1.4.1-0.20181210033626-0e12fd5eb026
 	github.com/urfave/cli v1.20.0 // indirect
 	github.com/valyala/fasttemplate v1.0.1 // indirect
-	golang.org/x/crypto v0.0.0-20190325154230-a5d413f7728c
+	golang.org/x/crypto v0.0.0-20190422183909-d864b10871cd
 	golang.org/x/lint v0.0.0-20181026193005-c67002cb31c3
-	golang.org/x/net v0.0.0-20181217023233-e147a9138326 // indirect
-	golang.org/x/sys v0.0.0-20190329044733-9eb1bfa1ce65 // indirect
-	golang.org/x/tools v0.0.0-20181026183834-f60e5f99f081 // indirect
+	golang.org/x/net v0.0.0-20190420063019-afa5a82059c6 // indirect
+	golang.org/x/sys v0.0.0-20190422165155-953cdadca894 // indirect
+	golang.org/x/tools v0.0.0-20190422233926-fe54fb35175b // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/d4l3k/messagediff.v1 v1.2.1
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
