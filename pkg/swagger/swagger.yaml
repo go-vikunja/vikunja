@@ -65,6 +65,9 @@ definitions:
         items:
           $ref: '#/definitions/models.Label'
         type: array
+      listID:
+        description: The list this task belongs to.
+        type: integer
       parentTaskID:
         description: If the task is a subtask, this is the id of its parent.
         type: integer
@@ -230,6 +233,9 @@ definitions:
         items:
           $ref: '#/definitions/models.Label'
         type: array
+      listID:
+        description: The list this task belongs to.
+        type: integer
       parentTaskID:
         description: If the task is a subtask, this is the id of its parent.
         type: integer
@@ -631,13 +637,7 @@ info:
     email: hello@vikunja.io
     name: General Vikunja contact
     url: http://vikunja.io/en/contact/
-  description: |-
-    This is the documentation for the [Vikunja](http://vikunja.io) API. Vikunja is a cross-plattform Todo-application with a lot of features, such as sharing lists with users or teams. <!-- ReDoc-Inject: <security-definitions> -->
-    # Authorization
-    **JWT-Auth:** Main authorization method, used for most of the requests. Needs ` + "`" + `Authorization: Bearer <jwt-token>` + "`" + `-header to authenticate successfully.
-
-    **BasicAuth:** Only used when requesting tasks via caldav.
-    <!-- ReDoc-Inject: <security-definitions> -->
+  description: '<!-- ReDoc-Inject: <security-definitions> -->'
   license:
     name: GPLv3
     url: http://code.vikunja.io/api/src/branch/master/LICENSE
@@ -648,15 +648,14 @@ paths:
     get:
       consumes:
       - application/json
-      description: Returns all labels which are either created by the user or associated
-        with a task the user has at least read-access to.
+      description: Returns an array with all assignees for this task.
       parameters:
       - description: The page number. Used for pagination. If not provided, the first
           page of results is returned.
         in: query
         name: p
         type: integer
-      - description: Search labels by label text.
+      - description: Search assignees by their username.
         in: query
         name: s
         type: string
@@ -664,10 +663,10 @@ paths:
       - application/json
       responses:
         "200":
-          description: The labels
+          description: The assignees
           schema:
             items:
-              $ref: '#/definitions/models.Label'
+              $ref: '#/definitions/models.User'
             type: array
         "500":
           description: Internal error
@@ -676,9 +675,9 @@ paths:
             type: object
       security:
       - JWTKeyAuth: []
-      summary: Get all labels a user has access to
+      summary: Get all assignees for a task
       tags:
-      - labels
+      - assignees
     put:
       consumes:
       - application/json
@@ -922,9 +921,9 @@ paths:
     get:
       consumes:
       - application/json
-      description: Returns a list by its ID.
+      description: Returns a team by its ID.
       parameters:
-      - description: List ID
+      - description: Team ID
         in: path
         name: id
         required: true
@@ -933,12 +932,12 @@ paths:
       - application/json
       responses:
         "200":
-          description: The list
+          description: The team
           schema:
-            $ref: '#/definitions/models.List'
+            $ref: '#/definitions/models.Team'
             type: object
         "403":
-          description: The user does not have access to the list
+          description: The user does not have access to the team
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
             type: object
@@ -949,9 +948,9 @@ paths:
             type: object
       security:
       - JWTKeyAuth: []
-      summary: Gets one list
+      summary: Gets one team
       tags:
-      - list
+      - team
     post:
       consumes:
       - application/json
@@ -2569,7 +2568,7 @@ paths:
           description: The tasks
           schema:
             items:
-              $ref: '#/definitions/models.List'
+              $ref: '#/definitions/models.ListTask'
             type: array
         "500":
           description: Internal error

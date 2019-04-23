@@ -35,7 +35,7 @@ const (
 // @Param startdate query int false "The start date parameter to filter by. Expects a unix timestamp. If no end date, but a start date is specified, the end date is set to the current time."
 // @Param enddate query int false "The end date parameter to filter by. Expects a unix timestamp. If no start date, but an end date is specified, the start date is set to the current time."
 // @Security JWTKeyAuth
-// @Success 200 {array} models.List "The tasks"
+// @Success 200 {array} models.ListTask "The tasks"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/all [get]
 func (t *ListTask) ReadAll(search string, a web.Auth, page int) (interface{}, error) {

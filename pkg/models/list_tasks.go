@@ -37,7 +37,7 @@ type ListTask struct {
 	RemindersUnix []int64 `xorm:"JSON TEXT null" json:"reminderDates"`
 	CreatedByID   int64   `xorm:"int(11) not null" json:"-"` // ID of the user who put that task on the list
 	// The list this task belongs to.
-	ListID int64 `xorm:"int(11) INDEX not null" json:"-" param:"list"`
+	ListID int64 `xorm:"int(11) INDEX not null" json:"listID" param:"list"`
 	// An amount in seconds this task repeats itself. If this is set, when marking the task as done, it will mark itself as "undone" and then increase all remindes and the due date by its amount.
 	RepeatAfter int64 `xorm:"int(11) INDEX null" json:"repeatAfter"`
 	// If the task is a subtask, this is the id of its parent.
