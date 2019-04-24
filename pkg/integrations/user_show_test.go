@@ -29,6 +29,6 @@ func TestUserShow(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Contains(t, rec.Body.String(), `"id":1`)
 		assert.Contains(t, rec.Body.String(), `"username":"user1"`)
-		assert.Contains(t, rec.Body.String(), `"email":""`)
+		assert.NotContains(t, rec.Body.String(), `"email":""`)
 	})
 }
