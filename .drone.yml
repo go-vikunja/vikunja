@@ -1,14 +1,36 @@
-workspace:
-  base: /srv/app
+kind: pipeline
+name: testing
 
-clone:
-  git:
-    image: plugins/git
-    depth: 50
-    tags: true
+trigger:
+  branch:
+    exclude:
+      - master
+  event:
+    - push
 
-pipeline:
-  build:
+steps:
+  - name: build
+    image: node:11-alpine
+    pull: true
+    group: build-static
+    commands:
+      - apk add yarn
+      - yarn
+      - yarn run lint
+      - yarn run build
+
+---
+kind: pipeline
+name: release-latest
+
+trigger:
+  branch:
+    - master
+  event:
+    - push
+
+steps:
+  - name: build
     image: node:11-alpine
     pull: true
     group: build-static
@@ -18,72 +40,103 @@ pipeline:
       - yarn run lint
       - "echo '{\"VIKUNJA_API_BASE_URL\": \"/api/v1/\"}' > /srv/app/src/git.kolaente.de/vikunja/frontend/public/config.json" # Override config
       - yarn run build
-    when:
-      event: [push, tag, pull_request]
 
-  static:
-    image: karalabe/xgo-latest:latest
-    pull: true
-    commands:
-      - cd dist
-      - zip -r ../vikunja-frontend-${DRONE_TAG##v}.zip *
-      - cd ..
-    when:
-      event: [tag]
-
-  static:
-    image: karalabe/xgo-latest:latest
+  - name: static
+    image: kolaente/zip
     pull: true
     commands:
       - cd dist
       - zip -r ../vikunja-frontend-master.zip *
       - cd ..
-    when:
-      event: [push]
-      branch: [ master ]
 
-  # Push the releases to our pseudo-s3-bucket
-  release:
+  - name: release-latest
     image: plugins/s3:1
     pull: true
-    secrets: [ aws_access_key_id, aws_secret_access_key ]
-    bucket: vikunja-frontend
-    endpoint: https://storage.kolaente.de
-    path_style: true
-    source: vikunja-frontend-${DRONE_TAG##v}.zip
-    when:
-      event: [ tag ]
-
-  release:
-    image: plugins/s3:1
-    pull: true
-    secrets: [ aws_access_key_id, aws_secret_access_key ]
-    bucket: vikunja-frontend
-    endpoint: https://storage.kolaente.de
-    path_style: true
-    source: vikunja-frontend-master.zip
-    when:
-      event: [ push ]
-      branch: [ master ]
+    settings:
+      bucket: vikunja-frontend
+      access_key:
+        from_secret: aws_access_key_id
+      secret_key:
+        from_secret: aws_secret_access_key
+      endpoint: https://storage.kolaente.de
+      path_style: true
+      source: vikunja-frontend-master.zip
 
   # Build the docker image and push it to docker hub
-  docker:
+  - name: docker
     image: plugins/docker
     pull: true
-    secrets: [ docker_username, docker_password ]
-    repo: vikunja/frontend
-    auto_tag: true
-    when:
-      event: [ push, tag ]
-      branch: [ master ]
+    settings:
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
+      repo: vikunja/frontend
+      auto_tag: true
 
-  rancher:
+  # Update the instance on try.vikunja.io
+  - name: rancher
     image: peloton/drone-rancher
-    url: http://server01.kolaente.de:8080/v1
-    secrets: [ RANCHER_ACCESS_KEY, RANCHER_SECRET_KEY ]
-    service: vikunja-dev/frontend
-    docker_image: vikunja/frontend
-    confirm: true
-    when:
-      event: [ push, tag ]
-      branch: [ master ]
+    settings:
+      url: http://server01.kolaente.de:8080/v1
+      access_key:
+        from_secret: RANCHER_ACCESS_KEY
+      secret_key:
+        from_secret: RANCHER_SECRET_KEY
+      service: vikunja-dev/frontend
+      docker_image: vikunja/frontend
+      confirm: true
+    depends_on: [ docker ]
+
+---
+kind: pipeline
+name: release-version
+
+trigger:
+  event:
+    - tag
+
+steps:
+  - name: build
+    image: node:11-alpine
+    pull: true
+    group: build-static
+    commands:
+      - apk add yarn
+      - yarn
+      - yarn run lint
+      - "echo '{\"VIKUNJA_API_BASE_URL\": \"/api/v1/\"}' > /srv/app/src/git.kolaente.de/vikunja/frontend/public/config.json" # Override config
+      - yarn run build
+
+  - name: static
+    image: kolaente/zip
+    pull: true
+    commands:
+      - cd dist
+      - zip -r ../vikunja-frontend-${DRONE_TAG##v}.zip *
+      - cd ..
+
+  - name: release-latest
+    image: plugins/s3:1
+    pull: true
+    settings:
+      bucket: vikunja-frontend
+      access_key:
+        from_secret: aws_access_key_id
+      secret_key:
+        from_secret: aws_secret_access_key
+      endpoint: https://storage.kolaente.de
+      path_style: true
+      source: vikunja-frontend-${DRONE_TAG##v}.zip
+
+  # Build the docker image and push it to docker hub
+  - name: docker
+    image: plugins/docker
+    pull: true
+    settings:
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
+      repo: vikunja/frontend
+      auto_tag: true
