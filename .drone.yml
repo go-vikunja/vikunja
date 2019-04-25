@@ -108,6 +108,7 @@ steps:
       - apk add yarn
       - yarn
       - yarn run lint
+      - pwd
       - "echo '{\"VIKUNJA_API_BASE_URL\": \"/api/v1/\"}' > /srv/app/src/git.kolaente.de/vikunja/frontend/public/config.json" # Override config
       - yarn run build
 
