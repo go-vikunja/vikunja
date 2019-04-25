@@ -48,8 +48,9 @@ steps:
       - cd dist
       - zip -r ../vikunja-frontend-master.zip *
       - cd ..
+    depends_on: [ build ]
 
-  - name: release-latest
+  - name: release
     image: plugins/s3:1
     pull: true
     settings:
@@ -61,6 +62,7 @@ steps:
       endpoint: https://storage.kolaente.de
       path_style: true
       source: vikunja-frontend-master.zip
+    depends_on: [ static ]
 
   # Build the docker image and push it to docker hub
   - name: docker
@@ -73,6 +75,7 @@ steps:
         from_secret: docker_password
       repo: vikunja/frontend
       auto_tag: true
+    depends_on: [ static ]
 
   # Update the instance on try.vikunja.io
   - name: rancher
@@ -115,8 +118,9 @@ steps:
       - cd dist
       - zip -r ../vikunja-frontend-${DRONE_TAG##v}.zip *
       - cd ..
+    depends_on: [ build ]
 
-  - name: release-latest
+  - name: release
     image: plugins/s3:1
     pull: true
     settings:
@@ -128,6 +132,7 @@ steps:
       endpoint: https://storage.kolaente.de
       path_style: true
       source: vikunja-frontend-${DRONE_TAG##v}.zip
+    depends_on: [ static ]
 
   # Build the docker image and push it to docker hub
   - name: docker
@@ -140,3 +145,4 @@ steps:
         from_secret: docker_password
       repo: vikunja/frontend
       auto_tag: true
+    depends_on: [ static ]
