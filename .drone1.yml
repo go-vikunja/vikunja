@@ -152,7 +152,9 @@ steps:
     image: techknowlogick/xgo:latest
     pull: true
     environment:
-      GO111MODULE: on
+      # This path does not exist. However, when we set the gopath to /go, the build fails. Not sure why.
+      # Leaving this here until we know how to resolve this properly.
+      GOPATH: /srv/app
     commands:
       - export PATH=$PATH:$GOPATH/bin
       - make release-windows
@@ -162,7 +164,9 @@ steps:
     image: techknowlogick/xgo:latest
     pull: true
     environment:
-      GO111MODULE: on
+      # This path does not exist. However, when we set the gopath to /go, the build fails. Not sure why.
+      # Leaving this here until we know how to resolve this properly.
+      GOPATH: /srv/app
     commands:
       - export PATH=$PATH:$GOPATH/bin
       - make release-linux
@@ -172,7 +176,9 @@ steps:
     image: techknowlogick/xgo:latest
     pull: true
     environment:
-      GO111MODULE: on
+      # This path does not exist. However, when we set the gopath to /go, the build fails. Not sure why.
+      # Leaving this here until we know how to resolve this properly.
+      GOPATH: /srv/app
     commands:
       - export PATH=$PATH:$GOPATH/bin
       - make release-darwin
@@ -343,7 +349,9 @@ steps:
     image: techknowlogick/xgo:latest
     pull: true
     environment:
-      GO111MODULE: on
+      # This path does not exist. However, when we set the gopath to /go, the build fails. Not sure why.
+      # Leaving this here until we know how to resolve this properly.
+      GOPATH: /srv/app
     commands:
       - export PATH=$PATH:$GOPATH/bin
       - make release-windows
@@ -353,7 +361,9 @@ steps:
     image: techknowlogick/xgo:latest
     pull: true
     environment:
-      GO111MODULE: on
+      # This path does not exist. However, when we set the gopath to /go, the build fails. Not sure why.
+      # Leaving this here until we know how to resolve this properly.
+      GOPATH: /srv/app
     commands:
       - export PATH=$PATH:$GOPATH/bin
       - make release-linux
@@ -363,7 +373,9 @@ steps:
     image: techknowlogick/xgo:latest
     pull: true
     environment:
-      GO111MODULE: on
+      # This path does not exist. However, when we set the gopath to /go, the build fails. Not sure why.
+      # Leaving this here until we know how to resolve this properly.
+      GOPATH: /srv/app
     commands:
       - export PATH=$PATH:$GOPATH/bin
       - make release-darwin
