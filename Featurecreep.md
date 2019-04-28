@@ -176,6 +176,8 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [ ] User struct should have a field for the avatar url (-> gravatar md5 calculated by the backend)
 * [ ] All `ReadAll` methods should return the number of items per page, the number of items on this page, the total pages and the items
       -> Check if there's a way to do that efficently. Maybe only implementing it in the web handler.
+* [ ] List stats to see how many tasks are done, how many are there in total, how many people have acces to a list etc
+* [ ] Colors for tasks
 
 ### Refactor 
 
