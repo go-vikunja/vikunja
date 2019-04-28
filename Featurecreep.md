@@ -138,6 +138,7 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [ ] Custom fields: Templates at List > Namespace > Global level, overwriting each other
 * [ ] Related tasks -> settable with a "kind" of relation like blocked, or just related or so
 * [ ] Description should be longtext
+* [ ] Pecent done - For now just a float, may later depend on how many sub tasks are done or so
 
 ### General features
 
