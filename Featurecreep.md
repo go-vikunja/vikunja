@@ -64,7 +64,8 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 		-> Login/Register/Password-reset geht natürlich nicht
 		-> Bleibt noch Profile abrufen und Einstellungen -> Macht also keinen Sinn das auf den neuen Handler umzuziehen
 * [x] Email-Verifizierung beim Registrieren
-* [x] Password Reset -> Link via email oder so
+* [x] Password Reset
+* [ ] New field in user model which holds a url of an avatar image - for now just Gravatar, later more
 * [ ] Settings
   * [ ] Password update
   * [ ] Email update
