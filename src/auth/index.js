@@ -51,9 +51,7 @@ export default {
 			email: creds.email,
 			password: creds.password
 		})
-			.then(response => {
-				// eslint-disable-next-line
-				console.log(response)
+			.then(() => {
 				this.login(context, creds, redirect)
 			})
 			.catch(e => {

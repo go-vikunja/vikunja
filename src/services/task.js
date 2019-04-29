@@ -16,10 +16,21 @@ export default class TaskService extends AbstractService {
 	}
 
 	beforeUpdate(model) {
+		return this.processModel(model)
+	}
+
+	beforeCreate(model) {
+		return this.processModel(model)
+	}
+
+	processModel(model) {
+		// Ensure the listID is an int
+		model.listID = Number(model.listID)
+
 		// Convert the date in a unix timestamp
-		model.dueDate = +new Date(model.dueDate) / 1000
-		model.startDate = +new Date(model.startDate) / 1000
-		model.endDate = +new Date(model.endDate) / 1000
+		model.dueDate = Math.round(+new Date(model.dueDate) / 1000)
+		model.startDate = Math.round(+new Date(model.startDate) / 1000)
+		model.endDate = Math.round(+new Date(model.endDate) / 1000)
 
 		// remove all nulls, these would create empty reminders
 		for (const index in model.reminderDates) {
@@ -29,9 +40,11 @@ export default class TaskService extends AbstractService {
 		}
 
 		// Make normal timestamps from js dates
-		model.reminderDates = model.reminderDates.map(r => {
-			return Math.round(+new Date(r) / 1000)
-		})
+		if(model.reminderDates.length > 0) {
+			model.reminderDates = model.reminderDates.map(r => {
+				return Math.round(+new Date(r) / 1000)
+			})
+		}
 
 		// Make the repeating amount to seconds
 		let repeatAfterSeconds = 0

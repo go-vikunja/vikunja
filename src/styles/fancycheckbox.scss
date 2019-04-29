@@ -5,6 +5,10 @@
   padding-right: 5px;
   padding-top: 3px;
 
+  &.is-block {
+    margin: .5em .2em;
+  }
+
   .check {
     cursor: pointer;
     position: relative;
@@ -16,6 +20,11 @@
 
     &:hover svg {
       stroke: $primary;
+    }
+
+    span {
+      font-size: 0.8em;
+      vertical-align: top;
     }
 
     svg {

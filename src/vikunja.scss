@@ -1,5 +1,7 @@
 @import 'styles/theme';
+@import 'styles/scrollbars';
 @import 'styles/general';
+@import 'styles/transitions';
 
 @import 'styles/tasks';
 @import 'styles/teams';
@@ -8,5 +10,6 @@
 
 @import 'styles/fancycheckbox';
 @import 'styles/tooltip';
+@import 'styles/gantt';
 
 @import 'styles/multiselect';

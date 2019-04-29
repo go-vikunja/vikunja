@@ -12,7 +12,8 @@
     "lodash": "^4.17.11",
     "v-tooltip": "^2.0.0-rc.33",
     "verte": "^0.0.10",
-    "vue": "^2.5.17"
+    "vue": "^2.5.17",
+    "vue-drag-resize": "^1.3.2"
   },
   "devDependencies": {
     "@fortawesome/fontawesome-svg-core": "^1.2.4",

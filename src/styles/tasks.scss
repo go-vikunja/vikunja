@@ -55,20 +55,20 @@
         }
       }
 
-      .high-priority{
-        color: $red;
-
-        .icon {
-          vertical-align: middle;
-        }
-
-        &.not-so-high {
-          color: $orange;
-        }
-      }
-
       .tag {
         margin: 0 0.5em;
+      }
+    }
+
+    .high-priority{
+      color: $red;
+
+      .icon {
+        vertical-align: middle;
+      }
+
+      &.not-so-high {
+        color: $orange;
       }
     }
 

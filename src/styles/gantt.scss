@@ -1,0 +1,215 @@
+$gantt-border: 1px solid $grey-lighter;
+$gantt-vertical-border-color: lighten($grey, 45);
+
+.gantt-chart {
+  padding: 5px 0;
+  overflow-x: auto;
+
+  .dates {
+    display: flex;
+    text-align: center;
+    border-bottom: $gantt-border;
+
+    .months {
+      display: flex;
+
+      .month {
+        padding: 0.5em 0 0;
+        border-right: $gantt-border;
+        font-family: $vikunja-font;
+        font-weight: bold;
+
+        &:last-child {
+          border-right: none;
+        }
+
+        .days {
+          display: flex;
+
+          .day {
+            padding: 0.5em 0;
+            font-weight: normal;
+
+            &.today {
+              background: $primary;
+              color: $white;
+              border-radius: 5px 5px 0 0;
+              font-weight: bold;
+            }
+
+            .theday {
+              padding: 0 .5em;
+              width: 100%;
+              display: block;
+            }
+
+            .weekday {
+              font-size: 0.8em;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .tasks {
+    max-width: 100%;
+    margin: 0;
+
+    .row {
+      height: 45px;
+      /*background: repeating-linear-gradient(90deg, $gantt-vertical-border-color, $gantt-vertical-border-color 1px, lighten($grey, 50) 1px, lighten($grey, 50) 35px);
+
+      &:nth-child(even) {
+        background: repeating-linear-gradient(90deg, $gantt-vertical-border-color, $gantt-vertical-border-color 1px, lighten($grey, 55) 1px, lighten($grey, 55) 35px);
+      }*/
+
+      .task {
+        display: inline-block;
+        border: 2px solid $primary;
+        background: lighten($primary, 40);
+        font-size: 0.85em;
+        margin: 0.5em;
+        border-radius: 6px;
+        padding: 0.25em 0.5em;
+        cursor: grab;
+        position: relative;
+
+        -webkit-touch-callout: none; // iOS Safari
+        -webkit-user-select: none; // Safari
+        -khtml-user-select: none; // Konqueror HTML
+        -moz-user-select: none; // Firefox
+        -ms-user-select: none; // Internet Explorer/Edge
+        user-select: none; // Non-prefixed version, currently  supported by Chrome and Opera
+
+        &.is-current-edit {
+          border-color: $orange;
+          background: lighten($orange, 40);
+        }
+
+        &.done span {
+          position: relative;
+
+          &:after {
+            content: '';
+            border-top: 1px solid $dark;
+            position: absolute;
+            right: 0;
+            left: 0;
+            top: 57%;
+          }
+        }
+
+        span:not(.high-priority) {
+          max-width: calc(100% - 20px);
+          display: inline-block;
+          white-space: nowrap;
+          text-overflow: ellipsis;
+          overflow: hidden;
+
+          &.has-high-priority {
+            max-width: calc(100% - 90px);
+          }
+
+          &.has-not-so-high-priority {
+            max-width: calc(100% - 70px);
+          }
+
+          &.has-super-high-priority {
+            max-width: calc(100% - 111px);
+          }
+
+          &.icon {
+            width: 10px;
+            text-align: center;
+          }
+        }
+
+        .high-priority{
+          margin: 0 0 0 .5em;
+          vertical-align: bottom;
+        }
+
+        .edit-toggle {
+          float: right;
+          cursor: pointer;
+          margin-right: 4px;
+        }
+
+        &.nodate {
+          border: 2px dashed $grey-light;
+          background: lighten($grey-light, 40);
+        }
+
+        &:active {
+          cursor: grabbing;
+        }
+      }
+    }
+  }
+
+  .taskedit {
+    position: fixed;
+    min-height: 0;
+    top: 10vh;
+    right: 10vw;
+
+    .card-content {
+      max-height: 60vh;
+      overflow-y: auto;
+    }
+  }
+
+  .add-new-task {
+    padding: 1em .7em .4em .7em;
+    display: flex;
+    max-width: 450px;
+
+    .input {
+      margin-right: .7em;
+      font-size: .8em;
+    }
+
+    .button {
+      font-size: .68em;
+    }
+  }
+}
+
+.gantt-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  .range-picker {
+    display: flex;
+    margin-bottom: 1em;
+
+    .field {
+      margin: 0 0 0 .5em;
+      max-width: 100px;
+
+      &, .input {
+        font-size: .8em;
+      }
+
+      .select {
+        height: auto;
+      }
+
+      select {
+        height: auto;
+        font-size: 0.75em;
+      }
+
+      .label {
+        font-size: .9em;
+        padding-left: .4em;
+      }
+    }
+  }
+}
+
+.vdr.active::before {
+  display: none;
+}

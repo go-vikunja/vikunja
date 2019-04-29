@@ -36,6 +36,7 @@
 * [x] Btns für Teams und neuer Namespace nach oben in die Leiste verschieben
 * [ ] Card-like overview of all lists with the first 3-5 tasks, undone first
 * [ ] Be able to collapse all lists in a namespace by clicking on the menu entry
+* [ ] Fancy Scrollbars
 
 ## Funktionales
 
@@ -49,6 +50,22 @@
   * [x] Overdue rot anzeigen
 * [x] Beim Team bearbeiten Nutzer suchen einbauen
 * [ ] Keyboard shortcuts
+* [ ] Gantt chart
+  * [x] Basics
+  * [x] Add tasks without dates set
+  * [x] Edit tasks with a kind of popup when clicking on them - needs refactoring edit task into an own component
+  * [x] Add a new task with a button or so
+  * [x] Be able to choose the range for the chart
+  * [x] Show task priority
+  * [x] Show task done or not done
+  * [ ] Colors - needs api change before 
+  * [x] More view modes
+    * [x] Month: "The big picture"
+    * [x] Day: 3-hour slices of a day
+* [ ] Table view (list view, bit with more details)
+* [ ] Calender view
+* [ ] Kanaban
+* [ ] Group list view by almost all fields
 
 ## Funktionen aus der API
 

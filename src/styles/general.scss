@@ -194,13 +194,6 @@
     }
   }
 
-  .fade-enter-active, .fade-leave-active {
-    transition: opacity 150ms;
-  }
-  .fade-enter, .fade-leave-to {
-    opacity: 0;
-  }
-
   .dropdown-trigger .button {
     background: none;
 
