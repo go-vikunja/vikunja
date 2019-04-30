@@ -37,3 +37,8 @@ $multiselect-border: #e8e8e8;
 $multiselect-highlight: $green;
 $multiselect-highlight-negative: $red;
 $multiselect-disabled: darken(#fff, 40);
+
+$scrollbar-height: 8px;
+$scrollbar-track-color: lighten($dark, 65);
+$scrollbar-thumb-color: lighten($dark, 40);
+$scrollbar-hover-color: lighten($dark, 30);
