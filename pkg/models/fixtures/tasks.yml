@@ -192,4 +192,11 @@
   list_id: 1
   created: 1543626724
   updated: 1543626724
+- id: 31
+  text: 'task #31 with color'
+  created_by_id: 1
+  list_id: 1
+  hex_color: f0f0f0
+  created: 1543626724
+  updated: 1543626724
 

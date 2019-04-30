@@ -173,6 +173,10 @@ func (t *ListTask) Update() (err error) {
 	if t.EndDateUnix == 0 {
 		ot.EndDateUnix = 0
 	}
+	// Color
+	if t.HexColor == "" {
+		ot.HexColor = ""
+	}
 
 	_, err = x.ID(t.ID).
 		Cols("text",
@@ -184,7 +188,8 @@ func (t *ListTask) Update() (err error) {
 			"parent_task_id",
 			"priority",
 			"start_date_unix",
-			"end_date_unix").
+			"end_date_unix",
+			"hex_color").
 		Update(ot)
 	*t = ot
 	return

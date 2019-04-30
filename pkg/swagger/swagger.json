@@ -1,7 +1,7 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "\u003c!-- ReDoc-Inject: \u003csecurity-definitions\u003e --\u003e",
+        "description": "This is the documentation for the [Vikunja](http://vikunja.io) API. Vikunja is a cross-plattform Todo-application with a lot of features, such as sharing lists with users or teams. \u003c!-- ReDoc-Inject: \u003csecurity-definitions\u003e --\u003e\n# Authorization\n**JWT-Auth:** Main authorization method, used for most of the requests. Needs ` + \"`\" + `Authorization: Bearer \u003cjwt-token\u003e` + \"`\" + `-header to authenticate successfully.\n\n**BasicAuth:** Only used when requesting tasks via caldav.\n\u003c!-- ReDoc-Inject: \u003csecurity-definitions\u003e --\u003e",
         "title": "Vikunja API",
         "contact": {
             "name": "General Vikunja contact",
@@ -3682,6 +3682,11 @@
                     "description": "When this task ends.",
                     "type": "integer"
                 },
+                "hexColor": {
+                    "description": "The task color in hex",
+                    "type": "string",
+                    "maxLength": 6
+                },
                 "id": {
                     "description": "The unique, numeric id of this task.",
                     "type": "integer"
@@ -3893,6 +3898,11 @@
                 "endDate": {
                     "description": "When this task ends.",
                     "type": "integer"
+                },
+                "hexColor": {
+                    "description": "The task color in hex",
+                    "type": "string",
+                    "maxLength": 6
                 },
                 "id": {
                     "description": "The unique, numeric id of this task.",

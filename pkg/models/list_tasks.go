@@ -52,6 +52,8 @@ type ListTask struct {
 	Assignees []*User `xorm:"-" json:"assignees"`
 	// An array of labels which are associated with this task.
 	Labels []*Label `xorm:"-" json:"labels"`
+	// The task color in hex
+	HexColor string `xorm:"varchar(6) null" json:"hexColor" valid:"runelength(0|6)" maxLength:"6"`
 
 	Sorting           string `xorm:"-" json:"-" query:"sort"` // Parameter to sort by
 	StartDateSortUnix int64  `xorm:"-" json:"-" query:"startdate"`

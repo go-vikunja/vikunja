@@ -57,6 +57,10 @@ definitions:
       endDate:
         description: When this task ends.
         type: integer
+      hexColor:
+        description: The task color in hex
+        maxLength: 6
+        type: string
       id:
         description: The unique, numeric id of this task.
         type: integer
@@ -225,6 +229,10 @@ definitions:
       endDate:
         description: When this task ends.
         type: integer
+      hexColor:
+        description: The task color in hex
+        maxLength: 6
+        type: string
       id:
         description: The unique, numeric id of this task.
         type: integer
@@ -637,7 +645,13 @@ info:
     email: hello@vikunja.io
     name: General Vikunja contact
     url: http://vikunja.io/en/contact/
-  description: '<!-- ReDoc-Inject: <security-definitions> -->'
+  description: |-
+    This is the documentation for the [Vikunja](http://vikunja.io) API. Vikunja is a cross-plattform Todo-application with a lot of features, such as sharing lists with users or teams. <!-- ReDoc-Inject: <security-definitions> -->
+    # Authorization
+    **JWT-Auth:** Main authorization method, used for most of the requests. Needs ` + "`" + `Authorization: Bearer <jwt-token>` + "`" + `-header to authenticate successfully.
+
+    **BasicAuth:** Only used when requesting tasks via caldav.
+    <!-- ReDoc-Inject: <security-definitions> -->
   license:
     name: GPLv3
     url: http://code.vikunja.io/api/src/branch/master/LICENSE
