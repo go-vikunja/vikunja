@@ -245,6 +245,15 @@ func sortTasksForTesting(by SortBy) (tasks []*ListTask) {
 			Created:     1543626724,
 			Updated:     1543626724,
 		},
+		{
+			ID:          31,
+			Text:        "task #31 with color",
+			HexColor:    "f0f0f0",
+			CreatedByID: 1,
+			ListID:      1,
+			Created:     1543626724,
+			Updated:     1543626724,
+		},
 	}
 
 	switch by {
@@ -554,6 +563,15 @@ func TestListTask_ReadAll(t *testing.T) {
 					Updated:     1543626724,
 				},
 				{
+					ID:          31,
+					Text:        "task #31 with color",
+					HexColor:    "f0f0f0",
+					CreatedByID: 1,
+					ListID:      1,
+					Created:     1543626724,
+					Updated:     1543626724,
+				},
+				{
 					ID:          4,
 					Text:        "task #4 low prio",
 					CreatedByID: 1,
@@ -826,6 +844,15 @@ func TestListTask_ReadAll(t *testing.T) {
 					Created:     1543626724,
 					Updated:     1543626724,
 				},
+				{
+					ID:          31,
+					Text:        "task #31 with color",
+					HexColor:    "f0f0f0",
+					CreatedByID: 1,
+					ListID:      1,
+					Created:     1543626724,
+					Updated:     1543626724,
+				},
 			},
 			wantErr: false,
 		},
@@ -1045,6 +1072,15 @@ func TestListTask_ReadAll(t *testing.T) {
 				{
 					ID:          30,
 					Text:        "task #30 with assignees",
+					CreatedByID: 1,
+					ListID:      1,
+					Created:     1543626724,
+					Updated:     1543626724,
+				},
+				{
+					ID:          31,
+					Text:        "task #31 with color",
+					HexColor:    "f0f0f0",
 					CreatedByID: 1,
 					ListID:      1,
 					Created:     1543626724,
