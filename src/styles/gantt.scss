@@ -8,7 +8,6 @@ $gantt-vertical-border-color: lighten($grey, 45);
   .dates {
     display: flex;
     text-align: center;
-    border-bottom: $gantt-border;
 
     .months {
       display: flex;
@@ -53,16 +52,12 @@ $gantt-vertical-border-color: lighten($grey, 45);
   }
 
   .tasks {
-    max-width: 100%;
+    max-width: unset !important;
     margin: 0;
+    border-top: $gantt-border;
 
     .row {
       height: 45px;
-      /*background: repeating-linear-gradient(90deg, $gantt-vertical-border-color, $gantt-vertical-border-color 1px, lighten($grey, 50) 1px, lighten($grey, 50) 35px);
-
-      &:nth-child(even) {
-        background: repeating-linear-gradient(90deg, $gantt-vertical-border-color, $gantt-vertical-border-color 1px, lighten($grey, 55) 1px, lighten($grey, 55) 35px);
-      }*/
 
       .task {
         display: inline-block;
