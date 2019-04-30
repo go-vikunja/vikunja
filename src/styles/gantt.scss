@@ -148,6 +148,7 @@ $gantt-vertical-border-color: lighten($grey, 45);
     min-height: 0;
     top: 10vh;
     right: 10vw;
+    z-index: 5;
 
     .card-content {
       max-height: 60vh;

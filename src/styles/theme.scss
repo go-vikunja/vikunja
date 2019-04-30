@@ -240,6 +240,7 @@ h1,h2,h3,h4,h5,h6{
 
 .navbar.main-theme {
   background: $light-background;
+  z-index: 30 !important;
 }
 
 .switch-view {

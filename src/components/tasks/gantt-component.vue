@@ -68,7 +68,7 @@
                  </VueDragResize>
 			</div>
 			<template v-if="showTaskswithoutDates">
-				<div class="row" v-for="t in tasksWithoutDates" :key="t.id">
+				<div class="row" v-for="(t, k) in tasksWithoutDates" :key="t.id" :style="{background: 'repeating-linear-gradient(90deg, #ededed, #ededed 1px, ' + (k % 2 === 0 ? '#fafafa 1px, #fafafa ' : '#fff 1px, #fff ') + dayWidth + 'px)'}">
 					<VueDragResize
 							class="task nodate"
 							:isActive="true"
