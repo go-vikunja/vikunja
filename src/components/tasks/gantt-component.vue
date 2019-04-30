@@ -28,8 +28,9 @@
 			<div class="row" v-for="(t, k) in theTasks" :key="t.id" :style="{background: 'repeating-linear-gradient(90deg, #ededed, #ededed 1px, ' + (k % 2 === 0 ? '#fafafa 1px, #fafafa ' : '#fff 1px, #fff ') + dayWidth + 'px)'}">
 				<VueDragResize
 						class="task"
-						:class="{'done': t.done, 'is-current-edit': taskToEdit !== null && taskToEdit.id === t.id}"
-						:isActive="true"
+						:class="{'done': t.done, 'is-current-edit': taskToEdit !== null && taskToEdit.id === t.id, 'has-light-text': !t.hasDarkColor(), 'has-dark-text': t.hasDarkColor()}"
+                        :style="{'border-color': t.hexColor, 'background-color': t.hexColor}"
+                        :isActive="true"
 						:x="t.offsetDays * dayWidth - 6"
 						:y="0"
 						:w="t.durationDays * dayWidth"

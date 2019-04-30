@@ -108,6 +108,20 @@
         </div>
 
         <div class="field">
+            <label class="label">Color</label>
+            <div class="control">
+                <verte
+                        v-model="taskEditTask.hexColor"
+                        menuPosition="top"
+                        picker="square"
+                        model="hex"
+                        :enableAlpha="false"
+                        :rgbSliders="true">
+                </verte>
+            </div>
+        </div>
+
+        <div class="field">
             <label class="label" for="">Assignees</label>
             <ul class="assingees">
                 <li v-for="(a, index) in taskEditTask.assignees" :key="a.id">
@@ -224,6 +238,8 @@
     import 'flatpickr/dist/flatpickr.css'
     import multiselect from 'vue-multiselect'
     import {differenceWith} from 'lodash'
+	import verte from 'verte'
+	import 'verte/dist/verte.css'
 
     import ListService from '../../services/list'
     import TaskService from '../../services/task'
@@ -273,6 +289,7 @@
         components: {
             flatPickr,
             multiselect,
+            verte,
         },
         props: {
             task: {

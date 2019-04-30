@@ -50,7 +50,7 @@
   * [x] Overdue rot anzeigen
 * [x] Beim Team bearbeiten Nutzer suchen einbauen
 * [ ] Keyboard shortcuts
-* [ ] Gantt chart
+* [x] Gantt chart
   * [x] Basics
   * [x] Add tasks without dates set
   * [x] Edit tasks with a kind of popup when clicking on them - needs refactoring edit task into an own component
@@ -58,7 +58,7 @@
   * [x] Be able to choose the range for the chart
   * [x] Show task priority
   * [x] Show task done or not done
-  * [ ] Colors - needs api change before 
+  * [x] Colors - needs api change before 
   * [x] More view modes
     * [x] Month: "The big picture"
     * [x] Day: 3-hour slices of a day

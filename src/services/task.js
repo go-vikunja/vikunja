@@ -69,6 +69,10 @@ export default class TaskService extends AbstractService {
 		}
 		model.repeatAfter = repeatAfterSeconds
 
+		if (model.hexColor.substring(0, 1) === '#') {
+			model.hexColor = model.hexColor.substring(1, 7)
+		}
+
 		return model
 	}
 }

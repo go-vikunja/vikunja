@@ -78,8 +78,31 @@ $gantt-vertical-border-color: lighten($grey, 45);
         user-select: none; // Non-prefixed version, currently  supported by Chrome and Opera
 
         &.is-current-edit {
-          border-color: $orange;
-          background: lighten($orange, 40);
+          border-color: $orange !important;
+        }
+
+        &.has-light-text {
+          color: $light;
+
+          &.done span:after {
+            border-top: 1px solid $light;
+          }
+
+          .edit-toggle {
+            color: $light;
+          }
+        }
+
+        &.has-dark-text {
+          color: $dark;
+
+          &.done span:after {
+            border-top: 1px solid $dark;
+          }
+
+          .edit-toggle {
+            color: $dark;
+          }
         }
 
         &.done span {
@@ -87,7 +110,6 @@ $gantt-vertical-border-color: lighten($grey, 45);
 
           &:after {
             content: '';
-            border-top: 1px solid $dark;
             position: absolute;
             right: 0;
             left: 0;
