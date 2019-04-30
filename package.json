@@ -1,6 +1,7 @@
 {
   "name": "vikunja-frontend",
-  "version": "0.1.0",
+  "version": "0.7.0",
+  "license": "LGPL-3.0-or-later",
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve",
