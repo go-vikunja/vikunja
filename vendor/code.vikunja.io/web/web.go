@@ -15,7 +15,7 @@
 
 package web
 
-import "github.com/labstack/echo"
+import "github.com/labstack/echo/v4"
 
 // Rights defines rights methods
 type Rights interface {

@@ -24,7 +24,7 @@ import (
 	"code.vikunja.io/web"
 	"code.vikunja.io/web/handler"
 	"github.com/dgrijalva/jwt-go"
-	"github.com/labstack/echo"
+	"github.com/labstack/echo/v4"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"net/http"

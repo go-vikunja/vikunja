@@ -20,7 +20,7 @@ package v1
 
 import (
 	"code.vikunja.io/api/pkg/log"
-	"github.com/labstack/echo"
+	"github.com/labstack/echo/v4"
 	"github.com/swaggo/swag"
 	"net/http"
 )

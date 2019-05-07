@@ -20,7 +20,7 @@ import (
 	"code.vikunja.io/api/pkg/caldav"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/web/handler"
-	"github.com/labstack/echo"
+	"github.com/labstack/echo/v4"
 	"net/http"
 	"time"
 )

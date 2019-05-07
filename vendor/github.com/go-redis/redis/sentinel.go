@@ -164,6 +164,24 @@ func (c *SentinelClient) Sentinels(name string) *SliceCmd {
 	return cmd
 }
 
+// Failover forces a failover as if the master was not reachable, and without
+// asking for agreement to other Sentinels.
+func (c *SentinelClient) Failover(name string) *StatusCmd {
+	cmd := NewStatusCmd("sentinel", "failover", name)
+	c.Process(cmd)
+	return cmd
+}
+
+// Reset resets all the masters with matching name. The pattern argument is a
+// glob-style pattern. The reset process clears any previous state in a master
+// (including a failover in progress), and removes every slave and sentinel
+// already discovered and associated with the master.
+func (c *SentinelClient) Reset(pattern string) *IntCmd {
+	cmd := NewIntCmd("sentinel", "reset", pattern)
+	c.Process(cmd)
+	return cmd
+}
+
 type sentinelFailover struct {
 	sentinelAddrs []string
 
@@ -176,6 +194,7 @@ type sentinelFailover struct {
 	masterName  string
 	_masterAddr string
 	sentinel    *SentinelClient
+	pubsub      *PubSub
 }
 
 func (c *sentinelFailover) Close() error {
@@ -304,13 +323,27 @@ func (c *sentinelFailover) switchMaster(addr string) {
 func (c *sentinelFailover) setSentinel(sentinel *SentinelClient) {
 	c.discoverSentinels(sentinel)
 	c.sentinel = sentinel
-	go c.listen(sentinel)
+
+	c.pubsub = sentinel.Subscribe("+switch-master")
+	go c.listen(c.pubsub)
 }
 
 func (c *sentinelFailover) closeSentinel() error {
-	err := c.sentinel.Close()
+	var firstErr error
+
+	err := c.pubsub.Close()
+	if err != nil && firstErr == err {
+		firstErr = err
+	}
+	c.pubsub = nil
+
+	err = c.sentinel.Close()
+	if err != nil && firstErr == err {
+		firstErr = err
+	}
 	c.sentinel = nil
-	return err
+
+	return firstErr
 }
 
 func (c *sentinelFailover) discoverSentinels(sentinel *SentinelClient) {
@@ -335,10 +368,7 @@ func (c *sentinelFailover) discoverSentinels(sentinel *SentinelClient) {
 	}
 }
 
-func (c *sentinelFailover) listen(sentinel *SentinelClient) {
-	pubsub := sentinel.Subscribe("+switch-master")
-	defer pubsub.Close()
-
+func (c *sentinelFailover) listen(pubsub *PubSub) {
 	ch := pubsub.Channel()
 	for {
 		msg, ok := <-ch

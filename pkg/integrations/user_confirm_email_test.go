@@ -19,7 +19,7 @@ package integrations
 import (
 	"code.vikunja.io/api/pkg/models"
 	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
-	"github.com/labstack/echo"
+	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"testing"

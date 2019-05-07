@@ -20,7 +20,7 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
-	"github.com/labstack/echo"
+	"github.com/labstack/echo/v4"
 )
 
 // CheckToken checks prints a message if the token is valid or not. Currently only used for testing pourposes.

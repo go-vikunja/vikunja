@@ -19,7 +19,7 @@ package v1
 import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/web/handler"
-	"github.com/labstack/echo"
+	"github.com/labstack/echo/v4"
 	"net/http"
 	"strconv"
 )

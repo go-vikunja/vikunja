@@ -20,18 +20,25 @@ func main() {
 			Aliases: []string{"i"},
 			Usage:   "Create docs.go",
 			Action: func(c *cli.Context) error {
-				dir := c.String("dir")
+				searchDir := c.String("dir")
 				mainAPIFile := c.String("generalInfo")
-				swaggerConfDir := c.String("swagger")
 				strategy := c.String("propertyStrategy")
+				outputDir := c.String("output")
+				parseVendor := c.Bool("parseVendor")
+
 				switch strategy {
 				case swag.CamelCase, swag.SnakeCase, swag.PascalCase:
 				default:
 					return errors.Errorf("not supported %s propertyStrategy", strategy)
 				}
 
-				gen.New().Build(dir, mainAPIFile, swaggerConfDir, strategy)
-				return nil
+				return gen.New().Build(&gen.Config{
+					SearchDir:          searchDir,
+					MainAPIFile:        mainAPIFile,
+					PropNamingStrategy: strategy,
+					OutputDir:          outputDir,
+					ParseVendor:        parseVendor,
+				})
 			},
 			Flags: []cli.Flag{
 				cli.StringFlag{
@@ -45,14 +52,18 @@ func main() {
 					Usage: "Directory you want to parse",
 				},
 				cli.StringFlag{
-					Name:  "swagger, s",
-					Value: "./docs/swagger",
-					Usage: "Output the swagger conf for json and yaml",
-				},
-				cli.StringFlag{
 					Name:  "propertyStrategy, p",
 					Value: "camelcase",
 					Usage: "Property Naming Strategy like snakecase,camelcase,pascalcase",
+				},
+				cli.StringFlag{
+					Name:  "output, o",
+					Value: "./docs",
+					Usage: "Output directory for al the generated files(swagger.json, swagger.yaml and doc.go)",
+				},
+				cli.BoolFlag{
+					Name:  "parseVendor",
+					Usage: "Parse go files in 'vendor' folder, disabled by default",
 				},
 			},
 		},

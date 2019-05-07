@@ -22,7 +22,7 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"github.com/dgrijalva/jwt-go"
-	"github.com/labstack/echo"
+	"github.com/labstack/echo/v4"
 	"github.com/spf13/viper"
 	"net/http"
 	"time"

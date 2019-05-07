@@ -1,4 +1,5 @@
-testdata/simple/docs
+dist
+testdata/simple*/docs
 cover.out
 
 # Test binary, build with `go test -c`
