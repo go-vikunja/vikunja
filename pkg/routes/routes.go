@@ -138,6 +138,8 @@ func RegisterRoutes(e *echo.Echo) {
 			log.Log.Fatal("You have to enable redis in order to use metrics")
 		}
 
+		metrics.InitMetrics()
+
 		type countable struct {
 			Rediskey string
 			Type     interface{}

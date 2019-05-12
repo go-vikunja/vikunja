@@ -19,12 +19,13 @@ package metrics
 import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/red"
+	"github.com/go-redis/redis"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/spf13/viper"
 )
 
-var r = red.GetRedis()
+var r *redis.Client
 
 const (
 	// ListCountKey is the name of the key in which we save the list count
@@ -43,7 +44,10 @@ const (
 	TeamCountKey = `teamcount`
 )
 
-func init() {
+// InitMetrics Initializes the metrics
+func InitMetrics() {
+	r = red.GetRedis()
+
 	// Register total list count metric
 	promauto.NewGaugeFunc(prometheus.GaugeOpts{
 		Name: "vikunja_list_count",

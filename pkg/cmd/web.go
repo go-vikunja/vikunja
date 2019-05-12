@@ -18,9 +18,6 @@ package cmd
 
 import (
 	"code.vikunja.io/api/pkg/log"
-	"code.vikunja.io/api/pkg/mail"
-	"code.vikunja.io/api/pkg/migration"
-	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/routes"
 	"code.vikunja.io/api/pkg/swagger"
 	"context"
@@ -40,21 +37,6 @@ var webCmd = &cobra.Command{
 	Use:   "web",
 	Short: "Starts the rest api web server",
 	Run: func(cmd *cobra.Command, args []string) {
-
-		// Set logger
-		log.InitLogger()
-
-		// Run the migrations
-		migration.Migrate(nil)
-
-		// Set Engine
-		err := models.SetEngine()
-		if err != nil {
-			log.Log.Fatal(err.Error())
-		}
-
-		// Start the mail daemon
-		mail.StartMailDaemon()
 
 		// Version notification
 		fmt.Printf("Vikunja version %s\n", Version)

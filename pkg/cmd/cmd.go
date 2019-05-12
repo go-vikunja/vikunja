@@ -18,6 +18,11 @@ package cmd
 
 import (
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/mail"
+	"code.vikunja.io/api/pkg/migration"
+	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/red"
 	"fmt"
 	"github.com/spf13/cobra"
 	"os"
@@ -27,7 +32,7 @@ import (
 var Version = "0.1"
 
 func init() {
-	cobra.OnInitialize(config.InitConfig)
+	cobra.OnInitialize(initialize)
 }
 
 var rootCmd = &cobra.Command{
@@ -51,4 +56,28 @@ func Execute() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+}
+
+// Initializes all kinds of things in the right order
+func initialize() {
+	// Init the config
+	config.InitConfig()
+
+	// Init redis
+	red.InitRedis()
+
+	// Set logger
+	log.InitLogger()
+
+	// Run the migrations
+	migration.Migrate(nil)
+
+	// Set Engine
+	err := models.SetEngine()
+	if err != nil {
+		log.Log.Fatal(err.Error())
+	}
+
+	// Start the mail daemon
+	mail.StartMailDaemon()
 }

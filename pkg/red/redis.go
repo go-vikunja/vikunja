@@ -24,8 +24,8 @@ import (
 
 var r *redis.Client
 
-// SetRedis initializes a redis connection
-func init() {
+// InitRedis initializes a redis connection
+func InitRedis() {
 	if !viper.GetBool("redis.enabled") {
 		return
 	}
@@ -44,6 +44,7 @@ func init() {
 	if err != nil {
 		log.Log.Fatal(err.Error())
 	}
+	log.Log.Debug("Redis initialized")
 }
 
 // GetRedis returns a pointer to a redis client
