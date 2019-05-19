@@ -36,7 +36,7 @@
 
   .namespace-container{
     background: $vikunja-nav-background;
-    z-index: 3;
+    z-index: 6;
     color: $vikunja-nav-color;
     padding: 0;
     transition: all $transition;
@@ -52,7 +52,6 @@
       top: 0;
       bottom: 0;
       width: 70vw;
-      z-index: 5;
 
       &.is-active {
         left: 0;
@@ -215,12 +214,12 @@
 .mobilemenu-hide-button,.mobilemenu-show-button{
   display: none;
   position: fixed;
-  z-index: 5;
+  z-index: 31;
   font-weight: bold;
   font-size: 2em;
-  color: $light;
+  color: $dark;
   &:hover, &:focus{
-    color: $light;
+    color: darken($dark, 20);
   }
 }
 
@@ -239,7 +238,7 @@
   left: 0;
   right: 0;
   background: rgba(250,250,250,0.8);
-  z-index: 4;
+  z-index: 5;
   opacity: 0;
   transition: all $transition;
 }

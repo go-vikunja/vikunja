@@ -240,7 +240,28 @@ h1,h2,h3,h4,h5,h6{
 
 .navbar.main-theme {
   background: $light-background;
-  z-index: 30 !important;
+  z-index: 5 !important;
+
+  @media screen and (max-width: $desktop) {
+    display: flex;
+    justify-content: space-between;
+
+    @media screen and (max-width: $tablet) {
+      .navbar-brand {
+        margin-left: 3em;
+      }
+    }
+
+    @media screen and (max-width: 640px) { // Magic number to hide the username if it would take too much space otherwise
+      .user {
+        width: 7em;
+
+        .username {
+          display: none;
+        }
+      }
+    }
+  }
 }
 
 .switch-view {

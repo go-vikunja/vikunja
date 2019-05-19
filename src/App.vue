@@ -12,7 +12,7 @@
 					<div class="dropdown is-right is-active">
 						<div class="dropdown-trigger">
 							<button class="button noshadow" @click="userMenuActive = !userMenuActive">
-								<span>{{user.infos.username}}</span>
+								<span class="username">{{user.infos.username}}</span>
 								<span class="icon is-small">
 									<icon icon="chevron-down"/>
 								</span>
