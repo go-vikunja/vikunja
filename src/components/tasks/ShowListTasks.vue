@@ -139,6 +139,7 @@
 				this.taskService.create(task)
 					.then(r => {
 						this.list.addTaskToList(r)
+						this.newTaskText = ''
 						message.success({message: 'The task was successfully created.'}, this)
 					})
 					.catch(e => {
