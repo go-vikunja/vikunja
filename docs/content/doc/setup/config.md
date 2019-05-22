@@ -59,6 +59,8 @@ service:
   # If set to true, enables a /metrics endpoint for prometheus to collect metrics about the system
   # You'll need to use redis for this in order to enable common metrics over multiple nodes
   enablemetrics: false
+  # Enable the caldav endpoint, see the docs for more details
+  enablecaldav: true
 
 database:
   # Database type to use. Supported types are mysql and sqlite.

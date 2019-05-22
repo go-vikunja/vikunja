@@ -115,7 +115,7 @@ func CreateUser(user User) (newUser User, err error) {
 
 // HashPassword hashes a password
 func hashPassword(password string) (string, error) {
-	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 11)
 	return string(bytes), err
 }
 

@@ -125,6 +125,8 @@ func (t *ListTask) updateTaskAssignees(assignees []*User) (err error) {
 	}
 
 	t.setTaskAssignees(assignees)
+
+	err = updateListLastUpdated(&List{ID: t.ListID})
 	return
 }
 
@@ -152,6 +154,11 @@ func (t *ListTask) setTaskAssignees(assignees []*User) {
 // @Router /tasks/{taskID}/assignees/{userID} [delete]
 func (la *ListTaskAssginee) Delete() (err error) {
 	_, err = x.Delete(&ListTaskAssginee{TaskID: la.TaskID, UserID: la.UserID})
+	if err != nil {
+		return err
+	}
+
+	err = updateListByTaskID(la.TaskID)
 	return
 }
 
@@ -198,7 +205,11 @@ func (t *ListTask) addNewAssigneeByID(newAssigneeID int64, list *List) (err erro
 		TaskID: t.ID,
 		UserID: newAssigneeID,
 	})
+	if err != nil {
+		return err
+	}
 
+	err = updateListLastUpdated(&List{ID: t.ListID})
 	return
 }
 
@@ -249,7 +260,7 @@ type BulkAssignees struct {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/assignees/bulk [post]
 func (ba *BulkAssignees) Create(a web.Auth) (err error) {
-	task, err := GetListTaskByID(ba.TaskID) // We need to use the full method here because we need all current assignees.
+	task, err := GetTaskByID(ba.TaskID) // We need to use the full method here because we need all current assignees.
 	if err != nil {
 		return
 	}

@@ -36,7 +36,7 @@ import (
 func (t *ListTask) Delete() (err error) {
 
 	// Check if it exists
-	_, err = GetListTaskByID(t.ID)
+	_, err = GetTaskByID(t.ID)
 	if err != nil {
 		return
 	}
@@ -51,5 +51,7 @@ func (t *ListTask) Delete() (err error) {
 	}
 
 	metrics.UpdateCount(-1, metrics.TaskCountKey)
+
+	err = updateListLastUpdated(&List{ID: t.ListID})
 	return
 }

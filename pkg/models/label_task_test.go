@@ -166,6 +166,8 @@ func TestLabelTask_Create(t *testing.T) {
 				a: &User{ID: 1},
 			},
 			wantForbidden: true,
+			wantErr:       true,
+			errType:       IsErrListTaskDoesNotExist,
 		},
 	}
 	for _, tt := range tests {

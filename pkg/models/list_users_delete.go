@@ -51,5 +51,10 @@ func (lu *ListUser) Delete() (err error) {
 
 	_, err = x.Where("user_id = ? AND list_id = ?", lu.UserID, lu.ListID).
 		Delete(&ListUser{})
+	if err != nil {
+		return err
+	}
+
+	err = updateListLastUpdated(&List{ID: lu.ListID})
 	return
 }

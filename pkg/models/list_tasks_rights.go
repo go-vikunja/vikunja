@@ -43,7 +43,7 @@ func (t *ListTask) CanCreate(a web.Auth) (bool, error) {
 func (t *ListTask) CanRead(a web.Auth) (canRead bool, err error) {
 	//return t.canDoListTask(a)
 	// Get the task, error out if it doesn't exist
-	*t, err = getTaskByIDSimple(t.ID)
+	*t, err = GetTaskByIDSimple(t.ID)
 	if err != nil {
 		return
 	}
@@ -58,7 +58,7 @@ func (t *ListTask) canDoListTask(a web.Auth) (bool, error) {
 	doer := getUserForRights(a)
 
 	// Get the task
-	lI, err := getTaskByIDSimple(t.ID)
+	lI, err := GetTaskByIDSimple(t.ID)
 	if err != nil {
 		return false, err
 	}

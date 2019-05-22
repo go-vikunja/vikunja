@@ -65,5 +65,10 @@ func (tl *TeamList) Create(a web.Auth) (err error) {
 
 	// Insert the new team
 	_, err = x.Insert(tl)
+	if err != nil {
+		return err
+	}
+
+	err = updateListLastUpdated(l)
 	return
 }

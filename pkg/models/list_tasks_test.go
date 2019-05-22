@@ -49,7 +49,7 @@ func TestListTask_Create(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Check if it was updated
-	li, err := GetListTaskByID(listtask.ID)
+	li, err := GetTaskByID(listtask.ID)
 	assert.NoError(t, err)
 	assert.Equal(t, li.Text, "Test34")
 
@@ -90,4 +90,19 @@ func TestListTask_Create(t *testing.T) {
 	err = listtask.Create(nUser)
 	assert.Error(t, err)
 	assert.True(t, IsErrUserDoesNotExist(err))
+}
+
+func TestUpdateDone(t *testing.T) {
+	t.Run("marking a task as done", func(t *testing.T) {
+		oldTask := &ListTask{Done: false}
+		newTask := &ListTask{Done: true}
+		updateDone(oldTask, newTask)
+		assert.NotEqual(t, int64(0), oldTask.DoneAtUnix)
+	})
+	t.Run("unmarking a task as done", func(t *testing.T) {
+		oldTask := &ListTask{Done: true}
+		newTask := &ListTask{Done: false}
+		updateDone(oldTask, newTask)
+		assert.Equal(t, int64(0), oldTask.DoneAtUnix)
+	})
 }

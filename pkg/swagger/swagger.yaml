@@ -51,6 +51,9 @@ definitions:
       done:
         description: Whether a task is done or not.
         type: boolean
+      doneAt:
+        description: The unix timestamp when a task was marked as done.
+        type: integer
       dueDate:
         description: A unix timestamp when the task is due.
         type: integer
@@ -223,6 +226,9 @@ definitions:
       done:
         description: Whether a task is done or not.
         type: boolean
+      doneAt:
+        description: The unix timestamp when a task was marked as done.
+        type: integer
       dueDate:
         description: A unix timestamp when the task is due.
         type: integer
@@ -645,13 +651,7 @@ info:
     email: hello@vikunja.io
     name: General Vikunja contact
     url: http://vikunja.io/en/contact/
-  description: |-
-    This is the documentation for the [Vikunja](http://vikunja.io) API. Vikunja is a cross-plattform Todo-application with a lot of features, such as sharing lists with users or teams. <!-- ReDoc-Inject: <security-definitions> -->
-    # Authorization
-    **JWT-Auth:** Main authorization method, used for most of the requests. Needs ` + "`" + `Authorization: Bearer <jwt-token>` + "`" + `-header to authenticate successfully.
-
-    **BasicAuth:** Only used when requesting tasks via caldav.
-    <!-- ReDoc-Inject: <security-definitions> -->
+  description: '<!-- ReDoc-Inject: <security-definitions> -->'
   license:
     name: GPLv3
     url: http://code.vikunja.io/api/src/branch/master/LICENSE
@@ -935,9 +935,9 @@ paths:
     get:
       consumes:
       - application/json
-      description: Returns a team by its ID.
+      description: Returns a list by its ID.
       parameters:
-      - description: Team ID
+      - description: List ID
         in: path
         name: id
         required: true
@@ -946,12 +946,12 @@ paths:
       - application/json
       responses:
         "200":
-          description: The team
+          description: The list
           schema:
-            $ref: '#/definitions/models.Team'
+            $ref: '#/definitions/models.List'
             type: object
         "403":
-          description: The user does not have access to the team
+          description: The user does not have access to the list
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
             type: object
@@ -962,9 +962,9 @@ paths:
             type: object
       security:
       - JWTKeyAuth: []
-      summary: Gets one team
+      summary: Gets one list
       tags:
-      - team
+      - list
     post:
       consumes:
       - application/json
@@ -2636,27 +2636,6 @@ paths:
       security:
       - JWTKeyAuth: []
       summary: Update a bunch of tasks at once
-      tags:
-      - task
-  /tasks/caldav:
-    get:
-      description: Returns a calDAV-parsable format with all tasks as calendar events.
-        Only returns tasks with a due date. Also creates reminders when the task has
-        one.
-      produces:
-      - text/plain
-      responses:
-        "200":
-          description: The caldav events.
-          schema:
-            type: string
-        "403":
-          description: Unauthorized.
-          schema:
-            type: string
-      security:
-      - BasicAuth: []
-      summary: CalDAV-readable format with all tasks as calendar events.
       tags:
       - task
   /teams:

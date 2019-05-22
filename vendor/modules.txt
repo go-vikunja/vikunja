@@ -12,6 +12,8 @@ github.com/alecthomas/template
 github.com/alecthomas/template/parse
 # github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a
 github.com/asaskevich/govalidator
+# github.com/beevik/etree v1.1.0
+github.com/beevik/etree
 # github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973
 github.com/beorn7/perks/quantile
 # github.com/client9/misspell v0.3.4
@@ -78,7 +80,7 @@ github.com/inconshreveable/mousetrap
 # github.com/jgautheron/goconst v0.0.0-20170703170152-9740945f5dcb
 github.com/jgautheron/goconst/cmd/goconst
 github.com/jgautheron/goconst
-# github.com/labstack/echo/v4 v4.1.5
+# github.com/labstack/echo/v4 v4.1.5 => ../../github.com/labstack/echo
 github.com/labstack/echo/v4
 github.com/labstack/echo/v4/middleware
 # github.com/labstack/gommon v0.2.8
@@ -86,6 +88,8 @@ github.com/labstack/gommon/log
 github.com/labstack/gommon/color
 github.com/labstack/gommon/bytes
 github.com/labstack/gommon/random
+# github.com/laurent22/ical-go v0.1.0
+github.com/laurent22/ical-go/ical
 # github.com/magiconair/properties v1.8.0
 github.com/magiconair/properties
 # github.com/mailru/easyjson v0.0.0-20190403194419-1ea4449da983
@@ -130,6 +134,15 @@ github.com/prometheus/procfs
 github.com/prometheus/procfs/nfs
 github.com/prometheus/procfs/xfs
 github.com/prometheus/procfs/internal/util
+# github.com/samedi/caldav-go v3.0.0+incompatible => ../../github.com/samedi/caldav-go
+github.com/samedi/caldav-go
+github.com/samedi/caldav-go/data
+github.com/samedi/caldav-go/errs
+github.com/samedi/caldav-go/lib
+github.com/samedi/caldav-go/global
+github.com/samedi/caldav-go/handlers
+github.com/samedi/caldav-go/files
+github.com/samedi/caldav-go/ixml
 # github.com/spf13/afero v1.2.2
 github.com/spf13/afero
 github.com/spf13/afero/mem

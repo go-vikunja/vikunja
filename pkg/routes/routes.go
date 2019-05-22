@@ -43,6 +43,7 @@ import (
 	"code.vikunja.io/api/pkg/metrics"
 	"code.vikunja.io/api/pkg/models"
 	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
+	"code.vikunja.io/api/pkg/routes/caldav"
 	_ "code.vikunja.io/api/pkg/swagger" // To generate swagger docs
 	"code.vikunja.io/web"
 	"code.vikunja.io/web/handler"
@@ -52,6 +53,7 @@ import (
 	elog "github.com/labstack/gommon/log"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/viper"
+	"strings"
 )
 
 // CustomValidator is a dummy struct to use govalidator with echo
@@ -119,13 +121,34 @@ func NewEcho() *echo.Echo {
 // RegisterRoutes registers all routes for the application
 func RegisterRoutes(e *echo.Echo) {
 
+	if viper.GetBool("service.enablecaldav") {
+		// Caldav routes
+		wkg := e.Group("/.well-known")
+		wkg.Use(middleware.BasicAuth(caldavBasicAuth))
+		wkg.Any("/caldav", caldav.PrincipalHandler)
+		wkg.Any("/caldav/", caldav.PrincipalHandler)
+		c := e.Group("/dav")
+		registerCalDavRoutes(c)
+	}
+
 	// CORS_SHIT
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins: []string{"*"},
+		Skipper: func(context echo.Context) bool {
+			// Since it is not possible to register this middleware just for the api group,
+			// we just disable it when for caldav requests.
+			// Caldav requires OPTIONS requests to be answered in a specific manner,
+			// not doing this would break the caldav implementation
+			return strings.HasPrefix(context.Path(), "/dav")
+		},
 	}))
 
 	// API Routes
 	a := e.Group("/api/v1")
+	registerAPIRoutes(a)
+}
+
+func registerAPIRoutes(a *echo.Group) {
 
 	// Docs
 	a.GET("/docs.json", apiv1.DocsJSON)
@@ -191,9 +214,6 @@ func RegisterRoutes(e *echo.Echo) {
 	a.POST("/user/password/token", apiv1.UserRequestResetPasswordToken)
 	a.POST("/user/password/reset", apiv1.UserResetPassword)
 	a.POST("/user/confirm", apiv1.UserConfirmEmail)
-
-	// Caldav, with auth
-	a.GET("/tasks/caldav", apiv1.Caldav)
 
 	// ===== Routes with Authetification =====
 	// Authetification
@@ -362,4 +382,35 @@ func RegisterRoutes(e *echo.Echo) {
 	}
 	a.PUT("/teams/:team/members", teamMemberHandler.CreateWeb)
 	a.DELETE("/teams/:team/members/:user", teamMemberHandler.DeleteWeb)
+}
+
+func registerCalDavRoutes(c *echo.Group) {
+
+	// Basic auth middleware
+	c.Use(middleware.BasicAuth(caldavBasicAuth))
+
+	// THIS is the entry point for caldav clients, otherwise lists will show up double
+	c.Any("", caldav.EntryHandler)
+	c.Any("/", caldav.EntryHandler)
+	c.Any("/principals/*/", caldav.PrincipalHandler)
+	c.Any("/lists", caldav.ListHandler)
+	c.Any("/lists/", caldav.ListHandler)
+	c.Any("/lists/:list", caldav.ListHandler)
+	c.Any("/lists/:list/", caldav.ListHandler)
+	c.Any("/lists/:list/:task", caldav.TaskHandler) // Mostly used for editing
+}
+
+func caldavBasicAuth(username, password string, c echo.Context) (bool, error) {
+	creds := &models.UserLogin{
+		Username: username,
+		Password: password,
+	}
+	u, err := models.CheckUserCredentials(creds)
+	if err != nil {
+		log.Log.Errorf("Error during basic auth for caldav: %v", err)
+		return false, nil
+	}
+	// Save the user in echo context for later use
+	c.Set("userBasicAuth", u)
+	return true, nil
 }

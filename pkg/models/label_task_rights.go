@@ -69,7 +69,7 @@ func (ltb *LabelTaskBulk) CanCreate(a web.Auth) (bool, error) {
 // always the same check for either deleting or adding a label to a task
 func canDoLabelTask(taskID int64, a web.Auth) (bool, error) {
 	// A user can add a label to a task if he can write to the task
-	task, err := getTaskByIDSimple(taskID)
+	task, err := GetTaskByIDSimple(taskID)
 	if err != nil {
 		return false, err
 	}

@@ -31,6 +31,8 @@ type ListTask struct {
 	Description string `xorm:"varchar(250)" json:"description" valid:"runelength(0|250)" maxLength:"250"`
 	// Whether a task is done or not.
 	Done bool `xorm:"INDEX null" json:"done"`
+	// The unix timestamp when a task was marked as done.
+	DoneAtUnix int64 `xorm:"INDEX null" json:"doneAt"`
 	// A unix timestamp when the task is due.
 	DueDateUnix int64 `xorm:"int(11) INDEX null" json:"dueDate"`
 	// An array of unix timestamps when the user wants to be reminded of the task.
@@ -54,6 +56,9 @@ type ListTask struct {
 	Labels []*Label `xorm:"-" json:"labels"`
 	// The task color in hex
 	HexColor string `xorm:"varchar(6) null" json:"hexColor" valid:"runelength(0|6)" maxLength:"6"`
+
+	// The UID is currently not used for anything other than caldav, which is why we don't expose it over json
+	UID string `xorm:"varchar(250) null" json:"-"`
 
 	Sorting           string `xorm:"-" json:"-" query:"sort"` // Parameter to sort by
 	StartDateSortUnix int64  `xorm:"-" json:"-" query:"startdate"`
@@ -88,96 +93,36 @@ func GetTasksByListID(listID int64) (tasks []*ListTask, err error) {
 		return
 	}
 
-	// No need to iterate over users and stuff if the list doesn't has tasks
-	if len(taskMap) == 0 {
-		return
-	}
-
-	// Get all users & task ids and put them into the array
-	var userIDs []int64
-	var taskIDs []int64
-	for _, i := range taskMap {
-		taskIDs = append(taskIDs, i.ID)
-		userIDs = append(userIDs, i.CreatedByID)
-	}
-
-	// Get all assignees
-	taskAssignees, err := getRawTaskAssigneesForTasks(taskIDs)
-	if err != nil {
-		return
-	}
-	// Put the assignees in the task map
-	for _, a := range taskAssignees {
-		if a != nil {
-			taskMap[a.TaskID].Assignees = append(taskMap[a.TaskID].Assignees, &a.User)
-		}
-	}
-
-	// Get all labels for the tasks
-	labels, err := getLabelsByTaskIDs(&LabelByTaskIDsOptions{TaskIDs: taskIDs})
-	if err != nil {
-		return
-	}
-	for _, l := range labels {
-		if l != nil {
-			taskMap[l.TaskID].Labels = append(taskMap[l.TaskID].Labels, &l.Label)
-		}
-	}
-
-	users := make(map[int64]*User)
-	err = x.In("id", userIDs).Find(&users)
-	if err != nil {
-		return
-	}
-
-	// Add all user objects to the appropriate tasks
-	for _, task := range taskMap {
-
-		// Make created by user objects
-		taskMap[task.ID].CreatedBy = *users[task.CreatedByID]
-
-		// Reorder all subtasks
-		if task.ParentTaskID != 0 {
-			taskMap[task.ParentTaskID].Subtasks = append(taskMap[task.ParentTaskID].Subtasks, task)
-			delete(taskMap, task.ID)
-		}
-	}
-
-	// make a complete slice from the map
-	tasks = []*ListTask{}
-	for _, t := range taskMap {
-		tasks = append(tasks, t)
-	}
-
-	// Sort the output. In Go, contents on a map are put on that map in no particular order (saved on heap).
-	// Because of this, tasks are not sorted anymore in the output, this leads to confiusion.
-	// To avoid all this, we need to sort the slice afterwards
-	sort.Slice(tasks, func(i, j int) bool {
-		return tasks[i].ID < tasks[j].ID
-	})
-
+	tasks, err = addMoreInfoToTasks(taskMap)
 	return
 }
 
-func getTaskByIDSimple(taskID int64) (task ListTask, err error) {
+// GetTaskByIDSimple returns a raw task without extra data by the task ID
+func GetTaskByIDSimple(taskID int64) (task ListTask, err error) {
 	if taskID < 1 {
 		return ListTask{}, ErrListTaskDoesNotExist{taskID}
 	}
 
-	exists, err := x.ID(taskID).Get(&task)
+	return GetTaskSimple(&ListTask{ID: taskID})
+}
+
+// GetTaskSimple returns a raw task without extra data
+func GetTaskSimple(t *ListTask) (task ListTask, err error) {
+	task = *t
+	exists, err := x.Get(&task)
 	if err != nil {
 		return ListTask{}, err
 	}
 
 	if !exists {
-		return ListTask{}, ErrListTaskDoesNotExist{taskID}
+		return ListTask{}, ErrListTaskDoesNotExist{t.ID}
 	}
 	return
 }
 
-// GetListTaskByID returns all tasks a list has
-func GetListTaskByID(listTaskID int64) (listTask ListTask, err error) {
-	listTask, err = getTaskByIDSimple(listTaskID)
+// GetTaskByID returns all tasks a list has
+func GetTaskByID(listTaskID int64) (listTask ListTask, err error) {
+	listTask, err = GetTaskByIDSimple(listTaskID)
 	if err != nil {
 		return
 	}
@@ -221,37 +166,101 @@ func (bt *BulkTask) GetTasksByIDs() (err error) {
 		}
 	}
 
-	err = x.In("id", bt.IDs).Find(&bt.Tasks)
+	taskMap := make(map[int64]*ListTask, len(bt.Tasks))
+	err = x.In("id", bt.IDs).Find(&taskMap)
 	if err != nil {
-		return err
+		return
 	}
 
-	// We use a map, to avoid looping over two slices at once
-	var usermapids = make(map[int64]bool) // Bool ist just something, doesn't acutually matter
-	for _, list := range bt.Tasks {
-		usermapids[list.CreatedByID] = true
-	}
+	bt.Tasks, err = addMoreInfoToTasks(taskMap)
+	return
+}
 
-	// Make a slice from the map
-	var userids []int64
-	for uid := range usermapids {
-		userids = append(userids, uid)
-	}
-
-	// Get all users for the tasks
-	var users []*User
-	err = x.In("id", userids).Find(&users)
+// GetTasksByUIDs gets all tasks from a bunch of uids
+func GetTasksByUIDs(uids []string) (tasks []*ListTask, err error) {
+	taskMap := make(map[int64]*ListTask)
+	err = x.In("uid", uids).Find(&taskMap)
 	if err != nil {
-		return err
+		return
 	}
 
-	for in, task := range bt.Tasks {
-		for _, u := range users {
-			if task.CreatedByID == u.ID {
-				bt.Tasks[in].CreatedBy = *u
-			}
+	tasks, err = addMoreInfoToTasks(taskMap)
+	return
+}
+
+// This function takes a map with pointers and returns a slice with pointers to tasks
+// It adds more stuff like assignees/labels/etc to a bunch of tasks
+func addMoreInfoToTasks(taskMap map[int64]*ListTask) (tasks []*ListTask, err error) {
+
+	// No need to iterate over users and stuff if the list doesn't has tasks
+	if len(taskMap) == 0 {
+		return
+	}
+
+	// Get all users & task ids and put them into the array
+	var userIDs []int64
+	var taskIDs []int64
+	for _, i := range taskMap {
+		taskIDs = append(taskIDs, i.ID)
+		userIDs = append(userIDs, i.CreatedByID)
+	}
+
+	// Get all assignees
+	taskAssignees, err := getRawTaskAssigneesForTasks(taskIDs)
+	if err != nil {
+		return
+	}
+	// Put the assignees in the task map
+	for _, a := range taskAssignees {
+		if a != nil {
+			taskMap[a.TaskID].Assignees = append(taskMap[a.TaskID].Assignees, &a.User)
 		}
 	}
+
+	// Get all labels for all the tasks
+	labels, err := getLabelsByTaskIDs(&LabelByTaskIDsOptions{TaskIDs: taskIDs})
+	if err != nil {
+		return
+	}
+	for _, l := range labels {
+		if l != nil {
+			taskMap[l.TaskID].Labels = append(taskMap[l.TaskID].Labels, &l.Label)
+		}
+	}
+
+	// Get all users of a task
+	// aka the ones who created a task
+	users := make(map[int64]*User)
+	err = x.In("id", userIDs).Find(&users)
+	if err != nil {
+		return
+	}
+
+	// Add all user objects to the appropriate tasks
+	for _, task := range taskMap {
+
+		// Make created by user objects
+		taskMap[task.ID].CreatedBy = *users[task.CreatedByID]
+
+		// Reorder all subtasks
+		if task.ParentTaskID != 0 {
+			taskMap[task.ParentTaskID].Subtasks = append(taskMap[task.ParentTaskID].Subtasks, task)
+			delete(taskMap, task.ID)
+		}
+	}
+
+	// make a complete slice from the map
+	tasks = []*ListTask{}
+	for _, t := range taskMap {
+		tasks = append(tasks, t)
+	}
+
+	// Sort the output. In Go, contents on a map are put on that map in no particular order.
+	// Because of this, tasks are not sorted anymore in the output, this leads to confiusion.
+	// To avoid all this, we need to sort the slice afterwards
+	sort.Slice(tasks, func(i, j int) bool {
+		return tasks[i].ID < tasks[j].ID
+	})
 
 	return
 }

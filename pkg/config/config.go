@@ -40,6 +40,7 @@ func InitConfig() {
 	viper.SetDefault("service.JWTSecret", random)
 	viper.SetDefault("service.interface", ":3456")
 	viper.SetDefault("service.frontendurl", "")
+	viper.SetDefault("service.enablecaldav", true)
 
 	ex, err := os.Executable()
 	if err != nil {

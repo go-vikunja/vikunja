@@ -48,10 +48,10 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [x] Pagination
 	* Sollte in der Config definierbar sein, wie viel pro Seite angezeigt werden soll, die CRUD-Methoden übergeben dann ein "gibt mir die Seite sowieso" an die CRUDable-Funktionenen, die müssen das dann Auswerten. Geht leider nicht anders, wenn man erst 2342352 Einträge hohlt und die dann nachträglich auf 200 begrenzt ist das ne massive Ressourcenverschwendung.
 * [x] Testen, ob man über die Routen methode von echo irgendwie ein swagger spec generieren könnte -> Andere Swagger library
-* [ ] CalDAV
+* [x] CalDAV
   * [x] Basics
   * [x] Reminders
-  * [ ] Discovery, stichwort PROPFIND 
+  * [x] Discovery, stichwort PROPFIND 
 * [x] Wir brauchen noch ne gute idee, wie man die listen kriegt, auf die man nur so Zugriff hat (ohne namespace)
     * Dazu am Besten nen pseudonamespace anlegen (id -1 oder so), der hat das dann alles
 * [x] Testing mit locust: https://locust.io/
@@ -171,7 +171,6 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [ ] Some kind of milestones for tasks
 * [ ] Create tasks from a text/markdown file (probably frontend only)
 * [ ] Label-view: Get a bunch of tasks by label
-* [ ] Better caldav support (VTODO)
 * [ ] Debian package should have a service file
 * [ ] Downloads should be served via nginx (with theme?), minio should only be used for pushing artifacts.
 * [ ] User struct should have a field for the avatar url (-> gravatar md5 calculated by the backend)
@@ -179,6 +178,34 @@ Sorry for some of them being in German, I'll tranlate them at some point.
       -> Check if there's a way to do that efficently. Maybe only implementing it in the web handler.
 * [ ] List stats to see how many tasks are done, how many are there in total, how many people have acces to a list etc
 * [ ] Colors for tasks
+* [ ] Better caldav support
+  * [x] VTODO
+    * [x] Fix organizer prop
+  * [x] Depricate the events thing for now
+  * [x] PROPFIND/OPTIONS : caldav discovery
+  * [x] Create new tasks
+    * [x] Save uid from the client
+  * [x] Update tasks
+    * [x] Marking as done
+  * [x] Fix OPTIONS Requests to the rest of the api being broken
+  * [x] Parse all props defined in rfc5545
+    * [x] COMPLETED -> Need to actually save the time the task was completed
+  * [x] Whenever a task ist created/updated, update the `updated` prop on the list so the etag changes and clients get notified
+  * [x] Fix not all tasks being displayed (My guess: Something about that f*cking etag)
+  * [x] Delete tasks
+  * [x] Last modified
+  * [x] Content Size
+  * [x] Modify the caldav lib as proposed in the pr
+  * [x] Improve login performance, each request taking > 1.5 sec is just too much, maybe just use the default value for hash iterations in the login/register function
+  * [x] Only show priority when we have one
+  * [x] Show a proper calendar title
+  * [x] Fix home principal propfind stuff
+  * [x] Docs
+  * [x] Setting to disable caldav completely
+  * [ ] Make it work with the app
+  * [ ] Cleanup the whole mess I made with the handlers and storage providers etc -> Probably a good idea to create a seperate storage provider etc for lists and tasks
+  * [ ] Tests
+  * [ ] Check if only needed things are queried from the db when accessing dav (for ex. no need to get all tasks when we act
 
 ### Refactor 
 
@@ -217,6 +244,7 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 
 ### Later
 
+* [ ] Backgrounds for lists -> needs uploading and storing and so on
 * [ ] Plugins
 * [ ] Rename Namespaces?
 * [ ] Namespaces to collections and n-n (one list can be in multiple collections)?
@@ -258,6 +286,7 @@ Sorry for some of them being in German, I'll tranlate them at some point.
   * [ ] Nozbe
   * [ ] Lanes
   * [ ] Nirvana
+  * [ ] Any.do
   * [ ] Good ol' Caldav (Tasks)
 * [ ] More auth providers
   * [ ] LDAP/AD

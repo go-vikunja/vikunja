@@ -26,6 +26,8 @@ steps:
   - name: build
     image: vikunja/golang-build:latest
     pull: true
+    environment:
+      GOFLAGS: '-mod=vendor'
     commands:
       - make lint
       - make fmt-check

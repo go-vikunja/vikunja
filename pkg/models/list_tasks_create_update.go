@@ -18,8 +18,10 @@ package models
 
 import (
 	"code.vikunja.io/api/pkg/metrics"
+	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/web"
 	"github.com/imdario/mergo"
+	"time"
 )
 
 // Create is the implementation to create a list task
@@ -60,6 +62,11 @@ func (t *ListTask) Create(a web.Auth) (err error) {
 		return err
 	}
 
+	// Generate a uuid if we don't already have one
+	if t.UID == "" {
+		t.UID = utils.MakeRandomString(40)
+	}
+
 	t.CreatedByID = u.ID
 	t.CreatedBy = u
 	if _, err = x.Insert(t); err != nil {
@@ -72,6 +79,8 @@ func (t *ListTask) Create(a web.Auth) (err error) {
 	}
 
 	metrics.UpdateCount(1, metrics.TaskCountKey)
+
+	err = updateListLastUpdated(&List{ID: t.ListID})
 	return
 }
 
@@ -91,7 +100,7 @@ func (t *ListTask) Create(a web.Auth) (err error) {
 // @Router /tasks/{id} [post]
 func (t *ListTask) Update() (err error) {
 	// Check if the task exists
-	ot, err := GetListTaskByID(t.ID)
+	ot, err := GetTaskByID(t.ID)
 	if err != nil {
 		return
 	}
@@ -189,12 +198,20 @@ func (t *ListTask) Update() (err error) {
 			"priority",
 			"start_date_unix",
 			"end_date_unix",
-			"hex_color").
+			"hex_color",
+			"done_at_unix").
 		Update(ot)
 	*t = ot
+	if err != nil {
+		return err
+	}
+
+	err = updateListLastUpdated(&List{ID: t.ListID})
 	return
 }
 
+// This helper function updates the reminders and doneAtUnix of the *old* task (since that's the one we're inserting
+// with updated values into the db)
 func updateDone(oldTask *ListTask, newTask *ListTask) {
 	if !oldTask.Done && newTask.Done && oldTask.RepeatAfter > 0 {
 		oldTask.DueDateUnix = oldTask.DueDateUnix + oldTask.RepeatAfter // assuming we'll save the old task (merged)
@@ -204,5 +221,14 @@ func updateDone(oldTask *ListTask, newTask *ListTask) {
 		}
 
 		newTask.Done = false
+	}
+
+	// Update the "done at" timestamp
+	if !oldTask.Done && newTask.Done {
+		oldTask.DoneAtUnix = time.Now().Unix()
+	}
+	// When unmarking a task as done, reset the timestamp
+	if oldTask.Done && !newTask.Done {
+		oldTask.DoneAtUnix = 0
 	}
 }

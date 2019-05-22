@@ -21,6 +21,7 @@ require (
 	code.vikunja.io/web v0.0.0-20190507193736-edb39812af9c
 	github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc
 	github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a
+	github.com/beevik/etree v1.1.0 // indirect
 	github.com/client9/misspell v0.3.4
 	github.com/d4l3k/messagediff v1.2.1 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
@@ -43,6 +44,7 @@ require (
 	github.com/jgautheron/goconst v0.0.0-20170703170152-9740945f5dcb
 	github.com/labstack/echo/v4 v4.1.5
 	github.com/labstack/gommon v0.2.8
+	github.com/laurent22/ical-go v0.1.0
 	github.com/mailru/easyjson v0.0.0-20190403194419-1ea4449da983 // indirect
 	github.com/mattn/go-oci8 v0.0.0-20181130072307-052f5d97b9b6 // indirect
 	github.com/mattn/go-runewidth v0.0.4 // indirect
@@ -53,6 +55,7 @@ require (
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/pelletier/go-toml v1.4.0 // indirect
 	github.com/prometheus/client_golang v0.9.2
+	github.com/samedi/caldav-go v3.0.0+incompatible
 	github.com/spf13/afero v1.2.2 // indirect
 	github.com/spf13/cobra v0.0.3
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
@@ -71,3 +74,8 @@ require (
 	src.techknowlogick.com/xgo v0.0.0-20190507142556-a5b29ecb0ff4
 	src.techknowlogick.com/xormigrate v0.0.0-20190321151057-24497c23c09c
 )
+
+//replace (
+//	github.com/labstack/echo/v4 => ../../github.com/labstack/echo // Branch: feature/report-method, PR https://github.com/labstack/echo/pull/1332
+//	github.com/samedi/caldav-go => ../../github.com/samedi/caldav-go // Branch: feature/dynamic-supported-components, PR: https://github.com/samedi/caldav-go/pull/6
+//)

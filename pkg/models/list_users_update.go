@@ -44,5 +44,10 @@ func (lu *ListUser) Update() (err error) {
 		Where("list_id = ? AND user_id = ?", lu.ListID, lu.UserID).
 		Cols("right").
 		Update(lu)
+	if err != nil {
+		return err
+	}
+
+	err = updateListLastUpdated(&List{ID: lu.ListID})
 	return
 }

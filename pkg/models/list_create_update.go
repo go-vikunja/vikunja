@@ -71,6 +71,21 @@ func (l *List) Update() (err error) {
 	return CreateOrUpdateList(l)
 }
 
+func updateListLastUpdated(list *List) error {
+	_, err := x.ID(list.ID).Cols("updated").Update(list)
+	return err
+}
+
+func updateListByTaskID(taskID int64) (err error) {
+	// need to get the task to update the list last updated timestamp
+	task, err := GetTaskByIDSimple(taskID)
+	if err != nil {
+		return err
+	}
+
+	return updateListLastUpdated(&List{ID: task.ListID})
+}
+
 // Create implements the create method of CRUDable
 // @Summary Creates a new list
 // @Description Creates a new list in a given namespace. The user needs write-access to the namespace.

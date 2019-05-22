@@ -67,6 +67,10 @@ func (lu *ListUser) Create(a web.Auth) (err error) {
 
 	// Insert user <-> list relation
 	_, err = x.Insert(lu)
+	if err != nil {
+		return err
+	}
 
+	err = updateListLastUpdated(l)
 	return
 }

@@ -86,6 +86,11 @@ func (lt *LabelTask) Create(a web.Auth) (err error) {
 
 	// Insert it
 	_, err = x.Insert(lt)
+	if err != nil {
+		return err
+	}
+
+	err = updateListByTaskID(lt.TaskID)
 	return
 }
 
@@ -272,6 +277,8 @@ func (t *ListTask) updateTaskLabels(creator web.Auth, labels []*Label) (err erro
 		}
 		t.Labels = append(t.Labels, label)
 	}
+
+	err = updateListLastUpdated(&List{ID: t.ListID})
 	return
 }
 
@@ -299,7 +306,7 @@ type LabelTaskBulk struct {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/labels/bulk [post]
 func (ltb *LabelTaskBulk) Create(a web.Auth) (err error) {
-	task, err := GetListTaskByID(ltb.TaskID)
+	task, err := GetTaskByID(ltb.TaskID)
 	if err != nil {
 		return
 	}

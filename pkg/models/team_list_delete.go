@@ -53,6 +53,10 @@ func (tl *TeamList) Delete() (err error) {
 	_, err = x.Where("team_id = ?", tl.TeamID).
 		And("list_id = ?", tl.ListID).
 		Delete(TeamList{})
+	if err != nil {
+		return err
+	}
 
+	err = updateListLastUpdated(&List{ID: tl.ListID})
 	return
 }

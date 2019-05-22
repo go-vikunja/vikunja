@@ -44,5 +44,10 @@ func (tl *TeamList) Update() (err error) {
 		Where("list_id = ? AND team_id = ?", tl.ListID, tl.TeamID).
 		Cols("right").
 		Update(tl)
+	if err != nil {
+		return err
+	}
+
+	err = updateListLastUpdated(&List{ID: tl.ListID})
 	return
 }

@@ -1,7 +1,7 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "This is the documentation for the [Vikunja](http://vikunja.io) API. Vikunja is a cross-plattform Todo-application with a lot of features, such as sharing lists with users or teams. \u003c!-- ReDoc-Inject: \u003csecurity-definitions\u003e --\u003e\n# Authorization\n**JWT-Auth:** Main authorization method, used for most of the requests. Needs ` + \"`\" + `Authorization: Bearer \u003cjwt-token\u003e` + \"`\" + `-header to authenticate successfully.\n\n**BasicAuth:** Only used when requesting tasks via caldav.\n\u003c!-- ReDoc-Inject: \u003csecurity-definitions\u003e --\u003e",
+        "description": "\u003c!-- ReDoc-Inject: \u003csecurity-definitions\u003e --\u003e",
         "title": "Vikunja API",
         "contact": {
             "name": "General Vikunja contact",
@@ -378,7 +378,7 @@
                         "JWTKeyAuth": []
                     }
                 ],
-                "description": "Returns a team by its ID.",
+                "description": "Returns a list by its ID.",
                 "consumes": [
                     "application/json"
                 ],
@@ -386,13 +386,13 @@
                     "application/json"
                 ],
                 "tags": [
-                    "team"
+                    "list"
                 ],
-                "summary": "Gets one team",
+                "summary": "Gets one list",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "Team ID",
+                        "description": "List ID",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -400,14 +400,14 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "The team",
+                        "description": "The list",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.Team"
+                            "$ref": "#/definitions/models.List"
                         }
                     },
                     "403": {
-                        "description": "The user does not have access to the team",
+                        "description": "The user does not have access to the list",
                         "schema": {
                             "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
@@ -2368,37 +2368,6 @@
                 }
             }
         },
-        "/tasks/caldav": {
-            "get": {
-                "security": [
-                    {
-                        "BasicAuth": []
-                    }
-                ],
-                "description": "Returns a calDAV-parsable format with all tasks as calendar events. Only returns tasks with a due date. Also creates reminders when the task has one.",
-                "produces": [
-                    "text/plain"
-                ],
-                "tags": [
-                    "task"
-                ],
-                "summary": "CalDAV-readable format with all tasks as calendar events.",
-                "responses": {
-                    "200": {
-                        "description": "The caldav events.",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "403": {
-                        "description": "Unauthorized.",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
         "/tasks/{id}": {
             "post": {
                 "security": [
@@ -3674,6 +3643,10 @@
                     "description": "Whether a task is done or not.",
                     "type": "boolean"
                 },
+                "doneAt": {
+                    "description": "The unix timestamp when a task was marked as done.",
+                    "type": "integer"
+                },
                 "dueDate": {
                     "description": "A unix timestamp when the task is due.",
                     "type": "integer"
@@ -3890,6 +3863,10 @@
                 "done": {
                     "description": "Whether a task is done or not.",
                     "type": "boolean"
+                },
+                "doneAt": {
+                    "description": "The unix timestamp when a task was marked as done.",
+                    "type": "integer"
                 },
                 "dueDate": {
                     "description": "A unix timestamp when the task is due.",

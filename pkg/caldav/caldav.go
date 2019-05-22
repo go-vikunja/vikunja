@@ -17,10 +17,15 @@
 package caldav
 
 import (
+	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/utils"
+	"fmt"
 	"strconv"
 	"time"
 )
+
+// DateFormat ist the caldav date format
+const DateFormat = `20060102T150405`
 
 // Event holds a single caldav event
 type Event struct {
@@ -32,6 +37,29 @@ type Event struct {
 	TimestampUnix int64
 	StartUnix     int64
 	EndUnix       int64
+}
+
+// Todo holds a single VTODO
+type Todo struct {
+	// Required
+	TimestampUnix int64
+	UID           string
+
+	// Optional
+	Summary       string
+	Description   string
+	CompletedUnix int64
+	Organizer     *models.User
+	Priority      int64 // 0-9, 1 is highest
+	RelatedToUID  string
+
+	StartUnix   int64
+	EndUnix     int64
+	DueDateUnix int64
+	Duration    time.Duration
+
+	CreatedUnix int64
+	UpdatedUnix int64 // last-mod
 }
 
 // Alarm holds infos about an alarm from a caldav event
@@ -92,10 +120,89 @@ END:VCALENDAR` // Need a line break
 	return
 }
 
+// ParseTodos returns a caldav vcalendar string with todos
+func ParseTodos(config *Config, todos []*Todo) (caldavtodos string) {
+	caldavtodos = `BEGIN:VCALENDAR
+VERSION:2.0
+METHOD:PUBLISH
+X-PUBLISHED-TTL:PT4H
+X-WR-CALNAME:` + config.Name + `
+PRODID:-//` + config.ProdID + `//EN`
+
+	for _, t := range todos {
+		if t.UID == "" {
+			t.UID = makeCalDavTimeFromUnixTime(t.TimestampUnix) + utils.Sha256(t.Summary)
+		}
+
+		caldavtodos += `
+BEGIN:VTODO
+UID:` + t.UID + `
+DTSTAMP:` + makeCalDavTimeFromUnixTime(t.TimestampUnix) + `
+SUMMARY:` + t.Summary
+
+		if t.StartUnix != 0 {
+			caldavtodos += `
+DTSTART: ` + makeCalDavTimeFromUnixTime(t.StartUnix)
+		}
+		if t.EndUnix != 0 {
+			caldavtodos += `
+DTEND: ` + makeCalDavTimeFromUnixTime(t.EndUnix)
+		}
+		if t.Description != "" {
+			caldavtodos += `
+DESCRIPTION:` + t.Description
+		}
+		if t.CompletedUnix != 0 {
+			caldavtodos += `
+COMPLETED: ` + makeCalDavTimeFromUnixTime(t.CompletedUnix)
+		}
+		if t.Organizer != nil {
+			caldavtodos += `
+ORGANIZER;CN=:` + t.Organizer.Username
+		}
+
+		if t.RelatedToUID != "" {
+			caldavtodos += `
+RELATED-TO:` + t.RelatedToUID
+		}
+
+		if t.DueDateUnix != 0 {
+			caldavtodos += `
+DUE:` + makeCalDavTimeFromUnixTime(t.DueDateUnix)
+		}
+
+		if t.CreatedUnix != 0 {
+			caldavtodos += `
+CREATED:` + makeCalDavTimeFromUnixTime(t.CreatedUnix)
+		}
+
+		if t.Duration != 0 {
+			caldavtodos += `
+DURATION:PT` + fmt.Sprintf("%.6f", t.Duration.Hours()) + `H` + fmt.Sprintf("%.6f", t.Duration.Minutes()) + `M` + fmt.Sprintf("%.6f", t.Duration.Seconds()) + `S`
+		}
+
+		if t.Priority != 0 {
+			caldavtodos += `
+PRIORITY:` + strconv.Itoa(int(t.Priority))
+		}
+
+		caldavtodos += `
+LAST-MODIFIED:` + makeCalDavTimeFromUnixTime(t.UpdatedUnix)
+
+		caldavtodos += `
+END:VTODO`
+	}
+
+	caldavtodos += `
+END:VCALENDAR` // Need a line break
+
+	return
+}
+
 func makeCalDavTimeFromUnixTime(unixtime int64) (caldavtime string) {
 	tz, _ := time.LoadLocation("UTC")
 	tm := time.Unix(unixtime, 0).In(tz)
-	return tm.Format("20060102T150405")
+	return tm.Format(DateFormat)
 }
 
 func calcAlarmDateFromReminder(eventStartUnix, reminderUnix int64) (alarmTime string) {
