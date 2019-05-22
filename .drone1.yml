@@ -154,7 +154,6 @@ steps:
     image: techknowlogick/xgo:latest
     pull: true
     environment:
-      GOFLAGS: '-mod=vendor'
       # This path does not exist. However, when we set the gopath to /go, the build fails. Not sure why.
       # Leaving this here until we know how to resolve this properly.
       GOPATH: /srv/app
@@ -167,7 +166,6 @@ steps:
     image: techknowlogick/xgo:latest
     pull: true
     environment:
-      GOFLAGS: '-mod=vendor'
       # This path does not exist. However, when we set the gopath to /go, the build fails. Not sure why.
       # Leaving this here until we know how to resolve this properly.
       GOPATH: /srv/app
@@ -180,7 +178,6 @@ steps:
     image: techknowlogick/xgo:latest
     pull: true
     environment:
-      GOFLAGS: '-mod=vendor'
       # This path does not exist. However, when we set the gopath to /go, the build fails. Not sure why.
       # Leaving this here until we know how to resolve this properly.
       GOPATH: /srv/app
@@ -354,7 +351,6 @@ steps:
     image: techknowlogick/xgo:latest
     pull: true
     environment:
-      GOFLAGS: '-mod=vendor'
       # This path does not exist. However, when we set the gopath to /go, the build fails. Not sure why.
       # Leaving this here until we know how to resolve this properly.
       GOPATH: /srv/app
@@ -367,7 +363,6 @@ steps:
     image: techknowlogick/xgo:latest
     pull: true
     environment:
-      GOFLAGS: '-mod=vendor'
       # This path does not exist. However, when we set the gopath to /go, the build fails. Not sure why.
       # Leaving this here until we know how to resolve this properly.
       GOPATH: /srv/app
@@ -380,7 +375,6 @@ steps:
     image: techknowlogick/xgo:latest
     pull: true
     environment:
-      GOFLAGS: '-mod=vendor'
       # This path does not exist. However, when we set the gopath to /go, the build fails. Not sure why.
       # Leaving this here until we know how to resolve this properly.
       GOPATH: /srv/app
