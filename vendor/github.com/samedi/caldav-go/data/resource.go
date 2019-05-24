@@ -2,13 +2,14 @@ package data
 
 import (
 	"fmt"
-	"github.com/laurent22/ical-go/ical"
 	"io/ioutil"
 	"log"
 	"os"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/laurent22/ical-go"
 
 	"github.com/samedi/caldav-go/files"
 	"github.com/samedi/caldav-go/lib"
