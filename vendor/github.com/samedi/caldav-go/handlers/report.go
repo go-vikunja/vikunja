@@ -113,8 +113,8 @@ func (rh reportHandler) fetchResourcesByFilters(origin *data.Resource, filtersXM
 			return reps, err
 		}
 
-		for _, resource := range resources {
-			reps = append(reps, reportRes{resource.Path, &resource, true})
+		for in, resource := range resources {
+			reps = append(reps, reportRes{resource.Path, &resources[in], true})
 		}
 	} else {
 		// the origin resource is not a collection, so returns just that as the result

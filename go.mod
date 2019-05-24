@@ -77,5 +77,5 @@ require (
 
 replace (
 	github.com/labstack/echo/v4 => github.com/kolaente/echo/v4 v4.0.0-20190507190305-3725a216d803 // Branch: feature/report-method, PR https://github.com/labstack/echo/pull/1332
-	github.com/samedi/caldav-go => github.com/kolaente/caldav-go v3.0.1-0.20190515182556-0537fdbe9340+incompatible // Branch: feature/dynamic-supported-components, PR: https://github.com/samedi/caldav-go/pull/6
+	github.com/samedi/caldav-go => github.com/kolaente/caldav-go v3.0.1-0.20190524174923-9e5cd1688227+incompatible // Branch: feature/dynamic-supported-components, PR: https://github.com/samedi/caldav-go/pull/6 and https://github.com/samedi/caldav-go/pull/7
 )
