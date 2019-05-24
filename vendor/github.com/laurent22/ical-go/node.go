@@ -1,17 +1,17 @@
 package ical
 
 import (
-	"time"
 	"regexp"
 	"strconv"
+	"time"
 )
 
 type Node struct {
-	Name string
-	Value string
-	Type int // 1 = Object, 0 = Name/Value
+	Name       string
+	Value      string
+	Type       int // 1 = Object, 0 = Name/Value
 	Parameters map[string]string
-	Children []*Node
+	Children   []*Node
 }
 
 func (this *Node) ChildrenByName(name string) []*Node {
@@ -44,19 +44,28 @@ func (this *Node) PropString(name string, defaultValue string) string {
 
 func (this *Node) PropDate(name string, defaultValue time.Time) time.Time {
 	node := this.ChildByName(name)
-	if node == nil { return defaultValue }
+	if node == nil {
+		return defaultValue
+	}
 	tzid := node.Parameter("TZID", "")
+	allDay := node.Parameter("VALUE", "") == "DATE"
 	var output time.Time
 	var err error
 	if tzid != "" {
 		loc, err := time.LoadLocation(tzid)
-		if err != nil { panic(err) }
+		if err != nil {
+			panic(err)
+		}
 		output, err = time.ParseInLocation("20060102T150405", node.Value, loc)
+	} else if allDay {
+		output, err = time.Parse("20060102", node.Value)
 	} else {
 		output, err = time.Parse("20060102T150405Z", node.Value)
 	}
 
-	if err != nil { panic(err) }
+	if err != nil {
+		panic(err)
+	}
 	return output
 }
 
@@ -86,29 +95,37 @@ func (this *Node) PropDuration(name string) time.Duration {
 	min := strToDuration(matches[2])
 	sec := strToDuration(matches[3])
 
-	return hours * time.Hour +  min * time.Minute + sec * time.Second
+	return hours*time.Hour + min*time.Minute + sec*time.Second
 }
 
 func (this *Node) PropInt(name string, defaultValue int) int {
 	n := this.PropString(name, "")
-	if n == "" { return defaultValue }
+	if n == "" {
+		return defaultValue
+	}
 	output, err := strconv.Atoi(n)
-	if err != nil { panic(err) }
+	if err != nil {
+		panic(err)
+	}
 	return output
 }
 
-func (this *Node) DigProperty(propPath... string) (string, bool) {
+func (this *Node) DigProperty(propPath ...string) (string, bool) {
 	return this.dig("prop", propPath...)
 }
 
 func (this *Node) Parameter(name string, defaultValue string) string {
-	if len(this.Parameters) <= 0 { return defaultValue }
+	if len(this.Parameters) <= 0 {
+		return defaultValue
+	}
 	v, ok := this.Parameters[name]
-	if !ok { return defaultValue }
+	if !ok {
+		return defaultValue
+	}
 	return v
 }
 
-func (this *Node) DigParameter(paramPath... string) (string, bool) {
+func (this *Node) DigParameter(paramPath ...string) (string, bool) {
 	return this.dig("param", paramPath...)
 }
 
@@ -120,7 +137,7 @@ func (this *Node) DigParameter(paramPath... string) (string, bool) {
 // Example:
 // dig("param", "VCALENDAR", "VEVENT", "DTEND", "TYPE") -> It will search for "VCALENDAR" node,
 // then a "VEVENT" node, then a "DTEND" note, then finally the "TYPE" param.
-func (this *Node) dig(valueType string, valuePath... string) (string, bool) {
+func (this *Node) dig(valueType string, valuePath ...string) (string, bool) {
 	current := this
 	lastIndex := len(valuePath) - 1
 	for _, v := range valuePath[:lastIndex] {

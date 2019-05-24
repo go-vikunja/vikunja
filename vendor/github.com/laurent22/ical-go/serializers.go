@@ -1,13 +1,13 @@
 package ical
 
 import (
-  "time"
-  "strings"
+	"strings"
+	"time"
 )
 
 type calSerializer struct {
 	calendar *Calendar
-	buffer *strBuffer
+	buffer   *strBuffer
 }
 
 func (this *calSerializer) serialize() string {
@@ -41,7 +41,7 @@ func (this *calSerializer) items() {
 }
 
 type calEventSerializer struct {
-	event *CalendarEvent
+	event  *CalendarEvent
 	buffer *strBuffer
 }
 
@@ -62,8 +62,9 @@ func (this *calEventSerializer) serializeEvent() {
 	this.dtstart()
 	this.dtend()
 	this.summary()
-  this.description()
+	this.description()
 	this.location()
+	this.url()
 	this.end()
 }
 
@@ -89,6 +90,10 @@ func (this *calEventSerializer) description() {
 
 func (this *calEventSerializer) location() {
 	this.serializeStringProp("LOCATION", this.event.Location)
+}
+
+func (this *calEventSerializer) url() {
+	this.serializeStringProp("URL", this.event.URL)
 }
 
 func (this *calEventSerializer) dtstart() {

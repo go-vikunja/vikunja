@@ -1,18 +1,18 @@
 package ical
 
 import (
-  "fmt"
-  "bytes"
+	"bytes"
+	"fmt"
 )
 
 type strBuffer struct {
-  buffer bytes.Buffer
+	buffer bytes.Buffer
 }
 
 func (b *strBuffer) Write(format string, elem ...interface{}) {
-  b.buffer.WriteString(fmt.Sprintf(format, elem...))
+	b.buffer.WriteString(fmt.Sprintf(format, elem...))
 }
 
 func (b *strBuffer) String() string {
-  return b.buffer.String()
+	return b.buffer.String()
 }

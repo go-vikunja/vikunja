@@ -1,8 +1,8 @@
 package ical
 
 import (
-	"log"
 	"errors"
+	"log"
 	"regexp"
 	"strings"
 )
@@ -10,7 +10,7 @@ import (
 func ParseCalendar(data string) (*Node, error) {
 	r := regexp.MustCompile("([\r|\t| ]*\n[\r|\t| ]*)+")
 	lines := r.Split(strings.TrimSpace(data), -1)
-	node, _, err, _  := parseCalendarNode(lines, 0)
+	node, _, err, _ := parseCalendarNode(lines, 0)
 
 	return node, err
 }
@@ -30,11 +30,13 @@ func parseCalendarNode(lines []string, lineIndex int) (*Node, bool, error, int) 
 		parameters = make(map[string]string)
 		for i := 1; i < len(splitted); i++ {
 			p := strings.Split(splitted[i], "=")
-			if len(p) != 2 { panic("Invalid parameter format: " + name) }
+			if len(p) != 2 {
+				panic("Invalid parameter format: " + name)
+			}
 			parameters[p[0]] = p[1]
 		}
 	}
-	value := line[colonIndex+1:len(line)]
+	value := line[colonIndex+1 : len(line)]
 
 	if name == "BEGIN" {
 		node := new(Node)
@@ -76,7 +78,7 @@ func parseCalendarNode(lines []string, lineIndex int) (*Node, bool, error, int) 
 func parseTextType(lines []string, lineIndex int) (string, int) {
 	line := lines[lineIndex]
 	colonIndex := strings.Index(line, ":")
-	output := strings.TrimSpace(line[colonIndex+1:len(line)])
+	output := strings.TrimSpace(line[colonIndex+1 : len(line)])
 	lineIndex++
 	for {
 		line := lines[lineIndex]

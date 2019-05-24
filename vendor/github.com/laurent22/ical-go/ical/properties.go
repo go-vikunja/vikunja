@@ -1,9 +1,0 @@
-package ical
-
-const (
-	VCALENDAR = "VCALENDAR"
-	VEVENT  = "VEVENT"
-	DTSTART = "DTSTART"
-	DTEND   = "DTEND"
-	DURATION = "DURATION"
-)

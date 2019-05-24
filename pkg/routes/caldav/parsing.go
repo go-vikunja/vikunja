@@ -20,7 +20,7 @@ import (
 	"code.vikunja.io/api/pkg/caldav"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
-	"github.com/laurent22/ical-go/ical"
+	"github.com/laurent22/ical-go"
 	"strconv"
 	"time"
 )

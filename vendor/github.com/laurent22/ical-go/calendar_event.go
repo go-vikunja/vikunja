@@ -5,14 +5,15 @@ import (
 )
 
 type CalendarEvent struct {
-	Id string
-	Summary string
-	Description string
-	Location string
-	CreatedAtUTC *time.Time
+	Id            string
+	Summary       string
+	Description   string
+	Location      string
+	URL           string
+	CreatedAtUTC  *time.Time
 	ModifiedAtUTC *time.Time
-	StartAt *time.Time
-	EndAt *time.Time
+	StartAt       *time.Time
+	EndAt         *time.Time
 }
 
 func (this *CalendarEvent) StartAtUTC() *time.Time {
@@ -34,7 +35,7 @@ func (this *CalendarEvent) ToICS() string {
 
 func (this *CalendarEvent) serializeWithBuffer(buffer *strBuffer) string {
 	serializer := calEventSerializer{
-		event: this,
+		event:  this,
 		buffer: buffer,
 	}
 	return serializer.serialize()

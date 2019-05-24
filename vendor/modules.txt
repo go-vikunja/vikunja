@@ -88,8 +88,8 @@ github.com/labstack/gommon/log
 github.com/labstack/gommon/color
 github.com/labstack/gommon/bytes
 github.com/labstack/gommon/random
-# github.com/laurent22/ical-go v0.1.0
-github.com/laurent22/ical-go/ical
+# github.com/laurent22/ical-go v0.1.1-0.20181107184520-7e5d6ade8eef
+github.com/laurent22/ical-go
 # github.com/magiconair/properties v1.8.0
 github.com/magiconair/properties
 # github.com/mailru/easyjson v0.0.0-20190403194419-1ea4449da983

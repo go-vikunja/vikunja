@@ -44,7 +44,7 @@ require (
 	github.com/jgautheron/goconst v0.0.0-20170703170152-9740945f5dcb
 	github.com/labstack/echo/v4 v4.1.5
 	github.com/labstack/gommon v0.2.8
-	github.com/laurent22/ical-go v0.1.0
+	github.com/laurent22/ical-go v0.1.1-0.20181107184520-7e5d6ade8eef
 	github.com/mailru/easyjson v0.0.0-20190403194419-1ea4449da983 // indirect
 	github.com/mattn/go-oci8 v0.0.0-20181130072307-052f5d97b9b6 // indirect
 	github.com/mattn/go-runewidth v0.0.4 // indirect

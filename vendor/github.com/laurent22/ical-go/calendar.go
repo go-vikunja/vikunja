@@ -7,7 +7,7 @@ type Calendar struct {
 func (this *Calendar) Serialize() string {
 	serializer := calSerializer{
 		calendar: this,
-		buffer: new(strBuffer),
+		buffer:   new(strBuffer),
 	}
 	return serializer.serialize()
 }
