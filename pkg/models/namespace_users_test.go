@@ -218,7 +218,7 @@ func TestNamespaceUser_ReadAll(t *testing.T) {
 func TestNamespaceUser_Update(t *testing.T) {
 	type fields struct {
 		ID          int64
-		UserID      int64
+		Username    string
 		NamespaceID int64
 		Right       Right
 		Created     int64
@@ -236,7 +236,7 @@ func TestNamespaceUser_Update(t *testing.T) {
 			name: "Test Update Normally",
 			fields: fields{
 				NamespaceID: 3,
-				UserID:      1,
+				Username:    "user1",
 				Right:       RightAdmin,
 			},
 		},
@@ -244,7 +244,7 @@ func TestNamespaceUser_Update(t *testing.T) {
 			name: "Test Update to write",
 			fields: fields{
 				NamespaceID: 3,
-				UserID:      1,
+				Username:    "user1",
 				Right:       RightWrite,
 			},
 		},
@@ -252,7 +252,7 @@ func TestNamespaceUser_Update(t *testing.T) {
 			name: "Test Update to Read",
 			fields: fields{
 				NamespaceID: 3,
-				UserID:      1,
+				Username:    "user1",
 				Right:       RightRead,
 			},
 		},
@@ -260,7 +260,7 @@ func TestNamespaceUser_Update(t *testing.T) {
 			name: "Test Update with invalid right",
 			fields: fields{
 				NamespaceID: 3,
-				UserID:      1,
+				Username:    "user1",
 				Right:       500,
 			},
 			wantErr: true,
@@ -271,7 +271,7 @@ func TestNamespaceUser_Update(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			nu := &NamespaceUser{
 				ID:          tt.fields.ID,
-				UserID:      tt.fields.UserID,
+				Username:    tt.fields.Username,
 				NamespaceID: tt.fields.NamespaceID,
 				Right:       tt.fields.Right,
 				Created:     tt.fields.Created,

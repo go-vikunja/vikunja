@@ -218,7 +218,7 @@ func TestListUser_ReadAll(t *testing.T) {
 func TestListUser_Update(t *testing.T) {
 	type fields struct {
 		ID       int64
-		UserID   int64
+		Username string
 		ListID   int64
 		Right    Right
 		Created  int64
@@ -235,33 +235,33 @@ func TestListUser_Update(t *testing.T) {
 		{
 			name: "Test Update Normally",
 			fields: fields{
-				ListID: 3,
-				UserID: 1,
-				Right:  RightAdmin,
+				ListID:   3,
+				Username: "user1",
+				Right:    RightAdmin,
 			},
 		},
 		{
 			name: "Test Update to write",
 			fields: fields{
-				ListID: 3,
-				UserID: 1,
-				Right:  RightWrite,
+				ListID:   3,
+				Username: "user1",
+				Right:    RightWrite,
 			},
 		},
 		{
 			name: "Test Update to Read",
 			fields: fields{
-				ListID: 3,
-				UserID: 1,
-				Right:  RightRead,
+				ListID:   3,
+				Username: "user1",
+				Right:    RightRead,
 			},
 		},
 		{
 			name: "Test Update with invalid right",
 			fields: fields{
-				ListID: 3,
-				UserID: 1,
-				Right:  500,
+				ListID:   3,
+				Username: "user1",
+				Right:    500,
 			},
 			wantErr: true,
 			errType: IsErrInvalidRight,
@@ -271,7 +271,7 @@ func TestListUser_Update(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			lu := &ListUser{
 				ID:       tt.fields.ID,
-				UserID:   tt.fields.UserID,
+				Username: tt.fields.Username,
 				ListID:   tt.fields.ListID,
 				Right:    tt.fields.Right,
 				Created:  tt.fields.Created,

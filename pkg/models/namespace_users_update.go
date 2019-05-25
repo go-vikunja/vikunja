@@ -40,6 +40,13 @@ func (nu *NamespaceUser) Update() (err error) {
 		return err
 	}
 
+	// Check if the user exists
+	user, err := GetUserByUsername(nu.Username)
+	if err != nil {
+		return err
+	}
+	nu.UserID = user.ID
+
 	_, err = x.
 		Where("namespace_id = ? AND user_id = ?", nu.NamespaceID, nu.UserID).
 		Cols("right").

@@ -217,7 +217,7 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [x] Reminders should use an extra table so we can make reverse lookups aka "give me all tasks with reminders in this period" which we'll need for things like email reminders notifications
 * [x] When giving a user access to a list/namespace, they should be reffered to by uuid, not numeric id
 * [x] Adding users to a team should also use uuid
-* [ ] Check if the team/user really exist before updating them on lists/namespaces
+* [x] Check if the team/user really exist before updating them on lists/namespaces
 
 ### Linters
 

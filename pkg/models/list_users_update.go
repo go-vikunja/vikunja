@@ -40,6 +40,13 @@ func (lu *ListUser) Update() (err error) {
 		return err
 	}
 
+	// Check if the user exists
+	user, err := GetUserByUsername(lu.Username)
+	if err != nil {
+		return err
+	}
+	lu.UserID = user.ID
+
 	_, err = x.
 		Where("list_id = ? AND user_id = ?", lu.ListID, lu.UserID).
 		Cols("right").
