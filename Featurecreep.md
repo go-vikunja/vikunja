@@ -218,7 +218,6 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [x] When giving a user access to a list/namespace, they should be reffered to by uuid, not numeric id
 * [x] Adding users to a team should also use uuid
 * [ ] Check if the team/user really exist before updating them on lists/namespaces
-* [ ] Check if the email is properly obfuscated everywhere -> alter GetUser() and add a new method GetUserWithEmail
 
 ### Linters
 
