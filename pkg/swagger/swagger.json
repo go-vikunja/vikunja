@@ -1,7 +1,7 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "\u003c!-- ReDoc-Inject: \u003csecurity-definitions\u003e --\u003e",
+        "description": "This is the documentation for the [Vikunja](http://vikunja.io) API. Vikunja is a cross-plattform Todo-application with a lot of features, such as sharing lists with users or teams. \u003c!-- ReDoc-Inject: \u003csecurity-definitions\u003e --\u003e\n# Authorization\n**JWT-Auth:** Main authorization method, used for most of the requests. Needs ` + \"`\" + `Authorization: Bearer \u003cjwt-token\u003e` + \"`\" + `-header to authenticate successfully.\n\n**BasicAuth:** Only used when requesting tasks via caldav.\n\u003c!-- ReDoc-Inject: \u003csecurity-definitions\u003e --\u003e",
         "title": "Vikunja API",
         "contact": {
             "name": "General Vikunja contact",
@@ -3970,9 +3970,9 @@
                     "description": "A unix timestamp when this relation was last updated. You cannot change this value.",
                     "type": "integer"
                 },
-                "userID": {
-                    "description": "The user id.",
-                    "type": "integer"
+                "username": {
+                    "description": "The username.",
+                    "type": "string"
                 }
             }
         },
@@ -4040,8 +4040,8 @@
                     "type": "integer"
                 },
                 "userID": {
-                    "description": "The user id.",
-                    "type": "integer"
+                    "description": "The username.",
+                    "type": "string"
                 }
             }
         },
@@ -4189,9 +4189,9 @@
                     "description": "The unique, numeric id of this team member relation.",
                     "type": "integer"
                 },
-                "userID": {
-                    "description": "The id of the member.",
-                    "type": "integer"
+                "username": {
+                    "description": "The username of the member. We use this to prevent automated user id entering.",
+                    "type": "string"
                 }
             }
         },

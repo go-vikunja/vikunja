@@ -53,7 +53,7 @@ func (t *Team) Create(a web.Auth) (err error) {
 	}
 
 	// Insert the current user as member and admin
-	tm := TeamMember{TeamID: t.ID, UserID: doer.ID, Admin: true}
+	tm := TeamMember{TeamID: t.ID, Username: doer.Username, Admin: true}
 	if err = tm.Create(doer); err != nil {
 		return err
 	}

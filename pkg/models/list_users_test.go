@@ -29,6 +29,7 @@ func TestListUser_Create(t *testing.T) {
 	type fields struct {
 		ID       int64
 		UserID   int64
+		Username string
 		ListID   int64
 		Right    Right
 		Created  int64
@@ -49,15 +50,15 @@ func TestListUser_Create(t *testing.T) {
 		{
 			name: "ListUsers Create normally",
 			fields: fields{
-				UserID: 1,
-				ListID: 2,
+				Username: "user1",
+				ListID:   2,
 			},
 		},
 		{
 			name: "ListUsers Create for duplicate",
 			fields: fields{
-				UserID: 1,
-				ListID: 2,
+				Username: "user1",
+				ListID:   2,
 			},
 			wantErr: true,
 			errType: IsErrUserAlreadyHasAccess,
@@ -65,9 +66,9 @@ func TestListUser_Create(t *testing.T) {
 		{
 			name: "ListUsers Create with invalid right",
 			fields: fields{
-				UserID: 1,
-				ListID: 2,
-				Right:  500,
+				Username: "user1",
+				ListID:   2,
+				Right:    500,
 			},
 			wantErr: true,
 			errType: IsErrInvalidRight,
@@ -75,8 +76,8 @@ func TestListUser_Create(t *testing.T) {
 		{
 			name: "ListUsers Create with inexisting list",
 			fields: fields{
-				UserID: 1,
-				ListID: 2000,
+				Username: "user1",
+				ListID:   2000,
 			},
 			wantErr: true,
 			errType: IsErrListDoesNotExist,
@@ -84,8 +85,8 @@ func TestListUser_Create(t *testing.T) {
 		{
 			name: "ListUsers Create with inexisting user",
 			fields: fields{
-				UserID: 500,
-				ListID: 2,
+				Username: "user500",
+				ListID:   2,
 			},
 			wantErr: true,
 			errType: IsErrUserDoesNotExist,
@@ -93,8 +94,8 @@ func TestListUser_Create(t *testing.T) {
 		{
 			name: "ListUsers Create with the owner as shared user",
 			fields: fields{
-				UserID: 1,
-				ListID: 1,
+				Username: "user1",
+				ListID:   1,
 			},
 			wantErr: true,
 			errType: IsErrUserAlreadyHasAccess,
@@ -105,6 +106,7 @@ func TestListUser_Create(t *testing.T) {
 			ul := &ListUser{
 				ID:       tt.fields.ID,
 				UserID:   tt.fields.UserID,
+				Username: tt.fields.Username,
 				ListID:   tt.fields.ListID,
 				Right:    tt.fields.Right,
 				Created:  tt.fields.Created,
@@ -291,7 +293,7 @@ func TestListUser_Update(t *testing.T) {
 func TestListUser_Delete(t *testing.T) {
 	type fields struct {
 		ID       int64
-		UserID   int64
+		Username string
 		ListID   int64
 		Right    Right
 		Created  int64
@@ -308,8 +310,8 @@ func TestListUser_Delete(t *testing.T) {
 		{
 			name: "Try deleting some unexistant user",
 			fields: fields{
-				UserID: 1000,
-				ListID: 2,
+				Username: "user1000",
+				ListID:   2,
 			},
 			wantErr: true,
 			errType: IsErrUserDoesNotExist,
@@ -317,8 +319,8 @@ func TestListUser_Delete(t *testing.T) {
 		{
 			name: "Try deleting a user which does not has access but exists",
 			fields: fields{
-				UserID: 1,
-				ListID: 4,
+				Username: "user1",
+				ListID:   4,
 			},
 			wantErr: true,
 			errType: IsErrUserDoesNotHaveAccessToList,
@@ -326,8 +328,8 @@ func TestListUser_Delete(t *testing.T) {
 		{
 			name: "Try deleting normally",
 			fields: fields{
-				UserID: 1,
-				ListID: 3,
+				Username: "user1",
+				ListID:   3,
 			},
 		},
 	}
@@ -335,7 +337,7 @@ func TestListUser_Delete(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			lu := &ListUser{
 				ID:       tt.fields.ID,
-				UserID:   tt.fields.UserID,
+				Username: tt.fields.Username,
 				ListID:   tt.fields.ListID,
 				Right:    tt.fields.Right,
 				Created:  tt.fields.Created,

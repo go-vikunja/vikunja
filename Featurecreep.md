@@ -215,9 +215,8 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [x] Fix lint errors
 * [x] Add settings for max open/idle connections and max connection lifetime
 * [x] Reminders should use an extra table so we can make reverse lookups aka "give me all tasks with reminders in this period" which we'll need for things like email reminders notifications
-* [ ] Teams and users should also have uuids (for users these can be the username)
-* [ ] When giving a team or user access to a list/namespace, they should be reffered to by uuid, not numeric id
-* [ ] Adding users to a team should also use uuid
+* [x] When giving a user access to a list/namespace, they should be reffered to by uuid, not numeric id
+* [x] Adding users to a team should also use uuid
 * [ ] Check if the team/user really exist before updating them on lists/namespaces
 * [ ] Check if the email is properly obfuscated everywhere -> alter GetUser() and add a new method GetUserWithEmail
 

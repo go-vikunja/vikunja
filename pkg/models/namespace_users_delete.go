@@ -34,10 +34,11 @@ import _ "code.vikunja.io/web" // For swaggerdocs generation
 func (nu *NamespaceUser) Delete() (err error) {
 
 	// Check if the user exists
-	_, err = GetUserByID(nu.UserID)
+	user, err := GetUserByUsername(nu.Username)
 	if err != nil {
 		return
 	}
+	nu.UserID = user.ID
 
 	// Check if the user has access to the namespace
 	has, err := x.Where("user_id = ? AND namespace_id = ?", nu.UserID, nu.NamespaceID).

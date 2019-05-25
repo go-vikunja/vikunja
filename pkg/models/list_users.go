@@ -22,8 +22,10 @@ import "code.vikunja.io/web"
 type ListUser struct {
 	// The unique, numeric id of this list <-> user relation.
 	ID int64 `xorm:"int(11) autoincr not null unique pk" json:"id" param:"namespace"`
-	// The user id.
-	UserID int64 `xorm:"int(11) not null INDEX" json:"userID" param:"user"`
+	// The username.
+	Username string `xorm:"-" json:"username" param:"user"`
+	// Used internally to reference the user
+	UserID int64 `xorm:"int(11) not null INDEX" json:"-"`
 	// The list id.
 	ListID int64 `xorm:"int(11) not null INDEX" json:"-" param:"list"`
 	// The right this user has. 0 = Read only, 1 = Read & Write, 2 = Admin. See the docs for more details.

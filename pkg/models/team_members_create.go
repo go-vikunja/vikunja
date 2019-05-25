@@ -41,10 +41,11 @@ func (tm *TeamMember) Create(a web.Auth) (err error) {
 	}
 
 	// Check if the user exists
-	_, err = GetUserByID(tm.UserID)
+	user, err := GetUserByUsername(tm.Username)
 	if err != nil {
 		return
 	}
+	tm.UserID = user.ID
 
 	// Check if that user is already part of the team
 	exists, err := x.Where("team_id = ? AND user_id = ?", tm.TeamID, tm.UserID).

@@ -29,7 +29,7 @@ import (
 func TestNamespaceUser_Create(t *testing.T) {
 	type fields struct {
 		ID          int64
-		UserID      int64
+		Username    string
 		NamespaceID int64
 		Right       Right
 		Created     int64
@@ -50,14 +50,14 @@ func TestNamespaceUser_Create(t *testing.T) {
 		{
 			name: "NamespaceUsers Create normally",
 			fields: fields{
-				UserID:      1,
+				Username:    "user1",
 				NamespaceID: 2,
 			},
 		},
 		{
 			name: "NamespaceUsers Create for duplicate",
 			fields: fields{
-				UserID:      1,
+				Username:    "user1",
 				NamespaceID: 2,
 			},
 			wantErr: true,
@@ -66,7 +66,7 @@ func TestNamespaceUser_Create(t *testing.T) {
 		{
 			name: "NamespaceUsers Create with invalid right",
 			fields: fields{
-				UserID:      1,
+				Username:    "user1",
 				NamespaceID: 2,
 				Right:       500,
 			},
@@ -76,7 +76,7 @@ func TestNamespaceUser_Create(t *testing.T) {
 		{
 			name: "NamespaceUsers Create with inexisting list",
 			fields: fields{
-				UserID:      1,
+				Username:    "user1",
 				NamespaceID: 2000,
 			},
 			wantErr: true,
@@ -85,7 +85,7 @@ func TestNamespaceUser_Create(t *testing.T) {
 		{
 			name: "NamespaceUsers Create with inexisting user",
 			fields: fields{
-				UserID:      500,
+				Username:    "user500",
 				NamespaceID: 2,
 			},
 			wantErr: true,
@@ -94,7 +94,7 @@ func TestNamespaceUser_Create(t *testing.T) {
 		{
 			name: "NamespaceUsers Create with the owner as shared user",
 			fields: fields{
-				UserID:      1,
+				Username:    "user1",
 				NamespaceID: 1,
 			},
 			wantErr: true,
@@ -105,7 +105,7 @@ func TestNamespaceUser_Create(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			un := &NamespaceUser{
 				ID:          tt.fields.ID,
-				UserID:      tt.fields.UserID,
+				Username:    tt.fields.Username,
 				NamespaceID: tt.fields.NamespaceID,
 				Right:       tt.fields.Right,
 				Created:     tt.fields.Created,
@@ -293,7 +293,7 @@ func TestNamespaceUser_Update(t *testing.T) {
 func TestNamespaceUser_Delete(t *testing.T) {
 	type fields struct {
 		ID          int64
-		UserID      int64
+		Username    string
 		NamespaceID int64
 		Right       Right
 		Created     int64
@@ -310,7 +310,7 @@ func TestNamespaceUser_Delete(t *testing.T) {
 		{
 			name: "Try deleting some unexistant user",
 			fields: fields{
-				UserID:      1000,
+				Username:    "user1000",
 				NamespaceID: 2,
 			},
 			wantErr: true,
@@ -319,7 +319,7 @@ func TestNamespaceUser_Delete(t *testing.T) {
 		{
 			name: "Try deleting a user which does not has access but exists",
 			fields: fields{
-				UserID:      1,
+				Username:    "user1",
 				NamespaceID: 4,
 			},
 			wantErr: true,
@@ -328,7 +328,7 @@ func TestNamespaceUser_Delete(t *testing.T) {
 		{
 			name: "Try deleting normally",
 			fields: fields{
-				UserID:      1,
+				Username:    "user1",
 				NamespaceID: 3,
 			},
 		},
@@ -337,7 +337,7 @@ func TestNamespaceUser_Delete(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			nu := &NamespaceUser{
 				ID:          tt.fields.ID,
-				UserID:      tt.fields.UserID,
+				Username:    tt.fields.Username,
 				NamespaceID: tt.fields.NamespaceID,
 				Right:       tt.fields.Right,
 				Created:     tt.fields.Created,

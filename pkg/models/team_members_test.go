@@ -25,8 +25,8 @@ func TestTeamMember_Create(t *testing.T) {
 
 	// Dummy team member
 	dummyteammember := TeamMember{
-		TeamID: 1,
-		UserID: 3,
+		TeamID:   1,
+		Username: "user3",
 	}
 
 	// Doer
@@ -57,24 +57,24 @@ func TestTeamMember_Create(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Delete the other one
-	tm := TeamMember{TeamID: 1, UserID: 2}
+	tm := TeamMember{TeamID: 1, Username: "user2"}
 	err = tm.Delete()
 	assert.NoError(t, err)
 
 	// Try deleting the last one
-	tm = TeamMember{TeamID: 1, UserID: 1}
+	tm = TeamMember{TeamID: 1, Username: "user1"}
 	err = tm.Delete()
 	assert.Error(t, err)
 	assert.True(t, IsErrCannotDeleteLastTeamMember(err))
 
 	// Try inserting a user which does not exist
-	dummyteammember.UserID = 9484
+	dummyteammember.Username = "user9484"
 	err = dummyteammember.Create(&doer)
 	assert.Error(t, err)
 	assert.True(t, IsErrUserDoesNotExist(err))
 
 	// Try adding a user to a team which does not exist
-	tm = TeamMember{TeamID: 94824, UserID: 1}
+	tm = TeamMember{TeamID: 94824, Username: "user1"}
 	err = tm.Create(&doer)
 	assert.Error(t, err)
 	assert.True(t, IsErrTeamDoesNotExist(err))

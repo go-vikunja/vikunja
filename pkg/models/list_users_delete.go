@@ -34,10 +34,11 @@ import _ "code.vikunja.io/web" // For swaggerdocs generation
 func (lu *ListUser) Delete() (err error) {
 
 	// Check if the user exists
-	_, err = GetUserByID(lu.UserID)
+	user, err := GetUserByUsername(lu.Username)
 	if err != nil {
 		return
 	}
+	lu.UserID = user.ID
 
 	// Check if the user has access to the list
 	has, err := x.Where("user_id = ? AND list_id = ?", lu.UserID, lu.ListID).

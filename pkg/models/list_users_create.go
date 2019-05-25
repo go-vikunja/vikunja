@@ -47,9 +47,11 @@ func (lu *ListUser) Create(a web.Auth) (err error) {
 	}
 
 	// Check if the user exists
-	if _, err = GetUserByID(lu.UserID); err != nil {
+	user, err := GetUserByUsername(lu.Username)
+	if err != nil {
 		return err
 	}
+	lu.UserID = user.ID
 
 	// Check if the user already has access or is owner of that list
 	// We explicitly DONT check for teams here

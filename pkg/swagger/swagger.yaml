@@ -312,9 +312,9 @@ definitions:
         description: A unix timestamp when this relation was last updated. You cannot
           change this value.
         type: integer
-      userID:
-        description: The user id.
-        type: integer
+      username:
+        description: The username.
+        type: string
     type: object
   models.Message:
     properties:
@@ -369,8 +369,8 @@ definitions:
           change this value.
         type: integer
       userID:
-        description: The user id.
-        type: integer
+        description: The username.
+        type: string
     type: object
   models.NamespaceWithLists:
     properties:
@@ -487,9 +487,10 @@ definitions:
       id:
         description: The unique, numeric id of this team member relation.
         type: integer
-      userID:
-        description: The id of the member.
-        type: integer
+      username:
+        description: The username of the member. We use this to prevent automated
+          user id entering.
+        type: string
     type: object
   models.TeamNamespace:
     properties:
@@ -651,7 +652,13 @@ info:
     email: hello@vikunja.io
     name: General Vikunja contact
     url: http://vikunja.io/en/contact/
-  description: '<!-- ReDoc-Inject: <security-definitions> -->'
+  description: |-
+    This is the documentation for the [Vikunja](http://vikunja.io) API. Vikunja is a cross-plattform Todo-application with a lot of features, such as sharing lists with users or teams. <!-- ReDoc-Inject: <security-definitions> -->
+    # Authorization
+    **JWT-Auth:** Main authorization method, used for most of the requests. Needs ` + "`" + `Authorization: Bearer <jwt-token>` + "`" + `-header to authenticate successfully.
+
+    **BasicAuth:** Only used when requesting tasks via caldav.
+    <!-- ReDoc-Inject: <security-definitions> -->
   license:
     name: GPLv3
     url: http://code.vikunja.io/api/src/branch/master/LICENSE

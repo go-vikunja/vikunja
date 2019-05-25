@@ -49,9 +49,11 @@ func (nu *NamespaceUser) Create(a web.Auth) (err error) {
 	}
 
 	// Check if the user exists
-	if _, err = GetUserByID(nu.UserID); err != nil {
+	user, err := GetUserByUsername(nu.Username)
+	if err != nil {
 		return err
 	}
+	nu.UserID = user.ID
 
 	// Check if the user already has access or is owner of that namespace
 	// We explicitly DO NOT check for teams here

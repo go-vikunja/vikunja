@@ -36,7 +36,7 @@ func CreateUser(user User) (newUser User, err error) {
 
 	// Check if the user already existst with that username
 	exists := true
-	existingUser, err := GetUser(User{Username: newUser.Username})
+	existingUser, err := GetUserByUsername(newUser.Username)
 	if err != nil {
 		if IsErrUserDoesNotExist(err) {
 			exists = false

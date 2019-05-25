@@ -66,8 +66,10 @@ type TeamMember struct {
 	ID int64 `xorm:"int(11) autoincr not null unique pk" json:"id"`
 	// The team id.
 	TeamID int64 `xorm:"int(11) not null INDEX" json:"-" param:"team"`
-	// The id of the member.
-	UserID int64 `xorm:"int(11) not null INDEX" json:"userID" param:"user"`
+	// The username of the member. We use this to prevent automated user id entering.
+	Username string `xorm:"-" json:"username" param:"user"`
+	// Used under the hood to manage team members
+	UserID int64 `xorm:"int(11) not null INDEX" json:"-"`
 	// Whether or not the member is an admin of the team. See the docs for more about what a team admin can do
 	Admin bool `xorm:"tinyint(1) INDEX null" json:"admin"`
 

@@ -119,6 +119,15 @@ func GetUserByID(id int64) (user User, err error) {
 	return GetUser(User{ID: id})
 }
 
+// GetUserByUsername gets a user from its user name. This is an extra function to be able to add an extra error check.
+func GetUserByUsername(username string) (user User, err error) {
+	if username == "" {
+		return User{}, ErrUserDoesNotExist{}
+	}
+
+	return GetUser(User{Username: username})
+}
+
 // GetUser gets a user object
 func GetUser(user User) (userOut User, err error) {
 	userOut = user
@@ -139,7 +148,7 @@ func CheckUserCredentials(u *UserLogin) (User, error) {
 	}
 
 	// Check if the user exists
-	user, err := GetUser(User{Username: u.Username})
+	user, err := GetUserByUsername(u.Username)
 	if err != nil {
 		// hashing the password takes a long time, so we hash something to not make it clear if the username was wrong
 		bcrypt.GenerateFromPassword([]byte(u.Username), 14)

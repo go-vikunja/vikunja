@@ -37,6 +37,13 @@ func (tm *TeamMember) Delete() (err error) {
 		return ErrCannotDeleteLastTeamMember{tm.TeamID, tm.UserID}
 	}
 
+	// Find the numeric user id
+	user, err := GetUserByUsername(tm.Username)
+	if err != nil {
+		return
+	}
+	tm.UserID = user.ID
+
 	_, err = x.Where("team_id = ? AND user_id = ?", tm.TeamID, tm.UserID).Delete(&TeamMember{})
 	return
 }
