@@ -76,7 +76,11 @@ database:
   # When using sqlite, this is the path where to store the data
   Path: "./vikunja.db"
   # Sets the max open connections to the database. Only used when using mysql.
-  openconnections: 100
+  maxopenconnections: 100
+  # Sets the maximum number of idle connections to the db.
+  maxidleconnections: 50
+  # The maximum lifetime of a single db connection in miliseconds.
+  maxconnectionlifetime: 10000
 
 cache:
   # If cache is enabled or not

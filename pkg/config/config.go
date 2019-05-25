@@ -57,7 +57,10 @@ func InitConfig() {
 	viper.SetDefault("database.password", "")
 	viper.SetDefault("database.database", "vikunja")
 	viper.SetDefault("database.path", "./vikunja.db")
-	viper.SetDefault("database.openconnections", 100)
+	viper.SetDefault("database.maxopenconnections", 100)
+	viper.SetDefault("database.maxidleconnections", 50)
+	viper.SetDefault("database.maxconnectionlifetime", 10000)
+
 	// Cacher
 	viper.SetDefault("cache.enabled", false)
 	viper.SetDefault("cache.type", "memory")

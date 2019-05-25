@@ -23,6 +23,8 @@ import (
 	"github.com/go-xorm/core"
 	"github.com/go-xorm/xorm"
 	"github.com/spf13/viper"
+	"strconv"
+	"time"
 
 	_ "github.com/go-sql-driver/mysql" // Because.
 	_ "github.com/mattn/go-sqlite3"    // Because.
@@ -64,7 +66,16 @@ func initMysqlEngine() (engine *xorm.Engine, err error) {
 		viper.GetString("database.host"),
 		viper.GetString("database.database"))
 	engine, err = xorm.NewEngine("mysql", connStr)
-	engine.SetMaxOpenConns(viper.GetInt("database.openconnections"))
+	if err != nil {
+		return
+	}
+	engine.SetMaxOpenConns(viper.GetInt("database.maxopenconnections"))
+	engine.SetMaxIdleConns(viper.GetInt("database.maxidleconnections"))
+	max, err := time.ParseDuration(strconv.Itoa(viper.GetInt("database.maxconnectionlifetime")) + `ms`)
+	if err != nil {
+		return
+	}
+	engine.SetConnMaxLifetime(max)
 	return
 }
 
