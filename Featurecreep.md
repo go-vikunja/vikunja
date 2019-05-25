@@ -232,7 +232,7 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 
 ### More server settings
 
-* [ ] Caldav disable/enable
+* [x] Caldav disable/enable
 * [ ] Assignees disable/enable
 * [ ] List/Namespace limits
 * [ ] Attachements disable/enable
@@ -247,8 +247,9 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 
 * [ ] Backgrounds for lists -> needs uploading and storing and so on
 * [ ] Plugins
-* [ ] Rename Namespaces?
-* [ ] Namespaces to collections and n-n (one list can be in multiple collections)?
+* [ ] Rename Namespaces to collections (or spaces?)
+* [ ] Collections n-n (one list can be in multiple collections)?
+* [ ] Rename lists to projects
 * [ ] Per-User limits of lists/namespaces
 * [ ] Admin-Interface to do stuff like settings and user management
   * [ ] Enable/Disable users
@@ -278,6 +279,16 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [ ] Comments on tasks
 * [ ] @mention users in tasks or comments to get them notified
 * [ ] Summary of tasks to do in a configurable interval (every day/week or so)
+* [ ] Disable/enable task fields in a list
+  * [ ] With inheritence from namespaces
+* [ ] Custom statuses for tasks, configurable in the list settings
+  * [ ] With inheritence from namespaces
+* [ ] better filters
+  * [ ] by lables
+  * [ ] Due dates
+  * [ ] Start/End dates
+  * [ ] Assignees
+  * [ ] Priorities
 * [ ] Importer (maybe frontend only)
   * [ ] Trello
   * [ ] Wunderlist
@@ -289,6 +300,7 @@ Sorry for some of them being in German, I'll tranlate them at some point.
   * [ ] Nirvana
   * [ ] Any.do
   * [ ] Good ol' Caldav (Tasks)
+  * [ ] ClickUp
 * [ ] More auth providers
   * [ ] LDAP/AD
   * [ ] Kerberos
