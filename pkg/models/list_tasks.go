@@ -36,7 +36,7 @@ type ListTask struct {
 	// A unix timestamp when the task is due.
 	DueDateUnix int64 `xorm:"int(11) INDEX null" json:"dueDate"`
 	// An array of unix timestamps when the user wants to be reminded of the task.
-	RemindersUnix []int64 `xorm:"JSON TEXT null" json:"reminderDates"`
+	RemindersUnix []int64 `xorm:"-" json:"reminderDates"`
 	CreatedByID   int64   `xorm:"int(11) not null" json:"-"` // ID of the user who put that task on the list
 	// The list this task belongs to.
 	ListID int64 `xorm:"int(11) INDEX not null" json:"listID" param:"list"`
@@ -82,6 +82,19 @@ type ListTask struct {
 // TableName returns the table name for listtasks
 func (ListTask) TableName() string {
 	return "tasks"
+}
+
+// TaskReminder holds a reminder on a task
+type TaskReminder struct {
+	ID           int64 `xorm:"int(11) autoincr not null unique pk"`
+	TaskID       int64 `xorm:"int(11) not null INDEX"`
+	ReminderUnix int64 `xorm:"int(11) not null INDEX"`
+	Created      int64 `xorm:"created not null"`
+}
+
+// TableName returns a pretty table name
+func (TaskReminder) TableName() string {
+	return "task_reminders"
 }
 
 // GetTasksByListID gets all todotasks for a list
@@ -236,11 +249,26 @@ func addMoreInfoToTasks(taskMap map[int64]*ListTask) (tasks []*ListTask, err err
 		return
 	}
 
+	// Get all reminders and put them in a map to have it easier later
+	reminders := []*TaskReminder{}
+	err = x.Table("task_reminders").In("task_id", taskIDs).Find(&reminders)
+	if err != nil {
+		return
+	}
+
+	taskRemindersUnix := make(map[int64][]int64)
+	for _, r := range reminders {
+		taskRemindersUnix[r.TaskID] = append(taskRemindersUnix[r.TaskID], r.ReminderUnix)
+	}
+
 	// Add all user objects to the appropriate tasks
 	for _, task := range taskMap {
 
 		// Make created by user objects
 		taskMap[task.ID].CreatedBy = *users[task.CreatedByID]
+
+		// Add the reminders
+		taskMap[task.ID].RemindersUnix = taskRemindersUnix[task.ID]
 
 		// Reorder all subtasks
 		if task.ParentTaskID != 0 {

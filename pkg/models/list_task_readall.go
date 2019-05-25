@@ -8,6 +8,7 @@ package models
 
 import (
 	"code.vikunja.io/web"
+	"sort"
 	"time"
 )
 
@@ -66,7 +67,7 @@ func (t *ListTask) ReadAll(search string, a web.Auth, page int) (interface{}, er
 }
 
 //GetTasksByUser returns all tasks for a user
-func GetTasksByUser(search string, u *User, page int, sortby SortBy, startDate time.Time, endDate time.Time) (tasks []*ListTask, err error) {
+func GetTasksByUser(search string, u *User, page int, sortby SortBy, startDate time.Time, endDate time.Time) ([]*ListTask, error) {
 	// Get all lists
 	lists, err := getRawListsForUser("", u, page)
 	if err != nil {
@@ -91,6 +92,8 @@ func GetTasksByUser(search string, u *User, page int, sortby SortBy, startDate t
 		orderby = "due_date_unix asc"
 	}
 
+	taskMap := make(map[int64]*ListTask)
+
 	// Then return all tasks for that lists
 	if startDate.Unix() != 0 || endDate.Unix() != 0 {
 
@@ -111,7 +114,7 @@ func GetTasksByUser(search string, u *User, page int, sortby SortBy, startDate t
 				"(end_date_unix BETWEEN ? and ?))", startDateUnix, endDateUnix, startDateUnix, endDateUnix, startDateUnix, endDateUnix).
 			And("(parent_task_id = 0 OR parent_task_id IS NULL)").
 			OrderBy(orderby).
-			Find(&tasks); err != nil {
+			Find(&taskMap); err != nil {
 			return nil, err
 		}
 	} else {
@@ -119,10 +122,39 @@ func GetTasksByUser(search string, u *User, page int, sortby SortBy, startDate t
 			Where("text LIKE ?", "%"+search+"%").
 			And("(parent_task_id = 0 OR parent_task_id IS NULL)").
 			OrderBy(orderby).
-			Find(&tasks); err != nil {
+			Find(&taskMap); err != nil {
 			return nil, err
 		}
 	}
 
+	tasks, err := addMoreInfoToTasks(taskMap)
+	if err != nil {
+		return nil, err
+	}
+	// Because the list is sorted by id which we don't want (since we're dealing with maps)
+	// we have to manually sort the tasks again here.
+	sortTasks(tasks, sortby)
+
 	return tasks, err
+}
+
+func sortTasks(tasks []*ListTask, by SortBy) {
+	switch by {
+	case SortTasksByPriorityDesc:
+		sort.Slice(tasks, func(i, j int) bool {
+			return tasks[i].Priority > tasks[j].Priority
+		})
+	case SortTasksByPriorityAsc:
+		sort.Slice(tasks, func(i, j int) bool {
+			return tasks[i].Priority < tasks[j].Priority
+		})
+	case SortTasksByDueDateDesc:
+		sort.Slice(tasks, func(i, j int) bool {
+			return tasks[i].DueDateUnix > tasks[j].DueDateUnix
+		})
+	case SortTasksByDueDateAsc:
+		sort.Slice(tasks, func(i, j int) bool {
+			return tasks[i].DueDateUnix < tasks[j].DueDateUnix
+		})
+	}
 }

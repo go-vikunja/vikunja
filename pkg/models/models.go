@@ -47,6 +47,7 @@ func GetTables() []interface{} {
 		&ListTaskAssginee{},
 		&Label{},
 		&LabelTask{},
+		&TaskReminder{},
 	}
 }
 

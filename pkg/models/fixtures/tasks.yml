@@ -167,7 +167,6 @@
 - id: 27
   text: 'task #27 with reminders'
   created_by_id: 1
-  reminders_unix: '[1543626724,1543626824]'
   list_id: 1
   created: 1543626724
   updated: 1543626724

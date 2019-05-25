@@ -78,6 +78,11 @@ func (t *ListTask) Create(a web.Auth) (err error) {
 		return err
 	}
 
+	// Update the reminders
+	if err := t.updateReminders(t.RemindersUnix); err != nil {
+		return err
+	}
+
 	metrics.UpdateCount(1, metrics.TaskCountKey)
 
 	err = updateListLastUpdated(&List{ID: t.ListID})
@@ -115,6 +120,11 @@ func (t *ListTask) Update() (err error) {
 
 	// Update the assignees
 	if err := ot.updateTaskAssignees(t.Assignees); err != nil {
+		return err
+	}
+
+	// Update the reminders
+	if err := ot.updateReminders(t.RemindersUnix); err != nil {
 		return err
 	}
 
@@ -162,10 +172,6 @@ func (t *ListTask) Update() (err error) {
 	if t.DueDateUnix == 0 {
 		ot.DueDateUnix = 0
 	}
-	// Reminders
-	if len(t.RemindersUnix) == 0 {
-		ot.RemindersUnix = nil
-	}
 	// Repeat after
 	if t.RepeatAfter == 0 {
 		ot.RepeatAfter = 0
@@ -192,7 +198,6 @@ func (t *ListTask) Update() (err error) {
 			"description",
 			"done",
 			"due_date_unix",
-			"reminders_unix",
 			"repeat_after",
 			"parent_task_id",
 			"priority",
@@ -231,4 +236,80 @@ func updateDone(oldTask *ListTask, newTask *ListTask) {
 	if oldTask.Done && !newTask.Done {
 		oldTask.DoneAtUnix = 0
 	}
+}
+
+// Creates or deletes all necessary remindes without unneded db operations.
+// The parameter is a slice with unix dates which holds the new reminders.
+func (t *ListTask) updateReminders(reminders []int64) (err error) {
+
+	// If we're removing everything, delete all reminders right away
+	if len(reminders) == 0 && len(t.RemindersUnix) > 0 {
+		_, err = x.Where("task_id = ?", t.ID).
+			Delete(TaskReminder{})
+		t.RemindersUnix = nil
+		return err
+	}
+
+	// If we didn't change anything (from 0 to zero) don't do anything.
+	if len(reminders) == 0 && len(t.RemindersUnix) == 0 {
+		return nil
+	}
+
+	// Make a hashmap of the new reminders for easier comparison
+	newReminders := make(map[int64]*TaskReminder, len(reminders))
+	for _, newReminder := range reminders {
+		newReminders[newReminder] = &TaskReminder{ReminderUnix: newReminder}
+	}
+
+	// Get old reminders to delete
+	var found bool
+	var remindersToDelete []int64
+	oldReminders := make(map[int64]*TaskReminder, len(t.RemindersUnix))
+	for _, oldReminder := range t.RemindersUnix {
+		found = false
+		// If a new reminder is already in the list with old reminders
+		if newReminders[oldReminder] != nil {
+			found = true
+		}
+
+		// Put all reminders which are only on the old list to the trash
+		if !found {
+			remindersToDelete = append(remindersToDelete, oldReminder)
+		}
+
+		oldReminders[oldReminder] = &TaskReminder{ReminderUnix: oldReminder}
+	}
+
+	// Delete all reminders not passed
+	if len(remindersToDelete) > 0 {
+		_, err = x.In("reminder_unix", remindersToDelete).
+			And("task_id = ?", t.ID).
+			Delete(ListTaskAssginee{})
+		if err != nil {
+			return err
+		}
+	}
+
+	// Loop through our users and add them
+	for _, r := range reminders {
+		// Check if the reminder already exists and only inserts it if not
+		if oldReminders[r] != nil {
+			// continue outer loop
+			continue
+		}
+
+		// Add the new reminder
+		_, err = x.Insert(TaskReminder{TaskID: t.ID, ReminderUnix: r})
+		if err != nil {
+			return err
+		}
+	}
+
+	t.RemindersUnix = reminders
+	if len(reminders) == 0 {
+		t.RemindersUnix = nil
+	}
+
+	err = updateListLastUpdated(&List{ID: t.ListID})
+	return
 }
