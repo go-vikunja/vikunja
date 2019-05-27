@@ -131,37 +131,24 @@ Sorry for some of them being in German, I'll tranlate them at some point.
   * [x] Check if something changed at all before running everything
   * [x] Editable via task edit, like assignees
   * [x] "One endpoint to rule them all" -> Array-addable
-* [ ] Attachments
-* [ ] Task-Templates innerhalb namespaces und Listen (-> Mehrere, die auswählbar sind)
-* [ ] Ein Task muss von mehreren Assignees abgehakt werden bis er als done markiert wird
-* [ ] Besseres Rechtesystem, damit man so fine-graded sachen machen kann wie "Der da darf aber nur Tasks hinzufügen, aber keine abhaken"
-  * [ ] Roles which enable or disable chaning certain fields of a task -> includes custm fields
-* [ ] Custom fields: Templates at List > Namespace > Global level, overwriting each other
-* [ ] Related tasks -> settable with a "kind" of relation like blocked, or just related or so
 * [ ] Description should be longtext
+* [ ] Attachments
+* [ ] Related tasks -> settable with a "kind" of relation like blocked, or just related or so
 * [ ] Pecent done - For now just a float, may later depend on how many sub tasks are done or so
+* [ ] Move tasks between lists
+* [ ] "Status" field (customizable statuses)
 
 ### General features
 
 * [x] Deps nach mod umziehen
 * [x] Performance bei rechtchecks verbessern
   * User & Teamright sollte sich für n rechte in einer Funktion testen lassen
-* [ ] Endpoint um die Rechte mit Beschreibung und code zu kriegen
-* [ ] "Smart Lists", Listen nach bestimmten Kriterien gefiltert -> speichern und im pseudonamespace
+* [x] Colors for tasks
+* [ ] Endpoint to get all possible rights with description and code
 * [ ] "Performance-Statistik" -> Wie viele Tasks man in bestimmten Zeiträumen so geschafft hat etc
 * [ ] IMAP-Integration -> Man schickt eine email an Vikunja und es macht daraus dann nen task -> Achtung missbrauchsmöglichkeiten
 * [ ] In und Out webhooks, mit Templates vom Payload
 * [ ] Reminders via mail
-* [ ] Activity Feed, so à la "der und der hat das und das gemacht etc"
-  * [ ] Per list
-  * [ ] For the current user
-* [ ] ~~Websockets~~ SSE https://github.com/kljensen/golang-html5-sse-example
-  * User authenticates (with jwt)
-  * When updating/creating/etc an event struct is sent to the broker
-  * The broker has a list of subscribed users
-  * It then checks who is allowed to the see the event it recieved and sends it
-  * [ ] Being able to define filters for notifications or turn them silent completely -> Probably frontend only
-* [ ] mgl. zum Emailmaskieren haben (in den Nutzereinstellungen, wenn man seine Email nicht an alle Welt rausposaunen will)
 * [ ] Mgl. zum Accountlöschen haben (so richtig krass mit emailverifiezierung und dass alle Privaten Listen gelöscht werden und man alle geteilten entweder wem übertragen muss oder  auf privat stellen)
 * [ ] /info endpoint, in dem dann zb die limits und version etc steht
 * [ ] Deprecate /namespaces/{id}/lists in favour of namespace.ReadOne() <-- should also return the lists
@@ -170,14 +157,13 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [ ] Colors for lists and namespaces -> Up to the frontend to implement these
 * [ ] Some kind of milestones for tasks
 * [ ] Create tasks from a text/markdown file (probably frontend only)
-* [ ] Label-view: Get a bunch of tasks by label
 * [ ] Debian package should have a service file
 * [ ] Downloads should be served via nginx (with theme?), minio should only be used for pushing artifacts.
 * [ ] User struct should have a field for the avatar url (-> gravatar md5 calculated by the backend)
 * [ ] All `ReadAll` methods should return the number of items per page, the number of items on this page, the total pages and the items
       -> Check if there's a way to do that efficently. Maybe only implementing it in the web handler.
 * [ ] List stats to see how many tasks are done, how many are there in total, how many people have acces to a list etc
-* [ ] Colors for tasks
+* [ ] Move lists between namespaces
 * [ ] Better caldav support
   * [x] VTODO
     * [x] Fix organizer prop
@@ -207,6 +193,20 @@ Sorry for some of them being in German, I'll tranlate them at some point.
   * [ ] Tests
   * [ ] Check if only needed things are queried from the db when accessing dav (for ex. no need to get all tasks when we act
 
+#### Events
+
+* [ ] Whenever something happens an event should be registered in the db, sse, mail, etc. -> Abstract with implementations for various things 
+* [ ] Activity Feed, so à la "der und der hat das und das gemacht etc"
+  * [ ] Per list
+  * [ ] For the current user
+* [ ] ~~Websockets~~ SSE https://github.com/kljensen/golang-html5-sse-example
+  * User authenticates (with jwt)
+  * When updating/creating/etc an event struct is sent to the broker
+  * The broker has a list of subscribed users
+  * It then checks who is allowed to the see the event it recieved and sends it
+  * [ ] Being able to define filters for notifications or turn them silent completely -> Probably frontend only
+
+
 ### Refactor 
 
 * [x] ListTaskRights, sollte überall gleich funktionieren, gibt ja mittlerweile auch eine Methode um liste von nem Task aus zu kriegen oder so
@@ -232,6 +232,7 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 
 * [x] Caldav disable/enable
 * [ ] Assignees disable/enable
+* [ ] Max number of assignees
 * [ ] List/Namespace limits
 * [ ] Attachements disable/enable
 * [ ] Attachements size
@@ -251,21 +252,29 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [ ] Per-User limits of lists/namespaces
 * [ ] Admin-Interface to do stuff like settings and user management
   * [ ] Enable/Disable users
-  * [ ] Better rights, fine-graded
+  * [ ] Manage user groups -> Creating new roles and defining what they're allowed to do etc.
+  * [ ] Manage custom fields task templates
   * [ ] Enable/disable allowing user adding to lists/namespaces for specific lists or namespaces
   * [ ] Admins should be able to see and mange all the boards
+  * [ ] Admin interface also usable via cli
+* [ ] `dump` and `restore` cli commands
+* [ ] Better rights system with user roles, to be able to manage fine-graded permissions on fields -> Giving read/write right for each field/action
+  * [ ] Roles which enable or disable chaning certain fields of a task -> includes custm fields
+  * [ ] Pre-defined roles to make it easier to set up (creatable via admin)
 * [ ] Limit registration to users with a defined email domain
 * [ ] Close the instance, either no registration or only one with defined email
 * [ ] 2fa
-* [ ] Custom fields for tasks
-* [ ] Sorting lists by members, tasks, teams, last modified, etc
+* [ ] Custom fields for tasks: Templates at List > Namespace > Global level, overwriting each other
+* [ ] Task-Templates in namespaces and lists (-> Multiple which are selectable)
+* [ ] Sorting lists by members, tasks, teams, last modified, etc (all possible fields)
 * [ ] "Favourite lists" -> A user can favourize boards which will then show up in a pseudonamespace
 * [ ] Public lists
 * [ ] Internal lists -> Only registered users can see the list
 * [ ] Rights management for both public and internal lists
 * [ ] Add new users via to a list which don't have an account yet, they'd get a link to sign up for vikunja.
   * [ ]  Respect registration email domain limits
-* [ ] Export all data from Vikunja to json
+* [ ] Export all data from Vikunja to json (related: `dump` cli command)
+  * [ ] Per user and for the whole instance
 * [ ] Watch a (n internal) list -> Will get notification for everything
 * [ ] Archive a task instead of deleting
 * [ ] Task dependencies
@@ -281,12 +290,15 @@ Sorry for some of them being in German, I'll tranlate them at some point.
   * [ ] With inheritence from namespaces
 * [ ] Custom statuses for tasks, configurable in the list settings
   * [ ] With inheritence from namespaces
-* [ ] better filters
+* [ ] Better filters
   * [ ] by lables
   * [ ] Due dates
   * [ ] Start/End dates
   * [ ] Assignees
   * [ ] Priorities
+* [ ] "Smart Lists", filtered lists, saved in some kind of pseudonamespace
+  * [ ] Global and per list
+* [ ] Automate everything "If this event happens, do this"
 * [ ] Importer (maybe frontend only)
   * [ ] Trello
   * [ ] Wunderlist
