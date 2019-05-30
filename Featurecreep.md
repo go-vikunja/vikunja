@@ -116,28 +116,6 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [x] Backups
 * [x] Docs aufsetzen
 
-### Tasks
-
-* [x] Start/Enddatum für Tasks
-* [x] Timeline/Calendar view -> Dazu tasks die in einem Bestimmten Bereich due sind, macht dann das Frontend
-* [x] Tasks innerhalb eines definierbarem Bereich, sollte aber trotzdem der server machen, so à la "Gib mir alles für diesen Monat"
-* [x] Bulk-edit -> Transactions
-* [x] Assignees
-  * [x] Check if something changed at all before running everything
-  * [x] Don't use `list.ReadOne()`, gets too much unnessecary shit
-  * [x] Wegen Performance auf eigene endpoints umziehen, wie labels
-  * [x] "One endpoint to rule them all" -> Array-addable
-* [x] Labels
-  * [x] Check if something changed at all before running everything
-  * [x] Editable via task edit, like assignees
-  * [x] "One endpoint to rule them all" -> Array-addable
-* [ ] Description should be longtext
-* [ ] Attachments
-* [ ] Related tasks -> settable with a "kind" of relation like blocked, or just related or so
-* [ ] Pecent done - For now just a float, may later depend on how many sub tasks are done or so
-* [ ] Move tasks between lists
-* [ ] "Status" field (customizable statuses)
-
 ### General features
 
 * [x] Deps nach mod umziehen
@@ -193,20 +171,6 @@ Sorry for some of them being in German, I'll tranlate them at some point.
   * [ ] Tests
   * [ ] Check if only needed things are queried from the db when accessing dav (for ex. no need to get all tasks when we act
 
-#### Events
-
-* [ ] Whenever something happens an event should be registered in the db, sse, mail, etc. -> Abstract with implementations for various things 
-* [ ] Activity Feed, so à la "der und der hat das und das gemacht etc"
-  * [ ] Per list
-  * [ ] For the current user
-* [ ] ~~Websockets~~ SSE https://github.com/kljensen/golang-html5-sse-example
-  * User authenticates (with jwt)
-  * When updating/creating/etc an event struct is sent to the broker
-  * The broker has a list of subscribed users
-  * It then checks who is allowed to the see the event it recieved and sends it
-  * [ ] Being able to define filters for notifications or turn them silent completely -> Probably frontend only
-
-
 ### Refactor 
 
 * [x] ListTaskRights, sollte überall gleich funktionieren, gibt ja mittlerweile auch eine Methode um liste von nem Task aus zu kriegen oder so
@@ -227,6 +191,41 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [ ] gosec-check -> waiting for mod
 * [x] goconst-check
 * [ ] golangci -> docker in drone, will probably make all other linters obsolete
+
+### Tasks
+
+* [x] Start/Enddatum für Tasks
+* [x] Timeline/Calendar view -> Dazu tasks die in einem Bestimmten Bereich due sind, macht dann das Frontend
+* [x] Tasks innerhalb eines definierbarem Bereich, sollte aber trotzdem der server machen, so à la "Gib mir alles für diesen Monat"
+* [x] Bulk-edit -> Transactions
+* [x] Assignees
+  * [x] Check if something changed at all before running everything
+  * [x] Don't use `list.ReadOne()`, gets too much unnessecary shit
+  * [x] Wegen Performance auf eigene endpoints umziehen, wie labels
+  * [x] "One endpoint to rule them all" -> Array-addable
+* [x] Labels
+  * [x] Check if something changed at all before running everything
+  * [x] Editable via task edit, like assignees
+  * [x] "One endpoint to rule them all" -> Array-addable
+* [ ] Description should be longtext
+* [ ] Attachments
+* [ ] Related tasks -> settable with a "kind" of relation like blocked, or just related or so
+* [ ] Pecent done - For now just a float, may later depend on how many sub tasks are done or so
+* [ ] Move tasks between lists
+* [ ] "Status" field (customizable statuses)
+
+#### Events
+
+* [ ] Whenever something happens an event should be registered in the db, sse, mail, etc. -> Abstract with implementations for various things 
+* [ ] Activity Feed, so à la "der und der hat das und das gemacht etc"
+  * [ ] Per list
+  * [ ] For the current user
+* [ ] ~~Websockets~~ SSE https://github.com/kljensen/golang-html5-sse-example
+  * User authenticates (with jwt)
+  * When updating/creating/etc an event struct is sent to the broker
+  * The broker has a list of subscribed users
+  * It then checks who is allowed to the see the event it recieved and sends it
+  * [ ] Being able to define filters for notifications or turn them silent completely -> Probably frontend only
 
 ### More server settings
 
