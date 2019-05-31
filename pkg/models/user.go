@@ -19,6 +19,7 @@ package models
 import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/metrics"
+	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/web"
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
@@ -46,6 +47,8 @@ type User struct {
 	// The user's email address.
 	Email    string `xorm:"varchar(250) null" json:"email,omitempty" valid:"email,length(0|250)" maxLength:"250"`
 	IsActive bool   `xorm:"null" json:"-"`
+	// The users md5-hashed email address, used to get the avatar from gravatar and the likes.
+	AvatarURL string `xorm:"-" json:"avatarUrl"`
 
 	PasswordResetToken string `xorm:"varchar(450) null" json:"-"`
 	EmailConfirmToken  string `xorm:"varchar(450) null" json:"-"`
@@ -60,6 +63,7 @@ type User struct {
 
 // AfterLoad is used to delete all emails to not have them leaked to the user
 func (u *User) AfterLoad() {
+	u.AvatarURL = utils.Md5String(u.Email)
 	u.Email = ""
 }
 

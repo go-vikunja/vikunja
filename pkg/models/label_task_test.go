@@ -47,9 +47,10 @@ func TestLabelTask_ReadAll(t *testing.T) {
 						Title:       "Label #4 - visible via other task",
 						CreatedByID: 2,
 						CreatedBy: &User{
-							ID:       2,
-							Username: "user2",
-							Password: "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
+							ID:        2,
+							Username:  "user2",
+							Password:  "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
+							AvatarURL: "ab53a2911ddf9b4817ac01ddcd3d975f", // hash for ""
 						},
 					},
 				},

@@ -159,18 +159,20 @@ func TestNamespaceUser_ReadAll(t *testing.T) {
 			want: []*UserWithRight{
 				{
 					User: User{
-						ID:       1,
-						Username: "user1",
-						Password: "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
-						IsActive: true,
+						ID:        1,
+						Username:  "user1",
+						Password:  "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
+						IsActive:  true,
+						AvatarURL: "111d68d06e2d317b5a59c2c6c5bad808",
 					},
 					Right: RightRead,
 				},
 				{
 					User: User{
-						ID:       2,
-						Username: "user2",
-						Password: "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
+						ID:        2,
+						Username:  "user2",
+						Password:  "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
+						AvatarURL: "ab53a2911ddf9b4817ac01ddcd3d975f",
 					},
 					Right: RightRead,
 				},

@@ -65,7 +65,7 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 		-> Bleibt noch Profile abrufen und Einstellungen -> Macht also keinen Sinn das auf den neuen Handler umzuziehen
 * [x] Email-Verifizierung beim Registrieren
 * [x] Password Reset
-* [ ] New field in user model which holds a url of an avatar image - for now just Gravatar, later more
+* [x] New field in user model which holds a url of an avatar image - for now just Gravatar, later more
 * [ ] Settings
   * [ ] Password update
   * [ ] Email update
