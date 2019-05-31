@@ -440,7 +440,7 @@ func TestListTask_ReadAll(t *testing.T) {
 		{
 			name: "ReadAll ListTasks sorted by due date default desc",
 			fields: fields{
-				Sorting: "dueadate",
+				Sorting: "duedate",
 			},
 			args: args{
 				search: "",
@@ -466,7 +466,7 @@ func TestListTask_ReadAll(t *testing.T) {
 		{
 			name: "ReadAll ListTasks sorted by due date desc",
 			fields: fields{
-				Sorting: "dueadatedesc",
+				Sorting: "duedatedesc",
 			},
 			args: args{
 				search: "",

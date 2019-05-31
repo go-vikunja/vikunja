@@ -1,7 +1,7 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "\u003c!-- ReDoc-Inject: \u003csecurity-definitions\u003e --\u003e",
+        "description": "This is the documentation for the [Vikunja](http://vikunja.io) API. Vikunja is a cross-plattform Todo-application with a lot of features, such as sharing lists with users or teams. \u003c!-- ReDoc-Inject: \u003csecurity-definitions\u003e --\u003e\n# Authorization\n**JWT-Auth:** Main authorization method, used for most of the requests. Needs ` + \"`\" + `Authorization: Bearer \u003cjwt-token\u003e` + \"`\" + `-header to authenticate successfully.\n\n**BasicAuth:** Only used when requesting tasks via caldav.\n\u003c!-- ReDoc-Inject: \u003csecurity-definitions\u003e --\u003e",
         "title": "Vikunja API",
         "contact": {
             "name": "General Vikunja contact",
@@ -24,7 +24,7 @@
                         "JWTKeyAuth": []
                     }
                 ],
-                "description": "Returns an array with all assignees for this task.",
+                "description": "Returns all labels which are either created by the user or associated with a task the user has at least read-access to.",
                 "consumes": [
                     "application/json"
                 ],
@@ -32,9 +32,9 @@
                     "application/json"
                 ],
                 "tags": [
-                    "assignees"
+                    "labels"
                 ],
-                "summary": "Get all assignees for a task",
+                "summary": "Get all labels a user has access to",
                 "parameters": [
                     {
                         "type": "integer",
@@ -44,18 +44,18 @@
                     },
                     {
                         "type": "string",
-                        "description": "Search assignees by their username.",
+                        "description": "Search labels by label text.",
                         "name": "s",
                         "in": "query"
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "The assignees",
+                        "description": "The labels",
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/models.User"
+                                "$ref": "#/definitions/models.Label"
                             }
                         }
                     },
@@ -2269,7 +2269,7 @@
                     },
                     {
                         "type": "string",
-                        "description": "The sorting parameter. Possible values to sort by are priority, prioritydesc, priorityasc, dueadate, dueadatedesc, dueadateasc.",
+                        "description": "The sorting parameter. Possible values to sort by are priority, prioritydesc, priorityasc, duedate, duedatedesc, duedateasc.",
                         "name": "sort",
                         "in": "query"
                     },

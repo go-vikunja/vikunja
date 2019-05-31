@@ -94,12 +94,12 @@ func TestListTask(t *testing.T) {
 			})
 			// should equal duedate desc
 			t.Run("by duedate", func(t *testing.T) {
-				rec, err := testHandler.testReadAll(url.Values{"sort": []string{"dueadate"}}, nil)
+				rec, err := testHandler.testReadAll(url.Values{"sort": []string{"duedate"}}, nil)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `[{"id":5,"text":"task #5 higher due date","description":"","done":false,"doneAt":0,"dueDate":1543636724,"reminderDates":null,"listID":1,"repeatAfter":0,"parentTaskID":0,"priority":0,"startDate":0,"endDate":0,"assignees":null,"labels":null,"hexColor":"","subtasks":null,"created":1543626724,"updated":1543626724,"createdBy":{"id":1,"username":"user1","avatarUrl":"111d68d06e2d317b5a59c2c6c5bad808","created":0,"updated":0}},{"id":6,"text":"task #6 lower due date"`)
 			})
 			t.Run("by duedate desc", func(t *testing.T) {
-				rec, err := testHandler.testReadAll(url.Values{"sort": []string{"dueadatedesc"}}, nil)
+				rec, err := testHandler.testReadAll(url.Values{"sort": []string{"duedatedesc"}}, nil)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `[{"id":5,"text":"task #5 higher due date","description":"","done":false,"doneAt":0,"dueDate":1543636724,"reminderDates":null,"listID":1,"repeatAfter":0,"parentTaskID":0,"priority":0,"startDate":0,"endDate":0,"assignees":null,"labels":null,"hexColor":"","subtasks":null,"created":1543626724,"updated":1543626724,"createdBy":{"id":1,"username":"user1","avatarUrl":"111d68d06e2d317b5a59c2c6c5bad808","created":0,"updated":0}},{"id":6,"text":"task #6 lower due date"`)
 			})
