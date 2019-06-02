@@ -1,6 +1,6 @@
 
-###################################
-#Build stage
+##############
+# Build stage
 FROM golang:1.11-alpine AS build-env
 
 ARG VIKUNJA_VERSION
@@ -8,10 +8,10 @@ ENV TAGS "sqlite"
 ENV GO111MODULE=on
 ENV GOFLAGS=-mod=vendor
 
-#Build deps
+# Build deps
 RUN apk --no-cache add build-base git
 
-#Setup repo
+# Setup repo
 COPY . ${GOPATH}/src/code.vikunja.io/api
 WORKDIR ${GOPATH}/src/code.vikunja.io/api
 
@@ -19,27 +19,19 @@ WORKDIR ${GOPATH}/src/code.vikunja.io/api
 RUN if [ -n "${VIKUNJA_VERSION}" ]; then git checkout "${VIKUNJA_VERSION}"; fi \
  && make clean build
 
-FROM alpine:3.7
+###################
+# The actual image
+# Note: I wanted to use the scratch image here, but unfortunatly the go-sqlite bindings require cgo and
+# for whatever reason, the container would not start when I compiled the image without cgo.
+FROM alpine:3.9
 LABEL maintainer="maintainers@vikunja.io"
 
-EXPOSE 3456
-
-RUN apk --no-cache add \
-    bash \
-    ca-certificates \
-    curl \
-    gettext \
-    linux-pam \
-    s6 \
-    sqlite \
-    su-exec \
-    tzdata
-
-COPY docker /
-COPY --from=build-env /go/src/code.vikunja.io/api/templates /app/vikunja/templates
-COPY --from=build-env /go/src/code.vikunja.io/api/vikunja /app/vikunja/vikunja
-
+WORKDIR /app/vikunja/
+COPY --from=build-env /go/src/code.vikunja.io/api/templates ./templates
+COPY --from=build-env /go/src/code.vikunja.io/api/vikunja .
+RUN chown nobody:nogroup -R /app/vikunja
 ENV VIKUNJA_SERVICE_ROOTPATH=/app/vikunja/
 
-ENTRYPOINT ["/bin/s6-svscan", "/etc/services.d"]
-CMD []
+USER nobody:nogroup
+CMD ["/app/vikunja/vikunja"]
+EXPOSE 3456
