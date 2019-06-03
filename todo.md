@@ -147,3 +147,8 @@
 * [ ] Activity Feed, so à la "der und der hat das und das gemacht etc"
 * [ ] Attachments for tasks
 * [ ] Search for users at new task assignees only in users who have access to the list
+
+## Fancy stuff
+
+* [ ] PWA
+* [ ] Vuex
