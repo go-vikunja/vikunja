@@ -241,7 +241,7 @@
 				}
 
 				if (this.shareType === 'user') {
-					this.stuffModel.userID = this.sharable.id
+					this.stuffModel.userID = this.sharable.username
 				} else if (this.shareType === 'team') {
 					this.stuffModel.teamID = this.sharable.id
 				}
