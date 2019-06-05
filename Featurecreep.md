@@ -182,6 +182,7 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [x] When giving a user access to a list/namespace, they should be reffered to by uuid, not numeric id
 * [x] Adding users to a team should also use uuid
 * [x] Check if the team/user really exist before updating them on lists/namespaces
+* [ ] Refactor config handling: Custom type "key" or so which holds the viper const and then mixins on that type to get the values from viper
 
 ### Linters
 
