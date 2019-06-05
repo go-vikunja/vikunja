@@ -35,6 +35,23 @@ export default class AbstractService {
 			},
 		})
 
+		// Set the interceptors to process every request
+		let self = this
+		this.http.interceptors.request.use( (config) => {
+			switch (config.method) {
+				case 'post':
+					config.data = JSON.stringify(self.beforeUpdate(config.data))
+					break
+				case 'put':
+					config.data = JSON.stringify(self.beforeCreate(config.data))
+					break
+				case 'delete':
+					config.data = JSON.stringify(self.beforeDelete(config.data))
+					break
+			}
+			return config
+		})
+
 		// Set the default auth header if we have a token
 		if (
 			localStorage.getItem('token') !== '' &&
@@ -291,7 +308,6 @@ export default class AbstractService {
 		}
 
 		const cancel = this.setLoading()
-		model = this.beforeCreate(model)
 		return this.http.put(this.getReplacedRoute(this.paths.create, model), model)
 			.catch(error => {
 				return this.errorHandler(error)
@@ -315,9 +331,6 @@ export default class AbstractService {
 		}
 
 		const cancel = this.setLoading()
-		if(typeof this.beforeUpdate === 'function') {
-			model = this.beforeUpdate(model)
-		}
 		return this.http.post(this.getReplacedRoute(this.paths.update, model), model)
 			.catch(error => {
 				return this.errorHandler(error)
@@ -341,7 +354,6 @@ export default class AbstractService {
 		}
 
 		const cancel = this.setLoading()
-		model = this.beforeDelete(model)
 		return this.http.delete(this.getReplacedRoute(this.paths.delete, model), model)
 			.catch(error => {
 				return this.errorHandler(error)
