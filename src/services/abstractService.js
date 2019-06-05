@@ -207,9 +207,9 @@ export default class AbstractService {
 	 * @param model
 	 * @return {*}
 	 */
-/*	beforeUpdate(model) {
+	beforeUpdate(model) {
 		return model
-	}*/
+	}
 
 	/**
 	 * Default preprocessor for delete requests

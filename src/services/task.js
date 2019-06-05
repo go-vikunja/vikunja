@@ -28,9 +28,9 @@ export default class TaskService extends AbstractService {
 		model.listID = Number(model.listID)
 
 		// Convert the date in a unix timestamp
-		model.dueDate = Math.round(+new Date(model.dueDate) / 1000)
-		model.startDate = Math.round(+new Date(model.startDate) / 1000)
-		model.endDate = Math.round(+new Date(model.endDate) / 1000)
+		model.dueDate = model.dueDate !== null ? Math.round(+new Date(model.dueDate) / 1000) : model.dueDate
+		model.startDate = model.startDate !== null ? Math.round(+new Date(model.startDate) / 1000): model.startDate
+		model.endDate = model.endDate !== null ? Math.round(+new Date(model.endDate) / 1000) : model.endDate
 
 		// remove all nulls, these would create empty reminders
 		for (const index in model.reminderDates) {
