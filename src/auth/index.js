@@ -23,7 +23,9 @@ export default {
 
 				// Tell others the user is autheticated
 				this.user.authenticated = true
-				this.getUserInfos()
+				const inf = this.getUserInfos()
+				// eslint-disable-next-line
+				console.log(inf)
 
 				// Hide the loader
 				context.loading = false
