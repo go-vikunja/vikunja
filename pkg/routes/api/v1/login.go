@@ -19,8 +19,6 @@ package v1
 import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/web/handler"
-	"crypto/md5"
-	"encoding/hex"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo/v4"
 	"github.com/spf13/viper"
@@ -76,8 +74,7 @@ func CreateNewJWTTokenForUser(user *models.User) (token string, err error) {
 	claims["id"] = user.ID
 	claims["exp"] = time.Now().Add(time.Hour * 72).Unix()
 
-	avatar := md5.Sum([]byte(user.Email))
-	claims["avatar"] = hex.EncodeToString(avatar[:])
+	claims["avatar"] = user.AvatarURL
 
 	// Generate encoded token and send it as response.
 	return t.SignedString([]byte(viper.GetString("service.JWTSecret")))
