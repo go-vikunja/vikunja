@@ -67,6 +67,10 @@
 * [ ] Kanaban
 * [ ] Group list view by almost all fields
 
+## Bugs
+
+* [ ] When adding an existing label to a task, the label is created every time it is added 
+
 ## Funktionen aus der API
 
 * [x] Sharingshit
