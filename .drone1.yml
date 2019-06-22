@@ -186,13 +186,21 @@ steps:
       - make release-darwin
     depends_on: [ before-static-build ]
 
-  - name: after-build-static
-    image: techknowlogick/xgo:latest
+  - name: after-build-compress
+    image: kolaente/upx
     pull: true
     depends_on:
       - static-build-windows
       - static-build-linux
       - static-build-darwin
+    commands:
+      - make release-compress
+
+  - name: after-build-static
+    image: techknowlogick/xgo:latest
+    pull: true
+    depends_on:
+      - after-build-compress
     commands:
       - make release-copy
       - make release-check
@@ -383,13 +391,21 @@ steps:
       - make release-darwin
     depends_on: [ before-static-build ]
 
-  - name: after-build-static
-    image: techknowlogick/xgo:latest
+  - name: after-build-compress
+    image: kolaente/upx
     pull: true
     depends_on:
       - static-build-windows
       - static-build-linux
       - static-build-darwin
+    commands:
+      - make release-compress
+
+  - name: after-build-static
+    image: techknowlogick/xgo:latest
+    pull: true
+    depends_on:
+      - after-build-compress
     commands:
       - make release-copy
       - make release-check

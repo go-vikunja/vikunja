@@ -64,10 +64,19 @@ make build
 
 Builds a `vikunja`-binary in the root directory of the repo for the platform it is run on.
 
+### Compress the built binary
+
+{{< highlight bash >}}
+make compress-build
+{{< /highlight >}}
+
+Go binaries are very big.
+To make the vikunja binary smaller, we can compress it using [upx](https://upx.github.io/).
+
 ### Build Releases
 
 {{< highlight bash >}}
-make build
+make release
 {{< /highlight >}}
 
 Builds binaries for all platforms and zips them with a copy of the `templates/` folder.
@@ -75,7 +84,7 @@ All built zip files are stored into `dist/zips/`. Binaries are stored in `dist/b
 binaries bundled with `templates` are stored in `dist/releases/`.
 
 All cross-platform binaries built using this series of commands are built with the help of 
-[xgo](https://github.com/karalabe/xgo). The make command will automatically install the
+[xgo](https://github.com/techknowlogick/xgo). The make command will automatically install the
 binary to be able to use it.
 
 `make release` is actually just a shortcut to execute `make release-dirs release-windows release-linux release-darwin release-copy release-check release-os-package release-zip`.
@@ -85,6 +94,7 @@ binary to be able to use it.
 * `release-copy` bundles binaries with a copy of `templates/` to then be zipped
 * `release-check` creates sha256 checksums for each binary which will be included in the zip file
 * `release-os-package` bundles a binary with a copy of the `templates/` folder, the `sha256` checksum file, a sample `config.yml` and a copy of the license in a folder for each architecture
+* `release-compress` compresses all build binaries, see `compress-build`
 * `release-zip` makes a zip file for the files created by `release-os-package`
 
 ### Build debian packages

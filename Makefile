@@ -98,6 +98,10 @@ build: $(EXECUTABLE)
 $(EXECUTABLE): $(SOURCES)
 	go build $(GOFLAGS) $(EXTRA_GOFLAGS) -tags '$(TAGS)' -ldflags '-s -w $(LDFLAGS)' -o $@
 
+.PHONY: compress-build
+compress-build:
+	upx -9 $(EXECUTABLE)
+
 .PHONY: release
 release: release-dirs release-windows release-linux release-darwin release-copy release-check release-os-package release-zip
 
@@ -134,6 +138,11 @@ release-darwin:
 ifneq ($(DRONE_WORKSPACE),'')
 	mv /build/* $(DIST)/binaries
 endif
+
+# Compresses all releases made by make release-* but not mips* releases since upx can't handle these.
+.PHONY: release-compress
+release-compress:
+	$(foreach file,$(filter-out $(wildcard $(wildcard $(DIST)/binaries/$(EXECUTABLE)-*mips*)),$(wildcard $(DIST)/binaries/$(EXECUTABLE)-*)), upx -9 $(file);)
 
 .PHONY: release-copy
 release-copy:
