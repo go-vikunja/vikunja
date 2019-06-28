@@ -33,14 +33,9 @@ import "code.vikunja.io/web"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces/{id}/users [get]
 func (nu *NamespaceUser) ReadAll(search string, a web.Auth, page int) (interface{}, error) {
-	u, err := getUserWithError(a)
-	if err != nil {
-		return nil, err
-	}
-
 	// Check if the user has access to the namespace
 	l := Namespace{ID: nu.NamespaceID}
-	canRead, err := l.CanRead(u)
+	canRead, err := l.CanRead(a)
 	if err != nil {
 		return nil, err
 	}

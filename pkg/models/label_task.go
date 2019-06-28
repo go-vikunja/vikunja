@@ -108,11 +108,6 @@ func (lt *LabelTask) Create(a web.Auth) (err error) {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{task}/labels [get]
 func (lt *LabelTask) ReadAll(search string, a web.Auth, page int) (labels interface{}, err error) {
-	u, err := getUserWithError(a)
-	if err != nil {
-		return nil, err
-	}
-
 	// Check if the user has the right to see the task
 	task := ListTask{ID: lt.TaskID}
 	canRead, err := task.CanRead(a)
@@ -120,11 +115,11 @@ func (lt *LabelTask) ReadAll(search string, a web.Auth, page int) (labels interf
 		return nil, err
 	}
 	if !canRead {
-		return nil, ErrNoRightToSeeTask{lt.TaskID, u.ID}
+		return nil, ErrNoRightToSeeTask{lt.TaskID, a.GetID()}
 	}
 
 	return getLabelsByTaskIDs(&LabelByTaskIDsOptions{
-		User:    u,
+		User:    &User{ID: a.GetID()},
 		Search:  search,
 		Page:    page,
 		TaskIDs: []int64{lt.TaskID},

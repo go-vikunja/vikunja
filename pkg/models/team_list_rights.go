@@ -22,24 +22,20 @@ import (
 
 // CanCreate checks if the user can create a team <-> list relation
 func (tl *TeamList) CanCreate(a web.Auth) (bool, error) {
-	u := getUserForRights(a)
-
-	l := List{ID: tl.ListID}
-	return l.IsAdmin(u)
+	return tl.canDoTeamList(a)
 }
 
 // CanDelete checks if the user can delete a team <-> list relation
 func (tl *TeamList) CanDelete(a web.Auth) (bool, error) {
-	user := getUserForRights(a)
-
-	l := List{ID: tl.ListID}
-	return l.IsAdmin(user)
+	return tl.canDoTeamList(a)
 }
 
 // CanUpdate checks if the user can update a team <-> list relation
 func (tl *TeamList) CanUpdate(a web.Auth) (bool, error) {
-	user := getUserForRights(a)
+	return tl.canDoTeamList(a)
+}
 
+func (tl *TeamList) canDoTeamList(a web.Auth) (bool, error) {
 	l := List{ID: tl.ListID}
-	return l.IsAdmin(user)
+	return l.IsAdmin(a)
 }

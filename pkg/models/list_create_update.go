@@ -106,14 +106,8 @@ func (l *List) Create(a web.Auth) (err error) {
 		return err
 	}
 
-	// Check rights
-	u, err := GetUserByID(doer.ID)
-	if err != nil {
-		return
-	}
-
-	l.OwnerID = u.ID
-	l.Owner.ID = u.ID
+	l.OwnerID = doer.ID
+	l.Owner = *doer
 	l.ID = 0 // Otherwise only the first time a new list would be created
 
 	return CreateOrUpdateList(l)

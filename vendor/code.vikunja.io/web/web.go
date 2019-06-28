@@ -50,7 +50,8 @@ type HTTPError struct {
 
 // Auth defines the authentication interface used to get some auth thing
 type Auth interface {
-	AuthDummy()
+	// Most of the time, we need an ID from the auth object only. Having this method saves the need to cast it.
+	GetID() int64
 }
 
 // Authprovider is a holder for the implementation of an authprovider by the application

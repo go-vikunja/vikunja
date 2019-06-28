@@ -84,12 +84,7 @@ func GetListsByNamespaceID(nID int64, doer *User) (lists []*List, err error) {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists [get]
 func (l *List) ReadAll(search string, a web.Auth, page int) (interface{}, error) {
-	u, err := getUserWithError(a)
-	if err != nil {
-		return nil, err
-	}
-
-	lists, err := getRawListsForUser(search, u, page)
+	lists, err := getRawListsForUser(search, &User{ID: a.GetID()}, page)
 	if err != nil {
 		return nil, err
 	}

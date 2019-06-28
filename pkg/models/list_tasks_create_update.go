@@ -39,10 +39,6 @@ import (
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{id} [put]
 func (t *ListTask) Create(a web.Auth) (err error) {
-	doer, err := getUserWithError(a)
-	if err != nil {
-		return err
-	}
 
 	t.ID = 0
 
@@ -57,7 +53,7 @@ func (t *ListTask) Create(a web.Auth) (err error) {
 		return
 	}
 
-	u, err := GetUserByID(doer.ID)
+	u, err := GetUserByID(a.GetID())
 	if err != nil {
 		return err
 	}

@@ -96,7 +96,10 @@ func TestLabel_ReadAll(t *testing.T) {
 			},
 		},
 		{
-			name:    "invalid user",
+			name: "invalid user",
+			args: args{
+				a: &User{ID: -1},
+			},
 			wantErr: true,
 		},
 	}

@@ -33,19 +33,14 @@ import "code.vikunja.io/web"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces/{id}/teams [get]
 func (tn *TeamNamespace) ReadAll(search string, a web.Auth, page int) (interface{}, error) {
-	user, err := getUserWithError(a)
-	if err != nil {
-		return nil, err
-	}
-
 	// Check if the user can read the namespace
 	n := Namespace{ID: tn.NamespaceID}
-	canRead, err := n.CanRead(user)
+	canRead, err := n.CanRead(a)
 	if err != nil {
 		return nil, err
 	}
 	if !canRead {
-		return nil, ErrNeedToHaveNamespaceReadAccess{NamespaceID: tn.NamespaceID, UserID: user.ID}
+		return nil, ErrNeedToHaveNamespaceReadAccess{NamespaceID: tn.NamespaceID, UserID: a.GetID()}
 	}
 
 	// Get the teams

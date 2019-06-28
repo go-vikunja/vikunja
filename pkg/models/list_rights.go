@@ -31,27 +31,24 @@ func (l *List) CanWrite(a web.Auth) (bool, error) {
 		return false, err
 	}
 
-	user := getUserForRights(a)
 	// Check if the user is either owner or can write to the list
-	if originalList.isOwner(user) {
+	if originalList.isOwner(&User{ID: a.GetID()}) {
 		return true, nil
 	}
 
-	return originalList.checkRight(user, RightWrite, RightAdmin)
+	return originalList.checkRight(a, RightWrite, RightAdmin)
 }
 
 // CanRead checks if a user has read access to a list
 func (l *List) CanRead(a web.Auth) (bool, error) {
-	user := getUserForRights(a)
-
 	// Check if the user is either owner or can read
 	if err := l.GetSimpleByID(); err != nil {
 		return false, err
 	}
-	if l.isOwner(user) {
+	if l.isOwner(&User{ID: a.GetID()}) {
 		return true, nil
 	}
-	return l.checkRight(user, RightRead, RightWrite, RightAdmin)
+	return l.checkRight(a, RightRead, RightWrite, RightAdmin)
 }
 
 // CanUpdate checks if the user can update a list
@@ -73,8 +70,6 @@ func (l *List) CanCreate(a web.Auth) (bool, error) {
 
 // IsAdmin returns whether the user has admin rights on the list or not
 func (l *List) IsAdmin(a web.Auth) (bool, error) {
-	user := getUserForRights(a)
-
 	originalList := &List{ID: l.ID}
 	err := originalList.GetSimpleByID()
 	if err != nil {
@@ -84,10 +79,10 @@ func (l *List) IsAdmin(a web.Auth) (bool, error) {
 	// Check all the things
 	// Check if the user is either owner or can write to the list
 	// Owners are always admins
-	if originalList.isOwner(user) {
+	if originalList.isOwner(&User{ID: a.GetID()}) {
 		return true, nil
 	}
-	return originalList.checkRight(user, RightAdmin)
+	return originalList.checkRight(a, RightAdmin)
 }
 
 // Little helper function to check if a user is list owner
@@ -96,7 +91,7 @@ func (l *List) isOwner(u *User) bool {
 }
 
 // Checks n different rights for any given user
-func (l *List) checkRight(user *User, rights ...Right) (bool, error) {
+func (l *List) checkRight(a web.Auth, rights ...Right) (bool, error) {
 
 	/*
 			The following loop creates an sql condition like this one:
@@ -113,24 +108,24 @@ func (l *List) checkRight(user *User, rights ...Right) (bool, error) {
 		// User conditions
 		// If the list was shared directly with the user and the user has the right
 		conds = append(conds, builder.And(
-			builder.Eq{"ul.user_id": user.ID},
+			builder.Eq{"ul.user_id": a.GetID()},
 			builder.Eq{"ul.right": r},
 		))
 		// If the namespace this list belongs to was shared directly with the user and the user has the right
 		conds = append(conds, builder.And(
-			builder.Eq{"un.user_id": user.ID},
+			builder.Eq{"un.user_id": a.GetID()},
 			builder.Eq{"un.right": r},
 		))
 
 		// Team rights
 		// If the list was shared directly with the team and the team has the right
 		conds = append(conds, builder.And(
-			builder.Eq{"tm2.user_id": user.ID},
+			builder.Eq{"tm2.user_id": a.GetID()},
 			builder.Eq{"tl.right": r},
 		))
 		// If the namespace this list belongs to was shared directly with the team and the team has the right
 		conds = append(conds, builder.And(
-			builder.Eq{"tm.user_id": user.ID},
+			builder.Eq{"tm.user_id": a.GetID()},
 			builder.Eq{"tn.right": r},
 		))
 	}

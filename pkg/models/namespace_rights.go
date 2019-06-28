@@ -60,8 +60,7 @@ func (n *Namespace) checkRight(a web.Auth, rights ...Right) (bool, error) {
 		return false, err
 	}
 
-	user := getUserForRights(a)
-	if user.ID == n.OwnerID {
+	if a.GetID() == n.OwnerID {
 		return true, nil
 	}
 
@@ -78,19 +77,19 @@ func (n *Namespace) checkRight(a web.Auth, rights ...Right) (bool, error) {
 	*/
 
 	var conds []builder.Cond
-	conds = append(conds, builder.Eq{"namespaces.owner_id": user.ID})
+	conds = append(conds, builder.Eq{"namespaces.owner_id": a.GetID()})
 	for _, r := range rights {
 		// User conditions
 		// If the namespace was shared directly with the user and the user has the right
 		conds = append(conds, builder.And(
-			builder.Eq{"users_namespace.user_id": user.ID},
+			builder.Eq{"users_namespace.user_id": a.GetID()},
 			builder.Eq{"users_namespace.right": r},
 		))
 
 		// Team rights
 		// If the namespace was shared directly with the team and the team has the right
 		conds = append(conds, builder.And(
-			builder.Eq{"team_members.user_id": user.ID},
+			builder.Eq{"team_members.user_id": a.GetID()},
 			builder.Eq{"team_namespaces.right": r},
 		))
 	}

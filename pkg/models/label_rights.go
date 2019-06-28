@@ -43,20 +43,17 @@ func (l *Label) CanCreate(a web.Auth) (bool, error) {
 }
 
 func (l *Label) isLabelOwner(a web.Auth) (bool, error) {
-	u := getUserForRights(a)
 	lorig, err := getLabelByIDSimple(l.ID)
 	if err != nil {
 		return false, err
 	}
-	return lorig.CreatedByID == u.ID, nil
+	return lorig.CreatedByID == a.GetID(), nil
 }
 
 // Helper method to check if a user can see a specific label
 func (l *Label) hasAccessToLabel(a web.Auth) (bool, error) {
-	u := getUserForRights(a)
-
 	// Get all tasks
-	taskIDs, err := getUserTaskIDs(u)
+	taskIDs, err := getUserTaskIDs(&User{ID: a.GetID()})
 	if err != nil {
 		return false, err
 	}
@@ -66,7 +63,7 @@ func (l *Label) hasAccessToLabel(a web.Auth) (bool, error) {
 	has, err := x.Table("labels").
 		Select("labels.*").
 		Join("LEFT", "label_task", "label_task.label_id = labels.id").
-		Where("label_task.label_id != null OR labels.created_by_id = ?", u.ID).
+		Where("label_task.label_id != null OR labels.created_by_id = ?", a.GetID()).
 		Or(builder.In("label_task.task_id", taskIDs)).
 		And("labels.id = ?", l.ID).
 		Exist(&labels)

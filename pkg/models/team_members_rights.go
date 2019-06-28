@@ -32,10 +32,8 @@ func (tm *TeamMember) CanDelete(a web.Auth) (bool, error) {
 
 // IsAdmin checks if the user is team admin
 func (tm *TeamMember) IsAdmin(a web.Auth) (bool, error) {
-	u := getUserForRights(a)
-
 	// A user can add a member to a team if he is admin of that team
-	exists, err := x.Where("user_id = ? AND team_id = ? AND admin = ?", u.ID, tm.TeamID, true).
+	exists, err := x.Where("user_id = ? AND team_id = ? AND admin = ?", a.GetID(), tm.TeamID, true).
 		Get(&TeamMember{})
 	return exists, err
 }

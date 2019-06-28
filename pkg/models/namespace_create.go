@@ -35,19 +35,14 @@ import (
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces [put]
 func (n *Namespace) Create(a web.Auth) (err error) {
-	doer, err := getUserWithError(a)
-	if err != nil {
-		return err
-	}
-
 	// Check if we have at least a name
 	if n.Name == "" {
-		return ErrNamespaceNameCannotBeEmpty{NamespaceID: 0, UserID: doer.ID}
+		return ErrNamespaceNameCannotBeEmpty{NamespaceID: 0, UserID: a.GetID()}
 	}
 	n.ID = 0 // This would otherwise prevent the creation of new lists after one was created
 
 	// Check if the User exists
-	n.Owner, err = GetUserByID(doer.ID)
+	n.Owner, err = GetUserByID(a.GetID())
 	if err != nil {
 		return
 	}

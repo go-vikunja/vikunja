@@ -32,11 +32,9 @@ func (t *ListTask) CanUpdate(a web.Auth) (bool, error) {
 
 // CanCreate determines if a user has the right to create a list task
 func (t *ListTask) CanCreate(a web.Auth) (bool, error) {
-	doer := getUserForRights(a)
-
 	// A user can do a task if he has write acces to its list
 	l := &List{ID: t.ListID}
-	return l.CanWrite(doer)
+	return l.CanWrite(a)
 }
 
 // CanRead determines if a user can read a task
@@ -55,8 +53,6 @@ func (t *ListTask) CanRead(a web.Auth) (canRead bool, err error) {
 
 // Helper function to check if a user can do stuff on a list task
 func (t *ListTask) canDoListTask(a web.Auth) (bool, error) {
-	doer := getUserForRights(a)
-
 	// Get the task
 	lI, err := GetTaskByIDSimple(t.ID)
 	if err != nil {
@@ -65,5 +61,5 @@ func (t *ListTask) canDoListTask(a web.Auth) (bool, error) {
 
 	// A user can do a task if he has write acces to its list
 	l := &List{ID: lI.ListID}
-	return l.CanWrite(doer)
+	return l.CanWrite(a)
 }

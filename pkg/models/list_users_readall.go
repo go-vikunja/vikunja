@@ -33,19 +33,14 @@ import "code.vikunja.io/web"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{id}/users [get]
 func (lu *ListUser) ReadAll(search string, a web.Auth, page int) (interface{}, error) {
-	u, err := getUserWithError(a)
-	if err != nil {
-		return nil, err
-	}
-
 	// Check if the user has access to the list
 	l := &List{ID: lu.ListID}
-	canRead, err := l.CanRead(u)
+	canRead, err := l.CanRead(a)
 	if err != nil {
 		return nil, err
 	}
 	if !canRead {
-		return nil, ErrNeedToHaveListReadAccess{UserID: u.ID, ListID: lu.ListID}
+		return nil, ErrNeedToHaveListReadAccess{UserID: a.GetID(), ListID: lu.ListID}
 	}
 
 	// Get all users

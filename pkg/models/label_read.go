@@ -34,10 +34,8 @@ import (
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /labels [get]
 func (l *Label) ReadAll(search string, a web.Auth, page int) (ls interface{}, err error) {
-	u, err := getUserWithError(a)
-	if err != nil {
-		return nil, err
-	}
+
+	u := &User{ID: a.GetID()}
 
 	// Get all tasks
 	taskIDs, err := getUserTaskIDs(u)

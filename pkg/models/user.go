@@ -17,7 +17,6 @@
 package models
 
 import (
-	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/metrics"
 	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/web"
@@ -67,20 +66,14 @@ func (u *User) AfterLoad() {
 	u.Email = ""
 }
 
-// AuthDummy implements the auth of the crud handler
-func (User) AuthDummy() {}
+// GetID implements the Auth interface
+func (u *User) GetID() int64 {
+	return u.ID
+}
 
 // TableName returns the table name for users
 func (User) TableName() string {
 	return "users"
-}
-
-func getUserForRights(a web.Auth) *User {
-	u, err := getUserWithError(a)
-	if err != nil {
-		log.Log.Error(err.Error())
-	}
-	return u
 }
 
 func getUserWithError(a web.Auth) (*User, error) {

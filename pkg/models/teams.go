@@ -139,16 +139,11 @@ func (t *Team) ReadOne() (err error) {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /teams [get]
 func (t *Team) ReadAll(search string, a web.Auth, page int) (interface{}, error) {
-	user, err := getUserWithError(a)
-	if err != nil {
-		return nil, err
-	}
-
 	all := []*Team{}
-	err = x.Select("teams.*").
+	err := x.Select("teams.*").
 		Table("teams").
 		Join("INNER", "team_members", "team_members.team_id = teams.id").
-		Where("team_members.user_id = ?", user.ID).
+		Where("team_members.user_id = ?", a.GetID()).
 		Limit(getLimitFromPageIndex(page)).
 		Where("teams.name LIKE ?", "%"+search+"%").
 		Find(&all)

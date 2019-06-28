@@ -18,7 +18,7 @@ module code.vikunja.io/api
 
 require (
 	cloud.google.com/go v0.34.0 // indirect
-	code.vikunja.io/web v0.0.0-20190628071027-b5c16e24b0a7
+	code.vikunja.io/web v0.0.0-20190628075253-b457b5a1a332
 	github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc
 	github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a
 	github.com/beevik/etree v1.1.0 // indirect

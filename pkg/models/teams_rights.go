@@ -38,8 +38,6 @@ func (t *Team) CanDelete(a web.Auth) (bool, error) {
 
 // IsAdmin returns true when the user is admin of a team
 func (t *Team) IsAdmin(a web.Auth) (bool, error) {
-	u := getUserForRights(a)
-
 	// Check if the team exists to be able to return a proper error message if not
 	_, err := GetTeamByID(t.ID)
 	if err != nil {
@@ -47,17 +45,15 @@ func (t *Team) IsAdmin(a web.Auth) (bool, error) {
 	}
 
 	return x.Where("team_id = ?", t.ID).
-		And("user_id = ?", u.ID).
+		And("user_id = ?", a.GetID()).
 		And("admin = ?", true).
 		Get(&TeamMember{})
 }
 
 // CanRead returns true if the user has read access to the team
 func (t *Team) CanRead(a web.Auth) (bool, error) {
-	user := getUserForRights(a)
-
 	// Check if the user is in the team
 	return x.Where("team_id = ?", t.ID).
-		And("user_id = ?", user.ID).
+		And("user_id = ?", a.GetID()).
 		Get(&TeamMember{})
 }
