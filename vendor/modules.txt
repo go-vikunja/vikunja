@@ -1,4 +1,4 @@
-# code.vikunja.io/web v0.0.0-20190507193736-edb39812af9c
+# code.vikunja.io/web v0.0.0-20190628071027-b5c16e24b0a7
 code.vikunja.io/web
 code.vikunja.io/web/handler
 # github.com/BurntSushi/toml v0.3.1

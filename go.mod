@@ -18,7 +18,7 @@ module code.vikunja.io/api
 
 require (
 	cloud.google.com/go v0.34.0 // indirect
-	code.vikunja.io/web v0.0.0-20190507193736-edb39812af9c
+	code.vikunja.io/web v0.0.0-20190628071027-b5c16e24b0a7
 	github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc
 	github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a
 	github.com/beevik/etree v1.1.0 // indirect
@@ -64,9 +64,6 @@ require (
 	github.com/swaggo/swag v1.5.0
 	golang.org/x/crypto v0.0.0-20190621222207-cc06ce4a13d4
 	golang.org/x/lint v0.0.0-20190409202823-959b441ac422
-	golang.org/x/net v0.0.0-20190620200207-3b0461eec859 // indirect
-	golang.org/x/sys v0.0.0-20190626221950-04f50cda93cb // indirect
-	golang.org/x/tools v0.0.0-20190628034336-212fb13d595e // indirect
 	google.golang.org/appengine v1.5.0 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/d4l3k/messagediff.v1 v1.2.1

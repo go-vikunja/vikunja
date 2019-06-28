@@ -194,7 +194,7 @@ type HTTPError struct {
 }
 ```
 
-You can learn more about how exactly custom error types are created in the [vikunja docs](https://git.kolaente.de/vikunja/api/src/branch/master/docs/practical-instructions/errors.md).
+You can learn more about how exactly custom error types are created in the [vikunja docs](https://vikunja.io/docs/custom-errors/).
 
 ## How the url param binder works
 

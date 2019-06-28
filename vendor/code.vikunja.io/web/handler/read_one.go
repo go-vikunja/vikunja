@@ -26,7 +26,7 @@ func (c *WebHandler) ReadOneWeb(ctx echo.Context) error {
 	currentStruct := c.EmptyStruct()
 
 	// Get the object & bind params to struct
-	if err := ParamBinder(currentStruct, ctx); err != nil {
+	if err := ctx.Bind(currentStruct); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "No or invalid model provided.")
 	}
 

@@ -32,7 +32,7 @@ func (c *WebHandler) ReadAllWeb(ctx echo.Context) error {
 	}
 
 	// Get the object & bind params to struct
-	if err := ParamBinder(currentStruct, ctx); err != nil {
+	if err := ctx.Bind(currentStruct); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "No or invalid model provided.")
 	}
 

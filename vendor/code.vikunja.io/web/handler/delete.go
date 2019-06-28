@@ -31,7 +31,7 @@ func (c *WebHandler) DeleteWeb(ctx echo.Context) error {
 	currentStruct := c.EmptyStruct()
 
 	// Bind params to struct
-	if err := ParamBinder(currentStruct, ctx); err != nil {
+	if err := ctx.Bind(currentStruct); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid URL param.")
 	}
 
