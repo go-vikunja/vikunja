@@ -42,7 +42,7 @@ require (
 	github.com/imdario/mergo v0.3.7
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/jgautheron/goconst v0.0.0-20170703170152-9740945f5dcb
-	github.com/labstack/echo/v4 v4.1.6
+	github.com/labstack/echo/v4 v4.1.7-0.20190627175217-8fb7b5be270f
 	github.com/labstack/gommon v0.2.9
 	github.com/laurent22/ical-go v0.1.1-0.20181107184520-7e5d6ade8eef
 	github.com/mailru/easyjson v0.0.0-20190403194419-1ea4449da983 // indirect
@@ -65,8 +65,8 @@ require (
 	golang.org/x/crypto v0.0.0-20190621222207-cc06ce4a13d4
 	golang.org/x/lint v0.0.0-20190409202823-959b441ac422
 	golang.org/x/net v0.0.0-20190620200207-3b0461eec859 // indirect
-	golang.org/x/sys v0.0.0-20190621203818-d432491b9138 // indirect
-	golang.org/x/tools v0.0.0-20190621195816-6e04913cbbac // indirect
+	golang.org/x/sys v0.0.0-20190626221950-04f50cda93cb // indirect
+	golang.org/x/tools v0.0.0-20190628034336-212fb13d595e // indirect
 	google.golang.org/appengine v1.5.0 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/d4l3k/messagediff.v1 v1.2.1
@@ -77,7 +77,4 @@ require (
 	src.techknowlogick.com/xormigrate v0.0.0-20190321151057-24497c23c09c
 )
 
-replace (
-	github.com/labstack/echo/v4 => github.com/kolaente/echo/v4 v4.0.0-20190622213746-34000ea0f7d3 // Branch: fix/failing-tests, PR https://github.com/labstack/echo/pull/1353
-	github.com/samedi/caldav-go => github.com/kolaente/caldav-go v3.0.1-0.20190524174923-9e5cd1688227+incompatible // Branch: feature/dynamic-supported-components, PR: https://github.com/samedi/caldav-go/pull/6 and https://github.com/samedi/caldav-go/pull/7
-)
+replace github.com/samedi/caldav-go => github.com/kolaente/caldav-go v3.0.1-0.20190524174923-9e5cd1688227+incompatible // Branch: feature/dynamic-supported-components, PR: https://github.com/samedi/caldav-go/pull/6 and https://github.com/samedi/caldav-go/pull/7
