@@ -17,13 +17,13 @@
 package cmd
 
 import (
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/routes"
 	"code.vikunja.io/api/pkg/swagger"
 	"context"
 	"fmt"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"os"
 	"os/signal"
 	"time"
@@ -49,7 +49,7 @@ var webCmd = &cobra.Command{
 		routes.RegisterRoutes(e)
 		// Start server
 		go func() {
-			if err := e.Start(viper.GetString("service.interface")); err != nil {
+			if err := e.Start(config.ServiceInterface.GetString()); err != nil {
 				e.Logger.Info("shutting down...")
 			}
 		}()

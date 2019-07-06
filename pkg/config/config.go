@@ -17,14 +17,97 @@
 package config
 
 import (
-	"code.vikunja.io/api/pkg/log"
 	"crypto/rand"
 	"fmt"
-	"github.com/spf13/viper"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
+
+	"github.com/spf13/viper"
 )
+
+// Key is used as a config key
+type Key string
+
+// These constants hold all config value keys
+const (
+	ServiceJWTSecret     Key = `service.JWTSecret`
+	ServiceInterface     Key = `service.interface`
+	ServiceFrontendurl   Key = `service.frontendurl`
+	ServiceEnableCaldav  Key = `service.enablecaldav`
+	ServiceRootpath      Key = `service.rootpath`
+	ServicePageCount     Key = `service.pagecount`
+	ServiceEnableMetrics Key = `service.enablemetrics`
+
+	DatabaseType                  Key = `database.type`
+	DatabaseHost                  Key = `database.host`
+	DatabaseUser                  Key = `database.user`
+	DatabasePassword              Key = `database.password`
+	DatabaseDatabase              Key = `database.database`
+	DatabasePath                  Key = `database.path`
+	DatabaseMaxOpenConnections    Key = `database.maxopenconnections`
+	DatabaseMaxIdleConnections    Key = `database.maxidleconnections`
+	DatabaseMaxConnectionLifetime Key = `database.maxconnectionlifetime`
+
+	CacheEnabled        Key = `cache.enabled`
+	CacheType           Key = `cache.type`
+	CacheMaxElementSize Key = `cache.maxelementsize`
+
+	MailerEnabled       Key = `mailer.enabled`
+	MailerHost          Key = `mailer.host`
+	MailerPort          Key = `mailer.port`
+	MailerUsername      Key = `mailer.username`
+	MailerPassword      Key = `mailer.password`
+	MailerSkipTLSVerify Key = `mailer.skiptlsverify`
+	MailerFromEmail     Key = `mailer.fromemail`
+	MailerQueuelength   Key = `mailer.queuelength`
+	MailerQueueTimeout  Key = `mailer.queuetimeout`
+
+	RedisEnabled  Key = `redis.enabled`
+	RedisHost     Key = `redis.host`
+	RedisPassword Key = `redis.password`
+	RedisDB       Key = `redis.db`
+
+	LogEnabled  Key = `log.enabled`
+	LogErrors   Key = `log.errors`
+	LogStandard Key = `log.standard`
+	LogDatabase Key = `log.database`
+	LogHTTP     Key = `log.echo`
+	LogEcho     Key = `log.echo`
+	LogPath     Key = `log.path`
+)
+
+// GetString returns a string config value
+func (k Key) GetString() string {
+	return viper.GetString(string(k))
+}
+
+// GetBool returns a bool config value
+func (k Key) GetBool() bool {
+	return viper.GetBool(string(k))
+}
+
+// GetInt returns an int config value
+func (k Key) GetInt() int {
+	return viper.GetInt(string(k))
+}
+
+// GetDuration returns a duration config value
+func (k Key) GetDuration() time.Duration {
+	return viper.GetDuration(string(k))
+}
+
+// Set sets a value
+func (k Key) Set(i interface{}) {
+	viper.Set(string(k), i)
+}
+
+// sets the default config value
+func (k Key) setDefault(i interface{}) {
+	viper.SetDefault(string(k), i)
+}
 
 // InitConfig initializes the config, sets defaults etc.
 func InitConfig() {
@@ -33,61 +116,61 @@ func InitConfig() {
 	// Service config
 	random, err := random(32)
 	if err != nil {
-		log.Log.Fatal(err.Error())
+		log.Fatal(err.Error())
 	}
 
 	// Service
-	viper.SetDefault("service.JWTSecret", random)
-	viper.SetDefault("service.interface", ":3456")
-	viper.SetDefault("service.frontendurl", "")
-	viper.SetDefault("service.enablecaldav", true)
+	ServiceJWTSecret.setDefault(random)
+	ServiceInterface.setDefault(":3456")
+	ServiceFrontendurl.setDefault("")
+	ServiceEnableCaldav.setDefault(true)
 
 	ex, err := os.Executable()
 	if err != nil {
 		panic(err)
 	}
 	exPath := filepath.Dir(ex)
-	viper.SetDefault("service.rootpath", exPath)
-	viper.SetDefault("service.pagecount", 50)
-	viper.SetDefault("service.enablemetrics", false)
+	ServiceRootpath.setDefault(exPath)
+	ServicePageCount.setDefault(50)
+	ServiceEnableMetrics.setDefault(false)
 	// Database
-	viper.SetDefault("database.type", "sqlite")
-	viper.SetDefault("database.host", "localhost")
-	viper.SetDefault("database.user", "vikunja")
-	viper.SetDefault("database.password", "")
-	viper.SetDefault("database.database", "vikunja")
-	viper.SetDefault("database.path", "./vikunja.db")
-	viper.SetDefault("database.maxopenconnections", 100)
-	viper.SetDefault("database.maxidleconnections", 50)
-	viper.SetDefault("database.maxconnectionlifetime", 10000)
+	DatabaseType.setDefault("sqlite")
+	DatabaseHost.setDefault("localhost")
+	DatabaseUser.setDefault("vikunja")
+	DatabasePassword.setDefault("")
+	DatabaseDatabase.setDefault("vikunja")
+	DatabasePath.setDefault("./vikunja.db")
+	DatabaseMaxOpenConnections.setDefault(100)
+	DatabaseMaxIdleConnections.setDefault(50)
+	DatabaseMaxConnectionLifetime.setDefault(10000)
 
 	// Cacher
-	viper.SetDefault("cache.enabled", false)
-	viper.SetDefault("cache.type", "memory")
-	viper.SetDefault("cache.maxelementsize", 1000)
+	CacheEnabled.setDefault(false)
+	CacheType.setDefault("memory")
+	CacheMaxElementSize.setDefault(1000)
 	// Mailer
-	viper.SetDefault("mailer.enabled", false)
-	viper.SetDefault("mailer.host", "")
-	viper.SetDefault("mailer.port", "587")
-	viper.SetDefault("mailer.user", "user")
-	viper.SetDefault("mailer.password", "")
-	viper.SetDefault("mailer.skiptlsverify", false)
-	viper.SetDefault("mailer.fromemail", "mail@vikunja")
-	viper.SetDefault("mailer.queuelength", 100)
-	viper.SetDefault("mailer.queuetimeout", 30)
+	MailerEnabled.setDefault(false)
+	MailerHost.setDefault("")
+	MailerPort.setDefault("587")
+	MailerUsername.setDefault("user")
+	MailerPassword.setDefault("")
+	MailerSkipTLSVerify.setDefault(false)
+	MailerFromEmail.setDefault("mail@vikunja")
+	MailerQueuelength.setDefault(100)
+	MailerQueueTimeout.setDefault(30)
 	// Redis
-	viper.SetDefault("redis.enabled", false)
-	viper.SetDefault("redis.host", "localhost:6379")
-	viper.SetDefault("redis.password", "")
-	viper.SetDefault("redis.db", 0)
+	RedisEnabled.setDefault(false)
+	RedisHost.setDefault("localhost:6379")
+	RedisPassword.setDefault("")
+	RedisDB.setDefault(0)
 	// Logger
-	viper.SetDefault("log.enabled", true)
-	viper.SetDefault("log.errors", "stdout")
-	viper.SetDefault("log.standard", "stdout")
-	viper.SetDefault("log.database", "off")
-	viper.SetDefault("log.http", "stdout")
-	viper.SetDefault("log.echo", "off")
-	viper.SetDefault("log.path", viper.GetString("service.rootpath")+"/logs")
+	LogEnabled.setDefault(true)
+	LogErrors.setDefault("stdout")
+	LogStandard.setDefault("stdout")
+	LogDatabase.setDefault(false)
+	LogHTTP.setDefault("stdout")
+	LogEcho.setDefault("off")
+	LogPath.setDefault(ServiceRootpath.GetString() + "/logs")
 
 	// Init checking for environment variables
 	viper.SetEnvPrefix("vikunja")
@@ -95,15 +178,15 @@ func InitConfig() {
 	viper.AutomaticEnv()
 
 	// Load the config file
-	viper.AddConfigPath(viper.GetString("service.rootpath"))
+	viper.AddConfigPath(ServiceRootpath.GetString())
 	viper.AddConfigPath("/etc/vikunja/")
 	viper.AddConfigPath("~/.config/vikunja")
 	viper.AddConfigPath(".")
 	viper.SetConfigName("config")
 	err = viper.ReadInConfig()
 	if err != nil {
-		log.Log.Info(err)
-		log.Log.Info("Using defaults.")
+		log.Println(err.Error())
+		log.Println("Using defaults.")
 	}
 }
 

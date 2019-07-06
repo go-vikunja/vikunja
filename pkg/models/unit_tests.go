@@ -24,7 +24,6 @@ import (
 	"fmt"
 	"github.com/go-xorm/core"
 	"github.com/go-xorm/xorm"
-	"github.com/spf13/viper"
 	"gopkg.in/testfixtures.v2"
 	"os"
 	"path/filepath"
@@ -71,7 +70,7 @@ func createTestEngine(fixturesDir string) error {
 			return err
 		}
 
-		if viper.GetString("database.type") == "mysql" {
+		if config.DatabaseType.GetString() == "mysql" {
 			fixturesHelper = &testfixtures.MySQL{}
 		}
 	} else {

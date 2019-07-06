@@ -17,27 +17,27 @@
 package red
 
 import (
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
 	"github.com/go-redis/redis"
-	"github.com/spf13/viper"
 )
 
 var r *redis.Client
 
 // InitRedis initializes a redis connection
 func InitRedis() {
-	if !viper.GetBool("redis.enabled") {
+	if !config.RedisEnabled.GetBool() {
 		return
 	}
 
-	if viper.GetString("redis.host") == "" {
+	if config.RedisHost.GetString() == "" {
 		log.Log.Fatal("No redis host provided.")
 	}
 
 	r = redis.NewClient(&redis.Options{
-		Addr:     viper.GetString("redis.host"),
-		Password: viper.GetString("redis.password"),
-		DB:       viper.GetInt("redis.db"),
+		Addr:     config.RedisHost.GetString(),
+		Password: config.RedisPassword.GetString(),
+		DB:       config.RedisDB.GetInt(),
 	})
 
 	err := r.Ping().Err()

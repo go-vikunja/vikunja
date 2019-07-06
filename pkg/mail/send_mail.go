@@ -18,9 +18,9 @@ package mail
 
 import (
 	"bytes"
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/utils"
 	"github.com/labstack/gommon/log"
-	"github.com/spf13/viper"
 	"gopkg.in/gomail.v2"
 	"text/template"
 )
@@ -54,7 +54,7 @@ type header struct {
 // SendMail puts a mail in the queue
 func SendMail(opts *Opts) {
 	m := gomail.NewMessage()
-	m.SetHeader("From", viper.GetString("mailer.fromemail"))
+	m.SetHeader("From", config.MailerFromEmail.GetString())
 	m.SetHeader("To", opts.To)
 	m.SetHeader("Subject", opts.Subject)
 	for _, h := range opts.Headers {
@@ -85,13 +85,13 @@ func SendMailWithTemplate(to, subject, tpl string, data map[string]interface{}) 
 	var plainContent bytes.Buffer
 
 	t := &Template{
-		Templates: template.Must(template.ParseGlob(viper.GetString("service.rootpath") + "/templates/mail/*.tmpl")),
+		Templates: template.Must(template.ParseGlob(config.ServiceRootpath.GetString() + "/templates/mail/*.tmpl")),
 	}
 
 	boundary := "np" + utils.MakeRandomString(13)
 
 	data["Boundary"] = boundary
-	data["FrontendURL"] = viper.GetString("service.frontendurl")
+	data["FrontendURL"] = config.ServiceFrontendurl.GetString()
 
 	if err := t.Templates.ExecuteTemplate(&htmlContent, tpl+".html.tmpl", data); err != nil {
 		log.Error(3, "Template: %v", err)

@@ -22,7 +22,6 @@ import (
 	"fmt"
 	"github.com/go-xorm/core"
 	"github.com/go-xorm/xorm"
-	"github.com/spf13/viper"
 	"strconv"
 	"time"
 
@@ -33,12 +32,12 @@ import (
 // CreateDBEngine initializes a db engine from the config
 func CreateDBEngine() (engine *xorm.Engine, err error) {
 	// If the database type is not set, this likely means we need to initialize the config first
-	if viper.GetString("database.type") == "" {
+	if config.DatabaseType.GetString() == "" {
 		config.InitConfig()
 	}
 
 	// Use Mysql if set
-	if viper.GetString("database.type") == "mysql" {
+	if config.DatabaseType.GetString() == "mysql" {
 		engine, err = initMysqlEngine()
 		if err != nil {
 			return
@@ -52,7 +51,7 @@ func CreateDBEngine() (engine *xorm.Engine, err error) {
 	}
 
 	engine.SetMapper(core.GonicMapper{})
-	engine.ShowSQL(viper.GetString("log.database") != "off")
+	engine.ShowSQL(config.LogDatabase.GetString() != "off")
 	engine.SetLogger(xorm.NewSimpleLogger(log.GetLogWriter("database")))
 
 	return
@@ -61,17 +60,17 @@ func CreateDBEngine() (engine *xorm.Engine, err error) {
 func initMysqlEngine() (engine *xorm.Engine, err error) {
 	connStr := fmt.Sprintf(
 		"%s:%s@tcp(%s)/%s?charset=utf8&parseTime=true",
-		viper.GetString("database.user"),
-		viper.GetString("database.password"),
-		viper.GetString("database.host"),
-		viper.GetString("database.database"))
+		config.DatabaseUser.GetString(),
+		config.DatabasePassword.GetString(),
+		config.DatabaseHost.GetString(),
+		config.DatabaseDatabase.GetString())
 	engine, err = xorm.NewEngine("mysql", connStr)
 	if err != nil {
 		return
 	}
-	engine.SetMaxOpenConns(viper.GetInt("database.maxopenconnections"))
-	engine.SetMaxIdleConns(viper.GetInt("database.maxidleconnections"))
-	max, err := time.ParseDuration(strconv.Itoa(viper.GetInt("database.maxconnectionlifetime")) + `ms`)
+	engine.SetMaxOpenConns(config.DatabaseMaxOpenConnections.GetInt())
+	engine.SetMaxIdleConns(config.DatabaseMaxIdleConnections.GetInt())
+	max, err := time.ParseDuration(strconv.Itoa(config.DatabaseMaxConnectionLifetime.GetInt()) + `ms`)
 	if err != nil {
 		return
 	}
@@ -80,7 +79,7 @@ func initMysqlEngine() (engine *xorm.Engine, err error) {
 }
 
 func initSqliteEngine() (engine *xorm.Engine, err error) {
-	path := viper.GetString("database.path")
+	path := config.DatabasePath.GetString()
 	if path == "" {
 		path = "./db.db"
 	}

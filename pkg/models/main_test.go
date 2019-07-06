@@ -18,11 +18,10 @@ package models
 
 import (
 	"code.vikunja.io/api/pkg/config"
-	"github.com/spf13/viper"
 	"testing"
 )
 
 func TestMain(m *testing.M) {
 	config.InitConfig()
-	MainTest(m, viper.GetString("service.rootpath"))
+	MainTest(m, config.ServiceRootpath.GetString())
 }

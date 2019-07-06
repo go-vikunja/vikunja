@@ -17,6 +17,7 @@
 package log
 
 import (
+	"code.vikunja.io/api/pkg/config"
 	"github.com/op/go-logging"
 	"github.com/spf13/viper"
 	"io"
@@ -39,18 +40,18 @@ var Log = logging.MustGetLogger("vikunja")
 
 // InitLogger initializes the global log handler
 func InitLogger() {
-	if !viper.GetBool("log.enabled") {
+	if !config.LogEnabled.GetBool() {
 		// Disable all logging when loggin in general is disabled, overwriting everything a user might have set.
-		viper.Set("log.errors", "off")
-		viper.Set("log.standard", "off")
-		viper.Set("log.database", "off")
-		viper.Set("log.http", "off")
-		viper.Set("log.echo", "off")
+		config.LogErrors.Set("off")
+		config.LogStandard.Set("off")
+		config.LogDatabase.Set("off")
+		config.LogHTTP.Set("off")
+		config.LogEcho.Set("off")
 		return
 	}
 
-	if viper.GetString("log.errors") == "file" || viper.GetString("log.standard") == "file" {
-		err := os.Mkdir(viper.GetString("log.path"), 0744)
+	if config.LogErrors.GetString() == "file" || config.LogStandard.GetString() == "file" {
+		err := os.Mkdir(config.LogPath.GetString(), 0744)
 		if err != nil && !os.IsExist(err) {
 			log.Fatal("Could not create log folder: ", err.Error())
 		}
@@ -59,7 +60,7 @@ func InitLogger() {
 	var logBackends []logging.Backend
 
 	// We define our two backends
-	if viper.GetString("log.standard") != "off" {
+	if config.LogStandard.GetString() != "off" {
 		stdWriter := GetLogWriter("standard")
 		stdBackend := logging.NewLogBackend(stdWriter, "", 0)
 
@@ -67,7 +68,7 @@ func InitLogger() {
 		logBackends = append(logBackends, logging.NewBackendFormatter(stdBackend, logging.MustStringFormatter(Fmt+"\n")))
 	}
 
-	if viper.GetString("log.error") != "off" {
+	if config.LogErrors.GetString() != "off" {
 		errWriter := GetLogWriter("error")
 		errBackend := logging.NewLogBackend(errWriter, "", 0)
 
@@ -86,7 +87,7 @@ func GetLogWriter(logfile string) (writer io.Writer) {
 	writer = os.Stderr // Set the default case to prevent nil pointer panics
 	switch viper.GetString("log." + logfile) {
 	case "file":
-		f, err := os.OpenFile(viper.GetString("log.path")+"/"+logfile+".log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		f, err := os.OpenFile(config.LogPath.GetString()+"/"+logfile+".log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 		if err != nil {
 			log.Fatal(err)
 		}

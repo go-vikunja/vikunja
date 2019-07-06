@@ -17,9 +17,9 @@
 package mail
 
 import (
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
 	"crypto/tls"
-	"github.com/spf13/viper"
 	"gopkg.in/gomail.v2"
 	"time"
 )
@@ -29,20 +29,20 @@ var Queue chan *gomail.Message
 
 // StartMailDaemon starts the mail daemon
 func StartMailDaemon() {
-	Queue = make(chan *gomail.Message, viper.GetInt("mailer.queuelength"))
+	Queue = make(chan *gomail.Message, config.MailerQueuelength.GetInt())
 
-	if !viper.GetBool("mailer.enabled") {
+	if !config.MailerEnabled.GetBool() {
 		return
 	}
 
-	if viper.GetString("mailer.host") == "" {
+	if config.MailerHost.GetString() == "" {
 		log.Log.Warning("Mailer seems to be not configured! Please see the config docs for more details.")
 		return
 	}
 
 	go func() {
-		d := gomail.NewDialer(viper.GetString("mailer.host"), viper.GetInt("mailer.port"), viper.GetString("mailer.username"), viper.GetString("mailer.password"))
-		d.TLSConfig = &tls.Config{InsecureSkipVerify: viper.GetBool("mailer.skiptlsverify")}
+		d := gomail.NewDialer(config.MailerHost.GetString(), config.MailerPort.GetInt(), config.MailerUsername.GetString(), config.MailerPassword.GetString())
+		d.TLSConfig = &tls.Config{InsecureSkipVerify: config.MailerSkipTLSVerify.GetBool()}
 
 		var s gomail.SendCloser
 		var err error
@@ -64,7 +64,7 @@ func StartMailDaemon() {
 				}
 				// Close the connection to the SMTP server if no email was sent in
 				// the last 30 seconds.
-			case <-time.After(viper.GetDuration("mailer.queuetimeout") * time.Second):
+			case <-time.After(config.MailerQueueTimeout.GetDuration() * time.Second):
 				if open {
 					if err := s.Close(); err != nil {
 						log.Log.Error("Error closing the mail server connection: %s\n", err)

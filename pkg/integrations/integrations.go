@@ -25,7 +25,6 @@ import (
 	"code.vikunja.io/web/handler"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo/v4"
-	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
@@ -75,7 +74,7 @@ var (
 
 func setupTestEnv() (e *echo.Echo, err error) {
 	config.InitConfig()
-	models.SetupTests(viper.GetString("service.rootpath"))
+	models.SetupTests(config.ServiceRootpath.GetString())
 
 	err = models.LoadFixtures()
 	if err != nil {
@@ -114,7 +113,7 @@ func addTokenToContext(t *testing.T, user *models.User, c echo.Context) {
 	assert.NoError(t, err)
 	// We send the string token through the parsing function to get a valid jwt.Token
 	tken, err := jwt.Parse(token, func(t *jwt.Token) (interface{}, error) {
-		return []byte(viper.GetString("service.JWTSecret")), nil
+		return []byte(config.ServiceJWTSecret.GetString()), nil
 	})
 	assert.NoError(t, err)
 	c.Set("user", tken)

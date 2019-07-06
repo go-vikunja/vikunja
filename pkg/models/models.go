@@ -17,6 +17,7 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
 	"encoding/gob"
@@ -24,7 +25,6 @@ import (
 	"github.com/go-xorm/xorm"
 	xrc "github.com/go-xorm/xorm-redis-cache"
 	_ "github.com/mattn/go-sqlite3" // Because.
-	"github.com/spf13/viper"
 )
 
 var (
@@ -61,13 +61,13 @@ func SetEngine() (err error) {
 
 	// Cache
 	// We have to initialize the cache here to avoid import cycles
-	if viper.GetBool("cache.enabled") {
-		switch viper.GetString("cache.type") {
+	if config.CacheEnabled.GetBool() {
+		switch config.CacheType.GetString() {
 		case "memory":
-			cacher := xorm.NewLRUCacher(xorm.NewMemoryStore(), viper.GetInt("cache.maxelementsize"))
+			cacher := xorm.NewLRUCacher(xorm.NewMemoryStore(), config.CacheMaxElementSize.GetInt())
 			x.SetDefaultCacher(cacher)
 		case "redis":
-			cacher := xrc.NewRedisCacher(viper.GetString("redis.host"), viper.GetString("redis.password"), xrc.DEFAULT_EXPIRATION, x.Logger())
+			cacher := xrc.NewRedisCacher(config.RedisEnabled.GetString(), config.RedisPassword.GetString(), xrc.DEFAULT_EXPIRATION, x.Logger())
 			x.SetDefaultCacher(cacher)
 			gob.Register(GetTables())
 		default:
@@ -85,7 +85,7 @@ func getLimitFromPageIndex(page int) (limit, start int) {
 		return 0, 0
 	}
 
-	limit = viper.GetInt("service.pagecount")
+	limit = config.ServicePageCount.GetInt()
 	start = limit * (page - 1)
 	return
 }

@@ -17,12 +17,12 @@
 package metrics
 
 import (
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/red"
 	"github.com/go-redis/redis"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
-	"github.com/spf13/viper"
 )
 
 var r *redis.Client
@@ -112,7 +112,7 @@ func SetCount(count int64, key string) error {
 
 // UpdateCount updates a count with a given amount
 func UpdateCount(update int64, key string) {
-	if !viper.GetBool("service.enablemetrics") {
+	if !config.ServiceEnableMetrics.GetBool() {
 		return
 	}
 	oldtotal, err := GetCount(key)

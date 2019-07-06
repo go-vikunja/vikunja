@@ -17,12 +17,12 @@
 package migration
 
 import (
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"github.com/go-xorm/xorm"
 	"github.com/olekukonko/tablewriter"
-	"github.com/spf13/viper"
 	"os"
 	"sort"
 	"src.techknowlogick.com/xormigrate"
@@ -103,7 +103,7 @@ func Rollback(migrationID string) {
 // Deletes a column from a table. All arguments are strings, to let them be standalone and not depending on any struct.
 func dropTableColum(x *xorm.Engine, tableName, col string) error {
 
-	switch viper.GetString("database.type") {
+	switch config.DatabaseType.GetString() {
 	case "sqlite":
 		log.Log.Warning("Unable to drop columns in SQLite")
 	case "mysql":

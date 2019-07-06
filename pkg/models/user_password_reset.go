@@ -17,9 +17,9 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/mail"
 	"code.vikunja.io/api/pkg/utils"
-	"github.com/spf13/viper"
 )
 
 // PasswordReset holds the data to reset a password
@@ -62,7 +62,7 @@ func UserPasswordReset(reset *PasswordReset) (err error) {
 	}
 
 	// Dont send a mail if we're testing
-	if !viper.GetBool("mailer.enabled") {
+	if !config.MailerEnabled.GetBool() {
 		return
 	}
 
@@ -103,7 +103,7 @@ func RequestUserPasswordResetToken(tr *PasswordTokenRequest) (err error) {
 	}
 
 	// Dont send a mail if we're testing
-	if !viper.GetBool("mailer.enabled") {
+	if !config.MailerEnabled.GetBool() {
 		return
 	}
 

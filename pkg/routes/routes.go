@@ -39,6 +39,7 @@
 package routes
 
 import (
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/metrics"
 	"code.vikunja.io/api/pkg/models"
@@ -52,7 +53,6 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	elog "github.com/labstack/gommon/log"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/spf13/viper"
 	"strings"
 )
 
@@ -88,7 +88,7 @@ func NewEcho() *echo.Echo {
 	e.HideBanner = true
 
 	if l, ok := e.Logger.(*elog.Logger); ok {
-		if viper.GetString("log.echo") == "off" {
+		if config.LogEcho.GetString() == "off" {
 			l.SetLevel(elog.OFF)
 		}
 		l.EnableColor()
@@ -97,7 +97,7 @@ func NewEcho() *echo.Echo {
 	}
 
 	// Logger
-	if viper.GetString("log.http") != "off" {
+	if config.LogHTTP.GetString() != "off" {
 		e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
 			Format: log.WebFmt + "\n",
 			Output: log.GetLogWriter("http"),
@@ -121,7 +121,7 @@ func NewEcho() *echo.Echo {
 // RegisterRoutes registers all routes for the application
 func RegisterRoutes(e *echo.Echo) {
 
-	if viper.GetBool("service.enablecaldav") {
+	if config.ServiceEnableCaldav.GetBool() {
 		// Caldav routes
 		wkg := e.Group("/.well-known")
 		wkg.Use(middleware.BasicAuth(caldavBasicAuth))
@@ -155,9 +155,9 @@ func registerAPIRoutes(a *echo.Group) {
 	a.GET("/docs", apiv1.RedocUI)
 
 	// Prometheus endpoint
-	if viper.GetBool("service.enablemetrics") {
+	if config.ServiceEnableMetrics.GetBool() {
 
-		if !viper.GetBool("redis.enabled") {
+		if !config.RedisEnabled.GetBool() {
 			log.Log.Fatal("You have to enable redis in order to use metrics")
 		}
 
@@ -217,10 +217,10 @@ func registerAPIRoutes(a *echo.Group) {
 
 	// ===== Routes with Authetification =====
 	// Authetification
-	a.Use(middleware.JWT([]byte(viper.GetString("service.JWTSecret"))))
+	a.Use(middleware.JWT([]byte(config.ServiceJWTSecret.GetString())))
 
 	// Middleware to collect metrics
-	if viper.GetBool("service.enablemetrics") {
+	if config.ServiceJWTSecret.GetBool() {
 		a.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
 			return func(c echo.Context) error {
 

@@ -17,11 +17,11 @@
 package v1
 
 import (
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/web/handler"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo/v4"
-	"github.com/spf13/viper"
 	"net/http"
 	"time"
 )
@@ -77,5 +77,5 @@ func CreateNewJWTTokenForUser(user *models.User) (token string, err error) {
 	claims["avatar"] = user.AvatarURL
 
 	// Generate encoded token and send it as response.
-	return t.SignedString([]byte(viper.GetString("service.JWTSecret")))
+	return t.SignedString([]byte(config.ServiceJWTSecret.GetString()))
 }
