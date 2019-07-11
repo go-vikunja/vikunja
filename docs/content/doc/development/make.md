@@ -22,6 +22,7 @@ These tasks are automatically run in our CI every time someone pushes to master 
 * `make ineffassign-check`
 * `make misspell-check`
 * `make goconst-check`
+* `make generate`
 * `make build`
 
 ### clean
@@ -63,6 +64,14 @@ make build
 {{< /highlight >}}
 
 Builds a `vikunja`-binary in the root directory of the repo for the platform it is run on.
+
+### Statically compile all templates into the binary
+
+{{< highlight bash >}}
+make generate
+{{< /highlight >}}
+
+This generates static code with all templates, meaning no template need to be referenced at runtime.
 
 ### Compress the built binary
 

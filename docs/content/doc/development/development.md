@@ -59,3 +59,10 @@ which will build a vikunja binary into the working directory. Writing test cases
 is highly encouraged and helps developers sleep at night.
 
 That’s it! You are ready to hack on Vikunja. Test changes, push them to the repository, and open a pull request.
+
+## Static assets
+
+Each Vikunja release contains all static assets directly compiled into the binary.
+To prevent this during development, use the `dev` tag when developing.
+
+See the [make docs](make.md#statically-compile-all-templates-into-the-binary) about how to compile with static assets for a release.

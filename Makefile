@@ -95,6 +95,10 @@ fmt-check:
 .PHONY: build
 build: $(EXECUTABLE)
 
+.PHONY: generate
+generate:
+	go generate code.vikunja.io/api/pkg/static
+
 $(EXECUTABLE): $(SOURCES)
 	go build $(GOFLAGS) $(EXTRA_GOFLAGS) -tags '$(TAGS)' -ldflags '-s -w $(LDFLAGS)' -o $@
 
@@ -147,8 +151,6 @@ release-compress:
 .PHONY: release-copy
 release-copy:
 	$(foreach file,$(wildcard $(DIST)/binaries/$(EXECUTABLE)-*),cp $(file) $(DIST)/release/$(notdir $(file));)
-	mkdir $(DIST)/release/templates -p
-	cp templates/ $(DIST)/templates/ -R
 
 .PHONY: release-check
 release-check:
@@ -156,7 +158,7 @@ release-check:
 
 .PHONY: release-os-package
 release-os-package:
-	$(foreach file,$(filter-out %.sha256,$(wildcard $(DIST)/release/$(EXECUTABLE)-*)),mkdir $(file)-full;mv $(file) $(file)-full/;	mv $(file).sha256 $(file)-full/; cp config.yml.sample $(file)-full/config.yml; cp $(DIST)/release/templates $(file)-full/ -R; cp LICENSE $(file)-full/; )
+	$(foreach file,$(filter-out %.sha256,$(wildcard $(DIST)/release/$(EXECUTABLE)-*)),mkdir $(file)-full;mv $(file) $(file)-full/;	mv $(file).sha256 $(file)-full/; cp config.yml.sample $(file)-full/config.yml; cp LICENSE $(file)-full/; )
 
 .PHONY: release-zip
 release-zip:
@@ -165,7 +167,7 @@ release-zip:
 # Builds a deb package using fpm from a previously created binary (using make build)
 .PHONY: build-deb
 build-deb:
-	fpm -s dir -t deb --url https://vikunja.io -n vikunja -v $(PKGVERSION) --license GPLv3 --directories /opt/vikunja --after-install ./build/after-install.sh --description 'Vikunja is an open-source todo application, written in Go. It lets you create lists,tasks and share them via teams or directly between users.' -m maintainers@vikunja.io ./$(BINLOCATION)=/opt/vikunja/vikunja ./templates=/opt/vikunja ./config.yml.sample=/etc/vikunja/config.yml;
+	fpm -s dir -t deb --url https://vikunja.io -n vikunja -v $(PKGVERSION) --license GPLv3 --directories /opt/vikunja --after-install ./build/after-install.sh --description 'Vikunja is an open-source todo application, written in Go. It lets you create lists,tasks and share them via teams or directly between users.' -m maintainers@vikunja.io ./$(BINLOCATION)=/opt/vikunja/vikunja ./config.yml.sample=/etc/vikunja/config.yml;
 
 .PHONY: reprepro
 reprepro:

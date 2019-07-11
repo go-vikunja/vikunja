@@ -29,6 +29,7 @@ steps:
     environment:
       GOFLAGS: '-mod=vendor'
     commands:
+      - make generate
       - make lint
       - make fmt-check
       # - make got-swag # Commented out until we figured out how to get this working on drone
@@ -148,6 +149,7 @@ steps:
     pull: true
     commands:
       - export PATH=$PATH:$GOPATH/bin
+      - make generate
       - make release-dirs
 
   - name: static-build-windows
@@ -353,6 +355,7 @@ steps:
     image: techknowlogick/xgo:latest
     pull: true
     commands:
+      - make generate
       - make release-dirs
 
   - name: static-build-windows

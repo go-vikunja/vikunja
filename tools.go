@@ -31,4 +31,6 @@ import (
 
 	_ "github.com/jgautheron/goconst/cmd/goconst"
 	_ "honnef.co/go/tools/cmd/staticcheck"
+
+	_ "github.com/shurcooL/vfsgen"
 )

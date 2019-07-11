@@ -143,6 +143,12 @@ github.com/samedi/caldav-go/global
 github.com/samedi/caldav-go/handlers
 github.com/samedi/caldav-go/files
 github.com/samedi/caldav-go/ixml
+# github.com/shurcooL/httpfs v0.0.0-20190527155220-6a4d4a70508b
+github.com/shurcooL/httpfs/html/vfstemplate
+github.com/shurcooL/httpfs/vfsutil
+github.com/shurcooL/httpfs/path/vfspath
+# github.com/shurcooL/vfsgen v0.0.0-20181202132449-6a9ea43bcacd
+github.com/shurcooL/vfsgen
 # github.com/spf13/afero v1.2.2
 github.com/spf13/afero
 github.com/spf13/afero/mem

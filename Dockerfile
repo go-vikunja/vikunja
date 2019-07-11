@@ -17,7 +17,7 @@ WORKDIR ${GOPATH}/src/code.vikunja.io/api
 
 #Checkout version if set
 RUN if [ -n "${VIKUNJA_VERSION}" ]; then git checkout "${VIKUNJA_VERSION}"; fi \
- && make clean build
+ && make clean generate build
 
 ###################
 # The actual image
@@ -27,7 +27,6 @@ FROM alpine:3.9
 LABEL maintainer="maintainers@vikunja.io"
 
 WORKDIR /app/vikunja/
-COPY --from=build-env /go/src/code.vikunja.io/api/templates ./templates
 COPY --from=build-env /go/src/code.vikunja.io/api/vikunja .
 RUN chown nobody:nogroup -R /app/vikunja
 ENV VIKUNJA_SERVICE_ROOTPATH=/app/vikunja/

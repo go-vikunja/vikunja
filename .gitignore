@@ -17,3 +17,4 @@ debian/
 logs/
 docs/public/
 docs/resources/
+pkg/static/templates_vfsdata.go

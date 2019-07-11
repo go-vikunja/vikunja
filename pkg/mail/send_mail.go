@@ -19,10 +19,12 @@ package mail
 import (
 	"bytes"
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/static"
 	"code.vikunja.io/api/pkg/utils"
-	"github.com/labstack/gommon/log"
+	"github.com/shurcooL/httpfs/html/vfstemplate"
 	"gopkg.in/gomail.v2"
-	"text/template"
+	"html/template"
 )
 
 // Opts holds infos for a mail
@@ -84,8 +86,10 @@ func SendMailWithTemplate(to, subject, tpl string, data map[string]interface{}) 
 	var htmlContent bytes.Buffer
 	var plainContent bytes.Buffer
 
-	t := &Template{
-		Templates: template.Must(template.ParseGlob(config.ServiceRootpath.GetString() + "/templates/mail/*.tmpl")),
+	t, err := vfstemplate.ParseGlob(static.Templates, nil, "*.tmpl")
+	if err != nil {
+		log.Log.Errorf("SendMailWithTemplate: ParseGlob: %v", err)
+		return
 	}
 
 	boundary := "np" + utils.MakeRandomString(13)
@@ -93,13 +97,13 @@ func SendMailWithTemplate(to, subject, tpl string, data map[string]interface{}) 
 	data["Boundary"] = boundary
 	data["FrontendURL"] = config.ServiceFrontendurl.GetString()
 
-	if err := t.Templates.ExecuteTemplate(&htmlContent, tpl+".html.tmpl", data); err != nil {
-		log.Error(3, "Template: %v", err)
+	if err := t.ExecuteTemplate(&htmlContent, tpl+".html.tmpl", data); err != nil {
+		log.Log.Errorf("ExecuteTemplate: %v", err)
 		return
 	}
 
-	if err := t.Templates.ExecuteTemplate(&plainContent, tpl+".plain.tmpl", data); err != nil {
-		log.Error(3, "Template: %v", err)
+	if err := t.ExecuteTemplate(&plainContent, tpl+".plain.tmpl", data); err != nil {
+		log.Log.Errorf("ExecuteTemplate: %v", err)
 		return
 	}
 
