@@ -294,24 +294,9 @@ steps:
       repo: vikunja/api
       auto_tag: true
 
-# Update the instance on try.vikunja.io
-  - name: rancher
-    image: peloton/drone-rancher
-    settings:
-      url: http://server01.kolaente.de:8080/v1
-      access_key:
-        from_secret: RANCHER_ACCESS_KEY
-      secret_key:
-        from_secret: RANCHER_SECRET_KEY
-      service: vikunja-dev/api
-      docker_image: vikunja/api
-      confirm: true
-    depends_on: [ docker ]
-
   - name: telegram
     image: appleboy/drone-telegram
     depends_on:
-      - rancher
       - release-latest
     settings:
       token:
@@ -562,15 +547,3 @@ steps:
       repo: vikunja/docs
       context: docs/
       dockerfile: docs/Dockerfile
-
-  - name: rancher
-    image: peloton/drone-rancher
-    settings:
-      url: http://server01.kolaente.de:8080/v1
-      access_key:
-        from_secret: RANCHER_ACCESS_KEY
-      secret_key:
-        from_secret: RANCHER_SECRET_KEY
-      service: vikunja-website/docs
-      docker_image: vikunja/docs
-      confirm: true
