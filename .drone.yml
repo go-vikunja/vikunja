@@ -77,20 +77,6 @@ steps:
       auto_tag: true
     depends_on: [ static ]
 
-  # Update the instance on try.vikunja.io
-  - name: rancher
-    image: peloton/drone-rancher
-    settings:
-      url: http://server01.kolaente.de:8080/v1
-      access_key:
-        from_secret: RANCHER_ACCESS_KEY
-      secret_key:
-        from_secret: RANCHER_SECRET_KEY
-      service: vikunja-dev/frontend
-      docker_image: vikunja/frontend
-      confirm: true
-    depends_on: [ docker ]
-
 ---
 kind: pipeline
 name: release-version
