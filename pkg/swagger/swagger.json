@@ -17,6 +17,27 @@
     "host": "{{.Host}}",
     "basePath": "/api/v1",
     "paths": {
+        "/info": {
+            "get": {
+                "description": "Returns the version, frontendurl and motd of Vikunja",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "service"
+                ],
+                "summary": "Info",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/v1.vikunjaInfos"
+                        }
+                    }
+                }
+            }
+        },
         "/labels": {
             "get": {
                 "security": [
@@ -24,7 +45,7 @@
                         "JWTKeyAuth": []
                     }
                 ],
-                "description": "Returns all labels which are either created by the user or associated with a task the user has at least read-access to.",
+                "description": "Returns an array with all assignees for this task.",
                 "consumes": [
                     "application/json"
                 ],
@@ -32,9 +53,9 @@
                     "application/json"
                 ],
                 "tags": [
-                    "labels"
+                    "assignees"
                 ],
-                "summary": "Get all labels a user has access to",
+                "summary": "Get all assignees for a task",
                 "parameters": [
                     {
                         "type": "integer",
@@ -44,18 +65,18 @@
                     },
                     {
                         "type": "string",
-                        "description": "Search labels by label text.",
+                        "description": "Search assignees by their username.",
                         "name": "s",
                         "in": "query"
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "The labels",
+                        "description": "The assignees",
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/models.Label"
+                                "$ref": "#/definitions/models.User"
                             }
                         }
                     },
@@ -3970,7 +3991,7 @@
                     "description": "A unix timestamp when this relation was last updated. You cannot change this value.",
                     "type": "integer"
                 },
-                "username": {
+                "userID": {
                     "description": "The username.",
                     "type": "string"
                 }
@@ -4397,6 +4418,20 @@
                     "type": "string"
                 },
                 "old_password": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1.vikunjaInfos": {
+            "type": "object",
+            "properties": {
+                "frontend_url": {
+                    "type": "string"
+                },
+                "motd": {
+                    "type": "string"
+                },
+                "version": {
                     "type": "string"
                 }
             }

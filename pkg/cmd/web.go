@@ -21,6 +21,7 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/routes"
 	"code.vikunja.io/api/pkg/swagger"
+	"code.vikunja.io/api/pkg/version"
 	"context"
 	"fmt"
 	"github.com/spf13/cobra"
@@ -39,10 +40,10 @@ var webCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 
 		// Version notification
-		fmt.Printf("Vikunja version %s\n", Version)
+		fmt.Printf("Vikunja version %s\n", version.Version)
 
 		// Additional swagger information
-		swagger.SwaggerInfo.Version = Version
+		swagger.SwaggerInfo.Version = version.Version
 
 		// Start the webserver
 		e := routes.NewEcho()

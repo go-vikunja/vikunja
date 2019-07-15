@@ -14,22 +14,10 @@
 //   You should have received a copy of the GNU General Public License
 //   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package cmd
+package version
 
-import (
-	"code.vikunja.io/api/pkg/version"
-	"fmt"
-	"github.com/spf13/cobra"
-)
+// This package holds the version info
+// It is an own package to avoid import cycles
 
-func init() {
-	rootCmd.AddCommand(versionCmd)
-}
-
-var versionCmd = &cobra.Command{
-	Use:   "version",
-	Short: "Print the version number of Vikunja",
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Vikunja api version " + version.Version)
-	},
-}
+// Version sets the version to be printed to the user. Gets overwritten by "make release" or "make build" with last git commit or tag.
+var Version = "0.7"

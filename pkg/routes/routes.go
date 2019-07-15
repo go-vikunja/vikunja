@@ -215,6 +215,9 @@ func registerAPIRoutes(a *echo.Group) {
 	a.POST("/user/password/reset", apiv1.UserResetPassword)
 	a.POST("/user/confirm", apiv1.UserConfirmEmail)
 
+	// Info endpoint
+	a.GET("/info", apiv1.Info)
+
 	// ===== Routes with Authetification =====
 	// Authetification
 	a.Use(middleware.JWT([]byte(config.ServiceJWTSecret.GetString())))

@@ -28,9 +28,6 @@ import (
 	"os"
 )
 
-// Version sets the version to be printed to the user. Gets overwritten by "make release" or "make build" with last git commit or tag.
-var Version = "0.1"
-
 func init() {
 	cobra.OnInitialize(initialize)
 }

@@ -312,7 +312,7 @@ definitions:
         description: A unix timestamp when this relation was last updated. You cannot
           change this value.
         type: integer
-      username:
+      userID:
         description: The username.
         type: string
     type: object
@@ -658,6 +658,15 @@ definitions:
       old_password:
         type: string
     type: object
+  v1.vikunjaInfos:
+    properties:
+      frontend_url:
+        type: string
+      motd:
+        type: string
+      version:
+        type: string
+    type: object
 host: '{{.Host}}'
 info:
   contact:
@@ -677,19 +686,32 @@ info:
   title: Vikunja API
   version: '{{.Version}}'
 paths:
+  /info:
+    get:
+      description: Returns the version, frontendurl and motd of Vikunja
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1.vikunjaInfos'
+            type: object
+      summary: Info
+      tags:
+      - service
   /labels:
     get:
       consumes:
       - application/json
-      description: Returns all labels which are either created by the user or associated
-        with a task the user has at least read-access to.
+      description: Returns an array with all assignees for this task.
       parameters:
       - description: The page number. Used for pagination. If not provided, the first
           page of results is returned.
         in: query
         name: p
         type: integer
-      - description: Search labels by label text.
+      - description: Search assignees by their username.
         in: query
         name: s
         type: string
@@ -697,10 +719,10 @@ paths:
       - application/json
       responses:
         "200":
-          description: The labels
+          description: The assignees
           schema:
             items:
-              $ref: '#/definitions/models.Label'
+              $ref: '#/definitions/models.User'
             type: array
         "500":
           description: Internal error
@@ -709,9 +731,9 @@ paths:
             type: object
       security:
       - JWTKeyAuth: []
-      summary: Get all labels a user has access to
+      summary: Get all assignees for a task
       tags:
-      - labels
+      - assignees
     put:
       consumes:
       - application/json

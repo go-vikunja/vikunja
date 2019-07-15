@@ -14,22 +14,32 @@
 //   You should have received a copy of the GNU General Public License
 //   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package cmd
+package v1
 
 import (
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/version"
-	"fmt"
-	"github.com/spf13/cobra"
+	"github.com/labstack/echo/v4"
+	"net/http"
 )
 
-func init() {
-	rootCmd.AddCommand(versionCmd)
+type vikunjaInfos struct {
+	Version     string `json:"version"`
+	FrontendURL string `json:"frontend_url"`
+	Motd        string `json:"motd"`
 }
 
-var versionCmd = &cobra.Command{
-	Use:   "version",
-	Short: "Print the version number of Vikunja",
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Vikunja api version " + version.Version)
-	},
+// Info is the handler to get infos about this vikunja instance
+// @Summary Info
+// @Description Returns the version, frontendurl and motd of Vikunja
+// @tags service
+// @Produce json
+// @Success 200 {object} v1.vikunjaInfos
+// @Router /info [get]
+func Info(c echo.Context) error {
+	return c.JSON(http.StatusOK, vikunjaInfos{
+		Version:     version.Version,
+		FrontendURL: config.ServiceFrontendurl.GetString(),
+		Motd:        config.ServiceMotd.GetString(),
+	})
 }

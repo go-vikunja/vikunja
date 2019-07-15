@@ -40,6 +40,7 @@ const (
 	ServiceRootpath      Key = `service.rootpath`
 	ServicePageCount     Key = `service.pagecount`
 	ServiceEnableMetrics Key = `service.enablemetrics`
+	ServiceMotd          Key = `service.motd`
 
 	DatabaseType                  Key = `database.type`
 	DatabaseHost                  Key = `database.host`
@@ -133,6 +134,8 @@ func InitConfig() {
 	ServiceRootpath.setDefault(exPath)
 	ServicePageCount.setDefault(50)
 	ServiceEnableMetrics.setDefault(false)
+	ServiceMotd.setDefault("")
+
 	// Database
 	DatabaseType.setDefault("sqlite")
 	DatabaseHost.setDefault("localhost")
