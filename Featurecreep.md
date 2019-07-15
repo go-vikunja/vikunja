@@ -123,6 +123,8 @@ Sorry for some of them being in German, I'll tranlate them at some point.
   * User & Teamright sollte sich für n rechte in einer Funktion testen lassen
 * [x] Colors for tasks
 * [x] /info endpoint, in dem dann zb die limits und version etc steht
+* [x] Bindata for templates
+* [x] User struct should have a field for the avatar url (-> gravatar md5 calculated by the backend)
 * [ ] Endpoint to get all possible rights with description and code
 * [ ] "Performance-Statistik" -> Wie viele Tasks man in bestimmten Zeiträumen so geschafft hat etc
 * [ ] IMAP-Integration -> Man schickt eine email an Vikunja und es macht daraus dann nen task -> Achtung missbrauchsmöglichkeiten
@@ -130,46 +132,49 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [ ] Reminders via mail
 * [ ] Mgl. zum Accountlöschen haben (so richtig krass mit emailverifiezierung und dass alle Privaten Listen gelöscht werden und man alle geteilten entweder wem übertragen muss oder  auf privat stellen)
 * [ ] Deprecate /namespaces/{id}/lists in favour of namespace.ReadOne() <-- should also return the lists
-* [ ] Bindata for templates
 * [ ] `GetUserByID` and the likes should return pointers
 * [ ] Colors for lists and namespaces -> Up to the frontend to implement these
 * [ ] Some kind of milestones for tasks
 * [ ] Create tasks from a text/markdown file (probably frontend only)
-* [ ] Debian package should have a service file
-* [ ] Downloads should be served via nginx (with theme?), minio should only be used for pushing artifacts.
-* [ ] User struct should have a field for the avatar url (-> gravatar md5 calculated by the backend)
 * [ ] All `ReadAll` methods should return the number of items per page, the number of items on this page, the total pages and the items
       -> Check if there's a way to do that efficently. Maybe only implementing it in the web handler.
 * [ ] List stats to see how many tasks are done, how many are there in total, how many people have acces to a list etc
-* [ ] Move lists between namespaces
-* [ ] Better caldav support
-  * [x] VTODO
-    * [x] Fix organizer prop
-  * [x] Depricate the events thing for now
-  * [x] PROPFIND/OPTIONS : caldav discovery
-  * [x] Create new tasks
-    * [x] Save uid from the client
-  * [x] Update tasks
-    * [x] Marking as done
-  * [x] Fix OPTIONS Requests to the rest of the api being broken
-  * [x] Parse all props defined in rfc5545
-    * [x] COMPLETED -> Need to actually save the time the task was completed
-  * [x] Whenever a task ist created/updated, update the `updated` prop on the list so the etag changes and clients get notified
-  * [x] Fix not all tasks being displayed (My guess: Something about that f*cking etag)
-  * [x] Delete tasks
-  * [x] Last modified
-  * [x] Content Size
-  * [x] Modify the caldav lib as proposed in the pr
-  * [x] Improve login performance, each request taking > 1.5 sec is just too much, maybe just use the default value for hash iterations in the login/register function
-  * [x] Only show priority when we have one
-  * [x] Show a proper calendar title
-  * [x] Fix home principal propfind stuff
-  * [x] Docs
-  * [x] Setting to disable caldav completely
-  * [ ] Make it work with the app
-  * [ ] Cleanup the whole mess I made with the handlers and storage providers etc -> Probably a good idea to create a seperate storage provider etc for lists and tasks
-  * [ ] Tests
-  * [ ] Check if only needed things are queried from the db when accessing dav (for ex. no need to get all tasks when we act
+* [ ] Move lists between namespaces -> Extra endpoint
+
+#### Better caldav support
+
+* [x] VTODO
+* [x] Fix organizer prop
+* [x] Depricate the events thing for now
+* [x] PROPFIND/OPTIONS : caldav discovery
+* [x] Create new tasks
+* [x] Save uid from the client
+* [x] Update tasks
+* [x] Marking as done
+* [x] Fix OPTIONS Requests to the rest of the api being broken
+* [x] Parse all props defined in rfc5545
+* [x] COMPLETED -> Need to actually save the time the task was completed
+* [x] Whenever a task ist created/updated, update the `updated` prop on the list so the etag changes and clients get notified
+* [x] Fix not all tasks being displayed (My guess: Something about that f*cking etag)
+* [x] Delete tasks
+* [x] Last modified
+* [x] Content Size
+* [x] Modify the caldav lib as proposed in the pr
+* [x] Improve login performance, each request taking > 1.5 sec is just too much, maybe just use the default value for hash iterations in the login/register function
+* [x] Only show priority when we have one
+* [x] Show a proper calendar title
+* [x] Fix home principal propfind stuff
+* [x] Docs
+* [x] Setting to disable caldav completely
+* [ ] Make it work with the app
+* [ ] Cleanup the whole mess I made with the handlers and storage providers etc -> Probably a good idea to create a seperate storage provider etc for lists and tasks
+* [ ] Tests
+* [ ] Check if only needed things are queried from the db when accessing dav (for ex. no need to get all tasks when we act
+
+### Infra 
+
+* [ ] Debian package should have a service file
+* [ ] Downloads should be served via nginx (with theme?), minio should only be used for pushing artifacts.
 
 ### Refactor 
 
@@ -182,8 +187,9 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [x] When giving a user access to a list/namespace, they should be reffered to by uuid, not numeric id
 * [x] Adding users to a team should also use uuid
 * [x] Check if the team/user really exist before updating them on lists/namespaces
-* [ ] Refactor config handling: Custom type "key" or so which holds the viper const and then mixins on that type to get the values from viper
+* [x] Refactor config handling: Custom type "key" or so which holds the viper const and then mixins on that type to get the values from viper
 * [ ] Have extra functions for logging to call so it is possible to call `log.Info` instead of `log.Log.Info`  
+* [ ] Less files, but with some kind of logic
 
 ### Linters
 
@@ -212,9 +218,9 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [ ] Description should be longtext
 * [ ] Attachments
 * [ ] Related tasks -> settable with a "kind" of relation like blocked, or just related or so
-* [ ] Pecent done - For now just a float, may later depend on how many sub tasks are done or so
+* [ ] Percent done - For now just a float, may later depend on how many sub tasks are done or so
 * [ ] Move tasks between lists
-* [ ] "Status" field (customizable statuses)
+* [ ] "Status" field for things like "New", "In Progress", "Done", etc (customizable statuses)
 
 #### Events
 
@@ -245,6 +251,8 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 
 ### Later
 
+* [ ] Public lists
+* [ ] Sorting lists by members, tasks, teams, last modified, etc (all possible fields)
 * [ ] Backgrounds for lists -> needs uploading and storing and so on
 * [ ] Plugins
 * [ ] Rename Namespaces to collections (or spaces?)
@@ -267,13 +275,11 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [ ] 2fa
 * [ ] Custom fields for tasks: Templates at List > Namespace > Global level, overwriting each other
 * [ ] Task-Templates in namespaces and lists (-> Multiple which are selectable)
-* [ ] Sorting lists by members, tasks, teams, last modified, etc (all possible fields)
 * [ ] "Favourite lists" -> A user can favourize boards which will then show up in a pseudonamespace
-* [ ] Public lists
 * [ ] Internal lists -> Only registered users can see the list
 * [ ] Rights management for both public and internal lists
 * [ ] Add new users via to a list which don't have an account yet, they'd get a link to sign up for vikunja.
-  * [ ]  Respect registration email domain limits
+  * [ ] Respect registration email domain limits
 * [ ] Export all data from Vikunja to json (related: `dump` cli command)
   * [ ] Per user and for the whole instance
 * [ ] Watch a (n internal) list -> Will get notification for everything
@@ -297,6 +303,7 @@ Sorry for some of them being in German, I'll tranlate them at some point.
   * [ ] Start/End dates
   * [ ] Assignees
   * [ ] Priorities
+  * [ ] Status
 * [ ] "Smart Lists", filtered lists, saved in some kind of pseudonamespace
   * [ ] Global and per list
 * [ ] Automate everything "If this event happens, do this"
