@@ -122,13 +122,13 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [x] Performance bei rechtchecks verbessern
   * User & Teamright sollte sich für n rechte in einer Funktion testen lassen
 * [x] Colors for tasks
+* [x] /info endpoint, in dem dann zb die limits und version etc steht
 * [ ] Endpoint to get all possible rights with description and code
 * [ ] "Performance-Statistik" -> Wie viele Tasks man in bestimmten Zeiträumen so geschafft hat etc
 * [ ] IMAP-Integration -> Man schickt eine email an Vikunja und es macht daraus dann nen task -> Achtung missbrauchsmöglichkeiten
 * [ ] In und Out webhooks, mit Templates vom Payload
 * [ ] Reminders via mail
 * [ ] Mgl. zum Accountlöschen haben (so richtig krass mit emailverifiezierung und dass alle Privaten Listen gelöscht werden und man alle geteilten entweder wem übertragen muss oder  auf privat stellen)
-* [ ] /info endpoint, in dem dann zb die limits und version etc steht
 * [ ] Deprecate /namespaces/{id}/lists in favour of namespace.ReadOne() <-- should also return the lists
 * [ ] Bindata for templates
 * [ ] `GetUserByID` and the likes should return pointers
