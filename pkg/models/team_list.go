@@ -48,3 +48,173 @@ type TeamWithRight struct {
 	Team  `xorm:"extends"`
 	Right Right `json:"right"`
 }
+
+// Create creates a new team <-> list relation
+// @Summary Add a team to a list
+// @Description Gives a team access to a list.
+// @tags sharing
+// @Accept json
+// @Produce json
+// @Security JWTKeyAuth
+// @Param id path int true "List ID"
+// @Param list body models.TeamList true "The team you want to add to the list."
+// @Success 200 {object} models.TeamList "The created team<->list relation."
+// @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid team list object provided."
+// @Failure 404 {object} code.vikunja.io/web.HTTPError "The team does not exist."
+// @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have access to the list"
+// @Failure 500 {object} models.Message "Internal error"
+// @Router /lists/{id}/teams [put]
+func (tl *TeamList) Create(a web.Auth) (err error) {
+
+	// Check if the rights are valid
+	if err = tl.Right.isValid(); err != nil {
+		return
+	}
+
+	// Check if the team exists
+	_, err = GetTeamByID(tl.TeamID)
+	if err != nil {
+		return
+	}
+
+	// Check if the list exists
+	l := &List{ID: tl.ListID}
+	if err := l.GetSimpleByID(); err != nil {
+		return err
+	}
+
+	// Check if the team is already on the list
+	exists, err := x.Where("team_id = ?", tl.TeamID).
+		And("list_id = ?", tl.ListID).
+		Get(&TeamList{})
+	if err != nil {
+		return
+	}
+	if exists {
+		return ErrTeamAlreadyHasAccess{tl.TeamID, tl.ListID}
+	}
+
+	// Insert the new team
+	_, err = x.Insert(tl)
+	if err != nil {
+		return err
+	}
+
+	err = updateListLastUpdated(l)
+	return
+}
+
+// Delete deletes a team <-> list relation based on the list & team id
+// @Summary Delete a team from a list
+// @Description Delets a team from a list. The team won't have access to the list anymore.
+// @tags sharing
+// @Produce json
+// @Security JWTKeyAuth
+// @Param listID path int true "List ID"
+// @Param teamID path int true "Team ID"
+// @Success 200 {object} models.Message "The team was successfully deleted."
+// @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have access to the list"
+// @Failure 404 {object} code.vikunja.io/web.HTTPError "Team or list does not exist."
+// @Failure 500 {object} models.Message "Internal error"
+// @Router /lists/{listID}/teams/{teamID} [delete]
+func (tl *TeamList) Delete() (err error) {
+
+	// Check if the team exists
+	_, err = GetTeamByID(tl.TeamID)
+	if err != nil {
+		return
+	}
+
+	// Check if the team has access to the list
+	has, err := x.Where("team_id = ? AND list_id = ?", tl.TeamID, tl.ListID).
+		Get(&TeamList{})
+	if err != nil {
+		return
+	}
+	if !has {
+		return ErrTeamDoesNotHaveAccessToList{TeamID: tl.TeamID, ListID: tl.ListID}
+	}
+
+	// Delete the relation
+	_, err = x.Where("team_id = ?", tl.TeamID).
+		And("list_id = ?", tl.ListID).
+		Delete(TeamList{})
+	if err != nil {
+		return err
+	}
+
+	err = updateListLastUpdated(&List{ID: tl.ListID})
+	return
+}
+
+// ReadAll implements the method to read all teams of a list
+// @Summary Get teams on a list
+// @Description Returns a list with all teams which have access on a given list.
+// @tags sharing
+// @Accept json
+// @Produce json
+// @Param id path int true "List ID"
+// @Param p query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
+// @Param s query string false "Search teams by its name."
+// @Security JWTKeyAuth
+// @Success 200 {array} models.TeamWithRight "The teams with their right."
+// @Failure 403 {object} code.vikunja.io/web.HTTPError "No right to see the list."
+// @Failure 500 {object} models.Message "Internal error"
+// @Router /lists/{id}/teams [get]
+func (tl *TeamList) ReadAll(search string, a web.Auth, page int) (interface{}, error) {
+	// Check if the user can read the namespace
+	l := &List{ID: tl.ListID}
+	canRead, err := l.CanRead(a)
+	if err != nil {
+		return nil, err
+	}
+	if !canRead {
+		return nil, ErrNeedToHaveListReadAccess{ListID: tl.ListID, UserID: a.GetID()}
+	}
+
+	// Get the teams
+	all := []*TeamWithRight{}
+	err = x.
+		Table("teams").
+		Join("INNER", "team_list", "team_id = teams.id").
+		Where("team_list.list_id = ?", tl.ListID).
+		Limit(getLimitFromPageIndex(page)).
+		Where("teams.name LIKE ?", "%"+search+"%").
+		Find(&all)
+
+	return all, err
+}
+
+// Update updates a team <-> list relation
+// @Summary Update a team <-> list relation
+// @Description Update a team <-> list relation. Mostly used to update the right that team has.
+// @tags sharing
+// @Accept json
+// @Produce json
+// @Param listID path int true "List ID"
+// @Param teamID path int true "Team ID"
+// @Param list body models.TeamList true "The team you want to update."
+// @Security JWTKeyAuth
+// @Success 200 {object} models.TeamList "The updated team <-> list relation."
+// @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have admin-access to the list"
+// @Failure 404 {object} code.vikunja.io/web.HTTPError "Team or list does not exist."
+// @Failure 500 {object} models.Message "Internal error"
+// @Router /lists/{listID}/teams/{teamID} [post]
+func (tl *TeamList) Update() (err error) {
+
+	// Check if the right is valid
+	if err := tl.Right.isValid(); err != nil {
+		return err
+	}
+
+	_, err = x.
+		Where("list_id = ? AND team_id = ?", tl.ListID, tl.TeamID).
+		Cols("right").
+		Update(tl)
+	if err != nil {
+		return err
+	}
+
+	err = updateListLastUpdated(&List{ID: tl.ListID})
+	return
+}

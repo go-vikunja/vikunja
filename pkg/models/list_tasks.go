@@ -17,8 +17,12 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/metrics"
+	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/web"
+	"github.com/imdario/mergo"
 	"sort"
+	"time"
 )
 
 // ListTask represents an task in a todolist
@@ -95,6 +99,148 @@ type TaskReminder struct {
 // TableName returns a pretty table name
 func (TaskReminder) TableName() string {
 	return "task_reminders"
+}
+
+// SortBy declares constants to sort
+type SortBy int
+
+// These are possible sort options
+const (
+	SortTasksByUnsorted   SortBy = -1
+	SortTasksByDueDateAsc        = iota
+	SortTasksByDueDateDesc
+	SortTasksByPriorityAsc
+	SortTasksByPriorityDesc
+)
+
+// ReadAll gets all tasks for a user
+// @Summary Get tasks
+// @Description Returns all tasks on any list the user has access to.
+// @tags task
+// @Accept json
+// @Produce json
+// @Param p query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
+// @Param s query string false "Search tasks by task text."
+// @Param sort query string false "The sorting parameter. Possible values to sort by are priority, prioritydesc, priorityasc, duedate, duedatedesc, duedateasc."
+// @Param startdate query int false "The start date parameter to filter by. Expects a unix timestamp. If no end date, but a start date is specified, the end date is set to the current time."
+// @Param enddate query int false "The end date parameter to filter by. Expects a unix timestamp. If no start date, but an end date is specified, the start date is set to the current time."
+// @Security JWTKeyAuth
+// @Success 200 {array} models.ListTask "The tasks"
+// @Failure 500 {object} models.Message "Internal error"
+// @Router /tasks/all [get]
+func (t *ListTask) ReadAll(search string, a web.Auth, page int) (interface{}, error) {
+	var sortby SortBy
+	switch t.Sorting {
+	case "priority":
+		sortby = SortTasksByPriorityDesc
+	case "prioritydesc":
+		sortby = SortTasksByPriorityDesc
+	case "priorityasc":
+		sortby = SortTasksByPriorityAsc
+	case "duedate":
+		sortby = SortTasksByDueDateDesc
+	case "duedatedesc":
+		sortby = SortTasksByDueDateDesc
+	case "duedateasc":
+		sortby = SortTasksByDueDateAsc
+	default:
+		sortby = SortTasksByUnsorted
+	}
+
+	return GetTasksByUser(search, &User{ID: a.GetID()}, page, sortby, time.Unix(t.StartDateSortUnix, 0), time.Unix(t.EndDateSortUnix, 0))
+}
+
+//GetTasksByUser returns all tasks for a user
+func GetTasksByUser(search string, u *User, page int, sortby SortBy, startDate time.Time, endDate time.Time) ([]*ListTask, error) {
+	// Get all lists
+	lists, err := getRawListsForUser("", u, page)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get all list IDs and get the tasks
+	var listIDs []int64
+	for _, l := range lists {
+		listIDs = append(listIDs, l.ID)
+	}
+
+	var orderby string
+	switch sortby {
+	case SortTasksByPriorityDesc:
+		orderby = "priority desc"
+	case SortTasksByPriorityAsc:
+		orderby = "priority asc"
+	case SortTasksByDueDateDesc:
+		orderby = "due_date_unix desc"
+	case SortTasksByDueDateAsc:
+		orderby = "due_date_unix asc"
+	}
+
+	taskMap := make(map[int64]*ListTask)
+
+	// Then return all tasks for that lists
+	if startDate.Unix() != 0 || endDate.Unix() != 0 {
+
+		startDateUnix := time.Now().Unix()
+		if startDate.Unix() != 0 {
+			startDateUnix = startDate.Unix()
+		}
+
+		endDateUnix := time.Now().Unix()
+		if endDate.Unix() != 0 {
+			endDateUnix = endDate.Unix()
+		}
+
+		if err := x.In("list_id", listIDs).
+			Where("text LIKE ?", "%"+search+"%").
+			And("((due_date_unix BETWEEN ? AND ?) OR "+
+				"(start_date_unix BETWEEN ? and ?) OR "+
+				"(end_date_unix BETWEEN ? and ?))", startDateUnix, endDateUnix, startDateUnix, endDateUnix, startDateUnix, endDateUnix).
+			And("(parent_task_id = 0 OR parent_task_id IS NULL)").
+			OrderBy(orderby).
+			Find(&taskMap); err != nil {
+			return nil, err
+		}
+	} else {
+		if err := x.In("list_id", listIDs).
+			Where("text LIKE ?", "%"+search+"%").
+			And("(parent_task_id = 0 OR parent_task_id IS NULL)").
+			OrderBy(orderby).
+			Find(&taskMap); err != nil {
+			return nil, err
+		}
+	}
+
+	tasks, err := addMoreInfoToTasks(taskMap)
+	if err != nil {
+		return nil, err
+	}
+	// Because the list is sorted by id which we don't want (since we're dealing with maps)
+	// we have to manually sort the tasks again here.
+	sortTasks(tasks, sortby)
+
+	return tasks, err
+}
+
+func sortTasks(tasks []*ListTask, by SortBy) {
+	switch by {
+	case SortTasksByPriorityDesc:
+		sort.Slice(tasks, func(i, j int) bool {
+			return tasks[i].Priority > tasks[j].Priority
+		})
+	case SortTasksByPriorityAsc:
+		sort.Slice(tasks, func(i, j int) bool {
+			return tasks[i].Priority < tasks[j].Priority
+		})
+	case SortTasksByDueDateDesc:
+		sort.Slice(tasks, func(i, j int) bool {
+			return tasks[i].DueDateUnix > tasks[j].DueDateUnix
+		})
+	case SortTasksByDueDateAsc:
+		sort.Slice(tasks, func(i, j int) bool {
+			return tasks[i].DueDateUnix < tasks[j].DueDateUnix
+		})
+	}
 }
 
 // GetTasksByListID gets all todotasks for a list
@@ -290,5 +436,326 @@ func addMoreInfoToTasks(taskMap map[int64]*ListTask) (tasks []*ListTask, err err
 		return tasks[i].ID < tasks[j].ID
 	})
 
+	return
+}
+
+// Create is the implementation to create a list task
+// @Summary Create a task
+// @Description Inserts a task into a list.
+// @tags task
+// @Accept json
+// @Produce json
+// @Security JWTKeyAuth
+// @Param id path int true "List ID"
+// @Param task body models.ListTask true "The task object"
+// @Success 200 {object} models.ListTask "The created task object."
+// @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid task object provided."
+// @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have access to the list"
+// @Failure 500 {object} models.Message "Internal error"
+// @Router /lists/{id} [put]
+func (t *ListTask) Create(a web.Auth) (err error) {
+
+	t.ID = 0
+
+	// Check if we have at least a text
+	if t.Text == "" {
+		return ErrListTaskCannotBeEmpty{}
+	}
+
+	// Check if the list exists
+	l := &List{ID: t.ListID}
+	if err = l.GetSimpleByID(); err != nil {
+		return
+	}
+
+	u, err := GetUserByID(a.GetID())
+	if err != nil {
+		return err
+	}
+
+	// Generate a uuid if we don't already have one
+	if t.UID == "" {
+		t.UID = utils.MakeRandomString(40)
+	}
+
+	t.CreatedByID = u.ID
+	t.CreatedBy = u
+	if _, err = x.Insert(t); err != nil {
+		return err
+	}
+
+	// Update the assignees
+	if err := t.updateTaskAssignees(t.Assignees); err != nil {
+		return err
+	}
+
+	// Update the reminders
+	if err := t.updateReminders(t.RemindersUnix); err != nil {
+		return err
+	}
+
+	metrics.UpdateCount(1, metrics.TaskCountKey)
+
+	err = updateListLastUpdated(&List{ID: t.ListID})
+	return
+}
+
+// Update updates a list task
+// @Summary Update a task
+// @Description Updates a task. This includes marking it as done. Assignees you pass will be updated, see their individual endpoints for more details on how this is done. To update labels, see the description of the endpoint.
+// @tags task
+// @Accept json
+// @Produce json
+// @Security JWTKeyAuth
+// @Param id path int true "Task ID"
+// @Param task body models.ListTask true "The task object"
+// @Success 200 {object} models.ListTask "The updated task object."
+// @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid task object provided."
+// @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have access to the task (aka its list)"
+// @Failure 500 {object} models.Message "Internal error"
+// @Router /tasks/{id} [post]
+func (t *ListTask) Update() (err error) {
+	// Check if the task exists
+	ot, err := GetTaskByID(t.ID)
+	if err != nil {
+		return
+	}
+
+	// Parent task cannot be the same as the current task
+	if t.ID == t.ParentTaskID {
+		return ErrParentTaskCannotBeTheSame{TaskID: t.ID}
+	}
+
+	// When a repeating task is marked as done, we update all deadlines and reminders and set it as undone
+	updateDone(&ot, t)
+
+	// Update the assignees
+	if err := ot.updateTaskAssignees(t.Assignees); err != nil {
+		return err
+	}
+
+	// Update the reminders
+	if err := ot.updateReminders(t.RemindersUnix); err != nil {
+		return err
+	}
+
+	// Update the labels
+	//
+	// Maybe FIXME:
+	// I've disabled this for now, because it requires significant changes in the way we do updates (using the
+	// Update() function. We need a user object in updateTaskLabels to check if the user has the right to see
+	// the label it is currently adding. To do this, we'll need to update the webhandler to let it pass the current
+	// user object (like it's already the case with the create method). However when we change it, that'll break
+	// a lot of existing code which we'll then need to refactor.
+	// This is why.
+	//
+	//if err := ot.updateTaskLabels(t.Labels); err != nil {
+	//	return err
+	//}
+	// set the labels to ot.Labels because our updateTaskLabels function puts the full label objects in it pretty nicely
+	// We also set this here to prevent it being overwritten later on.
+	//t.Labels = ot.Labels
+
+	// For whatever reason, xorm dont detect if done is updated, so we need to update this every time by hand
+	// Which is why we merge the actual task struct with the one we got from the
+	// The user struct overrides values in the actual one.
+	if err := mergo.Merge(&ot, t, mergo.WithOverride); err != nil {
+		return err
+	}
+
+	//////
+	// Mergo does ignore nil values. Because of that, we need to check all parameters and set the updated to
+	// nil/their nil value in the struct which is inserted.
+	////
+	// Done
+	if !t.Done {
+		ot.Done = false
+	}
+	// Priority
+	if t.Priority == 0 {
+		ot.Priority = 0
+	}
+	// Description
+	if t.Description == "" {
+		ot.Description = ""
+	}
+	// Due date
+	if t.DueDateUnix == 0 {
+		ot.DueDateUnix = 0
+	}
+	// Repeat after
+	if t.RepeatAfter == 0 {
+		ot.RepeatAfter = 0
+	}
+	// Parent task
+	if t.ParentTaskID == 0 {
+		ot.ParentTaskID = 0
+	}
+	// Start date
+	if t.StartDateUnix == 0 {
+		ot.StartDateUnix = 0
+	}
+	// End date
+	if t.EndDateUnix == 0 {
+		ot.EndDateUnix = 0
+	}
+	// Color
+	if t.HexColor == "" {
+		ot.HexColor = ""
+	}
+
+	_, err = x.ID(t.ID).
+		Cols("text",
+			"description",
+			"done",
+			"due_date_unix",
+			"repeat_after",
+			"parent_task_id",
+			"priority",
+			"start_date_unix",
+			"end_date_unix",
+			"hex_color",
+			"done_at_unix").
+		Update(ot)
+	*t = ot
+	if err != nil {
+		return err
+	}
+
+	err = updateListLastUpdated(&List{ID: t.ListID})
+	return
+}
+
+// This helper function updates the reminders and doneAtUnix of the *old* task (since that's the one we're inserting
+// with updated values into the db)
+func updateDone(oldTask *ListTask, newTask *ListTask) {
+	if !oldTask.Done && newTask.Done && oldTask.RepeatAfter > 0 {
+		oldTask.DueDateUnix = oldTask.DueDateUnix + oldTask.RepeatAfter // assuming we'll save the old task (merged)
+
+		for in, r := range oldTask.RemindersUnix {
+			oldTask.RemindersUnix[in] = r + oldTask.RepeatAfter
+		}
+
+		newTask.Done = false
+	}
+
+	// Update the "done at" timestamp
+	if !oldTask.Done && newTask.Done {
+		oldTask.DoneAtUnix = time.Now().Unix()
+	}
+	// When unmarking a task as done, reset the timestamp
+	if oldTask.Done && !newTask.Done {
+		oldTask.DoneAtUnix = 0
+	}
+}
+
+// Creates or deletes all necessary remindes without unneded db operations.
+// The parameter is a slice with unix dates which holds the new reminders.
+func (t *ListTask) updateReminders(reminders []int64) (err error) {
+
+	// If we're removing everything, delete all reminders right away
+	if len(reminders) == 0 && len(t.RemindersUnix) > 0 {
+		_, err = x.Where("task_id = ?", t.ID).
+			Delete(TaskReminder{})
+		t.RemindersUnix = nil
+		return err
+	}
+
+	// If we didn't change anything (from 0 to zero) don't do anything.
+	if len(reminders) == 0 && len(t.RemindersUnix) == 0 {
+		return nil
+	}
+
+	// Make a hashmap of the new reminders for easier comparison
+	newReminders := make(map[int64]*TaskReminder, len(reminders))
+	for _, newReminder := range reminders {
+		newReminders[newReminder] = &TaskReminder{ReminderUnix: newReminder}
+	}
+
+	// Get old reminders to delete
+	var found bool
+	var remindersToDelete []int64
+	oldReminders := make(map[int64]*TaskReminder, len(t.RemindersUnix))
+	for _, oldReminder := range t.RemindersUnix {
+		found = false
+		// If a new reminder is already in the list with old reminders
+		if newReminders[oldReminder] != nil {
+			found = true
+		}
+
+		// Put all reminders which are only on the old list to the trash
+		if !found {
+			remindersToDelete = append(remindersToDelete, oldReminder)
+		}
+
+		oldReminders[oldReminder] = &TaskReminder{ReminderUnix: oldReminder}
+	}
+
+	// Delete all reminders not passed
+	if len(remindersToDelete) > 0 {
+		_, err = x.In("reminder_unix", remindersToDelete).
+			And("task_id = ?", t.ID).
+			Delete(ListTaskAssginee{})
+		if err != nil {
+			return err
+		}
+	}
+
+	// Loop through our users and add them
+	for _, r := range reminders {
+		// Check if the reminder already exists and only inserts it if not
+		if oldReminders[r] != nil {
+			// continue outer loop
+			continue
+		}
+
+		// Add the new reminder
+		_, err = x.Insert(TaskReminder{TaskID: t.ID, ReminderUnix: r})
+		if err != nil {
+			return err
+		}
+	}
+
+	t.RemindersUnix = reminders
+	if len(reminders) == 0 {
+		t.RemindersUnix = nil
+	}
+
+	err = updateListLastUpdated(&List{ID: t.ListID})
+	return
+}
+
+// Delete implements the delete method for listTask
+// @Summary Delete a task
+// @Description Deletes a task from a list. This does not mean "mark it done".
+// @tags task
+// @Produce json
+// @Security JWTKeyAuth
+// @Param id path int true "Task ID"
+// @Success 200 {object} models.Message "The created task object."
+// @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid task ID provided."
+// @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have access to the list"
+// @Failure 500 {object} models.Message "Internal error"
+// @Router /tasks/{id} [delete]
+func (t *ListTask) Delete() (err error) {
+
+	// Check if it exists
+	_, err = GetTaskByID(t.ID)
+	if err != nil {
+		return
+	}
+
+	if _, err = x.ID(t.ID).Delete(ListTask{}); err != nil {
+		return err
+	}
+
+	// Delete assignees
+	if _, err = x.Where("task_id = ?", t.ID).Delete(ListTaskAssginee{}); err != nil {
+		return err
+	}
+
+	metrics.UpdateCount(-1, metrics.TaskCountKey)
+
+	err = updateListLastUpdated(&List{ID: t.ListID})
 	return
 }

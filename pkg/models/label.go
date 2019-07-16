@@ -18,6 +18,7 @@ package models
 
 import (
 	"code.vikunja.io/web"
+	"time"
 )
 
 // Label represents a label
@@ -47,4 +48,159 @@ type Label struct {
 // TableName makes a pretty table name
 func (Label) TableName() string {
 	return "labels"
+}
+
+// Create creates a new label
+// @Summary Create a label
+// @Description Creates a new label.
+// @tags labels
+// @Accept json
+// @Produce json
+// @Security JWTKeyAuth
+// @Param label body models.Label true "The label object"
+// @Success 200 {object} models.Label "The created label object."
+// @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid label object provided."
+// @Failure 500 {object} models.Message "Internal error"
+// @Router /labels [put]
+func (l *Label) Create(a web.Auth) (err error) {
+	u, err := getUserWithError(a)
+	if err != nil {
+		return
+	}
+
+	l.CreatedBy = u
+	l.CreatedByID = u.ID
+
+	_, err = x.Insert(l)
+	return
+}
+
+// Update updates a label
+// @Summary Update a label
+// @Description Update an existing label. The user needs to be the creator of the label to be able to do this.
+// @tags labels
+// @Accept json
+// @Produce json
+// @Security JWTKeyAuth
+// @Param id path int true "Label ID"
+// @Param label body models.Label true "The label object"
+// @Success 200 {object} models.Label "The created label object."
+// @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid label object provided."
+// @Failure 403 {object} code.vikunja.io/web.HTTPError "Not allowed to update the label."
+// @Failure 404 {object} code.vikunja.io/web.HTTPError "Label not found."
+// @Failure 500 {object} models.Message "Internal error"
+// @Router /labels/{id} [put]
+func (l *Label) Update() (err error) {
+	_, err = x.ID(l.ID).Update(l)
+	if err != nil {
+		return
+	}
+
+	err = l.ReadOne()
+	return
+}
+
+// Delete deletes a label
+// @Summary Delete a label
+// @Description Delete an existing label. The user needs to be the creator of the label to be able to do this.
+// @tags labels
+// @Accept json
+// @Produce json
+// @Security JWTKeyAuth
+// @Param id path int true "Label ID"
+// @Success 200 {object} models.Label "The label was successfully deleted."
+// @Failure 403 {object} code.vikunja.io/web.HTTPError "Not allowed to delete the label."
+// @Failure 404 {object} code.vikunja.io/web.HTTPError "Label not found."
+// @Failure 500 {object} models.Message "Internal error"
+// @Router /labels/{id} [delete]
+func (l *Label) Delete() (err error) {
+	_, err = x.ID(l.ID).Delete(&Label{})
+	return err
+}
+
+// ReadAll gets all labels a user can use
+// @Summary Get all labels a user has access to
+// @Description Returns all labels which are either created by the user or associated with a task the user has at least read-access to.
+// @tags labels
+// @Accept json
+// @Produce json
+// @Param p query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
+// @Param s query string false "Search labels by label text."
+// @Security JWTKeyAuth
+// @Success 200 {array} models.Label "The labels"
+// @Failure 500 {object} models.Message "Internal error"
+// @Router /labels [get]
+func (l *Label) ReadAll(search string, a web.Auth, page int) (ls interface{}, err error) {
+
+	u := &User{ID: a.GetID()}
+
+	// Get all tasks
+	taskIDs, err := getUserTaskIDs(u)
+	if err != nil {
+		return nil, err
+	}
+
+	return getLabelsByTaskIDs(&LabelByTaskIDsOptions{
+		Search:          search,
+		User:            u,
+		TaskIDs:         taskIDs,
+		GetUnusedLabels: true,
+	})
+}
+
+// ReadOne gets one label
+// @Summary Gets one label
+// @Description Returns one label by its ID.
+// @tags labels
+// @Accept json
+// @Produce json
+// @Param id path int true "Label ID"
+// @Security JWTKeyAuth
+// @Success 200 {object} models.Label "The label"
+// @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have access to the label"
+// @Failure 404 {object} code.vikunja.io/web.HTTPError "Label not found"
+// @Failure 500 {object} models.Message "Internal error"
+// @Router /labels/{id} [get]
+func (l *Label) ReadOne() (err error) {
+	label, err := getLabelByIDSimple(l.ID)
+	if err != nil {
+		return err
+	}
+	*l = *label
+
+	user, err := GetUserByID(l.CreatedByID)
+	if err != nil {
+		return err
+	}
+
+	l.CreatedBy = &user
+	return
+}
+
+func getLabelByIDSimple(labelID int64) (*Label, error) {
+	label := Label{}
+	exists, err := x.ID(labelID).Get(&label)
+	if err != nil {
+		return &label, err
+	}
+
+	if !exists {
+		return &Label{}, ErrLabelDoesNotExist{labelID}
+	}
+	return &label, err
+}
+
+// Helper method to get all task ids a user has
+func getUserTaskIDs(u *User) (taskIDs []int64, err error) {
+	tasks, err := GetTasksByUser("", u, -1, SortTasksByUnsorted, time.Unix(0, 0), time.Unix(0, 0))
+	if err != nil {
+		return nil, err
+	}
+
+	// make a slice of task ids
+	for _, t := range tasks {
+		taskIDs = append(taskIDs, t.ID)
+	}
+
+	return
 }

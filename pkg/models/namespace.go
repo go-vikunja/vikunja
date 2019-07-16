@@ -17,6 +17,7 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/metrics"
 	"code.vikunja.io/web"
 	"github.com/imdario/mergo"
 	"time"
@@ -251,4 +252,136 @@ func (n *Namespace) ReadAll(search string, a web.Auth, page int) (interface{}, e
 	}
 
 	return all, nil
+}
+
+// Create implements the creation method via the interface
+// @Summary Creates a new namespace
+// @Description Creates a new namespace.
+// @tags namespace
+// @Accept json
+// @Produce json
+// @Security JWTKeyAuth
+// @Param namespace body models.Namespace true "The namespace you want to create."
+// @Success 200 {object} models.Namespace "The created namespace."
+// @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid namespace object provided."
+// @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have access to the namespace"
+// @Failure 500 {object} models.Message "Internal error"
+// @Router /namespaces [put]
+func (n *Namespace) Create(a web.Auth) (err error) {
+	// Check if we have at least a name
+	if n.Name == "" {
+		return ErrNamespaceNameCannotBeEmpty{NamespaceID: 0, UserID: a.GetID()}
+	}
+	n.ID = 0 // This would otherwise prevent the creation of new lists after one was created
+
+	// Check if the User exists
+	n.Owner, err = GetUserByID(a.GetID())
+	if err != nil {
+		return
+	}
+	n.OwnerID = n.Owner.ID
+
+	// Insert
+	if _, err = x.Insert(n); err != nil {
+		return err
+	}
+
+	metrics.UpdateCount(1, metrics.NamespaceCountKey)
+	return
+}
+
+// Delete deletes a namespace
+// @Summary Deletes a namespace
+// @Description Delets a namespace
+// @tags namespace
+// @Produce json
+// @Security JWTKeyAuth
+// @Param id path int true "Namespace ID"
+// @Success 200 {object} models.Message "The namespace was successfully deleted."
+// @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid namespace object provided."
+// @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have access to the namespace"
+// @Failure 500 {object} models.Message "Internal error"
+// @Router /namespaces/{id} [delete]
+func (n *Namespace) Delete() (err error) {
+
+	// Check if the namespace exists
+	_, err = GetNamespaceByID(n.ID)
+	if err != nil {
+		return
+	}
+
+	// Delete the namespace
+	_, err = x.ID(n.ID).Delete(&Namespace{})
+	if err != nil {
+		return
+	}
+
+	// Delete all lists with their tasks
+	lists, err := GetListsByNamespaceID(n.ID, &User{})
+	if err != nil {
+		return
+	}
+	var listIDs []int64
+	// We need to do that for here because we need the list ids to delete two times:
+	// 1) to delete the lists itself
+	// 2) to delete the list tasks
+	for _, l := range lists {
+		listIDs = append(listIDs, l.ID)
+	}
+
+	// Delete tasks
+	_, err = x.In("list_id", listIDs).Delete(&ListTask{})
+	if err != nil {
+		return
+	}
+
+	// Delete the lists
+	_, err = x.In("id", listIDs).Delete(&List{})
+	if err != nil {
+		return
+	}
+
+	metrics.UpdateCount(-1, metrics.NamespaceCountKey)
+
+	return
+}
+
+// Update implements the update method via the interface
+// @Summary Updates a namespace
+// @Description Updates a namespace.
+// @tags namespace
+// @Accept json
+// @Produce json
+// @Security JWTKeyAuth
+// @Param id path int true "Namespace ID"
+// @Param namespace body models.Namespace true "The namespace with updated values you want to update."
+// @Success 200 {object} models.Namespace "The updated namespace."
+// @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid namespace object provided."
+// @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have access to the namespace"
+// @Failure 500 {object} models.Message "Internal error"
+// @Router /namespace/{id} [post]
+func (n *Namespace) Update() (err error) {
+	// Check if we have at least a name
+	if n.Name == "" {
+		return ErrNamespaceNameCannotBeEmpty{NamespaceID: n.ID}
+	}
+
+	// Check if the namespace exists
+	currentNamespace, err := GetNamespaceByID(n.ID)
+	if err != nil {
+		return
+	}
+
+	// Check if the (new) owner exists
+	n.OwnerID = n.Owner.ID
+	if currentNamespace.OwnerID != n.OwnerID {
+		n.Owner, err = GetUserByID(n.OwnerID)
+		if err != nil {
+			return
+		}
+	}
+
+	// Do the actual update
+	_, err = x.ID(currentNamespace.ID).Update(n)
+	return
 }

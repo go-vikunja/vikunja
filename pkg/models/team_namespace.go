@@ -42,3 +42,159 @@ type TeamNamespace struct {
 func (TeamNamespace) TableName() string {
 	return "team_namespaces"
 }
+
+// Create creates a new team <-> namespace relation
+// @Summary Add a team to a namespace
+// @Description Gives a team access to a namespace.
+// @tags sharing
+// @Accept json
+// @Produce json
+// @Security JWTKeyAuth
+// @Param id path int true "Namespace ID"
+// @Param namespace body models.TeamNamespace true "The team you want to add to the namespace."
+// @Success 200 {object} models.TeamNamespace "The created team<->namespace relation."
+// @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid team namespace object provided."
+// @Failure 404 {object} code.vikunja.io/web.HTTPError "The team does not exist."
+// @Failure 403 {object} code.vikunja.io/web.HTTPError "The team does not have access to the namespace"
+// @Failure 500 {object} models.Message "Internal error"
+// @Router /namespaces/{id}/teams [put]
+func (tn *TeamNamespace) Create(a web.Auth) (err error) {
+
+	// Check if the rights are valid
+	if err = tn.Right.isValid(); err != nil {
+		return
+	}
+
+	// Check if the team exists
+	_, err = GetTeamByID(tn.TeamID)
+	if err != nil {
+		return
+	}
+
+	// Check if the namespace exists
+	_, err = GetNamespaceByID(tn.NamespaceID)
+	if err != nil {
+		return
+	}
+
+	// Check if the team already has access to the namespace
+	exists, err := x.Where("team_id = ?", tn.TeamID).
+		And("namespace_id = ?", tn.NamespaceID).
+		Get(&TeamNamespace{})
+	if err != nil {
+		return
+	}
+	if exists {
+		return ErrTeamAlreadyHasAccess{tn.TeamID, tn.NamespaceID}
+	}
+
+	// Insert the new team
+	_, err = x.Insert(tn)
+	return
+}
+
+// Delete deletes a team <-> namespace relation based on the namespace & team id
+// @Summary Delete a team from a namespace
+// @Description Delets a team from a namespace. The team won't have access to the namespace anymore.
+// @tags sharing
+// @Produce json
+// @Security JWTKeyAuth
+// @Param namespaceID path int true "Namespace ID"
+// @Param teamID path int true "team ID"
+// @Success 200 {object} models.Message "The team was successfully deleted."
+// @Failure 403 {object} code.vikunja.io/web.HTTPError "The team does not have access to the namespace"
+// @Failure 404 {object} code.vikunja.io/web.HTTPError "team or namespace does not exist."
+// @Failure 500 {object} models.Message "Internal error"
+// @Router /namespaces/{namespaceID}/teams/{teamID} [delete]
+func (tn *TeamNamespace) Delete() (err error) {
+
+	// Check if the team exists
+	_, err = GetTeamByID(tn.TeamID)
+	if err != nil {
+		return
+	}
+
+	// Check if the team has access to the namespace
+	has, err := x.Where("team_id = ? AND namespace_id = ?", tn.TeamID, tn.NamespaceID).
+		Get(&TeamNamespace{})
+	if err != nil {
+		return
+	}
+	if !has {
+		return ErrTeamDoesNotHaveAccessToNamespace{TeamID: tn.TeamID, NamespaceID: tn.NamespaceID}
+	}
+
+	// Delete the relation
+	_, err = x.Where("team_id = ?", tn.TeamID).
+		And("namespace_id = ?", tn.NamespaceID).
+		Delete(TeamNamespace{})
+
+	return
+}
+
+// ReadAll implements the method to read all teams of a namespace
+// @Summary Get teams on a namespace
+// @Description Returns a namespace with all teams which have access on a given namespace.
+// @tags sharing
+// @Accept json
+// @Produce json
+// @Param id path int true "Namespace ID"
+// @Param p query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
+// @Param s query string false "Search teams by its name."
+// @Security JWTKeyAuth
+// @Success 200 {array} models.TeamWithRight "The teams with the right they have."
+// @Failure 403 {object} code.vikunja.io/web.HTTPError "No right to see the namespace."
+// @Failure 500 {object} models.Message "Internal error"
+// @Router /namespaces/{id}/teams [get]
+func (tn *TeamNamespace) ReadAll(search string, a web.Auth, page int) (interface{}, error) {
+	// Check if the user can read the namespace
+	n := Namespace{ID: tn.NamespaceID}
+	canRead, err := n.CanRead(a)
+	if err != nil {
+		return nil, err
+	}
+	if !canRead {
+		return nil, ErrNeedToHaveNamespaceReadAccess{NamespaceID: tn.NamespaceID, UserID: a.GetID()}
+	}
+
+	// Get the teams
+	all := []*TeamWithRight{}
+
+	err = x.Table("teams").
+		Join("INNER", "team_namespaces", "team_id = teams.id").
+		Where("team_namespaces.namespace_id = ?", tn.NamespaceID).
+		Limit(getLimitFromPageIndex(page)).
+		Where("teams.name LIKE ?", "%"+search+"%").
+		Find(&all)
+
+	return all, err
+}
+
+// Update updates a team <-> namespace relation
+// @Summary Update a team <-> namespace relation
+// @Description Update a team <-> namespace relation. Mostly used to update the right that team has.
+// @tags sharing
+// @Accept json
+// @Produce json
+// @Param namespaceID path int true "Namespace ID"
+// @Param teamID path int true "Team ID"
+// @Param namespace body models.TeamNamespace true "The team you want to update."
+// @Security JWTKeyAuth
+// @Success 200 {object} models.TeamNamespace "The updated team <-> namespace relation."
+// @Failure 403 {object} code.vikunja.io/web.HTTPError "The team does not have admin-access to the namespace"
+// @Failure 404 {object} code.vikunja.io/web.HTTPError "Team or namespace does not exist."
+// @Failure 500 {object} models.Message "Internal error"
+// @Router /namespaces/{namespaceID}/teams/{teamID} [post]
+func (tn *TeamNamespace) Update() (err error) {
+
+	// Check if the right is valid
+	if err := tn.Right.isValid(); err != nil {
+		return err
+	}
+
+	_, err = x.
+		Where("namespace_id = ? AND team_id = ?", tn.TeamID, tn.TeamID).
+		Cols("right").
+		Update(tn)
+	return
+}

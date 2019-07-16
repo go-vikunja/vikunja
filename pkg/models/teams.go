@@ -16,7 +16,10 @@
 
 package models
 
-import "code.vikunja.io/web"
+import (
+	"code.vikunja.io/api/pkg/metrics"
+	"code.vikunja.io/web"
+)
 
 // Team holds a team object
 type Team struct {
@@ -149,4 +152,122 @@ func (t *Team) ReadAll(search string, a web.Auth, page int) (interface{}, error)
 		Find(&all)
 
 	return all, err
+}
+
+// Create is the handler to create a team
+// @Summary Creates a new team
+// @Description Creates a new team in a given namespace. The user needs write-access to the namespace.
+// @tags team
+// @Accept json
+// @Produce json
+// @Security JWTKeyAuth
+// @Param team body models.Team true "The team you want to create."
+// @Success 200 {object} models.Team "The created team."
+// @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid team object provided."
+// @Failure 500 {object} models.Message "Internal error"
+// @Router /teams [put]
+func (t *Team) Create(a web.Auth) (err error) {
+	doer, err := getUserWithError(a)
+	if err != nil {
+		return err
+	}
+
+	// Check if we have a name
+	if t.Name == "" {
+		return ErrTeamNameCannotBeEmpty{}
+	}
+
+	t.CreatedByID = doer.ID
+	t.CreatedBy = *doer
+
+	_, err = x.Insert(t)
+	if err != nil {
+		return
+	}
+
+	// Insert the current user as member and admin
+	tm := TeamMember{TeamID: t.ID, Username: doer.Username, Admin: true}
+	if err = tm.Create(doer); err != nil {
+		return err
+	}
+
+	metrics.UpdateCount(1, metrics.TeamCountKey)
+	return
+}
+
+// Delete deletes a team
+// @Summary Deletes a team
+// @Description Delets a team. This will also remove the access for all users in that team.
+// @tags team
+// @Produce json
+// @Security JWTKeyAuth
+// @Param id path int true "Team ID"
+// @Success 200 {object} models.Message "The team was successfully deleted."
+// @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid team object provided."
+// @Failure 500 {object} models.Message "Internal error"
+// @Router /teams/{id} [delete]
+func (t *Team) Delete() (err error) {
+
+	// Delete the team
+	_, err = x.ID(t.ID).Delete(&Team{})
+	if err != nil {
+		return
+	}
+
+	// Delete team members
+	_, err = x.Where("team_id = ?", t.ID).Delete(&TeamMember{})
+	if err != nil {
+		return
+	}
+
+	// Delete team <-> namespace relations
+	_, err = x.Where("team_id = ?", t.ID).Delete(&TeamNamespace{})
+	if err != nil {
+		return
+	}
+
+	// Delete team <-> lists relations
+	_, err = x.Where("team_id = ?", t.ID).Delete(&TeamList{})
+	if err != nil {
+		return
+	}
+
+	metrics.UpdateCount(-1, metrics.TeamCountKey)
+	return
+}
+
+// Update is the handler to create a team
+// @Summary Updates a team
+// @Description Updates a team.
+// @tags team
+// @Accept json
+// @Produce json
+// @Security JWTKeyAuth
+// @Param id path int true "Team ID"
+// @Param team body models.Team true "The team with updated values you want to update."
+// @Success 200 {object} models.Team "The updated team."
+// @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid team object provided."
+// @Failure 500 {object} models.Message "Internal error"
+// @Router /teams/{id} [post]
+func (t *Team) Update() (err error) {
+	// Check if we have a name
+	if t.Name == "" {
+		return ErrTeamNameCannotBeEmpty{}
+	}
+
+	// Check if the team exists
+	_, err = GetTeamByID(t.ID)
+	if err != nil {
+		return
+	}
+
+	_, err = x.ID(t.ID).Update(t)
+	if err != nil {
+		return
+	}
+
+	// Get the newly updated team
+	*t, err = GetTeamByID(t.ID)
+
+	return
 }

@@ -43,3 +43,170 @@ type NamespaceUser struct {
 func (NamespaceUser) TableName() string {
 	return "users_namespace"
 }
+
+// Create creates a new namespace <-> user relation
+// @Summary Add a user to a namespace
+// @Description Gives a user access to a namespace.
+// @tags sharing
+// @Accept json
+// @Produce json
+// @Security JWTKeyAuth
+// @Param id path int true "Namespace ID"
+// @Param namespace body models.NamespaceUser true "The user you want to add to the namespace."
+// @Success 200 {object} models.NamespaceUser "The created user<->namespace relation."
+// @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid user namespace object provided."
+// @Failure 404 {object} code.vikunja.io/web.HTTPError "The user does not exist."
+// @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have access to the namespace"
+// @Failure 500 {object} models.Message "Internal error"
+// @Router /namespaces/{id}/users [put]
+func (nu *NamespaceUser) Create(a web.Auth) (err error) {
+	// Reset the id
+	nu.ID = 0
+
+	// Check if the right is valid
+	if err := nu.Right.isValid(); err != nil {
+		return err
+	}
+
+	// Check if the namespace exists
+	l, err := GetNamespaceByID(nu.NamespaceID)
+	if err != nil {
+		return
+	}
+
+	// Check if the user exists
+	user, err := GetUserByUsername(nu.Username)
+	if err != nil {
+		return err
+	}
+	nu.UserID = user.ID
+
+	// Check if the user already has access or is owner of that namespace
+	// We explicitly DO NOT check for teams here
+	if l.OwnerID == nu.UserID {
+		return ErrUserAlreadyHasNamespaceAccess{UserID: nu.UserID, NamespaceID: nu.NamespaceID}
+	}
+
+	exist, err := x.Where("namespace_id = ? AND user_id = ?", nu.NamespaceID, nu.UserID).Get(&NamespaceUser{})
+	if err != nil {
+		return
+	}
+	if exist {
+		return ErrUserAlreadyHasNamespaceAccess{UserID: nu.UserID, NamespaceID: nu.NamespaceID}
+	}
+
+	// Insert user <-> namespace relation
+	_, err = x.Insert(nu)
+
+	return
+}
+
+// Delete deletes a namespace <-> user relation
+// @Summary Delete a user from a namespace
+// @Description Delets a user from a namespace. The user won't have access to the namespace anymore.
+// @tags sharing
+// @Produce json
+// @Security JWTKeyAuth
+// @Param namespaceID path int true "Namespace ID"
+// @Param userID path int true "user ID"
+// @Success 200 {object} models.Message "The user was successfully deleted."
+// @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have access to the namespace"
+// @Failure 404 {object} code.vikunja.io/web.HTTPError "user or namespace does not exist."
+// @Failure 500 {object} models.Message "Internal error"
+// @Router /namespaces/{namespaceID}/users/{userID} [delete]
+func (nu *NamespaceUser) Delete() (err error) {
+
+	// Check if the user exists
+	user, err := GetUserByUsername(nu.Username)
+	if err != nil {
+		return
+	}
+	nu.UserID = user.ID
+
+	// Check if the user has access to the namespace
+	has, err := x.Where("user_id = ? AND namespace_id = ?", nu.UserID, nu.NamespaceID).
+		Get(&NamespaceUser{})
+	if err != nil {
+		return
+	}
+	if !has {
+		return ErrUserDoesNotHaveAccessToNamespace{NamespaceID: nu.NamespaceID, UserID: nu.UserID}
+	}
+
+	_, err = x.Where("user_id = ? AND namespace_id = ?", nu.UserID, nu.NamespaceID).
+		Delete(&NamespaceUser{})
+	return
+}
+
+// ReadAll gets all users who have access to a namespace
+// @Summary Get users on a namespace
+// @Description Returns a namespace with all users which have access on a given namespace.
+// @tags sharing
+// @Accept json
+// @Produce json
+// @Param id path int true "Namespace ID"
+// @Param p query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
+// @Param s query string false "Search users by its name."
+// @Security JWTKeyAuth
+// @Success 200 {array} models.UserWithRight "The users with the right they have."
+// @Failure 403 {object} code.vikunja.io/web.HTTPError "No right to see the namespace."
+// @Failure 500 {object} models.Message "Internal error"
+// @Router /namespaces/{id}/users [get]
+func (nu *NamespaceUser) ReadAll(search string, a web.Auth, page int) (interface{}, error) {
+	// Check if the user has access to the namespace
+	l := Namespace{ID: nu.NamespaceID}
+	canRead, err := l.CanRead(a)
+	if err != nil {
+		return nil, err
+	}
+	if !canRead {
+		return nil, ErrNeedToHaveNamespaceReadAccess{}
+	}
+
+	// Get all users
+	all := []*UserWithRight{}
+	err = x.
+		Join("INNER", "users_namespace", "user_id = users.id").
+		Where("users_namespace.namespace_id = ?", nu.NamespaceID).
+		Limit(getLimitFromPageIndex(page)).
+		Where("users.username LIKE ?", "%"+search+"%").
+		Find(&all)
+
+	return all, err
+}
+
+// Update updates a user <-> namespace relation
+// @Summary Update a user <-> namespace relation
+// @Description Update a user <-> namespace relation. Mostly used to update the right that user has.
+// @tags sharing
+// @Accept json
+// @Produce json
+// @Param namespaceID path int true "Namespace ID"
+// @Param userID path int true "User ID"
+// @Param namespace body models.NamespaceUser true "The user you want to update."
+// @Security JWTKeyAuth
+// @Success 200 {object} models.NamespaceUser "The updated user <-> namespace relation."
+// @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have admin-access to the namespace"
+// @Failure 404 {object} code.vikunja.io/web.HTTPError "User or namespace does not exist."
+// @Failure 500 {object} models.Message "Internal error"
+// @Router /namespaces/{namespaceID}/users/{userID} [post]
+func (nu *NamespaceUser) Update() (err error) {
+
+	// Check if the right is valid
+	if err := nu.Right.isValid(); err != nil {
+		return err
+	}
+
+	// Check if the user exists
+	user, err := GetUserByUsername(nu.Username)
+	if err != nil {
+		return err
+	}
+	nu.UserID = user.ID
+
+	_, err = x.
+		Where("namespace_id = ? AND user_id = ?", nu.NamespaceID, nu.UserID).
+		Cols("right").
+		Update(nu)
+	return
+}
