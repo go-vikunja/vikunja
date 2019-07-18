@@ -254,6 +254,7 @@ func registerAPIRoutes(a *echo.Group) {
 	a.POST("/lists/:list", listHandler.UpdateWeb)
 	a.DELETE("/lists/:list", listHandler.DeleteWeb)
 	a.PUT("/namespaces/:namespace/lists", listHandler.CreateWeb)
+	a.GET("/lists/:list/listusers", apiv1.ListUsersForList)
 
 	taskHandler := &handler.WebHandler{
 		EmptyStruct: func() handler.CObject {

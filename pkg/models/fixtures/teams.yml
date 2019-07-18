@@ -20,3 +20,21 @@
 - id: 7
   name: testteam4_admin_on_namespace9
   created_by_id: 1
+- id: 8
+  name: testteam8
+  created_by_id: 7
+- id: 9
+  name: testteam9
+  created_by_id: 7
+- id: 10
+  name: testteam10
+  created_by_id: 7
+- id: 11
+  name: testteam11
+  created_by_id: 7
+- id: 12
+  name: testteam12
+  created_by_id: 7
+- id: 13
+  name: testteam13
+  created_by_id: 7

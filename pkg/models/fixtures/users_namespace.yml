@@ -32,3 +32,21 @@
   right: 2
   updated: 0
   created: 0
+- id: 6
+  user_id: 11
+  namespace_id: 14
+  right: 0
+  updated: 0
+  created: 0
+- id: 7
+  user_id: 12
+  namespace_id: 14
+  right: 1
+  updated: 0
+  created: 0
+- id: 8
+  user_id: 13
+  namespace_id: 14
+  right: 2
+  updated: 0
+  created: 0

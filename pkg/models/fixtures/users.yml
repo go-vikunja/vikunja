@@ -46,3 +46,52 @@
   is_active: true
   updated: 0
   created: 0
+- id: 7
+  username: 'user7'
+  password: '$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.' # 1234
+  email: 'user7@example.com'
+  is_active: true
+  updated: 0
+  created: 0
+- id: 8
+  username: 'user8'
+  password: '$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.' # 1234
+  email: 'user8@example.com'
+  is_active: true
+  updated: 0
+  created: 0
+- id: 9
+  username: 'user9'
+  password: '$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.' # 1234
+  email: 'user9@example.com'
+  is_active: true
+  updated: 0
+  created: 0
+- id: 10
+  username: 'user10'
+  password: '$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.' # 1234
+  email: 'user10@example.com'
+  is_active: true
+  updated: 0
+  created: 0
+- id: 11
+  username: 'user11'
+  password: '$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.' # 1234
+  email: 'user11@example.com'
+  is_active: true
+  updated: 0
+  created: 0
+- id: 12
+  username: 'user12'
+  password: '$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.' # 1234
+  email: 'user12@example.com'
+  is_active: true
+  updated: 0
+  created: 0
+- id: 13
+  username: 'user13'
+  password: '$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.' # 1234
+  email: 'user14@example.com'
+  is_active: true
+  updated: 0
+  created: 0

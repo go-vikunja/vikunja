@@ -5,7 +5,7 @@ Authorization: Bearer {{auth_token}}
 ###
 
 # Get one list
-GET http://localhost:8080/api/v1/lists/1172
+GET http://localhost:8080/api/v1/lists/3
 Authorization: Bearer {{auth_token}}
 
 ###
@@ -82,11 +82,11 @@ Authorization: Bearer {{auth_token}}
 ###
 
 # Give a user access to that list
-PUT http://localhost:8080/api/v1/lists/1172/users
+PUT http://localhost:8080/api/v1/lists/3/users
 Authorization: Bearer {{auth_token}}
 Content-Type: application/json
 
-{"user_id":1, "right":1}
+{"userID":"user4", "right":1}
 
 ###
 
@@ -167,5 +167,11 @@ Content-Type: application/json
     {"id": 17}
   ]
 }
+
+###
+
+# Get all users who have access to a list
+GET http://localhost:8080/api/v1/lists/3/users
+Authorization: Bearer {{auth_token}}
 
 ###

@@ -134,3 +134,21 @@
   namespace_id: 12
   updated: 0
   created: 0
+# This list is owned by user 7, and several other users have access to it via different methods.
+# It is used to test the listUsers method.
+-
+  id: 18
+  title: Test18
+  description: Lorem Ipsum
+  owner_id: 7
+  namespace_id: 13
+  updated: 0
+  created: 0
+-
+  id: 19
+  title: Test19
+  description: Lorem Ipsum
+  owner_id: 7
+  namespace_id: 14
+  updated: 0
+  created: 0

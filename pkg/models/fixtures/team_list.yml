@@ -4,7 +4,6 @@
   right: 0
   updated: 0
   created: 0
-
 # This team has read only access on list 6
 - id: 2
   team_id: 2
@@ -12,7 +11,6 @@
   right: 0
   updated: 0
   created: 0
-
 # This team has write access on list 7
 - id: 3
   team_id: 3
@@ -20,11 +18,31 @@
   right: 1
   updated: 0
   created: 0
-
 # This team has admin access on list 8
 - id: 4
   team_id: 4
   list_id: 8
+  right: 2
+  updated: 0
+  created: 0
+# Readonly acces on list 19
+- id: 5
+  team_id: 8
+  list_id: 19
+  right: 2
+  updated: 0
+  created: 0
+# Write acces on list 19
+- id: 6
+  team_id: 9
+  list_id: 19
+  right: 1
+  updated: 0
+  created: 0
+# Admin acces on list 19
+- id: 7
+  team_id: 10
+  list_id: 19
   right: 2
   updated: 0
   created: 0

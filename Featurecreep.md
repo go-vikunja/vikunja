@@ -55,7 +55,7 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [x] Wir brauchen noch ne gute idee, wie man die listen kriegt, auf die man nur so Zugriff hat (ohne namespace)
     * Dazu am Besten nen pseudonamespace anlegen (id -1 oder so), der hat das dann alles
 * [x] Testing mit locust: https://locust.io/
-* [ ] Endpoint to get all users who have access to a list - regardless of via team, user share or via namespace
+* [x] Endpoint to get all users who have access to a list - regardless of via team, user share or via namespace
 
 #### Userstuff
 
@@ -188,8 +188,8 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [x] Adding users to a team should also use uuid
 * [x] Check if the team/user really exist before updating them on lists/namespaces
 * [x] Refactor config handling: Custom type "key" or so which holds the viper const and then mixins on that type to get the values from viper
+* [x] Less files, but with some kind of logic
 * [ ] Have extra functions for logging to call so it is possible to call `log.Info` instead of `log.Log.Info`  
-* [ ] Less files, but with some kind of logic
 
 ### Linters
 
