@@ -17,6 +17,15 @@ services:
       MYSQL_ROOT_PASSWORD: vikunjatest
       MYSQL_DATABASE: vikunjatest
 
+trigger:
+  branch:
+    include:
+      - master
+  event:
+    include:
+      - push
+      - pull_request
+
 steps:
   - name: fetch-tags
     image: docker:git
