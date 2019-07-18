@@ -116,31 +116,6 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [x] Backups
 * [x] Docs aufsetzen
 
-### General features
-
-* [x] Deps nach mod umziehen
-* [x] Performance bei rechtchecks verbessern
-  * User & Teamright sollte sich für n rechte in einer Funktion testen lassen
-* [x] Colors for tasks
-* [x] /info endpoint, in dem dann zb die limits und version etc steht
-* [x] Bindata for templates
-* [x] User struct should have a field for the avatar url (-> gravatar md5 calculated by the backend)
-* [ ] Endpoint to get all possible rights with description and code
-* [ ] "Performance-Statistik" -> Wie viele Tasks man in bestimmten Zeiträumen so geschafft hat etc
-* [ ] IMAP-Integration -> Man schickt eine email an Vikunja und es macht daraus dann nen task -> Achtung missbrauchsmöglichkeiten
-* [ ] In und Out webhooks, mit Templates vom Payload
-* [ ] Reminders via mail
-* [ ] Mgl. zum Accountlöschen haben (so richtig krass mit emailverifiezierung und dass alle Privaten Listen gelöscht werden und man alle geteilten entweder wem übertragen muss oder  auf privat stellen)
-* [ ] Deprecate /namespaces/{id}/lists in favour of namespace.ReadOne() <-- should also return the lists
-* [ ] `GetUserByID` and the likes should return pointers
-* [ ] Colors for lists and namespaces -> Up to the frontend to implement these
-* [ ] Some kind of milestones for tasks
-* [ ] Create tasks from a text/markdown file (probably frontend only)
-* [ ] All `ReadAll` methods should return the number of items per page, the number of items on this page, the total pages and the items
-      -> Check if there's a way to do that efficently. Maybe only implementing it in the web handler.
-* [ ] List stats to see how many tasks are done, how many are there in total, how many people have acces to a list etc
-* [ ] Move lists between namespaces -> Extra endpoint
-
 #### Better caldav support
 
 * [x] VTODO
@@ -171,6 +146,25 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [ ] Tests
 * [ ] Check if only needed things are queried from the db when accessing dav (for ex. no need to get all tasks when we act
 
+### General features
+
+* [x] Deps nach mod umziehen
+* [x] Performance bei rechtchecks verbessern
+  * User & Teamright sollte sich für n rechte in einer Funktion testen lassen
+* [x] Colors for tasks
+* [x] /info endpoint, in dem dann zb die limits und version etc steht
+* [x] Bindata for templates
+* [x] User struct should have a field for the avatar url (-> gravatar md5 calculated by the backend)
+* [ ] Endpoint to get all possible rights with description and code
+* [ ] Reminders via mail
+* [ ] Be able to "really" delete the account -> delete all lists and move ownership for others 
+* [ ] Deprecate /namespaces/{id}/lists in favour of namespace.ReadOne() <-- should also return the lists
+* [ ] Colors for lists and namespaces -> Up to the frontend to implement these
+* [ ] Create tasks from a text/markdown file (maybe frontend only)
+* [ ] All `ReadAll` methods should return the number of items per page, the number of items on this page, the total pages and the items
+      -> Check if there's a way to do that efficently. Maybe only implementing it in the web handler.
+* [ ] Move lists between namespaces -> Extra endpoint
+
 ### Infra 
 
 * [ ] Debian package should have a service file
@@ -190,6 +184,7 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [x] Refactor config handling: Custom type "key" or so which holds the viper const and then mixins on that type to get the values from viper
 * [x] Less files, but with some kind of logic
 * [ ] Have extra functions for logging to call so it is possible to call `log.Info` instead of `log.Log.Info`  
+* [ ] `GetUserByID` and the likes should return pointers
 
 ### Linters
 
@@ -258,6 +253,12 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [ ] Rename Namespaces to collections (or spaces?)
 * [ ] Collections n-n (one list can be in multiple collections)?
 * [ ] Rename lists to projects
+* [ ] "Performance-Statistik" -> Wie viele Tasks man in bestimmten Zeiträumen so geschafft hat etc
+* [ ] List stats to see how many tasks are done, how many are there in total, how many people have acces to a list etc
+* [ ] IMAP-Integration -> Man schickt eine email an Vikunja und es macht daraus dann nen task -> Achtung missbrauchsmöglichkeiten
+* [ ] In und Out webhooks, mit Templates vom Payload
+* [ ] Some kind of milestones for tasks
+* [ ] Get Weekly/Daily summary of the tasks to come per mail
 * [ ] Per-User limits of lists/namespaces
 * [ ] Admin-Interface to do stuff like settings and user management
   * [ ] Enable/Disable users
@@ -287,6 +288,7 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [ ] Task dependencies
 * [ ] Time tracking (possible plugin)
 * [ ] IFTTT
+* [ ] Task automation: Being able to create own flows "if this event is fired, do this" and so on
 * [ ] More sharing features (all of these with the already existing permissions)
   * [ ] Invite users per mail
   * [ ] Share a link with/without password
