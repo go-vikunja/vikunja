@@ -32,7 +32,7 @@ type ListTask struct {
 	// The task text. This is what you'll see in the list.
 	Text string `xorm:"varchar(250) not null" json:"text" valid:"runelength(3|250)" minLength:"3" maxLength:"250"`
 	// The task description.
-	Description string `xorm:"varchar(250)" json:"description" valid:"runelength(0|250)" maxLength:"250"`
+	Description string `xorm:"longtext null" json:"description" valid:"runelength(0|250)" maxLength:"250"`
 	// Whether a task is done or not.
 	Done bool `xorm:"INDEX null" json:"done"`
 	// The unix timestamp when a task was marked as done.

@@ -215,7 +215,7 @@ Sorry for some of them being in German, I'll tranlate them at some point.
   * [x] Check if something changed at all before running everything
   * [x] Editable via task edit, like assignees
   * [x] "One endpoint to rule them all" -> Array-addable
-* [ ] Description should be longtext
+* [x] Description should be longtext
 * [ ] Attachments
 * [ ] Related tasks -> settable with a "kind" of relation like blocked, or just related or so
 * [ ] Percent done - For now just a float, may later depend on how many sub tasks are done or so

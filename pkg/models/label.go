@@ -28,7 +28,7 @@ type Label struct {
 	// The title of the lable. You'll see this one on tasks associated with it.
 	Title string `xorm:"varchar(250) not null" json:"title" valid:"runelength(3|250)" minLength:"3" maxLength:"250"`
 	// The label description.
-	Description string `xorm:"varchar(250) null" json:"description" valid:"runelength(0|250)" maxLength:"250"`
+	Description string `xorm:"longtext null" json:"description" valid:"runelength(0|250)" maxLength:"250"`
 	// The color this label has
 	HexColor string `xorm:"varchar(6) null" json:"hex_color" valid:"runelength(0|6)" maxLength:"6"`
 

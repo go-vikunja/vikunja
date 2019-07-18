@@ -28,7 +28,7 @@ type Team struct {
 	// The name of this team.
 	Name string `xorm:"varchar(250) not null" json:"name" valid:"required,runelength(5|250)" minLength:"5" maxLength:"250"`
 	// The team's description.
-	Description string `xorm:"varchar(250)" json:"description" valid:"runelength(0|250)" minLength:"0" maxLength:"250"`
+	Description string `xorm:"longtext null" json:"description" valid:"runelength(0|250)" minLength:"0" maxLength:"250"`
 	CreatedByID int64  `xorm:"int(11) not null INDEX" json:"-"`
 
 	// The user who created this team.

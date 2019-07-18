@@ -117,6 +117,22 @@ func dropTableColum(x *xorm.Engine, tableName, col string) error {
 	return nil
 }
 
+// Modifies a column definition
+func modifyColumn(x *xorm.Engine, tableName, col, newDefinition string) error {
+	switch config.DatabaseType.GetString() {
+	case "sqlite":
+		log.Log.Warning("Unable to modify columns in SQLite")
+	case "mysql":
+		_, err := x.Exec("ALTER TABLE " + tableName + " MODIFY COLUMN " + col + " " + newDefinition)
+		if err != nil {
+			return err
+		}
+	default:
+		log.Log.Fatal("Unknown db.")
+	}
+	return nil
+}
+
 func initSchema(tx *xorm.Engine) error {
 	return tx.Sync2(
 		models.GetTables()...,
