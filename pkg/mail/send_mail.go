@@ -88,7 +88,7 @@ func SendMailWithTemplate(to, subject, tpl string, data map[string]interface{}) 
 
 	t, err := vfstemplate.ParseGlob(static.Templates, nil, "*.tmpl")
 	if err != nil {
-		log.Log.Errorf("SendMailWithTemplate: ParseGlob: %v", err)
+		log.Errorf("SendMailWithTemplate: ParseGlob: %v", err)
 		return
 	}
 
@@ -98,12 +98,12 @@ func SendMailWithTemplate(to, subject, tpl string, data map[string]interface{}) 
 	data["FrontendURL"] = config.ServiceFrontendurl.GetString()
 
 	if err := t.ExecuteTemplate(&htmlContent, tpl+".html.tmpl", data); err != nil {
-		log.Log.Errorf("ExecuteTemplate: %v", err)
+		log.Errorf("ExecuteTemplate: %v", err)
 		return
 	}
 
 	if err := t.ExecuteTemplate(&plainContent, tpl+".plain.tmpl", data); err != nil {
-		log.Log.Errorf("ExecuteTemplate: %v", err)
+		log.Errorf("ExecuteTemplate: %v", err)
 		return
 	}
 

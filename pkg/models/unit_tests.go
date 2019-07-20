@@ -42,7 +42,7 @@ func SetupTests(pathToRoot string) {
 	var err error
 	fixturesDir := filepath.Join(pathToRoot, "pkg", "models", "fixtures")
 	if err = createTestEngine(fixturesDir); err != nil {
-		log.Log.Fatalf("Error creating test engine: %v\n", err)
+		log.Fatalf("Error creating test engine: %v\n", err)
 	}
 
 	// Start the pseudo mail queue
@@ -50,7 +50,7 @@ func SetupTests(pathToRoot string) {
 
 	// Create test database
 	if err = LoadFixtures(); err != nil {
-		log.Log.Fatalf("Error preparing test database: %v", err.Error())
+		log.Fatalf("Error preparing test database: %v", err.Error())
 	}
 }
 

@@ -48,7 +48,7 @@ func ListHandler(c echo.Context) error {
 
 	u, err := getBasicAuthUserFromContext(c)
 	if err != nil {
-		log.Log.Error(err)
+		log.Error(err)
 		return echo.ErrInternalServerError
 	}
 
@@ -66,13 +66,13 @@ func ListHandler(c echo.Context) error {
 	if vtodo != "" && strings.HasPrefix(vtodo, `BEGIN:VCALENDAR`) {
 		storage.task, err = parseTaskFromVTODO(vtodo)
 		if err != nil {
-			log.Log.Error(err)
+			log.Error(err)
 			return echo.ErrInternalServerError
 		}
 	}
 
-	log.Log.Debugf("[CALDAV] Request Body: %v\n", string(body))
-	log.Log.Debugf("[CALDAV] Request Headers: %v\n", c.Request().Header)
+	log.Debugf("[CALDAV] Request Body: %v\n", string(body))
+	log.Debugf("[CALDAV] Request Headers: %v\n", c.Request().Header)
 
 	caldav.SetupStorage(storage)
 	caldav.SetupUser("dav/lists")
@@ -91,7 +91,7 @@ func TaskHandler(c echo.Context) error {
 
 	u, err := getBasicAuthUserFromContext(c)
 	if err != nil {
-		log.Log.Error(err)
+		log.Error(err)
 		return echo.ErrInternalServerError
 	}
 
@@ -114,7 +114,7 @@ func TaskHandler(c echo.Context) error {
 func PrincipalHandler(c echo.Context) error {
 	u, err := getBasicAuthUserFromContext(c)
 	if err != nil {
-		log.Log.Error(err)
+		log.Error(err)
 		return echo.ErrInternalServerError
 	}
 
@@ -128,8 +128,8 @@ func PrincipalHandler(c echo.Context) error {
 	// Restore the io.ReadCloser to its original state
 	c.Request().Body = ioutil.NopCloser(bytes.NewBuffer(body))
 
-	log.Log.Debugf("[CALDAV] Request Body: %v\n", string(body))
-	log.Log.Debugf("[CALDAV] Request Headers: %v\n", c.Request().Header)
+	log.Debugf("[CALDAV] Request Body: %v\n", string(body))
+	log.Debugf("[CALDAV] Request Headers: %v\n", c.Request().Header)
 
 	caldav.SetupStorage(storage)
 	caldav.SetupUser("dav/principals/" + u.Username)
@@ -144,7 +144,7 @@ func PrincipalHandler(c echo.Context) error {
 func EntryHandler(c echo.Context) error {
 	u, err := getBasicAuthUserFromContext(c)
 	if err != nil {
-		log.Log.Error(err)
+		log.Error(err)
 		return echo.ErrInternalServerError
 	}
 
@@ -158,8 +158,8 @@ func EntryHandler(c echo.Context) error {
 	// Restore the io.ReadCloser to its original state
 	c.Request().Body = ioutil.NopCloser(bytes.NewBuffer(body))
 
-	log.Log.Debugf("[CALDAV] Request Body: %v\n", string(body))
-	log.Log.Debugf("[CALDAV] Request Headers: %v\n", c.Request().Header)
+	log.Debugf("[CALDAV] Request Body: %v\n", string(body))
+	log.Debugf("[CALDAV] Request Headers: %v\n", c.Request().Header)
 
 	caldav.SetupStorage(storage)
 	caldav.SetupUser("dav/principals/" + u.Username)

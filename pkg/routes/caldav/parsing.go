@@ -118,7 +118,7 @@ func caldavTimeToUnixTimestamp(tstring string) int64 {
 
 	t, err := time.Parse(caldav.DateFormat, tstring)
 	if err != nil {
-		log.Log.Warningf("Error while parsing caldav time %s to unix time: %s", tstring, err)
+		log.Warningf("Error while parsing caldav time %s to unix time: %s", tstring, err)
 		return 0
 	}
 	return t.Unix()

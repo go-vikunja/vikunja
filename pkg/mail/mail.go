@@ -36,7 +36,7 @@ func StartMailDaemon() {
 	}
 
 	if config.MailerHost.GetString() == "" {
-		log.Log.Warning("Mailer seems to be not configured! Please see the config docs for more details.")
+		log.Warning("Mailer seems to be not configured! Please see the config docs for more details.")
 		return
 	}
 
@@ -55,21 +55,21 @@ func StartMailDaemon() {
 				}
 				if !open {
 					if s, err = d.Dial(); err != nil {
-						log.Log.Error("Error during connect to smtp server: %s", err)
+						log.Error("Error during connect to smtp server: %s", err)
 					}
 					open = true
 				}
 				if err := gomail.Send(s, m); err != nil {
-					log.Log.Error("Error when sending mail: %s", err)
+					log.Error("Error when sending mail: %s", err)
 				}
 				// Close the connection to the SMTP server if no email was sent in
 				// the last 30 seconds.
 			case <-time.After(config.MailerQueueTimeout.GetDuration() * time.Second):
 				if open {
 					if err := s.Close(); err != nil {
-						log.Log.Error("Error closing the mail server connection: %s\n", err)
+						log.Error("Error closing the mail server connection: %s\n", err)
 					}
-					log.Log.Infof("Closed connection to mailserver")
+					log.Infof("Closed connection to mailserver")
 					open = false
 				}
 			}

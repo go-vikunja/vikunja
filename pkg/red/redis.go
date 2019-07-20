@@ -31,7 +31,7 @@ func InitRedis() {
 	}
 
 	if config.RedisHost.GetString() == "" {
-		log.Log.Fatal("No redis host provided.")
+		log.Fatal("No redis host provided.")
 	}
 
 	r = redis.NewClient(&redis.Options{
@@ -42,9 +42,9 @@ func InitRedis() {
 
 	err := r.Ping().Err()
 	if err != nil {
-		log.Log.Fatal(err.Error())
+		log.Fatal(err.Error())
 	}
-	log.Log.Debug("Redis initialized")
+	log.Debug("Redis initialized")
 }
 
 // GetRedis returns a pointer to a redis client

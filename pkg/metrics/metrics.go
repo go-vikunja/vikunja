@@ -117,11 +117,11 @@ func UpdateCount(update int64, key string) {
 	}
 	oldtotal, err := GetCount(key)
 	if err != nil {
-		log.Log.Error(err.Error())
+		log.Error(err.Error())
 	}
 
 	err = SetCount(oldtotal+update, key)
 	if err != nil {
-		log.Log.Error(err.Error())
+		log.Error(err.Error())
 	}
 }

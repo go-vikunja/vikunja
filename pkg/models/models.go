@@ -55,7 +55,7 @@ func GetTables() []interface{} {
 func SetEngine() (err error) {
 	x, err = db.CreateDBEngine()
 	if err != nil {
-		log.Log.Criticalf("Could not connect to db: %v", err.Error())
+		log.Criticalf("Could not connect to db: %v", err.Error())
 		return
 	}
 
@@ -71,7 +71,7 @@ func SetEngine() (err error) {
 			x.SetDefaultCacher(cacher)
 			gob.Register(GetTables())
 		default:
-			log.Log.Info("Did not find a valid cache type. Caching disabled. Please refer to the docs for poosible cache types.")
+			log.Info("Did not find a valid cache type. Caching disabled. Please refer to the docs for poosible cache types.")
 		}
 	}
 

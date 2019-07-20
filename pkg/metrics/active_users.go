@@ -45,7 +45,7 @@ func init() {
 
 		allActiveUsers, err := GetActiveUsers()
 		if err != nil {
-			log.Log.Error(err.Error())
+			log.Error(err.Error())
 		}
 		activeUsersCount := 0
 		for _, u := range allActiveUsers {

@@ -72,7 +72,7 @@ func initialize() {
 	// Set Engine
 	err := models.SetEngine()
 	if err != nil {
-		log.Log.Fatal(err.Error())
+		log.Fatal(err.Error())
 	}
 
 	// Start the mail daemon

@@ -35,8 +35,8 @@ const WebFmt = `${time_rfc3339_nano}: WEB ` + "\t" + `▶ ${remote_ip} ${id} ${m
 // Fmt is the general log format
 const Fmt = `%{color}%{time:` + time.RFC3339Nano + `}: %{level}` + "\t" + `▶ %{shortpkg}/%{shortfunc} %{id:03x}%{color:reset} %{message}`
 
-// Log is the handler for the logger
-var Log = logging.MustGetLogger("vikunja")
+// loginstance is the instance of the logger which is used under the hood to log
+var logInstance = logging.MustGetLogger("vikunja")
 
 // InitLogger initializes the global log handler
 func InitLogger() {
@@ -99,4 +99,72 @@ func GetLogWriter(logfile string) (writer io.Writer) {
 		writer = os.Stdout
 	}
 	return
+}
+
+// GetLogger returns the logging instance. DO NOT USE THIS TO LOG STUFF.
+func GetLogger() *logging.Logger {
+	return logInstance
+}
+
+/////
+// The following functions are to be used as an "eye-candy", so one can just write log.Error() instead of log.Log.Error()
+
+// Debug is for debug messages
+func Debug(args ...interface{}) {
+	logInstance.Debug(args)
+}
+
+// Debugf is for debug messages
+func Debugf(format string, args ...interface{}) {
+	logInstance.Debugf(format, args)
+}
+
+// Info is for info messages
+func Info(args ...interface{}) {
+	logInstance.Info(args)
+}
+
+// Infof is for info messages
+func Infof(format string, args ...interface{}) {
+	logInstance.Infof(format, args)
+}
+
+// Error is for error messages
+func Error(args ...interface{}) {
+	logInstance.Error(args)
+}
+
+// Errorf is for error messages
+func Errorf(format string, args ...interface{}) {
+	logInstance.Errorf(format, args)
+}
+
+// Warning is for warning messages
+func Warning(args ...interface{}) {
+	logInstance.Warning(args)
+}
+
+// Warningf is for warning messages
+func Warningf(format string, args ...interface{}) {
+	logInstance.Warningf(format, args)
+}
+
+// Critical is for critical messages
+func Critical(args ...interface{}) {
+	logInstance.Critical(args)
+}
+
+// Criticalf is for critical messages
+func Criticalf(format string, args ...interface{}) {
+	logInstance.Critical(format, args)
+}
+
+// Fatal is for fatal messages
+func Fatal(args ...interface{}) {
+	logInstance.Fatal(args)
+}
+
+// Fatalf is for fatal messages
+func Fatalf(format string, args ...interface{}) {
+	logInstance.Fatal(format, args)
 }

@@ -387,7 +387,7 @@ func (vcls *VikunjaCaldavListStorage) getListRessource(isCollection bool) (rr Vi
 		return
 	}
 	if !can {
-		log.Log.Errorf("User %v tried to access a caldav resource (List %v) which they are not allowed to access", vcls.user.Username, vcls.list.ID)
+		log.Errorf("User %v tried to access a caldav resource (List %v) which they are not allowed to access", vcls.user.Username, vcls.list.ID)
 		return rr, models.ErrUserDoesNotHaveAccessToList{ListID: vcls.list.ID}
 	}
 	err = vcls.list.ReadOne()

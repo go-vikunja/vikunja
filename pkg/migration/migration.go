@@ -39,7 +39,7 @@ func initMigration(x *xorm.Engine) *xormigrate.Xormigrate {
 		var err error
 		x, err = db.CreateDBEngine()
 		if err != nil {
-			log.Log.Criticalf("Could not connect to db: %v", err.Error())
+			log.Criticalf("Could not connect to db: %v", err.Error())
 			return nil
 		}
 	}
@@ -61,21 +61,21 @@ func Migrate(x *xorm.Engine) {
 	m := initMigration(x)
 	err := m.Migrate()
 	if err != nil {
-		log.Log.Fatalf("Migration failed: %v", err)
+		log.Fatalf("Migration failed: %v", err)
 	}
-	log.Log.Info("Ran all migrations successfully.")
+	log.Info("Ran all migrations successfully.")
 }
 
 // ListMigrations pretty-prints a list with all migrations.
 func ListMigrations() {
 	x, err := db.CreateDBEngine()
 	if err != nil {
-		log.Log.Fatalf("Could not connect to db: %v", err.Error())
+		log.Fatalf("Could not connect to db: %v", err.Error())
 	}
 	ms := []*xormigrate.Migration{}
 	err = x.Find(&ms)
 	if err != nil {
-		log.Log.Fatalf("Error getting migration table: %v", err.Error())
+		log.Fatalf("Error getting migration table: %v", err.Error())
 	}
 
 	table := tablewriter.NewWriter(os.Stdout)
@@ -95,9 +95,9 @@ func Rollback(migrationID string) {
 	m := initMigration(nil)
 	err := m.RollbackTo(migrationID)
 	if err != nil {
-		log.Log.Fatalf("Could not rollback: %v", err)
+		log.Fatalf("Could not rollback: %v", err)
 	}
-	log.Log.Info("Rolled back successfully.")
+	log.Info("Rolled back successfully.")
 }
 
 // Deletes a column from a table. All arguments are strings, to let them be standalone and not depending on any struct.
@@ -105,14 +105,14 @@ func dropTableColum(x *xorm.Engine, tableName, col string) error {
 
 	switch config.DatabaseType.GetString() {
 	case "sqlite":
-		log.Log.Warning("Unable to drop columns in SQLite")
+		log.Warning("Unable to drop columns in SQLite")
 	case "mysql":
 		_, err := x.Exec("ALTER TABLE " + tableName + " DROP COLUMN " + col)
 		if err != nil {
 			return err
 		}
 	default:
-		log.Log.Fatal("Unknown db.")
+		log.Fatal("Unknown db.")
 	}
 	return nil
 }
@@ -121,14 +121,14 @@ func dropTableColum(x *xorm.Engine, tableName, col string) error {
 func modifyColumn(x *xorm.Engine, tableName, col, newDefinition string) error {
 	switch config.DatabaseType.GetString() {
 	case "sqlite":
-		log.Log.Warning("Unable to modify columns in SQLite")
+		log.Warning("Unable to modify columns in SQLite")
 	case "mysql":
 		_, err := x.Exec("ALTER TABLE " + tableName + " MODIFY COLUMN " + col + " " + newDefinition)
 		if err != nil {
 			return err
 		}
 	default:
-		log.Log.Fatal("Unknown db.")
+		log.Fatal("Unknown db.")
 	}
 	return nil
 }

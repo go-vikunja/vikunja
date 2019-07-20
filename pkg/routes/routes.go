@@ -113,7 +113,7 @@ func NewEcho() *echo.Echo {
 			return models.GetCurrentUser(c)
 		},
 	})
-	handler.SetLoggingProvider(log.Log)
+	handler.SetLoggingProvider(log.GetLogger())
 
 	return e
 }
@@ -158,7 +158,7 @@ func registerAPIRoutes(a *echo.Group) {
 	if config.ServiceEnableMetrics.GetBool() {
 
 		if !config.RedisEnabled.GetBool() {
-			log.Log.Fatal("You have to enable redis in order to use metrics")
+			log.Fatal("You have to enable redis in order to use metrics")
 		}
 
 		metrics.InitMetrics()
@@ -193,16 +193,16 @@ func registerAPIRoutes(a *echo.Group) {
 			// Set initial totals
 			total, err := models.GetTotalCount(c.Type)
 			if err != nil {
-				log.Log.Fatalf("Could not set initial count for %v, error was %s", c.Type, err)
+				log.Fatalf("Could not set initial count for %v, error was %s", c.Type, err)
 			}
 			if err := metrics.SetCount(total, c.Rediskey); err != nil {
-				log.Log.Fatalf("Could not set initial count for %v, error was %s", c.Type, err)
+				log.Fatalf("Could not set initial count for %v, error was %s", c.Type, err)
 			}
 		}
 
 		// init active users, sometimes we'll have garbage from previous runs in redis instead
 		if err := metrics.SetActiveUsers([]*metrics.ActiveUser{}); err != nil {
-			log.Log.Fatalf("Could not set initial count for active users, error was %s", err)
+			log.Fatalf("Could not set initial count for active users, error was %s", err)
 		}
 
 		a.GET("/metrics", echo.WrapHandler(promhttp.Handler()))
@@ -229,7 +229,7 @@ func registerAPIRoutes(a *echo.Group) {
 
 				// Update currently active users
 				if err := models.UpdateActiveUsersFromContext(c); err != nil {
-					log.Log.Error(err)
+					log.Error(err)
 					return next(c)
 				}
 				return next(c)
@@ -411,7 +411,7 @@ func caldavBasicAuth(username, password string, c echo.Context) (bool, error) {
 	}
 	u, err := models.CheckUserCredentials(creds)
 	if err != nil {
-		log.Log.Errorf("Error during basic auth for caldav: %v", err)
+		log.Errorf("Error during basic auth for caldav: %v", err)
 		return false, nil
 	}
 	// Save the user in echo context for later use
