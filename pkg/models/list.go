@@ -28,7 +28,7 @@ type List struct {
 	// The title of the list. You'll see this in the namespace overview.
 	Title string `xorm:"varchar(250) not null" json:"title" valid:"required,runelength(3|250)" minLength:"3" maxLength:"250"`
 	// The description of the list.
-	Description string `xorm:"longtext null" json:"description" valid:"runelength(0|1000)" maxLength:"1000"`
+	Description string `xorm:"longtext null" json:"description"`
 	OwnerID     int64  `xorm:"int(11) INDEX not null" json:"-"`
 	NamespaceID int64  `xorm:"int(11) INDEX not null" json:"-" param:"namespace"`
 

@@ -30,7 +30,7 @@ type Namespace struct {
 	// The name of this namespace.
 	Name string `xorm:"varchar(250) not null" json:"name" valid:"required,runelength(5|250)" minLength:"5" maxLength:"250"`
 	// The description of the namespace
-	Description string `xorm:"longtext null" json:"description" valid:"runelength(0|250)" maxLength:"250"`
+	Description string `xorm:"longtext null" json:"description"`
 	OwnerID     int64  `xorm:"int(11) not null INDEX" json:"-"`
 
 	// The user who owns this namespace
