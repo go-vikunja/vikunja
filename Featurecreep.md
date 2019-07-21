@@ -156,12 +156,10 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [x] Bindata for templates
 * [x] User struct should have a field for the avatar url (-> gravatar md5 calculated by the backend)
 * [x] Middleware to have configurable rate-limiting per user
-* [ ] Endpoint to get all possible rights with description and code
+* [ ] Colors for lists and namespaces -> Up to the frontend to implement these
 * [ ] Reminders via mail
 * [ ] Be able to "really" delete the account -> delete all lists and move ownership for others 
 * [ ] Deprecate /namespaces/{id}/lists in favour of namespace.ReadOne() <-- should also return the lists
-* [ ] Colors for lists and namespaces -> Up to the frontend to implement these
-* [ ] Create tasks from a text/markdown file (maybe frontend only)
 * [ ] All `ReadAll` methods should return the number of items per page, the number of items on this page, the total pages and the items
       -> Check if there's a way to do that efficently. Maybe only implementing it in the web handler.
 * [ ] Move lists between namespaces -> Extra endpoint
@@ -310,6 +308,7 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [ ] "Smart Lists", filtered lists, saved in some kind of pseudonamespace
   * [ ] Global and per list
 * [ ] Automate everything "If this event happens, do this"
+* [ ] Bulk-create lists/tasks -> needed for importer
 * [ ] Importer (maybe frontend only)
   * [ ] Trello
   * [ ] Wunderlist
@@ -322,6 +321,8 @@ Sorry for some of them being in German, I'll tranlate them at some point.
   * [ ] Any.do
   * [ ] Good ol' Caldav (Tasks)
   * [ ] ClickUp
+  * [ ] A markdown file like this one
+  * [ ] Vikunja json export
 * [ ] More auth providers
   * [ ] LDAP/AD
   * [ ] Kerberos
