@@ -135,4 +135,16 @@ log:
   http: "stdout"
   # Echo has its own logging which usually is unnessecary, which is why it is disabled by default. Possible values are stdout, stderr, file or off to disable standard logging.
   echo: "off"
+  
+ratelimit:
+  # whether or not to enable the rate limit
+  enabled: false
+  # The kind on which rates are based. Can be either "user" for a rate limit per user or "ip" for an ip-based rate limit.
+  kind: user
+  # The time period in seconds for the limit
+  period: 60
+  # The max number of requests a user is allowed to do in the configured time period
+  limit: 100
+  # The store where the limit counter for each user is stored. Possible values are "memory" or "redis"
+  store: memory
 {{< /highlight >}}

@@ -64,6 +64,7 @@ require (
 	github.com/spf13/viper v1.3.2
 	github.com/stretchr/testify v1.3.0
 	github.com/swaggo/swag v1.5.0
+	github.com/ulule/limiter/v3 v3.3.0
 	golang.org/x/crypto v0.0.0-20190621222207-cc06ce4a13d4
 	golang.org/x/lint v0.0.0-20190409202823-959b441ac422
 	google.golang.org/appengine v1.5.0 // indirect

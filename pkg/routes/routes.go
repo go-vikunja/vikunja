@@ -218,9 +218,12 @@ func registerAPIRoutes(a *echo.Group) {
 	// Info endpoint
 	a.GET("/info", apiv1.Info)
 
-	// ===== Routes with Authetification =====
+	// ===== Routes with Authetication =====
 	// Authetification
 	a.Use(middleware.JWT([]byte(config.ServiceJWTSecret.GetString())))
+
+	// Rate limit
+	setupRateLimit(a)
 
 	// Middleware to collect metrics
 	if config.ServiceJWTSecret.GetBool() {

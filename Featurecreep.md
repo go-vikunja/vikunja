@@ -155,6 +155,7 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [x] /info endpoint, in dem dann zb die limits und version etc steht
 * [x] Bindata for templates
 * [x] User struct should have a field for the avatar url (-> gravatar md5 calculated by the backend)
+* [x] Middleware to have configurable rate-limiting per user
 * [ ] Endpoint to get all possible rights with description and code
 * [ ] Reminders via mail
 * [ ] Be able to "really" delete the account -> delete all lists and move ownership for others 
@@ -164,7 +165,6 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [ ] All `ReadAll` methods should return the number of items per page, the number of items on this page, the total pages and the items
       -> Check if there's a way to do that efficently. Maybe only implementing it in the web handler.
 * [ ] Move lists between namespaces -> Extra endpoint
-* [ ] Middleware to have configurable rate-limiting per user
 
 ### Infra 
 

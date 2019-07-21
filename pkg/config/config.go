@@ -78,6 +78,12 @@ const (
 	LogHTTP     Key = `log.echo`
 	LogEcho     Key = `log.echo`
 	LogPath     Key = `log.path`
+
+	RateLimitEnabled Key = `ratelimit.enabled`
+	RateLimitKind    Key = `ratelimit.kind`
+	RateLimitPeriod  Key = `ratelimit.period`
+	RateLimitLimit   Key = `ratelimit.limit`
+	RateLimitStore   Key = `ratelimit.store`
 )
 
 // GetString returns a string config value
@@ -93,6 +99,11 @@ func (k Key) GetBool() bool {
 // GetInt returns an int config value
 func (k Key) GetInt() int {
 	return viper.GetInt(string(k))
+}
+
+// GetInt64 returns an int64 config value
+func (k Key) GetInt64() int64 {
+	return viper.GetInt64(string(k))
 }
 
 // GetDuration returns a duration config value
@@ -174,6 +185,12 @@ func InitConfig() {
 	LogHTTP.setDefault("stdout")
 	LogEcho.setDefault("off")
 	LogPath.setDefault(ServiceRootpath.GetString() + "/logs")
+	// Rate Limit
+	RateLimitEnabled.setDefault(false)
+	RateLimitKind.setDefault("user")
+	RateLimitLimit.setDefault(100)
+	RateLimitPeriod.setDefault(60)
+	RateLimitStore.setDefault("memory")
 
 	// Init checking for environment variables
 	viper.SetEnvPrefix("vikunja")

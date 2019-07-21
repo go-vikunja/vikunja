@@ -116,7 +116,7 @@ func Debug(args ...interface{}) {
 
 // Debugf is for debug messages
 func Debugf(format string, args ...interface{}) {
-	logInstance.Debugf(format, args)
+	logInstance.Debugf(format, args...)
 }
 
 // Info is for info messages
@@ -126,7 +126,7 @@ func Info(args ...interface{}) {
 
 // Infof is for info messages
 func Infof(format string, args ...interface{}) {
-	logInstance.Infof(format, args)
+	logInstance.Infof(format, args...)
 }
 
 // Error is for error messages
@@ -136,7 +136,7 @@ func Error(args ...interface{}) {
 
 // Errorf is for error messages
 func Errorf(format string, args ...interface{}) {
-	logInstance.Errorf(format, args)
+	logInstance.Errorf(format, args...)
 }
 
 // Warning is for warning messages
@@ -146,7 +146,7 @@ func Warning(args ...interface{}) {
 
 // Warningf is for warning messages
 func Warningf(format string, args ...interface{}) {
-	logInstance.Warningf(format, args)
+	logInstance.Warningf(format, args...)
 }
 
 // Critical is for critical messages
@@ -156,7 +156,7 @@ func Critical(args ...interface{}) {
 
 // Criticalf is for critical messages
 func Criticalf(format string, args ...interface{}) {
-	logInstance.Critical(format, args)
+	logInstance.Criticalf(format, args...)
 }
 
 // Fatal is for fatal messages
@@ -166,5 +166,5 @@ func Fatal(args ...interface{}) {
 
 // Fatalf is for fatal messages
 func Fatalf(format string, args ...interface{}) {
-	logInstance.Fatal(format, args)
+	logInstance.Fatalf(format, args...)
 }
