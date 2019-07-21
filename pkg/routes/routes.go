@@ -41,7 +41,6 @@ package routes
 import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
-	"code.vikunja.io/api/pkg/metrics"
 	"code.vikunja.io/api/pkg/models"
 	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
 	"code.vikunja.io/api/pkg/routes/caldav"
@@ -52,7 +51,6 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	elog "github.com/labstack/gommon/log"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"strings"
 )
 
@@ -155,58 +153,7 @@ func registerAPIRoutes(a *echo.Group) {
 	a.GET("/docs", apiv1.RedocUI)
 
 	// Prometheus endpoint
-	if config.ServiceEnableMetrics.GetBool() {
-
-		if !config.RedisEnabled.GetBool() {
-			log.Fatal("You have to enable redis in order to use metrics")
-		}
-
-		metrics.InitMetrics()
-
-		type countable struct {
-			Rediskey string
-			Type     interface{}
-		}
-
-		for _, c := range []countable{
-			{
-				metrics.ListCountKey,
-				models.List{},
-			},
-			{
-				metrics.UserCountKey,
-				models.User{},
-			},
-			{
-				metrics.NamespaceCountKey,
-				models.Namespace{},
-			},
-			{
-				metrics.TaskCountKey,
-				models.ListTask{},
-			},
-			{
-				metrics.TeamCountKey,
-				models.Team{},
-			},
-		} {
-			// Set initial totals
-			total, err := models.GetTotalCount(c.Type)
-			if err != nil {
-				log.Fatalf("Could not set initial count for %v, error was %s", c.Type, err)
-			}
-			if err := metrics.SetCount(total, c.Rediskey); err != nil {
-				log.Fatalf("Could not set initial count for %v, error was %s", c.Type, err)
-			}
-		}
-
-		// init active users, sometimes we'll have garbage from previous runs in redis instead
-		if err := metrics.SetActiveUsers([]*metrics.ActiveUser{}); err != nil {
-			log.Fatalf("Could not set initial count for active users, error was %s", err)
-		}
-
-		a.GET("/metrics", echo.WrapHandler(promhttp.Handler()))
-	}
+	setupMetrics(a)
 
 	// User stuff
 	a.POST("/login", apiv1.Login)
@@ -226,19 +173,7 @@ func registerAPIRoutes(a *echo.Group) {
 	setupRateLimit(a)
 
 	// Middleware to collect metrics
-	if config.ServiceJWTSecret.GetBool() {
-		a.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
-			return func(c echo.Context) error {
-
-				// Update currently active users
-				if err := models.UpdateActiveUsersFromContext(c); err != nil {
-					log.Error(err)
-					return next(c)
-				}
-				return next(c)
-			}
-		})
-	}
+	setupMetricsMiddleware(a)
 
 	a.POST("/tokenTest", apiv1.CheckToken)
 
