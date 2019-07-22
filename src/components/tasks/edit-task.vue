@@ -138,7 +138,7 @@
                         :options="foundUsers"
                         :multiple="false"
                         :searchable="true"
-                        :loading="userService.loading"
+                        :loading="listUserService.loading"
                         :internal-search="true"
                         @search-change="findUser"
                         placeholder="Type to search"
@@ -245,7 +245,7 @@
     import TaskService from '../../services/task'
     import TaskModel from '../../models/task'
     import UserModel from '../../models/user'
-    import UserService from '../../services/user'
+    import ListUserService from '../../services/listUsers'
     import priorities from '../../models/priorities'
     import LabelTaskService from '../../services/labelTask'
     import LabelService from '../../services/label'
@@ -277,7 +277,7 @@
                 },
 
                 newAssignee: UserModel,
-                userService: UserService,
+                listUserService: ListUserService,
                 foundUsers: [],
 
                 labelService: LabelService,
@@ -306,7 +306,7 @@
             this.listService = new ListService()
             this.taskService = new TaskService()
             this.newTask = new TaskModel()
-            this.userService = new UserService()
+            this.listUserService = new ListUserService()
             this.newAssignee = new UserModel()
             this.labelService = new LabelService()
             this.labelTaskService = new LabelTaskService()
@@ -374,7 +374,7 @@
                     return
                 }
 
-                this.userService.getAll({}, {s: query})
+                this.listUserService.getAll({listID: this.$route.params.id}, {s: query})
                     .then(response => {
                         // Filter the results to not include users who are already assigned
                         this.$set(this, 'foundUsers', differenceWith(response, this.taskEditTask.assignees, (first, second) => {
