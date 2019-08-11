@@ -184,6 +184,7 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [x] Less files, but with some kind of logic
 * [x] Have extra functions for logging to call so it is possible to call `log.Info` instead of `log.Log.Info`  
 * [ ] `GetUserByID` and the likes should return pointers
+* [ ] `ListTask` should be just `Task`
 
 ### Linters
 
@@ -211,7 +212,7 @@ Sorry for some of them being in German, I'll tranlate them at some point.
   * [x] "One endpoint to rule them all" -> Array-addable
 * [x] Description should be longtext
 * [ ] Attachments
-* [ ] Related tasks -> settable with a "kind" of relation like blocked, or just related or so
+* [ ] Related tasks -> settable with a "kind" of relation like blocked, subtask, or just related or so
 * [ ] Percent done - For now just a float, may later depend on how many sub tasks are done or so
 * [ ] Move tasks between lists
 * [ ] "Status" field for things like "New", "In Progress", "Done", etc (customizable statuses)
@@ -228,6 +229,9 @@ Sorry for some of them being in German, I'll tranlate them at some point.
   * The broker has a list of subscribed users
   * It then checks who is allowed to the see the event it recieved and sends it
   * [ ] Being able to define filters for notifications or turn them silent completely -> Probably frontend only
+* [ ] Settings for which notifications to recieve over which channel
+  * [ ] Different time-based filters
+* [ ] Subscriptions to tasks or whole project/namespace
 
 ### More server settings
 
@@ -283,11 +287,12 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [ ] Export all data from Vikunja to json (related: `dump` cli command)
   * [ ] Per user and for the whole instance
 * [ ] Watch a (n internal) list -> Will get notification for everything
-* [ ] Archive a task instead of deleting
+* [ ] Archive a task/project/namespace instead of deleting
 * [ ] Task dependencies
 * [ ] Time tracking (possible plugin)
 * [ ] IFTTT
 * [ ] Task automation: Being able to create own flows "if this event is fired, do this" and so on
+* [ ] User online status
 * [ ] More sharing features (all of these with the already existing permissions)
   * [ ] Invite users per mail
   * [ ] Share a link with/without password
@@ -296,8 +301,9 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [ ] Summary of tasks to do in a configurable interval (every day/week or so)
 * [ ] Disable/enable task fields in a list
   * [ ] With inheritence from namespaces
-* [ ] Custom statuses for tasks, configurable in the list settings
+* [ ] Custom statuses for tasks and projects, configurable in the list settings
   * [ ] With inheritence from namespaces
+* [ ] Project start/end/deadline dates 
 * [ ] Better filters
   * [ ] by lables
   * [ ] Due dates
