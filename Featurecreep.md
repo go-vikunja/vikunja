@@ -327,6 +327,10 @@ Sorry for some of them being in German, I'll tranlate them at some point.
   * [ ] Any.do
   * [ ] Good ol' Caldav (Tasks)
   * [ ] ClickUp
+  * [ ] Plutoio
+  * [ ] Clubhouse
+  * [ ] Roadmap
+  * [ ] Joplin
   * [ ] A markdown file like this one
   * [ ] Vikunja json export
 * [ ] More auth providers
