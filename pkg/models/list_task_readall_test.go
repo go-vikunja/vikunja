@@ -16,20 +16,20 @@ import (
 )
 
 func sortTasksForTesting(by SortBy) (tasks []*ListTask) {
-	user1 := User{
+	user1 := &User{
 		ID:        1,
 		Username:  "user1",
 		Password:  "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
 		IsActive:  true,
 		AvatarURL: "111d68d06e2d317b5a59c2c6c5bad808", // hash for ""
 	}
-	user2 := User{
+	user2 := &User{
 		ID:        2,
 		Username:  "user2",
 		Password:  "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
 		AvatarURL: "ab53a2911ddf9b4817ac01ddcd3d975f", // hash for ""
 	}
-	user6 := User{
+	user6 := &User{
 		ID:        6,
 		Username:  "user6",
 		Password:  "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
@@ -50,7 +50,7 @@ func sortTasksForTesting(by SortBy) (tasks []*ListTask) {
 					ID:          4,
 					Title:       "Label #4 - visible via other task",
 					CreatedByID: 2,
-					CreatedBy:   &user2,
+					CreatedBy:   user2,
 					Updated:     0,
 					Created:     0,
 				},
@@ -301,8 +301,8 @@ func sortTasksForTesting(by SortBy) (tasks []*ListTask) {
 			CreatedBy:   user1,
 			ListID:      1,
 			Assignees: []*User{
-				&user1,
-				&user2,
+				user1,
+				user2,
 			},
 			Created: 1543626724,
 			Updated: 1543626724,
@@ -345,7 +345,7 @@ func TestListTask_ReadAll(t *testing.T) {
 	assert.NoError(t, LoadFixtures())
 
 	// Dummy users
-	user1 := User{
+	user1 := &User{
 		ID:        1,
 		Username:  "user1",
 		Password:  "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
@@ -371,7 +371,7 @@ func TestListTask_ReadAll(t *testing.T) {
 		Subtasks          []*ListTask
 		Created           int64
 		Updated           int64
-		CreatedBy         User
+		CreatedBy         *User
 		CRUDable          web.CRUDable
 		Rights            web.Rights
 	}

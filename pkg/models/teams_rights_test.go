@@ -28,7 +28,7 @@ func TestTeam_CanDoSomething(t *testing.T) {
 		Name        string
 		Description string
 		CreatedByID int64
-		CreatedBy   User
+		CreatedBy   *User
 		Members     []*TeamUser
 		Created     int64
 		Updated     int64

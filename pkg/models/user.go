@@ -65,7 +65,6 @@ type User struct {
 // AfterLoad is used to delete all emails to not have them leaked to the user
 func (u *User) AfterLoad() {
 	u.AvatarURL = utils.Md5String(u.Email)
-	u.Email = ""
 }
 
 // GetID implements the Auth interface
@@ -99,8 +98,8 @@ type APIUserPassword struct {
 }
 
 // APIFormat formats an API User into a normal user struct
-func (apiUser *APIUserPassword) APIFormat() User {
-	return User{
+func (apiUser *APIUserPassword) APIFormat() *User {
+	return &User{
 		ID:       apiUser.ID,
 		Username: apiUser.Username,
 		Password: apiUser.Password,
@@ -109,41 +108,56 @@ func (apiUser *APIUserPassword) APIFormat() User {
 }
 
 // GetUserByID gets informations about a user by its ID
-func GetUserByID(id int64) (user User, err error) {
+func GetUserByID(id int64) (user *User, err error) {
 	// Apparently xorm does otherwise look for all users but return only one, which leads to returing one even if the ID is 0
 	if id < 1 {
-		return User{}, ErrUserDoesNotExist{}
+		return &User{}, ErrUserDoesNotExist{}
 	}
 
-	return GetUser(User{ID: id})
+	return GetUser(&User{ID: id})
 }
 
 // GetUserByUsername gets a user from its user name. This is an extra function to be able to add an extra error check.
-func GetUserByUsername(username string) (user User, err error) {
+func GetUserByUsername(username string) (user *User, err error) {
 	if username == "" {
-		return User{}, ErrUserDoesNotExist{}
+		return &User{}, ErrUserDoesNotExist{}
 	}
 
-	return GetUser(User{Username: username})
+	return GetUser(&User{Username: username})
 }
 
 // GetUser gets a user object
-func GetUser(user User) (userOut User, err error) {
-	userOut = user
-	exists, err := x.Get(&userOut)
+func GetUser(user *User) (userOut *User, err error) {
+	return getUser(user, false)
+}
+
+// GetUserWithEmail returns a user object with email
+func GetUserWithEmail(user *User) (userOut *User, err error) {
+	return getUser(user, true)
+}
+
+// getUser is a small helper function to avoid having duplicated code for almost the same use case
+func getUser(user *User, withEmail bool) (userOut *User, err error) {
+	userOut = &User{} // To prevent a panic if user is nil
+	*userOut = *user
+	exists, err := x.Get(userOut)
 
 	if !exists {
-		return User{}, ErrUserDoesNotExist{UserID: user.ID}
+		return &User{}, ErrUserDoesNotExist{UserID: user.ID}
+	}
+
+	if !withEmail {
+		userOut.Email = ""
 	}
 
 	return userOut, err
 }
 
 // CheckUserCredentials checks user credentials
-func CheckUserCredentials(u *UserLogin) (User, error) {
+func CheckUserCredentials(u *UserLogin) (*User, error) {
 	// Check if we have any credentials
 	if u.Password == "" || u.Username == "" {
-		return User{}, ErrNoUsernamePassword{}
+		return &User{}, ErrNoUsernamePassword{}
 	}
 
 	// Check if the user exists
@@ -151,21 +165,21 @@ func CheckUserCredentials(u *UserLogin) (User, error) {
 	if err != nil {
 		// hashing the password takes a long time, so we hash something to not make it clear if the username was wrong
 		bcrypt.GenerateFromPassword([]byte(u.Username), 14)
-		return User{}, ErrWrongUsernameOrPassword{}
+		return &User{}, ErrWrongUsernameOrPassword{}
 	}
 
 	// User is invalid if it needs to verify its email address
 	if !user.IsActive {
-		return User{}, ErrEmailNotConfirmed{UserID: user.ID}
+		return &User{}, ErrEmailNotConfirmed{UserID: user.ID}
 	}
 
 	// Check the users password
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(u.Password))
 	if err != nil {
 		if err == bcrypt.ErrMismatchedHashAndPassword {
-			return User{}, ErrWrongUsernameOrPassword{}
+			return &User{}, ErrWrongUsernameOrPassword{}
 		}
-		return User{}, err
+		return &User{}, err
 	}
 
 	return user, nil
@@ -216,47 +230,47 @@ func UpdateActiveUsersFromContext(c echo.Context) (err error) {
 }
 
 // CreateUser creates a new user and inserts it into the database
-func CreateUser(user User) (newUser User, err error) {
+func CreateUser(user *User) (newUser *User, err error) {
 
 	newUser = user
 
 	// Check if we have all needed informations
 	if newUser.Password == "" || newUser.Username == "" || newUser.Email == "" {
-		return User{}, ErrNoUsernamePassword{}
+		return &User{}, ErrNoUsernamePassword{}
 	}
 
 	// Check if the user already existst with that username
 	exists := true
-	existingUser, err := GetUserByUsername(newUser.Username)
+	_, err = GetUserByUsername(newUser.Username)
 	if err != nil {
 		if IsErrUserDoesNotExist(err) {
 			exists = false
 		} else {
-			return User{}, err
+			return &User{}, err
 		}
 	}
 	if exists {
-		return User{}, ErrUsernameExists{newUser.ID, newUser.Username}
+		return &User{}, ErrUsernameExists{newUser.ID, newUser.Username}
 	}
 
 	// Check if the user already existst with that email
 	exists = true
-	existingUser, err = GetUser(User{Email: newUser.Email})
+	_, err = GetUser(&User{Email: newUser.Email})
 	if err != nil {
 		if IsErrUserDoesNotExist(err) {
 			exists = false
 		} else {
-			return User{}, err
+			return &User{}, err
 		}
 	}
 	if exists {
-		return User{}, ErrUserEmailExists{existingUser.ID, existingUser.Email}
+		return &User{}, ErrUserEmailExists{newUser.ID, newUser.Email}
 	}
 
 	// Hash the password
 	newUser.Password, err = hashPassword(user.Password)
 	if err != nil {
-		return User{}, err
+		return &User{}, err
 	}
 
 	newUser.IsActive = true
@@ -270,7 +284,7 @@ func CreateUser(user User) (newUser User, err error) {
 	// Insert it
 	_, err = x.Insert(newUser)
 	if err != nil {
-		return User{}, err
+		return &User{}, err
 	}
 
 	// Update the metrics
@@ -279,14 +293,14 @@ func CreateUser(user User) (newUser User, err error) {
 	// Get the  full new User
 	newUserOut, err := GetUser(newUser)
 	if err != nil {
-		return User{}, err
+		return &User{}, err
 	}
 
 	// Create the user's namespace
 	newN := &Namespace{Name: newUserOut.Username, Description: newUserOut.Username + "'s namespace.", Owner: newUserOut}
-	err = newN.Create(&newUserOut)
+	err = newN.Create(newUserOut)
 	if err != nil {
-		return User{}, err
+		return &User{}, err
 	}
 
 	// Dont send a mail if we're testing
@@ -311,12 +325,12 @@ func hashPassword(password string) (string, error) {
 }
 
 // UpdateUser updates a user
-func UpdateUser(user User) (updatedUser User, err error) {
+func UpdateUser(user *User) (updatedUser *User, err error) {
 
 	// Check if it exists
 	theUser, err := GetUserByID(user.ID)
 	if err != nil {
-		return User{}, err
+		return &User{}, err
 	}
 
 	// Check if we have at least a username
@@ -330,13 +344,13 @@ func UpdateUser(user User) (updatedUser User, err error) {
 	// Update it
 	_, err = x.Id(user.ID).Update(user)
 	if err != nil {
-		return User{}, err
+		return &User{}, err
 	}
 
 	// Get the newly updated user
 	updatedUser, err = GetUserByID(user.ID)
 	if err != nil {
-		return User{}, err
+		return &User{}, err
 	}
 
 	return updatedUser, err

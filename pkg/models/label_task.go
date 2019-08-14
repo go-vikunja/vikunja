@@ -179,6 +179,11 @@ func getLabelsByTaskIDs(opts *LabelByTaskIDsOptions) (ls []*labelWithTaskID, err
 		return nil, err
 	}
 
+	// Obfuscate all user emails
+	for _, u := range users {
+		u.Email = ""
+	}
+
 	// Put it all together
 	for in, l := range labels {
 		labels[in].CreatedBy = users[l.CreatedByID]

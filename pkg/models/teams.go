@@ -32,7 +32,7 @@ type Team struct {
 	CreatedByID int64  `xorm:"int(11) not null INDEX" json:"-"`
 
 	// The user who created this team.
-	CreatedBy User `xorm:"-" json:"createdBy"`
+	CreatedBy *User `xorm:"-" json:"createdBy"`
 	// An array of all members in this team.
 	Members []*TeamUser `xorm:"-" json:"members"`
 
@@ -178,7 +178,7 @@ func (t *Team) Create(a web.Auth) (err error) {
 	}
 
 	t.CreatedByID = doer.ID
-	t.CreatedBy = *doer
+	t.CreatedBy = doer
 
 	_, err = x.Insert(t)
 	if err != nil {

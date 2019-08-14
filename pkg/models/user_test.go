@@ -31,7 +31,7 @@ func TestCreateUser(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Our dummy user for testing
-	dummyuser := User{
+	dummyuser := &User{
 		Username: "testuu",
 		Password: "1234",
 		Email:    "noone@example.com",
@@ -42,7 +42,7 @@ func TestCreateUser(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Create a second new user
-	_, err = CreateUser(User{Username: dummyuser.Username + "2", Email: dummyuser.Email + "m", Password: dummyuser.Password})
+	_, err = CreateUser(&User{Username: dummyuser.Username + "2", Email: dummyuser.Email + "m", Password: dummyuser.Password})
 	assert.NoError(t, err)
 
 	// Check if it fails to create the same user again
@@ -50,17 +50,17 @@ func TestCreateUser(t *testing.T) {
 	assert.Error(t, err)
 
 	// Check if it fails to create a user with just the same username
-	_, err = CreateUser(User{Username: dummyuser.Username, Password: "12345", Email: "email@example.com"})
+	_, err = CreateUser(&User{Username: dummyuser.Username, Password: "12345", Email: "email@example.com"})
 	assert.Error(t, err)
 	assert.True(t, IsErrUsernameExists(err))
 
 	// Check if it fails to create one with the same email
-	_, err = CreateUser(User{Username: "noone", Password: "1234", Email: dummyuser.Email})
+	_, err = CreateUser(&User{Username: "noone", Password: "1234", Email: dummyuser.Email})
 	assert.Error(t, err)
 	assert.True(t, IsErrUserEmailExists(err))
 
 	// Check if it fails to create a user without password and username
-	_, err = CreateUser(User{})
+	_, err = CreateUser(&User{})
 	assert.Error(t, err)
 	assert.True(t, IsErrNoUsernamePassword(err))
 
@@ -78,14 +78,14 @@ func TestCreateUser(t *testing.T) {
 	assert.True(t, IsErrUserDoesNotExist(err))
 
 	// Check the user credentials with an unverified email
-	user, err := CheckUserCredentials(&UserLogin{"user5", "1234"})
+	_, err = CheckUserCredentials(&UserLogin{"user5", "1234"})
 	assert.Error(t, err)
 	assert.True(t, IsErrEmailNotConfirmed(err))
 
 	// Update everything and check again
 	_, err = x.Cols("is_active").Where("true").Update(User{IsActive: true})
 	assert.NoError(t, err)
-	user, err = CheckUserCredentials(&UserLogin{"testuu", "1234"})
+	user, err := CheckUserCredentials(&UserLogin{"testuu", "1234"})
 	assert.NoError(t, err)
 	assert.Equal(t, "testuu", user.Username)
 
@@ -100,23 +100,23 @@ func TestCreateUser(t *testing.T) {
 	assert.True(t, IsErrWrongUsernameOrPassword(err))
 
 	// Update the user
-	uuser, err := UpdateUser(User{ID: theuser.ID, Password: "444444"})
+	uuser, err := UpdateUser(&User{ID: theuser.ID, Password: "444444"})
 	assert.NoError(t, err)
 	assert.Equal(t, theuser.Password, uuser.Password) // Password should not change
 	assert.Equal(t, theuser.Username, uuser.Username) // Username should not change either
 
 	// Try updating one which does not exist
-	_, err = UpdateUser(User{ID: 99999, Username: "dg"})
+	_, err = UpdateUser(&User{ID: 99999, Username: "dg"})
 	assert.Error(t, err)
 	assert.True(t, IsErrUserDoesNotExist(err))
 
 	// Update a users password
 	newpassword := "55555"
-	err = UpdateUserPassword(&theuser, newpassword)
+	err = UpdateUserPassword(theuser, newpassword)
 	assert.NoError(t, err)
 
 	// Check if it was changed
-	user, err = CheckUserCredentials(&UserLogin{theuser.Username, newpassword})
+	_, err = CheckUserCredentials(&UserLogin{theuser.Username, newpassword})
 	assert.NoError(t, err)
 
 	// Check if the searchterm works
@@ -134,11 +134,11 @@ func TestCreateUser(t *testing.T) {
 	assert.True(t, IsErrUserDoesNotExist(err))
 
 	// Delete it
-	err = DeleteUserByID(theuser.ID, &doer)
+	err = DeleteUserByID(theuser.ID, doer)
 	assert.NoError(t, err)
 
 	// Try deleting one with ID = 0
-	err = DeleteUserByID(0, &doer)
+	err = DeleteUserByID(0, doer)
 	assert.Error(t, err)
 	assert.True(t, IsErrIDCannotBeZero(err))
 }

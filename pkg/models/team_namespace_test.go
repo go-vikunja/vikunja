@@ -36,46 +36,46 @@ func TestTeamNamespace(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Test normal creation
-	allowed, _ := tn.CanCreate(&dummyuser)
+	allowed, _ := tn.CanCreate(dummyuser)
 	assert.True(t, allowed)
-	err = tn.Create(&dummyuser)
+	err = tn.Create(dummyuser)
 	assert.NoError(t, err)
 
 	// Test again (should fail)
-	err = tn.Create(&dummyuser)
+	err = tn.Create(dummyuser)
 	assert.Error(t, err)
 	assert.True(t, IsErrTeamAlreadyHasAccess(err))
 
 	// Test with invalid team right
 	tn2 := tn
 	tn2.Right = RightUnknown
-	err = tn2.Create(&dummyuser)
+	err = tn2.Create(dummyuser)
 	assert.Error(t, err)
 	assert.True(t, IsErrInvalidRight(err))
 
 	// Check with inexistant team
 	tn3 := tn
 	tn3.TeamID = 324
-	err = tn3.Create(&dummyuser)
+	err = tn3.Create(dummyuser)
 	assert.Error(t, err)
 	assert.True(t, IsErrTeamDoesNotExist(err))
 
 	// Check with a namespace which does not exist
 	tn4 := tn
 	tn4.NamespaceID = 423
-	err = tn4.Create(&dummyuser)
+	err = tn4.Create(dummyuser)
 	assert.Error(t, err)
 	assert.True(t, IsErrNamespaceDoesNotExist(err))
 
 	// Check readall
-	teams, err := tn.ReadAll("", &dummyuser, 1)
+	teams, err := tn.ReadAll("", dummyuser, 1)
 	assert.NoError(t, err)
 	assert.Equal(t, reflect.TypeOf(teams).Kind(), reflect.Slice)
 	s := reflect.ValueOf(teams)
 	assert.Equal(t, s.Len(), 1)
 
 	// Check readall for a nonexistant namespace
-	_, err = tn4.ReadAll("", &dummyuser, 1)
+	_, err = tn4.ReadAll("", dummyuser, 1)
 	assert.Error(t, err)
 	assert.True(t, IsErrNamespaceDoesNotExist(err))
 
@@ -86,7 +86,7 @@ func TestTeamNamespace(t *testing.T) {
 	assert.True(t, IsErrNeedToHaveNamespaceReadAccess(err))
 
 	// Delete it
-	allowed, _ = tn.CanDelete(&dummyuser)
+	allowed, _ = tn.CanDelete(dummyuser)
 	assert.True(t, allowed)
 	err = tn.Delete()
 	assert.NoError(t, err)

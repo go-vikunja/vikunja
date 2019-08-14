@@ -37,16 +37,16 @@ func TestList_Create(t *testing.T) {
 	}
 
 	// Check if the user can create
-	allowed, _ := dummylist.CanCreate(&doer)
+	allowed, _ := dummylist.CanCreate(doer)
 	assert.True(t, allowed)
 
 	// Create it
-	err = dummylist.Create(&doer)
+	err = dummylist.Create(doer)
 	assert.NoError(t, err)
 
 	// Get the list
 	newdummy := List{ID: dummylist.ID}
-	canRead, err := newdummy.CanRead(&doer)
+	canRead, err := newdummy.CanRead(doer)
 	assert.NoError(t, err)
 	assert.True(t, canRead)
 	err = newdummy.ReadOne()
@@ -56,18 +56,18 @@ func TestList_Create(t *testing.T) {
 	assert.Equal(t, dummylist.OwnerID, doer.ID)
 
 	// Check if the user can see it
-	allowed, _ = dummylist.CanRead(&doer)
+	allowed, _ = dummylist.CanRead(doer)
 	assert.True(t, allowed)
 
 	// Try updating a list
-	allowed, _ = dummylist.CanUpdate(&doer)
+	allowed, _ = dummylist.CanUpdate(doer)
 	assert.True(t, allowed)
 	dummylist.Description = "Lorem Ipsum dolor sit amet."
 	err = dummylist.Update()
 	assert.NoError(t, err)
 
 	// Delete it
-	allowed, _ = dummylist.CanDelete(&doer)
+	allowed, _ = dummylist.CanDelete(doer)
 	assert.True(t, allowed)
 
 	err = dummylist.Delete()
@@ -85,7 +85,7 @@ func TestList_Create(t *testing.T) {
 		NamespaceID: 876694,
 	}
 
-	err = list3.Create(&doer)
+	err = list3.Create(doer)
 	assert.Error(t, err)
 	assert.True(t, IsErrNamespaceDoesNotExist(err))
 

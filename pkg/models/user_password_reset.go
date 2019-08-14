@@ -88,7 +88,7 @@ func RequestUserPasswordResetToken(tr *PasswordTokenRequest) (err error) {
 	}
 
 	// Check if the user exists
-	user, err := GetUser(User{Email: tr.Email})
+	user, err := GetUserWithEmail(&User{Email: tr.Email})
 	if err != nil {
 		return
 	}
@@ -97,7 +97,7 @@ func RequestUserPasswordResetToken(tr *PasswordTokenRequest) (err error) {
 	user.PasswordResetToken = utils.MakeRandomString(400)
 
 	// Save it
-	_, err = x.Where("id = ?", user.ID).Update(&user)
+	_, err = x.Where("id = ?", user.ID).Update(user)
 	if err != nil {
 		return
 	}

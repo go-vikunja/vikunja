@@ -77,7 +77,7 @@ type ListTask struct {
 	Updated int64 `xorm:"updated not null" json:"updated"`
 
 	// The user who initially created the task.
-	CreatedBy User `xorm:"-" json:"createdBy" valid:"-"`
+	CreatedBy *User `xorm:"-" json:"createdBy" valid:"-"`
 
 	web.CRUDable `xorm:"-" json:"-"`
 	web.Rights   `xorm:"-" json:"-"`
@@ -372,6 +372,7 @@ func addMoreInfoToTasks(taskMap map[int64]*ListTask) (tasks []*ListTask, err err
 	// Put the assignees in the task map
 	for _, a := range taskAssignees {
 		if a != nil {
+			a.Email = "" // Obfuscate the email
 			taskMap[a.TaskID].Assignees = append(taskMap[a.TaskID].Assignees, &a.User)
 		}
 	}
@@ -395,6 +396,11 @@ func addMoreInfoToTasks(taskMap map[int64]*ListTask) (tasks []*ListTask, err err
 		return
 	}
 
+	// Obfuscate all user emails
+	for _, u := range users {
+		u.Email = ""
+	}
+
 	// Get all reminders and put them in a map to have it easier later
 	reminders := []*TaskReminder{}
 	err = x.Table("task_reminders").In("task_id", taskIDs).Find(&reminders)
@@ -411,7 +417,7 @@ func addMoreInfoToTasks(taskMap map[int64]*ListTask) (tasks []*ListTask, err err
 	for _, task := range taskMap {
 
 		// Make created by user objects
-		taskMap[task.ID].CreatedBy = *users[task.CreatedByID]
+		taskMap[task.ID].CreatedBy = users[task.CreatedByID]
 
 		// Add the reminders
 		taskMap[task.ID].RemindersUnix = taskRemindersUnix[task.ID]

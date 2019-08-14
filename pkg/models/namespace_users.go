@@ -172,6 +172,11 @@ func (nu *NamespaceUser) ReadAll(search string, a web.Auth, page int) (interface
 		Where("users.username LIKE ?", "%"+search+"%").
 		Find(&all)
 
+	// Obfuscate all user emails
+	for _, u := range all {
+		u.Email = ""
+	}
+
 	return all, err
 }
 

@@ -183,7 +183,7 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [x] Refactor config handling: Custom type "key" or so which holds the viper const and then mixins on that type to get the values from viper
 * [x] Less files, but with some kind of logic
 * [x] Have extra functions for logging to call so it is possible to call `log.Info` instead of `log.Log.Info`  
-* [ ] `GetUserByID` and the likes should return pointers
+* [x] `GetUserByID` and the likes should return pointers
 * [ ] `ListTask` should be just `Task`
 
 ### Linters

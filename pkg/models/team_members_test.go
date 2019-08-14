@@ -34,9 +34,9 @@ func TestTeamMember_Create(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Insert a new team member
-	allowed, _ := dummyteammember.CanCreate(&doer)
+	allowed, _ := dummyteammember.CanCreate(doer)
 	assert.True(t, allowed)
-	err = dummyteammember.Create(&doer)
+	err = dummyteammember.Create(doer)
 	assert.NoError(t, err)
 
 	// Check he's in there
@@ -46,12 +46,12 @@ func TestTeamMember_Create(t *testing.T) {
 	assert.Equal(t, 3, len(team.Members))
 
 	// Try inserting a user twice
-	err = dummyteammember.Create(&doer)
+	err = dummyteammember.Create(doer)
 	assert.Error(t, err)
 	assert.True(t, IsErrUserIsMemberOfTeam(err))
 
 	// Delete it
-	allowed, _ = dummyteammember.CanDelete(&doer)
+	allowed, _ = dummyteammember.CanDelete(doer)
 	assert.True(t, allowed)
 	err = dummyteammember.Delete()
 	assert.NoError(t, err)
@@ -69,13 +69,13 @@ func TestTeamMember_Create(t *testing.T) {
 
 	// Try inserting a user which does not exist
 	dummyteammember.Username = "user9484"
-	err = dummyteammember.Create(&doer)
+	err = dummyteammember.Create(doer)
 	assert.Error(t, err)
 	assert.True(t, IsErrUserDoesNotExist(err))
 
 	// Try adding a user to a team which does not exist
 	tm = TeamMember{TeamID: 94824, Username: "user1"}
-	err = tm.Create(&doer)
+	err = tm.Create(doer)
 	assert.Error(t, err)
 	assert.True(t, IsErrTeamDoesNotExist(err))
 }

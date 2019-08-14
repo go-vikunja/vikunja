@@ -193,7 +193,7 @@ func (t *ListTask) addNewAssigneeByID(newAssigneeID int64, list *List) (err erro
 	if err != nil {
 		return err
 	}
-	canRead, err := list.CanRead(&newAssignee)
+	canRead, err := list.CanRead(newAssignee)
 	if err != nil {
 		return err
 	}

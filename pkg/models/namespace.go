@@ -34,7 +34,7 @@ type Namespace struct {
 	OwnerID     int64  `xorm:"int(11) not null INDEX" json:"-"`
 
 	// The user who owns this namespace
-	Owner User `xorm:"-" json:"owner" valid:"-"`
+	Owner *User `xorm:"-" json:"owner" valid:"-"`
 
 	// A unix timestamp when this namespace was created. You cannot change this value.
 	Created int64 `xorm:"created not null" json:"created"`
@@ -148,7 +148,7 @@ func (n *Namespace) ReadAll(search string, a web.Auth, page int) (interface{}, e
 	// Create our pseudo-namespace to hold the shared lists
 	// We want this one at the beginning, which is why we create it here
 	pseudonamespace := PseudoNamespace
-	pseudonamespace.Owner = *doer
+	pseudonamespace.Owner = doer
 	all = append(all, &NamespaceWithLists{
 		pseudonamespace,
 		[]*List{},
@@ -238,7 +238,7 @@ func (n *Namespace) ReadAll(search string, a web.Auth, page int) (interface{}, e
 		// Users
 		for _, u := range users {
 			if n.OwnerID == u.ID {
-				all[i].Owner = *u
+				all[i].Owner = u
 				break
 			}
 		}

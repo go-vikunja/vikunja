@@ -119,5 +119,11 @@ func ListUsersFromList(l *List, search string) (users []*User, err error) {
 		GroupBy("id").
 		OrderBy("id").
 		Find(&users)
+
+	// Obfuscate all user emails
+	for _, u := range users {
+		u.Email = ""
+	}
+
 	return
 }

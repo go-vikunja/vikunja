@@ -55,7 +55,7 @@ func Login(c echo.Context) error {
 	}
 
 	// Create token
-	t, err := CreateNewJWTTokenForUser(&user)
+	t, err := CreateNewJWTTokenForUser(user)
 	if err != nil {
 		return err
 	}

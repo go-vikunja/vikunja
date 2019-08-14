@@ -33,7 +33,7 @@ type List struct {
 	NamespaceID int64  `xorm:"int(11) INDEX not null" json:"-" param:"namespace"`
 
 	// The user who created this list.
-	Owner User `xorm:"-" json:"owner" valid:"-"`
+	Owner *User `xorm:"-" json:"owner" valid:"-"`
 	// An array of tasks which belong to the list.
 	Tasks []*ListTask `xorm:"-" json:"tasks"`
 
@@ -224,7 +224,7 @@ func AddListDetails(lists []*List) (err error) {
 		// Owner
 		for _, owner := range owners {
 			if list.OwnerID == owner.ID {
-				lists[in].Owner = *owner
+				lists[in].Owner = owner
 				break
 			}
 		}
@@ -326,7 +326,7 @@ func (l *List) Create(a web.Auth) (err error) {
 	}
 
 	l.OwnerID = doer.ID
-	l.Owner = *doer
+	l.Owner = doer
 	l.ID = 0 // Otherwise only the first time a new list would be created
 
 	return CreateOrUpdateList(l)

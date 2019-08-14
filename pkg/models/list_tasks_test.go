@@ -35,15 +35,15 @@ func TestListTask_Create(t *testing.T) {
 	doer, err := GetUserByID(1)
 	assert.NoError(t, err)
 
-	allowed, _ := listtask.CanCreate(&doer)
+	allowed, _ := listtask.CanCreate(doer)
 	assert.True(t, allowed)
 
-	err = listtask.Create(&doer)
+	err = listtask.Create(doer)
 	assert.NoError(t, err)
 
 	// Update it
 	listtask.Text = "Test34"
-	allowed, _ = listtask.CanUpdate(&doer)
+	allowed, _ = listtask.CanUpdate(doer)
 	assert.True(t, allowed)
 	err = listtask.Update()
 	assert.NoError(t, err)
@@ -54,7 +54,7 @@ func TestListTask_Create(t *testing.T) {
 	assert.Equal(t, li.Text, "Test34")
 
 	// Delete the task
-	allowed, _ = listtask.CanDelete(&doer)
+	allowed, _ = listtask.CanDelete(doer)
 	assert.True(t, allowed)
 	err = listtask.Delete()
 	assert.NoError(t, err)
@@ -67,14 +67,14 @@ func TestListTask_Create(t *testing.T) {
 
 	// Try adding a list task with an empty text
 	listtask.Text = ""
-	err = listtask.Create(&doer)
+	err = listtask.Create(doer)
 	assert.Error(t, err)
 	assert.True(t, IsErrListTaskCannotBeEmpty(err))
 
 	// Try adding one to a nonexistant list
 	listtask.ListID = 99993939
 	listtask.Text = "Lorem Ipsum"
-	err = listtask.Create(&doer)
+	err = listtask.Create(doer)
 	assert.Error(t, err)
 	assert.True(t, IsErrListDoesNotExist(err))
 

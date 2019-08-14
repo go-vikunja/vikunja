@@ -34,9 +34,9 @@ func TestTeam_Create(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Insert it
-	allowed, _ := dummyteam.CanCreate(&doer)
+	allowed, _ := dummyteam.CanCreate(doer)
 	assert.True(t, allowed)
-	err = dummyteam.Create(&doer)
+	err = dummyteam.Create(doer)
 	assert.NoError(t, err)
 
 	// Check if it was inserted and we're admin
@@ -46,7 +46,7 @@ func TestTeam_Create(t *testing.T) {
 	assert.Equal(t, 1, len(tm.Members))
 	assert.Equal(t, doer.ID, tm.Members[0].User.ID)
 	assert.True(t, tm.Members[0].Admin)
-	allowed, _ = dummyteam.CanRead(&doer)
+	allowed, _ = dummyteam.CanRead(doer)
 	assert.True(t, allowed)
 
 	// Try getting a team with an ID < 0
@@ -55,7 +55,7 @@ func TestTeam_Create(t *testing.T) {
 	assert.True(t, IsErrTeamDoesNotExist(err))
 
 	// Get all teams the user is part of
-	ts, err := tm.ReadAll("", &doer, 1)
+	ts, err := tm.ReadAll("", doer, 1)
 	assert.NoError(t, err)
 	assert.Equal(t, reflect.TypeOf(ts).Kind(), reflect.Slice)
 	s := reflect.ValueOf(ts)
@@ -63,12 +63,12 @@ func TestTeam_Create(t *testing.T) {
 
 	// Check inserting it with an empty name
 	dummyteam.Name = ""
-	err = dummyteam.Create(&doer)
+	err = dummyteam.Create(doer)
 	assert.Error(t, err)
 	assert.True(t, IsErrTeamNameCannotBeEmpty(err))
 
 	// update it (still no name, should fail)
-	allowed, _ = dummyteam.CanUpdate(&doer)
+	allowed, _ = dummyteam.CanUpdate(doer)
 	assert.True(t, allowed)
 	err = dummyteam.Update()
 	assert.Error(t, err)
@@ -80,14 +80,14 @@ func TestTeam_Create(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Delete it
-	allowed, err = dummyteam.CanDelete(&doer)
+	allowed, err = dummyteam.CanDelete(doer)
 	assert.NoError(t, err)
 	assert.True(t, allowed)
 	err = dummyteam.Delete()
 	assert.NoError(t, err)
 
 	// Try deleting a (now) nonexistant team
-	allowed, err = dummyteam.CanDelete(&doer)
+	allowed, err = dummyteam.CanDelete(doer)
 	assert.False(t, allowed)
 	assert.Error(t, err)
 	assert.True(t, IsErrTeamDoesNotExist(err))

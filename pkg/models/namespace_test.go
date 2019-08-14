@@ -37,13 +37,13 @@ func TestNamespace_Create(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Try creating it
-	allowed, _ := dummynamespace.CanCreate(&doer)
+	allowed, _ := dummynamespace.CanCreate(doer)
 	assert.True(t, allowed)
-	err = dummynamespace.Create(&doer)
+	err = dummynamespace.Create(doer)
 	assert.NoError(t, err)
 
 	// check if it really exists
-	allowed, err = dummynamespace.CanRead(&doer)
+	allowed, err = dummynamespace.CanRead(doer)
 	assert.NoError(t, err)
 	assert.True(t, allowed)
 	err = dummynamespace.ReadOne()
@@ -52,7 +52,7 @@ func TestNamespace_Create(t *testing.T) {
 
 	// Try creating one without a name
 	n2 := Namespace{}
-	err = n2.Create(&doer)
+	err = n2.Create(doer)
 	assert.Error(t, err)
 	assert.True(t, IsErrNamespaceNameCannotBeEmpty(err))
 
@@ -64,7 +64,7 @@ func TestNamespace_Create(t *testing.T) {
 	assert.True(t, IsErrUserDoesNotExist(err))
 
 	// Update it
-	allowed, err = dummynamespace.CanUpdate(&doer)
+	allowed, err = dummynamespace.CanUpdate(doer)
 	assert.NoError(t, err)
 	assert.True(t, allowed)
 	dummynamespace.Description = "Dolor sit amet."
@@ -74,7 +74,7 @@ func TestNamespace_Create(t *testing.T) {
 	// Check if it was updated
 	assert.Equal(t, "Dolor sit amet.", dummynamespace.Description)
 	// Get it and check it again
-	allowed, err = dummynamespace.CanRead(&doer)
+	allowed, err = dummynamespace.CanRead(doer)
 	assert.NoError(t, err)
 	assert.True(t, allowed)
 	err = dummynamespace.ReadOne()
@@ -100,7 +100,7 @@ func TestNamespace_Create(t *testing.T) {
 	assert.True(t, IsErrNamespaceDoesNotExist(err))
 
 	// Delete it
-	allowed, err = dummynamespace.CanDelete(&doer)
+	allowed, err = dummynamespace.CanDelete(doer)
 	assert.NoError(t, err)
 	assert.True(t, allowed)
 	err = dummynamespace.Delete()
@@ -112,13 +112,13 @@ func TestNamespace_Create(t *testing.T) {
 	assert.True(t, IsErrNamespaceDoesNotExist(err))
 
 	// Check if it was successfully deleted
-	allowed, err = dummynamespace.CanRead(&doer)
+	allowed, err = dummynamespace.CanRead(doer)
 	assert.False(t, allowed)
 	assert.Error(t, err)
 	assert.True(t, IsErrNamespaceDoesNotExist(err))
 
 	// Get all namespaces of a user
-	nsps, err := n.ReadAll("", &doer, 1)
+	nsps, err := n.ReadAll("", doer, 1)
 	assert.NoError(t, err)
 	assert.Equal(t, reflect.TypeOf(nsps).Kind(), reflect.Slice)
 	s := reflect.ValueOf(nsps)

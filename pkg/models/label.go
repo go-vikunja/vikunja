@@ -173,7 +173,7 @@ func (l *Label) ReadOne() (err error) {
 		return err
 	}
 
-	l.CreatedBy = &user
+	l.CreatedBy = user
 	return
 }
 
