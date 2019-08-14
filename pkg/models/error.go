@@ -427,48 +427,48 @@ func (err ErrListTitleCannotBeEmpty) HTTPError() web.HTTPError {
 // List task errors
 // ================
 
-// ErrListTaskCannotBeEmpty represents a "ErrListDoesNotExist" kind of error. Used if the list does not exist.
-type ErrListTaskCannotBeEmpty struct{}
+// ErrTaskCannotBeEmpty represents a "ErrListDoesNotExist" kind of error. Used if the list does not exist.
+type ErrTaskCannotBeEmpty struct{}
 
-// IsErrListTaskCannotBeEmpty checks if an error is a ErrListDoesNotExist.
-func IsErrListTaskCannotBeEmpty(err error) bool {
-	_, ok := err.(ErrListTaskCannotBeEmpty)
+// IsErrTaskCannotBeEmpty checks if an error is a ErrListDoesNotExist.
+func IsErrTaskCannotBeEmpty(err error) bool {
+	_, ok := err.(ErrTaskCannotBeEmpty)
 	return ok
 }
 
-func (err ErrListTaskCannotBeEmpty) Error() string {
+func (err ErrTaskCannotBeEmpty) Error() string {
 	return fmt.Sprintf("List task text cannot be empty.")
 }
 
-// ErrCodeListTaskCannotBeEmpty holds the unique world-error code of this error
-const ErrCodeListTaskCannotBeEmpty = 4001
+// ErrCodeTaskCannotBeEmpty holds the unique world-error code of this error
+const ErrCodeTaskCannotBeEmpty = 4001
 
 // HTTPError holds the http error description
-func (err ErrListTaskCannotBeEmpty) HTTPError() web.HTTPError {
-	return web.HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrCodeListTaskCannotBeEmpty, Message: "You must provide at least a list task text."}
+func (err ErrTaskCannotBeEmpty) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrCodeTaskCannotBeEmpty, Message: "You must provide at least a list task text."}
 }
 
-// ErrListTaskDoesNotExist represents a "ErrListDoesNotExist" kind of error. Used if the list does not exist.
-type ErrListTaskDoesNotExist struct {
+// ErrTaskDoesNotExist represents a "ErrListDoesNotExist" kind of error. Used if the list does not exist.
+type ErrTaskDoesNotExist struct {
 	ID int64
 }
 
-// IsErrListTaskDoesNotExist checks if an error is a ErrListDoesNotExist.
-func IsErrListTaskDoesNotExist(err error) bool {
-	_, ok := err.(ErrListTaskDoesNotExist)
+// IsErrTaskDoesNotExist checks if an error is a ErrListDoesNotExist.
+func IsErrTaskDoesNotExist(err error) bool {
+	_, ok := err.(ErrTaskDoesNotExist)
 	return ok
 }
 
-func (err ErrListTaskDoesNotExist) Error() string {
+func (err ErrTaskDoesNotExist) Error() string {
 	return fmt.Sprintf("List task does not exist. [ID: %d]", err.ID)
 }
 
-// ErrCodeListTaskDoesNotExist holds the unique world-error code of this error
-const ErrCodeListTaskDoesNotExist = 4002
+// ErrCodeTaskDoesNotExist holds the unique world-error code of this error
+const ErrCodeTaskDoesNotExist = 4002
 
 // HTTPError holds the http error description
-func (err ErrListTaskDoesNotExist) HTTPError() web.HTTPError {
-	return web.HTTPError{HTTPCode: http.StatusNotFound, Code: ErrCodeListTaskDoesNotExist, Message: "This list task does not exist"}
+func (err ErrTaskDoesNotExist) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusNotFound, Code: ErrCodeTaskDoesNotExist, Message: "This list task does not exist"}
 }
 
 // ErrBulkTasksMustBeInSameList represents a "ErrBulkTasksMustBeInSameList" kind of error.

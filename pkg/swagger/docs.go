@@ -488,7 +488,7 @@ var doc = `{
                         "required": true,
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.ListTask"
+                            "$ref": "#/definitions/models.Task"
                         }
                     }
                 ],
@@ -497,7 +497,7 @@ var doc = `{
                         "description": "The created task object.",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.ListTask"
+                            "$ref": "#/definitions/models.Task"
                         }
                     },
                     "400": {
@@ -2393,7 +2393,7 @@ var doc = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/models.ListTask"
+                                "$ref": "#/definitions/models.Task"
                             }
                         }
                     },
@@ -2442,7 +2442,7 @@ var doc = `{
                         "description": "The updated task object.",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.ListTask"
+                            "$ref": "#/definitions/models.Task"
                         }
                     },
                     "400": {
@@ -2502,7 +2502,7 @@ var doc = `{
                         "required": true,
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.ListTask"
+                            "$ref": "#/definitions/models.Task"
                         }
                     }
                 ],
@@ -2511,7 +2511,7 @@ var doc = `{
                         "description": "The updated task object.",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.ListTask"
+                            "$ref": "#/definitions/models.Task"
                         }
                     },
                     "400": {
@@ -2618,7 +2618,7 @@ var doc = `{
                         "required": true,
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.ListTaskAssginee"
+                            "$ref": "#/definitions/models.TaskAssginee"
                         }
                     },
                     {
@@ -2634,7 +2634,7 @@ var doc = `{
                         "description": "The created assingee object.",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.ListTaskAssginee"
+                            "$ref": "#/definitions/models.TaskAssginee"
                         }
                     },
                     "400": {
@@ -2696,7 +2696,7 @@ var doc = `{
                         "description": "The created assingees object.",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.ListTaskAssginee"
+                            "$ref": "#/definitions/models.TaskAssginee"
                         }
                     },
                     "400": {
@@ -3803,7 +3803,7 @@ var doc = `{
                     "description": "An array of subtasks.",
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/models.ListTask"
+                        "$ref": "#/definitions/models.Task"
                     }
                 },
                 "task_ids": {
@@ -3920,7 +3920,7 @@ var doc = `{
                     "description": "An array of tasks which belong to the list.",
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/models.ListTask"
+                        "$ref": "#/definitions/models.Task"
                     }
                 },
                 "title": {
@@ -3935,7 +3935,7 @@ var doc = `{
                 }
             }
         },
-        "models.ListTask": {
+        "models.Task": {
             "type": "object",
             "properties": {
                 "assignees": {
@@ -4021,7 +4021,7 @@ var doc = `{
                     "description": "An array of subtasks.",
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/models.ListTask"
+                        "$ref": "#/definitions/models.Task"
                     }
                 },
                 "text": {
@@ -4036,7 +4036,7 @@ var doc = `{
                 }
             }
         },
-        "models.ListTaskAssginee": {
+        "models.TaskAssginee": {
             "type": "object",
             "properties": {
                 "created": {

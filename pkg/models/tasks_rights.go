@@ -21,25 +21,25 @@ import (
 )
 
 // CanDelete checks if the user can delete an task
-func (t *ListTask) CanDelete(a web.Auth) (bool, error) {
-	return t.canDoListTask(a)
+func (t *Task) CanDelete(a web.Auth) (bool, error) {
+	return t.canDoTask(a)
 }
 
 // CanUpdate determines if a user has the right to update a list task
-func (t *ListTask) CanUpdate(a web.Auth) (bool, error) {
-	return t.canDoListTask(a)
+func (t *Task) CanUpdate(a web.Auth) (bool, error) {
+	return t.canDoTask(a)
 }
 
 // CanCreate determines if a user has the right to create a list task
-func (t *ListTask) CanCreate(a web.Auth) (bool, error) {
+func (t *Task) CanCreate(a web.Auth) (bool, error) {
 	// A user can do a task if he has write acces to its list
 	l := &List{ID: t.ListID}
 	return l.CanWrite(a)
 }
 
 // CanRead determines if a user can read a task
-func (t *ListTask) CanRead(a web.Auth) (canRead bool, err error) {
-	//return t.canDoListTask(a)
+func (t *Task) CanRead(a web.Auth) (canRead bool, err error) {
+	//return t.canDoTask(a)
 	// Get the task, error out if it doesn't exist
 	*t, err = GetTaskByIDSimple(t.ID)
 	if err != nil {
@@ -52,7 +52,7 @@ func (t *ListTask) CanRead(a web.Auth) (canRead bool, err error) {
 }
 
 // Helper function to check if a user can do stuff on a list task
-func (t *ListTask) canDoListTask(a web.Auth) (bool, error) {
+func (t *Task) canDoTask(a web.Auth) (bool, error) {
 	// Get the task
 	lI, err := GetTaskByIDSimple(t.ID)
 	if err != nil {

@@ -100,7 +100,7 @@ func TaskHandler(c echo.Context) error {
 
 	storage := &VikunjaCaldavListStorage{
 		list: &models.List{ID: listID},
-		task: &models.ListTask{UID: taskUID},
+		task: &models.Task{UID: taskUID},
 		user: &u,
 	}
 

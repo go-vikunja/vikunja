@@ -24,9 +24,9 @@ import (
 // BulkTask is the definition of a bulk update task
 type BulkTask struct {
 	// A list of task ids to update
-	IDs   []int64     `json:"task_ids"`
-	Tasks []*ListTask `json:"-"`
-	ListTask
+	IDs   []int64 `json:"task_ids"`
+	Tasks []*Task `json:"-"`
+	Task
 }
 
 func (bt *BulkTask) checkIfTasksAreOnTheSameList() (err error) {
@@ -72,7 +72,7 @@ func (bt *BulkTask) CanUpdate(a web.Auth) (bool, error) {
 // @Produce json
 // @Security JWTKeyAuth
 // @Param task body models.BulkTask true "The task object. Looks like a normal task, the only difference is it uses an array of list_ids to update."
-// @Success 200 {object} models.ListTask "The updated task object."
+// @Success 200 {object} models.Task "The updated task object."
 // @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid task object provided."
 // @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have access to the task (aka its list)"
 // @Failure 500 {object} models.Message "Internal error"
@@ -90,7 +90,7 @@ func (bt *BulkTask) Update() (err error) {
 	for _, oldtask := range bt.Tasks {
 
 		// When a repeating task is marked as done, we update all deadlines and reminders and set it as undone
-		updateDone(oldtask, &bt.ListTask)
+		updateDone(oldtask, &bt.Task)
 
 		// Update the assignees
 		if err := oldtask.updateTaskAssignees(bt.Assignees); err != nil {
@@ -100,12 +100,12 @@ func (bt *BulkTask) Update() (err error) {
 		// For whatever reason, xorm dont detect if done is updated, so we need to update this every time by hand
 		// Which is why we merge the actual task struct with the one we got from the
 		// The user struct overrides values in the actual one.
-		if err := mergo.Merge(oldtask, &bt.ListTask, mergo.WithOverride); err != nil {
+		if err := mergo.Merge(oldtask, &bt.Task, mergo.WithOverride); err != nil {
 			return err
 		}
 
 		// And because a false is considered to be a null value, we need to explicitly check that case here.
-		if !bt.ListTask.Done {
+		if !bt.Task.Done {
 			oldtask.Done = false
 		}
 

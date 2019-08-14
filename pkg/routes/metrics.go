@@ -55,7 +55,7 @@ func setupMetrics(a *echo.Group) {
 			},
 			{
 				metrics.TaskCountKey,
-				models.ListTask{},
+				models.Task{},
 			},
 			{
 				metrics.TeamCountKey,

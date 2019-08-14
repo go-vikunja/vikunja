@@ -37,7 +37,7 @@ type VikunjaCaldavListStorage struct {
 	// Used when handling a list
 	list *models.List
 	// Used when handling a single task, like updating
-	task *models.ListTask
+	task *models.Task
 	// The current user
 	user        *models.User
 	isPrincipal bool
@@ -176,7 +176,7 @@ func (vcls *VikunjaCaldavListStorage) GetResourcesByFilters(rpath string, filter
 	//return vcls.GetResources(rpath, false)
 }
 
-func getTaskURL(task *models.ListTask) string {
+func getTaskURL(task *models.Task) string {
 	return ListBasePath + "/" + strconv.FormatInt(task.ListID, 10) + `/` + task.UID + `.ics`
 }
 
@@ -187,9 +187,9 @@ func (vcls *VikunjaCaldavListStorage) GetResource(rpath string) (*data.Resource,
 	if vcls.task != nil {
 		// save and override the updated unix date to not break any later etag checks
 		updated := vcls.task.Updated
-		task, err := models.GetTaskSimple(&models.ListTask{ID: vcls.task.ID, UID: vcls.task.UID})
+		task, err := models.GetTaskSimple(&models.Task{ID: vcls.task.ID, UID: vcls.task.UID})
 		if err != nil {
-			if models.IsErrListTaskDoesNotExist(err) {
+			if models.IsErrTaskDoesNotExist(err) {
 				return nil, false, errs.ResourceNotFoundError
 			}
 			return nil, false, err
@@ -316,7 +316,7 @@ func (vcls *VikunjaCaldavListStorage) DeleteResource(rpath string) error {
 // VikunjaListResourceAdapter holds the actual resource
 type VikunjaListResourceAdapter struct {
 	list *models.List
-	task *models.ListTask
+	task *models.Task
 
 	isPrincipal  bool
 	isCollection bool
@@ -356,7 +356,7 @@ func (vlra *VikunjaListResourceAdapter) GetContent() string {
 	}
 
 	if vlra.task != nil {
-		list := models.List{Tasks: []*models.ListTask{vlra.task}}
+		list := models.List{Tasks: []*models.Task{vlra.task}}
 		return getCaldavTodosForTasks(&list)
 	}
 

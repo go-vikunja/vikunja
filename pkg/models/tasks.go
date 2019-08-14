@@ -25,8 +25,8 @@ import (
 	"time"
 )
 
-// ListTask represents an task in a todolist
-type ListTask struct {
+// Task represents an task in a todolist
+type Task struct {
 	// The unique, numeric id of this task.
 	ID int64 `xorm:"int(11) autoincr not null unique pk" json:"id" param:"listtask"`
 	// The task text. This is what you'll see in the list.
@@ -69,7 +69,7 @@ type ListTask struct {
 	EndDateSortUnix   int64  `xorm:"-" json:"-" query:"enddate"`
 
 	// An array of subtasks.
-	Subtasks []*ListTask `xorm:"-" json:"subtasks"`
+	Subtasks []*Task `xorm:"-" json:"subtasks"`
 
 	// A unix timestamp when this task was created. You cannot change this value.
 	Created int64 `xorm:"created not null" json:"created"`
@@ -84,7 +84,7 @@ type ListTask struct {
 }
 
 // TableName returns the table name for listtasks
-func (ListTask) TableName() string {
+func (Task) TableName() string {
 	return "tasks"
 }
 
@@ -125,10 +125,10 @@ const (
 // @Param startdate query int false "The start date parameter to filter by. Expects a unix timestamp. If no end date, but a start date is specified, the end date is set to the current time."
 // @Param enddate query int false "The end date parameter to filter by. Expects a unix timestamp. If no start date, but an end date is specified, the start date is set to the current time."
 // @Security JWTKeyAuth
-// @Success 200 {array} models.ListTask "The tasks"
+// @Success 200 {array} models.Task "The tasks"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/all [get]
-func (t *ListTask) ReadAll(search string, a web.Auth, page int) (interface{}, error) {
+func (t *Task) ReadAll(search string, a web.Auth, page int) (interface{}, error) {
 	var sortby SortBy
 	switch t.Sorting {
 	case "priority":
@@ -151,7 +151,7 @@ func (t *ListTask) ReadAll(search string, a web.Auth, page int) (interface{}, er
 }
 
 //GetTasksByUser returns all tasks for a user
-func GetTasksByUser(search string, u *User, page int, sortby SortBy, startDate time.Time, endDate time.Time) ([]*ListTask, error) {
+func GetTasksByUser(search string, u *User, page int, sortby SortBy, startDate time.Time, endDate time.Time) ([]*Task, error) {
 	// Get all lists
 	lists, err := getRawListsForUser("", u, page)
 	if err != nil {
@@ -176,7 +176,7 @@ func GetTasksByUser(search string, u *User, page int, sortby SortBy, startDate t
 		orderby = "due_date_unix asc"
 	}
 
-	taskMap := make(map[int64]*ListTask)
+	taskMap := make(map[int64]*Task)
 
 	// Then return all tasks for that lists
 	if startDate.Unix() != 0 || endDate.Unix() != 0 {
@@ -222,7 +222,7 @@ func GetTasksByUser(search string, u *User, page int, sortby SortBy, startDate t
 	return tasks, err
 }
 
-func sortTasks(tasks []*ListTask, by SortBy) {
+func sortTasks(tasks []*Task, by SortBy) {
 	switch by {
 	case SortTasksByPriorityDesc:
 		sort.Slice(tasks, func(i, j int) bool {
@@ -244,9 +244,9 @@ func sortTasks(tasks []*ListTask, by SortBy) {
 }
 
 // GetTasksByListID gets all todotasks for a list
-func GetTasksByListID(listID int64) (tasks []*ListTask, err error) {
+func GetTasksByListID(listID int64) (tasks []*Task, err error) {
 	// make a map so we can put in a lot of other stuff more easily
-	taskMap := make(map[int64]*ListTask, len(tasks))
+	taskMap := make(map[int64]*Task, len(tasks))
 	err = x.Where("list_id = ?", listID).Find(&taskMap)
 	if err != nil {
 		return
@@ -257,30 +257,30 @@ func GetTasksByListID(listID int64) (tasks []*ListTask, err error) {
 }
 
 // GetTaskByIDSimple returns a raw task without extra data by the task ID
-func GetTaskByIDSimple(taskID int64) (task ListTask, err error) {
+func GetTaskByIDSimple(taskID int64) (task Task, err error) {
 	if taskID < 1 {
-		return ListTask{}, ErrListTaskDoesNotExist{taskID}
+		return Task{}, ErrTaskDoesNotExist{taskID}
 	}
 
-	return GetTaskSimple(&ListTask{ID: taskID})
+	return GetTaskSimple(&Task{ID: taskID})
 }
 
 // GetTaskSimple returns a raw task without extra data
-func GetTaskSimple(t *ListTask) (task ListTask, err error) {
+func GetTaskSimple(t *Task) (task Task, err error) {
 	task = *t
 	exists, err := x.Get(&task)
 	if err != nil {
-		return ListTask{}, err
+		return Task{}, err
 	}
 
 	if !exists {
-		return ListTask{}, ErrListTaskDoesNotExist{t.ID}
+		return Task{}, ErrTaskDoesNotExist{t.ID}
 	}
 	return
 }
 
 // GetTaskByID returns all tasks a list has
-func GetTaskByID(listTaskID int64) (listTask ListTask, err error) {
+func GetTaskByID(listTaskID int64) (listTask Task, err error) {
 	listTask, err = GetTaskByIDSimple(listTaskID)
 	if err != nil {
 		return
@@ -321,11 +321,11 @@ func GetTaskByID(listTaskID int64) (listTask ListTask, err error) {
 func (bt *BulkTask) GetTasksByIDs() (err error) {
 	for _, id := range bt.IDs {
 		if id < 1 {
-			return ErrListTaskDoesNotExist{id}
+			return ErrTaskDoesNotExist{id}
 		}
 	}
 
-	taskMap := make(map[int64]*ListTask, len(bt.Tasks))
+	taskMap := make(map[int64]*Task, len(bt.Tasks))
 	err = x.In("id", bt.IDs).Find(&taskMap)
 	if err != nil {
 		return
@@ -336,8 +336,8 @@ func (bt *BulkTask) GetTasksByIDs() (err error) {
 }
 
 // GetTasksByUIDs gets all tasks from a bunch of uids
-func GetTasksByUIDs(uids []string) (tasks []*ListTask, err error) {
-	taskMap := make(map[int64]*ListTask)
+func GetTasksByUIDs(uids []string) (tasks []*Task, err error) {
+	taskMap := make(map[int64]*Task)
 	err = x.In("uid", uids).Find(&taskMap)
 	if err != nil {
 		return
@@ -349,7 +349,7 @@ func GetTasksByUIDs(uids []string) (tasks []*ListTask, err error) {
 
 // This function takes a map with pointers and returns a slice with pointers to tasks
 // It adds more stuff like assignees/labels/etc to a bunch of tasks
-func addMoreInfoToTasks(taskMap map[int64]*ListTask) (tasks []*ListTask, err error) {
+func addMoreInfoToTasks(taskMap map[int64]*Task) (tasks []*Task, err error) {
 
 	// No need to iterate over users and stuff if the list doesn't has tasks
 	if len(taskMap) == 0 {
@@ -430,7 +430,7 @@ func addMoreInfoToTasks(taskMap map[int64]*ListTask) (tasks []*ListTask, err err
 	}
 
 	// make a complete slice from the map
-	tasks = []*ListTask{}
+	tasks = []*Task{}
 	for _, t := range taskMap {
 		tasks = append(tasks, t)
 	}
@@ -453,19 +453,19 @@ func addMoreInfoToTasks(taskMap map[int64]*ListTask) (tasks []*ListTask, err err
 // @Produce json
 // @Security JWTKeyAuth
 // @Param id path int true "List ID"
-// @Param task body models.ListTask true "The task object"
-// @Success 200 {object} models.ListTask "The created task object."
+// @Param task body models.Task true "The task object"
+// @Success 200 {object} models.Task "The created task object."
 // @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid task object provided."
 // @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have access to the list"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{id} [put]
-func (t *ListTask) Create(a web.Auth) (err error) {
+func (t *Task) Create(a web.Auth) (err error) {
 
 	t.ID = 0
 
 	// Check if we have at least a text
 	if t.Text == "" {
-		return ErrListTaskCannotBeEmpty{}
+		return ErrTaskCannotBeEmpty{}
 	}
 
 	// Check if the list exists
@@ -514,13 +514,13 @@ func (t *ListTask) Create(a web.Auth) (err error) {
 // @Produce json
 // @Security JWTKeyAuth
 // @Param id path int true "Task ID"
-// @Param task body models.ListTask true "The task object"
-// @Success 200 {object} models.ListTask "The updated task object."
+// @Param task body models.Task true "The task object"
+// @Success 200 {object} models.Task "The updated task object."
 // @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid task object provided."
 // @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have access to the task (aka its list)"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{id} [post]
-func (t *ListTask) Update() (err error) {
+func (t *Task) Update() (err error) {
 	// Check if the task exists
 	ot, err := GetTaskByID(t.ID)
 	if err != nil {
@@ -634,7 +634,7 @@ func (t *ListTask) Update() (err error) {
 
 // This helper function updates the reminders and doneAtUnix of the *old* task (since that's the one we're inserting
 // with updated values into the db)
-func updateDone(oldTask *ListTask, newTask *ListTask) {
+func updateDone(oldTask *Task, newTask *Task) {
 	if !oldTask.Done && newTask.Done && oldTask.RepeatAfter > 0 {
 		oldTask.DueDateUnix = oldTask.DueDateUnix + oldTask.RepeatAfter // assuming we'll save the old task (merged)
 
@@ -657,7 +657,7 @@ func updateDone(oldTask *ListTask, newTask *ListTask) {
 
 // Creates or deletes all necessary remindes without unneded db operations.
 // The parameter is a slice with unix dates which holds the new reminders.
-func (t *ListTask) updateReminders(reminders []int64) (err error) {
+func (t *Task) updateReminders(reminders []int64) (err error) {
 
 	// If we're removing everything, delete all reminders right away
 	if len(reminders) == 0 && len(t.RemindersUnix) > 0 {
@@ -701,7 +701,7 @@ func (t *ListTask) updateReminders(reminders []int64) (err error) {
 	if len(remindersToDelete) > 0 {
 		_, err = x.In("reminder_unix", remindersToDelete).
 			And("task_id = ?", t.ID).
-			Delete(ListTaskAssginee{})
+			Delete(TaskAssginee{})
 		if err != nil {
 			return err
 		}
@@ -743,7 +743,7 @@ func (t *ListTask) updateReminders(reminders []int64) (err error) {
 // @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have access to the list"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{id} [delete]
-func (t *ListTask) Delete() (err error) {
+func (t *Task) Delete() (err error) {
 
 	// Check if it exists
 	_, err = GetTaskByID(t.ID)
@@ -751,12 +751,12 @@ func (t *ListTask) Delete() (err error) {
 		return
 	}
 
-	if _, err = x.ID(t.ID).Delete(ListTask{}); err != nil {
+	if _, err = x.ID(t.ID).Delete(Task{}); err != nil {
 		return err
 	}
 
 	// Delete assignees
-	if _, err = x.Where("task_id = ?", t.ID).Delete(ListTaskAssginee{}); err != nil {
+	if _, err = x.Where("task_id = ?", t.ID).Delete(TaskAssginee{}); err != nil {
 		return err
 	}
 

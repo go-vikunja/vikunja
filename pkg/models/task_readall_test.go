@@ -15,7 +15,7 @@ import (
 	"code.vikunja.io/web"
 )
 
-func sortTasksForTesting(by SortBy) (tasks []*ListTask) {
+func sortTasksForTesting(by SortBy) (tasks []*Task) {
 	user1 := &User{
 		ID:        1,
 		Username:  "user1",
@@ -37,7 +37,7 @@ func sortTasksForTesting(by SortBy) (tasks []*ListTask) {
 		AvatarURL: "3efbe51f864c6666bc27caf4c6ff90ed", // hash for ""
 	}
 
-	tasks = []*ListTask{
+	tasks = []*Task{
 		{
 			ID:          1,
 			Text:        "task #1",
@@ -341,7 +341,7 @@ func sortTasksForTesting(by SortBy) (tasks []*ListTask) {
 	return
 }
 
-func TestListTask_ReadAll(t *testing.T) {
+func TestTask_ReadAll(t *testing.T) {
 	assert.NoError(t, LoadFixtures())
 
 	// Dummy users
@@ -368,7 +368,7 @@ func TestListTask_ReadAll(t *testing.T) {
 		Sorting           string
 		StartDateSortUnix int64
 		EndDateSortUnix   int64
-		Subtasks          []*ListTask
+		Subtasks          []*Task
 		Created           int64
 		Updated           int64
 		CreatedBy         *User
@@ -388,7 +388,7 @@ func TestListTask_ReadAll(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name:   "ReadAll ListTasks normally",
+			name:   "ReadAll Tasks normally",
 			fields: fields{},
 			args: args{
 				search: "",
@@ -399,7 +399,7 @@ func TestListTask_ReadAll(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "ReadAll ListTasks sorted by priority (desc)",
+			name: "ReadAll Tasks sorted by priority (desc)",
 			fields: fields{
 				Sorting: "priority",
 			},
@@ -412,7 +412,7 @@ func TestListTask_ReadAll(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "ReadAll ListTasks sorted by priority asc",
+			name: "ReadAll Tasks sorted by priority asc",
 			fields: fields{
 				Sorting: "priorityasc",
 			},
@@ -425,7 +425,7 @@ func TestListTask_ReadAll(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "ReadAll ListTasks sorted by priority desc",
+			name: "ReadAll Tasks sorted by priority desc",
 			fields: fields{
 				Sorting: "prioritydesc",
 			},
@@ -438,7 +438,7 @@ func TestListTask_ReadAll(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "ReadAll ListTasks sorted by due date default desc",
+			name: "ReadAll Tasks sorted by due date default desc",
 			fields: fields{
 				Sorting: "duedate",
 			},
@@ -451,7 +451,7 @@ func TestListTask_ReadAll(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "ReadAll ListTasks sorted by due date asc",
+			name: "ReadAll Tasks sorted by due date asc",
 			fields: fields{
 				Sorting: "duedateasc",
 			},
@@ -464,7 +464,7 @@ func TestListTask_ReadAll(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "ReadAll ListTasks sorted by due date desc",
+			name: "ReadAll Tasks sorted by due date desc",
 			fields: fields{
 				Sorting: "duedatedesc",
 			},
@@ -478,7 +478,7 @@ func TestListTask_ReadAll(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "ReadAll ListTasks with range",
+			name: "ReadAll Tasks with range",
 			fields: fields{
 				StartDateSortUnix: 1544500000,
 				EndDateSortUnix:   1544600000,
@@ -488,7 +488,7 @@ func TestListTask_ReadAll(t *testing.T) {
 				a:      &User{ID: 1},
 				page:   0,
 			},
-			want: []*ListTask{
+			want: []*Task{
 				{
 					ID:            7,
 					Text:          "task #7 with start date",
@@ -514,7 +514,7 @@ func TestListTask_ReadAll(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "ReadAll ListTasks with range",
+			name: "ReadAll Tasks with range",
 			fields: fields{
 				StartDateSortUnix: 1544700000,
 				EndDateSortUnix:   1545000000,
@@ -524,7 +524,7 @@ func TestListTask_ReadAll(t *testing.T) {
 				a:      &User{ID: 1},
 				page:   0,
 			},
-			want: []*ListTask{
+			want: []*Task{
 				{
 					ID:          8,
 					Text:        "task #8 with end date",
@@ -550,7 +550,7 @@ func TestListTask_ReadAll(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "ReadAll ListTasks with range without end date",
+			name: "ReadAll Tasks with range without end date",
 			fields: fields{
 				StartDateSortUnix: 1544700000,
 			},
@@ -559,7 +559,7 @@ func TestListTask_ReadAll(t *testing.T) {
 				a:      &User{ID: 1},
 				page:   0,
 			},
-			want: []*ListTask{
+			want: []*Task{
 				{
 					ID:          8,
 					Text:        "task #8 with end date",
@@ -587,7 +587,7 @@ func TestListTask_ReadAll(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			lt := &ListTask{
+			lt := &Task{
 				ID:                tt.fields.ID,
 				Text:              tt.fields.Text,
 				Description:       tt.fields.Description,
@@ -611,7 +611,7 @@ func TestListTask_ReadAll(t *testing.T) {
 			}
 			got, err := lt.ReadAll(tt.args.search, tt.args.a, tt.args.page)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("Test %s, ListTask.ReadAll() error = %v, wantErr %v", tt.name, err, tt.wantErr)
+				t.Errorf("Test %s, Task.ReadAll() error = %v, wantErr %v", tt.name, err, tt.wantErr)
 				return
 			}
 			if diff, equal := messagediff.PrettyDiff(got, tt.want); !equal {

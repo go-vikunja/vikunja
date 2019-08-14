@@ -70,8 +70,8 @@ func TestList(t *testing.T) {
 		})
 		t.Run("Rights check", func(t *testing.T) {
 			t.Run("Forbidden", func(t *testing.T) {
-				// Owned by user3
-				_, err := testHandler.testReadOne(nil, map[string]string{"list": "2"})
+				// Owned by user13
+				_, err := testHandler.testReadOne(nil, map[string]string{"list": "20"})
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `You don't have the right to see this`)
 			})
@@ -177,8 +177,8 @@ func TestList(t *testing.T) {
 		})
 		t.Run("Rights check", func(t *testing.T) {
 			t.Run("Forbidden", func(t *testing.T) {
-				// Owned by user3
-				_, err := testHandler.testUpdate(nil, map[string]string{"list": "2"}, `{"title":"TestLoremIpsum"}`)
+				// Owned by user13
+				_, err := testHandler.testUpdate(nil, map[string]string{"list": "20"}, `{"title":"TestLoremIpsum"}`)
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
@@ -260,8 +260,8 @@ func TestList(t *testing.T) {
 		})
 		t.Run("Rights check", func(t *testing.T) {
 			t.Run("Forbidden", func(t *testing.T) {
-				// Owned by user3
-				_, err := testHandler.testDelete(nil, map[string]string{"list": "2"})
+				// Owned by user13
+				_, err := testHandler.testDelete(nil, map[string]string{"list": "20"})
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
@@ -371,8 +371,8 @@ func TestList(t *testing.T) {
 		t.Run("Rights check", func(t *testing.T) {
 
 			t.Run("Forbidden", func(t *testing.T) {
-				// Owned by user3
-				_, err := testHandler.testCreate(nil, map[string]string{"namespace": "3"}, `{"title":"Lorem"}`)
+				// Owned by user13
+				_, err := testHandler.testCreate(nil, map[string]string{"namespace": "15"}, `{"title":"Lorem"}`)
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})

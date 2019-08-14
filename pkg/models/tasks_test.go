@@ -21,11 +21,11 @@ import (
 	"testing"
 )
 
-func TestListTask_Create(t *testing.T) {
+func TestTask_Create(t *testing.T) {
 	//assert.NoError(t, LoadFixtures())
 
 	// Fake list task
-	listtask := ListTask{
+	listtask := Task{
 		Text:        "Lorem",
 		Description: "Lorem Ipsum BACKERY",
 		ListID:      1,
@@ -63,13 +63,13 @@ func TestListTask_Create(t *testing.T) {
 	listtask.ID = 0
 	err = listtask.Delete()
 	assert.Error(t, err)
-	assert.True(t, IsErrListTaskDoesNotExist(err))
+	assert.True(t, IsErrTaskDoesNotExist(err))
 
 	// Try adding a list task with an empty text
 	listtask.Text = ""
 	err = listtask.Create(doer)
 	assert.Error(t, err)
-	assert.True(t, IsErrListTaskCannotBeEmpty(err))
+	assert.True(t, IsErrTaskCannotBeEmpty(err))
 
 	// Try adding one to a nonexistant list
 	listtask.ListID = 99993939
@@ -82,7 +82,7 @@ func TestListTask_Create(t *testing.T) {
 	listtask.ID = 94829352
 	err = listtask.Update()
 	assert.Error(t, err)
-	assert.True(t, IsErrListTaskDoesNotExist(err))
+	assert.True(t, IsErrTaskDoesNotExist(err))
 
 	// Try inserting an task with a nonexistant user
 	nUser := &User{ID: 9482385}
@@ -94,14 +94,14 @@ func TestListTask_Create(t *testing.T) {
 
 func TestUpdateDone(t *testing.T) {
 	t.Run("marking a task as done", func(t *testing.T) {
-		oldTask := &ListTask{Done: false}
-		newTask := &ListTask{Done: true}
+		oldTask := &Task{Done: false}
+		newTask := &Task{Done: true}
 		updateDone(oldTask, newTask)
 		assert.NotEqual(t, int64(0), oldTask.DoneAtUnix)
 	})
 	t.Run("unmarking a task as done", func(t *testing.T) {
-		oldTask := &ListTask{Done: true}
-		newTask := &ListTask{Done: false}
+		oldTask := &Task{Done: true}
+		newTask := &Task{Done: false}
 		updateDone(oldTask, newTask)
 		assert.Equal(t, int64(0), oldTask.DoneAtUnix)
 	})

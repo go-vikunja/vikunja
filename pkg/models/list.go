@@ -35,7 +35,7 @@ type List struct {
 	// The user who created this list.
 	Owner *User `xorm:"-" json:"owner" valid:"-"`
 	// An array of tasks which belong to the list.
-	Tasks []*ListTask `xorm:"-" json:"tasks"`
+	Tasks []*Task `xorm:"-" json:"tasks"`
 
 	// A unix timestamp when this list was created. You cannot change this value.
 	Created int64 `xorm:"created not null" json:"created"`
@@ -206,7 +206,7 @@ func AddListDetails(lists []*List) (err error) {
 	}
 
 	// Get all tasks
-	ts := []*ListTask{}
+	ts := []*Task{}
 	err = x.In("list_id", listIDs).Find(&ts)
 	if err != nil {
 		return
@@ -354,6 +354,6 @@ func (l *List) Delete() (err error) {
 	metrics.UpdateCount(-1, metrics.ListCountKey)
 
 	// Delete all todotasks on that list
-	_, err = x.Where("list_id = ?", l.ID).Delete(&ListTask{})
+	_, err = x.Where("list_id = ?", l.ID).Delete(&Task{})
 	return
 }

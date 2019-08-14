@@ -25,16 +25,16 @@ import (
 	"testing"
 )
 
-func TestListTask(t *testing.T) {
+func TestTask(t *testing.T) {
 	testHandler := webHandlerTest{
 		user: &testuser1,
 		strFunc: func() handler.CObject {
-			return &models.ListTask{}
+			return &models.Task{}
 		},
 		t: t,
 	}
 	// Only run specific nested tests:
-	// ^TestListTask$/^Update$/^Update_task_items$/^Removing_Assignees_null$
+	// ^TestTask$/^Update$/^Update_task_items$/^Removing_Assignees_null$
 	t.Run("ReadAll", func(t *testing.T) {
 		t.Run("Normal", func(t *testing.T) {
 			rec, err := testHandler.testReadAll(nil, nil)
@@ -333,7 +333,7 @@ func TestListTask(t *testing.T) {
 		t.Run("Nonexisting", func(t *testing.T) {
 			_, err := testHandler.testUpdate(nil, map[string]string{"listtask": "99999"}, `{"text":"Lorem Ipsum"}`)
 			assert.Error(t, err)
-			assertHandlerErrorCode(t, err, models.ErrCodeListTaskDoesNotExist)
+			assertHandlerErrorCode(t, err, models.ErrCodeTaskDoesNotExist)
 		})
 		t.Run("Rights check", func(t *testing.T) {
 			t.Run("Forbidden", func(t *testing.T) {
@@ -415,7 +415,7 @@ func TestListTask(t *testing.T) {
 		t.Run("Nonexisting", func(t *testing.T) {
 			_, err := testHandler.testDelete(nil, map[string]string{"listtask": "99999"})
 			assert.Error(t, err)
-			assertHandlerErrorCode(t, err, models.ErrCodeListTaskDoesNotExist)
+			assertHandlerErrorCode(t, err, models.ErrCodeTaskDoesNotExist)
 		})
 		t.Run("Rights check", func(t *testing.T) {
 			t.Run("Forbidden", func(t *testing.T) {
@@ -501,8 +501,8 @@ func TestListTask(t *testing.T) {
 		})
 		t.Run("Rights check", func(t *testing.T) {
 			t.Run("Forbidden", func(t *testing.T) {
-				// Owned by user3
-				_, err := testHandler.testCreate(nil, map[string]string{"list": "2"}, `{"text":"Lorem Ipsum"}`)
+				// Owned by user13
+				_, err := testHandler.testCreate(nil, map[string]string{"list": "20"}, `{"text":"Lorem Ipsum"}`)
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})

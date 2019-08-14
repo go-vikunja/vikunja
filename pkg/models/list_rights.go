@@ -130,6 +130,9 @@ func (l *List) checkRight(a web.Auth, rights ...Right) (bool, error) {
 		))
 	}
 
+	// If the user is the owner of a namespace, it has any right, all the time
+	conds = append(conds, builder.Eq{"n.owner_id": a.GetID()})
+
 	exists, err := x.Select("l.*").
 		Table("list").
 		Alias("l").

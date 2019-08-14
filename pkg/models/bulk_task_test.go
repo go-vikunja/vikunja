@@ -6,10 +6,10 @@ import (
 
 func TestBulkTask_Update(t *testing.T) {
 	type fields struct {
-		IDs      []int64
-		Tasks    []*ListTask
-		ListTask ListTask
-		User     *User
+		IDs   []int64
+		Tasks []*Task
+		Task  Task
+		User  *User
 	}
 	tests := []struct {
 		name          string
@@ -21,7 +21,7 @@ func TestBulkTask_Update(t *testing.T) {
 			name: "Test normal update",
 			fields: fields{
 				IDs: []int64{10, 11, 12},
-				ListTask: ListTask{
+				Task: Task{
 					Text: "bulkupdated",
 				},
 				User: &User{ID: 1},
@@ -31,7 +31,7 @@ func TestBulkTask_Update(t *testing.T) {
 			name: "Test with one task on different list",
 			fields: fields{
 				IDs: []int64{10, 11, 12, 13},
-				ListTask: ListTask{
+				Task: Task{
 					Text: "bulkupdated",
 				},
 				User: &User{ID: 1},
@@ -42,7 +42,7 @@ func TestBulkTask_Update(t *testing.T) {
 			name: "Test without any tasks",
 			fields: fields{
 				IDs: []int64{},
-				ListTask: ListTask{
+				Task: Task{
 					Text: "bulkupdated",
 				},
 				User: &User{ID: 1},
@@ -53,9 +53,9 @@ func TestBulkTask_Update(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			bt := &BulkTask{
-				IDs:      tt.fields.IDs,
-				Tasks:    tt.fields.Tasks,
-				ListTask: tt.fields.ListTask,
+				IDs:   tt.fields.IDs,
+				Tasks: tt.fields.Tasks,
+				Task:  tt.fields.Task,
 			}
 			allowed, _ := bt.CanUpdate(tt.fields.User)
 			if !allowed != tt.wantForbidden {

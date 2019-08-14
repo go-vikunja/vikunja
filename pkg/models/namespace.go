@@ -330,7 +330,7 @@ func (n *Namespace) Delete() (err error) {
 	}
 
 	// Delete tasks
-	_, err = x.In("list_id", listIDs).Delete(&ListTask{})
+	_, err = x.In("list_id", listIDs).Delete(&Task{})
 	if err != nil {
 		return
 	}

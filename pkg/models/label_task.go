@@ -109,7 +109,7 @@ func (lt *LabelTask) Create(a web.Auth) (err error) {
 // @Router /tasks/{task}/labels [get]
 func (lt *LabelTask) ReadAll(search string, a web.Auth, page int) (labels interface{}, err error) {
 	// Check if the user has the right to see the task
-	task := ListTask{ID: lt.TaskID}
+	task := Task{ID: lt.TaskID}
 	canRead, err := task.CanRead(a)
 	if err != nil {
 		return nil, err
@@ -193,7 +193,7 @@ func getLabelsByTaskIDs(opts *LabelByTaskIDsOptions) (ls []*labelWithTaskID, err
 }
 
 // Create or update a bunch of task labels
-func (t *ListTask) updateTaskLabels(creator web.Auth, labels []*Label) (err error) {
+func (t *Task) updateTaskLabels(creator web.Auth, labels []*Label) (err error) {
 
 	// If we don't have any new labels, delete everything right away. Saves us some hassle.
 	if len(labels) == 0 && len(t.Labels) > 0 {

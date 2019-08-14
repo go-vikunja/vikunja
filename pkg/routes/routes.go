@@ -196,7 +196,7 @@ func registerAPIRoutes(a *echo.Group) {
 
 	taskHandler := &handler.WebHandler{
 		EmptyStruct: func() handler.CObject {
-			return &models.ListTask{}
+			return &models.Task{}
 		},
 	}
 	a.PUT("/lists/:list", taskHandler.CreateWeb)
@@ -213,7 +213,7 @@ func registerAPIRoutes(a *echo.Group) {
 
 	assigneeTaskHandler := &handler.WebHandler{
 		EmptyStruct: func() handler.CObject {
-			return &models.ListTaskAssginee{}
+			return &models.TaskAssginee{}
 		},
 	}
 	a.PUT("/tasks/:listtask/assignees", assigneeTaskHandler.CreateWeb)

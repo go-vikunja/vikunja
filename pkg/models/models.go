@@ -36,7 +36,7 @@ func GetTables() []interface{} {
 	return []interface{}{
 		&User{},
 		&List{},
-		&ListTask{},
+		&Task{},
 		&Team{},
 		&TeamMember{},
 		&TeamList{},
@@ -44,7 +44,7 @@ func GetTables() []interface{} {
 		&Namespace{},
 		&ListUser{},
 		&NamespaceUser{},
-		&ListTaskAssginee{},
+		&TaskAssginee{},
 		&Label{},
 		&LabelTask{},
 		&TaskReminder{},

@@ -20,8 +20,8 @@ import (
 	"code.vikunja.io/web"
 )
 
-// ListTaskAssginee represents an assignment of a user to a task
-type ListTaskAssginee struct {
+// TaskAssginee represents an assignment of a user to a task
+type TaskAssginee struct {
 	ID      int64 `xorm:"int(11) autoincr not null unique pk" json:"-"`
 	TaskID  int64 `xorm:"int(11) INDEX not null" json:"-" param:"listtask"`
 	UserID  int64 `xorm:"int(11) INDEX not null" json:"user_id" param:"user"`
@@ -32,18 +32,18 @@ type ListTaskAssginee struct {
 }
 
 // TableName makes a pretty table name
-func (ListTaskAssginee) TableName() string {
+func (TaskAssginee) TableName() string {
 	return "task_assignees"
 }
 
-// ListTaskAssigneeWithUser is a helper type to deal with user joins
-type ListTaskAssigneeWithUser struct {
+// TaskAssigneeWithUser is a helper type to deal with user joins
+type TaskAssigneeWithUser struct {
 	TaskID int64
 	User   `xorm:"extends"`
 }
 
-func getRawTaskAssigneesForTasks(taskIDs []int64) (taskAssignees []*ListTaskAssigneeWithUser, err error) {
-	taskAssignees = []*ListTaskAssigneeWithUser{nil}
+func getRawTaskAssigneesForTasks(taskIDs []int64) (taskAssignees []*TaskAssigneeWithUser, err error) {
+	taskAssignees = []*TaskAssigneeWithUser{nil}
 	err = x.Table("task_assignees").
 		Select("task_id, users.*").
 		In("task_id", taskIDs).
@@ -53,12 +53,12 @@ func getRawTaskAssigneesForTasks(taskIDs []int64) (taskAssignees []*ListTaskAssi
 }
 
 // Create or update a bunch of task assignees
-func (t *ListTask) updateTaskAssignees(assignees []*User) (err error) {
+func (t *Task) updateTaskAssignees(assignees []*User) (err error) {
 
 	// If we don't have any new assignees, delete everything right away. Saves us some hassle.
 	if len(assignees) == 0 && len(t.Assignees) > 0 {
 		_, err = x.Where("task_id = ?", t.ID).
-			Delete(ListTaskAssginee{})
+			Delete(TaskAssginee{})
 		t.setTaskAssignees(assignees)
 		return err
 	}
@@ -96,7 +96,7 @@ func (t *ListTask) updateTaskAssignees(assignees []*User) (err error) {
 	if len(assigneesToDelete) > 0 {
 		_, err = x.In("user_id", assigneesToDelete).
 			And("task_id = ?", t.ID).
-			Delete(ListTaskAssginee{})
+			Delete(TaskAssginee{})
 		if err != nil {
 			return err
 		}
@@ -131,7 +131,7 @@ func (t *ListTask) updateTaskAssignees(assignees []*User) (err error) {
 }
 
 // Small helper functions to set the new assignees in various places
-func (t *ListTask) setTaskAssignees(assignees []*User) {
+func (t *Task) setTaskAssignees(assignees []*User) {
 	if len(assignees) == 0 {
 		t.Assignees = nil
 		return
@@ -152,8 +152,8 @@ func (t *ListTask) setTaskAssignees(assignees []*User) {
 // @Failure 403 {object} code.vikunja.io/web.HTTPError "Not allowed to delete the assignee."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/assignees/{userID} [delete]
-func (la *ListTaskAssginee) Delete() (err error) {
-	_, err = x.Delete(&ListTaskAssginee{TaskID: la.TaskID, UserID: la.UserID})
+func (la *TaskAssginee) Delete() (err error) {
+	_, err = x.Delete(&TaskAssginee{TaskID: la.TaskID, UserID: la.UserID})
 	if err != nil {
 		return err
 	}
@@ -169,13 +169,13 @@ func (la *ListTaskAssginee) Delete() (err error) {
 // @Accept json
 // @Produce json
 // @Security JWTKeyAuth
-// @Param assignee body models.ListTaskAssginee true "The assingee object"
+// @Param assignee body models.TaskAssginee true "The assingee object"
 // @Param taskID path int true "Task ID"
-// @Success 200 {object} models.ListTaskAssginee "The created assingee object."
+// @Success 200 {object} models.TaskAssginee "The created assingee object."
 // @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid assignee object provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/assignees [put]
-func (la *ListTaskAssginee) Create(a web.Auth) (err error) {
+func (la *TaskAssginee) Create(a web.Auth) (err error) {
 
 	// Get the list to perform later checks
 	list, err := GetListSimplByTaskID(la.TaskID)
@@ -183,11 +183,11 @@ func (la *ListTaskAssginee) Create(a web.Auth) (err error) {
 		return
 	}
 
-	task := &ListTask{ID: la.TaskID}
+	task := &Task{ID: la.TaskID}
 	return task.addNewAssigneeByID(la.UserID, list)
 }
 
-func (t *ListTask) addNewAssigneeByID(newAssigneeID int64, list *List) (err error) {
+func (t *Task) addNewAssigneeByID(newAssigneeID int64, list *List) (err error) {
 	// Check if the user exists and has access to the list
 	newAssignee, err := GetUserByID(newAssigneeID)
 	if err != nil {
@@ -201,7 +201,7 @@ func (t *ListTask) addNewAssigneeByID(newAssigneeID int64, list *List) (err erro
 		return ErrUserDoesNotHaveAccessToList{list.ID, newAssigneeID}
 	}
 
-	_, err = x.Insert(ListTaskAssginee{
+	_, err = x.Insert(TaskAssginee{
 		TaskID: t.ID,
 		UserID: newAssigneeID,
 	})
@@ -225,7 +225,7 @@ func (t *ListTask) addNewAssigneeByID(newAssigneeID int64, list *List) (err erro
 // @Success 200 {array} models.User "The assignees"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /labels [get]
-func (la *ListTaskAssginee) ReadAll(search string, a web.Auth, page int) (interface{}, error) {
+func (la *TaskAssginee) ReadAll(search string, a web.Auth, page int) (interface{}, error) {
 	var taskAssignees []*User
 	err := x.Table("task_assignees").
 		Select("users.*").
@@ -255,7 +255,7 @@ type BulkAssignees struct {
 // @Security JWTKeyAuth
 // @Param assignee body models.BulkAssignees true "The array of assignees"
 // @Param taskID path int true "Task ID"
-// @Success 200 {object} models.ListTaskAssginee "The created assingees object."
+// @Success 200 {object} models.TaskAssginee "The created assingees object."
 // @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid assignee object provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/assignees/bulk [post]

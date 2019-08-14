@@ -59,7 +59,7 @@ func getCaldavTodosForTasks(list *models.List) string {
 	return caldav.ParseTodos(caldavConfig, caldavtodos)
 }
 
-func parseTaskFromVTODO(content string) (vTask *models.ListTask, err error) {
+func parseTaskFromVTODO(content string) (vTask *models.Task, err error) {
 	parsed, err := ical.ParseCalendar(content)
 	if err != nil {
 		return nil, err
@@ -89,7 +89,7 @@ func parseTaskFromVTODO(content string) (vTask *models.ListTask, err error) {
 	// Parse the enddate
 	duration, _ := time.ParseDuration(task["DURATION"])
 
-	vTask = &models.ListTask{
+	vTask = &models.Task{
 		UID:           task["UID"],
 		Text:          task["SUMMARY"],
 		Description:   task["DESCRIPTION"],

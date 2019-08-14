@@ -76,7 +76,7 @@ func TestLabelTask_ReadAll(t *testing.T) {
 				a: &User{ID: 1},
 			},
 			wantErr: true,
-			errType: IsErrListTaskDoesNotExist,
+			errType: IsErrTaskDoesNotExist,
 		},
 	}
 	for _, tt := range tests {
@@ -168,7 +168,7 @@ func TestLabelTask_Create(t *testing.T) {
 			},
 			wantForbidden: true,
 			wantErr:       true,
-			errType:       IsErrListTaskDoesNotExist,
+			errType:       IsErrTaskDoesNotExist,
 		},
 	}
 	for _, tt := range tests {

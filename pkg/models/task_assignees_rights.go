@@ -21,21 +21,21 @@ import (
 )
 
 // CanCreate checks if a user can add a new assignee
-func (la *ListTaskAssginee) CanCreate(a web.Auth) (bool, error) {
-	return canDoListTaskAssingee(la.TaskID, a)
+func (la *TaskAssginee) CanCreate(a web.Auth) (bool, error) {
+	return canDoTaskAssingee(la.TaskID, a)
 }
 
 // CanCreate checks if a user can add a new assignee
 func (ba *BulkAssignees) CanCreate(a web.Auth) (bool, error) {
-	return canDoListTaskAssingee(ba.TaskID, a)
+	return canDoTaskAssingee(ba.TaskID, a)
 }
 
 // CanDelete checks if a user can delete an assignee
-func (la *ListTaskAssginee) CanDelete(a web.Auth) (bool, error) {
-	return canDoListTaskAssingee(la.TaskID, a)
+func (la *TaskAssginee) CanDelete(a web.Auth) (bool, error) {
+	return canDoTaskAssingee(la.TaskID, a)
 }
 
-func canDoListTaskAssingee(taskID int64, a web.Auth) (bool, error) {
+func canDoTaskAssingee(taskID int64, a web.Auth) (bool, error) {
 	// Check if the current user can edit the list
 	list, err := GetListSimplByTaskID(taskID)
 	if err != nil {
