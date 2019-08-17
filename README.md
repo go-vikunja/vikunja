@@ -8,6 +8,10 @@
 
 This is the web frontend for Vikunja, written in Vue.js.
 
+## Docker
+
+There is a [docker image available](https://hub.docker.com/r/vikunja/api) with support for http/2 and aggressive caching enabled.
+
 ## Project setup
 ```
 yarn install
