@@ -22,6 +22,29 @@ import (
 	"net/http"
 )
 
+// Generic
+
+// ErrGenericForbidden represents a "UsernameAlreadyExists" kind of error.
+type ErrGenericForbidden struct{}
+
+// IsErrGenericForbidden checks if an error is a ErrGenericForbidden.
+func IsErrGenericForbidden(err error) bool {
+	_, ok := err.(ErrGenericForbidden)
+	return ok
+}
+
+func (err ErrGenericForbidden) Error() string {
+	return fmt.Sprintf("Forbidden")
+}
+
+// ErrorCodeGenericForbidden holds the unique world-error code of this error
+const ErrorCodeGenericForbidden = 0001
+
+// HTTPError holds the http error description
+func (err ErrGenericForbidden) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusForbidden, Code: ErrorCodeGenericForbidden, Message: "You're not allowed to do this."}
+}
+
 // =====================
 // User Operation Errors
 // =====================
@@ -421,6 +444,30 @@ const ErrCodeListTitleCannotBeEmpty = 3005
 // HTTPError holds the http error description
 func (err ErrListTitleCannotBeEmpty) HTTPError() web.HTTPError {
 	return web.HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrCodeListTitleCannotBeEmpty, Message: "You must provide at least a list title."}
+}
+
+// ErrListShareDoesNotExist represents a "ErrListShareDoesNotExist" kind of error. Used if the list share does not exist.
+type ErrListShareDoesNotExist struct {
+	ID   int64
+	Hash string
+}
+
+// IsErrListShareDoesNotExist checks if an error is a ErrListShareDoesNotExist.
+func IsErrListShareDoesNotExist(err error) bool {
+	_, ok := err.(ErrListShareDoesNotExist)
+	return ok
+}
+
+func (err ErrListShareDoesNotExist) Error() string {
+	return fmt.Sprintf("List share does not exist.")
+}
+
+// ErrCodeListShareDoesNotExist holds the unique world-error code of this error
+const ErrCodeListShareDoesNotExist = 3006
+
+// HTTPError holds the http error description
+func (err ErrListShareDoesNotExist) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusNotFound, Code: ErrCodeListShareDoesNotExist, Message: "The list share does not exist."}
 }
 
 // ================

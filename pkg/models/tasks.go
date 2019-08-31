@@ -147,17 +147,40 @@ func (t *Task) ReadAll(search string, a web.Auth, page int) (interface{}, error)
 		sortby = SortTasksByUnsorted
 	}
 
-	return GetTasksByUser(search, &User{ID: a.GetID()}, page, sortby, time.Unix(t.StartDateSortUnix, 0), time.Unix(t.EndDateSortUnix, 0))
-}
+	taskopts := &taskOptions{
+		search:    search,
+		sortby:    sortby,
+		startDate: time.Unix(t.StartDateSortUnix, 0),
+		endDate:   time.Unix(t.EndDateSortUnix, 0),
+	}
 
-//GetTasksByUser returns all tasks for a user
-func GetTasksByUser(search string, u *User, page int, sortby SortBy, startDate time.Time, endDate time.Time) ([]*Task, error) {
-	// Get all lists
-	lists, err := getRawListsForUser("", u, page)
+	shareAuth, is := a.(*LinkSharing)
+	if is {
+		shareAuth.List = &List{ID: shareAuth.ListID}
+		err := shareAuth.List.GetSimpleByID()
+		if err != nil {
+			return nil, err
+		}
+		return getTasksForLists([]*List{shareAuth.List}, taskopts)
+	}
+
+	// Get all lists for the user
+	lists, err := getRawListsForUser("", &User{ID: a.GetID()}, page)
 	if err != nil {
 		return nil, err
 	}
 
+	return getTasksForLists(lists, taskopts)
+}
+
+type taskOptions struct {
+	search    string
+	sortby    SortBy
+	startDate time.Time
+	endDate   time.Time
+}
+
+func getTasksForLists(lists []*List, opts *taskOptions) (tasks []*Task, err error) {
 	// Get all list IDs and get the tasks
 	var listIDs []int64
 	for _, l := range lists {
@@ -165,7 +188,7 @@ func GetTasksByUser(search string, u *User, page int, sortby SortBy, startDate t
 	}
 
 	var orderby string
-	switch sortby {
+	switch opts.sortby {
 	case SortTasksByPriorityDesc:
 		orderby = "priority desc"
 	case SortTasksByPriorityAsc:
@@ -179,20 +202,20 @@ func GetTasksByUser(search string, u *User, page int, sortby SortBy, startDate t
 	taskMap := make(map[int64]*Task)
 
 	// Then return all tasks for that lists
-	if startDate.Unix() != 0 || endDate.Unix() != 0 {
+	if opts.startDate.Unix() != 0 || opts.endDate.Unix() != 0 {
 
 		startDateUnix := time.Now().Unix()
-		if startDate.Unix() != 0 {
-			startDateUnix = startDate.Unix()
+		if opts.startDate.Unix() != 0 {
+			startDateUnix = opts.startDate.Unix()
 		}
 
 		endDateUnix := time.Now().Unix()
-		if endDate.Unix() != 0 {
-			endDateUnix = endDate.Unix()
+		if opts.endDate.Unix() != 0 {
+			endDateUnix = opts.endDate.Unix()
 		}
 
 		if err := x.In("list_id", listIDs).
-			Where("text LIKE ?", "%"+search+"%").
+			Where("text LIKE ?", "%"+opts.search+"%").
 			And("((due_date_unix BETWEEN ? AND ?) OR "+
 				"(start_date_unix BETWEEN ? and ?) OR "+
 				"(end_date_unix BETWEEN ? and ?))", startDateUnix, endDateUnix, startDateUnix, endDateUnix, startDateUnix, endDateUnix).
@@ -203,7 +226,7 @@ func GetTasksByUser(search string, u *User, page int, sortby SortBy, startDate t
 		}
 	} else {
 		if err := x.In("list_id", listIDs).
-			Where("text LIKE ?", "%"+search+"%").
+			Where("text LIKE ?", "%"+opts.search+"%").
 			And("(parent_task_id = 0 OR parent_task_id IS NULL)").
 			OrderBy(orderby).
 			Find(&taskMap); err != nil {
@@ -211,13 +234,13 @@ func GetTasksByUser(search string, u *User, page int, sortby SortBy, startDate t
 		}
 	}
 
-	tasks, err := addMoreInfoToTasks(taskMap)
+	tasks, err = addMoreInfoToTasks(taskMap)
 	if err != nil {
 		return nil, err
 	}
 	// Because the list is sorted by id which we don't want (since we're dealing with maps)
 	// we have to manually sort the tasks again here.
-	sortTasks(tasks, sortby)
+	sortTasks(tasks, opts.sortby)
 
 	return tasks, err
 }

@@ -17,13 +17,10 @@
 package v1
 
 import (
-	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/web/handler"
-	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo/v4"
 	"net/http"
-	"time"
 )
 
 // Token represents an authentification token
@@ -55,27 +52,10 @@ func Login(c echo.Context) error {
 	}
 
 	// Create token
-	t, err := CreateNewJWTTokenForUser(user)
+	t, err := NewUserJWTAuthtoken(user)
 	if err != nil {
 		return err
 	}
 
 	return c.JSON(http.StatusOK, Token{Token: t})
-}
-
-// CreateNewJWTTokenForUser generates and signes a new jwt token for a user. This is a global function to be able to call it from integration tests.
-func CreateNewJWTTokenForUser(user *models.User) (token string, err error) {
-	t := jwt.New(jwt.SigningMethodHS256)
-
-	// Set claims
-	claims := t.Claims.(jwt.MapClaims)
-	claims["username"] = user.Username
-	claims["email"] = user.Email
-	claims["id"] = user.ID
-	claims["exp"] = time.Now().Add(time.Hour * 72).Unix()
-
-	claims["avatar"] = user.AvatarURL
-
-	// Generate encoded token and send it as response.
-	return t.SignedString([]byte(config.ServiceJWTSecret.GetString()))
 }

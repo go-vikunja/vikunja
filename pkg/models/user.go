@@ -189,6 +189,11 @@ func CheckUserCredentials(u *UserLogin) (*User, error) {
 func GetCurrentUser(c echo.Context) (user *User, err error) {
 	jwtinf := c.Get("user").(*jwt.Token)
 	claims := jwtinf.Claims.(jwt.MapClaims)
+	return GetUserFromClaims(claims)
+}
+
+// GetUserFromClaims Returns a new user from jwt claims
+func GetUserFromClaims(claims jwt.MapClaims) (user *User, err error) {
 	userID, ok := claims["id"].(float64)
 	if !ok {
 		return user, ErrCouldNotGetUserID{}

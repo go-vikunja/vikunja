@@ -48,11 +48,20 @@ func (n *Namespace) CanDelete(a web.Auth) (bool, error) {
 
 // CanCreate checks if the user can create a new namespace
 func (n *Namespace) CanCreate(a web.Auth) (bool, error) {
+	if _, is := a.(*LinkSharing); is {
+		return false, nil
+	}
+
 	// This is currently a dummy function, later on we could imagine global limits etc.
 	return true, nil
 }
 
 func (n *Namespace) checkRight(a web.Auth, rights ...Right) (bool, error) {
+
+	// If the auth is a link share, don't do anything
+	if _, is := a.(*LinkSharing); is {
+		return false, nil
+	}
 
 	// Get the namespace and check the right
 	err := n.GetSimpleByID()

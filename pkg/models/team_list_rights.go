@@ -36,6 +36,11 @@ func (tl *TeamList) CanUpdate(a web.Auth) (bool, error) {
 }
 
 func (tl *TeamList) canDoTeamList(a web.Auth) (bool, error) {
+	// Link shares aren't allowed to do anything
+	if _, is := a.(*LinkSharing); is {
+		return false, nil
+	}
+
 	l := List{ID: tl.ListID}
 	return l.IsAdmin(a)
 }

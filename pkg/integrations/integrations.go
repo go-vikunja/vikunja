@@ -107,9 +107,9 @@ func newTestRequest(t *testing.T, method string, handler func(ctx echo.Context) 
 	return
 }
 
-func addTokenToContext(t *testing.T, user *models.User, c echo.Context) {
+func addUserTokenToContext(t *testing.T, user *models.User, c echo.Context) {
 	// Get the token as a string
-	token, err := v1.CreateNewJWTTokenForUser(user)
+	token, err := v1.NewUserJWTAuthtoken(user)
 	assert.NoError(t, err)
 	// We send the string token through the parsing function to get a valid jwt.Token
 	tken, err := jwt.Parse(token, func(t *jwt.Token) (interface{}, error) {
@@ -119,8 +119,20 @@ func addTokenToContext(t *testing.T, user *models.User, c echo.Context) {
 	c.Set("user", tken)
 }
 
-func newTestRequestWithUser(t *testing.T, method string, handler echo.HandlerFunc, user *models.User, payload string, queryParams url.Values, urlParams map[string]string) (rec *httptest.ResponseRecorder, err error) {
-	c, rec := bootstrapTestRequest(t, method, payload, queryParams)
+func addLinkShareTokenToContext(t *testing.T, share *models.LinkSharing, c echo.Context) {
+	// Get the token as a string
+	token, err := v1.NewLinkShareJWTAuthtoken(share)
+	assert.NoError(t, err)
+	// We send the string token through the parsing function to get a valid jwt.Token
+	tken, err := jwt.Parse(token, func(t *jwt.Token) (interface{}, error) {
+		return []byte(config.ServiceJWTSecret.GetString()), nil
+	})
+	assert.NoError(t, err)
+	c.Set("user", tken)
+}
+
+func testRequestSetup(t *testing.T, method string, payload string, queryParams url.Values, urlParams map[string]string) (rec *httptest.ResponseRecorder, c echo.Context) {
+	c, rec = bootstrapTestRequest(t, method, payload, queryParams)
 
 	var paramNames []string
 	var paramValues []string
@@ -130,8 +142,19 @@ func newTestRequestWithUser(t *testing.T, method string, handler echo.HandlerFun
 	}
 	c.SetParamNames(paramNames...)
 	c.SetParamValues(paramValues...)
+	return
+}
 
-	addTokenToContext(t, user, c)
+func newTestRequestWithUser(t *testing.T, method string, handler echo.HandlerFunc, user *models.User, payload string, queryParams url.Values, urlParams map[string]string) (rec *httptest.ResponseRecorder, err error) {
+	rec, c := testRequestSetup(t, method, payload, queryParams, urlParams)
+	addUserTokenToContext(t, user, c)
+	err = handler(c)
+	return
+}
+
+func newTestRequestWithLinkShare(t *testing.T, method string, handler echo.HandlerFunc, share *models.LinkSharing, payload string, queryParams url.Values, urlParams map[string]string) (rec *httptest.ResponseRecorder, err error) {
+	rec, c := testRequestSetup(t, method, payload, queryParams, urlParams)
+	addLinkShareTokenToContext(t, share, c)
 	err = handler(c)
 	return
 }
@@ -155,9 +178,10 @@ func assertHandlerErrorCode(t *testing.T, err error, expectedErrorCode int) {
 }
 
 type webHandlerTest struct {
-	user    *models.User
-	strFunc func() handler.CObject
-	t       *testing.T
+	user      *models.User
+	linkShare *models.LinkSharing
+	strFunc   func() handler.CObject
+	t         *testing.T
 }
 
 func (h *webHandlerTest) getHandler() handler.WebHandler {
@@ -168,27 +192,52 @@ func (h *webHandlerTest) getHandler() handler.WebHandler {
 	}
 }
 
-func (h *webHandlerTest) testReadAll(queryParams url.Values, urlParams map[string]string) (rec *httptest.ResponseRecorder, err error) {
+func (h *webHandlerTest) testReadAllWithUser(queryParams url.Values, urlParams map[string]string) (rec *httptest.ResponseRecorder, err error) {
 	hndl := h.getHandler()
 	return newTestRequestWithUser(h.t, http.MethodGet, hndl.ReadAllWeb, h.user, "", queryParams, urlParams)
 }
 
-func (h *webHandlerTest) testReadOne(queryParams url.Values, urlParams map[string]string) (rec *httptest.ResponseRecorder, err error) {
+func (h *webHandlerTest) testReadOneWithUser(queryParams url.Values, urlParams map[string]string) (rec *httptest.ResponseRecorder, err error) {
 	hndl := h.getHandler()
 	return newTestRequestWithUser(h.t, http.MethodGet, hndl.ReadOneWeb, h.user, "", queryParams, urlParams)
 }
 
-func (h *webHandlerTest) testCreate(queryParams url.Values, urlParams map[string]string, payload string) (rec *httptest.ResponseRecorder, err error) {
+func (h *webHandlerTest) testCreateWithUser(queryParams url.Values, urlParams map[string]string, payload string) (rec *httptest.ResponseRecorder, err error) {
 	hndl := h.getHandler()
 	return newTestRequestWithUser(h.t, http.MethodPut, hndl.CreateWeb, h.user, payload, queryParams, urlParams)
 }
 
-func (h *webHandlerTest) testUpdate(queryParams url.Values, urlParams map[string]string, payload string) (rec *httptest.ResponseRecorder, err error) {
+func (h *webHandlerTest) testUpdateWithUser(queryParams url.Values, urlParams map[string]string, payload string) (rec *httptest.ResponseRecorder, err error) {
 	hndl := h.getHandler()
 	return newTestRequestWithUser(h.t, http.MethodPost, hndl.UpdateWeb, h.user, payload, queryParams, urlParams)
 }
 
-func (h *webHandlerTest) testDelete(queryParams url.Values, urlParams map[string]string) (rec *httptest.ResponseRecorder, err error) {
+func (h *webHandlerTest) testDeleteWithUser(queryParams url.Values, urlParams map[string]string) (rec *httptest.ResponseRecorder, err error) {
 	hndl := h.getHandler()
 	return newTestRequestWithUser(h.t, http.MethodDelete, hndl.DeleteWeb, h.user, "", queryParams, urlParams)
+}
+
+func (h *webHandlerTest) testReadAllWithLinkShare(queryParams url.Values, urlParams map[string]string) (rec *httptest.ResponseRecorder, err error) {
+	hndl := h.getHandler()
+	return newTestRequestWithLinkShare(h.t, http.MethodGet, hndl.ReadAllWeb, h.linkShare, "", queryParams, urlParams)
+}
+
+func (h *webHandlerTest) testReadOneWithLinkShare(queryParams url.Values, urlParams map[string]string) (rec *httptest.ResponseRecorder, err error) {
+	hndl := h.getHandler()
+	return newTestRequestWithLinkShare(h.t, http.MethodGet, hndl.ReadOneWeb, h.linkShare, "", queryParams, urlParams)
+}
+
+func (h *webHandlerTest) testCreateWithLinkShare(queryParams url.Values, urlParams map[string]string, payload string) (rec *httptest.ResponseRecorder, err error) {
+	hndl := h.getHandler()
+	return newTestRequestWithLinkShare(h.t, http.MethodPut, hndl.CreateWeb, h.linkShare, payload, queryParams, urlParams)
+}
+
+func (h *webHandlerTest) testUpdateWithLinkShare(queryParams url.Values, urlParams map[string]string, payload string) (rec *httptest.ResponseRecorder, err error) {
+	hndl := h.getHandler()
+	return newTestRequestWithLinkShare(h.t, http.MethodPost, hndl.UpdateWeb, h.linkShare, payload, queryParams, urlParams)
+}
+
+func (h *webHandlerTest) testDeleteWithLinkShare(queryParams url.Values, urlParams map[string]string) (rec *httptest.ResponseRecorder, err error) {
+	hndl := h.getHandler()
+	return newTestRequestWithLinkShare(h.t, http.MethodDelete, hndl.DeleteWeb, h.linkShare, "", queryParams, urlParams)
 }

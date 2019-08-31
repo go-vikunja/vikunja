@@ -138,6 +138,10 @@ type NamespaceWithLists struct {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces [get]
 func (n *Namespace) ReadAll(search string, a web.Auth, page int) (interface{}, error) {
+	if _, is := a.(*LinkSharing); is {
+		return nil, ErrGenericForbidden{}
+	}
+
 	doer, err := getUserWithError(a)
 	if err != nil {
 		return nil, err

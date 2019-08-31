@@ -19,7 +19,7 @@
     "paths": {
         "/info": {
             "get": {
-                "description": "Returns the version, frontendurl and motd of Vikunja",
+                "description": "Returns the version, frontendurl, motd and various settings of Vikunja",
                 "produces": [
                     "application/json"
                 ],
@@ -45,7 +45,7 @@
                         "JWTKeyAuth": []
                     }
                 ],
-                "description": "Returns an array with all assignees for this task.",
+                "description": "Returns all labels which are either created by the user or associated with a task the user has at least read-access to.",
                 "consumes": [
                     "application/json"
                 ],
@@ -53,9 +53,9 @@
                     "application/json"
                 ],
                 "tags": [
-                    "assignees"
+                    "labels"
                 ],
-                "summary": "Get all assignees for a task",
+                "summary": "Get all labels a user has access to",
                 "parameters": [
                     {
                         "type": "integer",
@@ -65,18 +65,18 @@
                     },
                     {
                         "type": "string",
-                        "description": "Search assignees by their username.",
+                        "description": "Search labels by label text.",
                         "name": "s",
                         "in": "query"
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "The assignees",
+                        "description": "The labels",
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/models.User"
+                                "$ref": "#/definitions/models.Label"
                             }
                         }
                     },
@@ -475,7 +475,7 @@
                         "required": true,
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.ListTask"
+                            "$ref": "#/definitions/models.Task"
                         }
                     }
                 ],
@@ -484,7 +484,7 @@
                         "description": "The created task object.",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.ListTask"
+                            "$ref": "#/definitions/models.Task"
                         }
                     },
                     "400": {
@@ -1238,6 +1238,269 @@
                     },
                     "404": {
                         "description": "user or list does not exist.",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/lists/{list}/shares": {
+            "get": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Returns all link shares which exist for a given list",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sharing"
+                ],
+                "summary": "Get all link shares for a list",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "List ID",
+                        "name": "list",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "The page number. Used for pagination. If not provided, the first page of results is returned.",
+                        "name": "p",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search shares by hash.",
+                        "name": "s",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The share links",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.LinkSharing"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Share a list via link. The user needs to have write-access to the list to be able do this.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sharing"
+                ],
+                "summary": "Share a list via link",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "List ID",
+                        "name": "list",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "The new link share object",
+                        "name": "label",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/models.LinkSharing"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The created link share object.",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/models.LinkSharing"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid link share object provided.",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                        }
+                    },
+                    "403": {
+                        "description": "Not allowed to add the list share.",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "The list does not exist.",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/lists/{list}/shares/{share}": {
+            "get": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Returns one link share by its ID.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sharing"
+                ],
+                "summary": "Get one link shares for a list",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "List ID",
+                        "name": "list",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Share ID",
+                        "name": "share",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The share links",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/models.LinkSharing"
+                        }
+                    },
+                    "403": {
+                        "description": "No access to the list",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Share Link not found.",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Remove a link share. The user needs to have write-access to the list to be able do this.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sharing"
+                ],
+                "summary": "Remove a link share",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "List ID",
+                        "name": "list",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Share Link ID",
+                        "name": "share",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The link was successfully removed.",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "403": {
+                        "description": "Not allowed to remove the link.",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Share Link not found.",
                         "schema": {
                             "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
@@ -2324,6 +2587,53 @@
                 }
             }
         },
+        "/shares/{share}/auth": {
+            "post": {
+                "description": "Get a jwt auth token for a shared list from a share hash.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sharing"
+                ],
+                "summary": "Get an auth token for a share",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "The share hash",
+                        "name": "share",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The valid jwt auth token.",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/v1.Token"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid link share object provided.",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
         "/tasks/all": {
             "get": {
                 "security": [
@@ -2380,7 +2690,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/models.ListTask"
+                                "$ref": "#/definitions/models.Task"
                             }
                         }
                     },
@@ -2429,7 +2739,7 @@
                         "description": "The updated task object.",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.ListTask"
+                            "$ref": "#/definitions/models.Task"
                         }
                     },
                     "400": {
@@ -2489,7 +2799,7 @@
                         "required": true,
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.ListTask"
+                            "$ref": "#/definitions/models.Task"
                         }
                     }
                 ],
@@ -2498,7 +2808,7 @@
                         "description": "The updated task object.",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.ListTask"
+                            "$ref": "#/definitions/models.Task"
                         }
                     },
                     "400": {
@@ -2580,6 +2890,63 @@
             }
         },
         "/tasks/{taskID}/assignees": {
+            "get": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Returns an array with all assignees for this task.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "assignees"
+                ],
+                "summary": "Get all assignees for a task",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "The page number. Used for pagination. If not provided, the first page of results is returned.",
+                        "name": "p",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search assignees by their username.",
+                        "name": "s",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Task ID",
+                        "name": "taskID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The assignees",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.User"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            },
             "put": {
                 "security": [
                     {
@@ -2605,7 +2972,7 @@
                         "required": true,
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.ListTaskAssginee"
+                            "$ref": "#/definitions/models.TaskAssginee"
                         }
                     },
                     {
@@ -2621,7 +2988,7 @@
                         "description": "The created assingee object.",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.ListTaskAssginee"
+                            "$ref": "#/definitions/models.TaskAssginee"
                         }
                     },
                     "400": {
@@ -2683,7 +3050,7 @@
                         "description": "The created assingees object.",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.ListTaskAssginee"
+                            "$ref": "#/definitions/models.TaskAssginee"
                         }
                     },
                     "400": {
@@ -3789,7 +4156,7 @@
                     "description": "An array of subtasks.",
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/models.ListTask"
+                        "$ref": "#/definitions/models.Task"
                     }
                 },
                 "task_ids": {
@@ -3882,6 +4249,48 @@
                 }
             }
         },
+        "models.LinkSharing": {
+            "type": "object",
+            "properties": {
+                "created": {
+                    "description": "A unix timestamp when this list was shared. You cannot change this value.",
+                    "type": "integer"
+                },
+                "hash": {
+                    "description": "The public id to get this shared list",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "The ID of the shared thing",
+                    "type": "integer"
+                },
+                "list": {
+                    "type": "object",
+                    "$ref": "#/definitions/models.List"
+                },
+                "right": {
+                    "description": "The right this list is shared with. 0 = Read only, 1 = Read \u0026 Write, 2 = Admin. See the docs for more details.",
+                    "type": "integer",
+                    "default": 0,
+                    "maximum": 2
+                },
+                "shared_by": {
+                    "description": "The user who shared this list",
+                    "type": "object",
+                    "$ref": "#/definitions/models.User"
+                },
+                "sharing_type": {
+                    "description": "The kind of this link. 0 = undefined, 1 = without password, 2 = with password (currently not implemented).",
+                    "type": "integer",
+                    "default": 0,
+                    "maximum": 2
+                },
+                "updated": {
+                    "description": "A unix timestamp when this share was last updated. You cannot change this value.",
+                    "type": "integer"
+                }
+            }
+        },
         "models.List": {
             "type": "object",
             "properties": {
@@ -3906,7 +4315,7 @@
                     "description": "An array of tasks which belong to the list.",
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/models.ListTask"
+                        "$ref": "#/definitions/models.Task"
                     }
                 },
                 "title": {
@@ -3917,118 +4326,6 @@
                 },
                 "updated": {
                     "description": "A unix timestamp when this list was last updated. You cannot change this value.",
-                    "type": "integer"
-                }
-            }
-        },
-        "models.ListTask": {
-            "type": "object",
-            "properties": {
-                "assignees": {
-                    "description": "An array of users who are assigned to this task",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.User"
-                    }
-                },
-                "created": {
-                    "description": "A unix timestamp when this task was created. You cannot change this value.",
-                    "type": "integer"
-                },
-                "createdBy": {
-                    "description": "The user who initially created the task.",
-                    "type": "object",
-                    "$ref": "#/definitions/models.User"
-                },
-                "description": {
-                    "description": "The task description.",
-                    "type": "string"
-                },
-                "done": {
-                    "description": "Whether a task is done or not.",
-                    "type": "boolean"
-                },
-                "doneAt": {
-                    "description": "The unix timestamp when a task was marked as done.",
-                    "type": "integer"
-                },
-                "dueDate": {
-                    "description": "A unix timestamp when the task is due.",
-                    "type": "integer"
-                },
-                "endDate": {
-                    "description": "When this task ends.",
-                    "type": "integer"
-                },
-                "hexColor": {
-                    "description": "The task color in hex",
-                    "type": "string",
-                    "maxLength": 6
-                },
-                "id": {
-                    "description": "The unique, numeric id of this task.",
-                    "type": "integer"
-                },
-                "labels": {
-                    "description": "An array of labels which are associated with this task.",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.Label"
-                    }
-                },
-                "listID": {
-                    "description": "The list this task belongs to.",
-                    "type": "integer"
-                },
-                "parentTaskID": {
-                    "description": "If the task is a subtask, this is the id of its parent.",
-                    "type": "integer"
-                },
-                "priority": {
-                    "description": "The task priority. Can be anything you want, it is possible to sort by this later.",
-                    "type": "integer"
-                },
-                "reminderDates": {
-                    "description": "An array of unix timestamps when the user wants to be reminded of the task.",
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "repeatAfter": {
-                    "description": "An amount in seconds this task repeats itself. If this is set, when marking the task as done, it will mark itself as \"undone\" and then increase all remindes and the due date by its amount.",
-                    "type": "integer"
-                },
-                "startDate": {
-                    "description": "When this task starts.",
-                    "type": "integer"
-                },
-                "subtasks": {
-                    "description": "An array of subtasks.",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.ListTask"
-                    }
-                },
-                "text": {
-                    "description": "The task text. This is what you'll see in the list.",
-                    "type": "string",
-                    "maxLength": 250,
-                    "minLength": 3
-                },
-                "updated": {
-                    "description": "A unix timestamp when this task was last updated. You cannot change this value.",
-                    "type": "integer"
-                }
-            }
-        },
-        "models.ListTaskAssginee": {
-            "type": "object",
-            "properties": {
-                "created": {
-                    "type": "integer"
-                },
-                "user_id": {
                     "type": "integer"
                 }
             }
@@ -4185,6 +4482,118 @@
                 "email": {
                     "type": "string",
                     "maxLength": 250
+                }
+            }
+        },
+        "models.Task": {
+            "type": "object",
+            "properties": {
+                "assignees": {
+                    "description": "An array of users who are assigned to this task",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.User"
+                    }
+                },
+                "created": {
+                    "description": "A unix timestamp when this task was created. You cannot change this value.",
+                    "type": "integer"
+                },
+                "createdBy": {
+                    "description": "The user who initially created the task.",
+                    "type": "object",
+                    "$ref": "#/definitions/models.User"
+                },
+                "description": {
+                    "description": "The task description.",
+                    "type": "string"
+                },
+                "done": {
+                    "description": "Whether a task is done or not.",
+                    "type": "boolean"
+                },
+                "doneAt": {
+                    "description": "The unix timestamp when a task was marked as done.",
+                    "type": "integer"
+                },
+                "dueDate": {
+                    "description": "A unix timestamp when the task is due.",
+                    "type": "integer"
+                },
+                "endDate": {
+                    "description": "When this task ends.",
+                    "type": "integer"
+                },
+                "hexColor": {
+                    "description": "The task color in hex",
+                    "type": "string",
+                    "maxLength": 6
+                },
+                "id": {
+                    "description": "The unique, numeric id of this task.",
+                    "type": "integer"
+                },
+                "labels": {
+                    "description": "An array of labels which are associated with this task.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Label"
+                    }
+                },
+                "listID": {
+                    "description": "The list this task belongs to.",
+                    "type": "integer"
+                },
+                "parentTaskID": {
+                    "description": "If the task is a subtask, this is the id of its parent.",
+                    "type": "integer"
+                },
+                "priority": {
+                    "description": "The task priority. Can be anything you want, it is possible to sort by this later.",
+                    "type": "integer"
+                },
+                "reminderDates": {
+                    "description": "An array of unix timestamps when the user wants to be reminded of the task.",
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "repeatAfter": {
+                    "description": "An amount in seconds this task repeats itself. If this is set, when marking the task as done, it will mark itself as \"undone\" and then increase all remindes and the due date by its amount.",
+                    "type": "integer"
+                },
+                "startDate": {
+                    "description": "When this task starts.",
+                    "type": "integer"
+                },
+                "subtasks": {
+                    "description": "An array of subtasks.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Task"
+                    }
+                },
+                "text": {
+                    "description": "The task text. This is what you'll see in the list.",
+                    "type": "string",
+                    "maxLength": 250,
+                    "minLength": 3
+                },
+                "updated": {
+                    "description": "A unix timestamp when this task was last updated. You cannot change this value.",
+                    "type": "integer"
+                }
+            }
+        },
+        "models.TaskAssginee": {
+            "type": "object",
+            "properties": {
+                "created": {
+                    "type": "integer"
+                },
+                "user_id": {
+                    "type": "integer"
                 }
             }
         },
@@ -4484,6 +4893,9 @@
             "properties": {
                 "frontend_url": {
                     "type": "string"
+                },
+                "link_sharing_enabled": {
+                    "type": "boolean"
                 },
                 "motd": {
                     "type": "string"

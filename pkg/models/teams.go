@@ -142,6 +142,10 @@ func (t *Team) ReadOne() (err error) {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /teams [get]
 func (t *Team) ReadAll(search string, a web.Auth, page int) (interface{}, error) {
+	if _, is := a.(*LinkSharing); is {
+		return nil, ErrGenericForbidden{}
+	}
+
 	all := []*Team{}
 	err := x.Select("teams.*").
 		Table("teams").

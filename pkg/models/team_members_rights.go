@@ -32,6 +32,11 @@ func (tm *TeamMember) CanDelete(a web.Auth) (bool, error) {
 
 // IsAdmin checks if the user is team admin
 func (tm *TeamMember) IsAdmin(a web.Auth) (bool, error) {
+	// Don't allow anything if we're dealing with a list share here
+	if _, is := a.(*LinkSharing); is {
+		return false, nil
+	}
+
 	// A user can add a member to a team if he is admin of that team
 	exists, err := x.Where("user_id = ? AND team_id = ? AND admin = ?", a.GetID(), tm.TeamID, true).
 		Get(&TeamMember{})

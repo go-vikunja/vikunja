@@ -35,7 +35,7 @@ func TestList(t *testing.T) {
 	}
 	t.Run("ReadAll", func(t *testing.T) {
 		t.Run("Normal", func(t *testing.T) {
-			rec, err := testHandler.testReadAll(nil, nil)
+			rec, err := testHandler.testReadAllWithUser(nil, nil)
 			assert.NoError(t, err)
 			assert.Contains(t, rec.Body.String(), `Test1`)
 			assert.NotContains(t, rec.Body.String(), `Test2`)
@@ -44,7 +44,7 @@ func TestList(t *testing.T) {
 			assert.NotContains(t, rec.Body.String(), `Test5`)
 		})
 		t.Run("Search", func(t *testing.T) {
-			rec, err := testHandler.testReadAll(url.Values{"s": []string{"Test1"}}, nil)
+			rec, err := testHandler.testReadAllWithUser(url.Values{"s": []string{"Test1"}}, nil)
 			assert.NoError(t, err)
 			assert.Contains(t, rec.Body.String(), `Test1`)
 			assert.NotContains(t, rec.Body.String(), `Test2`)
@@ -55,7 +55,7 @@ func TestList(t *testing.T) {
 	})
 	t.Run("ReadOne", func(t *testing.T) {
 		t.Run("Normal", func(t *testing.T) {
-			rec, err := testHandler.testReadOne(nil, map[string]string{"list": "1"})
+			rec, err := testHandler.testReadOneWithUser(nil, map[string]string{"list": "1"})
 			assert.NoError(t, err)
 			assert.Contains(t, rec.Body.String(), `"title":"Test1"`)
 			assert.NotContains(t, rec.Body.String(), `"title":"Test2"`)
@@ -64,77 +64,77 @@ func TestList(t *testing.T) {
 			assert.Contains(t, rec.Body.String(), `"tasks":[{"id":1,"text":"task #1",`)
 		})
 		t.Run("Nonexisting", func(t *testing.T) {
-			_, err := testHandler.testReadOne(nil, map[string]string{"list": "9999"})
+			_, err := testHandler.testReadOneWithUser(nil, map[string]string{"list": "9999"})
 			assert.Error(t, err)
 			assertHandlerErrorCode(t, err, models.ErrCodeListDoesNotExist)
 		})
 		t.Run("Rights check", func(t *testing.T) {
 			t.Run("Forbidden", func(t *testing.T) {
 				// Owned by user13
-				_, err := testHandler.testReadOne(nil, map[string]string{"list": "20"})
+				_, err := testHandler.testReadOneWithUser(nil, map[string]string{"list": "20"})
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `You don't have the right to see this`)
 			})
 			t.Run("Shared Via Team readonly", func(t *testing.T) {
-				rec, err := testHandler.testReadOne(nil, map[string]string{"list": "6"})
+				rec, err := testHandler.testReadOneWithUser(nil, map[string]string{"list": "6"})
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"Test6"`)
 			})
 			t.Run("Shared Via Team write", func(t *testing.T) {
-				rec, err := testHandler.testReadOne(nil, map[string]string{"list": "7"})
+				rec, err := testHandler.testReadOneWithUser(nil, map[string]string{"list": "7"})
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"Test7"`)
 			})
 			t.Run("Shared Via Team admin", func(t *testing.T) {
-				rec, err := testHandler.testReadOne(nil, map[string]string{"list": "8"})
+				rec, err := testHandler.testReadOneWithUser(nil, map[string]string{"list": "8"})
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"Test8"`)
 			})
 
 			t.Run("Shared Via User readonly", func(t *testing.T) {
-				rec, err := testHandler.testReadOne(nil, map[string]string{"list": "9"})
+				rec, err := testHandler.testReadOneWithUser(nil, map[string]string{"list": "9"})
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"Test9"`)
 			})
 			t.Run("Shared Via User write", func(t *testing.T) {
-				rec, err := testHandler.testReadOne(nil, map[string]string{"list": "10"})
+				rec, err := testHandler.testReadOneWithUser(nil, map[string]string{"list": "10"})
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"Test10"`)
 			})
 			t.Run("Shared Via User admin", func(t *testing.T) {
-				rec, err := testHandler.testReadOne(nil, map[string]string{"list": "11"})
+				rec, err := testHandler.testReadOneWithUser(nil, map[string]string{"list": "11"})
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"Test11"`)
 			})
 
 			t.Run("Shared Via NamespaceTeam readonly", func(t *testing.T) {
-				rec, err := testHandler.testReadOne(nil, map[string]string{"list": "12"})
+				rec, err := testHandler.testReadOneWithUser(nil, map[string]string{"list": "12"})
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"Test12"`)
 			})
 			t.Run("Shared Via NamespaceTeam write", func(t *testing.T) {
-				rec, err := testHandler.testReadOne(nil, map[string]string{"list": "13"})
+				rec, err := testHandler.testReadOneWithUser(nil, map[string]string{"list": "13"})
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"Test13"`)
 			})
 			t.Run("Shared Via NamespaceTeam admin", func(t *testing.T) {
-				rec, err := testHandler.testReadOne(nil, map[string]string{"list": "14"})
+				rec, err := testHandler.testReadOneWithUser(nil, map[string]string{"list": "14"})
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"Test14"`)
 			})
 
 			t.Run("Shared Via NamespaceUser readonly", func(t *testing.T) {
-				rec, err := testHandler.testReadOne(nil, map[string]string{"list": "15"})
+				rec, err := testHandler.testReadOneWithUser(nil, map[string]string{"list": "15"})
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"Test15"`)
 			})
 			t.Run("Shared Via NamespaceUser write", func(t *testing.T) {
-				rec, err := testHandler.testReadOne(nil, map[string]string{"list": "16"})
+				rec, err := testHandler.testReadOneWithUser(nil, map[string]string{"list": "16"})
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"Test16"`)
 			})
 			t.Run("Shared Via NamespaceUser admin", func(t *testing.T) {
-				rec, err := testHandler.testReadOne(nil, map[string]string{"list": "17"})
+				rec, err := testHandler.testReadOneWithUser(nil, map[string]string{"list": "17"})
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"Test17"`)
 			})
@@ -142,106 +142,106 @@ func TestList(t *testing.T) {
 	})
 	t.Run("Update", func(t *testing.T) {
 		t.Run("Normal", func(t *testing.T) {
-			// Check the list was loaded successfully afterwards, see testReadOne
-			rec, err := testHandler.testUpdate(nil, map[string]string{"list": "1"}, `{"title":"TestLoremIpsum"}`)
+			// Check the list was loaded successfully afterwards, see testReadOneWithUser
+			rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"list": "1"}, `{"title":"TestLoremIpsum"}`)
 			assert.NoError(t, err)
 			assert.Contains(t, rec.Body.String(), `"title":"TestLoremIpsum"`)
 			// The description should not be updated but returned correctly
 			assert.Contains(t, rec.Body.String(), `description":"Lorem Ipsum`)
 		})
 		t.Run("Nonexisting", func(t *testing.T) {
-			_, err := testHandler.testUpdate(nil, map[string]string{"list": "9999"}, `{"title":"TestLoremIpsum"}`)
+			_, err := testHandler.testUpdateWithUser(nil, map[string]string{"list": "9999"}, `{"title":"TestLoremIpsum"}`)
 			assert.Error(t, err)
 			assertHandlerErrorCode(t, err, models.ErrCodeListDoesNotExist)
 		})
 		t.Run("Normal with updating the description", func(t *testing.T) {
-			rec, err := testHandler.testUpdate(nil, map[string]string{"list": "1"}, `{"title":"TestLoremIpsum","description":"Lorem Ipsum dolor sit amet"}`)
+			rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"list": "1"}, `{"title":"TestLoremIpsum","description":"Lorem Ipsum dolor sit amet"}`)
 			assert.NoError(t, err)
 			assert.Contains(t, rec.Body.String(), `"title":"TestLoremIpsum"`)
 			assert.Contains(t, rec.Body.String(), `"description":"Lorem Ipsum dolor sit amet`)
 		})
 		t.Run("Empty title", func(t *testing.T) {
-			_, err := testHandler.testUpdate(nil, map[string]string{"list": "1"}, `{"title":""}`)
+			_, err := testHandler.testUpdateWithUser(nil, map[string]string{"list": "1"}, `{"title":""}`)
 			assert.Error(t, err)
 			assert.Contains(t, err.(*echo.HTTPError).Message.(models.ValidationHTTPError).InvalidFields, "title: non zero value required")
 		})
 		t.Run("Almost empty title", func(t *testing.T) {
-			_, err := testHandler.testUpdate(nil, map[string]string{"list": "1"}, `{"title":"nn"}`)
+			_, err := testHandler.testUpdateWithUser(nil, map[string]string{"list": "1"}, `{"title":"nn"}`)
 			assert.Error(t, err)
 			assert.Contains(t, err.(*echo.HTTPError).Message.(models.ValidationHTTPError).InvalidFields[0], "does not validate as runelength(3|250)")
 		})
 		t.Run("Title too long", func(t *testing.T) {
-			_, err := testHandler.testUpdate(nil, map[string]string{"list": "1"}, `{"title":"Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea taki"}`)
+			_, err := testHandler.testUpdateWithUser(nil, map[string]string{"list": "1"}, `{"title":"Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea taki"}`)
 			assert.Error(t, err)
 			assert.Contains(t, err.(*echo.HTTPError).Message.(models.ValidationHTTPError).InvalidFields[0], "does not validate as runelength(3|250)")
 		})
 		t.Run("Rights check", func(t *testing.T) {
 			t.Run("Forbidden", func(t *testing.T) {
 				// Owned by user13
-				_, err := testHandler.testUpdate(nil, map[string]string{"list": "20"}, `{"title":"TestLoremIpsum"}`)
+				_, err := testHandler.testUpdateWithUser(nil, map[string]string{"list": "20"}, `{"title":"TestLoremIpsum"}`)
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("Shared Via Team readonly", func(t *testing.T) {
-				_, err := testHandler.testUpdate(nil, map[string]string{"list": "6"}, `{"title":"TestLoremIpsum"}`)
+				_, err := testHandler.testUpdateWithUser(nil, map[string]string{"list": "6"}, `{"title":"TestLoremIpsum"}`)
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("Shared Via Team write", func(t *testing.T) {
-				rec, err := testHandler.testUpdate(nil, map[string]string{"list": "7"}, `{"title":"TestLoremIpsum"}`)
+				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"list": "7"}, `{"title":"TestLoremIpsum"}`)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"TestLoremIpsum"`)
 			})
 			t.Run("Shared Via Team admin", func(t *testing.T) {
-				rec, err := testHandler.testUpdate(nil, map[string]string{"list": "8"}, `{"title":"TestLoremIpsum"}`)
+				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"list": "8"}, `{"title":"TestLoremIpsum"}`)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"TestLoremIpsum"`)
 			})
 
 			t.Run("Shared Via User readonly", func(t *testing.T) {
-				_, err := testHandler.testUpdate(nil, map[string]string{"list": "9"}, `{"title":"TestLoremIpsum"}`)
+				_, err := testHandler.testUpdateWithUser(nil, map[string]string{"list": "9"}, `{"title":"TestLoremIpsum"}`)
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("Shared Via User write", func(t *testing.T) {
-				rec, err := testHandler.testUpdate(nil, map[string]string{"list": "10"}, `{"title":"TestLoremIpsum"}`)
+				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"list": "10"}, `{"title":"TestLoremIpsum"}`)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"TestLoremIpsum"`)
 			})
 			t.Run("Shared Via User admin", func(t *testing.T) {
-				rec, err := testHandler.testUpdate(nil, map[string]string{"list": "11"}, `{"title":"TestLoremIpsum"}`)
+				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"list": "11"}, `{"title":"TestLoremIpsum"}`)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"TestLoremIpsum"`)
 			})
 
 			t.Run("Shared Via NamespaceTeam readonly", func(t *testing.T) {
-				_, err := testHandler.testUpdate(nil, map[string]string{"list": "12"}, `{"title":"TestLoremIpsum"}`)
+				_, err := testHandler.testUpdateWithUser(nil, map[string]string{"list": "12"}, `{"title":"TestLoremIpsum"}`)
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("Shared Via NamespaceTeam write", func(t *testing.T) {
-				rec, err := testHandler.testUpdate(nil, map[string]string{"list": "13"}, `{"title":"TestLoremIpsum"}`)
+				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"list": "13"}, `{"title":"TestLoremIpsum"}`)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"TestLoremIpsum"`)
 			})
 			t.Run("Shared Via NamespaceTeam admin", func(t *testing.T) {
-				rec, err := testHandler.testUpdate(nil, map[string]string{"list": "14"}, `{"title":"TestLoremIpsum"}`)
+				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"list": "14"}, `{"title":"TestLoremIpsum"}`)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"TestLoremIpsum"`)
 			})
 
 			t.Run("Shared Via NamespaceUser readonly", func(t *testing.T) {
-				_, err := testHandler.testUpdate(nil, map[string]string{"list": "15"}, `{"title":"TestLoremIpsum"}`)
+				_, err := testHandler.testUpdateWithUser(nil, map[string]string{"list": "15"}, `{"title":"TestLoremIpsum"}`)
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("Shared Via NamespaceUser write", func(t *testing.T) {
-				rec, err := testHandler.testUpdate(nil, map[string]string{"list": "16"}, `{"title":"TestLoremIpsum"}`)
+				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"list": "16"}, `{"title":"TestLoremIpsum"}`)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"TestLoremIpsum"`)
 			})
 			t.Run("Shared Via NamespaceUser admin", func(t *testing.T) {
-				rec, err := testHandler.testUpdate(nil, map[string]string{"list": "17"}, `{"title":"TestLoremIpsum"}`)
+				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"list": "17"}, `{"title":"TestLoremIpsum"}`)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"TestLoremIpsum"`)
 			})
@@ -249,82 +249,82 @@ func TestList(t *testing.T) {
 	})
 	t.Run("Delete", func(t *testing.T) {
 		t.Run("Normal", func(t *testing.T) {
-			rec, err := testHandler.testDelete(nil, map[string]string{"list": "1"})
+			rec, err := testHandler.testDeleteWithUser(nil, map[string]string{"list": "1"})
 			assert.NoError(t, err)
 			assert.Contains(t, rec.Body.String(), `"message":"Successfully deleted."`)
 		})
 		t.Run("Nonexisting", func(t *testing.T) {
-			_, err := testHandler.testDelete(nil, map[string]string{"list": "999"})
+			_, err := testHandler.testDeleteWithUser(nil, map[string]string{"list": "999"})
 			assert.Error(t, err)
 			assertHandlerErrorCode(t, err, models.ErrCodeListDoesNotExist)
 		})
 		t.Run("Rights check", func(t *testing.T) {
 			t.Run("Forbidden", func(t *testing.T) {
 				// Owned by user13
-				_, err := testHandler.testDelete(nil, map[string]string{"list": "20"})
+				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"list": "20"})
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("Shared Via Team readonly", func(t *testing.T) {
-				_, err := testHandler.testDelete(nil, map[string]string{"list": "6"})
+				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"list": "6"})
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("Shared Via Team write", func(t *testing.T) {
-				_, err := testHandler.testDelete(nil, map[string]string{"list": "7"})
+				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"list": "7"})
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("Shared Via Team admin", func(t *testing.T) {
-				rec, err := testHandler.testDelete(nil, map[string]string{"list": "8"})
+				rec, err := testHandler.testDeleteWithUser(nil, map[string]string{"list": "8"})
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"message":"Successfully deleted."`)
 			})
 
 			t.Run("Shared Via User readonly", func(t *testing.T) {
-				_, err := testHandler.testDelete(nil, map[string]string{"list": "9"})
+				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"list": "9"})
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("Shared Via User write", func(t *testing.T) {
-				_, err := testHandler.testDelete(nil, map[string]string{"list": "10"})
+				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"list": "10"})
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("Shared Via User admin", func(t *testing.T) {
-				rec, err := testHandler.testDelete(nil, map[string]string{"list": "11"})
+				rec, err := testHandler.testDeleteWithUser(nil, map[string]string{"list": "11"})
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"message":"Successfully deleted."`)
 			})
 
 			t.Run("Shared Via NamespaceTeam readonly", func(t *testing.T) {
-				_, err := testHandler.testDelete(nil, map[string]string{"list": "12"})
+				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"list": "12"})
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("Shared Via NamespaceTeam write", func(t *testing.T) {
-				_, err := testHandler.testDelete(nil, map[string]string{"list": "13"})
+				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"list": "13"})
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("Shared Via NamespaceTeam admin", func(t *testing.T) {
-				rec, err := testHandler.testDelete(nil, map[string]string{"list": "14"})
+				rec, err := testHandler.testDeleteWithUser(nil, map[string]string{"list": "14"})
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"message":"Successfully deleted."`)
 			})
 
 			t.Run("Shared Via NamespaceUser readonly", func(t *testing.T) {
-				_, err := testHandler.testDelete(nil, map[string]string{"list": "15"})
+				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"list": "15"})
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("Shared Via NamespaceUser write", func(t *testing.T) {
-				_, err := testHandler.testDelete(nil, map[string]string{"list": "16"})
+				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"list": "16"})
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("Shared Via NamespaceUser admin", func(t *testing.T) {
-				rec, err := testHandler.testDelete(nil, map[string]string{"list": "17"})
+				rec, err := testHandler.testDeleteWithUser(nil, map[string]string{"list": "17"})
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"message":"Successfully deleted."`)
 			})
@@ -332,8 +332,8 @@ func TestList(t *testing.T) {
 	})
 	t.Run("Create", func(t *testing.T) {
 		t.Run("Normal", func(t *testing.T) {
-			// Check the list was loaded successfully after update, see testReadOne
-			rec, err := testHandler.testCreate(nil, map[string]string{"namespace": "1"}, `{"title":"Lorem"}`)
+			// Check the list was loaded successfully after update, see testReadOneWithUser
+			rec, err := testHandler.testCreateWithUser(nil, map[string]string{"namespace": "1"}, `{"title":"Lorem"}`)
 			assert.NoError(t, err)
 			assert.Contains(t, rec.Body.String(), `"title":"Lorem"`)
 			assert.Contains(t, rec.Body.String(), `"description":""`)
@@ -341,7 +341,7 @@ func TestList(t *testing.T) {
 			assert.Contains(t, rec.Body.String(), `"tasks":null`)
 		})
 		t.Run("Normal with description", func(t *testing.T) {
-			rec, err := testHandler.testCreate(nil, map[string]string{"namespace": "1"}, `{"title":"Lorem","description":"Lorem Ipsum"}`)
+			rec, err := testHandler.testCreateWithUser(nil, map[string]string{"namespace": "1"}, `{"title":"Lorem","description":"Lorem Ipsum"}`)
 			assert.NoError(t, err)
 			assert.Contains(t, rec.Body.String(), `"title":"Lorem"`)
 			assert.Contains(t, rec.Body.String(), `"description":"Lorem Ipsum"`)
@@ -349,22 +349,22 @@ func TestList(t *testing.T) {
 			assert.Contains(t, rec.Body.String(), `"tasks":null`)
 		})
 		t.Run("Nonexisting Namespace", func(t *testing.T) {
-			_, err := testHandler.testCreate(nil, map[string]string{"namespace": "999999"}, `{"title":"Lorem"}`)
+			_, err := testHandler.testCreateWithUser(nil, map[string]string{"namespace": "999999"}, `{"title":"Lorem"}`)
 			assert.Error(t, err)
 			assertHandlerErrorCode(t, err, models.ErrCodeNamespaceDoesNotExist)
 		})
 		t.Run("Empty title", func(t *testing.T) {
-			_, err := testHandler.testCreate(nil, map[string]string{"namespace": "1"}, `{"title":""}`)
+			_, err := testHandler.testCreateWithUser(nil, map[string]string{"namespace": "1"}, `{"title":""}`)
 			assert.Error(t, err)
 			assert.Contains(t, err.(*echo.HTTPError).Message.(models.ValidationHTTPError).InvalidFields, "title: non zero value required")
 		})
 		t.Run("Almost empty title", func(t *testing.T) {
-			_, err := testHandler.testCreate(nil, map[string]string{"namespace": "1"}, `{"title":"nn"}`)
+			_, err := testHandler.testCreateWithUser(nil, map[string]string{"namespace": "1"}, `{"title":"nn"}`)
 			assert.Error(t, err)
 			assert.Contains(t, err.(*echo.HTTPError).Message.(models.ValidationHTTPError).InvalidFields[0], "does not validate as runelength(3|250)")
 		})
 		t.Run("Title too long", func(t *testing.T) {
-			_, err := testHandler.testCreate(nil, map[string]string{"namespace": "1"}, `{"title":"Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea taki"}`)
+			_, err := testHandler.testCreateWithUser(nil, map[string]string{"namespace": "1"}, `{"title":"Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea taki"}`)
 			assert.Error(t, err)
 			assert.Contains(t, err.(*echo.HTTPError).Message.(models.ValidationHTTPError).InvalidFields[0], "does not validate as runelength(3|250)")
 		})
@@ -372,18 +372,18 @@ func TestList(t *testing.T) {
 
 			t.Run("Forbidden", func(t *testing.T) {
 				// Owned by user13
-				_, err := testHandler.testCreate(nil, map[string]string{"namespace": "15"}, `{"title":"Lorem"}`)
+				_, err := testHandler.testCreateWithUser(nil, map[string]string{"namespace": "15"}, `{"title":"Lorem"}`)
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 
 			t.Run("Shared Via NamespaceTeam readonly", func(t *testing.T) {
-				_, err := testHandler.testCreate(nil, map[string]string{"namespace": "7"}, `{"title":"Lorem"}`)
+				_, err := testHandler.testCreateWithUser(nil, map[string]string{"namespace": "7"}, `{"title":"Lorem"}`)
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("Shared Via NamespaceTeam write", func(t *testing.T) {
-				rec, err := testHandler.testCreate(nil, map[string]string{"namespace": "8"}, `{"title":"Lorem"}`)
+				rec, err := testHandler.testCreateWithUser(nil, map[string]string{"namespace": "8"}, `{"title":"Lorem"}`)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"Lorem"`)
 				assert.Contains(t, rec.Body.String(), `"description":""`)
@@ -391,7 +391,7 @@ func TestList(t *testing.T) {
 				assert.Contains(t, rec.Body.String(), `"tasks":null`)
 			})
 			t.Run("Shared Via NamespaceTeam admin", func(t *testing.T) {
-				rec, err := testHandler.testCreate(nil, map[string]string{"namespace": "9"}, `{"title":"Lorem"}`)
+				rec, err := testHandler.testCreateWithUser(nil, map[string]string{"namespace": "9"}, `{"title":"Lorem"}`)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"Lorem"`)
 				assert.Contains(t, rec.Body.String(), `"description":""`)
@@ -400,12 +400,12 @@ func TestList(t *testing.T) {
 			})
 
 			t.Run("Shared Via NamespaceUser readonly", func(t *testing.T) {
-				_, err := testHandler.testCreate(nil, map[string]string{"namespace": "10"}, `{"title":"Lorem"}`)
+				_, err := testHandler.testCreateWithUser(nil, map[string]string{"namespace": "10"}, `{"title":"Lorem"}`)
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("Shared Via NamespaceUser write", func(t *testing.T) {
-				rec, err := testHandler.testCreate(nil, map[string]string{"namespace": "11"}, `{"title":"Lorem"}`)
+				rec, err := testHandler.testCreateWithUser(nil, map[string]string{"namespace": "11"}, `{"title":"Lorem"}`)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"Lorem"`)
 				assert.Contains(t, rec.Body.String(), `"description":""`)
@@ -413,7 +413,7 @@ func TestList(t *testing.T) {
 				assert.Contains(t, rec.Body.String(), `"tasks":null`)
 			})
 			t.Run("Shared Via NamespaceUser admin", func(t *testing.T) {
-				rec, err := testHandler.testCreate(nil, map[string]string{"namespace": "12"}, `{"title":"Lorem"}`)
+				rec, err := testHandler.testCreateWithUser(nil, map[string]string{"namespace": "12"}, `{"title":"Lorem"}`)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"Lorem"`)
 				assert.Contains(t, rec.Body.String(), `"description":""`)

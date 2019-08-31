@@ -296,7 +296,7 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [ ] User online status
 * [ ] More sharing features (all of these with the already existing permissions)
   * [ ] Invite users per mail
-  * [ ] Share a link with/without password
+  * [x] Share a link with/without password
 * [ ] Comments on tasks
 * [ ] @mention users in tasks or comments to get them notified
 * [ ] Summary of tasks to do in a configurable interval (every day/week or so)

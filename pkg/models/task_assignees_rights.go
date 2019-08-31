@@ -41,5 +41,5 @@ func canDoTaskAssingee(taskID int64, a web.Auth) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return list.CanCreate(a)
+	return list.CanUpdate(a)
 }

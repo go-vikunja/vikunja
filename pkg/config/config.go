@@ -33,14 +33,15 @@ type Key string
 
 // These constants hold all config value keys
 const (
-	ServiceJWTSecret     Key = `service.JWTSecret`
-	ServiceInterface     Key = `service.interface`
-	ServiceFrontendurl   Key = `service.frontendurl`
-	ServiceEnableCaldav  Key = `service.enablecaldav`
-	ServiceRootpath      Key = `service.rootpath`
-	ServicePageCount     Key = `service.pagecount`
-	ServiceEnableMetrics Key = `service.enablemetrics`
-	ServiceMotd          Key = `service.motd`
+	ServiceJWTSecret         Key = `service.JWTSecret`
+	ServiceInterface         Key = `service.interface`
+	ServiceFrontendurl       Key = `service.frontendurl`
+	ServiceEnableCaldav      Key = `service.enablecaldav`
+	ServiceRootpath          Key = `service.rootpath`
+	ServicePageCount         Key = `service.pagecount`
+	ServiceEnableMetrics     Key = `service.enablemetrics`
+	ServiceMotd              Key = `service.motd`
+	ServiceEnableLinkSharing Key = `service.enablelinksharing`
 
 	DatabaseType                  Key = `database.type`
 	DatabaseHost                  Key = `database.host`
@@ -146,6 +147,7 @@ func InitConfig() {
 	ServicePageCount.setDefault(50)
 	ServiceEnableMetrics.setDefault(false)
 	ServiceMotd.setDefault("")
+	ServiceEnableLinkSharing.setDefault(true)
 
 	// Database
 	DatabaseType.setDefault("sqlite")

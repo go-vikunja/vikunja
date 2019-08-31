@@ -131,6 +131,9 @@ func (l *Label) Delete() (err error) {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /labels [get]
 func (l *Label) ReadAll(search string, a web.Auth, page int) (ls interface{}, err error) {
+	if _, is := a.(*LinkSharing); is {
+		return nil, ErrGenericForbidden{}
+	}
 
 	u := &User{ID: a.GetID()}
 
@@ -192,7 +195,18 @@ func getLabelByIDSimple(labelID int64) (*Label, error) {
 
 // Helper method to get all task ids a user has
 func getUserTaskIDs(u *User) (taskIDs []int64, err error) {
-	tasks, err := GetTasksByUser("", u, -1, SortTasksByUnsorted, time.Unix(0, 0), time.Unix(0, 0))
+
+	// Get all lists
+	lists, err := getRawListsForUser("", u, -1)
+	if err != nil {
+		return nil, err
+	}
+
+	tasks, err := getTasksForLists(lists, &taskOptions{
+		startDate: time.Unix(0, 0),
+		endDate:   time.Unix(0, 0),
+		sortby:    SortTasksByUnsorted,
+	})
 	if err != nil {
 		return nil, err
 	}

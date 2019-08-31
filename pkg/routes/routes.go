@@ -48,9 +48,11 @@ import (
 	"code.vikunja.io/web"
 	"code.vikunja.io/web/handler"
 	"github.com/asaskevich/govalidator"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	elog "github.com/labstack/gommon/log"
+	"net/http"
 	"strings"
 )
 
@@ -67,11 +69,11 @@ func (cv *CustomValidator) Validate(i interface{}) error {
 		}
 
 		httperr := models.ValidationHTTPError{
-			web.HTTPError{
+			HTTPError: web.HTTPError{
 				Code:    models.ErrCodeInvalidData,
 				Message: "Invalid Data",
 			},
-			errs,
+			InvalidFields: errs,
 		}
 
 		return httperr
@@ -108,7 +110,16 @@ func NewEcho() *echo.Echo {
 	// Handler config
 	handler.SetAuthProvider(&web.Auths{
 		AuthObject: func(c echo.Context) (web.Auth, error) {
-			return models.GetCurrentUser(c)
+			jwtinf := c.Get("user").(*jwt.Token)
+			claims := jwtinf.Claims.(jwt.MapClaims)
+			typ := int(claims["type"].(float64))
+			if typ == apiv1.AuthTypeLinkShare && config.ServiceEnableLinkSharing.GetBool() {
+				return models.GetLinkShareFromClaims(claims)
+			}
+			if typ == apiv1.AuthTypeUser {
+				return models.GetUserFromClaims(claims)
+			}
+			return nil, echo.NewHTTPError(http.StatusBadRequest, models.Message{Message: "Invalid JWT token."})
 		},
 	})
 	handler.SetLoggingProvider(log.GetLogger())
@@ -165,6 +176,11 @@ func registerAPIRoutes(a *echo.Group) {
 	// Info endpoint
 	a.GET("/info", apiv1.Info)
 
+	// Link share auth
+	if config.ServiceEnableLinkSharing.GetBool() {
+		a.POST("/shares/:share/auth", apiv1.AuthenticateLinkShare)
+	}
+
 	// ===== Routes with Authetication =====
 	// Authetification
 	a.Use(middleware.JWT([]byte(config.ServiceJWTSecret.GetString())))
@@ -193,6 +209,18 @@ func registerAPIRoutes(a *echo.Group) {
 	a.DELETE("/lists/:list", listHandler.DeleteWeb)
 	a.PUT("/namespaces/:namespace/lists", listHandler.CreateWeb)
 	a.GET("/lists/:list/listusers", apiv1.ListUsersForList)
+
+	if config.ServiceEnableLinkSharing.GetBool() {
+		listSharingHandler := &handler.WebHandler{
+			EmptyStruct: func() handler.CObject {
+				return &models.LinkSharing{}
+			},
+		}
+		a.PUT("/lists/:list/shares", listSharingHandler.CreateWeb)
+		a.GET("/lists/:list/shares", listSharingHandler.ReadAllWeb)
+		a.GET("/lists/:list/shares/:share", listSharingHandler.ReadOneWeb)
+		a.DELETE("/lists/:list/shares/:share", listSharingHandler.DeleteWeb)
+	}
 
 	taskHandler := &handler.WebHandler{
 		EmptyStruct: func() handler.CObject {

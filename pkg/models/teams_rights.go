@@ -22,6 +22,10 @@ import (
 
 // CanCreate checks if the user can create a new team
 func (t *Team) CanCreate(a web.Auth) (bool, error) {
+	if _, is := a.(*LinkSharing); is {
+		return false, nil
+	}
+
 	// This is currently a dummy function, later on we could imagine global limits etc.
 	return true, nil
 }
@@ -38,6 +42,11 @@ func (t *Team) CanDelete(a web.Auth) (bool, error) {
 
 // IsAdmin returns true when the user is admin of a team
 func (t *Team) IsAdmin(a web.Auth) (bool, error) {
+	// Don't do anything if we're deadling with a link share auth here
+	if _, is := a.(*LinkSharing); is {
+		return false, nil
+	}
+
 	// Check if the team exists to be able to return a proper error message if not
 	_, err := GetTeamByID(t.ID)
 	if err != nil {

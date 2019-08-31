@@ -221,13 +221,27 @@ func (t *Task) addNewAssigneeByID(newAssigneeID int64, list *List) (err error) {
 // @Produce json
 // @Param p query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
 // @Param s query string false "Search assignees by their username."
+// @Param taskID path int true "Task ID"
 // @Security JWTKeyAuth
 // @Success 200 {array} models.User "The assignees"
 // @Failure 500 {object} models.Message "Internal error"
-// @Router /labels [get]
+// @Router /tasks/{taskID}/assignees [get]
 func (la *TaskAssginee) ReadAll(search string, a web.Auth, page int) (interface{}, error) {
+	task, err := GetListSimplByTaskID(la.TaskID)
+	if err != nil {
+		return nil, err
+	}
+
+	can, err := task.CanRead(a)
+	if err != nil {
+		return nil, err
+	}
+	if !can {
+		return nil, ErrGenericForbidden{}
+	}
+
 	var taskAssignees []*User
-	err := x.Table("task_assignees").
+	err = x.Table("task_assignees").
 		Select("users.*").
 		Join("INNER", "users", "task_assignees.user_id = users.id").
 		Where("task_id = ? AND users.username LIKE ?", la.TaskID, "%"+search+"%").

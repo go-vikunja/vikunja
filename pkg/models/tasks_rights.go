@@ -47,8 +47,8 @@ func (t *Task) CanRead(a web.Auth) (canRead bool, err error) {
 	}
 
 	// A user can read a task if it has access to the list
-	list := &List{ID: t.ListID}
-	return list.CanRead(a)
+	l := &List{ID: t.ListID}
+	return l.CanRead(a)
 }
 
 // Helper function to check if a user can do stuff on a list task

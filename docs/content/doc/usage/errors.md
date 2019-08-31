@@ -14,6 +14,7 @@ This document describes the different errors Vikunja can return.
 
 | ErrorCode | HTTP Status Code | Description |
 |-----------|------------------|-------------|
+| 0001 | 403 | Generic forbidden error. |
 | 1001 | 400 | A user with this username already exists. |
 | 1002 | 400 | A user with this email address already exists. |
 | 1004 | 400 | No username and password specified. |
@@ -31,6 +32,7 @@ This document describes the different errors Vikunja can return.
 | 3001 | 404 | The list does not exist. |
 | 3004 | 403 | The user needs to have read permissions on that list to perform that action. |
 | 3005 | 400 | The list title cannot be empty. |
+| 3006 | 404 | The list share does not exist. |
 | 4001 | 400 | The list task text cannot be empty. |
 | 4002 | 404 | The list task does not exist. |
 | 4003 | 403 | All bulk editing tasks must belong to the same list. |

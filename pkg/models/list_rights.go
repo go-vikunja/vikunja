@@ -31,6 +31,13 @@ func (l *List) CanWrite(a web.Auth) (bool, error) {
 		return false, err
 	}
 
+	// Check if we're dealing with a share auth
+	shareAuth, ok := a.(*LinkSharing)
+	if ok {
+		return originalList.ID == shareAuth.ListID &&
+			(shareAuth.Right == RightWrite || shareAuth.Right == RightAdmin), nil
+	}
+
 	// Check if the user is either owner or can write to the list
 	if originalList.isOwner(&User{ID: a.GetID()}) {
 		return true, nil
@@ -45,6 +52,14 @@ func (l *List) CanRead(a web.Auth) (bool, error) {
 	if err := l.GetSimpleByID(); err != nil {
 		return false, err
 	}
+
+	// Check if we're dealing with a share auth
+	shareAuth, ok := a.(*LinkSharing)
+	if ok {
+		return l.ID == shareAuth.ListID &&
+			(shareAuth.Right == RightRead || shareAuth.Right == RightWrite || shareAuth.Right == RightAdmin), nil
+	}
+
 	if l.isOwner(&User{ID: a.GetID()}) {
 		return true, nil
 	}
@@ -61,7 +76,7 @@ func (l *List) CanDelete(a web.Auth) (bool, error) {
 	return l.IsAdmin(a)
 }
 
-// CanCreate checks if the user can update a list
+// CanCreate checks if the user can create a list
 func (l *List) CanCreate(a web.Auth) (bool, error) {
 	// A user can create a list if he has write access to the namespace
 	n := &Namespace{ID: l.NamespaceID}
@@ -74,6 +89,12 @@ func (l *List) IsAdmin(a web.Auth) (bool, error) {
 	err := originalList.GetSimpleByID()
 	if err != nil {
 		return false, err
+	}
+
+	// Check if we're dealing with a share auth
+	shareAuth, ok := a.(*LinkSharing)
+	if ok {
+		return originalList.ID == shareAuth.ListID && shareAuth.Right == RightAdmin, nil
 	}
 
 	// Check all the things

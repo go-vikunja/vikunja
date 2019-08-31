@@ -98,7 +98,7 @@ definitions:
       subtasks:
         description: An array of subtasks.
         items:
-          $ref: '#/definitions/models.ListTask'
+          $ref: '#/definitions/models.Task'
         type: array
       task_ids:
         description: A list of task ids to update
@@ -170,6 +170,42 @@ definitions:
           $ref: '#/definitions/models.Label'
         type: array
     type: object
+  models.LinkSharing:
+    properties:
+      created:
+        description: A unix timestamp when this list was shared. You cannot change
+          this value.
+        type: integer
+      hash:
+        description: The public id to get this shared list
+        type: string
+      id:
+        description: The ID of the shared thing
+        type: integer
+      list:
+        $ref: '#/definitions/models.List'
+        type: object
+      right:
+        default: 0
+        description: The right this list is shared with. 0 = Read only, 1 = Read &
+          Write, 2 = Admin. See the docs for more details.
+        maximum: 2
+        type: integer
+      shared_by:
+        $ref: '#/definitions/models.User'
+        description: The user who shared this list
+        type: object
+      sharing_type:
+        default: 0
+        description: The kind of this link. 0 = undefined, 1 = without password, 2
+          = with password (currently not implemented).
+        maximum: 2
+        type: integer
+      updated:
+        description: A unix timestamp when this share was last updated. You cannot
+          change this value.
+        type: integer
+    type: object
   models.List:
     properties:
       created:
@@ -189,7 +225,7 @@ definitions:
       tasks:
         description: An array of tasks which belong to the list.
         items:
-          $ref: '#/definitions/models.ListTask'
+          $ref: '#/definitions/models.Task'
         type: array
       title:
         description: The title of the list. You'll see this in the namespace overview.
@@ -199,94 +235,6 @@ definitions:
       updated:
         description: A unix timestamp when this list was last updated. You cannot
           change this value.
-        type: integer
-    type: object
-  models.ListTask:
-    properties:
-      assignees:
-        description: An array of users who are assigned to this task
-        items:
-          $ref: '#/definitions/models.User'
-        type: array
-      created:
-        description: A unix timestamp when this task was created. You cannot change
-          this value.
-        type: integer
-      createdBy:
-        $ref: '#/definitions/models.User'
-        description: The user who initially created the task.
-        type: object
-      description:
-        description: The task description.
-        type: string
-      done:
-        description: Whether a task is done or not.
-        type: boolean
-      doneAt:
-        description: The unix timestamp when a task was marked as done.
-        type: integer
-      dueDate:
-        description: A unix timestamp when the task is due.
-        type: integer
-      endDate:
-        description: When this task ends.
-        type: integer
-      hexColor:
-        description: The task color in hex
-        maxLength: 6
-        type: string
-      id:
-        description: The unique, numeric id of this task.
-        type: integer
-      labels:
-        description: An array of labels which are associated with this task.
-        items:
-          $ref: '#/definitions/models.Label'
-        type: array
-      listID:
-        description: The list this task belongs to.
-        type: integer
-      parentTaskID:
-        description: If the task is a subtask, this is the id of its parent.
-        type: integer
-      priority:
-        description: The task priority. Can be anything you want, it is possible to
-          sort by this later.
-        type: integer
-      reminderDates:
-        description: An array of unix timestamps when the user wants to be reminded
-          of the task.
-        items:
-          type: integer
-        type: array
-      repeatAfter:
-        description: An amount in seconds this task repeats itself. If this is set,
-          when marking the task as done, it will mark itself as "undone" and then
-          increase all remindes and the due date by its amount.
-        type: integer
-      startDate:
-        description: When this task starts.
-        type: integer
-      subtasks:
-        description: An array of subtasks.
-        items:
-          $ref: '#/definitions/models.ListTask'
-        type: array
-      text:
-        description: The task text. This is what you'll see in the list.
-        maxLength: 250
-        minLength: 3
-        type: string
-      updated:
-        description: A unix timestamp when this task was last updated. You cannot
-          change this value.
-        type: integer
-    type: object
-  models.ListTaskAssginee:
-    properties:
-      created:
-        type: integer
-      user_id:
         type: integer
     type: object
   models.ListUser:
@@ -411,6 +359,94 @@ definitions:
       email:
         maxLength: 250
         type: string
+    type: object
+  models.Task:
+    properties:
+      assignees:
+        description: An array of users who are assigned to this task
+        items:
+          $ref: '#/definitions/models.User'
+        type: array
+      created:
+        description: A unix timestamp when this task was created. You cannot change
+          this value.
+        type: integer
+      createdBy:
+        $ref: '#/definitions/models.User'
+        description: The user who initially created the task.
+        type: object
+      description:
+        description: The task description.
+        type: string
+      done:
+        description: Whether a task is done or not.
+        type: boolean
+      doneAt:
+        description: The unix timestamp when a task was marked as done.
+        type: integer
+      dueDate:
+        description: A unix timestamp when the task is due.
+        type: integer
+      endDate:
+        description: When this task ends.
+        type: integer
+      hexColor:
+        description: The task color in hex
+        maxLength: 6
+        type: string
+      id:
+        description: The unique, numeric id of this task.
+        type: integer
+      labels:
+        description: An array of labels which are associated with this task.
+        items:
+          $ref: '#/definitions/models.Label'
+        type: array
+      listID:
+        description: The list this task belongs to.
+        type: integer
+      parentTaskID:
+        description: If the task is a subtask, this is the id of its parent.
+        type: integer
+      priority:
+        description: The task priority. Can be anything you want, it is possible to
+          sort by this later.
+        type: integer
+      reminderDates:
+        description: An array of unix timestamps when the user wants to be reminded
+          of the task.
+        items:
+          type: integer
+        type: array
+      repeatAfter:
+        description: An amount in seconds this task repeats itself. If this is set,
+          when marking the task as done, it will mark itself as "undone" and then
+          increase all remindes and the due date by its amount.
+        type: integer
+      startDate:
+        description: When this task starts.
+        type: integer
+      subtasks:
+        description: An array of subtasks.
+        items:
+          $ref: '#/definitions/models.Task'
+        type: array
+      text:
+        description: The task text. This is what you'll see in the list.
+        maxLength: 250
+        minLength: 3
+        type: string
+      updated:
+        description: A unix timestamp when this task was last updated. You cannot
+          change this value.
+        type: integer
+    type: object
+  models.TaskAssginee:
+    properties:
+      created:
+        type: integer
+      user_id:
+        type: integer
     type: object
   models.Team:
     properties:
@@ -652,6 +688,8 @@ definitions:
     properties:
       frontend_url:
         type: string
+      link_sharing_enabled:
+        type: boolean
       motd:
         type: string
       version:
@@ -678,7 +716,8 @@ info:
 paths:
   /info:
     get:
-      description: Returns the version, frontendurl and motd of Vikunja
+      description: Returns the version, frontendurl, motd and various settings of
+        Vikunja
       produces:
       - application/json
       responses:
@@ -694,14 +733,15 @@ paths:
     get:
       consumes:
       - application/json
-      description: Returns an array with all assignees for this task.
+      description: Returns all labels which are either created by the user or associated
+        with a task the user has at least read-access to.
       parameters:
       - description: The page number. Used for pagination. If not provided, the first
           page of results is returned.
         in: query
         name: p
         type: integer
-      - description: Search assignees by their username.
+      - description: Search labels by label text.
         in: query
         name: s
         type: string
@@ -709,10 +749,10 @@ paths:
       - application/json
       responses:
         "200":
-          description: The assignees
+          description: The labels
           schema:
             items:
-              $ref: '#/definitions/models.User'
+              $ref: '#/definitions/models.Label'
             type: array
         "500":
           description: Internal error
@@ -721,9 +761,9 @@ paths:
             type: object
       security:
       - JWTKeyAuth: []
-      summary: Get all assignees for a task
+      summary: Get all labels a user has access to
       tags:
-      - assignees
+      - labels
     put:
       consumes:
       - application/json
@@ -1057,7 +1097,7 @@ paths:
         name: task
         required: true
         schema:
-          $ref: '#/definitions/models.ListTask'
+          $ref: '#/definitions/models.Task'
           type: object
       produces:
       - application/json
@@ -1065,7 +1105,7 @@ paths:
         "200":
           description: The created task object.
           schema:
-            $ref: '#/definitions/models.ListTask'
+            $ref: '#/definitions/models.Task'
             type: object
         "400":
           description: Invalid task object provided.
@@ -1318,6 +1358,184 @@ paths:
       security:
       - JWTKeyAuth: []
       summary: Add a user to a list
+      tags:
+      - sharing
+  /lists/{list}/shares:
+    get:
+      consumes:
+      - application/json
+      description: Returns all link shares which exist for a given list
+      parameters:
+      - description: List ID
+        in: path
+        name: list
+        required: true
+        type: integer
+      - description: The page number. Used for pagination. If not provided, the first
+          page of results is returned.
+        in: query
+        name: p
+        type: integer
+      - description: Search shares by hash.
+        in: query
+        name: s
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The share links
+          schema:
+            items:
+              $ref: '#/definitions/models.LinkSharing'
+            type: array
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+      security:
+      - JWTKeyAuth: []
+      summary: Get all link shares for a list
+      tags:
+      - sharing
+    put:
+      consumes:
+      - application/json
+      description: Share a list via link. The user needs to have write-access to the
+        list to be able do this.
+      parameters:
+      - description: List ID
+        in: path
+        name: list
+        required: true
+        type: integer
+      - description: The new link share object
+        in: body
+        name: label
+        required: true
+        schema:
+          $ref: '#/definitions/models.LinkSharing'
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The created link share object.
+          schema:
+            $ref: '#/definitions/models.LinkSharing'
+            type: object
+        "400":
+          description: Invalid link share object provided.
+          schema:
+            $ref: '#/definitions/code.vikunja.io/web.HTTPError'
+            type: object
+        "403":
+          description: Not allowed to add the list share.
+          schema:
+            $ref: '#/definitions/code.vikunja.io/web.HTTPError'
+            type: object
+        "404":
+          description: The list does not exist.
+          schema:
+            $ref: '#/definitions/code.vikunja.io/web.HTTPError'
+            type: object
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+      security:
+      - JWTKeyAuth: []
+      summary: Share a list via link
+      tags:
+      - sharing
+  /lists/{list}/shares/{share}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove a link share. The user needs to have write-access to the
+        list to be able do this.
+      parameters:
+      - description: List ID
+        in: path
+        name: list
+        required: true
+        type: integer
+      - description: Share Link ID
+        in: path
+        name: share
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The link was successfully removed.
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+        "403":
+          description: Not allowed to remove the link.
+          schema:
+            $ref: '#/definitions/code.vikunja.io/web.HTTPError'
+            type: object
+        "404":
+          description: Share Link not found.
+          schema:
+            $ref: '#/definitions/code.vikunja.io/web.HTTPError'
+            type: object
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+      security:
+      - JWTKeyAuth: []
+      summary: Remove a link share
+      tags:
+      - sharing
+    get:
+      consumes:
+      - application/json
+      description: Returns one link share by its ID.
+      parameters:
+      - description: List ID
+        in: path
+        name: list
+        required: true
+        type: integer
+      - description: Share ID
+        in: path
+        name: share
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The share links
+          schema:
+            $ref: '#/definitions/models.LinkSharing'
+            type: object
+        "403":
+          description: No access to the list
+          schema:
+            $ref: '#/definitions/code.vikunja.io/web.HTTPError'
+            type: object
+        "404":
+          description: Share Link not found.
+          schema:
+            $ref: '#/definitions/code.vikunja.io/web.HTTPError'
+            type: object
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+      security:
+      - JWTKeyAuth: []
+      summary: Get one link shares for a list
       tags:
       - sharing
   /lists/{listID}/teams/{teamID}:
@@ -2232,6 +2450,38 @@ paths:
       summary: Register
       tags:
       - user
+  /shares/{share}/auth:
+    post:
+      consumes:
+      - application/json
+      description: Get a jwt auth token for a shared list from a share hash.
+      parameters:
+      - description: The share hash
+        in: path
+        name: share
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The valid jwt auth token.
+          schema:
+            $ref: '#/definitions/v1.Token'
+            type: object
+        "400":
+          description: Invalid link share object provided.
+          schema:
+            $ref: '#/definitions/code.vikunja.io/web.HTTPError'
+            type: object
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+      summary: Get an auth token for a share
+      tags:
+      - sharing
   /tasks/{id}:
     delete:
       description: Deletes a task from a list. This does not mean "mark it done".
@@ -2286,7 +2536,7 @@ paths:
         name: task
         required: true
         schema:
-          $ref: '#/definitions/models.ListTask'
+          $ref: '#/definitions/models.Task'
           type: object
       produces:
       - application/json
@@ -2294,7 +2544,7 @@ paths:
         "200":
           description: The updated task object.
           schema:
-            $ref: '#/definitions/models.ListTask'
+            $ref: '#/definitions/models.Task'
             type: object
         "400":
           description: Invalid task object provided.
@@ -2452,6 +2702,44 @@ paths:
       tags:
       - labels
   /tasks/{taskID}/assignees:
+    get:
+      consumes:
+      - application/json
+      description: Returns an array with all assignees for this task.
+      parameters:
+      - description: The page number. Used for pagination. If not provided, the first
+          page of results is returned.
+        in: query
+        name: p
+        type: integer
+      - description: Search assignees by their username.
+        in: query
+        name: s
+        type: string
+      - description: Task ID
+        in: path
+        name: taskID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The assignees
+          schema:
+            items:
+              $ref: '#/definitions/models.User'
+            type: array
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+            type: object
+      security:
+      - JWTKeyAuth: []
+      summary: Get all assignees for a task
+      tags:
+      - assignees
     put:
       consumes:
       - application/json
@@ -2463,7 +2751,7 @@ paths:
         name: assignee
         required: true
         schema:
-          $ref: '#/definitions/models.ListTaskAssginee'
+          $ref: '#/definitions/models.TaskAssginee'
           type: object
       - description: Task ID
         in: path
@@ -2476,7 +2764,7 @@ paths:
         "200":
           description: The created assingee object.
           schema:
-            $ref: '#/definitions/models.ListTaskAssginee'
+            $ref: '#/definitions/models.TaskAssginee'
             type: object
         "400":
           description: Invalid assignee object provided.
@@ -2559,7 +2847,7 @@ paths:
         "200":
           description: The created assingees object.
           schema:
-            $ref: '#/definitions/models.ListTaskAssginee'
+            $ref: '#/definitions/models.TaskAssginee'
             type: object
         "400":
           description: Invalid assignee object provided.
@@ -2659,7 +2947,7 @@ paths:
           description: The tasks
           schema:
             items:
-              $ref: '#/definitions/models.ListTask'
+              $ref: '#/definitions/models.Task'
             type: array
         "500":
           description: Internal error
@@ -2693,7 +2981,7 @@ paths:
         "200":
           description: The updated task object.
           schema:
-            $ref: '#/definitions/models.ListTask'
+            $ref: '#/definitions/models.Task'
             type: object
         "400":
           description: Invalid task object provided.

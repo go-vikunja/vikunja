@@ -39,10 +39,19 @@ func (l *Label) CanRead(a web.Auth) (bool, error) {
 // CanCreate checks if the user can create a label
 // Currently a dummy.
 func (l *Label) CanCreate(a web.Auth) (bool, error) {
+	if _, is := a.(*LinkSharing); is {
+		return false, nil
+	}
+
 	return true, nil
 }
 
 func (l *Label) isLabelOwner(a web.Auth) (bool, error) {
+
+	if _, is := a.(*LinkSharing); is {
+		return false, nil
+	}
+
 	lorig, err := getLabelByIDSimple(l.ID)
 	if err != nil {
 		return false, err
@@ -52,6 +61,9 @@ func (l *Label) isLabelOwner(a web.Auth) (bool, error) {
 
 // Helper method to check if a user can see a specific label
 func (l *Label) hasAccessToLabel(a web.Auth) (bool, error) {
+
+	// TODO: add an extra check for link share handling
+
 	// Get all tasks
 	taskIDs, err := getUserTaskIDs(&User{ID: a.GetID()})
 	if err != nil {

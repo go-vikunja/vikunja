@@ -317,6 +317,15 @@ func sortTasksForTesting(by SortBy) (tasks []*Task) {
 			Created:     1543626724,
 			Updated:     1543626724,
 		},
+		{
+			ID:          32,
+			Text:        "task #32",
+			CreatedByID: 1,
+			CreatedBy:   user1,
+			ListID:      3,
+			Created:     1543626724,
+			Updated:     1543626724,
+		},
 	}
 
 	switch by {

@@ -85,14 +85,26 @@ func GetListsByNamespaceID(nID int64, doer *User) (lists []*List, err error) {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists [get]
 func (l *List) ReadAll(search string, a web.Auth, page int) (interface{}, error) {
+	// Check if we're dealing with a share auth
+	shareAuth, ok := a.(*LinkSharing)
+	if ok {
+		shareAuth.List = &List{ID: shareAuth.ListID}
+		err := shareAuth.List.GetSimpleByID()
+		if err != nil {
+			return nil, err
+		}
+		lists := []*List{shareAuth.List}
+		err = AddListDetails(lists)
+		return lists, err
+	}
+
 	lists, err := getRawListsForUser(search, &User{ID: a.GetID()}, page)
 	if err != nil {
 		return nil, err
 	}
 
 	// Add more list details
-	AddListDetails(lists)
-
+	err = AddListDetails(lists)
 	return lists, err
 }
 

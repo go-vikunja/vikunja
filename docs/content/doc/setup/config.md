@@ -61,6 +61,8 @@ service:
   enablemetrics: false
   # Enable the caldav endpoint, see the docs for more details
   enablecaldav: true
+  # Enable sharing of lists via a link
+  enablelinksharing: true
 
 database:
   # Database type to use. Supported types are mysql and sqlite.
