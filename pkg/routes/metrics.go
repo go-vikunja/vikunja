@@ -27,72 +27,75 @@ import (
 )
 
 func setupMetrics(a *echo.Group) {
-	if config.ServiceEnableMetrics.GetBool() {
-
-		if !config.RedisEnabled.GetBool() {
-			log.Fatal("You have to enable redis in order to use metrics")
-		}
-
-		metrics.InitMetrics()
-
-		type countable struct {
-			Rediskey string
-			Type     interface{}
-		}
-
-		for _, c := range []countable{
-			{
-				metrics.ListCountKey,
-				models.List{},
-			},
-			{
-				metrics.UserCountKey,
-				models.User{},
-			},
-			{
-				metrics.NamespaceCountKey,
-				models.Namespace{},
-			},
-			{
-				metrics.TaskCountKey,
-				models.Task{},
-			},
-			{
-				metrics.TeamCountKey,
-				models.Team{},
-			},
-		} {
-			// Set initial totals
-			total, err := models.GetTotalCount(c.Type)
-			if err != nil {
-				log.Fatalf("Could not set initial count for %v, error was %s", c.Type, err)
-			}
-			if err := metrics.SetCount(total, c.Rediskey); err != nil {
-				log.Fatalf("Could not set initial count for %v, error was %s", c.Type, err)
-			}
-		}
-
-		// init active users, sometimes we'll have garbage from previous runs in redis instead
-		if err := metrics.SetActiveUsers([]*metrics.ActiveUser{}); err != nil {
-			log.Fatalf("Could not set initial count for active users, error was %s", err)
-		}
-
-		a.GET("/metrics", echo.WrapHandler(promhttp.Handler()))
+	if !config.ServiceEnableMetrics.GetBool() {
+		return
 	}
+
+	if !config.RedisEnabled.GetBool() {
+		log.Fatal("You have to enable redis in order to use metrics")
+	}
+
+	metrics.InitMetrics()
+
+	type countable struct {
+		Rediskey string
+		Type     interface{}
+	}
+
+	for _, c := range []countable{
+		{
+			metrics.ListCountKey,
+			models.List{},
+		},
+		{
+			metrics.UserCountKey,
+			models.User{},
+		},
+		{
+			metrics.NamespaceCountKey,
+			models.Namespace{},
+		},
+		{
+			metrics.TaskCountKey,
+			models.Task{},
+		},
+		{
+			metrics.TeamCountKey,
+			models.Team{},
+		},
+	} {
+		// Set initial totals
+		total, err := models.GetTotalCount(c.Type)
+		if err != nil {
+			log.Fatalf("Could not get initial count for %v, error was %s", c.Type, err)
+		}
+		if err := metrics.SetCount(total, c.Rediskey); err != nil {
+			log.Fatalf("Could not set initial count for %v, error was %s", c.Type, err)
+		}
+	}
+
+	// init active users, sometimes we'll have garbage from previous runs in redis instead
+	if err := metrics.SetActiveUsers([]*metrics.ActiveUser{}); err != nil {
+		log.Fatalf("Could not set initial count for active users, error was %s", err)
+	}
+
+	a.GET("/metrics", echo.WrapHandler(promhttp.Handler()))
 }
 
 func setupMetricsMiddleware(a *echo.Group) {
-	if config.ServiceJWTSecret.GetBool() {
-		a.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
-			return func(c echo.Context) error {
+	if !config.ServiceEnableMetrics.GetBool() {
+		return
+	}
 
-				// Update currently active users
-				if err := models.UpdateActiveUsersFromContext(c); err != nil {
-					log.Error(err)
-					return next(c)
-				}
+	a.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+
+			// Update currently active users
+			if err := models.UpdateActiveUsersFromContext(c); err != nil {
+				log.Error(err)
 				return next(c)
 			}
-		})
-	}
+			return next(c)
+		}
+	})
 }

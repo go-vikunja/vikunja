@@ -211,7 +211,7 @@ func GetUserFromClaims(claims jwt.MapClaims) (user *User, err error) {
 func UpdateActiveUsersFromContext(c echo.Context) (err error) {
 	user, err := GetCurrentUser(c)
 	if err != nil {
-		return err
+		return
 	}
 
 	allActiveUsers, err := metrics.GetActiveUsers()
