@@ -160,6 +160,7 @@ steps:
       - export PATH=$PATH:$GOPATH/bin
       - make generate
       - make release-dirs
+    depends_on: [ fetch-tags ]
 
   - name: static-build-windows
     image: techknowlogick/xgo:latest
@@ -302,6 +303,7 @@ steps:
         from_secret: docker_password
       repo: vikunja/api
       auto_tag: true
+    depends_on: [ fetch-tags ]
 
   - name: telegram
     image: appleboy/drone-telegram
@@ -351,6 +353,7 @@ steps:
     commands:
       - make generate
       - make release-dirs
+    depends_on: [ fetch-tags ]
 
   - name: static-build-windows
     image: techknowlogick/xgo:latest
@@ -493,6 +496,7 @@ steps:
         from_secret: docker_password
       repo: vikunja/api
       auto_tag: true
+    depends_on: [ fetch-tags ]
 
   - name: telegram
     image: appleboy/drone-telegram
