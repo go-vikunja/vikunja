@@ -50,6 +50,9 @@ func InitLogger() {
 		return
 	}
 
+	// This show correct caller functions
+	logInstance.ExtraCalldepth = 1
+
 	if config.LogErrors.GetString() == "file" || config.LogStandard.GetString() == "file" {
 		err := os.Mkdir(config.LogPath.GetString(), 0744)
 		if err != nil && !os.IsExist(err) {
