@@ -6,7 +6,6 @@
 [![Docker Pulls](https://img.shields.io/docker/pulls/vikunja/api.svg)](https://hub.docker.com/r/vikunja/api/)
 [![Swagger Docs](https://img.shields.io/badge/swagger-docs-brightgreen.svg)](https://try.vikunja.io/api/v1/docs)
 [![Go Report Card](https://goreportcard.com/badge/git.kolaente.de/vikunja/api)](https://goreportcard.com/report/git.kolaente.de/vikunja/api)
-[![cover.run](https://cover.run/go/code.vikunja.io/api.svg?style=flat&tag=golang-1.10)](https://cover.run/go?tag=golang-1.10&repo=code.vikunja.io%2Fapi) 
 
 # Vikunja API
 
@@ -26,8 +25,10 @@
   * Reminder for tasks
 * Namespaces: A "group" which bundels multiple lists
 * Share lists and namespaces with teams and users with granular permissions
+* Plenty of details for tasks
 
-Try it on [try.vikunja.io](https://try.vikunja.io)!
+See [the features page](https://vikunja.io/en/features/) on our website for a more exaustive list or 
+try it on [try.vikunja.io](https://try.vikunja.io)!
 
 ## Docs
 
@@ -53,8 +54,8 @@ All docs can be found on [the vikunja home page](https://vikunja.io/docs/).
 * [ ] Attachments on tasks
 * [ ] More sharing features
   * [x] Share with individual users
-  * [ ] Share via a world-readable link with or without password, like Nextcloud
-* [ ] Read-only websocket to notify multiple clients of updates when something was changed
+  * [x] Share via a world-readable link with or without password, like Nextcloud
+* [ ] SSE to notify multiple clients of updates when something was changed
 * [ ] "Smart Lists" - Create lists based on filters
 * [ ] IMAP-Integration - Send an email to Vikunja to create a new task
 * [ ] Webhooks - Trigger other events when an action is done (like completing a task)
