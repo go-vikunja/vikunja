@@ -214,6 +214,7 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [x] Description should be longtext
 * [ ] Attachments
 * [ ] Related tasks -> settable with a "kind" of relation like blocked, subtask, or just related or so
+  * [ ] Should be possible to relate tasks which are not in the same list
 * [ ] Percent done - For now just a float, may later depend on how many sub tasks are done or so
 * [ ] Move tasks between lists
 * [ ] "Status" field for things like "New", "In Progress", "Done", etc (customizable statuses)
@@ -254,7 +255,7 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [ ] Sorting lists by members, tasks, teams, last modified, etc (all possible fields)
 * [ ] Backgrounds for lists -> needs uploading and storing and so on
 * [ ] Plugins
-* [ ] Rename Namespaces to collections (or spaces?)
+* [ ] Rename Namespaces to collections (or spaces?)? Or discard the whole namespace concept alltogether since it may be too confusing? -> Projects only
 * [ ] Collections n-n (one list can be in multiple collections)?
 * [ ] Rename lists to projects
 * [ ] "Performance-Statistik" -> Wie viele Tasks man in bestimmten Zeiträumen so geschafft hat etc
@@ -263,6 +264,8 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [ ] In und Out webhooks, mit Templates vom Payload
 * [ ] Some kind of milestones for tasks
 * [ ] Get Weekly/Daily summary of the tasks to come per mail
+* [ ] Boards (Boards)
+* [ ] Sprints
 * [ ] Epics
 * [ ] Stories
   * Maybe we can do both epics and stories with a new field "kind" on tasks, since epics and stories are basically high-level-overview tasks
@@ -284,23 +287,26 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [ ] 2fa
 * [ ] Custom fields for tasks: Templates at List > Namespace > Global level, overwriting each other
 * [ ] Task-Templates in namespaces and lists (-> Multiple which are selectable)
+  * The frontend would then GET the template, offer them in a drop down kind of thing and prefill the values, the api won't do anything 
+    about creating a task based on a template except providing it to the frontend
 * [ ] "Favourite lists" -> A user can favourize boards which will then show up in a pseudonamespace
-* [ ] Internal lists -> Only registered users can see the list
+* [ ] Internal lists -> Only registered users can see the list, but without explicit sharing
 * [ ] Rights management for both public and internal lists
-* [ ] Add new users via to a list which don't have an account yet, they'd get a link to sign up for vikunja.
-  * [ ] Respect registration email domain limits
 * [ ] Export all data from Vikunja to json (related: `dump` cli command)
   * [ ] Per user and for the whole instance
 * [ ] Watch a (n internal) list -> Will get notification for everything
-* [ ] Archive a task/project/namespace instead of deleting
-* [ ] Task dependencies
+  * [ ] Automatically subscribe when mentioning/commenting/assigning a user
+* [ ] Archive a task/project/namespace instead of deleting -> When archived, everything is read only
+* [ ] Task dependencies -> Can be implemented by using relations
 * [ ] Time tracking (possible plugin)
 * [ ] IFTTT
 * [ ] Task automation: Being able to create own flows "if this event is fired, do this" and so on
-* [ ] User online status
+* [ ] User online status -> Maybe just take that from metrics?
+* [ ] Add new users via to a list which don't have an account yet, they'd get a link to sign up for vikunja.
+  * [ ] Respect registration email domain limits
 * [ ] More sharing features (all of these with the already existing permissions)
-  * [ ] Invite users per mail
   * [x] Share a link with/without password
+  * [ ] Invite users per mail -> can easily be based off the link sharing stuff
 * [ ] Comments on tasks
 * [ ] @mention users in tasks or comments to get them notified
 * [ ] Summary of tasks to do in a configurable interval (every day/week or so)
@@ -308,7 +314,7 @@ Sorry for some of them being in German, I'll tranlate them at some point.
   * [ ] With inheritence from namespaces
 * [ ] Custom statuses for tasks and projects, configurable in the list settings
   * [ ] With inheritence from namespaces
-* [ ] Project start/end/deadline dates 
+* [ ] (sub-)Project start/end/deadline dates 
 * [ ] Better filters
   * [ ] by lables
   * [ ] Due dates
@@ -318,7 +324,6 @@ Sorry for some of them being in German, I'll tranlate them at some point.
   * [ ] Status
 * [ ] "Smart Lists", filtered lists, saved in some kind of pseudonamespace
   * [ ] Global and per list
-* [ ] Automate everything "If this event happens, do this"
 * [ ] Bulk-create lists/tasks -> needed for importer
 * [ ] Importer (maybe frontend only)
   * [ ] Trello
