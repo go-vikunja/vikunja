@@ -263,6 +263,10 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [ ] In und Out webhooks, mit Templates vom Payload
 * [ ] Some kind of milestones for tasks
 * [ ] Get Weekly/Daily summary of the tasks to come per mail
+* [ ] Epics
+* [ ] Stories
+  * Maybe we can do both epics and stories with a new field "kind" on tasks, since epics and stories are basically high-level-overview tasks
+  * Needs proper subtask stuff / relatsions
 * [ ] Per-User limits of lists/namespaces
 * [ ] Admin-Interface to do stuff like settings and user management
   * [ ] Enable/Disable users
