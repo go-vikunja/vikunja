@@ -88,12 +88,12 @@ func (l *List) ReadAll(search string, a web.Auth, page int) (interface{}, error)
 	// Check if we're dealing with a share auth
 	shareAuth, ok := a.(*LinkSharing)
 	if ok {
-		shareAuth.List = &List{ID: shareAuth.ListID}
-		err := shareAuth.List.GetSimpleByID()
+		list := &List{ID: shareAuth.ListID}
+		err := list.GetSimpleByID()
 		if err != nil {
 			return nil, err
 		}
-		lists := []*List{shareAuth.List}
+		lists := []*List{list}
 		err = AddListDetails(lists)
 		return lists, err
 	}

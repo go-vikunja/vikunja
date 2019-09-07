@@ -156,12 +156,12 @@ func (t *Task) ReadAll(search string, a web.Auth, page int) (interface{}, error)
 
 	shareAuth, is := a.(*LinkSharing)
 	if is {
-		shareAuth.List = &List{ID: shareAuth.ListID}
-		err := shareAuth.List.GetSimpleByID()
+		list := &List{ID: shareAuth.ListID}
+		err := list.GetSimpleByID()
 		if err != nil {
 			return nil, err
 		}
-		return getTasksForLists([]*List{shareAuth.List}, taskopts)
+		return getTasksForLists([]*List{list}, taskopts)
 	}
 
 	// Get all lists for the user

@@ -44,8 +44,6 @@ type LinkSharing struct {
 	// The right this list is shared with. 0 = Read only, 1 = Read & Write, 2 = Admin. See the docs for more details.
 	Right Right `xorm:"int(11) INDEX not null default 0" json:"right" valid:"length(0|2)" maximum:"2" default:"0"`
 
-	List *List `xorm:"-" json:"list" param:"fullist"`
-
 	// The kind of this link. 0 = undefined, 1 = without password, 2 = with password (currently not implemented).
 	SharingType SharingType `xorm:"int(11) INDEX not null default 0" json:"sharing_type" valid:"length(0|2)" maximum:"2" default:"0"`
 
@@ -102,6 +100,7 @@ func (share *LinkSharing) Create(a web.Auth) (err error) {
 	share.SharedByID = a.GetID()
 	share.Hash = utils.MakeRandomString(40)
 	_, err = x.Insert(share)
+	share.SharedBy, _ = a.(*User)
 	return
 }
 
@@ -158,6 +157,26 @@ func (share *LinkSharing) ReadAll(search string, a web.Auth, page int) (interfac
 		Where("list_id = ? AND hash LIKE ?", share.ListID, "%"+search+"%").
 		Limit(getLimitFromPageIndex(page)).
 		Find(&shares)
+	if err != nil {
+		return nil, err
+	}
+
+	// Find all users and add them
+	var userIDs []int64
+	for _, s := range shares {
+		userIDs = append(userIDs, s.SharedByID)
+	}
+
+	users := make(map[int64]*User)
+	err = x.In("id", userIDs).Find(&users)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, s := range shares {
+		s.SharedBy = users[s.SharedByID]
+	}
+
 	return shares, err
 }
 
@@ -190,7 +209,6 @@ func GetLinkShareByHash(hash string) (share *LinkSharing, err error) {
 	if !has {
 		return share, ErrListShareDoesNotExist{Hash: hash}
 	}
-	share.List = &List{ID: share.ListID}
 	return
 }
 

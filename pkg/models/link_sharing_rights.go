@@ -53,7 +53,7 @@ func (share *LinkSharing) canDoLinkShare(a web.Auth) (bool, error) {
 		return false, nil
 	}
 
-	l, err := GetListByShareHash(share.Hash)
+	l, err := GetListSimplByTaskID(share.ListID)
 	if err != nil {
 		return false, err
 	}
