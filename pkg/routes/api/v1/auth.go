@@ -19,7 +19,10 @@ package v1
 import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/web"
 	"github.com/dgrijalva/jwt-go"
+	"github.com/labstack/echo/v4"
+	"net/http"
 	"time"
 )
 
@@ -64,4 +67,18 @@ func NewLinkShareJWTAuthtoken(share *models.LinkSharing) (token string, err erro
 
 	// Generate encoded token and send it as response.
 	return t.SignedString([]byte(config.ServiceJWTSecret.GetString()))
+}
+
+// GetAuthFromClaims returns a web.Auth object from jwt claims
+func GetAuthFromClaims(c echo.Context) (a web.Auth, err error) {
+	jwtinf := c.Get("user").(*jwt.Token)
+	claims := jwtinf.Claims.(jwt.MapClaims)
+	typ := int(claims["type"].(float64))
+	if typ == AuthTypeLinkShare && config.ServiceEnableLinkSharing.GetBool() {
+		return models.GetLinkShareFromClaims(claims)
+	}
+	if typ == AuthTypeUser {
+		return models.GetUserFromClaims(claims)
+	}
+	return nil, echo.NewHTTPError(http.StatusBadRequest, models.Message{Message: "Invalid JWT token."})
 }

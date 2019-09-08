@@ -20,8 +20,8 @@ package routes
 import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
-	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/red"
+	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
 	"github.com/labstack/echo/v4"
 	"github.com/ulule/limiter/v3"
 	"github.com/ulule/limiter/v3/drivers/store/memory"
@@ -40,11 +40,11 @@ func RateLimit(rateLimiter *limiter.Limiter) echo.MiddlewareFunc {
 			case "ip":
 				rateLimitKey = c.RealIP()
 			case "user":
-				user, err := models.GetCurrentUser(c)
+				auth, err := apiv1.GetAuthFromClaims(c)
 				if err != nil {
-					log.Errorf("Error while getting the current user for rate limiting: %s", err)
+					log.Errorf("Error getting auth from jwt claims: %v", err)
 				}
-				rateLimitKey = "user_" + strconv.FormatInt(user.ID, 10)
+				rateLimitKey = "user_" + strconv.FormatInt(auth.GetID(), 10)
 			default:
 				log.Errorf("Unknown rate limit kind configured: %s", config.RateLimitKind.GetString())
 			}

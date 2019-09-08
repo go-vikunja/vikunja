@@ -48,11 +48,9 @@ import (
 	"code.vikunja.io/web"
 	"code.vikunja.io/web/handler"
 	"github.com/asaskevich/govalidator"
-	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	elog "github.com/labstack/gommon/log"
-	"net/http"
 	"strings"
 )
 
@@ -109,18 +107,7 @@ func NewEcho() *echo.Echo {
 
 	// Handler config
 	handler.SetAuthProvider(&web.Auths{
-		AuthObject: func(c echo.Context) (web.Auth, error) {
-			jwtinf := c.Get("user").(*jwt.Token)
-			claims := jwtinf.Claims.(jwt.MapClaims)
-			typ := int(claims["type"].(float64))
-			if typ == apiv1.AuthTypeLinkShare && config.ServiceEnableLinkSharing.GetBool() {
-				return models.GetLinkShareFromClaims(claims)
-			}
-			if typ == apiv1.AuthTypeUser {
-				return models.GetUserFromClaims(claims)
-			}
-			return nil, echo.NewHTTPError(http.StatusBadRequest, models.Message{Message: "Invalid JWT token."})
-		},
+		AuthObject: apiv1.GetAuthFromClaims,
 	})
 	handler.SetLoggingProvider(log.GetLogger())
 
