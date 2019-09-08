@@ -23,6 +23,13 @@ import (
 	"net/http"
 )
 
+// LinkShareToken represents a link share auth token with extra infos about the actual link share
+type LinkShareToken struct {
+	Token
+	*models.LinkSharing
+	ListID int64 `json:"list_id"`
+}
+
 // AuthenticateLinkShare gives a jwt auth token for valid share hashes
 // @Summary Get an auth token for a share
 // @Description Get a jwt auth token for a shared list from a share hash.
@@ -46,5 +53,9 @@ func AuthenticateLinkShare(c echo.Context) error {
 		return handler.HandleHTTPError(err, c)
 	}
 
-	return c.JSON(http.StatusOK, Token{Token: t})
+	return c.JSON(http.StatusOK, LinkShareToken{
+		Token:       Token{Token: t},
+		LinkSharing: share,
+		ListID:      share.ListID,
+	})
 }
