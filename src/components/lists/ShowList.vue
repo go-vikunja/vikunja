@@ -26,6 +26,7 @@
 
 	import ListModel from '../../models/list'
 	import ListService from '../../services/list'
+	import authType from '../../models/authTypes'
 
 	export default {
 		data() {
@@ -41,12 +42,12 @@
 		},
 		beforeMount() {
 			// Check if the user is already logged in, if so, redirect him to the homepage
-			if (!auth.user.authenticated && !auth.user.isLinkShareAuth) {
+			if (!auth.user.authenticated && auth.user.infos.type !== authType.LINK_SHARE) {
 				router.push({name: 'home'})
 			}
 
 			// If the type is invalid, redirect the user
-			if (this.$route.params.type !== 'gantt' && this.$route.params.type !== '') {
+			if (auth.user.authenticated && auth.user.infos.type !== authType.LINK_SHARE && this.$route.params.type !== 'gantt' && this.$route.params.type !== '') {
 				router.push({name: 'showList', params: { id:  this.$route.params.id }})
 			}
 		},

@@ -122,6 +122,7 @@
 				</div>
 			</div>
 		</div>
+		<!-- FIXME: This will only be triggered when the root component is already loaded before doing link share auth. Will "fix" itself once we use vuex. -->
 		<div v-else-if="user.authenticated && user.infos.type === authTypes.LINK_SHARE">
 			<div class="container has-text-centered link-share-view">
 				<div class="column is-10 is-offset-1">

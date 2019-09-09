@@ -83,8 +83,6 @@
 </template>
 
 <script>
-	import auth from '../../auth'
-	import router from '../../router'
 	import message from '../../message'
 
 	import ListService from '../../services/list'
@@ -119,12 +117,6 @@
 		watch: {
 			theList() {
 				this.list = this.theList
-			}
-		},
-		beforeMount() {
-			// Check if the user is already logged in, if so, redirect him to the homepage
-			if (!auth.user.authenticated) {
-				router.push({name: 'home'})
 			}
 		},
 		created() {
