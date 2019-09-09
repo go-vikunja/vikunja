@@ -20,6 +20,12 @@ Vue.config.productionTip = false
 import Notifications from 'vue-notification'
 Vue.use(Notifications)
 
+import config from './config'
+config.initConfig()
+    .then(() => {
+        Vue.prototype.$config = config.getConfig()
+    })
+
 // Icons
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { faSignOutAlt } from '@fortawesome/free-solid-svg-icons'
@@ -88,11 +94,10 @@ Vue.directive('focus', {
 	}
 })
 
-
 // Check the user's auth status when the app starts
 auth.checkAuth()
 
 new Vue({
     router,
-  render: h => h(App)
+    render: h => h(App)
 }).$mount('#app')
