@@ -41,7 +41,7 @@
 		},
 		beforeMount() {
 			// Check if the user is already logged in, if so, redirect him to the homepage
-			if (!auth.user.authenticated) {
+			if (!auth.user.authenticated && !auth.user.isLinkShareAuth) {
 				router.push({name: 'home'})
 			}
 

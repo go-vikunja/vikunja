@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "bulma": "^0.7.1",
+    "copy-to-clipboard": "^3.2.0",
     "lodash": "^4.17.11",
     "v-tooltip": "^2.0.0-rc.33",
     "verte": "^0.0.12",

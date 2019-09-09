@@ -1,6 +1,5 @@
 <template>
-	<div class="card">
-
+	<div class="card is-fullwidth">
 		<header class="card-header">
 			<p class="card-header-title">
 				{{shareType}}s with access to this {{typeString}}
@@ -307,33 +306,3 @@
 		},
 	}
 </script>
-
-<style lang="scss" scoped>
-	.card{
-		margin-bottom: 1rem;
-
-		.add-form {
-			margin: 1rem;
-		}
-
-		.table{
-			border-top: 1px solid darken(#fff, 15%);
-
-			td{
-				vertical-align: middle;
-			}
-
-			td.type, td.actions{
-				width: 250px;
-			}
-
-			td.actions{
-				text-align: right;
-			}
-		}
-	}
-
-	.sharables-list, .sharables-namespace{
-		padding: 0 !important;
-	}
-</style>

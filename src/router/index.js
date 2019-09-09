@@ -12,6 +12,7 @@ import ShowListComponent from '@/components/lists/ShowList'
 import NewListComponent from '@/components/lists/NewList'
 import EditListComponent from '@/components/lists/EditList'
 import ShowTasksInRangeComponent from '@/components/tasks/ShowTasksInRange'
+import LinkShareAuthComponent from '@/components/sharing/linkSharingAuth'
 // Namespace Handling
 import NewNamespaceComponent from '@/components/namespaces/NewNamespace'
 import EditNamespaceComponent from '@/components/namespaces/EditNamespace'
@@ -106,6 +107,11 @@ export default new Router({
 			path: '/labels',
 			name: 'listLabels',
 			component: ListLabelsComponent
-		}
+		},
+		{
+			path: '/share/:share/auth',
+			name: 'linkShareAuth',
+			component: LinkShareAuthComponent
+		},
 	]
 })

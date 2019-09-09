@@ -69,7 +69,7 @@
 
 ## Bugs
 
-* [ ] When adding an existing label to a task, the label is created every time it is added 
+* [x] When adding an existing label to a task, the label is created every time it is added -> no it isn't that's a bug in the api 
 
 ## Funktionen aus der API
 
@@ -127,6 +127,7 @@
 ## Other features
 
 * [x] Search for users at new task assignees only in users who have access to the list
+* [ ] Respect list rights in the ui, don't show buttons etc when the user has not the right to use them
 * [ ] Copy lists
 * [ ] "Move to Vikunja" -> Migrator von Wunderlist/todoist/etc
 

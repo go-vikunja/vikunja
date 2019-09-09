@@ -303,3 +303,15 @@ h1,h2,h3,h4,h5,h6{
     }
   }
 }
+
+.link-share-view {
+  .logo {
+    max-width: 500px;
+    width: 90%;
+    margin: 2em 0 4em;
+  }
+
+  .logout {
+    text-align: right;
+  }
+}

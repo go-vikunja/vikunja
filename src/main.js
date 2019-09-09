@@ -50,6 +50,7 @@ import { faExclamation } from '@fortawesome/free-solid-svg-icons'
 import { faTags } from '@fortawesome/free-solid-svg-icons'
 import { faChevronDown } from '@fortawesome/free-solid-svg-icons'
 import { faCheck } from '@fortawesome/free-solid-svg-icons'
+import { faPaste } from '@fortawesome/free-solid-svg-icons'
 import { faTimesCircle } from '@fortawesome/free-regular-svg-icons'
 import { faCalendarAlt } from '@fortawesome/free-regular-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
@@ -78,6 +79,7 @@ library.add(faExclamation)
 library.add(faTags)
 library.add(faChevronDown)
 library.add(faCheck)
+library.add(faPaste)
 
 Vue.component('icon', FontAwesomeIcon)
 

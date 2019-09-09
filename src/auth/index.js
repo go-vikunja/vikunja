@@ -7,7 +7,7 @@ export default {
 
 	user: {
 		authenticated: false,
-		infos: {}
+		infos: {},
 	},
 
 	login(context, creds, redirect) {
@@ -23,6 +23,7 @@ export default {
 
 				// Tell others the user is autheticated
 				this.user.authenticated = true
+				this.user.isLinkShareAuth = false
 				const inf = this.getUserInfos()
 				// eslint-disable-next-line
 				console.log(inf)
@@ -72,6 +73,17 @@ export default {
 		localStorage.removeItem('token')
 		router.push({name: 'login'})
 		this.user.authenticated = false
+	},
+
+	linkShareAuth(hash) {
+		return HTTP.post('/shares/'+hash+'/auth')
+			.then(r => {
+				localStorage.setItem('token', r.data.token)
+				this.getUserInfos()
+				return Promise.resolve(r.data)
+			}).catch(e =>  {
+				return Promise.reject(e)
+			})
 	},
 
 	checkAuth() {

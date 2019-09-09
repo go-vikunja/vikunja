@@ -1,0 +1,5 @@
+{
+  "UNKNOWN": 0,
+  "USER": 1,
+  "LINK_SHARE": 2
+}

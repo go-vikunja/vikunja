@@ -44,6 +44,8 @@
 		<component :is="manageUsersComponent" :id="list.id" type="list" shareType="user" :userIsAdmin="userIsAdmin"></component>
 		<component :is="manageTeamsComponent" :id="list.id" type="list" shareType="team" :userIsAdmin="userIsAdmin"></component>
 
+		<link-sharing :list-i-d="$route.params.id"/>
+
 		<modal
 				v-if="showDeleteModal"
 				@close="showDeleteModal = false"
@@ -60,6 +62,7 @@
 	import router from '../../router'
 	import message from '../../message'
 	import manageSharing from '../sharing/userTeam'
+	import LinkSharing from '../sharing/linkSharing';
 
 	import ListModel from '../../models/list'
 	import ListService from '../../services/list'
@@ -80,6 +83,7 @@
 			}
 		},
 		components: {
+			LinkSharing,
 			manageSharing,
 		},
 		beforeMount() {

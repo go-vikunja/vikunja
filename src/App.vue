@@ -1,6 +1,6 @@
 <template>
 	<div id="app">
-		<nav class="navbar main-theme is-fixed-top" role="navigation" aria-label="main navigation" v-if="user.authenticated">
+		<nav class="navbar main-theme is-fixed-top" role="navigation" aria-label="main navigation" v-if="user.authenticated && user.infos.type === authTypes.USER">
 			<div class="navbar-brand">
 				<router-link :to="{name: 'home'}" class="navbar-item logo">
 					<img src="/images/logo-full.svg" alt="Vikunja"/>
@@ -31,7 +31,7 @@
 				</div>
 			</div>
 		</nav>
-		<div v-if="user.authenticated">
+		<div v-if="user.authenticated && user.infos.type === authTypes.USER">
 			<a @click="mobileMenuActive = true" class="mobilemenu-show-button" v-if="!mobileMenuActive"><icon icon="bars"></icon></a>
 			<a @click="mobileMenuActive = false" class="mobilemenu-hide-button" v-if="mobileMenuActive"><icon icon="times"></icon></a>
 			<div class="app-container">
@@ -122,10 +122,28 @@
 				</div>
 			</div>
 		</div>
+		<div v-else-if="user.authenticated && user.infos.type === authTypes.LINK_SHARE">
+			<div class="container has-text-centered link-share-view">
+				<div class="column is-10 is-offset-1">
+					<img src="/images/logo-full.svg" alt="Vikunja" class="logo"/>
+					<div class="box has-text-left">
+						<div class="logout">
+							<a @click="logout()" class="button logout">
+								<span>Logout</span>
+									<span class="icon is-small">
+									<icon icon="sign-out-alt"/>
+								</span>
+							</a>
+						</div>
+                        <router-view/>
+					</div>
+				</div>
+			</div>
+		</div>
 		<div v-else>
 			<div class="container has-text-centered">
 				<div class="column is-4 is-offset-4">
-					<img src="/images/logo-full.svg"/>
+					<img src="/images/logo-full.svg" alt="Vikunja"/>
 						<router-view/>
 				</div>
 			</div>
@@ -138,7 +156,9 @@
 	import auth from './auth'
 	import message from './message'
 	import router from './router'
+
 	import NamespaceService from './services/namespace'
+	import authTypes from './models/authTypes'
 
 	export default {
 		name: 'app',
@@ -152,6 +172,7 @@
 				fullpage: false,
 				currentDate: new Date(),
 				userMenuActive: false,
+				authTypes: authTypes,
 			}
 		},
 		beforeMount() {
@@ -169,7 +190,7 @@
 			}
 		},
 		created() {
-			if (this.user.authenticated) {
+			if (auth.user.authenticated && auth.user.infos.type === authTypes.USER && this.$route.params.name === 'home') {
 				this.loadNamespaces()
 			}
 		},
@@ -195,7 +216,7 @@
 					})
 			},
 			loadNamespacesIfNeeded(e){
-				if (this.user.authenticated && e.name === 'home') {
+				if (auth.user.authenticated && auth.user.infos.type === authTypes.USER && e.name === 'home') {
 					this.loadNamespaces()
 				}
 			},
