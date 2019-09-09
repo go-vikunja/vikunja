@@ -190,7 +190,7 @@
 			}
 		},
 		created() {
-			if (auth.user.authenticated && auth.user.infos.type === authTypes.USER && this.$route.params.name === 'home') {
+			if (auth.user.authenticated && auth.user.infos.type === authTypes.USER && (this.$route.params.name === 'home' || this.namespaces.length === 0)) {
 				this.loadNamespaces()
 			}
 		},
@@ -216,7 +216,7 @@
 					})
 			},
 			loadNamespacesIfNeeded(e){
-				if (auth.user.authenticated && auth.user.infos.type === authTypes.USER && e.name === 'home') {
+				if (auth.user.authenticated && auth.user.infos.type === authTypes.USER && (e.name === 'home' || this.namespaces.length === 0)) {
 					this.loadNamespaces()
 				}
 			},
