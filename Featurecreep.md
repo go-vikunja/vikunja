@@ -214,6 +214,13 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [ ] Attachments
 * [ ] Related tasks -> settable with a "kind" of relation like blocked, subtask, or just related or so
   * [ ] Should be possible to relate tasks which are not in the same list
+  * New Struct for the relation
+  * Endpoint to get all full related tasks for a task
+  * When using task.ReadOne() or ReadAll() only get the relation kind + title etc, not everything
+  * Only check if the user has the right to see the task when creating it, not when viewing it -> put a warning in frontend
+  * Relation Kinds (for now): Subtask/Parent Task (from subtask, no extra relation), Related, later also Blocked/Blocking
+  * Should also be possible to create a new task with relations directly
+  * For everything else dedicated endpoints to manage relations
 * [ ] Percent done - For now just a float, may later depend on how many sub tasks are done or so
 * [ ] Move tasks between lists
 * [ ] "Status" field for things like "New", "In Progress", "Done", etc (customizable statuses)
