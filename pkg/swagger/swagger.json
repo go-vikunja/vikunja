@@ -4264,10 +4264,6 @@
                     "description": "The ID of the shared thing",
                     "type": "integer"
                 },
-                "list": {
-                    "type": "object",
-                    "$ref": "#/definitions/models.List"
-                },
                 "right": {
                     "description": "The right this list is shared with. 0 = Read only, 1 = Read \u0026 Write, 2 = Admin. See the docs for more details.",
                     "type": "integer",

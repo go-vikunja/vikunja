@@ -65,8 +65,18 @@ func sortTasksForTesting(by SortBy) (tasks []*Task) {
 			CreatedByID: 1,
 			CreatedBy:   user1,
 			ListID:      1,
-			Created:     1543626724,
-			Updated:     1543626724,
+			Labels: []*Label{
+				{
+					ID:          4,
+					Title:       "Label #4 - visible via other task",
+					CreatedByID: 2,
+					CreatedBy:   user2,
+					Updated:     0,
+					Created:     0,
+				},
+			},
+			Created: 1543626724,
+			Updated: 1543626724,
 		},
 		{
 			ID:          3,

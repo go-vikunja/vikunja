@@ -128,17 +128,18 @@ func (lt *LabelTask) ReadAll(search string, a web.Auth, page int) (labels interf
 
 // Helper struct, contains the label + its task ID
 type labelWithTaskID struct {
-	TaskID int64
+	TaskID int64 `json:"-"`
 	Label  `xorm:"extends"`
 }
 
 // LabelByTaskIDsOptions is a struct to not clutter the function with too many optional parameters.
 type LabelByTaskIDsOptions struct {
-	User            *User
-	Search          string
-	Page            int
-	TaskIDs         []int64
-	GetUnusedLabels bool
+	User                *User
+	Search              string
+	Page                int
+	TaskIDs             []int64
+	GetUnusedLabels     bool
+	GroupByLabelIDsOnly bool
 }
 
 // Helper function to get all labels for a set of tasks
@@ -153,6 +154,15 @@ func getLabelsByTaskIDs(opts *LabelByTaskIDsOptions) (ls []*labelWithTaskID, err
 		requestOrNil = "label_task.label_id != null OR labels.created_by_id = ?"
 	}
 
+	// We still need the task ID when we want to get all labels for a task, but because of this, we get the same label
+	// multiple times when it is associated to more than one task.
+	// Because of this whole thing, we need this extra switch here to only group by Task IDs if needed.
+	// Probably not the most ideal solution.
+	var groupBy = "labels.id,label_task.task_id"
+	if opts.GroupByLabelIDsOnly {
+		groupBy = "labels.id"
+	}
+
 	// Get all labels associated with these tasks
 	var labels []*labelWithTaskID
 	err = x.Table("labels").
@@ -161,7 +171,7 @@ func getLabelsByTaskIDs(opts *LabelByTaskIDsOptions) (ls []*labelWithTaskID, err
 		Where(requestOrNil, uidOrNil).
 		Or(builder.In("label_task.task_id", opts.TaskIDs)).
 		And("labels.title LIKE ?", "%"+opts.Search+"%").
-		GroupBy("labels.id,label_task.task_id"). // This filters out doubles
+		GroupBy(groupBy).
 		Limit(getLimitFromPageIndex(opts.Page)).
 		Find(&labels)
 	if err != nil {

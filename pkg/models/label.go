@@ -144,10 +144,11 @@ func (l *Label) ReadAll(search string, a web.Auth, page int) (ls interface{}, er
 	}
 
 	return getLabelsByTaskIDs(&LabelByTaskIDsOptions{
-		Search:          search,
-		User:            u,
-		TaskIDs:         taskIDs,
-		GetUnusedLabels: true,
+		Search:              search,
+		User:                u,
+		TaskIDs:             taskIDs,
+		GetUnusedLabels:     true,
+		GroupByLabelIDsOnly: true,
 	})
 }
 

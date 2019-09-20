@@ -182,9 +182,6 @@ definitions:
       id:
         description: The ID of the shared thing
         type: integer
-      list:
-        $ref: '#/definitions/models.List'
-        type: object
       right:
         default: 0
         description: The right this list is shared with. 0 = Read only, 1 = Read &
