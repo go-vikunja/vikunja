@@ -184,7 +184,7 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [x] Have extra functions for logging to call so it is possible to call `log.Info` instead of `log.Log.Info`  
 * [x] `GetUserByID` and the likes should return pointers
 * [x] `ListTask` should be just `Task`
-* [ ] Move `teams_{namespace|list}_*` to `{namespace|list}_teams_*` for better consistency
+* [x] Move `teams_{namespace|list}_*` to `{namespace|list}_teams_*` for better consistency
 
 ### Linters
 
