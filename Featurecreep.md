@@ -158,8 +158,7 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [x] Middleware to have configurable rate-limiting per user
 * [ ] Colors for lists and namespaces -> Up to the frontend to implement these
 * [ ] Reminders via mail
-* [ ] Be able to "really" delete the account -> delete all lists and move ownership for others 
-* [ ] Deprecate /namespaces/{id}/lists in favour of namespace.ReadOne() <-- should also return the lists
+* [ ] Be able to "really" delete the account -> delete all lists and move ownership for others
 * [ ] All `ReadAll` methods should return the number of items per page, the number of items on this page, the total pages and the items
       -> Check if there's a way to do that efficently. Maybe only implementing it in the web handler.
 * [ ] Move lists between namespaces -> Extra endpoint

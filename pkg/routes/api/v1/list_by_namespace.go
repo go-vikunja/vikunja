@@ -18,6 +18,7 @@ package v1
 
 import (
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/web/handler"
 	"github.com/labstack/echo/v4"
 	"net/http"
 	"strconv"
@@ -41,32 +42,23 @@ func GetListsByNamespaceID(c echo.Context) error {
 	// Get our namespace
 	namespace, err := getNamespace(c)
 	if err != nil {
-		if models.IsErrNamespaceDoesNotExist(err) {
-			return c.JSON(http.StatusNotFound, models.Message{"Namespace not found."})
-		}
-		if models.IsErrUserDoesNotHaveAccessToNamespace(err) {
-			return c.JSON(http.StatusForbidden, models.Message{"You don't have access to this namespace."})
-		}
-		return c.JSON(http.StatusInternalServerError, models.Message{"An error occurred."})
+		return handler.HandleHTTPError(err, c)
 	}
 
 	// Get the lists
 	doer, err := models.GetCurrentUser(c)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, models.Message{"An error occurred."})
+		return handler.HandleHTTPError(err, c)
 	}
 
 	lists, err := models.GetListsByNamespaceID(namespace.ID, doer)
 	if err != nil {
-		if models.IsErrNamespaceDoesNotExist(err) {
-			return c.JSON(http.StatusNotFound, models.Message{"Namespace not found."})
-		}
-		return c.JSON(http.StatusInternalServerError, models.Message{"An error occurred."})
+		return handler.HandleHTTPError(err, c)
 	}
 	return c.JSON(http.StatusOK, lists)
 }
 
-func getNamespace(c echo.Context) (namespace models.Namespace, err error) {
+func getNamespace(c echo.Context) (namespace *models.Namespace, err error) {
 	// Check if we have our ID
 	id := c.Param("namespace")
 	// Make int
@@ -76,7 +68,7 @@ func getNamespace(c echo.Context) (namespace models.Namespace, err error) {
 	}
 
 	if namespaceID == -1 {
-		namespace = models.PseudoNamespace
+		namespace = &models.PseudoNamespace
 		return
 	}
 
@@ -91,10 +83,7 @@ func getNamespace(c echo.Context) (namespace models.Namespace, err error) {
 		return namespace, err
 	}
 	if !canRead {
-		return
+		return nil, echo.ErrForbidden
 	}
-
-	// Get the namespace
-	err = namespace.ReadOne()
 	return
 }
