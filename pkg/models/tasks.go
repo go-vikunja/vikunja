@@ -60,6 +60,8 @@ type Task struct {
 	Labels []*Label `xorm:"-" json:"labels"`
 	// The task color in hex
 	HexColor string `xorm:"varchar(6) null" json:"hexColor" valid:"runelength(0|6)" maxLength:"6"`
+	// Determines how far a task is left from being done
+	PercentDone float64 `xorm:"DOUBLE null" json:"percentDone"`
 
 	// The UID is currently not used for anything other than caldav, which is why we don't expose it over json
 	UID string `xorm:"varchar(250) null" json:"-"`
@@ -632,6 +634,10 @@ func (t *Task) Update() (err error) {
 	if t.HexColor == "" {
 		ot.HexColor = ""
 	}
+	// Percent DOnw
+	if t.PercentDone == 0 {
+		ot.PercentDone = 0
+	}
 
 	_, err = x.ID(t.ID).
 		Cols("text",
@@ -644,7 +650,8 @@ func (t *Task) Update() (err error) {
 			"start_date_unix",
 			"end_date_unix",
 			"hex_color",
-			"done_at_unix").
+			"done_at_unix",
+			"percent_done").
 		Update(ot)
 	*t = ot
 	if err != nil {

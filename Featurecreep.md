@@ -211,6 +211,7 @@ Sorry for some of them being in German, I'll tranlate them at some point.
   * [x] Editable via task edit, like assignees
   * [x] "One endpoint to rule them all" -> Array-addable
 * [x] Description should be longtext
+* [x] Percent done - For now just a float, may later depend on how many sub tasks are done or so
 * [ ] Attachments
 * [ ] Related tasks -> settable with a "kind" of relation like blocked, subtask, or just related or so
   * [ ] Should be possible to relate tasks which are not in the same list
@@ -221,7 +222,6 @@ Sorry for some of them being in German, I'll tranlate them at some point.
   * Relation Kinds (for now): Subtask/Parent Task (from subtask, no extra relation), Related, later also Blocked/Blocking
   * Should also be possible to create a new task with relations directly
   * For everything else dedicated endpoints to manage relations
-* [ ] Percent done - For now just a float, may later depend on how many sub tasks are done or so
 * [ ] Move tasks between lists
 * [ ] "Status" field for things like "New", "In Progress", "Done", etc (customizable statuses)
 

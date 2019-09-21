@@ -77,6 +77,9 @@ definitions:
       parentTaskID:
         description: If the task is a subtask, this is the id of its parent.
         type: integer
+      percentDone:
+        description: Determines how far a task is left from being done
+        type: number
       priority:
         description: The task priority. Can be anything you want, it is possible to
           sort by this later.
@@ -405,6 +408,9 @@ definitions:
       parentTaskID:
         description: If the task is a subtask, this is the id of its parent.
         type: integer
+      percentDone:
+        description: Determines how far a task is left from being done
+        type: number
       priority:
         description: The task priority. Can be anything you want, it is possible to
           sort by this later.
@@ -1004,9 +1010,9 @@ paths:
     get:
       consumes:
       - application/json
-      description: Returns a list by its ID.
+      description: Returns a team by its ID.
       parameters:
-      - description: List ID
+      - description: Team ID
         in: path
         name: id
         required: true
@@ -1015,12 +1021,12 @@ paths:
       - application/json
       responses:
         "200":
-          description: The list
+          description: The team
           schema:
-            $ref: '#/definitions/models.List'
+            $ref: '#/definitions/models.Team'
             type: object
         "403":
-          description: The user does not have access to the list
+          description: The user does not have access to the team
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
             type: object
@@ -1031,9 +1037,9 @@ paths:
             type: object
       security:
       - JWTKeyAuth: []
-      summary: Gets one list
+      summary: Gets one team
       tags:
-      - list
+      - team
     post:
       consumes:
       - application/json
