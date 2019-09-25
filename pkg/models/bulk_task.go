@@ -116,7 +116,6 @@ func (bt *BulkTask) Update() (err error) {
 				"due_date_unix",
 				"reminders_unix",
 				"repeat_after",
-				"parent_task_id",
 				"priority",
 				"start_date_unix",
 				"end_date_unix").

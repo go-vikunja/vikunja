@@ -46,8 +46,6 @@ type Task struct {
 	ListID int64 `xorm:"int(11) INDEX not null" json:"listID" param:"list"`
 	// An amount in seconds this task repeats itself. If this is set, when marking the task as done, it will mark itself as "undone" and then increase all remindes and the due date by its amount.
 	RepeatAfter int64 `xorm:"int(11) INDEX null" json:"repeatAfter"`
-	// If the task is a subtask, this is the id of its parent.
-	ParentTaskID int64 `xorm:"int(11) INDEX null" json:"parentTaskID"`
 	// The task priority. Can be anything you want, it is possible to sort by this later.
 	Priority int64 `xorm:"int(11) null" json:"priority"`
 	// When this task starts.
@@ -70,8 +68,8 @@ type Task struct {
 	StartDateSortUnix int64  `xorm:"-" json:"-" query:"startdate"`
 	EndDateSortUnix   int64  `xorm:"-" json:"-" query:"enddate"`
 
-	// An array of subtasks.
-	Subtasks []*Task `xorm:"-" json:"subtasks"`
+	// All related tasks, grouped by their relation kind
+	RelatedTasks RelatedTaskMap `xorm:"-" json:"related_tasks"`
 
 	// A unix timestamp when this task was created. You cannot change this value.
 	Created int64 `xorm:"created not null" json:"created"`
@@ -221,7 +219,6 @@ func getTasksForLists(lists []*List, opts *taskOptions) (tasks []*Task, err erro
 			And("((due_date_unix BETWEEN ? AND ?) OR "+
 				"(start_date_unix BETWEEN ? and ?) OR "+
 				"(end_date_unix BETWEEN ? and ?))", startDateUnix, endDateUnix, startDateUnix, endDateUnix, startDateUnix, endDateUnix).
-			And("(parent_task_id = 0 OR parent_task_id IS NULL)").
 			OrderBy(orderby).
 			Find(&taskMap); err != nil {
 			return nil, err
@@ -229,7 +226,6 @@ func getTasksForLists(lists []*List, opts *taskOptions) (tasks []*Task, err erro
 	} else {
 		if err := x.In("list_id", listIDs).
 			Where("text LIKE ?", "%"+opts.search+"%").
-			And("(parent_task_id = 0 OR parent_task_id IS NULL)").
 			OrderBy(orderby).
 			Find(&taskMap); err != nil {
 			return nil, err
@@ -442,16 +438,38 @@ func addMoreInfoToTasks(taskMap map[int64]*Task) (tasks []*Task, err error) {
 	for _, task := range taskMap {
 
 		// Make created by user objects
-		taskMap[task.ID].CreatedBy = users[task.CreatedByID]
+		task.CreatedBy = users[task.CreatedByID]
 
 		// Add the reminders
-		taskMap[task.ID].RemindersUnix = taskRemindersUnix[task.ID]
+		task.RemindersUnix = taskRemindersUnix[task.ID]
 
-		// Reorder all subtasks
-		if task.ParentTaskID != 0 {
-			taskMap[task.ParentTaskID].Subtasks = append(taskMap[task.ParentTaskID].Subtasks, task)
-			delete(taskMap, task.ID)
-		}
+		// Prepare the subtasks
+		task.RelatedTasks = make(RelatedTaskMap)
+	}
+
+	// Get all related tasks
+	relatedTasks := []*TaskRelation{}
+	err = x.In("task_id", taskIDs).Find(&relatedTasks)
+	if err != nil {
+		return
+	}
+
+	// Collect all related task IDs, so we can get all related task headers in one go
+	var relatedTaskIDs []int64
+	for _, rt := range relatedTasks {
+		relatedTaskIDs = append(relatedTaskIDs, rt.OtherTaskID)
+	}
+	fullRelatedTasks := make(map[int64]*Task)
+	err = x.In("id", relatedTaskIDs).Find(&fullRelatedTasks)
+	if err != nil {
+		return
+	}
+
+	// NOTE: while it certainly be possible to run this function on	fullRelatedTasks again, we don't do this for performance reasons.
+
+	// Go through all task relations and put them into the task objects
+	for _, rt := range relatedTasks {
+		taskMap[rt.TaskID].RelatedTasks[rt.RelationKind] = append(taskMap[rt.TaskID].RelatedTasks[rt.RelationKind], fullRelatedTasks[rt.OtherTaskID])
 	}
 
 	// make a complete slice from the map
@@ -552,11 +570,6 @@ func (t *Task) Update() (err error) {
 		return
 	}
 
-	// Parent task cannot be the same as the current task
-	if t.ID == t.ParentTaskID {
-		return ErrParentTaskCannotBeTheSame{TaskID: t.ID}
-	}
-
 	// When a repeating task is marked as done, we update all deadlines and reminders and set it as undone
 	updateDone(&ot, t)
 
@@ -618,10 +631,6 @@ func (t *Task) Update() (err error) {
 	if t.RepeatAfter == 0 {
 		ot.RepeatAfter = 0
 	}
-	// Parent task
-	if t.ParentTaskID == 0 {
-		ot.ParentTaskID = 0
-	}
 	// Start date
 	if t.StartDateUnix == 0 {
 		ot.StartDateUnix = 0
@@ -645,7 +654,6 @@ func (t *Task) Update() (err error) {
 			"done",
 			"due_date_unix",
 			"repeat_after",
-			"parent_task_id",
 			"priority",
 			"start_date_unix",
 			"end_date_unix",

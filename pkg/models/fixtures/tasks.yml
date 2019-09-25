@@ -181,7 +181,6 @@
 - id: 29
   text: 'task #29 with parent task (1)'
   created_by_id: 1
-  parent_task_id: 1
   list_id: 1
   created: 1543626724
   updated: 1543626724

@@ -38,6 +38,11 @@ This document describes the different errors Vikunja can return.
 | 4003 | 403 | All bulk editing tasks must belong to the same list. |
 | 4004 | 403 | Need at least one task when bulk editing tasks. |
 | 4005 | 403 | The user does not have the right to see the task. |
+| 4006 | 403 | The user tried to set a parent task as the task itself. |
+| 4007 | 400 | The user tried to create a task relation with an invalid kind of relation. |
+| 4008 | 409 | The user tried to create a task relation which already exists. |
+| 4009 | 404 | The task relation does not exist. | 
+| 4010 | 400 | Cannot relate a task with itself. |
 | 5001 | 404 | The namspace does not exist. | 
 | 5003 | 403 | The user does not have access to the specified namespace. |
 | 5006 | 400 | The namespace name cannot be empty. |

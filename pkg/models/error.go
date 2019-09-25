@@ -618,6 +618,119 @@ func (err ErrParentTaskCannotBeTheSame) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrInvalidRelationKind represents an error where the user tries to use an invalid relation kind
+type ErrInvalidRelationKind struct {
+	Kind RelationKind
+}
+
+// IsErrInvalidRelationKind checks if an error is ErrInvalidRelationKind.
+func IsErrInvalidRelationKind(err error) bool {
+	_, ok := err.(ErrInvalidRelationKind)
+	return ok
+}
+
+func (err ErrInvalidRelationKind) Error() string {
+	return fmt.Sprintf("Invalid task relation kind [Kind: %v]", err.Kind)
+}
+
+// ErrCodeInvalidRelationKind holds the unique world-error code of this error
+const ErrCodeInvalidRelationKind = 4007
+
+// HTTPError holds the http error description
+func (err ErrInvalidRelationKind) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeInvalidRelationKind,
+		Message:  "The task relation is invalid.",
+	}
+}
+
+// ErrRelationAlreadyExists represents an error where the user tries to create an already existing relation
+type ErrRelationAlreadyExists struct {
+	Kind        RelationKind
+	TaskID      int64
+	OtherTaskID int64
+}
+
+// IsErrRelationAlreadyExists checks if an error is ErrRelationAlreadyExists.
+func IsErrRelationAlreadyExists(err error) bool {
+	_, ok := err.(ErrRelationAlreadyExists)
+	return ok
+}
+
+func (err ErrRelationAlreadyExists) Error() string {
+	return fmt.Sprintf("Task relation already exists [TaskID: %v, OtherTaskID: %v, Kind: %v]", err.TaskID, err.OtherTaskID, err.Kind)
+}
+
+// ErrCodeRelationAlreadyExists holds the unique world-error code of this error
+const ErrCodeRelationAlreadyExists = 4008
+
+// HTTPError holds the http error description
+func (err ErrRelationAlreadyExists) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusConflict,
+		Code:     ErrCodeRelationAlreadyExists,
+		Message:  "The task relation already exists.",
+	}
+}
+
+// ErrRelationDoesNotExist represents an error where a task relation does not exist.
+type ErrRelationDoesNotExist struct {
+	Kind        RelationKind
+	TaskID      int64
+	OtherTaskID int64
+}
+
+// IsErrRelationDoesNotExist checks if an error is ErrRelationDoesNotExist.
+func IsErrRelationDoesNotExist(err error) bool {
+	_, ok := err.(ErrRelationDoesNotExist)
+	return ok
+}
+
+func (err ErrRelationDoesNotExist) Error() string {
+	return fmt.Sprintf("Task relation does not exist [TaskID: %v, OtherTaskID: %v, Kind: %v]", err.TaskID, err.OtherTaskID, err.Kind)
+}
+
+// ErrCodeRelationDoesNotExist holds the unique world-error code of this error
+const ErrCodeRelationDoesNotExist = 4009
+
+// HTTPError holds the http error description
+func (err ErrRelationDoesNotExist) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusNotFound,
+		Code:     ErrCodeRelationDoesNotExist,
+		Message:  "The task relation does not exist.",
+	}
+}
+
+// ErrRelationTasksCannotBeTheSame represents an error where the user tries to relate a task with itself
+type ErrRelationTasksCannotBeTheSame struct {
+	TaskID      int64
+	OtherTaskID int64
+}
+
+// IsErrRelationTasksCannotBeTheSame checks if an error is ErrRelationTasksCannotBeTheSame.
+func IsErrRelationTasksCannotBeTheSame(err error) bool {
+	_, ok := err.(ErrRelationTasksCannotBeTheSame)
+	return ok
+}
+
+func (err ErrRelationTasksCannotBeTheSame) Error() string {
+	return fmt.Sprintf("Tried to relate a task with itself [TaskID: %v, OtherTaskID: %v]", err.TaskID, err.OtherTaskID)
+}
+
+// ErrCodeRelationTasksCannotBeTheSame holds the unique world-error code of this error
+const ErrCodeRelationTasksCannotBeTheSame = 4010
+
+// HTTPError holds the http error description
+func (err ErrRelationTasksCannotBeTheSame) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeRelationTasksCannotBeTheSame,
+		Message:  "You cannot relate a task with itself",
+	}
+}
+
 // =================
 // Namespace errors
 // =================

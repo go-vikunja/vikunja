@@ -399,7 +399,7 @@
                         "JWTKeyAuth": []
                     }
                 ],
-                "description": "Returns a team by its ID.",
+                "description": "Returns a list by its ID.",
                 "consumes": [
                     "application/json"
                 ],
@@ -407,13 +407,13 @@
                     "application/json"
                 ],
                 "tags": [
-                    "team"
+                    "list"
                 ],
-                "summary": "Gets one team",
+                "summary": "Gets one list",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "Team ID",
+                        "description": "List ID",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -421,14 +421,14 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "The team",
+                        "description": "The list",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.Team"
+                            "$ref": "#/definitions/models.List"
                         }
                     },
                     "403": {
-                        "description": "The user does not have access to the team",
+                        "description": "The user does not have access to the list",
                         "schema": {
                             "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
@@ -3191,6 +3191,134 @@
                 }
             }
         },
+        "/tasks/{taskID}/relations": {
+            "put": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Creates a new relation between two tasks. The user needs to have update rights on the base task and at least read rights on the other task. Both tasks do not need to be on the same list.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "task"
+                ],
+                "summary": "Create a new relation between two tasks",
+                "parameters": [
+                    {
+                        "description": "The relation object",
+                        "name": "relation",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/models.TaskRelation"
+                        }
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Task ID",
+                        "name": "taskID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The created task relation object.",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/models.TaskRelation"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid task relation object provided.",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "task"
+                ],
+                "summary": "Remove a task relation",
+                "parameters": [
+                    {
+                        "description": "The relation object",
+                        "name": "relation",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/models.TaskRelation"
+                        }
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Task ID",
+                        "name": "taskID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The task relation was successfully deleted.",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid task relation object provided.",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "The task relation was not found.",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
         "/tasks/{task}/labels": {
             "get": {
                 "security": [
@@ -4129,10 +4257,6 @@
                     "description": "The list this task belongs to.",
                     "type": "integer"
                 },
-                "parentTaskID": {
-                    "description": "If the task is a subtask, this is the id of its parent.",
-                    "type": "integer"
-                },
                 "percentDone": {
                     "description": "Determines how far a task is left from being done",
                     "type": "number"
@@ -4140,6 +4264,11 @@
                 "priority": {
                     "description": "The task priority. Can be anything you want, it is possible to sort by this later.",
                     "type": "integer"
+                },
+                "related_tasks": {
+                    "description": "All related tasks, grouped by their relation kind",
+                    "type": "object",
+                    "$ref": "#/definitions/models.RelatedTaskMap"
                 },
                 "reminderDates": {
                     "description": "An array of unix timestamps when the user wants to be reminded of the task.",
@@ -4155,13 +4284,6 @@
                 "startDate": {
                     "description": "When this task starts.",
                     "type": "integer"
-                },
-                "subtasks": {
-                    "description": "An array of subtasks.",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.Task"
-                    }
                 },
                 "task_ids": {
                     "description": "A list of task ids to update",
@@ -4485,6 +4607,111 @@
                 }
             }
         },
+        "models.RelatedTaskMap": {
+            "type": "object",
+            "additionalProperties": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "assignees": {
+                            "description": "An array of users who are assigned to this task",
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.User"
+                            }
+                        },
+                        "created": {
+                            "description": "A unix timestamp when this task was created. You cannot change this value.",
+                            "type": "integer"
+                        },
+                        "createdBy": {
+                            "description": "The user who initially created the task.",
+                            "type": "object",
+                            "$ref": "#/definitions/models.User"
+                        },
+                        "description": {
+                            "description": "The task description.",
+                            "type": "string"
+                        },
+                        "done": {
+                            "description": "Whether a task is done or not.",
+                            "type": "boolean"
+                        },
+                        "doneAt": {
+                            "description": "The unix timestamp when a task was marked as done.",
+                            "type": "integer"
+                        },
+                        "dueDate": {
+                            "description": "A unix timestamp when the task is due.",
+                            "type": "integer"
+                        },
+                        "endDate": {
+                            "description": "When this task ends.",
+                            "type": "integer"
+                        },
+                        "hexColor": {
+                            "description": "The task color in hex",
+                            "type": "string",
+                            "maxLength": 6
+                        },
+                        "id": {
+                            "description": "The unique, numeric id of this task.",
+                            "type": "integer"
+                        },
+                        "labels": {
+                            "description": "An array of labels which are associated with this task.",
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Label"
+                            }
+                        },
+                        "listID": {
+                            "description": "The list this task belongs to.",
+                            "type": "integer"
+                        },
+                        "percentDone": {
+                            "description": "Determines how far a task is left from being done",
+                            "type": "number"
+                        },
+                        "priority": {
+                            "description": "The task priority. Can be anything you want, it is possible to sort by this later.",
+                            "type": "integer"
+                        },
+                        "related_tasks": {
+                            "description": "All related tasks, grouped by their relation kind",
+                            "type": "object",
+                            "$ref": "#/definitions/models.RelatedTaskMap"
+                        },
+                        "reminderDates": {
+                            "description": "An array of unix timestamps when the user wants to be reminded of the task.",
+                            "type": "array",
+                            "items": {
+                                "type": "integer"
+                            }
+                        },
+                        "repeatAfter": {
+                            "description": "An amount in seconds this task repeats itself. If this is set, when marking the task as done, it will mark itself as \"undone\" and then increase all remindes and the due date by its amount.",
+                            "type": "integer"
+                        },
+                        "startDate": {
+                            "description": "When this task starts.",
+                            "type": "integer"
+                        },
+                        "text": {
+                            "description": "The task text. This is what you'll see in the list.",
+                            "type": "string",
+                            "maxLength": 250,
+                            "minLength": 3
+                        },
+                        "updated": {
+                            "description": "A unix timestamp when this task was last updated. You cannot change this value.",
+                            "type": "integer"
+                        }
+                    }
+                }
+            }
+        },
         "models.Task": {
             "type": "object",
             "properties": {
@@ -4544,10 +4771,6 @@
                     "description": "The list this task belongs to.",
                     "type": "integer"
                 },
-                "parentTaskID": {
-                    "description": "If the task is a subtask, this is the id of its parent.",
-                    "type": "integer"
-                },
                 "percentDone": {
                     "description": "Determines how far a task is left from being done",
                     "type": "number"
@@ -4555,6 +4778,11 @@
                 "priority": {
                     "description": "The task priority. Can be anything you want, it is possible to sort by this later.",
                     "type": "integer"
+                },
+                "related_tasks": {
+                    "description": "All related tasks, grouped by their relation kind",
+                    "type": "object",
+                    "$ref": "#/definitions/models.RelatedTaskMap"
                 },
                 "reminderDates": {
                     "description": "An array of unix timestamps when the user wants to be reminded of the task.",
@@ -4570,13 +4798,6 @@
                 "startDate": {
                     "description": "When this task starts.",
                     "type": "integer"
-                },
-                "subtasks": {
-                    "description": "An array of subtasks.",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.Task"
-                    }
                 },
                 "text": {
                     "description": "The task text. This is what you'll see in the list.",
@@ -4597,6 +4818,32 @@
                     "type": "integer"
                 },
                 "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.TaskRelation": {
+            "type": "object",
+            "properties": {
+                "created": {
+                    "description": "A unix timestamp when this label was created. You cannot change this value.",
+                    "type": "integer"
+                },
+                "created_by": {
+                    "description": "The user who created this relation",
+                    "type": "object",
+                    "$ref": "#/definitions/models.User"
+                },
+                "other_task_id": {
+                    "description": "The ID of the other task, the task which is being related.",
+                    "type": "integer"
+                },
+                "relation_kind": {
+                    "description": "The kind of the relation.",
+                    "type": "string"
+                },
+                "task_id": {
+                    "description": "The ID of the \"base\" task, the task which has a relation to another.",
                     "type": "integer"
                 }
             }

@@ -214,7 +214,8 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [x] Percent done - For now just a float, may later depend on how many sub tasks are done or so
 * [ ] Attachments
 * [ ] Related tasks -> settable with a "kind" of relation like blocked, subtask, or just related or so
-  * [ ] Should be possible to relate tasks which are not in the same list
+  * [x] Should be possible to relate tasks which are not in the same list
+  * [ ] Replace the old subtask implementation
   * New Struct for the relation
   * Endpoint to get all full related tasks for a task
   * When using task.ReadOne() or ReadAll() only get the relation kind + title etc, not everything

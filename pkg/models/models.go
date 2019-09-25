@@ -49,6 +49,7 @@ func GetTables() []interface{} {
 		&LabelTask{},
 		&TaskReminder{},
 		&LinkSharing{},
+		&TaskRelation{},
 	}
 }
 

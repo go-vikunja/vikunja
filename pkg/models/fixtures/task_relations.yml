@@ -1,0 +1,12 @@
+- id: 1
+  task_id: 1
+  other_task_id: 29
+  relation_kind: 'subtask'
+  created_by_id: 1
+  created: 0
+- id: 2
+  task_id: 29
+  other_task_id: 1
+  relation_kind: 'parenttask'
+  created_by_id: 1
+  created: 0
