@@ -60,7 +60,7 @@ func init() {
 
 			// Get all current subtasks and put them in a new table
 			tasks := []*task20190922205826{}
-			err = tx.Where("parent_task_id = not null OR parent_task_id != 0").Find(&tasks)
+			err = tx.Where("parent_task_id != null OR parent_task_id != 0").Find(&tasks)
 			if err != nil {
 				return err
 			}
