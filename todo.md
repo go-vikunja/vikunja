@@ -156,4 +156,8 @@
 ## Fancy stuff
 
 * [ ] PWA
+  * [x] Basics
+  * [ ] Should only show a small notification somewhere when offline
+  * [ ] Cache even api requests, but show a notification on lists "content may be outdated"
+  * [ ] Need a strategy to show all of this if the page is offline
 * [ ] Vuex
