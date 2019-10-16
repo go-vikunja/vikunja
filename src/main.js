@@ -87,6 +87,9 @@ Vue.component('icon', FontAwesomeIcon)
 import VTooltip from 'v-tooltip'
 Vue.use(VTooltip)
 
+// PWA
+import './registerServiceWorker'
+
 // Set focus
 Vue.directive('focus', {
 	// When the bound element is inserted into the DOM...
