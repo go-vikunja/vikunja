@@ -17,6 +17,7 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/metrics"
 	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/web"
@@ -70,6 +71,9 @@ type Task struct {
 
 	// All related tasks, grouped by their relation kind
 	RelatedTasks RelatedTaskMap `xorm:"-" json:"related_tasks"`
+
+	// All attachments this task has
+	Attachments []*TaskAttachment `xorm:"-" json:"attachments"`
 
 	// A unix timestamp when this task was created. You cannot change this value.
 	Created int64 `xorm:"created not null" json:"created"`
@@ -409,6 +413,28 @@ func addMoreInfoToTasks(taskMap map[int64]*Task) (tasks []*Task, err error) {
 		}
 	}
 
+	// Get task attachments
+	attachments := []*TaskAttachment{}
+	err = x.
+		In("task_id", taskIDs).
+		Find(&attachments)
+	if err != nil {
+		return nil, err
+	}
+
+	fileIDs := []int64{}
+	for _, a := range attachments {
+		userIDs = append(userIDs, a.CreatedByID)
+		fileIDs = append(fileIDs, a.FileID)
+	}
+
+	// Get all files
+	fs := make(map[int64]*files.File)
+	err = x.In("id", fileIDs).Find(&fs)
+	if err != nil {
+		return
+	}
+
 	// Get all users of a task
 	// aka the ones who created a task
 	users := make(map[int64]*User)
@@ -420,6 +446,13 @@ func addMoreInfoToTasks(taskMap map[int64]*Task) (tasks []*Task, err error) {
 	// Obfuscate all user emails
 	for _, u := range users {
 		u.Email = ""
+	}
+
+	// Put the users and files in task attachments
+	for _, a := range attachments {
+		a.CreatedBy = users[a.CreatedByID]
+		a.File = fs[a.FileID]
+		taskMap[a.TaskID].Attachments = append(taskMap[a.TaskID].Attachments, a)
 	}
 
 	// Get all reminders and put them in a map to have it easier later

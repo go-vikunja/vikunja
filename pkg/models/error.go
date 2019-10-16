@@ -17,6 +17,7 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/web"
 	"fmt"
 	"net/http"
@@ -728,6 +729,62 @@ func (err ErrRelationTasksCannotBeTheSame) HTTPError() web.HTTPError {
 		HTTPCode: http.StatusBadRequest,
 		Code:     ErrCodeRelationTasksCannotBeTheSame,
 		Message:  "You cannot relate a task with itself",
+	}
+}
+
+// ErrTaskAttachmentDoesNotExist represents an error where the user tries to relate a task with itself
+type ErrTaskAttachmentDoesNotExist struct {
+	TaskID       int64
+	AttachmentID int64
+	FileID       int64
+}
+
+// IsErrTaskAttachmentDoesNotExist checks if an error is ErrTaskAttachmentDoesNotExist.
+func IsErrTaskAttachmentDoesNotExist(err error) bool {
+	_, ok := err.(ErrTaskAttachmentDoesNotExist)
+	return ok
+}
+
+func (err ErrTaskAttachmentDoesNotExist) Error() string {
+	return fmt.Sprintf("Task attachment does not exist [TaskID: %d, AttachmentID: %d, FileID: %d]", err.TaskID, err.AttachmentID, err.FileID)
+}
+
+// ErrCodeTaskAttachmentDoesNotExist holds the unique world-error code of this error
+const ErrCodeTaskAttachmentDoesNotExist = 4011
+
+// HTTPError holds the http error description
+func (err ErrTaskAttachmentDoesNotExist) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusNotFound,
+		Code:     ErrCodeTaskAttachmentDoesNotExist,
+		Message:  "This task attachment does not exist.",
+	}
+}
+
+// ErrTaskAttachmentIsTooLarge represents an error where the user tries to relate a task with itself
+type ErrTaskAttachmentIsTooLarge struct {
+	Size int64
+}
+
+// IsErrTaskAttachmentIsTooLarge checks if an error is ErrTaskAttachmentIsTooLarge.
+func IsErrTaskAttachmentIsTooLarge(err error) bool {
+	_, ok := err.(ErrTaskAttachmentIsTooLarge)
+	return ok
+}
+
+func (err ErrTaskAttachmentIsTooLarge) Error() string {
+	return fmt.Sprintf("Task attachment is too large [Size: %d]", err.Size)
+}
+
+// ErrCodeTaskAttachmentIsTooLarge holds the unique world-error code of this error
+const ErrCodeTaskAttachmentIsTooLarge = 4012
+
+// HTTPError holds the http error description
+func (err ErrTaskAttachmentIsTooLarge) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeTaskAttachmentIsTooLarge,
+		Message:  fmt.Sprintf("The task attachment exceeds the configured file size of %d bytes, filesize was %d", config.FilesMaxSize.GetInt64(), err.Size),
 	}
 }
 

@@ -212,7 +212,13 @@ Sorry for some of them being in German, I'll tranlate them at some point.
   * [x] "One endpoint to rule them all" -> Array-addable
 * [x] Description should be longtext
 * [x] Percent done - For now just a float, may later depend on how many sub tasks are done or so
-* [ ] Attachments
+* [x] Attachments
+  * Extra file handling package
+  * Files are saved "somewhere" (configurable) using their ID -> now only fs, later other things, based on afero
+  * A files table which holds metadata like filename, created by etc
+  * The files sub package should have methods to return files as byte slice or so
+  * -> The concrete implementation (in this case task attachments) handles the rights for a file
+  * task attachments are just a n:m between a task and a file id
 * [x] Related tasks -> settable with a "kind" of relation like blocked, subtask, or just related or so
   * [x] Should be possible to relate tasks which are not in the same list
   * [x] Replace the old subtask implementation
@@ -270,6 +276,7 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [ ] IMAP-Integration -> Man schickt eine email an Vikunja und es macht daraus dann nen task -> Achtung missbrauchsmöglichkeiten
 * [ ] In und Out webhooks, mit Templates vom Payload
 * [ ] Some kind of milestones for tasks
+* [ ] Global/Per Namespace labels
 * [ ] Get Weekly/Daily summary of the tasks to come per mail
 * [ ] Boards (Boards)
 * [ ] Sprints

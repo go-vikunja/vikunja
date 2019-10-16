@@ -149,4 +149,10 @@ ratelimit:
   limit: 100
   # The store where the limit counter for each user is stored. Possible values are "memory" or "redis"
   store: memory
+
+files:
+  # The path where files are stored
+  basepath: ./files # relative to the binary
+  # The maximum size of a file, in bytes.
+  maxsize: 21474836480 # 20 MB
 {{< /highlight >}}

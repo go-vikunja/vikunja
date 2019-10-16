@@ -19,18 +19,18 @@ module code.vikunja.io/api
 require (
 	cloud.google.com/go v0.34.0 // indirect
 	code.vikunja.io/web v0.0.0-20190628075253-b457b5a1a332
-	github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc
+	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
 	github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a
 	github.com/beevik/etree v1.1.0 // indirect
 	github.com/client9/misspell v0.3.4
+	github.com/cpuguy83/go-md2man/v2 v2.0.0 // indirect
+	github.com/creack/pty v1.1.9 // indirect
 	github.com/d4l3k/messagediff v1.2.1 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/fzipp/gocyclo v0.0.0-20150627053110-6acd4345c835
 	github.com/garyburd/redigo v1.6.0 // indirect
-	github.com/go-openapi/jsonpointer v0.19.0 // indirect
-	github.com/go-openapi/jsonreference v0.19.0 // indirect
-	github.com/go-openapi/spec v0.19.0 // indirect
-	github.com/go-openapi/swag v0.19.0 // indirect
+	github.com/go-openapi/jsonreference v0.19.3 // indirect
+	github.com/go-openapi/spec v0.19.3 // indirect
 	github.com/go-redis/redis v6.15.2+incompatible
 	github.com/go-sql-driver/mysql v1.4.1
 	github.com/go-xorm/builder v0.3.4
@@ -38,14 +38,18 @@ require (
 	github.com/go-xorm/tests v0.5.6 // indirect
 	github.com/go-xorm/xorm v0.7.1
 	github.com/go-xorm/xorm-redis-cache v0.0.0-20180727005610-859b313566b2
+	github.com/golang/protobuf v1.3.2 // indirect
 	github.com/gordonklaus/ineffassign v0.0.0-20180909121442-1003c8bd00dc
 	github.com/imdario/mergo v0.3.7
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/jgautheron/goconst v0.0.0-20170703170152-9740945f5dcb
+	github.com/json-iterator/go v1.1.7 // indirect
+	github.com/kr/pty v1.1.8 // indirect
 	github.com/labstack/echo/v4 v4.1.7-0.20190627175217-8fb7b5be270f
 	github.com/labstack/gommon v0.2.9
 	github.com/laurent22/ical-go v0.1.1-0.20181107184520-7e5d6ade8eef
-	github.com/mailru/easyjson v0.0.0-20190403194419-1ea4449da983 // indirect
+	github.com/mailru/easyjson v0.7.0 // indirect
+	github.com/mattn/go-isatty v0.0.10 // indirect
 	github.com/mattn/go-oci8 v0.0.0-20181130072307-052f5d97b9b6 // indirect
 	github.com/mattn/go-runewidth v0.0.4 // indirect
 	github.com/mattn/go-sqlite3 v1.10.0
@@ -54,24 +58,34 @@ require (
 	github.com/onsi/gomega v1.4.3 // indirect
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/pelletier/go-toml v1.4.0 // indirect
+	github.com/pkg/errors v0.8.1 // indirect
 	github.com/prometheus/client_golang v0.9.2
 	github.com/samedi/caldav-go v3.0.0+incompatible
 	github.com/shurcooL/httpfs v0.0.0-20190527155220-6a4d4a70508b
 	github.com/shurcooL/vfsgen v0.0.0-20181202132449-6a9ea43bcacd
-	github.com/spf13/afero v1.2.2 // indirect
+	github.com/spf13/afero v1.2.2
 	github.com/spf13/cobra v0.0.3
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/viper v1.3.2
-	github.com/stretchr/testify v1.3.0
-	github.com/swaggo/swag v1.5.0
+	github.com/stretchr/testify v1.4.0
+	github.com/swaggo/swag v1.6.3
+	github.com/ugorji/go v1.1.7 // indirect
 	github.com/ulule/limiter/v3 v3.3.0
-	golang.org/x/crypto v0.0.0-20190621222207-cc06ce4a13d4
+	github.com/urfave/cli v1.22.1 // indirect
+	golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550
 	golang.org/x/lint v0.0.0-20190409202823-959b441ac422
+	golang.org/x/net v0.0.0-20191011234655-491137f69257 // indirect
+	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e // indirect
+	golang.org/x/sys v0.0.0-20191010194322-b09406accb47 // indirect
+	golang.org/x/tools v0.0.0-20191012152004-8de300cfc20a // indirect
+	golang.org/x/xerrors v0.0.0-20191011141410-1b5146add898 // indirect
 	google.golang.org/appengine v1.5.0 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
+	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 	gopkg.in/d4l3k/messagediff.v1 v1.2.1
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 	gopkg.in/testfixtures.v2 v2.5.3
+	gopkg.in/yaml.v2 v2.2.4 // indirect
 	honnef.co/go/tools v0.0.0-20190418001031-e561f6794a2a
 	src.techknowlogick.com/xgo v0.0.0-20190507142556-a5b29ecb0ff4
 	src.techknowlogick.com/xormigrate v0.0.0-20190321151057-24497c23c09c

@@ -1,0 +1,11 @@
+- id: 1
+  task_id: 1
+  file_id: 1
+  created_by_id: 1
+  created: 0
+# The file for this attachment does not exist
+- id: 2
+  task_id: 1
+  file_id: 9999
+  created_by_id: 1
+  created: 0

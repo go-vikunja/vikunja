@@ -77,7 +77,7 @@ func getNamespace(c echo.Context) (namespace *models.Namespace, err error) {
 	if err != nil {
 		return
 	}
-	namespace.ID = namespaceID
+	namespace = &models.Namespace{ID: namespaceID}
 	canRead, err := namespace.CanRead(user)
 	if err != nil {
 		return namespace, err

@@ -19,6 +19,7 @@ package migration
 import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"github.com/go-xorm/xorm"
@@ -134,7 +135,8 @@ func modifyColumn(x *xorm.Engine, tableName, col, newDefinition string) error {
 }
 
 func initSchema(tx *xorm.Engine) error {
-	return tx.Sync2(
-		models.GetTables()...,
-	)
+	schemeBeans := []interface{}{}
+	schemeBeans = append(schemeBeans, models.GetTables()...)
+	schemeBeans = append(schemeBeans, files.GetTables()...)
+	return tx.Sync2(schemeBeans...)
 }

@@ -85,6 +85,9 @@ const (
 	RateLimitPeriod  Key = `ratelimit.period`
 	RateLimitLimit   Key = `ratelimit.limit`
 	RateLimitStore   Key = `ratelimit.store`
+
+	FilesBasePath Key = `files.basepath`
+	FilesMaxSize  Key = `files.maxsize`
 )
 
 // GetString returns a string config value
@@ -122,10 +125,9 @@ func (k Key) setDefault(i interface{}) {
 	viper.SetDefault(string(k), i)
 }
 
-// InitConfig initializes the config, sets defaults etc.
-func InitConfig() {
-
-	// Set defaults
+// InitDefaultConfig sets default config values
+// This is an extra function so we can call it when initializing tests without initializing the full config
+func InitDefaultConfig() {
 	// Service config
 	random, err := random(32)
 	if err != nil {
@@ -193,6 +195,16 @@ func InitConfig() {
 	RateLimitLimit.setDefault(100)
 	RateLimitPeriod.setDefault(60)
 	RateLimitStore.setDefault("memory")
+	// Files
+	FilesBasePath.setDefault("files")
+	FilesMaxSize.setDefault(21474836480) // 20 MB
+}
+
+// InitConfig initializes the config, sets defaults etc.
+func InitConfig() {
+
+	// Set defaults
+	InitDefaultConfig()
 
 	// Init checking for environment variables
 	viper.SetEnvPrefix("vikunja")
@@ -205,7 +217,7 @@ func InitConfig() {
 	viper.AddConfigPath("~/.config/vikunja")
 	viper.AddConfigPath(".")
 	viper.SetConfigName("config")
-	err = viper.ReadInConfig()
+	err := viper.ReadInConfig()
 	if err != nil {
 		log.Println(err.Error())
 		log.Println("Using defaults.")

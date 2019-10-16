@@ -18,6 +18,7 @@ package cmd
 
 import (
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/mail"
 	"code.vikunja.io/api/pkg/migration"
@@ -74,6 +75,13 @@ func initialize() {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
+	err = files.SetEngine()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	// Initialize the files handler
+	files.InitFileHandler()
 
 	// Start the mail daemon
 	mail.StartMailDaemon()

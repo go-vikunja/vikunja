@@ -1,7 +1,7 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "This is the documentation for the [Vikunja](http://vikunja.io) API. Vikunja is a cross-plattform Todo-application with a lot of features, such as sharing lists with users or teams. \u003c!-- ReDoc-Inject: \u003csecurity-definitions\u003e --\u003e\n# Authorization\n**JWT-Auth:** Main authorization method, used for most of the requests. Needs ` + \"`\" + `Authorization: Bearer \u003cjwt-token\u003e` + \"`\" + `-header to authenticate successfully.\n\n**BasicAuth:** Only used when requesting tasks via caldav.\n\u003c!-- ReDoc-Inject: \u003csecurity-definitions\u003e --\u003e",
+        "description": "This is the documentation for the [Vikunja](http://vikunja.io) API. Vikunja is a cross-plattform Todo-application with a lot of features, such as sharing lists with users or teams. \u003c!-- ReDoc-Inject: \u003csecurity-definitions\u003e --\u003e\n# Authorization\n**JWT-Auth:** Main authorization method, used for most of the requests. Needs `Authorization: Bearer \u003cjwt-token\u003e`-header to authenticate successfully.\n\n**BasicAuth:** Only used when requesting tasks via caldav.\n\u003c!-- ReDoc-Inject: \u003csecurity-definitions\u003e --\u003e",
         "title": "Vikunja API",
         "contact": {
             "name": "General Vikunja contact",
@@ -11,10 +11,8 @@
         "license": {
             "name": "GPLv3",
             "url": "http://code.vikunja.io/api/src/branch/master/LICENSE"
-        },
-        "version": "{{.Version}}"
+        }
     },
-    "host": "{{.Host}}",
     "basePath": "/api/v1",
     "paths": {
         "/info": {
@@ -31,7 +29,6 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/v1.vikunjaInfos"
                         }
                     }
@@ -83,7 +80,6 @@
                     "500": {
                         "description": "Internal error",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     }
@@ -122,21 +118,18 @@
                     "200": {
                         "description": "The created label object.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Label"
                         }
                     },
                     "400": {
                         "description": "Invalid label object provided.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal error",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     }
@@ -174,28 +167,24 @@
                     "200": {
                         "description": "The label",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Label"
                         }
                     },
                     "403": {
                         "description": "The user does not have access to the label",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "404": {
                         "description": "Label not found",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal error",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     }
@@ -241,35 +230,30 @@
                     "200": {
                         "description": "The created label object.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Label"
                         }
                     },
                     "400": {
                         "description": "Invalid label object provided.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "403": {
                         "description": "Not allowed to update the label.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "404": {
                         "description": "Label not found.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal error",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     }
@@ -305,28 +289,24 @@
                     "200": {
                         "description": "The label was successfully deleted.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Label"
                         }
                     },
                     "403": {
                         "description": "Not allowed to delete the label.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "404": {
                         "description": "Label not found.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal error",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     }
@@ -378,14 +358,12 @@
                     "403": {
                         "description": "The user does not have access to the list",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal error",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     }
@@ -423,21 +401,18 @@
                     "200": {
                         "description": "The list",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.List"
                         }
                     },
                     "403": {
                         "description": "The user does not have access to the list",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal error",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     }
@@ -483,28 +458,24 @@
                     "200": {
                         "description": "The created task object.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Task"
                         }
                     },
                     "400": {
                         "description": "Invalid task object provided.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "403": {
                         "description": "The user does not have access to the list",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal error",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     }
@@ -550,28 +521,24 @@
                     "200": {
                         "description": "The updated list.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.List"
                         }
                     },
                     "400": {
                         "description": "Invalid list object provided.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "403": {
                         "description": "The user does not have access to the list",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal error",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     }
@@ -604,28 +571,24 @@
                     "200": {
                         "description": "The list was successfully deleted.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     },
                     "400": {
                         "description": "Invalid list object provided.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "403": {
                         "description": "The user does not have access to the list",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal error",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     }
@@ -678,21 +641,18 @@
                     "400": {
                         "description": "Something's invalid.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "401": {
                         "description": "The user does not have the right to see the list.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal server error.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     }
@@ -751,14 +711,12 @@
                     "403": {
                         "description": "No right to see the list.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal error",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     }
@@ -804,35 +762,30 @@
                     "200": {
                         "description": "The created team\u003c-\u003elist relation.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.TeamList"
                         }
                     },
                     "400": {
                         "description": "Invalid team list object provided.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "403": {
                         "description": "The user does not have access to the list",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "404": {
                         "description": "The team does not exist.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal error",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     }
@@ -891,14 +844,12 @@
                     "403": {
                         "description": "No right to see the list.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal error",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     }
@@ -944,35 +895,30 @@
                     "200": {
                         "description": "The created user\u003c-\u003elist relation.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.ListUser"
                         }
                     },
                     "400": {
                         "description": "Invalid user list object provided.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "403": {
                         "description": "The user does not have access to the list",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "404": {
                         "description": "The user does not exist.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal error",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     }
@@ -1027,28 +973,24 @@
                     "200": {
                         "description": "The updated team \u003c-\u003e list relation.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.TeamList"
                         }
                     },
                     "403": {
                         "description": "The user does not have admin-access to the list",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "404": {
                         "description": "Team or list does not exist.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal error",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     }
@@ -1088,28 +1030,24 @@
                     "200": {
                         "description": "The team was successfully deleted.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     },
                     "403": {
                         "description": "The user does not have access to the list",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "404": {
                         "description": "Team or list does not exist.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal error",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     }
@@ -1164,28 +1102,24 @@
                     "200": {
                         "description": "The updated user \u003c-\u003e list relation.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.ListUser"
                         }
                     },
                     "403": {
                         "description": "The user does not have admin-access to the list",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "404": {
                         "description": "User or list does not exist.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal error",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     }
@@ -1225,28 +1159,24 @@
                     "200": {
                         "description": "The user was successfully removed from the list.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     },
                     "403": {
                         "description": "The user does not have access to the list",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "404": {
                         "description": "user or list does not exist.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal error",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     }
@@ -1305,7 +1235,6 @@
                     "500": {
                         "description": "Internal error",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     }
@@ -1351,35 +1280,30 @@
                     "200": {
                         "description": "The created link share object.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.LinkSharing"
                         }
                     },
                     "400": {
                         "description": "Invalid link share object provided.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "403": {
                         "description": "Not allowed to add the list share.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "404": {
                         "description": "The list does not exist.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal error",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     }
@@ -1424,28 +1348,24 @@
                     "200": {
                         "description": "The share links",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.LinkSharing"
                         }
                     },
                     "403": {
                         "description": "No access to the list",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "404": {
                         "description": "Share Link not found.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal error",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     }
@@ -1488,28 +1408,24 @@
                     "200": {
                         "description": "The link was successfully removed.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     },
                     "403": {
                         "description": "Not allowed to remove the link.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "404": {
                         "description": "Share Link not found.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal error",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     }
@@ -1545,21 +1461,18 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/v1.Token"
                         }
                     },
                     "400": {
                         "description": "Invalid user password model.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     },
                     "403": {
                         "description": "Invalid username or password.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     }
@@ -1607,28 +1520,24 @@
                     "200": {
                         "description": "The updated namespace.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Namespace"
                         }
                     },
                     "400": {
                         "description": "Invalid namespace object provided.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "403": {
                         "description": "The user does not have access to the namespace",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal error",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     }
@@ -1680,7 +1589,6 @@
                     "500": {
                         "description": "Internal error",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     }
@@ -1719,28 +1627,24 @@
                     "200": {
                         "description": "The created namespace.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Namespace"
                         }
                     },
                     "400": {
                         "description": "Invalid namespace object provided.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "403": {
                         "description": "The user does not have access to the namespace",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal error",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     }
@@ -1778,21 +1682,18 @@
                     "200": {
                         "description": "The Namespace",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Namespace"
                         }
                     },
                     "403": {
                         "description": "The user does not have access to that namespace.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal error",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     }
@@ -1825,28 +1726,24 @@
                     "200": {
                         "description": "The namespace was successfully deleted.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     },
                     "400": {
                         "description": "Invalid namespace object provided.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "403": {
                         "description": "The user does not have access to the namespace",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal error",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     }
@@ -1893,21 +1790,18 @@
                     "403": {
                         "description": "No access to that namespace.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     },
                     "404": {
                         "description": "The namespace does not exist.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     },
                     "500": {
                         "description": "Internal error",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     }
@@ -1966,14 +1860,12 @@
                     "403": {
                         "description": "No right to see the namespace.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal error",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     }
@@ -2019,35 +1911,30 @@
                     "200": {
                         "description": "The created team\u003c-\u003enamespace relation.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.TeamNamespace"
                         }
                     },
                     "400": {
                         "description": "Invalid team namespace object provided.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "403": {
                         "description": "The team does not have access to the namespace",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "404": {
                         "description": "The team does not exist.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal error",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     }
@@ -2106,14 +1993,12 @@
                     "403": {
                         "description": "No right to see the namespace.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal error",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     }
@@ -2159,35 +2044,30 @@
                     "200": {
                         "description": "The created user\u003c-\u003enamespace relation.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.NamespaceUser"
                         }
                     },
                     "400": {
                         "description": "Invalid user namespace object provided.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "403": {
                         "description": "The user does not have access to the namespace",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "404": {
                         "description": "The user does not exist.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal error",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     }
@@ -2235,28 +2115,24 @@
                     "200": {
                         "description": "The created list.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.List"
                         }
                     },
                     "400": {
                         "description": "Invalid list object provided.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "403": {
                         "description": "The user does not have access to the list",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal error",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     }
@@ -2311,28 +2187,24 @@
                     "200": {
                         "description": "The updated team \u003c-\u003e namespace relation.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.TeamNamespace"
                         }
                     },
                     "403": {
                         "description": "The team does not have admin-access to the namespace",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "404": {
                         "description": "Team or namespace does not exist.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal error",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     }
@@ -2372,28 +2244,24 @@
                     "200": {
                         "description": "The team was successfully deleted.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     },
                     "403": {
                         "description": "The team does not have access to the namespace",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "404": {
                         "description": "team or namespace does not exist.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal error",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     }
@@ -2448,28 +2316,24 @@
                     "200": {
                         "description": "The updated user \u003c-\u003e namespace relation.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.NamespaceUser"
                         }
                     },
                     "403": {
                         "description": "The user does not have admin-access to the namespace",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "404": {
                         "description": "User or namespace does not exist.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal error",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     }
@@ -2509,28 +2373,24 @@
                     "200": {
                         "description": "The user was successfully deleted.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     },
                     "403": {
                         "description": "The user does not have access to the namespace",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "404": {
                         "description": "user or namespace does not exist.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal error",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     }
@@ -2566,21 +2426,18 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.User"
                         }
                     },
                     "400": {
                         "description": "No or invalid user register object provided / User already exists.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal error",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     }
@@ -2613,21 +2470,18 @@
                     "200": {
                         "description": "The valid jwt auth token.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/v1.Token"
                         }
                     },
                     "400": {
                         "description": "Invalid link share object provided.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal error",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     }
@@ -2697,7 +2551,6 @@
                     "500": {
                         "description": "Internal error",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     }
@@ -2738,28 +2591,24 @@
                     "200": {
                         "description": "The updated task object.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Task"
                         }
                     },
                     "400": {
                         "description": "Invalid task object provided.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "403": {
                         "description": "The user does not have access to the task (aka its list)",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal error",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     }
@@ -2807,28 +2656,24 @@
                     "200": {
                         "description": "The updated task object.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Task"
                         }
                     },
                     "400": {
                         "description": "Invalid task object provided.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "403": {
                         "description": "The user does not have access to the task (aka its list)",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal error",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     }
@@ -2861,28 +2706,261 @@
                     "200": {
                         "description": "The created task object.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     },
                     "400": {
                         "description": "Invalid task ID provided.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "403": {
                         "description": "The user does not have access to the list",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal error",
                         "schema": {
-                            "type": "object",
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/tasks/{id}/attachments": {
+            "get": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Get all task attachments for one task.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "task"
+                ],
+                "summary": "Get  all attachments for one task.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Task ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "All attachments for this task",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.TaskAttachment"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "No access to this task.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "404": {
+                        "description": "The task does not exist.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Upload a task attachment. You can pass multiple files with the files form param.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "task"
+                ],
+                "summary": "Upload a task attachment",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Task ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "The file, as multipart form file. You can pass multiple.",
+                        "name": "files",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Attachments were uploaded successfully.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "403": {
+                        "description": "No access to the task.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "404": {
+                        "description": "The task does not exist.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/tasks/{id}/attachments/{attachmentID}": {
+            "get": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Get one attachment for download. **Returns json on error.**",
+                "produces": [
+                    "application/octet-stream"
+                ],
+                "tags": [
+                    "task"
+                ],
+                "summary": "Get one attachment.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Task ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Attachment ID",
+                        "name": "attachmentID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The attachment file.",
+                        "schema": {
+                            "type": ""
+                        }
+                    },
+                    "403": {
+                        "description": "No access to this task.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "404": {
+                        "description": "The task does not exist.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Delete an attachment.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "task"
+                ],
+                "summary": "Delete an attachment",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Task ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Attachment ID",
+                        "name": "attachmentID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The attachment was deleted successfully.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "403": {
+                        "description": "No access to this task.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "404": {
+                        "description": "The task does not exist.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
                             "$ref": "#/definitions/models.Message"
                         }
                     }
@@ -2941,7 +3019,6 @@
                     "500": {
                         "description": "Internal error",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     }
@@ -2987,21 +3064,18 @@
                     "200": {
                         "description": "The created assingee object.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.TaskAssginee"
                         }
                     },
                     "400": {
                         "description": "Invalid assignee object provided.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal error",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     }
@@ -3049,21 +3123,18 @@
                     "200": {
                         "description": "The created assingees object.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.TaskAssginee"
                         }
                     },
                     "400": {
                         "description": "Invalid assignee object provided.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal error",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     }
@@ -3108,21 +3179,18 @@
                     "200": {
                         "description": "The assignee was successfully deleted.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     },
                     "403": {
                         "description": "Not allowed to delete the assignee.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal error",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     }
@@ -3170,21 +3238,18 @@
                     "200": {
                         "description": "The updated labels object.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.LabelTaskBulk"
                         }
                     },
                     "400": {
                         "description": "Invalid label object provided.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal error",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     }
@@ -3198,7 +3263,7 @@
                         "JWTKeyAuth": []
                     }
                 ],
-                "description": "Creates a new relation between two tasks. The user needs to have update rights on the base task and at least read rights on the other task. Both tasks do not need to be on the same list.",
+                "description": "Creates a new relation between two tasks. The user needs to have update rights on the base task and at least read rights on the other task. Both tasks do not need to be on the same list. Take a look at the docs for available task relation kinds.",
                 "consumes": [
                     "application/json"
                 ],
@@ -3232,21 +3297,18 @@
                     "200": {
                         "description": "The created task relation object.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.TaskRelation"
                         }
                     },
                     "400": {
                         "description": "Invalid task relation object provided.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal error",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     }
@@ -3291,28 +3353,24 @@
                     "200": {
                         "description": "The task relation was successfully deleted.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     },
                     "400": {
                         "description": "Invalid task relation object provided.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "404": {
                         "description": "The task relation was not found.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal error",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     }
@@ -3371,7 +3429,6 @@
                     "500": {
                         "description": "Internal error",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     }
@@ -3417,35 +3474,30 @@
                     "200": {
                         "description": "The created label relation object.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.LabelTask"
                         }
                     },
                     "400": {
                         "description": "Invalid label object provided.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "403": {
                         "description": "Not allowed to add the label.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "404": {
                         "description": "The label does not exist.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal error",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     }
@@ -3490,28 +3542,24 @@
                     "200": {
                         "description": "The label was successfully removed.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     },
                     "403": {
                         "description": "Not allowed to remove the label.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "404": {
                         "description": "Label not found.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal error",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     }
@@ -3563,7 +3611,6 @@
                     "500": {
                         "description": "Internal error",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     }
@@ -3602,21 +3649,18 @@
                     "200": {
                         "description": "The created team.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Team"
                         }
                     },
                     "400": {
                         "description": "Invalid team object provided.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal error",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     }
@@ -3664,21 +3708,18 @@
                     "200": {
                         "description": "The updated team.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Team"
                         }
                     },
                     "400": {
                         "description": "Invalid team object provided.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal error",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     }
@@ -3711,21 +3752,18 @@
                     "200": {
                         "description": "The team was successfully deleted.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     },
                     "400": {
                         "description": "Invalid team object provided.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal error",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     }
@@ -3773,28 +3811,24 @@
                     "200": {
                         "description": "The newly created member object",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.TeamMember"
                         }
                     },
                     "400": {
                         "description": "Invalid member object provided.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "403": {
                         "description": "The user does not have access to the team",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal error",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     }
@@ -3836,14 +3870,12 @@
                     "200": {
                         "description": "The user was successfully removed from the team.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     },
                     "500": {
                         "description": "Internal error",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     }
@@ -3872,21 +3904,18 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.User"
                         }
                     },
                     "404": {
                         "description": "User does not exist.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal server error.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     }
@@ -3922,21 +3951,18 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     },
                     "412": {
                         "description": "Bad token provided.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal error",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     }
@@ -3977,28 +4003,24 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     },
                     "400": {
                         "description": "Something's invalid.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "404": {
                         "description": "User does not exist.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal server error.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     }
@@ -4034,21 +4056,18 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     },
                     "400": {
                         "description": "Bad token provided.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal error",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     }
@@ -4084,21 +4103,18 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     },
                     "404": {
                         "description": "The user does not exist.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal error",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     }
@@ -4144,14 +4160,12 @@
                     "400": {
                         "description": "Something's invalid.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal server error.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Message"
                         }
                     }
@@ -4160,6 +4174,26 @@
         }
     },
     "definitions": {
+        "files.File": {
+            "type": "object",
+            "properties": {
+                "created": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "mime": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "size": {
+                    "type": "integer"
+                }
+            }
+        },
         "models.APIUserPassword": {
             "type": "object",
             "properties": {
@@ -4206,6 +4240,13 @@
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/models.User"
+                    }
+                },
+                "attachments": {
+                    "description": "All attachments this task has",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.TaskAttachment"
                     }
                 },
                 "created": {
@@ -4621,6 +4662,13 @@
                                 "$ref": "#/definitions/models.User"
                             }
                         },
+                        "attachments": {
+                            "description": "All attachments this task has",
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.TaskAttachment"
+                            }
+                        },
                         "created": {
                             "description": "A unix timestamp when this task was created. You cannot change this value.",
                             "type": "integer"
@@ -4722,6 +4770,13 @@
                         "$ref": "#/definitions/models.User"
                     }
                 },
+                "attachments": {
+                    "description": "All attachments this task has",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.TaskAttachment"
+                    }
+                },
                 "created": {
                     "description": "A unix timestamp when this task was created. You cannot change this value.",
                     "type": "integer"
@@ -4818,6 +4873,28 @@
                     "type": "integer"
                 },
                 "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.TaskAttachment": {
+            "type": "object",
+            "properties": {
+                "created": {
+                    "type": "integer"
+                },
+                "created_by": {
+                    "type": "object",
+                    "$ref": "#/definitions/models.User"
+                },
+                "file": {
+                    "type": "object",
+                    "$ref": "#/definitions/files.File"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "task_id": {
                     "type": "integer"
                 }
             }
@@ -5147,6 +5224,9 @@
                 },
                 "link_sharing_enabled": {
                     "type": "boolean"
+                },
+                "max_file_size": {
+                    "type": "integer"
                 },
                 "motd": {
                     "type": "string"

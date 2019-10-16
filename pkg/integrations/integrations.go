@@ -18,6 +18,8 @@ package integrations
 
 import (
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/routes"
 	v1 "code.vikunja.io/api/pkg/routes/api/v1"
@@ -29,6 +31,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
 	"strings"
 	"testing"
 )
@@ -73,10 +76,14 @@ var (
 )
 
 func setupTestEnv() (e *echo.Echo, err error) {
-	config.InitConfig()
+	config.InitDefaultConfig()
+	// We need to set the root path even if we're not using the config, otherwise fixtures are not loaded correctly
+	config.ServiceRootpath.Set(os.Getenv("VIKUNJA_SERVICE_ROOTPATH"))
+	// Some tests use the file engine, so we'll need to initialize that
+	files.InitTests()
 	models.SetupTests(config.ServiceRootpath.GetString())
 
-	err = models.LoadFixtures()
+	err = db.LoadFixtures()
 	if err != nil {
 		return
 	}

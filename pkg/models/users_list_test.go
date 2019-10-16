@@ -1,6 +1,7 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/db"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/d4l3k/messagediff.v1"
 	"testing"
@@ -8,7 +9,7 @@ import (
 
 func TestListUsersFromList(t *testing.T) {
 
-	err := LoadFixtures()
+	err := db.LoadFixtures()
 	assert.NoError(t, err)
 
 	testuser1 := &User{

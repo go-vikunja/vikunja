@@ -19,18 +19,30 @@ package db
 import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
+	"encoding/gob"
 	"fmt"
 	"github.com/go-xorm/core"
 	"github.com/go-xorm/xorm"
+	"os"
 	"strconv"
 	"time"
+
+	xrc "github.com/go-xorm/xorm-redis-cache"
 
 	_ "github.com/go-sql-driver/mysql" // Because.
 	_ "github.com/mattn/go-sqlite3"    // Because.
 )
 
+// We only want one instance of the engine, so we can reate it once and reuse it
+var x *xorm.Engine
+
 // CreateDBEngine initializes a db engine from the config
 func CreateDBEngine() (engine *xorm.Engine, err error) {
+
+	if x != nil {
+		return x, nil
+	}
+
 	// If the database type is not set, this likely means we need to initialize the config first
 	if config.DatabaseType.GetString() == "" {
 		config.InitConfig()
@@ -54,7 +66,55 @@ func CreateDBEngine() (engine *xorm.Engine, err error) {
 	engine.ShowSQL(config.LogDatabase.GetString() != "off")
 	engine.SetLogger(xorm.NewSimpleLogger(log.GetLogWriter("database")))
 
+	// Cache
+	// We have to initialize the cache here to avoid import cycles
+	if config.CacheEnabled.GetBool() {
+		switch config.CacheType.GetString() {
+		case "memory":
+			cacher := xorm.NewLRUCacher(xorm.NewMemoryStore(), config.CacheMaxElementSize.GetInt())
+			engine.SetDefaultCacher(cacher)
+		case "redis":
+			cacher := xrc.NewRedisCacher(config.RedisEnabled.GetString(), config.RedisPassword.GetString(), xrc.DEFAULT_EXPIRATION, engine.Logger())
+			engine.SetDefaultCacher(cacher)
+		default:
+			log.Info("Did not find a valid cache type. Caching disabled. Please refer to the docs for poosible cache types.")
+		}
+	}
+
+	x = engine
 	return
+}
+
+// CreateTestEngine creates an instance of the db engine which lives in memory
+func CreateTestEngine() (engine *xorm.Engine, err error) {
+
+	if x != nil {
+		return x, nil
+	}
+
+	if os.Getenv("VIKUNJA_TESTS_USE_CONFIG") == "1" {
+		config.InitConfig()
+		engine, err = CreateDBEngine()
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		engine, err = xorm.NewEngine("sqlite3", "file::memory:?cache=shared")
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	engine.SetMapper(core.GonicMapper{})
+	engine.ShowSQL(os.Getenv("UNIT_TESTS_VERBOSE") == "1")
+	engine.SetLogger(xorm.NewSimpleLogger(log.GetLogWriter("database")))
+	x = engine
+	return
+}
+
+// RegisterTableStructsForCache registers tables in gob encoding for redis cache
+func RegisterTableStructsForCache(val interface{}) {
+	gob.Register(val)
 }
 
 func initMysqlEngine() (engine *xorm.Engine, err error) {

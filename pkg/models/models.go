@@ -20,10 +20,9 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
-	"encoding/gob"
 	_ "github.com/go-sql-driver/mysql" // Because.
 	"github.com/go-xorm/xorm"
-	xrc "github.com/go-xorm/xorm-redis-cache"
+
 	_ "github.com/mattn/go-sqlite3" // Because.
 )
 
@@ -50,6 +49,7 @@ func GetTables() []interface{} {
 		&TaskReminder{},
 		&LinkSharing{},
 		&TaskRelation{},
+		&TaskAttachment{},
 	}
 }
 
@@ -62,19 +62,8 @@ func SetEngine() (err error) {
 	}
 
 	// Cache
-	// We have to initialize the cache here to avoid import cycles
-	if config.CacheEnabled.GetBool() {
-		switch config.CacheType.GetString() {
-		case "memory":
-			cacher := xorm.NewLRUCacher(xorm.NewMemoryStore(), config.CacheMaxElementSize.GetInt())
-			x.SetDefaultCacher(cacher)
-		case "redis":
-			cacher := xrc.NewRedisCacher(config.RedisEnabled.GetString(), config.RedisPassword.GetString(), xrc.DEFAULT_EXPIRATION, x.Logger())
-			x.SetDefaultCacher(cacher)
-			gob.Register(GetTables())
-		default:
-			log.Info("Did not find a valid cache type. Caching disabled. Please refer to the docs for poosible cache types.")
-		}
+	if config.CacheEnabled.GetBool() && config.CacheType.GetString() == "redis" {
+		db.RegisterTableStructsForCache(GetTables())
 	}
 
 	return nil

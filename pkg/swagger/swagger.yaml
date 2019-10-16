@@ -1,5 +1,18 @@
 basePath: /api/v1
 definitions:
+  files.File:
+    properties:
+      created:
+        type: string
+      id:
+        type: integer
+      mime:
+        type: string
+      name:
+        type: string
+      size:
+        type: integer
+    type: object
   models.APIUserPassword:
     properties:
       email:
@@ -35,6 +48,11 @@ definitions:
         description: An array of users who are assigned to this task
         items:
           $ref: '#/definitions/models.User'
+        type: array
+      attachments:
+        description: All attachments this task has
+        items:
+          $ref: '#/definitions/models.TaskAttachment'
         type: array
       created:
         description: A unix timestamp when this task was created. You cannot change
@@ -365,6 +383,11 @@ definitions:
             items:
               $ref: '#/definitions/models.User'
             type: array
+          attachments:
+            description: All attachments this task has
+            items:
+              $ref: '#/definitions/models.TaskAttachment'
+            type: array
           created:
             description: A unix timestamp when this task was created. You cannot change
               this value.
@@ -447,6 +470,11 @@ definitions:
         items:
           $ref: '#/definitions/models.User'
         type: array
+      attachments:
+        description: All attachments this task has
+        items:
+          $ref: '#/definitions/models.TaskAttachment'
+        type: array
       created:
         description: A unix timestamp when this task was created. You cannot change
           this value.
@@ -525,6 +553,21 @@ definitions:
       created:
         type: integer
       user_id:
+        type: integer
+    type: object
+  models.TaskAttachment:
+    properties:
+      created:
+        type: integer
+      created_by:
+        $ref: '#/definitions/models.User'
+        type: object
+      file:
+        $ref: '#/definitions/files.File'
+        type: object
+      id:
+        type: integer
+      task_id:
         type: integer
     type: object
   models.TaskRelation:
@@ -789,12 +832,13 @@ definitions:
         type: string
       link_sharing_enabled:
         type: boolean
+      max_file_size:
+        type: integer
       motd:
         type: string
       version:
         type: string
     type: object
-host: '{{.Host}}'
 info:
   contact:
     email: hello@vikunja.io
@@ -803,7 +847,7 @@ info:
   description: |-
     This is the documentation for the [Vikunja](http://vikunja.io) API. Vikunja is a cross-plattform Todo-application with a lot of features, such as sharing lists with users or teams. <!-- ReDoc-Inject: <security-definitions> -->
     # Authorization
-    **JWT-Auth:** Main authorization method, used for most of the requests. Needs ` + "`" + `Authorization: Bearer <jwt-token>` + "`" + `-header to authenticate successfully.
+    **JWT-Auth:** Main authorization method, used for most of the requests. Needs `Authorization: Bearer <jwt-token>`-header to authenticate successfully.
 
     **BasicAuth:** Only used when requesting tasks via caldav.
     <!-- ReDoc-Inject: <security-definitions> -->
@@ -811,7 +855,6 @@ info:
     name: GPLv3
     url: http://code.vikunja.io/api/src/branch/master/LICENSE
   title: Vikunja API
-  version: '{{.Version}}'
 paths:
   /info:
     get:
@@ -824,7 +867,6 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/v1.vikunjaInfos'
-            type: object
       summary: Info
       tags:
       - service
@@ -857,7 +899,6 @@ paths:
           description: Internal error
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
       security:
       - JWTKeyAuth: []
       summary: Get all labels a user has access to
@@ -882,17 +923,14 @@ paths:
           description: The created label object.
           schema:
             $ref: '#/definitions/models.Label'
-            type: object
         "400":
           description: Invalid label object provided.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "500":
           description: Internal error
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
       security:
       - JWTKeyAuth: []
       summary: Create a label
@@ -917,22 +955,18 @@ paths:
           description: The label was successfully deleted.
           schema:
             $ref: '#/definitions/models.Label'
-            type: object
         "403":
           description: Not allowed to delete the label.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "404":
           description: Label not found.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "500":
           description: Internal error
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
       security:
       - JWTKeyAuth: []
       summary: Delete a label
@@ -955,22 +989,18 @@ paths:
           description: The label
           schema:
             $ref: '#/definitions/models.Label'
-            type: object
         "403":
           description: The user does not have access to the label
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "404":
           description: Label not found
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "500":
           description: Internal error
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
       security:
       - JWTKeyAuth: []
       summary: Gets one label
@@ -1001,27 +1031,22 @@ paths:
           description: The created label object.
           schema:
             $ref: '#/definitions/models.Label'
-            type: object
         "400":
           description: Invalid label object provided.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "403":
           description: Not allowed to update the label.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "404":
           description: Label not found.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "500":
           description: Internal error
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
       security:
       - JWTKeyAuth: []
       summary: Update a label
@@ -1055,12 +1080,10 @@ paths:
           description: The user does not have access to the list
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "500":
           description: Internal error
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
       security:
       - JWTKeyAuth: []
       summary: Get all lists a user has access to
@@ -1082,22 +1105,18 @@ paths:
           description: The list was successfully deleted.
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
         "400":
           description: Invalid list object provided.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "403":
           description: The user does not have access to the list
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "500":
           description: Internal error
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
       security:
       - JWTKeyAuth: []
       summary: Deletes a list
@@ -1120,17 +1139,14 @@ paths:
           description: The list
           schema:
             $ref: '#/definitions/models.List'
-            type: object
         "403":
           description: The user does not have access to the list
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "500":
           description: Internal error
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
       security:
       - JWTKeyAuth: []
       summary: Gets one list
@@ -1160,22 +1176,18 @@ paths:
           description: The updated list.
           schema:
             $ref: '#/definitions/models.List'
-            type: object
         "400":
           description: Invalid list object provided.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "403":
           description: The user does not have access to the list
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "500":
           description: Internal error
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
       security:
       - JWTKeyAuth: []
       summary: Updates a list
@@ -1205,22 +1217,18 @@ paths:
           description: The created task object.
           schema:
             $ref: '#/definitions/models.Task'
-            type: object
         "400":
           description: Invalid task object provided.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "403":
           description: The user does not have access to the list
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "500":
           description: Internal error
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
       security:
       - JWTKeyAuth: []
       summary: Create a task
@@ -1255,17 +1263,14 @@ paths:
           description: Something's invalid.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "401":
           description: The user does not have the right to see the list.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "500":
           description: Internal server error.
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
       security:
       - JWTKeyAuth: []
       summary: Get users
@@ -1304,12 +1309,10 @@ paths:
           description: No right to see the list.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "500":
           description: Internal error
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
       security:
       - JWTKeyAuth: []
       summary: Get teams on a list
@@ -1339,27 +1342,22 @@ paths:
           description: The created team<->list relation.
           schema:
             $ref: '#/definitions/models.TeamList'
-            type: object
         "400":
           description: Invalid team list object provided.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "403":
           description: The user does not have access to the list
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "404":
           description: The team does not exist.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "500":
           description: Internal error
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
       security:
       - JWTKeyAuth: []
       summary: Add a team to a list
@@ -1398,12 +1396,10 @@ paths:
           description: No right to see the list.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "500":
           description: Internal error
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
       security:
       - JWTKeyAuth: []
       summary: Get users on a list
@@ -1433,27 +1429,22 @@ paths:
           description: The created user<->list relation.
           schema:
             $ref: '#/definitions/models.ListUser'
-            type: object
         "400":
           description: Invalid user list object provided.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "403":
           description: The user does not have access to the list
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "404":
           description: The user does not exist.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "500":
           description: Internal error
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
       security:
       - JWTKeyAuth: []
       summary: Add a user to a list
@@ -1492,7 +1483,6 @@ paths:
           description: Internal error
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
       security:
       - JWTKeyAuth: []
       summary: Get all link shares for a list
@@ -1523,27 +1513,22 @@ paths:
           description: The created link share object.
           schema:
             $ref: '#/definitions/models.LinkSharing'
-            type: object
         "400":
           description: Invalid link share object provided.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "403":
           description: Not allowed to add the list share.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "404":
           description: The list does not exist.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "500":
           description: Internal error
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
       security:
       - JWTKeyAuth: []
       summary: Share a list via link
@@ -1573,22 +1558,18 @@ paths:
           description: The link was successfully removed.
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
         "403":
           description: Not allowed to remove the link.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "404":
           description: Share Link not found.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "500":
           description: Internal error
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
       security:
       - JWTKeyAuth: []
       summary: Remove a link share
@@ -1616,22 +1597,18 @@ paths:
           description: The share links
           schema:
             $ref: '#/definitions/models.LinkSharing'
-            type: object
         "403":
           description: No access to the list
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "404":
           description: Share Link not found.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "500":
           description: Internal error
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
       security:
       - JWTKeyAuth: []
       summary: Get one link shares for a list
@@ -1659,22 +1636,18 @@ paths:
           description: The team was successfully deleted.
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
         "403":
           description: The user does not have access to the list
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "404":
           description: Team or list does not exist.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "500":
           description: Internal error
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
       security:
       - JWTKeyAuth: []
       summary: Delete a team from a list
@@ -1710,22 +1683,18 @@ paths:
           description: The updated team <-> list relation.
           schema:
             $ref: '#/definitions/models.TeamList'
-            type: object
         "403":
           description: The user does not have admin-access to the list
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "404":
           description: Team or list does not exist.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "500":
           description: Internal error
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
       security:
       - JWTKeyAuth: []
       summary: Update a team <-> list relation
@@ -1753,22 +1722,18 @@ paths:
           description: The user was successfully removed from the list.
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
         "403":
           description: The user does not have access to the list
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "404":
           description: user or list does not exist.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "500":
           description: Internal error
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
       security:
       - JWTKeyAuth: []
       summary: Delete a user from a list
@@ -1804,22 +1769,18 @@ paths:
           description: The updated user <-> list relation.
           schema:
             $ref: '#/definitions/models.ListUser'
-            type: object
         "403":
           description: The user does not have admin-access to the list
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "404":
           description: User or list does not exist.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "500":
           description: Internal error
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
       security:
       - JWTKeyAuth: []
       summary: Update a user <-> list relation
@@ -1845,17 +1806,14 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/v1.Token'
-            type: object
         "400":
           description: Invalid user password model.
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
         "403":
           description: Invalid username or password.
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
       summary: Login
       tags:
       - user
@@ -1884,22 +1842,18 @@ paths:
           description: The updated namespace.
           schema:
             $ref: '#/definitions/models.Namespace'
-            type: object
         "400":
           description: Invalid namespace object provided.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "403":
           description: The user does not have access to the namespace
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "500":
           description: Internal error
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
       security:
       - JWTKeyAuth: []
       summary: Updates a namespace
@@ -1933,7 +1887,6 @@ paths:
           description: Internal error
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
       security:
       - JWTKeyAuth: []
       summary: Get all namespaces a user has access to
@@ -1958,22 +1911,18 @@ paths:
           description: The created namespace.
           schema:
             $ref: '#/definitions/models.Namespace'
-            type: object
         "400":
           description: Invalid namespace object provided.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "403":
           description: The user does not have access to the namespace
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "500":
           description: Internal error
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
       security:
       - JWTKeyAuth: []
       summary: Creates a new namespace
@@ -1995,22 +1944,18 @@ paths:
           description: The namespace was successfully deleted.
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
         "400":
           description: Invalid namespace object provided.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "403":
           description: The user does not have access to the namespace
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "500":
           description: Internal error
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
       security:
       - JWTKeyAuth: []
       summary: Deletes a namespace
@@ -2033,17 +1978,14 @@ paths:
           description: The Namespace
           schema:
             $ref: '#/definitions/models.Namespace'
-            type: object
         "403":
           description: The user does not have access to that namespace.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "500":
           description: Internal error
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
       security:
       - JWTKeyAuth: []
       summary: Gets one namespace
@@ -2073,17 +2015,14 @@ paths:
           description: No access to that namespace.
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
         "404":
           description: The namespace does not exist.
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
         "500":
           description: Internal error
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
       security:
       - JWTKeyAuth: []
       summary: Get all lists in a namespace
@@ -2123,12 +2062,10 @@ paths:
           description: No right to see the namespace.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "500":
           description: Internal error
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
       security:
       - JWTKeyAuth: []
       summary: Get teams on a namespace
@@ -2158,27 +2095,22 @@ paths:
           description: The created team<->namespace relation.
           schema:
             $ref: '#/definitions/models.TeamNamespace'
-            type: object
         "400":
           description: Invalid team namespace object provided.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "403":
           description: The team does not have access to the namespace
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "404":
           description: The team does not exist.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "500":
           description: Internal error
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
       security:
       - JWTKeyAuth: []
       summary: Add a team to a namespace
@@ -2218,12 +2150,10 @@ paths:
           description: No right to see the namespace.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "500":
           description: Internal error
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
       security:
       - JWTKeyAuth: []
       summary: Get users on a namespace
@@ -2253,27 +2183,22 @@ paths:
           description: The created user<->namespace relation.
           schema:
             $ref: '#/definitions/models.NamespaceUser'
-            type: object
         "400":
           description: Invalid user namespace object provided.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "403":
           description: The user does not have access to the namespace
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "404":
           description: The user does not exist.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "500":
           description: Internal error
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
       security:
       - JWTKeyAuth: []
       summary: Add a user to a namespace
@@ -2305,22 +2230,18 @@ paths:
           description: The created list.
           schema:
             $ref: '#/definitions/models.List'
-            type: object
         "400":
           description: Invalid list object provided.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "403":
           description: The user does not have access to the list
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "500":
           description: Internal error
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
       security:
       - JWTKeyAuth: []
       summary: Creates a new list
@@ -2348,22 +2269,18 @@ paths:
           description: The team was successfully deleted.
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
         "403":
           description: The team does not have access to the namespace
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "404":
           description: team or namespace does not exist.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "500":
           description: Internal error
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
       security:
       - JWTKeyAuth: []
       summary: Delete a team from a namespace
@@ -2399,22 +2316,18 @@ paths:
           description: The updated team <-> namespace relation.
           schema:
             $ref: '#/definitions/models.TeamNamespace'
-            type: object
         "403":
           description: The team does not have admin-access to the namespace
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "404":
           description: Team or namespace does not exist.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "500":
           description: Internal error
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
       security:
       - JWTKeyAuth: []
       summary: Update a team <-> namespace relation
@@ -2442,22 +2355,18 @@ paths:
           description: The user was successfully deleted.
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
         "403":
           description: The user does not have access to the namespace
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "404":
           description: user or namespace does not exist.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "500":
           description: Internal error
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
       security:
       - JWTKeyAuth: []
       summary: Delete a user from a namespace
@@ -2493,22 +2402,18 @@ paths:
           description: The updated user <-> namespace relation.
           schema:
             $ref: '#/definitions/models.NamespaceUser'
-            type: object
         "403":
           description: The user does not have admin-access to the namespace
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "404":
           description: User or namespace does not exist.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "500":
           description: Internal error
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
       security:
       - JWTKeyAuth: []
       summary: Update a user <-> namespace relation
@@ -2534,18 +2439,15 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/models.User'
-            type: object
         "400":
           description: No or invalid user register object provided / User already
             exists.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "500":
           description: Internal error
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
       summary: Register
       tags:
       - user
@@ -2567,17 +2469,14 @@ paths:
           description: The valid jwt auth token.
           schema:
             $ref: '#/definitions/v1.Token'
-            type: object
         "400":
           description: Invalid link share object provided.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "500":
           description: Internal error
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
       summary: Get an auth token for a share
       tags:
       - sharing
@@ -2597,22 +2496,18 @@ paths:
           description: The created task object.
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
         "400":
           description: Invalid task ID provided.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "403":
           description: The user does not have access to the list
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "500":
           description: Internal error
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
       security:
       - JWTKeyAuth: []
       summary: Delete a task
@@ -2644,25 +2539,175 @@ paths:
           description: The updated task object.
           schema:
             $ref: '#/definitions/models.Task'
-            type: object
         "400":
           description: Invalid task object provided.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "403":
           description: The user does not have access to the task (aka its list)
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "500":
           description: Internal error
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
       security:
       - JWTKeyAuth: []
       summary: Update a task
+      tags:
+      - task
+  /tasks/{id}/attachments:
+    get:
+      consumes:
+      - application/json
+      description: Get all task attachments for one task.
+      parameters:
+      - description: Task ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: All attachments for this task
+          schema:
+            items:
+              $ref: '#/definitions/models.TaskAttachment'
+            type: array
+        "403":
+          description: No access to this task.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "404":
+          description: The task does not exist.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get  all attachments for one task.
+      tags:
+      - task
+    put:
+      consumes:
+      - multipart/form-data
+      description: Upload a task attachment. You can pass multiple files with the
+        files form param.
+      parameters:
+      - description: Task ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: The file, as multipart form file. You can pass multiple.
+        in: formData
+        name: files
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Attachments were uploaded successfully.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "403":
+          description: No access to the task.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "404":
+          description: The task does not exist.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Upload a task attachment
+      tags:
+      - task
+  /tasks/{id}/attachments/{attachmentID}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete an attachment.
+      parameters:
+      - description: Task ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Attachment ID
+        in: path
+        name: attachmentID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The attachment was deleted successfully.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "403":
+          description: No access to this task.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "404":
+          description: The task does not exist.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Delete an attachment
+      tags:
+      - task
+    get:
+      description: Get one attachment for download. **Returns json on error.**
+      parameters:
+      - description: Task ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Attachment ID
+        in: path
+        name: attachmentID
+        required: true
+        type: integer
+      produces:
+      - application/octet-stream
+      responses:
+        "200":
+          description: The attachment file.
+          schema:
+            type: ""
+        "403":
+          description: No access to this task.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "404":
+          description: The task does not exist.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get one attachment.
       tags:
       - task
   /tasks/{task}/labels:
@@ -2698,7 +2743,6 @@ paths:
           description: Internal error
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
       security:
       - JWTKeyAuth: []
       summary: Get all labels on a task
@@ -2729,27 +2773,22 @@ paths:
           description: The created label relation object.
           schema:
             $ref: '#/definitions/models.LabelTask'
-            type: object
         "400":
           description: Invalid label object provided.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "403":
           description: Not allowed to add the label.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "404":
           description: The label does not exist.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "500":
           description: Internal error
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
       security:
       - JWTKeyAuth: []
       summary: Add a label to a task
@@ -2779,22 +2818,18 @@ paths:
           description: The label was successfully removed.
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
         "403":
           description: Not allowed to remove the label.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "404":
           description: Label not found.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "500":
           description: Internal error
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
       security:
       - JWTKeyAuth: []
       summary: Remove a label from a task
@@ -2833,7 +2868,6 @@ paths:
           description: Internal error
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
       security:
       - JWTKeyAuth: []
       summary: Get all assignees for a task
@@ -2864,17 +2898,14 @@ paths:
           description: The created assingee object.
           schema:
             $ref: '#/definitions/models.TaskAssginee'
-            type: object
         "400":
           description: Invalid assignee object provided.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "500":
           description: Internal error
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
       security:
       - JWTKeyAuth: []
       summary: Add a new assignee to a task
@@ -2903,17 +2934,14 @@ paths:
           description: The assignee was successfully deleted.
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
         "403":
           description: Not allowed to delete the assignee.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "500":
           description: Internal error
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
       security:
       - JWTKeyAuth: []
       summary: Delete an assignee
@@ -2947,17 +2975,14 @@ paths:
           description: The created assingees object.
           schema:
             $ref: '#/definitions/models.TaskAssginee'
-            type: object
         "400":
           description: Invalid assignee object provided.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "500":
           description: Internal error
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
       security:
       - JWTKeyAuth: []
       summary: Add multiple new assignees to a task
@@ -2991,17 +3016,14 @@ paths:
           description: The updated labels object.
           schema:
             $ref: '#/definitions/models.LabelTaskBulk'
-            type: object
         "400":
           description: Invalid label object provided.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "500":
           description: Internal error
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
       security:
       - JWTKeyAuth: []
       summary: Update all labels on a task.
@@ -3031,22 +3053,18 @@ paths:
           description: The task relation was successfully deleted.
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
         "400":
           description: Invalid task relation object provided.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "404":
           description: The task relation was not found.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "500":
           description: Internal error
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
       security:
       - JWTKeyAuth: []
       summary: Remove a task relation
@@ -3057,7 +3075,8 @@ paths:
       - application/json
       description: Creates a new relation between two tasks. The user needs to have
         update rights on the base task and at least read rights on the other task.
-        Both tasks do not need to be on the same list.
+        Both tasks do not need to be on the same list. Take a look at the docs for
+        available task relation kinds.
       parameters:
       - description: The relation object
         in: body
@@ -3078,17 +3097,14 @@ paths:
           description: The created task relation object.
           schema:
             $ref: '#/definitions/models.TaskRelation'
-            type: object
         "400":
           description: Invalid task relation object provided.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "500":
           description: Internal error
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
       security:
       - JWTKeyAuth: []
       summary: Create a new relation between two tasks
@@ -3139,7 +3155,6 @@ paths:
           description: Internal error
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
       security:
       - JWTKeyAuth: []
       summary: Get tasks
@@ -3168,22 +3183,18 @@ paths:
           description: The updated task object.
           schema:
             $ref: '#/definitions/models.Task'
-            type: object
         "400":
           description: Invalid task object provided.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "403":
           description: The user does not have access to the task (aka its list)
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "500":
           description: Internal error
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
       security:
       - JWTKeyAuth: []
       summary: Update a bunch of tasks at once
@@ -3217,7 +3228,6 @@ paths:
           description: Internal error
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
       security:
       - JWTKeyAuth: []
       summary: Get teams
@@ -3243,17 +3253,14 @@ paths:
           description: The created team.
           schema:
             $ref: '#/definitions/models.Team'
-            type: object
         "400":
           description: Invalid team object provided.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "500":
           description: Internal error
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
       security:
       - JWTKeyAuth: []
       summary: Creates a new team
@@ -3276,17 +3283,14 @@ paths:
           description: The team was successfully deleted.
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
         "400":
           description: Invalid team object provided.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "500":
           description: Internal error
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
       security:
       - JWTKeyAuth: []
       summary: Deletes a team
@@ -3316,17 +3320,14 @@ paths:
           description: The updated team.
           schema:
             $ref: '#/definitions/models.Team'
-            type: object
         "400":
           description: Invalid team object provided.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "500":
           description: Internal error
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
       security:
       - JWTKeyAuth: []
       summary: Updates a team
@@ -3357,22 +3358,18 @@ paths:
           description: The newly created member object
           schema:
             $ref: '#/definitions/models.TeamMember'
-            type: object
         "400":
           description: Invalid member object provided.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "403":
           description: The user does not have access to the team
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "500":
           description: Internal error
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
       security:
       - JWTKeyAuth: []
       summary: Add a user to a team
@@ -3400,12 +3397,10 @@ paths:
           description: The user was successfully removed from the team.
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
         "500":
           description: Internal error
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
       security:
       - JWTKeyAuth: []
       summary: Remove a user from a team
@@ -3423,17 +3418,14 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/models.User'
-            type: object
         "404":
           description: User does not exist.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "500":
           description: Internal server error.
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
       security:
       - JWTKeyAuth: []
       summary: Get user information
@@ -3459,17 +3451,14 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
         "412":
           description: Bad token provided.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "500":
           description: Internal error
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
       summary: Confirm the email of a new user
       tags:
       - user
@@ -3493,22 +3482,18 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
         "400":
           description: Something's invalid.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "404":
           description: User does not exist.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "500":
           description: Internal server error.
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
       security:
       - JWTKeyAuth: []
       summary: Change password
@@ -3534,17 +3519,14 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
         "400":
           description: Bad token provided.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "500":
           description: Internal error
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
       summary: Resets a password
       tags:
       - user
@@ -3569,17 +3551,14 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
         "404":
           description: The user does not exist.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "500":
           description: Internal error
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
       summary: Request password reset token
       tags:
       - user
@@ -3607,12 +3586,10 @@ paths:
           description: Something's invalid.
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
-            type: object
         "500":
           description: Internal server error.
           schema:
             $ref: '#/definitions/models.Message'
-            type: object
       security:
       - JWTKeyAuth: []
       summary: Get users

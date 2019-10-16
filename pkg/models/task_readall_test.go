@@ -7,6 +7,8 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/files"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/d4l3k/messagediff.v1"
 	"sort"
@@ -65,6 +67,29 @@ func sortTasksForTesting(by SortBy) (tasks []*Task) {
 						Created:     1543626724,
 						Updated:     1543626724,
 					},
+				},
+			},
+			Attachments: []*TaskAttachment{
+				{
+					ID:          1,
+					TaskID:      1,
+					FileID:      1,
+					CreatedByID: 1,
+					CreatedBy:   user1,
+					File: &files.File{
+						ID:          1,
+						Name:        "test",
+						Size:        100,
+						CreatedUnix: 1570998791,
+						CreatedByID: 1,
+					},
+				},
+				{
+					ID:          2,
+					TaskID:      1,
+					FileID:      9999,
+					CreatedByID: 1,
+					CreatedBy:   user1,
 				},
 			},
 			Created: 1543626724,
@@ -434,7 +459,7 @@ func sortTasksForTesting(by SortBy) (tasks []*Task) {
 }
 
 func TestTask_ReadAll(t *testing.T) {
-	assert.NoError(t, LoadFixtures())
+	assert.NoError(t, db.LoadFixtures())
 
 	// Dummy users
 	user1 := &User{
