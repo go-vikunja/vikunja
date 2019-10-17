@@ -1,6 +1,8 @@
 <template>
     <div>
         <div v-if="isOnline">
+            <!-- This is a workaround to get the sw to "see" the to-be-cached version of the offline background image -->
+            <div class="offline" style="height: 0;width: 0;"></div>
             <nav class="navbar main-theme is-fixed-top" role="navigation" aria-label="main navigation"
                  v-if="user.authenticated && user.infos.type === authTypes.USER">
                 <div class="navbar-brand">
