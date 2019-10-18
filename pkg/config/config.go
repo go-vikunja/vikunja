@@ -197,7 +197,7 @@ func InitDefaultConfig() {
 	RateLimitStore.setDefault("memory")
 	// Files
 	FilesBasePath.setDefault("files")
-	FilesMaxSize.setDefault(21474836480) // 20 MB
+	FilesMaxSize.setDefault("20MB")
 }
 
 // InitConfig initializes the config, sets defaults etc.

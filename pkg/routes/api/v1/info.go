@@ -28,7 +28,7 @@ type vikunjaInfos struct {
 	FrontendURL        string `json:"frontend_url"`
 	Motd               string `json:"motd"`
 	LinkSharingEnabled bool   `json:"link_sharing_enabled"`
-	MaxFileSize        int64  `json:"max_file_size"`
+	MaxFileSize        string `json:"max_file_size"`
 }
 
 // Info is the handler to get infos about this vikunja instance
@@ -44,6 +44,6 @@ func Info(c echo.Context) error {
 		FrontendURL:        config.ServiceFrontendurl.GetString(),
 		Motd:               config.ServiceMotd.GetString(),
 		LinkSharingEnabled: config.ServiceEnableLinkSharing.GetBool(),
-		MaxFileSize:        config.FilesMaxSize.GetInt64(),
+		MaxFileSize:        config.FilesMaxSize.GetString(),
 	})
 }

@@ -19,6 +19,7 @@ package files
 import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/web"
+	"github.com/c2h5oh/datasize"
 	"github.com/spf13/afero"
 	"io"
 	"strconv"
@@ -30,7 +31,7 @@ type File struct {
 	ID   int64  `xorm:"int(11) autoincr not null unique pk" json:"id"`
 	Name string `xorm:"text not null" json:"name"`
 	Mime string `xorm:"text null" json:"mime"`
-	Size int64  `xorm:"int(11) not null" json:"size"`
+	Size uint64 `xorm:"int(11) not null" json:"size"`
 
 	Created time.Time `xorm:"-" json:"created"`
 
@@ -66,9 +67,15 @@ func (f *File) LoadFileMetaByID() (err error) {
 }
 
 // Create creates a new file from an FileHeader
-func Create(f io.ReadCloser, realname string, realsize int64, a web.Auth) (file *File, err error) {
+func Create(f io.ReadCloser, realname string, realsize uint64, a web.Auth) (file *File, err error) {
 
-	if realsize > config.FilesMaxSize.GetInt64() {
+	// Get and parse the configured file size
+	var maxSize datasize.ByteSize
+	err = maxSize.UnmarshalText([]byte(config.FilesMaxSize.GetString()))
+	if err != nil {
+		return nil, err
+	}
+	if realsize > maxSize.Bytes() {
 		return nil, ErrFileIsTooLarge{Size: realsize}
 	}
 

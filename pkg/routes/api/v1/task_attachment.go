@@ -82,7 +82,7 @@ func UploadTaskAttachment(c echo.Context) error {
 		}
 		defer f.Close()
 
-		err = ta.NewAttachment(f, file.Filename, file.Size, user)
+		err = ta.NewAttachment(f, file.Filename, uint64(file.Size), user)
 		if err != nil {
 			r.Errors = append(r.Errors, handler.HandleHTTPError(err, c))
 			continue

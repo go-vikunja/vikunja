@@ -763,7 +763,7 @@ func (err ErrTaskAttachmentDoesNotExist) HTTPError() web.HTTPError {
 
 // ErrTaskAttachmentIsTooLarge represents an error where the user tries to relate a task with itself
 type ErrTaskAttachmentIsTooLarge struct {
-	Size int64
+	Size uint64
 }
 
 // IsErrTaskAttachmentIsTooLarge checks if an error is ErrTaskAttachmentIsTooLarge.

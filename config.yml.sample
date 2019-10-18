@@ -110,5 +110,6 @@ ratelimit:
 files:
   # The path where files are stored
   basepath: ./files # relative to the binary
-  # The maximum size of a file, in bytes.
-  maxsize: 21474836480 # 20 MB
+  # The maximum size of a file, as a human-readable string.
+  # Warning: The max size is limited 2^64-1 bytes due to the underlying datatype
+  maxsize: 20MB

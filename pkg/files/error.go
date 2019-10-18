@@ -37,7 +37,7 @@ func IsErrFileDoesNotExist(err error) bool {
 
 // ErrFileIsTooLarge defines an error where a file is larger than the configured limit
 type ErrFileIsTooLarge struct {
-	Size int64
+	Size uint64
 }
 
 // Error is the error implementation of ErrFileIsTooLarge

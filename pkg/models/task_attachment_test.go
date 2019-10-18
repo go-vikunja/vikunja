@@ -111,7 +111,7 @@ func TestTaskAttachment_NewAttachment(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, testuser.ID, ta.File.CreatedByID)
 	assert.Equal(t, "testfile", ta.File.Name)
-	assert.Equal(t, int64(100), ta.File.Size)
+	assert.Equal(t, uint64(100), ta.File.Size)
 
 	// Extra test for max size test
 }

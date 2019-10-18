@@ -66,7 +66,7 @@ func TestCreate(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, int64(1), file.CreatedByID)
 		assert.Equal(t, "testfile", file.Name)
-		assert.Equal(t, int64(100), file.Size)
+		assert.Equal(t, uint64(100), file.Size)
 
 	})
 	t.Run("Too Large", func(t *testing.T) {

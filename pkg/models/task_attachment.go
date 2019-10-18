@@ -47,7 +47,7 @@ func (TaskAttachment) TableName() string {
 
 // NewAttachment creates a new task attachment
 // Note: I'm not sure if only accepting an io.ReadCloser and not an afero.File or os.File instead is a good way of doing things.
-func (ta *TaskAttachment) NewAttachment(f io.ReadCloser, realname string, realsize int64, a web.Auth) error {
+func (ta *TaskAttachment) NewAttachment(f io.ReadCloser, realname string, realsize uint64, a web.Auth) error {
 
 	// Store the file
 	file, err := files.Create(f, realname, realsize, a)
