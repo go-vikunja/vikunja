@@ -3,6 +3,7 @@
 	font-family: 'Quicksand';
 	font-style: normal;
 	font-weight: 300;
+	font-display: swap;
 	src: url('quicksand-v7-latin-300.eot'); /* IE9 Compat Modes */
 	src: local('Quicksand Light'), local('Quicksand-Light'),
 	url('quicksand-v7-latin-300.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
@@ -17,6 +18,7 @@
 	font-family: 'Quicksand';
 	font-style: normal;
 	font-weight: 400;
+	font-display: swap;
 	src: url('quicksand-v7-latin-regular.eot'); /* IE9 Compat Modes */
 	src: local('Quicksand Regular'), local('Quicksand-Regular'),
 	url('quicksand-v7-latin-regular.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
@@ -31,6 +33,7 @@
 	font-family: 'Quicksand';
 	font-style: normal;
 	font-weight: 500;
+	font-display: swap;
 	src: url('quicksand-v7-latin-500.eot'); /* IE9 Compat Modes */
 	src: local('Quicksand Medium'), local('Quicksand-Medium'),
 	url('quicksand-v7-latin-500.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
@@ -45,6 +48,7 @@
 	font-family: 'Quicksand';
 	font-style: normal;
 	font-weight: 700;
+	font-display: swap;
 	src: url('quicksand-v7-latin-700.eot'); /* IE9 Compat Modes */
 	src: local('Quicksand Bold'), local('Quicksand-Bold'),
 	url('quicksand-v7-latin-700.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
@@ -59,6 +63,7 @@
 	font-family: 'Open Sans';
 	font-style: normal;
 	font-weight: 400;
+	font-display: swap;
 	src: url('open-sans-v15-latin-regular.eot'); /* IE9 Compat Modes */
 	src: local('Open Sans Regular'), local('OpenSans-Regular'),
 	url('open-sans-v15-latin-regular.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
@@ -73,6 +78,7 @@
 	font-family: 'Open Sans';
 	font-style: italic;
 	font-weight: 400;
+	font-display: swap;
 	src: url('open-sans-v15-latin-italic.eot'); /* IE9 Compat Modes */
 	src: local('Open Sans Italic'), local('OpenSans-Italic'),
 	url('open-sans-v15-latin-italic.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
@@ -87,6 +93,7 @@
 	font-family: 'Open Sans';
 	font-style: normal;
 	font-weight: 700;
+	font-display: swap;
 	src: url('open-sans-v15-latin-700.eot'); /* IE9 Compat Modes */
 	src: local('Open Sans Bold'), local('OpenSans-Bold'),
 	url('open-sans-v15-latin-700.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
@@ -101,6 +108,7 @@
 	font-family: 'Open Sans';
 	font-style: italic;
 	font-weight: 700;
+	font-display: swap;
 	src: url('open-sans-v15-latin-700italic.eot'); /* IE9 Compat Modes */
 	src: local('Open Sans Bold Italic'), local('OpenSans-BoldItalic'),
 	url('open-sans-v15-latin-700italic.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
