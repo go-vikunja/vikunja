@@ -48,6 +48,11 @@ export default class ListModel extends AbstractModel {
 				return -1
 			if (a.done > b.done)
 				return 1
+
+			if (a.id > b.id)
+				return -1
+			if (a.id < b.id)
+				return 1
 			return 0
 		})
 	}
