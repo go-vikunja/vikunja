@@ -317,7 +317,7 @@ steps:
       message: >
         {{repo.owner}}/{{repo.name}}: \[{{build.status}}] Build {{build.number}}
         {{commit.author}} pushed to {{commit.branch}} {{commit.sha}}: `{{commit.message}}`
-        Build started at {{datetime build.started "2006-Jan-02T15:04:05Z"}} finished at {{datetime build.finished "2006-Jan-02T15:04:05Z" "GMT+2"}}.
+        Build started at {{datetime build.started "2006-Jan-02T15:04:05Z" "GMT+2"}} finished at {{datetime build.finished "2006-Jan-02T15:04:05Z" "GMT+2"}}.
     when:
       status:
         - success
@@ -511,7 +511,7 @@ steps:
       message: >
         {{repo.owner}}/{{repo.name}}: \[{{build.status}}] Build {{build.number}}
         {{commit.author}} pushed to {{commit.branch}} {{commit.sha}}: `{{commit.message}}`
-        Build started at {{datetime build.started "2006-Jan-02T15:04:05Z"}} finished at {{datetime build.finished "2006-Jan-02T15:04:05Z" "GMT+2"}}.
+        Build started at {{datetime build.started "2006-Jan-02T15:04:05Z" "GMT+2"}} finished at {{datetime build.finished "2006-Jan-02T15:04:05Z" "GMT+2"}}.
     when:
       status:
         - success
