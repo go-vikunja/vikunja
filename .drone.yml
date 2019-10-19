@@ -10,11 +10,10 @@ trigger:
 
 steps:
   - name: build
-    image: node:11-alpine
+    image: kolaente/yarn
     pull: true
     group: build-static
     commands:
-      - apk add yarn
       - yarn
       - yarn run lint
       - yarn run build
@@ -31,11 +30,10 @@ trigger:
 
 steps:
   - name: build
-    image: node:11-alpine
+    image: kolaente/yarn
     pull: true
     group: build-static
     commands:
-      - apk add yarn
       - yarn
       - yarn run lint
       - "echo '{\"VIKUNJA_API_BASE_URL\": \"/api/v1/\"}' > /drone/src/public/config.json" # Override config
@@ -87,11 +85,10 @@ trigger:
 
 steps:
   - name: build
-    image: node:11-alpine
+    image: kolaente/yarn
     pull: true
     group: build-static
     commands:
-      - apk add yarn
       - yarn
       - yarn run lint
       - "echo '{\"VIKUNJA_API_BASE_URL\": \"/api/v1/\"}' > /drone/src/public/config.json" # Override config
