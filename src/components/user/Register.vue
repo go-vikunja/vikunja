@@ -1,26 +1,30 @@
 <template>
 	<div>
-		<h2 class="title">Register</h2>
+		<h2 class="title has-text-centered">Register</h2>
 		<div class="box">
 			<form id="registerform" @submit.prevent="submit">
 				<div class="field">
+					<label class="label" for="username">Username</label>
 					<div class="control">
-						<input v-focus type="text" class="input" name="username" placeholder="Username" v-model="credentials.username" required>
+						<input v-focus type="text" id="username" class="input" name="username" placeholder="e.g. frederick" v-model="credentials.username" required/>
 					</div>
 				</div>
 				<div class="field">
+					<label class="label" for="email">E-mail address</label>
 					<div class="control">
-						<input type="text" class="input" name="email" placeholder="E-mail address" v-model="credentials.email" required>
+						<input type="text" class="input" id="email" name="email" placeholder="e.g. frederic@vikunja.io" v-model="credentials.email" required/>
 					</div>
 				</div>
 				<div class="field">
+					<label class="label" for="password1">Password</label>
 					<div class="control">
-						<input type="password" class="input" name="password1" placeholder="Password" v-model="credentials.password" required>
+						<input type="password" class="input" id="password1" name="password1" placeholder="e.g. ••••••••••••" v-model="credentials.password" required/>
 					</div>
 				</div>
 				<div class="field">
+					<label class="label" for="password2">Retype your password</label>
 					<div class="control">
-						<input type="password" class="input" name="password2" placeholder="Retype password" v-model="credentials.password2" required>
+						<input type="password" class="input" id="password2" name="password2" placeholder="e.g. ••••••••••••" v-model="credentials.password2" required/>
 					</div>
 				</div>
 

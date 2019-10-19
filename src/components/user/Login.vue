@@ -1,19 +1,21 @@
 <template>
 	<div>
-		<h2 class="title">Login</h2>
+		<h2 class="title has-text-centered">Login</h2>
 		<div class="box">
 			<div v-if="confirmedEmailSuccess" class="notification is-success has-text-centered">
 				You successfully confirmed your email! You can log in now.
 			</div>
 			<form id="loginform" @submit.prevent="submit">
 				<div class="field">
+					<label class="label" for="username">Username</label>
 					<div class="control">
-						<input v-focus type="text" class="input" name="username" placeholder="Username" v-model="credentials.username" required>
+						<input v-focus type="text" id="username" class="input" name="username" placeholder="e.g. frederick" v-model="credentials.username" required/>
 					</div>
 				</div>
 				<div class="field">
+					<label class="label" for="password">Password</label>
 					<div class="control">
-						<input type="password" class="input" name="password" placeholder="Password" v-model="credentials.password" required>
+						<input type="password" class="input" id="password" name="password" placeholder="e.g. ••••••••••••" v-model="credentials.password" required/>
 					</div>
 				</div>
 

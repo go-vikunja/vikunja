@@ -1,11 +1,12 @@
 <template>
 	<div>
-		<h2 class="title">Reset your password</h2>
+		<h2 class="title has-text-centered">Reset your password</h2>
 		<div class="box">
-			<form id="loginform" @submit.prevent="submit" v-if="!isSuccess">
+			<form @submit.prevent="submit" v-if="!isSuccess">
 				<div class="field">
+					<label class="label" for="email">E-mail address</label>
 					<div class="control">
-						<input v-focus type="text" class="input" name="email" placeholder="Email-Adress" v-model="passwordReset.email" required>
+						<input v-focus type="text" class="input" id="email" name="email" placeholder="e.g. frederic@vikunja.io" v-model="passwordReset.email" required/>
 					</div>
 				</div>
 

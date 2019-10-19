@@ -1,16 +1,18 @@
 <template>
 	<div>
-		<h2 class="title">Reset your password</h2>
+		<h2 class="title has-text-centered">Reset your password</h2>
 		<div class="box">
 			<form id="form" @submit.prevent="submit" v-if="!successMessage">
 				<div class="field">
+					<label class="label" for="password1">Password</label>
 					<div class="control">
-						<input v-focus type="password" class="input" name="password1" placeholder="Password" v-model="credentials.password" required>
+						<input v-focus type="password" class="input" id="password1" name="password1" placeholder="e.g. ••••••••••••" v-model="credentials.password" required/>
 					</div>
 				</div>
 				<div class="field">
+					<label class="label" for="password2">Retype your password</label>
 					<div class="control">
-						<input type="password" class="input" name="password2" placeholder="Retype password" v-model="credentials.password2" required>
+						<input type="password" class="input" id="password2" name="password2" placeholder="e.g. ••••••••••••" v-model="credentials.password2" required/>
 					</div>
 				</div>
 

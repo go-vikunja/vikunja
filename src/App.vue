@@ -155,7 +155,7 @@
                 </div>
             </div>
             <div v-else>
-                <div class="container has-text-centered">
+                <div class="container">
                     <div class="column is-4 is-offset-4">
                         <img src="/images/logo-full.svg" alt="Vikunja"/>
                         <router-view/>
