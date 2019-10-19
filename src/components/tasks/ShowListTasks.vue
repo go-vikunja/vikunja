@@ -54,7 +54,7 @@
 							</span>
 						</label>
 						<div @click="editTask(l.id)" class="icon settings">
-							<icon icon="cog"/>
+							<icon icon="pencil-alt"/>
 						</div>
 					</div>
 				</div>
