@@ -22,8 +22,10 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/metrics"
 	"code.vikunja.io/api/pkg/models"
+	v1 "code.vikunja.io/api/pkg/routes/api/v1"
 	"github.com/labstack/echo/v4"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"time"
 )
 
 func setupMetrics(a *echo.Group) {
@@ -91,11 +93,38 @@ func setupMetricsMiddleware(a *echo.Group) {
 		return func(c echo.Context) error {
 
 			// Update currently active users
-			if err := models.UpdateActiveUsersFromContext(c); err != nil {
+			if err := updateActiveUsersFromContext(c); err != nil {
 				log.Error(err)
 				return next(c)
 			}
 			return next(c)
 		}
 	})
+}
+
+// updateActiveUsersFromContext updates the currently active users in redis
+func updateActiveUsersFromContext(c echo.Context) (err error) {
+	auth, err := v1.GetAuthFromClaims(c)
+	if err != nil {
+		return
+	}
+
+	allActiveUsers, err := metrics.GetActiveUsers()
+	if err != nil {
+		return
+	}
+
+	var uupdated bool
+	for in, u := range allActiveUsers {
+		if u.UserID == auth.GetID() {
+			allActiveUsers[in].LastSeen = time.Now()
+			uupdated = true
+		}
+	}
+
+	if !uupdated {
+		allActiveUsers = append(allActiveUsers, &metrics.ActiveUser{UserID: auth.GetID(), LastSeen: time.Now()})
+	}
+
+	return metrics.SetActiveUsers(allActiveUsers)
 }

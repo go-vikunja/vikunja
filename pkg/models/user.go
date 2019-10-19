@@ -27,7 +27,6 @@ import (
 	"github.com/labstack/echo/v4"
 	"golang.org/x/crypto/bcrypt"
 	"reflect"
-	"time"
 )
 
 // UserLogin Object to recive user credentials in JSON format
@@ -205,33 +204,6 @@ func GetUserFromClaims(claims jwt.MapClaims) (user *User, err error) {
 	}
 
 	return
-}
-
-// UpdateActiveUsersFromContext updates the currently active users in redis
-func UpdateActiveUsersFromContext(c echo.Context) (err error) {
-	user, err := GetCurrentUser(c)
-	if err != nil {
-		return
-	}
-
-	allActiveUsers, err := metrics.GetActiveUsers()
-	if err != nil {
-		return
-	}
-
-	var uupdated bool
-	for in, u := range allActiveUsers {
-		if u.UserID == user.ID {
-			allActiveUsers[in].LastSeen = time.Now()
-			uupdated = true
-		}
-	}
-
-	if !uupdated {
-		allActiveUsers = append(allActiveUsers, &metrics.ActiveUser{UserID: user.ID, LastSeen: time.Now()})
-	}
-
-	return metrics.SetActiveUsers(allActiveUsers)
 }
 
 // CreateUser creates a new user and inserts it into the database
