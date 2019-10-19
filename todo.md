@@ -35,8 +35,8 @@
 * [x] Ladeanimationen erst nach 100ms anzeigen, sonst wird das überflüssigerweise angezeigt
 * [x] Btns für Teams und neuer Namespace nach oben in die Leiste verschieben
 * [x] Fancy Scrollbars
+* [x] Be able to collapse all lists in a namespace by clicking on the menu entry
 * [ ] Card-like overview of all lists with the first 3-5 tasks, undone first
-* [ ] Be able to collapse all lists in a namespace by clicking on the menu entry
 
 ## Funktionales
 

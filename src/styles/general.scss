@@ -62,38 +62,63 @@
       .menu-label {
         font-size: 1em;
         font-weight: 700;
+        font-weight: bold;
+        font-family: $vikunja-font;
+        color: $grey;
+        font-weight: 500;
         min-height: 2.5em;
         padding-top: $navbar-padding * 0.3;
+        padding-left: $navbar-padding;
 
+        display: block;
         white-space: nowrap;
         text-overflow: ellipsis;
         overflow: hidden;
       }
 
       .nsettings{
-        vertical-align: middle;
         float: right;
-        margin-left: 0.5rem;
-        min-width: 2.648em;
-        padding-top: 5px;
-      }
-
-      .menu-label {
-        font-weight: bold;
-        font-family: $vikunja-font;
+        padding: 10px 0.3em 0;
       }
 
       .menu-label,.nsettings,.menu-list a{
         color: $vikunja-nav-color;
       }
 
-      .menu-label{
+      .checkinput {
+        display: none;
+      }
+
+      .checkinput:checked + .more-container {
+        .menu-list.can-be-hidden {
+          opacity: 1;
+          height: auto;
+        }
+      }
+
+      .checkinput:not(:checked) + .more-container .hidden-hint {
+        opacity: 1;
+        height: auto;
+      }
+
+      .hidden-hint {
+        display: block;
+        opacity: 0;
+        height: 0;
+        text-align: center;
         color: $grey;
-        font-weight: 500;
-        padding-left: $navbar-padding;
+        cursor: pointer;
+        font-size: 0.8em;
       }
 
       .menu-list {
+        &.can-be-hidden {
+          transition: all $transition;
+          height: 0;
+          overflow: hidden;
+          opacity: 0;
+        }
+
         li {
           height: 44px;
         }

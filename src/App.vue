@@ -114,16 +114,22 @@
 											<icon icon="plus"/>
 										</span>
                                     </router-link>
-                                    <div class="menu-label">
-                                        {{n.name}}
-                                    </div>
+                                    <label class="menu-label" v-tooltip="n.name + ' (' + n.lists.length + ')'" :for="n.id + 'checker'">
+                                        {{n.name}} ({{n.lists.length}})
+                                    </label>
                                 </div>
-                                <ul class="menu-list" :key="n.id + 'child'">
-                                    <li v-for="l in n.lists" :key="l.id">
-                                        <router-link :to="{ name: 'showList', params: { id: l.id} }">{{l.title}}
-                                        </router-link>
-                                    </li>
-                                </ul>
+                                <input :key="n.id + 'checker'" type="checkbox" checked="checked" :id="n.id + 'checker'" class="checkinput"/>
+                                <div class="more-container" :key="n.id + 'child'">
+                                    <ul class="menu-list can-be-hidden" >
+                                        <li v-for="l in n.lists" :key="l.id">
+                                            <router-link :to="{ name: 'showList', params: { id: l.id} }">{{l.title}}
+                                            </router-link>
+                                        </li>
+                                    </ul>
+                                    <label class="hidden-hint" :for="n.id + 'checker'">
+                                        Show hidden lists ({{n.lists.length}})...
+                                    </label>
+                                </div>
                             </template>
                         </aside>
                     </div>
