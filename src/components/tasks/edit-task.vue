@@ -108,6 +108,27 @@
         </div>
 
         <div class="field">
+            <label class="label">Percent Done</label>
+            <div class="control">
+                <div class="select">
+                    <select v-model.number="taskEditTask.percentDone">
+                        <option value="0">0%</option>
+                        <option value="0.1">10%</option>
+                        <option value="0.2">20%</option>
+                        <option value="0.3">30%</option>
+                        <option value="0.4">40%</option>
+                        <option value="0.5">50%</option>
+                        <option value="0.6">60%</option>
+                        <option value="0.7">70%</option>
+                        <option value="0.8">80%</option>
+                        <option value="0.9">90%</option>
+                        <option value="1">100%</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="field">
             <label class="label">Color</label>
             <div class="control">
                 <verte

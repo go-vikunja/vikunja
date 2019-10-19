@@ -57,6 +57,7 @@ export default class TaskModel extends AbstractModel {
 			subtasks: [],
 			parentTaskID: 0,
 			hexColor: '',
+			percentDone: 0,
 
 			createdBy: UserModel,
 			created: 0,
