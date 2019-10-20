@@ -27,6 +27,22 @@ Vue.use(Router)
 
 export default new Router({
 	mode: 'history',
+	scrollBehavior (to, from, savedPosition) {
+		// If the user is using their forward/backward keys to navigate, we want to restore the scroll view
+		if(savedPosition) {
+			return savedPosition
+		}
+
+		// Scroll to anchor should still work
+		if(to.hash) {
+			return {
+				selector: to.hash
+			}
+		}
+
+		// Otherwise just scroll to the top
+		return { x: 0, y: 0 }
+	},
 	routes: [
 		{
 			path: '/',
