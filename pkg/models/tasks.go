@@ -184,7 +184,8 @@ type taskOptions struct {
 	endDate   time.Time
 }
 
-func getTasksForLists(lists []*List, opts *taskOptions) (tasks []*Task, err error) {
+func getRawTasksForLists(lists []*List, opts *taskOptions) (taskMap map[int64]*Task, err error) {
+
 	// Get all list IDs and get the tasks
 	var listIDs []int64
 	for _, l := range lists {
@@ -203,7 +204,7 @@ func getTasksForLists(lists []*List, opts *taskOptions) (tasks []*Task, err erro
 		orderby = "due_date_unix asc"
 	}
 
-	taskMap := make(map[int64]*Task)
+	taskMap = make(map[int64]*Task)
 
 	// Then return all tasks for that lists
 	if opts.startDate.Unix() != 0 || opts.endDate.Unix() != 0 {
@@ -234,6 +235,15 @@ func getTasksForLists(lists []*List, opts *taskOptions) (tasks []*Task, err erro
 			Find(&taskMap); err != nil {
 			return nil, err
 		}
+	}
+	return
+}
+
+func getTasksForLists(lists []*List, opts *taskOptions) (tasks []*Task, err error) {
+
+	taskMap, err := getRawTasksForLists(lists, opts)
+	if err != nil {
+		return nil, err
 	}
 
 	tasks, err = addMoreInfoToTasks(taskMap)
