@@ -51,8 +51,8 @@ All docs can be found on [the vikunja home page](https://vikunja.io/docs/).
 * [x] Get all your tasks for an interval (day/month/period)
 * [x] Labels for tasks
 * [x] Assign users to tasks
-* [ ] Attachments on tasks
-* [ ] More sharing features
+* [x] Attachments on tasks
+* [x] More sharing features
   * [x] Share with individual users
   * [x] Share via a world-readable link with or without password, like Nextcloud
 * [ ] SSE to notify multiple clients of updates when something was changed
@@ -66,7 +66,7 @@ All docs can be found on [the vikunja home page](https://vikunja.io/docs/).
 * [ ] Global limits for namespaces/lists/tasks
 * [ ] Disable registration, making an instance "invite-only" 
 
-See [Featurecreep.md](Featurecreep.md) for even more! (mostly ideas, for now)
+See [our roadmap](https://my.vikunja.cloud/share/QFyzYEmEYfSyQfTOmIRSwLUpkFjboaBqQCnaPmWd/auth) (hosted on Vikunja!) for even more!
 
 * [ ] [Mobile apps](https://code.vikunja.io/app) (seperate repo) *In Progress*
 * [ ] [Webapp](https://code.vikunja.io/frontend) (seperate repo) *In Progress*
