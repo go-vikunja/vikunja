@@ -8,6 +8,8 @@
 
 This is the web frontend for Vikunja, written in Vue.js.
 
+Take a look at [our roadmap](https://my.vikunja.cloud/share/UrdhKPqumxDXUbYpEGJLSIyNTwAnbBzVlwdDpRbv/auth) (hosted on Vikunja!) for a list of things we're currently working on!
+
 ## Docker
 
 There is a [docker image available](https://hub.docker.com/r/vikunja/api) with support for http/2 and aggressive caching enabled.
