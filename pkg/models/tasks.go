@@ -413,7 +413,10 @@ func addMoreInfoToTasks(taskMap map[int64]*Task) (tasks []*Task, err error) {
 	}
 
 	// Get all labels for all the tasks
-	labels, err := getLabelsByTaskIDs(&LabelByTaskIDsOptions{TaskIDs: taskIDs})
+	labels, err := getLabelsByTaskIDs(&LabelByTaskIDsOptions{
+		TaskIDs: taskIDs,
+		Page:    -1,
+	})
 	if err != nil {
 		return
 	}
