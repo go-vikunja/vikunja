@@ -18,7 +18,7 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [x] Find a nme
 * [x] Move packages to a better structure
 * [x] Swagger UI
-+ [x] Fix CORS
+* [x] Fix CORS
 * [x] Use echo.NewHTTPError instead of c.JSON(Message{})
 * [x] Better error messages when the model which is sent to the server is wrong
 * [x] Better error handling to show useful error messages and status codes
@@ -26,10 +26,10 @@ Sorry for some of them being in German, I'll tranlate them at some point.
 * [x] Docs for installing
 * [x] Tests for rights managemnt
 * [x] Rights checks:
-      * [x] Create lists
-      * [x] Edit lists
-      * [x] Add tasks
-      * [x] Edit tasks
+  * [x] Create lists
+  * [x] Edit lists
+  * [x] Add tasks
+  * [x] Edit tasks
 * [x] The -1 namespace should also be accessible seperately
 
 ### Short Term
