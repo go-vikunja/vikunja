@@ -54,8 +54,8 @@ service:
   # Vikunja will also look in this path for a config file, so you could provide only this variable to point to a folder
   # with a config file which will then be used.
   rootpath: <the path of the executable>
-  # The number of items which gets returned per page
-  pagecount: 50
+  # The max number of items which can be returned per page
+  maxitemsperpage: 50
   # If set to true, enables a /metrics endpoint for prometheus to collect metrics about the system
   # You'll need to use redis for this in order to enable common metrics over multiple nodes
   enablemetrics: false

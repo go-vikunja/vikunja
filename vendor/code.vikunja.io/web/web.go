@@ -31,7 +31,7 @@ type Rights interface {
 type CRUDable interface {
 	Create(Auth) error
 	ReadOne() error
-	ReadAll(string, Auth, int) (interface{}, error)
+	ReadAll(auth Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error)
 	Update() error
 	Delete() error
 }

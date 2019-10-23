@@ -131,20 +131,21 @@ type NamespaceWithLists struct {
 // @tags namespace
 // @Accept json
 // @Produce json
-// @Param p query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
+// @Param page query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
+// @Param per_page query int false "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page."
 // @Param s query string false "Search namespaces by name."
 // @Security JWTKeyAuth
 // @Success 200 {array} models.NamespaceWithLists "The Namespaces."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces [get]
-func (n *Namespace) ReadAll(search string, a web.Auth, page int) (interface{}, error) {
+func (n *Namespace) ReadAll(a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
 	if _, is := a.(*LinkSharing); is {
-		return nil, ErrGenericForbidden{}
+		return nil, 0, 0, ErrGenericForbidden{}
 	}
 
 	doer, err := getUserWithError(a)
 	if err != nil {
-		return nil, err
+		return nil, 0, 0, err
 	}
 
 	all := []*NamespaceWithLists{}
@@ -167,11 +168,11 @@ func (n *Namespace) ReadAll(search string, a web.Auth, page int) (interface{}, e
 		Or("namespaces.owner_id = ?", doer.ID).
 		Or("users_namespace.user_id = ?", doer.ID).
 		GroupBy("namespaces.id").
-		Limit(getLimitFromPageIndex(page)).
+		Limit(getLimitFromPageIndex(page, perPage)).
 		Where("namespaces.name LIKE ?", "%"+search+"%").
 		Find(&all)
 	if err != nil {
-		return all, err
+		return all, 0, 0, err
 	}
 
 	// Get all users
@@ -187,7 +188,7 @@ func (n *Namespace) ReadAll(search string, a web.Auth, page int) (interface{}, e
 		Find(&users)
 
 	if err != nil {
-		return all, err
+		return all, 0, 0, err
 	}
 
 	// Make a list of namespace ids
@@ -202,7 +203,7 @@ func (n *Namespace) ReadAll(search string, a web.Auth, page int) (interface{}, e
 		In("namespace_id", namespaceids).
 		Find(&lists)
 	if err != nil {
-		return all, err
+		return all, 0, 0, err
 	}
 
 	// Get all lists individually shared with our user (not via a namespace)
@@ -218,7 +219,7 @@ func (n *Namespace) ReadAll(search string, a web.Auth, page int) (interface{}, e
 		GroupBy("l.id").
 		Find(&individualLists)
 	if err != nil {
-		return nil, err
+		return nil, 0, 0, err
 	}
 
 	// Make the namespace -1 so we now later which one it was
@@ -234,9 +235,13 @@ func (n *Namespace) ReadAll(search string, a web.Auth, page int) (interface{}, e
 	}
 
 	// More details for the lists
-	AddListDetails(lists)
+	err = AddListDetails(lists)
+	if err != nil {
+		return nil, 0, 0, err
+	}
 
 	// Put objects in our namespace list
+	// TODO: Refactor this to use maps for better efficiency
 	for i, n := range all {
 
 		// Users
@@ -255,7 +260,22 @@ func (n *Namespace) ReadAll(search string, a web.Auth, page int) (interface{}, e
 		}
 	}
 
-	return all, nil
+	numberOfTotalItems, err = x.
+		Table("namespaces").
+		Join("LEFT", "team_namespaces", "namespaces.id = team_namespaces.namespace_id").
+		Join("LEFT", "team_members", "team_members.team_id = team_namespaces.team_id").
+		Join("LEFT", "users_namespace", "users_namespace.namespace_id = namespaces.id").
+		Where("team_members.user_id = ?", doer.ID).
+		Or("namespaces.owner_id = ?", doer.ID).
+		Or("users_namespace.user_id = ?", doer.ID).
+		GroupBy("namespaces.id").
+		Where("namespaces.name LIKE ?", "%"+search+"%").
+		Count(&NamespaceWithLists{})
+	if err != nil {
+		return all, 0, 0, err
+	}
+
+	return all, len(all), numberOfTotalItems, nil
 }
 
 // Create implements the creation method via the interface

@@ -139,22 +139,23 @@ func (tn *TeamNamespace) Delete() (err error) {
 // @Accept json
 // @Produce json
 // @Param id path int true "Namespace ID"
-// @Param p query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
+// @Param page query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
+// @Param per_page query int false "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page."
 // @Param s query string false "Search teams by its name."
 // @Security JWTKeyAuth
 // @Success 200 {array} models.TeamWithRight "The teams with the right they have."
 // @Failure 403 {object} code.vikunja.io/web.HTTPError "No right to see the namespace."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces/{id}/teams [get]
-func (tn *TeamNamespace) ReadAll(search string, a web.Auth, page int) (interface{}, error) {
+func (tn *TeamNamespace) ReadAll(a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
 	// Check if the user can read the namespace
 	n := Namespace{ID: tn.NamespaceID}
 	canRead, err := n.CanRead(a)
 	if err != nil {
-		return nil, err
+		return nil, 0, 0, err
 	}
 	if !canRead {
-		return nil, ErrNeedToHaveNamespaceReadAccess{NamespaceID: tn.NamespaceID, UserID: a.GetID()}
+		return nil, 0, 0, ErrNeedToHaveNamespaceReadAccess{NamespaceID: tn.NamespaceID, UserID: a.GetID()}
 	}
 
 	// Get the teams
@@ -163,11 +164,20 @@ func (tn *TeamNamespace) ReadAll(search string, a web.Auth, page int) (interface
 	err = x.Table("teams").
 		Join("INNER", "team_namespaces", "team_id = teams.id").
 		Where("team_namespaces.namespace_id = ?", tn.NamespaceID).
-		Limit(getLimitFromPageIndex(page)).
+		Limit(getLimitFromPageIndex(page, perPage)).
 		Where("teams.name LIKE ?", "%"+search+"%").
 		Find(&all)
+	if err != nil {
+		return nil, 0, 0, err
+	}
 
-	return all, err
+	numberOfTotalItems, err = x.Table("teams").
+		Join("INNER", "team_namespaces", "team_id = teams.id").
+		Where("team_namespaces.namespace_id = ?", tn.NamespaceID).
+		Where("teams.name LIKE ?", "%"+search+"%").
+		Count(&TeamWithRight{})
+
+	return all, len(all), numberOfTotalItems, err
 }
 
 // Update updates a team <-> namespace relation

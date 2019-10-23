@@ -145,22 +145,23 @@ func (nu *NamespaceUser) Delete() (err error) {
 // @Accept json
 // @Produce json
 // @Param id path int true "Namespace ID"
-// @Param p query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
+// @Param page query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
+// @Param per_page query int false "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page."
 // @Param s query string false "Search users by its name."
 // @Security JWTKeyAuth
 // @Success 200 {array} models.UserWithRight "The users with the right they have."
 // @Failure 403 {object} code.vikunja.io/web.HTTPError "No right to see the namespace."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces/{id}/users [get]
-func (nu *NamespaceUser) ReadAll(search string, a web.Auth, page int) (interface{}, error) {
+func (nu *NamespaceUser) ReadAll(a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
 	// Check if the user has access to the namespace
 	l := Namespace{ID: nu.NamespaceID}
 	canRead, err := l.CanRead(a)
 	if err != nil {
-		return nil, err
+		return nil, 0, 0, err
 	}
 	if !canRead {
-		return nil, ErrNeedToHaveNamespaceReadAccess{}
+		return nil, 0, 0, ErrNeedToHaveNamespaceReadAccess{}
 	}
 
 	// Get all users
@@ -168,16 +169,25 @@ func (nu *NamespaceUser) ReadAll(search string, a web.Auth, page int) (interface
 	err = x.
 		Join("INNER", "users_namespace", "user_id = users.id").
 		Where("users_namespace.namespace_id = ?", nu.NamespaceID).
-		Limit(getLimitFromPageIndex(page)).
+		Limit(getLimitFromPageIndex(page, perPage)).
 		Where("users.username LIKE ?", "%"+search+"%").
 		Find(&all)
+	if err != nil {
+		return nil, 0, 0, err
+	}
 
 	// Obfuscate all user emails
 	for _, u := range all {
 		u.Email = ""
 	}
 
-	return all, err
+	numberOfTotalItems, err = x.
+		Join("INNER", "users_namespace", "user_id = users.id").
+		Where("users_namespace.namespace_id = ?", nu.NamespaceID).
+		Where("users.username LIKE ?", "%"+search+"%").
+		Count(&UserWithRight{})
+
+	return all, len(all), numberOfTotalItems, err
 }
 
 // Update updates a user <-> namespace relation

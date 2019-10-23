@@ -219,25 +219,26 @@ func (t *Task) addNewAssigneeByID(newAssigneeID int64, list *List) (err error) {
 // @tags assignees
 // @Accept json
 // @Produce json
-// @Param p query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
+// @Param page query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
+// @Param per_page query int false "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page."
 // @Param s query string false "Search assignees by their username."
 // @Param taskID path int true "Task ID"
 // @Security JWTKeyAuth
 // @Success 200 {array} models.User "The assignees"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/assignees [get]
-func (la *TaskAssginee) ReadAll(search string, a web.Auth, page int) (interface{}, error) {
+func (la *TaskAssginee) ReadAll(a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
 	task, err := GetListSimplByTaskID(la.TaskID)
 	if err != nil {
-		return nil, err
+		return nil, 0, 0, err
 	}
 
 	can, err := task.CanRead(a)
 	if err != nil {
-		return nil, err
+		return nil, 0, 0, err
 	}
 	if !can {
-		return nil, ErrGenericForbidden{}
+		return nil, 0, 0, ErrGenericForbidden{}
 	}
 
 	var taskAssignees []*User
@@ -245,9 +246,18 @@ func (la *TaskAssginee) ReadAll(search string, a web.Auth, page int) (interface{
 		Select("users.*").
 		Join("INNER", "users", "task_assignees.user_id = users.id").
 		Where("task_id = ? AND users.username LIKE ?", la.TaskID, "%"+search+"%").
-		Limit(getLimitFromPageIndex(page)).
+		Limit(getLimitFromPageIndex(page, perPage)).
 		Find(&taskAssignees)
-	return taskAssignees, err
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	numberOfTotalItems, err = x.Table("task_assignees").
+		Select("users.*").
+		Join("INNER", "users", "task_assignees.user_id = users.id").
+		Where("task_id = ? AND users.username LIKE ?", la.TaskID, "%"+search+"%").
+		Count(&User{})
+	return taskAssignees, len(taskAssignees), numberOfTotalItems, err
 }
 
 // BulkAssignees is a helper struct used to update multiple assignees at once.

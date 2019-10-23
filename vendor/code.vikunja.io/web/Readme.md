@@ -60,7 +60,7 @@ This interface defines methods to Create/Read/ReadAll/Update/Delete something. I
 type CRUDable interface {
 	Create(Auth) error
 	ReadOne() error
-	ReadAll(string, Auth, int) (interface{}, error)
+	ReadAll(auth Auth, search string, page int64, perPage int64) (result interface{}, resultCount int64, numberOfPages int64, err error)
 	Update() error
 	Delete() error
 }
@@ -122,6 +122,13 @@ You can provide your own instance of `logger.Logger` (using [go-logging](https:/
 It will use this instance to log errors which are not better specified or things like users trying to do something they're
 not allowed to do and so on.
 
+#### MaxItemsPerPage
+
+Contains the maximum number of items per page.
+If the client requests more items than this, the number of items requested is set to this value.
+
+See [pagination](#pagination) for more.
+
 #### Full Example
 
 ```go
@@ -137,18 +144,35 @@ handler.SetLoggingProvider(&log.Log)
 
 ### Pagination
 
-When using the `ReadAll`-method, the third parameter contains the requested page. 
-Your function should return only the number of results corresponding to that page. 
-The number of items per page should be set by your application elewhere, most likely in its config.
+The `ReadAll`-method has a number of parameters:
 
-The number of items to return is then usually calculated with some method like `page_number * items_per_page`.
+```go
+ReadAll(auth Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfItems int64, err error)
+```
+
+The third parameter contains the requested page, the fourth parameter contains the number of items per page.
+You should calculate the limits accordingly.
+
+If the number of items per page are not set by the client, the web handler will pass the maximum number of items per page instead.
+This makes items per page optional for clients.
+Take a look at [the config section](#handler-config) for information on how to set that value.
+
+You need to return a number of things:
+
+* The result itself, usually a slice
+* The number of items you return in `result`. Most of the time, this is just `len(result)`. You need to return this value to make the clients aware if they requested a number of items > max items per page.
+* The total number of items available. We use the total number of items here and not the number pages so the implementations don't have to deal with calculating the number of pages from that. The total number of clients is then calculated and returned to the client, ite can then be used by the clients to build client-side pagination or similar.
+* An error.
+
+The number of items and the total number of pages available will be returned in the `x-pagination-total-pages` and `x-pagination-result-count` response headers.
+_You should put this in your api documentation._
 
 ### Search
 
 When using the `ReadAll`-method, the first parameter is a search term which should be used to search items of your struct. 
 You define the critera inside of that function.
 
-Users can then pass the `?s=something` parameter to the url to search, thats something you should put in your api documentation.
+Users can then pass the `?s=something` parameter to the url to search, _thats something you should put in your api documentation_.
 
 As the logic for "give me everything" and "give me everything where the name contains 'something'" is mostly the same, we made 
 the decision to design the function like this, in order to keep the places with mostly the same logic as few as possible. 

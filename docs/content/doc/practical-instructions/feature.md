@@ -27,7 +27,7 @@ You can feed this function directly into xorm's `Limit`-Function like so:
 
 {{< highlight golang >}}
 lists := []List{}
-err := x.Limit(getLimitFromPageIndex(pageIndex)).Find(&lists)
+err := x.Limit(getLimitFromPageIndex(pageIndex, itemsPerPage)).Find(&lists)
 {{< /highlight >}}
 
 // TODO: Add a full example from start to finish, like a tutorial on how to create a new endpoint?

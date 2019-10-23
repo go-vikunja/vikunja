@@ -89,7 +89,7 @@ func (vcls *VikunjaCaldavListStorage) GetResources(rpath string, withChildren bo
 	}
 
 	// Otherwise get all lists
-	thelists, err := vcls.list.ReadAll("", vcls.user, -1)
+	thelists, _, _, err := vcls.list.ReadAll(vcls.user, "", -1, 50)
 	if err != nil {
 		return nil, err
 	}

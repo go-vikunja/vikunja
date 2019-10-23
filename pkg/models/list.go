@@ -77,35 +77,36 @@ func GetListsByNamespaceID(nID int64, doer *User) (lists []*List, err error) {
 // @tags list
 // @Accept json
 // @Produce json
-// @Param p query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
+// @Param page query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
+// @Param per_page query int false "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page."
 // @Param s query string false "Search lists by title."
 // @Security JWTKeyAuth
 // @Success 200 {array} models.List "The lists"
 // @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have access to the list"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists [get]
-func (l *List) ReadAll(search string, a web.Auth, page int) (interface{}, error) {
+func (l *List) ReadAll(a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
 	// Check if we're dealing with a share auth
 	shareAuth, ok := a.(*LinkSharing)
 	if ok {
 		list := &List{ID: shareAuth.ListID}
 		err := list.GetSimpleByID()
 		if err != nil {
-			return nil, err
+			return nil, 0, 0, err
 		}
 		lists := []*List{list}
 		err = AddListDetails(lists)
-		return lists, err
+		return lists, 0, 0, err
 	}
 
-	lists, err := getRawListsForUser(search, &User{ID: a.GetID()}, page)
+	lists, resultCount, totalItems, err := getRawListsForUser(search, &User{ID: a.GetID()}, page, perPage)
 	if err != nil {
-		return nil, err
+		return nil, 0, 0, err
 	}
 
 	// Add more list details
 	err = AddListDetails(lists)
-	return lists, err
+	return lists, resultCount, totalItems, err
 }
 
 // ReadOne gets one list by its ID
@@ -177,10 +178,10 @@ func GetListSimplByTaskID(taskID int64) (l *List, err error) {
 }
 
 // Gets the lists only, without any tasks or so
-func getRawListsForUser(search string, u *User, page int) (lists []*List, err error) {
+func getRawListsForUser(search string, u *User, page int, perPage int) (lists []*List, resultCount int, totalItems int64, err error) {
 	fullUser, err := GetUserByID(u.ID)
 	if err != nil {
-		return lists, err
+		return nil, 0, 0, err
 	}
 
 	// Gets all Lists where the user is either owner or in a team which has access to the list
@@ -201,11 +202,33 @@ func getRawListsForUser(search string, u *User, page int) (lists []*List, err er
 		Or("ul.user_id = ?", fullUser.ID).
 		Or("un.user_id = ?", fullUser.ID).
 		GroupBy("l.id").
-		Limit(getLimitFromPageIndex(page)).
+		Limit(getLimitFromPageIndex(page, perPage)).
 		Where("l.title LIKE ?", "%"+search+"%").
 		Find(&lists)
+	if err != nil {
+		return nil, 0, 0, err
+	}
 
-	return lists, err
+	totalItems, err = x.
+		Table("list").
+		Alias("l").
+		Join("INNER", []string{"namespaces", "n"}, "l.namespace_id = n.id").
+		Join("LEFT", []string{"team_namespaces", "tn"}, "tn.namespace_id = n.id").
+		Join("LEFT", []string{"team_members", "tm"}, "tm.team_id = tn.team_id").
+		Join("LEFT", []string{"team_list", "tl"}, "l.id = tl.list_id").
+		Join("LEFT", []string{"team_members", "tm2"}, "tm2.team_id = tl.team_id").
+		Join("LEFT", []string{"users_list", "ul"}, "ul.list_id = l.id").
+		Join("LEFT", []string{"users_namespace", "un"}, "un.namespace_id = l.namespace_id").
+		Where("tm.user_id = ?", fullUser.ID).
+		Or("tm2.user_id = ?", fullUser.ID).
+		Or("l.owner_id = ?", fullUser.ID).
+		Or("ul.user_id = ?", fullUser.ID).
+		Or("un.user_id = ?", fullUser.ID).
+		GroupBy("l.id").
+		Limit(getLimitFromPageIndex(page, perPage)).
+		Where("l.title LIKE ?", "%"+search+"%").
+		Count(&List{})
+	return lists, len(lists), totalItems, err
 }
 
 // AddListDetails adds owner user objects and list tasks to all lists in the slice

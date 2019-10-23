@@ -119,7 +119,7 @@ func TestTaskAttachment_NewAttachment(t *testing.T) {
 func TestTaskAttachment_ReadAll(t *testing.T) {
 	files.InitTestFileFixtures(t)
 	ta := &TaskAttachment{TaskID: 1}
-	as, err := ta.ReadAll("", &User{ID: 1}, 0)
+	as, _, _, err := ta.ReadAll(&User{ID: 1}, "", 0, 50)
 	attachments, _ := as.([]*TaskAttachment)
 	assert.NoError(t, err)
 	assert.Len(t, attachments, 3)

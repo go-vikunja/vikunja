@@ -100,21 +100,23 @@ func (ta *TaskAttachment) ReadOne() (err error) {
 // @Accept json
 // @Produce json
 // @Param id path int true "Task ID"
+// @Param page query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
+// @Param per_page query int false "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page."
 // @Security JWTKeyAuth
 // @Success 200 {array} models.TaskAttachment "All attachments for this task"
 // @Failure 403 {object} models.Message "No access to this task."
 // @Failure 404 {object} models.Message "The task does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{id}/attachments [get]
-func (ta *TaskAttachment) ReadAll(s string, a web.Auth, page int) (interface{}, error) {
+func (ta *TaskAttachment) ReadAll(a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
 	attachments := []*TaskAttachment{}
 
-	err := x.
-		Limit(getLimitFromPageIndex(page)).
+	err = x.
+		Limit(getLimitFromPageIndex(page, perPage)).
 		Where("task_id = ?", ta.TaskID).
 		Find(&attachments)
 	if err != nil {
-		return nil, err
+		return nil, 0, 0, err
 	}
 
 	fileIDs := make([]int64, 0, len(attachments))
@@ -127,13 +129,13 @@ func (ta *TaskAttachment) ReadAll(s string, a web.Auth, page int) (interface{}, 
 	fs := make(map[int64]*files.File)
 	err = x.In("id", fileIDs).Find(&fs)
 	if err != nil {
-		return nil, err
+		return nil, 0, 0, err
 	}
 
 	us := make(map[int64]*User)
 	err = x.In("id", userIDs).Find(&us)
 	if err != nil {
-		return nil, err
+		return nil, 0, 0, err
 	}
 
 	for _, r := range attachments {
@@ -146,7 +148,10 @@ func (ta *TaskAttachment) ReadAll(s string, a web.Auth, page int) (interface{}, 
 		r.CreatedBy = us[r.CreatedByID]
 	}
 
-	return attachments, err
+	numberOfTotalItems, err = x.
+		Where("task_id = ?", ta.TaskID).
+		Count(&TaskAttachment{})
+	return attachments, len(attachments), numberOfTotalItems, err
 }
 
 // Delete removes an attachment

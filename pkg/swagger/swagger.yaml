@@ -833,7 +833,7 @@ definitions:
       link_sharing_enabled:
         type: boolean
       max_file_size:
-        type: integer
+        type: string
       motd:
         type: string
       version:
@@ -845,7 +845,10 @@ info:
     name: General Vikunja contact
     url: http://vikunja.io/en/contact/
   description: |-
-    This is the documentation for the [Vikunja](http://vikunja.io) API. Vikunja is a cross-plattform Todo-application with a lot of features, such as sharing lists with users or teams. <!-- ReDoc-Inject: <security-definitions> -->
+    # Pagination
+    Every endpoint capable of pagination will return two headers:
+    * `x-pagination-total-pages`: The total number of available pages for this request
+    * `x-pagination-result-count`: The number of items returned for this request.
     # Authorization
     **JWT-Auth:** Main authorization method, used for most of the requests. Needs `Authorization: Bearer <jwt-token>`-header to authenticate successfully.
 
@@ -880,7 +883,12 @@ paths:
       - description: The page number. Used for pagination. If not provided, the first
           page of results is returned.
         in: query
-        name: p
+        name: page
+        type: integer
+      - description: The maximum number of items per page. Note this parameter is
+          limited by the configured maximum of items per page.
+        in: query
+        name: per_page
         type: integer
       - description: Search labels by label text.
         in: query
@@ -1061,7 +1069,12 @@ paths:
       - description: The page number. Used for pagination. If not provided, the first
           page of results is returned.
         in: query
-        name: p
+        name: page
+        type: integer
+      - description: The maximum number of items per page. Note this parameter is
+          limited by the configured maximum of items per page.
+        in: query
+        name: per_page
         type: integer
       - description: Search lists by title.
         in: query
@@ -1290,7 +1303,12 @@ paths:
       - description: The page number. Used for pagination. If not provided, the first
           page of results is returned.
         in: query
-        name: p
+        name: page
+        type: integer
+      - description: The maximum number of items per page. Note this parameter is
+          limited by the configured maximum of items per page.
+        in: query
+        name: per_page
         type: integer
       - description: Search teams by its name.
         in: query
@@ -1377,7 +1395,12 @@ paths:
       - description: The page number. Used for pagination. If not provided, the first
           page of results is returned.
         in: query
-        name: p
+        name: page
+        type: integer
+      - description: The maximum number of items per page. Note this parameter is
+          limited by the configured maximum of items per page.
+        in: query
+        name: per_page
         type: integer
       - description: Search users by its name.
         in: query
@@ -1464,7 +1487,12 @@ paths:
       - description: The page number. Used for pagination. If not provided, the first
           page of results is returned.
         in: query
-        name: p
+        name: page
+        type: integer
+      - description: The maximum number of items per page. Note this parameter is
+          limited by the configured maximum of items per page.
+        in: query
+        name: per_page
         type: integer
       - description: Search shares by hash.
         in: query
@@ -1868,7 +1896,12 @@ paths:
       - description: The page number. Used for pagination. If not provided, the first
           page of results is returned.
         in: query
-        name: p
+        name: page
+        type: integer
+      - description: The maximum number of items per page. Note this parameter is
+          limited by the configured maximum of items per page.
+        in: query
+        name: per_page
         type: integer
       - description: Search namespaces by name.
         in: query
@@ -2043,7 +2076,12 @@ paths:
       - description: The page number. Used for pagination. If not provided, the first
           page of results is returned.
         in: query
-        name: p
+        name: page
+        type: integer
+      - description: The maximum number of items per page. Note this parameter is
+          limited by the configured maximum of items per page.
+        in: query
+        name: per_page
         type: integer
       - description: Search teams by its name.
         in: query
@@ -2131,7 +2169,12 @@ paths:
       - description: The page number. Used for pagination. If not provided, the first
           page of results is returned.
         in: query
-        name: p
+        name: page
+        type: integer
+      - description: The maximum number of items per page. Note this parameter is
+          limited by the configured maximum of items per page.
+        in: query
+        name: per_page
         type: integer
       - description: Search users by its name.
         in: query
@@ -2567,6 +2610,16 @@ paths:
         name: id
         required: true
         type: integer
+      - description: The page number. Used for pagination. If not provided, the first
+          page of results is returned.
+        in: query
+        name: page
+        type: integer
+      - description: The maximum number of items per page. Note this parameter is
+          limited by the configured maximum of items per page.
+        in: query
+        name: per_page
+        type: integer
       produces:
       - application/json
       responses:
@@ -2724,7 +2777,12 @@ paths:
       - description: The page number. Used for pagination. If not provided, the first
           page of results is returned.
         in: query
-        name: p
+        name: page
+        type: integer
+      - description: The maximum number of items per page. Note this parameter is
+          limited by the configured maximum of items per page.
+        in: query
+        name: per_page
         type: integer
       - description: Search labels by label text.
         in: query
@@ -2844,7 +2902,12 @@ paths:
       - description: The page number. Used for pagination. If not provided, the first
           page of results is returned.
         in: query
-        name: p
+        name: page
+        type: integer
+      - description: The maximum number of items per page. Note this parameter is
+          limited by the configured maximum of items per page.
+        in: query
+        name: per_page
         type: integer
       - description: Search assignees by their username.
         in: query
@@ -3119,7 +3182,12 @@ paths:
       - description: The page number. Used for pagination. If not provided, the first
           page of results is returned.
         in: query
-        name: p
+        name: page
+        type: integer
+      - description: The maximum number of items per page. Note this parameter is
+          limited by the configured maximum of items per page.
+        in: query
+        name: per_page
         type: integer
       - description: Search tasks by task text.
         in: query
@@ -3209,7 +3277,12 @@ paths:
       - description: The page number. Used for pagination. If not provided, the first
           page of results is returned.
         in: query
-        name: p
+        name: page
+        type: integer
+      - description: The maximum number of items per page. Note this parameter is
+          limited by the configured maximum of items per page.
+        in: query
+        name: per_page
         type: integer
       - description: Search teams by its name.
         in: query

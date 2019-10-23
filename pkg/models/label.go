@@ -124,15 +124,16 @@ func (l *Label) Delete() (err error) {
 // @tags labels
 // @Accept json
 // @Produce json
-// @Param p query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
+// @Param page query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
+// @Param per_page query int false "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page."
 // @Param s query string false "Search labels by label text."
 // @Security JWTKeyAuth
 // @Success 200 {array} models.Label "The labels"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /labels [get]
-func (l *Label) ReadAll(search string, a web.Auth, page int) (ls interface{}, err error) {
+func (l *Label) ReadAll(a web.Auth, search string, page int, perPage int) (ls interface{}, resultCount int, numberOfEntries int64, err error) {
 	if _, is := a.(*LinkSharing); is {
-		return nil, ErrGenericForbidden{}
+		return nil, 0, 0, ErrGenericForbidden{}
 	}
 
 	u := &User{ID: a.GetID()}
@@ -140,13 +141,15 @@ func (l *Label) ReadAll(search string, a web.Auth, page int) (ls interface{}, er
 	// Get all tasks
 	taskIDs, err := getUserTaskIDs(u)
 	if err != nil {
-		return nil, err
+		return nil, 0, 0, err
 	}
 
 	return getLabelsByTaskIDs(&LabelByTaskIDsOptions{
 		Search:              search,
 		User:                u,
 		TaskIDs:             taskIDs,
+		Page:                page,
+		PerPage:             perPage,
 		GetUnusedLabels:     true,
 		GroupByLabelIDsOnly: true,
 	})
@@ -198,15 +201,17 @@ func getLabelByIDSimple(labelID int64) (*Label, error) {
 func getUserTaskIDs(u *User) (taskIDs []int64, err error) {
 
 	// Get all lists
-	lists, err := getRawListsForUser("", u, -1)
+	lists, _, _, err := getRawListsForUser("", u, -1, 0)
 	if err != nil {
 		return nil, err
 	}
 
-	tasks, err := getRawTasksForLists(lists, &taskOptions{
+	tasks, _, _, err := getRawTasksForLists(lists, &taskOptions{
 		startDate: time.Unix(0, 0),
 		endDate:   time.Unix(0, 0),
 		sortby:    SortTasksByUnsorted,
+		page:      -1,
+		perPage:   0,
 	})
 	if err != nil {
 		return nil, err

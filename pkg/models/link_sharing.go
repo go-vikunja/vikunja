@@ -136,29 +136,30 @@ func (share *LinkSharing) ReadOne() (err error) {
 // @Accept json
 // @Produce json
 // @Param list path int true "List ID"
-// @Param p query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
+// @Param page query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
+// @Param per_page query int false "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page."
 // @Param s query string false "Search shares by hash."
 // @Security JWTKeyAuth
 // @Success 200 {array} models.LinkSharing "The share links"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{list}/shares [get]
-func (share *LinkSharing) ReadAll(search string, a web.Auth, page int) (interface{}, error) {
+func (share *LinkSharing) ReadAll(a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
 	list := &List{ID: share.ListID}
 	can, err := list.CanRead(a)
 	if err != nil {
-		return nil, err
+		return nil, 0, 0, err
 	}
 	if !can {
-		return nil, ErrGenericForbidden{}
+		return nil, 0, 0, ErrGenericForbidden{}
 	}
 
 	var shares []*LinkSharing
 	err = x.
 		Where("list_id = ? AND hash LIKE ?", share.ListID, "%"+search+"%").
-		Limit(getLimitFromPageIndex(page)).
+		Limit(getLimitFromPageIndex(page, perPage)).
 		Find(&shares)
 	if err != nil {
-		return nil, err
+		return nil, 0, 0, err
 	}
 
 	// Find all users and add them
@@ -170,14 +171,22 @@ func (share *LinkSharing) ReadAll(search string, a web.Auth, page int) (interfac
 	users := make(map[int64]*User)
 	err = x.In("id", userIDs).Find(&users)
 	if err != nil {
-		return nil, err
+		return nil, 0, 0, err
 	}
 
 	for _, s := range shares {
 		s.SharedBy = users[s.SharedByID]
 	}
 
-	return shares, err
+	// Total count
+	totalItems, err = x.
+		Where("list_id = ? AND hash LIKE ?", share.ListID, "%"+search+"%").
+		Count(&LinkSharing{})
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	return shares, len(shares), totalItems, err
 }
 
 // Delete removes a link share

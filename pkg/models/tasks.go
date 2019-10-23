@@ -123,7 +123,8 @@ const (
 // @tags task
 // @Accept json
 // @Produce json
-// @Param p query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
+// @Param page query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
+// @Param per_page query int false "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page."
 // @Param s query string false "Search tasks by task text."
 // @Param sort query string false "The sorting parameter. Possible values to sort by are priority, prioritydesc, priorityasc, duedate, duedatedesc, duedateasc."
 // @Param startdate query int false "The start date parameter to filter by. Expects a unix timestamp. If no end date, but a start date is specified, the end date is set to the current time."
@@ -132,7 +133,7 @@ const (
 // @Success 200 {array} models.Task "The tasks"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/all [get]
-func (t *Task) ReadAll(search string, a web.Auth, page int) (interface{}, error) {
+func (t *Task) ReadAll(a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
 	var sortby SortBy
 	switch t.Sorting {
 	case "priority":
@@ -156,6 +157,8 @@ func (t *Task) ReadAll(search string, a web.Auth, page int) (interface{}, error)
 		sortby:    sortby,
 		startDate: time.Unix(t.StartDateSortUnix, 0),
 		endDate:   time.Unix(t.EndDateSortUnix, 0),
+		page:      page,
+		perPage:   perPage,
 	}
 
 	shareAuth, is := a.(*LinkSharing)
@@ -163,15 +166,15 @@ func (t *Task) ReadAll(search string, a web.Auth, page int) (interface{}, error)
 		list := &List{ID: shareAuth.ListID}
 		err := list.GetSimpleByID()
 		if err != nil {
-			return nil, err
+			return nil, 0, 0, err
 		}
 		return getTasksForLists([]*List{list}, taskopts)
 	}
 
 	// Get all lists for the user
-	lists, err := getRawListsForUser("", &User{ID: a.GetID()}, page)
+	lists, _, _, err := getRawListsForUser("", &User{ID: a.GetID()}, -1, 0)
 	if err != nil {
-		return nil, err
+		return nil, 0, 0, err
 	}
 
 	return getTasksForLists(lists, taskopts)
@@ -182,9 +185,11 @@ type taskOptions struct {
 	sortby    SortBy
 	startDate time.Time
 	endDate   time.Time
+	page      int
+	perPage   int
 }
 
-func getRawTasksForLists(lists []*List, opts *taskOptions) (taskMap map[int64]*Task, err error) {
+func getRawTasksForLists(lists []*List, opts *taskOptions) (taskMap map[int64]*Task, resultCount int, totalItems int64, err error) {
 
 	// Get all list IDs and get the tasks
 	var listIDs []int64
@@ -219,42 +224,62 @@ func getRawTasksForLists(lists []*List, opts *taskOptions) (taskMap map[int64]*T
 			endDateUnix = opts.endDate.Unix()
 		}
 
-		if err := x.In("list_id", listIDs).
+		err := x.In("list_id", listIDs).
 			Where("text LIKE ?", "%"+opts.search+"%").
 			And("((due_date_unix BETWEEN ? AND ?) OR "+
 				"(start_date_unix BETWEEN ? and ?) OR "+
 				"(end_date_unix BETWEEN ? and ?))", startDateUnix, endDateUnix, startDateUnix, endDateUnix, startDateUnix, endDateUnix).
 			OrderBy(orderby).
-			Find(&taskMap); err != nil {
-			return nil, err
+			Limit(getLimitFromPageIndex(opts.page, opts.perPage)).
+			Find(&taskMap)
+		if err != nil {
+			return nil, 0, 0, err
+		}
+
+		totalItems, err = x.In("list_id", listIDs).
+			Where("text LIKE ?", "%"+opts.search+"%").
+			And("((due_date_unix BETWEEN ? AND ?) OR "+
+				"(start_date_unix BETWEEN ? and ?) OR "+
+				"(end_date_unix BETWEEN ? and ?))", startDateUnix, endDateUnix, startDateUnix, endDateUnix, startDateUnix, endDateUnix).
+			Count(&Task{})
+		if err != nil {
+			return nil, 0, 0, err
 		}
 	} else {
-		if err := x.In("list_id", listIDs).
+		err := x.In("list_id", listIDs).
 			Where("text LIKE ?", "%"+opts.search+"%").
 			OrderBy(orderby).
-			Find(&taskMap); err != nil {
-			return nil, err
+			Limit(getLimitFromPageIndex(opts.page, opts.perPage)).
+			Find(&taskMap)
+		if err != nil {
+			return nil, 0, 0, err
+		}
+		totalItems, err = x.In("list_id", listIDs).
+			Where("text LIKE ?", "%"+opts.search+"%").
+			Count(&Task{})
+		if err != nil {
+			return nil, 0, 0, err
 		}
 	}
-	return
+	return taskMap, len(taskMap), totalItems, nil
 }
 
-func getTasksForLists(lists []*List, opts *taskOptions) (tasks []*Task, err error) {
+func getTasksForLists(lists []*List, opts *taskOptions) (tasks []*Task, resultCount int, totalItems int64, err error) {
 
-	taskMap, err := getRawTasksForLists(lists, opts)
+	taskMap, resultCount, totalItems, err := getRawTasksForLists(lists, opts)
 	if err != nil {
-		return nil, err
+		return nil, 0, 0, err
 	}
 
 	tasks, err = addMoreInfoToTasks(taskMap)
 	if err != nil {
-		return nil, err
+		return nil, 0, 0, err
 	}
 	// Because the list is sorted by id which we don't want (since we're dealing with maps)
 	// we have to manually sort the tasks again here.
 	sortTasks(tasks, opts.sortby)
 
-	return tasks, err
+	return tasks, resultCount, totalItems, err
 }
 
 func sortTasks(tasks []*Task, by SortBy) {
@@ -339,7 +364,7 @@ func GetTaskByID(listTaskID int64) (listTask Task, err error) {
 	}
 
 	// Get task labels
-	taskLabels, err := getLabelsByTaskIDs(&LabelByTaskIDsOptions{
+	taskLabels, _, _, err := getLabelsByTaskIDs(&LabelByTaskIDsOptions{
 		TaskIDs: []int64{listTaskID},
 	})
 	if err != nil {
@@ -413,7 +438,7 @@ func addMoreInfoToTasks(taskMap map[int64]*Task) (tasks []*Task, err error) {
 	}
 
 	// Get all labels for all the tasks
-	labels, err := getLabelsByTaskIDs(&LabelByTaskIDsOptions{
+	labels, _, _, err := getLabelsByTaskIDs(&LabelByTaskIDsOptions{
 		TaskIDs: taskIDs,
 		Page:    -1,
 	})

@@ -135,27 +135,37 @@ func (t *Team) ReadOne() (err error) {
 // @tags team
 // @Accept json
 // @Produce json
-// @Param p query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
+// @Param page query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
+// @Param per_page query int false "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page."
 // @Param s query string false "Search teams by its name."
 // @Security JWTKeyAuth
 // @Success 200 {array} models.Team "The teams."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /teams [get]
-func (t *Team) ReadAll(search string, a web.Auth, page int) (interface{}, error) {
+func (t *Team) ReadAll(a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
 	if _, is := a.(*LinkSharing); is {
-		return nil, ErrGenericForbidden{}
+		return nil, 0, 0, ErrGenericForbidden{}
 	}
 
 	all := []*Team{}
-	err := x.Select("teams.*").
+	err = x.Select("teams.*").
 		Table("teams").
 		Join("INNER", "team_members", "team_members.team_id = teams.id").
 		Where("team_members.user_id = ?", a.GetID()).
-		Limit(getLimitFromPageIndex(page)).
+		Limit(getLimitFromPageIndex(page, perPage)).
 		Where("teams.name LIKE ?", "%"+search+"%").
 		Find(&all)
+	if err != nil {
+		return nil, 0, 0, err
+	}
 
-	return all, err
+	numberOfTotalItems, err = x.
+		Table("teams").
+		Join("INNER", "team_members", "team_members.team_id = teams.id").
+		Where("team_members.user_id = ?", a.GetID()).
+		Where("teams.name LIKE ?", "%"+search+"%").
+		Count(&Team{})
+	return all, len(all), numberOfTotalItems, err
 }
 
 // Create is the handler to create a team

@@ -159,22 +159,23 @@ func (lu *ListUser) Delete() (err error) {
 // @Accept json
 // @Produce json
 // @Param id path int true "List ID"
-// @Param p query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
+// @Param page query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
+// @Param per_page query int false "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page."
 // @Param s query string false "Search users by its name."
 // @Security JWTKeyAuth
 // @Success 200 {array} models.UserWithRight "The users with the right they have."
 // @Failure 403 {object} code.vikunja.io/web.HTTPError "No right to see the list."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{id}/users [get]
-func (lu *ListUser) ReadAll(search string, a web.Auth, page int) (interface{}, error) {
+func (lu *ListUser) ReadAll(a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
 	// Check if the user has access to the list
 	l := &List{ID: lu.ListID}
 	canRead, err := l.CanRead(a)
 	if err != nil {
-		return nil, err
+		return nil, 0, 0, err
 	}
 	if !canRead {
-		return nil, ErrNeedToHaveListReadAccess{UserID: a.GetID(), ListID: lu.ListID}
+		return nil, 0, 0, ErrNeedToHaveListReadAccess{UserID: a.GetID(), ListID: lu.ListID}
 	}
 
 	// Get all users
@@ -182,16 +183,25 @@ func (lu *ListUser) ReadAll(search string, a web.Auth, page int) (interface{}, e
 	err = x.
 		Join("INNER", "users_list", "user_id = users.id").
 		Where("users_list.list_id = ?", lu.ListID).
-		Limit(getLimitFromPageIndex(page)).
+		Limit(getLimitFromPageIndex(page, perPage)).
 		Where("users.username LIKE ?", "%"+search+"%").
 		Find(&all)
+	if err != nil {
+		return nil, 0, 0, err
+	}
 
 	// Obfuscate all user emails
 	for _, u := range all {
 		u.Email = ""
 	}
 
-	return all, err
+	numberOfTotalItems, err = x.
+		Join("INNER", "users_list", "user_id = users.id").
+		Where("users_list.list_id = ?", lu.ListID).
+		Where("users.username LIKE ?", "%"+search+"%").
+		Count(&UserWithRight{})
+
+	return all, len(all), numberOfTotalItems, err
 }
 
 // Update updates a user <-> list relation

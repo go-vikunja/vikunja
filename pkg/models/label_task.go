@@ -101,21 +101,22 @@ func (lt *LabelTask) Create(a web.Auth) (err error) {
 // @Accept json
 // @Produce json
 // @Param task path int true "Task ID"
-// @Param p query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
+// @Param page query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
+// @Param per_page query int false "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page."
 // @Param s query string false "Search labels by label text."
 // @Security JWTKeyAuth
 // @Success 200 {array} models.Label "The labels"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{task}/labels [get]
-func (lt *LabelTask) ReadAll(search string, a web.Auth, page int) (labels interface{}, err error) {
+func (lt *LabelTask) ReadAll(a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
 	// Check if the user has the right to see the task
 	task := Task{ID: lt.TaskID}
 	canRead, err := task.CanRead(a)
 	if err != nil {
-		return nil, err
+		return nil, 0, 0, err
 	}
 	if !canRead {
-		return nil, ErrNoRightToSeeTask{lt.TaskID, a.GetID()}
+		return nil, 0, 0, ErrNoRightToSeeTask{lt.TaskID, a.GetID()}
 	}
 
 	return getLabelsByTaskIDs(&LabelByTaskIDsOptions{
@@ -137,6 +138,7 @@ type LabelByTaskIDsOptions struct {
 	User                *User
 	Search              string
 	Page                int
+	PerPage             int
 	TaskIDs             []int64
 	GetUnusedLabels     bool
 	GroupByLabelIDsOnly bool
@@ -144,7 +146,7 @@ type LabelByTaskIDsOptions struct {
 
 // Helper function to get all labels for a set of tasks
 // Used when getting all labels for one task as well when getting all lables
-func getLabelsByTaskIDs(opts *LabelByTaskIDsOptions) (ls []*labelWithTaskID, err error) {
+func getLabelsByTaskIDs(opts *LabelByTaskIDsOptions) (ls []*labelWithTaskID, resultCount int, totalEntries int64, err error) {
 	// Include unused labels. Needed to be able to show a list of all unused labels a user
 	// has access to.
 	var uidOrNil interface{}
@@ -172,10 +174,10 @@ func getLabelsByTaskIDs(opts *LabelByTaskIDsOptions) (ls []*labelWithTaskID, err
 		Or(builder.In("label_task.task_id", opts.TaskIDs)).
 		And("labels.title LIKE ?", "%"+opts.Search+"%").
 		GroupBy(groupBy).
-		Limit(getLimitFromPageIndex(opts.Page)).
+		Limit(getLimitFromPageIndex(opts.Page, opts.PerPage)).
 		Find(&labels)
 	if err != nil {
-		return nil, err
+		return nil, 0, 0, err
 	}
 
 	// Get all created by users
@@ -186,7 +188,7 @@ func getLabelsByTaskIDs(opts *LabelByTaskIDsOptions) (ls []*labelWithTaskID, err
 	users := make(map[int64]*User)
 	err = x.In("id", userids).Find(&users)
 	if err != nil {
-		return nil, err
+		return nil, 0, 0, err
 	}
 
 	// Obfuscate all user emails
@@ -199,7 +201,19 @@ func getLabelsByTaskIDs(opts *LabelByTaskIDsOptions) (ls []*labelWithTaskID, err
 		labels[in].CreatedBy = users[l.CreatedByID]
 	}
 
-	return labels, err
+	// Get the total number of entries
+	totalEntries, err = x.Table("labels").
+		Join("LEFT", "label_task", "label_task.label_id = labels.id").
+		Where(requestOrNil, uidOrNil).
+		Or(builder.In("label_task.task_id", opts.TaskIDs)).
+		And("labels.title LIKE ?", "%"+opts.Search+"%").
+		GroupBy(groupBy).
+		Count(&Label{})
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	return labels, len(labels), totalEntries, err
 }
 
 // Create or update a bunch of task labels

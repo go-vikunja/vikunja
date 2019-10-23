@@ -69,14 +69,18 @@ func SetEngine() (err error) {
 	return nil
 }
 
-func getLimitFromPageIndex(page int) (limit, start int) {
+func getLimitFromPageIndex(page int, perPage int) (limit, start int) {
 
 	// Get everything when page index is -1
 	if page < 0 {
 		return 0, 0
 	}
 
-	limit = config.ServicePageCount.GetInt()
+	limit = config.ServiceMaxItemsPerPage.GetInt()
+	if perPage > 0 {
+		limit = perPage
+	}
+
 	start = limit * (page - 1)
 	return
 }

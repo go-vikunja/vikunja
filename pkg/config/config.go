@@ -38,7 +38,7 @@ const (
 	ServiceFrontendurl       Key = `service.frontendurl`
 	ServiceEnableCaldav      Key = `service.enablecaldav`
 	ServiceRootpath          Key = `service.rootpath`
-	ServicePageCount         Key = `service.pagecount`
+	ServiceMaxItemsPerPage   Key = `service.maxitemsperpage`
 	ServiceEnableMetrics     Key = `service.enablemetrics`
 	ServiceMotd              Key = `service.motd`
 	ServiceEnableLinkSharing Key = `service.enablelinksharing`
@@ -146,7 +146,7 @@ func InitDefaultConfig() {
 	}
 	exPath := filepath.Dir(ex)
 	ServiceRootpath.setDefault(exPath)
-	ServicePageCount.setDefault(50)
+	ServiceMaxItemsPerPage.setDefault(50)
 	ServiceEnableMetrics.setDefault(false)
 	ServiceMotd.setDefault("")
 	ServiceEnableLinkSharing.setDefault(true)

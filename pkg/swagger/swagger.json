@@ -1,7 +1,7 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "This is the documentation for the [Vikunja](http://vikunja.io) API. Vikunja is a cross-plattform Todo-application with a lot of features, such as sharing lists with users or teams. \u003c!-- ReDoc-Inject: \u003csecurity-definitions\u003e --\u003e\n# Authorization\n**JWT-Auth:** Main authorization method, used for most of the requests. Needs `Authorization: Bearer \u003cjwt-token\u003e`-header to authenticate successfully.\n\n**BasicAuth:** Only used when requesting tasks via caldav.\n\u003c!-- ReDoc-Inject: \u003csecurity-definitions\u003e --\u003e",
+        "description": "# Pagination\nEvery endpoint capable of pagination will return two headers:\n* `x-pagination-total-pages`: The total number of available pages for this request\n* `x-pagination-result-count`: The number of items returned for this request.\n# Authorization\n**JWT-Auth:** Main authorization method, used for most of the requests. Needs `Authorization: Bearer \u003cjwt-token\u003e`-header to authenticate successfully.\n\n**BasicAuth:** Only used when requesting tasks via caldav.\n\u003c!-- ReDoc-Inject: \u003csecurity-definitions\u003e --\u003e",
         "title": "Vikunja API",
         "contact": {
             "name": "General Vikunja contact",
@@ -57,7 +57,13 @@
                     {
                         "type": "integer",
                         "description": "The page number. Used for pagination. If not provided, the first page of results is returned.",
-                        "name": "p",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page.",
+                        "name": "per_page",
                         "in": "query"
                     },
                     {
@@ -335,7 +341,13 @@
                     {
                         "type": "integer",
                         "description": "The page number. Used for pagination. If not provided, the first page of results is returned.",
-                        "name": "p",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page.",
+                        "name": "per_page",
                         "in": "query"
                     },
                     {
@@ -688,7 +700,13 @@
                     {
                         "type": "integer",
                         "description": "The page number. Used for pagination. If not provided, the first page of results is returned.",
-                        "name": "p",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page.",
+                        "name": "per_page",
                         "in": "query"
                     },
                     {
@@ -821,7 +839,13 @@
                     {
                         "type": "integer",
                         "description": "The page number. Used for pagination. If not provided, the first page of results is returned.",
-                        "name": "p",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page.",
+                        "name": "per_page",
                         "in": "query"
                     },
                     {
@@ -1212,7 +1236,13 @@
                     {
                         "type": "integer",
                         "description": "The page number. Used for pagination. If not provided, the first page of results is returned.",
-                        "name": "p",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page.",
+                        "name": "per_page",
                         "in": "query"
                     },
                     {
@@ -1566,7 +1596,13 @@
                     {
                         "type": "integer",
                         "description": "The page number. Used for pagination. If not provided, the first page of results is returned.",
-                        "name": "p",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page.",
+                        "name": "per_page",
                         "in": "query"
                     },
                     {
@@ -1837,7 +1873,13 @@
                     {
                         "type": "integer",
                         "description": "The page number. Used for pagination. If not provided, the first page of results is returned.",
-                        "name": "p",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page.",
+                        "name": "per_page",
                         "in": "query"
                     },
                     {
@@ -1970,7 +2012,13 @@
                     {
                         "type": "integer",
                         "description": "The page number. Used for pagination. If not provided, the first page of results is returned.",
-                        "name": "p",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page.",
+                        "name": "per_page",
                         "in": "query"
                     },
                     {
@@ -2510,7 +2558,13 @@
                     {
                         "type": "integer",
                         "description": "The page number. Used for pagination. If not provided, the first page of results is returned.",
-                        "name": "p",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page.",
+                        "name": "per_page",
                         "in": "query"
                     },
                     {
@@ -2755,6 +2809,18 @@
                         "name": "id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "The page number. Used for pagination. If not provided, the first page of results is returned.",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page.",
+                        "name": "per_page",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -2989,7 +3055,13 @@
                     {
                         "type": "integer",
                         "description": "The page number. Used for pagination. If not provided, the first page of results is returned.",
-                        "name": "p",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page.",
+                        "name": "per_page",
                         "in": "query"
                     },
                     {
@@ -3406,7 +3478,13 @@
                     {
                         "type": "integer",
                         "description": "The page number. Used for pagination. If not provided, the first page of results is returned.",
-                        "name": "p",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page.",
+                        "name": "per_page",
                         "in": "query"
                     },
                     {
@@ -3588,7 +3666,13 @@
                     {
                         "type": "integer",
                         "description": "The page number. Used for pagination. If not provided, the first page of results is returned.",
-                        "name": "p",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page.",
+                        "name": "per_page",
                         "in": "query"
                     },
                     {
@@ -5226,7 +5310,7 @@
                     "type": "boolean"
                 },
                 "max_file_size": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "motd": {
                     "type": "string"

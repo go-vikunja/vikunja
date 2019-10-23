@@ -69,27 +69,27 @@ func TestTeamList(t *testing.T) {
 	assert.True(t, IsErrListDoesNotExist(err))
 
 	// Test Read all
-	teams, err := tl.ReadAll("", u, 1)
+	teams, _, _, err := tl.ReadAll(u, "", 1, 50)
 	assert.NoError(t, err)
 	assert.Equal(t, reflect.TypeOf(teams).Kind(), reflect.Slice)
 	s := reflect.ValueOf(teams)
 	assert.Equal(t, s.Len(), 1)
 
 	// Test Read all for nonexistant list
-	_, err = tl4.ReadAll("", u, 1)
+	_, _, _, err = tl4.ReadAll(u, "", 1, 50)
 	assert.Error(t, err)
 	assert.True(t, IsErrListDoesNotExist(err))
 
 	// Test Read all for a list where the user is owner of the namespace this list belongs to
 	tl5 := tl
 	tl5.ListID = 2
-	_, err = tl5.ReadAll("", u, 1)
+	_, _, _, err = tl5.ReadAll(u, "", 1, 50)
 	assert.NoError(t, err)
 
 	// Test read all for a list where the user not has access
 	tl6 := tl
 	tl6.ListID = 5
-	_, err = tl6.ReadAll("", u, 1)
+	_, _, _, err = tl6.ReadAll(u, "", 1, 50)
 	assert.Error(t, err)
 	assert.True(t, IsErrNeedToHaveListReadAccess(err))
 

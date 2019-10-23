@@ -16,6 +16,11 @@
 
 // @title Vikunja API
 // @description This is the documentation for the [Vikunja](http://vikunja.io) API. Vikunja is a cross-plattform Todo-application with a lot of features, such as sharing lists with users or teams. <!-- ReDoc-Inject: <security-definitions> -->
+
+// @description # Pagination
+// @description Every endpoint capable of pagination will return two headers:
+// @description * `x-pagination-total-pages`: The total number of available pages for this request
+// @description * `x-pagination-result-count`: The number of items returned for this request.
 // @description # Authorization
 // @description **JWT-Auth:** Main authorization method, used for most of the requests. Needs `Authorization: Bearer <jwt-token>`-header to authenticate successfully.
 // @description
@@ -110,6 +115,7 @@ func NewEcho() *echo.Echo {
 		AuthObject: apiv1.GetAuthFromClaims,
 	})
 	handler.SetLoggingProvider(log.GetLogger())
+	handler.SetMaxItemsPerPage(config.ServiceMaxItemsPerPage.GetInt())
 
 	return e
 }

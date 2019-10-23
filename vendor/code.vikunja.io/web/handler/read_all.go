@@ -17,6 +17,7 @@ package handler
 
 import (
 	"github.com/labstack/echo/v4"
+	"math"
 	"net/http"
 	"strconv"
 )
@@ -47,16 +48,56 @@ func (c *WebHandler) ReadAllWeb(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Bad page requested.")
 	}
 	if pageNumber < 0 {
-		return echo.NewHTTPError(http.StatusBadRequest, "Bad page requested.")
+		return echo.NewHTTPError(http.StatusBadRequest, "Page number cannot be negative.")
+	}
+
+	// Items per page
+	var perPageNumber int
+	perPage := ctx.QueryParam("per_page")
+	// If we dont have an "items per page" parameter, we want to use the default.
+	// To prevent Atoi from failing, we check this here.
+	if perPage != "" {
+		perPageNumber, err = strconv.Atoi(perPage)
+		if err != nil {
+			config.LoggingProvider.Error(err.Error())
+			return echo.NewHTTPError(http.StatusBadRequest, "Bad per page amount requested.")
+		}
+	}
+	// Set default page count
+	if perPageNumber == 0 {
+		perPageNumber = config.MaxItemsPerPage
+	}
+	if perPageNumber < 1 {
+		return echo.NewHTTPError(http.StatusBadRequest, "Per page amount cannot be negative.")
+	}
+	if perPageNumber > config.MaxItemsPerPage {
+		perPageNumber = config.MaxItemsPerPage
 	}
 
 	// Search
 	search := ctx.QueryParam("s")
 
-	lists, err := currentStruct.ReadAll(search, currentAuth, pageNumber)
+	result, resultCount, numberOfItems, err := currentStruct.ReadAll(currentAuth, search, pageNumber, perPageNumber)
 	if err != nil {
 		return HandleHTTPError(err, ctx)
 	}
 
-	return ctx.JSON(http.StatusOK, lists)
+	// Calculate the number of pages from the number of items
+	// We always round up, because if we don't have a number of items which is exactly dividable by the number of items per page,
+	// we would get a result that is one page off.
+	var numberOfPages = math.Ceil(float64(numberOfItems) / float64(perPageNumber))
+	// If we return all results, we only have one page
+	if pageNumber < 0 {
+		numberOfPages = 1
+	}
+	// If we don't have results, we don't have a page
+	if resultCount == 0 {
+		numberOfPages = 0
+	}
+
+	ctx.Response().Header().Set("x-pagination-total-pages", strconv.FormatFloat(numberOfPages, 'f', 0, 64))
+	ctx.Response().Header().Set("x-pagination-result-count", strconv.FormatInt(int64(resultCount), 10))
+	ctx.Response().Header().Set("Access-Control-Expose-Headers", "x-pagination-total-pages, x-pagination-result-count")
+
+	return ctx.JSON(http.StatusOK, result)
 }

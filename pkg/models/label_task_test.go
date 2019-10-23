@@ -89,7 +89,7 @@ func TestLabelTask_ReadAll(t *testing.T) {
 				CRUDable: tt.fields.CRUDable,
 				Rights:   tt.fields.Rights,
 			}
-			gotLabels, err := l.ReadAll(tt.args.search, tt.args.a, tt.args.page)
+			gotLabels, _, _, err := l.ReadAll(tt.args.a, tt.args.search, tt.args.page, 0)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("LabelTask.ReadAll() error = %v, wantErr %v", err, tt.wantErr)
 				return

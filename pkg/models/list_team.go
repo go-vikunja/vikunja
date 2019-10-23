@@ -154,22 +154,23 @@ func (tl *TeamList) Delete() (err error) {
 // @Accept json
 // @Produce json
 // @Param id path int true "List ID"
-// @Param p query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
+// @Param page query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
+// @Param per_page query int false "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page."
 // @Param s query string false "Search teams by its name."
 // @Security JWTKeyAuth
 // @Success 200 {array} models.TeamWithRight "The teams with their right."
 // @Failure 403 {object} code.vikunja.io/web.HTTPError "No right to see the list."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{id}/teams [get]
-func (tl *TeamList) ReadAll(search string, a web.Auth, page int) (interface{}, error) {
+func (tl *TeamList) ReadAll(a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
 	// Check if the user can read the namespace
 	l := &List{ID: tl.ListID}
 	canRead, err := l.CanRead(a)
 	if err != nil {
-		return nil, err
+		return nil, 0, 0, err
 	}
 	if !canRead {
-		return nil, ErrNeedToHaveListReadAccess{ListID: tl.ListID, UserID: a.GetID()}
+		return nil, 0, 0, ErrNeedToHaveListReadAccess{ListID: tl.ListID, UserID: a.GetID()}
 	}
 
 	// Get the teams
@@ -178,11 +179,24 @@ func (tl *TeamList) ReadAll(search string, a web.Auth, page int) (interface{}, e
 		Table("teams").
 		Join("INNER", "team_list", "team_id = teams.id").
 		Where("team_list.list_id = ?", tl.ListID).
-		Limit(getLimitFromPageIndex(page)).
+		Limit(getLimitFromPageIndex(page, perPage)).
 		Where("teams.name LIKE ?", "%"+search+"%").
 		Find(&all)
+	if err != nil {
+		return nil, 0, 0, err
+	}
 
-	return all, err
+	totalItems, err = x.
+		Table("teams").
+		Join("INNER", "team_list", "team_id = teams.id").
+		Where("team_list.list_id = ?", tl.ListID).
+		Where("teams.name LIKE ?", "%"+search+"%").
+		Count(&TeamWithRight{})
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	return all, len(all), totalItems, err
 }
 
 // Update updates a team <-> list relation

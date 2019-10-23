@@ -55,7 +55,7 @@ func TestTeam_Create(t *testing.T) {
 	assert.True(t, IsErrTeamDoesNotExist(err))
 
 	// Get all teams the user is part of
-	ts, err := tm.ReadAll("", doer, 1)
+	ts, _, _, err := tm.ReadAll(doer, "", 1, 50)
 	assert.NoError(t, err)
 	assert.Equal(t, reflect.TypeOf(ts).Kind(), reflect.Slice)
 	s := reflect.ValueOf(ts)

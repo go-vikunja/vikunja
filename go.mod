@@ -18,7 +18,7 @@ module code.vikunja.io/api
 
 require (
 	cloud.google.com/go v0.34.0 // indirect
-	code.vikunja.io/web v0.0.0-20190628075253-b457b5a1a332
+	code.vikunja.io/web v0.0.0-20191023202526-f337750c3573
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
 	github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a
 	github.com/beevik/etree v1.1.0 // indirect
@@ -46,10 +46,11 @@ require (
 	github.com/jgautheron/goconst v0.0.0-20170703170152-9740945f5dcb
 	github.com/json-iterator/go v1.1.7 // indirect
 	github.com/kr/pty v1.1.8 // indirect
-	github.com/labstack/echo/v4 v4.1.7-0.20190627175217-8fb7b5be270f
-	github.com/labstack/gommon v0.2.9
+	github.com/labstack/echo/v4 v4.1.11
+	github.com/labstack/gommon v0.3.0
 	github.com/laurent22/ical-go v0.1.1-0.20181107184520-7e5d6ade8eef
 	github.com/mailru/easyjson v0.7.0 // indirect
+	github.com/mattn/go-colorable v0.1.4 // indirect
 	github.com/mattn/go-isatty v0.0.10 // indirect
 	github.com/mattn/go-oci8 v0.0.0-20181130072307-052f5d97b9b6 // indirect
 	github.com/mattn/go-runewidth v0.0.4 // indirect
@@ -73,12 +74,13 @@ require (
 	github.com/ugorji/go v1.1.7 // indirect
 	github.com/ulule/limiter/v3 v3.3.0
 	github.com/urfave/cli v1.22.1 // indirect
+	github.com/valyala/fasttemplate v1.1.0 // indirect
 	golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550
 	golang.org/x/lint v0.0.0-20190409202823-959b441ac422
-	golang.org/x/net v0.0.0-20191011234655-491137f69257 // indirect
+	golang.org/x/net v0.0.0-20191021144547-ec77196f6094 // indirect
 	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e // indirect
-	golang.org/x/sys v0.0.0-20191010194322-b09406accb47 // indirect
-	golang.org/x/tools v0.0.0-20191012152004-8de300cfc20a // indirect
+	golang.org/x/sys v0.0.0-20191023151326-f89234f9a2c2 // indirect
+	golang.org/x/tools v0.0.0-20191023202404-2b779830f9d3 // indirect
 	golang.org/x/xerrors v0.0.0-20191011141410-1b5146add898 // indirect
 	google.golang.org/appengine v1.5.0 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect

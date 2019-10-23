@@ -203,7 +203,7 @@ func TestListUser_ReadAll(t *testing.T) {
 				CRUDable: tt.fields.CRUDable,
 				Rights:   tt.fields.Rights,
 			}
-			got, err := ul.ReadAll(tt.args.search, tt.args.a, tt.args.page)
+			got, _, _, err := ul.ReadAll(tt.args.a, tt.args.search, tt.args.page, 50)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ListUser.ReadAll() error = %v, wantErr %v", err, tt.wantErr)
 			}
