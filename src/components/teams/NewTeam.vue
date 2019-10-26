@@ -46,6 +46,7 @@
 		},
 		created() {
 			this.teamService = new TeamService()
+			this.team = new TeamModel()
 			this.$parent.setFullPage();
 		},
 		methods: {
