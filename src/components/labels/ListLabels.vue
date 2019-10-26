@@ -7,11 +7,10 @@
 		</p>
 		<div class="columns">
 			<div class="labels-list column">
-				<a
+				<span
 					v-for="l in labels" :key="l.id"
 					class="tag"
 					:class="{'disabled': user.infos.id !== l.created_by.id}"
-					@click="editLabel(l)"
 					:style="{'background': l.hex_color, 'color': l.textColor}"
 				>
 					<span
@@ -19,10 +18,15 @@
 						v-tooltip.bottom="'You are not allowed to edit this label because you dont own it.'">
 						{{ l.title }}
 					</span>
-					<span v-else>{{ l.title }}</span>
+					<a
+						@click="editLabel(l)"
+						:style="{'color': l.textColor}"
+						v-else>
+						{{ l.title }}
+					</a>
 					<a class="delete is-small" @click="deleteLabel(l)" v-if="user.infos.id === l.created_by.id"></a>
 
-				</a>
+				</span>
 			</div>
 			<div class="column is-4" v-if="isLabelEdit">
 				<div class="card">
