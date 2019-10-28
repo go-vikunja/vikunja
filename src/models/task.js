@@ -37,6 +37,13 @@ export default class TaskModel extends AbstractModel {
 		if (this.hexColor.substring(0, 1) !== '#') {
 			this.hexColor = '#' + this.hexColor
 		}
+
+		// Make all subtasks to task models
+		Object.keys(this.related_tasks).forEach(relationKind  => {
+			this.related_tasks[relationKind] = this.related_tasks[relationKind].map(t => {
+				return new TaskModel(t)
+			})
+		})
 	}
 	
 	defaults() {
@@ -54,10 +61,10 @@ export default class TaskModel extends AbstractModel {
 			endDate: 0,
 			repeatAfter: 0,
 			reminderDates: [],
-			subtasks: [],
 			parentTaskID: 0,
 			hexColor: '',
 			percentDone: 0,
+			related_tasks: {},
 
 			createdBy: UserModel,
 			created: 0,

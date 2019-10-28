@@ -62,17 +62,7 @@ export default class ListModel extends AbstractModel {
 	 * @param task
 	 */
 	addTaskToList(task) {
-		// If it's a subtask, add it to its parent, otherwise append it to the list of tasks
-		if (task.parentTaskID === 0) {
-			this.tasks.push(task)
-		} else {
-			for (const t in this.tasks) {
-				if (this.tasks[t].id === task.parentTaskID) {
-					this.tasks[t].subtasks.push(task)
-					break
-				}
-			}
-		}
+		this.tasks.push(task)
 		this.sortTasks()
 	}
 	
@@ -92,7 +82,7 @@ export default class ListModel extends AbstractModel {
 	}
 
 	/**
-	 * Loops through all tasks and updates the one  with the id it has
+	 * Loops through all tasks and updates the one with the id it has
 	 * @param task
 	 */
 	updateTaskByID(task) {
@@ -100,15 +90,6 @@ export default class ListModel extends AbstractModel {
 			if (this.tasks[t].id === task.id) {
 				this.tasks[t] = task
 				break
-			}
-
-			if (this.tasks[t].id === task.parentTaskID) {
-				for (const s in this.tasks[t].subtasks) {
-					if (this.tasks[t].subtasks[s].id === task.id) {
-						this.tasks[t].subtasks[s] = task
-						break
-					}
-				}
 			}
 		}
 		this.sortTasks()
