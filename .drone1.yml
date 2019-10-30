@@ -541,6 +541,15 @@ steps:
       - git submodule update --init
       - git submodule update --recursive --remote
 
+  - name: theme
+    image: kolaente/yarn
+    pull: true
+    group: build-static
+    commands:
+      - cd docs/themes/vikunja
+      - yarn --production=false
+      - ./node_modules/.bin/gulp
+
   - name: build
     image: monachus/hugo:v0.54.0
     pull: true
