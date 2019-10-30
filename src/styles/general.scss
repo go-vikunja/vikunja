@@ -348,3 +348,84 @@
 .button-right{
   float: right;
 }
+
+.switch-view {
+  background: $white;
+  display: inline-block;
+  margin: 1em 0;
+  border-radius: $radius;
+  font-size: .8em;
+  box-shadow: 0.3em 0.3em 0.8em darken($light, 6);
+
+  a {
+    padding: .5em;
+    display: inline-block;
+    margin: .4em;
+    border-radius: $radius;
+
+    -webkit-transition: all 100ms;
+    -moz-transition: all 100ms;
+    -ms-transition: all 100ms;
+    -o-transition: all 100ms;
+    transition: all 100ms;
+
+    &:not(:last-child) {
+      margin-right: 0;
+    }
+
+    &.is-active, &:hover {
+      color: $white;
+    }
+
+    &.is-active {
+      background: $primary;
+      font-weight: bold;
+      box-shadow: 0.3em 0.3em 0.8em darken($light, 6);
+    }
+
+    &:hover {
+      background: lighten($primary, 5);
+    }
+  }
+}
+
+.link-share-view {
+  .logo {
+    max-width: 500px;
+    width: 90%;
+    margin: 2em 0 4em;
+  }
+
+  .logout {
+    text-align: right;
+  }
+
+  .column {
+    max-width: 100%;
+  }
+}
+
+.offline {
+  background: url('../public/images/llama-nightscape.png') no-repeat center;
+  -webkit-background-size: cover;
+  background-size: cover;
+  height: 100vh;
+
+  .offline-message {
+    text-align: center;
+    position: absolute;
+    width: 100vw;
+    bottom: 5vh;
+    color: $white;
+    padding: 0 1em;
+
+    h1 {
+      font-weight: bold;
+      font-size: 1.5em;
+      text-align: center;
+      color: $white;
+      font-weight: 700 !important;
+      font-size: 1.5em;
+    }
+  }
+}
