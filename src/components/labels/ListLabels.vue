@@ -34,9 +34,9 @@
 						<span class="card-header-title">
 							Edit Label
 						</span>
-						<a class="card-header-icon" @click="isTaskEdit = false">
+						<a class="card-header-icon" @click="isLabelEdit = false">
 							<span class="icon">
-								<icon icon="angle-right"/>
+								<icon icon="times"/>
 							</span>
 						</a>
 					</header>
