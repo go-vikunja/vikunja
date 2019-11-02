@@ -339,44 +339,6 @@ func GetTaskSimple(t *Task) (task Task, err error) {
 	return
 }
 
-// GetTaskByID returns all tasks a list has
-func GetTaskByID(listTaskID int64) (listTask Task, err error) {
-	listTask, err = GetTaskByIDSimple(listTaskID)
-	if err != nil {
-		return
-	}
-
-	u, err := GetUserByID(listTask.CreatedByID)
-	if err != nil {
-		return
-	}
-	listTask.CreatedBy = u
-
-	// Get assignees
-	taskAssignees, err := getRawTaskAssigneesForTasks([]int64{listTaskID})
-	if err != nil {
-		return
-	}
-	for _, u := range taskAssignees {
-		if u != nil {
-			listTask.Assignees = append(listTask.Assignees, &u.User)
-		}
-	}
-
-	// Get task labels
-	taskLabels, _, _, err := getLabelsByTaskIDs(&LabelByTaskIDsOptions{
-		TaskIDs: []int64{listTaskID},
-	})
-	if err != nil {
-		return
-	}
-	for _, label := range taskLabels {
-		listTask.Labels = append(listTask.Labels, &label.Label)
-	}
-
-	return
-}
-
 // GetTasksByIDs returns all tasks for a list of ids
 func (bt *BulkTask) GetTasksByIDs() (err error) {
 	for _, id := range bt.IDs {
@@ -636,7 +598,7 @@ func (t *Task) Create(a web.Auth) (err error) {
 // @Router /tasks/{id} [post]
 func (t *Task) Update() (err error) {
 	// Check if the task exists
-	ot, err := GetTaskByID(t.ID)
+	ot, err := GetTaskByIDSimple(t.ID)
 	if err != nil {
 		return
 	}
@@ -854,12 +816,6 @@ func (t *Task) updateReminders(reminders []int64) (err error) {
 // @Router /tasks/{id} [delete]
 func (t *Task) Delete() (err error) {
 
-	// Check if it exists
-	_, err = GetTaskByID(t.ID)
-	if err != nil {
-		return
-	}
-
 	if _, err = x.ID(t.ID).Delete(Task{}); err != nil {
 		return err
 	}
@@ -872,5 +828,40 @@ func (t *Task) Delete() (err error) {
 	metrics.UpdateCount(-1, metrics.TaskCountKey)
 
 	err = updateListLastUpdated(&List{ID: t.ListID})
+	return
+}
+
+// ReadOne gets one task by its ID
+// @Summary Get one task
+// @Description Returns one task by its ID
+// @tags task
+// @Accept json
+// @Produce json
+// @Param ID path int true "The task ID"
+// @Security JWTKeyAuth
+// @Success 200 {object} models.Task "The task"
+// @Failure 404 {object} models.Message "Task not found"
+// @Failure 500 {object} models.Message "Internal error"
+// @Router /tasks/all [get]
+func (t *Task) ReadOne() (err error) {
+
+	taskMap := make(map[int64]*Task, 1)
+	taskMap[t.ID] = &Task{}
+	*taskMap[t.ID], err = GetTaskByIDSimple(t.ID)
+	if err != nil {
+		return
+	}
+
+	tasks, err := addMoreInfoToTasks(taskMap)
+	if err != nil {
+		return
+	}
+
+	if len(tasks) == 0 {
+		return ErrTaskDoesNotExist{t.ID}
+	}
+
+	*t = *tasks[0]
+
 	return
 }

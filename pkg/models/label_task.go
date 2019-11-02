@@ -330,9 +330,18 @@ type LabelTaskBulk struct {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/labels/bulk [post]
 func (ltb *LabelTaskBulk) Create(a web.Auth) (err error) {
-	task, err := GetTaskByID(ltb.TaskID)
+	task, err := GetTaskByIDSimple(ltb.TaskID)
 	if err != nil {
 		return
+	}
+	labels, _, _, err := getLabelsByTaskIDs(&LabelByTaskIDsOptions{
+		TaskIDs: []int64{ltb.TaskID},
+	})
+	if err != nil {
+		return err
+	}
+	for _, l := range labels {
+		task.Labels = append(task.Labels, &l.Label)
 	}
 	return task.updateTaskLabels(a, ltb.Labels)
 }

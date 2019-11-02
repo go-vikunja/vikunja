@@ -284,9 +284,17 @@ type BulkAssignees struct {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/assignees/bulk [post]
 func (ba *BulkAssignees) Create(a web.Auth) (err error) {
-	task, err := GetTaskByID(ba.TaskID) // We need to use the full method here because we need all current assignees.
+	task, err := GetTaskByIDSimple(ba.TaskID)
 	if err != nil {
 		return
 	}
+	assignees, err := getRawTaskAssigneesForTasks([]int64{task.ID})
+	if err != nil {
+		return err
+	}
+	for _, a := range assignees {
+		task.Assignees = append(task.Assignees, &a.User)
+	}
+
 	return task.updateTaskAssignees(ba.Assignees)
 }

@@ -24,6 +24,8 @@ import (
 func TestTask_Create(t *testing.T) {
 	//assert.NoError(t, LoadFixtures())
 
+	// TODO: This test needs refactoring
+
 	// Fake list task
 	listtask := Task{
 		Text:        "Lorem",
@@ -48,11 +50,6 @@ func TestTask_Create(t *testing.T) {
 	err = listtask.Update()
 	assert.NoError(t, err)
 
-	// Check if it was updated
-	li, err := GetTaskByID(listtask.ID)
-	assert.NoError(t, err)
-	assert.Equal(t, li.Text, "Test34")
-
 	// Delete the task
 	allowed, _ = listtask.CanDelete(doer)
 	assert.True(t, allowed)
@@ -61,7 +58,7 @@ func TestTask_Create(t *testing.T) {
 
 	// Delete a nonexistant task
 	listtask.ID = 0
-	err = listtask.Delete()
+	_, err = listtask.CanDelete(doer) // The check if the task exists happens in CanDelete
 	assert.Error(t, err)
 	assert.True(t, IsErrTaskDoesNotExist(err))
 
@@ -104,5 +101,20 @@ func TestUpdateDone(t *testing.T) {
 		newTask := &Task{Done: false}
 		updateDone(oldTask, newTask)
 		assert.Equal(t, int64(0), oldTask.DoneAtUnix)
+	})
+}
+
+func TestTask_ReadOne(t *testing.T) {
+	t.Run("default", func(t *testing.T) {
+		task := &Task{ID: 1}
+		err := task.ReadOne()
+		assert.NoError(t, err)
+		assert.Equal(t, "task #1", task.Text)
+	})
+	t.Run("nonexisting", func(t *testing.T) {
+		task := &Task{ID: 99999}
+		err := task.ReadOne()
+		assert.Error(t, err)
+		assert.True(t, IsErrTaskDoesNotExist(err))
 	})
 }
