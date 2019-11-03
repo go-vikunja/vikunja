@@ -369,6 +369,12 @@ func GetTasksByUIDs(uids []string) (tasks []*Task, err error) {
 	return
 }
 
+func getRemindersForTasks(taskIDs []int64) (reminders []*TaskReminder, err error) {
+	reminders = []*TaskReminder{}
+	err = x.Table("task_reminders").In("task_id", taskIDs).Find(&reminders)
+	return
+}
+
 // This function takes a map with pointers and returns a slice with pointers to tasks
 // It adds more stuff like assignees/labels/etc to a bunch of tasks
 func addMoreInfoToTasks(taskMap map[int64]*Task) (tasks []*Task, err error) {
@@ -456,8 +462,7 @@ func addMoreInfoToTasks(taskMap map[int64]*Task) (tasks []*Task, err error) {
 	}
 
 	// Get all reminders and put them in a map to have it easier later
-	reminders := []*TaskReminder{}
-	err = x.Table("task_reminders").In("task_id", taskIDs).Find(&reminders)
+	reminders, err := getRemindersForTasks(taskIDs)
 	if err != nil {
 		return
 	}
@@ -729,6 +734,17 @@ func updateDone(oldTask *Task, newTask *Task) {
 // Creates or deletes all necessary remindes without unneded db operations.
 // The parameter is a slice with unix dates which holds the new reminders.
 func (t *Task) updateReminders(reminders []int64) (err error) {
+
+	// Load the current reminders
+	taskReminders, err := getRemindersForTasks([]int64{t.ID})
+	if err != nil {
+		return err
+	}
+
+	t.RemindersUnix = make([]int64, 0, len(taskReminders))
+	for _, reminder := range taskReminders {
+		t.RemindersUnix = append(t.RemindersUnix, reminder.ReminderUnix)
+	}
 
 	// If we're removing everything, delete all reminders right away
 	if len(reminders) == 0 && len(t.RemindersUnix) > 0 {

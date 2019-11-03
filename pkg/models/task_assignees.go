@@ -43,7 +43,7 @@ type TaskAssigneeWithUser struct {
 }
 
 func getRawTaskAssigneesForTasks(taskIDs []int64) (taskAssignees []*TaskAssigneeWithUser, err error) {
-	taskAssignees = []*TaskAssigneeWithUser{nil}
+	taskAssignees = []*TaskAssigneeWithUser{}
 	err = x.Table("task_assignees").
 		Select("task_id, users.*").
 		In("task_id", taskIDs).
@@ -54,6 +54,17 @@ func getRawTaskAssigneesForTasks(taskIDs []int64) (taskAssignees []*TaskAssignee
 
 // Create or update a bunch of task assignees
 func (t *Task) updateTaskAssignees(assignees []*User) (err error) {
+
+	// Load the current assignees
+	currentAssignees, err := getRawTaskAssigneesForTasks([]int64{t.ID})
+	if err != nil {
+		return err
+	}
+
+	t.Assignees = make([]*User, 0, len(currentAssignees))
+	for _, assignee := range currentAssignees {
+		t.Assignees = append(t.Assignees, &assignee.User)
+	}
 
 	// If we don't have any new assignees, delete everything right away. Saves us some hassle.
 	if len(assignees) == 0 && len(t.Assignees) > 0 {
