@@ -29,8 +29,8 @@
 				<VueDragResize
 						class="task"
 						:class="{'done': t.done, 'is-current-edit': taskToEdit !== null && taskToEdit.id === t.id, 'has-light-text': !t.hasDarkColor(), 'has-dark-text': t.hasDarkColor()}"
-                        :style="{'border-color': t.hexColor, 'background-color': t.hexColor}"
-                        :isActive="true"
+						:style="{'border-color': t.hexColor, 'background-color': t.hexColor}"
+						:isActive="true"
 						:x="t.offsetDays * dayWidth - 6"
 						:y="0"
 						:w="t.durationDays * dayWidth"
@@ -46,11 +46,11 @@
 						@dragstop="resizeTask"
 						@clicked="taskDragged = t"
 				>
-                    <span :class="{
-                    'has-high-priority': t.priority >= priorities.HIGH,
-                    'has-not-so-high-priority': t.priority === priorities.HIGH,
-                    'has-super-high-priority': t.priority === priorities.DO_NOW
-                    }">{{t.text}}</span>
+					<span :class="{
+					'has-high-priority': t.priority >= priorities.HIGH,
+					'has-not-so-high-priority': t.priority === priorities.HIGH,
+					'has-super-high-priority': t.priority === priorities.DO_NOW
+					}">{{t.text}}</span>
 					<span v-if="t.priority >= priorities.HIGH" class="high-priority" :class="{'not-so-high': t.priority === priorities.HIGH}">
 						<span class="icon">
 							<icon icon="exclamation"/>
@@ -63,10 +63,10 @@
 						</span>
 					</span>
 					<!-- using the key here forces vue to use the updated version model and not the response returned by the api -->
-                    <a @click="editTask(theTasks[k])" class="edit-toggle">
-                        <icon icon="pen"/>
-                    </a>
-                 </VueDragResize>
+					<a @click="editTask(theTasks[k])" class="edit-toggle">
+						<icon icon="pen"/>
+					</a>
+				</VueDragResize>
 			</div>
 			<template v-if="showTaskswithoutDates">
 				<div class="row" v-for="(t, k) in tasksWithoutDates" :key="t.id" :style="{background: 'repeating-linear-gradient(90deg, #ededed, #ededed 1px, ' + (k % 2 === 0 ? '#fafafa 1px, #fafafa ' : '#fff 1px, #fff ') + dayWidth + 'px)'}">
@@ -183,7 +183,7 @@
 				fullWidth: 0,
 				now: null,
 				dayOffsetUntilToday: 0,
-                isTaskEdit: false,
+				isTaskEdit: false,
 				taskToEdit: null,
 				newTaskTitle: '',
 				newTaskFieldActive: false,
@@ -312,10 +312,10 @@
 						})
 				}, 100)
 			},
-            editTask(task) {
+			editTask(task) {
 				this.taskToEdit = task
 				this.isTaskEdit = true
-            },
+			},
 			showCreateNewTask() {
 				if(!this.newTaskFieldActive) {
 					// Timeout to not send the form if the field isn't even shown

@@ -1,182 +1,182 @@
 <template>
-    <div>
-        <div v-if="isOnline">
-            <!-- This is a workaround to get the sw to "see" the to-be-cached version of the offline background image -->
-            <div class="offline" style="height: 0;width: 0;"></div>
-            <nav class="navbar main-theme is-fixed-top" role="navigation" aria-label="main navigation"
-                 v-if="user.authenticated && user.infos.type === authTypes.USER">
-                <div class="navbar-brand">
-                    <router-link :to="{name: 'home'}" class="navbar-item logo">
-                        <img src="/images/logo-full.svg" alt="Vikunja"/>
-                    </router-link>
-                </div>
-                <div class="navbar-end">
-                    <div class="user">
-                        <img :src="gravatar()" class="avatar" alt=""/>
-                        <div class="dropdown is-right is-active">
-                            <div class="dropdown-trigger">
-                                <button class="button noshadow" @click="userMenuActive = !userMenuActive">
-                                    <span class="username">{{user.infos.username}}</span>
-                                    <span class="icon is-small">
+	<div>
+		<div v-if="isOnline">
+			<!-- This is a workaround to get the sw to "see" the to-be-cached version of the offline background image -->
+			<div class="offline" style="height: 0;width: 0;"></div>
+			<nav class="navbar main-theme is-fixed-top" role="navigation" aria-label="main navigation"
+				v-if="user.authenticated && user.infos.type === authTypes.USER">
+				<div class="navbar-brand">
+					<router-link :to="{name: 'home'}" class="navbar-item logo">
+						<img src="/images/logo-full.svg" alt="Vikunja"/>
+					</router-link>
+				</div>
+				<div class="navbar-end">
+					<div class="user">
+						<img :src="gravatar()" class="avatar" alt=""/>
+						<div class="dropdown is-right is-active">
+							<div class="dropdown-trigger">
+								<button class="button noshadow" @click="userMenuActive = !userMenuActive">
+									<span class="username">{{user.infos.username}}</span>
+									<span class="icon is-small">
 									<icon icon="chevron-down"/>
 								</span>
-                                </button>
-                            </div>
-                            <transition name="fade">
-                                <div class="dropdown-menu" v-if="userMenuActive">
-                                    <div class="dropdown-content">
-                                        <a @click="logout()" class="dropdown-item">
-                                            Logout
-                                        </a>
-                                    </div>
-                                </div>
-                            </transition>
-                        </div>
-                    </div>
-                </div>
-            </nav>
-            <div v-if="user.authenticated && user.infos.type === authTypes.USER">
-                <a @click="mobileMenuActive = true" class="mobilemenu-show-button" v-if="!mobileMenuActive">
-                    <icon icon="bars"></icon>
-                </a>
-                <a @click="mobileMenuActive = false" class="mobilemenu-hide-button" v-if="mobileMenuActive">
-                    <icon icon="times"></icon>
-                </a>
-                <div class="app-container">
-                    <div class="namespace-container" :class="{'is-active': mobileMenuActive}">
-                        <div class="menu top-menu">
-                            <ul class="menu-list">
-                                <li>
-                                    <router-link :to="{ name: 'home'}">
+								</button>
+							</div>
+							<transition name="fade">
+								<div class="dropdown-menu" v-if="userMenuActive">
+									<div class="dropdown-content">
+										<a @click="logout()" class="dropdown-item">
+											Logout
+										</a>
+									</div>
+								</div>
+							</transition>
+						</div>
+					</div>
+				</div>
+			</nav>
+			<div v-if="user.authenticated && user.infos.type === authTypes.USER">
+				<a @click="mobileMenuActive = true" class="mobilemenu-show-button" v-if="!mobileMenuActive">
+					<icon icon="bars"></icon>
+				</a>
+				<a @click="mobileMenuActive = false" class="mobilemenu-hide-button" v-if="mobileMenuActive">
+					<icon icon="times"></icon>
+				</a>
+				<div class="app-container">
+					<div class="namespace-container" :class="{'is-active': mobileMenuActive}">
+						<div class="menu top-menu">
+							<ul class="menu-list">
+								<li>
+									<router-link :to="{ name: 'home'}">
 									<span class="icon">
 										<icon icon="calendar"/>
 									</span>
-                                        Overview
-                                    </router-link>
-                                </li>
-                                <li>
-                                    <router-link :to="{ name: 'showTasksInRange', params: {type: 'month'}}">
+										Overview
+									</router-link>
+								</li>
+								<li>
+									<router-link :to="{ name: 'showTasksInRange', params: {type: 'month'}}">
 									<span class="icon">
 										<icon :icon="['far', 'calendar-alt']"/>
 									</span>
-                                        Next Month
-                                    </router-link>
-                                </li>
-                                <li>
-                                    <router-link :to="{ name: 'showTasksInRange', params: {type: 'week'}}">
+										Next Month
+									</router-link>
+								</li>
+								<li>
+									<router-link :to="{ name: 'showTasksInRange', params: {type: 'week'}}">
 									<span class="icon">
 										<icon icon="calendar-week"/>
 									</span>
-                                        Next Week
-                                    </router-link>
-                                </li>
-                                <li>
-                                    <router-link :to="{ name: 'listTeams'}">
+										Next Week
+									</router-link>
+								</li>
+								<li>
+									<router-link :to="{ name: 'listTeams'}">
 									<span class="icon">
 										<icon icon="users"/>
 									</span>
-                                        Teams
-                                    </router-link>
-                                </li>
-                                <li>
-                                    <router-link :to="{ name: 'newNamespace'}">
+										Teams
+									</router-link>
+								</li>
+								<li>
+									<router-link :to="{ name: 'newNamespace'}">
 									<span class="icon">
 										<icon icon="layer-group"/>
 									</span>
-                                        New Namespace
-                                    </router-link>
-                                </li>
-                                <li>
-                                    <router-link :to="{ name: 'listLabels'}">
+										New Namespace
+									</router-link>
+								</li>
+								<li>
+									<router-link :to="{ name: 'listLabels'}">
 									<span class="icon">
 										<icon icon="tags"/>
 									</span>
-                                        Labels
-                                    </router-link>
-                                </li>
-                            </ul>
-                        </div>
-                        <aside class="menu namespaces-lists">
-                            <div class="spinner" :class="{ 'is-loading': namespaceService.loading}"></div>
-                            <template v-for="n in namespaces">
-                                <div :key="n.id">
-                                    <router-link v-tooltip.right="'Settings'"
-                                                 :to="{name: 'editNamespace', params: {id: n.id} }" class="nsettings"
-                                                 v-if="n.id > 0">
+										Labels
+									</router-link>
+								</li>
+							</ul>
+						</div>
+						<aside class="menu namespaces-lists">
+							<div class="spinner" :class="{ 'is-loading': namespaceService.loading}"></div>
+							<template v-for="n in namespaces">
+								<div :key="n.id">
+									<router-link v-tooltip.right="'Settings'"
+											:to="{name: 'editNamespace', params: {id: n.id} }" class="nsettings"
+											v-if="n.id > 0">
 										<span class="icon">
 											<icon icon="cog"/>
 										</span>
-                                    </router-link>
-                                    <router-link v-tooltip="'Add a new list in the ' + n.name + ' namespace'"
-                                                 :to="{ name: 'newList', params: { id: n.id} }" class="nsettings"
-                                                 :key="n.id + 'newList'" v-if="n.id > 0">
+									</router-link>
+									<router-link v-tooltip="'Add a new list in the ' + n.name + ' namespace'"
+											:to="{ name: 'newList', params: { id: n.id} }" class="nsettings"
+											:key="n.id + 'newList'" v-if="n.id > 0">
 										<span class="icon">
 											<icon icon="plus"/>
 										</span>
-                                    </router-link>
-                                    <label class="menu-label" v-tooltip="n.name + ' (' + n.lists.length + ')'" :for="n.id + 'checker'">
-                                        {{n.name}} ({{n.lists.length}})
-                                    </label>
-                                </div>
-                                <input :key="n.id + 'checker'" type="checkbox" checked="checked" :id="n.id + 'checker'" class="checkinput"/>
-                                <div class="more-container" :key="n.id + 'child'">
-                                    <ul class="menu-list can-be-hidden" >
-                                        <li v-for="l in n.lists" :key="l.id">
-                                            <router-link :to="{ name: 'showList', params: { id: l.id} }">{{l.title}}
-                                            </router-link>
-                                        </li>
-                                    </ul>
-                                    <label class="hidden-hint" :for="n.id + 'checker'">
-                                        Show hidden lists ({{n.lists.length}})...
-                                    </label>
-                                </div>
-                            </template>
-                        </aside>
-                    </div>
-                    <div class="app-content" :class="{'fullpage-overlay': fullpage}">
-                        <a class="mobile-overlay" v-if="mobileMenuActive" @click="mobileMenuActive = false"></a>
-                        <transition name="fade">
-                            <router-view/>
-                        </transition>
-                    </div>
-                </div>
-            </div>
-            <!-- FIXME: This will only be triggered when the root component is already loaded before doing link share auth. Will "fix" itself once we use vuex. -->
-            <div v-else-if="user.authenticated && user.infos.type === authTypes.LINK_SHARE">
-                <div class="container has-text-centered link-share-view">
-                    <div class="column is-10 is-offset-1">
-                        <img src="/images/logo-full.svg" alt="Vikunja" class="logo"/>
-                        <div class="box has-text-left">
-                            <div class="logout">
-                                <a @click="logout()" class="button logout">
-                                    <span>Logout</span>
-                                    <span class="icon is-small">
+									</router-link>
+									<label class="menu-label" v-tooltip="n.name + ' (' + n.lists.length + ')'" :for="n.id + 'checker'">
+										{{n.name}} ({{n.lists.length}})
+									</label>
+								</div>
+								<input :key="n.id + 'checker'" type="checkbox" checked="checked" :id="n.id + 'checker'" class="checkinput"/>
+								<div class="more-container" :key="n.id + 'child'">
+									<ul class="menu-list can-be-hidden" >
+										<li v-for="l in n.lists" :key="l.id">
+											<router-link :to="{ name: 'showList', params: { id: l.id} }">{{l.title}}
+											</router-link>
+										</li>
+									</ul>
+									<label class="hidden-hint" :for="n.id + 'checker'">
+										Show hidden lists ({{n.lists.length}})...
+									</label>
+								</div>
+							</template>
+						</aside>
+					</div>
+					<div class="app-content" :class="{'fullpage-overlay': fullpage}">
+						<a class="mobile-overlay" v-if="mobileMenuActive" @click="mobileMenuActive = false"></a>
+						<transition name="fade">
+							<router-view/>
+						</transition>
+					</div>
+				</div>
+			</div>
+			<!-- FIXME: This will only be triggered when the root component is already loaded before doing link share auth. Will "fix" itself once we use vuex. -->
+			<div v-else-if="user.authenticated && user.infos.type === authTypes.LINK_SHARE">
+				<div class="container has-text-centered link-share-view">
+					<div class="column is-10 is-offset-1">
+						<img src="/images/logo-full.svg" alt="Vikunja" class="logo"/>
+						<div class="box has-text-left">
+							<div class="logout">
+								<a @click="logout()" class="button logout">
+									<span>Logout</span>
+									<span class="icon is-small">
 									<icon icon="sign-out-alt"/>
 								</span>
-                                </a>
-                            </div>
-                            <router-view/>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div v-else>
-                <div class="container">
-                    <div class="column is-4 is-offset-4">
-                        <img src="/images/logo-full.svg" alt="Vikunja"/>
-                        <router-view/>
-                    </div>
-                </div>
-            </div>
-            <notifications position="bottom left"/>
-        </div>
-        <div class="app offline" v-else>
-            <div class="offline-message">
-                <h1>You are offline.</h1>
-                <p>Please check your network connection and try again.</p>
-            </div>
-        </div>
-    </div>
+								</a>
+							</div>
+							<router-view/>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div v-else>
+				<div class="container">
+					<div class="column is-4 is-offset-4">
+						<img src="/images/logo-full.svg" alt="Vikunja"/>
+						<router-view/>
+					</div>
+				</div>
+			</div>
+			<notifications position="bottom left"/>
+		</div>
+		<div class="app offline" v-else>
+			<div class="offline-message">
+				<h1>You are offline.</h1>
+				<p>Please check your network connection and try again.</p>
+			</div>
+		</div>
+	</div>
 </template>
 
 <script>

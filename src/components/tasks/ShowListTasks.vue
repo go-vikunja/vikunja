@@ -38,7 +38,7 @@
 								<span class="tag" v-for="label in l.labels" :style="{'background': label.hex_color, 'color': label.textColor}" :key="label.id">
 									<span>{{ label.title }}</span>
 								</span>
-                                <img :src="gravatar(a)" :alt="a.username" v-for="a in l.assignees" class="avatar" :key="l.id + 'assignee' + a.id"/>
+								<img :src="gravatar(a)" :alt="a.username" v-for="a in l.assignees" class="avatar" :key="l.id + 'assignee' + a.id"/>
 								<i v-if="l.dueDate > 0" :class="{'overdue': (l.dueDate <= new Date())}"> - Due on {{new Date(l.dueDate).toLocaleString()}}</i>
 								<span v-if="l.priority >= priorities.HIGH" class="high-priority" :class="{'not-so-high': l.priority === priorities.HIGH}">
 									<span class="icon">
@@ -61,21 +61,21 @@
 			</div>
 			<div class="column is-4" v-if="isTaskEdit">
 				<div class="card taskedit">
-                    <header class="card-header">
-                        <p class="card-header-title">
-                            Edit Task
-                        </p>
-                        <a class="card-header-icon" @click="isTaskEdit = false">
-                            <span class="icon">
-                                <icon icon="angle-right"/>
-                            </span>
-                        </a>
-                    </header>
-                    <div class="card-content">
-                        <div class="content">
-                            <edit-task :task="taskEditTask"/>
-                        </div>
-                    </div>
+					<header class="card-header">
+						<p class="card-header-title">
+							Edit Task
+						</p>
+						<a class="card-header-icon" @click="isTaskEdit = false">
+							<span class="icon">
+								<icon icon="angle-right"/>
+							</span>
+						</a>
+					</header>
+					<div class="card-content">
+						<div class="content">
+							<edit-task :task="taskEditTask"/>
+						</div>
+					</div>
 				</div>
 			</div>
 		</div>
@@ -88,9 +88,9 @@
 	import ListService from '../../services/list'
 	import TaskService from '../../services/task'
 	import ListModel from '../../models/list'
-    import EditTask from './edit-task'
-    import TaskModel from '../../models/task'
-    import priorities from '../../models/priorities'
+	import EditTask from './edit-task'
+	import TaskModel from '../../models/task'
+	import priorities from '../../models/priorities'
 
 	export default {
 		data() {
@@ -98,16 +98,16 @@
 				listID: this.$route.params.id,
 				listService: ListService,
 				taskService: TaskService,
-                list: {},
-                isTaskEdit: false,
+				list: {},
+				isTaskEdit: false,
 				taskEditTask: TaskModel,
 				newTaskText: '',
-                priorities: {},
+				priorities: {},
 			}
 		},
-        components: {
+		components: {
 			EditTask,
-        },
+		},
 		props: {
 			theList: {
 				type: ListModel,
@@ -122,8 +122,8 @@
 		created() {
 			this.listService = new ListService()
 			this.taskService = new TaskService()
-            this.priorities = priorities
-            this.taskEditTask = null
+			this.priorities = priorities
+			this.taskEditTask = null
 			this.isTaskEdit = false
 		},
 		methods: {
@@ -146,7 +146,7 @@
 					task.done = e.target.checked
 					this.taskService.update(task)
 						.then(() => {
-                            this.list.sortTasks()
+							this.list.sortTasks()
 							message.success({message: 'The task was successfully ' + (task.done ? '' : 'un-') + 'marked as done.'}, this)
 						})
 						.catch(e => {
@@ -163,7 +163,7 @@
 			editTask(id) {
 				// Find the selected task and set it to the current object
 				let theTask = this.list.getTaskByID(id) // Somehow this does not work if we directly assign this to this.taskEditTask
-                this.taskEditTask = theTask
+				this.taskEditTask = theTask
 				this.isTaskEdit = true
 			},
 			gravatar(user) {
