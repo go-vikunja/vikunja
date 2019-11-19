@@ -150,3 +150,61 @@ func TestTaskAttachment_Delete(t *testing.T) {
 		assert.NoError(t, err)
 	})
 }
+
+func TestTaskAttachment_Rights(t *testing.T) {
+	u := &User{ID: 1}
+	t.Run("Can Read", func(t *testing.T) {
+		t.Run("Allowed", func(t *testing.T) {
+			ta := &TaskAttachment{TaskID: 1}
+			can, err := ta.CanRead(u)
+			assert.NoError(t, err)
+			assert.True(t, can)
+		})
+		t.Run("Forbidden", func(t *testing.T) {
+			ta := &TaskAttachment{TaskID: 14}
+			can, err := ta.CanRead(u)
+			assert.NoError(t, err)
+			assert.False(t, can)
+		})
+	})
+	t.Run("Can Delete", func(t *testing.T) {
+		t.Run("Allowed", func(t *testing.T) {
+			ta := &TaskAttachment{TaskID: 1}
+			can, err := ta.CanDelete(u)
+			assert.NoError(t, err)
+			assert.True(t, can)
+		})
+		t.Run("Forbidden, no access", func(t *testing.T) {
+			ta := &TaskAttachment{TaskID: 14}
+			can, err := ta.CanDelete(u)
+			assert.NoError(t, err)
+			assert.False(t, can)
+		})
+		t.Run("Forbidden, shared read only", func(t *testing.T) {
+			ta := &TaskAttachment{TaskID: 15}
+			can, err := ta.CanDelete(u)
+			assert.NoError(t, err)
+			assert.False(t, can)
+		})
+	})
+	t.Run("Can Create", func(t *testing.T) {
+		t.Run("Allowed", func(t *testing.T) {
+			ta := &TaskAttachment{TaskID: 1}
+			can, err := ta.CanCreate(u)
+			assert.NoError(t, err)
+			assert.True(t, can)
+		})
+		t.Run("Forbidden, no access", func(t *testing.T) {
+			ta := &TaskAttachment{TaskID: 14}
+			can, err := ta.CanCreate(u)
+			assert.NoError(t, err)
+			assert.False(t, can)
+		})
+		t.Run("Forbidden, shared read only", func(t *testing.T) {
+			ta := &TaskAttachment{TaskID: 15}
+			can, err := ta.CanCreate(u)
+			assert.NoError(t, err)
+			assert.False(t, can)
+		})
+	})
+}

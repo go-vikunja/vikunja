@@ -20,19 +20,13 @@ import "code.vikunja.io/web"
 
 // CanRead checks if the user can see an attachment
 func (ta *TaskAttachment) CanRead(a web.Auth) (bool, error) {
-	t, err := GetTaskByIDSimple(ta.TaskID)
-	if err != nil {
-		return false, err
-	}
+	t := &Task{ID: ta.TaskID}
 	return t.CanRead(a)
 }
 
 // CanDelete checks if the user can delete an attachment
 func (ta *TaskAttachment) CanDelete(a web.Auth) (bool, error) {
-	t, err := GetTaskByIDSimple(ta.TaskID)
-	if err != nil {
-		return false, err
-	}
+	t := &Task{ID: ta.TaskID}
 	return t.CanWrite(a)
 }
 

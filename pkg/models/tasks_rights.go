@@ -51,6 +51,11 @@ func (t *Task) CanRead(a web.Auth) (canRead bool, err error) {
 	return l.CanRead(a)
 }
 
+// CanWrite checks if a user has write access to a task
+func (t *Task) CanWrite(a web.Auth) (canWrite bool, err error) {
+	return t.canDoTask(a)
+}
+
 // Helper function to check if a user can do stuff on a list task
 func (t *Task) canDoTask(a web.Auth) (bool, error) {
 	// Get the task
