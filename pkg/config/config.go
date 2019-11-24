@@ -76,7 +76,7 @@ const (
 	LogErrors   Key = `log.errors`
 	LogStandard Key = `log.standard`
 	LogDatabase Key = `log.database`
-	LogHTTP     Key = `log.echo`
+	LogHTTP     Key = `log.http`
 	LogEcho     Key = `log.echo`
 	LogPath     Key = `log.path`
 
@@ -185,7 +185,7 @@ func InitDefaultConfig() {
 	LogEnabled.setDefault(true)
 	LogErrors.setDefault("stdout")
 	LogStandard.setDefault("stdout")
-	LogDatabase.setDefault(false)
+	LogDatabase.setDefault("off")
 	LogHTTP.setDefault("stdout")
 	LogEcho.setDefault("off")
 	LogPath.setDefault(ServiceRootpath.GetString() + "/logs")

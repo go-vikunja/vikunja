@@ -23,7 +23,6 @@ import (
 	"code.vikunja.io/api/pkg/swagger"
 	"code.vikunja.io/api/pkg/version"
 	"context"
-	"fmt"
 	"github.com/spf13/cobra"
 	"os"
 	"os/signal"
@@ -40,7 +39,7 @@ var webCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 
 		// Version notification
-		fmt.Printf("Vikunja version %s\n", version.Version)
+		log.Infof("Vikunja version %s", version.Version)
 
 		// Additional swagger information
 		swagger.SwaggerInfo.Version = version.Version
