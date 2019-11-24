@@ -13,6 +13,7 @@ import NewListComponent from '@/components/lists/NewList'
 import EditListComponent from '@/components/lists/EditList'
 import ShowTasksInRangeComponent from '@/components/tasks/ShowTasksInRange'
 import LinkShareAuthComponent from '@/components/sharing/linkSharingAuth'
+import TaskDetailViewComponent from '@/components/tasks/TaskDetailView'
 // Namespace Handling
 import NewNamespaceComponent from '@/components/namespaces/NewNamespace'
 import EditNamespaceComponent from '@/components/namespaces/EditNamespace'
@@ -115,9 +116,14 @@ export default new Router({
 			component: EditTeamComponent
 		},
 		{
-			path: '/tasks/:type',
+			path: '/tasks/by/:type',
 			name: 'showTasksInRange',
 			component: ShowTasksInRangeComponent
+		},
+		{
+			path: '/tasks/:id',
+			name: 'taskDetailView',
+			component: TaskDetailViewComponent,
 		},
 		{
 			path: '/labels',

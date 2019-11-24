@@ -22,17 +22,7 @@
 					<span class="tasktext">
 						{{l.text}}
 						<i v-if="l.dueDate > 0" :class="{'overdue': (new Date(l.dueDate * 1000) <= new Date())}"> - Due on {{formatUnixDate(l.dueDate)}}</i>
-						<span v-if="l.priority >= priorities.HIGH" class="high-priority" :class="{'not-so-high': l.priority === priorities.HIGH}">
-							<span class="icon">
-								<icon icon="exclamation"/>
-							</span>
-							<template v-if="l.priority === priorities.HIGH">High</template>
-							<template v-if="l.priority === priorities.URGENT">Urgent</template>
-							<template v-if="l.priority === priorities.DO_NOW">DO NOW</template>
-							<span class="icon" v-if="l.priority === priorities.DO_NOW">
-								<icon icon="exclamation"/>
-							</span>
-						</span>
+						<priority-label :priority="l.priority"/>
 					</span>
 				</label>
 			</div>
@@ -43,16 +33,18 @@
 	import router from '../../router'
 	import message from '../../message'
 	import TaskService from '../../services/task'
-	import priorities from '../../models/priorities'
+	import PriorityLabel from './reusable/priorityLabel'
 
 	export default {
 		name: "ShowTasks",
+		components: {
+			PriorityLabel
+		},
 		data() {
 			return {
 				tasks: [],
 				hasUndoneTasks: false,
 				taskService: TaskService,
-				priorities: priorities,
 			}
 		},
 		props: {

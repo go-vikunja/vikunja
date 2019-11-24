@@ -1,4 +1,4 @@
-import AbstractService from "./abstractService";
+import AbstractService from './abstractService'
 import LabelModel from '../models/label'
 
 export default class LabelService extends AbstractService {

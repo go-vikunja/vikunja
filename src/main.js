@@ -54,6 +54,14 @@ import { faPaste } from '@fortawesome/free-solid-svg-icons'
 import { faPencilAlt } from '@fortawesome/free-solid-svg-icons'
 import { faTimesCircle } from '@fortawesome/free-regular-svg-icons'
 import { faCalendarAlt } from '@fortawesome/free-regular-svg-icons'
+import { faCloudDownloadAlt } from '@fortawesome/free-solid-svg-icons'
+import { faCloudUploadAlt } from '@fortawesome/free-solid-svg-icons'
+import { faPercent } from '@fortawesome/free-solid-svg-icons'
+import { faStar } from '@fortawesome/free-regular-svg-icons'
+import { faAlignLeft } from '@fortawesome/free-solid-svg-icons'
+import { faPaperclip } from '@fortawesome/free-solid-svg-icons'
+import { faClock } from '@fortawesome/free-regular-svg-icons'
+import { faHistory } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
 library.add(faSignOutAlt)
@@ -82,6 +90,14 @@ library.add(faChevronDown)
 library.add(faCheck)
 library.add(faPaste)
 library.add(faPencilAlt)
+library.add(faCloudDownloadAlt)
+library.add(faCloudUploadAlt)
+library.add(faPercent)
+library.add(faStar)
+library.add(faAlignLeft)
+library.add(faPaperclip)
+library.add(faClock)
+library.add(faHistory)
 
 Vue.component('icon', FontAwesomeIcon)
 

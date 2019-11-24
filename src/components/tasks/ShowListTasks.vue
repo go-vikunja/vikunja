@@ -23,7 +23,7 @@
 			<div class="column">
 				<div class="tasks" v-if="this.list.tasks && this.list.tasks.length > 0" :class="{'short': isTaskEdit}">
 					<div class="task" v-for="l in list.tasks" :key="l.id">
-						<label :for="l.id">
+						<span>
 							<div class="fancycheckbox">
 								<input @change="markAsDone" type="checkbox" :id="l.id" :checked="l.done" style="display: none;">
 								<label :for="l.id" class="check">
@@ -33,26 +33,16 @@
 									</svg>
 								</label>
 							</div>
-							<span class="tasktext" :class="{ 'done': l.done}">
+							<router-link :to="{ name: 'taskDetailView', params: { id: l.id } }" class="tasktext" :class="{ 'done': l.done}">
 								{{l.text}}
 								<span class="tag" v-for="label in l.labels" :style="{'background': label.hex_color, 'color': label.textColor}" :key="label.id">
 									<span>{{ label.title }}</span>
 								</span>
-								<img :src="gravatar(a)" :alt="a.username" v-for="a in l.assignees" class="avatar" :key="l.id + 'assignee' + a.id"/>
+								<img :src="gravatar(a)" :alt="a.username" v-for="(a, i) in l.assignees" class="avatar" :key="l.id + 'assignee' + a.id + i"/>
 								<i v-if="l.dueDate > 0" :class="{'overdue': (l.dueDate <= new Date())}"> - Due on {{new Date(l.dueDate).toLocaleString()}}</i>
-								<span v-if="l.priority >= priorities.HIGH" class="high-priority" :class="{'not-so-high': l.priority === priorities.HIGH}">
-									<span class="icon">
-										<icon icon="exclamation"/>
-									</span>
-									<template v-if="l.priority === priorities.HIGH">High</template>
-									<template v-if="l.priority === priorities.URGENT">Urgent</template>
-									<template v-if="l.priority === priorities.DO_NOW">DO NOW</template>
-									<span class="icon" v-if="l.priority === priorities.DO_NOW">
-										<icon icon="exclamation"/>
-									</span>
-								</span>
-							</span>
-						</label>
+								<priority-label :priority="l.priority"/>
+							</router-link>
+						</span>
 						<div @click="editTask(l.id)" class="icon settings">
 							<icon icon="pencil-alt"/>
 						</div>
@@ -90,7 +80,7 @@
 	import ListModel from '../../models/list'
 	import EditTask from './edit-task'
 	import TaskModel from '../../models/task'
-	import priorities from '../../models/priorities'
+	import PriorityLabel from './reusable/priorityLabel'
 
 	export default {
 		data() {
@@ -102,10 +92,10 @@
 				isTaskEdit: false,
 				taskEditTask: TaskModel,
 				newTaskText: '',
-				priorities: {},
 			}
 		},
 		components: {
+			PriorityLabel,
 			EditTask,
 		},
 		props: {
@@ -122,7 +112,6 @@
 		created() {
 			this.listService = new ListService()
 			this.taskService = new TaskService()
-			this.priorities = priorities
 			this.taskEditTask = null
 			this.isTaskEdit = false
 		},

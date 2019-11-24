@@ -28,7 +28,7 @@
     padding: 0.5rem 1rem;
     border-bottom: 1px solid darken(#fff, 10%);
 
-    label{
+    span:not(.tag) {
       width: 96%;
       display: inline-block;
       cursor: pointer;
@@ -66,22 +66,19 @@
         height: 27px;
         width: 27px;
       }
+
+      a {
+        color: $text;
+        transition: color ease $transition-duration;
+
+        &:hover {
+          color: darken($text, 40%);
+        }
+      }
     }
 
     .remove {
       color: $red;
-    }
-
-    .high-priority{
-      color: $red;
-
-      .icon {
-        vertical-align: middle;
-      }
-
-      &.not-so-high {
-        color: $orange;
-      }
     }
 
     input[type="checkbox"] {
@@ -104,32 +101,6 @@
   min-height: calc(100% - 1rem);
   margin-top: 1rem;
 
-  .reminder-input{
-    margin: 0;
-
-    &.overdue input{
-      color: $red;
-    }
-
-    &:last-child {
-      margin-bottom: 0.75rem;
-    }
-
-    a {
-      color: $red;
-      vertical-align: sub;
-    }
-
-    input {
-      width: 90%;
-      border: none;
-
-      &:focus {
-        border: none;
-        box-shadow: none;
-      }
-    }
-  }
 
   .priority-select{
     .select, select{
@@ -163,5 +134,17 @@
     &:last-child{
       margin-right: 0;
     }
+  }
+}
+
+.high-priority{
+  color: $red;
+
+  .icon {
+    vertical-align: middle;
+  }
+
+  &.not-so-high {
+    color: $orange;
   }
 }

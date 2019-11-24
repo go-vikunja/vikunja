@@ -51,17 +51,7 @@
 					'has-not-so-high-priority': t.priority === priorities.HIGH,
 					'has-super-high-priority': t.priority === priorities.DO_NOW
 					}">{{t.text}}</span>
-					<span v-if="t.priority >= priorities.HIGH" class="high-priority" :class="{'not-so-high': t.priority === priorities.HIGH}">
-						<span class="icon">
-							<icon icon="exclamation"/>
-						</span>
-						<template v-if="t.priority === priorities.HIGH">High</template>
-						<template v-if="t.priority === priorities.URGENT">Urgent</template>
-						<template v-if="t.priority === priorities.DO_NOW">DO NOW</template>
-						<span class="icon" v-if="t.priority === priorities.DO_NOW">
-							<icon icon="exclamation"/>
-						</span>
-					</span>
+					<priority-label :priority="t.priority"/>
 					<!-- using the key here forces vue to use the updated version model and not the response returned by the api -->
 					<a @click="editTask(theTasks[k])" class="edit-toggle">
 						<icon icon="pen"/>
@@ -143,10 +133,12 @@
 	import TaskModel from '../../models/task'
 	import ListModel from '../../models/list'
 	import priorities from '../../models/priorities'
+	import PriorityLabel from "./reusable/priorityLabel";
 
 	export default {
 		name: 'GanttChart',
 		components: {
+			PriorityLabel,
 			EditTask,
 			VueDragResize,
 		},

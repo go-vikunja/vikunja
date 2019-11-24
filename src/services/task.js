@@ -6,6 +6,7 @@ export default class TaskService extends AbstractService {
 		super({
 			create: '/lists/{listID}',
 			getAll: '/tasks/all',
+			get: '/tasks/{id}',
 			update: '/tasks/{id}',
 			delete: '/tasks/{id}',
 		});
@@ -72,6 +73,13 @@ export default class TaskService extends AbstractService {
 		if (model.hexColor.substring(0, 1) === '#') {
 			model.hexColor = model.hexColor.substring(1, 7)
 		}
+
+		// Do the same for all related tasks
+		Object.keys(model.related_tasks).forEach(relationKind  => {
+			model.related_tasks[relationKind] = model.related_tasks[relationKind].map(t => {
+				return this.processModel(t)
+			})
+		})
 
 		return model
 	}

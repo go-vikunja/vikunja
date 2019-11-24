@@ -1,6 +1,8 @@
 @import url('/fonts/fonts.css');
 @import 'variables';
-@import "../../node_modules/bulma/bulma";
+@import '../../node_modules/bulma/bulma';
+
+@import 'animations';
 
 *, *:hover, *:active, *:focus{
   outline: none;
@@ -55,6 +57,10 @@
       &:focus:not(:active) {
         box-shadow: 0.1em 0.1em 0.7em lighten($color, 30) !important;
       }
+
+      &.is-outlined {
+        border: 2px solid $color;
+      }
     }
   }
 
@@ -69,6 +75,10 @@
     &:focus:not(:active) {
       box-shadow: none;
     }
+  }
+
+  &.is-small {
+    border-radius: $radius;
   }
 }
 
@@ -261,5 +271,20 @@ h1,h2,h3,h4,h5,h6{
         }
       }
     }
+  }
+}
+
+.multiselect__tags {
+  .remove-assignee {
+    vertical-align: bottom;
+    color: $red;
+    margin-left: -1.8em;
+    background: $white;
+    padding: 0 4px;
+    display: inline-block;
+    border-radius: 100%;
+    font-size: .8em;
+    width: 18px;
+    height: 18px;
   }
 }

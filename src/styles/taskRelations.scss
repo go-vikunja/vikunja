@@ -1,0 +1,39 @@
+.task-relations {
+  padding-bottom: 1em;
+
+  &.is-narrow .columns {
+    display: block;
+
+    .column {
+      width: 100%;
+    }
+  }
+
+  .related-tasks {
+    margin-bottom: .75em;
+
+    .title {
+      font-size: 1em;
+      margin: 0;
+    }
+
+    .tasks {
+      margin: 0;
+
+      .task {
+        padding: .5em;
+      }
+    }
+  }
+
+  .multiselect__input {
+    width: 90% !important;
+    padding-left: 5px !important;
+    z-index: 1;
+  }
+
+  .none {
+    font-style: italic;
+    text-align: center;
+  }
+}

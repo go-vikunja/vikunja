@@ -4,6 +4,7 @@
 @import 'styles/transitions';
 
 @import 'styles/tasks';
+@import 'styles/task';
 @import 'styles/teams';
 @import 'styles/fullpage';
 @import 'styles/labels';
@@ -12,5 +13,9 @@
 @import 'styles/fancycheckbox';
 @import 'styles/tooltip';
 @import 'styles/gantt';
+
+@import 'styles/attachments';
+@import 'styles/taskRelations';
+@import 'styles/reminders';
 
 @import 'styles/multiselect';

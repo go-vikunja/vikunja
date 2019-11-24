@@ -1,0 +1,185 @@
+.task-view {
+  .subtitle {
+    color: $grey;
+
+    a {
+      color: $grey-dark;
+    }
+  }
+
+  .has-top-border {
+    border-top: 1px solid lighten($grey, 35%);
+    padding-top: .5em;
+  }
+
+  h3 .button {
+    vertical-align: middle;
+  }
+
+  .icon.is-grey {
+    color: lighten($grey, 5%);
+  }
+
+  .heading {
+    display: flex;
+    justify-content: space-between;
+    text-transform: none;
+    align-items: center;
+
+    .title {
+      margin-bottom: 0;
+    }
+
+    .title.task-id {
+      color: lighten($grey, 25%);
+      white-space: nowrap;
+    }
+
+    .input.title{
+      font-size: 1.8rem;
+      font-family: $vikunja-font;
+      font-weight: 400 !important;
+      background: transparent;
+      border-color: transparent;
+      margin: 0 .3em;
+      height: 1.5em;
+      padding: 0 .3em;
+
+      &:hover,&:active {
+        background: $input-background-color;
+        border-color: $input-border-color;
+      }
+
+      &:focus {
+        background: $input-background-color;
+        border-color: $input-focus-border-color;
+      }
+    }
+
+    .is-done {
+      background: $green;
+      color: $white;
+      padding: .5em;
+      font-size: 1.5em;
+      margin-left: .5em;
+      font-weight: bold;
+      line-height: 1;
+      border-radius: 4px;
+    }
+  }
+
+  .date-input {
+    display: flex;
+    align-items: center;
+
+    a {
+      color: $red;
+      vertical-align: middle;
+      padding-left: .5em;
+      line-height: 1;
+    }
+  }
+
+  .details {
+    padding-bottom: 0.75em;
+    flex-flow: row wrap;
+
+    .detail-title {
+      display: block;
+      color: lighten($grey, 15%);
+    }
+
+    .none {
+      font-style: italic;
+    }
+
+    // Break after the 4th element
+    .column:nth-child(4n) {
+      page-break-after: always; // CSS 2.1 syntax
+      break-after: always; // New syntax
+    }
+
+    &.labels-list, .assignees{
+      .multiselect__tags {
+        padding: 3px 0 0 3px;
+        border: none;
+        background: transparent;
+      }
+
+      .multiselect__input, .multiselect__single {
+        width: 100% !important;
+        margin: 0;
+        padding: .35em !important;
+        position: relative !important;
+        background: transparent;
+      }
+
+      .multiselect__placeholder {
+        display: none;
+      }
+
+      .multiselect__select {
+        // We may need to enable this since it may also be responsable for showing the loading spinner
+        display: none;
+      }
+
+      .multiselect__content-wrapper {
+        border: none;
+      }
+    }
+
+    .input:not(.has-defaults),
+    .textarea,
+    .select:not(.has-defaults) select {
+      border-color: transparent;
+      background: transparent;
+      cursor: pointer;
+      transition: all $transition-duration;
+
+      &::placeholder {
+        color: $text-light;
+        opacity: 1;
+        font-style: italic;
+      }
+
+      &:hover {
+        border-color: $input-border-color;
+        background: $input-background-color;
+      }
+    }
+
+    .textarea {
+      &:hover {
+        cursor: text;
+      }
+
+      &:focus {
+        border-color: $input-focus-border-color
+      }
+    }
+
+    .select:not(.has-defaults):after {
+      opacity: 0;
+    }
+
+    .select:not(.has-defaults):hover:after {
+      opacity: 1;
+    }
+  }
+
+  .attachments {
+    margin-bottom: 0;
+
+    table tr:last-child td {
+      border-bottom: none;
+    }
+  }
+
+  .action-buttons {
+    a.button {
+      width: 100%;
+      margin-bottom: .5em;
+      justify-content: left;
+    }
+  }
+}

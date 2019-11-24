@@ -40,13 +40,16 @@ export default class AbstractService {
 		this.http.interceptors.request.use( (config) => {
 			switch (config.method) {
 				case 'post':
-					config.data = JSON.stringify(self.beforeUpdate(config.data))
+					if(this.useUpdateInterceptor())
+						config.data = JSON.stringify(self.beforeUpdate(config.data))
 					break
 				case 'put':
-					config.data = JSON.stringify(self.beforeCreate(config.data))
+					if(this.useCreateInterceptor())
+						config.data = JSON.stringify(self.beforeCreate(config.data))
 					break
 				case 'delete':
-					config.data = JSON.stringify(self.beforeDelete(config.data))
+					if(this.useDeleteInterceptor())
+						config.data = JSON.stringify(self.beforeDelete(config.data))
 					break
 			}
 			return config
@@ -68,6 +71,30 @@ export default class AbstractService {
 			update: paths.update !== undefined ? paths.update : '',
 			delete: paths.delete !== undefined ? paths.delete : '',
 		}
+	}
+
+	/**
+	 * Whether or not to use the create interceptor which processes a request payload into json
+	 * @returns {boolean}
+	 */
+	useCreateInterceptor() {
+		return true
+	}
+
+	/**
+	 * Whether or not to use the update interceptor which processes a request payload into json
+	 * @returns {boolean}
+	 */
+	useUpdateInterceptor() {
+		return true
+	}
+
+	/**
+	 * Whether or not to use the delete interceptor which processes a request payload into json
+	 * @returns {boolean}
+	 */
+	useDeleteInterceptor() {
+		return true
 	}
 	
 	/////////////////////

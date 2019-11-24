@@ -137,6 +137,12 @@ fieldset[disabled] .multiselect {
 
 .multiselect__tags-wrap {
   display: inline;
+
+  .user {
+    display: inline-block;
+    min-height: 30px;
+    margin: 0 0 .5em;
+  }
 }
 
 .multiselect__tags {

@@ -1,4 +1,4 @@
-import AbstractService from "./abstractService";
+import AbstractService from './abstractService'
 import TaskRelationModel from '../models/taskRelation'
 
 export default class TaskRelationService extends AbstractService {

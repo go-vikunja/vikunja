@@ -1,0 +1,28 @@
+.reminders {
+  .reminder-input {
+    margin: 0;
+
+    &.overdue input {
+      color: $red;
+    }
+
+    &:last-child {
+      margin-bottom: 0.75rem;
+    }
+
+    a {
+      color: $red;
+      vertical-align: sub;
+    }
+
+    input {
+      width: 90%;
+      border: none;
+
+      &:focus {
+        border: none;
+        box-shadow: none;
+      }
+    }
+  }
+}

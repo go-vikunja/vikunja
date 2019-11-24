@@ -1,11 +1,15 @@
 import AbstractModel from './abstractModel';
 import UserModel from './user'
-import LabelModel from "./label";
+import LabelModel from './label'
+import AttachmentModel from './attachment'
 
 export default class TaskModel extends AbstractModel {
 	
 	constructor(data) {
 		super(data)
+
+		this.id = Number(this.id)
+		this.listID = Number(this.listID)
 		
 		// Make date objects from timestamps
 		this.dueDate = this.parseDateIfNessecary(this.dueDate)
@@ -44,6 +48,11 @@ export default class TaskModel extends AbstractModel {
 				return new TaskModel(t)
 			})
 		})
+
+		// Make all attachments to attachment models
+		this.attachments = this.attachments.map(a => {
+			return new AttachmentModel(a)
+		})
 	}
 	
 	defaults() {
@@ -65,6 +74,7 @@ export default class TaskModel extends AbstractModel {
 			hexColor: '',
 			percentDone: 0,
 			related_tasks: {},
+			attachments: [],
 
 			createdBy: UserModel,
 			created: 0,
