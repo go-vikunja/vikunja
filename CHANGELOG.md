@@ -9,7 +9,7 @@ All releases can be found on https://code.vikunja.io/frontend/releases.
 
 The releases aim at the api versions which is why there are missing versions.
 
-## [0.8] - 2019-11-24
+## [0.9] - 2019-11-24
 
 ### Added
 
