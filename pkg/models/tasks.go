@@ -788,7 +788,7 @@ func (t *Task) updateReminders(reminders []int64) (err error) {
 	if len(remindersToDelete) > 0 {
 		_, err = x.In("reminder_unix", remindersToDelete).
 			And("task_id = ?", t.ID).
-			Delete(TaskAssginee{})
+			Delete(TaskReminder{})
 		if err != nil {
 			return err
 		}
