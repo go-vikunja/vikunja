@@ -7,9 +7,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 All releases can be found on https://code.vikunja.io/api/releases.
 
+## [0.9] - 2019-11-24
+
+### Added 
+
+* Task Attachments (#104)
+* Task Relations (#103)
+* Add endpoint to get a single task (#106)
+* Add file volume to the docker image
+* Added extra depth to logging to correctly show the functions calling the logger in logs
+* Added more infos to a link share auth (#98)
+* Added percent done to tasks (#102)
+
+### Fixed
+
+* Fix default logging settings (#107)
+* Fixed a bug where adding assignees or reminders via an update would re-create them and not respect already inserted ones, leaving a lot of garbage
+* Fixed a bug where deleting an attachment would cause a nil panic
+* Fixed building docs theme
+* Fixed error when setting max file size on 32-Bit systems
+* Fixed labels being displayed multiple times if they were associated with more than one task (#99)
+* Fixed metrics on/off setting
+* Fixed migration for task relations
+* Fixed not getting all labels when retrieving a list with all tasks
+* Fixed panic when using link share and metrics
+* Fixed rate limit panic when authenticating with a link share auth token (#97)
+* Fixed removing reminders
+* Small link share fixes (#96)
+
+### Changed 
+
+* Improve pagination (#105)
+* Moved `teams_{namespace|list}_*` to `{namespace|list}_teams_*` for better consistency (#101)
+* Refactored getting all lists for a namespace (#100)
+* Refactored getting task IDs for labels
+* Switched default logger to stdout instead of stderr
+* update docs theme
+
+### Misc
+
+* Move from markdown lists to Vikunja for roadmap
+
 ## [0.8] - 2019-09-01
 
-## Added
+### Added
 
 * Better Caldav support (#73)
 * Added settings for max open/idle connections and max connection lifetime (#74)
@@ -18,7 +59,7 @@ All releases can be found on https://code.vikunja.io/api/releases.
 * Rate limits (#91)
 * Sharing of lists via public links (#94)
 
-## Changed
+### Changed
 
 * Reminders now use an extra table (#75)
 * Use the username instead of a full user object when adding a user to a team or giving it rights (#76)
@@ -29,7 +70,7 @@ All releases can be found on https://code.vikunja.io/api/releases.
 * Use longtext instead of varchar(1000) on description fields (#88)
 * Logger refactoring (#90)
 
-## Fixed
+### Fixed
 
 * Fixed `listID` not being returned in tasks
 * Fixed tests (#72)
@@ -37,7 +78,7 @@ All releases can be found on https://code.vikunja.io/api/releases.
 * Fixed check if the user really exists before updating/deleting its rights (#77)
 * Fixed duedate spelling issue (#79)
 
-## Misc
+### Misc
 
 * Integration tests (#71)
 * Make sure the version works when building in drone
@@ -52,14 +93,14 @@ All releases can be found on https://code.vikunja.io/api/releases.
 
 ## [0.7] - 2019-04-05
 
-## Added
+### Added
 
 * DB migrations (#67)
 * More cli options for Vikunja (#66 #68)
 * Use query params to sort tasks instead of url params (#61)
 * More config paths (#55)
 
-## Fixed
+### Fixed
 
 * Fixed Priority not updating when setting it to 0
 * Fixed getting lists by namespace
@@ -67,7 +108,7 @@ All releases can be found on https://code.vikunja.io/api/releases.
 * Fixed labels not being queried correctly on tasks
 * Fixed bulk update label tasks
 
-## Changed
+### Changed
 
 * Hide a user's email address everywhere (#69)
 * Refactored `canRead()` to get the list before checking rights #65
@@ -77,7 +118,7 @@ All releases can be found on https://code.vikunja.io/api/releases.
 * Logging Handling (#57)
 * Rights performance improvements (#54)
 
-## Misc
+### Misc
 
 * Releases also as Debian packages (#56)
 
