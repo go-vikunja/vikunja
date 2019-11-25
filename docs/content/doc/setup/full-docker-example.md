@@ -33,6 +33,8 @@ services:
       VIKUNJA_DATABASE_TYPE: mysql
       VIKUNJA_DATABASE_USER: vikunja
       VIKUNJA_DATABASE_DATABASE: vikunja
+    volumes: 
+      - ./files:/app/vikunja/files
     networks:
       - web
       - default
@@ -92,6 +94,8 @@ services:
       VIKUNJA_REDIS_HOST: 'redis:6379'
       VIKUNJA_CACHE_ENABLED: 1
       VIKUNJA_CACHE_TYPE: redis
+    volumes: 
+      - ./files:/app/vikunja/files
     networks:
       - web
       - default
@@ -176,6 +180,8 @@ services:
       VIKUNJA_DATABASE_TYPE: mysql
       VIKUNJA_DATABASE_USER: root
       VIKUNJA_DATABASE_DATABASE: vikunja
+    volumes: 
+      - ./files:/app/vikunja/files
     depends_on:
       - db
   frontend:
@@ -218,6 +224,8 @@ services:
       VIKUNJA_REDIS_HOST: 'redis:6379'
       VIKUNJA_CACHE_ENABLED: 1
       VIKUNJA_CACHE_TYPE: redis
+    volumes: 
+      - ./files:/app/vikunja/files
     depends_on:
       - db
       - redis
