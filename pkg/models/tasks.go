@@ -134,50 +134,12 @@ const (
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/all [get]
 func (t *Task) ReadAll(a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
-	var sortby SortBy
-	switch t.Sorting {
-	case "priority":
-		sortby = SortTasksByPriorityDesc
-	case "prioritydesc":
-		sortby = SortTasksByPriorityDesc
-	case "priorityasc":
-		sortby = SortTasksByPriorityAsc
-	case "duedate":
-		sortby = SortTasksByDueDateDesc
-	case "duedatedesc":
-		sortby = SortTasksByDueDateDesc
-	case "duedateasc":
-		sortby = SortTasksByDueDateAsc
-	default:
-		sortby = SortTasksByUnsorted
+	tc := &TaskCollection{
+		Sorting:           t.Sorting,
+		StartDateSortUnix: t.StartDateSortUnix,
+		EndDateSortUnix:   t.EndDateSortUnix,
 	}
-
-	taskopts := &taskOptions{
-		search:    search,
-		sortby:    sortby,
-		startDate: time.Unix(t.StartDateSortUnix, 0),
-		endDate:   time.Unix(t.EndDateSortUnix, 0),
-		page:      page,
-		perPage:   perPage,
-	}
-
-	shareAuth, is := a.(*LinkSharing)
-	if is {
-		list := &List{ID: shareAuth.ListID}
-		err := list.GetSimpleByID()
-		if err != nil {
-			return nil, 0, 0, err
-		}
-		return getTasksForLists([]*List{list}, taskopts)
-	}
-
-	// Get all lists for the user
-	lists, _, _, err := getRawListsForUser("", &User{ID: a.GetID()}, -1, 0)
-	if err != nil {
-		return nil, 0, 0, err
-	}
-
-	return getTasksForLists(lists, taskopts)
+	return tc.ReadAll(a, search, page, perPage)
 }
 
 type taskOptions struct {

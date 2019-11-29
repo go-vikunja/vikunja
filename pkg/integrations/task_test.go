@@ -54,8 +54,21 @@ func TestTask(t *testing.T) {
 			assert.Contains(t, rec.Body.String(), `task #12`)
 			assert.NotContains(t, rec.Body.String(), `task #13`)
 			assert.NotContains(t, rec.Body.String(), `task #14`)
-			// TODO: add more tasks, since the whole point of this is to get all tasks in all lists where the user
-			//  has at least read access
+			assert.NotContains(t, rec.Body.String(), `task #13`)
+			assert.NotContains(t, rec.Body.String(), `task #14`)
+			assert.Contains(t, rec.Body.String(), `task #15`) // Shared via team readonly
+			assert.Contains(t, rec.Body.String(), `task #16`) // Shared via team write
+			assert.Contains(t, rec.Body.String(), `task #17`) // Shared via team admin
+			assert.Contains(t, rec.Body.String(), `task #18`) // Shared via user readonly
+			assert.Contains(t, rec.Body.String(), `task #19`) // Shared via user write
+			assert.Contains(t, rec.Body.String(), `task #20`) // Shared via user admin
+			assert.Contains(t, rec.Body.String(), `task #21`) // Shared via namespace team readonly
+			assert.Contains(t, rec.Body.String(), `task #22`) // Shared via namespace team write
+			assert.Contains(t, rec.Body.String(), `task #23`) // Shared via namespace team admin
+			assert.Contains(t, rec.Body.String(), `task #24`) // Shared via namespace user readonly
+			assert.Contains(t, rec.Body.String(), `task #25`) // Shared via namespace user write
+			assert.Contains(t, rec.Body.String(), `task #26`) // Shared via namespace user admin
+			// TODO: Add some cases where the user has access to the list, somhow shared
 		})
 		t.Run("Search", func(t *testing.T) {
 			rec, err := testHandler.testReadAllWithUser(url.Values{"s": []string{"task #6"}}, nil)

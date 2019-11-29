@@ -1642,6 +1642,66 @@ paths:
       summary: Get one link shares for a list
       tags:
       - sharing
+  /lists/{listID}/tasks:
+    get:
+      consumes:
+      - application/json
+      description: Returns all tasks for the current list.
+      parameters:
+      - description: The list ID.
+        in: path
+        name: listID
+        required: true
+        type: integer
+      - description: The page number. Used for pagination. If not provided, the first
+          page of results is returned.
+        in: query
+        name: page
+        type: integer
+      - description: The maximum number of items per page. Note this parameter is
+          limited by the configured maximum of items per page.
+        in: query
+        name: per_page
+        type: integer
+      - description: Search tasks by task text.
+        in: query
+        name: s
+        type: string
+      - description: The sorting parameter. Possible values to sort by are priority,
+          prioritydesc, priorityasc, duedate, duedatedesc, duedateasc.
+        in: query
+        name: sort
+        type: string
+      - description: The start date parameter to filter by. Expects a unix timestamp.
+          If no end date, but a start date is specified, the end date is set to the
+          current time.
+        in: query
+        name: startdate
+        type: integer
+      - description: The end date parameter to filter by. Expects a unix timestamp.
+          If no start date, but an end date is specified, the start date is set to
+          the current time.
+        in: query
+        name: enddate
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The tasks
+          schema:
+            items:
+              $ref: '#/definitions/models.Task'
+            type: array
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get tasks on a list
+      tags:
+      - task
   /lists/{listID}/teams/{teamID}:
     delete:
       description: Delets a team from a list. The team won't have access to the list
