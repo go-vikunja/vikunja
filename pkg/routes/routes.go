@@ -215,6 +215,13 @@ func registerAPIRoutes(a *echo.Group) {
 		a.DELETE("/lists/:list/shares/:share", listSharingHandler.DeleteWeb)
 	}
 
+	taskCollectionHandler := &handler.WebHandler{
+		EmptyStruct: func() handler.CObject {
+			return &models.TaskCollection{}
+		},
+	}
+	a.GET("/lists/:list/tasks", taskCollectionHandler.ReadAllWeb)
+
 	taskHandler := &handler.WebHandler{
 		EmptyStruct: func() handler.CObject {
 			return &models.Task{}
@@ -222,16 +229,9 @@ func registerAPIRoutes(a *echo.Group) {
 	}
 	a.PUT("/lists/:list", taskHandler.CreateWeb)
 	a.GET("/tasks/:listtask", taskHandler.ReadOneWeb)
-	a.GET("/tasks/all", taskHandler.ReadAllWeb)
+	a.GET("/tasks/all", taskCollectionHandler.ReadAllWeb)
 	a.DELETE("/tasks/:listtask", taskHandler.DeleteWeb)
 	a.POST("/tasks/:listtask", taskHandler.UpdateWeb)
-
-	taskCollectionHandler := &handler.WebHandler{
-		EmptyStruct: func() handler.CObject {
-			return &models.TaskCollection{}
-		},
-	}
-	a.GET("/lists/:list/tasks", taskCollectionHandler.ReadAllWeb)
 
 	bulkTaskHandler := &handler.WebHandler{
 		EmptyStruct: func() handler.CObject {

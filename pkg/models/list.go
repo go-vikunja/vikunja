@@ -35,7 +35,8 @@ type List struct {
 	// The user who created this list.
 	Owner *User `xorm:"-" json:"owner" valid:"-"`
 	// An array of tasks which belong to the list.
-	Tasks []*Task `xorm:"-" json:"tasks"`
+	// Deprecated: you should use the dedicated task list endpoint because it has support for pagination and filtering
+	Tasks []*Task `xorm:"-" json:"-"`
 
 	// A unix timestamp when this list was created. You cannot change this value.
 	Created int64 `xorm:"created not null" json:"created"`
@@ -122,12 +123,6 @@ func (l *List) ReadAll(a web.Auth, search string, page int, perPage int) (result
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{id} [get]
 func (l *List) ReadOne() (err error) {
-	// Get list tasks
-	l.Tasks, err = GetTasksByListID(l.ID)
-	if err != nil {
-		return err
-	}
-
 	// Get list owner
 	l.Owner, err = GetUserByID(l.OwnerID)
 	return
@@ -233,18 +228,9 @@ func getRawListsForUser(search string, u *User, page int, perPage int) (lists []
 
 // AddListDetails adds owner user objects and list tasks to all lists in the slice
 func AddListDetails(lists []*List) (err error) {
-	var listIDs []int64
 	var ownerIDs []int64
 	for _, l := range lists {
-		listIDs = append(listIDs, l.ID)
 		ownerIDs = append(ownerIDs, l.OwnerID)
-	}
-
-	// Get all tasks
-	ts := []*Task{}
-	err = x.In("list_id", listIDs).Find(&ts)
-	if err != nil {
-		return
 	}
 
 	// Get all list owners
@@ -261,13 +247,6 @@ func AddListDetails(lists []*List) (err error) {
 			if list.OwnerID == owner.ID {
 				lists[in].Owner = owner
 				break
-			}
-		}
-
-		// Tasks
-		for _, task := range ts {
-			if task.ListID == list.ID {
-				lists[in].Tasks = append(lists[in].Tasks, task)
 			}
 		}
 	}

@@ -117,7 +117,16 @@ const (
 	SortTasksByPriorityDesc
 )
 
-// ReadAll gets all tasks for a user
+type taskOptions struct {
+	search    string
+	sortby    SortBy
+	startDate time.Time
+	endDate   time.Time
+	page      int
+	perPage   int
+}
+
+// ReadAll is a dummy function to still have that endpoint documented
 // @Summary Get tasks
 // @Description Returns all tasks on any list the user has access to.
 // @tags task
@@ -134,21 +143,7 @@ const (
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/all [get]
 func (t *Task) ReadAll(a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
-	tc := &TaskCollection{
-		Sorting:           t.Sorting,
-		StartDateSortUnix: t.StartDateSortUnix,
-		EndDateSortUnix:   t.EndDateSortUnix,
-	}
-	return tc.ReadAll(a, search, page, perPage)
-}
-
-type taskOptions struct {
-	search    string
-	sortby    SortBy
-	startDate time.Time
-	endDate   time.Time
-	page      int
-	perPage   int
+	return nil, 0, 0, nil
 }
 
 func getRawTasksForLists(lists []*List, opts *taskOptions) (taskMap map[int64]*Task, resultCount int, totalItems int64, err error) {

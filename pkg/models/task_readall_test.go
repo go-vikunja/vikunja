@@ -471,22 +471,11 @@ func TestTask_ReadAll(t *testing.T) {
 	}
 
 	type fields struct {
-		ID                int64
-		Text              string
-		Description       string
-		Done              bool
-		DueDateUnix       int64
-		RemindersUnix     []int64
-		CreatedByID       int64
 		ListID            int64
-		RepeatAfter       int64
-		Priority          int64
 		Sorting           string
 		StartDateSortUnix int64
 		EndDateSortUnix   int64
-		Created           int64
-		Updated           int64
-		CreatedBy         *User
+		Lists             []*List
 		CRUDable          web.CRUDable
 		Rights            web.Rights
 	}
@@ -708,23 +697,11 @@ func TestTask_ReadAll(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			lt := &Task{
-				ID:                tt.fields.ID,
-				Text:              tt.fields.Text,
-				Description:       tt.fields.Description,
-				Done:              tt.fields.Done,
-				DueDateUnix:       tt.fields.DueDateUnix,
-				RemindersUnix:     tt.fields.RemindersUnix,
-				CreatedByID:       tt.fields.CreatedByID,
+			lt := &TaskCollection{
 				ListID:            tt.fields.ListID,
-				RepeatAfter:       tt.fields.RepeatAfter,
-				Priority:          tt.fields.Priority,
 				Sorting:           tt.fields.Sorting,
 				StartDateSortUnix: tt.fields.StartDateSortUnix,
 				EndDateSortUnix:   tt.fields.EndDateSortUnix,
-				Created:           tt.fields.Created,
-				Updated:           tt.fields.Updated,
-				CreatedBy:         tt.fields.CreatedBy,
 				CRUDable:          tt.fields.CRUDable,
 				Rights:            tt.fields.Rights,
 			}

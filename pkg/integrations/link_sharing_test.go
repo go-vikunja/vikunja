@@ -409,6 +409,27 @@ func TestLinkSharing(t *testing.T) {
 	})
 
 	t.Run("Tasks", func(t *testing.T) {
+		testHandlerTaskReadOnlyCollection := webHandlerTest{
+			linkShare: linkshareRead,
+			strFunc: func() handler.CObject {
+				return &models.TaskCollection{}
+			},
+			t: t,
+		}
+		testHandlerTaskWriteCollection := webHandlerTest{
+			linkShare: linkShareWrite,
+			strFunc: func() handler.CObject {
+				return &models.TaskCollection{}
+			},
+			t: t,
+		}
+		testHandlerTaskAdminCollection := webHandlerTest{
+			linkShare: linkShareAdmin,
+			strFunc: func() handler.CObject {
+				return &models.TaskCollection{}
+			},
+			t: t,
+		}
 		testHandlerTaskReadOnly := webHandlerTest{
 			linkShare: linkshareRead,
 			strFunc: func() handler.CObject {
@@ -432,7 +453,7 @@ func TestLinkSharing(t *testing.T) {
 		}
 		t.Run("ReadAll", func(t *testing.T) {
 			t.Run("Shared readonly", func(t *testing.T) {
-				rec, err := testHandlerTaskReadOnly.testReadAllWithLinkShare(nil, nil)
+				rec, err := testHandlerTaskReadOnlyCollection.testReadAllWithLinkShare(nil, nil)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `task #1`)
 				assert.Contains(t, rec.Body.String(), `task #2`)
@@ -450,7 +471,7 @@ func TestLinkSharing(t *testing.T) {
 				assert.NotContains(t, rec.Body.String(), `task #14`)
 			})
 			t.Run("Shared write", func(t *testing.T) {
-				rec, err := testHandlerTaskWrite.testReadAllWithLinkShare(nil, nil)
+				rec, err := testHandlerTaskWriteCollection.testReadAllWithLinkShare(nil, nil)
 				assert.NoError(t, err)
 				assert.NotContains(t, rec.Body.String(), `task #2`)
 				assert.NotContains(t, rec.Body.String(), `task #3`)
@@ -467,7 +488,7 @@ func TestLinkSharing(t *testing.T) {
 				assert.NotContains(t, rec.Body.String(), `task #14`)
 			})
 			t.Run("Shared admin", func(t *testing.T) {
-				rec, err := testHandlerTaskAdmin.testReadAllWithLinkShare(nil, nil)
+				rec, err := testHandlerTaskAdminCollection.testReadAllWithLinkShare(nil, nil)
 				assert.NoError(t, err)
 				assert.NotContains(t, rec.Body.String(), `task #2`)
 				assert.NotContains(t, rec.Body.String(), `task #4`)

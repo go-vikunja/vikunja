@@ -61,7 +61,7 @@ func TestList(t *testing.T) {
 			assert.NotContains(t, rec.Body.String(), `"title":"Test2"`)
 			assert.Contains(t, rec.Body.String(), `"owner":{"id":1,"username":"user1",`)
 			assert.NotContains(t, rec.Body.String(), `"owner":{"id":2,"username":"user2",`)
-			assert.Contains(t, rec.Body.String(), `"tasks":[{"id":1,"text":"task #1",`)
+			assert.NotContains(t, rec.Body.String(), `"tasks":`)
 		})
 		t.Run("Nonexisting", func(t *testing.T) {
 			_, err := testHandler.testReadOneWithUser(nil, map[string]string{"list": "9999"})
@@ -338,7 +338,7 @@ func TestList(t *testing.T) {
 			assert.Contains(t, rec.Body.String(), `"title":"Lorem"`)
 			assert.Contains(t, rec.Body.String(), `"description":""`)
 			assert.Contains(t, rec.Body.String(), `"owner":{"id":1`)
-			assert.Contains(t, rec.Body.String(), `"tasks":null`)
+			assert.NotContains(t, rec.Body.String(), `"tasks":`)
 		})
 		t.Run("Normal with description", func(t *testing.T) {
 			rec, err := testHandler.testCreateWithUser(nil, map[string]string{"namespace": "1"}, `{"title":"Lorem","description":"Lorem Ipsum"}`)
@@ -346,7 +346,7 @@ func TestList(t *testing.T) {
 			assert.Contains(t, rec.Body.String(), `"title":"Lorem"`)
 			assert.Contains(t, rec.Body.String(), `"description":"Lorem Ipsum"`)
 			assert.Contains(t, rec.Body.String(), `"owner":{"id":1`)
-			assert.Contains(t, rec.Body.String(), `"tasks":null`)
+			assert.NotContains(t, rec.Body.String(), `"tasks":`)
 		})
 		t.Run("Nonexisting Namespace", func(t *testing.T) {
 			_, err := testHandler.testCreateWithUser(nil, map[string]string{"namespace": "999999"}, `{"title":"Lorem"}`)
@@ -388,7 +388,7 @@ func TestList(t *testing.T) {
 				assert.Contains(t, rec.Body.String(), `"title":"Lorem"`)
 				assert.Contains(t, rec.Body.String(), `"description":""`)
 				assert.Contains(t, rec.Body.String(), `"owner":{"id":1`)
-				assert.Contains(t, rec.Body.String(), `"tasks":null`)
+				assert.NotContains(t, rec.Body.String(), `"tasks":`)
 			})
 			t.Run("Shared Via NamespaceTeam admin", func(t *testing.T) {
 				rec, err := testHandler.testCreateWithUser(nil, map[string]string{"namespace": "9"}, `{"title":"Lorem"}`)
@@ -396,7 +396,7 @@ func TestList(t *testing.T) {
 				assert.Contains(t, rec.Body.String(), `"title":"Lorem"`)
 				assert.Contains(t, rec.Body.String(), `"description":""`)
 				assert.Contains(t, rec.Body.String(), `"owner":{"id":1`)
-				assert.Contains(t, rec.Body.String(), `"tasks":null`)
+				assert.NotContains(t, rec.Body.String(), `"tasks":`)
 			})
 
 			t.Run("Shared Via NamespaceUser readonly", func(t *testing.T) {
@@ -410,7 +410,7 @@ func TestList(t *testing.T) {
 				assert.Contains(t, rec.Body.String(), `"title":"Lorem"`)
 				assert.Contains(t, rec.Body.String(), `"description":""`)
 				assert.Contains(t, rec.Body.String(), `"owner":{"id":1`)
-				assert.Contains(t, rec.Body.String(), `"tasks":null`)
+				assert.NotContains(t, rec.Body.String(), `"tasks":`)
 			})
 			t.Run("Shared Via NamespaceUser admin", func(t *testing.T) {
 				rec, err := testHandler.testCreateWithUser(nil, map[string]string{"namespace": "12"}, `{"title":"Lorem"}`)
@@ -418,7 +418,7 @@ func TestList(t *testing.T) {
 				assert.Contains(t, rec.Body.String(), `"title":"Lorem"`)
 				assert.Contains(t, rec.Body.String(), `"description":""`)
 				assert.Contains(t, rec.Body.String(), `"owner":{"id":1`)
-				assert.Contains(t, rec.Body.String(), `"tasks":null`)
+				assert.NotContains(t, rec.Body.String(), `"tasks":`)
 			})
 		})
 	})
