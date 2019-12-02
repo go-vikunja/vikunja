@@ -2,6 +2,7 @@ module.exports = {
 	configureWebpack: {
 		devtool: 'source-map'
 	},
+	productionSourceMap: false,
 	pwa: {
 		name: 'Vikunja',
 		themeColor: '#5974d9',
