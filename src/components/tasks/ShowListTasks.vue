@@ -71,8 +71,8 @@
 		</div>
 
 		<nav class="pagination is-centered" role="navigation" aria-label="pagination" v-if="taskCollectionService.totalPages > 1">
-			<button class="pagination-previous" @click="loadTasks(currentPage - 1)" :disabled="currentPage === 1">Previous</button>
-			<button class="pagination-next" @click="loadTasks(currentPage + 1)" :disabled="currentPage === taskCollectionService.totalPages">Next page</button>
+			<router-link class="pagination-previous" :to="{name: 'showList', query: { page: currentPage - 1 }}" tag="button" :disabled="currentPage === 1">Previous</router-link>
+			<router-link class="pagination-next" :to="{name: 'showList', query: { page: currentPage + 1 }}" tag="button" :disabled="currentPage === taskCollectionService.totalPages">Next page</router-link>
 			<ul class="pagination-list">
 				<template v-for="(p, i) in pages">
 					<li :key="'page'+i" v-if="p.isEllipsis"><span class="pagination-ellipsis">&hellip;</span></li>
