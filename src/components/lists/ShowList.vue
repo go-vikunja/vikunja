@@ -58,7 +58,7 @@
 		},
 		watch: {
 			// call again the method if the route changes
-			'$route': 'loadList'
+			'$route.path': 'loadList'
 		},
 		methods: {
 			loadList() {

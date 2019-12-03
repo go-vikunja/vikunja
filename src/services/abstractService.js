@@ -18,6 +18,9 @@ export default class AbstractService {
 		update: '',
 		delete: '',
 	}
+	// This contains the total number of pages and the number of results for the current page
+	totalPages = 0
+	resultCount = 0
 
 	/////////////
 	// Service init
@@ -96,7 +99,7 @@ export default class AbstractService {
 	useDeleteInterceptor() {
 		return true
 	}
-	
+
 	/////////////////////
 	// Global error handler
 	///////////////////
@@ -298,12 +301,15 @@ export default class AbstractService {
 	 * The difference between this and get() is this one is used to get a bunch of data (an array), not just a single object.
 	 * @param model The model to use. The request path is built using the values from the model.
 	 * @param params Optional query parameters
+	 * @param page The page to get
 	 * @returns {Q.Promise<any>}
 	 */
-	getAll(model = {}, params = {}) {
+	getAll(model = {}, params = {}, page = 1) {
 		if (this.paths.getAll === '') {
 			return Promise.reject({message: 'This model is not able to get data.'})
 		}
+
+		params.page = page
 
 		const cancel = this.setLoading()
 		model = this.beforeGet(model)
@@ -312,6 +318,9 @@ export default class AbstractService {
 				return this.errorHandler(error)
 			})
 			.then(response => {
+				this.resultCount = Number(response.headers['x-pagination-result-count'])
+				this.totalPages = Number(response.headers['x-pagination-total-pages'])
+
 				if (Array.isArray(response.data)) {
 					return Promise.resolve(response.data.map(entry => {
 						return this.modelGetAllFactory(entry)

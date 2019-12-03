@@ -1,5 +1,5 @@
 <template>
-	<div class="loader-container" :class="{ 'is-loading': listService.loading}">
+	<div class="loader-container" :class="{ 'is-loading': listService.loading || taskCollectionService.loading}">
 		<form @submit.prevent="addTask()">
 			<div class="field is-grouped">
 				<p class="control has-icons-left is-expanded" :class="{ 'is-loading': taskService.loading}">
@@ -21,8 +21,8 @@
 
 		<div class="columns">
 			<div class="column">
-				<div class="tasks" v-if="this.list.tasks && this.list.tasks.length > 0" :class="{'short': isTaskEdit}">
-					<div class="task" v-for="l in list.tasks" :key="l.id">
+				<div class="tasks" v-if="tasks && tasks.length > 0" :class="{'short': isTaskEdit}">
+					<div class="task" v-for="l in tasks" :key="l.id">
 						<span>
 							<div class="fancycheckbox">
 								<input @change="markAsDone" type="checkbox" :id="l.id" :checked="l.done" style="display: none;">
@@ -69,6 +69,19 @@
 				</div>
 			</div>
 		</div>
+
+		<nav class="pagination is-centered" role="navigation" aria-label="pagination" v-if="taskCollectionService.totalPages > 1">
+			<button class="pagination-previous" @click="loadTasks(currentPage - 1)" :disabled="currentPage === 1">Previous</button>
+			<button class="pagination-next" @click="loadTasks(currentPage + 1)" :disabled="currentPage === taskCollectionService.totalPages">Next page</button>
+			<ul class="pagination-list">
+				<template v-for="(p, i) in pages">
+					<li :key="'page'+i" v-if="p.isEllipsis"><span class="pagination-ellipsis">&hellip;</span></li>
+					<li :key="'page'+i" v-else>
+						<router-link :to="{name: 'showList', query: { page: p.number }}" :class="{'is-current': p.number === currentPage}" class="pagination-link" :aria-label="'Goto page ' + p.number">{{ p.number }}</router-link>
+					</li>
+				</template>
+			</ul>
+		</nav>
 	</div>
 </template>
 
@@ -81,6 +94,7 @@
 	import EditTask from './edit-task'
 	import TaskModel from '../../models/task'
 	import PriorityLabel from './reusable/priorityLabel'
+	import TaskCollectionService from '../../services/taskCollection'
 
 	export default {
 		data() {
@@ -88,7 +102,11 @@
 				listID: this.$route.params.id,
 				listService: ListService,
 				taskService: TaskService,
+				taskCollectionService: TaskCollectionService,
+				pages: [],
+				currentPage: 0,
 				list: {},
+				tasks: [],
 				isTaskEdit: false,
 				taskEditTask: TaskModel,
 				newTaskText: '',
@@ -107,11 +125,14 @@
 		watch: {
 			theList() {
 				this.list = this.theList
-			}
+				this.loadTasks(1)
+			},
+			'$route.query': 'loadTasksForPage', // Only listen for query path changes
 		},
 		created() {
 			this.listService = new ListService()
 			this.taskService = new TaskService()
+			this.taskCollectionService = new TaskCollectionService()
 			this.taskEditTask = null
 			this.isTaskEdit = false
 		},
@@ -127,6 +148,48 @@
 					.catch(e => {
 						message.error(e, this)
 					})
+			},
+			loadTasks(page) {
+				this.taskCollectionService.getAll({listID: this.$route.params.id}, {}, page)
+					.then(r => {
+						this.$set(this, 'tasks', r)
+						this.$set(this, 'pages', [])
+						this.currentPage = page
+
+						for (let i = 0; i < this.taskCollectionService.totalPages; i++)  {
+
+							// Show ellipsis instead of all pages
+							if(
+								i > 0 && // Always at least the first page
+								(i + 1) < this.taskCollectionService.totalPages && // And the last page
+								(
+									// And the current with current + 1 and current - 1
+									(i + 1) > this.currentPage + 1 ||
+									(i + 1) < this.currentPage - 1
+								)
+							) {
+								// Only add an ellipsis if the last page isn't already one
+								if(this.pages[i - 1] && !this.pages[i - 1].isEllipsis) {
+									this.pages.push({
+										number: 0,
+										isEllipsis: true,
+									})
+								}
+								continue
+							}
+
+							this.pages.push({
+								number: i + 1,
+								isEllipsis: false,
+							})
+						}
+					})
+					.catch(e => {
+						message.error(e, this)
+					})
+			},
+			loadTasksForPage(e) {
+				this.loadTasks(e.page)
 			},
 			markAsDone(e) {
 				let updateFunc = () => {
