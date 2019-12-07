@@ -788,6 +788,60 @@ func (err ErrTaskAttachmentIsTooLarge) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrInvalidSortParam represents an error where the provided sort param is invalid
+type ErrInvalidSortParam struct {
+	SortBy sortProperty
+}
+
+// IsErrInvalidSortParam checks if an error is ErrInvalidSortParam.
+func IsErrInvalidSortParam(err error) bool {
+	_, ok := err.(ErrInvalidSortParam)
+	return ok
+}
+
+func (err ErrInvalidSortParam) Error() string {
+	return fmt.Sprintf("Sort param is invalid [SortBy: %s]", err.SortBy)
+}
+
+// ErrCodeInvalidSortParam holds the unique world-error code of this error
+const ErrCodeInvalidSortParam = 4013
+
+// HTTPError holds the http error description
+func (err ErrInvalidSortParam) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeInvalidSortParam,
+		Message:  fmt.Sprintf("The task sort param '%s' is invalid.", err.SortBy),
+	}
+}
+
+// ErrInvalidSortOrder represents an error where the provided sort order is invalid
+type ErrInvalidSortOrder struct {
+	OrderBy sortOrder
+}
+
+// IsErrInvalidSortOrder checks if an error is ErrInvalidSortOrder.
+func IsErrInvalidSortOrder(err error) bool {
+	_, ok := err.(ErrInvalidSortOrder)
+	return ok
+}
+
+func (err ErrInvalidSortOrder) Error() string {
+	return fmt.Sprintf("Sort order is invalid [OrderBy: %s]", err.OrderBy)
+}
+
+// ErrCodeInvalidSortOrder holds the unique world-error code of this error
+const ErrCodeInvalidSortOrder = 4014
+
+// HTTPError holds the http error description
+func (err ErrInvalidSortOrder) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeInvalidSortOrder,
+		Message:  fmt.Sprintf("The task sort order '%s' is invalid. Allowed is either asc or desc.", err.OrderBy),
+	}
+}
+
 // =================
 // Namespace errors
 // =================

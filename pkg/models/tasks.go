@@ -105,25 +105,13 @@ func (TaskReminder) TableName() string {
 	return "task_reminders"
 }
 
-// SortBy declares constants to sort
-type SortBy int
-
-// These are possible sort options
-const (
-	SortTasksByUnsorted   SortBy = -1
-	SortTasksByDueDateAsc        = iota
-	SortTasksByDueDateDesc
-	SortTasksByPriorityAsc
-	SortTasksByPriorityDesc
-)
-
 type taskOptions struct {
 	search    string
-	sortby    SortBy
 	startDate time.Time
 	endDate   time.Time
 	page      int
 	perPage   int
+	sortby    []*sortParam
 }
 
 // ReadAll is a dummy function to still have that endpoint documented
@@ -154,16 +142,19 @@ func getRawTasksForLists(lists []*List, opts *taskOptions) (taskMap map[int64]*T
 		listIDs = append(listIDs, l.ID)
 	}
 
+	// Since xorm does not use placeholders for order by, it is possible to expose this with sql injection if we're directly
+	// passing user input to the db.
+	// As a workaround to prevent this, we check for valid column names here prior to passing it to the db.
 	var orderby string
-	switch opts.sortby {
-	case SortTasksByPriorityDesc:
-		orderby = "priority desc"
-	case SortTasksByPriorityAsc:
-		orderby = "priority asc"
-	case SortTasksByDueDateDesc:
-		orderby = "due_date_unix desc"
-	case SortTasksByDueDateAsc:
-		orderby = "due_date_unix asc"
+	for i, param := range opts.sortby {
+		// Validate the params
+		if err := param.validate(); err != nil {
+			return nil, 0, 0, err
+		}
+		orderby += param.sortBy.String() + " " + param.orderBy.String()
+		if (i + 1) < len(opts.sortby) {
+			orderby += ", "
+		}
 	}
 
 	taskMap = make(map[int64]*Task)
@@ -232,32 +223,11 @@ func getTasksForLists(lists []*List, opts *taskOptions) (tasks []*Task, resultCo
 	if err != nil {
 		return nil, 0, 0, err
 	}
-	// Because the list is sorted by id which we don't want (since we're dealing with maps)
+	// Because the list is fully unsorted (since we're dealing with maps)
 	// we have to manually sort the tasks again here.
 	sortTasks(tasks, opts.sortby)
 
 	return tasks, resultCount, totalItems, err
-}
-
-func sortTasks(tasks []*Task, by SortBy) {
-	switch by {
-	case SortTasksByPriorityDesc:
-		sort.Slice(tasks, func(i, j int) bool {
-			return tasks[i].Priority > tasks[j].Priority
-		})
-	case SortTasksByPriorityAsc:
-		sort.Slice(tasks, func(i, j int) bool {
-			return tasks[i].Priority < tasks[j].Priority
-		})
-	case SortTasksByDueDateDesc:
-		sort.Slice(tasks, func(i, j int) bool {
-			return tasks[i].DueDateUnix > tasks[j].DueDateUnix
-		})
-	case SortTasksByDueDateAsc:
-		sort.Slice(tasks, func(i, j int) bool {
-			return tasks[i].DueDateUnix < tasks[j].DueDateUnix
-		})
-	}
 }
 
 // GetTasksByListID gets all todotasks for a list

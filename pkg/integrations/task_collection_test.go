@@ -90,37 +90,48 @@ func TestTaskCollection(t *testing.T) {
 			assert.NotContains(t, rec.Body.String(), `task #14`)
 		})
 		t.Run("Sort Order", func(t *testing.T) {
-			// should equal priority desc
+			// TODO: Add more cases
+			// should equal priority asc
 			t.Run("by priority", func(t *testing.T) {
-				rec, err := testHandler.testReadAllWithUser(url.Values{"sort": []string{"priority"}}, urlParams)
+				rec, err := testHandler.testReadAllWithUser(url.Values{"sort_by": []string{"priority"}}, urlParams)
 				assert.NoError(t, err)
-				assert.Contains(t, rec.Body.String(), `[{"id":3,"text":"task #3 high prio","description":"","done":false,"doneAt":0,"dueDate":0,"reminderDates":null,"listID":1,"repeatAfter":0,"priority":100,"startDate":0,"endDate":0,"assignees":null,"labels":null,"hexColor":"","percentDone":0,"related_tasks":{},"attachments":null,"created":1543626724,"updated":1543626724,"createdBy":{"id":1,"username":"user1","avatarUrl":"111d68d06e2d317b5a59c2c6c5bad808","created":0,"updated":0}},{"id":4,"text":"task #4 low prio","description":"","done":false,"doneAt":0,"dueDate":0,"reminderDates":null,"listID":1,"repeatAfter":0,"priority":1,`)
+				assert.Contains(t, rec.Body.String(), `{"id":33,"text":"task #33 with percent done","description":"","done":false,"doneAt":0,"dueDate":0,"reminderDates":null,"listID":1,"repeatAfter":0,"priority":0,"startDate":0,"endDate":0,"assignees":null,"labels":null,"hexColor":"","percentDone":0.5,"related_tasks":{},"attachments":null,"created":1543626724,"updated":1543626724,"createdBy":{"id":1,"username":"user1","avatarUrl":"111d68d06e2d317b5a59c2c6c5bad808","created":0,"updated":0}},{"id":4,"text":"task #4 low prio","description":"","done":false,"doneAt":0,"dueDate":0,"reminderDates":null,"listID":1,"repeatAfter":0,"priority":1,"startDate":0,"endDate":0,"assignees":null,"labels":null,"hexColor":"","percentDone":0,"related_tasks":{},"attachments":null,"created":1543626724,"updated":1543626724,"createdBy":{"id":1,"username":"user1","avatarUrl":"111d68d06e2d317b5a59c2c6c5bad808","created":0,"updated":0}},{"id":3,"text":"task #3 high prio","description":"","done":false,"doneAt":0,"dueDate":0,"reminderDates":null,"listID":1,"repeatAfter":0,"priority":100,"startDate":0,"endDate":0,"assignees":null,"labels":null,"hexColor":"","percentDone":0,"related_tasks":{},"attachments":null,"created":1543626724,"updated":1543626724,"createdBy":{"id":1,"username":"user1","avatarUrl":"111d68d06e2d317b5a59c2c6c5bad808","created":0,"updated":0}}]`)
 			})
 			t.Run("by priority desc", func(t *testing.T) {
-				rec, err := testHandler.testReadAllWithUser(url.Values{"sort": []string{"prioritydesc"}}, urlParams)
+				rec, err := testHandler.testReadAllWithUser(url.Values{"sort_by": []string{"priority"}, "order_by": []string{"desc"}}, urlParams)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `[{"id":3,"text":"task #3 high prio","description":"","done":false,"doneAt":0,"dueDate":0,"reminderDates":null,"listID":1,"repeatAfter":0,"priority":100,"startDate":0,"endDate":0,"assignees":null,"labels":null,"hexColor":"","percentDone":0,"related_tasks":{},"attachments":null,"created":1543626724,"updated":1543626724,"createdBy":{"id":1,"username":"user1","avatarUrl":"111d68d06e2d317b5a59c2c6c5bad808","created":0,"updated":0}},{"id":4,"text":"task #4 low prio","description":"","done":false,"doneAt":0,"dueDate":0,"reminderDates":null,"listID":1,"repeatAfter":0,"priority":1,`)
 			})
 			t.Run("by priority asc", func(t *testing.T) {
-				rec, err := testHandler.testReadAllWithUser(url.Values{"sort": []string{"priorityasc"}}, urlParams)
+				rec, err := testHandler.testReadAllWithUser(url.Values{"sort_by": []string{"priority"}, "order_by": []string{"asc"}}, urlParams)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `{"id":33,"text":"task #33 with percent done","description":"","done":false,"doneAt":0,"dueDate":0,"reminderDates":null,"listID":1,"repeatAfter":0,"priority":0,"startDate":0,"endDate":0,"assignees":null,"labels":null,"hexColor":"","percentDone":0.5,"related_tasks":{},"attachments":null,"created":1543626724,"updated":1543626724,"createdBy":{"id":1,"username":"user1","avatarUrl":"111d68d06e2d317b5a59c2c6c5bad808","created":0,"updated":0}},{"id":4,"text":"task #4 low prio","description":"","done":false,"doneAt":0,"dueDate":0,"reminderDates":null,"listID":1,"repeatAfter":0,"priority":1,"startDate":0,"endDate":0,"assignees":null,"labels":null,"hexColor":"","percentDone":0,"related_tasks":{},"attachments":null,"created":1543626724,"updated":1543626724,"createdBy":{"id":1,"username":"user1","avatarUrl":"111d68d06e2d317b5a59c2c6c5bad808","created":0,"updated":0}},{"id":3,"text":"task #3 high prio","description":"","done":false,"doneAt":0,"dueDate":0,"reminderDates":null,"listID":1,"repeatAfter":0,"priority":100,"startDate":0,"endDate":0,"assignees":null,"labels":null,"hexColor":"","percentDone":0,"related_tasks":{},"attachments":null,"created":1543626724,"updated":1543626724,"createdBy":{"id":1,"username":"user1","avatarUrl":"111d68d06e2d317b5a59c2c6c5bad808","created":0,"updated":0}}]`)
 			})
-			// should equal duedate desc
+			// should equal duedate asc
 			t.Run("by duedate", func(t *testing.T) {
-				rec, err := testHandler.testReadAllWithUser(url.Values{"sort": []string{"duedate"}}, urlParams)
+				rec, err := testHandler.testReadAllWithUser(url.Values{"sort_by": []string{"due_date_unix"}}, urlParams)
 				assert.NoError(t, err)
-				assert.Contains(t, rec.Body.String(), `[{"id":5,"text":"task #5 higher due date","description":"","done":false,"doneAt":0,"dueDate":1543636724,"reminderDates":null,"listID":1,"repeatAfter":0,"priority":0,"startDate":0,"endDate":0,"assignees":null,"labels":null,"hexColor":"","percentDone":0,"related_tasks":{},"attachments":null,"created":1543626724,"updated":1543626724,"createdBy":{"id":1,"username":"user1","avatarUrl":"111d68d06e2d317b5a59c2c6c5bad808","created":0,"updated":0}},{"id":6,"text":"task #6 lower due date"`)
+				assert.Contains(t, rec.Body.String(), `{"id":6,"text":"task #6 lower due date","description":"","done":false,"doneAt":0,"dueDate":1543616724,"reminderDates":null,"listID":1,"repeatAfter":0,"priority":0,"startDate":0,"endDate":0,"assignees":null,"labels":null,"hexColor":"","percentDone":0,"related_tasks":{},"attachments":null,"created":1543626724,"updated":1543626724,"createdBy":{"id":1,"username":"user1","avatarUrl":"111d68d06e2d317b5a59c2c6c5bad808","created":0,"updated":0}},{"id":5,"text":"task #5 higher due date","description":"","done":false,"doneAt":0,"dueDate":1543636724,"reminderDates":null,"listID":1,"repeatAfter":0,"priority":0,"startDate":0,"endDate":0,"assignees":null,"labels":null,"hexColor":"","percentDone":0,"related_tasks":{},"attachments":null,"created":1543626724,"updated":1543626724,"createdBy":{"id":1,"username":"user1","avatarUrl":"111d68d06e2d317b5a59c2c6c5bad808","created":0,"updated":0}}]`)
 			})
 			t.Run("by duedate desc", func(t *testing.T) {
-				rec, err := testHandler.testReadAllWithUser(url.Values{"sort": []string{"duedatedesc"}}, urlParams)
+				rec, err := testHandler.testReadAllWithUser(url.Values{"sort_by": []string{"due_date_unix"}, "order_by": []string{"desc"}}, urlParams)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `[{"id":5,"text":"task #5 higher due date","description":"","done":false,"doneAt":0,"dueDate":1543636724,"reminderDates":null,"listID":1,"repeatAfter":0,"priority":0,"startDate":0,"endDate":0,"assignees":null,"labels":null,"hexColor":"","percentDone":0,"related_tasks":{},"attachments":null,"created":1543626724,"updated":1543626724,"createdBy":{"id":1,"username":"user1","avatarUrl":"111d68d06e2d317b5a59c2c6c5bad808","created":0,"updated":0}},{"id":6,"text":"task #6 lower due date"`)
 			})
 			t.Run("by duedate asc", func(t *testing.T) {
-				rec, err := testHandler.testReadAllWithUser(url.Values{"sort": []string{"duedateasc"}}, urlParams)
+				rec, err := testHandler.testReadAllWithUser(url.Values{"sort_by": []string{"due_date_unix"}, "order_by": []string{"asc"}}, urlParams)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `{"id":6,"text":"task #6 lower due date","description":"","done":false,"doneAt":0,"dueDate":1543616724,"reminderDates":null,"listID":1,"repeatAfter":0,"priority":0,"startDate":0,"endDate":0,"assignees":null,"labels":null,"hexColor":"","percentDone":0,"related_tasks":{},"attachments":null,"created":1543626724,"updated":1543626724,"createdBy":{"id":1,"username":"user1","avatarUrl":"111d68d06e2d317b5a59c2c6c5bad808","created":0,"updated":0}},{"id":5,"text":"task #5 higher due date","description":"","done":false,"doneAt":0,"dueDate":1543636724,"reminderDates":null,"listID":1,"repeatAfter":0,"priority":0,"startDate":0,"endDate":0,"assignees":null,"labels":null,"hexColor":"","percentDone":0,"related_tasks":{},"attachments":null,"created":1543626724,"updated":1543626724,"createdBy":{"id":1,"username":"user1","avatarUrl":"111d68d06e2d317b5a59c2c6c5bad808","created":0,"updated":0}}]`)
+			})
+			t.Run("invalid sort parameter", func(t *testing.T) {
+				_, err := testHandler.testReadAllWithUser(url.Values{"sort_by": []string{"loremipsum"}}, urlParams)
+				assert.Error(t, err)
+				assertHandlerErrorCode(t, err, models.ErrCodeInvalidSortParam)
+			})
+			t.Run("invalid sort order", func(t *testing.T) {
+				_, err := testHandler.testReadAllWithUser(url.Values{"sort_by": []string{"id"}, "order_by": []string{"loremipsum"}}, urlParams)
+				assert.Error(t, err)
+				assertHandlerErrorCode(t, err, models.ErrCodeInvalidSortOrder)
 			})
 			t.Run("invalid parameter", func(t *testing.T) {
 				// Invalid parameter should not sort at all
@@ -234,35 +245,35 @@ func TestTaskCollection(t *testing.T) {
 			assert.NotContains(t, rec.Body.String(), `task #14`)
 		})
 		t.Run("Sort Order", func(t *testing.T) {
-			// should equal priority desc
+			// should equal priority asc
 			t.Run("by priority", func(t *testing.T) {
-				rec, err := testHandler.testReadAllWithUser(url.Values{"sort": []string{"priority"}}, nil)
+				rec, err := testHandler.testReadAllWithUser(url.Values{"sort_by": []string{"priority"}}, nil)
 				assert.NoError(t, err)
-				assert.Contains(t, rec.Body.String(), `[{"id":3,"text":"task #3 high prio","description":"","done":false,"doneAt":0,"dueDate":0,"reminderDates":null,"listID":1,"repeatAfter":0,"priority":100,"startDate":0,"endDate":0,"assignees":null,"labels":null,"hexColor":"","percentDone":0,"related_tasks":{},"attachments":null,"created":1543626724,"updated":1543626724,"createdBy":{"id":1,"username":"user1","avatarUrl":"111d68d06e2d317b5a59c2c6c5bad808","created":0,"updated":0}},{"id":4,"text":"task #4 low prio","description":"","done":false,"doneAt":0,"dueDate":0,"reminderDates":null,"listID":1,"repeatAfter":0,"priority":1,`)
+				assert.Contains(t, rec.Body.String(), `{"id":33,"text":"task #33 with percent done","description":"","done":false,"doneAt":0,"dueDate":0,"reminderDates":null,"listID":1,"repeatAfter":0,"priority":0,"startDate":0,"endDate":0,"assignees":null,"labels":null,"hexColor":"","percentDone":0.5,"related_tasks":{},"attachments":null,"created":1543626724,"updated":1543626724,"createdBy":{"id":1,"username":"user1","avatarUrl":"111d68d06e2d317b5a59c2c6c5bad808","created":0,"updated":0}},{"id":4,"text":"task #4 low prio","description":"","done":false,"doneAt":0,"dueDate":0,"reminderDates":null,"listID":1,"repeatAfter":0,"priority":1,"startDate":0,"endDate":0,"assignees":null,"labels":null,"hexColor":"","percentDone":0,"related_tasks":{},"attachments":null,"created":1543626724,"updated":1543626724,"createdBy":{"id":1,"username":"user1","avatarUrl":"111d68d06e2d317b5a59c2c6c5bad808","created":0,"updated":0}},{"id":3,"text":"task #3 high prio","description":"","done":false,"doneAt":0,"dueDate":0,"reminderDates":null,"listID":1,"repeatAfter":0,"priority":100,"startDate":0,"endDate":0,"assignees":null,"labels":null,"hexColor":"","percentDone":0,"related_tasks":{},"attachments":null,"created":1543626724,"updated":1543626724,"createdBy":{"id":1,"username":"user1","avatarUrl":"111d68d06e2d317b5a59c2c6c5bad808","created":0,"updated":0}}]`)
 			})
 			t.Run("by priority desc", func(t *testing.T) {
-				rec, err := testHandler.testReadAllWithUser(url.Values{"sort": []string{"prioritydesc"}}, nil)
+				rec, err := testHandler.testReadAllWithUser(url.Values{"sort_by": []string{"priority"}, "order_by": []string{"desc"}}, nil)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `[{"id":3,"text":"task #3 high prio","description":"","done":false,"doneAt":0,"dueDate":0,"reminderDates":null,"listID":1,"repeatAfter":0,"priority":100,"startDate":0,"endDate":0,"assignees":null,"labels":null,"hexColor":"","percentDone":0,"related_tasks":{},"attachments":null,"created":1543626724,"updated":1543626724,"createdBy":{"id":1,"username":"user1","avatarUrl":"111d68d06e2d317b5a59c2c6c5bad808","created":0,"updated":0}},{"id":4,"text":"task #4 low prio","description":"","done":false,"doneAt":0,"dueDate":0,"reminderDates":null,"listID":1,"repeatAfter":0,"priority":1,`)
 			})
 			t.Run("by priority asc", func(t *testing.T) {
-				rec, err := testHandler.testReadAllWithUser(url.Values{"sort": []string{"priorityasc"}}, nil)
+				rec, err := testHandler.testReadAllWithUser(url.Values{"sort_by": []string{"priority"}, "order_by": []string{"asc"}}, nil)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `{"id":33,"text":"task #33 with percent done","description":"","done":false,"doneAt":0,"dueDate":0,"reminderDates":null,"listID":1,"repeatAfter":0,"priority":0,"startDate":0,"endDate":0,"assignees":null,"labels":null,"hexColor":"","percentDone":0.5,"related_tasks":{},"attachments":null,"created":1543626724,"updated":1543626724,"createdBy":{"id":1,"username":"user1","avatarUrl":"111d68d06e2d317b5a59c2c6c5bad808","created":0,"updated":0}},{"id":4,"text":"task #4 low prio","description":"","done":false,"doneAt":0,"dueDate":0,"reminderDates":null,"listID":1,"repeatAfter":0,"priority":1,"startDate":0,"endDate":0,"assignees":null,"labels":null,"hexColor":"","percentDone":0,"related_tasks":{},"attachments":null,"created":1543626724,"updated":1543626724,"createdBy":{"id":1,"username":"user1","avatarUrl":"111d68d06e2d317b5a59c2c6c5bad808","created":0,"updated":0}},{"id":3,"text":"task #3 high prio","description":"","done":false,"doneAt":0,"dueDate":0,"reminderDates":null,"listID":1,"repeatAfter":0,"priority":100,"startDate":0,"endDate":0,"assignees":null,"labels":null,"hexColor":"","percentDone":0,"related_tasks":{},"attachments":null,"created":1543626724,"updated":1543626724,"createdBy":{"id":1,"username":"user1","avatarUrl":"111d68d06e2d317b5a59c2c6c5bad808","created":0,"updated":0}}]`)
 			})
-			// should equal duedate desc
+			// should equal duedate asc
 			t.Run("by duedate", func(t *testing.T) {
-				rec, err := testHandler.testReadAllWithUser(url.Values{"sort": []string{"duedate"}}, nil)
+				rec, err := testHandler.testReadAllWithUser(url.Values{"sort_by": []string{"due_date_unix"}}, nil)
 				assert.NoError(t, err)
-				assert.Contains(t, rec.Body.String(), `[{"id":5,"text":"task #5 higher due date","description":"","done":false,"doneAt":0,"dueDate":1543636724,"reminderDates":null,"listID":1,"repeatAfter":0,"priority":0,"startDate":0,"endDate":0,"assignees":null,"labels":null,"hexColor":"","percentDone":0,"related_tasks":{},"attachments":null,"created":1543626724,"updated":1543626724,"createdBy":{"id":1,"username":"user1","avatarUrl":"111d68d06e2d317b5a59c2c6c5bad808","created":0,"updated":0}},{"id":6,"text":"task #6 lower due date"`)
+				assert.Contains(t, rec.Body.String(), `{"id":6,"text":"task #6 lower due date","description":"","done":false,"doneAt":0,"dueDate":1543616724,"reminderDates":null,"listID":1,"repeatAfter":0,"priority":0,"startDate":0,"endDate":0,"assignees":null,"labels":null,"hexColor":"","percentDone":0,"related_tasks":{},"attachments":null,"created":1543626724,"updated":1543626724,"createdBy":{"id":1,"username":"user1","avatarUrl":"111d68d06e2d317b5a59c2c6c5bad808","created":0,"updated":0}},{"id":5,"text":"task #5 higher due date","description":"","done":false,"doneAt":0,"dueDate":1543636724,"reminderDates":null,"listID":1,"repeatAfter":0,"priority":0,"startDate":0,"endDate":0,"assignees":null,"labels":null,"hexColor":"","percentDone":0,"related_tasks":{},"attachments":null,"created":1543626724,"updated":1543626724,"createdBy":{"id":1,"username":"user1","avatarUrl":"111d68d06e2d317b5a59c2c6c5bad808","created":0,"updated":0}}]`)
 			})
 			t.Run("by duedate desc", func(t *testing.T) {
-				rec, err := testHandler.testReadAllWithUser(url.Values{"sort": []string{"duedatedesc"}}, nil)
+				rec, err := testHandler.testReadAllWithUser(url.Values{"sort_by": []string{"due_date_unix"}, "order_by": []string{"desc"}}, nil)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `[{"id":5,"text":"task #5 higher due date","description":"","done":false,"doneAt":0,"dueDate":1543636724,"reminderDates":null,"listID":1,"repeatAfter":0,"priority":0,"startDate":0,"endDate":0,"assignees":null,"labels":null,"hexColor":"","percentDone":0,"related_tasks":{},"attachments":null,"created":1543626724,"updated":1543626724,"createdBy":{"id":1,"username":"user1","avatarUrl":"111d68d06e2d317b5a59c2c6c5bad808","created":0,"updated":0}},{"id":6,"text":"task #6 lower due date"`)
 			})
 			t.Run("by duedate asc", func(t *testing.T) {
-				rec, err := testHandler.testReadAllWithUser(url.Values{"sort": []string{"duedateasc"}}, nil)
+				rec, err := testHandler.testReadAllWithUser(url.Values{"sort_by": []string{"due_date_unix"}, "order_by": []string{"asc"}}, nil)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `{"id":6,"text":"task #6 lower due date","description":"","done":false,"doneAt":0,"dueDate":1543616724,"reminderDates":null,"listID":1,"repeatAfter":0,"priority":0,"startDate":0,"endDate":0,"assignees":null,"labels":null,"hexColor":"","percentDone":0,"related_tasks":{},"attachments":null,"created":1543626724,"updated":1543626724,"createdBy":{"id":1,"username":"user1","avatarUrl":"111d68d06e2d317b5a59c2c6c5bad808","created":0,"updated":0}},{"id":5,"text":"task #5 higher due date","description":"","done":false,"doneAt":0,"dueDate":1543636724,"reminderDates":null,"listID":1,"repeatAfter":0,"priority":0,"startDate":0,"endDate":0,"assignees":null,"labels":null,"hexColor":"","percentDone":0,"related_tasks":{},"attachments":null,"created":1543626724,"updated":1543626724,"createdBy":{"id":1,"username":"user1","avatarUrl":"111d68d06e2d317b5a59c2c6c5bad808","created":0,"updated":0}}]`)
 			})

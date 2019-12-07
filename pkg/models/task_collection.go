@@ -24,18 +24,22 @@ import (
 
 // TaskCollection is a struct used to hold filter details and not clutter the Task struct with information not related to actual tasks.
 type TaskCollection struct {
-	ListID            int64  `param:"list"`
-	Sorting           string `query:"sort"` // Parameter to sort by
-	StartDateSortUnix int64  `query:"startdate"`
-	EndDateSortUnix   int64  `query:"enddate"`
+	ListID            int64 `param:"list"`
+	StartDateSortUnix int64 `query:"startdate"`
+	EndDateSortUnix   int64 `query:"enddate"`
 	Lists             []*List
+
+	// The query parameter to sort by. This is for ex. done, priority, etc.
+	SortBy []string `query:"sort_by"`
+	// The query parameter to order the items by. This can be either asc or desc, with asc being the default.
+	OrderBy []string `query:"order_by"`
 
 	web.CRUDable `xorm:"-" json:"-"`
 	web.Rights   `xorm:"-" json:"-"`
 }
 
 // ReadAll gets all tasks for a collection
-// @Summary Get tasks on a list
+// @Summary Get tasks in a list
 // @Description Returns all tasks for the current list.
 // @tags task
 // @Accept json
@@ -44,7 +48,8 @@ type TaskCollection struct {
 // @Param page query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
 // @Param per_page query int false "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page."
 // @Param s query string false "Search tasks by task text."
-// @Param sort query string false "The sorting parameter. Possible values to sort by are priority, prioritydesc, priorityasc, duedate, duedatedesc, duedateasc."
+// @Param sort_by query string false "The sorting parameter. You can pass this multiple times to get the tasks ordered by multiple different parametes, along with `order_by`. Possible values to sort by are `id`, `text`, `description`, `done`, `done_at_unix`, `due_date_unix`, `created_by_id`, `list_id`, `repeat_after`, `priority`, `start_date_unix`, `end_date_unix`, `hex_color`, `percent_done`, `uid`, `created`, `updated`. Default is `id`."
+// @Param order_by query string false "The ordering parameter. Possible values to order by are `asc` or `desc`. Default is `asc`."
 // @Param startdate query int false "The start date parameter to filter by. Expects a unix timestamp. If no end date, but a start date is specified, the end date is set to the current time."
 // @Param enddate query int false "The end date parameter to filter by. Expects a unix timestamp. If no start date, but an end date is specified, the start date is set to the current time."
 // @Security JWTKeyAuth
@@ -52,31 +57,32 @@ type TaskCollection struct {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{listID}/tasks [get]
 func (tf *TaskCollection) ReadAll(a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
-	var sortby SortBy
-	switch tf.Sorting {
-	case "priority":
-		sortby = SortTasksByPriorityDesc
-	case "prioritydesc":
-		sortby = SortTasksByPriorityDesc
-	case "priorityasc":
-		sortby = SortTasksByPriorityAsc
-	case "duedate":
-		sortby = SortTasksByDueDateDesc
-	case "duedatedesc":
-		sortby = SortTasksByDueDateDesc
-	case "duedateasc":
-		sortby = SortTasksByDueDateAsc
-	default:
-		sortby = SortTasksByUnsorted
+
+	var sort = make([]*sortParam, 0, len(tf.SortBy))
+	for i, s := range tf.SortBy {
+		param := &sortParam{
+			sortBy:  sortProperty(s),
+			orderBy: orderAscending,
+		}
+		// This checks if tf.OrderBy has an entry with the same index as the current entry from tf.SortBy
+		// Taken from https://stackoverflow.com/a/27252199/10924593
+		if len(tf.OrderBy) > i {
+			param.orderBy = getSortOrderFromString(tf.OrderBy[i])
+		}
+		// Param validation
+		if err := param.validate(); err != nil {
+			return nil, 0, 0, err
+		}
+		sort = append(sort, param)
 	}
 
 	taskopts := &taskOptions{
 		search:    search,
-		sortby:    sortby,
 		startDate: time.Unix(tf.StartDateSortUnix, 0),
 		endDate:   time.Unix(tf.EndDateSortUnix, 0),
 		page:      page,
 		perPage:   perPage,
+		sortby:    sort,
 	}
 
 	shareAuth, is := a.(*LinkSharing)

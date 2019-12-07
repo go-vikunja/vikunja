@@ -209,7 +209,6 @@ func getUserTaskIDs(u *User) (taskIDs []int64, err error) {
 	tasks, _, _, err := getRawTasksForLists(lists, &taskOptions{
 		startDate: time.Unix(0, 0),
 		endDate:   time.Unix(0, 0),
-		sortby:    SortTasksByUnsorted,
 		page:      -1,
 		perPage:   0,
 	})

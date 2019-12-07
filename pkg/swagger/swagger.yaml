@@ -236,11 +236,6 @@ definitions:
         $ref: '#/definitions/models.User'
         description: The user who created this list.
         type: object
-      tasks:
-        description: An array of tasks which belong to the list.
-        items:
-          $ref: '#/definitions/models.Task'
-        type: array
       title:
         description: The title of the list. You'll see this in the namespace overview.
         maxLength: 250
@@ -1138,9 +1133,9 @@ paths:
     get:
       consumes:
       - application/json
-      description: Returns a list by its ID.
+      description: Returns a team by its ID.
       parameters:
-      - description: List ID
+      - description: Team ID
         in: path
         name: id
         required: true
@@ -1149,11 +1144,11 @@ paths:
       - application/json
       responses:
         "200":
-          description: The list
+          description: The team
           schema:
-            $ref: '#/definitions/models.List'
+            $ref: '#/definitions/models.Team'
         "403":
-          description: The user does not have access to the list
+          description: The user does not have access to the team
           schema:
             $ref: '#/definitions/code.vikunja.io/web.HTTPError'
         "500":
@@ -1162,9 +1157,9 @@ paths:
             $ref: '#/definitions/models.Message'
       security:
       - JWTKeyAuth: []
-      summary: Gets one list
+      summary: Gets one team
       tags:
-      - list
+      - team
     post:
       consumes:
       - application/json
@@ -1667,10 +1662,19 @@ paths:
         in: query
         name: s
         type: string
-      - description: The sorting parameter. Possible values to sort by are priority,
-          prioritydesc, priorityasc, duedate, duedatedesc, duedateasc.
+      - description: The sorting parameter. You can pass this multiple times to get
+          the tasks ordered by multiple different parametes, along with `order_by`.
+          Possible values to sort by are `id`, `text`, `description`, `done`, `done_at_unix`,
+          `due_date_unix`, `created_by_id`, `list_id`, `repeat_after`, `priority`,
+          `start_date_unix`, `end_date_unix`, `hex_color`, `percent_done`, `uid`,
+          `created`, `updated`. Default is `id`.
         in: query
-        name: sort
+        name: sort_by
+        type: string
+      - description: The ordering parameter. Possible values to order by are `asc`
+          or `desc`. Default is `asc`.
+        in: query
+        name: order_by
         type: string
       - description: The start date parameter to filter by. Expects a unix timestamp.
           If no end date, but a start date is specified, the end date is set to the
@@ -1699,7 +1703,7 @@ paths:
             $ref: '#/definitions/models.Message'
       security:
       - JWTKeyAuth: []
-      summary: Get tasks on a list
+      summary: Get tasks in a list
       tags:
       - task
   /lists/{listID}/teams/{teamID}:

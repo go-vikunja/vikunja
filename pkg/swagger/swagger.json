@@ -389,7 +389,7 @@
                         "JWTKeyAuth": []
                     }
                 ],
-                "description": "Returns a list by its ID.",
+                "description": "Returns a team by its ID.",
                 "consumes": [
                     "application/json"
                 ],
@@ -397,13 +397,13 @@
                     "application/json"
                 ],
                 "tags": [
-                    "list"
+                    "team"
                 ],
-                "summary": "Gets one list",
+                "summary": "Gets one team",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "List ID",
+                        "description": "Team ID",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -411,13 +411,13 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "The list",
+                        "description": "The team",
                         "schema": {
-                            "$ref": "#/definitions/models.List"
+                            "$ref": "#/definitions/models.Team"
                         }
                     },
                     "403": {
-                        "description": "The user does not have access to the list",
+                        "description": "The user does not have access to the team",
                         "schema": {
                             "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
                         }
@@ -966,7 +966,7 @@
                 "tags": [
                     "task"
                 ],
-                "summary": "Get tasks on a list",
+                "summary": "Get tasks in a list",
                 "parameters": [
                     {
                         "type": "integer",
@@ -995,8 +995,14 @@
                     },
                     {
                         "type": "string",
-                        "description": "The sorting parameter. Possible values to sort by are priority, prioritydesc, priorityasc, duedate, duedatedesc, duedateasc.",
-                        "name": "sort",
+                        "description": "The sorting parameter. You can pass this multiple times to get the tasks ordered by multiple different parametes, along with `order_by`. Possible values to sort by are `id`, `text`, `description`, `done`, `done_at_unix`, `due_date_unix`, `created_by_id`, `list_id`, `repeat_after`, `priority`, `start_date_unix`, `end_date_unix`, `hex_color`, `percent_done`, `uid`, `created`, `updated`. Default is `id`.",
+                        "name": "sort_by",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "The ordering parameter. Possible values to order by are `asc` or `desc`. Default is `asc`.",
+                        "name": "order_by",
                         "in": "query"
                     },
                     {
@@ -4613,13 +4619,6 @@
                     "description": "The user who created this list.",
                     "type": "object",
                     "$ref": "#/definitions/models.User"
-                },
-                "tasks": {
-                    "description": "An array of tasks which belong to the list.",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.Task"
-                    }
                 },
                 "title": {
                     "description": "The title of the list. You'll see this in the namespace overview.",
