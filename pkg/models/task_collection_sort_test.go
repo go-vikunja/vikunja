@@ -277,10 +277,6 @@ var taskSortTestCases = []taskSortTestCase{
 		name:         "done",
 		sortProperty: taskPropertyDone,
 		wantAsc: []*Task{
-			// These are done
-			task1,
-			task2,
-			task9,
 			// These are not
 			task3,
 			task4,
@@ -289,8 +285,16 @@ var taskSortTestCases = []taskSortTestCase{
 			task7,
 			task8,
 			task10,
+			// These are done
+			task1,
+			task2,
+			task9,
 		},
 		wantDesc: []*Task{
+			// These are done
+			task1,
+			task2,
+			task9,
 			// These are not
 			task3,
 			task4,
@@ -299,10 +303,6 @@ var taskSortTestCases = []taskSortTestCase{
 			task7,
 			task8,
 			task10,
-			// These are done
-			task1,
-			task2,
-			task9,
 		},
 	},
 	{
@@ -749,13 +749,46 @@ func TestTaskSort(t *testing.T) {
 	}
 
 	// Other cases
-	t.Run("Order by Done Ascending and Text Descending", func(t *testing.T) {
+	t.Run("Order by Done Ascending and ID Descending", func(t *testing.T) {
 		want := []*Task{
+			// Not done
+			task10,
+			task8,
+			task7,
+			task6,
+			task5,
+			task4,
+			task3,
+
 			// Done
+			task9,
 			task2,
 			task1,
-			task9,
+		}
+		sortParams := []*sortParam{
+			{
+				sortBy:  taskPropertyDone,
+				orderBy: orderAscending,
+			},
+			{
+				sortBy:  taskPropertyID,
+				orderBy: orderDescending,
+			},
+		}
 
+		got := deepcopy.Copy(want).([]*Task)
+
+		// Destroy wanted order to obtain some slice we can sort
+		rand.Shuffle(len(got), func(i, j int) {
+			got[i], got[j] = got[j], got[i]
+		})
+
+		sortTasks(got, sortParams)
+
+		assertTestSliceMatch(t, got, want)
+	})
+	t.Run("Order by Done Ascending and Text Descending", func(t *testing.T) {
+		want := []*Task{
 			// Not done
 			task10,
 			task7,
@@ -764,6 +797,10 @@ func TestTaskSort(t *testing.T) {
 			task4,
 			task3,
 			task8,
+			// Done
+			task2,
+			task1,
+			task9,
 		}
 		sortParams := []*sortParam{
 			{
@@ -789,6 +826,10 @@ func TestTaskSort(t *testing.T) {
 	})
 	t.Run("Order by Done Descending and Text Ascending", func(t *testing.T) {
 		want := []*Task{
+			// Done
+			task9,
+			task1,
+			task2,
 			// Not done
 			task8,
 			task3,
@@ -797,11 +838,6 @@ func TestTaskSort(t *testing.T) {
 			task6,
 			task7,
 			task10,
-
-			// Done
-			task9,
-			task1,
-			task2,
 		}
 		sortParams := []*sortParam{
 			{

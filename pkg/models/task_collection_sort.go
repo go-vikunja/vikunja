@@ -146,9 +146,9 @@ func mustMakeComparator(fieldName string) taskComparator {
 		return func(lhs, rhs *Task) int64 {
 			boolLHS, boolRHS := extractProp(lhs).(bool), extractProp(rhs).(bool)
 			if !boolLHS && boolRHS {
-				return 1
-			} else if boolLHS && !boolRHS {
 				return -1
+			} else if boolLHS && !boolRHS {
+				return 1
 			}
 			return 0
 		}
