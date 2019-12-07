@@ -118,8 +118,10 @@ func RegisterTableStructsForCache(val interface{}) {
 }
 
 func initMysqlEngine() (engine *xorm.Engine, err error) {
+	// We're using utf8mb here instead of just utf8 because we want to use non-BMP characters.
+	// See https://stackoverflow.com/a/30074553/10924593 for more info.
 	connStr := fmt.Sprintf(
-		"%s:%s@tcp(%s)/%s?charset=utf8&parseTime=true",
+		"%s:%s@tcp(%s)/%s?charset=utf8mb4&parseTime=true",
 		config.DatabaseUser.GetString(),
 		config.DatabasePassword.GetString(),
 		config.DatabaseHost.GetString(),
