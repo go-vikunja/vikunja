@@ -19,6 +19,7 @@ package v1
 import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/web/handler"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )
@@ -47,6 +48,39 @@ func Login(c echo.Context) error {
 
 	// Check user
 	user, err := models.CheckUserCredentials(&u)
+	if err != nil {
+		return handler.HandleHTTPError(err, c)
+	}
+
+	// Create token
+	t, err := NewUserJWTAuthtoken(user)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, Token{Token: t})
+}
+
+// RenewToken gives a new token to every user with a valid token
+// If the token is valid is checked in the middleware.
+// @Summary Renew user token
+// @Description Returns a new valid jwt user token with an extended length.
+// @tags user
+// @Accept json
+// @Produce json
+// @Success 200 {object} v1.Token
+// @Failure 400 {object} models.Message "Only user token are available for renew."
+// @Router /user/token [post]
+func RenewToken(c echo.Context) error {
+
+	jwtinf := c.Get("user").(*jwt.Token)
+	claims := jwtinf.Claims.(jwt.MapClaims)
+	typ := int(claims["type"].(float64))
+	if typ != AuthTypeUser {
+		return echo.ErrBadRequest
+	}
+
+	user, err := models.GetUserFromClaims(claims)
 	if err != nil {
 		return handler.HandleHTTPError(err, c)
 	}
