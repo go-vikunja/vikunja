@@ -525,7 +525,6 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				page:   0,
 			},
 			want: []*Task{
-				task2,
 				task33,
 				task32,
 				task31,
@@ -556,6 +555,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task4,
 				task3,
 				task1,
+				task2,
 			},
 			wantErr: false,
 		},
