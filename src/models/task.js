@@ -81,7 +81,6 @@ export default class TaskModel extends AbstractModel {
 			updated: 0,
 			
 			listID: 0, // Meta, only used when creating a new task
-			sortBy: 'duedate', // Meta, only used when listing all tasks
 		}
 	}
 	

@@ -125,7 +125,6 @@
 		watch: {
 			theList() {
 				this.list = this.theList
-				this.loadTasks(1)
 			},
 			'$route.query': 'loadTasksForPage', // Only listen for query path changes
 		},
@@ -135,13 +134,15 @@
 			this.taskCollectionService = new TaskCollectionService()
 			this.taskEditTask = null
 			this.isTaskEdit = false
+			this.loadTasks(1)
 		},
 		methods: {
 			addTask() {
 				let task = new TaskModel({text: this.newTaskText, listID: this.$route.params.id})
 				this.taskService.create(task)
 					.then(r => {
-						this.list.addTaskToList(r)
+						this.tasks.push(r)
+						this.sortTasks()
 						this.newTaskText = ''
 						message.success({message: 'The task was successfully created.'}, this)
 					})
@@ -150,7 +151,8 @@
 					})
 			},
 			loadTasks(page) {
-				this.taskCollectionService.getAll({listID: this.$route.params.id}, {}, page)
+				const params = {sort_by: ['done', 'id'], order_by: ['asc', 'desc']}
+				this.taskCollectionService.getAll({listID: this.$route.params.id}, params, page)
 					.then(r => {
 						this.$set(this, 'tasks', r)
 						this.$set(this, 'pages', [])
@@ -194,11 +196,11 @@
 			markAsDone(e) {
 				let updateFunc = () => {
 					// We get the task, update the 'done' property and then push it to the api.
-					let task = this.list.getTaskByID(e.target.id)
+					let task = this.getTaskByID(e.target.id)
 					task.done = e.target.checked
 					this.taskService.update(task)
 						.then(() => {
-							this.list.sortTasks()
+							this.sortTasks()
 							message.success({message: 'The task was successfully ' + (task.done ? '' : 'un-') + 'marked as done.'}, this)
 						})
 						.catch(e => {
@@ -214,12 +216,37 @@
 			},
 			editTask(id) {
 				// Find the selected task and set it to the current object
-				let theTask = this.list.getTaskByID(id) // Somehow this does not work if we directly assign this to this.taskEditTask
+				let theTask = this.getTaskByID(id) // Somehow this does not work if we directly assign this to this.taskEditTask
 				this.taskEditTask = theTask
 				this.isTaskEdit = true
 			},
 			gravatar(user) {
 				return 'https://www.gravatar.com/avatar/' + user.avatarUrl + '?s=27'
+			},
+			getTaskByID(id) {
+				for (const t in this.tasks) {
+					if (this.tasks[t].id === parseInt(id)) {
+						return this.tasks[t]
+					}
+				}
+				return {} // FIXME: This should probably throw something to make it clear to the user noting was found
+			},
+			sortTasks() {
+				if (this.tasks === null || this.tasks === []) {
+					return
+				}
+				return this.tasks.sort(function(a,b) {
+					if (a.done < b.done)
+						return -1
+					if (a.done > b.done)
+						return 1
+
+					if (a.id > b.id)
+						return -1
+					if (a.id < b.id)
+						return 1
+					return 0
+				})
 			},
 		}
 	}

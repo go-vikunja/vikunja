@@ -36,7 +36,7 @@
 	import PriorityLabel from './reusable/priorityLabel'
 
 	export default {
-		name: "ShowTasks",
+		name: 'ShowTasks',
 		components: {
 			PriorityLabel
 		},
@@ -58,7 +58,7 @@
 		},
 		methods: {
 			loadPendingTasks() {
-				let params = {'sort': 'duedate'}
+				let params = {sort_by: 'due_date_unix', order_by: 'desc'}
 				if (!this.showAll) {
 					params.startdate = Math.round(+ this.startDate / 1000)
 					params.enddate = Math.round(+ this.endDate / 1000)
@@ -72,7 +72,6 @@
 									this.hasUndoneTasks = true
 								}
 							}
-							r.sort(this.sortyByDeadline)
 						}
 						this.$set(this, 'tasks', r)
 					})
@@ -82,9 +81,6 @@
 			},
 			formatUnixDate(dateUnix) {
 				return (new Date(dateUnix * 1000)).toLocaleString()
-			},
-			sortyByDeadline(a, b) {
-				return ((a.dueDate > b.dueDate) ? -1 : ((a.dueDate < b.dueDate) ? 1 : 0));
 			},
 			gotoList(lid) {
 				router.push({name: 'showList', params: {id: lid}})

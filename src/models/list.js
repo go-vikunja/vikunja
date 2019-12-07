@@ -13,7 +13,6 @@ export default class ListModel extends AbstractModel {
 		})
 		
 		this.owner = new UserModel(this.owner)
-		this.sortTasks()
 	}
 	
 	// Default attributes that define the "empty" state.
@@ -29,69 +28,5 @@ export default class ListModel extends AbstractModel {
 			created: 0,
 			updated: 0,
 		}
-	}
-
-	////////
-	// Helpers
-	//////
-	
-	/**
-	 * Sorts all tasks according to their due date
-	 * @returns {this}
-	 */
-	sortTasks() {
-		if (this.tasks === null || this.tasks === []) {
-			return
-		}
-		return this.tasks.sort(function(a,b) {
-			if (a.done < b.done)
-				return -1
-			if (a.done > b.done)
-				return 1
-
-			if (a.id > b.id)
-				return -1
-			if (a.id < b.id)
-				return 1
-			return 0
-		})
-	}
-	
-	/**
-	 * Adds a task to the task array of this list. Usually only used when creating a new task
-	 * @param task
-	 */
-	addTaskToList(task) {
-		this.tasks.push(task)
-		this.sortTasks()
-	}
-	
-	/**
-	 * Gets a task by its ID by looping through all tasks.
-	 * @param id
-	 * @returns {TaskModel}
-	 */
-	getTaskByID(id) {
-		// TODO: Binary search?
-		for (const t in this.tasks) {
-			if (this.tasks[t].id === parseInt(id)) {
-				return this.tasks[t]
-			}
-		}
-		return {} // FIXME: This should probably throw something to make it clear to the user noting was found
-	}
-
-	/**
-	 * Loops through all tasks and updates the one with the id it has
-	 * @param task
-	 */
-	updateTaskByID(task) {
-		for (const t in this.tasks) {
-			if (this.tasks[t].id === task.id) {
-				this.tasks[t] = task
-				break
-			}
-		}
-		this.sortTasks()
 	}
 }
