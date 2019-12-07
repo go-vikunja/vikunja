@@ -471,6 +471,33 @@ func (err ErrListShareDoesNotExist) HTTPError() web.HTTPError {
 	return web.HTTPError{HTTPCode: http.StatusNotFound, Code: ErrCodeListShareDoesNotExist, Message: "The list share does not exist."}
 }
 
+// ErrListIdentifierIsNotUnique represents a "ErrListIdentifierIsNotUnique" kind of error. Used if the provided list identifier is not unique.
+type ErrListIdentifierIsNotUnique struct {
+	Identifier string
+}
+
+// IsErrListIdentifierIsNotUnique checks if an error is a ErrListIdentifierIsNotUnique.
+func IsErrListIdentifierIsNotUnique(err error) bool {
+	_, ok := err.(ErrListIdentifierIsNotUnique)
+	return ok
+}
+
+func (err ErrListIdentifierIsNotUnique) Error() string {
+	return fmt.Sprintf("List identifier is not unique.")
+}
+
+// ErrCodeListIdentifierIsNotUnique holds the unique world-error code of this error
+const ErrCodeListIdentifierIsNotUnique = 3007
+
+// HTTPError holds the http error description
+func (err ErrListIdentifierIsNotUnique) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeListIdentifierIsNotUnique,
+		Message:  "A list with this identifier already exists.",
+	}
+}
+
 // ================
 // List task errors
 // ================

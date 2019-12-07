@@ -29,8 +29,11 @@ type List struct {
 	Title string `xorm:"varchar(250) not null" json:"title" valid:"required,runelength(3|250)" minLength:"3" maxLength:"250"`
 	// The description of the list.
 	Description string `xorm:"longtext null" json:"description"`
-	OwnerID     int64  `xorm:"int(11) INDEX not null" json:"-"`
-	NamespaceID int64  `xorm:"int(11) INDEX not null" json:"-" param:"namespace"`
+	// The unique list short identifier. Used to build task identifiers.
+	Identifier string `xorm:"varchar(10) null" json:"identifier" valid:"runelength(0|10)" minLength:"0" maxLength:"10"`
+
+	OwnerID     int64 `xorm:"int(11) INDEX not null" json:"-"`
+	NamespaceID int64 `xorm:"int(11) INDEX not null" json:"-" param:"namespace"`
 
 	// The user who created this list.
 	Owner *User `xorm:"-" json:"owner" valid:"-"`
@@ -262,6 +265,17 @@ func CreateOrUpdateList(list *List) (err error) {
 		_, err = GetNamespaceByID(list.NamespaceID)
 		if err != nil {
 			return err
+		}
+	}
+
+	// Check if the identifier is unique and not empty
+	if list.Identifier != "" {
+		exists, err := x.Where("identifier = ?", list.Identifier).Exist(&List{})
+		if err != nil {
+			return err
+		}
+		if exists {
+			return ErrListIdentifierIsNotUnique{Identifier: list.Identifier}
 		}
 	}
 

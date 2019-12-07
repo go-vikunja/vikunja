@@ -24,9 +24,11 @@ import (
 	"code.vikunja.io/api/pkg/mail"
 	"fmt"
 	"github.com/go-xorm/xorm"
+	"github.com/stretchr/testify/assert"
 	"gopkg.in/testfixtures.v2"
 	"os"
 	"path/filepath"
+	"testing"
 )
 
 // SetupTests takes care of seting up the db, fixtures etc.
@@ -83,4 +85,10 @@ func createTestEngine(fixturesDir string) error {
 
 func initSchema(tx *xorm.Engine) error {
 	return tx.Sync2(GetTables()...)
+}
+
+func initFixtures(t *testing.T) {
+	// Init db fixtures
+	err := db.LoadFixtures()
+	assert.NoError(t, err)
 }

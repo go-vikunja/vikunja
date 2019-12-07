@@ -55,6 +55,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		ID:          1,
 		Text:        "task #1",
 		Description: "Lorem Ipsum",
+		Identifier:  "test1-1",
+		Index:       1,
 		CreatedByID: 1,
 		CreatedBy:   user1,
 		ListID:      1,
@@ -73,6 +75,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				{
 					ID:          29,
 					Text:        "task #29 with parent task (1)",
+					Index:       14,
 					CreatedByID: 1,
 					ListID:      1,
 					Created:     1543626724,
@@ -109,6 +112,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 	task2 := &Task{
 		ID:          2,
 		Text:        "task #2 done",
+		Identifier:  "test1-2",
+		Index:       2,
 		Done:        true,
 		CreatedByID: 1,
 		CreatedBy:   user1,
@@ -130,6 +135,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 	task3 := &Task{
 		ID:           3,
 		Text:         "task #3 high prio",
+		Identifier:   "test1-3",
+		Index:        3,
 		CreatedByID:  1,
 		CreatedBy:    user1,
 		ListID:       1,
@@ -141,6 +148,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 	task4 := &Task{
 		ID:           4,
 		Text:         "task #4 low prio",
+		Identifier:   "test1-4",
+		Index:        4,
 		CreatedByID:  1,
 		CreatedBy:    user1,
 		ListID:       1,
@@ -152,6 +161,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 	task5 := &Task{
 		ID:           5,
 		Text:         "task #5 higher due date",
+		Identifier:   "test1-5",
+		Index:        5,
 		CreatedByID:  1,
 		CreatedBy:    user1,
 		ListID:       1,
@@ -163,6 +174,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 	task6 := &Task{
 		ID:           6,
 		Text:         "task #6 lower due date",
+		Identifier:   "test1-6",
+		Index:        6,
 		CreatedByID:  1,
 		CreatedBy:    user1,
 		ListID:       1,
@@ -174,6 +187,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 	task7 := &Task{
 		ID:            7,
 		Text:          "task #7 with start date",
+		Identifier:    "test1-7",
+		Index:         7,
 		CreatedByID:   1,
 		CreatedBy:     user1,
 		ListID:        1,
@@ -185,6 +200,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 	task8 := &Task{
 		ID:           8,
 		Text:         "task #8 with end date",
+		Identifier:   "test1-8",
+		Index:        8,
 		CreatedByID:  1,
 		CreatedBy:    user1,
 		ListID:       1,
@@ -196,6 +213,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 	task9 := &Task{
 		ID:            9,
 		Text:          "task #9 with start and end date",
+		Identifier:    "test1-9",
+		Index:         9,
 		CreatedByID:   1,
 		CreatedBy:     user1,
 		ListID:        1,
@@ -208,6 +227,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 	task10 := &Task{
 		ID:           10,
 		Text:         "task #10 basic",
+		Identifier:   "test1-10",
+		Index:        10,
 		CreatedByID:  1,
 		CreatedBy:    user1,
 		ListID:       1,
@@ -218,6 +239,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 	task11 := &Task{
 		ID:           11,
 		Text:         "task #11 basic",
+		Identifier:   "test1-11",
+		Index:        11,
 		CreatedByID:  1,
 		CreatedBy:    user1,
 		ListID:       1,
@@ -228,6 +251,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 	task12 := &Task{
 		ID:           12,
 		Text:         "task #12 basic",
+		Identifier:   "test1-12",
+		Index:        12,
 		CreatedByID:  1,
 		CreatedBy:    user1,
 		ListID:       1,
@@ -238,6 +263,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 	task15 := &Task{
 		ID:           15,
 		Text:         "task #15",
+		Identifier:   "test6-1",
+		Index:        1,
 		CreatedByID:  6,
 		CreatedBy:    user6,
 		ListID:       6,
@@ -248,6 +275,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 	task16 := &Task{
 		ID:           16,
 		Text:         "task #16",
+		Identifier:   "test7-1",
+		Index:        1,
 		CreatedByID:  6,
 		CreatedBy:    user6,
 		ListID:       7,
@@ -258,6 +287,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 	task17 := &Task{
 		ID:           17,
 		Text:         "task #17",
+		Identifier:   "test8-1",
+		Index:        1,
 		CreatedByID:  6,
 		CreatedBy:    user6,
 		ListID:       8,
@@ -268,6 +299,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 	task18 := &Task{
 		ID:           18,
 		Text:         "task #18",
+		Identifier:   "test9-1",
+		Index:        1,
 		CreatedByID:  6,
 		CreatedBy:    user6,
 		ListID:       9,
@@ -278,6 +311,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 	task19 := &Task{
 		ID:           19,
 		Text:         "task #19",
+		Identifier:   "test10-1",
+		Index:        1,
 		CreatedByID:  6,
 		CreatedBy:    user6,
 		ListID:       10,
@@ -288,6 +323,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 	task20 := &Task{
 		ID:           20,
 		Text:         "task #20",
+		Identifier:   "test11-1",
+		Index:        1,
 		CreatedByID:  6,
 		CreatedBy:    user6,
 		ListID:       11,
@@ -298,6 +335,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 	task21 := &Task{
 		ID:           21,
 		Text:         "task #21",
+		Identifier:   "test12-1",
+		Index:        1,
 		CreatedByID:  6,
 		CreatedBy:    user6,
 		ListID:       12,
@@ -308,6 +347,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 	task22 := &Task{
 		ID:           22,
 		Text:         "task #22",
+		Identifier:   "test13-1",
+		Index:        1,
 		CreatedByID:  6,
 		CreatedBy:    user6,
 		ListID:       13,
@@ -318,6 +359,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 	task23 := &Task{
 		ID:           23,
 		Text:         "task #23",
+		Identifier:   "test14-1",
+		Index:        1,
 		CreatedByID:  6,
 		CreatedBy:    user6,
 		ListID:       14,
@@ -328,6 +371,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 	task24 := &Task{
 		ID:           24,
 		Text:         "task #24",
+		Identifier:   "test15-1",
+		Index:        1,
 		CreatedByID:  6,
 		CreatedBy:    user6,
 		ListID:       15,
@@ -338,6 +383,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 	task25 := &Task{
 		ID:           25,
 		Text:         "task #25",
+		Identifier:   "test16-1",
+		Index:        1,
 		CreatedByID:  6,
 		CreatedBy:    user6,
 		ListID:       16,
@@ -348,6 +395,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 	task26 := &Task{
 		ID:           26,
 		Text:         "task #26",
+		Identifier:   "test17-1",
+		Index:        1,
 		CreatedByID:  6,
 		CreatedBy:    user6,
 		ListID:       17,
@@ -358,6 +407,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 	task27 := &Task{
 		ID:            27,
 		Text:          "task #27 with reminders",
+		Identifier:    "test1-12",
+		Index:         12,
 		CreatedByID:   1,
 		CreatedBy:     user1,
 		RemindersUnix: []int64{1543626724, 1543626824},
@@ -369,6 +420,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 	task28 := &Task{
 		ID:           28,
 		Text:         "task #28 with repeat after",
+		Identifier:   "test1-13",
+		Index:        13,
 		CreatedByID:  1,
 		CreatedBy:    user1,
 		ListID:       1,
@@ -380,6 +433,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 	task29 := &Task{
 		ID:          29,
 		Text:        "task #29 with parent task (1)",
+		Identifier:  "test1-14",
+		Index:       14,
 		CreatedByID: 1,
 		CreatedBy:   user1,
 		ListID:      1,
@@ -389,6 +444,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 					ID:          1,
 					Text:        "task #1",
 					Description: "Lorem Ipsum",
+					Index:       1,
 					CreatedByID: 1,
 					ListID:      1,
 					Created:     1543626724,
@@ -402,6 +458,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 	task30 := &Task{
 		ID:          30,
 		Text:        "task #30 with assignees",
+		Identifier:  "test1-15",
+		Index:       15,
 		CreatedByID: 1,
 		CreatedBy:   user1,
 		ListID:      1,
@@ -416,6 +474,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 	task31 := &Task{
 		ID:           31,
 		Text:         "task #31 with color",
+		Identifier:   "test1-16",
+		Index:        16,
 		HexColor:     "f0f0f0",
 		CreatedByID:  1,
 		CreatedBy:    user1,
@@ -427,6 +487,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 	task32 := &Task{
 		ID:           32,
 		Text:         "task #32",
+		Identifier:   "test3-1",
+		Index:        1,
 		CreatedByID:  1,
 		CreatedBy:    user1,
 		ListID:       3,
@@ -437,6 +499,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 	task33 := &Task{
 		ID:           33,
 		Text:         "task #33 with percent done",
+		Identifier:   "test1-17",
+		Index:        17,
 		CreatedByID:  1,
 		CreatedBy:    user1,
 		ListID:       1,

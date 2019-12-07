@@ -2,6 +2,7 @@
   id: 1
   title: Test1
   description: Lorem Ipsum
+  identifier: test1
   owner_id: 1
   namespace_id: 1
   updated: 0
@@ -10,6 +11,7 @@
   id: 2
   title: Test2
   description: Lorem Ipsum
+  identifier: test2
   owner_id: 3
   namespace_id: 1
   updated: 0
@@ -18,6 +20,7 @@
   id: 3
   title: Test3
   description: Lorem Ipsum
+  identifier: test3
   owner_id: 3
   namespace_id: 2
   updated: 0
@@ -26,6 +29,7 @@
   id: 4
   title: Test4
   description: Lorem Ipsum
+  identifier: test4
   owner_id: 3
   namespace_id: 3
   updated: 0
@@ -34,6 +38,7 @@
   id: 5
   title: Test5
   description: Lorem Ipsum
+  identifier: test5
   owner_id: 5
   namespace_id: 5
   updated: 0
@@ -42,6 +47,7 @@
   id: 6
   title: Test6
   description: Lorem Ipsum
+  identifier: test6
   owner_id: 6
   namespace_id: 6
   updated: 0
@@ -50,6 +56,7 @@
   id: 7
   title: Test7
   description: Lorem Ipsum
+  identifier: test7
   owner_id: 6
   namespace_id: 6
   updated: 0
@@ -58,6 +65,7 @@
   id: 8
   title: Test8
   description: Lorem Ipsum
+  identifier: test8
   owner_id: 6
   namespace_id: 6
   updated: 0
@@ -66,6 +74,7 @@
   id: 9
   title: Test9
   description: Lorem Ipsum
+  identifier: test9
   owner_id: 6
   namespace_id: 6
   updated: 0
@@ -74,6 +83,7 @@
   id: 10
   title: Test10
   description: Lorem Ipsum
+  identifier: test10
   owner_id: 6
   namespace_id: 6
   updated: 0
@@ -82,6 +92,7 @@
   id: 11
   title: Test11
   description: Lorem Ipsum
+  identifier: test11
   owner_id: 6
   namespace_id: 6
   updated: 0
@@ -90,6 +101,7 @@
   id: 12
   title: Test12
   description: Lorem Ipsum
+  identifier: test12
   owner_id: 6
   namespace_id: 7
   updated: 0
@@ -98,6 +110,7 @@
   id: 13
   title: Test13
   description: Lorem Ipsum
+  identifier: test13
   owner_id: 6
   namespace_id: 8
   updated: 0
@@ -106,6 +119,7 @@
   id: 14
   title: Test14
   description: Lorem Ipsum
+  identifier: test14
   owner_id: 6
   namespace_id: 9
   updated: 0
@@ -114,6 +128,7 @@
   id: 15
   title: Test15
   description: Lorem Ipsum
+  identifier: test15
   owner_id: 6
   namespace_id: 10
   updated: 0
@@ -122,6 +137,7 @@
   id: 16
   title: Test16
   description: Lorem Ipsum
+  identifier: test16
   owner_id: 6
   namespace_id: 11
   updated: 0
@@ -130,6 +146,7 @@
   id: 17
   title: Test17
   description: Lorem Ipsum
+  identifier: test17
   owner_id: 6
   namespace_id: 12
   updated: 0
@@ -140,6 +157,7 @@
   id: 18
   title: Test18
   description: Lorem Ipsum
+  identifier: test18
   owner_id: 7
   namespace_id: 13
   updated: 0
@@ -148,6 +166,7 @@
   id: 19
   title: Test19
   description: Lorem Ipsum
+  identifier: test19
   owner_id: 7
   namespace_id: 14
   updated: 0
@@ -156,6 +175,7 @@
   id: 20
   title: Test20
   description: Lorem Ipsum
+  identifier: test20
   owner_id: 13
   namespace_id: 15
   updated: 0

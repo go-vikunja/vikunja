@@ -23,6 +23,7 @@ import (
 	"code.vikunja.io/web"
 	"github.com/imdario/mergo"
 	"sort"
+	"strconv"
 	"time"
 )
 
@@ -61,6 +62,11 @@ type Task struct {
 	HexColor string `xorm:"varchar(6) null" json:"hexColor" valid:"runelength(0|6)" maxLength:"6"`
 	// Determines how far a task is left from being done
 	PercentDone float64 `xorm:"DOUBLE null" json:"percentDone"`
+
+	// The task identifier, based on the list identifier and the task's index
+	Identifier string `xorm:"-" json:"identifier"`
+	// The task index, calculated per list
+	Index int64 `xorm:"int(11) not null default 0" json:"index"`
 
 	// The UID is currently not used for anything other than caldav, which is why we don't expose it over json
 	UID string `xorm:"varchar(250) null" json:"-"`
@@ -230,19 +236,6 @@ func getTasksForLists(lists []*List, opts *taskOptions) (tasks []*Task, resultCo
 	return tasks, resultCount, totalItems, err
 }
 
-// GetTasksByListID gets all todotasks for a list
-func GetTasksByListID(listID int64) (tasks []*Task, err error) {
-	// make a map so we can put in a lot of other stuff more easily
-	taskMap := make(map[int64]*Task, len(tasks))
-	err = x.Where("list_id = ?", listID).Find(&taskMap)
-	if err != nil {
-		return
-	}
-
-	tasks, err = addMoreInfoToTasks(taskMap)
-	return
-}
-
 // GetTaskByIDSimple returns a raw task without extra data by the task ID
 func GetTaskByIDSimple(taskID int64) (task Task, err error) {
 	if taskID < 1 {
@@ -314,9 +307,11 @@ func addMoreInfoToTasks(taskMap map[int64]*Task) (tasks []*Task, err error) {
 	// Get all users & task ids and put them into the array
 	var userIDs []int64
 	var taskIDs []int64
+	var listIDs []int64
 	for _, i := range taskMap {
 		taskIDs = append(taskIDs, i.ID)
 		userIDs = append(userIDs, i.CreatedByID)
+		listIDs = append(listIDs, i.ListID)
 	}
 
 	// Get all assignees
@@ -399,6 +394,13 @@ func addMoreInfoToTasks(taskMap map[int64]*Task) (tasks []*Task, err error) {
 		taskRemindersUnix[r.TaskID] = append(taskRemindersUnix[r.TaskID], r.ReminderUnix)
 	}
 
+	// Get all identifiers
+	lists := make(map[int64]*List, len(listIDs))
+	err = x.In("id", listIDs).Find(&lists)
+	if err != nil {
+		return
+	}
+
 	// Add all user objects to the appropriate tasks
 	for _, task := range taskMap {
 
@@ -410,6 +412,9 @@ func addMoreInfoToTasks(taskMap map[int64]*Task) (tasks []*Task, err error) {
 
 		// Prepare the subtasks
 		task.RelatedTasks = make(RelatedTaskMap)
+
+		// Build the task identifier from the list identifier and task index
+		task.Identifier = lists[task.ListID].Identifier + "-" + strconv.FormatInt(task.Index, 10)
 	}
 
 	// Get all related tasks
@@ -785,7 +790,7 @@ func (t *Task) Delete() (err error) {
 // @Success 200 {object} models.Task "The task"
 // @Failure 404 {object} models.Message "Task not found"
 // @Failure 500 {object} models.Message "Internal error"
-// @Router /tasks/all [get]
+// @Router /tasks/{ID} [get]
 func (t *Task) ReadOne() (err error) {
 
 	taskMap := make(map[int64]*Task, 1)

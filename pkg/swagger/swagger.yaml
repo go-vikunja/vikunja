@@ -84,6 +84,13 @@ definitions:
       id:
         description: The unique, numeric id of this task.
         type: integer
+      identifier:
+        description: The task identifier, based on the list identifier and the task's
+          index
+        type: string
+      index:
+        description: The task index, calculated per list
+        type: integer
       labels:
         description: An array of labels which are associated with this task.
         items:
@@ -232,6 +239,11 @@ definitions:
       id:
         description: The unique, numeric id of this list.
         type: integer
+      identifier:
+        description: The unique list short identifier. Used to build task identifiers.
+        maxLength: 10
+        minLength: 0
+        type: string
       owner:
         $ref: '#/definitions/models.User'
         description: The user who created this list.
@@ -413,6 +425,13 @@ definitions:
           id:
             description: The unique, numeric id of this task.
             type: integer
+          identifier:
+            description: The task identifier, based on the list identifier and the
+              task's index
+            type: string
+          index:
+            description: The task index, calculated per list
+            type: integer
           labels:
             description: An array of labels which are associated with this task.
             items:
@@ -499,6 +518,13 @@ definitions:
         type: string
       id:
         description: The unique, numeric id of this task.
+        type: integer
+      identifier:
+        description: The task identifier, based on the list identifier and the task's
+          index
+        type: string
+      index:
+        description: The task index, calculated per list
         type: integer
       labels:
         description: An array of labels which are associated with this task.
@@ -2587,6 +2613,37 @@ paths:
       summary: Get an auth token for a share
       tags:
       - sharing
+  /tasks/{ID}:
+    get:
+      consumes:
+      - application/json
+      description: Returns one task by its ID
+      parameters:
+      - description: The task ID
+        in: path
+        name: ID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The task
+          schema:
+            $ref: '#/definitions/models.Task'
+        "404":
+          description: Task not found
+          schema:
+            $ref: '#/definitions/models.Message'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get one task
+      tags:
+      - task
   /tasks/{id}:
     delete:
       description: Deletes a task from a list. This does not mean "mark it done".
@@ -3241,31 +3298,55 @@ paths:
     get:
       consumes:
       - application/json
-      description: Returns one task by its ID
+      description: Returns all tasks on any list the user has access to.
       parameters:
-      - description: The task ID
-        in: path
-        name: ID
-        required: true
+      - description: The page number. Used for pagination. If not provided, the first
+          page of results is returned.
+        in: query
+        name: page
+        type: integer
+      - description: The maximum number of items per page. Note this parameter is
+          limited by the configured maximum of items per page.
+        in: query
+        name: per_page
+        type: integer
+      - description: Search tasks by task text.
+        in: query
+        name: s
+        type: string
+      - description: The sorting parameter. Possible values to sort by are priority,
+          prioritydesc, priorityasc, duedate, duedatedesc, duedateasc.
+        in: query
+        name: sort
+        type: string
+      - description: The start date parameter to filter by. Expects a unix timestamp.
+          If no end date, but a start date is specified, the end date is set to the
+          current time.
+        in: query
+        name: startdate
+        type: integer
+      - description: The end date parameter to filter by. Expects a unix timestamp.
+          If no start date, but an end date is specified, the start date is set to
+          the current time.
+        in: query
+        name: enddate
         type: integer
       produces:
       - application/json
       responses:
         "200":
-          description: The task
+          description: The tasks
           schema:
-            $ref: '#/definitions/models.Task'
-        "404":
-          description: Task not found
-          schema:
-            $ref: '#/definitions/models.Message'
+            items:
+              $ref: '#/definitions/models.Task'
+            type: array
         "500":
           description: Internal error
           schema:
             $ref: '#/definitions/models.Message'
       security:
       - JWTKeyAuth: []
-      summary: Get one task
+      summary: Get tasks
       tags:
       - task
   /tasks/bulk:
