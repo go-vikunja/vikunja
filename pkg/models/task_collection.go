@@ -30,9 +30,11 @@ type TaskCollection struct {
 	Lists             []*List
 
 	// The query parameter to sort by. This is for ex. done, priority, etc.
-	SortBy []string `query:"sort_by"`
+	SortBy    []string `query:"sort_by"`
+	SortByArr []string `query:"sort_by[]"`
 	// The query parameter to order the items by. This can be either asc or desc, with asc being the default.
-	OrderBy []string `query:"order_by"`
+	OrderBy    []string `query:"order_by"`
+	OrderByArr []string `query:"order_by[]"`
 
 	web.CRUDable `xorm:"-" json:"-"`
 	web.Rights   `xorm:"-" json:"-"`
@@ -57,6 +59,14 @@ type TaskCollection struct {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{listID}/tasks [get]
 func (tf *TaskCollection) ReadAll(a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
+
+	if len(tf.SortByArr) > 0 {
+		tf.SortBy = append(tf.SortBy, tf.SortByArr...)
+	}
+
+	if len(tf.OrderByArr) > 0 {
+		tf.OrderBy = append(tf.OrderBy, tf.OrderByArr...)
+	}
 
 	var sort = make([]*sortParam, 0, len(tf.SortBy))
 	for i, s := range tf.SortBy {
