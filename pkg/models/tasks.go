@@ -497,6 +497,14 @@ func (t *Task) Create(a web.Auth) (err error) {
 		t.UID = utils.MakeRandomString(40)
 	}
 
+	// Get the index for this task
+	latestTask := &Task{}
+	_, err = x.Where("list_id = ?", t.ListID).OrderBy("id desc").Get(latestTask)
+	if err != nil {
+		return err
+	}
+
+	t.Index = latestTask.Index + 1
 	t.CreatedByID = u.ID
 	t.CreatedBy = u
 	if _, err = x.Insert(t); err != nil {

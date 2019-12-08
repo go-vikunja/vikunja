@@ -22,71 +22,101 @@ import (
 )
 
 func TestTask_Create(t *testing.T) {
-	//assert.NoError(t, LoadFixtures())
-
-	// TODO: This test needs refactoring
-
-	// Fake list task
-	listtask := Task{
-		Text:        "Lorem",
-		Description: "Lorem Ipsum BACKERY",
-		ListID:      1,
+	user := &User{
+		ID:       1,
+		Username: "user1",
+		Email:    "user1@example.com",
 	}
 
-	// Add one point to a list
-	doer, err := GetUserByID(1)
-	assert.NoError(t, err)
+	// We only test creating a task here, the rights are all well tested in the integration tests.
 
-	allowed, _ := listtask.CanCreate(doer)
-	assert.True(t, allowed)
+	t.Run("normal", func(t *testing.T) {
+		initFixtures(t)
+		task := &Task{
+			Text:        "Lorem",
+			Description: "Lorem Ipsum Dolor",
+			ListID:      1,
+		}
+		err := task.Create(user)
+		assert.NoError(t, err)
+		// Assert getting a uid
+		assert.NotEmpty(t, task.UID)
+		// Assert getting a new index
+		assert.NotEmpty(t, task.Index)
+		assert.Equal(t, int64(18), task.Index)
 
-	err = listtask.Create(doer)
-	assert.NoError(t, err)
+	})
+	t.Run("empty text", func(t *testing.T) {
+		initFixtures(t)
+		task := &Task{
+			Text:        "",
+			Description: "Lorem Ipsum Dolor",
+			ListID:      1,
+		}
+		err := task.Create(user)
+		assert.Error(t, err)
+		assert.True(t, IsErrTaskCannotBeEmpty(err))
+	})
+	t.Run("nonexistant list", func(t *testing.T) {
+		initFixtures(t)
+		task := &Task{
+			Text:        "Test",
+			Description: "Lorem Ipsum Dolor",
+			ListID:      9999999,
+		}
+		err := task.Create(user)
+		assert.Error(t, err)
+		assert.True(t, IsErrListDoesNotExist(err))
+	})
+	t.Run("noneixtant user", func(t *testing.T) {
+		initFixtures(t)
+		nUser := &User{ID: 99999999}
+		task := &Task{
+			Text:        "Test",
+			Description: "Lorem Ipsum Dolor",
+			ListID:      1,
+		}
+		err := task.Create(nUser)
+		assert.Error(t, err)
+		assert.True(t, IsErrUserDoesNotExist(err))
+	})
+}
 
-	// Update it
-	listtask.Text = "Test34"
-	allowed, _ = listtask.CanUpdate(doer)
-	assert.True(t, allowed)
-	err = listtask.Update()
-	assert.NoError(t, err)
+func TestTask_Update(t *testing.T) {
+	t.Run("normal", func(t *testing.T) {
+		initFixtures(t)
+		task := &Task{
+			ID:          1,
+			Text:        "test10000",
+			Description: "Lorem Ipsum Dolor",
+			ListID:      1,
+		}
+		err := task.Update()
+		assert.NoError(t, err)
+	})
+	t.Run("nonexistant task", func(t *testing.T) {
+		initFixtures(t)
+		task := &Task{
+			ID:          9999999,
+			Text:        "test10000",
+			Description: "Lorem Ipsum Dolor",
+			ListID:      1,
+		}
+		err := task.Update()
+		assert.Error(t, err)
+		assert.True(t, IsErrTaskDoesNotExist(err))
+	})
+}
 
-	// Delete the task
-	allowed, _ = listtask.CanDelete(doer)
-	assert.True(t, allowed)
-	err = listtask.Delete()
-	assert.NoError(t, err)
-
-	// Delete a nonexistant task
-	listtask.ID = 0
-	_, err = listtask.CanDelete(doer) // The check if the task exists happens in CanDelete
-	assert.Error(t, err)
-	assert.True(t, IsErrTaskDoesNotExist(err))
-
-	// Try adding a list task with an empty text
-	listtask.Text = ""
-	err = listtask.Create(doer)
-	assert.Error(t, err)
-	assert.True(t, IsErrTaskCannotBeEmpty(err))
-
-	// Try adding one to a nonexistant list
-	listtask.ListID = 99993939
-	listtask.Text = "Lorem Ipsum"
-	err = listtask.Create(doer)
-	assert.Error(t, err)
-	assert.True(t, IsErrListDoesNotExist(err))
-
-	// Try updating a nonexistant task
-	listtask.ID = 94829352
-	err = listtask.Update()
-	assert.Error(t, err)
-	assert.True(t, IsErrTaskDoesNotExist(err))
-
-	// Try inserting an task with a nonexistant user
-	nUser := &User{ID: 9482385}
-	listtask.ListID = 1
-	err = listtask.Create(nUser)
-	assert.Error(t, err)
-	assert.True(t, IsErrUserDoesNotExist(err))
+func TestTask_Delete(t *testing.T) {
+	t.Run("normal", func(t *testing.T) {
+		initFixtures(t)
+		task := &Task{
+			ID: 1,
+		}
+		err := task.Delete()
+		assert.NoError(t, err)
+	})
 }
 
 func TestUpdateDone(t *testing.T) {
@@ -106,12 +136,14 @@ func TestUpdateDone(t *testing.T) {
 
 func TestTask_ReadOne(t *testing.T) {
 	t.Run("default", func(t *testing.T) {
+		initFixtures(t)
 		task := &Task{ID: 1}
 		err := task.ReadOne()
 		assert.NoError(t, err)
 		assert.Equal(t, "task #1", task.Text)
 	})
 	t.Run("nonexisting", func(t *testing.T) {
+		initFixtures(t)
 		task := &Task{ID: 99999}
 		err := task.ReadOne()
 		assert.Error(t, err)
