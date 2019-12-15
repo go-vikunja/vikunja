@@ -137,7 +137,6 @@
 	import message from '../../message'
 	import flatPickr from 'vue-flatpickr-component'
 	import 'flatpickr/dist/flatpickr.css'
-	import multiselect from 'vue-multiselect'
 	import verte from 'verte'
 	import 'verte/dist/verte.css'
 
@@ -185,7 +184,6 @@
 			PercentDoneSelect,
 			PrioritySelect,
 			flatPickr,
-			multiselect,
 			verte,
 		},
 		props: {

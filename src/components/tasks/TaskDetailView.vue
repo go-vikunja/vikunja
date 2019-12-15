@@ -252,14 +252,12 @@
 	import ListModel from '../../models/list'
 	import NamespaceModel from '../../models/namespace'
 
-	import PriorityLabel from './reusable/priorityLabel'
 	import priorites from '../../models/priorities'
 
 	import flatPickr from 'vue-flatpickr-component'
 	import 'flatpickr/dist/flatpickr.css'
 	import PrioritySelect from './reusable/prioritySelect'
 	import PercentDoneSelect from './reusable/percentDoneSelect'
-	import Easymde from '../global/easymde'
 	import EditLabels from './reusable/editLabels'
 	import EditAssignees from './reusable/editAssignees'
 	import Attachments from './reusable/attachments'
@@ -276,10 +274,8 @@
 			Attachments,
 			EditAssignees,
 			EditLabels,
-			Easymde,
 			PercentDoneSelect,
 			PrioritySelect,
-			PriorityLabel,
 			flatPickr,
 		},
 		data() {

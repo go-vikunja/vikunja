@@ -18,7 +18,7 @@
 			select-label="Assign this user"
 			:showNoOptions="false"
 		>
-		<template slot="tag" slot-scope="{ option, remove }">
+		<template slot="tag" slot-scope="{ option }">
 			<user :user="option" :show-username="false" :avatar-size="30"/>
 			<a @click="removeAssignee(option)" class="remove-assignee">
 				<icon icon="times"/>

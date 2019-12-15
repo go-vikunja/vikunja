@@ -128,10 +128,22 @@
 	export default {
 		name: 'userTeamShare',
 		props: {
-			type: '',
-			shareType: '',
-			id: 0,
-			userIsAdmin: false,
+			type: {
+				type: String,
+				default: '',
+			},
+			shareType: {
+				type: String,
+				default: '',
+			},
+			id: {
+				type: Number,
+				default: 0,
+			},
+			userIsAdmin: {
+				type: Boolean,
+				default: false,
+			},
 		},
 		data() {
 			return {

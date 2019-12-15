@@ -20,7 +20,7 @@
 			@tag="createAndAddLabel"
 			tag-placeholder="Add this as new label"
 	>
-		<template slot="tag" slot-scope="{ option, remove }">
+		<template slot="tag" slot-scope="{ option }">
 						<span class="tag"
 							:style="{'background': option.hex_color, 'color': option.textColor}">
 							<span>{{ option.title }}</span>

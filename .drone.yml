@@ -14,7 +14,7 @@ steps:
     pull: true
     group: build-static
     commands:
-      - yarn
+      - yarn --frozen-lockfile
       - yarn run lint
       - yarn run build
 
@@ -34,7 +34,7 @@ steps:
     pull: true
     group: build-static
     commands:
-      - yarn
+      - yarn --frozen-lockfile
       - yarn run lint
       - "echo '{\"VIKUNJA_API_BASE_URL\": \"/api/v1/\"}' > /drone/src/public/config.json" # Override config
       - yarn run build
@@ -89,7 +89,7 @@ steps:
     pull: true
     group: build-static
     commands:
-      - yarn
+      - yarn --frozen-lockfile
       - yarn run lint
       - "echo '{\"VIKUNJA_API_BASE_URL\": \"/api/v1/\"}' > /drone/src/public/config.json" # Override config
       - yarn run build

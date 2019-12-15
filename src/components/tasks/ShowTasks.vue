@@ -8,7 +8,7 @@
 		</template>
 		<div class="spinner" :class="{ 'is-loading': taskService.loading}"></div>
 		<div class="tasks" v-if="tasks && tasks.length > 0">
-			<div @click="gotoList(l.listID)" class="task" v-for="l in tasks" :key="l.id" v-if="!l.done">
+			<div @click="gotoList(l.listID)" class="task" v-for="l in undoneTasks" :key="l.id">
 				<label :for="l.id">
 					<div class="fancycheckbox">
 						<input type="checkbox" :id="l.id" :checked="l.done" style="display: none;" disabled>
@@ -55,6 +55,11 @@
 		created() {
 			this.taskService = new TaskService()
 			this.loadPendingTasks()
+		},
+		computed: {
+			undoneTasks: function () {
+				return this.tasks.filter(t => !t.done)
+			}
 		},
 		methods: {
 			loadPendingTasks() {

@@ -12,7 +12,10 @@
             VueEasymde
         },
         props: {
-            value: '',
+            value: {
+                type: String,
+                default: '',
+            },
         },
         data() {
             return {

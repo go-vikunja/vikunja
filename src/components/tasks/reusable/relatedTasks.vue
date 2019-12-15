@@ -40,20 +40,22 @@
 			</div>
 		</div>
 
-		<div class="related-tasks" v-for="(rts, kind ) in relatedTasks" :key="kind" v-if="rts.length > 0">
-			<span class="title">{{ relationKinds[kind] }}</span>
-			<div class="tasks noborder">
-				<div class="task" v-for="t in rts" :key="t.id">
-					<router-link :to="{ name: 'taskDetailView', params: { id: t.id } }">
-						<span class="tasktext" :class="{ 'done': t.done}">
-							{{t.text}}
-						</span>
-					</router-link>
-					<a class="remove" @click="() => {showDeleteModal = true; relationToDelete = {relation_kind: kind, other_task_id: t.id}}">
-						<icon icon="trash-alt"/>
-					</a>
+		<div class="related-tasks" v-for="(rts, kind ) in relatedTasks" :key="kind">
+			<template v-if="rts.length > 0">
+				<span class="title">{{ relationKinds[kind] }}</span>
+				<div class="tasks noborder">
+					<div class="task" v-for="t in rts" :key="t.id">
+						<router-link :to="{ name: 'taskDetailView', params: { id: t.id } }">
+							<span class="tasktext" :class="{ 'done': t.done}">
+								{{t.text}}
+							</span>
+						</router-link>
+						<a class="remove" @click="() => {showDeleteModal = true; relationToDelete = {relation_kind: kind, other_task_id: t.id}}">
+							<icon icon="trash-alt"/>
+						</a>
+					</div>
 				</div>
-			</div>
+			</template>
 		</div>
 		<p v-if="showNoRelationsNotice && Object.keys(relatedTasks).length === 0" class="none">No task relations yet.</p>
 
