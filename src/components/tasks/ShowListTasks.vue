@@ -132,11 +132,15 @@
 			this.listService = new ListService()
 			this.taskService = new TaskService()
 			this.taskCollectionService = new TaskCollectionService()
-			this.taskEditTask = null
-			this.isTaskEdit = false
-			this.loadTasks(1)
+			this.initTasks(1)
 		},
 		methods: {
+			// This function initializes the tasks page and loads the first page of tasks
+			initTasks(page) {
+				this.taskEditTask = null
+				this.isTaskEdit = false
+				this.loadTasks(page)
+			},
 			addTask() {
 				let task = new TaskModel({text: this.newTaskText, listID: this.$route.params.id})
 				this.taskService.create(task)
@@ -191,7 +195,12 @@
 					})
 			},
 			loadTasksForPage(e) {
-				this.loadTasks(e.page)
+				// The page parameter can be undefined, in the case where the user loads a new list from the side bar menu
+				let page = e.page
+				if (typeof e.page === 'undefined') {
+					page = 1
+				}
+				this.initTasks(page)
 			},
 			markAsDone(e) {
 				let updateFunc = () => {
