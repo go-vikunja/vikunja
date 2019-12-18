@@ -11,6 +11,10 @@
 					</router-link>
 				</div>
 				<div class="navbar-end">
+					<div v-if="updateAvailable" class="update-notification">
+						<p>There is an update for Vikunja available!</p>
+						<a @click="refreshApp()" class="button is-primary noshadow">Update Now</a>
+					</div>
 					<div class="user">
 						<img :src="gravatar()" class="avatar" alt=""/>
 						<div class="dropdown is-right is-active">
@@ -187,6 +191,8 @@
 	import NamespaceService from './services/namespace'
 	import authTypes from './models/authTypes'
 
+	import swEvents from './ServiceWorker/events'
+
 	export default {
 		name: 'app',
 
@@ -201,6 +207,11 @@
 				userMenuActive: false,
 				authTypes: authTypes,
 				isOnline: true,
+
+				// Service Worker stuff
+				updateAvailable: false,
+				registration: null,
+				refreshing: false,
 			}
 		},
 		beforeMount() {
@@ -226,6 +237,17 @@
 			if (auth.user.authenticated && auth.user.infos.type === authTypes.USER && (this.$route.params.name === 'home' || this.namespaces.length === 0)) {
 				this.loadNamespaces()
 			}
+
+			// Service worker communication
+			document.addEventListener(swEvents.SW_UPDATED, this.showRefreshUI, { once: true })
+
+			navigator.serviceWorker.addEventListener(
+				'controllerchange', () => {
+					if (this.refreshing) return;
+					this.refreshing = true;
+					window.location.reload();
+				}
+			);
 		},
 		watch: {
 			// call the method again if the route changes
@@ -260,6 +282,17 @@
 			},
 			setFullPage() {
 				this.fullpage = true;
+			},
+			showRefreshUI (e) {
+				console.log('recieved refresh event', e)
+				this.registration = e.detail;
+				this.updateAvailable = true;
+			},
+			refreshApp () {
+				this.updateExists = false;
+				if (!this.registration || !this.registration.waiting) { return; }
+				// Notify the service worker to actually do the update
+				this.registration.waiting.postMessage('skipWaiting');
 			},
 		},
 	}

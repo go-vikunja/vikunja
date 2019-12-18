@@ -288,3 +288,18 @@ h1,h2,h3,h4,h5,h6{
     height: 18px;
   }
 }
+
+.update-notification {
+  margin: 1em;
+  display: flex;
+  align-items: center;
+  background: $warning;
+  padding: 0 0 0 .5em;
+  border-radius: $radius;
+  font-size: .9em;
+  color: darken($dark, 5);
+
+  .button {
+    margin-left: .5em;
+  }
+}
