@@ -34,6 +34,13 @@
 								</label>
 							</div>
 							<router-link :to="{ name: 'taskDetailView', params: { id: l.id } }" class="tasktext" :class="{ 'done': l.done}">
+								<!-- Show any parent tasks to make it clear this task is a sub task of something -->
+								<span class="parent-tasks" v-if="typeof l.related_tasks.parenttask !== 'undefined'">
+									<template v-for="(pt, i) in l.related_tasks.parenttask">
+										{{ pt.text }}<template v-if="(i + 1) < l.related_tasks.parenttask.length">,&nbsp;</template>
+									</template>
+									>
+								</span>
 								{{l.text}}
 								<span class="tag" v-for="label in l.labels" :style="{'background': label.hex_color, 'color': label.textColor}" :key="label.id">
 									<span>{{ label.title }}</span>

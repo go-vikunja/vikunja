@@ -77,6 +77,11 @@
       }
     }
 
+    span.parent-tasks {
+      color: lighten($dark, 50);
+      width: auto;
+    }
+
     .remove {
       color: $red;
     }
