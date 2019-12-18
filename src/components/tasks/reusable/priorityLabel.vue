@@ -30,3 +30,22 @@
 		}
 	}
 </script>
+
+<style lang="scss">
+	@import '../../../styles/variables';
+
+	span.high-priority{
+		color: $red;
+		width: auto !important; // To override the width set in tasks
+
+		.icon {
+			vertical-align: middle;
+			width: auto !important;
+			padding: 0 .5em;
+		}
+
+		&.not-so-high {
+			color: $orange;
+		}
+	}
+</style>

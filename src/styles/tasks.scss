@@ -142,14 +142,3 @@
   }
 }
 
-.high-priority{
-  color: $red;
-
-  .icon {
-    vertical-align: middle;
-  }
-
-  &.not-so-high {
-    color: $orange;
-  }
-}
