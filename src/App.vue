@@ -248,6 +248,11 @@
 					window.location.reload();
 				}
 			);
+
+			// Schedule a token renew every 60 minutes
+			setTimeout(() => {
+				auth.renewToken()
+			}, 1000 * 60 * 60)
 		},
 		watch: {
 			// call the method again if the route changes

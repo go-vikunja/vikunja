@@ -76,13 +76,28 @@ export default {
 	},
 
 	linkShareAuth(hash) {
-		return HTTP.post('/shares/'+hash+'/auth')
+		return HTTP.post('/shares/' + hash + '/auth')
 			.then(r => {
 				localStorage.setItem('token', r.data.token)
 				this.getUserInfos()
 				return Promise.resolve(r.data)
-			}).catch(e =>  {
+			}).catch(e => {
 				return Promise.reject(e)
+			})
+	},
+
+	renewToken() {
+		HTTP.post('user/token', null, {
+			headers: {
+				Authorization: 'Bearer ' + localStorage.getItem('token'),
+			}
+		})
+			.then(r => {
+				localStorage.setItem('token', r.data.token)
+			})
+			.catch(e => {
+				// eslint-disable-next-line
+				console.log('Error renewing token: ', e)
 			})
 	},
 
