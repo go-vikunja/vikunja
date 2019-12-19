@@ -298,6 +298,32 @@ h1,h2,h3,h4,h5,h6{
   border-radius: $radius;
   font-size: .9em;
   color: darken($dark, 5);
+  justify-content: space-between;
+
+  @media screen and (max-width: $desktop) {
+    & {
+      position: fixed;
+      bottom: 1em;
+      margin: 0;
+      width: 450px;
+      left: calc(50vw - 225px);
+    }
+  }
+
+  @media screen and (max-width: $tablet){
+    & {
+      position: fixed;
+      left: 1em;
+      right: 1em;
+      bottom: 1em;
+      width: auto;
+    }
+  }
+
+  p {
+    text-align: center;
+    width: 100%;
+  }
 
   .button {
     margin-left: .5em;
