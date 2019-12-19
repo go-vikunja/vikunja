@@ -29,7 +29,7 @@
     border-bottom: 1px solid darken(#fff, 10%);
 
     span:not(.tag) {
-      width: 96%;
+      width: calc(100% - 30px);
       display: inline-block;
       cursor: pointer;
 
