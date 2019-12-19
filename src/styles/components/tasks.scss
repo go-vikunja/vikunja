@@ -29,7 +29,7 @@
     border-bottom: 1px solid darken(#fff, 10%);
 
     span:not(.tag) {
-      width: calc(100% - 30px);
+      width: calc(100% - 40px);
       display: inline-block;
       cursor: pointer;
 
@@ -92,7 +92,7 @@
 
     .settings{
       float: right;
-      width: 4%;
+      width: 24px;
       cursor: pointer;
     }
   }

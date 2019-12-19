@@ -1,0 +1,22 @@
+.card {
+  background-color: rgba($grey-lighter, 0.075);
+  border-radius: $radius;
+  margin-bottom: 1rem;
+
+  .card-image {
+    img {
+      border-radius: $radius $radius 0 0;
+    }
+  }
+
+  .card-header {
+    box-shadow: none;
+    border-bottom: 1px solid $grey-lighter;
+    border-radius: $radius $radius 0 0;
+  }
+}
+
+.box,.card{
+  border: $thickness solid $border;
+  box-shadow: 0.3em 0.3em 0.8em darken($light, 6);
+}

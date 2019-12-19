@@ -441,3 +441,18 @@ fieldset[disabled] .multiselect {
     transform: rotate(2turn);
   }
 }
+
+.multiselect__tags {
+  .remove-assignee {
+    vertical-align: bottom;
+    color: $red;
+    margin-left: -1.8em;
+    background: $white;
+    padding: 0 4px;
+    display: inline-block;
+    border-radius: 100%;
+    font-size: .8em;
+    width: 18px;
+    height: 18px;
+  }
+}

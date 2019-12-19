@@ -1,0 +1,154 @@
+.button {
+  transition: all $transition;
+  border: 0;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  font-weight: bold;
+  height: 2.648em;
+  box-shadow: 0.3em 0.3em 1em lighten($dark, 75);
+
+  &.is-hovered,
+  &:hover {
+    box-shadow: 0.6em 0.6em 1em lighten($dark, 75);
+  }
+
+  &.fullheight{
+    padding-right: 7px;
+    height: 100%;
+  }
+
+  &.is-active,
+  &.is-focused,
+  &:active,
+  &:focus,
+  &:focus:not(:active) {
+    box-shadow: 0.1em 0.1em 0.7em lighten($dark, 75) !important;
+  }
+
+  &.icon-only{
+    padding-left: 16px;
+  }
+
+  @each $name, $pair in $colors {
+    $color: nth($pair, 1);
+
+    &.is-#{$name} {
+      box-shadow: 0.3em 0.3em 1em lighten($color, 30);
+
+      &.is-hovered,
+      &:hover {
+        box-shadow: 0.6em 0.6em 1em lighten($color, 30);
+      }
+
+      &.is-active,
+      &.is-focused,
+      &:active,
+      &:focus,
+      &:focus:not(:active) {
+        box-shadow: 0.1em 0.1em 0.7em lighten($color, 30) !important;
+      }
+
+      &.is-outlined {
+        border: 2px solid $color;
+      }
+    }
+  }
+
+  &.noshadow{
+    &,
+    &.is-hovered,
+    &:hover,
+    &.is-active,
+    &.is-focused,
+    &:active,
+    &:focus,
+    &:focus:not(:active) {
+      box-shadow: none;
+    }
+  }
+
+  &.is-small {
+    border-radius: $radius;
+  }
+}
+
+.input,
+.textarea {
+  transition: all $transition;
+  box-shadow: none;
+
+  &.is-active,
+  &.is-focused,
+  &:active,
+  &:focus {
+    box-shadow: none;
+  }
+
+  @each $name, $pair in $colors {
+    $color: nth($pair, 1);
+    $color-invert: nth($pair, 2);
+
+    &.is-#{$name} {
+      &.is-active,
+      &.is-focused,
+      &:active,
+      &:focus,
+      &:focus:not(:active) {
+        border-color: darken($color, 10);
+      }
+    }
+  }
+}
+
+.select:after {
+  margin-top: -0.575em;
+}
+
+.select select {
+  border-width: $thickness;
+
+  &:not([multiple]) {
+    height: calc(2.25em + #{$thickness});
+  }
+
+  &.is-active,
+  &.is-focused,
+  &:active,
+  &:focus,
+  &:focus:not(:active) {
+    box-shadow: none;
+  }
+}
+
+.field.has-addons {
+  .control .select select {
+    height: 2.25em;
+  }
+}
+
+.bigbuttons{
+  margin-top: 0.5rem;
+}
+
+.buttonright {
+  margin-right: 0.5rem;
+}
+
+.control.has-icons-left .icon, .control.has-icons-right .icon {
+  z-index: 0;
+}
+
+// Buttons icons
+.button .icon.is-small {
+  margin-right: 0.05rem !important;
+}
+
+// menu buttons
+.button-bottom {
+  margin-bottom: 1rem;
+}
+
+.button-right{
+  float: right;
+}
+

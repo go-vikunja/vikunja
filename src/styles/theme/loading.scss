@@ -1,0 +1,32 @@
+.loader-container {
+  &.is-loading {
+    position: relative;
+    pointer-events: none;
+    opacity: 0.5;
+    &:after {
+      @include loader;
+      position: absolute;
+      top: calc(50% - 2.5em);
+      left: calc(50% - 2.5em);
+      width: 5em;
+      height: 5em;
+      border-width: 0.25em;
+    }
+  }
+}
+
+.spinner{
+  &.is-loading {
+    pointer-events: none;
+    &:after {
+      @include loader;
+      width: 2em;
+      height: 2em;
+      margin-left: calc(50% - 1em);
+      position: absolute;
+      margin-top: 1em;
+      z-index: 999;
+      border-width: 0.25em;
+    }
+  }
+}

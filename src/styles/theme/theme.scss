@@ -1,0 +1,29 @@
+@import url('/fonts/fonts.css');
+@import '../../../node_modules/bulma/bulma';
+
+*, *:hover, *:active, *:focus{
+  outline: none;
+}
+
+body {
+  background: url('../../public/images/llama.svg') no-repeat bottom left fixed $light-background;
+  min-height: 100vh;
+}
+
+h1,h2,h3,h4,h5,h6{
+  font-family: $vikunja-font;
+  font-weight: 400 !important;
+}
+.logo {
+
+  padding-left: 2rem !important;
+
+  img {
+    max-height: 3rem !important;
+    margin-right: 1rem;
+  }
+}
+
+.progress {
+  border-radius: $radius-large;
+}

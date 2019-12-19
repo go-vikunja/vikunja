@@ -1,0 +1,39 @@
+.switch-view {
+  background: $white;
+  display: inline-block;
+  margin: 1em 0;
+  border-radius: $radius;
+  font-size: .8em;
+  box-shadow: 0.3em 0.3em 0.8em darken($light, 6);
+
+  a {
+    padding: .5em;
+    display: inline-block;
+    margin: .4em;
+    border-radius: $radius;
+
+    -webkit-transition: all 100ms;
+    -moz-transition: all 100ms;
+    -ms-transition: all 100ms;
+    -o-transition: all 100ms;
+    transition: all 100ms;
+
+    &:not(:last-child) {
+      margin-right: 0;
+    }
+
+    &.is-active, &:hover {
+      color: $white;
+    }
+
+    &.is-active {
+      background: $primary;
+      font-weight: bold;
+      box-shadow: 0.3em 0.3em 0.8em darken($light, 6);
+    }
+
+    &:hover {
+      background: lighten($primary, 5);
+    }
+  }
+}

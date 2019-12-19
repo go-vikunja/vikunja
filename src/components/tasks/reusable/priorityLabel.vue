@@ -32,7 +32,7 @@
 </script>
 
 <style lang="scss">
-	@import '../../../styles/variables';
+	@import '../../../styles/theme/variables';
 
 	span.high-priority{
 		color: $red;

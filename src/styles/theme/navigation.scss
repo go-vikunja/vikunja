@@ -1,23 +1,66 @@
+.navbar {
+  z-index: 2;
 
-/* Logo */
-.logo {
+  @each $name, $pair in $colors {
+    $color: nth($pair, 1);
+    $color-invert: nth($pair, 2);
 
-  padding-left: 2rem !important;
-
-  img {
-    max-height: 3rem !important;
-    margin-right: 1rem;
+    &.is-#{$name} {
+      border-color: darken($color, 5);
+    }
+  }
+  .navbar-dropdown {
+    box-shadow: $navbar-dropdown-boxed-shadow;
+    top: 101%;
   }
 }
 
-/* Buttons icons */
-.button .icon.is-small {
-  margin-right: 0.05rem !important;
+.navbar.main-theme {
+  background: $light-background;
+  z-index: 5 !important;
+
+  @media screen and (max-width: $desktop) {
+    display: flex;
+    justify-content: space-between;
+
+    @media screen and (max-width: $tablet) {
+      .navbar-brand {
+        margin-left: 3em;
+      }
+    }
+
+    @media screen and (max-width: 640px) { // Magic number to hide the username if it would take too much space otherwise
+      .user {
+        width: 7em;
+
+        .username {
+          display: none;
+        }
+      }
+    }
+  }
 }
 
-/* menu buttons */
-.button-bottom {
-  margin-bottom: 1rem;
+.hero {
+  .navbar {
+    border: none;
+    box-shadow: none;
+  }
+  @each $name, $pair in $colors {
+    $color: nth($pair, 1);
+    $color-invert: nth($pair, 2);
+
+    &.is-#{$name} {
+      .navbar {
+        box-shadow: none;
+      }
+    }
+  }
+  @include touch {
+    .navbar-menu {
+      box-shadow: none;
+    }
+  }
 }
 
 .navbar-menu .navbar-item .icon{
@@ -28,12 +71,7 @@
   z-index: 4 !important;
 }
 
-.app-container{
-  min-height: calc(100vh - 65px);
-  @media screen and (max-width: $tablet) {
-    padding-top: $navbar-height + 0.75rem;
-  }
-
+.app-container {
   .namespace-container{
     background: $vikunja-nav-background;
     z-index: 6;
@@ -176,23 +214,6 @@
       }
     }
   }
-
-  .app-content{
-    padding: $navbar-height + 1.5rem 1.5em 0 1.5em;
-    z-index: 2;
-    background: url('../public/images/llama-upside-down.svg') no-repeat top right $light-background;
-    margin-left: 17vw;
-
-    @media screen and (max-width: $tablet) {
-      margin-left: 0;
-      padding-top: 1.5em;
-      min-height: calc(100vh - 4rem);
-    }
-
-    .card{
-      background: #fff;
-    }
-  }
 }
 
 .navbar .user{
@@ -291,141 +312,6 @@
   }
 }
 
-/* Logout-icon */
 .logout-icon {
   margin-right: 0.85em !important;
-}
-
-/* Loading spinner */
-.loader-container {
-  &.is-loading {
-    position: relative;
-    pointer-events: none;
-    opacity: 0.5;
-    &:after {
-      @include loader;
-      position: absolute;
-      top: calc(50% - 2.5em);
-      left: calc(50% - 2.5em);
-      width: 5em;
-      height: 5em;
-      border-width: 0.25em;
-    }
-  }
-}
-
-.spinner{
-  &.is-loading {
-    pointer-events: none;
-    &:after {
-      @include loader;
-      width: 2em;
-      height: 2em;
-      margin-left: calc(50% - 1em);
-      position: absolute;
-      margin-top: 1em;
-      z-index: 999;
-      border-width: 0.25em;
-    }
-  }
-}
-
-.notifications{
-  left: 0.5em !important;
-  bottom: 1em !important;
-
-  .notification-wrapper .notification{
-    -webkit-border-radius: 0;
-    -moz-border-radius: 0;
-    border-radius: 0;
-    border-top-width: 0;
-    border-right-width: 0;
-    border-bottom-width: 0;
-    border-left-width: 0.4em;
-  }
-}
-
-.button-right{
-  float: right;
-}
-
-.switch-view {
-  background: $white;
-  display: inline-block;
-  margin: 1em 0;
-  border-radius: $radius;
-  font-size: .8em;
-  box-shadow: 0.3em 0.3em 0.8em darken($light, 6);
-
-  a {
-    padding: .5em;
-    display: inline-block;
-    margin: .4em;
-    border-radius: $radius;
-
-    -webkit-transition: all 100ms;
-    -moz-transition: all 100ms;
-    -ms-transition: all 100ms;
-    -o-transition: all 100ms;
-    transition: all 100ms;
-
-    &:not(:last-child) {
-      margin-right: 0;
-    }
-
-    &.is-active, &:hover {
-      color: $white;
-    }
-
-    &.is-active {
-      background: $primary;
-      font-weight: bold;
-      box-shadow: 0.3em 0.3em 0.8em darken($light, 6);
-    }
-
-    &:hover {
-      background: lighten($primary, 5);
-    }
-  }
-}
-
-.link-share-view {
-  .logo {
-    max-width: 500px;
-    width: 90%;
-    margin: 2em 0 4em;
-  }
-
-  .logout {
-    text-align: right;
-  }
-
-  .column {
-    max-width: 100%;
-  }
-}
-
-.offline {
-  background: url('../public/images/llama-nightscape.png') no-repeat center;
-  -webkit-background-size: cover;
-  background-size: cover;
-  height: 100vh;
-
-  .offline-message {
-    text-align: center;
-    position: absolute;
-    width: 100vw;
-    bottom: 5vh;
-    color: $white;
-    padding: 0 1em;
-
-    h1 {
-      font-weight: bold;
-      font-size: 1.5em;
-      text-align: center;
-      color: $white;
-      font-weight: 700 !important;
-      font-size: 1.5em;
-    }
-  }
 }

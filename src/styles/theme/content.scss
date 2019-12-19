@@ -1,0 +1,23 @@
+.app-container{
+  min-height: calc(100vh - 65px);
+  @media screen and (max-width: $tablet) {
+    padding-top: $navbar-height + 0.75rem;
+  }
+
+  .app-content{
+    padding: $navbar-height + 1.5rem 1.5em 0 1.5em;
+    z-index: 2;
+    background: url('../../public/images/llama-upside-down.svg') no-repeat top right $light-background;
+    margin-left: 17vw;
+
+    @media screen and (max-width: $tablet) {
+      margin-left: 0;
+      padding-top: 1.5em;
+      min-height: calc(100vh - 4rem);
+    }
+
+    .card{
+      background: #fff;
+    }
+  }
+}

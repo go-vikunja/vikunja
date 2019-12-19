@@ -12,7 +12,7 @@ import TaskOverview from './components/tasks/ShowTasks'
 Vue.component('TaskOverview', TaskOverview)
 
 // Add CSS
-import './vikunja.scss'
+import './styles/vikunja.scss'
 
 Vue.config.productionTip = false
 

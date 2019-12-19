@@ -1,0 +1,32 @@
+.notification {
+  border: $thickness solid $border;
+
+  @each $name, $pair in $colors {
+    $color: nth($pair, 1);
+
+    &.is-#{$name} {
+      border-color: darken($color, 5);
+    }
+  }
+}
+
+.notifications{
+  left: 0.5em !important;
+  bottom: 1em !important;
+
+  .notification-wrapper .notification{
+    -webkit-border-radius: 0;
+    -moz-border-radius: 0;
+    border-radius: 0;
+    border-top-width: 0;
+    border-right-width: 0;
+    border-bottom-width: 0;
+    border-left-width: 0.4em;
+  }
+}
+
+.message {
+  .message-body {
+    border: $thickness solid;
+  }
+}
