@@ -61,6 +61,8 @@ service:
   enablemetrics: false
   # Enable the caldav endpoint, see the docs for more details
   enablecaldav: true
+  # Set the motd message, available from the /info endpoint
+  motd: ""
   # Enable sharing of lists via a link
   enablelinksharing: true
 
