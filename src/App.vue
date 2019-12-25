@@ -168,6 +168,14 @@
 				<div class="container">
 					<div class="column is-4 is-offset-4">
 						<img src="/images/logo-full.svg" alt="Vikunja"/>
+						<div class="message is-info" v-if="motd !== ''">
+							<div class="message-header">
+								<p>Info</p>
+							</div>
+							<div class="message-body">
+								{{ motd }}
+							</div>
+						</div>
 						<router-view/>
 					</div>
 				</div>
@@ -207,6 +215,7 @@
 				userMenuActive: false,
 				authTypes: authTypes,
 				isOnline: true,
+				motd: '',
 
 				// Service Worker stuff
 				updateAvailable: false,
@@ -253,6 +262,9 @@
 			setTimeout(() => {
 				auth.renewToken()
 			}, 1000 * 60 * 60)
+
+			// Set the motd
+			this.setMotd()
 		},
 		watch: {
 			// call the method again if the route changes
@@ -298,6 +310,18 @@
 				if (!this.registration || !this.registration.waiting) { return; }
 				// Notify the service worker to actually do the update
 				this.registration.waiting.postMessage('skipWaiting');
+			},
+			setMotd() {
+				let cancel = () => {};
+				// Since the config may not be initialized when we're calling this, we need to retry until it is ready.
+				if (typeof this.$config === 'undefined') {
+					cancel = setTimeout(() => {
+						this.setMotd()
+					}, 150)
+				} else {
+					cancel()
+					this.motd = this.$config.motd
+				}
 			},
 		},
 	}
