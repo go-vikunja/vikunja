@@ -22,7 +22,7 @@ package tools
 
 import (
 	_ "github.com/client9/misspell/cmd/misspell"
-	_ "github.com/cweill/gotests/..."
+	_ "github.com/cweill/gotests"
 	_ "github.com/fzipp/gocyclo"
 	_ "github.com/gordonklaus/ineffassign"
 	_ "github.com/swaggo/swag/cmd/swag"

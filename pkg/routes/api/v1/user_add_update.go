@@ -17,6 +17,7 @@
 package v1
 
 import (
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/web/handler"
 	"github.com/labstack/echo/v4"
@@ -35,6 +36,9 @@ import (
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /register [post]
 func RegisterUser(c echo.Context) error {
+	if !config.ServiceEnableRegistration.GetBool() {
+		return echo.ErrNotFound
+	}
 	// Check for Request Content
 	var datUser *models.APIUserPassword
 	if err := c.Bind(&datUser); err != nil {

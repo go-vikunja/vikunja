@@ -22,6 +22,8 @@ service:
   motd: ""
   # Enable sharing of lists via a link
   enablelinksharing: true
+  # Whether to let new users registering themselves or not
+  enableregistration: true
 
 database:
   # Database type to use. Supported types are mysql and sqlite.

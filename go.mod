@@ -25,6 +25,7 @@ require (
 	github.com/c2h5oh/datasize v0.0.0-20171227191756-4eba002a5eae
 	github.com/client9/misspell v0.3.4
 	github.com/cpuguy83/go-md2man/v2 v2.0.0 // indirect
+	github.com/cweill/gotests v1.5.3
 	github.com/d4l3k/messagediff v1.2.1 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/fzipp/gocyclo v0.0.0-20150627053110-6acd4345c835
@@ -78,7 +79,6 @@ require (
 	golang.org/x/tools v0.0.0-20191130070609-6e064ea0cf2d // indirect
 	google.golang.org/appengine v1.5.0 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
-	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 	gopkg.in/d4l3k/messagediff.v1 v1.2.1
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 	gopkg.in/testfixtures.v2 v2.5.3

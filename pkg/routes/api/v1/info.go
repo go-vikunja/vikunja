@@ -24,11 +24,12 @@ import (
 )
 
 type vikunjaInfos struct {
-	Version            string `json:"version"`
-	FrontendURL        string `json:"frontend_url"`
-	Motd               string `json:"motd"`
-	LinkSharingEnabled bool   `json:"link_sharing_enabled"`
-	MaxFileSize        string `json:"max_file_size"`
+	Version             string `json:"version"`
+	FrontendURL         string `json:"frontend_url"`
+	Motd                string `json:"motd"`
+	LinkSharingEnabled  bool   `json:"link_sharing_enabled"`
+	MaxFileSize         string `json:"max_file_size"`
+	RegistrationEnabled bool   `json:"registration_enabled"`
 }
 
 // Info is the handler to get infos about this vikunja instance
@@ -40,10 +41,11 @@ type vikunjaInfos struct {
 // @Router /info [get]
 func Info(c echo.Context) error {
 	return c.JSON(http.StatusOK, vikunjaInfos{
-		Version:            version.Version,
-		FrontendURL:        config.ServiceFrontendurl.GetString(),
-		Motd:               config.ServiceMotd.GetString(),
-		LinkSharingEnabled: config.ServiceEnableLinkSharing.GetBool(),
-		MaxFileSize:        config.FilesMaxSize.GetString(),
+		Version:             version.Version,
+		FrontendURL:         config.ServiceFrontendurl.GetString(),
+		Motd:                config.ServiceMotd.GetString(),
+		LinkSharingEnabled:  config.ServiceEnableLinkSharing.GetBool(),
+		MaxFileSize:         config.FilesMaxSize.GetString(),
+		RegistrationEnabled: config.ServiceEnableRegistration.GetBool(),
 	})
 }
