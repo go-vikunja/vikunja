@@ -1,4 +1,4 @@
-// Copyright 2019 Vikunja and contriubtors. All rights reserved.
+// Copyright 2018-2020 Vikunja and contriubtors. All rights reserved.
 //
 // This file is part of Vikunja.
 //

@@ -1,7 +1,7 @@
 //lint:file-ignore ST1018 The const below is not ours
 
 // Vikunja is a todo-list application to facilitate your life.
-// Copyright 2019 Vikunja and contributors. All rights reserved.
+// Copyright 2018-2020 Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
