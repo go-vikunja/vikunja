@@ -44,16 +44,6 @@
       margin: 0 .3em;
       height: 1.5em;
       padding: 0 .3em;
-
-      &:hover,&:active {
-        background: $input-background-color;
-        border-color: $input-border-color;
-      }
-
-      &:focus {
-        background: $input-background-color;
-        border-color: $input-focus-border-color;
-      }
     }
 
     .is-done {
@@ -99,7 +89,7 @@
       break-after: always; // New syntax
     }
 
-    &.labels-list, .assignees{
+    &.labels-list, .assignees {
       .multiselect__tags {
         padding: 3px 0 0 3px;
         border: none;
@@ -127,7 +117,9 @@
         border: none;
       }
     }
+  }
 
+  .details,.heading {
     .input:not(.has-defaults),
     .textarea,
     .select:not(.has-defaults) select {
@@ -142,19 +134,15 @@
         font-style: italic;
       }
 
-      &:hover {
-        border-color: $input-border-color;
+      &:hover,&:active {
         background: $input-background-color;
-      }
-    }
-
-    .textarea {
-      &:hover {
+        border-color: $input-border-color;
         cursor: text;
       }
 
       &:focus {
-        border-color: $input-focus-border-color
+        background: $input-background-color;
+        border-color: $input-focus-border-color;
       }
     }
 
