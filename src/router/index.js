@@ -23,6 +23,9 @@ import EditTeamComponent from '@/components/teams/EditTeam'
 import NewTeamComponent from '@/components/teams/NewTeam'
 // Label Handling
 import ListLabelsComponent from '@/components/labels/ListLabels'
+// Migration
+import MigrationComponent from '../components/migrator/migrate'
+import WunderlistMigrationComponent from '../components/migrator/wunderlist'
 
 Vue.use(Router)
 
@@ -134,6 +137,16 @@ export default new Router({
 			path: '/share/:share/auth',
 			name: 'linkShareAuth',
 			component: LinkShareAuthComponent
+		},
+		{
+			path: '/migrate',
+			name: 'migrateStart',
+			component: MigrationComponent,
+		},
+		{
+			path: '/migrate/wunderlist',
+			name: 'migrateWunderlist',
+			component: WunderlistMigrationComponent,
 		},
 	]
 })

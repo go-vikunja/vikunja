@@ -2,6 +2,7 @@
 	<div class="content has-text-centered">
 		<h2>Hi {{user.infos.username}}!</h2>
 		<p>Click on a list or namespace on the left to get started.</p>
+		<router-link class="button is-primary is-right noshadow is-outlined" :to="{name: 'migrateStart'}">Import your data into Vikunja</router-link>
 		<TaskOverview :show-all="true"/>
 	</div>
 </template>
