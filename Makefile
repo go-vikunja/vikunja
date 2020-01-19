@@ -65,6 +65,9 @@ clean:
 .PHONY: test
 test:
 	VIKUNJA_SERVICE_ROOTPATH=$(shell pwd) go test $(GOFLAGS) -cover -coverprofile cover.out $(PACKAGES)
+
+.PHONY: test-coverage
+test-coverage: test
 	go tool cover -html=cover.out -o cover.html
 
 .PHONY: integration-test

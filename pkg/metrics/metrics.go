@@ -115,13 +115,16 @@ func UpdateCount(update int64, key string) {
 	if !config.ServiceEnableMetrics.GetBool() {
 		return
 	}
-	oldtotal, err := GetCount(key)
-	if err != nil {
-		log.Error(err.Error())
+	if update > 0 {
+		err := r.IncrBy(key, update).Err()
+		if err != nil {
+			log.Error(err.Error())
+		}
 	}
-
-	err = SetCount(oldtotal+update, key)
-	if err != nil {
-		log.Error(err.Error())
+	if update < 0 {
+		err := r.DecrBy(key, update).Err()
+		if err != nil {
+			log.Error(err.Error())
+		}
 	}
 }
