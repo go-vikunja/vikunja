@@ -2,7 +2,7 @@
 
 [![Build Status](https://drone1.kolaente.de/api/badges/vikunja/api/status.svg)](https://drone1.kolaente.de/vikunja/api)
 [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](LICENSE)
-[![Download](https://img.shields.io/badge/download-v0.9-brightgreen.svg)](https://storage.kolaente.de/minio/vikunja/)
+[![Download](https://img.shields.io/badge/download-v0.10-brightgreen.svg)](https://storage.kolaente.de/minio/vikunja/)
 [![Docker Pulls](https://img.shields.io/docker/pulls/vikunja/api.svg)](https://hub.docker.com/r/vikunja/api/)
 [![Swagger Docs](https://img.shields.io/badge/swagger-docs-brightgreen.svg)](https://try.vikunja.io/api/v1/docs)
 [![Go Report Card](https://goreportcard.com/badge/git.kolaente.de/vikunja/api)](https://goreportcard.com/report/git.kolaente.de/vikunja/api)
@@ -55,6 +55,7 @@ All docs can be found on [the vikunja home page](https://vikunja.io/docs/).
 * [x] More sharing features
   * [x] Share with individual users
   * [x] Share via a world-readable link with or without password, like Nextcloud
+* [x] Disable registration, making an instance "invite-only" 
 * [ ] SSE to notify multiple clients of updates when something was changed
 * [ ] "Smart Lists" - Create lists based on filters
 * [ ] IMAP-Integration - Send an email to Vikunja to create a new task
@@ -64,7 +65,6 @@ All docs can be found on [the vikunja home page](https://vikunja.io/docs/).
 * [ ] Bulk-edit multiple tasks at once
 * [ ] Team-efforts - Requiring a task to be marked as done by multiple members until it's done
 * [ ] Global limits for namespaces/lists/tasks
-* [ ] Disable registration, making an instance "invite-only" 
 
 See [our roadmap](https://my.vikunja.cloud/share/QFyzYEmEYfSyQfTOmIRSwLUpkFjboaBqQCnaPmWd/auth) (hosted on Vikunja!) for even more!
 
