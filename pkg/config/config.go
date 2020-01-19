@@ -89,6 +89,11 @@ const (
 
 	FilesBasePath Key = `files.basepath`
 	FilesMaxSize  Key = `files.maxsize`
+
+	MigrationWunderlistEnable       Key = `migration.wunderlist.enable`
+	MigrationWunderlistClientID     Key = `migration.wunderlist.clientid`
+	MigrationWunderlistClientSecret Key = `migration.wunderlist.clientsecret`
+	MigrationWunderlistRedirectURL  Key = `migration.wunderlist.redirecturl`
 )
 
 // GetString returns a string config value

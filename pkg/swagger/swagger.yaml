@@ -13,6 +13,11 @@ definitions:
       size:
         type: integer
     type: object
+  handler.AuthURL:
+    properties:
+      url:
+        type: string
+    type: object
   models.APIUserPassword:
     properties:
       email:
@@ -858,6 +863,12 @@ definitions:
       motd:
         type: string
       version:
+        type: string
+    type: object
+  wunderlist.Migration:
+    properties:
+      code:
+        description: Code is the code used to get a user api token
         type: string
     type: object
 info:
@@ -1935,6 +1946,57 @@ paths:
       summary: Login
       tags:
       - user
+  /migration/wunderlist/auth:
+    get:
+      description: Returns the auth url where the user needs to get its auth code.
+        This code can then be used to migrate everything from wunderlist to Vikunja.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The auth url.
+          schema:
+            $ref: '#/definitions/handler.AuthURL'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get the auth url from wunderlist
+      tags:
+      - migration
+  /migration/wunderlist/migrate:
+    post:
+      consumes:
+      - application/json
+      description: Migrates all folders, lists, tasks, notes, reminders, subtasks
+        and files from wunderlist to vikunja.
+      parameters:
+      - description: The auth code previously obtained from the auth url. See the
+          docs for /migration/wunderlist/auth.
+        in: body
+        name: migrationCode
+        required: true
+        schema:
+          $ref: '#/definitions/wunderlist.Migration'
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: A message telling you everything was migrated successfully.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Migrate all lists, tasks etc. from wunderlist
+      tags:
+      - migration
   /namespace/{id}:
     post:
       consumes:

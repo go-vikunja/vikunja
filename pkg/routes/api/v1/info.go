@@ -24,12 +24,13 @@ import (
 )
 
 type vikunjaInfos struct {
-	Version             string `json:"version"`
-	FrontendURL         string `json:"frontend_url"`
-	Motd                string `json:"motd"`
-	LinkSharingEnabled  bool   `json:"link_sharing_enabled"`
-	MaxFileSize         string `json:"max_file_size"`
-	RegistrationEnabled bool   `json:"registration_enabled"`
+	Version             string   `json:"version"`
+	FrontendURL         string   `json:"frontend_url"`
+	Motd                string   `json:"motd"`
+	LinkSharingEnabled  bool     `json:"link_sharing_enabled"`
+	MaxFileSize         string   `json:"max_file_size"`
+	RegistrationEnabled bool     `json:"registration_enabled"`
+	AvailableMigrators  []string `json:"available_migrators"`
 }
 
 // Info is the handler to get infos about this vikunja instance
@@ -40,12 +41,16 @@ type vikunjaInfos struct {
 // @Success 200 {object} v1.vikunjaInfos
 // @Router /info [get]
 func Info(c echo.Context) error {
-	return c.JSON(http.StatusOK, vikunjaInfos{
+	infos := vikunjaInfos{
 		Version:             version.Version,
 		FrontendURL:         config.ServiceFrontendurl.GetString(),
 		Motd:                config.ServiceMotd.GetString(),
 		LinkSharingEnabled:  config.ServiceEnableLinkSharing.GetBool(),
 		MaxFileSize:         config.FilesMaxSize.GetString(),
 		RegistrationEnabled: config.ServiceEnableRegistration.GetBool(),
-	})
+	}
+	if config.MigrationWunderlistEnable.GetBool() {
+		infos.AvailableMigrators = append(infos.AvailableMigrators, "wunderlist")
+	}
+	return c.JSON(http.StatusOK, infos)
 }

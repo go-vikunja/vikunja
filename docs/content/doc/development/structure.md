@@ -22,6 +22,10 @@ In general, this api repo has the following structure:
   * `metrics`
   * `migration`
   * `models`
+  * `modules`
+    * `migration`
+      * `handler`
+      * `wunderlist`
   * `red`
   * `routes`
     * `api/v1`
@@ -85,7 +89,7 @@ To learn how it works and how to add new metrics, take a look at [how metrics wo
 This package handles all migrations.
 All migrations are stored and executed here.
 
-To learn more, take a look at the [migrations docs]({{< ref "../development/migrations.md">}}).
+To learn more, take a look at the [migrations docs]({{< ref "../development/db-migrations.md">}}).
 
 ### models
 
@@ -96,6 +100,12 @@ Because this package is pretty huge, there are several documents and how-to's ab
 
 * [Adding a feature]({{< ref "../practical-instructions/feature.md">}})
 * [Making calls to the database]({{< ref "../practical-instructions/database.md">}})
+
+### modules
+
+#### migration
+
+See [writing a migrator]({{< ref "migration.md" >}}).
 
 ### red (redis)
 

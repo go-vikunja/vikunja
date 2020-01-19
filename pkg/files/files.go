@@ -39,6 +39,9 @@ type File struct {
 	CreatedByID int64 `xorm:"int(11) not null" json:"-"`
 
 	File afero.File `xorm:"-" json:"-"`
+	// This ReadCloser is only used for migration purposes. Use with care!
+	// There is currentlc no better way of doing this.
+	FileContent []byte `xorm:"-" json:"-"`
 }
 
 // TableName is the table name for the files table

@@ -160,4 +160,20 @@ files:
   # The maximum size of a file, as a human-readable string.
   # Warning: The max size is limited 2^64-1 bytes due to the underlying datatype
   maxsize: 20MB
+
+migration:
+  # These are the settings for the wunderlist migrator
+  wunderlist:
+    # Wheter to enable the wunderlist migrator or not
+    enable: true
+    # The client id, required for making requests to the wunderlist api
+    # You need to register your vikunja instance at https://developer.wunderlist.com/apps/new to get this
+    clientid:
+    # The client secret, also required for making requests to the wunderlist api
+    clientsecret:
+    # The url where clients are redirected after they authorized Vikunja to access their wunderlist stuff.
+    # This needs to match the url you entered when registering your Vikunja instance at wunderlist.
+    # This is usually the frontend url where the frontend then makes a request to /migration/wunderlist/migrate
+    # with the code obtained from the wunderlist api.
+    redirecturl:
 {{< /highlight >}}

@@ -1597,6 +1597,83 @@
                 }
             }
         },
+        "/migration/wunderlist/auth": {
+            "get": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Returns the auth url where the user needs to get its auth code. This code can then be used to migrate everything from wunderlist to Vikunja.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "migration"
+                ],
+                "summary": "Get the auth url from wunderlist",
+                "responses": {
+                    "200": {
+                        "description": "The auth url.",
+                        "schema": {
+                            "$ref": "#/definitions/handler.AuthURL"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/migration/wunderlist/migrate": {
+            "post": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Migrates all folders, lists, tasks, notes, reminders, subtasks and files from wunderlist to vikunja.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "migration"
+                ],
+                "summary": "Migrate all lists, tasks etc. from wunderlist",
+                "parameters": [
+                    {
+                        "description": "The auth code previously obtained from the auth url. See the docs for /migration/wunderlist/auth.",
+                        "name": "migrationCode",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/wunderlist.Migration"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A message telling you everything was migrated successfully.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
         "/namespace/{id}": {
             "post": {
                 "security": [
@@ -4444,6 +4521,14 @@
                 }
             }
         },
+        "handler.AuthURL": {
+            "type": "object",
+            "properties": {
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
         "models.APIUserPassword": {
             "type": "object",
             "properties": {
@@ -5505,6 +5590,15 @@
                     "type": "string"
                 },
                 "version": {
+                    "type": "string"
+                }
+            }
+        },
+        "wunderlist.Migration": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "Code is the code used to get a user api token",
                     "type": "string"
                 }
             }

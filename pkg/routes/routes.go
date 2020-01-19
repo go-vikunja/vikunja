@@ -47,6 +47,9 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/modules/migration"
+	migrationHandler "code.vikunja.io/api/pkg/modules/migration/handler"
+	"code.vikunja.io/api/pkg/modules/migration/wunderlist"
 	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
 	"code.vikunja.io/api/pkg/routes/caldav"
 	_ "code.vikunja.io/api/pkg/swagger" // To generate swagger docs
@@ -372,6 +375,20 @@ func registerAPIRoutes(a *echo.Group) {
 	}
 	a.PUT("/teams/:team/members", teamMemberHandler.CreateWeb)
 	a.DELETE("/teams/:team/members/:user", teamMemberHandler.DeleteWeb)
+
+	// Migrations
+	m := a.Group("/migration")
+
+	// Wunderlist
+	if config.MigrationWunderlistEnable.GetBool() {
+		wunderlistMigrationHandler := &migrationHandler.MigrationWeb{
+			MigrationStruct: func() migration.Migrator {
+				return &wunderlist.Migration{}
+			},
+		}
+		m.GET("/wunderlist/auth", wunderlistMigrationHandler.AuthURL)
+		m.POST("/wunderlist/migrate", wunderlistMigrationHandler.Migrate)
+	}
 }
 
 func registerCalDavRoutes(c *echo.Group) {
