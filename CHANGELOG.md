@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 All releases can be found on https://code.vikunja.io/api/releases.
 
+## [0.10] - 2020-01-19
+
+### Added
+
+* Migration (#120)
+* Endpoint to get tasks on a list (#108)
+* Sort Order for tasks (#110)
+* Add files volume to docker compose docs
+* Add motd config option to docs
+* Add option to disable registration (#117)
+* Add task identifier (#115)
+* Add tests for md5 generation (#111)
+* Add user token renew (#113)
+
+### Fixed
+
+* Fix new tasks not getting a new task index (#116)
+* Fix owner field being null for user shared namespaces (#119)
+* Fix passing sort_by and order_by as query path arrays
+* Fix sorting tasks by bool values
+* Fix task collection tests
+* Consistent copyright text in file headers (#112)
+
+### Changed
+
+* Task collection improvements (#109)
+* Update copyright year (#118)
+* Update docs with a traefik configuration
+* Use redis INCRBY and DECRBY when updating metrics values (#121)
+* Use utf8mb4 instead of plain utf8 (#114)
+* Update docs theme
+
 ## [0.9] - 2019-11-24
 
 ### Added 
