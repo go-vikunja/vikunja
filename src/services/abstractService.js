@@ -282,9 +282,21 @@ export default class AbstractService {
 			return Promise.reject({message: 'This model is not able to get data.'})
 		}
 
+		return this.getM(this.paths.get, model, params)
+	}
+
+	/**
+	 * This is a more abstract implementation which only does a get request.
+	 * Services which need more flexibility can use this.
+	 * @param url
+	 * @param model
+	 * @param params
+	 * @returns {Q.Promise<unknown>}
+	 */
+	getM(url, model = {}, params = {}) {
 		const cancel = this.setLoading()
 		model = this.beforeGet(model)
-		return this.http.get(this.getReplacedRoute(this.paths.get, model), {params: params})
+		return this.http.get(this.getReplacedRoute(url, model), {params: params})
 			.catch(error => {
 				return this.errorHandler(error)
 			})

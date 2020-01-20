@@ -2,11 +2,11 @@
 	<div class="content">
 		<h1>Import your data from Wunderlist to Vikunja</h1>
 		<p>Vikunja will import all folders, lists, tasks, notes, reminders and files you have access to.</p>
-		<template v-if="isMigrating === false && message === ''">
+		<template v-if="isMigrating === false && message === '' && lastMigrationDate === 0">
 			<p>To authorize Vikunja to access your Wunderlist Account, click the button below.</p>
 			<a :href="authUrl" class="button is-primary" :class="{'is-loading': migrationService.loading}" :disabled="migrationService.loading">Get Started</a>
 		</template>
-		<div class="migration-in-progress-container" v-else-if="isMigrating === true && message === ''">
+		<div class="migration-in-progress-container" v-else-if="isMigrating === true && message === '' && lastMigrationDate === 0">
 			<div class="migration-in-progress">
 				<img src="/images/migration/wunderlist.png" alt="Wunderlist Logo"/>
 				<div class="progress-dots">
@@ -21,7 +21,18 @@
 				</div>
 				<img src="/images/logo.svg" alt="Vikunja Logo">
 			</div>
-			<p>Migration in progress, hang tight...</p>
+			<p>Importing in progress, hang tight...</p>
+		</div>
+		<div v-else-if="lastMigrationDate > 0">
+			<p>
+				It looks like you've already imported your stuff from wunderlist at {{ new Date(lastMigrationDate * 1000) }}.<br/>
+				Importing again is possible, but might create duplicates.
+				Are you sure?
+			</p>
+			<div class="buttons">
+				<button class="button is-primary" @click="migrate">I am sure, please start migrating now!</button>
+				<router-link :to="{name: 'home'}" class="button is-danger is-outlined">Cancel</router-link>
+			</div>
 		</div>
 		<div v-else>
 			<div class="message is-primary">
@@ -45,6 +56,7 @@
 				migrationService: WunderlistMigrationService,
 				authUrl: '',
 				isMigrating: false,
+				lastMigrationDate: 0,
 				message: '',
 				wunderlistCode: '',
 			}
@@ -55,9 +67,18 @@
 			this.message = ''
 
 			if(typeof this.$route.query.code !== 'undefined') {
-				this.isMigrating = true
 				this.wunderlistCode = this.$route.query.code
-				this.migrate()
+				this.migrationService.getStatus()
+					.then(r => {
+						if(r.time_unix > 0) {
+							this.lastMigrationDate = r.time_unix
+							return
+						}
+						this.migrate()
+					})
+					.catch(e => {
+						message.error(e, this)
+					})
 			}
 		},
 		methods: {
@@ -71,6 +92,8 @@
 					})
 			},
 			migrate() {
+				this.isMigrating = true
+				this.lastMigrationDate = 0
 				this.migrationService.migrate({code: this.wunderlistCode})
 					.then(r => {
 						this.message = r.message
