@@ -1674,6 +1674,37 @@
                 }
             }
         },
+        "/migration/wunderlist/status": {
+            "get": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Returns if the current user already did the migation or not. This is useful to show a confirmation message in the frontend if the user is trying to do the same migration again.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "migration"
+                ],
+                "summary": "Get migration status",
+                "responses": {
+                    "200": {
+                        "description": "The migration status",
+                        "schema": {
+                            "$ref": "#/definitions/migration.Status"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
         "/namespace/{id}": {
             "post": {
                 "security": [
@@ -4529,6 +4560,20 @@
                 }
             }
         },
+        "migration.Status": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "migrator_name": {
+                    "type": "string"
+                },
+                "time_unix": {
+                    "type": "integer"
+                }
+            }
+        },
         "models.APIUserPassword": {
             "type": "object",
             "properties": {
@@ -5577,6 +5622,12 @@
         "v1.vikunjaInfos": {
             "type": "object",
             "properties": {
+                "available_migrators": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "frontend_url": {
                     "type": "string"
                 },
@@ -5588,6 +5639,9 @@
                 },
                 "motd": {
                     "type": "string"
+                },
+                "registration_enabled": {
+                    "type": "boolean"
                 },
                 "version": {
                     "type": "string"

@@ -386,8 +386,7 @@ func registerAPIRoutes(a *echo.Group) {
 				return &wunderlist.Migration{}
 			},
 		}
-		m.GET("/wunderlist/auth", wunderlistMigrationHandler.AuthURL)
-		m.POST("/wunderlist/migrate", wunderlistMigrationHandler.Migrate)
+		wunderlistMigrationHandler.RegisterRoutes(m)
 	}
 }
 

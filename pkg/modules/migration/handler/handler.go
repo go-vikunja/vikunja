@@ -34,6 +34,14 @@ type AuthURL struct {
 	URL string `json:"url"`
 }
 
+// RegisterRoutes registers all routes for migration
+func (mw *MigrationWeb) RegisterRoutes(g *echo.Group) {
+	ms := mw.MigrationStruct()
+	g.GET("/"+ms.Name()+"/auth", mw.AuthURL)
+	g.GET("/"+ms.Name()+"/status", mw.Status)
+	g.POST("/"+ms.Name()+"/migrate", mw.Migrate)
+}
+
 // AuthURL is the web handler to get the auth url
 func (mw *MigrationWeb) AuthURL(c echo.Context) error {
 	ms := mw.MigrationStruct()
@@ -62,5 +70,27 @@ func (mw *MigrationWeb) Migrate(c echo.Context) error {
 		return handler.HandleHTTPError(err, c)
 	}
 
+	err = migration.SetMigrationStatus(ms, user)
+	if err != nil {
+		return handler.HandleHTTPError(err, c)
+	}
+
 	return c.JSON(http.StatusOK, models.Message{Message: "Everything was migrated successfully."})
+}
+
+// Status returns whether or not a user has already done this migration
+func (mw *MigrationWeb) Status(c echo.Context) error {
+	ms := mw.MigrationStruct()
+
+	user, err := models.GetCurrentUser(c)
+	if err != nil {
+		return handler.HandleHTTPError(err, c)
+	}
+
+	status, err := migration.GetMigrationStatus(ms, user)
+	if err != nil {
+		return handler.HandleHTTPError(err, c)
+	}
+
+	return c.JSON(http.StatusOK, status)
 }

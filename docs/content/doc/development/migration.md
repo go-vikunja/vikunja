@@ -35,6 +35,9 @@ type Migrator interface {
 	// The use case for this are Oauth flows, where the server token should remain hidden and not
 	// known to the frontend.
 	AuthURL() string
+	// Name holds the name of the migration.
+	// This is used to show the name to users and to keep track of users who already migrated.
+	Name() string
 }
 ```
 
@@ -42,6 +45,9 @@ type Migrator interface {
 
 Once your migrator implements the migration interface, it becomes possible to use the helper http handlers.
 Their usage is very similar to the [general web handler](https://kolaente.dev/vikunja/web#user-content-defining-routes-using-the-standard-web-handler):
+
+The `RegisterRoutes(m)` method registers all routes with the scheme `/[MigratorName]/(auth|migrate|status)` for the 
+authUrl, Status and Migrate methods.
 
 ```go
 // This is an example for the Wunderlist migrator
@@ -51,8 +57,7 @@ if config.MigrationWunderlistEnable.GetBool() {
 			return &wunderlist.Migration{}
 		},
 	}
-	m.GET("/wunderlist/auth", wunderlistMigrationHandler.AuthURL)
-	m.POST("/wunderlist/migrate", wunderlistMigrationHandler.Migrate)
+    wunderlistMigrationHandler.RegisterRoutes(m)
 }
 ```
 

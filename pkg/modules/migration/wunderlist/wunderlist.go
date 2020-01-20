@@ -480,3 +480,16 @@ func (w *Migration) AuthURL() string {
 		config.MigrationWunderlistRedirectURL.GetString() +
 		"&state=" + utils.MakeRandomString(32)
 }
+
+// Name is used to get the name of the wunderlist migration
+// @Summary Get migration status
+// @Description Returns if the current user already did the migation or not. This is useful to show a confirmation message in the frontend if the user is trying to do the same migration again.
+// @tags migration
+// @Produce json
+// @Security JWTKeyAuth
+// @Success 200 {object} migration.Status "The migration status"
+// @Failure 500 {object} models.Message "Internal server error"
+// @Router /migration/wunderlist/status [get]
+func (w *Migration) Name() string {
+	return "wunderlist"
+}

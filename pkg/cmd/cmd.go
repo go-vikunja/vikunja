@@ -23,6 +23,7 @@ import (
 	"code.vikunja.io/api/pkg/mail"
 	"code.vikunja.io/api/pkg/migration"
 	"code.vikunja.io/api/pkg/models"
+	migrator "code.vikunja.io/api/pkg/modules/migration"
 	"code.vikunja.io/api/pkg/red"
 	"fmt"
 	"github.com/spf13/cobra"
@@ -76,6 +77,10 @@ func initialize() {
 		log.Fatal(err.Error())
 	}
 	err = files.SetEngine()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	err = migrator.InitDB()
 	if err != nil {
 		log.Fatal(err.Error())
 	}

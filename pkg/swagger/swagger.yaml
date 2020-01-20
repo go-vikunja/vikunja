@@ -18,6 +18,15 @@ definitions:
       url:
         type: string
     type: object
+  migration.Status:
+    properties:
+      id:
+        type: integer
+      migrator_name:
+        type: string
+      time_unix:
+        type: integer
+    type: object
   models.APIUserPassword:
     properties:
       email:
@@ -854,6 +863,10 @@ definitions:
     type: object
   v1.vikunjaInfos:
     properties:
+      available_migrators:
+        items:
+          type: string
+        type: array
       frontend_url:
         type: string
       link_sharing_enabled:
@@ -862,6 +875,8 @@ definitions:
         type: string
       motd:
         type: string
+      registration_enabled:
+        type: boolean
       version:
         type: string
     type: object
@@ -1995,6 +2010,27 @@ paths:
       security:
       - JWTKeyAuth: []
       summary: Migrate all lists, tasks etc. from wunderlist
+      tags:
+      - migration
+  /migration/wunderlist/status:
+    get:
+      description: Returns if the current user already did the migation or not. This
+        is useful to show a confirmation message in the frontend if the user is trying
+        to do the same migration again.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The migration status
+          schema:
+            $ref: '#/definitions/migration.Status'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get migration status
       tags:
       - migration
   /namespace/{id}:
