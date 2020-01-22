@@ -236,11 +236,27 @@
 						<span class="icon is-small"><icon :icon="['far', 'clock']"/></span>
 						Set a repeating interval
 					</a>
+					<a class="button is-danger is-outlined noshadow has-no-border" @click="showDeleteModal = true">
+						<span class="icon is-small"><icon icon="trash-alt"/></span>
+						Delete task
+					</a>
 				</div>
 			</div>
 
 			<!-- Created / Updated [by] -->
 		</div>
+
+		<modal
+				v-if="showDeleteModal"
+				@close="showDeleteModal = false"
+				@submit="deleteTask()">
+			<span slot="header">Delete this task</span>
+			<p slot="text">
+				Are you sure you want to remove this task? <br/>
+				This will also remove all attachments, reminders and relations associated with this task and
+				<b>cannot be undone!</b>
+			</p>
+		</modal>
 	</div>
 </template>
 
@@ -264,6 +280,7 @@
 	import RelatedTasks from './reusable/relatedTasks'
 	import RepeatAfter from './reusable/repeatAfter'
 	import Reminders from './reusable/reminders'
+	import router from '../../router'
 
 	export default {
 		name: 'TaskDetailView',
@@ -287,6 +304,7 @@
 
 				list: ListModel,
 				namespace: NamespaceModel,
+				showDeleteModal: false,
 
 				priorities: priorites,
 				flatPickerConfig: {
@@ -371,6 +389,16 @@
 			setFieldActive(fieldName) {
 				this.activeFields[fieldName] = true
 				this.$nextTick(() => this.$refs[fieldName].$el.focus())
+			},
+			deleteTask() {
+				this.taskService.delete(this.task)
+					.then(() => {
+						message.success({message: 'The task been deleted successfully.'}, this)
+						router.push({name: 'showList', params: {id: this.list.id}})
+					})
+					.catch(e => {
+						message.error(e, this)
+					})
 			},
 		},
 	}
