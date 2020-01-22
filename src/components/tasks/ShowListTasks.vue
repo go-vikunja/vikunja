@@ -1,7 +1,7 @@
 <template>
 	<div class="loader-container" :class="{ 'is-loading': listService.loading || taskCollectionService.loading}">
 		<form @submit.prevent="addTask()">
-			<div class="field is-grouped">
+			<div class="field is-grouped task-add">
 				<p class="control has-icons-left is-expanded" :class="{ 'is-loading': taskService.loading}">
 					<input v-focus class="input" :class="{ 'disabled': taskService.loading}" v-model="newTaskText" type="text" placeholder="Add a new task...">
 					<span class="icon is-small is-left">
