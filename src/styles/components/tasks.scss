@@ -45,11 +45,6 @@
           width: 89%;
         }
 
-        &.done{
-          text-decoration: line-through;
-          color: $grey;
-        }
-
         .overdue{
           color: $red;
         }
@@ -75,6 +70,11 @@
           color: darken($text, 40%);
         }
       }
+    }
+
+    .tasktext.done{
+      text-decoration: line-through;
+      color: $grey;
     }
 
     span.parent-tasks {
