@@ -24,13 +24,14 @@ import (
 )
 
 type vikunjaInfos struct {
-	Version             string   `json:"version"`
-	FrontendURL         string   `json:"frontend_url"`
-	Motd                string   `json:"motd"`
-	LinkSharingEnabled  bool     `json:"link_sharing_enabled"`
-	MaxFileSize         string   `json:"max_file_size"`
-	RegistrationEnabled bool     `json:"registration_enabled"`
-	AvailableMigrators  []string `json:"available_migrators"`
+	Version                string   `json:"version"`
+	FrontendURL            string   `json:"frontend_url"`
+	Motd                   string   `json:"motd"`
+	LinkSharingEnabled     bool     `json:"link_sharing_enabled"`
+	MaxFileSize            string   `json:"max_file_size"`
+	RegistrationEnabled    bool     `json:"registration_enabled"`
+	AvailableMigrators     []string `json:"available_migrators"`
+	TaskAttachmentsEnabled bool     `json:"task_attachments_enabled"`
 }
 
 // Info is the handler to get infos about this vikunja instance
@@ -42,12 +43,13 @@ type vikunjaInfos struct {
 // @Router /info [get]
 func Info(c echo.Context) error {
 	infos := vikunjaInfos{
-		Version:             version.Version,
-		FrontendURL:         config.ServiceFrontendurl.GetString(),
-		Motd:                config.ServiceMotd.GetString(),
-		LinkSharingEnabled:  config.ServiceEnableLinkSharing.GetBool(),
-		MaxFileSize:         config.FilesMaxSize.GetString(),
-		RegistrationEnabled: config.ServiceEnableRegistration.GetBool(),
+		Version:                version.Version,
+		FrontendURL:            config.ServiceFrontendurl.GetString(),
+		Motd:                   config.ServiceMotd.GetString(),
+		LinkSharingEnabled:     config.ServiceEnableLinkSharing.GetBool(),
+		MaxFileSize:            config.FilesMaxSize.GetString(),
+		RegistrationEnabled:    config.ServiceEnableRegistration.GetBool(),
+		TaskAttachmentsEnabled: config.ServiceEnableTaskAttachments.GetBool(),
 	}
 	if config.MigrationWunderlistEnable.GetBool() {
 		infos.AvailableMigrators = append(infos.AvailableMigrators, "wunderlist")

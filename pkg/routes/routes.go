@@ -288,15 +288,17 @@ func registerAPIRoutes(a *echo.Group) {
 	a.PUT("/tasks/:task/relations", taskRelationHandler.CreateWeb)
 	a.DELETE("/tasks/:task/relations", taskRelationHandler.DeleteWeb)
 
-	taskAttachmentHandler := &handler.WebHandler{
-		EmptyStruct: func() handler.CObject {
-			return &models.TaskAttachment{}
-		},
+	if config.ServiceEnableTaskAttachments.GetBool() {
+		taskAttachmentHandler := &handler.WebHandler{
+			EmptyStruct: func() handler.CObject {
+				return &models.TaskAttachment{}
+			},
+		}
+		a.GET("/tasks/:task/attachments", taskAttachmentHandler.ReadAllWeb)
+		a.DELETE("/tasks/:task/attachments/:attachment", taskAttachmentHandler.DeleteWeb)
+		a.PUT("/tasks/:task/attachments", apiv1.UploadTaskAttachment)
+		a.GET("/tasks/:task/attachments/:attachment", apiv1.GetTaskAttachment)
 	}
-	a.GET("/tasks/:task/attachments", taskAttachmentHandler.ReadAllWeb)
-	a.DELETE("/tasks/:task/attachments/:attachment", taskAttachmentHandler.DeleteWeb)
-	a.PUT("/tasks/:task/attachments", apiv1.UploadTaskAttachment)
-	a.GET("/tasks/:task/attachments/:attachment", apiv1.GetTaskAttachment)
 
 	labelHandler := &handler.WebHandler{
 		EmptyStruct: func() handler.CObject {

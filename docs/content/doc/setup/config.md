@@ -67,6 +67,8 @@ service:
   enablelinksharing: true
   # Whether to let new users registering themselves or not
   enableregistration: true
+  # Whether to enable task attachments or not
+  enabletaskattachments: true
 
 database:
   # Database type to use. Supported types are mysql and sqlite.
