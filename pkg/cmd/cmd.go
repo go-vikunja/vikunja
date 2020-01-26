@@ -25,6 +25,7 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	migrator "code.vikunja.io/api/pkg/modules/migration"
 	"code.vikunja.io/api/pkg/red"
+	"code.vikunja.io/api/pkg/user"
 	"fmt"
 	"github.com/spf13/cobra"
 	"os"
@@ -73,6 +74,10 @@ func initialize() {
 
 	// Set Engine
 	err := models.SetEngine()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	err = user.InitDB()
 	if err != nil {
 		log.Fatal(err.Error())
 	}

@@ -23,6 +23,7 @@ import (
 	"code.vikunja.io/api/pkg/metrics"
 	"code.vikunja.io/api/pkg/models"
 	v1 "code.vikunja.io/api/pkg/routes/api/v1"
+	"code.vikunja.io/api/pkg/user"
 	"github.com/labstack/echo/v4"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"time"
@@ -51,7 +52,7 @@ func setupMetrics(a *echo.Group) {
 		},
 		{
 			metrics.UserCountKey,
-			models.User{},
+			user.User{},
 		},
 		{
 			metrics.NamespaceCountKey,

@@ -19,6 +19,7 @@ package models
 import (
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/metrics"
+	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/web"
 	"github.com/imdario/mergo"
@@ -55,7 +56,7 @@ type Task struct {
 	// When this task ends.
 	EndDateUnix int64 `xorm:"int(11) INDEX null" json:"endDate" query:"-"`
 	// An array of users who are assigned to this task
-	Assignees []*User `xorm:"-" json:"assignees"`
+	Assignees []*user.User `xorm:"-" json:"assignees"`
 	// An array of labels which are associated with this task.
 	Labels []*Label `xorm:"-" json:"labels"`
 	// The task color in hex
@@ -87,7 +88,7 @@ type Task struct {
 	Updated int64 `xorm:"updated not null" json:"updated"`
 
 	// The user who initially created the task.
-	CreatedBy *User `xorm:"-" json:"createdBy" valid:"-"`
+	CreatedBy *user.User `xorm:"-" json:"createdBy" valid:"-"`
 
 	web.CRUDable `xorm:"-" json:"-"`
 	web.Rights   `xorm:"-" json:"-"`
@@ -365,7 +366,7 @@ func addMoreInfoToTasks(taskMap map[int64]*Task) (tasks []*Task, err error) {
 
 	// Get all users of a task
 	// aka the ones who created a task
-	users := make(map[int64]*User)
+	users := make(map[int64]*user.User)
 	err = x.In("id", userIDs).Find(&users)
 	if err != nil {
 		return
@@ -487,7 +488,7 @@ func (t *Task) Create(a web.Auth) (err error) {
 		return
 	}
 
-	u, err := GetUserByID(a.GetID())
+	u, err := user.GetUserByID(a.GetID())
 	if err != nil {
 		return err
 	}

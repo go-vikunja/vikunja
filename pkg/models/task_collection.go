@@ -18,6 +18,7 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
 	"time"
 )
@@ -108,7 +109,7 @@ func (tf *TaskCollection) ReadAll(a web.Auth, search string, page int, perPage i
 	// If the list ID is not set, we get all tasks for the user.
 	// This allows to use this function in Task.ReadAll with a possibility to deprecate the latter at some point.
 	if tf.ListID == 0 {
-		tf.Lists, _, _, err = getRawListsForUser("", &User{ID: a.GetID()}, -1, 0)
+		tf.Lists, _, _, err = getRawListsForUser("", &user.User{ID: a.GetID()}, -1, 0)
 		if err != nil {
 			return nil, 0, 0, err
 		}

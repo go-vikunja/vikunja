@@ -1,20 +1,21 @@
-// Vikunja is a todo-list application to facilitate your life.
-// Copyright 2018-2020 Vikunja and contributors. All rights reserved.
+// Copyright2018-2020 Vikunja and contriubtors. All rights reserved.
 //
-// This program is free software: you can redistribute it and/or modify
+// This file is part of Vikunja.
+//
+// Vikunja is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// This program is distributed in the hope that it will be useful,
+// Vikunja is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+// along with Vikunja.  If not, see <https://www.gnu.org/licenses/>.
 
-package models
+package user
 
 import (
 	"code.vikunja.io/api/pkg/config"
@@ -29,8 +30,8 @@ import (
 	"reflect"
 )
 
-// UserLogin Object to recive user credentials in JSON format
-type UserLogin struct {
+// Login Object to recive user credentials in JSON format
+type Login struct {
 	// The username used to log in.
 	Username string `json:"username"`
 	// The password for the user.
@@ -76,7 +77,9 @@ func (User) TableName() string {
 	return "users"
 }
 
-func getUserWithError(a web.Auth) (*User, error) {
+// GetFromAuth returns a user object from a web.Auth object and returns an error if the underlying type
+// is not a user object
+func GetFromAuth(a web.Auth) (*User, error) {
 	u, is := a.(*User)
 	if !is {
 		return &User{}, fmt.Errorf("user is not user element, is %s", reflect.TypeOf(a))
@@ -153,7 +156,7 @@ func getUser(user *User, withEmail bool) (userOut *User, err error) {
 }
 
 // CheckUserCredentials checks user credentials
-func CheckUserCredentials(u *UserLogin) (*User, error) {
+func CheckUserCredentials(u *Login) (*User, error) {
 	// Check if we have any credentials
 	if u.Password == "" || u.Username == "" {
 		return &User{}, ErrNoUsernamePassword{}
@@ -273,13 +276,6 @@ func CreateUser(user *User) (newUser *User, err error) {
 		return &User{}, err
 	}
 
-	// Create the user's namespace
-	newN := &Namespace{Name: newUserOut.Username, Description: newUserOut.Username + "'s namespace.", Owner: newUserOut}
-	err = newN.Create(newUserOut)
-	if err != nil {
-		return &User{}, err
-	}
-
 	// Dont send a mail if we're testing
 	if !config.MailerEnabled.GetBool() {
 		return newUserOut, err
@@ -358,26 +354,6 @@ func UpdateUserPassword(user *User, newPassword string) (err error) {
 	if err != nil {
 		return err
 	}
-
-	return err
-}
-
-// DeleteUserByID deletes a user by its ID
-func DeleteUserByID(id int64, doer *User) error {
-	// Check if the id is 0
-	if id == 0 {
-		return ErrIDCannotBeZero{}
-	}
-
-	// Delete the user
-	_, err := x.Id(id).Delete(&User{})
-
-	if err != nil {
-		return err
-	}
-
-	// Update the metrics
-	metrics.UpdateCount(-1, metrics.ActiveUsersKey)
 
 	return err
 }

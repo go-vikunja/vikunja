@@ -17,8 +17,8 @@
 package integrations
 
 import (
-	"code.vikunja.io/api/pkg/models"
 	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
+	"code.vikunja.io/api/pkg/user"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 	"net/http"
@@ -34,7 +34,7 @@ func TestUserRequestResetPasswordToken(t *testing.T) {
 	t.Run("Empty payload", func(t *testing.T) {
 		_, err := newTestRequest(t, http.MethodPost, apiv1.UserRequestResetPasswordToken, `{}`)
 		assert.Error(t, err)
-		assertHandlerErrorCode(t, err, models.ErrCodeNoUsernamePassword)
+		assertHandlerErrorCode(t, err, user.ErrCodeNoUsernamePassword)
 	})
 	t.Run("Invalid email address", func(t *testing.T) {
 		_, err := newTestRequest(t, http.MethodPost, apiv1.UserRequestResetPasswordToken, `{"email": "user1example.com"}`)
@@ -44,6 +44,6 @@ func TestUserRequestResetPasswordToken(t *testing.T) {
 	t.Run("No user with that email address", func(t *testing.T) {
 		_, err := newTestRequest(t, http.MethodPost, apiv1.UserRequestResetPasswordToken, `{"email": "user1000@example.com"}`)
 		assert.Error(t, err)
-		assertHandlerErrorCode(t, err, models.ErrCodeUserDoesNotExist)
+		assertHandlerErrorCode(t, err, user.ErrCodeUserDoesNotExist)
 	})
 }

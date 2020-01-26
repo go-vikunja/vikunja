@@ -20,6 +20,7 @@ package models
 import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/files"
+	"code.vikunja.io/api/pkg/user"
 	"github.com/stretchr/testify/assert"
 	"io"
 	"os"
@@ -95,7 +96,7 @@ func TestTaskAttachment_NewAttachment(t *testing.T) {
 	tf := &testfile{
 		content: []byte("testingstuff"),
 	}
-	testuser := &User{ID: 1}
+	testuser := &user.User{ID: 1}
 
 	err := ta.NewAttachment(tf, "testfile", 100, testuser)
 	assert.NoError(t, err)
@@ -119,7 +120,7 @@ func TestTaskAttachment_NewAttachment(t *testing.T) {
 func TestTaskAttachment_ReadAll(t *testing.T) {
 	files.InitTestFileFixtures(t)
 	ta := &TaskAttachment{TaskID: 1}
-	as, _, _, err := ta.ReadAll(&User{ID: 1}, "", 0, 50)
+	as, _, _, err := ta.ReadAll(&user.User{ID: 1}, "", 0, 50)
 	attachments, _ := as.([]*TaskAttachment)
 	assert.NoError(t, err)
 	assert.Len(t, attachments, 3)
@@ -152,7 +153,7 @@ func TestTaskAttachment_Delete(t *testing.T) {
 }
 
 func TestTaskAttachment_Rights(t *testing.T) {
-	u := &User{ID: 1}
+	u := &user.User{ID: 1}
 	t.Run("Can Read", func(t *testing.T) {
 		t.Run("Allowed", func(t *testing.T) {
 			ta := &TaskAttachment{TaskID: 1}

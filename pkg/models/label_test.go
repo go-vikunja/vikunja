@@ -17,6 +17,7 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/user"
 	"gopkg.in/d4l3k/messagediff.v1"
 	"reflect"
 	"runtime"
@@ -32,7 +33,7 @@ func TestLabel_ReadAll(t *testing.T) {
 		Description string
 		HexColor    string
 		CreatedByID int64
-		CreatedBy   *User
+		CreatedBy   *user.User
 		Created     int64
 		Updated     int64
 		CRUDable    web.CRUDable
@@ -43,7 +44,7 @@ func TestLabel_ReadAll(t *testing.T) {
 		a      web.Auth
 		page   int
 	}
-	user1 := &User{
+	user1 := &user.User{
 		ID:        1,
 		Username:  "user1",
 		Password:  "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
@@ -60,7 +61,7 @@ func TestLabel_ReadAll(t *testing.T) {
 		{
 			name: "normal",
 			args: args{
-				a: &User{ID: 1},
+				a: &user.User{ID: 1},
 			},
 			wantLs: []*labelWithTaskID{
 				{
@@ -85,7 +86,7 @@ func TestLabel_ReadAll(t *testing.T) {
 						ID:          4,
 						Title:       "Label #4 - visible via other task",
 						CreatedByID: 2,
-						CreatedBy: &User{
+						CreatedBy: &user.User{
 							ID:        2,
 							Username:  "user2",
 							Password:  "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
@@ -98,7 +99,7 @@ func TestLabel_ReadAll(t *testing.T) {
 		{
 			name: "invalid user",
 			args: args{
-				a: &User{ID: -1},
+				a: &user.User{ID: -1},
 			},
 			wantErr: true,
 		},
@@ -136,13 +137,13 @@ func TestLabel_ReadOne(t *testing.T) {
 		Description string
 		HexColor    string
 		CreatedByID int64
-		CreatedBy   *User
+		CreatedBy   *user.User
 		Created     int64
 		Updated     int64
 		CRUDable    web.CRUDable
 		Rights      web.Rights
 	}
-	user1 := &User{
+	user1 := &user.User{
 		ID:        1,
 		Username:  "user1",
 		Password:  "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
@@ -169,7 +170,7 @@ func TestLabel_ReadOne(t *testing.T) {
 				CreatedByID: 1,
 				CreatedBy:   user1,
 			},
-			auth: &User{ID: 1},
+			auth: &user.User{ID: 1},
 		},
 		{
 			name: "Get nonexistant label",
@@ -179,7 +180,7 @@ func TestLabel_ReadOne(t *testing.T) {
 			wantErr:       true,
 			errType:       IsErrLabelDoesNotExist,
 			wantForbidden: true,
-			auth:          &User{ID: 1},
+			auth:          &user.User{ID: 1},
 		},
 		{
 			name: "no rights",
@@ -187,7 +188,7 @@ func TestLabel_ReadOne(t *testing.T) {
 				ID: 3,
 			},
 			wantForbidden: true,
-			auth:          &User{ID: 1},
+			auth:          &user.User{ID: 1},
 		},
 		{
 			name: "Get label #4 - other user",
@@ -198,14 +199,14 @@ func TestLabel_ReadOne(t *testing.T) {
 				ID:          4,
 				Title:       "Label #4 - visible via other task",
 				CreatedByID: 2,
-				CreatedBy: &User{
+				CreatedBy: &user.User{
 					ID:        2,
 					Username:  "user2",
 					Password:  "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
 					AvatarURL: "ab53a2911ddf9b4817ac01ddcd3d975f",
 				},
 			},
-			auth: &User{ID: 1},
+			auth: &user.User{ID: 1},
 		},
 	}
 	for _, tt := range tests {
@@ -248,7 +249,7 @@ func TestLabel_Create(t *testing.T) {
 		Description string
 		HexColor    string
 		CreatedByID int64
-		CreatedBy   *User
+		CreatedBy   *user.User
 		Created     int64
 		Updated     int64
 		CRUDable    web.CRUDable
@@ -272,7 +273,7 @@ func TestLabel_Create(t *testing.T) {
 				HexColor:    "ffccff",
 			},
 			args: args{
-				a: &User{ID: 1},
+				a: &user.User{ID: 1},
 			},
 		},
 	}
@@ -308,7 +309,7 @@ func TestLabel_Update(t *testing.T) {
 		Description string
 		HexColor    string
 		CreatedByID int64
-		CreatedBy   *User
+		CreatedBy   *user.User
 		Created     int64
 		Updated     int64
 		CRUDable    web.CRUDable
@@ -327,7 +328,7 @@ func TestLabel_Update(t *testing.T) {
 				ID:    1,
 				Title: "new and better",
 			},
-			auth: &User{ID: 1},
+			auth: &user.User{ID: 1},
 		},
 		{
 			name: "nonexisting",
@@ -335,7 +336,7 @@ func TestLabel_Update(t *testing.T) {
 				ID:    99999,
 				Title: "new and better",
 			},
-			auth:          &User{ID: 1},
+			auth:          &user.User{ID: 1},
 			wantForbidden: true,
 			wantErr:       true,
 		},
@@ -345,7 +346,7 @@ func TestLabel_Update(t *testing.T) {
 				ID:    3,
 				Title: "new and better",
 			},
-			auth:          &User{ID: 1},
+			auth:          &user.User{ID: 1},
 			wantForbidden: true,
 		},
 		{
@@ -354,7 +355,7 @@ func TestLabel_Update(t *testing.T) {
 				ID:    4,
 				Title: "new and better",
 			},
-			auth:          &User{ID: 1},
+			auth:          &user.User{ID: 1},
 			wantForbidden: true,
 		},
 	}
@@ -390,7 +391,7 @@ func TestLabel_Delete(t *testing.T) {
 		Description string
 		HexColor    string
 		CreatedByID int64
-		CreatedBy   *User
+		CreatedBy   *user.User
 		Created     int64
 		Updated     int64
 		CRUDable    web.CRUDable
@@ -409,14 +410,14 @@ func TestLabel_Delete(t *testing.T) {
 			fields: fields{
 				ID: 1,
 			},
-			auth: &User{ID: 1},
+			auth: &user.User{ID: 1},
 		},
 		{
 			name: "nonexisting",
 			fields: fields{
 				ID: 99999,
 			},
-			auth:          &User{ID: 1},
+			auth:          &user.User{ID: 1},
 			wantForbidden: true, // When the label does not exist, it is forbidden. We should fix this, but for everything.
 		},
 		{
@@ -424,7 +425,7 @@ func TestLabel_Delete(t *testing.T) {
 			fields: fields{
 				ID: 3,
 			},
-			auth:          &User{ID: 1},
+			auth:          &user.User{ID: 1},
 			wantForbidden: true,
 		},
 		{
@@ -432,7 +433,7 @@ func TestLabel_Delete(t *testing.T) {
 			fields: fields{
 				ID: 4,
 			},
-			auth:          &User{ID: 1},
+			auth:          &user.User{ID: 1},
 			wantForbidden: true,
 		},
 	}

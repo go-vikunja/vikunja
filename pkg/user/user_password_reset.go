@@ -1,20 +1,21 @@
-// Vikunja is a todo-list application to facilitate your life.
-// Copyright 2018-2020 Vikunja and contributors. All rights reserved.
+// Copyright2018-2020 Vikunja and contriubtors. All rights reserved.
 //
-// This program is free software: you can redistribute it and/or modify
+// This file is part of Vikunja.
+//
+// Vikunja is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// This program is distributed in the hope that it will be useful,
+// Vikunja is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+// along with Vikunja.  If not, see <https://www.gnu.org/licenses/>.
 
-package models
+package user
 
 import (
 	"code.vikunja.io/api/pkg/config"
@@ -30,8 +31,8 @@ type PasswordReset struct {
 	NewPassword string `json:"new_password"`
 }
 
-// UserPasswordReset resets a users password
-func UserPasswordReset(reset *PasswordReset) (err error) {
+// ResetPassword resets a users password
+func ResetPassword(reset *PasswordReset) (err error) {
 
 	// Check if the password is not empty
 	if reset.NewPassword == "" {

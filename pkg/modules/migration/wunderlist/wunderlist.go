@@ -23,6 +23,7 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/migration"
+	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
 	"encoding/json"
 	"fmt"
@@ -341,7 +342,7 @@ func makeAuthGetRequest(token *wunderlistAuthToken, urlPart string, v interface{
 // @Success 200 {object} models.Message "A message telling you everything was migrated successfully."
 // @Failure 500 {object} models.Message "Internal server error"
 // @Router /migration/wunderlist/migrate [post]
-func (w *Migration) Migrate(user *models.User) (err error) {
+func (w *Migration) Migrate(user *user.User) (err error) {
 
 	log.Debugf("[Wunderlist migration] Starting wunderlist migration for user %d", user.ID)
 

@@ -16,7 +16,10 @@
 
 package models
 
-import "code.vikunja.io/web"
+import (
+	user2 "code.vikunja.io/api/pkg/user"
+	"code.vikunja.io/web"
+)
 
 // NamespaceUser represents a namespace <-> user relation
 type NamespaceUser struct {
@@ -75,7 +78,7 @@ func (nu *NamespaceUser) Create(a web.Auth) (err error) {
 	}
 
 	// Check if the user exists
-	user, err := GetUserByUsername(nu.Username)
+	user, err := user2.GetUserByUsername(nu.Username)
 	if err != nil {
 		return err
 	}
@@ -117,7 +120,7 @@ func (nu *NamespaceUser) Create(a web.Auth) (err error) {
 func (nu *NamespaceUser) Delete() (err error) {
 
 	// Check if the user exists
-	user, err := GetUserByUsername(nu.Username)
+	user, err := user2.GetUserByUsername(nu.Username)
 	if err != nil {
 		return
 	}
@@ -213,7 +216,7 @@ func (nu *NamespaceUser) Update() (err error) {
 	}
 
 	// Check if the user exists
-	user, err := GetUserByUsername(nu.Username)
+	user, err := user2.GetUserByUsername(nu.Username)
 	if err != nil {
 		return err
 	}

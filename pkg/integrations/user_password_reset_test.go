@@ -17,8 +17,8 @@
 package integrations
 
 import (
-	"code.vikunja.io/api/pkg/models"
 	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
+	"code.vikunja.io/api/pkg/user"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 	"net/http"
@@ -45,7 +45,7 @@ func TestUserPasswordReset(t *testing.T) {
 	"token": "passwordresettesttoken"
 }`)
 		assert.Error(t, err)
-		assertHandlerErrorCode(t, err, models.ErrCodeNoUsernamePassword)
+		assertHandlerErrorCode(t, err, user.ErrCodeNoUsernamePassword)
 	})
 	t.Run("Invalid password reset token", func(t *testing.T) {
 		_, err := newTestRequest(t, http.MethodPost, apiv1.UserResetPassword, `{
@@ -53,6 +53,6 @@ func TestUserPasswordReset(t *testing.T) {
 	"token": "invalidtoken"
 }`)
 		assert.Error(t, err)
-		assertHandlerErrorCode(t, err, models.ErrCodeInvalidPasswordResetToken)
+		assertHandlerErrorCode(t, err, user.ErrCodeInvalidPasswordResetToken)
 	})
 }

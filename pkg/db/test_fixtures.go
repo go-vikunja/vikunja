@@ -18,19 +18,46 @@
 package db
 
 import (
+	"code.vikunja.io/api/pkg/config"
+	"github.com/stretchr/testify/assert"
 	"gopkg.in/testfixtures.v2"
+	"path/filepath"
+	"testing"
 )
 
 var fixtures *testfixtures.Context
 
 // InitFixtures initialize test fixtures for a test database
-func InitFixtures(helper testfixtures.Helper, dir string) (err error) {
+func InitFixtures(tablenames ...string) (err error) {
+
+	var helper testfixtures.Helper = &testfixtures.SQLite{}
+	if config.DatabaseType.GetString() == "mysql" {
+		helper = &testfixtures.MySQL{}
+	}
+	dir := filepath.Join(config.ServiceRootpath.GetString(), "pkg", "db", "fixtures")
+
 	testfixtures.SkipDatabaseNameCheck(true)
-	fixtures, err = testfixtures.NewFolder(x.DB().DB, helper, dir)
+
+	// If fixture table names are specified, load them
+	// Otherwise, load all fixtures
+	if len(tablenames) > 0 {
+		for i, name := range tablenames {
+			tablenames[i] = filepath.Join(dir, name+".yml")
+		}
+		fixtures, err = testfixtures.NewFiles(x.DB().DB, helper, tablenames...)
+	} else {
+		fixtures, err = testfixtures.NewFolder(x.DB().DB, helper, dir)
+	}
 	return err
 }
 
 // LoadFixtures load fixtures for a test database
 func LoadFixtures() error {
 	return fixtures.Load()
+}
+
+// LoadAndAssertFixtures loads all fixtures defined before and asserts they are correctly loaded
+func LoadAndAssertFixtures(t *testing.T) {
+	err := LoadFixtures()
+	assert.NoError(t, err)
 }

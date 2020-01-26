@@ -18,6 +18,7 @@ package v1
 
 import (
 	"code.vikunja.io/api/pkg/models"
+	user2 "code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web/handler"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -45,7 +46,7 @@ func UploadTaskAttachment(c echo.Context) error {
 	}
 
 	// Rights check
-	user, err := models.GetCurrentUser(c)
+	user, err := user2.GetCurrentUser(c)
 	if err != nil {
 		return handler.HandleHTTPError(err, c)
 	}
@@ -114,7 +115,7 @@ func GetTaskAttachment(c echo.Context) error {
 	}
 
 	// Rights check
-	user, err := models.GetCurrentUser(c)
+	user, err := user2.GetCurrentUser(c)
 	if err != nil {
 		return handler.HandleHTTPError(err, c)
 	}

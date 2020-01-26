@@ -16,7 +16,10 @@
 
 package models
 
-import "code.vikunja.io/web"
+import (
+	"code.vikunja.io/api/pkg/user"
+	"code.vikunja.io/web"
+)
 
 // ListUser represents a list <-> user relation
 type ListUser struct {
@@ -47,8 +50,8 @@ func (ListUser) TableName() string {
 
 // UserWithRight represents a user in combination with the right it can have on a list/namespace
 type UserWithRight struct {
-	User  `xorm:"extends"`
-	Right Right `json:"right"`
+	user.User `xorm:"extends"`
+	Right     Right `json:"right"`
 }
 
 // Create creates a new list <-> user relation
@@ -80,7 +83,7 @@ func (lu *ListUser) Create(a web.Auth) (err error) {
 	}
 
 	// Check if the user exists
-	user, err := GetUserByUsername(lu.Username)
+	user, err := user.GetUserByUsername(lu.Username)
 	if err != nil {
 		return err
 	}
@@ -126,7 +129,7 @@ func (lu *ListUser) Create(a web.Auth) (err error) {
 func (lu *ListUser) Delete() (err error) {
 
 	// Check if the user exists
-	user, err := GetUserByUsername(lu.Username)
+	user, err := user.GetUserByUsername(lu.Username)
 	if err != nil {
 		return
 	}
@@ -227,7 +230,7 @@ func (lu *ListUser) Update() (err error) {
 	}
 
 	// Check if the user exists
-	user, err := GetUserByUsername(lu.Username)
+	user, err := user.GetUserByUsername(lu.Username)
 	if err != nil {
 		return err
 	}

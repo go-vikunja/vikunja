@@ -42,3 +42,29 @@ The integration tests use the same config and fixtures as the unit tests and the
 see at the beginning of this document.
 
 To run integration tests, use `make integration-test`.
+
+# Initializing db fixtures when writing tests
+
+All db fixtures for all tests live in the `pkg/db/fixtures/` folder as yaml files.
+Each file has the same name as the table the fixtures are for.
+You should put new fixtures in this folder.
+
+When initializing db fixtures, you are responsible for defining which tables your package needs in your test init function.
+Usually, this is done as follows (this code snippet is taken from the `user` package):
+
+```go
+err = db.InitTestFixtures("users")
+if err != nil {
+	log.Fatal(err)
+}
+```
+
+In your actual tests, you then load the fixtures into the in-memory db like so:
+
+```go
+db.LoadAndAssertFixtures(t)
+```
+
+This will load all fixtures you defined in your test init method.
+You should always use this method to load fixtures, the only exception is when your package tests require extra test 
+fixtures other than db fixtures (like files).

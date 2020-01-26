@@ -17,6 +17,7 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
 	"github.com/go-xorm/builder"
 )
@@ -65,7 +66,7 @@ func (l *Label) hasAccessToLabel(a web.Auth) (bool, error) {
 	// TODO: add an extra check for link share handling
 
 	// Get all tasks
-	taskIDs, err := getUserTaskIDs(&User{ID: a.GetID()})
+	taskIDs, err := getUserTaskIDs(&user.User{ID: a.GetID()})
 	if err != nil {
 		return false, err
 	}

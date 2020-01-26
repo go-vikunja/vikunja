@@ -19,6 +19,7 @@ package v1
 import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo/v4"
@@ -34,7 +35,7 @@ const (
 )
 
 // NewUserJWTAuthtoken generates and signes a new jwt token for a user. This is a global function to be able to call it from integration tests.
-func NewUserJWTAuthtoken(user *models.User) (token string, err error) {
+func NewUserJWTAuthtoken(user *user.User) (token string, err error) {
 	t := jwt.New(jwt.SigningMethodHS256)
 
 	// Set claims
@@ -78,7 +79,7 @@ func GetAuthFromClaims(c echo.Context) (a web.Auth, err error) {
 		return models.GetLinkShareFromClaims(claims)
 	}
 	if typ == AuthTypeUser {
-		return models.GetUserFromClaims(claims)
+		return user.GetUserFromClaims(claims)
 	}
 	return nil, echo.NewHTTPError(http.StatusBadRequest, models.Message{Message: "Invalid JWT token."})
 }

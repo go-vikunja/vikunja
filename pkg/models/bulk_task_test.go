@@ -1,6 +1,8 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/user"
 	"testing"
 )
 
@@ -9,7 +11,7 @@ func TestBulkTask_Update(t *testing.T) {
 		IDs   []int64
 		Tasks []*Task
 		Task  Task
-		User  *User
+		User  *user.User
 	}
 	tests := []struct {
 		name          string
@@ -24,7 +26,7 @@ func TestBulkTask_Update(t *testing.T) {
 				Task: Task{
 					Text: "bulkupdated",
 				},
-				User: &User{ID: 1},
+				User: &user.User{ID: 1},
 			},
 		},
 		{
@@ -34,7 +36,7 @@ func TestBulkTask_Update(t *testing.T) {
 				Task: Task{
 					Text: "bulkupdated",
 				},
-				User: &User{ID: 1},
+				User: &user.User{ID: 1},
 			},
 			wantForbidden: true,
 		},
@@ -45,13 +47,15 @@ func TestBulkTask_Update(t *testing.T) {
 				Task: Task{
 					Text: "bulkupdated",
 				},
-				User: &User{ID: 1},
+				User: &user.User{ID: 1},
 			},
 			wantForbidden: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+
 			bt := &BulkTask{
 				IDs:   tt.fields.IDs,
 				Tasks: tt.fields.Tasks,

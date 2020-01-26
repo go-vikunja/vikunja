@@ -18,6 +18,7 @@ package v1
 
 import (
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web/handler"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -44,7 +45,7 @@ type UserPassword struct {
 // @Router /user/password [post]
 func UserChangePassword(c echo.Context) error {
 	// Check if the user is itself
-	doer, err := models.GetCurrentUser(c)
+	doer, err := user.GetCurrentUser(c)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Error getting current user.")
 	}
@@ -56,16 +57,16 @@ func UserChangePassword(c echo.Context) error {
 	}
 
 	if newPW.OldPassword == "" {
-		return handler.HandleHTTPError(models.ErrEmptyOldPassword{}, c)
+		return handler.HandleHTTPError(user.ErrEmptyOldPassword{}, c)
 	}
 
 	// Check the current password
-	if _, err = models.CheckUserCredentials(&models.UserLogin{Username: doer.Username, Password: newPW.OldPassword}); err != nil {
+	if _, err = user.CheckUserCredentials(&user.Login{Username: doer.Username, Password: newPW.OldPassword}); err != nil {
 		return handler.HandleHTTPError(err, c)
 	}
 
 	// Update the password
-	if err = models.UpdateUserPassword(doer, newPW.NewPassword); err != nil {
+	if err = user.UpdateUserPassword(doer, newPW.NewPassword); err != nil {
 		return handler.HandleHTTPError(err, c)
 	}
 

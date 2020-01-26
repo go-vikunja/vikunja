@@ -17,6 +17,8 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
 	"github.com/stretchr/testify/assert"
 	"reflect"
@@ -25,6 +27,8 @@ import (
 )
 
 func TestTeamList(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+
 	// Dummy relation
 	tl := TeamList{
 		TeamID: 1,
@@ -33,7 +37,7 @@ func TestTeamList(t *testing.T) {
 	}
 
 	// Dummyuser
-	u, err := GetUserByID(1)
+	u, err := user.GetUserByID(1)
 	assert.NoError(t, err)
 
 	// Check normal creation
@@ -164,6 +168,8 @@ func TestTeamList_Update(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+
 			tl := &TeamList{
 				ID:       tt.fields.ID,
 				TeamID:   tt.fields.TeamID,

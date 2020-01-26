@@ -18,6 +18,7 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/web"
 	"github.com/dgrijalva/jwt-go"
@@ -48,8 +49,8 @@ type LinkSharing struct {
 	SharingType SharingType `xorm:"int(11) INDEX not null default 0" json:"sharing_type" valid:"length(0|2)" maximum:"2" default:"0"`
 
 	// The user who shared this list
-	SharedBy   *User `xorm:"-" json:"shared_by"`
-	SharedByID int64 `xorm:"int(11) INDEX not null" json:"-"`
+	SharedBy   *user.User `xorm:"-" json:"shared_by"`
+	SharedByID int64      `xorm:"int(11) INDEX not null" json:"-"`
 
 	// A unix timestamp when this list was shared. You cannot change this value.
 	Created int64 `xorm:"created not null" json:"created"`
@@ -100,7 +101,7 @@ func (share *LinkSharing) Create(a web.Auth) (err error) {
 	share.SharedByID = a.GetID()
 	share.Hash = utils.MakeRandomString(40)
 	_, err = x.Insert(share)
-	share.SharedBy, _ = a.(*User)
+	share.SharedBy, _ = a.(*user.User)
 	return
 }
 
@@ -168,7 +169,7 @@ func (share *LinkSharing) ReadAll(a web.Auth, search string, page int, perPage i
 		userIDs = append(userIDs, s.SharedByID)
 	}
 
-	users := make(map[int64]*User)
+	users := make(map[int64]*user.User)
 	err = x.In("id", userIDs).Find(&users)
 	if err != nil {
 		return nil, 0, 0, err

@@ -17,6 +17,7 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
 )
 
@@ -38,8 +39,8 @@ func (TaskAssginee) TableName() string {
 
 // TaskAssigneeWithUser is a helper type to deal with user joins
 type TaskAssigneeWithUser struct {
-	TaskID int64
-	User   `xorm:"extends"`
+	TaskID    int64
+	user.User `xorm:"extends"`
 }
 
 func getRawTaskAssigneesForTasks(taskIDs []int64) (taskAssignees []*TaskAssigneeWithUser, err error) {
@@ -53,7 +54,7 @@ func getRawTaskAssigneesForTasks(taskIDs []int64) (taskAssignees []*TaskAssignee
 }
 
 // Create or update a bunch of task assignees
-func (t *Task) updateTaskAssignees(assignees []*User) (err error) {
+func (t *Task) updateTaskAssignees(assignees []*user.User) (err error) {
 
 	// Load the current assignees
 	currentAssignees, err := getRawTaskAssigneesForTasks([]int64{t.ID})
@@ -61,7 +62,7 @@ func (t *Task) updateTaskAssignees(assignees []*User) (err error) {
 		return err
 	}
 
-	t.Assignees = make([]*User, 0, len(currentAssignees))
+	t.Assignees = make([]*user.User, 0, len(currentAssignees))
 	for _, assignee := range currentAssignees {
 		t.Assignees = append(t.Assignees, &assignee.User)
 	}
@@ -80,7 +81,7 @@ func (t *Task) updateTaskAssignees(assignees []*User) (err error) {
 	}
 
 	// Make a hashmap of the new assignees for easier comparison
-	newAssignees := make(map[int64]*User, len(assignees))
+	newAssignees := make(map[int64]*user.User, len(assignees))
 	for _, newAssignee := range assignees {
 		newAssignees[newAssignee.ID] = newAssignee
 	}
@@ -88,7 +89,7 @@ func (t *Task) updateTaskAssignees(assignees []*User) (err error) {
 	// Get old assignees to delete
 	var found bool
 	var assigneesToDelete []int64
-	oldAssignees := make(map[int64]*User, len(t.Assignees))
+	oldAssignees := make(map[int64]*user.User, len(t.Assignees))
 	for _, oldAssignee := range t.Assignees {
 		found = false
 		if newAssignees[oldAssignee.ID] != nil {
@@ -142,7 +143,7 @@ func (t *Task) updateTaskAssignees(assignees []*User) (err error) {
 }
 
 // Small helper functions to set the new assignees in various places
-func (t *Task) setTaskAssignees(assignees []*User) {
+func (t *Task) setTaskAssignees(assignees []*user.User) {
 	if len(assignees) == 0 {
 		t.Assignees = nil
 		return
@@ -200,7 +201,7 @@ func (la *TaskAssginee) Create(a web.Auth) (err error) {
 
 func (t *Task) addNewAssigneeByID(newAssigneeID int64, list *List) (err error) {
 	// Check if the user exists and has access to the list
-	newAssignee, err := GetUserByID(newAssigneeID)
+	newAssignee, err := user.GetUserByID(newAssigneeID)
 	if err != nil {
 		return err
 	}
@@ -252,7 +253,7 @@ func (la *TaskAssginee) ReadAll(a web.Auth, search string, page int, perPage int
 		return nil, 0, 0, ErrGenericForbidden{}
 	}
 
-	var taskAssignees []*User
+	var taskAssignees []*user.User
 	err = x.Table("task_assignees").
 		Select("users.*").
 		Join("INNER", "users", "task_assignees.user_id = users.id").
@@ -267,15 +268,15 @@ func (la *TaskAssginee) ReadAll(a web.Auth, search string, page int, perPage int
 		Select("users.*").
 		Join("INNER", "users", "task_assignees.user_id = users.id").
 		Where("task_id = ? AND users.username LIKE ?", la.TaskID, "%"+search+"%").
-		Count(&User{})
+		Count(&user.User{})
 	return taskAssignees, len(taskAssignees), numberOfTotalItems, err
 }
 
 // BulkAssignees is a helper struct used to update multiple assignees at once.
 type BulkAssignees struct {
 	// A list with all assignees
-	Assignees []*User `json:"assignees"`
-	TaskID    int64   `json:"-" param:"listtask"`
+	Assignees []*user.User `json:"assignees"`
+	TaskID    int64        `json:"-" param:"listtask"`
 
 	web.CRUDable `json:"-"`
 	web.Rights   `json:"-"`

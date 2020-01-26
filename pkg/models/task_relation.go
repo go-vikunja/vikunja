@@ -18,6 +18,7 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
 )
 
@@ -83,7 +84,7 @@ type TaskRelation struct {
 
 	CreatedByID int64 `xorm:"int(11) not null" json:"-"`
 	// The user who created this relation
-	CreatedBy *User `xorm:"-" json:"created_by"`
+	CreatedBy *user.User `xorm:"-" json:"created_by"`
 
 	// A unix timestamp when this label was created. You cannot change this value.
 	Created int64 `xorm:"created not null" json:"created"`

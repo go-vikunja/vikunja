@@ -20,6 +20,7 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/user"
 	_ "github.com/go-sql-driver/mysql" // Because.
 	"github.com/go-xorm/xorm"
 
@@ -33,7 +34,7 @@ var (
 // GetTables returns all structs which are also a table.
 func GetTables() []interface{} {
 	return []interface{}{
-		&User{},
+		&user.User{},
 		&List{},
 		&Task{},
 		&Team{},

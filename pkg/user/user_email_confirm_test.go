@@ -1,22 +1,26 @@
-// Vikunja is a todo-list application to facilitate your life.
-// Copyright 2018-2020 Vikunja and contributors. All rights reserved.
+// Copyright2018-2020 Vikunja and contriubtors. All rights reserved.
 //
-// This program is free software: you can redistribute it and/or modify
+// This file is part of Vikunja.
+//
+// Vikunja is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// This program is distributed in the hope that it will be useful,
+// Vikunja is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+// along with Vikunja.  If not, see <https://www.gnu.org/licenses/>.
 
-package models
+package user
 
-import "testing"
+import (
+	"code.vikunja.io/api/pkg/db"
+	"testing"
+)
 
 func TestUserEmailConfirm(t *testing.T) {
 	type args struct {
@@ -59,8 +63,9 @@ func TestUserEmailConfirm(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := UserEmailConfirm(tt.args.c); (err != nil) != tt.wantErr {
-				t.Errorf("UserEmailConfirm() error = %v, wantErr %v", err, tt.wantErr)
+			db.LoadAndAssertFixtures(t)
+			if err := ConfirmEmail(tt.args.c); (err != nil) != tt.wantErr {
+				t.Errorf("ConfirmEmail() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}

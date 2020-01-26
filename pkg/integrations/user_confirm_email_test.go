@@ -17,8 +17,8 @@
 package integrations
 
 import (
-	"code.vikunja.io/api/pkg/models"
 	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
+	"code.vikunja.io/api/pkg/user"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 	"net/http"
@@ -35,16 +35,16 @@ func TestUserConfirmEmail(t *testing.T) {
 		_, err := newTestRequest(t, http.MethodPost, apiv1.UserConfirmEmail, `{}`)
 		assert.Error(t, err)
 		assert.Equal(t, http.StatusPreconditionFailed, err.(*echo.HTTPError).Code)
-		assertHandlerErrorCode(t, err, models.ErrCodeInvalidEmailConfirmToken)
+		assertHandlerErrorCode(t, err, user.ErrCodeInvalidEmailConfirmToken)
 	})
 	t.Run("Empty token", func(t *testing.T) {
 		_, err := newTestRequest(t, http.MethodPost, apiv1.UserConfirmEmail, `{"token": ""}`)
 		assert.Error(t, err)
-		assertHandlerErrorCode(t, err, models.ErrCodeInvalidEmailConfirmToken)
+		assertHandlerErrorCode(t, err, user.ErrCodeInvalidEmailConfirmToken)
 	})
 	t.Run("Invalid token", func(t *testing.T) {
 		_, err := newTestRequest(t, http.MethodPost, apiv1.UserConfirmEmail, `{"token": "invalidToken"}`)
 		assert.Error(t, err)
-		assertHandlerErrorCode(t, err, models.ErrCodeInvalidEmailConfirmToken)
+		assertHandlerErrorCode(t, err, user.ErrCodeInvalidEmailConfirmToken)
 	})
 }

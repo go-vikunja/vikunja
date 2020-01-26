@@ -17,13 +17,15 @@
 
 package migration
 
-import "code.vikunja.io/api/pkg/models"
+import (
+	"code.vikunja.io/api/pkg/user"
+)
 
 // Migrator is the basic migrator interface which is shared among all migrators
 type Migrator interface {
 	// Migrate is the interface used to migrate a user's tasks from another platform to vikunja.
 	// The user object is the user who's tasks will be migrated.
-	Migrate(user *models.User) error
+	Migrate(user *user.User) error
 	// AuthURL returns a url for clients to authenticate against.
 	// The use case for this are Oauth flows, where the server token should remain hidden and not
 	// known to the frontend.

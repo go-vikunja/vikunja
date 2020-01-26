@@ -19,30 +19,28 @@ package models
 import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/files"
+	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
-	"github.com/stretchr/testify/assert"
 	"gopkg.in/d4l3k/messagediff.v1"
 	"testing"
 )
 
 func TestTaskCollection_ReadAll(t *testing.T) {
-	assert.NoError(t, db.LoadFixtures())
-
 	// Dummy users
-	user1 := &User{
+	user1 := &user.User{
 		ID:        1,
 		Username:  "user1",
 		Password:  "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
 		IsActive:  true,
 		AvatarURL: "111d68d06e2d317b5a59c2c6c5bad808", // hash for ""
 	}
-	user2 := &User{
+	user2 := &user.User{
 		ID:        2,
 		Username:  "user2",
 		Password:  "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
 		AvatarURL: "ab53a2911ddf9b4817ac01ddcd3d975f", // hash for ""
 	}
-	user6 := &User{
+	user6 := &user.User{
 		ID:        6,
 		Username:  "user6",
 		Password:  "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
@@ -463,7 +461,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedByID: 1,
 		CreatedBy:   user1,
 		ListID:      1,
-		Assignees: []*User{
+		Assignees: []*user.User{
 			user1,
 			user2,
 		},
@@ -538,7 +536,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			fields: fields{},
 			args: args{
 				search: "",
-				a:      &User{ID: 1},
+				a:      &user.User{ID: 1},
 				page:   0,
 			},
 			want: []*Task{
@@ -585,7 +583,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			},
 			args: args{
 				search: "",
-				a:      &User{ID: 1},
+				a:      &user.User{ID: 1},
 				page:   0,
 			},
 			want: []*Task{
@@ -631,7 +629,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			},
 			args: args{
 				search: "",
-				a:      &User{ID: 1},
+				a:      &user.User{ID: 1},
 				page:   0,
 			},
 			want: []*Task{
@@ -648,7 +646,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			},
 			args: args{
 				search: "",
-				a:      &User{ID: 1},
+				a:      &user.User{ID: 1},
 				page:   0,
 			},
 			want: []*Task{
@@ -664,7 +662,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			},
 			args: args{
 				search: "",
-				a:      &User{ID: 1},
+				a:      &user.User{ID: 1},
 				page:   0,
 			},
 			want: []*Task{
@@ -677,6 +675,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+
 			lt := &TaskCollection{
 				ListID:            tt.fields.ListID,
 				StartDateSortUnix: tt.fields.StartDateSortUnix,

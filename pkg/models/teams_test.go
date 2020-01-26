@@ -17,6 +17,7 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/user"
 	"github.com/stretchr/testify/assert"
 	"reflect"
 	"testing"
@@ -30,7 +31,7 @@ func TestTeam_Create(t *testing.T) {
 	}
 
 	// Doer
-	doer, err := GetUserByID(1)
+	doer, err := user.GetUserByID(1)
 	assert.NoError(t, err)
 
 	// Insert it

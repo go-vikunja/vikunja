@@ -17,6 +17,7 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
 	"time"
 )
@@ -34,7 +35,7 @@ type Label struct {
 
 	CreatedByID int64 `xorm:"int(11) not null" json:"-"`
 	// The user who created this label
-	CreatedBy *User `xorm:"-" json:"created_by"`
+	CreatedBy *user.User `xorm:"-" json:"created_by"`
 
 	// A unix timestamp when this label was created. You cannot change this value.
 	Created int64 `xorm:"created not null" json:"created"`
@@ -63,7 +64,7 @@ func (Label) TableName() string {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /labels [put]
 func (l *Label) Create(a web.Auth) (err error) {
-	u, err := getUserWithError(a)
+	u, err := user.GetFromAuth(a)
 	if err != nil {
 		return
 	}
@@ -136,7 +137,7 @@ func (l *Label) ReadAll(a web.Auth, search string, page int, perPage int) (ls in
 		return nil, 0, 0, ErrGenericForbidden{}
 	}
 
-	u := &User{ID: a.GetID()}
+	u := &user.User{ID: a.GetID()}
 
 	// Get all tasks
 	taskIDs, err := getUserTaskIDs(u)
@@ -175,7 +176,7 @@ func (l *Label) ReadOne() (err error) {
 	}
 	*l = *label
 
-	user, err := GetUserByID(l.CreatedByID)
+	user, err := user.GetUserByID(l.CreatedByID)
 	if err != nil {
 		return err
 	}
@@ -198,7 +199,7 @@ func getLabelByIDSimple(labelID int64) (*Label, error) {
 }
 
 // Helper method to get all task ids a user has
-func getUserTaskIDs(u *User) (taskIDs []int64, err error) {
+func getUserTaskIDs(u *user.User) (taskIDs []int64, err error) {
 
 	// Get all lists
 	lists, _, _, err := getRawListsForUser("", u, -1, 0)

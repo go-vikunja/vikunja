@@ -17,8 +17,8 @@
 package integrations
 
 import (
-	"code.vikunja.io/api/pkg/models"
 	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
+	"code.vikunja.io/api/pkg/user"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"testing"
@@ -39,7 +39,7 @@ func TestUserChangePassword(t *testing.T) {
   "old_password": "invalid"
 }`, nil, nil)
 		assert.Error(t, err)
-		assertHandlerErrorCode(t, err, models.ErrCodeWrongUsernameOrPassword)
+		assertHandlerErrorCode(t, err, user.ErrCodeWrongUsernameOrPassword)
 	})
 	t.Run("Empty old password", func(t *testing.T) {
 		_, err := newTestRequestWithUser(t, http.MethodPost, apiv1.UserChangePassword, &testuser1, `{
@@ -47,7 +47,7 @@ func TestUserChangePassword(t *testing.T) {
   "old_password": ""
 }`, nil, nil)
 		assert.Error(t, err)
-		assertHandlerErrorCode(t, err, models.ErrCodeEmptyOldPassword)
+		assertHandlerErrorCode(t, err, user.ErrCodeEmptyOldPassword)
 	})
 	t.Run("Empty new password", func(t *testing.T) {
 		_, err := newTestRequestWithUser(t, http.MethodPost, apiv1.UserChangePassword, &testuser1, `{
@@ -55,6 +55,6 @@ func TestUserChangePassword(t *testing.T) {
   "old_password": "1234"
 }`, nil, nil)
 		assert.Error(t, err)
-		assertHandlerErrorCode(t, err, models.ErrCodeEmptyNewPassword)
+		assertHandlerErrorCode(t, err, user.ErrCodeEmptyNewPassword)
 	})
 }

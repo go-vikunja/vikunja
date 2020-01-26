@@ -18,6 +18,7 @@ package v1
 
 import (
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web/handler"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -38,7 +39,7 @@ import (
 // @Router /users [get]
 func UserList(c echo.Context) error {
 	s := c.QueryParam("s")
-	users, err := models.ListUsers(s)
+	users, err := user.ListUsers(s)
 	if err != nil {
 		return handler.HandleHTTPError(err, c)
 	}
@@ -72,7 +73,7 @@ func ListUsersForList(c echo.Context) error {
 	}
 
 	list := models.List{ID: listID}
-	currentUser, err := models.GetCurrentUser(c)
+	currentUser, err := user.GetCurrentUser(c)
 	if err != nil {
 		return handler.HandleHTTPError(err, c)
 	}

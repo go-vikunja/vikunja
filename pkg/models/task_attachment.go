@@ -18,6 +18,7 @@ package models
 
 import (
 	"code.vikunja.io/api/pkg/files"
+	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
 	"io"
 	"time"
@@ -29,8 +30,8 @@ type TaskAttachment struct {
 	TaskID int64 `xorm:"int(11) not null" json:"task_id" param:"task"`
 	FileID int64 `xorm:"int(11) not null" json:"-"`
 
-	CreatedByID int64 `xorm:"int(11) not null" json:"-"`
-	CreatedBy   *User `xorm:"-" json:"created_by"`
+	CreatedByID int64      `xorm:"int(11) not null" json:"-"`
+	CreatedBy   *user.User `xorm:"-" json:"created_by"`
 
 	File *files.File `xorm:"-" json:"file"`
 
@@ -132,7 +133,7 @@ func (ta *TaskAttachment) ReadAll(a web.Auth, search string, page int, perPage i
 		return nil, 0, 0, err
 	}
 
-	us := make(map[int64]*User)
+	us := make(map[int64]*user.User)
 	err = x.In("id", userIDs).Find(&us)
 	if err != nil {
 		return nil, 0, 0, err

@@ -18,6 +18,7 @@ package v1
 
 import (
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web/handler"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -46,7 +47,7 @@ func GetListsByNamespaceID(c echo.Context) error {
 	}
 
 	// Get the lists
-	doer, err := models.GetCurrentUser(c)
+	doer, err := user.GetCurrentUser(c)
 	if err != nil {
 		return handler.HandleHTTPError(err, c)
 	}
@@ -73,7 +74,7 @@ func getNamespace(c echo.Context) (namespace *models.Namespace, err error) {
 	}
 
 	// Check if the user has acces to that namespace
-	user, err := models.GetCurrentUser(c)
+	user, err := user.GetCurrentUser(c)
 	if err != nil {
 		return
 	}

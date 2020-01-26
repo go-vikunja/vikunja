@@ -18,6 +18,7 @@ package models
 
 import (
 	"code.vikunja.io/api/pkg/metrics"
+	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
 	"github.com/imdario/mergo"
 	"time"
@@ -34,7 +35,7 @@ type Namespace struct {
 	OwnerID     int64  `xorm:"int(11) not null INDEX" json:"-"`
 
 	// The user who owns this namespace
-	Owner *User `xorm:"-" json:"owner" valid:"-"`
+	Owner *user.User `xorm:"-" json:"owner" valid:"-"`
 
 	// A unix timestamp when this namespace was created. You cannot change this value.
 	Created int64 `xorm:"created not null" json:"created"`
@@ -97,7 +98,7 @@ func GetNamespaceByID(id int64) (namespace Namespace, err error) {
 	}
 
 	// Get the namespace Owner
-	namespace.Owner, err = GetUserByID(namespace.OwnerID)
+	namespace.Owner, err = user.GetUserByID(namespace.OwnerID)
 	return
 }
 
@@ -115,7 +116,7 @@ func GetNamespaceByID(id int64) (namespace Namespace, err error) {
 // @Router /namespaces/{id} [get]
 func (n *Namespace) ReadOne() (err error) {
 	// Get the namespace Owner
-	n.Owner, err = GetUserByID(n.OwnerID)
+	n.Owner, err = user.GetUserByID(n.OwnerID)
 	return
 }
 
@@ -143,7 +144,7 @@ func (n *Namespace) ReadAll(a web.Auth, search string, page int, perPage int) (r
 		return nil, 0, 0, ErrGenericForbidden{}
 	}
 
-	doer, err := getUserWithError(a)
+	doer, err := user.GetFromAuth(a)
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -176,7 +177,7 @@ func (n *Namespace) ReadAll(a web.Auth, search string, page int, perPage int) (r
 	}
 
 	// Get all users
-	users := []*User{}
+	users := []*user.User{}
 	err = x.Select("users.*").
 		Table("namespaces").
 		Join("LEFT", "team_namespaces", "namespaces.id = team_namespaces.namespace_id").
@@ -301,7 +302,7 @@ func (n *Namespace) Create(a web.Auth) (err error) {
 	n.ID = 0 // This would otherwise prevent the creation of new lists after one was created
 
 	// Check if the User exists
-	n.Owner, err = GetUserByID(a.GetID())
+	n.Owner, err = user.GetUserByID(a.GetID())
 	if err != nil {
 		return
 	}
@@ -343,7 +344,7 @@ func (n *Namespace) Delete() (err error) {
 	}
 
 	// Delete all lists with their tasks
-	lists, err := GetListsByNamespaceID(n.ID, &User{})
+	lists, err := GetListsByNamespaceID(n.ID, &user.User{})
 	if err != nil {
 		return
 	}
@@ -401,7 +402,7 @@ func (n *Namespace) Update() (err error) {
 	// Check if the (new) owner exists
 	n.OwnerID = n.Owner.ID
 	if currentNamespace.OwnerID != n.OwnerID {
-		n.Owner, err = GetUserByID(n.OwnerID)
+		n.Owner, err = user.GetUserByID(n.OwnerID)
 		if err != nil {
 			return
 		}

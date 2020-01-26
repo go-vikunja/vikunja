@@ -16,7 +16,10 @@
 
 package models
 
-import "code.vikunja.io/web"
+import (
+	user2 "code.vikunja.io/api/pkg/user"
+	"code.vikunja.io/web"
+)
 
 // Create implements the create method to assign a user to a team
 // @Summary Add a user to a team
@@ -41,7 +44,7 @@ func (tm *TeamMember) Create(a web.Auth) (err error) {
 	}
 
 	// Check if the user exists
-	user, err := GetUserByUsername(tm.Username)
+	user, err := user2.GetUserByUsername(tm.Username)
 	if err != nil {
 		return
 	}
@@ -84,7 +87,7 @@ func (tm *TeamMember) Delete() (err error) {
 	}
 
 	// Find the numeric user id
-	user, err := GetUserByUsername(tm.Username)
+	user, err := user2.GetUserByUsername(tm.Username)
 	if err != nil {
 		return
 	}

@@ -19,6 +19,7 @@ package models
 import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/files"
+	"code.vikunja.io/api/pkg/user"
 	"os"
 	"testing"
 )
@@ -33,7 +34,9 @@ func TestMain(m *testing.M) {
 	// Some tests use the file engine, so we'll need to initialize that
 	files.InitTests()
 
-	SetupTests(config.ServiceRootpath.GetString())
+	user.InitTests()
+
+	SetupTests()
 
 	os.Exit(m.Run())
 }

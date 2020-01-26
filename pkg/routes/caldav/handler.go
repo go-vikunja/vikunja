@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web/handler"
 	"fmt"
 	"github.com/labstack/echo/v4"
@@ -31,10 +32,10 @@ import (
 	"strings"
 )
 
-func getBasicAuthUserFromContext(c echo.Context) (user models.User, err error) {
-	u, is := c.Get("userBasicAuth").(models.User)
+func getBasicAuthUserFromContext(c echo.Context) (user.User, error) {
+	u, is := c.Get("userBasicAuth").(user.User)
 	if !is {
-		return models.User{}, fmt.Errorf("user is not user element, is %s", reflect.TypeOf(c.Get("userBasicAuth")))
+		return user.User{}, fmt.Errorf("user is not user element, is %s", reflect.TypeOf(c.Get("userBasicAuth")))
 	}
 	return u, nil
 }

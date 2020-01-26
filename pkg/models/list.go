@@ -18,6 +18,7 @@ package models
 
 import (
 	"code.vikunja.io/api/pkg/metrics"
+	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
 )
 
@@ -36,7 +37,7 @@ type List struct {
 	NamespaceID int64 `xorm:"int(11) INDEX not null" json:"-" param:"namespace"`
 
 	// The user who created this list.
-	Owner *User `xorm:"-" json:"owner" valid:"-"`
+	Owner *user.User `xorm:"-" json:"owner" valid:"-"`
 	// An array of tasks which belong to the list.
 	// Deprecated: you should use the dedicated task list endpoint because it has support for pagination and filtering
 	Tasks []*Task `xorm:"-" json:"-"`
@@ -51,7 +52,7 @@ type List struct {
 }
 
 // GetListsByNamespaceID gets all lists in a namespace
-func GetListsByNamespaceID(nID int64, doer *User) (lists []*List, err error) {
+func GetListsByNamespaceID(nID int64, doer *user.User) (lists []*List, err error) {
 	if nID == -1 {
 		err = x.Select("l.*").
 			Table("list").
@@ -103,7 +104,7 @@ func (l *List) ReadAll(a web.Auth, search string, page int, perPage int) (result
 		return lists, 0, 0, err
 	}
 
-	lists, resultCount, totalItems, err := getRawListsForUser(search, &User{ID: a.GetID()}, page, perPage)
+	lists, resultCount, totalItems, err := getRawListsForUser(search, &user.User{ID: a.GetID()}, page, perPage)
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -127,7 +128,7 @@ func (l *List) ReadAll(a web.Auth, search string, page int, perPage int) (result
 // @Router /lists/{id} [get]
 func (l *List) ReadOne() (err error) {
 	// Get list owner
-	l.Owner, err = GetUserByID(l.OwnerID)
+	l.Owner, err = user.GetUserByID(l.OwnerID)
 	return
 }
 
@@ -176,8 +177,8 @@ func GetListSimplByTaskID(taskID int64) (l *List, err error) {
 }
 
 // Gets the lists only, without any tasks or so
-func getRawListsForUser(search string, u *User, page int, perPage int) (lists []*List, resultCount int, totalItems int64, err error) {
-	fullUser, err := GetUserByID(u.ID)
+func getRawListsForUser(search string, u *user.User, page int, perPage int) (lists []*List, resultCount int, totalItems int64, err error) {
+	fullUser, err := user.GetUserByID(u.ID)
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -237,7 +238,7 @@ func AddListDetails(lists []*List) (err error) {
 	}
 
 	// Get all list owners
-	owners := []*User{}
+	owners := []*user.User{}
 	err = x.In("id", ownerIDs).Find(&owners)
 	if err != nil {
 		return
@@ -348,7 +349,7 @@ func updateListByTaskID(taskID int64) (err error) {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces/{namespaceID}/lists [put]
 func (l *List) Create(a web.Auth) (err error) {
-	doer, err := getUserWithError(a)
+	doer, err := user.GetFromAuth(a)
 	if err != nil {
 		return err
 	}

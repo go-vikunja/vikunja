@@ -18,6 +18,7 @@ package models
 
 import (
 	"code.vikunja.io/api/pkg/metrics"
+	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
 )
 
@@ -32,7 +33,7 @@ type Team struct {
 	CreatedByID int64  `xorm:"int(11) not null INDEX" json:"-"`
 
 	// The user who created this team.
-	CreatedBy *User `xorm:"-" json:"createdBy"`
+	CreatedBy *user.User `xorm:"-" json:"createdBy"`
 	// An array of all members in this team.
 	Members []*TeamUser `xorm:"-" json:"members"`
 
@@ -53,7 +54,7 @@ func (Team) TableName() string {
 // AfterLoad gets the created by user object
 func (t *Team) AfterLoad() {
 	// Get the owner
-	t.CreatedBy, _ = GetUserByID(t.CreatedByID)
+	t.CreatedBy, _ = user.GetUserByID(t.CreatedByID)
 
 	// Get all members
 	x.Select("*").
@@ -90,7 +91,7 @@ func (TeamMember) TableName() string {
 
 // TeamUser is the team member type
 type TeamUser struct {
-	User `xorm:"extends"`
+	user.User `xorm:"extends"`
 	// Whether or not the member is an admin of the team. See the docs for more about what a team admin can do
 	Admin bool `json:"admin"`
 }
@@ -181,7 +182,7 @@ func (t *Team) ReadAll(a web.Auth, search string, page int, perPage int) (result
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /teams [put]
 func (t *Team) Create(a web.Auth) (err error) {
-	doer, err := getUserWithError(a)
+	doer, err := user.GetFromAuth(a)
 	if err != nil {
 		return err
 	}

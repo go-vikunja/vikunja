@@ -16,7 +16,9 @@
 
 package migration
 
-import "code.vikunja.io/api/pkg/models"
+import (
+	"code.vikunja.io/api/pkg/user"
+)
 
 // Status represents this migration status
 type Status struct {
@@ -32,7 +34,7 @@ func (s *Status) TableName() string {
 }
 
 // SetMigrationStatus sets the migration status for a user
-func SetMigrationStatus(m Migrator, u *models.User) (err error) {
+func SetMigrationStatus(m Migrator, u *user.User) (err error) {
 	status := &Status{
 		UserID:       u.ID,
 		MigratorName: m.Name(),
@@ -42,7 +44,7 @@ func SetMigrationStatus(m Migrator, u *models.User) (err error) {
 }
 
 // GetMigrationStatus returns the migration status for a migration and a user
-func GetMigrationStatus(m Migrator, u *models.User) (status *Status, err error) {
+func GetMigrationStatus(m Migrator, u *user.User) (status *Status, err error) {
 	status = &Status{}
 	_, err = x.Where("user_id = ? and migrator_name = ?", u.ID, m.Name()).Desc("id").Get(status)
 	return

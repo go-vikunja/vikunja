@@ -18,6 +18,7 @@ package v1
 
 import (
 	"code.vikunja.io/api/pkg/models"
+	user2 "code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web/handler"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo/v4"
@@ -41,13 +42,13 @@ type Token struct {
 // @Failure 403 {object} models.Message "Invalid username or password."
 // @Router /login [post]
 func Login(c echo.Context) error {
-	u := models.UserLogin{}
+	u := user2.Login{}
 	if err := c.Bind(&u); err != nil {
 		return c.JSON(http.StatusBadRequest, models.Message{"Please provide a username and password."})
 	}
 
 	// Check user
-	user, err := models.CheckUserCredentials(&u)
+	user, err := user2.CheckUserCredentials(&u)
 	if err != nil {
 		return handler.HandleHTTPError(err, c)
 	}
@@ -80,7 +81,7 @@ func RenewToken(c echo.Context) error {
 		return echo.ErrBadRequest
 	}
 
-	user, err := models.GetUserFromClaims(claims)
+	user, err := user2.GetUserFromClaims(claims)
 	if err != nil {
 		return handler.HandleHTTPError(err, c)
 	}

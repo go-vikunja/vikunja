@@ -17,6 +17,7 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
 	"github.com/go-xorm/builder"
 )
@@ -120,7 +121,7 @@ func (lt *LabelTask) ReadAll(a web.Auth, search string, page int, perPage int) (
 	}
 
 	return getLabelsByTaskIDs(&LabelByTaskIDsOptions{
-		User:    &User{ID: a.GetID()},
+		User:    &user.User{ID: a.GetID()},
 		Search:  search,
 		Page:    page,
 		TaskIDs: []int64{lt.TaskID},
@@ -135,7 +136,7 @@ type labelWithTaskID struct {
 
 // LabelByTaskIDsOptions is a struct to not clutter the function with too many optional parameters.
 type LabelByTaskIDsOptions struct {
-	User                *User
+	User                *user.User
 	Search              string
 	Page                int
 	PerPage             int
@@ -185,7 +186,7 @@ func getLabelsByTaskIDs(opts *LabelByTaskIDsOptions) (ls []*labelWithTaskID, res
 	for _, l := range labels {
 		userids = append(userids, l.CreatedByID)
 	}
-	users := make(map[int64]*User)
+	users := make(map[int64]*user.User)
 	err = x.In("id", userids).Find(&users)
 	if err != nil {
 		return nil, 0, 0, err
@@ -290,7 +291,7 @@ func (t *Task) updateTaskLabels(creator web.Auth, labels []*Label) (err error) {
 			return err
 		}
 		if !hasAccessToLabel {
-			user, _ := creator.(*User)
+			user, _ := creator.(*user.User)
 			return ErrUserHasNoAccessToLabel{LabelID: l.ID, UserID: user.ID}
 		}
 

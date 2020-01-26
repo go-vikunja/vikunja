@@ -17,8 +17,8 @@
 package integrations
 
 import (
-	"code.vikunja.io/api/pkg/models"
 	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
+	"code.vikunja.io/api/pkg/user"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"testing"
@@ -37,7 +37,7 @@ func TestRegister(t *testing.T) {
 	t.Run("Empty payload", func(t *testing.T) {
 		_, err := newTestRequest(t, http.MethodPost, apiv1.RegisterUser, `{}`)
 		assert.Error(t, err)
-		assertHandlerErrorCode(t, err, models.ErrCodeNoUsernamePassword)
+		assertHandlerErrorCode(t, err, user.ErrCodeNoUsernamePassword)
 	})
 	t.Run("Empty username", func(t *testing.T) {
 		_, err := newTestRequest(t, http.MethodPost, apiv1.RegisterUser, `{
@@ -46,7 +46,7 @@ func TestRegister(t *testing.T) {
   "email": "email@example.com"
 }`)
 		assert.Error(t, err)
-		assertHandlerErrorCode(t, err, models.ErrCodeNoUsernamePassword)
+		assertHandlerErrorCode(t, err, user.ErrCodeNoUsernamePassword)
 	})
 	t.Run("Empty password", func(t *testing.T) {
 		_, err := newTestRequest(t, http.MethodPost, apiv1.RegisterUser, `{
@@ -55,7 +55,7 @@ func TestRegister(t *testing.T) {
   "email": "email@example.com"
 }`)
 		assert.Error(t, err)
-		assertHandlerErrorCode(t, err, models.ErrCodeNoUsernamePassword)
+		assertHandlerErrorCode(t, err, user.ErrCodeNoUsernamePassword)
 	})
 	t.Run("Empty email", func(t *testing.T) {
 		_, err := newTestRequest(t, http.MethodPost, apiv1.RegisterUser, `{
@@ -64,7 +64,7 @@ func TestRegister(t *testing.T) {
   "email": ""
 }`)
 		assert.Error(t, err)
-		assertHandlerErrorCode(t, err, models.ErrCodeNoUsernamePassword)
+		assertHandlerErrorCode(t, err, user.ErrCodeNoUsernamePassword)
 	})
 	t.Run("Already existing username", func(t *testing.T) {
 		_, err := newTestRequest(t, http.MethodPost, apiv1.RegisterUser, `{
@@ -73,7 +73,7 @@ func TestRegister(t *testing.T) {
   "email": "email@example.com"
 }`)
 		assert.Error(t, err)
-		assertHandlerErrorCode(t, err, models.ErrorCodeUsernameExists)
+		assertHandlerErrorCode(t, err, user.ErrorCodeUsernameExists)
 	})
 	t.Run("Already existing email", func(t *testing.T) {
 		_, err := newTestRequest(t, http.MethodPost, apiv1.RegisterUser, `{
@@ -82,6 +82,6 @@ func TestRegister(t *testing.T) {
   "email": "user1@example.com"
 }`)
 		assert.Error(t, err)
-		assertHandlerErrorCode(t, err, models.ErrorCodeUserEmailExists)
+		assertHandlerErrorCode(t, err, user.ErrorCodeUserEmailExists)
 	})
 }

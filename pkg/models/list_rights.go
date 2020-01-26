@@ -17,6 +17,7 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
 	"github.com/go-xorm/builder"
 )
@@ -39,7 +40,7 @@ func (l *List) CanWrite(a web.Auth) (bool, error) {
 	}
 
 	// Check if the user is either owner or can write to the list
-	if originalList.isOwner(&User{ID: a.GetID()}) {
+	if originalList.isOwner(&user.User{ID: a.GetID()}) {
 		return true, nil
 	}
 
@@ -60,7 +61,7 @@ func (l *List) CanRead(a web.Auth) (bool, error) {
 			(shareAuth.Right == RightRead || shareAuth.Right == RightWrite || shareAuth.Right == RightAdmin), nil
 	}
 
-	if l.isOwner(&User{ID: a.GetID()}) {
+	if l.isOwner(&user.User{ID: a.GetID()}) {
 		return true, nil
 	}
 	return l.checkRight(a, RightRead, RightWrite, RightAdmin)
@@ -100,14 +101,14 @@ func (l *List) IsAdmin(a web.Auth) (bool, error) {
 	// Check all the things
 	// Check if the user is either owner or can write to the list
 	// Owners are always admins
-	if originalList.isOwner(&User{ID: a.GetID()}) {
+	if originalList.isOwner(&user.User{ID: a.GetID()}) {
 		return true, nil
 	}
 	return originalList.checkRight(a, RightAdmin)
 }
 
 // Little helper function to check if a user is list owner
-func (l *List) isOwner(u *User) bool {
+func (l *List) isOwner(u *user.User) bool {
 	return l.OwnerID == u.ID
 }
 

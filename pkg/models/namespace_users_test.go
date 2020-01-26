@@ -17,6 +17,8 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
 	"gopkg.in/d4l3k/messagediff.v1"
 	"reflect"
@@ -56,7 +58,7 @@ func TestNamespaceUser_Create(t *testing.T) {
 			name: "NamespaceUsers Create for duplicate",
 			fields: fields{
 				Username:    "user1",
-				NamespaceID: 2,
+				NamespaceID: 3,
 			},
 			wantErr: true,
 			errType: IsErrUserAlreadyHasNamespaceAccess,
@@ -87,7 +89,7 @@ func TestNamespaceUser_Create(t *testing.T) {
 				NamespaceID: 2,
 			},
 			wantErr: true,
-			errType: IsErrUserDoesNotExist,
+			errType: user.IsErrUserDoesNotExist,
 		},
 		{
 			name: "NamespaceUsers Create with the owner as shared user",
@@ -101,6 +103,8 @@ func TestNamespaceUser_Create(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+
 			un := &NamespaceUser{
 				ID:          tt.fields.ID,
 				Username:    tt.fields.Username,
@@ -152,11 +156,11 @@ func TestNamespaceUser_ReadAll(t *testing.T) {
 				NamespaceID: 3,
 			},
 			args: args{
-				a: &User{ID: 3},
+				a: &user.User{ID: 3},
 			},
 			want: []*UserWithRight{
 				{
-					User: User{
+					User: user.User{
 						ID:        1,
 						Username:  "user1",
 						Password:  "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
@@ -166,7 +170,7 @@ func TestNamespaceUser_ReadAll(t *testing.T) {
 					Right: RightRead,
 				},
 				{
-					User: User{
+					User: user.User{
 						ID:        2,
 						Username:  "user2",
 						Password:  "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
@@ -182,7 +186,7 @@ func TestNamespaceUser_ReadAll(t *testing.T) {
 				NamespaceID: 3,
 			},
 			args: args{
-				a: &User{ID: 4},
+				a: &user.User{ID: 4},
 			},
 			wantErr: true,
 			errType: IsErrNeedToHaveNamespaceReadAccess,
@@ -190,6 +194,8 @@ func TestNamespaceUser_ReadAll(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+
 			un := &NamespaceUser{
 				ID:          tt.fields.ID,
 				UserID:      tt.fields.UserID,
@@ -269,6 +275,8 @@ func TestNamespaceUser_Update(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+
 			nu := &NamespaceUser{
 				ID:          tt.fields.ID,
 				Username:    tt.fields.Username,
@@ -314,7 +322,7 @@ func TestNamespaceUser_Delete(t *testing.T) {
 				NamespaceID: 2,
 			},
 			wantErr: true,
-			errType: IsErrUserDoesNotExist,
+			errType: user.IsErrUserDoesNotExist,
 		},
 		{
 			name: "Try deleting a user which does not has access but exists",
@@ -335,6 +343,8 @@ func TestNamespaceUser_Delete(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+
 			nu := &NamespaceUser{
 				ID:          tt.fields.ID,
 				Username:    tt.fields.Username,

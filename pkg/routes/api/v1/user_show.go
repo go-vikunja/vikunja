@@ -17,7 +17,7 @@
 package v1
 
 import (
-	"code.vikunja.io/api/pkg/models"
+	user2 "code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web/handler"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -35,12 +35,12 @@ import (
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /user [get]
 func UserShow(c echo.Context) error {
-	userInfos, err := models.GetCurrentUser(c)
+	userInfos, err := user2.GetCurrentUser(c)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Error getting current user.")
 	}
 
-	user, err := models.GetUserByID(userInfos.ID)
+	user, err := user2.GetUserByID(userInfos.ID)
 	if err != nil {
 		return handler.HandleHTTPError(err, c)
 	}

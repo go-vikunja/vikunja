@@ -22,9 +22,7 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/testfixtures.v2"
 	"os"
-	"path/filepath"
 	"testing"
 )
 
@@ -45,10 +43,9 @@ func InitTestFileHandler() {
 }
 
 func initFixtures(t *testing.T) {
-	// Init db fixtures
-	err := db.LoadFixtures()
-	assert.NoError(t, err)
-
+	// DB fixtures
+	db.LoadAndAssertFixtures(t)
+	// File fixtures
 	InitTestFileFixtures(t)
 }
 
@@ -73,17 +70,7 @@ func InitTests() {
 		log.Fatal(err)
 	}
 
-	config.InitDefaultConfig()
-	// We need to set the root path even if we're not using the config, otherwise fixtures are not loaded correctly
-	config.ServiceRootpath.Set(os.Getenv("VIKUNJA_SERVICE_ROOTPATH"))
-
-	// Sync fixtures
-	var fixturesHelper testfixtures.Helper = &testfixtures.SQLite{}
-	if config.DatabaseType.GetString() == "mysql" {
-		fixturesHelper = &testfixtures.MySQL{}
-	}
-	fixturesDir := filepath.Join(config.ServiceRootpath.GetString(), "pkg", "files", "fixtures")
-	err = db.InitFixtures(fixturesHelper, fixturesDir)
+	err = db.InitTestFixtures("files")
 	if err != nil {
 		log.Fatal(err)
 	}

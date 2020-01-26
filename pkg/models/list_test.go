@@ -17,13 +17,15 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/user"
 	"github.com/stretchr/testify/assert"
 	"reflect"
 	"testing"
 )
 
 func TestList_CreateOrUpdate(t *testing.T) {
-	user := &User{
+	usr := &user.User{
 		ID:       1,
 		Username: "user1",
 		Email:    "user1@example.com",
@@ -31,41 +33,41 @@ func TestList_CreateOrUpdate(t *testing.T) {
 
 	t.Run("create", func(t *testing.T) {
 		t.Run("normal", func(t *testing.T) {
-			initFixtures(t)
+			db.LoadAndAssertFixtures(t)
 			list := List{
 				Title:       "test",
 				Description: "Lorem Ipsum",
 				NamespaceID: 1,
 			}
-			err := list.Create(user)
+			err := list.Create(usr)
 			assert.NoError(t, err)
 		})
 		t.Run("nonexistant namespace", func(t *testing.T) {
-			initFixtures(t)
+			db.LoadAndAssertFixtures(t)
 			list := List{
 				Title:       "test",
 				Description: "Lorem Ipsum",
 				NamespaceID: 999999,
 			}
 
-			err := list.Create(user)
+			err := list.Create(usr)
 			assert.Error(t, err)
 			assert.True(t, IsErrNamespaceDoesNotExist(err))
 		})
 		t.Run("nonexistant owner", func(t *testing.T) {
-			initFixtures(t)
-			user := &User{ID: 9482385}
+			db.LoadAndAssertFixtures(t)
+			usr := &user.User{ID: 9482385}
 			list := List{
 				Title:       "test",
 				Description: "Lorem Ipsum",
 				NamespaceID: 1,
 			}
-			err := list.Create(user)
+			err := list.Create(usr)
 			assert.Error(t, err)
-			assert.True(t, IsErrUserDoesNotExist(err))
+			assert.True(t, user.IsErrUserDoesNotExist(err))
 		})
 		t.Run("existing identifier", func(t *testing.T) {
-			initFixtures(t)
+			db.LoadAndAssertFixtures(t)
 			list := List{
 				Title:       "test",
 				Description: "Lorem Ipsum",
@@ -73,7 +75,7 @@ func TestList_CreateOrUpdate(t *testing.T) {
 				NamespaceID: 1,
 			}
 
-			err := list.Create(user)
+			err := list.Create(usr)
 			assert.Error(t, err)
 			assert.True(t, IsErrListIdentifierIsNotUnique(err))
 		})
@@ -81,7 +83,7 @@ func TestList_CreateOrUpdate(t *testing.T) {
 
 	t.Run("update", func(t *testing.T) {
 		t.Run("normal", func(t *testing.T) {
-			initFixtures(t)
+			db.LoadAndAssertFixtures(t)
 			list := List{
 				ID:          1,
 				Title:       "test",
@@ -94,7 +96,7 @@ func TestList_CreateOrUpdate(t *testing.T) {
 
 		})
 		t.Run("nonexistant", func(t *testing.T) {
-			initFixtures(t)
+			db.LoadAndAssertFixtures(t)
 			list := List{
 				ID:    99999999,
 				Title: "test",
@@ -105,7 +107,7 @@ func TestList_CreateOrUpdate(t *testing.T) {
 
 		})
 		t.Run("existing identifier", func(t *testing.T) {
-			initFixtures(t)
+			db.LoadAndAssertFixtures(t)
 			list := List{
 				Title:       "test",
 				Description: "Lorem Ipsum",
@@ -113,7 +115,7 @@ func TestList_CreateOrUpdate(t *testing.T) {
 				NamespaceID: 1,
 			}
 
-			err := list.Create(user)
+			err := list.Create(usr)
 			assert.Error(t, err)
 			assert.True(t, IsErrListIdentifierIsNotUnique(err))
 		})
@@ -121,7 +123,7 @@ func TestList_CreateOrUpdate(t *testing.T) {
 }
 
 func TestList_Delete(t *testing.T) {
-	initFixtures(t)
+	db.LoadAndAssertFixtures(t)
 	list := List{
 		ID: 1,
 	}
@@ -131,14 +133,16 @@ func TestList_Delete(t *testing.T) {
 
 func TestList_ReadAll(t *testing.T) {
 	t.Run("all in namespace", func(t *testing.T) {
-		initFixtures(t)
+		db.LoadAndAssertFixtures(t)
 		// Get all lists for our namespace
-		lists, err := GetListsByNamespaceID(1, &User{})
+		lists, err := GetListsByNamespaceID(1, &user.User{})
 		assert.NoError(t, err)
 		assert.Equal(t, len(lists), 2)
 	})
 	t.Run("all lists for user", func(t *testing.T) {
-		u := &User{ID: 1}
+		db.LoadAndAssertFixtures(t)
+
+		u := &user.User{ID: 1}
 		list := List{}
 		lists3, _, _, err := list.ReadAll(u, "", 1, 50)
 
@@ -148,10 +152,12 @@ func TestList_ReadAll(t *testing.T) {
 		assert.Equal(t, 16, s.Len())
 	})
 	t.Run("lists for nonexistant user", func(t *testing.T) {
-		user := &User{ID: 999999}
+		db.LoadAndAssertFixtures(t)
+
+		usr := &user.User{ID: 999999}
 		list := List{}
-		_, _, _, err := list.ReadAll(user, "", 1, 50)
+		_, _, _, err := list.ReadAll(usr, "", 1, 50)
 		assert.Error(t, err)
-		assert.True(t, IsErrUserDoesNotExist(err))
+		assert.True(t, user.IsErrUserDoesNotExist(err))
 	})
 }

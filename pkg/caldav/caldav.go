@@ -17,7 +17,7 @@
 package caldav
 
 import (
-	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
 	"fmt"
 	"strconv"
@@ -49,7 +49,7 @@ type Todo struct {
 	Summary       string
 	Description   string
 	CompletedUnix int64
-	Organizer     *models.User
+	Organizer     *user.User
 	Priority      int64 // 0-9, 1 is highest
 	RelatedToUID  string
 

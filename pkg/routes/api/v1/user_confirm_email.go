@@ -18,6 +18,7 @@ package v1
 
 import (
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web/handler"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -36,12 +37,12 @@ import (
 // @Router /user/confirm [post]
 func UserConfirmEmail(c echo.Context) error {
 	// Check for Request Content
-	var emailConfirm models.EmailConfirm
+	var emailConfirm user.EmailConfirm
 	if err := c.Bind(&emailConfirm); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "No token provided.")
 	}
 
-	err := models.UserEmailConfirm(&emailConfirm)
+	err := user.ConfirmEmail(&emailConfirm)
 	if err != nil {
 		return handler.HandleHTTPError(err, c)
 	}

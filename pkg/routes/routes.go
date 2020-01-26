@@ -53,6 +53,7 @@ import (
 	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
 	"code.vikunja.io/api/pkg/routes/caldav"
 	_ "code.vikunja.io/api/pkg/swagger" // To generate swagger docs
+	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
 	"code.vikunja.io/web/handler"
 	"github.com/asaskevich/govalidator"
@@ -407,11 +408,11 @@ func registerCalDavRoutes(c *echo.Group) {
 }
 
 func caldavBasicAuth(username, password string, c echo.Context) (bool, error) {
-	creds := &models.UserLogin{
+	creds := &user.Login{
 		Username: username,
 		Password: password,
 	}
-	u, err := models.CheckUserCredentials(creds)
+	u, err := user.CheckUserCredentials(creds)
 	if err != nil {
 		log.Errorf("Error during basic auth for caldav: %v", err)
 		return false, nil

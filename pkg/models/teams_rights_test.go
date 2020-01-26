@@ -17,6 +17,8 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/user"
 	"testing"
 
 	"code.vikunja.io/web"
@@ -28,7 +30,7 @@ func TestTeam_CanDoSomething(t *testing.T) {
 		Name        string
 		Description string
 		CreatedByID int64
-		CreatedBy   *User
+		CreatedBy   *user.User
 		Members     []*TeamUser
 		Created     int64
 		Updated     int64
@@ -50,7 +52,7 @@ func TestTeam_CanDoSomething(t *testing.T) {
 				ID: 1,
 			},
 			args: args{
-				a: &User{ID: 1},
+				a: &user.User{ID: 1},
 			},
 			want: map[string]bool{"CanCreate": true, "IsAdmin": true, "CanRead": true, "CanDelete": true, "CanUpdate": true},
 		},
@@ -60,7 +62,7 @@ func TestTeam_CanDoSomething(t *testing.T) {
 				ID: 300,
 			},
 			args: args{
-				a: &User{ID: 1},
+				a: &user.User{ID: 1},
 			},
 			want: map[string]bool{"CanCreate": true, "IsAdmin": false, "CanRead": false, "CanDelete": false, "CanUpdate": false},
 		},
@@ -70,13 +72,15 @@ func TestTeam_CanDoSomething(t *testing.T) {
 				ID: 1,
 			},
 			args: args{
-				a: &User{ID: 4},
+				a: &user.User{ID: 4},
 			},
 			want: map[string]bool{"CanCreate": true, "IsAdmin": false, "CanRead": false, "CanDelete": false, "CanUpdate": false},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+
 			tm := &Team{
 				ID:          tt.fields.ID,
 				Name:        tt.fields.Name,

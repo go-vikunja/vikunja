@@ -23,6 +23,7 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/routes"
 	v1 "code.vikunja.io/api/pkg/routes/api/v1"
+	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
 	"code.vikunja.io/web/handler"
 	"github.com/dgrijalva/jwt-go"
@@ -38,34 +39,34 @@ import (
 
 // These are the test users, the same way they are in the test database
 var (
-	testuser1 = models.User{
+	testuser1 = user.User{
 		ID:       1,
 		Username: "user1",
 		Password: "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
 		Email:    "user1@example.com",
 		IsActive: true,
 	}
-	testuser2 = models.User{
+	testuser2 = user.User{
 		ID:       2,
 		Username: "user2",
 		Password: "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
 		Email:    "user2@example.com",
 	}
-	testuser3 = models.User{
+	testuser3 = user.User{
 		ID:                 3,
 		Username:           "user3",
 		Password:           "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
 		Email:              "user3@example.com",
 		PasswordResetToken: "passwordresettesttoken",
 	}
-	testuser4 = models.User{
+	testuser4 = user.User{
 		ID:                4,
 		Username:          "user4",
 		Password:          "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
 		Email:             "user4@example.com",
 		EmailConfirmToken: "tiepiQueed8ahc7zeeFe1eveiy4Ein8osooxegiephauph2Ael",
 	}
-	testuser5 = models.User{
+	testuser5 = user.User{
 		ID:                4,
 		Username:          "user5",
 		Password:          "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
@@ -81,7 +82,8 @@ func setupTestEnv() (e *echo.Echo, err error) {
 	config.ServiceRootpath.Set(os.Getenv("VIKUNJA_SERVICE_ROOTPATH"))
 	// Some tests use the file engine, so we'll need to initialize that
 	files.InitTests()
-	models.SetupTests(config.ServiceRootpath.GetString())
+	user.InitTests()
+	models.SetupTests()
 
 	err = db.LoadFixtures()
 	if err != nil {
@@ -114,7 +116,7 @@ func newTestRequest(t *testing.T, method string, handler func(ctx echo.Context) 
 	return
 }
 
-func addUserTokenToContext(t *testing.T, user *models.User, c echo.Context) {
+func addUserTokenToContext(t *testing.T, user *user.User, c echo.Context) {
 	// Get the token as a string
 	token, err := v1.NewUserJWTAuthtoken(user)
 	assert.NoError(t, err)
@@ -152,7 +154,7 @@ func testRequestSetup(t *testing.T, method string, payload string, queryParams u
 	return
 }
 
-func newTestRequestWithUser(t *testing.T, method string, handler echo.HandlerFunc, user *models.User, payload string, queryParams url.Values, urlParams map[string]string) (rec *httptest.ResponseRecorder, err error) {
+func newTestRequestWithUser(t *testing.T, method string, handler echo.HandlerFunc, user *user.User, payload string, queryParams url.Values, urlParams map[string]string) (rec *httptest.ResponseRecorder, err error) {
 	rec, c := testRequestSetup(t, method, payload, queryParams, urlParams)
 	addUserTokenToContext(t, user, c)
 	err = handler(c)
@@ -185,7 +187,7 @@ func assertHandlerErrorCode(t *testing.T, err error, expectedErrorCode int) {
 }
 
 type webHandlerTest struct {
-	user      *models.User
+	user      *user.User
 	linkShare *models.LinkSharing
 	strFunc   func() handler.CObject
 	t         *testing.T

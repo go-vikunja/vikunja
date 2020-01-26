@@ -17,11 +17,14 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/user"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
 func TestTeamMember_Create(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
 
 	// Dummy team member
 	dummyteammember := TeamMember{
@@ -30,7 +33,7 @@ func TestTeamMember_Create(t *testing.T) {
 	}
 
 	// Doer
-	doer, err := GetUserByID(1)
+	doer, err := user.GetUserByID(1)
 	assert.NoError(t, err)
 
 	// Insert a new team member
@@ -71,7 +74,7 @@ func TestTeamMember_Create(t *testing.T) {
 	dummyteammember.Username = "user9484"
 	err = dummyteammember.Create(doer)
 	assert.Error(t, err)
-	assert.True(t, IsErrUserDoesNotExist(err))
+	assert.True(t, user.IsErrUserDoesNotExist(err))
 
 	// Try adding a user to a team which does not exist
 	tm = TeamMember{TeamID: 94824, Username: "user1"}

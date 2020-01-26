@@ -19,12 +19,13 @@ package migration
 import (
 	"bytes"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/user"
 	"io/ioutil"
 )
 
 // InsertFromStructure takes a fully nested Vikunja data structure and a user and then creates everything for this user
 // (Namespaces, tasks, etc. Even attachments and relations.)
-func InsertFromStructure(str []*models.NamespaceWithLists, user *models.User) (err error) {
+func InsertFromStructure(str []*models.NamespaceWithLists, user *user.User) (err error) {
 
 	// Create all namespaces
 	for _, n := range str {

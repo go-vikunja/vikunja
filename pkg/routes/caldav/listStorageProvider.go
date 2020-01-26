@@ -19,6 +19,7 @@ package caldav
 import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
+	user2 "code.vikunja.io/api/pkg/user"
 	"github.com/samedi/caldav-go/data"
 	"github.com/samedi/caldav-go/errs"
 	"strconv"
@@ -39,7 +40,7 @@ type VikunjaCaldavListStorage struct {
 	// Used when handling a single task, like updating
 	task *models.Task
 	// The current user
-	user        *models.User
+	user        *user2.User
 	isPrincipal bool
 	isEntry     bool // Entry level handling should only return a link to the principal url
 }

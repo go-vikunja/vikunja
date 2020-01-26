@@ -19,6 +19,7 @@ package handler
 import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/migration"
+	user2 "code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web/handler"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -53,7 +54,7 @@ func (mw *MigrationWeb) Migrate(c echo.Context) error {
 	ms := mw.MigrationStruct()
 
 	// Get the user from context
-	user, err := models.GetCurrentUser(c)
+	user, err := user2.GetCurrentUser(c)
 	if err != nil {
 		return handler.HandleHTTPError(err, c)
 	}
@@ -82,7 +83,7 @@ func (mw *MigrationWeb) Migrate(c echo.Context) error {
 func (mw *MigrationWeb) Status(c echo.Context) error {
 	ms := mw.MigrationStruct()
 
-	user, err := models.GetCurrentUser(c)
+	user, err := user2.GetCurrentUser(c)
 	if err != nil {
 		return handler.HandleHTTPError(err, c)
 	}

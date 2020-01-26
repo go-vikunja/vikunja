@@ -17,6 +17,8 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/user"
 	"testing"
 
 	"code.vikunja.io/web"
@@ -48,7 +50,7 @@ func TestTeamNamespace_CanDoSomething(t *testing.T) {
 				NamespaceID: 3,
 			},
 			args: args{
-				a: &User{ID: 3},
+				a: &user.User{ID: 3},
 			},
 			want: map[string]bool{"CanCreate": true, "CanDelete": true, "CanUpdate": true},
 		},
@@ -58,7 +60,7 @@ func TestTeamNamespace_CanDoSomething(t *testing.T) {
 				NamespaceID: 300,
 			},
 			args: args{
-				a: &User{ID: 3},
+				a: &user.User{ID: 3},
 			},
 			want: map[string]bool{"CanCreate": false, "CanDelete": false, "CanUpdate": false},
 		},
@@ -68,13 +70,15 @@ func TestTeamNamespace_CanDoSomething(t *testing.T) {
 				NamespaceID: 3,
 			},
 			args: args{
-				a: &User{ID: 4},
+				a: &user.User{ID: 4},
 			},
 			want: map[string]bool{"CanCreate": false, "CanDelete": false, "CanUpdate": false},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+
 			tn := &TeamNamespace{
 				ID:          tt.fields.ID,
 				TeamID:      tt.fields.TeamID,

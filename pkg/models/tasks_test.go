@@ -17,12 +17,14 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/user"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
 func TestTask_Create(t *testing.T) {
-	user := &User{
+	usr := &user.User{
 		ID:       1,
 		Username: "user1",
 		Email:    "user1@example.com",
@@ -31,13 +33,13 @@ func TestTask_Create(t *testing.T) {
 	// We only test creating a task here, the rights are all well tested in the integration tests.
 
 	t.Run("normal", func(t *testing.T) {
-		initFixtures(t)
+		db.LoadAndAssertFixtures(t)
 		task := &Task{
 			Text:        "Lorem",
 			Description: "Lorem Ipsum Dolor",
 			ListID:      1,
 		}
-		err := task.Create(user)
+		err := task.Create(usr)
 		assert.NoError(t, err)
 		// Assert getting a uid
 		assert.NotEmpty(t, task.UID)
@@ -47,30 +49,30 @@ func TestTask_Create(t *testing.T) {
 
 	})
 	t.Run("empty text", func(t *testing.T) {
-		initFixtures(t)
+		db.LoadAndAssertFixtures(t)
 		task := &Task{
 			Text:        "",
 			Description: "Lorem Ipsum Dolor",
 			ListID:      1,
 		}
-		err := task.Create(user)
+		err := task.Create(usr)
 		assert.Error(t, err)
 		assert.True(t, IsErrTaskCannotBeEmpty(err))
 	})
 	t.Run("nonexistant list", func(t *testing.T) {
-		initFixtures(t)
+		db.LoadAndAssertFixtures(t)
 		task := &Task{
 			Text:        "Test",
 			Description: "Lorem Ipsum Dolor",
 			ListID:      9999999,
 		}
-		err := task.Create(user)
+		err := task.Create(usr)
 		assert.Error(t, err)
 		assert.True(t, IsErrListDoesNotExist(err))
 	})
 	t.Run("noneixtant user", func(t *testing.T) {
-		initFixtures(t)
-		nUser := &User{ID: 99999999}
+		db.LoadAndAssertFixtures(t)
+		nUser := &user.User{ID: 99999999}
 		task := &Task{
 			Text:        "Test",
 			Description: "Lorem Ipsum Dolor",
@@ -78,13 +80,13 @@ func TestTask_Create(t *testing.T) {
 		}
 		err := task.Create(nUser)
 		assert.Error(t, err)
-		assert.True(t, IsErrUserDoesNotExist(err))
+		assert.True(t, user.IsErrUserDoesNotExist(err))
 	})
 }
 
 func TestTask_Update(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
-		initFixtures(t)
+		db.LoadAndAssertFixtures(t)
 		task := &Task{
 			ID:          1,
 			Text:        "test10000",
@@ -95,7 +97,7 @@ func TestTask_Update(t *testing.T) {
 		assert.NoError(t, err)
 	})
 	t.Run("nonexistant task", func(t *testing.T) {
-		initFixtures(t)
+		db.LoadAndAssertFixtures(t)
 		task := &Task{
 			ID:          9999999,
 			Text:        "test10000",
@@ -110,7 +112,7 @@ func TestTask_Update(t *testing.T) {
 
 func TestTask_Delete(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
-		initFixtures(t)
+		db.LoadAndAssertFixtures(t)
 		task := &Task{
 			ID: 1,
 		}
@@ -121,12 +123,14 @@ func TestTask_Delete(t *testing.T) {
 
 func TestUpdateDone(t *testing.T) {
 	t.Run("marking a task as done", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
 		oldTask := &Task{Done: false}
 		newTask := &Task{Done: true}
 		updateDone(oldTask, newTask)
 		assert.NotEqual(t, int64(0), oldTask.DoneAtUnix)
 	})
 	t.Run("unmarking a task as done", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
 		oldTask := &Task{Done: true}
 		newTask := &Task{Done: false}
 		updateDone(oldTask, newTask)
@@ -136,14 +140,14 @@ func TestUpdateDone(t *testing.T) {
 
 func TestTask_ReadOne(t *testing.T) {
 	t.Run("default", func(t *testing.T) {
-		initFixtures(t)
+		db.LoadAndAssertFixtures(t)
 		task := &Task{ID: 1}
 		err := task.ReadOne()
 		assert.NoError(t, err)
 		assert.Equal(t, "task #1", task.Text)
 	})
 	t.Run("nonexisting", func(t *testing.T) {
-		initFixtures(t)
+		db.LoadAndAssertFixtures(t)
 		task := &Task{ID: 99999}
 		err := task.ReadOne()
 		assert.Error(t, err)

@@ -17,6 +17,8 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
 	"github.com/stretchr/testify/assert"
 	"reflect"
@@ -25,6 +27,8 @@ import (
 )
 
 func TestTeamNamespace(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+
 	// Dummy team <-> namespace relation
 	tn := TeamNamespace{
 		TeamID:      1,
@@ -32,7 +36,7 @@ func TestTeamNamespace(t *testing.T) {
 		Right:       RightAdmin,
 	}
 
-	dummyuser, err := GetUserByID(1)
+	dummyuser, err := user.GetUserByID(1)
 	assert.NoError(t, err)
 
 	// Test normal creation
@@ -80,7 +84,7 @@ func TestTeamNamespace(t *testing.T) {
 	assert.True(t, IsErrNamespaceDoesNotExist(err))
 
 	// Check with no right to read the namespace
-	nouser := &User{ID: 393}
+	nouser := &user.User{ID: 393}
 	_, _, _, err = tn.ReadAll(nouser, "", 1, 50)
 	assert.Error(t, err)
 	assert.True(t, IsErrNeedToHaveNamespaceReadAccess(err))
@@ -156,6 +160,8 @@ func TestTeamNamespace_Update(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+
 			tl := &TeamNamespace{
 				ID:          tt.fields.ID,
 				TeamID:      tt.fields.TeamID,

@@ -1,6 +1,8 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/user"
 	"gopkg.in/d4l3k/messagediff.v1"
 	"reflect"
 	"runtime"
@@ -37,7 +39,7 @@ func TestLabelTask_ReadAll(t *testing.T) {
 				TaskID: 1,
 			},
 			args: args{
-				a: &User{ID: 1},
+				a: &user.User{ID: 1},
 			},
 			wantLabels: []*labelWithTaskID{
 				{
@@ -46,7 +48,7 @@ func TestLabelTask_ReadAll(t *testing.T) {
 						ID:          4,
 						Title:       "Label #4 - visible via other task",
 						CreatedByID: 2,
-						CreatedBy: &User{
+						CreatedBy: &user.User{
 							ID:        2,
 							Username:  "user2",
 							Password:  "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
@@ -62,7 +64,7 @@ func TestLabelTask_ReadAll(t *testing.T) {
 				TaskID: 14,
 			},
 			args: args{
-				a: &User{ID: 1},
+				a: &user.User{ID: 1},
 			},
 			wantErr: true,
 			errType: IsErrNoRightToSeeTask,
@@ -73,7 +75,7 @@ func TestLabelTask_ReadAll(t *testing.T) {
 				TaskID: 9999,
 			},
 			args: args{
-				a: &User{ID: 1},
+				a: &user.User{ID: 1},
 			},
 			wantErr: true,
 			errType: IsErrTaskDoesNotExist,
@@ -81,6 +83,8 @@ func TestLabelTask_ReadAll(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+
 			l := &LabelTask{
 				ID:       tt.fields.ID,
 				TaskID:   tt.fields.TaskID,
@@ -131,17 +135,17 @@ func TestLabelTask_Create(t *testing.T) {
 				LabelID: 1,
 			},
 			args: args{
-				a: &User{ID: 1},
+				a: &user.User{ID: 1},
 			},
 		},
 		{
 			name: "already existing",
 			fields: fields{
 				TaskID:  1,
-				LabelID: 1,
+				LabelID: 4,
 			},
 			args: args{
-				a: &User{ID: 1},
+				a: &user.User{ID: 1},
 			},
 			wantErr: true,
 			errType: IsErrLabelIsAlreadyOnTask,
@@ -153,7 +157,7 @@ func TestLabelTask_Create(t *testing.T) {
 				LabelID: 9999,
 			},
 			args: args{
-				a: &User{ID: 1},
+				a: &user.User{ID: 1},
 			},
 			wantForbidden: true,
 		},
@@ -164,7 +168,7 @@ func TestLabelTask_Create(t *testing.T) {
 				LabelID: 1,
 			},
 			args: args{
-				a: &User{ID: 1},
+				a: &user.User{ID: 1},
 			},
 			wantForbidden: true,
 			wantErr:       true,
@@ -173,6 +177,8 @@ func TestLabelTask_Create(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+
 			l := &LabelTask{
 				ID:       tt.fields.ID,
 				TaskID:   tt.fields.TaskID,
@@ -217,9 +223,9 @@ func TestLabelTask_Delete(t *testing.T) {
 			name: "normal",
 			fields: fields{
 				TaskID:  1,
-				LabelID: 1,
+				LabelID: 4,
 			},
-			auth: &User{ID: 1},
+			auth: &user.User{ID: 1},
 		},
 		{
 			name: "delete nonexistant",
@@ -227,7 +233,7 @@ func TestLabelTask_Delete(t *testing.T) {
 				TaskID:  1,
 				LabelID: 1,
 			},
-			auth:          &User{ID: 1},
+			auth:          &user.User{ID: 1},
 			wantForbidden: true,
 		},
 		{
@@ -236,7 +242,7 @@ func TestLabelTask_Delete(t *testing.T) {
 				TaskID:  1,
 				LabelID: 9999,
 			},
-			auth:          &User{ID: 1},
+			auth:          &user.User{ID: 1},
 			wantForbidden: true,
 		},
 		{
@@ -245,7 +251,7 @@ func TestLabelTask_Delete(t *testing.T) {
 				TaskID:  9999,
 				LabelID: 1,
 			},
-			auth:          &User{ID: 1},
+			auth:          &user.User{ID: 1},
 			wantForbidden: true,
 		},
 		{
@@ -254,12 +260,14 @@ func TestLabelTask_Delete(t *testing.T) {
 				TaskID:  14,
 				LabelID: 1,
 			},
-			auth:          &User{ID: 1},
+			auth:          &user.User{ID: 1},
 			wantForbidden: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+
 			l := &LabelTask{
 				ID:       tt.fields.ID,
 				TaskID:   tt.fields.TaskID,

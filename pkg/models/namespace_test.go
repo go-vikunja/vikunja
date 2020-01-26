@@ -17,12 +17,16 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/user"
 	"github.com/stretchr/testify/assert"
 	"reflect"
 	"testing"
 )
 
 func TestNamespace_Create(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+
 	// Create test database
 	//assert.NoError(t, LoadFixtures())
 
@@ -33,7 +37,7 @@ func TestNamespace_Create(t *testing.T) {
 	}
 
 	// Doer
-	doer, err := GetUserByID(1)
+	doer, err := user.GetUserByID(1)
 	assert.NoError(t, err)
 
 	// Try creating it
@@ -57,11 +61,11 @@ func TestNamespace_Create(t *testing.T) {
 	assert.True(t, IsErrNamespaceNameCannotBeEmpty(err))
 
 	// Try inserting one with a nonexistant user
-	nUser := &User{ID: 9482385}
+	nUser := &user.User{ID: 9482385}
 	dnsp2 := dummynamespace
 	err = dnsp2.Create(nUser)
 	assert.Error(t, err)
-	assert.True(t, IsErrUserDoesNotExist(err))
+	assert.True(t, user.IsErrUserDoesNotExist(err))
 
 	// Update it
 	allowed, err = dummynamespace.CanUpdate(doer)
@@ -85,7 +89,7 @@ func TestNamespace_Create(t *testing.T) {
 	dummynamespace.Owner.ID = 94829838572
 	err = dummynamespace.Update()
 	assert.Error(t, err)
-	assert.True(t, IsErrUserDoesNotExist(err))
+	assert.True(t, user.IsErrUserDoesNotExist(err))
 
 	// Try updating without a name
 	dummynamespace.Name = ""

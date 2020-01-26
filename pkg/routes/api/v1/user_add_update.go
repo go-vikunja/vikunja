@@ -19,6 +19,7 @@ package v1
 import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web/handler"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -40,13 +41,20 @@ func RegisterUser(c echo.Context) error {
 		return echo.ErrNotFound
 	}
 	// Check for Request Content
-	var datUser *models.APIUserPassword
+	var datUser *user.APIUserPassword
 	if err := c.Bind(&datUser); err != nil {
 		return c.JSON(http.StatusBadRequest, models.Message{"No or invalid user model provided."})
 	}
 
 	// Insert the user
-	newUser, err := models.CreateUser(datUser.APIFormat())
+	newUser, err := user.CreateUser(datUser.APIFormat())
+	if err != nil {
+		return handler.HandleHTTPError(err, c)
+	}
+
+	// Add its namespace
+	newN := &models.Namespace{Name: newUser.Username, Description: newUser.Username + "'s namespace.", Owner: newUser}
+	err = newN.Create(newUser)
 	if err != nil {
 		return handler.HandleHTTPError(err, c)
 	}

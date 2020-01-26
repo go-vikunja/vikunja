@@ -18,6 +18,7 @@ package v1
 
 import (
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web/handler"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -36,12 +37,12 @@ import (
 // @Router /user/password/reset [post]
 func UserResetPassword(c echo.Context) error {
 	// Check for Request Content
-	var pwReset models.PasswordReset
+	var pwReset user.PasswordReset
 	if err := c.Bind(&pwReset); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "No password provided.")
 	}
 
-	err := models.UserPasswordReset(&pwReset)
+	err := user.ResetPassword(&pwReset)
 	if err != nil {
 		return handler.HandleHTTPError(err, c)
 	}
@@ -62,7 +63,7 @@ func UserResetPassword(c echo.Context) error {
 // @Router /user/password/token [post]
 func UserRequestResetPasswordToken(c echo.Context) error {
 	// Check for Request Content
-	var pwTokenReset models.PasswordTokenRequest
+	var pwTokenReset user.PasswordTokenRequest
 	if err := c.Bind(&pwTokenReset); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "No username provided.")
 	}
@@ -71,7 +72,7 @@ func UserRequestResetPasswordToken(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err)
 	}
 
-	err := models.RequestUserPasswordResetToken(&pwTokenReset)
+	err := user.RequestUserPasswordResetToken(&pwTokenReset)
 	if err != nil {
 		return handler.HandleHTTPError(err, c)
 	}
