@@ -16,6 +16,7 @@
 package handler
 
 import (
+	"fmt"
 	"github.com/labstack/echo/v4"
 	"math"
 	"net/http"
@@ -34,7 +35,11 @@ func (c *WebHandler) ReadAllWeb(ctx echo.Context) error {
 
 	// Get the object & bind params to struct
 	if err := ctx.Bind(currentStruct); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "No or invalid model provided.")
+		config.LoggingProvider.Debugf("Invalid model error. Internal error was: %s", err.Error())
+		if he, is := err.(*echo.HTTPError); is {
+			return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid model provided. Error was: %s", he.Message))
+		}
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid model provided."))
 	}
 
 	// Pagination
