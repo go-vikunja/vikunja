@@ -138,16 +138,19 @@ func RegisterRoutes(e *echo.Echo) {
 	}
 
 	// CORS_SHIT
-	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins: []string{"*"},
-		Skipper: func(context echo.Context) bool {
-			// Since it is not possible to register this middleware just for the api group,
-			// we just disable it when for caldav requests.
-			// Caldav requires OPTIONS requests to be answered in a specific manner,
-			// not doing this would break the caldav implementation
-			return strings.HasPrefix(context.Path(), "/dav")
-		},
-	}))
+	if config.CorsEnable.GetBool() {
+		e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+			AllowOrigins: config.CorsOrigins.GetStringSlice(),
+			MaxAge:       config.CorsMaxAge.GetInt(),
+			Skipper: func(context echo.Context) bool {
+				// Since it is not possible to register this middleware just for the api group,
+				// we just disable it when for caldav requests.
+				// Caldav requires OPTIONS requests to be answered in a specific manner,
+				// not doing this would break the caldav implementation
+				return strings.HasPrefix(context.Path(), "/dav")
+			},
+		}))
+	}
 
 	// API Routes
 	a := e.Group("/api/v1")

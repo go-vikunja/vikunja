@@ -94,6 +94,10 @@ const (
 	MigrationWunderlistClientID     Key = `migration.wunderlist.clientid`
 	MigrationWunderlistClientSecret Key = `migration.wunderlist.clientsecret`
 	MigrationWunderlistRedirectURL  Key = `migration.wunderlist.redirecturl`
+
+	CorsEnable  Key = `cors.enable`
+	CorsOrigins Key = `cors.origins`
+	CorsMaxAge  Key = `cors.maxage`
 )
 
 // GetString returns a string config value
@@ -119,6 +123,11 @@ func (k Key) GetInt64() int64 {
 // GetDuration returns a duration config value
 func (k Key) GetDuration() time.Duration {
 	return viper.GetDuration(string(k))
+}
+
+// GetStringSlice returns a string slice from a config option
+func (k Key) GetStringSlice() []string {
+	return viper.GetStringSlice(string(k))
 }
 
 // Set sets a value
@@ -205,6 +214,10 @@ func InitDefaultConfig() {
 	// Files
 	FilesBasePath.setDefault("files")
 	FilesMaxSize.setDefault("20MB")
+	// Cors
+	CorsEnable.setDefault(true)
+	CorsOrigins.setDefault([]string{"*"})
+	CorsMaxAge.setDefault(0)
 }
 
 // InitConfig initializes the config, sets defaults etc.

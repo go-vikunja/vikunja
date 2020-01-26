@@ -63,6 +63,15 @@ redis:
   # 0 means default database
   db: 0
 
+cors:
+  # Whether to enable or disable cors headers.
+  enable: true
+  # A list of origins which may access the api.
+  origins:
+    - *
+  # How long (in seconds) the results of a preflight request can be cached.
+  maxage: 0
+
 mailer:
   # Whether to enable the mailer or not. If it is disabled, all users are enabled right away and password reset is not possible.
   enabled: false
