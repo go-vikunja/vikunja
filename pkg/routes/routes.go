@@ -159,26 +159,31 @@ func RegisterRoutes(e *echo.Echo) {
 
 func registerAPIRoutes(a *echo.Group) {
 
+	// This is the group with no auth
+	// It is its own group to be able to rate limit this based on different heuristics
+	n := a.Group("")
+	setupRateLimit(n, "ip")
+
 	// Docs
-	a.GET("/docs.json", apiv1.DocsJSON)
-	a.GET("/docs", apiv1.RedocUI)
+	n.GET("/docs.json", apiv1.DocsJSON)
+	n.GET("/docs", apiv1.RedocUI)
 
 	// Prometheus endpoint
-	setupMetrics(a)
+	setupMetrics(n)
 
 	// User stuff
-	a.POST("/login", apiv1.Login)
-	a.POST("/register", apiv1.RegisterUser)
-	a.POST("/user/password/token", apiv1.UserRequestResetPasswordToken)
-	a.POST("/user/password/reset", apiv1.UserResetPassword)
-	a.POST("/user/confirm", apiv1.UserConfirmEmail)
+	n.POST("/login", apiv1.Login)
+	n.POST("/register", apiv1.RegisterUser)
+	n.POST("/user/password/token", apiv1.UserRequestResetPasswordToken)
+	n.POST("/user/password/reset", apiv1.UserResetPassword)
+	n.POST("/user/confirm", apiv1.UserConfirmEmail)
 
 	// Info endpoint
-	a.GET("/info", apiv1.Info)
+	n.GET("/info", apiv1.Info)
 
 	// Link share auth
 	if config.ServiceEnableLinkSharing.GetBool() {
-		a.POST("/shares/:share/auth", apiv1.AuthenticateLinkShare)
+		n.POST("/shares/:share/auth", apiv1.AuthenticateLinkShare)
 	}
 
 	// ===== Routes with Authetication =====
@@ -186,7 +191,7 @@ func registerAPIRoutes(a *echo.Group) {
 	a.Use(middleware.JWT([]byte(config.ServiceJWTSecret.GetString())))
 
 	// Rate limit
-	setupRateLimit(a)
+	setupRateLimit(a, config.RateLimitKind.GetString())
 
 	// Middleware to collect metrics
 	setupMetricsMiddleware(a)

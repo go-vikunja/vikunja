@@ -32,11 +32,11 @@ import (
 )
 
 // RateLimit is the rate limit middleware
-func RateLimit(rateLimiter *limiter.Limiter) echo.MiddlewareFunc {
+func RateLimit(rateLimiter *limiter.Limiter, rateLimitKind string) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) (err error) {
 			var rateLimitKey string
-			switch config.RateLimitKind.GetString() {
+			switch rateLimitKind {
 			case "ip":
 				rateLimitKey = c.RealIP()
 			case "user":
@@ -46,7 +46,7 @@ func RateLimit(rateLimiter *limiter.Limiter) echo.MiddlewareFunc {
 				}
 				rateLimitKey = "user_" + strconv.FormatInt(auth.GetID(), 10)
 			default:
-				log.Errorf("Unknown rate limit kind configured: %s", config.RateLimitKind.GetString())
+				log.Errorf("Unknown rate limit kind configured: %s", rateLimitKind)
 			}
 			limiterCtx, err := rateLimiter.Get(c.Request().Context(), rateLimitKey)
 			if err != nil {
@@ -74,7 +74,7 @@ func RateLimit(rateLimiter *limiter.Limiter) echo.MiddlewareFunc {
 	}
 }
 
-func setupRateLimit(a *echo.Group) {
+func setupRateLimit(a *echo.Group, rateLimitKind string) {
 	if config.RateLimitEnabled.GetBool() {
 		rate := limiter.Rate{
 			Period: config.RateLimitPeriod.GetDuration() * time.Second,
@@ -98,6 +98,6 @@ func setupRateLimit(a *echo.Group) {
 		}
 		rateLimiter := limiter.New(store, rate)
 		log.Debugf("Rate limit configured with %s and %v requests per %v", config.RateLimitStore.GetString(), rate.Limit, rate.Period)
-		a.Use(RateLimit(rateLimiter))
+		a.Use(RateLimit(rateLimiter, rateLimitKind))
 	}
 }
