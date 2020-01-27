@@ -30,7 +30,7 @@ import (
 // @Accept json
 // @Produce json
 // @Security JWTKeyAuth
-// @Success 200 {object} models.User
+// @Success 200 {object} user.User
 // @Failure 404 {object} code.vikunja.io/web.HTTPError "User does not exist."
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /user [get]

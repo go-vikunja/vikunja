@@ -236,7 +236,7 @@ func (t *Task) addNewAssigneeByID(newAssigneeID int64, list *List) (err error) {
 // @Param s query string false "Search assignees by their username."
 // @Param taskID path int true "Task ID"
 // @Security JWTKeyAuth
-// @Success 200 {array} models.User "The assignees"
+// @Success 200 {array} user.User "The assignees"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/assignees [get]
 func (la *TaskAssginee) ReadAll(a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {

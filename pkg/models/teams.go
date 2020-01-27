@@ -20,6 +20,7 @@ import (
 	"code.vikunja.io/api/pkg/metrics"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
+	"github.com/go-xorm/builder"
 )
 
 // Team holds a team object
@@ -53,15 +54,6 @@ func (Team) TableName() string {
 
 // AfterLoad gets the created by user object
 func (t *Team) AfterLoad() {
-	// Get the owner
-	t.CreatedBy, _ = user.GetUserByID(t.CreatedByID)
-
-	// Get all members
-	x.Select("*").
-		Table("users").
-		Join("INNER", "team_members", "team_members.user_id = users.id").
-		Where("team_id = ?", t.ID).
-		Find(&t.Members)
 }
 
 // TeamMember defines the relationship between a user and a team
@@ -93,23 +85,76 @@ func (TeamMember) TableName() string {
 type TeamUser struct {
 	user.User `xorm:"extends"`
 	// Whether or not the member is an admin of the team. See the docs for more about what a team admin can do
-	Admin bool `json:"admin"`
+	Admin  bool  `json:"admin"`
+	TeamID int64 `json:"-"`
 }
 
 // GetTeamByID gets a team by its ID
-func GetTeamByID(id int64) (team Team, err error) {
+func GetTeamByID(id int64) (team *Team, err error) {
 	if id < 1 {
 		return team, ErrTeamDoesNotExist{id}
 	}
 
-	exists, err := x.Where("id = ?", id).Get(&team)
+	t := Team{}
+
+	exists, err := x.
+		Where("id = ?", id).
+		Get(&t)
 	if err != nil {
 		return
 	}
 	if !exists {
-		return team, ErrTeamDoesNotExist{id}
+		return &t, ErrTeamDoesNotExist{id}
 	}
 
+	teamSlice := []*Team{&t}
+	err = addMoreInfoToTeams(teamSlice)
+	if err != nil {
+		return
+	}
+
+	team = &t
+
+	return
+}
+
+func addMoreInfoToTeams(teams []*Team) (err error) {
+	// Put the teams in a map to make assigning more info to it more efficient
+	teamMap := make(map[int64]*Team, len(teams))
+	var teamIDs []int64
+	var ownerIDs []int64
+	for _, team := range teams {
+		teamMap[team.ID] = team
+		teamIDs = append(teamIDs, team.ID)
+		ownerIDs = append(ownerIDs, team.CreatedByID)
+	}
+
+	// Get all owners and team members
+	users := []*TeamUser{}
+	err = x.Select("*").
+		Table("users").
+		Join("LEFT", "team_members", "team_members.user_id = users.id").
+		Join("LEFT", "teams", "team_members.team_id = teams.id").
+		Or(
+			builder.In("team_id", teamIDs),
+			builder.And(
+				builder.In("users.id", ownerIDs),
+				builder.Expr("teams.created_by_id = users.id"),
+				builder.In("teams.id", teamIDs),
+			),
+		).
+		Find(&users)
+	if err != nil {
+		return
+	}
+	for _, u := range users {
+		if _, exists := teamMap[u.TeamID]; !exists {
+			continue
+		}
+		u.Email = ""
+		teamMap[u.TeamID].CreatedBy = &u.User
+		teamMap[u.TeamID].Members = append(teamMap[u.TeamID].Members, u)
+	}
 	return
 }
 
@@ -124,9 +169,12 @@ func GetTeamByID(id int64) (team Team, err error) {
 // @Success 200 {object} models.Team "The team"
 // @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have access to the team"
 // @Failure 500 {object} models.Message "Internal error"
-// @Router /lists/{id} [get]
+// @Router /teams/{id} [get]
 func (t *Team) ReadOne() (err error) {
-	*t, err = GetTeamByID(t.ID)
+	team, err := GetTeamByID(t.ID)
+	if team != nil {
+		*t = *team
+	}
 	return
 }
 
@@ -156,6 +204,11 @@ func (t *Team) ReadAll(a web.Auth, search string, page int, perPage int) (result
 		Limit(getLimitFromPageIndex(page, perPage)).
 		Where("teams.name LIKE ?", "%"+search+"%").
 		Find(&all)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	err = addMoreInfoToTeams(all)
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -282,7 +335,10 @@ func (t *Team) Update() (err error) {
 	}
 
 	// Get the newly updated team
-	*t, err = GetTeamByID(t.ID)
+	team, err := GetTeamByID(t.ID)
+	if team != nil {
+		*t = *team
+	}
 
 	return
 }

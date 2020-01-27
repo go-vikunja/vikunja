@@ -31,8 +31,8 @@ import (
 // @tags user
 // @Accept json
 // @Produce json
-// @Param credentials body models.APIUserPassword true "The user credentials"
-// @Success 200 {object} models.User
+// @Param credentials body user.APIUserPassword true "The user credentials"
+// @Success 200 {object} user.User
 // @Failure 400 {object} code.vikunja.io/web.HTTPError "No or invalid user register object provided / User already exists."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /register [post]

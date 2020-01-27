@@ -36,7 +36,7 @@ type Token struct {
 // @tags user
 // @Accept json
 // @Produce json
-// @Param credentials body models.UserLogin true "The login credentials"
+// @Param credentials body user.UserLogin true "The login credentials"
 // @Success 200 {object} v1.Token
 // @Failure 400 {object} models.Message "Invalid user password model."
 // @Failure 403 {object} models.Message "Invalid username or password."

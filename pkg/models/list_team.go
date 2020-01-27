@@ -186,6 +186,16 @@ func (tl *TeamList) ReadAll(a web.Auth, search string, page int, perPage int) (r
 		return nil, 0, 0, err
 	}
 
+	teams := []*Team{}
+	for _, t := range all {
+		teams = append(teams, &t.Team)
+	}
+
+	err = addMoreInfoToTeams(teams)
+	if err != nil {
+		return
+	}
+
 	totalItems, err = x.
 		Table("teams").
 		Join("INNER", "team_list", "team_id = teams.id").

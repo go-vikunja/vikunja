@@ -664,7 +664,7 @@ var doc = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/models.User"
+                                "$ref": "#/definitions/user.User"
                             }
                         }
                     },
@@ -1589,7 +1589,7 @@ var doc = `{
                         "required": true,
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/models.UserLogin"
+                            "$ref": "#/definitions/user.UserLogin"
                         }
                     }
                 ],
@@ -2688,7 +2688,7 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.User"
+                            "$ref": "#/definitions/user.User"
                         }
                     },
                     "400": {
@@ -3347,7 +3347,7 @@ var doc = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/models.User"
+                                "$ref": "#/definitions/user.User"
                             }
                         }
                     },
@@ -4251,7 +4251,7 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.User"
+                            "$ref": "#/definitions/user.User"
                         }
                     },
                     "404": {
@@ -4529,7 +4529,7 @@ var doc = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/models.User"
+                                "$ref": "#/definitions/user.User"
                             }
                         }
                     },
@@ -4626,7 +4626,7 @@ var doc = `{
                     "description": "A list with all assignees",
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/models.User"
+                        "$ref": "#/definitions/user.User"
                     }
                 }
             }
@@ -4638,7 +4638,7 @@ var doc = `{
                     "description": "An array of users who are assigned to this task",
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/models.User"
+                        "$ref": "#/definitions/user.User"
                     }
                 },
                 "attachments": {
@@ -4655,7 +4655,7 @@ var doc = `{
                 "createdBy": {
                     "description": "The user who initially created the task.",
                     "type": "object",
-                    "$ref": "#/definitions/models.User"
+                    "$ref": "#/definitions/user.User"
                 },
                 "description": {
                     "description": "The task description.",
@@ -4771,7 +4771,7 @@ var doc = `{
                 "created_by": {
                     "description": "The user who created this label",
                     "type": "object",
-                    "$ref": "#/definitions/models.User"
+                    "$ref": "#/definitions/user.User"
                 },
                 "description": {
                     "description": "The label description.",
@@ -4847,7 +4847,7 @@ var doc = `{
                 "shared_by": {
                     "description": "The user who shared this list",
                     "type": "object",
-                    "$ref": "#/definitions/models.User"
+                    "$ref": "#/definitions/user.User"
                 },
                 "sharing_type": {
                     "description": "The kind of this link. 0 = undefined, 1 = without password, 2 = with password (currently not implemented).",
@@ -4885,7 +4885,7 @@ var doc = `{
                 "owner": {
                     "description": "The user who created this list.",
                     "type": "object",
-                    "$ref": "#/definitions/models.User"
+                    "$ref": "#/definitions/user.User"
                 },
                 "title": {
                     "description": "The title of the list. You'll see this in the namespace overview.",
@@ -4959,7 +4959,7 @@ var doc = `{
                 "owner": {
                     "description": "The user who owns this namespace",
                     "type": "object",
-                    "$ref": "#/definitions/models.User"
+                    "$ref": "#/definitions/user.User"
                 },
                 "updated": {
                     "description": "A unix timestamp when this namespace was last updated. You cannot change this value.",
@@ -5024,7 +5024,7 @@ var doc = `{
                 "owner": {
                     "description": "The user who owns this namespace",
                     "type": "object",
-                    "$ref": "#/definitions/models.User"
+                    "$ref": "#/definitions/user.User"
                 },
                 "updated": {
                     "description": "A unix timestamp when this namespace was last updated. You cannot change this value.",
@@ -5065,7 +5065,7 @@ var doc = `{
                             "description": "An array of users who are assigned to this task",
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/models.User"
+                                "$ref": "#/definitions/user.User"
                             }
                         },
                         "attachments": {
@@ -5082,7 +5082,7 @@ var doc = `{
                         "createdBy": {
                             "description": "The user who initially created the task.",
                             "type": "object",
-                            "$ref": "#/definitions/models.User"
+                            "$ref": "#/definitions/user.User"
                         },
                         "description": {
                             "description": "The task description.",
@@ -5181,7 +5181,7 @@ var doc = `{
                     "description": "An array of users who are assigned to this task",
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/models.User"
+                        "$ref": "#/definitions/user.User"
                     }
                 },
                 "attachments": {
@@ -5198,7 +5198,7 @@ var doc = `{
                 "createdBy": {
                     "description": "The user who initially created the task.",
                     "type": "object",
-                    "$ref": "#/definitions/models.User"
+                    "$ref": "#/definitions/user.User"
                 },
                 "description": {
                     "description": "The task description.",
@@ -5307,7 +5307,7 @@ var doc = `{
                 },
                 "created_by": {
                     "type": "object",
-                    "$ref": "#/definitions/models.User"
+                    "$ref": "#/definitions/user.User"
                 },
                 "file": {
                     "type": "object",
@@ -5331,7 +5331,7 @@ var doc = `{
                 "created_by": {
                     "description": "The user who created this relation",
                     "type": "object",
-                    "$ref": "#/definitions/models.User"
+                    "$ref": "#/definitions/user.User"
                 },
                 "other_task_id": {
                     "description": "The ID of the other task, the task which is being related.",
@@ -5357,7 +5357,7 @@ var doc = `{
                 "createdBy": {
                     "description": "The user who created this team.",
                     "type": "object",
-                    "$ref": "#/definitions/models.User"
+                    "$ref": "#/definitions/user.User"
                 },
                 "description": {
                     "description": "The team's description.",
@@ -5507,7 +5507,7 @@ var doc = `{
                 "createdBy": {
                     "description": "The user who created this team.",
                     "type": "object",
-                    "$ref": "#/definitions/models.User"
+                    "$ref": "#/definitions/user.User"
                 },
                 "description": {
                     "description": "The team's description.",
@@ -5539,7 +5539,7 @@ var doc = `{
                 }
             }
         },
-        "models.User": {
+        "user.User": {
             "type": "object",
             "properties": {
                 "avatarUrl": {
@@ -5571,7 +5571,7 @@ var doc = `{
                 }
             }
         },
-        "models.UserLogin": {
+        "user.UserLogin": {
             "type": "object",
             "properties": {
                 "password": {

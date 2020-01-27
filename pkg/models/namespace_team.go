@@ -171,6 +171,16 @@ func (tn *TeamNamespace) ReadAll(a web.Auth, search string, page int, perPage in
 		return nil, 0, 0, err
 	}
 
+	teams := []*Team{}
+	for _, t := range all {
+		teams = append(teams, &t.Team)
+	}
+
+	err = addMoreInfoToTeams(teams)
+	if err != nil {
+		return
+	}
+
 	numberOfTotalItems, err = x.Table("teams").
 		Join("INNER", "team_namespaces", "team_id = teams.id").
 		Where("team_namespaces.namespace_id = ?", tn.NamespaceID).
