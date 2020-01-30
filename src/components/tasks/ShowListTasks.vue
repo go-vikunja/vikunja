@@ -46,7 +46,7 @@
 									<span>{{ label.title }}</span>
 								</span>
 								<img :src="gravatar(a)" :alt="a.username" v-for="(a, i) in l.assignees" class="avatar" :key="l.id + 'assignee' + a.id + i"/>
-								<i v-if="l.dueDate > 0" :class="{'overdue': (l.dueDate <= new Date())}"> - Due on {{new Date(l.dueDate).toLocaleString()}}</i>
+								<i v-if="l.dueDate > 0" :class="{'overdue': l.dueDate <= new Date() && !l.done}" v-tooltip="formatDate(l.dueDate)"> - Due {{formatDateSince(l.dueDate)}}</i>
 								<priority-label :priority="l.priority"/>
 							</router-link>
 						</span>

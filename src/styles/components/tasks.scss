@@ -33,7 +33,8 @@
       display: inline-block;
       cursor: pointer;
 
-      .tasktext {
+      .tasktext,
+      &.tasktext {
         vertical-align: top;
         white-space: nowrap;
         text-overflow: ellipsis;

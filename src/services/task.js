@@ -1,5 +1,6 @@
 import AbstractService from './abstractService'
 import TaskModel from '../models/task'
+import AttachmentService from './attachment'
 
 export default class TaskService extends AbstractService {
 	constructor() {
@@ -80,6 +81,14 @@ export default class TaskService extends AbstractService {
 				return this.processModel(t)
 			})
 		})
+
+		// Process all attachments to preven parsing errors
+		if(model.attachments.length > 0) {
+			const attachmentService = new AttachmentService()
+			model.attachments.map(a => {
+				return attachmentService.processModel(a)
+			})
+		}
 
 		return model
 	}

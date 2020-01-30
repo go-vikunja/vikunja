@@ -82,4 +82,9 @@ export default class AttachmentService extends AbstractService {
 				cancel()
 			})
 	}
+
+	processModel(model) {
+		model.created = Math.round(+new Date(model.created) / 1000)
+		return model
+	}
 }

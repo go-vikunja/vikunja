@@ -21,7 +21,7 @@
 					</div>
 					<span class="tasktext">
 						{{l.text}}
-						<i v-if="l.dueDate > 0" :class="{'overdue': (new Date(l.dueDate * 1000) <= new Date())}"> - Due on {{formatUnixDate(l.dueDate)}}</i>
+						<i v-if="l.dueDate > 0" :class="{'overdue': l.dueDate <= new Date()}" v-tooltip="formatDate(l.dueDate)"> - Due {{formatDateSince(l.dueDate)}}</i>
 						<priority-label :priority="l.priority"/>
 					</span>
 				</label>
@@ -83,9 +83,6 @@
 					.catch(e => {
 						message.error(e, this)
 					})
-			},
-			formatUnixDate(dateUnix) {
-				return (new Date(dateUnix * 1000)).toLocaleString()
 			},
 			gotoList(lid) {
 				router.push({name: 'showList', params: {id: lid}})

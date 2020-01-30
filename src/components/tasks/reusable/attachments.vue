@@ -31,8 +31,7 @@
 				</td>
 				<td>{{ a.file.getHumanSize() }}</td>
 				<td>{{ a.file.mime }}</td>
-<!--				FIXME: This needs a better solution-->
-				<td>{{ new Date(a.created) }}</td>
+				<td v-tooltip="formatDate(a.created)">{{ formatDateSince(a.created) }}</td>
 				<td>
 					<div class="buttons has-addons">
 						<a class="button is-primary noshadow" @click="downloadAttachment(a)" v-tooltip="'Download this attachment'">
