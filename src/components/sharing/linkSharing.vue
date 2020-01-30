@@ -104,7 +104,6 @@
 </template>
 
 <script>
-	import message from '../../message'
 	import rights from '../../models/rights'
 
 	import LinkShareService from '../../services/linkShare'
@@ -155,7 +154,7 @@
 						this.linkShares = r
 					})
 					.catch(e => {
-						message.error(e, this)
+						this.error(e, this)
 					})
 			},
 			add() {
@@ -163,22 +162,22 @@
 				this.linkShareService.create(newLinkShare)
 					.then(() => {
 						this.selectedRight = rights.READ
-						message.success({message: 'The link share was successfully created'}, this)
+						this.success({message: 'The link share was successfully created'}, this)
 						this.load()
 					})
 					.catch(e => {
-						message.error(e, this)
+						this.error(e, this)
 					})
 			},
 			remove() {
 				let linkshare = new LinkShareModel({id: this.linkIDToDelete, listID: this.listID})
 				this.linkShareService.delete(linkshare)
 					.then(() => {
-						message.success({message: 'The link share was successfully deleted'}, this)
+						this.success({message: 'The link share was successfully deleted'}, this)
 						this.load()
 					})
 					.catch(e => {
-						message.error(e, this)
+						this.error(e, this)
 					})
 					.finally(() => {
 						this.showDeleteModal = false

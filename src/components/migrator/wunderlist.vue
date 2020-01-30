@@ -47,7 +47,6 @@
 
 <script>
 	import WunderlistMigrationService from '../../services/migrator/wunderlist'
-	import message from '../../message'
 
 	export default {
 		name: 'wunderlist',
@@ -77,7 +76,7 @@
 						this.migrate()
 					})
 					.catch(e => {
-						message.error(e, this)
+						this.error(e, this)
 					})
 			}
 		},
@@ -88,7 +87,7 @@
 						this.authUrl = r.url
 					})
 					.catch(e => {
-						message.error(e, this)
+						this.error(e, this)
 					})
 			},
 			migrate() {
@@ -99,7 +98,7 @@
 						this.message = r.message
 					})
 					.catch(e => {
-						message.error(e, this)
+						this.error(e, this)
 					})
 					.finally(() => {
 						this.isMigrating = false

@@ -34,7 +34,6 @@
 
 <script>
 	import {differenceWith} from 'lodash'
-	import message from '../../../message'
 	import multiselect from 'vue-multiselect'
 
 	import UserModel from '../../../models/user'
@@ -88,10 +87,10 @@
 				const taskAssignee = new TaskAssigneeModel({user_id: user.id, task_id: this.taskID})
 				this.taskAssigneeService.create(taskAssignee)
 					.then(() => {
-						message.success({message: 'The user was successfully assigned.'}, this)
+						this.success({message: 'The user was successfully assigned.'}, this)
 					})
 					.catch(e => {
-						message.error(e, this)
+						this.error(e, this)
 					})
 			},
 			removeAssignee(user) {
@@ -104,10 +103,10 @@
 								this.assignees.splice(a, 1)
 							}
 						}
-						message.success({message: 'The user was successfully unassigned.'}, this)
+						this.success({message: 'The user was successfully unassigned.'}, this)
 					})
 					.catch(e => {
-						message.error(e, this)
+						this.error(e, this)
 					})
 			},
 			findUser(query) {
@@ -124,7 +123,7 @@
 						}))
 					})
 					.catch(e => {
-						message.error(e, this)
+						this.error(e, this)
 					})
 			},
 			clearAllFoundUsers() {

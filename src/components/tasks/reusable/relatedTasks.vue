@@ -79,7 +79,6 @@
 	import TaskRelationModel from '../../../models/taskRelation'
 
 	import multiselect from 'vue-multiselect'
-	import message from '../../../message'
 
 	export default {
 		name: 'relatedTasks',
@@ -138,7 +137,7 @@
 						this.$set(this, 'foundTasks', response)
 					})
 					.catch(e => {
-						message.error(e, this)
+						this.error(e, this)
 					})
 			},
 			clearAllFoundTasks() {
@@ -158,10 +157,10 @@
 						this.relatedTasks[this.newTaskRelationKind].push(this.newTaskRelationTask)
 						this.newTaskRelationKind = 'unset'
 						this.newTaskRelationTask = new TaskModel()
-						message.success({message: 'The task relation was created successfully'}, this)
+						this.success({message: 'The task relation was created successfully'}, this)
 					})
 					.catch(e => {
-						message.error(e, this)
+						this.error(e, this)
 					})
 			},
 			removeTaskRelation() {
@@ -179,10 +178,10 @@
 								}
 							}
 						})
-						message.success(r, this)
+						this.success(r, this)
 					})
 					.catch(e => {
-						message.error(e, this)
+						this.error(e, this)
 					})
 					.finally(() => {
 						this.showDeleteModal = false

@@ -126,7 +126,6 @@
 
 <script>
 	import VueDragResize from 'vue-drag-resize'
-	import message from '../../message'
 	import EditTask from './edit-task'
 
 	import TaskService from '../../services/task'
@@ -297,10 +296,10 @@
 								}
 							}
 
-							message.success({message: 'The task was successfully updated.'}, this)
+							this.success({message: 'The task was successfully updated.'}, this)
 						})
 						.catch(e => {
-							message.error(e, this)
+							this.error(e, this)
 						})
 				}, 100)
 			},
@@ -332,10 +331,10 @@
 						this.tasksWithoutDates.push(this.addGantAttributes(r))
 						this.newTaskTitle = ''
 						this.hideCrateNewTask()
-						message.success({message: 'The task was successfully created.'}, this)
+						this.success({message: 'The task was successfully created.'}, this)
 					})
 					.catch(e => {
-						message.error(e, this)
+						this.error(e, this)
 					})
 			},
 		},

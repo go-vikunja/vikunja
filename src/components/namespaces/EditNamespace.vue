@@ -58,7 +58,6 @@
 <script>
 	import auth from '../../auth'
 	import router from '../../router'
-	import message from '../../message'
 	import manageSharing from '../sharing/userTeam'
 
 	import NamespaceService from '../../services/namespace'
@@ -111,7 +110,7 @@
 						this.manageUsersComponent = 'manageSharing'
 					})
 					.catch(e => {
-						message.error(e, this)
+						this.error(e, this)
 					})
 			},
 			submit() {
@@ -124,20 +123,20 @@
 								this.$set(this.$parent.namespaces, n, r)
 							}
 						}
-						message.success({message: 'The namespace was successfully updated.'}, this)
+						this.success({message: 'The namespace was successfully updated.'}, this)
 					})
 					.catch(e => {
-						message.error(e, this)
+						this.error(e, this)
 					})
 			},
 			deleteNamespace() {
 				this.namespaceService.delete(this.namespace)
 					.then(() => {
-						message.success({message: 'The namespace was successfully deleted.'}, this)
+						this.success({message: 'The namespace was successfully deleted.'}, this)
 						router.push({name: 'home'})
 					})
 					.catch(e => {
-						message.error(e, this)
+						this.error(e, this)
 					})
 			}
 		}

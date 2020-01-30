@@ -93,8 +93,6 @@
 </template>
 
 <script>
-	import message from '../../message'
-
 	import ListService from '../../services/list'
 	import TaskService from '../../services/task'
 	import ListModel from '../../models/list'
@@ -155,10 +153,10 @@
 						this.tasks.push(r)
 						this.sortTasks()
 						this.newTaskText = ''
-						message.success({message: 'The task was successfully created.'}, this)
+						this.success({message: 'The task was successfully created.'}, this)
 					})
 					.catch(e => {
-						message.error(e, this)
+						this.error(e, this)
 					})
 			},
 			loadTasks(page) {
@@ -198,7 +196,7 @@
 						}
 					})
 					.catch(e => {
-						message.error(e, this)
+						this.error(e, this)
 					})
 			},
 			loadTasksForPage(e) {
@@ -217,10 +215,10 @@
 					this.taskService.update(task)
 						.then(() => {
 							this.sortTasks()
-							message.success({message: 'The task was successfully ' + (task.done ? '' : 'un-') + 'marked as done.'}, this)
+							this.success({message: 'The task was successfully ' + (task.done ? '' : 'un-') + 'marked as done.'}, this)
 						})
 						.catch(e => {
-							message.error(e, this)
+							this.error(e, this)
 						})
 				}
 

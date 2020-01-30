@@ -261,7 +261,6 @@
 </template>
 
 <script>
-	import message from '../../message'
 	import TaskService from '../../services/task'
 	import TaskModel from '../../models/task'
 	import relationKinds from '../../models/relationKinds'
@@ -361,17 +360,17 @@
 						this.activeFields.relatedTasks = Object.keys(this.task.related_tasks).length > 0
 					})
 					.catch(e => {
-						message.error(e, this)
+						this.error(e, this)
 					})
 			},
 			saveTask() {
 				this.taskService.update(this.task)
 					.then(r => {
 						this.$set(this, 'task', r)
-						message.success({message: 'The task was saved successfully.'}, this)
+						this.success({message: 'The task was saved successfully.'}, this)
 					})
 					.catch(e => {
-						message.error(e, this)
+						this.error(e, this)
 					})
 			},
 			setListAndNamespaceTitleFromParent() {
@@ -393,11 +392,11 @@
 			deleteTask() {
 				this.taskService.delete(this.task)
 					.then(() => {
-						message.success({message: 'The task been deleted successfully.'}, this)
+						this.success({message: 'The task been deleted successfully.'}, this)
 						router.push({name: 'showList', params: {id: this.list.id}})
 					})
 					.catch(e => {
-						message.error(e, this)
+						this.error(e, this)
 					})
 			},
 		},

@@ -35,7 +35,6 @@
 </template>
 
 <script>
-	import message from '../../../message'
 	import { differenceWith } from 'lodash'
 	import multiselect from 'vue-multiselect'
 
@@ -101,7 +100,7 @@
 							this.labelTimeout = null
 						})
 						.catch(e => {
-							message.error(e, this)
+							this.error(e, this)
 						})
 				}, 300)
 			},
@@ -112,10 +111,10 @@
 				let labelTask = new LabelTaskModel({taskID: this.taskID, label_id: label.id})
 				this.labelTaskService.create(labelTask)
 					.then(() => {
-						message.success({message: 'The label was successfully added.'}, this)
+						this.success({message: 'The label was successfully added.'}, this)
 					})
 					.catch(e => {
-						message.error(e, this)
+						this.error(e, this)
 					})
 			},
 			removeLabel(label) {
@@ -128,10 +127,10 @@
 								this.labels.splice(l, 1)
 							}
 						}
-						message.success({message: 'The label was successfully removed.'}, this)
+						this.success({message: 'The label was successfully removed.'}, this)
 					})
 					.catch(e => {
-						message.error(e, this)
+						this.error(e, this)
 					})
 			},
 			createAndAddLabel(title) {
@@ -142,7 +141,7 @@
 						this.labels.push(r)
 					})
 					.catch(e => {
-						message.error(e, this)
+						this.error(e, this)
 					})
 			},
 

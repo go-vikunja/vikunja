@@ -106,7 +106,6 @@
 
 <script>
 	import auth from '../../auth'
-	import message from '../../message'
 	import multiselect from 'vue-multiselect'
 
 	import UserNamespaceService from '../../services/userNamespace'
@@ -215,7 +214,7 @@
 						this.$set(this, 'sharables', r)
 					})
 					.catch(e => {
-						message.error(e, this)
+						this.error(e, this)
 					})
 			},
 			deleteSharable() {
@@ -236,10 +235,10 @@
 								this.sharables.splice(i, 1)
 							}
 						}
-						message.success({message: 'The ' + this.shareType + ' was successfully deleted from the ' + this.typeString + '.'}, this)
+						this.success({message: 'The ' + this.shareType + ' was successfully deleted from the ' + this.typeString + '.'}, this)
 					})
 					.catch(e => {
-						message.error(e, this)
+						this.error(e, this)
 					})
 			},
 			add(admin) {
@@ -259,11 +258,11 @@
 
 				this.stuffService.create(this.stuffModel)
 					.then(() => {
-						message.success({message: 'The ' + this.shareType + ' was successfully added.'}, this)
+						this.success({message: 'The ' + this.shareType + ' was successfully added.'}, this)
 						this.load()
 					})
 					.catch(e => {
-						message.error(e, this)
+						this.error(e, this)
 					})
 			},
 			toggleType() {
@@ -292,10 +291,10 @@
 								this.$set(this.sharables[i], 'right', r.right)
 							}
 						}
-						message.success({message: 'The ' + this.shareType + ' right was successfully updated.'}, this)
+						this.success({message: 'The ' + this.shareType + ' right was successfully updated.'}, this)
 					})
 					.catch(e => {
-						message.error(e, this)
+						this.error(e, this)
 					})
 			},
 			find(query) {
@@ -309,7 +308,7 @@
 						this.$set(this, 'found', response)
 					})
 					.catch(e => {
-						message.error(e, this)
+						this.error(e, this)
 					})
 			},
 			clearAll () {

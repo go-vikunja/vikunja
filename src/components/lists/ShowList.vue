@@ -19,7 +19,6 @@
 <script>
 	import auth from '../../auth'
 	import router from '../../router'
-	import message from '../../message'
 
 	import ShowListTask from '../tasks/ShowListTasks'
 	import Gantt from '../tasks/Gantt'
@@ -69,7 +68,7 @@
 						this.$set(this, 'list', r)
 					})
 					.catch(e => {
-						message.error(e, this)
+						this.error(e, this)
 					})
 			},
 		}

@@ -134,7 +134,6 @@
 </template>
 
 <script>
-	import message from '../../message'
 	import flatPickr from 'vue-flatpickr-component'
 	import 'flatpickr/dist/flatpickr.css'
 	import verte from 'verte'
@@ -208,10 +207,10 @@
 				this.taskService.update(this.taskEditTask)
 					.then(r => {
 						this.$set(this, 'taskEditTask', r)
-						message.success({message: 'The task was successfully updated.'}, this)
+						this.success({message: 'The task was successfully updated.'}, this)
 					})
 					.catch(e => {
-						message.error(e, this)
+						this.error(e, this)
 					})
 			},
 		},

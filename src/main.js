@@ -120,16 +120,19 @@ Vue.directive('focus', {
 // Check the user's auth status when the app starts
 auth.checkAuth()
 
-// Format date mixin
+// Mixins
 import moment from 'moment'
+import message from './message'
 Vue.mixin({
 	methods: {
 		formatDateSince: date => moment(date).fromNow(),
 		formatDate: date => moment(date).format('LLL'),
+		error: (e, context) => message.error(e, context),
+		success: (s, context) => message.success(s, context),
 	}
 })
 
 new Vue({
-    router,
-    render: h => h(App)
+	router,
+	render: h => h(App)
 }).$mount('#app')

@@ -27,7 +27,6 @@
 <script>
 	import auth from '../../auth'
 	import router from '../../router'
-	import message from '../../message'
 	import NamespaceModel from "../../models/namespace";
 	import NamespaceService from "../../services/namespace";
 
@@ -55,11 +54,11 @@
 				this.namespaceService.create(this.namespace)
 					.then(() => {
 						this.$parent.loadNamespaces()
-						message.success({message: 'The namespace was successfully created.'}, this)
+						this.success({message: 'The namespace was successfully created.'}, this)
 						router.push({name: 'home'})
 					})
 					.catch(e => {
-						message.error(e, this)
+						this.error(e, this)
 					})
 			},
 			back() {

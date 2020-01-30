@@ -31,7 +31,6 @@
 </template>
 <script>
 	import router from '../../router'
-	import message from '../../message'
 	import TaskService from '../../services/task'
 	import PriorityLabel from './reusable/priorityLabel'
 
@@ -81,7 +80,7 @@
 						this.$set(this, 'tasks', r)
 					})
 					.catch(e => {
-						message.error(e, this)
+						this.error(e, this)
 					})
 			},
 			gotoList(lid) {

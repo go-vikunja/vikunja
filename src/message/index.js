@@ -40,5 +40,4 @@ export default {
 
 		context.loading = false
     },
-
 }

@@ -26,7 +26,6 @@
 <script>
 	import auth from '../../auth'
 	import router from '../../router'
-	import message from '../../message'
 	import TeamModel from '../../models/team'
 	import TeamService from '../../services/team'
 
@@ -54,10 +53,10 @@
 				this.teamService.create(this.team)
 					.then(response => {
 						router.push({name:'editTeam', params:{id: response.id}})
-						message.success({message: 'The team was successfully created.'}, this)
+						this.success({message: 'The team was successfully created.'}, this)
 					})
 					.catch(e => {
-						message.error(e, this)
+						this.error(e, this)
 					})
 			},
 			back() {

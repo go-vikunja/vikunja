@@ -20,7 +20,6 @@
 <script>
 	import auth from '../../auth'
 	import router from '../../router'
-	import message from '../../message'
 	import TeamService from '../../services/team'
 	
 	export default {
@@ -48,7 +47,7 @@
 						this.$set(this, 'teams', response)
 					})
 					.catch(e => {
-						message.error(e, this)
+						this.error(e, this)
 					})
 			},
 		}

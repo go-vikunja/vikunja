@@ -193,7 +193,6 @@
 
 <script>
 	import auth from './auth'
-	import message from './message'
 	import router from './router'
 
 	import NamespaceService from './services/namespace'
@@ -284,7 +283,7 @@
 						this.$set(this, 'namespaces', r)
 					})
 					.catch(e => {
-						message.error(e, this)
+						this.error(e, this)
 					})
 			},
 			loadNamespacesIfNeeded(e) {

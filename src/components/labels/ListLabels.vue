@@ -95,7 +95,6 @@
 
 	import LabelService from '../../services/label'
 	import LabelModel from '../../models/label'
-	import message from '../../message'
 	import auth from '../../auth'
 
 	export default {
@@ -124,7 +123,7 @@
 						this.$set(this, 'labels', r)
 					})
 					.catch(e => {
-						message.error(e, this)
+						this.error(e, this)
 					})
 			},
 			deleteLabel(label) {
@@ -136,10 +135,10 @@
 								this.labels.splice(l, 1)
 							}
 						}
-						message.success({message: 'The label was successfully deleted.'}, this)
+						this.success({message: 'The label was successfully deleted.'}, this)
 					})
 					.catch(e => {
-						message.error(e, this)
+						this.error(e, this)
 					})
 			},
 			editLabelSubmit() {
@@ -150,10 +149,10 @@
 								this.$set(this.labels, l, r)
 							}
 						}
-						message.success({message: 'The label was successfully updated.'}, this)
+						this.success({message: 'The label was successfully updated.'}, this)
 					})
 					.catch(e => {
-						message.error(e, this)
+						this.error(e, this)
 					})
 			},
 			editLabel(label) {

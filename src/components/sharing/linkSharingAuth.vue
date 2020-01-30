@@ -11,7 +11,6 @@
 <script>
 	import auth from '../../auth'
 	import router from '../../router'
-	import message from '../../message'
 
 	export default {
 		name: 'linkSharingAuth',
@@ -32,7 +31,7 @@
 						router.push({name: 'showList', params: {id: r.list_id}})
 					})
 					.catch(e => {
-						message.error(e, this)
+						this.error(e, this)
 					})
 			}
 		},

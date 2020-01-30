@@ -26,7 +26,6 @@
 <script>
 	import auth from '../../auth'
 	import router from '../../router'
-	import message from '../../message'
 	import ListService from '../../services/list'
 	import ListModel from '../../models/list'
 
@@ -55,11 +54,11 @@
 				this.listService.create(this.list)
 					.then(response => {
 						this.$parent.loadNamespaces()
-						message.success({message: 'The list was successfully created.'}, this)
+						this.success({message: 'The list was successfully created.'}, this)
 						router.push({name: 'showList', params: {id: response.id}})
 					})
 					.catch(e => {
-						message.error(e, this)
+						this.error(e, this)
 					})
 			},
 			back() {

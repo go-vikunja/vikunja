@@ -60,7 +60,6 @@
 <script>
 	import auth from '../../auth'
 	import router from '../../router'
-	import message from '../../message'
 	import manageSharing from '../sharing/userTeam'
 	import LinkSharing from '../sharing/linkSharing';
 
@@ -114,7 +113,7 @@
 						this.manageUsersComponent = 'manageSharing'
 					})
 					.catch(e => {
-						message.error(e, this)
+						this.error(e, this)
 					})
 			},
 			submit() {
@@ -129,20 +128,20 @@
 								}
 							}
 						}
-						message.success({message: 'The list was successfully updated.'}, this)
+						this.success({message: 'The list was successfully updated.'}, this)
 					})
 					.catch(e => {
-						message.error(e, this)
+						this.error(e, this)
 					})
 			},
 			deleteList() {
 				this.listService.delete(this.list)
 					.then(() => {
-						message.success({message: 'The list was successfully deleted.'}, this)
+						this.success({message: 'The list was successfully deleted.'}, this)
 						router.push({name: 'home'})
 					})
 					.catch(e => {
-						message.error(e, this)
+						this.error(e, this)
 					})
 			},
 		}

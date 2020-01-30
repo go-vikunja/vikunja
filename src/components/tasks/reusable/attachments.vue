@@ -76,7 +76,6 @@
 <script>
 	import AttachmentService from '../../../services/attachment'
 	import AttachmentModel from '../../../models/attachment'
-	import message from '../../../message'
 
 	export default {
 		name: 'attachments',
@@ -153,18 +152,18 @@
 					.then(r => {
 						if(r.success !== null) {
 							r.success.forEach(a => {
-								message.success({message: 'Successfully uploaded ' + a.file.name}, this)
+								this.success({message: 'Successfully uploaded ' + a.file.name}, this)
 								this.attachments.push(a)
 							})
 						}
 						if(r.errors !== null) {
 							r.errors.forEach(m => {
-								message.error(m, this)
+								this.error(m)
 							})
 						}
 					})
 					.catch(e => {
-						message.error(e, this)
+						this.error(e, this)
 					})
 
 			},
@@ -177,10 +176,10 @@
 								this.attachments.splice(a, 1)
 							}
 						}
-						message.success(r, this)
+						this.success(r, this)
 					})
 					.catch(e => {
-						message.error(e, this)
+						this.error(e, this)
 					})
 					.finally(() => {
 						this.showDeleteModal = false

@@ -137,7 +137,6 @@
 <script>
 	import auth from '../../auth'
 	import router from '../../router'
-	import message from '../../message'
 
 	import TeamService from '../../services/team'
 	import TeamModel from '../../models/team'
@@ -190,37 +189,37 @@
 						}
 					})
 					.catch(e => {
-						message.error(e, this)
+						this.error(e, this)
 					})
 			},
 			submit() {
 				this.teamService.update(this.team)
 					.then(response => {
 						this.team = response
-						message.success({message: 'The team was successfully updated.'}, this)
+						this.success({message: 'The team was successfully updated.'}, this)
 					})
 					.catch(e => {
-						message.error(e, this)
+						this.error(e, this)
 					})
 			},
 			deleteTeam() {
 				this.teamService.delete(this.team)
 					.then(() => {
-						message.success({message: 'The team was successfully deleted.'}, this)
+						this.success({message: 'The team was successfully deleted.'}, this)
 						router.push({name: 'listTeams'})
 					})
 					.catch(e => {
-						message.error(e, this)
+						this.error(e, this)
 					})
 			},
 			deleteUser() {
 				this.teamMemberService.delete(this.member)
 					.then(() => {
-						message.success({message: 'The user was successfully deleted from the team.'}, this)
+						this.success({message: 'The user was successfully deleted from the team.'}, this)
 						this.loadTeam()
 					})
 					.catch(e => {
-						message.error(e, this)
+						this.error(e, this)
 					})
 					.finally(() => {
 						this.showUserDeleteModal = false
@@ -230,10 +229,10 @@
 				this.teamMemberService.create(this.member)
 					.then(() => {
 						this.loadTeam()
-						message.success({message: 'The team member was successfully added.'}, this)
+						this.success({message: 'The team member was successfully added.'}, this)
 					})
 					.catch(e => {
-						message.error(e, this)
+						this.error(e, this)
 					})
 			},
 			toggleUserType(member) {
