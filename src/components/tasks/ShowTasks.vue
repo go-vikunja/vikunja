@@ -8,7 +8,7 @@
 		</template>
 		<div class="spinner" :class="{ 'is-loading': taskService.loading}"></div>
 		<div class="tasks" v-if="tasks && tasks.length > 0">
-			<div @click="gotoList(l.listID)" class="task" v-for="l in undoneTasks" :key="l.id">
+			<div @click="gotoTask(l)" class="task" v-for="l in undoneTasks" :key="l.id">
 				<label :for="l.id">
 					<div class="fancycheckbox">
 						<input type="checkbox" :id="l.id" :checked="l.done" style="display: none;" disabled>
@@ -83,8 +83,8 @@
 						this.error(e, this)
 					})
 			},
-			gotoList(lid) {
-				router.push({name: 'showList', params: {id: lid}})
+			gotoTask(task) {
+				router.push({name: 'taskDetailView', params: {id: task.id}})
 			},
 		},
 	}
