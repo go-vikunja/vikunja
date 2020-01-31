@@ -136,6 +136,7 @@
 								</div>
 							</template>
 						</aside>
+						<a class="menu-bottom-link" target="_blank" href="https://vikunja.io">Powered by Vikunja</a>
 					</div>
 					<div class="app-content" :class="{'fullpage-overlay': fullpage}">
 						<a class="mobile-overlay" v-if="mobileMenuActive" @click="mobileMenuActive = false"></a>
