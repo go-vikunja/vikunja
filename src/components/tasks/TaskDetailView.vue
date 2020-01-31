@@ -6,7 +6,7 @@
 					#{{ task.id }}
 				</h1>
 				<div class="is-done" v-if="task.done">Done</div>
-				<input type="text" v-model="task.text" @change="saveTask()" class="input title" @keyup.enter="saveTask()"/>
+				<h1 class="title input" contenteditable="true" @focusout="saveTaskOnChange()" ref="taskTitle">{{ task.text }}</h1>
 			</div>
 			<h6 class="subtitle">
 				{{ namespace.name }} >
@@ -304,6 +304,7 @@
 				list: ListModel,
 				namespace: NamespaceModel,
 				showDeleteModal: false,
+				taskTitle: '',
 
 				priorities: priorites,
 				flatPickerConfig: {
@@ -345,6 +346,7 @@
 					.then(r => {
 						this.$set(this, 'task', r)
 						this.setListAndNamespaceTitleFromParent()
+						this.taskTitle = this.task.text
 
 						// Set all active fields based on values in the model
 						this.activeFields.assignees = this.task.assignees.length > 0
@@ -362,6 +364,22 @@
 					.catch(e => {
 						this.error(e, this)
 					})
+			},
+			saveTaskOnChange() {
+				this.$refs.taskTitle.spellcheck = false
+
+				// Pull the task title from the contenteditable
+				let taskTitle = this.$refs.taskTitle.textContent
+				this.task.text = taskTitle
+
+				// We only want to save if the title was actually change.
+				// Because the contenteditable does not have a change event,
+				// we're building it ourselves and only calling saveTask()
+				// if the task title changed.
+				if (this.task.text !== this.taskTitle) {
+					this.saveTask()
+					this.taskTitle = taskTitle
+				}
 			},
 			saveTask() {
 				this.taskService.update(this.task)

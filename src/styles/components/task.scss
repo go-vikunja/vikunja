@@ -46,6 +46,10 @@
       padding: 0 .3em;
     }
 
+    h1.input.title {
+      height: auto;
+    }
+
     .is-done {
       background: $green;
       color: $white;
