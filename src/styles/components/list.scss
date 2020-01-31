@@ -34,3 +34,28 @@
   padding: 10px 1em;
   height: 40px;
 }
+
+.search {
+  max-width: 300px;
+  margin-top: -78px;
+  float: right;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  .field {
+    transition: width $transition;
+    width: 100%;
+
+    &.hidden {
+      width: 0;
+      height: 0;
+      margin: 0;
+      overflow: hidden;
+    }
+
+    .button {
+      height: 100%;
+    }
+  }
+}

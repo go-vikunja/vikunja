@@ -4,7 +4,7 @@
 			<router-link :to="{ name: 'editList', params: { id: list.id } }" class="icon settings is-medium">
 				<icon icon="cog" size="2x"/>
 			</router-link>
-			<h1>{{ list.title }}</h1>
+			<h1 :style="{ 'opacity': list.title === '' ? '0': '1' }">{{ list.title === '' ? 'Loading...': list.title}}</h1>
 			<div class="switch-view">
 				<router-link :to="{ name: 'showList', params: { id: list.id } }" :class="{'is-active': $route.params.type !== 'gantt'}">List</router-link>
 				<router-link :to="{ name: 'showListWithType', params: { id: list.id, type: 'gantt' } }" :class="{'is-active': $route.params.type === 'gantt'}">Gantt</router-link>

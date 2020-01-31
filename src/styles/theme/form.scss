@@ -152,3 +152,6 @@
   float: right;
 }
 
+.control.has-icons-left .icon, .control.has-icons-right .icon {
+  z-index: 4;
+}

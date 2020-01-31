@@ -1,5 +1,36 @@
 <template>
 	<div class="loader-container" :class="{ 'is-loading': listService.loading || taskCollectionService.loading}">
+		<div class="search">
+			<div class="field has-addons" :class="{ 'hidden': !showTaskSearch }">
+				<div class="control has-icons-left has-icons-right">
+					<input
+							class="input"
+							type="text"
+							placeholder="Search"
+							v-focus
+							v-model="searchTerm"
+							@keyup.enter="searchTasks"
+							@blur="hideSearchBar()"/>
+					<span class="icon is-left">
+						<icon icon="search"/>
+					</span>
+				</div>
+				<div class="control">
+					<button
+							class="button noshadow is-primary"
+							@click="searchTasks"
+							:class="{'is-loading': taskCollectionService.loading}"
+							:disabled="searchTerm === ''">
+						Search
+					</button>
+				</div>
+			</div>
+			<button class="button" @click="showTaskSearch = !showTaskSearch" v-if="!showTaskSearch">
+				<span class="icon">
+					<icon icon="search"/>
+				</span>
+			</button>
+		</div>
 		<form @submit.prevent="addTask()">
 			<div class="field is-grouped task-add">
 				<p class="control has-icons-left is-expanded" :class="{ 'is-loading': taskService.loading}">
@@ -115,6 +146,9 @@
 				isTaskEdit: false,
 				taskEditTask: TaskModel,
 				newTaskText: '',
+
+				showTaskSearch: false,
+				searchTerm: '',
 			}
 		},
 		components: {
@@ -159,8 +193,11 @@
 						this.error(e, this)
 					})
 			},
-			loadTasks(page) {
+			loadTasks(page, search = '') {
 				const params = {sort_by: ['done', 'id'], order_by: ['asc', 'desc']}
+				if (search !== '') {
+					params.s = search
+				}
 				this.taskCollectionService.getAll({listID: this.$route.params.id}, params, page)
 					.then(r => {
 						this.$set(this, 'tasks', r)
@@ -261,6 +298,22 @@
 						return 1
 					return 0
 				})
+			},
+			searchTasks() {
+				if (this.searchTerm === '') {
+					return
+				}
+				this.loadTasks(1, this.searchTerm)
+			},
+			hideSearchBar() {
+				// This is a workaround.
+				// When clicking on the search button, @blur from the input is fired. If we
+				// would then directly hide the whole search bar directly, no click event
+				// from the button gets fired. To prevent this, we wait 200ms until we hide
+				// everything so the button has a chance of firering the search event.
+				setTimeout(() => {
+					this.showTaskSearch = false
+				}, 200)
 			},
 		}
 	}

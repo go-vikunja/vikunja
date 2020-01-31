@@ -62,6 +62,7 @@ import { faAlignLeft } from '@fortawesome/free-solid-svg-icons'
 import { faPaperclip } from '@fortawesome/free-solid-svg-icons'
 import { faClock } from '@fortawesome/free-regular-svg-icons'
 import { faHistory } from '@fortawesome/free-solid-svg-icons'
+import { faSearch } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
 library.add(faSignOutAlt)
@@ -98,6 +99,7 @@ library.add(faAlignLeft)
 library.add(faPaperclip)
 library.add(faClock)
 library.add(faHistory)
+library.add(faSearch)
 
 Vue.component('icon', FontAwesomeIcon)
 
