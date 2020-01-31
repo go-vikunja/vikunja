@@ -26,8 +26,8 @@
 						<router-link :to="{ name: 'getPasswordReset' }" class="reset-password-link">Reset your password</router-link>
 					</div>
 				</div>
-				<div class="notification is-danger" v-if="error">
-					{{ error }}
+				<div class="notification is-danger" v-if="errorMsg">
+					{{ errorMsg }}
 				</div>
 			</form>
 		</div>
@@ -47,7 +47,7 @@
 					username: '',
 					password: ''
 				},
-				error: '',
+				errorMsg: '',
 				confirmedEmailSuccess: false,
 				loading: false
 			}
@@ -66,7 +66,7 @@
 					})
 					.catch(e => {
 						cancel()
-						this.error = e.response.data.message
+						this.errorMsg = e.response.data.message
 					})
 			}
 
@@ -78,7 +78,7 @@
 		methods: {
 			submit() {
 				this.loading = true
-				this.error = ''
+				this.errorMsg = ''
 				let credentials = {
 					username: this.credentials.username,
 					password: this.credentials.password

@@ -25,7 +25,7 @@
 					Loading...
 				</div>
 				<div class="notification is-danger" v-if="error">
-					{{ error }}
+					{{ errorMsg }}
 				</div>
 			</form>
 			<div v-if="successMessage" class="has-text-centered">
@@ -50,7 +50,7 @@
 					password: '',
 					password2: '',
 				},
-				error: '',
+				errorMsg: '',
 				successMessage: ''
 			}
 		},
@@ -59,10 +59,10 @@
 		},
 		methods: {
 			submit() {
-				this.error = ''
+				this.errorMsg = ''
 
 				if (this.credentials.password2 !== this.credentials.password) {
-					this.error = 'Passwords don\'t match'
+					this.errorMsg = 'Passwords don\'t match'
 					return
 				}
 
@@ -73,7 +73,7 @@
 						localStorage.removeItem('passwordResetToken')
 					})
 					.catch(e => {
-						this.error = e.response.data.message
+						this.errorMsg = e.response.data.message
 					})
 			}
 		}

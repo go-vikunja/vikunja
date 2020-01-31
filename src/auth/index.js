@@ -40,9 +40,9 @@ export default {
 				// Hide the loader
 				context.loading = false
 				if (e.response) {
-					context.error = e.response.data.message
+					context.errorMsg = e.response.data.message
 					if (e.response.status === 401) {
-						context.error = 'Wrong username or password.'
+						context.errorMsg = 'Wrong username or password.'
 					}
 				}
 			})
@@ -61,9 +61,9 @@ export default {
 				// Hide the loader
 				context.loading = false
 				if (e.response) {
-					context.error = e.response.data.message
+					context.errorMsg = e.response.data.message
 					if (e.response.status === 401) {
-						context.error = 'Wrong username or password.'
+						context.errorMsg = 'Wrong username or password.'
 					}
 				}
 			})

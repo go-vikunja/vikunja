@@ -17,7 +17,7 @@
 					</div>
 				</div>
 				<div class="notification is-danger" v-if="error">
-					{{ error }}
+					{{ errorMsg }}
 				</div>
 			</form>
 			<div v-if="isSuccess" class="has-text-centered">
@@ -39,7 +39,7 @@
 			return {
 				passwordResetService: PasswordResetService,
 				passwordReset: PasswordResetModel,
-				error: '',
+				errorMsg: '',
 				isSuccess: false
 			}
 		},
@@ -49,13 +49,13 @@
 		},
 		methods: {
 			submit() {
-				this.error = ''
+				this.errorMsg = ''
 				this.passwordResetService.requestResetPassword(this.passwordReset)
 					.then(() => {
 						this.isSuccess = true
 					})
 					.catch(e => {
-						this.error = e.response.data.message
+						this.errorMsg = e.response.data.message
 					})
 			},
 		}
