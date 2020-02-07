@@ -1,4 +1,4 @@
-// Vikunja is a todo-list application to facilitate your life.
+// Vikunja is a to-do list application to facilitate your life.
 // Copyright 2018-2020 Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -28,7 +28,7 @@ const (
 const (
 	// Can read lists in a
 	RightRead Right = iota
-	// Can write in a like lists and todo tasks. Cannot create new lists.
+	// Can write in a like lists and tasks. Cannot create new lists.
 	RightWrite
 	// Can manage a list/namespace, can do everything
 	RightAdmin

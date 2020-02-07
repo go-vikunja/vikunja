@@ -1,4 +1,4 @@
-// Vikunja is a todo-list application to facilitate your life.
+// Vikunja is a to-do list application to facilitate your life.
 // Copyright 2018-2020 Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 // @title Vikunja API
-// @description This is the documentation for the [Vikunja](http://vikunja.io) API. Vikunja is a cross-plattform Todo-application with a lot of features, such as sharing lists with users or teams. <!-- ReDoc-Inject: <security-definitions> -->
+// @description This is the documentation for the [Vikunja](http://vikunja.io) API. Vikunja is a cross-plattform To-do-application with a lot of features, such as sharing lists with users or teams. <!-- ReDoc-Inject: <security-definitions> -->
 
 // @description # Pagination
 // @description Every endpoint capable of pagination will return two headers:
