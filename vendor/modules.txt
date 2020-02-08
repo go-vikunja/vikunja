@@ -1,4 +1,4 @@
-# code.vikunja.io/web v0.0.0-20200126190757-9947104b775e
+# code.vikunja.io/web v0.0.0-20200208214421-c90649369427
 code.vikunja.io/web
 code.vikunja.io/web/handler
 # github.com/BurntSushi/toml v0.3.1
@@ -199,7 +199,7 @@ github.com/urfave/cli
 github.com/valyala/bytebufferpool
 # github.com/valyala/fasttemplate v1.1.0
 github.com/valyala/fasttemplate
-# golang.org/x/crypto v0.0.0-20200117160349-530e935923ad
+# golang.org/x/crypto v0.0.0-20200208060501-ecb85df21340
 golang.org/x/crypto/acme
 golang.org/x/crypto/acme/autocert
 golang.org/x/crypto/bcrypt
@@ -207,9 +207,9 @@ golang.org/x/crypto/blowfish
 # golang.org/x/lint v0.0.0-20190409202823-959b441ac422
 golang.org/x/lint
 golang.org/x/lint/golint
-# golang.org/x/net v0.0.0-20200114155413-6afb5195e5aa
+# golang.org/x/net v0.0.0-20200202094626-16171245cfb2
 golang.org/x/net/idna
-# golang.org/x/sys v0.0.0-20200124204421-9fbb57f87de9
+# golang.org/x/sys v0.0.0-20200202164722-d101bd2416d5
 golang.org/x/sys/unix
 # golang.org/x/text v0.3.2
 golang.org/x/text/secure/bidirule

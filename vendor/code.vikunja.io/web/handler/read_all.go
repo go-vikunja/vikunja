@@ -104,5 +104,9 @@ func (c *WebHandler) ReadAllWeb(ctx echo.Context) error {
 	ctx.Response().Header().Set("x-pagination-result-count", strconv.FormatInt(int64(resultCount), 10))
 	ctx.Response().Header().Set("Access-Control-Expose-Headers", "x-pagination-total-pages, x-pagination-result-count")
 
-	return ctx.JSON(http.StatusOK, result)
+	err = ctx.JSON(http.StatusOK, result)
+	if err != nil {
+		return HandleHTTPError(err, ctx)
+	}
+	return err
 }

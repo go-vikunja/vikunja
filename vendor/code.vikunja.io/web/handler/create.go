@@ -62,5 +62,9 @@ func (c *WebHandler) CreateWeb(ctx echo.Context) error {
 		return HandleHTTPError(err, ctx)
 	}
 
-	return ctx.JSON(http.StatusCreated, currentStruct)
+	err = ctx.JSON(http.StatusCreated, currentStruct)
+	if err != nil {
+		return HandleHTTPError(err, ctx)
+	}
+	return err
 }
