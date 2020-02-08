@@ -23,6 +23,7 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/migration"
+	"code.vikunja.io/api/pkg/timeutil"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
 	"encoding/json"
@@ -144,7 +145,7 @@ func convertListForFolder(listID int, list *list, content *wunderlistContents) (
 
 	l := &models.List{
 		Title:   list.Title,
-		Created: list.CreatedAt.Unix(),
+		Created: timeutil.FromTime(list.CreatedAt),
 	}
 
 	// Find all tasks belonging to this list and put them in
@@ -152,13 +153,13 @@ func convertListForFolder(listID int, list *list, content *wunderlistContents) (
 		if t.ListID == listID {
 			newTask := &models.Task{
 				Text:    t.Title,
-				Created: t.CreatedAt.Unix(),
+				Created: timeutil.FromTime(t.CreatedAt),
 				Done:    t.Completed,
 			}
 
 			// Set Done At
 			if newTask.Done {
-				newTask.DoneAtUnix = t.CompletedAt.Unix()
+				newTask.DoneAt = timeutil.FromTime(t.CompletedAt)
 			}
 
 			// Parse the due date
@@ -167,7 +168,7 @@ func convertListForFolder(listID int, list *list, content *wunderlistContents) (
 				if err != nil {
 					return nil, err
 				}
-				newTask.DueDateUnix = dueDate.Unix()
+				newTask.DueDate = timeutil.FromTime(dueDate)
 			}
 
 			// Find related notes
@@ -198,13 +199,13 @@ func convertListForFolder(listID int, list *list, content *wunderlistContents) (
 							Mime:        f.ContentType,
 							Size:        uint64(f.FileSize),
 							Created:     f.CreatedAt,
-							CreatedUnix: f.CreatedAt.Unix(),
+							CreatedUnix: timeutil.FromTime(f.CreatedAt),
 							// We directly pass the file contents here to have a way to link the attachment to the file later.
 							// Because we don't have an ID for our task at this point of the migration, we cannot just throw all
 							// attachments in a slice and do the work of downloading and properly storing them later.
 							FileContent: buf.Bytes(),
 						},
-						Created: f.CreatedAt.Unix(),
+						Created: timeutil.FromTime(f.CreatedAt),
 					})
 				}
 			}
@@ -224,7 +225,7 @@ func convertListForFolder(listID int, list *list, content *wunderlistContents) (
 			// Reminders
 			for _, r := range content.reminders {
 				if r.TaskID == t.ID {
-					newTask.RemindersUnix = append(newTask.RemindersUnix, r.Date.Unix())
+					newTask.Reminders = append(newTask.Reminders, timeutil.FromTime(r.Date))
 				}
 			}
 
@@ -247,8 +248,8 @@ func convertWunderlistToVikunja(content *wunderlistContents) (fullVikunjaHierach
 		namespace := &models.NamespaceWithLists{
 			Namespace: models.Namespace{
 				Name:    folder.Title,
-				Created: folder.CreatedAt.Unix(),
-				Updated: folder.UpdatedAt.Unix(),
+				Created: timeutil.FromTime(folder.CreatedAt),
+				Updated: timeutil.FromTime(folder.UpdatedAt),
 			},
 		}
 

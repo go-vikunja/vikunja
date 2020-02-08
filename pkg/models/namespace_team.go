@@ -16,7 +16,10 @@
 
 package models
 
-import "code.vikunja.io/web"
+import (
+	"code.vikunja.io/api/pkg/timeutil"
+	"code.vikunja.io/web"
+)
 
 // TeamNamespace defines the relationship between a Team and a Namespace
 type TeamNamespace struct {
@@ -29,10 +32,10 @@ type TeamNamespace struct {
 	// The right this team has. 0 = Read only, 1 = Read & Write, 2 = Admin. See the docs for more details.
 	Right Right `xorm:"int(11) INDEX not null default 0" json:"right" valid:"length(0|2)" maximum:"2" default:"0"`
 
-	// A unix timestamp when this relation was created. You cannot change this value.
-	Created int64 `xorm:"created not null" json:"created"`
-	// A unix timestamp when this relation was last updated. You cannot change this value.
-	Updated int64 `xorm:"updated not null" json:"updated"`
+	// A timestamp when this relation was created. You cannot change this value.
+	Created timeutil.TimeStamp `xorm:"created not null" json:"created"`
+	// A timestamp when this relation was last updated. You cannot change this value.
+	Updated timeutil.TimeStamp `xorm:"updated not null" json:"updated"`
 
 	web.CRUDable `xorm:"-" json:"-"`
 	web.Rights   `xorm:"-" json:"-"`

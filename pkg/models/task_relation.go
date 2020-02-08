@@ -18,6 +18,7 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/timeutil"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
 )
@@ -86,8 +87,8 @@ type TaskRelation struct {
 	// The user who created this relation
 	CreatedBy *user.User `xorm:"-" json:"created_by"`
 
-	// A unix timestamp when this label was created. You cannot change this value.
-	Created int64 `xorm:"created not null" json:"created"`
+	// A timestamp when this label was created. You cannot change this value.
+	Created timeutil.TimeStamp `xorm:"created not null" json:"created"`
 
 	web.CRUDable `xorm:"-" json:"-"`
 	web.Rights   `xorm:"-" json:"-"`

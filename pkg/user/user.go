@@ -21,6 +21,7 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/mail"
 	"code.vikunja.io/api/pkg/metrics"
+	"code.vikunja.io/api/pkg/timeutil"
 	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/web"
 	"fmt"
@@ -54,10 +55,10 @@ type User struct {
 	PasswordResetToken string `xorm:"varchar(450) null" json:"-"`
 	EmailConfirmToken  string `xorm:"varchar(450) null" json:"-"`
 
-	// A unix timestamp when this task was created. You cannot change this value.
-	Created int64 `xorm:"created not null" json:"created"`
-	// A unix timestamp when this task was last updated. You cannot change this value.
-	Updated int64 `xorm:"updated not null" json:"updated"`
+	// A timestamp when this task was created. You cannot change this value.
+	Created timeutil.TimeStamp `xorm:"created not null" json:"created"`
+	// A timestamp when this task was last updated. You cannot change this value.
+	Updated timeutil.TimeStamp `xorm:"updated not null" json:"updated"`
 
 	web.Auth `xorm:"-" json:"-"`
 }

@@ -18,6 +18,7 @@ package models
 
 import (
 	"code.vikunja.io/api/pkg/metrics"
+	"code.vikunja.io/api/pkg/timeutil"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
 	"github.com/imdario/mergo"
@@ -37,10 +38,10 @@ type Namespace struct {
 	// The user who owns this namespace
 	Owner *user.User `xorm:"-" json:"owner" valid:"-"`
 
-	// A unix timestamp when this namespace was created. You cannot change this value.
-	Created int64 `xorm:"created not null" json:"created"`
-	// A unix timestamp when this namespace was last updated. You cannot change this value.
-	Updated int64 `xorm:"updated not null" json:"updated"`
+	// A timestamp when this namespace was created. You cannot change this value.
+	Created timeutil.TimeStamp `xorm:"created not null" json:"created"`
+	// A timestamp when this namespace was last updated. You cannot change this value.
+	Updated timeutil.TimeStamp `xorm:"updated not null" json:"updated"`
 
 	web.CRUDable `xorm:"-" json:"-"`
 	web.Rights   `xorm:"-" json:"-"`
@@ -51,8 +52,8 @@ var PseudoNamespace = Namespace{
 	ID:          -1,
 	Name:        "Shared Lists",
 	Description: "Lists of other users shared with you via teams or directly.",
-	Created:     time.Now().Unix(),
-	Updated:     time.Now().Unix(),
+	Created:     timeutil.FromTime(time.Now()),
+	Updated:     timeutil.FromTime(time.Now()),
 }
 
 // TableName makes beautiful table names

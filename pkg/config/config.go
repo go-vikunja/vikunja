@@ -44,6 +44,7 @@ const (
 	ServiceEnableLinkSharing     Key = `service.enablelinksharing`
 	ServiceEnableRegistration    Key = `service.enableregistration`
 	ServiceEnableTaskAttachments Key = `service.enabletaskattachments`
+	ServiceTimeZone              Key = `service.timezone`
 
 	DatabaseType                  Key = `database.type`
 	DatabaseHost                  Key = `database.host`
@@ -168,6 +169,7 @@ func InitDefaultConfig() {
 	ServiceEnableLinkSharing.setDefault(true)
 	ServiceEnableRegistration.setDefault(true)
 	ServiceEnableTaskAttachments.setDefault(true)
+	ServiceTimeZone.setDefault("GMT")
 
 	// Database
 	DatabaseType.setDefault("sqlite")

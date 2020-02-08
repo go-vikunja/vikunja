@@ -26,6 +26,8 @@ service:
   enableregistration: true
   # Whether to enable task attachments or not
   enabletaskattachments: true
+  # The time zone all timestamps are in
+  timezone: GMT
 
 database:
   # Database type to use. Supported types are mysql and sqlite.

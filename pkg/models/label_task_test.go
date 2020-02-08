@@ -2,6 +2,7 @@ package models
 
 import (
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/timeutil"
 	"code.vikunja.io/api/pkg/user"
 	"gopkg.in/d4l3k/messagediff.v1"
 	"reflect"
@@ -16,7 +17,7 @@ func TestLabelTask_ReadAll(t *testing.T) {
 		ID       int64
 		TaskID   int64
 		LabelID  int64
-		Created  int64
+		Created  timeutil.TimeStamp
 		CRUDable web.CRUDable
 		Rights   web.Rights
 	}
@@ -113,7 +114,7 @@ func TestLabelTask_Create(t *testing.T) {
 		ID       int64
 		TaskID   int64
 		LabelID  int64
-		Created  int64
+		Created  timeutil.TimeStamp
 		CRUDable web.CRUDable
 		Rights   web.Rights
 	}
@@ -207,7 +208,7 @@ func TestLabelTask_Delete(t *testing.T) {
 		ID       int64
 		TaskID   int64
 		LabelID  int64
-		Created  int64
+		Created  timeutil.TimeStamp
 		CRUDable web.CRUDable
 		Rights   web.Rights
 	}

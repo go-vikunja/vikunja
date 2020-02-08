@@ -20,6 +20,7 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/timeutil"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/d4l3k/messagediff.v1"
 	"io/ioutil"
@@ -192,18 +193,18 @@ func TestWunderlistParsing(t *testing.T) {
 		{
 			Namespace: models.Namespace{
 				Name:    "Lorem Ipsum",
-				Created: time1.Unix(),
-				Updated: time2.Unix(),
+				Created: timeutil.FromTime(time1),
+				Updated: timeutil.FromTime(time2),
 			},
 			Lists: []*models.List{
 				{
-					Created: time1.Unix(),
+					Created: timeutil.FromTime(time1),
 					Title:   "Lorem1",
 					Tasks: []*models.Task{
 						{
 							Text:        "Ipsum1",
-							DueDateUnix: 1378339200,
-							Created:     time1.Unix(),
+							DueDate:     1378339200,
+							Created:     timeutil.FromTime(time1),
 							Description: "Lorem Ipsum dolor sit amet",
 							Attachments: []*models.TaskAttachment{
 								{
@@ -212,18 +213,18 @@ func TestWunderlistParsing(t *testing.T) {
 										Mime:        "text/plain",
 										Size:        12345,
 										Created:     time2,
-										CreatedUnix: time2.Unix(),
+										CreatedUnix: timeutil.FromTime(time2),
 										FileContent: exampleFile,
 									},
-									Created: time2.Unix(),
+									Created: timeutil.FromTime(time2),
 								},
 							},
-							RemindersUnix: []int64{time4.Unix()},
+							Reminders: []timeutil.TimeStamp{timeutil.FromTime(time4)},
 						},
 						{
 							Text:        "Ipsum2",
-							DueDateUnix: 1378339200,
-							Created:     time1.Unix(),
+							DueDate:     1378339200,
+							Created:     timeutil.FromTime(time1),
 							Description: "Lorem Ipsum dolor sit amet",
 							RelatedTasks: map[models.RelationKind][]*models.Task{
 								models.RelationKindSubtask: {
@@ -239,15 +240,15 @@ func TestWunderlistParsing(t *testing.T) {
 					},
 				},
 				{
-					Created: time1.Unix(),
+					Created: timeutil.FromTime(time1),
 					Title:   "Lorem2",
 					Tasks: []*models.Task{
 						{
 							Text:        "Ipsum3",
 							Done:        true,
-							DoneAtUnix:  time1.Unix(),
-							DueDateUnix: 1378339200,
-							Created:     time1.Unix(),
+							DoneAt:      timeutil.FromTime(time1),
+							DueDate:     1378339200,
+							Created:     timeutil.FromTime(time1),
 							Description: "Lorem Ipsum dolor sit amet",
 							Attachments: []*models.TaskAttachment{
 								{
@@ -256,18 +257,18 @@ func TestWunderlistParsing(t *testing.T) {
 										Mime:        "text/plain",
 										Size:        12345,
 										Created:     time3,
-										CreatedUnix: time3.Unix(),
+										CreatedUnix: timeutil.FromTime(time3),
 										FileContent: exampleFile,
 									},
-									Created: time3.Unix(),
+									Created: timeutil.FromTime(time3),
 								},
 							},
 						},
 						{
-							Text:          "Ipsum4",
-							DueDateUnix:   1378339200,
-							Created:       time1.Unix(),
-							RemindersUnix: []int64{time3.Unix()},
+							Text:      "Ipsum4",
+							DueDate:   1378339200,
+							Created:   timeutil.FromTime(time1),
+							Reminders: []timeutil.TimeStamp{timeutil.FromTime(time3)},
 							RelatedTasks: map[models.RelationKind][]*models.Task{
 								models.RelationKindSubtask: {
 									{
@@ -279,52 +280,52 @@ func TestWunderlistParsing(t *testing.T) {
 					},
 				},
 				{
-					Created: time1.Unix(),
+					Created: timeutil.FromTime(time1),
 					Title:   "Lorem3",
 					Tasks: []*models.Task{
 						{
-							Text:        "Ipsum5",
-							DueDateUnix: 1378339200,
-							Created:     time1.Unix(),
+							Text:    "Ipsum5",
+							DueDate: 1378339200,
+							Created: timeutil.FromTime(time1),
 						},
 						{
-							Text:        "Ipsum6",
-							DueDateUnix: 1378339200,
-							Created:     time1.Unix(),
-							Done:        true,
-							DoneAtUnix:  time1.Unix(),
+							Text:    "Ipsum6",
+							DueDate: 1378339200,
+							Created: timeutil.FromTime(time1),
+							Done:    true,
+							DoneAt:  timeutil.FromTime(time1),
 						},
 						{
-							Text:        "Ipsum7",
-							DueDateUnix: 1378339200,
-							Created:     time1.Unix(),
-							Done:        true,
-							DoneAtUnix:  time1.Unix(),
+							Text:    "Ipsum7",
+							DueDate: 1378339200,
+							Created: timeutil.FromTime(time1),
+							Done:    true,
+							DoneAt:  timeutil.FromTime(time1),
 						},
 						{
-							Text:        "Ipsum8",
-							DueDateUnix: 1378339200,
-							Created:     time1.Unix(),
+							Text:    "Ipsum8",
+							DueDate: 1378339200,
+							Created: timeutil.FromTime(time1),
 						},
 					},
 				},
 				{
-					Created: time1.Unix(),
+					Created: timeutil.FromTime(time1),
 					Title:   "Lorem4",
 					Tasks: []*models.Task{
 						{
-							Text:        "Ipsum9",
-							DueDateUnix: 1378339200,
-							Created:     time1.Unix(),
-							Done:        true,
-							DoneAtUnix:  time1.Unix(),
+							Text:    "Ipsum9",
+							DueDate: 1378339200,
+							Created: timeutil.FromTime(time1),
+							Done:    true,
+							DoneAt:  timeutil.FromTime(time1),
 						},
 						{
-							Text:        "Ipsum10",
-							DueDateUnix: 1378339200,
-							Created:     time1.Unix(),
-							Done:        true,
-							DoneAtUnix:  time1.Unix(),
+							Text:    "Ipsum10",
+							DueDate: 1378339200,
+							Created: timeutil.FromTime(time1),
+							Done:    true,
+							DoneAt:  timeutil.FromTime(time1),
 						},
 					},
 				},
@@ -336,7 +337,7 @@ func TestWunderlistParsing(t *testing.T) {
 			},
 			Lists: []*models.List{
 				{
-					Created: time4.Unix(),
+					Created: timeutil.FromTime(time4),
 					Title:   "List without a namespace",
 				},
 			},

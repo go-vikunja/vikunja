@@ -18,6 +18,7 @@ package models
 
 import (
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/timeutil"
 	"code.vikunja.io/api/pkg/user"
 	"testing"
 
@@ -30,8 +31,8 @@ func TestTeamNamespace_CanDoSomething(t *testing.T) {
 		TeamID      int64
 		NamespaceID int64
 		Right       Right
-		Created     int64
-		Updated     int64
+		Created     timeutil.TimeStamp
+		Updated     timeutil.TimeStamp
 		CRUDable    web.CRUDable
 		Rights      web.Rights
 	}

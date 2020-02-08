@@ -17,6 +17,7 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/timeutil"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
 	"time"
@@ -37,10 +38,10 @@ type Label struct {
 	// The user who created this label
 	CreatedBy *user.User `xorm:"-" json:"created_by"`
 
-	// A unix timestamp when this label was created. You cannot change this value.
-	Created int64 `xorm:"created not null" json:"created"`
-	// A unix timestamp when this label was last updated. You cannot change this value.
-	Updated int64 `xorm:"updated not null" json:"updated"`
+	// A timestamp when this label was created. You cannot change this value.
+	Created timeutil.TimeStamp `xorm:"created not null" json:"created"`
+	// A timestamp when this label was last updated. You cannot change this value.
+	Updated timeutil.TimeStamp `xorm:"updated not null" json:"updated"`
 
 	web.CRUDable `xorm:"-" json:"-"`
 	web.Rights   `xorm:"-" json:"-"`

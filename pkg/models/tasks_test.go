@@ -18,6 +18,7 @@ package models
 
 import (
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/timeutil"
 	"code.vikunja.io/api/pkg/user"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -127,14 +128,14 @@ func TestUpdateDone(t *testing.T) {
 		oldTask := &Task{Done: false}
 		newTask := &Task{Done: true}
 		updateDone(oldTask, newTask)
-		assert.NotEqual(t, int64(0), oldTask.DoneAtUnix)
+		assert.NotEqual(t, timeutil.TimeStamp(0), oldTask.DoneAt)
 	})
 	t.Run("unmarking a task as done", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		oldTask := &Task{Done: true}
 		newTask := &Task{Done: false}
 		updateDone(oldTask, newTask)
-		assert.Equal(t, int64(0), oldTask.DoneAtUnix)
+		assert.Equal(t, timeutil.TimeStamp(0), oldTask.DoneAt)
 	})
 }
 

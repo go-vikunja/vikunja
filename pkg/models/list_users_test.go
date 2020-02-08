@@ -18,6 +18,7 @@ package models
 
 import (
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/timeutil"
 	"code.vikunja.io/api/pkg/user"
 	"gopkg.in/d4l3k/messagediff.v1"
 	"reflect"
@@ -34,8 +35,8 @@ func TestListUser_Create(t *testing.T) {
 		Username string
 		ListID   int64
 		Right    Right
-		Created  int64
-		Updated  int64
+		Created  timeutil.TimeStamp
+		Updated  timeutil.TimeStamp
 		CRUDable web.CRUDable
 		Rights   web.Rights
 	}
@@ -135,8 +136,8 @@ func TestListUser_ReadAll(t *testing.T) {
 		UserID   int64
 		ListID   int64
 		Right    Right
-		Created  int64
-		Updated  int64
+		Created  timeutil.TimeStamp
+		Updated  timeutil.TimeStamp
 		CRUDable web.CRUDable
 		Rights   web.Rights
 	}
@@ -229,8 +230,8 @@ func TestListUser_Update(t *testing.T) {
 		Username string
 		ListID   int64
 		Right    Right
-		Created  int64
-		Updated  int64
+		Created  timeutil.TimeStamp
+		Updated  timeutil.TimeStamp
 		CRUDable web.CRUDable
 		Rights   web.Rights
 	}
@@ -306,8 +307,8 @@ func TestListUser_Delete(t *testing.T) {
 		Username string
 		ListID   int64
 		Right    Right
-		Created  int64
-		Updated  int64
+		Created  timeutil.TimeStamp
+		Updated  timeutil.TimeStamp
 		CRUDable web.CRUDable
 		Rights   web.Rights
 	}

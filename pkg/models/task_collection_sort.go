@@ -17,6 +17,7 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/timeutil"
 	"fmt"
 	"reflect"
 	"sort"
@@ -117,6 +118,13 @@ func mustMakeComparator(fieldName string) taskComparator {
 		return reflect.ValueOf(task).Elem().FieldByIndex(field.Index).Interface()
 	}
 
+	// Special case for handling TimeStamp types
+	if field.Type.Name() == "TimeStamp" {
+		return func(lhs, rhs *Task) int64 {
+			return int64(extractProp(lhs).(timeutil.TimeStamp)) - int64(extractProp(rhs).(timeutil.TimeStamp))
+		}
+	}
+
 	switch field.Type.Kind() {
 	case reflect.Int64:
 		return func(lhs, rhs *Task) int64 {
@@ -165,14 +173,14 @@ var propertyComparators = map[sortProperty]taskComparator{
 	taskPropertyText:          mustMakeComparator("Text"),
 	taskPropertyDescription:   mustMakeComparator("Description"),
 	taskPropertyDone:          mustMakeComparator("Done"),
-	taskPropertyDoneAtUnix:    mustMakeComparator("DoneAtUnix"),
-	taskPropertyDueDateUnix:   mustMakeComparator("DueDateUnix"),
+	taskPropertyDoneAtUnix:    mustMakeComparator("DoneAt"),
+	taskPropertyDueDateUnix:   mustMakeComparator("DueDate"),
 	taskPropertyCreatedByID:   mustMakeComparator("CreatedByID"),
 	taskPropertyListID:        mustMakeComparator("ListID"),
 	taskPropertyRepeatAfter:   mustMakeComparator("RepeatAfter"),
 	taskPropertyPriority:      mustMakeComparator("Priority"),
-	taskPropertyStartDateUnix: mustMakeComparator("StartDateUnix"),
-	taskPropertyEndDateUnix:   mustMakeComparator("EndDateUnix"),
+	taskPropertyStartDateUnix: mustMakeComparator("StartDate"),
+	taskPropertyEndDateUnix:   mustMakeComparator("EndDate"),
 	taskPropertyHexColor:      mustMakeComparator("HexColor"),
 	taskPropertyPercentDone:   mustMakeComparator("PercentDone"),
 	taskPropertyUID:           mustMakeComparator("UID"),

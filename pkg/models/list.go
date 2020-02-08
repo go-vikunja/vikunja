@@ -18,6 +18,7 @@ package models
 
 import (
 	"code.vikunja.io/api/pkg/metrics"
+	"code.vikunja.io/api/pkg/timeutil"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
 )
@@ -42,10 +43,10 @@ type List struct {
 	// Deprecated: you should use the dedicated task list endpoint because it has support for pagination and filtering
 	Tasks []*Task `xorm:"-" json:"-"`
 
-	// A unix timestamp when this list was created. You cannot change this value.
-	Created int64 `xorm:"created not null" json:"created"`
-	// A unix timestamp when this list was last updated. You cannot change this value.
-	Updated int64 `xorm:"updated not null" json:"updated"`
+	// A timestamp when this list was created. You cannot change this value.
+	Created timeutil.TimeStamp `xorm:"created not null" json:"created"`
+	// A timestamp when this list was last updated. You cannot change this value.
+	Updated timeutil.TimeStamp `xorm:"updated not null" json:"updated"`
 
 	web.CRUDable `xorm:"-" json:"-"`
 	web.Rights   `xorm:"-" json:"-"`

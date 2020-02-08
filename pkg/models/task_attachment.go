@@ -18,10 +18,10 @@ package models
 
 import (
 	"code.vikunja.io/api/pkg/files"
+	"code.vikunja.io/api/pkg/timeutil"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
 	"io"
-	"time"
 )
 
 // TaskAttachment is the definition of a task attachment
@@ -35,7 +35,7 @@ type TaskAttachment struct {
 
 	File *files.File `xorm:"-" json:"file"`
 
-	Created int64 `xorm:"created" json:"created"`
+	Created timeutil.TimeStamp `xorm:"created" json:"created"`
 
 	web.CRUDable `xorm:"-" json:"-"`
 	web.Rights   `xorm:"-" json:"-"`
@@ -145,7 +145,7 @@ func (ta *TaskAttachment) ReadAll(a web.Auth, search string, page int, perPage i
 			continue
 		}
 		r.File = fs[r.FileID]
-		r.File.Created = time.Unix(r.File.CreatedUnix, 0)
+		r.File.Created = r.File.CreatedUnix.ToTime()
 		r.CreatedBy = us[r.CreatedByID]
 	}
 

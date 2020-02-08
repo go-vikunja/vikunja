@@ -18,6 +18,7 @@ package models
 
 import (
 	"code.vikunja.io/api/pkg/metrics"
+	"code.vikunja.io/api/pkg/timeutil"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
 	"github.com/go-xorm/builder"
@@ -38,10 +39,10 @@ type Team struct {
 	// An array of all members in this team.
 	Members []*TeamUser `xorm:"-" json:"members"`
 
-	// A unix timestamp when this relation was created. You cannot change this value.
-	Created int64 `xorm:"created" json:"created"`
-	// A unix timestamp when this relation was last updated. You cannot change this value.
-	Updated int64 `xorm:"updated" json:"updated"`
+	// A timestamp when this relation was created. You cannot change this value.
+	Created timeutil.TimeStamp `xorm:"created" json:"created"`
+	// A timestamp when this relation was last updated. You cannot change this value.
+	Updated timeutil.TimeStamp `xorm:"updated" json:"updated"`
 
 	web.CRUDable `xorm:"-" json:"-"`
 	web.Rights   `xorm:"-" json:"-"`
@@ -69,8 +70,8 @@ type TeamMember struct {
 	// Whether or not the member is an admin of the team. See the docs for more about what a team admin can do
 	Admin bool `xorm:"tinyint(1) INDEX null" json:"admin"`
 
-	// A unix timestamp when this relation was created. You cannot change this value.
-	Created int64 `xorm:"created not null" json:"created"`
+	// A timestamp when this relation was created. You cannot change this value.
+	Created timeutil.TimeStamp `xorm:"created not null" json:"created"`
 
 	web.CRUDable `xorm:"-" json:"-"`
 	web.Rights   `xorm:"-" json:"-"`

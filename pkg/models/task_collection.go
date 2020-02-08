@@ -53,8 +53,8 @@ type TaskCollection struct {
 // @Param s query string false "Search tasks by task text."
 // @Param sort_by query string false "The sorting parameter. You can pass this multiple times to get the tasks ordered by multiple different parametes, along with `order_by`. Possible values to sort by are `id`, `text`, `description`, `done`, `done_at_unix`, `due_date_unix`, `created_by_id`, `list_id`, `repeat_after`, `priority`, `start_date_unix`, `end_date_unix`, `hex_color`, `percent_done`, `uid`, `created`, `updated`. Default is `id`."
 // @Param order_by query string false "The ordering parameter. Possible values to order by are `asc` or `desc`. Default is `asc`."
-// @Param startdate query int false "The start date parameter to filter by. Expects a unix timestamp. If no end date, but a start date is specified, the end date is set to the current time."
-// @Param enddate query int false "The end date parameter to filter by. Expects a unix timestamp. If no start date, but an end date is specified, the start date is set to the current time."
+// @Param startdate query int false "The start date parameter to filter by. Expects a timestamp. If no end date, but a start date is specified, the end date is set to the current time."
+// @Param enddate query int false "The end date parameter to filter by. Expects a timestamp. If no start date, but an end date is specified, the start date is set to the current time."
 // @Security JWTKeyAuth
 // @Success 200 {array} models.Task "The tasks"
 // @Failure 500 {object} models.Message "Internal error"

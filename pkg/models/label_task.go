@@ -17,6 +17,7 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/timeutil"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
 	"github.com/go-xorm/builder"
@@ -29,8 +30,8 @@ type LabelTask struct {
 	TaskID int64 `xorm:"int(11) INDEX not null" json:"-" param:"listtask"`
 	// The label id you want to associate with a task.
 	LabelID int64 `xorm:"int(11) INDEX not null" json:"label_id" param:"label"`
-	// A unix timestamp when this task was created. You cannot change this value.
-	Created int64 `xorm:"created not null" json:"created"`
+	// A timestamp when this task was created. You cannot change this value.
+	Created timeutil.TimeStamp `xorm:"created not null" json:"created"`
 
 	web.CRUDable `xorm:"-" json:"-"`
 	web.Rights   `xorm:"-" json:"-"`

@@ -20,6 +20,7 @@ import (
 	"code.vikunja.io/api/pkg/caldav"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/timeutil"
 	"github.com/laurent22/ical-go"
 	"strconv"
 	"time"
@@ -31,23 +32,22 @@ func getCaldavTodosForTasks(list *models.List) string {
 	var caldavtodos []*caldav.Todo
 	for _, t := range list.Tasks {
 
-		durationString := t.EndDateUnix - t.StartDateUnix
-		duration, _ := time.ParseDuration(strconv.FormatInt(durationString, 10) + `s`)
+		duration := t.EndDate.ToTime().Sub(t.StartDate.ToTime())
 
 		caldavtodos = append(caldavtodos, &caldav.Todo{
-			TimestampUnix: t.Updated,
-			UID:           t.UID,
-			Summary:       t.Text,
-			Description:   t.Description,
-			CompletedUnix: t.DoneAtUnix,
+			Timestamp:   t.Updated,
+			UID:         t.UID,
+			Summary:     t.Text,
+			Description: t.Description,
+			Completed:   t.DoneAt,
 			// Organizer:     &t.CreatedBy, // Disabled until we figure out how this works
-			Priority:    t.Priority,
-			StartUnix:   t.StartDateUnix,
-			EndUnix:     t.EndDateUnix,
-			CreatedUnix: t.Created,
-			UpdatedUnix: t.Updated,
-			DueDateUnix: t.DueDateUnix,
-			Duration:    duration,
+			Priority: t.Priority,
+			Start:    t.StartDate,
+			End:      t.EndDate,
+			Created:  t.Created,
+			Updated:  t.Updated,
+			DueDate:  t.DueDate,
+			Duration: duration,
 		})
 	}
 
@@ -90,36 +90,36 @@ func parseTaskFromVTODO(content string) (vTask *models.Task, err error) {
 	duration, _ := time.ParseDuration(task["DURATION"])
 
 	vTask = &models.Task{
-		UID:           task["UID"],
-		Text:          task["SUMMARY"],
-		Description:   task["DESCRIPTION"],
-		Priority:      priority,
-		DueDateUnix:   caldavTimeToUnixTimestamp(task["DUE"]),
-		Updated:       caldavTimeToUnixTimestamp(task["DTSTAMP"]),
-		StartDateUnix: caldavTimeToUnixTimestamp(task["DTSTART"]),
-		DoneAtUnix:    caldavTimeToUnixTimestamp(task["COMPLETED"]),
+		UID:         task["UID"],
+		Text:        task["SUMMARY"],
+		Description: task["DESCRIPTION"],
+		Priority:    priority,
+		DueDate:     caldavTimeToTimestamp(task["DUE"]),
+		Updated:     caldavTimeToTimestamp(task["DTSTAMP"]),
+		StartDate:   caldavTimeToTimestamp(task["DTSTART"]),
+		DoneAt:      caldavTimeToTimestamp(task["COMPLETED"]),
 	}
 
 	if task["STATUS"] == "COMPLETED" {
 		vTask.Done = true
 	}
 
-	if duration > 0 && vTask.StartDateUnix > 0 {
-		vTask.EndDateUnix = vTask.StartDateUnix + int64(duration.Seconds())
+	if duration > 0 && vTask.StartDate > 0 {
+		vTask.EndDate = timeutil.FromTime(vTask.StartDate.ToTime().Add(duration))
 	}
 
 	return
 }
 
-func caldavTimeToUnixTimestamp(tstring string) int64 {
+func caldavTimeToTimestamp(tstring string) timeutil.TimeStamp {
 	if tstring == "" {
 		return 0
 	}
 
 	t, err := time.Parse(caldav.DateFormat, tstring)
 	if err != nil {
-		log.Warningf("Error while parsing caldav time %s to unix time: %s", tstring, err)
+		log.Warningf("Error while parsing caldav time %s to TimeStamp: %s", tstring, err)
 		return 0
 	}
-	return t.Unix()
+	return timeutil.FromTime(t)
 }

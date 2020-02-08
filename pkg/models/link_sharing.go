@@ -18,6 +18,7 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/timeutil"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/web"
@@ -52,10 +53,10 @@ type LinkSharing struct {
 	SharedBy   *user.User `xorm:"-" json:"shared_by"`
 	SharedByID int64      `xorm:"int(11) INDEX not null" json:"-"`
 
-	// A unix timestamp when this list was shared. You cannot change this value.
-	Created int64 `xorm:"created not null" json:"created"`
-	// A unix timestamp when this share was last updated. You cannot change this value.
-	Updated int64 `xorm:"updated not null" json:"updated"`
+	// A timestamp when this list was shared. You cannot change this value.
+	Created timeutil.TimeStamp `xorm:"created not null" json:"created"`
+	// A timestamp when this share was last updated. You cannot change this value.
+	Updated timeutil.TimeStamp `xorm:"updated not null" json:"updated"`
 
 	web.CRUDable `xorm:"-" json:"-"`
 	web.Rights   `xorm:"-" json:"-"`

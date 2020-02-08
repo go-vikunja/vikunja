@@ -19,6 +19,7 @@ package models
 import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/files"
+	"code.vikunja.io/api/pkg/timeutil"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
 	"gopkg.in/d4l3k/messagediff.v1"
@@ -167,7 +168,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		RelatedTasks: map[RelationKind][]*Task{},
 		Created:      1543626724,
 		Updated:      1543626724,
-		DueDateUnix:  1543636724,
+		DueDate:      1543636724,
 	}
 	task6 := &Task{
 		ID:           6,
@@ -180,20 +181,20 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		RelatedTasks: map[RelationKind][]*Task{},
 		Created:      1543626724,
 		Updated:      1543626724,
-		DueDateUnix:  1543616724,
+		DueDate:      1543616724,
 	}
 	task7 := &Task{
-		ID:            7,
-		Text:          "task #7 with start date",
-		Identifier:    "test1-7",
-		Index:         7,
-		CreatedByID:   1,
-		CreatedBy:     user1,
-		ListID:        1,
-		RelatedTasks:  map[RelationKind][]*Task{},
-		Created:       1543626724,
-		Updated:       1543626724,
-		StartDateUnix: 1544600000,
+		ID:           7,
+		Text:         "task #7 with start date",
+		Identifier:   "test1-7",
+		Index:        7,
+		CreatedByID:  1,
+		CreatedBy:    user1,
+		ListID:       1,
+		RelatedTasks: map[RelationKind][]*Task{},
+		Created:      1543626724,
+		Updated:      1543626724,
+		StartDate:    1544600000,
 	}
 	task8 := &Task{
 		ID:           8,
@@ -206,21 +207,21 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		RelatedTasks: map[RelationKind][]*Task{},
 		Created:      1543626724,
 		Updated:      1543626724,
-		EndDateUnix:  1544700000,
+		EndDate:      1544700000,
 	}
 	task9 := &Task{
-		ID:            9,
-		Text:          "task #9 with start and end date",
-		Identifier:    "test1-9",
-		Index:         9,
-		CreatedByID:   1,
-		CreatedBy:     user1,
-		ListID:        1,
-		RelatedTasks:  map[RelationKind][]*Task{},
-		Created:       1543626724,
-		Updated:       1543626724,
-		StartDateUnix: 1544600000,
-		EndDateUnix:   1544700000,
+		ID:           9,
+		Text:         "task #9 with start and end date",
+		Identifier:   "test1-9",
+		Index:        9,
+		CreatedByID:  1,
+		CreatedBy:    user1,
+		ListID:       1,
+		RelatedTasks: map[RelationKind][]*Task{},
+		Created:      1543626724,
+		Updated:      1543626724,
+		StartDate:    1544600000,
+		EndDate:      1544700000,
 	}
 	task10 := &Task{
 		ID:           10,
@@ -403,17 +404,17 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		Updated:      1543626724,
 	}
 	task27 := &Task{
-		ID:            27,
-		Text:          "task #27 with reminders",
-		Identifier:    "test1-12",
-		Index:         12,
-		CreatedByID:   1,
-		CreatedBy:     user1,
-		RemindersUnix: []int64{1543626724, 1543626824},
-		ListID:        1,
-		RelatedTasks:  map[RelationKind][]*Task{},
-		Created:       1543626724,
-		Updated:       1543626724,
+		ID:           27,
+		Text:         "task #27 with reminders",
+		Identifier:   "test1-12",
+		Index:        12,
+		CreatedByID:  1,
+		CreatedBy:    user1,
+		Reminders:    []timeutil.TimeStamp{1543626724, 1543626824},
+		ListID:       1,
+		RelatedTasks: map[RelationKind][]*Task{},
+		Created:      1543626724,
+		Updated:      1543626724,
 	}
 	task28 := &Task{
 		ID:           28,

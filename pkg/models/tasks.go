@@ -19,6 +19,7 @@ package models
 import (
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/metrics"
+	"code.vikunja.io/api/pkg/timeutil"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/web"
@@ -38,13 +39,13 @@ type Task struct {
 	Description string `xorm:"longtext null" json:"description"`
 	// Whether a task is done or not.
 	Done bool `xorm:"INDEX null" json:"done"`
-	// The unix timestamp when a task was marked as done.
-	DoneAtUnix int64 `xorm:"INDEX null" json:"doneAt"`
-	// A unix timestamp when the task is due.
-	DueDateUnix int64 `xorm:"int(11) INDEX null" json:"dueDate"`
-	// An array of unix timestamps when the user wants to be reminded of the task.
-	RemindersUnix []int64 `xorm:"-" json:"reminderDates"`
-	CreatedByID   int64   `xorm:"int(11) not null" json:"-"` // ID of the user who put that task on the list
+	// The time when a task was marked as done.
+	DoneAt timeutil.TimeStamp `xorm:"INDEX null 'done_at_unix'" json:"doneAt"`
+	// The time when the task is due.
+	DueDate timeutil.TimeStamp `xorm:"int(11) INDEX null 'due_date_unix'" json:"dueDate"`
+	// An array of datetimes when the user wants to be reminded of the task.
+	Reminders   []timeutil.TimeStamp `xorm:"-" json:"reminderDates"`
+	CreatedByID int64                `xorm:"int(11) not null" json:"-"` // ID of the user who put that task on the list
 	// The list this task belongs to.
 	ListID int64 `xorm:"int(11) INDEX not null" json:"listID" param:"list"`
 	// An amount in seconds this task repeats itself. If this is set, when marking the task as done, it will mark itself as "undone" and then increase all remindes and the due date by its amount.
@@ -52,9 +53,9 @@ type Task struct {
 	// The task priority. Can be anything you want, it is possible to sort by this later.
 	Priority int64 `xorm:"int(11) null" json:"priority"`
 	// When this task starts.
-	StartDateUnix int64 `xorm:"int(11) INDEX null" json:"startDate" query:"-"`
+	StartDate timeutil.TimeStamp `xorm:"int(11) INDEX null 'start_date_unix'" json:"startDate" query:"-"`
 	// When this task ends.
-	EndDateUnix int64 `xorm:"int(11) INDEX null" json:"endDate" query:"-"`
+	EndDate timeutil.TimeStamp `xorm:"int(11) INDEX null 'end_date_unix'" json:"endDate" query:"-"`
 	// An array of users who are assigned to this task
 	Assignees []*user.User `xorm:"-" json:"assignees"`
 	// An array of labels which are associated with this task.
@@ -72,20 +73,16 @@ type Task struct {
 	// The UID is currently not used for anything other than caldav, which is why we don't expose it over json
 	UID string `xorm:"varchar(250) null" json:"-"`
 
-	Sorting           string `xorm:"-" json:"-" query:"sort"` // Parameter to sort by
-	StartDateSortUnix int64  `xorm:"-" json:"-" query:"startdate"`
-	EndDateSortUnix   int64  `xorm:"-" json:"-" query:"enddate"`
-
 	// All related tasks, grouped by their relation kind
 	RelatedTasks RelatedTaskMap `xorm:"-" json:"related_tasks"`
 
 	// All attachments this task has
 	Attachments []*TaskAttachment `xorm:"-" json:"attachments"`
 
-	// A unix timestamp when this task was created. You cannot change this value.
-	Created int64 `xorm:"created not null" json:"created"`
-	// A unix timestamp when this task was last updated. You cannot change this value.
-	Updated int64 `xorm:"updated not null" json:"updated"`
+	// A timestamp when this task was created. You cannot change this value.
+	Created timeutil.TimeStamp `xorm:"created not null" json:"created"`
+	// A timestamp when this task was last updated. You cannot change this value.
+	Updated timeutil.TimeStamp `xorm:"updated not null" json:"updated"`
 
 	// The user who initially created the task.
 	CreatedBy *user.User `xorm:"-" json:"createdBy" valid:"-"`
@@ -101,10 +98,10 @@ func (Task) TableName() string {
 
 // TaskReminder holds a reminder on a task
 type TaskReminder struct {
-	ID           int64 `xorm:"int(11) autoincr not null unique pk"`
-	TaskID       int64 `xorm:"int(11) not null INDEX"`
-	ReminderUnix int64 `xorm:"int(11) not null INDEX"`
-	Created      int64 `xorm:"created not null"`
+	ID       int64              `xorm:"int(11) autoincr not null unique pk"`
+	TaskID   int64              `xorm:"int(11) not null INDEX"`
+	Reminder timeutil.TimeStamp `xorm:"int(11) not null INDEX 'reminder_unix'"`
+	Created  timeutil.TimeStamp `xorm:"created not null"`
 }
 
 // TableName returns a pretty table name
@@ -131,8 +128,8 @@ type taskOptions struct {
 // @Param per_page query int false "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page."
 // @Param s query string false "Search tasks by task text."
 // @Param sort query string false "The sorting parameter. Possible values to sort by are priority, prioritydesc, priorityasc, duedate, duedatedesc, duedateasc."
-// @Param startdate query int false "The start date parameter to filter by. Expects a unix timestamp. If no end date, but a start date is specified, the end date is set to the current time."
-// @Param enddate query int false "The end date parameter to filter by. Expects a unix timestamp. If no start date, but an end date is specified, the start date is set to the current time."
+// @Param startdate query int false "The start date parameter to filter by. Expects a timestamp. If no end date, but a start date is specified, the end date is set to the current time."
+// @Param enddate query int false "The end date parameter to filter by. Expects a timestamp. If no start date, but an end date is specified, the start date is set to the current time."
 // @Security JWTKeyAuth
 // @Success 200 {array} models.Task "The tasks"
 // @Failure 500 {object} models.Message "Internal error"
@@ -292,7 +289,7 @@ func GetTasksByUIDs(uids []string) (tasks []*Task, err error) {
 
 func getRemindersForTasks(taskIDs []int64) (reminders []*TaskReminder, err error) {
 	reminders = []*TaskReminder{}
-	err = x.Table("task_reminders").In("task_id", taskIDs).Find(&reminders)
+	err = x.In("task_id", taskIDs).Find(&reminders)
 	return
 }
 
@@ -390,9 +387,9 @@ func addMoreInfoToTasks(taskMap map[int64]*Task) (tasks []*Task, err error) {
 		return
 	}
 
-	taskRemindersUnix := make(map[int64][]int64)
+	taskRemindersUnix := make(map[int64][]timeutil.TimeStamp)
 	for _, r := range reminders {
-		taskRemindersUnix[r.TaskID] = append(taskRemindersUnix[r.TaskID], r.ReminderUnix)
+		taskRemindersUnix[r.TaskID] = append(taskRemindersUnix[r.TaskID], r.Reminder)
 	}
 
 	// Get all identifiers
@@ -409,7 +406,7 @@ func addMoreInfoToTasks(taskMap map[int64]*Task) (tasks []*Task, err error) {
 		task.CreatedBy = users[task.CreatedByID]
 
 		// Add the reminders
-		task.RemindersUnix = taskRemindersUnix[task.ID]
+		task.Reminders = taskRemindersUnix[task.ID]
 
 		// Prepare the subtasks
 		task.RelatedTasks = make(RelatedTaskMap)
@@ -518,7 +515,7 @@ func (t *Task) Create(a web.Auth) (err error) {
 	}
 
 	// Update the reminders
-	if err := t.updateReminders(t.RemindersUnix); err != nil {
+	if err := t.updateReminders(t.Reminders); err != nil {
 		return err
 	}
 
@@ -558,7 +555,7 @@ func (t *Task) Update() (err error) {
 	}
 
 	// Update the reminders
-	if err := ot.updateReminders(t.RemindersUnix); err != nil {
+	if err := ot.updateReminders(t.Reminders); err != nil {
 		return err
 	}
 
@@ -603,20 +600,20 @@ func (t *Task) Update() (err error) {
 		ot.Description = ""
 	}
 	// Due date
-	if t.DueDateUnix == 0 {
-		ot.DueDateUnix = 0
+	if t.DueDate == 0 {
+		ot.DueDate = 0
 	}
 	// Repeat after
 	if t.RepeatAfter == 0 {
 		ot.RepeatAfter = 0
 	}
 	// Start date
-	if t.StartDateUnix == 0 {
-		ot.StartDateUnix = 0
+	if t.StartDate == 0 {
+		ot.StartDate = 0
 	}
 	// End date
-	if t.EndDateUnix == 0 {
-		ot.EndDateUnix = 0
+	if t.EndDate == 0 {
+		ot.EndDate = 0
 	}
 	// Color
 	if t.HexColor == "" {
@@ -653,10 +650,10 @@ func (t *Task) Update() (err error) {
 // with updated values into the db)
 func updateDone(oldTask *Task, newTask *Task) {
 	if !oldTask.Done && newTask.Done && oldTask.RepeatAfter > 0 {
-		oldTask.DueDateUnix = oldTask.DueDateUnix + oldTask.RepeatAfter // assuming we'll save the old task (merged)
+		oldTask.DueDate = timeutil.FromTime(oldTask.DueDate.ToTime().Add(time.Duration(oldTask.RepeatAfter) * time.Second)) // assuming we'll save the old task (merged)
 
-		for in, r := range oldTask.RemindersUnix {
-			oldTask.RemindersUnix[in] = r + oldTask.RepeatAfter
+		for in, r := range oldTask.Reminders {
+			oldTask.Reminders[in] = timeutil.FromTime(r.ToTime().Add(time.Duration(oldTask.RepeatAfter) * time.Second))
 		}
 
 		newTask.Done = false
@@ -664,17 +661,17 @@ func updateDone(oldTask *Task, newTask *Task) {
 
 	// Update the "done at" timestamp
 	if !oldTask.Done && newTask.Done {
-		oldTask.DoneAtUnix = time.Now().Unix()
+		oldTask.DoneAt = timeutil.FromTime(time.Now())
 	}
 	// When unmarking a task as done, reset the timestamp
 	if oldTask.Done && !newTask.Done {
-		oldTask.DoneAtUnix = 0
+		oldTask.DoneAt = 0
 	}
 }
 
 // Creates or deletes all necessary remindes without unneded db operations.
 // The parameter is a slice with unix dates which holds the new reminders.
-func (t *Task) updateReminders(reminders []int64) (err error) {
+func (t *Task) updateReminders(reminders []timeutil.TimeStamp) (err error) {
 
 	// Load the current reminders
 	taskReminders, err := getRemindersForTasks([]int64{t.ID})
@@ -682,35 +679,35 @@ func (t *Task) updateReminders(reminders []int64) (err error) {
 		return err
 	}
 
-	t.RemindersUnix = make([]int64, 0, len(taskReminders))
+	t.Reminders = make([]timeutil.TimeStamp, 0, len(taskReminders))
 	for _, reminder := range taskReminders {
-		t.RemindersUnix = append(t.RemindersUnix, reminder.ReminderUnix)
+		t.Reminders = append(t.Reminders, reminder.Reminder)
 	}
 
 	// If we're removing everything, delete all reminders right away
-	if len(reminders) == 0 && len(t.RemindersUnix) > 0 {
+	if len(reminders) == 0 && len(t.Reminders) > 0 {
 		_, err = x.Where("task_id = ?", t.ID).
 			Delete(TaskReminder{})
-		t.RemindersUnix = nil
+		t.Reminders = nil
 		return err
 	}
 
 	// If we didn't change anything (from 0 to zero) don't do anything.
-	if len(reminders) == 0 && len(t.RemindersUnix) == 0 {
+	if len(reminders) == 0 && len(t.Reminders) == 0 {
 		return nil
 	}
 
 	// Make a hashmap of the new reminders for easier comparison
-	newReminders := make(map[int64]*TaskReminder, len(reminders))
+	newReminders := make(map[timeutil.TimeStamp]*TaskReminder, len(reminders))
 	for _, newReminder := range reminders {
-		newReminders[newReminder] = &TaskReminder{ReminderUnix: newReminder}
+		newReminders[newReminder] = &TaskReminder{Reminder: newReminder}
 	}
 
 	// Get old reminders to delete
 	var found bool
-	var remindersToDelete []int64
-	oldReminders := make(map[int64]*TaskReminder, len(t.RemindersUnix))
-	for _, oldReminder := range t.RemindersUnix {
+	var remindersToDelete []timeutil.TimeStamp
+	oldReminders := make(map[timeutil.TimeStamp]*TaskReminder, len(t.Reminders))
+	for _, oldReminder := range t.Reminders {
 		found = false
 		// If a new reminder is already in the list with old reminders
 		if newReminders[oldReminder] != nil {
@@ -722,7 +719,7 @@ func (t *Task) updateReminders(reminders []int64) (err error) {
 			remindersToDelete = append(remindersToDelete, oldReminder)
 		}
 
-		oldReminders[oldReminder] = &TaskReminder{ReminderUnix: oldReminder}
+		oldReminders[oldReminder] = &TaskReminder{Reminder: oldReminder}
 	}
 
 	// Delete all reminders not passed
@@ -744,15 +741,15 @@ func (t *Task) updateReminders(reminders []int64) (err error) {
 		}
 
 		// Add the new reminder
-		_, err = x.Insert(TaskReminder{TaskID: t.ID, ReminderUnix: r})
+		_, err = x.Insert(TaskReminder{TaskID: t.ID, Reminder: r})
 		if err != nil {
 			return err
 		}
 	}
 
-	t.RemindersUnix = reminders
+	t.Reminders = reminders
 	if len(reminders) == 0 {
-		t.RemindersUnix = nil
+		t.Reminders = nil
 	}
 
 	err = updateListLastUpdated(&List{ID: t.ListID})
