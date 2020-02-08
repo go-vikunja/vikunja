@@ -347,23 +347,30 @@
 						this.$set(this, 'task', r)
 						this.setListAndNamespaceTitleFromParent()
 						this.taskTitle = this.task.text
-
-						// Set all active fields based on values in the model
-						this.activeFields.assignees = this.task.assignees.length > 0
-						this.activeFields.priority = this.task.priority !== priorites.UNSET
-						this.activeFields.dueDate = this.task.dueDate !== null
-						this.activeFields.percentDone = this.task.percentDone > 0
-						this.activeFields.startDate = this.task.startDate !== null
-						this.activeFields.endDate = this.task.endDate !== null
-						this.activeFields.reminders = this.task.reminderDates.length > 1
-						this.activeFields.repeatAfter = this.task.repeatAfter.amount > 0
-						this.activeFields.labels = this.task.labels.length > 0
-						this.activeFields.attachments = this.task.attachments.length > 0
-						this.activeFields.relatedTasks = Object.keys(this.task.related_tasks).length > 0
+						this.setActiveFields()
 					})
 					.catch(e => {
 						this.error(e, this)
 					})
+			},
+			setActiveFields() {
+
+				this.task.dueDate = +new Date(this.task.dueDate) === 0 ? null : this.task.dueDate
+				this.task.startDate = +new Date(this.task.startDate) === 0 ? null : this.task.startDate
+				this.task.endDate = +new Date(this.task.endDate) === 0 ? null : this.task.endDate
+
+				// Set all active fields based on values in the model
+				this.activeFields.assignees = this.task.assignees.length > 0
+				this.activeFields.priority = this.task.priority !== priorites.UNSET
+				this.activeFields.dueDate = this.task.dueDate !== null
+				this.activeFields.percentDone = this.task.percentDone > 0
+				this.activeFields.startDate = this.task.startDate !== null
+				this.activeFields.endDate = this.task.endDate !== null
+				this.activeFields.reminders = this.task.reminderDates.length > 0
+				this.activeFields.repeatAfter = this.task.repeatAfter.amount > 0
+				this.activeFields.labels = this.task.labels.length > 0
+				this.activeFields.attachments = this.task.attachments.length > 0
+				this.activeFields.relatedTasks = Object.keys(this.task.related_tasks).length > 0
 			},
 			saveTaskOnChange() {
 				this.$refs.taskTitle.spellcheck = false
@@ -386,6 +393,7 @@
 					.then(r => {
 						this.$set(this, 'task', r)
 						this.success({message: 'The task was saved successfully.'}, this)
+						this.setActiveFields()
 					})
 					.catch(e => {
 						this.error(e, this)
