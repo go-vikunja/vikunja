@@ -16,10 +16,17 @@ export default class TaskModel extends AbstractModel {
 		this.startDate = new Date(this.startDate)
 		this.endDate = new Date(this.endDate)
 
-		this.reminderDates = this.reminderDates.map(d => {
-			return new Date(d)
-		})
-		this.reminderDates.push(null) // To trigger the datepicker
+		// Cancel all scheduled notifications for this task to be sure to only have available notifications
+		this.cancelScheduledNotifications()
+			.then(() => {
+				this.reminderDates = this.reminderDates.map(d => {
+					d = new Date(d)
+					// Every time we see a reminder, we schedule a notification for it
+					this.scheduleNotification(d)
+					return d
+				})
+				this.reminderDates.push(null) // To trigger the datepicker
+			})
 
 		// Parse the repeat after into something usable
 		this.parseRepeatAfter()
@@ -135,5 +142,71 @@ export default class TaskModel extends AbstractModel {
 		// luma will be a value 0..255 where 0 indicates the darkest, and 255 the brightest
 		let luma = 0.2126 * r + 0.7152 * g + 0.0722 * b; // per ITU-R BT.709
 		return luma > 128
+	}
+
+	async cancelScheduledNotifications() {
+		const registration = await navigator.serviceWorker.getRegistration()
+		if (typeof registration === 'undefined') {
+			return
+		}
+
+		// Get all scheduled notifications for this task and cancel them
+		const scheduledNotifications = await registration.getNotifications({
+			tag: `vikunja-task-${this.id}`,
+			includeTriggered: true,
+		})
+		console.debug('Already scheduled notifications:', scheduledNotifications)
+		scheduledNotifications.forEach(n => n.close())
+	}
+
+	async scheduleNotification(date) {
+
+		// Don't need to do anything if the notification date is in the past
+		if (date < (new Date())) {
+			return
+		}
+
+		if (!('showTrigger' in Notification.prototype)) {
+			console.debug('This browser does not support triggered notifications')
+			return
+		}
+
+		const {state} = await navigator.permissions.request({name: 'notifications'});
+		if (state !== 'granted') {
+			console.debug('Notification permission not granted, not showing notifications')
+			return
+		}
+
+		const registration = await navigator.serviceWorker.getRegistration()
+		if (typeof registration === 'undefined') {
+			return
+		}
+
+		// Register the actual notification
+		registration.showNotification('Vikunja Reminder', {
+			tag: `vikunja-task-${this.id}`, // Group notifications by task id so we're only showing one notification per task
+			body: this.text,
+			// eslint-disable-next-line no-undef
+			showTrigger: new TimestampTrigger(date),
+			badge: '/images/icons/badge-monochrome.png',
+			icon: '/images/icons/android-chrome-512x512.png',
+			data: {taskID: this.id},
+			actions: [
+				{
+					action: 'mark-as-done',
+					title: 'Done'
+				},
+				{
+					action: 'show-task',
+					title: 'Show task'
+				},
+			],
+		})
+		.then(() => {
+			console.debug('Notification scheduled for ' + date)
+		})
+		.catch(e => {
+			console.debug('Error scheduling notification', e)
+		})
 	}
 }

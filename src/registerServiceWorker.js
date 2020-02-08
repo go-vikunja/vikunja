@@ -2,6 +2,7 @@
 
 import { register } from 'register-service-worker'
 import swEvents from './ServiceWorker/events'
+import auth from './auth'
 
 if (process.env.NODE_ENV === 'production') {
   register(`${process.env.BASE_URL}sw.js`, {
@@ -32,3 +33,26 @@ if (process.env.NODE_ENV === 'production') {
     }
   })
 }
+
+if(navigator && navigator.serviceWorker) {
+  navigator.serviceWorker.addEventListener('message', event => {
+    // for every message we expect an action field
+    // determining operation that we should perform
+    const { action } = event.data;
+    // we use 2nd port provided by the message channel
+    const port = event.ports[0];
+
+    if(action === 'getBearerToken') {
+      console.debug('Token request from sw');
+      port.postMessage({
+        authToken: auth.getToken(),
+      })
+    } else {
+      console.error('Unknown event', event);
+      port.postMessage({
+        error: 'Unknown request',
+      })
+    }
+  });
+}
+
