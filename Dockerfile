@@ -32,6 +32,9 @@ RUN adduser -S -D vikunja -h /app/vikunja -H \
   && chown vikunja -R /app/vikunja
 ENV VIKUNJA_SERVICE_ROOTPATH=/app/vikunja/
 
+# Fix time zone settings not working
+RUN apk --no-cache add tzdata
+
 # Files permissions
 RUN mkdir /app/vikunja/files && \
   chown -R vikunja /app/vikunja/files
