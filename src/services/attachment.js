@@ -1,5 +1,6 @@
 import AbstractService from './abstractService'
 import AttachmentModel from '../models/attachment'
+import moment from 'moment'
 
 export default class AttachmentService extends AbstractService {
 	constructor() {
@@ -8,6 +9,11 @@ export default class AttachmentService extends AbstractService {
 			getAll: '/tasks/{task_id}/attachments',
 			delete: '/tasks/{task_id}/attachments/{id}',
 		})
+	}
+
+	processModel(model) {
+		model.created = moment(model.created).toISOString()
+		return model
 	}
 
 	uploadProgress = 0
@@ -81,10 +87,5 @@ export default class AttachmentService extends AbstractService {
 				this.uploadProgress = 0
 				cancel()
 			})
-	}
-
-	processModel(model) {
-		model.created = Math.round(+new Date(model.created) / 1000)
-		return model
 	}
 }

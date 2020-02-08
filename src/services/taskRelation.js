@@ -1,5 +1,6 @@
 import AbstractService from './abstractService'
 import TaskRelationModel from '../models/taskRelation'
+import moment from 'moment'
 
 export default class TaskRelationService extends AbstractService {
 	constructor() {
@@ -8,7 +9,12 @@ export default class TaskRelationService extends AbstractService {
 			delete: '/tasks/{task_id}/relations',
 		})
 	}
-	
+
+	processModel(model) {
+		model.created = moment(model.created).toISOString()
+		return model
+	}
+
 	modelFactory(data) {
 		return new TaskRelationModel(data)
 	}

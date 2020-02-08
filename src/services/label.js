@@ -1,5 +1,6 @@
 import AbstractService from './abstractService'
 import LabelModel from '../models/label'
+import moment from 'moment'
 
 export default class LabelService extends AbstractService {
 	constructor() {
@@ -11,7 +12,13 @@ export default class LabelService extends AbstractService {
 			delete: '/labels/{id}',
 		})
 	}
-	
+
+	processModel(model) {
+		model.created = moment(model.created).toISOString()
+		model.updated = moment(model.updated).toISOString()
+		return model
+	}
+
 	modelFactory(data) {
 		return new LabelModel(data)
 	}

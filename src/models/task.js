@@ -12,12 +12,12 @@ export default class TaskModel extends AbstractModel {
 		this.listID = Number(this.listID)
 		
 		// Make date objects from timestamps
-		this.dueDate = this.parseDateIfNessecary(this.dueDate)
-		this.startDate = this.parseDateIfNessecary(this.startDate)
-		this.endDate = this.parseDateIfNessecary(this.endDate)
+		this.dueDate = new Date(this.dueDate)
+		this.startDate = new Date(this.startDate)
+		this.endDate = new Date(this.endDate)
 
 		this.reminderDates = this.reminderDates.map(d => {
-			return this.parseDateIfNessecary(d)
+			return new Date(d)
 		})
 		this.reminderDates.push(null) // To trigger the datepicker
 
@@ -53,6 +53,9 @@ export default class TaskModel extends AbstractModel {
 		this.attachments = this.attachments.map(a => {
 			return new AttachmentModel(a)
 		})
+
+		this.created = new Date(this.created)
+		this.updated = new Date(this.updated)
 	}
 	
 	defaults() {
@@ -77,8 +80,8 @@ export default class TaskModel extends AbstractModel {
 			attachments: [],
 
 			createdBy: UserModel,
-			created: 0,
-			updated: 0,
+			created: null,
+			updated: null,
 			
 			listID: 0, // Meta, only used when creating a new task
 		}
@@ -88,19 +91,6 @@ export default class TaskModel extends AbstractModel {
 	// Helper functions
 	///////////////
 	
-	/**
-	 * Makes a js date object from a unix timestamp (in seconds).
-	 * @param unixTimestamp
-	 * @returns {*}
-	 */
-	parseDateIfNessecary(unixTimestamp) {
-		let dateobj = new Date(unixTimestamp * 1000)
-		if (unixTimestamp === 0) {
-			return null
-		}
-		return dateobj
-	}
-
 	/**
 	 * Parses the "repeat after x seconds" from the task into a usable js object inside the task.
 	 * This function should only be called from the constructor.

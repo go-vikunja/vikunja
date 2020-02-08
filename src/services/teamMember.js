@@ -1,5 +1,6 @@
 import AbstractService from './abstractService'
 import TeamMemberModel from '../models/teamMember'
+import moment from 'moment'
 
 export default class TeamMemberService extends AbstractService {
 	constructor() {
@@ -8,7 +9,13 @@ export default class TeamMemberService extends AbstractService {
 			delete: '/teams/{teamID}/members/{id}', // "id" is the user id because we're intheriting from a normal user
 		});
 	}
-	
+
+	processModel(model) {
+		model.created = moment(model.created).toISOString()
+		model.updated = moment(model.updated).toISOString()
+		return model
+	}
+
 	modelFactory(data) {
 		return new TeamMemberModel(data)
 	}

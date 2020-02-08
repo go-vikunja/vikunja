@@ -1,10 +1,11 @@
 import AbstractModel from './abstractModel'
-import UserModel from "./user";
+import UserModel from './user'
 
 export default class TaskRelationModel extends AbstractModel {
 	constructor(data) {
 		super(data)
 		this.created_by = new UserModel(this.created_by)
+		this.created = new Date(this.created)
 	}
 	
 	defaults() {
@@ -15,7 +16,7 @@ export default class TaskRelationModel extends AbstractModel {
 			relation_kind: '',
 
 			created_by: UserModel,
-			created: 0,
+			created: null,
 		}
 	}
 }

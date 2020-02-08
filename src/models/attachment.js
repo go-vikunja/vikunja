@@ -7,7 +7,7 @@ export default class AttachmentModel extends AbstractModel {
 		super(data)
 		this.created_by = new UserModel(this.created_by)
 		this.file = new FileModel(this.file)
-		this.created = new Date(this.created * 1000)
+		this.created = new Date(this.created)
 	}
 
 	defaults() {
@@ -16,7 +16,7 @@ export default class AttachmentModel extends AbstractModel {
 			task_id: 0,
 			file: FileModel,
 			created_by: UserModel,
-			created: 0,
+			created: null,
 		}
 	}
 }

@@ -1,6 +1,7 @@
 import AbstractService from './abstractService'
 import TaskModel from '../models/task'
 import AttachmentService from './attachment'
+import moment from 'moment'
 
 export default class TaskService extends AbstractService {
 	constructor() {
@@ -29,10 +30,12 @@ export default class TaskService extends AbstractService {
 		// Ensure the listID is an int
 		model.listID = Number(model.listID)
 
-		// Convert the date in a unix timestamp
-		model.dueDate = model.dueDate !== null ? Math.round(+new Date(model.dueDate) / 1000) : model.dueDate
-		model.startDate = model.startDate !== null ? Math.round(+new Date(model.startDate) / 1000): model.startDate
-		model.endDate = model.endDate !== null ? Math.round(+new Date(model.endDate) / 1000) : model.endDate
+		// Convert dates into an iso string
+		model.dueDate = moment(model.dueDate).toISOString()
+		model.startDate = moment(model.startDate).toISOString()
+		model.endDate = moment(model.endDate).toISOString()
+		model.created = moment(model.created).toISOString()
+		model.updated = moment(model.updated).toISOString()
 
 		// remove all nulls, these would create empty reminders
 		for (const index in model.reminderDates) {
@@ -44,7 +47,7 @@ export default class TaskService extends AbstractService {
 		// Make normal timestamps from js dates
 		if(model.reminderDates.length > 0) {
 			model.reminderDates = model.reminderDates.map(r => {
-				return Math.round(+new Date(r) / 1000)
+				return moment(r).toISOString()
 			})
 		}
 

@@ -1,6 +1,7 @@
 import AbstractService from './abstractService'
 import UserNamespaceModel from '../models/userNamespace'
 import UserModel from '../models/user'
+import moment from 'moment'
 
 export default class UserNamespaceService extends AbstractService {
 	constructor() {
@@ -10,6 +11,12 @@ export default class UserNamespaceService extends AbstractService {
 			update: '/namespaces/{namespaceID}/users/{userID}',
 			delete: '/namespaces/{namespaceID}/users/{userID}',
 		})
+	}
+
+	processModel(model) {
+		model.created = moment(model.created).toISOString()
+		model.updated = moment(model.updated).toISOString()
+		return model
 	}
 
 	modelFactory(data) {

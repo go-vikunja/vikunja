@@ -13,8 +13,11 @@ export default class ListModel extends AbstractModel {
 		})
 		
 		this.owner = new UserModel(this.owner)
+
+		this.created = new Date(this.created)
+		this.updated = new Date(this.updated)
 	}
-	
+
 	// Default attributes that define the "empty" state.
 	defaults() {
 		return {
@@ -24,9 +27,9 @@ export default class ListModel extends AbstractModel {
 			owner: UserModel,
 			tasks: [],
 			namespaceID: 0,
-			
-			created: 0,
-			updated: 0,
+
+			created: null,
+			updated: null,
 		}
 	}
 }

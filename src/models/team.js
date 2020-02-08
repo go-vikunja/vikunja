@@ -11,6 +11,9 @@ export default class TeamModel extends AbstractModel {
 			return new TeamMemberModel(m)
 		})
 		this.createdBy = new UserModel(this.createdBy)
+
+		this.created = new Date(this.created)
+		this.updated = new Date(this.updated)
 	}
 
 	defaults() {
@@ -22,8 +25,8 @@ export default class TeamModel extends AbstractModel {
 			right: 0,
 
 			createdBy: {},
-			created: 0,
-			updated: 0
+			created: null,
+			updated: null,
 		}
 	}
 }

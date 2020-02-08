@@ -10,6 +10,9 @@ export default class NamespaceModel extends AbstractModel {
 			return new ListModel(l)
 		})
 		this.owner = new UserModel(this.owner)
+
+		this.created = new Date(this.created)
+		this.updated = new Date(this.updated)
 	}
 
 	// Default attributes that define the 'empty' state.
@@ -21,8 +24,8 @@ export default class NamespaceModel extends AbstractModel {
 			owner: UserModel,
 			lists: [],
 
-			created: 0,
-			updated: 0,
+			created: null,
+			updated: null,
 		}
 	}
 }

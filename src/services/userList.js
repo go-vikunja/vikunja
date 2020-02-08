@@ -1,6 +1,7 @@
 import AbstractService from './abstractService'
 import UserListModel from '../models/userList'
 import UserModel from '../models/user'
+import moment from 'moment'
 
 export default class UserListService extends AbstractService {
 	constructor() {
@@ -10,6 +11,12 @@ export default class UserListService extends AbstractService {
 			update: '/lists/{listID}/users/{userID}',
 			delete: '/lists/{listID}/users/{userID}',
 		})
+	}
+
+	processModel(model) {
+		model.created = moment(model.created).toISOString()
+		model.updated = moment(model.updated).toISOString()
+		return model
 	}
 
 	modelFactory(data) {

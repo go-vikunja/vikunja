@@ -8,6 +8,9 @@ export default class ListModel extends AbstractModel {
         super(data)
 
         this.shared_by = new UserModel(this.shared_by)
+
+        this.created = new Date(this.created)
+        this.updated = new Date(this.updated)
     }
 
     // Default attributes that define the "empty" state.
@@ -20,8 +23,8 @@ export default class ListModel extends AbstractModel {
             sharing_type: 0,
             listID: 0,
 
-            created: 0,
-            updated: 0,
+            created: null,
+            updated: null,
         }
     }
 }

@@ -13,6 +13,9 @@ export default class LabelModel extends AbstractModel {
 		}
 		this.textColor = this.hasDarkColor() ? '#4a4a4a' : '#e5e5e5'
 		this.created_by = new UserModel(this.created_by)
+
+		this.created = new Date(this.created)
+		this.updated = new Date(this.updated)
 	}
 	
 	defaults() {
@@ -25,8 +28,8 @@ export default class LabelModel extends AbstractModel {
 			listID: 0,
 			textColor: '',
 			
-			created: 0,
-			updated: 0
+			created: null,
+			updated: null,
 		}
 	}
 	
