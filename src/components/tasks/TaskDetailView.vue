@@ -192,6 +192,15 @@
 					</div>
 				</div>
 				<div class="column is-one-fifth action-buttons">
+					<a class="button is-outlined noshadow has-no-border" :class="{'is-success': !task.done}" @click="toggleTaskDone()">
+						<span class="icon is-small"><icon icon="check-double"/></span>
+						<template v-if="task.done">
+							Mark as undone
+						</template>
+						<template v-else>
+							Done!
+						</template>
+					</a>
 					<a class="button" @click="setFieldActive('assignees')">
 						<span class="icon is-small"><icon icon="users"/></span>
 						Assign this task to a user
@@ -424,6 +433,10 @@
 					.catch(e => {
 						this.error(e, this)
 					})
+			},
+			toggleTaskDone() {
+				this.task.done = !this.task.done
+				this.saveTask()
 			},
 		},
 	}
