@@ -25,7 +25,9 @@
 
     @media screen and (max-width: $tablet) {
       .navbar-brand {
-        margin-left: 3em;
+        // This prevents the user icon from snapping to the left into the menu button
+        width: 0;
+        overflow: hidden;
       }
     }
 
@@ -195,6 +197,14 @@
             background: $white;
             border-left: $vikunja-nav-selected-width solid darken($primary, 3%);
           }
+        }
+      }
+
+      .logo {
+        display: none;
+
+        @media screen and (max-width: $tablet) {
+          display: block;
         }
       }
     }

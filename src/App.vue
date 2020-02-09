@@ -49,6 +49,9 @@
 				<div class="app-container">
 					<div class="namespace-container" :class="{'is-active': mobileMenuActive}">
 						<div class="menu top-menu">
+							<router-link :to="{name: 'home'}" class="logo">
+								<img src="/images/logo-full.svg" alt="Vikunja"/>
+							</router-link>
 							<ul class="menu-list">
 								<li>
 									<router-link :to="{ name: 'home'}">
