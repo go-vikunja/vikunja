@@ -375,7 +375,7 @@
 				this.activeFields.percentDone = this.task.percentDone > 0
 				this.activeFields.startDate = this.task.startDate !== null
 				this.activeFields.endDate = this.task.endDate !== null
-				this.activeFields.reminders = this.task.reminderDates.length > 0
+				this.activeFields.reminders = this.task.reminderDates.length > 1
 				this.activeFields.repeatAfter = this.task.repeatAfter.amount > 0
 				this.activeFields.labels = this.task.labels.length > 0
 				this.activeFields.attachments = this.task.attachments.length > 0
