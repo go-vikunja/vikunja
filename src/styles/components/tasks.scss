@@ -27,6 +27,11 @@
     display: block;
     padding: 0.5rem 1rem;
     border-bottom: 1px solid darken(#fff, 10%);
+    transition: background-color $transition;
+
+    &:hover {
+      background-color: darken($light-background, 3);
+    }
 
     span:not(.tag) {
       width: calc(100% - 40px);
