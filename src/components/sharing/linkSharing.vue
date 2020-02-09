@@ -7,14 +7,13 @@
 		</header>
 		<div class="card-content content sharables-list">
 			<form @submit.prevent="add()" class="add-form">
-				<div class="field is-grouped">
-					<div class="control">
-						<!-- TODO: maybe move this into a modal? -->
-						Add a new link share:
-					</div>
+				<p>
+					Share with a link:
+				</p>
+				<div class="field has-addons">
 					<div class="control">
 						<div class="select">
-							<select v-model="selectedRight" class="button buttonright">
+							<select v-model="selectedRight">
 								<option :value="rights.READ">Read only</option>
 								<option :value="rights.READ_WRITE">Read & write</option>
 								<option :value="rights.ADMIN">Admin</option>
@@ -23,15 +22,12 @@
 					</div>
 					<div class="control">
 						<button type="submit" class="button is-success">
-							<span class="icon is-small">
-								<icon icon="plus"/>
-							</span>
-							Add
+							Share
 						</button>
 					</div>
 				</div>
 			</form>
-			<table class="table is-striped is-hoverable is-fullwidth">
+			<table class="table is-striped is-hoverable is-fullwidth link-share-list">
 				<tbody>
 				<tr>
 					<th>Link</th>
@@ -48,7 +44,7 @@
 							</div>
 							<div class="control">
 								<a class="button is-success noshadow" @click="copy(getShareLink(s.hash))">
-									<span class="icon is-small">
+									<span class="icon">
 										<icon icon="paste"/>
 									</span>
 								</a>
@@ -80,7 +76,7 @@
 					</td>
 					<td class="actions">
 						<button @click="linkIDToDelete = s.id; showDeleteModal = true" class="button is-danger icon-only">
-							<span class="icon is-small">
+							<span class="icon">
 								<icon icon="trash-alt"/>
 							</span>
 						</button>

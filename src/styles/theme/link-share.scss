@@ -13,3 +13,29 @@
     max-width: 100%;
   }
 }
+
+.link-share-list {
+  .field.has-addons {
+    .control:first-child{
+      width: 100%;
+    }
+
+    .button {
+      height: 40px;
+    }
+
+    @media screen and (max-width: $tablet) {
+      .control:first-child {
+        display: none;
+      }
+
+      .button {
+        border-radius: $radius !important;
+      }
+    }
+  }
+}
+
+.sharables-list {
+  overflow-y: auto
+}
