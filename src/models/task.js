@@ -160,12 +160,6 @@ export default class TaskModel extends AbstractModel {
 	}
 
 	async scheduleNotification(date) {
-
-		// Don't need to do anything if the notification date is in the past
-		if (date < (new Date())) {
-			return
-		}
-
 		if (!('showTrigger' in Notification.prototype)) {
 			console.debug('This browser does not support triggered notifications')
 			return
