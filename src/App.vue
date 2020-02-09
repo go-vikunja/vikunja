@@ -296,6 +296,7 @@
 				this.fullpage = false;
 				this.loadNamespacesIfNeeded(e)
 				this.mobileMenuActive = false
+				this.userMenuActive = false
 			},
 			setFullPage() {
 				this.fullpage = true;
