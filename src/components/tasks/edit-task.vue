@@ -4,7 +4,7 @@
 			<label class="label" for="tasktext">Task Text</label>
 			<div class="control">
 				<input v-focus :class="{ 'disabled': taskService.loading}" :disabled="taskService.loading" class="input"
-					type="text" id="tasktext" placeholder="The task text is here..." v-model="taskEditTask.text">
+					type="text" id="tasktext" placeholder="The task text is here..." v-model="taskEditTask.text" @change="editTaskSubmit()">
 			</div>
 		</div>
 		<div class="field">
@@ -12,12 +12,13 @@
 			<div class="control">
 				<textarea :class="{ 'disabled': taskService.loading}" :disabled="taskService.loading" class="textarea"
 					placeholder="The tasks description goes here..." id="taskdescription"
-					v-model="taskEditTask.description"></textarea>
+					v-model="taskEditTask.description" @change="editTaskSubmit()">
+				</textarea>
 			</div>
 		</div>
 
 		<b>Reminder Dates</b>
-		<reminders v-model="taskEditTask.reminderDates"/>
+		<reminders v-model="taskEditTask.reminderDates" @change="editTaskSubmit()"/>
 
 		<div class="field">
 			<label class="label" for="taskduedate">Due Date</label>
@@ -28,6 +29,7 @@
 						:disabled="taskService.loading"
 						v-model="taskEditTask.dueDate"
 						:config="flatPickerConfig"
+						@on-close="editTaskSubmit()"
 						id="taskduedate"
 						placeholder="The tasks due date is here...">
 				</flat-pickr>
@@ -44,6 +46,7 @@
 							:disabled="taskService.loading"
 							v-model="taskEditTask.startDate"
 							:config="flatPickerConfig"
+							@on-close="editTaskSubmit()"
 							id="taskduedate"
 							placeholder="Start date">
 					</flat-pickr>
@@ -55,6 +58,7 @@
 							:disabled="taskService.loading"
 							v-model="taskEditTask.endDate"
 							:config="flatPickerConfig"
+							@on-close="editTaskSubmit()"
 							id="taskduedate"
 							placeholder="End date">
 					</flat-pickr>
@@ -64,20 +68,20 @@
 
 		<div class="field">
 			<label class="label" for="">Repeat after</label>
-			<repeat-after v-model="taskEditTask.repeatAfter"/>
+			<repeat-after v-model="taskEditTask.repeatAfter" @change="editTaskSubmit()"/>
 		</div>
 
 		<div class="field">
 			<label class="label" for="">Priority</label>
 			<div class="control priority-select">
-				<priority-select v-model="taskEditTask.priority"/>
+				<priority-select v-model="taskEditTask.priority" @change="editTaskSubmit()"/>
 			</div>
 		</div>
 
 		<div class="field">
 			<label class="label">Percent Done</label>
 			<div class="control">
-				<percent-done-select v-model="taskEditTask.percentDone"/>
+				<percent-done-select v-model="taskEditTask.percentDone" @change="editTaskSubmit()"/>
 			</div>
 		</div>
 
@@ -90,8 +94,9 @@
 						picker="square"
 						model="hex"
 						:enableAlpha="false"
-						:rgbSliders="true">
-				</verte>
+						:rgbSliders="true"
+						@change="editTaskSubmit()"
+				/>
 			</div>
 		</div>
 
