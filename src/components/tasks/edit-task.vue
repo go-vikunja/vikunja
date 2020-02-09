@@ -199,6 +199,7 @@
 		watch: {
 			task() {
 				this.taskEditTask = this.task
+				this.initTaskFields()
 			}
 		},
 		created() {
@@ -206,13 +207,20 @@
 			this.taskService = new TaskService()
 			this.newTask = new TaskModel()
 			this.taskEditTask = this.task
+			this.initTaskFields()
 		},
 		methods: {
+			initTaskFields() {
+				this.taskEditTask.dueDate = +new Date(this.task.dueDate) === 0 ? null : this.task.dueDate
+				this.taskEditTask.startDate = +new Date(this.task.startDate) === 0 ? null : this.task.startDate
+				this.taskEditTask.endDate = +new Date(this.task.endDate) === 0 ? null : this.task.endDate
+			},
 			editTaskSubmit() {
 				this.taskService.update(this.taskEditTask)
 					.then(r => {
 						this.$set(this, 'taskEditTask', r)
 						this.success({message: 'The task was successfully updated.'}, this)
+						this.initTaskFields()
 					})
 					.catch(e => {
 						this.error(e, this)
