@@ -101,11 +101,12 @@
       }
 
       .multiselect__input, .multiselect__single {
-        width: 100% !important;
+        width: auto !important;
         margin: 0;
         padding: .35em !important;
         position: relative !important;
         background: transparent;
+        max-width: 100%;
       }
 
       .multiselect__placeholder {
