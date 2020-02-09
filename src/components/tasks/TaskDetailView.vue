@@ -398,6 +398,13 @@
 				}
 			},
 			saveTask() {
+
+				// If no end date is being set, but a start date and due date,
+				// use the due date as the end date
+				if (this.task.endDate === null && this.task.startDate !== null && this.task.dueDate !== null) {
+					this.task.endDate = this.task.dueDate
+				}
+
 				this.taskService.update(this.task)
 					.then(r => {
 						this.$set(this, 'task', r)
