@@ -200,6 +200,10 @@
 						<span class="icon is-small"><icon icon="tags"/></span>
 						Add labels
 					</a>
+					<a class="button" @click="setFieldActive('reminders')">
+						<span class="icon is-small"><icon icon="history"/></span>
+						Set Reminders
+					</a>
 					<a class="button" @click="setFieldActive('attachments')">
 						<span class="icon is-small"><icon icon="paperclip"/></span>
 						Add attachments
@@ -227,10 +231,6 @@
 					<a class="button" @click="setFieldActive('endDate')">
 						<span class="icon is-small"><icon icon="calendar-week"/></span>
 						Set an End Date
-					</a>
-					<a class="button" @click="setFieldActive('reminders')">
-						<span class="icon is-small"><icon icon="history"/></span>
-						Set Reminders
 					</a>
 					<a class="button" @click="setFieldActive('repeatAfter')">
 						<span class="icon is-small"><icon :icon="['far', 'clock']"/></span>
