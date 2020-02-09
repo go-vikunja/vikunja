@@ -2,7 +2,7 @@
 	<div class="card is-fullwidth">
 		<header class="card-header">
 			<p class="card-header-title">
-				{{shareType}}s with access to this {{typeString}}
+				Shared with these {{shareType}}s
 			</p>
 		</header>
 		<div class="card-content content sharables-list">

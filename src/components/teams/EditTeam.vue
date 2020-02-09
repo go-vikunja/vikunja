@@ -128,7 +128,7 @@
 				v-on:submit="deleteUser()">
 			<span slot="header">Remove a user from the team</span>
 			<p slot="text">Are you sure you want to remove this user from the team?<br/>
-				He will loose access to all lists and namespaces this team has access to.<br/>
+				They will loose access to all lists and namespaces this team has access to.<br/>
 				<b>This CANNOT BE UNDONE!</b></p>
 		</modal>
 	</div>
