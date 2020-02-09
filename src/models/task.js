@@ -145,6 +145,11 @@ export default class TaskModel extends AbstractModel {
 	}
 
 	async cancelScheduledNotifications() {
+		if (!('showTrigger' in Notification.prototype)) {
+			console.debug('This browser does not support triggered notifications')
+			return
+		}
+
 		const registration = await navigator.serviceWorker.getRegistration()
 		if (typeof registration === 'undefined') {
 			return
