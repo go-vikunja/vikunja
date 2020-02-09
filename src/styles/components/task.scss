@@ -1,4 +1,9 @@
 .task-view {
+  // This is a workaround to hide the llama background from the top on the task detail page
+  margin-top: -1.5em;
+  padding-top: 1.5em;
+  background-color: $light-background;
+
   .subtitle {
     color: $grey;
 
