@@ -76,7 +76,7 @@
 								<span class="tag" v-for="label in l.labels" :style="{'background': label.hex_color, 'color': label.textColor}" :key="label.id">
 									<span>{{ label.title }}</span>
 								</span>
-								<img :src="gravatar(a)" :alt="a.username" v-for="(a, i) in l.assignees" class="avatar" :key="l.id + 'assignee' + a.id + i"/>
+								<img :src="a.getAvatarUrl(27)" :alt="a.username" v-for="(a, i) in l.assignees" class="avatar" :key="l.id + 'assignee' + a.id + i"/>
 								<i v-if="l.dueDate > 0" :class="{'overdue': l.dueDate <= new Date() && !l.done}" v-tooltip="formatDate(l.dueDate)"> - Due {{formatDateSince(l.dueDate)}}</i>
 								<priority-label :priority="l.priority"/>
 							</router-link>
@@ -270,9 +270,6 @@
 				let theTask = this.getTaskByID(id) // Somehow this does not work if we directly assign this to this.taskEditTask
 				this.taskEditTask = theTask
 				this.isTaskEdit = true
-			},
-			gravatar(user) {
-				return 'https://www.gravatar.com/avatar/' + user.avatarUrl + '?s=27'
 			},
 			getTaskByID(id) {
 				for (const t in this.tasks) {

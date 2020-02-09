@@ -16,7 +16,7 @@
 						<a @click="refreshApp()" class="button is-primary noshadow">Update Now</a>
 					</div>
 					<div class="user">
-						<img :src="gravatar()" class="avatar" alt=""/>
+						<img :src="user.infos.getAvatarUrl()" class="avatar" alt=""/>
 						<div class="dropdown is-right is-active">
 							<div class="dropdown-trigger">
 								<button class="button noshadow" @click="userMenuActive = !userMenuActive">
@@ -273,9 +273,6 @@
 		methods: {
 			logout() {
 				auth.logout()
-			},
-			gravatar() {
-				return 'https://www.gravatar.com/avatar/' + this.user.infos.avatar + '?s=50&d=mp'
 			},
 			loadNamespaces() {
 				this.namespaceService = new NamespaceService()

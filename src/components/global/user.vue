@@ -1,6 +1,6 @@
 <template>
 	<div class="user">
-		<img :src="gravatar()" class="avatar" alt="" v-tooltip="user.username"/>
+		<img :src="user.getAvatarUrl(avatarSize)" class="avatar" alt="" v-tooltip="user.username"/>
 		<span v-if="showUsername" class="username">{{ user.username }}</span>
 	</div>
 </template>
@@ -24,11 +24,6 @@
 				default: 50,
 			}
 		},
-		methods: {
-			gravatar() {
-				return 'https://www.gravatar.com/avatar/' + this.user.avatarUrl + '?s=' + this.avatarSize
-			}
-		}
 	}
 </script>
 

@@ -1,5 +1,6 @@
 import {HTTP} from '../http-common'
 import router from '../router'
+import UserModel from '../models/user'
 // const API_URL = 'http://localhost:8082/api/v1/'
 // const LOGIN_URL = 'http://localhost:8082/login'
 
@@ -106,9 +107,8 @@ export default {
 		this.getUserInfos()
 		this.user.authenticated = false
 		if (jwt) {
-			let infos = this.user.infos
 			let ts = Math.round((new Date()).getTime() / 1000)
-			if (infos.exp >= ts) {
+			if (this.user.infos.exp >= ts) {
 				this.user.authenticated = true
 			}
 		}
@@ -117,8 +117,8 @@ export default {
 	getUserInfos() {
 		let jwt = localStorage.getItem('token')
 		if (jwt) {
-			this.user.infos = this.parseJwt(localStorage.getItem('token'))
-			return this.parseJwt(localStorage.getItem('token'))
+			this.user.infos = new UserModel(this.parseJwt(localStorage.getItem('token')))
+			return this.user.infos
 		} else {
 			return {}
 		}
