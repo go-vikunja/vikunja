@@ -275,7 +275,7 @@
 				auth.logout()
 			},
 			gravatar() {
-				return 'https://www.gravatar.com/avatar/' + this.user.infos.avatar + '?s=50'
+				return 'https://www.gravatar.com/avatar/' + this.user.infos.avatar + '?s=50&d=mp'
 			},
 			loadNamespaces() {
 				this.namespaceService = new NamespaceService()
