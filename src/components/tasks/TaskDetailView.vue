@@ -213,25 +213,9 @@
 						<span class="icon is-small"><icon icon="history"/></span>
 						Set Reminders
 					</a>
-					<a class="button" @click="setFieldActive('attachments')">
-						<span class="icon is-small"><icon icon="paperclip"/></span>
-						Add attachments
-					</a>
-					<a class="button" @click="setFieldActive('relatedTasks')">
-						<span class="icon is-small"><icon icon="tasks"/></span>
-						Add task relations
-					</a>
-					<a class="button" @click="setFieldActive('priority')">
-						<span class="icon is-small"><icon :icon="['far', 'star']"/></span>
-						Set Priority
-					</a>
 					<a class="button" @click="setFieldActive('dueDate')">
 						<span class="icon is-small"><icon icon="calendar"/></span>
 						Set Due Date
-					</a>
-					<a class="button" @click="setFieldActive('percentDone')">
-						<span class="icon is-small"><icon icon="percent"/></span>
-						Set Percent Done
 					</a>
 					<a class="button" @click="setFieldActive('startDate')">
 						<span class="icon is-small"><icon icon="calendar-week"/></span>
@@ -244,6 +228,22 @@
 					<a class="button" @click="setFieldActive('repeatAfter')">
 						<span class="icon is-small"><icon :icon="['far', 'clock']"/></span>
 						Set a repeating interval
+					</a>
+					<a class="button" @click="setFieldActive('priority')">
+						<span class="icon is-small"><icon :icon="['far', 'star']"/></span>
+						Set Priority
+					</a>
+					<a class="button" @click="setFieldActive('percentDone')">
+						<span class="icon is-small"><icon icon="percent"/></span>
+						Set Percent Done
+					</a>
+					<a class="button" @click="setFieldActive('attachments')">
+						<span class="icon is-small"><icon icon="paperclip"/></span>
+						Add attachments
+					</a>
+					<a class="button" @click="setFieldActive('relatedTasks')">
+						<span class="icon is-small"><icon icon="tasks"/></span>
+						Add task relations
 					</a>
 					<a class="button is-danger is-outlined noshadow has-no-border" @click="showDeleteModal = true">
 						<span class="icon is-small"><icon icon="trash-alt"/></span>
