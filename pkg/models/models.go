@@ -21,7 +21,7 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
 	_ "github.com/go-sql-driver/mysql" // Because.
-	"github.com/go-xorm/xorm"
+	"xorm.io/xorm"
 
 	_ "github.com/mattn/go-sqlite3" // Because.
 )

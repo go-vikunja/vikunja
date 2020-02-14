@@ -18,7 +18,7 @@ package models
 
 import (
 	"code.vikunja.io/web"
-	"github.com/go-xorm/builder"
+	"xorm.io/builder"
 )
 
 // CanWrite checks if a user has write access to a namespace

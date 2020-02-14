@@ -21,12 +21,12 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	"encoding/gob"
 	"fmt"
-	"github.com/go-xorm/core"
-	"github.com/go-xorm/xorm"
 	"strconv"
 	"time"
+	"xorm.io/core"
+	"xorm.io/xorm"
 
-	xrc "github.com/go-xorm/xorm-redis-cache"
+	xrc "gitea.com/xorm/xorm-redis-cache"
 
 	_ "github.com/go-sql-driver/mysql" // Because.
 	_ "github.com/mattn/go-sqlite3"    // Because.
@@ -62,8 +62,9 @@ func CreateDBEngine() (engine *xorm.Engine, err error) {
 	}
 
 	engine.SetMapper(core.GonicMapper{})
-	engine.ShowSQL(config.LogDatabase.GetString() != "off")
-	engine.SetLogger(xorm.NewSimpleLogger(log.GetLogWriter("database")))
+	logger := xorm.NewSimpleLogger(log.GetLogWriter("database"))
+	logger.ShowSQL(config.LogDatabase.GetString() != "off")
+	engine.SetLogger(logger)
 
 	// Cache
 	// We have to initialize the cache here to avoid import cycles

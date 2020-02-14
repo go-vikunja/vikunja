@@ -18,8 +18,8 @@ package migration
 
 import (
 	"code.vikunja.io/api/pkg/utils"
-	"github.com/go-xorm/xorm"
 	"src.techknowlogick.com/xormigrate"
+	"xorm.io/xorm"
 )
 
 type listTask20190511202210 struct {

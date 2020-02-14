@@ -19,8 +19,8 @@ package migration
 
 import (
 	"code.vikunja.io/api/pkg/models"
-	"github.com/go-xorm/xorm"
 	"src.techknowlogick.com/xormigrate"
+	"xorm.io/xorm"
 )
 
 // TaskRelation represents a kind of relation between two tasks

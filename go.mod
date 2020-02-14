@@ -17,8 +17,9 @@
 module code.vikunja.io/api
 
 require (
-	cloud.google.com/go v0.34.0 // indirect
 	code.vikunja.io/web v0.0.0-20200208214421-c90649369427
+	gitea.com/xorm/tests v0.5.6 // indirect
+	gitea.com/xorm/xorm-redis-cache v0.0.0-20191113062523-5a6a9e2ab9f2
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
 	github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a
 	github.com/beevik/etree v1.1.0 // indirect
@@ -33,12 +34,9 @@ require (
 	github.com/go-openapi/jsonreference v0.19.3 // indirect
 	github.com/go-openapi/spec v0.19.4 // indirect
 	github.com/go-redis/redis v6.15.2+incompatible
-	github.com/go-sql-driver/mysql v1.4.1
-	github.com/go-xorm/builder v0.3.4
-	github.com/go-xorm/core v0.6.2
-	github.com/go-xorm/tests v0.5.6 // indirect
-	github.com/go-xorm/xorm v0.7.1
-	github.com/go-xorm/xorm-redis-cache v0.0.0-20180727005610-859b313566b2
+	github.com/go-sql-driver/mysql v1.5.0
+	github.com/go-xorm/core v0.6.2 // indirect
+	github.com/go-xorm/xorm v0.7.9 // indirect
 	github.com/golang/protobuf v1.3.2 // indirect
 	github.com/gordonklaus/ineffassign v0.0.0-20180909121442-1003c8bd00dc
 	github.com/imdario/mergo v0.3.7
@@ -51,14 +49,12 @@ require (
 	github.com/mattn/go-isatty v0.0.12 // indirect
 	github.com/mattn/go-oci8 v0.0.0-20181130072307-052f5d97b9b6 // indirect
 	github.com/mattn/go-runewidth v0.0.4 // indirect
-	github.com/mattn/go-sqlite3 v1.10.0
+	github.com/mattn/go-sqlite3 v2.0.3+incompatible
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
 	github.com/olekukonko/tablewriter v0.0.1
-	github.com/onsi/ginkgo v1.7.0 // indirect
-	github.com/onsi/gomega v1.4.3 // indirect
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/pelletier/go-toml v1.4.0 // indirect
-	github.com/prometheus/client_golang v0.9.2
+	github.com/prometheus/client_golang v0.9.3-0.20190127221311-3c4408c8b829
 	github.com/samedi/caldav-go v3.0.0+incompatible
 	github.com/shurcooL/httpfs v0.0.0-20190527155220-6a4d4a70508b
 	github.com/shurcooL/vfsgen v0.0.0-20181202132449-6a9ea43bcacd
@@ -75,7 +71,6 @@ require (
 	golang.org/x/net v0.0.0-20200202094626-16171245cfb2 // indirect
 	golang.org/x/sys v0.0.0-20200202164722-d101bd2416d5 // indirect
 	golang.org/x/tools v0.0.0-20191130070609-6e064ea0cf2d // indirect
-	google.golang.org/appengine v1.5.0 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/d4l3k/messagediff.v1 v1.2.1
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
@@ -83,7 +78,10 @@ require (
 	gopkg.in/yaml.v2 v2.2.7 // indirect
 	honnef.co/go/tools v0.0.0-20190418001031-e561f6794a2a
 	src.techknowlogick.com/xgo v0.0.0-20190507142556-a5b29ecb0ff4
-	src.techknowlogick.com/xormigrate v0.0.0-20190321151057-24497c23c09c
+	src.techknowlogick.com/xormigrate v1.1.0
+	xorm.io/builder v0.3.6
+	xorm.io/core v0.7.3
+	xorm.io/xorm v0.8.1
 )
 
 replace github.com/samedi/caldav-go => github.com/kolaente/caldav-go v3.0.1-0.20190524174923-9e5cd1688227+incompatible // Branch: feature/dynamic-supported-components, PR: https://github.com/samedi/caldav-go/pull/6 and https://github.com/samedi/caldav-go/pull/7

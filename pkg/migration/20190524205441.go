@@ -17,8 +17,8 @@
 package migration
 
 import (
-	"github.com/go-xorm/xorm"
 	"src.techknowlogick.com/xormigrate"
+	"xorm.io/xorm"
 )
 
 type taskReminder20190524205441 struct {

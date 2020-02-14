@@ -24,11 +24,11 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/migration"
 	"code.vikunja.io/api/pkg/user"
-	"github.com/go-xorm/xorm"
 	"github.com/olekukonko/tablewriter"
 	"os"
 	"sort"
 	"src.techknowlogick.com/xormigrate"
+	"xorm.io/xorm"
 )
 
 // You can get the id string for new migrations by running `date +%Y%m%d%H%M%S` on a unix system.

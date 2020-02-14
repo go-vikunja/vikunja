@@ -19,7 +19,7 @@ package models
 
 import (
 	"code.vikunja.io/api/pkg/user"
-	"github.com/go-xorm/builder"
+	"xorm.io/builder"
 )
 
 // ListUIDs hold all kinds of user IDs from accounts who have somehow access to a list

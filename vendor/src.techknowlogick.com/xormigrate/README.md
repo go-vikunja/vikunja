@@ -28,7 +28,7 @@ import (
 
 	"src.techknowlogick.com/xormigrate"
 
-	"github.com/go-xorm/xorm"
+	"xorm.io/xorm"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -158,5 +158,5 @@ m.NewLogger(os.Stdout)
 * Based on [Gormigrate][gormmigrate]
 * Uses [Xorm][xorm]
 
-[xorm]: http://github.com/go-xorm/xorm/
+[xorm]: http://xorm.io/
 [gormmigrate]: https://github.com/go-gormigrate/gormigrate

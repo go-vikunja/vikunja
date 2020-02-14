@@ -7,7 +7,7 @@ workspace:
 
 steps:
 - name: fetch-and-test
-  image: golang:1.12
+  image: golang:1.13
   environment:
     GO111MODULE: on
   commands:
@@ -19,7 +19,7 @@ steps:
 
 services:
 - name: pgsql
-  image: postgres:9.5
+  image: postgres:9.6
   environment:
     POSTGRES_DB: test
     POSTGRES_PASSWORD: postgres

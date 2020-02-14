@@ -18,8 +18,8 @@
 package migration
 
 import (
-	"github.com/go-xorm/xorm"
 	"src.techknowlogick.com/xormigrate"
+	"xorm.io/xorm"
 )
 
 type task20190920185205 struct {

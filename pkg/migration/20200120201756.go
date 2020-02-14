@@ -17,8 +17,8 @@
 package migration
 
 import (
-	"github.com/go-xorm/xorm"
 	"src.techknowlogick.com/xormigrate"
+	"xorm.io/xorm"
 )
 
 type status20200120201756 struct {

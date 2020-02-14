@@ -20,9 +20,9 @@ package db
 import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
-	"github.com/go-xorm/core"
-	"github.com/go-xorm/xorm"
 	"os"
+	"xorm.io/core"
+	"xorm.io/xorm"
 )
 
 // CreateTestEngine creates an instance of the db engine which lives in memory
@@ -46,8 +46,9 @@ func CreateTestEngine() (engine *xorm.Engine, err error) {
 	}
 
 	engine.SetMapper(core.GonicMapper{})
-	engine.ShowSQL(os.Getenv("UNIT_TESTS_VERBOSE") == "1")
-	engine.SetLogger(xorm.NewSimpleLogger(log.GetLogWriter("database")))
+	logger := xorm.NewSimpleLogger(log.GetLogWriter("database"))
+	logger.ShowSQL(os.Getenv("UNIT_TESTS_VERBOSE") == "1")
+	engine.SetLogger(logger)
 	x = engine
 	return
 }

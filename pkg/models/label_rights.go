@@ -19,7 +19,7 @@ package models
 import (
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
-	"github.com/go-xorm/builder"
+	"xorm.io/builder"
 )
 
 // CanUpdate checks if a user can update a label

@@ -20,7 +20,7 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
-	"github.com/go-xorm/xorm"
+	"xorm.io/xorm"
 )
 
 var x *xorm.Engine

@@ -19,8 +19,8 @@ package migration
 
 import (
 	"code.vikunja.io/api/pkg/models"
-	"github.com/go-xorm/xorm"
 	"src.techknowlogick.com/xormigrate"
+	"xorm.io/xorm"
 )
 
 type linkSharing20190818210133 struct {

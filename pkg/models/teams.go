@@ -21,7 +21,7 @@ import (
 	"code.vikunja.io/api/pkg/timeutil"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
-	"github.com/go-xorm/builder"
+	"xorm.io/builder"
 )
 
 // Team holds a team object

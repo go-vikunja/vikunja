@@ -19,7 +19,7 @@ package models
 import (
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
-	"github.com/go-xorm/builder"
+	"xorm.io/builder"
 )
 
 // CanWrite return whether the user can write on that list or not

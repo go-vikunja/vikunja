@@ -17,6 +17,7 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/timeutil"
 	"code.vikunja.io/api/pkg/user"
 	"gopkg.in/d4l3k/messagediff.v1"
@@ -119,6 +120,7 @@ func TestLabel_ReadAll(t *testing.T) {
 				CRUDable:    tt.fields.CRUDable,
 				Rights:      tt.fields.Rights,
 			}
+			db.LoadAndAssertFixtures(t)
 			gotLs, _, _, err := l.ReadAll(tt.args.a, tt.args.search, tt.args.page, 0)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Label.ReadAll() error = %v, wantErr %v", err, tt.wantErr)

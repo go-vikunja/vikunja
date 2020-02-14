@@ -20,7 +20,7 @@ import (
 	"code.vikunja.io/api/pkg/timeutil"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
-	"github.com/go-xorm/builder"
+	"xorm.io/builder"
 )
 
 // LabelTask represents a relation between a label and a task
@@ -149,15 +149,6 @@ type LabelByTaskIDsOptions struct {
 // Helper function to get all labels for a set of tasks
 // Used when getting all labels for one task as well when getting all lables
 func getLabelsByTaskIDs(opts *LabelByTaskIDsOptions) (ls []*labelWithTaskID, resultCount int, totalEntries int64, err error) {
-	// Include unused labels. Needed to be able to show a list of all unused labels a user
-	// has access to.
-	var uidOrNil interface{}
-	var requestOrNil interface{}
-	if opts.GetUnusedLabels {
-		uidOrNil = opts.User.ID
-		requestOrNil = "label_task.label_id != null OR labels.created_by_id = ?"
-	}
-
 	// We still need the task ID when we want to get all labels for a task, but because of this, we get the same label
 	// multiple times when it is associated to more than one task.
 	// Because of this whole thing, we need this extra switch here to only group by Task IDs if needed.
@@ -169,11 +160,15 @@ func getLabelsByTaskIDs(opts *LabelByTaskIDsOptions) (ls []*labelWithTaskID, res
 
 	// Get all labels associated with these tasks
 	var labels []*labelWithTaskID
+	cond := builder.And(builder.In("label_task.task_id", opts.TaskIDs), builder.NotNull{"label_task.label_id"})
+	if opts.GetUnusedLabels {
+		cond = builder.Or(cond, builder.Eq{"labels.created_by_id": opts.User.ID})
+	}
+
 	err = x.Table("labels").
 		Select("labels.*, label_task.task_id").
 		Join("LEFT", "label_task", "label_task.label_id = labels.id").
-		Where(requestOrNil, uidOrNil).
-		Or(builder.In("label_task.task_id", opts.TaskIDs)).
+		Where(cond).
 		And("labels.title LIKE ?", "%"+opts.Search+"%").
 		GroupBy(groupBy).
 		Limit(getLimitFromPageIndex(opts.Page, opts.PerPage)).
@@ -204,10 +199,13 @@ func getLabelsByTaskIDs(opts *LabelByTaskIDsOptions) (ls []*labelWithTaskID, res
 	}
 
 	// Get the total number of entries
+	condCount := builder.And(builder.In("label_task.task_id", opts.TaskIDs), builder.NotNull{"label_task.label_id"})
+	if opts.GetUnusedLabels {
+		condCount = builder.Or(cond, builder.Eq{"labels.created_by_id": opts.User.ID})
+	}
 	totalEntries, err = x.Table("labels").
 		Join("LEFT", "label_task", "label_task.label_id = labels.id").
-		Where(requestOrNil, uidOrNil).
-		Or(builder.In("label_task.task_id", opts.TaskIDs)).
+		Where(condCount).
 		And("labels.title LIKE ?", "%"+opts.Search+"%").
 		GroupBy(groupBy).
 		Count(&Label{})
