@@ -338,6 +338,9 @@ export default class AbstractService {
 						return this.modelGetAllFactory(entry)
 					}))
 				}
+				if(response.data === null) {
+					return Promise.resolve([])
+				}
 				return Promise.resolve(this.modelGetAllFactory(response.data))
 			})
 			.finally(() => {
