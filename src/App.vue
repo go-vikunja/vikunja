@@ -62,19 +62,19 @@
 									</router-link>
 								</li>
 								<li>
-									<router-link :to="{ name: 'showTasksInRange', params: {type: 'month'}}">
-									<span class="icon">
-										<icon :icon="['far', 'calendar-alt']"/>
-									</span>
-										Next Month
-									</router-link>
-								</li>
-								<li>
 									<router-link :to="{ name: 'showTasksInRange', params: {type: 'week'}}">
 									<span class="icon">
 										<icon icon="calendar-week"/>
 									</span>
 										Next Week
+									</router-link>
+								</li>
+								<li>
+									<router-link :to="{ name: 'showTasksInRange', params: {type: 'month'}}">
+									<span class="icon">
+										<icon :icon="['far', 'calendar-alt']"/>
+									</span>
+										Next Month
 									</router-link>
 								</li>
 								<li>
