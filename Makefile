@@ -96,7 +96,7 @@ fmt-check:
 	fi;
 
 .PHONY: build
-build: $(EXECUTABLE)
+build: generate $(EXECUTABLE)
 
 .PHONY: generate
 generate:
