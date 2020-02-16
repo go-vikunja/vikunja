@@ -73,7 +73,7 @@ service:
   timezone: GMT
 
 database:
-  # Database type to use. Supported types are mysql and sqlite.
+  # Database type to use. Supported types are mysql, postgres and sqlite.
   type: "sqlite"
   # Database user which is used to connect to the database.
   user: "vikunja"
@@ -85,12 +85,15 @@ database:
   database: "vikunja"
   # When using sqlite, this is the path where to store the data
   Path: "./vikunja.db"
-  # Sets the max open connections to the database. Only used when using mysql.
+  # Sets the max open connections to the database. Only used when using mysql and postgres.
   maxopenconnections: 100
   # Sets the maximum number of idle connections to the db.
   maxidleconnections: 50
   # The maximum lifetime of a single db connection in miliseconds.
   maxconnectionlifetime: 10000
+  # Secure connection mode. Only used with postgres.
+  # (see https://pkg.go.dev/github.com/lib/pq?tab=doc#hdr-Connection_String_Parameters)
+  sslmode: disable
 
 cache:
   # If cache is enabled or not

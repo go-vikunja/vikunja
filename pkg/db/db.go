@@ -21,7 +21,9 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	"encoding/gob"
 	"fmt"
+	"net/url"
 	"strconv"
+	"strings"
 	"time"
 	"xorm.io/core"
 	"xorm.io/xorm"
@@ -29,6 +31,7 @@ import (
 	xrc "gitea.com/xorm/xorm-redis-cache"
 
 	_ "github.com/go-sql-driver/mysql" // Because.
+	_ "github.com/lib/pq"              // Because.
 	_ "github.com/mattn/go-sqlite3"    // Because.
 )
 
@@ -50,6 +53,11 @@ func CreateDBEngine() (engine *xorm.Engine, err error) {
 	// Use Mysql if set
 	if config.DatabaseType.GetString() == "mysql" {
 		engine, err = initMysqlEngine()
+		if err != nil {
+			return
+		}
+	} else if config.DatabaseType.GetString() == "postgres" {
+		engine, err = initPostgresEngine()
 		if err != nil {
 			return
 		}
@@ -100,6 +108,46 @@ func initMysqlEngine() (engine *xorm.Engine, err error) {
 		config.DatabaseHost.GetString(),
 		config.DatabaseDatabase.GetString())
 	engine, err = xorm.NewEngine("mysql", connStr)
+	if err != nil {
+		return
+	}
+	engine.SetMaxOpenConns(config.DatabaseMaxOpenConnections.GetInt())
+	engine.SetMaxIdleConns(config.DatabaseMaxIdleConnections.GetInt())
+	max, err := time.ParseDuration(strconv.Itoa(config.DatabaseMaxConnectionLifetime.GetInt()) + `ms`)
+	if err != nil {
+		return
+	}
+	engine.SetConnMaxLifetime(max)
+	return
+}
+
+// parsePostgreSQLHostPort parses given input in various forms defined in
+// https://www.postgresql.org/docs/current/static/libpq-connect.html#LIBPQ-CONNSTRING
+// and returns proper host and port number.
+func parsePostgreSQLHostPort(info string) (string, string) {
+	host, port := "127.0.0.1", "5432"
+	if strings.Contains(info, ":") && !strings.HasSuffix(info, "]") {
+		idx := strings.LastIndex(info, ":")
+		host = info[:idx]
+		port = info[idx+1:]
+	} else if len(info) > 0 {
+		host = info
+	}
+	return host, port
+}
+
+func initPostgresEngine() (engine *xorm.Engine, err error) {
+	host, port := parsePostgreSQLHostPort(config.DatabaseHost.GetString())
+	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
+		host,
+		port,
+		url.PathEscape(config.DatabaseUser.GetString()),
+		url.PathEscape(config.DatabasePassword.GetString()),
+		config.DatabaseDatabase.GetString(),
+		config.DatabaseSslMode.GetString(),
+	)
+
+	engine, err = xorm.NewEngine("postgres", connStr)
 	if err != nil {
 		return
 	}

@@ -19,24 +19,20 @@ package db
 
 import (
 	"code.vikunja.io/api/pkg/config"
+	"fmt"
+	"github.com/go-testfixtures/testfixtures/v3"
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/testfixtures.v2"
 	"path/filepath"
 	"testing"
 )
 
-var fixtures *testfixtures.Context
+var fixtures *testfixtures.Loader
 
 // InitFixtures initialize test fixtures for a test database
 func InitFixtures(tablenames ...string) (err error) {
 
-	var helper testfixtures.Helper = &testfixtures.SQLite{}
-	if config.DatabaseType.GetString() == "mysql" {
-		helper = &testfixtures.MySQL{}
-	}
+	var testfiles func(loader *testfixtures.Loader) error
 	dir := filepath.Join(config.ServiceRootpath.GetString(), "pkg", "db", "fixtures")
-
-	testfixtures.SkipDatabaseNameCheck(true)
 
 	// If fixture table names are specified, load them
 	// Otherwise, load all fixtures
@@ -44,16 +40,71 @@ func InitFixtures(tablenames ...string) (err error) {
 		for i, name := range tablenames {
 			tablenames[i] = filepath.Join(dir, name+".yml")
 		}
-		fixtures, err = testfixtures.NewFiles(x.DB().DB, helper, tablenames...)
+		testfiles = testfixtures.Files(tablenames...)
 	} else {
-		fixtures, err = testfixtures.NewFolder(x.DB().DB, helper, dir)
+		testfiles = testfixtures.Directory(dir)
 	}
+
+	loaderOptions := []func(loader *testfixtures.Loader) error{
+		testfixtures.Database(x.DB().DB),
+		testfixtures.Dialect(config.DatabaseType.GetString()),
+		testfixtures.DangerousSkipTestDatabaseCheck(),
+		testfiles,
+	}
+
+	if config.DatabaseType.GetString() == "postgres" {
+		loaderOptions = append(loaderOptions, testfixtures.SkipResetSequences())
+	}
+
+	fixtures, err = testfixtures.New(loaderOptions...)
+	if err != nil {
+		return err
+	}
+
 	return err
 }
 
 // LoadFixtures load fixtures for a test database
 func LoadFixtures() error {
-	return fixtures.Load()
+	err := fixtures.Load()
+	if err != nil {
+		return err
+	}
+
+	// Copied from https://github.com/go-gitea/gitea/blob/master/models/test_fixtures.go#L39
+	// Now if we're running postgres we need to tell it to update the sequences
+	if x.Dialect().DriverName() == "postgres" {
+		results, err := x.QueryString(`SELECT 'SELECT SETVAL(' ||
+		quote_literal(quote_ident(PGT.schemaname) || '.' || quote_ident(S.relname)) ||
+		', COALESCE(MAX(' ||quote_ident(C.attname)|| '), 1) ) FROM ' ||
+		quote_ident(PGT.schemaname)|| '.'||quote_ident(T.relname)|| ';'
+	 FROM pg_class AS S,
+	      pg_depend AS D,
+	      pg_class AS T,
+	      pg_attribute AS C,
+	      pg_tables AS PGT
+	 WHERE S.relkind = 'S'
+	     AND S.oid = D.objid
+	     AND D.refobjid = T.oid
+	     AND D.refobjid = C.attrelid
+	     AND D.refobjsubid = C.attnum
+	     AND T.relname = PGT.tablename
+	 ORDER BY S.relname;`)
+		if err != nil {
+			fmt.Printf("Failed to generate sequence update: %v\n", err)
+			return err
+		}
+		for _, r := range results {
+			for _, value := range r {
+				_, err = x.Exec(value)
+				if err != nil {
+					fmt.Printf("Failed to update sequence: %s Error: %v\n", value, err)
+					return err
+				}
+			}
+		}
+	}
+	return err
 }
 
 // LoadAndAssertFixtures loads all fixtures defined before and asserts they are correctly loaded

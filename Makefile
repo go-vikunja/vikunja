@@ -64,7 +64,8 @@ clean:
 
 .PHONY: test
 test:
-	VIKUNJA_SERVICE_ROOTPATH=$(shell pwd) go test $(GOFLAGS) -cover -coverprofile cover.out $(PACKAGES)
+    # We run everything sequentially and not in parallel to prevent issues with real test databases
+	VIKUNJA_SERVICE_ROOTPATH=$(shell pwd) go test $(GOFLAGS) -p 1 -cover -coverprofile cover.out $(PACKAGES)
 
 .PHONY: test-coverage
 test-coverage: test
@@ -72,7 +73,8 @@ test-coverage: test
 
 .PHONY: integration-test
 integration-test:
-	VIKUNJA_SERVICE_ROOTPATH=$(shell pwd) go test $(GOFLAGS) code.vikunja.io/api/pkg/integrations
+    # We run everything sequentially and not in parallel to prevent issues with real test databases
+	VIKUNJA_SERVICE_ROOTPATH=$(shell pwd) go test $(GOFLAGS) -p 1 code.vikunja.io/api/pkg/integrations
 
 .PHONY: lint
 lint:

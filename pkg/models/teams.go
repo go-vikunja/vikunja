@@ -68,7 +68,7 @@ type TeamMember struct {
 	// Used under the hood to manage team members
 	UserID int64 `xorm:"int(11) not null INDEX" json:"-"`
 	// Whether or not the member is an admin of the team. See the docs for more about what a team admin can do
-	Admin bool `xorm:"tinyint(1) INDEX null" json:"admin"`
+	Admin bool `xorm:"null" json:"admin"`
 
 	// A timestamp when this relation was created. You cannot change this value.
 	Created timeutil.TimeStamp `xorm:"created not null" json:"created"`
@@ -131,7 +131,7 @@ func addMoreInfoToTeams(teams []*Team) (err error) {
 	}
 
 	// Get all owners and team members
-	users := []*TeamUser{}
+	users := make(map[int64]*TeamUser)
 	err = x.Select("*").
 		Table("users").
 		Join("LEFT", "team_members", "team_members.user_id = users.id").
@@ -153,8 +153,14 @@ func addMoreInfoToTeams(teams []*Team) (err error) {
 			continue
 		}
 		u.Email = ""
-		teamMap[u.TeamID].CreatedBy = &u.User
 		teamMap[u.TeamID].Members = append(teamMap[u.TeamID].Members, u)
+	}
+
+	// We need to do this in a second loop as owners might not be the last ones in the list
+	for _, team := range teamMap {
+		if teamUser, has := users[team.CreatedByID]; has {
+			team.CreatedBy = &teamUser.User
+		}
 	}
 	return
 }

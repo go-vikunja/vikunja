@@ -19,6 +19,7 @@ package models
 
 import (
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/user"
 	"github.com/stretchr/testify/assert"
@@ -30,6 +31,7 @@ import (
 
 func TestTaskAttachment_ReadOne(t *testing.T) {
 	t.Run("Normal File", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
 		files.InitTestFileFixtures(t)
 		ta := &TaskAttachment{
 			ID: 1,
@@ -50,6 +52,7 @@ func TestTaskAttachment_ReadOne(t *testing.T) {
 		assert.Equal(t, []byte("testfile1"), content)
 	})
 	t.Run("Nonexisting Attachment", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
 		files.InitTestFileFixtures(t)
 		ta := &TaskAttachment{
 			ID: 9999,
@@ -59,6 +62,7 @@ func TestTaskAttachment_ReadOne(t *testing.T) {
 		assert.True(t, IsErrTaskAttachmentDoesNotExist(err))
 	})
 	t.Run("Existing Attachment, Nonexisting File", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
 		files.InitTestFileFixtures(t)
 		ta := &TaskAttachment{
 			ID: 2,
@@ -88,6 +92,7 @@ func (t *testfile) Close() error {
 }
 
 func TestTaskAttachment_NewAttachment(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
 	files.InitTestFileFixtures(t)
 	// Assert the file is being stored correctly
 	ta := TaskAttachment{
@@ -118,16 +123,18 @@ func TestTaskAttachment_NewAttachment(t *testing.T) {
 }
 
 func TestTaskAttachment_ReadAll(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
 	files.InitTestFileFixtures(t)
 	ta := &TaskAttachment{TaskID: 1}
 	as, _, _, err := ta.ReadAll(&user.User{ID: 1}, "", 0, 50)
 	attachments, _ := as.([]*TaskAttachment)
 	assert.NoError(t, err)
-	assert.Len(t, attachments, 3)
+	assert.Len(t, attachments, 2)
 	assert.Equal(t, "test", attachments[0].File.Name)
 }
 
 func TestTaskAttachment_Delete(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
 	files.InitTestFileFixtures(t)
 	t.Run("Normal", func(t *testing.T) {
 		ta := &TaskAttachment{ID: 1}
@@ -156,12 +163,14 @@ func TestTaskAttachment_Rights(t *testing.T) {
 	u := &user.User{ID: 1}
 	t.Run("Can Read", func(t *testing.T) {
 		t.Run("Allowed", func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
 			ta := &TaskAttachment{TaskID: 1}
 			can, err := ta.CanRead(u)
 			assert.NoError(t, err)
 			assert.True(t, can)
 		})
 		t.Run("Forbidden", func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
 			ta := &TaskAttachment{TaskID: 14}
 			can, err := ta.CanRead(u)
 			assert.NoError(t, err)
@@ -170,18 +179,21 @@ func TestTaskAttachment_Rights(t *testing.T) {
 	})
 	t.Run("Can Delete", func(t *testing.T) {
 		t.Run("Allowed", func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
 			ta := &TaskAttachment{TaskID: 1}
 			can, err := ta.CanDelete(u)
 			assert.NoError(t, err)
 			assert.True(t, can)
 		})
 		t.Run("Forbidden, no access", func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
 			ta := &TaskAttachment{TaskID: 14}
 			can, err := ta.CanDelete(u)
 			assert.NoError(t, err)
 			assert.False(t, can)
 		})
 		t.Run("Forbidden, shared read only", func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
 			ta := &TaskAttachment{TaskID: 15}
 			can, err := ta.CanDelete(u)
 			assert.NoError(t, err)
@@ -190,18 +202,21 @@ func TestTaskAttachment_Rights(t *testing.T) {
 	})
 	t.Run("Can Create", func(t *testing.T) {
 		t.Run("Allowed", func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
 			ta := &TaskAttachment{TaskID: 1}
 			can, err := ta.CanCreate(u)
 			assert.NoError(t, err)
 			assert.True(t, can)
 		})
 		t.Run("Forbidden, no access", func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
 			ta := &TaskAttachment{TaskID: 14}
 			can, err := ta.CanCreate(u)
 			assert.NoError(t, err)
 			assert.False(t, can)
 		})
 		t.Run("Forbidden, shared read only", func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
 			ta := &TaskAttachment{TaskID: 15}
 			can, err := ta.CanCreate(u)
 			assert.NoError(t, err)

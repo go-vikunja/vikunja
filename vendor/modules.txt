@@ -66,6 +66,8 @@ github.com/go-redis/redis/internal/proto
 github.com/go-redis/redis/internal/util
 # github.com/go-sql-driver/mysql v1.5.0
 github.com/go-sql-driver/mysql
+# github.com/go-testfixtures/testfixtures/v3 v3.1.1
+github.com/go-testfixtures/testfixtures/v3
 # github.com/golang/protobuf v1.3.2
 github.com/golang/protobuf/proto
 # github.com/gordonklaus/ineffassign v0.0.0-20180909121442-1003c8bd00dc
@@ -98,6 +100,10 @@ github.com/labstack/gommon/log
 github.com/labstack/gommon/random
 # github.com/laurent22/ical-go v0.1.1-0.20181107184520-7e5d6ade8eef
 github.com/laurent22/ical-go
+# github.com/lib/pq v1.3.0
+github.com/lib/pq
+github.com/lib/pq/oid
+github.com/lib/pq/scram
 # github.com/magiconair/properties v1.8.0
 github.com/magiconair/properties
 # github.com/mailru/easyjson v0.7.0
@@ -172,7 +178,7 @@ github.com/spf13/cast
 github.com/spf13/cobra
 # github.com/spf13/jwalterweatherman v1.1.0
 github.com/spf13/jwalterweatherman
-# github.com/spf13/pflag v1.0.3
+# github.com/spf13/pflag v1.0.5
 github.com/spf13/pflag
 # github.com/spf13/viper v1.3.2
 github.com/spf13/viper
@@ -235,8 +241,6 @@ gopkg.in/alexcesaro/quotedprintable.v3
 gopkg.in/d4l3k/messagediff.v1
 # gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 gopkg.in/gomail.v2
-# gopkg.in/testfixtures.v2 v2.5.3
-gopkg.in/testfixtures.v2
 # gopkg.in/yaml.v2 v2.2.7
 gopkg.in/yaml.v2
 # honnef.co/go/tools v0.0.0-20190418001031-e561f6794a2a

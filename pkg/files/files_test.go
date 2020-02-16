@@ -57,11 +57,11 @@ func TestCreate(t *testing.T) {
 			content: []byte("testfile"),
 		}
 		ta := &testauth{id: 1}
-		_, err := Create(tf, "testfile", 100, ta)
+		createdFile, err := Create(tf, "testfile", 100, ta)
 		assert.NoError(t, err)
 
 		// Check the file was created correctly
-		file := &File{ID: 2}
+		file := &File{ID: createdFile.ID}
 		err = file.LoadFileMetaByID()
 		assert.NoError(t, err)
 		assert.Equal(t, int64(1), file.CreatedByID)

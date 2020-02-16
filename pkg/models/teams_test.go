@@ -17,6 +17,7 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/user"
 	"github.com/stretchr/testify/assert"
 	"reflect"
@@ -24,79 +25,108 @@ import (
 )
 
 func TestTeam_Create(t *testing.T) {
-	//Dummyteam
-	dummyteam := Team{
-		Name:        "Testteam293",
-		Description: "Lorem Ispum",
+	doer := &user.User{
+		ID:       1,
+		Username: "user1",
 	}
+	t.Run("normal", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		team := &Team{
+			Name:        "Testteam293",
+			Description: "Lorem Ispum",
+		}
+		err := team.Create(doer)
+		assert.NoError(t, err)
+	})
+	t.Run("empty name", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		team := &Team{}
+		err := team.Create(doer)
+		assert.Error(t, err)
+		assert.True(t, IsErrTeamNameCannotBeEmpty(err))
+	})
+}
 
-	// Doer
-	doer, err := user.GetUserByID(1)
-	assert.NoError(t, err)
+func TestTeam_ReadOne(t *testing.T) {
+	t.Run("normal", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		team := &Team{ID: 1}
+		err := team.ReadOne()
+		assert.NoError(t, err)
+		assert.Equal(t, "testteam1", team.Name)
+		assert.Equal(t, "Lorem Ipsum", team.Description)
+		assert.Equal(t, int64(1), team.CreatedBy.ID)
+		assert.Equal(t, int64(1), team.CreatedByID)
+	})
+	t.Run("invalid id", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		team := &Team{ID: -1}
+		err := team.ReadOne()
+		assert.Error(t, err)
+		assert.True(t, IsErrTeamDoesNotExist(err))
+	})
+	t.Run("nonexisting", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		team := &Team{ID: 99999}
+		err := team.ReadOne()
+		assert.Error(t, err)
+		assert.True(t, IsErrTeamDoesNotExist(err))
+	})
+}
 
-	// Insert it
-	allowed, _ := dummyteam.CanCreate(doer)
-	assert.True(t, allowed)
-	err = dummyteam.Create(doer)
-	assert.NoError(t, err)
+func TestTeam_ReadAll(t *testing.T) {
+	doer := &user.User{ID: 1}
+	t.Run("normal", func(t *testing.T) {
+		team := &Team{}
+		ts, _, _, err := team.ReadAll(doer, "", 1, 50)
+		assert.NoError(t, err)
+		assert.Equal(t, reflect.TypeOf(ts).Kind(), reflect.Slice)
+		s := reflect.ValueOf(ts)
+		assert.Equal(t, 8, s.Len())
+	})
+}
 
-	// Check if it was inserted and we're admin
-	tm := Team{ID: dummyteam.ID}
-	err = tm.ReadOne()
-	assert.NoError(t, err)
-	assert.Equal(t, 1, len(tm.Members))
-	assert.Equal(t, doer.ID, tm.Members[0].User.ID)
-	assert.True(t, tm.Members[0].Admin)
-	allowed, _ = dummyteam.CanRead(doer)
-	assert.True(t, allowed)
+func TestTeam_Update(t *testing.T) {
+	t.Run("normal", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		team := &Team{
+			ID:   1,
+			Name: "SomethingNew",
+		}
+		err := team.Update()
+		assert.NoError(t, err)
+	})
+	t.Run("empty name", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		team := &Team{
+			ID:   1,
+			Name: "",
+		}
+		err := team.Update()
+		assert.Error(t, err)
+		assert.True(t, IsErrTeamNameCannotBeEmpty(err))
+	})
+	t.Run("nonexisting", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		team := &Team{
+			ID:   9999,
+			Name: "SomethingNew",
+		}
+		err := team.Update()
+		assert.Error(t, err)
+		assert.True(t, IsErrTeamDoesNotExist(err))
+	})
+}
 
-	// Try getting a team with an ID < 0
-	_, err = GetTeamByID(-1)
-	assert.Error(t, err)
-	assert.True(t, IsErrTeamDoesNotExist(err))
-
-	// Get all teams the user is part of
-	ts, _, _, err := tm.ReadAll(doer, "", 1, 50)
-	assert.NoError(t, err)
-	assert.Equal(t, reflect.TypeOf(ts).Kind(), reflect.Slice)
-	s := reflect.ValueOf(ts)
-	assert.Equal(t, 9, s.Len())
-
-	// Check inserting it with an empty name
-	dummyteam.Name = ""
-	err = dummyteam.Create(doer)
-	assert.Error(t, err)
-	assert.True(t, IsErrTeamNameCannotBeEmpty(err))
-
-	// update it (still no name, should fail)
-	allowed, _ = dummyteam.CanUpdate(doer)
-	assert.True(t, allowed)
-	err = dummyteam.Update()
-	assert.Error(t, err)
-	assert.True(t, IsErrTeamNameCannotBeEmpty(err))
-
-	// Update it, this time with a name
-	dummyteam.Name = "Lorem"
-	err = dummyteam.Update()
-	assert.NoError(t, err)
-
-	// Delete it
-	allowed, err = dummyteam.CanDelete(doer)
-	assert.NoError(t, err)
-	assert.True(t, allowed)
-	err = dummyteam.Delete()
-	assert.NoError(t, err)
-
-	// Try deleting a (now) nonexistant team
-	allowed, err = dummyteam.CanDelete(doer)
-	assert.False(t, allowed)
-	assert.Error(t, err)
-	assert.True(t, IsErrTeamDoesNotExist(err))
-
-	// Try updating the (now) nonexistant team
-	err = dummyteam.Update()
-	assert.Error(t, err)
-	assert.True(t, IsErrTeamDoesNotExist(err))
+func TestTeam_Delete(t *testing.T) {
+	t.Run("normal", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		team := &Team{
+			ID: 1,
+		}
+		err := team.Delete()
+		assert.NoError(t, err)
+	})
 }
 
 func TestIsErrInvalidRight(t *testing.T) {

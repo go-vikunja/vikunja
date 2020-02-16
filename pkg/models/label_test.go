@@ -83,7 +83,6 @@ func TestLabel_ReadAll(t *testing.T) {
 					},
 				},
 				{
-					TaskID: 1,
 					Label: Label{
 						ID:          4,
 						Title:       "Label #4 - visible via other task",

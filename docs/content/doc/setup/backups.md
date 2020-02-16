@@ -29,6 +29,24 @@ To restore it, simply pipe it back into the `mysql` command:
 mysql -u <user> -p -h <db-host> <database> < vkunja-backup.sql
 {{< /highlight >}}
 
+## PostgreSQL
+
+To create a backup from PostgreSQL use the `pg_dump` command:
+
+{{< highlight bash >}}
+pg_dump -U <user> -h <db-host> <database> > vikunja-backup.sql
+{{< /highlight >}}
+
+You might be prompted for the password of the database user.
+
+To restore it, simply pipe it back into the `psql` command:
+
+{{< highlight bash >}}
+psql -U <user> -h <db-host> <database> < vikunja-backup.sql
+{{< /highlight >}}
+
+For more information, please visit the [relevant PostgreSQL documentation](https://www.postgresql.org/docs/12/backup-dump.html).
+
 ## SQLite
 
 To backup sqllite databases, it is enough to copy the database elsewhere.

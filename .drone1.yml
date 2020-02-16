@@ -6,16 +6,26 @@ workspace:
   path: src/code.vikunja.io/api
 
 services:
-  - name: test-db-unit
+  - name: test-mysql-unit
     image: mariadb:10
     environment:
       MYSQL_ROOT_PASSWORD: vikunjatest
       MYSQL_DATABASE: vikunjatest
-  - name: test-db-integration
+  - name: test-mysql-integration
     image: mariadb:10
     environment:
       MYSQL_ROOT_PASSWORD: vikunjatest
       MYSQL_DATABASE: vikunjatest
+  - name: test-postgres-unit
+    image: postgres:12
+    environment:
+      POSTGRES_PASSWORD: vikunjatest
+      POSTGRES_DB: vikunjatest
+  - name: test-postgres-integration
+    image: postgres:12
+    environment:
+      POSTGRES_PASSWORD: vikunjatest
+      POSTGRES_DB: vikunjatest
 
 trigger:
   branch:
@@ -78,10 +88,27 @@ steps:
     environment:
       VIKUNJA_TESTS_USE_CONFIG: 1
       VIKUNJA_DATABASE_TYPE: mysql
-      VIKUNJA_DATABASE_HOST: test-db-unit
+      VIKUNJA_DATABASE_HOST: test-mysql-unit
       VIKUNJA_DATABASE_USER: root
       VIKUNJA_DATABASE_PASSWORD: vikunjatest
       VIKUNJA_DATABASE_DATABASE: vikunjatest
+    commands:
+      - make test
+    depends_on: [ build ]
+    when:
+      event: [ push, tag, pull_request ]
+
+  - name: test-postgres
+    image: vikunja/golang-build:latest
+    pull: true
+    environment:
+      VIKUNJA_TESTS_USE_CONFIG: 1
+      VIKUNJA_DATABASE_TYPE: postgres
+      VIKUNJA_DATABASE_HOST: test-postgres-unit
+      VIKUNJA_DATABASE_USER: postgres
+      VIKUNJA_DATABASE_PASSWORD: vikunjatest
+      VIKUNJA_DATABASE_DATABASE: vikunjatest
+      VIKUNJA_DATABASE_SSLMODE: disable
     commands:
       - make test
     depends_on: [ build ]
@@ -115,10 +142,27 @@ steps:
     environment:
       VIKUNJA_TESTS_USE_CONFIG: 1
       VIKUNJA_DATABASE_TYPE: mysql
-      VIKUNJA_DATABASE_HOST: test-db-integration
+      VIKUNJA_DATABASE_HOST: test-mysql-integration
       VIKUNJA_DATABASE_USER: root
       VIKUNJA_DATABASE_PASSWORD: vikunjatest
       VIKUNJA_DATABASE_DATABASE: vikunjatest
+    commands:
+      - make integration-test
+    depends_on: [ build ]
+    when:
+      event: [ push, tag, pull_request ]
+
+  - name: integration-test-postgres
+    image: vikunja/golang-build:latest
+    pull: true
+    environment:
+      VIKUNJA_TESTS_USE_CONFIG: 1
+      VIKUNJA_DATABASE_TYPE: postgres
+      VIKUNJA_DATABASE_HOST: test-postgres-integration
+      VIKUNJA_DATABASE_USER: postgres
+      VIKUNJA_DATABASE_PASSWORD: vikunjatest
+      VIKUNJA_DATABASE_DATABASE: vikunjatest
+      VIKUNJA_DATABASE_SSLMODE: disable
     commands:
       - make integration-test
     depends_on: [ build ]

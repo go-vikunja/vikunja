@@ -55,6 +55,7 @@ const (
 	DatabaseMaxOpenConnections    Key = `database.maxopenconnections`
 	DatabaseMaxIdleConnections    Key = `database.maxidleconnections`
 	DatabaseMaxConnectionLifetime Key = `database.maxconnectionlifetime`
+	DatabaseSslMode               Key = `database.sslmode`
 
 	CacheEnabled        Key = `cache.enabled`
 	CacheType           Key = `cache.type`
@@ -181,6 +182,7 @@ func InitDefaultConfig() {
 	DatabaseMaxOpenConnections.setDefault(100)
 	DatabaseMaxIdleConnections.setDefault(50)
 	DatabaseMaxConnectionLifetime.setDefault(10000)
+	DatabaseSslMode.setDefault("disable")
 
 	// Cacher
 	CacheEnabled.setDefault(false)

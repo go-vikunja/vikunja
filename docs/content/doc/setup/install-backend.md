@@ -55,6 +55,7 @@ After=network.target
 # Depending on how you configured Vikunja, you may want to uncomment these:
 #Requires=mysql.service
 #Requires=mariadb.service
+#Requires=postgresql.service
 #Requires=redis.service
 
 [Service]

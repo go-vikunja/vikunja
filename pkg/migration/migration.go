@@ -114,6 +114,11 @@ func dropTableColum(x *xorm.Engine, tableName, col string) error {
 		if err != nil {
 			return err
 		}
+	case "postgres":
+		_, err := x.Exec("ALTER TABLE " + tableName + " DROP COLUMN " + col)
+		if err != nil {
+			return err
+		}
 	default:
 		log.Fatal("Unknown db.")
 	}
@@ -127,6 +132,11 @@ func modifyColumn(x *xorm.Engine, tableName, col, newDefinition string) error {
 		log.Warning("Unable to modify columns in SQLite")
 	case "mysql":
 		_, err := x.Exec("ALTER TABLE " + tableName + " MODIFY COLUMN " + col + " " + newDefinition)
+		if err != nil {
+			return err
+		}
+	case "postgres":
+		_, err := x.Exec("ALTER TABLE " + tableName + " ALTER COLUMN " + col + " " + newDefinition)
 		if err != nil {
 			return err
 		}

@@ -154,8 +154,10 @@ func getLabelsByTaskIDs(opts *LabelByTaskIDsOptions) (ls []*labelWithTaskID, res
 	// Because of this whole thing, we need this extra switch here to only group by Task IDs if needed.
 	// Probably not the most ideal solution.
 	var groupBy = "labels.id,label_task.task_id"
+	var selectStmt = "labels.*, label_task.task_id"
 	if opts.GroupByLabelIDsOnly {
 		groupBy = "labels.id"
+		selectStmt = "labels.*"
 	}
 
 	// Get all labels associated with these tasks
@@ -166,11 +168,12 @@ func getLabelsByTaskIDs(opts *LabelByTaskIDsOptions) (ls []*labelWithTaskID, res
 	}
 
 	err = x.Table("labels").
-		Select("labels.*, label_task.task_id").
+		Select(selectStmt).
 		Join("LEFT", "label_task", "label_task.label_id = labels.id").
 		Where(cond).
 		And("labels.title LIKE ?", "%"+opts.Search+"%").
 		GroupBy(groupBy).
+		OrderBy("labels.id ASC").
 		Limit(getLimitFromPageIndex(opts.Page, opts.PerPage)).
 		Find(&labels)
 	if err != nil {

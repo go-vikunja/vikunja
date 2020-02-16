@@ -35,6 +35,7 @@ require (
 	github.com/go-openapi/spec v0.19.4 // indirect
 	github.com/go-redis/redis v6.15.2+incompatible
 	github.com/go-sql-driver/mysql v1.5.0
+	github.com/go-testfixtures/testfixtures/v3 v3.1.1
 	github.com/go-xorm/core v0.6.2 // indirect
 	github.com/go-xorm/xorm v0.7.9 // indirect
 	github.com/golang/protobuf v1.3.2 // indirect
@@ -45,9 +46,9 @@ require (
 	github.com/labstack/echo/v4 v4.1.14
 	github.com/labstack/gommon v0.3.0
 	github.com/laurent22/ical-go v0.1.1-0.20181107184520-7e5d6ade8eef
+	github.com/lib/pq v1.3.0
 	github.com/mailru/easyjson v0.7.0 // indirect
 	github.com/mattn/go-isatty v0.0.12 // indirect
-	github.com/mattn/go-oci8 v0.0.0-20181130072307-052f5d97b9b6 // indirect
 	github.com/mattn/go-runewidth v0.0.4 // indirect
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
@@ -74,8 +75,6 @@ require (
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/d4l3k/messagediff.v1 v1.2.1
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
-	gopkg.in/testfixtures.v2 v2.5.3
-	gopkg.in/yaml.v2 v2.2.7 // indirect
 	honnef.co/go/tools v0.0.0-20190418001031-e561f6794a2a
 	src.techknowlogick.com/xgo v0.0.0-20190507142556-a5b29ecb0ff4
 	src.techknowlogick.com/xormigrate v1.1.0
