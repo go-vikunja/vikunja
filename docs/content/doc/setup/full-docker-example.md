@@ -76,7 +76,7 @@ networks:
     external: true
 {{< /highlight >}}
 
-### Without redis
+### With redis
 
 {{< highlight yaml >}}
 version: '3'
