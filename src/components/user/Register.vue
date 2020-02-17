@@ -12,7 +12,7 @@
 				<div class="field">
 					<label class="label" for="email">E-mail address</label>
 					<div class="control">
-						<input type="text" class="input" id="email" name="email" placeholder="e.g. frederic@vikunja.io" v-model="credentials.email" required/>
+						<input type="email" class="input" id="email" name="email" placeholder="e.g. frederic@vikunja.io" v-model="credentials.email" required/>
 					</div>
 				</div>
 				<div class="field">

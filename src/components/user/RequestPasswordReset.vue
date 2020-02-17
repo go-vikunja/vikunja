@@ -6,7 +6,7 @@
 				<div class="field">
 					<label class="label" for="email">E-mail address</label>
 					<div class="control">
-						<input v-focus type="text" class="input" id="email" name="email" placeholder="e.g. frederic@vikunja.io" v-model="passwordReset.email" required/>
+						<input v-focus type="email" class="input" id="email" name="email" placeholder="e.g. frederic@vikunja.io" v-model="passwordReset.email" required/>
 					</div>
 				</div>
 
