@@ -224,6 +224,8 @@ func InitDefaultConfig() {
 	CorsEnable.setDefault(true)
 	CorsOrigins.setDefault([]string{"*"})
 	CorsMaxAge.setDefault(0)
+	// Migration
+	MigrationWunderlistEnable.setDefault(false)
 }
 
 // InitConfig initializes the config, sets defaults etc.

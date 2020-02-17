@@ -38,6 +38,7 @@ require (
 	github.com/go-testfixtures/testfixtures/v3 v3.1.1
 	github.com/go-xorm/core v0.6.2 // indirect
 	github.com/go-xorm/xorm v0.7.9 // indirect
+	github.com/gogo/protobuf v1.2.0 // indirect
 	github.com/golang/protobuf v1.3.2 // indirect
 	github.com/gordonklaus/ineffassign v0.0.0-20180909121442-1003c8bd00dc
 	github.com/imdario/mergo v0.3.7
@@ -53,6 +54,8 @@ require (
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
 	github.com/olekukonko/tablewriter v0.0.1
+	github.com/onsi/ginkgo v1.7.0 // indirect
+	github.com/onsi/gomega v1.4.3 // indirect
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/pelletier/go-toml v1.4.0 // indirect
 	github.com/prometheus/client_golang v0.9.3-0.20190127221311-3c4408c8b829
