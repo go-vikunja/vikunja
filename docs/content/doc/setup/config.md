@@ -189,7 +189,8 @@ migration:
     clientsecret:
     # The url where clients are redirected after they authorized Vikunja to access their wunderlist stuff.
     # This needs to match the url you entered when registering your Vikunja instance at wunderlist.
-    # This is usually the frontend url where the frontend then makes a request to /migration/wunderlist
+    # This is usually the frontend url where the frontend then makes a request to /migration/wunderlist/migrate
     # with the code obtained from the wunderlist api.
+    # Note that the vikunja frontend expects this to be /migrate/wunderlist
     redirecturl:
 {{< /highlight >}}
