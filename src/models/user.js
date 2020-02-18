@@ -10,7 +10,7 @@ export default class UserModel extends AbstractModel {
 	defaults() {
 		return {
 			id: 0,
-			avatarUrl: '',
+			avatar: '',
 			email: '',
 			username: '',
 			created: null,
@@ -19,6 +19,6 @@ export default class UserModel extends AbstractModel {
 	}
 
 	getAvatarUrl(size = 50) {
-		return `https://www.gravatar.com/avatar/${this.avatarUrl}?s=${size}&d=mp`
+		return `https://www.gravatar.com/avatar/${this.avatar}?s=${size}&d=mp`
 	}
 }
