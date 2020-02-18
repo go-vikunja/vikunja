@@ -3,7 +3,7 @@
 		<h1>Manage labels</h1>
 		<p>
 			Click on a label to edit it.
-			You can edit all labels you created, you can use all lables which are associated with a task to whose list you have access.
+			You can edit all labels you created, you can use all labels which are associated with a task to whose list you have access.
 		</p>
 		<div class="columns">
 			<div class="labels-list column">
