@@ -18,6 +18,7 @@ package migration
 
 import (
 	"bytes"
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
 	"io/ioutil"
@@ -27,12 +28,17 @@ import (
 // (Namespaces, tasks, etc. Even attachments and relations.)
 func InsertFromStructure(str []*models.NamespaceWithLists, user *user.User) (err error) {
 
+	log.Debugf("[creating structure] Creating %d namespaces", len(str))
+
 	// Create all namespaces
 	for _, n := range str {
 		err = n.Create(user)
 		if err != nil {
 			return
 		}
+
+		log.Debugf("[creating structure] Created namespace %d", n.ID)
+		log.Debugf("[creating structure] Creating %d lists", len(n.Lists))
 
 		// Create all lists
 		for _, l := range n.Lists {
@@ -46,6 +52,9 @@ func InsertFromStructure(str []*models.NamespaceWithLists, user *user.User) (err
 				return
 			}
 
+			log.Debugf("[creating structure] Created list %d", l.ID)
+			log.Debugf("[creating structure] Creating %d tasks", len(tasks))
+
 			// Create all tasks
 			for _, t := range tasks {
 				t.ListID = l.ID
@@ -54,31 +63,49 @@ func InsertFromStructure(str []*models.NamespaceWithLists, user *user.User) (err
 					return
 				}
 
+				log.Debugf("[creating structure] Created task %d", t.ID)
+				if len(t.RelatedTasks) > 0 {
+					log.Debugf("[creating structure] Creating %d related task kinds", len(t.RelatedTasks))
+				}
+
 				// Create all relation for each task
 				for kind, tasks := range t.RelatedTasks {
-					// First create the related tasks if they does not exist
+
+					if len(tasks) > 0 {
+						log.Debugf("[creating structure] Creating %d related tasks for kind %v", len(tasks), kind)
+					}
+
 					for _, rt := range tasks {
+						// First create the related tasks if they do not exist
 						if rt.ID == 0 {
+							rt.ListID = t.ListID
 							err = rt.Create(user)
 							if err != nil {
 								return
 							}
+							log.Debugf("[creating structure] Created related task %d", rt.ID)
 						}
 
 						// Then create the relation
 						taskRel := &models.TaskRelation{
-							TaskID:       rt.ID,
-							OtherTaskID:  t.ID,
+							TaskID:       t.ID,
+							OtherTaskID:  rt.ID,
 							RelationKind: kind,
 						}
 						err = taskRel.Create(user)
 						if err != nil {
 							return
 						}
+
+						log.Debugf("[creating structure] Created task relation between task %d and %d", t.ID, rt.ID)
+
 					}
 				}
 
 				// Create all attachments for each task
+				if len(t.Attachments) > 0 {
+					log.Debugf("[creating structure] Creating %d attachments", len(t.Attachments))
+				}
 				for _, a := range t.Attachments {
 					// Check if we have a file to create
 					if len(a.File.FileContent) > 0 {
@@ -88,11 +115,14 @@ func InsertFromStructure(str []*models.NamespaceWithLists, user *user.User) (err
 						if err != nil {
 							return
 						}
+						log.Debugf("[creating structure] Created new attachment %d", a.ID)
 					}
 				}
 			}
 		}
 	}
+
+	log.Debugf("[creating structure] Done inserting new task structure")
 
 	return nil
 }

@@ -459,11 +459,14 @@ func (w *Migration) Migrate(user *user.User) (err error) {
 	log.Debugf("[Wunderlist migration] Insert data into db for user %d", user.ID)
 
 	err = migration.InsertFromStructure(fullVikunjaHierachie, user)
+	if err != nil {
+		return err
+	}
 
 	log.Debugf("[Wunderlist migration] Done inserting data into db for user %d", user.ID)
 	log.Debugf("[Wunderlist migration] Wunderlist migration for user %d done", user.ID)
 
-	return err
+	return nil
 }
 
 // AuthURL returns the url users need to authenticate against
