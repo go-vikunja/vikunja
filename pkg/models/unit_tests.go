@@ -46,6 +46,7 @@ func SetupTests() {
 		"namespaces",
 		"task_assignees",
 		"task_attachments",
+		"task_comments",
 		"task_relations",
 		"task_reminders",
 		"tasks",

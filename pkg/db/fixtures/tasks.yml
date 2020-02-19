@@ -243,4 +243,13 @@
   percent_done: 0.5
   created: 1543626724
   updated: 1543626724
+  # This task is forbidden for user1
+- id: 34
+  text: 'task #34'
+  created_by_id: 13
+  list_id: 20
+  index: 20
+  created: 1543626724
+  updated: 1543626724
+
 

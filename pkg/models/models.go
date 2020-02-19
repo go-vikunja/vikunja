@@ -50,6 +50,7 @@ func GetTables() []interface{} {
 		&LinkSharing{},
 		&TaskRelation{},
 		&TaskAttachment{},
+		&TaskComment{},
 	}
 }
 

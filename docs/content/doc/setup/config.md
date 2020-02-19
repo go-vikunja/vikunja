@@ -71,6 +71,8 @@ service:
   enabletaskattachments: true
   # The time zone all timestamps are in
   timezone: GMT
+  # Whether task comments should be enabled or not
+  enabletaskcomments: true
 
 database:
   # Database type to use. Supported types are mysql, postgres and sqlite.

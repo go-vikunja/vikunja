@@ -305,6 +305,19 @@ func registerAPIRoutes(a *echo.Group) {
 		a.GET("/tasks/:task/attachments/:attachment", apiv1.GetTaskAttachment)
 	}
 
+	if config.ServiceEnableTaskComments.GetBool() {
+		taskCommentHandler := &handler.WebHandler{
+			EmptyStruct: func() handler.CObject {
+				return &models.TaskComment{}
+			},
+		}
+		a.GET("/tasks/:task/comments", taskCommentHandler.ReadAllWeb)
+		a.PUT("/tasks/:task/comments", taskCommentHandler.CreateWeb)
+		a.DELETE("/tasks/:task/comments/:commentid", taskCommentHandler.DeleteWeb)
+		a.POST("/tasks/:task/comments/:commentid", taskCommentHandler.UpdateWeb)
+		a.GET("/tasks/:task/comments/:commentid", taskCommentHandler.ReadOneWeb)
+	}
+
 	labelHandler := &handler.WebHandler{
 		EmptyStruct: func() handler.CObject {
 			return &models.Label{}

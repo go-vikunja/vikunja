@@ -276,7 +276,7 @@ const ErrCodeTaskDoesNotExist = 4002
 
 // HTTPError holds the http error description
 func (err ErrTaskDoesNotExist) HTTPError() web.HTTPError {
-	return web.HTTPError{HTTPCode: http.StatusNotFound, Code: ErrCodeTaskDoesNotExist, Message: "This list task does not exist"}
+	return web.HTTPError{HTTPCode: http.StatusNotFound, Code: ErrCodeTaskDoesNotExist, Message: "This task does not exist"}
 }
 
 // ErrBulkTasksMustBeInSameList represents a "ErrBulkTasksMustBeInSameList" kind of error.
@@ -599,6 +599,34 @@ func (err ErrInvalidSortOrder) HTTPError() web.HTTPError {
 		HTTPCode: http.StatusBadRequest,
 		Code:     ErrCodeInvalidSortOrder,
 		Message:  fmt.Sprintf("The task sort order '%s' is invalid. Allowed is either asc or desc.", err.OrderBy),
+	}
+}
+
+// ErrTaskCommentDoesNotExist represents an error where a task comment does not exist
+type ErrTaskCommentDoesNotExist struct {
+	ID     int64
+	TaskID int64
+}
+
+// IsErrTaskCommentDoesNotExist checks if an error is ErrTaskCommentDoesNotExist.
+func IsErrTaskCommentDoesNotExist(err error) bool {
+	_, ok := err.(ErrTaskCommentDoesNotExist)
+	return ok
+}
+
+func (err ErrTaskCommentDoesNotExist) Error() string {
+	return fmt.Sprintf("Task comment does not exist [ID: %d, TaskID: %d]", err.ID, err.TaskID)
+}
+
+// ErrCodeTaskCommentDoesNotExist holds the unique world-error code of this error
+const ErrCodeTaskCommentDoesNotExist = 4015
+
+// HTTPError holds the http error description
+func (err ErrTaskCommentDoesNotExist) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusNotFound,
+		Code:     ErrCodeTaskCommentDoesNotExist,
+		Message:  "This task comment does not exist",
 	}
 }
 

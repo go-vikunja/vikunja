@@ -64,7 +64,7 @@ func (t *Task) canDoTask(a web.Auth) (bool, error) {
 		return false, err
 	}
 
-	// A user can do a task if he has write acces to its list
+	// A user can do a task if it has write acces to its list
 	l := &List{ID: lI.ListID}
 	return l.CanWrite(a)
 }
