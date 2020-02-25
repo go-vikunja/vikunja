@@ -19,6 +19,7 @@ export default class UserModel extends AbstractModel {
 	}
 
 	getAvatarUrl(size = 50) {
-		return `https://www.gravatar.com/avatar/${this.avatar}?s=${size}&d=mp`
+		const avatarUrl = this.avatar !== '' ? this.avatar : this.avatarUrl
+		return `https://www.gravatar.com/avatar/${avatarUrl}?s=${size}&d=mp`
 	}
 }

@@ -1,0 +1,19 @@
+.media.comment{
+  align-items: center;
+
+  .media-left {
+    margin: 0 1em;
+  }
+
+  .comment-actions {
+    font-size: .8em;
+
+    &, a {
+      color: $grey;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+  }
+}

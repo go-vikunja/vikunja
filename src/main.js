@@ -64,6 +64,7 @@ import { faClock } from '@fortawesome/free-regular-svg-icons'
 import { faHistory } from '@fortawesome/free-solid-svg-icons'
 import { faSearch } from '@fortawesome/free-solid-svg-icons'
 import { faCheckDouble } from '@fortawesome/free-solid-svg-icons'
+import { faComments } from '@fortawesome/free-regular-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
 library.add(faSignOutAlt)
@@ -102,6 +103,7 @@ library.add(faClock)
 library.add(faHistory)
 library.add(faSearch)
 library.add(faCheckDouble)
+library.add(faComments)
 
 Vue.component('icon', FontAwesomeIcon)
 

@@ -30,3 +30,11 @@ h1,h2,h3,h4,h5,h6{
 .has-no-border{
   border: none !important;
 }
+
+.has-rounded-corners {
+  border-radius: $radius;
+}
+
+.image.is-avatar{
+  border-radius: 100%;
+}

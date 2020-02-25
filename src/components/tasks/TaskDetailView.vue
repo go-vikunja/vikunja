@@ -190,6 +190,9 @@
 								ref="relatedTasks"
 						/>
 					</div>
+
+					<!-- Comments -->
+					<comments :task-i-d="taskID"/>
 				</div>
 				<div class="column is-one-fifth action-buttons">
 					<a class="button is-outlined noshadow has-no-border" :class="{'is-success': !task.done}" @click="toggleTaskDone()">
@@ -288,6 +291,7 @@
 	import RelatedTasks from './reusable/relatedTasks'
 	import RepeatAfter from './reusable/repeatAfter'
 	import Reminders from './reusable/reminders'
+	import Comments from './reusable/comments'
 	import router from '../../router'
 
 	export default {
@@ -301,6 +305,7 @@
 			EditLabels,
 			PercentDoneSelect,
 			PrioritySelect,
+			Comments,
 			flatPickr,
 		},
 		data() {
