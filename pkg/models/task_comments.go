@@ -65,6 +65,10 @@ func (tc *TaskComment) Create(a web.Auth) (err error) {
 
 	tc.AuthorID = a.GetID()
 	_, err = x.Insert(tc)
+	if err != nil {
+		return
+	}
+	tc.Author, err = user.GetUserByID(a.GetID())
 	return
 }
 

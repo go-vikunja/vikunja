@@ -33,6 +33,8 @@ func TestTaskComment_Create(t *testing.T) {
 		}
 		err := tc.Create(u)
 		assert.NoError(t, err)
+		assert.Equal(t, "test", tc.Comment)
+		assert.Equal(t, int64(1), tc.Author.ID)
 	})
 	t.Run("nonexisting task", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
