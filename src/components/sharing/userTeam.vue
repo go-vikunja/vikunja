@@ -76,13 +76,13 @@
 					</td>
 					<td class="actions" v-if="userIsAdmin">
 						<div class="select">
-							<select @change="sharableID = s.id;toggleType()" v-model="selectedRight" class="button buttonright">
+							<select @change="toggleType(s)" v-model="selectedRight" class="button buttonright">
 								<option :value="rights.READ" :selected="s.right === rights.READ">Read only</option>
 								<option :value="rights.READ_WRITE" :selected="s.right === rights.READ_WRITE">Read & write</option>
 								<option :value="rights.ADMIN" :selected="s.right === rights.ADMIN">Admin</option>
 							</select>
 						</div>
-						<button @click="sharableID = s.id; showDeleteModal = true" class="button is-danger icon-only">
+						<button @click="() => {sharable = s; showDeleteModal = true}" class="button is-danger icon-only">
 							<span class="icon is-small">
 								<icon icon="trash-alt"/>
 							</span>
@@ -150,8 +150,7 @@
 				stuffModel: Object,
 				searchService: Object,
 				sharable: Object,
-				sharableID: 0, // This holds either user or team id for stuff like rights update or deleting
-				
+
 				found: [],
 				searchLabel: '',
 				rights: rights,
@@ -220,7 +219,7 @@
 			deleteSharable() {
 
 				if (this.shareType === 'user') {
-					this.stuffModel.userID = this.sharable.id
+					this.stuffModel.userID = this.sharable.username
 				} else if (this.shareType === 'team') {
 					this.stuffModel.teamID = this.sharable.id
 				}
@@ -265,7 +264,7 @@
 						this.error(e, this)
 					})
 			},
-			toggleType() {
+			toggleType(sharable) {
 				if (this.selectedRight !== rights.ADMIN &&
 					this.selectedRight !== rights.READ &&
 					this.selectedRight !== rights.READ_WRITE
@@ -276,9 +275,9 @@
 
 
 				if (this.shareType === 'user') {
-					this.stuffModel.userID = this.sharableID
+					this.stuffModel.userID = sharable.username
 				} else if (this.shareType === 'team') {
-					this.stuffModel.teamID = this.sharableID
+					this.stuffModel.teamID = sharable.id
 				}
 
 				this.stuffService.update(this.stuffModel)
