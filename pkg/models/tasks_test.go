@@ -128,14 +128,82 @@ func TestUpdateDone(t *testing.T) {
 		oldTask := &Task{Done: false}
 		newTask := &Task{Done: true}
 		updateDone(oldTask, newTask)
-		assert.NotEqual(t, timeutil.TimeStamp(0), oldTask.DoneAt)
+		assert.NotEqual(t, timeutil.TimeStamp(0), newTask.DoneAt)
 	})
 	t.Run("unmarking a task as done", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		oldTask := &Task{Done: true}
 		newTask := &Task{Done: false}
 		updateDone(oldTask, newTask)
-		assert.Equal(t, timeutil.TimeStamp(0), oldTask.DoneAt)
+		assert.Equal(t, timeutil.TimeStamp(0), newTask.DoneAt)
+	})
+	t.Run("repeating interval", func(t *testing.T) {
+		t.Run("normal", func(t *testing.T) {
+			oldTask := &Task{
+				Done:        false,
+				RepeatAfter: 8600,
+				DueDate:     timeutil.TimeStamp(1550000000),
+			}
+			newTask := &Task{
+				Done: true,
+			}
+			updateDone(oldTask, newTask)
+			assert.Equal(t, timeutil.TimeStamp(1550008600), newTask.DueDate)
+		})
+		t.Run("don't update if due date is zero", func(t *testing.T) {
+			oldTask := &Task{
+				Done:        false,
+				RepeatAfter: 8600,
+				DueDate:     timeutil.TimeStamp(0),
+			}
+			newTask := &Task{
+				Done:    true,
+				DueDate: timeutil.TimeStamp(1543626724),
+			}
+			updateDone(oldTask, newTask)
+			assert.Equal(t, timeutil.TimeStamp(1543626724), newTask.DueDate)
+		})
+		t.Run("update reminders", func(t *testing.T) {
+			oldTask := &Task{
+				Done:        false,
+				RepeatAfter: 8600,
+				Reminders: []timeutil.TimeStamp{
+					1550000000,
+					1555000000,
+				},
+			}
+			newTask := &Task{
+				Done: true,
+			}
+			updateDone(oldTask, newTask)
+			assert.Len(t, newTask.Reminders, 2)
+			assert.Equal(t, timeutil.TimeStamp(1550008600), newTask.Reminders[0])
+			assert.Equal(t, timeutil.TimeStamp(1555008600), newTask.Reminders[1])
+		})
+		t.Run("update start date", func(t *testing.T) {
+			oldTask := &Task{
+				Done:        false,
+				RepeatAfter: 8600,
+				StartDate:   timeutil.TimeStamp(1550000000),
+			}
+			newTask := &Task{
+				Done: true,
+			}
+			updateDone(oldTask, newTask)
+			assert.Equal(t, timeutil.TimeStamp(1550008600), newTask.StartDate)
+		})
+		t.Run("update end date", func(t *testing.T) {
+			oldTask := &Task{
+				Done:        false,
+				RepeatAfter: 8600,
+				EndDate:     timeutil.TimeStamp(1550000000),
+			}
+			newTask := &Task{
+				Done: true,
+			}
+			updateDone(oldTask, newTask)
+			assert.Equal(t, timeutil.TimeStamp(1550008600), newTask.EndDate)
+		})
 	})
 }
 

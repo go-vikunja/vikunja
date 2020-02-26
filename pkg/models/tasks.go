@@ -540,10 +540,21 @@ func (t *Task) Create(a web.Auth) (err error) {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{id} [post]
 func (t *Task) Update() (err error) {
-	// Check if the task exists
+	// Check if the task exists and get the old values
 	ot, err := GetTaskByIDSimple(t.ID)
 	if err != nil {
 		return
+	}
+
+	// Get the reminders
+	reminders, err := getRemindersForTasks([]int64{t.ID})
+	if err != nil {
+		return
+	}
+
+	ot.Reminders = make([]timeutil.TimeStamp, len(reminders))
+	for i, r := range reminders {
+		ot.Reminders[i] = r.Reminder
 	}
 
 	// When a repeating task is marked as done, we update all deadlines and reminders and set it as undone
@@ -577,7 +588,7 @@ func (t *Task) Update() (err error) {
 	//t.Labels = ot.Labels
 
 	// For whatever reason, xorm dont detect if done is updated, so we need to update this every time by hand
-	// Which is why we merge the actual task struct with the one we got from the
+	// Which is why we merge the actual task struct with the one we got from the db
 	// The user struct overrides values in the actual one.
 	if err := mergo.Merge(&ot, t, mergo.WithOverride); err != nil {
 		return err
@@ -646,14 +657,32 @@ func (t *Task) Update() (err error) {
 	return
 }
 
-// This helper function updates the reminders and doneAtUnix of the *old* task (since that's the one we're inserting
-// with updated values into the db)
+// This helper function updates the reminders, doneAtUnix, start and end dates of the *old* task
+// and saves the new values in the newTask object.
+// We make a few assumtions here:
+//   1. Everything in oldTask is the truth - we figure out if we update anything at all if oldTask.RepeatAfter has a value > 0
+//   2. Because of 1., this functions should not be used to update values other than Done in the same go
 func updateDone(oldTask *Task, newTask *Task) {
 	if !oldTask.Done && newTask.Done && oldTask.RepeatAfter > 0 {
-		oldTask.DueDate = timeutil.FromTime(oldTask.DueDate.ToTime().Add(time.Duration(oldTask.RepeatAfter) * time.Second)) // assuming we'll save the old task (merged)
 
+		repeatDuration := time.Duration(oldTask.RepeatAfter) * time.Second
+
+		// assuming we'll merge the new task over the old task
+		if oldTask.DueDate > 0 {
+			newTask.DueDate = timeutil.FromTime(oldTask.DueDate.ToTime().Add(repeatDuration))
+		}
+
+		newTask.Reminders = oldTask.Reminders
 		for in, r := range oldTask.Reminders {
-			oldTask.Reminders[in] = timeutil.FromTime(r.ToTime().Add(time.Duration(oldTask.RepeatAfter) * time.Second))
+			newTask.Reminders[in] = timeutil.FromTime(r.ToTime().Add(repeatDuration))
+		}
+
+		if oldTask.StartDate > 0 {
+			newTask.StartDate = timeutil.FromTime(oldTask.StartDate.ToTime().Add(repeatDuration))
+		}
+
+		if oldTask.EndDate > 0 {
+			newTask.EndDate = timeutil.FromTime(oldTask.EndDate.ToTime().Add(repeatDuration))
 		}
 
 		newTask.Done = false
@@ -661,15 +690,15 @@ func updateDone(oldTask *Task, newTask *Task) {
 
 	// Update the "done at" timestamp
 	if !oldTask.Done && newTask.Done {
-		oldTask.DoneAt = timeutil.FromTime(time.Now())
+		newTask.DoneAt = timeutil.FromTime(time.Now())
 	}
 	// When unmarking a task as done, reset the timestamp
 	if oldTask.Done && !newTask.Done {
-		oldTask.DoneAt = 0
+		newTask.DoneAt = 0
 	}
 }
 
-// Creates or deletes all necessary remindes without unneded db operations.
+// Creates or deletes all necessary reminders without unneded db operations.
 // The parameter is a slice with unix dates which holds the new reminders.
 func (t *Task) updateReminders(reminders []timeutil.TimeStamp) (err error) {
 
