@@ -37,7 +37,7 @@
 				<div class="notification is-info" v-if="loading">
 					Loading...
 				</div>
-				<div class="notification is-danger" v-if="error">
+				<div class="notification is-danger" v-if="errorMsg !== ''">
 					{{ errorMsg }}
 				</div>
 			</form>
@@ -76,7 +76,7 @@
 
 				if (this.credentials.password2 !== this.credentials.password) {
 					this.loading = false
-					this.errorMsg = 'Passwords don\'t match'
+					this.errorMsg = 'Passwords don\'t match.'
 					return
 				}
 
