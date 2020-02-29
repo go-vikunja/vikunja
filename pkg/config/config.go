@@ -244,7 +244,7 @@ func InitConfig() {
 	// Load the config file
 	viper.AddConfigPath(ServiceRootpath.GetString())
 	viper.AddConfigPath("/etc/vikunja/")
-	viper.AddConfigPath("~/.config/vikunja")
+	viper.AddConfigPath("$HOME/.config/vikunja")
 	viper.AddConfigPath(".")
 	viper.SetConfigName("config")
 	err := viper.ReadInConfig()
