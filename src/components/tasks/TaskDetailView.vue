@@ -163,7 +163,15 @@
 						</h3>
 						<!-- We're using a normal textarea until the problem with the icons is resolved in easymde -->
 						<!-- <easymde v-model="task.description" @change="saveTask"/>-->
-						<textarea class="textarea" v-model="task.description" @change="saveTask" rows="6" placeholder="Click here to enter a description..."></textarea>
+						<textarea
+								class="textarea"
+								v-model="task.description"
+								rows="6"
+								placeholder="Click here to enter a description..."
+								@keyup.ctrl.enter="saveTaskIfDescriptionChanged"
+								@keydown="setDescriptionChanged"
+								@change="saveTaskIfDescriptionChanged"
+						></textarea>
 					</div>
 
 					<!-- Attachments -->
@@ -319,6 +327,7 @@
 				namespace: NamespaceModel,
 				showDeleteModal: false,
 				taskTitle: '',
+				descriptionChanged: false,
 
 				priorities: priorites,
 				flatPickerConfig: {
@@ -449,6 +458,22 @@
 			toggleTaskDone() {
 				this.task.done = !this.task.done
 				this.saveTask()
+			},
+			setDescriptionChanged(e) {
+				if (e.key === 'Enter' || e.key === 'Control') {
+					return
+				}
+				this.descriptionChanged = true
+			},
+			saveTaskIfDescriptionChanged() {
+				// We want to only save the description if it was changed.
+				// Since we can either trigger this with ctrl+enter or @change, it would be possible to save a task first
+				// with ctrl+enter and then with @change although nothing changed since the last save when @change gets fired.
+				// To only save one time we added this method.
+				if(this.descriptionChanged) {
+					this.descriptionChanged = false
+					this.saveTask()
+				}
 			},
 		},
 	}
