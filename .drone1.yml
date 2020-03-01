@@ -290,7 +290,7 @@ steps:
       path_style: true
       strip_prefix: dist/zip/
       source: dist/zip/*
-      target: /master/
+      target: /api/master/
     depends_on: [ sign-release ]
 
   # Build a debian package and push it to our bucket
@@ -324,7 +324,7 @@ steps:
     image: plugins/s3:1
     pull: true
     settings:
-      bucket: vikunja-deb
+      bucket: vikunja
       access_key:
         from_secret: aws_access_key_id
       secret_key:
@@ -333,7 +333,7 @@ steps:
       path_style: true
       strip_prefix: debian
       source: debian/*/*/*/*/*
-      target: /
+      target: /deb/
     depends_on: [ deb-structure ]
 
 # Build the docker image and push it to docker hub
@@ -483,7 +483,7 @@ steps:
       path_style: true
       strip_prefix: dist/zip/
       source: dist/zip/*
-      target: /${DRONE_TAG##v}/
+      target: /api/${DRONE_TAG##v}/
     depends_on: [ sign-release ]
 
   # Build a debian package and push it to our bucket
@@ -517,7 +517,7 @@ steps:
     image: plugins/s3:1
     pull: true
     settings:
-      bucket: vikunja-deb
+      bucket: vikunja
       access_key:
         from_secret: aws_access_key_id
       secret_key:
@@ -526,7 +526,7 @@ steps:
       path_style: true
       strip_prefix: debian
       source: debian/*/*/*/*/*
-      target: /
+      target: /deb/
     depends_on: [ deb-structure ]
 
 # Build the docker image and push it to docker hub
