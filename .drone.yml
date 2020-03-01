@@ -3,10 +3,12 @@ name: testing
 
 trigger:
   branch:
-    exclude:
+    include:
       - master
   event:
-    - push
+    include:
+      - push
+      - pull_request
 
 steps:
   - name: build
