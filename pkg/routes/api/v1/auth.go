@@ -46,8 +46,6 @@ func NewUserJWTAuthtoken(user *user.User) (token string, err error) {
 	claims["email"] = user.Email
 	claims["exp"] = time.Now().Add(time.Hour * 72).Unix()
 
-	claims["avatar"] = user.AvatarURL
-
 	// Generate encoded token and send it as response.
 	return t.SignedString([]byte(config.ServiceJWTSecret.GetString()))
 }

@@ -49,8 +49,6 @@ type User struct {
 	// The user's email address.
 	Email    string `xorm:"varchar(250) null" json:"email,omitempty" valid:"email,length(0|250)" maxLength:"250"`
 	IsActive bool   `xorm:"null" json:"-"`
-	// The users md5-hashed email address, used to get the avatar from gravatar and the likes.
-	AvatarURL string `xorm:"-" json:"avatarUrl"`
 
 	PasswordResetToken string `xorm:"varchar(450) null" json:"-"`
 	EmailConfirmToken  string `xorm:"varchar(450) null" json:"-"`
@@ -61,11 +59,6 @@ type User struct {
 	Updated timeutil.TimeStamp `xorm:"updated not null" json:"updated"`
 
 	web.Auth `xorm:"-" json:"-"`
-}
-
-// AfterLoad is used to delete all emails to not have them leaked to the user
-func (u *User) AfterLoad() {
-	u.AvatarURL = utils.Md5String(u.Email)
 }
 
 // GetID implements the Auth interface

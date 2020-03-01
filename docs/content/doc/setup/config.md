@@ -73,6 +73,8 @@ service:
   timezone: GMT
   # Whether task comments should be enabled or not
   enabletaskcomments: true
+  # The duration in seconds until a cached gravatar user avatar expires
+  gravatarexpiration: 3600
 
 database:
   # Database type to use. Supported types are mysql, postgres and sqlite.

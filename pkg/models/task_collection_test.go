@@ -29,24 +29,21 @@ import (
 func TestTaskCollection_ReadAll(t *testing.T) {
 	// Dummy users
 	user1 := &user.User{
-		ID:        1,
-		Username:  "user1",
-		Password:  "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
-		IsActive:  true,
-		AvatarURL: "111d68d06e2d317b5a59c2c6c5bad808", // hash for ""
+		ID:       1,
+		Username: "user1",
+		Password: "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
+		IsActive: true,
 	}
 	user2 := &user.User{
-		ID:        2,
-		Username:  "user2",
-		Password:  "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
-		AvatarURL: "ab53a2911ddf9b4817ac01ddcd3d975f", // hash for ""
+		ID:       2,
+		Username: "user2",
+		Password: "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
 	}
 	user6 := &user.User{
-		ID:        6,
-		Username:  "user6",
-		Password:  "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
-		IsActive:  true,
-		AvatarURL: "3efbe51f864c6666bc27caf4c6ff90ed", // hash for ""
+		ID:       6,
+		Username: "user6",
+		Password: "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
+		IsActive: true,
 	}
 
 	// We use individual variables for the tasks here to be able to rearrange or remove ones more easily
