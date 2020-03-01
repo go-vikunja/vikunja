@@ -54,7 +54,7 @@ steps:
     image: plugins/s3:1
     pull: true
     settings:
-      bucket: vikunja-frontend
+      bucket: vikunja
       access_key:
         from_secret: aws_access_key_id
       secret_key:
@@ -62,6 +62,7 @@ steps:
       endpoint: https://storage.kolaente.de
       path_style: true
       source: vikunja-frontend-master.zip
+      target: /frontend/
     depends_on: [ static ]
 
   # Build the docker image and push it to docker hub
@@ -109,7 +110,7 @@ steps:
     image: plugins/s3:1
     pull: true
     settings:
-      bucket: vikunja-frontend
+      bucket: vikunja
       access_key:
         from_secret: aws_access_key_id
       secret_key:
@@ -117,6 +118,7 @@ steps:
       endpoint: https://storage.kolaente.de
       path_style: true
       source: vikunja-frontend-${DRONE_TAG##v}.zip
+      target: /frontend/
     depends_on: [ static ]
 
   # Build the docker image and push it to docker hub
