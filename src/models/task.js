@@ -165,6 +165,12 @@ export default class TaskModel extends AbstractModel {
 	}
 
 	async scheduleNotification(date) {
+
+		if(date < new Date()) {
+			console.debug('Date is in the past, not scheduling a notification. Date is ', date)
+			return
+		}
+
 		if (!('showTrigger' in Notification.prototype)) {
 			console.debug('This browser does not support triggered notifications')
 			return
@@ -178,6 +184,7 @@ export default class TaskModel extends AbstractModel {
 
 		const registration = await navigator.serviceWorker.getRegistration()
 		if (typeof registration === 'undefined') {
+			console.error('No service worker registration available')
 			return
 		}
 
