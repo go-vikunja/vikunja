@@ -10,7 +10,7 @@
 			<progress class="progress is-small is-info" max="100" v-if="taskCommentService.loading">Loading comments...</progress>
 			<div class="media comment" v-for="c in comments" :key="c.id">
 				<figure class="media-left">
-					<img class="image is-avatar" :src="c.author.getAvatarUrl(48)" alt="">
+					<img class="image is-avatar" :src="c.author.getAvatarUrl(48)" alt="" width="48" height="48"/>
 				</figure>
 				<div class="media-content">
 					<div class="form" v-if="isCommentEdit && commentEdit.id === c.id">
@@ -39,7 +39,7 @@
 			</div>
 			<div class="media comment">
 				<figure class="media-left">
-					<img class="image is-avatar" :src="user.infos.getAvatarUrl(48)" alt="">
+					<img class="image is-avatar" :src="user.infos.getAvatarUrl(48)" alt="" width="48" height="48"/>
 				</figure>
 				<div class="media-content">
 					<div class="form">

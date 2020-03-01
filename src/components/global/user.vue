@@ -1,6 +1,6 @@
 <template>
 	<div class="user">
-		<img :src="user.getAvatarUrl(avatarSize)" class="avatar" alt="" v-tooltip="user.username"/>
+		<img :src="user.getAvatarUrl(avatarSize)" class="avatar" alt="" v-tooltip="user.username" :width="avatarSize" :height="avatarSize"/>
 		<span v-if="showUsername" class="username">{{ user.username }}</span>
 	</div>
 </template>
