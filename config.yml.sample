@@ -30,8 +30,6 @@ service:
   timezone: GMT
   # Whether task comments should be enabled or not
   enabletaskcomments: true
-  # The duration in seconds until a cached gravatar user avatar expires
-  gravatarexpiration: 3600
 
 database:
   # Database type to use. Supported types are mysql, postgres and sqlite.
@@ -154,3 +152,11 @@ migration:
     # with the code obtained from the wunderlist api.
     # Note that the vikunja frontend expects this to be /migrate/wunderlist
     redirecturl:
+
+avatar:
+  # Switch between avatar providers. Possible values are gravatar and default.
+  #   gravatar will fetch the avatar based on the user email.
+  #   default will return a default avatar for every request.
+  provider: gravatar
+  # When using gravatar, this is the duration in seconds until a cached gravatar user avatar expires
+  gravatarexpiration: 3600

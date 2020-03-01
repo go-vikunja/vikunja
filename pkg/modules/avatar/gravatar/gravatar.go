@@ -53,7 +53,7 @@ func (g *Provider) GetAvatar(user *user.User, size int64) ([]byte, string, error
 		// elaped is alway < 0 so the next check would always succeed.
 		// To have it make sense, we flip that.
 		elapsed := time.Until(a.loadedAt) * -1
-		needsRefetch = elapsed > time.Duration(config.ServiceGravatarExpiration.GetInt64())*time.Second
+		needsRefetch = elapsed > time.Duration(config.AvatarGravaterExpiration.GetInt64())*time.Second
 		if needsRefetch {
 			log.Debugf("Refetching avatar for user %d after %v", user.ID, elapsed)
 		} else {

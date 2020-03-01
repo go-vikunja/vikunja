@@ -17,7 +17,10 @@
 package v1
 
 import (
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/modules/avatar"
+	"code.vikunja.io/api/pkg/modules/avatar/empty"
 	"code.vikunja.io/api/pkg/modules/avatar/gravatar"
 	user2 "code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web/handler"
@@ -51,7 +54,13 @@ func GetAvatar(c echo.Context) error {
 	// Initialize the avatar provider
 	// For now, we only have one avatar provider, in the future there could be multiple which
 	// could be changed based on user settings etc.
-	avatarProvider := gravatar.Provider{}
+	var avatarProvider avatar.Provider
+	switch config.AvatarProvider.GetString() {
+	case "gravatar":
+		avatarProvider = &gravatar.Provider{}
+	default:
+		avatarProvider = &empty.Provider{}
+	}
 
 	size := c.QueryParam("size")
 	var sizeInt int64 = 250 // Default size of 250
@@ -64,11 +73,11 @@ func GetAvatar(c echo.Context) error {
 	}
 
 	// Get the avatar
-	avatar, mimeType, err := avatarProvider.GetAvatar(user, sizeInt)
+	a, mimeType, err := avatarProvider.GetAvatar(user, sizeInt)
 	if err != nil {
 		log.Errorf("Error getting avatar for user %d: %v", user.ID, err)
 		return handler.HandleHTTPError(err, c)
 	}
 
-	return c.Blob(http.StatusOK, mimeType, avatar)
+	return c.Blob(http.StatusOK, mimeType, a)
 }

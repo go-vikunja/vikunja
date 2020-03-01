@@ -46,7 +46,6 @@ const (
 	ServiceEnableTaskAttachments Key = `service.enabletaskattachments`
 	ServiceTimeZone              Key = `service.timezone`
 	ServiceEnableTaskComments    Key = `service.enabletaskcomments`
-	ServiceGravatarExpiration    Key = `service.gravatarexpiration`
 
 	DatabaseType                  Key = `database.type`
 	DatabaseHost                  Key = `database.host`
@@ -103,6 +102,9 @@ const (
 	CorsEnable  Key = `cors.enable`
 	CorsOrigins Key = `cors.origins`
 	CorsMaxAge  Key = `cors.maxage`
+
+	AvatarProvider           Key = `avatar.provider`
+	AvatarGravaterExpiration Key = `avatar.gravatarexpiration`
 )
 
 // GetString returns a string config value
@@ -174,7 +176,6 @@ func InitDefaultConfig() {
 	ServiceEnableTaskAttachments.setDefault(true)
 	ServiceTimeZone.setDefault("GMT")
 	ServiceEnableTaskComments.setDefault(true)
-	ServiceGravatarExpiration.setDefault(3600)
 
 	// Database
 	DatabaseType.setDefault("sqlite")
@@ -230,6 +231,9 @@ func InitDefaultConfig() {
 	CorsMaxAge.setDefault(0)
 	// Migration
 	MigrationWunderlistEnable.setDefault(false)
+	// Avatar
+	AvatarProvider.setDefault("gravatar")
+	AvatarGravaterExpiration.setDefault(3600)
 }
 
 // InitConfig initializes the config, sets defaults etc.
