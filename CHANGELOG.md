@@ -7,6 +7,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 All releases can be found on https://code.vikunja.io/api/releases.
 
+## [0.11] - 2020-03-01
+
+### Added 
+
+* Add config options for cors handling (#124)
+* Add config options for task attachments (#125)
+* Add generate as a make dependency for make build
+* Add logging for invalid model errors (#126)
+* Add more logging to web handler methods
+* Add postgres support (#135)
+* Add rate limit by ip for non-authenticated routes (#127)
+* Better efficency for loading teams (#128)
+* Expand relative path ~/.config/vikunja to $HOME/.config/vikunja (#146)
+* Task Comments (#138)
+
+### Fixed
+
+* Fix typo in docker-compose example (#140)
+* Fix frontend url for wunderlist migration in docs
+* Fix inserting task structure with related tasks (#142)
+* Fix time zone settings not working in Docker
+* Fix updating dates when marking a task as done (#145)
+* Make sure the author is returned when creating a new comment
+* Remove double user field
+
+### Changed
+
+* Explicitly disable wunderlist migration by default (#141)
+* Migration Improvements (#122)
+* Refactor User and DB handling (#123)
+* Return iso dates for everything date related from the api (#130)
+* Update copyright header
+* Update theme
+* Update xorm to use the new import path (#133)
+* Use relative url in .gitmodules (#132)
+
 ## [0.10] - 2020-01-19
 
 ### Added
