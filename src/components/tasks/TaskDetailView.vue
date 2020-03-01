@@ -6,7 +6,7 @@
 					#{{ task.id }}
 				</h1>
 				<div class="is-done" v-if="task.done">Done</div>
-				<h1 class="title input" contenteditable="true" @focusout="saveTaskOnChange()" ref="taskTitle">{{ task.text }}</h1>
+				<h1 class="title input" contenteditable="true" @focusout="saveTaskOnChange()" ref="taskTitle" @keyup.ctrl.enter="saveTaskOnChange()">{{ task.text }}</h1>
 			</div>
 			<h6 class="subtitle">
 				{{ namespace.name }} >
