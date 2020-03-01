@@ -1,4 +1,5 @@
 import AbstractModel from './abstractModel'
+import config from '../../public/config'
 
 export default class UserModel extends AbstractModel {
 	constructor(data) {
@@ -10,7 +11,6 @@ export default class UserModel extends AbstractModel {
 	defaults() {
 		return {
 			id: 0,
-			avatar: '',
 			email: '',
 			username: '',
 			created: null,
@@ -19,7 +19,6 @@ export default class UserModel extends AbstractModel {
 	}
 
 	getAvatarUrl(size = 50) {
-		const avatarUrl = this.avatar !== '' ? this.avatar : this.avatarUrl
-		return `https://www.gravatar.com/avatar/${avatarUrl}?s=${size}&d=mp`
+		return `${config.VIKUNJA_API_BASE_URL}${this.username}/avatar?size=${size}`
 	}
 }
