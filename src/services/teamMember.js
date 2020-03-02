@@ -1,6 +1,6 @@
 import AbstractService from './abstractService'
 import TeamMemberModel from '../models/teamMember'
-import moment from 'moment'
+import {formatISO} from 'date-fns'
 
 export default class TeamMemberService extends AbstractService {
 	constructor() {
@@ -11,8 +11,8 @@ export default class TeamMemberService extends AbstractService {
 	}
 
 	processModel(model) {
-		model.created = moment(model.created).toISOString()
-		model.updated = moment(model.updated).toISOString()
+		model.created = formatISO(model.created)
+		model.updated = formatISO(model.updated)
 		return model
 	}
 

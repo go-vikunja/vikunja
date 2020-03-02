@@ -1,6 +1,6 @@
 import AbstractService from './abstractService'
 import AttachmentModel from '../models/attachment'
-import moment from 'moment'
+import {formatISO} from 'date-fns'
 
 export default class AttachmentService extends AbstractService {
 	constructor() {
@@ -12,7 +12,7 @@ export default class AttachmentService extends AbstractService {
 	}
 
 	processModel(model) {
-		model.created = moment(model.created).toISOString()
+		model.created = formatISO(model.created)
 		return model
 	}
 

@@ -1,6 +1,6 @@
 import AbstractService from './abstractService'
 import LabelModel from '../models/label'
-import moment from 'moment'
+import {formatISO} from 'date-fns'
 
 export default class LabelService extends AbstractService {
 	constructor() {
@@ -14,8 +14,8 @@ export default class LabelService extends AbstractService {
 	}
 
 	processModel(model) {
-		model.created = moment(model.created).toISOString()
-		model.updated = moment(model.updated).toISOString()
+		model.created = formatISO(model.created)
+		model.updated = formatISO(model.updated)
 		return model
 	}
 

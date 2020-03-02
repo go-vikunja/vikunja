@@ -132,12 +132,12 @@ Vue.directive('focus', {
 auth.checkAuth()
 
 // Mixins
-import moment from 'moment'
 import message from './message'
+import {format, formatDistance} from 'date-fns'
 Vue.mixin({
 	methods: {
-		formatDateSince: date => moment(date).fromNow(),
-		formatDate: date => moment(date).format('LLL'),
+		formatDateSince: date => formatDistance(date, new Date()),
+		formatDate: date => format(date, 'PPPPpppp'),
 		error: (e, context, actions = []) => message.error(e, context, actions),
 		success: (s, context, actions = []) => message.success(s, context, actions),
 	}

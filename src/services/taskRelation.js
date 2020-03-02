@@ -1,6 +1,6 @@
 import AbstractService from './abstractService'
 import TaskRelationModel from '../models/taskRelation'
-import moment from 'moment'
+import {formatISO} from 'date-fns'
 
 export default class TaskRelationService extends AbstractService {
 	constructor() {
@@ -11,7 +11,7 @@ export default class TaskRelationService extends AbstractService {
 	}
 
 	processModel(model) {
-		model.created = moment(model.created).toISOString()
+		model.created = formatISO(model.created)
 		return model
 	}
 

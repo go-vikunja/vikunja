@@ -1,7 +1,7 @@
 import AbstractService from './abstractService'
 import ListModel from '../models/list'
 import TaskService from './task'
-import moment from 'moment'
+import {formatISO} from 'date-fns'
 
 export default class ListService extends AbstractService {
 	constructor() {
@@ -14,8 +14,8 @@ export default class ListService extends AbstractService {
 	}
 
 	processModel(model) {
-		model.created = moment(model.created).toISOString()
-		model.updated = moment(model.updated).toISOString()
+		model.created = formatISO(model.created)
+		model.updated = formatISO(model.updated)
 		return model
 	}
 
