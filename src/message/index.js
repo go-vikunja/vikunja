@@ -8,36 +8,40 @@ export default {
 			context.loading = false
 		};
 	},
-    error(e, context) {
-        // Build the notification text from error response
-        let err = e.message
-        if (e.response && e.response.data && e.response.data.message) {
-            err += '<br/>' + e.response.data.message
-        }
+	error(e, context, actions = []) {
+		// Build the notification text from error response
+		let err = e.message
+		if (e.response && e.response.data && e.response.data.message) {
+			err += '<br/>' + e.response.data.message
+		}
 
-        // Fire a notification
-        context.$notify({
-            type: 'error',
-            title: 'Error',
-            text: err
-        })
-
-		context.loading = false
-    },
-    success(e, context) {
-        // Build the notification text from error response
-        let err = e.message
-        if (e.response && e.response.data && e.response.data.message) {
-            err += '<br/>' + e.response.data.message
-        }
-
-        // Fire a notification
-        context.$notify({
-            type: 'success',
-            title: 'Success',
-            text: err
-        })
+		// Fire a notification
+		context.$notify({
+			type: 'error',
+			title: 'Error',
+			text: err,
+			actions: actions,
+		})
 
 		context.loading = false
-    },
+	},
+	success(e, context, actions = []) {
+		// Build the notification text from error response
+		let err = e.message
+		if (e.response && e.response.data && e.response.data.message) {
+			err += '<br/>' + e.response.data.message
+		}
+
+		// Fire a notification
+		context.$notify({
+			type: 'success',
+			title: 'Success',
+			text: err,
+			data: {
+				actions: actions,
+			},
+		})
+
+		context.loading = false
+	},
 }

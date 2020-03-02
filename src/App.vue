@@ -184,7 +184,7 @@
 					</div>
 				</div>
 			</div>
-			<notifications position="bottom left"/>
+			<notification/>
 		</div>
 		<div class="app offline" v-else>
 			<div class="offline-message">
@@ -203,10 +203,11 @@
 	import authTypes from './models/authTypes'
 
 	import swEvents from './ServiceWorker/events'
+	import Notification from "./components/global/notification";
 
 	export default {
 		name: 'app',
-
+		components: {Notification},
 		data() {
 			return {
 				user: auth.user,

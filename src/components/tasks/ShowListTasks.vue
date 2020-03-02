@@ -259,7 +259,14 @@
 					this.taskService.update(task)
 						.then(() => {
 							this.sortTasks()
-							this.success({message: 'The task was successfully ' + (task.done ? '' : 'un-') + 'marked as done.'}, this)
+							this.success(
+								{message: 'The task was successfully ' + (task.done ? '' : 'un-') + 'marked as done.'},
+								this,
+								[{
+									title: 'Undo',
+									callback: () => this.markAsDone({target: {id: e.target.id, checked: !e.target.checked}}),
+								}]
+							)
 						})
 						.catch(e => {
 							this.error(e, this)

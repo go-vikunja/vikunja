@@ -414,7 +414,7 @@
 					this.taskTitle = taskTitle
 				}
 			},
-			saveTask() {
+			saveTask(undoCallback = null) {
 
 				// If no end date is being set, but a start date and due date,
 				// use the due date as the end date
@@ -425,7 +425,14 @@
 				this.taskService.update(this.task)
 					.then(r => {
 						this.$set(this, 'task', r)
-						this.success({message: 'The task was saved successfully.'}, this)
+						let actions = []
+						if (undoCallback !== null) {
+							actions = [{
+								title: 'Undo',
+								callback: undoCallback,
+							}]
+						}
+						this.success({message: 'The task was saved successfully.'}, this, actions)
 						this.setActiveFields()
 					})
 					.catch(e => {
@@ -460,7 +467,7 @@
 			},
 			toggleTaskDone() {
 				this.task.done = !this.task.done
-				this.saveTask()
+				this.saveTask(() => this.toggleTaskDone())
 			},
 			setDescriptionChanged(e) {
 				if (e.key === 'Enter' || e.key === 'Control') {

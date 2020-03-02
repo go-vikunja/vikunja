@@ -138,8 +138,8 @@ Vue.mixin({
 	methods: {
 		formatDateSince: date => moment(date).fromNow(),
 		formatDate: date => moment(date).format('LLL'),
-		error: (e, context) => message.error(e, context),
-		success: (s, context) => message.success(s, context),
+		error: (e, context, actions = []) => message.error(e, context, actions),
+		success: (s, context, actions = []) => message.success(s, context, actions),
 	}
 })
 
