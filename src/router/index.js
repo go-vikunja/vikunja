@@ -2,6 +2,7 @@ import Vue from 'vue'
 import Router from 'vue-router'
 
 import HomeComponent from '@/components/Home'
+import NotFoundComponent from '@/components/404'
 // User Handling
 import LoginComponent from '@/components/user/Login'
 import RegisterComponent from '@/components/user/Register'
@@ -52,6 +53,11 @@ export default new Router({
 			path: '/',
 			name: 'home',
 			component: HomeComponent
+		},
+		{
+			path: '*',
+			name: '404',
+			component: NotFoundComponent,
 		},
 		{
 			path: '/login',
