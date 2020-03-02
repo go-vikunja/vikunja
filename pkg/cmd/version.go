@@ -30,6 +30,7 @@ var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print the version number of Vikunja",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Vikunja api version " + version.Version)
+		fmt.Printf("Vikunja api version %s\n", version.Version)
+		fmt.Printf("Built at %s\n", version.BuildTime)
 	},
 }
