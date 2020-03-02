@@ -150,7 +150,7 @@
 							</span>
 							Labels
 						</div>
-						<edit-labels :task-i-d="taskID" :start-labels="task.labels" ref="labels"/>
+						<edit-labels :task-i-d="taskID" v-model="task.labels" ref="labels"/>
 					</div>
 
 					<!-- Description -->

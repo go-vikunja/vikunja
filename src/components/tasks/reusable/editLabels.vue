@@ -46,7 +46,7 @@
 	export default {
 		name: 'edit-labels',
 		props: {
-			startLabels: {
+			value: {
 				default: () => [],
 				type: Array,
 			},
@@ -69,14 +69,14 @@
 			multiselect,
 		},
 		watch: {
-			startLabels(newLabels) {
+			value(newLabels) {
 				this.labels = newLabels
 			}
 		},
 		created() {
 			this.labelService = new LabelService()
 			this.labelTaskService = new LabelTaskService()
-			this.labels = this.startLabels
+			this.labels = this.value
 		},
 		methods: {
 			findLabel(query) {
@@ -112,6 +112,7 @@
 				this.labelTaskService.create(labelTask)
 					.then(() => {
 						this.success({message: 'The label was successfully added.'}, this)
+						this.$emit('input', this.labels)
 					})
 					.catch(e => {
 						this.error(e, this)
@@ -128,6 +129,7 @@
 							}
 						}
 						this.success({message: 'The label was successfully removed.'}, this)
+						this.$emit('input', this.labels)
 					})
 					.catch(e => {
 						this.error(e, this)

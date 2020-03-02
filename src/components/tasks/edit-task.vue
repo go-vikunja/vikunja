@@ -121,7 +121,7 @@
 		<div class="field">
 			<label class="label">Labels</label>
 			<div class="control">
-				<edit-labels :task-i-d="taskEditTask.id" :start-labels="taskEditTask.labels"/>
+				<edit-labels :task-i-d="taskEditTask.id" v-model="taskEditTask.labels"/>
 			</div>
 		</div>
 
