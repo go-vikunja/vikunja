@@ -1,6 +1,5 @@
 import axios from 'axios'
-import reduce from 'lodash'
-import replace from 'lodash'
+import {reduce, replace} from 'lodash'
 
 let config = require('../../public/config.json')
 

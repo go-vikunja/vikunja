@@ -33,7 +33,7 @@
 </template>
 
 <script>
-	import differenceWith from 'lodash'
+	import {differenceWith} from 'lodash'
 	import multiselect from 'vue-multiselect'
 
 	import UserModel from '../../../models/user'

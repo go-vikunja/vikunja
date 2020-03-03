@@ -1,6 +1,4 @@
-import defaults from 'lodash'
-import omitBy from 'lodash'
-import isNil from 'lodash'
+import {defaults, omitBy, isNil} from 'lodash'
 
 export default class AbstractModel {
 
