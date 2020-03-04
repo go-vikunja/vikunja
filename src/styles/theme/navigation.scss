@@ -185,7 +185,7 @@
             padding-right: 0.5em;
           }
 
-          &.router-link-exact-active {
+          &.router-link-active {
             color: $primary;
             border-left: $vikunja-nav-selected-width solid darken($primary, 5%);
             .icon {
