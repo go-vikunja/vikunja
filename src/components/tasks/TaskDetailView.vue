@@ -193,6 +193,7 @@
 						</h3>
 						<related-tasks
 								:task-i-d="taskID"
+								:list-id="task.listID"
 								:initial-related-tasks="task.related_tasks"
 								:show-no-relations-notice="true"
 								ref="relatedTasks"

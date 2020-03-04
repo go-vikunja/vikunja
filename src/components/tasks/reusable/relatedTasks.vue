@@ -2,27 +2,31 @@
 	<div class="task-relations">
 		<label class="label">New Task Relation</label>
 		<div class="columns">
-				<div class="column is-three-quarters">
-					<multiselect
-							v-model="newTaskRelationTask"
-							:options="foundTasks"
-							:multiple="false"
-							:searchable="true"
-							:loading="taskService.loading"
-							:internal-search="true"
-							@search-change="findTasks"
-							placeholder="Type search for a new task to add as related..."
-							label="text"
-							track-by="id"
-					>
-						<template slot="clear" slot-scope="props">
-							<div class="multiselect__clear"
-								v-if="newTaskRelationTask !== null && newTaskRelationTask.id !== 0"
-								@mousedown.prevent.stop="clearAllFoundTasks(props.search)"></div>
-						</template>
-						<span slot="noResult">No task found. Consider changing the search query.</span>
-					</multiselect>
-				</div>
+			<div class="column is-three-quarters">
+				<multiselect
+						v-model="newTaskRelationTask"
+						:options="foundTasks"
+						:multiple="false"
+						:searchable="true"
+						:loading="taskService.loading"
+						:internal-search="true"
+						@search-change="findTasks"
+						placeholder="Type search for a new task to add as related..."
+						label="text"
+						track-by="id"
+						:taggable="true"
+						:showNoOptions="false"
+						@tag="createAndRelateTask"
+						tag-placeholder="Add this as new related task"
+				>
+					<template slot="clear" slot-scope="props">
+						<div class="multiselect__clear"
+							v-if="newTaskRelationTask !== null && newTaskRelationTask.id !== 0"
+							@mousedown.prevent.stop="clearAllFoundTasks(props.search)"></div>
+					</template>
+					<span slot="noResult">No task found. Consider changing the search query.</span>
+				</multiselect>
+			</div>
 			<div class="column field has-addons">
 				<div class="control is-expanded">
 					<div class="select is-fullwidth has-defaults">
@@ -57,7 +61,9 @@
 				</div>
 			</template>
 		</div>
-		<p v-if="showNoRelationsNotice && Object.keys(relatedTasks).length === 0" class="none">No task relations yet.</p>
+		<p v-if="showNoRelationsNotice && Object.keys(relatedTasks).length === 0" class="none">
+			No task relations yet.
+		</p>
 
 		<!-- Delete modal -->
 		<modal
@@ -89,7 +95,7 @@
 				foundTasks: [],
 				relationKinds: relationKinds,
 				newTaskRelationTask: TaskModel,
-				newTaskRelationKind: 'unset',
+				newTaskRelationKind: 'related',
 				taskRelationService: TaskRelationService,
 				showDeleteModal: false,
 				relationToDelete: {},
@@ -105,12 +111,17 @@
 			},
 			initialRelatedTasks: {
 				type: Object,
-				default: () => {},
+				default: () => {
+				},
 			},
 			showNoRelationsNotice: {
 				type: Boolean,
 				default: false,
 			},
+			listId: {
+				type: Number,
+				default: 0,
+			}
 		},
 		created() {
 			this.taskService = new TaskService()
@@ -171,7 +182,7 @@
 				})
 				this.taskRelationService.delete(rel)
 					.then(r => {
-						Object.keys(this.relatedTasks).forEach(relationKind  => {
+						Object.keys(this.relatedTasks).forEach(relationKind => {
 							for (const t in this.relatedTasks[relationKind]) {
 								if (this.relatedTasks[relationKind][t].id === this.relationToDelete.other_task_id && relationKind === this.relationToDelete.relation_kind) {
 									this.relatedTasks[relationKind].splice(t, 1)
@@ -187,7 +198,17 @@
 						this.showDeleteModal = false
 					})
 			},
-
+			createAndRelateTask(text) {
+				const newTask = new TaskModel({text: text, listID: this.listId})
+				this.taskService.create(newTask)
+					.then(r => {
+						this.newTaskRelationTask = r
+						this.addTaskRelation()
+					})
+					.catch(e => {
+						this.error(e, this)
+					})
+			},
 		},
 	}
 </script>

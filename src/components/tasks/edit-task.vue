@@ -128,6 +128,7 @@
 		<related-tasks
 			class="is-narrow"
 			:task-i-d="task.id"
+			:list-id="task.listID"
 			:initial-related-tasks="task.related_tasks"
 		/>
 
