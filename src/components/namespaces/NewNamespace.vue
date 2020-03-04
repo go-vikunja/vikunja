@@ -5,22 +5,31 @@
 			</icon>
 		</a>
 		<h3>Create a new namespace</h3>
-		<form @submit.prevent="newNamespace" @keyup.esc="back()">
-			<div class="field is-grouped">
-				<p class="control is-expanded" v-bind:class="{ 'is-loading': namespaceService.loading}">
-					<input v-focus class="input" v-bind:class="{ 'disabled': namespaceService.loading}" v-model="namespace.name" type="text" placeholder="The namespace's name goes here...">
-				</p>
-				<p class="control">
-					<button type="submit" class="button is-success noshadow">
+		<div class="field is-grouped">
+			<p class="control is-expanded" v-bind:class="{ 'is-loading': namespaceService.loading}">
+				<input v-focus
+					class="input"
+					v-bind:class="{ 'disabled': namespaceService.loading}"
+					v-model="namespace.name"
+					type="text"
+					@keyup.enter="newNamespace()"
+					@keyup.esc="back()"
+					placeholder="The namespace's name goes here..."/>
+			</p>
+			<p class="control">
+				<button class="button is-success noshadow" @click="newNamespace()" :disabled="namespace.name.length <= 5">
 						<span class="icon is-small">
 							<icon icon="plus"/>
 						</span>
-						Add
-					</button>
-				</p>
-			</div>
-		</form>
-		<p class="small" v-tooltip.bottom="'A namespace is a collection of lists you can share and use to organize your lists with.<br/>In fact, every list belongs to a namepace.'">What's a namespace?</p>
+					Add
+				</button>
+			</p>
+		</div>
+		<p class="help is-danger" v-if="showError && namespace.name.length <= 5">
+			Please specify at least five characters.
+		</p>
+		<p class="small" v-tooltip.bottom="'A namespace is a collection of lists you can share and use to organize your lists with.<br/>In fact, every list belongs to a namepace.'">
+			What's a namespace?</p>
 	</div>
 </template>
 
@@ -34,6 +43,7 @@
 		name: "NewNamespace",
 		data() {
 			return {
+				showError: false,
 				namespace: NamespaceModel,
 				namespaceService: NamespaceService,
 			}
@@ -51,6 +61,12 @@
 		},
 		methods: {
 			newNamespace() {
+				if (this.namespace.name.length <= 4) {
+					this.showError = true
+					return
+				}
+				this.showError = false
+
 				this.namespaceService.create(this.namespace)
 					.then(() => {
 						this.$parent.loadNamespaces()

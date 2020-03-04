@@ -31,24 +31,28 @@
 				</span>
 			</button>
 		</div>
-		<form @submit.prevent="addTask()">
-			<div class="field is-grouped task-add">
+
+		<div class="field task-add">
+			<div class="field is-grouped">
 				<p class="control has-icons-left is-expanded" :class="{ 'is-loading': taskService.loading}">
-					<input v-focus class="input" :class="{ 'disabled': taskService.loading}" v-model="newTaskText" type="text" placeholder="Add a new task...">
+					<input v-focus class="input" :class="{ 'disabled': taskService.loading}" v-model="newTaskText" type="text" placeholder="Add a new task..." @keyup.enter="addTask()"/>
 					<span class="icon is-small is-left">
 						<icon icon="tasks"/>
 					</span>
 				</p>
 				<p class="control">
-					<button type="submit" class="button is-success">
-					<span class="icon is-small">
-						<icon icon="plus"/>
-					</span>
+					<button class="button is-success" :disabled="newTaskText.length < 3" @click="addTask()">
+						<span class="icon is-small">
+							<icon icon="plus"/>
+						</span>
 						Add
 					</button>
 				</p>
 			</div>
-		</form>
+			<p class="help is-danger" v-if="showError && newTaskText.length < 3">
+				Please specify at least three characters.
+			</p>
+		</div>
 
 		<div class="columns">
 			<div class="column">
@@ -154,6 +158,8 @@
 				taskEditTask: TaskModel,
 				newTaskText: '',
 
+				showError: false,
+
 				showTaskSearch: false,
 				searchTerm: '',
 			}
@@ -188,6 +194,12 @@
 				this.loadTasks(page)
 			},
 			addTask() {
+				if (this.newTaskText.length < 3) {
+					this.showError = true
+					return
+				}
+				this.showError = false
+
 				let task = new TaskModel({text: this.newTaskText, listID: this.$route.params.id})
 				this.taskService.create(task)
 					.then(r => {
