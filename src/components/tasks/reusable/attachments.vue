@@ -23,6 +23,7 @@
 				<th>Size</th>
 				<th>Type</th>
 				<th>Date</th>
+				<th>Created By</th>
 				<th>Action</th>
 			</tr>
 			<tr class="attachment" v-for="a in attachments" :key="a.id">
@@ -32,6 +33,7 @@
 				<td>{{ a.file.getHumanSize() }}</td>
 				<td>{{ a.file.mime }}</td>
 				<td v-tooltip="formatDate(a.created)">{{ formatDateSince(a.created) }}</td>
+				<td><user :user="a.created_by" :avatar-size="30"/></td>
 				<td>
 					<div class="buttons has-addons">
 						<a class="button is-primary noshadow" @click="downloadAttachment(a)" v-tooltip="'Download this attachment'">
@@ -76,9 +78,13 @@
 <script>
 	import AttachmentService from '../../../services/attachment'
 	import AttachmentModel from '../../../models/attachment'
+	import User from '../../global/user'
 
 	export default {
 		name: 'attachments',
+		components: {
+			User,
+		},
 		data() {
 			return {
 				attachments: [],
