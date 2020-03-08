@@ -31,9 +31,9 @@ export default class TaskService extends AbstractService {
 		model.listID = Number(model.listID)
 
 		// Convert dates into an iso string
-		model.dueDate = model.dueDate === null ? null : formatISO(model.dueDate)
-		model.startDate = model.startDate === null ? null : formatISO(model.startDate)
-		model.endDate = model.endDate === null ? null : formatISO(model.endDate)
+		model.dueDate = model.dueDate === null ? null : formatISO(new Date(model.dueDate))
+		model.startDate = model.startDate === null ? null : formatISO(new Date(model.startDate))
+		model.endDate = model.endDate === null ? null : formatISO(new Date(model.endDate))
 		model.created = formatISO(model.created)
 		model.updated = formatISO(model.updated)
 
@@ -47,7 +47,7 @@ export default class TaskService extends AbstractService {
 		// Make normal timestamps from js dates
 		if(model.reminderDates.length > 0) {
 			model.reminderDates = model.reminderDates.map(r => {
-				return formatISO(r)
+				return formatISO(new Date(r))
 			})
 		}
 
