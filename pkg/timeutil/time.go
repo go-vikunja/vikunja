@@ -17,6 +17,7 @@
 package timeutil
 
 import (
+	"4d63.com/tz"
 	"code.vikunja.io/api/pkg/config"
 	"encoding/json"
 	"time"
@@ -43,7 +44,7 @@ func (ts *TimeStamp) MarshalJSON() ([]byte, error) {
 		return []byte("null"), nil
 	}
 
-	loc, err := time.LoadLocation(config.ServiceTimeZone.GetString())
+	loc, err := tz.LoadLocation(config.ServiceTimeZone.GetString())
 	if err != nil {
 		return nil, err
 	}

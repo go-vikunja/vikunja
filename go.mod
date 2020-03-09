@@ -17,6 +17,8 @@
 module code.vikunja.io/api
 
 require (
+	4d63.com/embedfiles v1.0.0 // indirect
+	4d63.com/tz v1.1.0
 	code.vikunja.io/web v0.0.0-20200208214421-c90649369427
 	gitea.com/xorm/tests v0.5.6 // indirect
 	gitea.com/xorm/xorm-redis-cache v0.0.0-20191113062523-5a6a9e2ab9f2
