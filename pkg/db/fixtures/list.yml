@@ -180,3 +180,22 @@
   namespace_id: 15
   updated: 0
   created: 0
+-
+  id: 21
+  title: Test21 archived through namespace
+  description: Lorem Ipsum
+  identifier: test21
+  owner_id: 1
+  namespace_id: 16
+  updated: 0
+  created: 0
+-
+  id: 22
+  title: Test22 archived individually
+  description: Lorem Ipsum
+  identifier: test22
+  owner_id: 1
+  namespace_id: 1
+  is_archived: 1
+  updated: 0
+  created: 0

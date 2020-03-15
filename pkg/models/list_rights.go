@@ -32,19 +32,33 @@ func (l *List) CanWrite(a web.Auth) (bool, error) {
 		return false, err
 	}
 
+	// We put the result of the is archived check in a separate variable to be able to return it later without
+	// needing to recheck it again
+	errIsArchived := originalList.CheckIsArchived()
+
+	var canWrite bool
+
 	// Check if we're dealing with a share auth
 	shareAuth, ok := a.(*LinkSharing)
 	if ok {
 		return originalList.ID == shareAuth.ListID &&
-			(shareAuth.Right == RightWrite || shareAuth.Right == RightAdmin), nil
+			(shareAuth.Right == RightWrite || shareAuth.Right == RightAdmin), errIsArchived
 	}
 
 	// Check if the user is either owner or can write to the list
 	if originalList.isOwner(&user.User{ID: a.GetID()}) {
-		return true, nil
+		canWrite = true
 	}
 
-	return originalList.checkRight(a, RightWrite, RightAdmin)
+	if canWrite {
+		return canWrite, errIsArchived
+	}
+
+	canWrite, err = originalList.checkRight(a, RightWrite, RightAdmin)
+	if err != nil {
+		return false, err
+	}
+	return canWrite, errIsArchived
 }
 
 // CanRead checks if a user has read access to a list
@@ -68,8 +82,13 @@ func (l *List) CanRead(a web.Auth) (bool, error) {
 }
 
 // CanUpdate checks if the user can update a list
-func (l *List) CanUpdate(a web.Auth) (bool, error) {
-	return l.CanWrite(a)
+func (l *List) CanUpdate(a web.Auth) (canUpdate bool, err error) {
+	canUpdate, err = l.CanWrite(a)
+	// If the list is archived and the user tries to un-archive it, let the request through
+	if IsErrListIsArchived(err) && !l.IsArchived {
+		err = nil
+	}
+	return canUpdate, err
 }
 
 // CanDelete checks if the user can delete a list

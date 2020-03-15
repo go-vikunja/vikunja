@@ -251,5 +251,19 @@
   index: 20
   created: 1543626724
   updated: 1543626724
+- id: 35
+  text: 'task #35'
+  created_by_id: 1
+  list_id: 21
+  index: 1
+  created: 1543626724
+  updated: 1543626724
+- id: 36
+  text: 'task #36'
+  created_by_id: 1
+  list_id: 22
+  index: 1
+  created: 1543626724
+  updated: 1543626724
 
 

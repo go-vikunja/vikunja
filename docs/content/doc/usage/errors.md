@@ -34,6 +34,7 @@ This document describes the different errors Vikunja can return.
 | 3005 | 400 | The list title cannot be empty. |
 | 3006 | 404 | The list share does not exist. |
 | 3007 | 400 | A list with this identifier already exists. |
+| 3008 | 412 | The list is archived and can therefore only be accessed read only. This is also true for all tasks associated with this list. |
 | 4001 | 400 | The list task text cannot be empty. |
 | 4002 | 404 | The list task does not exist. |
 | 4003 | 403 | All bulk editing tasks must belong to the same list. |
@@ -55,6 +56,7 @@ This document describes the different errors Vikunja can return.
 | 5009 | 403 | The user needs to have namespace read access to perform that action. |
 | 5010 | 403 | This team does not have access to that namespace. |
 | 5011 | 409 | This user has already access to that namespace. |
+| 5012 | 412 | The namespace is archived and can therefore only be accessed read only. |
 | 6001 | 400 | The team name cannot be emtpy. |
 | 6002 | 404 | The team does not exist. |
 | 6004 | 409 | The team already has access to that namespace or list. |

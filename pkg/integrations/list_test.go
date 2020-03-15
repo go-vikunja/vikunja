@@ -38,10 +38,12 @@ func TestList(t *testing.T) {
 			rec, err := testHandler.testReadAllWithUser(nil, nil)
 			assert.NoError(t, err)
 			assert.Contains(t, rec.Body.String(), `Test1`)
-			assert.NotContains(t, rec.Body.String(), `Test2`)
+			assert.NotContains(t, rec.Body.String(), `Test2"`)
 			assert.Contains(t, rec.Body.String(), `Test3`) // Shared directly via users_list
 			assert.Contains(t, rec.Body.String(), `Test4`) // Shared via namespace
 			assert.NotContains(t, rec.Body.String(), `Test5`)
+			assert.NotContains(t, rec.Body.String(), `Test21`) // Archived through namespace
+			assert.NotContains(t, rec.Body.String(), `Test22`) // Archived directly
 		})
 		t.Run("Search", func(t *testing.T) {
 			rec, err := testHandler.testReadAllWithUser(url.Values{"s": []string{"Test1"}}, nil)
@@ -51,6 +53,17 @@ func TestList(t *testing.T) {
 			assert.NotContains(t, rec.Body.String(), `Test3`)
 			assert.NotContains(t, rec.Body.String(), `Test4`)
 			assert.NotContains(t, rec.Body.String(), `Test5`)
+		})
+		t.Run("Normal with archived lists", func(t *testing.T) {
+			rec, err := testHandler.testReadAllWithUser(url.Values{"is_archived": []string{"true"}}, nil)
+			assert.NoError(t, err)
+			assert.Contains(t, rec.Body.String(), `Test1`)
+			assert.NotContains(t, rec.Body.String(), `Test2"`)
+			assert.Contains(t, rec.Body.String(), `Test3`) // Shared directly via users_list
+			assert.Contains(t, rec.Body.String(), `Test4`) // Shared via namespace
+			assert.NotContains(t, rec.Body.String(), `Test5`)
+			assert.Contains(t, rec.Body.String(), `Test21`) // Archived through namespace
+			assert.Contains(t, rec.Body.String(), `Test22`) // Archived directly
 		})
 	})
 	t.Run("ReadOne", func(t *testing.T) {

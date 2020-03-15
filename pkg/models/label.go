@@ -203,7 +203,10 @@ func getLabelByIDSimple(labelID int64) (*Label, error) {
 func getUserTaskIDs(u *user.User) (taskIDs []int64, err error) {
 
 	// Get all lists
-	lists, _, _, err := getRawListsForUser("", u, -1, 0)
+	lists, _, _, err := getRawListsForUser(&listOptions{
+		user: u,
+		page: -1,
+	})
 	if err != nil {
 		return nil, err
 	}

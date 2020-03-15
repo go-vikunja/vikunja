@@ -21,6 +21,7 @@ import (
 	"code.vikunja.io/api/pkg/timeutil"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
+	"xorm.io/builder"
 )
 
 // List represents a list of tasks
@@ -43,6 +44,9 @@ type List struct {
 	// Deprecated: you should use the dedicated task list endpoint because it has support for pagination and filtering
 	Tasks []*Task `xorm:"-" json:"-"`
 
+	// Whether or not a list is archived.
+	IsArchived bool `xorm:"not null default false" json:"is_archived" query:"is_archived"`
+
 	// A timestamp when this list was created. You cannot change this value.
 	Created timeutil.TimeStamp `xorm:"created not null" json:"created"`
 	// A timestamp when this list was last updated. You cannot change this value.
@@ -57,16 +61,24 @@ func GetListsByNamespaceID(nID int64, doer *user.User) (lists []*List, err error
 	if nID == -1 {
 		err = x.Select("l.*").
 			Table("list").
-			Alias("l").
 			Join("LEFT", []string{"team_list", "tl"}, "l.id = tl.list_id").
 			Join("LEFT", []string{"team_members", "tm"}, "tm.team_id = tl.team_id").
 			Join("LEFT", []string{"users_list", "ul"}, "ul.list_id = l.id").
+			Join("LEFT", []string{"namespaces", "n"}, "l.namespace_id = n.id").
 			Where("tm.user_id = ?", doer.ID).
+			Where("l.is_archived = false").
+			Where("n.is_archived = false").
 			Or("ul.user_id = ?", doer.ID).
 			GroupBy("l.id").
 			Find(&lists)
 	} else {
-		err = x.Where("namespace_id = ?", nID).Find(&lists)
+		err = x.Select("l.*").
+			Alias("l").
+			Join("LEFT", []string{"namespaces", "n"}, "l.namespace_id = n.id").
+			Where("l.is_archived = false").
+			Where("n.is_archived = false").
+			Where("namespace_id = ?", nID).
+			Find(&lists)
 	}
 	if err != nil {
 		return nil, err
@@ -86,6 +98,7 @@ func GetListsByNamespaceID(nID int64, doer *user.User) (lists []*List, err error
 // @Param page query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
 // @Param per_page query int false "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page."
 // @Param s query string false "Search lists by title."
+// @Param is_archived query bool false "If true, also returns all archived lists."
 // @Security JWTKeyAuth
 // @Success 200 {array} models.List "The lists"
 // @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have access to the list"
@@ -105,7 +118,13 @@ func (l *List) ReadAll(a web.Auth, search string, page int, perPage int) (result
 		return lists, 0, 0, err
 	}
 
-	lists, resultCount, totalItems, err := getRawListsForUser(search, &user.User{ID: a.GetID()}, page, perPage)
+	lists, resultCount, totalItems, err := getRawListsForUser(&listOptions{
+		search:     search,
+		user:       &user.User{ID: a.GetID()},
+		page:       page,
+		perPage:    perPage,
+		isArchived: l.IsArchived,
+	})
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -177,11 +196,28 @@ func GetListSimplByTaskID(taskID int64) (l *List, err error) {
 	return &list, nil
 }
 
+type listOptions struct {
+	search     string
+	user       *user.User
+	page       int
+	perPage    int
+	isArchived bool
+}
+
 // Gets the lists only, without any tasks or so
-func getRawListsForUser(search string, u *user.User, page int, perPage int) (lists []*List, resultCount int, totalItems int64, err error) {
-	fullUser, err := user.GetUserByID(u.ID)
+func getRawListsForUser(opts *listOptions) (lists []*List, resultCount int, totalItems int64, err error) {
+	fullUser, err := user.GetUserByID(opts.user.ID)
 	if err != nil {
 		return nil, 0, 0, err
+	}
+
+	// Adding a 1=1 condition by default here because xorm always needs a condition and cannot handle nil conditions
+	var isArchivedCond builder.Cond = builder.Eq{"1": 1}
+	if !opts.isArchived {
+		isArchivedCond = builder.And(
+			builder.Eq{"l.is_archived": false},
+			builder.Eq{"n.is_archived": false},
+		)
 	}
 
 	// Gets all Lists where the user is either owner or in a team which has access to the list
@@ -202,8 +238,9 @@ func getRawListsForUser(search string, u *user.User, page int, perPage int) (lis
 		Or("ul.user_id = ?", fullUser.ID).
 		Or("un.user_id = ?", fullUser.ID).
 		GroupBy("l.id").
-		Limit(getLimitFromPageIndex(page, perPage)).
-		Where("l.title LIKE ?", "%"+search+"%").
+		Limit(getLimitFromPageIndex(opts.page, opts.perPage)).
+		Where("l.title LIKE ?", "%"+opts.search+"%").
+		Where(isArchivedCond).
 		Find(&lists)
 	if err != nil {
 		return nil, 0, 0, err
@@ -225,8 +262,9 @@ func getRawListsForUser(search string, u *user.User, page int, perPage int) (lis
 		Or("ul.user_id = ?", fullUser.ID).
 		Or("un.user_id = ?", fullUser.ID).
 		GroupBy("l.id").
-		Limit(getLimitFromPageIndex(page, perPage)).
-		Where("l.title LIKE ?", "%"+search+"%").
+		Limit(getLimitFromPageIndex(opts.page, opts.perPage)).
+		Where("l.title LIKE ?", "%"+opts.search+"%").
+		Where(isArchivedCond).
 		Count(&List{})
 	return lists, len(lists), totalItems, err
 }
@@ -259,6 +297,38 @@ func AddListDetails(lists []*List) (err error) {
 	return
 }
 
+// NamespaceList is a meta type to be able  to join a list with its namespace
+type NamespaceList struct {
+	List      List      `xorm:"extends"`
+	Namespace Namespace `xorm:"extends"`
+}
+
+// CheckIsArchived returns an ErrListIsArchived or ErrNamespaceIsArchived if the list or its namespace is archived.
+func (l *List) CheckIsArchived() (err error) {
+	// When creating a new list, we check if the namespace is archived
+	if l.ID == 0 {
+		n := &Namespace{ID: l.NamespaceID}
+		return n.CheckIsArchived()
+	}
+
+	nl := &NamespaceList{}
+	exists, err := x.
+		Table("list").
+		Join("LEFT", "namespaces", "list.namespace_id = namespaces.id").
+		Where("list.id = ? AND (list.is_archived = true OR namespaces.is_archived = true)", l.ID).
+		Get(nl)
+	if err != nil {
+		return
+	}
+	if exists && nl.List.ID != 0 && nl.List.IsArchived {
+		return ErrListIsArchived{ListID: l.ID}
+	}
+	if exists && nl.Namespace.ID != 0 && nl.Namespace.IsArchived {
+		return ErrNamespaceIsArchived{NamespaceID: nl.Namespace.ID}
+	}
+	return nil
+}
+
 // CreateOrUpdateList updates a list or creates it if it doesn't exist
 func CreateOrUpdateList(list *List) (err error) {
 
@@ -285,7 +355,22 @@ func CreateOrUpdateList(list *List) (err error) {
 		_, err = x.Insert(list)
 		metrics.UpdateCount(1, metrics.ListCountKey)
 	} else {
-		_, err = x.ID(list.ID).Update(list)
+		// We need to specify the cols we want to update here to be able to un-archive lists
+		colsToUpdate := []string{
+			"title",
+			"is_archived",
+		}
+		if list.Description != "" {
+			colsToUpdate = append(colsToUpdate, "description")
+		}
+		if list.Identifier != "" {
+			colsToUpdate = append(colsToUpdate, "identifier")
+		}
+
+		_, err = x.
+			ID(list.ID).
+			Cols(colsToUpdate...).
+			Update(list)
 	}
 
 	if err != nil {
@@ -350,6 +435,11 @@ func updateListByTaskID(taskID int64) (err error) {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces/{namespaceID}/lists [put]
 func (l *List) Create(a web.Auth) (err error) {
+	err = l.CheckIsArchived()
+	if err != nil {
+		return err
+	}
+
 	doer, err := user.GetFromAuth(a)
 	if err != nil {
 		return err

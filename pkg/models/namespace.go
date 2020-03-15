@@ -35,6 +35,9 @@ type Namespace struct {
 	Description string `xorm:"longtext null" json:"description"`
 	OwnerID     int64  `xorm:"int(11) not null INDEX" json:"-"`
 
+	// Whether or not a namespace is archived.
+	IsArchived bool `xorm:"not null default false" json:"is_archived" query:"is_archived"`
+
 	// The user who owns this namespace
 	Owner *user.User `xorm:"-" json:"owner" valid:"-"`
 
@@ -103,6 +106,20 @@ func GetNamespaceByID(id int64) (namespace Namespace, err error) {
 	return
 }
 
+// CheckIsArchived returns an ErrNamespaceIsArchived if the namepace is archived.
+func (n *Namespace) CheckIsArchived() error {
+	exists, err := x.
+		Where("id = ? AND is_archived = true", n.ID).
+		Exist(&Namespace{})
+	if err != nil {
+		return err
+	}
+	if exists {
+		return ErrNamespaceIsArchived{NamespaceID: n.ID}
+	}
+	return nil
+}
+
 // ReadOne gets one namespace
 // @Summary Gets one namespace
 // @Description Returns a namespace by its ID.
@@ -136,6 +153,7 @@ type NamespaceWithLists struct {
 // @Param page query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
 // @Param per_page query int false "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page."
 // @Param s query string false "Search namespaces by name."
+// @Param is_archived query bool false "If true, also returns all archived namespaces."
 // @Security JWTKeyAuth
 // @Success 200 {array} models.NamespaceWithLists "The Namespaces."
 // @Failure 500 {object} models.Message "Internal error"
@@ -169,6 +187,7 @@ func (n *Namespace) ReadAll(a web.Auth, search string, page int, perPage int) (r
 		Where("team_members.user_id = ?", doer.ID).
 		Or("namespaces.owner_id = ?", doer.ID).
 		Or("users_namespace.user_id = ?", doer.ID).
+		And("namespaces.is_archived = ?", n.IsArchived).
 		GroupBy("namespaces.id").
 		Limit(getLimitFromPageIndex(page, perPage)).
 		Where("namespaces.name LIKE ?", "%"+search+"%").
@@ -188,6 +207,7 @@ func (n *Namespace) ReadAll(a web.Auth, search string, page int, perPage int) (r
 		Where("team_members.user_id = ?", doer.ID).
 		Or("namespaces.owner_id = ?", doer.ID).
 		Or("users_namespace.user_id = ?", doer.ID).
+		And("namespaces.is_archived = ?", n.IsArchived).
 		GroupBy("users.id").
 		Find(&users)
 
@@ -220,6 +240,7 @@ func (n *Namespace) ReadAll(a web.Auth, search string, page int, perPage int) (r
 		Join("LEFT", []string{"users_list", "ul"}, "ul.list_id = l.id").
 		Where("tm.user_id = ?", doer.ID).
 		Or("ul.user_id = ?", doer.ID).
+		And("l.is_archived = false").
 		GroupBy("l.id").
 		Find(&individualLists)
 	if err != nil {
@@ -272,6 +293,7 @@ func (n *Namespace) ReadAll(a web.Auth, search string, page int, perPage int) (r
 		Where("team_members.user_id = ?", doer.ID).
 		Or("namespaces.owner_id = ?", doer.ID).
 		Or("users_namespace.user_id = ?", doer.ID).
+		And("namespaces.is_archived = false").
 		GroupBy("namespaces.id").
 		Where("namespaces.name LIKE ?", "%"+search+"%").
 		Count(&NamespaceWithLists{})
@@ -400,12 +422,19 @@ func (n *Namespace) Update() (err error) {
 		return
 	}
 
+	// Check if the namespace is archived and the update is not un-archiving it
+	if currentNamespace.IsArchived && n.IsArchived {
+		return ErrNamespaceIsArchived{NamespaceID: n.ID}
+	}
+
 	// Check if the (new) owner exists
-	n.OwnerID = n.Owner.ID
-	if currentNamespace.OwnerID != n.OwnerID {
-		n.Owner, err = user.GetUserByID(n.OwnerID)
-		if err != nil {
-			return
+	if n.Owner != nil {
+		n.OwnerID = n.Owner.ID
+		if currentNamespace.OwnerID != n.OwnerID {
+			n.Owner, err = user.GetUserByID(n.OwnerID)
+			if err != nil {
+				return
+			}
 		}
 	}
 

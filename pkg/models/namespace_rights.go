@@ -64,7 +64,8 @@ func (n *Namespace) checkRight(a web.Auth, rights ...Right) (bool, error) {
 	}
 
 	// Get the namespace and check the right
-	err := n.GetSimpleByID()
+	nn := &Namespace{ID: n.ID}
+	err := nn.GetSimpleByID()
 	if err != nil {
 		return false, err
 	}

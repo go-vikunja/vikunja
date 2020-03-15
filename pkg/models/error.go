@@ -231,6 +231,29 @@ func (err ErrListIdentifierIsNotUnique) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrListIsArchived represents an error, where a list is archived
+type ErrListIsArchived struct {
+	ListID int64
+}
+
+// IsErrListIsArchived checks if an error is a .
+func IsErrListIsArchived(err error) bool {
+	_, ok := err.(ErrListIsArchived)
+	return ok
+}
+
+func (err ErrListIsArchived) Error() string {
+	return fmt.Sprintf("List is archived [ListID: %d]", err.ListID)
+}
+
+// ErrCodeListIsArchived holds the unique world-error code of this error
+const ErrCodeListIsArchived = 3008
+
+// HTTPError holds the http error description
+func (err ErrListIsArchived) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusPreconditionFailed, Code: ErrCodeListIsArchived, Message: "This lists is archived. Editing or creating new tasks is not possible."}
+}
+
 // ================
 // List task errors
 // ================
@@ -775,6 +798,29 @@ const ErrCodeUserAlreadyHasNamespaceAccess = 5011
 // HTTPError holds the http error description
 func (err ErrUserAlreadyHasNamespaceAccess) HTTPError() web.HTTPError {
 	return web.HTTPError{HTTPCode: http.StatusConflict, Code: ErrCodeUserAlreadyHasNamespaceAccess, Message: "This user already has access to this namespace."}
+}
+
+// ErrNamespaceIsArchived represents an error where a namespace is archived
+type ErrNamespaceIsArchived struct {
+	NamespaceID int64
+}
+
+// IsErrNamespaceIsArchived checks if an error is a .
+func IsErrNamespaceIsArchived(err error) bool {
+	_, ok := err.(ErrNamespaceIsArchived)
+	return ok
+}
+
+func (err ErrNamespaceIsArchived) Error() string {
+	return fmt.Sprintf("Namespace is archived [NamespaceID: %d]", err.NamespaceID)
+}
+
+// ErrCodeNamespaceIsArchived holds the unique world-error code of this error
+const ErrCodeNamespaceIsArchived = 5012
+
+// HTTPError holds the http error description
+func (err ErrNamespaceIsArchived) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusPreconditionFailed, Code: ErrCodeNamespaceIsArchived, Message: "This namespaces is archived. Editing or creating new lists is not possible."}
 }
 
 // ============

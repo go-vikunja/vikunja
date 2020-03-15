@@ -221,9 +221,13 @@ func (h *webHandlerTest) testUpdateWithUser(queryParams url.Values, urlParams ma
 	return newTestRequestWithUser(h.t, http.MethodPost, hndl.UpdateWeb, h.user, payload, queryParams, urlParams)
 }
 
-func (h *webHandlerTest) testDeleteWithUser(queryParams url.Values, urlParams map[string]string) (rec *httptest.ResponseRecorder, err error) {
+func (h *webHandlerTest) testDeleteWithUser(queryParams url.Values, urlParams map[string]string, payload ...string) (rec *httptest.ResponseRecorder, err error) {
+	pl := ""
+	if len(payload) > 0 {
+		pl = payload[0]
+	}
 	hndl := h.getHandler()
-	return newTestRequestWithUser(h.t, http.MethodDelete, hndl.DeleteWeb, h.user, "", queryParams, urlParams)
+	return newTestRequestWithUser(h.t, http.MethodDelete, hndl.DeleteWeb, h.user, pl, queryParams, urlParams)
 }
 
 func (h *webHandlerTest) testReadAllWithLinkShare(queryParams url.Values, urlParams map[string]string) (rec *httptest.ResponseRecorder, err error) {

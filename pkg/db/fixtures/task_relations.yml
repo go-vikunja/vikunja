@@ -10,3 +10,27 @@
   relation_kind: 'parenttask'
   created_by_id: 1
   created: 0
+- id: 3
+  task_id: 35
+  other_task_id: 1
+  relation_kind: 'related'
+  created_by_id: 1
+  created: 0
+- id: 4
+  task_id: 35
+  other_task_id: 1
+  relation_kind: 'related'
+  created_by_id: 1
+  created: 0
+- id: 5
+  task_id: 36
+  other_task_id: 1
+  relation_kind: 'related'
+  created_by_id: 1
+  created: 0
+- id: 6
+  task_id: 36
+  other_task_id: 1
+  relation_kind: 'related'
+  created_by_id: 1
+  created: 0
