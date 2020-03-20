@@ -77,7 +77,7 @@ cors:
   enable: true
   # A list of origins which may access the api.
   origins:
-    - *
+    - "*"
   # How long (in seconds) the results of a preflight request can be cached.
   maxage: 0
 

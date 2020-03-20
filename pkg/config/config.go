@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 	"time"
@@ -250,14 +251,25 @@ func InitConfig() {
 	// Load the config file
 	viper.AddConfigPath(ServiceRootpath.GetString())
 	viper.AddConfigPath("/etc/vikunja/")
-	viper.AddConfigPath("$HOME/.config/vikunja")
-	viper.AddConfigPath(".")
-	viper.SetConfigName("config")
-	err := viper.ReadInConfig()
+
+	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		log.Println(err.Error())
 		log.Println("Using defaults.")
+		return
 	}
+
+	viper.AddConfigPath(path.Join(homeDir, ".config", "vikunja"))
+	viper.AddConfigPath(".")
+	viper.SetConfigName("config")
+	err = viper.ReadInConfig()
+	if err != nil {
+		log.Println(err.Error())
+		log.Println("Using defaults.")
+		return
+	}
+
+	log.Println("Found config file:", viper.ConfigFileUsed())
 }
 
 func random(length int) (string, error) {
