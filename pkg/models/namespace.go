@@ -133,8 +133,7 @@ func (n *Namespace) CheckIsArchived() error {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces/{id} [get]
 func (n *Namespace) ReadOne() (err error) {
-	// Get the namespace Owner
-	n.Owner, err = user.GetUserByID(n.OwnerID)
+	*n, err = GetNamespaceByID(n.ID)
 	return
 }
 
