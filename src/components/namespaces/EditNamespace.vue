@@ -90,6 +90,7 @@
 		},
 		created() {
 			this.namespaceService = new NamespaceService()
+			this.namespace = new NamespaceModel()
 			this.loadNamespace()
 		},
 		watch: {
