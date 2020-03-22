@@ -149,7 +149,20 @@ func (l *List) ReadAll(a web.Auth, search string, page int, perPage int) (result
 func (l *List) ReadOne() (err error) {
 	// Get list owner
 	l.Owner, err = user.GetUserByID(l.OwnerID)
-	return
+	if err != nil {
+		return err
+	}
+	// Check if the namespace is archived and set the namespace to archived if it is not already archived individually.
+	if !l.IsArchived {
+		err = l.CheckIsArchived()
+		if err != nil {
+			if !IsErrNamespaceIsArchived(err) && !IsErrListIsArchived(err) {
+				return
+			}
+			l.IsArchived = true
+		}
+	}
+	return nil
 }
 
 // GetSimpleByID gets a list with only the basic items, aka no tasks or user objects. Returns an error if the list does not exist.
