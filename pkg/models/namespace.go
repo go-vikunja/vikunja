@@ -23,6 +23,7 @@ import (
 	"code.vikunja.io/web"
 	"github.com/imdario/mergo"
 	"time"
+	"xorm.io/builder"
 )
 
 // Namespace holds informations about a namespace
@@ -169,6 +170,14 @@ func (n *Namespace) ReadAll(a web.Auth, search string, page int, perPage int) (r
 
 	all := []*NamespaceWithLists{}
 
+	// Adding a 1=1 condition by default here because xorm always needs a condition and cannot handle nil conditions
+	var isArchivedCond builder.Cond = builder.Eq{"1": 1}
+	if !n.IsArchived {
+		isArchivedCond = builder.And(
+			builder.Eq{"namespaces.is_archived": false},
+		)
+	}
+
 	// Create our pseudo-namespace to hold the shared lists
 	// We want this one at the beginning, which is why we create it here
 	pseudonamespace := PseudoNamespace
@@ -186,10 +195,10 @@ func (n *Namespace) ReadAll(a web.Auth, search string, page int, perPage int) (r
 		Where("team_members.user_id = ?", doer.ID).
 		Or("namespaces.owner_id = ?", doer.ID).
 		Or("users_namespace.user_id = ?", doer.ID).
-		And("namespaces.is_archived = ?", n.IsArchived).
 		GroupBy("namespaces.id").
 		Limit(getLimitFromPageIndex(page, perPage)).
 		Where("namespaces.name LIKE ?", "%"+search+"%").
+		Where(isArchivedCond).
 		Find(&all)
 	if err != nil {
 		return all, 0, 0, err
@@ -207,6 +216,7 @@ func (n *Namespace) ReadAll(a web.Auth, search string, page int, perPage int) (r
 		Or("namespaces.owner_id = ?", doer.ID).
 		Or("users_namespace.user_id = ?", doer.ID).
 		And("namespaces.is_archived = ?", n.IsArchived).
+		Where(isArchivedCond).
 		GroupBy("users.id").
 		Find(&users)
 
@@ -222,16 +232,20 @@ func (n *Namespace) ReadAll(a web.Auth, search string, page int, perPage int) (r
 
 	// Get all lists
 	lists := []*List{}
-	err = x.
-		In("namespace_id", namespaceids).
-		Find(&lists)
+	listQuery := x.
+		In("namespace_id", namespaceids)
+
+	if !n.IsArchived {
+		listQuery.And("is_archived = false")
+	}
+	err = listQuery.Find(&lists)
 	if err != nil {
 		return all, 0, 0, err
 	}
 
 	// Get all lists individually shared with our user (not via a namespace)
 	individualLists := []*List{}
-	err = x.Select("l.*").
+	iListQuery := x.Select("l.*").
 		Table("list").
 		Alias("l").
 		Join("LEFT", []string{"team_list", "tl"}, "l.id = tl.list_id").
@@ -239,9 +253,11 @@ func (n *Namespace) ReadAll(a web.Auth, search string, page int, perPage int) (r
 		Join("LEFT", []string{"users_list", "ul"}, "ul.list_id = l.id").
 		Where("tm.user_id = ?", doer.ID).
 		Or("ul.user_id = ?", doer.ID).
-		And("l.is_archived = false").
-		GroupBy("l.id").
-		Find(&individualLists)
+		GroupBy("l.id")
+	if !n.IsArchived {
+		iListQuery.And("l.is_archived = false")
+	}
+	err = iListQuery.Find(&individualLists)
 	if err != nil {
 		return nil, 0, 0, err
 	}
