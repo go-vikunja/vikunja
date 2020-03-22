@@ -453,7 +453,19 @@ func (n *Namespace) Update() (err error) {
 		}
 	}
 
+	// We need to specify the cols we want to update here to be able to un-archive lists
+	colsToUpdate := []string{
+		"name",
+		"is_archived",
+	}
+	if n.Description != "" {
+		colsToUpdate = append(colsToUpdate, "description")
+	}
+
 	// Do the actual update
-	_, err = x.ID(currentNamespace.ID).Update(n)
+	_, err = x.
+		ID(currentNamespace.ID).
+		Cols(colsToUpdate...).
+		Update(n)
 	return
 }
