@@ -342,7 +342,10 @@ func CreateOrUpdateList(list *List) (err error) {
 
 	// Check if the identifier is unique and not empty
 	if list.Identifier != "" {
-		exists, err := x.Where("identifier = ?", list.Identifier).Exist(&List{})
+		exists, err := x.
+			Where("identifier = ?", list.Identifier).
+			And("id != ?", list.ID).
+			Exist(&List{})
 		if err != nil {
 			return err
 		}
