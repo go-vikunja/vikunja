@@ -34,6 +34,8 @@ type List struct {
 	Description string `xorm:"longtext null" json:"description"`
 	// The unique list short identifier. Used to build task identifiers.
 	Identifier string `xorm:"varchar(10) null" json:"identifier" valid:"runelength(0|10)" minLength:"0" maxLength:"10"`
+	// The hex color of this list
+	HexColor string `xorm:"varchar(6) null" json:"hex_color" valid:"runelength(0|6)" maxLength:"6"`
 
 	OwnerID     int64 `xorm:"int(11) INDEX not null" json:"-"`
 	NamespaceID int64 `xorm:"int(11) INDEX not null" json:"-" param:"namespace"`
@@ -381,6 +383,9 @@ func CreateOrUpdateList(list *List) (err error) {
 		}
 		if list.Identifier != "" {
 			colsToUpdate = append(colsToUpdate, "identifier")
+		}
+		if list.HexColor != "" {
+			colsToUpdate = append(colsToUpdate, "hex_color")
 		}
 
 		_, err = x.

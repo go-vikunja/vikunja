@@ -36,6 +36,9 @@ type Namespace struct {
 	Description string `xorm:"longtext null" json:"description"`
 	OwnerID     int64  `xorm:"int(11) not null INDEX" json:"-"`
 
+	// The hex color of this namespace
+	HexColor string `xorm:"varchar(6) null" json:"hex_color" valid:"runelength(0|6)" maxLength:"6"`
+
 	// Whether or not a namespace is archived.
 	IsArchived bool `xorm:"not null default false" json:"is_archived" query:"is_archived"`
 
@@ -460,6 +463,9 @@ func (n *Namespace) Update() (err error) {
 	}
 	if n.Description != "" {
 		colsToUpdate = append(colsToUpdate, "description")
+	}
+	if n.HexColor != "" {
+		colsToUpdate = append(colsToUpdate, "hex_color")
 	}
 
 	// Do the actual update
