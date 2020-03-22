@@ -5,6 +5,10 @@
 				<icon icon="cog" size="2x"/>
 			</router-link>
 			<h1 :style="{ 'opacity': list.title === '' ? '0': '1' }">{{ list.title === '' ? 'Loading...': list.title}}</h1>
+			<div class="notification is-warning" v-if="list.is_archived">
+				This list is archived.
+				It is not possible to create new or edit tasks or it.
+			</div>
 			<div class="switch-view">
 				<router-link :to="{ name: 'showList', params: { id: list.id } }" :class="{'is-active': $route.params.type !== 'gantt'}">List</router-link>
 				<router-link :to="{ name: 'showListWithType', params: { id: list.id, type: 'gantt' } }" :class="{'is-active': $route.params.type === 'gantt'}">Gantt</router-link>

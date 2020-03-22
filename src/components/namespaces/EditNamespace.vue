@@ -1,5 +1,9 @@
 <template>
 	<div class="loader-container" v-bind:class="{ 'is-loading': namespaceService.loading}">
+		<div class="notification is-warning" v-if="namespace.is_archived">
+			This namespace is archived.
+			It is not possible to create new lists or edit it.
+		</div>
 		<div class="card">
 			<header class="card-header">
 				<p class="card-header-title">
@@ -19,6 +23,23 @@
 							<label class="label" for="namespacedescription">Description</label>
 							<div class="control">
 								<textarea :class="{ 'disabled': namespaceService.loading}" :disabled="namespaceService.loading" class="textarea" placeholder="The namespaces description goes here..." id="namespacedescription" v-model="namespace.description"></textarea>
+							</div>
+						</div>
+						<div class="field">
+							<label class="label" for="isArchivedCheck">Is Archived</label>
+							<div class="control">
+								<div class="fancycheckbox" v-tooltip="'If a namespace is archived, you cannot create new lists or edit it.'">
+									<input type="checkbox" id="isArchivedCheck" v-model="namespace.is_archived"/>
+									<label class="check" for="isArchivedCheck">
+										<svg width="18px" height="18px" viewBox="0 0 18 18">
+											<path d="M1,9 L1,3.5 C1,2 2,1 3.5,1 L14.5,1 C16,1 17,2 17,3.5 L17,14.5 C17,16 16,17 14.5,17 L3.5,17 C2,17 1,16 1,14.5 L1,9 Z"></path>
+											<polyline points="1 9 7 14 15 4"></polyline>
+										</svg>
+										<span>
+											This namespace is archived
+										</span>
+									</label>
+								</div>
 							</div>
 						</div>
 					</form>
@@ -62,7 +83,7 @@
 
 	import NamespaceService from '../../services/namespace'
 	import NamespaceModel from '../../models/namespace'
-	
+
 	export default {
 		name: "EditNamespace",
 		data() {

@@ -104,6 +104,18 @@
 							</ul>
 						</div>
 						<aside class="menu namespaces-lists">
+							<div class="fancycheckbox show-archived-check">
+								<input type="checkbox" v-model="showArchived" @change="loadNamespaces()" style="display: none;" id="showArchivedCheckbox"/>
+								<label class="check" for="showArchivedCheckbox">
+									<svg width="18px" height="18px" viewBox="0 0 18 18">
+										<path d="M1,9 L1,3.5 C1,2 2,1 3.5,1 L14.5,1 C16,1 17,2 17,3.5 L17,14.5 C17,16 16,17 14.5,17 L3.5,17 C2,17 1,16 1,14.5 L1,9 Z"></path>
+										<polyline points="1 9 7 14 15 4"></polyline>
+									</svg>
+									<span>
+										Show Archived
+									</span>
+								</label>
+							</div>
 							<div class="spinner" :class="{ 'is-loading': namespaceService.loading}"></div>
 							<template v-for="n in namespaces">
 								<div :key="n.id">
@@ -122,14 +134,23 @@
 										</span>
 									</router-link>
 									<label class="menu-label" v-tooltip="n.name + ' (' + n.lists.length + ')'" :for="n.id + 'checker'">
-										{{n.name}} ({{n.lists.length}})
+										<span>
+											{{n.name}} ({{n.lists.length}})
+										</span>
+										<span class="is-archived" v-if="n.is_archived">
+											Archived
+										</span>
 									</label>
 								</div>
 								<input :key="n.id + 'checker'" type="checkbox" checked="checked" :id="n.id + 'checker'" class="checkinput"/>
 								<div class="more-container" :key="n.id + 'child'">
 									<ul class="menu-list can-be-hidden" >
 										<li v-for="l in n.lists" :key="l.id">
-											<router-link :to="{ name: 'showList', params: { id: l.id} }">{{l.title}}
+											<router-link :to="{ name: 'showList', params: { id: l.id} }">
+												<span>{{l.title}}</span>
+												<span class="is-archived" v-if="l.is_archived">
+													Archived
+												</span>
 											</router-link>
 										</li>
 									</ul>
@@ -220,6 +241,7 @@
 				authTypes: authTypes,
 				isOnline: true,
 				motd: '',
+				showArchived: false,
 
 				// Service Worker stuff
 				updateAvailable: false,
@@ -280,7 +302,7 @@
 			},
 			loadNamespaces() {
 				this.namespaceService = new NamespaceService()
-				this.namespaceService.getAll()
+				this.namespaceService.getAll({}, {is_archived: this.showArchived})
 					.then(r => {
 						this.$set(this, 'namespaces', r)
 					})

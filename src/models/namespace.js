@@ -23,6 +23,7 @@ export default class NamespaceModel extends AbstractModel {
 			description: '',
 			owner: UserModel,
 			lists: [],
+			is_archived: false,
 
 			created: null,
 			updated: null,

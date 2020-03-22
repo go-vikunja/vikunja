@@ -32,7 +32,7 @@
 			</button>
 		</div>
 
-		<div class="field task-add">
+		<div class="field task-add" v-if="!list.is_archived">
 			<div class="field is-grouped">
 				<p class="control has-icons-left is-expanded" :class="{ 'is-loading': taskService.loading}">
 					<input v-focus class="input" :class="{ 'disabled': taskService.loading}" v-model="newTaskText" type="text" placeholder="Add a new task..." @keyup.enter="addTask()"/>
@@ -59,8 +59,8 @@
 				<div class="tasks" v-if="tasks && tasks.length > 0" :class="{'short': isTaskEdit}">
 					<div class="task" v-for="l in tasks" :key="l.id">
 						<span>
-							<div class="fancycheckbox">
-								<input @change="markAsDone" type="checkbox" :id="l.id" :checked="l.done" style="display: none;">
+							<div class="fancycheckbox" :class="{'is-disabled': list.is_archived}">
+								<input @change="markAsDone" type="checkbox" :id="l.id" :checked="l.done" style="display: none;" :disabled="list.is_archived">
 								<label :for="l.id" class="check">
 									<svg width="18px" height="18px" viewBox="0 0 18 18">
 										<path d="M1,9 L1,3.5 C1,2 2,1 3.5,1 L14.5,1 C16,1 17,2 17,3.5 L17,14.5 C17,16 16,17 14.5,17 L3.5,17 C2,17 1,16 1,14.5 L1,9 Z"></path>
@@ -92,7 +92,7 @@
 								<priority-label :priority="l.priority"/>
 							</router-link>
 						</span>
-						<div @click="editTask(l.id)" class="icon settings">
+						<div @click="editTask(l.id)" class="icon settings" v-if="!list.is_archived">
 							<icon icon="pencil-alt"/>
 						</div>
 					</div>

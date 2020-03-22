@@ -27,6 +27,7 @@ export default class ListModel extends AbstractModel {
 			owner: UserModel,
 			tasks: [],
 			namespaceID: 0,
+			is_archived: false,
 
 			created: null,
 			updated: null,

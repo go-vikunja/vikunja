@@ -1,5 +1,9 @@
 <template>
 	<div class="loader-container" :class="{ 'is-loading': listService.loading}">
+		<div class="notification is-warning" v-if="list.is_archived">
+			This list is archived.
+			It is not possible to create new or edit tasks or it.
+		</div>
 		<div class="card">
 			<header class="card-header">
 				<p class="card-header-title">
@@ -19,6 +23,15 @@
 							<label class="label" for="listdescription">Description</label>
 							<div class="control">
 								<textarea :class="{ 'disabled': listService.loading}" :disabled="listService.loading" class="textarea" placeholder="The lists description goes here..." id="listdescription" v-model="list.description"></textarea>
+							</div>
+						</div>
+						<div class="field">
+							<label class="label" for="isArchivedCheck">Is Archived</label>
+							<div class="control">
+								<label class="checkbox" v-tooltip="'If a list is archived, you cannot create new tasks or edit the list or existing tasks.'">
+									<input type="checkbox" id="isArchivedCheck" v-model="list.is_archived"/>
+									This list is archived
+								</label>
 							</div>
 						</div>
 					</form>
