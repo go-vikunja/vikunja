@@ -102,6 +102,11 @@
 		mounted() {
 			this.loadComments()
 		},
+		watch: {
+			taskID() {
+				this.loadComments()
+			}
+		},
 		methods: {
 			loadComments() {
 				this.taskCommentService.getAll({task_id: this.taskID})
