@@ -57,42 +57,9 @@
 		<div class="columns">
 			<div class="column">
 				<div class="tasks" v-if="tasks && tasks.length > 0" :class="{'short': isTaskEdit}">
-					<div class="task" v-for="l in tasks" :key="l.id">
-						<span>
-							<div class="fancycheckbox" :class="{'is-disabled': list.is_archived}">
-								<input @change="markAsDone" type="checkbox" :id="l.id" :checked="l.done" style="display: none;" :disabled="list.is_archived">
-								<label :for="l.id" class="check">
-									<svg width="18px" height="18px" viewBox="0 0 18 18">
-										<path d="M1,9 L1,3.5 C1,2 2,1 3.5,1 L14.5,1 C16,1 17,2 17,3.5 L17,14.5 C17,16 16,17 14.5,17 L3.5,17 C2,17 1,16 1,14.5 L1,9 Z"></path>
-										<polyline points="1 9 7 14 15 4"></polyline>
-									</svg>
-								</label>
-							</div>
-							<router-link :to="{ name: 'taskDetailView', params: { id: l.id } }" class="tasktext" :class="{ 'done': l.done}">
-								<!-- Show any parent tasks to make it clear this task is a sub task of something -->
-								<span class="parent-tasks" v-if="typeof l.related_tasks.parenttask !== 'undefined'">
-									<template v-for="(pt, i) in l.related_tasks.parenttask">
-										{{ pt.text }}<template v-if="(i + 1) < l.related_tasks.parenttask.length">,&nbsp;</template>
-									</template>
-									>
-								</span>
-								{{l.text}}
-								<span class="tag" v-for="label in l.labels" :style="{'background': label.hex_color, 'color': label.textColor}" :key="label.id">
-									<span>{{ label.title }}</span>
-								</span>
-								<img
-										:src="a.getAvatarUrl(27)"
-										:alt="a.username"
-										class="avatar"
-										width="27"
-										height="27"
-										v-for="(a, i) in l.assignees"
-										:key="l.id + 'assignee' + a.id + i"/>
-								<i v-if="l.dueDate > 0" :class="{'overdue': l.dueDate <= new Date() && !l.done}" v-tooltip="formatDate(l.dueDate)"> - Due {{formatDateSince(l.dueDate)}}</i>
-								<priority-label :priority="l.priority"/>
-							</router-link>
-						</span>
-						<div @click="editTask(l.id)" class="icon settings" v-if="!list.is_archived">
+					<div class="task" v-for="t in tasks" :key="t.id">
+						<single-task-in-list :the-task="t" @taskUpdated="updateTasks"/>
+						<div @click="editTask(t.id)" class="icon settings" v-if="!list.is_archived">
 							<icon icon="pencil-alt"/>
 						</div>
 					</div>
@@ -140,8 +107,8 @@
 	import ListModel from '../../models/list'
 	import EditTask from './edit-task'
 	import TaskModel from '../../models/task'
-	import PriorityLabel from './reusable/priorityLabel'
 	import TaskCollectionService from '../../services/taskCollection'
+	import SingleTaskInList from './reusable/singleTaskInList'
 
 	export default {
 		data() {
@@ -165,7 +132,7 @@
 			}
 		},
 		components: {
-			PriorityLabel,
+			SingleTaskInList,
 			EditTask,
 		},
 		props: {
@@ -267,34 +234,6 @@
 				}
 				this.initTasks(page, search)
 			},
-			markAsDone(e) {
-				let updateFunc = () => {
-					// We get the task, update the 'done' property and then push it to the api.
-					let task = this.getTaskByID(e.target.id)
-					task.done = e.target.checked
-					this.taskService.update(task)
-						.then(() => {
-							this.sortTasks()
-							this.success(
-								{message: 'The task was successfully ' + (task.done ? '' : 'un-') + 'marked as done.'},
-								this,
-								[{
-									title: 'Undo',
-									callback: () => this.markAsDone({target: {id: e.target.id, checked: !e.target.checked}}),
-								}]
-							)
-						})
-						.catch(e => {
-							this.error(e, this)
-						})
-				}
-
-				if (e.target.checked) {
-					setTimeout(updateFunc(), 300); // Delay it to show the animation when marking a task as done
-				} else {
-					updateFunc() // Don't delay it when un-marking it as it doesn't have an animation the other way around
-				}
-			},
 			editTask(id) {
 				// Find the selected task and set it to the current object
 				let theTask = this.getTaskByID(id) // Somehow this does not work if we directly assign this to this.taskEditTask
@@ -325,6 +264,15 @@
 						return 1
 					return 0
 				})
+			},
+			updateTasks(updatedTask) {
+				for (const t in this.tasks) {
+					if (this.tasks[t].id === updatedTask.id) {
+						this.$set(this.tasks, t, updatedTask)
+						break
+					}
+				}
+				this.sortTasks()
 			},
 			searchTasks() {
 				if (this.searchTerm === '') {
