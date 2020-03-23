@@ -136,7 +136,19 @@ import message from './message'
 import {format, formatDistance} from 'date-fns'
 Vue.mixin({
 	methods: {
-		formatDateSince: date => formatDistance(date, new Date()),
+		formatDateSince: date => {
+			const currentDate = new Date()
+			let formatted = '';
+			if (date > currentDate) {
+				formatted += 'in '
+			}
+			formatted += formatDistance(date, currentDate)
+			if(date < currentDate) {
+				formatted += ' ago'
+			}
+
+			return formatted;
+		},
 		formatDate: date => format(date, 'PPPPpppp'),
 		error: (e, context, actions = []) => message.error(e, context, actions),
 		success: (s, context, actions = []) => message.success(s, context, actions),
