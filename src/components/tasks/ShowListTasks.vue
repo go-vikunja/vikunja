@@ -188,10 +188,10 @@
 		},
 		methods: {
 			// This function initializes the tasks page and loads the first page of tasks
-			initTasks(page) {
+			initTasks(page, search = '') {
 				this.taskEditTask = null
 				this.isTaskEdit = false
-				this.loadTasks(page)
+				this.loadTasks(page, search)
 			},
 			addTask() {
 				if (this.newTaskText.length < 3) {
@@ -261,7 +261,11 @@
 				if (typeof e.page === 'undefined') {
 					page = 1
 				}
-				this.initTasks(page)
+				let search = e.search
+				if (typeof e.search === 'undefined') {
+					search = ''
+				}
+				this.initTasks(page, search)
 			},
 			markAsDone(e) {
 				let updateFunc = () => {
@@ -326,7 +330,10 @@
 				if (this.searchTerm === '') {
 					return
 				}
-				this.loadTasks(1, this.searchTerm)
+				this.$router.push({
+					name: 'showList',
+					query: {search: this.searchTerm}
+				})
 			},
 			hideSearchBar() {
 				// This is a workaround.
