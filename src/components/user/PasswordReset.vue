@@ -24,7 +24,7 @@
 				<div class="notification is-info" v-if="this.passwordResetService.loading">
 					Loading...
 				</div>
-				<div class="notification is-danger" v-if="error">
+				<div class="notification is-danger" v-if="errorMsg">
 					{{ errorMsg }}
 				</div>
 			</form>

@@ -16,7 +16,7 @@
 						<router-link :to="{ name: 'login' }" class="button">Login</router-link>
 					</div>
 				</div>
-				<div class="notification is-danger" v-if="error">
+				<div class="notification is-danger" v-if="errorMsg">
 					{{ errorMsg }}
 				</div>
 			</form>
