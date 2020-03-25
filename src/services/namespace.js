@@ -22,4 +22,14 @@ export default class NamespaceService extends AbstractService {
 	modelFactory(data) {
 		return new NamespaceModel(data)
 	}
+
+	beforeUpdate(namespace) {
+		namespace.hex_color = namespace.hex_color.substring(1, 7)
+		return namespace
+	}
+
+	beforeCreate(namespace) {
+		namespace.hex_color = namespace.hex_color.substring(1, 7)
+		return namespace
+	}
 }

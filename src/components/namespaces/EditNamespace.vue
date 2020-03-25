@@ -42,6 +42,18 @@
 								</div>
 							</div>
 						</div>
+						<div class="field">
+							<label class="label">Color</label>
+							<div class="control">
+								<verte
+										v-model="namespace.hex_color"
+										menuPosition="top"
+										picker="square"
+										model="hex"
+										:enableAlpha="false"
+										:rgbSliders="true"/>
+							</div>
+						</div>
 					</form>
 
 					<div class="columns bigbuttons">
@@ -77,6 +89,9 @@
 </template>
 
 <script>
+	import verte from 'verte'
+	import 'verte/dist/verte.css'
+
 	import auth from '../../auth'
 	import router from '../../router'
 	import manageSharing from '../sharing/userTeam'
@@ -100,6 +115,7 @@
 		},
 		components: {
 			manageSharing,
+			verte,
 		},
 		beforeMount() {
 			// Check if the user is already logged in, if so, redirect him to the homepage

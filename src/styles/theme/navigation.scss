@@ -130,9 +130,18 @@
         align-items: center;
         justify-content: space-between;
 
-        span:not(.icon) {
+        span.name:not(.icon) {
           overflow: hidden;
           text-overflow: ellipsis;
+
+          .color-bubble {
+            display: inline-block;
+            vertical-align: initial;
+            width: 12px;
+            height: 12px;
+            border-radius: 100%;
+            margin-right: 2px;
+          }
         }
 
         .is-archived {
@@ -149,8 +158,15 @@
         }
       }
 
-      .menu-label .is-archived {
-        min-width: 85px;
+      .menu-label {
+        .color-bubble {
+          width: 14px !important;
+          height: 14px !important;
+        }
+
+        .is-archived {
+          min-width: 85px;
+        }
       }
 
       .nsettings{

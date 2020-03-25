@@ -6,7 +6,11 @@ export default class ListModel extends AbstractModel {
 	
 	constructor(data) {
 		super(data)
-		
+
+		if (this.hex_color !== '' && this.hex_color.substring(0, 1) !== '#') {
+			this.hex_color = '#' + this.hex_color
+		}
+
 		// Make all tasks to task models
 		this.tasks = this.tasks.map(t => {
 			return new TaskModel(t)
@@ -28,6 +32,7 @@ export default class ListModel extends AbstractModel {
 			tasks: [],
 			namespaceID: 0,
 			is_archived: false,
+			hex_color: '',
 
 			created: null,
 			updated: null,

@@ -6,6 +6,10 @@ export default class NamespaceModel extends AbstractModel {
 	constructor(data) {
 		super(data)
 
+		if (this.hex_color !== '' && this.hex_color.substring(0, 1) !== '#') {
+			this.hex_color = '#' + this.hex_color
+		}
+
 		this.lists = this.lists.map(l => {
 			return new ListModel(l)
 		})
@@ -24,6 +28,7 @@ export default class NamespaceModel extends AbstractModel {
 			owner: UserModel,
 			lists: [],
 			is_archived: false,
+			hex_color: '',
 
 			created: null,
 			updated: null,

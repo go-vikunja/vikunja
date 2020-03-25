@@ -28,6 +28,12 @@ export default class ListService extends AbstractService {
 		model.tasks = model.tasks.map(task => {
 			return taskService.beforeUpdate(task)
 		})
+		model.hex_color = model.hex_color.substring(1, 7)
 		return model
+	}
+
+	beforeCreate(list) {
+		list.hex_color = list.hex_color.substring(1, 7)
+		return list
 	}
 }
