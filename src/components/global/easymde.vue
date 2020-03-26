@@ -23,6 +23,7 @@
                 config: {
                     autoDownloadFontAwesome: false,
                     spellChecker: false,
+                    placeholder: 'Click here to enter a description...',
                     toolbar: [
                         'heading-1',
                         'heading-2',
