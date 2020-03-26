@@ -82,14 +82,12 @@
 				let updateFunc = () => {
 					// We get the task, update the 'done' property and then push it to the api.
 					this.task.done = e.target.checked
-					let task = new TaskModel(this.task)
-					task.done = e.target.checked
-					this.taskService.update(task)
+					this.taskService.update(this.task)
 						.then(t => {
 							this.task = t
 							this.$emit('taskUpdated', t)
 							this.success(
-								{message: 'The task was successfully ' + (task.done ? '' : 'un-') + 'marked as done.'},
+								{message: 'The task was successfully ' + (this.task.done ? '' : 'un-') + 'marked as done.'},
 								this,
 								[{
 									title: 'Undo',
