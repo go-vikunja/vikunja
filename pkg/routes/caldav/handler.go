@@ -32,10 +32,10 @@ import (
 	"strings"
 )
 
-func getBasicAuthUserFromContext(c echo.Context) (user.User, error) {
-	u, is := c.Get("userBasicAuth").(user.User)
+func getBasicAuthUserFromContext(c echo.Context) (*user.User, error) {
+	u, is := c.Get("userBasicAuth").(*user.User)
 	if !is {
-		return user.User{}, fmt.Errorf("user is not user element, is %s", reflect.TypeOf(c.Get("userBasicAuth")))
+		return &user.User{}, fmt.Errorf("user is not user element, is %s", reflect.TypeOf(c.Get("userBasicAuth")))
 	}
 	return u, nil
 }
@@ -55,7 +55,7 @@ func ListHandler(c echo.Context) error {
 
 	storage := &VikunjaCaldavListStorage{
 		list: &models.List{ID: listID},
-		user: &u,
+		user: u,
 	}
 
 	// Try to parse a task from the request payload
@@ -102,7 +102,7 @@ func TaskHandler(c echo.Context) error {
 	storage := &VikunjaCaldavListStorage{
 		list: &models.List{ID: listID},
 		task: &models.Task{UID: taskUID},
-		user: &u,
+		user: u,
 	}
 
 	caldav.SetupStorage(storage)
@@ -120,7 +120,7 @@ func PrincipalHandler(c echo.Context) error {
 	}
 
 	storage := &VikunjaCaldavListStorage{
-		user:        &u,
+		user:        u,
 		isPrincipal: true,
 	}
 
@@ -150,7 +150,7 @@ func EntryHandler(c echo.Context) error {
 	}
 
 	storage := &VikunjaCaldavListStorage{
-		user:    &u,
+		user:    u,
 		isEntry: true,
 	}
 
