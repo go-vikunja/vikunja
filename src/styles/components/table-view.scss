@@ -1,0 +1,32 @@
+.table-view {
+  .table {
+    background: transparent;
+
+    .user {
+      margin: 0;
+    }
+
+    .is-done {
+      font-size: .9em;
+      margin: 0;
+    }
+  }
+
+  .column-filter {
+    text-align: right;
+    width: 100%;
+    max-width: 180px;
+    position: absolute;
+    right: 3em;
+    margin-top: -80px;
+
+    .card {
+      text-align: left;
+      margin-top: 1em;
+    }
+
+    .fancycheckbox {
+      display: block;
+    }
+  }
+}

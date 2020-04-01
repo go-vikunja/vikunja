@@ -64,6 +64,9 @@ import { faClock } from '@fortawesome/free-regular-svg-icons'
 import { faHistory } from '@fortawesome/free-solid-svg-icons'
 import { faSearch } from '@fortawesome/free-solid-svg-icons'
 import { faCheckDouble } from '@fortawesome/free-solid-svg-icons'
+import { faTh } from '@fortawesome/free-solid-svg-icons'
+import { faSort } from '@fortawesome/free-solid-svg-icons'
+import { faSortUp } from '@fortawesome/free-solid-svg-icons'
 import { faComments } from '@fortawesome/free-regular-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
@@ -104,6 +107,9 @@ library.add(faHistory)
 library.add(faSearch)
 library.add(faCheckDouble)
 library.add(faComments)
+library.add(faTh)
+library.add(faSort)
+library.add(faSortUp)
 
 Vue.component('icon', FontAwesomeIcon)
 

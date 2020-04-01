@@ -25,7 +25,6 @@
 						{{ l.title }}
 					</a>
 					<a class="delete is-small" @click="deleteLabel(l)" v-if="user.infos.id === l.created_by.id"></a>
-
 				</span>
 			</div>
 			<div class="column is-4" v-if="isLabelEdit">

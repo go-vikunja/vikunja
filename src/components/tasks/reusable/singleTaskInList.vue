@@ -1,15 +1,6 @@
 <template>
 	<span>
-		<div class="fancycheckbox" :class="{'is-disabled': isArchived}">
-			<input @change="markAsDone" type="checkbox" :id="task.id" :checked="task.done"
-				style="display: none;" :disabled="isArchived">
-			<label :for="task.id" class="check">
-				<svg width="18px" height="18px" viewBox="0 0 18 18">
-					<path d="M1,9 L1,3.5 C1,2 2,1 3.5,1 L14.5,1 C16,1 17,2 17,3.5 L17,14.5 C17,16 16,17 14.5,17 L3.5,17 C2,17 1,16 1,14.5 L1,9 Z"></path>
-					<polyline points="1 9 7 14 15 4"></polyline>
-				</svg>
-			</label>
-		</div>
+		<fancycheckbox v-model="task.done" @change="markAsDone" :disabled="isArchived"/>
 		<router-link :to="{ name: 'taskDetailView', params: { id: task.id } }" class="tasktext"  :class="{ 'done': task.done}">
 			<!-- Show any parent tasks to make it clear this task is a sub task of something -->
 			<span class="parent-tasks" v-if="typeof task.related_tasks.parenttask !== 'undefined'">
@@ -19,18 +10,15 @@
 				>
 			</span>
 			{{ task.text }}
-			<span class="tag" v-for="label in task.labels" :style="{'background': label.hex_color, 'color': label.textColor}"
-				:key="label.id">
-				<span>{{ label.title }}</span>
-			</span>
-			<img
-					:src="a.getAvatarUrl(27)"
-					:alt="a.username"
-					class="avatar"
-					width="27"
-					height="27"
+			<labels :labels="task.labels"/>
+			<user
+					:user="a"
+					:avatar-size="27"
+					:show-username="false"
+					:is-inline="true"
 					v-for="(a, i) in task.assignees"
-					:key="task.id + 'assignee' + a.id + i"/>
+					:key="task.id + 'assignee' + a.id + i"
+			/>
 			<i v-if="task.dueDate > 0"
 				:class="{'overdue': task.dueDate <= new Date() && !task.done}"
 				v-tooltip="formatDate(task.dueDate)"> - Due {{formatDateSince(task.dueDate)}}</i>
@@ -43,6 +31,9 @@
 	import TaskModel from '../../../models/task'
 	import PriorityLabel from './priorityLabel'
 	import TaskService from '../../../services/task'
+	import Labels from './labels'
+	import User from '../../global/user'
+	import Fancycheckbox from '../../global/fancycheckbox'
 
 	export default {
 		name: 'singleTaskInList',
@@ -53,6 +44,9 @@
 			}
 		},
 		components: {
+			Fancycheckbox,
+			User,
+			Labels,
 			PriorityLabel,
 		},
 		props: {
@@ -78,10 +72,8 @@
 			this.taskService = new TaskService()
 		},
 		methods: {
-			markAsDone(e) {
-				let updateFunc = () => {
-					// We get the task, update the 'done' property and then push it to the api.
-					this.task.done = e.target.checked
+			markAsDone(checked) {
+				const updateFunc = () => {
 					this.taskService.update(this.task)
 						.then(t => {
 							this.task = t
@@ -93,8 +85,7 @@
 									title: 'Undo',
 									callback: () => this.markAsDone({
 										target: {
-											id: e.target.id,
-											checked: !e.target.checked
+											checked: !checked
 										}
 									}),
 								}]
@@ -105,8 +96,8 @@
 						})
 				}
 
-				if (e.target.checked) {
-					setTimeout(updateFunc(), 300); // Delay it to show the animation when marking a task as done
+				if (checked) {
+					setTimeout(updateFunc, 300); // Delay it to show the animation when marking a task as done
 				} else {
 					updateFunc() // Don't delay it when un-marking it as it doesn't have an animation the other way around
 				}

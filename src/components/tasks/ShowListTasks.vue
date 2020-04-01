@@ -1,5 +1,5 @@
 <template>
-	<div class="loader-container" :class="{ 'is-loading': listService.loading || taskCollectionService.loading}">
+	<div class="loader-container" :class="{ 'is-loading': taskCollectionService.loading}">
 		<div class="search">
 			<div class="field has-addons" :class="{ 'hidden': !showTaskSearch }">
 				<div class="control has-icons-left has-icons-right">
@@ -87,13 +87,13 @@
 		</div>
 
 		<nav class="pagination is-centered" role="navigation" aria-label="pagination" v-if="taskCollectionService.totalPages > 1">
-			<router-link class="pagination-previous" :to="{name: 'showList', query: { page: currentPage - 1 }}" tag="button" :disabled="currentPage === 1">Previous</router-link>
-			<router-link class="pagination-next" :to="{name: 'showList', query: { page: currentPage + 1 }}" tag="button" :disabled="currentPage === taskCollectionService.totalPages">Next page</router-link>
+			<router-link class="pagination-previous" :to="getRouteForPagination(currentPage - 1)" tag="button" :disabled="currentPage === 1">Previous</router-link>
+			<router-link class="pagination-next" :to="getRouteForPagination(currentPage + 1)" tag="button" :disabled="currentPage === taskCollectionService.totalPages">Next page</router-link>
 			<ul class="pagination-list">
 				<template v-for="(p, i) in pages">
 					<li :key="'page'+i" v-if="p.isEllipsis"><span class="pagination-ellipsis">&hellip;</span></li>
 					<li :key="'page'+i" v-else>
-						<router-link :to="{name: 'showList', query: { page: p.number }}" :class="{'is-current': p.number === currentPage}" class="pagination-link" :aria-label="'Goto page ' + p.number">{{ p.number }}</router-link>
+						<router-link :to="getRouteForPagination(p.number)" :class="{'is-current': p.number === currentPage}" class="pagination-link" :aria-label="'Goto page ' + p.number">{{ p.number }}</router-link>
 					</li>
 				</template>
 			</ul>
@@ -102,35 +102,30 @@
 </template>
 
 <script>
-	import ListService from '../../services/list'
 	import TaskService from '../../services/task'
 	import ListModel from '../../models/list'
 	import EditTask from './edit-task'
 	import TaskModel from '../../models/task'
-	import TaskCollectionService from '../../services/taskCollection'
 	import SingleTaskInList from './reusable/singleTaskInList'
+	import taskList from './helpers/taskList'
 
 	export default {
+		name: 'ListView',
 		data() {
 			return {
 				listID: this.$route.params.id,
-				listService: ListService,
 				taskService: TaskService,
-				taskCollectionService: TaskCollectionService,
-				pages: [],
-				currentPage: 0,
 				list: {},
-				tasks: [],
 				isTaskEdit: false,
 				taskEditTask: TaskModel,
 				newTaskText: '',
 
 				showError: false,
-
-				showTaskSearch: false,
-				searchTerm: '',
 			}
 		},
+		mixins: [
+			taskList,
+		],
 		components: {
 			SingleTaskInList,
 			EditTask,
@@ -145,12 +140,9 @@
 			theList() {
 				this.list = this.theList
 			},
-			'$route.query': 'loadTasksForPage', // Only listen for query path changes
 		},
 		created() {
-			this.listService = new ListService()
 			this.taskService = new TaskService()
-			this.taskCollectionService = new TaskCollectionService()
 			this.initTasks(1)
 		},
 		methods: {
@@ -179,61 +171,6 @@
 						this.error(e, this)
 					})
 			},
-			loadTasks(page, search = '') {
-				const params = {sort_by: ['done', 'id'], order_by: ['asc', 'desc']}
-				if (search !== '') {
-					params.s = search
-				}
-				this.taskCollectionService.getAll({listID: this.$route.params.id}, params, page)
-					.then(r => {
-						this.$set(this, 'tasks', r)
-						this.$set(this, 'pages', [])
-						this.currentPage = page
-
-						for (let i = 0; i < this.taskCollectionService.totalPages; i++)  {
-
-							// Show ellipsis instead of all pages
-							if(
-								i > 0 && // Always at least the first page
-								(i + 1) < this.taskCollectionService.totalPages && // And the last page
-								(
-									// And the current with current + 1 and current - 1
-									(i + 1) > this.currentPage + 1 ||
-									(i + 1) < this.currentPage - 1
-								)
-							) {
-								// Only add an ellipsis if the last page isn't already one
-								if(this.pages[i - 1] && !this.pages[i - 1].isEllipsis) {
-									this.pages.push({
-										number: 0,
-										isEllipsis: true,
-									})
-								}
-								continue
-							}
-
-							this.pages.push({
-								number: i + 1,
-								isEllipsis: false,
-							})
-						}
-					})
-					.catch(e => {
-						this.error(e, this)
-					})
-			},
-			loadTasksForPage(e) {
-				// The page parameter can be undefined, in the case where the user loads a new list from the side bar menu
-				let page = e.page
-				if (typeof e.page === 'undefined') {
-					page = 1
-				}
-				let search = e.search
-				if (typeof e.search === 'undefined') {
-					search = ''
-				}
-				this.initTasks(page, search)
-			},
 			editTask(id) {
 				// Find the selected task and set it to the current object
 				let theTask = this.getTaskByID(id) // Somehow this does not work if we directly assign this to this.taskEditTask
@@ -248,23 +185,6 @@
 				}
 				return {} // FIXME: This should probably throw something to make it clear to the user noting was found
 			},
-			sortTasks() {
-				if (this.tasks === null || this.tasks === []) {
-					return
-				}
-				return this.tasks.sort(function(a,b) {
-					if (a.done < b.done)
-						return -1
-					if (a.done > b.done)
-						return 1
-
-					if (a.id > b.id)
-						return -1
-					if (a.id < b.id)
-						return 1
-					return 0
-				})
-			},
 			updateTasks(updatedTask) {
 				for (const t in this.tasks) {
 					if (this.tasks[t].id === updatedTask.id) {
@@ -273,25 +193,6 @@
 					}
 				}
 				this.sortTasks()
-			},
-			searchTasks() {
-				if (this.searchTerm === '') {
-					return
-				}
-				this.$router.push({
-					name: 'showList',
-					query: {search: this.searchTerm}
-				})
-			},
-			hideSearchBar() {
-				// This is a workaround.
-				// When clicking on the search button, @blur from the input is fired. If we
-				// would then directly hide the whole search bar directly, no click event
-				// from the button gets fired. To prevent this, we wait 200ms until we hide
-				// everything so the button has a chance of firering the search event.
-				setTimeout(() => {
-					this.showTaskSearch = false
-				}, 200)
 			},
 		}
 	}

@@ -28,10 +28,9 @@
 						<div class="field">
 							<label class="label" for="isArchivedCheck">Is Archived</label>
 							<div class="control">
-								<label class="checkbox" v-tooltip="'If a list is archived, you cannot create new tasks or edit the list or existing tasks.'">
-									<input type="checkbox" id="isArchivedCheck" v-model="list.is_archived"/>
+								<fancycheckbox v-model="list.is_archived" v-tooltip="'If a list is archived, you cannot create new tasks or edit the list or existing tasks.'">
 									This list is archived
-								</label>
+								</fancycheckbox>
 							</div>
 						</div>
 						<div class="field">
@@ -89,10 +88,11 @@
 	import auth from '../../auth'
 	import router from '../../router'
 	import manageSharing from '../sharing/userTeam'
-	import LinkSharing from '../sharing/linkSharing';
+	import LinkSharing from '../sharing/linkSharing'
 
 	import ListModel from '../../models/list'
 	import ListService from '../../services/list'
+	import Fancycheckbox from '../global/fancycheckbox'
 
 	export default {
 		name: "EditList",
@@ -110,6 +110,7 @@
 			}
 		},
 		components: {
+			Fancycheckbox,
 			LinkSharing,
 			manageSharing,
 			verte,

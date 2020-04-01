@@ -1,5 +1,5 @@
 <template>
-	<div class="user">
+	<div class="user" :class="{'is-inline': isInline}">
 		<img :src="user.getAvatarUrl(avatarSize)" class="avatar" alt="" v-tooltip="user.username" :width="avatarSize" :height="avatarSize"/>
 		<span v-if="showUsername" class="username">{{ user.username }}</span>
 	</div>
@@ -22,7 +22,11 @@
 				required: false,
 				type: Number,
 				default: 50,
-			}
+			},
+			isInline: {
+				type: Boolean,
+				default: false,
+			},
 		},
 	}
 </script>
@@ -30,6 +34,10 @@
 <style lang="scss" scoped>
 	.user {
 		margin: .5em;
+
+		&.is-inline {
+			display: inline;
+		}
 
 		img {
 			-webkit-border-radius: 100%;

@@ -10,12 +10,14 @@
 				It is not possible to create new or edit tasks or it.
 			</div>
 			<div class="switch-view">
-				<router-link :to="{ name: 'showList', params: { id: list.id } }" :class="{'is-active': $route.params.type !== 'gantt'}">List</router-link>
+				<router-link :to="{ name: 'showList', params: { id: list.id } }" :class="{'is-active': $route.params.type !== 'gantt' && $route.params.type !== 'table'}">List</router-link>
 				<router-link :to="{ name: 'showListWithType', params: { id: list.id, type: 'gantt' } }" :class="{'is-active': $route.params.type === 'gantt'}">Gantt</router-link>
+				<router-link :to="{ name: 'showListWithType', params: { id: list.id, type: 'table' } }" :class="{'is-active': $route.params.type === 'table'}">Table</router-link>
 			</div>
 		</div>
 
 		<gantt :list="list" v-if="$route.params.type === 'gantt'"/>
+		<table-view :list="list" v-else-if="$route.params.type === 'table'"/>
 		<show-list-task :the-list="list" v-else/>
 	</div>
 </template>
@@ -30,6 +32,7 @@
 	import ListModel from '../../models/list'
 	import ListService from '../../services/list'
 	import authType from '../../models/authTypes'
+	import TableView from '../tasks/TableView'
 
 	export default {
 		data() {
@@ -40,6 +43,7 @@
 			}
 		},
 		components: {
+			TableView,
 			Gantt,
 			ShowListTask,
 		},
@@ -50,7 +54,13 @@
 			}
 
 			// If the type is invalid, redirect the user
-			if (auth.user.authenticated && auth.user.infos.type !== authType.LINK_SHARE && this.$route.params.type !== 'gantt' && this.$route.params.type !== '') {
+			if (
+				auth.user.authenticated &&
+				auth.user.infos.type !== authType.LINK_SHARE &&
+				this.$route.params.type !== 'gantt' &&
+				this.$route.params.type !== 'table' &&
+				this.$route.params.type !== ''
+			) {
 				router.push({name: 'showList', params: { id:  this.$route.params.id }})
 			}
 		},

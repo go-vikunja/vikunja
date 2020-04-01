@@ -55,16 +55,6 @@
       height: auto;
     }
 
-    .is-done {
-      background: $green;
-      color: $white;
-      padding: .5em;
-      font-size: 1.5em;
-      margin-left: .5em;
-      font-weight: bold;
-      line-height: 1;
-      border-radius: 4px;
-    }
   }
 
   .date-input {
@@ -180,4 +170,16 @@
       justify-content: left;
     }
   }
+}
+
+.is-done {
+  background: $green;
+  color: $white;
+  padding: .5em;
+  font-size: 1.5em;
+  margin-left: .5em;
+  font-weight: bold;
+  line-height: 1;
+  border-radius: 4px;
+  text-align: center;
 }
