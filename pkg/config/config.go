@@ -254,7 +254,7 @@ func InitConfig() {
 
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		log.Println("No home directory found, not using config from ~/.config/vikunja/. Error was: %s", err.Error())
+		log.Printf("No home directory found, not using config from ~/.config/vikunja/. Error was: %s\n", err.Error())
 	} else {
 		viper.AddConfigPath(path.Join(homeDir, ".config", "vikunja"))
 	}
@@ -264,11 +264,11 @@ func InitConfig() {
 	err = viper.ReadInConfig()
 	if err != nil {
 		log.Println(err.Error())
-		log.Println("Using defaults.")
+		log.Println("Using default config.")
 		return
 	}
 
-	log.Println("Using config file:", viper.ConfigFileUsed())
+	log.Printf("Using config file: %s", viper.ConfigFileUsed())
 }
 
 func random(length int) (string, error) {
