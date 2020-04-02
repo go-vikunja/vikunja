@@ -9,13 +9,13 @@
 				<div class="field">
 					<label class="label" for="username">Username</label>
 					<div class="control">
-						<input v-focus type="text" id="username" class="input" name="username" placeholder="e.g. frederick" v-model="credentials.username" required/>
+						<input v-focus type="text" id="username" class="input" name="username" placeholder="e.g. frederick" ref="username" required/>
 					</div>
 				</div>
 				<div class="field">
 					<label class="label" for="password">Password</label>
 					<div class="control">
-						<input type="password" class="input" id="password" name="password" placeholder="e.g. ••••••••••••" v-model="credentials.password" required/>
+						<input type="password" class="input" id="password" name="password" placeholder="e.g. ••••••••••••" ref="password" required/>
 					</div>
 				</div>
 
@@ -43,10 +43,6 @@
 	export default {
 		data() {
 			return {
-				credentials: {
-					username: '',
-					password: ''
-				},
 				errorMsg: '',
 				confirmedEmailSuccess: false,
 				loading: false
@@ -79,9 +75,12 @@
 			submit() {
 				this.loading = true
 				this.errorMsg = ''
-				let credentials = {
-					username: this.credentials.username,
-					password: this.credentials.password
+				// Some browsers prevent Vue bindings from working with autofilled values.
+				// To work around this, we're manually getting the values here instead of relying on vue bindings.
+				// For more info, see https://kolaente.dev/vikunja/frontend/issues/78
+				const credentials = {
+					username: this.$refs.username.value,
+					password: this.$refs.password.value,
 				}
 
 				auth.login(this, credentials, 'home')
