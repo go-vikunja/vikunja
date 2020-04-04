@@ -9,6 +9,46 @@ All releases can be found on https://code.vikunja.io/frontend/releases.
 
 The releases aim at the api versions which is why there are missing versions.
 
+## [0.12] - 2020-04-04
+
+#### Added
+
+* Table View for tasks (#76)
+* 404 page
+* Add creating new related tasks
+* Add getting the user avatar from the api (#68)
+* Add support for archiving lists and namespaces (#73)
+* Add task search term to query param to enable navigation
+* Add undo button to notification when marking a task as done
+* Add user to attachments list
+* Colors for lists and namespaces (#74)
+* Enable marking tasks as done from the task overview
+* Ensure labels of a task get updated when updating them
+* Input length validation for new tasks, lists and namespaces (#70)
+* Pre/Suffix formatted dates with relative pronouns like "in [one day]" or "[two days] ago"
+
+#### Fixed
+
+* Fix avatar sizes
+* Fix changing task dates (due/start/end/reminders)
+* Fix comments not being loaded again when switching between tasks
+* Fix error notification still being shown on password reset pages despite no error
+* Fix gantt chart (#79)
+* Fix icon overflowing in navigation
+* Fix namespace model name showing wrong placeholder until the namespace was loaded
+* Fix new related task not being visible in the search field
+* Fix not highlighting the current list in menu when paginating
+* Fix updating a task with repeat after interval from list view (Fixes #75)
+* Use deep imports for importing lodash to make tree shaking easier
+* Revert "Use deep imports for importing lodash to make tree shaking easier"
+* Work around browsers preventing Vue bindings from working with autofill (Fixes #78)
+
+#### Changed
+
+* Schedule token renew every minute
+* Swap moment.js with date-fns
+* Change release bucket
+
 ## [0.11] - 2020-03-01
 
 ### Added
