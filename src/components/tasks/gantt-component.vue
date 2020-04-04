@@ -44,7 +44,7 @@
 						:parentW="fullWidth"
 						@resizestop="resizeTask"
 						@dragstop="resizeTask"
-						@clicked="taskDragged = t"
+						@clicked="setTaskDragged(t)"
 				>
 					<span :class="{
 					'has-high-priority': t.priority >= priorities.HIGH,
@@ -75,7 +75,7 @@
 							:parentW="fullWidth"
 							@resizestop="resizeTask"
 							@dragstop="resizeTask"
-							@clicked="taskDragged = t"
+							@clicked="setTaskDragged(t)"
 							v-tooltip="'This task has no dates set.'"
 					>
 						<span>{{t.text}}</span>
@@ -132,7 +132,8 @@
 	import TaskModel from '../../models/task'
 	import ListModel from '../../models/list'
 	import priorities from '../../models/priorities'
-	import PriorityLabel from "./reusable/priorityLabel";
+	import PriorityLabel from './reusable/priorityLabel'
+	import TaskCollectionService from '../../services/taskCollection'
 
 	export default {
 		name: 'GanttChart',
@@ -179,12 +180,10 @@
 				newTaskTitle: '',
 				newTaskFieldActive: false,
 				priorities: {},
+				taskCollectionService: TaskCollectionService,
 			}
 		},
 		watch: {
-			list() {
-				this.parseTasks()
-			},
 			dateFrom() {
 				this.buildTheGanttChart()
 			},
@@ -192,10 +191,13 @@
 				this.buildTheGanttChart()
 			},
 		},
-		beforeMount() {
+		created() {
 			this.now = new Date()
+			this.taskCollectionService = new TaskCollectionService()
 			this.taskService = new TaskService()
 			this.priorities = priorities
+		},
+		mounted() {
 			this.buildTheGanttChart()
 		},
 		methods: {
@@ -231,22 +233,46 @@
 				this.prepareTasks()
 			},
 			prepareTasks() {
-				this.theTasks = this.list.tasks
-					.filter(t => {
-						if(t.startDate === null && !t.done) {
-							this.tasksWithoutDates.push(t)
-						}
-						return t.startDate >= this.startDate && t.endDate <= this.endDate
+
+				const getAllTasks = (page = 1) => {
+					return this.taskCollectionService.getAll({listID: this.$route.params.id}, {}, page)
+						.then(tasks => {
+							if(page < this.taskCollectionService.totalPages) {
+								return getAllTasks(page + 1)
+									.then(nextTasks => {
+										return tasks.concat(nextTasks)
+									})
+							} else {
+								return tasks
+							}
+						})
+						.catch(e => {
+							return Promise.reject(e)
+						})
+				}
+
+				getAllTasks()
+					.then(tasks => {
+						this.theTasks = tasks
+							.filter(t => {
+								if(t.startDate === null && !t.done) {
+									this.tasksWithoutDates.push(t)
+								}
+								return t.startDate >= this.startDate && t.endDate <= this.endDate
+							})
+							.map(t => {
+								return this.addGantAttributes(t)
+							})
+							.sort(function(a,b) {
+								if (a.startDate < b.startDate)
+									return -1
+								if (a.startDate > b.startDate)
+									return 1
+								return 0
+							})
 					})
-					.map(t => {
-						return this.addGantAttributes(t)
-					})
-					.sort(function(a,b) {
-						if (a.startDate < b.startDate)
-							return -1
-						if (a.startDate > b.startDate)
-							return 1
-						return 0
+					.catch(e => {
+						this.error(e, this)
 					})
 			},
 			addGantAttributes(t) {
@@ -254,6 +280,9 @@
 				t.durationDays = Math.floor((t.endDate - t.startDate) / 1000 / 60 / 60 / 24) + 1
 				t.offsetDays = Math.floor((t.startDate - this.startDate) / 1000 / 60 / 60 / 24) + 1
 				return t
+			},
+			setTaskDragged(t) {
+				this.taskDragged = t
 			},
 			resizeTask(newRect) {
 
@@ -278,6 +307,17 @@
 					this.taskDragged.startDate = startDate
 					this.taskDragged.endDate = endDate
 
+			
+					// We take the task from the overall tasks array because the one in it has bad data after it was updated once.
+					// FIXME: This is a workaround. We should use a better mechanism to get the task or, even better,
+					// prevent it from containing outdated Data in the first place.
+					for (const tt in this.theTasks) {
+						if (this.theTasks[tt].id === this.taskDragged.id) {
+							this.$set(this, 'taskDragged', this.theTasks[tt])
+							break
+						}
+					}
+
 					this.taskService.update(this.taskDragged)
 						.then(r => {
 							// If the task didn't have dates before, we'll update the list
@@ -285,13 +325,15 @@
 								for (const t in this.tasksWithoutDates) {
 									if (this.tasksWithoutDates[t].id === r.id) {
 										this.tasksWithoutDates.splice(t, 1)
+										break
 									}
 								}
 								this.theTasks.push(this.addGantAttributes(r))
 							} else {
 								for (const tt in this.theTasks) {
 									if (this.theTasks[tt].id === r.id) {
-										this.theTasks[tt] = this.addGantAttributes(r)
+										this.$set(this.theTasks, tt, this.addGantAttributes(r))
+										break
 									}
 								}
 							}

@@ -96,3 +96,4 @@ export default class TaskService extends AbstractService {
 		return model
 	}
 }
+

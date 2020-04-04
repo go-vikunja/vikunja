@@ -12,9 +12,9 @@ export default class TaskModel extends AbstractModel {
 		this.listID = Number(this.listID)
 		
 		// Make date objects from timestamps
-		this.dueDate = new Date(this.dueDate)
-		this.startDate = new Date(this.startDate)
-		this.endDate = new Date(this.endDate)
+		this.dueDate = this.dueDate ? new Date(this.dueDate) : null
+		this.startDate = this.startDate ? new Date(this.startDate) : null
+		this.endDate = this.endDate ? new Date(this.endDate) : null
 
 		// Cancel all scheduled notifications for this task to be sure to only have available notifications
 		this.cancelScheduledNotifications()
@@ -216,3 +216,4 @@ export default class TaskModel extends AbstractModel {
 		})
 	}
 }
+
