@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 All releases can be found on https://code.vikunja.io/api/releases.
 
+## [0.12] - 2020-04-04
+
+#### Added 
+
+* Add support for archiving lists and namespaces (#152)
+* Colors for lists and namespaces (#155)
+* Add build time to compile flags
+* Add proxying gravatar requests for user avatars (#148)
+* Add empty avatar provider (#149)
+* expand relative path ~/.config/vikunja to $HOME/.config/vikunja **WINDOWS** (#147)
+* Show lists as archived if their namespace is archived
+
+#### Fixed
+
+* Workaround for timezones on windows (#151)
+* Fix getting one namespace
+* Fix getting the authenticated user with caldav
+* Fix searching for config in home directories
+* Fix updating lists with an identifier
+
+#### Changed
+
+* Change release bucket
+
 ## [0.11] - 2020-03-01
 
 ### Added 
