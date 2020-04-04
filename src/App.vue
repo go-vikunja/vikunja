@@ -283,10 +283,10 @@
 				}
 			);
 
-			// Schedule a token renew every 60 minutes
+			// Schedule a token renew every minute
 			setTimeout(() => {
 				auth.renewToken()
-			}, 1000 * 60 * 60)
+			}, 1000 * 60)
 
 			// Set the motd
 			this.setMotd()
