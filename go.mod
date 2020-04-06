@@ -25,7 +25,7 @@ require (
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
 	github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a
 	github.com/beevik/etree v1.1.0 // indirect
-	github.com/c2h5oh/datasize v0.0.0-20171227191756-4eba002a5eae
+	github.com/c2h5oh/datasize v0.0.0-20200112174442-28bbd4740fee
 	github.com/client9/misspell v0.3.4
 	github.com/cpuguy83/go-md2man/v2 v2.0.0 // indirect
 	github.com/cweill/gotests v1.5.3

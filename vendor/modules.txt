@@ -24,7 +24,7 @@ github.com/asaskevich/govalidator
 github.com/beevik/etree
 # github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973
 github.com/beorn7/perks/quantile
-# github.com/c2h5oh/datasize v0.0.0-20171227191756-4eba002a5eae
+# github.com/c2h5oh/datasize v0.0.0-20200112174442-28bbd4740fee
 github.com/c2h5oh/datasize
 # github.com/client9/misspell v0.3.4
 github.com/client9/misspell
