@@ -30,7 +30,7 @@
     "@vue/cli-plugin-pwa": "4.1.1",
     "@vue/cli-service": "4.1.1",
     "axios": "0.19.2",
-    "babel-eslint": "10.0.3",
+    "babel-eslint": "10.1.0",
     "core-js": "3.5.0",
     "eslint": "6.7.2",
     "eslint-plugin-vue": "6.0.1",
