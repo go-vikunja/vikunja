@@ -78,6 +78,25 @@ steps:
       auto_tag: true
     depends_on: [ static ]
 
+  - name: telegram
+    image: appleboy/drone-telegram
+    depends_on:
+      - release
+      - docker
+    settings:
+      token:
+        from_secret: TELEGRAM_TOKEN
+      to:
+        from_secret: TELEGRAM_TO
+      message: >
+        {{repo.owner}}/{{repo.name}}: \[{{build.status}}] Build {{build.number}}
+        {{commit.author}} pushed to {{commit.branch}} {{commit.sha}}: `{{commit.message}}`
+        Build started at {{datetime build.started "2006-Jan-02T15:04:05Z" "GMT+2"}} finished at {{datetime build.finished "2006-Jan-02T15:04:05Z" "GMT+2"}}.
+    when:
+      status:
+        - success
+        - failure
+
 ---
 kind: pipeline
 name: release-version
@@ -133,3 +152,23 @@ steps:
       repo: vikunja/frontend
       auto_tag: true
     depends_on: [ static ]
+
+  - name: telegram
+    image: appleboy/drone-telegram
+    depends_on:
+      - release
+      - docker
+    settings:
+      token:
+        from_secret: TELEGRAM_TOKEN
+      to:
+        from_secret: TELEGRAM_TO
+      message: >
+        {{repo.owner}}/{{repo.name}}: \[{{build.status}}] Build {{build.number}}
+        {{commit.author}} pushed to {{commit.branch}} {{commit.sha}}: `{{commit.message}}`
+        Build started at {{datetime build.started "2006-Jan-02T15:04:05Z" "GMT+2"}} finished at {{datetime build.finished "2006-Jan-02T15:04:05Z" "GMT+2"}}.
+    when:
+      status:
+        - success
+        - failure
+
