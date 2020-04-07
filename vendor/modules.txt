@@ -118,7 +118,7 @@ github.com/mailru/easyjson/jwriter
 github.com/mattn/go-colorable
 # github.com/mattn/go-isatty v0.0.12
 github.com/mattn/go-isatty
-# github.com/mattn/go-runewidth v0.0.4
+# github.com/mattn/go-runewidth v0.0.7
 github.com/mattn/go-runewidth
 # github.com/mattn/go-sqlite3 v2.0.3+incompatible
 github.com/mattn/go-sqlite3
@@ -128,7 +128,7 @@ github.com/matttproud/golang_protobuf_extensions/pbutil
 github.com/mitchellh/mapstructure
 # github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
 github.com/mohae/deepcopy
-# github.com/olekukonko/tablewriter v0.0.1
+# github.com/olekukonko/tablewriter v0.0.4
 github.com/olekukonko/tablewriter
 # github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 github.com/op/go-logging
