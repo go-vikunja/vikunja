@@ -147,6 +147,8 @@ github.com/google/pprof v0.0.0-20181206194817-3ea8567a2e57/go.mod h1:zfwlbNMJ+OI
 github.com/googleapis/gax-go/v2 v2.0.4/go.mod h1:0Wqv26UfaUD9n4G6kQubkQ+KchISgw+vpHVxEJEs9eg=
 github.com/gordonklaus/ineffassign v0.0.0-20180909121442-1003c8bd00dc h1:cJlkeAx1QYgO5N80aF5xRGstVsRQwgLR7uA2FnP1ZjY=
 github.com/gordonklaus/ineffassign v0.0.0-20180909121442-1003c8bd00dc/go.mod h1:cuNKsD1zp2v6XfE/orVX2QE1LC+i254ceGcVeDT3pTU=
+github.com/gordonklaus/ineffassign v0.0.0-20200309095847-7953dde2c7bf h1:vc7Dmrk4JwS0ZPS6WZvWlwDflgDTA26jItmbSj83nug=
+github.com/gordonklaus/ineffassign v0.0.0-20200309095847-7953dde2c7bf/go.mod h1:cuNKsD1zp2v6XfE/orVX2QE1LC+i254ceGcVeDT3pTU=
 github.com/gorilla/context v1.1.1/go.mod h1:kBGZzfjB9CEq2AlWe17Uuf7NDRt0dE0s8S51q0aT7Yg=
 github.com/gorilla/mux v1.6.2/go.mod h1:1lud6UwP+6orDFRuTfBEV8e9/aOM/c4fVVCaMa2zaAs=
 github.com/hashicorp/golang-lru v0.5.0/go.mod h1:/m3WP610KZHVQ1SGc6re/UDhFvYD7pJ4Ao+sR/qLZy8=

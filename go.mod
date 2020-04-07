@@ -41,7 +41,7 @@ require (
 	github.com/go-xorm/core v0.6.2 // indirect
 	github.com/go-xorm/xorm v0.7.9 // indirect
 	github.com/golang/protobuf v1.3.2 // indirect
-	github.com/gordonklaus/ineffassign v0.0.0-20180909121442-1003c8bd00dc
+	github.com/gordonklaus/ineffassign v0.0.0-20200309095847-7953dde2c7bf
 	github.com/imdario/mergo v0.3.7
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/jgautheron/goconst v0.0.0-20200227150835-cda7ea3bf591

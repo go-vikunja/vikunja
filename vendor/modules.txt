@@ -74,7 +74,7 @@ github.com/go-sql-driver/mysql
 github.com/go-testfixtures/testfixtures/v3
 # github.com/golang/protobuf v1.3.2
 github.com/golang/protobuf/proto
-# github.com/gordonklaus/ineffassign v0.0.0-20180909121442-1003c8bd00dc
+# github.com/gordonklaus/ineffassign v0.0.0-20200309095847-7953dde2c7bf
 github.com/gordonklaus/ineffassign
 # github.com/hashicorp/hcl v1.0.0
 github.com/hashicorp/hcl

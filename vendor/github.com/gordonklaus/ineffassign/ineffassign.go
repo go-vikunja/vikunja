@@ -282,18 +282,17 @@ func (bld *builder) Visit(n ast.Node) ast.Visitor {
 		for _, x := range n.Results {
 			bld.walk(x)
 		}
-		res := bld.results[len(bld.results)-1]
-		if res == nil {
-			break
-		}
-		for _, f := range res.List {
-			for _, id := range f.Names {
-				if n.Results != nil {
-					bld.assign(id)
+		if res := bld.results[len(bld.results)-1]; res != nil {
+			for _, f := range res.List {
+				for _, id := range f.Names {
+					if n.Results != nil {
+						bld.assign(id)
+					}
+					bld.use(id)
 				}
-				bld.use(id)
 			}
 		}
+		bld.newBlock()
 	case *ast.SendStmt:
 		bld.maybePanic()
 		return bld
@@ -368,14 +367,16 @@ func isZeroInitializer(x ast.Expr) bool {
 		x = c.Args[0]
 	}
 
-	b, ok := x.(*ast.BasicLit)
-	if !ok {
-		return false
+	switch x := x.(type) {
+	case *ast.BasicLit:
+		switch x.Value {
+		case "0", "0.0", "0.", ".0", `""`:
+			return true
+		}
+	case *ast.Ident:
+		return x.Name == "false" && x.Obj == nil
 	}
-	switch b.Value {
-	case "0", "0.0", "0.", ".0", `""`:
-		return true
-	}
+
 	return false
 }
 
