@@ -95,6 +95,15 @@ func (v *treeVisitor) Visit(node ast.Node) ast.Visitor {
 				v.addString(lit.Value, lit.Pos())
 			}
 		}
+
+	// fn("http://")
+	case *ast.CallExpr:
+		for _, item := range t.Args {
+			lit, ok := item.(*ast.BasicLit)
+			if ok && v.isSupported(lit.Kind) {
+				v.addString(lit.Value, lit.Pos())
+			}
+		}
 	}
 
 	return v
@@ -102,7 +111,8 @@ func (v *treeVisitor) Visit(node ast.Node) ast.Visitor {
 
 // addString adds a string in the map along with its position in the tree.
 func (v *treeVisitor) addString(str string, pos token.Pos) {
-	str = strings.Replace(str, `"`, "", 2)
+	// Drop first and last character, quote, backquote...
+	str = str[1 : len(str)-1]
 
 	// Ignore empty strings
 	if len(str) == 0 {

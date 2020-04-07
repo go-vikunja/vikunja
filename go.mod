@@ -44,7 +44,7 @@ require (
 	github.com/gordonklaus/ineffassign v0.0.0-20180909121442-1003c8bd00dc
 	github.com/imdario/mergo v0.3.7
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
-	github.com/jgautheron/goconst v0.0.0-20170703170152-9740945f5dcb
+	github.com/jgautheron/goconst v0.0.0-20200227150835-cda7ea3bf591
 	github.com/labstack/echo/v4 v4.1.14
 	github.com/labstack/gommon v0.3.0
 	github.com/laurent22/ical-go v0.1.1-0.20181107184520-7e5d6ade8eef

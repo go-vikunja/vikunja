@@ -91,7 +91,7 @@ github.com/hashicorp/hcl/json/token
 github.com/imdario/mergo
 # github.com/inconshreveable/mousetrap v1.0.0
 github.com/inconshreveable/mousetrap
-# github.com/jgautheron/goconst v0.0.0-20170703170152-9740945f5dcb
+# github.com/jgautheron/goconst v0.0.0-20200227150835-cda7ea3bf591
 github.com/jgautheron/goconst
 github.com/jgautheron/goconst/cmd/goconst
 # github.com/labstack/echo/v4 v4.1.14
