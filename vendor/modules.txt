@@ -165,7 +165,7 @@ github.com/samedi/caldav-go/global
 github.com/samedi/caldav-go/handlers
 github.com/samedi/caldav-go/ixml
 github.com/samedi/caldav-go/lib
-# github.com/shurcooL/httpfs v0.0.0-20190527155220-6a4d4a70508b
+# github.com/shurcooL/httpfs v0.0.0-20190707220628-8d4bc4ba7749
 github.com/shurcooL/httpfs/html/vfstemplate
 github.com/shurcooL/httpfs/path/vfspath
 github.com/shurcooL/httpfs/vfsutil
