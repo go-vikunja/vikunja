@@ -271,7 +271,7 @@ honnef.co/go/tools/staticcheck/vrp
 honnef.co/go/tools/stylecheck
 honnef.co/go/tools/unused
 honnef.co/go/tools/version
-# src.techknowlogick.com/xgo v0.0.0-20190507142556-a5b29ecb0ff4
+# src.techknowlogick.com/xgo v0.0.0-20200319213703-c43d4c44a6ac
 src.techknowlogick.com/xgo
 # src.techknowlogick.com/xormigrate v1.1.0
 src.techknowlogick.com/xormigrate

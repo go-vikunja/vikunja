@@ -476,6 +476,8 @@ honnef.co/go/tools v0.0.0-20190418001031-e561f6794a2a h1:LJwr7TCTghdatWv40WobzlK
 honnef.co/go/tools v0.0.0-20190418001031-e561f6794a2a/go.mod h1:rf3lG4BRIbNafJWhAfAdb/ePZxsR/4RtNHQocxwk9r4=
 src.techknowlogick.com/xgo v0.0.0-20190507142556-a5b29ecb0ff4 h1:DZKMg4qnT7UIyB5ZaC6ZqltF2K5KhA1oQ2PdxOLZ3jg=
 src.techknowlogick.com/xgo v0.0.0-20190507142556-a5b29ecb0ff4/go.mod h1:Ood88figJtEukTnU20P1IrXhyAkbOIGi4YzmeHVtGH0=
+src.techknowlogick.com/xgo v0.0.0-20200319213703-c43d4c44a6ac h1:7yl6vmo+RWjT/qFoMlJE1smvs83j/c7x9sDNTz3n/BM=
+src.techknowlogick.com/xgo v0.0.0-20200319213703-c43d4c44a6ac/go.mod h1:31CE1YKtDOrKTk9PSnjTpe6YbO6W/0LTYZ1VskL09oU=
 src.techknowlogick.com/xormigrate v1.1.0 h1:Ob79c1pOO+voMB9roa2eHZByT+TODwC51+Mn9e3HoTI=
 src.techknowlogick.com/xormigrate v1.1.0/go.mod h1:IMdvIk60uPX+IUsaXbdtqFzl3n7PfRg/cSZxxsiCWf8=
 xorm.io/builder v0.3.6 h1:ha28mQ2M+TFx96Hxo+iq6tQgnkC9IZkM6D8w9sKHHF8=

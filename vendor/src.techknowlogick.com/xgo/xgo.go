@@ -18,6 +18,7 @@ import (
 	"os/exec"
 	"os/user"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -31,8 +32,8 @@ func init() {
 		depsCache = filepath.Join(home, ".xgo-cache")
 		return
 	}
-	if user, err := user.Current(); user != nil && err == nil && user.HomeDir != "" {
-		depsCache = filepath.Join(user.HomeDir, ".xgo-cache")
+	if usr, err := user.Current(); usr != nil && err == nil && usr.HomeDir != "" {
+		depsCache = filepath.Join(usr.HomeDir, ".xgo-cache")
 		return
 	}
 	depsCache = filepath.Join(os.TempDir(), "xgo-cache")
@@ -70,22 +71,24 @@ type ConfigFlags struct {
 
 // Command line arguments to pass to go build
 var (
-	buildVerbose = flag.Bool("v", false, "Print the names of packages as they are compiled")
-	buildSteps   = flag.Bool("x", false, "Print the command as executing the builds")
-	buildRace    = flag.Bool("race", false, "Enable data race detection (supported only on amd64)")
-	buildTags    = flag.String("tags", "", "List of build tags to consider satisfied during the build")
-	buildLdFlags = flag.String("ldflags", "", "Arguments to pass on each go tool link invocation")
-	buildMode    = flag.String("buildmode", "default", "Indicates which kind of object file to build")
+	buildVerbose  = flag.Bool("v", false, "Print the names of packages as they are compiled")
+	buildSteps    = flag.Bool("x", false, "Print the command as executing the builds")
+	buildRace     = flag.Bool("race", false, "Enable data race detection (supported only on amd64)")
+	buildTags     = flag.String("tags", "", "List of build tags to consider satisfied during the build")
+	buildLdFlags  = flag.String("ldflags", "", "Arguments to pass on each go tool link invocation")
+	buildMode     = flag.String("buildmode", "default", "Indicates which kind of object file to build")
+	buildTrimpath = flag.Bool("trimpath", false, "Indicates if trimpath should be applied to build")
 )
 
 // BuildFlags is a simple collection of flags to fine tune a build.
 type BuildFlags struct {
-	Verbose bool   // Print the names of packages as they are compiled
-	Steps   bool   // Print the command as executing the builds
-	Race    bool   // Enable data race detection (supported only on amd64)
-	Tags    string // List of build tags to consider satisfied during the build
-	LdFlags string // Arguments to pass on each go tool link invocation
-	Mode    string // Indicates which kind of object file to build
+	Verbose  bool   // Print the names of packages as they are compiled
+	Steps    bool   // Print the command as executing the builds
+	Race     bool   // Enable data race detection (supported only on amd64)
+	Tags     string // List of build tags to consider satisfied during the build
+	LdFlags  string // Arguments to pass on each go tool link invocation
+	Mode     string // Indicates which kind of object file to build
+	Trimpath bool   // Indicates if trimpath should be applied to build
 }
 
 func main() {
@@ -174,12 +177,13 @@ func main() {
 		Targets:      strings.Split(*targets, ","),
 	}
 	flags := &BuildFlags{
-		Verbose: *buildVerbose,
-		Steps:   *buildSteps,
-		Race:    *buildRace,
-		Tags:    *buildTags,
-		LdFlags: *buildLdFlags,
-		Mode:    *buildMode,
+		Verbose:  *buildVerbose,
+		Steps:    *buildSteps,
+		Race:     *buildRace,
+		Tags:     *buildTags,
+		LdFlags:  *buildLdFlags,
+		Mode:     *buildMode,
+		Trimpath: *buildTrimpath,
 	}
 	folder, err := os.Getwd()
 	if err != nil {
@@ -219,7 +223,23 @@ func checkDockerImage(image string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
+	return compareOutAndImage(out, image)
+}
+
+// compare output of docker images and image name
+func compareOutAndImage(out []byte, image string) (bool, error) {
+
+	if strings.Contains(image, ":") {
+		// get repository and tag
+		res := strings.SplitN(image, ":", 2)
+		r, t := res[0], res[1]
+		match, _ := regexp.Match(fmt.Sprintf(`%s\s+%s`, r, t), out)
+		return match, nil
+	}
+
+	// default find repository without tag
 	return bytes.Contains(out, []byte(image)), nil
+
 }
 
 // Pulls an image from the docker registry.
@@ -290,10 +310,16 @@ func compile(image string, config *ConfigFlags, flags *BuildFlags, folder string
 	// Assemble and run the cross compilation command
 	fmt.Printf("Cross compiling %s...\n", config.Repository)
 
+	// Alter paths so they work for Windows
+	// Does not affect Linux paths
+	re := regexp.MustCompile("([A-Z]):")
+	folder_w := filepath.ToSlash(re.ReplaceAllString(folder, "/$1"))
+	depsCache_w := filepath.ToSlash(re.ReplaceAllString(depsCache, "/$1"))
+
 	args := []string{
 		"run", "--rm",
-		"-v", folder + ":/build",
-		"-v", depsCache + ":/deps-cache:ro",
+		"-v", folder_w + ":/build",
+		"-v", depsCache_w + ":/deps-cache:ro",
 		"-e", "REPO_REMOTE=" + config.Remote,
 		"-e", "REPO_BRANCH=" + config.Branch,
 		"-e", "PACK=" + config.Package,
@@ -306,7 +332,9 @@ func compile(image string, config *ConfigFlags, flags *BuildFlags, folder string
 		"-e", fmt.Sprintf("FLAG_TAGS=%s", flags.Tags),
 		"-e", fmt.Sprintf("FLAG_LDFLAGS=%s", flags.LdFlags),
 		"-e", fmt.Sprintf("FLAG_BUILDMODE=%s", flags.Mode),
+		"-e", fmt.Sprintf("FLAG_TRIMPATH=%v", flags.Trimpath),
 		"-e", "TARGETS=" + strings.Replace(strings.Join(config.Targets, " "), "*", ".", -1),
+		"-e", fmt.Sprintf("GOPROXY=%s", os.Getenv("GOPROXY")),
 	}
 	if usesModules {
 		args = append(args, []string{"-e", "GO111MODULE=on"}...)
@@ -363,6 +391,7 @@ func compileContained(config *ConfigFlags, flags *BuildFlags, folder string) err
 		fmt.Sprintf("FLAG_TAGS=%s", flags.Tags),
 		fmt.Sprintf("FLAG_LDFLAGS=%s", flags.LdFlags),
 		fmt.Sprintf("FLAG_BUILDMODE=%s", flags.Mode),
+		fmt.Sprintf("FLAG_TRIMPATH=%v", flags.Trimpath),
 		"TARGETS=" + strings.Replace(strings.Join(config.Targets, " "), "*", ".", -1),
 	}
 	if local {
