@@ -27,7 +27,6 @@ require (
 	github.com/beevik/etree v1.1.0 // indirect
 	github.com/c2h5oh/datasize v0.0.0-20200112174442-28bbd4740fee
 	github.com/client9/misspell v0.3.4
-	github.com/cpuguy83/go-md2man/v2 v2.0.0 // indirect
 	github.com/cweill/gotests v1.5.3
 	github.com/d4l3k/messagediff v1.2.1 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
@@ -43,7 +42,6 @@ require (
 	github.com/golang/protobuf v1.3.2 // indirect
 	github.com/gordonklaus/ineffassign v0.0.0-20200309095847-7953dde2c7bf
 	github.com/imdario/mergo v0.3.9
-	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/jgautheron/goconst v0.0.0-20200227150835-cda7ea3bf591
 	github.com/labstack/echo/v4 v4.1.16
 	github.com/labstack/gommon v0.3.0
@@ -60,7 +58,7 @@ require (
 	github.com/shurcooL/httpfs v0.0.0-20190707220628-8d4bc4ba7749
 	github.com/shurcooL/vfsgen v0.0.0-20181202132449-6a9ea43bcacd
 	github.com/spf13/afero v1.2.2
-	github.com/spf13/cobra v0.0.3
+	github.com/spf13/cobra v0.0.7
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/viper v1.6.2
 	github.com/stretchr/testify v1.4.0
