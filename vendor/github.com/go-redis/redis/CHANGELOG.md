@@ -1,9 +1,5 @@
 # Changelog
 
-## Unreleased
-
-- Cluster and Ring pipelines process commands for each node in its own goroutine.
-
 ## 6.14
 
 - Added Options.MinIdleConns.

@@ -34,12 +34,12 @@ require (
 	github.com/garyburd/redigo v1.6.0 // indirect
 	github.com/go-openapi/jsonreference v0.19.3 // indirect
 	github.com/go-openapi/spec v0.19.4 // indirect
-	github.com/go-redis/redis v6.15.7+incompatible
+	github.com/go-redis/redis v6.14.0+incompatible
+	github.com/go-redis/redis/v7 v7.2.0 // indirect
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/go-testfixtures/testfixtures/v3 v3.1.1
 	github.com/go-xorm/core v0.6.2 // indirect
 	github.com/go-xorm/xorm v0.7.9 // indirect
-	github.com/golang/protobuf v1.3.2 // indirect
 	github.com/gordonklaus/ineffassign v0.0.0-20200309095847-7953dde2c7bf
 	github.com/imdario/mergo v0.3.9
 	github.com/jgautheron/goconst v0.0.0-20200227150835-cda7ea3bf591
