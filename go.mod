@@ -19,6 +19,7 @@ module code.vikunja.io/api
 require (
 	4d63.com/embedfiles v1.0.0 // indirect
 	4d63.com/tz v1.1.0
+	cloud.google.com/go v0.37.4 // indirect
 	code.vikunja.io/web v0.0.0-20200208214421-c90649369427
 	gitea.com/xorm/tests v0.5.6 // indirect
 	gitea.com/xorm/xorm-redis-cache v0.0.0-20191113062523-5a6a9e2ab9f2
@@ -32,14 +33,15 @@ require (
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/fzipp/gocyclo v0.0.0-20150627053110-6acd4345c835
 	github.com/garyburd/redigo v1.6.0 // indirect
+	github.com/go-logfmt/logfmt v0.4.0 // indirect
 	github.com/go-openapi/jsonreference v0.19.3 // indirect
 	github.com/go-openapi/spec v0.19.4 // indirect
 	github.com/go-redis/redis v6.15.7+incompatible
-	github.com/go-redis/redis/v7 v7.2.0 // indirect
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/go-testfixtures/testfixtures/v3 v3.1.1
 	github.com/go-xorm/core v0.6.2 // indirect
 	github.com/go-xorm/xorm v0.7.9 // indirect
+	github.com/golang/protobuf v1.3.2 // indirect
 	github.com/gordonklaus/ineffassign v0.0.0-20200309095847-7953dde2c7bf
 	github.com/imdario/mergo v0.3.9
 	github.com/jgautheron/goconst v0.0.0-20200227150835-cda7ea3bf591
@@ -51,6 +53,8 @@ require (
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
 	github.com/olekukonko/tablewriter v0.0.4
+	github.com/onsi/ginkgo v1.10.1 // indirect
+	github.com/onsi/gomega v1.7.0 // indirect
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/pelletier/go-toml v1.4.0 // indirect
 	github.com/prometheus/client_golang v0.9.4
@@ -68,6 +72,7 @@ require (
 	golang.org/x/crypto v0.0.0-20200406173513-056763e48d71
 	golang.org/x/lint v0.0.0-20200302205851-738671d3881b
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
+	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 	gopkg.in/d4l3k/messagediff.v1 v1.2.1
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 	honnef.co/go/tools v0.0.0-20190418001031-e561f6794a2a

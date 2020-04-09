@@ -1,7 +1,9 @@
 package redis
 
 import (
+	"errors"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -10,7 +12,9 @@ import (
 	"github.com/go-redis/redis/internal/proto"
 )
 
-// PubSub implements Pub/Sub commands bas described in
+var errPingTimeout = errors.New("redis: ping timeout")
+
+// PubSub implements Pub/Sub commands as described in
 // http://redis.io/topics/pubsub. Message receiving is NOT safe
 // for concurrent use by multiple goroutines.
 //
@@ -26,14 +30,21 @@ type PubSub struct {
 	cn       *pool.Conn
 	channels map[string]struct{}
 	patterns map[string]struct{}
-	closed   bool
-	exit     chan struct{}
+
+	closed bool
+	exit   chan struct{}
 
 	cmd *Cmd
 
 	chOnce sync.Once
 	ch     chan *Message
 	ping   chan struct{}
+}
+
+func (c *PubSub) String() string {
+	channels := mapKeys(c.channels)
+	channels = append(channels, mapKeys(c.patterns)...)
+	return fmt.Sprintf("PubSub(%s)", strings.Join(channels, ", "))
 }
 
 func (c *PubSub) init() {
@@ -51,7 +62,6 @@ func (c *PubSub) _conn(newChannels []string) (*pool.Conn, error) {
 	if c.closed {
 		return nil, pool.ErrClosed
 	}
-
 	if c.cn != nil {
 		return c.cn, nil
 	}
@@ -387,16 +397,39 @@ func (c *PubSub) ReceiveMessage() (*Message, error) {
 // It periodically sends Ping messages to test connection health.
 // The channel is closed with PubSub. Receive* APIs can not be used
 // after channel is created.
+//
+// If the Go channel is full for 30 seconds the message is dropped.
 func (c *PubSub) Channel() <-chan *Message {
-	c.chOnce.Do(c.initChannel)
+	return c.channel(100)
+}
+
+// ChannelSize is like Channel, but creates a Go channel
+// with specified buffer size.
+func (c *PubSub) ChannelSize(size int) <-chan *Message {
+	return c.channel(size)
+}
+
+func (c *PubSub) channel(size int) <-chan *Message {
+	c.chOnce.Do(func() {
+		c.initChannel(size)
+	})
+	if cap(c.ch) != size {
+		err := fmt.Errorf("redis: PubSub.Channel is called with different buffer size")
+		panic(err)
+	}
 	return c.ch
 }
 
-func (c *PubSub) initChannel() {
-	c.ch = make(chan *Message, 100)
-	c.ping = make(chan struct{}, 10)
+func (c *PubSub) initChannel(size int) {
+	const timeout = 30 * time.Second
+
+	c.ch = make(chan *Message, size)
+	c.ping = make(chan struct{}, 1)
 
 	go func() {
+		timer := time.NewTimer(timeout)
+		timer.Stop()
+
 		var errCount int
 		for {
 			msg, err := c.Receive()
@@ -411,6 +444,7 @@ func (c *PubSub) initChannel() {
 				errCount++
 				continue
 			}
+
 			errCount = 0
 
 			// Any message is as good as a ping.
@@ -425,21 +459,28 @@ func (c *PubSub) initChannel() {
 			case *Pong:
 				// Ignore.
 			case *Message:
-				c.ch <- msg
+				timer.Reset(timeout)
+				select {
+				case c.ch <- msg:
+					if !timer.Stop() {
+						<-timer.C
+					}
+				case <-timer.C:
+					internal.Logf(
+						"redis: %s channel is full for %s (message is dropped)",
+						c, timeout)
+				}
 			default:
-				internal.Logf("redis: unknown message: %T", msg)
+				internal.Logf("redis: unknown message type: %T", msg)
 			}
 		}
 	}()
 
 	go func() {
-		const timeout = 5 * time.Second
-
 		timer := time.NewTimer(timeout)
 		timer.Stop()
 
 		healthy := true
-		var pingErr error
 		for {
 			timer.Reset(timeout)
 			select {
@@ -449,10 +490,13 @@ func (c *PubSub) initChannel() {
 					<-timer.C
 				}
 			case <-timer.C:
-				pingErr = c.Ping()
+				pingErr := c.Ping()
 				if healthy {
 					healthy = false
 				} else {
+					if pingErr == nil {
+						pingErr = errPingTimeout
+					}
 					c.mu.Lock()
 					c._reconnect(pingErr)
 					c.mu.Unlock()

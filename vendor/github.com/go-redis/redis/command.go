@@ -183,7 +183,7 @@ func (cmd *Cmd) Int() (int, error) {
 	case string:
 		return strconv.Atoi(val)
 	default:
-		err := fmt.Errorf("redis: unexpected type=%T for Int64", val)
+		err := fmt.Errorf("redis: unexpected type=%T for Int", val)
 		return 0, err
 	}
 }
@@ -214,6 +214,25 @@ func (cmd *Cmd) Uint64() (uint64, error) {
 		return strconv.ParseUint(val, 10, 64)
 	default:
 		err := fmt.Errorf("redis: unexpected type=%T for Uint64", val)
+		return 0, err
+	}
+}
+
+func (cmd *Cmd) Float32() (float32, error) {
+	if cmd.err != nil {
+		return 0, cmd.err
+	}
+	switch val := cmd.val.(type) {
+	case int64:
+		return float32(val), nil
+	case string:
+		f, err := strconv.ParseFloat(val, 32)
+		if err != nil {
+			return 0, err
+		}
+		return float32(f), nil
+	default:
+		err := fmt.Errorf("redis: unexpected type=%T for Float32", val)
 		return 0, err
 	}
 }
@@ -585,6 +604,17 @@ func (cmd *StringCmd) Uint64() (uint64, error) {
 	return strconv.ParseUint(cmd.Val(), 10, 64)
 }
 
+func (cmd *StringCmd) Float32() (float32, error) {
+	if cmd.err != nil {
+		return 0, cmd.err
+	}
+	f, err := strconv.ParseFloat(cmd.Val(), 32)
+	if err != nil {
+		return 0, err
+	}
+	return float32(f), nil
+}
+
 func (cmd *StringCmd) Float64() (float64, error) {
 	if cmd.err != nil {
 		return 0, cmd.err
@@ -687,12 +717,12 @@ func (cmd *StringSliceCmd) readReply(rd *proto.Reader) error {
 func stringSliceParser(rd *proto.Reader, n int64) (interface{}, error) {
 	ss := make([]string, 0, n)
 	for i := int64(0); i < n; i++ {
-		s, err := rd.ReadString()
-		if err == Nil {
+		switch s, err := rd.ReadString(); {
+		case err == Nil:
 			ss = append(ss, "")
-		} else if err != nil {
+		case err != nil:
 			return nil, err
-		} else {
+		default:
 			ss = append(ss, s)
 		}
 	}
@@ -969,14 +999,20 @@ func xMessageSliceParser(rd *proto.Reader, n int64) (interface{}, error) {
 				return nil, err
 			}
 
+			var values map[string]interface{}
+
 			v, err := rd.ReadArrayReply(stringInterfaceMapParser)
 			if err != nil {
-				return nil, err
+				if err != proto.Nil {
+					return nil, err
+				}
+			} else {
+				values = v.(map[string]interface{})
 			}
 
 			msgs = append(msgs, XMessage{
 				ID:     id,
-				Values: v.(map[string]interface{}),
+				Values: values,
 			})
 			return nil, nil
 		})
@@ -1333,6 +1369,68 @@ func zSliceParser(rd *proto.Reader, n int64) (interface{}, error) {
 		}
 	}
 	return zz, nil
+}
+
+//------------------------------------------------------------------------------
+
+type ZWithKeyCmd struct {
+	baseCmd
+
+	val ZWithKey
+}
+
+var _ Cmder = (*ZWithKeyCmd)(nil)
+
+func NewZWithKeyCmd(args ...interface{}) *ZWithKeyCmd {
+	return &ZWithKeyCmd{
+		baseCmd: baseCmd{_args: args},
+	}
+}
+
+func (cmd *ZWithKeyCmd) Val() ZWithKey {
+	return cmd.val
+}
+
+func (cmd *ZWithKeyCmd) Result() (ZWithKey, error) {
+	return cmd.Val(), cmd.Err()
+}
+
+func (cmd *ZWithKeyCmd) String() string {
+	return cmdString(cmd, cmd.val)
+}
+
+func (cmd *ZWithKeyCmd) readReply(rd *proto.Reader) error {
+	var v interface{}
+	v, cmd.err = rd.ReadArrayReply(zWithKeyParser)
+	if cmd.err != nil {
+		return cmd.err
+	}
+	cmd.val = v.(ZWithKey)
+	return nil
+}
+
+// Implements proto.MultiBulkParse
+func zWithKeyParser(rd *proto.Reader, n int64) (interface{}, error) {
+	if n != 3 {
+		return nil, fmt.Errorf("got %d elements, expected 3", n)
+	}
+
+	var z ZWithKey
+	var err error
+
+	z.Key, err = rd.ReadString()
+	if err != nil {
+		return nil, err
+	}
+	z.Member, err = rd.ReadString()
+	if err != nil {
+		return nil, err
+	}
+	z.Score, err = rd.ReadFloatReply()
+	if err != nil {
+		return nil, err
+	}
+	return z, nil
 }
 
 //------------------------------------------------------------------------------
