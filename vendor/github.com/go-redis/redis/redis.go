@@ -26,7 +26,6 @@ func SetLogger(logger *log.Logger) {
 type baseClient struct {
 	opt      *Options
 	connPool pool.Pooler
-	limiter  Limiter
 
 	process           func(Cmder) error
 	processPipeline   func([]Cmder) error
@@ -51,80 +50,45 @@ func (c *baseClient) newConn() (*pool.Conn, error) {
 		return nil, err
 	}
 
-	err = c.initConn(cn)
-	if err != nil {
-		_ = c.connPool.CloseConn(cn)
-		return nil, err
+	if cn.InitedAt.IsZero() {
+		if err := c.initConn(cn); err != nil {
+			_ = c.connPool.CloseConn(cn)
+			return nil, err
+		}
 	}
 
 	return cn, nil
 }
 
 func (c *baseClient) getConn() (*pool.Conn, error) {
-	if c.limiter != nil {
-		err := c.limiter.Allow()
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	cn, err := c._getConn()
-	if err != nil {
-		if c.limiter != nil {
-			c.limiter.ReportResult(err)
-		}
-		return nil, err
-	}
-	return cn, nil
-}
-
-func (c *baseClient) _getConn() (*pool.Conn, error) {
 	cn, err := c.connPool.Get()
 	if err != nil {
 		return nil, err
 	}
 
-	err = c.initConn(cn)
-	if err != nil {
-		c.connPool.Remove(cn, err)
-		if err := internal.Unwrap(err); err != nil {
+	if cn.InitedAt.IsZero() {
+		err := c.initConn(cn)
+		if err != nil {
+			c.connPool.Remove(cn)
 			return nil, err
 		}
-		return nil, err
 	}
 
 	return cn, nil
 }
 
-func (c *baseClient) releaseConn(cn *pool.Conn, err error) {
-	if c.limiter != nil {
-		c.limiter.ReportResult(err)
-	}
-
+func (c *baseClient) releaseConn(cn *pool.Conn, err error) bool {
 	if internal.IsBadConn(err, false) {
-		c.connPool.Remove(cn, err)
-	} else {
-		c.connPool.Put(cn)
-	}
-}
-
-func (c *baseClient) releaseConnStrict(cn *pool.Conn, err error) {
-	if c.limiter != nil {
-		c.limiter.ReportResult(err)
+		c.connPool.Remove(cn)
+		return false
 	}
 
-	if err == nil || internal.IsRedisError(err) {
-		c.connPool.Put(cn)
-	} else {
-		c.connPool.Remove(cn, err)
-	}
+	c.connPool.Put(cn)
+	return true
 }
 
 func (c *baseClient) initConn(cn *pool.Conn) error {
-	if cn.Inited {
-		return nil
-	}
-	cn.Inited = true
+	cn.InitedAt = time.Now()
 
 	if c.opt.Password == "" &&
 		c.opt.DB == 0 &&
@@ -162,7 +126,7 @@ func (c *baseClient) initConn(cn *pool.Conn) error {
 // Do creates a Cmd from the args and processes the cmd.
 func (c *baseClient) Do(args ...interface{}) *Cmd {
 	cmd := NewCmd(args...)
-	_ = c.Process(cmd)
+	c.Process(cmd)
 	return cmd
 }
 
@@ -204,7 +168,9 @@ func (c *baseClient) defaultProcess(cmd Cmder) error {
 			return err
 		}
 
-		err = cn.WithReader(c.cmdTimeout(cmd), cmd.readReply)
+		err = cn.WithReader(c.cmdTimeout(cmd), func(rd *proto.Reader) error {
+			return cmd.readReply(rd)
+		})
 		c.releaseConn(cn, err)
 		if err != nil && internal.IsRetryableError(err, cmd.readTimeout() == nil) {
 			continue
@@ -222,11 +188,7 @@ func (c *baseClient) retryBackoff(attempt int) time.Duration {
 
 func (c *baseClient) cmdTimeout(cmd Cmder) time.Duration {
 	if timeout := cmd.readTimeout(); timeout != nil {
-		t := *timeout
-		if t == 0 {
-			return 0
-		}
-		return t + 10*time.Second
+		return readTimeout(*timeout)
 	}
 	return c.opt.ReadTimeout
 }
@@ -238,7 +200,7 @@ func (c *baseClient) cmdTimeout(cmd Cmder) time.Duration {
 func (c *baseClient) Close() error {
 	var firstErr error
 	if c.onClose != nil {
-		if err := c.onClose(); err != nil {
+		if err := c.onClose(); err != nil && firstErr == nil {
 			firstErr = err
 		}
 	}
@@ -282,7 +244,12 @@ func (c *baseClient) generalProcessPipeline(cmds []Cmder, p pipelineProcessor) e
 		}
 
 		canRetry, err := p(cn, cmds)
-		c.releaseConnStrict(cn, err)
+
+		if err == nil || internal.IsRedisError(err) {
+			c.connPool.Put(cn)
+			break
+		}
+		c.connPool.Remove(cn)
 
 		if !canRetry || !internal.IsRetryableError(err, true) {
 			break
@@ -352,7 +319,7 @@ func txPipelineReadQueued(rd *proto.Reader, cmds []Cmder) error {
 		return err
 	}
 
-	for range cmds {
+	for _ = range cmds {
 		err = statusCmd.readReply(rd)
 		if err != nil && !internal.IsRedisError(err) {
 			return err
@@ -424,12 +391,12 @@ func (c *Client) WithContext(ctx context.Context) *Client {
 	if ctx == nil {
 		panic("nil context")
 	}
-	c2 := c.clone()
+	c2 := c.copy()
 	c2.ctx = ctx
 	return c2
 }
 
-func (c *Client) clone() *Client {
+func (c *Client) copy() *Client {
 	cp := *c
 	cp.init()
 	return &cp
@@ -438,11 +405,6 @@ func (c *Client) clone() *Client {
 // Options returns read-only Options that were used to create the client.
 func (c *Client) Options() *Options {
 	return c.opt
-}
-
-func (c *Client) SetLimiter(l Limiter) *Client {
-	c.limiter = l
-	return c
 }
 
 type PoolStats pool.Stats
@@ -493,30 +455,6 @@ func (c *Client) pubSub() *PubSub {
 
 // Subscribe subscribes the client to the specified channels.
 // Channels can be omitted to create empty subscription.
-// Note that this method does not wait on a response from Redis, so the
-// subscription may not be active immediately. To force the connection to wait,
-// you may call the Receive() method on the returned *PubSub like so:
-//
-//    sub := client.Subscribe(queryResp)
-//    iface, err := sub.Receive()
-//    if err != nil {
-//        // handle error
-//    }
-//
-//    // Should be *Subscription, but others are possible if other actions have been
-//    // taken on sub since it was created.
-//    switch iface.(type) {
-//    case *Subscription:
-//        // subscribe succeeded
-//    case *Message:
-//        // received first message
-//    case *Pong:
-//        // pong received
-//    default:
-//        // handle error
-//    }
-//
-//    ch := sub.Channel()
 func (c *Client) Subscribe(channels ...string) *PubSub {
 	pubsub := c.pubSub()
 	if len(channels) > 0 {
@@ -544,12 +482,10 @@ type Conn struct {
 }
 
 func newConn(opt *Options, cn *pool.Conn) *Conn {
-	connPool := pool.NewSingleConnPool(nil)
-	connPool.SetConn(cn)
 	c := Conn{
 		baseClient: baseClient{
 			opt:      opt,
-			connPool: connPool,
+			connPool: pool.NewSingleConnPool(cn),
 		},
 	}
 	c.baseClient.init()
