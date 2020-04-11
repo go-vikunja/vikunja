@@ -126,7 +126,7 @@ func TestTaskCollection(t *testing.T) {
 			t.Run("invalid sort parameter", func(t *testing.T) {
 				_, err := testHandler.testReadAllWithUser(url.Values{"sort_by": []string{"loremipsum"}}, urlParams)
 				assert.Error(t, err)
-				assertHandlerErrorCode(t, err, models.ErrCodeInvalidSortParam)
+				assertHandlerErrorCode(t, err, models.ErrCodeInvalidTaskField)
 			})
 			t.Run("invalid sort order", func(t *testing.T) {
 				_, err := testHandler.testReadAllWithUser(url.Values{"sort_by": []string{"id"}, "order_by": []string{"loremipsum"}}, urlParams)
@@ -145,7 +145,14 @@ func TestTaskCollection(t *testing.T) {
 		})
 		t.Run("Date range", func(t *testing.T) {
 			t.Run("start and end date", func(t *testing.T) {
-				rec, err := testHandler.testReadAllWithUser(url.Values{"startdate": []string{"1540000000"}, "enddate": []string{"1544700001"}}, urlParams)
+				rec, err := testHandler.testReadAllWithUser(
+					url.Values{
+						"filter_by":         []string{"start_date", "end_date", "due_date"},
+						"filter_value":      []string{"1544500000", "1544700001", "1543500000"},
+						"filter_comparator": []string{"greater", "less", "greater"},
+					},
+					urlParams,
+				)
 				assert.NoError(t, err)
 				assert.NotContains(t, rec.Body.String(), `task #1`)
 				assert.NotContains(t, rec.Body.String(), `task #2`)
@@ -163,16 +170,23 @@ func TestTaskCollection(t *testing.T) {
 				assert.NotContains(t, rec.Body.String(), `task #14`)
 			})
 			t.Run("start date only", func(t *testing.T) {
-				rec, err := testHandler.testReadAllWithUser(url.Values{"startdate": []string{"1540000000"}}, urlParams)
+				rec, err := testHandler.testReadAllWithUser(
+					url.Values{
+						"filter_by":         []string{"start_date"},
+						"filter_value":      []string{"1540000000"},
+						"filter_comparator": []string{"greater"},
+					},
+					urlParams,
+				)
 				assert.NoError(t, err)
 				assert.NotContains(t, rec.Body.String(), `task #1`)
 				assert.NotContains(t, rec.Body.String(), `task #2`)
 				assert.NotContains(t, rec.Body.String(), `task #3`)
 				assert.NotContains(t, rec.Body.String(), `task #4`)
-				assert.Contains(t, rec.Body.String(), `task #5`)
-				assert.Contains(t, rec.Body.String(), `task #6`)
+				assert.NotContains(t, rec.Body.String(), `task #5`)
+				assert.NotContains(t, rec.Body.String(), `task #6`)
 				assert.Contains(t, rec.Body.String(), `task #7`)
-				assert.Contains(t, rec.Body.String(), `task #8`)
+				assert.NotContains(t, rec.Body.String(), `task #8`)
 				assert.Contains(t, rec.Body.String(), `task #9`)
 				assert.NotContains(t, rec.Body.String(), `task #10`)
 				assert.NotContains(t, rec.Body.String(), `task #11`)
@@ -181,7 +195,14 @@ func TestTaskCollection(t *testing.T) {
 				assert.NotContains(t, rec.Body.String(), `task #14`)
 			})
 			t.Run("end date only", func(t *testing.T) {
-				rec, err := testHandler.testReadAllWithUser(url.Values{"enddate": []string{"1544700001"}}, urlParams)
+				rec, err := testHandler.testReadAllWithUser(
+					url.Values{
+						"filter_by":         []string{"end_date"},
+						"filter_value":      []string{"1544700001"},
+						"filter_comparator": []string{"greater"},
+					},
+					urlParams,
+				)
 				assert.NoError(t, err)
 				// If no start date but an end date is specified, this should be null
 				// since we don't have any tasks in the fixtures with an end date >
@@ -289,7 +310,14 @@ func TestTaskCollection(t *testing.T) {
 		})
 		t.Run("Date range", func(t *testing.T) {
 			t.Run("start and end date", func(t *testing.T) {
-				rec, err := testHandler.testReadAllWithUser(url.Values{"startdate": []string{"1540000000"}, "enddate": []string{"1544700001"}}, nil)
+				rec, err := testHandler.testReadAllWithUser(
+					url.Values{
+						"filter_by":         []string{"start_date", "end_date", "due_date"},
+						"filter_value":      []string{"1544500000", "1544700001", "1543500000"},
+						"filter_comparator": []string{"greater", "less", "greater"},
+					},
+					nil,
+				)
 				assert.NoError(t, err)
 				assert.NotContains(t, rec.Body.String(), `task #1`)
 				assert.NotContains(t, rec.Body.String(), `task #2`)
@@ -307,16 +335,23 @@ func TestTaskCollection(t *testing.T) {
 				assert.NotContains(t, rec.Body.String(), `task #14`)
 			})
 			t.Run("start date only", func(t *testing.T) {
-				rec, err := testHandler.testReadAllWithUser(url.Values{"startdate": []string{"1540000000"}}, nil)
+				rec, err := testHandler.testReadAllWithUser(
+					url.Values{
+						"filter_by":         []string{"start_date"},
+						"filter_value":      []string{"1540000000"},
+						"filter_comparator": []string{"greater"},
+					},
+					nil,
+				)
 				assert.NoError(t, err)
 				assert.NotContains(t, rec.Body.String(), `task #1`)
 				assert.NotContains(t, rec.Body.String(), `task #2`)
 				assert.NotContains(t, rec.Body.String(), `task #3`)
 				assert.NotContains(t, rec.Body.String(), `task #4`)
-				assert.Contains(t, rec.Body.String(), `task #5`)
-				assert.Contains(t, rec.Body.String(), `task #6`)
+				assert.NotContains(t, rec.Body.String(), `task #5`)
+				assert.NotContains(t, rec.Body.String(), `task #6`)
 				assert.Contains(t, rec.Body.String(), `task #7`)
-				assert.Contains(t, rec.Body.String(), `task #8`)
+				assert.NotContains(t, rec.Body.String(), `task #8`)
 				assert.Contains(t, rec.Body.String(), `task #9`)
 				assert.NotContains(t, rec.Body.String(), `task #10`)
 				assert.NotContains(t, rec.Body.String(), `task #11`)
@@ -325,7 +360,14 @@ func TestTaskCollection(t *testing.T) {
 				assert.NotContains(t, rec.Body.String(), `task #14`)
 			})
 			t.Run("end date only", func(t *testing.T) {
-				rec, err := testHandler.testReadAllWithUser(url.Values{"enddate": []string{"1544700001"}}, nil)
+				rec, err := testHandler.testReadAllWithUser(
+					url.Values{
+						"filter_by":         []string{"end_date"},
+						"filter_value":      []string{"1544700001"},
+						"filter_comparator": []string{"greater"},
+					},
+					nil,
+				)
 				assert.NoError(t, err)
 				// If no start date but an end date is specified, this should be null
 				// since we don't have any tasks in the fixtures with an end date >

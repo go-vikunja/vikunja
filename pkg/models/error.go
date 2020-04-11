@@ -653,6 +653,60 @@ func (err ErrTaskCommentDoesNotExist) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrInvalidTaskField represents an error where the provided task field is invalid
+type ErrInvalidTaskField struct {
+	TaskField string
+}
+
+// IsErrInvalidTaskField checks if an error is ErrInvalidTaskField.
+func IsErrInvalidTaskField(err error) bool {
+	_, ok := err.(ErrInvalidTaskField)
+	return ok
+}
+
+func (err ErrInvalidTaskField) Error() string {
+	return fmt.Sprintf("Task Field is invalid [TaskField: %s]", err.TaskField)
+}
+
+// ErrCodeInvalidTaskField holds the unique world-error code of this error
+const ErrCodeInvalidTaskField = 4016
+
+// HTTPError holds the http error description
+func (err ErrInvalidTaskField) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeInvalidTaskField,
+		Message:  fmt.Sprintf("The task field '%s' is invalid.", err.TaskField),
+	}
+}
+
+// ErrInvalidTaskFilterComparator represents an error where the provided task field is invalid
+type ErrInvalidTaskFilterComparator struct {
+	Comparator taskFilterComparator
+}
+
+// IsErrInvalidTaskFilterComparator checks if an error is ErrInvalidTaskFilterComparator.
+func IsErrInvalidTaskFilterComparator(err error) bool {
+	_, ok := err.(ErrInvalidTaskFilterComparator)
+	return ok
+}
+
+func (err ErrInvalidTaskFilterComparator) Error() string {
+	return fmt.Sprintf("Task filter comparator is invalid [Comparator: %s]", err.Comparator)
+}
+
+// ErrCodeInvalidTaskFilterComparator holds the unique world-error code of this error
+const ErrCodeInvalidTaskFilterComparator = 4017
+
+// HTTPError holds the http error description
+func (err ErrInvalidTaskFilterComparator) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeInvalidTaskFilterComparator,
+		Message:  fmt.Sprintf("The task filter comparator '%s' is invalid.", err.Comparator),
+	}
+}
+
 // =================
 // Namespace errors
 // =================

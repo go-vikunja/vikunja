@@ -27,6 +27,7 @@ import (
 	"sort"
 	"strconv"
 	"time"
+	"xorm.io/builder"
 )
 
 // Task represents an task in a todolist
@@ -38,7 +39,7 @@ type Task struct {
 	// The task description.
 	Description string `xorm:"longtext null" json:"description"`
 	// Whether a task is done or not.
-	Done bool `xorm:"INDEX null" json:"done"`
+	Done bool `xorm:"INDEX null default false" json:"done"`
 	// The time when a task was marked as done.
 	DoneAt timeutil.TimeStamp `xorm:"INDEX null 'done_at_unix'" json:"doneAt"`
 	// The time when the task is due.
@@ -110,12 +111,11 @@ func (TaskReminder) TableName() string {
 }
 
 type taskOptions struct {
-	search    string
-	startDate time.Time
-	endDate   time.Time
-	page      int
-	perPage   int
-	sortby    []*sortParam
+	search  string
+	page    int
+	perPage int
+	sortby  []*sortParam
+	filters []*taskFilter
 }
 
 // ReadAll is a dummy function to still have that endpoint documented
@@ -127,9 +127,11 @@ type taskOptions struct {
 // @Param page query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
 // @Param per_page query int false "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page."
 // @Param s query string false "Search tasks by task text."
-// @Param sort query string false "The sorting parameter. Possible values to sort by are priority, prioritydesc, priorityasc, duedate, duedatedesc, duedateasc."
-// @Param startdate query int false "The start date parameter to filter by. Expects a timestamp. If no end date, but a start date is specified, the end date is set to the current time."
-// @Param enddate query int false "The end date parameter to filter by. Expects a timestamp. If no start date, but an end date is specified, the start date is set to the current time."
+// @Param sort_by query string false "The sorting parameter. You can pass this multiple times to get the tasks ordered by multiple different parametes, along with `order_by`. Possible values to sort by are `id`, `text`, `description`, `done`, `done_at_unix`, `due_date_unix`, `created_by_id`, `list_id`, `repeat_after`, `priority`, `start_date_unix`, `end_date_unix`, `hex_color`, `percent_done`, `uid`, `created`, `updated`. Default is `id`."
+// @Param order_by query string false "The ordering parameter. Possible values to order by are `asc` or `desc`. Default is `asc`."
+// @Param filter_by query string false "The name of the field to filter by. Accepts an array for multiple filters which will be chanied together, all supplied filter must match."
+// @Param filter_value query string false "The value to filter for."
+// @Param filter_comparator query string false "The comparator to use for a filter. Available values are `equals`, `greater`, `greater_equals`, `less` and `less_equals`. Defaults to `equals`"
 // @Security JWTKeyAuth
 // @Success 200 {array} models.Task "The tasks"
 // @Failure 500 {object} models.Message "Internal error"
@@ -161,26 +163,32 @@ func getRawTasksForLists(lists []*List, opts *taskOptions) (taskMap map[int64]*T
 		}
 	}
 
+	var filters = make([]builder.Cond, 0, len(opts.filters))
+	for _, f := range opts.filters {
+		switch f.comparator {
+		case taskFilterComparatorEquals:
+			filters = append(filters, &builder.Eq{f.field: f.value})
+		case taskFilterComparatorNotEquals:
+			filters = append(filters, &builder.Neq{f.field: f.value})
+		case taskFilterComparatorGreater:
+			filters = append(filters, &builder.Gt{f.field: f.value})
+		case taskFilterComparatorGreateEquals:
+			filters = append(filters, &builder.Gte{f.field: f.value})
+		case taskFilterComparatorLess:
+			filters = append(filters, &builder.Lt{f.field: f.value})
+		case taskFilterComparatorLessEquals:
+			filters = append(filters, &builder.Lte{f.field: f.value})
+		}
+	}
+
 	taskMap = make(map[int64]*Task)
 
 	// Then return all tasks for that lists
-	if opts.startDate.Unix() != 0 || opts.endDate.Unix() != 0 {
-
-		startDateUnix := time.Now().Unix()
-		if opts.startDate.Unix() != 0 {
-			startDateUnix = opts.startDate.Unix()
-		}
-
-		endDateUnix := time.Now().Unix()
-		if opts.endDate.Unix() != 0 {
-			endDateUnix = opts.endDate.Unix()
-		}
+	if len(filters) > 0 {
 
 		err := x.In("list_id", listIDs).
 			Where("text LIKE ?", "%"+opts.search+"%").
-			And("((due_date_unix BETWEEN ? AND ?) OR "+
-				"(start_date_unix BETWEEN ? and ?) OR "+
-				"(end_date_unix BETWEEN ? and ?))", startDateUnix, endDateUnix, startDateUnix, endDateUnix, startDateUnix, endDateUnix).
+			Where(builder.Or(filters...)).
 			OrderBy(orderby).
 			Limit(getLimitFromPageIndex(opts.page, opts.perPage)).
 			Find(&taskMap)
@@ -190,9 +198,7 @@ func getRawTasksForLists(lists []*List, opts *taskOptions) (taskMap map[int64]*T
 
 		totalItems, err = x.In("list_id", listIDs).
 			Where("text LIKE ?", "%"+opts.search+"%").
-			And("((due_date_unix BETWEEN ? AND ?) OR "+
-				"(start_date_unix BETWEEN ? and ?) OR "+
-				"(end_date_unix BETWEEN ? and ?))", startDateUnix, endDateUnix, startDateUnix, endDateUnix, startDateUnix, endDateUnix).
+			Where(builder.Or(filters...)).
 			Count(&Task{})
 		if err != nil {
 			return nil, 0, 0, err

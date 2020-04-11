@@ -50,6 +50,8 @@ This document describes the different errors Vikunja can return.
 | 4013 | 400 | The task sort param is invalid. |
 | 4014 | 400 | The task sort order is invalid. |
 | 4015 | 404 | The task comment does not exist. |
+| 4016 | 403 | Invalid task field. |
+| 4017 | 403 | Invalid task filter comparator. |
 | 5001 | 404 | The namspace does not exist. | 
 | 5003 | 403 | The user does not have access to the specified namespace. |
 | 5006 | 400 | The namespace name cannot be empty. |

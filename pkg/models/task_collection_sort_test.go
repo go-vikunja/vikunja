@@ -44,7 +44,7 @@ func TestSortParamValidation(t *testing.T) {
 		})
 	})
 	t.Run("Test valid sort by", func(t *testing.T) {
-		for _, test := range []sortProperty{
+		for _, test := range []string{
 			taskPropertyID,
 			taskPropertyText,
 			taskPropertyDescription,
@@ -63,10 +63,10 @@ func TestSortParamValidation(t *testing.T) {
 			taskPropertyCreated,
 			taskPropertyUpdated,
 		} {
-			t.Run(test.String(), func(t *testing.T) {
+			t.Run(test, func(t *testing.T) {
 				s := &sortParam{
 					orderBy: orderAscending,
-					sortBy:  test,
+					sortBy:  sortProperty(test),
 				}
 				err := s.validate()
 				assert.NoError(t, err)
@@ -89,7 +89,7 @@ func TestSortParamValidation(t *testing.T) {
 		}
 		err := s.validate()
 		assert.Error(t, err)
-		assert.True(t, IsErrInvalidSortParam(err))
+		assert.True(t, IsErrInvalidTaskField(err))
 	})
 }
 
@@ -185,7 +185,7 @@ type taskSortTestCase struct {
 	name         string
 	wantAsc      []*Task
 	wantDesc     []*Task
-	sortProperty sortProperty
+	sortProperty string
 }
 
 var taskSortTestCases = []taskSortTestCase{
@@ -692,7 +692,7 @@ func TestTaskSort(t *testing.T) {
 			t.Run("asc default", func(t *testing.T) {
 				by := []*sortParam{
 					{
-						sortBy: testCase.sortProperty,
+						sortBy: sortProperty(testCase.sortProperty),
 					},
 				}
 
@@ -710,7 +710,7 @@ func TestTaskSort(t *testing.T) {
 			t.Run("asc", func(t *testing.T) {
 				by := []*sortParam{
 					{
-						sortBy:  testCase.sortProperty,
+						sortBy:  sortProperty(testCase.sortProperty),
 						orderBy: orderAscending,
 					},
 				}
@@ -729,7 +729,7 @@ func TestTaskSort(t *testing.T) {
 			t.Run("desc", func(t *testing.T) {
 				by := []*sortParam{
 					{
-						sortBy:  testCase.sortProperty,
+						sortBy:  sortProperty(testCase.sortProperty),
 						orderBy: orderDescending,
 					},
 				}
@@ -767,11 +767,11 @@ func TestTaskSort(t *testing.T) {
 		}
 		sortParams := []*sortParam{
 			{
-				sortBy:  taskPropertyDone,
+				sortBy:  sortProperty(taskPropertyDone),
 				orderBy: orderAscending,
 			},
 			{
-				sortBy:  taskPropertyID,
+				sortBy:  sortProperty(taskPropertyID),
 				orderBy: orderDescending,
 			},
 		}
@@ -804,11 +804,11 @@ func TestTaskSort(t *testing.T) {
 		}
 		sortParams := []*sortParam{
 			{
-				sortBy:  taskPropertyDone,
+				sortBy:  sortProperty(taskPropertyDone),
 				orderBy: orderAscending,
 			},
 			{
-				sortBy:  taskPropertyText,
+				sortBy:  sortProperty(taskPropertyText),
 				orderBy: orderDescending,
 			},
 		}
@@ -841,11 +841,11 @@ func TestTaskSort(t *testing.T) {
 		}
 		sortParams := []*sortParam{
 			{
-				sortBy:  taskPropertyDone,
+				sortBy:  sortProperty(taskPropertyDone),
 				orderBy: orderDescending,
 			},
 			{
-				sortBy:  taskPropertyText,
+				sortBy:  sortProperty(taskPropertyText),
 				orderBy: orderAscending,
 			},
 		}

@@ -35,23 +35,23 @@ type (
 )
 
 const (
-	taskPropertyID            sortProperty = "id"
-	taskPropertyText          sortProperty = "text"
-	taskPropertyDescription   sortProperty = "description"
-	taskPropertyDone          sortProperty = "done"
-	taskPropertyDoneAtUnix    sortProperty = "done_at_unix"
-	taskPropertyDueDateUnix   sortProperty = "due_date_unix"
-	taskPropertyCreatedByID   sortProperty = "created_by_id"
-	taskPropertyListID        sortProperty = "list_id"
-	taskPropertyRepeatAfter   sortProperty = "repeat_after"
-	taskPropertyPriority      sortProperty = "priority"
-	taskPropertyStartDateUnix sortProperty = "start_date_unix"
-	taskPropertyEndDateUnix   sortProperty = "end_date_unix"
-	taskPropertyHexColor      sortProperty = "hex_color"
-	taskPropertyPercentDone   sortProperty = "percent_done"
-	taskPropertyUID           sortProperty = "uid"
-	taskPropertyCreated       sortProperty = "created"
-	taskPropertyUpdated       sortProperty = "updated"
+	taskPropertyID            string = "id"
+	taskPropertyText          string = "text"
+	taskPropertyDescription   string = "description"
+	taskPropertyDone          string = "done"
+	taskPropertyDoneAtUnix    string = "done_at_unix"
+	taskPropertyDueDateUnix   string = "due_date_unix"
+	taskPropertyCreatedByID   string = "created_by_id"
+	taskPropertyListID        string = "list_id"
+	taskPropertyRepeatAfter   string = "repeat_after"
+	taskPropertyPriority      string = "priority"
+	taskPropertyStartDateUnix string = "start_date_unix"
+	taskPropertyEndDateUnix   string = "end_date_unix"
+	taskPropertyHexColor      string = "hex_color"
+	taskPropertyPercentDone   string = "percent_done"
+	taskPropertyUID           string = "uid"
+	taskPropertyCreated       string = "created"
+	taskPropertyUpdated       string = "updated"
 )
 
 func (p sortProperty) String() string {
@@ -82,28 +82,7 @@ func (sp *sortParam) validate() error {
 	if sp.orderBy != orderDescending && sp.orderBy != orderAscending {
 		return ErrInvalidSortOrder{OrderBy: sp.orderBy}
 	}
-	switch sp.sortBy {
-	case
-		taskPropertyID,
-		taskPropertyText,
-		taskPropertyDescription,
-		taskPropertyDone,
-		taskPropertyDoneAtUnix,
-		taskPropertyDueDateUnix,
-		taskPropertyCreatedByID,
-		taskPropertyListID,
-		taskPropertyRepeatAfter,
-		taskPropertyPriority,
-		taskPropertyStartDateUnix,
-		taskPropertyEndDateUnix,
-		taskPropertyHexColor,
-		taskPropertyPercentDone,
-		taskPropertyUID,
-		taskPropertyCreated,
-		taskPropertyUpdated:
-		return nil
-	}
-	return ErrInvalidSortParam{SortBy: sp.sortBy}
+	return validateTaskField(string(sp.sortBy))
 }
 
 type taskComparator func(lhs, rhs *Task) int64
@@ -168,7 +147,7 @@ func mustMakeComparator(fieldName string) taskComparator {
 // This is a map of properties that can be sorted by
 // and their appropriate comparator function.
 // The comparator function sorts in ascending mode.
-var propertyComparators = map[sortProperty]taskComparator{
+var propertyComparators = map[string]taskComparator{
 	taskPropertyID:            mustMakeComparator("ID"),
 	taskPropertyText:          mustMakeComparator("Text"),
 	taskPropertyDescription:   mustMakeComparator("Description"),
@@ -208,13 +187,13 @@ func sortTasks(tasks []*Task, by []*sortParam) {
 	// If we would not do this, we would get a different order for items with the same content every time
 	// the slice is sorted. To circumvent this, we always order at least by ID.
 	if len(by) == 0 ||
-		(len(by) > 0 && by[len(by)-1].sortBy != taskPropertyID) { // Don't sort by ID last if the id parameter is already passed as the last parameter.
-		by = append(by, &sortParam{sortBy: taskPropertyID, orderBy: orderAscending})
+		(len(by) > 0 && by[len(by)-1].sortBy != sortProperty(taskPropertyID)) { // Don't sort by ID last if the id parameter is already passed as the last parameter.
+		by = append(by, &sortParam{sortBy: sortProperty(taskPropertyID), orderBy: orderAscending})
 	}
 
 	comparators := make([]taskComparator, 0, len(by))
 	for _, param := range by {
-		comparator, ok := propertyComparators[param.sortBy]
+		comparator, ok := propertyComparators[string(param.sortBy)]
 		if !ok {
 			panic("No suitable comparator for sortBy found! Param was " + param.sortBy)
 		}

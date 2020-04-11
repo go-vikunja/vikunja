@@ -20,15 +20,12 @@ package models
 import (
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
-	"time"
 )
 
 // TaskCollection is a struct used to hold filter details and not clutter the Task struct with information not related to actual tasks.
 type TaskCollection struct {
-	ListID            int64 `param:"list"`
-	StartDateSortUnix int64 `query:"startdate"`
-	EndDateSortUnix   int64 `query:"enddate"`
-	Lists             []*List
+	ListID int64 `param:"list"`
+	Lists  []*List
 
 	// The query parameter to sort by. This is for ex. done, priority, etc.
 	SortBy    []string `query:"sort_by"`
@@ -37,8 +34,44 @@ type TaskCollection struct {
 	OrderBy    []string `query:"order_by"`
 	OrderByArr []string `query:"order_by[]"`
 
+	// The field name of the field to filter by
+	FilterBy    []string `query:"filter_by"`
+	FilterByArr []string `query:"filter_by[]"`
+	// The value of the field name to filter by
+	FilterValue    []string `query:"filter_value"`
+	FilterValueArr []string `query:"filter_value[]"`
+	// The comparator for field and value
+	FilterComparator    []string `query:"filter_comparator"`
+	FilterComparatorArr []string `query:"filter_comparator[]"`
+
 	web.CRUDable `xorm:"-" json:"-"`
 	web.Rights   `xorm:"-" json:"-"`
+}
+
+func validateTaskField(fieldName string) error {
+	switch fieldName {
+	case
+		taskPropertyID,
+		taskPropertyText,
+		taskPropertyDescription,
+		taskPropertyDone,
+		taskPropertyDoneAtUnix,
+		taskPropertyDueDateUnix,
+		taskPropertyCreatedByID,
+		taskPropertyListID,
+		taskPropertyRepeatAfter,
+		taskPropertyPriority,
+		taskPropertyStartDateUnix,
+		taskPropertyEndDateUnix,
+		taskPropertyHexColor,
+		taskPropertyPercentDone,
+		taskPropertyUID,
+		taskPropertyCreated,
+		taskPropertyUpdated:
+		return nil
+	}
+	return ErrInvalidTaskField{TaskField: fieldName}
+
 }
 
 // ReadAll gets all tasks for a collection
@@ -53,8 +86,9 @@ type TaskCollection struct {
 // @Param s query string false "Search tasks by task text."
 // @Param sort_by query string false "The sorting parameter. You can pass this multiple times to get the tasks ordered by multiple different parametes, along with `order_by`. Possible values to sort by are `id`, `text`, `description`, `done`, `done_at_unix`, `due_date_unix`, `created_by_id`, `list_id`, `repeat_after`, `priority`, `start_date_unix`, `end_date_unix`, `hex_color`, `percent_done`, `uid`, `created`, `updated`. Default is `id`."
 // @Param order_by query string false "The ordering parameter. Possible values to order by are `asc` or `desc`. Default is `asc`."
-// @Param startdate query int false "The start date parameter to filter by. Expects a timestamp. If no end date, but a start date is specified, the end date is set to the current time."
-// @Param enddate query int false "The end date parameter to filter by. Expects a timestamp. If no start date, but an end date is specified, the start date is set to the current time."
+// @Param filter_by query string false "The name of the field to filter by. Accepts an array for multiple filters which will be chanied together, all supplied filter must match."
+// @Param filter_value query string false "The value to filter for."
+// @Param filter_comparator query string false "The comparator to use for a filter. Available values are `equals`, `greater`, `greater_equals`, `less` and `less_equals`. Defaults to `equals`"
 // @Security JWTKeyAuth
 // @Success 200 {array} models.Task "The tasks"
 // @Failure 500 {object} models.Message "Internal error"
@@ -88,12 +122,15 @@ func (tf *TaskCollection) ReadAll(a web.Auth, search string, page int, perPage i
 	}
 
 	taskopts := &taskOptions{
-		search:    search,
-		startDate: time.Unix(tf.StartDateSortUnix, 0),
-		endDate:   time.Unix(tf.EndDateSortUnix, 0),
-		page:      page,
-		perPage:   perPage,
-		sortby:    sort,
+		search:  search,
+		page:    page,
+		perPage: perPage,
+		sortby:  sort,
+	}
+
+	taskopts.filters, err = getTaskFiltersByCollections(tf)
+	if err != nil {
+		return
 	}
 
 	shareAuth, is := a.(*LinkSharing)

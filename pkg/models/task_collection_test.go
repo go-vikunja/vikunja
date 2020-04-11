@@ -507,14 +507,17 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 	}
 
 	type fields struct {
-		ListID            int64
-		StartDateSortUnix int64
-		EndDateSortUnix   int64
-		Lists             []*List
-		SortBy            []string // Is a string, since this is the place where a query string comes from the user
-		OrderBy           []string
-		CRUDable          web.CRUDable
-		Rights            web.Rights
+		ListID  int64
+		Lists   []*List
+		SortBy  []string // Is a string, since this is the place where a query string comes from the user
+		OrderBy []string
+
+		FilterBy         []string
+		FilterValue      []string
+		FilterComparator []string
+
+		CRUDable web.CRUDable
+		Rights   web.Rights
 	}
 	type args struct {
 		search string
@@ -528,15 +531,18 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		want    interface{}
 		wantErr bool
 	}
+
+	defaultArgs := args{
+		search: "",
+		a:      &user.User{ID: 1},
+		page:   0,
+	}
+
 	tests := []testcase{
 		{
 			name:   "ReadAll Tasks normally",
 			fields: fields{},
-			args: args{
-				search: "",
-				a:      &user.User{ID: 1},
-				page:   0,
-			},
+			args:   defaultArgs,
 			want: []*Task{
 				task1,
 				task2,
@@ -579,11 +585,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				SortBy:  []string{"done", "id"},
 				OrderBy: []string{"asc", "desc"},
 			},
-			args: args{
-				search: "",
-				a:      &user.User{ID: 1},
-				page:   0,
-			},
+			args: defaultArgs,
 			want: []*Task{
 				task33,
 				task32,
@@ -622,14 +624,51 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		{
 			name: "ReadAll Tasks with range",
 			fields: fields{
-				StartDateSortUnix: 1544500000,
-				EndDateSortUnix:   1544600000,
+				FilterBy:         []string{"start_date", "end_date"},
+				FilterValue:      []string{"1544500000", "1544700001"},
+				FilterComparator: []string{"greater", "less"},
 			},
-			args: args{
-				search: "",
-				a:      &user.User{ID: 1},
-				page:   0,
+			args: defaultArgs,
+			want: []*Task{
+				task7,
+				task8,
+				task9,
 			},
+			wantErr: false,
+		},
+		{
+			name: "ReadAll Tasks with different range",
+			fields: fields{
+				FilterBy:         []string{"start_date", "end_date"},
+				FilterValue:      []string{"1544700000", "1545000000"},
+				FilterComparator: []string{"greater", "less"},
+			},
+			args: defaultArgs,
+			want: []*Task{
+				task8,
+				task9,
+			},
+			wantErr: false,
+		},
+		{
+			name: "ReadAll Tasks with range with start date only",
+			fields: fields{
+				FilterBy:         []string{"start_date"},
+				FilterValue:      []string{"1544600000"},
+				FilterComparator: []string{"greater"},
+			},
+			args:    defaultArgs,
+			want:    []*Task{},
+			wantErr: false,
+		},
+		{
+			name: "ReadAll Tasks with range with start date only and greater equals",
+			fields: fields{
+				FilterBy:         []string{"start_date"},
+				FilterValue:      []string{"1544600000"},
+				FilterComparator: []string{"greater_equals"},
+			},
+			args: defaultArgs,
 			want: []*Task{
 				task7,
 				task9,
@@ -637,35 +676,71 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "ReadAll Tasks with range",
+			name: "undone tasks only",
 			fields: fields{
-				StartDateSortUnix: 1544700000,
-				EndDateSortUnix:   1545000000,
+				FilterBy:         []string{"done"},
+				FilterValue:      []string{"false"},
+				FilterComparator: []string{"equals"},
 			},
-			args: args{
-				search: "",
-				a:      &user.User{ID: 1},
-				page:   0,
-			},
+			args: defaultArgs,
 			want: []*Task{
+				task1,
+				// Task 2 is done
+				task3,
+				task4,
+				task5,
+				task6,
+				task7,
 				task8,
 				task9,
+				task10,
+				task11,
+				task12,
+				task15,
+				task16,
+				task17,
+				task18,
+				task19,
+				task20,
+				task21,
+				task22,
+				task23,
+				task24,
+				task25,
+				task26,
+				task27,
+				task28,
+				task29,
+				task30,
+				task31,
+				task32,
+				task33,
 			},
 			wantErr: false,
 		},
 		{
-			name: "ReadAll Tasks with range without end date",
+			name: "done tasks only",
 			fields: fields{
-				StartDateSortUnix: 1544700000,
+				FilterBy:         []string{"done"},
+				FilterValue:      []string{"true"},
+				FilterComparator: []string{"equals"},
 			},
-			args: args{
-				search: "",
-				a:      &user.User{ID: 1},
-				page:   0,
-			},
+			args: defaultArgs,
 			want: []*Task{
-				task8,
-				task9,
+				task2,
+			},
+			wantErr: false,
+		},
+		{
+			name: "done tasks only - not equals done",
+			fields: fields{
+				FilterBy:         []string{"done"},
+				FilterValue:      []string{"false"},
+				FilterComparator: []string{"not_equals"},
+			},
+			args: defaultArgs,
+			want: []*Task{
+				task2,
 			},
 			wantErr: false,
 		},
@@ -676,13 +751,16 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
 
 			lt := &TaskCollection{
-				ListID:            tt.fields.ListID,
-				StartDateSortUnix: tt.fields.StartDateSortUnix,
-				EndDateSortUnix:   tt.fields.EndDateSortUnix,
-				SortBy:            tt.fields.SortBy,
-				OrderBy:           tt.fields.OrderBy,
-				CRUDable:          tt.fields.CRUDable,
-				Rights:            tt.fields.Rights,
+				ListID:  tt.fields.ListID,
+				SortBy:  tt.fields.SortBy,
+				OrderBy: tt.fields.OrderBy,
+
+				FilterBy:         tt.fields.FilterBy,
+				FilterValue:      tt.fields.FilterValue,
+				FilterComparator: tt.fields.FilterComparator,
+
+				CRUDable: tt.fields.CRUDable,
+				Rights:   tt.fields.Rights,
 			}
 			got, _, _, err := lt.ReadAll(tt.args.a, tt.args.search, tt.args.page, 50)
 			if (err != nil) != tt.wantErr {
@@ -690,7 +768,11 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				return
 			}
 			if diff, equal := messagediff.PrettyDiff(got, tt.want); !equal {
-				t.Errorf("Test %s, LabelTask.ReadAll() = %v, want %v, \ndiff: %v", tt.name, got, tt.want, diff)
+				if len(got.([]*Task)) == 0 && len(tt.want.([]*Task)) == 0 {
+					return
+				}
+
+				t.Errorf("Test %s, Task.ReadAll() = %v, want %v, \ndiff: %v", tt.name, got, tt.want, diff)
 			}
 		})
 	}

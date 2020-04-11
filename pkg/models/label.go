@@ -20,7 +20,6 @@ import (
 	"code.vikunja.io/api/pkg/timeutil"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
-	"time"
 )
 
 // Label represents a label
@@ -212,10 +211,8 @@ func getUserTaskIDs(u *user.User) (taskIDs []int64, err error) {
 	}
 
 	tasks, _, _, err := getRawTasksForLists(lists, &taskOptions{
-		startDate: time.Unix(0, 0),
-		endDate:   time.Unix(0, 0),
-		page:      -1,
-		perPage:   0,
+		page:    -1,
+		perPage: 0,
 	})
 	if err != nil {
 		return nil, err
