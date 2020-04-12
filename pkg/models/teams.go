@@ -35,7 +35,7 @@ type Team struct {
 	CreatedByID int64  `xorm:"int(11) not null INDEX" json:"-"`
 
 	// The user who created this team.
-	CreatedBy *user.User `xorm:"-" json:"createdBy"`
+	CreatedBy *user.User `xorm:"-" json:"created_by"`
 	// An array of all members in this team.
 	Members []*TeamUser `xorm:"-" json:"members"`
 

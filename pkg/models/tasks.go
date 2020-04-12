@@ -41,30 +41,30 @@ type Task struct {
 	// Whether a task is done or not.
 	Done bool `xorm:"INDEX null" json:"done"`
 	// The time when a task was marked as done.
-	DoneAt timeutil.TimeStamp `xorm:"INDEX null 'done_at_unix'" json:"doneAt"`
+	DoneAt timeutil.TimeStamp `xorm:"INDEX null 'done_at_unix'" json:"done_at"`
 	// The time when the task is due.
-	DueDate timeutil.TimeStamp `xorm:"int(11) INDEX null 'due_date_unix'" json:"dueDate"`
+	DueDate timeutil.TimeStamp `xorm:"int(11) INDEX null 'due_date_unix'" json:"due_date"`
 	// An array of datetimes when the user wants to be reminded of the task.
-	Reminders   []timeutil.TimeStamp `xorm:"-" json:"reminderDates"`
+	Reminders   []timeutil.TimeStamp `xorm:"-" json:"reminder_dates"`
 	CreatedByID int64                `xorm:"int(11) not null" json:"-"` // ID of the user who put that task on the list
 	// The list this task belongs to.
-	ListID int64 `xorm:"int(11) INDEX not null" json:"listID" param:"list"`
+	ListID int64 `xorm:"int(11) INDEX not null" json:"list_id" param:"list"`
 	// An amount in seconds this task repeats itself. If this is set, when marking the task as done, it will mark itself as "undone" and then increase all remindes and the due date by its amount.
-	RepeatAfter int64 `xorm:"int(11) INDEX null" json:"repeatAfter"`
+	RepeatAfter int64 `xorm:"int(11) INDEX null" json:"repeat_after"`
 	// The task priority. Can be anything you want, it is possible to sort by this later.
 	Priority int64 `xorm:"int(11) null" json:"priority"`
 	// When this task starts.
-	StartDate timeutil.TimeStamp `xorm:"int(11) INDEX null 'start_date_unix'" json:"startDate" query:"-"`
+	StartDate timeutil.TimeStamp `xorm:"int(11) INDEX null 'start_date_unix'" json:"start_date" query:"-"`
 	// When this task ends.
-	EndDate timeutil.TimeStamp `xorm:"int(11) INDEX null 'end_date_unix'" json:"endDate" query:"-"`
+	EndDate timeutil.TimeStamp `xorm:"int(11) INDEX null 'end_date_unix'" json:"end_date" query:"-"`
 	// An array of users who are assigned to this task
 	Assignees []*user.User `xorm:"-" json:"assignees"`
 	// An array of labels which are associated with this task.
 	Labels []*Label `xorm:"-" json:"labels"`
 	// The task color in hex
-	HexColor string `xorm:"varchar(6) null" json:"hexColor" valid:"runelength(0|6)" maxLength:"6"`
+	HexColor string `xorm:"varchar(6) null" json:"hex_color" valid:"runelength(0|6)" maxLength:"6"`
 	// Determines how far a task is left from being done
-	PercentDone float64 `xorm:"DOUBLE null" json:"percentDone"`
+	PercentDone float64 `xorm:"DOUBLE null" json:"percent_done"`
 
 	// The task identifier, based on the list identifier and the task's index
 	Identifier string `xorm:"-" json:"identifier"`
@@ -86,7 +86,7 @@ type Task struct {
 	Updated timeutil.TimeStamp `xorm:"updated not null" json:"updated"`
 
 	// The user who initially created the task.
-	CreatedBy *user.User `xorm:"-" json:"createdBy" valid:"-"`
+	CreatedBy *user.User `xorm:"-" json:"created_by" valid:"-"`
 
 	web.CRUDable `xorm:"-" json:"-"`
 	web.Rights   `xorm:"-" json:"-"`

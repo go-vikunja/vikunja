@@ -27,7 +27,7 @@ type ListUser struct {
 	// The unique, numeric id of this list <-> user relation.
 	ID int64 `xorm:"int(11) autoincr not null unique pk" json:"id" param:"namespace"`
 	// The username.
-	Username string `xorm:"-" json:"userID" param:"user"`
+	Username string `xorm:"-" json:"user_id" param:"user"`
 	// Used internally to reference the user
 	UserID int64 `xorm:"int(11) not null INDEX" json:"-"`
 	// The list id.

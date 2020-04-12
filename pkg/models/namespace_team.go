@@ -26,7 +26,7 @@ type TeamNamespace struct {
 	// The unique, numeric id of this namespace <-> team relation.
 	ID int64 `xorm:"int(11) autoincr not null unique pk" json:"id"`
 	// The team id.
-	TeamID int64 `xorm:"int(11) not null INDEX" json:"teamID" param:"team"`
+	TeamID int64 `xorm:"int(11) not null INDEX" json:"team_id" param:"team"`
 	// The namespace id.
 	NamespaceID int64 `xorm:"int(11) not null INDEX" json:"-" param:"namespace"`
 	// The right this team has. 0 = Read only, 1 = Read & Write, 2 = Admin. See the docs for more details.
