@@ -8,8 +8,8 @@ export default class TeamNamespaceService extends AbstractService {
 		super({
 			create: '/namespaces/{namespaceID}/teams',
 			getAll: '/namespaces/{namespaceID}/teams',
-			update: '/namespaces/{namespaceID}/teams/{teamID}',
-			delete: '/namespaces/{namespaceID}/teams/{teamID}',
+			update: '/namespaces/{namespaceID}/teams/{teamId}',
+			delete: '/namespaces/{namespaceID}/teams/{teamId}',
 		})
 	}
 

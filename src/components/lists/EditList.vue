@@ -1,6 +1,6 @@
 <template>
 	<div class="loader-container" :class="{ 'is-loading': listService.loading}">
-		<div class="notification is-warning" v-if="list.is_archived">
+		<div class="notification is-warning" v-if="list.isArchived">
 			This list is archived.
 			It is not possible to create new or edit tasks or it.
 		</div>
@@ -28,7 +28,7 @@
 						<div class="field">
 							<label class="label" for="isArchivedCheck">Is Archived</label>
 							<div class="control">
-								<fancycheckbox v-model="list.is_archived" v-tooltip="'If a list is archived, you cannot create new tasks or edit the list or existing tasks.'">
+								<fancycheckbox v-model="list.isArchived" v-tooltip="'If a list is archived, you cannot create new tasks or edit the list or existing tasks.'">
 									This list is archived
 								</fancycheckbox>
 							</div>
@@ -37,7 +37,7 @@
 							<label class="label">Color</label>
 							<div class="control">
 								<verte
-										v-model="list.hex_color"
+										v-model="list.hexColor"
 										menuPosition="top"
 										picker="square"
 										model="hex"

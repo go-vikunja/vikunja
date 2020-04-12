@@ -7,7 +7,7 @@ export default class ListModel extends AbstractModel {
         // The constructor of AbstractModel handles all the default parsing.
         super(data)
 
-        this.shared_by = new UserModel(this.shared_by)
+        this.sharedBy = new UserModel(this.sharedBy)
 
         this.created = new Date(this.created)
         this.updated = new Date(this.updated)
@@ -19,8 +19,8 @@ export default class ListModel extends AbstractModel {
             id: 0,
             hash: '',
             right: 0,
-            shared_by: UserModel,
-            sharing_type: 0,
+            sharedBy: UserModel,
+            sharingType: 0,
             listID: 0,
 
             created: null,

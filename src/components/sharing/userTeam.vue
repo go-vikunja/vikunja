@@ -175,7 +175,7 @@
 				if (this.type === 'list') {
 					this.typeString = `list`
 					this.stuffService = new UserListService()
-					this.stuffModel = new UserListModel({listID: this.id})
+					this.stuffModel = new UserListModel({listId: this.id})
 				} else if (this.type === 'namespace') {
 					this.typeString = `namespace`
 					this.stuffService = new UserNamespaceService()
@@ -192,7 +192,7 @@
 				if (this.type === 'list') {
 					this.typeString = `list`
 					this.stuffService = new TeamListService()
-					this.stuffModel = new TeamListModel({listID: this.id})
+					this.stuffModel = new TeamListModel({listId: this.id})
 				} else if (this.type === 'namespace') {
 					this.typeString = `namespace`
 					this.stuffService = new TeamNamespaceService()
@@ -219,17 +219,17 @@
 			deleteSharable() {
 
 				if (this.shareType === 'user') {
-					this.stuffModel.userID = this.sharable.username
+					this.stuffModel.userId = this.sharable.username
 				} else if (this.shareType === 'team') {
-					this.stuffModel.teamID = this.sharable.id
+					this.stuffModel.teamId = this.sharable.id
 				}
 				this.stuffService.delete(this.stuffModel)
 					.then(() => {
 						this.showDeleteModal = false
 						for (const i in this.sharables) {
 							if (
-								(this.sharables[i].id === this.stuffModel.userID && this.shareType === 'user') ||
-								(this.sharables[i].id === this.stuffModel.teamID && this.shareType === 'team')
+								(this.sharables[i].id === this.stuffModel.userId && this.shareType === 'user') ||
+								(this.sharables[i].id === this.stuffModel.teamId && this.shareType === 'team')
 							) {
 								this.sharables.splice(i, 1)
 							}
@@ -250,9 +250,9 @@
 				}
 
 				if (this.shareType === 'user') {
-					this.stuffModel.userID = this.sharable.username
+					this.stuffModel.userId = this.sharable.username
 				} else if (this.shareType === 'team') {
-					this.stuffModel.teamID = this.sharable.id
+					this.stuffModel.teamId = this.sharable.id
 				}
 
 				this.stuffService.create(this.stuffModel)
@@ -275,17 +275,17 @@
 
 
 				if (this.shareType === 'user') {
-					this.stuffModel.userID = sharable.username
+					this.stuffModel.userId = sharable.username
 				} else if (this.shareType === 'team') {
-					this.stuffModel.teamID = sharable.id
+					this.stuffModel.teamId = sharable.id
 				}
 
 				this.stuffService.update(this.stuffModel)
 					.then(r => {
 						for (const i in this.sharables) {
 							if (
-								(this.sharables[i].id === this.stuffModel.userID && this.shareType === 'user') ||
-								(this.sharables[i].id === this.stuffModel.teamID && this.shareType === 'team')
+								(this.sharables[i].id === this.stuffModel.userId && this.shareType === 'user') ||
+								(this.sharables[i].id === this.stuffModel.teamId && this.shareType === 'team')
 							) {
 								this.$set(this.sharables[i], 'right', r.right)
 							}

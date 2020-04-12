@@ -52,7 +52,7 @@
 						</div>
 					</td>
 					<td>
-						{{ s.shared_by.username }}
+						{{ s.sharedBy.username }}
 					</td>
 					<td class="type">
 						<template v-if="s.right === rights.ADMIN">
@@ -145,7 +145,7 @@
 					return
 				}
 
-				this.linkShareService.getAll({listID: this.listID})
+				this.linkShareService.getAll({listId: this.listID})
 					.then(r => {
 						this.linkShares = r
 					})
@@ -154,7 +154,7 @@
 					})
 			},
 			add() {
-				let newLinkShare = new LinkShareModel({right: this.selectedRight, listID: this.listID})
+				let newLinkShare = new LinkShareModel({right: this.selectedRight, listId: this.listID})
 				this.linkShareService.create(newLinkShare)
 					.then(() => {
 						this.selectedRight = rights.READ
@@ -166,7 +166,7 @@
 					})
 			},
 			remove() {
-				let linkshare = new LinkShareModel({id: this.linkIDToDelete, listID: this.listID})
+				let linkshare = new LinkShareModel({id: this.linkIDToDelete, listId: this.listID})
 				this.linkShareService.delete(linkshare)
 					.then(() => {
 						this.success({message: 'The link share was successfully deleted'}, this)

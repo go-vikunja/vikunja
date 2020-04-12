@@ -6,8 +6,8 @@ export default class NamespaceModel extends AbstractModel {
 	constructor(data) {
 		super(data)
 
-		if (this.hex_color !== '' && this.hex_color.substring(0, 1) !== '#') {
-			this.hex_color = '#' + this.hex_color
+		if (this.hexColor !== '' && this.hexColor.substring(0, 1) !== '#') {
+			this.hexColor = '#' + this.hexColor
 		}
 
 		this.lists = this.lists.map(l => {
@@ -27,8 +27,8 @@ export default class NamespaceModel extends AbstractModel {
 			description: '',
 			owner: UserModel,
 			lists: [],
-			is_archived: false,
-			hex_color: '',
+			isArchived: false,
+			hexColor: '',
 
 			created: null,
 			updated: null,

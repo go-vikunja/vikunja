@@ -24,12 +24,12 @@ export default class LabelService extends AbstractService {
 	}
 	
 	beforeUpdate(label) {
-		label.hex_color = label.hex_color.substring(1, 7)
+		label.hexColor = label.hexColor.substring(1, 7)
 		return label
 	}
 	
 	beforeCreate(label) {
-		label.hex_color = label.hex_color.substring(1, 7)
+		label.hexColor = label.hexColor.substring(1, 7)
 		return label
 	}
 }

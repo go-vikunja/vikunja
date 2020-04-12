@@ -6,7 +6,7 @@ export default class TeamListModel extends TeamShareBaseModel {
 		return merge(
 			super.defaults(),
 			{
-				listID: 0,
+				listId: 0,
 			}
 		)
 	}

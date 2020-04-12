@@ -7,7 +7,7 @@ export default class TeamMemberModel extends UserModel {
 			super.defaults(),
 			{
 				admin: false,
-				teamID: 0,
+				teamId: 0,
 			}
 		)
 	}

@@ -235,7 +235,7 @@
 			prepareTasks() {
 
 				const getAllTasks = (page = 1) => {
-					return this.taskCollectionService.getAll({listID: this.$route.params.id}, {}, page)
+					return this.taskCollectionService.getAll({listId: this.$route.params.id}, {}, page)
 						.then(tasks => {
 							if(page < this.taskCollectionService.totalPages) {
 								return getAllTasks(page + 1)
@@ -367,7 +367,7 @@
 				if (!this.newTaskFieldActive) {
 					return
 				}
-				let task = new TaskModel({text: this.newTaskTitle, listID: this.list.id})
+				let task = new TaskModel({text: this.newTaskTitle, listId: this.list.id})
 				this.taskService.create(task)
 					.then(r => {
 						this.tasksWithoutDates.push(this.addGantAttributes(r))

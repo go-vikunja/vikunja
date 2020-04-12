@@ -6,7 +6,7 @@ import {formatISO} from 'date-fns'
 export default class TaskService extends AbstractService {
 	constructor() {
 		super({
-			create: '/lists/{listID}',
+			create: '/lists/{listId}',
 			getAll: '/tasks/all',
 			get: '/tasks/{id}',
 			update: '/tasks/{id}',
@@ -27,8 +27,11 @@ export default class TaskService extends AbstractService {
 	}
 
 	processModel(model) {
-		// Ensure the listID is an int
-		model.listID = Number(model.listID)
+
+		console.log(model)
+
+		// Ensure that listId is an int
+		model.listId = Number(model.listId)
 
 		// Convert dates into an iso string
 		model.dueDate = model.dueDate === null ? null : formatISO(new Date(model.dueDate))
@@ -79,8 +82,8 @@ export default class TaskService extends AbstractService {
 		}
 
 		// Do the same for all related tasks
-		Object.keys(model.related_tasks).forEach(relationKind  => {
-			model.related_tasks[relationKind] = model.related_tasks[relationKind].map(t => {
+		Object.keys(model.relatedTasks).forEach(relationKind  => {
+			model.relatedTasks[relationKind] = model.relatedTasks[relationKind].map(t => {
 				return this.processModel(t)
 			})
 		})

@@ -27,7 +27,7 @@ export default {
 			if (search !== '') {
 				params.s = search
 			}
-			this.taskCollectionService.getAll({listID: this.$route.params.id}, params, page)
+			this.taskCollectionService.getAll({listId: this.$route.params.id}, params, page)
 				.then(r => {
 					this.$set(this, 'tasks', r)
 					this.$set(this, 'pages', [])

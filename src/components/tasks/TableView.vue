@@ -55,15 +55,15 @@
 				</th>
 				<th v-if="activeColumns.dueDate">
 					Due&nbsp;Date
-					<sort :order="sortBy.due_date_unix" @click="sort('due_date_unix')"/>
+					<sort :order="sortBy.dueDate_unix" @click="sort('dueDate_unix')"/>
 				</th>
 				<th v-if="activeColumns.startDate">
 					Start&nbsp;Date
-					<sort :order="sortBy.start_date_unix" @click="sort('start_date_unix')"/>
+					<sort :order="sortBy.startDate_unix" @click="sort('startDate_unix')"/>
 				</th>
 				<th v-if="activeColumns.endDate">
 					End&nbsp;Date
-					<sort :order="sortBy.end_date_unix" @click="sort('end_date_unix')"/>
+					<sort :order="sortBy.endDate_unix" @click="sort('endDate_unix')"/>
 				</th>
 				<th v-if="activeColumns.percentDone">
 					%&nbsp;Done

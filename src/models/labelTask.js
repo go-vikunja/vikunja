@@ -5,7 +5,7 @@ export default class LabelTask extends AbstractModel {
 		return {
 			id: 0,
 			taskID: 0,
-			label_id: 0,
+			labelId: 0,
 		}
 	}
 }

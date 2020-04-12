@@ -22,7 +22,7 @@
 	>
 		<template slot="tag" slot-scope="{ option }">
 						<span class="tag"
-							:style="{'background': option.hex_color, 'color': option.textColor}">
+							:style="{'background': option.hexColor, 'color': option.textColor}">
 							<span>{{ option.title }}</span>
 							<a class="delete is-small" @click="removeLabel(option)"></a>
 						</span>
@@ -108,7 +108,7 @@
 				this.$set(this, 'foundLabels', [])
 			},
 			addLabel(label) {
-				let labelTask = new LabelTaskModel({taskID: this.taskID, label_id: label.id})
+				let labelTask = new LabelTaskModel({taskID: this.taskID, labelId: label.id})
 				this.labelTaskService.create(labelTask)
 					.then(() => {
 						this.success({message: 'The label was successfully added.'}, this)
@@ -119,7 +119,7 @@
 					})
 			},
 			removeLabel(label) {
-				let labelTask = new LabelTaskModel({taskID: this.taskID, label_id: label.id})
+				let labelTask = new LabelTaskModel({taskID: this.taskID, labelId: label.id})
 				this.labelTaskService.delete(labelTask)
 					.then(() => {
 						// Remove the label from the list

@@ -13,7 +13,7 @@ export default class TeamShareBaseModel extends AbstractModel {
 
 	defaults() {
 		return {
-			teamID: 0,
+			teamId: 0,
 			right: 0,
 			
 			created: null,

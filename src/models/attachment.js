@@ -5,7 +5,7 @@ import FileModel from './file'
 export default class AttachmentModel extends AbstractModel {
 	constructor(data) {
 		super(data)
-		this.created_by = new UserModel(this.created_by)
+		this.createdBy = new UserModel(this.createdBy)
 		this.file = new FileModel(this.file)
 		this.created = new Date(this.created)
 	}
@@ -13,9 +13,9 @@ export default class AttachmentModel extends AbstractModel {
 	defaults() {
 		return {
 			id: 0,
-			task_id: 0,
+			taskId: 0,
 			file: FileModel,
-			created_by: UserModel,
+			createdBy: UserModel,
 			created: null,
 		}
 	}

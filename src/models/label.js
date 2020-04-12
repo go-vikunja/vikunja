@@ -5,14 +5,14 @@ export default class LabelModel extends AbstractModel {
 	constructor(data) {
 		super(data)
 		// Set the default color
-		if (this.hex_color === '') {
-			this.hex_color = 'e8e8e8'
+		if (this.hexColor === '') {
+			this.hexColor = 'e8e8e8'
 		}
-		if (this.hex_color.substring(0, 1) !== '#') {
-			this.hex_color = '#' + this.hex_color
+		if (this.hexColor.substring(0, 1) !== '#') {
+			this.hexColor = '#' + this.hexColor
 		}
 		this.textColor = this.hasDarkColor() ? '#4a4a4a' : '#e5e5e5'
-		this.created_by = new UserModel(this.created_by)
+		this.createdBy = new UserModel(this.createdBy)
 
 		this.created = new Date(this.created)
 		this.updated = new Date(this.updated)
@@ -22,10 +22,10 @@ export default class LabelModel extends AbstractModel {
 		return {
 			id: 0,
 			title: '',
-			hex_color: '',
+			hexColor: '',
 			description: '',
-			created_by: UserModel,
-			listID: 0,
+			createdBy: UserModel,
+			listId: 0,
 			textColor: '',
 			
 			created: null,
@@ -34,11 +34,11 @@ export default class LabelModel extends AbstractModel {
 	}
 	
 	hasDarkColor() {
-		if (this.hex_color === '#') {
+		if (this.hexColor === '#') {
 			return true // Defaults to dark
 		}
 		
-		let rgb = parseInt(this.hex_color.substring(1, 7), 16);   // convert rrggbb to decimal
+		let rgb = parseInt(this.hexColor.substring(1, 7), 16);   // convert rrggbb to decimal
 		let r = (rgb >> 16) & 0xff;  // extract red
 		let g = (rgb >>  8) & 0xff;  // extract green
 		let b = (rgb >>  0) & 0xff;  // extract blue

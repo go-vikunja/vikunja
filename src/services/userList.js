@@ -6,10 +6,10 @@ import {formatISO} from 'date-fns'
 export default class UserListService extends AbstractService {
 	constructor() {
 		super({
-			create: '/lists/{listID}/users',
-			getAll: '/lists/{listID}/users',
-			update: '/lists/{listID}/users/{userID}',
-			delete: '/lists/{listID}/users/{userID}',
+			create: '/lists/{listId}/users',
+			getAll: '/lists/{listId}/users',
+			update: '/lists/{listId}/users/{userId}',
+			delete: '/lists/{listId}/users/{userId}',
 		})
 	}
 

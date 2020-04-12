@@ -114,7 +114,7 @@
 
 		<div class="field has-addons">
 			<div class="control is-expanded">
-				<edit-assignees :task-i-d="taskEditTask.id" :list-i-d="taskEditTask.listID" :initial-assignees="taskEditTask.assignees"/>
+				<edit-assignees :task-i-d="taskEditTask.id" :list-i-d="taskEditTask.listId" :initial-assignees="taskEditTask.assignees"/>
 			</div>
 		</div>
 
@@ -128,8 +128,8 @@
 		<related-tasks
 			class="is-narrow"
 			:task-i-d="task.id"
-			:list-id="task.listID"
-			:initial-related-tasks="task.related_tasks"
+			:list-id="task.listId"
+			:initial-related-tasks="task.relatedTasks"
 		/>
 
 		<button type="submit" class="button is-success is-fullwidth" :class="{ 'is-loading': taskService.loading}">

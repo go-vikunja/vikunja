@@ -1,6 +1,6 @@
 <template>
 	<div class="loader-container" v-bind:class="{ 'is-loading': namespaceService.loading}">
-		<div class="notification is-warning" v-if="namespace.is_archived">
+		<div class="notification is-warning" v-if="namespace.isArchived">
 			This namespace is archived.
 			It is not possible to create new lists or edit it.
 		</div>
@@ -28,7 +28,7 @@
 						<div class="field">
 							<label class="label" for="isArchivedCheck">Is Archived</label>
 							<div class="control">
-								<fancycheckbox v-model="namespace.is_archived" v-tooltip="'If a namespace is archived, you cannot create new lists or edit it.'">
+								<fancycheckbox v-model="namespace.isArchived" v-tooltip="'If a namespace is archived, you cannot create new lists or edit it.'">
 									This namespace is archived
 								</fancycheckbox>
 							</div>
@@ -37,7 +37,7 @@
 							<label class="label">Color</label>
 							<div class="control">
 								<verte
-										v-model="namespace.hex_color"
+										v-model="namespace.hexColor"
 										menuPosition="top"
 										picker="square"
 										model="hex"

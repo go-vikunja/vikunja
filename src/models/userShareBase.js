@@ -9,7 +9,7 @@ export default class UserShareBaseModel extends AbstractModel {
 
 	defaults() {
 		return {
-			userID: '',
+			userId: '',
 			right: 0,
 			
 			created: null,

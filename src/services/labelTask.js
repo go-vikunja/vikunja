@@ -6,7 +6,7 @@ export default class LabelTaskService extends AbstractService {
 		super({
 			create: '/tasks/{taskID}/labels',
 			getAll: '/tasks/{taskID}/labels',
-			delete: '/tasks/{taskID}/labels/{label_id}',
+			delete: '/tasks/{taskID}/labels/{labelId}',
 		})
 	}
 	

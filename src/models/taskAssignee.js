@@ -9,8 +9,8 @@ export default class TaskAssigneeModel extends AbstractModel {
     defaults() {
         return {
             created: null,
-            user_id: 0,
-            task_id: 0,
+            userId: 0,
+            taskId: 0,
         }
     }
 }

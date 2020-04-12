@@ -5,9 +5,9 @@ import {formatISO} from 'date-fns'
 export default class AttachmentService extends AbstractService {
 	constructor() {
 		super({
-			create: '/tasks/{task_id}/attachments',
-			getAll: '/tasks/{task_id}/attachments',
-			delete: '/tasks/{task_id}/attachments/{id}',
+			create: '/tasks/{taskId}/attachments',
+			getAll: '/tasks/{taskId}/attachments',
+			delete: '/tasks/{taskId}/attachments/{id}',
 		})
 	}
 
@@ -36,7 +36,7 @@ export default class AttachmentService extends AbstractService {
 
 	download(model) {
 		this.http({
-			url: '/tasks/' + model.task_id + '/attachments/' + model.id,
+			url: '/tasks/' + model.taskId + '/attachments/' + model.id,
 			method: 'GET',
 			responseType: 'blob',
 		}).then((response) => {

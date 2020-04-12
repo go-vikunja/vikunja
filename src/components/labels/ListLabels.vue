@@ -10,11 +10,11 @@
 				<span
 					v-for="l in labels" :key="l.id"
 					class="tag"
-					:class="{'disabled': user.infos.id !== l.created_by.id}"
-					:style="{'background': l.hex_color, 'color': l.textColor}"
+					:class="{'disabled': user.infos.id !== l.createdBy.id}"
+					:style="{'background': l.hexColor, 'color': l.textColor}"
 				>
 					<span
-						v-if="user.infos.id !== l.created_by.id"
+						v-if="user.infos.id !== l.createdBy.id"
 						v-tooltip.bottom="'You are not allowed to edit this label because you dont own it.'">
 						{{ l.title }}
 					</span>
@@ -24,7 +24,7 @@
 						v-else>
 						{{ l.title }}
 					</a>
-					<a class="delete is-small" @click="deleteLabel(l)" v-if="user.infos.id === l.created_by.id"></a>
+					<a class="delete is-small" @click="deleteLabel(l)" v-if="user.infos.id === l.createdBy.id"></a>
 				</span>
 			</div>
 			<div class="column is-4" v-if="isLabelEdit">
@@ -57,7 +57,7 @@
 								<label class="label">Color</label>
 								<div class="control">
 									<verte
-											v-model="labelEditLabel.hex_color"
+											v-model="labelEditLabel.hexColor"
 											menuPosition="top"
 											picker="square"
 											model="hex"
@@ -155,7 +155,7 @@
 					})
 			},
 			editLabel(label) {
-				if(label.created_by.id !== this.user.infos.id) {
+				if(label.createdBy.id !== this.user.infos.id) {
 					return
 				}
 				this.labelEditLabel = label

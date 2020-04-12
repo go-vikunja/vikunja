@@ -10,7 +10,7 @@ export default class PasswordResetModel extends AbstractModel {
 	defaults() {
 		return {
 			token: '',
-			new_password: '',
+			newPassword: '',
 			email: '',
 		}
 	}

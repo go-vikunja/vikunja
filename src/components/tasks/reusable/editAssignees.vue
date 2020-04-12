@@ -84,7 +84,7 @@
 		},
 		methods: {
 			addAssignee(user) {
-				const taskAssignee = new TaskAssigneeModel({user_id: user.id, task_id: this.taskID})
+				const taskAssignee = new TaskAssigneeModel({userId: user.id, taskId: this.taskID})
 				this.taskAssigneeService.create(taskAssignee)
 					.then(() => {
 						this.success({message: 'The user was successfully assigned.'}, this)
@@ -94,7 +94,7 @@
 					})
 			},
 			removeAssignee(user) {
-				const taskAssignee = new TaskAssigneeModel({user_id: user.id, task_id: this.taskID})
+				const taskAssignee = new TaskAssigneeModel({userId: user.id, taskId: this.taskID})
 				this.taskAssigneeService.delete(taskAssignee)
 					.then(() => {
 						// Remove the assignee from the list
@@ -115,7 +115,7 @@
 					return
 				}
 
-				this.listUserService.getAll({listID: this.listID}, {s: query})
+				this.listUserService.getAll({listId: this.listID}, {s: query})
 					.then(response => {
 						// Filter the results to not include users who are already assigned
 						this.$set(this, 'foundUsers', differenceWith(response, this.assignees, (first, second) => {

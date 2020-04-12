@@ -46,7 +46,7 @@
 		},
 		methods: {
 			loadPendingTasks() {
-				let params = {sort_by: ['due_date_unix', 'id'], order_by: ['desc', 'desc']}
+				let params = {sort_by: ['dueDate_unix', 'id'], order_by: ['desc', 'desc']}
 				if (!this.showAll) {
 					params.startdate = Math.round(+ this.startDate / 1000)
 					params.enddate = Math.round(+ this.endDate / 1000)

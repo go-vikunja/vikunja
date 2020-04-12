@@ -32,7 +32,7 @@
 			</button>
 		</div>
 
-		<div class="field task-add" v-if="!list.is_archived">
+		<div class="field task-add" v-if="!list.isArchived">
 			<div class="field is-grouped">
 				<p class="control has-icons-left is-expanded" :class="{ 'is-loading': taskService.loading}">
 					<input v-focus class="input" :class="{ 'disabled': taskService.loading}" v-model="newTaskText" type="text" placeholder="Add a new task..." @keyup.enter="addTask()"/>
@@ -59,7 +59,7 @@
 				<div class="tasks" v-if="tasks && tasks.length > 0" :class="{'short': isTaskEdit}">
 					<div class="task" v-for="t in tasks" :key="t.id">
 						<single-task-in-list :the-task="t" @taskUpdated="updateTasks"/>
-						<div @click="editTask(t.id)" class="icon settings" v-if="!list.is_archived">
+						<div @click="editTask(t.id)" class="icon settings" v-if="!list.isArchived">
 							<icon icon="pencil-alt"/>
 						</div>
 					</div>
@@ -159,7 +159,7 @@
 				}
 				this.showError = false
 
-				let task = new TaskModel({text: this.newTaskText, listID: this.$route.params.id})
+				let task = new TaskModel({text: this.newTaskText, listId: this.$route.params.id})
 				this.taskService.create(task)
 					.then(r => {
 						this.tasks.push(r)

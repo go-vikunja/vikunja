@@ -7,7 +7,7 @@ export default class UserListModel extends UserShareBaseModel {
 		return merge(
 			super.defaults(),
 			{
-				listID: 0,
+				listId: 0,
 			}
 		)
 	}

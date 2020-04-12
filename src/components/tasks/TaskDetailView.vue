@@ -28,7 +28,7 @@
 							</div>
 							<edit-assignees
 									:task-i-d="task.id"
-									:list-i-d="task.listID"
+									:list-i-d="task.listId"
 									:initial-assignees="task.assignees"
 									ref="assignees"
 							/>
@@ -193,8 +193,8 @@
 						</h3>
 						<related-tasks
 								:task-i-d="taskID"
-								:list-id="task.listID"
-								:initial-related-tasks="task.related_tasks"
+								:list-id="task.listId"
+								:initial-related-tasks="task.relatedTasks"
 								:show-no-relations-notice="true"
 								ref="relatedTasks"
 						/>
@@ -397,7 +397,7 @@
 				this.activeFields.repeatAfter = this.task.repeatAfter.amount > 0
 				this.activeFields.labels = this.task.labels.length > 0
 				this.activeFields.attachments = this.task.attachments.length > 0
-				this.activeFields.relatedTasks = Object.keys(this.task.related_tasks).length > 0
+				this.activeFields.relatedTasks = Object.keys(this.task.relatedTasks).length > 0
 			},
 			saveTaskOnChange() {
 				this.$refs.taskTitle.spellcheck = false
@@ -444,7 +444,7 @@
 				// FIXME: Throw this away once we have vuex
 				this.$parent.namespaces.forEach(n => {
 					n.lists.forEach(l => {
-						if (l.id === this.task.listID) {
+						if (l.id === this.task.listId) {
 							this.list = l
 							this.namespace = n
 							return

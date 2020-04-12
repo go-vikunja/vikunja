@@ -7,8 +7,8 @@ export default class ListModel extends AbstractModel {
 	constructor(data) {
 		super(data)
 
-		if (this.hex_color !== '' && this.hex_color.substring(0, 1) !== '#') {
-			this.hex_color = '#' + this.hex_color
+		if (this.hexColor !== '' && this.hexColor.substring(0, 1) !== '#') {
+			this.hexColor = '#' + this.hexColor
 		}
 
 		// Make all tasks to task models
@@ -31,8 +31,8 @@ export default class ListModel extends AbstractModel {
 			owner: UserModel,
 			tasks: [],
 			namespaceID: 0,
-			is_archived: false,
-			hex_color: '',
+			isArchived: false,
+			hexColor: '',
 
 			created: null,
 			updated: null,

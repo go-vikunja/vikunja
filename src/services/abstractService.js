@@ -1,5 +1,7 @@
 import axios from 'axios'
 import {reduce, replace} from 'lodash'
+import {camelCase} from 'camel-case'
+import {snakeCase} from 'snake-case'
 
 let config = require('../../public/config.json')
 
@@ -40,19 +42,25 @@ export default class AbstractService {
 
 		// Set the interceptors to process every request
 		let self = this
-		this.http.interceptors.request.use( (config) => {
+		this.http.interceptors.request.use((config) => {
 			switch (config.method) {
 				case 'post':
-					if(this.useUpdateInterceptor())
-						config.data = JSON.stringify(self.beforeUpdate(config.data))
+					if (this.useUpdateInterceptor()) {
+						config.data = self.beforeUpdate(config.data)
+					}
+					config.data = JSON.stringify(this.modelToSnakeCase(config.data))
 					break
 				case 'put':
-					if(this.useCreateInterceptor())
-						config.data = JSON.stringify(self.beforeCreate(config.data))
+					if (this.useCreateInterceptor()) {
+						config.data = self.beforeCreate(config.data)
+					}
+					config.data = JSON.stringify(this.modelToSnakeCase(config.data))
 					break
 				case 'delete':
-					if(this.useDeleteInterceptor())
-						config.data = JSON.stringify(self.beforeDelete(config.data))
+					if (this.useDeleteInterceptor()) {
+						config.data = self.beforeDelete(config.data)
+					}
+					config.data = JSON.stringify(this.modelToSnakeCase(config.data))
 					break
 			}
 			return config
@@ -66,7 +74,7 @@ export default class AbstractService {
 		) {
 			this.http.defaults.headers.common['Authorization'] = 'Bearer ' + localStorage.getItem('token')
 		}
-		
+
 		this.paths = {
 			create: paths.create !== undefined ? paths.create : '',
 			get: paths.get !== undefined ? paths.get : '',
@@ -112,7 +120,7 @@ export default class AbstractService {
 	errorHandler(error) {
 		return Promise.reject(error)
 	}
-	
+
 	/////////////////
 	// Helper functions
 	///////////////
@@ -232,6 +240,32 @@ export default class AbstractService {
 	////////////
 
 	/**
+	 * Transforms field names to camel case.
+	 * @param model
+	 * @returns {*}
+	 */
+	modelToCamelCase(model) {
+		let parsedModel = {}
+		for (const m in model) {
+			parsedModel[camelCase(m)] = model[m]
+		}
+		return parsedModel
+	}
+
+	/**
+	 * Transforms field names to snake case - used before making an api request.
+	 * @param model
+	 * @returns {*}
+	 */
+	modelToSnakeCase(model) {
+		let parsedModel = {}
+		for (const m in model) {
+			parsedModel[snakeCase(m)] = model[m]
+		}
+		return parsedModel
+	}
+
+	/**
 	 * Default preprocessor for get requests
 	 * @param model
 	 * @return {*}
@@ -295,12 +329,16 @@ export default class AbstractService {
 	 */
 	getM(url, model = {}, params = {}) {
 		const cancel = this.setLoading()
+
 		model = this.beforeGet(model)
-		return this.http.get(this.getReplacedRoute(url, model), {params: params})
+		const finalUrl = this.getReplacedRoute(url, model)
+
+		return this.http.get(finalUrl, {params: params})
 			.catch(error => {
 				return this.errorHandler(error)
 			})
 			.then(response => {
+				response.data = this.modelToCamelCase(response.data)
 				return Promise.resolve(this.modelGetFactory(response.data))
 			})
 			.finally(() => {
@@ -325,7 +363,9 @@ export default class AbstractService {
 
 		const cancel = this.setLoading()
 		model = this.beforeGet(model)
-		return this.http.get(this.getReplacedRoute(this.paths.getAll, model), {params: params})
+		const finalUrl = this.getReplacedRoute(this.paths.getAll, model)
+
+		return this.http.get(finalUrl, {params: params})
 			.catch(error => {
 				return this.errorHandler(error)
 			})
@@ -338,16 +378,17 @@ export default class AbstractService {
 						return this.modelGetAllFactory(entry)
 					}))
 				}
-				if(response.data === null) {
+				if (response.data === null) {
 					return Promise.resolve([])
 				}
+				response.data = this.modelToCamelCase(response.data)
 				return Promise.resolve(this.modelGetAllFactory(response.data))
 			})
 			.finally(() => {
 				cancel()
 			})
 	}
-	
+
 	/**
 	 * Performs a put request to the url specified before
 	 * @param model
@@ -359,18 +400,21 @@ export default class AbstractService {
 		}
 
 		const cancel = this.setLoading()
-		return this.http.put(this.getReplacedRoute(this.paths.create, model), model)
+		const finalUrl = this.getReplacedRoute(this.paths.create, model)
+
+		return this.http.put(finalUrl, model)
 			.catch(error => {
 				return this.errorHandler(error)
 			})
 			.then(response => {
+				response.data = this.modelToCamelCase(response.data)
 				return Promise.resolve(this.modelCreateFactory(response.data))
 			})
 			.finally(() => {
 				cancel()
 			})
 	}
-	
+
 	/**
 	 * Performs a post request to the update url
 	 * @param model
@@ -382,11 +426,14 @@ export default class AbstractService {
 		}
 
 		const cancel = this.setLoading()
-		return this.http.post(this.getReplacedRoute(this.paths.update, model), model)
+		const finalUrl = this.getReplacedRoute(this.paths.update, model)
+
+		return this.http.post(finalUrl, model)
 			.catch(error => {
 				return this.errorHandler(error)
 			})
 			.then(response => {
+				response.data = this.modelToCamelCase(response.data)
 				return Promise.resolve(this.modelUpdateFactory(response.data))
 			})
 			.finally(() => {
@@ -405,11 +452,14 @@ export default class AbstractService {
 		}
 
 		const cancel = this.setLoading()
-		return this.http.delete(this.getReplacedRoute(this.paths.delete, model), model)
+		const finalUrl = this.getReplacedRoute(this.paths.delete, model)
+
+		return this.http.delete(finalUrl, model)
 			.catch(error => {
 				return this.errorHandler(error)
 			})
 			.then(response => {
+				response.data = this.modelToCamelCase(response.data)
 				return Promise.resolve(response.data)
 			})
 			.finally(() => {

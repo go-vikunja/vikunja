@@ -5,8 +5,8 @@ import {formatISO} from 'date-fns'
 export default class TaskRelationService extends AbstractService {
 	constructor() {
 		super({
-			create: '/tasks/{task_id}/relations',
-			delete: '/tasks/{task_id}/relations',
+			create: '/tasks/{taskId}/relations',
+			delete: '/tasks/{taskId}/relations',
 		})
 	}
 

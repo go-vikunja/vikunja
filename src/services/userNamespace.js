@@ -8,8 +8,8 @@ export default class UserNamespaceService extends AbstractService {
 		super({
 			create: '/namespaces/{namespaceID}/users',
 			getAll: '/namespaces/{namespaceID}/users',
-			update: '/namespaces/{namespaceID}/users/{userID}',
-			delete: '/namespaces/{namespaceID}/users/{userID}',
+			update: '/namespaces/{namespaceID}/users/{userId}',
+			delete: '/namespaces/{namespaceID}/users/{userId}',
 		})
 	}
 

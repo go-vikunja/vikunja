@@ -9,7 +9,7 @@ export default class TaskModel extends AbstractModel {
 		super(data)
 
 		this.id = Number(this.id)
-		this.listID = Number(this.listID)
+		this.listId = Number(this.listId)
 		
 		// Make date objects from timestamps
 		this.dueDate = this.dueDate ? new Date(this.dueDate) : null
@@ -50,8 +50,8 @@ export default class TaskModel extends AbstractModel {
 		}
 
 		// Make all subtasks to task models
-		Object.keys(this.related_tasks).forEach(relationKind  => {
-			this.related_tasks[relationKind] = this.related_tasks[relationKind].map(t => {
+		Object.keys(this.relatedTasks).forEach(relationKind  => {
+			this.relatedTasks[relationKind] = this.relatedTasks[relationKind].map(t => {
 				return new TaskModel(t)
 			})
 		})
@@ -83,14 +83,14 @@ export default class TaskModel extends AbstractModel {
 			parentTaskID: 0,
 			hexColor: '',
 			percentDone: 0,
-			related_tasks: {},
+			relatedTasks: {},
 			attachments: [],
 
 			createdBy: UserModel,
 			created: null,
 			updated: null,
 			
-			listID: 0, // Meta, only used when creating a new task
+			listId: 0, // Meta, only used when creating a new task
 		}
 	}
 	

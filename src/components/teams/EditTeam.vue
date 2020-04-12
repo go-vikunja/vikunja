@@ -175,14 +175,14 @@
 		},
 		methods: {
 			loadTeam() {
-				this.member = new TeamMemberModel({teamID: this.$route.params.id})
+				this.member = new TeamMemberModel({teamId: this.$route.params.id})
 				this.team = new TeamModel({id: this.$route.params.id})
 				this.teamService.get(this.team)
 					.then(response => {
 						this.$set(this, 'team', response)
 						let members = response.members
 						for (const m in members) {
-							members[m].teamID = this.$route.params.id
+							members[m].teamId = this.$route.params.id
 							if (members[m].id === this.user.infos.id && members[m].admin) {
 								this.userIsAdmin = true
 							}

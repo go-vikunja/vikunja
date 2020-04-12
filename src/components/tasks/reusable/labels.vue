@@ -1,6 +1,6 @@
 <template>
 	<div class="label-wrapper">
-		<span class="tag" v-for="label in labels" :style="{'background': label.hex_color, 'color': label.textColor}" :key="label.id">
+		<span class="tag" v-for="label in labels" :style="{'background': label.hexColor, 'color': label.textColor}" :key="label.id">
 			<span>{{ label.title }}</span>
 		</span>
 	</div>

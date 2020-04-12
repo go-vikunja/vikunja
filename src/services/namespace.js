@@ -24,12 +24,12 @@ export default class NamespaceService extends AbstractService {
 	}
 
 	beforeUpdate(namespace) {
-		namespace.hex_color = namespace.hex_color.substring(1, 7)
+		namespace.hexColor = namespace.hexColor.substring(1, 7)
 		return namespace
 	}
 
 	beforeCreate(namespace) {
-		namespace.hex_color = namespace.hex_color.substring(1, 7)
+		namespace.hexColor = namespace.hexColor.substring(1, 7)
 		return namespace
 	}
 }

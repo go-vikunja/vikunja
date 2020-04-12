@@ -94,9 +94,9 @@
 		},
 		created() {
 			this.taskCommentService = new TaskCommentService()
-			this.newComment = new TaskCommentModel({task_id: this.taskID})
-			this.commentEdit = new TaskCommentModel({task_id: this.taskID})
-			this.commentToDelete = new TaskCommentModel({task_id: this.taskID})
+			this.newComment = new TaskCommentModel({taskId: this.taskID})
+			this.commentEdit = new TaskCommentModel({taskId: this.taskID})
+			this.commentToDelete = new TaskCommentModel({taskId: this.taskID})
 			this.comments = []
 		},
 		mounted() {
@@ -109,7 +109,7 @@
 		},
 		methods: {
 			loadComments() {
-				this.taskCommentService.getAll({task_id: this.taskID})
+				this.taskCommentService.getAll({taskId: this.taskID})
 					.then(r => {
 						this.$set(this, 'comments', r)
 					})
@@ -143,7 +143,7 @@
 				if (this.commentEdit.comment === '') {
 					return
 				}
-				this.commentEdit.task_id = this.taskID
+				this.commentEdit.taskId = this.taskID
 				this.taskCommentService.update(this.commentEdit)
 					.then(r => {
 						for (const c in this.comments) {

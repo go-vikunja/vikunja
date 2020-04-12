@@ -66,7 +66,7 @@
 					return
 				}
 
-				let passwordReset = new PasswordResetModel({new_password: this.credentials.password})
+				let passwordReset = new PasswordResetModel({newPassword: this.credentials.password})
 				this.passwordResetService.resetPassword(passwordReset)
 					.then(response => {
 						this.successMessage = response.data.message

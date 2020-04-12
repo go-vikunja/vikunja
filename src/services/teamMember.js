@@ -5,8 +5,8 @@ import {formatISO} from 'date-fns'
 export default class TeamMemberService extends AbstractService {
 	constructor() {
 		super({
-			create: '/teams/{teamID}/members',
-			delete: '/teams/{teamID}/members/{id}', // "id" is the user id because we're intheriting from a normal user
+			create: '/teams/{teamId}/members',
+			delete: '/teams/{teamId}/members/{id}', // "id" is the user id because we're intheriting from a normal user
 		});
 	}
 
@@ -21,7 +21,7 @@ export default class TeamMemberService extends AbstractService {
 	}
 	
 	beforeCreate(model) {
-		model.userID = model.id // The api wants to get the user id as userID
+		model.userId = model.id // The api wants to get the user id as user_ID
 		model.admin = model.admin === null ? false : model.admin
 		return model
 	}

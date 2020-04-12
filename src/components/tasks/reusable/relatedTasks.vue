@@ -54,7 +54,7 @@
 								{{t.text}}
 							</span>
 						</router-link>
-						<a class="remove" @click="() => {showDeleteModal = true; relationToDelete = {relation_kind: kind, other_task_id: t.id}}">
+						<a class="remove" @click="() => {showDeleteModal = true; relationToDelete = {relationKind: kind, otherTaskId: t.id}}">
 							<icon icon="trash-alt"/>
 						</a>
 					</div>
@@ -156,9 +156,9 @@
 			},
 			addTaskRelation() {
 				let rel = new TaskRelationModel({
-					task_id: this.taskID,
-					other_task_id: this.newTaskRelationTask.id,
-					relation_kind: this.newTaskRelationKind,
+					taskId: this.taskID,
+					otherTaskId: this.newTaskRelationTask.id,
+					relationKind: this.newTaskRelationKind,
 				})
 				this.taskRelationService.create(rel)
 					.then(() => {
@@ -176,15 +176,15 @@
 			},
 			removeTaskRelation() {
 				let rel = new TaskRelationModel({
-					relation_kind: this.relationToDelete.relation_kind,
-					task_id: this.taskID,
-					other_task_id: this.relationToDelete.other_task_id,
+					relationKind: this.relationToDelete.relationKind,
+					taskId: this.taskID,
+					otherTaskId: this.relationToDelete.otherTaskId,
 				})
 				this.taskRelationService.delete(rel)
 					.then(r => {
 						Object.keys(this.relatedTasks).forEach(relationKind => {
 							for (const t in this.relatedTasks[relationKind]) {
-								if (this.relatedTasks[relationKind][t].id === this.relationToDelete.other_task_id && relationKind === this.relationToDelete.relation_kind) {
+								if (this.relatedTasks[relationKind][t].id === this.relationToDelete.otherTaskId && relationKind === this.relationToDelete.relationKind) {
 									this.relatedTasks[relationKind].splice(t, 1)
 								}
 							}
@@ -199,7 +199,7 @@
 					})
 			},
 			createAndRelateTask(text) {
-				const newTask = new TaskModel({text: text, listID: this.listId})
+				const newTask = new TaskModel({text: text, listId: this.listId})
 				this.taskService.create(newTask)
 					.then(r => {
 						this.newTaskRelationTask = r

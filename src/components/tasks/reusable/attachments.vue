@@ -33,7 +33,7 @@
 				<td>{{ a.file.getHumanSize() }}</td>
 				<td>{{ a.file.mime }}</td>
 				<td v-tooltip="formatDate(a.created)">{{ formatDateSince(a.created) }}</td>
-				<td><user :user="a.created_by" :avatar-size="30"/></td>
+				<td><user :user="a.createdBy" :avatar-size="30"/></td>
 				<td>
 					<div class="buttons has-addons">
 						<a class="button is-primary noshadow" @click="downloadAttachment(a)" v-tooltip="'Download this attachment'">
@@ -153,7 +153,7 @@
 				this.uploadFiles(this.$refs.files.files)
 			},
 			uploadFiles(files) {
-				const attachmentModel = new AttachmentModel({task_id: this.taskID})
+				const attachmentModel = new AttachmentModel({taskId: this.taskID})
 				this.attachmentService.create(attachmentModel, files)
 					.then(r => {
 						if(r.success !== null) {

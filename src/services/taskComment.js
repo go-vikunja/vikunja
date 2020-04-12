@@ -5,11 +5,11 @@ import {formatISO} from 'date-fns'
 export default class TaskCommentService extends AbstractService {
 	constructor() {
 		super({
-			create: '/tasks/{task_id}/comments',
-			getAll: '/tasks/{task_id}/comments',
-			get: '/tasks/{task_id}/comments/{id}',
-			update: '/tasks/{task_id}/comments/{id}',
-			delete: '/tasks/{task_id}/comments/{id}',
+			create: '/tasks/{taskId}/comments',
+			getAll: '/tasks/{taskId}/comments',
+			get: '/tasks/{taskId}/comments/{id}',
+			update: '/tasks/{taskId}/comments/{id}',
+			delete: '/tasks/{taskId}/comments/{id}',
 		})
 	}
 

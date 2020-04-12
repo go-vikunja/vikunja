@@ -126,10 +126,10 @@
 									</router-link>
 									<label class="menu-label" v-tooltip="n.name + ' (' + n.lists.length + ')'" :for="n.id + 'checker'">
 										<span class="name">
-											<span class="color-bubble" v-if="n.hex_color !== ''" :style="{ backgroundColor: n.hex_color }"></span>
+											<span class="color-bubble" v-if="n.hexColor !== ''" :style="{ backgroundColor: n.hexColor }"></span>
 											{{n.name}} ({{n.lists.length}})
 										</span>
-										<span class="is-archived" v-if="n.is_archived">
+										<span class="is-archived" v-if="n.isArchived">
 											Archived
 										</span>
 									</label>
@@ -140,10 +140,10 @@
 										<li v-for="l in n.lists" :key="l.id">
 											<router-link :to="{ name: 'showList', params: { id: l.id} }">
 												<span class="name">
-													<span class="color-bubble" v-if="l.hex_color !== ''" :style="{ backgroundColor: l.hex_color }"></span>
+													<span class="color-bubble" v-if="l.hexColor !== ''" :style="{ backgroundColor: l.hexColor }"></span>
 													{{l.title}}
 												</span>
-												<span class="is-archived" v-if="l.is_archived">
+												<span class="is-archived" v-if="l.isArchived">
 													Archived
 												</span>
 											</router-link>
@@ -301,7 +301,7 @@
 			},
 			loadNamespaces() {
 				this.namespaceService = new NamespaceService()
-				this.namespaceService.getAll({}, {is_archived: this.showArchived})
+				this.namespaceService.getAll({}, {isArchived: this.showArchived})
 					.then(r => {
 						this.$set(this, 'namespaces', r)
 					})

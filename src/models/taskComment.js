@@ -12,7 +12,7 @@ export default class TaskCommentModel extends AbstractModel {
 	defaults() {
 		return {
 			id: 0,
-			task_id: 0,
+			taskId: 0,
 			comment: '',
 			author: UserModel,
 			created: null,
