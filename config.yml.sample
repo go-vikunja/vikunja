@@ -106,14 +106,14 @@ log:
   path: <rootpath>logs
   # Whether to show any logging at all or none
   enabled: true
-  # Where the error log should go. Possible values are stdout, stderr, file or off to disable error logging.
-  errors: "stdout"
   # Where the normal log should go. Possible values are stdout, stderr, file or off to disable standard logging.
   standard: "stdout"
+  # Change the log level. Possible values (case-insensitive) are CRITICAL, ERROR, WARNING, NOTICE, INFO, DEBUG.
+  level: "INFO"
   # Whether or not to log database queries. Useful for debugging. Possible values are stdout, stderr, file or off to disable database logging.
   database: "off"
-  # The log level for database log messages. Possible values are CRITICAL, ERROR, WARNING, NOTICE, INFO, DEBUG.
-  databaselevel: "DEBUG"
+  # The log level for database log messages. Possible values (case-insensitive) are CRITICAL, ERROR, WARNING, NOTICE, INFO, DEBUG.
+  databaselevel: "WARNING"
   # Whether to log http requests or not. Possible values are stdout, stderr, file or off to disable http logging.
   http: "stdout"
   # Echo has its own logging which usually is unnessecary, which is why it is disabled by default. Possible values are stdout, stderr, file or off to disable standard logging.

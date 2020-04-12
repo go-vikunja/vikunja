@@ -21,8 +21,8 @@ import (
 	"github.com/op/go-logging"
 	"github.com/spf13/viper"
 	"io"
-	"log"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -35,14 +35,15 @@ const WebFmt = `${time_rfc3339_nano}: WEB ` + "\t" + `▶ ${remote_ip} ${id} ${m
 // Fmt is the general log format
 const Fmt = `%{color}%{time:` + time.RFC3339Nano + `}: %{level}` + "\t" + `▶ %{shortpkg}/%{shortfunc} %{id:03x}%{color:reset} %{message}`
 
+const logModule = `vikunja`
+
 // loginstance is the instance of the logger which is used under the hood to log
-var logInstance = logging.MustGetLogger("vikunja")
+var logInstance = logging.MustGetLogger(logModule)
 
 // InitLogger initializes the global log handler
 func InitLogger() {
 	if !config.LogEnabled.GetBool() {
 		// Disable all logging when loggin in general is disabled, overwriting everything a user might have set.
-		config.LogErrors.Set("off")
 		config.LogStandard.Set("off")
 		config.LogDatabase.Set("off")
 		config.LogHTTP.Set("off")
@@ -53,36 +54,30 @@ func InitLogger() {
 	// This show correct caller functions
 	logInstance.ExtraCalldepth = 1
 
-	if config.LogErrors.GetString() == "file" || config.LogStandard.GetString() == "file" {
+	if config.LogStandard.GetString() == "file" {
 		err := os.Mkdir(config.LogPath.GetString(), 0744)
 		if err != nil && !os.IsExist(err) {
-			log.Fatal("Could not create log folder: ", err.Error())
+			Fatalf("Could not create log folder: %s", err.Error())
 		}
 	}
-
-	var logBackends []logging.Backend
 
 	// We define our two backends
 	if config.LogStandard.GetString() != "off" {
 		stdWriter := GetLogWriter("standard")
-		stdBackend := logging.NewLogBackend(stdWriter, "", 0)
 
-		// Set the standard backend
-		logBackends = append(logBackends, logging.NewBackendFormatter(stdBackend, logging.MustStringFormatter(Fmt+"\n")))
+		level, err := logging.LogLevel(strings.ToUpper(config.LogLevel.GetString()))
+		if err != nil {
+			Fatalf("Error setting database log level: %s", err.Error())
+		}
+
+		logBackend := logging.NewLogBackend(stdWriter, "", 0)
+		backend := logging.NewBackendFormatter(logBackend, logging.MustStringFormatter(Fmt+"\n"))
+
+		backendLeveled := logging.AddModuleLevel(backend)
+		backendLeveled.SetLevel(level, logModule)
+
+		logInstance.SetBackend(backendLeveled)
 	}
-
-	if config.LogErrors.GetString() != "off" {
-		errWriter := GetLogWriter("error")
-		errBackend := logging.NewLogBackend(errWriter, "", 0)
-
-		// Only warnings and more severe messages should go to the error backend
-		errBackendLeveled := logging.AddModuleLevel(errBackend)
-		errBackendLeveled.SetLevel(logging.WARNING, "")
-		logBackends = append(logBackends, errBackendLeveled)
-	}
-
-	// Set our backends
-	logging.SetBackend(logBackends...)
 }
 
 // GetLogWriter returns the writer to where the normal log goes, depending on the config
@@ -90,9 +85,10 @@ func GetLogWriter(logfile string) (writer io.Writer) {
 	writer = os.Stdout // Set the default case to prevent nil pointer panics
 	switch viper.GetString("log." + logfile) {
 	case "file":
-		f, err := os.OpenFile(config.LogPath.GetString()+"/"+logfile+".log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		fullLogFilePath := config.LogPath.GetString() + "/" + logfile + ".log"
+		f, err := os.OpenFile(fullLogFilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 		if err != nil {
-			log.Fatal(err)
+			Fatalf("Could not create logfile %s: %s", fullLogFilePath, err.Error())
 		}
 		writer = f
 	case "stderr":
@@ -114,7 +110,7 @@ func GetLogger() *logging.Logger {
 
 // Debug is for debug messages
 func Debug(args ...interface{}) {
-	logInstance.Debug(args)
+	logInstance.Debug(args...)
 }
 
 // Debugf is for debug messages
@@ -124,7 +120,7 @@ func Debugf(format string, args ...interface{}) {
 
 // Info is for info messages
 func Info(args ...interface{}) {
-	logInstance.Info(args)
+	logInstance.Info(args...)
 }
 
 // Infof is for info messages
@@ -134,7 +130,7 @@ func Infof(format string, args ...interface{}) {
 
 // Error is for error messages
 func Error(args ...interface{}) {
-	logInstance.Error(args)
+	logInstance.Error(args...)
 }
 
 // Errorf is for error messages
@@ -144,7 +140,7 @@ func Errorf(format string, args ...interface{}) {
 
 // Warning is for warning messages
 func Warning(args ...interface{}) {
-	logInstance.Warning(args)
+	logInstance.Warning(args...)
 }
 
 // Warningf is for warning messages
@@ -154,7 +150,7 @@ func Warningf(format string, args ...interface{}) {
 
 // Critical is for critical messages
 func Critical(args ...interface{}) {
-	logInstance.Critical(args)
+	logInstance.Critical(args...)
 }
 
 // Criticalf is for critical messages
@@ -164,7 +160,7 @@ func Criticalf(format string, args ...interface{}) {
 
 // Fatal is for fatal messages
 func Fatal(args ...interface{}) {
-	logInstance.Fatal(args)
+	logInstance.Fatal(args...)
 }
 
 // Fatalf is for fatal messages

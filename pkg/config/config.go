@@ -79,8 +79,8 @@ const (
 	RedisDB       Key = `redis.db`
 
 	LogEnabled       Key = `log.enabled`
-	LogErrors        Key = `log.errors`
 	LogStandard      Key = `log.standard`
+	LogLevel         Key = `log.level`
 	LogDatabase      Key = `log.database`
 	LogDatabaseLevel Key = `log.databaselevel`
 	LogHTTP          Key = `log.http`
@@ -212,10 +212,10 @@ func InitDefaultConfig() {
 	RedisDB.setDefault(0)
 	// Logger
 	LogEnabled.setDefault(true)
-	LogErrors.setDefault("stdout")
 	LogStandard.setDefault("stdout")
+	LogLevel.setDefault("INFO")
 	LogDatabase.setDefault("off")
-	LogDatabaseLevel.setDefault("DEBUG")
+	LogDatabaseLevel.setDefault("WARNING")
 	LogHTTP.setDefault("stdout")
 	LogEcho.setDefault("off")
 	LogPath.setDefault(ServiceRootpath.GetString() + "/logs")
