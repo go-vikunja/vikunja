@@ -76,7 +76,7 @@ func (l *Label) hasAccessToLabel(a web.Auth) (bool, error) {
 	has, err := x.Table("labels").
 		Select("labels.*").
 		Join("LEFT", "label_task", "label_task.label_id = labels.id").
-		Where("label_task.label_id != null OR labels.created_by_id = ?", a.GetID()).
+		Where("label_task.label_id is not null OR labels.created_by_id = ?", a.GetID()).
 		Or(builder.In("label_task.task_id", taskIDs)).
 		And("labels.id = ?", l.ID).
 		Exist(&labels)

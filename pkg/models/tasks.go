@@ -39,7 +39,7 @@ type Task struct {
 	// The task description.
 	Description string `xorm:"longtext null" json:"description"`
 	// Whether a task is done or not.
-	Done bool `xorm:"INDEX null default false" json:"done"`
+	Done bool `xorm:"INDEX null" json:"done"`
 	// The time when a task was marked as done.
 	DoneAt timeutil.TimeStamp `xorm:"INDEX null 'done_at_unix'" json:"doneAt"`
 	// The time when the task is due.
@@ -184,41 +184,38 @@ func getRawTasksForLists(lists []*List, opts *taskOptions) (taskMap map[int64]*T
 	taskMap = make(map[int64]*Task)
 
 	// Then return all tasks for that lists
-	if len(filters) > 0 {
+	query := x.
+		OrderBy(orderby)
 
-		err := x.In("list_id", listIDs).
-			Where("text LIKE ?", "%"+opts.search+"%").
-			Where(builder.Or(filters...)).
-			OrderBy(orderby).
-			Limit(getLimitFromPageIndex(opts.page, opts.perPage)).
-			Find(&taskMap)
-		if err != nil {
-			return nil, 0, 0, err
-		}
-
-		totalItems, err = x.In("list_id", listIDs).
-			Where("text LIKE ?", "%"+opts.search+"%").
-			Where(builder.Or(filters...)).
-			Count(&Task{})
-		if err != nil {
-			return nil, 0, 0, err
-		}
-	} else {
-		err := x.In("list_id", listIDs).
-			Where("text LIKE ?", "%"+opts.search+"%").
-			OrderBy(orderby).
-			Limit(getLimitFromPageIndex(opts.page, opts.perPage)).
-			Find(&taskMap)
-		if err != nil {
-			return nil, 0, 0, err
-		}
-		totalItems, err = x.In("list_id", listIDs).
-			Where("text LIKE ?", "%"+opts.search+"%").
-			Count(&Task{})
-		if err != nil {
-			return nil, 0, 0, err
-		}
+	if len(opts.search) > 0 {
+		query = query.Where("text LIKE ?", "%"+opts.search+"%")
 	}
+
+	if len(listIDs) > 0 {
+		query = query.In("list_id", listIDs)
+	}
+
+	if len(filters) > 0 {
+		query = query.Where(builder.Or(filters...))
+	}
+
+	limit, start := getLimitFromPageIndex(opts.page, opts.perPage)
+
+	if limit > 0 {
+		query = query.Limit(limit, start)
+	}
+
+	err = query.Find(&taskMap)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	totalItems, err = query.
+		Count(&Task{})
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
 	return taskMap, len(taskMap), totalItems, nil
 }
 

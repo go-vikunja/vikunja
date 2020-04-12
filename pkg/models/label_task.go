@@ -162,20 +162,27 @@ func getLabelsByTaskIDs(opts *LabelByTaskIDsOptions) (ls []*labelWithTaskID, res
 
 	// Get all labels associated with these tasks
 	var labels []*labelWithTaskID
-	cond := builder.And(builder.In("label_task.task_id", opts.TaskIDs), builder.NotNull{"label_task.label_id"})
+	cond := builder.And(builder.NotNull{"label_task.label_id"})
+	if len(opts.TaskIDs) > 0 {
+		cond = builder.And(builder.In("label_task.task_id", opts.TaskIDs), cond)
+	}
 	if opts.GetUnusedLabels {
 		cond = builder.Or(cond, builder.Eq{"labels.created_by_id": opts.User.ID})
 	}
 
-	err = x.Table("labels").
+	limit, start := getLimitFromPageIndex(opts.Page, opts.PerPage)
+
+	query := x.Table("labels").
 		Select(selectStmt).
 		Join("LEFT", "label_task", "label_task.label_id = labels.id").
 		Where(cond).
 		And("labels.title LIKE ?", "%"+opts.Search+"%").
 		GroupBy(groupBy).
-		OrderBy("labels.id ASC").
-		Limit(getLimitFromPageIndex(opts.Page, opts.PerPage)).
-		Find(&labels)
+		OrderBy("labels.id ASC")
+	if limit > 0 {
+		query = query.Limit(limit, start)
+	}
+	err = query.Find(&labels)
 	if err != nil {
 		return nil, 0, 0, err
 	}

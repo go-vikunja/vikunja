@@ -46,7 +46,7 @@ func CreateTestEngine() (engine *xorm.Engine, err error) {
 	}
 
 	engine.SetMapper(core.GonicMapper{})
-	logger := xorm.NewSimpleLogger(log.GetLogWriter("database"))
+	logger := log.NewXormLogger()
 	logger.ShowSQL(os.Getenv("UNIT_TESTS_VERBOSE") == "1")
 	engine.SetLogger(logger)
 	x = engine

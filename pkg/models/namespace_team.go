@@ -164,12 +164,16 @@ func (tn *TeamNamespace) ReadAll(a web.Auth, search string, page int, perPage in
 	// Get the teams
 	all := []*TeamWithRight{}
 
-	err = x.Table("teams").
+	limit, start := getLimitFromPageIndex(page, perPage)
+
+	query := x.Table("teams").
 		Join("INNER", "team_namespaces", "team_id = teams.id").
 		Where("team_namespaces.namespace_id = ?", tn.NamespaceID).
-		Limit(getLimitFromPageIndex(page, perPage)).
-		Where("teams.name LIKE ?", "%"+search+"%").
-		Find(&all)
+		Where("teams.name LIKE ?", "%"+search+"%")
+	if limit > 0 {
+		query = query.Limit(limit, start)
+	}
+	err = query.Find(&all)
 	if err != nil {
 		return nil, 0, 0, err
 	}

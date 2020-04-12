@@ -78,13 +78,14 @@ const (
 	RedisPassword Key = `redis.password`
 	RedisDB       Key = `redis.db`
 
-	LogEnabled  Key = `log.enabled`
-	LogErrors   Key = `log.errors`
-	LogStandard Key = `log.standard`
-	LogDatabase Key = `log.database`
-	LogHTTP     Key = `log.http`
-	LogEcho     Key = `log.echo`
-	LogPath     Key = `log.path`
+	LogEnabled       Key = `log.enabled`
+	LogErrors        Key = `log.errors`
+	LogStandard      Key = `log.standard`
+	LogDatabase      Key = `log.database`
+	LogDatabaseLevel Key = `log.databaselevel`
+	LogHTTP          Key = `log.http`
+	LogEcho          Key = `log.echo`
+	LogPath          Key = `log.path`
 
 	RateLimitEnabled Key = `ratelimit.enabled`
 	RateLimitKind    Key = `ratelimit.kind`
@@ -214,6 +215,7 @@ func InitDefaultConfig() {
 	LogErrors.setDefault("stdout")
 	LogStandard.setDefault("stdout")
 	LogDatabase.setDefault("off")
+	LogDatabaseLevel.setDefault("DEBUG")
 	LogHTTP.setDefault("stdout")
 	LogEcho.setDefault("off")
 	LogPath.setDefault(ServiceRootpath.GetString() + "/logs")

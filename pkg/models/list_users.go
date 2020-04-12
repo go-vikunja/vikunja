@@ -182,14 +182,18 @@ func (lu *ListUser) ReadAll(a web.Auth, search string, page int, perPage int) (r
 		return nil, 0, 0, ErrNeedToHaveListReadAccess{UserID: a.GetID(), ListID: lu.ListID}
 	}
 
+	limit, start := getLimitFromPageIndex(page, perPage)
+
 	// Get all users
 	all := []*UserWithRight{}
-	err = x.
+	query := x.
 		Join("INNER", "users_list", "user_id = users.id").
 		Where("users_list.list_id = ?", lu.ListID).
-		Limit(getLimitFromPageIndex(page, perPage)).
-		Where("users.username LIKE ?", "%"+search+"%").
-		Find(&all)
+		Where("users.username LIKE ?", "%"+search+"%")
+	if limit > 0 {
+		query = query.Limit(limit, start)
+	}
+	err = query.Find(&all)
 	if err != nil {
 		return nil, 0, 0, err
 	}

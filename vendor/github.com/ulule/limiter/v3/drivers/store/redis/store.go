@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	libredis "github.com/go-redis/redis"
+	libredis "github.com/go-redis/redis/v7"
 	"github.com/pkg/errors"
 
 	"github.com/ulule/limiter/v3"
@@ -176,7 +176,7 @@ func (store *Store) doPeekValue(rtx *libredis.Tx, key string) (int64, time.Durat
 
 // peekValue will retrieve the counter and its expiration for given key.
 func peekValue(rtx *libredis.Tx, key string) (int64, time.Duration, error) {
-	pipe := rtx.Pipeline()
+	pipe := rtx.TxPipeline()
 	value := pipe.Get(key)
 	expire := pipe.PTTL(key)
 
@@ -240,7 +240,7 @@ func (store *Store) doUpdateValue(rtx *libredis.Tx, key string,
 
 // updateValue will try to increment the counter identified by given key.
 func updateValue(rtx *libredis.Tx, key string, expiration time.Duration) (int64, time.Duration, error) {
-	pipe := rtx.Pipeline()
+	pipe := rtx.TxPipeline()
 	value := pipe.Incr(key)
 	expire := pipe.PTTL(key)
 
@@ -259,11 +259,10 @@ func updateValue(rtx *libredis.Tx, key string, expiration time.Duration) (int64,
 		return 0, 0, err
 	}
 
-	// If ttl is -1ms, we have to define key expiration.
-	// PTTL return values changed as of Redis 2.8
-	// Now the command returns -2ms if the key does not exist, and -1ms if the key exists, but there is no expiry set
-	// We shouldn't try to set an expiry on a key that doesn't exist
-	if ttl == (-1 * time.Millisecond) {
+	// If ttl is less than zero, we have to define key expiration.
+	// The PTTL command returns -2 if the key does not exist, and -1 if the key exists, but there is no expiry set.
+	// We shouldn't try to set an expiry on a key that doesn't exist.
+	if isExpirationRequired(ttl) {
 		expire := rtx.Expire(key, expiration)
 
 		ok, err := expire.Result()
@@ -277,7 +276,6 @@ func updateValue(rtx *libredis.Tx, key string, expiration time.Duration) (int64,
 	}
 
 	return count, ttl, nil
-
 }
 
 // doResetValue will execute resetValue with a retry mecanism (optimistic locking) until store.MaxRetry is reached.
@@ -295,16 +293,12 @@ func (store *Store) doResetValue(rtx *libredis.Tx, key string) error {
 func resetValue(rtx *libredis.Tx, key string) error {
 	deletion := rtx.Del(key)
 
-	count, err := deletion.Result()
+	_, err := deletion.Result()
 	if err != nil {
 		return err
 	}
-	if count != 1 {
-		return errors.New("cannot delete key")
-	}
 
 	return nil
-
 }
 
 // ping checks if redis is alive.
@@ -317,4 +311,17 @@ func (store *Store) ping() (bool, error) {
 	}
 
 	return (pong == "PONG"), nil
+}
+
+// isExpirationRequired returns if we should set an expiration on a key, using (error) result from PTTL command.
+// The error code is -2 if the key does not exist, and -1 if the key exists.
+// Usually, it should be returned in nanosecond, but some users have reported that it could be in millisecond as well.
+// Better safe than sorry: we handle both.
+func isExpirationRequired(ttl time.Duration) bool {
+	switch ttl {
+	case -1 * time.Nanosecond, -1 * time.Millisecond:
+		return true
+	default:
+		return false
+	}
 }

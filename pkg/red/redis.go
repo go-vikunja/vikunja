@@ -19,7 +19,7 @@ package red
 import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
-	"github.com/go-redis/redis"
+	"github.com/go-redis/redis/v7"
 )
 
 var r *redis.Client

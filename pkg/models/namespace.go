@@ -190,7 +190,9 @@ func (n *Namespace) ReadAll(a web.Auth, search string, page int, perPage int) (r
 		[]*List{},
 	})
 
-	err = x.Select("namespaces.*").
+	limit, start := getLimitFromPageIndex(page, perPage)
+
+	query := x.Select("namespaces.*").
 		Table("namespaces").
 		Join("LEFT", "team_namespaces", "namespaces.id = team_namespaces.namespace_id").
 		Join("LEFT", "team_members", "team_members.team_id = team_namespaces.team_id").
@@ -199,10 +201,12 @@ func (n *Namespace) ReadAll(a web.Auth, search string, page int, perPage int) (r
 		Or("namespaces.owner_id = ?", doer.ID).
 		Or("users_namespace.user_id = ?", doer.ID).
 		GroupBy("namespaces.id").
-		Limit(getLimitFromPageIndex(page, perPage)).
 		Where("namespaces.name LIKE ?", "%"+search+"%").
-		Where(isArchivedCond).
-		Find(&all)
+		Where(isArchivedCond)
+	if limit > 0 {
+		query = query.Limit(limit, start)
+	}
+	err = query.Find(&all)
 	if err != nil {
 		return all, 0, 0, err
 	}

@@ -253,14 +253,17 @@ func (la *TaskAssginee) ReadAll(a web.Auth, search string, page int, perPage int
 	if !can {
 		return nil, 0, 0, ErrGenericForbidden{}
 	}
+	limit, start := getLimitFromPageIndex(page, perPage)
 
 	var taskAssignees []*user.User
-	err = x.Table("task_assignees").
+	query := x.Table("task_assignees").
 		Select("users.*").
 		Join("INNER", "users", "task_assignees.user_id = users.id").
-		Where("task_id = ? AND users.username LIKE ?", la.TaskID, "%"+search+"%").
-		Limit(getLimitFromPageIndex(page, perPage)).
-		Find(&taskAssignees)
+		Where("task_id = ? AND users.username LIKE ?", la.TaskID, "%"+search+"%")
+	if limit > 0 {
+		query = query.Limit(limit, start)
+	}
+	err = query.Find(&taskAssignees)
 	if err != nil {
 		return nil, 0, 0, err
 	}

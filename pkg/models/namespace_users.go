@@ -170,12 +170,17 @@ func (nu *NamespaceUser) ReadAll(a web.Auth, search string, page int, perPage in
 
 	// Get all users
 	all := []*UserWithRight{}
-	err = x.
+
+	limit, start := getLimitFromPageIndex(page, perPage)
+
+	query := x.
 		Join("INNER", "users_namespace", "user_id = users.id").
 		Where("users_namespace.namespace_id = ?", nu.NamespaceID).
-		Limit(getLimitFromPageIndex(page, perPage)).
-		Where("users.username LIKE ?", "%"+search+"%").
-		Find(&all)
+		Where("users.username LIKE ?", "%"+search+"%")
+	if limit > 0 {
+		query = query.Limit(limit, start)
+	}
+	err = query.Find(&all)
 	if err != nil {
 		return nil, 0, 0, err
 	}

@@ -112,10 +112,14 @@ func (ta *TaskAttachment) ReadOne() (err error) {
 func (ta *TaskAttachment) ReadAll(a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
 	attachments := []*TaskAttachment{}
 
-	err = x.
-		Limit(getLimitFromPageIndex(page, perPage)).
-		Where("task_id = ?", ta.TaskID).
-		Find(&attachments)
+	limit, start := getLimitFromPageIndex(page, perPage)
+
+	query := x.
+		Where("task_id = ?", ta.TaskID)
+	if limit > 0 {
+		query = query.Limit(limit, start)
+	}
+	err = query.Find(&attachments)
 	if err != nil {
 		return nil, 0, 0, err
 	}

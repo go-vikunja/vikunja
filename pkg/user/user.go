@@ -309,7 +309,7 @@ func UpdateUser(user *User) (updatedUser *User, err error) {
 	user.Password = theUser.Password // set the password to the one in the database to not accedently resetting it
 
 	// Update it
-	_, err = x.Id(user.ID).Update(user)
+	_, err = x.ID(user.ID).Update(user)
 	if err != nil {
 		return &User{}, err
 	}
@@ -344,7 +344,7 @@ func UpdateUserPassword(user *User, newPassword string) (err error) {
 	theUser.Password = hashed
 
 	// Update it
-	_, err = x.Id(user.ID).Update(theUser)
+	_, err = x.ID(user.ID).Update(theUser)
 	if err != nil {
 		return err
 	}

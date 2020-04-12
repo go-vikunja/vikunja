@@ -1,6 +1,7 @@
 - id: 1
   text: 'task #1'
   description: 'Lorem Ipsum'
+  done: false
   created_by_id: 1
   list_id: 1
   index: 1
@@ -16,6 +17,7 @@
   updated: 1543626724
 - id: 3
   text: 'task #3 high prio'
+  done: false
   created_by_id: 1
   list_id: 1
   index: 3
@@ -24,6 +26,7 @@
   priority: 100
 - id: 4
   text: 'task #4 low prio'
+  done: false
   created_by_id: 1
   list_id: 1
   index: 4
@@ -32,6 +35,7 @@
   priority: 1
 - id: 5
   text: 'task #5 higher due date'
+  done: false
   created_by_id: 1
   list_id: 1
   index: 5
@@ -40,6 +44,7 @@
   due_date_unix: 1543636724
 - id: 6
   text: 'task #6 lower due date'
+  done: false
   created_by_id: 1
   list_id: 1
   index: 6
@@ -48,6 +53,7 @@
   due_date_unix: 1543616724
 - id: 7
   text: 'task #7 with start date'
+  done: false
   created_by_id: 1
   list_id: 1
   index: 7
@@ -56,6 +62,7 @@
   start_date_unix: 1544600000
 - id: 8
   text: 'task #8 with end date'
+  done: false
   created_by_id: 1
   list_id: 1
   index: 8
@@ -64,6 +71,7 @@
   end_date_unix: 1544700000
 - id: 9
   text: 'task #9 with start and end date'
+  done: false
   created_by_id: 1
   list_id: 1
   index: 9
@@ -73,6 +81,7 @@
   end_date_unix: 1544700000
 - id: 10
   text: 'task #10 basic'
+  done: false
   created_by_id: 1
   list_id: 1
   index: 10
@@ -80,6 +89,7 @@
   updated: 1543626724
 - id: 11
   text: 'task #11 basic'
+  done: false
   created_by_id: 1
   list_id: 1
   index: 11
@@ -87,6 +97,7 @@
   updated: 1543626724
 - id: 12
   text: 'task #12 basic'
+  done: false
   created_by_id: 1
   list_id: 1
   index: 12
@@ -94,6 +105,7 @@
   updated: 1543626724
 - id: 13
   text: 'task #13 basic other list'
+  done: false
   created_by_id: 1
   list_id: 2
   index: 1
@@ -101,6 +113,7 @@
   updated: 1543626724
 - id: 14
   text: 'task #14 basic other list'
+  done: false
   created_by_id: 5
   list_id: 5
   index: 1
@@ -108,6 +121,7 @@
   updated: 1543626724
 - id: 15
   text: 'task #15'
+  done: false
   created_by_id: 6
   list_id: 6
   index: 1
@@ -115,6 +129,7 @@
   updated: 1543626724
 - id: 16
   text: 'task #16'
+  done: false
   created_by_id: 6
   list_id: 7
   index: 1
@@ -122,6 +137,7 @@
   updated: 1543626724
 - id: 17
   text: 'task #17'
+  done: false
   created_by_id: 6
   list_id: 8
   index: 1
@@ -129,6 +145,7 @@
   updated: 1543626724
 - id: 18
   text: 'task #18'
+  done: false
   created_by_id: 6
   list_id: 9
   index: 1
@@ -136,6 +153,7 @@
   updated: 1543626724
 - id: 19
   text: 'task #19'
+  done: false
   created_by_id: 6
   list_id: 10
   index: 1
@@ -143,6 +161,7 @@
   updated: 1543626724
 - id: 20
   text: 'task #20'
+  done: false
   created_by_id: 6
   list_id: 11
   index: 1
@@ -150,6 +169,7 @@
   updated: 1543626724
 - id: 21
   text: 'task #21'
+  done: false
   created_by_id: 6
   list_id: 12
   index: 1
@@ -157,6 +177,7 @@
   updated: 1543626724
 - id: 22
   text: 'task #22'
+  done: false
   created_by_id: 6
   list_id: 13
   index: 1
@@ -164,6 +185,7 @@
   updated: 1543626724
 - id: 23
   text: 'task #23'
+  done: false
   created_by_id: 6
   list_id: 14
   index: 1
@@ -171,6 +193,7 @@
   updated: 1543626724
 - id: 24
   text: 'task #24'
+  done: false
   created_by_id: 6
   list_id: 15
   index: 1
@@ -178,6 +201,7 @@
   updated: 1543626724
 - id: 25
   text: 'task #25'
+  done: false
   created_by_id: 6
   list_id: 16
   index: 1
@@ -185,6 +209,7 @@
   updated: 1543626724
 - id: 26
   text: 'task #26'
+  done: false
   created_by_id: 6
   list_id: 17
   index: 1
@@ -192,6 +217,7 @@
   updated: 1543626724
 - id: 27
   text: 'task #27 with reminders'
+  done: false
   created_by_id: 1
   list_id: 1
   index: 12
@@ -208,6 +234,7 @@
   updated: 1543626724
 - id: 29
   text: 'task #29 with parent task (1)'
+  done: false
   created_by_id: 1
   list_id: 1
   index: 14
@@ -215,6 +242,7 @@
   updated: 1543626724
 - id: 30
   text: 'task #30 with assignees'
+  done: false
   created_by_id: 1
   list_id: 1
   index: 15
@@ -222,6 +250,7 @@
   updated: 1543626724
 - id: 31
   text: 'task #31 with color'
+  done: false
   created_by_id: 1
   list_id: 1
   index: 16
@@ -230,6 +259,7 @@
   updated: 1543626724
 - id: 32
   text: 'task #32'
+  done: false
   created_by_id: 1
   list_id: 3
   index: 1
@@ -237,6 +267,7 @@
   updated: 1543626724
 - id: 33
   text: 'task #33 with percent done'
+  done: false
   created_by_id: 1
   list_id: 1
   index: 17
@@ -246,6 +277,7 @@
   # This task is forbidden for user1
 - id: 34
   text: 'task #34'
+  done: false
   created_by_id: 13
   list_id: 20
   index: 20
@@ -253,6 +285,7 @@
   updated: 1543626724
 - id: 35
   text: 'task #35'
+  done: false
   created_by_id: 1
   list_id: 21
   index: 1
@@ -260,6 +293,7 @@
   updated: 1543626724
 - id: 36
   text: 'task #36'
+  done: false
   created_by_id: 1
   list_id: 22
   index: 1

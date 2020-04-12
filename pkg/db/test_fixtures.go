@@ -24,6 +24,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"path/filepath"
 	"testing"
+	"xorm.io/xorm/schemas"
 )
 
 var fixtures *testfixtures.Loader
@@ -73,7 +74,7 @@ func LoadFixtures() error {
 
 	// Copied from https://github.com/go-gitea/gitea/blob/master/models/test_fixtures.go#L39
 	// Now if we're running postgres we need to tell it to update the sequences
-	if x.Dialect().DriverName() == "postgres" {
+	if x.Dialect().URI().DBType == schemas.POSTGRES {
 		results, err := x.QueryString(`SELECT 'SELECT SETVAL(' ||
 		quote_literal(quote_ident(PGT.schemaname) || '.' || quote_ident(S.relname)) ||
 		', COALESCE(MAX(' ||quote_ident(C.attname)|| '), 1) ) FROM ' ||

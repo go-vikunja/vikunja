@@ -235,9 +235,11 @@ func getRawListsForUser(opts *listOptions) (lists []*List, resultCount int, tota
 		)
 	}
 
+	limit, start := getLimitFromPageIndex(opts.page, opts.perPage)
+
 	// Gets all Lists where the user is either owner or in a team which has access to the list
 	// Or in a team which has namespace read access
-	err = x.Select("l.*").
+	query := x.Select("l.*").
 		Table("list").
 		Alias("l").
 		Join("INNER", []string{"namespaces", "n"}, "l.namespace_id = n.id").
@@ -247,16 +249,20 @@ func getRawListsForUser(opts *listOptions) (lists []*List, resultCount int, tota
 		Join("LEFT", []string{"team_members", "tm2"}, "tm2.team_id = tl.team_id").
 		Join("LEFT", []string{"users_list", "ul"}, "ul.list_id = l.id").
 		Join("LEFT", []string{"users_namespace", "un"}, "un.namespace_id = l.namespace_id").
-		Where("tm.user_id = ?", fullUser.ID).
-		Or("tm2.user_id = ?", fullUser.ID).
-		Or("l.owner_id = ?", fullUser.ID).
-		Or("ul.user_id = ?", fullUser.ID).
-		Or("un.user_id = ?", fullUser.ID).
+		Where(builder.Or(
+			builder.Eq{"tm.user_id": fullUser.ID},
+			builder.Eq{"tm2.user_id": fullUser.ID},
+			builder.Eq{"ul.user_id": fullUser.ID},
+			builder.Eq{"un.user_id": fullUser.ID},
+			builder.Eq{"l.owner_id": fullUser.ID},
+		)).
 		GroupBy("l.id").
-		Limit(getLimitFromPageIndex(opts.page, opts.perPage)).
 		Where("l.title LIKE ?", "%"+opts.search+"%").
-		Where(isArchivedCond).
-		Find(&lists)
+		Where(isArchivedCond)
+	if limit > 0 {
+		query = query.Limit(limit, start)
+	}
+	err = query.Find(&lists)
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -271,13 +277,14 @@ func getRawListsForUser(opts *listOptions) (lists []*List, resultCount int, tota
 		Join("LEFT", []string{"team_members", "tm2"}, "tm2.team_id = tl.team_id").
 		Join("LEFT", []string{"users_list", "ul"}, "ul.list_id = l.id").
 		Join("LEFT", []string{"users_namespace", "un"}, "un.namespace_id = l.namespace_id").
-		Where("tm.user_id = ?", fullUser.ID).
-		Or("tm2.user_id = ?", fullUser.ID).
-		Or("l.owner_id = ?", fullUser.ID).
-		Or("ul.user_id = ?", fullUser.ID).
-		Or("un.user_id = ?", fullUser.ID).
+		Where(builder.Or(
+			builder.Eq{"tm.user_id": fullUser.ID},
+			builder.Eq{"tm2.user_id": fullUser.ID},
+			builder.Eq{"ul.user_id": fullUser.ID},
+			builder.Eq{"un.user_id": fullUser.ID},
+			builder.Eq{"l.owner_id": fullUser.ID},
+		)).
 		GroupBy("l.id").
-		Limit(getLimitFromPageIndex(opts.page, opts.perPage)).
 		Where("l.title LIKE ?", "%"+opts.search+"%").
 		Where(isArchivedCond).
 		Count(&List{})

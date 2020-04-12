@@ -112,6 +112,8 @@ log:
   standard: "stdout"
   # Whether or not to log database queries. Useful for debugging. Possible values are stdout, stderr, file or off to disable database logging.
   database: "off"
+  # The log level for database log messages. Possible values are CRITICAL, ERROR, WARNING, NOTICE, INFO, DEBUG.
+  databaselevel: "DEBUG"
   # Whether to log http requests or not. Possible values are stdout, stderr, file or off to disable http logging.
   http: "stdout"
   # Echo has its own logging which usually is unnessecary, which is why it is disabled by default. Possible values are stdout, stderr, file or off to disable standard logging.

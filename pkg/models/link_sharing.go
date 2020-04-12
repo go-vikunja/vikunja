@@ -155,11 +155,15 @@ func (share *LinkSharing) ReadAll(a web.Auth, search string, page int, perPage i
 		return nil, 0, 0, ErrGenericForbidden{}
 	}
 
+	limit, start := getLimitFromPageIndex(page, perPage)
+
 	var shares []*LinkSharing
-	err = x.
-		Where("list_id = ? AND hash LIKE ?", share.ListID, "%"+search+"%").
-		Limit(getLimitFromPageIndex(page, perPage)).
-		Find(&shares)
+	query := x.
+		Where("list_id = ? AND hash LIKE ?", share.ListID, "%"+search+"%")
+	if limit > 0 {
+		query = query.Limit(limit, start)
+	}
+	err = query.Find(&shares)
 	if err != nil {
 		return nil, 0, 0, err
 	}

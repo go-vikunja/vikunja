@@ -203,14 +203,18 @@ func (t *Team) ReadAll(a web.Auth, search string, page int, perPage int) (result
 		return nil, 0, 0, ErrGenericForbidden{}
 	}
 
+	limit, start := getLimitFromPageIndex(page, perPage)
+
 	all := []*Team{}
-	err = x.Select("teams.*").
+	query := x.Select("teams.*").
 		Table("teams").
 		Join("INNER", "team_members", "team_members.team_id = teams.id").
 		Where("team_members.user_id = ?", a.GetID()).
-		Limit(getLimitFromPageIndex(page, perPage)).
-		Where("teams.name LIKE ?", "%"+search+"%").
-		Find(&all)
+		Where("teams.name LIKE ?", "%"+search+"%")
+	if limit > 0 {
+		query = query.Limit(limit, start)
+	}
+	err = query.Find(&all)
 	if err != nil {
 		return nil, 0, 0, err
 	}

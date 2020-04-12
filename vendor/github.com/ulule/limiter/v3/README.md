@@ -5,34 +5,30 @@
 [![Build Status][circle-img]][circle-url]
 [![Go Report Card][goreport-img]][goreport-url]
 
-*Dead simple rate limit middleware for Go.*
+_Dead simple rate limit middleware for Go._
 
-* Simple API
-* "Store" approach for backend
-* Redis support (but not tied too)
-* Middlewares: HTTP and [Gin][4]
+- Simple API
+- "Store" approach for backend
+- Redis support (but not tied too)
+- Middlewares: HTTP, [FastHTTP][6] and [Gin][4]
 
 ## Installation
 
 Using [Go Modules](https://github.com/golang/go/wiki/Modules)
 
 ```bash
-$ go get github.com/ulule/limiter/v3@v3.2.0
+$ go get github.com/ulule/limiter/v3@v3.5.0
 ```
-
-**Dep backport:**
-
-Please use [v3-dep](https://github.com/ulule/limiter/tree/v3-dep) branch.
 
 ## Usage
 
 In five steps:
 
-* Create a `limiter.Rate` instance _(the number of requests per period)_
-* Create a `limiter.Store` instance _(see [Redis](https://github.com/ulule/limiter/blob/master/drivers/store/redis/store.go) or [In-Memory](https://github.com/ulule/limiter/blob/master/drivers/store/memory/store.go))_
-* Create a `limiter.Limiter` instance that takes store and rate instances as arguments
-* Create a middleware instance using the middleware of your choice
-* Give the limiter instance to your middleware initializer
+- Create a `limiter.Rate` instance _(the number of requests per period)_
+- Create a `limiter.Store` instance _(see [Redis](https://github.com/ulule/limiter/blob/master/drivers/store/redis/store.go) or [In-Memory](https://github.com/ulule/limiter/blob/master/drivers/store/memory/store.go))_
+- Create a `limiter.Limiter` instance that takes store and rate instances as arguments
+- Create a middleware instance using the middleware of your choice
+- Give the limiter instance to your middleware initializer
 
 **Example:**
 
@@ -101,12 +97,12 @@ instance := limiter.New(store, rate)
 
 See middleware examples:
 
-* [HTTP](https://github.com/ulule/limiter/tree/master/examples/http/main.go)
-* [Gin](https://github.com/ulule/limiter/tree/master/examples/gin/main.go)
-* [Beego](https://github.com/ulule/limiter/blob/master/examples/beego/main.go)
-* [Chi](https://github.com/ulule/limiter/tree/master/examples/chi/main.go)
-* [Echo](https://github.com/ulule/limiter/tree/master/examples/echo/main.go)
-
+- [HTTP](https://github.com/ulule/limiter-examples/tree/master/http/main.go)
+- [Gin](https://github.com/ulule/limiter-examples/tree/master/gin/main.go)
+- [Beego](https://github.com/ulule/limiter-examples/blob/master//beego/main.go)
+- [Chi](https://github.com/ulule/limiter-examples/tree/master/chi/main.go)
+- [Echo](https://github.com/ulule/limiter-examples/tree/master/echo/main.go)
+- [Fasthttp](https://github.com/ulule/limiter-examples/tree/master/fasthttp/main.go)
 
 ## How it works
 
@@ -117,8 +113,8 @@ value with an expiration period.
 
 You will find two stores:
 
-* Redis: rely on [TTL](http://redis.io/commands/ttl) and incrementing the rate limit on each request.
-* In-Memory: rely on a fork of [go-cache](https://github.com/patrickmn/go-cache) with a goroutine to clear expired keys using a default interval.
+- Redis: rely on [TTL](http://redis.io/commands/ttl) and incrementing the rate limit on each request.
+- In-Memory: rely on a fork of [go-cache](https://github.com/patrickmn/go-cache) with a goroutine to clear expired keys using a default interval.
 
 When the limit is reached, a `429` HTTP status code is sent.
 
@@ -131,29 +127,29 @@ Because existing packages did not suit our needs.
 We tried a lot of alternatives:
 
 1. [Throttled][1]. This package uses the generic cell-rate algorithm. To cite the
-documentation: *"The algorithm has been slightly modified from its usual form to
-support limiting with an additional quantity parameter, such as for limiting the
-number of bytes uploaded"*. It is brillant in term of algorithm but
-documentation is quite unclear at the moment, we don't need *burst* feature for
-now, impossible to get a correct `After-Retry` (when limit exceeds, we can still
-make a few requests, because of the max burst) and it only supports ``http.Handler``
-middleware (we use [Gin][4]). Currently, we only need to return `429`
-and `X-Ratelimit-*` headers for `n reqs/duration`.
+   documentation: _"The algorithm has been slightly modified from its usual form to
+   support limiting with an additional quantity parameter, such as for limiting the
+   number of bytes uploaded"_. It is brillant in term of algorithm but
+   documentation is quite unclear at the moment, we don't need _burst_ feature for
+   now, impossible to get a correct `After-Retry` (when limit exceeds, we can still
+   make a few requests, because of the max burst) and it only supports `http.Handler`
+   middleware (we use [Gin][4]). Currently, we only need to return `429`
+   and `X-Ratelimit-*` headers for `n reqs/duration`.
 
 2. [Speedbump][3]. Good package but maybe too lightweight. No `Reset` support,
-only one middleware for [Gin][4] framework and too Redis-coupled. We rather
-prefer to use a "store" approach.
+   only one middleware for [Gin][4] framework and too Redis-coupled. We rather
+   prefer to use a "store" approach.
 
 3. [Tollbooth][5]. Good one too but does both too much and too little. It limits by
-remote IP, path, methods, custom headers and basic auth usernames... but does not
-provide any Redis support (only *in-memory*) and a ready-to-go middleware that sets
-`X-Ratelimit-*` headers. `tollbooth.LimitByRequest(limiter, r)` only returns an HTTP
-code.
+   remote IP, path, methods, custom headers and basic auth usernames... but does not
+   provide any Redis support (only _in-memory_) and a ready-to-go middleware that sets
+   `X-Ratelimit-*` headers. `tollbooth.LimitByRequest(limiter, r)` only returns an HTTP
+   code.
 
 4. [ratelimit][2]. Probably the closer to our needs but, once again, too
-lightweight, no middleware available and not active (last commit was in August
-2014). Some parts of code (Redis) comes from this project. It should deserve much
-more love.
+   lightweight, no middleware available and not active (last commit was in August
+   2014). Some parts of code (Redis) comes from this project. It should deserve much
+   more love.
 
 There are other many packages on GitHub but most are either too lightweight, too
 old (only support old Go versions) or unmaintained. So that's why we decided to
@@ -161,12 +157,12 @@ create yet another one.
 
 ## Contributing
 
-* Ping us on twitter:
-  * [@oibafsellig](https://twitter.com/oibafsellig)
-  * [@thoas](https://twitter.com/thoas)
-  * [@novln_](https://twitter.com/novln_)
-* Fork the [project](https://github.com/ulule/limiter)
-* Fix [bugs](https://github.com/ulule/limiter/issues)
+- Ping us on twitter:
+  - [@oibafsellig](https://twitter.com/oibafsellig)
+  - [@thoas](https://twitter.com/thoas)
+  - [@novln\_](https://twitter.com/novln_)
+- Fork the [project](https://github.com/ulule/limiter)
+- Fix [bugs](https://github.com/ulule/limiter/issues)
 
 Don't hesitate ;)
 
@@ -175,7 +171,7 @@ Don't hesitate ;)
 [3]: https://github.com/etcinit/speedbump
 [4]: https://github.com/gin-gonic/gin
 [5]: https://github.com/didip/tollbooth
-
+[6]: https://github.com/valyala/fasthttp
 [godoc-url]: https://godoc.org/github.com/ulule/limiter
 [godoc-img]: https://godoc.org/github.com/ulule/limiter?status.svg
 [license-img]: https://img.shields.io/badge/license-MIT-blue.svg

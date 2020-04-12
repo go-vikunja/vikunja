@@ -180,12 +180,16 @@ func (tc *TaskComment) ReadAll(auth web.Auth, search string, page int, perPage i
 		AuthorFromDB *user.User `xorm:"extends" json:"-"`
 	}
 
+	limit, start := getLimitFromPageIndex(page, perPage)
+
 	comments := []*TaskComment{}
-	err = x.
+	query := x.
 		Where("task_id = ? AND comment like ?", tc.TaskID, "%"+search+"%").
-		Join("LEFT", "users", "users.id = task_comments.author_id").
-		Limit(getLimitFromPageIndex(page, perPage)).
-		Find(&comments)
+		Join("LEFT", "users", "users.id = task_comments.author_id")
+	if limit > 0 {
+		query = query.Limit(limit, start)
+	}
+	err = query.Find(&comments)
 	if err != nil {
 		return
 	}

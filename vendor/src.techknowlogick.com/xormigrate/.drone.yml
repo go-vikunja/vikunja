@@ -7,7 +7,7 @@ workspace:
 
 steps:
 - name: fetch-and-test
-  image: golang:1.13
+  image: golang:1.14
   environment:
     GO111MODULE: on
   commands:
