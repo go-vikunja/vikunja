@@ -17,14 +17,15 @@
 package utils
 
 import (
-	"crypto/md5"
+	"crypto/md5" // #nosec
 	"fmt"
 	"io"
 )
 
 // Md5String generates an md5 hash from a string
 func Md5String(in string) string {
+	// #nosec
 	h := md5.New()
-	io.WriteString(h, in)
+	_, _ = io.WriteString(h, in)
 	return fmt.Sprintf("%x", h.Sum(nil))
 }

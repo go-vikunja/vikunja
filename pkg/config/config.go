@@ -34,6 +34,7 @@ type Key string
 
 // These constants hold all config value keys
 const (
+	// #nosec
 	ServiceJWTSecret             Key = `service.JWTSecret`
 	ServiceInterface             Key = `service.interface`
 	ServiceFrontendurl           Key = `service.frontendurl`

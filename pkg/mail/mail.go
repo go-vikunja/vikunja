@@ -42,6 +42,7 @@ func StartMailDaemon() {
 
 	go func() {
 		d := gomail.NewDialer(config.MailerHost.GetString(), config.MailerPort.GetInt(), config.MailerUsername.GetString(), config.MailerPassword.GetString())
+		// #nosec
 		d.TLSConfig = &tls.Config{InsecureSkipVerify: config.MailerSkipTLSVerify.GetBool()}
 
 		var s gomail.SendCloser

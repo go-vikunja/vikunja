@@ -86,7 +86,7 @@ func GetLogWriter(logfile string) (writer io.Writer) {
 	switch viper.GetString("log." + logfile) {
 	case "file":
 		fullLogFilePath := config.LogPath.GetString() + "/" + logfile + ".log"
-		f, err := os.OpenFile(fullLogFilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		f, err := os.OpenFile(fullLogFilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
 		if err != nil {
 			Fatalf("Could not create logfile %s: %s", fullLogFilePath, err.Error())
 		}

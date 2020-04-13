@@ -24,7 +24,7 @@ import (
 func init() {
 	migrateCmd.AddCommand(migrateListCmd)
 	migrationRollbackCmd.Flags().StringVarP(&rollbackUntilFlag, "name", "n", "", "The id of the migration you want to roll back until.")
-	migrationRollbackCmd.MarkFlagRequired("name")
+	_ = migrationRollbackCmd.MarkFlagRequired("name")
 	migrateCmd.AddCommand(migrationRollbackCmd)
 	rootCmd.AddCommand(migrateCmd)
 }

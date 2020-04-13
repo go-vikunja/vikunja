@@ -160,7 +160,7 @@ func CheckUserCredentials(u *Login) (*User, error) {
 	user, err := GetUserByUsername(u.Username)
 	if err != nil {
 		// hashing the password takes a long time, so we hash something to not make it clear if the username was wrong
-		bcrypt.GenerateFromPassword([]byte(u.Username), 14)
+		_, _ = bcrypt.GenerateFromPassword([]byte(u.Username), 14)
 		return &User{}, ErrWrongUsernameOrPassword{}
 	}
 

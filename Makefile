@@ -231,15 +231,17 @@ static-check:
 
 .PHONY: gosec-check
 gosec-check:
-	@hash ./bin/gosec > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
-		curl -sfL https://raw.githubusercontent.com/securego/gosec/master/install.sh | sh -s 1.2.0; \
+	@hash gosec > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
+		echo "Please manually install gosec by running"; \
+		echo "curl -sfL https://raw.githubusercontent.com/securego/gosec/master/install.sh | bash -s -- -b $GOPATH/bin v2.2.0"; \
+		exit 1; \
 	fi
-	for S in $(PACKAGES); do ./bin/gosec $$S || exit 1; done;
+	gosec ./...
 
 .PHONY: goconst-check
 goconst-check:
 	@hash goconst > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
 		go get -u github.com/jgautheron/goconst/cmd/goconst; \
 		go install $(GOFLAGS) github.com/jgautheron/goconst/cmd/goconst; \
-	fi
+	fi;
 	for S in $(PACKAGES); do goconst $$S || exit 1; done;

@@ -57,6 +57,8 @@ steps:
       - make goconst-check
       - make gocyclo-check
       - make static-check
+      - curl -sfL https://raw.githubusercontent.com/securego/gosec/master/install.sh | bash -s -- -b $GOPATH/bin v2.2.0 # Need to manually install as it does not support being installed via go modules like the rest.
+      - make gosec-check
       - make build
     when:
       event: [ push, tag, pull_request ]
