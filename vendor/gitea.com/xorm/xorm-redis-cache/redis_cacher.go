@@ -10,7 +10,8 @@ import (
 	"unsafe"
 
 	"github.com/garyburd/redigo/redis"
-	"xorm.io/core"
+	"xorm.io/xorm/caches"
+	"xorm.io/xorm/log"
 )
 
 const (
@@ -25,7 +26,7 @@ type RedisCacher struct {
 	pool              *redis.Pool
 	defaultExpiration time.Duration
 
-	Logger core.ILogger
+	Logger log.ContextLogger
 }
 
 // NewRedisCacher creates a Redis Cacher, host as IP endpoint, i.e., localhost:6379, provide empty string or nil if Redis server doesn't
@@ -38,7 +39,7 @@ type RedisCacher struct {
 //
 //     engine.MapCacher(&user, xormrediscache.NewRedisCacher("localhost:6379", "", xormrediscache.DEFAULT_EXPIRATION, engine.Logger))
 //
-func NewRedisCacher(host string, password string, defaultExpiration time.Duration, logger core.ILogger) *RedisCacher {
+func NewRedisCacher(host string, password string, defaultExpiration time.Duration, logger log.ContextLogger) *RedisCacher {
 	var pool = &redis.Pool{
 		MaxIdle:     5,
 		IdleTimeout: 240 * time.Second,
@@ -74,7 +75,7 @@ func NewRedisCacher(host string, password string, defaultExpiration time.Duratio
 }
 
 // MakeRedisCacher build a cacher based on redis.Pool
-func MakeRedisCacher(pool *redis.Pool, defaultExpiration time.Duration, logger core.ILogger) *RedisCacher {
+func MakeRedisCacher(pool *redis.Pool, defaultExpiration time.Duration, logger log.ContextLogger) *RedisCacher {
 	return &RedisCacher{pool: pool, defaultExpiration: defaultExpiration, Logger: logger}
 }
 
@@ -166,8 +167,8 @@ func (c *RedisCacher) delObject(key string) error {
 	conn := c.pool.Get()
 	defer conn.Close()
 	if !exists(conn, key) {
-		c.logErrf("delObject key:[%s] err: %v", key, core.ErrCacheMiss)
-		return core.ErrCacheMiss
+		c.logErrf("delObject key:[%s] err: %v", key, caches.ErrCacheMiss)
+		return caches.ErrCacheMiss
 	}
 	_, err := conn.Do("DEL", key)
 	return err

@@ -21,7 +21,6 @@ import (
 	"github.com/op/go-logging"
 	"strings"
 	"time"
-	"xorm.io/core"
 	"xorm.io/xorm/log"
 )
 
@@ -136,54 +135,4 @@ func (x *XormLogger) ShowSQL(show ...bool) {
 // IsShowSQL returns if sql queries should be shown
 func (x *XormLogger) IsShowSQL() bool {
 	return x.showSQL
-}
-
-// XormRedisCacherLogger is used as a compatibility layer to be able to re-use the same logger from xorm until
-// the redis cacher module accepts the same logger.
-// See https://gitea.com/xorm/xorm-redis-cache/issues/10
-type XormRedisCacherLogger struct {
-	XormLogger
-}
-
-// GetXormLoggerForRedis creates a new xorm logger which can be used with redis
-func GetXormLoggerForRedis(x *XormLogger) *XormRedisCacherLogger {
-	return &XormRedisCacherLogger{*x}
-}
-
-// Level returns the currently set log level
-func (x *XormRedisCacherLogger) Level() core.LogLevel {
-	switch x.level {
-	case log.LOG_DEBUG:
-		return core.LOG_DEBUG
-	case log.LOG_INFO:
-		return core.LOG_INFO
-	case log.LOG_WARNING:
-		return core.LOG_WARNING
-	case log.LOG_ERR:
-		return core.LOG_ERR
-	case log.LOG_OFF:
-		return core.LOG_OFF
-	case log.LOG_UNKNOWN:
-		return core.LOG_UNKNOWN
-	default:
-		return core.LOG_UNKNOWN
-	}
-}
-
-// SetLevel sets the log level
-func (x *XormRedisCacherLogger) SetLevel(l core.LogLevel) {
-	switch l {
-	case core.LOG_DEBUG:
-		x.level = log.LOG_DEBUG
-	case core.LOG_INFO:
-		x.level = log.LOG_INFO
-	case core.LOG_WARNING:
-		x.level = log.LOG_WARNING
-	case core.LOG_ERR:
-		x.level = log.LOG_ERR
-	case core.LOG_OFF:
-		x.level = log.LOG_OFF
-	default:
-		x.level = log.LOG_UNKNOWN
-	}
 }

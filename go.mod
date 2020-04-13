@@ -20,8 +20,7 @@ require (
 	4d63.com/embedfiles v1.0.0 // indirect
 	4d63.com/tz v1.1.0
 	code.vikunja.io/web v0.0.0-20200208214421-c90649369427
-	gitea.com/xorm/tests v0.5.6 // indirect
-	gitea.com/xorm/xorm-redis-cache v0.0.0-20191113062523-5a6a9e2ab9f2
+	gitea.com/xorm/xorm-redis-cache v0.2.0
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
 	github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a
 	github.com/beevik/etree v1.1.0 // indirect
@@ -32,14 +31,11 @@ require (
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/fzipp/gocyclo v0.0.0-20150627053110-6acd4345c835
-	github.com/garyburd/redigo v1.6.0 // indirect
 	github.com/go-openapi/jsonreference v0.19.3 // indirect
 	github.com/go-openapi/spec v0.19.4 // indirect
 	github.com/go-redis/redis/v7 v7.2.0
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/go-testfixtures/testfixtures/v3 v3.1.1
-	github.com/go-xorm/core v0.6.2 // indirect
-	github.com/go-xorm/xorm v0.7.9 // indirect
 	github.com/golang/protobuf v1.3.5 // indirect
 	github.com/gordonklaus/ineffassign v0.0.0-20200309095847-7953dde2c7bf
 	github.com/iancoleman/strcase v0.0.0-20191112232945-16388991a334

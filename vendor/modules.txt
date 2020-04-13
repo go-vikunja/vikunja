@@ -5,7 +5,7 @@
 # code.vikunja.io/web v0.0.0-20200208214421-c90649369427
 code.vikunja.io/web
 code.vikunja.io/web/handler
-# gitea.com/xorm/xorm-redis-cache v0.0.0-20191113062523-5a6a9e2ab9f2
+# gitea.com/xorm/xorm-redis-cache v0.2.0
 gitea.com/xorm/xorm-redis-cache
 # github.com/BurntSushi/toml v0.3.1
 github.com/BurntSushi/toml
