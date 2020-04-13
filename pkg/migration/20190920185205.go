@@ -23,7 +23,7 @@ import (
 )
 
 type task20190920185205 struct {
-	PercentDone float64 `xorm:"DOUBLE null" json:"percentDone"`
+	PercentDone float64 `xorm:"DOUBLE null" json:"percent_done"`
 }
 
 func (task20190920185205) TableName() string {

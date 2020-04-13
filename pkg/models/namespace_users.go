@@ -27,7 +27,7 @@ type NamespaceUser struct {
 	// The unique, numeric id of this namespace <-> user relation.
 	ID int64 `xorm:"int(11) autoincr not null unique pk" json:"id" param:"namespace"`
 	// The username.
-	Username string `xorm:"-" json:"userID" param:"user"`
+	Username string `xorm:"-" json:"user_id" param:"user"`
 	UserID   int64  `xorm:"int(11) not null INDEX" json:"-"`
 	// The namespace id
 	NamespaceID int64 `xorm:"int(11) not null INDEX" json:"-" param:"namespace"`

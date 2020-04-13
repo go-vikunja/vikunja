@@ -989,7 +989,7 @@ var doc = `{
                     {
                         "type": "integer",
                         "description": "The list ID.",
-                        "name": "listID",
+                        "name": "list_id",
                         "in": "path",
                         "required": true
                     },
@@ -1026,13 +1026,13 @@ var doc = `{
                     {
                         "type": "integer",
                         "description": "The start date parameter to filter by. Expects a unix timestamp. If no end date, but a start date is specified, the end date is set to the current time.",
-                        "name": "startdate",
+                        "name": "start_date",
                         "in": "query"
                     },
                     {
                         "type": "integer",
                         "description": "The end date parameter to filter by. Expects a unix timestamp. If no start date, but an end date is specified, the start date is set to the current time.",
-                        "name": "enddate",
+                        "name": "end_date",
                         "in": "query"
                     }
                 ],
@@ -1077,14 +1077,14 @@ var doc = `{
                     {
                         "type": "integer",
                         "description": "List ID",
-                        "name": "listID",
+                        "name": "list_id",
                         "in": "path",
                         "required": true
                     },
                     {
                         "type": "integer",
                         "description": "Team ID",
-                        "name": "teamID",
+                        "name": "team_id",
                         "in": "path",
                         "required": true
                     },
@@ -1144,14 +1144,14 @@ var doc = `{
                     {
                         "type": "integer",
                         "description": "List ID",
-                        "name": "listID",
+                        "name": "list_id",
                         "in": "path",
                         "required": true
                     },
                     {
                         "type": "integer",
                         "description": "Team ID",
-                        "name": "teamID",
+                        "name": "team_id",
                         "in": "path",
                         "required": true
                     }
@@ -1206,14 +1206,14 @@ var doc = `{
                     {
                         "type": "integer",
                         "description": "List ID",
-                        "name": "listID",
+                        "name": "list_id",
                         "in": "path",
                         "required": true
                     },
                     {
                         "type": "integer",
                         "description": "User ID",
-                        "name": "userID",
+                        "name": "user_id",
                         "in": "path",
                         "required": true
                     },
@@ -1273,14 +1273,14 @@ var doc = `{
                     {
                         "type": "integer",
                         "description": "List ID",
-                        "name": "listID",
+                        "name": "list_id",
                         "in": "path",
                         "required": true
                     },
                     {
                         "type": "integer",
                         "description": "User ID",
-                        "name": "userID",
+                        "name": "user_id",
                         "in": "path",
                         "required": true
                     }
@@ -2430,7 +2430,7 @@ var doc = `{
                     {
                         "type": "integer",
                         "description": "Team ID",
-                        "name": "teamID",
+                        "name": "team_id",
                         "in": "path",
                         "required": true
                     },
@@ -2497,7 +2497,7 @@ var doc = `{
                     {
                         "type": "integer",
                         "description": "team ID",
-                        "name": "teamID",
+                        "name": "team_id",
                         "in": "path",
                         "required": true
                     }
@@ -2559,7 +2559,7 @@ var doc = `{
                     {
                         "type": "integer",
                         "description": "User ID",
-                        "name": "userID",
+                        "name": "user_id",
                         "in": "path",
                         "required": true
                     },
@@ -2626,7 +2626,7 @@ var doc = `{
                     {
                         "type": "integer",
                         "description": "user ID",
-                        "name": "userID",
+                        "name": "user_id",
                         "in": "path",
                         "required": true
                     }
@@ -2796,13 +2796,13 @@ var doc = `{
                     {
                         "type": "integer",
                         "description": "The start date parameter to filter by. Expects a unix timestamp. If no end date, but a start date is specified, the end date is set to the current time.",
-                        "name": "startdate",
+                        "name": "start_date",
                         "in": "query"
                     },
                     {
                         "type": "integer",
                         "description": "The end date parameter to filter by. Expects a unix timestamp. If no start date, but an end date is specified, the start date is set to the current time.",
-                        "name": "enddate",
+                        "name": "end_date",
                         "in": "query"
                     }
                 ],
@@ -3505,7 +3505,7 @@ var doc = `{
                     {
                         "type": "integer",
                         "description": "Assignee user ID",
-                        "name": "userID",
+                        "name": "user_id",
                         "in": "path",
                         "required": true
                     }
@@ -4208,7 +4208,7 @@ var doc = `{
                     {
                         "type": "integer",
                         "description": "User ID",
-                        "name": "userID",
+                        "name": "user_id",
                         "in": "path",
                         "required": true
                     }
@@ -4652,7 +4652,7 @@ var doc = `{
                     "description": "A unix timestamp when this task was created. You cannot change this value.",
                     "type": "integer"
                 },
-                "createdBy": {
+                "created_by": {
                     "description": "The user who initially created the task.",
                     "type": "object",
                     "$ref": "#/definitions/user.User"
@@ -4665,19 +4665,19 @@ var doc = `{
                     "description": "Whether a task is done or not.",
                     "type": "boolean"
                 },
-                "doneAt": {
+                "done_at": {
                     "description": "The unix timestamp when a task was marked as done.",
                     "type": "integer"
                 },
-                "dueDate": {
+                "due_date": {
                     "description": "A unix timestamp when the task is due.",
                     "type": "integer"
                 },
-                "endDate": {
+                "end_date": {
                     "description": "When this task ends.",
                     "type": "integer"
                 },
-                "hexColor": {
+                "hex_color": {
                     "description": "The task color in hex",
                     "type": "string",
                     "maxLength": 6
@@ -4701,11 +4701,11 @@ var doc = `{
                         "$ref": "#/definitions/models.Label"
                     }
                 },
-                "listID": {
+                "list_id": {
                     "description": "The list this task belongs to.",
                     "type": "integer"
                 },
-                "percentDone": {
+                "percent_done": {
                     "description": "Determines how far a task is left from being done",
                     "type": "number"
                 },
@@ -4718,18 +4718,18 @@ var doc = `{
                     "type": "object",
                     "$ref": "#/definitions/models.RelatedTaskMap"
                 },
-                "reminderDates": {
+                "reminder_dates": {
                     "description": "An array of unix timestamps when the user wants to be reminded of the task.",
                     "type": "array",
                     "items": {
                         "type": "integer"
                     }
                 },
-                "repeatAfter": {
+                "repeat_after": {
                     "description": "An amount in seconds this task repeats itself. If this is set, when marking the task as done, it will mark itself as \"undone\" and then increase all remindes and the due date by its amount.",
                     "type": "integer"
                 },
-                "startDate": {
+                "start_date": {
                     "description": "When this task starts.",
                     "type": "integer"
                 },
@@ -4920,7 +4920,7 @@ var doc = `{
                     "description": "A unix timestamp when this relation was last updated. You cannot change this value.",
                     "type": "integer"
                 },
-                "userID": {
+                "user_id": {
                     "description": "The username.",
                     "type": "string"
                 }
@@ -4988,7 +4988,7 @@ var doc = `{
                     "description": "A unix timestamp when this relation was last updated. You cannot change this value.",
                     "type": "integer"
                 },
-                "userID": {
+                "user_id": {
                     "description": "The username.",
                     "type": "string"
                 }
@@ -5079,7 +5079,7 @@ var doc = `{
                             "description": "A unix timestamp when this task was created. You cannot change this value.",
                             "type": "integer"
                         },
-                        "createdBy": {
+                        "created_by": {
                             "description": "The user who initially created the task.",
                             "type": "object",
                             "$ref": "#/definitions/user.User"
@@ -5092,19 +5092,19 @@ var doc = `{
                             "description": "Whether a task is done or not.",
                             "type": "boolean"
                         },
-                        "doneAt": {
+                        "done_at": {
                             "description": "The unix timestamp when a task was marked as done.",
                             "type": "integer"
                         },
-                        "dueDate": {
+                        "due_date": {
                             "description": "A unix timestamp when the task is due.",
                             "type": "integer"
                         },
-                        "endDate": {
+                        "end_date": {
                             "description": "When this task ends.",
                             "type": "integer"
                         },
-                        "hexColor": {
+                        "hex_color": {
                             "description": "The task color in hex",
                             "type": "string",
                             "maxLength": 6
@@ -5128,11 +5128,11 @@ var doc = `{
                                 "$ref": "#/definitions/models.Label"
                             }
                         },
-                        "listID": {
+                        "list_id": {
                             "description": "The list this task belongs to.",
                             "type": "integer"
                         },
-                        "percentDone": {
+                        "percent_done": {
                             "description": "Determines how far a task is left from being done",
                             "type": "number"
                         },
@@ -5145,18 +5145,18 @@ var doc = `{
                             "type": "object",
                             "$ref": "#/definitions/models.RelatedTaskMap"
                         },
-                        "reminderDates": {
+                        "reminder_dates": {
                             "description": "An array of unix timestamps when the user wants to be reminded of the task.",
                             "type": "array",
                             "items": {
                                 "type": "integer"
                             }
                         },
-                        "repeatAfter": {
+                        "repeat_after": {
                             "description": "An amount in seconds this task repeats itself. If this is set, when marking the task as done, it will mark itself as \"undone\" and then increase all remindes and the due date by its amount.",
                             "type": "integer"
                         },
-                        "startDate": {
+                        "start_date": {
                             "description": "When this task starts.",
                             "type": "integer"
                         },
@@ -5195,7 +5195,7 @@ var doc = `{
                     "description": "A unix timestamp when this task was created. You cannot change this value.",
                     "type": "integer"
                 },
-                "createdBy": {
+                "created_by": {
                     "description": "The user who initially created the task.",
                     "type": "object",
                     "$ref": "#/definitions/user.User"
@@ -5208,19 +5208,19 @@ var doc = `{
                     "description": "Whether a task is done or not.",
                     "type": "boolean"
                 },
-                "doneAt": {
+                "done_at": {
                     "description": "The unix timestamp when a task was marked as done.",
                     "type": "integer"
                 },
-                "dueDate": {
+                "due_date": {
                     "description": "A unix timestamp when the task is due.",
                     "type": "integer"
                 },
-                "endDate": {
+                "end_date": {
                     "description": "When this task ends.",
                     "type": "integer"
                 },
-                "hexColor": {
+                "hex_color": {
                     "description": "The task color in hex",
                     "type": "string",
                     "maxLength": 6
@@ -5244,11 +5244,11 @@ var doc = `{
                         "$ref": "#/definitions/models.Label"
                     }
                 },
-                "listID": {
+                "list_id": {
                     "description": "The list this task belongs to.",
                     "type": "integer"
                 },
-                "percentDone": {
+                "percent_done": {
                     "description": "Determines how far a task is left from being done",
                     "type": "number"
                 },
@@ -5261,18 +5261,18 @@ var doc = `{
                     "type": "object",
                     "$ref": "#/definitions/models.RelatedTaskMap"
                 },
-                "reminderDates": {
+                "reminder_dates": {
                     "description": "An array of unix timestamps when the user wants to be reminded of the task.",
                     "type": "array",
                     "items": {
                         "type": "integer"
                     }
                 },
-                "repeatAfter": {
+                "repeat_after": {
                     "description": "An amount in seconds this task repeats itself. If this is set, when marking the task as done, it will mark itself as \"undone\" and then increase all remindes and the due date by its amount.",
                     "type": "integer"
                 },
-                "startDate": {
+                "start_date": {
                     "description": "When this task starts.",
                     "type": "integer"
                 },
@@ -5354,7 +5354,7 @@ var doc = `{
                     "description": "A unix timestamp when this relation was created. You cannot change this value.",
                     "type": "integer"
                 },
-                "createdBy": {
+                "created_by": {
                     "description": "The user who created this team.",
                     "type": "object",
                     "$ref": "#/definitions/user.User"
@@ -5403,7 +5403,7 @@ var doc = `{
                     "default": 0,
                     "maximum": 2
                 },
-                "teamID": {
+                "team_id": {
                     "description": "The team id.",
                     "type": "integer"
                 },
@@ -5451,7 +5451,7 @@ var doc = `{
                     "default": 0,
                     "maximum": 2
                 },
-                "teamID": {
+                "team_id": {
                     "description": "The team id.",
                     "type": "integer"
                 },
@@ -5504,7 +5504,7 @@ var doc = `{
                     "description": "A unix timestamp when this relation was created. You cannot change this value.",
                     "type": "integer"
                 },
-                "createdBy": {
+                "created_by": {
                     "description": "The user who created this team.",
                     "type": "object",
                     "$ref": "#/definitions/user.User"

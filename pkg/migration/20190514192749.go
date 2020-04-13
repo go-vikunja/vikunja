@@ -22,7 +22,7 @@ import (
 )
 
 type listTask20190514192749 struct {
-	DoneAtUnix int64 `xorm:"INDEX null" json:"doneAt"`
+	DoneAtUnix int64 `xorm:"INDEX null" json:"done_at"`
 }
 
 func (listTask20190514192749) TableName() string {

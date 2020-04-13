@@ -119,7 +119,7 @@ func (err ErrUserDoesNotExist) HTTPError() web.HTTPError {
 	return web.HTTPError{HTTPCode: http.StatusNotFound, Code: ErrCodeUserDoesNotExist, Message: "The user does not exist."}
 }
 
-// ErrCouldNotGetUserID represents a "ErrCouldNotGetUserID" kind of error.
+// ErrCouldNotGetUserID represents a "ErrCouldNotGetuser_id" kind of error.
 type ErrCouldNotGetUserID struct{}
 
 // IsErrCouldNotGetUserID checks if an error is a ErrCouldNotGetUserID.

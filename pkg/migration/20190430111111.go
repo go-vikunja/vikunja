@@ -22,7 +22,7 @@ import (
 )
 
 type listTask20190430111111 struct {
-	HexColor string `xorm:"varchar(6) null" json:"hexColor" valid:"runelength(0|6)" maxLength:"6"`
+	HexColor string `xorm:"varchar(6) null" json:"hex_color" valid:"runelength(0|6)" maxLength:"6"`
 }
 
 func (listTask20190430111111) TableName() string {

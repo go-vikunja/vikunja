@@ -27,21 +27,21 @@ type listTask20190511202210 struct {
 	Text              string  `xorm:"varchar(250) not null" json:"text" valid:"runelength(3|250)" minLength:"3" maxLength:"250"`
 	Description       string  `xorm:"varchar(250)" json:"description" valid:"runelength(0|250)" maxLength:"250"`
 	Done              bool    `xorm:"INDEX null" json:"done"`
-	DoneAtUnix        int64   `xorm:"INDEX null" json:"doneAt"`
-	DueDateUnix       int64   `xorm:"int(11) INDEX null" json:"dueDate"`
-	RemindersUnix     []int64 `xorm:"JSON TEXT null" json:"reminderDates"`
+	DoneAtUnix        int64   `xorm:"INDEX null" json:"done_at"`
+	DueDateUnix       int64   `xorm:"int(11) INDEX null" json:"due_date"`
+	RemindersUnix     []int64 `xorm:"JSON TEXT null" json:"reminder_dates"`
 	CreatedByID       int64   `xorm:"int(11) not null" json:"-"` // ID of the user who put that task on the list
-	ListID            int64   `xorm:"int(11) INDEX not null" json:"listID" param:"list"`
-	RepeatAfter       int64   `xorm:"int(11) INDEX null" json:"repeatAfter"`
+	ListID            int64   `xorm:"int(11) INDEX not null" json:"list_id" param:"list"`
+	RepeatAfter       int64   `xorm:"int(11) INDEX null" json:"repeat_after"`
 	ParentTaskID      int64   `xorm:"int(11) INDEX null" json:"parentTaskID"`
 	Priority          int64   `xorm:"int(11) null" json:"priority"`
-	StartDateUnix     int64   `xorm:"int(11) INDEX null" json:"startDate" query:"-"`
-	EndDateUnix       int64   `xorm:"int(11) INDEX null" json:"endDate" query:"-"`
-	HexColor          string  `xorm:"varchar(6) null" json:"hexColor" valid:"runelength(0|6)" maxLength:"6"`
+	StartDateUnix     int64   `xorm:"int(11) INDEX null" json:"start_date" query:"-"`
+	EndDateUnix       int64   `xorm:"int(11) INDEX null" json:"end_date" query:"-"`
+	HexColor          string  `xorm:"varchar(6) null" json:"hex_color" valid:"runelength(0|6)" maxLength:"6"`
 	UID               string  `xorm:"varchar(250) null" json:"-"`
 	Sorting           string  `xorm:"-" json:"-" query:"sort"` // Parameter to sort by
-	StartDateSortUnix int64   `xorm:"-" json:"-" query:"startdate"`
-	EndDateSortUnix   int64   `xorm:"-" json:"-" query:"enddate"`
+	StartDateSortUnix int64   `xorm:"-" json:"-" query:"start_date"`
+	EndDateSortUnix   int64   `xorm:"-" json:"-" query:"end_date"`
 	Created           int64   `xorm:"created not null" json:"created"`
 	Updated           int64   `xorm:"updated not null" json:"updated"`
 }

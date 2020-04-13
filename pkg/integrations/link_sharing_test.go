@@ -262,34 +262,34 @@ func TestLinkSharing(t *testing.T) {
 				})
 				t.Run("Create", func(t *testing.T) {
 					t.Run("Shared readonly", func(t *testing.T) {
-						_, err := testHandlerListUserReadOnly.testCreateWithLinkShare(nil, map[string]string{"list": "1"}, `{"userID":"user1"}`)
+						_, err := testHandlerListUserReadOnly.testCreateWithLinkShare(nil, map[string]string{"list": "1"}, `{"user_id":"user1"}`)
 						assert.Error(t, err)
 						assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 					})
 					t.Run("Shared write", func(t *testing.T) {
-						_, err := testHandlerListUserWrite.testCreateWithLinkShare(nil, map[string]string{"list": "2"}, `{"userID":"user1"}`)
+						_, err := testHandlerListUserWrite.testCreateWithLinkShare(nil, map[string]string{"list": "2"}, `{"user_id":"user1"}`)
 						assert.Error(t, err)
 						assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 					})
 					t.Run("Shared admin", func(t *testing.T) {
-						_, err := testHandlerListUserAdmin.testCreateWithLinkShare(nil, map[string]string{"list": "3"}, `{"userID":"user1"}`)
+						_, err := testHandlerListUserAdmin.testCreateWithLinkShare(nil, map[string]string{"list": "3"}, `{"user_id":"user1"}`)
 						assert.Error(t, err)
 						assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 					})
 				})
 				t.Run("Update", func(t *testing.T) {
 					t.Run("Shared readonly", func(t *testing.T) {
-						_, err := testHandlerListUserReadOnly.testUpdateWithLinkShare(nil, map[string]string{"list": "1"}, `{"userID":"user1"}`)
+						_, err := testHandlerListUserReadOnly.testUpdateWithLinkShare(nil, map[string]string{"list": "1"}, `{"user_id":"user1"}`)
 						assert.Error(t, err)
 						assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 					})
 					t.Run("Shared write", func(t *testing.T) {
-						_, err := testHandlerListUserWrite.testUpdateWithLinkShare(nil, map[string]string{"list": "2"}, `{"userID":"user1"}`)
+						_, err := testHandlerListUserWrite.testUpdateWithLinkShare(nil, map[string]string{"list": "2"}, `{"user_id":"user1"}`)
 						assert.Error(t, err)
 						assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 					})
 					t.Run("Shared admin", func(t *testing.T) {
-						_, err := testHandlerListUserAdmin.testUpdateWithLinkShare(nil, map[string]string{"list": "3"}, `{"userID":"user1"}`)
+						_, err := testHandlerListUserAdmin.testUpdateWithLinkShare(nil, map[string]string{"list": "3"}, `{"user_id":"user1"}`)
 						assert.Error(t, err)
 						assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 					})
@@ -354,34 +354,34 @@ func TestLinkSharing(t *testing.T) {
 				})
 				t.Run("Create", func(t *testing.T) {
 					t.Run("Shared readonly", func(t *testing.T) {
-						_, err := testHandlerListTeamReadOnly.testCreateWithLinkShare(nil, map[string]string{"list": "1"}, `{"teamID":1}`)
+						_, err := testHandlerListTeamReadOnly.testCreateWithLinkShare(nil, map[string]string{"list": "1"}, `{"team_id":1}`)
 						assert.Error(t, err)
 						assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 					})
 					t.Run("Shared write", func(t *testing.T) {
-						_, err := testHandlerListTeamWrite.testCreateWithLinkShare(nil, map[string]string{"list": "2"}, `{"teamID":1}`)
+						_, err := testHandlerListTeamWrite.testCreateWithLinkShare(nil, map[string]string{"list": "2"}, `{"team_id":1}`)
 						assert.Error(t, err)
 						assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 					})
 					t.Run("Shared admin", func(t *testing.T) {
-						_, err := testHandlerListTeamAdmin.testCreateWithLinkShare(nil, map[string]string{"list": "3"}, `{"teamID":1}`)
+						_, err := testHandlerListTeamAdmin.testCreateWithLinkShare(nil, map[string]string{"list": "3"}, `{"team_id":1}`)
 						assert.Error(t, err)
 						assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 					})
 				})
 				t.Run("Update", func(t *testing.T) {
 					t.Run("Shared readonly", func(t *testing.T) {
-						_, err := testHandlerListTeamReadOnly.testUpdateWithLinkShare(nil, map[string]string{"list": "1"}, `{"teamID":1}`)
+						_, err := testHandlerListTeamReadOnly.testUpdateWithLinkShare(nil, map[string]string{"list": "1"}, `{"team_id":1}`)
 						assert.Error(t, err)
 						assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 					})
 					t.Run("Shared write", func(t *testing.T) {
-						_, err := testHandlerListTeamWrite.testUpdateWithLinkShare(nil, map[string]string{"list": "2"}, `{"teamID":1}`)
+						_, err := testHandlerListTeamWrite.testUpdateWithLinkShare(nil, map[string]string{"list": "2"}, `{"team_id":1}`)
 						assert.Error(t, err)
 						assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 					})
 					t.Run("Shared admin", func(t *testing.T) {
-						_, err := testHandlerListTeamAdmin.testUpdateWithLinkShare(nil, map[string]string{"list": "3"}, `{"teamID":1}`)
+						_, err := testHandlerListTeamAdmin.testUpdateWithLinkShare(nil, map[string]string{"list": "3"}, `{"team_id":1}`)
 						assert.Error(t, err)
 						assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 					})
@@ -862,34 +862,34 @@ func TestLinkSharing(t *testing.T) {
 				})
 				t.Run("Create", func(t *testing.T) {
 					t.Run("Shared readonly", func(t *testing.T) {
-						_, err := testHandlerNamespaceUserReadOnly.testCreateWithLinkShare(nil, nil, `{"userID":"user1"}`)
+						_, err := testHandlerNamespaceUserReadOnly.testCreateWithLinkShare(nil, nil, `{"user_id":"user1"}`)
 						assert.Error(t, err)
 						assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 					})
 					t.Run("Shared write", func(t *testing.T) {
-						_, err := testHandlerNamespaceUserWrite.testCreateWithLinkShare(nil, nil, `{"userID":"user1"}`)
+						_, err := testHandlerNamespaceUserWrite.testCreateWithLinkShare(nil, nil, `{"user_id":"user1"}`)
 						assert.Error(t, err)
 						assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 					})
 					t.Run("Shared admin", func(t *testing.T) {
-						_, err := testHandlerNamespaceUserAdmin.testCreateWithLinkShare(nil, nil, `{"userID":"user1"}`)
+						_, err := testHandlerNamespaceUserAdmin.testCreateWithLinkShare(nil, nil, `{"user_id":"user1"}`)
 						assert.Error(t, err)
 						assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 					})
 				})
 				t.Run("Update", func(t *testing.T) {
 					t.Run("Shared readonly", func(t *testing.T) {
-						_, err := testHandlerNamespaceUserReadOnly.testUpdateWithLinkShare(nil, map[string]string{"namespace": "1"}, `{"userID":"user1"}`)
+						_, err := testHandlerNamespaceUserReadOnly.testUpdateWithLinkShare(nil, map[string]string{"namespace": "1"}, `{"user_id":"user1"}`)
 						assert.Error(t, err)
 						assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 					})
 					t.Run("Shared write", func(t *testing.T) {
-						_, err := testHandlerNamespaceUserWrite.testUpdateWithLinkShare(nil, map[string]string{"namespace": "2"}, `{"userID":"user1"}`)
+						_, err := testHandlerNamespaceUserWrite.testUpdateWithLinkShare(nil, map[string]string{"namespace": "2"}, `{"user_id":"user1"}`)
 						assert.Error(t, err)
 						assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 					})
 					t.Run("Shared admin", func(t *testing.T) {
-						_, err := testHandlerNamespaceUserAdmin.testUpdateWithLinkShare(nil, map[string]string{"namespace": "3"}, `{"userID":"user1"}`)
+						_, err := testHandlerNamespaceUserAdmin.testUpdateWithLinkShare(nil, map[string]string{"namespace": "3"}, `{"user_id":"user1"}`)
 						assert.Error(t, err)
 						assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 					})
@@ -954,34 +954,34 @@ func TestLinkSharing(t *testing.T) {
 				})
 				t.Run("Create", func(t *testing.T) {
 					t.Run("Shared readonly", func(t *testing.T) {
-						_, err := testHandlerNamespaceTeamReadOnly.testCreateWithLinkShare(nil, map[string]string{"namespace": "1"}, `{"teamID":1}`)
+						_, err := testHandlerNamespaceTeamReadOnly.testCreateWithLinkShare(nil, map[string]string{"namespace": "1"}, `{"team_id":1}`)
 						assert.Error(t, err)
 						assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 					})
 					t.Run("Shared write", func(t *testing.T) {
-						_, err := testHandlerNamespaceTeamWrite.testCreateWithLinkShare(nil, map[string]string{"namespace": "2"}, `{"teamID":1}`)
+						_, err := testHandlerNamespaceTeamWrite.testCreateWithLinkShare(nil, map[string]string{"namespace": "2"}, `{"team_id":1}`)
 						assert.Error(t, err)
 						assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 					})
 					t.Run("Shared admin", func(t *testing.T) {
-						_, err := testHandlerNamespaceTeamAdmin.testCreateWithLinkShare(nil, map[string]string{"namespace": "3"}, `{"teamID":1}`)
+						_, err := testHandlerNamespaceTeamAdmin.testCreateWithLinkShare(nil, map[string]string{"namespace": "3"}, `{"team_id":1}`)
 						assert.Error(t, err)
 						assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 					})
 				})
 				t.Run("Update", func(t *testing.T) {
 					t.Run("Shared readonly", func(t *testing.T) {
-						_, err := testHandlerNamespaceTeamReadOnly.testUpdateWithLinkShare(nil, map[string]string{"namespace": "1"}, `{"teamID":1}`)
+						_, err := testHandlerNamespaceTeamReadOnly.testUpdateWithLinkShare(nil, map[string]string{"namespace": "1"}, `{"team_id":1}`)
 						assert.Error(t, err)
 						assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 					})
 					t.Run("Shared write", func(t *testing.T) {
-						_, err := testHandlerNamespaceTeamWrite.testUpdateWithLinkShare(nil, map[string]string{"namespace": "2"}, `{"teamID":1}`)
+						_, err := testHandlerNamespaceTeamWrite.testUpdateWithLinkShare(nil, map[string]string{"namespace": "2"}, `{"team_id":1}`)
 						assert.Error(t, err)
 						assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 					})
 					t.Run("Shared admin", func(t *testing.T) {
-						_, err := testHandlerNamespaceTeamAdmin.testUpdateWithLinkShare(nil, map[string]string{"namespace": "3"}, `{"teamID":1}`)
+						_, err := testHandlerNamespaceTeamAdmin.testUpdateWithLinkShare(nil, map[string]string{"namespace": "3"}, `{"team_id":1}`)
 						assert.Error(t, err)
 						assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 					})

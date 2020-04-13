@@ -77,7 +77,7 @@ func GetLinkShareFromClaims(claims jwt.MapClaims) (share *LinkSharing, err error
 	share = &LinkSharing{}
 	share.ID = int64(claims["id"].(float64))
 	share.Hash = claims["hash"].(string)
-	share.ListID = int64(claims["listID"].(float64))
+	share.ListID = int64(claims["list_id"].(float64))
 	share.Right = Right(claims["right"].(float64))
 	share.SharedByID = int64(claims["sharedByID"].(float64))
 	return

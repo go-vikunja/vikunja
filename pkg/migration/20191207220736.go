@@ -25,7 +25,7 @@ import (
 type task20191207220736 struct {
 	ID     int64 `xorm:"int(11) autoincr not null unique pk" json:"id" param:"listtask"`
 	Index  int64 `xorm:"int(11) not null default 0" json:"index"`
-	ListID int64 `xorm:"int(11) INDEX not null" json:"listID" param:"list"`
+	ListID int64 `xorm:"int(11) INDEX not null" json:"list_id" param:"list"`
 }
 
 func (task20191207220736) TableName() string {
