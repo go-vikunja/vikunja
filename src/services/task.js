@@ -28,8 +28,6 @@ export default class TaskService extends AbstractService {
 
 	processModel(model) {
 
-		console.log(model)
-
 		// Ensure that listId is an int
 		model.listId = Number(model.listId)
 
