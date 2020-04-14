@@ -19,6 +19,11 @@ export default {
 	watch: {
 		'$route.query': 'loadTasksForPage', // Only listen for query path changes
 	},
+	beforeMount() {
+		// Triggering loading the tasks in beforeMount lets the component maintain the current page, therefore the page
+		// is not lost after navigating back from a task detail page for example.
+		this.loadTasksForPage(this.$route.query)
+	},
 	created() {
 		this.taskCollectionService = new TaskCollectionService()
 	},
@@ -67,7 +72,7 @@ export default {
 		},
 		loadTasksForPage(e) {
 			// The page parameter can be undefined, in the case where the user loads a new list from the side bar menu
-			let page = e.page
+			let page = Number(e.page)
 			if (typeof e.page === 'undefined') {
 				page = 1
 			}

@@ -59,6 +59,7 @@
 				auth.user.infos.type !== authType.LINK_SHARE &&
 				this.$route.params.type !== 'gantt' &&
 				this.$route.params.type !== 'table' &&
+				this.$route.params.type !== 'list' &&
 				this.$route.params.type !== ''
 			) {
 				router.push({name: 'showList', params: { id:  this.$route.params.id }})

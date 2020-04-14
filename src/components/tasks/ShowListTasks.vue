@@ -143,7 +143,6 @@
 		},
 		created() {
 			this.taskService = new TaskService()
-			this.initTasks(1)
 		},
 		methods: {
 			// This function initializes the tasks page and loads the first page of tasks
