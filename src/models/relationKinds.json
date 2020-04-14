@@ -1,13 +1,46 @@
 {
-  "subtask": "Subtask",
-  "parenttask": "Parent Task",
-  "related": "Related Task",
-  "duplicateof": "Duplicate Of",
-  "duplicates": "Duplicates",
-  "blocking": "Blocking",
-  "blocked": "Blocked By",
-  "precedes": "Preceds",
-  "follows": "Follows",
-  "copiedfrom": "Copied From",
-  "copiedto": "Copied To"
+  "subtask": [
+    "Subtask",
+    "Subtasks"
+  ],
+  "parenttask": [
+    "Parent Task",
+    "Parent Tasks"
+  ],
+  "related": [
+    "Related Task",
+    "Related Tasks"
+  ],
+  "duplicateof": [
+    "Duplicate Of",
+    "Duplicates Of"
+  ],
+  "duplicates": [
+    "Duplicates",
+    "Duplicates"
+  ],
+  "blocking": [
+    "Blocking",
+    "Blocking"
+  ],
+  "blocked": [
+    "Blocked By",
+    "Blocked By"
+  ],
+  "precedes": [
+    "Preceds",
+    "Preceds"
+  ],
+  "follows": [
+    "Follows",
+    "Follows"
+  ],
+  "copiedfrom": [
+    "Copied From",
+    "Copied From"
+  ],
+  "copiedto": [
+    "Copied To",
+    "Copied To"
+  ]
 }

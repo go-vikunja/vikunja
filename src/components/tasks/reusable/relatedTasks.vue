@@ -46,7 +46,7 @@
 
 		<div class="related-tasks" v-for="(rts, kind ) in relatedTasks" :key="kind">
 			<template v-if="rts.length > 0">
-				<span class="title">{{ relationKinds[kind] }}</span>
+				<span class="title">{{ relationKindTitle(kind, rts.length) }}</span>
 				<div class="tasks noborder">
 					<div class="task" v-for="t in rts" :key="t.id">
 						<router-link :to="{ name: 'taskDetailView', params: { id: t.id } }">
@@ -209,6 +209,12 @@
 						this.error(e, this)
 					})
 			},
+			relationKindTitle(kind, length) {
+				if (length > 1) {
+					return relationKinds[kind][1]
+				}
+				return relationKinds[kind][0]
+			}
 		},
 	}
 </script>
