@@ -33,7 +33,7 @@
 						<select v-model="newTaskRelationKind">
 							<option value="unset">Select a relation kind</option>
 							<option v-for="(label, rk) in relationKinds" :key="rk" :value="rk">
-								{{ label }}
+								{{ label[0] }}
 							</option>
 						</select>
 					</div>
