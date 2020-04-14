@@ -10,7 +10,7 @@ export default class TaskModel extends AbstractModel {
 
 		this.id = Number(this.id)
 		this.listId = Number(this.listId)
-		
+
 		// Make date objects from timestamps
 		this.dueDate = this.dueDate ? new Date(this.dueDate) : null
 		this.startDate = this.startDate ? new Date(this.startDate) : null

@@ -1,7 +1,6 @@
 import axios from 'axios'
 import {reduce, replace} from 'lodash'
-import {camelCase} from 'camel-case'
-import {snakeCase} from 'snake-case'
+import { objectToSnakeCase } from '../helpers/case'
 
 let config = require('../../public/config.json')
 
@@ -48,19 +47,19 @@ export default class AbstractService {
 					if (this.useUpdateInterceptor()) {
 						config.data = self.beforeUpdate(config.data)
 					}
-					config.data = JSON.stringify(this.modelToSnakeCase(config.data))
+					config.data = JSON.stringify(objectToSnakeCase(config.data))
 					break
 				case 'put':
 					if (this.useCreateInterceptor()) {
 						config.data = self.beforeCreate(config.data)
 					}
-					config.data = JSON.stringify(this.modelToSnakeCase(config.data))
+					config.data = JSON.stringify(objectToSnakeCase(config.data))
 					break
 				case 'delete':
 					if (this.useDeleteInterceptor()) {
 						config.data = self.beforeDelete(config.data)
 					}
-					config.data = JSON.stringify(this.modelToSnakeCase(config.data))
+					config.data = JSON.stringify(objectToSnakeCase(config.data))
 					break
 			}
 			return config
@@ -240,32 +239,6 @@ export default class AbstractService {
 	////////////
 
 	/**
-	 * Transforms field names to camel case.
-	 * @param model
-	 * @returns {*}
-	 */
-	modelToCamelCase(model) {
-		let parsedModel = {}
-		for (const m in model) {
-			parsedModel[camelCase(m)] = model[m]
-		}
-		return parsedModel
-	}
-
-	/**
-	 * Transforms field names to snake case - used before making an api request.
-	 * @param model
-	 * @returns {*}
-	 */
-	modelToSnakeCase(model) {
-		let parsedModel = {}
-		for (const m in model) {
-			parsedModel[snakeCase(m)] = model[m]
-		}
-		return parsedModel
-	}
-
-	/**
 	 * Default preprocessor for get requests
 	 * @param model
 	 * @return {*}
@@ -338,7 +311,6 @@ export default class AbstractService {
 				return this.errorHandler(error)
 			})
 			.then(response => {
-				response.data = this.modelToCamelCase(response.data)
 				return Promise.resolve(this.modelGetFactory(response.data))
 			})
 			.finally(() => {
@@ -381,7 +353,6 @@ export default class AbstractService {
 				if (response.data === null) {
 					return Promise.resolve([])
 				}
-				response.data = this.modelToCamelCase(response.data)
 				return Promise.resolve(this.modelGetAllFactory(response.data))
 			})
 			.finally(() => {
@@ -407,7 +378,6 @@ export default class AbstractService {
 				return this.errorHandler(error)
 			})
 			.then(response => {
-				response.data = this.modelToCamelCase(response.data)
 				return Promise.resolve(this.modelCreateFactory(response.data))
 			})
 			.finally(() => {
@@ -433,7 +403,6 @@ export default class AbstractService {
 				return this.errorHandler(error)
 			})
 			.then(response => {
-				response.data = this.modelToCamelCase(response.data)
 				return Promise.resolve(this.modelUpdateFactory(response.data))
 			})
 			.finally(() => {
@@ -459,7 +428,6 @@ export default class AbstractService {
 				return this.errorHandler(error)
 			})
 			.then(response => {
-				response.data = this.modelToCamelCase(response.data)
 				return Promise.resolve(response.data)
 			})
 			.finally(() => {

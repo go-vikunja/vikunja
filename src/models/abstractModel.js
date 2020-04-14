@@ -1,4 +1,5 @@
 import {defaults, omitBy, isNil} from 'lodash'
+import {objectToCamelCase} from '../helpers/case'
 
 export default class AbstractModel {
 
@@ -7,6 +8,9 @@ export default class AbstractModel {
 	 * @param data
 	 */
 	constructor(data) {
+
+		data = objectToCamelCase(data)
+
 		// Put all data in our model while overriding those with a value of null or undefined with their defaults
 		defaults(this, omitBy(data, isNil), this.defaults())
 	}
