@@ -1,7 +1,7 @@
 <template>
 	<notifications position="bottom left">
 		<template slot="body" slot-scope="props">
-			<div :class="['vue-notification-template', 'vue-notification', props.item.type]">
+			<div :class="['vue-notification-template', 'vue-notification', props.item.type]" @click="close(props)">
 				<div
 						v-if="props.item.title"
 						class="notification-title"
@@ -28,7 +28,12 @@
 
 <script>
 	export default {
-		name: 'notification'
+		name: 'notification',
+		methods: {
+			close(props) {
+				props.close()
+			},
+		},
 	}
 </script>
 
