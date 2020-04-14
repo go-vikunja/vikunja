@@ -87,7 +87,7 @@ require (
 replace (
 	github.com/coreos/bbolt => go.etcd.io/bbolt v1.3.4
 	github.com/coreos/go-systemd => github.com/coreos/go-systemd/v22 v22.0.0
-	github.com/hpcloud/tail => github.com/jeffbean/tail v0.0.0-20180825121900-988c412e1aaa923bd3f9dcb7c8a75b1b58818f4f // See https://github.com/hpcloud/tail/pull/159
+	github.com/hpcloud/tail => github.com/jeffbean/tail v1.0.1 // See https://github.com/hpcloud/tail/pull/159
 	github.com/samedi/caldav-go => github.com/kolaente/caldav-go v3.0.1-0.20190524174923-9e5cd1688227+incompatible // Branch: feature/dynamic-supported-components, PR: https://github.com/samedi/caldav-go/pull/6 and https://github.com/samedi/caldav-go/pull/7
 	gopkg.in/fsnotify.v1 => github.com/kolaente/fsnotify v1.4.10-0.20200411160148-1bc3c8ff4048 // See https://github.com/fsnotify/fsnotify/issues/328 and https://github.com/golang/go/issues/26904
 )
