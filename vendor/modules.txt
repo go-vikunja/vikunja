@@ -227,7 +227,7 @@ github.com/urfave/cli
 github.com/valyala/bytebufferpool
 # github.com/valyala/fasttemplate v1.1.0
 github.com/valyala/fasttemplate
-# golang.org/x/crypto v0.0.0-20200406173513-056763e48d71
+# golang.org/x/crypto v0.0.0-20200414173820-0848c9571904
 golang.org/x/crypto/acme
 golang.org/x/crypto/acme/autocert
 golang.org/x/crypto/bcrypt
