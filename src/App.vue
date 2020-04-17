@@ -4,7 +4,7 @@
 			<!-- This is a workaround to get the sw to "see" the to-be-cached version of the offline background image -->
 			<div class="offline" style="height: 0;width: 0;"></div>
 			<nav class="navbar main-theme is-fixed-top" role="navigation" aria-label="main navigation"
-				v-if="user.authenticated && user.infos.type === authTypes.USER">
+				v-if="user.authenticated && (userInfo && userInfo.type === authTypes.USER)">
 				<div class="navbar-brand">
 					<router-link :to="{name: 'home'}" class="navbar-item logo">
 						<img src="/images/logo-full.svg" alt="Vikunja"/>
@@ -42,7 +42,7 @@
 					</div>
 				</div>
 			</nav>
-			<div v-if="user.authenticated && user.infos.type === authTypes.USER">
+			<div v-if="user.authenticated && (userInfo && userInfo.type === authTypes.USER)">
 				<a @click="mobileMenuActive = true" class="mobilemenu-show-button" v-if="!mobileMenuActive">
 					<icon icon="bars"></icon>
 				</a>
@@ -169,7 +169,7 @@
 				</div>
 			</div>
 			<!-- FIXME: This will only be triggered when the root component is already loaded before doing link share auth. Will "fix" itself once we use vuex. -->
-			<div v-else-if="user.authenticated && user.infos.type === authTypes.LINK_SHARE">
+			<div v-else-if="user.authenticated && (userInfo && userInfo.type === authTypes.LINK_SHARE)">
 				<div class="container has-text-centered link-share-view">
 					<div class="column is-10 is-offset-1">
 						<img src="/images/logo-full.svg" alt="Vikunja" class="logo"/>
@@ -298,6 +298,11 @@
 			// call the method again if the route changes
 			'$route': 'doStuffAfterRoute'
 		},
+		computed: {
+			userInfo() {
+				return auth.getUserInfos()
+			}
+		},
 		methods: {
 			logout() {
 				auth.logout()
@@ -313,7 +318,7 @@
 					})
 			},
 			loadNamespacesIfNeeded(e) {
-				if (auth.user.authenticated && auth.user.infos.type === authTypes.USER && (e.name === 'home' || this.namespaces.length === 0)) {
+				if (auth.user.authenticated && (this.userInfo && this.userInfo.type === authTypes.USER) && (e.name === 'home' || this.namespaces.length === 0)) {
 					this.loadNamespaces()
 				}
 			},

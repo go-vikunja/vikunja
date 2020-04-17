@@ -18,6 +18,12 @@
 						<input type="password" class="input" id="password" name="password" placeholder="e.g. ••••••••••••" ref="password" required/>
 					</div>
 				</div>
+				<div class="field" v-if="needsTotpPasscode">
+					<label class="label" for="totpPasscode">Two Factor Authentication Code</label>
+					<div class="control">
+						<input type="text" class="input" id="totpPasscode" placeholder="e.g. 123456" ref="totpPasscode" required v-focus/>
+					</div>
+				</div>
 
 				<div class="field is-grouped">
 					<div class="control">
@@ -45,7 +51,8 @@
 			return {
 				errorMsg: '',
 				confirmedEmailSuccess: false,
-				loading: false
+				loading: false,
+				needsTotpPasscode: false,
 			}
 		},
 		beforeMount() {
@@ -81,6 +88,10 @@
 				const credentials = {
 					username: this.$refs.username.value,
 					password: this.$refs.password.value,
+				}
+
+				if(this.needsTotpPasscode) {
+					credentials.totpPasscode = this.$refs.totpPasscode.value
 				}
 
 				auth.login(this, credentials, 'home')

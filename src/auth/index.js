@@ -11,13 +11,19 @@ export default {
 		infos: {},
 	},
 
-	login(context, creds, redirect) {
+	login(context, credentials, redirect = '') {
 		localStorage.removeItem('token') // Delete an eventually preexisting old token
 
-		HTTP.post('login', {
-			username: creds.username,
-			password: creds.password
-		})
+		const data =  {
+			username: credentials.username,
+			password: credentials.password
+		}
+
+		if(credentials.totpPasscode) {
+			data.totp_passcode = credentials.totpPasscode
+		}
+
+		HTTP.post('login', data)
 			.then(response => {
 				// Save the token to local storage for later use
 				localStorage.setItem('token', response.data.token)
@@ -25,27 +31,27 @@ export default {
 				// Tell others the user is autheticated
 				this.user.authenticated = true
 				this.user.isLinkShareAuth = false
-				const inf = this.getUserInfos()
-				// eslint-disable-next-line
-				console.log(inf)
-
-				// Hide the loader
-				context.loading = false
 
 				// Redirect if nessecary
-				if (redirect) {
+				if (redirect !== '') {
 					router.push({name: redirect})
 				}
 			})
 			.catch(e => {
-				// Hide the loader
-				context.loading = false
 				if (e.response) {
+					if (e.response.data.code === 1017 && !credentials.totpPasscode) {
+						context.needsTotpPasscode = true
+						return
+					}
+
 					context.errorMsg = e.response.data.message
 					if (e.response.status === 401) {
 						context.errorMsg = 'Wrong username or password.'
 					}
 				}
+			})
+			.finally(() => {
+				context.loading = false
 			})
 	},
 

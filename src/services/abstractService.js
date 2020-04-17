@@ -386,19 +386,16 @@ export default class AbstractService {
 	}
 
 	/**
-	 * Performs a post request to the update url
+	 * An abstract implementation to send post requests.
+	 * Services can use this to implement functions to do post requests other than using the update method.
+	 * @param url
 	 * @param model
-	 * @returns {Q.Promise<any>}
+	 * @returns {Q.Promise<unknown>}
 	 */
-	update(model) {
-		if (this.paths.update === '') {
-			return Promise.reject({message: 'This model is not able to update data.'})
-		}
-
+	post(url, model) {
 		const cancel = this.setLoading()
-		const finalUrl = this.getReplacedRoute(this.paths.update, model)
 
-		return this.http.post(finalUrl, model)
+		return this.http.post(url, model)
 			.catch(error => {
 				return this.errorHandler(error)
 			})
@@ -408,6 +405,20 @@ export default class AbstractService {
 			.finally(() => {
 				cancel()
 			})
+	}
+
+	/**
+	 * Performs a post request to the update url
+	 * @param model
+	 * @returns {Q.Promise<any>}
+	 */
+	update(model) {
+		if (this.paths.update === '') {
+			return Promise.reject({message: 'This model is not able to update data.'})
+		}
+
+		const finalUrl = this.getReplacedRoute(this.paths.update, model)
+		return this.post(finalUrl, model)
 	}
 
 	/**
