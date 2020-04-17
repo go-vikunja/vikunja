@@ -147,36 +147,36 @@ func TestGetUser(t *testing.T) {
 func TestCheckUserCredentials(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
-		_, err := CheckUserCredentials(&Login{"user1", "1234"})
+		_, err := CheckUserCredentials(&Login{Username: "user1", Password: "1234"})
 		assert.NoError(t, err)
 	})
 	t.Run("unverified email", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
-		_, err := CheckUserCredentials(&Login{"user5", "1234"})
+		_, err := CheckUserCredentials(&Login{Username: "user5", Password: "1234"})
 		assert.Error(t, err)
 		assert.True(t, IsErrEmailNotConfirmed(err))
 	})
 	t.Run("wrong password", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
-		_, err := CheckUserCredentials(&Login{"user1", "12345"})
+		_, err := CheckUserCredentials(&Login{Username: "user1", Password: "12345"})
 		assert.Error(t, err)
 		assert.True(t, IsErrWrongUsernameOrPassword(err))
 	})
 	t.Run("nonexistant user", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
-		_, err := CheckUserCredentials(&Login{"dfstestuu", "1234"})
+		_, err := CheckUserCredentials(&Login{Username: "dfstestuu", Password: "1234"})
 		assert.Error(t, err)
 		assert.True(t, IsErrWrongUsernameOrPassword(err))
 	})
 	t.Run("empty password", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
-		_, err := CheckUserCredentials(&Login{"user1", ""})
+		_, err := CheckUserCredentials(&Login{Username: "user1"})
 		assert.Error(t, err)
 		assert.True(t, IsErrNoUsernamePassword(err))
 	})
 	t.Run("empty username", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
-		_, err := CheckUserCredentials(&Login{"", "1234"})
+		_, err := CheckUserCredentials(&Login{Password: "1234"})
 		assert.Error(t, err)
 		assert.True(t, IsErrNoUsernamePassword(err))
 	})

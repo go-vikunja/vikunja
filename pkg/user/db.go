@@ -46,5 +46,6 @@ func InitDB() (err error) {
 func GetTables() []interface{} {
 	return []interface{}{
 		&User{},
+		&TOTP{},
 	}
 }

@@ -289,3 +289,80 @@ const ErrCodeEmptyOldPassword = 1014
 func (err ErrEmptyOldPassword) HTTPError() web.HTTPError {
 	return web.HTTPError{HTTPCode: http.StatusPreconditionFailed, Code: ErrCodeEmptyOldPassword, Message: "Please specify old password."}
 }
+
+// ErrTOTPAlreadyEnabled represents a "TOTPAlreadyEnabled" kind of error.
+type ErrTOTPAlreadyEnabled struct{}
+
+// IsErrTOTPAlreadyEnabled checks if an error is a ErrTOTPAlreadyEnabled.
+func IsErrTOTPAlreadyEnabled(err error) bool {
+	_, ok := err.(ErrTOTPAlreadyEnabled)
+	return ok
+}
+
+func (err ErrTOTPAlreadyEnabled) Error() string {
+	return fmt.Sprintf("Totp is already enabled for this user")
+}
+
+// ErrCodeTOTPAlreadyEnabled holds the unique world-error code of this error
+const ErrCodeTOTPAlreadyEnabled = 1015
+
+// HTTPError holds the http error description
+func (err ErrTOTPAlreadyEnabled) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusPreconditionFailed,
+		Code:     ErrCodeTOTPAlreadyEnabled,
+		Message:  "Totp is already enabled for this user, but not activated.",
+	}
+}
+
+// ErrTOTPNotEnabled represents a "TOTPNotEnabled" kind of error.
+type ErrTOTPNotEnabled struct{}
+
+// IsErrTOTPNotEnabled checks if an error is a ErrTOTPNotEnabled.
+func IsErrTOTPNotEnabled(err error) bool {
+	_, ok := err.(ErrTOTPNotEnabled)
+	return ok
+}
+
+func (err ErrTOTPNotEnabled) Error() string {
+	return fmt.Sprintf("Totp is not enabled for this user")
+}
+
+// ErrCodeTOTPNotEnabled holds the unique world-error code of this error
+const ErrCodeTOTPNotEnabled = 1016
+
+// HTTPError holds the http error description
+func (err ErrTOTPNotEnabled) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusPreconditionFailed,
+		Code:     ErrCodeTOTPNotEnabled,
+		Message:  "Totp is not enabled for this user.",
+	}
+}
+
+// ErrInvalidTOTPPasscode represents a "InvalidTOTPPasscode" kind of error.
+type ErrInvalidTOTPPasscode struct {
+	Passcode string
+}
+
+// IsErrInvalidTOTPPasscode checks if an error is a ErrInvalidTOTPPasscode.
+func IsErrInvalidTOTPPasscode(err error) bool {
+	_, ok := err.(ErrInvalidTOTPPasscode)
+	return ok
+}
+
+func (err ErrInvalidTOTPPasscode) Error() string {
+	return fmt.Sprintf("Invalid totp passcode")
+}
+
+// ErrCodeInvalidTOTPPasscode holds the unique world-error code of this error
+const ErrCodeInvalidTOTPPasscode = 1017
+
+// HTTPError holds the http error description
+func (err ErrInvalidTOTPPasscode) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusPreconditionFailed,
+		Code:     ErrCodeInvalidTOTPPasscode,
+		Message:  "Invalid totp passcode.",
+	}
+}

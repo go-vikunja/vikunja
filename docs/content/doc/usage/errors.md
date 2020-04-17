@@ -27,6 +27,9 @@ This document describes the different errors Vikunja can return.
 | 1012 | 412 | Email address of the user not confirmed. |
 | 1013 | 412 | New password is empty. |
 | 1014 | 412 | Old password is empty. |
+| 1015 | 412 | Totp is already enabled for this user. |
+| 1016 | 412 | Totp is not enabled for this user. |
+| 1017 | 412 | The provided Totp passcode is invalid. |
 | 2001 | 400 | ID cannot be empty or 0. |
 | 2002 | 400 | Some of the request data was invalid. The response contains an aditional array with all invalid fields. |
 | 3001 | 404 | The list does not exist. |

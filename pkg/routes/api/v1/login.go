@@ -39,6 +39,7 @@ type Token struct {
 // @Param credentials body user.UserLogin true "The login credentials"
 // @Success 200 {object} v1.Token
 // @Failure 400 {object} models.Message "Invalid user password model."
+// @Failure 412 {object} models.Message "Invalid totp passcode."
 // @Failure 403 {object} models.Message "Invalid username or password."
 // @Router /login [post]
 func Login(c echo.Context) error {
@@ -51,6 +52,21 @@ func Login(c echo.Context) error {
 	user, err := user2.CheckUserCredentials(&u)
 	if err != nil {
 		return handler.HandleHTTPError(err, c)
+	}
+
+	totpEnabled, err := user2.TOTPEnabledForUser(user)
+	if err != nil {
+		return handler.HandleHTTPError(err, c)
+	}
+
+	if totpEnabled {
+		_, err = user2.ValidateTOTPPasscode(&user2.TOTPPasscode{
+			User:     user,
+			Passcode: u.TOTPPasscode,
+		})
+		if err != nil {
+			return handler.HandleHTTPError(err, c)
+		}
 	}
 
 	// Create token

@@ -202,11 +202,16 @@ func registerAPIRoutes(a *echo.Group) {
 	a.POST("/tokenTest", apiv1.CheckToken)
 
 	// User stuff
-	a.GET("/user", apiv1.UserShow)
-	a.POST("/user/password", apiv1.UserChangePassword)
-	a.GET("/users", apiv1.UserList)
-	a.POST("/user/token", apiv1.RenewToken)
-	a.POST("/user/settings/email", apiv1.UpdateUserEmail)
+	u := a.Group("/user")
+
+	u.GET("", apiv1.UserShow)
+	u.POST("/password", apiv1.UserChangePassword)
+	u.GET("s", apiv1.UserList)
+	u.POST("/token", apiv1.RenewToken)
+	u.POST("/settings/email", apiv1.UpdateUserEmail)
+	u.POST("/settings/totp/enroll", apiv1.UserTOTPEnroll)
+	u.POST("/settings/totp/enable", apiv1.UserTOTPEnable)
+	u.GET("/settings/totp/qrcode", apiv1.UserTOTPQrCode)
 
 	listHandler := &handler.WebHandler{
 		EmptyStruct: func() handler.CObject {

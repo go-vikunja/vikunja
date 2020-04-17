@@ -41,5 +41,4 @@ func init() {
 			return tx.DropTables(list20200322214624{})
 		},
 	})
-
 }

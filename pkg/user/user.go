@@ -37,6 +37,8 @@ type Login struct {
 	Username string `json:"username"`
 	// The password for the user.
 	Password string `json:"password"`
+	// The totp passcode of a user. Only needs to be provided when enabled.
+	TOTPPasscode string `json:"totp_passcode"`
 }
 
 // User holds information about an user
