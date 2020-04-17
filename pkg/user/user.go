@@ -172,15 +172,25 @@ func CheckUserCredentials(u *Login) (*User, error) {
 	}
 
 	// Check the users password
-	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(u.Password))
+	err = CheckUserPassword(user, u.Password)
 	if err != nil {
-		if err == bcrypt.ErrMismatchedHashAndPassword {
-			return &User{}, ErrWrongUsernameOrPassword{}
-		}
 		return &User{}, err
 	}
 
 	return user, nil
+}
+
+// CheckUserPassword checks and verifies a user's password. The user object needs to contain the hashed password from the database.
+func CheckUserPassword(user *User, password string) error {
+	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
+	if err != nil {
+		if err == bcrypt.ErrMismatchedHashAndPassword {
+			return ErrWrongUsernameOrPassword{}
+		}
+		return err
+	}
+
+	return nil
 }
 
 // GetCurrentUser returns the current user based on its jwt token

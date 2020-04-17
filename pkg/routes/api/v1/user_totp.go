@@ -93,6 +93,52 @@ func UserTOTPEnable(c echo.Context) error {
 	return c.JSON(http.StatusOK, models.Message{Message: "TOTP was enabled successfully."})
 }
 
+// UserTOTPDisable disables totp settings for the current user.
+// @Summary Disable totp settings
+// @Description Disables any totp settings for the current user.
+// @tags user
+// @Accept json
+// @Produce json
+// @Security JWTKeyAuth
+// @Param totp body user.Login true "The current user's password (only password is enough)."
+// @Success 200 {object} models.Message "Successfully disabled"
+// @Failure 400 {object} code.vikunja.io/web.HTTPError "Something's invalid."
+// @Failure 404 {object} code.vikunja.io/web.HTTPError "User does not exist."
+// @Failure 500 {object} models.Message "Internal server error."
+// @Router /user/settings/totp/disable [post]
+func UserTOTPDisable(c echo.Context) error {
+	login := &user.Login{}
+	if err := c.Bind(login); err != nil {
+		log.Debugf("Invalid model error. Internal error was: %s", err.Error())
+		if he, is := err.(*echo.HTTPError); is {
+			return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid model provided. Error was: %s", he.Message))
+		}
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid model provided."))
+	}
+
+	u, err := user.GetCurrentUser(c)
+	if err != nil {
+		return handler.HandleHTTPError(err, c)
+	}
+
+	u, err = user.GetUserByID(u.ID)
+	if err != nil {
+		return handler.HandleHTTPError(err, c)
+	}
+
+	err = user.CheckUserPassword(u, login.Password)
+	if err != nil {
+		return handler.HandleHTTPError(err, c)
+	}
+
+	err = user.DisableTOTP(u)
+	if err != nil {
+		return handler.HandleHTTPError(err, c)
+	}
+
+	return c.JSON(http.StatusOK, models.Message{Message: "TOTP was enabled successfully."})
+}
+
 // UserTOTPQrCode is the handler to show a qr code to enroll the user into totp
 // @Summary Totp QR Code
 // @Description Returns a qr code for easier setup at end user's devices.

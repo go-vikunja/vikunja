@@ -212,6 +212,7 @@ func registerAPIRoutes(a *echo.Group) {
 	u.GET("/settings/totp", apiv1.UserTOTP)
 	u.POST("/settings/totp/enroll", apiv1.UserTOTPEnroll)
 	u.POST("/settings/totp/enable", apiv1.UserTOTPEnable)
+	u.POST("/settings/totp/disable", apiv1.UserTOTPDisable)
 	u.GET("/settings/totp/qrcode", apiv1.UserTOTPQrCode)
 
 	listHandler := &handler.WebHandler{

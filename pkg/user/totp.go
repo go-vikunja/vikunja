@@ -105,6 +105,12 @@ func EnableTOTP(passcode *TOTPPasscode) (err error) {
 	return
 }
 
+// DisableTOTP removes all totp settings for a user.
+func DisableTOTP(user *User) (err error) {
+	_, err = x.Where("user_id = ?", user.ID).Delete(&TOTP{})
+	return
+}
+
 // ValidateTOTPPasscode validated totp codes of users.
 func ValidateTOTPPasscode(passcode *TOTPPasscode) (t *TOTP, err error) {
 	t, err = GetTOTPForUser(passcode.User)
