@@ -27,8 +27,8 @@
 								Assignees
 							</div>
 							<edit-assignees
-									:task-i-d="task.id"
-									:list-i-d="task.listId"
+									:task-id="task.id"
+									:list-id="task.listId"
 									:initial-assignees="task.assignees"
 									ref="assignees"
 							/>
@@ -150,7 +150,7 @@
 							</span>
 							Labels
 						</div>
-						<edit-labels :task-i-d="taskID" v-model="task.labels" ref="labels"/>
+						<edit-labels :task-id="taskId" v-model="task.labels" ref="labels"/>
 					</div>
 
 					<!-- Description -->
@@ -177,7 +177,7 @@
 					<!-- Attachments -->
 					<div class="content attachments has-top-border" v-if="activeFields.attachments">
 						<attachments
-								:task-i-d="taskID"
+								:task-id="taskId"
 								:initial-attachments="task.attachments"
 								ref="attachments"
 						/>
@@ -192,7 +192,7 @@
 							Related Tasks
 						</h3>
 						<related-tasks
-								:task-i-d="taskID"
+								:task-id="taskId"
 								:list-id="task.listId"
 								:initial-related-tasks="task.relatedTasks"
 								:show-no-relations-notice="true"
@@ -201,7 +201,7 @@
 					</div>
 
 					<!-- Comments -->
-					<comments :task-i-d="taskID"/>
+					<comments :task-id="taskId"/>
 				</div>
 				<div class="column is-one-fifth action-buttons">
 					<a class="button is-outlined noshadow has-no-border" :class="{'is-success': !task.done}" @click="toggleTaskDone()">
@@ -319,7 +319,7 @@
 		},
 		data() {
 			return {
-				taskID: Number(this.$route.params.id),
+				taskId: Number(this.$route.params.id),
 				taskService: TaskService,
 				task: TaskModel,
 				relationKinds: relationKinds,
@@ -365,8 +365,8 @@
 		},
 		methods: {
 			loadTask() {
-				this.taskID = Number(this.$route.params.id)
-				this.taskService.get({id: this.taskID})
+				this.taskId = Number(this.$route.params.id)
+				this.taskService.get({id: this.taskId})
 					.then(r => {
 						this.$set(this, 'task', r)
 						this.setListAndNamespaceTitleFromParent()

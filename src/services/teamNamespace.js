@@ -6,10 +6,10 @@ import {formatISO} from 'date-fns'
 export default class TeamNamespaceService extends AbstractService {
 	constructor() {
 		super({
-			create: '/namespaces/{namespaceID}/teams',
-			getAll: '/namespaces/{namespaceID}/teams',
-			update: '/namespaces/{namespaceID}/teams/{teamId}',
-			delete: '/namespaces/{namespaceID}/teams/{teamId}',
+			create: '/namespaces/{namespaceId}/teams',
+			getAll: '/namespaces/{namespaceId}/teams',
+			update: '/namespaces/{namespaceId}/teams/{teamId}',
+			delete: '/namespaces/{namespaceId}/teams/{teamId}',
 		})
 	}
 

@@ -74,7 +74,7 @@ const getBearerToken = async () => {
 
 // Notification action
 self.addEventListener('notificationclick', function(event) {
-	const taskID = event.notification.data.taskID
+	const taskId = event.notification.data.taskId
 	event.notification.close()
 
 	switch (event.action) {
@@ -87,14 +87,14 @@ self.addEventListener('notificationclick', function(event) {
 
 					getBearerToken()
 						.then(token => {
-							fetch(`${config.VIKUNJA_API_BASE_URL}tasks/${taskID}`, {
+							fetch(`${config.VIKUNJA_API_BASE_URL}tasks/${taskId}`, {
 								method: 'post',
 								headers: {
 									'Accept': 'application/json',
 									'Content-Type': 'application/json',
 									'Authorization': `Bearer ${token}`,
 								},
-								body: JSON.stringify({id: taskID, done: true})
+								body: JSON.stringify({id: taskId, done: true})
 							})
 							.then(r => r.json())
 							.then(r => {
@@ -107,7 +107,7 @@ self.addEventListener('notificationclick', function(event) {
 				})
 			break
 		case 'show-task':
-			clients.openWindow(`/tasks/${taskID}`)
+			clients.openWindow(`/tasks/${taskId}`)
 			break
 	}
 })

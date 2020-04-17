@@ -6,7 +6,7 @@ import {formatISO} from 'date-fns'
 export default class ListService extends AbstractService {
 	constructor() {
 		super({
-			create: '/namespaces/{namespaceID}/lists',
+			create: '/namespaces/{namespaceId}/lists',
 			get: '/lists/{id}',
 			update: '/lists/{id}',
 			delete: '/lists/{id}',

@@ -21,7 +21,7 @@ export default class TeamMemberService extends AbstractService {
 	}
 	
 	beforeCreate(model) {
-		model.userId = model.id // The api wants to get the user id as user_ID
+		model.userId = model.id // The api wants to get the user id as user_Id
 		model.admin = model.admin === null ? false : model.admin
 		return model
 	}

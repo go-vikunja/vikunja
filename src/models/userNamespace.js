@@ -7,7 +7,7 @@ export default class UserNamespaceModel extends UserShareBaseModel {
 		return merge(
 			super.defaults(),
 			{
-				namespaceID: 0,
+				namespaceId: 0,
 			}
 		)
 	}

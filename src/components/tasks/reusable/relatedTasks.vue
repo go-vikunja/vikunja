@@ -105,7 +105,7 @@
 			multiselect,
 		},
 		props: {
-			taskID: {
+			taskId: {
 				type: Number,
 				required: true,
 			},
@@ -156,7 +156,7 @@
 			},
 			addTaskRelation() {
 				let rel = new TaskRelationModel({
-					taskId: this.taskID,
+					taskId: this.taskId,
 					otherTaskId: this.newTaskRelationTask.id,
 					relationKind: this.newTaskRelationKind,
 				})
@@ -177,7 +177,7 @@
 			removeTaskRelation() {
 				let rel = new TaskRelationModel({
 					relationKind: this.relationToDelete.relationKind,
-					taskId: this.taskID,
+					taskId: this.taskId,
 					otherTaskId: this.relationToDelete.otherTaskId,
 				})
 				this.taskRelationService.delete(rel)

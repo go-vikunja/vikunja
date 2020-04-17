@@ -114,20 +114,20 @@
 
 		<div class="field has-addons">
 			<div class="control is-expanded">
-				<edit-assignees :task-i-d="taskEditTask.id" :list-i-d="taskEditTask.listId" :initial-assignees="taskEditTask.assignees"/>
+				<edit-assignees :task-id="taskEditTask.id" :list-id="taskEditTask.listId" :initial-assignees="taskEditTask.assignees"/>
 			</div>
 		</div>
 
 		<div class="field">
 			<label class="label">Labels</label>
 			<div class="control">
-				<edit-labels :task-i-d="taskEditTask.id" v-model="taskEditTask.labels"/>
+				<edit-labels :task-id="taskEditTask.id" v-model="taskEditTask.labels"/>
 			</div>
 		</div>
 
 		<related-tasks
 			class="is-narrow"
-			:task-i-d="task.id"
+			:task-id="task.id"
 			:list-id="task.listId"
 			:initial-related-tasks="task.relatedTasks"
 		/>
@@ -161,7 +161,7 @@
 		name: 'edit-task',
 		data() {
 			return {
-				listID: this.$route.params.id,
+				listId: this.$route.params.id,
 				listService: ListService,
 				taskService: TaskService,
 

@@ -80,7 +80,7 @@ export default class TaskModel extends AbstractModel {
 			endDate: 0,
 			repeatAfter: 0,
 			reminderDates: [],
-			parentTaskID: 0,
+			parentTaskId: 0,
 			hexColor: '',
 			percentDone: 0,
 			relatedTasks: {},
@@ -196,7 +196,7 @@ export default class TaskModel extends AbstractModel {
 			showTrigger: new TimestampTrigger(date),
 			badge: '/images/icons/badge-monochrome.png',
 			icon: '/images/icons/android-chrome-512x512.png',
-			data: {taskID: this.id},
+			data: {taskId: this.id},
 			actions: [
 				{
 					action: 'mark-as-done',

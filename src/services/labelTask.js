@@ -4,9 +4,9 @@ import LabelTask from "../models/labelTask";
 export default class LabelTaskService extends AbstractService {
 	constructor() {
 		super({
-			create: '/tasks/{taskID}/labels',
-			getAll: '/tasks/{taskID}/labels',
-			delete: '/tasks/{taskID}/labels/{labelId}',
+			create: '/tasks/{taskId}/labels',
+			getAll: '/tasks/{taskId}/labels',
+			delete: '/tasks/{taskId}/labels/{labelId}',
 		})
 	}
 	

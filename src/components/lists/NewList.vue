@@ -65,7 +65,7 @@
 				}
 				this.showError = false
 
-				this.list.namespaceID = this.$route.params.id
+				this.list.namespaceId = this.$route.params.id
 				this.listService.create(this.list)
 					.then(response => {
 						this.$parent.loadNamespaces()

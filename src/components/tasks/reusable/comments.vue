@@ -72,7 +72,7 @@
 	export default {
 		name: 'comments',
 		props: {
-			taskID: {
+			taskId: {
 				type: Number,
 				required: true,
 			}
@@ -94,22 +94,22 @@
 		},
 		created() {
 			this.taskCommentService = new TaskCommentService()
-			this.newComment = new TaskCommentModel({taskId: this.taskID})
-			this.commentEdit = new TaskCommentModel({taskId: this.taskID})
-			this.commentToDelete = new TaskCommentModel({taskId: this.taskID})
+			this.newComment = new TaskCommentModel({taskId: this.taskId})
+			this.commentEdit = new TaskCommentModel({taskId: this.taskId})
+			this.commentToDelete = new TaskCommentModel({taskId: this.taskId})
 			this.comments = []
 		},
 		mounted() {
 			this.loadComments()
 		},
 		watch: {
-			taskID() {
+			taskId() {
 				this.loadComments()
 			}
 		},
 		methods: {
 			loadComments() {
-				this.taskCommentService.getAll({taskId: this.taskID})
+				this.taskCommentService.getAll({taskId: this.taskId})
 					.then(r => {
 						this.$set(this, 'comments', r)
 					})
@@ -143,7 +143,7 @@
 				if (this.commentEdit.comment === '') {
 					return
 				}
-				this.commentEdit.taskId = this.taskID
+				this.commentEdit.taskId = this.taskId
 				this.taskCommentService.update(this.commentEdit)
 					.then(r => {
 						for (const c in this.comments) {

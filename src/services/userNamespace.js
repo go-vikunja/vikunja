@@ -6,10 +6,10 @@ import {formatISO} from 'date-fns'
 export default class UserNamespaceService extends AbstractService {
 	constructor() {
 		super({
-			create: '/namespaces/{namespaceID}/users',
-			getAll: '/namespaces/{namespaceID}/users',
-			update: '/namespaces/{namespaceID}/users/{userId}',
-			delete: '/namespaces/{namespaceID}/users/{userId}',
+			create: '/namespaces/{namespaceId}/users',
+			getAll: '/namespaces/{namespaceId}/users',
+			update: '/namespaces/{namespaceId}/users/{userId}',
+			delete: '/namespaces/{namespaceId}/users/{userId}',
 		})
 	}
 

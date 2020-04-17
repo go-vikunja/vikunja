@@ -96,7 +96,7 @@
 			}
 		},
 		props: {
-			taskID: {
+			taskId: {
 				required: true,
 				type: Number,
 			},
@@ -153,7 +153,7 @@
 				this.uploadFiles(this.$refs.files.files)
 			},
 			uploadFiles(files) {
-				const attachmentModel = new AttachmentModel({taskId: this.taskID})
+				const attachmentModel = new AttachmentModel({taskId: this.taskId})
 				this.attachmentService.create(attachmentModel, files)
 					.then(r => {
 						if(r.success !== null) {

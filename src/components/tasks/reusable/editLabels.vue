@@ -50,7 +50,7 @@
 				default: () => [],
 				type: Array,
 			},
-			taskID: {
+			taskId: {
 				type: Number,
 				required: true,
 			},
@@ -108,7 +108,7 @@
 				this.$set(this, 'foundLabels', [])
 			},
 			addLabel(label) {
-				let labelTask = new LabelTaskModel({taskID: this.taskID, labelId: label.id})
+				let labelTask = new LabelTaskModel({taskId: this.taskId, labelId: label.id})
 				this.labelTaskService.create(labelTask)
 					.then(() => {
 						this.success({message: 'The label was successfully added.'}, this)
@@ -119,7 +119,7 @@
 					})
 			},
 			removeLabel(label) {
-				let labelTask = new LabelTaskModel({taskID: this.taskID, labelId: label.id})
+				let labelTask = new LabelTaskModel({taskId: this.taskId, labelId: label.id})
 				this.labelTaskService.delete(labelTask)
 					.then(() => {
 						// Remove the label from the list

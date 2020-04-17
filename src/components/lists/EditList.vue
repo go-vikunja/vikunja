@@ -68,7 +68,7 @@
 		<component :is="manageUsersComponent" :id="list.id" type="list" shareType="user" :userIsAdmin="userIsAdmin"></component>
 		<component :is="manageTeamsComponent" :id="list.id" type="list" shareType="team" :userIsAdmin="userIsAdmin"></component>
 
-		<link-sharing :list-i-d="$route.params.id"/>
+		<link-sharing :list-id="$route.params.id"/>
 
 		<modal
 				v-if="showDeleteModal"

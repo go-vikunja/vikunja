@@ -113,7 +113,7 @@
 		name: 'ListView',
 		data() {
 			return {
-				listID: this.$route.params.id,
+				listId: this.$route.params.id,
 				taskService: TaskService,
 				list: {},
 				isTaskEdit: false,
@@ -172,11 +172,11 @@
 			},
 			editTask(id) {
 				// Find the selected task and set it to the current object
-				let theTask = this.getTaskByID(id) // Somehow this does not work if we directly assign this to this.taskEditTask
+				let theTask = this.getTaskById(id) // Somehow this does not work if we directly assign this to this.taskEditTask
 				this.taskEditTask = theTask
 				this.isTaskEdit = true
 			},
-			getTaskByID(id) {
+			getTaskById(id) {
 				for (const t in this.tasks) {
 					if (this.tasks[t].id === parseInt(id)) {
 						return this.tasks[t]

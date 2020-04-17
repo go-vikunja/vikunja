@@ -75,7 +75,7 @@
 						</template>
 					</td>
 					<td class="actions">
-						<button @click="linkIDToDelete = s.id; showDeleteModal = true" class="button is-danger icon-only">
+						<button @click="linkIdToDelete = s.id; showDeleteModal = true" class="button is-danger icon-only">
 							<span class="icon">
 								<icon icon="trash-alt"/>
 							</span>
@@ -110,7 +110,7 @@
 	export default {
 		name: 'linkSharing',
 		props: {
-			listID: {
+			listId: {
 				default: 0,
 				required: true,
 			},
@@ -123,7 +123,7 @@
 				rights: rights,
 				selectedRight: rights.READ,
 				showDeleteModal: false,
-				linkIDToDelete: 0,
+				linkIdToDelete: 0,
 			}
 		},
 		beforeMount() {
@@ -134,18 +134,18 @@
 			this.load()
 		},
 		watch: {
-			listID: () => { // watch it
+			listId: () => { // watch it
 				this.load()
 			}
 		},
 		methods: {
 			load() {
-				// If listID == 0 the list on the calling component wasn't already loaded, so we just bail out here
-				if (this.listID === 0) {
+				// If listId == 0 the list on the calling component wasn't already loaded, so we just bail out here
+				if (this.listId === 0) {
 					return
 				}
 
-				this.linkShareService.getAll({listId: this.listID})
+				this.linkShareService.getAll({listId: this.listId})
 					.then(r => {
 						this.linkShares = r
 					})
@@ -154,7 +154,7 @@
 					})
 			},
 			add() {
-				let newLinkShare = new LinkShareModel({right: this.selectedRight, listId: this.listID})
+				let newLinkShare = new LinkShareModel({right: this.selectedRight, listId: this.listId})
 				this.linkShareService.create(newLinkShare)
 					.then(() => {
 						this.selectedRight = rights.READ
@@ -166,7 +166,7 @@
 					})
 			},
 			remove() {
-				let linkshare = new LinkShareModel({id: this.linkIDToDelete, listId: this.listID})
+				let linkshare = new LinkShareModel({id: this.linkIdToDelete, listId: this.listId})
 				this.linkShareService.delete(linkshare)
 					.then(() => {
 						this.success({message: 'The link share was successfully deleted'}, this)

@@ -37,7 +37,7 @@
 	export default {
 		data() {
 			return {
-				listID: this.$route.params.id,
+				listId: this.$route.params.id,
 				listService: ListService,
 				list: ListModel,
 			}

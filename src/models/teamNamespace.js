@@ -6,7 +6,7 @@ export default class TeamNamespaceModel extends TeamShareBaseModel {
 		return merge(
 			super.defaults(),
 			{
-				namespaceID: 0,
+				namespaceId: 0,
 			}
 		)
 	}

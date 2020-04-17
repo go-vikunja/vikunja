@@ -30,7 +30,7 @@ export default class ListModel extends AbstractModel {
 			description: '',
 			owner: UserModel,
 			tasks: [],
-			namespaceID: 0,
+			namespaceId: 0,
 			isArchived: false,
 			hexColor: '',
 

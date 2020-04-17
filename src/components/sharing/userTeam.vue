@@ -179,7 +179,7 @@
 				} else if (this.type === 'namespace') {
 					this.typeString = `namespace`
 					this.stuffService = new UserNamespaceService()
-					this.stuffModel = new UserNamespaceModel({namespaceID: this.id})
+					this.stuffModel = new UserNamespaceModel({namespaceId: this.id})
 				} else {
 					throw new Error('Unknown type: ' + this.type)
 				}
@@ -196,7 +196,7 @@
 				} else if (this.type === 'namespace') {
 					this.typeString = `namespace`
 					this.stuffService = new TeamNamespaceService()
-					this.stuffModel = new TeamNamespaceModel({namespaceID: this.id})
+					this.stuffModel = new TeamNamespaceModel({namespaceId: this.id})
 				} else {
 					throw new Error('Unknown type: ' + this.type)
 				}

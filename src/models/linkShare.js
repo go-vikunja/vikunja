@@ -21,7 +21,7 @@ export default class ListModel extends AbstractModel {
             right: 0,
             sharedBy: UserModel,
             sharingType: 0,
-            listID: 0,
+            listId: 0,
 
             created: null,
             updated: null,
