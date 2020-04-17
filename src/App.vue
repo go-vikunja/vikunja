@@ -29,6 +29,9 @@
 							<transition name="fade">
 								<div class="dropdown-menu" v-if="userMenuActive">
 									<div class="dropdown-content">
+										<router-link :to="{name: 'userSettings'}" class="dropdown-item">
+											Settings
+										</router-link>
 										<a @click="logout()" class="dropdown-item">
 											Logout
 										</a>

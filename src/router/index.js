@@ -8,6 +8,7 @@ import LoginComponent from '@/components/user/Login'
 import RegisterComponent from '@/components/user/Register'
 import PasswordResetComponent from '@/components/user/PasswordReset'
 import GetPasswordResetComponent from '@/components/user/RequestPasswordReset'
+import UserSettingsComponent from '@/components/user/Settings'
 // List Handling
 import ShowListComponent from '@/components/lists/ShowList'
 import NewListComponent from '@/components/lists/NewList'
@@ -153,6 +154,11 @@ export default new Router({
 			path: '/migrate/wunderlist',
 			name: 'migrateWunderlist',
 			component: WunderlistMigrationComponent,
+		},
+		{
+			path: '/user/settings',
+			name: 'userSettings',
+			component: UserSettingsComponent,
 		},
 	]
 })
