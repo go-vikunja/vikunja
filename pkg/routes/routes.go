@@ -209,6 +209,7 @@ func registerAPIRoutes(a *echo.Group) {
 	u.GET("s", apiv1.UserList)
 	u.POST("/token", apiv1.RenewToken)
 	u.POST("/settings/email", apiv1.UpdateUserEmail)
+	u.GET("/settings/totp", apiv1.UserTOTP)
 	u.POST("/settings/totp/enroll", apiv1.UserTOTPEnroll)
 	u.POST("/settings/totp/enable", apiv1.UserTOTPEnable)
 	u.GET("/settings/totp/qrcode", apiv1.UserTOTPQrCode)

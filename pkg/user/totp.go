@@ -44,12 +44,13 @@ type TOTPPasscode struct {
 	Passcode string `json:"passcode"`
 }
 
-// TOTPEnabledForUser checks if totp is enabled for a user - not if it is activated, use getTOTPForUser to check that.
+// TOTPEnabledForUser checks if totp is enabled for a user - not if it is activated, use GetTOTPForUser to check that.
 func TOTPEnabledForUser(user *User) (bool, error) {
 	return x.Where("user_id = ?", user.ID).Exist(&TOTP{})
 }
 
-func getTOTPForUser(user *User) (t *TOTP, err error) {
+// GetTOTPForUser returns the current state of totp settings for the user.
+func GetTOTPForUser(user *User) (t *TOTP, err error) {
 	t = &TOTP{}
 	exists, err := x.Where("user_id = ?", user.ID).Get(t)
 	if err != nil {
@@ -106,7 +107,7 @@ func EnableTOTP(passcode *TOTPPasscode) (err error) {
 
 // ValidateTOTPPasscode validated totp codes of users.
 func ValidateTOTPPasscode(passcode *TOTPPasscode) (t *TOTP, err error) {
-	t, err = getTOTPForUser(passcode.User)
+	t, err = GetTOTPForUser(passcode.User)
 	if err != nil {
 		return
 	}
@@ -120,7 +121,7 @@ func ValidateTOTPPasscode(passcode *TOTPPasscode) (t *TOTP, err error) {
 
 // GetTOTPQrCodeForUser returns a qrcode for a user's totp setting
 func GetTOTPQrCodeForUser(user *User) (qrcode image.Image, err error) {
-	t, err := getTOTPForUser(user)
+	t, err := GetTOTPForUser(user)
 	if err != nil {
 		return
 	}

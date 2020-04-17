@@ -122,3 +122,27 @@ func UserTOTPQrCode(c echo.Context) error {
 
 	return c.Blob(http.StatusOK, "image/jpeg", buff.Bytes())
 }
+
+// UserTOTP returns the current totp implementation if any is enabled.
+// @Summary Totp setting for the current user
+// @Description Returns the current user totp setting or an error if it is not enabled.
+// @tags user
+// @Accept json
+// @Produce json
+// @Security JWTKeyAuth
+// @Success 200 {object} user.TOTP "The totp settings."
+// @Failure 500 {object} models.Message "Internal server error."
+// @Router /user/settings/totp [get]
+func UserTOTP(c echo.Context) error {
+	u, err := user.GetCurrentUser(c)
+	if err != nil {
+		return handler.HandleHTTPError(err, c)
+	}
+
+	t, err := user.GetTOTPForUser(u)
+	if err != nil {
+		return handler.HandleHTTPError(err, c)
+	}
+
+	return c.JSON(http.StatusOK, t)
+}
