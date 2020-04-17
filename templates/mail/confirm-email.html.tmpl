@@ -1,10 +1,12 @@
 {{template "mail-header.tmpl" .}}
 <p>
     Hi {{.User.Username}},<br>
-    <br>
-    Welcome to Vikunja!
+    {{if .IsNew}}
+        <br>
+        Welcome to Vikunja!
+    {{end}}
     <br/>
-    To confirm you email address, click the link below:
+    To confirm your email address, click the link below:
 </p>
 <a href="{{.FrontendURL}}?userEmailConfirm={{.User.EmailConfirmToken}}" title="Confirm your email address" style="background: rgb(20, 131, 175); -webkit-border-radius: 4px; -moz-border-radius: 4px; border-radius: 4px; border: 1px solid rgb(16, 106, 140); border-bottom-width: 3px;  color: rgb(255, 255, 255); font-weight: 700; font-size: 13px; margin: 10px auto; padding: 5px 10px; text-decoration: none; text-align: center; text-rendering: optimizelegibility; text-transform: uppercase; display: block; width: 200px;">
     Confirm your email address
