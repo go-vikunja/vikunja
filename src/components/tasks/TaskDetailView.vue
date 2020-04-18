@@ -200,6 +200,21 @@
 						/>
 					</div>
 
+					<!-- Move Task -->
+					<div class="content details has-top-border" v-if="activeFields.moveList">
+						<h3>
+							<span class="icon is-grey">
+								<icon icon="list"/>
+							</span>
+							Move task to different list
+						</h3>
+						<div class="field has-addons">
+							<div class="control is-expanded">
+								<list-search @selected="changeList"/>
+							</div>
+						</div>
+					</div>
+
 					<!-- Comments -->
 					<comments :task-id="taskId"/>
 				</div>
@@ -257,6 +272,10 @@
 						<span class="icon is-small"><icon icon="tasks"/></span>
 						Add task relations
 					</a>
+					<a class="button" @click="setFieldActive('moveList')">
+						<span class="icon is-small"><icon icon="list"/></span>
+						Move task to different list
+					</a>
 					<a class="button is-danger is-outlined noshadow has-no-border" @click="showDeleteModal = true">
 						<span class="icon is-small"><icon icon="trash-alt"/></span>
 						Delete task
@@ -302,10 +321,12 @@
 	import Reminders from './reusable/reminders'
 	import Comments from './reusable/comments'
 	import router from '../../router'
+	import ListSearch from "./reusable/listSearch";
 
 	export default {
 		name: 'TaskDetailView',
 		components: {
+			ListSearch,
 			Reminders,
 			RepeatAfter,
 			RelatedTasks,
@@ -350,6 +371,7 @@
 					labels: false,
 					attachments: false,
 					relatedTasks: false,
+					moveList: false,
 				},
 			}
 		},
@@ -486,6 +508,10 @@
 					this.saveTask()
 				}
 			},
+			changeList(list) {
+				this.task.listId = list.id
+				this.saveTask()
+			}
 		},
 	}
 </script>

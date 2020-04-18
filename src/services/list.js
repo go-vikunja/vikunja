@@ -8,6 +8,7 @@ export default class ListService extends AbstractService {
 		super({
 			create: '/namespaces/{namespaceId}/lists',
 			get: '/lists/{id}',
+			getAll: '/lists',
 			update: '/lists/{id}',
 			delete: '/lists/{id}',
 		})
