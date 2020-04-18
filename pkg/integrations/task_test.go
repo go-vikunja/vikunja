@@ -269,6 +269,24 @@ func TestTask(t *testing.T) {
 				assert.Contains(t, rec.Body.String(), `"text":"Lorem Ipsum"`)
 			})
 		})
+		t.Run("Move to other list", func(t *testing.T) {
+			t.Run("normal", func(t *testing.T) {
+				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"listtask": "1"}, `{"list_id":7}`)
+				assert.NoError(t, err)
+				assert.Contains(t, rec.Body.String(), `"list_id":7`)
+				assert.NotContains(t, rec.Body.String(), `"list_id":1`)
+			})
+			t.Run("Forbidden", func(t *testing.T) {
+				_, err := testHandler.testUpdateWithUser(nil, map[string]string{"listtask": "1"}, `{"list_id":20}`)
+				assert.Error(t, err)
+				assertHandlerErrorCode(t, err, models.ErrorCodeGenericForbidden)
+			})
+			t.Run("Read Only", func(t *testing.T) {
+				_, err := testHandler.testUpdateWithUser(nil, map[string]string{"listtask": "1"}, `{"list_id":6}`)
+				assert.Error(t, err)
+				assertHandlerErrorCode(t, err, models.ErrorCodeGenericForbidden)
+			})
+		})
 	})
 	t.Run("Delete", func(t *testing.T) {
 		t.Run("Normal", func(t *testing.T) {

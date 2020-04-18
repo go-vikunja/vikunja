@@ -649,7 +649,9 @@ func (t *Task) Update() (err error) {
 			"end_date_unix",
 			"hex_color",
 			"done_at_unix",
-			"percent_done").
+			"percent_done",
+			"list_id",
+		).
 		Update(ot)
 	*t = ot
 	if err != nil {

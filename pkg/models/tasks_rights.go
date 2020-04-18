@@ -59,12 +59,24 @@ func (t *Task) CanWrite(a web.Auth) (canWrite bool, err error) {
 // Helper function to check if a user can do stuff on a list task
 func (t *Task) canDoTask(a web.Auth) (bool, error) {
 	// Get the task
-	lI, err := GetTaskByIDSimple(t.ID)
+	ot, err := GetTaskByIDSimple(t.ID)
 	if err != nil {
 		return false, err
 	}
 
+	// Check if we're moving the task into a different list to check if the user has sufficient rights for that on the new list
+	if t.ListID != 0 && t.ListID != ot.ListID {
+		newList := &List{ID: t.ListID}
+		can, err := newList.CanWrite(a)
+		if err != nil {
+			return false, err
+		}
+		if !can {
+			return false, ErrGenericForbidden{}
+		}
+	}
+
 	// A user can do a task if it has write acces to its list
-	l := &List{ID: lI.ListID}
+	l := &List{ID: ot.ListID}
 	return l.CanWrite(a)
 }
