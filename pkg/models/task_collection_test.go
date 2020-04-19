@@ -56,6 +56,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedByID: 1,
 		CreatedBy:   user1,
 		ListID:      1,
+		BucketID:    1,
 		Labels: []*Label{
 			{
 				ID:          4,
@@ -114,6 +115,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedByID: 1,
 		CreatedBy:   user1,
 		ListID:      1,
+		BucketID:    1,
 		Labels: []*Label{
 			{
 				ID:          4,
@@ -140,6 +142,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		Created:      1543626724,
 		Updated:      1543626724,
 		Priority:     100,
+		BucketID:     2,
 	}
 	task4 := &Task{
 		ID:           4,
@@ -153,6 +156,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		Created:      1543626724,
 		Updated:      1543626724,
 		Priority:     1,
+		BucketID:     2,
 	}
 	task5 := &Task{
 		ID:           5,
@@ -166,6 +170,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		Created:      1543626724,
 		Updated:      1543626724,
 		DueDate:      1543636724,
+		BucketID:     2,
 	}
 	task6 := &Task{
 		ID:           6,
@@ -179,6 +184,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		Created:      1543626724,
 		Updated:      1543626724,
 		DueDate:      1543616724,
+		BucketID:     3,
 	}
 	task7 := &Task{
 		ID:           7,
@@ -192,6 +198,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		Created:      1543626724,
 		Updated:      1543626724,
 		StartDate:    1544600000,
+		BucketID:     3,
 	}
 	task8 := &Task{
 		ID:           8,
@@ -205,6 +212,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		Created:      1543626724,
 		Updated:      1543626724,
 		EndDate:      1544700000,
+		BucketID:     3,
 	}
 	task9 := &Task{
 		ID:           9,
@@ -445,6 +453,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 					ListID:      1,
 					Created:     1543626724,
 					Updated:     1543626724,
+					BucketID:    1,
 				},
 			},
 		},

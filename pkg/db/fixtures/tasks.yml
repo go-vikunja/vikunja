@@ -7,6 +7,7 @@
   index: 1
   created: 1543626724
   updated: 1543626724
+  bucket_id: 1
 - id: 2
   text: 'task #2 done'
   done: true
@@ -15,6 +16,7 @@
   index: 2
   created: 1543626724
   updated: 1543626724
+  bucket_id: 1
 - id: 3
   text: 'task #3 high prio'
   done: false
@@ -24,6 +26,7 @@
   created: 1543626724
   updated: 1543626724
   priority: 100
+  bucket_id: 2
 - id: 4
   text: 'task #4 low prio'
   done: false
@@ -33,6 +36,7 @@
   created: 1543626724
   updated: 1543626724
   priority: 1
+  bucket_id: 2
 - id: 5
   text: 'task #5 higher due date'
   done: false
@@ -42,6 +46,7 @@
   created: 1543626724
   updated: 1543626724
   due_date_unix: 1543636724
+  bucket_id: 2
 - id: 6
   text: 'task #6 lower due date'
   done: false
@@ -51,6 +56,7 @@
   created: 1543626724
   updated: 1543626724
   due_date_unix: 1543616724
+  bucket_id: 3
 - id: 7
   text: 'task #7 with start date'
   done: false
@@ -60,6 +66,7 @@
   created: 1543626724
   updated: 1543626724
   start_date_unix: 1544600000
+  bucket_id: 3
 - id: 8
   text: 'task #8 with end date'
   done: false
@@ -69,6 +76,7 @@
   created: 1543626724
   updated: 1543626724
   end_date_unix: 1544700000
+  bucket_id: 3
 - id: 9
   text: 'task #9 with start and end date'
   done: false

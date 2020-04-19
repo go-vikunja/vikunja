@@ -51,6 +51,7 @@ func GetTables() []interface{} {
 		&TaskRelation{},
 		&TaskAttachment{},
 		&TaskComment{},
+		&Bucket{},
 	}
 }
 

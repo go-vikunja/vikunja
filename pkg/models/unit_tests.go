@@ -56,7 +56,9 @@ func SetupTests() {
 		"teams",
 		"users",
 		"users_list",
-		"users_namespace")
+		"users_namespace",
+		"buckets",
+	)
 	if err != nil {
 		log.Fatal(err)
 	}

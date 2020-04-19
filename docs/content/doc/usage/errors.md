@@ -74,3 +74,5 @@ This document describes the different errors Vikunja can return.
 | 8002 | 404 | The label does not exist. |
 | 8003 | 403 | The user does not have access to this label. |
 | 9001 | 403 | The right is invalid. | 
+| 10001 | 404 | The bucket does not exist. | 
+| 10002 | 400 | The bucket does not belong to that list. | 

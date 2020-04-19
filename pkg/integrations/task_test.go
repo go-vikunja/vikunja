@@ -287,6 +287,24 @@ func TestTask(t *testing.T) {
 				assertHandlerErrorCode(t, err, models.ErrorCodeGenericForbidden)
 			})
 		})
+		t.Run("Bucket", func(t *testing.T) {
+			t.Run("Normal", func(t *testing.T) {
+				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"listtask": "1"}, `{"bucket_id":2}`)
+				assert.NoError(t, err)
+				assert.Contains(t, rec.Body.String(), `"bucket_id":2`)
+				assert.NotContains(t, rec.Body.String(), `"bucket_id":1`)
+			})
+			t.Run("Different List", func(t *testing.T) {
+				_, err := testHandler.testUpdateWithUser(nil, map[string]string{"listtask": "1"}, `{"bucket_id":4}`)
+				assert.Error(t, err)
+				assertHandlerErrorCode(t, err, models.ErrCodeBucketDoesNotBelongToList)
+			})
+			t.Run("Nonexisting Bucket", func(t *testing.T) {
+				_, err := testHandler.testUpdateWithUser(nil, map[string]string{"listtask": "1"}, `{"bucket_id":9999}`)
+				assert.Error(t, err)
+				assertHandlerErrorCode(t, err, models.ErrCodeBucketDoesNotExist)
+			})
+		})
 	})
 	t.Run("Delete", func(t *testing.T) {
 		t.Run("Normal", func(t *testing.T) {
@@ -450,6 +468,24 @@ func TestTask(t *testing.T) {
 				rec, err := testHandler.testCreateWithUser(nil, map[string]string{"list": "17"}, `{"text":"Lorem Ipsum"}`)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"text":"Lorem Ipsum"`)
+			})
+		})
+		t.Run("Bucket", func(t *testing.T) {
+			t.Run("Normal", func(t *testing.T) {
+				rec, err := testHandler.testCreateWithUser(nil, map[string]string{"list": "1"}, `{"text":"Lorem Ipsum","bucket_id":2}`)
+				assert.NoError(t, err)
+				assert.Contains(t, rec.Body.String(), `"bucket_id":2`)
+				assert.NotContains(t, rec.Body.String(), `"bucket_id":1`)
+			})
+			t.Run("Different List", func(t *testing.T) {
+				_, err := testHandler.testCreateWithUser(nil, map[string]string{"list": "1"}, `{"text":"Lorem Ipsum","bucket_id":4}`)
+				assert.Error(t, err)
+				assertHandlerErrorCode(t, err, models.ErrCodeBucketDoesNotBelongToList)
+			})
+			t.Run("Nonexisting Bucket", func(t *testing.T) {
+				_, err := testHandler.testCreateWithUser(nil, map[string]string{"list": "1"}, `{"text":"Lorem Ipsum","bucket_id":9999}`)
+				assert.Error(t, err)
+				assertHandlerErrorCode(t, err, models.ErrCodeBucketDoesNotExist)
 			})
 		})
 	})

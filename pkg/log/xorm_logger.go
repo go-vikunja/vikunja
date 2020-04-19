@@ -37,8 +37,11 @@ type XormLogger struct {
 }
 
 // NewXormLogger creates and initializes a new xorm logger
-func NewXormLogger() *XormLogger {
-	level, err := logging.LogLevel(strings.ToUpper(config.LogDatabaseLevel.GetString()))
+func NewXormLogger(lvl string) *XormLogger {
+	if lvl == "" {
+		lvl = strings.ToUpper(config.LogDatabaseLevel.GetString())
+	}
+	level, err := logging.LogLevel(lvl)
 	if err != nil {
 		Critical("Error setting database log level: %s", err.Error())
 	}

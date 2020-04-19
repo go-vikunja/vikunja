@@ -246,6 +246,16 @@ func registerAPIRoutes(a *echo.Group) {
 	}
 	a.GET("/lists/:list/tasks", taskCollectionHandler.ReadAllWeb)
 
+	kanbanBucketHandler := &handler.WebHandler{
+		EmptyStruct: func() handler.CObject {
+			return &models.Bucket{}
+		},
+	}
+	a.GET("/lists/:list/buckets", kanbanBucketHandler.ReadAllWeb)
+	a.PUT("/lists/:list/buckets", kanbanBucketHandler.CreateWeb)
+	a.POST("/lists/:list/buckets/:bucket", kanbanBucketHandler.UpdateWeb)
+	a.DELETE("/lists/:list/buckets/:bucket", kanbanBucketHandler.DeleteWeb)
+
 	taskHandler := &handler.WebHandler{
 		EmptyStruct: func() handler.CObject {
 			return &models.Task{}

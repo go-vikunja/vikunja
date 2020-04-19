@@ -1178,7 +1178,7 @@ func IsErrInvalidRight(err error) bool {
 }
 
 func (err ErrInvalidRight) Error() string {
-	return fmt.Sprintf(" right invalid [Right: %d]", err.Right)
+	return fmt.Sprintf("Right invalid [Right: %d]", err.Right)
 }
 
 // ErrCodeInvalidRight holds the unique world-error code of this error
@@ -1190,5 +1190,64 @@ func (err ErrInvalidRight) HTTPError() web.HTTPError {
 		HTTPCode: http.StatusBadRequest,
 		Code:     ErrCodeInvalidRight,
 		Message:  "The right is invalid.",
+	}
+}
+
+// ========
+// Kanban
+// ========
+
+// ErrBucketDoesNotExist represents an error where a kanban bucket does not exist
+type ErrBucketDoesNotExist struct {
+	BucketID int64
+}
+
+// IsErrBucketDoesNotExist checks if an error is ErrBucketDoesNotExist.
+func IsErrBucketDoesNotExist(err error) bool {
+	_, ok := err.(ErrBucketDoesNotExist)
+	return ok
+}
+
+func (err ErrBucketDoesNotExist) Error() string {
+	return fmt.Sprintf("Bucket does not exist [BucketID: %d]", err.BucketID)
+}
+
+// ErrCodeBucketDoesNotExist holds the unique world-error code of this error
+const ErrCodeBucketDoesNotExist = 10001
+
+// HTTPError holds the http error description
+func (err ErrBucketDoesNotExist) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusNotFound,
+		Code:     ErrCodeBucketDoesNotExist,
+		Message:  "This bucket does not exist.",
+	}
+}
+
+// ErrBucketDoesNotBelongToList represents an error where a kanban bucket does not belong to a list
+type ErrBucketDoesNotBelongToList struct {
+	BucketID int64
+	ListID   int64
+}
+
+// IsErrBucketDoesNotBelongToList checks if an error is ErrBucketDoesNotBelongToList.
+func IsErrBucketDoesNotBelongToList(err error) bool {
+	_, ok := err.(ErrBucketDoesNotBelongToList)
+	return ok
+}
+
+func (err ErrBucketDoesNotBelongToList) Error() string {
+	return fmt.Sprintf("Bucket does not not belong to list [BucketID: %d, ListID: %d]", err.BucketID, err.ListID)
+}
+
+// ErrCodeBucketDoesNotBelongToList holds the unique world-error code of this error
+const ErrCodeBucketDoesNotBelongToList = 10002
+
+// HTTPError holds the http error description
+func (err ErrBucketDoesNotBelongToList) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeBucketDoesNotBelongToList,
+		Message:  "This bucket does not belong to that list.",
 	}
 }

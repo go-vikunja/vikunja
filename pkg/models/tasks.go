@@ -85,6 +85,9 @@ type Task struct {
 	// A timestamp when this task was last updated. You cannot change this value.
 	Updated timeutil.TimeStamp `xorm:"updated not null" json:"updated"`
 
+	// BucketID is the ID of the kanban bucket this task belongs to.
+	BucketID int64 `xorm:"int(11) null" json:"bucket_id"`
+
 	// The user who initially created the task.
 	CreatedBy *user.User `xorm:"-" json:"created_by" valid:"-"`
 
@@ -459,6 +462,22 @@ func addMoreInfoToTasks(taskMap map[int64]*Task) (tasks []*Task, err error) {
 	return
 }
 
+func checkBucketAndTaskBelongToSameList(fullTask *Task, bucketID int64) (err error) {
+	if bucketID != 0 {
+		b, err := getBucketByID(bucketID)
+		if err != nil {
+			return err
+		}
+		if fullTask.ListID != b.ListID {
+			return ErrBucketDoesNotBelongToList{
+				ListID:   fullTask.ListID,
+				BucketID: fullTask.BucketID,
+			}
+		}
+	}
+	return
+}
+
 // Create is the implementation to create a list task
 // @Summary Create a task
 // @Description Inserts a task into a list.
@@ -496,6 +515,12 @@ func (t *Task) Create(a web.Auth) (err error) {
 	// Generate a uuid if we don't already have one
 	if t.UID == "" {
 		t.UID = utils.MakeRandomString(40)
+	}
+
+	// If there is a bucket set, make sure they belong to the same list as the task
+	err = checkBucketAndTaskBelongToSameList(t, t.BucketID)
+	if err != nil {
+		return
 	}
 
 	// Get the index for this task
@@ -571,6 +596,12 @@ func (t *Task) Update() (err error) {
 	// Update the reminders
 	if err := ot.updateReminders(t.Reminders); err != nil {
 		return err
+	}
+
+	// If there is a bucket set, make sure they belong to the same list as the task
+	err = checkBucketAndTaskBelongToSameList(&ot, t.BucketID)
+	if err != nil {
+		return
 	}
 
 	// Update the labels

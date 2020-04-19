@@ -70,7 +70,7 @@ func CreateDBEngine() (engine *xorm.Engine, err error) {
 	}
 
 	engine.SetMapper(core.GonicMapper{})
-	logger := log.NewXormLogger()
+	logger := log.NewXormLogger("")
 	engine.SetLogger(logger)
 
 	// Cache
