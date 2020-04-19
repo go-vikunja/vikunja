@@ -12,9 +12,16 @@ menu:
 
 This document describes the different errors Vikunja can return.
 
+### Generic
+
 | ErrorCode | HTTP Status Code | Description |
 |-----------|------------------|-------------|
 | 0001 | 403 | Generic forbidden error. |
+
+### User
+
+| ErrorCode | HTTP Status Code | Description |
+|-----------|------------------|-------------|
 | 1001 | 400 | A user with this username already exists. |
 | 1002 | 400 | A user with this email address already exists. |
 | 1004 | 400 | No username and password specified. |
@@ -30,14 +37,29 @@ This document describes the different errors Vikunja can return.
 | 1015 | 412 | Totp is already enabled for this user. |
 | 1016 | 412 | Totp is not enabled for this user. |
 | 1017 | 412 | The provided Totp passcode is invalid. |
+
+### Validation
+
+| ErrorCode | HTTP Status Code | Description |
+|-----------|------------------|-------------|
 | 2001 | 400 | ID cannot be empty or 0. |
 | 2002 | 400 | Some of the request data was invalid. The response contains an aditional array with all invalid fields. |
+
+### List
+
+| ErrorCode | HTTP Status Code | Description |
+|-----------|------------------|-------------|
 | 3001 | 404 | The list does not exist. |
 | 3004 | 403 | The user needs to have read permissions on that list to perform that action. |
 | 3005 | 400 | The list title cannot be empty. |
 | 3006 | 404 | The list share does not exist. |
 | 3007 | 400 | A list with this identifier already exists. |
 | 3008 | 412 | The list is archived and can therefore only be accessed read only. This is also true for all tasks associated with this list. |
+
+### Task
+
+| ErrorCode | HTTP Status Code | Description |
+|-----------|------------------|-------------|
 | 4001 | 400 | The list task text cannot be empty. |
 | 4002 | 404 | The list task does not exist. |
 | 4003 | 403 | All bulk editing tasks must belong to the same list. |
@@ -55,6 +77,11 @@ This document describes the different errors Vikunja can return.
 | 4015 | 404 | The task comment does not exist. |
 | 4016 | 403 | Invalid task field. |
 | 4017 | 403 | Invalid task filter comparator. |
+
+### Namespace
+
+| ErrorCode | HTTP Status Code | Description |
+|-----------|------------------|-------------|
 | 5001 | 404 | The namspace does not exist. | 
 | 5003 | 403 | The user does not have access to the specified namespace. |
 | 5006 | 400 | The namespace name cannot be empty. |
@@ -62,17 +89,42 @@ This document describes the different errors Vikunja can return.
 | 5010 | 403 | This team does not have access to that namespace. |
 | 5011 | 409 | This user has already access to that namespace. |
 | 5012 | 412 | The namespace is archived and can therefore only be accessed read only. |
+
+### Team
+
+| ErrorCode | HTTP Status Code | Description |
+|-----------|------------------|-------------|
 | 6001 | 400 | The team name cannot be emtpy. |
 | 6002 | 404 | The team does not exist. |
 | 6004 | 409 | The team already has access to that namespace or list. |
 | 6005 | 409 | The user is already a member of that team. |
 | 6006 | 400 | Cannot delete the last team member. |
 | 6007 | 403 | The team does not have access to the list to perform that action. |
+
+### User List Access
+
+| ErrorCode | HTTP Status Code | Description |
+|-----------|------------------|-------------|
 | 7002 | 409 | The user already has access to that list. |
 | 7003 | 403 | The user does not have access to that list. |
+
+### Label
+
+| ErrorCode | HTTP Status Code | Description |
+|-----------|------------------|-------------|
 | 8001 | 403 | This label already exists on that task. |
 | 8002 | 404 | The label does not exist. |
 | 8003 | 403 | The user does not have access to this label. |
+
+### Right
+
+| ErrorCode | HTTP Status Code | Description |
+|-----------|------------------|-------------|
 | 9001 | 403 | The right is invalid. | 
+
+### Kanban
+
+| ErrorCode | HTTP Status Code | Description |
+|-----------|------------------|-------------|
 | 10001 | 404 | The bucket does not exist. | 
 | 10002 | 400 | The bucket does not belong to that list. | 
