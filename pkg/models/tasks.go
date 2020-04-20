@@ -664,9 +664,14 @@ func (t *Task) Update() (err error) {
 	if t.HexColor == "" {
 		ot.HexColor = ""
 	}
-	// Percent DOnw
+	// Percent Done
 	if t.PercentDone == 0 {
 		ot.PercentDone = 0
+	}
+	// Bucket ID
+	// Yes it is possible to move a task back into the empty bucket
+	if t.BucketID == 0 {
+		ot.BucketID = 0
 	}
 
 	_, err = x.ID(t.ID).
