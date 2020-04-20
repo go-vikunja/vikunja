@@ -682,6 +682,7 @@ func (t *Task) Update() (err error) {
 			"done_at_unix",
 			"percent_done",
 			"list_id",
+			"bucket_id",
 		).
 		Update(ot)
 	*t = ot
