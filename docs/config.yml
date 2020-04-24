@@ -37,3 +37,6 @@ menu:
     - name: Code
       url: https://code.vikunja.io/
       weight: 50
+    - name: Community
+      url: https://community.vikunja.io/
+      weight: 60
