@@ -573,7 +573,7 @@ func (err ErrTaskAttachmentIsTooLarge) HTTPError() web.HTTPError {
 
 // ErrInvalidSortParam represents an error where the provided sort param is invalid
 type ErrInvalidSortParam struct {
-	SortBy sortProperty
+	SortBy string
 }
 
 // IsErrInvalidSortParam checks if an error is ErrInvalidSortParam.

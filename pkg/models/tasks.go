@@ -24,10 +24,11 @@ import (
 	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/web"
 	"github.com/imdario/mergo"
-	"sort"
+	"math"
 	"strconv"
 	"time"
 	"xorm.io/builder"
+	"xorm.io/xorm/schemas"
 )
 
 // Task represents an task in a todolist
@@ -88,6 +89,14 @@ type Task struct {
 	// BucketID is the ID of the kanban bucket this task belongs to.
 	BucketID int64 `xorm:"int(11) null" json:"bucket_id"`
 
+	// The position of the task - any task list can be sorted as usual by this parameter.
+	// When accessing tasks via kanban buckets, this is primarily used to sort them based on a range
+	// We're using a float64 here to make it possible to put any task within any two other tasks (by changing the number).
+	// You would calculate the new position between two tasks with something like task3.position = (task2.position - task1.position) / 2.
+	// A 64-Bit float leaves plenty of room to initially give tasks a position with 2^16 difference to the previous task
+	// which also leaves a lot of room for rearranging and sorting later.
+	Position float64 `xorm:"double null" json:"position"`
+
 	// The user who initially created the task.
 	CreatedBy *user.User `xorm:"-" json:"created_by" valid:"-"`
 
@@ -143,12 +152,21 @@ func (t *Task) ReadAll(a web.Auth, search string, page int, perPage int) (result
 	return nil, 0, 0, nil
 }
 
-func getRawTasksForLists(lists []*List, opts *taskOptions) (taskMap map[int64]*Task, resultCount int, totalItems int64, err error) {
+func getRawTasksForLists(lists []*List, opts *taskOptions) (tasks []*Task, resultCount int, totalItems int64, err error) {
 
 	// Get all list IDs and get the tasks
 	var listIDs []int64
 	for _, l := range lists {
 		listIDs = append(listIDs, l.ID)
+	}
+
+	// Add the id parameter as the last parameter to sorty by default, but only if it is not already passed as the last parameter.
+	if len(opts.sortby) == 0 ||
+		len(opts.sortby) > 0 && opts.sortby[len(opts.sortby)-1].sortBy != taskPropertyID {
+		opts.sortby = append(opts.sortby, &sortParam{
+			sortBy:  taskPropertyID,
+			orderBy: orderAscending,
+		})
 	}
 
 	// Since xorm does not use placeholders for order by, it is possible to expose this with sql injection if we're directly
@@ -160,7 +178,19 @@ func getRawTasksForLists(lists []*List, opts *taskOptions) (taskMap map[int64]*T
 		if err := param.validate(); err != nil {
 			return nil, 0, 0, err
 		}
-		orderby += param.sortBy.String() + " " + param.orderBy.String()
+		orderby += param.sortBy + " " + param.orderBy.String()
+
+		// Postgres sorts by default entries with null values after ones with values.
+		// To make that consistent with the sort order we have and other dbms, we're adding a separate clause here.
+		if x.Dialect().URI().DBType == schemas.POSTGRES {
+			if param.orderBy == orderAscending {
+				orderby += " NULLS FIRST"
+			}
+			if param.orderBy == orderDescending {
+				orderby += " NULLS LAST"
+			}
+		}
+
 		if (i + 1) < len(opts.sortby) {
 			orderby += ", "
 		}
@@ -184,8 +214,6 @@ func getRawTasksForLists(lists []*List, opts *taskOptions) (taskMap map[int64]*T
 		}
 	}
 
-	taskMap = make(map[int64]*Task)
-
 	// Then return all tasks for that lists
 	query := x.
 		OrderBy(orderby)
@@ -208,7 +236,8 @@ func getRawTasksForLists(lists []*List, opts *taskOptions) (taskMap map[int64]*T
 		query = query.Limit(limit, start)
 	}
 
-	err = query.Find(&taskMap)
+	tasks = []*Task{}
+	err = query.Find(&tasks)
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -219,23 +248,25 @@ func getRawTasksForLists(lists []*List, opts *taskOptions) (taskMap map[int64]*T
 		return nil, 0, 0, err
 	}
 
-	return taskMap, len(taskMap), totalItems, nil
+	return tasks, len(tasks), totalItems, nil
 }
 
 func getTasksForLists(lists []*List, opts *taskOptions) (tasks []*Task, resultCount int, totalItems int64, err error) {
 
-	taskMap, resultCount, totalItems, err := getRawTasksForLists(lists, opts)
+	tasks, resultCount, totalItems, err = getRawTasksForLists(lists, opts)
 	if err != nil {
 		return nil, 0, 0, err
 	}
 
-	tasks, err = addMoreInfoToTasks(taskMap)
+	taskMap := make(map[int64]*Task, len(tasks))
+	for _, t := range tasks {
+		taskMap[t.ID] = t
+	}
+
+	err = addMoreInfoToTasks(taskMap)
 	if err != nil {
 		return nil, 0, 0, err
 	}
-	// Because the list is fully unsorted (since we're dealing with maps)
-	// we have to manually sort the tasks again here.
-	sortTasks(tasks, opts.sortby)
 
 	return tasks, resultCount, totalItems, err
 }
@@ -271,25 +302,28 @@ func (bt *BulkTask) GetTasksByIDs() (err error) {
 		}
 	}
 
-	taskMap := make(map[int64]*Task, len(bt.Tasks))
-	err = x.In("id", bt.IDs).Find(&taskMap)
+	err = x.In("id", bt.IDs).Find(&bt.Tasks)
 	if err != nil {
 		return
 	}
 
-	bt.Tasks, err = addMoreInfoToTasks(taskMap)
 	return
 }
 
 // GetTasksByUIDs gets all tasks from a bunch of uids
 func GetTasksByUIDs(uids []string) (tasks []*Task, err error) {
-	taskMap := make(map[int64]*Task)
-	err = x.In("uid", uids).Find(&taskMap)
+	tasks = []*Task{}
+	err = x.In("uid", uids).Find(&tasks)
 	if err != nil {
 		return
 	}
 
-	tasks, err = addMoreInfoToTasks(taskMap)
+	taskMap := make(map[int64]*Task, len(tasks))
+	for _, t := range tasks {
+		taskMap[t.ID] = t
+	}
+
+	err = addMoreInfoToTasks(taskMap)
 	return
 }
 
@@ -301,7 +335,7 @@ func getRemindersForTasks(taskIDs []int64) (reminders []*TaskReminder, err error
 
 // This function takes a map with pointers and returns a slice with pointers to tasks
 // It adds more stuff like assignees/labels/etc to a bunch of tasks
-func addMoreInfoToTasks(taskMap map[int64]*Task) (tasks []*Task, err error) {
+func addMoreInfoToTasks(taskMap map[int64]*Task) (err error) {
 
 	// No need to iterate over users and stuff if the list doesn't has tasks
 	if len(taskMap) == 0 {
@@ -351,7 +385,7 @@ func addMoreInfoToTasks(taskMap map[int64]*Task) (tasks []*Task, err error) {
 		In("task_id", taskIDs).
 		Find(&attachments)
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	fileIDs := []int64{}
@@ -446,19 +480,6 @@ func addMoreInfoToTasks(taskMap map[int64]*Task) (tasks []*Task, err error) {
 		taskMap[rt.TaskID].RelatedTasks[rt.RelationKind] = append(taskMap[rt.TaskID].RelatedTasks[rt.RelationKind], fullRelatedTasks[rt.OtherTaskID])
 	}
 
-	// make a complete slice from the map
-	tasks = []*Task{}
-	for _, t := range taskMap {
-		tasks = append(tasks, t)
-	}
-
-	// Sort the output. In Go, contents on a map are put on that map in no particular order.
-	// Because of this, tasks are not sorted anymore in the output, this leads to confiusion.
-	// To avoid all this, we need to sort the slice afterwards
-	sort.Slice(tasks, func(i, j int) bool {
-		return tasks[i].ID < tasks[j].ID
-	})
-
 	return
 }
 
@@ -533,6 +554,10 @@ func (t *Task) Create(a web.Auth) (err error) {
 	t.Index = latestTask.Index + 1
 	t.CreatedByID = u.ID
 	t.CreatedBy = u
+	// If no position was supplied, set a default one
+	if t.Position == 0 {
+		t.Position = float64(latestTask.ID+1) * math.Pow(2, 16)
+	}
 	if _, err = x.Insert(t); err != nil {
 		return err
 	}
@@ -673,6 +698,10 @@ func (t *Task) Update() (err error) {
 	if t.BucketID == 0 {
 		ot.BucketID = 0
 	}
+	// Position
+	if t.Position == 0 {
+		ot.Position = 0
+	}
 
 	_, err = x.ID(t.ID).
 		Cols("text",
@@ -688,6 +717,7 @@ func (t *Task) Update() (err error) {
 			"percent_done",
 			"list_id",
 			"bucket_id",
+			"position",
 		).
 		Update(ot)
 	*t = ot
@@ -877,16 +907,16 @@ func (t *Task) ReadOne() (err error) {
 		return
 	}
 
-	tasks, err := addMoreInfoToTasks(taskMap)
+	err = addMoreInfoToTasks(taskMap)
 	if err != nil {
 		return
 	}
 
-	if len(tasks) == 0 {
+	if len(taskMap) == 0 {
 		return ErrTaskDoesNotExist{t.ID}
 	}
 
-	*t = *tasks[0]
+	*t = *taskMap[t.ID]
 
 	return
 }

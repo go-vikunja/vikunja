@@ -67,7 +67,8 @@ func validateTaskField(fieldName string) error {
 		taskPropertyPercentDone,
 		taskPropertyUID,
 		taskPropertyCreated,
-		taskPropertyUpdated:
+		taskPropertyUpdated,
+		taskPropertyPosition:
 		return nil
 	}
 	return ErrInvalidTaskField{TaskField: fieldName}
@@ -106,7 +107,7 @@ func (tf *TaskCollection) ReadAll(a web.Auth, search string, page int, perPage i
 	var sort = make([]*sortParam, 0, len(tf.SortBy))
 	for i, s := range tf.SortBy {
 		param := &sortParam{
-			sortBy:  sortProperty(s),
+			sortBy:  s,
 			orderBy: orderAscending,
 		}
 		// This checks if tf.OrderBy has an entry with the same index as the current entry from tf.SortBy

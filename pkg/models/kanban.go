@@ -123,7 +123,15 @@ func (b *Bucket) ReadAll(auth web.Auth, search string, page int, perPage int) (r
 	}
 
 	// Get all tasks for this list
-	tasks, _, _, err := getTasksForLists([]*List{{ID: b.ListID}}, &taskOptions{})
+	opts := &taskOptions{
+		sortby: []*sortParam{
+			{
+				sortBy:  taskPropertyPosition,
+				orderBy: orderAscending,
+			},
+		},
+	}
+	tasks, _, _, err := getTasksForLists([]*List{{ID: b.ListID}}, opts)
 	if err != nil {
 		return
 	}
