@@ -205,6 +205,12 @@ func (b *Bucket) Delete() (err error) {
 		}
 	}
 
+	// Remove the bucket itself
+	_, err = x.Where("id = ?", b.ID).Delete(&Bucket{})
+	if err != nil {
+		return
+	}
+
 	// Get the default bucket
 	defaultBucket, err := getDefaultBucket(b.ListID)
 	if err != nil {
@@ -216,8 +222,5 @@ func (b *Bucket) Delete() (err error) {
 	if err != nil {
 		return
 	}
-
-	// Remove the bucket itself
-	_, err = x.Where("id = ?", b.ID).Delete(&Bucket{})
 	return
 }
