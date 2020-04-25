@@ -44,20 +44,25 @@
 			</div>
 		</div>
 		<gantt-chart
-			:list="list"
+			:list-id="Number($route.params.listId)"
 			:show-taskswithout-dates="showTaskswithoutDates"
 			:date-from="dateFrom"
 			:date-to="dateTo"
 			:day-width="dayWidth"
 		/>
+
+		<!-- This router view is used to show the task popup while keeping the gantt chart itself -->
+		<transition name="modal">
+			<router-view/>
+		</transition>
+
 	</div>
 </template>
 
 <script>
-	import GanttChart from './gantt-component'
+	import GanttChart from '../../tasks/gantt-component'
 	import flatPickr from 'vue-flatpickr-component'
-	import ListModel from '../../models/list'
-	import Fancycheckbox from '../global/fancycheckbox'
+	import Fancycheckbox from '../../global/fancycheckbox'
 
 	export default {
 		name: 'Gantt',
@@ -83,12 +88,6 @@
 		beforeMount() {
 			this.dateFrom = new Date((new Date()).setDate((new Date()).getDate() - 15))
 			this.dateTo = new Date((new Date()).setDate((new Date()).getDate() + 30))
-		},
-		props: {
-			list: {
-				type: ListModel,
-				required: true,
-			}
 		},
 	}
 </script>

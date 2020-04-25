@@ -8,12 +8,14 @@
 				<div class="is-done" v-if="task.done">Done</div>
 				<h1 class="title input" contenteditable="true" @focusout="saveTaskOnChange()" ref="taskTitle" @keyup.ctrl.enter="saveTaskOnChange()">{{ task.text }}</h1>
 			</div>
-			<h6 class="subtitle">
-				{{ namespace.name }} >
-				<router-link :to="{ name: 'showList', params: { id: list.id } }">
-					{{ list.title }}
-				</router-link>
-			</h6>
+			<!-- FIXME: Throw this away once we have vuex -->
+			<!-- Commented out because it is a) not working and b) not working -->
+<!--			<h6 class="subtitle">-->
+<!--				{{ namespace.name }} >-->
+<!--				<router-link :to="{ name: 'showList', params: { id: list.id } }">-->
+<!--					{{ list.title }}-->
+<!--				</router-link>-->
+<!--			</h6>-->
 
 			<!-- Content and buttons -->
 			<div class="columns">
@@ -218,7 +220,7 @@
 					<!-- Comments -->
 					<comments :task-id="taskId"/>
 				</div>
-				<div class="column is-one-fifth action-buttons">
+				<div class="column is-one-third action-buttons">
 					<a class="button is-outlined noshadow has-no-border" :class="{'is-success': !task.done}" @click="toggleTaskDone()">
 						<span class="icon is-small"><icon icon="check-double"/></span>
 						<template v-if="task.done">
@@ -464,15 +466,15 @@
 			},
 			setListAndNamespaceTitleFromParent() {
 				// FIXME: Throw this away once we have vuex
-				this.$parent.namespaces.forEach(n => {
-					n.lists.forEach(l => {
-						if (l.id === this.task.listId) {
-							this.list = l
-							this.namespace = n
-							return
-						}
-					})
-				})
+				// this.$parent.namespaces.forEach(n => {
+				// 	n.lists.forEach(l => {
+				// 		if (l.id === this.task.listId) {
+				// 			this.list = l
+				// 			this.namespace = n
+				// 			return
+				// 		}
+				// 	})
+				// })
 			},
 			setFieldActive(fieldName) {
 				this.activeFields[fieldName] = true
@@ -482,7 +484,7 @@
 				this.taskService.delete(this.task)
 					.then(() => {
 						this.success({message: 'The task been deleted successfully.'}, this)
-						router.push({name: 'showList', params: {id: this.list.id}})
+						router.push({name: 'showList', params: {listId: this.list.id}})
 					})
 					.catch(e => {
 						this.error(e, this)

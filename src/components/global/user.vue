@@ -24,6 +24,7 @@
 				default: 50,
 			},
 			isInline: {
+				required: false,
 				type: Boolean,
 				default: false,
 			},

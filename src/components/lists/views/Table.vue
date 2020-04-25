@@ -85,13 +85,13 @@
 			<tbody>
 			<tr v-for="t in tasks" :key="t.id">
 				<td v-if="activeColumns.id">
-					<router-link :to="{name: 'taskDetailView', params: { id: t.id }}">{{ t.id }}</router-link>
+					<router-link :to="{name: 'task.table.detail', params: { id: t.id }}">{{ t.id }}</router-link>
 				</td>
 				<td v-if="activeColumns.done">
 					<div class="is-done" v-if="t.done">Done</div>
 				</td>
 				<td v-if="activeColumns.text">
-					<router-link :to="{name: 'taskDetailView', params: { id: t.id }}">{{ t.text }}</router-link>
+					<router-link :to="{name: 'task.table.detail', params: { id: t.id }}">{{ t.text }}</router-link>
 				</td>
 				<td v-if="activeColumns.priority">
 					<priority-label :priority="t.priority" :show-all="true"/>
@@ -137,21 +137,26 @@
 				</template>
 			</ul>
 		</nav>
+
+		<!-- This router view is used to show the task popup while keeping the table view itself -->
+		<transition name="modal">
+			<router-view/>
+		</transition>
+
 	</div>
 </template>
 
 <script>
-	import ListModel from '../../models/list'
-	import taskList from './helpers/taskList'
-	import User from '../global/user'
-	import PriorityLabel from './reusable/priorityLabel'
-	import Labels from './reusable/labels'
-	import DateTableCell from './reusable/date-table-cell'
-	import Fancycheckbox from '../global/fancycheckbox'
-	import Sort from './reusable/sort'
+	import taskList from '../../tasks/helpers/taskList'
+	import User from '../../global/user'
+	import PriorityLabel from '../../tasks/reusable/priorityLabel'
+	import Labels from '../../tasks/reusable/labels'
+	import DateTableCell from '../../tasks/reusable/date-table-cell'
+	import Fancycheckbox from '../../global/fancycheckbox'
+	import Sort from '../../tasks/reusable/sort'
 
 	export default {
-		name: 'TableView',
+		name: 'Table',
 		components: {
 			Sort,
 			Fancycheckbox,
@@ -184,12 +189,6 @@
 				sortBy: {
 					id: 'desc',
 				},
-			}
-		},
-		props: {
-			list: {
-				type: ListModel,
-				required: true,
 			}
 		},
 		created() {

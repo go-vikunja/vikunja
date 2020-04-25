@@ -4,7 +4,7 @@
   text-transform: uppercase;
   font-size: 0.85rem;
   font-weight: bold;
-  height: 2.648em;
+  height: $button-height;
   box-shadow: 0.3em 0.3em 1em lighten($dark, 75);
 
   &.is-hovered,
@@ -154,4 +154,27 @@
 
 .control.has-icons-left .icon, .control.has-icons-right .icon {
   z-index: 4;
+}
+
+// Contenteditable form
+.input.title{
+  font-size: 1.8rem;
+  font-family: $vikunja-font;
+  font-weight: 400 !important;
+  background: transparent;
+  border-color: transparent;
+  margin: 0 .3em;
+  height: 1.5em;
+  padding: 0 .3em;
+
+  &:focus {
+    background: $input-background-color;
+    border-color: $input-focus-border-color;
+  }
+}
+
+h1, h2, h3{
+  .input.title {
+    height: auto;
+  }
 }

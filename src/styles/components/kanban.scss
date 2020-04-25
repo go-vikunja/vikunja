@@ -1,0 +1,226 @@
+$bucket-background: #e8f0f5;
+$task-background: $white;
+$ease-out: all .3s cubic-bezier(0.23, 1, 0.32, 1);
+
+$crazy-height-calculation: '100vh - 4.5rem - 1.5rem - 116px - 1em - 1.5em';
+
+.kanban {
+
+  display: flex;
+  align-items: flex-start;
+  overflow-x: auto;
+  overflow-y: hidden;
+  height: calc(#{$crazy-height-calculation});
+  margin: 0 -1.5rem;
+  padding: 0 1.5em;
+
+  .bucket {
+
+    background-color: $bucket-background;
+    border-radius: $radius;
+    position: relative;
+
+    flex: 0 0 300px;
+    margin: 0 1em 0 0;
+    max-height: 100%;
+    min-height: 20px;
+
+    .tasks {
+      max-height: calc(#{$crazy-height-calculation} - 1rem - 1.5rem - 1em - #{$button-height} - 1em);
+      overflow: auto;
+
+      .task {
+
+        &:first-child {
+          margin-top: 0;
+        }
+
+        -webkit-touch-callout: none; // iOS Safari
+          -webkit-user-select: none; // Safari
+           -khtml-user-select: none; // Konqueror HTML
+             -moz-user-select: none; // Old versions of Firefox
+              -ms-user-select: none; // Internet Explorer/Edge
+                  user-select: none; // Non-prefixed version, currently supported by Chrome, Opera and Firefox
+
+        transition: $ease-out;
+        cursor: pointer;
+        box-shadow: 2px 2px 2px darken($white, 12%);
+
+        font-size: .9em;
+        padding: .5em;
+        margin: .5em;
+        border-radius: $radius;
+        background: $task-background;
+
+        &.loader-container.is-loading:after {
+          width: 1.5em;
+          height: 1.5em;
+          top: calc(50% - .75em);
+          left: calc(50% - .75em);
+          border-width: 2px;
+        }
+
+        .color {
+          width: 4px;
+          height: 24px;
+          display: block;
+          float: left;
+          border-radius: 0 2px 2px 0;
+          margin-left: -.5em;
+        }
+
+        h3 {
+          font-family: $family-sans-serif;
+          font-size: 1rem;
+        }
+
+        .due-date {
+          float: right;
+          display: flex;
+          align-items: center;
+
+          .icon {
+            margin-right: 2px;
+          }
+
+          &.overdue {
+            color: $red;
+          }
+        }
+
+        .label-wrapper .tag {
+          margin: .5em .5em 0 0;
+        }
+
+        .footer {
+          background: transparent;
+          padding: 0;
+          display: flex;
+          justify-content: space-between;
+
+          .items {
+            display: flex;
+            align-items: center;
+
+            > :not(:last-child) {
+              margin-right: .5em;
+            }
+          }
+
+          .assignees {
+            display: flex;
+
+            .user {
+              display: inline;
+              margin: 0 -12px 0 0;
+
+              img {
+                margin-right: 0;
+              }
+            }
+          }
+
+          .icon {
+            svg {
+              margin: 4px;
+              fill: $dark;
+            }
+          }
+        }
+
+        .footer .icon,
+        .due-date,
+        .priority-label {
+          background: darken($task-background, 5%);
+          border-radius: $radius;
+          padding-right: 5px;
+        }
+
+        .priority-label {
+          margin: .5em 0;
+          display: inline-block;
+        }
+
+        .task-id {
+          color: $grey;
+        }
+
+        .is-done {
+          margin: 0;
+          font-size: .8em;
+          padding: .25em .5em;
+        }
+
+        &.is-moving {
+          opacity: .5;
+        }
+
+        span {
+          width: auto;
+        }
+      }
+
+      .drop-preview {
+        border-radius: $radius;
+        margin: 0 .5em .5em;
+        background: transparent;
+        border: 3px dashed darken($bucket-background, 5%);
+      }
+    }
+
+    h2 {
+      font-size: 1rem;
+      margin: 0;
+      font-weight: 600 !important;
+    }
+
+    &.new-bucket {
+
+      background: $bucket-background;
+      display: block;
+
+      .button {
+        width: 100%;
+        background: transparent;
+      }
+    }
+  }
+
+  .bucket-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: .5em;
+
+    .dropdown-trigger {
+      cursor: pointer;
+    }
+
+    .title.input {
+      height: auto;
+      padding: .4em .5em;
+    }
+  }
+
+  .bucket-footer {
+    padding: .5em;
+
+    .button {
+      background-color: transparent;
+
+      &:hover {
+        background-color: $white;
+      }
+    }
+  }
+}
+
+.ghost-task {
+  transition: transform 0.18s ease;
+  transform: rotateZ(3deg)
+}
+
+.ghost-task-drop {
+  transition: transform 0.18s ease-in-out;
+  transform: rotateZ(0deg)
+}

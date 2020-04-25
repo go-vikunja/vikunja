@@ -108,7 +108,7 @@
 					<p class="card-header-title">
 						Edit Task
 					</p>
-					<a class="card-header-icon" @click="isTaskEdit = false;taskToEdit = null">
+					<a class="card-header-icon" @click="() => {isTaskEdit = false; taskToEdit = null}">
 						<span class="icon">
 							<icon icon="times"/>
 						</span>
@@ -130,7 +130,6 @@
 
 	import TaskService from '../../services/task'
 	import TaskModel from '../../models/task'
-	import ListModel from '../../models/list'
 	import priorities from '../../models/priorities'
 	import PriorityLabel from './reusable/priorityLabel'
 	import TaskCollectionService from '../../services/taskCollection'
@@ -143,8 +142,8 @@
 			VueDragResize,
 		},
 		props: {
-			list: {
-				type: ListModel,
+			listId: {
+				type: Number,
 				required: true,
 			},
 			showTaskswithoutDates: {
@@ -235,7 +234,7 @@
 			prepareTasks() {
 
 				const getAllTasks = (page = 1) => {
-					return this.taskCollectionService.getAll({listId: this.$route.params.id}, {}, page)
+					return this.taskCollectionService.getAll({listId: this.listId}, {}, page)
 						.then(tasks => {
 							if(page < this.taskCollectionService.totalPages) {
 								return getAllTasks(page + 1)
@@ -367,7 +366,7 @@
 				if (!this.newTaskFieldActive) {
 					return
 				}
-				let task = new TaskModel({text: this.newTaskTitle, listId: this.list.id})
+				let task = new TaskModel({text: this.newTaskTitle, listId: this.listId})
 				this.taskService.create(task)
 					.then(r => {
 						this.tasksWithoutDates.push(this.addGantAttributes(r))

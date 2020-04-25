@@ -68,6 +68,7 @@ import { faTh } from '@fortawesome/free-solid-svg-icons'
 import { faSort } from '@fortawesome/free-solid-svg-icons'
 import { faSortUp } from '@fortawesome/free-solid-svg-icons'
 import { faList } from '@fortawesome/free-solid-svg-icons'
+import { faEllipsisV } from '@fortawesome/free-solid-svg-icons'
 import { faComments } from '@fortawesome/free-regular-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
@@ -112,6 +113,7 @@ library.add(faTh)
 library.add(faSort)
 library.add(faSortUp)
 library.add(faList)
+library.add(faEllipsisV)
 
 Vue.component('icon', FontAwesomeIcon)
 

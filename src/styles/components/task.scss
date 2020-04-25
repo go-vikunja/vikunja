@@ -39,22 +39,6 @@
       color: lighten($grey, 25%);
       white-space: nowrap;
     }
-
-    .input.title{
-      font-size: 1.8rem;
-      font-family: $vikunja-font;
-      font-weight: 400 !important;
-      background: transparent;
-      border-color: transparent;
-      margin: 0 .3em;
-      height: 1.5em;
-      padding: 0 .3em;
-    }
-
-    h1.input.title {
-      height: auto;
-    }
-
   }
 
   .date-input {
@@ -82,8 +66,8 @@
       font-style: italic;
     }
 
-    // Break after the 4th element
-    .column:nth-child(4n) {
+    // Break after the 2nd element
+    .column:nth-child(2n) {
       page-break-after: always; // CSS 2.1 syntax
       break-after: always; // New syntax
     }
@@ -182,4 +166,15 @@
   line-height: 1;
   border-radius: 4px;
   text-align: center;
+}
+
+.modal-container .task-view {
+  border-radius: $radius;
+  padding: 1em;
+  color: $text;
+
+  @media screen and (max-width: 800px) {
+    border-radius: 0;
+    padding-top: 2rem;
+  }
 }

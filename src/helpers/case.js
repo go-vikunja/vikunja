@@ -10,6 +10,13 @@ export function objectToCamelCase(object) {
 	let parsedObject = {}
 	for (const m in object) {
 		parsedObject[camelCase(m)] = object[m]
+		// Call it again for nested objects
+		if(
+			typeof object[m] === 'object' &&
+			object[m] !== null
+		) {
+			object[m] = objectToCamelCase(object[m])
+		}
 	}
 	return parsedObject
 }
@@ -23,6 +30,14 @@ export function objectToSnakeCase(object) {
 	let parsedObject = {}
 	for (const m in object) {
 		parsedObject[snakeCase(m)] = object[m]
+		// Call it again for nested objects
+		if(
+			typeof object[m] === 'object' &&
+			object[m] !== null &&
+			!(object[m] instanceof Date)
+		) {
+			object[m] = objectToSnakeCase(object[m])
+		}
 	}
 	return parsedObject
 }

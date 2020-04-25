@@ -28,7 +28,7 @@
 				auth.linkShareAuth(this.$route.params.share)
 					.then((r) => {
 						this.loading = false
-						router.push({name: 'showList', params: {id: r.listId}})
+						router.push({name: 'showList', params: {listId: r.listId}})
 					})
 					.catch(e => {
 						this.error(e, this)

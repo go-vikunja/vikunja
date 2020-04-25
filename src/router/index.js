@@ -10,12 +10,11 @@ import PasswordResetComponent from '@/components/user/PasswordReset'
 import GetPasswordResetComponent from '@/components/user/RequestPasswordReset'
 import UserSettingsComponent from '@/components/user/Settings'
 // List Handling
-import ShowListComponent from '@/components/lists/ShowList'
 import NewListComponent from '@/components/lists/NewList'
 import EditListComponent from '@/components/lists/EditList'
 import ShowTasksInRangeComponent from '@/components/tasks/ShowTasksInRange'
 import LinkShareAuthComponent from '@/components/sharing/linkSharingAuth'
-import TaskDetailViewComponent from '@/components/tasks/TaskDetailView'
+import TaskDetailViewModal from '../components/tasks/TaskDetailViewModal'
 // Namespace Handling
 import NewNamespaceComponent from '@/components/namespaces/NewNamespace'
 import EditNamespaceComponent from '@/components/namespaces/EditNamespace'
@@ -28,26 +27,32 @@ import ListLabelsComponent from '@/components/labels/ListLabels'
 // Migration
 import MigrationComponent from '../components/migrator/migrate'
 import WunderlistMigrationComponent from '../components/migrator/wunderlist'
+// List Views
+import ShowListComponent from '../components/lists/ShowList'
+import Kanban from '../components/lists/views/Kanban'
+import List from '../components/lists/views/List'
+import Gantt from '../components/lists/views/Gantt'
+import Table from '../components/lists/views/Table'
 
 Vue.use(Router)
 
 export default new Router({
 	mode: 'history',
-	scrollBehavior (to, from, savedPosition) {
+	scrollBehavior(to, from, savedPosition) {
 		// If the user is using their forward/backward keys to navigate, we want to restore the scroll view
-		if(savedPosition) {
+		if (savedPosition) {
 			return savedPosition
 		}
 
 		// Scroll to anchor should still work
-		if(to.hash) {
+		if (to.hash) {
 			return {
 				selector: to.hash
 			}
 		}
 
 		// Otherwise just scroll to the top
-		return { x: 0, y: 0 }
+		return {x: 0, y: 0}
 	},
 	routes: [
 		{
@@ -81,19 +86,64 @@ export default new Router({
 			component: RegisterComponent
 		},
 		{
-			path: '/lists/:id',
-			name: 'showList',
-			component: ShowListComponent
-		},
-		{
 			path: '/lists/:id/edit',
 			name: 'editList',
 			component: EditListComponent
 		},
 		{
-			path: '/lists/:id/:type',
-			name: 'showListWithType',
+			path: '/lists/:listId',
+			name: 'showList',
 			component: ShowListComponent,
+			children: [
+				{
+					path: '/lists/:listId/list',
+					name: 'list.list',
+					component: List,
+					children: [
+						{
+							path: '/tasks/:id',
+							name: 'task.list.detail',
+							component: TaskDetailViewModal,
+						},
+					],
+				},
+				{
+					path: '/lists/:listId/gantt',
+					name: 'list.gantt',
+					component: Gantt,
+					children: [
+						{
+							path: '/tasks/:id',
+							name: 'task.gantt.detail',
+							component: TaskDetailViewModal,
+						},
+					],
+				},
+				{
+					path: '/lists/:listId/table',
+					name: 'list.table',
+					component: Table,
+					children: [
+						{
+							path: '/tasks/:id',
+							name: 'task.table.detail',
+							component: TaskDetailViewModal,
+						},
+					],
+				},
+				{
+					path: '/lists/:listId/kanban',
+					name: 'list.kanban',
+					component: Kanban,
+					children: [
+						{
+							path: '/tasks/:id',
+							name: 'task.kanban.detail',
+							component: TaskDetailViewModal,
+						},
+					],
+				},
+			]
 		},
 		{
 			path: '/namespaces/:id/list',
@@ -128,12 +178,7 @@ export default new Router({
 		{
 			path: '/tasks/by/:type',
 			name: 'showTasksInRange',
-			component: ShowTasksInRangeComponent
-		},
-		{
-			path: '/tasks/:id',
-			name: 'taskDetailView',
-			component: TaskDetailViewComponent,
+			component: ShowTasksInRangeComponent,
 		},
 		{
 			path: '/labels',

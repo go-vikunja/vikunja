@@ -1,6 +1,8 @@
 import AbstractService from './abstractService'
 import TaskModel from '../models/task'
 import AttachmentService from './attachment'
+import LabelService from './label'
+
 import {formatISO} from 'date-fns'
 
 export default class TaskService extends AbstractService {
@@ -92,6 +94,12 @@ export default class TaskService extends AbstractService {
 			model.attachments.map(a => {
 				return attachmentService.processModel(a)
 			})
+		}
+
+		// Preprocess all labels
+		if(model.labels.length > 0) {
+			const labelService = new LabelService()
+			model.labels = model.labels.map(l => labelService.processModel(l))
 		}
 
 		return model

@@ -29,10 +29,20 @@ export default {
 	},
 	methods: {
 		loadTasks(page, search = '', params = {sort_by: ['done', 'id'], order_by: ['asc', 'desc']}) {
+
+			// Because this function is triggered every time on navigation, we're putting a condition here to only load it when we actually want to show tasks
+			// FIXME: This is a bit hacky -> Cleanup.
+			if (
+				this.$route.name !== 'list.list' &&
+				this.$route.name !== 'list.table'
+			) {
+				return
+			}
+
 			if (search !== '') {
 				params.s = search
 			}
-			this.taskCollectionService.getAll({listId: this.$route.params.id}, params, page)
+			this.taskCollectionService.getAll({listId: this.$route.params.listId}, params, page)
 				.then(r => {
 					this.$set(this, 'tasks', r)
 					this.$set(this, 'pages', [])
@@ -104,7 +114,7 @@ export default {
 				return
 			}
 			this.$router.push({
-				name: 'showList',
+				name: 'list.list',
 				query: {search: this.searchTerm}
 			})
 		},

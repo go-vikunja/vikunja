@@ -10,15 +10,14 @@
 				It is not possible to create new or edit tasks or it.
 			</div>
 			<div class="switch-view">
-				<router-link :to="{ name: 'showList', params: { id: list.id } }" :class="{'is-active': $route.params.type !== 'gantt' && $route.params.type !== 'table'}">List</router-link>
-				<router-link :to="{ name: 'showListWithType', params: { id: list.id, type: 'gantt' } }" :class="{'is-active': $route.params.type === 'gantt'}">Gantt</router-link>
-				<router-link :to="{ name: 'showListWithType', params: { id: list.id, type: 'table' } }" :class="{'is-active': $route.params.type === 'table'}">Table</router-link>
+				<router-link :to="{ name: 'list.list',   params: { id: $route.params.listId } }" :class="{'is-active': $route.name === 'list.list'}">List</router-link>
+				<router-link :to="{ name: 'list.gantt',  params: { id: $route.params.listId } }" :class="{'is-active': $route.name === 'list.gantt'}">Gantt</router-link>
+				<router-link :to="{ name: 'list.table',  params: { id: $route.params.listId } }" :class="{'is-active': $route.name === 'list.table'}">Table</router-link>
+				<router-link :to="{ name: 'list.kanban', params: { id: $route.params.listId } }" :class="{'is-active': $route.name === 'list.kanban'}">Kanban</router-link>
 			</div>
 		</div>
 
-		<gantt :list="list" v-if="$route.params.type === 'gantt'"/>
-		<table-view :list="list" v-else-if="$route.params.type === 'table'"/>
-		<show-list-task :the-list="list" v-else/>
+		<router-view/>
 	</div>
 </template>
 
@@ -26,64 +25,65 @@
 	import auth from '../../auth'
 	import router from '../../router'
 
-	import ShowListTask from '../tasks/ShowListTasks'
-	import Gantt from '../tasks/Gantt'
-
 	import ListModel from '../../models/list'
 	import ListService from '../../services/list'
 	import authType from '../../models/authTypes'
-	import TableView from '../tasks/TableView'
 
 	export default {
 		data() {
 			return {
-				listId: this.$route.params.id,
 				listService: ListService,
 				list: ListModel,
+				listLoaded: 0,
 			}
-		},
-		components: {
-			TableView,
-			Gantt,
-			ShowListTask,
 		},
 		beforeMount() {
 			// Check if the user is already logged in, if so, redirect him to the homepage
 			if (!auth.user.authenticated && auth.user.infos.type !== authType.LINK_SHARE) {
 				router.push({name: 'home'})
 			}
-
-			// If the type is invalid, redirect the user
-			if (
-				auth.user.authenticated &&
-				auth.user.infos.type !== authType.LINK_SHARE &&
-				this.$route.params.type !== 'gantt' &&
-				this.$route.params.type !== 'table' &&
-				this.$route.params.type !== 'list' &&
-				this.$route.params.type !== ''
-			) {
-				router.push({name: 'showList', params: { id:  this.$route.params.id }})
-			}
 		},
 		created() {
 			this.listService = new ListService()
 			this.list = new ListModel()
+		},
+		mounted() {
 			this.loadList()
 		},
 		watch: {
 			// call again the method if the route changes
-			'$route.path': 'loadList'
+			'$route.path': 'loadList',
 		},
 		methods: {
 			loadList() {
+
+				// Don't load the list if we either already loaded it or aren't dealing with a list at all currently
+				if(this.$route.params.listId === this.listLoaded || typeof this.$route.params.listId === 'undefined') {
+					return
+				}
+
+				// Redirect the user to list view by default
+				if (
+					this.$route.name !== 'list.list' &&
+					this.$route.name !== 'list.gantt' &&
+					this.$route.name !== 'list.table' &&
+					this.$route.name !== 'list.kanban'
+				) {
+					router.push({name: 'list.list', params: {id: this.$route.params.listId}})
+					return
+				}
+
 				// We create an extra list object instead of creating it in this.list because that would trigger a ui update which would result in bad ux.
-				let list = new ListModel({id: this.$route.params.id})
+				let list = new ListModel({id: this.$route.params.listId})
 				this.listService.get(list)
 					.then(r => {
 						this.$set(this, 'list', r)
 					})
 					.catch(e => {
 						this.error(e, this)
+					})
+					.finally(() => {
+						this.listLoaded = this.$route.params.listId
 					})
 			},
 		}

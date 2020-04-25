@@ -141,7 +141,7 @@
 								<div class="more-container" :key="n.id + 'child'">
 									<ul class="menu-list can-be-hidden" >
 										<li v-for="l in n.lists" :key="l.id">
-											<router-link :to="{ name: 'showList', params: { id: l.id} }">
+											<router-link :to="{ name: 'showList', params: { listId: l.id} }">
 												<span class="name">
 													<span class="color-bubble" v-if="l.hexColor !== ''" :style="{ backgroundColor: l.hexColor }"></span>
 													{{l.title}}
@@ -296,7 +296,7 @@
 		},
 		watch: {
 			// call the method again if the route changes
-			'$route': 'doStuffAfterRoute'
+			'$route': 'doStuffAfterRoute',
 		},
 		computed: {
 			userInfo() {

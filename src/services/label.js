@@ -13,10 +13,11 @@ export default class LabelService extends AbstractService {
 		})
 	}
 
-	processModel(model) {
-		model.created = formatISO(model.created)
-		model.updated = formatISO(model.updated)
-		return model
+	processModel(label) {
+		label.created = formatISO(label.created)
+		label.updated = formatISO(label.updated)
+		label.hexColor = label.hexColor.substring(1, 7)
+		return label
 	}
 
 	modelFactory(data) {
@@ -24,12 +25,10 @@ export default class LabelService extends AbstractService {
 	}
 	
 	beforeUpdate(label) {
-		label.hexColor = label.hexColor.substring(1, 7)
-		return label
+		return this.processModel(label)
 	}
 	
 	beforeCreate(label) {
-		label.hexColor = label.hexColor.substring(1, 7)
-		return label
+		return this.processModel(label)
 	}
 }

@@ -38,6 +38,11 @@
 </script>
 
 <style scoped>
+
+	.vue-notification {
+		z-index: 9999;
+	}
+
 	.buttons {
 		margin-top: .5em;
 	}

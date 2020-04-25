@@ -49,7 +49,7 @@
 				<span class="title">{{ relationKindTitle(kind, rts.length) }}</span>
 				<div class="tasks noborder">
 					<div class="task" v-for="t in rts" :key="t.id">
-						<router-link :to="{ name: 'taskDetailView', params: { id: t.id } }">
+						<router-link :to="{ name: 'task.kanban.detail', params: { id: t.id } }">
 							<span class="tasktext" :class="{ 'done': t.done}">
 								{{t.text}}
 							</span>

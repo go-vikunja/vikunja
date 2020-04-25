@@ -4,7 +4,9 @@ import LabelModel from './label'
 import AttachmentModel from './attachment'
 
 export default class TaskModel extends AbstractModel {
-	
+
+	defaultColor = '198CFF'
+
 	constructor(data) {
 		super(data)
 
@@ -43,7 +45,7 @@ export default class TaskModel extends AbstractModel {
 
 		// Set the default color
 		if (this.hexColor === '') {
-			this.hexColor = '198CFF'
+			this.hexColor = this.defaultColor
 		}
 		if (this.hexColor.substring(0, 1) !== '#') {
 			this.hexColor = '#' + this.hexColor

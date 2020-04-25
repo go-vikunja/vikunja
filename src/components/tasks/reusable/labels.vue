@@ -11,7 +11,6 @@
 		name: 'labels',
 		props: {
 			labels: {
-				type: Array,
 				required: true,
 			}
 		}

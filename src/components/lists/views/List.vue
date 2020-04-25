@@ -98,19 +98,24 @@
 				</template>
 			</ul>
 		</nav>
+
+		<!-- This router view is used to show the task popup while keeping the kanban board itself -->
+		<transition name="modal">
+			<router-view/>
+		</transition>
+
 	</div>
 </template>
 
 <script>
-	import TaskService from '../../services/task'
-	import ListModel from '../../models/list'
-	import EditTask from './edit-task'
-	import TaskModel from '../../models/task'
-	import SingleTaskInList from './reusable/singleTaskInList'
-	import taskList from './helpers/taskList'
+	import TaskService from '../../../services/task'
+	import EditTask from '../../tasks/edit-task'
+	import TaskModel from '../../../models/task'
+	import SingleTaskInList from '../../tasks/reusable/singleTaskInList'
+	import taskList from '../../tasks/helpers/taskList'
 
 	export default {
-		name: 'ListView',
+		name: 'List',
 		data() {
 			return {
 				listId: this.$route.params.id,
@@ -129,17 +134,6 @@
 		components: {
 			SingleTaskInList,
 			EditTask,
-		},
-		props: {
-			theList: {
-				type: ListModel,
-				required: true,
-			}
-		},
-		watch: {
-			theList() {
-				this.list = this.theList
-			},
 		},
 		created() {
 			this.taskService = new TaskService()
