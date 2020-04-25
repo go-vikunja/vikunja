@@ -1251,3 +1251,31 @@ func (err ErrBucketDoesNotBelongToList) HTTPError() web.HTTPError {
 		Message:  "This bucket does not belong to that list.",
 	}
 }
+
+// ErrCannotRemoveLastBucket represents an error where a kanban bucket is the last on a list and thus cannot be removed.
+type ErrCannotRemoveLastBucket struct {
+	BucketID int64
+	ListID   int64
+}
+
+// IsErrCannotRemoveLastBucket checks if an error is ErrCannotRemoveLastBucket.
+func IsErrCannotRemoveLastBucket(err error) bool {
+	_, ok := err.(ErrCannotRemoveLastBucket)
+	return ok
+}
+
+func (err ErrCannotRemoveLastBucket) Error() string {
+	return fmt.Sprintf("Cannot remove last bucket of list [BucketID: %d, ListID: %d]", err.BucketID, err.ListID)
+}
+
+// ErrCodeCannotRemoveLastBucket holds the unique world-error code of this error
+const ErrCodeCannotRemoveLastBucket = 10003
+
+// HTTPError holds the http error description
+func (err ErrCannotRemoveLastBucket) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusPreconditionFailed,
+		Code:     ErrCodeCannotRemoveLastBucket,
+		Message:  "You cannot remove the last bucket on this list.",
+	}
+}

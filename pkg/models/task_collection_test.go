@@ -75,6 +75,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 					Index:       14,
 					CreatedByID: 1,
 					ListID:      1,
+					BucketID:    1,
 					Created:     1543626724,
 					Updated:     1543626724,
 				},
@@ -223,6 +224,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user1,
 		ListID:       1,
 		RelatedTasks: map[RelationKind][]*Task{},
+		BucketID:     1,
 		Created:      1543626724,
 		Updated:      1543626724,
 		StartDate:    1544600000,
@@ -237,6 +239,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user1,
 		ListID:       1,
 		RelatedTasks: map[RelationKind][]*Task{},
+		BucketID:     1,
 		Created:      1543626724,
 		Updated:      1543626724,
 	}
@@ -249,6 +252,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user1,
 		ListID:       1,
 		RelatedTasks: map[RelationKind][]*Task{},
+		BucketID:     1,
 		Created:      1543626724,
 		Updated:      1543626724,
 	}
@@ -261,6 +265,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user1,
 		ListID:       1,
 		RelatedTasks: map[RelationKind][]*Task{},
+		BucketID:     1,
 		Created:      1543626724,
 		Updated:      1543626724,
 	}
@@ -273,6 +278,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user6,
 		ListID:       6,
 		RelatedTasks: map[RelationKind][]*Task{},
+		BucketID:     6,
 		Created:      1543626724,
 		Updated:      1543626724,
 	}
@@ -285,6 +291,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user6,
 		ListID:       7,
 		RelatedTasks: map[RelationKind][]*Task{},
+		BucketID:     7,
 		Created:      1543626724,
 		Updated:      1543626724,
 	}
@@ -297,6 +304,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user6,
 		ListID:       8,
 		RelatedTasks: map[RelationKind][]*Task{},
+		BucketID:     8,
 		Created:      1543626724,
 		Updated:      1543626724,
 	}
@@ -309,6 +317,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user6,
 		ListID:       9,
 		RelatedTasks: map[RelationKind][]*Task{},
+		BucketID:     9,
 		Created:      1543626724,
 		Updated:      1543626724,
 	}
@@ -321,6 +330,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user6,
 		ListID:       10,
 		RelatedTasks: map[RelationKind][]*Task{},
+		BucketID:     10,
 		Created:      1543626724,
 		Updated:      1543626724,
 	}
@@ -333,6 +343,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user6,
 		ListID:       11,
 		RelatedTasks: map[RelationKind][]*Task{},
+		BucketID:     11,
 		Created:      1543626724,
 		Updated:      1543626724,
 	}
@@ -345,6 +356,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user6,
 		ListID:       12,
 		RelatedTasks: map[RelationKind][]*Task{},
+		BucketID:     12,
 		Created:      1543626724,
 		Updated:      1543626724,
 	}
@@ -357,6 +369,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user6,
 		ListID:       13,
 		RelatedTasks: map[RelationKind][]*Task{},
+		BucketID:     13,
 		Created:      1543626724,
 		Updated:      1543626724,
 	}
@@ -369,6 +382,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user6,
 		ListID:       14,
 		RelatedTasks: map[RelationKind][]*Task{},
+		BucketID:     14,
 		Created:      1543626724,
 		Updated:      1543626724,
 	}
@@ -381,6 +395,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user6,
 		ListID:       15,
 		RelatedTasks: map[RelationKind][]*Task{},
+		BucketID:     15,
 		Created:      1543626724,
 		Updated:      1543626724,
 	}
@@ -393,6 +408,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user6,
 		ListID:       16,
 		RelatedTasks: map[RelationKind][]*Task{},
+		BucketID:     16,
 		Created:      1543626724,
 		Updated:      1543626724,
 	}
@@ -405,6 +421,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user6,
 		ListID:       17,
 		RelatedTasks: map[RelationKind][]*Task{},
+		BucketID:     17,
 		Created:      1543626724,
 		Updated:      1543626724,
 	}
@@ -417,6 +434,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user1,
 		Reminders:    []timeutil.TimeStamp{1543626724, 1543626824},
 		ListID:       1,
+		BucketID:     1,
 		RelatedTasks: map[RelationKind][]*Task{},
 		Created:      1543626724,
 		Updated:      1543626724,
@@ -431,6 +449,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		ListID:       1,
 		RelatedTasks: map[RelationKind][]*Task{},
 		RepeatAfter:  3600,
+		BucketID:     1,
 		Created:      1543626724,
 		Updated:      1543626724,
 	}
@@ -457,8 +476,9 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				},
 			},
 		},
-		Created: 1543626724,
-		Updated: 1543626724,
+		BucketID: 1,
+		Created:  1543626724,
+		Updated:  1543626724,
 	}
 	task30 := &Task{
 		ID:          30,
@@ -473,6 +493,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			user2,
 		},
 		RelatedTasks: map[RelationKind][]*Task{},
+		BucketID:     1,
 		Created:      1543626724,
 		Updated:      1543626724,
 	}
@@ -486,6 +507,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user1,
 		ListID:       1,
 		RelatedTasks: map[RelationKind][]*Task{},
+		BucketID:     1,
 		Created:      1543626724,
 		Updated:      1543626724,
 	}
@@ -498,6 +520,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user1,
 		ListID:       3,
 		RelatedTasks: map[RelationKind][]*Task{},
+		BucketID:     21,
 		Created:      1543626724,
 		Updated:      1543626724,
 	}
@@ -511,6 +534,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		ListID:       1,
 		PercentDone:  0.5,
 		RelatedTasks: map[RelationKind][]*Task{},
+		BucketID:     1,
 		Created:      1543626724,
 		Updated:      1543626724,
 	}

@@ -20,7 +20,6 @@ import (
 	"code.vikunja.io/api/pkg/timeutil"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
-	"time"
 )
 
 // Bucket represents a kanban bucket
@@ -64,6 +63,15 @@ func getBucketByID(id int64) (b *Bucket, err error) {
 	return
 }
 
+func getDefaultBucket(listID int64) (bucket *Bucket, err error) {
+	bucket = &Bucket{}
+	_, err = x.
+		Where("list_id = ?", listID).
+		OrderBy("id asc").
+		Get(bucket)
+	return
+}
+
 // ReadAll returns all buckets with their tasks for a certain list
 // @Summary Get all kanban buckets of a list
 // @Description Returns all kanban buckets with belong to a list including their tasks.
@@ -81,23 +89,7 @@ func (b *Bucket) ReadAll(auth web.Auth, search string, page int, perPage int) (r
 	// I'll probably just don't do it and instead make individual tasks archivable.
 
 	// Get all buckets for this list
-	buckets := []*Bucket{
-		{
-			// This is the default bucket for all tasks which are not associated to a bucket.
-			ID:          0,
-			Title:       "Not associated to a bucket",
-			ListID:      b.ListID,
-			Created:     timeutil.FromTime(time.Now()),
-			Updated:     timeutil.FromTime(time.Now()),
-			CreatedByID: auth.GetID(),
-		},
-	}
-
-	buckets[0].CreatedBy, err = user.GetFromAuth(auth)
-	if err != nil {
-		return
-	}
-
+	buckets := []*Bucket{}
 	err = x.Where("list_id = ?", b.ListID).Find(&buckets)
 	if err != nil {
 		return
@@ -189,7 +181,7 @@ func (b *Bucket) Update() (err error) {
 
 // Delete removes a bucket, but no tasks
 // @Summary Deletes an existing bucket
-// @Description Deletes an existing kanban bucket and dissociates all of its task. It does not delete any tasks.
+// @Description Deletes an existing kanban bucket and dissociates all of its task. It does not delete any tasks. You cannot delete the last bucket on a list.
 // @tags task
 // @Accept json
 // @Produce json
@@ -201,8 +193,26 @@ func (b *Bucket) Update() (err error) {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{listID}/buckets/{bucketID} [delete]
 func (b *Bucket) Delete() (err error) {
+	// Prevent removing the last bucket
+	total, err := x.Where("list_id = ?", b.ListID).Count(&Bucket{})
+	if err != nil {
+		return
+	}
+	if total <= 1 {
+		return ErrCannotRemoveLastBucket{
+			BucketID: b.ID,
+			ListID:   b.ListID,
+		}
+	}
+
+	// Get the default bucket
+	defaultBucket, err := getDefaultBucket(b.ListID)
+	if err != nil {
+		return
+	}
+
 	// Remove all associations of tasks to that bucket
-	_, err = x.Where("bucket_id = ?", b.ID).Cols("bucket_id").Update(&Task{BucketID: 0})
+	_, err = x.Where("bucket_id = ?", b.ID).Cols("bucket_id").Update(&Task{BucketID: defaultBucket.ID})
 	if err != nil {
 		return
 	}

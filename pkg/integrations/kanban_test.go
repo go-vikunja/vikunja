@@ -133,7 +133,7 @@ func TestBucket(t *testing.T) {
 	})
 	t.Run("Delete", func(t *testing.T) {
 		t.Run("Normal", func(t *testing.T) {
-			rec, err := testHandler.testDeleteWithUser(nil, map[string]string{"bucket": "1"})
+			rec, err := testHandler.testDeleteWithUser(nil, map[string]string{"list": "1", "bucket": "1"})
 			assert.NoError(t, err)
 			assert.Contains(t, rec.Body.String(), `"message":"Successfully deleted."`)
 		})
@@ -145,70 +145,70 @@ func TestBucket(t *testing.T) {
 		t.Run("Rights check", func(t *testing.T) {
 			t.Run("Forbidden", func(t *testing.T) {
 				// Owned by user13
-				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"bucket": "5"})
+				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"list": "20", "bucket": "5"})
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("Shared Via Team readonly", func(t *testing.T) {
-				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"bucket": "6"})
+				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"list": "6", "bucket": "6"})
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("Shared Via Team write", func(t *testing.T) {
-				rec, err := testHandler.testDeleteWithUser(nil, map[string]string{"bucket": "7"})
+				rec, err := testHandler.testDeleteWithUser(nil, map[string]string{"list": "7", "bucket": "7"})
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"message":"Successfully deleted."`)
 			})
 			t.Run("Shared Via Team admin", func(t *testing.T) {
-				rec, err := testHandler.testDeleteWithUser(nil, map[string]string{"bucket": "8"})
+				rec, err := testHandler.testDeleteWithUser(nil, map[string]string{"list": "8", "bucket": "8"})
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"message":"Successfully deleted."`)
 			})
 
 			t.Run("Shared Via User readonly", func(t *testing.T) {
-				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"bucket": "9"})
+				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"list": "9", "bucket": "9"})
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("Shared Via User write", func(t *testing.T) {
-				rec, err := testHandler.testDeleteWithUser(nil, map[string]string{"bucket": "10"})
+				rec, err := testHandler.testDeleteWithUser(nil, map[string]string{"list": "10", "bucket": "10"})
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"message":"Successfully deleted."`)
 			})
 			t.Run("Shared Via User admin", func(t *testing.T) {
-				rec, err := testHandler.testDeleteWithUser(nil, map[string]string{"bucket": "11"})
+				rec, err := testHandler.testDeleteWithUser(nil, map[string]string{"list": "11", "bucket": "11"})
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"message":"Successfully deleted."`)
 			})
 
 			t.Run("Shared Via NamespaceTeam readonly", func(t *testing.T) {
-				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"bucket": "12"})
+				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"list": "12", "bucket": "12"})
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("Shared Via NamespaceTeam write", func(t *testing.T) {
-				rec, err := testHandler.testDeleteWithUser(nil, map[string]string{"bucket": "13"})
+				rec, err := testHandler.testDeleteWithUser(nil, map[string]string{"list": "13", "bucket": "13"})
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"message":"Successfully deleted."`)
 			})
 			t.Run("Shared Via NamespaceTeam admin", func(t *testing.T) {
-				rec, err := testHandler.testDeleteWithUser(nil, map[string]string{"bucket": "14"})
+				rec, err := testHandler.testDeleteWithUser(nil, map[string]string{"list": "14", "bucket": "14"})
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"message":"Successfully deleted."`)
 			})
 
 			t.Run("Shared Via NamespaceUser readonly", func(t *testing.T) {
-				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"bucket": "15"})
+				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"list": "15", "bucket": "15"})
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("Shared Via NamespaceUser write", func(t *testing.T) {
-				rec, err := testHandler.testDeleteWithUser(nil, map[string]string{"bucket": "16"})
+				rec, err := testHandler.testDeleteWithUser(nil, map[string]string{"list": "16", "bucket": "16"})
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"message":"Successfully deleted."`)
 			})
 			t.Run("Shared Via NamespaceUser admin", func(t *testing.T) {
-				rec, err := testHandler.testDeleteWithUser(nil, map[string]string{"bucket": "17"})
+				rec, err := testHandler.testDeleteWithUser(nil, map[string]string{"list": "17", "bucket": "17"})
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"message":"Successfully deleted."`)
 			})

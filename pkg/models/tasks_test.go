@@ -47,6 +47,8 @@ func TestTask_Create(t *testing.T) {
 		// Assert getting a new index
 		assert.NotEmpty(t, task.Index)
 		assert.Equal(t, int64(18), task.Index)
+		// Assert moving it into the default bucket
+		assert.Equal(t, int64(1), task.BucketID)
 
 	})
 	t.Run("empty text", func(t *testing.T) {

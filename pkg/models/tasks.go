@@ -544,6 +544,15 @@ func (t *Task) Create(a web.Auth) (err error) {
 		return
 	}
 
+	// Get the default bucket and move the task there
+	if t.BucketID == 0 {
+		defaultBucket, err := getDefaultBucket(t.ListID)
+		if err != nil {
+			return err
+		}
+		t.BucketID = defaultBucket.ID
+	}
+
 	// Get the index for this task
 	latestTask := &Task{}
 	_, err = x.Where("list_id = ?", t.ListID).OrderBy("id desc").Get(latestTask)
