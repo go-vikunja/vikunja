@@ -1,46 +1,45 @@
 <template>
 	<div class="task-relations">
 		<label class="label">New Task Relation</label>
-		<div class="columns">
-			<div class="column is-three-quarters">
-				<multiselect
-						v-model="newTaskRelationTask"
-						:options="foundTasks"
-						:multiple="false"
-						:searchable="true"
-						:loading="taskService.loading"
-						:internal-search="true"
-						@search-change="findTasks"
-						placeholder="Type search for a new task to add as related..."
-						label="text"
-						track-by="id"
-						:taggable="true"
-						:showNoOptions="false"
-						@tag="createAndRelateTask"
-						tag-placeholder="Add this as new related task"
-				>
-					<template slot="clear" slot-scope="props">
-						<div class="multiselect__clear"
+		<div class="field">
+			<multiselect
+					v-model="newTaskRelationTask"
+					:options="foundTasks"
+					:multiple="false"
+					:searchable="true"
+					:loading="taskService.loading"
+					:internal-search="true"
+					@search-change="findTasks"
+					placeholder="Type search for a new task to add as related..."
+					label="text"
+					track-by="id"
+					:taggable="true"
+					:showNoOptions="false"
+					@tag="createAndRelateTask"
+					tag-placeholder="Add this as new related task"
+			>
+				<template slot="clear" slot-scope="props">
+					<div
+							class="multiselect__clear"
 							v-if="newTaskRelationTask !== null && newTaskRelationTask.id !== 0"
 							@mousedown.prevent.stop="clearAllFoundTasks(props.search)"></div>
-					</template>
-					<span slot="noResult">No task found. Consider changing the search query.</span>
-				</multiselect>
+				</template>
+				<span slot="noResult">No task found. Consider changing the search query.</span>
+			</multiselect>
+		</div>
+		<div class="field has-addons">
+			<div class="control is-expanded">
+				<div class="select is-fullwidth has-defaults">
+					<select v-model="newTaskRelationKind">
+						<option value="unset">Select a relation kind</option>
+						<option v-for="(label, rk) in relationKinds" :key="rk" :value="rk">
+							{{ label[0] }}
+						</option>
+					</select>
+				</div>
 			</div>
-			<div class="column field has-addons">
-				<div class="control is-expanded">
-					<div class="select is-fullwidth has-defaults">
-						<select v-model="newTaskRelationKind">
-							<option value="unset">Select a relation kind</option>
-							<option v-for="(label, rk) in relationKinds" :key="rk" :value="rk">
-								{{ label[0] }}
-							</option>
-						</select>
-					</div>
-				</div>
-				<div class="control">
-					<a class="button is-primary" @click="addTaskRelation()">Add task Relation</a>
-				</div>
+			<div class="control">
+				<a class="button is-primary" @click="addTaskRelation()">Add task Relation</a>
 			</div>
 		</div>
 
@@ -54,7 +53,9 @@
 								{{t.text}}
 							</span>
 						</router-link>
-						<a class="remove" @click="() => {showDeleteModal = true; relationToDelete = {relationKind: kind, otherTaskId: t.id}}">
+						<a
+								class="remove"
+								@click="() => {showDeleteModal = true; relationToDelete = {relationKind: kind, otherTaskId: t.id}}">
 							<icon icon="trash-alt"/>
 						</a>
 					</div>
