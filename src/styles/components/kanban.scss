@@ -122,8 +122,12 @@ $crazy-height-calculation: '100vh - 4.5rem - 1.5rem - 116px - 1em - 1.5em';
 
           .icon {
             svg {
-              margin: 4px;
+              margin: 4px 0 4px 4px;
               fill: $dark;
+
+              &:not(.svg-inline--fa) {
+                width: 16px;
+              }
             }
           }
         }
