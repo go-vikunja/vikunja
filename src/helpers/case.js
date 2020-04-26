@@ -10,12 +10,23 @@ export function objectToCamelCase(object) {
 	let parsedObject = {}
 	for (const m in object) {
 		parsedObject[camelCase(m)] = object[m]
+
+		// Recursive processing
+		// Prevent processing for some cases
+		if(object[m] === null) {
+			continue
+		}
+
+		// Call it again for arrays
+		if (Array.isArray(object[m])) {
+			parsedObject[camelCase(m)] = object[m].map(o => objectToCamelCase(o))
+			// Because typeof [] === 'object' is true for arrays, we leave the loop here to prevent converting arrays to objects.
+			continue
+		}
+
 		// Call it again for nested objects
-		if(
-			typeof object[m] === 'object' &&
-			object[m] !== null
-		) {
-			object[m] = objectToCamelCase(object[m])
+		if(typeof object[m] === 'object') {
+			parsedObject[camelCase(m)] = objectToCamelCase(object[m])
 		}
 	}
 	return parsedObject
@@ -30,14 +41,31 @@ export function objectToSnakeCase(object) {
 	let parsedObject = {}
 	for (const m in object) {
 		parsedObject[snakeCase(m)] = object[m]
-		// Call it again for nested objects
+
+		// Recursive processing
+		// Prevent processing for some cases
 		if(
-			typeof object[m] === 'object' &&
-			object[m] !== null &&
-			!(object[m] instanceof Date)
+			object[m] === null ||
+			(object[m] instanceof Date)
 		) {
-			object[m] = objectToSnakeCase(object[m])
+			continue
+		}
+
+		// Call it again for arrays
+		if (Array.isArray(object[m])) {
+			parsedObject[snakeCase(m)] = object[m].map(o => objectToSnakeCase(o))
+			// Because typeof [] === 'object' is true for arrays, we leave the loop here to prevent converting arrays to objects.
+			continue
+		}
+
+		// Call it again for nested objects
+		if(typeof object[m] === 'object') {
+			parsedObject[snakeCase(m)] = objectToSnakeCase(object[m])
 		}
 	}
+
+
+	console.log('end', parsedObject, object)
+
 	return parsedObject
 }
