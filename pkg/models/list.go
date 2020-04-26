@@ -477,7 +477,17 @@ func (l *List) Create(a web.Auth) (err error) {
 	l.Owner = doer
 	l.ID = 0 // Otherwise only the first time a new list would be created
 
-	return CreateOrUpdateList(l)
+	err = CreateOrUpdateList(l)
+	if err != nil {
+		return
+	}
+
+	// Create a new first bucket for this list
+	b := &Bucket{
+		ListID: l.ID,
+		Title:  "New Bucket",
+	}
+	return b.Create(a)
 }
 
 // Delete implements the delete method of CRUDable
