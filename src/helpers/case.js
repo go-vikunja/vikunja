@@ -64,8 +64,5 @@ export function objectToSnakeCase(object) {
 		}
 	}
 
-
-	console.log('end', parsedObject, object)
-
 	return parsedObject
 }
