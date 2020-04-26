@@ -12394,7 +12394,7 @@ vue-sfc-descriptor-to-string@^1.0.0:
   dependencies:
     indent-string "^3.2.0"
 
-vue-smooth-dnd@^0.8.1:
+vue-smooth-dnd@0.8.1:
   version "0.8.1"
   resolved "https://registry.yarnpkg.com/vue-smooth-dnd/-/vue-smooth-dnd-0.8.1.tgz#b1c584cfe49b830a402548b4bf08f00f68f430e5"
   integrity sha512-eZVVPTwz4A1cs0+CjXx/ihV+gAl3QBoWQnU6+23Gp59t0WBU99z7ducBQ4FvjBamqOlg8SDOE5eFHQedxwB4Wg==
