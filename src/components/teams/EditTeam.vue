@@ -15,6 +15,9 @@
 								<input v-focus :class="{ 'disabled': teamMemberService.loading}" :disabled="teamMemberService.loading" class="input" type="text" id="teamtext" placeholder="The team text is here..." v-model="team.name">
 							</div>
 						</div>
+						<p class="help is-danger" v-if="showError && team.name.length <= 5">
+							Please specify at least five characters.
+						</p>
 						<div class="field">
 							<label class="label" for="teamdescription">Description</label>
 							<div class="control">
@@ -142,7 +145,7 @@
 	import TeamModel from '../../models/team'
 	import TeamMemberService from '../../services/teamMember'
 	import TeamMemberModel from '../../models/teamMember'
-	
+
 	export default {
 		name: "EditTeam",
 		data() {
@@ -156,6 +159,8 @@
 				showUserDeleteModal: false,
 				user: auth.user,
 				userIsAdmin: false,
+
+				showError: false,
 			}
 		},
 		beforeMount() {
@@ -193,6 +198,12 @@
 					})
 			},
 			submit() {
+				if (this.team.name.length <= 4) {
+					this.showError = true
+					return
+				}
+				this.showError = false
+
 				this.teamService.update(this.team)
 					.then(response => {
 						this.team = response

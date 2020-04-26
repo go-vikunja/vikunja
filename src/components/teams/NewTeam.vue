@@ -8,7 +8,12 @@
 		<form @submit.prevent="newTeam" @keyup.esc="back()">
 			<div class="field is-grouped">
 				<p class="control is-expanded" v-bind:class="{ 'is-loading': teamService.loading}">
-					<input v-focus class="input" v-bind:class="{ 'disabled': teamService.loading}" v-model="team.name" type="text" placeholder="The team's name goes here...">
+					<input
+							v-focus
+							class="input"
+							:class="{ 'disabled': teamService.loading}" v-model="team.name"
+							type="text"
+							placeholder="The team's name goes here..."/>
 				</p>
 				<p class="control">
 					<button type="submit" class="button is-success noshadow">
@@ -19,6 +24,9 @@
 					</button>
 				</p>
 			</div>
+			<p class="help is-danger" v-if="showError && team.name.length <= 5">
+				Please specify at least five characters.
+			</p>
 		</form>
 	</div>
 </template>
@@ -35,6 +43,7 @@
 			return {
 				teamService: TeamService,
 				team: TeamModel,
+				showError: false,
 			}
 		},
 		beforeMount() {
@@ -50,9 +59,16 @@
 		},
 		methods: {
 			newTeam() {
+
+				if (this.team.name.length <= 4) {
+					this.showError = true
+					return
+				}
+				this.showError = false
+
 				this.teamService.create(this.team)
 					.then(response => {
-						router.push({name:'editTeam', params:{id: response.id}})
+						router.push({name: 'editTeam', params: {id: response.id}})
 						this.success({message: 'The team was successfully created.'}, this)
 					})
 					.catch(e => {
