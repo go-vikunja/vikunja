@@ -71,7 +71,7 @@ $crazy-height-calculation: '100vh - 4.5rem - 1.5rem - 116px - 1em - 1.5em';
 
         h3 {
           font-family: $family-sans-serif;
-          font-size: 1rem;
+          font-size: .85rem;
         }
 
         .due-date {
@@ -143,6 +143,7 @@ $crazy-height-calculation: '100vh - 4.5rem - 1.5rem - 116px - 1em - 1.5em';
 
         .task-id {
           color: $grey;
+          font-size: .8rem;
         }
 
         .is-done {
