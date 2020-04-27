@@ -6,7 +6,7 @@ export default class TeamMemberService extends AbstractService {
 	constructor() {
 		super({
 			create: '/teams/{teamId}/members',
-			delete: '/teams/{teamId}/members/{id}', // "id" is the user id because we're intheriting from a normal user
+			delete: '/teams/{teamId}/members/{username}',
 		});
 	}
 

@@ -11,6 +11,8 @@
 
   .table{
     border-top: 1px solid darken(#fff, 15%);
+    border-radius: 4px;
+    overflow: hidden;
 
     td{
       vertical-align: middle;
