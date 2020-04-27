@@ -215,19 +215,23 @@ func getRawTasksForLists(lists []*List, opts *taskOptions) (tasks []*Task, resul
 	}
 
 	// Then return all tasks for that lists
-	query := x.
+	query := x.NewSession().
 		OrderBy(orderby)
+	queryCount := x.NewSession()
 
 	if len(opts.search) > 0 {
 		query = query.Where("text LIKE ?", "%"+opts.search+"%")
+		queryCount = queryCount.Where("text LIKE ?", "%"+opts.search+"%")
 	}
 
 	if len(listIDs) > 0 {
 		query = query.In("list_id", listIDs)
+		queryCount = queryCount.In("list_id", listIDs)
 	}
 
 	if len(filters) > 0 {
 		query = query.Where(builder.Or(filters...))
+		queryCount = queryCount.Where(builder.Or(filters...))
 	}
 
 	limit, start := getLimitFromPageIndex(opts.page, opts.perPage)
@@ -242,7 +246,7 @@ func getRawTasksForLists(lists []*List, opts *taskOptions) (tasks []*Task, resul
 		return nil, 0, 0, err
 	}
 
-	totalItems, err = query.
+	totalItems, err = queryCount.
 		Count(&Task{})
 	if err != nil {
 		return nil, 0, 0, err
