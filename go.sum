@@ -140,6 +140,8 @@ github.com/go-sql-driver/mysql v1.5.0/go.mod h1:DCzpHaOWr8IXmIStZouvnhqoel9Qv2LB
 github.com/go-stack/stack v1.8.0/go.mod h1:v0f6uXyyMGvRgIKkXu+yp6POWl0qKG85gN/melR3HDY=
 github.com/go-testfixtures/testfixtures/v3 v3.1.1 h1:SBIfzULODQQ7JV6AD931MvAz8pnkk6QCfMIcoOBDaXQ=
 github.com/go-testfixtures/testfixtures/v3 v3.1.1/go.mod h1:RZctY24ixituGC73XlAV1gkCwYMVwiSwPm26MNlQIhE=
+github.com/go-testfixtures/testfixtures/v3 v3.1.2 h1:sACIJoknTtWHbz5wahA6f50IGsz7oBXS+jgm0eKl4eI=
+github.com/go-testfixtures/testfixtures/v3 v3.1.2/go.mod h1:RZctY24ixituGC73XlAV1gkCwYMVwiSwPm26MNlQIhE=
 github.com/godbus/dbus/v5 v5.0.3/go.mod h1:xhWf0FNVPg57R7Z0UbKHbJfkEywrmjJnf7w5xrFpKfA=
 github.com/gofrs/uuid v3.2.0+incompatible/go.mod h1:b2aQJv3Z4Fp6yNu3cdSllBxTCLRxnplIgP/c0N/04lM=
 github.com/gogo/protobuf v1.1.1/go.mod h1:r8qH/GZQm5c6nD/R0oafs1akxWv10x8SbQlK7atdtwQ=
