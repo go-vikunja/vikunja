@@ -26,7 +26,7 @@ $crazy-height-calculation: '100vh - 4.5rem - 1.5rem - 116px - 1em - 1.5em';
     min-height: 20px;
 
     .tasks {
-      max-height: calc(#{$crazy-height-calculation} - 1rem - 1.5rem - 1em - #{$button-height} - 1em);
+      max-height: calc(#{$crazy-height-calculation} - 1rem - 2.5rem - 1em - #{$button-height} - 1em);
       overflow: auto;
 
       .task {
