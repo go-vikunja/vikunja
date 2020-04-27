@@ -130,7 +130,7 @@ export default {
 		},
 		getRouteForPagination(page = 1, type = 'list') {
 			return {
-				name: 'showListWithType',
+				name: 'list.' + type,
 				params: {
 					type: type
 				},
