@@ -53,9 +53,16 @@ func (share *LinkSharing) canDoLinkShare(a web.Auth) (bool, error) {
 		return false, nil
 	}
 
-	l, err := GetListSimplByTaskID(share.ListID)
+	l := &List{ID: share.ListID}
+	err := l.GetSimpleByID()
 	if err != nil {
 		return false, err
 	}
+
+	// Check if the user is admin when the link right is admin
+	if share.Right == RightAdmin {
+		return l.IsAdmin(a)
+	}
+
 	return l.CanWrite(a)
 }

@@ -99,10 +99,16 @@ func GetLinkShareFromClaims(claims jwt.MapClaims) (share *LinkSharing, err error
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{list}/shares [put]
 func (share *LinkSharing) Create(a web.Auth) (err error) {
+
+	err = share.Right.isValid()
+	if err != nil {
+		return
+	}
+
 	share.SharedByID = a.GetID()
 	share.Hash = utils.MakeRandomString(40)
 	_, err = x.Insert(share)
-	share.SharedBy, _ = a.(*user.User)
+	share.SharedBy, _ = user.GetFromAuth(a)
 	return
 }
 

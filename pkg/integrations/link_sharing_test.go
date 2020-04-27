@@ -54,6 +54,84 @@ func TestLinkSharing(t *testing.T) {
 		SharedByID:  1,
 	}
 
+	t.Run("New Link Share", func(t *testing.T) {
+		testHandler := webHandlerTest{
+			user: &testuser1,
+			strFunc: func() handler.CObject {
+				return &models.LinkSharing{}
+			},
+			t: t,
+		}
+		t.Run("Forbidden", func(t *testing.T) {
+			t.Run("read only", func(t *testing.T) {
+				_, err := testHandler.testCreateWithUser(nil, map[string]string{"list": "20"}, `{"right":0}`)
+				assert.Error(t, err)
+				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+			})
+			t.Run("write", func(t *testing.T) {
+				_, err := testHandler.testCreateWithUser(nil, map[string]string{"list": "20"}, `{"right":1}`)
+				assert.Error(t, err)
+				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+			})
+			t.Run("admin", func(t *testing.T) {
+				_, err := testHandler.testCreateWithUser(nil, map[string]string{"list": "20"}, `{"right":2}`)
+				assert.Error(t, err)
+				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+			})
+		})
+		t.Run("Read only access", func(t *testing.T) {
+			t.Run("read only", func(t *testing.T) {
+				_, err := testHandler.testCreateWithUser(nil, map[string]string{"list": "9"}, `{"right":0}`)
+				assert.Error(t, err)
+				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+			})
+			t.Run("write", func(t *testing.T) {
+				_, err := testHandler.testCreateWithUser(nil, map[string]string{"list": "9"}, `{"right":1}`)
+				assert.Error(t, err)
+				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+			})
+			t.Run("admin", func(t *testing.T) {
+				_, err := testHandler.testCreateWithUser(nil, map[string]string{"list": "9"}, `{"right":2}`)
+				assert.Error(t, err)
+				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+			})
+		})
+		t.Run("Write access", func(t *testing.T) {
+			t.Run("read only", func(t *testing.T) {
+				req, err := testHandler.testCreateWithUser(nil, map[string]string{"list": "10"}, `{"right":0}`)
+				assert.NoError(t, err)
+				assert.Contains(t, req.Body.String(), `"hash":`)
+			})
+			t.Run("write", func(t *testing.T) {
+				req, err := testHandler.testCreateWithUser(nil, map[string]string{"list": "10"}, `{"right":1}`)
+				assert.NoError(t, err)
+				assert.Contains(t, req.Body.String(), `"hash":`)
+			})
+			t.Run("admin", func(t *testing.T) {
+				_, err := testHandler.testCreateWithUser(nil, map[string]string{"list": "10"}, `{"right":2}`)
+				assert.Error(t, err)
+				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+			})
+		})
+		t.Run("Admin access", func(t *testing.T) {
+			t.Run("read only", func(t *testing.T) {
+				req, err := testHandler.testCreateWithUser(nil, map[string]string{"list": "11"}, `{"right":0}`)
+				assert.NoError(t, err)
+				assert.Contains(t, req.Body.String(), `"hash":`)
+			})
+			t.Run("write", func(t *testing.T) {
+				req, err := testHandler.testCreateWithUser(nil, map[string]string{"list": "11"}, `{"right":1}`)
+				assert.NoError(t, err)
+				assert.Contains(t, req.Body.String(), `"hash":`)
+			})
+			t.Run("admin", func(t *testing.T) {
+				req, err := testHandler.testCreateWithUser(nil, map[string]string{"list": "11"}, `{"right":2}`)
+				assert.NoError(t, err)
+				assert.Contains(t, req.Body.String(), `"hash":`)
+			})
+		})
+	})
+
 	t.Run("Lists", func(t *testing.T) {
 		testHandlerListReadOnly := webHandlerTest{
 			linkShare: linkshareRead,
