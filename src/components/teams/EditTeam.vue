@@ -85,7 +85,7 @@
 									track-by="id">
 								<template slot="clear" slot-scope="props">
 									<div
-											class="multiselect__clear" v-if="newMember.id !== 0"
+											class="multiselect__clear" v-if="newMember !== null && newMember.id !== 0"
 											@mousedown.prevent.stop="clearAll(props.search)">
 									</div>
 								</template>
