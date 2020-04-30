@@ -12,7 +12,7 @@
 			<!-- Commented out because it is a) not working and b) not working -->
 <!--			<h6 class="subtitle">-->
 <!--				{{ namespace.name }} >-->
-<!--				<router-link :to="{ name: 'showList', params: { id: list.id } }">-->
+<!--				<router-link :to="{ name: 'list.index', params: { id: list.id } }">-->
 <!--					{{ list.title }}-->
 <!--				</router-link>-->
 <!--			</h6>-->
@@ -306,7 +306,6 @@
 	import TaskService from '../../services/task'
 	import TaskModel from '../../models/task'
 	import relationKinds from '../../models/relationKinds'
-	import ListModel from '../../models/list'
 	import NamespaceModel from '../../models/namespace'
 
 	import priorites from '../../models/priorities'
@@ -323,7 +322,7 @@
 	import Reminders from './reusable/reminders'
 	import Comments from './reusable/comments'
 	import router from '../../router'
-	import ListSearch from "./reusable/listSearch";
+	import ListSearch from './reusable/listSearch'
 
 	export default {
 		name: 'TaskDetailView',
@@ -347,7 +346,6 @@
 				task: TaskModel,
 				relationKinds: relationKinds,
 
-				list: ListModel,
 				namespace: NamespaceModel,
 				showDeleteModal: false,
 				taskTitle: '',
@@ -484,7 +482,7 @@
 				this.taskService.delete(this.task)
 					.then(() => {
 						this.success({message: 'The task been deleted successfully.'}, this)
-						router.push({name: 'showList', params: {listId: this.list.id}})
+						router.back()
 					})
 					.catch(e => {
 						this.error(e, this)

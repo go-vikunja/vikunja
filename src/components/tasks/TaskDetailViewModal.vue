@@ -5,7 +5,7 @@
 				<a @click="close()" class="close">
 					<icon icon="times"/>
 				</a>
-				<task-detail-view :parent-list="list" :parent-namespace="namespace"/>
+				<task-detail-view/>
 			</div>
 		</div>
 	</div>
@@ -17,12 +17,6 @@
 
 	export default {
 		name: 'TaskDetailViewModal',
-		data() {
-			return {
-				list: null,
-				namespace: null,
-			}
-		},
 		components: {
 			TaskDetailView,
 		},
@@ -33,7 +27,3 @@
 		},
 	}
 </script>
-
-<style scoped>
-
-</style>

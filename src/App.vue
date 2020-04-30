@@ -141,7 +141,7 @@
 								<div class="more-container" :key="n.id + 'child'">
 									<ul class="menu-list can-be-hidden" >
 										<li v-for="l in n.lists" :key="l.id">
-											<router-link :to="{ name: 'showList', params: { listId: l.id} }">
+											<router-link :to="{ name: 'list.index', params: { listId: l.id} }">
 												<span class="name">
 													<span class="color-bubble" v-if="l.hexColor !== ''" :style="{ backgroundColor: l.hexColor }"></span>
 													{{l.title}}

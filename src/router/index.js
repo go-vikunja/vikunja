@@ -92,7 +92,7 @@ export default new Router({
 		},
 		{
 			path: '/lists/:listId',
-			name: 'showList',
+			name: 'list.index',
 			component: ShowListComponent,
 			children: [
 				{

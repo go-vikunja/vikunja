@@ -70,7 +70,7 @@
 					.then(response => {
 						this.$parent.loadNamespaces()
 						this.success({message: 'The list was successfully created.'}, this)
-						router.push({name: 'showList', params: {listId: response.id}})
+						router.push({name: 'list.index', params: {listId: response.id}})
 					})
 					.catch(e => {
 						this.error(e, this)
