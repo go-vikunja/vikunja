@@ -7,6 +7,12 @@ import {snakeCase} from 'snake-case'
  * @returns {*}
  */
 export function objectToCamelCase(object) {
+
+	// When calling recursively, this can be called without being and object or array in which case we just return the value
+	if (typeof object !== 'object') {
+		return object
+	}
+
 	let parsedObject = {}
 	for (const m in object) {
 		parsedObject[camelCase(m)] = object[m]
@@ -38,6 +44,12 @@ export function objectToCamelCase(object) {
  * @returns {*}
  */
 export function objectToSnakeCase(object) {
+
+	// When calling recursively, this can be called without being and object or array in which case we just return the value
+	if (typeof object !== 'object') {
+		return object
+	}
+
 	let parsedObject = {}
 	for (const m in object) {
 		parsedObject[snakeCase(m)] = object[m]
