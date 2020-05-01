@@ -5,9 +5,11 @@ WORKDIR /build
 
 COPY .  ./
 
-RUN yarn install --frozen-lockfile
-RUN yarn run build
-
+# Override config
+RUN echo '{"VIKUNJA_API_BASE_URL": "/api/v1/"}' > /build/public/config.json && \
+  # Build the frontend
+  yarn install --frozen-lockfile && \
+  yarn run build
 
 # Stage 2: copy 
 FROM nginx
