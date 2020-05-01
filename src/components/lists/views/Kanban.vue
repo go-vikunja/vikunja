@@ -214,9 +214,6 @@
 				buckets: [],
 				taskService: TaskService,
 
-				// We're directly using the list id from the route since that one is always available
-				listId: this.$route.params.listId,
-
 				dropPlaceholderOptions: {
 					className: 'drop-preview',
 					animationDuration: 150,
@@ -245,7 +242,7 @@
 		},
 		methods: {
 			loadBuckets() {
-				this.bucketService.getAll({listId: this.listId})
+				this.bucketService.getAll({listId: this.$route.params.listId})
 					.then(r => {
 						this.buckets = r
 					})
@@ -358,7 +355,7 @@
 
 				const bi = bucketIndex()
 
-				const task = new TaskModel({text: this.newTaskText, bucketId: this.buckets[bi].id, listId: this.listId})
+				const task = new TaskModel({text: this.newTaskText, bucketId: this.buckets[bi].id, listId: this.$route.params.listId})
 
 				this.taskService.create(task)
 					.then(r => {
@@ -375,7 +372,7 @@
 					return
 				}
 
-				const newBucket = new BucketModel({title: this.newBucketTitle, listId: parseInt(this.listId)})
+				const newBucket = new BucketModel({title: this.newBucketTitle, listId: parseInt(this.$route.params.listId)})
 
 				this.bucketService.create(newBucket)
 					.then(r => {
@@ -403,7 +400,7 @@
 			deleteBucket() {
 				const bucket = new BucketModel({
 					id: this.bucketToDelete,
-					listId: this.listId,
+					listId: this.$route.params.listId,
 				})
 				this.bucketService.delete(bucket)
 					.then(r => {
@@ -422,7 +419,7 @@
 				const bucket = new BucketModel({
 					id: bucketId,
 					title: bucketTitle,
-					listId: Number(this.listId),
+					listId: Number(this.$route.params.listId),
 				})
 
 				// Because the contenteditable does not have a change event,

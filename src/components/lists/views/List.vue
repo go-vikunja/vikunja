@@ -118,7 +118,6 @@
 		name: 'List',
 		data() {
 			return {
-				listId: this.$route.params.listId,
 				taskService: TaskService,
 				list: {},
 				isTaskEdit: false,
@@ -152,7 +151,7 @@
 				}
 				this.showError = false
 
-				let task = new TaskModel({text: this.newTaskText, listId: this.listId})
+				let task = new TaskModel({text: this.newTaskText, listId: this.$route.params.listId})
 				this.taskService.create(task)
 					.then(r => {
 						this.tasks.push(r)
