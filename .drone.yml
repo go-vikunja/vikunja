@@ -151,7 +151,6 @@ steps:
         from_secret: docker_password
       repo: vikunja/frontend
       auto_tag: true
-    depends_on: [ static ]
 
   - name: telegram
     image: appleboy/drone-telegram
