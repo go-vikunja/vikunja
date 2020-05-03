@@ -706,11 +706,6 @@ func (t *Task) Update() (err error) {
 	if t.PercentDone == 0 {
 		ot.PercentDone = 0
 	}
-	// Bucket ID
-	// Yes it is possible to move a task back into the empty bucket
-	if t.BucketID == 0 {
-		ot.BucketID = 0
-	}
 	// Position
 	if t.Position == 0 {
 		ot.Position = 0
