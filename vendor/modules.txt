@@ -118,7 +118,7 @@ github.com/labstack/gommon/log
 github.com/labstack/gommon/random
 # github.com/laurent22/ical-go v0.1.1-0.20181107184520-7e5d6ade8eef
 github.com/laurent22/ical-go
-# github.com/lib/pq v1.4.0
+# github.com/lib/pq v1.5.0
 github.com/lib/pq
 github.com/lib/pq/oid
 github.com/lib/pq/scram
