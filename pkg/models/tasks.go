@@ -642,6 +642,15 @@ func (t *Task) Update() (err error) {
 		return
 	}
 
+	// If the task is being moved between lists, make sure to move the bucket as well
+	if ot.ListID != t.ListID {
+		b, err := getDefaultBucket(t.ListID)
+		if err != nil {
+			return err
+		}
+		t.BucketID = b.ID
+	}
+
 	// Update the labels
 	//
 	// Maybe FIXME:
