@@ -209,15 +209,11 @@ func getLabelsByTaskIDs(opts *LabelByTaskIDsOptions) (ls []*labelWithTaskID, res
 	}
 
 	// Get the total number of entries
-	condCount := builder.And(builder.In("label_task.task_id", opts.TaskIDs), builder.NotNull{"label_task.label_id"})
-	if opts.GetUnusedLabels {
-		condCount = builder.Or(cond, builder.Eq{"labels.created_by_id": opts.User.ID})
-	}
 	totalEntries, err = x.Table("labels").
+		Select("count(DISTINCT labels.id)").
 		Join("LEFT", "label_task", "label_task.label_id = labels.id").
-		Where(condCount).
+		Where(cond).
 		And("labels.title LIKE ?", "%"+opts.Search+"%").
-		GroupBy(groupBy).
 		Count(&Label{})
 	if err != nil {
 		return nil, 0, 0, err
