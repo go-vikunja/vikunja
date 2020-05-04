@@ -208,7 +208,7 @@
 							<span class="icon is-grey">
 								<icon icon="list"/>
 							</span>
-							Move task to different list
+							Move task to a different list
 						</h3>
 						<div class="field has-addons">
 							<div class="control is-expanded">
@@ -276,7 +276,7 @@
 					</a>
 					<a class="button" @click="setFieldActive('moveList')">
 						<span class="icon is-small"><icon icon="list"/></span>
-						Move task to different list
+						Move task
 					</a>
 					<a class="button is-danger is-outlined noshadow has-no-border" @click="showDeleteModal = true">
 						<span class="icon is-small"><icon icon="trash-alt"/></span>
