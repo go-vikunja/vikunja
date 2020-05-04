@@ -3,25 +3,26 @@
 		<h1>Manage labels</h1>
 		<p>
 			Click on a label to edit it.
-			You can edit all labels you created, you can use all labels which are associated with a task to whose list you have access.
+			You can edit all labels you created, you can use all labels which are associated with a task to whose list
+			you have access.
 		</p>
 		<div class="columns">
 			<div class="labels-list column">
 				<span
-					v-for="l in labels" :key="l.id"
-					class="tag"
-					:class="{'disabled': user.infos.id !== l.createdBy.id}"
-					:style="{'background': l.hexColor, 'color': l.textColor}"
+						v-for="l in labels" :key="l.id"
+						class="tag"
+						:class="{'disabled': user.infos.id !== l.createdBy.id}"
+						:style="{'background': l.hexColor, 'color': l.textColor}"
 				>
 					<span
-						v-if="user.infos.id !== l.createdBy.id"
-						v-tooltip.bottom="'You are not allowed to edit this label because you dont own it.'">
+							v-if="user.infos.id !== l.createdBy.id"
+							v-tooltip.bottom="'You are not allowed to edit this label because you dont own it.'">
 						{{ l.title }}
 					</span>
 					<a
-						@click="editLabel(l)"
-						:style="{'color': l.textColor}"
-						v-else>
+							@click="editLabel(l)"
+							:style="{'color': l.textColor}"
+							v-else>
 						{{ l.title }}
 					</a>
 					<a class="delete is-small" @click="deleteLabel(l)" v-if="user.infos.id === l.createdBy.id"></a>
@@ -44,13 +45,20 @@
 							<div class="field">
 								<label class="label">Title</label>
 								<div class="control">
-									<input class="input" type="text" placeholder="Label title" v-model="labelEditLabel.title"/>
+									<input
+											class="input"
+											type="text"
+											placeholder="Label title"
+											v-model="labelEditLabel.title"/>
 								</div>
 							</div>
 							<div class="field">
 								<label class="label">Description</label>
 								<div class="control">
-									<textarea class="textarea" placeholder="Label description" v-model="labelEditLabel.description"></textarea>
+									<textarea
+											class="textarea"
+											placeholder="Label description"
+											v-model="labelEditLabel.description"></textarea>
 								</div>
 							</div>
 							<div class="field">
@@ -68,12 +76,15 @@
 							</div>
 							<div class="field has-addons">
 								<div class="control is-expanded">
-									<button type="submit" class="button is-fullwidth is-success" :class="{ 'is-loading': labelService.loading}">
+									<button type="submit" class="button is-fullwidth is-success"
+											:class="{ 'is-loading': labelService.loading}">
 										Save
 									</button>
 								</div>
 								<div class="control">
-									<a class="button has-icon is-danger" @click="deleteLabel(labelEditLabel);isLabelEdit = false;">
+									<a
+											class="button has-icon is-danger"
+											@click="() => {deleteLabel(labelEditLabel);isLabelEdit = false}">
 										<span class="icon">
 											<icon icon="trash-alt"/>
 										</span>
@@ -117,7 +128,24 @@
 		},
 		methods: {
 			loadLabels() {
-				this.labelService.getAll()
+				const getAllLabels = (page = 1) => {
+					return this.labelService.getAll({}, {}, page)
+						.then(labels => {
+							if(page < this.labelService.totalPages) {
+								return getAllLabels(page + 1)
+									.then(nextLabels => {
+										return labels.concat(nextLabels)
+									})
+							} else {
+								return labels
+							}
+						})
+						.catch(e => {
+							return Promise.reject(e)
+						})
+				}
+
+				getAllLabels()
 					.then(r => {
 						this.$set(this, 'labels', r)
 					})
@@ -155,7 +183,7 @@
 					})
 			},
 			editLabel(label) {
-				if(label.createdBy.id !== this.user.infos.id) {
+				if (label.createdBy.id !== this.user.infos.id) {
 					return
 				}
 				this.labelEditLabel = label
