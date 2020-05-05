@@ -10,7 +10,7 @@ RUN \
   yarn install --frozen-lockfile && \
   yarn run build && \
   # Override config
-  sed -i 's/http\:\/\/localhost\:8080\/api\/v1/\/api\/v1/g' dist/index.html
+  sed -i 's/http\:\/\/localhost\:3456\/api\/v1/\/api\/v1/g' dist/index.html
 
 # Stage 2: copy 
 FROM nginx

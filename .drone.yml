@@ -39,7 +39,7 @@ steps:
       - yarn --frozen-lockfile
       - yarn run lint
       - yarn run build
-      - sed -i 's/http\:\/\/localhost\:8080\/api\/v1/\/api\/v1/g' dist/index.html # Override the default api url used for developing
+      - sed -i 's/http\:\/\/localhost\:3456\/api\/v1/\/api\/v1/g' dist/index.html # Override the default api url used for developing
 
   - name: static
     image: kolaente/zip
@@ -113,7 +113,7 @@ steps:
       - yarn --frozen-lockfile
       - yarn run lint
       - yarn run build
-      - sed -i 's/http\:\/\/localhost\:8080\/api\/v1/\/api\/v1/g' dist/index.html # Override the default api url used for developing
+      - sed -i 's/http\:\/\/localhost\:3456\/api\/v1/\/api\/v1/g' dist/index.html # Override the default api url used for developing
 
   - name: static
     image: kolaente/zip
