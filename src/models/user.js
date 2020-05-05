@@ -18,6 +18,6 @@ export default class UserModel extends AbstractModel {
 	}
 
 	getAvatarUrl(size = 50) {
-		return `${window.API_URL}${this.username}/avatar?size=${size}`
+		return `${window.API_URL}/${this.username}/avatar?size=${size}`
 	}
 }
