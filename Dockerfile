@@ -8,9 +8,7 @@ COPY .  ./
 RUN \
   # Build the frontend
   yarn install --frozen-lockfile && \
-  yarn run build && \
-  # Override config
-  sed -i 's/http\:\/\/localhost\:3456\/api\/v1/\/api\/v1/g' dist/index.html
+  yarn run build
 
 # Stage 2: copy 
 FROM nginx
@@ -22,8 +20,11 @@ RUN apt-get update && apt-get install -y apt-utils openssl && \
   openssl x509 -req -days 3650 -in /etc/nginx/ssl/dummy.csr -signkey /etc/nginx/ssl/dummy.key -out /etc/nginx/ssl/dummy.crt
 
 COPY nginx.conf /etc/nginx/nginx.conf
+COPY run.sh /run.sh
 
 # copy compiled files from stage 1
 COPY --from=compile-image /build/dist /usr/share/nginx/html
 
 LABEL maintainer="maintainers@vikunja.io"
+
+CMD "/run.sh"
