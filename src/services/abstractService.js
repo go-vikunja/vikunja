@@ -2,8 +2,6 @@ import axios from 'axios'
 import {reduce, replace} from 'lodash'
 import { objectToSnakeCase } from '../helpers/case'
 
-let config = require('../../public/config.json')
-
 export default class AbstractService {
 
 	/////////////////////////////
@@ -33,7 +31,7 @@ export default class AbstractService {
 	 */
 	constructor(paths) {
 		this.http = axios.create({
-			baseURL: config.VIKUNJA_API_BASE_URL,
+			baseURL: window.API_URL,
 			headers: {
 				'Content-Type': 'application/json',
 			},
