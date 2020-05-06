@@ -18,11 +18,11 @@
     overflow: auto;
 
     .scrolling-content {
-      max-width: 800px;
+      max-width: 1024px;
       width: 100%;
       margin: 4rem auto;
 
-      @media screen and (max-width: 800px) {
+      @media screen and (max-width: 1024px) {
         margin: 0;
 
         .close {
