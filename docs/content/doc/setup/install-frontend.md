@@ -17,6 +17,20 @@ Unzip them and store them somewhere your server can access them.
 
 You also need to configure a rewrite condition to internally redirect all requests to `index.html` which handles all urls. 
 
+## API URL configuration
+
+By default, the frontend assumes it can reach the api at `/api/v1` relative to the frontend url.
+This means that if you make the frontend available at, say `https://vikunja.example.com`, it tries to reach the api
+at `https://vikunja.example.com/api/v1`.
+In this scenario it is not possible for the frontend and the api to live on seperate servers or even just seperate 
+ports on the same server with [the use of a reverse proxy]({{< ref "reverse-proxy.md">}}).
+
+To make configurations like this possible, the api url can be set in the `index.html` file of the frontend releases.
+Just open the file with a text editor - there are comments which will explain how to set the url.
+
+**Note:** This needs to be done again after every update. 
+(If you have a good idea for a better solution than this, we'd love to [hear it](https://vikunja.io/contact/))
+
 ## Docker
 
 The docker image is based on nginx and just contains all nessecary files for the frontend.
@@ -30,6 +44,11 @@ docker run -p 80:80 vikunja/frontend
 which will run the docker image and expose port 80 on the host.
 
 See [full docker example]({{< ref "full-docker-example.md">}}) for more varations of this config.
+
+### API URL configuration in docker
+
+When running the frontend with docker, it is possible to set the environment variable `$VIKUNJA_API_URL` to the api url.
+It is therefore not needed to change the url manually inside the docker container.
 
 ## NGINX
 
