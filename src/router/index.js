@@ -13,7 +13,7 @@ import UserSettingsComponent from '@/components/user/Settings'
 import NewListComponent from '@/components/lists/NewList'
 import EditListComponent from '@/components/lists/EditList'
 import ShowTasksInRangeComponent from '@/components/tasks/ShowTasksInRange'
-import LinkShareAuthComponent from '@/components/sharing/linkSharingAuth'
+import LinkShareAuthComponent from '../components/sharing/linkSharingAuth'
 import TaskDetailViewModal from '../components/tasks/TaskDetailViewModal'
 // Namespace Handling
 import NewNamespaceComponent from '@/components/namespaces/NewNamespace'
