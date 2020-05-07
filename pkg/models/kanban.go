@@ -17,6 +17,7 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/timeutil"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
@@ -132,6 +133,11 @@ func (b *Bucket) ReadAll(auth web.Auth, search string, page int, perPage int) (r
 	// All tasks which are not associated to any bucket will have bucket id 0 which is the nil value for int64
 	// Since we created a bucked with that id at the beginning, all tasks should be in there.
 	for _, task := range tasks {
+		// Check if the bucket exists in the map to prevent nil pointer panics
+		if _, exists := bucketMap[task.BucketID]; !exists {
+			log.Debugf("Tried to put task %d into bucket %d which does not exist in list %d", task.ID, task.BucketID, b.ListID)
+			continue
+		}
 		bucketMap[task.BucketID].Tasks = append(bucketMap[task.BucketID].Tasks, task)
 	}
 
