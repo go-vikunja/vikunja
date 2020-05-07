@@ -11,7 +11,7 @@
     "bulma": "0.8.2",
     "camel-case": "4.1.1",
     "copy-to-clipboard": "3.3.1",
-    "date-fns": "2.12.0",
+    "date-fns": "2.13.0",
     "lodash": "4.17.15",
     "register-service-worker": "1.7.1",
     "snake-case": "3.0.3",
