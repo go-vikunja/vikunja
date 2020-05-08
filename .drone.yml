@@ -12,7 +12,7 @@ trigger:
 
 steps:
   - name: build
-    image: kolaente/yarn
+    image: node:13
     pull: true
     group: build-static
     commands:
@@ -32,7 +32,7 @@ trigger:
 
 steps:
   - name: build
-    image: kolaente/yarn
+    image: node:13
     pull: true
     group: build-static
     commands:
@@ -106,7 +106,7 @@ trigger:
 
 steps:
   - name: build
-    image: kolaente/yarn
+    image: node:13
     pull: true
     group: build-static
     commands:
