@@ -141,7 +141,7 @@
 								<div class="more-container" :key="n.id + 'child'">
 									<ul class="menu-list can-be-hidden" >
 										<li v-for="l in n.lists" :key="l.id">
-											<router-link :to="{ name: 'list.index', params: { listId: l.id} }">
+											<router-link :to="{ name: 'list.index', params: { listId: l.id} }" :class="{'router-link-exact-active': currentList === l.id}">
 												<span class="name">
 													<span class="color-bubble" v-if="l.hexColor !== ''" :style="{ backgroundColor: l.hexColor }"></span>
 													{{l.title}}
@@ -223,7 +223,7 @@
 	import swEvents from './ServiceWorker/events'
 	import Notification from './components/global/notification'
 	import Fancycheckbox from './components/global/fancycheckbox'
-	import {IS_FULLPAGE, ONLINE} from './store/mutation-types'
+	import {CURRENT_LIST, IS_FULLPAGE, ONLINE} from './store/mutation-types'
 
 	export default {
 		name: 'app',
@@ -302,6 +302,7 @@
 			namespaces(state) {
 				return state.namespaces.namespaces.filter(n => this.showArchived ? true : !n.isArchived)
 			},
+			currentList: CURRENT_LIST,
 		}),
 		methods: {
 			logout() {
@@ -320,6 +321,21 @@
 				this.loadNamespacesIfNeeded(e)
 				this.mobileMenuActive = false
 				this.userMenuActive = false
+
+				// Reset the current list highlight in menu if the current list is not list related.
+				if (
+					this.$route.name === 'home' ||
+					this.$route.name === 'editNamespace' ||
+					this.$route.name === 'listTeams' ||
+					this.$route.name === 'editTeam' ||
+					this.$route.name === 'showTasksInRange' ||
+					this.$route.name === 'listLabels' ||
+					this.$route.name === 'migrateStart' ||
+					this.$route.name === 'migrate.wunderlist' ||
+					this.$route.name === 'userSettings'
+				) {
+					this.$store.commit(CURRENT_LIST, 0)
+				}
 			},
 			showRefreshUI(e) {
 				console.log('recieved refresh event', e)

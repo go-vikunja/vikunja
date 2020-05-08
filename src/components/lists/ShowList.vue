@@ -26,6 +26,7 @@
 
 	import ListModel from '../../models/list'
 	import ListService from '../../services/list'
+	import {CURRENT_LIST} from "../../store/mutation-types";
 
 	export default {
 		data() {
@@ -64,6 +65,8 @@
 					router.push({name: 'list.list', params: {id: this.$route.params.listId}})
 					return
 				}
+
+				this.$store.commit(CURRENT_LIST, Number(this.$route.params.listId))
 
 				// We create an extra list object instead of creating it in this.list because that would trigger a ui update which would result in bad ux.
 				let list = new ListModel({id: this.$route.params.listId})
