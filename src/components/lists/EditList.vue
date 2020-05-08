@@ -68,7 +68,7 @@
 		<component :is="manageUsersComponent" :id="list.id" type="list" shareType="user" :userIsAdmin="userIsAdmin"></component>
 		<component :is="manageTeamsComponent" :id="list.id" type="list" shareType="team" :userIsAdmin="userIsAdmin"></component>
 
-		<link-sharing :list-id="$route.params.id"/>
+		<link-sharing :list-id="$route.params.id" v-if="linkSharingEnabled"/>
 
 		<modal
 				v-if="showDeleteModal"
@@ -85,7 +85,6 @@
 	import verte from 'verte'
 	import 'verte/dist/verte.css'
 
-	import auth from '../../auth'
 	import router from '../../router'
 	import manageSharing from '../sharing/userTeam'
 	import LinkSharing from '../sharing/linkSharing'
@@ -102,8 +101,6 @@
 				listService: ListService,
 
 				showDeleteModal: false,
-				user: auth.user,
-				userIsAdmin: false, // FIXME: we should be able to know somehow if the user is admin, not only based on if he's the owner
 
 				manageUsersComponent: '',
 				manageTeamsComponent: '',
@@ -115,12 +112,6 @@
 			manageSharing,
 			verte,
 		},
-		beforeMount() {
-			// Check if the user is already logged in, if so, redirect him to the homepage
-			if (!auth.user.authenticated) {
-				router.push({name: 'home'})
-			}
-		},
 		created() {
 			this.listService = new ListService()
 			this.loadList()
@@ -129,15 +120,20 @@
 			// call again the method if the route changes
 			'$route': 'loadList'
 		},
+		computed: {
+			linkSharingEnabled() {
+				return this.$store.state.config.linkSharingEnabled
+			},
+			userIsAdmin() {
+				return this.list.owner && this.list.owner.id === this.$store.state.auth.info.id
+			},
+		},
 		methods: {
 			loadList() {
 				let list = new ListModel({id: this.$route.params.id})
 				this.listService.get(list)
 					.then(r => {
 						this.$set(this, 'list', r)
-						if (r.owner.id === this.user.infos.id) {
-							this.userIsAdmin = true
-						}
 						// This will trigger the dynamic loading of components once we actually have all the data to pass to them
 						this.manageTeamsComponent = 'manageSharing'
 						this.manageUsersComponent = 'manageSharing'
@@ -149,15 +145,7 @@
 			submit() {
 				this.listService.update(this.list)
 					.then(r => {
-						// Update the list in the parent
-						for (const n in this.$parent.namespaces) {
-							let lists = this.$parent.namespaces[n].lists
-							for (const l in lists) {
-								if (lists[l].id === r.id) {
-									this.$set(this.$parent.namespaces[n].lists, l, r)
-								}
-							}
-						}
+						this.$store.commit('namespaces/setListInNamespaceById', r)
 						this.success({message: 'The list was successfully updated.'}, this)
 					})
 					.catch(e => {

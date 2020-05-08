@@ -9,31 +9,61 @@
 				<div class="field">
 					<label class="label" for="username">Username</label>
 					<div class="control">
-						<input v-focus type="text" id="username" class="input" name="username" placeholder="e.g. frederick" ref="username" required/>
+						<input
+								v-focus type="text"
+								id="username"
+								class="input"
+								name="username"
+								placeholder="e.g. frederick"
+								ref="username"
+								required
+						/>
 					</div>
 				</div>
 				<div class="field">
 					<label class="label" for="password">Password</label>
 					<div class="control">
-						<input type="password" class="input" id="password" name="password" placeholder="e.g. ••••••••••••" ref="password" required/>
+						<input
+								type="password"
+								class="input"
+								id="password"
+								name="password"
+								placeholder="e.g. ••••••••••••"
+								ref="password"
+								required
+						/>
 					</div>
 				</div>
 				<div class="field" v-if="needsTotpPasscode">
 					<label class="label" for="totpPasscode">Two Factor Authentication Code</label>
 					<div class="control">
-						<input type="text" class="input" id="totpPasscode" placeholder="e.g. 123456" ref="totpPasscode" required v-focus/>
+						<input
+								type="text"
+								class="input"
+								id="totpPasscode"
+								placeholder="e.g. 123456"
+								ref="totpPasscode"
+								required
+								v-focus
+						/>
 					</div>
 				</div>
 
 				<div class="field is-grouped">
+					<div class="control is-expanded">
+						<button type="submit" class="button is-primary" v-bind:class="{ 'is-loading': loading}">Login
+						</button>
+						<router-link :to="{ name: 'register' }" class="button" v-if="registrationEnabled">Register
+						</router-link>
+					</div>
 					<div class="control">
-						<button type="submit" class="button is-primary" v-bind:class="{ 'is-loading': loading}">Login</button>
-						<router-link :to="{ name: 'register' }" class="button">Register</router-link>
-						<router-link :to="{ name: 'getPasswordReset' }" class="reset-password-link">Reset your password</router-link>
+						<router-link :to="{ name: 'getPasswordReset' }" class="reset-password-link">Reset your
+							password
+						</router-link>
 					</div>
 				</div>
-				<div class="notification is-danger" v-if="errorMsg">
-					{{ errorMsg }}
+				<div class="notification is-danger" v-if="errorMessage">
+					{{ errorMessage }}
 				</div>
 			</form>
 		</div>
@@ -41,18 +71,17 @@
 </template>
 
 <script>
-	import auth from '../../auth'
+	import {mapState} from 'vuex'
+
 	import router from '../../router'
 	import {HTTP} from '../../http-common'
 	import message from '../../message'
+	import {ERROR_MESSAGE, LOADING} from '../../store/mutation-types'
 
 	export default {
 		data() {
 			return {
-				errorMsg: '',
 				confirmedEmailSuccess: false,
-				loading: false,
-				needsTotpPasscode: false,
 			}
 		},
 		beforeMount() {
@@ -69,19 +98,25 @@
 					})
 					.catch(e => {
 						cancel()
-						this.errorMsg = e.response.data.message
+						this.$store.commit(ERROR_MESSAGE, e.response.data.message)
 					})
 			}
 
 			// Check if the user is already logged in, if so, redirect him to the homepage
-			if (auth.user.authenticated) {
+			if (this.authenticated) {
 				router.push({name: 'home'})
 			}
 		},
+		computed: mapState({
+			registrationEnabled: state => state.config.registrationEnabled,
+			loading: LOADING,
+			errorMessage: ERROR_MESSAGE,
+			needsTotpPasscode: state => state.auth.needsTotpPasscode,
+			authenticated: state => state.auth.authenticated,
+		}),
 		methods: {
 			submit() {
-				this.loading = true
-				this.errorMsg = ''
+				this.$store.commit(ERROR_MESSAGE, '')
 				// Some browsers prevent Vue bindings from working with autofilled values.
 				// To work around this, we're manually getting the values here instead of relying on vue bindings.
 				// For more info, see https://kolaente.dev/vikunja/frontend/issues/78
@@ -90,11 +125,15 @@
 					password: this.$refs.password.value,
 				}
 
-				if(this.needsTotpPasscode) {
+				if (this.needsTotpPasscode) {
 					credentials.totpPasscode = this.$refs.totpPasscode.value
 				}
 
-				auth.login(this, credentials, 'home')
+				this.$store.dispatch('auth/login', credentials)
+					.then(() => {
+						router.push({name: 'home'})
+					})
+					.catch(() => {})
 			}
 		}
 	}
@@ -105,7 +144,7 @@
 		margin: 0 0.4em 0 0;
 	}
 
-	.reset-password-link{
+	.reset-password-link {
 		display: inline-block;
 		padding-top: 5px;
 	}

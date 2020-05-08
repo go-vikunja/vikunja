@@ -34,10 +34,10 @@
 </template>
 
 <script>
-	import auth from '../../auth'
 	import router from '../../router'
 	import NamespaceModel from "../../models/namespace";
 	import NamespaceService from "../../services/namespace";
+	import {IS_FULLPAGE} from '../../store/mutation-types'
 
 	export default {
 		name: "NewNamespace",
@@ -48,16 +48,10 @@
 				namespaceService: NamespaceService,
 			}
 		},
-		beforeMount() {
-			// Check if the user is already logged in, if so, redirect him to the homepage
-			if (!auth.user.authenticated) {
-				router.push({name: 'home'})
-			}
-		},
 		created() {
 			this.namespace = new NamespaceModel()
 			this.namespaceService = new NamespaceService()
-			this.$parent.setFullPage();
+			this.$store.commit(IS_FULLPAGE, true)
 		},
 		methods: {
 			newNamespace() {
@@ -68,10 +62,10 @@
 				this.showError = false
 
 				this.namespaceService.create(this.namespace)
-					.then(() => {
-						this.$parent.loadNamespaces()
+					.then(r => {
+						this.$store.commit('namespaces/addNamespace', r)
 						this.success({message: 'The namespace was successfully created.'}, this)
-						router.push({name: 'home'})
+						router.back()
 					})
 					.catch(e => {
 						this.error(e, this)

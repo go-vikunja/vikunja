@@ -83,7 +83,6 @@
 	import verte from 'verte'
 	import 'verte/dist/verte.css'
 
-	import auth from '../../auth'
 	import router from '../../router'
 	import manageSharing from '../sharing/userTeam'
 
@@ -96,13 +95,11 @@
 		data() {
 			return {
 				namespaceService: NamespaceService,
-				userIsAdmin: false,
 				manageUsersComponent: '',
 				manageTeamsComponent: '',
 
 				namespace: NamespaceModel,
 				showDeleteModal: false,
-				user: auth.user,
 			}
 		},
 		components: {
@@ -111,11 +108,6 @@
 			verte,
 		},
 		beforeMount() {
-			// Check if the user is already logged in, if so, redirect him to the homepage
-			if (!auth.user.authenticated) {
-				router.push({name: 'home'})
-			}
-
 			this.namespace.id = this.$route.params.id
 		},
 		created() {
@@ -127,15 +119,17 @@
 			// call again the method if the route changes
 			'$route': 'loadNamespace'
 		},
+		computed: {
+			userIsAdmin() {
+				return this.namespace.owner && this.namespace.owner.id === this.$store.state.auth.info.id
+			},
+		},
 		methods: {
 			loadNamespace() {
 				let namespace = new NamespaceModel({id: this.$route.params.id})
 				this.namespaceService.get(namespace)
 					.then(r => {
 						this.$set(this, 'namespace', r)
-						if (r.owner.id === this.user.infos.id) {
-							this.userIsAdmin = true
-						}
 						// This will trigger the dynamic loading of components once we actually have all the data to pass to them
 						this.manageTeamsComponent = 'manageSharing'
 						this.manageUsersComponent = 'manageSharing'
@@ -148,12 +142,7 @@
 				this.namespaceService.update(this.namespace)
 					.then(r => {
 						// Update the namespace in the parent
-						for (const n in this.$parent.namespaces) {
-							if (this.$parent.namespaces[n].id === r.id) {
-								r.lists = this.$parent.namespaces[n].lists
-								this.$set(this.$parent.namespaces, n, r)
-							}
-						}
+						this.$store.commit('namespaces/setNamespaceById', r)
 						this.success({message: 'The namespace was successfully updated.'}, this)
 					})
 					.catch(e => {

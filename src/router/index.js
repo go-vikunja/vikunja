@@ -197,7 +197,7 @@ export default new Router({
 		},
 		{
 			path: '/migrate/wunderlist',
-			name: 'migrateWunderlist',
+			name: 'migrate.wunderlist',
 			component: WunderlistMigrationComponent,
 		},
 		{

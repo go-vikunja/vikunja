@@ -42,7 +42,7 @@
 					<template v-if="shareType === 'user'">
 						<td>{{s.username}}</td>
 						<td>
-							<template v-if="s.id === currentUser.id">
+							<template v-if="s.id === userInfo.id">
 								<b class="is-success">You</b>
 							</template>
 						</td>
@@ -105,8 +105,8 @@
 </template>
 
 <script>
-	import auth from '../../auth'
 	import multiselect from 'vue-multiselect'
+	import {mapState} from 'vuex'
 
 	import UserNamespaceService from '../../services/userNamespace'
 	import UserNamespaceModel from '../../models/userNamespace'
@@ -156,7 +156,6 @@
 				rights: rights,
 				selectedRight: rights.READ,
 
-				currentUser: auth.user.infos,
 				typeString: '',
 				sharables: [], // This holds either teams or users who this namepace or list is shared with
 				showDeleteModal: false,
@@ -165,6 +164,9 @@
 		components: {
 			multiselect
 		},
+		computed: mapState({
+			userInfo: state => state.auth.info
+		}),
 		created() {
 
 			if (this.shareType === 'user') {

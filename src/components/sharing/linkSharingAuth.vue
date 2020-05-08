@@ -9,7 +9,6 @@
 </template>
 
 <script>
-	import auth from '../../auth'
 	import router from '../../router'
 
 	export default {
@@ -25,7 +24,7 @@
 		},
 		methods: {
 			auth() {
-				auth.linkShareAuth(this.$route.params.share)
+				this.$store.dispatch('auth/linkShareAuth', this.$route.params.share)
 					.then((r) => {
 						this.loading = false
 						router.push({name: 'list.list', params: {listId: r.list_id}})

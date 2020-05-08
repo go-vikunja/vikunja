@@ -2,7 +2,6 @@
 
 import { register } from 'register-service-worker'
 import swEvents from './ServiceWorker/events'
-import auth from './auth'
 
 if (process.env.NODE_ENV === 'production') {
   register(`${process.env.BASE_URL}sw.js`, {
@@ -45,7 +44,7 @@ if(navigator && navigator.serviceWorker) {
     if(action === 'getBearerToken') {
       console.debug('Token request from sw');
       port.postMessage({
-        authToken: auth.getToken(),
+        authToken: localStorage.getItem('token'),
       })
     } else {
       console.error('Unknown event', event);

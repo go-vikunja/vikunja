@@ -11,11 +11,11 @@
 				<span
 						v-for="l in labels" :key="l.id"
 						class="tag"
-						:class="{'disabled': user.infos.id !== l.createdBy.id}"
+						:class="{'disabled': userInfo.id !== l.createdBy.id}"
 						:style="{'background': l.hexColor, 'color': l.textColor}"
 				>
 					<span
-							v-if="user.infos.id !== l.createdBy.id"
+							v-if="userInfo.id !== l.createdBy.id"
 							v-tooltip.bottom="'You are not allowed to edit this label because you dont own it.'">
 						{{ l.title }}
 					</span>
@@ -25,7 +25,7 @@
 							v-else>
 						{{ l.title }}
 					</a>
-					<a class="delete is-small" @click="deleteLabel(l)" v-if="user.infos.id === l.createdBy.id"></a>
+					<a class="delete is-small" @click="deleteLabel(l)" v-if="userInfo.id === l.createdBy.id"></a>
 				</span>
 			</div>
 			<div class="column is-4" v-if="isLabelEdit">
@@ -102,10 +102,10 @@
 <script>
 	import verte from 'verte'
 	import 'verte/dist/verte.css'
+	import {mapState} from 'vuex'
 
 	import LabelService from '../../services/label'
 	import LabelModel from '../../models/label'
-	import auth from '../../auth'
 
 	export default {
 		name: 'ListLabels',
@@ -118,7 +118,6 @@
 				labels: [],
 				labelEditLabel: LabelModel,
 				isLabelEdit: false,
-				user: auth.user,
 			}
 		},
 		created() {
@@ -126,6 +125,9 @@
 			this.labelEditLabel = new LabelModel()
 			this.loadLabels()
 		},
+		computed: mapState({
+			userInfo: state => state.auth.info
+		}),
 		methods: {
 			loadLabels() {
 				const getAllLabels = (page = 1) => {
@@ -183,7 +185,7 @@
 					})
 			},
 			editLabel(label) {
-				if (label.createdBy.id !== this.user.infos.id) {
+				if (label.createdBy.id !== this.userInfo.id) {
 					return
 				}
 				this.labelEditLabel = label

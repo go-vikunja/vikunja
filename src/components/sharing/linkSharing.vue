@@ -75,7 +75,7 @@
 						</template>
 					</td>
 					<td class="actions">
-						<button @click="linkIdToDelete = s.id; showDeleteModal = true" class="button is-danger icon-only">
+						<button @click="() => {linkIdToDelete = s.id; showDeleteModal = true}" class="button is-danger icon-only">
 							<span class="icon">
 								<icon icon="trash-alt"/>
 							</span>
@@ -106,6 +106,7 @@
 	import LinkShareModel from '../../models/linkShare'
 
 	import copy from 'copy-to-clipboard'
+	import {mapState} from 'vuex'
 
 	export default {
 		name: 'linkSharing',
@@ -138,6 +139,9 @@
 				this.load()
 			}
 		},
+		computed: mapState({
+			frontendUrl: state => state.config.frontendUrl,
+		}),
 		methods: {
 			load() {
 				// If listId == 0 the list on the calling component wasn't already loaded, so we just bail out here
@@ -183,7 +187,7 @@
 				copy(text)
 			},
 			getShareLink(hash) {
-				return this.$config.frontend_url + 'share/'  + hash + '/auth'
+				return this.frontendUrl + 'share/'  + hash + '/auth'
 			},
 		},
 	}

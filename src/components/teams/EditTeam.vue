@@ -107,7 +107,7 @@
 					<tr v-for="m in team.members" :key="m.id">
 						<td>{{m.username}}</td>
 						<td>
-							<template v-if="m.id === user.infos.id">
+							<template v-if="m.id === userInfo.id">
 								<b class="is-success">You</b>
 							</template>
 						</td>
@@ -127,7 +127,7 @@
 						</td>
 						<td class="actions" v-if="userIsAdmin">
 							<button @click="toggleUserType(m)" class="button buttonright is-primary"
-									v-if="m.id !== user.infos.id">
+									v-if="m.id !== userInfo.id">
 								Make
 								<template v-if="!m.admin">
 									Admin
@@ -137,7 +137,7 @@
 								</template>
 							</button>
 							<button @click="() => {member = m; showUserDeleteModal = true}" class="button is-danger"
-									v-if="m.id !== user.infos.id">
+									v-if="m.id !== userInfo.id">
 									<span class="icon is-small">
 										<icon icon="trash-alt"/>
 									</span>
@@ -173,9 +173,9 @@
 </template>
 
 <script>
-	import auth from '../../auth'
 	import router from '../../router'
 	import multiselect from 'vue-multiselect'
+	import {mapState} from 'vuex'
 
 	import TeamService from '../../services/team'
 	import TeamModel from '../../models/team'
@@ -196,7 +196,6 @@
 
 				showDeleteModal: false,
 				showUserDeleteModal: false,
-				user: auth.user,
 				userIsAdmin: false,
 
 				newMember: UserModel,
@@ -209,12 +208,6 @@
 		components: {
 			multiselect,
 		},
-		beforeMount() {
-			// Check if the user is already logged in, if so, redirect him to the homepage
-			if (!auth.user.authenticated) {
-				router.push({name: 'home'})
-			}
-		},
 		created() {
 			this.teamService = new TeamService()
 			this.teamMemberService = new TeamMemberService()
@@ -225,9 +218,11 @@
 			// call again the method if the route changes
 			'$route': 'loadTeam'
 		},
+		computed: mapState({
+			userInfo: state => state.auth.info,
+		}),
 		methods: {
 			loadTeam() {
-				// this.member = new TeamMemberModel({teamId: this.teamId})
 				this.team = new TeamModel({id: this.teamId})
 				this.teamService.get(this.team)
 					.then(response => {
@@ -235,7 +230,7 @@
 						let members = response.members
 						for (const m in members) {
 							members[m].teamId = this.teamId
-							if (members[m].id === this.user.infos.id && members[m].admin) {
+							if (members[m].id === this.userInfo.id && members[m].admin) {
 								this.userIsAdmin = true
 							}
 						}

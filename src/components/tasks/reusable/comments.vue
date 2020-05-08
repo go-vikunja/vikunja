@@ -39,7 +39,7 @@
 			</div>
 			<div class="media comment">
 				<figure class="media-left">
-					<img class="image is-avatar" :src="user.infos.getAvatarUrl(48)" alt="" width="48" height="48"/>
+					<img class="image is-avatar" :src="userAvatar" alt="" width="48" height="48"/>
 				</figure>
 				<div class="media-content">
 					<div class="form">
@@ -67,7 +67,6 @@
 <script>
 	import TaskCommentService from '../../../services/taskComment'
 	import TaskCommentModel from '../../../models/taskComment'
-	import auth from '../../../auth'
 
 	export default {
 		name: 'comments',
@@ -80,7 +79,6 @@
 		data() {
 			return {
 				comments: [],
-				user: auth.user,
 
 				showDeleteModal: false,
 				commentToDelete: TaskCommentModel,
@@ -106,6 +104,11 @@
 			taskId() {
 				this.loadComments()
 			}
+		},
+		computed: {
+			userAvatar() {
+				return this.$store.state.auth.info.getAvatarUrl(48)
+			},
 		},
 		methods: {
 			loadComments() {

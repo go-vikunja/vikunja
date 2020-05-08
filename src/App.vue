@@ -1,10 +1,10 @@
 <template>
 	<div>
-		<div v-if="isOnline">
+		<div v-if="online">
 			<!-- This is a workaround to get the sw to "see" the to-be-cached version of the offline background image -->
 			<div class="offline" style="height: 0;width: 0;"></div>
 			<nav class="navbar main-theme is-fixed-top" role="navigation" aria-label="main navigation"
-				v-if="user.authenticated && (userInfo && userInfo.type === authTypes.USER)">
+				v-if="userAuthenticated && (userInfo && userInfo.type === authTypes.USER)">
 				<div class="navbar-brand">
 					<router-link :to="{name: 'home'}" class="navbar-item logo">
 						<img src="/images/logo-full.svg" alt="Vikunja"/>
@@ -16,11 +16,11 @@
 						<a @click="refreshApp()" class="button is-primary noshadow">Update Now</a>
 					</div>
 					<div class="user">
-						<img :src="user.infos.getAvatarUrl()" class="avatar" alt=""/>
+						<img :src="userInfo.getAvatarUrl()" class="avatar" alt=""/>
 						<div class="dropdown is-right is-active">
 							<div class="dropdown-trigger">
 								<button class="button noshadow" @click="userMenuActive = !userMenuActive">
-									<span class="username">{{user.infos.username}}</span>
+									<span class="username">{{userInfo.username}}</span>
 									<span class="icon is-small">
 									<icon icon="chevron-down"/>
 								</span>
@@ -42,7 +42,7 @@
 					</div>
 				</div>
 			</nav>
-			<div v-if="user.authenticated && (userInfo && userInfo.type === authTypes.USER)">
+			<div v-if="userAuthenticated && (userInfo && userInfo.type === authTypes.USER)">
 				<a @click="mobileMenuActive = true" class="mobilemenu-show-button" v-if="!mobileMenuActive">
 					<icon icon="bars"></icon>
 				</a>
@@ -107,7 +107,7 @@
 							</ul>
 						</div>
 						<aside class="menu namespaces-lists">
-							<fancycheckbox v-model="showArchived" @change="loadNamespaces()" class="show-archived-check">
+							<fancycheckbox v-model="showArchived" class="show-archived-check">
 								Show Archived
 							</fancycheckbox>
 							<div class="spinner" :class="{ 'is-loading': namespaceService.loading}"></div>
@@ -168,8 +168,7 @@
 					</div>
 				</div>
 			</div>
-			<!-- FIXME: This will only be triggered when the root component is already loaded before doing link share auth. Will "fix" itself once we use vuex. -->
-			<div v-else-if="user.authenticated && (userInfo && userInfo.type === authTypes.LINK_SHARE)">
+			<div v-else-if="userAuthenticated && (userInfo && userInfo.type === authTypes.LINK_SHARE)">
 				<div class="container has-text-centered link-share-view">
 					<div class="column is-10 is-offset-1">
 						<img src="/images/logo-full.svg" alt="Vikunja" class="logo"/>
@@ -215,8 +214,8 @@
 </template>
 
 <script>
-	import auth from './auth'
 	import router from './router'
+	import {mapState} from 'vuex'
 
 	import NamespaceService from './services/namespace'
 	import authTypes from './models/authTypes'
@@ -224,6 +223,7 @@
 	import swEvents from './ServiceWorker/events'
 	import Notification from './components/global/notification'
 	import Fancycheckbox from './components/global/fancycheckbox'
+	import {IS_FULLPAGE, ONLINE} from './store/mutation-types'
 
 	export default {
 		name: 'app',
@@ -233,16 +233,11 @@
 		},
 		data() {
 			return {
-				user: auth.user,
-				namespaces: [],
 				namespaceService: NamespaceService,
 				mobileMenuActive: false,
-				fullpage: false,
 				currentDate: new Date(),
 				userMenuActive: false,
 				authTypes: authTypes,
-				isOnline: true,
-				motd: '',
 				showArchived: false,
 
 				// Service Worker stuff
@@ -253,9 +248,9 @@
 		},
 		beforeMount() {
 			// Check if the user is offline, show a message then
-			this.isOnline = navigator.onLine
-			window.addEventListener('online',  () => this.isOnline = navigator.onLine);
-			window.addEventListener('offline', () => this.isOnline = navigator.onLine);
+			this.$store.commit(ONLINE, navigator.onLine)
+			window.addEventListener('online', () => this.$store.commit(ONLINE, navigator.onLine));
+			window.addEventListener('offline', () => this.$store.commit(ONLINE, navigator.onLine));
 
 			// Password reset
 			if (this.$route.query.userPasswordReset !== undefined) {
@@ -271,12 +266,15 @@
 			}
 		},
 		created() {
-			if (auth.user.authenticated && auth.user.infos.type === authTypes.USER && (this.$route.params.name === 'home' || this.namespaces.length === 0)) {
+			this.$store.dispatch('config/update')
+			this.$store.dispatch('auth/checkAuth')
+
+			if (this.userAuthenticated && this.userInfo.type === authTypes.USER && (this.$route.params.name === 'home' || this.namespaces.length === 0)) {
 				this.loadNamespaces()
 			}
 
 			// Service worker communication
-			document.addEventListener(swEvents.SW_UPDATED, this.showRefreshUI, { once: true })
+			document.addEventListener(swEvents.SW_UPDATED, this.showRefreshUI, {once: true})
 
 			navigator.serviceWorker.addEventListener(
 				'controllerchange', () => {
@@ -288,71 +286,53 @@
 
 			// Schedule a token renew every minute
 			setTimeout(() => {
-				auth.renewToken()
+				this.$store.dispatch('auth/renewToken')
 			}, 1000 * 60)
-
-			// Set the motd
-			this.setMotd()
 		},
 		watch: {
 			// call the method again if the route changes
 			'$route': 'doStuffAfterRoute',
 		},
-		computed: {
-			userInfo() {
-				return auth.getUserInfos()
-			}
-		},
+		computed: mapState({
+			userInfo: state => state.auth.info,
+			userAuthenticated: state => state.auth.authenticated,
+			motd: state => state.config.motd,
+			online: ONLINE,
+			fullpage: IS_FULLPAGE,
+			namespaces(state) {
+				return state.namespaces.namespaces.filter(n => this.showArchived ? true : !n.isArchived)
+			},
+		}),
 		methods: {
 			logout() {
-				auth.logout()
+				this.$store.dispatch('auth/logout')
 			},
 			loadNamespaces() {
-				this.namespaceService = new NamespaceService()
-				this.namespaceService.getAll({}, {isArchived: this.showArchived})
-					.then(r => {
-						this.$set(this, 'namespaces', r)
-					})
-					.catch(e => {
-						this.error(e, this)
-					})
+				this.$store.dispatch('namespaces/loadNamespaces')
 			},
 			loadNamespacesIfNeeded(e) {
-				if (auth.user.authenticated && (this.userInfo && this.userInfo.type === authTypes.USER) && (e.name === 'home' || this.namespaces.length === 0)) {
+				if (this.userAuthenticated && (this.userInfo && this.userInfo.type === authTypes.USER) && (e.name === 'home' || this.namespaces.length === 0)) {
 					this.loadNamespaces()
 				}
 			},
 			doStuffAfterRoute(e) {
-				this.fullpage = false;
+				this.$store.commit(IS_FULLPAGE, false)
 				this.loadNamespacesIfNeeded(e)
 				this.mobileMenuActive = false
 				this.userMenuActive = false
 			},
-			setFullPage() {
-				this.fullpage = true;
-			},
-			showRefreshUI (e) {
+			showRefreshUI(e) {
 				console.log('recieved refresh event', e)
 				this.registration = e.detail;
 				this.updateAvailable = true;
 			},
-			refreshApp () {
+			refreshApp() {
 				this.updateExists = false;
-				if (!this.registration || !this.registration.waiting) { return; }
+				if (!this.registration || !this.registration.waiting) {
+					return;
+				}
 				// Notify the service worker to actually do the update
 				this.registration.waiting.postMessage('skipWaiting');
-			},
-			setMotd() {
-				let cancel = () => {};
-				// Since the config may not be initialized when we're calling this, we need to retry until it is ready.
-				if (typeof this.$config === 'undefined') {
-					cancel = setTimeout(() => {
-						this.setMotd()
-					}, 150)
-				} else {
-					cancel()
-					this.motd = this.$config.motd
-				}
 			},
 		},
 	}

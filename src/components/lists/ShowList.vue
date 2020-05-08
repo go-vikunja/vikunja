@@ -22,12 +22,10 @@
 </template>
 
 <script>
-	import auth from '../../auth'
 	import router from '../../router'
 
 	import ListModel from '../../models/list'
 	import ListService from '../../services/list'
-	import authType from '../../models/authTypes'
 
 	export default {
 		data() {
@@ -35,12 +33,6 @@
 				listService: ListService,
 				list: ListModel,
 				listLoaded: 0,
-			}
-		},
-		beforeMount() {
-			// Check if the user is already logged in, if so, redirect him to the homepage
-			if (!auth.user.authenticated && auth.user.infos.type !== authType.LINK_SHARE) {
-				router.push({name: 'home'})
 			}
 		},
 		created() {

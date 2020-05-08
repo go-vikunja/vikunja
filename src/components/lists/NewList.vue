@@ -32,10 +32,10 @@
 </template>
 
 <script>
-	import auth from '../../auth'
 	import router from '../../router'
 	import ListService from '../../services/list'
 	import ListModel from '../../models/list'
+	import {IS_FULLPAGE} from '../../store/mutation-types'
 
 	export default {
 		name: "NewList",
@@ -46,16 +46,10 @@
 				listService: ListService,
 			}
 		},
-		beforeMount() {
-			// Check if the user is already logged in, if so, redirect him to the homepage
-			if (!auth.user.authenticated) {
-				router.push({name: 'home'})
-			}
-		},
 		created() {
 			this.list = new ListModel()
 			this.listService = new ListService()
-			this.$parent.setFullPage();
+			this.$store.commit(IS_FULLPAGE, true)
 		},
 		methods: {
 			newList() {
@@ -68,7 +62,8 @@
 				this.list.namespaceId = this.$route.params.id
 				this.listService.create(this.list)
 					.then(response => {
-						this.$parent.loadNamespaces()
+						response.namespaceId = this.list.namespaceId
+						this.$store.commit('namespaces/addListToNamespace', response)
 						this.success({message: 'The list was successfully created.'}, this)
 						router.push({name: 'list.index', params: {listId: response.id}})
 					})

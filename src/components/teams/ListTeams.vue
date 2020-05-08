@@ -18,8 +18,6 @@
 </template>
 
 <script>
-	import auth from '../../auth'
-	import router from '../../router'
 	import TeamService from '../../services/team'
 	
 	export default {
@@ -28,12 +26,6 @@
 			return {
 				teamService: TeamService,
 				teams: [],
-			}
-		},
-		beforeMount() {
-			// Check if the user is already logged in, if so, redirect him to the homepage
-			if (!auth.user.authenticated) {
-				router.push({name: 'home'})
 			}
 		},
 		created() {

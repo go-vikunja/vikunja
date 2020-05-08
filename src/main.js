@@ -1,7 +1,6 @@
 import Vue from 'vue'
 import App from './App.vue'
 import router from './router'
-import auth from './auth'
 
 // Register the modal
 import Modal from './components/modal/Modal'
@@ -19,12 +18,6 @@ Vue.config.productionTip = false
 // Notifications
 import Notifications from 'vue-notification'
 Vue.use(Notifications)
-
-import config from './config'
-config.initConfig()
-    .then(() => {
-        Vue.prototype.$config = config.getConfig()
-    })
 
 // Icons
 import { library } from '@fortawesome/fontawesome-svg-core'
@@ -138,9 +131,6 @@ Vue.directive('focus', {
 	}
 })
 
-// Check the user's auth status when the app starts
-auth.checkAuth()
-
 // Mixins
 import message from './message'
 import {format, formatDistance} from 'date-fns'
@@ -165,7 +155,11 @@ Vue.mixin({
 	}
 })
 
+// Vuex
+import {store} from './store'
+
 new Vue({
 	router,
+	store,
 	render: h => h(App)
 }).$mount('#app')

@@ -37,8 +37,8 @@
 				<div class="notification is-info" v-if="loading">
 					Loading...
 				</div>
-				<div class="notification is-danger" v-if="errorMsg !== ''">
-					{{ errorMsg }}
+				<div class="notification is-danger" v-if="errorMessage !== ''">
+					{{ errorMessage }}
 				</div>
 			</form>
 		</div>
@@ -46,8 +46,9 @@
 </template>
 
 <script>
-	import auth from '../../auth'
 	import router from '../../router'
+	import {mapState} from 'vuex'
+	import {ERROR_MESSAGE, LOADING} from '../../store/mutation-types'
 
 	export default {
 		data() {
@@ -58,35 +59,37 @@
 					password: '',
 					password2: '',
 				},
-				errorMsg: '',
-				loading: false
 			}
 		},
 		beforeMount() {
 			// Check if the user is already logged in, if so, redirect him to the homepage
-			if (auth.user.authenticated) {
+			if (this.authenticated) {
 				router.push({name: 'home'})
 			}
 		},
+		computed: mapState({
+			authenticated: state => state.auth.authenticated,
+			loading: LOADING,
+			errorMessage: ERROR_MESSAGE,
+		}),
 		methods: {
 			submit() {
-				this.loading = true
-
-				this.errorMsg = ''
+				this.$store.commit(LOADING, true)
+				this.$store.commit(ERROR_MESSAGE, '')
 
 				if (this.credentials.password2 !== this.credentials.password) {
-					this.loading = false
-					this.errorMsg = 'Passwords don\'t match.'
+					this.$store.commit(ERROR_MESSAGE, 'Passwords don\'t match.')
+					this.$store.commit(LOADING, false)
 					return
 				}
 
-				let credentials = {
+				const credentials = {
 					username: this.credentials.username,
 					email: this.credentials.email,
 					password: this.credentials.password
 				}
 
-				auth.register(this, credentials, 'home')
+				this.$store.dispatch('auth/register', credentials)
 			}
 		}
 	}

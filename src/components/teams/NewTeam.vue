@@ -32,10 +32,10 @@
 </template>
 
 <script>
-	import auth from '../../auth'
 	import router from '../../router'
 	import TeamModel from '../../models/team'
 	import TeamService from '../../services/team'
+	import {IS_FULLPAGE} from '../../store/mutation-types'
 
 	export default {
 		name: "NewTeam",
@@ -46,16 +46,10 @@
 				showError: false,
 			}
 		},
-		beforeMount() {
-			// Check if the user is already logged in, if so, redirect him to the homepage
-			if (!auth.user.authenticated) {
-				router.push({name: 'home'})
-			}
-		},
 		created() {
 			this.teamService = new TeamService()
 			this.team = new TeamModel()
-			this.$parent.setFullPage();
+			this.$store.commit(IS_FULLPAGE, true)
 		},
 		methods: {
 			newTeam() {
