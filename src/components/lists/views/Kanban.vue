@@ -198,6 +198,7 @@
 
 	import {filterObject} from '../../../helpers/filterObject'
 	import {applyDrag} from '../../../helpers/applyDrag'
+	import {mapState} from 'vuex'
 
 	export default {
 		name: 'Kanban',
@@ -211,7 +212,6 @@
 		data() {
 			return {
 				bucketService: BucketService,
-				buckets: [],
 				taskService: TaskService,
 
 				dropPlaceholderOptions: {
@@ -240,12 +240,12 @@
 			this.loadBuckets()
 			setTimeout(() => document.addEventListener('click', this.closeBucketDropdowns), 0)
 		},
+		computed: mapState({
+			buckets: state => state.kanban.buckets,
+		}),
 		methods: {
 			loadBuckets() {
-				this.bucketService.getAll({listId: this.$route.params.listId})
-					.then(r => {
-						this.buckets = r
-					})
+				this.$store.dispatch('kanban/loadBucketsForList', this.$route.params.listId)
 					.catch(e => {
 						this.error(e, this)
 					})
@@ -271,7 +271,9 @@
 					delete buckets[bucketIndex]
 					buckets[bucketIndex] = bucket
 					// Set the buckets, triggering a state update in vue
-					this.buckets = buckets
+					// FIXME: This seems to set some task attributes (like due date) wrong. Commented out, but seems to still work?
+					//   Not sure what to do about this.
+					// this.$store.commit('kanban/setBuckets', buckets)
 				}
 
 				if (dropResult.addedIndex !== null) {
@@ -297,10 +299,10 @@
 
 					task.bucketId = bucketId
 
-					this.taskService.update(task)
-						.then(t => {
+					this.$store.dispatch('tasks/update', task)
+						.then(() => {
 							// Update the block with the new task details
-							this.$set(this.buckets[bucketIndex].tasks, taskIndex, t)
+							// this.$store.commit('kanban/setTaskInBucketByIndex', {bucketIndex, taskIndex, task: t})
 							this.success({message: 'The task was moved successfully!'}, this)
 						})
 						.catch(e => {
@@ -315,14 +317,6 @@
 				return index => {
 					const bucket = this.buckets[filterObject(this.buckets, b => b.id === bucketId)]
 					return bucket.tasks[index]
-				}
-			},
-			getBlockFromTask(task) {
-				return {
-					id: task.id,
-					status: 'bucket' + task.bucketId,
-					// We're putting the task in an extra property so we won't have to maintin this whole thing because of basically recreating the task model.
-					task: task,
 				}
 			},
 			toggleShowNewTaskInput(bucket) {
@@ -360,7 +354,7 @@
 				this.taskService.create(task)
 					.then(r => {
 						this.newTaskText = ''
-						this.buckets[bi].tasks.push(r)
+						this.$store.commit('kanban/addTaskToBucket', r)
 						this.success({message: 'The task was created successfully!'}, this)
 					})
 					.catch(e => {
@@ -374,15 +368,10 @@
 
 				const newBucket = new BucketModel({title: this.newBucketTitle, listId: parseInt(this.$route.params.listId)})
 
-				this.bucketService.create(newBucket)
-					.then(r => {
+				this.$store.dispatch('kanban/createBucket', newBucket)
+					.then(() => {
 						this.newBucketTitle = ''
 						this.showNewBucketInput = false
-						if (Array.isArray(this.buckets)) {
-							this.buckets.push(r)
-						} else {
-							this.buckets[r.id] = r
-						}
 						this.success({message: 'The bucket was created successfully!'}, this)
 					})
 					.catch(e => {
@@ -402,9 +391,9 @@
 					id: this.bucketToDelete,
 					listId: this.$route.params.listId,
 				})
-				this.bucketService.delete(bucket)
+
+				this.$store.dispatch('kanban/deleteBucket', bucket)
 					.then(r => {
-						this.loadBuckets()
 						this.success(r, this)
 					})
 					.catch(e => {
@@ -430,7 +419,7 @@
 					return
 				}
 
-				this.bucketService.update(bucket)
+				this.$store.dispatch('kanban/updateBucket', bucket)
 					.then(r => {
 						this.success({message: 'The bucket title was updated successfully!'}, this)
 						realBucket.title = r.title

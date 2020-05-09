@@ -54,14 +54,14 @@
 									:class="{ 'disabled': taskService.loading}"
 									class="input"
 									:disabled="taskService.loading"
-									v-model="task.dueDate"
+									v-model="dueDate"
 									:config="flatPickerConfig"
 									@on-close="saveTask"
 									placeholder="Click here to set a due date"
 									ref="dueDate"
 								>
 								</flat-pickr>
-								<a v-if="task.dueDate" @click="() => {task.dueDate = null;saveTask()}">
+								<a v-if="dueDate" @click="() => {dueDate = task.dueDate = null;saveTask()}">
 									<span class="icon is-small">
 										<icon icon="times"></icon>
 									</span>
@@ -345,6 +345,9 @@
 				taskService: TaskService,
 				task: TaskModel,
 				relationKinds: relationKinds,
+				// The due date is a seperate property in the task to prevent flatpickr from modifying the task model
+				// in store right after updating it from the api resulting in the wrong due date format being saved in the task.
+				dueDate: null,
 
 				namespace: NamespaceModel,
 				showDeleteModal: false,
@@ -401,7 +404,7 @@
 			},
 			setActiveFields() {
 
-				this.task.dueDate = +new Date(this.task.dueDate) === 0 ? null : this.task.dueDate
+				this.dueDate = +new Date(this.task.dueDate) === 0 ? null : this.task.dueDate
 				this.task.startDate = +new Date(this.task.startDate) === 0 ? null : this.task.startDate
 				this.task.endDate = +new Date(this.task.endDate) === 0 ? null : this.task.endDate
 
@@ -439,13 +442,15 @@
 			},
 			saveTask(undoCallback = null) {
 
+				this.task.dueDate = this.dueDate
+
 				// If no end date is being set, but a start date and due date,
 				// use the due date as the end date
 				if (this.task.endDate === null && this.task.startDate !== null && this.task.dueDate !== null) {
 					this.task.endDate = this.task.dueDate
 				}
 
-				this.taskService.update(this.task)
+				this.$store.dispatch('tasks/update', this.task)
 					.then(r => {
 						this.$set(this, 'task', r)
 						let actions = []
@@ -455,6 +460,7 @@
 								callback: undoCallback,
 							}]
 						}
+						this.dueDate = this.task.dueDate
 						this.success({message: 'The task was saved successfully.'}, this, actions)
 						this.setActiveFields()
 					})

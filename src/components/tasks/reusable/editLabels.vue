@@ -41,7 +41,6 @@
 	import LabelService from '../../../services/label'
 	import LabelModel from '../../../models/label'
 	import LabelTaskService from '../../../services/labelTask'
-	import LabelTaskModel from '../../../models/labelTask'
 
 	export default {
 		name: 'edit-labels',
@@ -108,8 +107,7 @@
 				this.$set(this, 'foundLabels', [])
 			},
 			addLabel(label) {
-				let labelTask = new LabelTaskModel({taskId: this.taskId, labelId: label.id})
-				this.labelTaskService.create(labelTask)
+				this.$store.dispatch('tasks/addLabel', {label: label, taskId: this.taskId})
 					.then(() => {
 						this.success({message: 'The label was successfully added.'}, this)
 						this.$emit('input', this.labels)
@@ -119,8 +117,7 @@
 					})
 			},
 			removeLabel(label) {
-				let labelTask = new LabelTaskModel({taskId: this.taskId, labelId: label.id})
-				this.labelTaskService.delete(labelTask)
+				this.$store.dispatch('tasks/removeLabel', {label: label, taskId: this.taskId})
 					.then(() => {
 						// Remove the label from the list
 						for (const l in this.labels) {

@@ -39,7 +39,6 @@
 	import UserModel from '../../../models/user'
 	import ListUserService from '../../../services/listUsers'
 	import TaskAssigneeService from '../../../services/taskAssignee'
-	import TaskAssigneeModel from '../../../models/taskAssignee'
 	import User from '../../global/user'
 
 	export default {
@@ -84,8 +83,7 @@
 		},
 		methods: {
 			addAssignee(user) {
-				const taskAssignee = new TaskAssigneeModel({userId: user.id, taskId: this.taskId})
-				this.taskAssigneeService.create(taskAssignee)
+				this.$store.dispatch('tasks/addAssignee', {user: user, taskId: this.taskId})
 					.then(() => {
 						this.success({message: 'The user was successfully assigned.'}, this)
 					})
@@ -94,8 +92,7 @@
 					})
 			},
 			removeAssignee(user) {
-				const taskAssignee = new TaskAssigneeModel({userId: user.id, taskId: this.taskId})
-				this.taskAssigneeService.delete(taskAssignee)
+				this.$store.dispatch('tasks/removeAssignee', {user: user, taskId: this.taskId})
 					.then(() => {
 						// Remove the assignee from the list
 						for (const a in this.assignees) {
