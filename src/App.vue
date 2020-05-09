@@ -307,6 +307,7 @@
 		methods: {
 			logout() {
 				this.$store.dispatch('auth/logout')
+				router.push({name: 'login'})
 			},
 			loadNamespaces() {
 				this.$store.dispatch('namespaces/loadNamespaces')
@@ -317,9 +318,10 @@
 				}
 			},
 			doStuffAfterRoute(e) {
-				if(this.$store.state[IS_FULLPAGE]) {
+				if (this.$store.state[IS_FULLPAGE]) {
 					this.$store.commit(IS_FULLPAGE, false)
 				}
+
 				this.loadNamespacesIfNeeded(e)
 				this.mobileMenuActive = false
 				this.userMenuActive = false
