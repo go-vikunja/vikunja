@@ -317,7 +317,9 @@
 				}
 			},
 			doStuffAfterRoute(e) {
-				this.$store.commit(IS_FULLPAGE, false)
+				if(this.$store.state[IS_FULLPAGE]) {
+					this.$store.commit(IS_FULLPAGE, false)
+				}
 				this.loadNamespacesIfNeeded(e)
 				this.mobileMenuActive = false
 				this.userMenuActive = false
