@@ -1,5 +1,5 @@
 <template>
-	<div class="kanban loader-container" :class="{ 'is-loading': bucketService.loading}">
+	<div class="kanban loader-container" :class="{ 'is-loading': loading}">
 		<div v-for="bucket in buckets" :key="`bucket${bucket.id}`" class="bucket">
 			<div class="bucket-header">
 				<h2
@@ -140,7 +140,7 @@
 			</div>
 		</div>
 
-		<div class="bucket new-bucket" v-if="!bucketService.loading">
+		<div class="bucket new-bucket" v-if="!loading">
 			<input
 					v-if="showNewBucketInput"
 					class="input"
@@ -151,8 +151,8 @@
 					@keyup.esc="() => showNewBucketInput = false"
 					@keyup.enter="createNewBucket"
 					v-model="newBucketTitle"
-					:disabled="bucketService.loading"
-					:class="{'is-loading': bucketService.loading}"
+					:disabled="loading"
+					:class="{'is-loading': loading}"
 			/>
 			<a
 					class="button noshadow is-transparent is-fullwidth has-text-centered"
@@ -186,7 +186,6 @@
 </template>
 
 <script>
-	import BucketService from '../../../services/bucket'
 	import TaskService from '../../../services/task'
 	import TaskModel from '../../../models/task'
 	import BucketModel from '../../../models/bucket'
@@ -199,6 +198,7 @@
 	import {filterObject} from '../../../helpers/filterObject'
 	import {applyDrag} from '../../../helpers/applyDrag'
 	import {mapState} from 'vuex'
+	import {LOADING} from '../../../store/mutation-types'
 
 	export default {
 		name: 'Kanban',
@@ -211,7 +211,6 @@
 		},
 		data() {
 			return {
-				bucketService: BucketService,
 				taskService: TaskService,
 
 				dropPlaceholderOptions: {
@@ -235,13 +234,13 @@
 			}
 		},
 		created() {
-			this.bucketService = new BucketService()
 			this.taskService = new TaskService()
 			this.loadBuckets()
 			setTimeout(() => document.addEventListener('click', this.closeBucketDropdowns), 0)
 		},
 		computed: mapState({
 			buckets: state => state.kanban.buckets,
+			loading: LOADING,
 		}),
 		methods: {
 			loadBuckets() {

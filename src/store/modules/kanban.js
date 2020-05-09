@@ -2,6 +2,7 @@ import Vue from 'vue'
 
 import BucketService from '../../services/bucket'
 import {filterObject} from '../../helpers/filterObject'
+import {setLoading} from '../helper'
 
 /**
  * This store is intended to hold the currently active kanban view.
@@ -89,6 +90,11 @@ export default {
 	},
 	actions: {
 		loadBucketsForList(ctx, listId) {
+			const cancel = setLoading(ctx)
+
+			// Clear everything to prevent having old buckets in the list if loading the buckets from this list takes a few moments
+			ctx.commit('setBuckets', [])
+
 			const bucketService = new BucketService()
 			return bucketService.getAll({listId: listId})
 				.then(r => {
@@ -98,8 +104,13 @@ export default {
 				.catch(e => {
 					return Promise.reject(e)
 				})
+				.finally(() => {
+					cancel()
+				})
 		},
 		createBucket(ctx, bucket) {
+			const cancel = setLoading(ctx)
+
 			const bucketService = new BucketService()
 			return bucketService.create(bucket)
 				.then(r => {
@@ -109,8 +120,13 @@ export default {
 				.catch(e => {
 					return Promise.reject(e)
 				})
+				.finally(() => {
+					cancel()
+				})
 		},
 		deleteBucket(ctx, bucket) {
+			const cancel = setLoading(ctx)
+
 			const bucketService = new BucketService()
 			return bucketService.delete(bucket)
 				.then(r => {
@@ -122,8 +138,13 @@ export default {
 				.catch(e => {
 					return Promise.reject(e)
 				})
+				.finally(() => {
+					cancel()
+				})
 		},
 		updateBucket(ctx, bucket) {
+			const cancel = setLoading(ctx)
+
 			const bucketService = new BucketService()
 			return bucketService.update(bucket)
 				.then(r => {
@@ -135,6 +156,9 @@ export default {
 				})
 				.catch(e => {
 					return Promise.reject(e)
+				})
+				.finally(() => {
+					cancel()
 				})
 		},
 	},
