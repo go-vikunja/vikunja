@@ -26,7 +26,7 @@ import (
 type TOTP struct {
 	ID     int64  `xorm:"int(11) autoincr not null unique pk" json:"-"`
 	UserID int64  `xorm:"int(11) not null" json:"-"`
-	Secret string `xorm:"varchar(20) not null" json:"secret"`
+	Secret string `xorm:"text not null" json:"secret"`
 	// The totp entry will only be enabled after the user verified they have a working totp setup.
 	Enabled bool `xorm:"null" json:"enabled"`
 	// The totp url used to be able to enroll the user later
