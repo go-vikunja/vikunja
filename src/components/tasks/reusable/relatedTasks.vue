@@ -48,8 +48,11 @@
 				<span class="title">{{ relationKindTitle(kind, rts.length) }}</span>
 				<div class="tasks noborder">
 					<div class="task" v-for="t in rts" :key="t.id">
-						<router-link :to="{ name: 'task.kanban.detail', params: { id: t.id } }">
+						<router-link :to="{ name: $route.name, params: { id: t.id } }">
 							<span class="tasktext" :class="{ 'done': t.done}">
+								<span v-if="t.listId !== listId" class="different-list" v-tooltip="'This task belongs to a different list.'">
+									{{ $store.getters['namespaces/getListById'](t.listId).title }} >
+								</span>
 								{{t.text}}
 							</span>
 						</router-link>

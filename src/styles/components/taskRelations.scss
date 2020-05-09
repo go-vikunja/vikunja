@@ -22,6 +22,11 @@
 
       .task {
         padding: .5em;
+
+        .different-list {
+          color: lighten($dark, 50);
+          width: auto;
+        }
       }
     }
   }

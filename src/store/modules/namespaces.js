@@ -46,6 +46,18 @@ export default {
 			}
 		},
 	},
+	getters: {
+		getListById: state => id => {
+			for (const n in state.namespaces) {
+				for (const l in state.namespaces[n].lists) {
+					if (state.namespaces[n].lists[l].id === id) {
+						return state.namespaces[n].lists[l]
+					}
+				}
+			}
+			return null
+		},
+	},
 	actions: {
 		loadNamespaces(ctx) {
 			const namespaceService = new NamespaceService()
