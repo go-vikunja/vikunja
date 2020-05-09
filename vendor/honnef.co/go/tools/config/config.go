@@ -1,11 +1,62 @@
 package config
 
 import (
+	"bytes"
+	"fmt"
 	"os"
 	"path/filepath"
+	"reflect"
+	"strings"
 
 	"github.com/BurntSushi/toml"
+	"golang.org/x/tools/go/analysis"
 )
+
+var Analyzer = &analysis.Analyzer{
+	Name: "config",
+	Doc:  "loads configuration for the current package tree",
+	Run: func(pass *analysis.Pass) (interface{}, error) {
+		if len(pass.Files) == 0 {
+			cfg := DefaultConfig
+			return &cfg, nil
+		}
+		cache, err := os.UserCacheDir()
+		if err != nil {
+			cache = ""
+		}
+		var path string
+		for _, f := range pass.Files {
+			p := pass.Fset.PositionFor(f.Pos(), true).Filename
+			// FIXME(dh): using strings.HasPrefix isn't technically
+			// correct, but it should be good enough for now.
+			if cache != "" && strings.HasPrefix(p, cache) {
+				// File in the build cache of the standard Go build system
+				continue
+			}
+			path = p
+			break
+		}
+
+		if path == "" {
+			// The package only consists of generated files.
+			cfg := DefaultConfig
+			return &cfg, nil
+		}
+
+		dir := filepath.Dir(path)
+		cfg, err := Load(dir)
+		if err != nil {
+			return nil, fmt.Errorf("error loading staticcheck.conf: %s", err)
+		}
+		return &cfg, nil
+	},
+	RunDespiteErrors: true,
+	ResultType:       reflect.TypeOf((*Config)(nil)),
+}
+
+func For(pass *analysis.Pass) *Config {
+	return pass.ResultOf[Analyzer].(*Config)
+}
 
 func mergeLists(a, b []string) []string {
 	out := make([]string, 0, len(a)+len(b))
@@ -73,7 +124,18 @@ type Config struct {
 	HTTPStatusCodeWhitelist []string `toml:"http_status_code_whitelist"`
 }
 
-var defaultConfig = Config{
+func (c Config) String() string {
+	buf := &bytes.Buffer{}
+
+	fmt.Fprintf(buf, "Checks: %#v\n", c.Checks)
+	fmt.Fprintf(buf, "Initialisms: %#v\n", c.Initialisms)
+	fmt.Fprintf(buf, "DotImportWhitelist: %#v\n", c.DotImportWhitelist)
+	fmt.Fprintf(buf, "HTTPStatusCodeWhitelist: %#v", c.HTTPStatusCodeWhitelist)
+
+	return buf.String()
+}
+
+var DefaultConfig = Config{
 	Checks: []string{"all", "-ST1000", "-ST1003", "-ST1016"},
 	Initialisms: []string{
 		"ACL", "API", "ASCII", "CPU", "CSS", "DNS",
@@ -120,7 +182,7 @@ func parseConfigs(dir string) ([]Config, error) {
 		}
 		dir = ndir
 	}
-	out = append(out, defaultConfig)
+	out = append(out, DefaultConfig)
 	if len(out) < 2 {
 		return out, nil
 	}

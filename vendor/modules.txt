@@ -199,7 +199,7 @@ github.com/spf13/cobra
 github.com/spf13/jwalterweatherman
 # github.com/spf13/pflag v1.0.5
 github.com/spf13/pflag
-# github.com/spf13/viper v1.6.3
+# github.com/spf13/viper v1.7.0
 github.com/spf13/viper
 # github.com/stretchr/testify v1.5.1
 github.com/stretchr/testify/assert
@@ -260,6 +260,8 @@ golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
 golang.org/x/text/width
 # golang.org/x/tools v0.0.0-20200410194907-79a7a3126eef
+golang.org/x/tools/go/analysis
+golang.org/x/tools/go/analysis/passes/inspect
 golang.org/x/tools/go/ast/astutil
 golang.org/x/tools/go/ast/inspector
 golang.org/x/tools/go/buildutil
@@ -269,8 +271,10 @@ golang.org/x/tools/go/internal/gcimporter
 golang.org/x/tools/go/internal/packagesdriver
 golang.org/x/tools/go/loader
 golang.org/x/tools/go/packages
+golang.org/x/tools/go/types/objectpath
 golang.org/x/tools/go/types/typeutil
 golang.org/x/tools/imports
+golang.org/x/tools/internal/analysisinternal
 golang.org/x/tools/internal/fastwalk
 golang.org/x/tools/internal/gocommand
 golang.org/x/tools/internal/gopathwalk
@@ -321,24 +325,26 @@ gopkg.in/gomail.v2
 gopkg.in/ini.v1
 # gopkg.in/yaml.v2 v2.2.8
 gopkg.in/yaml.v2
-# honnef.co/go/tools v0.0.0-20190418001031-e561f6794a2a
+# honnef.co/go/tools v0.0.1-2019.2.3
 honnef.co/go/tools/arg
-honnef.co/go/tools/callgraph
-honnef.co/go/tools/callgraph/static
 honnef.co/go/tools/cmd/staticcheck
 honnef.co/go/tools/config
 honnef.co/go/tools/deprecated
+honnef.co/go/tools/facts
 honnef.co/go/tools/functions
 honnef.co/go/tools/go/types/typeutil
+honnef.co/go/tools/internal/cache
+honnef.co/go/tools/internal/passes/buildssa
+honnef.co/go/tools/internal/renameio
 honnef.co/go/tools/internal/sharedcheck
 honnef.co/go/tools/lint
 honnef.co/go/tools/lint/lintdsl
 honnef.co/go/tools/lint/lintutil
 honnef.co/go/tools/lint/lintutil/format
+honnef.co/go/tools/loader
 honnef.co/go/tools/printf
 honnef.co/go/tools/simple
 honnef.co/go/tools/ssa
-honnef.co/go/tools/ssa/ssautil
 honnef.co/go/tools/ssautil
 honnef.co/go/tools/staticcheck
 honnef.co/go/tools/staticcheck/vrp
