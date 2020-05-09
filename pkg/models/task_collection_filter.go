@@ -53,7 +53,7 @@ func getTaskFiltersByCollections(c *TaskCollection) (filters []*taskFilter, err 
 	}
 
 	if len(c.FilterComparatorArr) > 0 {
-		c.FilterValue = append(c.FilterValue, c.FilterComparatorArr...)
+		c.FilterComparator = append(c.FilterComparator, c.FilterComparatorArr...)
 	}
 
 	filters = make([]*taskFilter, 0, len(c.FilterBy))
