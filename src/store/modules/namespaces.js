@@ -57,6 +57,19 @@ export default {
 			}
 			return null
 		},
+		getListAndNamespaceById: state => listId => {
+			for (const n in state.namespaces) {
+				for (const l in state.namespaces[n].lists) {
+					if (state.namespaces[n].lists[l].id === listId) {
+						return {
+							list: state.namespaces[n].lists[l],
+							namespace: state.namespaces[n],
+						}
+					}
+				}
+			}
+			return null
+		},
 	},
 	actions: {
 		loadNamespaces(ctx) {

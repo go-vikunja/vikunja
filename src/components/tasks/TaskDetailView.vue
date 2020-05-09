@@ -6,16 +6,15 @@
 					#{{ task.id }}
 				</h1>
 				<div class="is-done" v-if="task.done">Done</div>
-				<h1 class="title input" contenteditable="true" @focusout="saveTaskOnChange()" ref="taskTitle" @keyup.ctrl.enter="saveTaskOnChange()">{{ task.text }}</h1>
+				<h1 class="title input" contenteditable="true" @focusout="saveTaskOnChange()" ref="taskTitle"
+					@keyup.ctrl.enter="saveTaskOnChange()">{{ task.text }}</h1>
 			</div>
-			<!-- FIXME: Throw this away once we have vuex -->
-			<!-- Commented out because it is a) not working and b) not working -->
-<!--			<h6 class="subtitle">-->
-<!--				{{ namespace.name }} >-->
-<!--				<router-link :to="{ name: 'list.index', params: { id: list.id } }">-->
-<!--					{{ list.title }}-->
-<!--				</router-link>-->
-<!--			</h6>-->
+			<h6 class="subtitle" v-if="parent && parent.namespace && parent.list">
+				{{ parent.namespace.name }} >
+				<router-link :to="{ name: 'list.index', params: { listId: parent.list.id } }">
+					{{ parent.list.title }}
+				</router-link>
+			</h6>
 
 			<!-- Content and buttons -->
 			<div class="columns">
@@ -51,14 +50,14 @@
 							</div>
 							<div class="date-input">
 								<flat-pickr
-									:class="{ 'disabled': taskService.loading}"
-									class="input"
-									:disabled="taskService.loading"
-									v-model="dueDate"
-									:config="flatPickerConfig"
-									@on-close="saveTask"
-									placeholder="Click here to set a due date"
-									ref="dueDate"
+										:class="{ 'disabled': taskService.loading}"
+										class="input"
+										:disabled="taskService.loading"
+										v-model="dueDate"
+										:config="flatPickerConfig"
+										@on-close="saveTask"
+										placeholder="Click here to set a due date"
+										ref="dueDate"
 								>
 								</flat-pickr>
 								<a v-if="dueDate" @click="() => {dueDate = task.dueDate = null;saveTask()}">
@@ -84,14 +83,14 @@
 							</div>
 							<div class="date-input">
 								<flat-pickr
-									:class="{ 'disabled': taskService.loading}"
-									class="input"
-									:disabled="taskService.loading"
-									v-model="task.startDate"
-									:config="flatPickerConfig"
-									@on-close="saveTask"
-									placeholder="Click here to set a start date"
-									ref="startDate"
+										:class="{ 'disabled': taskService.loading}"
+										class="input"
+										:disabled="taskService.loading"
+										v-model="task.startDate"
+										:config="flatPickerConfig"
+										@on-close="saveTask"
+										placeholder="Click here to set a start date"
+										ref="startDate"
 								>
 								</flat-pickr>
 								<a v-if="task.startDate" @click="() => {task.startDate = null;saveTask()}">
@@ -109,14 +108,14 @@
 							</div>
 							<div class="date-input">
 								<flat-pickr
-									:class="{ 'disabled': taskService.loading}"
-									class="input"
-									:disabled="taskService.loading"
-									v-model="task.endDate"
-									:config="flatPickerConfig"
-									@on-close="saveTask"
-									placeholder="Click here to set an end date"
-									ref="endDate"
+										:class="{ 'disabled': taskService.loading}"
+										class="input"
+										:disabled="taskService.loading"
+										v-model="task.endDate"
+										:config="flatPickerConfig"
+										@on-close="saveTask"
+										placeholder="Click here to set an end date"
+										ref="endDate"
 								>
 								</flat-pickr>
 								<a v-if="task.endDate" @click="() => {task.endDate = null;saveTask()}">
@@ -221,7 +220,10 @@
 					<comments :task-id="taskId"/>
 				</div>
 				<div class="column is-one-third action-buttons">
-					<a class="button is-outlined noshadow has-no-border" :class="{'is-success': !task.done}" @click="toggleTaskDone()">
+					<a
+							class="button is-outlined noshadow has-no-border"
+							:class="{'is-success': !task.done}"
+							@click="toggleTaskDone()">
 						<span class="icon is-small"><icon icon="check-double"/></span>
 						<template v-if="task.done">
 							Mark as undone
@@ -306,7 +308,6 @@
 	import TaskService from '../../services/task'
 	import TaskModel from '../../models/task'
 	import relationKinds from '../../models/relationKinds'
-	import NamespaceModel from '../../models/namespace'
 
 	import priorites from '../../models/priorities'
 
@@ -349,7 +350,6 @@
 				// in store right after updating it from the api resulting in the wrong due date format being saved in the task.
 				dueDate: null,
 
-				namespace: NamespaceModel,
 				showDeleteModal: false,
 				taskTitle: '',
 				descriptionChanged: false,
@@ -388,13 +388,28 @@
 		mounted() {
 			this.loadTask()
 		},
+		computed: {
+			parent() {
+				if(!this.task.listId) {
+					return {
+						namespace: null,
+						list: null,
+					}
+				}
+
+				if(!this.$store.getters["namespaces/getListAndNamespaceById"]) {
+					return null
+				}
+
+				return this.$store.getters["namespaces/getListAndNamespaceById"](this.task.listId)
+			},
+		},
 		methods: {
 			loadTask() {
 				this.taskId = Number(this.$route.params.id)
 				this.taskService.get({id: this.taskId})
 					.then(r => {
 						this.$set(this, 'task', r)
-						this.setListAndNamespaceTitleFromParent()
 						this.taskTitle = this.task.text
 						this.setActiveFields()
 					})
@@ -468,18 +483,6 @@
 						this.error(e, this)
 					})
 			},
-			setListAndNamespaceTitleFromParent() {
-				// FIXME: Throw this away once we have vuex
-				// this.$parent.namespaces.forEach(n => {
-				// 	n.lists.forEach(l => {
-				// 		if (l.id === this.task.listId) {
-				// 			this.list = l
-				// 			this.namespace = n
-				// 			return
-				// 		}
-				// 	})
-				// })
-			},
 			setFieldActive(fieldName) {
 				this.activeFields[fieldName] = true
 				this.$nextTick(() => this.$refs[fieldName].$el.focus())
@@ -509,7 +512,7 @@
 				// Since we can either trigger this with ctrl+enter or @change, it would be possible to save a task first
 				// with ctrl+enter and then with @change although nothing changed since the last save when @change gets fired.
 				// To only save one time we added this method.
-				if(this.descriptionChanged) {
+				if (this.descriptionChanged) {
 					this.descriptionChanged = false
 					this.saveTask()
 				}
