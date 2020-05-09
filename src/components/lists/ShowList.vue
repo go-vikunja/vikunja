@@ -10,10 +10,10 @@
 				It is not possible to create new or edit tasks or it.
 			</div>
 			<div class="switch-view">
-				<router-link :to="{ name: 'list.list',   params: { id: $route.params.listId } }" :class="{'is-active': $route.name === 'list.list'}">List</router-link>
-				<router-link :to="{ name: 'list.gantt',  params: { id: $route.params.listId } }" :class="{'is-active': $route.name === 'list.gantt'}">Gantt</router-link>
-				<router-link :to="{ name: 'list.table',  params: { id: $route.params.listId } }" :class="{'is-active': $route.name === 'list.table'}">Table</router-link>
-				<router-link :to="{ name: 'list.kanban', params: { id: $route.params.listId } }" :class="{'is-active': $route.name === 'list.kanban'}">Kanban</router-link>
+				<router-link :to="{ name: 'list.list',   params: { listId: listId } }" :class="{'is-active': $route.name === 'list.list'}">List</router-link>
+				<router-link :to="{ name: 'list.gantt',  params: { listId: listId } }" :class="{'is-active': $route.name === 'list.gantt'}">Gantt</router-link>
+				<router-link :to="{ name: 'list.table',  params: { listId: listId } }" :class="{'is-active': $route.name === 'list.table'}">Table</router-link>
+				<router-link :to="{ name: 'list.kanban', params: { listId: listId } }" :class="{'is-active': $route.name === 'list.kanban'}">Kanban</router-link>
 			</div>
 		</div>
 
@@ -26,7 +26,7 @@
 
 	import ListModel from '../../models/list'
 	import ListService from '../../services/list'
-	import {CURRENT_LIST} from "../../store/mutation-types";
+	import {CURRENT_LIST} from '../../store/mutation-types'
 
 	export default {
 		data() {
@@ -46,6 +46,12 @@
 		watch: {
 			// call again the method if the route changes
 			'$route.path': 'loadList',
+		},
+		computed: {
+			// Computed property to let "listId" always have a value
+			listId() {
+				return typeof this.$route.params.listId === 'undefined' ? 0 : this.$route.params.listId
+			},
 		},
 		methods: {
 			loadList() {
