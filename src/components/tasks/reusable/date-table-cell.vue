@@ -10,7 +10,7 @@
 		props: {
 			date: {
 				type: Date,
-				required: true,
+				default: 0,
 			}
 		},
 	}
