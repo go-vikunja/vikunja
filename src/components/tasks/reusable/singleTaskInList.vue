@@ -1,7 +1,7 @@
 <template>
 	<span>
 		<fancycheckbox v-model="task.done" @change="markAsDone" :disabled="isArchived"/>
-		<router-link :to="{ name: 'task.detail', params: { id: task.id } }" class="tasktext"  :class="{ 'done': task.done}">
+		<router-link :to="{ name: taskDetailRoute, params: { id: task.id } }" class="tasktext"  :class="{ 'done': task.done}">
 			<!-- Show any parent tasks to make it clear this task is a sub task of something -->
 			<span class="parent-tasks" v-if="typeof task.relatedTasks.parenttask !== 'undefined'">
 				<template v-for="(pt, i) in task.relatedTasks.parenttask">
@@ -58,6 +58,10 @@
 				type: Boolean,
 				default: false,
 			},
+			taskDetailRoute: {
+				type: String,
+				default: 'task.list.detail'
+			}
 		},
 		watch: {
 			theTask(newVal) {

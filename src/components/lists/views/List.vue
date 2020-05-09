@@ -58,7 +58,7 @@
 			<div class="column">
 				<div class="tasks" v-if="tasks && tasks.length > 0" :class="{'short': isTaskEdit}">
 					<div class="task" v-for="t in tasks" :key="t.id">
-						<single-task-in-list :the-task="t" @taskUpdated="updateTasks"/>
+						<single-task-in-list :the-task="t" @taskUpdated="updateTasks" task-detail-route="task.detail"/>
 						<div @click="editTask(t.id)" class="icon settings" v-if="!list.isArchived">
 							<icon icon="pencil-alt"/>
 						</div>
