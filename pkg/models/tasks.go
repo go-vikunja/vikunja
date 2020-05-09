@@ -122,12 +122,20 @@ func (TaskReminder) TableName() string {
 	return "task_reminders"
 }
 
+type taskFilterConcatinator string
+
+const (
+	filterConcatAnd = "and"
+	filterConcatOr  = "or"
+)
+
 type taskOptions struct {
-	search  string
-	page    int
-	perPage int
-	sortby  []*sortParam
-	filters []*taskFilter
+	search       string
+	page         int
+	perPage      int
+	sortby       []*sortParam
+	filters      []*taskFilter
+	filterConcat taskFilterConcatinator
 }
 
 // ReadAll is a dummy function to still have that endpoint documented
@@ -144,6 +152,7 @@ type taskOptions struct {
 // @Param filter_by query string false "The name of the field to filter by. Accepts an array for multiple filters which will be chanied together, all supplied filter must match."
 // @Param filter_value query string false "The value to filter for."
 // @Param filter_comparator query string false "The comparator to use for a filter. Available values are `equals`, `greater`, `greater_equals`, `less` and `less_equals`. Defaults to `equals`"
+// @Param filter_concat query string false "The concatinator to use for filters. Available values are `and` or `or`. Defaults to `or`."
 // @Security JWTKeyAuth
 // @Success 200 {array} models.Task "The tasks"
 // @Failure 500 {object} models.Message "Internal error"
@@ -153,6 +162,11 @@ func (t *Task) ReadAll(a web.Auth, search string, page int, perPage int) (result
 }
 
 func getRawTasksForLists(lists []*List, opts *taskOptions) (tasks []*Task, resultCount int, totalItems int64, err error) {
+
+	// Set the default concatinator of filter variables to or if none was provided
+	if opts.filterConcat == "" {
+		opts.filterConcat = filterConcatOr
+	}
 
 	// Get all list IDs and get the tasks
 	var listIDs []int64
@@ -197,6 +211,7 @@ func getRawTasksForLists(lists []*List, opts *taskOptions) (tasks []*Task, resul
 	}
 
 	var filters = make([]builder.Cond, 0, len(opts.filters))
+	// To still find tasks with nil values, we exclude 0s when comparing with >/< values.
 	for _, f := range opts.filters {
 		switch f.comparator {
 		case taskFilterComparatorEquals:
@@ -204,13 +219,13 @@ func getRawTasksForLists(lists []*List, opts *taskOptions) (tasks []*Task, resul
 		case taskFilterComparatorNotEquals:
 			filters = append(filters, &builder.Neq{f.field: f.value})
 		case taskFilterComparatorGreater:
-			filters = append(filters, &builder.Gt{f.field: f.value})
+			filters = append(filters, builder.Or(&builder.Gt{f.field: f.value}, &builder.Eq{f.field: 0}))
 		case taskFilterComparatorGreateEquals:
-			filters = append(filters, &builder.Gte{f.field: f.value})
+			filters = append(filters, builder.Or(&builder.Gte{f.field: f.value}, &builder.Eq{f.field: 0}))
 		case taskFilterComparatorLess:
-			filters = append(filters, &builder.Lt{f.field: f.value})
+			filters = append(filters, builder.Or(&builder.Lt{f.field: f.value}, &builder.Eq{f.field: 0}))
 		case taskFilterComparatorLessEquals:
-			filters = append(filters, &builder.Lte{f.field: f.value})
+			filters = append(filters, builder.Or(&builder.Lte{f.field: f.value}, &builder.Eq{f.field: 0}))
 		}
 	}
 
@@ -230,8 +245,14 @@ func getRawTasksForLists(lists []*List, opts *taskOptions) (tasks []*Task, resul
 	}
 
 	if len(filters) > 0 {
-		query = query.Where(builder.Or(filters...))
-		queryCount = queryCount.Where(builder.Or(filters...))
+		if opts.filterConcat == filterConcatOr {
+			query = query.Where(builder.Or(filters...))
+			queryCount = queryCount.Where(builder.Or(filters...))
+		}
+		if opts.filterConcat == filterConcatAnd {
+			query = query.Where(builder.And(filters...))
+			queryCount = queryCount.Where(builder.And(filters...))
+		}
 	}
 
 	limit, start := getLimitFromPageIndex(opts.page, opts.perPage)

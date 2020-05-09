@@ -43,6 +43,8 @@ type TaskCollection struct {
 	// The comparator for field and value
 	FilterComparator    []string `query:"filter_comparator"`
 	FilterComparatorArr []string `query:"filter_comparator[]"`
+	// The way all filter conditions are concatenated together, can be either "and" or "or".,
+	FilterConcat string `query:"filter_concat"`
 
 	web.CRUDable `xorm:"-" json:"-"`
 	web.Rights   `xorm:"-" json:"-"`
@@ -90,6 +92,7 @@ func validateTaskField(fieldName string) error {
 // @Param filter_by query string false "The name of the field to filter by. Accepts an array for multiple filters which will be chanied together, all supplied filter must match."
 // @Param filter_value query string false "The value to filter for."
 // @Param filter_comparator query string false "The comparator to use for a filter. Available values are `equals`, `greater`, `greater_equals`, `less` and `less_equals`. Defaults to `equals`"
+// @Param filter_concat query string false "The concatinator to use for filters. Available values are `and` or `or`. Defaults to `or`."
 // @Security JWTKeyAuth
 // @Success 200 {array} models.Task "The tasks"
 // @Failure 500 {object} models.Message "Internal error"
@@ -123,10 +126,11 @@ func (tf *TaskCollection) ReadAll(a web.Auth, search string, page int, perPage i
 	}
 
 	taskopts := &taskOptions{
-		search:  search,
-		page:    page,
-		perPage: perPage,
-		sortby:  sort,
+		search:       search,
+		page:         page,
+		perPage:      perPage,
+		sortby:       sort,
+		filterConcat: taskFilterConcatinator(tf.FilterConcat),
 	}
 
 	taskopts.filters, err = getTaskFiltersByCollections(tf)

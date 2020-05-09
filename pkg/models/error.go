@@ -707,6 +707,33 @@ func (err ErrInvalidTaskFilterComparator) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrInvalidTaskFilterConcatinator represents an error where the provided task field is invalid
+type ErrInvalidTaskFilterConcatinator struct {
+	Concatinator taskFilterConcatinator
+}
+
+// IsErrInvalidTaskFilterConcatinator checks if an error is ErrInvalidTaskFilterConcatinator.
+func IsErrInvalidTaskFilterConcatinator(err error) bool {
+	_, ok := err.(ErrInvalidTaskFilterConcatinator)
+	return ok
+}
+
+func (err ErrInvalidTaskFilterConcatinator) Error() string {
+	return fmt.Sprintf("Task filter concatinator is invalid [Concatinator: %s]", err.Concatinator)
+}
+
+// ErrCodeInvalidTaskFilterConcatinator holds the unique world-error code of this error
+const ErrCodeInvalidTaskFilterConcatinator = 4018
+
+// HTTPError holds the http error description
+func (err ErrInvalidTaskFilterConcatinator) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeInvalidTaskFilterConcatinator,
+		Message:  fmt.Sprintf("The task filter concatinator '%s' is invalid.", err.Concatinator),
+	}
+}
+
 // =================
 // Namespace errors
 // =================

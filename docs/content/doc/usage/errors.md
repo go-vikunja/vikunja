@@ -77,6 +77,7 @@ This document describes the different errors Vikunja can return.
 | 4015 | 404 | The task comment does not exist. |
 | 4016 | 403 | Invalid task field. |
 | 4017 | 403 | Invalid task filter comparator. |
+| 4018 | 403 | Invalid task filter concatinator. |
 
 ### Namespace
 

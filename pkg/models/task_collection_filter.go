@@ -56,6 +56,12 @@ func getTaskFiltersByCollections(c *TaskCollection) (filters []*taskFilter, err 
 		c.FilterComparator = append(c.FilterComparator, c.FilterComparatorArr...)
 	}
 
+	if c.FilterConcat != "" && c.FilterConcat != filterConcatAnd && c.FilterConcat != filterConcatOr {
+		return nil, ErrInvalidTaskFilterConcatinator{
+			Concatinator: taskFilterConcatinator(c.FilterConcat),
+		}
+	}
+
 	filters = make([]*taskFilter, 0, len(c.FilterBy))
 	for i, f := range c.FilterBy {
 		filter := &taskFilter{
