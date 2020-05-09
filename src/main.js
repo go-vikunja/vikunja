@@ -2,6 +2,9 @@ import Vue from 'vue'
 import App from './App.vue'
 import router from './router'
 
+import {VERSION} from './version.json'
+console.info(`Vikunja frontend version ${VERSION}`)
+
 // Register the modal
 import Modal from './components/modal/Modal'
 Vue.component('modal', Modal)

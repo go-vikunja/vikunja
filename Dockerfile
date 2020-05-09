@@ -8,6 +8,7 @@ COPY .  ./
 RUN \
   # Build the frontend
   yarn install --frozen-lockfile && \
+  echo '{"VERSION": "'$(git describe --tags --always --abbrev=10 | sed 's/-/+/' | sed 's/^v//' | sed 's/-g/-/')'"}' > version.json && \
   yarn run build
 
 # Stage 2: copy 
