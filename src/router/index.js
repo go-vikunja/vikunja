@@ -15,6 +15,7 @@ import EditListComponent from '@/components/lists/EditList'
 import ShowTasksInRangeComponent from '@/components/tasks/ShowTasksInRange'
 import LinkShareAuthComponent from '../components/sharing/linkSharingAuth'
 import TaskDetailViewModal from '../components/tasks/TaskDetailViewModal'
+import TaskDetailView from '../components/tasks/TaskDetailView'
 // Namespace Handling
 import NewNamespaceComponent from '@/components/namespaces/NewNamespace'
 import EditNamespaceComponent from '@/components/namespaces/EditNamespace'
@@ -91,6 +92,11 @@ export default new Router({
 			component: EditListComponent
 		},
 		{
+			path: '/tasks/:id',
+			name: 'task.detail',
+			component: TaskDetailView,
+		},
+		{
 			path: '/lists/:listId',
 			name: 'list.index',
 			component: ShowListComponent,
@@ -123,13 +129,6 @@ export default new Router({
 					path: '/lists/:listId/table',
 					name: 'list.table',
 					component: Table,
-					children: [
-						{
-							path: '/tasks/:id',
-							name: 'task.table.detail',
-							component: TaskDetailViewModal,
-						},
-					],
 				},
 				{
 					path: '/lists/:listId/kanban',

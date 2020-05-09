@@ -85,13 +85,13 @@
 			<tbody>
 			<tr v-for="t in tasks" :key="t.id">
 				<td v-if="activeColumns.id">
-					<router-link :to="{name: 'task.table.detail', params: { id: t.id }}">{{ t.id }}</router-link>
+					<router-link :to="{name: 'task.detail', params: { id: t.id }}">{{ t.id }}</router-link>
 				</td>
 				<td v-if="activeColumns.done">
 					<div class="is-done" v-if="t.done">Done</div>
 				</td>
 				<td v-if="activeColumns.text">
-					<router-link :to="{name: 'task.table.detail', params: { id: t.id }}">{{ t.text }}</router-link>
+					<router-link :to="{name: 'task.detail', params: { id: t.id }}">{{ t.text }}</router-link>
 				</td>
 				<td v-if="activeColumns.priority">
 					<priority-label :priority="t.priority" :show-all="true"/>
