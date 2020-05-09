@@ -51,7 +51,7 @@
 						<router-link :to="{ name: $route.name, params: { id: t.id } }">
 							<span class="tasktext" :class="{ 'done': t.done}">
 								<span v-if="t.listId !== listId" class="different-list" v-tooltip="'This task belongs to a different list.'">
-									{{ $store.getters['namespaces/getListById'](t.listId).title }} >
+									{{ $store.getters['namespaces/getListById'](t.listId) === null ? '' : $store.getters['namespaces/getListById'](t.listId).title }} >
 								</span>
 								{{t.text}}
 							</span>
