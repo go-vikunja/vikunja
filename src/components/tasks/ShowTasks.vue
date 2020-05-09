@@ -39,10 +39,8 @@
 			this.taskService = new TaskService()
 			this.loadPendingTasks()
 		},
-		computed: {
-			undoneTasks: function () {
-				return this.tasks.filter(t => !t.done)
-			}
+		watch: {
+			'$route': 'loadPendingTasks',
 		},
 		methods: {
 			loadPendingTasks() {
