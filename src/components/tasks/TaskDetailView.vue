@@ -11,7 +11,7 @@
 			</div>
 			<h6 class="subtitle" v-if="parent && parent.namespace && parent.list">
 				{{ parent.namespace.name }} >
-				<router-link :to="{ name: 'list.index', params: { listId: parent.list.id } }">
+				<router-link :to="{ name: 'list.list', params: { listId: parent.list.id } }">
 					{{ parent.list.title }}
 				</router-link>
 			</h6>

@@ -68,7 +68,7 @@
 					this.$route.name !== 'list.table' &&
 					this.$route.name !== 'list.kanban'
 				) {
-					router.push({name: 'list.list', params: {id: this.$route.params.listId}})
+					router.replace({name: 'list.list', params: {id: this.$route.params.listId}})
 					return
 				}
 
