@@ -44,15 +44,26 @@
 		},
 		methods: {
 			loadPendingTasks() {
-				let params = {
+				const params = {
 					sort_by: ['due_date_unix', 'id'],
 					order_by: ['desc', 'desc'],
 					filter_by: ['done'],
 					filter_value: [false],
+					filter_comparator: ['equals'],
+					filter_concat: 'and',
 				}
 				if (!this.showAll) {
-					params.startdate = Math.round(+ this.startDate / 1000)
-					params.enddate = Math.round(+ this.endDate / 1000)
+					params.filter_by.push('start_date')
+					params.filter_value.push(Math.round(+ this.startDate / 1000))
+					params.filter_comparator.push('greater')
+
+					params.filter_by.push('end_date')
+					params.filter_value.push(Math.round(+ this.endDate / 1000))
+					params.filter_comparator.push('less')
+
+					params.filter_by.push('due_date')
+					params.filter_value.push(Math.round(+ this.endDate / 1000))
+					params.filter_comparator.push('less')
 				}
 
 				this.taskService.getAll({}, params)
@@ -64,8 +75,7 @@
 								}
 							}
 						}
-						this.$set(this, 'tasks', r)
-						this.sortTasks()
+						this.$set(this, 'tasks', r.filter(t => !t.done))
 					})
 					.catch(e => {
 						this.error(e, this)
