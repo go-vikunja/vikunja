@@ -5,6 +5,11 @@ import router from './router'
 import {VERSION} from './version.json'
 console.info(`Vikunja frontend version ${VERSION}`)
 
+// Make sure the api url does not contain a / at the end
+if(window.API_URL.substr(window.API_URL.length - 1, window.API_URL.length) === '/') {
+	window.API_URL = window.API_URL.substr(0, window.API_URL.length - 1)
+}
+
 // Register the modal
 import Modal from './components/modal/Modal'
 Vue.component('modal', Modal)
