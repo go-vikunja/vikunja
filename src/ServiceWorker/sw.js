@@ -10,7 +10,7 @@ workbox.routing.registerRoute(
 
 // Always send api reqeusts through the network
 workbox.routing.registerRoute(
-	new RegExp('(\\/)?api\\/v1\\/.*$'),
+	new RegExp('api\\/v1\\/.*$'),
 	new workbox.strategies.NetworkOnly()
 );
 
