@@ -1,9 +1,14 @@
 # Changelog
 
+## v3.2.0 - 2020-05-10
+
+- Add support for loading multiple files and directories
+  ([#65](https://github.com/go-testfixtures/testfixtures/pull/65)).
+
 ## v3.1.2 - 2020-04-26
 
 - Dump: Fix column order in generated YAML files
-  [#62](https://github.com/go-testfixtures/testfixtures/pull/62)
+  ([#62](https://github.com/go-testfixtures/testfixtures/pull/62)).
 
 ## v3.1.1 - 2020-01-11
 

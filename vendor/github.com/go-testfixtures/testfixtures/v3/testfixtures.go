@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"path"
 	"path/filepath"
 	"regexp"
@@ -185,7 +186,7 @@ func Directory(dir string) func(*Loader) error {
 		if err != nil {
 			return err
 		}
-		l.fixturesFiles = fixtures
+		l.fixturesFiles = append(l.fixturesFiles, fixtures...)
 		return nil
 	}
 }
@@ -197,7 +198,19 @@ func Files(files ...string) func(*Loader) error {
 		if err != nil {
 			return err
 		}
-		l.fixturesFiles = fixtures
+		l.fixturesFiles = append(l.fixturesFiles, fixtures...)
+		return nil
+	}
+}
+
+// Paths inform Loader to load a given set of YAML files and directories.
+func Paths(paths ...string) func(*Loader) error {
+	return func(l *Loader) error {
+		fixtures, err := l.fixturesFromPaths(paths...)
+		if err != nil {
+			return err
+		}
+		l.fixturesFiles = append(l.fixturesFiles, fixtures...)
 		return nil
 	}
 }
@@ -529,6 +542,34 @@ func (l *Loader) fixturesFromFiles(fileNames ...string) ([]*fixtureFile, error) 
 			return nil, err
 		}
 		fixtureFiles = append(fixtureFiles, fixture)
+	}
+
+	return fixtureFiles, nil
+}
+
+func (l *Loader) fixturesFromPaths(paths ...string) ([]*fixtureFile, error) {
+	fixtureExtractor := func(p string, isDir bool) ([]*fixtureFile, error) {
+		if isDir {
+			return l.fixturesFromDir(p)
+		}
+
+		return l.fixturesFromFiles(p)
+	}
+
+	var fixtureFiles []*fixtureFile
+
+	for _, p := range paths {
+		f, err := os.Stat(p)
+		if err != nil {
+			return nil, fmt.Errorf(`testfixtures: could not stat path "%s": %w`, p, err)
+		}
+
+		fixtures, err := fixtureExtractor(p, f.IsDir())
+		if err != nil {
+			return nil, err
+		}
+
+		fixtureFiles = append(fixtureFiles, fixtures...)
 	}
 
 	return fixtureFiles, nil

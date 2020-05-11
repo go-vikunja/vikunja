@@ -192,6 +192,25 @@ if err != nil {
 }
 ```
 
+With `Paths` option, you can specify the paths that fixtures will load
+from. Path can be directory or file. If directory, we will search YAML files
+in it.
+
+```go
+fixtures, err := testfixtures.New(
+        testfixtures.Database(db),
+        testfixtures.Dialect("postgres"),
+        testfixtures.Paths(
+                "fixtures/orders.yml",
+                "fixtures/customers.yml",
+                "common_fixtures/users"
+        ),
+)
+if err != nil {
+        ...
+}
+```
+
 ## Security check
 
 In order to prevent you from accidentally wiping the wrong database, this

@@ -76,7 +76,7 @@ github.com/go-redis/redis/v7/internal/proto
 github.com/go-redis/redis/v7/internal/util
 # github.com/go-sql-driver/mysql v1.5.0
 github.com/go-sql-driver/mysql
-# github.com/go-testfixtures/testfixtures/v3 v3.1.2
+# github.com/go-testfixtures/testfixtures/v3 v3.2.0
 github.com/go-testfixtures/testfixtures/v3
 # github.com/golang/protobuf v1.4.0
 github.com/golang/protobuf/proto
