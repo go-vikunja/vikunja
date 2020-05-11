@@ -2,6 +2,15 @@
 	<span>
 		<fancycheckbox v-model="task.done" @change="markAsDone" :disabled="isArchived"/>
 		<router-link :to="{ name: taskDetailRoute, params: { id: task.id } }" class="tasktext"  :class="{ 'done': task.done}">
+
+			<router-link
+					v-if="showList && $store.getters['lists/getListById'](task.listId) !== null"
+					v-tooltip="`This task belongs to list '${$store.getters['lists/getListById'](task.listId).title}'`"
+					:to="{ name: 'list.list', params: { listId: task.listId } }"
+					class="task-list">
+				{{ $store.getters['lists/getListById'](task.listId).title }}
+			</router-link>
+
 			<!-- Show any parent tasks to make it clear this task is a sub task of something -->
 			<span class="parent-tasks" v-if="typeof task.relatedTasks.parenttask !== 'undefined'">
 				<template v-for="(pt, i) in task.relatedTasks.parenttask">
@@ -61,7 +70,11 @@
 			taskDetailRoute: {
 				type: String,
 				default: 'task.list.detail'
-			}
+			},
+			showList: {
+				type: Boolean,
+				default: false,
+			},
 		},
 		watch: {
 			theTask(newVal) {

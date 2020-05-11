@@ -54,6 +54,13 @@
         .overdue{
           color: $red;
         }
+
+        .task-list {
+          width: auto;
+          color: lighten($grey, 25%);
+          font-size: .9em;
+          vertical-align: text-bottom;
+        }
       }
 
       .tag {

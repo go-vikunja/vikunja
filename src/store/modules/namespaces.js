@@ -47,16 +47,6 @@ export default {
 		},
 	},
 	getters: {
-		getListById: state => id => {
-			for (const n in state.namespaces) {
-				for (const l in state.namespaces[n].lists) {
-					if (state.namespaces[n].lists[l].id === id) {
-						return state.namespaces[n].lists[l]
-					}
-				}
-			}
-			return null
-		},
 		getListAndNamespaceById: state => listId => {
 			for (const n in state.namespaces) {
 				for (const l in state.namespaces[n].lists) {
@@ -78,6 +68,17 @@ export default {
 			return namespaceService.getAll({}, {is_archived: true})
 				.then(r => {
 					ctx.commit('namespaces', r)
+
+					// Put all lists in the list state
+					const lists = []
+					r.forEach(n => {
+						n.lists.forEach(l => {
+							lists.push(l)
+						})
+					})
+
+					ctx.commit('lists/addLists', lists, {root:true})
+
 					return Promise.resolve()
 				})
 				.catch(e => {

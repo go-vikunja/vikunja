@@ -9,7 +9,7 @@
 		<div class="spinner" :class="{ 'is-loading': taskService.loading}"></div>
 		<div class="tasks" v-if="tasks && tasks.length > 0">
 			<div class="task" v-for="t in tasks" :key="t.id">
-				<single-task-in-list :the-task="t" @taskUpdated="updateTasks"/>
+				<single-task-in-list :the-task="t" @taskUpdated="updateTasks" :show-list="true"/>
 			</div>
 		</div>
 	</div>
