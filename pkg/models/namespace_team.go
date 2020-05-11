@@ -220,7 +220,7 @@ func (tn *TeamNamespace) Update() (err error) {
 	}
 
 	_, err = x.
-		Where("namespace_id = ? AND team_id = ?", tn.TeamID, tn.TeamID).
+		Where("namespace_id = ? AND team_id = ?", tn.NamespaceID, tn.TeamID).
 		Cols("right").
 		Update(tn)
 	return
