@@ -19,6 +19,17 @@ export default {
 					return Promise.reject(e)
 				})
 		},
+		delete(ctx, task) {
+			const taskService = new TaskService()
+			return taskService.delete(task)
+				.then(t => {
+					ctx.commit('kanban/removeTaskInBucket', task, {root: true})
+					return Promise.resolve(t)
+				})
+				.catch(e => {
+					return Promise.reject(e)
+				})
+		},
 		// Adds a task attachment in store.
 		// This is an action to be able to commit other mutations
 		addTaskAttachment(ctx, {taskId, attachment}) {

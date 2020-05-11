@@ -67,6 +67,26 @@ export default {
 			const bi = filterObject(state.buckets, b => b.id === task.bucketId)
 			state.buckets[bi].tasks.push(task)
 		},
+		removeTaskInBucket(state, task) {
+			// If this gets invoked without any tasks actually loaded, we can save the hassle of finding the task
+			if (state.buckets.length === 0) {
+				return
+			}
+
+			for (const b in state.buckets) {
+				if (state.buckets[b].id === task.bucketId) {
+					for (const t in state.buckets[b].tasks) {
+						if (state.buckets[b].tasks[t].id === task.id) {
+							const bucket = state.buckets[b]
+							bucket.tasks.splice(t, 1)
+							Vue.set(state.buckets, b, bucket)
+							return
+						}
+					}
+					return
+				}
+			}
+		}
 	},
 	getters: {
 		getTaskById: state => id => {

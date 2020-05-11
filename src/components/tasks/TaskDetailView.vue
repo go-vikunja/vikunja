@@ -488,7 +488,7 @@
 				this.$nextTick(() => this.$refs[fieldName].$el.focus())
 			},
 			deleteTask() {
-				this.taskService.delete(this.task)
+				this.$store.dispatch('tasks/delete', this.task)
 					.then(() => {
 						this.success({message: 'The task been deleted successfully.'}, this)
 						router.back()
