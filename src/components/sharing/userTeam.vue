@@ -76,7 +76,7 @@
 					</td>
 					<td class="actions" v-if="userIsAdmin">
 						<div class="select">
-							<select @change="toggleType(s)" v-model="selectedRight" class="button buttonright">
+							<select @change="toggleType(s)" v-model="selectedRight[s.id]" class="button buttonright">
 								<option :value="rights.READ" :selected="s.right === rights.READ">Read only</option>
 								<option :value="rights.READ_WRITE" :selected="s.right === rights.READ_WRITE">Read & write</option>
 								<option :value="rights.ADMIN" :selected="s.right === rights.ADMIN">Admin</option>
@@ -154,7 +154,7 @@
 				found: [],
 				searchLabel: '',
 				rights: rights,
-				selectedRight: rights.READ,
+				selectedRight: {},
 
 				typeString: '',
 				sharables: [], // This holds either teams or users who this namepace or list is shared with
@@ -213,6 +213,7 @@
 				this.stuffService.getAll(this.stuffModel)
 					.then(r => {
 						this.$set(this, 'sharables', r)
+						r.forEach(s => this.$set(this.selectedRight, s.id, s.right))
 					})
 					.catch(e => {
 						this.error(e, this)
@@ -267,13 +268,13 @@
 					})
 			},
 			toggleType(sharable) {
-				if (this.selectedRight !== rights.ADMIN &&
-					this.selectedRight !== rights.READ &&
-					this.selectedRight !== rights.READ_WRITE
+				if (this.selectedRight[sharable.id] !== rights.ADMIN &&
+					this.selectedRight[sharable.id] !== rights.READ &&
+					this.selectedRight[sharable.id] !== rights.READ_WRITE
 				) {
-					this.selectedRight = rights.READ
+					this.selectedRight[sharable.id] = rights.READ
 				}
-				this.stuffModel.right = this.selectedRight
+				this.stuffModel.right = this.selectedRight[sharable.id]
 
 
 				if (this.shareType === 'user') {
@@ -286,7 +287,7 @@
 					.then(r => {
 						for (const i in this.sharables) {
 							if (
-								(this.sharables[i].id === this.stuffModel.userId && this.shareType === 'user') ||
+								(this.sharables[i].username === this.stuffModel.userId && this.shareType === 'user') ||
 								(this.sharables[i].id === this.stuffModel.teamId && this.shareType === 'team')
 							) {
 								this.$set(this.sharables[i], 'right', r.right)
