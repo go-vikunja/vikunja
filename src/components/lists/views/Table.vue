@@ -112,7 +112,7 @@
 				<date-table-cell :date="t.dueDate" v-if="activeColumns.dueDate"/>
 				<date-table-cell :date="t.startDate" v-if="activeColumns.startDate"/>
 				<date-table-cell :date="t.endDate" v-if="activeColumns.endDate"/>
-				<td v-if="activeColumns.percentDone">{{ t.percentDone }}%</td>
+				<td v-if="activeColumns.percentDone">{{ t.percentDone * 100 }}%</td>
 				<date-table-cell :date="t.created" v-if="activeColumns.created"/>
 				<date-table-cell :date="t.updated" v-if="activeColumns.updated"/>
 				<td v-if="activeColumns.createdBy">
