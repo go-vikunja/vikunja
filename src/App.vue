@@ -267,7 +267,14 @@
 		},
 		beforeCreate() {
 			// Check if the user is already logged in, if so, redirect them to the homepage
-			if (!this.userAuthenticated && this.$route.name !== 'login') {
+			if (
+				!this.userAuthenticated &&
+				this.$route.name !== 'login' &&
+				this.$route.name !== 'getPasswordReset' &&
+				this.$route.name !== 'passwordReset' &&
+				this.$route.name !== 'register' &&
+				this.$route.name !== 'linkShareAuth'
+			) {
 				router.push({name: 'login'})
 			}
 		},
