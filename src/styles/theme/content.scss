@@ -1,10 +1,10 @@
-.app-container{
+.app-container {
   min-height: calc(100vh - 65px);
   @media screen and (max-width: $tablet) {
     padding-top: $navbar-height + 0.75rem;
   }
 
-  .app-content{
+  .app-content {
     padding: $navbar-height + 1.5rem 1.5em 0 1.5em;
     z-index: 2;
     margin-left: 17vw;
@@ -15,8 +15,19 @@
       min-height: calc(100vh - 4rem);
     }
 
-    .card{
+    .card {
       background: #fff;
     }
+  }
+}
+
+.noauth-container {
+  width: 450px;
+  margin: 0 auto;
+  padding: 1rem 0;
+
+  @media screen and (max-width: calc(450px + 2rem)) {
+    width: 100%;
+    padding: 1rem;
   }
 }

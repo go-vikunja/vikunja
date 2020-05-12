@@ -187,19 +187,17 @@
 				</div>
 			</div>
 			<div v-else>
-				<div class="container">
-					<div class="column is-4 is-offset-4">
-						<img src="/images/logo-full.svg" alt="Vikunja"/>
-						<div class="message is-info" v-if="motd !== ''">
-							<div class="message-header">
-								<p>Info</p>
-							</div>
-							<div class="message-body">
-								{{ motd }}
-							</div>
+				<div class="noauth-container">
+					<img src="/images/logo-full.svg" alt="Vikunja"/>
+					<div class="message is-info" v-if="motd !== ''">
+						<div class="message-header">
+							<p>Info</p>
 						</div>
-						<router-view/>
+						<div class="message-body">
+							{{ motd }}
+						</div>
 					</div>
+					<router-view/>
 				</div>
 			</div>
 			<notification/>
