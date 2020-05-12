@@ -74,6 +74,8 @@ redis:
 
 cors:
   # Whether to enable or disable cors headers.
+  # Note: If you want to put the frontend and the api on seperate domains or ports, you will need to enable this.
+  #       Otherwise the frontend won't be able to make requests to the api through the browser.
   enable: true
   # A list of origins which may access the api.
   origins:
