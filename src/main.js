@@ -14,10 +14,6 @@ if(window.API_URL.substr(window.API_URL.length - 1, window.API_URL.length) === '
 import Modal from './components/modal/Modal'
 Vue.component('modal', Modal)
 
-// Register the task overview component
-import TaskOverview from './components/tasks/ShowTasks'
-Vue.component('TaskOverview', TaskOverview)
-
 // Add CSS
 import './styles/vikunja.scss'
 

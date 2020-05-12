@@ -9,27 +9,24 @@
 		>
 			Import your data into Vikunja
 		</router-link>
-		<TaskOverview :show-all="true"/>
+		<ShowTasks :show-all="true"/>
 	</div>
 </template>
 
 <script>
-	import router from '../router'
 	import {mapState} from 'vuex'
+	import ShowTasks from './tasks/ShowTasks'
 
 	export default {
-		name: "Home",
+		name: 'Home',
+		components: {
+			ShowTasks,
+		},
 		data() {
 			return {
 				loading: false,
 				currentDate: new Date(),
 				tasks: []
-			}
-		},
-		beforeMount() {
-			// Check if the user is already logged in, if so, redirect him to the homepage
-			if (!this.authenticated) {
-				router.push({name: 'login'})
 			}
 		},
 		computed: mapState({

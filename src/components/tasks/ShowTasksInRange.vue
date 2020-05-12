@@ -1,6 +1,6 @@
 <template>
 	<div class="content has-text-centered">
-		<TaskOverview
+		<ShowTasks
 			:start-date="startDate"
 			:end-date="endDate"
 		/>
@@ -8,8 +8,13 @@
 </template>
 
 <script>
+	import ShowTasks from './ShowTasks'
+
 	export default {
-		name: "ShowTasksInRange",
+		name: 'ShowTasksInRange',
+		components: {
+			ShowTasks,
+		},
 		data() {
 			return {
 				startDate: new Date(this.$route.params.startDateUnix),

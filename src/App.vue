@@ -265,6 +265,12 @@
 				router.push({name: 'login'})
 			}
 		},
+		beforeCreate() {
+			// Check if the user is already logged in, if so, redirect them to the homepage
+			if (!this.userAuthenticated && this.$route.name !== 'login') {
+				router.push({name: 'login'})
+			}
+		},
 		created() {
 			this.$store.dispatch('config/update')
 			this.$store.dispatch('auth/checkAuth')
