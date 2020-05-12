@@ -73,11 +73,12 @@ func ListUsersForList(c echo.Context) error {
 	}
 
 	list := models.List{ID: listID}
-	currentUser, err := user.GetCurrentUser(c)
+	auth, err := GetAuthFromClaims(c)
 	if err != nil {
 		return handler.HandleHTTPError(err, c)
 	}
-	canRead, err := list.CanRead(currentUser)
+
+	canRead, err := list.CanRead(auth)
 	if err != nil {
 		return handler.HandleHTTPError(err, c)
 	}

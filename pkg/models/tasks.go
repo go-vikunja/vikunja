@@ -553,9 +553,16 @@ func (t *Task) Create(a web.Auth) (err error) {
 		return
 	}
 
-	u, err := user.GetUserByID(a.GetID())
-	if err != nil {
-		return err
+	if _, is := a.(*LinkSharing); is {
+		// A negative user id indicates user share links
+		t.CreatedByID = a.GetID() * -1
+	} else {
+		u, err := user.GetUserByID(a.GetID())
+		if err != nil {
+			return err
+		}
+		t.CreatedByID = u.ID
+		t.CreatedBy = u
 	}
 
 	// Generate a uuid if we don't already have one
@@ -586,8 +593,6 @@ func (t *Task) Create(a web.Auth) (err error) {
 	}
 
 	t.Index = latestTask.Index + 1
-	t.CreatedByID = u.ID
-	t.CreatedBy = u
 	// If no position was supplied, set a default one
 	if t.Position == 0 {
 		t.Position = float64(latestTask.ID+1) * math.Pow(2, 16)

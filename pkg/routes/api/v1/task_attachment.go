@@ -18,7 +18,6 @@ package v1
 
 import (
 	"code.vikunja.io/api/pkg/models"
-	user2 "code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web/handler"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -46,11 +45,12 @@ func UploadTaskAttachment(c echo.Context) error {
 	}
 
 	// Rights check
-	user, err := user2.GetCurrentUser(c)
+	auth, err := GetAuthFromClaims(c)
 	if err != nil {
 		return handler.HandleHTTPError(err, c)
 	}
-	can, err := taskAttachment.CanCreate(user)
+
+	can, err := taskAttachment.CanCreate(auth)
 	if err != nil {
 		return handler.HandleHTTPError(err, c)
 	}
@@ -83,7 +83,7 @@ func UploadTaskAttachment(c echo.Context) error {
 		}
 		defer f.Close()
 
-		err = ta.NewAttachment(f, file.Filename, uint64(file.Size), user)
+		err = ta.NewAttachment(f, file.Filename, uint64(file.Size), auth)
 		if err != nil {
 			r.Errors = append(r.Errors, handler.HandleHTTPError(err, c))
 			continue
@@ -115,11 +115,11 @@ func GetTaskAttachment(c echo.Context) error {
 	}
 
 	// Rights check
-	user, err := user2.GetCurrentUser(c)
+	auth, err := GetAuthFromClaims(c)
 	if err != nil {
 		return handler.HandleHTTPError(err, c)
 	}
-	can, err := taskAttachment.CanRead(user)
+	can, err := taskAttachment.CanRead(auth)
 	if err != nil {
 		return handler.HandleHTTPError(err, c)
 	}
