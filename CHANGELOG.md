@@ -7,6 +7,99 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 All releases can be found on https://code.vikunja.io/api/releases.
 
+## [0.13] - 2020-05-12
+
+#### Added
+
+* Add 2fa for authentification (#383)
+* Add categories to error docs
+* Add changing email for users
+* Add community link
+* Add configuration options for log level
+* Add creating a new first bucket when creating a new list
+* Add docs for changing frontend url
+* Add endpoint to disable totp auth
+* Add endpoint to get the current users totp status
+* Add explanation to docs about cors
+* Add github token for renovate (#164)
+* Add gosec static analysis
+* Add moving tasks between lists (#389)
+* Add real buckets for tasks which don't have one (#446)
+* Add traefik 2 example configuration
+* Configure Renovate (#159)
+* Kanban (#393)
+* Task filters (#243)
+* Task Position (#412)
+
+#### Fixed
+
+* Add checking and logging when trying to put a task into a nonexisting bucket
+* Fix bucket ID being reset with no need to do so
+* Fix creating new things with a link share auth
+* Fix dependencies
+* Fix gosec in drone
+* Fix link share creation & creating admin link shares without admin rights
+* Fix moving tasks back into the empty (ID: 0) bucket
+* Fix moving tasks in buckets
+* Fix not moving its bucket when moving a task between lists
+* Fix pagination count for task collection
+* Fix parsing array style comparators by query param
+* Fix reference to reverse proxies in docs
+* Fix removing the last bucket
+* Fix replace statements for tail
+* Fix team rights not updating for namespace rights
+* Fix tests after renaming json fields to snake_case
+* Fix total label count when getting all labels (#477)
+* Remove setting task bucket to 0
+* Task Filter Fixes (#495)
+
+#### Changed
+
+* Change all json fields to snake_case
+* Change totp secret datatype from varchar to text
+* Update alpine Docker tag to v3.11 (#160)
+* Update docs theme
+* Update github.com/c2h5oh/datasize commit hash to 28bbd47 (#212)
+* Update github.com/gordonklaus/ineffassign commit hash to 7953dde (#233)
+* Update github.com/jgautheron/goconst commit hash to cda7ea3 (#228)
+* Update github.com/shurcooL/httpfs commit hash to 8d4bc4b (#229)
+* Update golang.org/x/crypto commit hash to 056763e (#222)
+* Update golang.org/x/crypto commit hash to 06a226f (#504)
+* Update golang.org/x/crypto commit hash to 0848c95 (#371)
+* Update golang.org/x/crypto commit hash to 3c4aac8 (#419)
+* Update golang.org/x/crypto commit hash to 44a6062 (#429)
+* Update golang.org/x/crypto commit hash to 4b2356b (#475)
+* Update golang.org/x/crypto commit hash to 4bdfaf4 (#438)
+* Update golang.org/x/crypto commit hash to 729f1e8 (#458)
+* Update golang.org/x/crypto commit hash to a76a400 (#411)
+* Update golang.org/x/lint commit hash to 738671d (#223)
+* Update module go-redis/redis to v6.15.7 (#234)
+* Update module go-redis/redis to v6.15.7 (#290)
+* Update module go-redis/redis to v7 (#277)
+* Update module go-redis/redis to v7 (#309)
+* Update module go-testfixtures/testfixtures/v3 to v3.1.2 (#457)
+* Update module go-testfixtures/testfixtures/v3 to v3.2.0 (#505)
+* Update module imdario/mergo to v0.3.9 (#238)
+* Update module labstack/echo/v4 to v4.1.16 (#241)
+* Update module lib/pq to v1.4.0 (#428)
+* Update module lib/pq to v1.5.0 (#476)
+* Update module lib/pq to v1.5.1 (#485)
+* Update module lib/pq to v1.5.2 (#491)
+* Update module olekukonko/tablewriter to v0.0.4 (#240)
+* Update module prometheus/client_golang to v0.9.4 (#245)
+* Update module prometheus/client_golang to v1
+* Update module prometheus/client_golang to v1.6.0 (#463)
+* Update module spf13/cobra to v0.0.7 (#271)
+* Update module spf13/viper to v1.6.2 (#272)
+* Update module spf13/viper to v1.6.3 (#291)
+* Update module spf13/viper to v1.7.0 (#494)
+* Update module stretchr/testify to v1.5.1 (#274)
+* Update Renovate Configuration (#161)
+* Update src.techknowlogick.com/xgo commit hash to bb0faa3 (#279)
+* Update src.techknowlogick.com/xgo commit hash to c43d4c4 (#224)
+* Update xorm redis cacher to use the xorm logger instead of a special seperate one
+* Update xorm to v1 (#323)
+
 ## [0.12] - 2020-04-04
 
 #### Added 
