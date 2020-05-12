@@ -9,6 +9,129 @@ All releases can be found on https://code.vikunja.io/frontend/releases.
 
 The releases aim at the api versions which is why there are missing versions.
 
+## [0.13] - 2020-05-12
+
+#### Added 
+
+* Add docker run script to change api url on startup
+* Add github token for renovate (#89)
+* Add input length validation for team names
+* Add list title in overview page
+* Add logging frontend version to console on startup
+* Add moving tasks between lists
+* Add scrolling for task table view
+* Add telegram release notificiation (#98)
+* Add user settings (#108)
+* Better responsive layout for unauthenticated pages
+* Change default api url to 3456 (Vikunja default)
+* Configure Renovate (#80)
+* Docker multistage build (#113)
+* Don't open task detail in popup for list and table view
+* Don't show the llama background when on mobile
+* Highlight the current list when something list related is called
+* Kanban (#118)
+* Make api url configurable in index.html
+* Make "Move task to different list" wording shorter
+* Make sure the api url does not have a / at the end
+* Show parent list and namespace for tasks in detail views
+* Show the list of a related task if it belongs to a different list
+* TOTP (#109)
+* Open popup detail view when opening from task overview
+* Vuex (#126)
+
+#### Fixed
+
+* Fetch tags when building in ci to display proper versions
+* Fix attachment icon
+* Fix avatar url
+* Fix bucket spacing on kanban board
+* Fix changing api url when releasing
+* Fix closing of notifications by clicking on it not working
+* Fix creating a new task on a list when in list view
+* Fix date table cell getting wrong data
+* Fix %done in table view
+* Fix drone config
+* Fix id params not being named correctly
+* Fix listId not changing when switching between lists
+* Fix listId not defined in list view switcher
+* Fix loading state for kanban board
+* Fix maintaining the current page for the list view when navigating back from another page
+* Fix navigating back to list view after deleting a task
+* Fix not all labels being shown
+* Fix not redirecting to login page after logging out
+* Fix not re-loading tasks when switching between overviews
+* Fix opening link share list view
+* Fix pagination for tasks
+* Fix parsing nested array with non-objects when updating
+* Fix parsing nested models
+* Fix redirecting for unauthenticated pages to login
+* Fix redirecting to list view from task detail
+* Fix related tasks input size
+* Fix related tasks list being too large
+* Fix setting api url when building docker image
+* Fix sharing rights not displayed correctly
+* Fix task modal with when attachments are present
+* Fix task relation kind dropdown
+* Fix task sort parameters
+* Fix task title overflowing in detail view
+* Fix team managment (#121)
+* Fix trying to load the current tasks even when not logged in (Fixes #133)
+* Fix undefined getter for related tasks
+* Fix uploading attachments
+* Fix user search bar not hiding in edit team view
+* Fix using filters for overview views
+* Fix version console log when compiling for Docker
+* Let labels take all available space on tasks
+
+#### Changed
+
+* Less explicit matching of api routes for service worker
+* Make all api fields snake_case (#105)
+* Make the task font size smaller for task cards
+* Move conversion of snake_case to camelCase to model to make recursive models still work
+* Only set fullpage state to false if the page is actually fullpage
+* Only show undone tasks on task overview page
+* Pin dependencies (#106)
+* Pin dependencies (#81)
+* Pin dependency vue-smooth-dnd to 0.8.1 (#120)
+* Pin dependency vuex to 3.3.0 (#128)
+* Pluralize related task kinds if there is more than one
+* Remove debug log
+* Remove debug logging
+* Remove dependency in docker build step when releasing
+* Remove dependency in docker build step when releasing latest
+* Remove llama-upside-down.svg
+* Remove task in kanban state when removing in task detail view
+* Switch docker image to node for building
+* Update dependency axios to v0.19.2 (#83)
+* Update dependency babel-eslint to v10.1.0 (#84)
+* Update dependency bulma to v0.8.1 (#85)
+* Update dependency bulma to v0.8.2 (#104)
+* Update dependency copy-to-clipboard to v3.3.1 (#100)
+* Update dependency core-js to v3.6.4 (#101)
+* Update dependency core-js to v3.6.5 (#102)
+* Update dependency date-fns to v2.11.1 (#88)
+* Update dependency date-fns to v2.12.0 (#103)
+* Update dependency date-fns to v2.13.0 (#127)
+* Update dependency eslint-plugin-vue to v6.2.2 (#91)
+* Update dependency eslint to v6.8.0 (#90)
+* Update dependency eslint to v7 (#129)
+* Update dependency node-sass to v4.13.1 (#92)
+* Update dependency node-sass to v4.14.0 (#119)
+* Update dependency node-sass to v4.14.1 (#125)
+* Update dependency register-service-worker to v1.7.1 (#93)
+* Update dependency sass-loader to v8.0.2 (#94)
+* Update dependency v-tooltip to v2.0.3 (#95)
+* Update dependency vue-easymde to v1.2.0 (#116)
+* Update dependency vue-router to v3.1.6 (#96)
+* Update dependency vuex to v3.4.0 (#132)
+* Update Font Awesome (#82)
+* Update Node.js to v13.14.0 (#123)
+* Update tasks in kanban board after editing them in task detail view (#130)
+* Update vue-cli monorepo to v4.3.0 (#97)
+* Update vue-cli monorepo to v4.3.1 (#99)
+* Upgrade vue-cli
+
 ## [0.12] - 2020-04-04
 
 #### Added
