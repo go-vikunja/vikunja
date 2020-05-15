@@ -89,6 +89,24 @@ func TestTaskCollection(t *testing.T) {
 			assert.NotContains(t, rec.Body.String(), `task #13`)
 			assert.NotContains(t, rec.Body.String(), `task #14`)
 		})
+		t.Run("Search case insensitive", func(t *testing.T) {
+			rec, err := testHandler.testReadAllWithUser(url.Values{"s": []string{"tASk #6"}}, urlParams)
+			assert.NoError(t, err)
+			assert.NotContains(t, rec.Body.String(), `task #1`)
+			assert.NotContains(t, rec.Body.String(), `task #2`)
+			assert.NotContains(t, rec.Body.String(), `task #3`)
+			assert.NotContains(t, rec.Body.String(), `task #4`)
+			assert.NotContains(t, rec.Body.String(), `task #5`)
+			assert.Contains(t, rec.Body.String(), `task #6`)
+			assert.NotContains(t, rec.Body.String(), `task #7`)
+			assert.NotContains(t, rec.Body.String(), `task #8`)
+			assert.NotContains(t, rec.Body.String(), `task #9`)
+			assert.NotContains(t, rec.Body.String(), `task #10`)
+			assert.NotContains(t, rec.Body.String(), `task #11`)
+			assert.NotContains(t, rec.Body.String(), `task #12`)
+			assert.NotContains(t, rec.Body.String(), `task #13`)
+			assert.NotContains(t, rec.Body.String(), `task #14`)
+		})
 		t.Run("Sort Order", func(t *testing.T) {
 			// TODO: Add more cases
 			// should equal priority asc

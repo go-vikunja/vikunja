@@ -17,6 +17,7 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/metrics"
 	"code.vikunja.io/api/pkg/timeutil"
@@ -235,8 +236,18 @@ func getRawTasksForLists(lists []*List, opts *taskOptions) (tasks []*Task, resul
 	queryCount := x.NewSession()
 
 	if len(opts.search) > 0 {
-		query = query.Where("text LIKE ?", "%"+opts.search+"%")
-		queryCount = queryCount.Where("text LIKE ?", "%"+opts.search+"%")
+		// Postgres' is case sensitive by default.
+		// To work around this, we're using ILIKE as opposed to normal LIKE statements.
+		// ILIKE is preferred over LOWER(text) LIKE for performance reasons.
+		// See https://stackoverflow.com/q/7005302/10924593
+		// Seems okay to use that now, we may need to find a better solution overall in the future.
+		if config.DatabaseType.GetString() == "postgres" {
+			query = query.Where("text ILIKE ?", "%"+opts.search+"%")
+			queryCount = queryCount.Where("text ILIKE ?", "%"+opts.search+"%")
+		} else {
+			query = query.Where("text LIKE ?", "%"+opts.search+"%")
+			queryCount = queryCount.Where("text LIKE ?", "%"+opts.search+"%")
+		}
 	}
 
 	if len(listIDs) > 0 {
