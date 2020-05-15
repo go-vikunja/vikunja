@@ -211,30 +211,19 @@ func (n *Namespace) ReadAll(a web.Auth, search string, page int, perPage int) (r
 		return all, 0, 0, err
 	}
 
-	// Get all users
-	users := []*user.User{}
-	err = x.Select("users.*").
-		Table("namespaces").
-		Join("LEFT", "team_namespaces", "namespaces.id = team_namespaces.namespace_id").
-		Join("LEFT", "team_members", "team_members.team_id = team_namespaces.team_id").
-		Join("LEFT", "users_namespace", "users_namespace.namespace_id = namespaces.id").
-		Join("INNER", "users", "users.id = namespaces.owner_id").
-		Where("team_members.user_id = ?", doer.ID).
-		Or("namespaces.owner_id = ?", doer.ID).
-		Or("users_namespace.user_id = ?", doer.ID).
-		And("namespaces.is_archived = ?", n.IsArchived).
-		Where(isArchivedCond).
-		GroupBy("users.id").
-		Find(&users)
-
-	if err != nil {
-		return all, 0, 0, err
-	}
-
 	// Make a list of namespace ids
 	var namespaceids []int64
+	var userIDs []int64
 	for _, nsp := range all {
 		namespaceids = append(namespaceids, nsp.ID)
+		userIDs = append(userIDs, nsp.OwnerID)
+	}
+
+	// Get all owners
+	userMap := make(map[int64]*user.User)
+	err = x.In("id", userIDs).Find(&userMap)
+	if err != nil {
+		return all, 0, 0, err
 	}
 
 	// Get all lists
@@ -287,24 +276,19 @@ func (n *Namespace) ReadAll(a web.Auth, search string, page int, perPage int) (r
 		return nil, 0, 0, err
 	}
 
+	nMap := make(map[int64]*NamespaceWithLists, len(all))
+
 	// Put objects in our namespace list
-	// TODO: Refactor this to use maps for better efficiency
-	for i, n := range all {
+	for _, n := range all {
 
 		// Users
-		for _, u := range users {
-			if n.OwnerID == u.ID {
-				all[i].Owner = u
-				break
-			}
-		}
+		n.Owner = userMap[n.OwnerID]
 
-		// List infos
-		for _, l := range lists {
-			if n.ID == l.NamespaceID {
-				all[i].Lists = append(all[i].Lists, l)
-			}
-		}
+		nMap[n.ID] = n
+	}
+
+	for _, list := range lists {
+		nMap[list.NamespaceID].Lists = append(nMap[list.NamespaceID].Lists, list)
 	}
 
 	numberOfTotalItems, err = x.
