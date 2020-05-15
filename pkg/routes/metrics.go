@@ -26,7 +26,6 @@ import (
 	"code.vikunja.io/api/pkg/user"
 	"github.com/labstack/echo/v4"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"time"
 )
 
 func setupMetrics(a *echo.Group) {
@@ -77,11 +76,6 @@ func setupMetrics(a *echo.Group) {
 		}
 	}
 
-	// init active users, sometimes we'll have garbage from previous runs in redis instead
-	if err := metrics.SetActiveUsers([]*metrics.ActiveUser{}); err != nil {
-		log.Fatalf("Could not set initial count for active users, error was %s", err)
-	}
-
 	a.GET("/metrics", echo.WrapHandler(promhttp.Handler()))
 }
 
@@ -110,22 +104,5 @@ func updateActiveUsersFromContext(c echo.Context) (err error) {
 		return
 	}
 
-	allActiveUsers, err := metrics.GetActiveUsers()
-	if err != nil {
-		return
-	}
-
-	var uupdated bool
-	for in, u := range allActiveUsers {
-		if u.UserID == auth.GetID() {
-			allActiveUsers[in].LastSeen = time.Now()
-			uupdated = true
-		}
-	}
-
-	if !uupdated {
-		allActiveUsers = append(allActiveUsers, &metrics.ActiveUser{UserID: auth.GetID(), LastSeen: time.Now()})
-	}
-
-	return metrics.SetActiveUsers(allActiveUsers)
+	return metrics.SetUserActive(auth)
 }

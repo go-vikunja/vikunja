@@ -19,6 +19,7 @@ package metrics
 import (
 	"bytes"
 	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/web"
 	"encoding/gob"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
@@ -37,7 +38,15 @@ type ActiveUser struct {
 	LastSeen time.Time
 }
 
+// ActiveUsersMap is the type used to save active users
+type ActiveUsersMap map[int64]*ActiveUser
+
+// activeUsers holds a map with all active users
+var activeUsers ActiveUsersMap
+
 func init() {
+	activeUsers = make(ActiveUsersMap)
+
 	promauto.NewGaugeFunc(prometheus.GaugeOpts{
 		Name: "vikunja_active_users",
 		Help: "The currently active users on this node",
@@ -57,8 +66,17 @@ func init() {
 	})
 }
 
+// SetUserActive sets a user as active and pushes it to redis
+func SetUserActive(a web.Auth) (err error) {
+	activeUsers[a.GetID()] = &ActiveUser{
+		UserID:   a.GetID(),
+		LastSeen: time.Now(),
+	}
+	return PushActiveUsers()
+}
+
 // GetActiveUsers returns the active users from redis
-func GetActiveUsers() (users []*ActiveUser, err error) {
+func GetActiveUsers() (users ActiveUsersMap, err error) {
 
 	activeUsersR, err := r.Get(ActiveUsersKey).Bytes()
 	if err != nil {
@@ -80,11 +98,11 @@ func GetActiveUsers() (users []*ActiveUser, err error) {
 	return
 }
 
-// SetActiveUsers sets the active users from redis
-func SetActiveUsers(users []*ActiveUser) (err error) {
+// PushActiveUsers pushed the content of the activeUsers map to redis
+func PushActiveUsers() (err error) {
 	var b bytes.Buffer
 	e := gob.NewEncoder(&b)
-	if err := e.Encode(users); err != nil {
+	if err := e.Encode(activeUsers); err != nil {
 		return err
 	}
 

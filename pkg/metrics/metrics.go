@@ -48,6 +48,11 @@ const (
 func InitMetrics() {
 	r = red.GetRedis()
 
+	// init active users, sometimes we'll have garbage from previous runs in redis instead
+	if err := PushActiveUsers(); err != nil {
+		log.Fatalf("Could not set initial count for active users, error was %s", err)
+	}
+
 	// Register total list count metric
 	promauto.NewGaugeFunc(prometheus.GaugeOpts{
 		Name: "vikunja_list_count",
