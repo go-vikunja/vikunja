@@ -781,6 +781,8 @@ honnef.co/go/tools v0.0.1-2019.2.3/go.mod h1:a3bituU0lyd329TUQxRnasdCoJDkEUEAqEt
 rsc.io/binaryregexp v0.2.0/go.mod h1:qTv7/COck+e2FymRvadv62gMdZztPaShugOCi3I+8D8=
 src.techknowlogick.com/xgo v0.0.0-20200408234745-bb0faa361273 h1:dE6ry9rVwDn3soD4wPCXqEG60AZTuhniZzHdnj3c+74=
 src.techknowlogick.com/xgo v0.0.0-20200408234745-bb0faa361273/go.mod h1:31CE1YKtDOrKTk9PSnjTpe6YbO6W/0LTYZ1VskL09oU=
+src.techknowlogick.com/xgo v0.0.0-20200514233805-209a5cf70012 h1:k1/qGRpsaGka4IHT2UIUdPqM6+oo3O7+8S3ACN2kJZQ=
+src.techknowlogick.com/xgo v0.0.0-20200514233805-209a5cf70012/go.mod h1:31CE1YKtDOrKTk9PSnjTpe6YbO6W/0LTYZ1VskL09oU=
 src.techknowlogick.com/xormigrate v1.2.0 h1:bq9JaI48bxB+OddMghicjmV7sGmBUogJq4HmTN0DOcw=
 src.techknowlogick.com/xormigrate v1.2.0/go.mod h1:7so27LAfBRqAxbma5jKYeL4ykVG1Jhsv9ncSq1KBCs4=
 xorm.io/builder v0.3.7 h1:2pETdKRK+2QG4mLX4oODHEhn5Z8j1m8sXa7jfu+/SZI=
