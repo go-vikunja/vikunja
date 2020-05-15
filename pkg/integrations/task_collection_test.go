@@ -118,6 +118,22 @@ func TestTaskCollection(t *testing.T) {
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `[{"id":5,"text":"task #5 higher due date","description":"","done":false,"done_at":null,"due_date":"2018-12-01T03:58:44Z","reminder_dates":null,"list_id":1,"repeat_after":0,"priority":0,"start_date":null,"end_date":null,"assignees":null,"labels":null,"hex_color":"","percent_done":0,"identifier":"test1-5","index":5,"related_tasks":{},"attachments":null,"created":"2018-12-01T01:12:04Z","updated":"2018-12-01T01:12:04Z","bucket_id":2,"position":0,"created_by":{"id":1,"username":"user1","created":null,"updated":null}},{"id":6,"text":"task #6 lower due date`)
 			})
+			// Due date without unix suffix
+			t.Run("by duedate asc without _unix suffix", func(t *testing.T) {
+				rec, err := testHandler.testReadAllWithUser(url.Values{"sort_by": []string{"due_date"}, "order_by": []string{"asc"}}, urlParams)
+				assert.NoError(t, err)
+				assert.Contains(t, rec.Body.String(), `{"id":6,"text":"task #6 lower due date","description":"","done":false,"done_at":null,"due_date":"2018-11-30T22:25:24Z","reminder_dates":null,"list_id":1,"repeat_after":0,"priority":0,"start_date":null,"end_date":null,"assignees":null,"labels":null,"hex_color":"","percent_done":0,"identifier":"test1-6","index":6,"related_tasks":{},"attachments":null,"created":"2018-12-01T01:12:04Z","updated":"2018-12-01T01:12:04Z","bucket_id":3,"position":0,"created_by":{"id":1,"username":"user1","created":null,"updated":null}},{"id":5,"text":"task #5 higher due date","description":"","done":false,"done_at":null,"due_date":"2018-12-01T03:58:44Z","reminder_dates":null,"list_id":1,"repeat_after":0,"priority":0,"start_date":null,"end_date":null,"assignees":null,"labels":null,"hex_color":"","percent_done":0,"identifier":"test1-5","index":5,"related_tasks":{},"attachments":null,"created":"2018-12-01T01:12:04Z","updated":"2018-12-01T01:12:04Z","bucket_id":2,"position":0,"created_by":{"id":1,"username":"user1","created":null,"updated":null}}]`)
+			})
+			t.Run("by due_date without _unix suffix", func(t *testing.T) {
+				rec, err := testHandler.testReadAllWithUser(url.Values{"sort_by": []string{"due_date"}}, urlParams)
+				assert.NoError(t, err)
+				assert.Contains(t, rec.Body.String(), `{"id":6,"text":"task #6 lower due date","description":"","done":false,"done_at":null,"due_date":"2018-11-30T22:25:24Z","reminder_dates":null,"list_id":1,"repeat_after":0,"priority":0,"start_date":null,"end_date":null,"assignees":null,"labels":null,"hex_color":"","percent_done":0,"identifier":"test1-6","index":6,"related_tasks":{},"attachments":null,"created":"2018-12-01T01:12:04Z","updated":"2018-12-01T01:12:04Z","bucket_id":3,"position":0,"created_by":{"id":1,"username":"user1","created":null,"updated":null}},{"id":5,"text":"task #5 higher due date","description":"","done":false,"done_at":null,"due_date":"2018-12-01T03:58:44Z","reminder_dates":null,"list_id":1,"repeat_after":0,"priority":0,"start_date":null,"end_date":null,"assignees":null,"labels":null,"hex_color":"","percent_done":0,"identifier":"test1-5","index":5,"related_tasks":{},"attachments":null,"created":"2018-12-01T01:12:04Z","updated":"2018-12-01T01:12:04Z","bucket_id":2,"position":0,"created_by":{"id":1,"username":"user1","created":null,"updated":null}}]`)
+			})
+			t.Run("by duedate desc without _unix suffix", func(t *testing.T) {
+				rec, err := testHandler.testReadAllWithUser(url.Values{"sort_by": []string{"due_date"}, "order_by": []string{"desc"}}, urlParams)
+				assert.NoError(t, err)
+				assert.Contains(t, rec.Body.String(), `[{"id":5,"text":"task #5 higher due date","description":"","done":false,"done_at":null,"due_date":"2018-12-01T03:58:44Z","reminder_dates":null,"list_id":1,"repeat_after":0,"priority":0,"start_date":null,"end_date":null,"assignees":null,"labels":null,"hex_color":"","percent_done":0,"identifier":"test1-5","index":5,"related_tasks":{},"attachments":null,"created":"2018-12-01T01:12:04Z","updated":"2018-12-01T01:12:04Z","bucket_id":2,"position":0,"created_by":{"id":1,"username":"user1","created":null,"updated":null}},{"id":6,"text":"task #6 lower due date`)
+			})
 			t.Run("by duedate asc", func(t *testing.T) {
 				rec, err := testHandler.testReadAllWithUser(url.Values{"sort_by": []string{"due_date_unix"}, "order_by": []string{"asc"}}, urlParams)
 				assert.NoError(t, err)

@@ -118,6 +118,20 @@ func (tf *TaskCollection) ReadAll(a web.Auth, search string, page int, perPage i
 		if len(tf.OrderBy) > i {
 			param.orderBy = getSortOrderFromString(tf.OrderBy[i])
 		}
+
+		// Special case for pseudo date fields
+		// FIXME: This is really dirty, to fix this properly the db fields should be renamed
+		switch param.sortBy {
+		case "done_at":
+			param.sortBy = taskPropertyDoneAtUnix
+		case "due_date":
+			param.sortBy = taskPropertyDueDateUnix
+		case "start_date":
+			param.sortBy = taskPropertyStartDateUnix
+		case "end_date":
+			param.sortBy = taskPropertyEndDateUnix
+		}
+
 		// Param validation
 		if err := param.validate(); err != nil {
 			return nil, 0, 0, err

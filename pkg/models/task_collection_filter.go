@@ -90,7 +90,7 @@ func getTaskFiltersByCollections(c *TaskCollection) (filters []*taskFilter, err 
 		}
 
 		// Special case for pseudo date fields
-		// FIXME: This is really dirty, to fix this the db fields should be renamed
+		// FIXME: This is really dirty, to fix this properly the db fields should be renamed
 		if filter.field+"_unix" == taskPropertyDoneAtUnix ||
 			filter.field+"_unix" == taskPropertyDueDateUnix ||
 			filter.field+"_unix" == taskPropertyStartDateUnix ||
