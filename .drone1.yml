@@ -67,8 +67,9 @@ steps:
     image: vikunja/golang-build:latest
     pull: true
     commands:
+      - make generate
       - make test
-    depends_on: [ build ]
+    depends_on: [ fetch-tags ]
     when:
       event: [ push, tag, pull_request ]
 
@@ -79,8 +80,9 @@ steps:
       VIKUNJA_TESTS_USE_CONFIG: 1
       VIKUNJA_DATABASE_TYPE: sqlite
     commands:
+      - make generate
       - make test
-    depends_on: [ build ]
+    depends_on: [ fetch-tags ]
     when:
       event: [ push, tag, pull_request ]
 
@@ -95,8 +97,9 @@ steps:
       VIKUNJA_DATABASE_PASSWORD: vikunjatest
       VIKUNJA_DATABASE_DATABASE: vikunjatest
     commands:
+      - make generate
       - make test
-    depends_on: [ build ]
+    depends_on: [ fetch-tags ]
     when:
       event: [ push, tag, pull_request ]
 
@@ -112,8 +115,9 @@ steps:
       VIKUNJA_DATABASE_DATABASE: vikunjatest
       VIKUNJA_DATABASE_SSLMODE: disable
     commands:
+      - make generate
       - make test
-    depends_on: [ build ]
+    depends_on: [ fetch-tags ]
     when:
       event: [ push, tag, pull_request ]
 
@@ -121,8 +125,9 @@ steps:
     image: vikunja/golang-build:latest
     pull: true
     commands:
+      - make generate
       - make integration-test
-    depends_on: [ build ]
+    depends_on: [ fetch-tags ]
     when:
       event: [ push, tag, pull_request ]
 
@@ -133,8 +138,9 @@ steps:
       VIKUNJA_TESTS_USE_CONFIG: 1
       VIKUNJA_DATABASE_TYPE: sqlite
     commands:
+      - make generate
       - make integration-test
-    depends_on: [ build ]
+    depends_on: [ fetch-tags ]
     when:
       event: [ push, tag, pull_request ]
 
@@ -149,8 +155,9 @@ steps:
       VIKUNJA_DATABASE_PASSWORD: vikunjatest
       VIKUNJA_DATABASE_DATABASE: vikunjatest
     commands:
+      - make generate
       - make integration-test
-    depends_on: [ build ]
+    depends_on: [ fetch-tags ]
     when:
       event: [ push, tag, pull_request ]
 
@@ -166,8 +173,9 @@ steps:
       VIKUNJA_DATABASE_DATABASE: vikunjatest
       VIKUNJA_DATABASE_SSLMODE: disable
     commands:
+      - make generate
       - make integration-test
-    depends_on: [ build ]
+    depends_on: [ fetch-tags ]
     when:
       event: [ push, tag, pull_request ]
 
