@@ -12,23 +12,60 @@
 			</header>
 			<div class="card-content">
 				<div class="content">
-					<form  @submit.prevent="submit()">
+					<form @submit.prevent="submit()">
 						<div class="field">
 							<label class="label" for="listtext">List Name</label>
 							<div class="control">
-								<input v-focus :class="{ 'disabled': listService.loading}" :disabled="listService.loading" class="input" type="text" id="listtext" placeholder="The list title goes here..." v-model="list.title">
+								<input
+										v-focus
+										:class="{ 'disabled': listService.loading}"
+										:disabled="listService.loading"
+										class="input"
+										type="text"
+										id="listtext"
+										placeholder="The list title goes here..."
+										@keyup.enter="submit"
+										v-model="list.title"/>
+							</div>
+						</div>
+						<div class="field">
+							<label
+									class="label"
+									for="listtext"
+									v-tooltip="'The list identifier can be used to uniquely identify a task across lists. You can set it to empty to disable it.'">
+								List Identifier
+							</label>
+							<div class="control">
+								<input
+										v-focus
+										:class="{ 'disabled': listService.loading}"
+										:disabled="listService.loading"
+										class="input"
+										type="text"
+										id="listtext"
+										placeholder="The list identifier goes here..."
+										@keyup.enter="submit"
+										v-model="list.identifier"/>
 							</div>
 						</div>
 						<div class="field">
 							<label class="label" for="listdescription">Description</label>
 							<div class="control">
-								<textarea :class="{ 'disabled': listService.loading}" :disabled="listService.loading" class="textarea" placeholder="The lists description goes here..." id="listdescription" v-model="list.description"></textarea>
+								<textarea
+										:class="{ 'disabled': listService.loading}"
+										:disabled="listService.loading"
+										class="textarea"
+										placeholder="The lists description goes here..."
+										id="listdescription"
+										v-model="list.description"></textarea>
 							</div>
 						</div>
 						<div class="field">
 							<label class="label" for="isArchivedCheck">Is Archived</label>
 							<div class="control">
-								<fancycheckbox v-model="list.isArchived" v-tooltip="'If a list is archived, you cannot create new tasks or edit the list or existing tasks.'">
+								<fancycheckbox
+										v-model="list.isArchived"
+										v-tooltip="'If a list is archived, you cannot create new tasks or edit the list or existing tasks.'">
 									This list is archived
 								</fancycheckbox>
 							</div>
@@ -49,12 +86,14 @@
 
 					<div class="columns bigbuttons">
 						<div class="column">
-							<button @click="submit()" class="button is-primary is-fullwidth" :class="{ 'is-loading': listService.loading}">
+							<button @click="submit()" class="button is-primary is-fullwidth"
+									:class="{ 'is-loading': listService.loading}">
 								Save
 							</button>
 						</div>
 						<div class="column is-1">
-							<button @click="showDeleteModal = true" class="button is-danger is-fullwidth" :class="{ 'is-loading': listService.loading}">
+							<button @click="showDeleteModal = true" class="button is-danger is-fullwidth"
+									:class="{ 'is-loading': listService.loading}">
 								<span class="icon is-small">
 									<icon icon="trash-alt"/>
 								</span>
@@ -65,8 +104,18 @@
 			</div>
 		</div>
 
-		<component :is="manageUsersComponent" :id="list.id" type="list" shareType="user" :userIsAdmin="userIsAdmin"></component>
-		<component :is="manageTeamsComponent" :id="list.id" type="list" shareType="team" :userIsAdmin="userIsAdmin"></component>
+		<component
+				:is="manageUsersComponent"
+				:id="list.id"
+				type="list"
+				shareType="user"
+				:userIsAdmin="userIsAdmin"/>
+		<component
+				:is="manageTeamsComponent"
+				:id="list.id"
+				type="list"
+				shareType="team"
+				:userIsAdmin="userIsAdmin"/>
 
 		<link-sharing :list-id="$route.params.id" v-if="linkSharingEnabled"/>
 

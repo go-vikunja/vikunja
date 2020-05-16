@@ -33,6 +33,7 @@ export default class ListModel extends AbstractModel {
 			namespaceId: 0,
 			isArchived: false,
 			hexColor: '',
+			identifier: '',
 
 			created: null,
 			updated: null,

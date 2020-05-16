@@ -2,8 +2,11 @@
 	<div class="loader-container" :class="{ 'is-loading': taskService.loading}">
 		<div class="task-view">
 			<div class="heading">
-				<h1 class="title task-id">
-					#{{ task.id }}
+				<h1 class="title task-id" v-if="task.identifier === ''">
+					#{{ task.index }}
+				</h1>
+				<h1 class="title task-id" v-else>
+					{{ task.identifier }}
 				</h1>
 				<div class="is-done" v-if="task.done">Done</div>
 				<h1 class="title input" contenteditable="true" @focusout="saveTaskOnChange()" ref="taskTitle"

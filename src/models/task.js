@@ -63,6 +63,11 @@ export default class TaskModel extends AbstractModel {
 			return new AttachmentModel(a)
 		})
 
+		// Set the task identifier to empty if the list does not have one
+		if(this.identifier === `-${this.index}`) {
+			this.identifier = ''
+		}
+
 		this.created = new Date(this.created)
 		this.updated = new Date(this.updated)
 	}
@@ -87,6 +92,8 @@ export default class TaskModel extends AbstractModel {
 			percentDone: 0,
 			relatedTasks: {},
 			attachments: [],
+			identifier: '',
+			index: 0,
 
 			createdBy: UserModel,
 			created: null,
