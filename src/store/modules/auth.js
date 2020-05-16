@@ -119,6 +119,7 @@ export default {
 				ctx.commit('info', info)
 			}
 			ctx.commit('authenticated', authenticated)
+			return Promise.resolve()
 		},
 		// Renews the api token and saves it to local storage
 		renewToken(ctx) {

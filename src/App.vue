@@ -264,25 +264,27 @@
 			}
 		},
 		beforeCreate() {
-			// Check if the user is already logged in, if so, redirect them to the homepage
-			if (
-				!this.userAuthenticated &&
-				this.$route.name !== 'login' &&
-				this.$route.name !== 'getPasswordReset' &&
-				this.$route.name !== 'passwordReset' &&
-				this.$route.name !== 'register' &&
-				this.$route.name !== 'linkShareAuth'
-			) {
-				router.push({name: 'login'})
-			}
-		},
-		created() {
 			this.$store.dispatch('config/update')
 			this.$store.dispatch('auth/checkAuth')
+				.then(() => {
+					// Check if the user is already logged in, if so, redirect them to the homepage
+					if (
+						!this.userAuthenticated &&
+						this.$route.name !== 'login' &&
+						this.$route.name !== 'getPasswordReset' &&
+						this.$route.name !== 'passwordReset' &&
+						this.$route.name !== 'register' &&
+						this.$route.name !== 'linkShareAuth'
+					) {
+						router.push({name: 'login'})
+					}
 
-			if (this.userAuthenticated && this.userInfo.type === authTypes.USER && (this.$route.params.name === 'home' || this.namespaces.length === 0)) {
-				this.loadNamespaces()
-			}
+					if (this.userAuthenticated && this.userInfo.type === authTypes.USER && (this.$route.params.name === 'home' || this.namespaces.length === 0)) {
+						this.loadNamespaces()
+					}
+				})
+		},
+		created() {
 
 			// Service worker communication
 			document.addEventListener(swEvents.SW_UPDATED, this.showRefreshUI, {once: true})
