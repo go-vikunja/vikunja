@@ -71,7 +71,7 @@
 									{{ formatDateSince(task.dueDate) }}
 								</span>
 							</span>
-							<h3>{{ task.text }}</h3>
+							<h3>{{ task.title }}</h3>
 							<labels :labels="task.labels"/>
 							<div class="footer">
 								<div class="items">
@@ -348,7 +348,7 @@
 
 				const bi = bucketIndex()
 
-				const task = new TaskModel({text: this.newTaskText, bucketId: this.buckets[bi].id, listId: this.$route.params.listId})
+				const task = new TaskModel({title: this.newTaskText, bucketId: this.buckets[bi].id, listId: this.$route.params.listId})
 
 				this.taskService.create(task)
 					.then(r => {

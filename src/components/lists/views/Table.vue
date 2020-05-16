@@ -12,7 +12,7 @@
 					<div class="card-content">
 						<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.id">#</fancycheckbox>
 						<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.done">Done</fancycheckbox>
-						<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.text">Name</fancycheckbox>
+						<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.title">Title</fancycheckbox>
 						<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.priority">Priority</fancycheckbox>
 						<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.labels">Labels</fancycheckbox>
 						<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.assignees">Assignees</fancycheckbox>
@@ -39,9 +39,9 @@
 					Done
 					<sort :order="sortBy.done" @click="sort('done')"/>
 				</th>
-				<th v-if="activeColumns.text">
+				<th v-if="activeColumns.title">
 					Name
-					<sort :order="sortBy.text" @click="sort('text')"/>
+					<sort :order="sortBy.title" @click="sort('title')"/>
 				</th>
 				<th v-if="activeColumns.priority">
 					Priority
@@ -90,8 +90,8 @@
 				<td v-if="activeColumns.done">
 					<div class="is-done" v-if="t.done">Done</div>
 				</td>
-				<td v-if="activeColumns.text">
-					<router-link :to="{name: 'task.detail', params: { id: t.id }}">{{ t.text }}</router-link>
+				<td v-if="activeColumns.title">
+					<router-link :to="{name: 'task.detail', params: { id: t.id }}">{{ t.title }}</router-link>
 				</td>
 				<td v-if="activeColumns.priority">
 					<priority-label :priority="t.priority" :show-all="true"/>
@@ -174,7 +174,7 @@
 				activeColumns: {
 					id: true,
 					done: true,
-					text: true,
+					title: true,
 					priority: false,
 					labels: true,
 					assignees: true,

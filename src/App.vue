@@ -120,17 +120,17 @@
 											<icon icon="cog"/>
 										</span>
 									</router-link>
-									<router-link v-tooltip="'Add a new list in the ' + n.name + ' namespace'"
+									<router-link v-tooltip="'Add a new list in the ' + n.title + ' namespace'"
 											:to="{ name: 'newList', params: { id: n.id} }" class="nsettings"
 											:key="n.id + 'newList'" v-if="n.id > 0">
 										<span class="icon">
 											<icon icon="plus"/>
 										</span>
 									</router-link>
-									<label class="menu-label" v-tooltip="n.name + ' (' + n.lists.length + ')'" :for="n.id + 'checker'">
+									<label class="menu-label" v-tooltip="n.title + ' (' + n.lists.length + ')'" :for="n.id + 'checker'">
 										<span class="name">
 											<span class="color-bubble" v-if="n.hexColor !== ''" :style="{ backgroundColor: n.hexColor }"></span>
-											{{n.name}} ({{n.lists.length}})
+											{{n.title}} ({{n.lists.length}})
 										</span>
 										<span class="is-archived" v-if="n.isArchived">
 											Archived

@@ -23,7 +23,7 @@ export default class NamespaceModel extends AbstractModel {
 	defaults() {
 		return {
 			id: 0,
-			name: '',
+			title: '',
 			description: '',
 			owner: UserModel,
 			lists: [],

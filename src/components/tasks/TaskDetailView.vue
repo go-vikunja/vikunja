@@ -7,10 +7,10 @@
 				</h1>
 				<div class="is-done" v-if="task.done">Done</div>
 				<h1 class="title input" contenteditable="true" @focusout="saveTaskOnChange()" ref="taskTitle"
-					@keyup.ctrl.enter="saveTaskOnChange()">{{ task.text }}</h1>
+					@keyup.ctrl.enter="saveTaskOnChange()">{{ task.title }}</h1>
 			</div>
 			<h6 class="subtitle" v-if="parent && parent.namespace && parent.list">
-				{{ parent.namespace.name }} >
+				{{ parent.namespace.title }} >
 				<router-link :to="{ name: 'list.list', params: { listId: parent.list.id } }">
 					{{ parent.list.title }}
 				</router-link>
@@ -410,7 +410,7 @@
 				this.taskService.get({id: this.taskId})
 					.then(r => {
 						this.$set(this, 'task', r)
-						this.taskTitle = this.task.text
+						this.taskTitle = this.task.title
 						this.setActiveFields()
 					})
 					.catch(e => {
@@ -444,13 +444,13 @@
 
 				// Pull the task title from the contenteditable
 				let taskTitle = this.$refs.taskTitle.textContent
-				this.task.text = taskTitle
+				this.task.title = taskTitle
 
 				// We only want to save if the title was actually change.
 				// Because the contenteditable does not have a change event,
 				// we're building it ourselves and only calling saveTask()
 				// if the task title changed.
-				if (this.task.text !== this.taskTitle) {
+				if (this.task.title !== this.taskTitle) {
 					this.saveTask()
 					this.taskTitle = taskTitle
 				}

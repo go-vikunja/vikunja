@@ -151,7 +151,7 @@
 				}
 				this.showError = false
 
-				let task = new TaskModel({text: this.newTaskText, listId: this.$route.params.listId})
+				let task = new TaskModel({title: this.newTaskText, listId: this.$route.params.listId})
 				this.taskService.create(task)
 					.then(r => {
 						this.tasks.push(r)

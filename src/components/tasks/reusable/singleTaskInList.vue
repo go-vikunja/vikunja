@@ -14,11 +14,11 @@
 			<!-- Show any parent tasks to make it clear this task is a sub task of something -->
 			<span class="parent-tasks" v-if="typeof task.relatedTasks.parenttask !== 'undefined'">
 				<template v-for="(pt, i) in task.relatedTasks.parenttask">
-					{{ pt.text }}<template v-if="(i + 1) < task.relatedTasks.parenttask.length">,&nbsp;</template>
+					{{ pt.title }}<template v-if="(i + 1) < task.relatedTasks.parenttask.length">,&nbsp;</template>
 				</template>
 				>
 			</span>
-			{{ task.text }}
+			{{ task.title }}
 			<labels :labels="task.labels"/>
 			<user
 					:user="a"

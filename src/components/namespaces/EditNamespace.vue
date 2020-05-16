@@ -12,23 +12,39 @@
 			</header>
 			<div class="card-content">
 				<div class="content">
-					<form  @submit.prevent="submit()">
+					<form @submit.prevent="submit()">
 						<div class="field">
 							<label class="label" for="namespacetext">Namespace Name</label>
 							<div class="control">
-								<input v-focus :class="{ 'disabled': namespaceService.loading}" :disabled="namespaceService.loading" class="input" type="text" id="namespacetext" placeholder="The namespace text is here..." v-model="namespace.name">
+								<input
+										v-focus
+										:class="{ 'disabled': namespaceService.loading}"
+										:disabled="namespaceService.loading"
+										class="input"
+										type="text"
+										id="namespacetext"
+										placeholder="The namespace text is here..."
+										v-model="namespace.title"/>
 							</div>
 						</div>
 						<div class="field">
 							<label class="label" for="namespacedescription">Description</label>
 							<div class="control">
-								<textarea :class="{ 'disabled': namespaceService.loading}" :disabled="namespaceService.loading" class="textarea" placeholder="The namespaces description goes here..." id="namespacedescription" v-model="namespace.description"></textarea>
+								<textarea
+										:class="{ 'disabled': namespaceService.loading}"
+										:disabled="namespaceService.loading"
+										class="textarea"
+										placeholder="The namespaces description goes here..."
+										id="namespacedescription"
+										v-model="namespace.description"></textarea>
 							</div>
 						</div>
 						<div class="field">
 							<label class="label" for="isArchivedCheck">Is Archived</label>
 							<div class="control">
-								<fancycheckbox v-model="namespace.isArchived" v-tooltip="'If a namespace is archived, you cannot create new lists or edit it.'">
+								<fancycheckbox
+										v-model="namespace.isArchived"
+										v-tooltip="'If a namespace is archived, you cannot create new lists or edit it.'">
 									This namespace is archived
 								</fancycheckbox>
 							</div>
@@ -49,12 +65,14 @@
 
 					<div class="columns bigbuttons">
 						<div class="column">
-							<button @click="submit()" class="button is-primary is-fullwidth" :class="{ 'is-loading': namespaceService.loading}">
+							<button @click="submit()" class="button is-primary is-fullwidth"
+									:class="{ 'is-loading': namespaceService.loading}">
 								Save
 							</button>
 						</div>
 						<div class="column is-1">
-							<button @click="showDeleteModal = true" class="button is-danger is-fullwidth" :class="{ 'is-loading': namespaceService.loading}">
+							<button @click="showDeleteModal = true" class="button is-danger is-fullwidth"
+									:class="{ 'is-loading': namespaceService.loading}">
 								<span class="icon is-small">
 									<icon icon="trash-alt"/>
 								</span>
@@ -65,8 +83,18 @@
 			</div>
 		</div>
 
-		<component :is="manageUsersComponent" :id="namespace.id" type="namespace" shareType="user" :userIsAdmin="userIsAdmin"></component>
-		<component :is="manageTeamsComponent" :id="namespace.id" type="namespace" shareType="team" :userIsAdmin="userIsAdmin"></component>
+		<component
+				:is="manageUsersComponent"
+				:id="namespace.id"
+				type="namespace"
+				shareType="user"
+				:userIsAdmin="userIsAdmin"/>
+		<component
+				:is="manageTeamsComponent"
+				:id="namespace.id"
+				type="namespace"
+				shareType="team"
+				:userIsAdmin="userIsAdmin"/>
 
 		<modal
 				v-if="showDeleteModal"

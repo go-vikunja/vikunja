@@ -53,7 +53,7 @@
 								<span v-if="t.listId !== listId" class="different-list" v-tooltip="'This task belongs to a different list.'">
 									{{ $store.getters['lists/getListById'](t.listId) === null ? '' : $store.getters['lists/getListById'](t.listId).title }} >
 								</span>
-								{{t.text}}
+								{{t.title}}
 							</span>
 						</router-link>
 						<a
@@ -202,8 +202,8 @@
 						this.showDeleteModal = false
 					})
 			},
-			createAndRelateTask(text) {
-				const newTask = new TaskModel({text: text, listId: this.listId})
+			createAndRelateTask(title) {
+				const newTask = new TaskModel({title: title, listId: this.listId})
 				this.taskService.create(newTask)
 					.then(r => {
 						this.newTaskRelationTask = r

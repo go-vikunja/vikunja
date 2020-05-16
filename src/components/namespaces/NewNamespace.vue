@@ -10,14 +10,14 @@
 				<input v-focus
 					class="input"
 					v-bind:class="{ 'disabled': namespaceService.loading}"
-					v-model="namespace.name"
+					v-model="namespace.title"
 					type="text"
 					@keyup.enter="newNamespace()"
 					@keyup.esc="back()"
 					placeholder="The namespace's name goes here..."/>
 			</p>
 			<p class="control">
-				<button class="button is-success noshadow" @click="newNamespace()" :disabled="namespace.name.length <= 5">
+				<button class="button is-success noshadow" @click="newNamespace()" :disabled="namespace.title.length <= 5">
 						<span class="icon is-small">
 							<icon icon="plus"/>
 						</span>
@@ -25,7 +25,7 @@
 				</button>
 			</p>
 		</div>
-		<p class="help is-danger" v-if="showError && namespace.name.length <= 5">
+		<p class="help is-danger" v-if="showError && namespace.title.length <= 5">
 			Please specify at least five characters.
 		</p>
 		<p class="small" v-tooltip.bottom="'A namespace is a collection of lists you can share and use to organize your lists with.<br/>In fact, every list belongs to a namepace.'">
@@ -55,7 +55,7 @@
 		},
 		methods: {
 			newNamespace() {
-				if (this.namespace.name.length <= 4) {
+				if (this.namespace.title.length <= 4) {
 					this.showError = true
 					return
 				}

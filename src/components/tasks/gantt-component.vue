@@ -50,7 +50,7 @@
 					'has-high-priority': t.priority >= priorities.HIGH,
 					'has-not-so-high-priority': t.priority === priorities.HIGH,
 					'has-super-high-priority': t.priority === priorities.DO_NOW
-					}">{{t.text}}</span>
+					}">{{t.title}}</span>
 					<priority-label :priority="t.priority"/>
 					<!-- using the key here forces vue to use the updated version model and not the response returned by the api -->
 					<a @click="editTask(theTasks[k])" class="edit-toggle">
@@ -78,7 +78,7 @@
 							@clicked="setTaskDragged(t)"
 							v-tooltip="'This task has no dates set.'"
 					>
-						<span>{{t.text}}</span>
+						<span>{{t.title}}</span>
 					</VueDragResize>
 				</div>
 			</template>
@@ -366,7 +366,7 @@
 				if (!this.newTaskFieldActive) {
 					return
 				}
-				let task = new TaskModel({text: this.newTaskTitle, listId: this.listId})
+				let task = new TaskModel({title: this.newTaskTitle, listId: this.listId})
 				this.taskService.create(task)
 					.then(r => {
 						this.tasksWithoutDates.push(this.addGantAttributes(r))
