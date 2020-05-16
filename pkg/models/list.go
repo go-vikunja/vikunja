@@ -431,12 +431,10 @@ func CreateOrUpdateList(list *List) (err error) {
 		colsToUpdate := []string{
 			"title",
 			"is_archived",
+			"identifier",
 		}
 		if list.Description != "" {
 			colsToUpdate = append(colsToUpdate, "description")
-		}
-		if list.Identifier != "" {
-			colsToUpdate = append(colsToUpdate, "identifier")
 		}
 		if list.HexColor != "" {
 			colsToUpdate = append(colsToUpdate, "hex_color")
