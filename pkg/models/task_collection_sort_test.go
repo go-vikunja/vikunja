@@ -43,7 +43,7 @@ func TestSortParamValidation(t *testing.T) {
 	t.Run("Test valid sort by", func(t *testing.T) {
 		for _, test := range []string{
 			taskPropertyID,
-			taskPropertyText,
+			taskPropertyTitle,
 			taskPropertyDescription,
 			taskPropertyDone,
 			taskPropertyDoneAtUnix,

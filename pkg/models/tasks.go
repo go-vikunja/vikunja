@@ -37,7 +37,7 @@ type Task struct {
 	// The unique, numeric id of this task.
 	ID int64 `xorm:"int(11) autoincr not null unique pk" json:"id" param:"listtask"`
 	// The task text. This is what you'll see in the list.
-	Text string `xorm:"varchar(250) not null" json:"text" valid:"runelength(3|250)" minLength:"3" maxLength:"250"`
+	Title string `xorm:"varchar(250) not null" json:"title" valid:"runelength(3|250)" minLength:"3" maxLength:"250"`
 	// The task description.
 	Description string `xorm:"longtext null" json:"description"`
 	// Whether a task is done or not.
@@ -242,11 +242,11 @@ func getRawTasksForLists(lists []*List, opts *taskOptions) (tasks []*Task, resul
 		// See https://stackoverflow.com/q/7005302/10924593
 		// Seems okay to use that now, we may need to find a better solution overall in the future.
 		if config.DatabaseType.GetString() == "postgres" {
-			query = query.Where("text ILIKE ?", "%"+opts.search+"%")
-			queryCount = queryCount.Where("text ILIKE ?", "%"+opts.search+"%")
+			query = query.Where("title ILIKE ?", "%"+opts.search+"%")
+			queryCount = queryCount.Where("title ILIKE ?", "%"+opts.search+"%")
 		} else {
-			query = query.Where("text LIKE ?", "%"+opts.search+"%")
-			queryCount = queryCount.Where("text LIKE ?", "%"+opts.search+"%")
+			query = query.Where("title LIKE ?", "%"+opts.search+"%")
+			queryCount = queryCount.Where("title LIKE ?", "%"+opts.search+"%")
 		}
 	}
 
@@ -554,7 +554,7 @@ func (t *Task) Create(a web.Auth) (err error) {
 	t.ID = 0
 
 	// Check if we have at least a text
-	if t.Text == "" {
+	if t.Title == "" {
 		return ErrTaskCannotBeEmpty{}
 	}
 
@@ -758,7 +758,7 @@ func (t *Task) Update() (err error) {
 	}
 
 	_, err = x.ID(t.ID).
-		Cols("text",
+		Cols("title",
 			"description",
 			"done",
 			"due_date_unix",

@@ -24,7 +24,7 @@ func TestBulkTask_Update(t *testing.T) {
 			fields: fields{
 				IDs: []int64{10, 11, 12},
 				Task: Task{
-					Text: "bulkupdated",
+					Title: "bulkupdated",
 				},
 				User: &user.User{ID: 1},
 			},
@@ -34,7 +34,7 @@ func TestBulkTask_Update(t *testing.T) {
 			fields: fields{
 				IDs: []int64{10, 11, 12, 13},
 				Task: Task{
-					Text: "bulkupdated",
+					Title: "bulkupdated",
 				},
 				User: &user.User{ID: 1},
 			},
@@ -45,7 +45,7 @@ func TestBulkTask_Update(t *testing.T) {
 			fields: fields{
 				IDs: []int64{},
 				Task: Task{
-					Text: "bulkupdated",
+					Title: "bulkupdated",
 				},
 				User: &user.User{ID: 1},
 			},

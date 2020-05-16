@@ -137,7 +137,7 @@ func (vcls *VikunjaCaldavListStorage) GetResourcesByList(rpaths []string) ([]dat
 			task: t,
 		}
 		r := data.NewResource(getTaskURL(t), &rr)
-		r.Name = t.Text
+		r.Name = t.Title
 		resources = append(resources, r)
 	}
 
@@ -159,7 +159,7 @@ func (vcls *VikunjaCaldavListStorage) GetResourcesByFilters(rpath string, filter
 				isCollection: false,
 			}
 			r := data.NewResource(getTaskURL(t), &rr)
-			r.Name = t.Text
+			r.Name = t.Title
 			resources = append(resources, r)
 		}
 		return resources, nil

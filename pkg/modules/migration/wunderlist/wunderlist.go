@@ -152,7 +152,7 @@ func convertListForFolder(listID int, list *list, content *wunderlistContents) (
 	for _, t := range content.tasks {
 		if t.ListID == listID {
 			newTask := &models.Task{
-				Text:    t.Title,
+				Title:   t.Title,
 				Created: timeutil.FromTime(t.CreatedAt),
 				Done:    t.Completed,
 			}
@@ -217,7 +217,7 @@ func convertListForFolder(listID int, list *list, content *wunderlistContents) (
 						newTask.RelatedTasks = make(models.RelatedTaskMap)
 					}
 					newTask.RelatedTasks[models.RelationKindSubtask] = append(newTask.RelatedTasks[models.RelationKindSubtask], &models.Task{
-						Text: s.Title,
+						Title: s.Title,
 					})
 				}
 			}
@@ -247,7 +247,7 @@ func convertWunderlistToVikunja(content *wunderlistContents) (fullVikunjaHierach
 	for _, folder := range content.folders {
 		namespace := &models.NamespaceWithLists{
 			Namespace: models.Namespace{
-				Name:    folder.Title,
+				Title:   folder.Title,
 				Created: timeutil.FromTime(folder.CreatedAt),
 				Updated: timeutil.FromTime(folder.UpdatedAt),
 			},
@@ -274,7 +274,7 @@ func convertWunderlistToVikunja(content *wunderlistContents) (fullVikunjaHierach
 	if len(listMap) > 0 {
 		newNamespace := &models.NamespaceWithLists{
 			Namespace: models.Namespace{
-				Name: "Migrated from wunderlist",
+				Title: "Migrated from wunderlist",
 			},
 		}
 

@@ -37,7 +37,7 @@ func getCaldavTodosForTasks(list *models.List) string {
 		caldavtodos = append(caldavtodos, &caldav.Todo{
 			Timestamp:   t.Updated,
 			UID:         t.UID,
-			Summary:     t.Text,
+			Summary:     t.Title,
 			Description: t.Description,
 			Completed:   t.DoneAt,
 			// Organizer:     &t.CreatedBy, // Disabled until we figure out how this works
@@ -91,7 +91,7 @@ func parseTaskFromVTODO(content string) (vTask *models.Task, err error) {
 
 	vTask = &models.Task{
 		UID:         task["UID"],
-		Text:        task["SUMMARY"],
+		Title:       task["SUMMARY"],
 		Description: task["DESCRIPTION"],
 		Priority:    priority,
 		DueDate:     caldavTimeToTimestamp(task["DUE"]),

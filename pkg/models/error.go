@@ -268,7 +268,7 @@ func IsErrTaskCannotBeEmpty(err error) bool {
 }
 
 func (err ErrTaskCannotBeEmpty) Error() string {
-	return fmt.Sprintf("List task text cannot be empty.")
+	return fmt.Sprintf("List task title cannot be empty.")
 }
 
 // ErrCodeTaskCannotBeEmpty holds the unique world-error code of this error
@@ -276,7 +276,7 @@ const ErrCodeTaskCannotBeEmpty = 4001
 
 // HTTPError holds the http error description
 func (err ErrTaskCannotBeEmpty) HTTPError() web.HTTPError {
-	return web.HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrCodeTaskCannotBeEmpty, Message: "You must provide at least a list task text."}
+	return web.HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrCodeTaskCannotBeEmpty, Message: "You must provide at least a list task title."}
 }
 
 // ErrTaskDoesNotExist represents a "ErrListDoesNotExist" kind of error. Used if the list does not exist.

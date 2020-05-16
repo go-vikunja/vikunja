@@ -1,83 +1,83 @@
 - id: 1
-  name: testnamespace
+  title: testnamespace
   description: Lorem Ipsum
   owner_id: 1
   updated: 0
   created: 0
 - id: 2
-  name: testnamespace2
+  title: testnamespace2
   description: Lorem Ipsum
   owner_id: 2
   updated: 0
   created: 0
 - id: 3
-  name: testnamespace3
+  title: testnamespace3
   description: Lorem Ipsum
   owner_id: 3
   updated: 0
   created: 0
 - id: 6
-  name: testnamespace6
+  title: testnamespace6
   description: Lorem Ipsum
   owner_id: 6
   updated: 0
   created: 0
 - id: 7
-  name: testnamespace7
+  title: testnamespace7
   description: Lorem Ipsum
   owner_id: 6
   updated: 0
   created: 0
 - id: 8
-  name: testnamespace8
+  title: testnamespace8
   description: Lorem Ipsum
   owner_id: 6
   updated: 0
   created: 0
 - id: 9
-  name: testnamespace9
+  title: testnamespace9
   description: Lorem Ipsum
   owner_id: 6
   updated: 0
   created: 0
 - id: 10
-  name: testnamespace10
+  title: testnamespace10
   description: Lorem Ipsum
   owner_id: 6
   updated: 0
   created: 0
 - id: 11
-  name: testnamespace11
+  title: testnamespace11
   description: Lorem Ipsum
   owner_id: 6
   updated: 0
   created: 0
 - id: 12
-  name: testnamespace12
+  title: testnamespace12
   description: Lorem Ipsum
   owner_id: 6
   updated: 0
   created: 0
 - id: 13
-  name: testnamespace13
+  title: testnamespace13
   description: Lorem Ipsum
   owner_id: 7
   updated: 0
   created: 0
 - id: 14
-  name: testnamespace14
+  title: testnamespace14
   description: Lorem Ipsum
   owner_id: 7
   updated: 0
   created: 0
 - id: 15
-  name: testnamespace15
+  title: testnamespace15
   description: Lorem Ipsum
   owner_id: 13
   updated: 0
   created: 0
 - id: 16
-  name: Archived testnamespace16
+  title: Archived testnamespace16
   owner_id: 1
   is_archived: 1
   updated: 0

@@ -36,7 +36,7 @@ func TestTask_Create(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		task := &Task{
-			Text:        "Lorem",
+			Title:       "Lorem",
 			Description: "Lorem Ipsum Dolor",
 			ListID:      1,
 		}
@@ -51,10 +51,10 @@ func TestTask_Create(t *testing.T) {
 		assert.Equal(t, int64(1), task.BucketID)
 
 	})
-	t.Run("empty text", func(t *testing.T) {
+	t.Run("empty title", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		task := &Task{
-			Text:        "",
+			Title:       "",
 			Description: "Lorem Ipsum Dolor",
 			ListID:      1,
 		}
@@ -65,7 +65,7 @@ func TestTask_Create(t *testing.T) {
 	t.Run("nonexistant list", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		task := &Task{
-			Text:        "Test",
+			Title:       "Test",
 			Description: "Lorem Ipsum Dolor",
 			ListID:      9999999,
 		}
@@ -77,7 +77,7 @@ func TestTask_Create(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		nUser := &user.User{ID: 99999999}
 		task := &Task{
-			Text:        "Test",
+			Title:       "Test",
 			Description: "Lorem Ipsum Dolor",
 			ListID:      1,
 		}
@@ -92,7 +92,7 @@ func TestTask_Update(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		task := &Task{
 			ID:          1,
-			Text:        "test10000",
+			Title:       "test10000",
 			Description: "Lorem Ipsum Dolor",
 			ListID:      1,
 		}
@@ -103,7 +103,7 @@ func TestTask_Update(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		task := &Task{
 			ID:          9999999,
-			Text:        "test10000",
+			Title:       "test10000",
 			Description: "Lorem Ipsum Dolor",
 			ListID:      1,
 		}
@@ -215,7 +215,7 @@ func TestTask_ReadOne(t *testing.T) {
 		task := &Task{ID: 1}
 		err := task.ReadOne()
 		assert.NoError(t, err)
-		assert.Equal(t, "task #1", task.Text)
+		assert.Equal(t, "task #1", task.Title)
 	})
 	t.Run("nonexisting", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)

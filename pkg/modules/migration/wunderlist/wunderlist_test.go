@@ -192,7 +192,7 @@ func TestWunderlistParsing(t *testing.T) {
 	expectedHierachie := []*models.NamespaceWithLists{
 		{
 			Namespace: models.Namespace{
-				Name:    "Lorem Ipsum",
+				Title:   "Lorem Ipsum",
 				Created: timeutil.FromTime(time1),
 				Updated: timeutil.FromTime(time2),
 			},
@@ -202,7 +202,7 @@ func TestWunderlistParsing(t *testing.T) {
 					Title:   "Lorem1",
 					Tasks: []*models.Task{
 						{
-							Text:        "Ipsum1",
+							Title:       "Ipsum1",
 							DueDate:     1378339200,
 							Created:     timeutil.FromTime(time1),
 							Description: "Lorem Ipsum dolor sit amet",
@@ -222,17 +222,17 @@ func TestWunderlistParsing(t *testing.T) {
 							Reminders: []timeutil.TimeStamp{timeutil.FromTime(time4)},
 						},
 						{
-							Text:        "Ipsum2",
+							Title:       "Ipsum2",
 							DueDate:     1378339200,
 							Created:     timeutil.FromTime(time1),
 							Description: "Lorem Ipsum dolor sit amet",
 							RelatedTasks: map[models.RelationKind][]*models.Task{
 								models.RelationKindSubtask: {
 									{
-										Text: "LoremSub1",
+										Title: "LoremSub1",
 									},
 									{
-										Text: "LoremSub2",
+										Title: "LoremSub2",
 									},
 								},
 							},
@@ -244,7 +244,7 @@ func TestWunderlistParsing(t *testing.T) {
 					Title:   "Lorem2",
 					Tasks: []*models.Task{
 						{
-							Text:        "Ipsum3",
+							Title:       "Ipsum3",
 							Done:        true,
 							DoneAt:      timeutil.FromTime(time1),
 							DueDate:     1378339200,
@@ -265,14 +265,14 @@ func TestWunderlistParsing(t *testing.T) {
 							},
 						},
 						{
-							Text:      "Ipsum4",
+							Title:     "Ipsum4",
 							DueDate:   1378339200,
 							Created:   timeutil.FromTime(time1),
 							Reminders: []timeutil.TimeStamp{timeutil.FromTime(time3)},
 							RelatedTasks: map[models.RelationKind][]*models.Task{
 								models.RelationKindSubtask: {
 									{
-										Text: "LoremSub3",
+										Title: "LoremSub3",
 									},
 								},
 							},
@@ -284,26 +284,26 @@ func TestWunderlistParsing(t *testing.T) {
 					Title:   "Lorem3",
 					Tasks: []*models.Task{
 						{
-							Text:    "Ipsum5",
+							Title:   "Ipsum5",
 							DueDate: 1378339200,
 							Created: timeutil.FromTime(time1),
 						},
 						{
-							Text:    "Ipsum6",
-							DueDate: 1378339200,
-							Created: timeutil.FromTime(time1),
-							Done:    true,
-							DoneAt:  timeutil.FromTime(time1),
-						},
-						{
-							Text:    "Ipsum7",
+							Title:   "Ipsum6",
 							DueDate: 1378339200,
 							Created: timeutil.FromTime(time1),
 							Done:    true,
 							DoneAt:  timeutil.FromTime(time1),
 						},
 						{
-							Text:    "Ipsum8",
+							Title:   "Ipsum7",
+							DueDate: 1378339200,
+							Created: timeutil.FromTime(time1),
+							Done:    true,
+							DoneAt:  timeutil.FromTime(time1),
+						},
+						{
+							Title:   "Ipsum8",
 							DueDate: 1378339200,
 							Created: timeutil.FromTime(time1),
 						},
@@ -314,14 +314,14 @@ func TestWunderlistParsing(t *testing.T) {
 					Title:   "Lorem4",
 					Tasks: []*models.Task{
 						{
-							Text:    "Ipsum9",
+							Title:   "Ipsum9",
 							DueDate: 1378339200,
 							Created: timeutil.FromTime(time1),
 							Done:    true,
 							DoneAt:  timeutil.FromTime(time1),
 						},
 						{
-							Text:    "Ipsum10",
+							Title:   "Ipsum10",
 							DueDate: 1378339200,
 							Created: timeutil.FromTime(time1),
 							Done:    true,
@@ -333,7 +333,7 @@ func TestWunderlistParsing(t *testing.T) {
 		},
 		{
 			Namespace: models.Namespace{
-				Name: "Migrated from wunderlist",
+				Title: "Migrated from wunderlist",
 			},
 			Lists: []*models.List{
 				{

@@ -30,7 +30,7 @@ type Migrator interface {
 	// The use case for this are Oauth flows, where the server token should remain hidden and not
 	// known to the frontend.
 	AuthURL() string
-	// Name holds the name of the migration.
+	// Title holds the name of the migration.
 	// This is used to show the name to users and to keep track of users who already migrated.
 	Name() string
 }

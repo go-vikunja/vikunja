@@ -110,7 +110,7 @@ func (bt *BulkTask) Update() (err error) {
 		}
 
 		_, err = sess.ID(oldtask.ID).
-			Cols("text",
+			Cols("title",
 				"description",
 				"done",
 				"due_date_unix",

@@ -585,36 +585,36 @@ func TestLinkSharing(t *testing.T) {
 		})
 		t.Run("Create", func(t *testing.T) {
 			t.Run("Shared readonly", func(t *testing.T) {
-				_, err := testHandlerTaskReadOnly.testCreateWithLinkShare(nil, map[string]string{"list": "1"}, `{"text":"Lorem Ipsum"}`)
+				_, err := testHandlerTaskReadOnly.testCreateWithLinkShare(nil, map[string]string{"list": "1"}, `{"title":"Lorem Ipsum"}`)
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("Shared write", func(t *testing.T) {
-				rec, err := testHandlerTaskWrite.testCreateWithLinkShare(nil, map[string]string{"list": "2"}, `{"text":"Lorem Ipsum"}`)
+				rec, err := testHandlerTaskWrite.testCreateWithLinkShare(nil, map[string]string{"list": "2"}, `{"title":"Lorem Ipsum"}`)
 				assert.NoError(t, err)
-				assert.Contains(t, rec.Body.String(), `"text":"Lorem Ipsum"`)
+				assert.Contains(t, rec.Body.String(), `"title":"Lorem Ipsum"`)
 			})
 			t.Run("Shared admin", func(t *testing.T) {
-				rec, err := testHandlerTaskAdmin.testCreateWithLinkShare(nil, map[string]string{"list": "3"}, `{"text":"Lorem Ipsum"}`)
+				rec, err := testHandlerTaskAdmin.testCreateWithLinkShare(nil, map[string]string{"list": "3"}, `{"title":"Lorem Ipsum"}`)
 				assert.NoError(t, err)
-				assert.Contains(t, rec.Body.String(), `"text":"Lorem Ipsum"`)
+				assert.Contains(t, rec.Body.String(), `"title":"Lorem Ipsum"`)
 			})
 		})
 		t.Run("Update", func(t *testing.T) {
 			t.Run("Shared readonly", func(t *testing.T) {
-				_, err := testHandlerTaskReadOnly.testUpdateWithLinkShare(nil, map[string]string{"listtask": "1"}, `{"text":"Lorem Ipsum"}`)
+				_, err := testHandlerTaskReadOnly.testUpdateWithLinkShare(nil, map[string]string{"listtask": "1"}, `{"title":"Lorem Ipsum"}`)
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("Shared write", func(t *testing.T) {
-				rec, err := testHandlerTaskWrite.testUpdateWithLinkShare(nil, map[string]string{"listtask": "13"}, `{"text":"Lorem Ipsum"}`)
+				rec, err := testHandlerTaskWrite.testUpdateWithLinkShare(nil, map[string]string{"listtask": "13"}, `{"title":"Lorem Ipsum"}`)
 				assert.NoError(t, err)
-				assert.Contains(t, rec.Body.String(), `"text":"Lorem Ipsum"`)
+				assert.Contains(t, rec.Body.String(), `"title":"Lorem Ipsum"`)
 			})
 			t.Run("Shared admin", func(t *testing.T) {
-				rec, err := testHandlerTaskAdmin.testUpdateWithLinkShare(nil, map[string]string{"listtask": "32"}, `{"text":"Lorem Ipsum"}`)
+				rec, err := testHandlerTaskAdmin.testUpdateWithLinkShare(nil, map[string]string{"listtask": "32"}, `{"title":"Lorem Ipsum"}`)
 				assert.NoError(t, err)
-				assert.Contains(t, rec.Body.String(), `"text":"Lorem Ipsum"`)
+				assert.Contains(t, rec.Body.String(), `"title":"Lorem Ipsum"`)
 			})
 
 		})
@@ -847,34 +847,34 @@ func TestLinkSharing(t *testing.T) {
 		})
 		t.Run("Create", func(t *testing.T) {
 			t.Run("Shared readonly", func(t *testing.T) {
-				_, err := testHandlerNamespaceReadOnly.testCreateWithLinkShare(nil, nil, `{"name":"LoremIpsum"}`)
+				_, err := testHandlerNamespaceReadOnly.testCreateWithLinkShare(nil, nil, `{"title":"LoremIpsum"}`)
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("Shared write", func(t *testing.T) {
-				_, err := testHandlerNamespaceWrite.testCreateWithLinkShare(nil, nil, `{"name":"LoremIpsum"}`)
+				_, err := testHandlerNamespaceWrite.testCreateWithLinkShare(nil, nil, `{"title":"LoremIpsum"}`)
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("Shared admin", func(t *testing.T) {
-				_, err := testHandlerNamespaceAdmin.testCreateWithLinkShare(nil, nil, `{"name":"LoremIpsum"}`)
+				_, err := testHandlerNamespaceAdmin.testCreateWithLinkShare(nil, nil, `{"title":"LoremIpsum"}`)
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 		})
 		t.Run("Update", func(t *testing.T) {
 			t.Run("Shared readonly", func(t *testing.T) {
-				_, err := testHandlerNamespaceReadOnly.testUpdateWithLinkShare(nil, map[string]string{"namespace": "1"}, `{"name":"LoremIpsum"}`)
+				_, err := testHandlerNamespaceReadOnly.testUpdateWithLinkShare(nil, map[string]string{"namespace": "1"}, `{"title":"LoremIpsum"}`)
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("Shared write", func(t *testing.T) {
-				_, err := testHandlerNamespaceWrite.testUpdateWithLinkShare(nil, map[string]string{"namespace": "2"}, `{"name":"LoremIpsum"}`)
+				_, err := testHandlerNamespaceWrite.testUpdateWithLinkShare(nil, map[string]string{"namespace": "2"}, `{"title":"LoremIpsum"}`)
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("Shared admin", func(t *testing.T) {
-				_, err := testHandlerNamespaceAdmin.testUpdateWithLinkShare(nil, map[string]string{"namespace": "3"}, `{"name":"LoremIpsum"}`)
+				_, err := testHandlerNamespaceAdmin.testUpdateWithLinkShare(nil, map[string]string{"namespace": "3"}, `{"title":"LoremIpsum"}`)
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})

@@ -32,7 +32,7 @@ func TestNamespace_Create(t *testing.T) {
 
 	// Dummy namespace
 	dummynamespace := Namespace{
-		Name:        "Test",
+		Title:       "Test",
 		Description: "Lorem Ipsum",
 	}
 
@@ -52,7 +52,7 @@ func TestNamespace_Create(t *testing.T) {
 	assert.True(t, allowed)
 	err = dummynamespace.ReadOne()
 	assert.NoError(t, err)
-	assert.Equal(t, dummynamespace.Name, "Test")
+	assert.Equal(t, dummynamespace.Title, "Test")
 
 	// Try creating one without a name
 	n2 := Namespace{}
@@ -92,13 +92,13 @@ func TestNamespace_Create(t *testing.T) {
 	assert.True(t, user.IsErrUserDoesNotExist(err))
 
 	// Try updating without a name
-	dummynamespace.Name = ""
+	dummynamespace.Title = ""
 	err = dummynamespace.Update()
 	assert.Error(t, err)
 	assert.True(t, IsErrNamespaceNameCannotBeEmpty(err))
 
 	// Try updating a nonexistant one
-	n := Namespace{ID: 284729, Name: "Lorem"}
+	n := Namespace{ID: 284729, Title: "Lorem"}
 	err = n.Update()
 	assert.Error(t, err)
 	assert.True(t, IsErrNamespaceDoesNotExist(err))

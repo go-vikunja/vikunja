@@ -27,7 +27,7 @@ type (
 
 const (
 	taskPropertyID            string = "id"
-	taskPropertyText          string = "text"
+	taskPropertyTitle         string = "title"
 	taskPropertyDescription   string = "description"
 	taskPropertyDone          string = "done"
 	taskPropertyDoneAtUnix    string = "done_at_unix"

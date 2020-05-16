@@ -107,12 +107,12 @@ func TestArchived(t *testing.T) {
 
 	t.Run("namespace", func(t *testing.T) {
 		t.Run("not editable", func(t *testing.T) {
-			_, err := testNamespaceHandler.testUpdateWithUser(nil, map[string]string{"namespace": "16"}, `{"name":"TestIpsum","is_archived":true}`)
+			_, err := testNamespaceHandler.testUpdateWithUser(nil, map[string]string{"namespace": "16"}, `{"title":"TestIpsum","is_archived":true}`)
 			assert.Error(t, err)
 			assertHandlerErrorCode(t, err, models.ErrCodeNamespaceIsArchived)
 		})
 		t.Run("unarchivable", func(t *testing.T) {
-			rec, err := testNamespaceHandler.testUpdateWithUser(nil, map[string]string{"namespace": "16"}, `{"name":"TestIpsum","is_archived":false}`)
+			rec, err := testNamespaceHandler.testUpdateWithUser(nil, map[string]string{"namespace": "16"}, `{"title":"TestIpsum","is_archived":false}`)
 			assert.NoError(t, err)
 			assert.Contains(t, rec.Body.String(), `"is_archived":false`)
 		})
@@ -124,12 +124,12 @@ func TestArchived(t *testing.T) {
 		t.Run("should not appear in the list", func(t *testing.T) {
 			rec, err := testNamespaceHandler.testReadAllWithUser(nil, nil)
 			assert.NoError(t, err)
-			assert.NotContains(t, rec.Body.String(), `"name":"Archived testnamespace16"`)
+			assert.NotContains(t, rec.Body.String(), `"title":"Archived testnamespace16"`)
 		})
 		t.Run("should appear in the list if explicitly requested", func(t *testing.T) {
 			rec, err := testNamespaceHandler.testReadAllWithUser(url.Values{"is_archived": []string{"true"}}, nil)
 			assert.NoError(t, err)
-			assert.Contains(t, rec.Body.String(), `"name":"Archived testnamespace16"`)
+			assert.Contains(t, rec.Body.String(), `"title":"Archived testnamespace16"`)
 		})
 	})
 
@@ -138,7 +138,7 @@ func TestArchived(t *testing.T) {
 		taskTests := func(taskID string, errCode int, t *testing.T) {
 			t.Run("task", func(t *testing.T) {
 				t.Run("edit task", func(t *testing.T) {
-					_, err := testTaskHandler.testUpdateWithUser(nil, map[string]string{"listtask": taskID}, `{"text":"TestIpsum"}`)
+					_, err := testTaskHandler.testUpdateWithUser(nil, map[string]string{"listtask": taskID}, `{"title":"TestIpsum"}`)
 					assert.Error(t, err)
 					assertHandlerErrorCode(t, err, errCode)
 				})
@@ -202,7 +202,7 @@ func TestArchived(t *testing.T) {
 				assertHandlerErrorCode(t, err, models.ErrCodeNamespaceIsArchived)
 			})
 			t.Run("no new tasks", func(t *testing.T) {
-				_, err := testTaskHandler.testCreateWithUser(nil, map[string]string{"list": "21"}, `{"text":"Lorem"}`)
+				_, err := testTaskHandler.testCreateWithUser(nil, map[string]string{"list": "21"}, `{"title":"Lorem"}`)
 				assert.Error(t, err)
 				assertHandlerErrorCode(t, err, models.ErrCodeNamespaceIsArchived)
 			})
@@ -222,7 +222,7 @@ func TestArchived(t *testing.T) {
 				assertHandlerErrorCode(t, err, models.ErrCodeListIsArchived)
 			})
 			t.Run("no new tasks", func(t *testing.T) {
-				_, err := testTaskHandler.testCreateWithUser(nil, map[string]string{"list": "22"}, `{"text":"Lorem"}`)
+				_, err := testTaskHandler.testCreateWithUser(nil, map[string]string{"list": "22"}, `{"title":"Lorem"}`)
 				assert.Error(t, err)
 				assertHandlerErrorCode(t, err, models.ErrCodeListIsArchived)
 			})

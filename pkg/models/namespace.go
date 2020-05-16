@@ -31,7 +31,7 @@ type Namespace struct {
 	// The unique, numeric id of this namespace.
 	ID int64 `xorm:"int(11) autoincr not null unique pk" json:"id" param:"namespace"`
 	// The name of this namespace.
-	Name string `xorm:"varchar(250) not null" json:"name" valid:"required,runelength(5|250)" minLength:"5" maxLength:"250"`
+	Title string `xorm:"varchar(250) not null" json:"title" valid:"required,runelength(5|250)" minLength:"5" maxLength:"250"`
 	// The description of the namespace
 	Description string `xorm:"longtext null" json:"description"`
 	OwnerID     int64  `xorm:"int(11) not null INDEX" json:"-"`
@@ -57,7 +57,7 @@ type Namespace struct {
 // PseudoNamespace is a pseudo namespace used to hold shared lists
 var PseudoNamespace = Namespace{
 	ID:          -1,
-	Name:        "Shared Lists",
+	Title:       "Shared Lists",
 	Description: "Lists of other users shared with you via teams or directly.",
 	Created:     timeutil.FromTime(time.Now()),
 	Updated:     timeutil.FromTime(time.Now()),
@@ -201,7 +201,7 @@ func (n *Namespace) ReadAll(a web.Auth, search string, page int, perPage int) (r
 		Or("namespaces.owner_id = ?", doer.ID).
 		Or("users_namespace.user_id = ?", doer.ID).
 		GroupBy("namespaces.id").
-		Where("namespaces.name LIKE ?", "%"+search+"%").
+		Where("namespaces.title LIKE ?", "%"+search+"%").
 		Where(isArchivedCond)
 	if limit > 0 {
 		query = query.Limit(limit, start)
@@ -301,7 +301,7 @@ func (n *Namespace) ReadAll(a web.Auth, search string, page int, perPage int) (r
 		Or("users_namespace.user_id = ?", doer.ID).
 		And("namespaces.is_archived = false").
 		GroupBy("namespaces.id").
-		Where("namespaces.name LIKE ?", "%"+search+"%").
+		Where("namespaces.title LIKE ?", "%"+search+"%").
 		Count(&NamespaceWithLists{})
 	if err != nil {
 		return all, 0, 0, err
@@ -325,7 +325,7 @@ func (n *Namespace) ReadAll(a web.Auth, search string, page int, perPage int) (r
 // @Router /namespaces [put]
 func (n *Namespace) Create(a web.Auth) (err error) {
 	// Check if we have at least a name
-	if n.Name == "" {
+	if n.Title == "" {
 		return ErrNamespaceNameCannotBeEmpty{NamespaceID: 0, UserID: a.GetID()}
 	}
 	n.ID = 0 // This would otherwise prevent the creation of new lists after one was created
@@ -418,7 +418,7 @@ func (n *Namespace) Delete() (err error) {
 // @Router /namespace/{id} [post]
 func (n *Namespace) Update() (err error) {
 	// Check if we have at least a name
-	if n.Name == "" {
+	if n.Title == "" {
 		return ErrNamespaceNameCannotBeEmpty{NamespaceID: n.ID}
 	}
 

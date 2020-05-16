@@ -34,7 +34,7 @@ func TestInsertFromStructure(t *testing.T) {
 		testStructure := []*models.NamespaceWithLists{
 			{
 				Namespace: models.Namespace{
-					Name:        "Test1",
+					Title:       "Test1",
 					Description: "Lorem Ipsum",
 				},
 				Lists: []*models.List{
@@ -43,22 +43,22 @@ func TestInsertFromStructure(t *testing.T) {
 						Description: "Something",
 						Tasks: []*models.Task{
 							{
-								Text:        "Task1",
+								Title:       "Task1",
 								Description: "Lorem",
 							},
 							{
-								Text: "Task with related tasks",
+								Title: "Task with related tasks",
 								RelatedTasks: map[models.RelationKind][]*models.Task{
 									models.RelationKindSubtask: {
 										{
-											Text:        "Related to task with related task",
+											Title:       "Related to task with related task",
 											Description: "As subtask",
 										},
 									},
 								},
 							},
 							{
-								Text: "Task with attachments",
+								Title: "Task with attachments",
 								Attachments: []*models.TaskAttachment{
 									{
 										File: &files.File{
