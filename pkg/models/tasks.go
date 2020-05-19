@@ -163,6 +163,11 @@ func (t *Task) ReadAll(a web.Auth, search string, page int, perPage int) (result
 
 func getRawTasksForLists(lists []*List, opts *taskOptions) (tasks []*Task, resultCount int, totalItems int64, err error) {
 
+	// If the user does not have any lists, don't try to get any tasks
+	if len(lists) == 0 {
+		return nil, 0, 0, nil
+	}
+
 	// Set the default concatinator of filter variables to or if none was provided
 	if opts.filterConcat == "" {
 		opts.filterConcat = filterConcatOr
