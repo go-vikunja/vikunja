@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 All releases can be found on https://code.vikunja.io/api/releases.
 
+## [0.13.1] - 2020-05-19
+
+### Fixed
+
+* Don't get all tasks if a user has no lists
+
 ## [0.13] - 2020-05-12
 
 #### Added
