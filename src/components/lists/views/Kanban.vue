@@ -237,6 +237,13 @@
 			this.taskService = new TaskService()
 			this.loadBuckets()
 			setTimeout(() => document.addEventListener('click', this.closeBucketDropdowns), 0)
+
+			// Save the current list view to local storage
+			// We use local storage and not vuex here to make it persistent across reloads.
+			localStorage.setItem('listView', this.$route.name)
+		},
+		watch: {
+			'$route.params.listId': 'loadBuckets',
 		},
 		computed: mapState({
 			buckets: state => state.kanban.buckets,

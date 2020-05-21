@@ -68,7 +68,10 @@
 					this.$route.name !== 'list.table' &&
 					this.$route.name !== 'list.kanban'
 				) {
-					router.replace({name: 'list.list', params: {id: this.$route.params.listId}})
+
+					const savedListView = localStorage.getItem('listView')
+
+					router.replace({name: savedListView ? savedListView : 'list.list', params: {id: this.$route.params.listId}})
 					return
 				}
 

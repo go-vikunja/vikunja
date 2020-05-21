@@ -71,6 +71,11 @@
 			flatPickr,
 			GanttChart
 		},
+		created() {
+			// Save the current list view to local storage
+			// We use local storage and not vuex here to make it persistent across reloads.
+			localStorage.setItem('listView', this.$route.name)
+		},
 		data() {
 			return {
 				showTaskswithoutDates: false,

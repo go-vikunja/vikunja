@@ -136,6 +136,10 @@
 		},
 		created() {
 			this.taskService = new TaskService()
+
+			// Save the current list view to local storage
+			// We use local storage and not vuex here to make it persistent across reloads.
+			localStorage.setItem('listView', this.$route.name)
 		},
 		methods: {
 			// This function initializes the tasks page and loads the first page of tasks
