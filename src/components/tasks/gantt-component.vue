@@ -183,12 +183,9 @@
 			}
 		},
 		watch: {
-			dateFrom() {
-				this.buildTheGanttChart()
-			},
-			dateTo() {
-				this.buildTheGanttChart()
-			},
+			'dateFrom': 'buildTheGanttChart',
+			'dateTo': 'buildTheGanttChart',
+			'listId': 'parseTasks',
 		},
 		created() {
 			this.now = new Date()
