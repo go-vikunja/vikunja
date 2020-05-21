@@ -57,6 +57,7 @@ type ClusterOptions struct {
 
 	OnConnect func(*Conn) error
 
+	Username string
 	Password string
 
 	MaxRetries      int
@@ -66,6 +67,9 @@ type ClusterOptions struct {
 	DialTimeout  time.Duration
 	ReadTimeout  time.Duration
 	WriteTimeout time.Duration
+
+	// NewClient creates a cluster node client with provided name and options.
+	NewClient func(opt *Options) *Client
 
 	// PoolSize applies per cluster node and not for the whole cluster.
 	PoolSize           int
@@ -118,6 +122,10 @@ func (opt *ClusterOptions) init() {
 	case 0:
 		opt.MaxRetryBackoff = 512 * time.Millisecond
 	}
+
+	if opt.NewClient == nil {
+		opt.NewClient = NewClient
+	}
 }
 
 func (opt *ClusterOptions) clientOptions() *Options {
@@ -130,6 +138,7 @@ func (opt *ClusterOptions) clientOptions() *Options {
 		MaxRetries:      opt.MaxRetries,
 		MinRetryBackoff: opt.MinRetryBackoff,
 		MaxRetryBackoff: opt.MaxRetryBackoff,
+		Username:        opt.Username,
 		Password:        opt.Password,
 		readOnly:        opt.ReadOnly,
 
@@ -162,7 +171,7 @@ func newClusterNode(clOpt *ClusterOptions, addr string) *clusterNode {
 	opt := clOpt.clientOptions()
 	opt.Addr = addr
 	node := clusterNode{
-		Client: NewClient(opt),
+		Client: clOpt.NewClient(opt),
 	}
 
 	node.latency = math.MaxUint32
