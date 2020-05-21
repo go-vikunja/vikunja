@@ -39,6 +39,8 @@ export default {
 				return
 			}
 
+			this.$set(this, 'tasks', [])
+
 			if (search !== '') {
 				params.s = search
 			}
