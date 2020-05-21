@@ -247,10 +247,22 @@
 		},
 		computed: mapState({
 			buckets: state => state.kanban.buckets,
+			loadedListId: state => state.kanban.listId,
 			loading: LOADING,
 		}),
 		methods: {
 			loadBuckets() {
+
+				// Prevent trying to load buckets if the task popup view is active
+				if(this.$route.name !== 'list.kanban') {
+					return
+				}
+
+				// Only load buckets if we don't already loaded them
+				if(this.loadedListId === this.$route.params.listId) {
+					return
+				}
+
 				this.$store.dispatch('kanban/loadBucketsForList', this.$route.params.listId)
 					.catch(e => {
 						this.error(e, this)

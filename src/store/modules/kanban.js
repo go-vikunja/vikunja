@@ -12,8 +12,12 @@ export default {
 	namespaced: true,
 	state: () => ({
 		buckets: [],
+		listId: 0,
 	}),
 	mutations: {
+		setListId(state, listId) {
+			state.listId = listId
+		},
 		setBuckets(state, buckets) {
 			state.buckets = buckets
 		},
@@ -119,6 +123,7 @@ export default {
 			return bucketService.getAll({listId: listId})
 				.then(r => {
 					ctx.commit('setBuckets', r)
+					ctx.commit('setListId', listId)
 					return Promise.resolve()
 				})
 				.catch(e => {
