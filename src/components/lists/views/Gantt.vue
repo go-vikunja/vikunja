@@ -63,6 +63,7 @@
 	import GanttChart from '../../tasks/gantt-component'
 	import flatPickr from 'vue-flatpickr-component'
 	import Fancycheckbox from '../../global/fancycheckbox'
+	import {saveListView} from '../../../helpers/saveListView'
 
 	export default {
 		name: 'Gantt',
@@ -74,7 +75,7 @@
 		created() {
 			// Save the current list view to local storage
 			// We use local storage and not vuex here to make it persistent across reloads.
-			localStorage.setItem('listView', this.$route.name)
+			saveListView(this.$route.params.listId, this.$route.name)
 		},
 		data() {
 			return {

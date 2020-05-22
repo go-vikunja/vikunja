@@ -199,6 +199,7 @@
 	import {applyDrag} from '../../../helpers/applyDrag'
 	import {mapState} from 'vuex'
 	import {LOADING} from '../../../store/mutation-types'
+	import {saveListView} from '../../../helpers/saveListView'
 
 	export default {
 		name: 'Kanban',
@@ -240,7 +241,7 @@
 
 			// Save the current list view to local storage
 			// We use local storage and not vuex here to make it persistent across reloads.
-			localStorage.setItem('listView', this.$route.name)
+			saveListView(this.$route.params.listId, this.$route.name)
 		},
 		watch: {
 			'$route.params.listId': 'loadBuckets',

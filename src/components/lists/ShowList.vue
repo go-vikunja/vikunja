@@ -27,6 +27,7 @@
 	import ListModel from '../../models/list'
 	import ListService from '../../services/list'
 	import {CURRENT_LIST} from '../../store/mutation-types'
+	import {getListView} from '../../helpers/saveListView'
 
 	export default {
 		data() {
@@ -69,9 +70,9 @@
 					this.$route.name !== 'list.kanban'
 				) {
 
-					const savedListView = localStorage.getItem('listView')
+					const savedListView = getListView(this.$route.params.listId)
 
-					router.replace({name: savedListView ? savedListView : 'list.list', params: {id: this.$route.params.listId}})
+					router.replace({name: savedListView, params: {id: this.$route.params.listId}})
 					return
 				}
 

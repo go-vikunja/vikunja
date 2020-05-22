@@ -113,6 +113,7 @@
 	import TaskModel from '../../../models/task'
 	import SingleTaskInList from '../../tasks/reusable/singleTaskInList'
 	import taskList from '../../tasks/helpers/taskList'
+	import {saveListView} from '../../../helpers/saveListView'
 
 	export default {
 		name: 'List',
@@ -139,7 +140,7 @@
 
 			// Save the current list view to local storage
 			// We use local storage and not vuex here to make it persistent across reloads.
-			localStorage.setItem('listView', this.$route.name)
+			saveListView(this.$route.params.listId, this.$route.name)
 		},
 		methods: {
 			// This function initializes the tasks page and loads the first page of tasks

@@ -154,6 +154,7 @@
 	import DateTableCell from '../../tasks/reusable/date-table-cell'
 	import Fancycheckbox from '../../global/fancycheckbox'
 	import Sort from '../../tasks/reusable/sort'
+	import {saveListView} from '../../../helpers/saveListView'
 
 	export default {
 		name: 'Table',
@@ -205,7 +206,7 @@
 
 			// Save the current list view to local storage
 			// We use local storage and not vuex here to make it persistent across reloads.
-			localStorage.setItem('listView', this.$route.name)
+			saveListView(this.$route.params.listId, this.$route.name)
 		},
 		methods: {
 			initTasks(page, search = '') {
