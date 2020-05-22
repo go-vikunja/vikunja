@@ -26,6 +26,10 @@ COPY run.sh /run.sh
 # copy compiled files from stage 1
 COPY --from=compile-image /build/dist /usr/share/nginx/html
 
+# Unprivileged user
+ENV PUID 1000
+ENV PGID 1000
+
 LABEL maintainer="maintainers@vikunja.io"
 
 CMD "/run.sh"
