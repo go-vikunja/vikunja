@@ -106,7 +106,7 @@ docker run -p 3456:3456 vikunja/api
 {{< /highlight >}}
 
 to run with a standard configuration.
-This will expose 
+This will expose vikunja on port `3456` on the host running the container.
 
 You can mount a local configuration like so:
 
@@ -116,6 +116,18 @@ docker run -p 3456:3456 -v /path/to/config/on/host.yml:/app/vikunja/config.yml:r
 
 Though it is recommended to use eviroment variables or `.env` files to configure Vikunja in docker.
 See [config]({{< ref "config.md">}}) for a list of available configuration options.
+
+### Files volume
+
+By default the container stores all files uploaded and used through vikunja inside of `/app/vikunja/files` which is created as a docker volume.
+You should mount the volume somewhere to the host to permanently store the files and don't loose them if the container restarts.
+
+### Setting user and group id of the user running vikunja
+
+You can set the user and group id of the user running vikunja with the `PUID` and `PGID` evironment variables.
+This follows the pattern used by [the linuxserver.io](https://docs.linuxserver.io/general/understanding-puid-and-pgid) docker images.
+
+This is useful to solve general permission problems when host-mounting volumes such as the volume used for task attachments.
 
 ### Docker compose
 
@@ -132,13 +144,15 @@ services:
       VIKUNJA_DATABASE_TYPE: mysql
       VIKUNJA_DATABASE_USER: root
       VIKUNJA_SERVICE_JWTSECRET: <generated secret>
+    volumes:
+      - ./files:/app/vikunja/files
   db:
     image: mariadb:10
     environment:
       MYSQL_ROOT_PASSWORD: supersecret
       MYSQL_DATABASE: vikunja
     volumes:
-    - ./db:/var/lib/mysql
+      - ./db:/var/lib/mysql
 {{< /highlight >}}
 
 See [full docker example]({{< ref "full-docker-example.md">}}) for more varations of this config.

@@ -30,6 +30,8 @@ services:
       VIKUNJA_REDIS_HOST: 'redis:6379'
       VIKUNJA_CACHE_ENABLED: 1
       VIKUNJA_CACHE_TYPE: redis
+    volumes:
+      - ./files:/app/vikunja/files
   redis:
     image: redis
 {{< /highlight >}}

@@ -28,9 +28,16 @@ LABEL maintainer="maintainers@vikunja.io"
 
 WORKDIR /app/vikunja/
 COPY --from=build-env /go/src/code.vikunja.io/api/vikunja .
-RUN adduser -S -D vikunja -h /app/vikunja -H \
-  && chown vikunja -R /app/vikunja
 ENV VIKUNJA_SERVICE_ROOTPATH=/app/vikunja/
+
+# Dynamic permission changing stuff
+ENV PUID 1000
+ENV PGID 1000
+RUN apk --no-cache add shadow && \
+  addgroup -g ${PGID} vikunja && \
+  adduser -s /bin/sh -D -G vikunja -u ${PUID} vikunja -h /app/vikunja -H && \
+  chown vikunja -R /app/vikunja
+COPY run.sh /run.sh
 
 # Fix time zone settings not working
 RUN apk --no-cache add tzdata
@@ -40,6 +47,5 @@ RUN mkdir /app/vikunja/files && \
   chown -R vikunja /app/vikunja/files
 VOLUME /app/vikunja/files
 
-USER vikunja
-CMD ["/app/vikunja/vikunja"]
+CMD ["/run.sh"]
 EXPOSE 3456

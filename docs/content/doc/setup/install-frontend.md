@@ -45,6 +45,11 @@ which will run the docker image and expose port 80 on the host.
 
 See [full docker example]({{< ref "full-docker-example.md">}}) for more varations of this config.
 
+### Setting user and group id of the user running vikunja
+
+You can set the user and group id of the user running vikunja with the `PUID` and `PGID` evironment variables.
+This follows the pattern used by [the linuxserver.io](https://docs.linuxserver.io/general/understanding-puid-and-pgid) docker images.
+
 ### API URL configuration in docker
 
 When running the frontend with docker, it is possible to set the environment variable `$VIKUNJA_API_URL` to the api url.
