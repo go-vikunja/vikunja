@@ -19,8 +19,7 @@
 					<button
 							class="button noshadow is-primary"
 							@click="searchTasks"
-							:class="{'is-loading': taskCollectionService.loading}"
-							:disabled="searchTerm === ''">
+							:class="{'is-loading': taskCollectionService.loading}">
 						Search
 					</button>
 				</div>

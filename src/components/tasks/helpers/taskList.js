@@ -112,9 +112,11 @@ export default {
 			})
 		},
 		searchTasks() {
-			if (this.searchTerm === '') {
+			// Only search if the search term changed
+			if (this.$route.query === this.searchTerm) {
 				return
 			}
+
 			this.$router.push({
 				name: 'list.list',
 				query: {search: this.searchTerm}
