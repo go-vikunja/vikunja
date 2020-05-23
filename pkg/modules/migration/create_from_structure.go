@@ -30,6 +30,8 @@ func InsertFromStructure(str []*models.NamespaceWithLists, user *user.User) (err
 
 	log.Debugf("[creating structure] Creating %d namespaces", len(str))
 
+	labels := make(map[string]*models.Label)
+
 	// Create all namespaces
 	for _, n := range str {
 		err = n.Create(user)
@@ -117,6 +119,34 @@ func InsertFromStructure(str []*models.NamespaceWithLists, user *user.User) (err
 						}
 						log.Debugf("[creating structure] Created new attachment %d", a.ID)
 					}
+				}
+
+				// Create all labels
+				for _, label := range t.Labels {
+					// Check if we already have a label with that name + color combination and use it
+					// If not, create one and save it for later
+					var lb *models.Label
+					var exists bool
+					lb, exists = labels[label.Title+label.HexColor]
+					if !exists {
+						err = label.Create(user)
+						if err != nil {
+							return err
+						}
+						log.Debugf("[creating structure] Created new label %d", label.ID)
+						labels[label.Title+label.HexColor] = label
+						lb = label
+					}
+
+					lt := &models.LabelTask{
+						LabelID: lb.ID,
+						TaskID:  t.ID,
+					}
+					err = lt.Create(user)
+					if err != nil {
+						return err
+					}
+					log.Debugf("[creating structure] Associated task %d with label %d", t.ID, lb.ID)
 				}
 			}
 		}

@@ -199,6 +199,20 @@ migration:
     # with the code obtained from the wunderlist api.
     # Note that the vikunja frontend expects this to be /migrate/wunderlist
     redirecturl:
+  todoist:
+    # Wheter to enable the todoist migrator or not
+    enable: false
+    # The client id, required for making requests to the wunderlist api
+    # You need to register your vikunja instance at https://developer.todoist.com/appconsole.html to get this
+    clientid:
+    # The client secret, also required for making requests to the todoist api
+    clientsecret:
+    # The url where clients are redirected after they authorized Vikunja to access their todoist items.
+    # This needs to match the url you entered when registering your Vikunja instance at todoist.
+    # This is usually the frontend url where the frontend then makes a request to /migration/todoist/migrate
+    # with the code obtained from the todoist api.
+    # Note that the vikunja frontend expects this to be /migrate/todoist
+    redirecturl:
 
 avatar:
   # Switch between avatar providers. Possible values are gravatar and default.

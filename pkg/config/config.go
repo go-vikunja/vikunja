@@ -101,6 +101,10 @@ const (
 	MigrationWunderlistClientID     Key = `migration.wunderlist.clientid`
 	MigrationWunderlistClientSecret Key = `migration.wunderlist.clientsecret`
 	MigrationWunderlistRedirectURL  Key = `migration.wunderlist.redirecturl`
+	MigrationTodoistEnable          Key = `migration.todoist.enable`
+	MigrationTodoistClientID        Key = `migration.todoist.clientid`
+	MigrationTodoistClientSecret    Key = `migration.todoist.clientsecret`
+	MigrationTodoistRedirectURL     Key = `migration.todoist.redirecturl`
 
 	CorsEnable  Key = `cors.enable`
 	CorsOrigins Key = `cors.origins`
@@ -235,6 +239,7 @@ func InitDefaultConfig() {
 	CorsMaxAge.setDefault(0)
 	// Migration
 	MigrationWunderlistEnable.setDefault(false)
+	MigrationTodoistEnable.setDefault(false)
 	// Avatar
 	AvatarProvider.setDefault("gravatar")
 	AvatarGravaterExpiration.setDefault(3600)

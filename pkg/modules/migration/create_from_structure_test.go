@@ -69,6 +69,28 @@ func TestInsertFromStructure(t *testing.T) {
 									},
 								},
 							},
+							{
+								Title: "Task with labels",
+								Labels: []*models.Label{
+									{
+										Title:    "Label1",
+										HexColor: "ff00ff",
+									},
+									{
+										Title:    "Label2",
+										HexColor: "ff00ff",
+									},
+								},
+							},
+							{
+								Title: "Task with same label",
+								Labels: []*models.Label{
+									{
+										Title:    "Label1",
+										HexColor: "ff00ff",
+									},
+								},
+							},
 						},
 					},
 				},

@@ -348,6 +348,6 @@ func TestWunderlistParsing(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, hierachie)
 	if diff, equal := messagediff.PrettyDiff(hierachie, expectedHierachie); !equal {
-		t.Errorf("ListUser.ReadAll() = %v, want %v, diff: %v", hierachie, expectedHierachie, diff)
+		t.Errorf("converted wunderlist data = %v, want %v, diff: %v", hierachie, expectedHierachie, diff)
 	}
 }

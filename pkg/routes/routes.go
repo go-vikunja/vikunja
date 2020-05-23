@@ -49,6 +49,7 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/migration"
 	migrationHandler "code.vikunja.io/api/pkg/modules/migration/handler"
+	"code.vikunja.io/api/pkg/modules/migration/todoist"
 	"code.vikunja.io/api/pkg/modules/migration/wunderlist"
 	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
 	"code.vikunja.io/api/pkg/routes/caldav"
@@ -432,6 +433,16 @@ func registerAPIRoutes(a *echo.Group) {
 			},
 		}
 		wunderlistMigrationHandler.RegisterRoutes(m)
+	}
+
+	// Todoist
+	if config.MigrationTodoistEnable.GetBool() {
+		todoistMigrationHandler := &migrationHandler.MigrationWeb{
+			MigrationStruct: func() migration.Migrator {
+				return &todoist.Migration{}
+			},
+		}
+		todoistMigrationHandler.RegisterRoutes(m)
 	}
 }
 
