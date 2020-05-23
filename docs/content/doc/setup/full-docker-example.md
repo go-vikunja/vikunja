@@ -190,6 +190,7 @@ services:
       MYSQL_DATABASE: vikunja
     volumes:
       - ./db:/var/lib/mysql
+    restart: unless-stopped
   api:
     image: vikunja/api
     environment:
@@ -202,8 +203,10 @@ services:
       - ./files:/app/vikunja/files
     depends_on:
       - db
+    restart: unless-stopped
   frontend:
     image: vikunja/frontend
+    restart: unless-stopped
   proxy:
     image: nginx
     ports:
@@ -213,4 +216,5 @@ services:
     depends_on:
       - api
       - frontend
+    restart: unless-stopped
 {{< /highlight >}}
