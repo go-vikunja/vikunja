@@ -54,7 +54,8 @@ func initMigration(x *xorm.Engine) *xormigrate.Xormigrate {
 	})
 
 	m := xormigrate.New(x, migrations)
-	m.NewLogger(log.GetLogWriter("database"))
+	logger := log.NewXormLogger("")
+	m.SetLogger(logger)
 	m.InitSchema(initSchema)
 	return m
 }
