@@ -1,14 +1,14 @@
 <template>
 	<div class="content">
-		<h1>Import your data from Wunderlist to Vikunja</h1>
-		<p>Vikunja will import all folders, lists, tasks, notes, reminders and files you have access to.</p>
+		<h1>Import your data from {{ name }} to Vikunja</h1>
+		<p>Vikunja will import all lists, tasks, notes, reminders and files you have access to.</p>
 		<template v-if="isMigrating === false && message === '' && lastMigrationDate === 0">
-			<p>To authorize Vikunja to access your Wunderlist Account, click the button below.</p>
+			<p>To authorize Vikunja to access your {{ name }} Account, click the button below.</p>
 			<a :href="authUrl" class="button is-primary" :class="{'is-loading': migrationService.loading}" :disabled="migrationService.loading">Get Started</a>
 		</template>
 		<div class="migration-in-progress-container" v-else-if="isMigrating === true && message === '' && lastMigrationDate === 0">
 			<div class="migration-in-progress">
-				<img src="/images/migration/wunderlist.png" alt="Wunderlist Logo"/>
+				<img :src="`/images/migration/${identifier}.png`" :alt="name"/>
 				<div class="progress-dots">
 					<span></span>
 					<span></span>
@@ -19,13 +19,13 @@
 					<span></span>
 					<span></span>
 				</div>
-				<img src="/images/logo.svg" alt="Vikunja Logo">
+				<img src="/images/logo.svg" alt="Vikunja">
 			</div>
 			<p>Importing in progress, hang tight...</p>
 		</div>
 		<div v-else-if="lastMigrationDate > 0">
 			<p>
-				It looks like you've already imported your stuff from wunderlist at {{ new Date(lastMigrationDate * 1000) }}.<br/>
+				It looks like you've already imported your stuff from {{ name }} at {{ new Date(lastMigrationDate * 1000) }}.<br/>
 				Importing again is possible, but might create duplicates.
 				Are you sure?
 			</p>
@@ -46,13 +46,12 @@
 </template>
 
 <script>
-	import WunderlistMigrationService from '../../services/migrator/wunderlist'
+	import AbstractMigrationService from "../../services/migrator/abstractMigrationService";
 
 	export default {
-		name: 'wunderlist',
+		name: 'migration',
 		data() {
 			return {
-				migrationService: WunderlistMigrationService,
 				authUrl: '',
 				isMigrating: false,
 				lastMigrationDate: 0,
@@ -60,8 +59,18 @@
 				wunderlistCode: '',
 			}
 		},
+		props: {
+			name: {
+				type: String,
+				required: true,
+			},
+			identifier: {
+				type: String,
+				required: true,
+			},
+		},
 		created() {
-			this.migrationService = new WunderlistMigrationService()
+			this.migrationService = new AbstractMigrationService(this.identifier)
 			this.getAuthUrl()
 			this.message = ''
 

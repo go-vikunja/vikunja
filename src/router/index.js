@@ -27,7 +27,7 @@ import NewTeamComponent from '@/components/teams/NewTeam'
 import ListLabelsComponent from '@/components/labels/ListLabels'
 // Migration
 import MigrationComponent from '../components/migrator/migrate'
-import WunderlistMigrationComponent from '../components/migrator/wunderlist'
+import MigrateServiceComponent from '../components/migrator/migrate-service'
 // List Views
 import ShowListComponent from '../components/lists/ShowList'
 import Kanban from '../components/lists/views/Kanban'
@@ -195,9 +195,9 @@ export default new Router({
 			component: MigrationComponent,
 		},
 		{
-			path: '/migrate/wunderlist',
-			name: 'migrate.wunderlist',
-			component: WunderlistMigrationComponent,
+			path: '/migrate/:service',
+			name: 'migrate',
+			component: MigrateServiceComponent,
 		},
 		{
 			path: '/user/settings',
