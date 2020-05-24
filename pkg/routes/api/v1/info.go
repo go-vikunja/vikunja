@@ -18,6 +18,8 @@ package v1
 
 import (
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/modules/migration/todoist"
+	"code.vikunja.io/api/pkg/modules/migration/wunderlist"
 	"code.vikunja.io/api/pkg/version"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -51,8 +53,16 @@ func Info(c echo.Context) error {
 		RegistrationEnabled:    config.ServiceEnableRegistration.GetBool(),
 		TaskAttachmentsEnabled: config.ServiceEnableTaskAttachments.GetBool(),
 	}
+
+	// Migrators
 	if config.MigrationWunderlistEnable.GetBool() {
-		infos.AvailableMigrators = append(infos.AvailableMigrators, "wunderlist")
+		m := &wunderlist.Migration{}
+		infos.AvailableMigrators = append(infos.AvailableMigrators, m.Name())
 	}
+	if config.MigrationTodoistEnable.GetBool() {
+		m := &todoist.Migration{}
+		infos.AvailableMigrators = append(infos.AvailableMigrators, m.Name())
+	}
+
 	return c.JSON(http.StatusOK, infos)
 }
