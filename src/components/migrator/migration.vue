@@ -23,9 +23,9 @@
 			</div>
 			<p>Importing in progress, hang tight...</p>
 		</div>
-		<div v-else-if="lastMigrationDate > 0">
+		<div v-else-if="lastMigrationDate">
 			<p>
-				It looks like you've already imported your stuff from {{ name }} at {{ new Date(lastMigrationDate * 1000) }}.<br/>
+				It looks like you've already imported your stuff from {{ name }} at {{ formatDate(lastMigrationDate) }}.<br/>
 				Importing again is possible, but might create duplicates.
 				Are you sure?
 			</p>
@@ -54,7 +54,7 @@
 			return {
 				authUrl: '',
 				isMigrating: false,
-				lastMigrationDate: 0,
+				lastMigrationDate: null,
 				message: '',
 				wunderlistCode: '',
 			}
@@ -78,8 +78,8 @@
 				this.wunderlistCode = this.$route.query.code
 				this.migrationService.getStatus()
 					.then(r => {
-						if(r.time_unix > 0) {
-							this.lastMigrationDate = r.time_unix
+						if(r.time_unix) {
+							this.lastMigrationDate = new Date(r.time_unix)
 							return
 						}
 						this.migrate()
