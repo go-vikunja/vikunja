@@ -17,6 +17,7 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/metrics"
 	"code.vikunja.io/api/pkg/timeutil"
 	"code.vikunja.io/api/pkg/user"
@@ -50,6 +51,11 @@ type List struct {
 
 	// Whether or not a list is archived.
 	IsArchived bool `xorm:"not null default false" json:"is_archived" query:"is_archived"`
+
+	// The id of the file this list has set as background
+	BackgroundFileID int64 `xorm:"null" json:"-"`
+	// Holds extra information about the background set since some background providers require attribution or similar. If not null, the background can be accessed at /lists/{listID}/background
+	BackgroundInformation interface{} `xorm:"-" json:"background_information"`
 
 	// A timestamp when this list was created. You cannot change this value.
 	Created timeutil.TimeStamp `xorm:"created not null" json:"created"`
@@ -166,6 +172,16 @@ func (l *List) ReadOne() (err error) {
 			l.IsArchived = true
 		}
 	}
+
+	// Get any background information if there is one set
+	if l.BackgroundFileID != 0 {
+		// Currently unsplash only
+		l.BackgroundInformation, err = GetUnsplashPhotoByFileID(l.BackgroundFileID)
+		if err != nil && !files.IsErrFileIsNotUnsplashFile(err) {
+			return
+		}
+	}
+
 	return nil
 }
 
@@ -558,5 +574,18 @@ func (l *List) Delete() (err error) {
 
 	// Delete all todotasks on that list
 	_, err = x.Where("list_id = ?", l.ID).Delete(&Task{})
+	return
+}
+
+// SetListBackground sets a background file as list background in the db
+func SetListBackground(listID int64, background *files.File) (err error) {
+	l := &List{
+		ID:               listID,
+		BackgroundFileID: background.ID,
+	}
+	_, err = x.
+		Where("id = ?", l.ID).
+		Cols("background_file_id").
+		Update(l)
 	return
 }

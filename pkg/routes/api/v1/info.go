@@ -26,14 +26,15 @@ import (
 )
 
 type vikunjaInfos struct {
-	Version                string   `json:"version"`
-	FrontendURL            string   `json:"frontend_url"`
-	Motd                   string   `json:"motd"`
-	LinkSharingEnabled     bool     `json:"link_sharing_enabled"`
-	MaxFileSize            string   `json:"max_file_size"`
-	RegistrationEnabled    bool     `json:"registration_enabled"`
-	AvailableMigrators     []string `json:"available_migrators"`
-	TaskAttachmentsEnabled bool     `json:"task_attachments_enabled"`
+	Version                    string   `json:"version"`
+	FrontendURL                string   `json:"frontend_url"`
+	Motd                       string   `json:"motd"`
+	LinkSharingEnabled         bool     `json:"link_sharing_enabled"`
+	MaxFileSize                string   `json:"max_file_size"`
+	RegistrationEnabled        bool     `json:"registration_enabled"`
+	AvailableMigrators         []string `json:"available_migrators"`
+	TaskAttachmentsEnabled     bool     `json:"task_attachments_enabled"`
+	EnabledBackgroundProviders []string `json:"enabled_background_providers"`
 }
 
 // Info is the handler to get infos about this vikunja instance
@@ -44,7 +45,7 @@ type vikunjaInfos struct {
 // @Success 200 {object} v1.vikunjaInfos
 // @Router /info [get]
 func Info(c echo.Context) error {
-	infos := vikunjaInfos{
+	info := vikunjaInfos{
 		Version:                version.Version,
 		FrontendURL:            config.ServiceFrontendurl.GetString(),
 		Motd:                   config.ServiceMotd.GetString(),
@@ -57,12 +58,18 @@ func Info(c echo.Context) error {
 	// Migrators
 	if config.MigrationWunderlistEnable.GetBool() {
 		m := &wunderlist.Migration{}
-		infos.AvailableMigrators = append(infos.AvailableMigrators, m.Name())
+		info.AvailableMigrators = append(info.AvailableMigrators, m.Name())
 	}
 	if config.MigrationTodoistEnable.GetBool() {
 		m := &todoist.Migration{}
-		infos.AvailableMigrators = append(infos.AvailableMigrators, m.Name())
+		info.AvailableMigrators = append(info.AvailableMigrators, m.Name())
 	}
 
-	return c.JSON(http.StatusOK, infos)
+	if config.BackgroundsEnabled.GetBool() {
+		if config.BackgroundsUnsplashEnabled.GetBool() {
+			info.EnabledBackgroundProviders = append(info.EnabledBackgroundProviders, "unsplash")
+		}
+	}
+
+	return c.JSON(http.StatusOK, info)
 }

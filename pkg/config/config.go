@@ -112,6 +112,11 @@ const (
 
 	AvatarProvider           Key = `avatar.provider`
 	AvatarGravaterExpiration Key = `avatar.gravatarexpiration`
+
+	BackgroundsEnabled               Key = `backgrounds.enabled`
+	BackgroundsUnsplashEnabled       Key = `backgrounds.providers.unsplash.enabled`
+	BackgroundsUnsplashAccessToken   Key = `backgrounds.providers.unsplash.accesstoken`
+	BackgroundsUnsplashApplicationID Key = `backgrounds.providers.unsplash.applicationid`
 )
 
 // GetString returns a string config value
@@ -243,6 +248,9 @@ func InitDefaultConfig() {
 	// Avatar
 	AvatarProvider.setDefault("gravatar")
 	AvatarGravaterExpiration.setDefault(3600)
+	// List Backgrounds
+	BackgroundsEnabled.setDefault(false)
+	BackgroundsUnsplashEnabled.setDefault(false)
 }
 
 // InitConfig initializes the config, sets defaults etc.

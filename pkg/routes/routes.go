@@ -47,6 +47,9 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/modules/background"
+	backgroundHandler "code.vikunja.io/api/pkg/modules/background/handler"
+	"code.vikunja.io/api/pkg/modules/background/unsplash"
 	"code.vikunja.io/api/pkg/modules/migration"
 	migrationHandler "code.vikunja.io/api/pkg/modules/migration/handler"
 	"code.vikunja.io/api/pkg/modules/migration/todoist"
@@ -443,6 +446,20 @@ func registerAPIRoutes(a *echo.Group) {
 			},
 		}
 		todoistMigrationHandler.RegisterRoutes(m)
+	}
+
+	// List Backgrounds
+	if config.BackgroundsEnabled.GetBool() {
+		a.GET("/lists/:list/background", backgroundHandler.GetListBackground)
+		if config.BackgroundsUnsplashEnabled.GetBool() {
+			unsplashBackgroundProvider := &backgroundHandler.BackgroundProvider{
+				Provider: func() background.Provider {
+					return &unsplash.Provider{}
+				},
+			}
+			a.GET("/backgrounds/unsplash/search", unsplashBackgroundProvider.SearchBackgrounds)
+			a.POST("/lists/:list/backgrounds/unsplash", unsplashBackgroundProvider.SetBackground)
+		}
 	}
 }
 

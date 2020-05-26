@@ -50,3 +50,20 @@ func IsErrFileIsTooLarge(err error) bool {
 	_, ok := err.(ErrFileIsTooLarge)
 	return ok
 }
+
+// ErrFileIsNotUnsplashFile defines an error where a file is not downloaded from unsplash.
+// Used in cases whenever unsplash information about a file is requested, but the file was not downloaded from unsplash.
+type ErrFileIsNotUnsplashFile struct {
+	FileID int64
+}
+
+// Error is the error implementation of ErrFileIsNotUnsplashFile
+func (err ErrFileIsNotUnsplashFile) Error() string {
+	return fmt.Sprintf("file was not downloaded from unsplash [FileID: %d]", err.FileID)
+}
+
+//IsErrFileIsNotUnsplashFile checks if an error is ErrFileIsNotUnsplashFile
+func IsErrFileIsNotUnsplashFile(err error) bool {
+	_, ok := err.(ErrFileIsNotUnsplashFile)
+	return ok
+}

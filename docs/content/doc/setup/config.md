@@ -221,4 +221,20 @@ avatar:
   provider: gravatar
   # When using gravatar, this is the duration in seconds until a cached gravatar user avatar expires
   gravatarexpiration: 3600
+
+backgrounds:
+  # Whether to enable backgrounds for lists at all.
+  enabled: false
+  providers:
+    unsplash:
+      # Whether to enable setting backgrounds from unsplash as list backgrounds
+      enabled: false
+      # You need to create an application for your installation at https://unsplash.com/oauth/applications/new 
+      # and set the access token below.
+      accesstoken:
+      # The unsplash application id is only used for pingback and required as per their api guidelines.
+      # You can find the Application ID in the dashboard for your API application. It should be a numeric ID.
+      # It will only show in the UI if your application has been approved for Enterprise usage, therefore if
+      # you’re in Demo mode, you can also find the ID in the URL at the end: https://unsplash.com/oauth/applications/:application_id
+      applicationid:
 {{< /highlight >}}
