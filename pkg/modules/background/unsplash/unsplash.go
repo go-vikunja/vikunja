@@ -140,6 +140,11 @@ func (p *Provider) Search(search string, page int64) (result []*background.Image
 			ID:    p.ID,
 			URL:   p.Urls.Raw,
 			Thumb: p.Urls.Thumb,
+			Info: &models.UnsplashPhoto{
+				UnsplashID: p.ID,
+				Author:     p.User.Username,
+				AuthorName: p.User.Name,
+			},
 		})
 		photos[p.ID] = p
 	}
