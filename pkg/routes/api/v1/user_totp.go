@@ -82,7 +82,7 @@ func UserTOTPEnable(c echo.Context) error {
 		if he, is := err.(*echo.HTTPError); is {
 			return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid model provided. Error was: %s", he.Message))
 		}
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid model provided."))
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid model provided.")
 	}
 
 	err = user.EnableTOTP(passcode)
@@ -113,7 +113,7 @@ func UserTOTPDisable(c echo.Context) error {
 		if he, is := err.(*echo.HTTPError); is {
 			return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid model provided. Error was: %s", he.Message))
 		}
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid model provided."))
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid model provided.")
 	}
 
 	u, err := user.GetCurrentUser(c)

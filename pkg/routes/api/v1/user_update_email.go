@@ -47,7 +47,7 @@ func UpdateUserEmail(c echo.Context) (err error) {
 		if he, is := err.(*echo.HTTPError); is {
 			return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid model provided. Error was: %s", he.Message))
 		}
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid model provided."))
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid model provided.")
 	}
 
 	emailUpdate.User, err = user.GetCurrentUser(c)

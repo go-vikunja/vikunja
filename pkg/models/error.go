@@ -35,7 +35,7 @@ func IsErrGenericForbidden(err error) bool {
 }
 
 func (err ErrGenericForbidden) Error() string {
-	return fmt.Sprintf("Forbidden")
+	return "Forbidden"
 }
 
 // ErrorCodeGenericForbidden holds the unique world-error code of this error
@@ -60,7 +60,7 @@ func IsErrIDCannotBeZero(err error) bool {
 }
 
 func (err ErrIDCannotBeZero) Error() string {
-	return fmt.Sprintf("ID cannot be empty or 0")
+	return "ID cannot be empty or 0"
 }
 
 // ErrCodeIDCannotBeZero holds the unique world-error code of this error
@@ -169,7 +169,7 @@ func IsErrListTitleCannotBeEmpty(err error) bool {
 }
 
 func (err ErrListTitleCannotBeEmpty) Error() string {
-	return fmt.Sprintf("List title cannot be empty.")
+	return "List title cannot be empty."
 }
 
 // ErrCodeListTitleCannotBeEmpty holds the unique world-error code of this error
@@ -193,7 +193,7 @@ func IsErrListShareDoesNotExist(err error) bool {
 }
 
 func (err ErrListShareDoesNotExist) Error() string {
-	return fmt.Sprintf("List share does not exist.")
+	return "List share does not exist."
 }
 
 // ErrCodeListShareDoesNotExist holds the unique world-error code of this error
@@ -216,7 +216,7 @@ func IsErrListIdentifierIsNotUnique(err error) bool {
 }
 
 func (err ErrListIdentifierIsNotUnique) Error() string {
-	return fmt.Sprintf("List identifier is not unique.")
+	return "List identifier is not unique."
 }
 
 // ErrCodeListIdentifierIsNotUnique holds the unique world-error code of this error
@@ -268,7 +268,7 @@ func IsErrTaskCannotBeEmpty(err error) bool {
 }
 
 func (err ErrTaskCannotBeEmpty) Error() string {
-	return fmt.Sprintf("List task title cannot be empty.")
+	return "List task title cannot be empty."
 }
 
 // ErrCodeTaskCannotBeEmpty holds the unique world-error code of this error
@@ -336,7 +336,7 @@ func IsErrBulkTasksNeedAtLeastOne(err error) bool {
 }
 
 func (err ErrBulkTasksNeedAtLeastOne) Error() string {
-	return fmt.Sprintf("Need at least one task when bulk editing tasks")
+	return "Need at least one task when bulk editing tasks"
 }
 
 // ErrCodeBulkTasksNeedAtLeastOne holds the unique world-error code of this error

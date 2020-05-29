@@ -74,7 +74,7 @@ require (
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
 	gopkg.in/d4l3k/messagediff.v1 v1.2.1
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
-	honnef.co/go/tools v0.0.1-2019.2.3
+	honnef.co/go/tools v0.0.1-2020.1.4
 	src.techknowlogick.com/xgo v0.0.0-20200514233805-209a5cf70012
 	src.techknowlogick.com/xormigrate v1.2.0
 	xorm.io/builder v0.3.7

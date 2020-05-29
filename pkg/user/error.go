@@ -85,7 +85,7 @@ func IsErrNoUsernamePassword(err error) bool {
 }
 
 func (err ErrNoUsernamePassword) Error() string {
-	return fmt.Sprintf("No username and password provided")
+	return "No username and password provided"
 }
 
 // ErrCodeNoUsernamePassword holds the unique world-error code of this error
@@ -129,7 +129,7 @@ func IsErrCouldNotGetUserID(err error) bool {
 }
 
 func (err ErrCouldNotGetUserID) Error() string {
-	return fmt.Sprintf("Could not get user ID")
+	return "Could not get user ID"
 }
 
 // ErrCodeCouldNotGetUserID holds the unique world-error code of this error
@@ -208,7 +208,7 @@ type ErrWrongUsernameOrPassword struct {
 }
 
 func (err ErrWrongUsernameOrPassword) Error() string {
-	return fmt.Sprintf("Wrong username or password")
+	return "Wrong username or password"
 }
 
 // ErrCodeWrongUsernameOrPassword holds the unique world-error code of this error
@@ -258,7 +258,7 @@ func IsErrEmptyNewPassword(err error) bool {
 }
 
 func (err ErrEmptyNewPassword) Error() string {
-	return fmt.Sprintf("New password is empty")
+	return "New password is empty"
 }
 
 // ErrCodeEmptyNewPassword holds the unique world-error code of this error
@@ -279,7 +279,7 @@ func IsErrEmptyOldPassword(err error) bool {
 }
 
 func (err ErrEmptyOldPassword) Error() string {
-	return fmt.Sprintf("Old password is empty")
+	return "Old password is empty"
 }
 
 // ErrCodeEmptyOldPassword holds the unique world-error code of this error
@@ -300,7 +300,7 @@ func IsErrTOTPAlreadyEnabled(err error) bool {
 }
 
 func (err ErrTOTPAlreadyEnabled) Error() string {
-	return fmt.Sprintf("Totp is already enabled for this user")
+	return "Totp is already enabled for this user"
 }
 
 // ErrCodeTOTPAlreadyEnabled holds the unique world-error code of this error
@@ -325,7 +325,7 @@ func IsErrTOTPNotEnabled(err error) bool {
 }
 
 func (err ErrTOTPNotEnabled) Error() string {
-	return fmt.Sprintf("Totp is not enabled for this user")
+	return "Totp is not enabled for this user"
 }
 
 // ErrCodeTOTPNotEnabled holds the unique world-error code of this error
@@ -352,7 +352,7 @@ func IsErrInvalidTOTPPasscode(err error) bool {
 }
 
 func (err ErrInvalidTOTPPasscode) Error() string {
-	return fmt.Sprintf("Invalid totp passcode")
+	return "Invalid totp passcode"
 }
 
 // ErrCodeInvalidTOTPPasscode holds the unique world-error code of this error
