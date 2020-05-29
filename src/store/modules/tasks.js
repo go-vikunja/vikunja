@@ -49,7 +49,11 @@ export default {
 				.then(r => {
 					const t = ctx.rootGetters['kanban/getTaskById'](taskId)
 					if (t.task === null) {
-						return Promise.reject('Task not found.')
+						// Don't try further adding a label if the task is not in kanban
+						// Usually this means the kanban board hasn't been accessed until now.
+						// Vuex seems to have its difficulties with that, so we just log the error and fail silently.
+						console.debug('Could not add assignee to task in kanban, task not found', t)
+						return Promise.resolve(r)
 					}
 					t.task.assignees.push(user)
 					ctx.commit('kanban/setTaskInBucketByIndex', t, {root: true})
@@ -68,7 +72,11 @@ export default {
 				.then(r => {
 					const t = ctx.rootGetters['kanban/getTaskById'](taskId)
 					if (t.task === null) {
-						return Promise.reject('Task not found.')
+						// Don't try further adding a label if the task is not in kanban
+						// Usually this means the kanban board hasn't been accessed until now.
+						// Vuex seems to have its difficulties with that, so we just log the error and fail silently.
+						console.debug('Could not remove assignee from task in kanban, task not found', t)
+						return Promise.resolve(r)
 					}
 
 					for (const a in t.task.assignees) {
@@ -95,7 +103,11 @@ export default {
 				.then(r => {
 					const t = ctx.rootGetters['kanban/getTaskById'](taskId)
 					if (t.task === null) {
-						return Promise.reject('Task not found.')
+						// Don't try further adding a label if the task is not in kanban
+						// Usually this means the kanban board hasn't been accessed until now.
+						// Vuex seems to have its difficulties with that, so we just log the error and fail silently.
+						console.debug('Could not add label to task in kanban, task not found', t)
+						return Promise.resolve(r)
 					}
 					t.task.labels.push(label)
 					ctx.commit('kanban/setTaskInBucketByIndex', t, {root: true})
@@ -115,7 +127,11 @@ export default {
 				.then(r => {
 					const t = ctx.rootGetters['kanban/getTaskById'](taskId)
 					if (t.task === null) {
-						return Promise.reject('Task not found.')
+						// Don't try further adding a label if the task is not in kanban
+						// Usually this means the kanban board hasn't been accessed until now.
+						// Vuex seems to have its difficulties with that, so we just log the error and fail silently.
+						console.debug('Could not remove label from task in kanban, task not found', t)
+						return Promise.resolve(r)
 					}
 
 					// Remove the label from the list
