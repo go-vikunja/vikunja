@@ -3,7 +3,7 @@
 		<h3 v-if="showAll">Current tasks</h3>
 		<h3 v-else>Tasks from {{startDate.toLocaleDateString()}} until {{endDate.toLocaleDateString()}}</h3>
 		<template v-if="!taskService.loading && (!hasUndoneTasks || !tasks)">
-			<h3 class="nothing">Nothing to to - Have a nice day!</h3>
+			<h3 class="nothing">Nothing to do - Have a nice day!</h3>
 			<img src="/images/cool.svg" alt=""/>
 		</template>
 		<div class="spinner" :class="{ 'is-loading': taskService.loading}"></div>
