@@ -53,6 +53,30 @@ type header struct {
 	Content string
 }
 
+// SendTestMail sends a test mail to a receipient.
+// It works without a queue.
+func SendTestMail(to string) error {
+	if config.MailerHost.GetString() == "" {
+		log.Warning("Mailer seems to be not configured! Please see the config docs for more details.")
+		return nil
+	}
+
+	d := getDialer()
+	s, err := d.Dial()
+	if err != nil {
+		return err
+	}
+	defer s.Close()
+
+	m := gomail.NewMessage()
+	m.SetHeader("From", config.MailerFromEmail.GetString())
+	m.SetHeader("To", to)
+	m.SetHeader("Subject", "Test from Vikunja")
+	m.SetBody("text/plain", "This is a test mail! If you got this, Vikunja is correctly set up to send emails.")
+
+	return gomail.Send(s, m)
+}
+
 // SendMail puts a mail in the queue
 func SendMail(opts *Opts) {
 	m := gomail.NewMessage()

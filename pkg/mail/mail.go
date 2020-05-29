@@ -27,6 +27,16 @@ import (
 // Queue is the mail queue
 var Queue chan *gomail.Message
 
+func getDialer() *gomail.Dialer {
+	d := gomail.NewDialer(config.MailerHost.GetString(), config.MailerPort.GetInt(), config.MailerUsername.GetString(), config.MailerPassword.GetString())
+	// #nosec
+	d.TLSConfig = &tls.Config{
+		InsecureSkipVerify: config.MailerSkipTLSVerify.GetBool(),
+		ServerName:         config.MailerHost.GetString(),
+	}
+	return d
+}
+
 // StartMailDaemon starts the mail daemon
 func StartMailDaemon() {
 	Queue = make(chan *gomail.Message, config.MailerQueuelength.GetInt())
@@ -41,9 +51,7 @@ func StartMailDaemon() {
 	}
 
 	go func() {
-		d := gomail.NewDialer(config.MailerHost.GetString(), config.MailerPort.GetInt(), config.MailerUsername.GetString(), config.MailerPassword.GetString())
-		// #nosec
-		d.TLSConfig = &tls.Config{InsecureSkipVerify: config.MailerSkipTLSVerify.GetBool()}
+		d := getDialer()
 
 		var s gomail.SendCloser
 		var err error
