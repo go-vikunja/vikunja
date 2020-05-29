@@ -25,7 +25,7 @@ import (
 type Image struct {
 	ID    string `json:"id"`
 	URL   string `json:"url"`
-	Thumb string `json:"thumb"`
+	Thumb string `json:"thumb,omitempty"`
 	// This can be used to supply extra information from an image provider to clients
 	Info interface{} `json:"info,omitempty"`
 }

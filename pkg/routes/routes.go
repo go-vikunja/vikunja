@@ -459,6 +459,8 @@ func registerAPIRoutes(a *echo.Group) {
 			}
 			a.GET("/backgrounds/unsplash/search", unsplashBackgroundProvider.SearchBackgrounds)
 			a.POST("/lists/:list/backgrounds/unsplash", unsplashBackgroundProvider.SetBackground)
+			a.GET("/backgrounds/unsplash/images/:image/thumb", unsplash.ProxyUnsplashThumb)
+			a.GET("/backgrounds/unsplash/images/:image", unsplash.ProxyUnsplashImage)
 		}
 	}
 }

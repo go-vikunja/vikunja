@@ -26,6 +26,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 // Provider represents an unsplash image provider
@@ -90,6 +91,18 @@ func doGet(url string, result interface{}) (err error) {
 	return
 }
 
+func getImageID(fullURL string) string {
+	// Unsplash image urls have the form
+	// https://images.unsplash.com/photo-1590622878565-c662a7fd1394?ixlib=rb-1.2.1&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=200&fit=max&ixid=eyJhcHBfaWQiOjcyODAwfQ
+	// We only need the "photo-*" part of it.
+	parts := strings.Split(strings.Split(fullURL, "?")[0], "photo-")
+	if len(parts) < 2 {
+		log.Errorf("Unsplash thumb url does not contain enough parts [parts: %v]", parts)
+		return ""
+	}
+	return parts[1]
+}
+
 // Search is the implementation to search on unsplash
 // @Summary Search for a background from unsplash
 // @Description Search for a list background from unsplash
@@ -114,9 +127,8 @@ func (p *Provider) Search(search string, page int64) (result []*background.Image
 		result = []*background.Image{}
 		for _, p := range collectionResult {
 			result = append(result, &background.Image{
-				ID:    p.ID,
-				URL:   p.Urls.Raw,
-				Thumb: p.Urls.Thumb,
+				ID:  p.ID,
+				URL: getImageID(p.Urls.Raw),
 				Info: &models.UnsplashPhoto{
 					UnsplashID: p.ID,
 					Author:     p.User.Username,
@@ -137,9 +149,8 @@ func (p *Provider) Search(search string, page int64) (result []*background.Image
 	result = []*background.Image{}
 	for _, p := range searchResult.Results {
 		result = append(result, &background.Image{
-			ID:    p.ID,
-			URL:   p.Urls.Raw,
-			Thumb: p.Urls.Thumb,
+			ID:  p.ID,
+			URL: getImageID(p.Urls.Raw),
 			Info: &models.UnsplashPhoto{
 				UnsplashID: p.ID,
 				Author:     p.User.Username,
