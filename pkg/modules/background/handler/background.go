@@ -86,6 +86,10 @@ func (bp *BackgroundProvider) SetBackground(c echo.Context) error {
 		log.Infof("Tried to update list background of list %d while not having the rights for it (User: %v)", listID, auth)
 		return echo.NewHTTPError(http.StatusForbidden)
 	}
+	// Load the list
+	if err := list.GetSimpleByID(); err != nil {
+		return handler.HandleHTTPError(err, c)
+	}
 
 	image := &background.Image{}
 	err = c.Bind(image)
