@@ -13,6 +13,7 @@ export default {
 		registrationEnabled: true,
 		availableMigrators: [],
 		taskAttachmentsEnabled: true,
+		totpEnabled: true,
 	}),
 	mutations: {
 		[CONFIG](state, config) {
@@ -24,6 +25,7 @@ export default {
 			state.registrationEnabled = config.registration_enabled
 			state.availableMigrators = config.available_migrators
 			state.taskAttachmentsEnabled = config.task_attachments_enabled
+			state.totpEnabled = config.totp_enabled
 		},
 	},
 	actions: {

@@ -75,7 +75,7 @@
 				</div>
 			</div>
 		</div>
-		<div class="card">
+		<div class="card" v-if="totpEnabled">
 			<header class="card-header">
 				<p class="card-header-title">
 					Two Factor Authentication
@@ -132,6 +132,8 @@
 	import TotpModel from '../../models/totp'
 	import TotpService from '../../services/totp'
 
+	import {mapState} from 'vuex'
+
 	export default {
 		name: 'Settings',
 		data() {
@@ -177,6 +179,9 @@
 					this.error(e, this)
 				})
 		},
+		computed: mapState({
+			totpEnabled: state => state.config.totpEnabled
+		}),
 		methods: {
 			updatePassword() {
 				if (this.passwordConfirm !== this.passwordUpdate.newPassword) {
