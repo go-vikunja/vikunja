@@ -1,6 +1,10 @@
 
 export const saveListView = (listId, routeName) => {
-	const savedListViewJson = JSON.parse(localStorage.getItem('listView'))
+	const savedListView = localStorage.getItem('listView')
+	let savedListViewJson = false
+	if (savedListView !== null) {
+		savedListViewJson = JSON.parse(savedListView)
+	}
 
 	let listView = {}
 	if(savedListViewJson) {
