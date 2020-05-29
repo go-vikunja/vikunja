@@ -17,6 +17,7 @@
 package unsplash
 
 import (
+	"bytes"
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
@@ -199,6 +200,13 @@ func (p *Provider) Set(image *background.Image, list *models.List, auth web.Auth
 		return
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode > 399 {
+		b := bytes.Buffer{}
+		_, _ = b.ReadFrom(resp.Body)
+		log.Errorf("Error getting unsplash photo %s: Request failed with status %d, message was %s", photo.ID, resp.StatusCode, b.String())
+		return
+	}
 
 	log.Debugf("Downloaded Unsplash Photo %s", image.ID)
 
