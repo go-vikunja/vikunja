@@ -35,6 +35,7 @@ type vikunjaInfos struct {
 	AvailableMigrators         []string `json:"available_migrators"`
 	TaskAttachmentsEnabled     bool     `json:"task_attachments_enabled"`
 	EnabledBackgroundProviders []string `json:"enabled_background_providers"`
+	TotpEnabled                bool     `json:"totp_enabled"`
 }
 
 // Info is the handler to get infos about this vikunja instance
@@ -53,6 +54,7 @@ func Info(c echo.Context) error {
 		MaxFileSize:            config.FilesMaxSize.GetString(),
 		RegistrationEnabled:    config.ServiceEnableRegistration.GetBool(),
 		TaskAttachmentsEnabled: config.ServiceEnableTaskAttachments.GetBool(),
+		TotpEnabled:            config.ServiceEnableTotp.GetBool(),
 	}
 
 	// Migrators

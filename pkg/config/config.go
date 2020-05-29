@@ -48,6 +48,7 @@ const (
 	ServiceEnableTaskAttachments Key = `service.enabletaskattachments`
 	ServiceTimeZone              Key = `service.timezone`
 	ServiceEnableTaskComments    Key = `service.enabletaskcomments`
+	ServiceEnableTotp            Key = `service.enabletotp`
 
 	DatabaseType                  Key = `database.type`
 	DatabaseHost                  Key = `database.host`
@@ -188,6 +189,7 @@ func InitDefaultConfig() {
 	ServiceEnableTaskAttachments.setDefault(true)
 	ServiceTimeZone.setDefault("GMT")
 	ServiceEnableTaskComments.setDefault(true)
+	ServiceEnableTotp.setDefault(true)
 
 	// Database
 	DatabaseType.setDefault("sqlite")

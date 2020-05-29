@@ -17,6 +17,7 @@
 package user
 
 import (
+	"code.vikunja.io/api/pkg/config"
 	"github.com/pquerna/otp"
 	"github.com/pquerna/otp/totp"
 	"image"
@@ -46,6 +47,9 @@ type TOTPPasscode struct {
 
 // TOTPEnabledForUser checks if totp is enabled for a user - not if it is activated, use GetTOTPForUser to check that.
 func TOTPEnabledForUser(user *User) (bool, error) {
+	if !config.ServiceEnableTotp.GetBool() {
+		return false, nil
+	}
 	return x.Where("user_id = ?", user.ID).Exist(&TOTP{})
 }
 

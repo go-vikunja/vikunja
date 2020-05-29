@@ -73,6 +73,8 @@ service:
   timezone: GMT
   # Whether task comments should be enabled or not
   enabletaskcomments: true
+  # Whether totp is enabled. In most cases you want to leave that enabled.
+  enabletotp: true
 
 database:
   # Database type to use. Supported types are mysql, postgres and sqlite.
