@@ -135,7 +135,7 @@ func (p *Provider) Search(search string, page int64) (result []*background.Image
 		var existsForPage bool
 
 		if emptySearchResult != nil &&
-			time.Since(emptySearchResult.lastCached) < time.Minute {
+			time.Since(emptySearchResult.lastCached) < time.Hour {
 			_, existsForPage = emptySearchResult.images[page]
 		}
 
