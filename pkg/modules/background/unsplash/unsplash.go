@@ -28,6 +28,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // Provider represents an unsplash image provider
@@ -70,6 +71,15 @@ type Photo struct {
 // Very simple caching method - pretty much only used to retain information when saving an image
 // FIXME: Should use a proper cache
 var photos map[string]*Photo
+
+// We're caching the initial collection to save a few api requests as this is retrieved every time a
+// user opens the settings page.
+type initialCollection struct {
+	lastCached time.Time
+	images     []*background.Image
+}
+
+var emptySearchResult *initialCollection
 
 func init() {
 	photos = make(map[string]*Photo)
@@ -119,6 +129,14 @@ func (p *Provider) Search(search string, page int64) (result []*background.Image
 
 	// If we don't have a search query, return results from the unsplash featured collection
 	if search == "" {
+
+		if emptySearchResult != nil && time.Since(emptySearchResult.lastCached) < time.Minute {
+			log.Debugf("Serving intial unsplash collection from cache, last updated at %v", emptySearchResult.lastCached)
+			return emptySearchResult.images, nil
+		}
+
+		log.Debug("Retrieving initial unsplash collection from unsplash api")
+
 		collectionResult := []*Photo{}
 		err = doGet("collections/317099/photos?page="+strconv.FormatInt(page, 10)+"&per_page=25&order_by=latest", &collectionResult)
 		if err != nil {
@@ -137,6 +155,11 @@ func (p *Provider) Search(search string, page int64) (result []*background.Image
 				},
 			})
 			photos[p.ID] = p
+		}
+
+		emptySearchResult = &initialCollection{
+			lastCached: time.Now(),
+			images:     result,
 		}
 		return
 	}
