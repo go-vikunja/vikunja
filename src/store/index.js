@@ -46,10 +46,20 @@ export const store = new Vuex.Store({
 		[CURRENT_LIST](state, currentList) {
 			// Not sure if this is the right way to do it but hey, it works
 			if (
+				// List changed
 				currentList.id !== state.currentList.id ||
+				// The current list got a new background and didn't have one previously
+				(
+					currentList.backgroundInformation &&
+					!state.currentList.backgroundInformation
+				) ||
+				// The current list got a new background and had one previously
 				(
 					currentList.backgroundInformation &&
 					currentList.backgroundInformation.unsplashId &&
+					state.currentList &&
+					state.currentList.backgroundInformation &&
+					state.currentList.backgroundInformation.unsplashId &&
 					currentList.backgroundInformation.unsplashId !== state.currentList.backgroundInformation.unsplashId
 				)
 			) {
