@@ -114,12 +114,7 @@ func getImageID(fullURL string) string {
 	// Unsplash image urls have the form
 	// https://images.unsplash.com/photo-1590622878565-c662a7fd1394?ixlib=rb-1.2.1&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=200&fit=max&ixid=eyJhcHBfaWQiOjcyODAwfQ
 	// We only need the "photo-*" part of it.
-	parts := strings.Split(strings.Split(fullURL, "?")[0], "photo-")
-	if len(parts) < 2 {
-		log.Errorf("Unsplash thumb url does not contain enough parts [parts: %v]", parts)
-		return ""
-	}
-	return parts[1]
+	return strings.Replace(strings.Split(fullURL, "?")[0], "https://images.unsplash.com/", "", 1)
 }
 
 // Gets an unsplash photo either from cache or directly from the unsplash api
