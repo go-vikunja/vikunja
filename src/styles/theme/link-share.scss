@@ -7,10 +7,15 @@
 
   .logout {
     text-align: right;
+    margin-bottom: 1rem;
   }
 
   .column {
     max-width: 100%;
+  }
+
+  .card {
+    background: $white;
   }
 }
 

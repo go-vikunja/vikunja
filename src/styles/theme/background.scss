@@ -1,4 +1,4 @@
-.app-container.has-background {
+.app-container.has-background, .link-share-container.has-background {
   background-position: center;
   background-size: cover;
   background-repeat: no-repeat;
@@ -47,4 +47,13 @@
 
 .navbar.has-background {
   background: $transparent-background-light;
+}
+
+.link-share-container.has-background .view {
+  background: transparent;
+  border: none;
+
+  .logout .button {
+    box-shadow: none;
+  }
 }

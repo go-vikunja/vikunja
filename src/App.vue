@@ -186,13 +186,23 @@
 					</div>
 				</div>
 			</div>
-			<div v-else-if="userAuthenticated && (userInfo && userInfo.type === authTypes.LINK_SHARE)">
+			<div
+					v-else-if="userAuthenticated && (userInfo && userInfo.type === authTypes.LINK_SHARE)"
+					class="link-share-container"
+					:class="{'has-background': background}"
+					:style="{'background-image': `url(${background})`}"
+			>
 				<div class="container has-text-centered link-share-view">
 					<div class="column is-10 is-offset-1">
 						<img src="/images/logo-full.svg" alt="Vikunja" class="logo"/>
-						<div class="box has-text-left">
+						<h1
+								class="title"
+								:style="{ 'opacity': currentList.title === '' ? '0': '1' }">
+							{{ currentList.title === '' ? 'Loading...': currentList.title}}
+						</h1>
+						<div class="box has-text-left view">
 							<div class="logout">
-								<a @click="logout()" class="button logout">
+								<a @click="logout()" class="button">
 									<span>Logout</span>
 									<span class="icon is-small">
 									<icon icon="sign-out-alt"/>
