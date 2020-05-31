@@ -20,7 +20,7 @@ export default class BackgroundUnsplashService extends AbstractService {
 
 	thumb(model) {
 		return this.http({
-			url: `/backgrounds/unsplash/images/${model.url}/thumb`,
+			url: `/backgrounds/unsplash/images/${model.id}/thumb`,
 			method: 'GET',
 			responseType: 'blob',
 		})
