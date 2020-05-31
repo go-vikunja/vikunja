@@ -82,6 +82,9 @@
 		},
 		methods: {
 			newBackgroundSearch() {
+				if (!this.unsplashBackgroundEnabled) {
+					return
+				}
 				// This is an extra method to reset a few things when searching to not break loading more photos.
 				this.$set(this, 'backgroundSearchResult', [])
 				this.$set(this, 'backgroundThumbs', {})
