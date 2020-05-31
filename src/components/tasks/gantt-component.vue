@@ -333,8 +333,6 @@
 									}
 								}
 							}
-
-							this.success({message: 'The task was successfully updated.'}, this)
 						})
 						.catch(e => {
 							this.error(e, this)
@@ -369,7 +367,6 @@
 						this.tasksWithoutDates.push(this.addGantAttributes(r))
 						this.newTaskTitle = ''
 						this.hideCrateNewTask()
-						this.success({message: 'The task was successfully created.'}, this)
 					})
 					.catch(e => {
 						this.error(e, this)
