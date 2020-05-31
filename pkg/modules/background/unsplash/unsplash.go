@@ -140,7 +140,7 @@ func (p *Provider) Search(search string, page int64) (result []*background.Image
 		}
 
 		if existsForPage {
-			log.Debugf("Serving intial unsplash collection for page %d from cache, last updated at %v", page, emptySearchResult.lastCached)
+			log.Debugf("Serving initial unsplash collection for page %d from cache, last updated at %v", page, emptySearchResult.lastCached)
 			return emptySearchResult.images[page], nil
 		}
 
