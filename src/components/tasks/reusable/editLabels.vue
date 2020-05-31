@@ -109,7 +109,6 @@
 			addLabel(label) {
 				this.$store.dispatch('tasks/addLabel', {label: label, taskId: this.taskId})
 					.then(() => {
-						this.success({message: 'The label was successfully added.'}, this)
 						this.$emit('input', this.labels)
 					})
 					.catch(e => {
@@ -125,7 +124,6 @@
 								this.labels.splice(l, 1)
 							}
 						}
-						this.success({message: 'The label was successfully removed.'}, this)
 						this.$emit('input', this.labels)
 					})
 					.catch(e => {

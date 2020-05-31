@@ -319,11 +319,6 @@
 					task.bucketId = bucketId
 
 					this.$store.dispatch('tasks/update', task)
-						.then(() => {
-							// Update the block with the new task details
-							// this.$store.commit('kanban/setTaskInBucketByIndex', {bucketIndex, taskIndex, task: t})
-							this.success({message: 'The task was moved successfully!'}, this)
-						})
 						.catch(e => {
 							this.error(e, this)
 						})
@@ -374,7 +369,6 @@
 					.then(r => {
 						this.newTaskText = ''
 						this.$store.commit('kanban/addTaskToBucket', r)
-						this.success({message: 'The task was created successfully!'}, this)
 					})
 					.catch(e => {
 						this.error(e, this)
@@ -391,7 +385,6 @@
 					.then(() => {
 						this.newBucketTitle = ''
 						this.showNewBucketInput = false
-						this.success({message: 'The bucket was created successfully!'}, this)
 					})
 					.catch(e => {
 						this.error(e, this)
@@ -412,9 +405,6 @@
 				})
 
 				this.$store.dispatch('kanban/deleteBucket', bucket)
-					.then(r => {
-						this.success(r, this)
-					})
 					.catch(e => {
 						this.error(e, this)
 					})
@@ -440,7 +430,6 @@
 
 				this.$store.dispatch('kanban/updateBucket', bucket)
 					.then(r => {
-						this.success({message: 'The bucket title was updated successfully!'}, this)
 						realBucket.title = r.title
 					})
 					.catch(e => {

@@ -172,7 +172,6 @@
 						this.relatedTasks[this.newTaskRelationKind].push(this.newTaskRelationTask)
 						this.newTaskRelationKind = 'unset'
 						this.newTaskRelationTask = new TaskModel()
-						this.success({message: 'The task relation was created successfully'}, this)
 					})
 					.catch(e => {
 						this.error(e, this)
@@ -185,7 +184,7 @@
 					otherTaskId: this.relationToDelete.otherTaskId,
 				})
 				this.taskRelationService.delete(rel)
-					.then(r => {
+					.then(() => {
 						Object.keys(this.relatedTasks).forEach(relationKind => {
 							for (const t in this.relatedTasks[relationKind]) {
 								if (this.relatedTasks[relationKind][t].id === this.relationToDelete.otherTaskId && relationKind === this.relationToDelete.relationKind) {
@@ -193,7 +192,6 @@
 								}
 							}
 						})
-						this.success(r, this)
 					})
 					.catch(e => {
 						this.error(e, this)

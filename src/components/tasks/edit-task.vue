@@ -220,7 +220,6 @@
 				this.taskService.update(this.taskEditTask)
 					.then(r => {
 						this.$set(this, 'taskEditTask', r)
-						this.success({message: 'The task was successfully updated.'}, this)
 						this.initTaskFields()
 					})
 					.catch(e => {

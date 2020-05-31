@@ -477,9 +477,9 @@
 								title: 'Undo',
 								callback: undoCallback,
 							}]
+							this.success({message: 'The task was saved successfully.'}, this, actions)
 						}
 						this.dueDate = this.task.dueDate
-						this.success({message: 'The task was saved successfully.'}, this, actions)
 						this.setActiveFields()
 					})
 					.catch(e => {

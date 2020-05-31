@@ -84,9 +84,6 @@
 		methods: {
 			addAssignee(user) {
 				this.$store.dispatch('tasks/addAssignee', {user: user, taskId: this.taskId})
-					.then(() => {
-						this.success({message: 'The user was successfully assigned.'}, this)
-					})
 					.catch(e => {
 						this.error(e, this)
 					})
@@ -100,7 +97,6 @@
 								this.assignees.splice(a, 1)
 							}
 						}
-						this.success({message: 'The user was successfully unassigned.'}, this)
 					})
 					.catch(e => {
 						this.error(e, this)

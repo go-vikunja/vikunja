@@ -158,7 +158,6 @@
 					.then(r => {
 						if(r.success !== null) {
 							r.success.forEach(a => {
-								this.success({message: 'Successfully uploaded ' + a.file.name}, this)
 								this.attachments.push(a)
 								this.$store.dispatch('tasks/addTaskAttachment', {taskId: this.taskId, attachment: a})
 							})

@@ -161,7 +161,6 @@
 						this.tasks.push(r)
 						this.sortTasks()
 						this.newTaskText = ''
-						this.success({message: 'The task was successfully created.'}, this)
 					})
 					.catch(e => {
 						this.error(e, this)

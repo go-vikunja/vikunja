@@ -127,7 +127,6 @@
 				this.taskCommentService.create(this.newComment)
 					.then(r => {
 						this.comments.push(r)
-						this.success({message: 'The comment was sucessfully added.'}, this)
 						this.newComment.comment = ''
 					})
 					.catch(e => {
@@ -154,7 +153,6 @@
 								this.$set(this.comments, c, r)
 							}
 						}
-						this.success({message: 'The comment was successfully updated.'}, this)
 					})
 					.catch(e => {
 						this.error(e, this)
@@ -165,13 +163,12 @@
 			},
 			deleteComment() {
 				this.taskCommentService.delete(this.commentToDelete)
-					.then(r => {
+					.then(() => {
 						for (const a in this.comments) {
 							if (this.comments[a].id === this.commentToDelete.id) {
 								this.comments.splice(a, 1)
 							}
 						}
-						this.success(r, this)
 					})
 					.catch(e => {
 						this.error(e, this)
