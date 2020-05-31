@@ -17,9 +17,21 @@
 package unsplash
 
 import (
+	"code.vikunja.io/web/handler"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )
+
+func unsplashImage(url string, c echo.Context) error {
+	resp, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode > 399 {
+		return echo.ErrNotFound
+	}
+	return c.Stream(http.StatusOK, "image/jpg", resp.Body)
+}
 
 // ProxyUnsplashImage proxies a thumbnail from unsplash for privacy reasons.
 // @Summary Get an unsplash image
@@ -33,15 +45,12 @@ import (
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /backgrounds/unsplash/image/{image} [get]
 func ProxyUnsplashImage(c echo.Context) error {
-	imageID := c.Param("image")
-	resp, err := http.Get("https://images.unsplash.com/photo-" + imageID + "?ixlib=rb-1.2.1&fm=jpg&ixid=eyJhcHBfaWQiOjcyODAwfQ")
+	photo, err := getUnsplashPhotoInfoByID(c.Param("image"))
 	if err != nil {
-		return err
+		return handler.HandleHTTPError(err, c)
 	}
-	if resp.StatusCode > 399 {
-		return echo.ErrNotFound
-	}
-	return c.Stream(http.StatusOK, "image/jpg", resp.Body)
+	pingbackByPhotoID(photo.ID)
+	return unsplashImage(photo.Urls.Raw, c)
 }
 
 // ProxyUnsplashThumb proxies a thumbnail from unsplash for privacy reasons.
@@ -56,13 +65,10 @@ func ProxyUnsplashImage(c echo.Context) error {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /backgrounds/unsplash/image/{image}/thumb [get]
 func ProxyUnsplashThumb(c echo.Context) error {
-	imageID := c.Param("image")
-	resp, err := http.Get("https://images.unsplash.com/photo-" + imageID + "?ixlib=rb-1.2.1&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=200&fit=max&ixid=eyJhcHBfaWQiOjcyODAwfQ")
+	photo, err := getUnsplashPhotoInfoByID(c.Param("image"))
 	if err != nil {
-		return err
+		return handler.HandleHTTPError(err, c)
 	}
-	if resp.StatusCode > 399 {
-		return echo.ErrNotFound
-	}
-	return c.Stream(http.StatusOK, "image/jpg", resp.Body)
+	pingbackByPhotoID(photo.ID)
+	return unsplashImage("https://images.unsplash.com/photo-"+getImageID(photo.Urls.Raw)+"?ixlib=rb-1.2.1&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=200&fit=max&ixid=eyJhcHBfaWQiOjcyODAwfQ", c)
 }

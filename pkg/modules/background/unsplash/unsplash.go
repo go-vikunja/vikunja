@@ -31,6 +31,8 @@ import (
 	"time"
 )
 
+const unsplashAPIURL = `https://api.unsplash.com/`
+
 // Provider represents an unsplash image provider
 type Provider struct {
 }
@@ -62,9 +64,10 @@ type Photo struct {
 		Thumb   string `json:"thumb"`
 	} `json:"urls"`
 	Links struct {
-		Self     string `json:"self"`
-		HTML     string `json:"html"`
-		Download string `json:"download"`
+		Self             string `json:"self"`
+		HTML             string `json:"html"`
+		Download         string `json:"download"`
+		DownloadLocation string `json:"download_location"`
 	} `json:"links"`
 }
 
@@ -87,8 +90,8 @@ func init() {
 	photos = make(map[string]*Photo)
 }
 
-func doGet(url string, result interface{}) (err error) {
-	req, err := http.NewRequest("GET", "https://api.unsplash.com/"+url, nil)
+func doGet(url string, result ...interface{}) (err error) {
+	req, err := http.NewRequest("GET", unsplashAPIURL+url, nil)
 	if err != nil {
 		return
 	}
@@ -100,7 +103,10 @@ func doGet(url string, result interface{}) (err error) {
 		return
 	}
 
-	err = json.NewDecoder(resp.Body).Decode(result)
+	if len(result) > 0 {
+		return json.NewDecoder(resp.Body).Decode(result[0])
+	}
+
 	return
 }
 
@@ -114,6 +120,21 @@ func getImageID(fullURL string) string {
 		return ""
 	}
 	return parts[1]
+}
+
+// Gets an unsplash photo either from cache or directly from the unsplash api
+func getUnsplashPhotoInfoByID(photoID string) (photo *Photo, err error) {
+	var exists bool
+	photo, exists = photos[photoID]
+	if !exists {
+		log.Debugf("Image information for unsplash photo %s not cached, requesting from unsplash...", photoID)
+		photo = &Photo{}
+		err = doGet("photos/"+photoID, photo)
+		if err != nil {
+			return
+		}
+	}
+	return
 }
 
 // Search is the implementation to search on unsplash
@@ -219,16 +240,9 @@ func (p *Provider) Search(search string, page int64) (result []*background.Image
 func (p *Provider) Set(image *background.Image, list *models.List, auth web.Auth) (err error) {
 
 	// Find the photo
-	var photo *Photo
-	var exists bool
-	photo, exists = photos[image.ID]
-	if !exists {
-		log.Debugf("Image information for unsplash photo %s not cached, requesting from unsplash...", image.ID)
-		photo = &Photo{}
-		err = doGet("photos/"+image.ID, photo)
-		if err != nil {
-			return
-		}
+	photo, err := getUnsplashPhotoInfoByID(image.ID)
+	if err != nil {
+		return
 	}
 
 	// Download the photo from unsplash
@@ -246,7 +260,14 @@ func (p *Provider) Set(image *background.Image, list *models.List, auth web.Auth
 		return
 	}
 
-	log.Debugf("Downloaded Unsplash Photo %s", image.ID)
+	log.Debugf("Downloaded unsplash photo %s", image.ID)
+
+	// Ping the unsplash download endpoint (again, unsplash api guidelines)
+	err = doGet(strings.Replace(photo.Links.DownloadLocation, unsplashAPIURL, "", 1))
+	if err != nil {
+		return
+	}
+	log.Debugf("Pinged unsplash download endpoint for photo %s", image.ID)
 
 	// Save it as a file in vikunja
 	file, err := files.Create(resp.Body, "", 0, auth)
@@ -296,8 +317,13 @@ func Pingback(f *files.File) {
 	}
 
 	// Do the ping
-	if _, err := http.Get("https://views.unsplash.com/v?app_id=" + config.BackgroundsUnsplashApplicationID.GetString() + "&photo_id=" + unsplashPhoto.UnsplashID); err != nil {
+	pingbackByPhotoID(unsplashPhoto.UnsplashID)
+}
+
+func pingbackByPhotoID(photoID string) {
+	if _, err := http.Get("https://views.unsplash.com/v?app_id=" + config.BackgroundsUnsplashApplicationID.GetString() + "&photo_id=" + photoID); err != nil {
 		log.Errorf("Unsplash Pingback Failed: %s", err.Error())
 	}
-	log.Debugf("Pinged unsplash for photo %s", unsplashPhoto.UnsplashID)
+	log.Debugf("Pinged unsplash for photo %s", photoID)
+
 }
