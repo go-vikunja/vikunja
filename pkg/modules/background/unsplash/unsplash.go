@@ -76,7 +76,9 @@ var photos map[string]*Photo
 // user opens the settings page.
 type initialCollection struct {
 	lastCached time.Time
-	images     []*background.Image
+	// images contains a slice of images by page they belong to
+	// this allows us to cache individual pages.
+	images map[int64][]*background.Image
 }
 
 var emptySearchResult *initialCollection
@@ -130,12 +132,19 @@ func (p *Provider) Search(search string, page int64) (result []*background.Image
 	// If we don't have a search query, return results from the unsplash featured collection
 	if search == "" {
 
-		if emptySearchResult != nil && time.Since(emptySearchResult.lastCached) < time.Minute {
-			log.Debugf("Serving intial unsplash collection from cache, last updated at %v", emptySearchResult.lastCached)
-			return emptySearchResult.images, nil
+		var existsForPage bool
+
+		if emptySearchResult != nil &&
+			time.Since(emptySearchResult.lastCached) < time.Minute {
+			_, existsForPage = emptySearchResult.images[page]
 		}
 
-		log.Debug("Retrieving initial unsplash collection from unsplash api")
+		if existsForPage {
+			log.Debugf("Serving intial unsplash collection for page %d from cache, last updated at %v", page, emptySearchResult.lastCached)
+			return emptySearchResult.images[page], nil
+		}
+
+		log.Debugf("Retrieving initial unsplash collection for page %d from unsplash api", page)
 
 		collectionResult := []*Photo{}
 		err = doGet("collections/317099/photos?page="+strconv.FormatInt(page, 10)+"&per_page=25&order_by=latest", &collectionResult)
@@ -157,10 +166,16 @@ func (p *Provider) Search(search string, page int64) (result []*background.Image
 			photos[p.ID] = p
 		}
 
-		emptySearchResult = &initialCollection{
-			lastCached: time.Now(),
-			images:     result,
+		// Put the collection in cache
+		if emptySearchResult == nil {
+			emptySearchResult = &initialCollection{
+				images: make(map[int64][]*background.Image),
+			}
 		}
+
+		emptySearchResult.lastCached = time.Now()
+		emptySearchResult.images[page] = result
+
 		return
 	}
 
