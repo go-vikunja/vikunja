@@ -22,8 +22,6 @@ export const getListView = listId => {
 		localStorage.removeItem('listView')
 	}
 
-	console.log('saved list view state', savedListView)
-
 	if (!savedListView) {
 		return 'list.list'
 	}

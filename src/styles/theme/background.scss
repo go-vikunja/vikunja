@@ -1,0 +1,50 @@
+.app-container.has-background {
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  min-height: 100vh;
+
+  .namespace-container {
+    background: $transparent-background-light;
+  }
+
+  .tasks {
+    background: $transparent-background-light;
+    border-radius: $radius;
+
+    .task:first-child {
+      border-radius: $radius $radius 0 0;
+    }
+
+    .task:last-child {
+      border-radius: 0 0 $radius $radius;
+    }
+  }
+
+  .table-view .table {
+    background: $transparent-background-light;
+    border-radius: $radius;
+  }
+
+  .pagination-link:not(.is-current) {
+    background: $light-background;
+  }
+
+  .box,
+  .card,
+  .switch-view,
+  .table-view .button,
+  .search .button {
+    box-shadow: none;
+  }
+
+  .task-view {
+    border-radius: $radius;
+    margin-top: 1em;
+  }
+}
+
+.navbar.has-background {
+  background: $transparent-background-light;
+}

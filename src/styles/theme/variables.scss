@@ -18,6 +18,7 @@ $navbar-dropdown-boxed-shadow: $dropdown-content-shadow;
 $bulmaswatch-import-font: false !default;
 $light-background: #F1F5F8;
 $transition-duration: 100ms;
+$transparent-background-light: rgba($light-background, 0.9);
 
 $vikunja-font: 'Quicksand', sans-serif;
 $vikunja-light-text: darken(#fff, 10%);
@@ -44,3 +45,5 @@ $scrollbar-thumb-color: lighten($dark, 40);
 $scrollbar-hover-color: lighten($dark, 30);
 
 $button-height: 2.648em;
+
+$switch-view-height: 43px;

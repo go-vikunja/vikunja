@@ -34,6 +34,7 @@ export default class ListModel extends AbstractModel {
 			isArchived: false,
 			hexColor: '',
 			identifier: '',
+			backgroundInformation: null,
 
 			created: null,
 			updated: null,

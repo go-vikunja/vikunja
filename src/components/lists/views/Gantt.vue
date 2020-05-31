@@ -1,5 +1,5 @@
 <template>
-	<div>
+	<div class="gantt-chart-container">
 		<div class="gantt-options">
 			<fancycheckbox v-model="showTaskswithoutDates" class="is-block">
 				Show tasks which don't have dates set

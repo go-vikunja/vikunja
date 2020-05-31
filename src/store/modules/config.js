@@ -14,6 +14,7 @@ export default {
 		availableMigrators: [],
 		taskAttachmentsEnabled: true,
 		totpEnabled: true,
+		enabledBackgroundProviders: [],
 	}),
 	mutations: {
 		[CONFIG](state, config) {
@@ -26,6 +27,7 @@ export default {
 			state.availableMigrators = config.available_migrators
 			state.taskAttachmentsEnabled = config.task_attachments_enabled
 			state.totpEnabled = config.totp_enabled
+			state.enabledBackgroundProviders = config.enabled_background_providers
 		},
 	},
 	actions: {

@@ -1,5 +1,5 @@
 <template>
-	<div class="loader-container" :class="{ 'is-loading': listService.loading}">
+	<div class="loader-container edit-list" :class="{ 'is-loading': listService.loading}">
 		<div class="notification is-warning" v-if="list.isArchived">
 			This list is archived.
 			It is not possible to create new or edit tasks or it.
@@ -104,6 +104,8 @@
 			</div>
 		</div>
 
+		<background :list-id="$route.params.id"/>
+
 		<component
 				:is="manageUsersComponent"
 				:id="list.id"
@@ -141,6 +143,8 @@
 	import ListModel from '../../models/list'
 	import ListService from '../../services/list'
 	import Fancycheckbox from '../global/fancycheckbox'
+	import Background from './settings/background'
+	import {CURRENT_LIST} from '../../store/mutation-types'
 
 	export default {
 		name: "EditList",
@@ -156,6 +160,7 @@
 			}
 		},
 		components: {
+			Background,
 			Fancycheckbox,
 			LinkSharing,
 			manageSharing,
@@ -183,6 +188,7 @@
 				this.listService.get(list)
 					.then(r => {
 						this.$set(this, 'list', r)
+						this.$store.commit(CURRENT_LIST, r)
 						// This will trigger the dynamic loading of components once we actually have all the data to pass to them
 						this.manageTeamsComponent = 'manageSharing'
 						this.manageUsersComponent = 'manageSharing'

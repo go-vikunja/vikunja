@@ -37,4 +37,22 @@ export default class ListService extends AbstractService {
 		list.hexColor = list.hexColor.substring(1, 7)
 		return list
 	}
+
+	background(list) {
+		if (list.background === null) {
+			return Promise.resolve('')
+		}
+
+		return this.http({
+			url: `/lists/${list.id}/background`,
+			method: 'GET',
+			responseType: 'blob',
+		})
+			.then(response => {
+				return window.URL.createObjectURL(new Blob([response.data]))
+			})
+			.catch(e => {
+				return e
+			})
+	}
 }

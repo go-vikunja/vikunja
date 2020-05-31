@@ -9,6 +9,7 @@
       border-color: darken($color, 5);
     }
   }
+
   .navbar-dropdown {
     box-shadow: $navbar-dropdown-boxed-shadow;
     top: 101%;
@@ -18,6 +19,17 @@
 .navbar.main-theme {
   background: $light-background;
   z-index: 5 !important;
+  justify-content: space-between;
+  align-items: center;
+
+  .title {
+    margin: 0;
+    font-size: 1.75rem;
+  }
+
+  .navbar-end {
+    margin-left: 0;
+  }
 
   @media screen and (max-width: $desktop) {
     display: flex;
@@ -48,6 +60,7 @@
     border: none;
     box-shadow: none;
   }
+
   @each $name, $pair in $colors {
     $color: nth($pair, 1);
     $color-invert: nth($pair, 2);
@@ -65,16 +78,16 @@
   }
 }
 
-.navbar-menu .navbar-item .icon{
+.navbar-menu .navbar-item .icon {
   margin: 0 0.5em;
 }
 
-.navbar{
+.navbar {
   z-index: 4 !important;
 }
 
 .app-container {
-  .namespace-container{
+  .namespace-container {
     background: $vikunja-nav-background;
     z-index: 6;
     color: $vikunja-nav-color;
@@ -107,7 +120,7 @@
       }
     }
 
-    .menu{
+    .menu {
       .menu-label {
         font-size: 1em;
         font-weight: 700;
@@ -169,12 +182,12 @@
         }
       }
 
-      .nsettings{
+      .nsettings {
         float: right;
         padding: 10px 0.3em 0;
       }
 
-      .menu-label,.nsettings,.menu-list a{
+      .menu-label, .nsettings, .menu-list a {
         color: $vikunja-nav-color;
       }
 
@@ -240,6 +253,7 @@
           &.router-link-exact-active {
             color: $primary;
             border-left: $vikunja-nav-selected-width solid darken($primary, 5%);
+
             .icon {
               color: $primary;
             }
@@ -280,9 +294,7 @@
   }
 }
 
-.navbar .user{
-  padding: 1em 0.5em 0;
-
+.navbar .user {
   span {
     font-family: $vikunja-font;
   }
@@ -306,7 +318,7 @@
   .dropdown-trigger .button {
     background: none;
 
-    &:focus:not(:active), &:active{
+    &:focus:not(:active), &:active {
       outline: none !important;
       -webkit-box-shadow: none !important;
       -moz-box-shadow: none !important;
@@ -321,57 +333,59 @@
   }
 }
 
-.mobilemenu-hide-button,.mobilemenu-show-button{
+.mobilemenu-hide-button, .mobilemenu-show-button {
   display: none;
   position: fixed;
   z-index: 31;
   font-weight: bold;
   font-size: 2em;
   color: $dark;
-  &:hover, &:focus{
+
+  &:hover, &:focus {
     color: darken($dark, 20);
   }
 }
 
-.mobilemenu-hide-button{
+.mobilemenu-hide-button {
   color: $dark;
-  &:hover, &:focus{
+
+  &:hover, &:focus {
     color: $dark;
   }
 }
 
-.mobile-overlay{
+.mobile-overlay {
   display: none;
   position: fixed;
   top: 0;
   bottom: 0;
   left: 0;
   right: 0;
-  background: rgba(250,250,250,0.8);
+  background: rgba(250, 250, 250, 0.8);
   z-index: 5;
   opacity: 0;
   transition: all $transition;
 }
 
 @media screen and (max-width: $tablet) {
-  .mobilemenu-hide-button{
+  .mobilemenu-hide-button {
     display: block;
     top: 1vh;
     right: 4vh;
   }
 
-  .mobilemenu-show-button{
+  .mobilemenu-show-button {
     display: block;
     top: 1vh;
     left: 4vh;
   }
 
-  .mobile-overlay{
+  .mobile-overlay {
     display: block;
     opacity: 1;
   }
 
-  .navbar.is-dark .navbar-brand > .navbar-item{
+  .navbar.is-dark .navbar-brand > .navbar-item {
     margin: 0 auto;
   }
 }

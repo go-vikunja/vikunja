@@ -1,4 +1,4 @@
-.card.is-fullwidth{
+.card.is-fullwidth {
   margin-bottom: 1rem;
 
   .add-form {
@@ -9,26 +9,26 @@
     padding: 0;
   }
 
-  .table{
+  .table {
     border-top: 1px solid darken(#fff, 15%);
     border-radius: 4px;
     overflow: hidden;
 
-    td{
+    td {
       vertical-align: middle;
     }
 
-    td.type, td.actions{
+    td.type, td.actions {
       width: 250px;
     }
 
-    td.actions{
+    td.actions {
       text-align: right;
     }
   }
 }
 
-.sharables-list, .sharables-namespace{
+.sharables-list, .sharables-namespace {
   padding: 0 !important;
 }
 
@@ -39,11 +39,15 @@
 
 .search {
   max-width: 300px;
-  margin-top: -78px;
+  margin-top: -58px;
   float: right;
   display: flex;
   align-items: center;
   justify-content: space-between;
+
+  .button, .input {
+    height: $switch-view-height;
+  }
 
   .field {
     transition: width $transition;
@@ -60,4 +64,24 @@
       height: 100%;
     }
   }
+}
+
+.list-title {
+  display: flex;
+  align-items: center;
+
+  h1 {
+    margin: 0;
+  }
+
+  .icon {
+    color: $grey-dark;
+    margin-left: 1rem;
+    height: 1rem;
+    width: 1rem;
+  }
+}
+
+.edit-list {
+  padding-bottom: 1em;
 }

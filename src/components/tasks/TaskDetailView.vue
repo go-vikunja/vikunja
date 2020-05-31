@@ -1,5 +1,5 @@
 <template>
-	<div class="loader-container" :class="{ 'is-loading': taskService.loading}">
+	<div class="loader-container task-view-container" :class="{ 'is-loading': taskService.loading}">
 		<div class="task-view">
 			<div class="heading">
 				<h1 class="title task-id" v-if="task.identifier === ''">

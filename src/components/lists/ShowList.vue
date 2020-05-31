@@ -1,20 +1,33 @@
 <template>
-	<div class="loader-container" :class="{ 'is-loading': listService.loading}">
-		<div class="content">
-			<router-link :to="{ name: 'editList', params: { id: list.id } }" class="icon settings is-medium">
-				<icon icon="cog" size="2x"/>
+	<div
+			class="loader-container"
+			:class="{ 'is-loading': listService.loading}"
+	>
+		<div class="switch-view">
+			<router-link
+					:to="{ name: 'list.list',   params: { listId: listId } }"
+					:class="{'is-active': $route.name === 'list.list'}">
+				List
 			</router-link>
-			<h1 :style="{ 'opacity': list.title === '' ? '0': '1' }">{{ list.title === '' ? 'Loading...': list.title}}</h1>
-			<div class="notification is-warning" v-if="list.isArchived">
-				This list is archived.
-				It is not possible to create new or edit tasks or it.
-			</div>
-			<div class="switch-view">
-				<router-link :to="{ name: 'list.list',   params: { listId: listId } }" :class="{'is-active': $route.name === 'list.list'}">List</router-link>
-				<router-link :to="{ name: 'list.gantt',  params: { listId: listId } }" :class="{'is-active': $route.name === 'list.gantt'}">Gantt</router-link>
-				<router-link :to="{ name: 'list.table',  params: { listId: listId } }" :class="{'is-active': $route.name === 'list.table'}">Table</router-link>
-				<router-link :to="{ name: 'list.kanban', params: { listId: listId } }" :class="{'is-active': $route.name === 'list.kanban'}">Kanban</router-link>
-			</div>
+			<router-link
+					:to="{ name: 'list.gantt',  params: { listId: listId } }"
+					:class="{'is-active': $route.name === 'list.gantt'}">
+				Gantt
+			</router-link>
+			<router-link
+					:to="{ name: 'list.table',  params: { listId: listId } }"
+					:class="{'is-active': $route.name === 'list.table'}">
+				Table
+			</router-link>
+			<router-link
+					:to="{ name: 'list.kanban', params: { listId: listId } }"
+					:class="{'is-active': $route.name === 'list.kanban'}">
+				Kanban
+			</router-link>
+		</div>
+		<div class="notification is-warning" v-if="list.isArchived">
+			This list is archived.
+			It is not possible to create new or edit tasks or it.
 		</div>
 
 		<router-view/>
@@ -53,12 +66,15 @@
 			listId() {
 				return typeof this.$route.params.listId === 'undefined' ? 0 : this.$route.params.listId
 			},
+			background() {
+				return this.$store.state.background
+			},
 		},
 		methods: {
 			loadList() {
 
 				// Don't load the list if we either already loaded it or aren't dealing with a list at all currently
-				if(this.$route.params.listId === this.listLoaded || typeof this.$route.params.listId === 'undefined') {
+				if (this.$route.params.listId === this.listLoaded || typeof this.$route.params.listId === 'undefined') {
 					return
 				}
 
@@ -76,13 +92,12 @@
 					return
 				}
 
-				this.$store.commit(CURRENT_LIST, Number(this.$route.params.listId))
-
 				// We create an extra list object instead of creating it in this.list because that would trigger a ui update which would result in bad ux.
 				let list = new ListModel({id: this.$route.params.listId})
 				this.listService.get(list)
 					.then(r => {
 						this.$set(this, 'list', r)
+						this.$store.commit(CURRENT_LIST, r)
 					})
 					.catch(e => {
 						this.error(e, this)

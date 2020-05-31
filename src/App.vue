@@ -3,11 +3,25 @@
 		<div v-if="online">
 			<!-- This is a workaround to get the sw to "see" the to-be-cached version of the offline background image -->
 			<div class="offline" style="height: 0;width: 0;"></div>
-			<nav class="navbar main-theme is-fixed-top" role="navigation" aria-label="main navigation"
-				v-if="userAuthenticated && (userInfo && userInfo.type === authTypes.USER)">
+			<nav
+					class="navbar main-theme is-fixed-top"
+					:class="{'has-background': background}"
+					role="navigation"
+					aria-label="main navigation"
+					v-if="userAuthenticated && (userInfo && userInfo.type === authTypes.USER)">
 				<div class="navbar-brand">
 					<router-link :to="{name: 'home'}" class="navbar-item logo">
 						<img src="/images/logo-full.svg" alt="Vikunja"/>
+					</router-link>
+				</div>
+				<div class="list-title" v-if="currentList.id">
+					<h1
+							class="title"
+							:style="{ 'opacity': currentList.title === '' ? '0': '1' }">
+						{{ currentList.title === '' ? 'Loading...': currentList.title}}
+					</h1>
+					<router-link :to="{ name: 'editList', params: { id: currentList.id } }" class="icon">
+						<icon icon="cog" size="2x"/>
 					</router-link>
 				</div>
 				<div class="navbar-end">
@@ -49,7 +63,11 @@
 				<a @click="mobileMenuActive = false" class="mobilemenu-hide-button" v-if="mobileMenuActive">
 					<icon icon="times"></icon>
 				</a>
-				<div class="app-container">
+				<div
+						class="app-container"
+						:class="{'has-background': background}"
+						:style="{'background-image': `url(${background})`}"
+				>
 					<div class="namespace-container" :class="{'is-active': mobileMenuActive}">
 						<div class="menu top-menu">
 							<router-link :to="{name: 'home'}" class="logo">
@@ -141,7 +159,7 @@
 								<div class="more-container" :key="n.id + 'child'">
 									<ul class="menu-list can-be-hidden" >
 										<li v-for="l in n.lists" :key="l.id">
-											<router-link :to="{ name: 'list.index', params: { listId: l.id} }" :class="{'router-link-exact-active': currentList === l.id}">
+											<router-link :to="{ name: 'list.index', params: { listId: l.id} }" :class="{'router-link-exact-active': currentList.id === l.id}">
 												<span class="name">
 													<span class="color-bubble" v-if="l.hexColor !== ''" :style="{ backgroundColor: l.hexColor }"></span>
 													{{l.title}}
@@ -316,6 +334,7 @@
 				return state.namespaces.namespaces.filter(n => this.showArchived ? true : !n.isArchived)
 			},
 			currentList: CURRENT_LIST,
+			background: 'background',
 		}),
 		methods: {
 			logout() {
@@ -351,7 +370,7 @@
 					this.$route.name === 'migrate.wunderlist' ||
 					this.$route.name === 'userSettings'
 				) {
-					this.$store.commit(CURRENT_LIST, 0)
+					this.$store.commit(CURRENT_LIST, {})
 				}
 			},
 			showRefreshUI(e) {

@@ -1,10 +1,11 @@
 .switch-view {
   background: $white;
   display: inline-block;
-  margin: 1em 0;
   border-radius: $radius;
   font-size: .8em;
   box-shadow: 0.3em 0.3em 0.8em darken($light, 6);
+  height: $switch-view-height;
+  margin-bottom: 1em;
 
   a {
     padding: .5em;

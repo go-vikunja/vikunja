@@ -1,6 +1,10 @@
 $gantt-border: 1px solid $grey-lighter;
 $gantt-vertical-border-color: lighten($grey, 45);
 
+.gantt-chart-container {
+  padding-bottom: 1em;
+}
+
 .gantt-chart {
   padding: 5px 0;
   overflow-x: auto;
