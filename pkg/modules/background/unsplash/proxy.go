@@ -20,10 +20,12 @@ import (
 	"code.vikunja.io/web/handler"
 	"github.com/labstack/echo/v4"
 	"net/http"
+	"strings"
 )
 
 func unsplashImage(url string, c echo.Context) error {
-	resp, err := http.Get(url)
+	// Replacing and appending the url for security reasons
+	resp, err := http.Get("https://images.unsplash.com/" + strings.Replace(url, "https://images.unsplash.com/", "", 1))
 	if err != nil {
 		return err
 	}
