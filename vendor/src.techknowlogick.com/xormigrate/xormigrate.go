@@ -275,11 +275,11 @@ func (x *Xormigrate) runMigration(migration *Migration) error {
 			logger.Info(migration.Description)
 		}
 		if err := migration.Migrate(x.db); err != nil {
-			return err
+			return fmt.Errorf("migration %s failed: %s", migration.ID, err.Error())
 		}
 
 		if err := x.insertMigration(migration.ID); err != nil {
-			return err
+			return fmt.Errorf("inserting migration %s failed: %s", migration.ID, err.Error())
 		}
 	}
 	return nil

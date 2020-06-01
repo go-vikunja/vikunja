@@ -76,7 +76,7 @@ require (
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 	honnef.co/go/tools v0.0.1-2020.1.4
 	src.techknowlogick.com/xgo v0.0.0-20200514233805-209a5cf70012
-	src.techknowlogick.com/xormigrate v1.2.0
+	src.techknowlogick.com/xormigrate v1.2.1
 	xorm.io/builder v0.3.7
 	xorm.io/core v0.7.3
 	xorm.io/xorm v1.0.1
