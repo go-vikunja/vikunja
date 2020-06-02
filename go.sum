@@ -782,6 +782,8 @@ src.techknowlogick.com/xgo v0.0.0-20200514233805-209a5cf70012 h1:k1/qGRpsaGka4IH
 src.techknowlogick.com/xgo v0.0.0-20200514233805-209a5cf70012/go.mod h1:31CE1YKtDOrKTk9PSnjTpe6YbO6W/0LTYZ1VskL09oU=
 src.techknowlogick.com/xgo v0.0.0-20200601230223-eeb7c0a673dd h1:6hliDQiQTI45t45ECQxdnLhdkd8y96dsBeeun0A/9jQ=
 src.techknowlogick.com/xgo v0.0.0-20200601230223-eeb7c0a673dd/go.mod h1:31CE1YKtDOrKTk9PSnjTpe6YbO6W/0LTYZ1VskL09oU=
+src.techknowlogick.com/xgo v0.0.0-20200602060627-a09175ea9056 h1:9XYMVs36yGHbSNs+m7kHg5lQnTOie2bMLM1c8LtAoXs=
+src.techknowlogick.com/xgo v0.0.0-20200602060627-a09175ea9056/go.mod h1:31CE1YKtDOrKTk9PSnjTpe6YbO6W/0LTYZ1VskL09oU=
 src.techknowlogick.com/xormigrate v1.2.0 h1:bq9JaI48bxB+OddMghicjmV7sGmBUogJq4HmTN0DOcw=
 src.techknowlogick.com/xormigrate v1.2.0/go.mod h1:7so27LAfBRqAxbma5jKYeL4ykVG1Jhsv9ncSq1KBCs4=
 src.techknowlogick.com/xormigrate v1.2.1 h1:HMtGqV5QN5zvYU244jzFCJ27rAljkMn/jsgp+H4S6WA=
