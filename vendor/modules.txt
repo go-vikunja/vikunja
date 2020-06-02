@@ -409,7 +409,7 @@ honnef.co/go/tools/staticcheck
 honnef.co/go/tools/stylecheck
 honnef.co/go/tools/unused
 honnef.co/go/tools/version
-# src.techknowlogick.com/xgo v0.0.0-20200514233805-209a5cf70012
+# src.techknowlogick.com/xgo v0.0.0-20200601230223-eeb7c0a673dd
 src.techknowlogick.com/xgo
 # src.techknowlogick.com/xormigrate v1.2.1
 src.techknowlogick.com/xormigrate
