@@ -1,5 +1,14 @@
 .list-background-setting {
 
+  .unsplash-link {
+    text-align: right;
+    font-size: .8rem;
+
+    a {
+      color: $grey-dark;
+    }
+  }
+
   .image-search-result {
     margin-top: 1em;
     display: flex;

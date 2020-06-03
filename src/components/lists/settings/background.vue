@@ -18,6 +18,7 @@
 						@keyup="() => newBackgroundSearch()"
 						:class="{'is-loading': backgroundService.loading}"
 				/>
+				<p class="unsplash-link"><a href="https://unsplash.com" target="_blank">Powered by Unsplash</a></p>
 				<div class="image-search-result">
 					<a
 							@click="() => setBackground(im.id)"
