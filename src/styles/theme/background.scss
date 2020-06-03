@@ -43,6 +43,14 @@
     border-radius: $radius;
     margin-top: 1em;
   }
+
+  .kanban .tasks {
+    background: transparent;
+
+    .task {
+      border-radius: $radius !important;
+    }
+  }
 }
 
 .navbar.has-background {
