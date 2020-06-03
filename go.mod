@@ -66,7 +66,7 @@ require (
 	github.com/swaggo/swag v1.6.3
 	github.com/ulule/limiter/v3 v3.5.0
 	github.com/urfave/cli v1.22.2 // indirect
-	golang.org/x/crypto v0.0.0-20200510223506-06a226fb4e37
+	golang.org/x/crypto v0.0.0-20200602180216-279210d13fed
 	golang.org/x/lint v0.0.0-20200302205851-738671d3881b
 	golang.org/x/net v0.0.0-20200324143707-d3edc9973b7e // indirect
 	golang.org/x/tools v0.0.0-20200410194907-79a7a3126eef // indirect
