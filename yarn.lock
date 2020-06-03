@@ -8243,10 +8243,10 @@ marked@^0.8.2:
   resolved "https://registry.yarnpkg.com/marked/-/marked-0.8.2.tgz#4faad28d26ede351a7a1aaa5fec67915c869e355"
   integrity sha512-EGwzEeCcLniFX51DhTpmTom+dSA/MG/OBUDjnWtHbEnjAH180VzUeAw+oE4+Zv+CoYBWyRlYOTR0N8SO9R1PVw==
 
-marked@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/marked/-/marked-1.0.0.tgz#d35784245a04871e5988a491e28867362e941693"
-  integrity sha512-Wo+L1pWTVibfrSr+TTtMuiMfNzmZWiOPeO7rZsQUY5bgsxpHesBEcIWJloWVTFnrMXnf/TL30eTFSGJddmQAng==
+marked@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/marked/-/marked-1.1.0.tgz#62504ad4d11550c942935ccc5e39d64e5a4c4e50"
+  integrity sha512-EkE7RW6KcXfMHy2PA7Jg0YJE1l8UPEZE8k45tylzmZM30/r1M1MUXWQfJlrSbsTeh7m/XTwHbWUENvAJZpp1YA==
 
 md5.js@^1.3.4:
   version "1.3.5"
@@ -12471,13 +12471,13 @@ vue-drag-resize@1.3.2:
   resolved "https://registry.yarnpkg.com/vue-drag-resize/-/vue-drag-resize-1.3.2.tgz#99132a99746c878e4596fad08d36c98f604930a3"
   integrity sha512-XiSEep3PPh9IPQqa4vIy/YENBpYch2SIPNipcPAEGhaSa0V8A8gSq9s7JQ66p/hiINdnR7f5ZqAkOdm6zU/4Gw==
 
-vue-easymde@1.2.0:
-  version "1.2.0"
-  resolved "https://registry.yarnpkg.com/vue-easymde/-/vue-easymde-1.2.0.tgz#1bb8d3a8a3aca8b1e6497d9ad82b6d0e48e5009c"
-  integrity sha512-7jRgb2bcyrthdc/R4xZvCxZsIrT/48t43sSUtg8EMWqrKwUBBUzItqggJzv8UTInWd9BbcTiiivlmD3otyq5Pw==
+vue-easymde@1.2.1:
+  version "1.2.1"
+  resolved "https://registry.yarnpkg.com/vue-easymde/-/vue-easymde-1.2.1.tgz#0e0183503a1f3ac666404bc74146cbd7202f7c61"
+  integrity sha512-/vaIE3yUYIfeCUjH1Qx9hfil596vYNRiBvC/N0PfausMGUYcdZ0D6/Gf/kB8QFymnuCe8Hi3+Xbg/0VLlf1+mw==
   dependencies:
     easymde "^2.10.1"
-    marked "^1.0.0"
+    marked "^1.1.0"
 
 vue-eslint-parser@^7.0.0:
   version "7.0.0"
