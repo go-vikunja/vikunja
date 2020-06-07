@@ -17,13 +17,13 @@
 package migration
 
 import (
-	"code.vikunja.io/api/pkg/models"
 	"math"
 	"src.techknowlogick.com/xormigrate"
 	"xorm.io/xorm"
 )
 
 type task20200420215928 struct {
+	ID       int64   `xorm:"int(11) autoincr not null unique pk" json:"id" param:"listtask"`
 	Position float64 `xorm:"double null" json:"position"`
 }
 
@@ -42,7 +42,7 @@ func init() {
 			}
 
 			// Create a position according to their id -> gives a starting position
-			tasks := []*models.Task{}
+			tasks := []*task20200420215928{}
 			err = tx.Find(&tasks)
 			if err != nil {
 				return err
