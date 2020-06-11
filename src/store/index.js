@@ -61,6 +61,14 @@ export const store = new Vuex.Store({
 					state.currentList.backgroundInformation &&
 					state.currentList.backgroundInformation.unsplashId &&
 					currentList.backgroundInformation.unsplashId !== state.currentList.backgroundInformation.unsplashId
+				) ||
+				// The new list has a background which is not an unsplash one and did not have one previously
+				(
+					currentList.backgroundInformation &&
+					currentList.backgroundInformation.type &&
+					state.currentList &&
+					state.currentList.backgroundInformation &&
+					state.currentList.backgroundInformation.type
 				)
 			) {
 				if (currentList.backgroundInformation) {

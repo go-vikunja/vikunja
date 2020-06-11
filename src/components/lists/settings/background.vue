@@ -1,7 +1,7 @@
 <template>
 	<div
-			v-if="unsplashBackgroundEnabled"
 			class="card list-background-setting loader-container"
+			v-if="uploadBackgroundEnabled || unsplashBackgroundEnabled"
 			:class="{ 'is-loading': backgroundService.loading}">
 		<header class="card-header">
 			<p class="card-header-title">
@@ -9,7 +9,23 @@
 			</p>
 		</header>
 		<div class="card-content">
-			<div class="content">
+			<div class="content" v-if="uploadBackgroundEnabled">
+				<input
+						type="file"
+						ref="backgroundUploadInput"
+						@change="uploadBackground"
+						class="is-hidden"
+						accept="image/*"
+				/>
+				<a
+						class="button is-primary"
+						:class="{'is-loading': backgroundUploadService.loading}"
+						@click="$refs.backgroundUploadInput.click()"
+				>
+					Choose a background from your pc
+				</a>
+			</div>
+			<div class="content" v-if="unsplashBackgroundEnabled">
 				<input
 						type="text"
 						placeholder="Search for a background..."
@@ -51,6 +67,7 @@
 
 <script>
 	import BackgroundUnsplashService from '../../../services/backgroundUnsplash'
+	import BackgroundUploadService from '../../../services/backgroundUpload'
 	import {CURRENT_LIST} from '../../../store/mutation-types'
 
 	export default {
@@ -63,6 +80,8 @@
 				backgroundThumbs: {},
 				currentPage: 1,
 				backgroundSearchTimeout: null,
+
+				backgroundUploadService: null,
 			}
 		},
 		props: {
@@ -75,9 +94,13 @@
 			unsplashBackgroundEnabled() {
 				return this.$store.state.config.enabledBackgroundProviders.includes('unsplash')
 			},
+			uploadBackgroundEnabled() {
+				return this.$store.state.config.enabledBackgroundProviders.includes('upload')
+			},
 		},
 		created() {
 			this.backgroundService = new BackgroundUnsplashService()
+			this.backgroundUploadService = new BackgroundUploadService()
 			// Show the default collection of backgrounds
 			this.newBackgroundSearch()
 		},
@@ -93,7 +116,7 @@
 			},
 			searchBackgrounds(page = 1) {
 
-				if(this.backgroundSearchTimeout !== null) {
+				if (this.backgroundSearchTimeout !== null) {
 					clearTimeout(this.backgroundSearchTimeout)
 				}
 
@@ -123,6 +146,20 @@
 				}
 
 				this.backgroundService.update({id: backgroundId, listId: this.listId})
+					.then(l => {
+						this.$store.commit(CURRENT_LIST, l)
+						this.success({message: 'The background has been set successfully!'}, this)
+					})
+					.catch(e => {
+						this.error(e, this)
+					})
+			},
+			uploadBackground() {
+				if (this.$refs.backgroundUploadInput.files.length === 0) {
+					return
+				}
+
+				this.backgroundUploadService.create(this.listId, this.$refs.backgroundUploadInput.files[0])
 					.then(l => {
 						this.$store.commit(CURRENT_LIST, l)
 						this.success({message: 'The background has been set successfully!'}, this)
