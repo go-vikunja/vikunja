@@ -115,6 +115,7 @@ const (
 	AvatarGravaterExpiration Key = `avatar.gravatarexpiration`
 
 	BackgroundsEnabled               Key = `backgrounds.enabled`
+	BackgroundsUploadEnabled         Key = `backgrounds.providers.upload.enabled`
 	BackgroundsUnsplashEnabled       Key = `backgrounds.providers.unsplash.enabled`
 	BackgroundsUnsplashAccessToken   Key = `backgrounds.providers.unsplash.accesstoken`
 	BackgroundsUnsplashApplicationID Key = `backgrounds.providers.unsplash.applicationid`
@@ -252,6 +253,7 @@ func InitDefaultConfig() {
 	AvatarGravaterExpiration.setDefault(3600)
 	// List Backgrounds
 	BackgroundsEnabled.setDefault(false)
+	BackgroundsUploadEnabled.setDefault(false)
 	BackgroundsUnsplashEnabled.setDefault(false)
 }
 

@@ -185,6 +185,9 @@ backgrounds:
   # Whether to enable backgrounds for lists at all.
   enabled: false
   providers:
+    upload:
+      # Whethere to enable uploaded list backgrounds
+      enabled: false
     unsplash:
       # Whether to enable setting backgrounds from unsplash as list backgrounds
       enabled: false

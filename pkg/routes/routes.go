@@ -50,6 +50,7 @@ import (
 	"code.vikunja.io/api/pkg/modules/background"
 	backgroundHandler "code.vikunja.io/api/pkg/modules/background/handler"
 	"code.vikunja.io/api/pkg/modules/background/unsplash"
+	"code.vikunja.io/api/pkg/modules/background/upload"
 	"code.vikunja.io/api/pkg/modules/migration"
 	migrationHandler "code.vikunja.io/api/pkg/modules/migration/handler"
 	"code.vikunja.io/api/pkg/modules/migration/todoist"
@@ -454,6 +455,14 @@ func registerAPIRoutes(a *echo.Group) {
 	// List Backgrounds
 	if config.BackgroundsEnabled.GetBool() {
 		a.GET("/lists/:list/background", backgroundHandler.GetListBackground)
+		if config.BackgroundsUploadEnabled.GetBool() {
+			uploadBackgroundProvider := &backgroundHandler.BackgroundProvider{
+				Provider: func() background.Provider {
+					return &upload.Provider{}
+				},
+			}
+			a.PUT("/lists/:list/backgrounds/upload", uploadBackgroundProvider.UploadBackground)
+		}
 		if config.BackgroundsUnsplashEnabled.GetBool() {
 			unsplashBackgroundProvider := &backgroundHandler.BackgroundProvider{
 				Provider: func() background.Provider {

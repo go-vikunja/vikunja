@@ -220,7 +220,7 @@ func (p *Provider) Search(search string, page int64) (result []*background.Image
 
 // Set sets an unsplash photo as list background
 // @Summary Set an unsplash photo as list background
-// @Description Sets a photo from unsplash as list background.1
+// @Description Sets a photo from unsplash as list background.
 // @tags list
 // @Accept json
 // @Produce json
@@ -308,6 +308,9 @@ func Pingback(f *files.File) {
 	// Check if the file is actually downloaded from unsplash
 	unsplashPhoto, err := models.GetUnsplashPhotoByFileID(f.ID)
 	if err != nil {
+		if files.IsErrFileIsNotUnsplashFile(err) {
+			return
+		}
 		log.Errorf("Unsplash Pingback: %s", err.Error())
 	}
 

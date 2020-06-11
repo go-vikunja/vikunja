@@ -68,6 +68,9 @@ func Info(c echo.Context) error {
 	}
 
 	if config.BackgroundsEnabled.GetBool() {
+		if config.BackgroundsUploadEnabled.GetBool() {
+			info.EnabledBackgroundProviders = append(info.EnabledBackgroundProviders, "upload")
+		}
 		if config.BackgroundsUnsplashEnabled.GetBool() {
 			info.EnabledBackgroundProviders = append(info.EnabledBackgroundProviders, "unsplash")
 		}

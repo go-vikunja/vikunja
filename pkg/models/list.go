@@ -66,6 +66,14 @@ type List struct {
 	web.Rights   `xorm:"-" json:"-"`
 }
 
+// ListBackgroundType holds a list background type
+type ListBackgroundType struct {
+	Type string
+}
+
+// ListBackgroundUpload represents the list upload background type
+const ListBackgroundUpload string = "upload"
+
 // GetListsByNamespaceID gets all lists in a namespace
 func GetListsByNamespaceID(nID int64, doer *user.User) (lists []*List, err error) {
 	if nID == -1 {
@@ -175,10 +183,14 @@ func (l *List) ReadOne() (err error) {
 
 	// Get any background information if there is one set
 	if l.BackgroundFileID != 0 {
-		// Currently unsplash only
+		// Unsplash image
 		l.BackgroundInformation, err = GetUnsplashPhotoByFileID(l.BackgroundFileID)
 		if err != nil && !files.IsErrFileIsNotUnsplashFile(err) {
 			return
+		}
+
+		if err != nil && files.IsErrFileIsNotUnsplashFile(err) {
+			l.BackgroundInformation = &ListBackgroundType{Type: ListBackgroundUpload}
 		}
 	}
 

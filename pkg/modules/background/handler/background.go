@@ -23,6 +23,7 @@ import (
 	"code.vikunja.io/api/pkg/modules/background"
 	"code.vikunja.io/api/pkg/modules/background/unsplash"
 	v1 "code.vikunja.io/api/pkg/routes/api/v1"
+	"code.vikunja.io/web"
 	"code.vikunja.io/web/handler"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -62,40 +63,85 @@ func (bp *BackgroundProvider) SearchBackgrounds(c echo.Context) error {
 	return c.JSON(http.StatusOK, result)
 }
 
-// SetBackground sets an Image as list background
-func (bp *BackgroundProvider) SetBackground(c echo.Context) error {
-	auth, err := v1.GetAuthFromClaims(c)
+// This function does all kinds of preparations for setting and uploading a background
+func (bp *BackgroundProvider) setBackgroundPreparations(c echo.Context) (list *models.List, auth web.Auth, err error) {
+	auth, err = v1.GetAuthFromClaims(c)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid auth token: "+err.Error())
+		return nil, nil, echo.NewHTTPError(http.StatusBadRequest, "Invalid auth token: "+err.Error())
 	}
-
-	p := bp.Provider()
 
 	listID, err := strconv.ParseInt(c.Param("list"), 10, 64)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid list ID: "+err.Error())
+		return nil, nil, echo.NewHTTPError(http.StatusBadRequest, "Invalid list ID: "+err.Error())
 	}
 
 	// Check if the user has the right to change the list background
-	list := &models.List{ID: listID}
+	list = &models.List{ID: listID}
 	can, err := list.CanUpdate(auth)
 	if err != nil {
-		return handler.HandleHTTPError(err, c)
+		return
 	}
 	if !can {
 		log.Infof("Tried to update list background of list %d while not having the rights for it (User: %v)", listID, auth)
-		return echo.NewHTTPError(http.StatusForbidden)
+		return list, auth, models.ErrGenericForbidden{}
 	}
 	// Load the list
-	if err := list.GetSimpleByID(); err != nil {
+	err = list.GetSimpleByID()
+	return
+}
+
+// SetBackground sets an Image as list background
+func (bp *BackgroundProvider) SetBackground(c echo.Context) error {
+	list, auth, err := bp.setBackgroundPreparations(c)
+	if err != nil {
 		return handler.HandleHTTPError(err, c)
 	}
+
+	p := bp.Provider()
 
 	image := &background.Image{}
 	err = c.Bind(image)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "No or invalid model provided: "+err.Error())
 	}
+
+	err = p.Set(image, list, auth)
+	if err != nil {
+		return handler.HandleHTTPError(err, c)
+	}
+	return c.JSON(http.StatusOK, list)
+}
+
+// UploadBackground uploads a background and passes the id of the uploaded file as an Image to the Set function of the BackgroundProvider.
+func (bp *BackgroundProvider) UploadBackground(c echo.Context) error {
+	list, auth, err := bp.setBackgroundPreparations(c)
+	if err != nil {
+		return handler.HandleHTTPError(err, c)
+	}
+
+	p := bp.Provider()
+
+	// Get + upload the image
+	file, err := c.FormFile("background")
+	if err != nil {
+		return err
+	}
+	src, err := file.Open()
+	if err != nil {
+		return err
+	}
+	defer src.Close()
+
+	f, err := files.Create(src, file.Filename, uint64(file.Size), auth)
+	if err != nil {
+		if files.IsErrFileIsTooLarge(err) {
+			return echo.ErrBadRequest
+		}
+
+		return handler.HandleHTTPError(err, c)
+	}
+
+	image := &background.Image{ID: strconv.FormatInt(f.ID, 10)}
 
 	err = p.Set(image, list, auth)
 	if err != nil {
