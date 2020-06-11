@@ -57,7 +57,12 @@
 							</span>
 							<span class="task-id">
 								<span class="is-done" v-if="task.done">Done</span>
-								#{{ task.id }}
+								<template v-if="task.identifier === ''">
+									#{{ task.index }}
+								</template>
+								<template v-else>
+									#{{ task.index }}
+								</template>
 							</span>
 							<span
 									v-if="task.dueDate > 0"
@@ -255,12 +260,12 @@
 			loadBuckets() {
 
 				// Prevent trying to load buckets if the task popup view is active
-				if(this.$route.name !== 'list.kanban') {
+				if (this.$route.name !== 'list.kanban') {
 					return
 				}
 
 				// Only load buckets if we don't already loaded them
-				if(this.loadedListId === this.$route.params.listId) {
+				if (this.loadedListId === this.$route.params.listId) {
 					return
 				}
 
@@ -363,7 +368,11 @@
 
 				const bi = bucketIndex()
 
-				const task = new TaskModel({title: this.newTaskText, bucketId: this.buckets[bi].id, listId: this.$route.params.listId})
+				const task = new TaskModel({
+					title: this.newTaskText,
+					bucketId: this.buckets[bi].id,
+					listId: this.$route.params.listId
+				})
 
 				this.taskService.create(task)
 					.then(r => {
@@ -379,7 +388,10 @@
 					return
 				}
 
-				const newBucket = new BucketModel({title: this.newBucketTitle, listId: parseInt(this.$route.params.listId)})
+				const newBucket = new BucketModel({
+					title: this.newBucketTitle,
+					listId: parseInt(this.$route.params.listId)
+				})
 
 				this.$store.dispatch('kanban/createBucket', newBucket)
 					.then(() => {
