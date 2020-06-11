@@ -24,7 +24,7 @@
 		},
 		props: {
 			value: {
-				required: true,
+				required: false,
 			},
 			disabled: {
 				type: Boolean,
@@ -52,7 +52,3 @@
 		},
 	}
 </script>
-
-<style scoped>
-
-</style>

@@ -37,35 +37,6 @@
   height: 40px;
 }
 
-.search {
-  max-width: 300px;
-  margin-top: -58px;
-  float: right;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-
-  .button, .input {
-    height: $switch-view-height;
-  }
-
-  .field {
-    transition: width $transition;
-    width: 100%;
-
-    &.hidden {
-      width: 0;
-      height: 0;
-      margin: 0;
-      overflow: hidden;
-    }
-
-    .button {
-      height: 100%;
-    }
-  }
-}
-
 .list-title {
   display: flex;
   align-items: center;
@@ -84,4 +55,69 @@
 
 .edit-list {
   padding-bottom: 1em;
+}
+
+.filter-container {
+  text-align: right;
+  width: 100%;
+  min-width: 400px;
+  max-width: 180px;
+  position: absolute;
+  right: 1.5em;
+  margin-top: -58px;
+  z-index: 99;
+
+  .items {
+    display: flex;
+    justify-content: flex-end;
+
+    .button:not(:last-child) {
+      margin-right: .5em;
+    }
+  }
+
+  .button {
+    height: $switch-view-height;
+  }
+
+  .card {
+    text-align: left;
+    margin-top: calc(1rem - 1px);
+    float: right;
+  }
+
+  .fancycheckbox {
+    display: block;
+  }
+
+  .search {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-right: .5em;
+
+    .button, .input {
+      height: $switch-view-height;
+    }
+
+    .field {
+      transition: width $transition;
+      width: 100%;
+
+      &.hidden {
+        width: 0;
+        height: 0;
+        margin: 0;
+        overflow: hidden;
+      }
+
+      .button {
+        height: 100%;
+      }
+    }
+  }
+
+  .filters input {
+    font-size: .9em;
+  }
 }

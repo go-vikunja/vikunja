@@ -13,26 +13,5 @@
       margin: 0;
     }
   }
-
-  .column-filter {
-    text-align: right;
-    width: 100%;
-    max-width: 180px;
-    position: absolute;
-    right: 1.5em;
-    margin-top: -58px;
-
-    .button {
-      height: $switch-view-height;
-    }
-
-    .card {
-      text-align: left;
-      margin-top: 1em;
-    }
-
-    .fancycheckbox {
-      display: block;
-    }
-  }
 }
+

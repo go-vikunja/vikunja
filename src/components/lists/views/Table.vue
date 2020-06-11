@@ -1,12 +1,20 @@
 <template>
 	<div class="table-view loader-container" :class="{'is-loading': taskCollectionService.loading}">
-		<div class="column-filter">
-			<button class="button" @click="showActiveColumnsFilter = !showActiveColumnsFilter">
-				<span class="icon is-small">
-					<icon icon="th"/>
-				</span>
-				Columns
-			</button>
+		<div class="filter-container">
+			<div class="items">
+				<button class="button" @click="() => {showActiveColumnsFilter = !showActiveColumnsFilter; showTaskFilter = false}">
+					<span class="icon is-small">
+						<icon icon="th"/>
+					</span>
+					Columns
+				</button>
+				<button class="button" @click="() => {showTaskFilter = !showTaskFilter; showActiveColumnsFilter = false}">
+					<span class="icon is-small">
+						<icon icon="filter"/>
+					</span>
+					Filters
+				</button>
+			</div>
 			<transition name="fade">
 				<div class="card" v-if="showActiveColumnsFilter">
 					<div class="card-content">
@@ -25,6 +33,11 @@
 						<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.createdBy">Created By</fancycheckbox>
 					</div>
 				</div>
+				<filters
+						v-if="showTaskFilter"
+						v-model="params"
+						@change="loadTasks(1)"
+				/>
 			</transition>
 		</div>
 
@@ -155,10 +168,12 @@
 	import Fancycheckbox from '../../global/fancycheckbox'
 	import Sort from '../../tasks/reusable/sort'
 	import {saveListView} from '../../../helpers/saveListView'
+	import Filters from '../reusable/filters'
 
 	export default {
 		name: 'Table',
 		components: {
+			Filters,
 			Sort,
 			Fancycheckbox,
 			DateTableCell,
@@ -202,6 +217,10 @@
 				this.$set(this, 'sortBy', JSON.parse(savedSortBy))
 			}
 
+			this.$set(this.params, 'filter_by', [])
+			this.$set(this.params, 'filter_value', [])
+			this.$set(this.params, 'filter_comparator', [])
+
 			this.initTasks(1)
 
 			// Save the current list view to local storage
@@ -210,7 +229,9 @@
 		},
 		methods: {
 			initTasks(page, search = '') {
-				let params = {sort_by: [], order_by: []}
+				const params = this.params
+				params.sort_by = []
+				params.order_by = []
 				Object.keys(this.sortBy).map(s => {
 					params.sort_by.push(s)
 					params.order_by.push(this.sortBy[s])

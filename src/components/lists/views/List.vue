@@ -1,40 +1,64 @@
 <template>
 	<div class="loader-container" :class="{ 'is-loading': taskCollectionService.loading}">
-		<div class="search">
-			<div class="field has-addons" :class="{ 'hidden': !showTaskSearch }">
-				<div class="control has-icons-left has-icons-right">
-					<input
-							class="input"
-							type="text"
-							placeholder="Search"
-							v-focus
-							v-model="searchTerm"
-							@keyup.enter="searchTasks"
-							@blur="hideSearchBar()"/>
-					<span class="icon is-left">
-						<icon icon="search"/>
-					</span>
-				</div>
-				<div class="control">
-					<button
-							class="button noshadow is-primary"
-							@click="searchTasks"
-							:class="{'is-loading': taskCollectionService.loading}">
-						Search
+		<div class="filter-container">
+			<div class="items">
+				<div class="search">
+					<div class="field has-addons" :class="{ 'hidden': !showTaskSearch }">
+						<div class="control has-icons-left has-icons-right">
+							<input
+									class="input"
+									type="text"
+									placeholder="Search"
+									v-focus
+									v-model="searchTerm"
+									@keyup.enter="searchTasks"
+									@blur="hideSearchBar()"/>
+							<span class="icon is-left">
+								<icon icon="search"/>
+							</span>
+						</div>
+						<div class="control">
+							<button
+									class="button noshadow is-primary"
+									@click="searchTasks"
+									:class="{'is-loading': taskCollectionService.loading}">
+								Search
+							</button>
+						</div>
+					</div>
+					<button class="button" @click="showTaskSearch = !showTaskSearch" v-if="!showTaskSearch">
+						<span class="icon">
+							<icon icon="search"/>
+						</span>
 					</button>
 				</div>
+				<button class="button" @click="showTaskFilter = !showTaskFilter">
+					<span class="icon is-small">
+						<icon icon="filter"/>
+					</span>
+					Filters
+				</button>
 			</div>
-			<button class="button" @click="showTaskSearch = !showTaskSearch" v-if="!showTaskSearch">
-				<span class="icon">
-					<icon icon="search"/>
-				</span>
-			</button>
+			<transition name="fade">
+				<filters
+						v-if="showTaskFilter"
+						v-model="params"
+						@change="loadTasks(1)"
+				/>
+			</transition>
 		</div>
 
 		<div class="field task-add" v-if="!list.isArchived">
 			<div class="field is-grouped">
 				<p class="control has-icons-left is-expanded" :class="{ 'is-loading': taskService.loading}">
-					<input v-focus class="input" :class="{ 'disabled': taskService.loading}" v-model="newTaskText" type="text" placeholder="Add a new task..." @keyup.enter="addTask()"/>
+					<input
+							v-focus
+							class="input"
+							:class="{ 'disabled': taskService.loading}"
+							v-model="newTaskText"
+							type="text"
+							placeholder="Add a new task..."
+							@keyup.enter="addTask()"/>
 					<span class="icon is-small is-left">
 						<icon icon="tasks"/>
 					</span>
@@ -85,14 +109,36 @@
 			</div>
 		</div>
 
-		<nav class="pagination is-centered" role="navigation" aria-label="pagination" v-if="taskCollectionService.totalPages > 1">
-			<router-link class="pagination-previous" :to="getRouteForPagination(currentPage - 1)" tag="button" :disabled="currentPage === 1">Previous</router-link>
-			<router-link class="pagination-next" :to="getRouteForPagination(currentPage + 1)" tag="button" :disabled="currentPage === taskCollectionService.totalPages">Next page</router-link>
+		<nav
+				class="pagination is-centered"
+				role="navigation"
+				aria-label="pagination"
+				v-if="taskCollectionService.totalPages > 1">
+			<router-link
+					class="pagination-previous"
+					:to="getRouteForPagination(currentPage - 1)"
+					tag="button"
+					:disabled="currentPage === 1">
+				Previous
+			</router-link>
+			<router-link
+					class="pagination-next"
+					:to="getRouteForPagination(currentPage + 1)"
+					tag="button"
+					:disabled="currentPage === taskCollectionService.totalPages">
+				Next page
+			</router-link>
 			<ul class="pagination-list">
 				<template v-for="(p, i) in pages">
 					<li :key="'page'+i" v-if="p.isEllipsis"><span class="pagination-ellipsis">&hellip;</span></li>
 					<li :key="'page'+i" v-else>
-						<router-link :to="getRouteForPagination(p.number)" :class="{'is-current': p.number === currentPage}" class="pagination-link" :aria-label="'Goto page ' + p.number">{{ p.number }}</router-link>
+						<router-link
+								:to="getRouteForPagination(p.number)"
+								:class="{'is-current': p.number === currentPage}"
+								class="pagination-link"
+								:aria-label="'Goto page ' + p.number">
+							{{ p.number }}
+						</router-link>
 					</li>
 				</template>
 			</ul>
@@ -113,6 +159,7 @@
 	import SingleTaskInList from '../../tasks/reusable/singleTaskInList'
 	import taskList from '../../tasks/helpers/taskList'
 	import {saveListView} from '../../../helpers/saveListView'
+	import Filters from '../reusable/filters'
 
 	export default {
 		name: 'List',
@@ -131,6 +178,7 @@
 			taskList,
 		],
 		components: {
+			Filters,
 			SingleTaskInList,
 			EditTask,
 		},

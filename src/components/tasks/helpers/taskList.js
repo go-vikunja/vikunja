@@ -14,6 +14,16 @@ export default {
 
 			showTaskSearch: false,
 			searchTerm: '',
+
+			showTaskFilter: false,
+			params: {
+				sort_by: ['done', 'id'],
+				order_by: ['asc', 'desc'],
+				filter_by: ['done'],
+				filter_value: ['false'],
+				filter_comparator: ['equals'],
+				filter_concat: 'and',
+			},
 		}
 	},
 	watch: {
@@ -28,7 +38,11 @@ export default {
 		this.taskCollectionService = new TaskCollectionService()
 	},
 	methods: {
-		loadTasks(page, search = '', params = {sort_by: ['done', 'id'], order_by: ['asc', 'desc']}) {
+		loadTasks(
+			page,
+			search = '',
+			params = null,
+		) {
 
 			// Because this function is triggered every time on navigation, we're putting a condition here to only load it when we actually want to show tasks
 			// FIXME: This is a bit hacky -> Cleanup.
@@ -41,6 +55,10 @@ export default {
 
 			this.$set(this, 'tasks', [])
 
+			if (params === null) {
+				params = this.params
+			}
+
 			if (search !== '') {
 				params.s = search
 			}
@@ -50,10 +68,10 @@ export default {
 					this.$set(this, 'pages', [])
 					this.currentPage = page
 
-					for (let i = 0; i < this.taskCollectionService.totalPages; i++)  {
+					for (let i = 0; i < this.taskCollectionService.totalPages; i++) {
 
 						// Show ellipsis instead of all pages
-						if(
+						if (
 							i > 0 && // Always at least the first page
 							(i + 1) < this.taskCollectionService.totalPages && // And the last page
 							(
@@ -63,7 +81,7 @@ export default {
 							)
 						) {
 							// Only add an ellipsis if the last page isn't already one
-							if(this.pages[i - 1] && !this.pages[i - 1].isEllipsis) {
+							if (this.pages[i - 1] && !this.pages[i - 1].isEllipsis) {
 								this.pages.push({
 									number: 0,
 									isEllipsis: true,
@@ -98,7 +116,7 @@ export default {
 			if (this.tasks === null || this.tasks === []) {
 				return
 			}
-			return this.tasks.sort(function(a,b) {
+			return this.tasks.sort(function (a, b) {
 				if (a.done < b.done)
 					return -1
 				if (a.done > b.done)
@@ -142,6 +160,6 @@ export default {
 					page: page,
 				},
 			}
-		}
+		},
 	}
 }
