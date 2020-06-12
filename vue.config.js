@@ -5,7 +5,7 @@ module.exports = {
 	productionSourceMap: false,
 	pwa: {
 		name: 'Vikunja',
-		themeColor: '#5974d9',
+		themeColor: '#1973ff',
 		appleMobileWebAppCapable: 'yes',
 		workboxPluginMode: 'InjectManifest',
 		workboxOptions: {

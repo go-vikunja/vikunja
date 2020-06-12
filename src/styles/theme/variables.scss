@@ -1,9 +1,9 @@
 $black: hsl(0, 0%, 4%) !default;
 $orange: #ff851b;
-$green: #00CE6E;
-$blue: #5974d9;
+$green: #00db60;
 $red: #ff4136;
-$primary: #198CFF !default;
+$blue: #1973ff;
+$primary: $blue;
 $dark: lighten($black, 8);
 
 $info-invert: #fff;
