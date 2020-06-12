@@ -340,6 +340,7 @@
   font-weight: bold;
   font-size: 2em;
   color: $dark;
+  line-height: 1;
 
   &:hover, &:focus {
     color: darken($dark, 20);
@@ -370,14 +371,14 @@
 @media screen and (max-width: $tablet) {
   .mobilemenu-hide-button {
     display: block;
-    top: 1vh;
-    right: 4vh;
+    top: 1rem;
+    right: 1rem;
   }
 
   .mobilemenu-show-button {
     display: block;
-    top: 1vh;
-    left: 4vh;
+    top: 1rem;
+    left: 1rem;
   }
 
   .mobile-overlay {
