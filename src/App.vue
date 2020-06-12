@@ -131,23 +131,35 @@
 							<div class="spinner" :class="{ 'is-loading': namespaceService.loading}"></div>
 							<template v-for="n in namespaces">
 								<div :key="n.id">
-									<router-link v-tooltip.right="'Settings'"
-											:to="{name: 'editNamespace', params: {id: n.id} }" class="nsettings"
+									<router-link
+											v-tooltip.right="'Settings'"
+											:to="{name: 'editNamespace', params: {id: n.id} }"
+											class="nsettings"
 											v-if="n.id > 0">
 										<span class="icon">
 											<icon icon="cog"/>
 										</span>
 									</router-link>
-									<router-link v-tooltip="'Add a new list in the ' + n.title + ' namespace'"
-											:to="{ name: 'newList', params: { id: n.id} }" class="nsettings"
-											:key="n.id + 'newList'" v-if="n.id > 0">
+									<router-link
+											v-tooltip="'Add a new list in the ' + n.title + ' namespace'"
+											:to="{ name: 'newList', params: { id: n.id} }"
+											class="nsettings"
+											:key="n.id + 'newList'"
+											v-if="n.id > 0">
 										<span class="icon">
 											<icon icon="plus"/>
 										</span>
 									</router-link>
-									<label class="menu-label" v-tooltip="n.title + ' (' + n.lists.length + ')'" :for="n.id + 'checker'">
+									<label
+											class="menu-label"
+											v-tooltip="n.title + ' (' + n.lists.length + ')'"
+											:for="n.id + 'checker'">
 										<span class="name">
-											<span class="color-bubble" v-if="n.hexColor !== ''" :style="{ backgroundColor: n.hexColor }"></span>
+											<span
+													class="color-bubble"
+													v-if="n.hexColor !== ''"
+													:style="{ backgroundColor: n.hexColor }">
+											</span>
 											{{n.title}} ({{n.lists.length}})
 										</span>
 										<span class="is-archived" v-if="n.isArchived">
@@ -155,13 +167,24 @@
 										</span>
 									</label>
 								</div>
-								<input :key="n.id + 'checker'" type="checkbox" checked="checked" :id="n.id + 'checker'" class="checkinput"/>
+								<input
+										:key="n.id + 'checker'"
+										type="checkbox"
+										checked="checked"
+										:id="n.id + 'checker'"
+										class="checkinput"/>
 								<div class="more-container" :key="n.id + 'child'">
-									<ul class="menu-list can-be-hidden" >
+									<ul class="menu-list can-be-hidden">
 										<li v-for="l in n.lists" :key="l.id">
-											<router-link :to="{ name: 'list.index', params: { listId: l.id} }" :class="{'router-link-exact-active': currentList.id === l.id}">
+											<router-link
+													:to="{ name: 'list.index', params: { listId: l.id} }"
+													:class="{'router-link-exact-active': currentList.id === l.id}">
 												<span class="name">
-													<span class="color-bubble" v-if="l.hexColor !== ''" :style="{ backgroundColor: l.hexColor }"></span>
+													<span
+															class="color-bubble"
+															v-if="l.hexColor !== ''"
+															:style="{ backgroundColor: l.hexColor }">
+													</span>
 													{{l.title}}
 												</span>
 												<span class="is-archived" v-if="l.isArchived">
@@ -325,10 +348,18 @@
 				}
 			);
 
-			// Schedule a token renew every minute
-			setTimeout(() => {
-				this.$store.dispatch('auth/renewToken')
-			}, 1000 * 60)
+			// Try renewing the token every time vikunja is loaded initially
+			// (When opening the browser the focus event is not fired)
+			this.$store.dispatch('auth/renewToken')
+
+			// Check if the token is still valid if the window gets focus again to maybe renew it
+			window.addEventListener('focus', () => {
+				// Check if the token is valid for less than 60 hours and renew if thats the case
+				if (this.userInfo.exp - +new Date() / 1000 < 60 * 3600) {
+					this.$store.dispatch('auth/renewToken')
+					console.log('renewed token')
+				}
+			})
 		},
 		watch: {
 			// call the method again if the route changes
