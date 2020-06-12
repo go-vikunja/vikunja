@@ -14,6 +14,9 @@
 						<img src="/images/logo-full.svg" alt="Vikunja"/>
 					</router-link>
 				</div>
+				<a @click="mobileMenuActive = true" class="mobilemenu-show-button" v-if="!mobileMenuActive">
+					<icon icon="bars"></icon>
+				</a>
 				<div class="list-title" v-if="currentList.id">
 					<h1
 							class="title"
@@ -57,9 +60,6 @@
 				</div>
 			</nav>
 			<div v-if="userAuthenticated && (userInfo && userInfo.type === authTypes.USER)">
-				<a @click="mobileMenuActive = true" class="mobilemenu-show-button" v-if="!mobileMenuActive">
-					<icon icon="bars"></icon>
-				</a>
 				<a @click="mobileMenuActive = false" class="mobilemenu-hide-button" v-if="mobileMenuActive">
 					<icon icon="times"></icon>
 				</a>

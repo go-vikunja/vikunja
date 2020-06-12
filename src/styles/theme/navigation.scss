@@ -25,6 +25,9 @@
   .title {
     margin: 0;
     font-size: 1.75rem;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
   }
 
   .navbar-end {
@@ -37,15 +40,11 @@
 
     @media screen and (max-width: $tablet) {
       .navbar-brand {
-        // This prevents the user icon from snapping to the left into the menu button
-        width: 0;
-        overflow: hidden;
+        display: none;
       }
-    }
 
-    @media screen and (max-width: 640px) { // Magic number to hide the username if it would take too much space otherwise
       .user {
-        width: 4rem;
+        width: $user-dropdown-width-mobile;
         display: flex;
         align-items: center;
 
@@ -110,7 +109,7 @@
     transition: all $transition;
     position: fixed;
     bottom: 0;
-    top: $navbar-height + 0.75rem;
+    top: $navbar-height;
     overflow-x: auto;
     width: 17vw;
 
@@ -350,7 +349,6 @@
 
 .mobilemenu-hide-button, .mobilemenu-show-button {
   display: none;
-  position: fixed;
   z-index: 31;
   font-weight: bold;
   font-size: 2em;
@@ -363,7 +361,7 @@
 }
 
 .mobilemenu-hide-button {
-  color: $dark;
+  position: fixed;
 
   &:hover, &:focus {
     color: $dark;
@@ -386,14 +384,13 @@
 @media screen and (max-width: $tablet) {
   .mobilemenu-hide-button {
     display: block;
-    top: 1rem;
-    right: 1rem;
+    top: $hamburger-menu-icon-spacing;
+    right: $hamburger-menu-icon-spacing;
   }
 
   .mobilemenu-show-button {
     display: block;
-    top: 1rem;
-    left: 1rem;
+    margin-left: $hamburger-menu-icon-spacing;
   }
 
   .mobile-overlay {

@@ -40,6 +40,12 @@
 .list-title {
   display: flex;
   align-items: center;
+  justify-content: center;
+
+  @media screen and (max-width: $tablet) {
+    // We need a fixed width for overflowing ellipsis to work
+    width: calc(100vw - #{$user-dropdown-width-mobile} - #{2 * $hamburger-menu-icon-spacing} - #{$hamburger-menu-icon-width} - 1rem); // -1rem for the edit icon
+  }
 
   h1 {
     margin: 0;

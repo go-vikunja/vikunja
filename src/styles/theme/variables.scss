@@ -1,6 +1,4 @@
-
-$black:        hsl(0, 0%, 4%) !default
-
+$black: hsl(0, 0%, 4%) !default;
 $orange: #ff851b;
 $green: #00CE6E;
 $blue: #5974d9;
@@ -22,7 +20,7 @@ $transparent-background-light: rgba($light-background, 0.9);
 
 $vikunja-font: 'Quicksand', sans-serif;
 $vikunja-light-text: darken(#fff, 10%);
-$vikunja-blue: #7F23FF;// #7F23FF; // #5974d9
+$vikunja-blue: #7F23FF; // #7F23FF; // #5974d9
 $vikunja-green: #4DB788;
 
 $navbar-padding: 2em;
@@ -47,3 +45,8 @@ $scrollbar-hover-color: lighten($dark, 30);
 $button-height: 2.648em;
 
 $switch-view-height: 43px;
+
+$user-dropdown-width-mobile: 4rem;
+$hamburger-menu-icon-spacing: 1rem;
+$hamburger-menu-icon-width: 28px;
+$navbar-height: 4rem;

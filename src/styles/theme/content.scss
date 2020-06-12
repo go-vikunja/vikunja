@@ -1,7 +1,7 @@
 .app-container {
   min-height: calc(100vh - 65px);
   @media screen and (max-width: $tablet) {
-    padding-top: $navbar-height + 0.75rem;
+    padding-top: $navbar-height;
   }
 
   .app-content {
