@@ -354,8 +354,23 @@
 
 			// Check if the token is still valid if the window gets focus again to maybe renew it
 			window.addEventListener('focus', () => {
+
+				if(!this.userAuthenticated) {
+					return
+				}
+
+				const expiresIn = this.userInfo.exp - +new Date() / 1000
+
+				// If the token expiry is negative, it is already expired and we have no choice but to redirect
+				// the user to the login page
+				if (expiresIn < 0) {
+					this.$store.dispatch('auth/checkAuth')
+					router.push({name: 'login'})
+					return
+				}
+
 				// Check if the token is valid for less than 60 hours and renew if thats the case
-				if (this.userInfo.exp - +new Date() / 1000 < 60 * 3600) {
+				if (expiresIn < 60 * 3600) {
 					this.$store.dispatch('auth/renewToken')
 					console.log('renewed token')
 				}
