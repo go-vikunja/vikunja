@@ -45,7 +45,22 @@
 
     @media screen and (max-width: 640px) { // Magic number to hide the username if it would take too much space otherwise
       .user {
-        width: 7em;
+        width: 4rem;
+        display: flex;
+        align-items: center;
+
+        .dropdown-trigger {
+          line-height: 1;
+
+          .button {
+            padding: 0 0.25rem;
+            height: 1rem;
+
+            .icon {
+              width: .5rem;
+            }
+          }
+        }
 
         .username {
           display: none;
