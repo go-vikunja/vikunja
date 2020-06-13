@@ -685,7 +685,7 @@ steps:
     commands:
       - cd docs/themes/vikunja
       - yarn --production=false
-      - ./node_modules/.bin/gulp
+      - ./node_modules/.bin/gulp prod
 
   - name: build
     image: monachus/hugo:v0.54.0
