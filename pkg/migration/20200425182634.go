@@ -17,32 +17,65 @@
 package migration
 
 import (
-	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/timeutil"
 	"src.techknowlogick.com/xormigrate"
 	"xorm.io/xorm"
 )
+
+type list20200425182634 struct {
+	ID      int64 `xorm:"int(11) autoincr not null unique pk" json:"id" param:"list"`
+	OwnerID int64 `xorm:"int(11) INDEX not null" json:"-"`
+}
+
+func (l *list20200425182634) TableName() string {
+	return "list"
+}
+
+type task20200425182634 struct {
+	ID       int64              `xorm:"int(11) autoincr not null unique pk" json:"id" param:"listtask"`
+	ListID   int64              `xorm:"int(11) INDEX not null" json:"list_id" param:"list"`
+	Updated  timeutil.TimeStamp `xorm:"updated not null" json:"updated"`
+	BucketID int64              `xorm:"int(11) null" json:"bucket_id"`
+}
+
+func (t *task20200425182634) TableName() string {
+	return "tasks"
+}
+
+type bucket20200425182634 struct {
+	ID          int64              `xorm:"int(11) autoincr not null unique pk" json:"id" param:"bucket"`
+	Title       string             `xorm:"text not null" valid:"required" minLength:"1" json:"title"`
+	ListID      int64              `xorm:"int(11) not null" json:"list_id" param:"list"`
+	Created     timeutil.TimeStamp `xorm:"created not null" json:"created"`
+	Updated     timeutil.TimeStamp `xorm:"updated not null" json:"updated"`
+	CreatedByID int64              `xorm:"int(11) not null" json:"-"`
+}
+
+func (b *bucket20200425182634) TableName() string {
+	return "buckets"
+}
 
 func init() {
 	migrations = append(migrations, &xormigrate.Migration{
 		ID:          "20200425182634",
 		Description: "Create one bucket for each list",
 		Migrate: func(tx *xorm.Engine) (err error) {
-			lists := []*models.List{}
+			lists := []*list20200425182634{}
 			err = tx.Find(&lists)
 			if err != nil {
 				return
 			}
 
-			tasks := []*models.Task{}
+			tasks := []*task20200425182634{}
 			err = tx.Find(&tasks)
 			if err != nil {
 				return
 			}
 
 			// This map contains all buckets with their list ids as key
-			buckets := make(map[int64]*models.Bucket, len(lists))
+			buckets := make(map[int64]*bucket20200425182634, len(lists))
 			for _, l := range lists {
-				buckets[l.ID] = &models.Bucket{
+				buckets[l.ID] = &bucket20200425182634{
 					ListID: l.ID,
 					Title:  "New Bucket",
 					// The bucket creator is just the same as the list's one
