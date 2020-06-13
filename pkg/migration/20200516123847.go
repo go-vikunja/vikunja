@@ -36,6 +36,10 @@ type list20200516123847 struct {
 	Updated     timeutil.TimeStamp `xorm:"updated not null" json:"updated"`
 }
 
+func (l *list20200516123847) TableName() string {
+	return "list"
+}
+
 func init() {
 	migrations = append(migrations, &xormigrate.Migration{
 		ID:          "20200516123847",
