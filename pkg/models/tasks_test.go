@@ -22,6 +22,7 @@ import (
 	"code.vikunja.io/api/pkg/user"
 	"github.com/stretchr/testify/assert"
 	"testing"
+	"time"
 )
 
 func TestTask_Create(t *testing.T) {
@@ -150,7 +151,13 @@ func TestUpdateDone(t *testing.T) {
 				Done: true,
 			}
 			updateDone(oldTask, newTask)
-			assert.Equal(t, timeutil.TimeStamp(1550008600), newTask.DueDate)
+
+			var expected int64 = 1550008600
+			for expected < time.Now().Unix() {
+				expected += oldTask.RepeatAfter
+			}
+
+			assert.Equal(t, timeutil.TimeStamp(expected), newTask.DueDate)
 		})
 		t.Run("don't update if due date is zero", func(t *testing.T) {
 			oldTask := &Task{
@@ -178,9 +185,19 @@ func TestUpdateDone(t *testing.T) {
 				Done: true,
 			}
 			updateDone(oldTask, newTask)
+
+			var expected1 int64 = 1550008600
+			var expected2 int64 = 1555008600
+			for expected1 < time.Now().Unix() {
+				expected1 += oldTask.RepeatAfter
+			}
+			for expected2 < time.Now().Unix() {
+				expected2 += oldTask.RepeatAfter
+			}
+
 			assert.Len(t, newTask.Reminders, 2)
-			assert.Equal(t, timeutil.TimeStamp(1550008600), newTask.Reminders[0])
-			assert.Equal(t, timeutil.TimeStamp(1555008600), newTask.Reminders[1])
+			assert.Equal(t, timeutil.TimeStamp(expected1), newTask.Reminders[0])
+			assert.Equal(t, timeutil.TimeStamp(expected2), newTask.Reminders[1])
 		})
 		t.Run("update start date", func(t *testing.T) {
 			oldTask := &Task{
@@ -192,7 +209,13 @@ func TestUpdateDone(t *testing.T) {
 				Done: true,
 			}
 			updateDone(oldTask, newTask)
-			assert.Equal(t, timeutil.TimeStamp(1550008600), newTask.StartDate)
+
+			var expected int64 = 1550008600
+			for expected < time.Now().Unix() {
+				expected += oldTask.RepeatAfter
+			}
+
+			assert.Equal(t, timeutil.TimeStamp(expected), newTask.StartDate)
 		})
 		t.Run("update end date", func(t *testing.T) {
 			oldTask := &Task{
@@ -204,7 +227,26 @@ func TestUpdateDone(t *testing.T) {
 				Done: true,
 			}
 			updateDone(oldTask, newTask)
-			assert.Equal(t, timeutil.TimeStamp(1550008600), newTask.EndDate)
+
+			var expected int64 = 1550008600
+			for expected < time.Now().Unix() {
+				expected += oldTask.RepeatAfter
+			}
+
+			assert.Equal(t, timeutil.TimeStamp(expected), newTask.EndDate)
+		})
+		t.Run("ensure due date is repeated even if the original one is in the future", func(t *testing.T) {
+			oldTask := &Task{
+				Done:        false,
+				RepeatAfter: 8600,
+				DueDate:     timeutil.FromTime(time.Now().Add(time.Hour)),
+			}
+			newTask := &Task{
+				Done: true,
+			}
+			updateDone(oldTask, newTask)
+			expected := int64(oldTask.DueDate) + oldTask.RepeatAfter
+			assert.Equal(t, timeutil.TimeStamp(expected), newTask.DueDate)
 		})
 	})
 }

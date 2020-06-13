@@ -800,20 +800,35 @@ func updateDone(oldTask *Task, newTask *Task) {
 
 		// assuming we'll merge the new task over the old task
 		if oldTask.DueDate > 0 {
+			// Always add one instance of the repeating interval to catch cases where a due date is already in the future
+			// but not the repeating interval
 			newTask.DueDate = timeutil.FromTime(oldTask.DueDate.ToTime().Add(repeatDuration))
+			// Add the repeating interval until the new due date is in the future
+			for !newTask.DueDate.ToTime().After(time.Now()) {
+				newTask.DueDate = timeutil.FromTime(newTask.DueDate.ToTime().Add(repeatDuration))
+			}
 		}
 
 		newTask.Reminders = oldTask.Reminders
 		for in, r := range oldTask.Reminders {
 			newTask.Reminders[in] = timeutil.FromTime(r.ToTime().Add(repeatDuration))
+			for !newTask.Reminders[in].ToTime().After(time.Now()) {
+				newTask.Reminders[in] = timeutil.FromTime(newTask.Reminders[in].ToTime().Add(repeatDuration))
+			}
 		}
 
 		if oldTask.StartDate > 0 {
 			newTask.StartDate = timeutil.FromTime(oldTask.StartDate.ToTime().Add(repeatDuration))
+			for !newTask.StartDate.ToTime().After(time.Now()) {
+				newTask.StartDate = timeutil.FromTime(newTask.StartDate.ToTime().Add(repeatDuration))
+			}
 		}
 
 		if oldTask.EndDate > 0 {
 			newTask.EndDate = timeutil.FromTime(oldTask.EndDate.ToTime().Add(repeatDuration))
+			for !newTask.EndDate.ToTime().After(time.Now()) {
+				newTask.EndDate = timeutil.FromTime(newTask.EndDate.ToTime().Add(repeatDuration))
+			}
 		}
 
 		newTask.Done = false
@@ -892,7 +907,7 @@ func (t *Task) updateReminders(reminders []timeutil.TimeStamp) (err error) {
 		}
 	}
 
-	// Loop through our users and add them
+	// Loop through our reminders and add them
 	for _, r := range reminders {
 		// Check if the reminder already exists and only inserts it if not
 		if oldReminders[r] != nil {
