@@ -16,12 +16,22 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: vikunjatest
       MYSQL_DATABASE: vikunjatest
+  - name: test-mysql-migration
+    image: mariadb:10
+    environment:
+      MYSQL_ROOT_PASSWORD: vikunjatest
+      MYSQL_DATABASE: vikunjatest
   - name: test-postgres-unit
     image: postgres:12
     environment:
       POSTGRES_PASSWORD: vikunjatest
       POSTGRES_DB: vikunjatest
   - name: test-postgres-integration
+    image: postgres:12
+    environment:
+      POSTGRES_PASSWORD: vikunjatest
+      POSTGRES_DB: vikunjatest
+  - name: test-postgres-migration
     image: postgres:12
     environment:
       POSTGRES_PASSWORD: vikunjatest
@@ -48,6 +58,17 @@ steps:
     environment:
       GOFLAGS: '-mod=vendor'
     commands:
+      - make build
+    when:
+      event: [ push, tag, pull_request ]
+
+  - name: lint
+    image: vikunja/golang-build:latest
+    pull: true
+    environment:
+      GOFLAGS: '-mod=vendor'
+    depends_on: [ build ]
+    commands:
       - make generate
       - make lint
       - make fmt-check
@@ -59,7 +80,69 @@ steps:
       - make static-check
       - wget -O - -q https://raw.githubusercontent.com/securego/gosec/master/install.sh | sh -s -- -b $GOPATH/bin v2.2.0 # Need to manually install as it does not support being installed via go modules like the rest.
       - make gosec-check
-      - make build
+    when:
+      event: [ push, tag, pull_request ]
+
+  - name: test-migration-prepare
+    image: kolaente/toolbox:latest
+    pull: true
+    commands:
+      # Get the latest version
+      - wget https://dl.vikunja.io/api/master/vikunja-master-linux-amd64-full.zip -q -O vikunja-latest.zip
+      - unzip vikunja-latest.zip vikunja-master-linux-amd64
+
+  - name: test-migration-sqlite
+    image: kolaente/toolbox:latest
+    pull: true
+    depends_on: [ test-migration-prepare, build ]
+    environment:
+      VIKUNJA_DATABASE_TYPE: sqlite
+      VIKUNJA_DATABASE_PATH: ./vikunja-migration-test.db
+      VIKUNJA_LOG_DATABASE: stdout
+      VIKUNJA_LOG_DATABASELEVEL: debug
+    commands:
+      - ./vikunja-master-linux-amd64 migrate
+      # Run the migrations from the binary build in the step before
+      - ./vikunja migrate
+    when:
+      event: [ push, tag, pull_request ]
+
+  - name: test-migration-mysql
+    image: kolaente/toolbox:latest
+    pull: true
+    depends_on: [ test-migration-prepare, build ]
+    environment:
+      VIKUNJA_DATABASE_TYPE: mysql
+      VIKUNJA_DATABASE_HOST: test-mysql-migration
+      VIKUNJA_DATABASE_USER: root
+      VIKUNJA_DATABASE_PASSWORD: vikunjatest
+      VIKUNJA_DATABASE_DATABASE: vikunjatest
+      VIKUNJA_LOG_DATABASE: stdout
+      VIKUNJA_LOG_DATABASELEVEL: debug
+    commands:
+      - ./vikunja-master-linux-amd64 migrate
+      # Run the migrations from the binary build in the step before
+      - ./vikunja migrate
+    when:
+      event: [ push, tag, pull_request ]
+
+  - name: test-migration-psql
+    image: kolaente/toolbox:latest
+    pull: true
+    depends_on: [ test-migration-prepare, build ]
+    environment:
+      VIKUNJA_DATABASE_TYPE: postgres
+      VIKUNJA_DATABASE_HOST: test-postgres-migration
+      VIKUNJA_DATABASE_USER: postgres
+      VIKUNJA_DATABASE_PASSWORD: vikunjatest
+      VIKUNJA_DATABASE_DATABASE: vikunjatest
+      VIKUNJA_DATABASE_SSLMODE: disable
+      VIKUNJA_LOG_DATABASE: stdout
+      VIKUNJA_LOG_DATABASELEVEL: debug
+    commands:
+      - ./vikunja-master-linux-amd64 migrate
+      # Run the migrations from the binary build in the step before
+      - ./vikunja migrate
     when:
       event: [ push, tag, pull_request ]
 
@@ -286,7 +369,7 @@ steps:
         - dist/zip/*
       detach_sign: true
 
-# Push the releases to our pseudo-s3-bucket
+  # Push the releases to our pseudo-s3-bucket
   - name: release-latest
     image: plugins/s3:1
     pull: true
@@ -346,7 +429,7 @@ steps:
       target: /deb/
     depends_on: [ deb-structure ]
 
-# Build the docker image and push it to docker hub
+  # Build the docker image and push it to docker hub
   - name: docker
     image: plugins/docker
     pull: true
@@ -479,7 +562,7 @@ steps:
         - dist/zip/*
       detach_sign: true
 
-# Push the releases to our pseudo-s3-bucket
+  # Push the releases to our pseudo-s3-bucket
   - name: release-version
     image: plugins/s3:1
     pull: true
@@ -539,7 +622,7 @@ steps:
       target: /deb/
     depends_on: [ deb-structure ]
 
-# Build the docker image and push it to docker hub
+  # Build the docker image and push it to docker hub
   - name: docker
     image: plugins/docker
     pull: true
