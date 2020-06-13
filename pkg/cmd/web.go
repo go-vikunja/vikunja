@@ -36,6 +36,9 @@ func init() {
 var webCmd = &cobra.Command{
 	Use:   "web",
 	Short: "Starts the rest api web server",
+	PreRun: func(cmd *cobra.Command, args []string) {
+		fullInit()
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 
 		// Version notification

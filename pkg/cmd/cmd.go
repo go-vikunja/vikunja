@@ -31,10 +31,6 @@ import (
 	"os"
 )
 
-func init() {
-	cobra.OnInitialize(initialize)
-}
-
 var rootCmd = &cobra.Command{
 	Use:   "vikunja",
 	Short: "Vikunja is the to-do app to organize your life.",
@@ -47,7 +43,8 @@ alpine areas of the Andes and a relative of the llama.
 Vikunja is a self-hosted To-Do list application with a web app and mobile apps for all platforms. It is licensed under the GPLv3.
 
 Find more info at vikunja.io.`,
-	Run: webCmd.Run,
+	PreRun: webCmd.PreRun,
+	Run:    webCmd.Run,
 }
 
 // Execute starts the application
@@ -58,8 +55,8 @@ func Execute() {
 	}
 }
 
-// Initializes all kinds of things in the right order
-func initialize() {
+// Will only fullInit config, redis, logger but no db connection.
+func lightInit() {
 	// Init the config
 	config.InitConfig()
 
@@ -68,6 +65,12 @@ func initialize() {
 
 	// Set logger
 	log.InitLogger()
+}
+
+// Initializes all kinds of things in the right order
+func fullInit() {
+
+	lightInit()
 
 	// Run the migrations
 	migration.Migrate(nil)

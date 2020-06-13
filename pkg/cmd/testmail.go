@@ -30,6 +30,12 @@ var testmailCmd = &cobra.Command{
 	Use:   "testmail [email]",
 	Short: "Send a test mail using the configured smtp connection",
 	Args:  cobra.ExactArgs(1),
+	PreRun: func(cmd *cobra.Command, args []string) {
+		lightInit()
+
+		// Start the mail daemon
+		mail.StartMailDaemon()
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		log.Info("Sending testmail...")
 		email := args[0]

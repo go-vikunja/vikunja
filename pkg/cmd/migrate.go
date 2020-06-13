@@ -35,6 +35,9 @@ func init() {
 var migrateCmd = &cobra.Command{
 	Use:   "migrate",
 	Short: "Run all database migrations which didn't already run.",
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		lightInit()
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		migration.Migrate(nil)
 	},
