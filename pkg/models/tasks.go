@@ -26,6 +26,7 @@ import (
 	"code.vikunja.io/web"
 	"github.com/imdario/mergo"
 	"math"
+	"sort"
 	"strconv"
 	"time"
 	"xorm.io/builder"
@@ -53,6 +54,8 @@ type Task struct {
 	ListID int64 `xorm:"int(11) INDEX not null" json:"list_id" param:"list"`
 	// An amount in seconds this task repeats itself. If this is set, when marking the task as done, it will mark itself as "undone" and then increase all remindes and the due date by its amount.
 	RepeatAfter int64 `xorm:"int(11) INDEX null" json:"repeat_after"`
+	// If specified, a repeating task will repeat from the current date rather than the last set date.
+	RepeatFromCurrentDate bool `xorm:"null" json:"repeat_from_current_date"`
 	// The task priority. Can be anything you want, it is possible to sort by this later.
 	Priority int64 `xorm:"int(11) null" json:"priority"`
 	// When this task starts.
@@ -761,6 +764,10 @@ func (t *Task) Update() (err error) {
 	if t.Position == 0 {
 		ot.Position = 0
 	}
+	// Repeat from current date
+	if !t.RepeatFromCurrentDate {
+		ot.RepeatFromCurrentDate = false
+	}
 
 	_, err = x.ID(t.ID).
 		Cols("title",
@@ -777,6 +784,7 @@ func (t *Task) Update() (err error) {
 			"list_id",
 			"bucket_id",
 			"position",
+			"repeat_from_current_date",
 		).
 		Update(ot)
 	*t = ot
@@ -798,36 +806,73 @@ func updateDone(oldTask *Task, newTask *Task) {
 
 		repeatDuration := time.Duration(oldTask.RepeatAfter) * time.Second
 
+		// Current time in an extra variable to base all calculations on the same time
+		now := time.Now()
+
 		// assuming we'll merge the new task over the old task
 		if oldTask.DueDate > 0 {
-			// Always add one instance of the repeating interval to catch cases where a due date is already in the future
-			// but not the repeating interval
-			newTask.DueDate = timeutil.FromTime(oldTask.DueDate.ToTime().Add(repeatDuration))
-			// Add the repeating interval until the new due date is in the future
-			for !newTask.DueDate.ToTime().After(time.Now()) {
-				newTask.DueDate = timeutil.FromTime(newTask.DueDate.ToTime().Add(repeatDuration))
+			if oldTask.RepeatFromCurrentDate {
+				newTask.DueDate = timeutil.FromTime(now.Add(repeatDuration))
+			} else {
+				// Always add one instance of the repeating interval to catch cases where a due date is already in the future
+				// but not the repeating interval
+				newTask.DueDate = timeutil.FromTime(oldTask.DueDate.ToTime().Add(repeatDuration))
+				// Add the repeating interval until the new due date is in the future
+				for !newTask.DueDate.ToTime().After(now) {
+					newTask.DueDate = timeutil.FromTime(newTask.DueDate.ToTime().Add(repeatDuration))
+				}
 			}
 		}
 
 		newTask.Reminders = oldTask.Reminders
-		for in, r := range oldTask.Reminders {
-			newTask.Reminders[in] = timeutil.FromTime(r.ToTime().Add(repeatDuration))
-			for !newTask.Reminders[in].ToTime().After(time.Now()) {
-				newTask.Reminders[in] = timeutil.FromTime(newTask.Reminders[in].ToTime().Add(repeatDuration))
+		// When repeating from the current date, all reminders should keep their difference to each other.
+		// To make this easier, we sort them first because we can then rely on the fact the first is the smallest
+		if len(oldTask.Reminders) > 0 {
+			if oldTask.RepeatFromCurrentDate {
+				sort.Slice(oldTask.Reminders, func(i, j int) bool {
+					return oldTask.Reminders[i] < oldTask.Reminders[j]
+				})
+				first := oldTask.Reminders[0]
+				for in, r := range oldTask.Reminders {
+					diff := time.Duration(r-first) * time.Second
+					newTask.Reminders[in] = timeutil.FromTime(now.Add(repeatDuration + diff))
+				}
+			} else {
+				for in, r := range oldTask.Reminders {
+					newTask.Reminders[in] = timeutil.FromTime(r.ToTime().Add(repeatDuration))
+					for !newTask.Reminders[in].ToTime().After(now) {
+						newTask.Reminders[in] = timeutil.FromTime(newTask.Reminders[in].ToTime().Add(repeatDuration))
+					}
+				}
 			}
 		}
 
-		if oldTask.StartDate > 0 {
-			newTask.StartDate = timeutil.FromTime(oldTask.StartDate.ToTime().Add(repeatDuration))
-			for !newTask.StartDate.ToTime().After(time.Now()) {
-				newTask.StartDate = timeutil.FromTime(newTask.StartDate.ToTime().Add(repeatDuration))
+		// If a task has a start and end date, the end date should keep the difference to the start date when setting them as new
+		if oldTask.RepeatFromCurrentDate && oldTask.StartDate > 0 && oldTask.EndDate > 0 {
+			diff := time.Duration(oldTask.EndDate-oldTask.StartDate) * time.Second
+			newTask.StartDate = timeutil.FromTime(now.Add(repeatDuration))
+			newTask.EndDate = timeutil.FromTime(now.Add(repeatDuration + diff))
+		} else {
+			if oldTask.StartDate > 0 {
+				if oldTask.RepeatFromCurrentDate {
+					newTask.StartDate = timeutil.FromTime(now.Add(repeatDuration))
+				} else {
+					newTask.StartDate = timeutil.FromTime(oldTask.StartDate.ToTime().Add(repeatDuration))
+					for !newTask.StartDate.ToTime().After(now) {
+						newTask.StartDate = timeutil.FromTime(newTask.StartDate.ToTime().Add(repeatDuration))
+					}
+				}
 			}
-		}
 
-		if oldTask.EndDate > 0 {
-			newTask.EndDate = timeutil.FromTime(oldTask.EndDate.ToTime().Add(repeatDuration))
-			for !newTask.EndDate.ToTime().After(time.Now()) {
-				newTask.EndDate = timeutil.FromTime(newTask.EndDate.ToTime().Add(repeatDuration))
+			if oldTask.EndDate > 0 {
+				if oldTask.RepeatFromCurrentDate {
+					newTask.EndDate = timeutil.FromTime(now.Add(repeatDuration))
+				} else {
+					newTask.EndDate = timeutil.FromTime(oldTask.EndDate.ToTime().Add(repeatDuration))
+					for !newTask.EndDate.ToTime().After(now) {
+						newTask.EndDate = timeutil.FromTime(newTask.EndDate.ToTime().Add(repeatDuration))
+					}
+				}
 			}
 		}
 

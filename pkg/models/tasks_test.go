@@ -248,6 +248,89 @@ func TestUpdateDone(t *testing.T) {
 			expected := int64(oldTask.DueDate) + oldTask.RepeatAfter
 			assert.Equal(t, timeutil.TimeStamp(expected), newTask.DueDate)
 		})
+		t.Run("repeat from current date", func(t *testing.T) {
+			t.Run("due date", func(t *testing.T) {
+				oldTask := &Task{
+					Done:                  false,
+					RepeatAfter:           8600,
+					RepeatFromCurrentDate: true,
+					DueDate:               timeutil.TimeStamp(1550000000),
+				}
+				newTask := &Task{
+					Done: true,
+				}
+				updateDone(oldTask, newTask)
+
+				assert.Equal(t, timeutil.FromTime(time.Now().Add(time.Duration(oldTask.RepeatAfter)*time.Second)), newTask.DueDate)
+			})
+			t.Run("reminders", func(t *testing.T) {
+				oldTask := &Task{
+					Done:                  false,
+					RepeatAfter:           8600,
+					RepeatFromCurrentDate: true,
+					Reminders: []timeutil.TimeStamp{
+						1550000000,
+						1555000000,
+					},
+				}
+				newTask := &Task{
+					Done: true,
+				}
+				updateDone(oldTask, newTask)
+
+				diff := time.Duration(oldTask.Reminders[1]-oldTask.Reminders[0]) * time.Second
+
+				assert.Len(t, newTask.Reminders, 2)
+				assert.Equal(t, timeutil.FromTime(time.Now().Add(time.Duration(oldTask.RepeatAfter)*time.Second)), newTask.Reminders[0])
+				assert.Equal(t, timeutil.FromTime(time.Now().Add(diff+time.Duration(oldTask.RepeatAfter)*time.Second)), newTask.Reminders[1])
+			})
+			t.Run("start date", func(t *testing.T) {
+				oldTask := &Task{
+					Done:                  false,
+					RepeatAfter:           8600,
+					RepeatFromCurrentDate: true,
+					StartDate:             timeutil.TimeStamp(1550000000),
+				}
+				newTask := &Task{
+					Done: true,
+				}
+				updateDone(oldTask, newTask)
+
+				assert.Equal(t, timeutil.FromTime(time.Now().Add(time.Duration(oldTask.RepeatAfter)*time.Second)), newTask.StartDate)
+			})
+			t.Run("end date", func(t *testing.T) {
+				oldTask := &Task{
+					Done:                  false,
+					RepeatAfter:           8600,
+					RepeatFromCurrentDate: true,
+					EndDate:               timeutil.TimeStamp(1560000000),
+				}
+				newTask := &Task{
+					Done: true,
+				}
+				updateDone(oldTask, newTask)
+
+				assert.Equal(t, timeutil.FromTime(time.Now().Add(time.Duration(oldTask.RepeatAfter)*time.Second)), newTask.EndDate)
+			})
+			t.Run("start and end date", func(t *testing.T) {
+				oldTask := &Task{
+					Done:                  false,
+					RepeatAfter:           8600,
+					RepeatFromCurrentDate: true,
+					StartDate:             timeutil.TimeStamp(1550000000),
+					EndDate:               timeutil.TimeStamp(1560000000),
+				}
+				newTask := &Task{
+					Done: true,
+				}
+				updateDone(oldTask, newTask)
+
+				diff := time.Duration(oldTask.EndDate-oldTask.StartDate) * time.Second
+
+				assert.Equal(t, timeutil.FromTime(time.Now().Add(time.Duration(oldTask.RepeatAfter)*time.Second)), newTask.StartDate)
+				assert.Equal(t, timeutil.FromTime(time.Now().Add(diff+time.Duration(oldTask.RepeatAfter)*time.Second)), newTask.EndDate)
+			})
+		})
 	})
 }
 
