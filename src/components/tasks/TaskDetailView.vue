@@ -142,7 +142,10 @@
 								<icon :icon="['far', 'clock']"/>
 								Repeat
 							</div>
-							<repeat-after v-model="task.repeatAfter" @change="saveTask" ref="repeatAfter"/>
+							<repeat-after
+									v-model="task"
+									@change="saveTask"
+									ref="repeatAfter"/>
 						</div>
 					</div>
 
@@ -393,14 +396,14 @@
 		},
 		computed: {
 			parent() {
-				if(!this.task.listId) {
+				if (!this.task.listId) {
 					return {
 						namespace: null,
 						list: null,
 					}
 				}
 
-				if(!this.$store.getters["namespaces/getListAndNamespaceById"]) {
+				if (!this.$store.getters["namespaces/getListAndNamespaceById"]) {
 					return null
 				}
 

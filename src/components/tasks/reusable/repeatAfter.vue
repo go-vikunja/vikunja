@@ -1,61 +1,93 @@
 <template>
 	<div class="control repeat-after-input columns">
-		<div class="column">
-			<p>
-				Each
-			</p>
-		</div>
-		<div class="column is-two-fifths">
-			<input class="input" placeholder="Specify an amount..." v-model="repeatAfter.amount" @change="updateData"/>
-		</div>
-		<div class="column is-two-fifths">
-			<div class="select">
-				<select v-model="repeatAfter.type" @change="updateData">
-					<option value="hours">Hours</option>
-					<option value="days">Days</option>
-					<option value="weeks">Weeks</option>
-					<option value="months">Months</option>
-					<option value="years">Years</option>
-				</select>
+		<p class="column is-1">
+			Each
+		</p>
+		<div class="column is-7 field has-addons">
+			<div class="control">
+				<input
+						class="input"
+						placeholder="Specify an amount..."
+						v-model="repeatAfter.amount"
+						@change="updateData"/>
+			</div>
+			<div class="control">
+				<div class="select">
+					<select v-model="repeatAfter.type" @change="updateData">
+						<option value="hours">Hours</option>
+						<option value="days">Days</option>
+						<option value="weeks">Weeks</option>
+						<option value="months">Months</option>
+						<option value="years">Years</option>
+					</select>
+				</div>
 			</div>
 		</div>
+		<fancycheckbox
+				class="column"
+				@change="updateData"
+				v-model="task.repeatFromCurrentDate"
+				v-tooltip="'When marking the task as done, all dates will be set relative to the current date rather than the date they had before.'"
+		>
+			Repeat from current date
+		</fancycheckbox>
 	</div>
-
 </template>
 
 <script>
+	import Fancycheckbox from '../../global/fancycheckbox'
+
 	export default {
 		name: 'repeatAfter',
+		components: {Fancycheckbox},
 		data() {
 			return {
+				task: {},
 				repeatAfter: {},
 			}
 		},
 		props: {
 			value: {
-				default: () => {},
+				default: () => {
+				},
 				required: true,
 			}
 		},
 		watch: {
 			value(newVal) {
-				this.repeatAfter = newVal
+				this.task = newVal
+				this.repeatAfter = newVal.repeatAfter
 			},
 		},
 		mounted() {
-			this.repeatAfter = this.value
+			this.task = this.value
+			this.repeatAfter = this.value.repeatAfter
 		},
 		methods: {
 			updateData() {
-				this.$emit('input', this.repeatAfter)
+				this.task.repeatAfter = this.repeatAfter
+				this.$emit('input', this.task)
 				this.$emit('change')
 			}
 		},
 	}
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 	p {
 		padding-top: 6px;
+	}
+
+	.field.has-addons {
+
+		margin-bottom: .5rem;
+
+		.control .select select {
+			height: 2.5em;
+		}
+	}
+
+	.columns {
+		align-items: center;
 	}
 </style>

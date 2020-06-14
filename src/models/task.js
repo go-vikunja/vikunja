@@ -86,6 +86,7 @@ export default class TaskModel extends AbstractModel {
 			startDate: 0,
 			endDate: 0,
 			repeatAfter: 0,
+			repeatFromCurrentDate: false,
 			reminderDates: [],
 			parentTaskId: 0,
 			hexColor: '',
