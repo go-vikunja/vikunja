@@ -11,7 +11,8 @@
 					v-if="userAuthenticated && (userInfo && userInfo.type === authTypes.USER)">
 				<div class="navbar-brand">
 					<router-link :to="{name: 'home'}" class="navbar-item logo">
-						<img src="/images/logo-full.svg" alt="Vikunja"/>
+						<img src="/images/logo-full-pride.svg" alt="Vikunja" v-if="(new Date()).getMonth() === 5"/>
+						<img src="/images/logo-full.svg" alt="Vikunja" v-else/>
 					</router-link>
 				</div>
 				<a @click="mobileMenuActive = true" class="mobilemenu-show-button" v-if="!mobileMenuActive">
