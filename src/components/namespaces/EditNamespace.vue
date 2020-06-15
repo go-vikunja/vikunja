@@ -52,13 +52,7 @@
 						<div class="field">
 							<label class="label">Color</label>
 							<div class="control">
-								<verte
-										v-model="namespace.hexColor"
-										menuPosition="top"
-										picker="square"
-										model="hex"
-										:enableAlpha="false"
-										:rgbSliders="true"/>
+								<color-picker v-model="namespace.hexColor"/>
 							</div>
 						</div>
 					</form>
@@ -108,15 +102,13 @@
 </template>
 
 <script>
-	import verte from 'verte'
-	import 'verte/dist/verte.css'
-
 	import router from '../../router'
 	import manageSharing from '../sharing/userTeam'
 
 	import NamespaceService from '../../services/namespace'
 	import NamespaceModel from '../../models/namespace'
 	import Fancycheckbox from '../global/fancycheckbox'
+	import ColorPicker from '../global/colorPicker'
 
 	export default {
 		name: "EditNamespace",
@@ -131,9 +123,9 @@
 			}
 		},
 		components: {
+			ColorPicker,
 			Fancycheckbox,
 			manageSharing,
-			verte,
 		},
 		beforeMount() {
 			this.namespace.id = this.$route.params.id

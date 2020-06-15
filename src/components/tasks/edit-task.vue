@@ -88,15 +88,7 @@
 		<div class="field">
 			<label class="label">Color</label>
 			<div class="control">
-				<verte
-						v-model="taskEditTask.hexColor"
-						menuPosition="top"
-						picker="square"
-						model="hex"
-						:enableAlpha="false"
-						:rgbSliders="true"
-						@change="editTaskSubmit()"
-				/>
+				<color-picker v-model="taskEditTask.hexColor"/>
 			</div>
 		</div>
 
@@ -142,8 +134,6 @@
 <script>
 	import flatPickr from 'vue-flatpickr-component'
 	import 'flatpickr/dist/flatpickr.css'
-	import verte from 'verte'
-	import 'verte/dist/verte.css'
 
 	import ListService from '../../services/list'
 	import TaskService from '../../services/task'
@@ -156,6 +146,7 @@
 	import RelatedTasks from './reusable/relatedTasks'
 	import RepeatAfter from './reusable/repeatAfter'
 	import Reminders from './reusable/reminders'
+	import ColorPicker from '../global/colorPicker'
 
 	export default {
 		name: 'edit-task',
@@ -181,6 +172,7 @@
 			}
 		},
 		components: {
+			ColorPicker,
 			Reminders,
 			RepeatAfter,
 			RelatedTasks,
@@ -189,7 +181,6 @@
 			PercentDoneSelect,
 			PrioritySelect,
 			flatPickr,
-			verte,
 		},
 		props: {
 			task: {

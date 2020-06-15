@@ -1,0 +1,15 @@
+.color-picker-container {
+  display: flex;
+  justify-content: center;
+
+  .verte__guide {
+    border-radius: 100%;
+    border: 1px solid $grey-light;
+    box-shadow: $card-shadow;
+  }
+
+  a.reset {
+    font-size: .9em;
+    padding-left: .5rem;
+  }
+}

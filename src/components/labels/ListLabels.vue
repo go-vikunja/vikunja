@@ -64,14 +64,7 @@
 							<div class="field">
 								<label class="label">Color</label>
 								<div class="control">
-									<verte
-											v-model="labelEditLabel.hexColor"
-											menuPosition="top"
-											picker="square"
-											model="hex"
-											:enableAlpha="false"
-											:rgbSliders="true">
-									</verte>
+									<color-picker v-model="labelEditLabel.hexColor"/>
 								</div>
 							</div>
 							<div class="field has-addons">
@@ -100,17 +93,16 @@
 </template>
 
 <script>
-	import verte from 'verte'
-	import 'verte/dist/verte.css'
 	import {mapState} from 'vuex'
 
 	import LabelService from '../../services/label'
 	import LabelModel from '../../models/label'
+	import ColorPicker from '../global/colorPicker'
 
 	export default {
 		name: 'ListLabels',
 		components: {
-			verte,
+			ColorPicker,
 		},
 		data() {
 			return {

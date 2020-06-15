@@ -73,13 +73,7 @@
 						<div class="field">
 							<label class="label">Color</label>
 							<div class="control">
-								<verte
-										v-model="list.hexColor"
-										menuPosition="top"
-										picker="square"
-										model="hex"
-										:enableAlpha="false"
-										:rgbSliders="true"/>
+								<color-picker v-model="list.hexColor"/>
 							</div>
 						</div>
 					</form>
@@ -133,9 +127,6 @@
 </template>
 
 <script>
-	import verte from 'verte'
-	import 'verte/dist/verte.css'
-
 	import router from '../../router'
 	import manageSharing from '../sharing/userTeam'
 	import LinkSharing from '../sharing/linkSharing'
@@ -145,6 +136,7 @@
 	import Fancycheckbox from '../global/fancycheckbox'
 	import Background from './settings/background'
 	import {CURRENT_LIST} from '../../store/mutation-types'
+	import ColorPicker from '../global/colorPicker'
 
 	export default {
 		name: "EditList",
@@ -160,11 +152,11 @@
 			}
 		},
 		components: {
+			ColorPicker,
 			Background,
 			Fancycheckbox,
 			LinkSharing,
 			manageSharing,
-			verte,
 		},
 		created() {
 			this.listService = new ListService()
