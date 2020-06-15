@@ -460,12 +460,10 @@ func CreateOrUpdateList(list *List) (err error) {
 			"title",
 			"is_archived",
 			"identifier",
+			"hex_color",
 		}
 		if list.Description != "" {
 			colsToUpdate = append(colsToUpdate, "description")
-		}
-		if list.HexColor != "" {
-			colsToUpdate = append(colsToUpdate, "hex_color")
 		}
 
 		_, err = x.

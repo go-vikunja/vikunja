@@ -448,12 +448,10 @@ func (n *Namespace) Update() (err error) {
 	colsToUpdate := []string{
 		"name",
 		"is_archived",
+		"hex_color",
 	}
 	if n.Description != "" {
 		colsToUpdate = append(colsToUpdate, "description")
-	}
-	if n.HexColor != "" {
-		colsToUpdate = append(colsToUpdate, "hex_color")
 	}
 
 	// Do the actual update

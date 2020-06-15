@@ -92,7 +92,14 @@ func (l *Label) Create(a web.Auth) (err error) {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /labels/{id} [put]
 func (l *Label) Update() (err error) {
-	_, err = x.ID(l.ID).Update(l)
+	_, err = x.
+		ID(l.ID).
+		Cols(
+			"title",
+			"description",
+			"hex_color",
+		).
+		Update(l)
 	if err != nil {
 		return
 	}
