@@ -16,7 +16,8 @@
 </template>
 <script>
 	import TaskService from '../../services/task'
-	import SingleTaskInList from "./reusable/singleTaskInList";
+	import SingleTaskInList from './reusable/singleTaskInList'
+	import {HAS_TASKS} from '../../store/mutation-types'
 
 	export default {
 		name: 'ShowTasks',
@@ -54,15 +55,15 @@
 				}
 				if (!this.showAll) {
 					params.filter_by.push('start_date')
-					params.filter_value.push(Math.round(+ this.startDate / 1000))
+					params.filter_value.push(Math.round(+this.startDate / 1000))
 					params.filter_comparator.push('greater')
 
 					params.filter_by.push('end_date')
-					params.filter_value.push(Math.round(+ this.endDate / 1000))
+					params.filter_value.push(Math.round(+this.endDate / 1000))
 					params.filter_comparator.push('less')
 
 					params.filter_by.push('due_date')
-					params.filter_value.push(Math.round(+ this.endDate / 1000))
+					params.filter_value.push(Math.round(+this.endDate / 1000))
 					params.filter_comparator.push('less')
 				}
 
@@ -76,6 +77,7 @@
 							}
 						}
 						this.$set(this, 'tasks', r.filter(t => !t.done))
+						this.$store.commit(HAS_TASKS, r.length > 0)
 					})
 					.catch(e => {
 						this.error(e, this)
@@ -85,7 +87,7 @@
 				if (this.tasks === null || this.tasks === []) {
 					return
 				}
-				return this.tasks.sort(function(a,b) {
+				return this.tasks.sort(function (a, b) {
 					if (a.done < b.done)
 						return -1
 					if (a.done > b.done)
@@ -112,16 +114,16 @@
 </script>
 
 <style scoped>
-	h3{
+	h3 {
 		text-align: left;
 	}
 
-	h3.nothing{
+	h3.nothing {
 		text-align: center;
 		margin-top: 3em;
 	}
 
-	img{
+	img {
 		margin-top: 2em;
 	}
 

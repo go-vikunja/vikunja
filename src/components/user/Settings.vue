@@ -2,6 +2,7 @@
 	<div
 			class="loader-container"
 			:class="{ 'is-loading': passwordUpdateService.loading || emailUpdateService.loading || totpService.loading }">
+		<!-- Password update -->
 		<div class="card">
 			<header class="card-header">
 				<p class="card-header-title">
@@ -58,6 +59,8 @@
 				</div>
 			</div>
 		</div>
+
+		<!-- Update E-Mail -->
 		<div class="card">
 			<header class="card-header">
 				<p class="card-header-title">
@@ -102,6 +105,8 @@
 				</div>
 			</div>
 		</div>
+
+		<!-- TOTP -->
 		<div class="card" v-if="totpEnabled">
 			<header class="card-header">
 				<p class="card-header-title">
@@ -166,6 +171,22 @@
 				</div>
 			</div>
 		</div>
+		<div class="card" v-if="totpEnabled">
+			<header class="card-header">
+				<p class="card-header-title">
+					Migrate from other services to Vikunja
+				</p>
+			</header>
+			<div class="card-content">
+				<router-link
+						class="button is-primary is-right noshadow is-outlined"
+						:to="{name: 'migrateStart'}"
+						v-if="migratorsEnabled"
+				>
+					Import your data into Vikunja
+				</router-link>
+			</div>
+		</div>
 	</div>
 </template>
 
@@ -212,7 +233,8 @@
 			this.totpStatus()
 		},
 		computed: mapState({
-			totpEnabled: state => state.config.totpEnabled
+			totpEnabled: state => state.config.totpEnabled,
+			migratorsEnabled: state => state.config.availableMigrators !== null && state.config.availableMigrators.length > 0,
 		}),
 		methods: {
 			updatePassword() {

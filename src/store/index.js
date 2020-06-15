@@ -3,7 +3,7 @@ import Vuex from 'vuex'
 
 Vue.use(Vuex)
 
-import {CURRENT_LIST, ERROR_MESSAGE, IS_FULLPAGE, LOADING, ONLINE} from './mutation-types'
+import {CURRENT_LIST, ERROR_MESSAGE, HAS_TASKS, IS_FULLPAGE, LOADING, ONLINE} from './mutation-types'
 import config from './modules/config'
 import auth from './modules/auth'
 import namespaces from './modules/namespaces'
@@ -29,6 +29,7 @@ export const store = new Vuex.Store({
 		// This is used to highlight the current list in menu for all list related views
 		currentList: {id: 0},
 		background: '',
+		hasTasks: false,
 	},
 	mutations: {
 		[LOADING](state, loading) {
@@ -87,5 +88,8 @@ export const store = new Vuex.Store({
 
 			state.currentList = currentList
 		},
+		[HAS_TASKS](state, hasTasks) {
+			state.hasTasks = hasTasks
+		}
 	},
 })
