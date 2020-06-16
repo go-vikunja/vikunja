@@ -329,21 +329,37 @@ func AddListDetails(lists []*List) (err error) {
 	}
 
 	// Get all list owners
-	owners := []*user.User{}
+	owners := map[int64]*user.User{}
 	err = x.In("id", ownerIDs).Find(&owners)
 	if err != nil {
 		return
 	}
 
-	// Build it all into the lists slice
-	for in, list := range lists {
-		// Owner
-		for _, owner := range owners {
-			if list.OwnerID == owner.ID {
-				lists[in].Owner = owner
-				break
-			}
+	var fileIDs []int64
+	for _, l := range lists {
+		if o, exists := owners[l.OwnerID]; exists {
+			l.Owner = o
 		}
+		if l.BackgroundFileID != 0 {
+			l.BackgroundInformation = &ListBackgroundType{Type: ListBackgroundUpload}
+		}
+		fileIDs = append(fileIDs, l.BackgroundFileID)
+	}
+
+	// Unsplash background file info
+	us := []*UnsplashPhoto{}
+	err = x.In("file_id", fileIDs).Find(&us)
+	if err != nil {
+		return
+	}
+	unsplashPhotos := make(map[int64]*UnsplashPhoto, len(us))
+	for _, u := range us {
+		unsplashPhotos[u.FileID] = u
+	}
+
+	// Build it all into the lists slice
+	for _, l := range lists {
+		l.BackgroundInformation = unsplashPhotos[l.BackgroundFileID]
 	}
 
 	return
