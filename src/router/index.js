@@ -19,6 +19,7 @@ import TaskDetailView from '../components/tasks/TaskDetailView'
 // Namespace Handling
 import NewNamespaceComponent from '@/components/namespaces/NewNamespace'
 import EditNamespaceComponent from '@/components/namespaces/EditNamespace'
+import ListNamespaces from '../components/namespaces/ListNamespaces'
 // Team Handling
 import ListTeamsComponent from '@/components/teams/ListTeams'
 import EditTeamComponent from '@/components/teams/EditTeam'
@@ -143,6 +144,11 @@ export default new Router({
 					],
 				},
 			]
+		},
+		{
+			path: '/namespaces',
+			name: 'namespaces.index',
+			component: ListNamespaces,
 		},
 		{
 			path: '/namespaces/:id/list',

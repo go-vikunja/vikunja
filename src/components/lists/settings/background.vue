@@ -148,6 +148,7 @@
 				this.backgroundService.update({id: backgroundId, listId: this.listId})
 					.then(l => {
 						this.$store.commit(CURRENT_LIST, l)
+						this.$store.commit('namespaces/setListInNamespaceById', l)
 						this.success({message: 'The background has been set successfully!'}, this)
 					})
 					.catch(e => {
@@ -162,6 +163,7 @@
 				this.backgroundUploadService.create(this.listId, this.$refs.backgroundUploadInput.files[0])
 					.then(l => {
 						this.$store.commit(CURRENT_LIST, l)
+						this.$store.commit('namespaces/setListInNamespaceById', l)
 						this.success({message: 'The background has been set successfully!'}, this)
 					})
 					.catch(e => {

@@ -125,15 +125,6 @@
       }
     }
 
-    .show-archived-check {
-      width: 100%;
-      text-align: right;
-
-      span {
-        vertical-align: super;
-      }
-    }
-
     .menu {
       .menu-label {
         font-size: 1em;
@@ -171,18 +162,6 @@
           }
         }
 
-        .is-archived {
-          font-size: 0.75em;
-          border: 1px solid $grey;
-          color: $grey !important;
-          padding: 2px 4px;
-          border-radius: 3px;
-          font-family: $vikunja-font;
-          min-width: 60px;
-          display: block;
-          margin-left: 3px;
-          text-align: center;
-        }
       }
 
       .menu-label {

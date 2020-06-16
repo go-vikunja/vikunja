@@ -140,6 +140,7 @@ Vue.directive('focus', {
 // Mixins
 import message from './message'
 import {format, formatDistance} from 'date-fns'
+import {colorIsDark} from './helpers/colorIsDark'
 Vue.mixin({
 	methods: {
 		formatDateSince: date => {
@@ -158,6 +159,7 @@ Vue.mixin({
 		formatDate: date => format(date, 'PPPPpppp'),
 		error: (e, context, actions = []) => message.error(e, context, actions),
 		success: (s, context, actions = []) => message.success(s, context, actions),
+		colorIsDark: colorIsDark
 	}
 })
 

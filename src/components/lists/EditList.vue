@@ -139,7 +139,7 @@
 	import ColorPicker from '../global/colorPicker'
 
 	export default {
-		name: "EditList",
+		name: 'EditList',
 		data() {
 			return {
 				list: ListModel,

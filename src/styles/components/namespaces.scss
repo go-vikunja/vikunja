@@ -1,0 +1,131 @@
+$lists-per-row: 5;
+
+.namespaces-list {
+  .button.new-namespace {
+    float: right;
+
+    @media screen and (max-width: $tablet / 2) {
+      float: none;
+      width: 100%;
+      margin-bottom: 1rem;
+    }
+  }
+
+  .show-archived-check {
+    margin-bottom: 1rem;
+  }
+
+  .namespace {
+    margin-bottom: 1rem;
+
+    h1 {
+      display: flex;
+      align-items: center;
+    }
+
+    .is-archived {
+      font-size: 0.75rem;
+      border: 1px solid $grey;
+      color: $grey !important;
+      padding: 2px 4px;
+      margin-left: .5rem;
+      border-radius: 3px;
+      font-family: $vikunja-font;
+      background: rgba($white, 0.75);
+    }
+
+    .lists {
+      display: flex;
+      flex-flow: row wrap;
+
+      .list {
+        width: calc((100% - #{($lists-per-row - 1) * 1rem}) / #{$lists-per-row});
+        height: 150px;
+        background: $white;
+        margin: 0 1rem 1rem 0;
+        padding: 1rem;
+        border-radius: $radius;
+        box-shadow: 0.3em 0.3em 1em lighten($dark, 75);
+        transition: box-shadow $transition;
+
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+
+        &:hover {
+          box-shadow: 0 0 1em lighten($dark, 65);
+        }
+
+        @media screen and (min-width: $widescreen) {
+          &:nth-child(#{$lists-per-row}n) {
+            margin-right: 0;
+          }
+        }
+
+        @media screen and (max-width: $widescreen) and (min-width: $tablet) {
+          $lists-per-row: 3;
+          & {
+            width: calc((100% - #{($lists-per-row - 1) * 1rem}) / #{$lists-per-row});
+          }
+
+          &:nth-child(#{$lists-per-row}n) {
+            margin-right: 0;
+          }
+        }
+
+        @media screen and (max-width: $tablet) {
+          $lists-per-row: 2;
+          & {
+            width: calc((100% - #{($lists-per-row - 1) * 1rem}) / #{$lists-per-row});
+          }
+
+          &:nth-child(#{$lists-per-row}n) {
+            margin-right: 0;
+          }
+        }
+
+        @media screen and (max-width: $tablet / 2) {
+          $lists-per-row: 1;
+          & {
+            width: 100%;
+            margin-right: 0;
+          }
+        }
+
+        .is-archived-container {
+          width: 100%;
+          text-align: right;
+
+          .is-archived {
+            font-size: .75em;
+          }
+        }
+
+        .title {
+          align-self: flex-end;
+          font-family: $vikunja-font;
+          font-weight: 400;
+          font-size: 1.5rem;
+          color: $text;
+          width: 100%;
+          margin-bottom: 0;
+        }
+
+        &.has-light-text .title {
+          color: $light;
+        }
+
+        &.has-background {
+          background-size: cover;
+          background-repeat: no-repeat;
+          background-position: center;
+
+          .title {
+            text-shadow: 0 0 10px $black, 1px 1px 5px $grey-darker, -1px -1px 5px $grey-darker;
+            color: $white;
+          }
+        }
+      }
+    }
+  }
+}

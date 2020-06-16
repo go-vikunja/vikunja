@@ -108,11 +108,11 @@
 									</router-link>
 								</li>
 								<li>
-									<router-link :to="{ name: 'newNamespace'}">
+									<router-link :to="{ name: 'namespaces.index'}">
 									<span class="icon">
 										<icon icon="layer-group"/>
 									</span>
-										New Namespace
+										Namespaces & Lists
 									</router-link>
 								</li>
 								<li>
@@ -126,9 +126,6 @@
 							</ul>
 						</div>
 						<aside class="menu namespaces-lists">
-							<fancycheckbox v-model="showArchived" class="show-archived-check">
-								Show Archived
-							</fancycheckbox>
 							<div class="spinner" :class="{ 'is-loading': namespaceService.loading}"></div>
 							<template v-for="n in namespaces">
 								<div :key="n.id">
@@ -163,9 +160,6 @@
 											</span>
 											{{n.title}} ({{n.lists.length}})
 										</span>
-										<span class="is-archived" v-if="n.isArchived">
-											Archived
-										</span>
 									</label>
 								</div>
 								<input
@@ -187,9 +181,6 @@
 															:style="{ backgroundColor: l.hexColor }">
 													</span>
 													{{l.title}}
-												</span>
-												<span class="is-archived" v-if="l.isArchived">
-													Archived
 												</span>
 											</router-link>
 										</li>
@@ -272,13 +263,11 @@
 
 	import swEvents from './ServiceWorker/events'
 	import Notification from './components/global/notification'
-	import Fancycheckbox from './components/global/fancycheckbox'
 	import {CURRENT_LIST, IS_FULLPAGE, ONLINE} from './store/mutation-types'
 
 	export default {
 		name: 'app',
 		components: {
-			Fancycheckbox,
 			Notification,
 		},
 		data() {
@@ -288,7 +277,6 @@
 				currentDate: new Date(),
 				userMenuActive: false,
 				authTypes: authTypes,
-				showArchived: false,
 
 				// Service Worker stuff
 				updateAvailable: false,
@@ -388,7 +376,7 @@
 			online: ONLINE,
 			fullpage: IS_FULLPAGE,
 			namespaces(state) {
-				return state.namespaces.namespaces.filter(n => this.showArchived ? true : !n.isArchived)
+				return state.namespaces.namespaces.filter(n => !n.isArchived)
 			},
 			currentList: CURRENT_LIST,
 			background: 'background',
@@ -425,7 +413,8 @@
 					this.$route.name === 'listLabels' ||
 					this.$route.name === 'migrateStart' ||
 					this.$route.name === 'migrate.wunderlist' ||
-					this.$route.name === 'userSettings'
+					this.$route.name === 'userSettings' ||
+					this.$route.name === 'namespaces.index'
 				) {
 					this.$store.commit(CURRENT_LIST, {})
 				}
