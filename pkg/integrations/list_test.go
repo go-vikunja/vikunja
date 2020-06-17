@@ -178,15 +178,10 @@ func TestList(t *testing.T) {
 			assert.Error(t, err)
 			assert.Contains(t, err.(*echo.HTTPError).Message.(models.ValidationHTTPError).InvalidFields, "title: non zero value required")
 		})
-		t.Run("Almost empty title", func(t *testing.T) {
-			_, err := testHandler.testUpdateWithUser(nil, map[string]string{"list": "1"}, `{"title":"nn"}`)
-			assert.Error(t, err)
-			assert.Contains(t, err.(*echo.HTTPError).Message.(models.ValidationHTTPError).InvalidFields[0], "does not validate as runelength(3|250)")
-		})
 		t.Run("Title too long", func(t *testing.T) {
 			_, err := testHandler.testUpdateWithUser(nil, map[string]string{"list": "1"}, `{"title":"Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea taki"}`)
 			assert.Error(t, err)
-			assert.Contains(t, err.(*echo.HTTPError).Message.(models.ValidationHTTPError).InvalidFields[0], "does not validate as runelength(3|250)")
+			assert.Contains(t, err.(*echo.HTTPError).Message.(models.ValidationHTTPError).InvalidFields[0], "does not validate as runelength(1|250)")
 		})
 		t.Run("Rights check", func(t *testing.T) {
 			t.Run("Forbidden", func(t *testing.T) {
@@ -371,15 +366,10 @@ func TestList(t *testing.T) {
 			assert.Error(t, err)
 			assert.Contains(t, err.(*echo.HTTPError).Message.(models.ValidationHTTPError).InvalidFields, "title: non zero value required")
 		})
-		t.Run("Almost empty title", func(t *testing.T) {
-			_, err := testHandler.testCreateWithUser(nil, map[string]string{"namespace": "1"}, `{"title":"nn"}`)
-			assert.Error(t, err)
-			assert.Contains(t, err.(*echo.HTTPError).Message.(models.ValidationHTTPError).InvalidFields[0], "does not validate as runelength(3|250)")
-		})
 		t.Run("Title too long", func(t *testing.T) {
 			_, err := testHandler.testCreateWithUser(nil, map[string]string{"namespace": "1"}, `{"title":"Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea taki"}`)
 			assert.Error(t, err)
-			assert.Contains(t, err.(*echo.HTTPError).Message.(models.ValidationHTTPError).InvalidFields[0], "does not validate as runelength(3|250)")
+			assert.Contains(t, err.(*echo.HTTPError).Message.(models.ValidationHTTPError).InvalidFields[0], "does not validate as runelength(1|250)")
 		})
 		t.Run("Rights check", func(t *testing.T) {
 

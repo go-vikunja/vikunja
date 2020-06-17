@@ -31,7 +31,7 @@ type Namespace struct {
 	// The unique, numeric id of this namespace.
 	ID int64 `xorm:"int(11) autoincr not null unique pk" json:"id" param:"namespace"`
 	// The name of this namespace.
-	Title string `xorm:"varchar(250) not null" json:"title" valid:"required,runelength(5|250)" minLength:"5" maxLength:"250"`
+	Title string `xorm:"varchar(250) not null" json:"title" valid:"required,runelength(1|250)" minLength:"5" maxLength:"250"`
 	// The description of the namespace
 	Description string `xorm:"longtext null" json:"description"`
 	OwnerID     int64  `xorm:"int(11) not null INDEX" json:"-"`

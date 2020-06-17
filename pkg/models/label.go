@@ -27,7 +27,7 @@ type Label struct {
 	// The unique, numeric id of this label.
 	ID int64 `xorm:"int(11) autoincr not null unique pk" json:"id" param:"label"`
 	// The title of the lable. You'll see this one on tasks associated with it.
-	Title string `xorm:"varchar(250) not null" json:"title" valid:"runelength(3|250)" minLength:"3" maxLength:"250"`
+	Title string `xorm:"varchar(250) not null" json:"title" valid:"runelength(1|250)" minLength:"3" maxLength:"250"`
 	// The label description.
 	Description string `xorm:"longtext null" json:"description"`
 	// The color this label has
