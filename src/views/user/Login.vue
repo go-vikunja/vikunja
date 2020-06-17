@@ -53,11 +53,11 @@
 					<div class="control is-expanded">
 						<button type="submit" class="button is-primary" v-bind:class="{ 'is-loading': loading}">Login
 						</button>
-						<router-link :to="{ name: 'register' }" class="button" v-if="registrationEnabled">Register
+						<router-link :to="{ name: 'user.register' }" class="button" v-if="registrationEnabled">Register
 						</router-link>
 					</div>
 					<div class="control">
-						<router-link :to="{ name: 'getPasswordReset' }" class="reset-password-link">Reset your
+						<router-link :to="{ name: 'user.password-reset.request' }" class="reset-password-link">Reset your
 							password
 						</router-link>
 					</div>

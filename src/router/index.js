@@ -70,33 +70,68 @@ export default new Router({
 		},
 		{
 			path: '/login',
-			name: 'login',
+			name: 'user.login',
 			component: LoginComponent
 		},
 		{
 			path: '/get-password-reset',
-			name: 'getPasswordReset',
+			name: 'user.password-reset.request',
 			component: GetPasswordResetComponent
 		},
 		{
 			path: '/password-reset',
-			name: 'passwordReset',
+			name: 'user.password-reset.reset',
 			component: PasswordResetComponent
 		},
 		{
 			path: '/register',
-			name: 'register',
+			name: 'user.register',
 			component: RegisterComponent
 		},
 		{
+			path: '/user/settings',
+			name: 'user.settings',
+			component: UserSettingsComponent,
+		},
+		{
+			path: '/share/:share/auth',
+			name: 'link-share.auth',
+			component: LinkShareAuthComponent
+		},
+		{
+			path: '/namespaces',
+			name: 'namespaces.index',
+			component: ListNamespaces,
+		},
+		{
+			path: '/namespaces/new',
+			name: 'namespace.create',
+			component: NewNamespaceComponent
+		},
+		{
+			path: '/namespaces/:id/edit',
+			name: 'namespace.edit',
+			component: EditNamespaceComponent
+		},
+		{
+			path: '/namespaces/:id/list',
+			name: 'list.create',
+			component: NewListComponent
+		},
+		{
 			path: '/lists/:id/edit',
-			name: 'editList',
+			name: 'list.edit',
 			component: EditListComponent
 		},
 		{
 			path: '/tasks/:id',
 			name: 'task.detail',
 			component: TaskDetailView,
+		},
+		{
+			path: '/tasks/by/:type',
+			name: 'tasks.range',
+			component: ShowTasksInRangeComponent,
 		},
 		{
 			path: '/lists/:listId',
@@ -147,69 +182,34 @@ export default new Router({
 			]
 		},
 		{
-			path: '/namespaces',
-			name: 'namespaces.index',
-			component: ListNamespaces,
-		},
-		{
-			path: '/namespaces/:id/list',
-			name: 'newList',
-			component: NewListComponent
-		},
-		{
-			path: '/namespaces/new',
-			name: 'newNamespace',
-			component: NewNamespaceComponent
-		},
-		{
-			path: '/namespaces/:id/edit',
-			name: 'editNamespace',
-			component: EditNamespaceComponent
-		},
-		{
 			path: '/teams',
-			name: 'listTeams',
+			name: 'teams.index',
 			component: ListTeamsComponent
 		},
 		{
 			path: '/teams/new',
-			name: 'newTeam',
+			name: 'teams.create',
 			component: NewTeamComponent
 		},
 		{
 			path: '/teams/:id/edit',
-			name: 'editTeam',
+			name: 'teams.edit',
 			component: EditTeamComponent
 		},
 		{
-			path: '/tasks/by/:type',
-			name: 'showTasksInRange',
-			component: ShowTasksInRangeComponent,
-		},
-		{
 			path: '/labels',
-			name: 'listLabels',
+			name: 'labels.index',
 			component: ListLabelsComponent
 		},
 		{
-			path: '/share/:share/auth',
-			name: 'linkShareAuth',
-			component: LinkShareAuthComponent
-		},
-		{
 			path: '/migrate',
-			name: 'migrateStart',
+			name: 'migrate.start',
 			component: MigrationComponent,
 		},
 		{
 			path: '/migrate/:service',
-			name: 'migrate',
+			name: 'migrate.service',
 			component: MigrateServiceComponent,
-		},
-		{
-			path: '/user/settings',
-			name: 'userSettings',
-			component: UserSettingsComponent,
 		},
 	]
 })

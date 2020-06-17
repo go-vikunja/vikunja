@@ -24,7 +24,7 @@
 							:style="{ 'opacity': currentList.title === '' ? '0': '1' }">
 						{{ currentList.title === '' ? 'Loading...': currentList.title}}
 					</h1>
-					<router-link :to="{ name: 'editList', params: { id: currentList.id } }" class="icon">
+					<router-link :to="{ name: 'list.edit', params: { id: currentList.id } }" class="icon">
 						<icon icon="cog" size="2x"/>
 					</router-link>
 				</div>
@@ -47,7 +47,7 @@
 							<transition name="fade">
 								<div class="dropdown-menu" v-if="userMenuActive">
 									<div class="dropdown-content">
-										<router-link :to="{name: 'userSettings'}" class="dropdown-item">
+										<router-link :to="{name: 'user.settings'}" class="dropdown-item">
 											Settings
 										</router-link>
 										<a @click="logout()" class="dropdown-item">
@@ -84,7 +84,7 @@
 									</router-link>
 								</li>
 								<li>
-									<router-link :to="{ name: 'showTasksInRange', params: {type: 'week'}}">
+									<router-link :to="{ name: 'tasks.range', params: {type: 'week'}}">
 									<span class="icon">
 										<icon icon="calendar-week"/>
 									</span>
@@ -92,7 +92,7 @@
 									</router-link>
 								</li>
 								<li>
-									<router-link :to="{ name: 'showTasksInRange', params: {type: 'month'}}">
+									<router-link :to="{ name: 'tasks.range', params: {type: 'month'}}">
 									<span class="icon">
 										<icon :icon="['far', 'calendar-alt']"/>
 									</span>
@@ -100,7 +100,7 @@
 									</router-link>
 								</li>
 								<li>
-									<router-link :to="{ name: 'listTeams'}">
+									<router-link :to="{ name: 'teams.index'}">
 									<span class="icon">
 										<icon icon="users"/>
 									</span>
@@ -116,7 +116,7 @@
 									</router-link>
 								</li>
 								<li>
-									<router-link :to="{ name: 'listLabels'}">
+									<router-link :to="{ name: 'labels.index'}">
 									<span class="icon">
 										<icon icon="tags"/>
 									</span>
@@ -131,7 +131,7 @@
 								<div :key="n.id">
 									<router-link
 											v-tooltip.right="'Settings'"
-											:to="{name: 'editNamespace', params: {id: n.id} }"
+											:to="{name: 'namespace.edit', params: {id: n.id} }"
 											class="nsettings"
 											v-if="n.id > 0">
 										<span class="icon">
@@ -140,9 +140,9 @@
 									</router-link>
 									<router-link
 											v-tooltip="'Add a new list in the ' + n.title + ' namespace'"
-											:to="{ name: 'newList', params: { id: n.id} }"
+											:to="{ name: 'list.create', params: { id: n.id} }"
 											class="nsettings"
-											:key="n.id + 'newList'"
+											:key="n.id + 'list.create'"
 											v-if="n.id > 0">
 										<span class="icon">
 											<icon icon="plus"/>
@@ -294,13 +294,13 @@
 			if (this.$route.query.userPasswordReset !== undefined) {
 				localStorage.removeItem('passwordResetToken') // Delete an eventually preexisting old token
 				localStorage.setItem('passwordResetToken', this.$route.query.userPasswordReset)
-				router.push({name: 'passwordReset'})
+				router.push({name: 'user.password-reset.reset'})
 			}
 			// Email verification
 			if (this.$route.query.userEmailConfirm !== undefined) {
 				localStorage.removeItem('emailConfirmToken') // Delete an eventually preexisting old token
 				localStorage.setItem('emailConfirmToken', this.$route.query.userEmailConfirm)
-				router.push({name: 'login'})
+				router.push({name: 'user.login'})
 			}
 		},
 		beforeCreate() {
@@ -310,13 +310,13 @@
 					// Check if the user is already logged in, if so, redirect them to the homepage
 					if (
 						!this.userAuthenticated &&
-						this.$route.name !== 'login' &&
-						this.$route.name !== 'getPasswordReset' &&
-						this.$route.name !== 'passwordReset' &&
-						this.$route.name !== 'register' &&
-						this.$route.name !== 'linkShareAuth'
+						this.$route.name !== 'user.login' &&
+						this.$route.name !== 'user.password-reset.request' &&
+						this.$route.name !== 'user.password-reset.reset' &&
+						this.$route.name !== 'user.register' &&
+						this.$route.name !== 'link-share.auth'
 					) {
-						router.push({name: 'login'})
+						router.push({name: 'user.login'})
 					}
 
 					if (this.userAuthenticated && this.userInfo.type === authTypes.USER && (this.$route.params.name === 'home' || this.namespaces.length === 0)) {
@@ -354,7 +354,7 @@
 				// the user to the login page
 				if (expiresIn < 0) {
 					this.$store.dispatch('auth/checkAuth')
-					router.push({name: 'login'})
+					router.push({name: 'user.login'})
 					return
 				}
 
@@ -384,7 +384,7 @@
 		methods: {
 			logout() {
 				this.$store.dispatch('auth/logout')
-				router.push({name: 'login'})
+				router.push({name: 'user.login'})
 			},
 			loadNamespaces() {
 				this.$store.dispatch('namespaces/loadNamespaces')
@@ -406,14 +406,14 @@
 				// Reset the current list highlight in menu if the current list is not list related.
 				if (
 					this.$route.name === 'home' ||
-					this.$route.name === 'editNamespace' ||
-					this.$route.name === 'listTeams' ||
-					this.$route.name === 'editTeam' ||
-					this.$route.name === 'showTasksInRange' ||
-					this.$route.name === 'listLabels' ||
-					this.$route.name === 'migrateStart' ||
+					this.$route.name === 'namespace.edit' ||
+					this.$route.name === 'teams.index' ||
+					this.$route.name === 'teams.edit' ||
+					this.$route.name === 'tasks.range' ||
+					this.$route.name === 'labels.index' ||
+					this.$route.name === 'migrate.start' ||
 					this.$route.name === 'migrate.wunderlist' ||
-					this.$route.name === 'userSettings' ||
+					this.$route.name === 'user.settings' ||
 					this.$route.name === 'namespaces.index'
 				) {
 					this.$store.commit(CURRENT_LIST, {})

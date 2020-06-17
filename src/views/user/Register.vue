@@ -31,7 +31,7 @@
 				<div class="field is-grouped">
 					<div class="control">
 						<button type="submit" class="button is-primary" v-bind:class="{ 'is-loading': loading}">Register</button>
-						<router-link :to="{ name: 'login' }" class="button">Login</router-link>
+						<router-link :to="{ name: 'user.login' }" class="button">Login</router-link>
 					</div>
 				</div>
 				<div class="notification is-info" v-if="loading">

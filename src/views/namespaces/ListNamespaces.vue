@@ -1,6 +1,6 @@
 <template>
 	<div class="content namespaces-list">
-		<router-link :to="{name: 'newNamespace'}" class="button is-success new-namespace">
+		<router-link :to="{name: 'namespace.create'}" class="button is-success new-namespace">
 			<span class="icon is-small">
 				<icon icon="plus"/>
 			</span>

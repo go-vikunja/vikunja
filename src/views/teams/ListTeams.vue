@@ -1,6 +1,6 @@
 <template>
 	<div class="content loader-container" v-bind:class="{ 'is-loading': teamService.loading}">
-		<router-link :to="{name:'newTeam'}" class="button is-success button-right" >
+		<router-link :to="{name:'teams.create'}" class="button is-success button-right" >
 			<span class="icon is-small">
 				<icon icon="plus"/>
 			</span>
@@ -9,7 +9,7 @@
 		<h1>Teams</h1>
 		<ul class="teams box">
 			<li v-for="t in teams" :key="t.id">
-				<router-link :to="{name: 'editTeam', params: {id: t.id}}">
+				<router-link :to="{name: 'teams.edit', params: {id: t.id}}">
 					{{t.name}}
 				</router-link>
 			</li>

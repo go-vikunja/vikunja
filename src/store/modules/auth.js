@@ -73,7 +73,7 @@ export default {
 		// Registers a new user and logs them in.
 		// Not sure if this is the right place to put the logic in, maybe a seperate js component would be better suited.
 		register(ctx, credentials) {
-			return HTTP.post('register', {
+			return HTTP.post('user.register', {
 				username: credentials.username,
 				email: credentials.email,
 				password: credentials.password

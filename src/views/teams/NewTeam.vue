@@ -62,7 +62,7 @@
 
 				this.teamService.create(this.team)
 					.then(response => {
-						router.push({name: 'editTeam', params: {id: response.id}})
+						router.push({name: 'teams.edit', params: {id: response.id}})
 						this.success({message: 'The team was successfully created.'}, this)
 					})
 					.catch(e => {

@@ -259,7 +259,7 @@
 				this.teamService.delete(this.team)
 					.then(() => {
 						this.success({message: 'The team was successfully deleted.'}, this)
-						router.push({name: 'listTeams'})
+						router.push({name: 'teams.index'})
 					})
 					.catch(e => {
 						this.error(e, this)

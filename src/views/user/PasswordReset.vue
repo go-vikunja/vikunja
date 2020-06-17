@@ -32,7 +32,7 @@
 				<div class="notification is-success">
 					{{ successMessage }}
 				</div>
-				<router-link :to="{ name: 'login' }" class="button is-primary">Login</router-link>
+				<router-link :to="{ name: 'user.login' }" class="button is-primary">Login</router-link>
 			</div>
 		</div>
 	</div>

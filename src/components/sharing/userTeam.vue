@@ -49,7 +49,7 @@
 					</template>
 					<template v-if="shareType === 'team'">
 						<td>
-							<router-link :to="{name: 'editTeam', params: {id: s.id}}">
+							<router-link :to="{name: 'teams.edit', params: {id: s.id}}">
 								{{s.name}}
 							</router-link>
 						</td>
