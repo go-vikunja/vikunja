@@ -160,15 +160,15 @@
 </template>
 
 <script>
-	import taskList from '../../tasks/helpers/taskList'
-	import User from '../../global/user'
-	import PriorityLabel from '../../tasks/reusable/priorityLabel'
-	import Labels from '../../tasks/reusable/labels'
-	import DateTableCell from '../../tasks/reusable/date-table-cell'
-	import Fancycheckbox from '../../global/fancycheckbox'
-	import Sort from '../../tasks/reusable/sort'
+	import taskList from '../../../components/tasks/mixins/taskList'
+	import User from '../../../components/misc/user'
+	import PriorityLabel from '../../../components/tasks/partials/priorityLabel'
+	import Labels from '../../../components/tasks/partials/labels'
+	import DateTableCell from '../../../components/tasks/partials/date-table-cell'
+	import Fancycheckbox from '../../../components/input/fancycheckbox'
+	import Sort from '../../../components/tasks/partials/sort'
 	import {saveListView} from '../../../helpers/saveListView'
-	import Filters from '../reusable/filters'
+	import Filters from '../../../components/list/partials/filters'
 
 	export default {
 		name: 'Table',

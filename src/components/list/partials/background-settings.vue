@@ -71,7 +71,7 @@
 	import {CURRENT_LIST} from '../../../store/mutation-types'
 
 	export default {
-		name: 'background',
+		name: 'background-settings',
 		data() {
 			return {
 				backgroundSearchTerm: '',

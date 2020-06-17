@@ -262,7 +262,7 @@
 	import authTypes from './models/authTypes'
 
 	import swEvents from './ServiceWorker/events'
-	import Notification from './components/global/notification'
+	import Notification from './components/misc/notification'
 	import {CURRENT_LIST, IS_FULLPAGE, ONLINE} from './store/mutation-types'
 
 	export default {

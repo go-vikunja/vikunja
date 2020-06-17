@@ -97,7 +97,7 @@
 
 	import LabelService from '../../services/label'
 	import LabelModel from '../../models/label'
-	import ColorPicker from '../global/colorPicker'
+	import ColorPicker from '../../components/input/colorPicker'
 
 	export default {
 		name: 'ListLabels',

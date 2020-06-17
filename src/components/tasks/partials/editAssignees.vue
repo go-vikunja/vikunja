@@ -39,7 +39,7 @@
 	import UserModel from '../../../models/user'
 	import ListUserService from '../../../services/listUsers'
 	import TaskAssigneeService from '../../../services/taskAssignee'
-	import User from '../../global/user'
+	import User from '../../misc/user'
 
 	export default {
 		name: 'editAssignees',

@@ -313,23 +313,23 @@
 <script>
 	import TaskService from '../../services/task'
 	import TaskModel from '../../models/task'
-	import relationKinds from '../../models/relationKinds'
+	import relationKinds from '../../models/relationKinds.json'
 
-	import priorites from '../../models/priorities'
+	import priorites from '../../models/priorities.json'
 
 	import flatPickr from 'vue-flatpickr-component'
 	import 'flatpickr/dist/flatpickr.css'
-	import PrioritySelect from './reusable/prioritySelect'
-	import PercentDoneSelect from './reusable/percentDoneSelect'
-	import EditLabels from './reusable/editLabels'
-	import EditAssignees from './reusable/editAssignees'
-	import Attachments from './reusable/attachments'
-	import RelatedTasks from './reusable/relatedTasks'
-	import RepeatAfter from './reusable/repeatAfter'
-	import Reminders from './reusable/reminders'
-	import Comments from './reusable/comments'
+	import PrioritySelect from '../../components/tasks/partials/prioritySelect'
+	import PercentDoneSelect from '../../components/tasks/partials/percentDoneSelect'
+	import EditLabels from '../../components/tasks/partials/editLabels'
+	import EditAssignees from '../../components/tasks/partials/editAssignees'
+	import Attachments from '../../components/tasks/partials/attachments'
+	import RelatedTasks from '../../components/tasks/partials/relatedTasks'
+	import RepeatAfter from '../../components/tasks/partials/repeatAfter'
+	import Reminders from '../../components/tasks/partials/reminders'
+	import Comments from '../../components/tasks/partials/comments'
 	import router from '../../router'
-	import ListSearch from './reusable/listSearch'
+	import ListSearch from '../../components/tasks/partials/listSearch'
 
 	export default {
 		name: 'TaskDetailView',

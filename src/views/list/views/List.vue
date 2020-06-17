@@ -154,12 +154,12 @@
 
 <script>
 	import TaskService from '../../../services/task'
-	import EditTask from '../../tasks/edit-task'
+	import EditTask from '../../../components/tasks/edit-task'
 	import TaskModel from '../../../models/task'
-	import SingleTaskInList from '../../tasks/reusable/singleTaskInList'
-	import taskList from '../../tasks/helpers/taskList'
+	import SingleTaskInList from '../../../components/tasks/partials/singleTaskInList'
+	import taskList from '../../../components/tasks/mixins/taskList'
 	import {saveListView} from '../../../helpers/saveListView'
-	import Filters from '../reusable/filters'
+	import Filters from '../../../components/list/partials/filters'
 
 	export default {
 		name: 'List',

@@ -26,7 +26,7 @@
 </template>
 
 <script>
-	import Fancycheckbox from '../../global/fancycheckbox'
+	import Fancycheckbox from '../../input/fancycheckbox'
 	import flatPickr from 'vue-flatpickr-component'
 	import 'flatpickr/dist/flatpickr.css'
 

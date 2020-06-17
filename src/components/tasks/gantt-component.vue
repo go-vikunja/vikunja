@@ -136,7 +136,7 @@
 	import TaskService from '../../services/task'
 	import TaskModel from '../../models/task'
 	import priorities from '../../models/priorities'
-	import PriorityLabel from './reusable/priorityLabel'
+	import PriorityLabel from './partials/priorityLabel'
 	import TaskCollectionService from '../../services/taskCollection'
 
 	export default {

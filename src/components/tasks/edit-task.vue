@@ -139,14 +139,14 @@
 	import TaskService from '../../services/task'
 	import TaskModel from '../../models/task'
 	import priorities from '../../models/priorities'
-	import PrioritySelect from './reusable/prioritySelect'
-	import PercentDoneSelect from './reusable/percentDoneSelect'
-	import EditLabels from './reusable/editLabels'
-	import EditAssignees from './reusable/editAssignees'
-	import RelatedTasks from './reusable/relatedTasks'
-	import RepeatAfter from './reusable/repeatAfter'
-	import Reminders from './reusable/reminders'
-	import ColorPicker from '../global/colorPicker'
+	import PrioritySelect from './partials/prioritySelect'
+	import PercentDoneSelect from './partials/percentDoneSelect'
+	import EditLabels from './partials/editLabels'
+	import EditAssignees from './partials/editAssignees'
+	import RelatedTasks from './partials/relatedTasks'
+	import RepeatAfter from './partials/repeatAfter'
+	import Reminders from './partials/reminders'
+	import ColorPicker from '../input/colorPicker'
 
 	export default {
 		name: 'edit-task',

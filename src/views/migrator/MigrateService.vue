@@ -6,7 +6,7 @@
 </template>
 
 <script>
-	import Migration from './migration'
+	import Migration from '../../components/migrator/migration'
 	import router from '../../router'
 
 	export default {

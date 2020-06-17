@@ -11,7 +11,7 @@ if(window.API_URL.substr(window.API_URL.length - 1, window.API_URL.length) === '
 }
 
 // Register the modal
-import Modal from './components/modal/Modal'
+import Modal from './components/modal/modal'
 Vue.component('modal', Modal)
 
 // Add CSS

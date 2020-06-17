@@ -16,7 +16,7 @@
 </template>
 <script>
 	import TaskService from '../../services/task'
-	import SingleTaskInList from './reusable/singleTaskInList'
+	import SingleTaskInList from '../../components/tasks/partials/singleTaskInList'
 	import {HAS_TASKS} from '../../store/mutation-types'
 
 	export default {

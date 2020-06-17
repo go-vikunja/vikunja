@@ -103,12 +103,12 @@
 
 <script>
 	import router from '../../router'
-	import manageSharing from '../sharing/userTeam'
+	import manageSharing from '../../components/sharing/userTeam'
 
 	import NamespaceService from '../../services/namespace'
 	import NamespaceModel from '../../models/namespace'
-	import Fancycheckbox from '../global/fancycheckbox'
-	import ColorPicker from '../global/colorPicker'
+	import Fancycheckbox from '../../components/input/fancycheckbox'
+	import ColorPicker from '../../components/input/colorPicker'
 
 	export default {
 		name: "EditNamespace",

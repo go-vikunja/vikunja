@@ -60,9 +60,9 @@
 </template>
 
 <script>
-	import GanttChart from '../../tasks/gantt-component'
+	import GanttChart from '../../../components/tasks/gantt-component'
 	import flatPickr from 'vue-flatpickr-component'
-	import Fancycheckbox from '../../global/fancycheckbox'
+	import Fancycheckbox from '../../../components/input/fancycheckbox'
 	import {saveListView} from '../../../helpers/saveListView'
 
 	export default {

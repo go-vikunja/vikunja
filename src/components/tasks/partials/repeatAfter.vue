@@ -35,7 +35,7 @@
 </template>
 
 <script>
-	import Fancycheckbox from '../../global/fancycheckbox'
+	import Fancycheckbox from '../../input/fancycheckbox'
 
 	export default {
 		name: 'repeatAfter',

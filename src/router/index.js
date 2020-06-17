@@ -1,40 +1,41 @@
 import Vue from 'vue'
 import Router from 'vue-router'
 
-import HomeComponent from '@/components/Home'
-import NotFoundComponent from '@/components/404'
+import HomeComponent from '../views/Home'
+import NotFoundComponent from '../views/404'
 // User Handling
-import LoginComponent from '@/components/user/Login'
-import RegisterComponent from '@/components/user/Register'
-import PasswordResetComponent from '@/components/user/PasswordReset'
-import GetPasswordResetComponent from '@/components/user/RequestPasswordReset'
-import UserSettingsComponent from '@/components/user/Settings'
+import LoginComponent from '../views/user/Login'
+import RegisterComponent from '../views/user/Register'
+import PasswordResetComponent from '../views/user/PasswordReset'
+import GetPasswordResetComponent from '../views/user/RequestPasswordReset'
+import UserSettingsComponent from '../views/user/Settings'
 // List Handling
-import NewListComponent from '@/components/lists/NewList'
-import EditListComponent from '@/components/lists/EditList'
-import ShowTasksInRangeComponent from '@/components/tasks/ShowTasksInRange'
-import LinkShareAuthComponent from '../components/sharing/linkSharingAuth'
-import TaskDetailViewModal from '../components/tasks/TaskDetailViewModal'
-import TaskDetailView from '../components/tasks/TaskDetailView'
+import NewListComponent from '../views/list/NewList'
+import EditListComponent from '../views/list/EditList'
+// Tasks
+import ShowTasksInRangeComponent from '../views/tasks/ShowTasksInRange'
+import LinkShareAuthComponent from '../views/sharing/LinkSharingAuth'
+import TaskDetailViewModal from '../views/tasks/TaskDetailViewModal'
+import TaskDetailView from '../views/tasks/TaskDetailView'
 // Namespace Handling
-import NewNamespaceComponent from '@/components/namespaces/NewNamespace'
-import EditNamespaceComponent from '@/components/namespaces/EditNamespace'
-import ListNamespaces from '../components/namespaces/ListNamespaces'
+import NewNamespaceComponent from '../views/namespaces/NewNamespace'
+import EditNamespaceComponent from '../views/namespaces/EditNamespace'
+import ListNamespaces from '../views/namespaces/ListNamespaces'
 // Team Handling
-import ListTeamsComponent from '@/components/teams/ListTeams'
-import EditTeamComponent from '@/components/teams/EditTeam'
-import NewTeamComponent from '@/components/teams/NewTeam'
+import ListTeamsComponent from '../views/teams/ListTeams'
+import EditTeamComponent from '../views/teams/EditTeam'
+import NewTeamComponent from '../views/teams/NewTeam'
 // Label Handling
-import ListLabelsComponent from '@/components/labels/ListLabels'
+import ListLabelsComponent from '../views/labels/ListLabels'
 // Migration
-import MigrationComponent from '../components/migrator/migrate'
-import MigrateServiceComponent from '../components/migrator/migrate-service'
+import MigrationComponent from '../views/migrator/Migrate'
+import MigrateServiceComponent from '../views/migrator/MigrateService'
 // List Views
-import ShowListComponent from '../components/lists/ShowList'
-import Kanban from '../components/lists/views/Kanban'
-import List from '../components/lists/views/List'
-import Gantt from '../components/lists/views/Gantt'
-import Table from '../components/lists/views/Table'
+import ShowListComponent from '../views/list/ShowList'
+import Kanban from '../views/list/views/Kanban'
+import List from '../views/list/views/List'
+import Gantt from '../views/list/views/Gantt'
+import Table from '../views/list/views/Table'
 
 Vue.use(Router)
 

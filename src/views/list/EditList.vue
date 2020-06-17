@@ -128,15 +128,15 @@
 
 <script>
 	import router from '../../router'
-	import manageSharing from '../sharing/userTeam'
-	import LinkSharing from '../sharing/linkSharing'
+	import manageSharing from '../../components/sharing/userTeam'
+	import LinkSharing from '../../components/sharing/linkSharing'
 
 	import ListModel from '../../models/list'
 	import ListService from '../../services/list'
-	import Fancycheckbox from '../global/fancycheckbox'
-	import Background from './settings/background'
+	import Fancycheckbox from '../../components/input/fancycheckbox'
+	import Background from '../../components/list/partials/background-settings'
 	import {CURRENT_LIST} from '../../store/mutation-types'
-	import ColorPicker from '../global/colorPicker'
+	import ColorPicker from '../../components/input/colorPicker'
 
 	export default {
 		name: 'EditList',

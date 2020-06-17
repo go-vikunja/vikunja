@@ -196,9 +196,9 @@
 	import BucketModel from '../../../models/bucket'
 
 	import {Container, Draggable} from 'vue-smooth-dnd'
-	import PriorityLabel from '../../tasks/reusable/priorityLabel'
-	import User from '../../global/user'
-	import Labels from '../../tasks/reusable/labels'
+	import PriorityLabel from '../../../components/tasks/partials/priorityLabel'
+	import User from '../../../components/misc/user'
+	import Labels from '../../../components/tasks/partials/labels'
 
 	import {filterObject} from '../../../helpers/filterObject'
 	import {applyDrag} from '../../../helpers/applyDrag'

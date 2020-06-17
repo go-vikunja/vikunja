@@ -51,7 +51,7 @@
 <script>
 	import {mapState} from 'vuex'
 	import ListService from '../../services/list'
-	import Fancycheckbox from '../global/fancycheckbox'
+	import Fancycheckbox from '../../components/input/fancycheckbox'
 
 	export default {
 		name: 'ListNamespaces',

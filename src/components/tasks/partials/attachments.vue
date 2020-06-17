@@ -78,7 +78,7 @@
 <script>
 	import AttachmentService from '../../../services/attachment'
 	import AttachmentModel from '../../../models/attachment'
-	import User from '../../global/user'
+	import User from '../../misc/user'
 
 	export default {
 		name: 'attachments',

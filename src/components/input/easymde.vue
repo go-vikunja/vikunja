@@ -76,7 +76,7 @@
 </script>
 
 <style lang="scss">
-    @import '~easymde/dist/easymde.min.css';
+    @import '../../../node_modules/easymde/dist/easymde.min.css';
 
     .CodeMirror {
         padding: 0;

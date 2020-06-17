@@ -41,8 +41,8 @@
 	import PriorityLabel from './priorityLabel'
 	import TaskService from '../../../services/task'
 	import Labels from './labels'
-	import User from '../../global/user'
-	import Fancycheckbox from '../../global/fancycheckbox'
+	import User from '../../misc/user'
+	import Fancycheckbox from '../../input/fancycheckbox'
 
 	export default {
 		name: 'singleTaskInList',

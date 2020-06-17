@@ -12,7 +12,7 @@
 	import router from '../../router'
 
 	export default {
-		name: 'linkSharingAuth',
+		name: 'LinkSharingAuth',
 		data() {
 			return {
 				hash: '',
