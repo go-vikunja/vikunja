@@ -54,7 +54,7 @@ require (
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/pelletier/go-toml v1.4.0 // indirect
 	github.com/pquerna/otp v1.2.0
-	github.com/prometheus/client_golang v1.6.0
+	github.com/prometheus/client_golang v1.7.0
 	github.com/samedi/caldav-go v3.0.0+incompatible
 	github.com/shurcooL/httpfs v0.0.0-20190707220628-8d4bc4ba7749
 	github.com/shurcooL/vfsgen v0.0.0-20181202132449-6a9ea43bcacd
