@@ -47,7 +47,7 @@
         }
       }
 
-      @media screen and (max-width: ($tablet / 2)) {
+      @media screen and (max-width: ($mobile)) {
         width: calc(100% - 1em);
 
         &:nth-child(1n) {

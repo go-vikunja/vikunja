@@ -4,7 +4,7 @@ $lists-per-row: 5;
   .button.new-namespace {
     float: right;
 
-    @media screen and (max-width: $tablet / 2) {
+    @media screen and (max-width: $mobile) {
       float: none;
       width: 100%;
       margin-bottom: 1rem;
@@ -84,7 +84,7 @@ $lists-per-row: 5;
           }
         }
 
-        @media screen and (max-width: $tablet / 2) {
+        @media screen and (max-width: $mobile) {
           $lists-per-row: 1;
           & {
             width: 100%;

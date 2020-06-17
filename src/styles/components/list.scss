@@ -126,4 +126,19 @@
   .filters input {
     font-size: .9em;
   }
+
+  @media screen and (max-width: $tablet) {
+    position: static;
+    margin: 1rem 0;
+    max-width: 100%;
+    min-width: auto;
+
+    .search {
+      width: 100%;
+
+      .control:first-child {
+        width: 100%;
+      }
+    }
+  }
 }
