@@ -23,8 +23,8 @@
 										v-model="team.name"/>
 							</div>
 						</div>
-						<p class="help is-danger" v-if="showError && team.name.length <= 5">
-							Please specify at least five characters.
+						<p class="help is-danger" v-if="showError && team.name === ''">
+							Please specify a name.
 						</p>
 						<div class="field">
 							<label class="label" for="teamdescription">Description</label>
@@ -240,7 +240,7 @@
 					})
 			},
 			submit() {
-				if (this.team.name.length <= 4) {
+				if (this.team.name === '') {
 					this.showError = true
 					return
 				}

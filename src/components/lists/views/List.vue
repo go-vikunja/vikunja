@@ -72,8 +72,8 @@
 					</button>
 				</p>
 			</div>
-			<p class="help is-danger" v-if="showError && newTaskText.length < 3">
-				Please specify at least three characters.
+			<p class="help is-danger" v-if="showError && newTaskText === ''">
+				Please specify a list title.
 			</p>
 		</div>
 
@@ -197,7 +197,7 @@
 				this.loadTasks(page, search)
 			},
 			addTask() {
-				if (this.newTaskText.length < 3) {
+				if (this.newTaskText === '') {
 					this.showError = true
 					return
 				}

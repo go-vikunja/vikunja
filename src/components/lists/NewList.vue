@@ -17,7 +17,7 @@
 					@keyup.enter="newList()"/>
 			</p>
 			<p class="control">
-				<button class="button is-success noshadow" @click="newList()" :disabled="list.title.length < 3">
+				<button class="button is-success noshadow" @click="newList()" :disabled="list.title === ''">
 						<span class="icon is-small">
 							<icon icon="plus"/>
 						</span>
@@ -25,8 +25,8 @@
 				</button>
 			</p>
 		</div>
-		<p class="help is-danger" v-if="showError && list.title.length < 3">
-			Please specify at least three characters.
+		<p class="help is-danger" v-if="showError && list.title === ''">
+			Please specify a title.
 		</p>
 	</div>
 </template>
@@ -53,7 +53,7 @@
 		},
 		methods: {
 			newList() {
-				if (this.list.title.length < 3) {
+				if (this.list.title === '') {
 					this.showError = true
 					return
 				}

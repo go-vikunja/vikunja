@@ -124,8 +124,8 @@
 								:class="{'is-loading': taskService.loading}"
 						/>
 					</div>
-					<p class="help is-danger" v-if="newTaskError[bucket.id] && newTaskText.length < 3">
-						Please specify at least three characters.
+					<p class="help is-danger" v-if="newTaskError[bucket.id] && newTaskText === ''">
+						Please specify a title.
 					</p>
 				</div>
 				<a
@@ -351,7 +351,7 @@
 			},
 			addTaskToBucket(bucketId) {
 
-				if (this.newTaskText.length < 3) {
+				if (this.newTaskText === '') {
 					this.$set(this.newTaskError, bucketId, true)
 					return
 				}

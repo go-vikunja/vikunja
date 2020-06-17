@@ -24,8 +24,8 @@
 					</button>
 				</p>
 			</div>
-			<p class="help is-danger" v-if="showError && team.name.length <= 5">
-				Please specify at least five characters.
+			<p class="help is-danger" v-if="showError && team.name === ''">
+				Please specify a name.
 			</p>
 		</form>
 	</div>
@@ -38,7 +38,7 @@
 	import {IS_FULLPAGE} from '../../store/mutation-types'
 
 	export default {
-		name: "NewTeam",
+		name: 'NewTeam',
 		data() {
 			return {
 				teamService: TeamService,
@@ -54,7 +54,7 @@
 		methods: {
 			newTeam() {
 
-				if (this.team.name.length <= 4) {
+				if (this.team.name === '') {
 					this.showError = true
 					return
 				}

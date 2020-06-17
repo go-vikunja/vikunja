@@ -17,7 +17,7 @@
 					placeholder="The namespace's name goes here..."/>
 			</p>
 			<p class="control">
-				<button class="button is-success noshadow" @click="newNamespace()" :disabled="namespace.title.length <= 5">
+				<button class="button is-success noshadow" @click="newNamespace()" :disabled="namespace.title === ''">
 						<span class="icon is-small">
 							<icon icon="plus"/>
 						</span>
@@ -25,8 +25,8 @@
 				</button>
 			</p>
 		</div>
-		<p class="help is-danger" v-if="showError && namespace.title.length <= 5">
-			Please specify at least five characters.
+		<p class="help is-danger" v-if="showError && namespace.title === ''">
+			Please specify a title.
 		</p>
 		<p class="small" v-tooltip.bottom="'A namespace is a collection of lists you can share and use to organize your lists with.<br/>In fact, every list belongs to a namepace.'">
 			What's a namespace?</p>
@@ -55,7 +55,7 @@
 		},
 		methods: {
 			newNamespace() {
-				if (this.namespace.title.length <= 4) {
+				if (this.namespace.title === '') {
 					this.showError = true
 					return
 				}
