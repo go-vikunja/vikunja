@@ -49,7 +49,7 @@
 					</div>
 				</div>
 
-				<div class="field is-grouped">
+				<div class="field is-grouped login-buttons">
 					<div class="control is-expanded">
 						<button type="submit" class="button is-primary" v-bind:class="{ 'is-loading': loading}">Login
 						</button>

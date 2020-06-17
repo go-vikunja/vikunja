@@ -22,12 +22,18 @@
 }
 
 .noauth-container {
-  width: 450px;
+  max-width: 450px;
+  width: 100%;
   margin: 0 auto;
-  padding: 1rem 0;
+  padding: 1rem;
 
-  @media screen and (max-width: calc(450px + 2rem)) {
-    width: 100%;
-    padding: 1rem;
+  @media screen and (max-width: 450px) {
+    .login-buttons {
+      flex-direction: column;
+
+      .control:first-child {
+        margin-bottom: 1rem;
+      }
+    }
   }
 }
