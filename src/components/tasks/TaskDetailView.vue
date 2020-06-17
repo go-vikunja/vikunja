@@ -14,7 +14,7 @@
 			</div>
 			<h6 class="subtitle" v-if="parent && parent.namespace && parent.list">
 				{{ parent.namespace.title }} >
-				<router-link :to="{ name: 'list.list', params: { listId: parent.list.id } }">
+				<router-link :to="{ name: listViewName, params: { listId: parent.list.id } }">
 					{{ parent.list.title }}
 				</router-link>
 			</h6>
@@ -359,6 +359,7 @@
 				showDeleteModal: false,
 				taskTitle: '',
 				descriptionChanged: false,
+				listViewName: 'list.list',
 
 				priorities: priorites,
 				flatPickerConfig: {
@@ -392,6 +393,13 @@
 			this.task = new TaskModel()
 		},
 		mounted() {
+
+			// Build the list path from the task detail name to send the user to the view they came from.
+			const parts = this.$route.name.split('.')
+			if (parts.length > 2 && parts[2] === 'detail') {
+				this.listViewName = `list.${parts[1]}`
+			}
+
 			this.loadTask()
 		},
 		computed: {
