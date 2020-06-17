@@ -188,7 +188,7 @@ github.com/shurcooL/httpfs/vfsutil
 github.com/shurcooL/sanitized_anchor_name
 # github.com/shurcooL/vfsgen v0.0.0-20181202132449-6a9ea43bcacd
 github.com/shurcooL/vfsgen
-# github.com/spf13/afero v1.2.2
+# github.com/spf13/afero v1.3.0
 github.com/spf13/afero
 github.com/spf13/afero/mem
 # github.com/spf13/cast v1.3.0
