@@ -21,6 +21,3 @@ package version
 
 // Version sets the version to be printed to the user. Gets overwritten by "make release" or "make build" with last git commit or tag.
 var Version = "0.7"
-
-// BuildTime contains the build time of vikunja.
-var BuildTime = ""

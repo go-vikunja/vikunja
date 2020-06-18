@@ -42,7 +42,7 @@ var webCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 
 		// Version notification
-		log.Infof("Vikunja version %s, built at %s", version.Version, version.BuildTime)
+		log.Infof("Vikunja version %s", version.Version)
 
 		// Additional swagger information
 		swagger.SwaggerInfo.Version = version.Version
