@@ -16,9 +16,9 @@ params:
   description: The to-do app to organize your life
   author: The Vikunja Authors
   website: https://vikunja.io
-  fanthomEnabled: false
-  fathomUrl: fathom.kolaente.de
-  fathomSiteID: RYKSD
+  plausibleEnabled: true
+  plausibleDomain: vikunja.io
+  plausibleURL: https://analytics.kolaente.de
 
 menu:
   page:
