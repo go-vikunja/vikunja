@@ -1,5 +1,7 @@
 module code.vikunja.io/web
 
+go 1.14
+
 require (
 	github.com/labstack/echo/v4 v4.1.7-0.20190627175217-8fb7b5be270f
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
