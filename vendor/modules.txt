@@ -360,7 +360,7 @@ honnef.co/go/tools/unused
 honnef.co/go/tools/version
 # src.techknowlogick.com/xgo v0.0.0-20200602060627-a09175ea9056
 src.techknowlogick.com/xgo
-# src.techknowlogick.com/xormigrate v1.2.1
+# src.techknowlogick.com/xormigrate v1.3.0
 src.techknowlogick.com/xormigrate
 # xorm.io/builder v0.3.7
 xorm.io/builder
