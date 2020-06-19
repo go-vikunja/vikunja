@@ -82,3 +82,13 @@ Usage:
 {{< highlight bash >}}
 $ vikunja web    
 {{< /highlight >}}
+
+### `dump`
+
+Creates a zip file with all vikunja-related files.
+This includes config, version, all files and the full database.
+
+Usage:
+{{< highlight bash >}}
+$ vikunja dump
+{{< /highlight >}}

@@ -20,3 +20,4 @@ docs/resources/
 pkg/static/templates_vfsdata.go
 files/
 !pkg/files/
+vikunja-dump*
