@@ -32,6 +32,8 @@ service:
   enabletaskcomments: true
   # Whether totp is enabled. In most cases you want to leave that enabled.
   enabletotp: true
+  # If not empty, enables logging of crashes and unhandled errors in sentry.
+  sentrydsn: ''
 
 database:
   # Database type to use. Supported types are mysql, postgres and sqlite.

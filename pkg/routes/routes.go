@@ -59,13 +59,17 @@ import (
 	"code.vikunja.io/api/pkg/routes/caldav"
 	_ "code.vikunja.io/api/pkg/swagger" // To generate swagger docs
 	"code.vikunja.io/api/pkg/user"
+	"code.vikunja.io/api/pkg/version"
 	"code.vikunja.io/web"
 	"code.vikunja.io/web/handler"
 	"github.com/asaskevich/govalidator"
+	"github.com/getsentry/sentry-go"
+	sentryecho "github.com/getsentry/sentry-go/echo"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	elog "github.com/labstack/gommon/log"
 	"strings"
+	"time"
 )
 
 // CustomValidator is a dummy struct to use govalidator with echo
@@ -114,6 +118,42 @@ func NewEcho() *echo.Echo {
 			Format: log.WebFmt + "\n",
 			Output: log.GetLogWriter("http"),
 		}))
+	}
+
+	// panic recover
+	e.Use(middleware.Recover())
+
+	if config.ServiceSentryDsn.GetString() != "" {
+		if err := sentry.Init(sentry.ClientOptions{
+			Dsn:              config.ServiceSentryDsn.GetString(),
+			AttachStacktrace: true,
+			Release:          version.Version,
+		}); err != nil {
+			log.Criticalf("Sentry init failed: %s", err)
+		}
+		defer sentry.Flush(5 * time.Second)
+
+		e.Use(sentryecho.New(sentryecho.Options{
+			Repanic: true,
+		}))
+
+		e.HTTPErrorHandler = func(err error, c echo.Context) {
+			// Only capture errors not already handled by echo
+			if _, ok := err.(*echo.HTTPError); !ok {
+				hub := sentryecho.GetHubFromContext(c)
+				if hub != nil {
+					hub.WithScope(func(scope *sentry.Scope) {
+						scope.SetExtra("url", c.Request().URL)
+						hub.CaptureException(err)
+					})
+				} else {
+					sentry.CaptureException(err)
+					log.Debugf("Could not add context for sending error '%s' to sentry", err.Error())
+				}
+				log.Debugf("Error '%s' sent to sentry", err.Error())
+			}
+			e.DefaultHTTPErrorHandler(err, c)
+		}
 	}
 
 	// Validation

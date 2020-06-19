@@ -49,6 +49,7 @@ const (
 	ServiceTimeZone              Key = `service.timezone`
 	ServiceEnableTaskComments    Key = `service.enabletaskcomments`
 	ServiceEnableTotp            Key = `service.enabletotp`
+	ServiceSentryDsn             Key = `service.sentrydsn`
 
 	DatabaseType                  Key = `database.type`
 	DatabaseHost                  Key = `database.host`

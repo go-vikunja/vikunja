@@ -56,6 +56,9 @@ github.com/fzipp/gocyclo
 # github.com/garyburd/redigo v1.6.0
 github.com/garyburd/redigo/internal
 github.com/garyburd/redigo/redis
+# github.com/getsentry/sentry-go v0.6.1
+github.com/getsentry/sentry-go
+github.com/getsentry/sentry-go/echo
 # github.com/ghodss/yaml v1.0.0
 github.com/ghodss/yaml
 # github.com/go-openapi/jsonpointer v0.19.3
