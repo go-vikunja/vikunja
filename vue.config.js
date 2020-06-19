@@ -1,6 +1,6 @@
 module.exports = {
 	configureWebpack: {
-		devtool: 'source-map'
+		devtool: 'source-map',
 	},
 	productionSourceMap: false,
 	pwa: {
@@ -10,9 +10,9 @@ module.exports = {
 		workboxPluginMode: 'InjectManifest',
 		workboxOptions: {
 			importWorkboxFrom: 'local',
-            swSrc: 'src/ServiceWorker/sw.js',
+			swSrc: 'src/ServiceWorker/sw.js',
 		},
-		iconPaths:{
+		iconPaths: {
 			favicon32: 'images/icons/favicon-32x32.png',
 			favicon16: 'images/icons/favicon-16x16.png',
 			appleTouchIcon: 'images/icons/apple-touch-icon-152x152.png',
