@@ -80,11 +80,20 @@ func Dump(filename string) error {
 	if err != nil {
 		return fmt.Errorf("error saving file: %s", err)
 	}
-	for fid, fcontent := range allFiles {
-		err = writeBytesToZip("files/"+strconv.FormatInt(fid, 10), fcontent, dumpWriter)
+	for fid, file := range allFiles {
+		header := &zip.FileHeader{
+			Name:   "files/" + strconv.FormatInt(fid, 10),
+			Method: compressionUsed,
+		}
+		w, err := dumpWriter.CreateHeader(header)
+		if err != nil {
+			return err
+		}
+		_, err = io.Copy(w, file)
 		if err != nil {
 			return fmt.Errorf("error writing file %d: %s", fid, err)
 		}
+		_ = file.Close()
 	}
 	log.Infof("Dumped files")
 

@@ -16,27 +16,25 @@
 
 package files
 
-import "bytes"
+import (
+	"io"
+)
 
 // Dump dumps all saved files
 // This only includes the raw files, no db entries.
-func Dump() (allFiles map[int64][]byte, err error) {
+func Dump() (allFiles map[int64]io.ReadCloser, err error) {
 	files := []*File{}
 	err = x.Find(&files)
 	if err != nil {
 		return
 	}
 
-	allFiles = make(map[int64][]byte, len(files))
+	allFiles = make(map[int64]io.ReadCloser, len(files))
 	for _, file := range files {
 		if err := file.LoadFileByID(); err != nil {
 			return nil, err
 		}
-		var buf bytes.Buffer
-		if _, err := buf.ReadFrom(file.File); err != nil {
-			return nil, err
-		}
-		allFiles[file.ID] = buf.Bytes()
+		allFiles[file.ID] = file.File
 	}
 
 	return
