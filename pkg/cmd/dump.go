@@ -17,6 +17,7 @@
 package cmd
 
 import (
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/dump"
 	"github.com/spf13/cobra"
 	"time"
@@ -34,6 +35,8 @@ var dumpCmd = &cobra.Command{
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		filename := "vikunja-dump_" + time.Now().Format("2006-01-02_15-03-05") + ".zip"
-		dump.Dump(filename)
+		if err := dump.Dump(filename); err != nil {
+			log.Critical(err.Error())
+		}
 	},
 }

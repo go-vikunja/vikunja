@@ -22,6 +22,7 @@ import (
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/version"
+	"fmt"
 	"github.com/spf13/viper"
 	"io"
 	"os"
@@ -33,10 +34,10 @@ import (
 const compressionUsed = zip.Deflate
 
 // Dump creates a zip file with all vikunja files at filename
-func Dump(filename string) {
+func Dump(filename string) error {
 	dumpFile, err := os.Create(filename)
 	if err != nil {
-		log.Criticalf("Error opening dump file: %s", err)
+		return fmt.Errorf("error opening dump file: %s", err)
 	}
 	defer dumpFile.Close()
 
@@ -47,7 +48,7 @@ func Dump(filename string) {
 	log.Info("Start dumping config file...")
 	err = writeFileToZip(viper.ConfigFileUsed(), dumpWriter)
 	if err != nil {
-		log.Criticalf("Error saving config file: %s", err)
+		return fmt.Errorf("error saving config file: %s", err)
 	}
 	log.Info("Dumped config file")
 
@@ -55,7 +56,7 @@ func Dump(filename string) {
 	log.Info("Start dumping version file...")
 	err = writeBytesToZip("VERSION", []byte(version.Version), dumpWriter)
 	if err != nil {
-		log.Criticalf("Error saving version: %s", err)
+		return fmt.Errorf("error saving version: %s", err)
 	}
 	log.Info("Dumped version")
 
@@ -63,12 +64,12 @@ func Dump(filename string) {
 	log.Info("Start dumping database...")
 	data, err := db.Dump()
 	if err != nil {
-		log.Criticalf("Error saving database data: %s", err)
+		return fmt.Errorf("error saving database data: %s", err)
 	}
 	for t, d := range data {
 		err = writeBytesToZip("database/"+t+".json", d, dumpWriter)
 		if err != nil {
-			log.Criticalf("Error writing database table %s: %s", t, err)
+			return fmt.Errorf("error writing database table %s: %s", t, err)
 		}
 	}
 	log.Info("Dumped database")
@@ -77,19 +78,19 @@ func Dump(filename string) {
 	log.Info("Start dumping files...")
 	allFiles, err := files.Dump()
 	if err != nil {
-		log.Criticalf("Error saving file: %s", err)
+		return fmt.Errorf("error saving file: %s", err)
 	}
 	for fid, fcontent := range allFiles {
 		err = writeBytesToZip("files/"+strconv.FormatInt(fid, 10), fcontent, dumpWriter)
 		if err != nil {
-			log.Criticalf("Error writing file %d: %s", fid, err)
+			return fmt.Errorf("error writing file %d: %s", fid, err)
 		}
 	}
 	log.Infof("Dumped files")
 
 	log.Info("Done creating dump")
 	log.Infof("Dump file saved at %s", filename)
-
+	return nil
 }
 
 func writeFileToZip(filename string, writer *zip.Writer) error {
