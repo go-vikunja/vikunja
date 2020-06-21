@@ -18,6 +18,7 @@
 	import TaskService from '../../services/task'
 	import SingleTaskInList from '../../components/tasks/partials/singleTaskInList'
 	import {HAS_TASKS} from '../../store/mutation-types'
+	import {mapState} from 'vuex'
 
 	export default {
 		name: 'ShowTasks',
@@ -43,8 +44,18 @@
 		watch: {
 			'$route': 'loadPendingTasks',
 		},
+		computed: mapState({
+			userAuthenticated: state => state.auth.authenticated,
+		}),
 		methods: {
 			loadPendingTasks() {
+				// Since this route is authentication only, users would get an error message if they access the page unauthenticated.
+				// Since this component is mounted as the home page before unauthenticated users get redirected
+				// to the login page, they will almost always see the error message.
+				if (!this.userAuthenticated) {
+					return
+				}
+
 				const params = {
 					sort_by: ['due_date_unix', 'id'],
 					order_by: ['desc', 'desc'],
