@@ -11,7 +11,7 @@
 					:internal-search="true"
 					@search-change="findTasks"
 					placeholder="Type search for a new task to add as related..."
-					label="text"
+					label="title"
 					track-by="id"
 					:taggable="true"
 					:showNoOptions="false"
