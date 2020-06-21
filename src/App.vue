@@ -329,13 +329,15 @@
 			// Service worker communication
 			document.addEventListener(swEvents.SW_UPDATED, this.showRefreshUI, {once: true})
 
-			navigator.serviceWorker.addEventListener(
-				'controllerchange', () => {
-					if (this.refreshing) return;
-					this.refreshing = true;
-					window.location.reload();
-				}
-			);
+			if (navigator && navigator.serviceWorker) {
+				navigator.serviceWorker.addEventListener(
+					'controllerchange', () => {
+						if (this.refreshing) return;
+						this.refreshing = true;
+						window.location.reload();
+					}
+				)
+			}
 
 			// Try renewing the token every time vikunja is loaded initially
 			// (When opening the browser the focus event is not fired)
@@ -344,7 +346,7 @@
 			// Check if the token is still valid if the window gets focus again to maybe renew it
 			window.addEventListener('focus', () => {
 
-				if(!this.userAuthenticated) {
+				if (!this.userAuthenticated) {
 					return
 				}
 
