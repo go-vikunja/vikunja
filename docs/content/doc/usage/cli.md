@@ -92,3 +92,12 @@ Usage:
 {{< highlight bash >}}
 $ vikunja dump
 {{< /highlight >}}
+
+### `restore`
+
+Restores a previously created dump from a zip file, see `dump`.
+
+Usage:
+{{< highlight bash >}}
+$ vikunja restore <path to dump zip file>
+{{< /highlight >}}
