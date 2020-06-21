@@ -17,6 +17,7 @@
 package cmd
 
 import (
+	"code.vikunja.io/api/pkg/initialize"
 	"code.vikunja.io/api/pkg/migration"
 	"github.com/spf13/cobra"
 )
@@ -36,7 +37,7 @@ var migrateCmd = &cobra.Command{
 	Use:   "migrate",
 	Short: "Run all database migrations which didn't already run.",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		lightInit()
+		initialize.LightInit()
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		migration.Migrate(nil)

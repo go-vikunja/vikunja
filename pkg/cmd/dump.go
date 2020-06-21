@@ -17,6 +17,7 @@
 package cmd
 
 import (
+	"code.vikunja.io/api/pkg/initialize"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/dump"
 	"github.com/spf13/cobra"
@@ -31,7 +32,7 @@ var dumpCmd = &cobra.Command{
 	Use:   "dump",
 	Short: "Dump all vikunja data into a zip file. Includes config, files and db.",
 	PreRun: func(cmd *cobra.Command, args []string) {
-		fullInit()
+		initialize.FullInit()
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		filename := "vikunja-dump_" + time.Now().Format("2006-01-02_15-03-05") + ".zip"

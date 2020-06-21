@@ -104,6 +104,15 @@ func Rollback(migrationID string) {
 	log.Info("Rolled back successfully.")
 }
 
+// MigrateTo executes all migrations up to a certain point
+func MigrateTo(migrationID string, x *xorm.Engine) error {
+	m := initMigration(x)
+	if err := m.MigrateTo(migrationID); err != nil {
+		return err
+	}
+	return nil
+}
+
 // Deletes a column from a table. All arguments are strings, to let them be standalone and not depending on any struct.
 func dropTableColum(x *xorm.Engine, tableName, col string) error {
 

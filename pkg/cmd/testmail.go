@@ -17,6 +17,7 @@
 package cmd
 
 import (
+	"code.vikunja.io/api/pkg/initialize"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/mail"
 	"github.com/spf13/cobra"
@@ -31,7 +32,7 @@ var testmailCmd = &cobra.Command{
 	Short: "Send a test mail using the configured smtp connection",
 	Args:  cobra.ExactArgs(1),
 	PreRun: func(cmd *cobra.Command, args []string) {
-		lightInit()
+		initialize.LightInit()
 
 		// Start the mail daemon
 		mail.StartMailDaemon()

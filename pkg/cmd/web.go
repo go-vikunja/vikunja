@@ -18,6 +18,7 @@ package cmd
 
 import (
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/initialize"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/routes"
 	"code.vikunja.io/api/pkg/swagger"
@@ -37,7 +38,7 @@ var webCmd = &cobra.Command{
 	Use:   "web",
 	Short: "Starts the rest api web server",
 	PreRun: func(cmd *cobra.Command, args []string) {
-		fullInit()
+		initialize.FullInit()
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 

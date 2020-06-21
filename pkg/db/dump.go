@@ -40,3 +40,15 @@ func Dump() (data map[string][]byte, err error) {
 
 	return
 }
+
+// Restore restores a table with all its entries
+func Restore(table string, contents []map[string]interface{}) (err error) {
+
+	for _, content := range contents {
+		if _, err := x.Table(table).Insert(content); err != nil {
+			return err
+		}
+	}
+
+	return
+}

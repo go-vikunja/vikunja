@@ -96,7 +96,7 @@ func Create(f io.ReadCloser, realname string, realsize uint64, a web.Auth) (file
 	}
 
 	// Save the file to storage with its new ID as path
-	err = afs.WriteReader(file.getFileName(), f)
+	err = file.Save(f)
 	return
 }
 
@@ -112,4 +112,9 @@ func (f *File) Delete() (err error) {
 
 	err = afs.Remove(f.getFileName())
 	return
+}
+
+// Save saves a file to storage
+func (f *File) Save(fcontent io.ReadCloser) error {
+	return afs.WriteReader(f.getFileName(), fcontent)
 }

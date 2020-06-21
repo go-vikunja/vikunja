@@ -168,3 +168,20 @@ func initSqliteEngine() (engine *xorm.Engine, err error) {
 
 	return xorm.NewEngine("sqlite3", path)
 }
+
+// WipeEverything wipes all tables and their data. Use with caution...
+func WipeEverything() error {
+
+	tables, err := x.DBMetas()
+	if err != nil {
+		return err
+	}
+
+	for _, t := range tables {
+		if err := x.DropTables(t.Name); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}

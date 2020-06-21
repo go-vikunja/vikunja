@@ -17,31 +17,26 @@
 package cmd
 
 import (
-	"fmt"
+	"code.vikunja.io/api/pkg/initialize"
+	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/modules/dump"
 	"github.com/spf13/cobra"
-	"os"
 )
 
-var rootCmd = &cobra.Command{
-	Use:   "vikunja",
-	Short: "Vikunja is the to-do app to organize your life.",
-	Long: `Vikunja (/vɪˈkuːnjə/)
-The to-do app to organize your life.
-
-Also one of the two wild South American camelids which live in the high
-alpine areas of the Andes and a relative of the llama.
-
-Vikunja is a self-hosted To-Do list application with a web app and mobile apps for all platforms. It is licensed under the GPLv3.
-
-Find more info at vikunja.io.`,
-	PreRun: webCmd.PreRun,
-	Run:    webCmd.Run,
+func init() {
+	rootCmd.AddCommand(restoreCmd)
 }
 
-// Execute starts the application
-func Execute() {
-	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
+var restoreCmd = &cobra.Command{
+	Use:   "restore [filename]",
+	Short: "Restores all vikunja data from a vikunja dump.",
+	Args:  cobra.ExactArgs(1),
+	PreRun: func(cmd *cobra.Command, args []string) {
+		initialize.FullInit()
+	},
+	Run: func(cmd *cobra.Command, args []string) {
+		if err := dump.Restore(args[0]); err != nil {
+			log.Critical(err.Error())
+		}
+	},
 }
