@@ -22,7 +22,7 @@
 			<!-- Content and buttons -->
 			<div class="columns">
 				<!-- Content -->
-				<div class="column">
+				<div class="column is-two-thirds">
 					<div class="columns details">
 						<div class="column assignees" v-if="activeFields.assignees">
 							<!-- Assignees -->
