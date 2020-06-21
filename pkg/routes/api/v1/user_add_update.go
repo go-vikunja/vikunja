@@ -45,6 +45,9 @@ func RegisterUser(c echo.Context) error {
 	if err := c.Bind(&datUser); err != nil {
 		return c.JSON(http.StatusBadRequest, models.Message{"No or invalid user model provided."})
 	}
+	if datUser == nil {
+		return c.JSON(http.StatusBadRequest, models.Message{"No or invalid user model provided."})
+	}
 
 	// Insert the user
 	newUser, err := user.CreateUser(datUser.APIFormat())
