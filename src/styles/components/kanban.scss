@@ -60,15 +60,6 @@ $crazy-height-calculation: '100vh - 4.5rem - 1.5rem - 1em - 1.5em - 8px';
           border-width: 2px;
         }
 
-        .color {
-          width: 4px;
-          height: 24px;
-          display: block;
-          float: left;
-          border-radius: 0 2px 2px 0;
-          margin-left: -.5em;
-        }
-
         h3 {
           font-family: $family-sans-serif;
           font-size: .85rem;
@@ -81,6 +72,7 @@ $crazy-height-calculation: '100vh - 4.5rem - 1.5rem - 1em - 1.5em - 8px';
 
           .icon {
             margin-right: 2px;
+            margin-left: 5px;
           }
 
           &.overdue {
@@ -162,6 +154,26 @@ $crazy-height-calculation: '100vh - 4.5rem - 1.5rem - 1em - 1.5em - 8px';
 
         span {
           width: auto;
+        }
+
+        &.has-light-text {
+          color: $white;
+
+          .task-id {
+            color: $grey-lighter;
+          }
+
+          .footer .icon,
+          .due-date,
+          .priority-label {
+            background: darken($task-background, 80%);
+          }
+
+          .footer {
+            .icon svg {
+              fill: $white;
+            }
+          }
         }
       }
 

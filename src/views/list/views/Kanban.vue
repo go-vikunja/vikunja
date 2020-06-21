@@ -47,14 +47,11 @@
 								tag="div"
 								:class="{
 							'is-loading': taskService.loading && taskUpdating[task.id],
-							'draggable': !taskService.loading || !taskUpdating[task.id]
+							'draggable': !taskService.loading || !taskUpdating[task.id],
+							'has-light-text': !colorIsDark(task.hexColor) && task.hexColor !== `#${task.defaultColor}`,
 						}"
+								:style="{'background-color': task.hexColor !== '#' && task.hexColor !== `#${task.defaultColor}` ? task.hexColor : false}"
 						>
-							<span
-									class="color"
-									:style="{ 'background-color': task.hexColor }"
-									v-if="task.hexColor !== '#' + task.defaultColor">
-							</span>
 							<span class="task-id">
 								<span class="is-done" v-if="task.done">Done</span>
 								<template v-if="task.identifier === ''">
