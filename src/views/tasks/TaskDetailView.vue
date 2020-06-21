@@ -147,6 +147,18 @@
 									@change="saveTask"
 									ref="repeatAfter"/>
 						</div>
+						<div class="column" v-if="activeFields.color">
+							<!-- Color -->
+							<div class="detail-title">
+								<icon icon="fill-drip"/>
+								Color
+							</div>
+							<color-picker
+									v-model="taskColor"
+									menu-position="bottom"
+									@change="saveTask"
+									ref="color"/>
+						</div>
 					</div>
 
 					<!-- Labels -->
@@ -286,6 +298,10 @@
 						<span class="icon is-small"><icon icon="list"/></span>
 						Move task
 					</a>
+					<a class="button" @click="setFieldActive('color')">
+						<span class="icon is-small"><icon icon="fill-drip"/></span>
+						Set task color
+					</a>
 					<a class="button is-danger is-outlined noshadow has-no-border" @click="showDeleteModal = true">
 						<span class="icon is-small"><icon icon="trash-alt"/></span>
 						Delete task
@@ -330,10 +346,12 @@
 	import Comments from '../../components/tasks/partials/comments'
 	import router from '../../router'
 	import ListSearch from '../../components/tasks/partials/listSearch'
+	import ColorPicker from "../../components/input/colorPicker";
 
 	export default {
 		name: 'TaskDetailView',
 		components: {
+			ColorPicker,
 			ListSearch,
 			Reminders,
 			RepeatAfter,
@@ -355,6 +373,13 @@
 				// The due date is a seperate property in the task to prevent flatpickr from modifying the task model
 				// in store right after updating it from the api resulting in the wrong due date format being saved in the task.
 				dueDate: null,
+				// We doubled the task color property here because verte does not have a real change property, leading
+				// to the color property change being triggered when the # is removed from it, leading to an update,
+				// which leads in turn to a change... This creates an infinite loop in which the task is updated, changed,
+				// updated, changed, updated and so on.
+				// To prevent this, we put the task color property in a seperate value which is set to the task color
+				// when it is saved and loaded.
+				taskColor: '',
 
 				showDeleteModal: false,
 				taskTitle: '',
@@ -382,6 +407,7 @@
 					attachments: false,
 					relatedTasks: false,
 					moveList: false,
+					color: false,
 				},
 			}
 		},
@@ -425,6 +451,7 @@
 					.then(r => {
 						this.$set(this, 'task', r)
 						this.taskTitle = this.task.title
+						this.taskColor = this.task.hexColor
 						this.setActiveFields()
 					})
 					.catch(e => {
@@ -472,6 +499,7 @@
 			saveTask(undoCallback = null) {
 
 				this.task.dueDate = this.dueDate
+				this.task.hexColor = this.taskColor
 
 				// If no end date is being set, but a start date and due date,
 				// use the due date as the end date

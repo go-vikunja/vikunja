@@ -15,7 +15,7 @@ export default class TaskService extends AbstractService {
 			delete: '/tasks/{id}',
 		});
 	}
-	
+
 	modelFactory(data) {
 		return new TaskModel(data)
 	}
@@ -34,9 +34,9 @@ export default class TaskService extends AbstractService {
 		model.listId = Number(model.listId)
 
 		// Convert dates into an iso string
-		model.dueDate = model.dueDate === null ? null : formatISO(new Date(model.dueDate))
-		model.startDate = model.startDate === null ? null : formatISO(new Date(model.startDate))
-		model.endDate = model.endDate === null ? null : formatISO(new Date(model.endDate))
+		model.dueDate = model.dueDate ? null : formatISO(new Date(model.dueDate))
+		model.startDate = model.startDate ? null : formatISO(new Date(model.startDate))
+		model.endDate = model.endDate ? null : formatISO(new Date(model.endDate))
 		model.created = formatISO(model.created)
 		model.updated = formatISO(model.updated)
 
@@ -48,7 +48,7 @@ export default class TaskService extends AbstractService {
 		}
 
 		// Make normal timestamps from js dates
-		if(model.reminderDates.length > 0) {
+		if (model.reminderDates.length > 0) {
 			model.reminderDates = model.reminderDates.map(r => {
 				return formatISO(new Date(r))
 			})
@@ -82,14 +82,14 @@ export default class TaskService extends AbstractService {
 		}
 
 		// Do the same for all related tasks
-		Object.keys(model.relatedTasks).forEach(relationKind  => {
+		Object.keys(model.relatedTasks).forEach(relationKind => {
 			model.relatedTasks[relationKind] = model.relatedTasks[relationKind].map(t => {
 				return this.processModel(t)
 			})
 		})
 
 		// Process all attachments to preven parsing errors
-		if(model.attachments.length > 0) {
+		if (model.attachments.length > 0) {
 			const attachmentService = new AttachmentService()
 			model.attachments.map(a => {
 				return attachmentService.processModel(a)
@@ -97,7 +97,7 @@ export default class TaskService extends AbstractService {
 		}
 
 		// Preprocess all labels
-		if(model.labels.length > 0) {
+		if (model.labels.length > 0) {
 			const labelService = new LabelService()
 			model.labels = model.labels.map(l => labelService.processModel(l))
 		}

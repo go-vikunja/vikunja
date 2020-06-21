@@ -2,7 +2,7 @@
 	<div class="color-picker-container">
 		<verte
 				v-model="color"
-				menuPosition="top"
+				:menuPosition="menuPosition"
 				picker="square"
 				model="hex"
 				:enableAlpha="false"
@@ -22,6 +22,7 @@
 		data() {
 			return {
 				color: '',
+				lastChangeTimeout: null,
 			}
 		},
 		components: {
@@ -31,6 +32,10 @@
 			value: {
 				required: true,
 			},
+			menuPosition: {
+				type: String,
+				default: 'top',
+			},
 		},
 		watch: {
 			value(newVal) {
@@ -38,15 +43,22 @@
 			},
 			color() {
 				this.update()
-			}
+			},
 		},
 		mounted() {
 			this.color = this.value
 		},
 		methods: {
 			update() {
-				this.$emit('input', this.color)
-				this.$emit('change')
+
+				if(this.lastChangeTimeout !== null) {
+					clearTimeout(this.lastChangeTimeout)
+				}
+
+				this.lastChangeTimeout = setTimeout(() => {
+					this.$emit('input', this.color)
+					this.$emit('change')
+				}, 500)
 			},
 			reset() {
 				// FIXME: I havn't found a way to make it clear to the user the color war reset.
