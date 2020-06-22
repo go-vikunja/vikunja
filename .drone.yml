@@ -282,3 +282,31 @@ steps:
       auto_tag: true
       auto_tag_suffix: linux-amd64
     depends_on: [ fetch-tags ]
+
+---
+kind: pipeline
+type: docker
+name: docker-manifest
+
+trigger:
+  ref:
+    - refs/heads/master
+    - "refs/tags/**"
+
+depends_on:
+  - docker-amd64-latest
+  - docker-arm-latest
+
+steps:
+  - name: manifest
+    pull: always
+    image: plugins/manifest
+    settings:
+      auto_tag: true
+      ignore_missing: true
+      spec: docker-manifest.tmpl
+      password:
+        from_secret: docker_password
+      username:
+        from_secret: docker_username
+
