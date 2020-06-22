@@ -71,23 +71,10 @@ steps:
       target: /frontend/
     depends_on: [ static ]
 
-  # Build the docker image and push it to docker hub
-  - name: docker
-    image: plugins/docker
-    pull: true
-    settings:
-      username:
-        from_secret: docker_username
-      password:
-        from_secret: docker_password
-      repo: vikunja/frontend
-      auto_tag: true
-
   - name: telegram
     image: appleboy/drone-telegram
     depends_on:
       - release
-      - docker
     settings:
       token:
         from_secret: TELEGRAM_TOKEN
@@ -151,23 +138,10 @@ steps:
       target: /frontend/
     depends_on: [ static ]
 
-  # Build the docker image and push it to docker hub
-  - name: docker
-    image: plugins/docker
-    pull: true
-    settings:
-      username:
-        from_secret: docker_username
-      password:
-        from_secret: docker_password
-      repo: vikunja/frontend
-      auto_tag: true
-
   - name: telegram
     image: appleboy/drone-telegram
     depends_on:
       - release
-      - docker
     settings:
       token:
         from_secret: TELEGRAM_TOKEN
@@ -181,4 +155,106 @@ steps:
       status:
         - success
         - failure
+---
+kind: pipeline
+type: docker
+name: docker-arm-latest
 
+platform:
+  os: linux
+  arch: arm
+
+trigger:
+  branch:
+    - master
+  event:
+    - push
+
+steps:
+  - name: docker
+    image: plugins/docker
+    pull: true
+    settings:
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
+      repo: vikunja/frontend
+      auto_tag: true
+
+---
+kind: pipeline
+type: docker
+name: docker-arm-release
+
+platform:
+  os: linux
+  arch: arm
+
+trigger:
+  event:
+    - tag
+
+steps:
+  - name: docker
+    image: plugins/docker
+    pull: true
+    settings:
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
+      repo: vikunja/frontend
+      auto_tag: true
+
+---
+kind: pipeline
+type: docker
+name: docker-amd64-latest
+
+platform:
+  os: linux
+  arch: amd64
+
+trigger:
+  branch:
+    - master
+  event:
+    - push
+
+steps:
+  - name: docker
+    image: plugins/docker
+    pull: true
+    settings:
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
+      repo: vikunja/frontend
+      auto_tag: true
+
+---
+kind: pipeline
+type: docker
+name: docker-amd64-release
+
+platform:
+  os: linux
+  arch: amd64
+
+trigger:
+  event:
+    - tag
+
+steps:
+  - name: docker
+    image: plugins/docker
+    pull: true
+    settings:
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
+      repo: vikunja/frontend
+      auto_tag: true
