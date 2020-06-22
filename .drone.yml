@@ -171,6 +171,10 @@ trigger:
     - push
 
 steps:
+  - name: fetch-tags
+    image: docker:git
+    commands:
+      - git fetch --tags
   - name: docker
     image: plugins/docker
     pull: true
@@ -181,6 +185,7 @@ steps:
         from_secret: docker_password
       repo: vikunja/frontend
       auto_tag: true
+    depends_on: [ fetch-tags ]
 
 ---
 kind: pipeline
@@ -196,6 +201,10 @@ trigger:
     - tag
 
 steps:
+  - name: fetch-tags
+    image: docker:git
+    commands:
+      - git fetch --tags
   - name: docker
     image: plugins/docker
     pull: true
@@ -206,6 +215,7 @@ steps:
         from_secret: docker_password
       repo: vikunja/frontend
       auto_tag: true
+    depends_on: [ fetch-tags ]
 
 ---
 kind: pipeline
@@ -223,6 +233,10 @@ trigger:
     - push
 
 steps:
+  - name: fetch-tags
+    image: docker:git
+    commands:
+      - git fetch --tags
   - name: docker
     image: plugins/docker
     pull: true
@@ -233,6 +247,7 @@ steps:
         from_secret: docker_password
       repo: vikunja/frontend
       auto_tag: true
+    depends_on: [ fetch-tags ]
 
 ---
 kind: pipeline
@@ -248,6 +263,10 @@ trigger:
     - tag
 
 steps:
+  - name: fetch-tags
+    image: docker:git
+    commands:
+      - git fetch --tags
   - name: docker
     image: plugins/docker
     pull: true
@@ -258,3 +277,4 @@ steps:
         from_secret: docker_password
       repo: vikunja/frontend
       auto_tag: true
+    depends_on: [ fetch-tags ]
