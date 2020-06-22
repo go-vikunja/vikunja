@@ -71,24 +71,6 @@ steps:
       target: /frontend/
     depends_on: [ static ]
 
-  - name: telegram
-    image: appleboy/drone-telegram
-    depends_on:
-      - release
-    settings:
-      token:
-        from_secret: TELEGRAM_TOKEN
-      to:
-        from_secret: TELEGRAM_TO
-      message: >
-        {{repo.owner}}/{{repo.name}}: \[{{build.status}}] Build {{build.number}}
-        {{commit.author}} pushed to {{commit.branch}} {{commit.sha}}: `{{commit.message}}`
-        Build started at {{datetime build.started "2006-Jan-02T15:04:05Z" "GMT+2"}} finished at {{datetime build.finished "2006-Jan-02T15:04:05Z" "GMT+2"}}.
-    when:
-      status:
-        - success
-        - failure
-
 ---
 kind: pipeline
 name: release-version
@@ -138,56 +120,6 @@ steps:
       target: /frontend/
     depends_on: [ static ]
 
-  - name: telegram
-    image: appleboy/drone-telegram
-    depends_on:
-      - release
-    settings:
-      token:
-        from_secret: TELEGRAM_TOKEN
-      to:
-        from_secret: TELEGRAM_TO
-      message: >
-        {{repo.owner}}/{{repo.name}}: \[{{build.status}}] Build {{build.number}}
-        {{commit.author}} pushed to {{commit.branch}} {{commit.sha}}: `{{commit.message}}`
-        Build started at {{datetime build.started "2006-Jan-02T15:04:05Z" "GMT+2"}} finished at {{datetime build.finished "2006-Jan-02T15:04:05Z" "GMT+2"}}.
-    when:
-      status:
-        - success
-        - failure
----
-kind: pipeline
-type: docker
-name: docker-arm-latest
-
-platform:
-  os: linux
-  arch: arm
-
-trigger:
-  branch:
-    - master
-  event:
-    - push
-
-steps:
-  - name: fetch-tags
-    image: docker:git
-    commands:
-      - git fetch --tags
-  - name: docker
-    image: plugins/docker:linux-arm
-    pull: true
-    settings:
-      username:
-        from_secret: docker_username
-      password:
-        from_secret: docker_password
-      repo: vikunja/frontend
-      auto_tag: true
-      auto_tag_suffix: linux-arm64
-    depends_on: [ fetch-tags ]
-
 ---
 kind: pipeline
 type: docker
@@ -198,8 +130,9 @@ platform:
   arch: arm
 
 trigger:
-  event:
-    - tag
+  ref:
+    - refs/heads/master
+    - "refs/tags/**"
 
 steps:
   - name: fetch-tags
@@ -217,39 +150,6 @@ steps:
       repo: vikunja/frontend
       auto_tag: true
       auto_tag_suffix: linux-arm64
-    depends_on: [ fetch-tags ]
-
----
-kind: pipeline
-type: docker
-name: docker-amd64-latest
-
-platform:
-  os: linux
-  arch: amd64
-
-trigger:
-  branch:
-    - master
-  event:
-    - push
-
-steps:
-  - name: fetch-tags
-    image: docker:git
-    commands:
-      - git fetch --tags
-  - name: docker
-    image: plugins/docker:linux-amd64
-    pull: true
-    settings:
-      username:
-        from_secret: docker_username
-      password:
-        from_secret: docker_password
-      repo: vikunja/frontend
-      auto_tag: true
-      auto_tag_suffix: linux-amd64
     depends_on: [ fetch-tags ]
 
 ---
@@ -262,8 +162,9 @@ platform:
   arch: amd64
 
 trigger:
-  event:
-    - tag
+  ref:
+    - refs/heads/master
+    - "refs/tags/**"
 
 steps:
   - name: fetch-tags
@@ -294,8 +195,8 @@ trigger:
     - "refs/tags/**"
 
 depends_on:
-  - docker-amd64-latest
-  - docker-arm-latest
+  - docker-amd64-release
+  - docker-arm-release
 
 steps:
   - name: manifest
@@ -310,3 +211,34 @@ steps:
       username:
         from_secret: docker_username
 
+---
+kind: pipeline
+type: docker
+name: notify
+
+trigger:
+  ref:
+    - refs/heads/master
+    - "refs/tags/**"
+
+depends_on:
+  - release-version
+  - release-latest
+  - docker-manifest
+
+steps:
+  - name: telegram
+    image: appleboy/drone-telegram
+    settings:
+      token:
+        from_secret: TELEGRAM_TOKEN
+      to:
+        from_secret: TELEGRAM_TO
+      message: >
+        {{repo.owner}}/{{repo.name}}: \[{{build.status}}] Build {{build.number}}
+        {{commit.author}} pushed to {{commit.branch}} {{commit.sha}}: `{{commit.message}}`
+        Build started at {{datetime build.started "2006-Jan-02T15:04:05Z" "GMT+2"}} finished at {{datetime build.finished "2006-Jan-02T15:04:05Z" "GMT+2"}}.
+    when:
+      status:
+        - success
+        - failure
