@@ -149,7 +149,7 @@ steps:
         from_secret: docker_password
       repo: vikunja/frontend
       auto_tag: true
-      auto_tag_suffix: linux-arm64
+      auto_tag_suffix: linux-arm
     depends_on: [ fetch-tags ]
 
 ---
