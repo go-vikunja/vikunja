@@ -269,6 +269,7 @@ steps:
 
 kind: pipeline
 name: release
+
 depends_on:
   - testing
 
@@ -507,6 +508,9 @@ kind: pipeline
 type: docker
 name: docker-arm-release
 
+depends_on:
+  - testing
+
 platform:
   os: linux
   arch: arm
@@ -531,13 +535,16 @@ steps:
         from_secret: docker_password
       repo: vikunja/api
       auto_tag: true
-      auto_tag_suffix: linux-arm64
+      auto_tag_suffix: linux-arm
     depends_on: [ fetch-tags ]
 
 ---
 kind: pipeline
 type: docker
 name: docker-amd64-release
+
+depends_on:
+  - testing
 
 platform:
   os: linux
