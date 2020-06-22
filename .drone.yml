@@ -176,7 +176,7 @@ steps:
     commands:
       - git fetch --tags
   - name: docker
-    image: plugins/docker
+    image: plugins/docker:linux-arm64
     pull: true
     settings:
       username:
@@ -185,6 +185,7 @@ steps:
         from_secret: docker_password
       repo: vikunja/frontend
       auto_tag: true
+      auto_tag_suffix: linux-arm64
     depends_on: [ fetch-tags ]
 
 ---
@@ -206,7 +207,7 @@ steps:
     commands:
       - git fetch --tags
   - name: docker
-    image: plugins/docker
+    image: plugins/docker:linux-arm64
     pull: true
     settings:
       username:
@@ -215,6 +216,7 @@ steps:
         from_secret: docker_password
       repo: vikunja/frontend
       auto_tag: true
+      auto_tag_suffix: linux-arm64
     depends_on: [ fetch-tags ]
 
 ---
@@ -238,7 +240,7 @@ steps:
     commands:
       - git fetch --tags
   - name: docker
-    image: plugins/docker
+    image: plugins/docker:linux-amd64
     pull: true
     settings:
       username:
@@ -247,6 +249,7 @@ steps:
         from_secret: docker_password
       repo: vikunja/frontend
       auto_tag: true
+      auto_tag_suffix: linux-amd64
     depends_on: [ fetch-tags ]
 
 ---
@@ -268,7 +271,7 @@ steps:
     commands:
       - git fetch --tags
   - name: docker
-    image: plugins/docker
+    image: plugins/docker:linux-amd64
     pull: true
     settings:
       username:
@@ -277,4 +280,5 @@ steps:
         from_secret: docker_password
       repo: vikunja/frontend
       auto_tag: true
+      auto_tag_suffix: linux-amd64
     depends_on: [ fetch-tags ]
