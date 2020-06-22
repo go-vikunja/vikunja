@@ -218,3 +218,57 @@ services:
       - frontend
     restart: unless-stopped
 {{< /highlight >}}
+
+## Example with Caddy v2 as proxy
+
+You will need the following `Caddyfile` on your host (or elsewhere, but then you'd need to adjust the proxy mount at the bottom of the compose file):
+
+{{< highlight conf >}}
+vikunja.example.com {
+    reverse_proxy /api/* api:3456
+    reverse_proxy frontend:80
+}
+{{< /highlight >}}
+
+`docker-compose.yml` config:
+
+{{< highlight yaml >}}
+version: '3'
+
+services:
+  db:
+    image: mariadb:10
+    environment:
+      MYSQL_ROOT_PASSWORD: supersecret
+      MYSQL_DATABASE: vikunja
+    volumes:
+      - ./db:/var/lib/mysql
+    restart: unless-stopped
+  api:
+    image: vikunja/api
+    environment:
+      VIKUNJA_DATABASE_HOST: db
+      VIKUNJA_DATABASE_PASSWORD: supersecret
+      VIKUNJA_DATABASE_TYPE: mysql
+      VIKUNJA_DATABASE_USER: root
+      VIKUNJA_DATABASE_DATABASE: vikunja
+    volumes: 
+      - ./files:/app/vikunja/files
+    depends_on:
+      - db
+    restart: unless-stopped
+  frontend:
+    image: vikunja/frontend
+    restart: unless-stopped
+  caddy:
+    image: caddy
+    restart: unless-stopped
+    ports:
+        - "80:80"
+        - "443:443"
+    depends_on:
+      - api
+      - frontend
+    volumes:
+        - ./Caddyfile:/etc/caddy/Caddyfile:ro
+{{< /highlight >}}
