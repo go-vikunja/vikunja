@@ -47,7 +47,7 @@ database:
   # Databse to use
   database: "vikunja"
   # When using sqlite, this is the path where to store the data
-  Path: "./vikunja.db"
+  path: "./vikunja.db"
   # Sets the max open connections to the database. Only used when using mysql and postgres.
   maxopenconnections: 100
   # Sets the maximum number of idle connections to the db.
