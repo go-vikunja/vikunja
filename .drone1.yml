@@ -264,12 +264,11 @@ steps:
 
 ---
 ########
-# Build a release when pushing to master
-# We need to copy this because drone currently can't run a pipeline on either a push to master or a tag.
+# Build a release when tagging
 ########
 
 kind: pipeline
-name: deploy-master
+name: release
 depends_on:
   - testing
 
@@ -278,10 +277,9 @@ workspace:
   path: src/code.vikunja.io/api
 
 trigger:
-  branch:
-    - master
-  event:
-    - push
+  ref:
+    - refs/heads/master
+    - "refs/tags/**"
 
 steps:
   # Needed to get the versions right as they depend on tags
@@ -384,172 +382,11 @@ steps:
       strip_prefix: dist/zip/
       source: dist/zip/*
       target: /api/master/
+    trigger:
+      ref:
+        - refs/heads/master
     depends_on: [ sign-release ]
 
-  # Build a debian package and push it to our bucket
-  - name: build-deb
-    image: kolaente/fpm
-    pull: true
-    commands:
-      - make build-deb
-    depends_on: [ static-build-linux ]
-
-  - name: deb-structure
-    image: kolaente/reprepro
-    pull: true
-    environment:
-      GPG_PRIVATE_KEY:
-        from_secret: gpg_privatekey
-    commands:
-      - export GPG_TTY=$(tty)
-      - gpg -qk
-      - echo "use-agent" >>  ~/.gnupg/gpg.conf
-      - gpgconf --kill gpg-agent
-      - echo $GPG_PRIVATE_KEY > ~/frederik.gpg
-      - gpg --import ~/frederik.gpg
-      - mkdir debian/conf -p
-      - cp build/reprepro-dist-conf debian/conf/distributions
-      - make reprepro
-    depends_on: [ build-deb ]
-
-  # Push the releases to our pseudo-s3-bucket
-  - name: release-deb
-    image: plugins/s3:1
-    pull: true
-    settings:
-      bucket: vikunja
-      access_key:
-        from_secret: aws_access_key_id
-      secret_key:
-        from_secret: aws_secret_access_key
-      endpoint: https://storage.kolaente.de
-      path_style: true
-      strip_prefix: debian
-      source: debian/*/*/*/*/*
-      target: /deb/
-    depends_on: [ deb-structure ]
-
-  - name: telegram
-    image: appleboy/drone-telegram
-    depends_on:
-      - release-latest
-    settings:
-      token:
-        from_secret: TELEGRAM_TOKEN
-      to:
-        from_secret: TELEGRAM_TO
-      message: >
-        {{repo.owner}}/{{repo.name}}: \[{{build.status}}] Build {{build.number}}
-        {{commit.author}} pushed to {{commit.branch}} {{commit.sha}}: `{{commit.message}}`
-        Build started at {{datetime build.started "2006-Jan-02T15:04:05Z" "GMT+2"}} finished at {{datetime build.finished "2006-Jan-02T15:04:05Z" "GMT+2"}}.
-    when:
-      status:
-        - success
-        - failure
----
-########
-# Build a release when tagging
-# We need to copy this because drone currently can't run a pipeline on either a push to master or a tag.
-########
-
-kind: pipeline
-name: deploy-version
-depends_on:
-  - testing
-
-workspace:
-  base: /go
-  path: src/code.vikunja.io/api
-
-trigger:
-  event:
-    - tag
-
-steps:
-  - name: fetch-tags
-    image: docker:git
-    commands:
-      - git fetch --tags
-
-  - name: before-static-build
-    image: techknowlogick/xgo:latest
-    pull: true
-    commands:
-      - make generate
-      - make release-dirs
-    depends_on: [ fetch-tags ]
-
-  - name: static-build-windows
-    image: techknowlogick/xgo:latest
-    pull: true
-    environment:
-      # This path does not exist. However, when we set the gopath to /go, the build fails. Not sure why.
-      # Leaving this here until we know how to resolve this properly.
-      GOPATH: /srv/app
-    commands:
-      - export PATH=$PATH:$GOPATH/bin
-      - make release-windows
-    depends_on: [ before-static-build ]
-
-  - name: static-build-linux
-    image: techknowlogick/xgo:latest
-    pull: true
-    environment:
-      # This path does not exist. However, when we set the gopath to /go, the build fails. Not sure why.
-      # Leaving this here until we know how to resolve this properly.
-      GOPATH: /srv/app
-    commands:
-      - export PATH=$PATH:$GOPATH/bin
-      - make release-linux
-    depends_on: [ before-static-build ]
-
-  - name: static-build-darwin
-    image: techknowlogick/xgo:latest
-    pull: true
-    environment:
-      # This path does not exist. However, when we set the gopath to /go, the build fails. Not sure why.
-      # Leaving this here until we know how to resolve this properly.
-      GOPATH: /srv/app
-    commands:
-      - export PATH=$PATH:$GOPATH/bin
-      - make release-darwin
-    depends_on: [ before-static-build ]
-
-  - name: after-build-compress
-    image: kolaente/upx
-    pull: true
-    depends_on:
-      - static-build-windows
-      - static-build-linux
-      - static-build-darwin
-    commands:
-      - make release-compress
-
-  - name: after-build-static
-    image: techknowlogick/xgo:latest
-    pull: true
-    depends_on:
-      - after-build-compress
-    commands:
-      - make release-copy
-      - make release-check
-      - make release-os-package
-      - make release-zip
-
-  - name: sign-release
-    image: plugins/gpgsign:1
-    pull: true
-    depends_on: [ after-build-static ]
-    settings:
-      key:
-        from_secret: gpg_privkey
-      passphrase:
-        from_secret: gpg_password
-      files:
-        - dist/zip/*
-      detach_sign: true
-
-  # Push the releases to our pseudo-s3-bucket
   - name: release-version
     image: plugins/s3:1
     pull: true
@@ -564,6 +401,9 @@ steps:
       strip_prefix: dist/zip/
       source: dist/zip/*
       target: /api/${DRONE_TAG##v}/
+    trigger:
+      ref:
+        - "refs/tags/**"
     depends_on: [ sign-release ]
 
   # Build a debian package and push it to our bucket
@@ -608,24 +448,6 @@ steps:
       source: debian/*/*/*/*/*
       target: /deb/
     depends_on: [ deb-structure ]
-
-  - name: telegram
-    image: appleboy/drone-telegram
-    depends_on:
-      - release-version
-    settings:
-      token:
-        from_secret: TELEGRAM_TOKEN
-      to:
-        from_secret: TELEGRAM_TO
-      message: >
-        {{repo.owner}}/{{repo.name}}: \[{{build.status}}] Build {{build.number}}
-        {{commit.author}} pushed to {{commit.branch}} {{commit.sha}}: `{{commit.message}}`
-        Build started at {{datetime build.started "2006-Jan-02T15:04:05Z" "GMT+2"}} finished at {{datetime build.finished "2006-Jan-02T15:04:05Z" "GMT+2"}}.
-    when:
-      status:
-        - success
-        - failure
 
 ---
 kind: pipeline
@@ -683,63 +505,24 @@ steps:
 ---
 kind: pipeline
 type: docker
-name: docker-arm-latest
-
-depends_on:
-  - testing
-
-platform:
-  os: linux
-  arch: arm
-
-trigger:
-  branch:
-    - master
-  event:
-    - push
-
-steps:
-  # Needed to get the versions right as they depend on tags
-  - name: fetch-tags
-    image: docker:git
-    commands:
-      - git fetch --tags
-  - name: docker
-    image: plugins/docker
-    pull: true
-    settings:
-      username:
-        from_secret: docker_username
-      password:
-        from_secret: docker_password
-      repo: vikunja/api
-      auto_tag: true
-    depends_on: [ fetch-tags ]
-
----
-kind: pipeline
-type: docker
 name: docker-arm-release
 
-depends_on:
-  - testing
-
 platform:
   os: linux
   arch: arm
 
 trigger:
-  event:
-    - tag
+  ref:
+    - refs/heads/master
+    - "refs/tags/**"
 
 steps:
-  # Needed to get the versions right as they depend on tags
   - name: fetch-tags
     image: docker:git
     commands:
       - git fetch --tags
   - name: docker
-    image: plugins/docker
+    image: plugins/docker:linux-arm
     pull: true
     settings:
       username:
@@ -748,42 +531,7 @@ steps:
         from_secret: docker_password
       repo: vikunja/api
       auto_tag: true
-    depends_on: [ fetch-tags ]
-
----
-kind: pipeline
-type: docker
-name: docker-amd64-latest
-
-depends_on:
-  - testing
-
-platform:
-  os: linux
-  arch: amd64
-
-trigger:
-  branch:
-    - master
-  event:
-    - push
-
-steps:
-  # Needed to get the versions right as they depend on tags
-  - name: fetch-tags
-    image: docker:git
-    commands:
-      - git fetch --tags
-  - name: docker
-    image: plugins/docker
-    pull: true
-    settings:
-      username:
-        from_secret: docker_username
-      password:
-        from_secret: docker_password
-      repo: vikunja/api
-      auto_tag: true
+      auto_tag_suffix: linux-arm64
     depends_on: [ fetch-tags ]
 
 ---
@@ -791,25 +539,22 @@ kind: pipeline
 type: docker
 name: docker-amd64-release
 
-depends_on:
-  - testing
-
 platform:
   os: linux
   arch: amd64
 
 trigger:
-  event:
-    - tag
+  ref:
+    - refs/heads/master
+    - "refs/tags/**"
 
 steps:
-  # Needed to get the versions right as they depend on tags
   - name: fetch-tags
     image: docker:git
     commands:
       - git fetch --tags
   - name: docker
-    image: plugins/docker
+    image: plugins/docker:linux-amd64
     pull: true
     settings:
       username:
@@ -818,4 +563,63 @@ steps:
         from_secret: docker_password
       repo: vikunja/api
       auto_tag: true
+      auto_tag_suffix: linux-amd64
     depends_on: [ fetch-tags ]
+
+---
+kind: pipeline
+type: docker
+name: docker-manifest
+
+trigger:
+  ref:
+    - refs/heads/master
+    - "refs/tags/**"
+
+depends_on:
+  - docker-amd64-release
+  - docker-arm-release
+
+steps:
+  - name: manifest
+    pull: always
+    image: plugins/manifest
+    settings:
+      auto_tag: true
+      ignore_missing: true
+      spec: docker-manifest.tmpl
+      password:
+        from_secret: docker_password
+      username:
+        from_secret: docker_username
+
+---
+kind: pipeline
+type: docker
+name: notify
+
+trigger:
+  ref:
+    - refs/heads/master
+    - "refs/tags/**"
+
+depends_on:
+  - release
+  - docker-manifest
+
+steps:
+  - name: telegram
+    image: appleboy/drone-telegram
+    settings:
+      token:
+        from_secret: TELEGRAM_TOKEN
+      to:
+        from_secret: TELEGRAM_TO
+      message: >
+        {{repo.owner}}/{{repo.name}}: \[{{build.status}}] Build {{build.number}}
+        {{commit.author}} pushed to {{commit.branch}} {{commit.sha}}: `{{commit.message}}`
+        Build started at {{datetime build.started "2006-Jan-02T15:04:05Z" "GMT+2"}} finished at {{datetime build.finished "2006-Jan-02T15:04:05Z" "GMT+2"}}.
+    when:
+      status:
+        - success
+        - failure
