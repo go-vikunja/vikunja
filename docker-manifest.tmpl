@@ -1,4 +1,4 @@
-image: vikunja/frontend:{{#if build.tag}}{{trimPrefix "v" build.tag}}{{else}}latest{{/if}}
+image: vikunja/api:{{#if build.tag}}{{trimPrefix "v" build.tag}}{{else}}latest{{/if}}
 {{#if build.tags}}
 tags:
 {{#each build.tags}}
@@ -7,12 +7,12 @@ tags:
 {{/if}}
 manifests:
   -
-    image: vikunja/frontend:{{#if build.tag}}{{trimPrefix "v" build.tag}}-{{/if}}linux-amd64
+    image: vikunja/api:{{#if build.tag}}{{trimPrefix "v" build.tag}}-{{/if}}linux-amd64
     platform:
       architecture: amd64
       os: linux
   -
-    image: vikunja/frontend:{{#if build.tag}}{{trimPrefix "v" build.tag}}-{{/if}}linux-arm
+    image: vikunja/api:{{#if build.tag}}{{trimPrefix "v" build.tag}}-{{/if}}linux-arm
     platform:
       architecture: arm
       os: linux
