@@ -685,6 +685,9 @@ kind: pipeline
 type: docker
 name: docker-arm-latest
 
+depends_on:
+  - testing
+
 platform:
   os: linux
   arch: arm
@@ -718,6 +721,9 @@ kind: pipeline
 type: docker
 name: docker-arm-release
 
+depends_on:
+  - testing
+
 platform:
   os: linux
   arch: arm
@@ -748,6 +754,9 @@ steps:
 kind: pipeline
 type: docker
 name: docker-amd64-latest
+
+depends_on:
+  - testing
 
 platform:
   os: linux
@@ -781,6 +790,9 @@ steps:
 kind: pipeline
 type: docker
 name: docker-amd64-release
+
+depends_on:
+  - testing
 
 platform:
   os: linux
