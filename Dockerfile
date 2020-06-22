@@ -7,7 +7,7 @@ COPY .  ./
 
 RUN \
   # Build the frontend
-  yarn install --frozen-lockfile && \
+  yarn install --frozen-lockfile --network-timeout 100000 && \
   echo '{"VERSION": "'$(git describe --tags --always --abbrev=10 | sed 's/-/+/' | sed 's/^v//' | sed 's/-g/-/')'"}' > src/version.json && \
   yarn run build
 
