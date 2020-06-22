@@ -176,7 +176,7 @@ steps:
     commands:
       - git fetch --tags
   - name: docker
-    image: plugins/docker:linux-arm64
+    image: plugins/docker:linux-arm
     pull: true
     settings:
       username:
@@ -207,7 +207,7 @@ steps:
     commands:
       - git fetch --tags
   - name: docker
-    image: plugins/docker:linux-arm64
+    image: plugins/docker:linux-arm
     pull: true
     settings:
       username:
