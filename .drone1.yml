@@ -429,19 +429,6 @@ steps:
       target: /deb/
     depends_on: [ deb-structure ]
 
-  # Build the docker image and push it to docker hub
-  - name: docker
-    image: plugins/docker
-    pull: true
-    settings:
-      username:
-        from_secret: docker_username
-      password:
-        from_secret: docker_password
-      repo: vikunja/api
-      auto_tag: true
-    depends_on: [ fetch-tags ]
-
   - name: telegram
     image: appleboy/drone-telegram
     depends_on:
@@ -622,23 +609,9 @@ steps:
       target: /deb/
     depends_on: [ deb-structure ]
 
-  # Build the docker image and push it to docker hub
-  - name: docker
-    image: plugins/docker
-    pull: true
-    settings:
-      username:
-        from_secret: docker_username
-      password:
-        from_secret: docker_password
-      repo: vikunja/api
-      auto_tag: true
-    depends_on: [ fetch-tags ]
-
   - name: telegram
     image: appleboy/drone-telegram
     depends_on:
-      - docker
       - release-version
     settings:
       token:
@@ -706,3 +679,131 @@ steps:
       repo: vikunja/docs
       context: docs/
       dockerfile: docs/Dockerfile
+
+---
+kind: pipeline
+type: docker
+name: docker-arm-latest
+
+platform:
+  os: linux
+  arch: arm
+
+trigger:
+  branch:
+    - master
+  event:
+    - push
+
+steps:
+  # Needed to get the versions right as they depend on tags
+  - name: fetch-tags
+    image: docker:git
+    commands:
+      - git fetch --tags
+  - name: docker
+    image: plugins/docker
+    pull: true
+    settings:
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
+      repo: vikunja/api
+      auto_tag: true
+    depends_on: [ fetch-tags ]
+
+---
+kind: pipeline
+type: docker
+name: docker-arm-release
+
+platform:
+  os: linux
+  arch: arm
+
+trigger:
+  event:
+    - tag
+
+steps:
+  # Needed to get the versions right as they depend on tags
+  - name: fetch-tags
+    image: docker:git
+    commands:
+      - git fetch --tags
+  - name: docker
+    image: plugins/docker
+    pull: true
+    settings:
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
+      repo: vikunja/api
+      auto_tag: true
+    depends_on: [ fetch-tags ]
+
+---
+kind: pipeline
+type: docker
+name: docker-amd64-latest
+
+platform:
+  os: linux
+  arch: amd64
+
+trigger:
+  branch:
+    - master
+  event:
+    - push
+
+steps:
+  # Needed to get the versions right as they depend on tags
+  - name: fetch-tags
+    image: docker:git
+    commands:
+      - git fetch --tags
+  - name: docker
+    image: plugins/docker
+    pull: true
+    settings:
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
+      repo: vikunja/api
+      auto_tag: true
+    depends_on: [ fetch-tags ]
+
+---
+kind: pipeline
+type: docker
+name: docker-amd64-release
+
+platform:
+  os: linux
+  arch: amd64
+
+trigger:
+  event:
+    - tag
+
+steps:
+  # Needed to get the versions right as they depend on tags
+  - name: fetch-tags
+    image: docker:git
+    commands:
+      - git fetch --tags
+  - name: docker
+    image: plugins/docker
+    pull: true
+    settings:
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
+      repo: vikunja/api
+      auto_tag: true
+    depends_on: [ fetch-tags ]
