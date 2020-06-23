@@ -42,7 +42,7 @@ func initMigration(x *xorm.Engine) *xormigrate.Xormigrate {
 		var err error
 		x, err = db.CreateDBEngine()
 		if err != nil {
-			log.Criticalf("Could not connect to db: %v", err.Error())
+			log.Fatalf("Could not connect to db: %v", err.Error())
 			return nil
 		}
 	}

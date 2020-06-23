@@ -23,6 +23,7 @@ import (
 	"fmt"
 	xrc "gitea.com/xorm/xorm-redis-cache"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -165,6 +166,13 @@ func initSqliteEngine() (engine *xorm.Engine, err error) {
 	if path == "" {
 		path = "./db.db"
 	}
+
+	// Try opening the db file to return a better error message if that does not work
+	file, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE, 0)
+	if err != nil {
+		return nil, fmt.Errorf("could not open database file [uid=%d, gid=%d]: %s", os.Getuid(), os.Getgid(), err)
+	}
+	_ = file.Close() // We directly close the file because we only want to check if it is writable. It will be reopened lazily later by xorm.
 
 	return xorm.NewEngine("sqlite3", path)
 }
