@@ -253,8 +253,8 @@ func InitDefaultConfig() {
 	AvatarProvider.setDefault("gravatar")
 	AvatarGravaterExpiration.setDefault(3600)
 	// List Backgrounds
-	BackgroundsEnabled.setDefault(false)
-	BackgroundsUploadEnabled.setDefault(false)
+	BackgroundsEnabled.setDefault(true)
+	BackgroundsUploadEnabled.setDefault(true)
 	BackgroundsUnsplashEnabled.setDefault(false)
 }
 

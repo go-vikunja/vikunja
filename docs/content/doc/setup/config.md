@@ -228,11 +228,11 @@ avatar:
 
 backgrounds:
   # Whether to enable backgrounds for lists at all.
-  enabled: false
+  enabled: true
   providers:
-    upload: 
+    upload:
       # Whethere to enable uploaded list backgrounds
-      enabled: false
+      enabled: true
     unsplash:
       # Whether to enable setting backgrounds from unsplash as list backgrounds
       enabled: false
