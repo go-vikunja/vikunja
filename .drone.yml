@@ -16,7 +16,7 @@ steps:
     pull: true
     group: build-static
     commands:
-      - yarn --frozen-lockfile
+      - yarn --frozen-lockfile --network-timeout 100000
       - yarn run lint
       - yarn run build
 
@@ -41,7 +41,7 @@ steps:
     pull: true
     group: build-static
     commands:
-      - yarn --frozen-lockfile
+      - yarn --frozen-lockfile --network-timeout 100000
       - yarn run lint
       - "echo '{\"VERSION\": \"'$(git describe --tags --always --abbrev=10 | sed 's/-/+/' | sed 's/^v//' | sed 's/-g/-/')'\"}' > src/version.json"
       - yarn run build
@@ -90,7 +90,7 @@ steps:
     pull: true
     group: build-static
     commands:
-      - yarn --frozen-lockfile
+      - yarn --frozen-lockfile --network-timeout 100000
       - yarn run lint
       - "echo '{\"VERSION\": \"'$(git describe --tags --always --abbrev=10 | sed 's/-/+/' | sed 's/^v//' | sed 's/-g/-/')'\"}' > src/version.json"
       - yarn run build
