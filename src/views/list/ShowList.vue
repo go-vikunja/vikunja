@@ -73,6 +73,17 @@
 		methods: {
 			loadList() {
 
+				// This invalidates the loaded list at the kanban board which lets it reload its content when
+				// switched to it. This ensures updates done to tasks in the gantt or list views are consistently
+				// shown in all views while preventing reloads when closing a task popup.
+				// We don't do this for the table view because that does not change tasks.
+				if (
+					this.$route.name === 'list.list' ||
+					this.$route.name === 'list.gantt'
+				) {
+					this.$store.commit('kanban/setListId', 0)
+				}
+
 				// Don't load the list if we either already loaded it or aren't dealing with a list at all currently
 				if (this.$route.params.listId === this.listLoaded || typeof this.$route.params.listId === 'undefined') {
 					return
