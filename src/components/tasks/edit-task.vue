@@ -4,7 +4,7 @@
 			<label class="label" for="tasktext">Task Text</label>
 			<div class="control">
 				<input v-focus :class="{ 'disabled': taskService.loading}" :disabled="taskService.loading" class="input"
-					type="text" id="tasktext" placeholder="The task text is here..." v-model="taskEditTask.text" @change="editTaskSubmit()">
+					type="text" id="tasktext" placeholder="The task text is here..." v-model="taskEditTask.title" @change="editTaskSubmit()">
 			</div>
 		</div>
 		<div class="field">
