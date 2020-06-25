@@ -43,7 +43,10 @@
 		data() {
 			return {
 				task: {},
-				repeatAfter: {},
+				repeatAfter: {
+					amount: 0,
+					type: '',
+				},
 			}
 		},
 		props: {
@@ -61,7 +64,9 @@
 		},
 		mounted() {
 			this.task = this.value
-			this.repeatAfter = this.value.repeatAfter
+			if (typeof this.value.repeatAfter !== 'undefined') {
+				this.repeatAfter = this.value.repeatAfter
+			}
 		},
 		methods: {
 			updateData() {
