@@ -64,7 +64,7 @@
 					</span>
 				</p>
 				<p class="control">
-					<button class="button is-success" :disabled="newTaskText.length < 3" @click="addTask()">
+					<button class="button is-success" :disabled="newTaskText.length === 0" @click="addTask()">
 						<span class="icon is-small">
 							<icon icon="plus"/>
 						</span>
