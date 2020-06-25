@@ -58,7 +58,7 @@
 									#{{ task.index }}
 								</template>
 								<template v-else>
-									#{{ task.index }}
+									{{ task.identifier }}
 								</template>
 							</span>
 							<span

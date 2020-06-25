@@ -98,7 +98,14 @@
 			<tbody>
 			<tr v-for="t in tasks" :key="t.id">
 				<td v-if="activeColumns.id">
-					<router-link :to="{name: 'task.detail', params: { id: t.id }}">{{ t.id }}</router-link>
+					<router-link :to="{name: 'task.detail', params: { id: t.id }}">
+						<template v-if="t.identifier === ''">
+							#{{ t.index }}
+						</template>
+						<template v-else>
+							{{ t.identifier }}
+						</template>
+					</router-link>
 				</td>
 				<td v-if="activeColumns.done">
 					<div class="is-done" v-if="t.done">Done</div>
