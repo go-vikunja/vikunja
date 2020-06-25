@@ -20,6 +20,7 @@ import (
 	"code.vikunja.io/api/pkg/version"
 	"fmt"
 	"github.com/spf13/cobra"
+	"runtime"
 )
 
 func init() {
@@ -31,5 +32,6 @@ var versionCmd = &cobra.Command{
 	Short: "Print the version number of Vikunja",
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Printf("Vikunja api version %s\n", version.Version)
+		fmt.Printf("Built with %s\n", runtime.Version())
 	},
 }
