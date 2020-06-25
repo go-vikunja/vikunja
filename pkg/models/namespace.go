@@ -446,7 +446,7 @@ func (n *Namespace) Update() (err error) {
 
 	// We need to specify the cols we want to update here to be able to un-archive lists
 	colsToUpdate := []string{
-		"name",
+		"title",
 		"is_archived",
 		"hex_color",
 	}
