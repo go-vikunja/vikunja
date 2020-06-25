@@ -14,8 +14,18 @@
 						<img src="/images/logo-full-pride.svg" alt="Vikunja" v-if="(new Date()).getMonth() === 5"/>
 						<img src="/images/logo-full.svg" alt="Vikunja" v-else/>
 					</router-link>
+					<a
+							@click="menuActive = true"
+							class="menu-show-button"
+							:class="{'is-visible': !menuActive}"
+					>
+						<icon icon="bars"></icon>
+					</a>
 				</div>
-				<a @click="mobileMenuActive = true" class="mobilemenu-show-button" v-if="!mobileMenuActive">
+				<a
+						@click="menuActive = true"
+						class="menu-show-button"
+				>
 					<icon icon="bars"></icon>
 				</a>
 				<div class="list-title" v-if="currentList.id">
@@ -61,7 +71,7 @@
 				</div>
 			</nav>
 			<div v-if="userAuthenticated && (userInfo && userInfo.type === authTypes.USER)">
-				<a @click="mobileMenuActive = false" class="mobilemenu-hide-button" v-if="mobileMenuActive">
+				<a @click="menuActive = false" class="menu-hide-button" v-if="menuActive">
 					<icon icon="times"></icon>
 				</a>
 				<div
@@ -69,7 +79,7 @@
 						:class="{'has-background': background}"
 						:style="{'background-image': `url(${background})`}"
 				>
-					<div class="namespace-container" :class="{'is-active': mobileMenuActive}">
+					<div class="namespace-container" :class="{'is-active': menuActive}">
 						<div class="menu top-menu">
 							<router-link :to="{name: 'home'}" class="logo">
 								<img src="/images/logo-full.svg" alt="Vikunja"/>
@@ -125,6 +135,7 @@
 								</li>
 							</ul>
 						</div>
+						<a @click="menuActive = false" class="collapse-menu-button">Collapse Menu</a>
 						<aside class="menu namespaces-lists">
 							<div class="spinner" :class="{ 'is-loading': namespaceService.loading}"></div>
 							<template v-for="n in namespaces">
@@ -193,8 +204,14 @@
 						</aside>
 						<a class="menu-bottom-link" target="_blank" href="https://vikunja.io">Powered by Vikunja</a>
 					</div>
-					<div class="app-content" :class="{'fullpage-overlay': fullpage}">
-						<a class="mobile-overlay" v-if="mobileMenuActive" @click="mobileMenuActive = false"></a>
+					<div
+							class="app-content"
+							:class="{
+								'fullpage-overlay': fullpage,
+								'is-menu-enabled': menuActive,
+							}"
+					>
+						<a class="mobile-overlay" v-if="menuActive" @click="menuActive = false"></a>
 						<transition name="fade">
 							<router-view/>
 						</transition>
@@ -273,7 +290,7 @@
 		data() {
 			return {
 				namespaceService: NamespaceService,
-				mobileMenuActive: false,
+				menuActive: true,
 				currentDate: new Date(),
 				userMenuActive: false,
 				authTypes: authTypes,
@@ -339,6 +356,11 @@
 				)
 			}
 
+			// Hide the menu by default on mobile
+			if (window.innerWidth < 770) {
+				this.menuActive = false
+			}
+
 			// Try renewing the token every time vikunja is loaded initially
 			// (When opening the browser the focus event is not fired)
 			this.$store.dispatch('auth/renewToken')
@@ -402,8 +424,12 @@
 				}
 
 				this.loadNamespacesIfNeeded(e)
-				this.mobileMenuActive = false
 				this.userMenuActive = false
+
+				// If the menu is active on desktop, don't hide it because that would confuse the user
+				if (window.innerWidth < 770) {
+					this.menuActive = false
+				}
 
 				// Reset the current list highlight in menu if the current list is not list related.
 				if (

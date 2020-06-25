@@ -7,7 +7,10 @@
   .app-content {
     padding: $navbar-height + 1.5rem 1.5em 0 1.5em;
     z-index: 2;
-    margin-left: 17vw;
+
+    &.is-menu-enabled {
+      margin-left: 17vw;
+    }
 
     @media screen and (max-width: $tablet) {
       margin-left: 0;

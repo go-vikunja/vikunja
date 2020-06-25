@@ -14,6 +14,11 @@
     box-shadow: $navbar-dropdown-boxed-shadow;
     top: 101%;
   }
+
+  .navbar-brand {
+    display: flex;
+    align-items: center;
+  }
 }
 
 .navbar.main-theme {
@@ -113,15 +118,30 @@
     overflow-x: auto;
     width: 17vw;
 
-    @media screen and (max-width: $tablet) {
-      padding: 0 0 1em;
-      left: -147vw;
-      top: 0;
-      bottom: 0;
-      width: 70vw;
+    padding: 0 0 1em;
+    left: -147vw;
+    bottom: 0;
 
-      &.is-active {
-        left: 0;
+    @media screen and (max-width: $tablet) {
+      top: 0;
+      width: 70vw;
+    }
+
+    &.is-active {
+      left: 0;
+    }
+
+    .collapse-menu-button {
+      font-size: .75rem;
+      color: $grey;
+      text-align: center;
+      display: block;
+      width: 100%;
+      margin: $navbar-padding / 2 0 $navbar-padding;
+      cursor: pointer;
+
+      @media screen and (max-width: $tablet) {
+        display: none;
       }
     }
 
@@ -270,7 +290,7 @@
     }
 
     .top-menu {
-      margin: $navbar-padding / 2 0 $navbar-padding;
+      margin-top: $navbar-padding / 2;
 
       .menu-list {
         li {
@@ -326,7 +346,7 @@
   }
 }
 
-.mobilemenu-hide-button, .mobilemenu-show-button {
+.menu-hide-button, .menu-show-button {
   display: none;
   z-index: 31;
   font-weight: bold;
@@ -339,7 +359,7 @@
   }
 }
 
-.mobilemenu-hide-button {
+.menu-hide-button {
   position: fixed;
 
   &:hover, &:focus {
@@ -361,13 +381,13 @@
 }
 
 @media screen and (max-width: $tablet) {
-  .mobilemenu-hide-button {
+  .menu-hide-button {
     display: block;
     top: $hamburger-menu-icon-spacing;
     right: $hamburger-menu-icon-spacing;
   }
 
-  .mobilemenu-show-button {
+  .menu-show-button {
     display: block;
     margin-left: $hamburger-menu-icon-spacing;
   }
@@ -380,6 +400,10 @@
   .navbar.is-dark .navbar-brand > .navbar-item {
     margin: 0 auto;
   }
+}
+
+.menu-show-button.is-visible {
+  display: block;
 }
 
 .logout-icon {
