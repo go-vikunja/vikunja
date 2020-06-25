@@ -59,7 +59,9 @@
 		watch: {
 			value(newVal) {
 				this.task = newVal
-				this.repeatAfter = newVal.repeatAfter
+				if (typeof newVal.repeatAfter !== 'undefined') {
+					this.repeatAfter = newVal.repeatAfter
+				}
 			},
 		},
 		mounted() {
