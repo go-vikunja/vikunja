@@ -26,6 +26,7 @@ import (
 	"code.vikunja.io/web"
 	"encoding/json"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -196,7 +197,7 @@ func (p *Provider) Search(search string, page int64) (result []*background.Image
 	}
 
 	searchResult := &SearchResult{}
-	err = doGet("search/photos?query="+search+"&page="+strconv.FormatInt(page, 10)+"&per_page=25", &searchResult)
+	err = doGet("search/photos?query="+url.QueryEscape(search)+"&page="+strconv.FormatInt(page, 10)+"&per_page=25", &searchResult)
 	if err != nil {
 		return
 	}
