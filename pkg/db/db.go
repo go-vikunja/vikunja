@@ -172,7 +172,8 @@ func initSqliteEngine() (engine *xorm.Engine, err error) {
 	if err != nil {
 		return nil, fmt.Errorf("could not open database file [uid=%d, gid=%d]: %s", os.Getuid(), os.Getgid(), err)
 	}
-	_ = file.Close() // We directly close the file because we only want to check if it is writable. It will be reopened lazily later by xorm.
+	_ = file.Close()    // We directly close the file because we only want to check if it is writable. It will be reopened lazily later by xorm.
+	_ = os.Remove(path) // Remove the file to not prevent the db from creating another one
 
 	return xorm.NewEngine("sqlite3", path)
 }
