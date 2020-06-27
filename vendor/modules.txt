@@ -1,7 +1,3 @@
-# 4d63.com/embedfiles v1.0.0
-4d63.com/embedfiles
-# 4d63.com/tz v1.1.0
-4d63.com/tz
 # code.vikunja.io/web v0.0.0-20200618164749-a5f3d450d39a
 code.vikunja.io/web
 code.vikunja.io/web/handler
@@ -189,7 +185,7 @@ github.com/shurcooL/httpfs/path/vfspath
 github.com/shurcooL/httpfs/vfsutil
 # github.com/shurcooL/sanitized_anchor_name v1.0.0
 github.com/shurcooL/sanitized_anchor_name
-# github.com/shurcooL/vfsgen v0.0.0-20181202132449-6a9ea43bcacd
+# github.com/shurcooL/vfsgen v0.0.0-20200627165143-92b8a710ab6c
 github.com/shurcooL/vfsgen
 # github.com/spf13/afero v1.3.0
 github.com/spf13/afero

@@ -18,7 +18,7 @@ module code.vikunja.io/api
 
 require (
 	4d63.com/embedfiles v1.0.0 // indirect
-	4d63.com/tz v1.1.0
+	4d63.com/tz v1.1.0 // indirect
 	code.vikunja.io/web v0.0.0-20200618164749-a5f3d450d39a
 	gitea.com/xorm/xorm-redis-cache v0.2.0
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
@@ -46,7 +46,7 @@ require (
 	github.com/labstack/gommon v0.3.0
 	github.com/laurent22/ical-go v0.1.1-0.20181107184520-7e5d6ade8eef
 	github.com/lib/pq v1.7.0
-	github.com/magiconair/properties v1.8.1
+	github.com/magiconair/properties v1.8.1 // indirect
 	github.com/mailru/easyjson v0.7.0 // indirect
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible
 	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
@@ -59,7 +59,7 @@ require (
 	github.com/prometheus/client_golang v1.7.1
 	github.com/samedi/caldav-go v3.0.0+incompatible
 	github.com/shurcooL/httpfs v0.0.0-20190707220628-8d4bc4ba7749
-	github.com/shurcooL/vfsgen v0.0.0-20181202132449-6a9ea43bcacd
+	github.com/shurcooL/vfsgen v0.0.0-20200627165143-92b8a710ab6c
 	github.com/spf13/afero v1.3.0
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
