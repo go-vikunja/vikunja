@@ -62,14 +62,22 @@ func CreateDBEngine() (engine *xorm.Engine, err error) {
 		if err != nil {
 			return
 		}
-	} else {
+	} else if config.DatabaseType.GetString() == "sqlite" {
 		// Otherwise use sqlite
 		engine, err = initSqliteEngine()
 		if err != nil {
 			return
 		}
+	} else {
+		log.Fatalf("Unknown database type %s", config.DatabaseType.GetString())
 	}
 
+	engine.SetTZLocation(config.GetTimeZone()) // Vikunja's timezone
+	loc, err := time.LoadLocation("GMT")       // The db data timezone
+	if err != nil {
+		log.Fatalf("Error parsing time zone: %s", err)
+	}
+	engine.SetTZDatabase(loc)
 	engine.SetMapper(core.GonicMapper{})
 	logger := log.NewXormLogger("")
 	engine.SetLogger(logger)

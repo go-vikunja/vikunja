@@ -17,7 +17,6 @@
 package migration
 
 import (
-	"code.vikunja.io/api/pkg/timeutil"
 	"src.techknowlogick.com/xormigrate"
 	"xorm.io/xorm"
 )
@@ -28,8 +27,8 @@ type taskComments20200219183248 struct {
 	AuthorID int64  `xorm:"not null" json:"-"`
 	TaskID   int64  `xorm:"not null" json:"-" param:"task"`
 
-	Created timeutil.TimeStamp `xorm:"created"`
-	Updated timeutil.TimeStamp `xorm:"updated"`
+	Created int64 `xorm:"created"`
+	Updated int64 `xorm:"updated"`
 }
 
 func (s taskComments20200219183248) TableName() string {

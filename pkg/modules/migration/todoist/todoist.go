@@ -23,7 +23,6 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/migration"
-	"code.vikunja.io/api/pkg/timeutil"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
 	"encoding/json"
@@ -267,14 +266,14 @@ func convertTodoistToVikunja(sync *sync) (fullVikunjaHierachie []*models.Namespa
 	for _, i := range sync.Items {
 		task := &models.Task{
 			Title:   i.Content,
-			Created: timeutil.FromTime(i.DateAdded),
+			Created: i.DateAdded.In(config.GetTimeZone()),
 			Done:    i.Checked == 1,
 		}
 
 		// Only try to parse the task done at date if the task is actually done
 		// Sometimes weired things happen if we try to parse nil dates.
 		if task.Done {
-			task.DoneAt = timeutil.FromTime(i.DateCompleted)
+			task.DoneAt = i.DateCompleted.In(config.GetTimeZone())
 		}
 
 		// Todoist priorities only range from 1 (lowest) and max 4 (highest), so we need to make slight adjustments
@@ -288,7 +287,7 @@ func convertTodoistToVikunja(sync *sync) (fullVikunjaHierachie []*models.Namespa
 			if err != nil {
 				return nil, err
 			}
-			task.DueDate = timeutil.FromTime(dueDate)
+			task.DueDate = dueDate.In(config.GetTimeZone())
 		}
 
 		// Put all labels together from earlier
@@ -341,17 +340,16 @@ func convertTodoistToVikunja(sync *sync) (fullVikunjaHierachie []*models.Namespa
 
 		tasks[n.ItemID].Attachments = append(tasks[n.ItemID].Attachments, &models.TaskAttachment{
 			File: &files.File{
-				Name:        n.FileAttachment.FileName,
-				Mime:        n.FileAttachment.FileType,
-				Size:        uint64(n.FileAttachment.FileSize),
-				Created:     n.Posted,
-				CreatedUnix: timeutil.FromTime(n.Posted),
+				Name:    n.FileAttachment.FileName,
+				Mime:    n.FileAttachment.FileType,
+				Size:    uint64(n.FileAttachment.FileSize),
+				Created: n.Posted,
 				// We directly pass the file contents here to have a way to link the attachment to the file later.
 				// Because we don't have an ID for our task at this point of the migration, we cannot just throw all
 				// attachments in a slice and do the work of downloading and properly storing them later.
 				FileContent: buf.Bytes(),
 			},
-			Created: timeutil.FromTime(n.Posted),
+			Created: n.Posted,
 		})
 	}
 
@@ -375,7 +373,7 @@ func convertTodoistToVikunja(sync *sync) (fullVikunjaHierachie []*models.Namespa
 			return nil, err
 		}
 
-		tasks[r.ItemID].Reminders = append(tasks[r.ItemID].Reminders, timeutil.FromTime(date))
+		tasks[r.ItemID].Reminders = append(tasks[r.ItemID].Reminders, date.In(config.GetTimeZone()))
 	}
 
 	return []*models.NamespaceWithLists{

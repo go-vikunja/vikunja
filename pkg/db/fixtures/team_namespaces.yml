@@ -2,51 +2,51 @@
   team_id: 1
   namespace_id: 3
   right: 0
-  updated: 0
-  created: 0
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
 
 - id: 2
   team_id: 2
   namespace_id: 3
   right: 0
-  updated: 0
-  created: 0
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
 
 - id: 3
   team_id: 5
   namespace_id: 7
   right: 0
-  updated: 0
-  created: 0
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
 
 - id: 4
   team_id: 6
   namespace_id: 8
   right: 1
-  updated: 0
-  created: 0
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
 
 - id: 5
   team_id: 7
   namespace_id: 9
   right: 2
-  updated: 0
-  created: 0
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
 - id: 6
   team_id: 11
   namespace_id: 14
   right: 0
-  updated: 0
-  created: 0
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
 - id: 7
   team_id: 12
   namespace_id: 14
   right: 1
-  updated: 0
-  created: 0
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
 - id: 8
   team_id: 13
   namespace_id: 14
   right: 2
-  updated: 0
-  created: 0
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12

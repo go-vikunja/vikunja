@@ -22,6 +22,7 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	_ "github.com/go-sql-driver/mysql" // Because.
 	_ "github.com/lib/pq"              // Because.
+	"time"
 	"xorm.io/xorm"
 
 	_ "github.com/mattn/go-sqlite3" // Because.
@@ -29,6 +30,9 @@ import (
 
 var (
 	x *xorm.Engine
+
+	testCreatedTime time.Time
+	testUpdatedTime time.Time
 )
 
 // GetTables returns all structs which are also a table.

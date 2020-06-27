@@ -20,7 +20,6 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/models"
-	"code.vikunja.io/api/pkg/timeutil"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/d4l3k/messagediff.v1"
 	"io/ioutil"
@@ -35,12 +34,16 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 
 	time1, err := time.Parse(time.RFC3339Nano, "2014-09-26T08:25:05Z")
 	assert.NoError(t, err)
+	time1 = time1.In(config.GetTimeZone())
 	time3, err := time.Parse(time.RFC3339Nano, "2014-10-21T08:25:05Z")
 	assert.NoError(t, err)
+	time3 = time3.In(config.GetTimeZone())
 	dueTime, err := time.Parse(time.RFC3339Nano, "2020-05-31T00:00:00Z")
 	assert.NoError(t, err)
-	nilTime, err := time.Parse(time.RFC3339Nano, "1970-01-01T00:00:00Z")
+	dueTime = dueTime.In(config.GetTimeZone())
+	nilTime, err := time.Parse(time.RFC3339Nano, "0001-01-01T00:00:00Z")
 	assert.NoError(t, err)
+	//nilTime = nilTime.In(config.GetTimeZone())
 	exampleFile, err := ioutil.ReadFile(config.ServiceRootpath.GetString() + "/pkg/modules/migration/wunderlist/testimage.jpg")
 	assert.NoError(t, err)
 
@@ -344,68 +347,68 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 							Title:       "Task400000000",
 							Description: "Lorem Ipsum dolor sit amet",
 							Done:        false,
-							Created:     timeutil.FromTime(time1),
-							Reminders: []timeutil.TimeStamp{
-								timeutil.FromTime(time.Date(2020, time.June, 15, 0, 0, 0, 0, time.UTC)),
-								timeutil.FromTime(time.Date(2020, time.June, 16, 0, 0, 0, 0, time.UTC)),
+							Created:     time1,
+							Reminders: []time.Time{
+								time.Date(2020, time.June, 15, 0, 0, 0, 0, time.UTC).In(config.GetTimeZone()),
+								time.Date(2020, time.June, 16, 0, 0, 0, 0, time.UTC).In(config.GetTimeZone()),
 							},
 						},
 						{
 							Title:       "Task400000001",
 							Description: "Lorem Ipsum dolor sit amet",
 							Done:        false,
-							Created:     timeutil.FromTime(time1),
+							Created:     time1,
 						},
 						{
 							Title:   "Task400000002",
 							Done:    false,
-							Created: timeutil.FromTime(time1),
-							Reminders: []timeutil.TimeStamp{
-								timeutil.FromTime(time.Date(2020, time.July, 15, 0, 0, 0, 0, time.UTC)),
+							Created: time1,
+							Reminders: []time.Time{
+								time.Date(2020, time.July, 15, 0, 0, 0, 0, time.UTC).In(config.GetTimeZone()),
 							},
 						},
 						{
 							Title:       "Task400000003",
 							Description: "Lorem Ipsum dolor sit amet",
 							Done:        true,
-							DueDate:     timeutil.FromTime(dueTime),
-							Created:     timeutil.FromTime(time1),
-							DoneAt:      timeutil.FromTime(time3),
+							DueDate:     dueTime,
+							Created:     time1,
+							DoneAt:      time3,
 							Labels:      vikunjaLabels,
-							Reminders: []timeutil.TimeStamp{
-								timeutil.FromTime(time.Date(2020, time.June, 15, 0, 0, 0, 0, time.UTC)),
+							Reminders: []time.Time{
+								time.Date(2020, time.June, 15, 0, 0, 0, 0, time.UTC).In(config.GetTimeZone()),
 							},
 						},
 						{
 							Title:   "Task400000004",
 							Done:    false,
-							Created: timeutil.FromTime(time1),
+							Created: time1,
 							Labels:  vikunjaLabels,
 						},
 						{
 							Title:   "Task400000005",
 							Done:    true,
-							DueDate: timeutil.FromTime(dueTime),
-							Created: timeutil.FromTime(time1),
-							DoneAt:  timeutil.FromTime(time3),
-							Reminders: []timeutil.TimeStamp{
-								timeutil.FromTime(time.Date(2020, time.June, 15, 0, 0, 0, 0, time.UTC)),
+							DueDate: dueTime,
+							Created: time1,
+							DoneAt:  time3,
+							Reminders: []time.Time{
+								time.Date(2020, time.June, 15, 0, 0, 0, 0, time.UTC).In(config.GetTimeZone()),
 							},
 						},
 						{
 							Title:   "Task400000006",
 							Done:    true,
-							DueDate: timeutil.FromTime(dueTime),
-							Created: timeutil.FromTime(time1),
-							DoneAt:  timeutil.FromTime(time3),
+							DueDate: dueTime,
+							Created: time1,
+							DoneAt:  time3,
 							RelatedTasks: map[models.RelationKind][]*models.Task{
 								models.RelationKindSubtask: {
 									{
 										Title:    "Task with parent",
 										Done:     false,
 										Priority: 2,
-										Created:  timeutil.FromTime(time1),
-										DoneAt:   timeutil.FromTime(nilTime),
+										Created:  time1,
+										DoneAt:   nilTime,
 									},
 								},
 							},
@@ -414,34 +417,34 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 							Title:    "Task with parent",
 							Done:     false,
 							Priority: 2,
-							Created:  timeutil.FromTime(time1),
-							DoneAt:   timeutil.FromTime(nilTime),
+							Created:  time1,
+							DoneAt:   nilTime,
 						},
 						{
 							Title:   "Task400000106",
 							Done:    true,
-							DueDate: timeutil.FromTime(dueTime),
-							Created: timeutil.FromTime(time1),
-							DoneAt:  timeutil.FromTime(time3),
+							DueDate: dueTime,
+							Created: time1,
+							DoneAt:  time3,
 							Labels:  vikunjaLabels,
 						},
 						{
 							Title:   "Task400000107",
 							Done:    true,
-							Created: timeutil.FromTime(time1),
-							DoneAt:  timeutil.FromTime(time3),
+							Created: time1,
+							DoneAt:  time3,
 						},
 						{
 							Title:   "Task400000108",
 							Done:    true,
-							Created: timeutil.FromTime(time1),
-							DoneAt:  timeutil.FromTime(time3),
+							Created: time1,
+							DoneAt:  time3,
 						},
 						{
 							Title:   "Task400000109",
 							Done:    true,
-							Created: timeutil.FromTime(time1),
-							DoneAt:  timeutil.FromTime(time3),
+							Created: time1,
+							DoneAt:  time3,
 						},
 					},
 				},
@@ -453,35 +456,35 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 						{
 							Title:   "Task400000007",
 							Done:    false,
-							DueDate: timeutil.FromTime(dueTime),
-							Created: timeutil.FromTime(time1),
+							DueDate: dueTime,
+							Created: time1,
 						},
 						{
 							Title:   "Task400000008",
 							Done:    false,
-							DueDate: timeutil.FromTime(dueTime),
-							Created: timeutil.FromTime(time1),
+							DueDate: dueTime,
+							Created: time1,
 						},
 						{
 							Title:   "Task400000009",
 							Done:    false,
-							Created: timeutil.FromTime(time1),
-							Reminders: []timeutil.TimeStamp{
-								timeutil.FromTime(time.Date(2020, time.June, 15, 0, 0, 0, 0, time.UTC)),
+							Created: time1,
+							Reminders: []time.Time{
+								time.Date(2020, time.June, 15, 0, 0, 0, 0, time.UTC).In(config.GetTimeZone()),
 							},
 						},
 						{
 							Title:       "Task400000010",
 							Description: "Lorem Ipsum dolor sit amet",
 							Done:        true,
-							Created:     timeutil.FromTime(time1),
-							DoneAt:      timeutil.FromTime(time3),
+							Created:     time1,
+							DoneAt:      time3,
 						},
 						{
 							Title:       "Task400000101",
 							Description: "Lorem Ipsum dolor sit amet",
 							Done:        false,
-							Created:     timeutil.FromTime(time1),
+							Created:     time1,
 							Attachments: []*models.TaskAttachment{
 								{
 									File: &files.File{
@@ -489,37 +492,36 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 										Mime:        "text/plain",
 										Size:        12345,
 										Created:     time1,
-										CreatedUnix: timeutil.FromTime(time1),
 										FileContent: exampleFile,
 									},
-									Created: timeutil.FromTime(time1),
+									Created: time1,
 								},
 							},
 						},
 						{
 							Title:   "Task400000102",
 							Done:    false,
-							DueDate: timeutil.FromTime(dueTime),
-							Created: timeutil.FromTime(time1),
+							DueDate: dueTime,
+							Created: time1,
 							Labels:  vikunjaLabels,
 						},
 						{
 							Title:   "Task400000103",
 							Done:    false,
-							Created: timeutil.FromTime(time1),
+							Created: time1,
 							Labels:  vikunjaLabels,
 						},
 						{
 							Title:   "Task400000104",
 							Done:    false,
-							Created: timeutil.FromTime(time1),
+							Created: time1,
 							Labels:  vikunjaLabels,
 						},
 						{
 							Title:   "Task400000105",
 							Done:    false,
-							DueDate: timeutil.FromTime(dueTime),
-							Created: timeutil.FromTime(time1),
+							DueDate: dueTime,
+							Created: time1,
 							Labels:  vikunjaLabels,
 						},
 					},
@@ -532,8 +534,8 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 						{
 							Title:   "Task400000111",
 							Done:    true,
-							Created: timeutil.FromTime(time1),
-							DoneAt:  timeutil.FromTime(time3),
+							Created: time1,
+							DoneAt:  time3,
 						},
 					},
 				},

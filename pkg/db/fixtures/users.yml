@@ -4,31 +4,31 @@
   password: '$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.' # 1234
   email: 'user1@example.com'
   is_active: true
-  updated: 0
-  created: 0
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
 -
   id: 2
   username: 'user2'
   password: '$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.' # 1234
   email: 'user2@example.com'
-  updated: 0
-  created: 0
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
 -
   id: 3
   username: 'user3'
   password: '$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.' # 1234
   email: 'user3@example.com'
   password_reset_token: passwordresettesttoken
-  updated: 0
-  created: 0
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
 -
   id: 4
   username: 'user4'
   password: '$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.' # 1234
   email: 'user4@example.com'
   email_confirm_token: tiepiQueed8ahc7zeeFe1eveiy4Ein8osooxegiephauph2Ael
-  updated: 0
-  created: 0
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
 -
   id: 5
   username: 'user5'
@@ -36,62 +36,62 @@
   email: 'user5@example.com'
   email_confirm_token: tiepiQueed8ahc7zeeFe1eveiy4Ein8osooxegiephauph2Ael
   is_active: false
-  updated: 0
-  created: 0
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
 # This use is used to create a whole bunch of lists which are then shared directly with a user
 - id: 6
   username: 'user6'
   password: '$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.' # 1234
   email: 'user6@example.com'
   is_active: true
-  updated: 0
-  created: 0
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
 - id: 7
   username: 'user7'
   password: '$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.' # 1234
   email: 'user7@example.com'
   is_active: true
-  updated: 0
-  created: 0
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
 - id: 8
   username: 'user8'
   password: '$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.' # 1234
   email: 'user8@example.com'
   is_active: true
-  updated: 0
-  created: 0
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
 - id: 9
   username: 'user9'
   password: '$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.' # 1234
   email: 'user9@example.com'
   is_active: true
-  updated: 0
-  created: 0
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
 - id: 10
   username: 'user10'
   password: '$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.' # 1234
   email: 'user10@example.com'
   is_active: true
-  updated: 0
-  created: 0
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
 - id: 11
   username: 'user11'
   password: '$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.' # 1234
   email: 'user11@example.com'
   is_active: true
-  updated: 0
-  created: 0
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
 - id: 12
   username: 'user12'
   password: '$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.' # 1234
   email: 'user12@example.com'
   is_active: true
-  updated: 0
-  created: 0
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
 - id: 13
   username: 'user13'
   password: '$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.' # 1234
   email: 'user14@example.com'
   is_active: true
-  updated: 0
-  created: 0
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12

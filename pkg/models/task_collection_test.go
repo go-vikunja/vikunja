@@ -17,13 +17,14 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/files"
-	"code.vikunja.io/api/pkg/timeutil"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
 	"gopkg.in/d4l3k/messagediff.v1"
 	"testing"
+	"time"
 )
 
 func TestTaskCollection_ReadAll(t *testing.T) {
@@ -33,18 +34,26 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		Username: "user1",
 		Password: "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
 		IsActive: true,
+		Created:  testCreatedTime,
+		Updated:  testUpdatedTime,
 	}
 	user2 := &user.User{
 		ID:       2,
 		Username: "user2",
 		Password: "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
+		Created:  testCreatedTime,
+		Updated:  testUpdatedTime,
 	}
 	user6 := &user.User{
 		ID:       6,
 		Username: "user6",
 		Password: "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
 		IsActive: true,
+		Created:  testCreatedTime,
+		Updated:  testUpdatedTime,
 	}
+
+	loc := config.GetTimeZone()
 
 	// We use individual variables for the tasks here to be able to rearrange or remove ones more easily
 	task1 := &Task{
@@ -63,8 +72,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				Title:       "Label #4 - visible via other task",
 				CreatedByID: 2,
 				CreatedBy:   user2,
-				Updated:     0,
-				Created:     0,
+				Created:     testCreatedTime,
+				Updated:     testUpdatedTime,
 			},
 		},
 		RelatedTasks: map[RelationKind][]*Task{
@@ -76,8 +85,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 					CreatedByID: 1,
 					ListID:      1,
 					BucketID:    1,
-					Created:     1543626724,
-					Updated:     1543626724,
+					Created:     time.Unix(1543626724, 0).In(loc),
+					Updated:     time.Unix(1543626724, 0).In(loc),
 				},
 			},
 		},
@@ -88,11 +97,12 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				FileID:      1,
 				CreatedByID: 1,
 				CreatedBy:   user1,
+				Created:     testCreatedTime,
 				File: &files.File{
 					ID:          1,
 					Name:        "test",
 					Size:        100,
-					CreatedUnix: 1570998791,
+					Created:     time.Unix(1570998791, 0).In(loc),
 					CreatedByID: 1,
 				},
 			},
@@ -102,10 +112,11 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				FileID:      9999,
 				CreatedByID: 1,
 				CreatedBy:   user1,
+				Created:     testCreatedTime,
 			},
 		},
-		Created: 1543626724,
-		Updated: 1543626724,
+		Created: time.Unix(1543626724, 0).In(loc),
+		Updated: time.Unix(1543626724, 0).In(loc),
 	}
 	task2 := &Task{
 		ID:          2,
@@ -123,13 +134,13 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				Title:       "Label #4 - visible via other task",
 				CreatedByID: 2,
 				CreatedBy:   user2,
-				Updated:     0,
-				Created:     0,
+				Created:     testCreatedTime,
+				Updated:     testUpdatedTime,
 			},
 		},
 		RelatedTasks: map[RelationKind][]*Task{},
-		Created:      1543626724,
-		Updated:      1543626724,
+		Created:      time.Unix(1543626724, 0).In(loc),
+		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
 	task3 := &Task{
 		ID:           3,
@@ -140,8 +151,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user1,
 		ListID:       1,
 		RelatedTasks: map[RelationKind][]*Task{},
-		Created:      1543626724,
-		Updated:      1543626724,
+		Created:      time.Unix(1543626724, 0).In(loc),
+		Updated:      time.Unix(1543626724, 0).In(loc),
 		Priority:     100,
 		BucketID:     2,
 	}
@@ -154,8 +165,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user1,
 		ListID:       1,
 		RelatedTasks: map[RelationKind][]*Task{},
-		Created:      1543626724,
-		Updated:      1543626724,
+		Created:      time.Unix(1543626724, 0).In(loc),
+		Updated:      time.Unix(1543626724, 0).In(loc),
 		Priority:     1,
 		BucketID:     2,
 	}
@@ -168,9 +179,9 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user1,
 		ListID:       1,
 		RelatedTasks: map[RelationKind][]*Task{},
-		Created:      1543626724,
-		Updated:      1543626724,
-		DueDate:      1543636724,
+		Created:      time.Unix(1543626724, 0).In(loc),
+		Updated:      time.Unix(1543626724, 0).In(loc),
+		DueDate:      time.Unix(1543636724, 0).In(loc),
 		BucketID:     2,
 	}
 	task6 := &Task{
@@ -182,9 +193,9 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user1,
 		ListID:       1,
 		RelatedTasks: map[RelationKind][]*Task{},
-		Created:      1543626724,
-		Updated:      1543626724,
-		DueDate:      1543616724,
+		Created:      time.Unix(1543626724, 0).In(loc),
+		Updated:      time.Unix(1543626724, 0).In(loc),
+		DueDate:      time.Unix(1543616724, 0).In(loc),
 		BucketID:     3,
 	}
 	task7 := &Task{
@@ -196,9 +207,9 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user1,
 		ListID:       1,
 		RelatedTasks: map[RelationKind][]*Task{},
-		Created:      1543626724,
-		Updated:      1543626724,
-		StartDate:    1544600000,
+		Created:      time.Unix(1543626724, 0).In(loc),
+		Updated:      time.Unix(1543626724, 0).In(loc),
+		StartDate:    time.Unix(1544600000, 0).In(loc),
 		BucketID:     3,
 	}
 	task8 := &Task{
@@ -210,9 +221,9 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user1,
 		ListID:       1,
 		RelatedTasks: map[RelationKind][]*Task{},
-		Created:      1543626724,
-		Updated:      1543626724,
-		EndDate:      1544700000,
+		Created:      time.Unix(1543626724, 0).In(loc),
+		Updated:      time.Unix(1543626724, 0).In(loc),
+		EndDate:      time.Unix(1544700000, 0).In(loc),
 		BucketID:     3,
 	}
 	task9 := &Task{
@@ -225,10 +236,10 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		ListID:       1,
 		RelatedTasks: map[RelationKind][]*Task{},
 		BucketID:     1,
-		Created:      1543626724,
-		Updated:      1543626724,
-		StartDate:    1544600000,
-		EndDate:      1544700000,
+		Created:      time.Unix(1543626724, 0).In(loc),
+		Updated:      time.Unix(1543626724, 0).In(loc),
+		StartDate:    time.Unix(1544600000, 0).In(loc),
+		EndDate:      time.Unix(1544700000, 0).In(loc),
 	}
 	task10 := &Task{
 		ID:           10,
@@ -240,8 +251,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		ListID:       1,
 		RelatedTasks: map[RelationKind][]*Task{},
 		BucketID:     1,
-		Created:      1543626724,
-		Updated:      1543626724,
+		Created:      time.Unix(1543626724, 0).In(loc),
+		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
 	task11 := &Task{
 		ID:           11,
@@ -253,8 +264,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		ListID:       1,
 		RelatedTasks: map[RelationKind][]*Task{},
 		BucketID:     1,
-		Created:      1543626724,
-		Updated:      1543626724,
+		Created:      time.Unix(1543626724, 0).In(loc),
+		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
 	task12 := &Task{
 		ID:           12,
@@ -266,8 +277,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		ListID:       1,
 		RelatedTasks: map[RelationKind][]*Task{},
 		BucketID:     1,
-		Created:      1543626724,
-		Updated:      1543626724,
+		Created:      time.Unix(1543626724, 0).In(loc),
+		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
 	task15 := &Task{
 		ID:           15,
@@ -279,8 +290,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		ListID:       6,
 		RelatedTasks: map[RelationKind][]*Task{},
 		BucketID:     6,
-		Created:      1543626724,
-		Updated:      1543626724,
+		Created:      time.Unix(1543626724, 0).In(loc),
+		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
 	task16 := &Task{
 		ID:           16,
@@ -292,8 +303,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		ListID:       7,
 		RelatedTasks: map[RelationKind][]*Task{},
 		BucketID:     7,
-		Created:      1543626724,
-		Updated:      1543626724,
+		Created:      time.Unix(1543626724, 0).In(loc),
+		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
 	task17 := &Task{
 		ID:           17,
@@ -305,8 +316,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		ListID:       8,
 		RelatedTasks: map[RelationKind][]*Task{},
 		BucketID:     8,
-		Created:      1543626724,
-		Updated:      1543626724,
+		Created:      time.Unix(1543626724, 0).In(loc),
+		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
 	task18 := &Task{
 		ID:           18,
@@ -318,8 +329,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		ListID:       9,
 		RelatedTasks: map[RelationKind][]*Task{},
 		BucketID:     9,
-		Created:      1543626724,
-		Updated:      1543626724,
+		Created:      time.Unix(1543626724, 0).In(loc),
+		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
 	task19 := &Task{
 		ID:           19,
@@ -331,8 +342,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		ListID:       10,
 		RelatedTasks: map[RelationKind][]*Task{},
 		BucketID:     10,
-		Created:      1543626724,
-		Updated:      1543626724,
+		Created:      time.Unix(1543626724, 0).In(loc),
+		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
 	task20 := &Task{
 		ID:           20,
@@ -344,8 +355,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		ListID:       11,
 		RelatedTasks: map[RelationKind][]*Task{},
 		BucketID:     11,
-		Created:      1543626724,
-		Updated:      1543626724,
+		Created:      time.Unix(1543626724, 0).In(loc),
+		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
 	task21 := &Task{
 		ID:           21,
@@ -357,8 +368,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		ListID:       12,
 		RelatedTasks: map[RelationKind][]*Task{},
 		BucketID:     12,
-		Created:      1543626724,
-		Updated:      1543626724,
+		Created:      time.Unix(1543626724, 0).In(loc),
+		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
 	task22 := &Task{
 		ID:           22,
@@ -370,8 +381,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		ListID:       13,
 		RelatedTasks: map[RelationKind][]*Task{},
 		BucketID:     13,
-		Created:      1543626724,
-		Updated:      1543626724,
+		Created:      time.Unix(1543626724, 0).In(loc),
+		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
 	task23 := &Task{
 		ID:           23,
@@ -383,8 +394,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		ListID:       14,
 		RelatedTasks: map[RelationKind][]*Task{},
 		BucketID:     14,
-		Created:      1543626724,
-		Updated:      1543626724,
+		Created:      time.Unix(1543626724, 0).In(loc),
+		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
 	task24 := &Task{
 		ID:           24,
@@ -396,8 +407,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		ListID:       15,
 		RelatedTasks: map[RelationKind][]*Task{},
 		BucketID:     15,
-		Created:      1543626724,
-		Updated:      1543626724,
+		Created:      time.Unix(1543626724, 0).In(loc),
+		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
 	task25 := &Task{
 		ID:           25,
@@ -409,8 +420,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		ListID:       16,
 		RelatedTasks: map[RelationKind][]*Task{},
 		BucketID:     16,
-		Created:      1543626724,
-		Updated:      1543626724,
+		Created:      time.Unix(1543626724, 0).In(loc),
+		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
 	task26 := &Task{
 		ID:           26,
@@ -422,22 +433,25 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		ListID:       17,
 		RelatedTasks: map[RelationKind][]*Task{},
 		BucketID:     17,
-		Created:      1543626724,
-		Updated:      1543626724,
+		Created:      time.Unix(1543626724, 0).In(loc),
+		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
 	task27 := &Task{
-		ID:           27,
-		Title:        "task #27 with reminders",
-		Identifier:   "test1-12",
-		Index:        12,
-		CreatedByID:  1,
-		CreatedBy:    user1,
-		Reminders:    []timeutil.TimeStamp{1543626724, 1543626824},
+		ID:          27,
+		Title:       "task #27 with reminders",
+		Identifier:  "test1-12",
+		Index:       12,
+		CreatedByID: 1,
+		CreatedBy:   user1,
+		Reminders: []time.Time{
+			time.Unix(1543626724, 0).In(loc),
+			time.Unix(1543626824, 0).In(loc),
+		},
 		ListID:       1,
 		BucketID:     1,
 		RelatedTasks: map[RelationKind][]*Task{},
-		Created:      1543626724,
-		Updated:      1543626724,
+		Created:      time.Unix(1543626724, 0).In(loc),
+		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
 	task28 := &Task{
 		ID:           28,
@@ -450,8 +464,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		RelatedTasks: map[RelationKind][]*Task{},
 		RepeatAfter:  3600,
 		BucketID:     1,
-		Created:      1543626724,
-		Updated:      1543626724,
+		Created:      time.Unix(1543626724, 0).In(loc),
+		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
 	task29 := &Task{
 		ID:          29,
@@ -470,15 +484,15 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 					Index:       1,
 					CreatedByID: 1,
 					ListID:      1,
-					Created:     1543626724,
-					Updated:     1543626724,
+					Created:     time.Unix(1543626724, 0).In(loc),
+					Updated:     time.Unix(1543626724, 0).In(loc),
 					BucketID:    1,
 				},
 			},
 		},
 		BucketID: 1,
-		Created:  1543626724,
-		Updated:  1543626724,
+		Created:  time.Unix(1543626724, 0).In(loc),
+		Updated:  time.Unix(1543626724, 0).In(loc),
 	}
 	task30 := &Task{
 		ID:          30,
@@ -494,8 +508,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		},
 		RelatedTasks: map[RelationKind][]*Task{},
 		BucketID:     1,
-		Created:      1543626724,
-		Updated:      1543626724,
+		Created:      time.Unix(1543626724, 0).In(loc),
+		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
 	task31 := &Task{
 		ID:           31,
@@ -508,8 +522,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		ListID:       1,
 		RelatedTasks: map[RelationKind][]*Task{},
 		BucketID:     1,
-		Created:      1543626724,
-		Updated:      1543626724,
+		Created:      time.Unix(1543626724, 0).In(loc),
+		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
 	task32 := &Task{
 		ID:           32,
@@ -521,8 +535,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		ListID:       3,
 		RelatedTasks: map[RelationKind][]*Task{},
 		BucketID:     21,
-		Created:      1543626724,
-		Updated:      1543626724,
+		Created:      time.Unix(1543626724, 0).In(loc),
+		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
 	task33 := &Task{
 		ID:           33,
@@ -535,8 +549,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		PercentDone:  0.5,
 		RelatedTasks: map[RelationKind][]*Task{},
 		BucketID:     1,
-		Created:      1543626724,
-		Updated:      1543626724,
+		Created:      time.Unix(1543626724, 0).In(loc),
+		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
 
 	type fields struct {
@@ -545,9 +559,10 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		SortBy  []string // Is a string, since this is the place where a query string comes from the user
 		OrderBy []string
 
-		FilterBy         []string
-		FilterValue      []string
-		FilterComparator []string
+		FilterBy           []string
+		FilterValue        []string
+		FilterComparator   []string
+		FilterIncludeNulls bool
 
 		CRUDable web.CRUDable
 		Rights   web.Rights
@@ -658,7 +673,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			name: "ReadAll Tasks with range",
 			fields: fields{
 				FilterBy:         []string{"start_date", "end_date"},
-				FilterValue:      []string{"1544500000", "1544700001"},
+				FilterValue:      []string{"2018-12-11T03:46:40+00:00", "2018-12-13T11:20:01+00:00"},
 				FilterComparator: []string{"greater", "less"},
 			},
 			args: defaultArgs,
@@ -673,7 +688,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			name: "ReadAll Tasks with different range",
 			fields: fields{
 				FilterBy:         []string{"start_date", "end_date"},
-				FilterValue:      []string{"1544700000", "1545000000"},
+				FilterValue:      []string{"2018-12-13T11:20:00+00:00", "2018-12-16T22:40:00+00:00"},
 				FilterComparator: []string{"greater", "less"},
 			},
 			args: defaultArgs,
@@ -687,7 +702,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			name: "ReadAll Tasks with range with start date only",
 			fields: fields{
 				FilterBy:         []string{"start_date"},
-				FilterValue:      []string{"1544600000"},
+				FilterValue:      []string{"2018-12-12T07:33:20+00:00"},
 				FilterComparator: []string{"greater"},
 			},
 			args:    defaultArgs,
@@ -698,7 +713,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			name: "ReadAll Tasks with range with start date only and greater equals",
 			fields: fields{
 				FilterBy:         []string{"start_date"},
-				FilterValue:      []string{"1544600000"},
+				FilterValue:      []string{"2018-12-12T07:33:20+00:00"},
 				FilterComparator: []string{"greater_equals"},
 			},
 			args: defaultArgs,
@@ -777,6 +792,50 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name: "range with nulls",
+			fields: fields{
+				FilterBy:           []string{"start_date", "end_date"},
+				FilterValue:        []string{"2018-12-11T03:46:40+00:00", "2018-12-13T11:20:01+00:00"},
+				FilterComparator:   []string{"greater", "less"},
+				FilterIncludeNulls: true,
+			},
+			args: defaultArgs,
+			want: []*Task{
+				task1, // has nil dates
+				task2, // has nil dates
+				task3, // has nil dates
+				task4, // has nil dates
+				task5, // has nil dates
+				task6, // has nil dates
+				task7,
+				task8,
+				task9,
+				task10, // has nil dates
+				task11, // has nil dates
+				task12, // has nil dates
+				task15, // has nil dates
+				task16, // has nil dates
+				task17, // has nil dates
+				task18, // has nil dates
+				task19, // has nil dates
+				task20, // has nil dates
+				task21, // has nil dates
+				task22, // has nil dates
+				task23, // has nil dates
+				task24, // has nil dates
+				task25, // has nil dates
+				task26, // has nil dates
+				task27, // has nil dates
+				task28, // has nil dates
+				task29, // has nil dates
+				task30, // has nil dates
+				task31, // has nil dates
+				task32, // has nil dates
+				task33, // has nil dates
+			},
+			wantErr: false,
+		},
 	}
 
 	for _, tt := range tests {
@@ -788,9 +847,10 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				SortBy:  tt.fields.SortBy,
 				OrderBy: tt.fields.OrderBy,
 
-				FilterBy:         tt.fields.FilterBy,
-				FilterValue:      tt.fields.FilterValue,
-				FilterComparator: tt.fields.FilterComparator,
+				FilterBy:           tt.fields.FilterBy,
+				FilterValue:        tt.fields.FilterValue,
+				FilterComparator:   tt.fields.FilterComparator,
+				FilterIncludeNulls: tt.fields.FilterIncludeNulls,
 
 				CRUDable: tt.fields.CRUDable,
 				Rights:   tt.fields.Rights,

@@ -20,11 +20,36 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/user"
+	"fmt"
 	"os"
 	"testing"
+	"time"
 )
 
+func setupTime() {
+	var err error
+	loc, err := time.LoadLocation("GMT")
+	if err != nil {
+		fmt.Printf("Error setting up time: %s", err)
+		os.Exit(1)
+	}
+	testCreatedTime, err = time.ParseInLocation(time.RFC3339Nano, "2018-12-01T15:13:12.0+00:00", loc)
+	if err != nil {
+		fmt.Printf("Error setting up time: %s", err)
+		os.Exit(1)
+	}
+	testCreatedTime = testCreatedTime.In(loc)
+	testUpdatedTime, err = time.ParseInLocation(time.RFC3339Nano, "2018-12-02T15:13:12.0+00:00", loc)
+	if err != nil {
+		fmt.Printf("Error setting up time: %s", err)
+		os.Exit(1)
+	}
+	testUpdatedTime = testUpdatedTime.In(loc)
+}
+
 func TestMain(m *testing.M) {
+
+	setupTime()
 
 	// Set default config
 	config.InitDefaultConfig()

@@ -734,6 +734,34 @@ func (err ErrInvalidTaskFilterConcatinator) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrInvalidTaskFilterValue represents an error where the provided task filter value is invalid
+type ErrInvalidTaskFilterValue struct {
+	Value string
+	Field string
+}
+
+// IsErrInvalidTaskFilterValue checks if an error is ErrInvalidTaskFilterValue.
+func IsErrInvalidTaskFilterValue(err error) bool {
+	_, ok := err.(ErrInvalidTaskFilterValue)
+	return ok
+}
+
+func (err ErrInvalidTaskFilterValue) Error() string {
+	return fmt.Sprintf("Task filter value is invalid [Value: %s, Field: %s]", err.Value, err.Field)
+}
+
+// ErrCodeInvalidTaskFilterValue holds the unique world-error code of this error
+const ErrCodeInvalidTaskFilterValue = 4019
+
+// HTTPError holds the http error description
+func (err ErrInvalidTaskFilterValue) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeInvalidTaskFilterValue,
+		Message:  fmt.Sprintf("The task filter value '%s' for field '%s' is invalid.", err.Value, err.Field),
+	}
+}
+
 // =================
 // Namespace errors
 // =================

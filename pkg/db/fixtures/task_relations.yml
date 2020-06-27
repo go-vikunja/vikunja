@@ -3,34 +3,34 @@
   other_task_id: 29
   relation_kind: 'subtask'
   created_by_id: 1
-  created: 0
+  created: 2018-12-01 15:13:12
 - id: 2
   task_id: 29
   other_task_id: 1
   relation_kind: 'parenttask'
   created_by_id: 1
-  created: 0
+  created: 2018-12-01 15:13:12
 - id: 3
   task_id: 35
   other_task_id: 1
   relation_kind: 'related'
   created_by_id: 1
-  created: 0
+  created: 2018-12-01 15:13:12
 - id: 4
   task_id: 35
   other_task_id: 1
   relation_kind: 'related'
   created_by_id: 1
-  created: 0
+  created: 2018-12-01 15:13:12
 - id: 5
   task_id: 36
   other_task_id: 1
   relation_kind: 'related'
   created_by_id: 1
-  created: 0
+  created: 2018-12-01 15:13:12
 - id: 6
   task_id: 36
   other_task_id: 1
   relation_kind: 'related'
   created_by_id: 1
-  created: 0
+  created: 2018-12-01 15:13:12

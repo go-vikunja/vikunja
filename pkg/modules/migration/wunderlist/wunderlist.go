@@ -23,7 +23,6 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/migration"
-	"code.vikunja.io/api/pkg/timeutil"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
 	"encoding/json"
@@ -145,7 +144,7 @@ func convertListForFolder(listID int, list *list, content *wunderlistContents) (
 
 	l := &models.List{
 		Title:   list.Title,
-		Created: timeutil.FromTime(list.CreatedAt),
+		Created: list.CreatedAt,
 	}
 
 	// Find all tasks belonging to this list and put them in
@@ -153,13 +152,13 @@ func convertListForFolder(listID int, list *list, content *wunderlistContents) (
 		if t.ListID == listID {
 			newTask := &models.Task{
 				Title:   t.Title,
-				Created: timeutil.FromTime(t.CreatedAt),
+				Created: t.CreatedAt,
 				Done:    t.Completed,
 			}
 
 			// Set Done At
 			if newTask.Done {
-				newTask.DoneAt = timeutil.FromTime(t.CompletedAt)
+				newTask.DoneAt = t.CompletedAt.In(config.GetTimeZone())
 			}
 
 			// Parse the due date
@@ -168,7 +167,7 @@ func convertListForFolder(listID int, list *list, content *wunderlistContents) (
 				if err != nil {
 					return nil, err
 				}
-				newTask.DueDate = timeutil.FromTime(dueDate)
+				newTask.DueDate = dueDate.In(config.GetTimeZone())
 			}
 
 			// Find related notes
@@ -195,17 +194,16 @@ func convertListForFolder(listID int, list *list, content *wunderlistContents) (
 
 					newTask.Attachments = append(newTask.Attachments, &models.TaskAttachment{
 						File: &files.File{
-							Name:        f.FileName,
-							Mime:        f.ContentType,
-							Size:        uint64(f.FileSize),
-							Created:     f.CreatedAt,
-							CreatedUnix: timeutil.FromTime(f.CreatedAt),
+							Name:    f.FileName,
+							Mime:    f.ContentType,
+							Size:    uint64(f.FileSize),
+							Created: f.CreatedAt,
 							// We directly pass the file contents here to have a way to link the attachment to the file later.
 							// Because we don't have an ID for our task at this point of the migration, we cannot just throw all
 							// attachments in a slice and do the work of downloading and properly storing them later.
 							FileContent: buf.Bytes(),
 						},
-						Created: timeutil.FromTime(f.CreatedAt),
+						Created: f.CreatedAt,
 					})
 				}
 			}
@@ -225,7 +223,7 @@ func convertListForFolder(listID int, list *list, content *wunderlistContents) (
 			// Reminders
 			for _, r := range content.reminders {
 				if r.TaskID == t.ID {
-					newTask.Reminders = append(newTask.Reminders, timeutil.FromTime(r.Date))
+					newTask.Reminders = append(newTask.Reminders, r.Date.In(config.GetTimeZone()))
 				}
 			}
 
@@ -248,8 +246,8 @@ func convertWunderlistToVikunja(content *wunderlistContents) (fullVikunjaHierach
 		namespace := &models.NamespaceWithLists{
 			Namespace: models.Namespace{
 				Title:   folder.Title,
-				Created: timeutil.FromTime(folder.CreatedAt),
-				Updated: timeutil.FromTime(folder.UpdatedAt),
+				Created: folder.CreatedAt,
+				Updated: folder.UpdatedAt,
 			},
 		}
 

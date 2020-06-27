@@ -18,12 +18,12 @@ package models
 
 import (
 	"code.vikunja.io/api/pkg/db"
-	"code.vikunja.io/api/pkg/timeutil"
 	"code.vikunja.io/api/pkg/user"
 	"gopkg.in/d4l3k/messagediff.v1"
 	"reflect"
 	"runtime"
 	"testing"
+	"time"
 
 	"code.vikunja.io/web"
 )
@@ -35,8 +35,8 @@ func TestListUser_Create(t *testing.T) {
 		Username string
 		ListID   int64
 		Right    Right
-		Created  timeutil.TimeStamp
-		Updated  timeutil.TimeStamp
+		Created  time.Time
+		Updated  time.Time
 		CRUDable web.CRUDable
 		Rights   web.Rights
 	}
@@ -136,8 +136,8 @@ func TestListUser_ReadAll(t *testing.T) {
 		UserID   int64
 		ListID   int64
 		Right    Right
-		Created  timeutil.TimeStamp
-		Updated  timeutil.TimeStamp
+		Created  time.Time
+		Updated  time.Time
 		CRUDable web.CRUDable
 		Rights   web.Rights
 	}
@@ -169,6 +169,8 @@ func TestListUser_ReadAll(t *testing.T) {
 						Username: "user1",
 						Password: "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
 						IsActive: true,
+						Created:  testCreatedTime,
+						Updated:  testUpdatedTime,
 					},
 					Right: RightRead,
 				},
@@ -177,6 +179,8 @@ func TestListUser_ReadAll(t *testing.T) {
 						ID:       2,
 						Username: "user2",
 						Password: "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
+						Created:  testCreatedTime,
+						Updated:  testUpdatedTime,
 					},
 					Right: RightRead,
 				},
@@ -228,8 +232,8 @@ func TestListUser_Update(t *testing.T) {
 		Username string
 		ListID   int64
 		Right    Right
-		Created  timeutil.TimeStamp
-		Updated  timeutil.TimeStamp
+		Created  time.Time
+		Updated  time.Time
 		CRUDable web.CRUDable
 		Rights   web.Rights
 	}
@@ -305,8 +309,8 @@ func TestListUser_Delete(t *testing.T) {
 		Username string
 		ListID   int64
 		Right    Right
-		Created  timeutil.TimeStamp
-		Updated  timeutil.TimeStamp
+		Created  time.Time
+		Updated  time.Time
 		CRUDable web.CRUDable
 		Rights   web.Rights
 	}

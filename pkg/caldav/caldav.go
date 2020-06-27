@@ -17,11 +17,12 @@
 package caldav
 
 import (
-	"code.vikunja.io/api/pkg/timeutil"
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -35,37 +36,37 @@ type Event struct {
 	UID         string
 	Alarms      []Alarm
 
-	Timestamp timeutil.TimeStamp
-	Start     timeutil.TimeStamp
-	End       timeutil.TimeStamp
+	Timestamp time.Time
+	Start     time.Time
+	End       time.Time
 }
 
 // Todo holds a single VTODO
 type Todo struct {
 	// Required
-	Timestamp timeutil.TimeStamp
+	Timestamp time.Time
 	UID       string
 
 	// Optional
 	Summary      string
 	Description  string
-	Completed    timeutil.TimeStamp
+	Completed    time.Time
 	Organizer    *user.User
 	Priority     int64 // 0-9, 1 is highest
 	RelatedToUID string
 
-	Start    timeutil.TimeStamp
-	End      timeutil.TimeStamp
-	DueDate  timeutil.TimeStamp
+	Start    time.Time
+	End      time.Time
+	DueDate  time.Time
 	Duration time.Duration
 
-	Created timeutil.TimeStamp
-	Updated timeutil.TimeStamp // last-mod
+	Created time.Time
+	Updated time.Time // last-mod
 }
 
 // Alarm holds infos about an alarm from a caldav event
 type Alarm struct {
-	Time        timeutil.TimeStamp
+	Time        time.Time
 	Description string
 }
 
@@ -141,11 +142,11 @@ UID:` + t.UID + `
 DTSTAMP:` + makeCalDavTimeFromTimeStamp(t.Timestamp) + `
 SUMMARY:` + t.Summary
 
-		if t.Start != 0 {
+		if t.Start.Unix() > 0 {
 			caldavtodos += `
 DTSTART: ` + makeCalDavTimeFromTimeStamp(t.Start)
 		}
-		if t.End != 0 {
+		if t.End.Unix() > 0 {
 			caldavtodos += `
 DTEND: ` + makeCalDavTimeFromTimeStamp(t.End)
 		}
@@ -153,7 +154,7 @@ DTEND: ` + makeCalDavTimeFromTimeStamp(t.End)
 			caldavtodos += `
 DESCRIPTION:` + t.Description
 		}
-		if t.Completed != 0 {
+		if t.Completed.Unix() > 0 {
 			caldavtodos += `
 COMPLETED: ` + makeCalDavTimeFromTimeStamp(t.Completed)
 		}
@@ -167,12 +168,12 @@ ORGANIZER;CN=:` + t.Organizer.Username
 RELATED-TO:` + t.RelatedToUID
 		}
 
-		if t.DueDate != 0 {
+		if t.DueDate.Unix() > 0 {
 			caldavtodos += `
 DUE:` + makeCalDavTimeFromTimeStamp(t.DueDate)
 		}
 
-		if t.Created != 0 {
+		if t.Created.Unix() > 0 {
 			caldavtodos += `
 CREATED:` + makeCalDavTimeFromTimeStamp(t.Created)
 		}
@@ -200,20 +201,19 @@ END:VCALENDAR` // Need a line break
 	return
 }
 
-func makeCalDavTimeFromTimeStamp(ts timeutil.TimeStamp) (caldavtime string) {
-	tz, _ := time.LoadLocation("UTC")
-	return ts.ToTime().In(tz).Format(DateFormat)
+func makeCalDavTimeFromTimeStamp(ts time.Time) (caldavtime string) {
+	return ts.In(config.GetTimeZone()).Format(DateFormat)
 }
 
-func calcAlarmDateFromReminder(eventStartUnix, reminderUnix timeutil.TimeStamp) (alarmTime string) {
-	if eventStartUnix > reminderUnix {
+func calcAlarmDateFromReminder(eventStart, reminder time.Time) (alarmTime string) {
+	diff := reminder.Sub(eventStart)
+	diffStr := strings.ToUpper(diff.String())
+	if diff < 0 {
 		alarmTime += `-`
+		// We append the - at the beginning of the caldav flag, that would get in the way if the minutes
+		// themselves are also containing it
+		diffStr = diffStr[1:]
 	}
-	alarmTime += `PT`
-	diff := eventStartUnix - reminderUnix
-	if diff < 0 { // Make it positive
-		diff = diff * -1
-	}
-	alarmTime += strconv.Itoa(int(diff/60)) + "M"
+	alarmTime += `PT` + diffStr
 	return
 }

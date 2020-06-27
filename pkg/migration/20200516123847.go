@@ -17,23 +17,22 @@
 package migration
 
 import (
-	"code.vikunja.io/api/pkg/timeutil"
 	"src.techknowlogick.com/xormigrate"
 	"strings"
 	"xorm.io/xorm"
 )
 
 type list20200516123847 struct {
-	ID          int64              `xorm:"int(11) autoincr not null unique pk" json:"id" param:"list"`
-	Title       string             `xorm:"varchar(250) not null" json:"title" valid:"required,runelength(3|250)" minLength:"3" maxLength:"250"`
-	Description string             `xorm:"longtext null" json:"description"`
-	Identifier  string             `xorm:"varchar(10) null" json:"identifier" valid:"runelength(0|10)" minLength:"0" maxLength:"10"`
-	HexColor    string             `xorm:"varchar(6) null" json:"hex_color" valid:"runelength(0|6)" maxLength:"6"`
-	OwnerID     int64              `xorm:"int(11) INDEX not null" json:"-"`
-	NamespaceID int64              `xorm:"int(11) INDEX not null" json:"-" param:"namespace"`
-	IsArchived  bool               `xorm:"not null default false" json:"is_archived" query:"is_archived"`
-	Created     timeutil.TimeStamp `xorm:"created not null" json:"created"`
-	Updated     timeutil.TimeStamp `xorm:"updated not null" json:"updated"`
+	ID          int64  `xorm:"int(11) autoincr not null unique pk" json:"id" param:"list"`
+	Title       string `xorm:"varchar(250) not null" json:"title" valid:"required,runelength(3|250)" minLength:"3" maxLength:"250"`
+	Description string `xorm:"longtext null" json:"description"`
+	Identifier  string `xorm:"varchar(10) null" json:"identifier" valid:"runelength(0|10)" minLength:"0" maxLength:"10"`
+	HexColor    string `xorm:"varchar(6) null" json:"hex_color" valid:"runelength(0|6)" maxLength:"6"`
+	OwnerID     int64  `xorm:"int(11) INDEX not null" json:"-"`
+	NamespaceID int64  `xorm:"int(11) INDEX not null" json:"-" param:"namespace"`
+	IsArchived  bool   `xorm:"not null default false" json:"is_archived" query:"is_archived"`
+	Created     int64  `xorm:"created not null" json:"created"`
+	Updated     int64  `xorm:"updated not null" json:"updated"`
 }
 
 func (l *list20200516123847) TableName() string {

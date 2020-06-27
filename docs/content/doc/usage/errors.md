@@ -78,6 +78,7 @@ This document describes the different errors Vikunja can return.
 | 4016 | 403 | Invalid task field. |
 | 4017 | 403 | Invalid task filter comparator. |
 | 4018 | 403 | Invalid task filter concatinator. |
+| 4019 | 403 | Invalid task filter value. |
 
 ### Namespace
 

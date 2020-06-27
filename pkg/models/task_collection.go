@@ -45,6 +45,8 @@ type TaskCollection struct {
 	FilterComparatorArr []string `query:"filter_comparator[]"`
 	// The way all filter conditions are concatenated together, can be either "and" or "or".,
 	FilterConcat string `query:"filter_concat"`
+	// If set to true, the result will also include null values
+	FilterIncludeNulls bool `query:"filter_include_nulls"`
 
 	web.CRUDable `xorm:"-" json:"-"`
 	web.Rights   `xorm:"-" json:"-"`
@@ -57,14 +59,14 @@ func validateTaskField(fieldName string) error {
 		taskPropertyTitle,
 		taskPropertyDescription,
 		taskPropertyDone,
-		taskPropertyDoneAtUnix,
-		taskPropertyDueDateUnix,
+		taskPropertyDoneAt,
+		taskPropertyDueDate,
 		taskPropertyCreatedByID,
 		taskPropertyListID,
 		taskPropertyRepeatAfter,
 		taskPropertyPriority,
-		taskPropertyStartDateUnix,
-		taskPropertyEndDateUnix,
+		taskPropertyStartDate,
+		taskPropertyEndDate,
 		taskPropertyHexColor,
 		taskPropertyPercentDone,
 		taskPropertyUID,
@@ -87,12 +89,13 @@ func validateTaskField(fieldName string) error {
 // @Param page query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
 // @Param per_page query int false "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page."
 // @Param s query string false "Search tasks by task text."
-// @Param sort_by query string false "The sorting parameter. You can pass this multiple times to get the tasks ordered by multiple different parametes, along with `order_by`. Possible values to sort by are `id`, `title`, `description`, `done`, `done_at_unix`, `due_date_unix`, `created_by_id`, `list_id`, `repeat_after`, `priority`, `start_date_unix`, `end_date_unix`, `hex_color`, `percent_done`, `uid`, `created`, `updated`. Default is `id`."
+// @Param sort_by query string false "The sorting parameter. You can pass this multiple times to get the tasks ordered by multiple different parametes, along with `order_by`. Possible values to sort by are `id`, `title`, `description`, `done`, `done_at`, `due_date`, `created_by_id`, `list_id`, `repeat_after`, `priority`, `start_date`, `end_date`, `hex_color`, `percent_done`, `uid`, `created`, `updated`. Default is `id`."
 // @Param order_by query string false "The ordering parameter. Possible values to order by are `asc` or `desc`. Default is `asc`."
 // @Param filter_by query string false "The name of the field to filter by. Accepts an array for multiple filters which will be chanied together, all supplied filter must match."
 // @Param filter_value query string false "The value to filter for."
 // @Param filter_comparator query string false "The comparator to use for a filter. Available values are `equals`, `greater`, `greater_equals`, `less` and `less_equals`. Defaults to `equals`"
 // @Param filter_concat query string false "The concatinator to use for filters. Available values are `and` or `or`. Defaults to `or`."
+// @Param filter_include_nulls query string false "If set to true the result will include filtered fields whose value is set to `null`. Available values are `true` or `false`. Defaults to `false`."
 // @Security JWTKeyAuth
 // @Success 200 {array} models.Task "The tasks"
 // @Failure 500 {object} models.Message "Internal error"
@@ -119,19 +122,6 @@ func (tf *TaskCollection) ReadAll(a web.Auth, search string, page int, perPage i
 			param.orderBy = getSortOrderFromString(tf.OrderBy[i])
 		}
 
-		// Special case for pseudo date fields
-		// FIXME: This is really dirty, to fix this properly the db fields should be renamed
-		switch param.sortBy {
-		case "done_at":
-			param.sortBy = taskPropertyDoneAtUnix
-		case "due_date":
-			param.sortBy = taskPropertyDueDateUnix
-		case "start_date":
-			param.sortBy = taskPropertyStartDateUnix
-		case "end_date":
-			param.sortBy = taskPropertyEndDateUnix
-		}
-
 		// Param validation
 		if err := param.validate(); err != nil {
 			return nil, 0, 0, err
@@ -140,11 +130,12 @@ func (tf *TaskCollection) ReadAll(a web.Auth, search string, page int, perPage i
 	}
 
 	taskopts := &taskOptions{
-		search:       search,
-		page:         page,
-		perPage:      perPage,
-		sortby:       sort,
-		filterConcat: taskFilterConcatinator(tf.FilterConcat),
+		search:             search,
+		page:               page,
+		perPage:            perPage,
+		sortby:             sort,
+		filterConcat:       taskFilterConcatinator(tf.FilterConcat),
+		filterIncludeNulls: tf.FilterIncludeNulls,
 	}
 
 	taskopts.filters, err = getTaskFiltersByCollections(tf)

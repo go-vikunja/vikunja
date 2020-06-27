@@ -197,7 +197,7 @@ func (vcls *VikunjaCaldavListStorage) GetResource(rpath string) (*data.Resource,
 		}
 
 		vcls.task = &task
-		if updated > 0 {
+		if updated.Unix() > 0 {
 			vcls.task.Updated = updated
 		}
 
@@ -342,12 +342,12 @@ func (vlra *VikunjaListResourceAdapter) CalculateEtag() string {
 
 	// Return the etag of a task if we have one
 	if vlra.task != nil {
-		return `"` + strconv.FormatInt(vlra.task.ID, 10) + `-` + strconv.FormatInt(vlra.task.Updated.ToTime().Unix(), 10) + `"`
+		return `"` + strconv.FormatInt(vlra.task.ID, 10) + `-` + strconv.FormatInt(vlra.task.Updated.Unix(), 10) + `"`
 	}
 	// This also returns the etag of the list, and not of the task,
 	// which becomes problematic because the client uses this etag (= the one from the list) to make
 	// Requests to update a task. These do not match and thus updating a task fails.
-	return `"` + strconv.FormatInt(vlra.list.ID, 10) + `-` + strconv.FormatInt(vlra.list.Updated.ToTime().Unix(), 10) + `"`
+	return `"` + strconv.FormatInt(vlra.list.ID, 10) + `-` + strconv.FormatInt(vlra.list.Updated.Unix(), 10) + `"`
 }
 
 // GetContent returns the content string of a resource (a task in our case)
@@ -372,11 +372,11 @@ func (vlra *VikunjaListResourceAdapter) GetContentSize() int64 {
 // GetModTime returns when the resource was last modified
 func (vlra *VikunjaListResourceAdapter) GetModTime() time.Time {
 	if vlra.task != nil {
-		return time.Unix(vlra.task.Updated.ToTime().Unix(), 0)
+		return vlra.task.Updated
 	}
 
 	if vlra.list != nil {
-		return time.Unix(vlra.list.Updated.ToTime().Unix(), 0)
+		return vlra.list.Updated
 	}
 
 	return time.Time{}

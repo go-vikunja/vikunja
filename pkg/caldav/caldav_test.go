@@ -16,7 +16,12 @@
 
 package caldav
 
-import "testing"
+import (
+	"code.vikunja.io/api/pkg/config"
+	"github.com/stretchr/testify/assert"
+	"testing"
+	"time"
+)
 
 func TestParseEvents(t *testing.T) {
 	type args struct {
@@ -40,23 +45,23 @@ func TestParseEvents(t *testing.T) {
 						Summary:     "Event #1",
 						Description: "Lorem Ipsum",
 						UID:         "randommduid",
-						Timestamp:   1543626724,
-						Start:       1543626724,
-						End:         1543627824,
+						Timestamp:   time.Unix(1543626724, 0).In(config.GetTimeZone()),
+						Start:       time.Unix(1543626724, 0).In(config.GetTimeZone()),
+						End:         time.Unix(1543627824, 0).In(config.GetTimeZone()),
 					},
 					{
 						Summary:   "Event #2",
 						UID:       "randommduidd",
-						Timestamp: 1543726724,
-						Start:     1543726724,
-						End:       1543738724,
+						Timestamp: time.Unix(1543726724, 0).In(config.GetTimeZone()),
+						Start:     time.Unix(1543726724, 0).In(config.GetTimeZone()),
+						End:       time.Unix(1543738724, 0).In(config.GetTimeZone()),
 					},
 					{
 						Summary:   "Event #3 with empty uid",
 						UID:       "20181202T0600242aaef4a81d770c1e775e26bc5abebc87f1d3d7bffaa83",
-						Timestamp: 1543726824,
-						Start:     1543726824,
-						End:       1543727000,
+						Timestamp: time.Unix(1543726824, 0).In(config.GetTimeZone()),
+						Start:     time.Unix(1543726824, 0).In(config.GetTimeZone()),
+						End:       time.Unix(1543727000, 0).In(config.GetTimeZone()),
 					},
 				},
 			},
@@ -104,44 +109,44 @@ END:VCALENDAR`,
 						Summary:     "Event #1",
 						Description: "Lorem Ipsum",
 						UID:         "randommduid",
-						Timestamp:   1543626724,
-						Start:       1543626724,
-						End:         1543627824,
+						Timestamp:   time.Unix(1543626724, 0).In(config.GetTimeZone()),
+						Start:       time.Unix(1543626724, 0).In(config.GetTimeZone()),
+						End:         time.Unix(1543627824, 0).In(config.GetTimeZone()),
 						Alarms: []Alarm{
-							{Time: 1543626524},
-							{Time: 1543626224},
-							{Time: 1543626024},
+							{Time: time.Unix(1543626524, 0).In(config.GetTimeZone())},
+							{Time: time.Unix(1543626224, 0).In(config.GetTimeZone())},
+							{Time: time.Unix(1543626024, 0)},
 						},
 					},
 					{
 						Summary:   "Event #2",
 						UID:       "randommduidd",
-						Timestamp: 1543726724,
-						Start:     1543726724,
-						End:       1543738724,
+						Timestamp: time.Unix(1543726724, 0).In(config.GetTimeZone()),
+						Start:     time.Unix(1543726724, 0).In(config.GetTimeZone()),
+						End:       time.Unix(1543738724, 0).In(config.GetTimeZone()),
 						Alarms: []Alarm{
-							{Time: 1543626524},
-							{Time: 1543626224},
-							{Time: 1543626024},
+							{Time: time.Unix(1543626524, 0).In(config.GetTimeZone())},
+							{Time: time.Unix(1543626224, 0).In(config.GetTimeZone())},
+							{Time: time.Unix(1543626024, 0).In(config.GetTimeZone())},
 						},
 					},
 					{
 						Summary:   "Event #3 with empty uid",
-						Timestamp: 1543726824,
-						Start:     1543726824,
-						End:       1543727000,
+						Timestamp: time.Unix(1543726824, 0).In(config.GetTimeZone()),
+						Start:     time.Unix(1543726824, 0).In(config.GetTimeZone()),
+						End:       time.Unix(1543727000, 0).In(config.GetTimeZone()),
 						Alarms: []Alarm{
-							{Time: 1543626524},
-							{Time: 1543626224},
-							{Time: 1543626024},
-							{Time: 1543826824},
+							{Time: time.Unix(1543626524, 0).In(config.GetTimeZone())},
+							{Time: time.Unix(1543626224, 0).In(config.GetTimeZone())},
+							{Time: time.Unix(1543626024, 0).In(config.GetTimeZone())},
+							{Time: time.Unix(1543826824, 0).In(config.GetTimeZone())},
 						},
 					},
 					{
 						Summary:   "Event #4 without any",
-						Timestamp: 1543726824,
-						Start:     1543726824,
-						End:       1543727000,
+						Timestamp: time.Unix(1543726824, 0),
+						Start:     time.Unix(1543726824, 0),
+						End:       time.Unix(1543727000, 0),
 					},
 				},
 			},
@@ -159,17 +164,17 @@ DTSTAMP:20181201T011204
 DTSTART:20181201T011204
 DTEND:20181201T013024
 BEGIN:VALARM
-TRIGGER:-PT3M
+TRIGGER:-PT3M20S
 ACTION:DISPLAY
 DESCRIPTION:Event #1
 END:VALARM
 BEGIN:VALARM
-TRIGGER:-PT8M
+TRIGGER:-PT8M20S
 ACTION:DISPLAY
 DESCRIPTION:Event #1
 END:VALARM
 BEGIN:VALARM
-TRIGGER:-PT11M
+TRIGGER:-PT11M40S
 ACTION:DISPLAY
 DESCRIPTION:Event #1
 END:VALARM
@@ -182,17 +187,17 @@ DTSTAMP:20181202T045844
 DTSTART:20181202T045844
 DTEND:20181202T081844
 BEGIN:VALARM
-TRIGGER:-PT1670M
+TRIGGER:-PT27H50M0S
 ACTION:DISPLAY
 DESCRIPTION:Event #2
 END:VALARM
 BEGIN:VALARM
-TRIGGER:-PT1675M
+TRIGGER:-PT27H55M0S
 ACTION:DISPLAY
 DESCRIPTION:Event #2
 END:VALARM
 BEGIN:VALARM
-TRIGGER:-PT1678M
+TRIGGER:-PT27H58M20S
 ACTION:DISPLAY
 DESCRIPTION:Event #2
 END:VALARM
@@ -205,22 +210,22 @@ DTSTAMP:20181202T050024
 DTSTART:20181202T050024
 DTEND:20181202T050320
 BEGIN:VALARM
-TRIGGER:-PT1671M
+TRIGGER:-PT27H51M40S
 ACTION:DISPLAY
 DESCRIPTION:Event #3 with empty uid
 END:VALARM
 BEGIN:VALARM
-TRIGGER:-PT1676M
+TRIGGER:-PT27H56M40S
 ACTION:DISPLAY
 DESCRIPTION:Event #3 with empty uid
 END:VALARM
 BEGIN:VALARM
-TRIGGER:-PT1680M
+TRIGGER:-PT28H0M0S
 ACTION:DISPLAY
 DESCRIPTION:Event #3 with empty uid
 END:VALARM
 BEGIN:VALARM
-TRIGGER:PT1666M
+TRIGGER:PT27H46M40S
 ACTION:DISPLAY
 DESCRIPTION:Event #3 with empty uid
 END:VALARM
@@ -238,9 +243,8 @@ END:VCALENDAR`,
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if gotCaldavevents := ParseEvents(tt.args.config, tt.args.events); gotCaldavevents != tt.wantCaldavevents {
-				t.Errorf("ParseEvents() = %v, want %v", gotCaldavevents, tt.wantCaldavevents)
-			}
+			gotCaldavevents := ParseEvents(tt.args.config, tt.args.events)
+			assert.Equal(t, gotCaldavevents, tt.wantCaldavevents)
 		})
 	}
 }

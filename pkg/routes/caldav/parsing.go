@@ -20,7 +20,6 @@ import (
 	"code.vikunja.io/api/pkg/caldav"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
-	"code.vikunja.io/api/pkg/timeutil"
 	"github.com/laurent22/ical-go"
 	"strconv"
 	"time"
@@ -32,7 +31,7 @@ func getCaldavTodosForTasks(list *models.List) string {
 	var caldavtodos []*caldav.Todo
 	for _, t := range list.Tasks {
 
-		duration := t.EndDate.ToTime().Sub(t.StartDate.ToTime())
+		duration := t.EndDate.Sub(t.StartDate)
 
 		caldavtodos = append(caldavtodos, &caldav.Todo{
 			Timestamp:   t.Updated,
@@ -104,22 +103,22 @@ func parseTaskFromVTODO(content string) (vTask *models.Task, err error) {
 		vTask.Done = true
 	}
 
-	if duration > 0 && vTask.StartDate > 0 {
-		vTask.EndDate = timeutil.FromTime(vTask.StartDate.ToTime().Add(duration))
+	if duration > 0 && !vTask.StartDate.IsZero() {
+		vTask.EndDate = vTask.StartDate.Add(duration)
 	}
 
 	return
 }
 
-func caldavTimeToTimestamp(tstring string) timeutil.TimeStamp {
+func caldavTimeToTimestamp(tstring string) time.Time {
 	if tstring == "" {
-		return 0
+		return time.Time{}
 	}
 
 	t, err := time.Parse(caldav.DateFormat, tstring)
 	if err != nil {
 		log.Warningf("Error while parsing caldav time %s to TimeStamp: %s", tstring, err)
-		return 0
+		return time.Time{}
 	}
-	return timeutil.FromTime(t)
+	return t
 }

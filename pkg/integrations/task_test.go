@@ -75,7 +75,7 @@ func TestTask(t *testing.T) {
 			t.Run("Due date unset", func(t *testing.T) {
 				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"listtask": "5"}, `{"due_date": null}`)
 				assert.NoError(t, err)
-				assert.Contains(t, rec.Body.String(), `"due_date":null`)
+				assert.Contains(t, rec.Body.String(), `"due_date":"0001-01-01T00:00:00Z"`)
 				assert.NotContains(t, rec.Body.String(), `"due_date":"2020-02-10T10:00:00Z"`)
 			})
 			t.Run("Reminders", func(t *testing.T) {
@@ -151,9 +151,9 @@ func TestTask(t *testing.T) {
 				assert.NotContains(t, rec.Body.String(), `"start_date":0`)
 			})
 			t.Run("Start date unset", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"listtask": "7"}, `{"start_date":null}`)
+				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"listtask": "7"}, `{"start_date":"0001-01-01T00:00:00Z"}`)
 				assert.NoError(t, err)
-				assert.Contains(t, rec.Body.String(), `"start_date":null`)
+				assert.Contains(t, rec.Body.String(), `"start_date":"0001-01-01T00:00:00Z"`)
 				assert.NotContains(t, rec.Body.String(), `"start_date":"2020-02-10T10:00:00Z"`)
 			})
 			t.Run("End date", func(t *testing.T) {
@@ -163,9 +163,9 @@ func TestTask(t *testing.T) {
 				assert.NotContains(t, rec.Body.String(), `"end_date":""`)
 			})
 			t.Run("End date unset", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"listtask": "8"}, `{"end_date":null}`)
+				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"listtask": "8"}, `{"end_date":"0001-01-01T00:00:00Z"}`)
 				assert.NoError(t, err)
-				assert.Contains(t, rec.Body.String(), `"end_date":null`)
+				assert.Contains(t, rec.Body.String(), `"end_date":"0001-01-01T00:00:00Z"`)
 				assert.NotContains(t, rec.Body.String(), `"end_date":"2020-02-10T10:00:00Z"`)
 			})
 			t.Run("Color", func(t *testing.T) {

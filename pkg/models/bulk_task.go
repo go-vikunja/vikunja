@@ -113,12 +113,12 @@ func (bt *BulkTask) Update() (err error) {
 			Cols("title",
 				"description",
 				"done",
-				"due_date_unix",
-				"reminders_unix",
+				"due_date",
+				"reminders",
 				"repeat_after",
 				"priority",
-				"start_date_unix",
-				"end_date_unix").
+				"start_date",
+				"end_date").
 			Update(oldtask)
 		if err != nil {
 			return sess.Rollback()

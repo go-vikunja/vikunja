@@ -18,7 +18,6 @@ package files
 
 import (
 	"code.vikunja.io/api/pkg/config"
-	"code.vikunja.io/api/pkg/timeutil"
 	"code.vikunja.io/web"
 	"github.com/c2h5oh/datasize"
 	"github.com/spf13/afero"
@@ -34,10 +33,8 @@ type File struct {
 	Mime string `xorm:"text null" json:"mime"`
 	Size uint64 `xorm:"int(11) not null" json:"size"`
 
-	Created time.Time `xorm:"-" json:"created"`
-
-	CreatedUnix timeutil.TimeStamp `xorm:"created" json:"-"`
-	CreatedByID int64              `xorm:"int(11) not null" json:"-"`
+	Created     time.Time `xorm:"created" json:"created"`
+	CreatedByID int64     `xorm:"int(11) not null" json:"-"`
 
 	File afero.File `xorm:"-" json:"-"`
 	// This ReadCloser is only used for migration purposes. Use with care!
@@ -66,7 +63,6 @@ func (f *File) LoadFileMetaByID() (err error) {
 	if !exists {
 		return ErrFileDoesNotExist{FileID: f.ID}
 	}
-	f.Created = f.CreatedUnix.ToTime()
 	return
 }
 

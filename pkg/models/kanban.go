@@ -18,9 +18,9 @@ package models
 
 import (
 	"code.vikunja.io/api/pkg/log"
-	"code.vikunja.io/api/pkg/timeutil"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
+	"time"
 )
 
 // Bucket represents a kanban bucket
@@ -35,9 +35,9 @@ type Bucket struct {
 	Tasks []*Task `xorm:"-" json:"tasks"`
 
 	// A timestamp when this bucket was created. You cannot change this value.
-	Created timeutil.TimeStamp `xorm:"created not null" json:"created"`
+	Created time.Time `xorm:"created not null" json:"created"`
 	// A timestamp when this bucket was last updated. You cannot change this value.
-	Updated timeutil.TimeStamp `xorm:"updated not null" json:"updated"`
+	Updated time.Time `xorm:"updated not null" json:"updated"`
 
 	// The user who initially created the bucket.
 	CreatedBy   *user.User `xorm:"-" json:"created_by" valid:"-"`

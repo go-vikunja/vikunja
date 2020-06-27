@@ -17,16 +17,16 @@
 package migration
 
 import (
-	"code.vikunja.io/api/pkg/timeutil"
 	"code.vikunja.io/api/pkg/user"
+	"time"
 )
 
 // Status represents this migration status
 type Status struct {
-	ID           int64              `xorm:"int(11) autoincr not null unique pk" json:"id"`
-	UserID       int64              `xorm:"int(11) not null" json:"-"`
-	MigratorName string             `xorm:"varchar(255)" json:"migrator_name"`
-	Created      timeutil.TimeStamp `xorm:"created not null 'created_unix'" json:"time_unix"`
+	ID           int64     `xorm:"int(11) autoincr not null unique pk" json:"id"`
+	UserID       int64     `xorm:"int(11) not null" json:"-"`
+	MigratorName string    `xorm:"varchar(255)" json:"migrator_name"`
+	Created      time.Time `xorm:"created not null 'created'" json:"time"`
 }
 
 // TableName holds the table name for the migration status table

@@ -18,9 +18,13 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/config"
+	"fmt"
 	"github.com/iancoleman/strcase"
 	"reflect"
 	"strconv"
+	"time"
+	"xorm.io/xorm/schemas"
 )
 
 type taskFilterComparator string
@@ -85,17 +89,11 @@ func getTaskFiltersByCollections(c *TaskCollection) (filters []*taskFilter, err 
 		if len(c.FilterValue) > i {
 			filter.value, err = getNativeValueForTaskField(filter.field, c.FilterValue[i])
 			if err != nil {
-				return
+				return nil, ErrInvalidTaskFilterValue{
+					Value: filter.field,
+					Field: c.FilterValue[i],
+				}
 			}
-		}
-
-		// Special case for pseudo date fields
-		// FIXME: This is really dirty, to fix this properly the db fields should be renamed
-		if filter.field+"_unix" == taskPropertyDoneAtUnix ||
-			filter.field+"_unix" == taskPropertyDueDateUnix ||
-			filter.field+"_unix" == taskPropertyStartDateUnix ||
-			filter.field+"_unix" == taskPropertyEndDateUnix {
-			filter.field += "_unix"
 		}
 
 		filters = append(filters, filter)
@@ -153,7 +151,13 @@ func getNativeValueForTaskField(fieldName, value string) (nativeValue interface{
 		nativeValue = value
 	case reflect.Bool:
 		nativeValue, err = strconv.ParseBool(value)
+	case reflect.Struct:
+		if field.Type == schemas.TimeType {
+			nativeValue, err = time.Parse(time.RFC3339, value)
+			nativeValue = nativeValue.(time.Time).In(config.GetTimeZone())
+		}
 	default:
+		panic(fmt.Errorf("unrecognized filter type %s for field %s, value %s", field.Type.String(), fieldName, value))
 	}
 
 	return

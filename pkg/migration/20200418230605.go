@@ -17,18 +17,17 @@
 package migration
 
 import (
-	"code.vikunja.io/api/pkg/timeutil"
 	"src.techknowlogick.com/xormigrate"
 	"xorm.io/xorm"
 )
 
 type bucket20200418230605 struct {
-	ID          int64              `xorm:"int(11) autoincr not null unique pk"`
-	Title       string             `xorm:"text not null"`
-	ListID      int64              `xorm:"int(11) not null"`
-	Created     timeutil.TimeStamp `xorm:"created not null"`
-	Updated     timeutil.TimeStamp `xorm:"updated not null"`
-	CreatedByID int64              `xorm:"int(11) not null"`
+	ID          int64  `xorm:"int(11) autoincr not null unique pk"`
+	Title       string `xorm:"text not null"`
+	ListID      int64  `xorm:"int(11) not null"`
+	Created     int64  `xorm:"created not null"`
+	Updated     int64  `xorm:"updated not null"`
+	CreatedByID int64  `xorm:"int(11) not null"`
 }
 
 func (b *bucket20200418230605) TableName() string {

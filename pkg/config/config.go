@@ -152,6 +152,23 @@ func (k Key) GetStringSlice() []string {
 	return viper.GetStringSlice(string(k))
 }
 
+var timezone *time.Location
+
+// GetTimeZone returns the time zone configured for vikunja
+// It is a separate function and not done through viper because that makes handling
+// it way easier, especially when testing.
+func GetTimeZone() *time.Location {
+	if timezone == nil {
+		loc, err := time.LoadLocation(ServiceTimeZone.GetString())
+		if err != nil {
+			fmt.Printf("Error parsing time zone: %s", err)
+			os.Exit(1)
+		}
+		timezone = loc
+	}
+	return timezone
+}
+
 // Set sets a value
 func (k Key) Set(i interface{}) {
 	viper.Set(string(k), i)

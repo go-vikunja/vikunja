@@ -2,83 +2,83 @@
   title: testnamespace
   description: Lorem Ipsum
   owner_id: 1
-  updated: 0
-  created: 0
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
 - id: 2
   title: testnamespace2
   description: Lorem Ipsum
   owner_id: 2
-  updated: 0
-  created: 0
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
 - id: 3
   title: testnamespace3
   description: Lorem Ipsum
   owner_id: 3
-  updated: 0
-  created: 0
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
 - id: 6
   title: testnamespace6
   description: Lorem Ipsum
   owner_id: 6
-  updated: 0
-  created: 0
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
 - id: 7
   title: testnamespace7
   description: Lorem Ipsum
   owner_id: 6
-  updated: 0
-  created: 0
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
 - id: 8
   title: testnamespace8
   description: Lorem Ipsum
   owner_id: 6
-  updated: 0
-  created: 0
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
 - id: 9
   title: testnamespace9
   description: Lorem Ipsum
   owner_id: 6
-  updated: 0
-  created: 0
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
 - id: 10
   title: testnamespace10
   description: Lorem Ipsum
   owner_id: 6
-  updated: 0
-  created: 0
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
 - id: 11
   title: testnamespace11
   description: Lorem Ipsum
   owner_id: 6
-  updated: 0
-  created: 0
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
 - id: 12
   title: testnamespace12
   description: Lorem Ipsum
   owner_id: 6
-  updated: 0
-  created: 0
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
 - id: 13
   title: testnamespace13
   description: Lorem Ipsum
   owner_id: 7
-  updated: 0
-  created: 0
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
 - id: 14
   title: testnamespace14
   description: Lorem Ipsum
   owner_id: 7
-  updated: 0
-  created: 0
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
 - id: 15
   title: testnamespace15
   description: Lorem Ipsum
   owner_id: 13
-  updated: 0
-  created: 0
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
 - id: 16
   title: Archived testnamespace16
   owner_id: 1
   is_archived: 1
-  updated: 0
-  created: 0
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12

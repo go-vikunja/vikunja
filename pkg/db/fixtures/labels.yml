@@ -1,20 +1,20 @@
 - id: 1
   title: 'Label #1'
   created_by_id: 1
-  updated: 0
-  created: 0
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
 - id: 2
   title: 'Label #2'
   created_by_id: 1
-  updated: 0
-  created: 0
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
 - id: 3
   title: 'Label #3 - other user'
   created_by_id: 2
-  updated: 0
-  created: 0
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
 - id: 4
   title: 'Label #4 - visible via other task'
   created_by_id: 2
-  updated: 0
-  created: 0
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12

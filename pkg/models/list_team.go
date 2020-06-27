@@ -17,8 +17,8 @@
 package models
 
 import (
-	"code.vikunja.io/api/pkg/timeutil"
 	"code.vikunja.io/web"
+	"time"
 )
 
 // TeamList defines the relation between a team and a list
@@ -33,9 +33,9 @@ type TeamList struct {
 	Right Right `xorm:"int(11) INDEX not null default 0" json:"right" valid:"length(0|2)" maximum:"2" default:"0"`
 
 	// A timestamp when this relation was created. You cannot change this value.
-	Created timeutil.TimeStamp `xorm:"created not null" json:"created"`
+	Created time.Time `xorm:"created not null" json:"created"`
 	// A timestamp when this relation was last updated. You cannot change this value.
-	Updated timeutil.TimeStamp `xorm:"updated not null" json:"updated"`
+	Updated time.Time `xorm:"updated not null" json:"updated"`
 
 	web.CRUDable `xorm:"-" json:"-"`
 	web.Rights   `xorm:"-" json:"-"`

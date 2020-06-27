@@ -2,206 +2,206 @@
   title: testbucket1
   list_id: 1
   created_by_id: 1
-  created: 1587244432
-  updated: 1587244432
+  created: 2020-04-18 21:13:52
+  updated: 2020-04-18 21:13:52
 - id: 2
   title: testbucket2
   list_id: 1
   created_by_id: 1
-  created: 1587244432
-  updated: 1587244432
+  created: 2020-04-18 21:13:52
+  updated: 2020-04-18 21:13:52
 - id: 3
   title: testbucket3
   list_id: 1
   created_by_id: 1
-  created: 1587244432
-  updated: 1587244432
+  created: 2020-04-18 21:13:52
+  updated: 2020-04-18 21:13:52
 - id: 4
   title: testbucket4 - other list
   list_id: 2
   created_by_id: 1
-  created: 1587244432
-  updated: 1587244432
+  created: 2020-04-18 21:13:52
+  updated: 2020-04-18 21:13:52
 # The following are not or only partly owned by user 1
 - id: 5
   title: testbucket5
   list_id: 20
   created_by_id: 1
-  created: 1587244432
-  updated: 1587244432
+  created: 2020-04-18 21:13:52
+  updated: 2020-04-18 21:13:52
 - id: 6
   title: testbucket6
   list_id: 6
   created_by_id: 1
-  created: 1587244432
-  updated: 1587244432
+  created: 2020-04-18 21:13:52
+  updated: 2020-04-18 21:13:52
 - id: 7
   title: testbucket7
   list_id: 7
   created_by_id: 1
-  created: 1587244432
-  updated: 1587244432
+  created: 2020-04-18 21:13:52
+  updated: 2020-04-18 21:13:52
 - id: 8
   title: testbucket8
   list_id: 8
   created_by_id: 1
-  created: 1587244432
-  updated: 1587244432
+  created: 2020-04-18 21:13:52
+  updated: 2020-04-18 21:13:52
 - id: 9
   title: testbucket9
   list_id: 9
   created_by_id: 1
-  created: 1587244432
-  updated: 1587244432
+  created: 2020-04-18 21:13:52
+  updated: 2020-04-18 21:13:52
 - id: 10
   title: testbucket10
   list_id: 10
   created_by_id: 1
-  created: 1587244432
-  updated: 1587244432
+  created: 2020-04-18 21:13:52
+  updated: 2020-04-18 21:13:52
 - id: 11
   title: testbucket11
   list_id: 11
   created_by_id: 1
-  created: 1587244432
-  updated: 1587244432
+  created: 2020-04-18 21:13:52
+  updated: 2020-04-18 21:13:52
 - id: 12
   title: testbucket13
   list_id: 12
   created_by_id: 1
-  created: 1587244432
-  updated: 1587244432
+  created: 2020-04-18 21:13:52
+  updated: 2020-04-18 21:13:52
 - id: 13
   title: testbucket13
   list_id: 13
   created_by_id: 1
-  created: 1587244432
-  updated: 1587244432
+  created: 2020-04-18 21:13:52
+  updated: 2020-04-18 21:13:52
 - id: 14
   title: testbucket14
   list_id: 14
   created_by_id: 1
-  created: 1587244432
-  updated: 1587244432
+  created: 2020-04-18 21:13:52
+  updated: 2020-04-18 21:13:52
 - id: 15
   title: testbucket15
   list_id: 15
   created_by_id: 1
-  created: 1587244432
-  updated: 1587244432
+  created: 2020-04-18 21:13:52
+  updated: 2020-04-18 21:13:52
 - id: 16
   title: testbucket16
   list_id: 16
   created_by_id: 1
-  created: 1587244432
-  updated: 1587244432
+  created: 2020-04-18 21:13:52
+  updated: 2020-04-18 21:13:52
 - id: 17
   title: testbucket17
   list_id: 17
   created_by_id: 1
-  created: 1587244432
-  updated: 1587244432
+  created: 2020-04-18 21:13:52
+  updated: 2020-04-18 21:13:52
 - id: 18
   title: testbucket18
   list_id: 5
   created_by_id: 1
-  created: 1587244432
-  updated: 1587244432
+  created: 2020-04-18 21:13:52
+  updated: 2020-04-18 21:13:52
 - id: 19
   title: testbucket19
   list_id: 21
   created_by_id: 1
-  created: 1587244432
-  updated: 1587244432
+  created: 2020-04-18 21:13:52
+  updated: 2020-04-18 21:13:52
 - id: 20
   title: testbucket20
   list_id: 22
   created_by_id: 1
-  created: 1587244432
-  updated: 1587244432
+  created: 2020-04-18 21:13:52
+  updated: 2020-04-18 21:13:52
 - id: 21
   title: testbucket21
   list_id: 3
   created_by_id: 1
-  created: 1587244432
-  updated: 1587244432
+  created: 2020-04-18 21:13:52
+  updated: 2020-04-18 21:13:52
 # Duplicate buckets to make deletion of one of them possible
 - id: 22
   title: testbucket22
   list_id: 6
   created_by_id: 1
-  created: 1587244432
-  updated: 1587244432
+  created: 2020-04-18 21:13:52
+  updated: 2020-04-18 21:13:52
 - id: 23
   title: testbucket23
   list_id: 7
   created_by_id: 1
-  created: 1587244432
-  updated: 1587244432
+  created: 2020-04-18 21:13:52
+  updated: 2020-04-18 21:13:52
 - id: 24
   title: testbucket24
   list_id: 8
   created_by_id: 1
-  created: 1587244432
-  updated: 1587244432
+  created: 2020-04-18 21:13:52
+  updated: 2020-04-18 21:13:52
 - id: 25
   title: testbucket25
   list_id: 9
   created_by_id: 1
-  created: 1587244432
-  updated: 1587244432
+  created: 2020-04-18 21:13:52
+  updated: 2020-04-18 21:13:52
 - id: 26
   title: testbucket26
   list_id: 10
   created_by_id: 1
-  created: 1587244432
-  updated: 1587244432
+  created: 2020-04-18 21:13:52
+  updated: 2020-04-18 21:13:52
 - id: 27
   title: testbucket27
   list_id: 11
   created_by_id: 1
-  created: 1587244432
-  updated: 1587244432
+  created: 2020-04-18 21:13:52
+  updated: 2020-04-18 21:13:52
 - id: 28
   title: testbucket28
   list_id: 12
   created_by_id: 1
-  created: 1587244432
-  updated: 1587244432
+  created: 2020-04-18 21:13:52
+  updated: 2020-04-18 21:13:52
 - id: 29
   title: testbucket29
   list_id: 13
   created_by_id: 1
-  created: 1587244432
-  updated: 1587244432
+  created: 2020-04-18 21:13:52
+  updated: 2020-04-18 21:13:52
 - id: 30
   title: testbucket30
   list_id: 14
   created_by_id: 1
-  created: 1587244432
-  updated: 1587244432
+  created: 2020-04-18 21:13:52
+  updated: 2020-04-18 21:13:52
 - id: 31
   title: testbucket31
   list_id: 15
   created_by_id: 1
-  created: 1587244432
-  updated: 1587244432
+  created: 2020-04-18 21:13:52
+  updated: 2020-04-18 21:13:52
 - id: 32
   title: testbucket32
   list_id: 16
   created_by_id: 1
-  created: 1587244432
-  updated: 1587244432
+  created: 2020-04-18 21:13:52
+  updated: 2020-04-18 21:13:52
 - id: 33
   title: testbucket33
   list_id: 17
   created_by_id: 1
-  created: 1587244432
-  updated: 1587244432
+  created: 2020-04-18 21:13:52
+  updated: 2020-04-18 21:13:52
 # This bucket is the last one in its list
 - id: 34
   title: testbucket34
   list_id: 18
   created_by_id: 1
-  created: 1587244432
-  updated: 1587244432
+  created: 2020-04-18 21:13:52
+  updated: 2020-04-18 21:13:52

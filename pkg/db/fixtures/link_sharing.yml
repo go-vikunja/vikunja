@@ -4,21 +4,21 @@
   right: 0
   sharing_type: 1
   shared_by_id: 1
-  created: 0
-  updated: 0
+  created: 2018-12-01 15:13:12
+  updated: 2018-12-02 15:13:12
 - id: 2
   hash: test2
   list_id: 2
   right: 1
   sharing_type: 1
   shared_by_id: 1
-  created: 0
-  updated: 0
+  created: 2018-12-01 15:13:12
+  updated: 2018-12-02 15:13:12
 - id: 3
   hash: test3
   list_id: 3
   right: 2
   sharing_type: 1
   shared_by_id: 1
-  created: 0
-  updated: 0
+  created: 2018-12-01 15:13:12
+  updated: 2018-12-02 15:13:12

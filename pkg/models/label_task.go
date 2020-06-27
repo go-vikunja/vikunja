@@ -17,9 +17,9 @@
 package models
 
 import (
-	"code.vikunja.io/api/pkg/timeutil"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
+	"time"
 	"xorm.io/builder"
 )
 
@@ -31,7 +31,7 @@ type LabelTask struct {
 	// The label id you want to associate with a task.
 	LabelID int64 `xorm:"int(11) INDEX not null" json:"label_id" param:"label"`
 	// A timestamp when this task was created. You cannot change this value.
-	Created timeutil.TimeStamp `xorm:"created not null" json:"created"`
+	Created time.Time `xorm:"created not null" json:"created"`
 
 	web.CRUDable `xorm:"-" json:"-"`
 	web.Rights   `xorm:"-" json:"-"`

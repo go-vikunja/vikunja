@@ -18,11 +18,11 @@
 package models
 
 import (
-	"code.vikunja.io/api/pkg/timeutil"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/web"
 	"github.com/dgrijalva/jwt-go"
+	"time"
 )
 
 // SharingType holds the sharing type
@@ -54,9 +54,9 @@ type LinkSharing struct {
 	SharedByID int64      `xorm:"int(11) INDEX not null" json:"-"`
 
 	// A timestamp when this list was shared. You cannot change this value.
-	Created timeutil.TimeStamp `xorm:"created not null" json:"created"`
+	Created time.Time `xorm:"created not null" json:"created"`
 	// A timestamp when this share was last updated. You cannot change this value.
-	Updated timeutil.TimeStamp `xorm:"updated not null" json:"updated"`
+	Updated time.Time `xorm:"updated not null" json:"updated"`
 
 	web.CRUDable `xorm:"-" json:"-"`
 	web.Rights   `xorm:"-" json:"-"`

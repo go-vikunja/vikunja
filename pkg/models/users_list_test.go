@@ -30,17 +30,23 @@ func TestListUsersFromList(t *testing.T) {
 		Username: "user1",
 		Password: "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
 		IsActive: true,
+		Created:  testCreatedTime,
+		Updated:  testUpdatedTime,
 	}
 	testuser2 := &user.User{
 		ID:       2,
 		Username: "user2",
 		Password: "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
+		Created:  testCreatedTime,
+		Updated:  testUpdatedTime,
 	}
 	testuser3 := &user.User{
 		ID:                 3,
 		Username:           "user3",
 		Password:           "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
 		PasswordResetToken: "passwordresettesttoken",
+		Created:            testCreatedTime,
+		Updated:            testUpdatedTime,
 	}
 	testuser4 := &user.User{
 		ID:                4,
@@ -48,6 +54,8 @@ func TestListUsersFromList(t *testing.T) {
 		Password:          "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
 		IsActive:          false,
 		EmailConfirmToken: "tiepiQueed8ahc7zeeFe1eveiy4Ein8osooxegiephauph2Ael",
+		Created:           testCreatedTime,
+		Updated:           testUpdatedTime,
 	}
 	testuser5 := &user.User{
 		ID:                5,
@@ -55,54 +63,72 @@ func TestListUsersFromList(t *testing.T) {
 		Password:          "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
 		IsActive:          false,
 		EmailConfirmToken: "tiepiQueed8ahc7zeeFe1eveiy4Ein8osooxegiephauph2Ael",
+		Created:           testCreatedTime,
+		Updated:           testUpdatedTime,
 	}
 	testuser6 := &user.User{
 		ID:       6,
 		Username: "user6",
 		Password: "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
 		IsActive: true,
+		Created:  testCreatedTime,
+		Updated:  testUpdatedTime,
 	}
 	testuser7 := &user.User{
 		ID:       7,
 		Username: "user7",
 		Password: "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
 		IsActive: true,
+		Created:  testCreatedTime,
+		Updated:  testUpdatedTime,
 	}
 	testuser8 := &user.User{
 		ID:       8,
 		Username: "user8",
 		Password: "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
 		IsActive: true,
+		Created:  testCreatedTime,
+		Updated:  testUpdatedTime,
 	}
 	testuser9 := &user.User{
 		ID:       9,
 		Username: "user9",
 		Password: "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
 		IsActive: true,
+		Created:  testCreatedTime,
+		Updated:  testUpdatedTime,
 	}
 	testuser10 := &user.User{
 		ID:       10,
 		Username: "user10",
 		Password: "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
 		IsActive: true,
+		Created:  testCreatedTime,
+		Updated:  testUpdatedTime,
 	}
 	testuser11 := &user.User{
 		ID:       11,
 		Username: "user11",
 		Password: "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
 		IsActive: true,
+		Created:  testCreatedTime,
+		Updated:  testUpdatedTime,
 	}
 	testuser12 := &user.User{
 		ID:       12,
 		Username: "user12",
 		Password: "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
 		IsActive: true,
+		Created:  testCreatedTime,
+		Updated:  testUpdatedTime,
 	}
 	testuser13 := &user.User{
 		ID:       13,
 		Username: "user13",
 		Password: "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
 		IsActive: true,
+		Created:  testCreatedTime,
+		Updated:  testUpdatedTime,
 	}
 
 	type args struct {

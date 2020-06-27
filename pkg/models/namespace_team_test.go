@@ -18,13 +18,13 @@ package models
 
 import (
 	"code.vikunja.io/api/pkg/db"
-	"code.vikunja.io/api/pkg/timeutil"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
 	"github.com/stretchr/testify/assert"
 	"reflect"
 	"runtime"
 	"testing"
+	"time"
 )
 
 func TestTeamNamespace(t *testing.T) {
@@ -113,8 +113,8 @@ func TestTeamNamespace_Update(t *testing.T) {
 		TeamID      int64
 		NamespaceID int64
 		Right       Right
-		Created     timeutil.TimeStamp
-		Updated     timeutil.TimeStamp
+		Created     time.Time
+		Updated     time.Time
 		CRUDable    web.CRUDable
 		Rights      web.Rights
 	}

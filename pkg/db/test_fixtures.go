@@ -50,6 +50,7 @@ func InitFixtures(tablenames ...string) (err error) {
 		testfixtures.Database(x.DB().DB),
 		testfixtures.Dialect(config.DatabaseType.GetString()),
 		testfixtures.DangerousSkipTestDatabaseCheck(),
+		testfixtures.Location(config.GetTimeZone()),
 		testfiles,
 	}
 

@@ -21,7 +21,6 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/mail"
 	"code.vikunja.io/api/pkg/metrics"
-	"code.vikunja.io/api/pkg/timeutil"
 	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/web"
 	"fmt"
@@ -29,6 +28,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"golang.org/x/crypto/bcrypt"
 	"reflect"
+	"time"
 )
 
 // Login Object to recive user credentials in JSON format
@@ -56,9 +56,9 @@ type User struct {
 	EmailConfirmToken  string `xorm:"varchar(450) null" json:"-"`
 
 	// A timestamp when this task was created. You cannot change this value.
-	Created timeutil.TimeStamp `xorm:"created not null" json:"created"`
+	Created time.Time `xorm:"created not null" json:"created"`
 	// A timestamp when this task was last updated. You cannot change this value.
-	Updated timeutil.TimeStamp `xorm:"updated not null" json:"updated"`
+	Updated time.Time `xorm:"updated not null" json:"updated"`
 
 	web.Auth `xorm:"-" json:"-"`
 }
@@ -139,7 +139,9 @@ func getUser(user *User, withEmail bool) (userOut *User, err error) {
 	userOut = &User{} // To prevent a panic if user is nil
 	*userOut = *user
 	exists, err := x.Get(userOut)
-
+	if err != nil {
+		return nil, err
+	}
 	if !exists {
 		return &User{}, ErrUserDoesNotExist{UserID: user.ID}
 	}

@@ -18,9 +18,9 @@
 package models
 
 import (
-	"code.vikunja.io/api/pkg/timeutil"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
+	"time"
 )
 
 // TaskComment represents a task comment
@@ -31,8 +31,8 @@ type TaskComment struct {
 	Author   *user.User `xorm:"-" json:"author"`
 	TaskID   int64      `xorm:"not null" json:"-" param:"task"`
 
-	Created timeutil.TimeStamp `xorm:"created" json:"created"`
-	Updated timeutil.TimeStamp `xorm:"updated" json:"updated"`
+	Created time.Time `xorm:"created" json:"created"`
+	Updated time.Time `xorm:"updated" json:"updated"`
 
 	web.CRUDable `xorm:"-" json:"-"`
 	web.Rights   `xorm:"-" json:"-"`

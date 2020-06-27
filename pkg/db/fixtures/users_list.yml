@@ -2,47 +2,47 @@
   user_id: 1
   list_id: 3
   right: 0
-  updated: 0
-  created: 0
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
 - id: 2
   user_id: 2
   list_id: 3
   right: 0
-  updated: 0
-  created: 0
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
 - id: 3
   user_id: 1
   list_id: 9
   right: 0
-  updated: 0
-  created: 0
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
 - id: 4
   user_id: 1
   list_id: 10
   right: 1
-  updated: 0
-  created: 0
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
 - id: 5
   user_id: 1
   list_id: 11
   right: 2
-  updated: 0
-  created: 0
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
 - id: 6
   user_id: 4
   list_id: 19
   right: 0
-  updated: 0
-  created: 0
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
 - id: 7
   user_id: 5
   list_id: 19
   right: 1
-  updated: 0
-  created: 0
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
 - id: 8
   user_id: 6
   list_id: 19
   right: 2
-  updated: 0
-  created: 0
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12

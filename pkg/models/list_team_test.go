@@ -18,13 +18,13 @@ package models
 
 import (
 	"code.vikunja.io/api/pkg/db"
-	"code.vikunja.io/api/pkg/timeutil"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
 	"github.com/stretchr/testify/assert"
 	"reflect"
 	"runtime"
 	"testing"
+	"time"
 )
 
 func TestTeamList(t *testing.T) {
@@ -121,8 +121,8 @@ func TestTeamList_Update(t *testing.T) {
 		TeamID   int64
 		ListID   int64
 		Right    Right
-		Created  timeutil.TimeStamp
-		Updated  timeutil.TimeStamp
+		Created  time.Time
+		Updated  time.Time
 		CRUDable web.CRUDable
 		Rights   web.Rights
 	}

@@ -17,7 +17,6 @@
 package migration
 
 import (
-	"code.vikunja.io/api/pkg/timeutil"
 	"src.techknowlogick.com/xormigrate"
 	"xorm.io/xorm"
 )
@@ -32,10 +31,10 @@ func (l *list20200425182634) TableName() string {
 }
 
 type task20200425182634 struct {
-	ID       int64              `xorm:"int(11) autoincr not null unique pk" json:"id" param:"listtask"`
-	ListID   int64              `xorm:"int(11) INDEX not null" json:"list_id" param:"list"`
-	Updated  timeutil.TimeStamp `xorm:"updated not null" json:"updated"`
-	BucketID int64              `xorm:"int(11) null" json:"bucket_id"`
+	ID       int64 `xorm:"int(11) autoincr not null unique pk" json:"id" param:"listtask"`
+	ListID   int64 `xorm:"int(11) INDEX not null" json:"list_id" param:"list"`
+	Updated  int64 `xorm:"updated not null" json:"updated"`
+	BucketID int64 `xorm:"int(11) null" json:"bucket_id"`
 }
 
 func (t *task20200425182634) TableName() string {
@@ -43,12 +42,12 @@ func (t *task20200425182634) TableName() string {
 }
 
 type bucket20200425182634 struct {
-	ID          int64              `xorm:"int(11) autoincr not null unique pk" json:"id" param:"bucket"`
-	Title       string             `xorm:"text not null" valid:"required" minLength:"1" json:"title"`
-	ListID      int64              `xorm:"int(11) not null" json:"list_id" param:"list"`
-	Created     timeutil.TimeStamp `xorm:"created not null" json:"created"`
-	Updated     timeutil.TimeStamp `xorm:"updated not null" json:"updated"`
-	CreatedByID int64              `xorm:"int(11) not null" json:"-"`
+	ID          int64  `xorm:"int(11) autoincr not null unique pk" json:"id" param:"bucket"`
+	Title       string `xorm:"text not null" valid:"required" minLength:"1" json:"title"`
+	ListID      int64  `xorm:"int(11) not null" json:"list_id" param:"list"`
+	Created     int64  `xorm:"created not null" json:"created"`
+	Updated     int64  `xorm:"updated not null" json:"updated"`
+	CreatedByID int64  `xorm:"int(11) not null" json:"-"`
 }
 
 func (b *bucket20200425182634) TableName() string {

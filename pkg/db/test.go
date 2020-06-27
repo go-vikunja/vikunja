@@ -49,6 +49,7 @@ func CreateTestEngine() (engine *xorm.Engine, err error) {
 	logger := log.NewXormLogger("DEBUG")
 	logger.ShowSQL(os.Getenv("UNIT_TESTS_VERBOSE") == "1")
 	engine.SetLogger(logger)
+	engine.SetTZLocation(config.GetTimeZone())
 	x = engine
 	return
 }

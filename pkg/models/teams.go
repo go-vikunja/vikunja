@@ -18,9 +18,9 @@ package models
 
 import (
 	"code.vikunja.io/api/pkg/metrics"
-	"code.vikunja.io/api/pkg/timeutil"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
+	"time"
 	"xorm.io/builder"
 )
 
@@ -40,9 +40,9 @@ type Team struct {
 	Members []*TeamUser `xorm:"-" json:"members"`
 
 	// A timestamp when this relation was created. You cannot change this value.
-	Created timeutil.TimeStamp `xorm:"created" json:"created"`
+	Created time.Time `xorm:"created" json:"created"`
 	// A timestamp when this relation was last updated. You cannot change this value.
-	Updated timeutil.TimeStamp `xorm:"updated" json:"updated"`
+	Updated time.Time `xorm:"updated" json:"updated"`
 
 	web.CRUDable `xorm:"-" json:"-"`
 	web.Rights   `xorm:"-" json:"-"`
@@ -71,7 +71,7 @@ type TeamMember struct {
 	Admin bool `xorm:"null" json:"admin"`
 
 	// A timestamp when this relation was created. You cannot change this value.
-	Created timeutil.TimeStamp `xorm:"created not null" json:"created"`
+	Created time.Time `xorm:"created not null" json:"created"`
 
 	web.CRUDable `xorm:"-" json:"-"`
 	web.Rights   `xorm:"-" json:"-"`
