@@ -41,7 +41,7 @@ type List struct {
 	HexColor string `xorm:"varchar(6) null" json:"hex_color" valid:"runelength(0|6)" maxLength:"6"`
 
 	OwnerID     int64 `xorm:"int(11) INDEX not null" json:"-"`
-	NamespaceID int64 `xorm:"int(11) INDEX not null" json:"-" param:"namespace"`
+	NamespaceID int64 `xorm:"int(11) INDEX not null" json:"namespace_id" param:"namespace"`
 
 	// The user who created this list.
 	Owner *user.User `xorm:"-" json:"owner" valid:"-"`
