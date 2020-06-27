@@ -18,6 +18,10 @@
 		<template slot="clear" slot-scope="props">
 			<div class="multiselect__clear" v-if="list !== null && list.id !== 0" @mousedown.prevent.stop="clearAll(props.search)"></div>
 		</template>
+		<template slot="option" slot-scope="props">
+			<span class="list-namespace-title">{{ namespace(props.option.namespaceId) }} ></span>
+			{{ props.option.title }}
+		</template>
 		<span slot="noResult">No list found. Consider changing the search query.</span>
 	</multiselect>
 </template>
@@ -63,6 +67,13 @@
 			},
 			select(list) {
 				this.$emit('selected', list)
+			},
+			namespace(namespaceId) {
+				const namespace = this.$store.getters['namespaces/getNamespaceById'](namespaceId)
+				if (namespace !== null) {
+					return namespace.title
+				}
+				return 'Shared Lists'
 			},
 		},
 	}

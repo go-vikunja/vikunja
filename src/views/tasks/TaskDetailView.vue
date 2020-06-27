@@ -229,7 +229,7 @@
 						</h3>
 						<div class="field has-addons">
 							<div class="control is-expanded">
-								<list-search @selected="changeList"/>
+								<list-search @selected="changeList" ref="moveList"/>
 							</div>
 						</div>
 					</div>

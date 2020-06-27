@@ -60,6 +60,14 @@ export default {
 			}
 			return null
 		},
+		getNamespaceById: state => namespaceId => {
+			for (const n in state.namespaces) {
+				if (state.namespaces[n].id === namespaceId) {
+					return state.namespaces[n]
+				}
+			}
+			return null
+		},
 	},
 	actions: {
 		loadNamespaces(ctx) {
@@ -77,7 +85,7 @@ export default {
 						})
 					})
 
-					ctx.commit('lists/addLists', lists, {root:true})
+					ctx.commit('lists/addLists', lists, {root: true})
 
 					return Promise.resolve()
 				})
