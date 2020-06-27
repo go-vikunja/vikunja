@@ -57,24 +57,25 @@
 				}
 
 				const params = {
-					sort_by: ['due_date_unix', 'id'],
+					sort_by: ['due_date', 'id'],
 					order_by: ['desc', 'desc'],
 					filter_by: ['done'],
 					filter_value: [false],
 					filter_comparator: ['equals'],
 					filter_concat: 'and',
+					filter_include_nulls: true,
 				}
 				if (!this.showAll) {
 					params.filter_by.push('start_date')
-					params.filter_value.push(Math.round(+this.startDate / 1000))
+					params.filter_value.push(this.startDate)
 					params.filter_comparator.push('greater')
 
 					params.filter_by.push('end_date')
-					params.filter_value.push(Math.round(+this.endDate / 1000))
+					params.filter_value.push(this.endDate)
 					params.filter_comparator.push('less')
 
 					params.filter_by.push('due_date')
-					params.filter_value.push(Math.round(+this.endDate / 1000))
+					params.filter_value.push(this.endDate)
 					params.filter_comparator.push('less')
 				}
 

@@ -78,8 +78,8 @@
 				this.wunderlistCode = this.$route.query.code
 				this.migrationService.getStatus()
 					.then(r => {
-						if(r.time_unix) {
-							this.lastMigrationDate = new Date(r.time_unix)
+						if(r.time) {
+							this.lastMigrationDate = new Date(r.time)
 							return
 						}
 						this.migrate()

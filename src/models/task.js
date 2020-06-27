@@ -14,9 +14,9 @@ export default class TaskModel extends AbstractModel {
 		this.listId = Number(this.listId)
 
 		// Make date objects from timestamps
-		this.dueDate = this.dueDate ? new Date(this.dueDate) : null
-		this.startDate = this.startDate ? new Date(this.startDate) : null
-		this.endDate = this.endDate ? new Date(this.endDate) : null
+		this.dueDate = this.dueDate && !this.dueDate.startsWith('0001') ? new Date(this.dueDate) : null
+		this.startDate = this.startDate && !this.startDate.startsWith('0001') ? new Date(this.startDate) : null
+		this.endDate = this.endDate && !this.endDate.startsWith('0001') ? new Date(this.endDate) : null
 
 		// Cancel all scheduled notifications for this task to be sure to only have available notifications
 		this.cancelScheduledNotifications()
@@ -32,13 +32,13 @@ export default class TaskModel extends AbstractModel {
 
 		// Parse the repeat after into something usable
 		this.parseRepeatAfter()
-		
+
 		// Parse the assignees into user models
 		this.assignees = this.assignees.map(a => {
 			return new UserModel(a)
 		})
 		this.createdBy = new UserModel(this.createdBy)
-		
+
 		this.labels = this.labels.map(l => {
 			return new LabelModel(l)
 		})
@@ -52,7 +52,7 @@ export default class TaskModel extends AbstractModel {
 		}
 
 		// Make all subtasks to task models
-		Object.keys(this.relatedTasks).forEach(relationKind  => {
+		Object.keys(this.relatedTasks).forEach(relationKind => {
 			this.relatedTasks[relationKind] = this.relatedTasks[relationKind].map(t => {
 				return new TaskModel(t)
 			})
@@ -64,14 +64,14 @@ export default class TaskModel extends AbstractModel {
 		})
 
 		// Set the task identifier to empty if the list does not have one
-		if(this.identifier === `-${this.index}`) {
+		if (this.identifier === `-${this.index}`) {
 			this.identifier = ''
 		}
 
 		this.created = new Date(this.created)
 		this.updated = new Date(this.updated)
 	}
-	
+
 	defaults() {
 		return {
 			id: 0,
@@ -81,7 +81,7 @@ export default class TaskModel extends AbstractModel {
 			priority: 0,
 			labels: [],
 			assignees: [],
-			
+
 			dueDate: 0,
 			startDate: 0,
 			endDate: 0,
@@ -99,15 +99,15 @@ export default class TaskModel extends AbstractModel {
 			createdBy: UserModel,
 			created: null,
 			updated: null,
-			
+
 			listId: 0, // Meta, only used when creating a new task
 		}
 	}
-	
+
 	/////////////////
 	// Helper functions
 	///////////////
-	
+
 	/**
 	 * Parses the "repeat after x seconds" from the task into a usable js object inside the task.
 	 * This function should only be called from the constructor.
@@ -157,7 +157,7 @@ export default class TaskModel extends AbstractModel {
 
 	async scheduleNotification(date) {
 
-		if(date < new Date()) {
+		if (date < new Date()) {
 			console.debug('Date is in the past, not scheduling a notification. Date is ', date)
 			return
 		}
@@ -199,12 +199,12 @@ export default class TaskModel extends AbstractModel {
 				},
 			],
 		})
-		.then(() => {
-			console.debug('Notification scheduled for ' + date)
-		})
-		.catch(e => {
-			console.debug('Error scheduling notification', e)
-		})
+			.then(() => {
+				console.debug('Notification scheduled for ' + date)
+			})
+			.catch(e => {
+				console.debug('Error scheduling notification', e)
+			})
 	}
 }
 

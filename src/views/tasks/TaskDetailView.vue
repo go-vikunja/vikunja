@@ -460,9 +460,9 @@
 			},
 			setActiveFields() {
 
-				this.dueDate = +new Date(this.task.dueDate) === 0 ? null : this.task.dueDate
-				this.task.startDate = +new Date(this.task.startDate) === 0 ? null : this.task.startDate
-				this.task.endDate = +new Date(this.task.endDate) === 0 ? null : this.task.endDate
+				this.dueDate = this.task.dueDate ? this.task.dueDate : null
+				this.task.startDate = this.task.startDate ? this.task.startDate : null
+				this.task.endDate = this.task.endDate ? this.task.endDate : null
 
 				// Set all active fields based on values in the model
 				this.activeFields.assignees = this.task.assignees.length > 0
