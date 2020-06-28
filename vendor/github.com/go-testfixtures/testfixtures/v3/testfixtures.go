@@ -109,7 +109,7 @@ func Dialect(dialect string) func(*Loader) error {
 
 func helperForDialect(dialect string) (helper, error) {
 	switch dialect {
-	case "postgres", "postgresql", "timescaledb":
+	case "postgres", "postgresql", "timescaledb", "pgx":
 		return &postgreSQL{}, nil
 	case "mysql", "mariadb":
 		return &mySQL{}, nil
@@ -324,19 +324,34 @@ func (l *Loader) Load() error {
 	}
 
 	err := l.helper.disableReferentialIntegrity(l.db, func(tx *sql.Tx) error {
+		modifiedTables := make(map[string]bool, len(l.fixturesFiles))
 		for _, file := range l.fixturesFiles {
-			modified, err := l.helper.isTableModified(tx, file.fileNameWithoutExtension())
+			tableName := file.fileNameWithoutExtension()
+			modified, err := l.helper.isTableModified(tx, tableName)
 			if err != nil {
 				return err
 			}
+			modifiedTables[tableName] = modified
+		}
+
+		// Delete existing table data for specified fixtures before populating the data. This helps avoid
+		// DELETE CASCADE constraints when using the `UseAlterConstraint()` option.
+		for _, file := range l.fixturesFiles {
+			modified := modifiedTables[file.fileNameWithoutExtension()]
 			if !modified {
 				continue
 			}
 			if err := file.delete(tx, l.helper); err != nil {
 				return err
 			}
+		}
 
-			err = l.helper.whileInsertOnTable(tx, file.fileNameWithoutExtension(), func() error {
+		for _, file := range l.fixturesFiles {
+			modified := modifiedTables[file.fileNameWithoutExtension()]
+			if !modified {
+				continue
+			}
+			err := l.helper.whileInsertOnTable(tx, file.fileNameWithoutExtension(), func() error {
 				for j, i := range file.insertSQLs {
 					if _, err := tx.Exec(i.sql, i.params...); err != nil {
 						return &InsertError{

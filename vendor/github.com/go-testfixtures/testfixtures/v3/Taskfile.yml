@@ -20,7 +20,7 @@ tasks:
   test:mysql:
     desc: Test MySQL
     cmds:
-      - task: test:db
+      - task: test-db
         vars: {DATABASE: mysql}
 
   test:sqlite:
