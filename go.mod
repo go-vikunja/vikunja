@@ -17,8 +17,6 @@
 module code.vikunja.io/api
 
 require (
-	4d63.com/embedfiles v1.0.0 // indirect
-	4d63.com/tz v1.1.0 // indirect
 	code.vikunja.io/web v0.0.0-20200618164749-a5f3d450d39a
 	gitea.com/xorm/xorm-redis-cache v0.2.0
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
@@ -46,9 +44,8 @@ require (
 	github.com/labstack/gommon v0.3.0
 	github.com/laurent22/ical-go v0.1.1-0.20181107184520-7e5d6ade8eef
 	github.com/lib/pq v1.7.0
-	github.com/magiconair/properties v1.8.1 // indirect
 	github.com/mailru/easyjson v0.7.0 // indirect
-	github.com/mattn/go-sqlite3 v2.0.3+incompatible
+	github.com/mattn/go-sqlite3 v1.14.0
 	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
 	github.com/olekukonko/tablewriter v0.0.4
 	github.com/onsi/ginkgo v1.12.0 // indirect
