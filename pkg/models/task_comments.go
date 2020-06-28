@@ -53,7 +53,7 @@ func (tc *TaskComment) TableName() string {
 // @Param relation body models.TaskComment true "The task comment object"
 // @Param taskID path int true "Task ID"
 // @Success 200 {object} models.TaskComment "The created task comment object."
-// @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid task comment object provided."
+// @Failure 400 {object} web.HTTPError "Invalid task comment object provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/comments [put]
 func (tc *TaskComment) Create(a web.Auth) (err error) {
@@ -82,8 +82,8 @@ func (tc *TaskComment) Create(a web.Auth) (err error) {
 // @Param taskID path int true "Task ID"
 // @Param commentID path int true "Comment ID"
 // @Success 200 {object} models.Message "The task comment was successfully deleted."
-// @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid task comment object provided."
-// @Failure 404 {object} code.vikunja.io/web.HTTPError "The task comment was not found."
+// @Failure 400 {object} web.HTTPError "Invalid task comment object provided."
+// @Failure 404 {object} web.HTTPError "The task comment was not found."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/comments/{commentID} [delete]
 func (tc *TaskComment) Delete() error {
@@ -104,8 +104,8 @@ func (tc *TaskComment) Delete() error {
 // @Param taskID path int true "Task ID"
 // @Param commentID path int true "Comment ID"
 // @Success 200 {object} models.TaskComment "The updated task comment object."
-// @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid task comment object provided."
-// @Failure 404 {object} code.vikunja.io/web.HTTPError "The task comment was not found."
+// @Failure 400 {object} web.HTTPError "Invalid task comment object provided."
+// @Failure 404 {object} web.HTTPError "The task comment was not found."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/comments/{commentID} [post]
 func (tc *TaskComment) Update() error {
@@ -126,8 +126,8 @@ func (tc *TaskComment) Update() error {
 // @Param taskID path int true "Task ID"
 // @Param commentID path int true "Comment ID"
 // @Success 200 {object} models.TaskComment "The task comment object."
-// @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid task comment object provided."
-// @Failure 404 {object} code.vikunja.io/web.HTTPError "The task comment was not found."
+// @Failure 400 {object} web.HTTPError "Invalid task comment object provided."
+// @Failure 404 {object} web.HTTPError "The task comment was not found."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/comments/{commentID} [get]
 func (tc *TaskComment) ReadOne() (err error) {

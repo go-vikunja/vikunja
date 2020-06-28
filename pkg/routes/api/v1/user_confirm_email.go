@@ -30,9 +30,9 @@ import (
 // @tags user
 // @Accept json
 // @Produce json
-// @Param credentials body models.EmailConfirm true "The token."
+// @Param credentials body user.EmailConfirm true "The token."
 // @Success 200 {object} models.Message
-// @Failure 412 {object} code.vikunja.io/web.HTTPError "Bad token provided."
+// @Failure 412 {object} web.HTTPError "Bad token provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /user/confirm [post]
 func UserConfirmEmail(c echo.Context) error {

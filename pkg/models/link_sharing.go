@@ -93,9 +93,9 @@ func GetLinkShareFromClaims(claims jwt.MapClaims) (share *LinkSharing, err error
 // @Param list path int true "List ID"
 // @Param label body models.LinkSharing true "The new link share object"
 // @Success 200 {object} models.LinkSharing "The created link share object."
-// @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid link share object provided."
-// @Failure 403 {object} code.vikunja.io/web.HTTPError "Not allowed to add the list share."
-// @Failure 404 {object} code.vikunja.io/web.HTTPError "The list does not exist."
+// @Failure 400 {object} web.HTTPError "Invalid link share object provided."
+// @Failure 403 {object} web.HTTPError "Not allowed to add the list share."
+// @Failure 404 {object} web.HTTPError "The list does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{list}/shares [put]
 func (share *LinkSharing) Create(a web.Auth) (err error) {
@@ -122,8 +122,8 @@ func (share *LinkSharing) Create(a web.Auth) (err error) {
 // @Param share path int true "Share ID"
 // @Security JWTKeyAuth
 // @Success 200 {object} models.LinkSharing "The share links"
-// @Failure 403 {object} code.vikunja.io/web.HTTPError "No access to the list"
-// @Failure 404 {object} code.vikunja.io/web.HTTPError "Share Link not found."
+// @Failure 403 {object} web.HTTPError "No access to the list"
+// @Failure 404 {object} web.HTTPError "Share Link not found."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{list}/shares/{share} [get]
 func (share *LinkSharing) ReadOne() (err error) {
@@ -211,8 +211,8 @@ func (share *LinkSharing) ReadAll(a web.Auth, search string, page int, perPage i
 // @Param list path int true "List ID"
 // @Param share path int true "Share Link ID"
 // @Success 200 {object} models.Message "The link was successfully removed."
-// @Failure 403 {object} code.vikunja.io/web.HTTPError "Not allowed to remove the link."
-// @Failure 404 {object} code.vikunja.io/web.HTTPError "Share Link not found."
+// @Failure 403 {object} web.HTTPError "Not allowed to remove the link."
+// @Failure 404 {object} web.HTTPError "Share Link not found."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{list}/shares/{share} [delete]
 func (share *LinkSharing) Delete() (err error) {

@@ -229,8 +229,8 @@ func (p *Provider) Search(search string, page int64) (result []*background.Image
 // @Param id path int true "List ID"
 // @Param list body background.Image true "The image you want to set as background"
 // @Success 200 {object} models.List "The background has been successfully set."
-// @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid image object provided."
-// @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have access to the list"
+// @Failure 400 {object} web.HTTPError "Invalid image object provided."
+// @Failure 403 {object} web.HTTPError "The user does not have access to the list"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{id}/backgrounds/unsplash [post]
 func (p *Provider) Set(image *background.Image, list *models.List, auth web.Auth) (err error) {

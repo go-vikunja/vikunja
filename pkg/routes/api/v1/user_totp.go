@@ -36,8 +36,8 @@ import (
 // @Produce json
 // @Security JWTKeyAuth
 // @Success 200 {object} user.TOTP
-// @Failure 400 {object} code.vikunja.io/web.HTTPError "Something's invalid."
-// @Failure 404 {object} code.vikunja.io/web.HTTPError "User does not exist."
+// @Failure 400 {object} web.HTTPError "Something's invalid."
+// @Failure 404 {object} web.HTTPError "User does not exist."
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /user/settings/totp/enroll [post]
 func UserTOTPEnroll(c echo.Context) error {
@@ -63,9 +63,9 @@ func UserTOTPEnroll(c echo.Context) error {
 // @Param totp body user.TOTPPasscode true "The totp passcode."
 // @Security JWTKeyAuth
 // @Success 200 {object} models.Message "Successfully enabled"
-// @Failure 400 {object} code.vikunja.io/web.HTTPError "Something's invalid."
-// @Failure 404 {object} code.vikunja.io/web.HTTPError "User does not exist."
-// @Failure 412 {object} code.vikunja.io/web.HTTPError "TOTP is not enrolled."
+// @Failure 400 {object} web.HTTPError "Something's invalid."
+// @Failure 404 {object} web.HTTPError "User does not exist."
+// @Failure 412 {object} web.HTTPError "TOTP is not enrolled."
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /user/settings/totp/enable [post]
 func UserTOTPEnable(c echo.Context) error {
@@ -102,8 +102,8 @@ func UserTOTPEnable(c echo.Context) error {
 // @Security JWTKeyAuth
 // @Param totp body user.Login true "The current user's password (only password is enough)."
 // @Success 200 {object} models.Message "Successfully disabled"
-// @Failure 400 {object} code.vikunja.io/web.HTTPError "Something's invalid."
-// @Failure 404 {object} code.vikunja.io/web.HTTPError "User does not exist."
+// @Failure 400 {object} web.HTTPError "Something's invalid."
+// @Failure 404 {object} web.HTTPError "User does not exist."
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /user/settings/totp/disable [post]
 func UserTOTPDisable(c echo.Context) error {

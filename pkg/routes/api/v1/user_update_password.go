@@ -39,8 +39,8 @@ type UserPassword struct {
 // @Param userPassword body v1.UserPassword true "The current and new password."
 // @Security JWTKeyAuth
 // @Success 200 {object} models.Message
-// @Failure 400 {object} code.vikunja.io/web.HTTPError "Something's invalid."
-// @Failure 404 {object} code.vikunja.io/web.HTTPError "User does not exist."
+// @Failure 400 {object} web.HTTPError "Something's invalid."
+// @Failure 404 {object} web.HTTPError "User does not exist."
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /user/password [post]
 func UserChangePassword(c echo.Context) error {

@@ -60,7 +60,7 @@ func (Label) TableName() string {
 // @Security JWTKeyAuth
 // @Param label body models.Label true "The label object"
 // @Success 200 {object} models.Label "The created label object."
-// @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid label object provided."
+// @Failure 400 {object} web.HTTPError "Invalid label object provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /labels [put]
 func (l *Label) Create(a web.Auth) (err error) {
@@ -86,9 +86,9 @@ func (l *Label) Create(a web.Auth) (err error) {
 // @Param id path int true "Label ID"
 // @Param label body models.Label true "The label object"
 // @Success 200 {object} models.Label "The created label object."
-// @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid label object provided."
-// @Failure 403 {object} code.vikunja.io/web.HTTPError "Not allowed to update the label."
-// @Failure 404 {object} code.vikunja.io/web.HTTPError "Label not found."
+// @Failure 400 {object} web.HTTPError "Invalid label object provided."
+// @Failure 403 {object} web.HTTPError "Not allowed to update the label."
+// @Failure 404 {object} web.HTTPError "Label not found."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /labels/{id} [put]
 func (l *Label) Update() (err error) {
@@ -117,8 +117,8 @@ func (l *Label) Update() (err error) {
 // @Security JWTKeyAuth
 // @Param id path int true "Label ID"
 // @Success 200 {object} models.Label "The label was successfully deleted."
-// @Failure 403 {object} code.vikunja.io/web.HTTPError "Not allowed to delete the label."
-// @Failure 404 {object} code.vikunja.io/web.HTTPError "Label not found."
+// @Failure 403 {object} web.HTTPError "Not allowed to delete the label."
+// @Failure 404 {object} web.HTTPError "Label not found."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /labels/{id} [delete]
 func (l *Label) Delete() (err error) {
@@ -172,8 +172,8 @@ func (l *Label) ReadAll(a web.Auth, search string, page int, perPage int) (ls in
 // @Param id path int true "Label ID"
 // @Security JWTKeyAuth
 // @Success 200 {object} models.Label "The label"
-// @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have access to the label"
-// @Failure 404 {object} code.vikunja.io/web.HTTPError "Label not found"
+// @Failure 403 {object} web.HTTPError "The user does not have access to the label"
+// @Failure 404 {object} web.HTTPError "Label not found"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /labels/{id} [get]
 func (l *Label) ReadOne() (err error) {

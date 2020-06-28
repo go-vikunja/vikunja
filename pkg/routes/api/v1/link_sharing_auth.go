@@ -38,7 +38,7 @@ type LinkShareToken struct {
 // @Produce json
 // @Param share path string true "The share hash"
 // @Success 200 {object} v1.Token "The valid jwt auth token."
-// @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid link share object provided."
+// @Failure 400 {object} web.HTTPError "Invalid link share object provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /shares/{share}/auth [post]
 func AuthenticateLinkShare(c echo.Context) error {

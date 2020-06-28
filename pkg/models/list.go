@@ -119,7 +119,7 @@ func GetListsByNamespaceID(nID int64, doer *user.User) (lists []*List, err error
 // @Param is_archived query bool false "If true, also returns all archived lists."
 // @Security JWTKeyAuth
 // @Success 200 {array} models.List "The lists"
-// @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have access to the list"
+// @Failure 403 {object} web.HTTPError "The user does not have access to the list"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists [get]
 func (l *List) ReadAll(a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
@@ -161,7 +161,7 @@ func (l *List) ReadAll(a web.Auth, search string, page int, perPage int) (result
 // @Security JWTKeyAuth
 // @Param id path int true "List ID"
 // @Success 200 {object} models.List "The list"
-// @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have access to the list"
+// @Failure 403 {object} web.HTTPError "The user does not have access to the list"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{id} [get]
 func (l *List) ReadOne() (err error) {
@@ -512,8 +512,8 @@ func CreateOrUpdateList(list *List) (err error) {
 // @Param id path int true "List ID"
 // @Param list body models.List true "The list with updated values you want to update."
 // @Success 200 {object} models.List "The updated list."
-// @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid list object provided."
-// @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have access to the list"
+// @Failure 400 {object} web.HTTPError "Invalid list object provided."
+// @Failure 403 {object} web.HTTPError "The user does not have access to the list"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{id} [post]
 func (l *List) Update() (err error) {
@@ -545,8 +545,8 @@ func updateListByTaskID(taskID int64) (err error) {
 // @Param namespaceID path int true "Namespace ID"
 // @Param list body models.List true "The list you want to create."
 // @Success 200 {object} models.List "The created list."
-// @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid list object provided."
-// @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have access to the list"
+// @Failure 400 {object} web.HTTPError "Invalid list object provided."
+// @Failure 403 {object} web.HTTPError "The user does not have access to the list"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces/{namespaceID}/lists [put]
 func (l *List) Create(a web.Auth) (err error) {
@@ -585,8 +585,8 @@ func (l *List) Create(a web.Auth) (err error) {
 // @Security JWTKeyAuth
 // @Param id path int true "List ID"
 // @Success 200 {object} models.Message "The list was successfully deleted."
-// @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid list object provided."
-// @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have access to the list"
+// @Failure 400 {object} web.HTTPError "Invalid list object provided."
+// @Failure 403 {object} web.HTTPError "The user does not have access to the list"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{id} [delete]
 func (l *List) Delete() (err error) {

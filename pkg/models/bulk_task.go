@@ -73,8 +73,8 @@ func (bt *BulkTask) CanUpdate(a web.Auth) (bool, error) {
 // @Security JWTKeyAuth
 // @Param task body models.BulkTask true "The task object. Looks like a normal task, the only difference is it uses an array of list_ids to update."
 // @Success 200 {object} models.Task "The updated task object."
-// @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid task object provided."
-// @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have access to the task (aka its list)"
+// @Failure 400 {object} web.HTTPError "Invalid task object provided."
+// @Failure 403 {object} web.HTTPError "The user does not have access to the task (aka its list)"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/bulk [post]
 func (bt *BulkTask) Update() (err error) {

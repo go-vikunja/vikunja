@@ -52,8 +52,8 @@ func (LabelTask) TableName() string {
 // @Param task path int true "Task ID"
 // @Param label path int true "Label ID"
 // @Success 200 {object} models.Message "The label was successfully removed."
-// @Failure 403 {object} code.vikunja.io/web.HTTPError "Not allowed to remove the label."
-// @Failure 404 {object} code.vikunja.io/web.HTTPError "Label not found."
+// @Failure 403 {object} web.HTTPError "Not allowed to remove the label."
+// @Failure 404 {object} web.HTTPError "Label not found."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{task}/labels/{label} [delete]
 func (lt *LabelTask) Delete() (err error) {
@@ -71,9 +71,9 @@ func (lt *LabelTask) Delete() (err error) {
 // @Param task path int true "Task ID"
 // @Param label body models.LabelTask true "The label object"
 // @Success 200 {object} models.LabelTask "The created label relation object."
-// @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid label object provided."
-// @Failure 403 {object} code.vikunja.io/web.HTTPError "Not allowed to add the label."
-// @Failure 404 {object} code.vikunja.io/web.HTTPError "The label does not exist."
+// @Failure 400 {object} web.HTTPError "Invalid label object provided."
+// @Failure 403 {object} web.HTTPError "Not allowed to add the label."
+// @Failure 404 {object} web.HTTPError "The label does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{task}/labels [put]
 func (lt *LabelTask) Create(a web.Auth) (err error) {
@@ -332,7 +332,7 @@ type LabelTaskBulk struct {
 // @Param label body models.LabelTaskBulk true "The array of labels"
 // @Param taskID path int true "Task ID"
 // @Success 200 {object} models.LabelTaskBulk "The updated labels object."
-// @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid label object provided."
+// @Failure 400 {object} web.HTTPError "Invalid label object provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/labels/bulk [post]
 func (ltb *LabelTaskBulk) Create(a web.Auth) (err error) {

@@ -113,7 +113,7 @@ type RelatedTaskMap map[RelationKind][]*Task
 // @Param relation body models.TaskRelation true "The relation object"
 // @Param taskID path int true "Task ID"
 // @Success 200 {object} models.TaskRelation "The created task relation object."
-// @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid task relation object provided."
+// @Failure 400 {object} web.HTTPError "Invalid task relation object provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/relations [put]
 func (rel *TaskRelation) Create(a web.Auth) error {
@@ -193,8 +193,8 @@ func (rel *TaskRelation) Create(a web.Auth) error {
 // @Param relation body models.TaskRelation true "The relation object"
 // @Param taskID path int true "Task ID"
 // @Success 200 {object} models.Message "The task relation was successfully deleted."
-// @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid task relation object provided."
-// @Failure 404 {object} code.vikunja.io/web.HTTPError "The task relation was not found."
+// @Failure 400 {object} web.HTTPError "Invalid task relation object provided."
+// @Failure 404 {object} web.HTTPError "The task relation was not found."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/relations [delete]
 func (rel *TaskRelation) Delete() error {

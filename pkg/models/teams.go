@@ -174,7 +174,7 @@ func addMoreInfoToTeams(teams []*Team) (err error) {
 // @Security JWTKeyAuth
 // @Param id path int true "Team ID"
 // @Success 200 {object} models.Team "The team"
-// @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have access to the team"
+// @Failure 403 {object} web.HTTPError "The user does not have access to the team"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /teams/{id} [get]
 func (t *Team) ReadOne() (err error) {
@@ -242,7 +242,7 @@ func (t *Team) ReadAll(a web.Auth, search string, page int, perPage int) (result
 // @Security JWTKeyAuth
 // @Param team body models.Team true "The team you want to create."
 // @Success 200 {object} models.Team "The created team."
-// @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid team object provided."
+// @Failure 400 {object} web.HTTPError "Invalid team object provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /teams [put]
 func (t *Team) Create(a web.Auth) (err error) {
@@ -282,7 +282,7 @@ func (t *Team) Create(a web.Auth) (err error) {
 // @Security JWTKeyAuth
 // @Param id path int true "Team ID"
 // @Success 200 {object} models.Message "The team was successfully deleted."
-// @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid team object provided."
+// @Failure 400 {object} web.HTTPError "Invalid team object provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /teams/{id} [delete]
 func (t *Team) Delete() (err error) {
@@ -325,7 +325,7 @@ func (t *Team) Delete() (err error) {
 // @Param id path int true "Team ID"
 // @Param team body models.Team true "The team with updated values you want to update."
 // @Success 200 {object} models.Team "The updated team."
-// @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid team object provided."
+// @Failure 400 {object} web.HTTPError "Invalid team object provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /teams/{id} [post]
 func (t *Team) Update() (err error) {

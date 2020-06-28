@@ -162,7 +162,7 @@ func (t *Task) setTaskAssignees(assignees []*user.User) {
 // @Param taskID path int true "Task ID"
 // @Param userID path int true "Assignee user ID"
 // @Success 200 {object} models.Message "The assignee was successfully deleted."
-// @Failure 403 {object} code.vikunja.io/web.HTTPError "Not allowed to delete the assignee."
+// @Failure 403 {object} web.HTTPError "Not allowed to delete the assignee."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/assignees/{userID} [delete]
 func (la *TaskAssginee) Delete() (err error) {
@@ -185,7 +185,7 @@ func (la *TaskAssginee) Delete() (err error) {
 // @Param assignee body models.TaskAssginee true "The assingee object"
 // @Param taskID path int true "Task ID"
 // @Success 200 {object} models.TaskAssginee "The created assingee object."
-// @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid assignee object provided."
+// @Failure 400 {object} web.HTTPError "Invalid assignee object provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/assignees [put]
 func (la *TaskAssginee) Create(a web.Auth) (err error) {
@@ -296,7 +296,7 @@ type BulkAssignees struct {
 // @Param assignee body models.BulkAssignees true "The array of assignees"
 // @Param taskID path int true "Task ID"
 // @Success 200 {object} models.TaskAssginee "The created assingees object."
-// @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid assignee object provided."
+// @Failure 400 {object} web.HTTPError "Invalid assignee object provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/assignees/bulk [post]
 func (ba *BulkAssignees) Create(a web.Auth) (err error) {

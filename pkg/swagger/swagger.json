@@ -15,6 +15,146 @@
     },
     "basePath": "/api/v1",
     "paths": {
+        "/backgrounds/unsplash/image/{image}": {
+            "get": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Get an unsplash image. **Returns json on error.**",
+                "produces": [
+                    "application/octet-stream"
+                ],
+                "tags": [
+                    "list"
+                ],
+                "summary": "Get an unsplash image",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Unsplash Image ID",
+                        "name": "thumb",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The image",
+                        "schema": {
+                            "type": ""
+                        }
+                    },
+                    "404": {
+                        "description": "The image does not exist.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/backgrounds/unsplash/image/{image}/thumb": {
+            "get": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Get an unsplash thumbnail image. The thumbnail is cropped to a max width of 200px. **Returns json on error.**",
+                "produces": [
+                    "application/octet-stream"
+                ],
+                "tags": [
+                    "list"
+                ],
+                "summary": "Get an unsplash thumbnail image",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Unsplash Image ID",
+                        "name": "thumb",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The thumbnail",
+                        "schema": {
+                            "type": ""
+                        }
+                    },
+                    "404": {
+                        "description": "The image does not exist.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/backgrounds/unsplash/search": {
+            "get": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Search for a list background from unsplash",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "list"
+                ],
+                "summary": "Search for a background from unsplash",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Search backgrounds from unsplash with this search term.",
+                        "name": "s",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "The page number. Used for pagination. If not provided, the first page of results is returned.",
+                        "name": "p",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "An array with photos",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/background.Image"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
         "/info": {
             "get": {
                 "description": "Returns the version, frontendurl, motd and various settings of Vikunja",
@@ -115,7 +255,6 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Label"
                         }
                     }
@@ -130,7 +269,7 @@
                     "400": {
                         "description": "Invalid label object provided.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "500": {
@@ -179,13 +318,13 @@
                     "403": {
                         "description": "The user does not have access to the label",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "404": {
                         "description": "Label not found",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "500": {
@@ -227,7 +366,6 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Label"
                         }
                     }
@@ -242,19 +380,19 @@
                     "400": {
                         "description": "Invalid label object provided.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "403": {
                         "description": "Not allowed to update the label.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "404": {
                         "description": "Label not found.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "500": {
@@ -301,13 +439,13 @@
                     "403": {
                         "description": "Not allowed to delete the label.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "404": {
                         "description": "Label not found.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "500": {
@@ -355,6 +493,12 @@
                         "description": "Search lists by title.",
                         "name": "s",
                         "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "If true, also returns all archived lists.",
+                        "name": "is_archived",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -370,7 +514,7 @@
                     "403": {
                         "description": "The user does not have access to the list",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "500": {
@@ -419,7 +563,7 @@
                     "403": {
                         "description": "The user does not have access to the list",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "500": {
@@ -461,7 +605,6 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Task"
                         }
                     }
@@ -476,13 +619,13 @@
                     "400": {
                         "description": "Invalid task object provided.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "403": {
                         "description": "The user does not have access to the list",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "500": {
@@ -524,7 +667,6 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.List"
                         }
                     }
@@ -539,13 +681,13 @@
                     "400": {
                         "description": "Invalid list object provided.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "403": {
                         "description": "The user does not have access to the list",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "500": {
@@ -589,13 +731,299 @@
                     "400": {
                         "description": "Invalid list object provided.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "403": {
                         "description": "The user does not have access to the list",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/lists/{id}/background": {
+            "get": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Get the list background of a specific list. **Returns json on error.**",
+                "produces": [
+                    "application/octet-stream"
+                ],
+                "tags": [
+                    "list"
+                ],
+                "summary": "Get the list background",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "List ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The list background file.",
+                        "schema": {
+                            "type": ""
+                        }
+                    },
+                    "403": {
+                        "description": "No access to this list.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "404": {
+                        "description": "The list does not exist.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/lists/{id}/backgrounds/unsplash": {
+            "post": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Sets a photo from unsplash as list background.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "list"
+                ],
+                "summary": "Set an unsplash photo as list background",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "List ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "The image you want to set as background",
+                        "name": "list",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/background.Image"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The background has been successfully set.",
+                        "schema": {
+                            "$ref": "#/definitions/models.List"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid image object provided.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "403": {
+                        "description": "The user does not have access to the list",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/lists/{id}/backgrounds/upload": {
+            "put": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Upload a list background.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "list"
+                ],
+                "summary": "Upload a list background",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "List ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "The file as single file.",
+                        "name": "background",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The background was set successfully.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "403": {
+                        "description": "File too large.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "404": {
+                        "description": "The list does not exist.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/lists/{id}/buckets": {
+            "get": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Returns all kanban buckets with belong to a list including their tasks.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "task"
+                ],
+                "summary": "Get all kanban buckets of a list",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "List Id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The buckets with their tasks",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Bucket"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Creates a new kanban bucket on a list.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "task"
+                ],
+                "summary": "Create a new bucket",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "List Id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "The bucket object",
+                        "name": "bucket",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Bucket"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The created bucket object.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Bucket"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid bucket object provided.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "The list does not exist.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "500": {
@@ -646,20 +1074,20 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/models.User"
+                                "$ref": "#/definitions/user.User"
                             }
                         }
                     },
                     "400": {
                         "description": "Something's invalid.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "401": {
                         "description": "The user does not have the right to see the list.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "500": {
@@ -729,7 +1157,7 @@
                     "403": {
                         "description": "No right to see the list.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "500": {
@@ -771,7 +1199,6 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.TeamList"
                         }
                     }
@@ -786,19 +1213,19 @@
                     "400": {
                         "description": "Invalid team list object provided.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "403": {
                         "description": "The user does not have access to the list",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "404": {
                         "description": "The team does not exist.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "500": {
@@ -868,7 +1295,7 @@
                     "403": {
                         "description": "No right to see the list.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "500": {
@@ -910,7 +1337,6 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.ListUser"
                         }
                     }
@@ -925,19 +1351,144 @@
                     "400": {
                         "description": "Invalid user list object provided.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "403": {
                         "description": "The user does not have access to the list",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "404": {
                         "description": "The user does not exist.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/lists/{listID}/buckets/{bucketID}": {
+            "post": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Updates an existing kanban bucket.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "task"
+                ],
+                "summary": "Update an existing bucket",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "List Id",
+                        "name": "listID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Bucket Id",
+                        "name": "bucketID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "The bucket object",
+                        "name": "bucket",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Bucket"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The created bucket object.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Bucket"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid bucket object provided.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "The bucket does not exist.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Deletes an existing kanban bucket and dissociates all of its task. It does not delete any tasks. You cannot delete the last bucket on a list.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "task"
+                ],
+                "summary": "Deletes an existing bucket",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "List Id",
+                        "name": "listID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Bucket Id",
+                        "name": "bucketID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successfully deleted.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "404": {
+                        "description": "The bucket does not exist.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "500": {
@@ -995,7 +1546,7 @@
                     },
                     {
                         "type": "string",
-                        "description": "The sorting parameter. You can pass this multiple times to get the tasks ordered by multiple different parametes, along with `order_by`. Possible values to sort by are `id`, `text`, `description`, `done`, `done_at_unix`, `due_date_unix`, `created_by_id`, `list_id`, `repeat_after`, `priority`, `start_date_unix`, `end_date_unix`, `hex_color`, `percent_done`, `uid`, `created`, `updated`. Default is `id`.",
+                        "description": "The sorting parameter. You can pass this multiple times to get the tasks ordered by multiple different parametes, along with `order_by`. Possible values to sort by are `id`, `title`, `description`, `done`, `done_at`, `due_date`, `created_by_id`, `list_id`, `repeat_after`, `priority`, `start_date`, `end_date`, `hex_color`, `percent_done`, `uid`, `created`, `updated`. Default is `id`.",
                         "name": "sort_by",
                         "in": "query"
                     },
@@ -1006,15 +1557,33 @@
                         "in": "query"
                     },
                     {
-                        "type": "integer",
-                        "description": "The start date parameter to filter by. Expects a unix timestamp. If no end date, but a start date is specified, the end date is set to the current time.",
-                        "name": "startdate",
+                        "type": "string",
+                        "description": "The name of the field to filter by. Accepts an array for multiple filters which will be chanied together, all supplied filter must match.",
+                        "name": "filter_by",
                         "in": "query"
                     },
                     {
-                        "type": "integer",
-                        "description": "The end date parameter to filter by. Expects a unix timestamp. If no start date, but an end date is specified, the start date is set to the current time.",
-                        "name": "enddate",
+                        "type": "string",
+                        "description": "The value to filter for.",
+                        "name": "filter_value",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "The comparator to use for a filter. Available values are `equals`, `greater`, `greater_equals`, `less` and `less_equals`. Defaults to `equals`",
+                        "name": "filter_comparator",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "The concatinator to use for filters. Available values are `and` or `or`. Defaults to `or`.",
+                        "name": "filter_concat",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "If set to true the result will include filtered fields whose value is set to `null`. Available values are `true` or `false`. Defaults to `false`.",
+                        "name": "filter_include_nulls",
                         "in": "query"
                     }
                 ],
@@ -1076,7 +1645,6 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.TeamList"
                         }
                     }
@@ -1091,13 +1659,13 @@
                     "403": {
                         "description": "The user does not have admin-access to the list",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "404": {
                         "description": "Team or list does not exist.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "500": {
@@ -1148,13 +1716,13 @@
                     "403": {
                         "description": "The user does not have access to the list",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "404": {
                         "description": "Team or list does not exist.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "500": {
@@ -1205,7 +1773,6 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.ListUser"
                         }
                     }
@@ -1220,13 +1787,13 @@
                     "403": {
                         "description": "The user does not have admin-access to the list",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "404": {
                         "description": "User or list does not exist.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "500": {
@@ -1277,13 +1844,13 @@
                     "403": {
                         "description": "The user does not have access to the list",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "404": {
                         "description": "user or list does not exist.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "500": {
@@ -1389,7 +1956,6 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.LinkSharing"
                         }
                     }
@@ -1404,19 +1970,19 @@
                     "400": {
                         "description": "Invalid link share object provided.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "403": {
                         "description": "Not allowed to add the list share.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "404": {
                         "description": "The list does not exist.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "500": {
@@ -1472,13 +2038,13 @@
                     "403": {
                         "description": "No access to the list",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "404": {
                         "description": "Share Link not found.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "500": {
@@ -1532,13 +2098,13 @@
                     "403": {
                         "description": "Not allowed to remove the link.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "404": {
                         "description": "Share Link not found.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "500": {
@@ -1570,8 +2136,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
-                            "$ref": "#/definitions/models.UserLogin"
+                            "$ref": "#/definitions/user.Login"
                         }
                     }
                 ],
@@ -1590,6 +2155,119 @@
                     },
                     "403": {
                         "description": "Invalid username or password.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "412": {
+                        "description": "Invalid totp passcode.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/migration/todoist/auth": {
+            "get": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Returns the auth url where the user needs to get its auth code. This code can then be used to migrate everything from todoist to Vikunja.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "migration"
+                ],
+                "summary": "Get the auth url from todoist",
+                "responses": {
+                    "200": {
+                        "description": "The auth url.",
+                        "schema": {
+                            "$ref": "#/definitions/handler.AuthURL"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/migration/todoist/migrate": {
+            "post": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Migrates all projects, tasks, notes, reminders, subtasks and files from todoist to vikunja.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "migration"
+                ],
+                "summary": "Migrate all lists, tasks etc. from todoist",
+                "parameters": [
+                    {
+                        "description": "The auth code previously obtained from the auth url. See the docs for /migration/todoist/auth.",
+                        "name": "migrationCode",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/todoist.Migration"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A message telling you everything was migrated successfully.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/migration/todoist/status": {
+            "get": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Returns if the current user already did the migation or not. This is useful to show a confirmation message in the frontend if the user is trying to do the same migration again.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "migration"
+                ],
+                "summary": "Get migration status",
+                "responses": {
+                    "200": {
+                        "description": "The migration status",
+                        "schema": {
+                            "$ref": "#/definitions/migration.Status"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
                         "schema": {
                             "$ref": "#/definitions/models.Message"
                         }
@@ -1653,7 +2331,6 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/wunderlist.Migration"
                         }
                     }
@@ -1737,7 +2414,6 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Namespace"
                         }
                     }
@@ -1752,13 +2428,13 @@
                     "400": {
                         "description": "Invalid namespace object provided.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "403": {
                         "description": "The user does not have access to the namespace",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "500": {
@@ -1806,6 +2482,12 @@
                         "description": "Search namespaces by name.",
                         "name": "s",
                         "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "If true, also returns all archived namespaces.",
+                        "name": "is_archived",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -1850,7 +2532,6 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Namespace"
                         }
                     }
@@ -1865,13 +2546,13 @@
                     "400": {
                         "description": "Invalid namespace object provided.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "403": {
                         "description": "The user does not have access to the namespace",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "500": {
@@ -1920,7 +2601,7 @@
                     "403": {
                         "description": "The user does not have access to that namespace.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "500": {
@@ -1964,13 +2645,13 @@
                     "400": {
                         "description": "Invalid namespace object provided.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "403": {
                         "description": "The user does not have access to the namespace",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "500": {
@@ -2098,7 +2779,7 @@
                     "403": {
                         "description": "No right to see the namespace.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "500": {
@@ -2140,7 +2821,6 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.TeamNamespace"
                         }
                     }
@@ -2155,19 +2835,19 @@
                     "400": {
                         "description": "Invalid team namespace object provided.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "403": {
                         "description": "The team does not have access to the namespace",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "404": {
                         "description": "The team does not exist.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "500": {
@@ -2237,7 +2917,7 @@
                     "403": {
                         "description": "No right to see the namespace.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "500": {
@@ -2279,7 +2959,6 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.NamespaceUser"
                         }
                     }
@@ -2294,19 +2973,19 @@
                     "400": {
                         "description": "Invalid user namespace object provided.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "403": {
                         "description": "The user does not have access to the namespace",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "404": {
                         "description": "The user does not exist.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "500": {
@@ -2350,7 +3029,6 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.List"
                         }
                     }
@@ -2365,13 +3043,13 @@
                     "400": {
                         "description": "Invalid list object provided.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "403": {
                         "description": "The user does not have access to the list",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "500": {
@@ -2422,7 +3100,6 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.TeamNamespace"
                         }
                     }
@@ -2437,13 +3114,13 @@
                     "403": {
                         "description": "The team does not have admin-access to the namespace",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "404": {
                         "description": "Team or namespace does not exist.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "500": {
@@ -2494,13 +3171,13 @@
                     "403": {
                         "description": "The team does not have access to the namespace",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "404": {
                         "description": "team or namespace does not exist.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "500": {
@@ -2551,7 +3228,6 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.NamespaceUser"
                         }
                     }
@@ -2566,13 +3242,13 @@
                     "403": {
                         "description": "The user does not have admin-access to the namespace",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "404": {
                         "description": "User or namespace does not exist.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "500": {
@@ -2623,13 +3299,13 @@
                     "403": {
                         "description": "The user does not have access to the namespace",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "404": {
                         "description": "user or namespace does not exist.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "500": {
@@ -2661,8 +3337,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
-                            "$ref": "#/definitions/models.APIUserPassword"
+                            "$ref": "#/definitions/user.APIUserPassword"
                         }
                     }
                 ],
@@ -2670,13 +3345,13 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.User"
+                            "$ref": "#/definitions/user.User"
                         }
                     },
                     "400": {
                         "description": "No or invalid user register object provided / User already exists.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "500": {
@@ -2720,7 +3395,7 @@
                     "400": {
                         "description": "Invalid link share object provided.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "500": {
@@ -2771,20 +3446,38 @@
                     },
                     {
                         "type": "string",
-                        "description": "The sorting parameter. Possible values to sort by are priority, prioritydesc, priorityasc, duedate, duedatedesc, duedateasc.",
-                        "name": "sort",
+                        "description": "The sorting parameter. You can pass this multiple times to get the tasks ordered by multiple different parametes, along with `order_by`. Possible values to sort by are `id`, `text`, `description`, `done`, `done_at`, `due_date`, `created_by_id`, `list_id`, `repeat_after`, `priority`, `start_date`, `end_date`, `hex_color`, `percent_done`, `uid`, `created`, `updated`. Default is `id`.",
+                        "name": "sort_by",
                         "in": "query"
                     },
                     {
-                        "type": "integer",
-                        "description": "The start date parameter to filter by. Expects a unix timestamp. If no end date, but a start date is specified, the end date is set to the current time.",
-                        "name": "startdate",
+                        "type": "string",
+                        "description": "The ordering parameter. Possible values to order by are `asc` or `desc`. Default is `asc`.",
+                        "name": "order_by",
                         "in": "query"
                     },
                     {
-                        "type": "integer",
-                        "description": "The end date parameter to filter by. Expects a unix timestamp. If no start date, but an end date is specified, the start date is set to the current time.",
-                        "name": "enddate",
+                        "type": "string",
+                        "description": "The name of the field to filter by. Accepts an array for multiple filters which will be chanied together, all supplied filter must match.",
+                        "name": "filter_by",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "The value to filter for.",
+                        "name": "filter_value",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "The comparator to use for a filter. Available values are `equals`, `greater`, `greater_equals`, `less` and `less_equals`. Defaults to `equals`",
+                        "name": "filter_comparator",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "The concatinator to use for filters. Available values are `and` or `or`. Defaults to `or`.",
+                        "name": "filter_concat",
                         "in": "query"
                     }
                 ],
@@ -2832,7 +3525,6 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.BulkTask"
                         }
                     }
@@ -2847,13 +3539,13 @@
                     "400": {
                         "description": "Invalid task object provided.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "403": {
                         "description": "The user does not have access to the task (aka its list)",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "500": {
@@ -2946,7 +3638,6 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Task"
                         }
                     }
@@ -2961,13 +3652,13 @@
                     "400": {
                         "description": "Invalid task object provided.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "403": {
                         "description": "The user does not have access to the task (aka its list)",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "500": {
@@ -3011,13 +3702,13 @@
                     "400": {
                         "description": "Invalid task ID provided.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "403": {
                         "description": "The user does not have access to the list",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "500": {
@@ -3329,7 +4020,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/models.User"
+                                "$ref": "#/definitions/user.User"
                             }
                         }
                     },
@@ -3365,7 +4056,6 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.TaskAssginee"
                         }
                     },
@@ -3387,7 +4077,7 @@
                     "400": {
                         "description": "Invalid assignee object provided.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "500": {
@@ -3424,7 +4114,6 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.BulkAssignees"
                         }
                     },
@@ -3446,7 +4135,7 @@
                     "400": {
                         "description": "Invalid assignee object provided.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "500": {
@@ -3502,7 +4191,291 @@
                     "403": {
                         "description": "Not allowed to delete the assignee.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/tasks/{taskID}/comments": {
+            "get": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Get all task comments. The user doing this need to have at least read access to the task.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "task"
+                ],
+                "summary": "Get all task comments",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Task ID",
+                        "name": "taskID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The array with all task comments",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.TaskComment"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Create a new task comment. The user doing this need to have at least write access to the task this comment should belong to.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "task"
+                ],
+                "summary": "Create a new task comment",
+                "parameters": [
+                    {
+                        "description": "The task comment object",
+                        "name": "relation",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.TaskComment"
+                        }
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Task ID",
+                        "name": "taskID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The created task comment object.",
+                        "schema": {
+                            "$ref": "#/definitions/models.TaskComment"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid task comment object provided.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/tasks/{taskID}/comments/{commentID}": {
+            "get": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Remove a task comment. The user doing this need to have at least read access to the task this comment belongs to.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "task"
+                ],
+                "summary": "Remove a task comment",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Task ID",
+                        "name": "taskID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Comment ID",
+                        "name": "commentID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The task comment object.",
+                        "schema": {
+                            "$ref": "#/definitions/models.TaskComment"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid task comment object provided.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "The task comment was not found.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Update an existing task comment. The user doing this need to have at least write access to the task this comment belongs to.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "task"
+                ],
+                "summary": "Update an existing task comment",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Task ID",
+                        "name": "taskID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Comment ID",
+                        "name": "commentID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The updated task comment object.",
+                        "schema": {
+                            "$ref": "#/definitions/models.TaskComment"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid task comment object provided.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "The task comment was not found.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Remove a task comment. The user doing this need to have at least write access to the task this comment belongs to.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "task"
+                ],
+                "summary": "Remove a task comment",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Task ID",
+                        "name": "taskID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Comment ID",
+                        "name": "commentID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The task comment was successfully deleted.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid task comment object provided.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "The task comment was not found.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "500": {
@@ -3539,7 +4512,6 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.LabelTaskBulk"
                         }
                     },
@@ -3561,7 +4533,7 @@
                     "400": {
                         "description": "Invalid label object provided.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "500": {
@@ -3598,7 +4570,6 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.TaskRelation"
                         }
                     },
@@ -3620,7 +4591,7 @@
                     "400": {
                         "description": "Invalid task relation object provided.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "500": {
@@ -3654,7 +4625,6 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.TaskRelation"
                         }
                     },
@@ -3676,13 +4646,13 @@
                     "400": {
                         "description": "Invalid task relation object provided.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "404": {
                         "description": "The task relation was not found.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "500": {
@@ -3788,7 +4758,6 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.LabelTask"
                         }
                     }
@@ -3803,19 +4772,19 @@
                     "400": {
                         "description": "Invalid label object provided.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "403": {
                         "description": "Not allowed to add the label.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "404": {
                         "description": "The label does not exist.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "500": {
@@ -3871,13 +4840,13 @@
                     "403": {
                         "description": "Not allowed to remove the label.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "404": {
                         "description": "Label not found.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "500": {
@@ -3969,7 +4938,6 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Team"
                         }
                     }
@@ -3984,7 +4952,7 @@
                     "400": {
                         "description": "Invalid team object provided.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "500": {
@@ -3997,6 +4965,53 @@
             }
         },
         "/teams/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Returns a team by its ID.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "team"
+                ],
+                "summary": "Gets one team",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Team ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The team",
+                        "schema": {
+                            "$ref": "#/definitions/models.Team"
+                        }
+                    },
+                    "403": {
+                        "description": "The user does not have access to the team",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            },
             "post": {
                 "security": [
                     {
@@ -4028,7 +5043,6 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.Team"
                         }
                     }
@@ -4043,7 +5057,7 @@
                     "400": {
                         "description": "Invalid team object provided.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "500": {
@@ -4087,7 +5101,7 @@
                     "400": {
                         "description": "Invalid team object provided.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "500": {
@@ -4131,7 +5145,6 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/models.TeamMember"
                         }
                     }
@@ -4146,13 +5159,13 @@
                     "400": {
                         "description": "Invalid member object provided.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "403": {
                         "description": "The user does not have access to the team",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "500": {
@@ -4233,13 +5246,13 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.User"
+                            "$ref": "#/definitions/user.User"
                         }
                     },
                     "404": {
                         "description": "User does not exist.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "500": {
@@ -4271,8 +5284,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
-                            "$ref": "#/definitions/models.EmailConfirm"
+                            "$ref": "#/definitions/user.EmailConfirm"
                         }
                     }
                 ],
@@ -4286,7 +5298,7 @@
                     "412": {
                         "description": "Bad token provided.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "500": {
@@ -4323,7 +5335,6 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/v1.UserPassword"
                         }
                     }
@@ -4338,13 +5349,13 @@
                     "400": {
                         "description": "Something's invalid.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "404": {
                         "description": "User does not exist.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "500": {
@@ -4376,8 +5387,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
-                            "$ref": "#/definitions/models.PasswordReset"
+                            "$ref": "#/definitions/user.PasswordReset"
                         }
                     }
                 ],
@@ -4391,7 +5401,7 @@
                     "400": {
                         "description": "Bad token provided.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "500": {
@@ -4423,8 +5433,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
-                            "$ref": "#/definitions/models.PasswordTokenRequest"
+                            "$ref": "#/definitions/user.PasswordTokenRequest"
                         }
                     }
                 ],
@@ -4438,11 +5447,302 @@
                     "404": {
                         "description": "The user does not exist.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/settings/email": {
+            "post": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Lets the current user change their email address.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "Update email address",
+                "parameters": [
+                    {
+                        "description": "The new email address and current password.",
+                        "name": "userEmailUpdate",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/user.EmailUpdate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "400": {
+                        "description": "Something's invalid.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "User does not exist.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/settings/totp": {
+            "get": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Returns the current user totp setting or an error if it is not enabled.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "Totp setting for the current user",
+                "responses": {
+                    "200": {
+                        "description": "The totp settings.",
+                        "schema": {
+                            "$ref": "#/definitions/user.TOTP"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/settings/totp/disable": {
+            "post": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Disables any totp settings for the current user.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "Disable totp settings",
+                "parameters": [
+                    {
+                        "description": "The current user's password (only password is enough).",
+                        "name": "totp",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/user.Login"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successfully disabled",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "400": {
+                        "description": "Something's invalid.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "User does not exist.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/settings/totp/enable": {
+            "post": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Enables a previously enrolled totp setting by providing a totp passcode.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "Enable a previously enrolled totp setting.",
+                "parameters": [
+                    {
+                        "description": "The totp passcode.",
+                        "name": "totp",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/user.TOTPPasscode"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successfully enabled",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "400": {
+                        "description": "Something's invalid.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "User does not exist.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "412": {
+                        "description": "TOTP is not enrolled.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/settings/totp/enroll": {
+            "post": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Creates an initial setup for the user in the db. After this step, the user needs to verify they have a working totp setup with the \"enable totp\" endpoint.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "Enroll a user into totp",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/user.TOTP"
+                        }
+                    },
+                    "400": {
+                        "description": "Something's invalid.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "User does not exist.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/settings/totp/qrcode": {
+            "get": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Returns a qr code for easier setup at end user's devices.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "Totp QR Code",
+                "responses": {
+                    "200": {
+                        "description": "The qr code as jpeg image",
+                        "schema": {
+                            "type": ""
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error.",
                         "schema": {
                             "$ref": "#/definitions/models.Message"
                         }
@@ -4511,14 +5811,14 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/models.User"
+                                "$ref": "#/definitions/user.User"
                             }
                         }
                     },
                     "400": {
                         "description": "Something's invalid.",
                         "schema": {
-                            "$ref": "#/definitions/code.vikunja.io/web.HTTPError"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "500": {
@@ -4529,9 +5829,77 @@
                     }
                 }
             }
+        },
+        "/{username}/avatar": {
+            "get": {
+                "description": "Returns the user avatar as image.",
+                "produces": [
+                    "application/octet-stream"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "User Avatar",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "The username of the user who's avatar you want to get",
+                        "name": "username",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "The size of the avatar you want to get",
+                        "name": "size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The avatar",
+                        "schema": {
+                            "type": ""
+                        }
+                    },
+                    "404": {
+                        "description": "The user does not exist.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
+        "afero.File": {
+            "type": "object"
+        },
+        "background.Image": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "info": {
+                    "description": "This can be used to supply extra information from an image provider to clients",
+                    "type": "object"
+                },
+                "thumb": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
         "files.File": {
             "type": "object",
             "properties": {
@@ -4569,12 +5937,942 @@
                 "migrator_name": {
                     "type": "string"
                 },
-                "time_unix": {
+                "time": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.Bucket": {
+            "type": "object",
+            "properties": {
+                "created": {
+                    "description": "A timestamp when this bucket was created. You cannot change this value.",
+                    "type": "string"
+                },
+                "created_by": {
+                    "description": "The user who initially created the bucket.",
+                    "type": "object",
+                    "$ref": "#/definitions/user.User"
+                },
+                "id": {
+                    "description": "The unique, numeric id of this bucket.",
+                    "type": "integer"
+                },
+                "list_id": {
+                    "description": "The list this bucket belongs to.",
+                    "type": "integer"
+                },
+                "tasks": {
+                    "description": "All tasks which belong to this bucket.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Task"
+                    }
+                },
+                "title": {
+                    "description": "The title of this bucket.",
+                    "type": "string",
+                    "minLength": 1
+                },
+                "updated": {
+                    "description": "A timestamp when this bucket was last updated. You cannot change this value.",
+                    "type": "string"
+                }
+            }
+        },
+        "models.BulkAssignees": {
+            "type": "object",
+            "properties": {
+                "assignees": {
+                    "description": "A list with all assignees",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/user.User"
+                    }
+                }
+            }
+        },
+        "models.BulkTask": {
+            "type": "object",
+            "properties": {
+                "assignees": {
+                    "description": "An array of users who are assigned to this task",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/user.User"
+                    }
+                },
+                "attachments": {
+                    "description": "All attachments this task has",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.TaskAttachment"
+                    }
+                },
+                "bucket_id": {
+                    "description": "BucketID is the ID of the kanban bucket this task belongs to.",
+                    "type": "integer"
+                },
+                "created": {
+                    "description": "A timestamp when this task was created. You cannot change this value.",
+                    "type": "string"
+                },
+                "created_by": {
+                    "description": "The user who initially created the task.",
+                    "type": "object",
+                    "$ref": "#/definitions/user.User"
+                },
+                "description": {
+                    "description": "The task description.",
+                    "type": "string"
+                },
+                "done": {
+                    "description": "Whether a task is done or not.",
+                    "type": "boolean"
+                },
+                "done_at": {
+                    "description": "The time when a task was marked as done.",
+                    "type": "string"
+                },
+                "due_date": {
+                    "description": "The time when the task is due.",
+                    "type": "string"
+                },
+                "end_date": {
+                    "description": "When this task ends.",
+                    "type": "string"
+                },
+                "hex_color": {
+                    "description": "The task color in hex",
+                    "type": "string",
+                    "maxLength": 6
+                },
+                "id": {
+                    "description": "The unique, numeric id of this task.",
+                    "type": "integer"
+                },
+                "identifier": {
+                    "description": "The task identifier, based on the list identifier and the task's index",
+                    "type": "string"
+                },
+                "index": {
+                    "description": "The task index, calculated per list",
+                    "type": "integer"
+                },
+                "labels": {
+                    "description": "An array of labels which are associated with this task.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Label"
+                    }
+                },
+                "list_id": {
+                    "description": "The list this task belongs to.",
+                    "type": "integer"
+                },
+                "percent_done": {
+                    "description": "Determines how far a task is left from being done",
+                    "type": "number"
+                },
+                "position": {
+                    "description": "The position of the task - any task list can be sorted as usual by this parameter.\nWhen accessing tasks via kanban buckets, this is primarily used to sort them based on a range\nWe're using a float64 here to make it possible to put any task within any two other tasks (by changing the number).\nYou would calculate the new position between two tasks with something like task3.position = (task2.position - task1.position) / 2.\nA 64-Bit float leaves plenty of room to initially give tasks a position with 2^16 difference to the previous task\nwhich also leaves a lot of room for rearranging and sorting later.",
+                    "type": "number"
+                },
+                "priority": {
+                    "description": "The task priority. Can be anything you want, it is possible to sort by this later.",
+                    "type": "integer"
+                },
+                "related_tasks": {
+                    "description": "All related tasks, grouped by their relation kind",
+                    "type": "object",
+                    "$ref": "#/definitions/models.RelatedTaskMap"
+                },
+                "reminder_dates": {
+                    "description": "An array of datetimes when the user wants to be reminded of the task.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "repeat_after": {
+                    "description": "An amount in seconds this task repeats itself. If this is set, when marking the task as done, it will mark itself as \"undone\" and then increase all remindes and the due date by its amount.",
+                    "type": "integer"
+                },
+                "repeat_from_current_date": {
+                    "description": "If specified, a repeating task will repeat from the current date rather than the last set date.",
+                    "type": "boolean"
+                },
+                "start_date": {
+                    "description": "When this task starts.",
+                    "type": "string"
+                },
+                "task_ids": {
+                    "description": "A list of task ids to update",
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "title": {
+                    "description": "The task text. This is what you'll see in the list.",
+                    "type": "string",
+                    "maxLength": 250,
+                    "minLength": 3
+                },
+                "updated": {
+                    "description": "A timestamp when this task was last updated. You cannot change this value.",
+                    "type": "string"
+                }
+            }
+        },
+        "models.Label": {
+            "type": "object",
+            "properties": {
+                "created": {
+                    "description": "A timestamp when this label was created. You cannot change this value.",
+                    "type": "string"
+                },
+                "created_by": {
+                    "description": "The user who created this label",
+                    "type": "object",
+                    "$ref": "#/definitions/user.User"
+                },
+                "description": {
+                    "description": "The label description.",
+                    "type": "string"
+                },
+                "hex_color": {
+                    "description": "The color this label has",
+                    "type": "string",
+                    "maxLength": 6
+                },
+                "id": {
+                    "description": "The unique, numeric id of this label.",
+                    "type": "integer"
+                },
+                "title": {
+                    "description": "The title of the lable. You'll see this one on tasks associated with it.",
+                    "type": "string",
+                    "maxLength": 250,
+                    "minLength": 3
+                },
+                "updated": {
+                    "description": "A timestamp when this label was last updated. You cannot change this value.",
+                    "type": "string"
+                }
+            }
+        },
+        "models.LabelTask": {
+            "type": "object",
+            "properties": {
+                "created": {
+                    "description": "A timestamp when this task was created. You cannot change this value.",
+                    "type": "string"
+                },
+                "label_id": {
+                    "description": "The label id you want to associate with a task.",
                     "type": "integer"
                 }
             }
         },
-        "models.APIUserPassword": {
+        "models.LabelTaskBulk": {
+            "type": "object",
+            "properties": {
+                "labels": {
+                    "description": "All labels you want to update at once.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Label"
+                    }
+                }
+            }
+        },
+        "models.LinkSharing": {
+            "type": "object",
+            "properties": {
+                "created": {
+                    "description": "A timestamp when this list was shared. You cannot change this value.",
+                    "type": "string"
+                },
+                "hash": {
+                    "description": "The public id to get this shared list",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "The ID of the shared thing",
+                    "type": "integer"
+                },
+                "right": {
+                    "description": "The right this list is shared with. 0 = Read only, 1 = Read \u0026 Write, 2 = Admin. See the docs for more details.",
+                    "type": "integer",
+                    "default": 0,
+                    "maximum": 2
+                },
+                "shared_by": {
+                    "description": "The user who shared this list",
+                    "type": "object",
+                    "$ref": "#/definitions/user.User"
+                },
+                "sharing_type": {
+                    "description": "The kind of this link. 0 = undefined, 1 = without password, 2 = with password (currently not implemented).",
+                    "type": "integer",
+                    "default": 0,
+                    "maximum": 2
+                },
+                "updated": {
+                    "description": "A timestamp when this share was last updated. You cannot change this value.",
+                    "type": "string"
+                }
+            }
+        },
+        "models.List": {
+            "type": "object",
+            "properties": {
+                "background_information": {
+                    "description": "Holds extra information about the background set since some background providers require attribution or similar. If not null, the background can be accessed at /lists/{listID}/background",
+                    "type": "object"
+                },
+                "created": {
+                    "description": "A timestamp when this list was created. You cannot change this value.",
+                    "type": "string"
+                },
+                "description": {
+                    "description": "The description of the list.",
+                    "type": "string"
+                },
+                "hex_color": {
+                    "description": "The hex color of this list",
+                    "type": "string",
+                    "maxLength": 6
+                },
+                "id": {
+                    "description": "The unique, numeric id of this list.",
+                    "type": "integer"
+                },
+                "identifier": {
+                    "description": "The unique list short identifier. Used to build task identifiers.",
+                    "type": "string",
+                    "maxLength": 10,
+                    "minLength": 0
+                },
+                "is_archived": {
+                    "description": "Whether or not a list is archived.",
+                    "type": "boolean"
+                },
+                "namespace_id": {
+                    "type": "integer"
+                },
+                "owner": {
+                    "description": "The user who created this list.",
+                    "type": "object",
+                    "$ref": "#/definitions/user.User"
+                },
+                "title": {
+                    "description": "The title of the list. You'll see this in the namespace overview.",
+                    "type": "string",
+                    "maxLength": 250,
+                    "minLength": 3
+                },
+                "updated": {
+                    "description": "A timestamp when this list was last updated. You cannot change this value.",
+                    "type": "string"
+                }
+            }
+        },
+        "models.ListUser": {
+            "type": "object",
+            "properties": {
+                "created": {
+                    "description": "A timestamp when this relation was created. You cannot change this value.",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "The unique, numeric id of this list \u003c-\u003e user relation.",
+                    "type": "integer"
+                },
+                "right": {
+                    "description": "The right this user has. 0 = Read only, 1 = Read \u0026 Write, 2 = Admin. See the docs for more details.",
+                    "type": "integer",
+                    "default": 0,
+                    "maximum": 2
+                },
+                "updated": {
+                    "description": "A timestamp when this relation was last updated. You cannot change this value.",
+                    "type": "string"
+                },
+                "user_id": {
+                    "description": "The username.",
+                    "type": "string"
+                }
+            }
+        },
+        "models.Message": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "description": "A standard message.",
+                    "type": "string"
+                }
+            }
+        },
+        "models.Namespace": {
+            "type": "object",
+            "properties": {
+                "created": {
+                    "description": "A timestamp when this namespace was created. You cannot change this value.",
+                    "type": "string"
+                },
+                "description": {
+                    "description": "The description of the namespace",
+                    "type": "string"
+                },
+                "hex_color": {
+                    "description": "The hex color of this namespace",
+                    "type": "string",
+                    "maxLength": 6
+                },
+                "id": {
+                    "description": "The unique, numeric id of this namespace.",
+                    "type": "integer"
+                },
+                "is_archived": {
+                    "description": "Whether or not a namespace is archived.",
+                    "type": "boolean"
+                },
+                "owner": {
+                    "description": "The user who owns this namespace",
+                    "type": "object",
+                    "$ref": "#/definitions/user.User"
+                },
+                "title": {
+                    "description": "The name of this namespace.",
+                    "type": "string",
+                    "maxLength": 250,
+                    "minLength": 5
+                },
+                "updated": {
+                    "description": "A timestamp when this namespace was last updated. You cannot change this value.",
+                    "type": "string"
+                }
+            }
+        },
+        "models.NamespaceUser": {
+            "type": "object",
+            "properties": {
+                "created": {
+                    "description": "A timestamp when this relation was created. You cannot change this value.",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "The unique, numeric id of this namespace \u003c-\u003e user relation.",
+                    "type": "integer"
+                },
+                "right": {
+                    "description": "The right this user has. 0 = Read only, 1 = Read \u0026 Write, 2 = Admin. See the docs for more details.",
+                    "type": "integer",
+                    "default": 0,
+                    "maximum": 2
+                },
+                "updated": {
+                    "description": "A timestamp when this relation was last updated. You cannot change this value.",
+                    "type": "string"
+                },
+                "user_id": {
+                    "description": "The username.",
+                    "type": "string"
+                }
+            }
+        },
+        "models.NamespaceWithLists": {
+            "type": "object",
+            "properties": {
+                "created": {
+                    "description": "A timestamp when this namespace was created. You cannot change this value.",
+                    "type": "string"
+                },
+                "description": {
+                    "description": "The description of the namespace",
+                    "type": "string"
+                },
+                "hex_color": {
+                    "description": "The hex color of this namespace",
+                    "type": "string",
+                    "maxLength": 6
+                },
+                "id": {
+                    "description": "The unique, numeric id of this namespace.",
+                    "type": "integer"
+                },
+                "is_archived": {
+                    "description": "Whether or not a namespace is archived.",
+                    "type": "boolean"
+                },
+                "lists": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.List"
+                    }
+                },
+                "owner": {
+                    "description": "The user who owns this namespace",
+                    "type": "object",
+                    "$ref": "#/definitions/user.User"
+                },
+                "title": {
+                    "description": "The name of this namespace.",
+                    "type": "string",
+                    "maxLength": 250,
+                    "minLength": 5
+                },
+                "updated": {
+                    "description": "A timestamp when this namespace was last updated. You cannot change this value.",
+                    "type": "string"
+                }
+            }
+        },
+        "models.RelatedTaskMap": {
+            "type": "object",
+            "additionalProperties": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/definitions/models.Task"
+                }
+            }
+        },
+        "models.Task": {
+            "type": "object",
+            "properties": {
+                "assignees": {
+                    "description": "An array of users who are assigned to this task",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/user.User"
+                    }
+                },
+                "attachments": {
+                    "description": "All attachments this task has",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.TaskAttachment"
+                    }
+                },
+                "bucket_id": {
+                    "description": "BucketID is the ID of the kanban bucket this task belongs to.",
+                    "type": "integer"
+                },
+                "created": {
+                    "description": "A timestamp when this task was created. You cannot change this value.",
+                    "type": "string"
+                },
+                "created_by": {
+                    "description": "The user who initially created the task.",
+                    "type": "object",
+                    "$ref": "#/definitions/user.User"
+                },
+                "description": {
+                    "description": "The task description.",
+                    "type": "string"
+                },
+                "done": {
+                    "description": "Whether a task is done or not.",
+                    "type": "boolean"
+                },
+                "done_at": {
+                    "description": "The time when a task was marked as done.",
+                    "type": "string"
+                },
+                "due_date": {
+                    "description": "The time when the task is due.",
+                    "type": "string"
+                },
+                "end_date": {
+                    "description": "When this task ends.",
+                    "type": "string"
+                },
+                "hex_color": {
+                    "description": "The task color in hex",
+                    "type": "string",
+                    "maxLength": 6
+                },
+                "id": {
+                    "description": "The unique, numeric id of this task.",
+                    "type": "integer"
+                },
+                "identifier": {
+                    "description": "The task identifier, based on the list identifier and the task's index",
+                    "type": "string"
+                },
+                "index": {
+                    "description": "The task index, calculated per list",
+                    "type": "integer"
+                },
+                "labels": {
+                    "description": "An array of labels which are associated with this task.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Label"
+                    }
+                },
+                "list_id": {
+                    "description": "The list this task belongs to.",
+                    "type": "integer"
+                },
+                "percent_done": {
+                    "description": "Determines how far a task is left from being done",
+                    "type": "number"
+                },
+                "position": {
+                    "description": "The position of the task - any task list can be sorted as usual by this parameter.\nWhen accessing tasks via kanban buckets, this is primarily used to sort them based on a range\nWe're using a float64 here to make it possible to put any task within any two other tasks (by changing the number).\nYou would calculate the new position between two tasks with something like task3.position = (task2.position - task1.position) / 2.\nA 64-Bit float leaves plenty of room to initially give tasks a position with 2^16 difference to the previous task\nwhich also leaves a lot of room for rearranging and sorting later.",
+                    "type": "number"
+                },
+                "priority": {
+                    "description": "The task priority. Can be anything you want, it is possible to sort by this later.",
+                    "type": "integer"
+                },
+                "related_tasks": {
+                    "description": "All related tasks, grouped by their relation kind",
+                    "type": "object",
+                    "$ref": "#/definitions/models.RelatedTaskMap"
+                },
+                "reminder_dates": {
+                    "description": "An array of datetimes when the user wants to be reminded of the task.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "repeat_after": {
+                    "description": "An amount in seconds this task repeats itself. If this is set, when marking the task as done, it will mark itself as \"undone\" and then increase all remindes and the due date by its amount.",
+                    "type": "integer"
+                },
+                "repeat_from_current_date": {
+                    "description": "If specified, a repeating task will repeat from the current date rather than the last set date.",
+                    "type": "boolean"
+                },
+                "start_date": {
+                    "description": "When this task starts.",
+                    "type": "string"
+                },
+                "title": {
+                    "description": "The task text. This is what you'll see in the list.",
+                    "type": "string",
+                    "maxLength": 250,
+                    "minLength": 3
+                },
+                "updated": {
+                    "description": "A timestamp when this task was last updated. You cannot change this value.",
+                    "type": "string"
+                }
+            }
+        },
+        "models.TaskAssginee": {
+            "type": "object",
+            "properties": {
+                "created": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.TaskAttachment": {
+            "type": "object",
+            "properties": {
+                "created": {
+                    "type": "string"
+                },
+                "created_by": {
+                    "type": "object",
+                    "$ref": "#/definitions/user.User"
+                },
+                "file": {
+                    "type": "object",
+                    "$ref": "#/definitions/files.File"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "task_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.TaskComment": {
+            "type": "object",
+            "properties": {
+                "author": {
+                    "type": "object",
+                    "$ref": "#/definitions/user.User"
+                },
+                "comment": {
+                    "type": "string"
+                },
+                "created": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "updated": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.TaskRelation": {
+            "type": "object",
+            "properties": {
+                "created": {
+                    "description": "A timestamp when this label was created. You cannot change this value.",
+                    "type": "string"
+                },
+                "created_by": {
+                    "description": "The user who created this relation",
+                    "type": "object",
+                    "$ref": "#/definitions/user.User"
+                },
+                "other_task_id": {
+                    "description": "The ID of the other task, the task which is being related.",
+                    "type": "integer"
+                },
+                "relation_kind": {
+                    "description": "The kind of the relation.",
+                    "type": "string"
+                },
+                "task_id": {
+                    "description": "The ID of the \"base\" task, the task which has a relation to another.",
+                    "type": "integer"
+                }
+            }
+        },
+        "models.Team": {
+            "type": "object",
+            "properties": {
+                "created": {
+                    "description": "A timestamp when this relation was created. You cannot change this value.",
+                    "type": "string"
+                },
+                "created_by": {
+                    "description": "The user who created this team.",
+                    "type": "object",
+                    "$ref": "#/definitions/user.User"
+                },
+                "description": {
+                    "description": "The team's description.",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "The unique, numeric id of this team.",
+                    "type": "integer"
+                },
+                "members": {
+                    "description": "An array of all members in this team.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.TeamUser"
+                    }
+                },
+                "name": {
+                    "description": "The name of this team.",
+                    "type": "string",
+                    "maxLength": 250,
+                    "minLength": 5
+                },
+                "updated": {
+                    "description": "A timestamp when this relation was last updated. You cannot change this value.",
+                    "type": "string"
+                }
+            }
+        },
+        "models.TeamList": {
+            "type": "object",
+            "properties": {
+                "created": {
+                    "description": "A timestamp when this relation was created. You cannot change this value.",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "The unique, numeric id of this list \u003c-\u003e team relation.",
+                    "type": "integer"
+                },
+                "right": {
+                    "description": "The right this team has. 0 = Read only, 1 = Read \u0026 Write, 2 = Admin. See the docs for more details.",
+                    "type": "integer",
+                    "default": 0,
+                    "maximum": 2
+                },
+                "team_id": {
+                    "description": "The team id.",
+                    "type": "integer"
+                },
+                "updated": {
+                    "description": "A timestamp when this relation was last updated. You cannot change this value.",
+                    "type": "string"
+                }
+            }
+        },
+        "models.TeamMember": {
+            "type": "object",
+            "properties": {
+                "admin": {
+                    "description": "Whether or not the member is an admin of the team. See the docs for more about what a team admin can do",
+                    "type": "boolean"
+                },
+                "created": {
+                    "description": "A timestamp when this relation was created. You cannot change this value.",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "The unique, numeric id of this team member relation.",
+                    "type": "integer"
+                },
+                "username": {
+                    "description": "The username of the member. We use this to prevent automated user id entering.",
+                    "type": "string"
+                }
+            }
+        },
+        "models.TeamNamespace": {
+            "type": "object",
+            "properties": {
+                "created": {
+                    "description": "A timestamp when this relation was created. You cannot change this value.",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "The unique, numeric id of this namespace \u003c-\u003e team relation.",
+                    "type": "integer"
+                },
+                "right": {
+                    "description": "The right this team has. 0 = Read only, 1 = Read \u0026 Write, 2 = Admin. See the docs for more details.",
+                    "type": "integer",
+                    "default": 0,
+                    "maximum": 2
+                },
+                "team_id": {
+                    "description": "The team id.",
+                    "type": "integer"
+                },
+                "updated": {
+                    "description": "A timestamp when this relation was last updated. You cannot change this value.",
+                    "type": "string"
+                }
+            }
+        },
+        "models.TeamUser": {
+            "type": "object",
+            "properties": {
+                "admin": {
+                    "description": "Whether or not the member is an admin of the team. See the docs for more about what a team admin can do",
+                    "type": "boolean"
+                },
+                "created": {
+                    "description": "A timestamp when this task was created. You cannot change this value.",
+                    "type": "string"
+                },
+                "email": {
+                    "description": "The user's email address.",
+                    "type": "string",
+                    "maxLength": 250
+                },
+                "id": {
+                    "description": "The unique, numeric id of this user.",
+                    "type": "integer"
+                },
+                "updated": {
+                    "description": "A timestamp when this task was last updated. You cannot change this value.",
+                    "type": "string"
+                },
+                "username": {
+                    "description": "The username of the user. Is always unique.",
+                    "type": "string",
+                    "maxLength": 250,
+                    "minLength": 3
+                }
+            }
+        },
+        "models.TeamWithRight": {
+            "type": "object",
+            "properties": {
+                "created": {
+                    "description": "A timestamp when this relation was created. You cannot change this value.",
+                    "type": "string"
+                },
+                "created_by": {
+                    "description": "The user who created this team.",
+                    "type": "object",
+                    "$ref": "#/definitions/user.User"
+                },
+                "description": {
+                    "description": "The team's description.",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "The unique, numeric id of this team.",
+                    "type": "integer"
+                },
+                "members": {
+                    "description": "An array of all members in this team.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.TeamUser"
+                    }
+                },
+                "name": {
+                    "description": "The name of this team.",
+                    "type": "string",
+                    "maxLength": 250,
+                    "minLength": 5
+                },
+                "right": {
+                    "type": "integer"
+                },
+                "updated": {
+                    "description": "A timestamp when this relation was last updated. You cannot change this value.",
+                    "type": "string"
+                }
+            }
+        },
+        "models.UserWithRight": {
+            "type": "object",
+            "properties": {
+                "created": {
+                    "description": "A timestamp when this task was created. You cannot change this value.",
+                    "type": "string"
+                },
+                "email": {
+                    "description": "The user's email address.",
+                    "type": "string",
+                    "maxLength": 250
+                },
+                "id": {
+                    "description": "The unique, numeric id of this user.",
+                    "type": "integer"
+                },
+                "right": {
+                    "type": "integer"
+                },
+                "updated": {
+                    "description": "A timestamp when this task was last updated. You cannot change this value.",
+                    "type": "string"
+                },
+                "username": {
+                    "description": "The username of the user. Is always unique.",
+                    "type": "string",
+                    "maxLength": 250,
+                    "minLength": 3
+                }
+            }
+        },
+        "todoist.Migration": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                }
+            }
+        },
+        "user.APIUserPassword": {
             "type": "object",
             "properties": {
                 "email": {
@@ -4600,140 +6898,7 @@
                 }
             }
         },
-        "models.BulkAssignees": {
-            "type": "object",
-            "properties": {
-                "assignees": {
-                    "description": "A list with all assignees",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.User"
-                    }
-                }
-            }
-        },
-        "models.BulkTask": {
-            "type": "object",
-            "properties": {
-                "assignees": {
-                    "description": "An array of users who are assigned to this task",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.User"
-                    }
-                },
-                "attachments": {
-                    "description": "All attachments this task has",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.TaskAttachment"
-                    }
-                },
-                "created": {
-                    "description": "A unix timestamp when this task was created. You cannot change this value.",
-                    "type": "integer"
-                },
-                "createdBy": {
-                    "description": "The user who initially created the task.",
-                    "type": "object",
-                    "$ref": "#/definitions/models.User"
-                },
-                "description": {
-                    "description": "The task description.",
-                    "type": "string"
-                },
-                "done": {
-                    "description": "Whether a task is done or not.",
-                    "type": "boolean"
-                },
-                "doneAt": {
-                    "description": "The unix timestamp when a task was marked as done.",
-                    "type": "integer"
-                },
-                "dueDate": {
-                    "description": "A unix timestamp when the task is due.",
-                    "type": "integer"
-                },
-                "endDate": {
-                    "description": "When this task ends.",
-                    "type": "integer"
-                },
-                "hexColor": {
-                    "description": "The task color in hex",
-                    "type": "string",
-                    "maxLength": 6
-                },
-                "id": {
-                    "description": "The unique, numeric id of this task.",
-                    "type": "integer"
-                },
-                "identifier": {
-                    "description": "The task identifier, based on the list identifier and the task's index",
-                    "type": "string"
-                },
-                "index": {
-                    "description": "The task index, calculated per list",
-                    "type": "integer"
-                },
-                "labels": {
-                    "description": "An array of labels which are associated with this task.",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.Label"
-                    }
-                },
-                "listID": {
-                    "description": "The list this task belongs to.",
-                    "type": "integer"
-                },
-                "percentDone": {
-                    "description": "Determines how far a task is left from being done",
-                    "type": "number"
-                },
-                "priority": {
-                    "description": "The task priority. Can be anything you want, it is possible to sort by this later.",
-                    "type": "integer"
-                },
-                "related_tasks": {
-                    "description": "All related tasks, grouped by their relation kind",
-                    "type": "object",
-                    "$ref": "#/definitions/models.RelatedTaskMap"
-                },
-                "reminderDates": {
-                    "description": "An array of unix timestamps when the user wants to be reminded of the task.",
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "repeatAfter": {
-                    "description": "An amount in seconds this task repeats itself. If this is set, when marking the task as done, it will mark itself as \"undone\" and then increase all remindes and the due date by its amount.",
-                    "type": "integer"
-                },
-                "startDate": {
-                    "description": "When this task starts.",
-                    "type": "integer"
-                },
-                "task_ids": {
-                    "description": "A list of task ids to update",
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "text": {
-                    "description": "The task text. This is what you'll see in the list.",
-                    "type": "string",
-                    "maxLength": 250,
-                    "minLength": 3
-                },
-                "updated": {
-                    "description": "A unix timestamp when this task was last updated. You cannot change this value.",
-                    "type": "integer"
-                }
-            }
-        },
-        "models.EmailConfirm": {
+        "user.EmailConfirm": {
             "type": "object",
             "properties": {
                 "token": {
@@ -4742,278 +6907,37 @@
                 }
             }
         },
-        "models.Label": {
+        "user.EmailUpdate": {
             "type": "object",
             "properties": {
-                "created": {
-                    "description": "A unix timestamp when this label was created. You cannot change this value.",
-                    "type": "integer"
-                },
-                "created_by": {
-                    "description": "The user who created this label",
-                    "type": "object",
-                    "$ref": "#/definitions/models.User"
-                },
-                "description": {
-                    "description": "The label description.",
+                "new_email": {
+                    "description": "The new email address. Needs to be a valid email address.",
                     "type": "string"
                 },
-                "hex_color": {
-                    "description": "The color this label has",
-                    "type": "string",
-                    "maxLength": 6
-                },
-                "id": {
-                    "description": "The unique, numeric id of this label.",
-                    "type": "integer"
-                },
-                "title": {
-                    "description": "The title of the lable. You'll see this one on tasks associated with it.",
-                    "type": "string",
-                    "maxLength": 250,
-                    "minLength": 3
-                },
-                "updated": {
-                    "description": "A unix timestamp when this label was last updated. You cannot change this value.",
-                    "type": "integer"
-                }
-            }
-        },
-        "models.LabelTask": {
-            "type": "object",
-            "properties": {
-                "created": {
-                    "description": "A unix timestamp when this task was created. You cannot change this value.",
-                    "type": "integer"
-                },
-                "label_id": {
-                    "description": "The label id you want to associate with a task.",
-                    "type": "integer"
-                }
-            }
-        },
-        "models.LabelTaskBulk": {
-            "type": "object",
-            "properties": {
-                "labels": {
-                    "description": "All labels you want to update at once.",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.Label"
-                    }
-                }
-            }
-        },
-        "models.LinkSharing": {
-            "type": "object",
-            "properties": {
-                "created": {
-                    "description": "A unix timestamp when this list was shared. You cannot change this value.",
-                    "type": "integer"
-                },
-                "hash": {
-                    "description": "The public id to get this shared list",
-                    "type": "string"
-                },
-                "id": {
-                    "description": "The ID of the shared thing",
-                    "type": "integer"
-                },
-                "right": {
-                    "description": "The right this list is shared with. 0 = Read only, 1 = Read \u0026 Write, 2 = Admin. See the docs for more details.",
-                    "type": "integer",
-                    "default": 0,
-                    "maximum": 2
-                },
-                "shared_by": {
-                    "description": "The user who shared this list",
-                    "type": "object",
-                    "$ref": "#/definitions/models.User"
-                },
-                "sharing_type": {
-                    "description": "The kind of this link. 0 = undefined, 1 = without password, 2 = with password (currently not implemented).",
-                    "type": "integer",
-                    "default": 0,
-                    "maximum": 2
-                },
-                "updated": {
-                    "description": "A unix timestamp when this share was last updated. You cannot change this value.",
-                    "type": "integer"
-                }
-            }
-        },
-        "models.List": {
-            "type": "object",
-            "properties": {
-                "created": {
-                    "description": "A unix timestamp when this list was created. You cannot change this value.",
-                    "type": "integer"
-                },
-                "description": {
-                    "description": "The description of the list.",
-                    "type": "string"
-                },
-                "id": {
-                    "description": "The unique, numeric id of this list.",
-                    "type": "integer"
-                },
-                "identifier": {
-                    "description": "The unique list short identifier. Used to build task identifiers.",
-                    "type": "string",
-                    "maxLength": 10,
-                    "minLength": 0
-                },
-                "owner": {
-                    "description": "The user who created this list.",
-                    "type": "object",
-                    "$ref": "#/definitions/models.User"
-                },
-                "title": {
-                    "description": "The title of the list. You'll see this in the namespace overview.",
-                    "type": "string",
-                    "maxLength": 250,
-                    "minLength": 3
-                },
-                "updated": {
-                    "description": "A unix timestamp when this list was last updated. You cannot change this value.",
-                    "type": "integer"
-                }
-            }
-        },
-        "models.ListUser": {
-            "type": "object",
-            "properties": {
-                "created": {
-                    "description": "A unix timestamp when this relation was created. You cannot change this value.",
-                    "type": "integer"
-                },
-                "id": {
-                    "description": "The unique, numeric id of this list \u003c-\u003e user relation.",
-                    "type": "integer"
-                },
-                "right": {
-                    "description": "The right this user has. 0 = Read only, 1 = Read \u0026 Write, 2 = Admin. See the docs for more details.",
-                    "type": "integer",
-                    "default": 0,
-                    "maximum": 2
-                },
-                "updated": {
-                    "description": "A unix timestamp when this relation was last updated. You cannot change this value.",
-                    "type": "integer"
-                },
-                "userID": {
-                    "description": "The username.",
+                "password": {
+                    "description": "The password of the user for confirmation.",
                     "type": "string"
                 }
             }
         },
-        "models.Message": {
+        "user.Login": {
             "type": "object",
             "properties": {
-                "message": {
-                    "description": "A standard message.",
+                "password": {
+                    "description": "The password for the user.",
+                    "type": "string"
+                },
+                "totp_passcode": {
+                    "description": "The totp passcode of a user. Only needs to be provided when enabled.",
+                    "type": "string"
+                },
+                "username": {
+                    "description": "The username used to log in.",
                     "type": "string"
                 }
             }
         },
-        "models.Namespace": {
-            "type": "object",
-            "properties": {
-                "created": {
-                    "description": "A unix timestamp when this namespace was created. You cannot change this value.",
-                    "type": "integer"
-                },
-                "description": {
-                    "description": "The description of the namespace",
-                    "type": "string"
-                },
-                "id": {
-                    "description": "The unique, numeric id of this namespace.",
-                    "type": "integer"
-                },
-                "name": {
-                    "description": "The name of this namespace.",
-                    "type": "string",
-                    "maxLength": 250,
-                    "minLength": 5
-                },
-                "owner": {
-                    "description": "The user who owns this namespace",
-                    "type": "object",
-                    "$ref": "#/definitions/models.User"
-                },
-                "updated": {
-                    "description": "A unix timestamp when this namespace was last updated. You cannot change this value.",
-                    "type": "integer"
-                }
-            }
-        },
-        "models.NamespaceUser": {
-            "type": "object",
-            "properties": {
-                "created": {
-                    "description": "A unix timestamp when this relation was created. You cannot change this value.",
-                    "type": "integer"
-                },
-                "id": {
-                    "description": "The unique, numeric id of this namespace \u003c-\u003e user relation.",
-                    "type": "integer"
-                },
-                "right": {
-                    "description": "The right this user has. 0 = Read only, 1 = Read \u0026 Write, 2 = Admin. See the docs for more details.",
-                    "type": "integer",
-                    "default": 0,
-                    "maximum": 2
-                },
-                "updated": {
-                    "description": "A unix timestamp when this relation was last updated. You cannot change this value.",
-                    "type": "integer"
-                },
-                "userID": {
-                    "description": "The username.",
-                    "type": "string"
-                }
-            }
-        },
-        "models.NamespaceWithLists": {
-            "type": "object",
-            "properties": {
-                "created": {
-                    "description": "A unix timestamp when this namespace was created. You cannot change this value.",
-                    "type": "integer"
-                },
-                "description": {
-                    "description": "The description of the namespace",
-                    "type": "string"
-                },
-                "id": {
-                    "description": "The unique, numeric id of this namespace.",
-                    "type": "integer"
-                },
-                "lists": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.List"
-                    }
-                },
-                "name": {
-                    "description": "The name of this namespace.",
-                    "type": "string",
-                    "maxLength": 250,
-                    "minLength": 5
-                },
-                "owner": {
-                    "description": "The user who owns this namespace",
-                    "type": "object",
-                    "$ref": "#/definitions/models.User"
-                },
-                "updated": {
-                    "description": "A unix timestamp when this namespace was last updated. You cannot change this value.",
-                    "type": "integer"
-                }
-            }
-        },
-        "models.PasswordReset": {
+        "user.PasswordReset": {
             "type": "object",
             "properties": {
                 "new_password": {
@@ -5026,7 +6950,7 @@
                 }
             }
         },
-        "models.PasswordTokenRequest": {
+        "user.PasswordTokenRequest": {
             "type": "object",
             "properties": {
                 "email": {
@@ -5035,427 +6959,36 @@
                 }
             }
         },
-        "models.RelatedTaskMap": {
-            "type": "object",
-            "additionalProperties": {
-                "type": "array",
-                "items": {
-                    "type": "object",
-                    "properties": {
-                        "assignees": {
-                            "description": "An array of users who are assigned to this task",
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/models.User"
-                            }
-                        },
-                        "attachments": {
-                            "description": "All attachments this task has",
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/models.TaskAttachment"
-                            }
-                        },
-                        "created": {
-                            "description": "A unix timestamp when this task was created. You cannot change this value.",
-                            "type": "integer"
-                        },
-                        "createdBy": {
-                            "description": "The user who initially created the task.",
-                            "type": "object",
-                            "$ref": "#/definitions/models.User"
-                        },
-                        "description": {
-                            "description": "The task description.",
-                            "type": "string"
-                        },
-                        "done": {
-                            "description": "Whether a task is done or not.",
-                            "type": "boolean"
-                        },
-                        "doneAt": {
-                            "description": "The unix timestamp when a task was marked as done.",
-                            "type": "integer"
-                        },
-                        "dueDate": {
-                            "description": "A unix timestamp when the task is due.",
-                            "type": "integer"
-                        },
-                        "endDate": {
-                            "description": "When this task ends.",
-                            "type": "integer"
-                        },
-                        "hexColor": {
-                            "description": "The task color in hex",
-                            "type": "string",
-                            "maxLength": 6
-                        },
-                        "id": {
-                            "description": "The unique, numeric id of this task.",
-                            "type": "integer"
-                        },
-                        "identifier": {
-                            "description": "The task identifier, based on the list identifier and the task's index",
-                            "type": "string"
-                        },
-                        "index": {
-                            "description": "The task index, calculated per list",
-                            "type": "integer"
-                        },
-                        "labels": {
-                            "description": "An array of labels which are associated with this task.",
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/models.Label"
-                            }
-                        },
-                        "listID": {
-                            "description": "The list this task belongs to.",
-                            "type": "integer"
-                        },
-                        "percentDone": {
-                            "description": "Determines how far a task is left from being done",
-                            "type": "number"
-                        },
-                        "priority": {
-                            "description": "The task priority. Can be anything you want, it is possible to sort by this later.",
-                            "type": "integer"
-                        },
-                        "related_tasks": {
-                            "description": "All related tasks, grouped by their relation kind",
-                            "type": "object",
-                            "$ref": "#/definitions/models.RelatedTaskMap"
-                        },
-                        "reminderDates": {
-                            "description": "An array of unix timestamps when the user wants to be reminded of the task.",
-                            "type": "array",
-                            "items": {
-                                "type": "integer"
-                            }
-                        },
-                        "repeatAfter": {
-                            "description": "An amount in seconds this task repeats itself. If this is set, when marking the task as done, it will mark itself as \"undone\" and then increase all remindes and the due date by its amount.",
-                            "type": "integer"
-                        },
-                        "startDate": {
-                            "description": "When this task starts.",
-                            "type": "integer"
-                        },
-                        "text": {
-                            "description": "The task text. This is what you'll see in the list.",
-                            "type": "string",
-                            "maxLength": 250,
-                            "minLength": 3
-                        },
-                        "updated": {
-                            "description": "A unix timestamp when this task was last updated. You cannot change this value.",
-                            "type": "integer"
-                        }
-                    }
-                }
-            }
-        },
-        "models.Task": {
+        "user.TOTP": {
             "type": "object",
             "properties": {
-                "assignees": {
-                    "description": "An array of users who are assigned to this task",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.User"
-                    }
-                },
-                "attachments": {
-                    "description": "All attachments this task has",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.TaskAttachment"
-                    }
-                },
-                "created": {
-                    "description": "A unix timestamp when this task was created. You cannot change this value.",
-                    "type": "integer"
-                },
-                "createdBy": {
-                    "description": "The user who initially created the task.",
-                    "type": "object",
-                    "$ref": "#/definitions/models.User"
-                },
-                "description": {
-                    "description": "The task description.",
-                    "type": "string"
-                },
-                "done": {
-                    "description": "Whether a task is done or not.",
+                "enabled": {
+                    "description": "The totp entry will only be enabled after the user verified they have a working totp setup.",
                     "type": "boolean"
                 },
-                "doneAt": {
-                    "description": "The unix timestamp when a task was marked as done.",
-                    "type": "integer"
-                },
-                "dueDate": {
-                    "description": "A unix timestamp when the task is due.",
-                    "type": "integer"
-                },
-                "endDate": {
-                    "description": "When this task ends.",
-                    "type": "integer"
-                },
-                "hexColor": {
-                    "description": "The task color in hex",
-                    "type": "string",
-                    "maxLength": 6
-                },
-                "id": {
-                    "description": "The unique, numeric id of this task.",
-                    "type": "integer"
-                },
-                "identifier": {
-                    "description": "The task identifier, based on the list identifier and the task's index",
+                "secret": {
                     "type": "string"
                 },
-                "index": {
-                    "description": "The task index, calculated per list",
-                    "type": "integer"
-                },
-                "labels": {
-                    "description": "An array of labels which are associated with this task.",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.Label"
-                    }
-                },
-                "listID": {
-                    "description": "The list this task belongs to.",
-                    "type": "integer"
-                },
-                "percentDone": {
-                    "description": "Determines how far a task is left from being done",
-                    "type": "number"
-                },
-                "priority": {
-                    "description": "The task priority. Can be anything you want, it is possible to sort by this later.",
-                    "type": "integer"
-                },
-                "related_tasks": {
-                    "description": "All related tasks, grouped by their relation kind",
-                    "type": "object",
-                    "$ref": "#/definitions/models.RelatedTaskMap"
-                },
-                "reminderDates": {
-                    "description": "An array of unix timestamps when the user wants to be reminded of the task.",
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "repeatAfter": {
-                    "description": "An amount in seconds this task repeats itself. If this is set, when marking the task as done, it will mark itself as \"undone\" and then increase all remindes and the due date by its amount.",
-                    "type": "integer"
-                },
-                "startDate": {
-                    "description": "When this task starts.",
-                    "type": "integer"
-                },
-                "text": {
-                    "description": "The task text. This is what you'll see in the list.",
-                    "type": "string",
-                    "maxLength": 250,
-                    "minLength": 3
-                },
-                "updated": {
-                    "description": "A unix timestamp when this task was last updated. You cannot change this value.",
-                    "type": "integer"
-                }
-            }
-        },
-        "models.TaskAssginee": {
-            "type": "object",
-            "properties": {
-                "created": {
-                    "type": "integer"
-                },
-                "user_id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "models.TaskAttachment": {
-            "type": "object",
-            "properties": {
-                "created": {
-                    "type": "integer"
-                },
-                "created_by": {
-                    "type": "object",
-                    "$ref": "#/definitions/models.User"
-                },
-                "file": {
-                    "type": "object",
-                    "$ref": "#/definitions/files.File"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "task_id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "models.TaskRelation": {
-            "type": "object",
-            "properties": {
-                "created": {
-                    "description": "A unix timestamp when this label was created. You cannot change this value.",
-                    "type": "integer"
-                },
-                "created_by": {
-                    "description": "The user who created this relation",
-                    "type": "object",
-                    "$ref": "#/definitions/models.User"
-                },
-                "other_task_id": {
-                    "description": "The ID of the other task, the task which is being related.",
-                    "type": "integer"
-                },
-                "relation_kind": {
-                    "description": "The kind of the relation.",
-                    "type": "string"
-                },
-                "task_id": {
-                    "description": "The ID of the \"base\" task, the task which has a relation to another.",
-                    "type": "integer"
-                }
-            }
-        },
-        "models.Team": {
-            "type": "object",
-            "properties": {
-                "created": {
-                    "description": "A unix timestamp when this relation was created. You cannot change this value.",
-                    "type": "integer"
-                },
-                "createdBy": {
-                    "description": "The user who created this team.",
-                    "type": "object",
-                    "$ref": "#/definitions/models.User"
-                },
-                "description": {
-                    "description": "The team's description.",
-                    "type": "string"
-                },
-                "id": {
-                    "description": "The unique, numeric id of this team.",
-                    "type": "integer"
-                },
-                "members": {
-                    "description": "An array of all members in this team.",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.TeamUser"
-                    }
-                },
-                "name": {
-                    "description": "The name of this team.",
-                    "type": "string",
-                    "maxLength": 250,
-                    "minLength": 5
-                },
-                "updated": {
-                    "description": "A unix timestamp when this relation was last updated. You cannot change this value.",
-                    "type": "integer"
-                }
-            }
-        },
-        "models.TeamList": {
-            "type": "object",
-            "properties": {
-                "created": {
-                    "description": "A unix timestamp when this relation was created. You cannot change this value.",
-                    "type": "integer"
-                },
-                "id": {
-                    "description": "The unique, numeric id of this list \u003c-\u003e team relation.",
-                    "type": "integer"
-                },
-                "right": {
-                    "description": "The right this team has. 0 = Read only, 1 = Read \u0026 Write, 2 = Admin. See the docs for more details.",
-                    "type": "integer",
-                    "default": 0,
-                    "maximum": 2
-                },
-                "teamID": {
-                    "description": "The team id.",
-                    "type": "integer"
-                },
-                "updated": {
-                    "description": "A unix timestamp when this relation was last updated. You cannot change this value.",
-                    "type": "integer"
-                }
-            }
-        },
-        "models.TeamMember": {
-            "type": "object",
-            "properties": {
-                "admin": {
-                    "description": "Whether or not the member is an admin of the team. See the docs for more about what a team admin can do",
-                    "type": "boolean"
-                },
-                "created": {
-                    "description": "A unix timestamp when this relation was created. You cannot change this value.",
-                    "type": "integer"
-                },
-                "id": {
-                    "description": "The unique, numeric id of this team member relation.",
-                    "type": "integer"
-                },
-                "username": {
-                    "description": "The username of the member. We use this to prevent automated user id entering.",
+                "url": {
+                    "description": "The totp url used to be able to enroll the user later",
                     "type": "string"
                 }
             }
         },
-        "models.TeamNamespace": {
+        "user.TOTPPasscode": {
             "type": "object",
             "properties": {
-                "created": {
-                    "description": "A unix timestamp when this relation was created. You cannot change this value.",
-                    "type": "integer"
-                },
-                "id": {
-                    "description": "The unique, numeric id of this namespace \u003c-\u003e team relation.",
-                    "type": "integer"
-                },
-                "right": {
-                    "description": "The right this team has. 0 = Read only, 1 = Read \u0026 Write, 2 = Admin. See the docs for more details.",
-                    "type": "integer",
-                    "default": 0,
-                    "maximum": 2
-                },
-                "teamID": {
-                    "description": "The team id.",
-                    "type": "integer"
-                },
-                "updated": {
-                    "description": "A unix timestamp when this relation was last updated. You cannot change this value.",
-                    "type": "integer"
+                "passcode": {
+                    "type": "string"
                 }
             }
         },
-        "models.TeamUser": {
+        "user.User": {
             "type": "object",
             "properties": {
-                "admin": {
-                    "description": "Whether or not the member is an admin of the team. See the docs for more about what a team admin can do",
-                    "type": "boolean"
-                },
-                "avatarUrl": {
-                    "description": "The users md5-hashed email address, used to get the avatar from gravatar and the likes.",
-                    "type": "string"
-                },
                 "created": {
-                    "description": "A unix timestamp when this task was created. You cannot change this value.",
-                    "type": "integer"
+                    "description": "A timestamp when this task was created. You cannot change this value.",
+                    "type": "string"
                 },
                 "email": {
                     "description": "The user's email address.",
@@ -5467,130 +7000,8 @@
                     "type": "integer"
                 },
                 "updated": {
-                    "description": "A unix timestamp when this task was last updated. You cannot change this value.",
-                    "type": "integer"
-                },
-                "username": {
-                    "description": "The username of the user. Is always unique.",
-                    "type": "string",
-                    "maxLength": 250,
-                    "minLength": 3
-                }
-            }
-        },
-        "models.TeamWithRight": {
-            "type": "object",
-            "properties": {
-                "created": {
-                    "description": "A unix timestamp when this relation was created. You cannot change this value.",
-                    "type": "integer"
-                },
-                "createdBy": {
-                    "description": "The user who created this team.",
-                    "type": "object",
-                    "$ref": "#/definitions/models.User"
-                },
-                "description": {
-                    "description": "The team's description.",
+                    "description": "A timestamp when this task was last updated. You cannot change this value.",
                     "type": "string"
-                },
-                "id": {
-                    "description": "The unique, numeric id of this team.",
-                    "type": "integer"
-                },
-                "members": {
-                    "description": "An array of all members in this team.",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.TeamUser"
-                    }
-                },
-                "name": {
-                    "description": "The name of this team.",
-                    "type": "string",
-                    "maxLength": 250,
-                    "minLength": 5
-                },
-                "right": {
-                    "type": "integer"
-                },
-                "updated": {
-                    "description": "A unix timestamp when this relation was last updated. You cannot change this value.",
-                    "type": "integer"
-                }
-            }
-        },
-        "models.User": {
-            "type": "object",
-            "properties": {
-                "avatarUrl": {
-                    "description": "The users md5-hashed email address, used to get the avatar from gravatar and the likes.",
-                    "type": "string"
-                },
-                "created": {
-                    "description": "A unix timestamp when this task was created. You cannot change this value.",
-                    "type": "integer"
-                },
-                "email": {
-                    "description": "The user's email address.",
-                    "type": "string",
-                    "maxLength": 250
-                },
-                "id": {
-                    "description": "The unique, numeric id of this user.",
-                    "type": "integer"
-                },
-                "updated": {
-                    "description": "A unix timestamp when this task was last updated. You cannot change this value.",
-                    "type": "integer"
-                },
-                "username": {
-                    "description": "The username of the user. Is always unique.",
-                    "type": "string",
-                    "maxLength": 250,
-                    "minLength": 3
-                }
-            }
-        },
-        "models.UserLogin": {
-            "type": "object",
-            "properties": {
-                "password": {
-                    "description": "The password for the user.",
-                    "type": "string"
-                },
-                "username": {
-                    "description": "The username used to log in.",
-                    "type": "string"
-                }
-            }
-        },
-        "models.UserWithRight": {
-            "type": "object",
-            "properties": {
-                "avatarUrl": {
-                    "description": "The users md5-hashed email address, used to get the avatar from gravatar and the likes.",
-                    "type": "string"
-                },
-                "created": {
-                    "description": "A unix timestamp when this task was created. You cannot change this value.",
-                    "type": "integer"
-                },
-                "email": {
-                    "description": "The user's email address.",
-                    "type": "string",
-                    "maxLength": 250
-                },
-                "id": {
-                    "description": "The unique, numeric id of this user.",
-                    "type": "integer"
-                },
-                "right": {
-                    "type": "integer"
-                },
-                "updated": {
-                    "description": "A unix timestamp when this task was last updated. You cannot change this value.",
-                    "type": "integer"
                 },
                 "username": {
                     "description": "The username of the user. Is always unique.",
@@ -5628,6 +7039,12 @@
                         "type": "string"
                     }
                 },
+                "enabled_background_providers": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "frontend_url": {
                     "type": "string"
                 },
@@ -5643,7 +7060,24 @@
                 "registration_enabled": {
                     "type": "boolean"
                 },
+                "task_attachments_enabled": {
+                    "type": "boolean"
+                },
+                "totp_enabled": {
+                    "type": "boolean"
+                },
                 "version": {
+                    "type": "string"
+                }
+            }
+        },
+        "web.HTTPError": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "message": {
                     "type": "string"
                 }
             }

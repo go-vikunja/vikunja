@@ -569,8 +569,8 @@ func checkBucketAndTaskBelongToSameList(fullTask *Task, bucketID int64) (err err
 // @Param id path int true "List ID"
 // @Param task body models.Task true "The task object"
 // @Success 200 {object} models.Task "The created task object."
-// @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid task object provided."
-// @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have access to the list"
+// @Failure 400 {object} web.HTTPError "Invalid task object provided."
+// @Failure 403 {object} web.HTTPError "The user does not have access to the list"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{id} [put]
 func (t *Task) Create(a web.Auth) (err error) {
@@ -662,8 +662,8 @@ func (t *Task) Create(a web.Auth) (err error) {
 // @Param id path int true "Task ID"
 // @Param task body models.Task true "The task object"
 // @Success 200 {object} models.Task "The updated task object."
-// @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid task object provided."
-// @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have access to the task (aka its list)"
+// @Failure 400 {object} web.HTTPError "Invalid task object provided."
+// @Failure 403 {object} web.HTTPError "The user does not have access to the task (aka its list)"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{id} [post]
 func (t *Task) Update() (err error) {
@@ -1000,8 +1000,8 @@ func (t *Task) updateReminders(reminders []time.Time) (err error) {
 // @Security JWTKeyAuth
 // @Param id path int true "Task ID"
 // @Success 200 {object} models.Message "The created task object."
-// @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid task ID provided."
-// @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have access to the list"
+// @Failure 400 {object} web.HTTPError "Invalid task ID provided."
+// @Failure 403 {object} web.HTTPError "The user does not have access to the list"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{id} [delete]
 func (t *Task) Delete() (err error) {

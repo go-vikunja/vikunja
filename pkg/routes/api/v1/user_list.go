@@ -34,7 +34,7 @@ import (
 // @Param s query string false "Search for a user by its name."
 // @Security JWTKeyAuth
 // @Success 200 {array} user.User "All (found) users."
-// @Failure 400 {object} code.vikunja.io/web.HTTPError "Something's invalid."
+// @Failure 400 {object} web.HTTPError "Something's invalid."
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /users [get]
 func UserList(c echo.Context) error {
@@ -62,8 +62,8 @@ func UserList(c echo.Context) error {
 // @Security JWTKeyAuth
 // @Param id path int true "List ID"
 // @Success 200 {array} user.User "All (found) users."
-// @Failure 400 {object} code.vikunja.io/web.HTTPError "Something's invalid."
-// @Failure 401 {object} code.vikunja.io/web.HTTPError "The user does not have the right to see the list."
+// @Failure 400 {object} web.HTTPError "Something's invalid."
+// @Failure 401 {object} web.HTTPError "The user does not have the right to see the list."
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /lists/{id}/listusers [get]
 func ListUsersForList(c echo.Context) error {

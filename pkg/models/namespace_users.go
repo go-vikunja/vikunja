@@ -58,9 +58,9 @@ func (NamespaceUser) TableName() string {
 // @Param id path int true "Namespace ID"
 // @Param namespace body models.NamespaceUser true "The user you want to add to the namespace."
 // @Success 200 {object} models.NamespaceUser "The created user<->namespace relation."
-// @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid user namespace object provided."
-// @Failure 404 {object} code.vikunja.io/web.HTTPError "The user does not exist."
-// @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have access to the namespace"
+// @Failure 400 {object} web.HTTPError "Invalid user namespace object provided."
+// @Failure 404 {object} web.HTTPError "The user does not exist."
+// @Failure 403 {object} web.HTTPError "The user does not have access to the namespace"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces/{id}/users [put]
 func (nu *NamespaceUser) Create(a web.Auth) (err error) {
@@ -114,8 +114,8 @@ func (nu *NamespaceUser) Create(a web.Auth) (err error) {
 // @Param namespaceID path int true "Namespace ID"
 // @Param userID path int true "user ID"
 // @Success 200 {object} models.Message "The user was successfully deleted."
-// @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have access to the namespace"
-// @Failure 404 {object} code.vikunja.io/web.HTTPError "user or namespace does not exist."
+// @Failure 403 {object} web.HTTPError "The user does not have access to the namespace"
+// @Failure 404 {object} web.HTTPError "user or namespace does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces/{namespaceID}/users/{userID} [delete]
 func (nu *NamespaceUser) Delete() (err error) {
@@ -154,7 +154,7 @@ func (nu *NamespaceUser) Delete() (err error) {
 // @Param s query string false "Search users by its name."
 // @Security JWTKeyAuth
 // @Success 200 {array} models.UserWithRight "The users with the right they have."
-// @Failure 403 {object} code.vikunja.io/web.HTTPError "No right to see the namespace."
+// @Failure 403 {object} web.HTTPError "No right to see the namespace."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces/{id}/users [get]
 func (nu *NamespaceUser) ReadAll(a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
@@ -210,8 +210,8 @@ func (nu *NamespaceUser) ReadAll(a web.Auth, search string, page int, perPage in
 // @Param namespace body models.NamespaceUser true "The user you want to update."
 // @Security JWTKeyAuth
 // @Success 200 {object} models.NamespaceUser "The updated user <-> namespace relation."
-// @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have admin-access to the namespace"
-// @Failure 404 {object} code.vikunja.io/web.HTTPError "User or namespace does not exist."
+// @Failure 403 {object} web.HTTPError "The user does not have admin-access to the namespace"
+// @Failure 404 {object} web.HTTPError "User or namespace does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces/{namespaceID}/users/{userID} [post]
 func (nu *NamespaceUser) Update() (err error) {

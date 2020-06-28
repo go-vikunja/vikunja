@@ -132,7 +132,7 @@ func (n *Namespace) CheckIsArchived() error {
 // @Security JWTKeyAuth
 // @Param id path int true "Namespace ID"
 // @Success 200 {object} models.Namespace "The Namespace"
-// @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have access to that namespace."
+// @Failure 403 {object} web.HTTPError "The user does not have access to that namespace."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces/{id} [get]
 func (n *Namespace) ReadOne() (err error) {
@@ -318,8 +318,8 @@ func (n *Namespace) ReadAll(a web.Auth, search string, page int, perPage int) (r
 // @Security JWTKeyAuth
 // @Param namespace body models.Namespace true "The namespace you want to create."
 // @Success 200 {object} models.Namespace "The created namespace."
-// @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid namespace object provided."
-// @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have access to the namespace"
+// @Failure 400 {object} web.HTTPError "Invalid namespace object provided."
+// @Failure 403 {object} web.HTTPError "The user does not have access to the namespace"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces [put]
 func (n *Namespace) Create(a web.Auth) (err error) {
@@ -353,8 +353,8 @@ func (n *Namespace) Create(a web.Auth) (err error) {
 // @Security JWTKeyAuth
 // @Param id path int true "Namespace ID"
 // @Success 200 {object} models.Message "The namespace was successfully deleted."
-// @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid namespace object provided."
-// @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have access to the namespace"
+// @Failure 400 {object} web.HTTPError "Invalid namespace object provided."
+// @Failure 403 {object} web.HTTPError "The user does not have access to the namespace"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces/{id} [delete]
 func (n *Namespace) Delete() (err error) {
@@ -411,8 +411,8 @@ func (n *Namespace) Delete() (err error) {
 // @Param id path int true "Namespace ID"
 // @Param namespace body models.Namespace true "The namespace with updated values you want to update."
 // @Success 200 {object} models.Namespace "The updated namespace."
-// @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid namespace object provided."
-// @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have access to the namespace"
+// @Failure 400 {object} web.HTTPError "Invalid namespace object provided."
+// @Failure 403 {object} web.HTTPError "The user does not have access to the namespace"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespace/{id} [post]
 func (n *Namespace) Update() (err error) {

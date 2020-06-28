@@ -154,8 +154,8 @@ func (b *Bucket) ReadAll(auth web.Auth, search string, page int, perPage int) (r
 // @Param id path int true "List Id"
 // @Param bucket body models.Bucket true "The bucket object"
 // @Success 200 {object} models.Bucket "The created bucket object."
-// @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid bucket object provided."
-// @Failure 404 {object} code.vikunja.io/web.HTTPError "The list does not exist."
+// @Failure 400 {object} web.HTTPError "Invalid bucket object provided."
+// @Failure 404 {object} web.HTTPError "The list does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{id}/buckets [put]
 func (b *Bucket) Create(a web.Auth) (err error) {
@@ -176,8 +176,8 @@ func (b *Bucket) Create(a web.Auth) (err error) {
 // @Param bucketID path int true "Bucket Id"
 // @Param bucket body models.Bucket true "The bucket object"
 // @Success 200 {object} models.Bucket "The created bucket object."
-// @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid bucket object provided."
-// @Failure 404 {object} code.vikunja.io/web.HTTPError "The bucket does not exist."
+// @Failure 400 {object} web.HTTPError "Invalid bucket object provided."
+// @Failure 404 {object} web.HTTPError "The bucket does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{listID}/buckets/{bucketID} [post]
 func (b *Bucket) Update() (err error) {
@@ -195,7 +195,7 @@ func (b *Bucket) Update() (err error) {
 // @Param listID path int true "List Id"
 // @Param bucketID path int true "Bucket Id"
 // @Success 200 {object} models.Message "Successfully deleted."
-// @Failure 404 {object} code.vikunja.io/web.HTTPError "The bucket does not exist."
+// @Failure 404 {object} web.HTTPError "The bucket does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{listID}/buckets/{bucketID} [delete]
 func (b *Bucket) Delete() (err error) {

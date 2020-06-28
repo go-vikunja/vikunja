@@ -65,9 +65,9 @@ type UserWithRight struct {
 // @Param id path int true "List ID"
 // @Param list body models.ListUser true "The user you want to add to the list."
 // @Success 200 {object} models.ListUser "The created user<->list relation."
-// @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid user list object provided."
-// @Failure 404 {object} code.vikunja.io/web.HTTPError "The user does not exist."
-// @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have access to the list"
+// @Failure 400 {object} web.HTTPError "Invalid user list object provided."
+// @Failure 404 {object} web.HTTPError "The user does not exist."
+// @Failure 403 {object} web.HTTPError "The user does not have access to the list"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{id}/users [put]
 func (lu *ListUser) Create(a web.Auth) (err error) {
@@ -123,8 +123,8 @@ func (lu *ListUser) Create(a web.Auth) (err error) {
 // @Param listID path int true "List ID"
 // @Param userID path int true "User ID"
 // @Success 200 {object} models.Message "The user was successfully removed from the list."
-// @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have access to the list"
-// @Failure 404 {object} code.vikunja.io/web.HTTPError "user or list does not exist."
+// @Failure 403 {object} web.HTTPError "The user does not have access to the list"
+// @Failure 404 {object} web.HTTPError "user or list does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{listID}/users/{userID} [delete]
 func (lu *ListUser) Delete() (err error) {
@@ -168,7 +168,7 @@ func (lu *ListUser) Delete() (err error) {
 // @Param s query string false "Search users by its name."
 // @Security JWTKeyAuth
 // @Success 200 {array} models.UserWithRight "The users with the right they have."
-// @Failure 403 {object} code.vikunja.io/web.HTTPError "No right to see the list."
+// @Failure 403 {object} web.HTTPError "No right to see the list."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{id}/users [get]
 func (lu *ListUser) ReadAll(a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
@@ -223,8 +223,8 @@ func (lu *ListUser) ReadAll(a web.Auth, search string, page int, perPage int) (r
 // @Param list body models.ListUser true "The user you want to update."
 // @Security JWTKeyAuth
 // @Success 200 {object} models.ListUser "The updated user <-> list relation."
-// @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have admin-access to the list"
-// @Failure 404 {object} code.vikunja.io/web.HTTPError "User or list does not exist."
+// @Failure 403 {object} web.HTTPError "The user does not have admin-access to the list"
+// @Failure 404 {object} web.HTTPError "User or list does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{listID}/users/{userID} [post]
 func (lu *ListUser) Update() (err error) {

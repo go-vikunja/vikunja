@@ -62,9 +62,9 @@ type TeamWithRight struct {
 // @Param id path int true "List ID"
 // @Param list body models.TeamList true "The team you want to add to the list."
 // @Success 200 {object} models.TeamList "The created team<->list relation."
-// @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid team list object provided."
-// @Failure 404 {object} code.vikunja.io/web.HTTPError "The team does not exist."
-// @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have access to the list"
+// @Failure 400 {object} web.HTTPError "Invalid team list object provided."
+// @Failure 404 {object} web.HTTPError "The team does not exist."
+// @Failure 403 {object} web.HTTPError "The user does not have access to the list"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{id}/teams [put]
 func (tl *TeamList) Create(a web.Auth) (err error) {
@@ -116,8 +116,8 @@ func (tl *TeamList) Create(a web.Auth) (err error) {
 // @Param listID path int true "List ID"
 // @Param teamID path int true "Team ID"
 // @Success 200 {object} models.Message "The team was successfully deleted."
-// @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have access to the list"
-// @Failure 404 {object} code.vikunja.io/web.HTTPError "Team or list does not exist."
+// @Failure 403 {object} web.HTTPError "The user does not have access to the list"
+// @Failure 404 {object} web.HTTPError "Team or list does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{listID}/teams/{teamID} [delete]
 func (tl *TeamList) Delete() (err error) {
@@ -162,7 +162,7 @@ func (tl *TeamList) Delete() (err error) {
 // @Param s query string false "Search teams by its name."
 // @Security JWTKeyAuth
 // @Success 200 {array} models.TeamWithRight "The teams with their right."
-// @Failure 403 {object} code.vikunja.io/web.HTTPError "No right to see the list."
+// @Failure 403 {object} web.HTTPError "No right to see the list."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{id}/teams [get]
 func (tl *TeamList) ReadAll(a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
@@ -227,8 +227,8 @@ func (tl *TeamList) ReadAll(a web.Auth, search string, page int, perPage int) (r
 // @Param list body models.TeamList true "The team you want to update."
 // @Security JWTKeyAuth
 // @Success 200 {object} models.TeamList "The updated team <-> list relation."
-// @Failure 403 {object} code.vikunja.io/web.HTTPError "The user does not have admin-access to the list"
-// @Failure 404 {object} code.vikunja.io/web.HTTPError "Team or list does not exist."
+// @Failure 403 {object} web.HTTPError "The user does not have admin-access to the list"
+// @Failure 404 {object} web.HTTPError "Team or list does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{listID}/teams/{teamID} [post]
 func (tl *TeamList) Update() (err error) {

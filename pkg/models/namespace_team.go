@@ -56,9 +56,9 @@ func (TeamNamespace) TableName() string {
 // @Param id path int true "Namespace ID"
 // @Param namespace body models.TeamNamespace true "The team you want to add to the namespace."
 // @Success 200 {object} models.TeamNamespace "The created team<->namespace relation."
-// @Failure 400 {object} code.vikunja.io/web.HTTPError "Invalid team namespace object provided."
-// @Failure 404 {object} code.vikunja.io/web.HTTPError "The team does not exist."
-// @Failure 403 {object} code.vikunja.io/web.HTTPError "The team does not have access to the namespace"
+// @Failure 400 {object} web.HTTPError "Invalid team namespace object provided."
+// @Failure 404 {object} web.HTTPError "The team does not exist."
+// @Failure 403 {object} web.HTTPError "The team does not have access to the namespace"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces/{id}/teams [put]
 func (tn *TeamNamespace) Create(a web.Auth) (err error) {
@@ -105,8 +105,8 @@ func (tn *TeamNamespace) Create(a web.Auth) (err error) {
 // @Param namespaceID path int true "Namespace ID"
 // @Param teamID path int true "team ID"
 // @Success 200 {object} models.Message "The team was successfully deleted."
-// @Failure 403 {object} code.vikunja.io/web.HTTPError "The team does not have access to the namespace"
-// @Failure 404 {object} code.vikunja.io/web.HTTPError "team or namespace does not exist."
+// @Failure 403 {object} web.HTTPError "The team does not have access to the namespace"
+// @Failure 404 {object} web.HTTPError "team or namespace does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces/{namespaceID}/teams/{teamID} [delete]
 func (tn *TeamNamespace) Delete() (err error) {
@@ -147,7 +147,7 @@ func (tn *TeamNamespace) Delete() (err error) {
 // @Param s query string false "Search teams by its name."
 // @Security JWTKeyAuth
 // @Success 200 {array} models.TeamWithRight "The teams with the right they have."
-// @Failure 403 {object} code.vikunja.io/web.HTTPError "No right to see the namespace."
+// @Failure 403 {object} web.HTTPError "No right to see the namespace."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces/{id}/teams [get]
 func (tn *TeamNamespace) ReadAll(a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
@@ -208,8 +208,8 @@ func (tn *TeamNamespace) ReadAll(a web.Auth, search string, page int, perPage in
 // @Param namespace body models.TeamNamespace true "The team you want to update."
 // @Security JWTKeyAuth
 // @Success 200 {object} models.TeamNamespace "The updated team <-> namespace relation."
-// @Failure 403 {object} code.vikunja.io/web.HTTPError "The team does not have admin-access to the namespace"
-// @Failure 404 {object} code.vikunja.io/web.HTTPError "Team or namespace does not exist."
+// @Failure 403 {object} web.HTTPError "The team does not have admin-access to the namespace"
+// @Failure 404 {object} web.HTTPError "Team or namespace does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces/{namespaceID}/teams/{teamID} [post]
 func (tn *TeamNamespace) Update() (err error) {

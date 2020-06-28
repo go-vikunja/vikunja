@@ -192,7 +192,7 @@ do-the-swag:
 	@hash swag > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
 		go install $(GOFLAGS) github.com/swaggo/swag/cmd/swag; \
 	fi
-	swag init -g pkg/routes/routes.go -o ./pkg/swagger;
+	swag init -g pkg/routes/routes.go --parseDependency -o ./pkg/swagger;
 	# Fix the generated swagger file, currently a workaround until swaggo can properly use go mod
 	sed -i '/"definitions": {/a "code.vikunja.io.web.HTTPError": {"type": "object","properties": {"code": {"type": "integer"},"message": {"type": "string"}}},' pkg/swagger/docs.go;
 	sed -i 's/code.vikunja.io\/web.HTTPError/code.vikunja.io.web.HTTPError/g' pkg/swagger/docs.go;
