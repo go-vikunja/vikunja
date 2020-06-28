@@ -32,9 +32,6 @@ See [testing]({{< ref "test.md">}}).
 
 If you're able to use go modules, you can clone the project wherever you want to and work from there.
 
-However, when building or running tests, please supply the `-mod=vendor` flag to go so it builds using the 
-dependencies from the `vendor/` folder.
-
 #### Development-setup without go modules
 
 Some internal packages are referenced using their respective package URL. This can become problematic. 
