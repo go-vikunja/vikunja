@@ -62,7 +62,7 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/viper v1.7.0
 	github.com/stretchr/testify v1.6.1
-	github.com/swaggo/swag v1.6.3
+	github.com/swaggo/swag v1.6.7
 	github.com/ulule/limiter/v3 v3.5.0
 	github.com/urfave/cli v1.22.2 // indirect
 	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
