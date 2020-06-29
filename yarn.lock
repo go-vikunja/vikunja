@@ -12559,10 +12559,10 @@ vue@2.6.11, vue@^2.6.11:
   resolved "https://registry.yarnpkg.com/vue/-/vue-2.6.11.tgz#76594d877d4b12234406e84e35275c6d514125c5"
   integrity sha512-VfPwgcGABbGAue9+sfrD4PuwFar7gPb1yl1UK1MwXoQPAw0BKSqWfoYCT/ThFrdEVWoI51dBuyCoiNU9bZDZxQ==
 
-vuex@3.4.0:
-  version "3.4.0"
-  resolved "https://registry.yarnpkg.com/vuex/-/vuex-3.4.0.tgz#20cc086062d750769fce1febb34e7fceeaebde45"
-  integrity sha512-ajtqwEW/QhnrBZQsZxCLHThZZaa+Db45c92Asf46ZDXu6uHXgbfVuBaJ4gzD2r4UX0oMJHstFwd2r2HM4l8umg==
+vuex@3.5.0:
+  version "3.5.0"
+  resolved "https://registry.yarnpkg.com/vuex/-/vuex-3.5.0.tgz#0a4bb83122a159dec64b63cc9372880812de8eae"
+  integrity sha512-LetLEGe9cgfjdBZnKq/FVe9XwiNsikK1VK4Oh0SPt5sir0apalnJEOc/0vAdJGOWLe0Z1uXS+ovvhD9OjjgrTw==
 
 watch@^1.0.2:
   version "1.0.2"
