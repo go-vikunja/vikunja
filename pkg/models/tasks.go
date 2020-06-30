@@ -18,7 +18,6 @@ package models
 
 import (
 	"code.vikunja.io/api/pkg/config"
-	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/metrics"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
@@ -440,26 +439,7 @@ func addMoreInfoToTasks(taskMap map[int64]*Task) (err error) {
 	}
 
 	// Get task attachments
-	attachments := []*TaskAttachment{}
-	err = x.
-		In("task_id", taskIDs).
-		Find(&attachments)
-	if err != nil {
-		return
-	}
-
-	fileIDs := []int64{}
-	for _, a := range attachments {
-		userIDs = append(userIDs, a.CreatedByID)
-		fileIDs = append(fileIDs, a.FileID)
-	}
-
-	// Get all files
-	fs := make(map[int64]*files.File)
-	err = x.In("id", fileIDs).Find(&fs)
-	if err != nil {
-		return
-	}
+	attachments, err := getTaskAttachmentsByTaskIDs(taskIDs)
 
 	// Get all users of a task
 	// aka the ones who created a task
@@ -476,8 +456,6 @@ func addMoreInfoToTasks(taskMap map[int64]*Task) (err error) {
 
 	// Put the users and files in task attachments
 	for _, a := range attachments {
-		a.CreatedBy = users[a.CreatedByID]
-		a.File = fs[a.FileID]
 		taskMap[a.TaskID].Attachments = append(taskMap[a.TaskID].Attachments, a)
 	}
 
@@ -574,6 +552,10 @@ func checkBucketAndTaskBelongToSameList(fullTask *Task, bucketID int64) (err err
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{id} [put]
 func (t *Task) Create(a web.Auth) (err error) {
+	return createTask(t, a, true)
+}
+
+func createTask(t *Task, a web.Auth, updateAssignees bool) (err error) {
 
 	t.ID = 0
 
@@ -637,8 +619,10 @@ func (t *Task) Create(a web.Auth) (err error) {
 	}
 
 	// Update the assignees
-	if err := t.updateTaskAssignees(t.Assignees); err != nil {
-		return err
+	if updateAssignees {
+		if err := t.updateTaskAssignees(t.Assignees); err != nil {
+			return err
+		}
 	}
 
 	// Update the reminders

@@ -98,7 +98,7 @@ func (l *List) CanDelete(a web.Auth) (bool, error) {
 
 // CanCreate checks if the user can create a list
 func (l *List) CanCreate(a web.Auth) (bool, error) {
-	// A user can create a list if he has write access to the namespace
+	// A user can create a list if they have write access to the namespace
 	n := &Namespace{ID: l.NamespaceID}
 	return n.CanWrite(a)
 }

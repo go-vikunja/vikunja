@@ -193,3 +193,45 @@ func (ta *TaskAttachment) Delete() error {
 	}
 	return err
 }
+
+func getTaskAttachmentsByTaskIDs(taskIDs []int64) (attachments []*TaskAttachment, err error) {
+	attachments = []*TaskAttachment{}
+	err = x.
+		In("task_id", taskIDs).
+		Find(&attachments)
+	if err != nil {
+		return
+	}
+
+	fileIDs := []int64{}
+	userIDs := []int64{}
+	for _, a := range attachments {
+		userIDs = append(userIDs, a.CreatedByID)
+		fileIDs = append(fileIDs, a.FileID)
+	}
+
+	// Get all files
+	fs := make(map[int64]*files.File)
+	err = x.In("id", fileIDs).Find(&fs)
+	if err != nil {
+		return
+	}
+
+	users := make(map[int64]*user.User)
+	err = x.In("id", userIDs).Find(&users)
+	if err != nil {
+		return
+	}
+
+	// Obfuscate all user emails
+	for _, u := range users {
+		u.Email = ""
+	}
+
+	for _, a := range attachments {
+		a.CreatedBy = users[a.CreatedByID]
+		a.File = fs[a.FileID]
+	}
+
+	return
+}

@@ -304,6 +304,13 @@ func registerAPIRoutes(a *echo.Group) {
 	a.POST("/lists/:list/buckets/:bucket", kanbanBucketHandler.UpdateWeb)
 	a.DELETE("/lists/:list/buckets/:bucket", kanbanBucketHandler.DeleteWeb)
 
+	listDuplicateHandler := &handler.WebHandler{
+		EmptyStruct: func() handler.CObject {
+			return &models.ListDuplicate{}
+		},
+	}
+	a.PUT("/lists/:listid/duplicate", listDuplicateHandler.CreateWeb)
+
 	taskHandler := &handler.WebHandler{
 		EmptyStruct: func() handler.CObject {
 			return &models.Task{}
