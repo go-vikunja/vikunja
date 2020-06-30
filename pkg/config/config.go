@@ -26,6 +26,7 @@ import (
 	"strings"
 	"time"
 
+	"4d63.com/tz"
 	"github.com/spf13/viper"
 )
 
@@ -159,7 +160,7 @@ var timezone *time.Location
 // it way easier, especially when testing.
 func GetTimeZone() *time.Location {
 	if timezone == nil {
-		loc, err := time.LoadLocation(ServiceTimeZone.GetString())
+		loc, err := tz.LoadLocation(ServiceTimeZone.GetString())
 		if err != nil {
 			fmt.Printf("Error parsing time zone: %s", err)
 			os.Exit(1)

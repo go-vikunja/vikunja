@@ -17,6 +17,7 @@
 module code.vikunja.io/api
 
 require (
+	4d63.com/tz v1.1.0
 	code.vikunja.io/web v0.0.0-20200618164749-a5f3d450d39a
 	gitea.com/xorm/xorm-redis-cache v0.2.0
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
