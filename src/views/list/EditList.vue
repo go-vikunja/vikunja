@@ -98,6 +98,32 @@
 			</div>
 		</div>
 
+		<div class="card">
+			<header class="card-header">
+				<p class="card-header-title">
+					Duplicate this list
+				</p>
+			</header>
+			<div class="card-content">
+				<div class="content">
+					<p>Select a namespace which should hold the duplicated list:</p>
+					<div class="field is-grouped">
+						<p class="control is-expanded">
+							<namespace-search @selected="selectNamespace"/>
+						</p>
+						<p class="control">
+							<button type="submit" class="button is-success" @click="duplicateList">
+								<span class="icon is-small">
+									<icon icon="plus"/>
+								</span>
+								Add
+							</button>
+						</p>
+					</div>
+				</div>
+			</div>
+		</div>
+
 		<background :list-id="$route.params.id"/>
 
 		<component
@@ -137,6 +163,9 @@
 	import Background from '../../components/list/partials/background-settings'
 	import {CURRENT_LIST} from '../../store/mutation-types'
 	import ColorPicker from '../../components/input/colorPicker'
+	import NamespaceSearch from '../../components/namespace/namespace-search'
+	import ListDuplicateService from '../../services/listDuplicateService'
+	import ListDuplicateModel from '../../models/listDuplicateModel'
 
 	export default {
 		name: 'EditList',
@@ -149,9 +178,13 @@
 
 				manageUsersComponent: '',
 				manageTeamsComponent: '',
+
+				listDuplicateService: ListDuplicateService,
+				selectedNamespace: null,
 			}
 		},
 		components: {
+			NamespaceSearch,
 			ColorPicker,
 			Background,
 			Fancycheckbox,
@@ -160,6 +193,7 @@
 		},
 		created() {
 			this.listService = new ListService()
+			this.listDuplicateService = new ListDuplicateService()
 			this.loadList()
 		},
 		watch: {
@@ -204,6 +238,24 @@
 					.then(() => {
 						this.success({message: 'The list was successfully deleted.'}, this)
 						router.push({name: 'home'})
+					})
+					.catch(e => {
+						this.error(e, this)
+					})
+			},
+			selectNamespace(namespace) {
+				this.selectedNamespace = namespace
+			},
+			duplicateList() {
+				const listDuplicate = new ListDuplicateModel({
+					listId: this.list.id,
+					namespaceId: this.selectedNamespace.id,
+				})
+				this.listDuplicateService.create(listDuplicate)
+					.then(r => {
+						this.$store.commit('namespaces/addListToNamespace', r.list)
+						this.success({message: 'The list was successfully duplicated.'}, this)
+						router.push({name: 'list.index', params: {listId: r.list.id}})
 					})
 					.catch(e => {
 						this.error(e, this)
