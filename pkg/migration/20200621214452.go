@@ -649,7 +649,12 @@ create unique index UQE_users_namespace_id
 					}
 				case schemas.MYSQL:
 					sql = []string{
-						"ALTER TABLE " + table + " DROP COLUMN IF EXISTS " + colTmp + ";",
+						// mysql does not support the IF EXISTS part of the following statement. To not break
+						// compatibility with mysql over mariadb, we're not using it.
+						// The statement is probably useless anyway since its only purpose is to clean up old tables
+						// which may be leftovers from a previously failed migration. However, since the whole thing
+						// is wrapped in sessions, this is extremely unlikely to happen anyway.
+						//"ALTER TABLE " + table + " DROP COLUMN IF EXISTS " + colTmp + ";",
 						"ALTER TABLE " + table + " ADD COLUMN " + colTmp + " DATETIME NULL;",
 						// #nosec
 						"UPDATE " + table + " SET " + colTmp + " = IF(" + colOld + " = 0, NULL, FROM_UNIXTIME(" + colOld + "));",
