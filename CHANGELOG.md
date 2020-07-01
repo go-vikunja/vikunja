@@ -9,6 +9,113 @@ All releases can be found on https://code.vikunja.io/frontend/releases.
 
 The releases aim at the api versions which is why there are missing versions.
 
+## [0.14.0 - 2020-07-01]
+
+### Added
+
+* Add border to colorpicker (fixes #146)
+* Add changing list identifier
+* Add changing the uid and gid in docker through env variables
+* Add color picker to change task color to task detail view
+* Add docker build pipelines for arm and amd64 (#164)
+* Add docker multiarch manifest build step
+* Add list duplicate (#172)
+* Add mention of unsplash in the background settings
+* Add option to hide the menu on desktop
+* Add option to remove color from label, task, namespace or list (#157)
+* Add repeating tasks from current date setting
+* Add suffix for auto built docker images per arch
+* Add todoist migrator to the frontend
+* Add yarn timeout to build
+* Custom backgrounds for lists (#144)
+* Enable resetting search input
+* List Background upload (#151)
+* Namespaces & Lists Page (#160)
+* Task Filters (#149)
+
+### Fixed
+
+* Always break kanban card titles
+* Check if we have a service worker available before trying to communicate with it
+* Don't disable the task add button if input is empty
+* Don't try to fetch the initial unsplash results when unsplash backgrounds are disabled
+* Don't try to make a request to get the totp status if its disabled
+* Ensure consistent naming of title fields (#134)
+* Fix changing task dates
+* Fix Datetime Handling (#168)
+* Fix docker arm build plugin
+* Fix docker arm build tag
+* Fix edit task repeat after being undefined (again)
+* Fix error messages when trying to update tasks in kanban if kanban hasn't been opened yet
+* Fix error when adding a background to a list which did not have one before
+* Fix gantt chart not updating when navigating between lists
+* Fix getting migration status
+* Fix hamburger icon on mobile padding
+* Fix kanban board height
+* Fix kanban tasks with backgrounds
+* Fix list title on mobile
+* Fix login form on mobile
+* Fix notifications not using task title
+* Fix not sending the user to the view they came from when viewing task details
+* Fix not showing changes in kanban when switching between views
+* Fix redirect when not logged in
+* Fix register
+* Fix related tasks overflowing if a related task has a long name
+* Fix related tasks search
+* Fix repeat after value being undefined error in task edit panel
+* Fix saving list view if not present in browser
+* Fix search on mobile
+* Fix task title not editable in edit task pane
+* Fix trying to load kanban buckets if the kanban board is not in focus
+* Fix typo when no upcoming tasks are available
+* Fix user dropdown on mobile
+* Only load tasks when the user is authenticated
+* Remember list view when navigating between lists
+* Remove old tasks when loading list view
+
+### Changed
+
+* Change logo primary color
+* Color the whole card on kanban if the task has a color
+* Don't show a success message if it is obvious the action has been successful
+* Don't show the task id in list view
+* Hide hints on start page if a user has tasks (#159)
+* Hide totp settings if it is disabled server side
+* Increase network timeout when building docker image
+* Make sure the version includes the tag when building docker images
+* #PrideMonth
+* Only renew user token on tab focus events
+* Redirect the user to login page if the token expired when the tab gets focus again
+* Remove title length restrictions
+* Rename routes to follow the same pattern
+* Restructure components
+* Save list view per list and not globally
+* Show list background when viewing a link share
+* Show namespace name in list search field
+* Show task index instead of id on kanban
+* Simplify pipeline
+* Update dependency bulma to v0.9.0 (#150)
+* Update dependency date-fns to v2.14.0 (#136)
+* Update dependency eslint to v7.1.0 (#139)
+* Update dependency eslint to v7.2.0 (#148)
+* Update dependency eslint to v7.3.0 (#162)
+* Update dependency eslint to v7.3.1 (#166)
+* Update dependency @fortawesome/vue-fontawesome to v0.1.10 (#158)
+* Update dependency vue-easymde to v1.2.1 (#145)
+* Update dependency vue-router to v3.2.0 (#137)
+* Update dependency vue-router to v3.3.1 (#141)
+* Update dependency vue-router to v3.3.2 (#142)
+* Update dependency vue-router to v3.3.4 (#156)
+* Update dependency vuex to v3.5.0 (#170)
+* Update dependency vuex to v3.5.1 (#171)
+* Update Font Awesome (#161)
+* Update vue monorepo (#153)
+* Update vue monorepo to v4.4.1 (#140)
+* Update vue monorepo to v4.4.4 (#154)
+* Update vue monorepo to v4.4.5 (#165)
+* Update vue monorepo to v4.4.6 (#167)
+* Use the right Id when loading unsplash thumbnails
+
 ## [0.13] - 2020-05-12
 
 #### Added 
