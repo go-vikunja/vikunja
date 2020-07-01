@@ -24,6 +24,7 @@ $crazy-height-calculation: '100vh - 4.5rem - 1.5rem - 1em - 1.5em - 8px';
     margin: 0 1em 0 0;
     max-height: 100%;
     min-height: 20px;
+    max-width: 300px;
 
     .tasks {
       max-height: calc(#{$crazy-height-calculation} - 1rem - 2.5rem - 2em - #{$button-height} - 1em);
@@ -63,6 +64,7 @@ $crazy-height-calculation: '100vh - 4.5rem - 1.5rem - 1em - 1.5em - 8px';
         h3 {
           font-family: $family-sans-serif;
           font-size: .85rem;
+          word-break: break-word;
         }
 
         .due-date {
