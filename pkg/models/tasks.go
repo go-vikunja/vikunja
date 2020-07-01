@@ -392,6 +392,10 @@ func getRemindersForTasks(taskIDs []int64) (reminders []*TaskReminder, err error
 	return
 }
 
+func (t *Task) setIdentifier(list *List) {
+	t.Identifier = list.Identifier + "-" + strconv.FormatInt(t.Index, 10)
+}
+
 // This function takes a map with pointers and returns a slice with pointers to tasks
 // It adds more stuff like assignees/labels/etc to a bunch of tasks
 func addMoreInfoToTasks(taskMap map[int64]*Task) (err error) {
@@ -490,7 +494,7 @@ func addMoreInfoToTasks(taskMap map[int64]*Task) (err error) {
 		task.RelatedTasks = make(RelatedTaskMap)
 
 		// Build the task identifier from the list identifier and task index
-		task.Identifier = lists[task.ListID].Identifier + "-" + strconv.FormatInt(task.Index, 10)
+		task.setIdentifier(lists[task.ListID])
 	}
 
 	// Get all related tasks
@@ -631,6 +635,8 @@ func createTask(t *Task, a web.Auth, updateAssignees bool) (err error) {
 	}
 
 	metrics.UpdateCount(1, metrics.TaskCountKey)
+
+	t.setIdentifier(l)
 
 	err = updateListLastUpdated(&List{ID: t.ListID})
 	return
