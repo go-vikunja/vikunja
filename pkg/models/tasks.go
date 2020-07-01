@@ -693,13 +693,41 @@ func (t *Task) Update() (err error) {
 		return
 	}
 
-	// If the task is being moved between lists, make sure to move the bucket as well
+	// All columns to update in a separate variable to be able to add to them
+	colsToUpdate := []string{
+		"title",
+		"description",
+		"done",
+		"due_date",
+		"repeat_after",
+		"priority",
+		"start_date",
+		"end_date",
+		"hex_color",
+		"done_at",
+		"percent_done",
+		"list_id",
+		"bucket_id",
+		"position",
+		"repeat_from_current_date",
+	}
+
+	// If the task is being moved between lists, make sure to move the bucket + index as well
 	if t.ListID != 0 && ot.ListID != t.ListID {
 		b, err := getDefaultBucket(t.ListID)
 		if err != nil {
 			return err
 		}
 		t.BucketID = b.ID
+
+		latestTask := &Task{}
+		_, err = x.Where("list_id = ?", t.ListID).OrderBy("id desc").Get(latestTask)
+		if err != nil {
+			return err
+		}
+
+		t.Index = latestTask.Index + 1
+		colsToUpdate = append(colsToUpdate, "index")
 	}
 
 	// Update the labels
@@ -776,22 +804,7 @@ func (t *Task) Update() (err error) {
 	}
 
 	_, err = x.ID(t.ID).
-		Cols("title",
-			"description",
-			"done",
-			"due_date",
-			"repeat_after",
-			"priority",
-			"start_date",
-			"end_date",
-			"hex_color",
-			"done_at",
-			"percent_done",
-			"list_id",
-			"bucket_id",
-			"position",
-			"repeat_from_current_date",
-		).
+		Cols(colsToUpdate...).
 		Update(ot)
 	*t = ot
 	if err != nil {
