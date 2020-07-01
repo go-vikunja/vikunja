@@ -7,6 +7,121 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 All releases can be found on https://code.vikunja.io/api/releases.
 
+## [0.14.0] - 2020-07-01
+
+### Added 
+
+* Add ability to run the docker container with configurable user and group ids
+* Add better errors if the sqlite db file is not writable
+* Add cache for initial unsplash collection
+* Add docker setup guide from start to finish
+* Add docs for restore
+* Add dump command (#592)
+* Add section to full-docker-example.md for Caddy v2 (#595)
+* Add go version to version command
+* Add list background information when getting all lists
+* Add logging if downloading an image from unsplash fails
+* Add migration test in drone (#585)
+* Add option to disable totp for everyone
+* Add plausible to docs
+* Add restarting commands to all example docker compose files
+* Add seperate docker pipeline for amd64 and arm
+* Add test mail command (#571)
+* Add todoist migrator to available migrators in info endpoint if it is enabled
+* Add unsplash image proxy for images and thumbnails
+* Add returning unsplash info when searching
+* Don't return all tasks when a user has no lists
+* Duplicate Lists (#603)
+* Enable upload backgrounds by default
+* Generate a random list identifier based on the list title
+* List Backgrounds (#568)
+* List Background upload (#582)
+* Repeat tasks after completion (#587)
+* Restore command (#593)
+* Sentry integration (#591)
+* Todoist Migration (#566)
+
+### Fixed
+
+* Ensure consistent naming of title fields (#528)
+* Ensure task dates are in the future if a task has a repeating interval (#586)
+* Fix caching of initial unsplash results per page
+* Fix case-insensitive task search for postgresql (#524)
+* Fix docker manifest build
+* Fix docker multiarch build
+* Fix docs theme build
+* Fix getting unsplash thumbnails for non "photo-*" urls
+* Fix migration 20200425182634
+* Fix migration 20200516123847
+* Fix migration to add position to task
+* Fix misspell
+* Fix namespace title not being updated
+* Fix not loading timezones on all operating systems
+* Fix proxying unsplash images (security)
+* Fix removing existing sqlite files
+* Fix resetting list, label & namespace colors
+* Fix searching for unsplash pictures with words that contain a space
+* Fix setting a list identifier to empty
+* Fix sqlite db not working when creating a new one
+* Fix sqlite path in default config
+* Fix swagger docs
+* Fix updating the index when moving a task
+* Prevent crashing when trying to register with an empty payload
+* Properly ping unsplash when using unsplash images
+* Return errors when dumping
+* Set the list identifier when creating a new task
+
+### Changed
+
+* Expose namespace id when querying lists
+* Improve getting all namespaces performance (#526)
+* Improve memory usage of dump by not loading all files in memory prior to adding them to the zip
+* Improve metrics performance
+* Load the list when setting a background
+* Make the db timezone migration mysql compatible
+* Make the `_unix` suffix optional when sorting tasks
+* Migrate all timestamps to real iso dates (#594)
+* Make sure docker images are only built when tests pass
+* Remove build date from binary
+* Remove dependencies on build step to speed up test pipeline (#521)
+* Remove go mod vendor todo from pr template now that we don't keep dependencies in the repo anymore
+* Remove migration dependency to models
+* Remove min length for labels, lists, namespaces, tasks and teams
+* Remove vendored dependencies
+* Reorganize cmd init functions
+* Set unsplash empty collection caching to one hour
+* Simplify pipeline & add docker manifest step
+* Update alpine Docker tag to v3.12 (#573)
+* Update and fix staticcheck
+* Update dependency github.com/mattn/go-sqlite3 to v1.14.0
+* Update github.com/shurcooL/vfsgen commit hash to 92b8a71 (#599)
+* Update golang.org/x/crypto commit hash to 279210d (#577)
+* Update golang.org/x/crypto commit hash to 70a84ac (#578)
+* Update golang.org/x/crypto commit hash to 75b2880 (#596)
+* Update module go-redis/redis/v7 to v7.3.0 (#565)
+* Update module go-redis/redis/v7 to v7.4.0 (#579)
+* Update module go-testfixtures/testfixtures/v3 to v3.3.0 (#600)
+* Update module lib/pq to v1.6.0 (#572)
+* Update module lib/pq to v1.7.0 (#581)
+* Update module prometheus/client_golang to v1.7.0 (#589)
+* Update module prometheus/client_golang to v1.7.1 (#597)
+* Update module spf13/afero to v1.3.0 (#588)
+* Update module spf13/afero to v1.3.1 (#602)
+* Update module spf13/cobra to v1 (#511)
+* Update module src.techknowlogick.com/xormigrate to v1.2.1 (#574)
+* Update module src.techknowlogick.com/xormigrate to v1.3.0 (#590)
+* Update module stretchr/testify to v1.6.0 (#570)
+* Update module stretchr/testify to v1.6.1 (#580)
+* Update module swaggo/swag to v1.6.7 (#601)
+* Update src.techknowlogick.com/xgo commit hash to 209a5cf (#523)
+* Update src.techknowlogick.com/xgo commit hash to a09175e (#576)
+* Update src.techknowlogick.com/xgo commit hash to eeb7c0a (#575)
+* update theme
+* Update theme
+* Update web handler
+* Update xorm.io/xorm 1.0.1 -> 1.0.2
+* Use the db logger instance for logging migration related stuff
+
 ## [0.13.1] - 2020-05-19
 
 ### Fixed
