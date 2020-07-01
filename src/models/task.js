@@ -182,7 +182,7 @@ export default class TaskModel extends AbstractModel {
 		// Register the actual notification
 		registration.showNotification('Vikunja Reminder', {
 			tag: `vikunja-task-${this.id}`, // Group notifications by task id so we're only showing one notification per task
-			body: this.text,
+			body: this.title,
 			// eslint-disable-next-line no-undef
 			showTrigger: new TimestampTrigger(date),
 			badge: '/images/icons/badge-monochrome.png',
