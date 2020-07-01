@@ -69,6 +69,9 @@
 			background() {
 				return this.$store.state.background
 			},
+			currentList() {
+				return typeof this.$store.state.currentList === 'undefined' ? {id: 0} : this.$store.state.currentList
+			},
 		},
 		methods: {
 			loadList() {
@@ -85,7 +88,10 @@
 				}
 
 				// Don't load the list if we either already loaded it or aren't dealing with a list at all currently
-				if (this.$route.params.listId === this.listLoaded || typeof this.$route.params.listId === 'undefined') {
+				if (
+					this.$route.params.listId === this.listLoaded ||
+					typeof this.$route.params.listId === 'undefined' ||
+					this.$route.params.listId === this.currentList.id) {
 					return
 				}
 
@@ -96,7 +102,6 @@
 					this.$route.name !== 'list.table' &&
 					this.$route.name !== 'list.kanban'
 				) {
-
 					const savedListView = getListView(this.$route.params.listId)
 
 					router.replace({name: savedListView, params: {id: this.$route.params.listId}})
