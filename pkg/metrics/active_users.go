@@ -39,9 +39,11 @@ type ActiveUser struct {
 	LastSeen time.Time
 }
 
+type activeUsersMap map[int64]*ActiveUser
+
 // ActiveUsersMap is the type used to save active users
 type ActiveUsers struct {
-	users map[int64]*ActiveUser
+	users activeUsersMap
 	mutex *sync.Mutex
 }
 
@@ -59,7 +61,7 @@ func init() {
 		Help: "The currently active users on this node",
 	}, func() float64 {
 
-		allActiveUsers, err := GetActiveUsers()
+		allActiveUsers, err := getActiveUsers()
 		if err != nil {
 			log.Error(err.Error())
 		}
@@ -67,7 +69,7 @@ func init() {
 			return 0
 		}
 		activeUsersCount := 0
-		for _, u := range allActiveUsers.users {
+		for _, u := range allActiveUsers {
 			if time.Since(u.LastSeen) < SecondsUntilInactive*time.Second {
 				activeUsersCount++
 			}
@@ -87,8 +89,8 @@ func SetUserActive(a web.Auth) (err error) {
 	return PushActiveUsers()
 }
 
-// GetActiveUsers returns the active users from redis
-func GetActiveUsers() (users *ActiveUsers, err error) {
+// getActiveUsers returns the active users from redis
+func getActiveUsers() (users activeUsersMap, err error) {
 
 	activeUsersR, err := r.Get(ActiveUsersKey).Bytes()
 	if err != nil {
