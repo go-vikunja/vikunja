@@ -1,6 +1,6 @@
 <template>
 	<div
-			class="loader-container"
+			class="loader-container is-max-width-desktop"
 			:class="{ 'is-loading': passwordUpdateService.loading || emailUpdateService.loading || totpService.loading }">
 		<!-- Password update -->
 		<div class="card">

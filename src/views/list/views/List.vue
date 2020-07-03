@@ -1,5 +1,5 @@
 <template>
-	<div class="loader-container" :class="{ 'is-loading': taskCollectionService.loading}">
+	<div class="loader-container is-max-width-desktop" :class="{ 'is-loading': taskCollectionService.loading}">
 		<div class="filter-container">
 			<div class="items">
 				<div class="search">

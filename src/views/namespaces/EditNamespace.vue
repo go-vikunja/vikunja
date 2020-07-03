@@ -1,5 +1,5 @@
 <template>
-	<div class="loader-container" v-bind:class="{ 'is-loading': namespaceService.loading}">
+	<div class="loader-container is-max-width-desktop" v-bind:class="{ 'is-loading': namespaceService.loading}">
 		<div class="notification is-warning" v-if="namespace.isArchived">
 			This namespace is archived.
 			It is not possible to create new lists or edit it.

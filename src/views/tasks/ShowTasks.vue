@@ -1,5 +1,5 @@
 <template>
-	<div>
+	<div class="is-max-width-desktop">
 		<h3 v-if="showAll">Current tasks</h3>
 		<h3 v-else>Tasks from {{startDate.toLocaleDateString()}} until {{endDate.toLocaleDateString()}}</h3>
 		<template v-if="!taskService.loading && (!hasUndoneTasks || !tasks)">

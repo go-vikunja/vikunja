@@ -63,3 +63,9 @@ button.table {
 .pagination {
   padding-bottom: 1em;
 }
+
+.is-max-width-desktop {
+  width: 100%;
+  max-width: $desktop;
+  margin: 0 auto;
+}

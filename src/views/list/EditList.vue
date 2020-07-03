@@ -1,5 +1,5 @@
 <template>
-	<div class="loader-container edit-list" :class="{ 'is-loading': listService.loading}">
+	<div class="loader-container edit-list is-max-width-desktop" :class="{ 'is-loading': listService.loading}">
 		<div class="notification is-warning" v-if="list.isArchived">
 			This list is archived.
 			It is not possible to create new or edit tasks or it.

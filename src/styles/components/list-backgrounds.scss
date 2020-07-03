@@ -15,7 +15,7 @@
     flex-flow: row wrap;
 
     .image {
-      width: calc(100% / 6 - 1em);
+      width: calc(100% / 5 - 1em);
       height: 120px;
       margin: .5em;
       background-size: cover;
@@ -23,7 +23,7 @@
       display: flex;
 
       @media screen and (min-width: $desktop) {
-        &:nth-child(6n) {
+        &:nth-child(5n) {
           page-break-after: always; // CSS 2.1 syntax
           break-after: always; // New syntax
         }

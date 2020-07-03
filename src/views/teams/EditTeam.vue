@@ -1,5 +1,5 @@
 <template>
-	<div class="loader-container" v-bind:class="{ 'is-loading': teamService.loading}">
+	<div class="loader-container is-max-width-desktop" v-bind:class="{ 'is-loading': teamService.loading}">
 		<div class="card is-fullwidth" v-if="userIsAdmin">
 			<header class="card-header">
 				<p class="card-header-title">
