@@ -77,6 +77,10 @@
 			</p>
 		</div>
 
+		<p v-if="tasks.length === 0" class="list-is-empty-notice">
+			This list is currently empty.
+		</p>
+
 		<div class="columns">
 			<div class="column">
 				<div class="tasks" v-if="tasks && tasks.length > 0" :class="{'short': isTaskEdit}">
