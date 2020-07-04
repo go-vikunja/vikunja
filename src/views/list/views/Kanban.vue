@@ -29,7 +29,7 @@
 					</div>
 				</div>
 			</div>
-			<div class="tasks">
+			<div class="tasks" :ref="`tasks-container${bucket.id}`">
 				<Container
 						@drop="e => onDrop(bucket.id, e)"
 						group-name="buckets"
@@ -378,6 +378,12 @@
 					})
 					.catch(e => {
 						this.error(e, this)
+					})
+					.finally(() => {
+						if(!this.$refs[`tasks-container${task.bucketId}`][0]) {
+							return
+						}
+						this.$refs[`tasks-container${task.bucketId}`][0].scrollTop = this.$refs[`tasks-container${task.bucketId}`][0].scrollHeight
 					})
 			},
 			createNewBucket() {
