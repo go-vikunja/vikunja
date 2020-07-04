@@ -16,8 +16,8 @@ endif
 GOFILES := $(shell find . -name "*.go" -type f ! -path "*/bindata.go")
 GOFMT ?= gofmt -s
 
-GOFLAGS := -v
 EXTRA_GOFLAGS ?=
+GOFLAGS := -v $(EXTRA_GOFLAGS)
 
 LDFLAGS := -X "code.vikunja.io/api/pkg/version.Version=$(shell git describe --tags --always --abbrev=10 | sed 's/-/+/' | sed 's/^v//' | sed 's/-g/-/')" -X "main.Tags=$(TAGS)"
 
@@ -105,7 +105,7 @@ generate:
 	go generate code.vikunja.io/api/pkg/static
 
 $(EXECUTABLE): $(SOURCES)
-	go build $(GOFLAGS) $(EXTRA_GOFLAGS) -tags '$(TAGS)' -ldflags '-s -w $(LDFLAGS)' -o $@
+	go build $(GOFLAGS) -tags '$(TAGS)' -ldflags '-s -w $(LDFLAGS)' -o $@
 
 .PHONY: compress-build
 compress-build:
