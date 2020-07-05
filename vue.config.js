@@ -32,6 +32,32 @@ module.exports = {
 					"type": "image/png"
 				}
 			],
+			shortcuts: [
+				{
+					name: 'Overview',
+					url: '/',
+				},
+				{
+					name: 'Namespaces And Lists Overview',
+					short_name: 'Namespaces & Lists',
+					url: '/namespaces',
+				},
+				{
+					name: 'Tasks Next Week',
+					short_name: 'Next Week',
+					url: '/tasks/by/week',
+				},
+				{
+					name: 'Tasks Next Month',
+					short_name: 'Next Month',
+					url: '/tasks/by/month',
+				},
+				{
+					name: 'Teams Overview',
+					short_name: 'Teams',
+					url: '/teams',
+				}
+			]
 		},
 	}
 }
