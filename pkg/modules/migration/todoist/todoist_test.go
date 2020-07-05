@@ -274,7 +274,7 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 				ID:     103001,
 				ItemID: 400000000,
 				Due: &dueDate{
-					Date:        "2020-06-16",
+					Date:        "2020-06-16T07:00:00",
 					IsRecurring: false,
 				},
 			},
@@ -282,7 +282,7 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 				ID:     103002,
 				ItemID: 400000002,
 				Due: &dueDate{
-					Date:        "2020-07-15",
+					Date:        "2020-07-15T07:00:00Z",
 					IsRecurring: true,
 				},
 			},
@@ -290,7 +290,7 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 				ID:     103003,
 				ItemID: 400000003,
 				Due: &dueDate{
-					Date:        "2020-06-15",
+					Date:        "2020-06-15T07:00:00",
 					IsRecurring: false,
 				},
 			},
@@ -298,7 +298,7 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 				ID:     103004,
 				ItemID: 400000005,
 				Due: &dueDate{
-					Date:        "2020-06-15",
+					Date:        "2020-06-15T07:00:00",
 					IsRecurring: false,
 				},
 			},
@@ -306,7 +306,7 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 				ID:     103006,
 				ItemID: 400000009,
 				Due: &dueDate{
-					Date:        "2020-06-15",
+					Date:        "2020-06-15T07:00:00",
 					IsRecurring: false,
 				},
 			},
@@ -350,7 +350,7 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 							Created:     time1,
 							Reminders: []time.Time{
 								time.Date(2020, time.June, 15, 0, 0, 0, 0, time.UTC).In(config.GetTimeZone()),
-								time.Date(2020, time.June, 16, 0, 0, 0, 0, time.UTC).In(config.GetTimeZone()),
+								time.Date(2020, time.June, 16, 7, 0, 0, 0, time.UTC).In(config.GetTimeZone()),
 							},
 						},
 						{
@@ -364,7 +364,7 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 							Done:    false,
 							Created: time1,
 							Reminders: []time.Time{
-								time.Date(2020, time.July, 15, 0, 0, 0, 0, time.UTC).In(config.GetTimeZone()),
+								time.Date(2020, time.July, 15, 7, 0, 0, 0, time.UTC).In(config.GetTimeZone()),
 							},
 						},
 						{
@@ -376,7 +376,7 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 							DoneAt:      time3,
 							Labels:      vikunjaLabels,
 							Reminders: []time.Time{
-								time.Date(2020, time.June, 15, 0, 0, 0, 0, time.UTC).In(config.GetTimeZone()),
+								time.Date(2020, time.June, 15, 7, 0, 0, 0, time.UTC).In(config.GetTimeZone()),
 							},
 						},
 						{
@@ -392,7 +392,7 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 							Created: time1,
 							DoneAt:  time3,
 							Reminders: []time.Time{
-								time.Date(2020, time.June, 15, 0, 0, 0, 0, time.UTC).In(config.GetTimeZone()),
+								time.Date(2020, time.June, 15, 7, 0, 0, 0, time.UTC).In(config.GetTimeZone()),
 							},
 						},
 						{
@@ -470,7 +470,7 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 							Done:    false,
 							Created: time1,
 							Reminders: []time.Time{
-								time.Date(2020, time.June, 15, 0, 0, 0, 0, time.UTC).In(config.GetTimeZone()),
+								time.Date(2020, time.June, 15, 7, 0, 0, 0, time.UTC).In(config.GetTimeZone()),
 							},
 						},
 						{

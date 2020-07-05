@@ -283,7 +283,7 @@ func convertTodoistToVikunja(sync *sync) (fullVikunjaHierachie []*models.Namespa
 
 		// Put the due date together
 		if i.Due != nil {
-			dueDate, err := time.Parse("2006-01-02T15:04:05Z", i.Due.Date)
+			dueDate, err := time.Parse("2006-01-02", i.Due.Date)
 			if err != nil {
 				return nil, err
 			}
@@ -368,7 +368,15 @@ func convertTodoistToVikunja(sync *sync) (fullVikunjaHierachie []*models.Namespa
 			continue
 		}
 
-		date, err := time.Parse("2006-01-02", r.Due.Date)
+		var err error
+		var date time.Time
+		date, err = time.Parse("2006-01-02T15:04:05Z", r.Due.Date)
+		if err != nil {
+			date, err = time.Parse("2006-01-02T15:04:05", r.Due.Date)
+		}
+		if err != nil {
+			date, err = time.Parse("2006-01-02", r.Due.Date)
+		}
 		if err != nil {
 			return nil, err
 		}
