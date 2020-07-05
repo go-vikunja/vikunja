@@ -41,16 +41,17 @@
 						drag-handle-selector=".task.draggable"
 				>
 					<Draggable v-for="task in bucket.tasks" :key="`bucket${bucket.id}-task${task.id}`">
-						<router-link
-								:to="{ name: 'task.kanban.detail', params: { id: task.id } }"
+						<div
 								class="task loader-container draggable"
-								tag="div"
 								:class="{
 							'is-loading': taskService.loading && taskUpdating[task.id],
 							'draggable': !taskService.loading || !taskUpdating[task.id],
 							'has-light-text': !colorIsDark(task.hexColor) && task.hexColor !== `#${task.defaultColor}`,
 						}"
 								:style="{'background-color': task.hexColor !== '#' && task.hexColor !== `#${task.defaultColor}` ? task.hexColor : false}"
+								@click.ctrl="() => markTaskAsDone(task)"
+								@click.meta="() => markTaskAsDone(task)"
+								@click.exact="() => $router.push({ name: 'task.kanban.detail', params: { id: task.id } })"
 						>
 							<span class="task-id">
 								<span class="is-done" v-if="task.done">Done</span>
@@ -100,7 +101,7 @@
 									</span>
 								</div>
 							</div>
-						</router-link>
+						</div>
 					</Draggable>
 				</Container>
 			</div>
@@ -329,6 +330,16 @@
 						})
 				}
 			},
+			markTaskAsDone(task) {
+				task.done = !task.done
+				this.$store.dispatch('tasks/update', task)
+					.catch(e => {
+						this.error(e, this)
+					})
+					.finally(() => {
+						this.$set(this.taskUpdating, task.id, false)
+					})
+			},
 			getTaskPayload(bucketId) {
 				return index => {
 					const bucket = this.buckets[filterObject(this.buckets, b => b.id === bucketId)]
@@ -380,7 +391,7 @@
 						this.error(e, this)
 					})
 					.finally(() => {
-						if(!this.$refs[`tasks-container${task.bucketId}`][0]) {
+						if (!this.$refs[`tasks-container${task.bucketId}`][0]) {
 							return
 						}
 						this.$refs[`tasks-container${task.bucketId}`][0].scrollTop = this.$refs[`tasks-container${task.bucketId}`][0].scrollHeight
