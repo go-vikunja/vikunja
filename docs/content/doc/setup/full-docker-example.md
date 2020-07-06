@@ -15,6 +15,12 @@ It uses an nginx container or traefik on the host to proxy backend and frontend 
 
 For all available configuration options, see [configuration]({{< ref "config.md">}}).
 
+<div class="notification is-warning">
+<b>NOTE:</b> If you intend to run Vikunja with mysql and/or to use non-latin characters 
+<a href="{{< ref "utf-8.md">}}">make sure your db is utf-8 compatible</a>.<br/>
+All examples on this page already reflect this and do not require additional work.
+</div>
+
 ### Redis
 
 To use redis, you'll need to add this to the config examples below:
@@ -84,6 +90,7 @@ services:
     restart: unless-stopped
   db:
     image: mariadb:10
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     environment:
       MYSQL_ROOT_PASSWORD: supersupersecret 
       MYSQL_USER: vikunja
@@ -143,6 +150,7 @@ services:
     restart: unless-stopped
   db:
     image: mariadb:10
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     environment:
       MYSQL_ROOT_PASSWORD: supersupersecret 
       MYSQL_USER: vikunja
@@ -185,6 +193,7 @@ version: '3'
 services:
   db:
     image: mariadb:10
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     environment:
       MYSQL_ROOT_PASSWORD: supersecret
       MYSQL_DATABASE: vikunja
@@ -238,6 +247,7 @@ version: '3'
 services:
   db:
     image: mariadb:10
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     environment:
       MYSQL_ROOT_PASSWORD: supersecret
       MYSQL_DATABASE: vikunja

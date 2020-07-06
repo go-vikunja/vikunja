@@ -10,6 +10,11 @@ menu:
 
 # Backend
 
+<div class="notification is-warning">
+<b>NOTE:</b> If you intend to run Vikunja with mysql and/or to use non-latin characters 
+<a href="{{< ref "utf-8.md">}}">make sure your db is utf-8 compatible</a>.
+</div>
+
 ## Install from binary
 
 Download a copy of Vikunja from the [download page](https://vikunja.io/en/download/) for your architecture.
@@ -148,6 +153,7 @@ services:
       - ./files:/app/vikunja/files
   db:
     image: mariadb:10
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     environment:
       MYSQL_ROOT_PASSWORD: supersecret
       MYSQL_DATABASE: vikunja

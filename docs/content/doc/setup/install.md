@@ -30,6 +30,7 @@ This document provides an overview and instructions for the different methods.
   * [Docker]({{< ref "install-backend.md#docker">}})
   * [Debian packages]({{< ref "install-backend.md#debian-packages">}})
   * [Configuration]({{< ref "config.md">}})
+  * [UTF-8 Settings]({{< ref "utf-8.md">}})
 * [Frontend]({{< ref "install-frontend.md">}})
   * [Docker]({{< ref "install-frontend.md#docker">}})
   * [NGINX]({{< ref "install-frontend.md#nginx">}})

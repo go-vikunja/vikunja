@@ -20,6 +20,11 @@ params:
   plausibleDomain: vikunja.io
   plausibleURL: https://analytics.kolaente.de
 
+markup:
+  goldmark:
+    renderer:
+      unsafe: true
+
 menu:
   page:
     - name: Home
