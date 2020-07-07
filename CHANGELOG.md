@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 All releases can be found on https://code.vikunja.io/api/releases.
 
+## [0.14.1] - 2020-07-07
+
+### Fixed
+
+* Fix creating lists with non ascii characters (#607)
+* Fix decoding active users from redis
+* Fix parsing todoist reminder dates
+* Make sure the metrics map accesses only happen explicitly
+
+### Changed
+
+* Update docs theme
+
 ## [0.14.0] - 2020-07-01
 
 ### Added 
