@@ -232,6 +232,9 @@
 
 			this.totpStatus()
 		},
+		mounted() {
+			this.setTitle('Settings')
+		},
 		computed: mapState({
 			totpEnabled: state => state.config.totpEnabled,
 			migratorsEnabled: state => state.config.availableMigrators !== null && state.config.availableMigrators.length > 0,

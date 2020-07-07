@@ -107,6 +107,9 @@
 				router.push({name: 'home'})
 			}
 		},
+		created() {
+			this.setTitle('Login')
+		},
 		computed: mapState({
 			registrationEnabled: state => state.config.registrationEnabled,
 			loading: LOADING,

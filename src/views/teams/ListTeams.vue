@@ -21,7 +21,7 @@
 	import TeamService from '../../services/team'
 	
 	export default {
-		name: "ListTeams",
+		name: 'ListTeams',
 		data() {
 			return {
 				teamService: TeamService,
@@ -31,6 +31,9 @@
 		created() {
 			this.teamService = new TeamService()
 			this.loadTeams()
+		},
+		mounted() {
+			this.setTitle('Teams')
 		},
 		methods: {
 			loadTeams() {

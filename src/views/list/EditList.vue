@@ -218,6 +218,7 @@
 						// This will trigger the dynamic loading of components once we actually have all the data to pass to them
 						this.manageTeamsComponent = 'manageSharing'
 						this.manageUsersComponent = 'manageSharing'
+						this.setTitle(`Edit ${this.list.title}`)
 					})
 					.catch(e => {
 						this.error(e, this)

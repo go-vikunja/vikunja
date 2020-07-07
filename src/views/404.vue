@@ -7,6 +7,9 @@
 
 <script>
 	export default {
-		name: '404'
+		name: '404',
+		mounted() {
+			this.setTitle('404')
+		},
 	}
 </script>

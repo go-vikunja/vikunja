@@ -227,6 +227,7 @@
 				this.teamService.get(this.team)
 					.then(response => {
 						this.$set(this, 'team', response)
+						this.setTitle(`Edit Team ${this.team.name}`)
 						let members = response.members
 						for (const m in members) {
 							members[m].teamId = this.teamId

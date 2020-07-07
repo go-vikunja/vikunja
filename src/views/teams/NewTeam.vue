@@ -51,6 +51,9 @@
 			this.team = new TeamModel()
 			this.$store.commit(IS_FULLPAGE, true)
 		},
+		mounted() {
+			this.setTitle('Create a new Team')
+		},
 		methods: {
 			newTeam() {
 

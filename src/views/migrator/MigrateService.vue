@@ -20,6 +20,9 @@
 				identifier: '',
 			}
 		},
+		mounted() {
+			this.setTitle(`Import your data from ${this.name} into Vikunja`)
+		},
 		created() {
 			switch (this.$route.params.service) {
 				case 'wunderlist':

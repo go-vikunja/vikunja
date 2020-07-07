@@ -53,6 +53,9 @@
 			this.namespaceService = new NamespaceService()
 			this.$store.commit(IS_FULLPAGE, true)
 		},
+		mounted() {
+			this.setTitle('Create a new namespace')
+		},
 		methods: {
 			newNamespace() {
 				if (this.namespace.title === '') {

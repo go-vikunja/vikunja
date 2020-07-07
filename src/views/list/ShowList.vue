@@ -70,11 +70,12 @@
 				return this.$store.state.background
 			},
 			currentList() {
-				return typeof this.$store.state.currentList === 'undefined' ? {id: 0} : this.$store.state.currentList
+				return typeof this.$store.state.currentList === 'undefined' ? {id: 0, title: ''} : this.$store.state.currentList
 			},
 		},
 		methods: {
 			loadList() {
+				this.setTitle(this.currentList.title)
 
 				// This invalidates the loaded list at the kanban board which lets it reload its content when
 				// switched to it. This ensures updates done to tasks in the gantt or list views are consistently

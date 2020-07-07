@@ -65,14 +65,17 @@
 				backgrounds: {},
 			}
 		},
+		created() {
+			this.loadBackgroundsForLists()
+		},
+		mounted() {
+			this.setTitle('Namespaces & Lists')
+		},
 		computed: mapState({
 			namespaces(state) {
 				return state.namespaces.namespaces.filter(n => this.showArchived ? true : !n.isArchived)
 			},
 		}),
-		created() {
-			this.loadBackgroundsForLists()
-		},
 		methods: {
 			loadBackgroundsForLists() {
 				const listService = new ListService()

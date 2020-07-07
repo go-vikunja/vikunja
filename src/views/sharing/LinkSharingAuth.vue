@@ -22,6 +22,9 @@
 		created() {
 			this.auth()
 		},
+		mounted() {
+			this.setTitle('Authenticating...')
+		},
 		methods: {
 			auth() {
 				this.$store.dispatch('auth/linkShareAuth', this.$route.params.share)

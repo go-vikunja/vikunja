@@ -14,6 +14,9 @@
 <script>
 	export default {
 		name: 'migrate.service',
+		mounted() {
+			this.setTitle('Import your data to Vikunja')
+		},
 		computed: {
 			availableMigrators() {
 				return this.$store.state.config.availableMigrators

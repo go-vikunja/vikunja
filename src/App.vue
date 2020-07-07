@@ -419,6 +419,8 @@
 				}
 			},
 			doStuffAfterRoute(e) {
+				// this.setTitle('') // Reset the title if the page component does not set one itself
+
 				if (this.$store.state[IS_FULLPAGE]) {
 					this.$store.commit(IS_FULLPAGE, false)
 				}

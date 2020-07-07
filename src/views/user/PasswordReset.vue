@@ -57,6 +57,9 @@
 		created() {
 			this.passwordResetService = new PasswordResetService()
 		},
+		mounted() {
+			this.setTitle('Reset your password')
+		},
 		methods: {
 			submit() {
 				this.errorMsg = ''

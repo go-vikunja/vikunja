@@ -11,6 +11,7 @@ import kanban from './modules/kanban'
 import tasks from './modules/tasks'
 import lists from './modules/lists'
 import ListService from '../services/list'
+import {setTitle} from '../helpers/setTitle'
 
 export const store = new Vuex.Store({
 	modules: {
@@ -45,6 +46,9 @@ export const store = new Vuex.Store({
 			state.isFullpage = fullpage
 		},
 		[CURRENT_LIST](state, currentList) {
+
+			setTitle(currentList.title)
+
 			// Not sure if this is the right way to do it but hey, it works
 			if (
 				// List changed

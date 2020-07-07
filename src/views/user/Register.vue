@@ -67,6 +67,9 @@
 				router.push({name: 'home'})
 			}
 		},
+		mounted() {
+			this.setTitle('Register')
+		},
 		computed: mapState({
 			authenticated: state => state.auth.authenticated,
 			loading: LOADING,

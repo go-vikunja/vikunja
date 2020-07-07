@@ -117,6 +117,9 @@
 			this.labelEditLabel = new LabelModel()
 			this.loadLabels()
 		},
+		mounted() {
+			this.setTitle('Labels')
+		},
 		computed: mapState({
 			userInfo: state => state.auth.info
 		}),

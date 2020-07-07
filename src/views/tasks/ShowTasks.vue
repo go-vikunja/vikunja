@@ -56,6 +56,12 @@
 					return
 				}
 
+				if (this.showAll) {
+					this.setTitle('Current Tasks')
+				} else {
+					this.setTitle(`Tasks from ${this.startDate.toLocaleDateString()} until ${this.endDate.toLocaleDateString()}`)
+				}
+
 				const params = {
 					sort_by: ['due_date', 'id'],
 					order_by: ['desc', 'desc'],

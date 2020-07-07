@@ -47,6 +47,9 @@
 			this.passwordResetService = new PasswordResetService()
 			this.passwordReset = new PasswordResetModel()
 		},
+		mounted() {
+			this.setTitle('Reset your password')
+		},
 		methods: {
 			submit() {
 				this.errorMsg = ''

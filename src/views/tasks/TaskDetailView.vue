@@ -453,6 +453,7 @@
 						this.taskTitle = this.task.title
 						this.taskColor = this.task.hexColor
 						this.setActiveFields()
+						this.setTitle(this.task.title)
 					})
 					.catch(e => {
 						this.error(e, this)
