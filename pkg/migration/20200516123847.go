@@ -55,7 +55,7 @@ func init() {
 				// The general idea here is to take the title and slice it into pieces, until we found a unique piece.
 
 				var exists = true
-				titleSlug := strings.Replace(strings.ToUpper(l.Title), " ", "", -1)
+				titleSlug := []rune(strings.Replace(strings.ToUpper(l.Title), " ", "", -1))
 
 				// We can save at most 10 characters in the db, so we need to ensure it has at most 10 characters
 				if len(titleSlug) > 10 {
@@ -72,7 +72,7 @@ func init() {
 					}
 
 					// Take a random part of the title slug, starting at the beginning
-					l.Identifier = titleSlug[i:]
+					l.Identifier = string(titleSlug[i:])
 					exists, err = sess.
 						Where("identifier = ?", l.Identifier).
 						And("id != ?", l.ID).

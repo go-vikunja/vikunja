@@ -79,6 +79,16 @@ func TestList_CreateOrUpdate(t *testing.T) {
 			assert.Error(t, err)
 			assert.True(t, IsErrListIdentifierIsNotUnique(err))
 		})
+		t.Run("non ascii characters", func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+			list := List{
+				Title:       "приффки фсем",
+				Description: "Lorem Ipsum",
+				NamespaceID: 1,
+			}
+			err := list.Create(usr)
+			assert.NoError(t, err)
+		})
 	})
 
 	t.Run("update", func(t *testing.T) {
