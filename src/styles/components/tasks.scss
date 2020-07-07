@@ -8,17 +8,17 @@
       max-width: 53vw;
     }
   }
-  
+
   @media screen and (max-width: $tablet) {
     max-width: 100%;
   }
 
-  &.noborder{
+  &.noborder {
     margin: 1rem -0.5rem;
   }
 
   .task {
-    display: block;
+    display: flex;
     padding: 0.5rem 1rem;
     border-bottom: 1px solid darken(#fff, 10%);
     transition: background-color $transition;
@@ -28,7 +28,7 @@
     }
 
     span:not(.tag) {
-      width: calc(100% - 40px);
+      width: 100%;
       display: inline-block;
       cursor: pointer;
 
@@ -39,13 +39,14 @@
         text-overflow: ellipsis;
         overflow: hidden;
         display: inline-block;
-        width: 94%;
+        max-width: calc(#{$desktop} - 27px - 2rem); // The max width of the outer container minus the padding
+        width: calc(100% - 2rem); // The max width of the outer container minus the padding
 
-        @media screen and (max-width: $tablet) {
-          width: 89%;
+        @media screen and (max-width: $desktop) {
+          max-width: calc(100vw - 27px - 2rem - 1.5rem - 3rem); // 1.5rem is the padding of the tasks container, 3rem is the padding of .app-container
         }
 
-        .overdue{
+        .overdue {
           color: $red;
         }
 
@@ -55,6 +56,10 @@
           font-size: .9em;
           vertical-align: text-bottom;
         }
+      }
+
+      .fancycheckbox span {
+        display: none;
       }
 
       .tag {
@@ -79,7 +84,7 @@
       }
     }
 
-    .tasktext.done{
+    .tasktext.done {
       text-decoration: line-through;
       color: $grey;
     }
@@ -97,7 +102,7 @@
       vertical-align: middle;
     }
 
-    .settings{
+    .settings {
       float: right;
       width: 24px;
       cursor: pointer;
@@ -109,13 +114,27 @@
   }
 }
 
-.taskedit{
+.is-menu-enabled .tasks .task span:not(.tag) {
+  .tasktext, &.tasktext {
+    @media screen and (max-width: $desktop) {
+      max-width: calc(100vw - 27px - 2rem - 1.5rem - 3rem - #{$navbar-width}); // 1.5rem is the padding of the tasks container, 3rem is the padding of .app-container
+    }
+
+    // Duplicated rule to have it work properly in at least some browsers
+    // This should be fine as the ui doesn't work in rare edge cases to begin with
+    @media screen and (max-width: calc(#{$desktop} + #{$navbar-width})) {
+      max-width: calc(100vw - 27px - 2rem - 1.5rem - 3rem - #{$navbar-width}); // 1.5rem is the padding of the tasks container, 3rem is the padding of .app-container
+    }
+  }
+}
+
+.taskedit {
   min-height: calc(100% - 1rem);
   margin-top: 1rem;
 
 
-  .priority-select{
-    .select, select{
+  .priority-select {
+    .select, select {
       width: 100%;
     }
   }
@@ -124,26 +143,26 @@
     list-style: none;
     margin: 0;
 
-    li{
+    li {
       padding: 0.5em 0.5em 0;
 
-      a{
+      a {
         float: right;
         color: $red;
         transition: all $transition;
 
-        &:hover{
+        &:hover {
           color: darken($red, 15);
         }
       }
     }
   }
 
-  .tag{
+  .tag {
     margin-right: 0.5em;
     margin-bottom: 0.5em;
 
-    &:last-child{
+    &:last-child {
       margin-right: 0;
     }
   }
