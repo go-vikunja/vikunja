@@ -5,6 +5,7 @@
 				<h2
 						class="title input"
 						contenteditable="true"
+						spellcheck="false"
 						@focusout="() => saveBucketTitle(bucket.id)"
 						:ref="`bucket${bucket.id}title`"
 						@keyup.ctrl.enter="() => saveBucketTitle(bucket.id)">{{ bucket.title }}</h2>
