@@ -181,16 +181,16 @@
 							Description
 						</h3>
 						<!-- We're using a normal textarea until the problem with the icons is resolved in easymde -->
-						<easymde v-model="task.description" @change="saveTask"/>
-<!--						<textarea-->
-<!--								class="textarea"-->
-<!--								v-model="task.description"-->
-<!--								rows="6"-->
-<!--								placeholder="Click here to enter a description..."-->
-<!--								@keyup.ctrl.enter="saveTaskIfDescriptionChanged"-->
-<!--								@keydown="setDescriptionChanged"-->
-<!--								@change="saveTaskIfDescriptionChanged"-->
-<!--						></textarea>-->
+						<!-- <easymde v-model="task.description" @change="saveTask"/>-->
+						<textarea
+								class="textarea"
+								v-model="task.description"
+								rows="6"
+								placeholder="Click here to enter a description..."
+								@keyup.ctrl.enter="saveTaskIfDescriptionChanged"
+								@keydown="setDescriptionChanged"
+								@change="saveTaskIfDescriptionChanged"
+						></textarea>
 					</div>
 
 					<!-- Attachments -->
@@ -335,8 +335,6 @@
 
 	import flatPickr from 'vue-flatpickr-component'
 	import 'flatpickr/dist/flatpickr.css'
-	import easymde from '../../components/input/easymde'
-
 	import PrioritySelect from '../../components/tasks/partials/prioritySelect'
 	import PercentDoneSelect from '../../components/tasks/partials/percentDoneSelect'
 	import EditLabels from '../../components/tasks/partials/editLabels'
@@ -348,7 +346,7 @@
 	import Comments from '../../components/tasks/partials/comments'
 	import router from '../../router'
 	import ListSearch from '../../components/tasks/partials/listSearch'
-	import ColorPicker from '../../components/input/colorPicker'
+	import ColorPicker from "../../components/input/colorPicker";
 
 	export default {
 		name: 'TaskDetailView',
@@ -365,7 +363,6 @@
 			PrioritySelect,
 			Comments,
 			flatPickr,
-			easymde,
 		},
 		data() {
 			return {
