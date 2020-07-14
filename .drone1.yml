@@ -383,12 +383,13 @@ steps:
     image: plugins/s3:1
     pull: true
     settings:
-      bucket: vikunja
+      bucket: vikunja-releases
       access_key:
         from_secret: aws_access_key_id
       secret_key:
         from_secret: aws_secret_access_key
-      endpoint: https://storage.kolaente.de
+      endpoint: https://s3.fr-par.scw.cloud
+      region: fr-par
       path_style: true
       strip_prefix: dist/zip/
       source: dist/zip/*
@@ -402,12 +403,13 @@ steps:
     image: plugins/s3:1
     pull: true
     settings:
-      bucket: vikunja
+      bucket: vikunja-releases
       access_key:
         from_secret: aws_access_key_id
       secret_key:
         from_secret: aws_secret_access_key
-      endpoint: https://storage.kolaente.de
+      endpoint: https://s3.fr-par.scw.cloud
+      region: fr-par
       path_style: true
       strip_prefix: dist/zip/
       source: dist/zip/*
@@ -448,12 +450,13 @@ steps:
     image: plugins/s3:1
     pull: true
     settings:
-      bucket: vikunja
+      bucket: vikunja-releases
       access_key:
         from_secret: aws_access_key_id
       secret_key:
         from_secret: aws_secret_access_key
-      endpoint: https://storage.kolaente.de
+      endpoint: https://s3.fr-par.scw.cloud
+      region: fr-par
       path_style: true
       strip_prefix: debian
       source: debian/*/*/*/*/*
