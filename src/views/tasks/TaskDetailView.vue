@@ -180,24 +180,18 @@
 							</span>
 							Description
 						</h3>
-						<!-- We're using a normal textarea until the problem with the icons is resolved in easymde -->
-						<!-- <easymde v-model="task.description" @change="saveTask"/>-->
-						<textarea
-								class="textarea"
+						<editor
 								v-model="task.description"
-								rows="6"
-								placeholder="Click here to enter a description..."
-								@keyup.ctrl.enter="saveTaskIfDescriptionChanged"
-								@keydown="setDescriptionChanged"
-								@change="saveTaskIfDescriptionChanged"
-						></textarea>
+								@change="saveTask"
+								:upload-enabled="true"
+								:upload-callback="attachmentUpload"
+								placeholder="Click here to enter a description..."/>
 					</div>
 
 					<!-- Attachments -->
 					<div class="content attachments has-top-border" v-if="activeFields.attachments">
 						<attachments
 								:task-id="taskId"
-								:initial-attachments="task.attachments"
 								ref="attachments"
 						/>
 					</div>
@@ -335,6 +329,7 @@
 
 	import flatPickr from 'vue-flatpickr-component'
 	import 'flatpickr/dist/flatpickr.css'
+
 	import PrioritySelect from '../../components/tasks/partials/prioritySelect'
 	import PercentDoneSelect from '../../components/tasks/partials/percentDoneSelect'
 	import EditLabels from '../../components/tasks/partials/editLabels'
@@ -346,7 +341,8 @@
 	import Comments from '../../components/tasks/partials/comments'
 	import router from '../../router'
 	import ListSearch from '../../components/tasks/partials/listSearch'
-	import ColorPicker from "../../components/input/colorPicker";
+	import ColorPicker from '../../components/input/colorPicker'
+	import attachmentUpload from '../../components/tasks/mixins/attachmentUpload'
 
 	export default {
 		name: 'TaskDetailView',
@@ -363,7 +359,11 @@
 			PrioritySelect,
 			Comments,
 			flatPickr,
+			editor: () => import(/* webpackPrefetch: true */ '../../components/input/editor'),
 		},
+		mixins: [
+			attachmentUpload,
+		],
 		data() {
 			return {
 				taskId: Number(this.$route.params.id),
@@ -450,6 +450,7 @@
 				this.taskService.get({id: this.taskId})
 					.then(r => {
 						this.$set(this, 'task', r)
+						this.$store.commit('attachments/set', r.attachments)
 						this.taskTitle = this.task.title
 						this.taskColor = this.task.hexColor
 						this.setActiveFields()
@@ -563,7 +564,7 @@
 			changeList(list) {
 				this.task.listId = list.id
 				this.saveTask()
-			}
+			},
 		},
 	}
 </script>

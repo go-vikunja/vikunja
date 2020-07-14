@@ -79,6 +79,7 @@
 	import AttachmentService from '../../../services/attachment'
 	import AttachmentModel from '../../../models/attachment'
 	import User from '../../misc/user'
+	import {mapState} from 'vuex'
 
 	export default {
 		name: 'attachments',
@@ -87,7 +88,6 @@
 		},
 		data() {
 			return {
-				attachments: [],
 				attachmentService: AttachmentService,
 				showDropzone: false,
 
@@ -106,8 +106,10 @@
 		},
 		created() {
 			this.attachmentService = new AttachmentService()
-			this.attachments = this.initialAttachments
 		},
+		computed: mapState({
+			attachments: state => state.attachments.attachments
+		}),
 		mounted() {
 			document.addEventListener('dragenter', e => {
 				e.stopPropagation()
@@ -136,11 +138,6 @@
 				this.showDropzone = false
 			})
 		},
-		watch: {
-			initialAttachments(newVal) {
-				this.attachments = newVal
-			},
-		},
 		methods: {
 			downloadAttachment(attachment) {
 				this.attachmentService.download(attachment)
@@ -158,7 +155,7 @@
 					.then(r => {
 						if(r.success !== null) {
 							r.success.forEach(a => {
-								this.attachments.push(a)
+								this.$store.commit('attachments/add', a)
 								this.$store.dispatch('tasks/addTaskAttachment', {taskId: this.taskId, attachment: a})
 							})
 						}
@@ -171,17 +168,11 @@
 					.catch(e => {
 						this.error(e, this)
 					})
-
 			},
 			deleteAttachment() {
 				this.attachmentService.delete(this.attachmentToDelete)
 					.then(r => {
-						// Remove the file from the list
-						for (const a in this.attachments) {
-							if (this.attachments[a].id === this.attachmentToDelete.id) {
-								this.attachments.splice(a, 1)
-							}
-						}
+						this.$store.commit('attachments/removeById', this.attachmentToDelete.id)
 						this.success(r, this)
 					})
 					.catch(e => {

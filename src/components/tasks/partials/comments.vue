@@ -7,33 +7,29 @@
 			Comments
 		</h1>
 		<div class="comments">
-			<progress class="progress is-small is-info" max="100" v-if="taskCommentService.loading">Loading comments...</progress>
+			<progress class="progress is-small is-info" max="100" v-if="taskCommentService.loading">Loading
+				comments...
+			</progress>
 			<div class="media comment" v-for="c in comments" :key="c.id">
 				<figure class="media-left">
 					<img class="image is-avatar" :src="c.author.getAvatarUrl(48)" alt="" width="48" height="48"/>
 				</figure>
 				<div class="media-content">
-					<div class="form" v-if="isCommentEdit && commentEdit.id === c.id">
-						<div class="field">
-							<textarea class="textarea" :class="{'is-loading': taskCommentService.loading}" placeholder="Add your comment..." v-model="commentEdit.comment" @keyup.ctrl.enter="editComment()"></textarea>
-						</div>
-						<div class="field">
-							<button class="button is-primary" :class="{'is-loading': taskCommentService.loading}" @click="editComment()" :disabled="commentEdit.comment === ''">Comment</button>
-							<a @click="() => isCommentEdit = false">Cancel</a>
-						</div>
-					</div>
-					<div class="content" v-else>
+					<div class="comment-info">
 						<strong>{{ c.author.username }}</strong>&nbsp;
 						<small v-tooltip="formatDate(c.created)">{{ formatDateSince(c.created) }}</small>
-						<small v-if="+new Date(c.created) !== +new Date(c.updated)" v-tooltip="formatDate(c.updated)"> · edited {{ formatDateSince(c.updated) }}</small>
-						<br/>
-						<p>
-							{{c.comment}}
-						</p>
-						<div class="comment-actions">
-							<a @click="toggleEdit(c)">Edit</a>&nbsp;·&nbsp;
-							<a @click="toggleDelete(c.id)">Remove</a>
-						</div>
+						<small v-if="+new Date(c.created) !== +new Date(c.updated)" v-tooltip="formatDate(c.updated)"> ·
+							edited {{ formatDateSince(c.updated) }}</small>
+					</div>
+					<editor
+							v-model="c.comment"
+							:has-preview="true"
+							@change="() => {toggleEdit(c);editComment()}"
+							:upload-enabled="true"
+							:upload-callback="attachmentUpload"
+					/>
+					<div class="comment-actions">
+						<a @click="toggleDelete(c.id)">Remove</a>
 					</div>
 				</div>
 			</div>
@@ -44,10 +40,21 @@
 				<div class="media-content">
 					<div class="form">
 						<div class="field">
-							<textarea class="textarea" :class="{'is-loading': taskCommentService.loading && !isCommentEdit}" placeholder="Add your comment..." v-model="newComment.comment" @keyup.ctrl.enter="addComment()"></textarea>
+							<editor
+									placeholder="Add your comment..."
+									:class="{'is-loading': taskCommentService.loading && !isCommentEdit}"
+									v-model="newComment.comment"
+									:has-preview="false"
+									:upload-enabled="true"
+									:upload-callback="attachmentUpload"
+									v-if="editorActive"
+							/>
 						</div>
 						<div class="field">
-							<button class="button is-primary" :class="{'is-loading': taskCommentService.loading && !isCommentEdit}" @click="addComment()" :disabled="newComment.comment === ''">Comment</button>
+							<button class="button is-primary"
+									:class="{'is-loading': taskCommentService.loading && !isCommentEdit}"
+									@click="addComment()" :disabled="newComment.comment === ''">Comment
+							</button>
 						</div>
 					</div>
 				</div>
@@ -67,9 +74,16 @@
 <script>
 	import TaskCommentService from '../../../services/taskComment'
 	import TaskCommentModel from '../../../models/taskComment'
+	import attachmentUpload from '../mixins/attachmentUpload'
 
 	export default {
 		name: 'comments',
+		components: {
+			editor: () => import(/* webpackPrefetch: true */ '../../input/editor'),
+		},
+		mixins: [
+			attachmentUpload,
+		],
 		props: {
 			taskId: {
 				type: Number,
@@ -88,6 +102,7 @@
 
 				taskCommentService: TaskCommentService,
 				newComment: TaskCommentModel,
+				editorActive: true,
 			}
 		},
 		created() {
@@ -124,6 +139,15 @@
 				if (this.newComment.comment === '') {
 					return
 				}
+
+				// This makes the editor trigger its mounted function again which makes it forget every input
+				// it currently has in its textarea. This is a counter-hack to a hack inside of vue-easymde
+				// which made it impossible to detect change from the outside. Therefore the component would
+				// not update if new content from the outside was made available.
+				// See https://github.com/NikulinIlya/vue-easymde/issues/3
+				this.editorActive = false
+				this.$nextTick(() => this.editorActive = true)
+
 				this.taskCommentService.create(this.newComment)
 					.then(r => {
 						this.comments.push(r)

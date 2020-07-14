@@ -1,8 +1,22 @@
-.media.comment{
+.media.comment {
   align-items: center;
 
   .media-left {
     margin: 0 1em;
+  }
+
+  @media screen and (min-width: $tablet) {
+    .comment-info {
+      margin-bottom: -3rem;
+    }
+  }
+
+  .editor .tabs {
+    margin-bottom: 0;
+
+    ul {
+      border-bottom: none;
+    }
   }
 
   .comment-actions {

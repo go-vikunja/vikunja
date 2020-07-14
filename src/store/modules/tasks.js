@@ -39,6 +39,7 @@ export default {
 			}
 			t.task.attachments.push(attachment)
 			ctx.commit('kanban/setTaskInBucketByIndex', t, {root: true})
+			ctx.commit('attachments/add', attachment, {root: true})
 		},
 		addAssignee(ctx, {user, taskId}) {
 

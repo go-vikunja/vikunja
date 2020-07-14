@@ -34,19 +34,24 @@ export default class AttachmentService extends AbstractService {
 		return data
 	}
 
-	download(model) {
-		this.http({
+	getBlobUrl(model) {
+		return this.http({
 			url: '/tasks/' + model.taskId + '/attachments/' + model.id,
 			method: 'GET',
 			responseType: 'blob',
-		}).then((response) => {
-			const url = window.URL.createObjectURL(new Blob([response.data]));
+		}).then(response => {
+			return window.URL.createObjectURL(new Blob([response.data]));
+		})
+	}
+
+	download(model) {
+		this.getBlobUrl(model).then(url => {
 			const link = document.createElement('a');
 			link.href = url;
 			link.setAttribute('download', model.file.name);
 			link.click();
 			window.URL.revokeObjectURL(url);
-		});
+		})
 	}
 
 	/**

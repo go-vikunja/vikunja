@@ -29,20 +29,21 @@
 						<div class="field">
 							<label class="label" for="teamdescription">Description</label>
 							<div class="control">
-								<textarea
+								<editor
 										:class="{ 'disabled': teamService.loading}"
 										:disabled="teamService.loading"
-										class="textarea"
 										placeholder="The teams description goes here..."
 										id="teamdescription"
-										v-model="team.description"></textarea>
+										v-model="team.description"
+										:preview-is-default="false"
+								/>
 							</div>
 						</div>
 					</form>
 
 					<div class="columns bigbuttons">
 						<div class="column">
-							<button @click="submit()" class="button is-success is-fullwidth"
+							<button @click="submit()" class="button is-primary is-fullwidth"
 									:class="{ 'is-loading': teamService.loading}">
 								Save
 							</button>
@@ -207,6 +208,7 @@
 		},
 		components: {
 			multiselect,
+			editor: () => import(/* webpackPrefetch: true */ '../../components/input/editor'),
 		},
 		created() {
 			this.teamService = new TeamService()

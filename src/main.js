@@ -147,6 +147,9 @@ import {setTitle} from './helpers/setTitle'
 Vue.mixin({
 	methods: {
 		formatDateSince: date => {
+			if (typeof date === 'string') {
+				date = new Date(date)
+			}
 			const currentDate = new Date()
 			let formatted = '';
 			if (date > currentDate) {
@@ -159,7 +162,12 @@ Vue.mixin({
 
 			return formatted;
 		},
-		formatDate: date => format(date, 'PPPPpppp'),
+		formatDate: date => {
+			if (typeof date === 'string') {
+				date = new Date(date)
+			}
+			return date ? format(date, 'PPPPpppp'): ''
+		},
 		error: (e, context, actions = []) => message.error(e, context, actions),
 		success: (s, context, actions = []) => message.success(s, context, actions),
 		colorIsDark: colorIsDark,

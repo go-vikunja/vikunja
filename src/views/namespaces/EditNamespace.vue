@@ -30,13 +30,15 @@
 						<div class="field">
 							<label class="label" for="namespacedescription">Description</label>
 							<div class="control">
-								<textarea
+								<editor
 										:class="{ 'disabled': namespaceService.loading}"
 										:disabled="namespaceService.loading"
-										class="textarea"
 										placeholder="The namespaces description goes here..."
 										id="namespacedescription"
-										v-model="namespace.description"></textarea>
+										v-model="namespace.description"
+										:preview-is-default="false"
+										v-if="editorActive"
+								/>
 							</div>
 						</div>
 						<div class="field">
@@ -120,12 +122,14 @@
 
 				namespace: NamespaceModel,
 				showDeleteModal: false,
+				editorActive: false,
 			}
 		},
 		components: {
 			ColorPicker,
 			Fancycheckbox,
 			manageSharing,
+			editor: () => import(/* webpackPrefetch: true */ '../../components/input/editor'),
 		},
 		beforeMount() {
 			this.namespace.id = this.$route.params.id
@@ -146,6 +150,14 @@
 		},
 		methods: {
 			loadNamespace() {
+				// This makes the editor trigger its mounted function again which makes it forget every input
+				// it currently has in its textarea. This is a counter-hack to a hack inside of vue-easymde
+				// which made it impossible to detect change from the outside. Therefore the component would
+				// not update if new content from the outside was made available.
+				// See https://github.com/NikulinIlya/vue-easymde/issues/3
+				this.editorActive = false
+				this.$nextTick(() => this.editorActive = true)
+
 				let namespace = new NamespaceModel({id: this.$route.params.id})
 				this.namespaceService.get(namespace)
 					.then(r => {

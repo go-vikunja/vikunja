@@ -51,13 +51,14 @@
 						<div class="field">
 							<label class="label" for="listdescription">Description</label>
 							<div class="control">
-								<textarea
+								<editor
 										:class="{ 'disabled': listService.loading}"
 										:disabled="listService.loading"
-										class="textarea"
 										placeholder="The lists description goes here..."
 										id="listdescription"
-										v-model="list.description"></textarea>
+										v-model="list.description"
+										:preview-is-default="false"
+								/>
 							</div>
 						</div>
 						<div class="field">
@@ -190,6 +191,7 @@
 			Fancycheckbox,
 			LinkSharing,
 			manageSharing,
+			editor: () => import(/* webpackPrefetch: true */ '../../components/input/editor'),
 		},
 		created() {
 			this.listService = new ListService()

@@ -55,10 +55,12 @@
 							<div class="field">
 								<label class="label">Description</label>
 								<div class="control">
-									<textarea
-											class="textarea"
+									<editor
 											placeholder="Label description"
-											v-model="labelEditLabel.description"></textarea>
+											v-model="labelEditLabel.description"
+											:preview-is-default="false"
+											v-if="editorActive"
+									/>
 								</div>
 							</div>
 							<div class="field">
@@ -69,7 +71,7 @@
 							</div>
 							<div class="field has-addons">
 								<div class="control is-expanded">
-									<button type="submit" class="button is-fullwidth is-success"
+									<button type="submit" class="button is-fullwidth is-primary"
 											:class="{ 'is-loading': labelService.loading}">
 										Save
 									</button>
@@ -103,6 +105,7 @@
 		name: 'ListLabels',
 		components: {
 			ColorPicker,
+			editor: () => import(/* webpackPrefetch: true */ '../../components/input/editor'),
 		},
 		data() {
 			return {
@@ -110,6 +113,7 @@
 				labels: [],
 				labelEditLabel: LabelModel,
 				isLabelEdit: false,
+				editorActive: false,
 			}
 		},
 		created() {
@@ -128,7 +132,7 @@
 				const getAllLabels = (page = 1) => {
 					return this.labelService.getAll({}, {}, page)
 						.then(labels => {
-							if(page < this.labelService.totalPages) {
+							if (page < this.labelService.totalPages) {
 								return getAllLabels(page + 1)
 									.then(nextLabels => {
 										return labels.concat(nextLabels)
@@ -185,6 +189,14 @@
 				}
 				this.labelEditLabel = label
 				this.isLabelEdit = true
+
+				// This makes the editor trigger its mounted function again which makes it forget every input
+				// it currently has in its textarea. This is a counter-hack to a hack inside of vue-easymde
+				// which made it impossible to detect change from the outside. Therefore the component would
+				// not update if new content from the outside was made available.
+				// See https://github.com/NikulinIlya/vue-easymde/issues/3
+				this.editorActive = false
+				this.$nextTick(() => this.editorActive = true)
 			}
 		}
 	}
