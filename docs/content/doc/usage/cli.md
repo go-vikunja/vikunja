@@ -13,14 +13,27 @@ menu:
 You can interact with Vikunja using its `cli` interface. 
 The following commands are available:
 
+* [dump](#dump)
 * [help](#help)
 * [migrate](#migrate)
+* [restore](#restore)
+* [testmail](#testmail)
 * [version](#version)
 * [web](#web)
 
 If you don't specify a command, the [`web`](#web) command will be executed.
 
 All commands use the same standard [config file]({{< ref "../setup/config.md">}}).
+
+### `dump`
+
+Creates a zip file with all vikunja-related files.
+This includes config, version, all files and the full database.
+
+Usage:
+{{< highlight bash >}}
+$ vikunja dump
+{{< /highlight >}}
 
 ### `help`
 
@@ -63,6 +76,23 @@ $ vikunja migrate rollback [flags]
 Flags:
 * `-n`, `--name` string: The id of the migration you want to roll back until.
  
+### `restore`
+
+Restores a previously created dump from a zip file, see `dump`.
+
+Usage:
+{{< highlight bash >}}
+$ vikunja restore <path to dump zip file>
+{{< /highlight >}}
+
+### testmail
+
+Sends a test mail using the configured smtp connection.
+
+Usage:
+{{< highlight bash >}}
+$ vikunja testmail <email to send the test mail to>
+{{< /highlight >}}
 
 ### `version`
 
@@ -81,23 +111,4 @@ Starts Vikunja's REST api server.
 Usage:
 {{< highlight bash >}}
 $ vikunja web    
-{{< /highlight >}}
-
-### `dump`
-
-Creates a zip file with all vikunja-related files.
-This includes config, version, all files and the full database.
-
-Usage:
-{{< highlight bash >}}
-$ vikunja dump
-{{< /highlight >}}
-
-### `restore`
-
-Restores a previously created dump from a zip file, see `dump`.
-
-Usage:
-{{< highlight bash >}}
-$ vikunja restore <path to dump zip file>
 {{< /highlight >}}
