@@ -113,7 +113,11 @@
 							<namespace-search @selected="selectNamespace"/>
 						</p>
 						<p class="control">
-							<button type="submit" class="button is-success" @click="duplicateList">
+							<button
+									type="submit"
+									class="button is-success"
+									@click="duplicateList"
+									:class="{'is-loading': listDuplicateService.loading}">
 								<span class="icon is-small">
 									<icon icon="plus"/>
 								</span>
