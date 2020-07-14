@@ -76,6 +76,7 @@ const (
 	MailerFromEmail     Key = `mailer.fromemail`
 	MailerQueuelength   Key = `mailer.queuelength`
 	MailerQueueTimeout  Key = `mailer.queuetimeout`
+	MailerForceSSL      Key = `mailer.forcessl`
 
 	RedisEnabled  Key = `redis.enabled`
 	RedisHost     Key = `redis.host`
@@ -237,6 +238,7 @@ func InitDefaultConfig() {
 	MailerFromEmail.setDefault("mail@vikunja")
 	MailerQueuelength.setDefault(100)
 	MailerQueueTimeout.setDefault(30)
+	MailerForceSSL.setDefault(false)
 	// Redis
 	RedisEnabled.setDefault(false)
 	RedisHost.setDefault("localhost:6379")

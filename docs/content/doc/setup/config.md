@@ -149,6 +149,8 @@ mailer:
   queuelength: 100
   # The timeout in seconds after which the current open connection to the mailserver will be closed.
   queuetimeout: 30
+  # By default, vikunja will try to connect with starttls, use this option to force it to use ssl.
+  forcessl: false
 
 log:
   # A folder where all the logfiles should go.

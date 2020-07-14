@@ -34,6 +34,7 @@ func getDialer() *gomail.Dialer {
 		InsecureSkipVerify: config.MailerSkipTLSVerify.GetBool(),
 		ServerName:         config.MailerHost.GetString(),
 	}
+	d.SSL = config.MailerForceSSL.GetBool()
 	return d
 }
 
