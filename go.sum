@@ -960,6 +960,8 @@ src.techknowlogick.com/xgo v0.0.0-20200714165907-7c2e3c9bf9bd h1:FW3Vf2fUZStFFG/
 src.techknowlogick.com/xgo v0.0.0-20200714165907-7c2e3c9bf9bd/go.mod h1:31CE1YKtDOrKTk9PSnjTpe6YbO6W/0LTYZ1VskL09oU=
 src.techknowlogick.com/xgo v0.0.0-20200714173810-96de19c19b14 h1:xtoylAc6hVBtbENQrtVXO95FPCGXewwtCQBZbVUM8EQ=
 src.techknowlogick.com/xgo v0.0.0-20200714173810-96de19c19b14/go.mod h1:31CE1YKtDOrKTk9PSnjTpe6YbO6W/0LTYZ1VskL09oU=
+src.techknowlogick.com/xgo v1.0.1-0.20200714173810-96de19c19b14 h1:e8P02bjvCTmi33s1MoinoTwMwrCq7+omCS3/3+GZWXA=
+src.techknowlogick.com/xgo v1.0.1-0.20200714173810-96de19c19b14/go.mod h1:31CE1YKtDOrKTk9PSnjTpe6YbO6W/0LTYZ1VskL09oU=
 src.techknowlogick.com/xormigrate v1.3.0 h1:cCOEk8CjhRqxMtE8X8aV0qd6b2njwU1c3++ZuyaTsA0=
 src.techknowlogick.com/xormigrate v1.3.0/go.mod h1:lmB01Zzm8lkvGE+qvlZoaIl39c8iEvHtYMtSFiHg250=
 xorm.io/builder v0.3.7 h1:2pETdKRK+2QG4mLX4oODHEhn5Z8j1m8sXa7jfu+/SZI=
