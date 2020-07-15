@@ -8270,7 +8270,7 @@ map-visit@^1.0.0:
   dependencies:
     object-visit "^1.0.0"
 
-marked@1.1.1:
+marked@1.1.1, marked@^1.1.1:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/marked/-/marked-1.1.1.tgz#e5d61b69842210d5df57b05856e0c91572703e6a"
   integrity sha512-mJzT8D2yPxoPh7h0UXkB+dBj4FykPJ2OIfxAWeIHrvoHDkFxukV/29QxoFQoPM6RLEwhIFdJpmKBlqVM3s2ZIw==
@@ -8279,11 +8279,6 @@ marked@^0.8.2:
   version "0.8.2"
   resolved "https://registry.yarnpkg.com/marked/-/marked-0.8.2.tgz#4faad28d26ede351a7a1aaa5fec67915c869e355"
   integrity sha512-EGwzEeCcLniFX51DhTpmTom+dSA/MG/OBUDjnWtHbEnjAH180VzUeAw+oE4+Zv+CoYBWyRlYOTR0N8SO9R1PVw==
-
-marked@^1.1.0:
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/marked/-/marked-1.1.0.tgz#62504ad4d11550c942935ccc5e39d64e5a4c4e50"
-  integrity sha512-EkE7RW6KcXfMHy2PA7Jg0YJE1l8UPEZE8k45tylzmZM30/r1M1MUXWQfJlrSbsTeh7m/XTwHbWUENvAJZpp1YA==
 
 md5.js@^1.3.4:
   version "1.3.5"
@@ -12482,13 +12477,13 @@ vue-drag-resize@1.4.1:
   resolved "https://registry.yarnpkg.com/vue-drag-resize/-/vue-drag-resize-1.4.1.tgz#bd2d2f99e356f97831a504c23d5adce17a9b6268"
   integrity sha512-8ES66/5O00J2d5POuJq9kCdi/cpaycsvH6YwJH0+ksYKTyHWC8JSm8Wd0pRy50FnRawhczptebIxrbOd8r+6qw==
 
-vue-easymde@1.2.1:
-  version "1.2.1"
-  resolved "https://registry.yarnpkg.com/vue-easymde/-/vue-easymde-1.2.1.tgz#0e0183503a1f3ac666404bc74146cbd7202f7c61"
-  integrity sha512-/vaIE3yUYIfeCUjH1Qx9hfil596vYNRiBvC/N0PfausMGUYcdZ0D6/Gf/kB8QFymnuCe8Hi3+Xbg/0VLlf1+mw==
+vue-easymde@1.2.2:
+  version "1.2.2"
+  resolved "https://registry.yarnpkg.com/vue-easymde/-/vue-easymde-1.2.2.tgz#fda2578f2fa198aa5cc6746c37d6b0bcb03ed1c8"
+  integrity sha512-Dt4kGiQ0VfpCOZ5OgeE9L58Er2/r482VBTfwd6Ky0wqEGXknGmiMXEsZ1MvZf8bZQIPS9nhGlV4B+n1hb8VHPg==
   dependencies:
     easymde "^2.10.1"
-    marked "^1.1.0"
+    marked "^1.1.1"
 
 vue-eslint-parser@^7.0.0:
   version "7.0.0"

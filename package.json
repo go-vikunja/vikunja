@@ -21,7 +21,7 @@
     "verte": "0.0.12",
     "vue": "2.6.11",
     "vue-drag-resize": "1.4.1",
-    "vue-easymde": "1.2.1",
+    "vue-easymde": "1.2.2",
     "vue-smooth-dnd": "0.8.1",
     "vuex": "3.5.1"
   },
