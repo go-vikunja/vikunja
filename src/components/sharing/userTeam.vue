@@ -17,7 +17,8 @@
 								:loading="searchService.loading"
 								:internal-search="true"
 								@search-change="find"
-								placeholder="Type to search"
+								placeholder="Type to search..."
+								:showNoOptions="false"
 								:label="searchLabel"
 								track-by="id">
 							<template slot="clear" slot-scope="props">

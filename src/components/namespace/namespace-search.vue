@@ -9,6 +9,7 @@
 			@search-change="findNamespaces"
 			@select="select"
 			placeholder="Search for a namespace..."
+			:showNoOptions="false"
 			label="title"
 			track-by="id">
 		<template slot="clear" slot-scope="props">

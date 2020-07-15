@@ -81,7 +81,8 @@
 									:loading="userService.loading"
 									:internal-search="true"
 									@search-change="findUser"
-									placeholder="Type to search"
+									placeholder="Type to search..."
+									:showNoOptions="false"
 									label="username"
 									track-by="id">
 								<template slot="clear" slot-scope="props">
