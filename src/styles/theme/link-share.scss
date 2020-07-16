@@ -17,6 +17,10 @@
   .card {
     background: $white;
   }
+
+  .title {
+    text-shadow: 0 0 1rem $white;
+  }
 }
 
 .link-share-list {
@@ -43,4 +47,13 @@
 
 .sharables-list:not(.card-content) {
   overflow-y: auto
+}
+
+.link-share-container.has-background .container{
+  max-width: 100vw;
+
+  .column {
+    width: 100%;
+    margin: 0;
+  }
 }
