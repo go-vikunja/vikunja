@@ -278,8 +278,7 @@ func (ld *ListDuplicate) Create(a web.Auth) (err error) {
 			}
 		}
 
-		ld.List.BackgroundFileID = file.ID
-		if err := CreateOrUpdateList(ld.List); err != nil {
+		if err := SetListBackground(ld.List.ID, file); err != nil {
 			return err
 		}
 
