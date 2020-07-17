@@ -219,7 +219,7 @@ gocyclo-check:
 	    go get -u github.com/fzipp/gocyclo; \
 		go install $(GOFLAGS) github.com/fzipp/gocyclo; \
 	fi
-	for S in $(GOFILES); do gocyclo -over 47 $$S || exit 1; done;
+	for S in $(GOFILES); do gocyclo -over 48 $$S || exit 1; done;
 
 .PHONY: static-check
 static-check:

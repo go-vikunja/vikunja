@@ -18,6 +18,7 @@ package models
 
 import (
 	"code.vikunja.io/api/pkg/files"
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/web"
 )
@@ -66,13 +67,22 @@ func (ld *ListDuplicate) CanCreate(a web.Auth) (canCreate bool, err error) {
 // @Router /lists/{listID}/duplicate [put]
 func (ld *ListDuplicate) Create(a web.Auth) (err error) {
 
+	log.Debugf("Duplicating list %d", ld.ListID)
+
 	ld.List.ID = 0
 	ld.List.Identifier = "" // Reset the identifier to trigger regenerating a new one
 	// Set the owner to the current user
 	ld.List.OwnerID = a.GetID()
 	if err := CreateOrUpdateList(ld.List); err != nil {
-		return err
+		// If there is no available unique list identifier, just reset it.
+		if IsErrListIdentifierIsNotUnique(err) {
+			ld.List.Identifier = ""
+		} else {
+			return err
+		}
 	}
+
+	log.Debugf("Duplicated list %d into new list %d", ld.ListID, ld.List.ID)
 
 	// Duplicate kanban buckets
 	// Old bucket ID as key, new id as value
@@ -92,6 +102,8 @@ func (ld *ListDuplicate) Create(a web.Auth) (err error) {
 		}
 		bucketMap[oldID] = b.ID
 	}
+
+	log.Debugf("Duplicated all buckets from list %d into %d", ld.ListID, ld.List.ID)
 
 	// Get all tasks + all task details
 	tasks, _, _, err := getTasksForLists([]*List{{ID: ld.ListID}}, &taskOptions{})
@@ -116,6 +128,8 @@ func (ld *ListDuplicate) Create(a web.Auth) (err error) {
 		oldTaskIDs = append(oldTaskIDs, oldID)
 	}
 
+	log.Debugf("Duplicated all tasks from list %d into %d", ld.ListID, ld.List.ID)
+
 	// Save all attachments
 	// We also duplicate all underlying files since they could be modified in one list which would result in
 	// file changes in the other list which is not something we want.
@@ -125,11 +139,13 @@ func (ld *ListDuplicate) Create(a web.Auth) (err error) {
 	}
 
 	for _, attachment := range attachments {
+		oldAttachmentID := attachment.ID
 		attachment.ID = 0
 		attachment.TaskID = oldTaskIDs[attachment.TaskID]
 		attachment.File = &files.File{ID: attachment.FileID}
 		if err := attachment.File.LoadFileMetaByID(); err != nil {
 			if files.IsErrFileDoesNotExist(err) {
+				log.Debugf("Not duplicating attachment %d (file %d) because it does not exist from list %d into %d", oldAttachmentID, attachment.FileID, ld.ListID, ld.List.ID)
 				continue
 			}
 			return err
@@ -146,7 +162,11 @@ func (ld *ListDuplicate) Create(a web.Auth) (err error) {
 		if attachment.File.File != nil {
 			_ = attachment.File.File.Close()
 		}
+
+		log.Debugf("Duplicated attachment %d into %d from list %d into %d", oldAttachmentID, attachment.ID, ld.ListID, ld.List.ID)
 	}
+
+	log.Debugf("Duplicated all attachments from list %d into %d", ld.ListID, ld.List.ID)
 
 	// Copy label tasks (not the labels)
 	labelTasks := []*LabelTask{}
@@ -162,6 +182,8 @@ func (ld *ListDuplicate) Create(a web.Auth) (err error) {
 			return err
 		}
 	}
+
+	log.Debugf("Duplicated all labels from list %d into %d", ld.ListID, ld.List.ID)
 
 	// Assignees
 	// Only copy those assignees who have access to the task
@@ -183,6 +205,8 @@ func (ld *ListDuplicate) Create(a web.Auth) (err error) {
 		}
 	}
 
+	log.Debugf("Duplicated all assignees from list %d into %d", ld.ListID, ld.List.ID)
+
 	// Comments
 	comments := []*TaskComment{}
 	err = x.In("task_id", oldTaskIDs).Find(&comments)
@@ -196,6 +220,8 @@ func (ld *ListDuplicate) Create(a web.Auth) (err error) {
 			return err
 		}
 	}
+
+	log.Debugf("Duplicated all comments from list %d into %d", ld.ListID, ld.List.ID)
 
 	// Relations in that list
 	// Low-Effort: Only copy those relations which are between tasks in the same list
@@ -218,8 +244,13 @@ func (ld *ListDuplicate) Create(a web.Auth) (err error) {
 		}
 	}
 
+	log.Debugf("Duplicated all task relations from list %d into %d", ld.ListID, ld.List.ID)
+
 	// Background files + unsplash info
 	if ld.List.BackgroundFileID != 0 {
+
+		log.Debugf("Duplicating background %d from list %d into %d", ld.List.BackgroundFileID, ld.ListID, ld.List.ID)
+
 		f := &files.File{ID: ld.List.BackgroundFileID}
 		if err := f.LoadFileMetaByID(); err != nil {
 			return err
@@ -251,6 +282,8 @@ func (ld *ListDuplicate) Create(a web.Auth) (err error) {
 		if err := CreateOrUpdateList(ld.List); err != nil {
 			return err
 		}
+
+		log.Debugf("Duplicated list background from list %d into %d", ld.ListID, ld.List.ID)
 	}
 
 	// Rights / Shares
@@ -267,6 +300,9 @@ func (ld *ListDuplicate) Create(a web.Auth) (err error) {
 			return err
 		}
 	}
+
+	log.Debugf("Duplicated user shares from list %d into %d", ld.ListID, ld.List.ID)
+
 	teams := []*TeamList{}
 	err = x.Where("list_id = ?", ld.ListID).Find(&teams)
 	if err != nil {
@@ -294,6 +330,8 @@ func (ld *ListDuplicate) Create(a web.Auth) (err error) {
 			return err
 		}
 	}
+
+	log.Debugf("Duplicated all link shares from list %d into %d", ld.ListID, ld.List.ID)
 
 	return
 }
