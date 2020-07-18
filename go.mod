@@ -31,8 +31,6 @@ require (
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/fzipp/gocyclo v0.0.0-20150627053110-6acd4345c835
 	github.com/getsentry/sentry-go v0.6.1
-	github.com/go-openapi/jsonreference v0.19.3 // indirect
-	github.com/go-openapi/spec v0.19.4 // indirect
 	github.com/go-redis/redis/v7 v7.4.0
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/go-testfixtures/testfixtures/v3 v3.3.0
@@ -65,7 +63,6 @@ require (
 	github.com/stretchr/testify v1.6.1
 	github.com/swaggo/swag v1.6.7
 	github.com/ulule/limiter/v3 v3.5.0
-	github.com/urfave/cli v1.22.2 // indirect
 	golang.org/x/crypto v0.0.0-20200709230013-948cd5f35899
 	golang.org/x/lint v0.0.0-20200302205851-738671d3881b
 	golang.org/x/net v0.0.0-20200602114024-627f9648deb9 // indirect
@@ -76,7 +73,7 @@ require (
 	gopkg.in/d4l3k/messagediff.v1 v1.2.1
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 	honnef.co/go/tools v0.0.1-2020.1.4
-	src.techknowlogick.com/xgo v1.0.1-0.20200714173810-96de19c19b14
+	src.techknowlogick.com/xgo v1.0.1-0.20200717022558-357d34c5aebf
 	src.techknowlogick.com/xormigrate v1.3.0
 	xorm.io/builder v0.3.7
 	xorm.io/core v0.7.3
