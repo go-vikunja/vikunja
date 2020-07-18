@@ -26,16 +26,22 @@ import (
 )
 
 type vikunjaInfos struct {
-	Version                    string   `json:"version"`
-	FrontendURL                string   `json:"frontend_url"`
-	Motd                       string   `json:"motd"`
-	LinkSharingEnabled         bool     `json:"link_sharing_enabled"`
-	MaxFileSize                string   `json:"max_file_size"`
-	RegistrationEnabled        bool     `json:"registration_enabled"`
-	AvailableMigrators         []string `json:"available_migrators"`
-	TaskAttachmentsEnabled     bool     `json:"task_attachments_enabled"`
-	EnabledBackgroundProviders []string `json:"enabled_background_providers"`
-	TotpEnabled                bool     `json:"totp_enabled"`
+	Version                    string    `json:"version"`
+	FrontendURL                string    `json:"frontend_url"`
+	Motd                       string    `json:"motd"`
+	LinkSharingEnabled         bool      `json:"link_sharing_enabled"`
+	MaxFileSize                string    `json:"max_file_size"`
+	RegistrationEnabled        bool      `json:"registration_enabled"`
+	AvailableMigrators         []string  `json:"available_migrators"`
+	TaskAttachmentsEnabled     bool      `json:"task_attachments_enabled"`
+	EnabledBackgroundProviders []string  `json:"enabled_background_providers"`
+	TotpEnabled                bool      `json:"totp_enabled"`
+	Legal                      legalInfo `json:"legal"`
+}
+
+type legalInfo struct {
+	ImprintURL       string `json:"imprint_url"`
+	PrivacyPolicyURL string `json:"privacy_policy_url"`
 }
 
 // Info is the handler to get infos about this vikunja instance
@@ -55,6 +61,10 @@ func Info(c echo.Context) error {
 		RegistrationEnabled:    config.ServiceEnableRegistration.GetBool(),
 		TaskAttachmentsEnabled: config.ServiceEnableTaskAttachments.GetBool(),
 		TotpEnabled:            config.ServiceEnableTotp.GetBool(),
+		Legal: legalInfo{
+			ImprintURL:       config.LegalImprintURL.GetString(),
+			PrivacyPolicyURL: config.LegalPrivacyURL.GetString(),
+		},
 	}
 
 	// Migrators

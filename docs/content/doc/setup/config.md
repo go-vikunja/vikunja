@@ -246,4 +246,10 @@ backgrounds:
       # It will only show in the UI if your application has been approved for Enterprise usage, therefore if
       # you’re in Demo mode, you can also find the ID in the URL at the end: https://unsplash.com/oauth/applications/:application_id
       applicationid:
+
+# Legal urls
+# Will be shown in the frontend if configured here
+legal:
+  imprinturl: 
+  privacyurl: 
 {{< /highlight >}}

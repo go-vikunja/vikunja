@@ -52,6 +52,9 @@ const (
 	ServiceEnableTotp            Key = `service.enabletotp`
 	ServiceSentryDsn             Key = `service.sentrydsn`
 
+	LegalImprintURL Key = `legal.imprinturl`
+	LegalPrivacyURL Key = `legal.privacyurl`
+
 	DatabaseType                  Key = `database.type`
 	DatabaseHost                  Key = `database.host`
 	DatabaseUser                  Key = `database.user`
