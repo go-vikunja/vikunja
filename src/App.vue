@@ -60,6 +60,8 @@
 										<router-link :to="{name: 'user.settings'}" class="dropdown-item">
 											Settings
 										</router-link>
+										<a :href="imprintUrl" v-if="imprintUrl" class="dropdown-item" target="_blank">Imprint</a>
+										<a :href="privacyPolicyUrl" v-if="privacyPolicyUrl" class="dropdown-item" target="_blank">Privacy policy</a>
 										<a @click="logout()" class="dropdown-item">
 											Logout
 										</a>
@@ -404,6 +406,8 @@
 			},
 			currentList: CURRENT_LIST,
 			background: 'background',
+			imprintUrl: state => state.config.legal.imprintUrl,
+			privacyPolicyUrl: state => state.config.legal.privacyPolicyUrl,
 		}),
 		methods: {
 			logout() {

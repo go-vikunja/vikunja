@@ -41,6 +41,7 @@
 					{{ errorMessage }}
 				</div>
 			</form>
+			<legal/>
 		</div>
 	</div>
 </template>
@@ -49,8 +50,12 @@
 	import router from '../../router'
 	import {mapState} from 'vuex'
 	import {ERROR_MESSAGE, LOADING} from '../../store/mutation-types'
+	import Legal from '../../components/misc/legal'
 
 	export default {
+		components: {
+			Legal,
+		},
 		data() {
 			return {
 				credentials: {

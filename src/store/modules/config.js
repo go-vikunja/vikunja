@@ -15,6 +15,10 @@ export default {
 		taskAttachmentsEnabled: true,
 		totpEnabled: true,
 		enabledBackgroundProviders: [],
+		legal: {
+			imprintUrl: '',
+			privacyPolicyUrl: '',
+		}
 	}),
 	mutations: {
 		[CONFIG](state, config) {
@@ -28,6 +32,8 @@ export default {
 			state.taskAttachmentsEnabled = config.task_attachments_enabled
 			state.totpEnabled = config.totp_enabled
 			state.enabledBackgroundProviders = config.enabled_background_providers
+			state.legal.imprintUrl = config.legal.imprint_url
+			state.legal.privacyPolicyUrl = config.legal.privacy_policy_url
 		},
 	},
 	actions: {
