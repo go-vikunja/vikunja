@@ -5,8 +5,10 @@
   "main": "index.js",
   "repository": "https://code.vikunja.io/desktop",
   "license": "GPLv3",
-  "private": false,
   "devDependencies": {
     "electron": "^9.1.0"
+  },
+  "scripts": {
+    "start": "electron ."
   }
 }
