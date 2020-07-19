@@ -1,0 +1,12 @@
+{
+  "name": "vikunja-desktop",
+  "version": "0.14.0",
+  "description": "Vikunja's frontend, repackaged as an electron app!",
+  "main": "index.js",
+  "repository": "https://code.vikunja.io/desktop",
+  "license": "GPLv3",
+  "private": false,
+  "devDependencies": {
+    "electron": "^9.1.0"
+  }
+}
