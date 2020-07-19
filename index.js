@@ -11,7 +11,7 @@ function createWindow () {
   })
 
   // The starting point of the app
-  win.loadFile('index.html')
+  win.loadFile('./frontend/index.html')
 }
 
 // This method will be called when Electron has finished
