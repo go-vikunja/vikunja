@@ -1,5 +1,13 @@
 <template>
 	<div class="is-max-width-desktop show-tasks">
+		<fancycheckbox
+				class="is-pulled-right"
+				v-if="!showAll"
+				v-model="showNulls"
+				@change="loadPendingTasks"
+		>
+			Show tasks without dates
+		</fancycheckbox>
 		<h3 v-if="showAll">Current tasks</h3>
 		<h3 v-else>
 			Tasks from
@@ -21,7 +29,7 @@
 					@on-close="loadPendingTasks"
 			/>
 		</h3>
-		<template v-if="!taskService.loading && (!hasUndoneTasks || !tasks)">
+		<template v-if="!taskService.loading && (!hasUndoneTasks || !tasks || tasks.length === 0)">
 			<h3 class="nothing">Nothing to do - Have a nice day!</h3>
 			<img src="/images/cool.svg" alt=""/>
 		</template>
@@ -41,10 +49,12 @@
 
 	import flatPickr from 'vue-flatpickr-component'
 	import 'flatpickr/dist/flatpickr.css'
+	import Fancycheckbox from '../../components/input/fancycheckbox'
 
 	export default {
 		name: 'ShowTasks',
 		components: {
+			Fancycheckbox,
 			SingleTaskInList,
 			flatPickr,
 		},
@@ -53,6 +63,7 @@
 				tasks: [],
 				hasUndoneTasks: false,
 				taskService: TaskService,
+				showNulls: true,
 
 				cStartDate: null,
 				cEndDate: null,
@@ -115,16 +126,18 @@
 					filter_value: [false],
 					filter_comparator: ['equals'],
 					filter_concat: 'and',
-					filter_include_nulls: true,
+					filter_include_nulls: this.showNulls,
 				}
 				if (!this.showAll) {
-					params.filter_by.push('start_date')
-					params.filter_value.push(this.cStartDate)
-					params.filter_comparator.push('greater')
+					if(this.showNulls) {
+						params.filter_by.push('start_date')
+						params.filter_value.push(this.cStartDate)
+						params.filter_comparator.push('greater')
 
-					params.filter_by.push('end_date')
-					params.filter_value.push(this.cEndDate)
-					params.filter_comparator.push('less')
+						params.filter_by.push('end_date')
+						params.filter_value.push(this.cEndDate)
+						params.filter_comparator.push('less')
+					}
 
 					params.filter_by.push('due_date')
 					params.filter_value.push(this.cEndDate)
