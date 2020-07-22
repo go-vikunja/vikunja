@@ -167,3 +167,28 @@
     }
   }
 }
+
+.show-tasks {
+  h3 {
+    text-align: left;
+
+    &.nothing {
+      text-align: center;
+      margin-top: 3em;
+    }
+
+    .input {
+      width: 190px;
+      vertical-align: middle;
+      margin: .5rem 0;
+    }
+  }
+
+  img {
+    margin-top: 2em;
+  }
+
+  .spinner.is-loading:after {
+    margin-left: calc(40% - 1em);
+  }
+}
