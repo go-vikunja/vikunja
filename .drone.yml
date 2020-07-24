@@ -230,7 +230,7 @@ depends_on:
 
 steps:
   - name: telegram
-    image: appleboy/drone-telegram
+    image: appleboy/drone-telegram:1-linux-amd64
     settings:
       token:
         from_secret: TELEGRAM_TOKEN
