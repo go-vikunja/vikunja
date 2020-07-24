@@ -16,7 +16,7 @@ export default {
 	}),
 	mutations: {
 		setListId(state, listId) {
-			state.listId = listId
+			state.listId = parseInt(listId)
 		},
 		setBuckets(state, buckets) {
 			state.buckets = buckets

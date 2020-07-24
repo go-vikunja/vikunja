@@ -92,7 +92,9 @@
 				if (
 					this.$route.params.listId === this.listLoaded ||
 					typeof this.$route.params.listId === 'undefined' ||
-					this.$route.params.listId === this.currentList.id) {
+					this.$route.params.listId === this.currentList.id ||
+					parseInt(this.$route.params.listId) === this.currentList.id
+				) {
 					return
 				}
 
