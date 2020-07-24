@@ -173,7 +173,7 @@
 					</div>
 
 					<!-- Description -->
-					<div class="details content" :class="{ 'has-top-border': activeFields.labels }">
+					<div class="details content description" :class="{ 'has-top-border': activeFields.labels }">
 						<h3>
 							<span class="icon is-grey">
 								<icon icon="align-left"/>

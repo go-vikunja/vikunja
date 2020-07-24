@@ -110,9 +110,21 @@
         border: none;
       }
     }
+
+    &.description .editor {
+      margin-top: -3.5rem;
+
+      .tabs {
+        margin-bottom: 0;
+
+        ul {
+          border-bottom: none;
+        }
+      }
+    }
   }
 
-  .details,.heading {
+  .details, .heading {
     .input:not(.has-defaults),
     .textarea,
     .select:not(.has-defaults) select {
@@ -127,7 +139,7 @@
         font-style: italic;
       }
 
-      &:hover,&:active {
+      &:hover, &:active {
         background: $input-background-color;
         border-color: $input-border-color;
         cursor: text;
