@@ -268,6 +268,8 @@
 					return
 				}
 
+				console.debug('Loading buckets, loadedListId = ', this.loadedListId)
+
 				this.$store.dispatch('kanban/loadBucketsForList', this.$route.params.listId)
 					.catch(e => {
 						this.error(e, this)

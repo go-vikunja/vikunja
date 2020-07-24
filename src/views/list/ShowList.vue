@@ -106,8 +106,11 @@
 					const savedListView = getListView(this.$route.params.listId)
 
 					router.replace({name: savedListView, params: {id: this.$route.params.listId}})
+					console.debug('Replaced list view with ', savedListView)
 					return
 				}
+
+				console.debug('Loading list, $route.name = ', this.$route.name, ', $route.params = ', this.$route.params)
 
 				// We create an extra list object instead of creating it in this.list because that would trigger a ui update which would result in bad ux.
 				let list = new ListModel({id: this.$route.params.listId})
