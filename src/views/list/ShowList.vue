@@ -112,7 +112,7 @@
 					return
 				}
 
-				console.debug('Loading list, $route.name = ', this.$route.name, ', $route.params = ', this.$route.params)
+				console.debug(`Loading list, $route.name = ${this.$route.name}, $route.params =`, this.$route.params, `, listLoaded = ${this.listLoaded}, currentList = `, this.currentList)
 
 				// We create an extra list object instead of creating it in this.list because that would trigger a ui update which would result in bad ux.
 				let list = new ListModel({id: this.$route.params.listId})
