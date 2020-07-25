@@ -264,7 +264,10 @@
 				}
 
 				// Only load buckets if we don't already loaded them
-				if (this.loadedListId === this.$route.params.listId) {
+				if (
+					this.loadedListId === this.$route.params.listId ||
+					this.loadedListId === parseInt(this.$route.params.listId)
+				) {
 					return
 				}
 
