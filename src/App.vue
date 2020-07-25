@@ -62,6 +62,7 @@
 										</router-link>
 										<a :href="imprintUrl" v-if="imprintUrl" class="dropdown-item" target="_blank">Imprint</a>
 										<a :href="privacyPolicyUrl" v-if="privacyPolicyUrl" class="dropdown-item" target="_blank">Privacy policy</a>
+										<a @click="keyboardShortcutsActive = true" class="dropdown-item">Keyboard Shortcuts</a>
 										<a @click="logout()" class="dropdown-item">
 											Logout
 										</a>
@@ -137,7 +138,11 @@
 								</li>
 							</ul>
 						</div>
-						<a @click="menuActive = false" class="collapse-menu-button">Collapse Menu</a>
+
+						<a @click="menuActive = false" class="collapse-menu-button" v-shortkey="['ctrl', 'e']" @shortkey="() => menuActive = !menuActive">
+							Collapse Menu
+						</a>
+
 						<aside class="menu namespaces-lists">
 							<div class="spinner" :class="{ 'is-loading': namespaceService.loading}"></div>
 							<template v-for="n in namespaces">
@@ -217,6 +222,9 @@
 						<transition name="fade">
 							<router-view/>
 						</transition>
+						<a class="keyboard-shortcuts-button" @click="keyboardShortcutsActive = true">
+							<icon icon="keyboard"/>
+						</a>
 					</div>
 				</div>
 			</div>
@@ -270,6 +278,10 @@
 				<p>Please check your network connection and try again.</p>
 			</div>
 		</div>
+
+		<transition name="fade">
+			<keyboard-shortcuts v-if="keyboardShortcutsActive" @close="keyboardShortcutsActive = false"/>
+		</transition>
 	</div>
 </template>
 
@@ -283,10 +295,12 @@
 	import swEvents from './ServiceWorker/events'
 	import Notification from './components/misc/notification'
 	import {CURRENT_LIST, IS_FULLPAGE, ONLINE} from './store/mutation-types'
+	import KeyboardShortcuts from './components/misc/keyboard-shortcuts'
 
 	export default {
 		name: 'app',
 		components: {
+			KeyboardShortcuts,
 			Notification,
 		},
 		data() {
@@ -296,6 +310,7 @@
 				currentDate: new Date(),
 				userMenuActive: false,
 				authTypes: authTypes,
+				keyboardShortcutsActive: false,
 
 				// Service Worker stuff
 				updateAvailable: false,

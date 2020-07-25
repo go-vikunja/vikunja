@@ -71,3 +71,7 @@ button.table {
   max-width: $desktop;
   margin: 0 auto;
 }
+
+.has-no-shadow {
+  box-shadow: none !important;
+}

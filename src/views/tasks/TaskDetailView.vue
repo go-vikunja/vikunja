@@ -244,11 +244,11 @@
 							Done!
 						</template>
 					</a>
-					<a class="button" @click="setFieldActive('assignees')">
+					<a class="button" @click="setFieldActive('assignees')" v-shortkey="['ctrl', 'shift', 'a']" @shortkey="setFieldActive('assignees')">
 						<span class="icon is-small"><icon icon="users"/></span>
 						Assign this task to a user
 					</a>
-					<a class="button" @click="setFieldActive('labels')">
+					<a class="button" @click="setFieldActive('labels')" v-shortkey="['ctrl', 'shift', 'l']" @shortkey="setFieldActive('labels')">
 						<span class="icon is-small"><icon icon="tags"/></span>
 						Add labels
 					</a>
@@ -256,7 +256,7 @@
 						<span class="icon is-small"><icon icon="history"/></span>
 						Set Reminders
 					</a>
-					<a class="button" @click="setFieldActive('dueDate')">
+					<a class="button" @click="setFieldActive('dueDate')" v-shortkey="['ctrl', 'shift', 'd']" @shortkey="setFieldActive('dueDate')">
 						<span class="icon is-small"><icon icon="calendar"/></span>
 						Set Due Date
 					</a>
@@ -280,11 +280,11 @@
 						<span class="icon is-small"><icon icon="percent"/></span>
 						Set Percent Done
 					</a>
-					<a class="button" @click="setFieldActive('attachments')">
+					<a class="button" @click="setFieldActive('attachments')" v-shortkey="['ctrl', 'shift', 'f']" @shortkey="setFieldActive('attachments')">
 						<span class="icon is-small"><icon icon="paperclip"/></span>
 						Add attachments
 					</a>
-					<a class="button" @click="setFieldActive('relatedTasks')">
+					<a class="button" @click="setFieldActive('relatedTasks')" v-shortkey="['ctrl', 'shift', 'r']" @shortkey="setFieldActive('relatedTasks')">
 						<span class="icon is-small"><icon icon="tasks"/></span>
 						Add task relations
 					</a>

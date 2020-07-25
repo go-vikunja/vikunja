@@ -68,6 +68,7 @@ import { faList } from '@fortawesome/free-solid-svg-icons'
 import { faEllipsisV } from '@fortawesome/free-solid-svg-icons'
 import { faFilter } from '@fortawesome/free-solid-svg-icons'
 import { faFillDrip } from '@fortawesome/free-solid-svg-icons'
+import { faKeyboard } from '@fortawesome/free-solid-svg-icons'
 import { faComments } from '@fortawesome/free-regular-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
@@ -115,6 +116,7 @@ library.add(faList)
 library.add(faEllipsisV)
 library.add(faFilter)
 library.add(faFillDrip)
+library.add(faKeyboard)
 
 Vue.component('icon', FontAwesomeIcon)
 
@@ -124,6 +126,10 @@ Vue.use(VTooltip)
 
 // PWA
 import './registerServiceWorker'
+
+// Shortcuts
+import vueShortkey from 'vue-shortkey'
+Vue.use(vueShortkey)
 
 // Set focus
 Vue.directive('focus', {

@@ -1,0 +1,44 @@
+.keyboard-shortcuts-button {
+  position: fixed;
+  bottom: calc(1rem - 4px);
+  right: 1rem;
+  z-index: 4500; // The modal has a z-index of 4000
+
+  color: $grey;
+  transition: color $transition;
+}
+
+.keyboard-shortcuts-modal {
+  z-index: 4600;
+
+  .card-content {
+    text-align: left;
+
+    .info {
+      font-style: italic;
+    }
+
+    p {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      .shortcuts {
+        display: flex;
+        align-items: center;
+
+        i {
+          padding: 0 .25rem;
+        }
+
+        span {
+          padding: .1rem .35rem;
+          border: 1px solid $grey-light;
+          background: lighten($grey-lightest, 2.5);
+          border-radius: 3px;
+          font-size: .75rem;
+        }
+      }
+    }
+  }
+}
