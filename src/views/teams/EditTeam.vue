@@ -176,7 +176,6 @@
 
 <script>
 	import router from '../../router'
-	import multiselect from 'vue-multiselect'
 	import {mapState} from 'vuex'
 
 	import TeamService from '../../services/team'
@@ -185,6 +184,8 @@
 	import TeamMemberModel from '../../models/teamMember'
 	import UserModel from '../../models/user'
 	import UserService from '../../services/user'
+	import LoadingComponent from '../../components/misc/loading'
+	import ErrorComponent from '../../components/misc/error'
 
 	export default {
 		name: 'EditTeam',
@@ -208,8 +209,18 @@
 			}
 		},
 		components: {
-			multiselect,
-			editor: () => import(/* webpackPrefetch: true */ '../../components/input/editor'),
+			multiselect: () => ({
+				component: import(/* webpackPrefetch: true *//* webpackChunkName: "multiselect" */ 'vue-multiselect'),
+				loading: LoadingComponent,
+				error: ErrorComponent,
+				timeout: 60000,
+			}),
+			editor: () => ({
+				component: import(/* webpackPrefetch: true *//* webpackChunkName: "editor" */ '../../components/input/editor'),
+				loading: LoadingComponent,
+				error: ErrorComponent,
+				timeout: 60000,
+			}),
 		},
 		created() {
 			this.teamService = new TeamService()

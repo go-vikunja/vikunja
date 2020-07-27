@@ -34,18 +34,24 @@
 
 <script>
 	import {differenceWith} from 'lodash'
-	import multiselect from 'vue-multiselect'
 
 	import UserModel from '../../../models/user'
 	import ListUserService from '../../../services/listUsers'
 	import TaskAssigneeService from '../../../services/taskAssignee'
 	import User from '../../misc/user'
+	import LoadingComponent from '../../misc/loading'
+	import ErrorComponent from '../../misc/error'
 
 	export default {
 		name: 'editAssignees',
 		components: {
 			User,
-			multiselect,
+			multiselect: () => ({
+				component: import(/* webpackPrefetch: true *//* webpackChunkName: "multiselect" */ 'vue-multiselect'),
+				loading: LoadingComponent,
+				error: ErrorComponent,
+				timeout: 60000,
+			}),
 		},
 		props: {
 			taskId: {

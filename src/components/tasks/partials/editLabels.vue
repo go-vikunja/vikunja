@@ -36,11 +36,12 @@
 
 <script>
 	import { differenceWith } from 'lodash'
-	import multiselect from 'vue-multiselect'
 
 	import LabelService from '../../../services/label'
 	import LabelModel from '../../../models/label'
 	import LabelTaskService from '../../../services/labelTask'
+	import LoadingComponent from '../../misc/loading'
+	import ErrorComponent from '../../misc/error'
 
 	export default {
 		name: 'edit-labels',
@@ -65,7 +66,12 @@
 			}
 		},
 		components: {
-			multiselect,
+			multiselect: () => ({
+				component: import(/* webpackPrefetch: true *//* webpackChunkName: "multiselect" */ 'vue-multiselect'),
+				loading: LoadingComponent,
+				error: ErrorComponent,
+				timeout: 60000,
+			}),
 		},
 		watch: {
 			value(newLabels) {

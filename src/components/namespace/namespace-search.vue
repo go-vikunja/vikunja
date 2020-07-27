@@ -22,10 +22,10 @@
 </template>
 
 <script>
-	import multiselect from 'vue-multiselect'
-
 	import NamespaceService from '../../services/namespace'
 	import NamespaceModel from '../../models/namespace'
+	import LoadingComponent from '../misc/loading'
+	import ErrorComponent from '../misc/error'
 
 	export default {
 		name: 'namespace-search',
@@ -37,7 +37,12 @@
 			}
 		},
 		components: {
-			multiselect,
+			multiselect: () => ({
+				component: import(/* webpackPrefetch: true *//* webpackChunkName: "multiselect" */ 'vue-multiselect'),
+				loading: LoadingComponent,
+				error: ErrorComponent,
+				timeout: 60000,
+			}),
 		},
 		created() {
 			this.namespaceService = new NamespaceService()

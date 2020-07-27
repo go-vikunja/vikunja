@@ -343,6 +343,8 @@
 	import ListSearch from '../../components/tasks/partials/listSearch'
 	import ColorPicker from '../../components/input/colorPicker'
 	import attachmentUpload from '../../components/tasks/mixins/attachmentUpload'
+	import LoadingComponent from '../../components/misc/loading'
+	import ErrorComponent from '../../components/misc/error'
 
 	export default {
 		name: 'TaskDetailView',
@@ -359,7 +361,12 @@
 			PrioritySelect,
 			Comments,
 			flatPickr,
-			editor: () => import(/* webpackPrefetch: true */ '../../components/input/editor'),
+			editor: () => ({
+				component: import(/* webpackPrefetch: true *//* webpackChunkName: "editor" */ '../../components/input/editor'),
+				loading: LoadingComponent,
+				error: ErrorComponent,
+				timeout: 60000,
+			}),
 		},
 		mixins: [
 			attachmentUpload,

@@ -88,7 +88,8 @@
 	import relationKinds from '../../../models/relationKinds'
 	import TaskRelationModel from '../../../models/taskRelation'
 
-	import multiselect from 'vue-multiselect'
+	import LoadingComponent from '../../misc/loading'
+	import ErrorComponent from '../../misc/error'
 
 	export default {
 		name: 'relatedTasks',
@@ -106,7 +107,12 @@
 			}
 		},
 		components: {
-			multiselect,
+			multiselect: () => ({
+				component: import(/* webpackPrefetch: true *//* webpackChunkName: "multiselect" */ 'vue-multiselect'),
+				loading: LoadingComponent,
+				error: ErrorComponent,
+				timeout: 60000,
+			}),
 		},
 		props: {
 			taskId: {

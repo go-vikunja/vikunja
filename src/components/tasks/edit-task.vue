@@ -161,6 +161,8 @@
 	import RepeatAfter from './partials/repeatAfter'
 	import Reminders from './partials/reminders'
 	import ColorPicker from '../input/colorPicker'
+	import LoadingComponent from '../misc/loading'
+	import ErrorComponent from '../misc/error'
 
 	export default {
 		name: 'edit-task',
@@ -196,7 +198,12 @@
 			PercentDoneSelect,
 			PrioritySelect,
 			flatPickr,
-			editor: () => import(/* webpackPrefetch: true */ '../../components/input/editor'),
+			editor: () => ({
+				component: import(/* webpackPrefetch: true *//* webpackChunkName: "editor" */ '../../components/input/editor'),
+				loading: LoadingComponent,
+				error: ErrorComponent,
+				timeout: 60000,
+			}),
 		},
 		props: {
 			task: {

@@ -75,11 +75,18 @@
 	import TaskCommentService from '../../../services/taskComment'
 	import TaskCommentModel from '../../../models/taskComment'
 	import attachmentUpload from '../mixins/attachmentUpload'
+	import LoadingComponent from '../../misc/loading'
+	import ErrorComponent from '../../misc/error'
 
 	export default {
 		name: 'comments',
 		components: {
-			editor: () => import(/* webpackPrefetch: true */ '../../input/editor'),
+			editor: () => ({
+				component: import(/* webpackPrefetch: true *//* webpackChunkName: "editor" */ '../../input/editor'),
+				loading: LoadingComponent,
+				error: ErrorComponent,
+				timeout: 60000,
+			}),
 		},
 		mixins: [
 			attachmentUpload,

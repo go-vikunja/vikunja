@@ -100,12 +100,19 @@
 	import LabelService from '../../services/label'
 	import LabelModel from '../../models/label'
 	import ColorPicker from '../../components/input/colorPicker'
+	import LoadingComponent from '../../components/misc/loading'
+	import ErrorComponent from '../../components/misc/error'
 
 	export default {
 		name: 'ListLabels',
 		components: {
 			ColorPicker,
-			editor: () => import(/* webpackPrefetch: true */ '../../components/input/editor'),
+			editor: () => ({
+				component: import(/* webpackPrefetch: true *//* webpackChunkName: "editor" */ '../../components/input/editor'),
+				loading: LoadingComponent,
+				error: ErrorComponent,
+				timeout: 60000,
+			}),
 		},
 		data() {
 			return {

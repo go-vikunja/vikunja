@@ -3,28 +3,77 @@ import Router from 'vue-router'
 
 import HomeComponent from '../views/Home'
 import NotFoundComponent from '../views/404'
+import LoadingComponent from '../components/misc/loading'
+import ErrorComponent from '../components/misc/error'
 // User Handling
 import LoginComponent from '../views/user/Login'
 import RegisterComponent from '../views/user/Register'
-import PasswordResetComponent from '../views/user/PasswordReset'
-import GetPasswordResetComponent from '../views/user/RequestPasswordReset'
-import UserSettingsComponent from '../views/user/Settings'
+
+const PasswordResetComponent = () => ({
+	component: import(/* webpackPrefetch: true *//* webpackChunkName: "user-settings" */'../views/user/PasswordReset'),
+	loading: LoadingComponent,
+	error: ErrorComponent,
+	timeout: 60000,
+})
+const GetPasswordResetComponent = () => ({
+	component: import(/* webpackPrefetch: true *//* webpackChunkName: "user-settings" */'../views/user/RequestPasswordReset'),
+	loading: LoadingComponent,
+	error: ErrorComponent,
+	timeout: 60000,
+})
+const UserSettingsComponent = () => ({
+	component: import(/* webpackPrefetch: true *//* webpackChunkName: "user-settings" */'../views/user/Settings'),
+	loading: LoadingComponent,
+	error: ErrorComponent,
+	timeout: 60000,
+})
 // List Handling
-import NewListComponent from '../views/list/NewList'
-import EditListComponent from '../views/list/EditList'
+const NewListComponent = () => ({
+	component: import(/* webpackPrefetch: true *//* webpackChunkName: "settings" */'../views/list/NewList'),
+	loading: LoadingComponent,
+	error: ErrorComponent,
+	timeout: 60000,
+})
+const EditListComponent = () => ({
+	component: import(/* webpackPrefetch: true *//* webpackChunkName: "settings" */'../views/list/EditList'),
+	loading: LoadingComponent,
+	error: ErrorComponent,
+	timeout: 60000,
+})
 // Tasks
 import ShowTasksInRangeComponent from '../views/tasks/ShowTasksInRange'
 import LinkShareAuthComponent from '../views/sharing/LinkSharingAuth'
 import TaskDetailViewModal from '../views/tasks/TaskDetailViewModal'
 import TaskDetailView from '../views/tasks/TaskDetailView'
 // Namespace Handling
-import NewNamespaceComponent from '../views/namespaces/NewNamespace'
-import EditNamespaceComponent from '../views/namespaces/EditNamespace'
+const NewNamespaceComponent = () => ({
+	component: import(/* webpackPrefetch: true *//* webpackChunkName: "settings" */'../views/namespaces/NewNamespace'),
+	loading: LoadingComponent,
+	error: ErrorComponent,
+	timeout: 60000,
+})
+const EditNamespaceComponent = () => ({
+	component: import(/* webpackPrefetch: true *//* webpackChunkName: "settings" */'../views/namespaces/EditNamespace'),
+	loading: LoadingComponent,
+	error: ErrorComponent,
+	timeout: 60000,
+})
 import ListNamespaces from '../views/namespaces/ListNamespaces'
 // Team Handling
 import ListTeamsComponent from '../views/teams/ListTeams'
-import EditTeamComponent from '../views/teams/EditTeam'
-import NewTeamComponent from '../views/teams/NewTeam'
+
+const EditTeamComponent = () => ({
+	component: import(/* webpackPrefetch: true *//* webpackChunkName: "settings" */'../views/teams/EditTeam'),
+	loading: LoadingComponent,
+	error: ErrorComponent,
+	timeout: 60000,
+})
+const NewTeamComponent = () => ({
+	component: import(/* webpackPrefetch: true *//* webpackChunkName: "settings" */'../views/teams/NewTeam'),
+	loading: LoadingComponent,
+	error: ErrorComponent,
+	timeout: 60000,
+})
 // Label Handling
 import ListLabelsComponent from '../views/labels/ListLabels'
 // Migration

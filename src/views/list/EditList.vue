@@ -171,6 +171,8 @@
 	import NamespaceSearch from '../../components/namespace/namespace-search'
 	import ListDuplicateService from '../../services/listDuplicateService'
 	import ListDuplicateModel from '../../models/listDuplicateModel'
+	import LoadingComponent from '../../components/misc/loading'
+	import ErrorComponent from '../../components/misc/error'
 
 	export default {
 		name: 'EditList',
@@ -195,7 +197,12 @@
 			Fancycheckbox,
 			LinkSharing,
 			manageSharing,
-			editor: () => import(/* webpackPrefetch: true */ '../../components/input/editor'),
+			editor: () => ({
+				component: import(/* webpackPrefetch: true *//* webpackChunkName: "editor" */ '../../components/input/editor'),
+				loading: LoadingComponent,
+				error: ErrorComponent,
+				timeout: 60000,
+			}),
 		},
 		created() {
 			this.listService = new ListService()
