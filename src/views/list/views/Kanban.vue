@@ -241,7 +241,7 @@
 		created() {
 			this.taskService = new TaskService()
 			this.loadBuckets()
-			setTimeout(() => document.addEventListener('click', this.closeBucketDropdowns), 0)
+			this.$nextTick(() => document.addEventListener('click', this.closeBucketDropdowns))
 
 			// Save the current list view to local storage
 			// We use local storage and not vuex here to make it persistent across reloads.

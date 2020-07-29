@@ -47,7 +47,7 @@
 						<img :src="userInfo.getAvatarUrl()" class="avatar" alt=""/>
 						<div class="dropdown is-right is-active">
 							<div class="dropdown-trigger">
-								<button class="button noshadow" @click="userMenuActive = !userMenuActive">
+								<button class="button noshadow" @click.stop="userMenuActive = !userMenuActive">
 									<span class="username">{{userInfo.username}}</span>
 									<span class="icon is-small">
 									<icon icon="chevron-down"/>
@@ -405,6 +405,9 @@
 					console.log('renewed token')
 				}
 			})
+
+			// This will hide the menu once clicked outside of it
+			this.$nextTick(() => document.addEventListener('click', () => this.userMenuActive = false))
 		},
 		watch: {
 			// call the method again if the route changes
