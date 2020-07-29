@@ -74,6 +74,12 @@
 			},
 		},
 		methods: {
+			replaceListView() {
+				const savedListView = getListView(this.$route.params.listId)
+				router.replace({name: savedListView, params: {id: this.$route.params.listId}})
+				console.debug('Replaced list view with ', savedListView)
+				return
+			},
 			loadList() {
 				this.setTitle(this.currentList.title)
 
@@ -86,6 +92,12 @@
 					this.$route.name === 'list.gantt'
 				) {
 					this.$store.commit('kanban/setListId', 0)
+				}
+
+				// When clicking again on a list in the menu, there would be no list view selected which means no list
+				// at all. Users will then have to click on the list view menu again which is quite confusing.
+				if (this.$route.name === 'list.index') {
+					return this.replaceListView()
 				}
 
 				// Don't load the list if we either already loaded it or aren't dealing with a list at all currently
@@ -105,11 +117,7 @@
 					this.$route.name !== 'list.table' &&
 					this.$route.name !== 'list.kanban'
 				) {
-					const savedListView = getListView(this.$route.params.listId)
-
-					router.replace({name: savedListView, params: {id: this.$route.params.listId}})
-					console.debug('Replaced list view with ', savedListView)
-					return
+					return this.replaceListView()
 				}
 
 				console.debug(`Loading list, $route.name = ${this.$route.name}, $route.params =`, this.$route.params, `, listLoaded = ${this.listLoaded}, currentList = `, this.currentList)
