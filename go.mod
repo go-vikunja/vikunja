@@ -63,7 +63,7 @@ require (
 	github.com/stretchr/testify v1.6.1
 	github.com/swaggo/swag v1.6.7
 	github.com/ulule/limiter/v3 v3.5.0
-	golang.org/x/crypto v0.0.0-20200709230013-948cd5f35899
+	golang.org/x/crypto v0.0.0-20200728195943-123391ffb6de
 	golang.org/x/lint v0.0.0-20200302205851-738671d3881b
 	golang.org/x/net v0.0.0-20200602114024-627f9648deb9 // indirect
 	golang.org/x/text v0.3.3 // indirect
