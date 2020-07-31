@@ -12487,10 +12487,10 @@ vue-cli-plugin-apollo@^0.21.3:
     subscriptions-transport-ws "^0.9.16"
     ts-node "^8.4.1"
 
-vue-drag-resize@1.4.1:
-  version "1.4.1"
-  resolved "https://registry.yarnpkg.com/vue-drag-resize/-/vue-drag-resize-1.4.1.tgz#bd2d2f99e356f97831a504c23d5adce17a9b6268"
-  integrity sha512-8ES66/5O00J2d5POuJq9kCdi/cpaycsvH6YwJH0+ksYKTyHWC8JSm8Wd0pRy50FnRawhczptebIxrbOd8r+6qw==
+vue-drag-resize@1.4.2:
+  version "1.4.2"
+  resolved "https://registry.yarnpkg.com/vue-drag-resize/-/vue-drag-resize-1.4.2.tgz#656408b52c77c383a6aafb08c32bd220f0f25b73"
+  integrity sha512-rPd8JkkueBegCX8niJg3aWwQBfys9upaxLDyH6+1Gkz6pUzldhVqpF0hragppo68q6NWqE9fbvypWVI43AFyqw==
 
 vue-easymde@1.2.2:
   version "1.2.2"
