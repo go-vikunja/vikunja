@@ -1,24 +1,26 @@
 <template>
 	<span>
 		<fancycheckbox v-model="task.done" @change="markAsDone" :disabled="isArchived"/>
-		<router-link :to="{ name: taskDetailRoute, params: { id: task.id } }" class="tasktext"  :class="{ 'done': task.done}">
+		<span class="tasktext" :class="{ 'done': task.done}">
+			<router-link :to="{ name: taskDetailRoute, params: { id: task.id } }">
+				<router-link
+						v-if="showList && $store.getters['lists/getListById'](task.listId) !== null"
+						v-tooltip="`This task belongs to list '${$store.getters['lists/getListById'](task.listId).title}'`"
+						:to="{ name: 'list.list', params: { listId: task.listId } }"
+						class="task-list">
+					{{ $store.getters['lists/getListById'](task.listId).title }}
+				</router-link>
 
-			<router-link
-					v-if="showList && $store.getters['lists/getListById'](task.listId) !== null"
-					v-tooltip="`This task belongs to list '${$store.getters['lists/getListById'](task.listId).title}'`"
-					:to="{ name: 'list.list', params: { listId: task.listId } }"
-					class="task-list">
-				{{ $store.getters['lists/getListById'](task.listId).title }}
+				<!-- Show any parent tasks to make it clear this task is a sub task of something -->
+				<span class="parent-tasks" v-if="typeof task.relatedTasks.parenttask !== 'undefined'">
+					<template v-for="(pt, i) in task.relatedTasks.parenttask">
+						{{ pt.title }}<template v-if="(i + 1) < task.relatedTasks.parenttask.length">,&nbsp;</template>
+					</template>
+					>
+				</span>
+				{{ task.title }}
 			</router-link>
 
-			<!-- Show any parent tasks to make it clear this task is a sub task of something -->
-			<span class="parent-tasks" v-if="typeof task.relatedTasks.parenttask !== 'undefined'">
-				<template v-for="(pt, i) in task.relatedTasks.parenttask">
-					{{ pt.title }}<template v-if="(i + 1) < task.relatedTasks.parenttask.length">,&nbsp;</template>
-				</template>
-				>
-			</span>
-			{{ task.title }}
 			<labels :labels="task.labels"/>
 			<user
 					:user="a"
@@ -28,11 +30,19 @@
 					v-for="(a, i) in task.assignees"
 					:key="task.id + 'assignee' + a.id + i"
 			/>
-			<i v-if="task.dueDate > 0"
-				:class="{'overdue': task.dueDate <= new Date() && !task.done}"
-				v-tooltip="formatDate(task.dueDate)"> - Due {{formatDateSince(task.dueDate)}}</i>
+			<i
+					v-if="+new Date(task.dueDate) > 0"
+					:class="{'overdue': task.dueDate <= new Date() && !task.done}"
+					v-tooltip="formatDate(task.dueDate)"
+					@click.stop="showDefer = !showDefer"
+			>
+				- Due {{formatDateSince(task.dueDate)}}
+			</i>
+			<transition name="fade">
+				<defer-task v-model="task" v-if="+new Date(task.dueDate) > 0 && showDefer"/>
+			</transition>
 			<priority-label :priority="task.priority"/>
-		</router-link>
+		</span>
 	</span>
 </template>
 
@@ -43,6 +53,7 @@
 	import Labels from './labels'
 	import User from '../../misc/user'
 	import Fancycheckbox from '../../input/fancycheckbox'
+	import DeferTask from './defer-task'
 
 	export default {
 		name: 'singleTaskInList',
@@ -50,9 +61,11 @@
 			return {
 				taskService: TaskService,
 				task: TaskModel,
+				showDefer: false,
 			}
 		},
 		components: {
+			DeferTask,
 			Fancycheckbox,
 			User,
 			Labels,

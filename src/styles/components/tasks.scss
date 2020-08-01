@@ -192,3 +192,53 @@
     margin-left: calc(40% - 1em);
   }
 }
+
+.defer-task {
+  $defer-task-max-width: 350px;
+
+  position: absolute;
+  width: 100%;
+  max-width: $defer-task-max-width;
+  border-radius: $radius;
+  border: 1px solid $grey-lighter;
+  padding: 1rem;
+  margin: 1rem;
+  background: $white;
+  color: $text;
+  cursor: default;
+  z-index: 10;
+
+  input.input {
+    display: none;
+  }
+
+  .flatpickr-calendar {
+    margin: 0 auto;
+    box-shadow: none;
+
+    span {
+      width: auto !important;
+    }
+  }
+
+  .defer-days {
+    justify-content: space-between;
+    display: flex;
+    margin: .5rem 0;
+  }
+
+  @media screen and (max-width: ($defer-task-max-width + 100px)) { // 100px is roughly the size the pane is pulled to the right
+    left: .5rem;
+    right: .5rem;
+    max-width: 100%;
+    width: calc(100vw - 1rem - 2rem);
+
+    .flatpickr-calendar {
+      max-width: 100%;
+
+      .flatpickr-innerContainer {
+        overflow: scroll;
+      }
+    }
+  }
+}
