@@ -120,8 +120,10 @@ func (ld *ListDuplicate) Create(a web.Auth) (err error) {
 		t.ListID = ld.List.ID
 		t.BucketID = bucketMap[t.BucketID]
 		t.UID = ""
-		err := createTask(t, a, false)
+		s := x.NewSession()
+		err := createTask(s, t, a, false)
 		if err != nil {
+			_ = s.Rollback()
 			return err
 		}
 		taskMap[oldID] = t.ID

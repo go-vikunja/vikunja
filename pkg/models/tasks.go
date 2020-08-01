@@ -28,6 +28,7 @@ import (
 	"strconv"
 	"time"
 	"xorm.io/builder"
+	"xorm.io/xorm"
 	"xorm.io/xorm/schemas"
 )
 
@@ -525,9 +526,9 @@ func addMoreInfoToTasks(taskMap map[int64]*Task) (err error) {
 	return
 }
 
-func checkBucketAndTaskBelongToSameList(fullTask *Task, bucketID int64) (err error) {
+func checkBucketAndTaskBelongToSameList(s *xorm.Session, fullTask *Task, bucketID int64) (err error) {
 	if bucketID != 0 {
-		b, err := getBucketByID(bucketID)
+		b, err := getBucketByID(s, bucketID)
 		if err != nil {
 			return err
 		}
@@ -556,10 +557,16 @@ func checkBucketAndTaskBelongToSameList(fullTask *Task, bucketID int64) (err err
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{id} [put]
 func (t *Task) Create(a web.Auth) (err error) {
-	return createTask(t, a, true)
+	s := x.NewSession()
+	err = createTask(s, t, a, true)
+	if err != nil {
+		_ = s.Rollback()
+		return err
+	}
+	return s.Commit()
 }
 
-func createTask(t *Task, a web.Auth, updateAssignees bool) (err error) {
+func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool) (err error) {
 
 	t.ID = 0
 
@@ -570,7 +577,7 @@ func createTask(t *Task, a web.Auth, updateAssignees bool) (err error) {
 
 	// Check if the list exists
 	l := &List{ID: t.ListID}
-	if err = l.GetSimpleByID(); err != nil {
+	if err = l.getSimpleByID(s); err != nil {
 		return
 	}
 
@@ -592,14 +599,14 @@ func createTask(t *Task, a web.Auth, updateAssignees bool) (err error) {
 	}
 
 	// If there is a bucket set, make sure they belong to the same list as the task
-	err = checkBucketAndTaskBelongToSameList(t, t.BucketID)
+	err = checkBucketAndTaskBelongToSameList(s, t, t.BucketID)
 	if err != nil {
 		return
 	}
 
 	// Get the default bucket and move the task there
 	if t.BucketID == 0 {
-		defaultBucket, err := getDefaultBucket(t.ListID)
+		defaultBucket, err := getDefaultBucket(s, t.ListID)
 		if err != nil {
 			return err
 		}
@@ -608,7 +615,7 @@ func createTask(t *Task, a web.Auth, updateAssignees bool) (err error) {
 
 	// Get the index for this task
 	latestTask := &Task{}
-	_, err = x.Where("list_id = ?", t.ListID).OrderBy("id desc").Get(latestTask)
+	_, err = s.Where("list_id = ?", t.ListID).OrderBy("id desc").Get(latestTask)
 	if err != nil {
 		return err
 	}
@@ -618,19 +625,19 @@ func createTask(t *Task, a web.Auth, updateAssignees bool) (err error) {
 	if t.Position == 0 {
 		t.Position = float64(latestTask.ID+1) * math.Pow(2, 16)
 	}
-	if _, err = x.Insert(t); err != nil {
+	if _, err = s.Insert(t); err != nil {
 		return err
 	}
 
 	// Update the assignees
 	if updateAssignees {
-		if err := t.updateTaskAssignees(t.Assignees); err != nil {
+		if err := t.updateTaskAssignees(s, t.Assignees); err != nil {
 			return err
 		}
 	}
 
 	// Update the reminders
-	if err := t.updateReminders(t.Reminders); err != nil {
+	if err := t.updateReminders(s, t.Reminders); err != nil {
 		return err
 	}
 
@@ -638,7 +645,7 @@ func createTask(t *Task, a web.Auth, updateAssignees bool) (err error) {
 
 	t.setIdentifier(l)
 
-	err = updateListLastUpdated(&List{ID: t.ListID})
+	err = updateListLastUpdatedS(s, &List{ID: t.ListID})
 	return
 }
 
@@ -657,15 +664,20 @@ func createTask(t *Task, a web.Auth, updateAssignees bool) (err error) {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{id} [post]
 func (t *Task) Update() (err error) {
+
+	s := x.NewSession()
+
 	// Check if the task exists and get the old values
 	ot, err := GetTaskByIDSimple(t.ID)
 	if err != nil {
+		_ = s.Rollback()
 		return
 	}
 
 	// Get the reminders
 	reminders, err := getRemindersForTasks([]int64{t.ID})
 	if err != nil {
+		_ = s.Rollback()
 		return
 	}
 
@@ -678,18 +690,21 @@ func (t *Task) Update() (err error) {
 	updateDone(&ot, t)
 
 	// Update the assignees
-	if err := ot.updateTaskAssignees(t.Assignees); err != nil {
+	if err := ot.updateTaskAssignees(s, t.Assignees); err != nil {
+		_ = s.Rollback()
 		return err
 	}
 
 	// Update the reminders
-	if err := ot.updateReminders(t.Reminders); err != nil {
+	if err := ot.updateReminders(s, t.Reminders); err != nil {
+		_ = s.Rollback()
 		return err
 	}
 
 	// If there is a bucket set, make sure they belong to the same list as the task
-	err = checkBucketAndTaskBelongToSameList(&ot, t.BucketID)
+	err = checkBucketAndTaskBelongToSameList(s, &ot, t.BucketID)
 	if err != nil {
+		_ = s.Rollback()
 		return
 	}
 
@@ -714,15 +729,17 @@ func (t *Task) Update() (err error) {
 
 	// If the task is being moved between lists, make sure to move the bucket + index as well
 	if t.ListID != 0 && ot.ListID != t.ListID {
-		b, err := getDefaultBucket(t.ListID)
+		b, err := getDefaultBucket(s, t.ListID)
 		if err != nil {
+			_ = s.Rollback()
 			return err
 		}
 		t.BucketID = b.ID
 
 		latestTask := &Task{}
-		_, err = x.Where("list_id = ?", t.ListID).OrderBy("id desc").Get(latestTask)
+		_, err = s.Where("list_id = ?", t.ListID).OrderBy("id desc").Get(latestTask)
 		if err != nil {
+			_ = s.Rollback()
 			return err
 		}
 
@@ -751,6 +768,7 @@ func (t *Task) Update() (err error) {
 	// Which is why we merge the actual task struct with the one we got from the db
 	// The user struct overrides values in the actual one.
 	if err := mergo.Merge(&ot, t, mergo.WithOverride); err != nil {
+		_ = s.Rollback()
 		return err
 	}
 
@@ -803,16 +821,21 @@ func (t *Task) Update() (err error) {
 		ot.RepeatFromCurrentDate = false
 	}
 
-	_, err = x.ID(t.ID).
+	_, err = s.ID(t.ID).
 		Cols(colsToUpdate...).
 		Update(ot)
 	*t = ot
 	if err != nil {
+		_ = s.Rollback()
 		return err
 	}
 
-	err = updateListLastUpdated(&List{ID: t.ListID})
-	return
+	err = updateListLastUpdatedS(s, &List{ID: t.ListID})
+	if err != nil {
+		_ = s.Rollback()
+		return err
+	}
+	return s.Commit()
 }
 
 // This helper function updates the reminders, doneAt, start and end dates of the *old* task
@@ -910,7 +933,7 @@ func updateDone(oldTask *Task, newTask *Task) {
 
 // Creates or deletes all necessary reminders without unneded db operations.
 // The parameter is a slice with unix dates which holds the new reminders.
-func (t *Task) updateReminders(reminders []time.Time) (err error) {
+func (t *Task) updateReminders(s *xorm.Session, reminders []time.Time) (err error) {
 
 	// Load the current reminders
 	taskReminders, err := getRemindersForTasks([]int64{t.ID})
@@ -925,7 +948,7 @@ func (t *Task) updateReminders(reminders []time.Time) (err error) {
 
 	// If we're removing everything, delete all reminders right away
 	if len(reminders) == 0 && len(t.Reminders) > 0 {
-		_, err = x.Where("task_id = ?", t.ID).
+		_, err = s.Where("task_id = ?", t.ID).
 			Delete(TaskReminder{})
 		t.Reminders = nil
 		return err
@@ -963,7 +986,7 @@ func (t *Task) updateReminders(reminders []time.Time) (err error) {
 
 	// Delete all reminders not passed
 	if len(remindersToDelete) > 0 {
-		_, err = x.In("reminder", remindersToDelete).
+		_, err = s.In("reminder", remindersToDelete).
 			And("task_id = ?", t.ID).
 			Delete(TaskReminder{})
 		if err != nil {
@@ -980,7 +1003,7 @@ func (t *Task) updateReminders(reminders []time.Time) (err error) {
 		}
 
 		// Add the new reminder
-		_, err = x.Insert(TaskReminder{TaskID: t.ID, Reminder: r})
+		_, err = s.Insert(TaskReminder{TaskID: t.ID, Reminder: r})
 		if err != nil {
 			return err
 		}
@@ -991,7 +1014,7 @@ func (t *Task) updateReminders(reminders []time.Time) (err error) {
 		t.Reminders = nil
 	}
 
-	err = updateListLastUpdated(&List{ID: t.ListID})
+	err = updateListLastUpdatedS(s, &List{ID: t.ListID})
 	return
 }
 

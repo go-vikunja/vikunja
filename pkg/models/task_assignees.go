@@ -20,6 +20,7 @@ import (
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
 	"time"
+	"xorm.io/xorm"
 )
 
 // TaskAssginee represents an assignment of a user to a task
@@ -55,7 +56,7 @@ func getRawTaskAssigneesForTasks(taskIDs []int64) (taskAssignees []*TaskAssignee
 }
 
 // Create or update a bunch of task assignees
-func (t *Task) updateTaskAssignees(assignees []*user.User) (err error) {
+func (t *Task) updateTaskAssignees(s *xorm.Session, assignees []*user.User) (err error) {
 
 	// Load the current assignees
 	currentAssignees, err := getRawTaskAssigneesForTasks([]int64{t.ID})
@@ -70,7 +71,7 @@ func (t *Task) updateTaskAssignees(assignees []*user.User) (err error) {
 
 	// If we don't have any new assignees, delete everything right away. Saves us some hassle.
 	if len(assignees) == 0 && len(t.Assignees) > 0 {
-		_, err = x.Where("task_id = ?", t.ID).
+		_, err = s.Where("task_id = ?", t.ID).
 			Delete(TaskAssginee{})
 		t.setTaskAssignees(assignees)
 		return err
@@ -107,7 +108,7 @@ func (t *Task) updateTaskAssignees(assignees []*user.User) (err error) {
 
 	// Delete all assignees not passed
 	if len(assigneesToDelete) > 0 {
-		_, err = x.In("user_id", assigneesToDelete).
+		_, err = s.In("user_id", assigneesToDelete).
 			And("task_id = ?", t.ID).
 			Delete(TaskAssginee{})
 		if err != nil {
@@ -300,6 +301,8 @@ type BulkAssignees struct {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/assignees/bulk [post]
 func (ba *BulkAssignees) Create(a web.Auth) (err error) {
+	s := x.NewSession()
+
 	task, err := GetTaskByIDSimple(ba.TaskID)
 	if err != nil {
 		return
@@ -312,5 +315,11 @@ func (ba *BulkAssignees) Create(a web.Auth) (err error) {
 		task.Assignees = append(task.Assignees, &a.User)
 	}
 
-	return task.updateTaskAssignees(ba.Assignees)
+	err = task.updateTaskAssignees(s, ba.Assignees)
+	if err != nil {
+		_ = s.Rollback()
+		return err
+	}
+
+	return s.Commit()
 }

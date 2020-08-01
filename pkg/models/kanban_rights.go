@@ -36,7 +36,7 @@ func (b *Bucket) CanDelete(a web.Auth) (bool, error) {
 
 // canDoBucket checks if the bucket exists and if the user has the right to act on it
 func (b *Bucket) canDoBucket(a web.Auth) (bool, error) {
-	bb, err := getBucketByID(b.ID)
+	bb, err := getBucketByID(x.NewSession(), b.ID)
 	if err != nil {
 		return false, err
 	}

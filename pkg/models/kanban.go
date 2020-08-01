@@ -21,6 +21,7 @@ import (
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
 	"time"
+	"xorm.io/xorm"
 )
 
 // Bucket represents a kanban bucket
@@ -52,9 +53,9 @@ func (b *Bucket) TableName() string {
 	return "buckets"
 }
 
-func getBucketByID(id int64) (b *Bucket, err error) {
+func getBucketByID(s *xorm.Session, id int64) (b *Bucket, err error) {
 	b = &Bucket{}
-	exists, err := x.Where("id = ?", id).Get(b)
+	exists, err := s.Where("id = ?", id).Get(b)
 	if err != nil {
 		return
 	}
@@ -64,9 +65,9 @@ func getBucketByID(id int64) (b *Bucket, err error) {
 	return
 }
 
-func getDefaultBucket(listID int64) (bucket *Bucket, err error) {
+func getDefaultBucket(s *xorm.Session, listID int64) (bucket *Bucket, err error) {
 	bucket = &Bucket{}
-	_, err = x.
+	_, err = s.
 		Where("list_id = ?", listID).
 		OrderBy("id asc").
 		Get(bucket)
@@ -199,9 +200,13 @@ func (b *Bucket) Update() (err error) {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{listID}/buckets/{bucketID} [delete]
 func (b *Bucket) Delete() (err error) {
+
+	s := x.NewSession()
+
 	// Prevent removing the last bucket
-	total, err := x.Where("list_id = ?", b.ListID).Count(&Bucket{})
+	total, err := s.Where("list_id = ?", b.ListID).Count(&Bucket{})
 	if err != nil {
+		_ = s.Rollback()
 		return
 	}
 	if total <= 1 {
@@ -212,21 +217,25 @@ func (b *Bucket) Delete() (err error) {
 	}
 
 	// Remove the bucket itself
-	_, err = x.Where("id = ?", b.ID).Delete(&Bucket{})
+	_, err = s.Where("id = ?", b.ID).Delete(&Bucket{})
 	if err != nil {
+		_ = s.Rollback()
 		return
 	}
 
 	// Get the default bucket
-	defaultBucket, err := getDefaultBucket(b.ListID)
+	defaultBucket, err := getDefaultBucket(s, b.ListID)
 	if err != nil {
+		_ = s.Rollback()
 		return
 	}
 
 	// Remove all associations of tasks to that bucket
-	_, err = x.Where("bucket_id = ?", b.ID).Cols("bucket_id").Update(&Task{BucketID: defaultBucket.ID})
+	_, err = s.Where("bucket_id = ?", b.ID).Cols("bucket_id").Update(&Task{BucketID: defaultBucket.ID})
 	if err != nil {
+		_ = s.Rollback()
 		return
 	}
-	return
+
+	return s.Commit()
 }

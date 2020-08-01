@@ -93,7 +93,7 @@ func (bt *BulkTask) Update() (err error) {
 		updateDone(oldtask, &bt.Task)
 
 		// Update the assignees
-		if err := oldtask.updateTaskAssignees(bt.Assignees); err != nil {
+		if err := oldtask.updateTaskAssignees(sess, bt.Assignees); err != nil {
 			return err
 		}
 
@@ -121,7 +121,8 @@ func (bt *BulkTask) Update() (err error) {
 				"end_date").
 			Update(oldtask)
 		if err != nil {
-			return sess.Rollback()
+			_ = sess.Rollback()
+			return err
 		}
 	}
 

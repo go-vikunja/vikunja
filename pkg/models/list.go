@@ -199,6 +199,16 @@ func (l *List) ReadOne() (err error) {
 
 // GetSimpleByID gets a list with only the basic items, aka no tasks or user objects. Returns an error if the list does not exist.
 func (l *List) GetSimpleByID() (err error) {
+	s := x.NewSession()
+	err = l.getSimpleByID(s)
+	if err != nil {
+		_ = s.Rollback()
+		return err
+	}
+	return nil
+}
+
+func (l *List) getSimpleByID(s *xorm.Session) (err error) {
 	if l.ID < 1 {
 		return ErrListDoesNotExist{ID: l.ID}
 	}
@@ -207,7 +217,7 @@ func (l *List) GetSimpleByID() (err error) {
 	// leading to not finding anything if the id is good, but for example the title is different.
 	id := l.ID
 	*l = List{}
-	exists, err := x.Where("id = ?", id).Get(l)
+	exists, err := s.Where("id = ?", id).Get(l)
 	if err != nil {
 		return
 	}
@@ -520,8 +530,18 @@ func (l *List) Update() (err error) {
 	return CreateOrUpdateList(l)
 }
 
-func updateListLastUpdated(list *List) error {
-	_, err := x.ID(list.ID).Cols("updated").Update(list)
+func updateListLastUpdated(list *List) (err error) {
+	s := x.NewSession()
+	err = updateListLastUpdatedS(s, list)
+	if err != nil {
+		_ = s.Rollback()
+		return err
+	}
+	return nil
+}
+
+func updateListLastUpdatedS(s *xorm.Session, list *List) error {
+	_, err := s.ID(list.ID).Cols("updated").Update(list)
 	return err
 }
 
