@@ -9,10 +9,12 @@ export default {
 		isLinkShareAuth: false,
 		info: {},
 		needsTotpPasscode: false,
+		avatarUrl: '',
 	}),
 	mutations: {
 		info(state, info) {
 			state.info = info
+			state.avatarUrl = info.getAvatarUrl()
 		},
 		authenticated(state, authenticated) {
 			state.authenticated = authenticated
@@ -22,6 +24,9 @@ export default {
 		},
 		needsTotpPasscode(state, needs) {
 			state.needsTotpPasscode = needs
+		},
+		reloadAvatar(state) {
+			state.avatarUrl = `${state.info.getAvatarUrl()}&=${+new Date()}`
 		},
 	},
 	actions: {

@@ -106,6 +106,9 @@
 			</div>
 		</div>
 
+		<!-- Avatar -->
+		<avatar-settings/>
+
 		<!-- TOTP -->
 		<div class="card" v-if="totpEnabled">
 			<header class="card-header">
@@ -200,6 +203,8 @@
 
 	import {mapState} from 'vuex'
 
+	import AvatarSettings from '../../components/user/avatar-settings'
+
 	export default {
 		name: 'Settings',
 		data() {
@@ -219,6 +224,9 @@
 				totpDisableForm: false,
 				totpDisablePassword: '',
 			}
+		},
+		components: {
+			AvatarSettings,
 		},
 		created() {
 			this.passwordUpdateService = new PasswordUpdateService()

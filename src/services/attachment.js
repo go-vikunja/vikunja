@@ -16,8 +16,6 @@ export default class AttachmentService extends AbstractService {
 		return model
 	}
 
-	uploadProgress = 0
-
 	useCreateInterceptor() {
 		return false
 	}
@@ -61,36 +59,15 @@ export default class AttachmentService extends AbstractService {
 	 * @returns {Promise<any|never>}
 	 */
 	create(model, files) {
-
-		let data = new FormData()
+		const data = new FormData()
 		for (let i = 0; i < files.length; i++) {
 			// TODO: Validation of file size
 			data.append('files', new Blob([files[i]]), files[i].name);
 		}
 
-		const cancel = this.setLoading()
-		return this.http.put(
+		return this.uploadFormData(
 			this.getReplacedRoute(this.paths.create, model),
-			data,
-			{
-				headers: {
-					'Content-Type':
-						'multipart/form-data; boundary=' + data._boundary,
-				},
-				onUploadProgress: progressEvent => {
-					this.uploadProgress = Math.round( (progressEvent.loaded * 100) / progressEvent.total );
-				}
-			}
+			data
 		)
-			.catch(error => {
-				return this.errorHandler(error)
-			})
-			.then(response => {
-				return Promise.resolve(this.modelCreateFactory(response.data))
-			})
-			.finally(() => {
-				this.uploadProgress = 0
-				cancel()
-			})
 	}
 }

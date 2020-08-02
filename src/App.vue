@@ -44,7 +44,7 @@
 						<a @click="refreshApp()" class="button is-primary noshadow">Update Now</a>
 					</div>
 					<div class="user">
-						<img :src="userInfo.getAvatarUrl()" class="avatar" alt=""/>
+						<img :src="userAvatar" class="avatar" alt=""/>
 						<div class="dropdown is-right is-active">
 							<div class="dropdown-trigger">
 								<button class="button noshadow" @click.stop="userMenuActive = !userMenuActive">
@@ -415,6 +415,7 @@
 		},
 		computed: mapState({
 			userInfo: state => state.auth.info,
+			userAvatar: state => state.auth.avatarUrl,
 			userAuthenticated: state => state.auth.authenticated,
 			motd: state => state.config.motd,
 			online: ONLINE,
