@@ -445,6 +445,9 @@ func addMoreInfoToTasks(taskMap map[int64]*Task) (err error) {
 
 	// Get task attachments
 	attachments, err := getTaskAttachmentsByTaskIDs(taskIDs)
+	if err != nil {
+		return
+	}
 
 	// Get all users of a task
 	// aka the ones who created a task

@@ -221,10 +221,6 @@ migration:
     redirecturl:
 
 avatar:
-  # Switch between avatar providers. Possible values are gravatar and default.
-  #   gravatar will fetch the avatar based on the user email.
-  #   default will return a default avatar for every request.
-  provider: gravatar
   # When using gravatar, this is the duration in seconds until a cached gravatar user avatar expires
   gravatarexpiration: 3600
 

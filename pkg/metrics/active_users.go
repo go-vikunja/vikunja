@@ -41,7 +41,7 @@ type ActiveUser struct {
 
 type activeUsersMap map[int64]*ActiveUser
 
-// ActiveUsersMap is the type used to save active users
+// ActiveUsers is the type used to save active users
 type ActiveUsers struct {
 	users activeUsersMap
 	mutex *sync.Mutex

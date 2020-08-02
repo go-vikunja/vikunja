@@ -55,6 +55,9 @@ type User struct {
 	PasswordResetToken string `xorm:"varchar(450) null" json:"-"`
 	EmailConfirmToken  string `xorm:"varchar(450) null" json:"-"`
 
+	AvatarProvider string `xorm:"varchar(255) null" json:"-"`
+	AvatarFileID   int64  `xorn:"null" json:"-"`
+
 	// A timestamp when this task was created. You cannot change this value.
 	Created time.Time `xorm:"created not null" json:"created"`
 	// A timestamp when this task was last updated. You cannot change this value.
@@ -269,6 +272,8 @@ func CreateUser(user *User) (newUser *User, err error) {
 		newUser.EmailConfirmToken = utils.MakeRandomString(60)
 	}
 
+	newUser.AvatarProvider = "initials"
+
 	// Insert it
 	_, err = x.Insert(newUser)
 	if err != nil {
@@ -322,6 +327,16 @@ func UpdateUser(user *User) (updatedUser *User, err error) {
 	}
 
 	user.Password = theUser.Password // set the password to the one in the database to not accedently resetting it
+
+	// Validate the avatar type
+	if user.AvatarProvider != "" {
+		if user.AvatarProvider != "default" &&
+			user.AvatarProvider != "gravatar" &&
+			user.AvatarProvider != "initials" &&
+			user.AvatarProvider != "upload" {
+			return updatedUser, &ErrInvalidAvatarProvider{AvatarProvider: user.AvatarProvider}
+		}
+	}
 
 	// Update it
 	_, err = x.ID(user.ID).Update(user)

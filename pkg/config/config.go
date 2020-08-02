@@ -117,7 +117,6 @@ const (
 	CorsOrigins Key = `cors.origins`
 	CorsMaxAge  Key = `cors.maxage`
 
-	AvatarProvider           Key = `avatar.provider`
 	AvatarGravaterExpiration Key = `avatar.gravatarexpiration`
 
 	BackgroundsEnabled               Key = `backgrounds.enabled`
@@ -273,7 +272,6 @@ func InitDefaultConfig() {
 	MigrationWunderlistEnable.setDefault(false)
 	MigrationTodoistEnable.setDefault(false)
 	// Avatar
-	AvatarProvider.setDefault("gravatar")
 	AvatarGravaterExpiration.setDefault(3600)
 	// List Backgrounds
 	BackgroundsEnabled.setDefault(true)

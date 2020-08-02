@@ -923,6 +923,12 @@ var doc = `{
                             "$ref": "#/definitions/models.Message"
                         }
                     },
+                    "400": {
+                        "description": "File is no image.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
                     "403": {
                         "description": "File too large.",
                         "schema": {
@@ -1504,6 +1510,70 @@ var doc = `{
                     },
                     "404": {
                         "description": "The bucket does not exist.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/lists/{listID}/duplicate": {
+            "put": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Copies the list, tasks, files, kanban data, assignees, comments, attachments, lables, relations, backgrounds, user/team rights and link shares from one list to a new namespace. The user needs read access in the list and write access in the namespace of the new list.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "list"
+                ],
+                "summary": "Duplicate an existing list",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "The list ID to duplicate",
+                        "name": "listID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "The target namespace which should hold the copied list.",
+                        "name": "list",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.ListDuplicate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The created list.",
+                        "schema": {
+                            "$ref": "#/definitions/models.ListDuplicate"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid list duplicate object provided.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "403": {
+                        "description": "The user does not have access to the list or namespace",
                         "schema": {
                             "$ref": "#/definitions/web.HTTPError"
                         }
@@ -5476,6 +5546,150 @@ var doc = `{
                 }
             }
         },
+        "/user/settings/avatar": {
+            "get": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Returns the current user's avatar setting.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "Return user avatar setting",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/v1.UserAvatarProvider"
+                        }
+                    },
+                    "400": {
+                        "description": "Something's invalid.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Changes the user avatar. Valid types are gravatar (uses the user email), upload, initials, default.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "Set the user's avatar",
+                "parameters": [
+                    {
+                        "description": "The user's avatar setting",
+                        "name": "avatar",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/v1.UserAvatarProvider"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/v1.UserAvatarProvider"
+                        }
+                    },
+                    "400": {
+                        "description": "Something's invalid.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/settings/avatar/upload": {
+            "put": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Upload a user avatar. This will also set the user's avatar provider to \"upload\"",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "Upload a user avatar",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "The avatar as single file.",
+                        "name": "avatar",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The avatar was set successfully.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "400": {
+                        "description": "File is no image.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "403": {
+                        "description": "File too large.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
         "/user/settings/email": {
             "post": {
                 "security": [
@@ -6297,6 +6511,20 @@ var doc = `{
                 }
             }
         },
+        "models.ListDuplicate": {
+            "type": "object",
+            "properties": {
+                "list": {
+                    "description": "The copied list",
+                    "type": "object",
+                    "$ref": "#/definitions/models.List"
+                },
+                "namespace_id": {
+                    "description": "The target namespace ID",
+                    "type": "integer"
+                }
+            }
+        },
         "models.ListUser": {
             "type": "object",
             "properties": {
@@ -7037,6 +7265,14 @@ var doc = `{
                 }
             }
         },
+        "v1.UserAvatarProvider": {
+            "type": "object",
+            "properties": {
+                "avatar_provider": {
+                    "type": "string"
+                }
+            }
+        },
         "v1.UserPassword": {
             "type": "object",
             "properties": {
@@ -7044,6 +7280,17 @@ var doc = `{
                     "type": "string"
                 },
                 "old_password": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1.legalInfo": {
+            "type": "object",
+            "properties": {
+                "imprint_url": {
+                    "type": "string"
+                },
+                "privacy_policy_url": {
                     "type": "string"
                 }
             }
@@ -7065,6 +7312,10 @@ var doc = `{
                 },
                 "frontend_url": {
                     "type": "string"
+                },
+                "legal": {
+                    "type": "object",
+                    "$ref": "#/definitions/v1.legalInfo"
                 },
                 "link_sharing_enabled": {
                     "type": "boolean"

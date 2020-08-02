@@ -21,7 +21,7 @@ GOFLAGS := -v $(EXTRA_GOFLAGS)
 
 LDFLAGS := -X "code.vikunja.io/api/pkg/version.Version=$(shell git describe --tags --always --abbrev=10 | sed 's/-/+/' | sed 's/^v//' | sed 's/-g/-/')" -X "main.Tags=$(TAGS)"
 
-PACKAGES ?= $(filter-out code.vikunja.io/api/pkg/integrations,$(shell go list))
+PACKAGES ?= $(filter-out code.vikunja.io/api/pkg/integrations,$(shell go list all | grep code\.vikunja\.io\/api))
 SOURCES ?= $(shell find . -name "*.go" -type f)
 
 TAGS ?=

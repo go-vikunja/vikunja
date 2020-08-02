@@ -254,6 +254,9 @@ func registerAPIRoutes(a *echo.Group) {
 	u.GET("s", apiv1.UserList)
 	u.POST("/token", apiv1.RenewToken)
 	u.POST("/settings/email", apiv1.UpdateUserEmail)
+	u.GET("/settings/avatar", apiv1.GetUserAvatarProvider)
+	u.POST("/settings/avatar", apiv1.ChangeUserAvatarProvider)
+	u.PUT("/settings/avatar/upload", apiv1.UploadAvatar)
 
 	if config.ServiceEnableTotp.GetBool() {
 		u.GET("/settings/totp", apiv1.UserTOTP)

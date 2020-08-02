@@ -17,16 +17,27 @@
 package v1
 
 import (
-	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/avatar"
 	"code.vikunja.io/api/pkg/modules/avatar/empty"
 	"code.vikunja.io/api/pkg/modules/avatar/gravatar"
-	user2 "code.vikunja.io/api/pkg/user"
+	"code.vikunja.io/api/pkg/modules/avatar/initials"
+	"code.vikunja.io/api/pkg/modules/avatar/upload"
+	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web/handler"
+
+	"bytes"
+	"github.com/disintegration/imaging"
+	"github.com/gabriel-vasile/mimetype"
 	"github.com/labstack/echo/v4"
+	"image"
+	"image/png"
+	"io"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 // GetAvatar returns a user's avatar
@@ -45,7 +56,7 @@ func GetAvatar(c echo.Context) error {
 	username := c.Param("username")
 
 	// Get the user
-	user, err := user2.GetUserWithEmail(&user2.User{Username: username})
+	u, err := user.GetUserWithEmail(&user.User{Username: username})
 	if err != nil {
 		log.Errorf("Error getting user for avatar: %v", err)
 		return handler.HandleHTTPError(err, c)
@@ -55,9 +66,13 @@ func GetAvatar(c echo.Context) error {
 	// For now, we only have one avatar provider, in the future there could be multiple which
 	// could be changed based on user settings etc.
 	var avatarProvider avatar.Provider
-	switch config.AvatarProvider.GetString() {
+	switch u.AvatarProvider {
 	case "gravatar":
 		avatarProvider = &gravatar.Provider{}
+	case "initials":
+		avatarProvider = &initials.Provider{}
+	case "upload":
+		avatarProvider = &upload.Provider{}
 	default:
 		avatarProvider = &empty.Provider{}
 	}
@@ -73,11 +88,100 @@ func GetAvatar(c echo.Context) error {
 	}
 
 	// Get the avatar
-	a, mimeType, err := avatarProvider.GetAvatar(user, sizeInt)
+	a, mimeType, err := avatarProvider.GetAvatar(u, sizeInt)
 	if err != nil {
-		log.Errorf("Error getting avatar for user %d: %v", user.ID, err)
+		log.Errorf("Error getting avatar for user %d: %v", u.ID, err)
 		return handler.HandleHTTPError(err, c)
 	}
 
 	return c.Blob(http.StatusOK, mimeType, a)
+}
+
+// UploadAvatar uploads and sets a user avatar
+// @Summary Upload a user avatar
+// @Description Upload a user avatar. This will also set the user's avatar provider to "upload"
+// @tags user
+// @Accept mpfd
+// @Produce json
+// @Param avatar formData string true "The avatar as single file."
+// @Security JWTKeyAuth
+// @Success 200 {object} models.Message "The avatar was set successfully."
+// @Failure 400 {object} models.Message "File is no image."
+// @Failure 403 {object} models.Message "File too large."
+// @Failure 500 {object} models.Message "Internal error"
+// @Router /user/settings/avatar/upload [put]
+func UploadAvatar(c echo.Context) (err error) {
+
+	uc, err := user.GetCurrentUser(c)
+	if err != nil {
+		return handler.HandleHTTPError(err, c)
+	}
+	u, err := user.GetUserByID(uc.ID)
+	if err != nil {
+		return handler.HandleHTTPError(err, c)
+	}
+
+	// Get + upload the image
+	file, err := c.FormFile("avatar")
+	if err != nil {
+		return err
+	}
+	src, err := file.Open()
+	if err != nil {
+		return err
+	}
+	defer src.Close()
+
+	// Validate we're dealing with an image
+	mime, err := mimetype.DetectReader(src)
+	if err != nil {
+		return handler.HandleHTTPError(err, c)
+	}
+	if !strings.HasPrefix(mime.String(), "image") {
+		return c.JSON(http.StatusBadRequest, models.Message{Message: "Uploaded file is no image."})
+	}
+	_, _ = src.Seek(0, io.SeekStart)
+
+	// Remove the old file if one exists
+	if u.AvatarFileID != 0 {
+		f := &files.File{ID: u.AvatarFileID}
+		if err := f.Delete(); err != nil {
+			if !files.IsErrFileDoesNotExist(err) {
+				return handler.HandleHTTPError(err, c)
+			}
+		}
+		u.AvatarFileID = 0
+	}
+
+	// Resize the new file to a max height of 1024
+	img, _, err := image.Decode(src)
+	if err != nil {
+		return handler.HandleHTTPError(err, c)
+	}
+	resizedImg := imaging.Resize(img, 0, 1024, imaging.Lanczos)
+	buf := &bytes.Buffer{}
+	if err := png.Encode(buf, resizedImg); err != nil {
+		return handler.HandleHTTPError(err, c)
+	}
+
+	upload.InvalidateCache(u)
+
+	// Save the file
+	f, err := files.CreateWithMime(buf, file.Filename, uint64(file.Size), u, "image/png")
+	if err != nil {
+		if files.IsErrFileIsTooLarge(err) {
+			return echo.ErrBadRequest
+		}
+
+		return handler.HandleHTTPError(err, c)
+	}
+
+	u.AvatarFileID = f.ID
+	u.AvatarProvider = "upload"
+
+	if _, err := user.UpdateUser(u); err != nil {
+		return handler.HandleHTTPError(err, c)
+	}
+
+	return c.JSON(http.StatusOK, models.Message{Message: "Avatar was uploaded successfully."})
 }

@@ -366,3 +366,30 @@ func (err ErrInvalidTOTPPasscode) HTTPError() web.HTTPError {
 		Message:  "Invalid totp passcode.",
 	}
 }
+
+// ErrInvalidAvatarProvider represents a "InvalidAvatarProvider" kind of error.
+type ErrInvalidAvatarProvider struct {
+	AvatarProvider string
+}
+
+// IsErrInvalidAvatarProvider checks if an error is a ErrInvalidAvatarProvider.
+func IsErrInvalidAvatarProvider(err error) bool {
+	_, ok := err.(ErrInvalidAvatarProvider)
+	return ok
+}
+
+func (err ErrInvalidAvatarProvider) Error() string {
+	return "Invalid avatar provider"
+}
+
+// ErrCodeInvalidAvatarProvider holds the unique world-error code of this error
+const ErrCodeInvalidAvatarProvider = 1018
+
+// HTTPError holds the http error description
+func (err ErrInvalidAvatarProvider) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusPreconditionFailed,
+		Code:     ErrCodeInvalidAvatarProvider,
+		Message:  "Invalid avatar provider setting. See docs for valid types.",
+	}
+}

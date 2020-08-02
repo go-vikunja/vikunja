@@ -43,6 +43,7 @@ func (p *Provider) Search(search string, page int64) (result []*background.Image
 // @Param background formData string true "The file as single file."
 // @Security JWTKeyAuth
 // @Success 200 {object} models.Message "The background was set successfully."
+// @Failure 400 {object} models.Message "File is no image."
 // @Failure 403 {object} models.Message "No access to the list."
 // @Failure 403 {object} models.Message "File too large."
 // @Failure 404 {object} models.Message "The list does not exist."

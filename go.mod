@@ -28,12 +28,15 @@ require (
 	github.com/cweill/gotests v1.5.3
 	github.com/d4l3k/messagediff v1.2.1 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
+	github.com/disintegration/imaging v1.6.2
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/fzipp/gocyclo v0.0.0-20150627053110-6acd4345c835
+	github.com/gabriel-vasile/mimetype v1.1.1
 	github.com/getsentry/sentry-go v0.7.0
 	github.com/go-redis/redis/v7 v7.4.0
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/go-testfixtures/testfixtures/v3 v3.3.0
+	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/gordonklaus/ineffassign v0.0.0-20200309095847-7953dde2c7bf
 	github.com/iancoleman/strcase v0.0.0-20191112232945-16388991a334
 	github.com/imdario/mergo v0.3.10
@@ -64,6 +67,7 @@ require (
 	github.com/swaggo/swag v1.6.7
 	github.com/ulule/limiter/v3 v3.5.0
 	golang.org/x/crypto v0.0.0-20200728195943-123391ffb6de
+	golang.org/x/image v0.0.0-20200801110659-972c09e46d76
 	golang.org/x/lint v0.0.0-20200302205851-738671d3881b
 	golang.org/x/net v0.0.0-20200602114024-627f9648deb9 // indirect
 	golang.org/x/text v0.3.3 // indirect

@@ -67,7 +67,12 @@ func (f *File) LoadFileMetaByID() (err error) {
 }
 
 // Create creates a new file from an FileHeader
-func Create(f io.ReadCloser, realname string, realsize uint64, a web.Auth) (file *File, err error) {
+func Create(f io.Reader, realname string, realsize uint64, a web.Auth) (file *File, err error) {
+	return CreateWithMime(f, realname, realsize, a, "")
+}
+
+// CreateWithMime creates a new file from an FileHeader and sets its mime type
+func CreateWithMime(f io.Reader, realname string, realsize uint64, a web.Auth, mime string) (file *File, err error) {
 
 	// Get and parse the configured file size
 	var maxSize datasize.ByteSize
@@ -84,6 +89,7 @@ func Create(f io.ReadCloser, realname string, realsize uint64, a web.Auth) (file
 		Name:        realname,
 		Size:        realsize,
 		CreatedByID: a.GetID(),
+		Mime:        mime,
 	}
 
 	_, err = x.Insert(file)
@@ -111,6 +117,6 @@ func (f *File) Delete() (err error) {
 }
 
 // Save saves a file to storage
-func (f *File) Save(fcontent io.ReadCloser) error {
+func (f *File) Save(fcontent io.Reader) error {
 	return afs.WriteReader(f.getFileName(), fcontent)
 }

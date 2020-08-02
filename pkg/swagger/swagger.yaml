@@ -320,6 +320,16 @@ definitions:
           this value.
         type: string
     type: object
+  models.ListDuplicate:
+    properties:
+      list:
+        $ref: '#/definitions/models.List'
+        description: The copied list
+        type: object
+      namespace_id:
+        description: The target namespace ID
+        type: integer
+    type: object
   models.ListUser:
     properties:
       created:
@@ -905,11 +915,23 @@ definitions:
       token:
         type: string
     type: object
+  v1.UserAvatarProvider:
+    properties:
+      avatar_provider:
+        type: string
+    type: object
   v1.UserPassword:
     properties:
       new_password:
         type: string
       old_password:
+        type: string
+    type: object
+  v1.legalInfo:
+    properties:
+      imprint_url:
+        type: string
+      privacy_policy_url:
         type: string
     type: object
   v1.vikunjaInfos:
@@ -924,6 +946,9 @@ definitions:
         type: array
       frontend_url:
         type: string
+      legal:
+        $ref: '#/definitions/v1.legalInfo'
+        type: object
       link_sharing_enabled:
         type: boolean
       max_file_size:
@@ -1578,6 +1603,10 @@ paths:
           description: The background was set successfully.
           schema:
             $ref: '#/definitions/models.Message'
+        "400":
+          description: File is no image.
+          schema:
+            $ref: '#/definitions/models.Message'
         "403":
           description: File too large.
           schema:
@@ -2139,6 +2168,50 @@ paths:
       summary: Update an existing bucket
       tags:
       - task
+  /lists/{listID}/duplicate:
+    put:
+      consumes:
+      - application/json
+      description: Copies the list, tasks, files, kanban data, assignees, comments,
+        attachments, lables, relations, backgrounds, user/team rights and link shares
+        from one list to a new namespace. The user needs read access in the list and
+        write access in the namespace of the new list.
+      parameters:
+      - description: The list ID to duplicate
+        in: path
+        name: listID
+        required: true
+        type: integer
+      - description: The target namespace which should hold the copied list.
+        in: body
+        name: list
+        required: true
+        schema:
+          $ref: '#/definitions/models.ListDuplicate'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The created list.
+          schema:
+            $ref: '#/definitions/models.ListDuplicate'
+        "400":
+          description: Invalid list duplicate object provided.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "403":
+          description: The user does not have access to the list or namespace
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Duplicate an existing list
+      tags:
+      - list
   /lists/{listID}/tasks:
     get:
       consumes:
@@ -4601,6 +4674,99 @@ paths:
           schema:
             $ref: '#/definitions/models.Message'
       summary: Request password reset token
+      tags:
+      - user
+  /user/settings/avatar:
+    get:
+      consumes:
+      - application/json
+      description: Returns the current user's avatar setting.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1.UserAvatarProvider'
+        "400":
+          description: Something's invalid.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal server error.
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Return user avatar setting
+      tags:
+      - user
+    post:
+      consumes:
+      - application/json
+      description: Changes the user avatar. Valid types are gravatar (uses the user
+        email), upload, initials, default.
+      parameters:
+      - description: The user's avatar setting
+        in: body
+        name: avatar
+        required: true
+        schema:
+          $ref: '#/definitions/v1.UserAvatarProvider'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1.UserAvatarProvider'
+        "400":
+          description: Something's invalid.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal server error.
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Set the user's avatar
+      tags:
+      - user
+  /user/settings/avatar/upload:
+    put:
+      consumes:
+      - multipart/form-data
+      description: Upload a user avatar. This will also set the user's avatar provider
+        to "upload"
+      parameters:
+      - description: The avatar as single file.
+        in: formData
+        name: avatar
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The avatar was set successfully.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "400":
+          description: File is no image.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "403":
+          description: File too large.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Upload a user avatar
       tags:
       - user
   /user/settings/email:

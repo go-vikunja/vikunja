@@ -25,9 +25,12 @@ import (
 	v1 "code.vikunja.io/api/pkg/routes/api/v1"
 	"code.vikunja.io/web"
 	"code.vikunja.io/web/handler"
+	"github.com/gabriel-vasile/mimetype"
 	"github.com/labstack/echo/v4"
+	"io"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 // BackgroundProvider represents a thing which holds a background provider
@@ -132,7 +135,18 @@ func (bp *BackgroundProvider) UploadBackground(c echo.Context) error {
 	}
 	defer src.Close()
 
-	f, err := files.Create(src, file.Filename, uint64(file.Size), auth)
+	// Validate we're dealing with an image
+	mime, err := mimetype.DetectReader(src)
+	if err != nil {
+		return handler.HandleHTTPError(err, c)
+	}
+	if !strings.HasPrefix(mime.String(), "image") {
+		return c.JSON(http.StatusBadRequest, models.Message{Message: "Uploaded file is no image."})
+	}
+	_, _ = src.Seek(0, io.SeekStart)
+
+	// Save the file
+	f, err := files.CreateWithMime(src, file.Filename, uint64(file.Size), auth, mime.String())
 	if err != nil {
 		if files.IsErrFileIsTooLarge(err) {
 			return echo.ErrBadRequest
