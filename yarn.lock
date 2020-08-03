@@ -12469,7 +12469,7 @@ vscode-uri@^1.0.6:
   resolved "https://registry.yarnpkg.com/vscode-uri/-/vscode-uri-1.0.8.tgz#9769aaececae4026fb6e22359cb38946580ded59"
   integrity sha512-obtSWTlbJ+a+TFRYGaUumtVwb+InIUVI0Lu0VBUAPmj2cU5JutEXg3xUE0c2J5Tcy7h2DEKVJBFi+Y9ZSFzzPQ==
 
-vue-advanced-cropper@^0.16.10:
+vue-advanced-cropper@0.16.10:
   version "0.16.10"
   resolved "https://registry.yarnpkg.com/vue-advanced-cropper/-/vue-advanced-cropper-0.16.10.tgz#2792003c3cf55fb028c6822aa6f50f18019f2741"
   integrity sha512-xUr7tTpbm+EyrILgLinhxj3NrmJlhUgMCtsifEldwZ8vHyHCCKCnvjRsMpiAQWPLrfhjMwECA0U77Mu93tHRow==
