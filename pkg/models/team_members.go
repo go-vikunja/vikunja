@@ -117,18 +117,20 @@ func (tm *TeamMember) Update() (err error) {
 	tm.UserID = user.ID
 
 	// Get the full member object and change the admin right
+	ttm := &TeamMember{}
 	_, err = x.
 		Where("team_id = ? AND user_id = ?", tm.TeamID, tm.UserID).
-		Get(tm)
+		Get(ttm)
 	if err != nil {
 		return err
 	}
-	tm.Admin = !tm.Admin
+	ttm.Admin = !ttm.Admin
 
 	// Do the update
 	_, err = x.
 		Where("team_id = ? AND user_id = ?", tm.TeamID, tm.UserID).
 		Cols("admin").
-		Update(tm)
+		Update(ttm)
+	tm.Admin = ttm.Admin // Since we're returning the updated rights object
 	return
 }
