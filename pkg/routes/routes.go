@@ -478,6 +478,7 @@ func registerAPIRoutes(a *echo.Group) {
 	}
 	a.PUT("/teams/:team/members", teamMemberHandler.CreateWeb)
 	a.DELETE("/teams/:team/members/:user", teamMemberHandler.DeleteWeb)
+	a.POST("/teams/:team/members/:user/admin", teamMemberHandler.UpdateWeb)
 
 	// Migrations
 	m := a.Group("/migration")

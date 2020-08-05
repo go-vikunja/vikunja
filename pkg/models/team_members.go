@@ -96,3 +96,39 @@ func (tm *TeamMember) Delete() (err error) {
 	_, err = x.Where("team_id = ? AND user_id = ?", tm.TeamID, tm.UserID).Delete(&TeamMember{})
 	return
 }
+
+// Update toggles a team member's admin status
+// @Summary Toggle a team member's admin status
+// @Description If a user is team admin, this will make them member and vise-versa.
+// @tags team
+// @Produce json
+// @Security JWTKeyAuth
+// @Param id path int true "Team ID"
+// @Param userID path int true "User ID"
+// @Success 200 {object} models.Message "The member right was successfully changed."
+// @Failure 500 {object} models.Message "Internal error"
+// @Router /teams/{id}/members/{userID}/admin [post]
+func (tm *TeamMember) Update() (err error) {
+	// Find the numeric user id
+	user, err := user2.GetUserByUsername(tm.Username)
+	if err != nil {
+		return
+	}
+	tm.UserID = user.ID
+
+	// Get the full member object and change the admin right
+	_, err = x.
+		Where("team_id = ? AND user_id = ?", tm.TeamID, tm.UserID).
+		Get(tm)
+	if err != nil {
+		return err
+	}
+	tm.Admin = !tm.Admin
+
+	// Do the update
+	_, err = x.
+		Where("team_id = ? AND user_id = ?", tm.TeamID, tm.UserID).
+		Cols("admin").
+		Update(tm)
+	return
+}

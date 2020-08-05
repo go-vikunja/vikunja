@@ -4524,6 +4524,36 @@ paths:
       summary: Remove a user from a team
       tags:
       - team
+  /teams/{id}/members/{userID}/admin:
+    post:
+      description: If a user is team admin, this will make them member and vise-versa.
+      parameters:
+      - description: Team ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: User ID
+        in: path
+        name: userID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The member right was successfully changed.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Toggle a team member's admin status
+      tags:
+      - team
   /user:
     get:
       consumes:

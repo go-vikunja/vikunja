@@ -30,6 +30,11 @@ func (tm *TeamMember) CanDelete(a web.Auth) (bool, error) {
 	return tm.IsAdmin(a)
 }
 
+// CanUpdate checks if the user can modify a team member's right
+func (tm *TeamMember) CanUpdate(a web.Auth) (bool, error) {
+	return tm.IsAdmin(a)
+}
+
 // IsAdmin checks if the user is team admin
 func (tm *TeamMember) IsAdmin(a web.Auth) (bool, error) {
 	// Don't allow anything if we're dealing with a list share here

@@ -81,3 +81,30 @@ func TestTeamMember_Delete(t *testing.T) {
 		assert.NoError(t, err)
 	})
 }
+
+func TestTeamMember_Update(t *testing.T) {
+	t.Run("normal", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		tm := &TeamMember{
+			TeamID:   1,
+			Username: "user1",
+			Admin:    true,
+		}
+		err := tm.Update()
+		assert.NoError(t, err)
+		assert.False(t, tm.Admin)
+	})
+	// This should have the same result as the normal run as the update function
+	// should ignore what was passed.
+	t.Run("explicitly false in payload", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		tm := &TeamMember{
+			TeamID:   1,
+			Username: "user1",
+			Admin:    true,
+		}
+		err := tm.Update()
+		assert.NoError(t, err)
+		assert.False(t, tm.Admin)
+	})
+}
