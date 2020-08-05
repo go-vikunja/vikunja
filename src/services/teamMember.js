@@ -7,7 +7,8 @@ export default class TeamMemberService extends AbstractService {
 		super({
 			create: '/teams/{teamId}/members',
 			delete: '/teams/{teamId}/members/{username}',
-		});
+			update: '/teams/{teamId}/members/{username}/admin',
+		})
 	}
 
 	processModel(model) {
@@ -19,7 +20,7 @@ export default class TeamMemberService extends AbstractService {
 	modelFactory(data) {
 		return new TeamMemberModel(data)
 	}
-	
+
 	beforeCreate(model) {
 		model.userId = model.id // The api wants to get the user id as user_Id
 		model.admin = model.admin === null ? false : model.admin

@@ -129,6 +129,7 @@
 						</td>
 						<td class="actions" v-if="userIsAdmin">
 							<button @click="toggleUserType(m)" class="button buttonright is-primary"
+									:class="{'is-loading': teamMemberService.loading}"
 									v-if="m.id !== userInfo.id">
 								Make
 								<template v-if="!m.admin">
@@ -139,6 +140,7 @@
 								</template>
 							</button>
 							<button @click="() => {member = m; showUserDeleteModal = true}" class="button is-danger"
+									:class="{'is-loading': teamMemberService.loading}"
 									v-if="m.id !== userInfo.id">
 									<span class="icon is-small">
 										<icon icon="trash-alt"/>
@@ -230,7 +232,7 @@
 		},
 		watch: {
 			// call again the method if the route changes
-			'$route': 'loadTeam'
+			'$route': 'loadTeam',
 		},
 		computed: mapState({
 			userInfo: state => state.auth.info,
@@ -309,11 +311,15 @@
 			},
 			toggleUserType(member) {
 				member.admin = !member.admin
-				this.teamMemberService.delete(member)
-					.then(() => this.teamMemberService.create(member))
-					.then(() => {
-						this.loadTeam()
-						this.success({message: 'The team member was successfully made ' + (member.admin ? 'admin': 'member') + '.'}, this)
+				this.teamMemberService.update(member)
+					.then(r => {
+						for(const tm in this.team.members) {
+							if (this.team.members[tm].id === member.id) {
+								this.$set(this.team.members[tm], 'admin', r.admin)
+								break
+							}
+						}
+						this.success({message: 'The team member was successfully made ' + (member.admin ? 'admin' : 'member') + '.'}, this)
 					})
 					.catch(e => {
 						this.error(e, this)
@@ -336,7 +342,7 @@
 			clearAll() {
 				this.$set(this, 'foundUsers', [])
 			},
-		}
+		},
 	}
 </script>
 
