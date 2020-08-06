@@ -9,6 +9,12 @@ All releases can be found on https://code.vikunja.io/frontend/releases.
 
 The releases aim at the api versions which is why there are missing versions.
 
+## [0.14.1 - 2020-08-06]
+
+### Fixed
+
+* Prevent html being rendered in tooltips
+
 ## [0.14.0 - 2020-07-01]
 
 ### Added
