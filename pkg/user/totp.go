@@ -50,7 +50,9 @@ func TOTPEnabledForUser(user *User) (bool, error) {
 	if !config.ServiceEnableTotp.GetBool() {
 		return false, nil
 	}
-	return x.Where("user_id = ?", user.ID).Exist(&TOTP{})
+	t := &TOTP{}
+	_, err := x.Where("user_id = ?", user.ID).Get(t)
+	return t.Enabled, err
 }
 
 // GetTOTPForUser returns the current state of totp settings for the user.
