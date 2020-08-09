@@ -37,7 +37,7 @@ require (
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/go-testfixtures/testfixtures/v3 v3.3.0
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
-	github.com/gordonklaus/ineffassign v0.0.0-20200309095847-7953dde2c7bf
+	github.com/gordonklaus/ineffassign v0.0.0-20200809085317-e36bfde3bb78
 	github.com/iancoleman/strcase v0.0.0-20191112232945-16388991a334
 	github.com/imdario/mergo v0.3.10
 	github.com/jgautheron/goconst v0.0.0-20200227150835-cda7ea3bf591
