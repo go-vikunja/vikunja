@@ -78,7 +78,7 @@ func ListUsersForList(c echo.Context) error {
 		return handler.HandleHTTPError(err, c)
 	}
 
-	canRead, err := list.CanRead(auth)
+	canRead, _, err := list.CanRead(auth)
 	if err != nil {
 		return handler.HandleHTTPError(err, c)
 	}

@@ -165,7 +165,7 @@ func (tc *TaskComment) ReadOne() (err error) {
 func (tc *TaskComment) ReadAll(auth web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
 
 	// Check if the user has access to the task
-	canRead, err := tc.CanRead(auth)
+	canRead, _, err := tc.CanRead(auth)
 	if err != nil {
 		return nil, 0, 0, err
 	}

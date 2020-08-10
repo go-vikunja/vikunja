@@ -19,15 +19,15 @@ package models
 import "code.vikunja.io/web"
 
 // CanRead implements the read right check for a link share
-func (share *LinkSharing) CanRead(a web.Auth) (bool, error) {
+func (share *LinkSharing) CanRead(a web.Auth) (bool, int, error) {
 	// Don't allow creating link shares if the user itself authenticated with a link share
 	if _, is := a.(*LinkSharing); is {
-		return false, nil
+		return false, 0, nil
 	}
 
 	l, err := GetListByShareHash(share.Hash)
 	if err != nil {
-		return false, err
+		return false, 0, err
 	}
 	return l.CanRead(a)
 }

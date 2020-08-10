@@ -47,7 +47,7 @@ func TestNamespace_Create(t *testing.T) {
 	assert.NoError(t, err)
 
 	// check if it really exists
-	allowed, err = dummynamespace.CanRead(doer)
+	allowed, _, err = dummynamespace.CanRead(doer)
 	assert.NoError(t, err)
 	assert.True(t, allowed)
 	err = dummynamespace.ReadOne()
@@ -78,7 +78,7 @@ func TestNamespace_Create(t *testing.T) {
 	// Check if it was updated
 	assert.Equal(t, "Dolor sit amet.", dummynamespace.Description)
 	// Get it and check it again
-	allowed, err = dummynamespace.CanRead(doer)
+	allowed, _, err = dummynamespace.CanRead(doer)
 	assert.NoError(t, err)
 	assert.True(t, allowed)
 	err = dummynamespace.ReadOne()
@@ -116,7 +116,7 @@ func TestNamespace_Create(t *testing.T) {
 	assert.True(t, IsErrNamespaceDoesNotExist(err))
 
 	// Check if it was successfully deleted
-	allowed, err = dummynamespace.CanRead(doer)
+	allowed, _, err = dummynamespace.CanRead(doer)
 	assert.False(t, allowed)
 	assert.Error(t, err)
 	assert.True(t, IsErrNamespaceDoesNotExist(err))

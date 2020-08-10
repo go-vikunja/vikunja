@@ -33,7 +33,7 @@ func (l *Label) CanDelete(a web.Auth) (bool, error) {
 }
 
 // CanRead checks if a user can read a label
-func (l *Label) CanRead(a web.Auth) (bool, error) {
+func (l *Label) CanRead(a web.Auth) (bool, int, error) {
 	return l.hasAccessToLabel(a)
 }
 
@@ -61,24 +61,37 @@ func (l *Label) isLabelOwner(a web.Auth) (bool, error) {
 }
 
 // Helper method to check if a user can see a specific label
-func (l *Label) hasAccessToLabel(a web.Auth) (bool, error) {
+func (l *Label) hasAccessToLabel(a web.Auth) (has bool, maxRight int, err error) {
 
 	// TODO: add an extra check for link share handling
 
 	// Get all tasks
 	taskIDs, err := getUserTaskIDs(&user.User{ID: a.GetID()})
 	if err != nil {
-		return false, err
+		return false, 0, err
 	}
 
 	// Get all labels associated with these tasks
-	var labels []*Label
-	has, err := x.Table("labels").
-		Select("labels.*").
+	ll := &LabelTask{}
+	has, err = x.Table("labels").
+		Select("label_task.*").
 		Join("LEFT", "label_task", "label_task.label_id = labels.id").
 		Where("label_task.label_id is not null OR labels.created_by_id = ?", a.GetID()).
 		Or(builder.In("label_task.task_id", taskIDs)).
 		And("labels.id = ?", l.ID).
-		Exist(&labels)
-	return has, err
+		Exist(ll)
+	if err != nil {
+		return
+	}
+
+	// Since the right depends on the task the label is associated with, we need to check that too.
+	if ll.TaskID > 0 {
+		t := &Task{ID: ll.TaskID}
+		_, maxRight, err = t.CanRead(a)
+		if err != nil {
+			return
+		}
+	}
+
+	return
 }

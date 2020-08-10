@@ -60,9 +60,17 @@ func (t *Team) IsAdmin(a web.Auth) (bool, error) {
 }
 
 // CanRead returns true if the user has read access to the team
-func (t *Team) CanRead(a web.Auth) (bool, error) {
+func (t *Team) CanRead(a web.Auth) (bool, int, error) {
 	// Check if the user is in the team
-	return x.Where("team_id = ?", t.ID).
+	tm := &TeamMember{}
+	can, err := x.Where("team_id = ?", t.ID).
 		And("user_id = ?", a.GetID()).
-		Get(&TeamMember{})
+		Get(tm)
+
+	maxRights := 0
+	if tm.Admin {
+		maxRights = int(RightAdmin)
+	}
+
+	return can, maxRights, err
 }

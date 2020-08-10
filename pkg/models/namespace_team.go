@@ -153,7 +153,7 @@ func (tn *TeamNamespace) Delete() (err error) {
 func (tn *TeamNamespace) ReadAll(a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
 	// Check if the user can read the namespace
 	n := Namespace{ID: tn.NamespaceID}
-	canRead, err := n.CanRead(a)
+	canRead, _, err := n.CanRead(a)
 	if err != nil {
 		return nil, 0, 0, err
 	}

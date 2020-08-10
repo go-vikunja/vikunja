@@ -104,7 +104,7 @@ func TestTeam_CanDoSomething(t *testing.T) {
 			if got, _ := tm.CanUpdate(tt.args.a); got != tt.want["CanUpdate"] {
 				t.Errorf("Team.CanUpdate() = %v, want %v", got, tt.want["CanUpdate"])
 			}
-			if got, _ := tm.CanRead(tt.args.a); got != tt.want["CanRead"] {
+			if got, _, _ := tm.CanRead(tt.args.a); got != tt.want["CanRead"] {
 				t.Errorf("Team.CanRead() = %v, want %v", got, tt.want["CanRead"])
 			}
 			if got, _ := tm.IsAdmin(tt.args.a); got != tt.want["IsAdmin"] {

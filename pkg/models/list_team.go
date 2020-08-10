@@ -168,7 +168,7 @@ func (tl *TeamList) Delete() (err error) {
 func (tl *TeamList) ReadAll(a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
 	// Check if the user can read the namespace
 	l := &List{ID: tl.ListID}
-	canRead, err := l.CanRead(a)
+	canRead, _, err := l.CanRead(a)
 	if err != nil {
 		return nil, 0, 0, err
 	}

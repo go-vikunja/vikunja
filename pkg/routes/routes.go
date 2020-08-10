@@ -21,6 +21,9 @@
 // @description Every endpoint capable of pagination will return two headers:
 // @description * `x-pagination-total-pages`: The total number of available pages for this request
 // @description * `x-pagination-result-count`: The number of items returned for this request.
+// @description # Rights
+// @description All endpoints which return a single item (list, task, namespace, etc.) - no array - will also return a `x-max-right` header with the max right the user has on this item as an int where `0` is `Read Only`, `1` is `Read & Write` and `2` is `Admin`.
+// @description This can be used to show or hide ui elements based on the rights the user has.
 // @description # Authorization
 // @description **JWT-Auth:** Main authorization method, used for most of the requests. Needs `Authorization: Bearer <jwt-token>`-header to authenticate successfully.
 // @description

@@ -165,14 +165,14 @@ func TestTaskAttachment_Rights(t *testing.T) {
 		t.Run("Allowed", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
 			ta := &TaskAttachment{TaskID: 1}
-			can, err := ta.CanRead(u)
+			can, _, err := ta.CanRead(u)
 			assert.NoError(t, err)
 			assert.True(t, can)
 		})
 		t.Run("Forbidden", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
 			ta := &TaskAttachment{TaskID: 14}
-			can, err := ta.CanRead(u)
+			can, _, err := ta.CanRead(u)
 			assert.NoError(t, err)
 			assert.False(t, can)
 		})

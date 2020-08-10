@@ -20,7 +20,7 @@ package models
 import "code.vikunja.io/web"
 
 // CanRead checks if a user can read a comment
-func (tc *TaskComment) CanRead(a web.Auth) (bool, error) {
+func (tc *TaskComment) CanRead(a web.Auth) (bool, int, error) {
 	t := Task{ID: tc.TaskID}
 	return t.CanRead(a)
 }

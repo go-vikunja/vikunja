@@ -113,7 +113,7 @@ func (lt *LabelTask) Create(a web.Auth) (err error) {
 func (lt *LabelTask) ReadAll(a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
 	// Check if the user has the right to see the task
 	task := Task{ID: lt.TaskID}
-	canRead, err := task.CanRead(a)
+	canRead, _, err := task.CanRead(a)
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -291,7 +291,7 @@ func (t *Task) updateTaskLabels(creator web.Auth, labels []*Label) (err error) {
 		}
 
 		// Check if the user has the rights to see the label he is about to add
-		hasAccessToLabel, err := label.hasAccessToLabel(creator)
+		hasAccessToLabel, _, err := label.hasAccessToLabel(creator)
 		if err != nil {
 			return err
 		}

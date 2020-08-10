@@ -7436,7 +7436,7 @@ var SwaggerInfo = swaggerInfo{
 	BasePath:    "/api/v1",
 	Schemes:     []string{},
 	Title:       "Vikunja API",
-	Description: "# Pagination\nEvery endpoint capable of pagination will return two headers:\n* `x-pagination-total-pages`: The total number of available pages for this request\n* `x-pagination-result-count`: The number of items returned for this request.\n# Authorization\n**JWT-Auth:** Main authorization method, used for most of the requests. Needs `Authorization: Bearer <jwt-token>`-header to authenticate successfully.\n\n**BasicAuth:** Only used when requesting tasks via caldav.\n<!-- ReDoc-Inject: <security-definitions> -->",
+	Description: "# Pagination\nEvery endpoint capable of pagination will return two headers:\n* `x-pagination-total-pages`: The total number of available pages for this request\n* `x-pagination-result-count`: The number of items returned for this request.\n# Rights\nAll endpoints which return a single item (list, task, namespace, etc.) - no array - will also return a `x-max-right` header with the max right the user has on this item as an int where `0` is `Read Only`, `1` is `Read & Write` and `2` is `Admin`.\nThis can be used to show or hide ui elements based on the rights the user has.\n# Authorization\n**JWT-Auth:** Main authorization method, used for most of the requests. Needs `Authorization: Bearer <jwt-token>`-header to authenticate successfully.\n\n**BasicAuth:** Only used when requesting tasks via caldav.\n<!-- ReDoc-Inject: <security-definitions> -->",
 }
 
 type s struct{}

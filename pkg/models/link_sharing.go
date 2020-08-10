@@ -153,7 +153,7 @@ func (share *LinkSharing) ReadOne() (err error) {
 // @Router /lists/{list}/shares [get]
 func (share *LinkSharing) ReadAll(a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
 	list := &List{ID: share.ListID}
-	can, err := list.CanRead(a)
+	can, _, err := list.CanRead(a)
 	if err != nil {
 		return nil, 0, 0, err
 	}

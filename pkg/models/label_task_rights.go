@@ -27,7 +27,7 @@ func (lt *LabelTask) CanCreate(a web.Auth) (bool, error) {
 		return false, err
 	}
 
-	hasAccessTolabel, err := label.hasAccessToLabel(a)
+	hasAccessTolabel, _, err := label.hasAccessToLabel(a)
 	if err != nil || !hasAccessTolabel { // If the user doesn't have access to the label, we can error out here
 		return false, err
 	}

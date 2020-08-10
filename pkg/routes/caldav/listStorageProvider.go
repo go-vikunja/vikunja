@@ -383,7 +383,7 @@ func (vlra *VikunjaListResourceAdapter) GetModTime() time.Time {
 }
 
 func (vcls *VikunjaCaldavListStorage) getListRessource(isCollection bool) (rr VikunjaListResourceAdapter, err error) {
-	can, err := vcls.list.CanRead(vcls.user)
+	can, _, err := vcls.list.CanRead(vcls.user)
 	if err != nil {
 		return
 	}

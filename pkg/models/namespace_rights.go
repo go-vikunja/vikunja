@@ -23,16 +23,18 @@ import (
 
 // CanWrite checks if a user has write access to a namespace
 func (n *Namespace) CanWrite(a web.Auth) (bool, error) {
-	return n.checkRight(a, RightWrite, RightAdmin)
+	can, _, err := n.checkRight(a, RightWrite, RightAdmin)
+	return can, err
 }
 
 // IsAdmin returns true or false if the user is admin on that namespace or not
 func (n *Namespace) IsAdmin(a web.Auth) (bool, error) {
-	return n.checkRight(a, RightAdmin)
+	is, _, err := n.checkRight(a, RightAdmin)
+	return is, err
 }
 
 // CanRead checks if a user has read access to that namespace
-func (n *Namespace) CanRead(a web.Auth) (bool, error) {
+func (n *Namespace) CanRead(a web.Auth) (bool, int, error) {
 	return n.checkRight(a, RightRead, RightWrite, RightAdmin)
 }
 
@@ -56,22 +58,22 @@ func (n *Namespace) CanCreate(a web.Auth) (bool, error) {
 	return true, nil
 }
 
-func (n *Namespace) checkRight(a web.Auth, rights ...Right) (bool, error) {
+func (n *Namespace) checkRight(a web.Auth, rights ...Right) (bool, int, error) {
 
 	// If the auth is a link share, don't do anything
 	if _, is := a.(*LinkSharing); is {
-		return false, nil
+		return false, 0, nil
 	}
 
 	// Get the namespace and check the right
 	nn := &Namespace{ID: n.ID}
 	err := nn.GetSimpleByID()
 	if err != nil {
-		return false, err
+		return false, 0, err
 	}
 
 	if a.GetID() == n.OwnerID {
-		return true, nil
+		return true, int(RightAdmin), nil
 	}
 
 	/*
@@ -104,7 +106,14 @@ func (n *Namespace) checkRight(a web.Auth, rights ...Right) (bool, error) {
 		))
 	}
 
-	exists, err := x.Select("namespaces.*").
+	type allRights struct {
+		UserNamespace NamespaceUser `xorm:"extends"`
+		TeamNamespace TeamNamespace `xorm:"extends"`
+	}
+
+	var maxRights = 0
+	r := &allRights{}
+	exists, err := x.Select("*").
 		Table("namespaces").
 		// User stuff
 		Join("LEFT", "users_namespace", "users_namespace.namespace_id = namespaces.id").
@@ -118,6 +127,15 @@ func (n *Namespace) checkRight(a web.Auth, rights ...Right) (bool, error) {
 			),
 			builder.Eq{"namespaces.id": n.ID},
 		)).
-		Exist(&List{})
-	return exists, err
+		Exist(r)
+
+	// Figure out the max right and return it
+	if int(r.UserNamespace.Right) > maxRights {
+		maxRights = int(r.UserNamespace.Right)
+	}
+	if int(r.TeamNamespace.Right) > maxRights {
+		maxRights = int(r.TeamNamespace.Right)
+	}
+
+	return exists, maxRights, err
 }

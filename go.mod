@@ -18,7 +18,7 @@ module code.vikunja.io/api
 
 require (
 	4d63.com/tz v1.1.0
-	code.vikunja.io/web v0.0.0-20200618164749-a5f3d450d39a
+	code.vikunja.io/web v0.0.0-20200809154828-8767618f181f
 	gitea.com/xorm/xorm-redis-cache v0.2.0
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
 	github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a
@@ -69,7 +69,6 @@ require (
 	golang.org/x/crypto v0.0.0-20200728195943-123391ffb6de
 	golang.org/x/image v0.0.0-20200801110659-972c09e46d76
 	golang.org/x/lint v0.0.0-20200302205851-738671d3881b
-	golang.org/x/net v0.0.0-20200602114024-627f9648deb9 // indirect
 	golang.org/x/text v0.3.3 // indirect
 	golang.org/x/tools v0.0.0-20200410194907-79a7a3126eef // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect

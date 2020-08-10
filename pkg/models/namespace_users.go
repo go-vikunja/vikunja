@@ -160,7 +160,7 @@ func (nu *NamespaceUser) Delete() (err error) {
 func (nu *NamespaceUser) ReadAll(a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
 	// Check if the user has access to the namespace
 	l := Namespace{ID: nu.NamespaceID}
-	canRead, err := l.CanRead(a)
+	canRead, _, err := l.CanRead(a)
 	if err != nil {
 		return nil, 0, 0, err
 	}

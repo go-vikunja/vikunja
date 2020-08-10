@@ -191,7 +191,7 @@ func GetListBackground(c echo.Context) error {
 
 	// Check if a background for this list exists + Rights
 	list := &models.List{ID: listID}
-	can, err := list.CanRead(auth)
+	can, _, err := list.CanRead(auth)
 	if err != nil {
 		return handler.HandleHTTPError(err, c)
 	}

@@ -41,7 +41,7 @@ type ListDuplicate struct {
 func (ld *ListDuplicate) CanCreate(a web.Auth) (canCreate bool, err error) {
 	// List Exists + user has read access to list
 	ld.List = &List{ID: ld.ListID}
-	canRead, err := ld.List.CanRead(a)
+	canRead, _, err := ld.List.CanRead(a)
 	if err != nil || !canRead {
 		return canRead, err
 	}

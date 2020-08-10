@@ -207,7 +207,7 @@ func (t *Task) addNewAssigneeByID(newAssigneeID int64, list *List) (err error) {
 	if err != nil {
 		return err
 	}
-	canRead, err := list.CanRead(newAssignee)
+	canRead, _, err := list.CanRead(newAssignee)
 	if err != nil {
 		return err
 	}
@@ -247,7 +247,7 @@ func (la *TaskAssginee) ReadAll(a web.Auth, search string, page int, perPage int
 		return nil, 0, 0, err
 	}
 
-	can, err := task.CanRead(a)
+	can, _, err := task.CanRead(a)
 	if err != nil {
 		return nil, 0, 0, err
 	}

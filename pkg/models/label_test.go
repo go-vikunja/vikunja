@@ -240,7 +240,7 @@ func TestLabel_ReadOne(t *testing.T) {
 				Rights:      tt.fields.Rights,
 			}
 
-			allowed, _ := l.CanRead(tt.auth)
+			allowed, _, _ := l.CanRead(tt.auth)
 			if !allowed && !tt.wantForbidden {
 				t.Errorf("Label.CanRead() forbidden, want %v", tt.wantForbidden)
 			}

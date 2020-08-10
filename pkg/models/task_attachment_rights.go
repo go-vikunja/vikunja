@@ -19,7 +19,7 @@ package models
 import "code.vikunja.io/web"
 
 // CanRead checks if the user can see an attachment
-func (ta *TaskAttachment) CanRead(a web.Auth) (bool, error) {
+func (ta *TaskAttachment) CanRead(a web.Auth) (bool, int, error) {
 	t := &Task{ID: ta.TaskID}
 	return t.CanRead(a)
 }

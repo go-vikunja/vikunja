@@ -174,7 +174,7 @@ func (lu *ListUser) Delete() (err error) {
 func (lu *ListUser) ReadAll(a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
 	// Check if the user has access to the list
 	l := &List{ID: lu.ListID}
-	canRead, err := l.CanRead(a)
+	canRead, _, err := l.CanRead(a)
 	if err != nil {
 		return nil, 0, 0, err
 	}

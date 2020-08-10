@@ -119,7 +119,7 @@ func GetTaskAttachment(c echo.Context) error {
 	if err != nil {
 		return handler.HandleHTTPError(err, c)
 	}
-	can, err := taskAttachment.CanRead(auth)
+	can, _, err := taskAttachment.CanRead(auth)
 	if err != nil {
 		return handler.HandleHTTPError(err, c)
 	}

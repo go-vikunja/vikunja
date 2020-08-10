@@ -42,7 +42,7 @@ func (rel *TaskRelation) CanCreate(a web.Auth) (bool, error) {
 
 	// We explicitly don't check if the two tasks are on the same list.
 	otherTask := &Task{ID: rel.OtherTaskID}
-	has, err = otherTask.CanRead(a)
+	has, _, err = otherTask.CanRead(a)
 	if err != nil {
 		return false, err
 	}

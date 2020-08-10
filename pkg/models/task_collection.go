@@ -166,7 +166,7 @@ func (tf *TaskCollection) ReadAll(a web.Auth, search string, page int, perPage i
 	} else {
 		// Check the list exists and the user has acess on it
 		list := &List{ID: tf.ListID}
-		canRead, err := list.CanRead(a)
+		canRead, _, err := list.CanRead(a)
 		if err != nil {
 			return nil, 0, 0, err
 		}

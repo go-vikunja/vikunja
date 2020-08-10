@@ -54,7 +54,7 @@ func (l *List) CanWrite(a web.Auth) (bool, error) {
 		return canWrite, errIsArchived
 	}
 
-	canWrite, err = originalList.checkRight(a, RightWrite, RightAdmin)
+	canWrite, _, err = originalList.checkRight(a, RightWrite, RightAdmin)
 	if err != nil {
 		return false, err
 	}
@@ -62,21 +62,21 @@ func (l *List) CanWrite(a web.Auth) (bool, error) {
 }
 
 // CanRead checks if a user has read access to a list
-func (l *List) CanRead(a web.Auth) (bool, error) {
+func (l *List) CanRead(a web.Auth) (bool, int, error) {
 	// Check if the user is either owner or can read
 	if err := l.GetSimpleByID(); err != nil {
-		return false, err
+		return false, 0, err
 	}
 
 	// Check if we're dealing with a share auth
 	shareAuth, ok := a.(*LinkSharing)
 	if ok {
 		return l.ID == shareAuth.ListID &&
-			(shareAuth.Right == RightRead || shareAuth.Right == RightWrite || shareAuth.Right == RightAdmin), nil
+			(shareAuth.Right == RightRead || shareAuth.Right == RightWrite || shareAuth.Right == RightAdmin), int(shareAuth.Right), nil
 	}
 
 	if l.isOwner(&user.User{ID: a.GetID()}) {
-		return true, nil
+		return true, int(RightAdmin), nil
 	}
 	return l.checkRight(a, RightRead, RightWrite, RightAdmin)
 }
@@ -123,7 +123,8 @@ func (l *List) IsAdmin(a web.Auth) (bool, error) {
 	if originalList.isOwner(&user.User{ID: a.GetID()}) {
 		return true, nil
 	}
-	return originalList.checkRight(a, RightAdmin)
+	is, _, err := originalList.checkRight(a, RightAdmin)
+	return is, err
 }
 
 // Little helper function to check if a user is list owner
@@ -132,7 +133,7 @@ func (l *List) isOwner(u *user.User) bool {
 }
 
 // Checks n different rights for any given user
-func (l *List) checkRight(a web.Auth, rights ...Right) (bool, error) {
+func (l *List) checkRight(a web.Auth, rights ...Right) (bool, int, error) {
 
 	/*
 			The following loop creates an sql condition like this one:
@@ -174,7 +175,17 @@ func (l *List) checkRight(a web.Auth, rights ...Right) (bool, error) {
 	// If the user is the owner of a namespace, it has any right, all the time
 	conds = append(conds, builder.Eq{"n.owner_id": a.GetID()})
 
-	exists, err := x.Select("l.*").
+	type allListRights struct {
+		UserNamespace NamespaceUser `xorm:"extends"`
+		UserList      ListUser      `xorm:"extends"`
+
+		TeamNamespace TeamNamespace `xorm:"extends"`
+		TeamList      TeamList      `xorm:"extends"`
+	}
+
+	r := &allListRights{}
+	var maxRight = 0
+	exists, err := x.
 		Table("list").
 		Alias("l").
 		// User stuff
@@ -193,6 +204,21 @@ func (l *List) checkRight(a web.Auth, rights ...Right) (bool, error) {
 			),
 			builder.Eq{"l.id": l.ID},
 		)).
-		Exist(&List{})
-	return exists, err
+		Get(r)
+
+	// Figure out the max right and return it
+	if int(r.UserNamespace.Right) > maxRight {
+		maxRight = int(r.UserNamespace.Right)
+	}
+	if int(r.UserList.Right) > maxRight {
+		maxRight = int(r.UserList.Right)
+	}
+	if int(r.TeamNamespace.Right) > maxRight {
+		maxRight = int(r.TeamNamespace.Right)
+	}
+	if int(r.TeamList.Right) > maxRight {
+		maxRight = int(r.TeamList.Right)
+	}
+
+	return exists, maxRight, err
 }
