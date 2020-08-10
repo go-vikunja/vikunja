@@ -59,7 +59,7 @@ require (
 	github.com/samedi/caldav-go v3.0.0+incompatible
 	github.com/shurcooL/httpfs v0.0.0-20190707220628-8d4bc4ba7749
 	github.com/shurcooL/vfsgen v0.0.0-20200627165143-92b8a710ab6c
-	github.com/spf13/afero v1.3.3
+	github.com/spf13/afero v1.3.4
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/viper v1.7.1
