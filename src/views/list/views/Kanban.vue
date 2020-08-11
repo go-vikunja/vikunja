@@ -125,7 +125,7 @@
 								class="input"
 								type="text"
 								placeholder="Enter the new task text..."
-								v-focus
+								v-focus.always
 								@focusout="toggleShowNewTaskInput(bucket.id)"
 								@keyup.esc="toggleShowNewTaskInput(bucket.id)"
 								@keyup.enter="addTaskToBucket(bucket.id)"
@@ -161,7 +161,7 @@
 					class="input"
 					type="text"
 					placeholder="Enter the new bucket title..."
-					v-focus
+					v-focus.always
 					@focusout="() => showNewBucketInput = false"
 					@keyup.esc="() => showNewBucketInput = false"
 					@keyup.enter="createNewBucket"
