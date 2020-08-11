@@ -216,10 +216,13 @@
 					</div>
 					<div
 							class="app-content"
-							:class="{
-								'fullpage-overlay': fullpage,
-								'is-menu-enabled': menuActive,
-							}"
+							:class="[
+								{
+									'fullpage-overlay': fullpage,
+									'is-menu-enabled': menuActive,
+								},
+								$route.name,
+							]"
 					>
 						<a class="mobile-overlay" v-if="menuActive" @click="menuActive = false"></a>
 						<transition name="fade">
