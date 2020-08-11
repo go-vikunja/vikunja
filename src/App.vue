@@ -34,7 +34,10 @@
 							:style="{ 'opacity': currentList.title === '' ? '0': '1' }">
 						{{ currentList.title === '' ? 'Loading...': currentList.title}}
 					</h1>
-					<router-link :to="{ name: 'list.edit', params: { id: currentList.id } }" class="icon">
+					<router-link
+							:to="{ name: 'list.edit', params: { id: currentList.id } }"
+							class="icon"
+							v-if="canWriteCurrentList">
 						<icon icon="cog" size="2x"/>
 					</router-link>
 				</div>
@@ -291,6 +294,7 @@
 
 	import NamespaceService from './services/namespace'
 	import authTypes from './models/authTypes'
+	import Rights from './models/rights.json'
 
 	import swEvents from './ServiceWorker/events'
 	import Notification from './components/misc/notification'
@@ -427,6 +431,7 @@
 			background: 'background',
 			imprintUrl: state => state.config.legal.imprintUrl,
 			privacyPolicyUrl: state => state.config.legal.privacyPolicyUrl,
+			canWriteCurrentList: state => state.currentList.maxRight > Rights.READ,
 		}),
 		methods: {
 			logout() {

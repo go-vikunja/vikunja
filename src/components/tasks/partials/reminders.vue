@@ -10,9 +10,10 @@
 					:value="r"
 					:data-index="index"
 					placeholder="Add a new reminder..."
+					:disabled="disabled"
 			>
 			</flat-pickr>
-			<a v-if="index !== (reminders.length - 1)" @click="removeReminderByIndex(index)">
+			<a v-if="index !== (reminders.length - 1) && !disabled" @click="removeReminderByIndex(index)">
 				<icon icon="times"></icon>
 			</a>
 		</div>
@@ -44,7 +45,10 @@
 			value: {
 				default: () => [],
 				type: Array,
-			}
+			},
+			disabled: {
+				default: false,
+			},
 		},
 		components: {
 			flatPickr,

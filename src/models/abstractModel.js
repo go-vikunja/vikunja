@@ -4,6 +4,12 @@ import {objectToCamelCase} from '../helpers/case'
 export default class AbstractModel {
 
 	/**
+	 * The max right the user has on this object, as returned by the x-max-right header from the api.
+	 * @type {number|null}
+	 */
+	maxRight = null
+
+	/**
 	 * The abstract constructor takes an object and merges its data with the default data of this model.
 	 * @param data
 	 */

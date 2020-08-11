@@ -48,7 +48,7 @@
 			</transition>
 		</div>
 
-		<div class="field task-add" v-if="!list.isArchived">
+		<div class="field task-add" v-if="!list.isArchived && canWrite">
 			<div class="field is-grouped">
 				<p class="control has-icons-left is-expanded" :class="{ 'is-loading': taskService.loading}">
 					<input
@@ -85,8 +85,13 @@
 			<div class="column">
 				<div class="tasks" v-if="tasks && tasks.length > 0" :class="{'short': isTaskEdit}">
 					<div class="task" v-for="t in tasks" :key="t.id">
-						<single-task-in-list :the-task="t" @taskUpdated="updateTasks" task-detail-route="task.detail"/>
-						<div @click="editTask(t.id)" class="icon settings" v-if="!list.isArchived">
+						<single-task-in-list
+								:the-task="t"
+								@taskUpdated="updateTasks"
+								task-detail-route="task.detail"
+								:disabled="!canWrite"
+						/>
+						<div @click="editTask(t.id)" class="icon settings" v-if="!list.isArchived && canWrite">
 							<icon icon="pencil-alt"/>
 						</div>
 					</div>
@@ -169,6 +174,8 @@
 	import taskList from '../../../components/tasks/mixins/taskList'
 	import {saveListView} from '../../../helpers/saveListView'
 	import Filters from '../../../components/list/partials/filters'
+	import Rights from '../../../models/rights.json'
+	import {mapState} from 'vuex'
 
 	export default {
 		name: 'List',
@@ -202,6 +209,9 @@
 			// We use local storage and not vuex here to make it persistent across reloads.
 			saveListView(this.$route.params.listId, this.$route.name)
 		},
+		computed: mapState({
+			canWrite: state => state.currentList.maxRight > Rights.READ,
+		}),
 		methods: {
 			// This function initializes the tasks page and loads the first page of tasks
 			initTasks(page, search = '') {

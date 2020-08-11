@@ -1,6 +1,6 @@
 <template>
 	<div class="select">
-		<select v-model.number="percentDone" @change="updateData">
+		<select v-model.number="percentDone" @change="updateData" :disabled="disabled">
 			<option value="0">0%</option>
 			<option value="0.1">10%</option>
 			<option value="0.2">20%</option>
@@ -28,7 +28,10 @@
 			value: {
 				default: 0,
 				type: Number,
-			}
+			},
+			disabled: {
+				default: false,
+			},
 		},
 		watch: {
 			// Set the priority to the :value every time it changes from the outside

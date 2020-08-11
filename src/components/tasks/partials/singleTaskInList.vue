@@ -1,6 +1,6 @@
 <template>
 	<span>
-		<fancycheckbox v-model="task.done" @change="markAsDone" :disabled="isArchived"/>
+		<fancycheckbox v-model="task.done" @change="markAsDone" :disabled="isArchived || disabled"/>
 		<span class="tasktext" :class="{ 'done': task.done}">
 			<router-link :to="{ name: taskDetailRoute, params: { id: task.id } }">
 				<router-link
@@ -85,6 +85,10 @@
 				default: 'task.list.detail'
 			},
 			showList: {
+				type: Boolean,
+				default: false,
+			},
+			disabled: {
 				type: Boolean,
 				default: false,
 			},

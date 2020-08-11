@@ -17,10 +17,11 @@
 			track-by="id"
 			select-label="Assign this user"
 			:showNoOptions="false"
+			:disabled="disabled"
 		>
 		<template slot="tag" slot-scope="{ option }">
 			<user :user="option" :show-username="false" :avatar-size="30"/>
-			<a @click="removeAssignee(option)" class="remove-assignee">
+			<a @click="removeAssignee(option)" class="remove-assignee" v-if="!disabled">
 				<icon icon="times"/>
 			</a>
 		</template>
@@ -65,7 +66,10 @@
 			initialAssignees: {
 				type: Array,
 				default: () => [],
-			}
+			},
+			disabled: {
+				default: false,
+			},
 		},
 		data() {
 			return {

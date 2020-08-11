@@ -6,6 +6,7 @@
 			</span>
 			Attachments
 			<a
+					v-if="editEnabled"
 					class="button is-primary is-outlined is-small noshadow"
 					@click="$refs.files.click()"
 					:disabled="attachmentService.loading">
@@ -14,7 +15,7 @@
 			</a>
 		</h3>
 
-		<input type="file" id="files" ref="files" multiple @change="uploadNewAttachment()" :disabled="attachmentService.loading"/>
+		<input type="file" id="files" ref="files" multiple @change="uploadNewAttachment()" :disabled="attachmentService.loading" v-if="editEnabled"/>
 		<progress v-if="attachmentService.uploadProgress > 0" class="progress is-primary" :value="attachmentService.uploadProgress" max="100">{{ attachmentService.uploadProgress }}%</progress>
 
 		<table>
@@ -41,7 +42,7 @@
 								<icon icon="cloud-download-alt"/>
 							</span>
 						</a>
-						<a class="button is-danger noshadow" v-tooltip="'Delete this attachment'" @click="() => {attachmentToDelete = a; showDeleteModal = true}">
+						<a v-if="editEnabled" class="button is-danger noshadow" v-tooltip="'Delete this attachment'" @click="() => {attachmentToDelete = a; showDeleteModal = true}">
 							<span class="icon">
 								<icon icon="trash-alt"/>
 							</span>
@@ -52,7 +53,7 @@
 		</table>
 
 		<!-- Dropzone -->
-		<div class="dropzone" :class="{ 'hidden': !showDropzone }">
+		<div class="dropzone" :class="{ 'hidden': !showDropzone }" v-if="editEnabled">
 			<div class="drop-hint">
 				<div class="icon">
 					<icon icon="cloud-upload-alt"/>
@@ -102,7 +103,10 @@
 			},
 			initialAttachments: {
 				type: Array,
-			}
+			},
+			editEnabled: {
+				default: true,
+			},
 		},
 		created() {
 			this.attachmentService = new AttachmentService()

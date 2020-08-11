@@ -112,7 +112,10 @@
     }
 
     &.description .editor {
-      margin-top: -3.5rem;
+
+      &.is-pulled-up {
+        margin-top: -3.5rem;
+      }
 
       .tabs {
         margin-bottom: 0;
@@ -139,15 +142,17 @@
         font-style: italic;
       }
 
-      &:hover, &:active {
-        background: $input-background-color;
-        border-color: $input-border-color;
-        cursor: text;
-      }
+      &:not(:disabled) {
+        &:hover, &:active {
+          background: $input-background-color;
+          border-color: $input-border-color;
+          cursor: text;
+        }
 
-      &:focus {
-        background: $input-background-color;
-        border-color: $input-focus-border-color;
+        &:focus {
+          background: $input-background-color;
+          border-color: $input-focus-border-color;
+        }
       }
     }
 

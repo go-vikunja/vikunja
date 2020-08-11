@@ -1,6 +1,6 @@
 <template>
-	<div class="editor">
-		<div class="tabs is-right" v-if="hasPreview">
+	<div class="editor" :class="{'is-pulled-up': isEditEnabled}">
+		<div class="tabs is-right" v-if="hasPreview && isEditEnabled">
 			<ul>
 				<li :class="{'is-active': isPreviewActive}" v-if="isEditActive">
 					<a @click="showPreview">Preview</a>
@@ -56,6 +56,9 @@
 			},
 			previewIsDefault: {
 				type: Boolean,
+				default: true,
+			},
+			isEditEnabled: {
 				default: true,
 			},
 		},

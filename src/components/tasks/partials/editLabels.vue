@@ -19,6 +19,7 @@
 			:showNoOptions="false"
 			@tag="createAndAddLabel"
 			tag-placeholder="Add this as new label"
+			:disabled="disabled"
 	>
 		<template slot="tag" slot-scope="{ option }">
 						<span class="tag"
@@ -53,6 +54,9 @@
 			taskId: {
 				type: Number,
 				required: true,
+			},
+			disabled: {
+				default: false,
 			},
 		},
 		data() {

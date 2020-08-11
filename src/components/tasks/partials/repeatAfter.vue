@@ -6,6 +6,7 @@
 		<div class="column is-7 field has-addons">
 			<div class="control">
 				<input
+						:disabled="disabled"
 						class="input"
 						placeholder="Specify an amount..."
 						v-model="repeatAfter.amount"
@@ -13,7 +14,7 @@
 			</div>
 			<div class="control">
 				<div class="select">
-					<select v-model="repeatAfter.type" @change="updateData">
+					<select v-model="repeatAfter.type" @change="updateData" :disabled="disabled">
 						<option value="hours">Hours</option>
 						<option value="days">Days</option>
 						<option value="weeks">Weeks</option>
@@ -24,6 +25,7 @@
 			</div>
 		</div>
 		<fancycheckbox
+				:disabled="disabled"
 				class="column"
 				@change="updateData"
 				v-model="task.repeatFromCurrentDate"
@@ -54,7 +56,10 @@
 				default: () => {
 				},
 				required: true,
-			}
+			},
+			disabled: {
+				default: false,
+			},
 		},
 		watch: {
 			value(newVal) {

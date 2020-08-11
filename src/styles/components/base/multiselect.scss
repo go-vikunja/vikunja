@@ -347,7 +347,6 @@ fieldset[disabled] .multiselect {
 }
 
 .multiselect--disabled {
-  background: $multiselect-disabled;
   pointer-events: none;
   .multiselect__current, .multiselect__select {
     background: $multiselect-disabled;

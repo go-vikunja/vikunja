@@ -22,7 +22,7 @@
 			<!-- Content and buttons -->
 			<div class="columns">
 				<!-- Content -->
-				<div class="column is-two-thirds">
+				<div class="column" :class="{'is-two-thirds': canWrite}">
 					<div class="columns details">
 						<div class="column assignees" v-if="activeFields.assignees">
 							<!-- Assignees -->
@@ -35,6 +35,7 @@
 									:list-id="task.listId"
 									:initial-assignees="task.assignees"
 									ref="assignees"
+									:disabled="!canWrite"
 							/>
 						</div>
 						<div class="column" v-if="activeFields.priority">
@@ -43,7 +44,11 @@
 								<icon :icon="['far', 'star']"/>
 								Priority
 							</div>
-							<priority-select v-model="task.priority" @change="saveTask" ref="priority"/>
+							<priority-select
+									v-model="task.priority"
+									@change="saveTask"
+									ref="priority"
+									:disabled="!canWrite"/>
 						</div>
 						<div class="column" v-if="activeFields.dueDate">
 							<!-- Due Date -->
@@ -55,7 +60,7 @@
 								<flat-pickr
 										:class="{ 'disabled': taskService.loading}"
 										class="input"
-										:disabled="taskService.loading"
+										:disabled="taskService.loading || !canWrite"
 										v-model="dueDate"
 										:config="flatPickerConfig"
 										@on-close="saveTask"
@@ -63,7 +68,7 @@
 										ref="dueDate"
 								>
 								</flat-pickr>
-								<a v-if="dueDate" @click="() => {dueDate = task.dueDate = null;saveTask()}">
+								<a v-if="dueDate && canWrite" @click="() => {dueDate = task.dueDate = null;saveTask()}">
 									<span class="icon is-small">
 										<icon icon="times"></icon>
 									</span>
@@ -76,7 +81,11 @@
 								<icon icon="percent"/>
 								Percent Done
 							</div>
-							<percent-done-select v-model="task.percentDone" @change="saveTask" ref="percentDone"/>
+							<percent-done-select
+									v-model="task.percentDone"
+									@change="saveTask"
+									ref="percentDone"
+									:disabled="!canWrite"/>
 						</div>
 						<div class="column" v-if="activeFields.startDate">
 							<!-- Start Date -->
@@ -88,7 +97,7 @@
 								<flat-pickr
 										:class="{ 'disabled': taskService.loading}"
 										class="input"
-										:disabled="taskService.loading"
+										:disabled="taskService.loading || !canWrite"
 										v-model="task.startDate"
 										:config="flatPickerConfig"
 										@on-close="saveTask"
@@ -96,7 +105,7 @@
 										ref="startDate"
 								>
 								</flat-pickr>
-								<a v-if="task.startDate" @click="() => {task.startDate = null;saveTask()}">
+								<a v-if="task.startDate && canWrite" @click="() => {task.startDate = null;saveTask()}">
 									<span class="icon is-small">
 										<icon icon="times"></icon>
 									</span>
@@ -113,7 +122,7 @@
 								<flat-pickr
 										:class="{ 'disabled': taskService.loading}"
 										class="input"
-										:disabled="taskService.loading"
+										:disabled="taskService.loading || !canWrite"
 										v-model="task.endDate"
 										:config="flatPickerConfig"
 										@on-close="saveTask"
@@ -121,7 +130,7 @@
 										ref="endDate"
 								>
 								</flat-pickr>
-								<a v-if="task.endDate" @click="() => {task.endDate = null;saveTask()}">
+								<a v-if="task.endDate && canWrite" @click="() => {task.endDate = null;saveTask()}">
 									<span class="icon is-small">
 										<icon icon="times"></icon>
 									</span>
@@ -134,7 +143,11 @@
 								<icon icon="history"/>
 								Reminders
 							</div>
-							<reminders v-model="task.reminderDates" @change="saveTask" ref="reminders"/>
+							<reminders
+									v-model="task.reminderDates"
+									@change="saveTask"
+									ref="reminders"
+									:disabled="!canWrite"/>
 						</div>
 						<div class="column" v-if="activeFields.repeatAfter">
 							<!-- Repeat after -->
@@ -145,6 +158,7 @@
 							<repeat-after
 									v-model="task"
 									@change="saveTask"
+									:disabled="!canWrite"
 									ref="repeatAfter"/>
 						</div>
 						<div class="column" v-if="activeFields.color">
@@ -169,7 +183,7 @@
 							</span>
 							Labels
 						</div>
-						<edit-labels :task-id="taskId" v-model="task.labels" ref="labels"/>
+						<edit-labels :task-id="taskId" v-model="task.labels" ref="labels" :disabled="!canWrite"/>
 					</div>
 
 					<!-- Description -->
@@ -185,6 +199,7 @@
 								@change="saveTask"
 								:upload-enabled="true"
 								:upload-callback="attachmentUpload"
+								:is-edit-enabled="canWrite"
 								placeholder="Click here to enter a description..."/>
 					</div>
 
@@ -193,6 +208,7 @@
 						<attachments
 								:task-id="taskId"
 								ref="attachments"
+								:edit-enabled="canWrite"
 						/>
 					</div>
 
@@ -210,6 +226,7 @@
 								:initial-related-tasks="task.relatedTasks"
 								:show-no-relations-notice="true"
 								ref="relatedTasks"
+								:edit-enabled="canWrite"
 						/>
 					</div>
 
@@ -229,9 +246,9 @@
 					</div>
 
 					<!-- Comments -->
-					<comments :task-id="taskId"/>
+					<comments :task-id="taskId" :can-write="canWrite"/>
 				</div>
-				<div class="column is-one-third action-buttons">
+				<div class="column is-one-third action-buttons" v-if="canWrite">
 					<a
 							class="button is-outlined noshadow has-no-border"
 							:class="{'is-success': !task.done}"
@@ -244,11 +261,19 @@
 							Done!
 						</template>
 					</a>
-					<a class="button" @click="setFieldActive('assignees')" v-shortkey="['ctrl', 'shift', 'a']" @shortkey="setFieldActive('assignees')">
+					<a
+							class="button"
+							@click="setFieldActive('assignees')"
+							v-shortkey="['ctrl', 'shift', 'a']"
+							@shortkey="setFieldActive('assignees')">
 						<span class="icon is-small"><icon icon="users"/></span>
 						Assign this task to a user
 					</a>
-					<a class="button" @click="setFieldActive('labels')" v-shortkey="['ctrl', 'shift', 'l']" @shortkey="setFieldActive('labels')">
+					<a
+							class="button"
+							@click="setFieldActive('labels')"
+							v-shortkey="['ctrl', 'shift', 'l']"
+							@shortkey="setFieldActive('labels')">
 						<span class="icon is-small"><icon icon="tags"/></span>
 						Add labels
 					</a>
@@ -256,7 +281,11 @@
 						<span class="icon is-small"><icon icon="history"/></span>
 						Set Reminders
 					</a>
-					<a class="button" @click="setFieldActive('dueDate')" v-shortkey="['ctrl', 'shift', 'd']" @shortkey="setFieldActive('dueDate')">
+					<a
+							class="button"
+							@click="setFieldActive('dueDate')"
+							v-shortkey="['ctrl', 'shift', 'd']"
+							@shortkey="setFieldActive('dueDate')">
 						<span class="icon is-small"><icon icon="calendar"/></span>
 						Set Due Date
 					</a>
@@ -280,11 +309,19 @@
 						<span class="icon is-small"><icon icon="percent"/></span>
 						Set Percent Done
 					</a>
-					<a class="button" @click="setFieldActive('attachments')" v-shortkey="['ctrl', 'shift', 'f']" @shortkey="setFieldActive('attachments')">
+					<a
+							class="button"
+							@click="setFieldActive('attachments')"
+							v-shortkey="['ctrl', 'shift', 'f']"
+							@shortkey="setFieldActive('attachments')">
 						<span class="icon is-small"><icon icon="paperclip"/></span>
 						Add attachments
 					</a>
-					<a class="button" @click="setFieldActive('relatedTasks')" v-shortkey="['ctrl', 'shift', 'r']" @shortkey="setFieldActive('relatedTasks')">
+					<a
+							class="button"
+							@click="setFieldActive('relatedTasks')"
+							v-shortkey="['ctrl', 'shift', 'r']"
+							@shortkey="setFieldActive('relatedTasks')">
 						<span class="icon is-small"><icon icon="tasks"/></span>
 						Add task relations
 					</a>
@@ -326,6 +363,7 @@
 	import relationKinds from '../../models/relationKinds.json'
 
 	import priorites from '../../models/priorities.json'
+	import rights from '../../models/rights.json'
 
 	import flatPickr from 'vue-flatpickr-component'
 	import 'flatpickr/dist/flatpickr.css'
@@ -419,7 +457,7 @@
 			}
 		},
 		watch: {
-			'$route': 'loadTask'
+			'$route': 'loadTask',
 		},
 		created() {
 			this.taskService = new TaskService()
@@ -444,11 +482,14 @@
 					}
 				}
 
-				if (!this.$store.getters["namespaces/getListAndNamespaceById"]) {
+				if (!this.$store.getters['namespaces/getListAndNamespaceById']) {
 					return null
 				}
 
-				return this.$store.getters["namespaces/getListAndNamespaceById"](this.task.listId)
+				return this.$store.getters['namespaces/getListAndNamespaceById'](this.task.listId)
+			},
+			canWrite() {
+				return this.task && this.task.maxRight && this.task.maxRight > rights.READ
 			},
 		},
 		methods: {
@@ -507,6 +548,10 @@
 			},
 			saveTask(undoCallback = null) {
 
+				if (!this.canWrite) {
+					return
+				}
+
 				this.task.dueDate = this.dueDate
 				this.task.hexColor = this.taskColor
 
@@ -536,7 +581,11 @@
 			},
 			setFieldActive(fieldName) {
 				this.activeFields[fieldName] = true
-				this.$nextTick(() => this.$refs[fieldName].$el.focus())
+				this.$nextTick(() => {
+					if (this.$refs[fieldName]) {
+						this.$refs[fieldName].$el.focus()
+					}
+				})
 			},
 			deleteTask() {
 				this.$store.dispatch('tasks/delete', this.task)

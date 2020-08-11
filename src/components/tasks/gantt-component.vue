@@ -35,7 +35,7 @@
 							'has-dark-text': colorIsDark(t.hexColor)
 						}"
 						:style="{'border-color': t.hexColor, 'background-color': t.hexColor}"
-						:isActive="true"
+						:isActive="canWrite"
 						:x="t.offsetDays * dayWidth - 6"
 						:y="0"
 						:w="t.durationDays * dayWidth"
@@ -67,7 +67,7 @@
 				<div class="row" v-for="(t, k) in tasksWithoutDates" :key="t.id" :style="{background: 'repeating-linear-gradient(90deg, #ededed, #ededed 1px, ' + (k % 2 === 0 ? '#fafafa 1px, #fafafa ' : '#fff 1px, #fff ') + dayWidth + 'px)'}">
 					<VueDragResize
 							class="task nodate"
-							:isActive="true"
+							:isActive="canWrite"
 							:x="dayOffsetUntilToday * dayWidth - 6"
 							:y="0"
 							:h="31"
@@ -88,7 +88,7 @@
 				</div>
 			</template>
 		</div>
-		<form @submit.prevent="addNewTask()" class="add-new-task">
+		<form @submit.prevent="addNewTask()" class="add-new-task" v-if="canWrite">
 			<transition name="width">
 				<input
 					type="text"
@@ -138,6 +138,8 @@
 	import priorities from '../../models/priorities'
 	import PriorityLabel from './partials/priorityLabel'
 	import TaskCollectionService from '../../services/taskCollection'
+	import {mapState} from 'vuex'
+	import Rights from '../../models/rights.json'
 
 	export default {
 		name: 'GanttChart',
@@ -201,6 +203,9 @@
 		mounted() {
 			this.buildTheGanttChart()
 		},
+		computed: mapState({
+			canWrite: state => state.currentList.maxRight > Rights.READ,
+		}),
 		methods: {
 			buildTheGanttChart() {
 				this.setDates()

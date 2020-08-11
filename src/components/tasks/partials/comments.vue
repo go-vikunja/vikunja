@@ -1,6 +1,6 @@
 <template>
-	<div class="content details has-top-border">
-		<h1>
+	<div class="content details" :class="{'has-top-border': canWrite || comments.length > 0}">
+		<h1 v-if="canWrite || comments.length > 0">
 			<span class="icon is-grey">
 				<icon :icon="['far', 'comments']"/>
 			</span>
@@ -15,7 +15,7 @@
 					<img class="image is-avatar" :src="c.author.getAvatarUrl(48)" alt="" width="48" height="48"/>
 				</figure>
 				<div class="media-content">
-					<div class="comment-info">
+					<div class="comment-info" :class="{'is-pulled-up': canWrite}">
 						<strong>{{ c.author.username }}</strong>&nbsp;
 						<small v-tooltip="formatDate(c.created)">{{ formatDateSince(c.created) }}</small>
 						<small v-if="+new Date(c.created) !== +new Date(c.updated)" v-tooltip="formatDate(c.updated)"> ·
@@ -27,13 +27,14 @@
 							@change="() => {toggleEdit(c);editComment()}"
 							:upload-enabled="true"
 							:upload-callback="attachmentUpload"
+							:is-edit-enabled="canWrite"
 					/>
-					<div class="comment-actions">
+					<div class="comment-actions" v-if="canWrite">
 						<a @click="toggleDelete(c.id)">Remove</a>
 					</div>
 				</div>
 			</div>
-			<div class="media comment">
+			<div class="media comment" v-if="canWrite">
 				<figure class="media-left">
 					<img class="image is-avatar" :src="userAvatar" alt="" width="48" height="48"/>
 				</figure>
@@ -95,7 +96,10 @@
 			taskId: {
 				type: Number,
 				required: true,
-			}
+			},
+			canWrite: {
+				default: true,
+			},
 		},
 		data() {
 			return {
@@ -125,7 +129,7 @@
 		watch: {
 			taskId() {
 				this.loadComments()
-			}
+			},
 		},
 		computed: {
 			userAvatar() {

@@ -310,7 +310,9 @@ export default class AbstractService {
 				return this.errorHandler(error)
 			})
 			.then(response => {
-				return Promise.resolve(this.modelGetFactory(response.data))
+				const result = this.modelGetFactory(response.data)
+				result.maxRight = Number(response.headers['x-max-right'])
+				return Promise.resolve(result)
 			})
 			.finally(() => {
 				cancel()
@@ -377,7 +379,11 @@ export default class AbstractService {
 				return this.errorHandler(error)
 			})
 			.then(response => {
-				return Promise.resolve(this.modelCreateFactory(response.data))
+				const result = this.modelCreateFactory(response.data)
+				if(typeof model.maxRight !== 'undefined') {
+					result.maxRight = model.maxRight
+				}
+				return Promise.resolve(result)
 			})
 			.finally(() => {
 				cancel()
@@ -399,7 +405,11 @@ export default class AbstractService {
 				return this.errorHandler(error)
 			})
 			.then(response => {
-				return Promise.resolve(this.modelUpdateFactory(response.data))
+				const result = this.modelUpdateFactory(response.data)
+				if(typeof model.maxRight !== 'undefined') {
+					result.maxRight = model.maxRight
+				}
+				return Promise.resolve(result)
 			})
 			.finally(() => {
 				cancel()

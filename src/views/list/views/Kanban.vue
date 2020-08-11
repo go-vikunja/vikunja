@@ -9,7 +9,11 @@
 						@focusout="() => saveBucketTitle(bucket.id)"
 						:ref="`bucket${bucket.id}title`"
 						@keyup.ctrl.enter="() => saveBucketTitle(bucket.id)">{{ bucket.title }}</h2>
-				<div class="dropdown is-right options" :class="{ 'is-active': bucketOptionsDropDownActive[bucket.id] }">
+				<div
+						class="dropdown is-right options"
+						:class="{ 'is-active': bucketOptionsDropDownActive[bucket.id] }"
+						v-if="canWrite"
+				>
 					<div class="dropdown-trigger" @click.stop="toggleBucketDropdown(bucket.id)">
 						<span class="icon">
 							<icon icon="ellipsis-v"/>
@@ -31,7 +35,9 @@
 				</div>
 			</div>
 			<div class="tasks" :ref="`tasks-container${bucket.id}`">
-				<Container
+				<!-- Make the component either a div or a draggable component based on the user rights -->
+				<component
+						:is="canWrite ? 'Container' : 'div'"
 						@drop="e => onDrop(bucket.id, e)"
 						group-name="buckets"
 						:get-child-payload="getTaskPayload(bucket.id)"
@@ -41,7 +47,12 @@
 						drag-class-drop="ghost-task-drop"
 						drag-handle-selector=".task.draggable"
 				>
-					<Draggable v-for="task in bucket.tasks" :key="`bucket${bucket.id}-task${task.id}`">
+					<!-- Make the component either a div or a draggable component based on the user rights -->
+					<component
+							v-for="task in bucket.tasks"
+							:key="`bucket${bucket.id}-task${task.id}`"
+							:is="canWrite ? 'Draggable' : 'div'"
+					>
 						<div
 								class="task loader-container draggable"
 								:class="{
@@ -103,10 +114,10 @@
 								</div>
 							</div>
 						</div>
-					</Draggable>
-				</Container>
+					</component>
+				</component>
 			</div>
-			<div class="bucket-footer">
+			<div class="bucket-footer" v-if="canWrite">
 				<div class="field" v-if="showNewTaskInput[bucket.id]">
 					<div class="control">
 						<input
@@ -144,7 +155,7 @@
 			</div>
 		</div>
 
-		<div class="bucket new-bucket" v-if="!loading">
+		<div class="bucket new-bucket" v-if="!loading && canWrite">
 			<input
 					v-if="showNewBucketInput"
 					class="input"
@@ -204,6 +215,7 @@
 	import {mapState} from 'vuex'
 	import {LOADING} from '../../../store/mutation-types'
 	import {saveListView} from '../../../helpers/saveListView'
+	import Rights from '../../../models/rights.json'
 
 	export default {
 		name: 'Kanban',
@@ -254,6 +266,7 @@
 			buckets: state => state.kanban.buckets,
 			loadedListId: state => state.kanban.listId,
 			loading: LOADING,
+			canWrite: state => state.currentList.maxRight > Rights.READ,
 		}),
 		methods: {
 			loadBuckets() {
@@ -385,7 +398,7 @@
 				const task = new TaskModel({
 					title: this.newTaskText,
 					bucketId: this.buckets[bi].id,
-					listId: this.$route.params.listId
+					listId: this.$route.params.listId,
 				})
 
 				this.taskService.create(task)
@@ -410,7 +423,7 @@
 
 				const newBucket = new BucketModel({
 					title: this.newBucketTitle,
-					listId: parseInt(this.$route.params.listId)
+					listId: parseInt(this.$route.params.listId),
 				})
 
 				this.$store.dispatch('kanban/createBucket', newBucket)

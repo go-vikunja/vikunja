@@ -61,7 +61,6 @@
 			</div>
 		</div>
 		<div class="card is-fullwidth">
-
 			<header class="card-header">
 				<p class="card-header-title">
 					Team Members
@@ -188,6 +187,7 @@
 	import UserService from '../../services/user'
 	import LoadingComponent from '../../components/misc/loading'
 	import ErrorComponent from '../../components/misc/error'
+	import Rights from '../../models/rights.json'
 
 	export default {
 		name: 'EditTeam',
@@ -201,7 +201,6 @@
 
 				showDeleteModal: false,
 				showUserDeleteModal: false,
-				userIsAdmin: false,
 
 				newMember: UserModel,
 				foundUsers: [],
@@ -234,9 +233,14 @@
 			// call again the method if the route changes
 			'$route': 'loadTeam',
 		},
-		computed: mapState({
-			userInfo: state => state.auth.info,
-		}),
+		computed: {
+			userIsAdmin() {
+				return this.team && this.team.maxRight && this.team.maxRight > Rights.READ
+			},
+			...mapState({
+				userInfo: state => state.auth.info,
+			}),
+		},
 		methods: {
 			loadTeam() {
 				this.team = new TeamModel({id: this.teamId})
@@ -244,13 +248,6 @@
 					.then(response => {
 						this.$set(this, 'team', response)
 						this.setTitle(`Edit Team ${this.team.name}`)
-						let members = response.members
-						for (const m in members) {
-							members[m].teamId = this.teamId
-							if (members[m].id === this.userInfo.id && members[m].admin) {
-								this.userIsAdmin = true
-							}
-						}
 					})
 					.catch(e => {
 						this.error(e, this)
@@ -313,7 +310,7 @@
 				member.admin = !member.admin
 				this.teamMemberService.update(member)
 					.then(r => {
-						for(const tm in this.team.members) {
+						for (const tm in this.team.members) {
 							if (this.team.members[tm].id === member.id) {
 								this.$set(this.team.members[tm], 'admin', r.admin)
 								break
@@ -357,5 +354,9 @@
 
 	.team-members {
 		padding: 0;
+
+		.table {
+			border-top: 0;
+		}
 	}
 </style>
