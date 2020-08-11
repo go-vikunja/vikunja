@@ -64,6 +64,13 @@ button.table {
 
 .pagination {
   padding-bottom: 1em;
+
+  .pagination-previous, .pagination-next {
+    &:not(:disabled):hover {
+      background: $button-background-color;
+      cursor: pointer;
+    }
+  }
 }
 
 .is-max-width-desktop {
