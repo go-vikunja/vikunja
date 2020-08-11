@@ -1,6 +1,7 @@
 $bucket-background: #e8f0f5;
 $task-background: $white;
 $ease-out: all .3s cubic-bezier(0.23, 1, 0.32, 1);
+$bucket-width: 300px;
 
 $crazy-height-calculation: '100vh - 4.5rem - 1.5rem - 1em - 1.5em - 8px';
 
@@ -24,11 +25,11 @@ $crazy-height-calculation: '100vh - 4.5rem - 1.5rem - 1em - 1.5em - 8px';
     border-radius: $radius;
     position: relative;
 
-    flex: 0 0 300px;
+    flex: 0 0 $bucket-width;
     margin: 0 1em 0 0;
     max-height: 100%;
     min-height: 20px;
-    max-width: 300px;
+    max-width: $bucket-width;
 
     .tasks {
       max-height: calc(#{$crazy-height-calculation} - 1rem - 2.5rem - 2em - #{$button-height} - 1em);
@@ -41,11 +42,11 @@ $crazy-height-calculation: '100vh - 4.5rem - 1.5rem - 1em - 1.5em - 8px';
         }
 
         -webkit-touch-callout: none; // iOS Safari
-          -webkit-user-select: none; // Safari
-           -khtml-user-select: none; // Konqueror HTML
-             -moz-user-select: none; // Old versions of Firefox
-              -ms-user-select: none; // Internet Explorer/Edge
-                  user-select: none; // Non-prefixed version, currently supported by Chrome, Opera and Firefox
+        -webkit-user-select: none; // Safari
+        -khtml-user-select: none; // Konqueror HTML
+        -moz-user-select: none; // Old versions of Firefox
+        -ms-user-select: none; // Internet Explorer/Edge
+        user-select: none; // Non-prefixed version, currently supported by Chrome, Opera and Firefox
 
         transition: $ease-out;
         cursor: pointer;
@@ -199,13 +200,17 @@ $crazy-height-calculation: '100vh - 4.5rem - 1.5rem - 1em - 1.5em - 8px';
     }
 
     &.new-bucket {
-
-      background: $bucket-background;
-      display: block;
+      // Because of reasons, this button ignores the margin we gave it to the right.
+      // To make it still look like it has some, we modify the container to have a padding of 1rem,
+      // which is the same as the margin it should have. Then we make the container itself bigger
+      // to hide the fact we just made the button smaller.
+      min-width: calc(#{$bucket-width} + 1rem);
+      background: transparent;
+      padding-right: 1rem;
 
       .button {
+        background: $bucket-background;
         width: 100%;
-        background: transparent;
       }
     }
   }
