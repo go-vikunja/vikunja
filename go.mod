@@ -69,13 +69,12 @@ require (
 	golang.org/x/crypto v0.0.0-20200728195943-123391ffb6de
 	golang.org/x/image v0.0.0-20200801110659-972c09e46d76
 	golang.org/x/lint v0.0.0-20200302205851-738671d3881b
-	golang.org/x/text v0.3.3 // indirect
 	golang.org/x/tools v0.0.0-20200410194907-79a7a3126eef // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
 	gopkg.in/d4l3k/messagediff.v1 v1.2.1
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
-	honnef.co/go/tools v0.0.1-2020.1.4
+	honnef.co/go/tools v0.0.1-2020.1.5
 	src.techknowlogick.com/xgo v1.1.1-0.20200811225412-bff6512e7c9c
 	src.techknowlogick.com/xormigrate v1.3.0
 	xorm.io/builder v0.3.7

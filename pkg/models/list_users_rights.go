@@ -43,5 +43,5 @@ func (lu *ListUser) canDoListUser(a web.Auth) (bool, error) {
 
 	// Get the list and check if the user has write access on it
 	l := List{ID: lu.ListID}
-	return l.CanWrite(a)
+	return l.IsAdmin(a)
 }
