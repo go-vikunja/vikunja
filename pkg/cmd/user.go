@@ -28,7 +28,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"syscall"
 	"time"
 )
 
@@ -72,12 +71,12 @@ func getPasswordFromFlagOrInput() (pw string) {
 	pw = userFlagPassword
 	if userFlagPassword == "" {
 		fmt.Print("Enter Password: ")
-		bytePW, err := terminal.ReadPassword(syscall.Stdin)
+		bytePW, err := terminal.ReadPassword(int(os.Stdin.Fd()))
 		if err != nil {
 			log.Fatalf("Error reading password: %s", err)
 		}
 		fmt.Printf("\nConfirm Password: ")
-		byteConfirmPW, err := terminal.ReadPassword(syscall.Stdin)
+		byteConfirmPW, err := terminal.ReadPassword(int(os.Stdin.Fd()))
 		if err != nil {
 			log.Fatalf("Error reading password: %s", err)
 		}
