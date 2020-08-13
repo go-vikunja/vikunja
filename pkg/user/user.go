@@ -315,7 +315,7 @@ func hashPassword(password string) (string, error) {
 func UpdateUser(user *User) (updatedUser *User, err error) {
 
 	// Check if it exists
-	theUser, err := GetUserByID(user.ID)
+	theUser, err := GetUserWithEmail(&User{ID: user.ID})
 	if err != nil {
 		return &User{}, err
 	}
@@ -324,9 +324,29 @@ func UpdateUser(user *User) (updatedUser *User, err error) {
 	if user.Username == "" {
 		//return User{}, ErrNoUsername{user.ID}
 		user.Username = theUser.Username // Dont change the username if we dont have one
+	} else {
+		// Check if the new username already exists
+		uu, err := GetUserByUsername(user.Username)
+		if err != nil && !IsErrUserDoesNotExist(err) {
+			return nil, err
+		}
+		if uu.ID != 0 && uu.ID != user.ID {
+			return nil, &ErrUsernameExists{Username: user.Username, UserID: uu.ID}
+		}
 	}
 
-	user.Password = theUser.Password // set the password to the one in the database to not accedently resetting it
+	// Check if the email is already used
+	if user.Email == "" {
+		user.Email = theUser.Email
+	} else {
+		uu, err := getUser(&User{Email: user.Email}, true)
+		if err != nil && !IsErrUserDoesNotExist(err) {
+			return nil, err
+		}
+		if uu.ID != 0 && uu.ID != user.ID {
+			return nil, &ErrUserEmailExists{Email: user.Email, UserID: uu.ID}
+		}
+	}
 
 	// Validate the avatar type
 	if user.AvatarProvider != "" {
@@ -339,7 +359,10 @@ func UpdateUser(user *User) (updatedUser *User, err error) {
 	}
 
 	// Update it
-	_, err = x.ID(user.ID).Update(user)
+	_, err = x.
+		ID(user.ID).
+		Cols("username", "email", "avatar_provider", "is_active").
+		Update(user)
 	if err != nil {
 		return &User{}, err
 	}

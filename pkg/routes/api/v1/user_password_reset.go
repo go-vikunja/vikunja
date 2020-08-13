@@ -72,7 +72,7 @@ func UserRequestResetPasswordToken(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err)
 	}
 
-	err := user.RequestUserPasswordResetToken(&pwTokenReset)
+	err := user.RequestUserPasswordResetTokenByEmail(&pwTokenReset)
 	if err != nil {
 		return handler.HandleHTTPError(err, c)
 	}

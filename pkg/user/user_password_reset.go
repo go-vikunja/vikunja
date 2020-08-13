@@ -82,8 +82,8 @@ type PasswordTokenRequest struct {
 	Email string `json:"email" valid:"email,length(0|250)" maxLength:"250"`
 }
 
-// RequestUserPasswordResetToken inserts a random token to reset a users password into the databsse
-func RequestUserPasswordResetToken(tr *PasswordTokenRequest) (err error) {
+// RequestUserPasswordResetTokenByEmail inserts a random token to reset a users password into the databsse
+func RequestUserPasswordResetTokenByEmail(tr *PasswordTokenRequest) (err error) {
 	if tr.Email == "" {
 		return ErrNoUsernamePassword{}
 	}
@@ -94,6 +94,11 @@ func RequestUserPasswordResetToken(tr *PasswordTokenRequest) (err error) {
 		return
 	}
 
+	return RequestUserPasswordResetToken(user)
+}
+
+// RequestUserPasswordResetToken sends a user a password reset email.
+func RequestUserPasswordResetToken(user *User) (err error) {
 	// Generate a token and save it
 	user.PasswordResetToken = utils.MakeRandomString(400)
 
