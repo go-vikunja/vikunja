@@ -191,20 +191,24 @@
 										class="checkinput"/>
 								<div class="more-container" :key="n.id + 'child'">
 									<ul class="menu-list can-be-hidden">
-										<li v-for="l in n.lists" :key="l.id">
-											<router-link
-													:to="{ name: 'list.index', params: { listId: l.id} }"
-													:class="{'router-link-exact-active': currentList.id === l.id}">
-												<span class="name">
-													<span
-															class="color-bubble"
-															v-if="l.hexColor !== ''"
-															:style="{ backgroundColor: l.hexColor }">
+										<template v-for="l in n.lists">
+											<!-- This is a bit ugly but vue wouldn't want to let me filter this - probably because the lists
+													are nested inside of the namespaces makes it a lot harder.-->
+											<li v-if="!l.isArchived" :key="l.id">
+												<router-link
+														:to="{ name: 'list.index', params: { listId: l.id} }"
+														:class="{'router-link-exact-active': currentList.id === l.id}">
+													<span class="name">
+														<span
+																class="color-bubble"
+																v-if="l.hexColor !== ''"
+																:style="{ backgroundColor: l.hexColor }">
+														</span>
+														{{l.title}}
 													</span>
-													{{l.title}}
-												</span>
-											</router-link>
-										</li>
+												</router-link>
+											</li>
+										</template>
 									</ul>
 									<label class="hidden-hint" :for="n.id + 'checker'">
 										Show hidden lists ({{n.lists.length}})...
