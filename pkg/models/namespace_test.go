@@ -20,15 +20,10 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/user"
 	"github.com/stretchr/testify/assert"
-	"reflect"
 	"testing"
 )
 
 func TestNamespace_Create(t *testing.T) {
-	db.LoadAndAssertFixtures(t)
-
-	// Create test database
-	//assert.NoError(t, LoadFixtures())
 
 	// Dummy namespace
 	dummynamespace := Namespace{
@@ -36,95 +31,137 @@ func TestNamespace_Create(t *testing.T) {
 		Description: "Lorem Ipsum",
 	}
 
-	// Doer
-	doer, err := user.GetUserByID(1)
-	assert.NoError(t, err)
+	user1 := &user.User{ID: 1}
 
-	// Try creating it
-	allowed, _ := dummynamespace.CanCreate(doer)
-	assert.True(t, allowed)
-	err = dummynamespace.Create(doer)
-	assert.NoError(t, err)
+	t.Run("normal", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		err := dummynamespace.Create(user1)
+		assert.NoError(t, err)
+	})
+	t.Run("no title", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		n2 := Namespace{}
+		err := n2.Create(user1)
+		assert.Error(t, err)
+		assert.True(t, IsErrNamespaceNameCannotBeEmpty(err))
+	})
+	t.Run("nonexistant user", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		nUser := &user.User{ID: 9482385}
+		dnsp2 := dummynamespace
+		err := dnsp2.Create(nUser)
+		assert.Error(t, err)
+		assert.True(t, user.IsErrUserDoesNotExist(err))
+	})
+}
 
-	// check if it really exists
-	allowed, _, err = dummynamespace.CanRead(doer)
-	assert.NoError(t, err)
-	assert.True(t, allowed)
-	err = dummynamespace.ReadOne()
-	assert.NoError(t, err)
-	assert.Equal(t, dummynamespace.Title, "Test")
+func TestNamespace_ReadOne(t *testing.T) {
+	t.Run("normal", func(t *testing.T) {
+		n := &Namespace{ID: 1}
+		db.LoadAndAssertFixtures(t)
+		err := n.ReadOne()
+		assert.NoError(t, err)
+		assert.Equal(t, n.Title, "testnamespace")
+	})
+	t.Run("nonexistant", func(t *testing.T) {
+		n := &Namespace{ID: 99999}
+		db.LoadAndAssertFixtures(t)
+		err := n.ReadOne()
+		assert.Error(t, err)
+		assert.True(t, IsErrNamespaceDoesNotExist(err))
+	})
+}
 
-	// Try creating one without a name
-	n2 := Namespace{}
-	err = n2.Create(doer)
-	assert.Error(t, err)
-	assert.True(t, IsErrNamespaceNameCannotBeEmpty(err))
+func TestNamespace_Update(t *testing.T) {
+	t.Run("normal", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		n := &Namespace{
+			ID:    1,
+			Title: "Lorem Ipsum",
+		}
+		err := n.Update()
+		assert.NoError(t, err)
+	})
+	t.Run("nonexisting", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		n := &Namespace{
+			ID:    99999,
+			Title: "Lorem Ipsum",
+		}
+		err := n.Update()
+		assert.Error(t, err)
+		assert.True(t, IsErrNamespaceDoesNotExist(err))
+	})
+	t.Run("nonexisting owner", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		n := &Namespace{
+			ID:    1,
+			Title: "Lorem Ipsum",
+			Owner: &user.User{ID: 99999},
+		}
+		err := n.Update()
+		assert.Error(t, err)
+		assert.True(t, user.IsErrUserDoesNotExist(err))
+	})
+	t.Run("no title", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		n := &Namespace{
+			ID: 1,
+		}
+		err := n.Update()
+		assert.Error(t, err)
+		assert.True(t, IsErrNamespaceNameCannotBeEmpty(err))
+	})
+}
 
-	// Try inserting one with a nonexistant user
-	nUser := &user.User{ID: 9482385}
-	dnsp2 := dummynamespace
-	err = dnsp2.Create(nUser)
-	assert.Error(t, err)
-	assert.True(t, user.IsErrUserDoesNotExist(err))
+func TestNamespace_Delete(t *testing.T) {
+	t.Run("normal", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		n := &Namespace{
+			ID: 1,
+		}
+		err := n.Delete()
+		assert.NoError(t, err)
+	})
+	t.Run("nonexisting", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		n := &Namespace{
+			ID: 9999,
+		}
+		err := n.Delete()
+		assert.Error(t, err)
+		assert.True(t, IsErrNamespaceDoesNotExist(err))
+	})
+}
 
-	// Update it
-	allowed, err = dummynamespace.CanUpdate(doer)
-	assert.NoError(t, err)
-	assert.True(t, allowed)
-	dummynamespace.Description = "Dolor sit amet."
-	err = dummynamespace.Update()
-	assert.NoError(t, err)
+func TestNamespace_ReadAll(t *testing.T) {
+	user1 := &user.User{ID: 1}
 
-	// Check if it was updated
-	assert.Equal(t, "Dolor sit amet.", dummynamespace.Description)
-	// Get it and check it again
-	allowed, _, err = dummynamespace.CanRead(doer)
-	assert.NoError(t, err)
-	assert.True(t, allowed)
-	err = dummynamespace.ReadOne()
-	assert.NoError(t, err)
-	assert.Equal(t, "Dolor sit amet.", dummynamespace.Description)
-
-	// Try updating one with a nonexistant owner
-	dummynamespace.Owner.ID = 999999
-	err = dummynamespace.Update()
-	assert.Error(t, err)
-	assert.True(t, user.IsErrUserDoesNotExist(err))
-
-	// Try updating without a name
-	dummynamespace.Title = ""
-	err = dummynamespace.Update()
-	assert.Error(t, err)
-	assert.True(t, IsErrNamespaceNameCannotBeEmpty(err))
-
-	// Try updating a nonexistant one
-	n := Namespace{ID: 284729, Title: "Lorem"}
-	err = n.Update()
-	assert.Error(t, err)
-	assert.True(t, IsErrNamespaceDoesNotExist(err))
-
-	// Delete it
-	allowed, err = dummynamespace.CanDelete(doer)
-	assert.NoError(t, err)
-	assert.True(t, allowed)
-	err = dummynamespace.Delete()
-	assert.NoError(t, err)
-
-	// Try deleting a nonexistant one
-	err = n.Delete()
-	assert.Error(t, err)
-	assert.True(t, IsErrNamespaceDoesNotExist(err))
-
-	// Check if it was successfully deleted
-	allowed, _, err = dummynamespace.CanRead(doer)
-	assert.False(t, allowed)
-	assert.Error(t, err)
-	assert.True(t, IsErrNamespaceDoesNotExist(err))
-
-	// Get all namespaces of a user
-	nsps, _, _, err := n.ReadAll(doer, "", 1, 50)
-	assert.NoError(t, err)
-	assert.Equal(t, reflect.TypeOf(nsps).Kind(), reflect.Slice)
-	s := reflect.ValueOf(nsps)
-	assert.Equal(t, 9, s.Len())
+	t.Run("normal", func(t *testing.T) {
+		n := &Namespace{}
+		nn, _, _, err := n.ReadAll(user1, "", 1, -1)
+		namespaces := nn.([]*NamespaceWithLists)
+		assert.NoError(t, err)
+		assert.NotNil(t, namespaces)
+		assert.Len(t, namespaces, 9)                 // Total of 9 including shared
+		assert.Equal(t, int64(-1), namespaces[0].ID) // The first one should be the one with the shared namespaces
+		// Ensure every list and namespace are not archived
+		for _, namespace := range namespaces {
+			assert.False(t, namespace.IsArchived)
+			for _, list := range namespace.Lists {
+				assert.False(t, list.IsArchived)
+			}
+		}
+	})
+	t.Run("archived", func(t *testing.T) {
+		n := &Namespace{
+			IsArchived: true,
+		}
+		nn, _, _, err := n.ReadAll(user1, "", 1, -1)
+		namespaces := nn.([]*NamespaceWithLists)
+		assert.NoError(t, err)
+		assert.NotNil(t, namespaces)
+		assert.Len(t, namespaces, 10)                // Total of 10 including shared, one is archived
+		assert.Equal(t, int64(-1), namespaces[0].ID) // The first one should be the one with the shared namespaces
+	})
 }
