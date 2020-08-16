@@ -111,6 +111,8 @@ func (ld *ListDuplicate) Create(a web.Auth) (err error) {
 		return err
 	}
 
+	// This map contains the old task id as key and the new duplicated task id as value.
+	// It is used to map old task items to new ones.
 	taskMap := make(map[int64]int64)
 	// Create + update all tasks (includes reminders)
 	oldTaskIDs := make([]int64, len(tasks))
@@ -143,7 +145,12 @@ func (ld *ListDuplicate) Create(a web.Auth) (err error) {
 	for _, attachment := range attachments {
 		oldAttachmentID := attachment.ID
 		attachment.ID = 0
-		attachment.TaskID = oldTaskIDs[attachment.TaskID]
+		var exists bool
+		attachment.TaskID, exists = taskMap[attachment.TaskID]
+		if !exists {
+			log.Debugf("Error duplicating attachment %d from old task %d to new task: Old task <-> new task does not seem to exist.", oldAttachmentID, attachment.TaskID)
+			continue
+		}
 		attachment.File = &files.File{ID: attachment.FileID}
 		if err := attachment.File.LoadFileMetaByID(); err != nil {
 			if files.IsErrFileDoesNotExist(err) {
