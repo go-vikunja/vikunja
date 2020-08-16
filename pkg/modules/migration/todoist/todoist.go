@@ -316,6 +316,7 @@ func convertTodoistToVikunja(sync *sync) (fullVikunjaHierachie []*models.Namespa
 	}
 
 	// Task Notes -> Task Descriptions
+	// FIXME: Should be comments
 	for _, n := range sync.Notes {
 		if tasks[n.ItemID].Description != "" {
 			tasks[n.ItemID].Description += "\n"
@@ -326,31 +327,34 @@ func convertTodoistToVikunja(sync *sync) (fullVikunjaHierachie []*models.Namespa
 			continue
 		}
 
-		// Download the attachment and put it in the file
-		resp, err := http.Get(n.FileAttachment.FileURL)
-		if err != nil {
-			return nil, err
-		}
-		defer resp.Body.Close()
-		buf := &bytes.Buffer{}
-		_, err = buf.ReadFrom(resp.Body)
-		if err != nil {
-			return nil, err
-		}
+		// Only add the attachment if there's something to download
+		if len(n.FileAttachment.FileURL) > 0 {
+			// Download the attachment and put it in the file
+			resp, err := http.Get(n.FileAttachment.FileURL)
+			if err != nil {
+				return nil, err
+			}
+			defer resp.Body.Close()
+			buf := &bytes.Buffer{}
+			_, err = buf.ReadFrom(resp.Body)
+			if err != nil {
+				return nil, err
+			}
 
-		tasks[n.ItemID].Attachments = append(tasks[n.ItemID].Attachments, &models.TaskAttachment{
-			File: &files.File{
-				Name:    n.FileAttachment.FileName,
-				Mime:    n.FileAttachment.FileType,
-				Size:    uint64(n.FileAttachment.FileSize),
+			tasks[n.ItemID].Attachments = append(tasks[n.ItemID].Attachments, &models.TaskAttachment{
+				File: &files.File{
+					Name:    n.FileAttachment.FileName,
+					Mime:    n.FileAttachment.FileType,
+					Size:    uint64(n.FileAttachment.FileSize),
+					Created: n.Posted,
+					// We directly pass the file contents here to have a way to link the attachment to the file later.
+					// Because we don't have an ID for our task at this point of the migration, we cannot just throw all
+					// attachments in a slice and do the work of downloading and properly storing them later.
+					FileContent: buf.Bytes(),
+				},
 				Created: n.Posted,
-				// We directly pass the file contents here to have a way to link the attachment to the file later.
-				// Because we don't have an ID for our task at this point of the migration, we cannot just throw all
-				// attachments in a slice and do the work of downloading and properly storing them later.
-				FileContent: buf.Bytes(),
-			},
-			Created: n.Posted,
-		})
+			})
+		}
 	}
 
 	// Project Notes -> List Descriptions
