@@ -181,9 +181,14 @@ server {
 
     location /api/ {
         proxy_pass http://api:3456;
+        client_max_body_size 20M;
     }
 }
 {{< /highlight >}}
+
+<div class="notification is-warning">
+<b>NOTE:</b> If you change the max upload size in Vikunja's settings, you'll need to also change the <code>client_max_body_size</code> in the nginx proxy config.
+</div>
 
 `docker-compose.yml` config:
 

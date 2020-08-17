@@ -90,13 +90,20 @@ server {
 
     location /api/ {
         proxy_pass http://api:3456;
+        client_max_body_size 20M;
     }
 }
 {{< /highlight >}}
 
 This is a simple proxy configuration which will forward all requests to `/api/` to the api container and everything else to the frontend.
 
-**Note:** Even if you want to make your installation available under a different port, you don't need to change anything in this configuration.
+<div class="notification is-info">
+<b>NOTE:</b> Even if you want to make your installation available under a different port, you don't need to change anything in this configuration.
+</div>
+
+<div class="notification is-warning">
+<b>NOTE:</b> If you change the max upload size in Vikunja's settings, you'll need to also change the <code>client_max_body_size</code> in the nginx proxy config.
+</div>
 
 ## Run it
 
