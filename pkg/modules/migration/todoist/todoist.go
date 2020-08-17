@@ -313,6 +313,18 @@ func convertTodoistToVikunja(sync *sync) (fullVikunjaHierachie []*models.Namespa
 		}
 
 		tasks[i.ParentID].RelatedTasks[models.RelationKindSubtask] = append(tasks[i.ParentID].RelatedTasks[models.RelationKindSubtask], tasks[i.ID])
+
+		// Remove the task from the top level structure, otherwise it is added twice
+	outer:
+		for _, list := range lists {
+			for in, t := range list.Tasks {
+				if t == tasks[i.ID] {
+					list.Tasks = append(list.Tasks[:in], list.Tasks[in+1:]...)
+					break outer
+				}
+			}
+		}
+		delete(tasks, i.ID)
 	}
 
 	// Task Notes -> Task Descriptions

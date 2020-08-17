@@ -414,13 +414,6 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 							},
 						},
 						{
-							Title:    "Task with parent",
-							Done:     false,
-							Priority: 2,
-							Created:  time1,
-							DoneAt:   nilTime,
-						},
-						{
 							Title:   "Task400000106",
 							Done:    true,
 							DueDate: dueTime,
