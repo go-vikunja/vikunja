@@ -88,13 +88,23 @@ func Login(c echo.Context) error {
 // @Success 200 {object} v1.Token
 // @Failure 400 {object} models.Message "Only user token are available for renew."
 // @Router /user/token [post]
-func RenewToken(c echo.Context) error {
+func RenewToken(c echo.Context) (err error) {
 
 	jwtinf := c.Get("user").(*jwt.Token)
 	claims := jwtinf.Claims.(jwt.MapClaims)
 	typ := int(claims["type"].(float64))
-	if typ != AuthTypeUser {
-		return echo.ErrBadRequest
+	if typ == AuthTypeLinkShare {
+		share := &models.LinkSharing{}
+		share.ID = int64(claims["id"].(float64))
+		err := share.ReadOne()
+		if err != nil {
+			return handler.HandleHTTPError(err, c)
+		}
+		t, err := NewLinkShareJWTAuthtoken(share)
+		if err != nil {
+			return handler.HandleHTTPError(err, c)
+		}
+		return c.JSON(http.StatusOK, Token{Token: t})
 	}
 
 	user, err := user2.GetUserFromClaims(claims)
