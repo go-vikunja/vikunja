@@ -21,7 +21,7 @@ require (
 	code.vikunja.io/web v0.0.0-20200809154828-8767618f181f
 	gitea.com/xorm/xorm-redis-cache v0.2.0
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
-	github.com/asaskevich/govalidator v0.0.0-20200818142706-50839af6027e
+	github.com/asaskevich/govalidator v0.0.0-20200819183940-29e1ff8eb0bb
 	github.com/beevik/etree v1.1.0 // indirect
 	github.com/c2h5oh/datasize v0.0.0-20200112174442-28bbd4740fee
 	github.com/client9/misspell v0.3.4
