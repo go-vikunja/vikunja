@@ -43,7 +43,7 @@ server {
         index  index.html index.htm;
     }
     
-    location /api/ {
+    location ~* ^/(api|dav|\.well-known)/ {
         proxy_pass http://localhost:3456;
         client_max_body_size 20M;
     }
@@ -67,7 +67,7 @@ server {
         index  index.html index.htm;
     }
     
-    location /api/ {
+    location ~* ^/(api|dav|\.well-known)/ {
         proxy_pass http://localhost:3456;
         client_max_body_size 20M;
     }
@@ -92,14 +92,18 @@ Put the following config in `cat /etc/apache2/sites-available/vikunja.conf`:
     </Proxy>
     ProxyPass /api http://localhost:3456/api
     ProxyPassReverse /api http://localhost:3456/api
+    ProxyPass /dav http://localhost:3456/dav
+    ProxyPassReverse /dav http://localhost:3456/dav
+    ProxyPass /.well-known http://localhost:3456/.well-known
+    ProxyPassReverse /.well-known http://localhost:3456/.well-known
 
     DocumentRoot /var/www/html
     RewriteEngine On
-    RewriteRule ^\/?(config\.json|favicon\.ico|css|fonts|images|img|js|api) - [L]
+    RewriteRule ^\/?(config\.json|favicon\.ico|css|fonts|images|img|js|api|dav|\.well-known) - [L]
     RewriteRule ^(.*)$ /index.html [QSA,L]
 </VirtualHost>
 {{< /highlight >}}
 
-**Note:** The apache modules `proxy` and `proxy_http` must be enabled for this.
+**Note:** The apache modules `proxy`, `proxy_http` and `rewrite` must be enabled for this.
 
 For more details see the [frontend apache configuration]({{< ref "install-frontend.md#apache">}}).

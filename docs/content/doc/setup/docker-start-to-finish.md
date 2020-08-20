@@ -88,7 +88,7 @@ server {
         proxy_pass http://frontend:80;
     }
 
-    location /api/ {
+    location ~* ^/(api|dav|\.well-known)/ {
         proxy_pass http://api:3456;
         client_max_body_size 20M;
     }

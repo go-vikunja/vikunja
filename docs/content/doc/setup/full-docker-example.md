@@ -74,7 +74,7 @@ services:
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.vikunja-api.rule=Host(`vikunja.example.com`) && PathPrefix(`/api/v1`)"
+      - "traefik.http.routers.vikunja-api.rule=Host(`vikunja.example.com`) && PathPrefix(`/api/v1`, `/dav/`, `/.well-known/`)"
       - "traefik.http.routers.vikunja-api.entrypoints=https"
       - "traefik.http.routers.vikunja-api.tls.certResolver=acme"
   frontend:
@@ -133,7 +133,7 @@ services:
     labels:
       - "traefik.docker.network=web"
       - "traefik.enable=true"
-      - "traefik.frontend.rule=Host:vikunja.example.com;PathPrefix:/api/v1"
+      - "traefik.frontend.rule=Host:vikunja.example.com;PathPrefix:/api/v1,/dav/,/.well-known"
       - "traefik.port=3456"
       - "traefik.protocol=http"
   frontend:
@@ -179,7 +179,7 @@ server {
         proxy_pass http://frontend:80;
     }
 
-    location /api/ {
+    location ~* ^/(api|dav|\.well-known)/ {
         proxy_pass http://api:3456;
         client_max_body_size 20M;
     }
@@ -240,6 +240,8 @@ You will need the following `Caddyfile` on your host (or elsewhere, but then you
 {{< highlight conf >}}
 vikunja.example.com {
     reverse_proxy /api/* api:3456
+    reverse_proxy /.well-known/* api:3456
+    reverse_proxy /dav/* api:3456
     reverse_proxy frontend:80
 }
 {{< /highlight >}}
