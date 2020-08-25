@@ -23,7 +23,7 @@ require (
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
 	github.com/asaskevich/govalidator v0.0.0-20200819183940-29e1ff8eb0bb
 	github.com/beevik/etree v1.1.0 // indirect
-	github.com/c2h5oh/datasize v0.0.0-20200112174442-28bbd4740fee
+	github.com/c2h5oh/datasize v0.0.0-20200825124411-48ed595a09d2
 	github.com/client9/misspell v0.3.4
 	github.com/cweill/gotests v1.5.3
 	github.com/d4l3k/messagediff v1.2.1 // indirect
