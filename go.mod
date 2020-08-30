@@ -38,7 +38,7 @@ require (
 	github.com/go-testfixtures/testfixtures/v3 v3.4.0
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/gordonklaus/ineffassign v0.0.0-20200809085317-e36bfde3bb78
-	github.com/iancoleman/strcase v0.1.0
+	github.com/iancoleman/strcase v0.1.1
 	github.com/imdario/mergo v0.3.11
 	github.com/jgautheron/goconst v0.0.0-20200227150835-cda7ea3bf591
 	github.com/kr/text v0.2.0 // indirect
