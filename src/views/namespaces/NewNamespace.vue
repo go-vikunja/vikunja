@@ -28,7 +28,7 @@
 		<p class="help is-danger" v-if="showError && namespace.title === ''">
 			Please specify a title.
 		</p>
-		<p class="small" v-tooltip.bottom="'A namespace is a collection of lists you can share and use to organize your lists with.<br/>In fact, every list belongs to a namepace.'">
+		<p class="small" v-tooltip.bottom="'A namespace is a collection of lists you can share and use to organize your lists with. In fact, every list belongs to a namepace.'">
 			What's a namespace?</p>
 	</div>
 </template>
