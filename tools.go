@@ -33,4 +33,6 @@ import (
 	_ "honnef.co/go/tools/cmd/staticcheck"
 
 	_ "github.com/shurcooL/vfsgen"
+
+	_ "github.com/magefile/mage"
 )

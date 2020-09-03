@@ -52,13 +52,26 @@ steps:
     commands:
       - git fetch --tags
 
-  - name: build
+  # We're statically compiling the magefile to avoid race condition issues caused by multiple pipeline steps
+  # compiling the same magefile at the same time. It's also faster if each step does not need to compile it first.
+  - name: mage
     image: vikunja/golang-build:latest
     pull: true
     environment:
       GOPROXY: 'https://goproxy.kolaente.de'
     commands:
-      - make build
+      - mage -compile ./mage-static
+    when:
+      event: [ push, tag, pull_request ]
+
+  - name: build
+    image: vikunja/golang-build:latest
+    pull: true
+    environment:
+      GOPROXY: 'https://goproxy.kolaente.de'
+    depends_on: [ mage ]
+    commands:
+      - ./mage-static build:build
     when:
       event: [ push, tag, pull_request ]
 
@@ -69,17 +82,17 @@ steps:
       GOPROXY: 'https://goproxy.kolaente.de'
     depends_on: [ build ]
     commands:
-      - make generate
-      - make lint
-      - make fmt-check
-      # - make got-swag # Commented out until we figured out how to get this working on drone
-      - make ineffassign-check
-      - make misspell-check
-      - make goconst-check
-      - make gocyclo-check
-      - make static-check
+      - ./mage-static build:generate
+      - ./mage-static check:lint
+      - ./mage-static check:fmt
+      - ./mage-static check:got-swag
+      - ./mage-static check:ineffassign
+      - ./mage-static check:misspell
+      - ./mage-static check:goconst
+      - ./mage-static check:gocyclo
+      - ./mage-static check:static
       - wget -O - -q https://raw.githubusercontent.com/securego/gosec/master/install.sh | sh -s -- -b $GOPATH/bin v2.2.0 # Need to manually install as it does not support being installed via go modules like the rest.
-      - make gosec-check
+      - ./mage-static check:gosec
     when:
       event: [ push, tag, pull_request ]
 
@@ -152,9 +165,9 @@ steps:
     environment:
       GOPROXY: 'https://goproxy.kolaente.de'
     commands:
-      - make generate
-      - make test
-    depends_on: [ fetch-tags ]
+      - ./mage-static build:generate
+      - ./mage-static test:unit
+    depends_on: [ fetch-tags, mage ]
     when:
       event: [ push, tag, pull_request ]
 
@@ -166,9 +179,9 @@ steps:
       VIKUNJA_TESTS_USE_CONFIG: 1
       VIKUNJA_DATABASE_TYPE: sqlite
     commands:
-      - make generate
-      - make test
-    depends_on: [ fetch-tags ]
+      - ./mage-static build:generate
+      - ./mage-static test:unit
+    depends_on: [ fetch-tags, mage ]
     when:
       event: [ push, tag, pull_request ]
 
@@ -184,9 +197,9 @@ steps:
       VIKUNJA_DATABASE_PASSWORD: vikunjatest
       VIKUNJA_DATABASE_DATABASE: vikunjatest
     commands:
-      - make generate
-      - make test
-    depends_on: [ fetch-tags ]
+      - ./mage-static build:generate
+      - ./mage-static test:unit
+    depends_on: [ fetch-tags, mage ]
     when:
       event: [ push, tag, pull_request ]
 
@@ -203,9 +216,9 @@ steps:
       VIKUNJA_DATABASE_DATABASE: vikunjatest
       VIKUNJA_DATABASE_SSLMODE: disable
     commands:
-      - make generate
-      - make test
-    depends_on: [ fetch-tags ]
+      - ./mage-static build:generate
+      - ./mage-static test:unit
+    depends_on: [ fetch-tags, mage ]
     when:
       event: [ push, tag, pull_request ]
 
@@ -215,9 +228,9 @@ steps:
     environment:
       GOPROXY: 'https://goproxy.kolaente.de'
     commands:
-      - make generate
-      - make integration-test
-    depends_on: [ fetch-tags ]
+      - ./mage-static build:generate
+      - ./mage-static test:integration
+    depends_on: [ fetch-tags, mage ]
     when:
       event: [ push, tag, pull_request ]
 
@@ -229,9 +242,9 @@ steps:
       VIKUNJA_TESTS_USE_CONFIG: 1
       VIKUNJA_DATABASE_TYPE: sqlite
     commands:
-      - make generate
-      - make integration-test
-    depends_on: [ fetch-tags ]
+      - ./mage-static build:generate
+      - ./mage-static test:integration
+    depends_on: [ fetch-tags, mage ]
     when:
       event: [ push, tag, pull_request ]
 
@@ -247,9 +260,9 @@ steps:
       VIKUNJA_DATABASE_PASSWORD: vikunjatest
       VIKUNJA_DATABASE_DATABASE: vikunjatest
     commands:
-      - make generate
-      - make integration-test
-    depends_on: [ fetch-tags ]
+      - ./mage-static build:generate
+      - ./mage-static test:integration
+    depends_on: [ fetch-tags, mage ]
     when:
       event: [ push, tag, pull_request ]
 
@@ -266,9 +279,9 @@ steps:
       VIKUNJA_DATABASE_DATABASE: vikunjatest
       VIKUNJA_DATABASE_SSLMODE: disable
     commands:
-      - make generate
-      - make integration-test
-    depends_on: [ fetch-tags ]
+      - ./mage-static build:generate
+      - ./mage-static test:integration
+    depends_on: [ fetch-tags, mage ]
     when:
       event: [ push, tag, pull_request ]
 
@@ -299,14 +312,27 @@ steps:
     commands:
       - git fetch --tags
 
+  # We're statically compiling the magefile to avoid race condition issues caused by multiple pipeline steps
+  # compiling the same magefile at the same time. It's also faster if each step does not need to compile it first.
+  - name: mage
+    image: vikunja/golang-build:latest
+    pull: true
+    environment:
+      GOPROXY: 'https://goproxy.kolaente.de'
+    commands:
+      - mage -compile ./mage-static
+    when:
+      event: [ push, tag, pull_request ]
+
   - name: before-static-build
     image: techknowlogick/xgo:latest
     pull: true
     commands:
       - export PATH=$PATH:$GOPATH/bin
-      - make generate
-      - make release-dirs
-    depends_on: [ fetch-tags ]
+      - go install github.com/magefile/mage
+      - ./mage-static build:generate
+      - ./mage-static release:dirs
+    depends_on: [ fetch-tags, mage ]
 
   - name: static-build-windows
     image: techknowlogick/xgo:latest
@@ -317,7 +343,8 @@ steps:
       GOPATH: /srv/app
     commands:
       - export PATH=$PATH:$GOPATH/bin
-      - make release-windows
+      - go install github.com/magefile/mage
+      - ./mage-static release:windows
     depends_on: [ before-static-build ]
 
   - name: static-build-linux
@@ -329,7 +356,8 @@ steps:
       GOPATH: /srv/app
     commands:
       - export PATH=$PATH:$GOPATH/bin
-      - make release-linux
+      - go install github.com/magefile/mage
+      - ./mage-static release:linux
     depends_on: [ before-static-build ]
 
   - name: static-build-darwin
@@ -341,7 +369,8 @@ steps:
       GOPATH: /srv/app
     commands:
       - export PATH=$PATH:$GOPATH/bin
-      - make release-darwin
+      - go install github.com/magefile/mage
+      - ./mage-static release:darwin
     depends_on: [ before-static-build ]
 
   - name: after-build-compress
@@ -352,7 +381,7 @@ steps:
       - static-build-linux
       - static-build-darwin
     commands:
-      - make release-compress
+      - ./mage-static release:compress
 
   - name: after-build-static
     image: techknowlogick/xgo:latest
@@ -360,10 +389,11 @@ steps:
     depends_on:
       - after-build-compress
     commands:
-      - make release-copy
-      - make release-check
-      - make release-os-package
-      - make release-zip
+      - go install github.com/magefile/mage
+      - ./mage-static release:copy
+      - ./mage-static release:check
+      - ./mage-static release:os-package
+      - ./mage-static release:zip
 
   - name: sign-release
     image: plugins/gpgsign:1
@@ -428,7 +458,7 @@ steps:
     image: kolaente/fpm
     pull: true
     commands:
-      - make build-deb
+      - ./mage-static build-deb
     depends_on: [ static-build-linux ]
 
   - name: deb-structure
@@ -446,7 +476,7 @@ steps:
       - gpg --import ~/frederik.gpg
       - mkdir debian/conf -p
       - cp build/reprepro-dist-conf debian/conf/distributions
-      - make reprepro
+      - ./mage-static reprepro
     depends_on: [ build-deb ]
 
   # Push the releases to our pseudo-s3-bucket

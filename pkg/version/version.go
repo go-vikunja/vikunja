@@ -20,4 +20,4 @@ package version
 // It is an own package to avoid import cycles
 
 // Version sets the version to be printed to the user. Gets overwritten by "make release" or "make build" with last git commit or tag.
-var Version = "0.7"
+var Version = "dev"

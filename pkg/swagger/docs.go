@@ -6157,7 +6157,6 @@ var doc = `{
         }
     },
     "definitions": {
-"code.vikunja.io.web.HTTPError": {"type": "object","properties": {"code": {"type": "integer"},"message": {"type": "string"}}},
         "afero.File": {
             "type": "object"
         },
