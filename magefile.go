@@ -474,6 +474,11 @@ func runXgo(targets string) error {
 		RootPath)
 	if os.Getenv("DRONE_WORKSPACE") != "" {
 		return filepath.Walk("/build/", func(path string, info os.FileInfo, err error) error {
+			// Skip directories
+			if info.IsDir() {
+				return nil
+			}
+
 			return os.Rename(path, RootPath+"/"+DIST+"/binaries/"+info.Name())
 		})
 	}
