@@ -492,10 +492,18 @@ func (Release) Dirs() error {
 
 func runXgo(targets string) error {
 	checkAndInstallGoTool("xgo", "src.techknowlogick.com/xgo")
+
+	extraLdflags := `-linkmode external -extldflags "-static" `
+
+	// See https://github.com/techknowlogick/xgo/issues/79
+	if strings.HasPrefix(targets, "darwin") {
+		extraLdflags = ""
+	}
+
 	runAndStreamOutput("xgo",
 		"-dest", RootPath+"/"+DIST+"/binaries",
 		"-tags", "netgo "+Tags,
-		"-ldflags", `-linkmode external -extldflags "-static" `+Ldflags,
+		"-ldflags", extraLdflags+Ldflags,
 		"-targets", targets,
 		"-out", Executable+"-"+Version,
 		RootPath)
