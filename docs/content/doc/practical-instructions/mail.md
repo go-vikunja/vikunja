@@ -12,6 +12,8 @@ menu:
 
 This document explains how to use the mailer to send emails and what to do to create a new kind of email to be sent.
 
+{{< table_of_contents >}}
+
 ## Sending emails
 
 **Note:** You should use mail templates whenever possible (see below).
@@ -30,7 +32,7 @@ type Opts struct {
 }
 {{< /highlight >}}
 
-## Sending emails based on a template
+### Sending emails based on a template
 
 For each mail with a template, there are two email templates: One for plaintext emails, one for html emails.
 
@@ -41,7 +43,7 @@ To send a mail based on a template, use the function `mail.SendMailWithTemplate(
 `to` and `subject` are pretty much self-explanatory, `tpl` is the name of the template, without `.html.tmpl` or `.plain.tmpl`. 
 `data` is a map you can pass additional data to your template.
 
-#### Sending a mail with a template
+### Sending a mail with a template
 
 A basic html email template would look like this:
 

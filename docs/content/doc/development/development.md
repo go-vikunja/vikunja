@@ -17,7 +17,9 @@ If you don't intend to add new dependencies, go `1.9` and above should be fine.
 
 To contribute to Vikunja, fork the project and work on the master branch.
 
-A lot of developing tasks are automated using a Makefile, so make sure to [take a look at it]({{< ref "make.md">}}).
+A lot of developing tasks are automated using a Magefile, so make sure to [take a look at it]({{< ref "mage.md">}}).
+
+{{< table_of_contents >}}
 
 ## Libraries
 
@@ -50,7 +52,7 @@ git remote add origin git@git.kolaente.de:<USERNAME>/api.git
 git fetch --all --prune
 {{< /highlight >}}
 
-This should provide a working development environment for Vikunja. Take a look at the Makefile to get an overview about 
+This should provide a working development environment for Vikunja. Take a look at the Magefile to get an overview about 
 the available tasks. The most common tasks should be `mage test:unit` which will start our test environment and `mage build:build` 
 which will build a vikunja binary into the working directory. Writing test cases is not mandatory to contribute, but it 
 is highly encouraged and helps developers sleep at night.

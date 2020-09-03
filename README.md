@@ -35,7 +35,7 @@ try it on [try.vikunja.io](https://try.vikunja.io)!
 * [Installing](https://vikunja.io/docs/installing/)
 * [Build from source](https://vikunja.io/docs/build-from-sources/)
 * [Development setup](https://vikunja.io/docs/development/)
-* [Makefile](https://vikunja.io/docs/makefile/)
+* [Magefile](https://vikunja.io/docs/mage/)
 * [Testing](https://vikunja.io/docs/testing/)
 
 All docs can be found on [the vikunja home page](https://vikunja.io/docs/).

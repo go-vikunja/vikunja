@@ -18,7 +18,9 @@ This is used whenever you make a call to the database to get or update data.
 
 This xorm instance is set up and initialized every time vikunja is started.
 
-### Adding new database tables
+{{< table_of_contents >}}
+
+## Adding new database tables
 
 To add a new table to the database, add a an instance of your struct to the `tables` variable in the 
 init function in `pkg/models/models.go`. Xorm will sync them automatically.
@@ -27,7 +29,7 @@ You also need to add a pointer to the `tablesWithPointer` slice to enable cachin
 
 To learn more about how to configure your struct to create "good" tables, refer to [the xorm documentaion](http://xorm.io/docs/).
 
-### Adding data to test fixtures
+## Adding data to test fixtures
 
 Adding data for test fixtures is done in via `yaml` files insinde of `pkg/models/fixtures`.
 

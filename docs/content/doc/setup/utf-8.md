@@ -17,6 +17,8 @@ Vikunja itself will work just fine until you want to use non-latin characters in
 On this page, you will find information about how to fully ensure non-latin characters like aüäß or emojis work 
 with your installation.
 
+{{< table_of_contents >}}
+
 ## Postgresql & SQLite
 
 Postgresql and SQLite should handle utf-8 just fine - If you discover any issues nonetheless, please 
@@ -49,11 +51,11 @@ The charset `latin1` means the db is encoded in the `latin1` encoding which does
 
 (The following guide is based on [this thread from stackoverflow](https://dba.stackexchange.com/a/104866))
 
-#### 0. Backup your database
+### 0. Backup your database
 
 Before attempting any conversion, please [back up your database]({{< ref "backups.md">}}).
 
-#### 1. Create a pre-conversion script
+### 1. Create a pre-conversion script
 
 Copy the following sql statements in a file called `preAlterTables.sql` and replace all occurences of `vikunja` with 
 the name of your database:
@@ -70,7 +72,7 @@ SELECT concat("ALTER TABLE `",table_schema,"`.`",table_name, "` CHANGE `",column
 FROM `COLUMNS` where table_schema like 'vikunja' and data_type in ('text','tinytext','mediumtext','longtext');
 {{< /highlight >}}
 
-#### 2. Run the pre-conversion script
+### 2. Run the pre-conversion script
 
 Running this will create the actual migration script for your particular database structure and save it in a file called `alterTables.sql`:
 
@@ -78,7 +80,7 @@ Running this will create the actual migration script for your particular databas
 mysql -uroot < preAlterTables.sql | egrep '^ALTER' > alterTables.sql
 {{< /highlight >}}
 
-#### 3. Convert the database
+### 3. Convert the database
 
 At this point converting is just a matter of executing the previously generated sql script:
 
@@ -86,7 +88,7 @@ At this point converting is just a matter of executing the previously generated 
 mysql -uroot < alterTables.sql
 {{< /highlight >}}
 
-#### 4. Verify it was successfully converted
+### 4. Verify it was successfully converted
 
 If everything worked as intended, your db collation should now look like this:
 

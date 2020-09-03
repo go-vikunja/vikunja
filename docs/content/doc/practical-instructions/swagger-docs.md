@@ -12,7 +12,7 @@ menu:
 
 The api documentation is generated using [swaggo](https://github.com/swaggo/swag) from comments.
 
-### Documenting structs
+## Documenting structs
 
 You should always comment every field which will be exposed as a json in the api.
 These comments will show up in the documentation, it'll make it easier for developers using the api.

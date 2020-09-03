@@ -23,7 +23,7 @@ The following values are possible:
 | 1 | Read and write. Namespaces or lists shared with this right can be read and written to by the team or user. |
 | 2 | Admin. Can do anything like read and write, but can additionally manage sharing options. |
 
-### Team admins
+## Team admins
 
 When adding or querying a team, every member has an additional boolean value stating if it is admin or not.
 A team admin can also add and remove team members and also change whether a user in the team is admin or not.

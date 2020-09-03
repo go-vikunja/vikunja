@@ -13,6 +13,8 @@ menu:
 These examples assume you have an instance of the backend running on your server listening on port `3456`.
 If you've changed this setting, you need to update the server configurations accordingly.
 
+{{< table_of_contents >}}
+
 ## NGINX
 
 Below are two example configurations which you can put in your `nginx.conf`:

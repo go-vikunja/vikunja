@@ -16,24 +16,26 @@ You can run unit tests with [our `Magefile`]({{< ref "mage.md">}}) with
 mage test:unit
 {{< /highlight >}}
 
-### Running tests with config
+{{< table_of_contents >}}
+
+## Running tests with config
 
 You can run tests with all available config variables if you want, enabeling you to run tests for a lot of scenarios.
 
 To use the normal config set the enviroment variable `VIKUNJA_TESTS_USE_CONFIG=1`.
 
-### Show sql queries
+## Show sql queries
 
 When `UNIT_TESTS_VERBOSE=1` is set, all sql queries will be shown when tests are run.
 
-### Fixtures
+## Fixtures
 
 All tests are run against a set of db fixtures.
 These fixtures are defined in `pkg/models/fixtures` in YAML-Files which represent the database structure.
 
 When you add a new test case which requires new database entries to test against, update these files.
 
-# Integration tests
+## Integration tests
 
 All integration tests live in `pkg/integrations`.
 You can run them by executing `mage test:integration`.
@@ -43,7 +45,7 @@ see at the beginning of this document.
 
 To run integration tests, use `mage test:integration`.
 
-# Initializing db fixtures when writing tests
+## Initializing db fixtures when writing tests
 
 All db fixtures for all tests live in the `pkg/db/fixtures/` folder as yaml files.
 Each file has the same name as the table the fixtures are for.

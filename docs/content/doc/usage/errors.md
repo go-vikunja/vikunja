@@ -12,13 +12,15 @@ menu:
 
 This document describes the different errors Vikunja can return.
 
-### Generic
+{{< table_of_contents >}}
+
+## Generic
 
 | ErrorCode | HTTP Status Code | Description |
 |-----------|------------------|-------------|
 | 0001 | 403 | Generic forbidden error. |
 
-### User
+## User
 
 | ErrorCode | HTTP Status Code | Description |
 |-----------|------------------|-------------|
@@ -39,14 +41,14 @@ This document describes the different errors Vikunja can return.
 | 1017 | 412 | The provided Totp passcode is invalid. |
 | 1018 | 412 | The provided user avatar provider type setting is invalid. |
 
-### Validation
+## Validation
 
 | ErrorCode | HTTP Status Code | Description |
 |-----------|------------------|-------------|
 | 2001 | 400 | ID cannot be empty or 0. |
 | 2002 | 400 | Some of the request data was invalid. The response contains an aditional array with all invalid fields. |
 
-### List
+## List
 
 | ErrorCode | HTTP Status Code | Description |
 |-----------|------------------|-------------|
@@ -57,7 +59,7 @@ This document describes the different errors Vikunja can return.
 | 3007 | 400 | A list with this identifier already exists. |
 | 3008 | 412 | The list is archived and can therefore only be accessed read only. This is also true for all tasks associated with this list. |
 
-### Task
+## Task
 
 | ErrorCode | HTTP Status Code | Description |
 |-----------|------------------|-------------|
@@ -81,7 +83,7 @@ This document describes the different errors Vikunja can return.
 | 4018 | 403 | Invalid task filter concatinator. |
 | 4019 | 403 | Invalid task filter value. |
 
-### Namespace
+## Namespace
 
 | ErrorCode | HTTP Status Code | Description |
 |-----------|------------------|-------------|
@@ -93,7 +95,7 @@ This document describes the different errors Vikunja can return.
 | 5011 | 409 | This user has already access to that namespace. |
 | 5012 | 412 | The namespace is archived and can therefore only be accessed read only. |
 
-### Team
+## Team
 
 | ErrorCode | HTTP Status Code | Description |
 |-----------|------------------|-------------|
@@ -104,14 +106,14 @@ This document describes the different errors Vikunja can return.
 | 6006 | 400 | Cannot delete the last team member. |
 | 6007 | 403 | The team does not have access to the list to perform that action. |
 
-### User List Access
+## User List Access
 
 | ErrorCode | HTTP Status Code | Description |
 |-----------|------------------|-------------|
 | 7002 | 409 | The user already has access to that list. |
 | 7003 | 403 | The user does not have access to that list. |
 
-### Label
+## Label
 
 | ErrorCode | HTTP Status Code | Description |
 |-----------|------------------|-------------|
@@ -119,13 +121,13 @@ This document describes the different errors Vikunja can return.
 | 8002 | 404 | The label does not exist. |
 | 8003 | 403 | The user does not have access to this label. |
 
-### Right
+## Right
 
 | ErrorCode | HTTP Status Code | Description |
 |-----------|------------------|-------------|
 | 9001 | 403 | The right is invalid. | 
 
-### Kanban
+## Kanban
 
 | ErrorCode | HTTP Status Code | Description |
 |-----------|------------------|-------------|

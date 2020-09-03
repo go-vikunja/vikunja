@@ -21,7 +21,9 @@ For all available configuration options, see [configuration]({{< ref "config.md"
 All examples on this page already reflect this and do not require additional work.
 </div>
 
-### Redis
+{{< table_of_contents >}}
+
+## Redis
 
 To use redis, you'll need to add this to the config examples below:
 

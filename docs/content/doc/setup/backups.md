@@ -13,6 +13,8 @@ menu:
 Vikunja does not store any data outside of the database.
 So, all you need to backup are the contents of that database and maybe the config file.
 
+{{< table_of_contents >}}
+
 ## MySQL
 
 To create a backup from mysql use the `mysqldump` command:

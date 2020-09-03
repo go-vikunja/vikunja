@@ -17,6 +17,8 @@ Unzip them and store them somewhere your server can access them.
 
 You also need to configure a rewrite condition to internally redirect all requests to `index.html` which handles all urls. 
 
+{{< table_of_contents >}}
+
 ## API URL configuration
 
 By default, the frontend assumes it can reach the api at `/api/v1` relative to the frontend url.

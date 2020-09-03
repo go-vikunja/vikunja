@@ -15,6 +15,8 @@ Metrics work by exposing a `/metrics` endpoint which can then be accessed by pro
 To keep the load on the database minimal, metrics are stored and updated in redis.
 The `metrics` package provides several functions to create and update metrics.
 
+{{< table_of_contents >}}
+
 ## New metrics
 
 First, define a `const` with the metric key in redis. This is done in `pkg/metrics/metrics.go`.
@@ -41,6 +43,6 @@ Because metrics are stored in redis, you are responsible to increase or decrease
 To do this, use `metrics.UpdateCount(value, key)` where `value` is the amount you want to cange it (you can pass
 negative values to decrease it) and `key` it the redis key used to define the metric.
 
-# Using it
+## Using it
 
 A Prometheus config with a Grafana template is available at [our git repo](https://git.kolaente.de/vikunja/monitoring).

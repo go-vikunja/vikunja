@@ -16,6 +16,8 @@ menu:
 
 Vikunja supports managing tasks via the [caldav VTODO](https://tools.ietf.org/html/rfc5545#section-3.6.2) extension.
 
+{{< table_of_contents >}}
+
 ## URLs
 
 All urls are located under the `/dav` subspace.
@@ -64,11 +66,11 @@ Vikunja **currently does not** support these properties:
 
 ## Tested Clients
 
-#### Working
+### Working
 
 * [Evolution](https://wiki.gnome.org/Apps/Evolution/)
 
-#### Not working
+### Not working
 
 * [Tasks (Android)](https://tasks.org/)
 

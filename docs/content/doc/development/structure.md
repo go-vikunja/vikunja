@@ -45,6 +45,8 @@ In general, this api repo has the following structure:
 
 This document will explain what these mean and what you can find where.
 
+{{< table_of_contents >}}
+
 ## Root level
 
 The root directory is where [the config file]({{< ref "../setup/config.md">}}), [Magefile]({{< ref "mage.md">}}), license, drone config, 

@@ -15,6 +15,8 @@ Mage is a pure go solution which allows for greater flexibility and things like 
 
 This document explains what taks are available and what they do.
 
+{{< table_of_contents >}}
+
 ## Installation
 
 To use mage, you'll need to install the mage cli.

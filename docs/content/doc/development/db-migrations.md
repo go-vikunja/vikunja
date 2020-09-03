@@ -16,6 +16,8 @@ Additionally, they can also be run directly by using the `migrate` command.
 We use [xormigrate](https://github.com/techknowlogick/xormigrate) to handle migrations, 
 which is based on gormigrate.
 
+{{< table_of_contents >}}
+
 ## Add a new migration
 
 All migrations are stored in `pkg/migrations` and files should have the same name as their id.

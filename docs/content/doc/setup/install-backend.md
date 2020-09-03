@@ -15,6 +15,8 @@ menu:
 <a href="{{< ref "utf-8.md">}}">make sure your db is utf-8 compatible</a>.
 </div>
 
+{{< table_of_contents >}}
+
 ## Install from binary
 
 Download a copy of Vikunja from the [download page](https://vikunja.io/en/download/) for your architecture.

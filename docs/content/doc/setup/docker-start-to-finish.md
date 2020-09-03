@@ -17,6 +17,8 @@ We'll use [docker compose](https://docs.docker.com/compose/) to make handling th
 
 > If you have any issues setting up vikunja, please don't hesitate to reach out to us via [matrix](https://riot.im/app/#/room/!dCRiCiLaCCFVNlDnYs:matrix.org?via=matrix.org), the [community forum](https://community.vikunja.io/) or even [email](mailto:hello@vikunja.io).
 
+{{< table_of_contents >}}
+
 ## Preparations (optional)
 
 Create a directory for the project where all data and the compose file will live in.

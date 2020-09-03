@@ -16,12 +16,14 @@ To make this easier, we have put together a few helpers which are documented on 
 In general, each migrator implements a migrator interface which is then called from a client.
 The interface makes it possible to use helper methods which handle http an focus only on the implementation of the migrator itself.
 
-### Structure
+{{< table_of_contents >}}
+
+## Structure
 
 All migrator implementations live in their own package in `pkg/modules/migration/<name-of-the-service>`.
 When creating a new migrator, you should place all related code inside that module.
 
-### Migrator interface
+## Migrator interface
 
 The migrator interface is defined as follows:
 
@@ -41,7 +43,7 @@ type Migrator interface {
 }
 ```
 
-### Defining http routes
+## Defining http routes
 
 Once your migrator implements the migration interface, it becomes possible to use the helper http handlers.
 Their usage is very similar to the [general web handler](https://kolaente.dev/vikunja/web#user-content-defining-routes-using-the-standard-web-handler):
@@ -63,7 +65,7 @@ if config.MigrationWunderlistEnable.GetBool() {
 
 You should also document the routes with [swagger annotations]({{< ref "../practical-instructions/swagger-docs.md" >}}).
 
-### Insertion helper method
+## Insertion helper method
 
 There is a method available in the `migration` package which takes a fully nested Vikunja structure and creates it with all relations. 
 This means you start by adding a namespace, then add lists inside of that namespace, then tasks in the lists and so on.
@@ -81,7 +83,7 @@ if err != nil {
 err = migration.InsertFromStructure(fullVikunjaHierachie, user)
 ```
 
-### Configuration
+## Configuration
 
 You should add at least an option to enable or disable the migration.
 Chances are, you'll need some more options for things like client ID and secret 
@@ -90,7 +92,7 @@ Chances are, you'll need some more options for things like client ID and secret
 The easiest way to implement an on/off switch is to check whether your migration service is enabled or not when 
 registering the routes, and then simply don't registering the routes in the case it is disabled.
 
-#### Making the migrator public in `/info` 
+### Making the migrator public in `/info` 
 
 You should make your migrator available in the `/info` endpoint so that frontends can display options to enable them or not.
 To do this, add an entry to `pkg/routes/api/v1/info.go`.
