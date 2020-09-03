@@ -578,6 +578,7 @@ func (Release) Compress(ctx context.Context) error {
 
 		// Runs compressing in parallel since upx is single-threaded
 		errs.Go(func() error {
+			runAndStreamOutput("chmod", "+x", path) // Make sure all binaries are executable. Sometimes the CI does weired things and they're not.
 			runAndStreamOutput("upx", "-9", path)
 			return nil
 		})
