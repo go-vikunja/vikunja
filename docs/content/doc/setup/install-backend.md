@@ -178,6 +178,100 @@ dpkg -i vikunja.deb
 This will install the backend to `/opt/vikunja`.
 To configure it, use the config file in `/etc/vikunja/config.yml`.
 
+## FreeBSD / FreeNAS
+
+Unfortunately, we currently can't provide pre-built binaries for FreeBSD.
+As a workaround, it is possible to compile vikunja for FreeBSD directly on a FreeBSD machine, a guide is available below:
+
+*Thanks to HungrySkeleton who originally created this guide [in the forum](https://community.vikunja.io/t/freebsd-support/69/11).*
+
+### Jail Setup
+
+1. Create jail named ```vikunja```
+2. Set jail properties to 'auto start'
+3. Mount storage (```/mnt``` to ```jailData/vikunja```)
+4. Start jail & SSH into it
+
+### Installing packages
+
+{{< highlight bash >}}
+pkg update && pkg upgrade -y
+pkg install nano git go gmake
+go install github.com/magefile/mage
+{{< /highlight >}}
+
+### Clone vikunja repo
+
+{{< highlight bash >}}
+mkdir /mnt/GO/code.vikunja.io
+cd /mnt/GO/code.vikunja.io
+git clone https://code.vikunja.io/api
+cd /mnt/GO/code.vikunja.io/api
+{{< /highlight >}}
+
+### Compile binaries
+
+{{< highlight bash >}}
+go install
+mage build
+{{< /highlight >}}
+
+### Create folder to install backend server into
+
+{{< highlight bash >}}
+mkdir /mnt/backend
+cp /mnt/GO/code.vikunja.io/api/vikunja /mnt/backend/vikunja
+cd /mnt/backend
+chmod +x /mnt/backend/vikunja
+{{< /highlight >}}
+
+### Set vikunja to boot on startup
+
+{{< highlight bash >}}
+nano /etc/rc.d/vikunja
+{{< /highlight >}}
+
+Then paste into the file:
+
+{{< highlight bash >}}
+#!/bin/sh
+
+. /etc/rc.subr
+
+name=vikunja
+rcvar=vikunja_enable
+
+command="/mnt/backend/${name}"
+
+load_rc_config $name
+run_rc_command "$1"
+{{< /highlight >}}
+
+Save and exit.  Then execute:
+
+{{< highlight bash >}}
+chmod +x /etc/rc.d/vikunja
+nano /etc/rc.conf
+{{< /highlight >}}
+
+Then add line to bottom of file:
+
+{{< highlight bash >}}
+vikunja_enable="YES"
+{{< /highlight >}}
+
+Test vikunja now works with
+
+{{< highlight bash >}}
+service vikunja start
+{{< /highlight >}}
+
+The API is now available through IP:
+
+```
+192.168.1.XXX:3456
+```
+
 ## Configuration
 
 See [available configuration options]({{< ref "config.md">}}).
