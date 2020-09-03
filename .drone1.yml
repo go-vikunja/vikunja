@@ -458,7 +458,7 @@ steps:
     image: kolaente/fpm
     pull: true
     commands:
-      - ./mage-static build-deb
+      - ./mage-static release:deb
     depends_on: [ static-build-linux ]
 
   - name: deb-structure
@@ -476,7 +476,7 @@ steps:
       - gpg --import ~/frederik.gpg
       - mkdir debian/conf -p
       - cp build/reprepro-dist-conf debian/conf/distributions
-      - ./mage-static reprepro
+      - ./mage-static release:reprepro
     depends_on: [ build-deb ]
 
   # Push the releases to our pseudo-s3-bucket
