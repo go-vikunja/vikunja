@@ -10,10 +10,10 @@ menu:
 
 # Testing
 
-You can run unit tests with [our `Makefile`]({{< ref "make.md">}}) with
+You can run unit tests with [our `Magefile`]({{< ref "mage.md">}}) with
 
 {{< highlight bash >}}
-make test
+mage test:unit
 {{< /highlight >}}
 
 ### Running tests with config
@@ -36,12 +36,12 @@ When you add a new test case which requires new database entries to test against
 # Integration tests
 
 All integration tests live in `pkg/integrations`.
-You can run them by executing `make integration-test`.
+You can run them by executing `mage test:integration`.
 
 The integration tests use the same config and fixtures as the unit tests and therefor have the same options available,
 see at the beginning of this document.
 
-To run integration tests, use `make integration-test`.
+To run integration tests, use `mage test:integration`.
 
 # Initializing db fixtures when writing tests
 

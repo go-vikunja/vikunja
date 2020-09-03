@@ -51,7 +51,7 @@ git fetch --all --prune
 {{< /highlight >}}
 
 This should provide a working development environment for Vikunja. Take a look at the Makefile to get an overview about 
-the available tasks. The most common tasks should be `make test` which will start our test environment and `make build` 
+the available tasks. The most common tasks should be `mage test:unit` which will start our test environment and `mage build:build` 
 which will build a vikunja binary into the working directory. Writing test cases is not mandatory to contribute, but it 
 is highly encouraged and helps developers sleep at night.
 
@@ -62,4 +62,4 @@ That’s it! You are ready to hack on Vikunja. Test changes, push them to the re
 Each Vikunja release contains all static assets directly compiled into the binary.
 To prevent this during development, use the `dev` tag when developing.
 
-See the [make docs](make.md#statically-compile-all-templates-into-the-binary) about how to compile with static assets for a release.
+See the [mage docs](mage.md#statically-compile-all-templates-into-the-binary) about how to compile with static assets for a release.
