@@ -11410,6 +11410,11 @@ ripemd160@^2.0.0, ripemd160@^2.0.1:
     hash-base "^3.0.0"
     inherits "^2.0.1"
 
+rollup-plugin-analyzer@^3.3.0:
+  version "3.3.0"
+  resolved "https://registry.yarnpkg.com/rollup-plugin-analyzer/-/rollup-plugin-analyzer-3.3.0.tgz#52fb30465ae927d9c078b6ec90c578cfb9164fc2"
+  integrity sha512-zUPGitW4usmZcVa0nKecRvw3odtXgnxdCben9Hx1kxVoR3demek8RU9tmRG/R35hnRPQTb7wEsYEe3GUcjxIMA==
+
 rss-parser@^3.8.0:
   version "3.8.0"
   resolved "https://registry.yarnpkg.com/rss-parser/-/rss-parser-3.8.0.tgz#6ab883c5cfb69202e25c76fe2b17e3e9179a39f6"
@@ -13201,14 +13206,15 @@ vscode-uri@^1.0.6:
   resolved "https://registry.yarnpkg.com/vscode-uri/-/vscode-uri-1.0.8.tgz#9769aaececae4026fb6e22359cb38946580ded59"
   integrity sha512-obtSWTlbJ+a+TFRYGaUumtVwb+InIUVI0Lu0VBUAPmj2cU5JutEXg3xUE0c2J5Tcy7h2DEKVJBFi+Y9ZSFzzPQ==
 
-vue-advanced-cropper@0.16.10:
-  version "0.16.10"
-  resolved "https://registry.yarnpkg.com/vue-advanced-cropper/-/vue-advanced-cropper-0.16.10.tgz#2792003c3cf55fb028c6822aa6f50f18019f2741"
-  integrity sha512-xUr7tTpbm+EyrILgLinhxj3NrmJlhUgMCtsifEldwZ8vHyHCCKCnvjRsMpiAQWPLrfhjMwECA0U77Mu93tHRow==
+vue-advanced-cropper@0.17.0:
+  version "0.17.0"
+  resolved "https://registry.yarnpkg.com/vue-advanced-cropper/-/vue-advanced-cropper-0.17.0.tgz#ce2c36263bc70098a74fc9a7a4b237077ba4c672"
+  integrity sha512-X9iDidWYvEX35itpMsbq1Tc1kl9zIwRRlkQFXG2mJdrBGNSBwzm/ue8SutmQenQR9yVqQXIyhCymR+0p83z5RA==
   dependencies:
     classnames "^2.2.6"
     debounce "^1.2.0"
     easy-bem "^1.0.2"
+    rollup-plugin-analyzer "^3.3.0"
 
 vue-cli-plugin-apollo@^0.21.3:
   version "0.21.3"
