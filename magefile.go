@@ -243,6 +243,33 @@ func copyFile(src, dst string) error {
 	return out.Close()
 }
 
+// os.Rename has issues with moving files between docker volumes.
+// Because of this limitaion, it fails in drone.
+// Source: https://gist.github.com/var23rav/23ae5d0d4d830aff886c3c970b8f6c6b
+func moveFile(sourcePath, destPath string) error {
+	inputFile, err := os.Open(sourcePath)
+	if err != nil {
+		return fmt.Errorf("couldn't open source file: %s", err)
+	}
+	outputFile, err := os.Create(destPath)
+	if err != nil {
+		inputFile.Close()
+		return fmt.Errorf("couldn't open dest file: %s", err)
+	}
+	defer outputFile.Close()
+	_, err = io.Copy(outputFile, inputFile)
+	inputFile.Close()
+	if err != nil {
+		return fmt.Errorf("writing to output file failed: %s", err)
+	}
+	// The copy was successful, so now delete the original file
+	err = os.Remove(sourcePath)
+	if err != nil {
+		return fmt.Errorf("failed removing original file: %s", err)
+	}
+	return nil
+}
+
 // Formats the code using go fmt
 func Fmt() {
 	args := append([]string{"-s", "-w"}, GoFiles...)
@@ -479,7 +506,7 @@ func runXgo(targets string) error {
 				return nil
 			}
 
-			return os.Rename(path, RootPath+"/"+DIST+"/binaries/"+info.Name())
+			return moveFile(path, RootPath+"/"+DIST+"/binaries/"+info.Name())
 		})
 	}
 	return nil
@@ -589,10 +616,10 @@ func (Release) OsPackage() error {
 		if err := os.Mkdir(folder, 0755); err != nil {
 			return err
 		}
-		if err := os.Rename(p+info.Name()+".sha256", folder+info.Name()+".sha256"); err != nil {
+		if err := moveFile(p+info.Name()+".sha256", folder+info.Name()+".sha256"); err != nil {
 			return err
 		}
-		if err := os.Rename(path, folder+info.Name()); err != nil {
+		if err := moveFile(path, folder+info.Name()); err != nil {
 			return err
 		}
 		if err := copyFile(RootPath+"/config.yml.sample", folder+"config.yml.sample"); err != nil {
