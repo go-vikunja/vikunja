@@ -143,14 +143,19 @@ func setGoFiles() {
 	}
 }
 
+// Some variables can always get initialized, so we do just that.
 func init() {
+	setExecutable()
+	setRootPath()
+}
+
+// Some variables have external dependencies (like git) which may not always be available.
+func initVars() {
 	Tags = os.Getenv("TAGS")
 	setVersion()
-	setExecutable()
 	setBinLocation()
 	setPkgVersion()
 	setApiPackages()
-	setRootPath()
 	setGoFiles()
 	Ldflags = `-X "` + PACKAGE + `/pkg/version.Version=` + VersionNumber + `" -X "main.Tags=` + Tags + `"`
 }
@@ -272,12 +277,14 @@ func moveFile(sourcePath, destPath string) error {
 
 // Formats the code using go fmt
 func Fmt() {
+	mg.Deps(initVars)
 	args := append([]string{"-s", "-w"}, GoFiles...)
 	runAndStreamOutput("gofmt", args...)
 }
 
 // Generates the swagger docs from the code annotations
 func DoTheSwag() {
+	mg.Deps(initVars)
 	checkAndInstallGoTool("swag", "github.com/swaggo/swag/cmd/swag")
 	runAndStreamOutput("swag", "init", "-g", "./pkg/routes/routes.go", "--parseDependency", "-d", RootPath, "-o", RootPath+"/pkg/swagger")
 }
@@ -286,6 +293,7 @@ type Test mg.Namespace
 
 // Runs all tests except integration tests
 func (Test) Unit() {
+	mg.Deps(initVars)
 	// We run everything sequentially and not in parallel to prevent issues with real test databases
 	args := append([]string{"test", Goflags[0], "-p", "1"}, ApiPackages...)
 	runAndStreamOutput("go", args...)
@@ -293,12 +301,14 @@ func (Test) Unit() {
 
 // Runs the tests and builds the coverage html file from coverage output
 func (Test) Coverage() {
+	mg.Deps(initVars)
 	mg.Deps(Test.Unit)
 	runAndStreamOutput("go", "tool", "cover", "-html=cover.out", "-o", "cover.html")
 }
 
 // Runs the integration tests
 func (Test) Integration() {
+	mg.Deps(initVars)
 	// We run everything sequentially and not in parallel to prevent issues with real test databases
 	runAndStreamOutput("go", "test", Goflags[0], "-p", "1", PACKAGE+"/pkg/integrations")
 }
@@ -307,6 +317,7 @@ type Check mg.Namespace
 
 // Checks if the code is properly formatted with go fmt
 func (Check) Fmt() error {
+	mg.Deps(initVars)
 	args := append([]string{"-s", "-d"}, GoFiles...)
 	c := exec.Command("gofmt", args...)
 	out, err := c.Output()
@@ -326,6 +337,7 @@ func (Check) Fmt() error {
 
 // Runs golint on all packages
 func (Check) Lint() {
+	mg.Deps(initVars)
 	checkAndInstallGoTool("golint", "golang.org/x/lint/golint")
 	args := append([]string{"-set_exit_status"}, ApiPackages...)
 	runAndStreamOutput("golint", args...)
@@ -333,6 +345,7 @@ func (Check) Lint() {
 
 // Checks if the swagger docs need to be re-generated from the code annotations
 func (Check) GotSwag() {
+	mg.Deps(initVars)
 	// The check is pretty cheaply done: We take the hash of the swagger.json file, generate the docs,
 	// hash the file again and compare the two hashes to see if anything changed. If that's the case,
 	// regenerating the docs is necessary.
@@ -362,30 +375,35 @@ func (Check) GotSwag() {
 
 // Checks the source code for misspellings
 func (Check) Misspell() {
+	mg.Deps(initVars)
 	checkAndInstallGoTool("misspell", "github.com/client9/misspell/cmd/misspell")
 	runAndStreamOutput("misspell", append([]string{"-error"}, GoFiles...)...)
 }
 
 // Checks the source code for ineffectual assigns
 func (Check) Ineffassign() {
+	mg.Deps(initVars)
 	checkAndInstallGoTool("ineffassign", "github.com/gordonklaus/ineffassign")
 	runAndStreamOutput("ineffassign", GoFiles...)
 }
 
 // Checks for the cyclomatic complexity of the source code
 func (Check) Gocyclo() {
+	mg.Deps(initVars)
 	checkAndInstallGoTool("gocyclo", "github.com/fzipp/gocyclo")
 	runAndStreamOutput("gocyclo", append([]string{"-over", "49"}, GoFiles...)...)
 }
 
 // Statically analyzes the source code about a range of different problems
 func (Check) Static() {
+	mg.Deps(initVars)
 	checkAndInstallGoTool("staticcheck", "honnef.co/go/tools/cmd/staticcheck")
 	runAndStreamOutput("staticcheck", ApiPackages...)
 }
 
 // Checks the source code for potential security issues
 func (Check) GoSec() {
+	mg.Deps(initVars)
 	if err := exec.Command("gosec").Run(); err != nil && strings.Contains(err.Error(), "executable file not found") {
 		fmt.Println("Please manually install gosec by running")
 		fmt.Println("curl -sfL https://raw.githubusercontent.com/securego/gosec/master/install.sh | bash -s -- -b $GOPATH/bin v2.2.0")
@@ -396,12 +414,14 @@ func (Check) GoSec() {
 
 // Checks for repeated strings that could be replaced by a constant
 func (Check) Goconst() {
+	mg.Deps(initVars)
 	checkAndInstallGoTool("goconst", "github.com/jgautheron/goconst/cmd/goconst")
 	runAndStreamOutput("goconst", ApiPackages...)
 }
 
 // Runs fmt-check, lint, got-swag, misspell-check, ineffasign-check, gocyclo-check, static-check, gosec-check, goconst-check all in parallel
 func (Check) All() {
+	mg.Deps(initVars)
 	mg.Deps(
 		Check.Fmt,
 		Check.Lint,
@@ -419,6 +439,7 @@ type Build mg.Namespace
 
 // Cleans all build, executable and bindata files
 func (Build) Clean() error {
+	mg.Deps(initVars)
 	if err := exec.Command("go", "clean", "./...").Run(); err != nil {
 		return err
 	}
@@ -436,11 +457,13 @@ func (Build) Clean() error {
 
 // Generates static content into the final binary
 func (Build) Generate() {
+	mg.Deps(initVars)
 	runAndStreamOutput("go", "generate", PACKAGE+"/pkg/static")
 }
 
 // Builds a vikunja binary, ready to run
 func (Build) Build() {
+	mg.Deps(initVars)
 	mg.Deps(Build.Generate)
 	runAndStreamOutput("go", "build", Goflags[0], "-tags", Tags, "-ldflags", "-s -w "+Ldflags, "-o", Executable)
 }
@@ -449,6 +472,7 @@ type Release mg.Namespace
 
 // Runs all steps in the right order to create release packages for various platforms
 func (Release) Release(ctx context.Context) error {
+	mg.Deps(initVars)
 	mg.Deps(Build.Generate, Release.Dirs)
 	mg.Deps(Release.Windows, Release.Linux, Release.Darwin)
 
@@ -491,6 +515,7 @@ func (Release) Dirs() error {
 }
 
 func runXgo(targets string) error {
+	mg.Deps(initVars)
 	checkAndInstallGoTool("xgo", "src.techknowlogick.com/xgo")
 
 	extraLdflags := `-linkmode external -extldflags "-static" `
