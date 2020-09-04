@@ -37,6 +37,7 @@ type vikunjaInfos struct {
 	EnabledBackgroundProviders []string  `json:"enabled_background_providers"`
 	TotpEnabled                bool      `json:"totp_enabled"`
 	Legal                      legalInfo `json:"legal"`
+	CaldavEnabled              bool      `json:"caldav_enabled"`
 }
 
 type legalInfo struct {
@@ -61,6 +62,7 @@ func Info(c echo.Context) error {
 		RegistrationEnabled:    config.ServiceEnableRegistration.GetBool(),
 		TaskAttachmentsEnabled: config.ServiceEnableTaskAttachments.GetBool(),
 		TotpEnabled:            config.ServiceEnableTotp.GetBool(),
+		CaldavEnabled:          config.ServiceEnableCaldav.GetBool(),
 		Legal: legalInfo{
 			ImprintURL:       config.LegalImprintURL.GetString(),
 			PrivacyPolicyURL: config.LegalPrivacyURL.GetString(),
