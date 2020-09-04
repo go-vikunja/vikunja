@@ -2,12 +2,14 @@
   title: testbucket1
   list_id: 1
   created_by_id: 1
+  limit: 9999999 # This bucket has a limit we will never exceed in the tests to make sure the logic allows for buckets with limits
   created: 2020-04-18 21:13:52
   updated: 2020-04-18 21:13:52
 - id: 2
   title: testbucket2
   list_id: 1
   created_by_id: 1
+  limit: 3
   created: 2020-04-18 21:13:52
   updated: 2020-04-18 21:13:52
 - id: 3

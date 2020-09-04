@@ -289,9 +289,9 @@ func TestTask(t *testing.T) {
 		})
 		t.Run("Bucket", func(t *testing.T) {
 			t.Run("Normal", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"listtask": "1"}, `{"bucket_id":2}`)
+				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"listtask": "1"}, `{"bucket_id":3}`)
 				assert.NoError(t, err)
-				assert.Contains(t, rec.Body.String(), `"bucket_id":2`)
+				assert.Contains(t, rec.Body.String(), `"bucket_id":3`)
 				assert.NotContains(t, rec.Body.String(), `"bucket_id":1`)
 			})
 			t.Run("Different List", func(t *testing.T) {
@@ -472,9 +472,9 @@ func TestTask(t *testing.T) {
 		})
 		t.Run("Bucket", func(t *testing.T) {
 			t.Run("Normal", func(t *testing.T) {
-				rec, err := testHandler.testCreateWithUser(nil, map[string]string{"list": "1"}, `{"title":"Lorem Ipsum","bucket_id":2}`)
+				rec, err := testHandler.testCreateWithUser(nil, map[string]string{"list": "1"}, `{"title":"Lorem Ipsum","bucket_id":3}`)
 				assert.NoError(t, err)
-				assert.Contains(t, rec.Body.String(), `"bucket_id":2`)
+				assert.Contains(t, rec.Body.String(), `"bucket_id":3`)
 				assert.NotContains(t, rec.Body.String(), `"bucket_id":1`)
 			})
 			t.Run("Different List", func(t *testing.T) {

@@ -35,6 +35,9 @@ type Bucket struct {
 	// All tasks which belong to this bucket.
 	Tasks []*Task `xorm:"-" json:"tasks"`
 
+	// How many tasks can be at the same time on this board max
+	Limit int64 `xorm:"default 0" json:"limit"`
+
 	// A timestamp when this bucket was created. You cannot change this value.
 	Created time.Time `xorm:"created not null" json:"created"`
 	// A timestamp when this bucket was last updated. You cannot change this value.

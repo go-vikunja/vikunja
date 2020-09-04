@@ -1334,3 +1334,32 @@ func (err ErrCannotRemoveLastBucket) HTTPError() web.HTTPError {
 		Message:  "You cannot remove the last bucket on this list.",
 	}
 }
+
+// ErrBucketLimitExceeded represents an error where a task is being created or moved to a bucket which has its limit already exceeded.
+type ErrBucketLimitExceeded struct {
+	BucketID int64
+	Limit    int64
+	TaskID   int64 // may be 0
+}
+
+// IsErrBucketLimitExceeded checks if an error is ErrBucketLimitExceeded.
+func IsErrBucketLimitExceeded(err error) bool {
+	_, ok := err.(ErrBucketLimitExceeded)
+	return ok
+}
+
+func (err ErrBucketLimitExceeded) Error() string {
+	return fmt.Sprintf("Cannot add a task to this bucket because it would exceed the limit [BucketID: %d, Limit: %d, TaskID: %d]", err.BucketID, err.Limit, err.TaskID)
+}
+
+// ErrCodeBucketLimitExceeded holds the unique world-error code of this error
+const ErrCodeBucketLimitExceeded = 10004
+
+// HTTPError holds the http error description
+func (err ErrBucketLimitExceeded) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusPreconditionFailed,
+		Code:     ErrCodeBucketLimitExceeded,
+		Message:  "You cannot add the task to this bucket as it already exceeded the limit of tasks it can hold.",
+	}
+}

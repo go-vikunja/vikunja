@@ -134,3 +134,4 @@ This document describes the different errors Vikunja can return.
 | 10001 | 404 | The bucket does not exist. | 
 | 10002 | 400 | The bucket does not belong to that list. | 
 | 10003 | 412 | You cannot remove the last bucket on a list. | 
+| 10004 | 412 | You cannot add the task to this bucket as it already exceeded the limit of tasks it can hold. | 

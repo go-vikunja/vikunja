@@ -6236,6 +6236,10 @@ var doc = `{
                     "description": "The unique, numeric id of this bucket.",
                     "type": "integer"
                 },
+                "limit": {
+                    "description": "How many tasks can be at the same time on this board max",
+                    "type": "integer"
+                },
                 "list_id": {
                     "description": "The list this bucket belongs to.",
                     "type": "integer"

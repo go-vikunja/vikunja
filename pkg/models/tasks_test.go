@@ -85,6 +85,18 @@ func TestTask_Create(t *testing.T) {
 		assert.Error(t, err)
 		assert.True(t, user.IsErrUserDoesNotExist(err))
 	})
+	t.Run("full bucket", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		task := &Task{
+			Title:       "Lorem",
+			Description: "Lorem Ipsum Dolor",
+			ListID:      1,
+			BucketID:    2, // Bucket 2 already has 3 tasks and a limit of 3
+		}
+		err := task.Create(usr)
+		assert.Error(t, err)
+		assert.True(t, IsErrBucketLimitExceeded(err))
+	})
 }
 
 func TestTask_Update(t *testing.T) {
@@ -110,6 +122,19 @@ func TestTask_Update(t *testing.T) {
 		err := task.Update()
 		assert.Error(t, err)
 		assert.True(t, IsErrTaskDoesNotExist(err))
+	})
+	t.Run("full bucket", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		task := &Task{
+			ID:          1,
+			Title:       "test10000",
+			Description: "Lorem Ipsum Dolor",
+			ListID:      1,
+			BucketID:    2, // Bucket 2 already has 3 tasks and a limit of 3
+		}
+		err := task.Update()
+		assert.Error(t, err)
+		assert.True(t, IsErrBucketLimitExceeded(err))
 	})
 }
 

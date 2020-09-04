@@ -545,6 +545,32 @@ func checkBucketAndTaskBelongToSameList(s *xorm.Session, fullTask *Task, bucketI
 	return
 }
 
+// Checks if adding a new task would exceed the bucket limit
+func checkBucketLimit(s *xorm.Session, t *Task, bucket *Bucket) (err error) {
+
+	// We need the bucket to check if it has more tasks than the limit allows
+	if bucket == nil {
+		bucket, err = getBucketByID(s, t.BucketID)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Check the limit
+	if bucket.Limit > 0 {
+		taskCount, err := s.
+			Where("bucket_id = ?", bucket.ID).
+			Count(&Task{})
+		if err != nil {
+			return err
+		}
+		if taskCount >= bucket.Limit {
+			return ErrBucketLimitExceeded{TaskID: t.ID, BucketID: bucket.ID, Limit: bucket.Limit}
+		}
+	}
+	return nil
+}
+
 // Create is the implementation to create a list task
 // @Summary Create a task
 // @Description Inserts a task into a list.
@@ -608,12 +634,18 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool) (err
 	}
 
 	// Get the default bucket and move the task there
+	var bucket *Bucket
 	if t.BucketID == 0 {
-		defaultBucket, err := getDefaultBucket(s, t.ListID)
+		bucket, err = getDefaultBucket(s, t.ListID)
 		if err != nil {
 			return err
 		}
-		t.BucketID = defaultBucket.ID
+		t.BucketID = bucket.ID
+	}
+
+	// Bucket Limit
+	if err := checkBucketLimit(s, t, bucket); err != nil {
+		return err
 	}
 
 	// Get the index for this task
@@ -730,15 +762,19 @@ func (t *Task) Update() (err error) {
 		"repeat_from_current_date",
 	}
 
-	// If the task is being moved between lists, make sure to move the bucket + index as well
-	if t.ListID != 0 && ot.ListID != t.ListID {
-		b, err := getDefaultBucket(s, t.ListID)
+	// Make sure we have a bucket
+	var bucket *Bucket
+	if t.BucketID == 0 || (t.ListID != 0 && ot.ListID != t.ListID) {
+		bucket, err = getDefaultBucket(s, t.ListID)
 		if err != nil {
 			_ = s.Rollback()
 			return err
 		}
-		t.BucketID = b.ID
+		t.BucketID = bucket.ID
+	}
 
+	// If the task is being moved between lists, make sure to move the bucket + index as well
+	if t.ListID != 0 && ot.ListID != t.ListID {
 		latestTask := &Task{}
 		_, err = s.Where("list_id = ?", t.ListID).OrderBy("id desc").Get(latestTask)
 		if err != nil {
@@ -748,6 +784,12 @@ func (t *Task) Update() (err error) {
 
 		t.Index = latestTask.Index + 1
 		colsToUpdate = append(colsToUpdate, "index")
+	}
+
+	// Check the bucket limit
+	if err := checkBucketLimit(s, t, bucket); err != nil {
+		_ = s.Rollback()
+		return err
 	}
 
 	// Update the labels
