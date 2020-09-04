@@ -7350,6 +7350,9 @@ var doc = `{
                         "type": "string"
                     }
                 },
+                "caldav_enabled": {
+                    "type": "boolean"
+                },
                 "enabled_background_providers": {
                     "type": "array",
                     "items": {

@@ -876,6 +876,8 @@ definitions:
         items:
           type: string
         type: array
+      caldav_enabled:
+        type: boolean
       enabled_background_providers:
         items:
           type: string
