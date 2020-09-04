@@ -705,7 +705,7 @@ func (Release) Deb() {
 		"--description", "'Vikunja is an open-source todo application, written in Go. It lets you create lists,tasks and share them via teams or directly between users.'",
 		"-m", "maintainers@vikunja.io",
 		"-p", RootPath+"/"+Executable+"-"+Version+"_amd64.deb",
-		"./"+BinLocation+"=/opt/vikunja/vikunja",
+		RootPath+"/"+BinLocation+"=/opt/vikunja/vikunja",
 		"./config.yml.sample=/etc/vikunja/config.yml",
 	)
 }
