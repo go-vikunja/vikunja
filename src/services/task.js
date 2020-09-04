@@ -37,8 +37,8 @@ export default class TaskService extends AbstractService {
 		model.dueDate = !model.dueDate ? null : formatISO(new Date(model.dueDate))
 		model.startDate = !model.startDate ? null : formatISO(new Date(model.startDate))
 		model.endDate = !model.endDate ? null : formatISO(new Date(model.endDate))
-		model.created = formatISO(model.created)
-		model.updated = formatISO(model.updated)
+		model.created = formatISO(new Date(model.created))
+		model.updated = formatISO(new Date(model.updated))
 
 		// remove all nulls, these would create empty reminders
 		for (const index in model.reminderDates) {

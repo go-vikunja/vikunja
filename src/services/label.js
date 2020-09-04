@@ -14,8 +14,8 @@ export default class LabelService extends AbstractService {
 	}
 
 	processModel(label) {
-		label.created = formatISO(label.created)
-		label.updated = formatISO(label.updated)
+		label.created = formatISO(new Date(label.created))
+		label.updated = formatISO(new Date(label.updated))
 		label.hexColor = label.hexColor.substring(1, 7)
 		return label
 	}

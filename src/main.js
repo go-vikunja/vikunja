@@ -70,6 +70,7 @@ import { faFilter } from '@fortawesome/free-solid-svg-icons'
 import { faFillDrip } from '@fortawesome/free-solid-svg-icons'
 import { faKeyboard } from '@fortawesome/free-solid-svg-icons'
 import { faComments } from '@fortawesome/free-regular-svg-icons'
+import { faSave } from '@fortawesome/free-regular-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
 library.add(faSignOutAlt)
@@ -117,6 +118,7 @@ library.add(faEllipsisV)
 library.add(faFilter)
 library.add(faFillDrip)
 library.add(faKeyboard)
+library.add(faSave)
 
 Vue.component('icon', FontAwesomeIcon)
 

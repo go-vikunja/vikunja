@@ -213,6 +213,14 @@ $crazy-height-calculation: '100vh - 4.5rem - 1.5rem - 1em - 1.5em - 8px';
         width: 100%;
       }
     }
+
+    a.dropdown-item {
+      padding-right: 1rem;
+
+      .input {
+        height: 2.25em;
+      }
+    }
   }
 
   .bucket-header {
@@ -220,6 +228,15 @@ $crazy-height-calculation: '100vh - 4.5rem - 1.5rem - 1em - 1.5em - 8px';
     align-items: center;
     justify-content: space-between;
     padding: .5em;
+
+    .limit {
+      padding-left: .5rem;
+      font-weight: bold;
+
+      &.is-max {
+        color: $red;
+      }
+    }
 
     .dropdown-trigger {
       cursor: pointer;

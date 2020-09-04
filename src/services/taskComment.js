@@ -14,8 +14,8 @@ export default class TaskCommentService extends AbstractService {
 	}
 
 	processModel(model) {
-		model.created = formatISO(model.created)
-		model.updated = formatISO(model.updated)
+		model.created = formatISO(new Date(model.created))
+		model.updated = formatISO(new Date(model.updated))
 		return model
 	}
 

@@ -75,7 +75,7 @@ export default class TaskModel extends AbstractModel {
 	defaults() {
 		return {
 			id: 0,
-			text: '',
+			title: '',
 			description: '',
 			done: false,
 			priority: 0,

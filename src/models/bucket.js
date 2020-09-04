@@ -1,6 +1,6 @@
 import AbstractModel from './abstractModel'
 import UserModel from './user'
-import TaskModel from "./task";
+import TaskModel from './task'
 
 export default class BucketModel extends AbstractModel {
 	constructor(bucket) {
@@ -18,6 +18,7 @@ export default class BucketModel extends AbstractModel {
 			id: 0,
 			title: '',
 			listId: 0,
+			limit: 0,
 			tasks: [],
 
 			createdBy: null,

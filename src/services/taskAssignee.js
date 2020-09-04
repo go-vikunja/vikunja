@@ -11,7 +11,7 @@ export default class TaskAssigneeService extends AbstractService {
 	}
 
 	processModel(model) {
-		model.created = formatISO(model.created)
+		model.created = formatISO(new Date(model.created))
 		return model
 	}
 

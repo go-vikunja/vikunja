@@ -9,6 +9,12 @@
 						@focusout="() => saveBucketTitle(bucket.id)"
 						:ref="`bucket${bucket.id}title`"
 						@keyup.ctrl.enter="() => saveBucketTitle(bucket.id)">{{ bucket.title }}</h2>
+				<span 
+					class="limit"
+					:class="{'is-max': bucket.tasks.length >= bucket.limit}"
+					v-if="bucket.limit > 0">
+					{{ bucket.tasks.length }}/{{ bucket.limit }}
+				</span>
 				<div
 						class="dropdown is-right options"
 						:class="{ 'is-active': bucketOptionsDropDownActive[bucket.id] }"
@@ -21,6 +27,33 @@
 					</div>
 					<div class="dropdown-menu" role="menu">
 						<div class="dropdown-content">
+							<a
+								class="dropdown-item"
+								@click.stop="showSetLimitInput = true"
+							>
+								<div class="field has-addons" v-if="showSetLimitInput">
+									<div class="control">
+										<input
+											type="number"
+											class="input"
+											v-focus.always
+											v-model="bucket.limit"
+											@keyup.enter="() => updateBucket(bucket)"
+											@change="() => updateBucket(bucket)"
+										/>
+									</div>
+									<div class="control">
+										<a class="button is-primary has-no-shadow">
+											<span class="icon">
+												<icon :icon="['far', 'save']"/>
+											</span>
+										</a>
+									</div>
+								</div>
+								<template v-else>
+									Limit: {{ bucket.limit > 0 ? bucket.limit : 'Not set' }}
+								</template>
+							</a>
 							<a
 									class="dropdown-item has-text-danger"
 									@click="() => deleteBucketModal(bucket.id)"
@@ -43,6 +76,7 @@
 						:get-child-payload="getTaskPayload(bucket.id)"
 						:drop-placeholder="dropPlaceholderOptions"
 						:animation-duration="150"
+						:should-accept-drop="() => shouldAcceptDrop(bucket)"
 						drag-class="ghost-task"
 						drag-class-drop="ghost-task-drop"
 						drag-handle-selector=".task.draggable"
@@ -58,7 +92,7 @@
 								:class="{
 							'is-loading': taskService.loading && taskUpdating[task.id],
 							'draggable': !taskService.loading || !taskUpdating[task.id],
-							'has-light-text': !colorIsDark(task.hexColor) && task.hexColor !== `#${task.defaultColor}`,
+							'has-light-text': !colorIsDark(task.hexColor) && task.hexColor !== `#${task.defaultColor}` && task.hexColor !== task.defaultColor,
 						}"
 								:style="{'background-color': task.hexColor !== '#' && task.hexColor !== `#${task.defaultColor}` ? task.hexColor : false}"
 								@click.ctrl="() => markTaskAsDone(task)"
@@ -235,6 +269,7 @@
 					animationDuration: 150,
 					showOnTop: true,
 				},
+				sourceBucket: 0,
 				bucketOptionsDropDownActive: {},
 
 				showBucketDeleteModal: false,
@@ -245,6 +280,7 @@
 				newBucketTitle: '',
 				showNewBucketInput: false,
 				newTaskError: {},
+				showSetLimitInput: false,
 
 				// We're using this to show the loading animation only at the task when updating it
 				taskUpdating: {},
@@ -362,6 +398,7 @@
 			getTaskPayload(bucketId) {
 				return index => {
 					const bucket = this.buckets[filterObject(this.buckets, b => b.id === bucketId)]
+					this.sourceBucket = bucket.id
 					return bucket.tasks[index]
 				}
 			},
@@ -369,9 +406,11 @@
 				this.$set(this.showNewTaskInput, bucket, !this.showNewTaskInput[bucket])
 			},
 			toggleBucketDropdown(bucketId) {
+				this.closeBucketDropdowns() // Close all eventually open dropdowns
 				this.$set(this.bucketOptionsDropDownActive, bucketId, !this.bucketOptionsDropDownActive[bucketId])
 			},
 			closeBucketDropdowns() {
+				this.showSetLimitInput = false
 				for (const bucketId in this.bucketOptionsDropDownActive) {
 					this.bucketOptionsDropDownActive[bucketId] = false
 				}
@@ -480,6 +519,18 @@
 					.catch(e => {
 						this.error(e, this)
 					})
+			},
+			updateBucket(bucket) {
+				bucket.limit = parseInt(bucket.limit)
+				this.$store.dispatch('kanban/updateBucket', bucket)
+					.catch(e => {
+						this.error(e, this)
+					})
+			},
+			shouldAcceptDrop(bucket) {
+				return bucket.id === this.sourceBucket || // When dragging from a bucket who has its limit reached, dragging should still be possible
+					bucket.limit === 0 || // If there is no limit set, dragging & dropping should always work
+					bucket.tasks.length < bucket.limit // Disallow dropping to buckets which have their limit reached
 			},
 		},
 	}

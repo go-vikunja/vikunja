@@ -1,5 +1,6 @@
 import AbstractService from './abstractService'
-import BucketModel from "../models/bucket";
+import BucketModel from '../models/bucket'
+import TaskService from '@/services/task'
 
 export default class BucketService extends AbstractService {
 	constructor() {
@@ -13,5 +14,11 @@ export default class BucketService extends AbstractService {
 
 	modelFactory(data) {
 		return new BucketModel(data)
+	}
+
+	beforeUpdate(model) {
+		const taskService = new TaskService()
+		model.tasks = model.tasks.map(t => taskService.processModel(t))
+		return model
 	}
 }
