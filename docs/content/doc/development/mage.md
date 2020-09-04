@@ -34,6 +34,7 @@ There are multiple categories of subcommands in the magefile:
 * `check`: Contains commands to statically check the source code 
 * `release`: Contains commands to release Vikunja with everything that's required
 * `test`: Contains commands to run all kinds of tests
+* `dev`: Contains commands to run development tasks
 * `misc`: Commands which do not belong in either of the other categories
 
 ## CI
@@ -161,6 +162,17 @@ mage test:integration
 {{< /highlight >}}
 
 Runs all integration tests.
+
+## Dev
+
+### Create a new migration 
+
+{{< highlight bash >}}
+mage dev:create-migration
+{{< /highlight >}}
+
+Creates a new migration with the current date. 
+Will ask for the name of the struct you want to create a migration for.
 
 ## Misc
 

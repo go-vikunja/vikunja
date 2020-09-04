@@ -32,6 +32,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"time"
 )
 
 const (
@@ -56,10 +57,11 @@ var (
 
 	// Aliases are mage aliases of targets
 	Aliases = map[string]interface{}{
-		"do-the-swag":        DoTheSwag,
-		"check:go-sec":       Check.GoSec,
-		"check:got-swag":     Check.GotSwag,
-		"release:os-package": Release.OsPackage,
+		"do-the-swag":          DoTheSwag,
+		"check:go-sec":         Check.GoSec,
+		"check:got-swag":       Check.GotSwag,
+		"release:os-package":   Release.OsPackage,
+		"dev:create-migration": Dev.CreateMigration,
 	}
 )
 
@@ -711,4 +713,69 @@ func (Release) Deb() {
 // Creates a debian repo structure
 func (Release) Reprepro() {
 	runAndStreamOutput("reprepro_expect", "debian", "includedeb", "strech", RootPath+"/"+Executable+"-"+Version+"_amd64.deb")
+}
+
+type Dev mg.Namespace
+
+// Creates a new bare db migration skeleton in pkg/migration with the current date
+func (Dev) CreateMigration() error {
+
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Print("Enter the name of the struct: ")
+	str, _ := reader.ReadString('\n')
+	str = strings.Trim(str, "\n")
+
+	date := time.Now().Format("20060102150405")
+
+	migration := `// Vikunja is a to-do list application to facilitate your life.
+// Copyright 2018-2020 Vikunja and contributors. All rights reserved.
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+package migration
+
+import (
+	"src.techknowlogick.com/xormigrate"
+	"xorm.io/xorm"
+)
+
+type ` + str + date + ` struct {
+}
+
+func (` + str + date + `) TableName() string {
+	return "` + str + `"
+}
+
+func init() {
+	migrations = append(migrations, &xormigrate.Migration{
+		ID:          "` + date + `",
+		Description: "",
+		Migrate: func(tx *xorm.Engine) error {
+			return tx.Sync2(` + str + date + `{})
+		},
+		Rollback: func(tx *xorm.Engine) error {
+			return nil
+		},
+	})
+}
+`
+	f, err := os.Create(RootPath + "/pkg/migration/" + date + ".go")
+	defer f.Close()
+	if err != nil {
+		return err
+	}
+
+	_, err = f.WriteString(migration)
+	return err
 }
