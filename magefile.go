@@ -253,24 +253,36 @@ func copyFile(src, dst string) error {
 // os.Rename has issues with moving files between docker volumes.
 // Because of this limitaion, it fails in drone.
 // Source: https://gist.github.com/var23rav/23ae5d0d4d830aff886c3c970b8f6c6b
-func moveFile(sourcePath, destPath string) error {
-	inputFile, err := os.Open(sourcePath)
+func moveFile(src, dst string) error {
+	inputFile, err := os.Open(src)
+	defer inputFile.Close()
 	if err != nil {
 		return fmt.Errorf("couldn't open source file: %s", err)
 	}
-	outputFile, err := os.Create(destPath)
+
+	outputFile, err := os.Create(dst)
+	defer outputFile.Close()
 	if err != nil {
-		inputFile.Close()
 		return fmt.Errorf("couldn't open dest file: %s", err)
 	}
-	defer outputFile.Close()
+
 	_, err = io.Copy(outputFile, inputFile)
-	inputFile.Close()
 	if err != nil {
 		return fmt.Errorf("writing to output file failed: %s", err)
 	}
+
+	// Make sure to copy copy the permissions of the original file as well
+	si, err := os.Stat(src)
+	if err != nil {
+		return err
+	}
+
+	if err := os.Chmod(dst, si.Mode()); err != nil {
+		return err
+	}
+
 	// The copy was successful, so now delete the original file
-	err = os.Remove(sourcePath)
+	err = os.Remove(src)
 	if err != nil {
 		return fmt.Errorf("failed removing original file: %s", err)
 	}
