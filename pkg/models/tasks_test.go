@@ -136,6 +136,19 @@ func TestTask_Update(t *testing.T) {
 		assert.Error(t, err)
 		assert.True(t, IsErrBucketLimitExceeded(err))
 	})
+	t.Run("full bucket but not changing the bucket", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		task := &Task{
+			ID:          4,
+			Title:       "test10000",
+			Description: "Lorem Ipsum Dolor",
+			Position:    10,
+			ListID:      1,
+			BucketID:    2, // Bucket 2 already has 3 tasks and a limit of 3
+		}
+		err := task.Update()
+		assert.NoError(t, err)
+	})
 }
 
 func TestTask_Delete(t *testing.T) {

@@ -787,9 +787,12 @@ func (t *Task) Update() (err error) {
 	}
 
 	// Check the bucket limit
-	if err := checkBucketLimit(s, t, bucket); err != nil {
-		_ = s.Rollback()
-		return err
+	// Only check the bucket limit if the task is being moved between buckets, allow reordering the task within a bucket
+	if t.BucketID != ot.BucketID {
+		if err := checkBucketLimit(s, t, bucket); err != nil {
+			_ = s.Rollback()
+			return err
+		}
 	}
 
 	// Update the labels
