@@ -9,33 +9,33 @@
 </template>
 
 <script>
-	import router from '../../router'
+import router from '../../router'
 
-	export default {
-		name: 'LinkSharingAuth',
-		data() {
-			return {
-				hash: '',
-				loading: true,
-			}
+export default {
+	name: 'LinkSharingAuth',
+	data() {
+		return {
+			hash: '',
+			loading: true,
+		}
+	},
+	created() {
+		this.auth()
+	},
+	mounted() {
+		this.setTitle('Authenticating...')
+	},
+	methods: {
+		auth() {
+			this.$store.dispatch('auth/linkShareAuth', this.$route.params.share)
+				.then((r) => {
+					this.loading = false
+					router.push({name: 'list.list', params: {listId: r.list_id}})
+				})
+				.catch(e => {
+					this.error(e, this)
+				})
 		},
-		created() {
-			this.auth()
-		},
-		mounted() {
-			this.setTitle('Authenticating...')
-		},
-		methods: {
-			auth() {
-				this.$store.dispatch('auth/linkShareAuth', this.$route.params.share)
-					.then((r) => {
-						this.loading = false
-						router.push({name: 'list.list', params: {listId: r.list_id}})
-					})
-					.catch(e => {
-						this.error(e, this)
-					})
-			}
-		},
-	}
+	},
+}
 </script>

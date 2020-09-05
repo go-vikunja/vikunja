@@ -26,7 +26,7 @@ export default class BackgroundUploadService extends AbstractService {
 		return this.uploadFile(
 			this.getReplacedRoute(this.paths.create, {listId: listId}),
 			file,
-			'background'
+			'background',
 		)
 	}
 }

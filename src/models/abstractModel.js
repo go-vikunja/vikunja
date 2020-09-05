@@ -1,5 +1,5 @@
-import {defaults, omitBy, isNil} from 'lodash'
-import {objectToCamelCase} from '../helpers/case'
+import {defaults, isNil, omitBy} from 'lodash'
+import {objectToCamelCase} from '@/helpers/case'
 
 export default class AbstractModel {
 

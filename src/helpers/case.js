@@ -19,7 +19,7 @@ export function objectToCamelCase(object) {
 
 		// Recursive processing
 		// Prevent processing for some cases
-		if(object[m] === null) {
+		if (object[m] === null) {
 			continue
 		}
 
@@ -31,7 +31,7 @@ export function objectToCamelCase(object) {
 		}
 
 		// Call it again for nested objects
-		if(typeof object[m] === 'object') {
+		if (typeof object[m] === 'object') {
 			parsedObject[camelCase(m)] = objectToCamelCase(object[m])
 		}
 	}
@@ -56,7 +56,7 @@ export function objectToSnakeCase(object) {
 
 		// Recursive processing
 		// Prevent processing for some cases
-		if(
+		if (
 			object[m] === null ||
 			(object[m] instanceof Date)
 		) {
@@ -71,7 +71,7 @@ export function objectToSnakeCase(object) {
 		}
 
 		// Call it again for nested objects
-		if(typeof object[m] === 'object') {
+		if (typeof object[m] === 'object') {
 			parsedObject[snakeCase(m)] = objectToSnakeCase(object[m])
 		}
 	}

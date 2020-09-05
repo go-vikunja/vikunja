@@ -10,7 +10,7 @@ export default class NamespaceService extends AbstractService {
 			getAll: '/namespaces',
 			update: '/namespaces/{id}',
 			delete: '/namespaces/{id}',
-		});
+		})
 	}
 
 	processModel(model) {

@@ -1,7 +1,7 @@
 import Vue from 'vue'
 
 import BucketService from '../../services/bucket'
-import {filterObject} from '../../helpers/filterObject'
+import {filterObject} from '@/helpers/filterObject'
 import {setLoading} from '../helper'
 
 /**
@@ -90,7 +90,7 @@ export default {
 					return
 				}
 			}
-		}
+		},
 	},
 	getters: {
 		getTaskById: state => id => {

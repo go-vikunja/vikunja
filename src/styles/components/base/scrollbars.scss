@@ -1,4 +1,3 @@
-
 // Chrome
 ::-webkit-scrollbar {
   width: $scrollbar-height;
@@ -25,7 +24,7 @@
 }
 
 // Firefox
-*{
+* {
   scrollbar-color: $scrollbar-thumb-color $scrollbar-track-color;
   scrollbar-width: thin;
 }

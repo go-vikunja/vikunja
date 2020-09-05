@@ -21,7 +21,7 @@
 						</div>
 					</div>
 					<div class="control">
-						<button type="submit" class="button is-success">
+						<button class="button is-success" type="submit">
 							Share
 						</button>
 					</div>
@@ -36,61 +36,62 @@
 					<th>Delete</th>
 				</tr>
 				<template v-if="linkShares.length > 0">
-				<tr v-for="s in linkShares" :key="s.id">
-					<td>
-						<div class="field has-addons">
-							<div class="control">
-								<input class="input" type="text" :value="getShareLink(s.hash)" readonly/>
-							</div>
-							<div class="control">
-								<a class="button is-success noshadow" @click="copy(getShareLink(s.hash))">
+					<tr :key="s.id" v-for="s in linkShares">
+						<td>
+							<div class="field has-addons">
+								<div class="control">
+									<input :value="getShareLink(s.hash)" class="input" readonly type="text"/>
+								</div>
+								<div class="control">
+									<a @click="copy(getShareLink(s.hash))" class="button is-success noshadow">
 									<span class="icon">
 										<icon icon="paste"/>
 									</span>
-								</a>
+									</a>
+								</div>
 							</div>
-						</div>
-					</td>
-					<td>
-						{{ s.sharedBy.username }}
-					</td>
-					<td class="type">
-						<template v-if="s.right === rights.ADMIN">
+						</td>
+						<td>
+							{{ s.sharedBy.username }}
+						</td>
+						<td class="type">
+							<template v-if="s.right === rights.ADMIN">
 						<span class="icon is-small">
 							<icon icon="lock"/>
 						</span>
-							Admin
-						</template>
-						<template v-else-if="s.right === rights.READ_WRITE">
+								Admin
+							</template>
+							<template v-else-if="s.right === rights.READ_WRITE">
 						<span class="icon is-small">
 							<icon icon="pen"/>
 						</span>
-							Write
-						</template>
-						<template v-else>
+								Write
+							</template>
+							<template v-else>
 						<span class="icon is-small">
 							<icon icon="users"/>
 						</span>
-							Read-only
-						</template>
-					</td>
-					<td class="actions">
-						<button @click="() => {linkIdToDelete = s.id; showDeleteModal = true}" class="button is-danger icon-only">
+								Read-only
+							</template>
+						</td>
+						<td class="actions">
+							<button @click="() => {linkIdToDelete = s.id; showDeleteModal = true}"
+									class="button is-danger icon-only">
 							<span class="icon">
 								<icon icon="trash-alt"/>
 							</span>
-						</button>
-					</td>
-				</tr>
+							</button>
+						</td>
+					</tr>
 				</template>
 				</tbody>
 			</table>
 		</div>
 
 		<modal
-				v-if="showDeleteModal"
-				@close="showDeleteModal = false"
-				@submit="remove()">
+			@close="showDeleteModal = false"
+			@submit="remove()"
+			v-if="showDeleteModal">
 			<span slot="header">Remove a link share</span>
 			<p slot="text">Are you sure you want to remove this link share?<br/>
 				It will no longer be possible to access this list with this link share.<br/>
@@ -100,95 +101,95 @@
 </template>
 
 <script>
-	import rights from '../../models/rights'
+import rights from '../../models/rights'
 
-	import LinkShareService from '../../services/linkShare'
-	import LinkShareModel from '../../models/linkShare'
+import LinkShareService from '../../services/linkShare'
+import LinkShareModel from '../../models/linkShare'
 
-	import copy from 'copy-to-clipboard'
-	import {mapState} from 'vuex'
+import copy from 'copy-to-clipboard'
+import {mapState} from 'vuex'
 
-	export default {
-		name: 'linkSharing',
-		props: {
-			listId: {
-				default: 0,
-				required: true,
-			},
+export default {
+	name: 'linkSharing',
+	props: {
+		listId: {
+			default: 0,
+			required: true,
 		},
-		data() {
-			return {
-				linkShares: [],
-				linkShareService: LinkShareService,
-				newLinkShare: LinkShareModel,
-				rights: rights,
-				selectedRight: rights.READ,
-				showDeleteModal: false,
-				linkIdToDelete: 0,
-			}
-		},
-		beforeMount() {
-			this.linkShareService = new LinkShareService()
-		},
-		created() {
-			this.linkShareService = new LinkShareService()
+	},
+	data() {
+		return {
+			linkShares: [],
+			linkShareService: LinkShareService,
+			newLinkShare: LinkShareModel,
+			rights: rights,
+			selectedRight: rights.READ,
+			showDeleteModal: false,
+			linkIdToDelete: 0,
+		}
+	},
+	beforeMount() {
+		this.linkShareService = new LinkShareService()
+	},
+	created() {
+		this.linkShareService = new LinkShareService()
+		this.load()
+	},
+	watch: {
+		listId: () => { // watch it
 			this.load()
 		},
-		watch: {
-			listId: () => { // watch it
-				this.load()
+	},
+	computed: mapState({
+		frontendUrl: state => state.config.frontendUrl,
+	}),
+	methods: {
+		load() {
+			// If listId == 0 the list on the calling component wasn't already loaded, so we just bail out here
+			if (this.listId === 0) {
+				return
 			}
-		},
-		computed: mapState({
-			frontendUrl: state => state.config.frontendUrl,
-		}),
-		methods: {
-			load() {
-				// If listId == 0 the list on the calling component wasn't already loaded, so we just bail out here
-				if (this.listId === 0) {
-					return
-				}
 
-				this.linkShareService.getAll({listId: this.listId})
-					.then(r => {
-						this.linkShares = r
-					})
-					.catch(e => {
-						this.error(e, this)
-					})
-			},
-			add() {
-				let newLinkShare = new LinkShareModel({right: this.selectedRight, listId: this.listId})
-				this.linkShareService.create(newLinkShare)
-					.then(() => {
-						this.selectedRight = rights.READ
-						this.success({message: 'The link share was successfully created'}, this)
-						this.load()
-					})
-					.catch(e => {
-						this.error(e, this)
-					})
-			},
-			remove() {
-				let linkshare = new LinkShareModel({id: this.linkIdToDelete, listId: this.listId})
-				this.linkShareService.delete(linkshare)
-					.then(() => {
-						this.success({message: 'The link share was successfully deleted'}, this)
-						this.load()
-					})
-					.catch(e => {
-						this.error(e, this)
-					})
-					.finally(() => {
-						this.showDeleteModal = false
-					})
-			},
-			copy(text) {
-				copy(text)
-			},
-			getShareLink(hash) {
-				return this.frontendUrl + 'share/'  + hash + '/auth'
-			},
+			this.linkShareService.getAll({listId: this.listId})
+				.then(r => {
+					this.linkShares = r
+				})
+				.catch(e => {
+					this.error(e, this)
+				})
 		},
-	}
+		add() {
+			let newLinkShare = new LinkShareModel({right: this.selectedRight, listId: this.listId})
+			this.linkShareService.create(newLinkShare)
+				.then(() => {
+					this.selectedRight = rights.READ
+					this.success({message: 'The link share was successfully created'}, this)
+					this.load()
+				})
+				.catch(e => {
+					this.error(e, this)
+				})
+		},
+		remove() {
+			let linkshare = new LinkShareModel({id: this.linkIdToDelete, listId: this.listId})
+			this.linkShareService.delete(linkshare)
+				.then(() => {
+					this.success({message: 'The link share was successfully deleted'}, this)
+					this.load()
+				})
+				.catch(e => {
+					this.error(e, this)
+				})
+				.finally(() => {
+					this.showDeleteModal = false
+				})
+		},
+		copy(text) {
+			copy(text)
+		},
+		getShareLink(hash) {
+			return this.frontendUrl + 'share/' + hash + '/auth'
+		},
+	},
+}
 </script>

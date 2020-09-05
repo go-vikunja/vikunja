@@ -3,6 +3,7 @@
     position: relative;
     pointer-events: none;
     opacity: 0.5;
+
     &:after {
       @include loader;
       position: absolute;
@@ -15,9 +16,10 @@
   }
 }
 
-.spinner{
+.spinner {
   &.is-loading {
     pointer-events: none;
+
     &:after {
       @include loader;
       width: 2em;

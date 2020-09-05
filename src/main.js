@@ -3,76 +3,86 @@ import App from './App.vue'
 import router from './router'
 
 import {VERSION} from './version.json'
+// Register the modal
+import Modal from './components/modal/modal'
+// Add CSS
+import './styles/vikunja.scss'
+// Notifications
+import Notifications from 'vue-notification'
+// Icons
+import {library} from '@fortawesome/fontawesome-svg-core'
+import {
+	faAlignLeft,
+	faAngleRight,
+	faBars,
+	faCalendar,
+	faCalendarWeek,
+	faCheck,
+	faCheckDouble,
+	faChevronDown,
+	faCloudDownloadAlt,
+	faCloudUploadAlt,
+	faCog,
+	faEllipsisV,
+	faExclamation,
+	faFillDrip,
+	faFilter,
+	faHistory,
+	faKeyboard,
+	faLayerGroup,
+	faList,
+	faListOl,
+	faLock,
+	faPaperclip,
+	faPaste,
+	faPen,
+	faPencilAlt,
+	faPercent,
+	faPlus,
+	faPowerOff,
+	faSearch,
+	faSignOutAlt,
+	faSort,
+	faSortUp,
+	faStar as faStarSolid,
+	faTachometerAlt,
+	faTags,
+	faTasks,
+	faTh,
+	faTimes,
+	faTrashAlt,
+	faUser,
+	faUsers,
+} from '@fortawesome/free-solid-svg-icons'
+import {faCalendarAlt, faClock, faComments, faSave, faStar, faTimesCircle} from '@fortawesome/free-regular-svg-icons'
+import {FontAwesomeIcon} from '@fortawesome/vue-fontawesome'
+// Tooltip
+import VTooltip from 'v-tooltip'
+// PWA
+import './registerServiceWorker'
+
+// Shortcuts
+import vueShortkey from 'vue-shortkey'
+// Mixins
+import message from './message'
+import {format, formatDistance} from 'date-fns'
+import {colorIsDark} from './helpers/colorIsDark'
+import {setTitle} from './helpers/setTitle'
+// Vuex
+import {store} from './store'
+
 console.info(`Vikunja frontend version ${VERSION}`)
 
 // Make sure the api url does not contain a / at the end
-if(window.API_URL.substr(window.API_URL.length - 1, window.API_URL.length) === '/') {
+if (window.API_URL.substr(window.API_URL.length - 1, window.API_URL.length) === '/') {
 	window.API_URL = window.API_URL.substr(0, window.API_URL.length - 1)
 }
 
-// Register the modal
-import Modal from './components/modal/modal'
 Vue.component('modal', Modal)
-
-// Add CSS
-import './styles/vikunja.scss'
 
 Vue.config.productionTip = false
 
-// Notifications
-import Notifications from 'vue-notification'
 Vue.use(Notifications)
-
-// Icons
-import { library } from '@fortawesome/fontawesome-svg-core'
-import { faSignOutAlt } from '@fortawesome/free-solid-svg-icons'
-import { faPlus } from '@fortawesome/free-solid-svg-icons'
-import { faListOl } from '@fortawesome/free-solid-svg-icons'
-import { faTasks } from '@fortawesome/free-solid-svg-icons'
-import { faCog } from '@fortawesome/free-solid-svg-icons'
-import { faAngleRight } from '@fortawesome/free-solid-svg-icons'
-import { faLayerGroup } from '@fortawesome/free-solid-svg-icons'
-import { faTrashAlt } from '@fortawesome/free-solid-svg-icons'
-import { faUsers } from '@fortawesome/free-solid-svg-icons'
-import { faUser } from '@fortawesome/free-solid-svg-icons'
-import { faLock } from '@fortawesome/free-solid-svg-icons'
-import { faPen } from '@fortawesome/free-solid-svg-icons'
-import { faTimes } from '@fortawesome/free-solid-svg-icons'
-import { faTachometerAlt } from '@fortawesome/free-solid-svg-icons'
-import { faCalendar } from '@fortawesome/free-solid-svg-icons'
-import { faBars } from '@fortawesome/free-solid-svg-icons'
-import { faPowerOff } from '@fortawesome/free-solid-svg-icons'
-import { faCalendarWeek } from '@fortawesome/free-solid-svg-icons'
-import { faExclamation } from '@fortawesome/free-solid-svg-icons'
-import { faTags } from '@fortawesome/free-solid-svg-icons'
-import { faChevronDown } from '@fortawesome/free-solid-svg-icons'
-import { faCheck } from '@fortawesome/free-solid-svg-icons'
-import { faPaste } from '@fortawesome/free-solid-svg-icons'
-import { faPencilAlt } from '@fortawesome/free-solid-svg-icons'
-import { faTimesCircle } from '@fortawesome/free-regular-svg-icons'
-import { faCalendarAlt } from '@fortawesome/free-regular-svg-icons'
-import { faCloudDownloadAlt } from '@fortawesome/free-solid-svg-icons'
-import { faCloudUploadAlt } from '@fortawesome/free-solid-svg-icons'
-import { faPercent } from '@fortawesome/free-solid-svg-icons'
-import { faStar as faStarSolid } from '@fortawesome/free-solid-svg-icons'
-import { faStar } from '@fortawesome/free-regular-svg-icons'
-import { faAlignLeft } from '@fortawesome/free-solid-svg-icons'
-import { faPaperclip } from '@fortawesome/free-solid-svg-icons'
-import { faClock } from '@fortawesome/free-regular-svg-icons'
-import { faHistory } from '@fortawesome/free-solid-svg-icons'
-import { faSearch } from '@fortawesome/free-solid-svg-icons'
-import { faCheckDouble } from '@fortawesome/free-solid-svg-icons'
-import { faTh } from '@fortawesome/free-solid-svg-icons'
-import { faSort } from '@fortawesome/free-solid-svg-icons'
-import { faSortUp } from '@fortawesome/free-solid-svg-icons'
-import { faList } from '@fortawesome/free-solid-svg-icons'
-import { faEllipsisV } from '@fortawesome/free-solid-svg-icons'
-import { faFilter } from '@fortawesome/free-solid-svg-icons'
-import { faFillDrip } from '@fortawesome/free-solid-svg-icons'
-import { faKeyboard } from '@fortawesome/free-solid-svg-icons'
-import { faComments } from '@fortawesome/free-regular-svg-icons'
-import { faSave } from '@fortawesome/free-regular-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
 library.add(faSignOutAlt)
 library.add(faPlus)
@@ -124,15 +134,8 @@ library.add(faStarSolid)
 
 Vue.component('icon', FontAwesomeIcon)
 
-// Tooltip
-import VTooltip from 'v-tooltip'
 Vue.use(VTooltip, {defaultHtml: false})
 
-// PWA
-import './registerServiceWorker'
-
-// Shortcuts
-import vueShortkey from 'vue-shortkey'
 Vue.use(vueShortkey)
 
 // Set focus
@@ -146,14 +149,9 @@ Vue.directive('focus', {
 		if (window.innerWidth > 769 || (typeof modifiers.always !== 'undefined' && modifiers.always)) {
 			el.focus()
 		}
-	}
+	},
 })
 
-// Mixins
-import message from './message'
-import {format, formatDistance} from 'date-fns'
-import {colorIsDark} from './helpers/colorIsDark'
-import {setTitle} from './helpers/setTitle'
 Vue.mixin({
 	methods: {
 		formatDateSince: date => {
@@ -161,35 +159,32 @@ Vue.mixin({
 				date = new Date(date)
 			}
 			const currentDate = new Date()
-			let formatted = '';
+			let formatted = ''
 			if (date > currentDate) {
 				formatted += 'in '
 			}
 			formatted += formatDistance(date, currentDate)
-			if(date < currentDate) {
+			if (date < currentDate) {
 				formatted += ' ago'
 			}
 
-			return formatted;
+			return formatted
 		},
 		formatDate: date => {
 			if (typeof date === 'string') {
 				date = new Date(date)
 			}
-			return date ? format(date, 'PPPPpppp'): ''
+			return date ? format(date, 'PPPPpppp') : ''
 		},
 		error: (e, context, actions = []) => message.error(e, context, actions),
 		success: (s, context, actions = []) => message.success(s, context, actions),
 		colorIsDark: colorIsDark,
 		setTitle: setTitle,
-	}
+	},
 })
-
-// Vuex
-import {store} from './store'
 
 new Vue({
 	router,
 	store,
-	render: h => h(App)
+	render: h => h(App),
 }).$mount('#app')

@@ -1,6 +1,6 @@
 <template>
 	<div class="modal-mask">
-		<div class="modal-container" @click.self="close()">
+		<div @click.self="close()" class="modal-container">
 			<div class="scrolling-content">
 				<a @click="close()" class="close">
 					<icon icon="times"/>
@@ -12,18 +12,18 @@
 </template>
 
 <script>
-	import TaskDetailView from './TaskDetailView'
-	import router from '../../router'
+import TaskDetailView from './TaskDetailView'
+import router from '../../router'
 
-	export default {
-		name: 'TaskDetailViewModal',
-		components: {
-			TaskDetailView,
+export default {
+	name: 'TaskDetailViewModal',
+	components: {
+		TaskDetailView,
+	},
+	methods: {
+		close() {
+			router.back()
 		},
-		methods: {
-			close() {
-				router.back()
-			},
-		},
-	}
+	},
+}
 </script>

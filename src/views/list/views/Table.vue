@@ -1,14 +1,16 @@
 <template>
-	<div class="table-view loader-container" :class="{'is-loading': taskCollectionService.loading}">
+	<div :class="{'is-loading': taskCollectionService.loading}" class="table-view loader-container">
 		<div class="filter-container">
 			<div class="items">
-				<button class="button" @click="() => {showActiveColumnsFilter = !showActiveColumnsFilter; showTaskFilter = false}">
+				<button @click="() => {showActiveColumnsFilter = !showActiveColumnsFilter; showTaskFilter = false}"
+						class="button">
 					<span class="icon is-small">
 						<icon icon="th"/>
 					</span>
 					Columns
 				</button>
-				<button class="button" @click="() => {showTaskFilter = !showTaskFilter; showActiveColumnsFilter = false}">
+				<button @click="() => {showTaskFilter = !showTaskFilter; showActiveColumnsFilter = false}"
+						class="button">
 					<span class="icon is-small">
 						<icon icon="filter"/>
 					</span>
@@ -21,22 +23,29 @@
 						<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.id">#</fancycheckbox>
 						<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.done">Done</fancycheckbox>
 						<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.title">Title</fancycheckbox>
-						<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.priority">Priority</fancycheckbox>
+						<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.priority">Priority
+						</fancycheckbox>
 						<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.labels">Labels</fancycheckbox>
-						<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.assignees">Assignees</fancycheckbox>
-						<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.dueDate">Due Date</fancycheckbox>
-						<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.startDate">Start Date</fancycheckbox>
-						<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.endDate">End Date</fancycheckbox>
-						<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.percentDone">% Done</fancycheckbox>
+						<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.assignees">Assignees
+						</fancycheckbox>
+						<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.dueDate">Due Date
+						</fancycheckbox>
+						<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.startDate">Start Date
+						</fancycheckbox>
+						<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.endDate">End Date
+						</fancycheckbox>
+						<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.percentDone">% Done
+						</fancycheckbox>
 						<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.created">Created</fancycheckbox>
 						<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.updated">Updated</fancycheckbox>
-						<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.createdBy">Created By</fancycheckbox>
+						<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.createdBy">Created By
+						</fancycheckbox>
 					</div>
 				</div>
 				<filters
-						v-if="showTaskFilter"
-						v-model="params"
-						@change="loadTasks(1)"
+					@change="loadTasks(1)"
+					v-if="showTaskFilter"
+					v-model="params"
 				/>
 			</transition>
 		</div>
@@ -96,7 +105,7 @@
 			</tr>
 			</thead>
 			<tbody>
-			<tr v-for="t in tasks" :key="t.id">
+			<tr :key="t.id" v-for="t in tasks">
 				<td v-if="activeColumns.id">
 					<router-link :to="{name: 'task.detail', params: { id: t.id }}">
 						<template v-if="t.identifier === ''">
@@ -121,12 +130,12 @@
 				</td>
 				<td v-if="activeColumns.assignees">
 					<user
-							:user="a"
-							:avatar-size="27"
-							:show-username="false"
-							:is-inline="true"
-							v-for="(a, i) in t.assignees"
-							:key="t.id + 'assignee' + a.id + i"
+						:avatar-size="27"
+						:is-inline="true"
+						:key="t.id + 'assignee' + a.id + i"
+						:show-username="false"
+						:user="a"
+						v-for="(a, i) in t.assignees"
 					/>
 				</td>
 				<date-table-cell :date="t.dueDate" v-if="activeColumns.dueDate"/>
@@ -137,22 +146,43 @@
 				<date-table-cell :date="t.updated" v-if="activeColumns.updated"/>
 				<td v-if="activeColumns.createdBy">
 					<user
-							:user="t.createdBy"
-							:show-username="false"
-							:avatar-size="27"/>
+						:avatar-size="27"
+						:show-username="false"
+						:user="t.createdBy"/>
 				</td>
 			</tr>
 			</tbody>
 		</table>
 
-		<nav class="pagination is-centered" role="navigation" aria-label="pagination" v-if="taskCollectionService.totalPages > 1">
-			<router-link class="pagination-previous" :to="getRouteForPagination(currentPage - 1, 'table')" tag="button" :disabled="currentPage === 1">Previous</router-link>
-			<router-link class="pagination-next" :to="getRouteForPagination(currentPage + 1, 'table')" tag="button" :disabled="currentPage === taskCollectionService.totalPages">Next page</router-link>
+		<nav
+			aria-label="pagination"
+			class="pagination is-centered"
+			role="navigation"
+			v-if="taskCollectionService.totalPages > 1">
+			<router-link
+				:disabled="currentPage === 1"
+				:to="getRouteForPagination(currentPage - 1, 'table')"
+				class="pagination-previous"
+				tag="button">
+				Previous
+			</router-link>
+			<router-link
+				:disabled="currentPage === taskCollectionService.totalPages"
+				:to="getRouteForPagination(currentPage + 1, 'table')"
+				class="pagination-next"
+				tag="button">
+				Next page
+			</router-link>
 			<ul class="pagination-list">
 				<template v-for="(p, i) in pages">
 					<li :key="'page'+i" v-if="p.isEllipsis"><span class="pagination-ellipsis">&hellip;</span></li>
 					<li :key="'page'+i" v-else>
-						<router-link :to="getRouteForPagination(p.number, 'table')" :class="{'is-current': p.number === currentPage}" class="pagination-link" :aria-label="'Goto page ' + p.number">{{ p.number }}</router-link>
+						<router-link
+							:aria-label="'Goto page ' + p.number"
+							:class="{'is-current': p.number === currentPage}"
+							:to="getRouteForPagination(p.number, 'table')"
+							class="pagination-link">{{ p.number }}
+						</router-link>
 					</li>
 				</template>
 			</ul>
@@ -167,100 +197,100 @@
 </template>
 
 <script>
-	import taskList from '../../../components/tasks/mixins/taskList'
-	import User from '../../../components/misc/user'
-	import PriorityLabel from '../../../components/tasks/partials/priorityLabel'
-	import Labels from '../../../components/tasks/partials/labels'
-	import DateTableCell from '../../../components/tasks/partials/date-table-cell'
-	import Fancycheckbox from '../../../components/input/fancycheckbox'
-	import Sort from '../../../components/tasks/partials/sort'
-	import {saveListView} from '../../../helpers/saveListView'
-	import Filters from '../../../components/list/partials/filters'
+import taskList from '../../../components/tasks/mixins/taskList'
+import User from '../../../components/misc/user'
+import PriorityLabel from '../../../components/tasks/partials/priorityLabel'
+import Labels from '../../../components/tasks/partials/labels'
+import DateTableCell from '../../../components/tasks/partials/date-table-cell'
+import Fancycheckbox from '../../../components/input/fancycheckbox'
+import Sort from '../../../components/tasks/partials/sort'
+import {saveListView} from '@/helpers/saveListView'
+import Filters from '../../../components/list/partials/filters'
 
-	export default {
-		name: 'Table',
-		components: {
-			Filters,
-			Sort,
-			Fancycheckbox,
-			DateTableCell,
-			Labels,
-			PriorityLabel,
-			User,
-		},
-		mixins: [
-			taskList,
-		],
-		data() {
-			return {
-				showActiveColumnsFilter: false,
-				activeColumns: {
-					id: true,
-					done: true,
-					title: true,
-					priority: false,
-					labels: true,
-					assignees: true,
-					dueDate: true,
-					startDate: false,
-					endDate: false,
-					percentDone: false,
-					created: false,
-					updated: false,
-					createdBy: false,
-				},
-				sortBy: {
-					id: 'desc',
-				},
-			}
-		},
-		created() {
-			const savedShowColumns = localStorage.getItem('tableViewColumns')
-			if (savedShowColumns !== null) {
-				this.$set(this, 'activeColumns', JSON.parse(savedShowColumns))
-			}
-			const savedSortBy = localStorage.getItem('tableViewSortBy')
-			if (savedSortBy !== null) {
-				this.$set(this, 'sortBy', JSON.parse(savedSortBy))
-			}
-
-			this.$set(this.params, 'filter_by', [])
-			this.$set(this.params, 'filter_value', [])
-			this.$set(this.params, 'filter_comparator', [])
-
-			this.initTasks(1)
-
-			// Save the current list view to local storage
-			// We use local storage and not vuex here to make it persistent across reloads.
-			saveListView(this.$route.params.listId, this.$route.name)
-		},
-		methods: {
-			initTasks(page, search = '') {
-				const params = this.params
-				params.sort_by = []
-				params.order_by = []
-				Object.keys(this.sortBy).map(s => {
-					params.sort_by.push(s)
-					params.order_by.push(this.sortBy[s])
-				})
-				this.loadTasks(page, search, params)
+export default {
+	name: 'Table',
+	components: {
+		Filters,
+		Sort,
+		Fancycheckbox,
+		DateTableCell,
+		Labels,
+		PriorityLabel,
+		User,
+	},
+	mixins: [
+		taskList,
+	],
+	data() {
+		return {
+			showActiveColumnsFilter: false,
+			activeColumns: {
+				id: true,
+				done: true,
+				title: true,
+				priority: false,
+				labels: true,
+				assignees: true,
+				dueDate: true,
+				startDate: false,
+				endDate: false,
+				percentDone: false,
+				created: false,
+				updated: false,
+				createdBy: false,
 			},
-			sort(property) {
-				const order = this.sortBy[property]
-				if (typeof order === 'undefined' || order === 'none') {
-					this.$set(this.sortBy, property, 'desc')
-				} else if (order === 'desc') {
-					this.$set(this.sortBy, property, 'asc')
-				} else {
-					this.$delete(this.sortBy, property)
-				}
-				this.initTasks(this.currentPage, this.searchTerm)
-				// Save the order to be able to retrieve them later
-				localStorage.setItem('tableViewSortBy', JSON.stringify(this.sortBy))
+			sortBy: {
+				id: 'desc',
 			},
-			saveTaskColumns() {
-				localStorage.setItem('tableViewColumns', JSON.stringify(this.activeColumns))
-			},
+		}
+	},
+	created() {
+		const savedShowColumns = localStorage.getItem('tableViewColumns')
+		if (savedShowColumns !== null) {
+			this.$set(this, 'activeColumns', JSON.parse(savedShowColumns))
+		}
+		const savedSortBy = localStorage.getItem('tableViewSortBy')
+		if (savedSortBy !== null) {
+			this.$set(this, 'sortBy', JSON.parse(savedSortBy))
+		}
+
+		this.$set(this.params, 'filter_by', [])
+		this.$set(this.params, 'filter_value', [])
+		this.$set(this.params, 'filter_comparator', [])
+
+		this.initTasks(1)
+
+		// Save the current list view to local storage
+		// We use local storage and not vuex here to make it persistent across reloads.
+		saveListView(this.$route.params.listId, this.$route.name)
+	},
+	methods: {
+		initTasks(page, search = '') {
+			const params = this.params
+			params.sort_by = []
+			params.order_by = []
+			Object.keys(this.sortBy).map(s => {
+				params.sort_by.push(s)
+				params.order_by.push(this.sortBy[s])
+			})
+			this.loadTasks(page, search, params)
 		},
-	}
+		sort(property) {
+			const order = this.sortBy[property]
+			if (typeof order === 'undefined' || order === 'none') {
+				this.$set(this.sortBy, property, 'desc')
+			} else if (order === 'desc') {
+				this.$set(this.sortBy, property, 'asc')
+			} else {
+				this.$delete(this.sortBy, property)
+			}
+			this.initTasks(this.currentPage, this.searchTerm)
+			// Save the order to be able to retrieve them later
+			localStorage.setItem('tableViewSortBy', JSON.stringify(this.sortBy))
+		},
+		saveTaskColumns() {
+			localStorage.setItem('tableViewColumns', JSON.stringify(this.activeColumns))
+		},
+	},
+}
 </script>

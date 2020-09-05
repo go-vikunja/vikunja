@@ -23,11 +23,11 @@ export default class LabelService extends AbstractService {
 	modelFactory(data) {
 		return new LabelModel(data)
 	}
-	
+
 	beforeUpdate(label) {
 		return this.processModel(label)
 	}
-	
+
 	beforeCreate(label) {
 		return this.processModel(label)
 	}

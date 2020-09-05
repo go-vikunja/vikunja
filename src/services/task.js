@@ -13,7 +13,7 @@ export default class TaskService extends AbstractService {
 			get: '/tasks/{id}',
 			update: '/tasks/{id}',
 			delete: '/tasks/{id}',
-		});
+		})
 	}
 
 	modelFactory(data) {

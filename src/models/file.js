@@ -32,6 +32,6 @@ export default class FileModel extends AbstractModel {
 			it++
 		}
 
-		return Number(Math.round(size+'e2')+'e-2') + ' ' + sizes[it]
+		return Number(Math.round(size + 'e2') + 'e-2') + ' ' + sizes[it]
 	}
 }

@@ -1,22 +1,22 @@
 <template>
 	<div class="fullpage">
-		<a class="close" @click="back()">
+		<a @click="back()" class="close">
 			<icon :icon="['far', 'times-circle']">
 			</icon>
 		</a>
 		<h3>Create a new team</h3>
-		<form @submit.prevent="newTeam" @keyup.esc="back()">
+		<form @keyup.esc="back()" @submit.prevent="newTeam">
 			<div class="field is-grouped">
 				<p class="control is-expanded" v-bind:class="{ 'is-loading': teamService.loading}">
 					<input
-							v-focus
-							class="input"
-							:class="{ 'disabled': teamService.loading}" v-model="team.name"
-							type="text"
-							placeholder="The team's name goes here..."/>
+						:class="{ 'disabled': teamService.loading}"
+						class="input"
+						placeholder="The team's name goes here..." type="text"
+						v-focus
+						v-model="team.name"/>
 				</p>
 				<p class="control">
-					<button type="submit" class="button is-success noshadow">
+					<button class="button is-success noshadow" type="submit">
 						<span class="icon is-small">
 							<icon icon="plus"/>
 						</span>
@@ -32,49 +32,49 @@
 </template>
 
 <script>
-	import router from '../../router'
-	import TeamModel from '../../models/team'
-	import TeamService from '../../services/team'
-	import {IS_FULLPAGE} from '../../store/mutation-types'
+import router from '../../router'
+import TeamModel from '../../models/team'
+import TeamService from '../../services/team'
+import {IS_FULLPAGE} from '@/store/mutation-types'
 
-	export default {
-		name: 'NewTeam',
-		data() {
-			return {
-				teamService: TeamService,
-				team: TeamModel,
-				showError: false,
-			}
-		},
-		created() {
-			this.teamService = new TeamService()
-			this.team = new TeamModel()
-			this.$store.commit(IS_FULLPAGE, true)
-		},
-		mounted() {
-			this.setTitle('Create a new Team')
-		},
-		methods: {
-			newTeam() {
-
-				if (this.team.name === '') {
-					this.showError = true
-					return
-				}
-				this.showError = false
-
-				this.teamService.create(this.team)
-					.then(response => {
-						router.push({name: 'teams.edit', params: {id: response.id}})
-						this.success({message: 'The team was successfully created.'}, this)
-					})
-					.catch(e => {
-						this.error(e, this)
-					})
-			},
-			back() {
-				router.go(-1)
-			},
+export default {
+	name: 'NewTeam',
+	data() {
+		return {
+			teamService: TeamService,
+			team: TeamModel,
+			showError: false,
 		}
-	}
+	},
+	created() {
+		this.teamService = new TeamService()
+		this.team = new TeamModel()
+		this.$store.commit(IS_FULLPAGE, true)
+	},
+	mounted() {
+		this.setTitle('Create a new Team')
+	},
+	methods: {
+		newTeam() {
+
+			if (this.team.name === '') {
+				this.showError = true
+				return
+			}
+			this.showError = false
+
+			this.teamService.create(this.team)
+				.then(response => {
+					router.push({name: 'teams.edit', params: {id: response.id}})
+					this.success({message: 'The team was successfully created.'}, this)
+				})
+				.catch(e => {
+					this.error(e, this)
+				})
+		},
+		back() {
+			router.go(-1)
+		},
+	},
+}
 </script>

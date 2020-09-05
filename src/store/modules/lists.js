@@ -16,7 +16,7 @@ export default {
 	},
 	getters: {
 		getListById: state => id => {
-			if(typeof state[id] !== 'undefined') {
+			if (typeof state[id] !== 'undefined') {
 				return state[id]
 			}
 			return null

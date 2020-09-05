@@ -1,13 +1,13 @@
 <template>
-	<div class="task loader-container" :class="{'is-loading': taskService.loading}">
-		<fancycheckbox v-model="task.done" @change="markAsDone" :disabled="isArchived || disabled"/>
-		<span class="tasktext" :class="{ 'done': task.done}">
+	<div :class="{'is-loading': taskService.loading}" class="task loader-container">
+		<fancycheckbox :disabled="isArchived || disabled" @change="markAsDone" v-model="task.done"/>
+		<span :class="{ 'done': task.done}" class="tasktext">
 			<router-link :to="{ name: taskDetailRoute, params: { id: task.id } }">
 				<router-link
-						v-if="showList && $store.getters['lists/getListById'](task.listId) !== null"
-						v-tooltip="`This task belongs to list '${$store.getters['lists/getListById'](task.listId).title}'`"
-						:to="{ name: 'list.list', params: { listId: task.listId } }"
-						class="task-list">
+					:to="{ name: 'list.list', params: { listId: task.listId } }"
+					class="task-list"
+					v-if="showList && $store.getters['lists/getListById'](task.listId) !== null"
+					v-tooltip="`This task belongs to list '${$store.getters['lists/getListById'](task.listId).title}'`">
 					{{ $store.getters['lists/getListById'](task.listId).title }}
 				</router-link>
 
@@ -23,37 +23,37 @@
 
 			<labels :labels="task.labels"/>
 			<user
-					:user="a"
-					:avatar-size="27"
-					:show-username="false"
-					:is-inline="true"
-					v-for="(a, i) in task.assignees"
-					:key="task.id + 'assignee' + a.id + i"
+				:avatar-size="27"
+				:is-inline="true"
+				:key="task.id + 'assignee' + a.id + i"
+				:show-username="false"
+				:user="a"
+				v-for="(a, i) in task.assignees"
 			/>
 			<i
-					v-if="+new Date(task.dueDate) > 0"
-					:class="{'overdue': task.dueDate <= new Date() && !task.done}"
-					v-tooltip="formatDate(task.dueDate)"
-					@click.stop="showDefer = !showDefer"
+				:class="{'overdue': task.dueDate <= new Date() && !task.done}"
+				@click.stop="showDefer = !showDefer"
+				v-if="+new Date(task.dueDate) > 0"
+				v-tooltip="formatDate(task.dueDate)"
 			>
-				- Due {{formatDateSince(task.dueDate)}}
+				- Due {{ formatDateSince(task.dueDate) }}
 			</i>
 			<transition name="fade">
-				<defer-task v-model="task" v-if="+new Date(task.dueDate) > 0 && showDefer"/>
+				<defer-task v-if="+new Date(task.dueDate) > 0 && showDefer" v-model="task"/>
 			</transition>
 			<priority-label :priority="task.priority"/>
 		</span>
 		<router-link
-			v-if="currentList.id !== task.listId && $store.getters['lists/getListById'](task.listId) !== null"
-			v-tooltip="`This task belongs to list '${$store.getters['lists/getListById'](task.listId).title}'`"
 			:to="{ name: 'list.list', params: { listId: task.listId } }"
-			class="task-list">
+			class="task-list"
+			v-if="currentList.id !== task.listId && $store.getters['lists/getListById'](task.listId) !== null"
+			v-tooltip="`This task belongs to list '${$store.getters['lists/getListById'](task.listId).title}'`">
 			{{ $store.getters['lists/getListById'](task.listId).title }}
 		</router-link>
 		<a
-			class="favorite"
 			:class="{'is-favorite': task.isFavorite}"
-			@click="toggleFavorite">
+			@click="toggleFavorite"
+			class="favorite">
 			<icon icon="star" v-if="task.isFavorite"/>
 			<icon :icon="['far', 'star']" v-else/>
 		</a>
@@ -62,112 +62,115 @@
 </template>
 
 <script>
-	import TaskModel from '../../../models/task'
-	import PriorityLabel from './priorityLabel'
-	import TaskService from '../../../services/task'
-	import Labels from './labels'
-	import User from '../../misc/user'
-	import Fancycheckbox from '../../input/fancycheckbox'
-	import DeferTask from './defer-task'
+import TaskModel from '../../../models/task'
+import PriorityLabel from './priorityLabel'
+import TaskService from '../../../services/task'
+import Labels from './labels'
+import User from '../../misc/user'
+import Fancycheckbox from '../../input/fancycheckbox'
+import DeferTask from './defer-task'
 
-	export default {
-		name: 'singleTaskInList',
-		data() {
-			return {
-				taskService: TaskService,
-				task: TaskModel,
-				showDefer: false,
-			}
+export default {
+	name: 'singleTaskInList',
+	data() {
+		return {
+			taskService: TaskService,
+			task: TaskModel,
+			showDefer: false,
+		}
+	},
+	components: {
+		DeferTask,
+		Fancycheckbox,
+		User,
+		Labels,
+		PriorityLabel,
+	},
+	props: {
+		theTask: {
+			type: TaskModel,
+			required: true,
 		},
-		components: {
-			DeferTask,
-			Fancycheckbox,
-			User,
-			Labels,
-			PriorityLabel,
+		isArchived: {
+			type: Boolean,
+			default: false,
 		},
-		props: {
-			theTask: {
-				type: TaskModel,
-				required: true,
-			},
-			isArchived: {
-				type: Boolean,
-				default: false,
-			},
-			taskDetailRoute: {
-				type: String,
-				default: 'task.list.detail'
-			},
-			showList: {
-				type: Boolean,
-				default: false,
-			},
-			disabled: {
-				type: Boolean,
-				default: false,
-			},
+		taskDetailRoute: {
+			type: String,
+			default: 'task.list.detail',
 		},
-		watch: {
-			theTask(newVal) {
-				this.task = newVal
-			},
+		showList: {
+			type: Boolean,
+			default: false,
 		},
-		mounted() {
-			this.task = this.theTask
+		disabled: {
+			type: Boolean,
+			default: false,
 		},
-		created() {
-			this.task = new TaskModel()
-			this.taskService = new TaskService()
+	},
+	watch: {
+		theTask(newVal) {
+			this.task = newVal
 		},
-		computed: {
-			currentList() {
-				return typeof this.$store.state.currentList === 'undefined' ? {id: 0, title: ''} : this.$store.state.currentList
-			},
+	},
+	mounted() {
+		this.task = this.theTask
+	},
+	created() {
+		this.task = new TaskModel()
+		this.taskService = new TaskService()
+	},
+	computed: {
+		currentList() {
+			return typeof this.$store.state.currentList === 'undefined' ? {
+				id: 0,
+				title: '',
+			} : this.$store.state.currentList
 		},
-		methods: {
-			markAsDone(checked) {
-				const updateFunc = () => {
-					this.taskService.update(this.task)
-						.then(t => {
-							this.task = t
-							this.$emit('taskUpdated', t)
-							this.success(
-								{message: 'The task was successfully ' + (this.task.done ? '' : 'un-') + 'marked as done.'},
-								this,
-								[{
-									title: 'Undo',
-									callback: () => this.markAsDone({
-										target: {
-											checked: !checked
-										}
-									}),
-								}]
-							)
-						})
-						.catch(e => {
-							this.error(e, this)
-						})
-				}
-
-				if (checked) {
-					setTimeout(updateFunc, 300); // Delay it to show the animation when marking a task as done
-				} else {
-					updateFunc() // Don't delay it when un-marking it as it doesn't have an animation the other way around
-				}
-			},
-			toggleFavorite() {
-				this.task.isFavorite = !this.task.isFavorite
+	},
+	methods: {
+		markAsDone(checked) {
+			const updateFunc = () => {
 				this.taskService.update(this.task)
 					.then(t => {
 						this.task = t
 						this.$emit('taskUpdated', t)
-						this.$store.dispatch('namespaces/loadNamespacesIfFavoritesDontExist')
+						this.success(
+							{message: 'The task was successfully ' + (this.task.done ? '' : 'un-') + 'marked as done.'},
+							this,
+							[{
+								title: 'Undo',
+								callback: () => this.markAsDone({
+									target: {
+										checked: !checked,
+									},
+								}),
+							}],
+						)
 					})
 					.catch(e => {
 						this.error(e, this)
 					})
-			},
+			}
+
+			if (checked) {
+				setTimeout(updateFunc, 300) // Delay it to show the animation when marking a task as done
+			} else {
+				updateFunc() // Don't delay it when un-marking it as it doesn't have an animation the other way around
+			}
 		},
-	}
+		toggleFavorite() {
+			this.task.isFavorite = !this.task.isFavorite
+			this.taskService.update(this.task)
+				.then(t => {
+					this.task = t
+					this.$emit('taskUpdated', t)
+					this.$store.dispatch('namespaces/loadNamespacesIfFavoritesDontExist')
+				})
+				.catch(e => {
+					this.error(e, this)
+				})
+		},
+	},
+}
 </script>

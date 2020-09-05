@@ -10,8 +10,8 @@
 						<slot name="text"></slot>
 					</div>
 					<div class="actions">
-						<button class="button is-danger is-inverted noshadow" @click="$emit('close')">Cancel</button>
-						<button class="button is-success noshadow" @click="$emit('submit')">Do it!</button>
+						<button @click="$emit('close')" class="button is-danger is-inverted noshadow">Cancel</button>
+						<button @click="$emit('submit')" class="button is-success noshadow">Do it!</button>
 					</div>
 				</div>
 			</div>
@@ -20,15 +20,15 @@
 </template>
 
 <script>
-	export default {
-		name: 'modal',
-		mounted: function () {
-			document.addEventListener('keydown', (e) => {
-				// Close the model when escape is pressed
-				if (e.keyCode === 27) {
-					this.$emit('close')
-				}
-			})
-		}
-	}
+export default {
+	name: 'modal',
+	mounted: function () {
+		document.addEventListener('keydown', (e) => {
+			// Close the model when escape is pressed
+			if (e.keyCode === 27) {
+				this.$emit('close')
+			}
+		})
+	},
+}
 </script>

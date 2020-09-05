@@ -7,17 +7,17 @@ export default class AbstractMigrationService extends AbstractService {
 
 	constructor(serviceUrlKey) {
 		super({
-			update: '/migration/'+serviceUrlKey+'/migrate',
+			update: '/migration/' + serviceUrlKey + '/migrate',
 		})
 		this.serviceUrlKey = serviceUrlKey
 	}
 
 	getAuthUrl() {
-		return this.getM('/migration/'+this.serviceUrlKey+'/auth')
+		return this.getM('/migration/' + this.serviceUrlKey + '/auth')
 	}
 
 	getStatus() {
-		return this.getM('/migration/'+this.serviceUrlKey+'/status')
+		return this.getM('/migration/' + this.serviceUrlKey + '/status')
 	}
 
 	migrate(data) {

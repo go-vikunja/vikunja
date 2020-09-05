@@ -5,7 +5,7 @@ import {formatISO} from 'date-fns'
 export default class UserService extends AbstractService {
 	constructor() {
 		super({
-			getAll: '/users'
+			getAll: '/users',
 		})
 	}
 

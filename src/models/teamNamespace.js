@@ -7,7 +7,7 @@ export default class TeamNamespaceModel extends TeamShareBaseModel {
 			super.defaults(),
 			{
 				namespaceId: 0,
-			}
+			},
 		)
 	}
 }

@@ -1,6 +1,6 @@
 <template>
 	<div class="select">
-		<select v-model="priority" @change="updateData" :disabled="disabled">
+		<select :disabled="disabled" @change="updateData" v-model="priority">
 			<option :value="priorities.UNSET">Unset</option>
 			<option :value="priorities.LOW">Low</option>
 			<option :value="priorities.MEDIUM">Medium</option>
@@ -12,39 +12,39 @@
 </template>
 
 <script>
-	import priorites from '../../../models/priorities'
+import priorites from '../../../models/priorities'
 
-	export default {
-		name: 'prioritySelect',
-		data() {
-			return {
-				priorities: priorites,
-				priority: 0,
-			}
+export default {
+	name: 'prioritySelect',
+	data() {
+		return {
+			priorities: priorites,
+			priority: 0,
+		}
+	},
+	props: {
+		value: {
+			default: 0,
+			type: Number,
 		},
-		props: {
-			value: {
-				default: 0,
-				type: Number,
-			},
-			disabled: {
-				default: false,
-			},
+		disabled: {
+			default: false,
 		},
-		watch: {
-			// Set the priority to the :value every time it changes from the outside
-			value(newVal) {
-				this.priority = newVal
-			},
+	},
+	watch: {
+		// Set the priority to the :value every time it changes from the outside
+		value(newVal) {
+			this.priority = newVal
 		},
-		mounted() {
-			this.priority = this.value
+	},
+	mounted() {
+		this.priority = this.value
+	},
+	methods: {
+		updateData() {
+			this.$emit('input', this.priority)
+			this.$emit('change')
 		},
-		methods: {
-			updateData() {
-				this.$emit('input', this.priority)
-				this.$emit('change')
-			}
-		},
-	}
+	},
+}
 </script>

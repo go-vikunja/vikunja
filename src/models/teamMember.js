@@ -8,7 +8,7 @@ export default class TeamMemberModel extends UserModel {
 			{
 				admin: false,
 				teamId: 0,
-			}
+			},
 		)
 	}
 }

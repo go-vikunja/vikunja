@@ -7,7 +7,7 @@ export default class TeamListModel extends TeamShareBaseModel {
 			super.defaults(),
 			{
 				listId: 0,
-			}
+			},
 		)
 	}
 }

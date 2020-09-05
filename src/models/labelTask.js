@@ -1,4 +1,4 @@
-import AbstractModel from "./abstractModel";
+import AbstractModel from './abstractModel'
 
 export default class LabelTask extends AbstractModel {
 	defaults() {

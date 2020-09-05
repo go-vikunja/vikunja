@@ -11,7 +11,7 @@ export default class UserShareBaseModel extends AbstractModel {
 		return {
 			userId: '',
 			right: 0,
-			
+
 			created: null,
 			updated: null,
 		}

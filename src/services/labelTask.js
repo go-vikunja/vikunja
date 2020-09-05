@@ -1,5 +1,5 @@
-import AbstractService from "./abstractService";
-import LabelTask from "../models/labelTask";
+import AbstractService from './abstractService'
+import LabelTask from '../models/labelTask'
 
 export default class LabelTaskService extends AbstractService {
 	constructor() {
@@ -9,7 +9,7 @@ export default class LabelTaskService extends AbstractService {
 			delete: '/tasks/{taskId}/labels/{labelId}',
 		})
 	}
-	
+
 	modelFactory(data) {
 		return new LabelTask(data)
 	}

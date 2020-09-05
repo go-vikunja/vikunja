@@ -4,45 +4,45 @@
 			<label class="label" for="tasktext">Task Text</label>
 			<div class="control">
 				<input
-						v-focus
-						:class="{ 'disabled': taskService.loading}"
-						:disabled="taskService.loading"
-						class="input"
-						type="text"
-						id="tasktext"
-						placeholder="The task text is here..."
-						v-model="taskEditTask.title"
-						@change="editTaskSubmit()"/>
+					:class="{ 'disabled': taskService.loading}"
+					:disabled="taskService.loading"
+					@change="editTaskSubmit()"
+					class="input"
+					id="tasktext"
+					placeholder="The task text is here..."
+					type="text"
+					v-focus
+					v-model="taskEditTask.title"/>
 			</div>
 		</div>
 		<div class="field">
 			<label class="label" for="taskdescription">Description</label>
 			<div class="control">
 				<editor
-						placeholder="The tasks description goes here..."
-						id="taskdescription"
-						v-model="taskEditTask.description"
-						:preview-is-default="false"
-						v-if="editorActive"
+					:preview-is-default="false"
+					id="taskdescription"
+					placeholder="The tasks description goes here..."
+					v-if="editorActive"
+					v-model="taskEditTask.description"
 				/>
 			</div>
 		</div>
 
 		<b>Reminder Dates</b>
-		<reminders v-model="taskEditTask.reminderDates" @change="editTaskSubmit()"/>
+		<reminders @change="editTaskSubmit()" v-model="taskEditTask.reminderDates"/>
 
 		<div class="field">
 			<label class="label" for="taskduedate">Due Date</label>
 			<div class="control">
 				<flat-pickr
-						:class="{ 'disabled': taskService.loading}"
-						class="input"
-						:disabled="taskService.loading"
-						v-model="taskEditTask.dueDate"
-						:config="flatPickerConfig"
-						@on-close="editTaskSubmit()"
-						id="taskduedate"
-						placeholder="The tasks due date is here...">
+					:class="{ 'disabled': taskService.loading}"
+					:config="flatPickerConfig"
+					:disabled="taskService.loading"
+					@on-close="editTaskSubmit()"
+					class="input"
+					id="taskduedate"
+					placeholder="The tasks due date is here..."
+					v-model="taskEditTask.dueDate">
 				</flat-pickr>
 			</div>
 		</div>
@@ -52,26 +52,26 @@
 			<div class="control columns">
 				<div class="column">
 					<flat-pickr
-							:class="{ 'disabled': taskService.loading}"
-							class="input"
-							:disabled="taskService.loading"
-							v-model="taskEditTask.startDate"
-							:config="flatPickerConfig"
-							@on-close="editTaskSubmit()"
-							id="taskduedate"
-							placeholder="Start date">
+						:class="{ 'disabled': taskService.loading}"
+						:config="flatPickerConfig"
+						:disabled="taskService.loading"
+						@on-close="editTaskSubmit()"
+						class="input"
+						id="taskduedate"
+						placeholder="Start date"
+						v-model="taskEditTask.startDate">
 					</flat-pickr>
 				</div>
 				<div class="column">
 					<flat-pickr
-							:class="{ 'disabled': taskService.loading}"
-							class="input"
-							:disabled="taskService.loading"
-							v-model="taskEditTask.endDate"
-							:config="flatPickerConfig"
-							@on-close="editTaskSubmit()"
-							id="taskduedate"
-							placeholder="End date">
+						:class="{ 'disabled': taskService.loading}"
+						:config="flatPickerConfig"
+						:disabled="taskService.loading"
+						@on-close="editTaskSubmit()"
+						class="input"
+						id="taskduedate"
+						placeholder="End date"
+						v-model="taskEditTask.endDate">
 					</flat-pickr>
 				</div>
 			</div>
@@ -79,20 +79,20 @@
 
 		<div class="field">
 			<label class="label" for="">Repeat after</label>
-			<repeat-after v-model="taskEditTask.repeatAfter" @change="editTaskSubmit()"/>
+			<repeat-after @change="editTaskSubmit()" v-model="taskEditTask.repeatAfter"/>
 		</div>
 
 		<div class="field">
 			<label class="label" for="">Priority</label>
 			<div class="control priority-select">
-				<priority-select v-model="taskEditTask.priority" @change="editTaskSubmit()"/>
+				<priority-select @change="editTaskSubmit()" v-model="taskEditTask.priority"/>
 			</div>
 		</div>
 
 		<div class="field">
 			<label class="label">Percent Done</label>
 			<div class="control">
-				<percent-done-select v-model="taskEditTask.percentDone" @change="editTaskSubmit()"/>
+				<percent-done-select @change="editTaskSubmit()" v-model="taskEditTask.percentDone"/>
 			</div>
 		</div>
 
@@ -106,8 +106,8 @@
 		<div class="field">
 			<label class="label" for="">Assignees</label>
 			<ul class="assingees">
-				<li v-for="(a, index) in taskEditTask.assignees" :key="a.id">
-					{{a.username}}
+				<li :key="a.id" v-for="(a, index) in taskEditTask.assignees">
+					{{ a.username }}
 					<a @click="deleteAssigneeByIndex(index)">
 						<icon icon="times"/>
 					</a>
@@ -118,9 +118,9 @@
 		<div class="field has-addons">
 			<div class="control is-expanded">
 				<edit-assignees
-						:task-id="taskEditTask.id"
-						:list-id="taskEditTask.listId"
-						:initial-assignees="taskEditTask.assignees"/>
+					:initial-assignees="taskEditTask.assignees"
+					:list-id="taskEditTask.listId"
+					:task-id="taskEditTask.id"/>
 			</div>
 		</div>
 
@@ -132,13 +132,13 @@
 		</div>
 
 		<related-tasks
-				class="is-narrow"
-				:task-id="task.id"
-				:list-id="task.listId"
-				:initial-related-tasks="task.relatedTasks"
+			:initial-related-tasks="task.relatedTasks"
+			:list-id="task.listId"
+			:task-id="task.id"
+			class="is-narrow"
 		/>
 
-		<button type="submit" class="button is-success is-fullwidth" :class="{ 'is-loading': taskService.loading}">
+		<button :class="{ 'is-loading': taskService.loading}" class="button is-success is-fullwidth" type="submit">
 			Save
 		</button>
 
@@ -146,113 +146,113 @@
 </template>
 
 <script>
-	import flatPickr from 'vue-flatpickr-component'
-	import 'flatpickr/dist/flatpickr.css'
+import flatPickr from 'vue-flatpickr-component'
+import 'flatpickr/dist/flatpickr.css'
 
-	import ListService from '../../services/list'
-	import TaskService from '../../services/task'
-	import TaskModel from '../../models/task'
-	import priorities from '../../models/priorities'
-	import PrioritySelect from './partials/prioritySelect'
-	import PercentDoneSelect from './partials/percentDoneSelect'
-	import EditLabels from './partials/editLabels'
-	import EditAssignees from './partials/editAssignees'
-	import RelatedTasks from './partials/relatedTasks'
-	import RepeatAfter from './partials/repeatAfter'
-	import Reminders from './partials/reminders'
-	import ColorPicker from '../input/colorPicker'
-	import LoadingComponent from '../misc/loading'
-	import ErrorComponent from '../misc/error'
+import ListService from '../../services/list'
+import TaskService from '../../services/task'
+import TaskModel from '../../models/task'
+import priorities from '../../models/priorities'
+import PrioritySelect from './partials/prioritySelect'
+import PercentDoneSelect from './partials/percentDoneSelect'
+import EditLabels from './partials/editLabels'
+import EditAssignees from './partials/editAssignees'
+import RelatedTasks from './partials/relatedTasks'
+import RepeatAfter from './partials/repeatAfter'
+import Reminders from './partials/reminders'
+import ColorPicker from '../input/colorPicker'
+import LoadingComponent from '../misc/loading'
+import ErrorComponent from '../misc/error'
 
-	export default {
-		name: 'edit-task',
-		data() {
-			return {
-				listId: this.$route.params.id,
-				listService: ListService,
-				taskService: TaskService,
+export default {
+	name: 'edit-task',
+	data() {
+		return {
+			listId: this.$route.params.id,
+			listService: ListService,
+			taskService: TaskService,
 
-				priorities: priorities,
-				list: {},
-				editorActive: false,
-				newTask: TaskModel,
-				isTaskEdit: false,
-				taskEditTask: TaskModel,
-				flatPickerConfig: {
-					altFormat: 'j M Y H:i',
-					altInput: true,
-					dateFormat: 'Y-m-d H:i',
-					enableTime: true,
-					onOpen: this.updateLastReminderDate,
-					onClose: this.addReminderDate,
-				},
-			}
+			priorities: priorities,
+			list: {},
+			editorActive: false,
+			newTask: TaskModel,
+			isTaskEdit: false,
+			taskEditTask: TaskModel,
+			flatPickerConfig: {
+				altFormat: 'j M Y H:i',
+				altInput: true,
+				dateFormat: 'Y-m-d H:i',
+				enableTime: true,
+				onOpen: this.updateLastReminderDate,
+				onClose: this.addReminderDate,
+			},
+		}
+	},
+	components: {
+		ColorPicker,
+		Reminders,
+		RepeatAfter,
+		RelatedTasks,
+		EditAssignees,
+		EditLabels,
+		PercentDoneSelect,
+		PrioritySelect,
+		flatPickr,
+		editor: () => ({
+			component: import(/* webpackPrefetch: true *//* webpackChunkName: "editor" */ '../../components/input/editor'),
+			loading: LoadingComponent,
+			error: ErrorComponent,
+			timeout: 60000,
+		}),
+	},
+	props: {
+		task: {
+			type: TaskModel,
+			required: true,
 		},
-		components: {
-			ColorPicker,
-			Reminders,
-			RepeatAfter,
-			RelatedTasks,
-			EditAssignees,
-			EditLabels,
-			PercentDoneSelect,
-			PrioritySelect,
-			flatPickr,
-			editor: () => ({
-				component: import(/* webpackPrefetch: true *//* webpackChunkName: "editor" */ '../../components/input/editor'),
-				loading: LoadingComponent,
-				error: ErrorComponent,
-				timeout: 60000,
-			}),
-		},
-		props: {
-			task: {
-				type: TaskModel,
-				required: true,
-			}
-		},
-		watch: {
-			task() {
-				this.taskEditTask = this.task
-				this.initTaskFields()
-			}
-		},
-		created() {
-			this.listService = new ListService()
-			this.taskService = new TaskService()
-			this.newTask = new TaskModel()
+	},
+	watch: {
+		task() {
 			this.taskEditTask = this.task
 			this.initTaskFields()
 		},
-		methods: {
-			initTaskFields() {
-				this.taskEditTask.dueDate = +new Date(this.task.dueDate) === 0 ? null : this.task.dueDate
-				this.taskEditTask.startDate = +new Date(this.task.startDate) === 0 ? null : this.task.startDate
-				this.taskEditTask.endDate = +new Date(this.task.endDate) === 0 ? null : this.task.endDate
-				// This makes the editor trigger its mounted function again which makes it forget every input
-				// it currently has in its textarea. This is a counter-hack to a hack inside of vue-easymde
-				// which made it impossible to detect change from the outside. Therefore the component would
-				// not update if new content from the outside was made available.
-				// See https://github.com/NikulinIlya/vue-easymde/issues/3
-				this.editorActive = false
-				this.$nextTick(() => this.editorActive = true)
-			},
-			editTaskSubmit() {
-				this.taskService.update(this.taskEditTask)
-					.then(r => {
-						this.$set(this, 'taskEditTask', r)
-						this.initTaskFields()
-					})
-					.catch(e => {
-						this.error(e, this)
-					})
-			},
+	},
+	created() {
+		this.listService = new ListService()
+		this.taskService = new TaskService()
+		this.newTask = new TaskModel()
+		this.taskEditTask = this.task
+		this.initTaskFields()
+	},
+	methods: {
+		initTaskFields() {
+			this.taskEditTask.dueDate = +new Date(this.task.dueDate) === 0 ? null : this.task.dueDate
+			this.taskEditTask.startDate = +new Date(this.task.startDate) === 0 ? null : this.task.startDate
+			this.taskEditTask.endDate = +new Date(this.task.endDate) === 0 ? null : this.task.endDate
+			// This makes the editor trigger its mounted function again which makes it forget every input
+			// it currently has in its textarea. This is a counter-hack to a hack inside of vue-easymde
+			// which made it impossible to detect change from the outside. Therefore the component would
+			// not update if new content from the outside was made available.
+			// See https://github.com/NikulinIlya/vue-easymde/issues/3
+			this.editorActive = false
+			this.$nextTick(() => this.editorActive = true)
 		},
-	}
+		editTaskSubmit() {
+			this.taskService.update(this.taskEditTask)
+				.then(r => {
+					this.$set(this, 'taskEditTask', r)
+					this.initTaskFields()
+				})
+				.catch(e => {
+					this.error(e, this)
+				})
+		},
+	},
+}
 </script>
 
 <style scoped>
-	form {
-		margin-bottom: 1em;
-	}
+form {
+	margin-bottom: 1em;
+}
 </style>

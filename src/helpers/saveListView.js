@@ -1,4 +1,3 @@
-
 export const saveListView = (listId, routeName) => {
 	const savedListView = localStorage.getItem('listView')
 	let savedListViewJson = false
@@ -7,7 +6,7 @@ export const saveListView = (listId, routeName) => {
 	}
 
 	let listView = {}
-	if(savedListViewJson) {
+	if (savedListViewJson) {
 		listView = savedListViewJson
 	}
 
@@ -18,7 +17,7 @@ export const saveListView = (listId, routeName) => {
 export const getListView = listId => {
 	// Remove old stored settings
 	const savedListView = localStorage.getItem('listView')
-	if(savedListView !== null && savedListView.startsWith('list.')) {
+	if (savedListView !== null && savedListView.startsWith('list.')) {
 		localStorage.removeItem('listView')
 	}
 
@@ -28,7 +27,7 @@ export const getListView = listId => {
 
 	const savedListViewJson = JSON.parse(savedListView)
 
-	if(!savedListViewJson[listId]) {
+	if (!savedListViewJson[listId]) {
 		return 'list.list'
 	}
 

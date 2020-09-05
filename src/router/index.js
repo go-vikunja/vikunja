@@ -8,6 +8,25 @@ import ErrorComponent from '../components/misc/error'
 // User Handling
 import LoginComponent from '../views/user/Login'
 import RegisterComponent from '../views/user/Register'
+// Tasks
+import ShowTasksInRangeComponent from '../views/tasks/ShowTasksInRange'
+import LinkShareAuthComponent from '../views/sharing/LinkSharingAuth'
+import TaskDetailViewModal from '../views/tasks/TaskDetailViewModal'
+import TaskDetailView from '../views/tasks/TaskDetailView'
+import ListNamespaces from '../views/namespaces/ListNamespaces'
+// Team Handling
+import ListTeamsComponent from '../views/teams/ListTeams'
+// Label Handling
+import ListLabelsComponent from '../views/labels/ListLabels'
+// Migration
+import MigrationComponent from '../views/migrator/Migrate'
+import MigrateServiceComponent from '../views/migrator/MigrateService'
+// List Views
+import ShowListComponent from '../views/list/ShowList'
+import Kanban from '../views/list/views/Kanban'
+import List from '../views/list/views/List'
+import Gantt from '../views/list/views/Gantt'
+import Table from '../views/list/views/Table'
 
 const PasswordResetComponent = () => ({
 	component: import(/* webpackPrefetch: true *//* webpackChunkName: "user-settings" */'../views/user/PasswordReset'),
@@ -40,11 +59,6 @@ const EditListComponent = () => ({
 	error: ErrorComponent,
 	timeout: 60000,
 })
-// Tasks
-import ShowTasksInRangeComponent from '../views/tasks/ShowTasksInRange'
-import LinkShareAuthComponent from '../views/sharing/LinkSharingAuth'
-import TaskDetailViewModal from '../views/tasks/TaskDetailViewModal'
-import TaskDetailView from '../views/tasks/TaskDetailView'
 // Namespace Handling
 const NewNamespaceComponent = () => ({
 	component: import(/* webpackPrefetch: true *//* webpackChunkName: "settings" */'../views/namespaces/NewNamespace'),
@@ -58,9 +72,6 @@ const EditNamespaceComponent = () => ({
 	error: ErrorComponent,
 	timeout: 60000,
 })
-import ListNamespaces from '../views/namespaces/ListNamespaces'
-// Team Handling
-import ListTeamsComponent from '../views/teams/ListTeams'
 
 const EditTeamComponent = () => ({
 	component: import(/* webpackPrefetch: true *//* webpackChunkName: "settings" */'../views/teams/EditTeam'),
@@ -74,17 +85,6 @@ const NewTeamComponent = () => ({
 	error: ErrorComponent,
 	timeout: 60000,
 })
-// Label Handling
-import ListLabelsComponent from '../views/labels/ListLabels'
-// Migration
-import MigrationComponent from '../views/migrator/Migrate'
-import MigrateServiceComponent from '../views/migrator/MigrateService'
-// List Views
-import ShowListComponent from '../views/list/ShowList'
-import Kanban from '../views/list/views/Kanban'
-import List from '../views/list/views/List'
-import Gantt from '../views/list/views/Gantt'
-import Table from '../views/list/views/Table'
 
 Vue.use(Router)
 
@@ -99,7 +99,7 @@ export default new Router({
 		// Scroll to anchor should still work
 		if (to.hash) {
 			return {
-				selector: to.hash
+				selector: to.hash,
 			}
 		}
 
@@ -110,7 +110,7 @@ export default new Router({
 		{
 			path: '/',
 			name: 'home',
-			component: HomeComponent
+			component: HomeComponent,
 		},
 		{
 			path: '*',
@@ -120,22 +120,22 @@ export default new Router({
 		{
 			path: '/login',
 			name: 'user.login',
-			component: LoginComponent
+			component: LoginComponent,
 		},
 		{
 			path: '/get-password-reset',
 			name: 'user.password-reset.request',
-			component: GetPasswordResetComponent
+			component: GetPasswordResetComponent,
 		},
 		{
 			path: '/password-reset',
 			name: 'user.password-reset.reset',
-			component: PasswordResetComponent
+			component: PasswordResetComponent,
 		},
 		{
 			path: '/register',
 			name: 'user.register',
-			component: RegisterComponent
+			component: RegisterComponent,
 		},
 		{
 			path: '/user/settings',
@@ -145,7 +145,7 @@ export default new Router({
 		{
 			path: '/share/:share/auth',
 			name: 'link-share.auth',
-			component: LinkShareAuthComponent
+			component: LinkShareAuthComponent,
 		},
 		{
 			path: '/namespaces',
@@ -155,22 +155,22 @@ export default new Router({
 		{
 			path: '/namespaces/new',
 			name: 'namespace.create',
-			component: NewNamespaceComponent
+			component: NewNamespaceComponent,
 		},
 		{
 			path: '/namespaces/:id/edit',
 			name: 'namespace.edit',
-			component: EditNamespaceComponent
+			component: EditNamespaceComponent,
 		},
 		{
 			path: '/namespaces/:id/list',
 			name: 'list.create',
-			component: NewListComponent
+			component: NewListComponent,
 		},
 		{
 			path: '/lists/:id/edit',
 			name: 'list.edit',
-			component: EditListComponent
+			component: EditListComponent,
 		},
 		{
 			path: '/tasks/:id',
@@ -228,27 +228,27 @@ export default new Router({
 						},
 					],
 				},
-			]
+			],
 		},
 		{
 			path: '/teams',
 			name: 'teams.index',
-			component: ListTeamsComponent
+			component: ListTeamsComponent,
 		},
 		{
 			path: '/teams/new',
 			name: 'teams.create',
-			component: NewTeamComponent
+			component: NewTeamComponent,
 		},
 		{
 			path: '/teams/:id/edit',
 			name: 'teams.edit',
-			component: EditTeamComponent
+			component: EditTeamComponent,
 		},
 		{
 			path: '/labels',
 			name: 'labels.index',
-			component: ListLabelsComponent
+			component: ListLabelsComponent,
 		},
 		{
 			path: '/migrate',
@@ -260,5 +260,5 @@ export default new Router({
 			name: 'migrate.service',
 			component: MigrateServiceComponent,
 		},
-	]
+	],
 })

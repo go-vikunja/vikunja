@@ -1,38 +1,38 @@
 <template>
-	<div class="loader-container is-max-width-desktop" :class="{ 'is-loading': taskCollectionService.loading}">
+	<div :class="{ 'is-loading': taskCollectionService.loading}" class="loader-container is-max-width-desktop">
 		<div class="filter-container">
 			<div class="items">
 				<div class="search">
-					<div class="field has-addons" :class="{ 'hidden': !showTaskSearch }">
+					<div :class="{ 'hidden': !showTaskSearch }" class="field has-addons">
 						<div class="control has-icons-left has-icons-right">
 							<input
-									class="input"
-									type="text"
-									placeholder="Search"
-									v-focus
-									v-model="searchTerm"
-									@keyup.enter="searchTasks"
-									@blur="hideSearchBar()"/>
+								@blur="hideSearchBar()"
+								@keyup.enter="searchTasks"
+								class="input"
+								placeholder="Search"
+								type="text"
+								v-focus
+								v-model="searchTerm"/>
 							<span class="icon is-left">
 								<icon icon="search"/>
 							</span>
 						</div>
 						<div class="control">
 							<button
-									class="button noshadow is-primary"
-									@click="searchTasks"
-									:class="{'is-loading': taskCollectionService.loading}">
+								:class="{'is-loading': taskCollectionService.loading}"
+								@click="searchTasks"
+								class="button noshadow is-primary">
 								Search
 							</button>
 						</div>
 					</div>
-					<button class="button" @click="showTaskSearch = !showTaskSearch" v-if="!showTaskSearch">
+					<button @click="showTaskSearch = !showTaskSearch" class="button" v-if="!showTaskSearch">
 						<span class="icon">
 							<icon icon="search"/>
 						</span>
 					</button>
 				</div>
-				<button class="button" @click="showTaskFilter = !showTaskFilter">
+				<button @click="showTaskFilter = !showTaskFilter" class="button">
 					<span class="icon is-small">
 						<icon icon="filter"/>
 					</span>
@@ -41,30 +41,30 @@
 			</div>
 			<transition name="fade">
 				<filters
-						v-if="showTaskFilter"
-						v-model="params"
-						@change="loadTasks(1)"
+					@change="loadTasks(1)"
+					v-if="showTaskFilter"
+					v-model="params"
 				/>
 			</transition>
 		</div>
 
 		<div class="field task-add" v-if="!list.isArchived && canWrite">
 			<div class="field is-grouped">
-				<p class="control has-icons-left is-expanded" :class="{ 'is-loading': taskService.loading}">
+				<p :class="{ 'is-loading': taskService.loading}" class="control has-icons-left is-expanded">
 					<input
-							v-focus
-							class="input"
-							:class="{ 'disabled': taskService.loading}"
-							v-model="newTaskText"
-							type="text"
-							placeholder="Add a new task..."
-							@keyup.enter="addTask()"/>
+						:class="{ 'disabled': taskService.loading}"
+						@keyup.enter="addTask()"
+						class="input"
+						placeholder="Add a new task..."
+						type="text"
+						v-focus
+						v-model="newTaskText"/>
 					<span class="icon is-small is-left">
 						<icon icon="tasks"/>
 					</span>
 				</p>
 				<p class="control">
-					<button class="button is-success" :disabled="newTaskText.length === 0" @click="addTask()">
+					<button :disabled="newTaskText.length === 0" @click="addTask()" class="button is-success">
 						<span class="icon is-small">
 							<icon icon="plus"/>
 						</span>
@@ -77,24 +77,24 @@
 			</p>
 		</div>
 
-		<p v-if="tasks.length === 0" class="list-is-empty-notice">
+		<p class="list-is-empty-notice" v-if="tasks.length === 0">
 			This list is currently empty.
 		</p>
 
 		<div class="columns">
 			<div class="column">
-				<div class="tasks" v-if="tasks && tasks.length > 0" :class="{'short': isTaskEdit}">
+				<div :class="{'short': isTaskEdit}" class="tasks" v-if="tasks && tasks.length > 0">
 					<single-task-in-list
-						v-for="t in tasks"
+						:disabled="!canWrite"
 						:key="t.id"
 						:the-task="t"
 						@taskUpdated="updateTasks"
 						task-detail-route="task.detail"
-						:disabled="!canWrite"
+						v-for="t in tasks"
 					>
-					<div @click="editTask(t.id)" class="icon settings" v-if="!list.isArchived && canWrite">
-						<icon icon="pencil-alt"/>
-					</div>
+						<div @click="editTask(t.id)" class="icon settings" v-if="!list.isArchived && canWrite">
+							<icon icon="pencil-alt"/>
+						</div>
 					</single-task-in-list>
 				</div>
 			</div>
@@ -104,7 +104,7 @@
 						<p class="card-header-title">
 							Edit Task
 						</p>
-						<a class="card-header-icon" @click="isTaskEdit = false">
+						<a @click="isTaskEdit = false" class="card-header-icon">
 							<span class="icon">
 								<icon icon="angle-right"/>
 							</span>
@@ -120,22 +120,22 @@
 		</div>
 
 		<nav
-				class="pagination is-centered"
-				role="navigation"
-				aria-label="pagination"
-				v-if="taskCollectionService.totalPages > 1">
+			aria-label="pagination"
+			class="pagination is-centered"
+			role="navigation"
+			v-if="taskCollectionService.totalPages > 1">
 			<router-link
-					class="pagination-previous"
-					:to="getRouteForPagination(currentPage - 1)"
-					tag="button"
-					:disabled="currentPage === 1">
+				:disabled="currentPage === 1"
+				:to="getRouteForPagination(currentPage - 1)"
+				class="pagination-previous"
+				tag="button">
 				Previous
 			</router-link>
 			<router-link
-					class="pagination-next"
-					:to="getRouteForPagination(currentPage + 1)"
-					tag="button"
-					:disabled="currentPage === taskCollectionService.totalPages">
+				:disabled="currentPage === taskCollectionService.totalPages"
+				:to="getRouteForPagination(currentPage + 1)"
+				class="pagination-next"
+				tag="button">
 				Next page
 			</router-link>
 			<ul class="pagination-list">
@@ -143,10 +143,10 @@
 					<li :key="'page'+i" v-if="p.isEllipsis"><span class="pagination-ellipsis">&hellip;</span></li>
 					<li :key="'page'+i" v-else>
 						<router-link
-								:to="getRouteForPagination(p.number)"
-								:class="{'is-current': p.number === currentPage}"
-								class="pagination-link"
-								:aria-label="'Goto page ' + p.number">
+							:aria-label="'Goto page ' + p.number"
+							:class="{'is-current': p.number === currentPage}"
+							:to="getRouteForPagination(p.number)"
+							class="pagination-link">
 							{{ p.number }}
 						</router-link>
 					</li>
@@ -163,201 +163,201 @@
 </template>
 
 <script>
-	import TaskService from '../../../services/task'
-	import TaskModel from '../../../models/task'
-	import LabelTaskService from '../../../services/labelTask'
-	import LabelService from '../../../services/label'
-	import LabelTask from '../../../models/labelTask'
-	import LabelModel from '../../../models/label'
+import TaskService from '../../../services/task'
+import TaskModel from '../../../models/task'
+import LabelTaskService from '../../../services/labelTask'
+import LabelService from '../../../services/label'
+import LabelTask from '../../../models/labelTask'
+import LabelModel from '../../../models/label'
 
-	import EditTask from '../../../components/tasks/edit-task'
-	import SingleTaskInList from '../../../components/tasks/partials/singleTaskInList'
-	import taskList from '../../../components/tasks/mixins/taskList'
-	import {saveListView} from '../../../helpers/saveListView'
-	import Filters from '../../../components/list/partials/filters'
-	import Rights from '../../../models/rights.json'
-	import {mapState} from 'vuex'
+import EditTask from '../../../components/tasks/edit-task'
+import SingleTaskInList from '../../../components/tasks/partials/singleTaskInList'
+import taskList from '../../../components/tasks/mixins/taskList'
+import {saveListView} from '@/helpers/saveListView'
+import Filters from '../../../components/list/partials/filters'
+import Rights from '../../../models/rights.json'
+import {mapState} from 'vuex'
 
-	export default {
-		name: 'List',
-		data() {
-			return {
-				taskService: TaskService,
-				list: {},
-				isTaskEdit: false,
-				taskEditTask: TaskModel,
-				newTaskText: '',
+export default {
+	name: 'List',
+	data() {
+		return {
+			taskService: TaskService,
+			list: {},
+			isTaskEdit: false,
+			taskEditTask: TaskModel,
+			newTaskText: '',
 
-				showError: false,
-				labelTaskService: LabelTaskService,
-				labelService: LabelService,
+			showError: false,
+			labelTaskService: LabelTaskService,
+			labelService: LabelService,
+		}
+	},
+	mixins: [
+		taskList,
+	],
+	components: {
+		Filters,
+		SingleTaskInList,
+		EditTask,
+	},
+	created() {
+		this.taskService = new TaskService()
+		this.labelService = new LabelService()
+		this.labelTaskService = new LabelTaskService()
+
+		// Save the current list view to local storage
+		// We use local storage and not vuex here to make it persistent across reloads.
+		saveListView(this.$route.params.listId, this.$route.name)
+	},
+	computed: mapState({
+		canWrite: state => state.currentList.maxRight > Rights.READ,
+	}),
+	methods: {
+		// This function initializes the tasks page and loads the first page of tasks
+		initTasks(page, search = '') {
+			this.taskEditTask = null
+			this.isTaskEdit = false
+			this.loadTasks(page, search)
+		},
+		addTask() {
+			if (this.newTaskText === '') {
+				this.showError = true
+				return
 			}
-		},
-		mixins: [
-			taskList,
-		],
-		components: {
-			Filters,
-			SingleTaskInList,
-			EditTask,
-		},
-		created() {
-			this.taskService = new TaskService()
-			this.labelService = new LabelService()
-			this.labelTaskService = new LabelTaskService()
+			this.showError = false
 
-			// Save the current list view to local storage
-			// We use local storage and not vuex here to make it persistent across reloads.
-			saveListView(this.$route.params.listId, this.$route.name)
-		},
-		computed: mapState({
-			canWrite: state => state.currentList.maxRight > Rights.READ,
-		}),
-		methods: {
-			// This function initializes the tasks page and loads the first page of tasks
-			initTasks(page, search = '') {
-				this.taskEditTask = null
-				this.isTaskEdit = false
-				this.loadTasks(page, search)
-			},
-			addTask() {
-				if (this.newTaskText === '') {
-					this.showError = true
-					return
-				}
-				this.showError = false
+			let task = new TaskModel({title: this.newTaskText, listId: this.$route.params.listId})
+			this.taskService.create(task)
+				.then(task => {
+					this.tasks.push(task)
+					this.sortTasks()
+					this.newTaskText = ''
 
-				let task = new TaskModel({title: this.newTaskText, listId: this.$route.params.listId})
-				this.taskService.create(task)
-					.then(task => {
-						this.tasks.push(task)
-						this.sortTasks()
-						this.newTaskText = ''
+					// Check if the task has words starting with ~ in the title and make them to labels
+					const parts = task.title.split(' ~')
+					// The first element will always contain the title, even if there is no occurrence of ~
+					if (parts.length > 1) {
 
-						// Check if the task has words starting with ~ in the title and make them to labels
-						const parts = task.title.split(' ~')
-						// The first element will always contain the title, even if there is no occurrence of ~
-						if (parts.length > 1) {
+						// First, create an unresolved promise for each entry in the array to wait
+						// until all labels are added to update the task title once again
+						let labelAddings = []
+						let labelAddsToWaitFor = []
+						parts.forEach((p, index) => {
+							if (index < 1) {
+								return
+							}
 
-							// First, create an unresolved promise for each entry in the array to wait
-							// until all labels are added to update the task title once again
-							let labelAddings = []
-							let labelAddsToWaitFor = []
-							parts.forEach((p, index) => {
-								if (index < 1) {
-									return
-								}
+							labelAddsToWaitFor.push(new Promise((resolve, reject) => {
+								labelAddings.push({resolve: resolve, reject: reject})
+							}))
+						})
 
-								labelAddsToWaitFor.push(new Promise((resolve, reject) => {
-									labelAddings.push({resolve: resolve, reject: reject})
-								}))
-							})
+						// Then do everything that is involved in finding, creating and adding the label to the task
+						parts.forEach((p, index) => {
+							if (index < 1) {
+								return
+							}
 
-							// Then do everything that is involved in finding, creating and adding the label to the task
-							parts.forEach((p, index) => {
-								if (index < 1) {
-									return
-								}
+							// The part up until the next space
+							const labelTitle = p.split(' ')[0]
 
-								// The part up until the next space
-								const labelTitle = p.split(' ')[0]
+							// Check if the label exists
+							this.labelService.getAll({}, {s: labelTitle})
+								.then(res => {
+									// Label found, use it
+									if (res.length > 0 && res[0].title === labelTitle) {
+										const labelTask = new LabelTask({
+											taskId: task.id,
+											labelId: res[0].id,
+										})
+										this.labelTaskService.create(labelTask)
+											.then(result => {
+												task.labels.push(res[0])
 
-								// Check if the label exists
-								this.labelService.getAll({}, {s: labelTitle})
-									.then(res => {
-										// Label found, use it
-										if (res.length > 0 && res[0].title === labelTitle) {
-											const labelTask = new LabelTask({
-												taskId: task.id,
-												labelId: res[0].id,
+												// Remove the label text from the task title
+												task.title = task.title.replace(` ~${labelTitle}`, '')
+
+												// Make the promise done (the one with the index 0 does not exist)
+												labelAddings[index - 1].resolve(result)
 											})
-											this.labelTaskService.create(labelTask)
-												.then(result => {
-													task.labels.push(res[0])
-
-													// Remove the label text from the task title
-													task.title = task.title.replace(` ~${labelTitle}`, '')
-
-													// Make the promise done (the one with the index 0 does not exist)
-													labelAddings[index-1].resolve(result)
+											.catch(e => {
+												this.error(e, this)
+											})
+									} else {
+										// label not found, create it
+										const label = new LabelModel({title: labelTitle})
+										this.labelService.create(label)
+											.then(res => {
+												const labelTask = new LabelTask({
+													taskId: task.id,
+													labelId: res.id,
 												})
-												.catch(e => {
-													this.error(e, this)
-												})
-										} else {
-											// label not found, create it
-											const label = new LabelModel({title: labelTitle})
-											this.labelService.create(label)
-												.then(res => {
-													const labelTask = new LabelTask({
-														taskId: task.id,
-														labelId: res.id,
+												this.labelTaskService.create(labelTask)
+													.then(result => {
+														task.labels.push(res)
+
+														// Remove the label text from the task title
+														task.title = task.title.replace(` ~${labelTitle}`, '')
+
+														// Make the promise done (the one with the index 0 does not exist)
+														labelAddings[index - 1].resolve(result)
 													})
-													this.labelTaskService.create(labelTask)
-														.then(result => {
-															task.labels.push(res)
+													.catch(e => {
+														this.error(e, this)
+													})
+											})
+											.catch(e => {
+												this.error(e, this)
+											})
+									}
+								})
+								.catch(e => {
+									this.error(e, this)
+								})
+						})
 
-															// Remove the label text from the task title
-															task.title = task.title.replace(` ~${labelTitle}`, '')
-
-															// Make the promise done (the one with the index 0 does not exist)
-															labelAddings[index-1].resolve(result)
-														})
-														.catch(e => {
-															this.error(e, this)
-														})
-												})
-												.catch(e => {
-													this.error(e, this)
-												})
-										}
+						// This waits to update the task until all labels have been added and the title has
+						// been modified to remove each label text
+						Promise.all(labelAddsToWaitFor)
+							.then(() => {
+								this.taskService.update(task)
+									.then(updatedTask => {
+										this.updateTasks(updatedTask)
 									})
 									.catch(e => {
 										this.error(e, this)
 									})
 							})
-
-							// This waits to update the task until all labels have been added and the title has
-							// been modified to remove each label text
-							Promise.all(labelAddsToWaitFor)
-								.then(() => {
-									this.taskService.update(task)
-										.then(updatedTask => {
-											this.updateTasks(updatedTask)
-										})
-										.catch(e => {
-											this.error(e, this)
-										})
-								})
-						}
-					})
-					.catch(e => {
-						this.error(e, this)
-					})
-			},
-			editTask(id) {
-				// Find the selected task and set it to the current object
-				let theTask = this.getTaskById(id) // Somehow this does not work if we directly assign this to this.taskEditTask
-				this.taskEditTask = theTask
-				this.isTaskEdit = true
-			},
-			getTaskById(id) {
-				for (const t in this.tasks) {
-					if (this.tasks[t].id === parseInt(id)) {
-						return this.tasks[t]
 					}
+				})
+				.catch(e => {
+					this.error(e, this)
+				})
+		},
+		editTask(id) {
+			// Find the selected task and set it to the current object
+			let theTask = this.getTaskById(id) // Somehow this does not work if we directly assign this to this.taskEditTask
+			this.taskEditTask = theTask
+			this.isTaskEdit = true
+		},
+		getTaskById(id) {
+			for (const t in this.tasks) {
+				if (this.tasks[t].id === parseInt(id)) {
+					return this.tasks[t]
 				}
-				return {} // FIXME: This should probably throw something to make it clear to the user noting was found
-			},
-			updateTasks(updatedTask) {
-				for (const t in this.tasks) {
-					if (this.tasks[t].id === updatedTask.id) {
-						this.$set(this.tasks, t, updatedTask)
-						break
-					}
+			}
+			return {} // FIXME: This should probably throw something to make it clear to the user noting was found
+		},
+		updateTasks(updatedTask) {
+			for (const t in this.tasks) {
+				if (this.tasks[t].id === updatedTask.id) {
+					this.$set(this.tasks, t, updatedTask)
+					break
 				}
-				this.sortTasks()
-			},
-		}
-	}
+			}
+			this.sortTasks()
+		},
+	},
+}
 </script>

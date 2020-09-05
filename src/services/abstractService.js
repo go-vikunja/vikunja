@@ -1,6 +1,6 @@
 import axios from 'axios'
 import {reduce, replace} from 'lodash'
-import {objectToSnakeCase} from '../helpers/case'
+import {objectToSnakeCase} from '@/helpers/case'
 
 export default class AbstractService {
 
@@ -380,7 +380,7 @@ export default class AbstractService {
 			})
 			.then(response => {
 				const result = this.modelCreateFactory(response.data)
-				if(typeof model.maxRight !== 'undefined') {
+				if (typeof model.maxRight !== 'undefined') {
 					result.maxRight = model.maxRight
 				}
 				return Promise.resolve(result)
@@ -406,7 +406,7 @@ export default class AbstractService {
 			})
 			.then(response => {
 				const result = this.modelUpdateFactory(response.data)
-				if(typeof model.maxRight !== 'undefined') {
+				if (typeof model.maxRight !== 'undefined') {
 					result.maxRight = model.maxRight
 				}
 				return Promise.resolve(result)

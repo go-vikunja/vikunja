@@ -1,6 +1,6 @@
 <template>
 	<div class="modal-mask keyboard-shortcuts-modal">
-		<div class="modal-container" @click.self="close()">
+		<div @click.self="close()" class="modal-container">
 			<div class="modal-content">
 				<div class="card has-background-white has-no-shadow">
 					<header class="card-header">
@@ -28,7 +28,7 @@
 							</span>
 						</p>
 						<template
-								v-if="$route.name === 'task.detail' || $route.name === 'task.list.detail' || $route.name === 'task.gantt.detail' || $route.name === 'task.kanban.detail' || $route.name === 'task.detail'">
+							v-if="$route.name === 'task.detail' || $route.name === 'task.list.detail' || $route.name === 'task.gantt.detail' || $route.name === 'task.kanban.detail' || $route.name === 'task.detail'">
 							<p>
 								<strong>Assign this task to a user</strong>
 								<span class="shortcuts">
@@ -88,12 +88,12 @@
 </template>
 
 <script>
-	export default {
-		name: 'keyboard-shortcuts',
-		methods: {
-			close() {
-				this.$emit('close')
-			},
+export default {
+	name: 'keyboard-shortcuts',
+	methods: {
+		close() {
+			this.$emit('close')
 		},
-	}
+	},
+}
 </script>

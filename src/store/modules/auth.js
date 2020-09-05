@@ -1,6 +1,6 @@
-import {HTTP} from '../../http-common'
-import {ERROR_MESSAGE, LOADING} from "../mutation-types";
-import UserModel from "../../models/user";
+import {HTTP} from '@/http-common'
+import {ERROR_MESSAGE, LOADING} from '../mutation-types'
+import UserModel from '../../models/user'
 
 export default {
 	namespaced: true,
@@ -37,12 +37,12 @@ export default {
 			// Delete an eventually preexisting old token
 			localStorage.removeItem('token')
 
-			const data =  {
+			const data = {
 				username: credentials.username,
-				password: credentials.password
+				password: credentials.password,
 			}
 
-			if(credentials.totpPasscode) {
+			if (credentials.totpPasscode) {
 				data.totp_passcode = credentials.totpPasscode
 			}
 
@@ -81,7 +81,7 @@ export default {
 			return HTTP.post('register', {
 				username: credentials.username,
 				email: credentials.email,
-				password: credentials.password
+				password: credentials.password,
 			})
 				.then(() => {
 					return ctx.dispatch('login', credentials)
@@ -135,7 +135,7 @@ export default {
 			HTTP.post('user/token', null, {
 				headers: {
 					Authorization: 'Bearer ' + localStorage.getItem('token'),
-				}
+				},
 			})
 				.then(r => {
 					localStorage.setItem('token', r.data.token)
@@ -149,6 +149,6 @@ export default {
 		logout(ctx) {
 			localStorage.removeItem('token')
 			ctx.dispatch('checkAuth')
-		}
+		},
 	},
 }

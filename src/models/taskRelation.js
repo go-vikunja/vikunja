@@ -7,7 +7,7 @@ export default class TaskRelationModel extends AbstractModel {
 		this.createdBy = new UserModel(this.createdBy)
 		this.created = new Date(this.created)
 	}
-	
+
 	defaults() {
 		return {
 			id: 0,

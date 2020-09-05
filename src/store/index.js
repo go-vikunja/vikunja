@@ -1,8 +1,5 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
-
-Vue.use(Vuex)
-
 import {CURRENT_LIST, ERROR_MESSAGE, HAS_TASKS, IS_FULLPAGE, LOADING, ONLINE} from './mutation-types'
 import config from './modules/config'
 import auth from './modules/auth'
@@ -13,7 +10,9 @@ import lists from './modules/lists'
 import attachments from './modules/attachments'
 
 import ListService from '../services/list'
-import {setTitle} from '../helpers/setTitle'
+import {setTitle} from '@/helpers/setTitle'
+
+Vue.use(Vuex)
 
 export const store = new Vuex.Store({
 	modules: {
@@ -97,6 +96,6 @@ export const store = new Vuex.Store({
 		},
 		[HAS_TASKS](state, hasTasks) {
 			state.hasTasks = hasTasks
-		}
+		},
 	},
 })

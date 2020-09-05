@@ -1,5 +1,7 @@
 <template>
-	<span v-if="showAll || priority >= priorities.HIGH" :class="{'not-so-high': priority === priorities.HIGH, 'high-priority': priority >= priorities.HIGH}">
+	<span
+		:class="{'not-so-high': priority === priorities.HIGH, 'high-priority': priority >= priorities.HIGH}"
+		v-if="showAll || priority >= priorities.HIGH">
 		<span class="icon" v-if="priority >= priorities.HIGH">
 			<icon icon="exclamation"/>
 		</span>
@@ -16,43 +18,43 @@
 </template>
 
 <script>
-	import priorites from '../../../models/priorities'
+import priorites from '../../../models/priorities'
 
-	export default {
-		name: 'priorityLabel',
-		data() {
-			return {
-				priorities: priorites,
-			}
-		},
-		props: {
-			priority: {
-				default: 0,
-				type: Number,
-			},
-			showAll: {
-				type: Boolean,
-				default: false,
-			},
+export default {
+	name: 'priorityLabel',
+	data() {
+		return {
+			priorities: priorites,
 		}
-	}
+	},
+	props: {
+		priority: {
+			default: 0,
+			type: Number,
+		},
+		showAll: {
+			type: Boolean,
+			default: false,
+		},
+	},
+}
 </script>
 
 <style lang="scss">
-	@import '../../../styles/theme/variables';
+@import '../../../styles/theme/variables';
 
-	span.high-priority{
-		color: $red;
-		width: auto !important; // To override the width set in tasks
+span.high-priority {
+	color: $red;
+	width: auto !important; // To override the width set in tasks
 
-		.icon {
-			vertical-align: middle;
-			width: auto !important;
-			padding: 0 .5em;
-		}
-
-		&.not-so-high {
-			color: $orange;
-		}
+	.icon {
+		vertical-align: middle;
+		width: auto !important;
+		padding: 0 .5em;
 	}
+
+	&.not-so-high {
+		color: $orange;
+	}
+}
 </style>

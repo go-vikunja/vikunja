@@ -5,7 +5,7 @@ import TeamMemberModel from './teamMember'
 export default class TeamModel extends AbstractModel {
 	constructor(data) {
 		super(data)
-		
+
 		// Make the members to usermodels
 		this.members = this.members.map(m => {
 			return new TeamMemberModel(m)

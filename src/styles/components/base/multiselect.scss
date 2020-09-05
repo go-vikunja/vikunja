@@ -25,10 +25,12 @@ fieldset[disabled] .multiselect {
     border-width: 2px;
     box-shadow: 0 0 0 1px transparent;
   }
+
   &:before {
     animation: spinning 2.4s cubic-bezier(0.41, 0.26, 0.2, 0.62);
     animation-iteration-count: infinite;
   }
+
   &:after {
     animation: spinning 2.4s cubic-bezier(0.51, 0.09, 0.21, 0.8);
     animation-iteration-count: infinite;
@@ -58,9 +60,11 @@ fieldset[disabled] .multiselect {
   min-height: 40px;
   text-align: left;
   color: $text;
+
   * {
     box-sizing: border-box;
   }
+
   &:focus {
     outline: none;
   }
@@ -73,12 +77,14 @@ fieldset[disabled] .multiselect {
 
 .multiselect--active {
   z-index: 50;
+
   &:not(.multiselect--above) {
     .multiselect__current, .multiselect__input, .multiselect__tags {
       border-bottom-left-radius: 0;
       border-bottom-right-radius: 0;
     }
   }
+
   .multiselect__select {
     transform: rotateZ(180deg);
   }
@@ -131,6 +137,7 @@ fieldset[disabled] .multiselect {
     border-color: $primary;
     outline: none;
   }
+
   padding-left: 5px;
   margin-bottom: 8px;
 }
@@ -184,14 +191,17 @@ fieldset[disabled] .multiselect {
   line-height: 22px;
   transition: all 0.2s ease;
   border-radius: 5px;
+
   &:after {
     content: "×";
     color: darken($multiselect-highlight, 20);
     font-size: 14px;
   }
+
   &:focus, &:hover {
     background: lighten($multiselect-highlight, 10);
   }
+
   &:focus:after, &:hover:after {
     color: $white;
   }
@@ -227,6 +237,7 @@ fieldset[disabled] .multiselect {
   text-align: center;
   cursor: pointer;
   transition: transform 0.2s ease;
+
   &:before {
     position: relative;
     right: 0;
@@ -305,6 +316,7 @@ fieldset[disabled] .multiselect {
   position: relative;
   cursor: pointer;
   white-space: nowrap;
+
   &:after {
     top: 0;
     right: 0;
@@ -320,6 +332,7 @@ fieldset[disabled] .multiselect {
   background: $multiselect-highlight;
   outline: none;
   color: $white;
+
   &:after {
     content: attr(data-select);
     background: $multiselect-highlight;
@@ -331,13 +344,16 @@ fieldset[disabled] .multiselect {
   background: darken($white, 10);
   color: $multiselect-dark;
   font-weight: bold;
+
   &:after {
     content: attr(data-selected);
     color: silver;
   }
+
   &.multiselect__option--highlight {
     background: $multiselect-highlight-negative;
     color: $white;
+
     &:after {
       background: $multiselect-highlight-negative;
       content: attr(data-deselect);
@@ -348,6 +364,7 @@ fieldset[disabled] .multiselect {
 
 .multiselect--disabled {
   pointer-events: none;
+
   .multiselect__current, .multiselect__select {
     background: $multiselect-disabled;
     color: darken($multiselect-disabled, 40);
@@ -364,9 +381,11 @@ fieldset[disabled] .multiselect {
 .multiselect__option--group {
   background: $multiselect-disabled;
   color: $multiselect-dark;
+
   &.multiselect__option--highlight {
     background: $multiselect-dark;
     color: $white;
+
     &:after {
       background: $multiselect-dark;
     }
@@ -380,6 +399,7 @@ fieldset[disabled] .multiselect {
 .multiselect__option--group-selected.multiselect__option--highlight {
   background: $multiselect-highlight-negative;
   color: $white;
+
   &:after {
     background: $multiselect-highlight-negative;
     content: attr(data-deselect);
@@ -406,24 +426,30 @@ fieldset[disabled] .multiselect {
   .multiselect {
     text-align: right;
   }
+
   .multiselect__select {
     right: auto;
     left: 1px;
   }
+
   .multiselect__tags {
     padding: 8px 8px 0px 40px;
   }
+
   .multiselect__content {
     text-align: right;
   }
+
   .multiselect__option:after {
     right: auto;
     left: 0;
   }
+
   .multiselect__clear {
     right: auto;
     left: 12px;
   }
+
   .multiselect__spinner {
     right: auto;
     left: 1px;

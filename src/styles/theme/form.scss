@@ -12,7 +12,7 @@
     box-shadow: 0.6em 0.6em 1em lighten($dark, 75);
   }
 
-  &.fullheight{
+  &.fullheight {
     padding-right: 7px;
     height: 100%;
   }
@@ -25,7 +25,7 @@
     box-shadow: 0.1em 0.1em 0.7em lighten($dark, 75) !important;
   }
 
-  &.icon-only{
+  &.icon-only {
     padding-left: 16px;
   }
 
@@ -58,7 +58,7 @@
     color: $white;
   }
 
-  &.noshadow{
+  &.noshadow {
     &,
     &.is-hovered,
     &:hover,
@@ -130,7 +130,7 @@
   }
 }
 
-.bigbuttons{
+.bigbuttons {
   margin-top: 0.5rem;
 }
 
@@ -152,7 +152,7 @@
   margin-bottom: 1rem;
 }
 
-.button-right{
+.button-right {
   float: right;
 }
 
@@ -161,7 +161,7 @@
 }
 
 // Contenteditable form
-.input.title{
+.input.title {
   font-size: 1.8rem;
   font-family: $vikunja-font;
   font-weight: 400 !important;
@@ -177,7 +177,7 @@
   }
 }
 
-h1, h2, h3{
+h1, h2, h3 {
   .input.title {
     height: auto;
   }

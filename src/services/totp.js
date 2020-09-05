@@ -1,5 +1,5 @@
 import AbstractService from './abstractService'
-import TotpModel from "../models/totp";
+import TotpModel from '../models/totp'
 
 export default class TotpService extends AbstractService {
 	urlPrefix = '/user/settings/totp'

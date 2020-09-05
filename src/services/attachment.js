@@ -38,17 +38,17 @@ export default class AttachmentService extends AbstractService {
 			method: 'GET',
 			responseType: 'blob',
 		}).then(response => {
-			return window.URL.createObjectURL(new Blob([response.data]));
+			return window.URL.createObjectURL(new Blob([response.data]))
 		})
 	}
 
 	download(model) {
 		this.getBlobUrl(model).then(url => {
-			const link = document.createElement('a');
-			link.href = url;
-			link.setAttribute('download', model.file.name);
-			link.click();
-			window.URL.revokeObjectURL(url);
+			const link = document.createElement('a')
+			link.href = url
+			link.setAttribute('download', model.file.name)
+			link.click()
+			window.URL.revokeObjectURL(url)
 		})
 	}
 
@@ -62,12 +62,12 @@ export default class AttachmentService extends AbstractService {
 		const data = new FormData()
 		for (let i = 0; i < files.length; i++) {
 			// TODO: Validation of file size
-			data.append('files', new Blob([files[i]]), files[i].name);
+			data.append('files', new Blob([files[i]]), files[i].name)
 		}
 
 		return this.uploadFormData(
 			this.getReplacedRoute(this.paths.create, model),
-			data
+			data,
 		)
 	}
 }

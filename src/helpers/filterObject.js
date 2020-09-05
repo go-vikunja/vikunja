@@ -1,4 +1,3 @@
-
 export const filterObject = (obj, fn) => {
 	let key
 

@@ -28,5 +28,5 @@ export default {
 					this.error(e, this)
 				})
 		},
-	}
+	},
 }

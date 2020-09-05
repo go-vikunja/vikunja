@@ -8,7 +8,7 @@ export default class UserListModel extends UserShareBaseModel {
 			super.defaults(),
 			{
 				listId: 0,
-			}
+			},
 		)
 	}
 }

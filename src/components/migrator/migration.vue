@@ -5,18 +5,18 @@
 		<template v-if="isMigrating === false && message === '' && lastMigrationDate === null">
 			<p>To authorize Vikunja to access your {{ name }} Account, click the button below.</p>
 			<a
-					:href="authUrl"
-					class="button is-primary"
-					:class="{'is-loading': migrationService.loading}"
-					:disabled="migrationService.loading">
+				:class="{'is-loading': migrationService.loading}"
+				:disabled="migrationService.loading"
+				:href="authUrl"
+				class="button is-primary">
 				Get Started
 			</a>
 		</template>
 		<div
-				class="migration-in-progress-container"
-				v-else-if="isMigrating === true && message === '' && lastMigrationDate === null">
+			class="migration-in-progress-container"
+			v-else-if="isMigrating === true && message === '' && lastMigrationDate === null">
 			<div class="migration-in-progress">
-				<img :src="`/images/migration/${identifier}.png`" :alt="name"/>
+				<img :alt="name" :src="`/images/migration/${identifier}.png`"/>
 				<div class="progress-dots">
 					<span></span>
 					<span></span>
@@ -27,7 +27,7 @@
 					<span></span>
 					<span></span>
 				</div>
-				<img src="/images/logo.svg" alt="Vikunja">
+				<img alt="Vikunja" src="/images/logo.svg">
 			</div>
 			<p>Importing in progress, hang tight...</p>
 		</div>
@@ -38,7 +38,7 @@
 				Are you sure?
 			</p>
 			<div class="buttons">
-				<button class="button is-primary" @click="migrate">I am sure, please start migrating now!</button>
+				<button @click="migrate" class="button is-primary">I am sure, please start migrating now!</button>
 				<router-link :to="{name: 'home'}" class="button is-danger is-outlined">Cancel</router-link>
 			</div>
 		</div>
@@ -54,73 +54,73 @@
 </template>
 
 <script>
-	import AbstractMigrationService from '../../services/migrator/abstractMigrationService'
+import AbstractMigrationService from '../../services/migrator/abstractMigrationService'
 
-	export default {
-		name: 'migration',
-		data() {
-			return {
-				authUrl: '',
-				isMigrating: false,
-				lastMigrationDate: null,
-				message: '',
-				wunderlistCode: '',
-			}
+export default {
+	name: 'migration',
+	data() {
+		return {
+			authUrl: '',
+			isMigrating: false,
+			lastMigrationDate: null,
+			message: '',
+			wunderlistCode: '',
+		}
+	},
+	props: {
+		name: {
+			type: String,
+			required: true,
 		},
-		props: {
-			name: {
-				type: String,
-				required: true,
-			},
-			identifier: {
-				type: String,
-				required: true,
-			},
+		identifier: {
+			type: String,
+			required: true,
 		},
-		created() {
-			this.migrationService = new AbstractMigrationService(this.identifier)
-			this.getAuthUrl()
-			this.message = ''
+	},
+	created() {
+		this.migrationService = new AbstractMigrationService(this.identifier)
+		this.getAuthUrl()
+		this.message = ''
 
-			if (typeof this.$route.query.code !== 'undefined') {
-				this.wunderlistCode = this.$route.query.code
-				this.migrationService.getStatus()
-					.then(r => {
-						if (r.time) {
-							this.lastMigrationDate = new Date(r.time)
-							return
-						}
-						this.migrate()
-					})
-					.catch(e => {
-						this.error(e, this)
-					})
-			}
+		if (typeof this.$route.query.code !== 'undefined') {
+			this.wunderlistCode = this.$route.query.code
+			this.migrationService.getStatus()
+				.then(r => {
+					if (r.time) {
+						this.lastMigrationDate = new Date(r.time)
+						return
+					}
+					this.migrate()
+				})
+				.catch(e => {
+					this.error(e, this)
+				})
+		}
+	},
+	methods: {
+		getAuthUrl() {
+			this.migrationService.getAuthUrl()
+				.then(r => {
+					this.authUrl = r.url
+				})
+				.catch(e => {
+					this.error(e, this)
+				})
 		},
-		methods: {
-			getAuthUrl() {
-				this.migrationService.getAuthUrl()
-					.then(r => {
-						this.authUrl = r.url
-					})
-					.catch(e => {
-						this.error(e, this)
-					})
-			},
-			migrate() {
-				this.isMigrating = true
-				this.lastMigrationDate = 0
-				this.migrationService.migrate({code: this.wunderlistCode})
-					.then(r => {
-						this.message = r.message
-					})
-					.catch(e => {
-						this.error(e, this)
-					})
-					.finally(() => {
-						this.isMigrating = false
-					})
-			},
+		migrate() {
+			this.isMigrating = true
+			this.lastMigrationDate = 0
+			this.migrationService.migrate({code: this.wunderlistCode})
+				.then(r => {
+					this.message = r.message
+				})
+				.catch(e => {
+					this.error(e, this)
+				})
+				.finally(() => {
+					this.isMigrating = false
+				})
 		},
-	}
+	},
+}
 </script>

@@ -10,7 +10,7 @@ export default class TeamService extends AbstractService {
 			getAll: '/teams',
 			update: '/teams/{id}',
 			delete: '/teams/{id}',
-		});
+		})
 	}
 
 	processModel(model) {

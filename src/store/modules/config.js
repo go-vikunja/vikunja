@@ -1,5 +1,5 @@
 import {CONFIG} from '../mutation-types'
-import {HTTP} from '../../http-common'
+import {HTTP} from '@/http-common'
 
 export default {
 	namespaced: true,
@@ -18,7 +18,7 @@ export default {
 		legal: {
 			imprintUrl: '',
 			privacyPolicyUrl: '',
-		}
+		},
 	}),
 	mutations: {
 		[CONFIG](state, config) {

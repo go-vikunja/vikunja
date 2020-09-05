@@ -1,13 +1,13 @@
 .labels-list {
-  a, a:hover{
+  a, a:hover {
     text-decoration: none;
   }
 
-  .tag{
+  .tag {
     margin: 0.5em;
     background: darken($background, 5);
 
-    &.disabled{
+    &.disabled {
       opacity: 0.7;
 
       &, a {

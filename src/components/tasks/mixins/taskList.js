@@ -137,7 +137,7 @@ export default {
 
 			this.$router.push({
 				name: 'list.list',
-				query: {search: this.searchTerm}
+				query: {search: this.searchTerm},
 			})
 		},
 		hideSearchBar() {
@@ -154,12 +154,12 @@ export default {
 			return {
 				name: 'list.' + type,
 				params: {
-					type: type
+					type: type,
 				},
 				query: {
 					page: page,
 				},
 			}
 		},
-	}
+	},
 }

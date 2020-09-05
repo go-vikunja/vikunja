@@ -3,7 +3,7 @@ import TaskModel from './task'
 import UserModel from './user'
 
 export default class ListModel extends AbstractModel {
-	
+
 	constructor(data) {
 		super(data)
 
@@ -15,7 +15,7 @@ export default class ListModel extends AbstractModel {
 		this.tasks = this.tasks.map(t => {
 			return new TaskModel(t)
 		})
-		
+
 		this.owner = new UserModel(this.owner)
 
 		this.created = new Date(this.created)

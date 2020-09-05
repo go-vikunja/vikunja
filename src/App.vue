@@ -4,54 +4,54 @@
 			<!-- This is a workaround to get the sw to "see" the to-be-cached version of the offline background image -->
 			<div class="offline" style="height: 0;width: 0;"></div>
 			<nav
-					class="navbar main-theme is-fixed-top"
-					:class="{'has-background': background}"
-					role="navigation"
-					aria-label="main navigation"
-					v-if="userAuthenticated && (userInfo && userInfo.type === authTypes.USER)">
+				:class="{'has-background': background}"
+				aria-label="main navigation"
+				class="navbar main-theme is-fixed-top"
+				role="navigation"
+				v-if="userAuthenticated && (userInfo && userInfo.type === authTypes.USER)">
 				<div class="navbar-brand">
 					<router-link :to="{name: 'home'}" class="navbar-item logo">
-						<img src="/images/logo-full-pride.svg" alt="Vikunja" v-if="(new Date()).getMonth() === 5"/>
-						<img src="/images/logo-full.svg" alt="Vikunja" v-else/>
+						<img alt="Vikunja" src="/images/logo-full-pride.svg" v-if="(new Date()).getMonth() === 5"/>
+						<img alt="Vikunja" src="/images/logo-full.svg" v-else/>
 					</router-link>
 					<a
-							@click="menuActive = true"
-							class="menu-show-button"
-							:class="{'is-visible': !menuActive}"
+						:class="{'is-visible': !menuActive}"
+						@click="menuActive = true"
+						class="menu-show-button"
 					>
 						<icon icon="bars"></icon>
 					</a>
 				</div>
 				<a
-						@click="menuActive = true"
-						class="menu-show-button"
+					@click="menuActive = true"
+					class="menu-show-button"
 				>
 					<icon icon="bars"></icon>
 				</a>
 				<div class="list-title" v-if="currentList.id">
 					<h1
-							class="title"
-							:style="{ 'opacity': currentList.title === '' ? '0': '1' }">
-						{{ currentList.title === '' ? 'Loading...': currentList.title}}
+						:style="{ 'opacity': currentList.title === '' ? '0': '1' }"
+						class="title">
+						{{ currentList.title === '' ? 'Loading...' : currentList.title }}
 					</h1>
 					<router-link
-							:to="{ name: 'list.edit', params: { id: currentList.id } }"
-							class="icon"
-							v-if="canWriteCurrentList">
+						:to="{ name: 'list.edit', params: { id: currentList.id } }"
+						class="icon"
+						v-if="canWriteCurrentList">
 						<icon icon="cog" size="2x"/>
 					</router-link>
 				</div>
 				<div class="navbar-end">
-					<div v-if="updateAvailable" class="update-notification">
+					<div class="update-notification" v-if="updateAvailable">
 						<p>There is an update for Vikunja available!</p>
 						<a @click="refreshApp()" class="button is-primary noshadow">Update Now</a>
 					</div>
 					<div class="user">
-						<img :src="userAvatar" class="avatar" alt=""/>
+						<img :src="userAvatar" alt="" class="avatar"/>
 						<div class="dropdown is-right is-active">
 							<div class="dropdown-trigger">
-								<button class="button noshadow" @click.stop="userMenuActive = !userMenuActive">
-									<span class="username">{{userInfo.username}}</span>
+								<button @click.stop="userMenuActive = !userMenuActive" class="button noshadow">
+									<span class="username">{{ userInfo.username }}</span>
 									<span class="icon is-small">
 									<icon icon="chevron-down"/>
 								</span>
@@ -63,9 +63,16 @@
 										<router-link :to="{name: 'user.settings'}" class="dropdown-item">
 											Settings
 										</router-link>
-										<a :href="imprintUrl" v-if="imprintUrl" class="dropdown-item" target="_blank">Imprint</a>
-										<a :href="privacyPolicyUrl" v-if="privacyPolicyUrl" class="dropdown-item" target="_blank">Privacy policy</a>
-										<a @click="keyboardShortcutsActive = true" class="dropdown-item">Keyboard Shortcuts</a>
+										<a :href="imprintUrl" class="dropdown-item" target="_blank" v-if="imprintUrl">Imprint</a>
+										<a
+											:href="privacyPolicyUrl"
+											class="dropdown-item"
+											target="_blank"
+											v-if="privacyPolicyUrl">
+											Privacy policy
+										</a>
+										<a @click="keyboardShortcutsActive = true" class="dropdown-item">Keyboard
+											Shortcuts</a>
 										<a @click="logout()" class="dropdown-item">
 											Logout
 										</a>
@@ -81,14 +88,14 @@
 					<icon icon="times"></icon>
 				</a>
 				<div
-						class="app-container"
-						:class="{'has-background': background}"
-						:style="{'background-image': `url(${background})`}"
+					:class="{'has-background': background}"
+					:style="{'background-image': `url(${background})`}"
+					class="app-container"
 				>
-					<div class="namespace-container" :class="{'is-active': menuActive}">
+					<div :class="{'is-active': menuActive}" class="namespace-container">
 						<div class="menu top-menu">
 							<router-link :to="{name: 'home'}" class="logo">
-								<img src="/images/logo-full.svg" alt="Vikunja"/>
+								<img alt="Vikunja" src="/images/logo-full.svg"/>
 							</router-link>
 							<ul class="menu-list">
 								<li>
@@ -142,115 +149,119 @@
 							</ul>
 						</div>
 
-						<a @click="menuActive = false" class="collapse-menu-button" v-shortkey="['ctrl', 'e']" @shortkey="() => menuActive = !menuActive">
+						<a
+							@click="menuActive = false"
+							@shortkey="() => menuActive = !menuActive"
+							class="collapse-menu-button"
+							v-shortkey="['ctrl', 'e']">
 							Collapse Menu
 						</a>
 
 						<aside class="menu namespaces-lists">
-							<div class="spinner" :class="{ 'is-loading': namespaceService.loading}"></div>
+							<div :class="{ 'is-loading': namespaceService.loading}" class="spinner"></div>
 							<template v-for="n in namespaces">
 								<div :key="n.id">
 									<router-link
-											v-tooltip.right="'Settings'"
-											:to="{name: 'namespace.edit', params: {id: n.id} }"
-											class="nsettings"
-											v-if="n.id > 0">
+										:to="{name: 'namespace.edit', params: {id: n.id} }"
+										class="nsettings"
+										v-if="n.id > 0"
+										v-tooltip.right="'Settings'">
 										<span class="icon">
 											<icon icon="cog"/>
 										</span>
 									</router-link>
 									<router-link
-											v-tooltip="'Add a new list in the ' + n.title + ' namespace'"
-											:to="{ name: 'list.create', params: { id: n.id} }"
-											class="nsettings"
-											:key="n.id + 'list.create'"
-											v-if="n.id > 0">
+										:key="n.id + 'list.create'"
+										:to="{ name: 'list.create', params: { id: n.id} }"
+										class="nsettings"
+										v-if="n.id > 0"
+										v-tooltip="'Add a new list in the ' + n.title + ' namespace'">
 										<span class="icon">
 											<icon icon="plus"/>
 										</span>
 									</router-link>
 									<label
-											class="menu-label"
-											v-tooltip="n.title + ' (' + n.lists.length + ')'"
-											:for="n.id + 'checker'">
+										:for="n.id + 'checker'"
+										class="menu-label"
+										v-tooltip="n.title + ' (' + n.lists.length + ')'">
 										<span class="name">
 											<span
-													class="color-bubble"
-													v-if="n.hexColor !== ''"
-													:style="{ backgroundColor: n.hexColor }">
+												:style="{ backgroundColor: n.hexColor }"
+												class="color-bubble"
+												v-if="n.hexColor !== ''">
 											</span>
-											{{n.title}} ({{n.lists.length}})
+											{{ n.title }} ({{ n.lists.length }})
 										</span>
 									</label>
 								</div>
 								<input
-										:key="n.id + 'checker'"
-										type="checkbox"
-										checked="checked"
-										:id="n.id + 'checker'"
-										class="checkinput"/>
-								<div class="more-container" :key="n.id + 'child'">
+									:id="n.id + 'checker'"
+									:key="n.id + 'checker'"
+									checked="checked"
+									class="checkinput"
+									type="checkbox"/>
+								<div :key="n.id + 'child'" class="more-container">
 									<ul class="menu-list can-be-hidden">
 										<template v-for="l in n.lists">
 											<!-- This is a bit ugly but vue wouldn't want to let me filter this - probably because the lists
 													are nested inside of the namespaces makes it a lot harder.-->
-											<li v-if="!l.isArchived" :key="l.id">
+											<li :key="l.id" v-if="!l.isArchived">
 												<router-link
-														:to="{ name: 'list.index', params: { listId: l.id} }"
-														:class="{'router-link-exact-active': currentList.id === l.id}">
+													:class="{'router-link-exact-active': currentList.id === l.id}"
+													:to="{ name: 'list.index', params: { listId: l.id} }">
 													<span class="name">
 														<span
-																class="color-bubble"
-																v-if="l.hexColor !== ''"
-																:style="{ backgroundColor: l.hexColor }">
+															:style="{ backgroundColor: l.hexColor }"
+															class="color-bubble"
+															v-if="l.hexColor !== ''">
 														</span>
-														{{l.title}}
+														{{ l.title }}
 													</span>
 												</router-link>
 											</li>
 										</template>
 									</ul>
-									<label class="hidden-hint" :for="n.id + 'checker'">
-										Show hidden lists ({{n.lists.length}})...
+									<label :for="n.id + 'checker'" class="hidden-hint">
+										Show hidden lists ({{ n.lists.length }})...
 									</label>
 								</div>
 							</template>
 						</aside>
-						<a class="menu-bottom-link" target="_blank" href="https://vikunja.io">Powered by Vikunja</a>
+						<a class="menu-bottom-link" href="https://vikunja.io" target="_blank">Powered by Vikunja</a>
 					</div>
 					<div
-							class="app-content"
-							:class="[
+						:class="[
 								{
 									'fullpage-overlay': fullpage,
 									'is-menu-enabled': menuActive,
 								},
 								$route.name,
 							]"
+						class="app-content"
 					>
-						<a class="mobile-overlay" v-if="menuActive" @click="menuActive = false"></a>
+						<a @click="menuActive = false" class="mobile-overlay" v-if="menuActive"></a>
 						<transition name="fade">
 							<router-view/>
 						</transition>
-						<a class="keyboard-shortcuts-button" @click="keyboardShortcutsActive = true">
+						<a @click="keyboardShortcutsActive = true" class="keyboard-shortcuts-button">
 							<icon icon="keyboard"/>
 						</a>
 					</div>
 				</div>
 			</div>
 			<div
-					v-else-if="userAuthenticated && (userInfo && userInfo.type === authTypes.LINK_SHARE)"
-					class="link-share-container"
-					:class="{'has-background': background}"
-					:style="{'background-image': `url(${background})`}"
+				:class="{'has-background': background}"
+				:style="{'background-image': `url(${background})`}"
+				class="link-share-container"
+				v-else-if="userAuthenticated && (userInfo && userInfo.type === authTypes.LINK_SHARE)"
 			>
 				<div class="container has-text-centered link-share-view">
 					<div class="column is-10 is-offset-1">
-						<img src="/images/logo-full.svg" alt="Vikunja" class="logo"/>
+						<img alt="Vikunja" class="logo" src="/images/logo-full.svg"/>
 						<h1
-								class="title"
-								:style="{ 'opacity': currentList.title === '' ? '0': '1' }">
-							{{ currentList.title === '' ? 'Loading...': currentList.title}}
+							:style="{ 'opacity': currentList.title === '' ? '0': '1' }"
+							class="title">
+							{{ currentList.title === '' ? 'Loading...' : currentList.title }}
 						</h1>
 						<div class="box has-text-left view">
 							<div class="logout">
@@ -268,7 +279,7 @@
 			</div>
 			<div v-else>
 				<div class="noauth-container">
-					<img src="/images/logo-full.svg" alt="Vikunja"/>
+					<img alt="Vikunja" src="/images/logo-full.svg"/>
 					<div class="message is-info" v-if="motd !== ''">
 						<div class="message-header">
 							<p>Info</p>
@@ -290,213 +301,213 @@
 		</div>
 
 		<transition name="fade">
-			<keyboard-shortcuts v-if="keyboardShortcutsActive" @close="keyboardShortcutsActive = false"/>
+			<keyboard-shortcuts @close="keyboardShortcutsActive = false" v-if="keyboardShortcutsActive"/>
 		</transition>
 	</div>
 </template>
 
 <script>
-	import router from './router'
-	import {mapState} from 'vuex'
+import router from './router'
+import {mapState} from 'vuex'
 
-	import NamespaceService from './services/namespace'
-	import authTypes from './models/authTypes'
-	import Rights from './models/rights.json'
+import NamespaceService from './services/namespace'
+import authTypes from './models/authTypes'
+import Rights from './models/rights.json'
 
-	import swEvents from './ServiceWorker/events'
-	import Notification from './components/misc/notification'
-	import {CURRENT_LIST, IS_FULLPAGE, ONLINE} from './store/mutation-types'
-	import KeyboardShortcuts from './components/misc/keyboard-shortcuts'
+import swEvents from './ServiceWorker/events'
+import Notification from './components/misc/notification'
+import {CURRENT_LIST, IS_FULLPAGE, ONLINE} from './store/mutation-types'
+import KeyboardShortcuts from './components/misc/keyboard-shortcuts'
 
-	export default {
-		name: 'app',
-		components: {
-			KeyboardShortcuts,
-			Notification,
-		},
-		data() {
-			return {
-				namespaceService: NamespaceService,
-				menuActive: true,
-				currentDate: new Date(),
-				userMenuActive: false,
-				authTypes: authTypes,
-				keyboardShortcutsActive: false,
+export default {
+	name: 'app',
+	components: {
+		KeyboardShortcuts,
+		Notification,
+	},
+	data() {
+		return {
+			namespaceService: NamespaceService,
+			menuActive: true,
+			currentDate: new Date(),
+			userMenuActive: false,
+			authTypes: authTypes,
+			keyboardShortcutsActive: false,
 
-				// Service Worker stuff
-				updateAvailable: false,
-				registration: null,
-				refreshing: false,
+			// Service Worker stuff
+			updateAvailable: false,
+			registration: null,
+			refreshing: false,
+		}
+	},
+	beforeMount() {
+		// Check if the user is offline, show a message then
+		this.$store.commit(ONLINE, navigator.onLine)
+		window.addEventListener('online', () => this.$store.commit(ONLINE, navigator.onLine))
+		window.addEventListener('offline', () => this.$store.commit(ONLINE, navigator.onLine))
+
+		// Password reset
+		if (this.$route.query.userPasswordReset !== undefined) {
+			localStorage.removeItem('passwordResetToken') // Delete an eventually preexisting old token
+			localStorage.setItem('passwordResetToken', this.$route.query.userPasswordReset)
+			router.push({name: 'user.password-reset.reset'})
+		}
+		// Email verification
+		if (this.$route.query.userEmailConfirm !== undefined) {
+			localStorage.removeItem('emailConfirmToken') // Delete an eventually preexisting old token
+			localStorage.setItem('emailConfirmToken', this.$route.query.userEmailConfirm)
+			router.push({name: 'user.login'})
+		}
+	},
+	beforeCreate() {
+		this.$store.dispatch('config/update')
+		this.$store.dispatch('auth/checkAuth')
+			.then(() => {
+				// Check if the user is already logged in, if so, redirect them to the homepage
+				if (
+					!this.userAuthenticated &&
+					this.$route.name !== 'user.login' &&
+					this.$route.name !== 'user.password-reset.request' &&
+					this.$route.name !== 'user.password-reset.reset' &&
+					this.$route.name !== 'user.register' &&
+					this.$route.name !== 'link-share.auth'
+				) {
+					router.push({name: 'user.login'})
+				}
+
+				if (this.userAuthenticated && this.userInfo.type === authTypes.USER && (this.$route.params.name === 'home' || this.namespaces.length === 0)) {
+					this.loadNamespaces()
+				}
+			})
+	},
+	created() {
+
+		// Service worker communication
+		document.addEventListener(swEvents.SW_UPDATED, this.showRefreshUI, {once: true})
+
+		if (navigator && navigator.serviceWorker) {
+			navigator.serviceWorker.addEventListener(
+				'controllerchange', () => {
+					if (this.refreshing) return
+					this.refreshing = true
+					window.location.reload()
+				},
+			)
+		}
+
+		// Hide the menu by default on mobile
+		if (window.innerWidth < 770) {
+			this.menuActive = false
+		}
+
+		// Try renewing the token every time vikunja is loaded initially
+		// (When opening the browser the focus event is not fired)
+		this.$store.dispatch('auth/renewToken')
+
+		// Check if the token is still valid if the window gets focus again to maybe renew it
+		window.addEventListener('focus', () => {
+
+			if (!this.userAuthenticated) {
+				return
 			}
-		},
-		beforeMount() {
-			// Check if the user is offline, show a message then
-			this.$store.commit(ONLINE, navigator.onLine)
-			window.addEventListener('online', () => this.$store.commit(ONLINE, navigator.onLine));
-			window.addEventListener('offline', () => this.$store.commit(ONLINE, navigator.onLine));
 
-			// Password reset
-			if (this.$route.query.userPasswordReset !== undefined) {
-				localStorage.removeItem('passwordResetToken') // Delete an eventually preexisting old token
-				localStorage.setItem('passwordResetToken', this.$route.query.userPasswordReset)
-				router.push({name: 'user.password-reset.reset'})
-			}
-			// Email verification
-			if (this.$route.query.userEmailConfirm !== undefined) {
-				localStorage.removeItem('emailConfirmToken') // Delete an eventually preexisting old token
-				localStorage.setItem('emailConfirmToken', this.$route.query.userEmailConfirm)
+			const expiresIn = this.userInfo.exp - +new Date() / 1000
+
+			// If the token expiry is negative, it is already expired and we have no choice but to redirect
+			// the user to the login page
+			if (expiresIn < 0) {
+				this.$store.dispatch('auth/checkAuth')
 				router.push({name: 'user.login'})
-			}
-		},
-		beforeCreate() {
-			this.$store.dispatch('config/update')
-			this.$store.dispatch('auth/checkAuth')
-				.then(() => {
-					// Check if the user is already logged in, if so, redirect them to the homepage
-					if (
-						!this.userAuthenticated &&
-						this.$route.name !== 'user.login' &&
-						this.$route.name !== 'user.password-reset.request' &&
-						this.$route.name !== 'user.password-reset.reset' &&
-						this.$route.name !== 'user.register' &&
-						this.$route.name !== 'link-share.auth'
-					) {
-						router.push({name: 'user.login'})
-					}
-
-					if (this.userAuthenticated && this.userInfo.type === authTypes.USER && (this.$route.params.name === 'home' || this.namespaces.length === 0)) {
-						this.loadNamespaces()
-					}
-				})
-		},
-		created() {
-
-			// Service worker communication
-			document.addEventListener(swEvents.SW_UPDATED, this.showRefreshUI, {once: true})
-
-			if (navigator && navigator.serviceWorker) {
-				navigator.serviceWorker.addEventListener(
-					'controllerchange', () => {
-						if (this.refreshing) return;
-						this.refreshing = true;
-						window.location.reload();
-					}
-				)
+				return
 			}
 
-			// Hide the menu by default on mobile
+			// Check if the token is valid for less than 60 hours and renew if thats the case
+			if (expiresIn < 60 * 3600) {
+				this.$store.dispatch('auth/renewToken')
+				console.log('renewed token')
+			}
+		})
+
+		// This will hide the menu once clicked outside of it
+		this.$nextTick(() => document.addEventListener('click', () => this.userMenuActive = false))
+	},
+	watch: {
+		// call the method again if the route changes
+		'$route': 'doStuffAfterRoute',
+	},
+	computed: mapState({
+		userInfo: state => state.auth.info,
+		userAvatar: state => state.auth.avatarUrl,
+		userAuthenticated: state => state.auth.authenticated,
+		motd: state => state.config.motd,
+		online: ONLINE,
+		fullpage: IS_FULLPAGE,
+		namespaces(state) {
+			return state.namespaces.namespaces.filter(n => !n.isArchived)
+		},
+		currentList: CURRENT_LIST,
+		background: 'background',
+		imprintUrl: state => state.config.legal.imprintUrl,
+		privacyPolicyUrl: state => state.config.legal.privacyPolicyUrl,
+		canWriteCurrentList: state => state.currentList.maxRight > Rights.READ,
+	}),
+	methods: {
+		logout() {
+			this.$store.dispatch('auth/logout')
+			router.push({name: 'user.login'})
+		},
+		loadNamespaces() {
+			this.$store.dispatch('namespaces/loadNamespaces')
+		},
+		loadNamespacesIfNeeded(e) {
+			if (this.userAuthenticated && (this.userInfo && this.userInfo.type === authTypes.USER) && (e.name === 'home' || this.namespaces.length === 0)) {
+				this.loadNamespaces()
+			}
+		},
+		doStuffAfterRoute(e) {
+			// this.setTitle('') // Reset the title if the page component does not set one itself
+
+			if (this.$store.state[IS_FULLPAGE]) {
+				this.$store.commit(IS_FULLPAGE, false)
+			}
+
+			this.loadNamespacesIfNeeded(e)
+			this.userMenuActive = false
+
+			// If the menu is active on desktop, don't hide it because that would confuse the user
 			if (window.innerWidth < 770) {
 				this.menuActive = false
 			}
 
-			// Try renewing the token every time vikunja is loaded initially
-			// (When opening the browser the focus event is not fired)
-			this.$store.dispatch('auth/renewToken')
-
-			// Check if the token is still valid if the window gets focus again to maybe renew it
-			window.addEventListener('focus', () => {
-
-				if (!this.userAuthenticated) {
-					return
-				}
-
-				const expiresIn = this.userInfo.exp - +new Date() / 1000
-
-				// If the token expiry is negative, it is already expired and we have no choice but to redirect
-				// the user to the login page
-				if (expiresIn < 0) {
-					this.$store.dispatch('auth/checkAuth')
-					router.push({name: 'user.login'})
-					return
-				}
-
-				// Check if the token is valid for less than 60 hours and renew if thats the case
-				if (expiresIn < 60 * 3600) {
-					this.$store.dispatch('auth/renewToken')
-					console.log('renewed token')
-				}
-			})
-
-			// This will hide the menu once clicked outside of it
-			this.$nextTick(() => document.addEventListener('click', () => this.userMenuActive = false))
+			// Reset the current list highlight in menu if the current list is not list related.
+			if (
+				this.$route.name === 'home' ||
+				this.$route.name === 'namespace.edit' ||
+				this.$route.name === 'teams.index' ||
+				this.$route.name === 'teams.edit' ||
+				this.$route.name === 'tasks.range' ||
+				this.$route.name === 'labels.index' ||
+				this.$route.name === 'migrate.start' ||
+				this.$route.name === 'migrate.wunderlist' ||
+				this.$route.name === 'user.settings' ||
+				this.$route.name === 'namespaces.index'
+			) {
+				this.$store.commit(CURRENT_LIST, {})
+			}
 		},
-		watch: {
-			// call the method again if the route changes
-			'$route': 'doStuffAfterRoute',
+		showRefreshUI(e) {
+			console.log('recieved refresh event', e)
+			this.registration = e.detail
+			this.updateAvailable = true
 		},
-		computed: mapState({
-			userInfo: state => state.auth.info,
-			userAvatar: state => state.auth.avatarUrl,
-			userAuthenticated: state => state.auth.authenticated,
-			motd: state => state.config.motd,
-			online: ONLINE,
-			fullpage: IS_FULLPAGE,
-			namespaces(state) {
-				return state.namespaces.namespaces.filter(n => !n.isArchived)
-			},
-			currentList: CURRENT_LIST,
-			background: 'background',
-			imprintUrl: state => state.config.legal.imprintUrl,
-			privacyPolicyUrl: state => state.config.legal.privacyPolicyUrl,
-			canWriteCurrentList: state => state.currentList.maxRight > Rights.READ,
-		}),
-		methods: {
-			logout() {
-				this.$store.dispatch('auth/logout')
-				router.push({name: 'user.login'})
-			},
-			loadNamespaces() {
-				this.$store.dispatch('namespaces/loadNamespaces')
-			},
-			loadNamespacesIfNeeded(e) {
-				if (this.userAuthenticated && (this.userInfo && this.userInfo.type === authTypes.USER) && (e.name === 'home' || this.namespaces.length === 0)) {
-					this.loadNamespaces()
-				}
-			},
-			doStuffAfterRoute(e) {
-				// this.setTitle('') // Reset the title if the page component does not set one itself
-
-				if (this.$store.state[IS_FULLPAGE]) {
-					this.$store.commit(IS_FULLPAGE, false)
-				}
-
-				this.loadNamespacesIfNeeded(e)
-				this.userMenuActive = false
-
-				// If the menu is active on desktop, don't hide it because that would confuse the user
-				if (window.innerWidth < 770) {
-					this.menuActive = false
-				}
-
-				// Reset the current list highlight in menu if the current list is not list related.
-				if (
-					this.$route.name === 'home' ||
-					this.$route.name === 'namespace.edit' ||
-					this.$route.name === 'teams.index' ||
-					this.$route.name === 'teams.edit' ||
-					this.$route.name === 'tasks.range' ||
-					this.$route.name === 'labels.index' ||
-					this.$route.name === 'migrate.start' ||
-					this.$route.name === 'migrate.wunderlist' ||
-					this.$route.name === 'user.settings' ||
-					this.$route.name === 'namespaces.index'
-				) {
-					this.$store.commit(CURRENT_LIST, {})
-				}
-			},
-			showRefreshUI(e) {
-				console.log('recieved refresh event', e)
-				this.registration = e.detail;
-				this.updateAvailable = true;
-			},
-			refreshApp() {
-				this.updateExists = false;
-				if (!this.registration || !this.registration.waiting) {
-					return;
-				}
-				// Notify the service worker to actually do the update
-				this.registration.waiting.postMessage('skipWaiting');
-			},
+		refreshApp() {
+			this.updateExists = false
+			if (!this.registration || !this.registration.waiting) {
+				return
+			}
+			// Notify the service worker to actually do the update
+			this.registration.waiting.postMessage('skipWaiting')
 		},
-	}
+	},
+}
 </script>

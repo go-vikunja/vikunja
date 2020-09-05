@@ -5,7 +5,7 @@ import {formatISO} from 'date-fns'
 export default class ListUserService extends AbstractService {
 	constructor() {
 		super({
-			getAll: '/lists/{listId}/listusers'
+			getAll: '/lists/{listId}/listusers',
 		})
 	}
 
