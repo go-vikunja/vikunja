@@ -46,7 +46,7 @@
 		<router-link
 			:to="{ name: 'list.list', params: { listId: task.listId } }"
 			class="task-list"
-			v-if="currentList.id !== task.listId && $store.getters['lists/getListById'](task.listId) !== null"
+			v-if="!showList && currentList.id !== task.listId && $store.getters['lists/getListById'](task.listId) !== null"
 			v-tooltip="`This task belongs to list '${$store.getters['lists/getListById'](task.listId).title}'`">
 			{{ $store.getters['lists/getListById'](task.listId).title }}
 		</router-link>
