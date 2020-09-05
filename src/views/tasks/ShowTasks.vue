@@ -35,9 +35,13 @@
 		</template>
 		<div :class="{ 'is-loading': taskService.loading}" class="spinner"></div>
 		<div class="tasks" v-if="tasks && tasks.length > 0">
-			<div :key="t.id" class="task" v-for="t in tasks">
-				<single-task-in-list :show-list="true" :the-task="t" @taskUpdated="updateTasks"/>
-			</div>
+			<single-task-in-list
+				:key="t.id"
+				class="task"
+				v-for="t in tasks"
+				:show-list="true"
+				:the-task="t"
+				@taskUpdated="updateTasks"/>
 		</div>
 	</div>
 </template>

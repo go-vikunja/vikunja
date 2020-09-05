@@ -31,7 +31,6 @@
 
     .tasktext,
     &.tasktext {
-      vertical-align: top;
       white-space: nowrap;
       text-overflow: ellipsis;
       overflow: hidden;
@@ -215,6 +214,10 @@
 
   img {
     margin-top: 2em;
+  }
+
+  .user img{
+    margin: 0;
   }
 
   .spinner.is-loading:after {
