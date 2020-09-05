@@ -1,5 +1,5 @@
 <template>
-	<span>
+	<div class="task loader-container" :class="{'is-loading': taskService.loading}">
 		<fancycheckbox v-model="task.done" @change="markAsDone" :disabled="isArchived || disabled"/>
 		<span class="tasktext" :class="{ 'done': task.done}">
 			<router-link :to="{ name: taskDetailRoute, params: { id: task.id } }">
@@ -43,7 +43,22 @@
 			</transition>
 			<priority-label :priority="task.priority"/>
 		</span>
-	</span>
+		<router-link
+			v-if="currentList.id !== task.listId && $store.getters['lists/getListById'](task.listId) !== null"
+			v-tooltip="`This task belongs to list '${$store.getters['lists/getListById'](task.listId).title}'`"
+			:to="{ name: 'list.list', params: { listId: task.listId } }"
+			class="task-list">
+			{{ $store.getters['lists/getListById'](task.listId).title }}
+		</router-link>
+		<a
+			class="favorite"
+			:class="{'is-favorite': task.isFavorite}"
+			@click="toggleFavorite">
+			<icon icon="star" v-if="task.isFavorite"/>
+			<icon :icon="['far', 'star']" v-else/>
+		</a>
+		<slot></slot>
+	</div>
 </template>
 
 <script>
@@ -105,6 +120,11 @@
 			this.task = new TaskModel()
 			this.taskService = new TaskService()
 		},
+		computed: {
+			currentList() {
+				return typeof this.$store.state.currentList === 'undefined' ? {id: 0, title: ''} : this.$store.state.currentList
+			},
+		},
 		methods: {
 			markAsDone(checked) {
 				const updateFunc = () => {
@@ -135,6 +155,18 @@
 				} else {
 					updateFunc() // Don't delay it when un-marking it as it doesn't have an animation the other way around
 				}
+			},
+			toggleFavorite() {
+				this.task.isFavorite = !this.task.isFavorite
+				this.taskService.update(this.task)
+					.then(t => {
+						this.task = t
+						this.$emit('taskUpdated', t)
+						this.$store.dispatch('namespaces/loadNamespacesIfFavoritesDontExist')
+					})
+					.catch(e => {
+						this.error(e, this)
+					})
 			},
 		},
 	}

@@ -54,6 +54,7 @@ import { faCalendarAlt } from '@fortawesome/free-regular-svg-icons'
 import { faCloudDownloadAlt } from '@fortawesome/free-solid-svg-icons'
 import { faCloudUploadAlt } from '@fortawesome/free-solid-svg-icons'
 import { faPercent } from '@fortawesome/free-solid-svg-icons'
+import { faStar as faStarSolid } from '@fortawesome/free-solid-svg-icons'
 import { faStar } from '@fortawesome/free-regular-svg-icons'
 import { faAlignLeft } from '@fortawesome/free-solid-svg-icons'
 import { faPaperclip } from '@fortawesome/free-solid-svg-icons'
@@ -119,6 +120,7 @@ library.add(faFilter)
 library.add(faFillDrip)
 library.add(faKeyboard)
 library.add(faSave)
+library.add(faStarSolid)
 
 Vue.component('icon', FontAwesomeIcon)
 

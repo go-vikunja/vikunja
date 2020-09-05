@@ -84,17 +84,18 @@
 		<div class="columns">
 			<div class="column">
 				<div class="tasks" v-if="tasks && tasks.length > 0" :class="{'short': isTaskEdit}">
-					<div class="task" v-for="t in tasks" :key="t.id">
-						<single-task-in-list
-								:the-task="t"
-								@taskUpdated="updateTasks"
-								task-detail-route="task.detail"
-								:disabled="!canWrite"
-						/>
-						<div @click="editTask(t.id)" class="icon settings" v-if="!list.isArchived && canWrite">
-							<icon icon="pencil-alt"/>
-						</div>
+					<single-task-in-list
+						v-for="t in tasks"
+						:key="t.id"
+						:the-task="t"
+						@taskUpdated="updateTasks"
+						task-detail-route="task.detail"
+						:disabled="!canWrite"
+					>
+					<div @click="editTask(t.id)" class="icon settings" v-if="!list.isArchived && canWrite">
+						<icon icon="pencil-alt"/>
 					</div>
+					</single-task-in-list>
 				</div>
 			</div>
 			<div class="column is-4" v-if="isTaskEdit">

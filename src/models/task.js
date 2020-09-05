@@ -1,4 +1,4 @@
-import AbstractModel from './abstractModel';
+import AbstractModel from './abstractModel'
 import UserModel from './user'
 import LabelModel from './label'
 import AttachmentModel from './attachment'
@@ -95,6 +95,7 @@ export default class TaskModel extends AbstractModel {
 			attachments: [],
 			identifier: '',
 			index: 0,
+			isFavorite: false,
 
 			createdBy: UserModel,
 			created: null,
@@ -167,7 +168,7 @@ export default class TaskModel extends AbstractModel {
 			return
 		}
 
-		const {state} = await navigator.permissions.request({name: 'notifications'});
+		const {state} = await navigator.permissions.request({name: 'notifications'})
 		if (state !== 'granted') {
 			console.debug('Notification permission not granted, not showing notifications')
 			return
@@ -191,11 +192,11 @@ export default class TaskModel extends AbstractModel {
 			actions: [
 				{
 					action: 'mark-as-done',
-					title: 'Done'
+					title: 'Done',
 				},
 				{
 					action: 'show-task',
-					title: 'Show task'
+					title: 'Show task',
 				},
 			],
 		})

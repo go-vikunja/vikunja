@@ -22,65 +22,85 @@
     padding: 0.5rem 1rem;
     border-bottom: 1px solid darken(#fff, 10%);
     transition: background-color $transition;
+    align-items: center;
+    cursor: pointer;
 
     &:hover {
       background-color: darken($light-background, 3);
     }
 
-    span:not(.tag) {
-      width: 100%;
+    .tasktext,
+    &.tasktext {
+      vertical-align: top;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
       display: inline-block;
-      cursor: pointer;
+      width: 100%;
 
-      .tasktext,
-      &.tasktext {
-        vertical-align: top;
-        white-space: nowrap;
-        text-overflow: ellipsis;
-        overflow: hidden;
-        display: inline-block;
-        max-width: calc(#{$desktop} - 27px - 2rem); // The max width of the outer container minus the padding
-        width: calc(100% - 2rem); // The max width of the outer container minus the padding
+      .overdue {
+        color: $red;
+      }
+    }
 
-        @media screen and (max-width: $desktop) {
-          max-width: calc(100vw - 27px - 2rem - 1.5rem - 3rem); // 1.5rem is the padding of the tasks container, 3rem is the padding of .app-container
-        }
+    .task-list {
+      width: auto;
+      color: lighten($grey, 25%);
+      font-size: .9em;
+      white-space: nowrap;
+    }
 
-        .overdue {
-          color: $red;
-        }
+    .fancycheckbox span {
+      display: none;
+    }
 
-        .task-list {
-          width: auto;
-          color: lighten($grey, 25%);
-          font-size: .9em;
-          vertical-align: text-bottom;
-        }
+    .tag {
+      margin: 0 0.5em;
+    }
+
+    .avatar {
+      border-radius: 50%;
+      vertical-align: bottom;
+      margin-left: 5px;
+      height: 27px;
+      width: 27px;
+    }
+
+    a {
+      color: $text;
+      transition: color ease $transition-duration;
+
+      &:hover {
+        color: darken($text, 40%);
+      }
+    }
+
+    .favorite {
+      opacity: 0;
+      text-align: center;
+      width: 27px;
+      transition: opacity $transition, color $transition;
+
+      &:hover {
+        color: $orange;
       }
 
-      .fancycheckbox span {
+      &.is-favorite {
+        opacity: 1;
+        color: $orange;
+      }
+    }
+
+    &:hover .favorite {
+      opacity: 1;
+    }
+
+    .fancycheckbox {
+      height: 18px;
+      padding-top: 0;
+
+      span {
         display: none;
-      }
-
-      .tag {
-        margin: 0 0.5em;
-      }
-
-      .avatar {
-        border-radius: 50%;
-        vertical-align: bottom;
-        margin-left: 5px;
-        height: 27px;
-        width: 27px;
-      }
-
-      a {
-        color: $text;
-        transition: color ease $transition-duration;
-
-        &:hover {
-          color: darken($text, 40%);
-        }
       }
     }
 
@@ -106,6 +126,15 @@
       float: right;
       width: 24px;
       cursor: pointer;
+    }
+
+    &.loader-container.is-loading:after {
+      top: calc(50% - 1em);
+      left: calc(50% - 1em);
+      width: 2em;
+      height: 2em;
+      border-left-color: $grey-light;
+      border-bottom-color: $grey-light;
     }
   }
 
@@ -241,4 +270,9 @@
       }
     }
   }
+}
+
+.is-max-width-desktop .tasks .task {
+  width: 100%;
+  max-width: $desktop;
 }

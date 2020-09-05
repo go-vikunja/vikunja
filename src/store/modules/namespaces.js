@@ -93,5 +93,11 @@ export default {
 					return Promise.reject(e)
 				})
 		},
+		loadNamespacesIfFavoritesDontExist(ctx) {
+			// The first namespace should be the one holding all favorites
+			if(ctx.state.namespaces[0].id !== -2) {
+				return ctx.dispatch('loadNamespaces')
+			}
+		},
 	},
 }
