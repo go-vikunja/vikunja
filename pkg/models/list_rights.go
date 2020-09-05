@@ -25,6 +25,11 @@ import (
 // CanWrite return whether the user can write on that list or not
 func (l *List) CanWrite(a web.Auth) (bool, error) {
 
+	// The favorite list can't be edited
+	if l.ID == FavoritesPseudoList.ID {
+		return false, nil
+	}
+
 	// Get the list and check the right
 	originalList := &List{ID: l.ID}
 	err := originalList.GetSimpleByID()
@@ -63,6 +68,19 @@ func (l *List) CanWrite(a web.Auth) (bool, error) {
 
 // CanRead checks if a user has read access to a list
 func (l *List) CanRead(a web.Auth) (bool, int, error) {
+
+	// The favorite list needs a special treatment
+	if l.ID == FavoritesPseudoList.ID {
+		owner, err := user.GetFromAuth(a)
+		if err != nil {
+			return false, 0, err
+		}
+
+		*l = FavoritesPseudoList
+		l.Owner = owner
+		return true, int(RightRead), nil
+	}
+
 	// Check if the user is either owner or can read
 	if err := l.GetSimpleByID(); err != nil {
 		return false, 0, err
@@ -83,6 +101,10 @@ func (l *List) CanRead(a web.Auth) (bool, int, error) {
 
 // CanUpdate checks if the user can update a list
 func (l *List) CanUpdate(a web.Auth) (canUpdate bool, err error) {
+	// The favorite list can't be edited
+	if l.ID == FavoritesPseudoList.ID {
+		return false, nil
+	}
 	canUpdate, err = l.CanWrite(a)
 	// If the list is archived and the user tries to un-archive it, let the request through
 	if IsErrListIsArchived(err) && !l.IsArchived {
@@ -105,6 +127,11 @@ func (l *List) CanCreate(a web.Auth) (bool, error) {
 
 // IsAdmin returns whether the user has admin rights on the list or not
 func (l *List) IsAdmin(a web.Auth) (bool, error) {
+	// The favorite list can't be edited
+	if l.ID == FavoritesPseudoList.ID {
+		return false, nil
+	}
+
 	originalList := &List{ID: l.ID}
 	err := originalList.GetSimpleByID()
 	if err != nil {

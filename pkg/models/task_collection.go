@@ -150,7 +150,7 @@ func (tf *TaskCollection) ReadAll(a web.Auth, search string, page int, perPage i
 		if err != nil {
 			return nil, 0, 0, err
 		}
-		return getTasksForLists([]*List{list}, taskopts)
+		return getTasksForLists([]*List{list}, a, taskopts)
 	}
 
 	// If the list ID is not set, we get all tasks for the user.
@@ -176,5 +176,5 @@ func (tf *TaskCollection) ReadAll(a web.Auth, search string, page int, perPage i
 		tf.Lists = []*List{{ID: tf.ListID}}
 	}
 
-	return getTasksForLists(tf.Lists, taskopts)
+	return getTasksForLists(tf.Lists, a, taskopts)
 }

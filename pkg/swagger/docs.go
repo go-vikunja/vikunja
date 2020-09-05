@@ -6341,6 +6341,10 @@ var doc = `{
                     "description": "The task index, calculated per list",
                     "type": "integer"
                 },
+                "is_favorite": {
+                    "description": "True if a task is a favorite task. Favorite tasks show up in a separate \"Important\" list",
+                    "type": "boolean"
+                },
                 "labels": {
                     "description": "An array of labels which are associated with this task.",
                     "type": "array",
@@ -6801,6 +6805,10 @@ var doc = `{
                 "index": {
                     "description": "The task index, calculated per list",
                     "type": "integer"
+                },
+                "is_favorite": {
+                    "description": "True if a task is a favorite task. Favorite tasks show up in a separate \"Important\" list",
+                    "type": "boolean"
                 },
                 "labels": {
                     "description": "An array of labels which are associated with this task.",

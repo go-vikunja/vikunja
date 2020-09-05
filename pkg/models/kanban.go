@@ -128,7 +128,7 @@ func (b *Bucket) ReadAll(auth web.Auth, search string, page int, perPage int) (r
 			},
 		},
 	}
-	tasks, _, _, err := getTasksForLists([]*List{{ID: b.ListID}}, opts)
+	tasks, _, _, err := getTasksForLists([]*List{{ID: b.ListID}}, auth, opts)
 	if err != nil {
 		return
 	}

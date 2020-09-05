@@ -84,6 +84,9 @@ type Task struct {
 	// All attachments this task has
 	Attachments []*TaskAttachment `xorm:"-" json:"attachments"`
 
+	// True if a task is a favorite task. Favorite tasks show up in a separate "Important" list
+	IsFavorite bool `xorm:"default false" json:"is_favorite"`
+
 	// A timestamp when this task was created. You cannot change this value.
 	Created time.Time `xorm:"created not null" json:"created"`
 	// A timestamp when this task was last updated. You cannot change this value.
@@ -165,7 +168,7 @@ func (t *Task) ReadAll(a web.Auth, search string, page int, perPage int) (result
 	return nil, 0, 0, nil
 }
 
-func getRawTasksForLists(lists []*List, opts *taskOptions) (tasks []*Task, resultCount int, totalItems int64, err error) {
+func getRawTasksForLists(lists []*List, a web.Auth, opts *taskOptions) (tasks []*Task, resultCount int, totalItems int64, err error) {
 
 	// If the user does not have any lists, don't try to get any tasks
 	if len(lists) == 0 {
@@ -179,7 +182,11 @@ func getRawTasksForLists(lists []*List, opts *taskOptions) (tasks []*Task, resul
 
 	// Get all list IDs and get the tasks
 	var listIDs []int64
+	var hasFavoriteLists bool
 	for _, l := range lists {
+		if l.ID == FavoritesPseudoList.ID {
+			hasFavoriteLists = true
+		}
 		listIDs = append(listIDs, l.ID)
 	}
 
@@ -274,10 +281,33 @@ func getRawTasksForLists(lists []*List, opts *taskOptions) (tasks []*Task, resul
 		}
 	}
 
+	var listIDCond builder.Cond
+	var listCond builder.Cond
 	if len(listIDs) > 0 {
-		query = query.In("list_id", listIDs)
-		queryCount = queryCount.In("list_id", listIDs)
+		listIDCond = builder.In("list_id", listIDs)
+		listCond = listIDCond
 	}
+
+	if hasFavoriteLists {
+		// Make sure users can only see their favorites
+		userLists, _, _, err := getRawListsForUser(&listOptions{
+			user: &user.User{ID: a.GetID()},
+			page: -1,
+		})
+		if err != nil {
+			return nil, 0, 0, err
+		}
+
+		userListIDs := make([]int64, len(userLists))
+		for _, l := range userLists {
+			userListIDs = append(userListIDs, l.ID)
+		}
+
+		listCond = builder.Or(listIDCond, builder.And(builder.Eq{"is_favorite": true}, builder.In("list_id", userListIDs)))
+	}
+
+	query = query.Where(listCond)
+	queryCount = queryCount.Where(listCond)
 
 	if len(filters) > 0 {
 		if opts.filterConcat == filterConcatOr {
@@ -311,9 +341,9 @@ func getRawTasksForLists(lists []*List, opts *taskOptions) (tasks []*Task, resul
 	return tasks, len(tasks), totalItems, nil
 }
 
-func getTasksForLists(lists []*List, opts *taskOptions) (tasks []*Task, resultCount int, totalItems int64, err error) {
+func getTasksForLists(lists []*List, a web.Auth, opts *taskOptions) (tasks []*Task, resultCount int, totalItems int64, err error) {
 
-	tasks, resultCount, totalItems, err = getRawTasksForLists(lists, opts)
+	tasks, resultCount, totalItems, err = getRawTasksForLists(lists, a, opts)
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -760,6 +790,7 @@ func (t *Task) Update() (err error) {
 		"bucket_id",
 		"position",
 		"repeat_from_current_date",
+		"is_favorite",
 	}
 
 	// Make sure we have a bucket
@@ -867,6 +898,10 @@ func (t *Task) Update() (err error) {
 	// Repeat from current date
 	if !t.RepeatFromCurrentDate {
 		ot.RepeatFromCurrentDate = false
+	}
+	// Is Favorite
+	if !t.IsFavorite {
+		ot.IsFavorite = false
 	}
 
 	_, err = s.ID(t.ID).

@@ -143,8 +143,9 @@ func TestNamespace_ReadAll(t *testing.T) {
 		namespaces := nn.([]*NamespaceWithLists)
 		assert.NoError(t, err)
 		assert.NotNil(t, namespaces)
-		assert.Len(t, namespaces, 9)                 // Total of 9 including shared
-		assert.Equal(t, int64(-1), namespaces[0].ID) // The first one should be the one with the shared namespaces
+		assert.Len(t, namespaces, 10)                // Total of 10 including shared & favorites
+		assert.Equal(t, int64(-2), namespaces[0].ID) // The first one should be the one with favorites
+		assert.Equal(t, int64(-1), namespaces[1].ID) // The second one should be the one with the shared namespaces
 		// Ensure every list and namespace are not archived
 		for _, namespace := range namespaces {
 			assert.False(t, namespace.IsArchived)
@@ -161,7 +162,8 @@ func TestNamespace_ReadAll(t *testing.T) {
 		namespaces := nn.([]*NamespaceWithLists)
 		assert.NoError(t, err)
 		assert.NotNil(t, namespaces)
-		assert.Len(t, namespaces, 10)                // Total of 10 including shared, one is archived
-		assert.Equal(t, int64(-1), namespaces[0].ID) // The first one should be the one with the shared namespaces
+		assert.Len(t, namespaces, 11)                // Total of 11 including shared & favorites, one is archived
+		assert.Equal(t, int64(-2), namespaces[0].ID) // The first one should be the one with favorites
+		assert.Equal(t, int64(-1), namespaces[1].ID) // The second one should be the one with the shared namespaces
 	})
 }

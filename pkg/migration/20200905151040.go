@@ -21,20 +21,20 @@ import (
 	"xorm.io/xorm"
 )
 
-type buckets20200904101559 struct {
-	Limit int64 `xorm:"default 0" json:"limit"`
+type tasks20200905151040 struct {
+	IsFavorite bool `xorm:"default false" json:"is_favorite"`
 }
 
-func (buckets20200904101559) TableName() string {
-	return "buckets"
+func (tasks20200905151040) TableName() string {
+	return "tasks"
 }
 
 func init() {
 	migrations = append(migrations, &xormigrate.Migration{
-		ID:          "20200904101559",
-		Description: "Add limit field to kanban",
+		ID:          "20200905151040",
+		Description: "Add favorite field to tasks",
 		Migrate: func(tx *xorm.Engine) error {
-			return tx.Sync2(buckets20200904101559{})
+			return tx.Sync2(tasks20200905151040{})
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return nil

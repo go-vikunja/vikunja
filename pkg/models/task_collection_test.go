@@ -66,6 +66,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:   user1,
 		ListID:      1,
 		BucketID:    1,
+		IsFavorite:  true,
 		Labels: []*Label{
 			{
 				ID:          4,
@@ -288,6 +289,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedByID:  6,
 		CreatedBy:    user6,
 		ListID:       6,
+		IsFavorite:   true,
 		RelatedTasks: map[RelationKind][]*Task{},
 		BucketID:     6,
 		Created:      time.Unix(1543626724, 0).In(loc),
@@ -484,6 +486,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 					Index:       1,
 					CreatedByID: 1,
 					ListID:      1,
+					IsFavorite:  true,
 					Created:     time.Unix(1543626724, 0).In(loc),
 					Updated:     time.Unix(1543626724, 0).In(loc),
 					BucketID:    1,
@@ -835,6 +838,18 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task33, // has nil dates
 			},
 			wantErr: false,
+		},
+		{
+			name: "favorited tasks",
+			args: defaultArgs,
+			fields: fields{
+				ListID: FavoritesPseudoList.ID,
+			},
+			want: []*Task{
+				task1,
+				task15,
+				// Task 34 is also a favorite, but on a list user 1 has no access to.
+			},
 		},
 	}
 

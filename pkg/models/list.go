@@ -74,6 +74,16 @@ type ListBackgroundType struct {
 // ListBackgroundUpload represents the list upload background type
 const ListBackgroundUpload string = "upload"
 
+// FavoritesPseudoList holds all tasks marked as favorites
+var FavoritesPseudoList = List{
+	ID:          -1,
+	Title:       "Favorites",
+	Description: "This list has all tasks marked as favorites.",
+	NamespaceID: FavoritesPseudoNamespace.ID,
+	Created:     time.Now(),
+	Updated:     time.Now(),
+}
+
 // GetListsByNamespaceID gets all lists in a namespace
 func GetListsByNamespaceID(nID int64, doer *user.User) (lists []*List, err error) {
 	if nID == -1 {
@@ -165,6 +175,12 @@ func (l *List) ReadAll(a web.Auth, search string, page int, perPage int) (result
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{id} [get]
 func (l *List) ReadOne() (err error) {
+
+	if l.ID == FavoritesPseudoList.ID {
+		// Already "built" the list in CanRead
+		return nil
+	}
+
 	// Get list owner
 	l.Owner, err = user.GetUserByID(l.OwnerID)
 	if err != nil {

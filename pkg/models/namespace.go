@@ -62,6 +62,15 @@ var PseudoNamespace = Namespace{
 	Updated:     time.Now(),
 }
 
+// FavoritesPseudoNamespace is a pseudo namespace used to hold favorited lists and tasks
+var FavoritesPseudoNamespace = Namespace{
+	ID:          -2,
+	Title:       "Favorites",
+	Description: "Favorite lists and tasks.",
+	Created:     time.Now(),
+	Updated:     time.Now(),
+}
+
 // TableName makes beautiful table names
 func (Namespace) TableName() string {
 	return "namespaces"
@@ -76,6 +85,11 @@ func (n *Namespace) GetSimpleByID() (err error) {
 	// Get the namesapce with shared lists
 	if n.ID == -1 {
 		*n = PseudoNamespace
+		return
+	}
+
+	if n.ID == FavoritesPseudoNamespace.ID {
+		*n = FavoritesPseudoNamespace
 		return
 	}
 
@@ -180,8 +194,17 @@ func (n *Namespace) ReadAll(a web.Auth, search string, page int, perPage int) (r
 		)
 	}
 
-	// Create our pseudo-namespace to hold the shared lists
+	// Create our pseudo namespace with favorite lists
 	// We want this one at the beginning, which is why we create it here
+	pseudoFavoriteNamespace := FavoritesPseudoNamespace
+	pseudoFavoriteNamespace.Owner = doer
+	all = append(all, &NamespaceWithLists{
+		Namespace: pseudoFavoriteNamespace,
+		Lists:     []*List{{}},
+	})
+	*all[0].Lists[0] = FavoritesPseudoList // Copying the list to be able to modify it later
+
+	// Create our pseudo namespace to hold the shared lists
 	pseudonamespace := PseudoNamespace
 	pseudonamespace.Owner = doer
 	all = append(all, &NamespaceWithLists{
@@ -266,6 +289,19 @@ func (n *Namespace) ReadAll(a web.Auth, search string, page int, perPage int) (r
 
 	// Remove the pseudonamespace if we don't have any shared lists
 	if len(individualLists) == 0 {
+		all = append(all[:1], all[2:]...)
+	}
+
+	// Check if we have any favorites and remove the favorites namespace from the list if not
+	favoriteCount, err := x.
+		Join("INNER", "list", "tasks.list_id = list.id").
+		Join("INNER", "namespaces", "list.namespace_id = namespaces.id").
+		Where(builder.And(builder.Eq{"is_favorite": true}, builder.In("namespaces.id", namespaceids))).
+		Count(&Task{})
+	if err != nil {
+		return nil, 0, 0, err
+	}
+	if favoriteCount == 0 {
 		all = append(all[:0], all[1:]...)
 	}
 

@@ -106,7 +106,7 @@ func (ld *ListDuplicate) Create(a web.Auth) (err error) {
 	log.Debugf("Duplicated all buckets from list %d into %d", ld.ListID, ld.List.ID)
 
 	// Get all tasks + all task details
-	tasks, _, _, err := getTasksForLists([]*List{{ID: ld.ListID}}, &taskOptions{})
+	tasks, _, _, err := getTasksForLists([]*List{{ID: ld.ListID}}, a, &taskOptions{})
 	if err != nil {
 		return err
 	}
