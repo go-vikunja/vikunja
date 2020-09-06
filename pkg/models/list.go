@@ -57,6 +57,9 @@ type List struct {
 	// Holds extra information about the background set since some background providers require attribution or similar. If not null, the background can be accessed at /lists/{listID}/background
 	BackgroundInformation interface{} `xorm:"-" json:"background_information"`
 
+	// True if a list is a favorite. Favorite lists show up in a separate namespace.
+	IsFavorite bool `xorm:"default false" json:"is_favorite"`
+
 	// A timestamp when this list was created. You cannot change this value.
 	Created time.Time `xorm:"created not null" json:"created"`
 	// A timestamp when this list was last updated. You cannot change this value.
@@ -80,6 +83,7 @@ var FavoritesPseudoList = List{
 	Title:       "Favorites",
 	Description: "This list has all tasks marked as favorites.",
 	NamespaceID: FavoritesPseudoNamespace.ID,
+	IsFavorite:  true,
 	Created:     time.Now(),
 	Updated:     time.Now(),
 }
@@ -464,7 +468,7 @@ func GenerateListIdentifier(l *List, sess *xorm.Engine) (err error) {
 func CreateOrUpdateList(list *List) (err error) {
 
 	// Check if the namespace exists
-	if list.NamespaceID != 0 {
+	if list.NamespaceID != 0 && list.NamespaceID != FavoritesPseudoNamespace.ID {
 		_, err = GetNamespaceByID(list.NamespaceID)
 		if err != nil {
 			return err
@@ -503,6 +507,7 @@ func CreateOrUpdateList(list *List) (err error) {
 			"is_archived",
 			"identifier",
 			"hex_color",
+			"is_favorite",
 		}
 		if list.Description != "" {
 			colsToUpdate = append(colsToUpdate, "description")

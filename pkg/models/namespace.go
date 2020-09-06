@@ -292,19 +292,6 @@ func (n *Namespace) ReadAll(a web.Auth, search string, page int, perPage int) (r
 		all = append(all[:1], all[2:]...)
 	}
 
-	// Check if we have any favorites and remove the favorites namespace from the list if not
-	favoriteCount, err := x.
-		Join("INNER", "list", "tasks.list_id = list.id").
-		Join("INNER", "namespaces", "list.namespace_id = namespaces.id").
-		Where(builder.And(builder.Eq{"is_favorite": true}, builder.In("namespaces.id", namespaceids))).
-		Count(&Task{})
-	if err != nil {
-		return nil, 0, 0, err
-	}
-	if favoriteCount == 0 {
-		all = append(all[:0], all[1:]...)
-	}
-
 	// More details for the lists
 	err = AddListDetails(lists)
 	if err != nil {
@@ -323,7 +310,36 @@ func (n *Namespace) ReadAll(a web.Auth, search string, page int, perPage int) (r
 	}
 
 	for _, list := range lists {
+		if list.IsFavorite {
+			nMap[pseudoFavoriteNamespace.ID].Lists = append(nMap[pseudoFavoriteNamespace.ID].Lists, list)
+		}
 		nMap[list.NamespaceID].Lists = append(nMap[list.NamespaceID].Lists, list)
+	}
+
+	// Check if we have any favorites or favorited lists and remove the favorites namespace from the list if not
+	var favoriteCount int64
+	favoriteCount, err = x.
+		Join("INNER", "list", "tasks.list_id = list.id").
+		Join("INNER", "namespaces", "list.namespace_id = namespaces.id").
+		Where(builder.And(builder.Eq{"tasks.is_favorite": true}, builder.In("namespaces.id", namespaceids))).
+		Count(&Task{})
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	// If we don't have any favorites in the favorites pseudo list, remove that pseudo list from the namespace
+	if favoriteCount == 0 {
+		for in, l := range nMap[pseudoFavoriteNamespace.ID].Lists {
+			if l.ID == FavoritesPseudoList.ID {
+				nMap[pseudoFavoriteNamespace.ID].Lists = append(nMap[pseudoFavoriteNamespace.ID].Lists[:in], nMap[pseudoFavoriteNamespace.ID].Lists[in+1:]...)
+				break
+			}
+		}
+	}
+
+	// If we don't have any favorites in the namespace, remove it
+	if len(nMap[pseudoFavoriteNamespace.ID].Lists) == 0 {
+		all = append(all[:0], all[1:]...)
 	}
 
 	numberOfTotalItems, err = x.

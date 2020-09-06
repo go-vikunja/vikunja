@@ -6545,6 +6545,10 @@ var doc = `{
                     "description": "Whether or not a list is archived.",
                     "type": "boolean"
                 },
+                "is_favorite": {
+                    "description": "True if a list is a favorite. Favorite lists show up in a separate namespace.",
+                    "type": "boolean"
+                },
                 "namespace_id": {
                     "type": "integer"
                 },

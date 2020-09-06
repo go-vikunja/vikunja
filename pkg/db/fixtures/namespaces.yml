@@ -82,3 +82,9 @@
   is_archived: 1
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
+- id: 17
+  title: testnamespace17
+  description: Lorem Ipsum
+  owner_id: 12
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12

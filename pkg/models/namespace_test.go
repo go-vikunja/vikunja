@@ -136,6 +136,8 @@ func TestNamespace_Delete(t *testing.T) {
 
 func TestNamespace_ReadAll(t *testing.T) {
 	user1 := &user.User{ID: 1}
+	user11 := &user.User{ID: 11}
+	user12 := &user.User{ID: 12}
 
 	t.Run("normal", func(t *testing.T) {
 		n := &Namespace{}
@@ -165,5 +167,22 @@ func TestNamespace_ReadAll(t *testing.T) {
 		assert.Len(t, namespaces, 11)                // Total of 11 including shared & favorites, one is archived
 		assert.Equal(t, int64(-2), namespaces[0].ID) // The first one should be the one with favorites
 		assert.Equal(t, int64(-1), namespaces[1].ID) // The second one should be the one with the shared namespaces
+	})
+	t.Run("no favorites", func(t *testing.T) {
+		n := &Namespace{}
+		nn, _, _, err := n.ReadAll(user11, "", 1, -1)
+		namespaces := nn.([]*NamespaceWithLists)
+		assert.NoError(t, err)
+		// Assert the first namespace is not the favorites namespace
+		assert.NotEqual(t, FavoritesPseudoNamespace.ID, namespaces[0].ID)
+	})
+	t.Run("no favorite tasks but namespace", func(t *testing.T) {
+		n := &Namespace{}
+		nn, _, _, err := n.ReadAll(user12, "", 1, -1)
+		namespaces := nn.([]*NamespaceWithLists)
+		assert.NoError(t, err)
+		// Assert the first namespace is the favorites namespace and contains lists
+		assert.Equal(t, FavoritesPseudoNamespace.ID, namespaces[0].ID)
+		assert.NotEqual(t, 0, namespaces[0].Lists)
 	})
 }
