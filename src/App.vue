@@ -207,15 +207,25 @@
 													are nested inside of the namespaces makes it a lot harder.-->
 											<li :key="l.id" v-if="!l.isArchived">
 												<router-link
+													class="list-menu-link"
 													:class="{'router-link-exact-active': currentList.id === l.id}"
-													:to="{ name: 'list.index', params: { listId: l.id} }">
-													<span class="name">
-														<span
-															:style="{ backgroundColor: l.hexColor }"
-															class="color-bubble"
-															v-if="l.hexColor !== ''">
-														</span>
+													:to="{ name: 'list.index', params: { listId: l.id} }"
+													tag="span"
+												>
+													<span
+														:style="{ backgroundColor: l.hexColor }"
+														class="color-bubble"
+														v-if="l.hexColor !== ''">
+													</span>
+													<span class="list-menu-title">
 														{{ l.title }}
+													</span>
+													<span
+														:class="{'is-favorite': l.isFavorite}"
+														@click.stop="toggleFavoriteList(l)"
+														class="favorite">
+														<icon icon="star" v-if="l.isFavorite"/>
+														<icon :icon="['far', 'star']" v-else/>
 													</span>
 												</router-link>
 											</li>
@@ -507,6 +517,15 @@ export default {
 			}
 			// Notify the service worker to actually do the update
 			this.registration.waiting.postMessage('skipWaiting')
+		},
+		toggleFavoriteList(list) {
+			// The favorites pseudo list is always favorite
+			// Archived lists cannot be marked favorite
+			if (list.id === -1 || list.isArchived) {
+				return
+			}
+			this.$store.dispatch('lists/toggleListFavorite', list)
+				.catch(e => this.error(e, this))
 		},
 	},
 }

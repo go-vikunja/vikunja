@@ -33,12 +33,20 @@
 						}"
 						:to="{ name: 'list.index', params: { listId: l.id} }"
 						class="list"
+						tag="span"
 						v-if="showArchived ? true : !l.isArchived"
 					>
 						<div class="is-archived-container">
-						<span class="is-archived" v-if="l.isArchived">
-							Archived
-						</span>
+							<span class="is-archived" v-if="l.isArchived">
+								Archived
+							</span>
+							<span
+								:class="{'is-favorite': l.isFavorite, 'is-archived': l.isArchived}"
+								@click.stop="toggleFavoriteList(l)"
+								class="favorite">
+								<icon icon="star" v-if="l.isFavorite"/>
+								<icon :icon="['far', 'star']" v-else/>
+							</span>
 						</div>
 						<div class="title">{{ l.title }}</div>
 					</router-link>
@@ -92,6 +100,15 @@ export default {
 					}
 				})
 			})
+		},
+		toggleFavoriteList(list) {
+			// The favorites pseudo list is always favorite
+			// Archived lists cannot be marked favorite
+			if (list.id === -1 || list.isArchived) {
+				return
+			}
+			this.$store.dispatch('lists/toggleListFavorite', list)
+				.catch(e => this.error(e, this))
 		},
 	},
 }

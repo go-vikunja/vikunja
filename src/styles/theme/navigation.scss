@@ -164,25 +164,44 @@
         overflow: hidden;
       }
 
-      .menu-label, .menu-list a {
+      .menu-label, .menu-list span.list-menu-link, .menu-list a {
         display: flex;
         align-items: center;
         justify-content: space-between;
+        cursor: pointer;
 
-        span.name:not(.icon) {
+        .list-menu-title {
           overflow: hidden;
           text-overflow: ellipsis;
+          width: 100%;
+        }
 
-          .color-bubble {
-            display: inline-block;
-            vertical-align: initial;
-            width: 12px;
-            height: 12px;
-            border-radius: 100%;
-            margin-right: 2px;
+        .color-bubble {
+          display: inline-block;
+          width: 14px; // Without this, the bubble is only 10.2342357612px wide and seems squashed.
+          height: 12px;
+          border-radius: 100%;
+          margin-right: 4px;
+        }
+
+        .favorite {
+          margin-left: .25rem;
+          transition: opacity $transition, color $transition;
+          opacity: 0;
+
+          &:hover {
+            color: $orange;
+          }
+
+          &.is-favorite {
+            opacity: 1;
+            color: $orange;
           }
         }
 
+        &:hover .favorite {
+          opacity: 1;
+        }
       }
 
       .menu-label {
@@ -201,7 +220,7 @@
         padding: 10px 0.3em 0;
       }
 
-      .menu-label, .nsettings, .menu-list a {
+      .menu-label, .nsettings, .menu-list span.list-menu-link, .menu-list a {
         color: $vikunja-nav-color;
       }
 
@@ -243,7 +262,7 @@
           height: 44px;
         }
 
-        a {
+        span.list-menu-link, a {
           padding: 0.75em .5em 0.75em $navbar-padding * 1.5;
           transition: all 0.2s ease;
 
@@ -299,7 +318,7 @@
           font-family: $vikunja-font;
         }
 
-        a {
+        span.list-menu-link, a {
           padding-left: 2em;
           display: inline-block;
         }

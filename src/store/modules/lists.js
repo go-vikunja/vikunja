@@ -1,4 +1,7 @@
 import Vue from 'vue'
+import ListService from '@/services/list'
+
+const FavoriteListsNamespace = -2
 
 export default {
 	namespaced: true,
@@ -20,6 +23,34 @@ export default {
 				return state[id]
 			}
 			return null
+		},
+	},
+	actions: {
+		toggleListFavorite(ctx, list) {
+			list.isFavorite = !list.isFavorite
+			const listService = new ListService()
+
+			return listService.update(list)
+				.then(r => {
+					if (r.isFavorite) {
+						ctx.commit('addList', r)
+						r.namespaceId = FavoriteListsNamespace
+						ctx.commit('namespaces/addListToNamespace', r, {root: true})
+					} else {
+						ctx.commit('namespaces/setListInNamespaceById', r, {root: true})
+						r.namespaceId = FavoriteListsNamespace
+						ctx.commit('namespaces/removeListFromNamespaceById', r, {root: true})
+					}
+					ctx.dispatch('namespaces/loadNamespacesIfFavoritesDontExist', null, {root: true})
+					ctx.dispatch('namespaces/removeFavoritesNamespaceIfEmpty', null, {root: true})
+					return Promise.resolve(r)
+				})
+				.catch(e => {
+					// Reset the list state to the initial one to avoid confusion for the user
+					list.isFavorite = !list.isFavorite
+					ctx.commit('addList', list)
+					return Promise.reject(e)
+				})
 		},
 	},
 }

@@ -30,7 +30,6 @@ $lists-per-row: 5;
       border: 1px solid $grey;
       color: $grey !important;
       padding: 2px 4px;
-      margin-left: .5rem;
       border-radius: 3px;
       font-family: $vikunja-font;
       background: rgba($white, 0.75);
@@ -41,6 +40,7 @@ $lists-per-row: 5;
       flex-flow: row wrap;
 
       .list {
+        cursor: pointer;
         width: calc((100% - #{($lists-per-row - 1) * 1rem}) / #{$lists-per-row});
         height: 150px;
         background: $white;
@@ -100,6 +100,7 @@ $lists-per-row: 5;
 
           .is-archived {
             font-size: .75em;
+            float: left;
           }
         }
 
@@ -126,6 +127,29 @@ $lists-per-row: 5;
             text-shadow: 0 0 10px $black, 1px 1px 5px $grey-darker, -1px -1px 5px $grey-darker;
             color: $white;
           }
+        }
+
+        .favorite {
+          transition: opacity $transition, color $transition;
+          opacity: 0;
+
+          &:hover {
+            color: $orange;
+          }
+
+          &.is-archived {
+            display: none;
+          }
+
+          &.is-favorite {
+            display: inline-block;
+            opacity: 1;
+            color: $orange;
+          }
+        }
+
+        &:hover .favorite {
+          opacity: 1;
         }
       }
     }

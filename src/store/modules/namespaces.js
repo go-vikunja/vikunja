@@ -24,12 +24,14 @@ export default {
 			for (const n in state.namespaces) {
 				// We don't have the namespace id on the list which means we need to loop over all lists until we find it.
 				// FIXME: Not ideal at all - we should fix that at the api level.
-				for (const l in state.namespaces[n].lists) {
-					if (state.namespaces[n].lists[l].id === list.id) {
-						const namespace = state.namespaces[n]
-						namespace.lists[l] = list
-						Vue.set(state.namespaces, n, namespace)
-						return
+				if (state.namespaces[n].id === list.namespaceId) {
+					for (const l in state.namespaces[n].lists) {
+						if (state.namespaces[n].lists[l].id === list.id) {
+							const namespace = state.namespaces[n]
+							namespace.lists[l] = list
+							Vue.set(state.namespaces, n, namespace)
+							return
+						}
 					}
 				}
 			}
@@ -42,6 +44,20 @@ export default {
 				if (state.namespaces[n].id === list.namespaceId) {
 					state.namespaces[n].lists.push(list)
 					return
+				}
+			}
+		},
+		removeListFromNamespaceById(state, list) {
+			for (const n in state.namespaces) {
+				// We don't have the namespace id on the list which means we need to loop over all lists until we find it.
+				// FIXME: Not ideal at all - we should fix that at the api level.
+				if (state.namespaces[n].id === list.namespaceId) {
+					for (const l in state.namespaces[n].lists) {
+						if (state.namespaces[n].lists[l].id === list.id) {
+							state.namespaces[n].lists.splice(l, 1)
+							return
+						}
+					}
 				}
 			}
 		},
@@ -97,6 +113,12 @@ export default {
 			// The first namespace should be the one holding all favorites
 			if (ctx.state.namespaces[0].id !== -2) {
 				return ctx.dispatch('loadNamespaces')
+			}
+		},
+		removeFavoritesNamespaceIfEmpty(ctx) {
+			if (ctx.state.namespaces[0].id === -2 && ctx.state.namespaces[0].lists.length === 0) {
+				ctx.state.namespaces.splice(0, 1)
+				return Promise.resolve()
 			}
 		},
 	},
