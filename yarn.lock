@@ -13195,10 +13195,10 @@ vscode-uri@^1.0.6:
   resolved "https://registry.yarnpkg.com/vscode-uri/-/vscode-uri-1.0.8.tgz#9769aaececae4026fb6e22359cb38946580ded59"
   integrity sha512-obtSWTlbJ+a+TFRYGaUumtVwb+InIUVI0Lu0VBUAPmj2cU5JutEXg3xUE0c2J5Tcy7h2DEKVJBFi+Y9ZSFzzPQ==
 
-vue-advanced-cropper@0.17.2:
-  version "0.17.2"
-  resolved "https://registry.yarnpkg.com/vue-advanced-cropper/-/vue-advanced-cropper-0.17.2.tgz#5bf993b90a8aaeaebec88a8226709b32a023db50"
-  integrity sha512-Sq90KM8F3fLf5VVkJLpOYg8ECLiew4VFsaRuSV0zJYi7+FhEH9eDbU0/Y+omNVyy2MLipnrVGm3BvuhwpyeYNQ==
+vue-advanced-cropper@0.17.3:
+  version "0.17.3"
+  resolved "https://registry.yarnpkg.com/vue-advanced-cropper/-/vue-advanced-cropper-0.17.3.tgz#f926154527e8e1c4921e07028e61b01950fd682c"
+  integrity sha512-dzBOjc8B9CHs4Jsx7CnjwIKwb6K3CdBUDrO8EEci1Cs4my3bsrV5ZoQnmQV0mZ7JhpKurqU6yO3RjSZHEeNR5A==
   dependencies:
     classnames "^2.2.6"
     debounce "^1.2.0"
