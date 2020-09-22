@@ -1,15 +1,6 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "labels": ["dependencies"],
-  "hostRules": [
-    {
-      "domainName": "github.com",
-      "encrypted": {
-        "token": "jaazUwAHa7jio3jq+UFvUeVR5/fOwt3BNAzEBlhixggSYqooJ7Paq7aJ77mNHYBEYwCWFuUG3+SlQ/uLeMU0AtGNdxk9VQ2mbcZIpSbIPR2YU4NoQ0HrhL0XyrN6eShqLBQYKz47o3gaHd3ltWhVeMCxGjfoAlPw+z0DhUQCfuFWUJu3lYYNIhY+CVeir6r0s0AablpxMJ1kpak6fCQ6BdaOW11rC/bQfW82fAp4Pkv877AolB+fVU7klMXfU6d2Ihk343jOEvltI5g1l5ss0vjiJnGZh4Sxump0ivoc73/P1TnywKTrvEdWs9df42IUAZozJwfqAIOUCtWbZifEXg=="
-      }
-    }
-  ],
-
   "extends": [
     "config:base"
   ]
