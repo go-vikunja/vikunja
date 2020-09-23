@@ -48,7 +48,7 @@ require (
 	github.com/lib/pq v1.8.0
 	github.com/magefile/mage v1.10.0
 	github.com/mailru/easyjson v0.7.0 // indirect
-	github.com/mattn/go-sqlite3 v1.14.2
+	github.com/mattn/go-sqlite3 v1.14.3
 	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
 	github.com/olekukonko/tablewriter v0.0.4
 	github.com/onsi/ginkgo v1.12.0 // indirect
