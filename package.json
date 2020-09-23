@@ -12,7 +12,7 @@
     "camel-case": "4.1.1",
     "copy-to-clipboard": "3.3.1",
     "date-fns": "2.16.1",
-    "dompurify": "2.0.17",
+    "dompurify": "2.1.0",
     "lodash": "4.17.20",
     "marked": "1.1.1",
     "register-service-worker": "1.7.1",
