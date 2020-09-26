@@ -135,3 +135,10 @@ This document describes the different errors Vikunja can return.
 | 10002 | 400 | The bucket does not belong to that list. | 
 | 10003 | 412 | You cannot remove the last bucket on a list. | 
 | 10004 | 412 | You cannot add the task to this bucket as it already exceeded the limit of tasks it can hold. | 
+
+## Saved Filters
+
+| ErrorCode | HTTP Status Code | Description |
+|-----------|------------------|-------------|
+| 11001 | 404 | The saved filter does not exist. |
+| 11002 | 412 | Saved filters are not available for link shares. | 

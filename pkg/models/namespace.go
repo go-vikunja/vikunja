@@ -21,6 +21,7 @@ import (
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
 	"github.com/imdario/mergo"
+	"sort"
 	"time"
 	"xorm.io/builder"
 )
@@ -30,7 +31,7 @@ type Namespace struct {
 	// The unique, numeric id of this namespace.
 	ID int64 `xorm:"int(11) autoincr not null unique pk" json:"id" param:"namespace"`
 	// The name of this namespace.
-	Title string `xorm:"varchar(250) not null" json:"title" valid:"required,runelength(1|250)" minLength:"5" maxLength:"250"`
+	Title string `xorm:"varchar(250) not null" json:"title" valid:"required,runelength(1|250)" minLength:"1" maxLength:"250"`
 	// The description of the namespace
 	Description string `xorm:"longtext null" json:"description"`
 	OwnerID     int64  `xorm:"int(11) not null INDEX" json:"-"`
@@ -53,8 +54,8 @@ type Namespace struct {
 	web.Rights   `xorm:"-" json:"-"`
 }
 
-// PseudoNamespace is a pseudo namespace used to hold shared lists
-var PseudoNamespace = Namespace{
+// SharedListsPseudoNamespace is a pseudo namespace used to hold shared lists
+var SharedListsPseudoNamespace = Namespace{
 	ID:          -1,
 	Title:       "Shared Lists",
 	Description: "Lists of other users shared with you via teams or directly.",
@@ -67,6 +68,15 @@ var FavoritesPseudoNamespace = Namespace{
 	ID:          -2,
 	Title:       "Favorites",
 	Description: "Favorite lists and tasks.",
+	Created:     time.Now(),
+	Updated:     time.Now(),
+}
+
+// SavedFiltersPseudoNamespace is a pseudo namespace used to hold saved filters
+var SavedFiltersPseudoNamespace = Namespace{
+	ID:          -3,
+	Title:       "Filters",
+	Description: "Saved filters.",
 	Created:     time.Now(),
 	Updated:     time.Now(),
 }
@@ -84,7 +94,7 @@ func (n *Namespace) GetSimpleByID() (err error) {
 
 	// Get the namesapce with shared lists
 	if n.ID == -1 {
-		*n = PseudoNamespace
+		*n = SharedListsPseudoNamespace
 		return
 	}
 
@@ -179,12 +189,17 @@ func (n *Namespace) ReadAll(a web.Auth, search string, page int, perPage int) (r
 		return nil, 0, 0, ErrGenericForbidden{}
 	}
 
+	// This map will hold all namespaces and their lists. The key is usually the id of the namespace.
+	// We're using a map here because it makes a few things like adding lists or removing pseudo namespaces easier.
+	namespaces := make(map[int64]*NamespaceWithLists)
+
+	//////////////////////////////
+	// Lists with their namespaces
+
 	doer, err := user.GetFromAuth(a)
 	if err != nil {
 		return nil, 0, 0, err
 	}
-
-	all := []*NamespaceWithLists{}
 
 	// Adding a 1=1 condition by default here because xorm always needs a condition and cannot handle nil conditions
 	var isArchivedCond builder.Cond = builder.Eq{"1": 1}
@@ -194,26 +209,7 @@ func (n *Namespace) ReadAll(a web.Auth, search string, page int, perPage int) (r
 		)
 	}
 
-	// Create our pseudo namespace with favorite lists
-	// We want this one at the beginning, which is why we create it here
-	pseudoFavoriteNamespace := FavoritesPseudoNamespace
-	pseudoFavoriteNamespace.Owner = doer
-	all = append(all, &NamespaceWithLists{
-		Namespace: pseudoFavoriteNamespace,
-		Lists:     []*List{{}},
-	})
-	*all[0].Lists[0] = FavoritesPseudoList // Copying the list to be able to modify it later
-
-	// Create our pseudo namespace to hold the shared lists
-	pseudonamespace := PseudoNamespace
-	pseudonamespace.Owner = doer
-	all = append(all, &NamespaceWithLists{
-		pseudonamespace,
-		[]*List{},
-	})
-
 	limit, start := getLimitFromPageIndex(page, perPage)
-
 	query := x.Select("namespaces.*").
 		Table("namespaces").
 		Join("LEFT", "team_namespaces", "namespaces.id = team_namespaces.namespace_id").
@@ -228,15 +224,15 @@ func (n *Namespace) ReadAll(a web.Auth, search string, page int, perPage int) (r
 	if limit > 0 {
 		query = query.Limit(limit, start)
 	}
-	err = query.Find(&all)
+	err = query.Find(&namespaces)
 	if err != nil {
-		return all, 0, 0, err
+		return nil, 0, 0, err
 	}
 
 	// Make a list of namespace ids
 	var namespaceids []int64
 	var userIDs []int64
-	for _, nsp := range all {
+	for _, nsp := range namespaces {
 		namespaceids = append(namespaceids, nsp.ID)
 		userIDs = append(userIDs, nsp.OwnerID)
 	}
@@ -245,7 +241,7 @@ func (n *Namespace) ReadAll(a web.Auth, search string, page int, perPage int) (r
 	userMap := make(map[int64]*user.User)
 	err = x.In("id", userIDs).Find(&userMap)
 	if err != nil {
-		return all, 0, 0, err
+		return nil, 0, 0, err
 	}
 
 	// Get all lists
@@ -258,7 +254,34 @@ func (n *Namespace) ReadAll(a web.Auth, search string, page int, perPage int) (r
 	}
 	err = listQuery.Find(&lists)
 	if err != nil {
-		return all, 0, 0, err
+		return nil, 0, 0, err
+	}
+
+	numberOfTotalItems, err = x.
+		Table("namespaces").
+		Join("LEFT", "team_namespaces", "namespaces.id = team_namespaces.namespace_id").
+		Join("LEFT", "team_members", "team_members.team_id = team_namespaces.team_id").
+		Join("LEFT", "users_namespace", "users_namespace.namespace_id = namespaces.id").
+		Where("team_members.user_id = ?", doer.ID).
+		Or("namespaces.owner_id = ?", doer.ID).
+		Or("users_namespace.user_id = ?", doer.ID).
+		And("namespaces.is_archived = false").
+		GroupBy("namespaces.id").
+		Where("namespaces.title LIKE ?", "%"+search+"%").
+		Count(&NamespaceWithLists{})
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	///////////////
+	// Shared Lists
+
+	// Create our pseudo namespace to hold the shared lists
+	sharedListsPseudonamespace := SharedListsPseudoNamespace
+	sharedListsPseudonamespace.Owner = doer
+	namespaces[sharedListsPseudonamespace.ID] = &NamespaceWithLists{
+		sharedListsPseudonamespace,
+		[]*List{},
 	}
 
 	// Get all lists individually shared with our user (not via a namespace)
@@ -287,9 +310,9 @@ func (n *Namespace) ReadAll(a web.Auth, search string, page int, perPage int) (r
 		lists = append(lists, l)
 	}
 
-	// Remove the pseudonamespace if we don't have any shared lists
+	// Remove the sharedListsPseudonamespace if we don't have any shared lists
 	if len(individualLists) == 0 {
-		all = append(all[:1], all[2:]...)
+		delete(namespaces, sharedListsPseudonamespace.ID)
 	}
 
 	// More details for the lists
@@ -298,22 +321,23 @@ func (n *Namespace) ReadAll(a web.Auth, search string, page int, perPage int) (r
 		return nil, 0, 0, err
 	}
 
-	nMap := make(map[int64]*NamespaceWithLists, len(all))
+	/////////////////
+	// Favorite lists
 
-	// Put objects in our namespace list
-	for _, n := range all {
-
-		// Users
-		n.Owner = userMap[n.OwnerID]
-
-		nMap[n.ID] = n
+	// Create our pseudo namespace with favorite lists
+	pseudoFavoriteNamespace := FavoritesPseudoNamespace
+	pseudoFavoriteNamespace.Owner = doer
+	namespaces[pseudoFavoriteNamespace.ID] = &NamespaceWithLists{
+		Namespace: pseudoFavoriteNamespace,
+		Lists:     []*List{{}},
 	}
+	*namespaces[pseudoFavoriteNamespace.ID].Lists[0] = FavoritesPseudoList // Copying the list to be able to modify it later
 
 	for _, list := range lists {
 		if list.IsFavorite {
-			nMap[pseudoFavoriteNamespace.ID].Lists = append(nMap[pseudoFavoriteNamespace.ID].Lists, list)
+			namespaces[pseudoFavoriteNamespace.ID].Lists = append(namespaces[pseudoFavoriteNamespace.ID].Lists, list)
 		}
-		nMap[list.NamespaceID].Lists = append(nMap[list.NamespaceID].Lists, list)
+		namespaces[list.NamespaceID].Lists = append(namespaces[list.NamespaceID].Lists, list)
 	}
 
 	// Check if we have any favorites or favorited lists and remove the favorites namespace from the list if not
@@ -329,34 +353,57 @@ func (n *Namespace) ReadAll(a web.Auth, search string, page int, perPage int) (r
 
 	// If we don't have any favorites in the favorites pseudo list, remove that pseudo list from the namespace
 	if favoriteCount == 0 {
-		for in, l := range nMap[pseudoFavoriteNamespace.ID].Lists {
+		for in, l := range namespaces[pseudoFavoriteNamespace.ID].Lists {
 			if l.ID == FavoritesPseudoList.ID {
-				nMap[pseudoFavoriteNamespace.ID].Lists = append(nMap[pseudoFavoriteNamespace.ID].Lists[:in], nMap[pseudoFavoriteNamespace.ID].Lists[in+1:]...)
+				namespaces[pseudoFavoriteNamespace.ID].Lists = append(namespaces[pseudoFavoriteNamespace.ID].Lists[:in], namespaces[pseudoFavoriteNamespace.ID].Lists[in+1:]...)
 				break
 			}
 		}
 	}
 
 	// If we don't have any favorites in the namespace, remove it
-	if len(nMap[pseudoFavoriteNamespace.ID].Lists) == 0 {
-		all = append(all[:0], all[1:]...)
+	if len(namespaces[pseudoFavoriteNamespace.ID].Lists) == 0 {
+		delete(namespaces, pseudoFavoriteNamespace.ID)
 	}
 
-	numberOfTotalItems, err = x.
-		Table("namespaces").
-		Join("LEFT", "team_namespaces", "namespaces.id = team_namespaces.namespace_id").
-		Join("LEFT", "team_members", "team_members.team_id = team_namespaces.team_id").
-		Join("LEFT", "users_namespace", "users_namespace.namespace_id = namespaces.id").
-		Where("team_members.user_id = ?", doer.ID).
-		Or("namespaces.owner_id = ?", doer.ID).
-		Or("users_namespace.user_id = ?", doer.ID).
-		And("namespaces.is_archived = false").
-		GroupBy("namespaces.id").
-		Where("namespaces.title LIKE ?", "%"+search+"%").
-		Count(&NamespaceWithLists{})
+	/////////////////
+	// Saved Filters
+
+	savedFilters, err := getSavedFiltersForUser(a)
 	if err != nil {
-		return all, 0, 0, err
+		return nil, 0, 0, err
 	}
+
+	if len(savedFilters) > 0 {
+		savedFiltersPseudoNamespace := SavedFiltersPseudoNamespace
+		savedFiltersPseudoNamespace.Owner = doer
+		namespaces[savedFiltersPseudoNamespace.ID] = &NamespaceWithLists{
+			Namespace: savedFiltersPseudoNamespace,
+			Lists:     make([]*List, 0, len(savedFilters)),
+		}
+
+		for _, filter := range savedFilters {
+			namespaces[savedFiltersPseudoNamespace.ID].Lists = append(namespaces[savedFiltersPseudoNamespace.ID].Lists, &List{
+				ID:          getListIDFromSavedFilterID(filter.ID),
+				Title:       filter.Title,
+				Description: filter.Description,
+				Created:     filter.Created,
+				Updated:     filter.Updated,
+				Owner:       doer,
+			})
+		}
+	}
+
+	//////////////////////
+	// Put it all together (and sort it)
+	all := make([]*NamespaceWithLists, 0, len(namespaces))
+	for _, n := range namespaces {
+		n.Owner = userMap[n.OwnerID]
+		all = append(all, n)
+	}
+	sort.Slice(all, func(i, j int) bool {
+		return all[i].ID < all[j].ID
+	})
 
 	return all, len(all), numberOfTotalItems, nil
 }

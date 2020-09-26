@@ -20,7 +20,10 @@ package db
 import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
+	"fmt"
+	"github.com/stretchr/testify/assert"
 	"os"
+	"testing"
 	"xorm.io/core"
 	"xorm.io/xorm"
 )
@@ -68,4 +71,33 @@ func InitTestFixtures(tablenames ...string) (err error) {
 	}
 
 	return nil
+}
+
+// AssertDBExists checks and asserts the existence of certain entries in the db
+func AssertDBExists(t *testing.T, table string, values map[string]interface{}, custom bool) {
+	var exists bool
+	var err error
+	v := make(map[string]interface{})
+	// Postgres sometimes needs to build raw sql. Because it won't always need to do this and this isn't fun, it's a flag.
+	if custom {
+		//#nosec
+		sql := "SELECT * FROM " + table + " WHERE "
+		for col, val := range values {
+			sql += col + "=" + fmt.Sprintf("%v", val) + " AND "
+		}
+		sql = sql[:len(sql)-5]
+		exists, err = x.SQL(sql).Get(&v)
+	} else {
+		exists, err = x.Table(table).Where(values).Get(&v)
+	}
+	assert.NoError(t, err, fmt.Sprintf("Failed to assert entries exist in db, error was: %s", err))
+	assert.True(t, exists, fmt.Sprintf("Entries %v do not exist in table %s", values, table))
+}
+
+// AssertDBMissing checks and asserts the nonexiste nce of certain entries in the db
+func AssertDBMissing(t *testing.T, table string, values map[string]interface{}) {
+	v := make(map[string]interface{})
+	exists, err := x.Table(table).Where(values).Exist(&v)
+	assert.NoError(t, err, fmt.Sprintf("Failed to assert entries don't exist in db, error was: %s", err))
+	assert.False(t, exists, fmt.Sprintf("Entries %v exist in table %s", values, table))
 }

@@ -46,7 +46,7 @@ type User struct {
 	// The unique, numeric id of this user.
 	ID int64 `xorm:"int(11) autoincr not null unique pk" json:"id"`
 	// The username of the user. Is always unique.
-	Username string `xorm:"varchar(250) not null unique" json:"username" valid:"length(1|250)" minLength:"3" maxLength:"250"`
+	Username string `xorm:"varchar(250) not null unique" json:"username" valid:"length(1|250)" minLength:"1" maxLength:"250"`
 	Password string `xorm:"varchar(250) not null" json:"-"`
 	// The user's email address.
 	Email    string `xorm:"varchar(250) null" json:"email,omitempty" valid:"email,length(0|250)" maxLength:"250"`

@@ -142,12 +142,13 @@ func TestNamespace_ReadAll(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		n := &Namespace{}
 		nn, _, _, err := n.ReadAll(user1, "", 1, -1)
-		namespaces := nn.([]*NamespaceWithLists)
 		assert.NoError(t, err)
+		namespaces := nn.([]*NamespaceWithLists)
 		assert.NotNil(t, namespaces)
-		assert.Len(t, namespaces, 10)                // Total of 10 including shared & favorites
-		assert.Equal(t, int64(-2), namespaces[0].ID) // The first one should be the one with favorites
-		assert.Equal(t, int64(-1), namespaces[1].ID) // The second one should be the one with the shared namespaces
+		assert.Len(t, namespaces, 11)                // Total of 10 including shared, favorites and saved filters
+		assert.Equal(t, int64(-3), namespaces[0].ID) // The first one should be the one with shared filters
+		assert.Equal(t, int64(-2), namespaces[1].ID) // The second one should be the one with favorites
+		assert.Equal(t, int64(-1), namespaces[2].ID) // The third one should be the one with the shared namespaces
 		// Ensure every list and namespace are not archived
 		for _, namespace := range namespaces {
 			assert.False(t, namespace.IsArchived)
@@ -164,9 +165,10 @@ func TestNamespace_ReadAll(t *testing.T) {
 		namespaces := nn.([]*NamespaceWithLists)
 		assert.NoError(t, err)
 		assert.NotNil(t, namespaces)
-		assert.Len(t, namespaces, 11)                // Total of 11 including shared & favorites, one is archived
-		assert.Equal(t, int64(-2), namespaces[0].ID) // The first one should be the one with favorites
-		assert.Equal(t, int64(-1), namespaces[1].ID) // The second one should be the one with the shared namespaces
+		assert.Len(t, namespaces, 12)                // Total of 12 including shared & favorites, one is archived
+		assert.Equal(t, int64(-3), namespaces[0].ID) // The first one should be the one with shared filters
+		assert.Equal(t, int64(-2), namespaces[1].ID) // The second one should be the one with favorites
+		assert.Equal(t, int64(-1), namespaces[2].ID) // The third one should be the one with the shared namespaces
 	})
 	t.Run("no favorites", func(t *testing.T) {
 		n := &Namespace{}
@@ -184,5 +186,13 @@ func TestNamespace_ReadAll(t *testing.T) {
 		// Assert the first namespace is the favorites namespace and contains lists
 		assert.Equal(t, FavoritesPseudoNamespace.ID, namespaces[0].ID)
 		assert.NotEqual(t, 0, namespaces[0].Lists)
+	})
+	t.Run("no saved filters", func(t *testing.T) {
+		n := &Namespace{}
+		nn, _, _, err := n.ReadAll(user11, "", 1, -1)
+		namespaces := nn.([]*NamespaceWithLists)
+		assert.NoError(t, err)
+		// Assert the first namespace is not the favorites namespace
+		assert.NotEqual(t, SavedFiltersPseudoNamespace.ID, namespaces[0].ID)
 	})
 }

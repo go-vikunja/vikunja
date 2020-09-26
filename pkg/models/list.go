@@ -32,7 +32,7 @@ type List struct {
 	// The unique, numeric id of this list.
 	ID int64 `xorm:"int(11) autoincr not null unique pk" json:"id" param:"list"`
 	// The title of the list. You'll see this in the namespace overview.
-	Title string `xorm:"varchar(250) not null" json:"title" valid:"required,runelength(1|250)" minLength:"3" maxLength:"250"`
+	Title string `xorm:"varchar(250) not null" json:"title" valid:"required,runelength(1|250)" minLength:"1" maxLength:"250"`
 	// The description of the list.
 	Description string `xorm:"longtext null" json:"description"`
 	// The unique list short identifier. Used to build task identifiers.
@@ -183,6 +183,19 @@ func (l *List) ReadOne() (err error) {
 	if l.ID == FavoritesPseudoList.ID {
 		// Already "built" the list in CanRead
 		return nil
+	}
+
+	// Check for saved filters
+	if getSavedFilterIDFromListID(l.ID) > 0 {
+		sf, err := getSavedFilterSimpleByID(getSavedFilterIDFromListID(l.ID))
+		if err != nil {
+			return err
+		}
+		l.Title = sf.Title
+		l.Description = sf.Description
+		l.Created = sf.Created
+		l.Updated = sf.Updated
+		l.OwnerID = sf.OwnerID
 	}
 
 	// Get list owner

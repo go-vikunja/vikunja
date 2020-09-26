@@ -182,7 +182,7 @@ definitions:
       title:
         description: The task text. This is what you'll see in the list.
         maxLength: 250
-        minLength: 3
+        minLength: 1
         type: string
       updated:
         description: A timestamp when this task was last updated. You cannot change this value.
@@ -210,7 +210,7 @@ definitions:
       title:
         description: The title of the lable. You'll see this one on tasks associated with it.
         maxLength: 250
-        minLength: 3
+        minLength: 1
         type: string
       updated:
         description: A timestamp when this label was last updated. You cannot change this value.
@@ -300,7 +300,7 @@ definitions:
       title:
         description: The title of the list. You'll see this in the namespace overview.
         maxLength: 250
-        minLength: 3
+        minLength: 1
         type: string
       updated:
         description: A timestamp when this list was last updated. You cannot change this value.
@@ -367,7 +367,7 @@ definitions:
       title:
         description: The name of this namespace.
         maxLength: 250
-        minLength: 5
+        minLength: 1
         type: string
       updated:
         description: A timestamp when this namespace was last updated. You cannot change this value.
@@ -422,7 +422,7 @@ definitions:
       title:
         description: The name of this namespace.
         maxLength: 250
-        minLength: 5
+        minLength: 1
         type: string
       updated:
         description: A timestamp when this namespace was last updated. You cannot change this value.
@@ -433,6 +433,34 @@ definitions:
       items:
         $ref: '#/definitions/models.Task'
       type: array
+    type: object
+  models.SavedFilter:
+    properties:
+      created:
+        description: A timestamp when this filter was created. You cannot change this value.
+        type: string
+      description:
+        description: The description of the filter
+        type: string
+      filters:
+        $ref: '#/definitions/models.TaskCollection'
+        description: The actual filters this filter contains
+        type: object
+      id:
+        description: The unique numeric id of this saved filter
+        type: integer
+      owner:
+        $ref: '#/definitions/user.User'
+        description: The user who owns this filter
+        type: object
+      title:
+        description: The title of the filter.
+        maxLength: 250
+        minLength: 1
+        type: string
+      updated:
+        description: A timestamp when this filter was last updated. You cannot change this value.
+        type: string
     type: object
   models.Task:
     properties:
@@ -531,7 +559,7 @@ definitions:
       title:
         description: The task text. This is what you'll see in the list.
         maxLength: 250
-        minLength: 3
+        minLength: 1
         type: string
       updated:
         description: A timestamp when this task was last updated. You cannot change this value.
@@ -558,6 +586,40 @@ definitions:
         type: integer
       task_id:
         type: integer
+    type: object
+  models.TaskCollection:
+    properties:
+      filter_by:
+        description: The field name of the field to filter by
+        items:
+          type: string
+        type: array
+      filter_comparator:
+        description: The comparator for field and value
+        items:
+          type: string
+        type: array
+      filter_concat:
+        description: The way all filter conditions are concatenated together, can be either "and" or "or".,
+        type: string
+      filter_include_nulls:
+        description: If set to true, the result will also include null values
+        type: boolean
+      filter_value:
+        description: The value of the field name to filter by
+        items:
+          type: string
+        type: array
+      order_by:
+        description: The query parameter to order the items by. This can be either asc or desc, with asc being the default.
+        items:
+          type: string
+        type: array
+      sort_by:
+        description: The query parameter to sort by. This is for ex. done, priority, etc.
+        items:
+          type: string
+        type: array
     type: object
   models.TaskComment:
     properties:
@@ -615,7 +677,7 @@ definitions:
       name:
         description: The name of this team.
         maxLength: 250
-        minLength: 5
+        minLength: 1
         type: string
       updated:
         description: A timestamp when this relation was last updated. You cannot change this value.
@@ -697,7 +759,7 @@ definitions:
       username:
         description: The username of the user. Is always unique.
         maxLength: 250
-        minLength: 3
+        minLength: 1
         type: string
     type: object
   models.TeamWithRight:
@@ -723,7 +785,7 @@ definitions:
       name:
         description: The name of this team.
         maxLength: 250
-        minLength: 5
+        minLength: 1
         type: string
       right:
         type: integer
@@ -751,7 +813,7 @@ definitions:
       username:
         description: The username of the user. Is always unique.
         maxLength: 250
-        minLength: 3
+        minLength: 1
         type: string
     type: object
   todoist.Migration:
@@ -855,7 +917,7 @@ definitions:
       username:
         description: The username of the user. Is always unique.
         maxLength: 250
-        minLength: 3
+        minLength: 1
         type: string
     type: object
   v1.Token:
@@ -1069,6 +1131,130 @@ paths:
       summary: Search for a background from unsplash
       tags:
       - list
+  /filters:
+    put:
+      consumes:
+      - application/json
+      description: Creates a new saved filter
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The Saved Filter
+          schema:
+            $ref: '#/definitions/models.SavedFilter'
+        "403":
+          description: The user does not have access to that saved filter.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Creates a new saved filter
+      tags:
+      - filter
+  /filters/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Removes a saved filter by its ID.
+      parameters:
+      - description: Filter ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The Saved Filter
+          schema:
+            $ref: '#/definitions/models.SavedFilter'
+        "403":
+          description: The user does not have access to that saved filter.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "404":
+          description: The saved filter does not exist.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Removes a saved filter
+      tags:
+      - filter
+    get:
+      consumes:
+      - application/json
+      description: Returns a saved filter by its ID.
+      parameters:
+      - description: Filter ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The Saved Filter
+          schema:
+            $ref: '#/definitions/models.SavedFilter'
+        "403":
+          description: The user does not have access to that saved filter.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Gets one saved filter
+      tags:
+      - filter
+    post:
+      consumes:
+      - application/json
+      description: Updates a saved filter by its ID.
+      parameters:
+      - description: Filter ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The Saved Filter
+          schema:
+            $ref: '#/definitions/models.SavedFilter'
+        "403":
+          description: The user does not have access to that saved filter.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "404":
+          description: The saved filter does not exist.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Updates a saved filter
+      tags:
+      - filter
   /info:
     get:
       description: Returns the version, frontendurl, motd and various settings of Vikunja

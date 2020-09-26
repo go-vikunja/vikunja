@@ -57,6 +57,7 @@ var (
 
 	// Aliases are mage aliases of targets
 	Aliases = map[string]interface{}{
+		"build":                Build.Build,
 		"do-the-swag":          DoTheSwag,
 		"check:go-sec":         Check.GoSec,
 		"check:got-swag":       Check.GotSwag,

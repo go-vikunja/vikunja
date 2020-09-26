@@ -1363,3 +1363,62 @@ func (err ErrBucketLimitExceeded) HTTPError() web.HTTPError {
 		Message:  "You cannot add the task to this bucket as it already exceeded the limit of tasks it can hold.",
 	}
 }
+
+// =============
+// Saved Filters
+// =============
+
+// ErrSavedFilterDoesNotExist represents an error where a kanban bucket does not exist
+type ErrSavedFilterDoesNotExist struct {
+	SavedFilterID int64
+}
+
+// IsErrSavedFilterDoesNotExist checks if an error is ErrSavedFilterDoesNotExist.
+func IsErrSavedFilterDoesNotExist(err error) bool {
+	_, ok := err.(ErrSavedFilterDoesNotExist)
+	return ok
+}
+
+func (err ErrSavedFilterDoesNotExist) Error() string {
+	return fmt.Sprintf("Saved filter does not exist [SavedFilterID: %d]", err.SavedFilterID)
+}
+
+// ErrCodeSavedFilterDoesNotExist holds the unique world-error code of this error
+const ErrCodeSavedFilterDoesNotExist = 11001
+
+// HTTPError holds the http error description
+func (err ErrSavedFilterDoesNotExist) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusNotFound,
+		Code:     ErrCodeSavedFilterDoesNotExist,
+		Message:  "This saved filter does not exist.",
+	}
+}
+
+// ErrSavedFilterNotAvailableForLinkShare represents an error where a kanban bucket does not exist
+type ErrSavedFilterNotAvailableForLinkShare struct {
+	SavedFilterID int64
+	LinkShareID   int64
+}
+
+// IsErrSavedFilterNotAvailableForLinkShare checks if an error is ErrSavedFilterNotAvailableForLinkShare.
+func IsErrSavedFilterNotAvailableForLinkShare(err error) bool {
+	_, ok := err.(ErrSavedFilterNotAvailableForLinkShare)
+	return ok
+}
+
+func (err ErrSavedFilterNotAvailableForLinkShare) Error() string {
+	return fmt.Sprintf("Saved filters are not available for link shares [SavedFilterID: %d, LinkShareID: %d]", err.SavedFilterID, err.LinkShareID)
+}
+
+// ErrCodeSavedFilterNotAvailableForLinkShare holds the unique world-error code of this error
+const ErrCodeSavedFilterNotAvailableForLinkShare = 11002
+
+// HTTPError holds the http error description
+func (err ErrSavedFilterNotAvailableForLinkShare) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusPreconditionFailed,
+		Code:     ErrCodeSavedFilterNotAvailableForLinkShare,
+		Message:  "Saved filters are not available for link shares.",
+	}
+}

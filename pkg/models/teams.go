@@ -29,7 +29,7 @@ type Team struct {
 	// The unique, numeric id of this team.
 	ID int64 `xorm:"int(11) autoincr not null unique pk" json:"id" param:"team"`
 	// The name of this team.
-	Name string `xorm:"varchar(250) not null" json:"name" valid:"required,runelength(1|250)" minLength:"5" maxLength:"250"`
+	Name string `xorm:"varchar(250) not null" json:"name" valid:"required,runelength(1|250)" minLength:"1" maxLength:"250"`
 	// The team's description.
 	Description string `xorm:"longtext null" json:"description"`
 	CreatedByID int64  `xorm:"int(11) not null INDEX" json:"-"`

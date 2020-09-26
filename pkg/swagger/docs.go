@@ -172,6 +172,201 @@ var doc = `{
                 }
             }
         },
+        "/filters": {
+            "put": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Creates a new saved filter",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "filter"
+                ],
+                "summary": "Creates a new saved filter",
+                "responses": {
+                    "200": {
+                        "description": "The Saved Filter",
+                        "schema": {
+                            "$ref": "#/definitions/models.SavedFilter"
+                        }
+                    },
+                    "403": {
+                        "description": "The user does not have access to that saved filter.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/filters/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Returns a saved filter by its ID.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "filter"
+                ],
+                "summary": "Gets one saved filter",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Filter ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The Saved Filter",
+                        "schema": {
+                            "$ref": "#/definitions/models.SavedFilter"
+                        }
+                    },
+                    "403": {
+                        "description": "The user does not have access to that saved filter.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Updates a saved filter by its ID.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "filter"
+                ],
+                "summary": "Updates a saved filter",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Filter ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The Saved Filter",
+                        "schema": {
+                            "$ref": "#/definitions/models.SavedFilter"
+                        }
+                    },
+                    "403": {
+                        "description": "The user does not have access to that saved filter.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "The saved filter does not exist.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Removes a saved filter by its ID.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "filter"
+                ],
+                "summary": "Removes a saved filter",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Filter ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The Saved Filter",
+                        "schema": {
+                            "$ref": "#/definitions/models.SavedFilter"
+                        }
+                    },
+                    "403": {
+                        "description": "The user does not have access to that saved filter.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "The saved filter does not exist.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
         "/info": {
             "get": {
                 "description": "Returns the version, frontendurl, motd and various settings of Vikunja",
@@ -6403,7 +6598,7 @@ var doc = `{
                     "description": "The task text. This is what you'll see in the list.",
                     "type": "string",
                     "maxLength": 250,
-                    "minLength": 3
+                    "minLength": 1
                 },
                 "updated": {
                     "description": "A timestamp when this task was last updated. You cannot change this value.",
@@ -6440,7 +6635,7 @@ var doc = `{
                     "description": "The title of the lable. You'll see this one on tasks associated with it.",
                     "type": "string",
                     "maxLength": 250,
-                    "minLength": 3
+                    "minLength": 1
                 },
                 "updated": {
                     "description": "A timestamp when this label was last updated. You cannot change this value.",
@@ -6561,7 +6756,7 @@ var doc = `{
                     "description": "The title of the list. You'll see this in the namespace overview.",
                     "type": "string",
                     "maxLength": 250,
-                    "minLength": 3
+                    "minLength": 1
                 },
                 "updated": {
                     "description": "A timestamp when this list was last updated. You cannot change this value.",
@@ -6652,7 +6847,7 @@ var doc = `{
                     "description": "The name of this namespace.",
                     "type": "string",
                     "maxLength": 250,
-                    "minLength": 5
+                    "minLength": 1
                 },
                 "updated": {
                     "description": "A timestamp when this namespace was last updated. You cannot change this value.",
@@ -6726,7 +6921,7 @@ var doc = `{
                     "description": "The name of this namespace.",
                     "type": "string",
                     "maxLength": 250,
-                    "minLength": 5
+                    "minLength": 1
                 },
                 "updated": {
                     "description": "A timestamp when this namespace was last updated. You cannot change this value.",
@@ -6740,6 +6935,43 @@ var doc = `{
                 "type": "array",
                 "items": {
                     "$ref": "#/definitions/models.Task"
+                }
+            }
+        },
+        "models.SavedFilter": {
+            "type": "object",
+            "properties": {
+                "created": {
+                    "description": "A timestamp when this filter was created. You cannot change this value.",
+                    "type": "string"
+                },
+                "description": {
+                    "description": "The description of the filter",
+                    "type": "string"
+                },
+                "filters": {
+                    "description": "The actual filters this filter contains",
+                    "type": "object",
+                    "$ref": "#/definitions/models.TaskCollection"
+                },
+                "id": {
+                    "description": "The unique numeric id of this saved filter",
+                    "type": "integer"
+                },
+                "owner": {
+                    "description": "The user who owns this filter",
+                    "type": "object",
+                    "$ref": "#/definitions/user.User"
+                },
+                "title": {
+                    "description": "The title of the filter.",
+                    "type": "string",
+                    "maxLength": 250,
+                    "minLength": 1
+                },
+                "updated": {
+                    "description": "A timestamp when this filter was last updated. You cannot change this value.",
+                    "type": "string"
                 }
             }
         },
@@ -6865,7 +7097,7 @@ var doc = `{
                     "description": "The task text. This is what you'll see in the list.",
                     "type": "string",
                     "maxLength": 250,
-                    "minLength": 3
+                    "minLength": 1
                 },
                 "updated": {
                     "description": "A timestamp when this task was last updated. You cannot change this value.",
@@ -6903,6 +7135,54 @@ var doc = `{
                 },
                 "task_id": {
                     "type": "integer"
+                }
+            }
+        },
+        "models.TaskCollection": {
+            "type": "object",
+            "properties": {
+                "filter_by": {
+                    "description": "The field name of the field to filter by",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "filter_comparator": {
+                    "description": "The comparator for field and value",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "filter_concat": {
+                    "description": "The way all filter conditions are concatenated together, can be either \"and\" or \"or\".,",
+                    "type": "string"
+                },
+                "filter_include_nulls": {
+                    "description": "If set to true, the result will also include null values",
+                    "type": "boolean"
+                },
+                "filter_value": {
+                    "description": "The value of the field name to filter by",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "order_by": {
+                    "description": "The query parameter to order the items by. This can be either asc or desc, with asc being the default.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "sort_by": {
+                    "description": "The query parameter to sort by. This is for ex. done, priority, etc.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },
@@ -6984,7 +7264,7 @@ var doc = `{
                     "description": "The name of this team.",
                     "type": "string",
                     "maxLength": 250,
-                    "minLength": 5
+                    "minLength": 1
                 },
                 "updated": {
                     "description": "A timestamp when this relation was last updated. You cannot change this value.",
@@ -7095,7 +7375,7 @@ var doc = `{
                     "description": "The username of the user. Is always unique.",
                     "type": "string",
                     "maxLength": 250,
-                    "minLength": 3
+                    "minLength": 1
                 }
             }
         },
@@ -7130,7 +7410,7 @@ var doc = `{
                     "description": "The name of this team.",
                     "type": "string",
                     "maxLength": 250,
-                    "minLength": 5
+                    "minLength": 1
                 },
                 "right": {
                     "type": "integer"
@@ -7168,7 +7448,7 @@ var doc = `{
                     "description": "The username of the user. Is always unique.",
                     "type": "string",
                     "maxLength": 250,
-                    "minLength": 3
+                    "minLength": 1
                 }
             }
         },
@@ -7315,7 +7595,7 @@ var doc = `{
                     "description": "The username of the user. Is always unique.",
                     "type": "string",
                     "maxLength": 250,
-                    "minLength": 3
+                    "minLength": 1
                 }
             }
         },

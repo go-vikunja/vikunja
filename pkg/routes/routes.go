@@ -431,6 +431,16 @@ func registerAPIRoutes(a *echo.Group) {
 	a.DELETE("/lists/:list/users/:user", listUserHandler.DeleteWeb)
 	a.POST("/lists/:list/users/:user", listUserHandler.UpdateWeb)
 
+	savedFiltersHandler := &handler.WebHandler{
+		EmptyStruct: func() handler.CObject {
+			return &models.SavedFilter{}
+		},
+	}
+	a.GET("/filters/:filter", savedFiltersHandler.ReadOneWeb)
+	a.PUT("/filters", savedFiltersHandler.CreateWeb)
+	a.DELETE("/filters/:filter", savedFiltersHandler.DeleteWeb)
+	a.POST("/filters/:filter", savedFiltersHandler.UpdateWeb)
+
 	namespaceHandler := &handler.WebHandler{
 		EmptyStruct: func() handler.CObject {
 			return &models.Namespace{}

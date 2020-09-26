@@ -81,6 +81,12 @@ func (l *List) CanRead(a web.Auth) (bool, int, error) {
 		return true, int(RightRead), nil
 	}
 
+	// Saved Filter Lists need a special case
+	if getSavedFilterIDFromListID(l.ID) > 0 {
+		sf := &SavedFilter{ID: getSavedFilterIDFromListID(l.ID)}
+		return sf.CanRead(a)
+	}
+
 	// Check if the user is either owner or can read
 	if err := l.GetSimpleByID(); err != nil {
 		return false, 0, err

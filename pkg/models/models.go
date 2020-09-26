@@ -57,6 +57,7 @@ func GetTables() []interface{} {
 		&TaskComment{},
 		&Bucket{},
 		&UnsplashPhoto{},
+		&SavedFilter{},
 	}
 }
 

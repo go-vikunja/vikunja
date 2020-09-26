@@ -1,0 +1,6 @@
+- id: 1
+  filters: '{"sort_by":null,"order_by":null,"filter_by":["start_date","end_date","due_date"],"filter_value":["2018-12-11T03:46:40+00:00","2018-12-13T11:20:01+00:00","2018-11-29T14:00:00+00:00"],"filter_comparator":["greater","less","greater"],"filter_concat":"","filter_include_nulls":false}'
+  title: testfilter1
+  owner_id: 1
+  updated: 2020-09-08 15:13:12
+  created: 2020-09-08 14:13:12

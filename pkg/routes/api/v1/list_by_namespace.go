@@ -69,7 +69,7 @@ func getNamespace(c echo.Context) (namespace *models.Namespace, err error) {
 	}
 
 	if namespaceID == -1 {
-		namespace = &models.PseudoNamespace
+		namespace = &models.SharedListsPseudoNamespace
 		return
 	}
 

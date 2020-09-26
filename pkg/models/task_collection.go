@@ -24,29 +24,29 @@ import (
 
 // TaskCollection is a struct used to hold filter details and not clutter the Task struct with information not related to actual tasks.
 type TaskCollection struct {
-	ListID int64 `param:"list"`
-	Lists  []*List
+	ListID int64   `param:"list" json:"-"`
+	Lists  []*List `json:"-"`
 
 	// The query parameter to sort by. This is for ex. done, priority, etc.
-	SortBy    []string `query:"sort_by"`
-	SortByArr []string `query:"sort_by[]"`
+	SortBy    []string `query:"sort_by" json:"sort_by"`
+	SortByArr []string `query:"sort_by[]" json:"-"`
 	// The query parameter to order the items by. This can be either asc or desc, with asc being the default.
-	OrderBy    []string `query:"order_by"`
-	OrderByArr []string `query:"order_by[]"`
+	OrderBy    []string `query:"order_by" json:"order_by"`
+	OrderByArr []string `query:"order_by[]" json:"-"`
 
 	// The field name of the field to filter by
-	FilterBy    []string `query:"filter_by"`
-	FilterByArr []string `query:"filter_by[]"`
+	FilterBy    []string `query:"filter_by" json:"filter_by"`
+	FilterByArr []string `query:"filter_by[]" json:"-"`
 	// The value of the field name to filter by
-	FilterValue    []string `query:"filter_value"`
-	FilterValueArr []string `query:"filter_value[]"`
+	FilterValue    []string `query:"filter_value" json:"filter_value"`
+	FilterValueArr []string `query:"filter_value[]" json:"-"`
 	// The comparator for field and value
-	FilterComparator    []string `query:"filter_comparator"`
-	FilterComparatorArr []string `query:"filter_comparator[]"`
+	FilterComparator    []string `query:"filter_comparator" json:"filter_comparator"`
+	FilterComparatorArr []string `query:"filter_comparator[]" json:"-"`
 	// The way all filter conditions are concatenated together, can be either "and" or "or".,
-	FilterConcat string `query:"filter_concat"`
+	FilterConcat string `query:"filter_concat" json:"filter_concat"`
 	// If set to true, the result will also include null values
-	FilterIncludeNulls bool `query:"filter_include_nulls"`
+	FilterIncludeNulls bool `query:"filter_include_nulls" json:"filter_include_nulls"`
 
 	web.CRUDable `xorm:"-" json:"-"`
 	web.Rights   `xorm:"-" json:"-"`
@@ -101,6 +101,17 @@ func validateTaskField(fieldName string) error {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{listID}/tasks [get]
 func (tf *TaskCollection) ReadAll(a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
+
+	// If the list id is < -1 this means we're dealing with a saved filter - in that case we get and populate the filter
+	// -1 is the favorites list which works as intended
+	if tf.ListID < -1 {
+		s, err := getSavedFilterSimpleByID(getSavedFilterIDFromListID(tf.ListID))
+		if err != nil {
+			return nil, 0, 0, err
+		}
+
+		return s.getTaskCollection().ReadAll(a, search, page, perPage)
+	}
 
 	if len(tf.SortByArr) > 0 {
 		tf.SortBy = append(tf.SortBy, tf.SortByArr...)

@@ -258,6 +258,29 @@ func TestTaskCollection(t *testing.T) {
 				assertHandlerErrorCode(t, err, models.ErrCodeInvalidTaskFilterValue)
 			})
 		})
+		t.Run("saved filter", func(t *testing.T) {
+			t.Run("date range", func(t *testing.T) {
+				rec, err := testHandler.testReadAllWithUser(
+					nil,
+					map[string]string{"list": "-2"}, // Actually a saved filter - contains the same filter arguments as the start and end date filter from above
+				)
+				assert.NoError(t, err)
+				assert.NotContains(t, rec.Body.String(), `task #1`)
+				assert.NotContains(t, rec.Body.String(), `task #2`)
+				assert.NotContains(t, rec.Body.String(), `task #3`)
+				assert.NotContains(t, rec.Body.String(), `task #4`)
+				assert.Contains(t, rec.Body.String(), `task #5`)
+				assert.Contains(t, rec.Body.String(), `task #6`)
+				assert.Contains(t, rec.Body.String(), `task #7`)
+				assert.Contains(t, rec.Body.String(), `task #8`)
+				assert.Contains(t, rec.Body.String(), `task #9`)
+				assert.NotContains(t, rec.Body.String(), `task #10`)
+				assert.NotContains(t, rec.Body.String(), `task #11`)
+				assert.NotContains(t, rec.Body.String(), `task #12`)
+				assert.NotContains(t, rec.Body.String(), `task #13`)
+				assert.NotContains(t, rec.Body.String(), `task #14`)
+			})
+		})
 	})
 
 	t.Run("ReadAll for all tasks", func(t *testing.T) {
