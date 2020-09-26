@@ -3,6 +3,7 @@ $lists-per-row: 5;
 .namespaces-list {
   .button.new-namespace {
     float: right;
+    margin-left: 1rem;
 
     @media screen and (max-width: $mobile) {
       float: none;

@@ -1,6 +1,7 @@
 import AbstractModel from './abstractModel'
 import TaskModel from './task'
 import UserModel from './user'
+import {getSavedFilterIdFromListId} from '@/helpers/savedFilter'
 
 export default class ListModel extends AbstractModel {
 
@@ -40,5 +41,13 @@ export default class ListModel extends AbstractModel {
 			created: null,
 			updated: null,
 		}
+	}
+
+	isSavedFilter() {
+		return this.getSavedFilterId() > 0
+	}
+
+	getSavedFilterId() {
+		return getSavedFilterIdFromListId(this.id)
 	}
 }

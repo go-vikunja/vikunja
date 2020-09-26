@@ -27,6 +27,8 @@ import Kanban from '../views/list/views/Kanban'
 import List from '../views/list/views/List'
 import Gantt from '../views/list/views/Gantt'
 import Table from '../views/list/views/Table'
+// Saved Filters
+import CreateSavedFilter from '@/views/filters/CreateSavedFilter'
 
 const PasswordResetComponent = () => ({
 	component: import(/* webpackPrefetch: true *//* webpackChunkName: "user-settings" */'../views/user/PasswordReset'),
@@ -54,7 +56,7 @@ const NewListComponent = () => ({
 	timeout: 60000,
 })
 const EditListComponent = () => ({
-	component: import(/* webpackPrefetch: true *//* webpackChunkName: "settings" */'../views/list/EditList'),
+	component: import(/* webpackPrefetch: true *//* webpackChunkName: "settings" */'../views/list/EditListView'),
 	loading: LoadingComponent,
 	error: ErrorComponent,
 	timeout: 60000,
@@ -259,6 +261,11 @@ export default new Router({
 			path: '/migrate/:service',
 			name: 'migrate.service',
 			component: MigrateServiceComponent,
+		},
+		{
+			path: '/filters/new',
+			name: 'filters.create',
+			component: CreateSavedFilter,
 		},
 	],
 })

@@ -48,7 +48,7 @@
 			</transition>
 		</div>
 
-		<div class="field task-add" v-if="!list.isArchived && canWrite">
+		<div class="field task-add" v-if="!list.isArchived && canWrite && list.id > 0">
 			<div class="field is-grouped">
 				<p :class="{ 'is-loading': taskService.loading}" class="control has-icons-left is-expanded">
 					<input
@@ -183,7 +183,6 @@ export default {
 	data() {
 		return {
 			taskService: TaskService,
-			list: {},
 			isTaskEdit: false,
 			taskEditTask: TaskModel,
 			newTaskText: '',
@@ -212,6 +211,7 @@ export default {
 	},
 	computed: mapState({
 		canWrite: state => state.currentList.maxRight > Rights.READ,
+		list: state => state.currentList,
 	}),
 	methods: {
 		// This function initializes the tasks page and loads the first page of tasks

@@ -6,6 +6,12 @@
 			</span>
 			Create new namespace
 		</router-link>
+		<router-link :to="{name: 'filters.create'}" class="button is-primary new-namespace">
+			<span class="icon is-small">
+				<icon icon="filter"/>
+			</span>
+			Create a new saved filter
+		</router-link>
 
 		<fancycheckbox class="show-archived-check" v-model="showArchived">
 			Show Archived
