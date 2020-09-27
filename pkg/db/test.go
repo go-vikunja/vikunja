@@ -73,8 +73,8 @@ func InitTestFixtures(tablenames ...string) (err error) {
 	return nil
 }
 
-// AssertDBExists checks and asserts the existence of certain entries in the db
-func AssertDBExists(t *testing.T, table string, values map[string]interface{}, custom bool) {
+// AssertExists checks and asserts the existence of certain entries in the db
+func AssertExists(t *testing.T, table string, values map[string]interface{}, custom bool) {
 	var exists bool
 	var err error
 	v := make(map[string]interface{})
@@ -94,8 +94,8 @@ func AssertDBExists(t *testing.T, table string, values map[string]interface{}, c
 	assert.True(t, exists, fmt.Sprintf("Entries %v do not exist in table %s", values, table))
 }
 
-// AssertDBMissing checks and asserts the nonexiste nce of certain entries in the db
-func AssertDBMissing(t *testing.T, table string, values map[string]interface{}) {
+// AssertMissing checks and asserts the nonexiste nce of certain entries in the db
+func AssertMissing(t *testing.T, table string, values map[string]interface{}) {
 	v := make(map[string]interface{})
 	exists, err := x.Table(table).Where(values).Exist(&v)
 	assert.NoError(t, err, fmt.Sprintf("Failed to assert entries don't exist in db, error was: %s", err))

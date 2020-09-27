@@ -37,6 +37,11 @@ func TestTeamMember_Create(t *testing.T) {
 		}
 		err := tm.Create(doer)
 		assert.NoError(t, err)
+		db.AssertExists(t, "team_members", map[string]interface{}{
+			"id":      tm.ID,
+			"team_id": 1,
+			"user_id": 3,
+		}, false)
 	})
 	t.Run("already existing", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -79,6 +84,10 @@ func TestTeamMember_Delete(t *testing.T) {
 		}
 		err := tm.Delete()
 		assert.NoError(t, err)
+		db.AssertMissing(t, "team_members", map[string]interface{}{
+			"team_id": 1,
+			"user_id": 1,
+		})
 	})
 }
 
@@ -92,7 +101,12 @@ func TestTeamMember_Update(t *testing.T) {
 		}
 		err := tm.Update()
 		assert.NoError(t, err)
-		assert.False(t, tm.Admin)
+		assert.False(t, tm.Admin) // Since this endpoint toggles the right, we should get a false for admin back.
+		db.AssertExists(t, "team_members", map[string]interface{}{
+			"team_id": 1,
+			"user_id": 1,
+			"admin":   false,
+		}, false)
 	})
 	// This should have the same result as the normal run as the update function
 	// should ignore what was passed.
@@ -106,5 +120,10 @@ func TestTeamMember_Update(t *testing.T) {
 		err := tm.Update()
 		assert.NoError(t, err)
 		assert.False(t, tm.Admin)
+		db.AssertExists(t, "team_members", map[string]interface{}{
+			"team_id": 1,
+			"user_id": 1,
+			"admin":   false,
+		}, false)
 	})
 }

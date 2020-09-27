@@ -49,6 +49,14 @@ func TestTask_Create(t *testing.T) {
 		assert.Equal(t, int64(18), task.Index)
 		// Assert moving it into the default bucket
 		assert.Equal(t, int64(1), task.BucketID)
+		db.AssertExists(t, "tasks", map[string]interface{}{
+			"id":            task.ID,
+			"title":         "Lorem",
+			"description":   "Lorem Ipsum Dolor",
+			"list_id":       1,
+			"created_by_id": 1,
+			"bucket_id":     1,
+		}, false)
 
 	})
 	t.Run("empty title", func(t *testing.T) {
@@ -110,6 +118,12 @@ func TestTask_Update(t *testing.T) {
 		}
 		err := task.Update()
 		assert.NoError(t, err)
+		db.AssertExists(t, "tasks", map[string]interface{}{
+			"id":          1,
+			"title":       "test10000",
+			"description": "Lorem Ipsum Dolor",
+			"list_id":     1,
+		}, false)
 	})
 	t.Run("nonexistant task", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -159,6 +173,9 @@ func TestTask_Delete(t *testing.T) {
 		}
 		err := task.Delete()
 		assert.NoError(t, err)
+		db.AssertMissing(t, "tasks", map[string]interface{}{
+			"id": 1,
+		})
 	})
 }
 

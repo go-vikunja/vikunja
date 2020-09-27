@@ -202,6 +202,13 @@ func TestLabelTask_Create(t *testing.T) {
 			if (err != nil) && tt.wantErr && !tt.errType(err) {
 				t.Errorf("LabelTask.Create() Wrong error type! Error = %v, want = %v", err, runtime.FuncForPC(reflect.ValueOf(tt.errType).Pointer()).Name())
 			}
+			if !tt.wantErr {
+				db.AssertExists(t, "label_task", map[string]interface{}{
+					"id":       l.ID,
+					"task_id":  l.TaskID,
+					"label_id": l.LabelID,
+				}, false)
+			}
 		})
 	}
 }
@@ -290,6 +297,12 @@ func TestLabelTask_Delete(t *testing.T) {
 			}
 			if (err != nil) && tt.wantErr && !tt.errType(err) {
 				t.Errorf("LabelTask.Delete() Wrong error type! Error = %v, want = %v", err, runtime.FuncForPC(reflect.ValueOf(tt.errType).Pointer()).Name())
+			}
+			if !tt.wantForbidden {
+				db.AssertMissing(t, "label_task", map[string]interface{}{
+					"label_id": l.LabelID,
+					"task_id":  l.TaskID,
+				})
 			}
 		})
 	}

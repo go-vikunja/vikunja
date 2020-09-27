@@ -27,92 +27,150 @@ import (
 	"time"
 )
 
-func TestTeamList(t *testing.T) {
-	db.LoadAndAssertFixtures(t)
+func TestTeamList_ReadAll(t *testing.T) {
+	u := &user.User{ID: 1}
 
-	// Dummy relation
-	tl := TeamList{
-		TeamID: 1,
-		ListID: 1,
-		Right:  RightAdmin,
-	}
+	t.Run("normal", func(t *testing.T) {
+		tl := TeamList{
+			TeamID: 1,
+			ListID: 3,
+		}
+		db.LoadAndAssertFixtures(t)
+		teams, _, _, err := tl.ReadAll(u, "", 1, 50)
+		assert.NoError(t, err)
+		assert.Equal(t, reflect.TypeOf(teams).Kind(), reflect.Slice)
+		s := reflect.ValueOf(teams)
+		assert.Equal(t, s.Len(), 1)
+	})
+	t.Run("nonexistant list", func(t *testing.T) {
+		tl := TeamList{
+			ListID: 99999,
+		}
+		db.LoadAndAssertFixtures(t)
+		_, _, _, err := tl.ReadAll(u, "", 1, 50)
+		assert.Error(t, err)
+		assert.True(t, IsErrListDoesNotExist(err))
+	})
+	t.Run("namespace owner", func(t *testing.T) {
+		tl := TeamList{
+			TeamID: 1,
+			ListID: 2,
+			Right:  RightAdmin,
+		}
+		db.LoadAndAssertFixtures(t)
+		_, _, _, err := tl.ReadAll(u, "", 1, 50)
+		assert.NoError(t, err)
+	})
+	t.Run("no access", func(t *testing.T) {
+		tl := TeamList{
+			TeamID: 1,
+			ListID: 5,
+			Right:  RightAdmin,
+		}
+		db.LoadAndAssertFixtures(t)
+		_, _, _, err := tl.ReadAll(u, "", 1, 50)
+		assert.Error(t, err)
+		assert.True(t, IsErrNeedToHaveListReadAccess(err))
+	})
+}
 
-	// Dummyuser
-	u, err := user.GetUserByID(1)
-	assert.NoError(t, err)
+func TestTeamList_Create(t *testing.T) {
+	u := &user.User{ID: 1}
+	t.Run("normal", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		tl := TeamList{
+			TeamID: 1,
+			ListID: 1,
+			Right:  RightAdmin,
+		}
+		allowed, _ := tl.CanCreate(u)
+		assert.True(t, allowed)
+		err := tl.Create(u)
+		assert.NoError(t, err)
+		db.AssertExists(t, "team_list", map[string]interface{}{
+			"team_id": 1,
+			"list_id": 1,
+			"right":   RightAdmin,
+		}, false)
+	})
+	t.Run("team already has access", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		tl := TeamList{
+			TeamID: 1,
+			ListID: 3,
+			Right:  RightAdmin,
+		}
+		err := tl.Create(u)
+		assert.Error(t, err)
+		assert.True(t, IsErrTeamAlreadyHasAccess(err))
+	})
+	t.Run("wrong rights", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		tl := TeamList{
+			TeamID: 1,
+			ListID: 1,
+			Right:  RightUnknown,
+		}
+		err := tl.Create(u)
+		assert.Error(t, err)
+		assert.True(t, IsErrInvalidRight(err))
+	})
+	t.Run("nonexistant team", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		tl := TeamList{
+			TeamID: 9999,
+			ListID: 1,
+		}
+		err := tl.Create(u)
+		assert.Error(t, err)
+		assert.True(t, IsErrTeamDoesNotExist(err))
+	})
+	t.Run("nonexistant list", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		tl := TeamList{
+			TeamID: 1,
+			ListID: 9999,
+		}
+		err := tl.Create(u)
+		assert.Error(t, err)
+		assert.True(t, IsErrListDoesNotExist(err))
+	})
+}
 
-	// Check normal creation
-	allowed, _ := tl.CanCreate(u)
-	assert.True(t, allowed)
-	err = tl.Create(u)
-	assert.NoError(t, err)
-
-	// Check again
-	err = tl.Create(u)
-	assert.Error(t, err)
-	assert.True(t, IsErrTeamAlreadyHasAccess(err))
-
-	// Check with wrong rights
-	tl2 := tl
-	tl2.Right = RightUnknown
-	err = tl2.Create(u)
-	assert.Error(t, err)
-	assert.True(t, IsErrInvalidRight(err))
-
-	// Check with inexistant team
-	tl3 := tl
-	tl3.TeamID = 3253
-	err = tl3.Create(u)
-	assert.Error(t, err)
-	assert.True(t, IsErrTeamDoesNotExist(err))
-
-	// Check with inexistant list
-	tl4 := tl
-	tl4.ListID = 3252
-	err = tl4.Create(u)
-	assert.Error(t, err)
-	assert.True(t, IsErrListDoesNotExist(err))
-
-	// Test Read all
-	teams, _, _, err := tl.ReadAll(u, "", 1, 50)
-	assert.NoError(t, err)
-	assert.Equal(t, reflect.TypeOf(teams).Kind(), reflect.Slice)
-	s := reflect.ValueOf(teams)
-	assert.Equal(t, s.Len(), 1)
-
-	// Test Read all for nonexistant list
-	_, _, _, err = tl4.ReadAll(u, "", 1, 50)
-	assert.Error(t, err)
-	assert.True(t, IsErrListDoesNotExist(err))
-
-	// Test Read all for a list where the user is owner of the namespace this list belongs to
-	tl5 := tl
-	tl5.ListID = 2
-	_, _, _, err = tl5.ReadAll(u, "", 1, 50)
-	assert.NoError(t, err)
-
-	// Test read all for a list where the user not has access
-	tl6 := tl
-	tl6.ListID = 5
-	_, _, _, err = tl6.ReadAll(u, "", 1, 50)
-	assert.Error(t, err)
-	assert.True(t, IsErrNeedToHaveListReadAccess(err))
-
-	// Delete
-	allowed, _ = tl.CanDelete(u)
-	assert.True(t, allowed)
-	err = tl.Delete()
-	assert.NoError(t, err)
-
-	// Delete a nonexistant team
-	err = tl3.Delete()
-	assert.Error(t, err)
-	assert.True(t, IsErrTeamDoesNotExist(err))
-
-	// Delete with a nonexistant list
-	err = tl4.Delete()
-	assert.Error(t, err)
-	assert.True(t, IsErrTeamDoesNotHaveAccessToList(err))
+func TestTeamList_Delete(t *testing.T) {
+	t.Run("normal", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		tl := TeamList{
+			TeamID: 1,
+			ListID: 3,
+		}
+		err := tl.Delete()
+		assert.NoError(t, err)
+		db.AssertMissing(t, "team_list", map[string]interface{}{
+			"team_id": 1,
+			"list_id": 3,
+		})
+	})
+	t.Run("nonexistant team", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		tl := TeamList{
+			TeamID: 9999,
+			ListID: 1,
+		}
+		err := tl.Delete()
+		assert.Error(t, err)
+		assert.True(t, IsErrTeamDoesNotExist(err))
+	})
+	t.Run("nonexistant list", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		tl := TeamList{
+			TeamID: 1,
+			ListID: 9999,
+		}
+		err := tl.Delete()
+		assert.Error(t, err)
+		assert.True(t, IsErrTeamDoesNotHaveAccessToList(err))
+	})
 }
 
 func TestTeamList_Update(t *testing.T) {
@@ -187,6 +245,13 @@ func TestTeamList_Update(t *testing.T) {
 			}
 			if (err != nil) && tt.wantErr && !tt.errType(err) {
 				t.Errorf("TeamList.Update() Wrong error type! Error = %v, want = %v", err, runtime.FuncForPC(reflect.ValueOf(tt.errType).Pointer()).Name())
+			}
+			if !tt.wantErr {
+				db.AssertExists(t, "team_list", map[string]interface{}{
+					"list_id": tt.fields.ListID,
+					"team_id": tt.fields.TeamID,
+					"right":   tt.fields.Right,
+				}, false)
 			}
 		})
 	}

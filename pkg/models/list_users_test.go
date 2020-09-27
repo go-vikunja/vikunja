@@ -126,6 +126,12 @@ func TestListUser_Create(t *testing.T) {
 			if (err != nil) && tt.wantErr && !tt.errType(err) {
 				t.Errorf("ListUser.Create() Wrong error type! Error = %v, want = %v", err, runtime.FuncForPC(reflect.ValueOf(tt.errType).Pointer()).Name())
 			}
+			if !tt.wantErr {
+				db.AssertExists(t, "users_list", map[string]interface{}{
+					"user_id": ul.UserID,
+					"list_id": tt.fields.ListID,
+				}, false)
+			}
 		})
 	}
 }
@@ -299,6 +305,13 @@ func TestListUser_Update(t *testing.T) {
 			if (err != nil) && tt.wantErr && !tt.errType(err) {
 				t.Errorf("ListUser.Update() Wrong error type! Error = %v, want = %v", err, runtime.FuncForPC(reflect.ValueOf(tt.errType).Pointer()).Name())
 			}
+			if !tt.wantErr {
+				db.AssertExists(t, "users_list", map[string]interface{}{
+					"list_id": tt.fields.ListID,
+					"user_id": lu.UserID,
+					"right":   tt.fields.Right,
+				}, false)
+			}
 		})
 	}
 }
@@ -307,6 +320,7 @@ func TestListUser_Delete(t *testing.T) {
 	type fields struct {
 		ID       int64
 		Username string
+		UserID   int64
 		ListID   int64
 		Right    Right
 		Created  time.Time
@@ -342,6 +356,7 @@ func TestListUser_Delete(t *testing.T) {
 			name: "Try deleting normally",
 			fields: fields{
 				Username: "user1",
+				UserID:   1,
 				ListID:   3,
 			},
 		},
@@ -366,6 +381,12 @@ func TestListUser_Delete(t *testing.T) {
 			}
 			if (err != nil) && tt.wantErr && !tt.errType(err) {
 				t.Errorf("ListUser.Delete() Wrong error type! Error = %v, want = %v", err, runtime.FuncForPC(reflect.ValueOf(tt.errType).Pointer()).Name())
+			}
+			if !tt.wantErr {
+				db.AssertMissing(t, "users_list", map[string]interface{}{
+					"user_id": tt.fields.UserID,
+					"list_id": tt.fields.ListID,
+				})
 			}
 		})
 	}

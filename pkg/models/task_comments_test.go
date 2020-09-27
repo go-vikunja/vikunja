@@ -35,6 +35,12 @@ func TestTaskComment_Create(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, "test", tc.Comment)
 		assert.Equal(t, int64(1), tc.Author.ID)
+		db.AssertExists(t, "task_comments", map[string]interface{}{
+			"id":        tc.ID,
+			"author_id": u.ID,
+			"comment":   "test",
+			"task_id":   1,
+		}, false)
 	})
 	t.Run("nonexisting task", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -54,6 +60,9 @@ func TestTaskComment_Delete(t *testing.T) {
 		tc := &TaskComment{ID: 1}
 		err := tc.Delete()
 		assert.NoError(t, err)
+		db.AssertMissing(t, "task_comments", map[string]interface{}{
+			"id": 1,
+		})
 	})
 	t.Run("nonexisting comment", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -73,6 +82,10 @@ func TestTaskComment_Update(t *testing.T) {
 		}
 		err := tc.Update()
 		assert.NoError(t, err)
+		db.AssertExists(t, "task_comments", map[string]interface{}{
+			"id":      1,
+			"comment": "testing",
+		}, false)
 	})
 	t.Run("nonexisting comment", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)

@@ -78,6 +78,10 @@ func TestBucket_Delete(t *testing.T) {
 		err = x.Where("bucket_id = ?", 1).Find(&tasks)
 		assert.NoError(t, err)
 		assert.Len(t, tasks, 15)
+		db.AssertMissing(t, "buckets", map[string]interface{}{
+			"id":      2,
+			"list_id": 1,
+		})
 	})
 	t.Run("last bucket in list", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -88,5 +92,9 @@ func TestBucket_Delete(t *testing.T) {
 		err := b.Delete()
 		assert.Error(t, err)
 		assert.True(t, IsErrCannotRemoveLastBucket(err))
+		db.AssertExists(t, "buckets", map[string]interface{}{
+			"id":      34,
+			"list_id": 18,
+		}, false)
 	})
 }

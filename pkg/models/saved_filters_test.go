@@ -65,7 +65,7 @@ func TestSavedFilter_Create(t *testing.T) {
 		vals["filters::jsonb"] = vals["filters"].(string) + "::jsonb"
 		delete(vals, "filters")
 	}
-	db.AssertDBExists(t, "saved_filters", vals, true)
+	db.AssertExists(t, "saved_filters", vals, true)
 }
 
 func TestSavedFilter_ReadOne(t *testing.T) {
@@ -92,7 +92,7 @@ func TestSavedFilter_Update(t *testing.T) {
 	}
 	err := sf.Update()
 	assert.NoError(t, err)
-	db.AssertDBExists(t, "saved_filters", map[string]interface{}{
+	db.AssertExists(t, "saved_filters", map[string]interface{}{
 		"id":          1,
 		"title":       "NewTitle",
 		"description": "",
@@ -106,7 +106,7 @@ func TestSavedFilter_Delete(t *testing.T) {
 	}
 	err := sf.Delete()
 	assert.NoError(t, err)
-	db.AssertDBMissing(t, "saved_filters", map[string]interface{}{
+	db.AssertMissing(t, "saved_filters", map[string]interface{}{
 		"id": 1,
 	})
 }

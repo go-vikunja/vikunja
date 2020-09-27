@@ -41,6 +41,12 @@ func TestList_CreateOrUpdate(t *testing.T) {
 			}
 			err := list.Create(usr)
 			assert.NoError(t, err)
+			db.AssertExists(t, "list", map[string]interface{}{
+				"id":           list.ID,
+				"title":        list.Title,
+				"description":  list.Description,
+				"namespace_id": list.NamespaceID,
+			}, false)
 		})
 		t.Run("nonexistant namespace", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
@@ -88,6 +94,12 @@ func TestList_CreateOrUpdate(t *testing.T) {
 			}
 			err := list.Create(usr)
 			assert.NoError(t, err)
+			db.AssertExists(t, "list", map[string]interface{}{
+				"id":           list.ID,
+				"title":        list.Title,
+				"description":  list.Description,
+				"namespace_id": list.NamespaceID,
+			}, false)
 		})
 	})
 
@@ -103,7 +115,12 @@ func TestList_CreateOrUpdate(t *testing.T) {
 			list.Description = "Lorem Ipsum dolor sit amet."
 			err := list.Update()
 			assert.NoError(t, err)
-
+			db.AssertExists(t, "list", map[string]interface{}{
+				"id":           list.ID,
+				"title":        list.Title,
+				"description":  list.Description,
+				"namespace_id": list.NamespaceID,
+			}, false)
 		})
 		t.Run("nonexistant", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
@@ -139,6 +156,9 @@ func TestList_Delete(t *testing.T) {
 	}
 	err := list.Delete()
 	assert.NoError(t, err)
+	db.AssertMissing(t, "list", map[string]interface{}{
+		"id": 1,
+	})
 }
 
 func TestList_ReadAll(t *testing.T) {

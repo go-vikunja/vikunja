@@ -314,6 +314,14 @@ func TestLabel_Create(t *testing.T) {
 			if err := l.Create(tt.args.a); (err != nil) != tt.wantErr {
 				t.Errorf("Label.Create() error = %v, wantErr %v", err, tt.wantErr)
 			}
+			if !tt.wantErr {
+				db.AssertExists(t, "labels", map[string]interface{}{
+					"id":          l.ID,
+					"title":       l.Title,
+					"description": l.Description,
+					"hex_color":   l.HexColor,
+				}, false)
+			}
 		})
 	}
 }
@@ -396,6 +404,12 @@ func TestLabel_Update(t *testing.T) {
 			if err := l.Update(); (err != nil) != tt.wantErr {
 				t.Errorf("Label.Update() error = %v, wantErr %v", err, tt.wantErr)
 			}
+			if !tt.wantErr && !tt.wantForbidden {
+				db.AssertExists(t, "labels", map[string]interface{}{
+					"id":    tt.fields.ID,
+					"title": tt.fields.Title,
+				}, false)
+			}
 		})
 	}
 }
@@ -473,6 +487,11 @@ func TestLabel_Delete(t *testing.T) {
 			}
 			if err := l.Delete(); (err != nil) != tt.wantErr {
 				t.Errorf("Label.Delete() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if !tt.wantErr && !tt.wantForbidden {
+				db.AssertMissing(t, "labels", map[string]interface{}{
+					"id": l.ID,
+				})
 			}
 		})
 	}

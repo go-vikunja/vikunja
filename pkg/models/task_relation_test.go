@@ -35,6 +35,12 @@ func TestTaskRelation_Create(t *testing.T) {
 		}
 		err := rel.Create(&user.User{ID: 1})
 		assert.NoError(t, err)
+		db.AssertExists(t, "task_relations", map[string]interface{}{
+			"task_id":       1,
+			"other_task_id": 2,
+			"relation_kind": RelationKindSubtask,
+			"created_by_id": 1,
+		}, false)
 	})
 	t.Run("Two Tasks In Different Lists", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -46,6 +52,12 @@ func TestTaskRelation_Create(t *testing.T) {
 		}
 		err := rel.Create(&user.User{ID: 1})
 		assert.NoError(t, err)
+		db.AssertExists(t, "task_relations", map[string]interface{}{
+			"task_id":       1,
+			"other_task_id": 13,
+			"relation_kind": RelationKindSubtask,
+			"created_by_id": 1,
+		}, false)
 	})
 	t.Run("Already Existing", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -83,6 +95,11 @@ func TestTaskRelation_Delete(t *testing.T) {
 		}
 		err := rel.Delete()
 		assert.NoError(t, err)
+		db.AssertMissing(t, "task_relations", map[string]interface{}{
+			"task_id":       1,
+			"other_task_id": 29,
+			"relation_kind": RelationKindSubtask,
+		})
 	})
 	t.Run("Not existing", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)

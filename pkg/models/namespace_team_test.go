@@ -27,84 +27,142 @@ import (
 	"time"
 )
 
-func TestTeamNamespace(t *testing.T) {
-	db.LoadAndAssertFixtures(t)
+func TestTeamNamespace_ReadAll(t *testing.T) {
+	u := &user.User{ID: 1}
 
-	// Dummy team <-> namespace relation
-	tn := TeamNamespace{
-		TeamID:      1,
-		NamespaceID: 1,
-		Right:       RightAdmin,
-	}
+	t.Run("normal", func(t *testing.T) {
+		tn := TeamNamespace{
+			NamespaceID: 3,
+		}
+		db.LoadAndAssertFixtures(t)
+		teams, _, _, err := tn.ReadAll(u, "", 1, 50)
+		assert.NoError(t, err)
+		assert.Equal(t, reflect.TypeOf(teams).Kind(), reflect.Slice)
+		s := reflect.ValueOf(teams)
+		assert.Equal(t, s.Len(), 2)
+	})
+	t.Run("nonexistant namespace", func(t *testing.T) {
+		tn := TeamNamespace{
+			NamespaceID: 9999,
+		}
+		db.LoadAndAssertFixtures(t)
+		_, _, _, err := tn.ReadAll(u, "", 1, 50)
+		assert.Error(t, err)
+		assert.True(t, IsErrNamespaceDoesNotExist(err))
+	})
+	t.Run("no right for namespace", func(t *testing.T) {
+		tn := TeamNamespace{
+			NamespaceID: 17,
+		}
+		db.LoadAndAssertFixtures(t)
+		_, _, _, err := tn.ReadAll(u, "", 1, 50)
+		assert.Error(t, err)
+		assert.True(t, IsErrNeedToHaveNamespaceReadAccess(err))
+	})
+}
 
-	dummyuser, err := user.GetUserByID(1)
-	assert.NoError(t, err)
+func TestTeamNamespace_Create(t *testing.T) {
+	u := &user.User{ID: 1}
 
-	// Test normal creation
-	allowed, _ := tn.CanCreate(dummyuser)
-	assert.True(t, allowed)
-	err = tn.Create(dummyuser)
-	assert.NoError(t, err)
+	t.Run("normal", func(t *testing.T) {
+		tn := TeamNamespace{
+			TeamID:      1,
+			NamespaceID: 1,
+			Right:       RightAdmin,
+		}
+		db.LoadAndAssertFixtures(t)
+		allowed, _ := tn.CanCreate(u)
+		assert.True(t, allowed)
+		err := tn.Create(u)
+		assert.NoError(t, err)
+		db.AssertExists(t, "team_namespaces", map[string]interface{}{
+			"team_id":      1,
+			"namespace_id": 1,
+			"right":        RightAdmin,
+		}, false)
+	})
+	t.Run("team already has access", func(t *testing.T) {
+		tn := TeamNamespace{
+			TeamID:      1,
+			NamespaceID: 3,
+			Right:       RightRead,
+		}
+		db.LoadAndAssertFixtures(t)
+		err := tn.Create(u)
+		assert.Error(t, err)
+		assert.True(t, IsErrTeamAlreadyHasAccess(err))
+	})
+	t.Run("invalid team right", func(t *testing.T) {
+		tn := TeamNamespace{
+			TeamID:      1,
+			NamespaceID: 3,
+			Right:       RightUnknown,
+		}
+		db.LoadAndAssertFixtures(t)
+		err := tn.Create(u)
+		assert.Error(t, err)
+		assert.True(t, IsErrInvalidRight(err))
+	})
+	t.Run("nonexistant team", func(t *testing.T) {
+		tn := TeamNamespace{
+			TeamID:      9999,
+			NamespaceID: 1,
+		}
+		db.LoadAndAssertFixtures(t)
+		err := tn.Create(u)
+		assert.Error(t, err)
+		assert.True(t, IsErrTeamDoesNotExist(err))
+	})
+	t.Run("nonexistant namespace", func(t *testing.T) {
+		tn := TeamNamespace{
+			TeamID:      1,
+			NamespaceID: 9999,
+		}
+		db.LoadAndAssertFixtures(t)
+		err := tn.Create(u)
+		assert.Error(t, err)
+		assert.True(t, IsErrNamespaceDoesNotExist(err))
+	})
+}
 
-	// Test again (should fail)
-	err = tn.Create(dummyuser)
-	assert.Error(t, err)
-	assert.True(t, IsErrTeamAlreadyHasAccess(err))
+func TestTeamNamespace_Delete(t *testing.T) {
+	u := &user.User{ID: 1}
 
-	// Test with invalid team right
-	tn2 := tn
-	tn2.Right = RightUnknown
-	err = tn2.Create(dummyuser)
-	assert.Error(t, err)
-	assert.True(t, IsErrInvalidRight(err))
-
-	// Check with inexistant team
-	tn3 := tn
-	tn3.TeamID = 324
-	err = tn3.Create(dummyuser)
-	assert.Error(t, err)
-	assert.True(t, IsErrTeamDoesNotExist(err))
-
-	// Check with a namespace which does not exist
-	tn4 := tn
-	tn4.NamespaceID = 423
-	err = tn4.Create(dummyuser)
-	assert.Error(t, err)
-	assert.True(t, IsErrNamespaceDoesNotExist(err))
-
-	// Check readall
-	teams, _, _, err := tn.ReadAll(dummyuser, "", 1, 50)
-	assert.NoError(t, err)
-	assert.Equal(t, reflect.TypeOf(teams).Kind(), reflect.Slice)
-	s := reflect.ValueOf(teams)
-	assert.Equal(t, s.Len(), 1)
-
-	// Check readall for a nonexistant namespace
-	_, _, _, err = tn4.ReadAll(dummyuser, "", 1, 50)
-	assert.Error(t, err)
-	assert.True(t, IsErrNamespaceDoesNotExist(err))
-
-	// Check with no right to read the namespace
-	nouser := &user.User{ID: 393}
-	_, _, _, err = tn.ReadAll(nouser, "", 1, 50)
-	assert.Error(t, err)
-	assert.True(t, IsErrNeedToHaveNamespaceReadAccess(err))
-
-	// Delete it
-	allowed, _ = tn.CanDelete(dummyuser)
-	assert.True(t, allowed)
-	err = tn.Delete()
-	assert.NoError(t, err)
-
-	// Try deleting with a nonexisting team
-	err = tn3.Delete()
-	assert.Error(t, err)
-	assert.True(t, IsErrTeamDoesNotExist(err))
-
-	// Try deleting with a nonexistant namespace
-	err = tn4.Delete()
-	assert.Error(t, err)
-	assert.True(t, IsErrTeamDoesNotHaveAccessToNamespace(err))
+	t.Run("normal", func(t *testing.T) {
+		tn := TeamNamespace{
+			TeamID:      7,
+			NamespaceID: 9,
+		}
+		db.LoadAndAssertFixtures(t)
+		allowed, _ := tn.CanDelete(u)
+		assert.True(t, allowed)
+		err := tn.Delete()
+		assert.NoError(t, err)
+		db.AssertMissing(t, "team_namespaces", map[string]interface{}{
+			"team_id":      7,
+			"namespace_id": 9,
+		})
+	})
+	t.Run("nonexistant team", func(t *testing.T) {
+		tn := TeamNamespace{
+			TeamID:      9999,
+			NamespaceID: 3,
+		}
+		db.LoadAndAssertFixtures(t)
+		err := tn.Delete()
+		assert.Error(t, err)
+		assert.True(t, IsErrTeamDoesNotExist(err))
+	})
+	t.Run("nonexistant namespace", func(t *testing.T) {
+		tn := TeamNamespace{
+			TeamID:      1,
+			NamespaceID: 9999,
+		}
+		db.LoadAndAssertFixtures(t)
+		err := tn.Delete()
+		assert.Error(t, err)
+		assert.True(t, IsErrTeamDoesNotHaveAccessToNamespace(err))
+	})
 }
 
 func TestTeamNamespace_Update(t *testing.T) {
@@ -179,6 +237,13 @@ func TestTeamNamespace_Update(t *testing.T) {
 			}
 			if (err != nil) && tt.wantErr && !tt.errType(err) {
 				t.Errorf("TeamNamespace.Update() Wrong error type! Error = %v, want = %v", err, runtime.FuncForPC(reflect.ValueOf(tt.errType).Pointer()).Name())
+			}
+			if !tt.wantErr {
+				db.AssertExists(t, "team_namespaces", map[string]interface{}{
+					"team_id":      tt.fields.TeamID,
+					"namespace_id": tt.fields.NamespaceID,
+					"right":        tt.fields.Right,
+				}, false)
 			}
 		})
 	}

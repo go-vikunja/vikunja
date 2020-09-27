@@ -31,6 +31,7 @@ func TestNamespaceUser_Create(t *testing.T) {
 	type fields struct {
 		ID          int64
 		Username    string
+		UserID      int64
 		NamespaceID int64
 		Right       Right
 		Created     time.Time
@@ -52,6 +53,7 @@ func TestNamespaceUser_Create(t *testing.T) {
 			name: "NamespaceUsers Create normally",
 			fields: fields{
 				Username:    "user1",
+				UserID:      1,
 				NamespaceID: 2,
 			},
 		},
@@ -122,6 +124,12 @@ func TestNamespaceUser_Create(t *testing.T) {
 			}
 			if (err != nil) && tt.wantErr && !tt.errType(err) {
 				t.Errorf("NamespaceUser.Create() Wrong error type! Error = %v, want = %v", err, runtime.FuncForPC(reflect.ValueOf(tt.errType).Pointer()).Name())
+			}
+			if !tt.wantErr {
+				db.AssertExists(t, "users_namespace", map[string]interface{}{
+					"user_id":      tt.fields.UserID,
+					"namespace_id": tt.fields.NamespaceID,
+				}, false)
 			}
 		})
 	}
@@ -228,6 +236,7 @@ func TestNamespaceUser_Update(t *testing.T) {
 	type fields struct {
 		ID          int64
 		Username    string
+		UserID      int64
 		NamespaceID int64
 		Right       Right
 		Created     time.Time
@@ -246,6 +255,7 @@ func TestNamespaceUser_Update(t *testing.T) {
 			fields: fields{
 				NamespaceID: 3,
 				Username:    "user1",
+				UserID:      1,
 				Right:       RightAdmin,
 			},
 		},
@@ -254,6 +264,7 @@ func TestNamespaceUser_Update(t *testing.T) {
 			fields: fields{
 				NamespaceID: 3,
 				Username:    "user1",
+				UserID:      1,
 				Right:       RightWrite,
 			},
 		},
@@ -262,6 +273,7 @@ func TestNamespaceUser_Update(t *testing.T) {
 			fields: fields{
 				NamespaceID: 3,
 				Username:    "user1",
+				UserID:      1,
 				Right:       RightRead,
 			},
 		},
@@ -297,6 +309,13 @@ func TestNamespaceUser_Update(t *testing.T) {
 			if (err != nil) && tt.wantErr && !tt.errType(err) {
 				t.Errorf("NamespaceUser.Update() Wrong error type! Error = %v, want = %v", err, runtime.FuncForPC(reflect.ValueOf(tt.errType).Pointer()).Name())
 			}
+			if !tt.wantErr {
+				db.AssertExists(t, "users_namespace", map[string]interface{}{
+					"user_id":      tt.fields.UserID,
+					"namespace_id": tt.fields.NamespaceID,
+					"right":        tt.fields.Right,
+				}, false)
+			}
 		})
 	}
 }
@@ -305,6 +324,7 @@ func TestNamespaceUser_Delete(t *testing.T) {
 	type fields struct {
 		ID          int64
 		Username    string
+		UserID      int64
 		NamespaceID int64
 		Right       Right
 		Created     time.Time
@@ -340,6 +360,7 @@ func TestNamespaceUser_Delete(t *testing.T) {
 			name: "Try deleting normally",
 			fields: fields{
 				Username:    "user1",
+				UserID:      1,
 				NamespaceID: 3,
 			},
 		},
@@ -364,6 +385,12 @@ func TestNamespaceUser_Delete(t *testing.T) {
 			}
 			if (err != nil) && tt.wantErr && !tt.errType(err) {
 				t.Errorf("NamespaceUser.Delete() Wrong error type! Error = %v, want = %v", err, runtime.FuncForPC(reflect.ValueOf(tt.errType).Pointer()).Name())
+			}
+			if !tt.wantErr {
+				db.AssertMissing(t, "users_namespace", map[string]interface{}{
+					"user_id":      tt.fields.UserID,
+					"namespace_id": tt.fields.NamespaceID,
+				})
 			}
 		})
 	}

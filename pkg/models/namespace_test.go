@@ -37,6 +37,10 @@ func TestNamespace_Create(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		err := dummynamespace.Create(user1)
 		assert.NoError(t, err)
+		db.AssertExists(t, "namespaces", map[string]interface{}{
+			"title":       "Test",
+			"description": "Lorem Ipsum",
+		}, false)
 	})
 	t.Run("no title", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -81,6 +85,10 @@ func TestNamespace_Update(t *testing.T) {
 		}
 		err := n.Update()
 		assert.NoError(t, err)
+		db.AssertExists(t, "namespaces", map[string]interface{}{
+			"id":    1,
+			"title": "Lorem Ipsum",
+		}, false)
 	})
 	t.Run("nonexisting", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -122,6 +130,9 @@ func TestNamespace_Delete(t *testing.T) {
 		}
 		err := n.Delete()
 		assert.NoError(t, err)
+		db.AssertMissing(t, "namespaces", map[string]interface{}{
+			"id": 1,
+		})
 	})
 	t.Run("nonexisting", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)

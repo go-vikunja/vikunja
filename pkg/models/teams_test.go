@@ -37,6 +37,11 @@ func TestTeam_Create(t *testing.T) {
 		}
 		err := team.Create(doer)
 		assert.NoError(t, err)
+		db.AssertExists(t, "teams", map[string]interface{}{
+			"id":          team.ID,
+			"name":        "Testteam293",
+			"description": "Lorem Ispum",
+		}, false)
 	})
 	t.Run("empty name", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -95,6 +100,10 @@ func TestTeam_Update(t *testing.T) {
 		}
 		err := team.Update()
 		assert.NoError(t, err)
+		db.AssertExists(t, "teams", map[string]interface{}{
+			"id":   team.ID,
+			"name": "SomethingNew",
+		}, false)
 	})
 	t.Run("empty name", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -126,6 +135,9 @@ func TestTeam_Delete(t *testing.T) {
 		}
 		err := team.Delete()
 		assert.NoError(t, err)
+		db.AssertMissing(t, "teams", map[string]interface{}{
+			"id": 1,
+		})
 	})
 }
 
