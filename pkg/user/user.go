@@ -361,7 +361,12 @@ func UpdateUser(user *User) (updatedUser *User, err error) {
 	// Update it
 	_, err = x.
 		ID(user.ID).
-		Cols("username", "email", "avatar_provider", "is_active").
+		Cols(
+			"username",
+			"email",
+			"avatar_provider",
+			"avatar_file_id",
+			"is_active").
 		Update(user)
 	if err != nil {
 		return &User{}, err
