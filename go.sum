@@ -735,6 +735,8 @@ golang.org/x/image v0.0.0-20200922025426-e59bae62ef32 h1:E+SEVulmY8U4+i6vSB88YSc
 golang.org/x/image v0.0.0-20200922025426-e59bae62ef32/go.mod h1:FeLwcggjj3mMvU+oOTbSwawSJRM1uh48EjtB4UJZlP0=
 golang.org/x/image v0.0.0-20200924062109-4578eab98f00 h1:9VSII+GM7HSMYSWsMcnMnDHKcDv2agce+07ISbE3llQ=
 golang.org/x/image v0.0.0-20200924062109-4578eab98f00/go.mod h1:FeLwcggjj3mMvU+oOTbSwawSJRM1uh48EjtB4UJZlP0=
+golang.org/x/image v0.0.0-20200927005634-a67d67e0935b h1:89/bJY/WM5isgJh5o9bQ78Wu54tN5gZwkC+he5Q7vbM=
+golang.org/x/image v0.0.0-20200927005634-a67d67e0935b/go.mod h1:FeLwcggjj3mMvU+oOTbSwawSJRM1uh48EjtB4UJZlP0=
 golang.org/x/lint v0.0.0-20181026193005-c67002cb31c3/go.mod h1:UVdnD1Gm6xHRNCYTkRU2/jEulfH38KcIWyp/GAMgvoE=
 golang.org/x/lint v0.0.0-20190227174305-5b3e6a55c961/go.mod h1:wehouNa3lNwaWXcvxsM5YxQ5yQlVC4a0KAMCusXpPoU=
 golang.org/x/lint v0.0.0-20190301231843-5614ed5bae6f/go.mod h1:UVdnD1Gm6xHRNCYTkRU2/jEulfH38KcIWyp/GAMgvoE=
