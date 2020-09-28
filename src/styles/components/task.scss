@@ -33,6 +33,11 @@
 
     .title {
       margin-bottom: 0;
+
+      &.input {
+        // 1.8rem is the font-size, 1.125 is the line-height, .3em padding everywhere, 1px border around the whole thing.
+        min-height: calc(1.8rem * 1.125 + .6em + 2px);
+      }
     }
 
     .title.task-id {
