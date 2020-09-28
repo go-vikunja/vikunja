@@ -262,6 +262,11 @@ export default {
 							// The part up until the next space
 							const labelTitle = p.split(' ')[0]
 
+							// Don't create an empty label
+							if (labelTitle === '') {
+								return
+							}
+
 							// Check if the label exists
 							this.labelService.getAll({}, {s: labelTitle})
 								.then(res => {
