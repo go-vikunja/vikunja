@@ -168,31 +168,18 @@ export default {
 					this.error(e, this)
 				})
 		},
-		sortTasks() {
-			if (this.tasks === null || this.tasks === []) {
-				return
-			}
-			return this.tasks.sort(function (a, b) {
-				if (a.done < b.done)
-					return -1
-				if (a.done > b.done)
-					return 1
-
-				if (a.id > b.id)
-					return -1
-				if (a.id < b.id)
-					return 1
-				return 0
-			})
-		},
 		updateTasks(updatedTask) {
 			for (const t in this.tasks) {
 				if (this.tasks[t].id === updatedTask.id) {
 					this.$set(this.tasks, t, updatedTask)
+					// Move the task to the end of the done tasks if it is now done
+					if (updatedTask.done) {
+						this.tasks.splice(t, 1)
+						this.tasks.push(updatedTask)
+					}
 					break
 				}
 			}
-			this.sortTasks()
 		},
 	},
 }
