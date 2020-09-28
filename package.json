@@ -14,7 +14,7 @@
     "date-fns": "2.16.1",
     "dompurify": "2.1.1",
     "lodash": "4.17.20",
-    "marked": "1.1.1",
+    "marked": "1.2.0",
     "register-service-worker": "1.7.1",
     "snake-case": "3.0.3",
     "v-tooltip": "2.0.3",
