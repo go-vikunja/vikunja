@@ -402,7 +402,10 @@ func AddListDetails(lists []*List) (err error) {
 
 	// Build it all into the lists slice
 	for _, l := range lists {
-		l.BackgroundInformation = unsplashPhotos[l.BackgroundFileID]
+		// Only override the file info if we have info for unsplash backgrounds
+		if _, exists := unsplashPhotos[l.BackgroundFileID]; exists {
+			l.BackgroundInformation = unsplashPhotos[l.BackgroundFileID]
+		}
 	}
 
 	return
