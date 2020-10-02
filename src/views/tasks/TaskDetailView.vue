@@ -32,10 +32,10 @@
 							</div>
 							<edit-assignees
 								:disabled="!canWrite"
-								:initial-assignees="task.assignees"
 								:list-id="task.listId"
 								:task-id="task.id"
 								ref="assignees"
+								v-model="task.assignees"
 							/>
 						</div>
 						<div class="column" v-if="activeFields.priority">

@@ -65,12 +65,11 @@ export default {
 			type: Number,
 			required: true,
 		},
-		initialAssignees: {
-			type: Array,
-			default: () => [],
-		},
 		disabled: {
 			default: false,
+		},
+		value: {
+			type: Array,
 		},
 	},
 	data() {
@@ -83,19 +82,22 @@ export default {
 		}
 	},
 	created() {
-		this.assignees = this.initialAssignees
+		this.assignees = this.value
 		this.listUserService = new ListUserService()
 		this.newAssignee = new UserModel()
 		this.taskAssigneeService = new TaskAssigneeService()
 	},
 	watch: {
-		initialAssignees(newVal) {
+		value(newVal) {
 			this.assignees = newVal
 		},
 	},
 	methods: {
 		addAssignee(user) {
 			this.$store.dispatch('tasks/addAssignee', {user: user, taskId: this.taskId})
+				.then(() => {
+					this.$emit('input', this.assignees)
+				})
 				.catch(e => {
 					this.error(e, this)
 				})
