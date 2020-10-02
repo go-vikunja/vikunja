@@ -134,7 +134,7 @@ export default {
 				this.taskService.update(this.task)
 					.then(t => {
 						this.task = t
-						this.$emit('taskUpdated', t)
+						this.$emit('task-updated', t)
 						this.success(
 							{message: 'The task was successfully ' + (this.task.done ? '' : 'un-') + 'marked as done.'},
 							this,
@@ -164,7 +164,7 @@ export default {
 			this.taskService.update(this.task)
 				.then(t => {
 					this.task = t
-					this.$emit('taskUpdated', t)
+					this.$emit('task-updated', t)
 					this.$store.dispatch('namespaces/loadNamespacesIfFavoritesDontExist')
 				})
 				.catch(e => {

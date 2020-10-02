@@ -136,7 +136,7 @@ export default {
 		this.load()
 	},
 	watch: {
-		listId: () => { // watch it
+		listId() { // watch it
 			this.load()
 		},
 	},
