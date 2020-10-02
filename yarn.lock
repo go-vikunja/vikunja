@@ -4628,10 +4628,10 @@ codemirror-spell-checker@1.1.2:
   dependencies:
     typo-js "*"
 
-codemirror@^5.52.2:
-  version "5.53.0"
-  resolved "https://registry.yarnpkg.com/codemirror/-/codemirror-5.53.0.tgz#7d5c373388e26bb902082da749a0e8cedbfe2b95"
-  integrity sha512-gpnlCCcfp/k9U38X5edaTNRAuNW3vNyAFiG4ZeytlHBl0PsCRYFTomLnAsTfJf/B1eQ7kyzB4k3XXolebpYhtA==
+codemirror@^5.58.1:
+  version "5.58.1"
+  resolved "https://registry.yarnpkg.com/codemirror/-/codemirror-5.58.1.tgz#ec6bf38ad2a17f74c61bd00cc6dc5a69bd167854"
+  integrity sha512-UGb/ueu20U4xqWk8hZB3xIfV2/SFqnSLYONiM3wTMDqko0bsYrsAkGGhqUzbRkYm89aBKPyHtuNEbVWF9FTFzw==
 
 collection-visit@^1.0.0:
   version "1.0.0"
@@ -5718,14 +5718,14 @@ easy-stack@^1.0.0:
   resolved "https://registry.yarnpkg.com/easy-stack/-/easy-stack-1.0.0.tgz#12c91b3085a37f0baa336e9486eac4bf94e3e788"
   integrity sha1-EskbMIWjfwuqM26UhurEv5Tj54g=
 
-easymde@^2.10.1:
-  version "2.10.1"
-  resolved "https://registry.yarnpkg.com/easymde/-/easymde-2.10.1.tgz#671836ed08033def1a4379bfa2d193994c46471d"
-  integrity sha512-khKYfB18ZYbkJAGEeQXaV2ZZ1QS7BavNj2xdcPGpO8GXi30qA9bVxzswGW8QNZQRmPtaXiQDG236Yv/BQY7P2A==
+easymde@^2.12.0:
+  version "2.12.0"
+  resolved "https://registry.yarnpkg.com/easymde/-/easymde-2.12.0.tgz#c9930c1c2dfed0c912ad95960807ea21e2359c95"
+  integrity sha512-R899trkHlkp48GkLbeZ/01exmhSzVgKiHmzbQiAcMAzyqjyd6L110iv+csE+RnRLddJKIilPvJqInJ+E7ILrYg==
   dependencies:
-    codemirror "^5.52.2"
+    codemirror "^5.58.1"
     codemirror-spell-checker "1.1.2"
-    marked "^0.8.2"
+    marked "^1.2.0"
 
 ecc-jsbn@~0.1.1:
   version "0.1.2"
@@ -8939,20 +8939,10 @@ map-visit@^1.0.0:
   dependencies:
     object-visit "^1.0.0"
 
-marked@1.2.0:
+marked@1.2.0, marked@^1.2.0:
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/marked/-/marked-1.2.0.tgz#7221ce2395fa6cf6d722e6f2871a32d3513c85ca"
   integrity sha512-tiRxakgbNPBr301ihe/785NntvYyhxlqcL3YaC8CaxJQh7kiaEtrN9B/eK2I2943Yjkh5gw25chYFDQhOMCwMA==
-
-marked@^0.8.2:
-  version "0.8.2"
-  resolved "https://registry.yarnpkg.com/marked/-/marked-0.8.2.tgz#4faad28d26ede351a7a1aaa5fec67915c869e355"
-  integrity sha512-EGwzEeCcLniFX51DhTpmTom+dSA/MG/OBUDjnWtHbEnjAH180VzUeAw+oE4+Zv+CoYBWyRlYOTR0N8SO9R1PVw==
-
-marked@^1.1.1:
-  version "1.1.1"
-  resolved "https://registry.yarnpkg.com/marked/-/marked-1.1.1.tgz#e5d61b69842210d5df57b05856e0c91572703e6a"
-  integrity sha512-mJzT8D2yPxoPh7h0UXkB+dBj4FykPJ2OIfxAWeIHrvoHDkFxukV/29QxoFQoPM6RLEwhIFdJpmKBlqVM3s2ZIw==
 
 md5.js@^1.3.4:
   version "1.3.5"
@@ -13266,13 +13256,13 @@ vue-drag-resize@1.4.2:
   resolved "https://registry.yarnpkg.com/vue-drag-resize/-/vue-drag-resize-1.4.2.tgz#656408b52c77c383a6aafb08c32bd220f0f25b73"
   integrity sha512-rPd8JkkueBegCX8niJg3aWwQBfys9upaxLDyH6+1Gkz6pUzldhVqpF0hragppo68q6NWqE9fbvypWVI43AFyqw==
 
-vue-easymde@1.2.2:
-  version "1.2.2"
-  resolved "https://registry.yarnpkg.com/vue-easymde/-/vue-easymde-1.2.2.tgz#fda2578f2fa198aa5cc6746c37d6b0bcb03ed1c8"
-  integrity sha512-Dt4kGiQ0VfpCOZ5OgeE9L58Er2/r482VBTfwd6Ky0wqEGXknGmiMXEsZ1MvZf8bZQIPS9nhGlV4B+n1hb8VHPg==
+vue-easymde@1.3.0:
+  version "1.3.0"
+  resolved "https://registry.yarnpkg.com/vue-easymde/-/vue-easymde-1.3.0.tgz#d350e3d04ca8aa209209095f7b68c0d9d0498a42"
+  integrity sha512-VkeSkxH3uhGWqxIt73WLbLzCZP/4yHY05cMYVfL7RFUf4bB9WTjrHEWVLRDCvEToVcxNR7uLpNDE4XtljDuCcg==
   dependencies:
-    easymde "^2.10.1"
-    marked "^1.1.1"
+    easymde "^2.12.0"
+    marked "^1.2.0"
 
 vue-eslint-parser@^7.1.0:
   version "7.1.0"
