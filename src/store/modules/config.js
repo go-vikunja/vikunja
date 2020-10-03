@@ -19,6 +19,7 @@ export default {
 			imprintUrl: '',
 			privacyPolicyUrl: '',
 		},
+		caldavEnabled: false,
 	}),
 	mutations: {
 		[CONFIG](state, config) {
@@ -34,6 +35,7 @@ export default {
 			state.enabledBackgroundProviders = config.enabled_background_providers
 			state.legal.imprintUrl = config.legal.imprint_url
 			state.legal.privacyPolicyUrl = config.legal.privacy_policy_url
+			state.caldavEnabled = config.caldav_enabled
 		},
 	},
 	actions: {

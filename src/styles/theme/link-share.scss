@@ -23,24 +23,22 @@
   }
 }
 
-.link-share-list {
-  .field.has-addons {
+.field.has-addons.no-input-mobile {
+  .control:first-child {
+    width: 100%;
+  }
+
+  .button {
+    height: 40px;
+  }
+
+  @media screen and (max-width: $tablet) {
     .control:first-child {
-      width: 100%;
+      display: none;
     }
 
     .button {
-      height: 40px;
-    }
-
-    @media screen and (max-width: $tablet) {
-      .control:first-child {
-        display: none;
-      }
-
-      .button {
-        border-radius: $radius !important;
-      }
+      border-radius: $radius !important;
     }
   }
 }

@@ -174,7 +174,9 @@
 				</div>
 			</div>
 		</div>
-		<div class="card" v-if="totpEnabled">
+
+		<!-- Migration -->
+		<div class="card" v-if="migratorsEnabled">
 			<header class="card-header">
 				<p class="card-header-title">
 					Migrate from other services to Vikunja
@@ -188,6 +190,38 @@
 				>
 					Import your data into Vikunja
 				</router-link>
+			</div>
+		</div>
+
+		<!-- Caldav -->
+		<div class="card" v-if="caldavEnabled">
+			<header class="card-header">
+				<p class="card-header-title">
+					Caldav
+				</p>
+			</header>
+			<div class="card-content content">
+				<p>
+					You can connect Vikunja to caldav clients to view and manage all tasks from different clients.
+					Enter this url into your client:
+				</p>
+				<div class="field has-addons no-input-mobile">
+					<div class="control is-expanded">
+						<input type="text" v-model="caldavUrl" class="input" readonly/>
+					</div>
+					<div class="control">
+						<a @click="copy(caldavUrl)" class="button is-success noshadow" v-tooltip="'Copy to clipboard'">
+							<span class="icon">
+								<icon icon="paste"/>
+							</span>
+						</a>
+					</div>
+				</div>
+				<p>
+					<a href="https://vikunja.io/docs/caldav/" target="_blank">
+						More information about caldav in Vikunja
+					</a>
+				</p>
 			</div>
 		</div>
 	</div>
@@ -204,6 +238,7 @@ import TotpService from '../../services/totp'
 import {mapState} from 'vuex'
 
 import AvatarSettings from '../../components/user/avatar-settings'
+import copy from 'copy-to-clipboard'
 
 export default {
 	name: 'Settings',
@@ -223,6 +258,8 @@ export default {
 			totpConfirmPasscode: '',
 			totpDisableForm: false,
 			totpDisablePassword: '',
+
+			caldavUrl: '',
 		}
 	},
 	components: {
@@ -239,6 +276,7 @@ export default {
 		this.totp = new TotpModel()
 
 		this.totpStatus()
+		this.buildCaldavUrl()
 	},
 	mounted() {
 		this.setTitle('Settings')
@@ -246,6 +284,8 @@ export default {
 	computed: mapState({
 		totpEnabled: state => state.config.totpEnabled,
 		migratorsEnabled: state => state.config.availableMigrators !== null && state.config.availableMigrators.length > 0,
+		caldavEnabled: state => state.config.caldavEnabled,
+		userInfo: state => state.auth.info,
 	}),
 	methods: {
 		updatePassword() {
@@ -318,6 +358,13 @@ export default {
 					this.success({message: 'Two factor authentication was sucessfully disabled.'}, this)
 				})
 				.catch(e => this.error(e, this))
+		},
+		buildCaldavUrl() {
+			const apiBase = window.API_URL.replace('/api/v1', '')
+			this.caldavUrl = `${apiBase}/dav/principals/${this.userInfo.username}/`
+		},
+		copy(text) {
+			copy(text)
 		},
 	},
 }

@@ -38,12 +38,12 @@
 				<template v-if="linkShares.length > 0">
 					<tr :key="s.id" v-for="s in linkShares">
 						<td>
-							<div class="field has-addons">
+							<div class="field has-addons no-input-mobile">
 								<div class="control">
 									<input :value="getShareLink(s.hash)" class="input" readonly type="text"/>
 								</div>
 								<div class="control">
-									<a @click="copy(getShareLink(s.hash))" class="button is-success noshadow">
+									<a @click="copy(getShareLink(s.hash))" class="button is-success noshadow" v-tooltip="'Copy to clipboard'">
 									<span class="icon">
 										<icon icon="paste"/>
 									</span>
