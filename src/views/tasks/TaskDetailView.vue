@@ -9,8 +9,14 @@
 					{{ task.identifier }}
 				</h1>
 				<div class="is-done" v-if="task.done">Done</div>
-				<h1 @focusout="saveTaskOnChange()" @keyup.ctrl.enter="saveTaskOnChange()" class="title input" contenteditable="true"
-					ref="taskTitle">{{ task.title }}</h1>
+				<h1
+					@focusout="saveTaskOnChange()"
+					@keyup.ctrl.enter="saveTaskOnChange()"
+					class="title input"
+					contenteditable="true"
+					ref="taskTitle">
+					{{ task.title }}
+				</h1>
 			</div>
 			<h6 class="subtitle" v-if="parent && parent.namespace && parent.list">
 				{{ parent.namespace.title }} >
@@ -552,32 +558,35 @@ export default {
 				return
 			}
 
-			this.task.dueDate = this.dueDate
-			this.task.hexColor = this.taskColor
+			// We're doing the whole update in a nextTick because sometimes race conditions can occur when
+			// setting the due date on mobile which leads to no due date change being saved.
+			this.$nextTick(() => {
+				this.task.dueDate = this.dueDate
+				this.task.hexColor = this.taskColor
 
-			// If no end date is being set, but a start date and due date,
-			// use the due date as the end date
-			if (this.task.endDate === null && this.task.startDate !== null && this.task.dueDate !== null) {
-				this.task.endDate = this.task.dueDate
-			}
+				// If no end date is being set, but a start date and due date,
+				// use the due date as the end date
+				if (this.task.endDate === null && this.task.startDate !== null && this.task.dueDate !== null) {
+					this.task.endDate = this.task.dueDate
+				}
 
-			this.$store.dispatch('tasks/update', this.task)
-				.then(r => {
-					this.$set(this, 'task', r)
-					let actions = []
-					if (undoCallback !== null) {
-						actions = [{
-							title: 'Undo',
-							callback: undoCallback,
-						}]
-						this.success({message: 'The task was saved successfully.'}, this, actions)
-					}
-					this.dueDate = this.task.dueDate
-					this.setActiveFields()
-				})
-				.catch(e => {
-					this.error(e, this)
-				})
+				this.$store.dispatch('tasks/update', this.task)
+					.then(r => {
+						this.$set(this, 'task', r)
+						let actions = []
+						if (undoCallback !== null) {
+							actions = [{
+								title: 'Undo',
+								callback: undoCallback,
+							}]
+							this.success({message: 'The task was saved successfully.'}, this, actions)
+						}
+						this.setActiveFields()
+					})
+					.catch(e => {
+						this.error(e, this)
+					})
+			})
 		},
 		setFieldActive(fieldName) {
 			this.activeFields[fieldName] = true

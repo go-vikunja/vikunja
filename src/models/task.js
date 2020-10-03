@@ -142,6 +142,11 @@ export default class TaskModel extends AbstractModel {
 			return
 		}
 
+		if (typeof navigator.serviceWorker === 'undefined') {
+			console.debug('Service Worker not available')
+			return
+		}
+
 		const registration = await navigator.serviceWorker.getRegistration()
 		if (typeof registration === 'undefined') {
 			return
@@ -157,6 +162,10 @@ export default class TaskModel extends AbstractModel {
 	}
 
 	async scheduleNotification(date) {
+		if (typeof navigator.serviceWorker === 'undefined') {
+			console.debug('Service Worker not available')
+			return
+		}
 
 		if (date < new Date()) {
 			console.debug('Date is in the past, not scheduling a notification. Date is ', date)
