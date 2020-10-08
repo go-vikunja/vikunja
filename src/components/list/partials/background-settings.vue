@@ -42,7 +42,7 @@
 						@click="() => setBackground(im.id)"
 						class="image"
 						v-for="im in backgroundSearchResult">
-						<a :href="`https://unsplash.com/@${im.info.author}`" class="info">
+						<a :href="`https://unsplash.com/@${im.info.author}`" target="_blank" class="info">
 							{{ im.info.authorName }}
 						</a>
 					</a>
