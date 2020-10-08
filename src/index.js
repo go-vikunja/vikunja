@@ -1,4 +1,4 @@
-const { app, BrowserWindow, protocol, session } = require('electron')
+const { app, BrowserWindow, protocol, shell } = require('electron')
 const path = require('path')
 
 function createWindow () {
@@ -9,6 +9,11 @@ function createWindow () {
     webPreferences: {
       nodeIntegration: true
     }
+  })
+
+  win.webContents.on('new-window', function(e, url) {
+    e.preventDefault();
+    shell.openExternal(url);
   })
 
   // The starting point of the app
