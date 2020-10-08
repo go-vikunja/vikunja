@@ -10,11 +10,11 @@ actual frontend bundle and build the app:
 ```bash
 wget https://dl.vikunja.io/frontend/vikunja-frontend-master.zip
 unzip vikunja-frontend-master.zip -d frontend
-sed -i 's/\/fonts/\.\/fonts/g' frontend/index.html
-sed -i 's/\/js/\.\/js/g' frontend/index.html      
-sed -i 's/\/css/\.\/css/g' frontend/index.html    
-sed -i 's/\/images/\.\/images/g' frontend/index.html
-sed -i 's/\/images/\.\/images/g' frontend/js/*
+sed -i 's/\/fonts/file\:\/\/fonts/g' frontend/index.html
+sed -i 's/\/js/file\:\/\/js/g' frontend/index.html      
+sed -i 's/\/css/file\:\/\/css/g' frontend/index.html    
+sed -i 's/\/images/file\:\/\/images/g' frontend/index.html
+sed -i "s/\/'images/'file\:\/\/images/g" frontend/js/*
 ```
 
 ## Building for release
