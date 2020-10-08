@@ -392,6 +392,11 @@ export default {
 	},
 	created() {
 
+		// Make sure to always load the home route when running with electron
+		if(this.$route.fullPath.endsWith('frontend/index.html')) {
+			this.$router.push({name: 'home'})
+		}
+
 		// Service worker communication
 		document.addEventListener(swEvents.SW_UPDATED, this.showRefreshUI, {once: true})
 
