@@ -11,6 +11,7 @@ function createWindow() {
 		},
 	})
 
+	// Remove external links in the browser
 	win.webContents.on('new-window', function (e, url) {
 		e.preventDefault()
 		shell.openExternal(url)
