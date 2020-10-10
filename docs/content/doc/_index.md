@@ -17,9 +17,9 @@ To learn more about the what, why and how, take a look at [the features page](ht
 
 ## Start
 
-A good starting point if you want to install and host Vikunja on your server are [the install documentation](installing)
-and [available configuration options](config-options).
+A good starting point if you want to install and host Vikunja on your server are [the install documentation]({{< ref "./setup/install.md">}})
+and [available configuration options]({{< ref "./setup/config.md">}}).
 
 ## Developing
 
-If you want to start contributing to Vikunja, take a look at [the development docs](development).
+If you want to start contributing to Vikunja, take a look at [the development docs]({{< ref "./development/development.md">}}).
