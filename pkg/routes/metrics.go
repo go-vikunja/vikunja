@@ -33,10 +33,6 @@ func setupMetrics(a *echo.Group) {
 		return
 	}
 
-	if !config.RedisEnabled.GetBool() {
-		log.Fatal("You have to enable redis in order to use metrics")
-	}
-
 	metrics.InitMetrics()
 
 	type countable struct {

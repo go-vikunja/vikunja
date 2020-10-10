@@ -26,6 +26,10 @@ var r *redis.Client
 
 // InitRedis initializes a redis connection
 func InitRedis() {
+	if r != nil {
+		return
+	}
+
 	if !config.RedisEnabled.GetBool() {
 		return
 	}

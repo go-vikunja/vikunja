@@ -23,6 +23,8 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/background"
+	"code.vikunja.io/api/pkg/modules/keyvalue"
+	e "code.vikunja.io/api/pkg/modules/keyvalue/error"
 	"code.vikunja.io/web"
 	"encoding/json"
 	"net/http"
@@ -32,7 +34,10 @@ import (
 	"time"
 )
 
-const unsplashAPIURL = `https://api.unsplash.com/`
+const (
+	unsplashAPIURL = `https://api.unsplash.com/`
+	cachePrefix    = `unsplash_photo_`
+)
 
 // Provider represents an unsplash image provider
 type Provider struct {
@@ -72,10 +77,6 @@ type Photo struct {
 	} `json:"links"`
 }
 
-// Very simple caching method - pretty much only used to retain information when saving an image
-// FIXME: Should use a proper cache
-var photos map[string]*Photo
-
 // We're caching the initial collection to save a few api requests as this is retrieved every time a
 // user opens the settings page.
 type initialCollection struct {
@@ -86,10 +87,6 @@ type initialCollection struct {
 }
 
 var emptySearchResult *initialCollection
-
-func init() {
-	photos = make(map[string]*Photo)
-}
 
 func doGet(url string, result ...interface{}) (err error) {
 	req, err := http.NewRequest("GET", unsplashAPIURL+url, nil)
@@ -120,15 +117,21 @@ func getImageID(fullURL string) string {
 
 // Gets an unsplash photo either from cache or directly from the unsplash api
 func getUnsplashPhotoInfoByID(photoID string) (photo *Photo, err error) {
-	var exists bool
-	photo, exists = photos[photoID]
-	if !exists {
+
+	p, err := keyvalue.Get(cachePrefix + photoID)
+	if err != nil && !e.IsErrValueNotFoundForKey(err) {
+		return nil, err
+	}
+
+	if err != nil && e.IsErrValueNotFoundForKey(err) {
 		log.Debugf("Image information for unsplash photo %s not cached, requesting from unsplash...", photoID)
 		photo = &Photo{}
 		err = doGet("photos/"+photoID, photo)
 		if err != nil {
 			return
 		}
+	} else {
+		photo = p.(*Photo)
 	}
 	return
 }
@@ -180,7 +183,9 @@ func (p *Provider) Search(search string, page int64) (result []*background.Image
 					AuthorName: p.User.Name,
 				},
 			})
-			photos[p.ID] = p
+			if err := keyvalue.Put(cachePrefix+p.ID, p); err != nil {
+				return nil, err
+			}
 		}
 
 		// Put the collection in cache
@@ -213,7 +218,9 @@ func (p *Provider) Search(search string, page int64) (result []*background.Image
 				AuthorName: p.User.Name,
 			},
 		})
-		photos[p.ID] = p
+		if err := keyvalue.Put(cachePrefix+p.ID, p); err != nil {
+			return nil, err
+		}
 	}
 
 	return

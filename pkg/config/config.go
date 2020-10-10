@@ -124,6 +124,8 @@ const (
 	BackgroundsUnsplashEnabled       Key = `backgrounds.providers.unsplash.enabled`
 	BackgroundsUnsplashAccessToken   Key = `backgrounds.providers.unsplash.accesstoken`
 	BackgroundsUnsplashApplicationID Key = `backgrounds.providers.unsplash.applicationid`
+
+	KeyvalueType Key = `keyvalue.type`
 )
 
 // GetString returns a string config value
@@ -277,6 +279,8 @@ func InitDefaultConfig() {
 	BackgroundsEnabled.setDefault(true)
 	BackgroundsUploadEnabled.setDefault(true)
 	BackgroundsUnsplashEnabled.setDefault(false)
+	// Key Value
+	KeyvalueType.setDefault("memory")
 }
 
 // InitConfig initializes the config, sets defaults etc.
@@ -308,6 +312,14 @@ func InitConfig() {
 		log.Println(err.Error())
 		log.Println("Using default config.")
 		return
+	}
+
+	if CacheType.GetString() == "keyvalue" {
+		CacheType.Set(KeyvalueType.GetString())
+	}
+
+	if RateLimitStore.GetString() == "keyvalue" {
+		RateLimitStore.Set(KeyvalueType.GetString())
 	}
 
 	log.Printf("Using config file: %s", viper.ConfigFileUsed())

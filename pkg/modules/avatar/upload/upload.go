@@ -20,24 +20,15 @@ import (
 	"bytes"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/modules/keyvalue"
+	e "code.vikunja.io/api/pkg/modules/keyvalue/error"
 	"code.vikunja.io/api/pkg/user"
 	"github.com/disintegration/imaging"
 	"image"
 	"image/png"
 	"io/ioutil"
-	"sync"
+	"strconv"
 )
-
-var (
-	// This is a map with a map so we're able to clear all cached avatar (in all sizes) for one user at once
-	// The first map has as key the user id, the second one has the size as key
-	resizedCache     = map[int64]map[int64][]byte{}
-	resizedCacheLock = sync.Mutex{}
-)
-
-func init() {
-	resizedCache = make(map[int64]map[int64][]byte)
-}
 
 // Provider represents the upload avatar provider
 type Provider struct {
@@ -46,19 +37,32 @@ type Provider struct {
 // GetAvatar returns an uploaded user avatar
 func (p *Provider) GetAvatar(u *user.User, size int64) (avatar []byte, mimeType string, err error) {
 
-	a, cached := resizedCache[u.ID]
-	if cached {
+	cacheKey := "avatar_upload_" + strconv.Itoa(int(u.ID))
+
+	ai, err := keyvalue.Get(cacheKey)
+	if err != nil && !e.IsErrValueNotFoundForKey(err) {
+		return nil, "", err
+	}
+
+	var cached map[int64][]byte
+
+	if ai != nil {
+		cached = ai.(map[int64][]byte)
+	}
+
+	if err != nil && e.IsErrValueNotFoundForKey(err) {
+		// Nothing ever cached for this user so we need to create the size map to avoid panics
+		cached = make(map[int64][]byte)
+	} else {
+		a := ai.(map[int64][]byte)
 		if a != nil && a[size] != nil {
 			log.Debugf("Serving uploaded avatar for user %d and size %d from cache.", u.ID, size)
 			return a[size], "", nil
 		}
 		// This means we have a map for the user, but nothing in it.
 		if a == nil {
-			resizedCache[u.ID] = make(map[int64][]byte)
+			cached = make(map[int64][]byte)
 		}
-	} else {
-		// Nothing ever cached for this user so we need to create the size map to avoid panics
-		resizedCache[u.ID] = make(map[int64][]byte)
 	}
 
 	log.Debugf("Uploaded avatar for user %d and size %d not cached, resizing and caching.", u.ID, size)
@@ -84,15 +88,17 @@ func (p *Provider) GetAvatar(u *user.User, size int64) (avatar []byte, mimeType 
 	}
 
 	avatar, err = ioutil.ReadAll(buf)
-	resizedCacheLock.Lock()
-	resizedCache[u.ID][size] = avatar
-	resizedCacheLock.Unlock()
+	if err != nil {
+		return nil, "", err
+	}
+	cached[size] = avatar
+	err = keyvalue.Put(cacheKey, cached)
 	return avatar, f.Mime, err
 }
 
 // InvalidateCache invalidates the avatar cache for a user
 func InvalidateCache(u *user.User) {
-	resizedCacheLock.Lock()
-	delete(resizedCache, u.ID)
-	resizedCacheLock.Unlock()
+	if err := keyvalue.Del("avatar_upload_" + strconv.Itoa(int(u.ID))); err != nil {
+		log.Errorf("Could not invalidate upload avatar cache for user %d, error was %s", u.ID, err)
+	}
 }

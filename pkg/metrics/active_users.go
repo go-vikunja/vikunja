@@ -17,10 +17,9 @@
 package metrics
 
 import (
-	"bytes"
 	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/web"
-	"encoding/gob"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"sync"
@@ -91,36 +90,19 @@ func SetUserActive(a web.Auth) (err error) {
 
 // getActiveUsers returns the active users from redis
 func getActiveUsers() (users activeUsersMap, err error) {
-
-	activeUsersR, err := r.Get(ActiveUsersKey).Bytes()
-	if err != nil {
-		if err.Error() == "redis: nil" {
-			return users, nil
-		}
-		return
-	}
-
-	var b bytes.Buffer
-	_, err = b.Write(activeUsersR)
+	u, err := keyvalue.Get(ActiveUsersKey)
 	if err != nil {
 		return nil, err
 	}
-	d := gob.NewDecoder(&b)
-	if err := d.Decode(&users); err != nil {
-		return nil, err
-	}
+
+	users = u.(activeUsersMap)
 	return
 }
 
 // PushActiveUsers pushed the content of the activeUsers map to redis
 func PushActiveUsers() (err error) {
-	var b bytes.Buffer
-	e := gob.NewEncoder(&b)
 	activeUsers.mutex.Lock()
 	defer activeUsers.mutex.Unlock()
-	if err := e.Encode(activeUsers.users); err != nil {
-		return err
-	}
 
-	return r.Set(ActiveUsersKey, b.Bytes(), 0).Err()
+	return keyvalue.Put(ActiveUsersKey, activeUsers.users)
 }

@@ -61,8 +61,10 @@ database:
 cache:
   # If cache is enabled or not
   enabled: false
-  # Cache type. Possible values are memory or redis, you'll need to enable redis below when using redis
-  type: memory
+  # Cache type. Possible values are "keyvalue", "memory" or "redis".
+  # When choosing "keyvalue" this setting follows the one configured in the "keyvalue" section.
+  # When choosing "redis" you will need to configure the redis connection seperately.
+  type: keyvalue
   # When using memory this defines the maximum size an element can take
   maxelementsize: 1000
 
@@ -136,8 +138,10 @@ ratelimit:
   period: 60
   # The max number of requests a user is allowed to do in the configured time period
   limit: 100
-  # The store where the limit counter for each user is stored. Possible values are "memory" or "redis"
-  store: memory
+  # The store where the limit counter for each user is stored.
+  # Possible values are "keyvalue", "memory" or "redis".
+  # When choosing "keyvalue" this setting follows the one configured in the "keyvalue" section.
+  store: keyvalue
 
 files:
   # The path where files are stored
@@ -205,3 +209,9 @@ backgrounds:
 legal:
   imprinturl:
   privacyurl:
+
+# Key Value Storage settings
+# The Key Value Storage is used for different kinds of things like metrics and a few cache systems.
+keyvalue:
+  # The type of the storage backend. Can be either "memory" or "redis". If "redis" is chosen it needs to be configured seperately.
+  type: "memory"

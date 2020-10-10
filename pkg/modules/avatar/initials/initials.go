@@ -17,14 +17,12 @@
 package initials
 
 import (
+	"bytes"
 	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/modules/keyvalue"
+	e "code.vikunja.io/api/pkg/modules/keyvalue/error"
 	"code.vikunja.io/api/pkg/user"
 	"github.com/disintegration/imaging"
-	"strconv"
-	"strings"
-	"sync"
-
-	"bytes"
 	"github.com/golang/freetype/truetype"
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/gofont/goregular"
@@ -33,6 +31,8 @@ import (
 	"image/color"
 	"image/draw"
 	"image/png"
+	"strconv"
+	"strings"
 )
 
 // Provider represents the provider implementation of the initials provider
@@ -51,18 +51,7 @@ var (
 		{121, 134, 203, 255},
 		{241, 185, 29, 255},
 	}
-
-	// Contain the created avatars with a size of defaultSize
-	cache            = map[int64]*image.RGBA64{}
-	cacheLock        = sync.Mutex{}
-	cacheResized     = map[string][]byte{}
-	cacheResizedLock = sync.Mutex{}
 )
-
-func init() {
-	cache = make(map[int64]*image.RGBA64)
-	cacheResized = make(map[string][]byte)
-}
 
 const (
 	dpi         = 72
@@ -124,10 +113,26 @@ func drawImage(text rune, bg *color.RGBA) (img *image.RGBA64, err error) {
 	return img, err
 }
 
+func getCacheKey(prefix string, keys ...int64) string {
+	result := "avatar_initials_" + prefix
+	for i, key := range keys {
+		result += strconv.Itoa(int(key))
+		if i < len(keys) {
+			result += "_"
+		}
+	}
+	return result
+}
+
 func getAvatarForUser(u *user.User) (fullSizeAvatar *image.RGBA64, err error) {
-	var cached bool
-	fullSizeAvatar, cached = cache[u.ID]
-	if !cached {
+	cacheKey := getCacheKey("full", u.ID)
+
+	a, err := keyvalue.Get(cacheKey)
+	if err != nil && !e.IsErrValueNotFoundForKey(err) {
+		return nil, err
+	}
+
+	if err != nil && e.IsErrValueNotFoundForKey(err) {
 		log.Debugf("Initials avatar for user %d not cached, creating...", u.ID)
 		firstRune := []rune(strings.ToUpper(u.Username))[0]
 		bg := avatarBgColors[int(u.ID)%len(avatarBgColors)] // Random color based on the user id
@@ -136,21 +141,27 @@ func getAvatarForUser(u *user.User) (fullSizeAvatar *image.RGBA64, err error) {
 		if err != nil {
 			return nil, err
 		}
-		cacheLock.Lock()
-		cache[u.ID] = fullSizeAvatar
-		cacheLock.Unlock()
+		err = keyvalue.Put(cacheKey, fullSizeAvatar)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		fullSizeAvatar = a.(*image.RGBA64)
 	}
 
-	return fullSizeAvatar, err
+	return fullSizeAvatar, nil
 }
 
 // GetAvatar returns an initials avatar for a user
 func (p *Provider) GetAvatar(u *user.User, size int64) (avatar []byte, mimeType string, err error) {
+	cacheKey := getCacheKey("resized", u.ID, size)
 
-	var cached bool
-	cacheKey := strconv.Itoa(int(u.ID)) + "_" + strconv.Itoa(int(size))
-	avatar, cached = cacheResized[cacheKey]
-	if !cached {
+	a, err := keyvalue.Get(cacheKey)
+	if err != nil && !e.IsErrValueNotFoundForKey(err) {
+		return nil, "", err
+	}
+
+	if err != nil && e.IsErrValueNotFoundForKey(err) {
 		log.Debugf("Initials avatar for user %d and size %d not cached, creating...", u.ID, size)
 		fullAvatar, err := getAvatarForUser(u)
 		if err != nil {
@@ -164,12 +175,14 @@ func (p *Provider) GetAvatar(u *user.User, size int64) (avatar []byte, mimeType 
 			return nil, "", err
 		}
 		avatar = buf.Bytes()
-		cacheResizedLock.Lock()
-		cacheResized[cacheKey] = avatar
-		cacheResizedLock.Unlock()
+		err = keyvalue.Put(cacheKey, avatar)
+		if err != nil {
+			return nil, "", err
+		}
 	} else {
+		avatar = a.([]byte)
 		log.Debugf("Serving initials avatar for user %d and size %d from cache", u.ID, size)
 	}
 
-	return avatar, "image/png", err
+	return avatar, "image/png", nil
 }

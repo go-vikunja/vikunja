@@ -23,6 +23,7 @@ import (
 	"code.vikunja.io/api/pkg/mail"
 	"code.vikunja.io/api/pkg/migration"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/modules/keyvalue"
 	migrator "code.vikunja.io/api/pkg/modules/migration"
 	"code.vikunja.io/api/pkg/red"
 	"code.vikunja.io/api/pkg/user"
@@ -35,6 +36,9 @@ func LightInit() {
 
 	// Init redis
 	red.InitRedis()
+
+	// Init keyvalue store
+	keyvalue.InitStorage()
 
 	// Set logger
 	log.InitLogger()

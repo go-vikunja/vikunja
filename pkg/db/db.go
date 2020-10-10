@@ -90,7 +90,7 @@ func CreateDBEngine() (engine *xorm.Engine, err error) {
 			cacher := caches.NewLRUCacher(caches.NewMemoryStore(), config.CacheMaxElementSize.GetInt())
 			engine.SetDefaultCacher(cacher)
 		case "redis":
-			cacher := xrc.NewRedisCacher(config.RedisEnabled.GetString(), config.RedisPassword.GetString(), xrc.DEFAULT_EXPIRATION, engine.Logger())
+			cacher := xrc.NewRedisCacher(config.RedisHost.GetString(), config.RedisPassword.GetString(), xrc.DEFAULT_EXPIRATION, engine.Logger())
 			engine.SetDefaultCacher(cacher)
 		default:
 			log.Info("Did not find a valid cache type. Caching disabled. Please refer to the docs for poosible cache types.")

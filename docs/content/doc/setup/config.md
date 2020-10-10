@@ -104,8 +104,10 @@ database:
 cache:
   # If cache is enabled or not
   enabled: false
-  # Cache type. Possible values are memory or redis, you'll need to enable redis below when using redis
-  type: memory
+  # Cache type. Possible values are "keyvalue", "memory" or "redis".
+  # When choosing "keyvalue" this setting follows the one configured in the "keyvalue" section.
+  # When choosing "redis" you will need to configure the redis connection seperately.
+  type: keyvalue
   # When using memory this defines the maximum size an element can take
   maxelementsize: 1000
 
@@ -169,7 +171,7 @@ log:
   http: "stdout"
   # Echo has its own logging which usually is unnessecary, which is why it is disabled by default. Possible values are stdout, stderr, file or off to disable standard logging.
   echo: "off"
-  
+
 ratelimit:
   # whether or not to enable the rate limit
   enabled: false
@@ -179,8 +181,10 @@ ratelimit:
   period: 60
   # The max number of requests a user is allowed to do in the configured time period
   limit: 100
-  # The store where the limit counter for each user is stored. Possible values are "memory" or "redis"
-  store: memory
+  # The store where the limit counter for each user is stored.
+  # Possible values are "keyvalue", "memory" or "redis".
+  # When choosing "keyvalue" this setting follows the one configured in the "keyvalue" section.
+  store: keyvalue
 
 files:
   # The path where files are stored
@@ -234,7 +238,7 @@ backgrounds:
     unsplash:
       # Whether to enable setting backgrounds from unsplash as list backgrounds
       enabled: false
-      # You need to create an application for your installation at https://unsplash.com/oauth/applications/new 
+      # You need to create an application for your installation at https://unsplash.com/oauth/applications/new
       # and set the access token below.
       accesstoken:
       # The unsplash application id is only used for pingback and required as per their api guidelines.
@@ -246,6 +250,12 @@ backgrounds:
 # Legal urls
 # Will be shown in the frontend if configured here
 legal:
-  imprinturl: 
-  privacyurl: 
+  imprinturl:
+  privacyurl:
+
+# Key Value Storage settings
+# The Key Value Storage is used for different kinds of things like metrics and a few cache systems.
+keyvalue:
+  # The type of the storage backend. Can be either "memory" or "redis". If "redis" is chosen it needs to be configured seperately.
+  type: "memory"
 {{< /highlight >}}

@@ -19,13 +19,11 @@ package metrics
 import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
-	"code.vikunja.io/api/pkg/red"
-	"github.com/go-redis/redis/v7"
+	"code.vikunja.io/api/pkg/modules/keyvalue"
+	e "code.vikunja.io/api/pkg/modules/keyvalue/error"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 )
-
-var r *redis.Client
 
 const (
 	// ListCountKey is the name of the key in which we save the list count
@@ -46,8 +44,6 @@ const (
 
 // InitMetrics Initializes the metrics
 func InitMetrics() {
-	r = red.GetRedis()
-
 	// init active users, sometimes we'll have garbage from previous runs in redis instead
 	if err := PushActiveUsers(); err != nil {
 		log.Fatalf("Could not set initial count for active users, error was %s", err)
@@ -101,18 +97,21 @@ func InitMetrics() {
 
 // GetCount returns the current count from redis
 func GetCount(key string) (count int64, err error) {
-	count, err = r.Get(key).Int64()
-	if err != nil && err.Error() != "redis: nil" {
-		return
+	cnt, err := keyvalue.Get(key)
+	if err != nil {
+		if e.IsErrValueNotFoundForKey(err) {
+			return 0, nil
+		}
+		return 0, err
 	}
-	err = nil
+	count = cnt.(int64)
 
 	return
 }
 
 // SetCount sets the list count to a given value
 func SetCount(count int64, key string) error {
-	return r.Set(key, count, 0).Err()
+	return keyvalue.Put(key, count)
 }
 
 // UpdateCount updates a count with a given amount
@@ -121,13 +120,13 @@ func UpdateCount(update int64, key string) {
 		return
 	}
 	if update > 0 {
-		err := r.IncrBy(key, update).Err()
+		err := keyvalue.IncrBy(key, update)
 		if err != nil {
 			log.Error(err.Error())
 		}
 	}
 	if update < 0 {
-		err := r.DecrBy(key, update).Err()
+		err := keyvalue.DecrBy(key, update)
 		if err != nil {
 			log.Error(err.Error())
 		}
