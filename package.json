@@ -1,49 +1,57 @@
 {
   "name": "vikunja-desktop",
   "version": "0.14.0",
-  "description": "Vikunja's frontend, repackaged as an electron app!",
+  "description": "Vikunja's frontend as a standalone desktop application.",
   "main": "src/index.js",
   "repository": "https://code.vikunja.io/desktop",
   "license": "GPLv3",
+  "author": {
+    "email": "maintainers@vikunja.io",
+    "name": "Vikunja Team"
+  },
+  "homepage": "https://vikunja.io",
   "scripts": {
     "start": "electron-forge start",
-    "package": "electron-forge package",
-    "make": "electron-forge make",
-    "publish": "electron-forge publish"
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
   },
-  "config": {
-    "forge": {
-      "packagerConfig": {},
-      "makers": [
-        {
-          "name": "@electron-forge/maker-squirrel",
-          "config": {
-            "name": "desktop"
-          }
-        },
-        {
-          "name": "@electron-forge/maker-zip",
-          "platforms": [
-            "darwin"
-          ]
-        },
-        {
-          "name": "@electron-forge/maker-deb",
-          "config": {}
-        },
-        {
-          "name": "@electron-forge/maker-rpm",
-          "config": {}
-        }
+  "build": {
+    "appId": "io.vikunja.desktop",
+    "productName": "Vikunja Desktop",
+    "linux": {
+      "target": [
+        "deb",
+        "AppImage",
+        "snap",
+        "pacman",
+        "apk",
+        "freebsd",
+        "rpm",
+        "zip",
+        "tar.gz"
+      ],
+      "category": "Productivity"
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "nsis-web",
+        "portable",
+        "msi",
+        "zip"
+      ]
+    },
+    "mac": {
+      "category": "public.app-category.productivity",
+      "target": [
+        "dmg",
+        "zip"
       ]
     }
   },
   "devDependencies": {
     "@electron-forge/cli": "6.0.0-beta.52",
-    "@electron-forge/maker-deb": "6.0.0-beta.52",
-    "@electron-forge/maker-rpm": "6.0.0-beta.52",
-    "@electron-forge/maker-squirrel": "6.0.0-beta.52",
-    "@electron-forge/maker-zip": "6.0.0-beta.52",
-    "electron": "9.1.0"
+    "electron": "9.1.0",
+    "electron-builder": "^22.8.1"
   }
 }
