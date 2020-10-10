@@ -16,6 +16,9 @@ function createWindow() {
 		shell.openExternal(url)
 	})
 
+	// Hide the toolbar
+	win.setMenuBarVisibility(false)
+
 	// The starting point of the app
 	win.loadFile('./frontend/index.html')
 }
