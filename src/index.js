@@ -1,6 +1,8 @@
 const {app, BrowserWindow, protocol, shell} = require('electron')
 const path = require('path')
 
+const frontendAssetsPath = 'frontend/'
+
 function createWindow() {
 	// Create the browser window.
 	const win = new BrowserWindow({
@@ -20,8 +22,10 @@ function createWindow() {
 	// Hide the toolbar
 	win.setMenuBarVisibility(false)
 
+	const p = path.normalize(`${__dirname}/../${frontendAssetsPath}index.html`)
+
 	// The starting point of the app
-	win.loadFile('./frontend/index.html')
+	win.loadFile(p)
 }
 
 // This method will be called when Electron has finished
@@ -37,7 +41,7 @@ app.whenReady().then(() => {
 			if (url.startsWith('css/fonts') || url.startsWith('css/img')) {
 				url = url.substr(4)
 			}
-			url = path.normalize(`${root}/frontend/${url}`)
+			url = path.normalize(`${root}/${frontendAssetsPath}${url}`)
 		}
 		callback({path: url})
 	})
