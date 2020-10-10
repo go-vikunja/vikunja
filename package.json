@@ -18,6 +18,11 @@
   "build": {
     "appId": "io.vikunja.desktop",
     "productName": "Vikunja Desktop",
+    "files": [
+      "./frontend/",
+      "./src/index.js"
+    ],
+    "asar": false,
     "linux": {
       "target": [
         "deb",
@@ -35,7 +40,6 @@
     "win": {
       "target": [
         "nsis",
-        "nsis-web",
         "portable",
         "msi",
         "zip"
