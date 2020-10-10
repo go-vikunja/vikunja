@@ -19,10 +19,9 @@
     "appId": "io.vikunja.desktop",
     "productName": "Vikunja Desktop",
     "files": [
-      "./frontend/",
+      "./frontend/**/*",
       "./src/index.js"
     ],
-    "asar": false,
     "linux": {
       "target": [
         "deb",
@@ -55,6 +54,7 @@
   },
   "devDependencies": {
     "@electron-forge/cli": "6.0.0-beta.52",
+    "asar": "^3.0.3",
     "electron": "9.1.0",
     "electron-builder": "^22.8.1"
   }
