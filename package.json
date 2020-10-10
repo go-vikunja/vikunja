@@ -4,7 +4,7 @@
   "description": "Vikunja's frontend as a standalone desktop application.",
   "main": "src/index.js",
   "repository": "https://code.vikunja.io/desktop",
-  "license": "GPLv3",
+  "license": "GPL-3.0-or-later",
   "author": {
     "email": "maintainers@vikunja.io",
     "name": "Vikunja Team"
