@@ -158,7 +158,6 @@
 						</a>
 
 						<aside class="menu namespaces-lists">
-							<div :class="{ 'is-loading': namespaceService.loading}" class="spinner"></div>
 							<template v-for="n in namespaces">
 								<div :key="n.id">
 									<router-link
@@ -320,7 +319,6 @@
 import router from './router'
 import {mapState} from 'vuex'
 
-import NamespaceService from './services/namespace'
 import authTypes from './models/authTypes'
 import Rights from './models/rights.json'
 
@@ -337,7 +335,6 @@ export default {
 	},
 	data() {
 		return {
-			namespaceService: NamespaceService,
 			menuActive: true,
 			currentDate: new Date(),
 			userMenuActive: false,

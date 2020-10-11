@@ -1,5 +1,5 @@
 import {CONFIG} from '../mutation-types'
-import {HTTP} from '@/http-common'
+import {HTTPFactory} from '@/http-common'
 
 export default {
 	namespaced: true,
@@ -40,10 +40,14 @@ export default {
 	},
 	actions: {
 		update(ctx) {
-			HTTP.get('info')
+			const HTTP = HTTPFactory()
+
+			return HTTP.get('info')
 				.then(r => {
 					ctx.commit(CONFIG, r.data)
+					return Promise.resolve(r)
 				})
+				.catch(e => Promise.reject(e))
 		},
 	},
 }

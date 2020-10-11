@@ -76,6 +76,10 @@
   }
 }
 
+.field.has-addons .button {
+  height: 2.5rem;
+}
+
 .input,
 .textarea {
   transition: all $transition;

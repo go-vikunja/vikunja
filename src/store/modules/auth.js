@@ -1,4 +1,4 @@
-import {HTTP} from '@/http-common'
+import {HTTPFactory} from '@/http-common'
 import {ERROR_MESSAGE, LOADING} from '../mutation-types'
 import UserModel from '../../models/user'
 
@@ -32,6 +32,7 @@ export default {
 	actions: {
 		// Logs a user in with a set of credentials.
 		login(ctx, credentials) {
+			const HTTP = HTTPFactory()
 			ctx.commit(LOADING, true, {root: true})
 
 			// Delete an eventually preexisting old token
@@ -78,6 +79,7 @@ export default {
 		// Registers a new user and logs them in.
 		// Not sure if this is the right place to put the logic in, maybe a seperate js component would be better suited.
 		register(ctx, credentials) {
+			const HTTP = HTTPFactory()
 			return HTTP.post('register', {
 				username: credentials.username,
 				email: credentials.email,
@@ -98,6 +100,7 @@ export default {
 		},
 
 		linkShareAuth(ctx, hash) {
+			const HTTP = HTTPFactory()
 			return HTTP.post('/shares/' + hash + '/auth')
 				.then(r => {
 					localStorage.setItem('token', r.data.token)
@@ -128,6 +131,7 @@ export default {
 		},
 		// Renews the api token and saves it to local storage
 		renewToken(ctx) {
+			const HTTP = HTTPFactory()
 			if (!ctx.state.authenticated) {
 				return
 			}

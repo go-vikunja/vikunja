@@ -5,6 +5,7 @@
 			<div class="notification is-success has-text-centered" v-if="confirmedEmailSuccess">
 				You successfully confirmed your email! You can log in now.
 			</div>
+			<api-config/>
 			<form @submit.prevent="submit" id="loginform">
 				<div class="field">
 					<label class="label" for="username">Username</label>
@@ -76,13 +77,15 @@
 import {mapState} from 'vuex'
 
 import router from '../../router'
-import {HTTP} from '@/http-common'
+import {HTTPFactory} from '@/http-common'
 import message from '../../message'
 import {ERROR_MESSAGE, LOADING} from '@/store/mutation-types'
 import legal from '../../components/misc/legal'
+import ApiConfig from '@/components/misc/api-config'
 
 export default {
 	components: {
+		ApiConfig,
 		legal,
 	},
 	data() {
@@ -91,6 +94,7 @@ export default {
 		}
 	},
 	beforeMount() {
+		const HTTP = HTTPFactory()
 		// Try to verify the email
 		// FIXME: Why is this here? Can we find a better place for this?
 		let emailVerifyToken = localStorage.getItem('emailConfirmToken')
