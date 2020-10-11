@@ -1,0 +1,47 @@
+kind: pipeline
+name: release-latest
+
+trigger:
+  branch:
+    - master
+  event:
+    - push
+
+steps:
+  - name: fetch-tags
+    image: docker:git
+    commands:
+      - git fetch --tags
+
+  - name: build
+    image: electronuserland/builder:wine
+    pull: true
+    commands:
+      # TODO: Move to a yarn script
+      - wget https://dl.vikunja.io/frontend/vikunja-frontend-master.zip
+      - unzip vikunja-frontend-master.zip -d frontend
+      - sed -i 's/\/fonts/file\:\/\/fonts/g' frontend/index.html
+      - sed -i 's/\/js/file\:\/\/js/g' frontend/index.html
+      - sed -i 's/\/css/file\:\/\/css/g' frontend/index.html
+      - sed -i 's/\/images/file\:\/\/images/g' frontend/index.html
+      - sed -i "s/\/'images/'file\:\/\/images/g" frontend/js/*
+      - yarn install
+      - export BUILD_NUMBER=master
+      - yarn dist --linux --windows
+
+  - name: release
+    image: plugins/s3:1
+    pull: true
+    settings:
+      bucket: vikunja-releases
+      access_key:
+        from_secret: aws_access_key_id
+      secret_key:
+        from_secret: aws_secret_access_key
+      endpoint: https://s3.fr-par.scw.cloud
+      region: fr-par
+      path_style: true
+      strip_prefix: dist/
+      source: dist/*
+      target: /desktop/master/
+    depends_on: [ static ]
