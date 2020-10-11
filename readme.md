@@ -1,5 +1,7 @@
 # Vikunja desktop
 
+[![Build Status](https://drone.kolaente.de/api/badges/vikunja/desktop/status.svg)](https://drone.kolaente.de/vikunja/desktop)
+
 The Vikunja frontend all repackaged as an electron app to run as a desktop app!
 
 ## Dev
