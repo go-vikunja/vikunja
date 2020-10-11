@@ -18,6 +18,7 @@ package migration
 
 import (
 	"math"
+
 	"src.techknowlogick.com/xormigrate"
 	"xorm.io/xorm"
 )

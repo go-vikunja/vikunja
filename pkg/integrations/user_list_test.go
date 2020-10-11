@@ -17,10 +17,11 @@
 package integrations
 
 import (
-	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"testing"
+
+	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestUserList(t *testing.T) {

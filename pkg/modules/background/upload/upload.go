@@ -17,11 +17,12 @@
 package upload
 
 import (
+	"strconv"
+
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/background"
 	"code.vikunja.io/web"
-	"strconv"
 )
 
 // Provider represents an upload provider

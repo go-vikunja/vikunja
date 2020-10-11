@@ -17,10 +17,11 @@
 package models
 
 import (
+	"time"
+
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
-	"time"
 	"xorm.io/xorm"
 )
 

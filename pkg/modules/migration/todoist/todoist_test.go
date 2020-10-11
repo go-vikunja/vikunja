@@ -17,15 +17,16 @@
 package todoist
 
 import (
+	"io/ioutil"
+	"strconv"
+	"testing"
+	"time"
+
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/models"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/d4l3k/messagediff.v1"
-	"io/ioutil"
-	"strconv"
-	"testing"
-	"time"
 )
 
 func TestConvertTodoistToVikunja(t *testing.T) {
@@ -43,7 +44,6 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 	dueTime = dueTime.In(config.GetTimeZone())
 	nilTime, err := time.Parse(time.RFC3339Nano, "0001-01-01T00:00:00Z")
 	assert.NoError(t, err)
-	//nilTime = nilTime.In(config.GetTimeZone())
 	exampleFile, err := ioutil.ReadFile(config.ServiceRootpath.GetString() + "/pkg/modules/migration/wunderlist/testimage.jpg")
 	assert.NoError(t, err)
 

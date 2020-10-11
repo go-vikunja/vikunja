@@ -17,13 +17,14 @@
 package log
 
 import (
-	"code.vikunja.io/api/pkg/config"
-	"github.com/op/go-logging"
-	"github.com/spf13/viper"
 	"io"
 	"os"
 	"strings"
 	"time"
+
+	"code.vikunja.io/api/pkg/config"
+	"github.com/op/go-logging"
+	"github.com/spf13/viper"
 )
 
 // ErrFmt holds the format for all the console logging
@@ -105,7 +106,6 @@ func GetLogger() *logging.Logger {
 	return logInstance
 }
 
-/////
 // The following functions are to be used as an "eye-candy", so one can just write log.Error() instead of log.Log.Error()
 
 // Debug is for debug messages

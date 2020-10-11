@@ -17,10 +17,11 @@
 package log
 
 import (
-	"code.vikunja.io/api/pkg/config"
-	"github.com/op/go-logging"
 	"strings"
 	"time"
+
+	"code.vikunja.io/api/pkg/config"
+	"github.com/op/go-logging"
 	"xorm.io/xorm/log"
 )
 

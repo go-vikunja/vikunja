@@ -18,9 +18,10 @@
 package models
 
 import (
+	"time"
+
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
-	"time"
 )
 
 // RelationKind represents a kind of relation between to tasks
@@ -174,6 +175,8 @@ func (rel *TaskRelation) Create(a web.Auth) error {
 		otherRelation.RelationKind = RelationKindCopiedTo
 	case RelationKindCopiedTo:
 		otherRelation.RelationKind = RelationKindCopiedFrom
+	case RelationKindUnknown:
+		// Nothing to do
 	}
 
 	// Finally insert everything

@@ -17,14 +17,15 @@
 package models
 
 import (
-	"code.vikunja.io/api/pkg/db"
-	"code.vikunja.io/api/pkg/user"
-	"code.vikunja.io/web"
-	"github.com/stretchr/testify/assert"
 	"reflect"
 	"runtime"
 	"testing"
 	"time"
+
+	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/user"
+	"code.vikunja.io/web"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestTeamList_ReadAll(t *testing.T) {

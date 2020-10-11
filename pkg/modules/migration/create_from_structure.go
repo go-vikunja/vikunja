@@ -18,10 +18,11 @@ package migration
 
 import (
 	"bytes"
+	"io/ioutil"
+
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
-	"io/ioutil"
 )
 
 // InsertFromStructure takes a fully nested Vikunja data structure and a user and then creates everything for this user

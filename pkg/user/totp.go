@@ -17,10 +17,11 @@
 package user
 
 import (
+	"image"
+
 	"code.vikunja.io/api/pkg/config"
 	"github.com/pquerna/otp"
 	"github.com/pquerna/otp/totp"
-	"image"
 )
 
 // TOTP holds a user's totp setting in the database.
@@ -35,7 +36,7 @@ type TOTP struct {
 }
 
 // TableName holds the table name for totp secrets
-func (T *TOTP) TableName() string {
+func (t *TOTP) TableName() string {
 	return "totp"
 }
 

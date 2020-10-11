@@ -17,11 +17,12 @@
 package models
 
 import (
+	"testing"
+
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/user"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestListDuplicate(t *testing.T) {

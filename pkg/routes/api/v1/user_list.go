@@ -17,12 +17,13 @@
 package v1
 
 import (
+	"net/http"
+	"strconv"
+
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web/handler"
 	"github.com/labstack/echo/v4"
-	"net/http"
-	"strconv"
 )
 
 // UserList gets all information about a user

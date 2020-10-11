@@ -17,11 +17,12 @@
 package v1
 
 import (
+	"net/http"
+
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web/handler"
 	"github.com/labstack/echo/v4"
-	"net/http"
 )
 
 // UserResetPassword is the handler to change a users password
@@ -47,7 +48,7 @@ func UserResetPassword(c echo.Context) error {
 		return handler.HandleHTTPError(err, c)
 	}
 
-	return c.JSON(http.StatusOK, models.Message{"The password was updated successfully."})
+	return c.JSON(http.StatusOK, models.Message{Message: "The password was updated successfully."})
 }
 
 // UserRequestResetPasswordToken is the handler to change a users password
@@ -77,5 +78,5 @@ func UserRequestResetPasswordToken(c echo.Context) error {
 		return handler.HandleHTTPError(err, c)
 	}
 
-	return c.JSON(http.StatusOK, models.Message{"Token was sent."})
+	return c.JSON(http.StatusOK, models.Message{Message: "Token was sent."})
 }

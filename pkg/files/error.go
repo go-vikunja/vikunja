@@ -29,7 +29,7 @@ func (err ErrFileDoesNotExist) Error() string {
 	return fmt.Sprintf("file %d does not exist", err.FileID)
 }
 
-//IsErrFileDoesNotExist checks if an error is ErrFileDoesNotExist
+// IsErrFileDoesNotExist checks if an error is ErrFileDoesNotExist
 func IsErrFileDoesNotExist(err error) bool {
 	_, ok := err.(ErrFileDoesNotExist)
 	return ok
@@ -45,7 +45,7 @@ func (err ErrFileIsTooLarge) Error() string {
 	return fmt.Sprintf("file is too large [Size: %d]", err.Size)
 }
 
-//IsErrFileIsTooLarge checks if an error is ErrFileIsTooLarge
+// IsErrFileIsTooLarge checks if an error is ErrFileIsTooLarge
 func IsErrFileIsTooLarge(err error) bool {
 	_, ok := err.(ErrFileIsTooLarge)
 	return ok
@@ -62,7 +62,7 @@ func (err ErrFileIsNotUnsplashFile) Error() string {
 	return fmt.Sprintf("file was not downloaded from unsplash [FileID: %d]", err.FileID)
 }
 
-//IsErrFileIsNotUnsplashFile checks if an error is ErrFileIsNotUnsplashFile
+// IsErrFileIsNotUnsplashFile checks if an error is ErrFileIsNotUnsplashFile
 func IsErrFileIsNotUnsplashFile(err error) bool {
 	_, ok := err.(ErrFileIsNotUnsplashFile)
 	return ok

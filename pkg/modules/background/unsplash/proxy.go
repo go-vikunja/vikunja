@@ -17,18 +17,25 @@
 package unsplash
 
 import (
-	"code.vikunja.io/web/handler"
-	"github.com/labstack/echo/v4"
+	"context"
 	"net/http"
 	"strings"
+
+	"code.vikunja.io/web/handler"
+	"github.com/labstack/echo/v4"
 )
 
 func unsplashImage(url string, c echo.Context) error {
 	// Replacing and appending the url for security reasons
-	resp, err := http.Get("https://images.unsplash.com/" + strings.Replace(url, "https://images.unsplash.com/", "", 1))
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "https://images.unsplash.com/"+strings.Replace(url, "https://images.unsplash.com/", "", 1), nil)
 	if err != nil {
 		return err
 	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
 	if resp.StatusCode > 399 {
 		return echo.ErrNotFound
 	}

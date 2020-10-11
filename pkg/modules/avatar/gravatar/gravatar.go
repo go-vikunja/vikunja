@@ -17,14 +17,16 @@
 package gravatar
 
 import (
-	"code.vikunja.io/api/pkg/config"
-	"code.vikunja.io/api/pkg/log"
-	"code.vikunja.io/api/pkg/user"
-	"code.vikunja.io/api/pkg/utils"
+	"context"
 	"io/ioutil"
 	"net/http"
 	"strconv"
 	"time"
+
+	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/user"
+	"code.vikunja.io/api/pkg/utils"
 )
 
 type avatar struct {
@@ -62,10 +64,15 @@ func (g *Provider) GetAvatar(user *user.User, size int64) ([]byte, string, error
 	}
 	if !exists || needsRefetch {
 		log.Debugf("Gravatar for user %d with size %d not cached, requesting from gravatar...", user.ID, size)
-		resp, err := http.Get("https://www.gravatar.com/avatar/" + utils.Md5String(user.Email) + "?s=" + sizeString + "&d=mp")
+		req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "https://www.gravatar.com/avatar/"+utils.Md5String(user.Email)+"?s="+sizeString+"&d=mp", nil)
 		if err != nil {
 			return nil, "", err
 		}
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			return nil, "", err
+		}
+		defer resp.Body.Close()
 		avatarContent, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
 			return nil, "", err

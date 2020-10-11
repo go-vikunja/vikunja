@@ -18,15 +18,16 @@
 package models
 
 import (
+	"io"
+	"os"
+	"strconv"
+	"testing"
+
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/user"
 	"github.com/stretchr/testify/assert"
-	"io"
-	"os"
-	"strconv"
-	"testing"
 )
 
 func TestTaskAttachment_ReadOne(t *testing.T) {

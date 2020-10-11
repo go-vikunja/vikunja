@@ -17,12 +17,13 @@
 package migration
 
 import (
+	"os"
+	"testing"
+
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
-	"os"
-	"testing"
 )
 
 // TestMain is the main test function used to bootstrap the test env

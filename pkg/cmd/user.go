@@ -18,17 +18,18 @@
 package cmd
 
 import (
-	"code.vikunja.io/api/pkg/initialize"
-	"code.vikunja.io/api/pkg/log"
-	"code.vikunja.io/api/pkg/user"
 	"fmt"
-	"github.com/olekukonko/tablewriter"
-	"github.com/spf13/cobra"
-	"golang.org/x/crypto/ssh/terminal"
 	"os"
 	"strconv"
 	"strings"
 	"time"
+
+	"code.vikunja.io/api/pkg/initialize"
+	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/user"
+	"github.com/olekukonko/tablewriter"
+	"github.com/spf13/cobra"
+	"golang.org/x/crypto/ssh/terminal"
 )
 
 var (

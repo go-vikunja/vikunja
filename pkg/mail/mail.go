@@ -17,11 +17,12 @@
 package mail
 
 import (
+	"crypto/tls"
+	"time"
+
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
-	"crypto/tls"
 	"gopkg.in/gomail.v2"
-	"time"
 )
 
 // Queue is the mail queue

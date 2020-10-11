@@ -18,8 +18,9 @@
 package user
 
 import (
-	"code.vikunja.io/api/pkg/db"
 	"testing"
+
+	"code.vikunja.io/api/pkg/db"
 )
 
 func TestUserEmailConfirm(t *testing.T) {

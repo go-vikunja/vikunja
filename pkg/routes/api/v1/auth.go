@@ -17,14 +17,15 @@
 package v1
 
 import (
+	"net/http"
+	"time"
+
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo/v4"
-	"net/http"
-	"time"
 )
 
 // These are all valid auth types

@@ -17,12 +17,13 @@
 package models
 
 import (
+	"time"
+
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
 	_ "github.com/go-sql-driver/mysql" // Because.
 	_ "github.com/lib/pq"              // Because.
-	"time"
 	"xorm.io/xorm"
 
 	_ "github.com/mattn/go-sqlite3" // Because.

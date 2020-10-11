@@ -18,15 +18,16 @@ package dump
 
 import (
 	"archive/zip"
+	"fmt"
+	"io"
+	"os"
+	"strconv"
+
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/version"
-	"fmt"
 	"github.com/spf13/viper"
-	"io"
-	"os"
-	"strconv"
 )
 
 // Change to deflate to gain better compression

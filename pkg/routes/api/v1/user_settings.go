@@ -17,11 +17,12 @@
 package v1
 
 import (
+	"net/http"
+
 	"code.vikunja.io/api/pkg/models"
 	user2 "code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web/handler"
 	"github.com/labstack/echo/v4"
-	"net/http"
 )
 
 // UserAvatarProvider holds the user avatar provider type

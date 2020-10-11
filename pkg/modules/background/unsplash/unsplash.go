@@ -18,6 +18,14 @@ package unsplash
 
 import (
 	"bytes"
+	"context"
+	"encoding/json"
+	"net/http"
+	"net/url"
+	"strconv"
+	"strings"
+	"time"
+
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
@@ -26,12 +34,6 @@ import (
 	"code.vikunja.io/api/pkg/modules/keyvalue"
 	e "code.vikunja.io/api/pkg/modules/keyvalue/error"
 	"code.vikunja.io/web"
-	"encoding/json"
-	"net/http"
-	"net/url"
-	"strconv"
-	"strings"
-	"time"
 )
 
 const (
@@ -89,7 +91,7 @@ type initialCollection struct {
 var emptySearchResult *initialCollection
 
 func doGet(url string, result ...interface{}) (err error) {
-	req, err := http.NewRequest("GET", unsplashAPIURL+url, nil)
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, unsplashAPIURL+url, nil)
 	if err != nil {
 		return
 	}
@@ -100,6 +102,7 @@ func doGet(url string, result ...interface{}) (err error) {
 	if err != nil {
 		return
 	}
+	defer resp.Body.Close()
 
 	if len(result) > 0 {
 		return json.NewDecoder(resp.Body).Decode(result[0])
@@ -250,9 +253,13 @@ func (p *Provider) Set(image *background.Image, list *models.List, auth web.Auth
 
 	// Download the photo from unsplash
 	// The parameters crop the image to a max width of 2560 and a max height of 2048 to save bandwidth and storage.
-	resp, err := http.Get(photo.Urls.Raw + "&w=2560&h=2048&q=90")
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, photo.Urls.Raw+"&w=2560&h=2048&q=90", nil)
 	if err != nil {
 		return
+	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
 	}
 	defer resp.Body.Close()
 
@@ -327,9 +334,13 @@ func Pingback(f *files.File) {
 }
 
 func pingbackByPhotoID(photoID string) {
-	if _, err := http.Get("https://views.unsplash.com/v?app_id=" + config.BackgroundsUnsplashApplicationID.GetString() + "&photo_id=" + photoID); err != nil {
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "https://views.unsplash.com/v?app_id="+config.BackgroundsUnsplashApplicationID.GetString()+"&photo_id="+photoID, nil)
+	if err != nil {
+		log.Errorf("Unsplash Pingback Failed: %s", err.Error())
+	}
+	_, err = http.DefaultClient.Do(req)
+	if err != nil {
 		log.Errorf("Unsplash Pingback Failed: %s", err.Error())
 	}
 	log.Debugf("Pinged unsplash for photo %s", photoID)
-
 }

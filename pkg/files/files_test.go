@@ -18,10 +18,11 @@
 package files
 
 import (
-	"github.com/stretchr/testify/assert"
 	"io"
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 type testfile struct {

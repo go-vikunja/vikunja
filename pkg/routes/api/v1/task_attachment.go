@@ -17,10 +17,11 @@
 package v1
 
 import (
+	"net/http"
+
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/web/handler"
 	"github.com/labstack/echo/v4"
-	"net/http"
 )
 
 // UploadTaskAttachment handles everything needed for the upload of a task attachment

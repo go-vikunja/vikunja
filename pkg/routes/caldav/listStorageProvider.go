@@ -17,14 +17,15 @@
 package caldav
 
 import (
+	"strconv"
+	"strings"
+	"time"
+
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	user2 "code.vikunja.io/api/pkg/user"
 	"github.com/samedi/caldav-go/data"
 	"github.com/samedi/caldav-go/errs"
-	"strconv"
-	"strings"
-	"time"
 )
 
 // DavBasePath is the base url path
@@ -119,8 +120,8 @@ func (vcls *VikunjaCaldavListStorage) GetResourcesByList(rpaths []string) ([]dat
 	var uids []string
 	for _, path := range rpaths {
 		parts := strings.Split(path, "/")
-		uid := []rune(parts[4]) // The 4th part is the id with ".ics" suffix
-		endlen := len(uid) - 4  // ".ics" are 4 bytes
+		uid := []rune(parts[4])          // The 4th part is the id with ".ics" suffix
+		endlen := len(uid) - len(".ics") // ".ics" are 4 bytes
 		uids = append(uids, string(uid[:endlen]))
 	}
 
@@ -174,7 +175,7 @@ func (vcls *VikunjaCaldavListStorage) GetResourcesByFilters(rpath string, filter
 	r.Name = vcls.list.Title
 	return []data.Resource{r}, nil
 	// For now, filtering is disabled.
-	//return vcls.GetResources(rpath, false)
+	// return vcls.GetResources(rpath, false)
 }
 
 func getTaskURL(task *models.Task) string {
@@ -336,9 +337,9 @@ func (vlra *VikunjaListResourceAdapter) CalculateEtag() string {
 	// And therefore, updating the task fails since these etags don't match.
 	// To fix that, we use this extra field to determine if we're currently updating a task and return the
 	// etag of the list instead.
-	//if vlra.list != nil {
-	//	return `"` + strconv.FormatInt(vlra.list.ID, 10) + `-` + strconv.FormatInt(vlra.list.Updated, 10) + `"`
-	//}
+	// if vlra.list != nil {
+	//	 return `"` + strconv.FormatInt(vlra.list.ID, 10) + `-` + strconv.FormatInt(vlra.list.Updated, 10) + `"`
+	// }
 
 	// Return the etag of a task if we have one
 	if vlra.task != nil {

@@ -17,12 +17,13 @@
 package v1
 
 import (
+	"net/http"
+
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/modules/migration/todoist"
 	"code.vikunja.io/api/pkg/modules/migration/wunderlist"
 	"code.vikunja.io/api/pkg/version"
 	"github.com/labstack/echo/v4"
-	"net/http"
 )
 
 type vikunjaInfos struct {

@@ -17,6 +17,13 @@
 package integrations
 
 import (
+	"net/http"
+	"net/http/httptest"
+	"net/url"
+	"os"
+	"strings"
+	"testing"
+
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/files"
@@ -29,12 +36,6 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
-	"net/http"
-	"net/http/httptest"
-	"net/url"
-	"os"
-	"strings"
-	"testing"
 )
 
 // These are the test users, the same way they are in the test database

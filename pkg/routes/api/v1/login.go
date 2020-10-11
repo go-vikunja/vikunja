@@ -17,12 +17,13 @@
 package v1
 
 import (
+	"net/http"
+
 	"code.vikunja.io/api/pkg/models"
 	user2 "code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web/handler"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo/v4"
-	"net/http"
 )
 
 // Token represents an authentification token
@@ -45,7 +46,7 @@ type Token struct {
 func Login(c echo.Context) error {
 	u := user2.Login{}
 	if err := c.Bind(&u); err != nil {
-		return c.JSON(http.StatusBadRequest, models.Message{"Please provide a username and password."})
+		return c.JSON(http.StatusBadRequest, models.Message{Message: "Please provide a username and password."})
 	}
 
 	// Check user

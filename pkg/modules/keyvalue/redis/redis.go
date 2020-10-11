@@ -18,9 +18,12 @@
 package redis
 
 import (
+	"encoding/json"
+
+	"github.com/go-errors/errors"
+
 	e "code.vikunja.io/api/pkg/modules/keyvalue/error"
 	"code.vikunja.io/api/pkg/red"
-	"encoding/json"
 	"github.com/go-redis/redis/v7"
 )
 
@@ -52,7 +55,7 @@ func (s *Storage) Put(key string, value interface{}) (err error) {
 func (s *Storage) Get(key string) (value interface{}, err error) {
 	b, err := s.client.Get(key).Bytes()
 	if err != nil {
-		if err == redis.Nil {
+		if errors.Is(err, redis.Nil) {
 			return nil, &e.ErrValueNotFoundForKey{Key: key}
 		}
 		return nil, err

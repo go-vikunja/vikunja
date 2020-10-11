@@ -18,6 +18,13 @@ package initials
 
 import (
 	"bytes"
+	"image"
+	"image/color"
+	"image/draw"
+	"image/png"
+	"strconv"
+	"strings"
+
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
 	e "code.vikunja.io/api/pkg/modules/keyvalue/error"
@@ -27,12 +34,6 @@ import (
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/gofont/goregular"
 	"golang.org/x/image/math/fixed"
-	"image"
-	"image/color"
-	"image/draw"
-	"image/png"
-	"strconv"
-	"strings"
 )
 
 // Provider represents the provider implementation of the initials provider
@@ -41,15 +42,15 @@ type Provider struct {
 
 var (
 	avatarBgColors = []*color.RGBA{
-		{69, 189, 243, 255},
-		{224, 143, 112, 255},
-		{77, 182, 172, 255},
-		{149, 117, 205, 255},
-		{176, 133, 94, 255},
-		{240, 98, 146, 255},
-		{163, 211, 108, 255},
-		{121, 134, 203, 255},
-		{241, 185, 29, 255},
+		{R: 69, G: 189, B: 243, A: 255},
+		{R: 224, G: 143, B: 112, A: 255},
+		{R: 77, G: 182, B: 172, A: 255},
+		{R: 149, G: 117, B: 205, A: 255},
+		{R: 176, G: 133, B: 94, A: 255},
+		{R: 240, G: 98, B: 146, A: 255},
+		{R: 163, G: 211, B: 108, A: 255},
+		{R: 121, G: 134, B: 203, A: 255},
+		{R: 241, G: 185, B: 29, A: 255},
 	}
 )
 

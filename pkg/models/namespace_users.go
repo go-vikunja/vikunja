@@ -17,9 +17,10 @@
 package models
 
 import (
+	"time"
+
 	user2 "code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
-	"time"
 )
 
 // NamespaceUser represents a namespace <-> user relation

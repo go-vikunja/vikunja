@@ -18,13 +18,14 @@ package mail
 
 import (
 	"bytes"
+	"html/template"
+
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/static"
 	"code.vikunja.io/api/pkg/utils"
 	"github.com/shurcooL/httpfs/html/vfstemplate"
 	"gopkg.in/gomail.v2"
-	"html/template"
 )
 
 // Opts holds infos for a mail

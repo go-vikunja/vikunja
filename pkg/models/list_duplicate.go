@@ -65,6 +65,7 @@ func (ld *ListDuplicate) CanCreate(a web.Auth) (canCreate bool, err error) {
 // @Failure 403 {object} web.HTTPError "The user does not have access to the list or namespace"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{listID}/duplicate [put]
+//nolint:gocyclo
 func (ld *ListDuplicate) Create(a web.Auth) (err error) {
 
 	log.Debugf("Duplicating list %d", ld.ListID)

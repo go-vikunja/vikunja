@@ -18,12 +18,13 @@
 package models
 
 import (
-	"code.vikunja.io/api/pkg/config"
 	"fmt"
-	"github.com/iancoleman/strcase"
 	"reflect"
 	"strconv"
 	"time"
+
+	"code.vikunja.io/api/pkg/config"
+	"github.com/iancoleman/strcase"
 	"xorm.io/xorm/schemas"
 )
 
@@ -112,6 +113,8 @@ func validateTaskFieldComparator(comparator taskFilterComparator) error {
 		taskFilterComparatorLessEquals,
 		taskFilterComparatorNotEquals:
 		return nil
+	case taskFilterComparatorInvalid:
+		fallthrough
 	default:
 		return ErrInvalidTaskFilterComparator{Comparator: comparator}
 	}

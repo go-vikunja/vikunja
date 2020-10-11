@@ -17,10 +17,11 @@
 package caldav
 
 import (
-	"code.vikunja.io/api/pkg/config"
-	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
+
+	"code.vikunja.io/api/pkg/config"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestParseEvents(t *testing.T) {

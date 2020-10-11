@@ -17,13 +17,14 @@
 package metrics
 
 import (
+	"sync"
+	"time"
+
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/web"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
-	"sync"
-	"time"
 )
 
 // SecondsUntilInactive defines the seconds until a user is considered inactive

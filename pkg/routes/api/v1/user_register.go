@@ -17,12 +17,13 @@
 package v1
 
 import (
+	"net/http"
+
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web/handler"
 	"github.com/labstack/echo/v4"
-	"net/http"
 )
 
 // RegisterUser is the register handler
@@ -43,10 +44,10 @@ func RegisterUser(c echo.Context) error {
 	// Check for Request Content
 	var datUser *user.APIUserPassword
 	if err := c.Bind(&datUser); err != nil {
-		return c.JSON(http.StatusBadRequest, models.Message{"No or invalid user model provided."})
+		return c.JSON(http.StatusBadRequest, models.Message{Message: "No or invalid user model provided."})
 	}
 	if datUser == nil {
-		return c.JSON(http.StatusBadRequest, models.Message{"No or invalid user model provided."})
+		return c.JSON(http.StatusBadRequest, models.Message{Message: "No or invalid user model provided."})
 	}
 
 	// Insert the user

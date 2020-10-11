@@ -18,8 +18,9 @@
 package memory
 
 import (
-	e "code.vikunja.io/api/pkg/modules/keyvalue/error"
 	"sync"
+
+	e "code.vikunja.io/api/pkg/modules/keyvalue/error"
 )
 
 // Storage is the memory implementation of a storage backend

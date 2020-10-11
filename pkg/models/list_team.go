@@ -17,8 +17,9 @@
 package models
 
 import (
-	"code.vikunja.io/web"
 	"time"
+
+	"code.vikunja.io/web"
 )
 
 // TeamList defines the relation between a team and a list

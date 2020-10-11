@@ -18,16 +18,17 @@ package upload
 
 import (
 	"bytes"
+	"image"
+	"image/png"
+	"io/ioutil"
+	"strconv"
+
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
 	e "code.vikunja.io/api/pkg/modules/keyvalue/error"
 	"code.vikunja.io/api/pkg/user"
 	"github.com/disintegration/imaging"
-	"image"
-	"image/png"
-	"io/ioutil"
-	"strconv"
 )
 
 // Provider represents the upload avatar provider

@@ -18,12 +18,13 @@
 package db
 
 import (
-	"code.vikunja.io/api/pkg/config"
-	"code.vikunja.io/api/pkg/log"
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
+
+	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/log"
+	"github.com/stretchr/testify/assert"
 	"xorm.io/core"
 	"xorm.io/xorm"
 )

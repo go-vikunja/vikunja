@@ -18,6 +18,14 @@ package todoist
 
 import (
 	"bytes"
+	"context"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"net/url"
+	"strings"
+	"time"
+
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
@@ -25,12 +33,6 @@ import (
 	"code.vikunja.io/api/pkg/modules/migration"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
-	"encoding/json"
-	"fmt"
-	"net/http"
-	"net/url"
-	"strings"
-	"time"
 )
 
 // Migration is the todoist migration struct
@@ -217,7 +219,7 @@ func (m *Migration) AuthURL() string {
 }
 
 func doPost(url string, form url.Values) (resp *http.Response, err error) {
-	req, err := http.NewRequest("POST", url, strings.NewReader(form.Encode()))
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, url, strings.NewReader(form.Encode()))
 	if err != nil {
 		return
 	}
@@ -342,7 +344,12 @@ func convertTodoistToVikunja(sync *sync) (fullVikunjaHierachie []*models.Namespa
 		// Only add the attachment if there's something to download
 		if len(n.FileAttachment.FileURL) > 0 {
 			// Download the attachment and put it in the file
-			resp, err := http.Get(n.FileAttachment.FileURL)
+			req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, n.FileAttachment.FileURL, nil)
+			if err != nil {
+				return nil, err
+			}
+			hc := http.Client{}
+			resp, err := hc.Do(req)
 			if err != nil {
 				return nil, err
 			}
@@ -417,6 +424,7 @@ func getAccessTokenFromAuthToken(authToken string) (accessToken string, err erro
 	if err != nil {
 		return
 	}
+	defer resp.Body.Close()
 
 	if resp.StatusCode > 399 {
 		buf := &bytes.Buffer{}
@@ -468,6 +476,7 @@ func (m *Migration) Migrate(u *user.User) (err error) {
 	if err != nil {
 		return
 	}
+	defer resp.Body.Close()
 
 	syncResponse := &sync{}
 	err = json.NewDecoder(resp.Body).Decode(syncResponse)

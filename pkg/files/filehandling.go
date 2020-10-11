@@ -17,13 +17,14 @@
 package files
 
 import (
+	"os"
+	"testing"
+
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
-	"os"
-	"testing"
 )
 
 // This file handles storing and retrieving a file for different backends
@@ -49,7 +50,7 @@ func initFixtures(t *testing.T) {
 	InitTestFileFixtures(t)
 }
 
-//InitTestFileFixtures initializes file fixtures
+// InitTestFileFixtures initializes file fixtures
 func InitTestFileFixtures(t *testing.T) {
 	// Init fixture files
 	filename := config.FilesBasePath.GetString() + "/1"

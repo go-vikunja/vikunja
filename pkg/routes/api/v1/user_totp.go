@@ -18,14 +18,15 @@ package v1
 
 import (
 	"bytes"
+	"fmt"
+	"image/jpeg"
+	"net/http"
+
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web/handler"
-	"fmt"
 	"github.com/labstack/echo/v4"
-	"image/jpeg"
-	"net/http"
 )
 
 // UserTOTPEnroll is the handler to enroll a user into totp

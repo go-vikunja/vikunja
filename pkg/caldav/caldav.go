@@ -17,13 +17,14 @@
 package caldav
 
 import (
-	"code.vikunja.io/api/pkg/config"
-	"code.vikunja.io/api/pkg/user"
-	"code.vikunja.io/api/pkg/utils"
 	"fmt"
 	"strconv"
 	"strings"
 	"time"
+
+	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/user"
+	"code.vikunja.io/api/pkg/utils"
 )
 
 // DateFormat ist the caldav date format

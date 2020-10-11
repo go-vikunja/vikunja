@@ -18,6 +18,10 @@
 package routes
 
 import (
+	"net/http"
+	"strconv"
+	"time"
+
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/red"
@@ -26,9 +30,6 @@ import (
 	"github.com/ulule/limiter/v3"
 	"github.com/ulule/limiter/v3/drivers/store/memory"
 	"github.com/ulule/limiter/v3/drivers/store/redis"
-	"net/http"
-	"strconv"
-	"time"
 )
 
 // RateLimit is the rate limit middleware

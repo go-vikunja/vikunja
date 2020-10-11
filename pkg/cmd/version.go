@@ -17,10 +17,11 @@
 package cmd
 
 import (
-	"code.vikunja.io/api/pkg/version"
 	"fmt"
-	"github.com/spf13/cobra"
 	"runtime"
+
+	"code.vikunja.io/api/pkg/version"
+	"github.com/spf13/cobra"
 )
 
 func init() {

@@ -17,6 +17,11 @@
 package handler
 
 import (
+	"io"
+	"net/http"
+	"strconv"
+	"strings"
+
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
@@ -27,10 +32,6 @@ import (
 	"code.vikunja.io/web/handler"
 	"github.com/gabriel-vasile/mimetype"
 	"github.com/labstack/echo/v4"
-	"io"
-	"net/http"
-	"strconv"
-	"strings"
 )
 
 // BackgroundProvider represents a thing which holds a background provider

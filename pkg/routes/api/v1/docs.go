@@ -19,10 +19,11 @@
 package v1
 
 import (
+	"net/http"
+
 	"code.vikunja.io/api/pkg/log"
 	"github.com/labstack/echo/v4"
 	"github.com/swaggo/swag"
-	"net/http"
 )
 
 // DocsJSON serves swagger doc json specs

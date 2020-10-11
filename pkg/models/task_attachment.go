@@ -17,11 +17,12 @@
 package models
 
 import (
+	"io"
+	"time"
+
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
-	"io"
-	"time"
 )
 
 // TaskAttachment is the definition of a task attachment

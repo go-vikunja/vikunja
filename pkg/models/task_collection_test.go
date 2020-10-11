@@ -17,14 +17,15 @@
 package models
 
 import (
+	"testing"
+	"time"
+
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
 	"gopkg.in/d4l3k/messagediff.v1"
-	"testing"
-	"time"
 )
 
 func TestTaskCollection_ReadAll(t *testing.T) {

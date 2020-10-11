@@ -17,9 +17,10 @@
 package models
 
 import (
+	"time"
+
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
-	"time"
 )
 
 // ListUser represents a list <-> user relation

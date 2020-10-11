@@ -18,6 +18,14 @@ package wunderlist
 
 import (
 	"bytes"
+	"context"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"net/url"
+	"strconv"
+	"time"
+
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
@@ -25,12 +33,6 @@ import (
 	"code.vikunja.io/api/pkg/modules/migration"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
-	"encoding/json"
-	"fmt"
-	"net/http"
-	"net/url"
-	"strconv"
-	"time"
 )
 
 // Migration represents the implementation of the migration for wunderlist
@@ -51,17 +53,17 @@ type wunderlistAuthToken struct {
 }
 
 type task struct {
-	ID          int       `json:"id"`
 	AssigneeID  int       `json:"assignee_id"`
 	CreatedAt   time.Time `json:"created_at"`
 	CreatedByID int       `json:"created_by_id"`
+	Completed   bool      `json:"completed"`
+	CompletedAt time.Time `json:"completed_at"`
 	DueDate     string    `json:"due_date"`
+	ID          int       `json:"id"`
 	ListID      int       `json:"list_id"`
 	Revision    int       `json:"revision"`
 	Starred     bool      `json:"starred"`
 	Title       string    `json:"title"`
-	Completed   bool      `json:"completed"`
-	CompletedAt time.Time `json:"completed_at"`
 }
 
 type list struct {
@@ -181,7 +183,11 @@ func convertListForFolder(listID int, list *list, content *wunderlistContents) (
 			for _, f := range content.files {
 				if f.TaskID == t.ID {
 					// Download the attachment and put it in the file
-					resp, err := http.Get(f.URL)
+					req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, f.URL, nil)
+					if err != nil {
+						return nil, err
+					}
+					resp, err := http.DefaultClient.Do(req)
 					if err != nil {
 						return nil, err
 					}
@@ -296,7 +302,7 @@ func convertWunderlistToVikunja(content *wunderlistContents) (fullVikunjaHierach
 }
 
 func makeAuthGetRequest(token *wunderlistAuthToken, urlPart string, v interface{}, urlParams url.Values) error {
-	req, err := http.NewRequest(http.MethodGet, "https://a.wunderlist.com/api/v1/"+urlPart, nil)
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "https://a.wunderlist.com/api/v1/"+urlPart, nil)
 	if err != nil {
 		return err
 	}
@@ -366,10 +372,16 @@ func (w *Migration) Migrate(user *user.User) (err error) {
 	if err != nil {
 		return
 	}
-	resp, err := http.Post("https://www.wunderlist.com/oauth/access_token", "application/json", bytes.NewBuffer(jsonAuth))
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, "https://www.wunderlist.com/oauth/access_token", bytes.NewBuffer(jsonAuth))
+	if err != nil {
+		return err
+	}
+	req.Header.Add("Content-Type", "application/json")
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return
 	}
+	defer resp.Body.Close()
 
 	authToken := &wunderlistAuthToken{}
 	err = json.NewDecoder(resp.Body).Decode(authToken)

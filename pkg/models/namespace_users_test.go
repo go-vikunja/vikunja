@@ -17,14 +17,15 @@
 package models
 
 import (
-	"code.vikunja.io/api/pkg/db"
-	"code.vikunja.io/api/pkg/user"
-	"code.vikunja.io/web"
-	"gopkg.in/d4l3k/messagediff.v1"
 	"reflect"
 	"runtime"
 	"testing"
 	"time"
+
+	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/user"
+	"code.vikunja.io/web"
+	"gopkg.in/d4l3k/messagediff.v1"
 )
 
 func TestNamespaceUser_Create(t *testing.T) {

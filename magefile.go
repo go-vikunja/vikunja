@@ -59,7 +59,6 @@ var (
 	Aliases = map[string]interface{}{
 		"build":                Build.Build,
 		"do-the-swag":          DoTheSwag,
-		"check:go-sec":         Check.GoSec,
 		"check:got-swag":       Check.GotSwag,
 		"release:os-package":   Release.OsPackage,
 		"dev:create-migration": Dev.CreateMigration,
@@ -330,34 +329,6 @@ func (Test) Integration() {
 
 type Check mg.Namespace
 
-// Checks if the code is properly formatted with go fmt
-func (Check) Fmt() error {
-	mg.Deps(initVars)
-	args := append([]string{"-s", "-d"}, GoFiles...)
-	c := exec.Command("gofmt", args...)
-	out, err := c.Output()
-	if err != nil {
-		return err
-	}
-
-	if len(out) > 0 {
-		fmt.Println("Code is not properly gofmt'ed.")
-		fmt.Println("Please run 'mage fmt' and commit the result:")
-		fmt.Print(string(out))
-		os.Exit(1)
-	}
-
-	return nil
-}
-
-// Runs golint on all packages
-func (Check) Lint() {
-	mg.Deps(initVars)
-	checkAndInstallGoTool("golint", "golang.org/x/lint/golint")
-	args := append([]string{"-set_exit_status"}, ApiPackages...)
-	runAndStreamOutput("golint", args...)
-}
-
 // Checks if the swagger docs need to be re-generated from the code annotations
 func (Check) GotSwag() {
 	mg.Deps(initVars)
@@ -388,65 +359,31 @@ func (Check) GotSwag() {
 	}
 }
 
-// Checks the source code for misspellings
-func (Check) Misspell() {
+func checkGolangCiLintInstalled() {
 	mg.Deps(initVars)
-	checkAndInstallGoTool("misspell", "github.com/client9/misspell/cmd/misspell")
-	runAndStreamOutput("misspell", append([]string{"-error"}, GoFiles...)...)
-}
-
-// Checks the source code for ineffectual assigns
-func (Check) Ineffassign() {
-	mg.Deps(initVars)
-	checkAndInstallGoTool("ineffassign", "github.com/gordonklaus/ineffassign")
-	runAndStreamOutput("ineffassign", GoFiles...)
-}
-
-// Checks for the cyclomatic complexity of the source code
-func (Check) Gocyclo() {
-	mg.Deps(initVars)
-	checkAndInstallGoTool("gocyclo", "github.com/fzipp/gocyclo")
-	runAndStreamOutput("gocyclo", append([]string{"-over", "49"}, GoFiles...)...)
-}
-
-// Statically analyzes the source code about a range of different problems
-func (Check) Static() {
-	mg.Deps(initVars)
-	checkAndInstallGoTool("staticcheck", "honnef.co/go/tools/cmd/staticcheck")
-	runAndStreamOutput("staticcheck", ApiPackages...)
-}
-
-// Checks the source code for potential security issues
-func (Check) GoSec() {
-	mg.Deps(initVars)
-	if err := exec.Command("gosec").Run(); err != nil && strings.Contains(err.Error(), "executable file not found") {
-		fmt.Println("Please manually install gosec by running")
-		fmt.Println("curl -sfL https://raw.githubusercontent.com/securego/gosec/master/install.sh | bash -s -- -b $GOPATH/bin v2.2.0")
+	if err := exec.Command("golangci-lint").Run(); err != nil && strings.Contains(err.Error(), "executable file not found") {
+		fmt.Println("Please manually install golangci-lint by running")
+		fmt.Println("curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.31.0")
 		os.Exit(1)
 	}
-	runAndStreamOutput("gosec", "./...")
 }
 
-// Checks for repeated strings that could be replaced by a constant
-func (Check) Goconst() {
-	mg.Deps(initVars)
-	checkAndInstallGoTool("goconst", "github.com/jgautheron/goconst/cmd/goconst")
-	runAndStreamOutput("goconst", ApiPackages...)
+func (Check) Golangci() {
+	checkGolangCiLintInstalled()
+	runAndStreamOutput("golangci-lint", "run")
+}
+
+func (Check) GolangciFix() {
+	checkGolangCiLintInstalled()
+	runAndStreamOutput("golangci-lint", "run", "--fix")
 }
 
 // Runs fmt-check, lint, got-swag, misspell-check, ineffasign-check, gocyclo-check, static-check, gosec-check, goconst-check all in parallel
 func (Check) All() {
 	mg.Deps(initVars)
 	mg.Deps(
-		Check.Fmt,
-		Check.Lint,
+		Check.Golangci,
 		Check.GotSwag,
-		Check.Misspell,
-		Check.Ineffassign,
-		Check.Gocyclo,
-		Check.Static,
-		Check.GoSec,
-		Check.Goconst,
 	)
 }
 

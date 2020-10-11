@@ -17,11 +17,12 @@
 package v1
 
 import (
+	"net/http"
+
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web/handler"
 	"github.com/labstack/echo/v4"
-	"net/http"
 )
 
 // UserConfirmEmail is the handler to confirm a user email
@@ -47,5 +48,5 @@ func UserConfirmEmail(c echo.Context) error {
 		return handler.HandleHTTPError(err, c)
 	}
 
-	return c.JSON(http.StatusOK, models.Message{"The email was confirmed successfully."})
+	return c.JSON(http.StatusOK, models.Message{Message: "The email was confirmed successfully."})
 }

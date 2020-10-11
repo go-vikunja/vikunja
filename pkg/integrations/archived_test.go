@@ -18,11 +18,12 @@
 package integrations
 
 import (
+	"net/url"
+	"testing"
+
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/web/handler"
 	"github.com/stretchr/testify/assert"
-	"net/url"
-	"testing"
 )
 
 // This tests the following behaviour:

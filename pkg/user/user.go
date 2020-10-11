@@ -18,17 +18,19 @@
 package user
 
 import (
+	"errors"
+	"fmt"
+	"reflect"
+	"time"
+
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/mail"
 	"code.vikunja.io/api/pkg/metrics"
 	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/web"
-	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo/v4"
 	"golang.org/x/crypto/bcrypt"
-	"reflect"
-	"time"
 )
 
 // Login Object to recive user credentials in JSON format
@@ -189,7 +191,7 @@ func CheckUserCredentials(u *Login) (*User, error) {
 func CheckUserPassword(user *User, password string) error {
 	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 	if err != nil {
-		if err == bcrypt.ErrMismatchedHashAndPassword {
+		if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
 			return ErrWrongUsernameOrPassword{}
 		}
 		return err
@@ -322,7 +324,6 @@ func UpdateUser(user *User) (updatedUser *User, err error) {
 
 	// Check if we have at least a username
 	if user.Username == "" {
-		//return User{}, ErrNoUsername{user.ID}
 		user.Username = theUser.Username // Dont change the username if we dont have one
 	} else {
 		// Check if the new username already exists

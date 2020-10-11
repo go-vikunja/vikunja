@@ -17,12 +17,13 @@
 package integrations
 
 import (
+	"net/http"
+	"testing"
+
 	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
 	"code.vikunja.io/api/pkg/user"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
-	"net/http"
-	"testing"
 )
 
 func TestUserConfirmEmail(t *testing.T) {

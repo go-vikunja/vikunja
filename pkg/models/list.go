@@ -17,12 +17,13 @@
 package models
 
 import (
+	"strings"
+	"time"
+
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/metrics"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
-	"strings"
-	"time"
 	"xorm.io/builder"
 	"xorm.io/xorm"
 )
@@ -450,7 +451,7 @@ func GenerateListIdentifier(l *List, sess *xorm.Engine) (err error) {
 	// The general idea here is to take the title and slice it into pieces, until we found a unique piece.
 
 	var exists = true
-	titleSlug := []rune(strings.Replace(strings.ToUpper(l.Title), " ", "", -1))
+	titleSlug := []rune(strings.ReplaceAll(strings.ToUpper(l.Title), " ", ""))
 
 	// We can save at most 10 characters in the db, so we need to ensure it has at most 10 characters
 	if len(titleSlug) > 10 {

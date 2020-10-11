@@ -18,12 +18,13 @@
 package db
 
 import (
-	"code.vikunja.io/api/pkg/config"
 	"fmt"
-	"github.com/go-testfixtures/testfixtures/v3"
-	"github.com/stretchr/testify/assert"
 	"path/filepath"
 	"testing"
+
+	"code.vikunja.io/api/pkg/config"
+	"github.com/go-testfixtures/testfixtures/v3"
+	"github.com/stretchr/testify/assert"
 	"xorm.io/xorm/schemas"
 )
 

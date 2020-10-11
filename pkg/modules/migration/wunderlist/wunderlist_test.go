@@ -17,15 +17,16 @@
 package wunderlist
 
 import (
+	"io/ioutil"
+	"strconv"
+	"testing"
+	"time"
+
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/models"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/d4l3k/messagediff.v1"
-	"io/ioutil"
-	"strconv"
-	"testing"
-	"time"
 )
 
 func TestWunderlistParsing(t *testing.T) {

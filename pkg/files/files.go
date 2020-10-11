@@ -17,13 +17,14 @@
 package files
 
 import (
+	"io"
+	"strconv"
+	"time"
+
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/web"
 	"github.com/c2h5oh/datasize"
 	"github.com/spf13/afero"
-	"io"
-	"strconv"
-	"time"
 )
 
 // File holds all information about a file

@@ -17,12 +17,13 @@
 package models
 
 import (
+	"sort"
+	"time"
+
 	"code.vikunja.io/api/pkg/metrics"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
 	"github.com/imdario/mergo"
-	"sort"
-	"time"
 	"xorm.io/builder"
 )
 

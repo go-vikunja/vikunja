@@ -17,16 +17,17 @@
 package db
 
 import (
-	"code.vikunja.io/api/pkg/config"
-	"code.vikunja.io/api/pkg/log"
 	"encoding/gob"
 	"fmt"
-	xrc "gitea.com/xorm/xorm-redis-cache"
 	"net/url"
 	"os"
 	"strconv"
 	"strings"
 	"time"
+
+	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/log"
+	xrc "gitea.com/xorm/xorm-redis-cache"
 	"xorm.io/core"
 	"xorm.io/xorm"
 	"xorm.io/xorm/caches"
@@ -52,23 +53,24 @@ func CreateDBEngine() (engine *xorm.Engine, err error) {
 	}
 
 	// Use Mysql if set
-	if config.DatabaseType.GetString() == "mysql" {
+	switch config.DatabaseType.GetString() {
+	case "mysql":
 		engine, err = initMysqlEngine()
 		if err != nil {
 			return
 		}
-	} else if config.DatabaseType.GetString() == "postgres" {
+	case "postgres":
 		engine, err = initPostgresEngine()
 		if err != nil {
 			return
 		}
-	} else if config.DatabaseType.GetString() == "sqlite" {
+	case "sqlite":
 		// Otherwise use sqlite
 		engine, err = initSqliteEngine()
 		if err != nil {
 			return
 		}
-	} else {
+	default:
 		log.Fatalf("Unknown database type %s", config.DatabaseType.GetString())
 	}
 

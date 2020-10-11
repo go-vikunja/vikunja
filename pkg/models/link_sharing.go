@@ -18,11 +18,12 @@
 package models
 
 import (
+	"time"
+
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/web"
 	"github.com/dgrijalva/jwt-go"
-	"time"
 )
 
 // SharingType holds the sharing type

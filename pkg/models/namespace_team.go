@@ -17,8 +17,9 @@
 package models
 
 import (
-	"code.vikunja.io/web"
 	"time"
+
+	"code.vikunja.io/web"
 )
 
 // TeamNamespace defines the relationship between a Team and a Namespace

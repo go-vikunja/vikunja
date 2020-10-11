@@ -17,8 +17,9 @@
 package migration
 
 import (
-	"src.techknowlogick.com/xormigrate"
 	"strings"
+
+	"src.techknowlogick.com/xormigrate"
 	"xorm.io/xorm"
 )
 
@@ -55,7 +56,7 @@ func init() {
 				// The general idea here is to take the title and slice it into pieces, until we found a unique piece.
 
 				var exists = true
-				titleSlug := []rune(strings.Replace(strings.ToUpper(l.Title), " ", "", -1))
+				titleSlug := []rune(strings.ReplaceAll(strings.ToUpper(l.Title), " ", ""))
 
 				// We can save at most 10 characters in the db, so we need to ensure it has at most 10 characters
 				if len(titleSlug) > 10 {

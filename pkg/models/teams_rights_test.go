@@ -17,10 +17,11 @@
 package models
 
 import (
-	"code.vikunja.io/api/pkg/db"
-	"code.vikunja.io/api/pkg/user"
 	"testing"
 	"time"
+
+	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/user"
 
 	"code.vikunja.io/web"
 )

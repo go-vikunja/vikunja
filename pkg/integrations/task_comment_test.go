@@ -17,11 +17,12 @@
 package integrations
 
 import (
+	"testing"
+
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/web/handler"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestTaskComments(t *testing.T) {

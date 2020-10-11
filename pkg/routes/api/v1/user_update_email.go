@@ -17,13 +17,14 @@
 package v1
 
 import (
+	"fmt"
+	"net/http"
+
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web/handler"
-	"fmt"
 	"github.com/labstack/echo/v4"
-	"net/http"
 )
 
 // UpdateUserEmail is the handler to let a user update their email address.

@@ -47,6 +47,9 @@
 package routes
 
 import (
+	"strings"
+	"time"
+
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
@@ -71,8 +74,6 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	elog "github.com/labstack/gommon/log"
-	"strings"
-	"time"
 )
 
 // CustomValidator is a dummy struct to use govalidator with echo

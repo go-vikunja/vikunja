@@ -17,11 +17,12 @@
 package v1
 
 import (
+	"net/http"
+
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web/handler"
 	"github.com/labstack/echo/v4"
-	"net/http"
 )
 
 // UserPassword holds a user password. Used to update it.
@@ -70,5 +71,5 @@ func UserChangePassword(c echo.Context) error {
 		return handler.HandleHTTPError(err, c)
 	}
 
-	return c.JSON(http.StatusOK, models.Message{"The password was updated successfully."})
+	return c.JSON(http.StatusOK, models.Message{Message: "The password was updated successfully."})
 }

@@ -17,11 +17,12 @@
 package models
 
 import (
+	"reflect"
+	"testing"
+
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/user"
 	"github.com/stretchr/testify/assert"
-	"reflect"
-	"testing"
 )
 
 func TestTeam_Create(t *testing.T) {

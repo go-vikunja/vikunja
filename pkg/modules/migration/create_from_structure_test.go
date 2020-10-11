@@ -17,12 +17,13 @@
 package migration
 
 import (
+	"testing"
+
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestInsertFromStructure(t *testing.T) {

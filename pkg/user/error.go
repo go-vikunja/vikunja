@@ -18,9 +18,10 @@
 package user
 
 import (
-	"code.vikunja.io/web"
 	"fmt"
 	"net/http"
+
+	"code.vikunja.io/web"
 )
 
 // =====================

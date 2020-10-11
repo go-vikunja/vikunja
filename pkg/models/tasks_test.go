@@ -17,11 +17,12 @@
 package models
 
 import (
+	"testing"
+	"time"
+
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/user"
 	"github.com/stretchr/testify/assert"
-	"testing"
-	"time"
 )
 
 func TestTask_Create(t *testing.T) {

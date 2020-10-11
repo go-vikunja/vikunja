@@ -17,12 +17,13 @@
 package caldav
 
 import (
+	"strconv"
+	"time"
+
 	"code.vikunja.io/api/pkg/caldav"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"github.com/laurent22/ical-go"
-	"strconv"
-	"time"
 )
 
 func getCaldavTodosForTasks(list *models.List) string {

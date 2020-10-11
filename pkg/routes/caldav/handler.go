@@ -18,18 +18,19 @@ package caldav
 
 import (
 	"bytes"
-	"code.vikunja.io/api/pkg/log"
-	"code.vikunja.io/api/pkg/models"
-	"code.vikunja.io/api/pkg/user"
-	"code.vikunja.io/web/handler"
 	"fmt"
-	"github.com/labstack/echo/v4"
-	"github.com/samedi/caldav-go"
-	"github.com/samedi/caldav-go/lib"
 	"io/ioutil"
 	"reflect"
 	"strconv"
 	"strings"
+
+	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/user"
+	"code.vikunja.io/web/handler"
+	"github.com/labstack/echo/v4"
+	"github.com/samedi/caldav-go"
+	"github.com/samedi/caldav-go/lib"
 )
 
 func getBasicAuthUserFromContext(c echo.Context) (*user.User, error) {

@@ -17,13 +17,14 @@
 package models
 
 import (
-	"code.vikunja.io/api/pkg/db"
-	"code.vikunja.io/api/pkg/user"
-	"gopkg.in/d4l3k/messagediff.v1"
 	"reflect"
 	"runtime"
 	"testing"
 	"time"
+
+	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/user"
+	"gopkg.in/d4l3k/messagediff.v1"
 
 	"code.vikunja.io/web"
 )

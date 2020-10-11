@@ -29,15 +29,16 @@ import (
 	"code.vikunja.io/web/handler"
 
 	"bytes"
-	"github.com/disintegration/imaging"
-	"github.com/gabriel-vasile/mimetype"
-	"github.com/labstack/echo/v4"
 	"image"
 	"image/png"
 	"io"
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/disintegration/imaging"
+	"github.com/gabriel-vasile/mimetype"
+	"github.com/labstack/echo/v4"
 )
 
 // GetAvatar returns a user's avatar

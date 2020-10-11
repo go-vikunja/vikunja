@@ -17,17 +17,18 @@
 package cmd
 
 import (
+	"context"
+	"os"
+	"os/signal"
+	"time"
+
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/initialize"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/routes"
 	"code.vikunja.io/api/pkg/swagger"
 	"code.vikunja.io/api/pkg/version"
-	"context"
 	"github.com/spf13/cobra"
-	"os"
-	"os/signal"
-	"time"
 )
 
 func init() {

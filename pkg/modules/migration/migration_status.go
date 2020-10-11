@@ -17,8 +17,9 @@
 package migration
 
 import (
-	"code.vikunja.io/api/pkg/user"
 	"time"
+
+	"code.vikunja.io/api/pkg/user"
 )
 
 // Status represents this migration status

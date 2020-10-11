@@ -17,8 +17,9 @@
 package v1
 
 import (
-	"code.vikunja.io/api/pkg/models"
 	"fmt"
+
+	"code.vikunja.io/api/pkg/models"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo/v4"
 )
@@ -30,5 +31,5 @@ func CheckToken(c echo.Context) error {
 
 	fmt.Println(user.Valid)
 
-	return c.JSON(418, models.Message{"🍵"})
+	return c.JSON(418, models.Message{Message: "🍵"})
 }

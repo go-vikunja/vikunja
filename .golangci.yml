@@ -1,0 +1,73 @@
+run:
+  timeout: 5m
+  tests: true
+
+linters:
+  enable:
+    - megacheck
+    - govet
+    - goconst
+    - gocritic
+    - gocyclo
+    - goerr113
+    - goheader
+    - gofmt
+    - goimports
+    - golint
+    - misspell
+  disable:
+    - scopelint # Obsolete, using exportloopref instead
+  presets:
+    - bugs
+    - unused
+  fast: false
+
+linter-settings:
+  nestif:
+    min-complexity: 6
+  goheader:
+    template-path: code-hesader-template.txt
+
+issues:
+  exclude-rules:
+    # Exclude some linters from running on tests files.
+    - path: _test\.go
+      linters:
+        - gocyclo
+        - deadcode
+    - path: pkg/integrations/*
+      linters:
+        - gocyclo
+        - deadcode
+        - varcheck
+        - unparam
+        - bodyclose
+    - path: pkg/integrations/*
+      text: "unlambda"
+      linters:
+        - gocritic
+    - path: pkg/modules/background/unsplash/unsplash\.go
+      linters:
+        - bodyclose
+    - path: pkg/migration/*
+      linters:
+        - exhaustive
+        - goconst
+        - goerr113
+    - path: pkg/models/task_collection_filter\.go
+      linters:
+        - exhaustive
+    - path: pkg/utils/random_string\.go
+      text: "G404:" # We don't care about cryptographically secure randomness when we're using that utility function.
+      linters:
+        - gosec
+    - path: pkg/modules/dump/*
+      linters:
+        - goerr113
+    - path: pkg/
+      text: "err113: do not define dynamic errors, use wrapped static errors instead:"
+      linters:
+        - goerr113
+    - text: "commentFormatting: put a space between `//` and comment text"
+      linters:
+        - gocritic

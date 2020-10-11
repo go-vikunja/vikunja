@@ -1,9 +1,10 @@
 package models
 
 import (
+	"testing"
+
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/user"
-	"testing"
 )
 
 func TestBulkTask_Update(t *testing.T) {

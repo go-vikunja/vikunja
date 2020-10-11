@@ -17,12 +17,13 @@
 package handler
 
 import (
+	"net/http"
+
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/migration"
 	user2 "code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web/handler"
 	"github.com/labstack/echo/v4"
-	"net/http"
 )
 
 // MigrationWeb holds the web migration handler

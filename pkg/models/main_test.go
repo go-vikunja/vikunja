@@ -17,13 +17,14 @@
 package models
 
 import (
-	"code.vikunja.io/api/pkg/config"
-	"code.vikunja.io/api/pkg/files"
-	"code.vikunja.io/api/pkg/user"
 	"fmt"
 	"os"
 	"testing"
 	"time"
+
+	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/files"
+	"code.vikunja.io/api/pkg/user"
 )
 
 func setupTime() {

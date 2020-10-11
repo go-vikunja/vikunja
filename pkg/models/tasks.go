@@ -17,16 +17,17 @@
 package models
 
 import (
+	"math"
+	"sort"
+	"strconv"
+	"time"
+
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/metrics"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/web"
 	"github.com/imdario/mergo"
-	"math"
-	"sort"
-	"strconv"
-	"time"
 	"xorm.io/builder"
 	"xorm.io/xorm"
 	"xorm.io/xorm/schemas"
@@ -168,6 +169,7 @@ func (t *Task) ReadAll(a web.Auth, search string, page int, perPage int) (result
 	return nil, 0, 0, nil
 }
 
+//nolint:gocyclo
 func getRawTasksForLists(lists []*List, a web.Auth, opts *taskOptions) (tasks []*Task, resultCount int, totalItems int64, err error) {
 
 	// If the user does not have any lists, don't try to get any tasks
@@ -258,6 +260,8 @@ func getRawTasksForLists(lists []*List, a web.Auth, opts *taskOptions) (tasks []
 			} else {
 				filters = append(filters, &builder.Lte{f.field: f.value})
 			}
+		case taskFilterComparatorInvalid:
+			// Nothing to do
 		}
 	}
 
@@ -728,6 +732,7 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool) (err
 // @Failure 403 {object} web.HTTPError "The user does not have access to the task (aka its list)"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{id} [post]
+//nolint:gocyclo
 func (t *Task) Update() (err error) {
 
 	s := x.NewSession()
@@ -836,12 +841,12 @@ func (t *Task) Update() (err error) {
 	// a lot of existing code which we'll then need to refactor.
 	// This is why.
 	//
-	//if err := ot.updateTaskLabels(t.Labels); err != nil {
-	//	return err
-	//}
+	// if err := ot.updateTaskLabels(t.Labels); err != nil {
+	// 	return err
+	// }
 	// set the labels to ot.Labels because our updateTaskLabels function puts the full label objects in it pretty nicely
 	// We also set this here to prevent it being overwritten later on.
-	//t.Labels = ot.Labels
+	// t.Labels = ot.Labels
 
 	// For whatever reason, xorm dont detect if done is updated, so we need to update this every time by hand
 	// Which is why we merge the actual task struct with the one we got from the db

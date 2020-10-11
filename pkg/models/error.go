@@ -17,10 +17,11 @@
 package models
 
 import (
-	"code.vikunja.io/api/pkg/config"
-	"code.vikunja.io/web"
 	"fmt"
 	"net/http"
+
+	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/web"
 )
 
 // Generic

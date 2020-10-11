@@ -20,19 +20,20 @@ import (
 	"archive/zip"
 	"bufio"
 	"bytes"
-	"code.vikunja.io/api/pkg/db"
-	"code.vikunja.io/api/pkg/files"
-	"code.vikunja.io/api/pkg/initialize"
-	"code.vikunja.io/api/pkg/log"
-	"code.vikunja.io/api/pkg/migration"
 	"encoding/json"
 	"fmt"
 	"io"
 	"os"
 	"sort"
-	"src.techknowlogick.com/xormigrate"
 	"strconv"
 	"strings"
+
+	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/files"
+	"code.vikunja.io/api/pkg/initialize"
+	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/migration"
+	"src.techknowlogick.com/xormigrate"
 )
 
 const maxConfigSize = 5 * 1024 * 1024 // 5 MB, should be largely enough
