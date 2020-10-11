@@ -44,4 +44,4 @@ steps:
       strip_prefix: dist/
       source: dist/*
       target: /desktop/master/
-    depends_on: [ static ]
+    depends_on: [ build ]
