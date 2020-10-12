@@ -309,6 +309,11 @@ func convertTodoistToVikunja(sync *sync) (fullVikunjaHierachie []*models.Namespa
 			continue
 		}
 
+		if _, exists := tasks[i.ParentID]; !exists {
+			log.Debugf("[Todoist Migration] Could not find task %d in tasks map while trying to get resolve subtasks for task %d", i.ParentID, i.ID)
+			continue
+		}
+
 		// Prevent all those nil errors
 		if tasks[i.ParentID].RelatedTasks == nil {
 			tasks[i.ParentID].RelatedTasks = make(models.RelatedTaskMap)
@@ -332,6 +337,11 @@ func convertTodoistToVikunja(sync *sync) (fullVikunjaHierachie []*models.Namespa
 	// Task Notes -> Task Descriptions
 	// FIXME: Should be comments
 	for _, n := range sync.Notes {
+		if _, exists := tasks[n.ItemID]; !exists {
+			log.Debugf("[Todoist Migration] Could not find task %d for note %d", n.ItemID, n.ID)
+			continue
+		}
+
 		if tasks[n.ItemID].Description != "" {
 			tasks[n.ItemID].Description += "\n"
 		}
@@ -389,6 +399,10 @@ func convertTodoistToVikunja(sync *sync) (fullVikunjaHierachie []*models.Namespa
 	for _, r := range sync.Reminders {
 		if r.Due == nil {
 			continue
+		}
+
+		if _, exists := tasks[r.ItemID]; !exists {
+			log.Debugf("Could not find task %d for reminder %d while trying to resolve reminders", r.ItemID, r.ID)
 		}
 
 		var err error
