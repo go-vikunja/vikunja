@@ -46,28 +46,28 @@ type apiTokenResponse struct {
 }
 
 type label struct {
-	ID         int    `json:"id"`
+	ID         int64  `json:"id"`
 	Name       string `json:"name"`
-	Color      int    `json:"color"`
-	ItemOrder  int    `json:"item_order"`
-	IsDeleted  int    `json:"is_deleted"`
-	IsFavorite int    `json:"is_favorite"`
+	Color      int64  `json:"color"`
+	ItemOrder  int64  `json:"item_order"`
+	IsDeleted  int64  `json:"is_deleted"`
+	IsFavorite int64  `json:"is_favorite"`
 }
 
 type project struct {
-	ID             int    `json:"id"`
-	LegacyID       int    `json:"legacy_id"`
+	ID             int64  `json:"id"`
+	LegacyID       int64  `json:"legacy_id"`
 	Name           string `json:"name"`
-	Color          int    `json:"color"`
-	ParentID       int    `json:"parent_id"`
-	ChildOrder     int    `json:"child_order"`
-	Collapsed      int    `json:"collapsed"`
+	Color          int64  `json:"color"`
+	ParentID       int64  `json:"parent_id"`
+	ChildOrder     int64  `json:"child_order"`
+	Collapsed      int64  `json:"collapsed"`
 	Shared         bool   `json:"shared"`
-	LegacyParentID int    `json:"legacy_parent_id"`
-	SyncID         int    `json:"sync_id"`
-	IsDeleted      int    `json:"is_deleted"`
-	IsArchived     int    `json:"is_archived"`
-	IsFavorite     int    `json:"is_favorite"`
+	LegacyParentID int64  `json:"legacy_parent_id"`
+	SyncID         int64  `json:"sync_id"`
+	IsDeleted      int64  `json:"is_deleted"`
+	IsArchived     int64  `json:"is_archived"`
+	IsFavorite     int64  `json:"is_favorite"`
 }
 
 type dueDate struct {
@@ -79,28 +79,28 @@ type dueDate struct {
 }
 
 type item struct {
-	ID              int         `json:"id"`
-	LegacyID        int         `json:"legacy_id"`
-	UserID          int         `json:"user_id"`
-	ProjectID       int         `json:"project_id"`
-	LegacyProjectID int         `json:"legacy_project_id"`
+	ID              int64       `json:"id"`
+	LegacyID        int64       `json:"legacy_id"`
+	UserID          int64       `json:"user_id"`
+	ProjectID       int64       `json:"project_id"`
+	LegacyProjectID int64       `json:"legacy_project_id"`
 	Content         string      `json:"content"`
-	Priority        int         `json:"priority"`
+	Priority        int64       `json:"priority"`
 	Due             *dueDate    `json:"due"`
-	ParentID        int         `json:"parent_id"`
-	LegacyParentID  int         `json:"legacy_parent_id"`
-	ChildOrder      int         `json:"child_order"`
-	SectionID       int         `json:"section_id"`
-	DayOrder        int         `json:"day_order"`
-	Collapsed       int         `json:"collapsed"`
+	ParentID        int64       `json:"parent_id"`
+	LegacyParentID  int64       `json:"legacy_parent_id"`
+	ChildOrder      int64       `json:"child_order"`
+	SectionID       int64       `json:"section_id"`
+	DayOrder        int64       `json:"day_order"`
+	Collapsed       int64       `json:"collapsed"`
 	Children        interface{} `json:"children"`
-	Labels          []int       `json:"labels"`
-	AddedByUID      int         `json:"added_by_uid"`
-	AssignedByUID   int         `json:"assigned_by_uid"`
-	ResponsibleUID  int         `json:"responsible_uid"`
-	Checked         int         `json:"checked"`
-	InHistory       int         `json:"in_history"`
-	IsDeleted       int         `json:"is_deleted"`
+	Labels          []int64     `json:"labels"`
+	AddedByUID      int64       `json:"added_by_uid"`
+	AssignedByUID   int64       `json:"assigned_by_uid"`
+	ResponsibleUID  int64       `json:"responsible_uid"`
+	Checked         int64       `json:"checked"`
+	InHistory       int64       `json:"in_history"`
+	IsDeleted       int64       `json:"is_deleted"`
 	DateAdded       time.Time   `json:"date_added"`
 	HasMoreNotes    bool        `json:"has_more_notes"`
 	DateCompleted   time.Time   `json:"date_completed"`
@@ -109,23 +109,23 @@ type item struct {
 type fileAttachment struct {
 	FileType    string `json:"file_type"`
 	FileName    string `json:"file_name"`
-	FileSize    int    `json:"file_size"`
+	FileSize    int64  `json:"file_size"`
 	FileURL     string `json:"file_url"`
 	UploadState string `json:"upload_state"`
 }
 
 type note struct {
-	ID              int             `json:"id"`
-	LegacyID        int             `json:"legacy_id"`
-	PostedUID       int             `json:"posted_uid"`
-	ProjectID       int             `json:"project_id"`
-	LegacyProjectID int             `json:"legacy_project_id"`
-	ItemID          int             `json:"item_id"`
-	LegacyItemID    int             `json:"legacy_item_id"`
+	ID              int64           `json:"id"`
+	LegacyID        int64           `json:"legacy_id"`
+	PostedUID       int64           `json:"posted_uid"`
+	ProjectID       int64           `json:"project_id"`
+	LegacyProjectID int64           `json:"legacy_project_id"`
+	ItemID          int64           `json:"item_id"`
+	LegacyItemID    int64           `json:"legacy_item_id"`
 	Content         string          `json:"content"`
 	FileAttachment  *fileAttachment `json:"file_attachment"`
-	UidsToNotify    []int           `json:"uids_to_notify"`
-	IsDeleted       int             `json:"is_deleted"`
+	UidsToNotify    []int64         `json:"uids_to_notify"`
+	IsDeleted       int64           `json:"is_deleted"`
 	Posted          time.Time       `json:"posted"`
 }
 
@@ -133,22 +133,22 @@ type projectNote struct {
 	Content        string          `json:"content"`
 	FileAttachment *fileAttachment `json:"file_attachment"`
 	ID             int64           `json:"id"`
-	IsDeleted      int             `json:"is_deleted"`
+	IsDeleted      int64           `json:"is_deleted"`
 	Posted         time.Time       `json:"posted"`
-	PostedUID      int             `json:"posted_uid"`
-	ProjectID      int             `json:"project_id"`
-	UidsToNotify   []int           `json:"uids_to_notify"`
+	PostedUID      int64           `json:"posted_uid"`
+	ProjectID      int64           `json:"project_id"`
+	UidsToNotify   []int64         `json:"uids_to_notify"`
 }
 
 type reminder struct {
-	ID        int      `json:"id"`
-	NotifyUID int      `json:"notify_uid"`
-	ItemID    int      `json:"item_id"`
+	ID        int64    `json:"id"`
+	NotifyUID int64    `json:"notify_uid"`
+	ItemID    int64    `json:"item_id"`
 	Service   string   `json:"service"`
 	Type      string   `json:"type"`
 	Due       *dueDate `json:"due"`
-	MmOffset  int      `json:"mm_offset"`
-	IsDeleted int      `json:"is_deleted"`
+	MmOffset  int64    `json:"mm_offset"`
+	IsDeleted int64    `json:"is_deleted"`
 }
 
 type sync struct {
@@ -160,12 +160,12 @@ type sync struct {
 	Reminders    []*reminder    `json:"reminders"`
 }
 
-var todoistColors = map[int]string{}
+var todoistColors = map[int64]string{}
 
 func init() {
-	todoistColors = make(map[int]string, 19)
+	todoistColors = make(map[int64]string, 19)
 	// The todoists colors are static, taken from https://developer.todoist.com/sync/v8/#colors
-	todoistColors = map[int]string{
+	todoistColors = map[int64]string{
 		30: "b8256f",
 		31: "db4035",
 		32: "ff9933",
@@ -238,13 +238,13 @@ func convertTodoistToVikunja(sync *sync) (fullVikunjaHierachie []*models.Namespa
 	}
 
 	// A map for all vikunja lists with the project id they're coming from as key
-	lists := make(map[int]*models.List, len(sync.Projects))
+	lists := make(map[int64]*models.List, len(sync.Projects))
 
 	// A map for all vikunja tasks with the todoist task id as key to find them easily and add more data
-	tasks := make(map[int]*models.Task, len(sync.Items))
+	tasks := make(map[int64]*models.Task, len(sync.Items))
 
 	// A map for all vikunja labels with the todoist id as key to find them easier
-	labels := make(map[int]*models.Label, len(sync.Labels))
+	labels := make(map[int64]*models.Label, len(sync.Labels))
 
 	for _, p := range sync.Projects {
 		list := &models.List{
@@ -280,7 +280,7 @@ func convertTodoistToVikunja(sync *sync) (fullVikunjaHierachie []*models.Namespa
 
 		// Todoist priorities only range from 1 (lowest) and max 4 (highest), so we need to make slight adjustments
 		if i.Priority > 1 {
-			task.Priority = int64(i.Priority)
+			task.Priority = i.Priority
 		}
 
 		// Put the due date together

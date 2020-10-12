@@ -47,12 +47,12 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 	exampleFile, err := ioutil.ReadFile(config.ServiceRootpath.GetString() + "/pkg/modules/migration/wunderlist/testimage.jpg")
 	assert.NoError(t, err)
 
-	makeTestItem := func(id, projectId int, hasDueDate, hasLabels, done bool) *item {
+	makeTestItem := func(id, projectId int64, hasDueDate, hasLabels, done bool) *item {
 		item := &item{
 			ID:            id,
 			UserID:        1855589,
 			ProjectID:     projectId,
-			Content:       "Task" + strconv.Itoa(id),
+			Content:       "Task" + strconv.FormatInt(id, 10),
 			Priority:      1,
 			ParentID:      0,
 			ChildOrder:    1,
@@ -66,7 +66,7 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 		}
 
 		if hasLabels {
-			item.Labels = []int{
+			item.Labels = []int64{
 				80000,
 				80001,
 				80002,
