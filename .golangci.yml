@@ -71,3 +71,6 @@ issues:
     - text: "commentFormatting: put a space between `//` and comment text"
       linters:
         - gocritic
+    - path: pkg/modules/migration
+      linters:
+        - gocyclo
