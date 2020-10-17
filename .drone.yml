@@ -23,7 +23,8 @@ steps:
       - unzip vikunja-frontend-master.zip -d frontend
       - sed -i 's/\\/api\\/v1//g' frontend/index.html
       # Make sure that the -master suffix is added to release files
-      - export VERSION=${DRONE_TAG##v,DRONE_BRANCH}
+      - export VERSION=${DRONE_TAG##v}
+      - if [ -z "$$VERSION" ]; then export VERSION=${DRONE_BRANCH} fi
       - echo $VERSION
       - sed -i "s/$${version}/$$VERSION/g" package.json
       - yarn install
