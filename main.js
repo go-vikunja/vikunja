@@ -1,4 +1,5 @@
 const {app, BrowserWindow, shell} = require('electron')
+const path = require('path')
 const express = require('express')
 const eApp = express()
 
@@ -24,7 +25,7 @@ function createWindow() {
 	mainWindow.setMenuBarVisibility(false)
 
 	// Start a local express server to serve static files
-	eApp.use(express.static(frontendPath))
+	eApp.use(express.static(path.join(__dirname, frontendPath)))
 	// Handle urls set by the frontend
 	eApp.get('*', (request, response, next) => {
 		response.sendFile(`${__dirname}/${frontendPath}index.html`);
