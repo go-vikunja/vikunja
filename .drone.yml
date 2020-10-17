@@ -25,7 +25,7 @@ steps:
       # Make sure that the -master suffix is added to release files
       - export VERSION=${DRONE_TAG##v}
       - if [ -z "$$VERSION" ]; then export VERSION=${DRONE_BRANCH}; fi
-      - sed -i "s/\$$\{version\}/$$VERSION/g" package.json
+      - sed -i "s/$$\{version\}/$$VERSION/g" package.json
       - yarn install
       - yarn dist --linux --windows
 
