@@ -34,6 +34,7 @@ require (
 	github.com/gabriel-vasile/mimetype v1.1.1
 	github.com/getsentry/sentry-go v0.7.0
 	github.com/go-errors/errors v1.1.1
+	github.com/go-openapi/swag v0.19.9 // indirect
 	github.com/go-redis/redis/v7 v7.4.0
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/go-testfixtures/testfixtures/v3 v3.4.0
@@ -48,7 +49,7 @@ require (
 	github.com/laurent22/ical-go v0.1.1-0.20181107184520-7e5d6ade8eef
 	github.com/lib/pq v1.8.0
 	github.com/magefile/mage v1.10.0
-	github.com/mailru/easyjson v0.7.0 // indirect
+	github.com/mailru/easyjson v0.7.6 // indirect
 	github.com/mattn/go-sqlite3 v1.14.4
 	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
 	github.com/olekukonko/tablewriter v0.0.4
@@ -66,13 +67,14 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/viper v1.7.1
 	github.com/stretchr/testify v1.6.1
-	github.com/swaggo/swag v1.6.7
+	github.com/swaggo/swag v1.6.8
 	github.com/ulule/limiter/v3 v3.5.0
 	golang.org/x/crypto v0.0.0-20201016220609-9e8e0b390897
 	golang.org/x/image v0.0.0-20200927104501-e162460cd6b5
 	golang.org/x/lint v0.0.0-20200302205851-738671d3881b
+	golang.org/x/net v0.0.0-20201016165138-7b1cca2348c0 // indirect
 	golang.org/x/sync v0.0.0-20201008141435-b3e1573b7520
-	golang.org/x/tools v0.0.0-20200410194907-79a7a3126eef // indirect
+	golang.org/x/tools v0.0.0-20201017001424-6003fad69a88 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
 	gopkg.in/d4l3k/messagediff.v1 v1.2.1

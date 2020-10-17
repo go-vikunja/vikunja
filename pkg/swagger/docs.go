@@ -6352,9 +6352,6 @@ var doc = `{
         }
     },
     "definitions": {
-        "afero.File": {
-            "type": "object"
-        },
         "background.Image": {
             "type": "object",
             "properties": {
@@ -6424,7 +6421,6 @@ var doc = `{
                 },
                 "created_by": {
                     "description": "The user who initially created the bucket.",
-                    "type": "object",
                     "$ref": "#/definitions/user.User"
                 },
                 "id": {
@@ -6496,7 +6492,6 @@ var doc = `{
                 },
                 "created_by": {
                     "description": "The user who initially created the task.",
-                    "type": "object",
                     "$ref": "#/definitions/user.User"
                 },
                 "description": {
@@ -6565,7 +6560,6 @@ var doc = `{
                 },
                 "related_tasks": {
                     "description": "All related tasks, grouped by their relation kind",
-                    "type": "object",
                     "$ref": "#/definitions/models.RelatedTaskMap"
                 },
                 "reminder_dates": {
@@ -6615,7 +6609,6 @@ var doc = `{
                 },
                 "created_by": {
                     "description": "The user who created this label",
-                    "type": "object",
                     "$ref": "#/definitions/user.User"
                 },
                 "description": {
@@ -6691,7 +6684,6 @@ var doc = `{
                 },
                 "shared_by": {
                     "description": "The user who shared this list",
-                    "type": "object",
                     "$ref": "#/definitions/user.User"
                 },
                 "sharing_type": {
@@ -6749,7 +6741,6 @@ var doc = `{
                 },
                 "owner": {
                     "description": "The user who created this list.",
-                    "type": "object",
                     "$ref": "#/definitions/user.User"
                 },
                 "title": {
@@ -6769,7 +6760,6 @@ var doc = `{
             "properties": {
                 "list": {
                     "description": "The copied list",
-                    "type": "object",
                     "$ref": "#/definitions/models.List"
                 },
                 "namespace_id": {
@@ -6840,7 +6830,6 @@ var doc = `{
                 },
                 "owner": {
                     "description": "The user who owns this namespace",
-                    "type": "object",
                     "$ref": "#/definitions/user.User"
                 },
                 "title": {
@@ -6914,7 +6903,6 @@ var doc = `{
                 },
                 "owner": {
                     "description": "The user who owns this namespace",
-                    "type": "object",
                     "$ref": "#/definitions/user.User"
                 },
                 "title": {
@@ -6951,7 +6939,6 @@ var doc = `{
                 },
                 "filters": {
                     "description": "The actual filters this filter contains",
-                    "type": "object",
                     "$ref": "#/definitions/models.TaskCollection"
                 },
                 "id": {
@@ -6960,7 +6947,6 @@ var doc = `{
                 },
                 "owner": {
                     "description": "The user who owns this filter",
-                    "type": "object",
                     "$ref": "#/definitions/user.User"
                 },
                 "title": {
@@ -7002,7 +6988,6 @@ var doc = `{
                 },
                 "created_by": {
                     "description": "The user who initially created the task.",
-                    "type": "object",
                     "$ref": "#/definitions/user.User"
                 },
                 "description": {
@@ -7071,7 +7056,6 @@ var doc = `{
                 },
                 "related_tasks": {
                     "description": "All related tasks, grouped by their relation kind",
-                    "type": "object",
                     "$ref": "#/definitions/models.RelatedTaskMap"
                 },
                 "reminder_dates": {
@@ -7123,11 +7107,9 @@ var doc = `{
                     "type": "string"
                 },
                 "created_by": {
-                    "type": "object",
                     "$ref": "#/definitions/user.User"
                 },
                 "file": {
-                    "type": "object",
                     "$ref": "#/definitions/files.File"
                 },
                 "id": {
@@ -7190,7 +7172,6 @@ var doc = `{
             "type": "object",
             "properties": {
                 "author": {
-                    "type": "object",
                     "$ref": "#/definitions/user.User"
                 },
                 "comment": {
@@ -7216,7 +7197,6 @@ var doc = `{
                 },
                 "created_by": {
                     "description": "The user who created this relation",
-                    "type": "object",
                     "$ref": "#/definitions/user.User"
                 },
                 "other_task_id": {
@@ -7242,7 +7222,6 @@ var doc = `{
                 },
                 "created_by": {
                     "description": "The user who created this team.",
-                    "type": "object",
                     "$ref": "#/definitions/user.User"
                 },
                 "description": {
@@ -7388,7 +7367,6 @@ var doc = `{
                 },
                 "created_by": {
                     "description": "The user who created this team.",
-                    "type": "object",
                     "$ref": "#/definitions/user.User"
                 },
                 "description": {
@@ -7659,7 +7637,6 @@ var doc = `{
                     "type": "string"
                 },
                 "legal": {
-                    "type": "object",
                     "$ref": "#/definitions/v1.legalInfo"
                 },
                 "link_sharing_enabled": {

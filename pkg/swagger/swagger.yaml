@@ -1,7 +1,5 @@
 basePath: /api/v1
 definitions:
-  afero.File:
-    type: object
   background.Image:
     properties:
       id:
@@ -49,7 +47,6 @@ definitions:
       created_by:
         $ref: '#/definitions/user.User'
         description: The user who initially created the bucket.
-        type: object
       id:
         description: The unique, numeric id of this bucket.
         type: integer
@@ -101,7 +98,6 @@ definitions:
       created_by:
         $ref: '#/definitions/user.User'
         description: The user who initially created the task.
-        type: object
       description:
         description: The task description.
         type: string
@@ -159,7 +155,6 @@ definitions:
       related_tasks:
         $ref: '#/definitions/models.RelatedTaskMap'
         description: All related tasks, grouped by their relation kind
-        type: object
       reminder_dates:
         description: An array of datetimes when the user wants to be reminded of the task.
         items:
@@ -196,7 +191,6 @@ definitions:
       created_by:
         $ref: '#/definitions/user.User'
         description: The user who created this label
-        type: object
       description:
         description: The label description.
         type: string
@@ -252,7 +246,6 @@ definitions:
       shared_by:
         $ref: '#/definitions/user.User'
         description: The user who shared this list
-        type: object
       sharing_type:
         default: 0
         description: The kind of this link. 0 = undefined, 1 = without password, 2 = with password (currently not implemented).
@@ -296,7 +289,6 @@ definitions:
       owner:
         $ref: '#/definitions/user.User'
         description: The user who created this list.
-        type: object
       title:
         description: The title of the list. You'll see this in the namespace overview.
         maxLength: 250
@@ -311,7 +303,6 @@ definitions:
       list:
         $ref: '#/definitions/models.List'
         description: The copied list
-        type: object
       namespace_id:
         description: The target namespace ID
         type: integer
@@ -363,7 +354,6 @@ definitions:
       owner:
         $ref: '#/definitions/user.User'
         description: The user who owns this namespace
-        type: object
       title:
         description: The name of this namespace.
         maxLength: 250
@@ -418,7 +408,6 @@ definitions:
       owner:
         $ref: '#/definitions/user.User'
         description: The user who owns this namespace
-        type: object
       title:
         description: The name of this namespace.
         maxLength: 250
@@ -445,14 +434,12 @@ definitions:
       filters:
         $ref: '#/definitions/models.TaskCollection'
         description: The actual filters this filter contains
-        type: object
       id:
         description: The unique numeric id of this saved filter
         type: integer
       owner:
         $ref: '#/definitions/user.User'
         description: The user who owns this filter
-        type: object
       title:
         description: The title of the filter.
         maxLength: 250
@@ -483,7 +470,6 @@ definitions:
       created_by:
         $ref: '#/definitions/user.User'
         description: The user who initially created the task.
-        type: object
       description:
         description: The task description.
         type: string
@@ -541,7 +527,6 @@ definitions:
       related_tasks:
         $ref: '#/definitions/models.RelatedTaskMap'
         description: All related tasks, grouped by their relation kind
-        type: object
       reminder_dates:
         description: An array of datetimes when the user wants to be reminded of the task.
         items:
@@ -578,10 +563,8 @@ definitions:
         type: string
       created_by:
         $ref: '#/definitions/user.User'
-        type: object
       file:
         $ref: '#/definitions/files.File'
-        type: object
       id:
         type: integer
       task_id:
@@ -625,7 +608,6 @@ definitions:
     properties:
       author:
         $ref: '#/definitions/user.User'
-        type: object
       comment:
         type: string
       created:
@@ -643,7 +625,6 @@ definitions:
       created_by:
         $ref: '#/definitions/user.User'
         description: The user who created this relation
-        type: object
       other_task_id:
         description: The ID of the other task, the task which is being related.
         type: integer
@@ -662,7 +643,6 @@ definitions:
       created_by:
         $ref: '#/definitions/user.User'
         description: The user who created this team.
-        type: object
       description:
         description: The team's description.
         type: string
@@ -770,7 +750,6 @@ definitions:
       created_by:
         $ref: '#/definitions/user.User'
         description: The user who created this team.
-        type: object
       description:
         description: The team's description.
         type: string
@@ -960,7 +939,6 @@ definitions:
         type: string
       legal:
         $ref: '#/definitions/v1.legalInfo'
-        type: object
       link_sharing_enabled:
         type: boolean
       max_file_size:
