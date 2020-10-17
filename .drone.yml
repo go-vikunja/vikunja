@@ -22,9 +22,9 @@ steps:
       - wget https://dl.vikunja.io/frontend/vikunja-frontend-master.zip
       - unzip vikunja-frontend-master.zip -d frontend
       - sed -i 's/\\/api\\/v1//g' frontend/index.html
-      - yarn install
       # Make sure that the -master suffix is added to release files
       - sed -i 's/\\$\{version\}/master/g' package.json
+      - yarn install
       - yarn dist --linux --windows
 
   - name: release
