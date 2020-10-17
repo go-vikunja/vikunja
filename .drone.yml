@@ -23,7 +23,7 @@ steps:
       - sed -i 's/\/api\/v1//g' frontend/index.html
       - yarn install
       # Make sure that the -master suffix is added to release files
-      - sed -i 's/\$\{version\}/master/g' package.json
+      - sed -i 's/${version}/master/g' package.json
       - yarn dist --linux --windows
 
   - name: release
