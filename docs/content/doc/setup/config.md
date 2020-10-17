@@ -27,7 +27,14 @@ first:
     child: true
 {{< /highlight >}}
 
-## Config file locations
+# Formats
+
+Vikunja supports using `toml`, `yaml`, `hcl`, `ini`, `json`, envfile, env variables and Java Properties files.
+We reccomend yaml or toml, but you're free to use whatever you want.
+
+Vikunja provides a default [`config.yml`](https://kolaente.dev/vikunja/api/src/branch/master/config.yml.sample) file which you can use as a starting point.
+
+# Config file locations
 
 Vikunja will search on various places for a config file:
 
@@ -38,224 +45,521 @@ Vikunja will search on various places for a config file:
 
 # Default configuration with explanations
 
-This is the same as the `config.yml.sample` file you'll find in the root of vikunja.
+The following explains all possible config variables and their defaults.
+You can find a full example configuration file in [here](https://code.vikunja.io/api/src/branch/master/config.yml.sample).
 
-{{< highlight yaml >}}
-service:
-  # This token is used to verify issued JWT tokens.
-  # Default is a random token which will be generated at each startup of vikunja.
-  # (This means all already issued tokens will be invalid once you restart vikunja)
-  JWTSecret: "cei6gaezoosah2bao3ieZohkae5aicah"
-  # The interface on which to run the webserver
-  interface: ":3456"
-  # The URL of the frontend, used to send password reset emails.
-  frontendurl: ""
-  # The base path on the file system where the binary and assets are.
-  # Vikunja will also look in this path for a config file, so you could provide only this variable to point to a folder
-  # with a config file which will then be used.
-  rootpath: <the path of the executable>
-  # The max number of items which can be returned per page
-  maxitemsperpage: 50
-  # If set to true, enables a /metrics endpoint for prometheus to collect metrics about the system
-  # You'll need to use redis for this in order to enable common metrics over multiple nodes
-  enablemetrics: false
-  # Enable the caldav endpoint, see the docs for more details
-  enablecaldav: true
-  # Set the motd message, available from the /info endpoint
-  motd: ""
-  # Enable sharing of lists via a link
-  enablelinksharing: true
-  # Whether to let new users registering themselves or not
-  enableregistration: true
-  # Whether to enable task attachments or not
-  enabletaskattachments: true
-  # The time zone all timestamps are in
-  timezone: GMT
-  # Whether task comments should be enabled or not
-  enabletaskcomments: true
-  # Whether totp is enabled. In most cases you want to leave that enabled.
-  enabletotp: true
-  # If not empty, enables logging of crashes and unhandled errors in sentry.
-  sentrydsn: ''
+If you don't provide a value in your config file, their default will be used.
 
-database:
-  # Database type to use. Supported types are mysql, postgres and sqlite.
-  type: "sqlite"
-  # Database user which is used to connect to the database.
-  user: "vikunja"
-  # Databse password
-  password: ""
-  # Databse host
-  host: "localhost"
-  # Databse to use
-  database: "vikunja"
-  # When using sqlite, this is the path where to store the data
-  path: "./vikunja.db"
-  # Sets the max open connections to the database. Only used when using mysql and postgres.
-  maxopenconnections: 100
-  # Sets the maximum number of idle connections to the db.
-  maxidleconnections: 50
-  # The maximum lifetime of a single db connection in miliseconds.
-  maxconnectionlifetime: 10000
-  # Secure connection mode. Only used with postgres.
-  # (see https://pkg.go.dev/github.com/lib/pq?tab=doc#hdr-Connection_String_Parameters)
-  sslmode: disable
+## Nesting
 
-cache:
-  # If cache is enabled or not
-  enabled: false
-  # Cache type. Possible values are "keyvalue", "memory" or "redis".
-  # When choosing "keyvalue" this setting follows the one configured in the "keyvalue" section.
-  # When choosing "redis" you will need to configure the redis connection seperately.
-  type: keyvalue
-  # When using memory this defines the maximum size an element can take
-  maxelementsize: 1000
+Most config variables are nested under some "higher-level" key.
+For example, the `interface` config variable is a child of the `service` key.
 
-redis:
-  # Whether to enable redis or not
-  enabled: false
-  # The host of the redis server including its port.
-  host: 'localhost:6379'
-  # The password used to authenicate against the redis server
-  password: ''
-  # 0 means default database
-  db: 0
+The docs below aim to reflect that leveling, but please also have a lookt at [the default config](https://code.vikunja.io/api/src/branch/master/config.yml.sample) file
+to better grasp how the nesting looks like.
 
-cors:
-  # Whether to enable or disable cors headers.
-  # Note: If you want to put the frontend and the api on seperate domains or ports, you will need to enable this.
-  #       Otherwise the frontend won't be able to make requests to the api through the browser.
-  enable: true
-  # A list of origins which may access the api.
-  origins:
-    - *
-  # How long (in seconds) the results of a preflight request can be cached.
-  maxage: 0
+<!-- Generated config will be injected here -->
 
-mailer:
-  # Whether to enable the mailer or not. If it is disabled, all users are enabled right away and password reset is not possible.
-  enabled: false
-  # SMTP Host
-  host: ""
-  # SMTP Host port
-  port: 587
-  # SMTP username
-  username: "user"
-  # SMTP password
-  password: ""
-  # Wether to skip verification of the tls certificate on the server
-  skiptlsverify: false
-  # The default from address when sending emails
-  fromemail: "mail@vikunja"
-  # The length of the mail queue.
-  queuelength: 100
-  # The timeout in seconds after which the current open connection to the mailserver will be closed.
-  queuetimeout: 30
-  # By default, vikunja will try to connect with starttls, use this option to force it to use ssl.
-  forcessl: false
+---
 
-log:
-  # A folder where all the logfiles should go.
-  path: <rootpath>logs
-  # Whether to show any logging at all or none
-  enabled: true
-  # Where the normal log should go. Possible values are stdout, stderr, file or off to disable standard logging.
-  standard: "stdout"
-  # Change the log level. Possible values (case-insensitive) are CRITICAL, ERROR, WARNING, NOTICE, INFO, DEBUG.
-  level: "INFO"
-  # Whether or not to log database queries. Useful for debugging. Possible values are stdout, stderr, file or off to disable database logging.
-  database: "off"
-  # The log level for database log messages. Possible values (case-insensitive) are CRITICAL, ERROR, WARNING, NOTICE, INFO, DEBUG.
-  databaselevel: "WARNING"
-  # Whether to log http requests or not. Possible values are stdout, stderr, file or off to disable http logging.
-  http: "stdout"
-  # Echo has its own logging which usually is unnessecary, which is why it is disabled by default. Possible values are stdout, stderr, file or off to disable standard logging.
-  echo: "off"
+## service
 
-ratelimit:
-  # whether or not to enable the rate limit
-  enabled: false
-  # The kind on which rates are based. Can be either "user" for a rate limit per user or "ip" for an ip-based rate limit.
-  kind: user
-  # The time period in seconds for the limit
-  period: 60
-  # The max number of requests a user is allowed to do in the configured time period
-  limit: 100
-  # The store where the limit counter for each user is stored.
-  # Possible values are "keyvalue", "memory" or "redis".
-  # When choosing "keyvalue" this setting follows the one configured in the "keyvalue" section.
-  store: keyvalue
 
-files:
-  # The path where files are stored
-  basepath: ./files # relative to the binary
-  # The maximum size of a file, as a human-readable string.
-  # Warning: The max size is limited 2^64-1 bytes due to the underlying datatype
-  maxsize: 20MB
 
-migration:
-  # These are the settings for the wunderlist migrator
-  wunderlist:
-    # Wheter to enable the wunderlist migrator or not
-    enable: false
-    # The client id, required for making requests to the wunderlist api
-    # You need to register your vikunja instance at https://developer.wunderlist.com/apps/new to get this
-    clientid:
-    # The client secret, also required for making requests to the wunderlist api
-    clientsecret:
-    # The url where clients are redirected after they authorized Vikunja to access their wunderlist stuff.
-    # This needs to match the url you entered when registering your Vikunja instance at wunderlist.
-    # This is usually the frontend url where the frontend then makes a request to /migration/wunderlist/migrate
-    # with the code obtained from the wunderlist api.
-    # Note that the vikunja frontend expects this to be /migrate/wunderlist
-    redirecturl:
-  todoist:
-    # Wheter to enable the todoist migrator or not
-    enable: false
-    # The client id, required for making requests to the wunderlist api
-    # You need to register your vikunja instance at https://developer.todoist.com/appconsole.html to get this
-    clientid:
-    # The client secret, also required for making requests to the todoist api
-    clientsecret:
-    # The url where clients are redirected after they authorized Vikunja to access their todoist items.
-    # This needs to match the url you entered when registering your Vikunja instance at todoist.
-    # This is usually the frontend url where the frontend then makes a request to /migration/todoist/migrate
-    # with the code obtained from the todoist api.
-    # Note that the vikunja frontend expects this to be /migrate/todoist
-    redirecturl:
+### JWTSecret
 
-avatar:
-  # When using gravatar, this is the duration in seconds until a cached gravatar user avatar expires
-  gravatarexpiration: 3600
+This token is used to verify issued JWT tokens.
+Default is a random token which will be generated at each startup of vikunja.
+(This means all already issued tokens will be invalid once you restart vikunja)
 
-backgrounds:
-  # Whether to enable backgrounds for lists at all.
-  enabled: true
-  providers:
-    upload:
-      # Whethere to enable uploaded list backgrounds
-      enabled: true
-    unsplash:
-      # Whether to enable setting backgrounds from unsplash as list backgrounds
-      enabled: false
-      # You need to create an application for your installation at https://unsplash.com/oauth/applications/new
-      # and set the access token below.
-      accesstoken:
-      # The unsplash application id is only used for pingback and required as per their api guidelines.
-      # You can find the Application ID in the dashboard for your API application. It should be a numeric ID.
-      # It will only show in the UI if your application has been approved for Enterprise usage, therefore if
-      # you’re in Demo mode, you can also find the ID in the URL at the end: https://unsplash.com/oauth/applications/:application_id
-      applicationid:
+Default: `<jwt-secret>`
 
-# Legal urls
-# Will be shown in the frontend if configured here
-legal:
-  imprinturl:
-  privacyurl:
+### interface
 
-# Key Value Storage settings
-# The Key Value Storage is used for different kinds of things like metrics and a few cache systems.
-keyvalue:
-  # The type of the storage backend. Can be either "memory" or "redis". If "redis" is chosen it needs to be configured seperately.
-  type: "memory"
-{{< /highlight >}}
+The interface on which to run the webserver
+
+Default: `:3456`
+
+### frontendurl
+
+The URL of the frontend, used to send password reset emails.
+
+Default: `<empty>`
+
+### rootpath
+
+The base path on the file system where the binary and assets are.
+Vikunja will also look in this path for a config file, so you could provide only this variable to point to a folder
+with a config file which will then be used.
+
+Default: `<rootpath>`
+
+### maxitemsperpage
+
+The max number of items which can be returned per page
+
+Default: `50`
+
+### enablemetrics
+
+If set to true, enables a /metrics endpoint for prometheus to collect metrics about the system
+You'll need to use redis for this in order to enable common metrics over multiple nodes
+
+Default: `false`
+
+### enablecaldav
+
+Enable the caldav endpoint, see the docs for more details
+
+Default: `true`
+
+### motd
+
+Set the motd message, available from the /info endpoint
+
+Default: `<empty>`
+
+### enablelinksharing
+
+Enable sharing of lists via a link
+
+Default: `true`
+
+### enableregistration
+
+Whether to let new users registering themselves or not
+
+Default: `true`
+
+### enabletaskattachments
+
+Whether to enable task attachments or not
+
+Default: `true`
+
+### timezone
+
+The time zone all timestamps are in
+
+Default: `GMT`
+
+### enabletaskcomments
+
+Whether task comments should be enabled or not
+
+Default: `true`
+
+### enabletotp
+
+Whether totp is enabled. In most cases you want to leave that enabled.
+
+Default: `true`
+
+### sentrydsn
+
+If not empty, enables logging of crashes and unhandled errors in sentry.
+
+Default: `<empty>`
+
+---
+
+## database
+
+
+
+### type
+
+Database type to use. Supported types are mysql, postgres and sqlite.
+
+Default: `sqlite`
+
+### user
+
+Database user which is used to connect to the database.
+
+Default: `vikunja`
+
+### password
+
+Databse password
+
+Default: `<empty>`
+
+### host
+
+Databse host
+
+Default: `localhost`
+
+### database
+
+Databse to use
+
+Default: `vikunja`
+
+### path
+
+When using sqlite, this is the path where to store the data
+
+Default: `./vikunja.db`
+
+### maxopenconnections
+
+Sets the max open connections to the database. Only used when using mysql and postgres.
+
+Default: `100`
+
+### maxidleconnections
+
+Sets the maximum number of idle connections to the db.
+
+Default: `50`
+
+### maxconnectionlifetime
+
+The maximum lifetime of a single db connection in miliseconds.
+
+Default: `10000`
+
+### sslmode
+
+Secure connection mode. Only used with postgres.
+(see https://pkg.go.dev/github.com/lib/pq?tab=doc#hdr-Connection_String_Parameters)
+
+Default: `disable`
+
+---
+
+## cache
+
+
+
+### enabled
+
+If cache is enabled or not
+
+Default: `false`
+
+### type
+
+Cache type. Possible values are "keyvalue", "memory" or "redis".
+When choosing "keyvalue" this setting follows the one configured in the "keyvalue" section.
+When choosing "redis" you will need to configure the redis connection seperately.
+
+Default: `keyvalue`
+
+### maxelementsize
+
+When using memory this defines the maximum size an element can take
+
+Default: `1000`
+
+---
+
+## redis
+
+
+
+### enabled
+
+Whether to enable redis or not
+
+Default: `false`
+
+### host
+
+The host of the redis server including its port.
+
+Default: `localhost:6379`
+
+### password
+
+The password used to authenicate against the redis server
+
+Default: `<empty>`
+
+### db
+
+0 means default database
+
+Default: `0`
+
+---
+
+## cors
+
+
+
+### enable
+
+Whether to enable or disable cors headers.
+Note: If you want to put the frontend and the api on seperate domains or ports, you will need to enable this.
+      Otherwise the frontend won't be able to make requests to the api through the browser.
+
+Default: `true`
+
+### origins
+
+A list of origins which may access the api.
+
+Default: `<empty>`
+
+### maxage
+
+How long (in seconds) the results of a preflight request can be cached.
+
+Default: `0`
+
+---
+
+## mailer
+
+
+
+### enabled
+
+Whether to enable the mailer or not. If it is disabled, all users are enabled right away and password reset is not possible.
+
+Default: `false`
+
+### host
+
+SMTP Host
+
+Default: `<empty>`
+
+### port
+
+SMTP Host port
+
+Default: `587`
+
+### username
+
+SMTP username
+
+Default: `user`
+
+### password
+
+SMTP password
+
+Default: `<empty>`
+
+### skiptlsverify
+
+Wether to skip verification of the tls certificate on the server
+
+Default: `false`
+
+### fromemail
+
+The default from address when sending emails
+
+Default: `mail@vikunja`
+
+### queuelength
+
+The length of the mail queue.
+
+Default: `100`
+
+### queuetimeout
+
+The timeout in seconds after which the current open connection to the mailserver will be closed.
+
+Default: `30`
+
+### forcessl
+
+By default, vikunja will try to connect with starttls, use this option to force it to use ssl.
+
+Default: `false`
+
+---
+
+## log
+
+
+
+### path
+
+A folder where all the logfiles should go.
+
+Default: `<rootpath>logs`
+
+### enabled
+
+Whether to show any logging at all or none
+
+Default: `true`
+
+### standard
+
+Where the normal log should go. Possible values are stdout, stderr, file or off to disable standard logging.
+
+Default: `stdout`
+
+### level
+
+Change the log level. Possible values (case-insensitive) are CRITICAL, ERROR, WARNING, NOTICE, INFO, DEBUG.
+
+Default: `INFO`
+
+### database
+
+Whether or not to log database queries. Useful for debugging. Possible values are stdout, stderr, file or off to disable database logging.
+
+Default: `off`
+
+### databaselevel
+
+The log level for database log messages. Possible values (case-insensitive) are CRITICAL, ERROR, WARNING, NOTICE, INFO, DEBUG.
+
+Default: `WARNING`
+
+### http
+
+Whether to log http requests or not. Possible values are stdout, stderr, file or off to disable http logging.
+
+Default: `stdout`
+
+### echo
+
+Echo has its own logging which usually is unnessecary, which is why it is disabled by default. Possible values are stdout, stderr, file or off to disable standard logging.
+
+Default: `off`
+
+---
+
+## ratelimit
+
+
+
+### enabled
+
+whether or not to enable the rate limit
+
+Default: `false`
+
+### kind
+
+The kind on which rates are based. Can be either "user" for a rate limit per user or "ip" for an ip-based rate limit.
+
+Default: `user`
+
+### period
+
+The time period in seconds for the limit
+
+Default: `60`
+
+### limit
+
+The max number of requests a user is allowed to do in the configured time period
+
+Default: `100`
+
+### store
+
+The store where the limit counter for each user is stored.
+Possible values are "keyvalue", "memory" or "redis".
+When choosing "keyvalue" this setting follows the one configured in the "keyvalue" section.
+
+Default: `keyvalue`
+
+---
+
+## files
+
+
+
+### basepath
+
+The path where files are stored
+
+Default: `./files`
+
+### maxsize
+
+The maximum size of a file, as a human-readable string.
+Warning: The max size is limited 2^64-1 bytes due to the underlying datatype
+
+Default: `20MB`
+
+---
+
+## migration
+
+
+
+### wunderlist
+
+These are the settings for the wunderlist migrator
+
+Default: `<empty>`
+
+### todoist
+
+Default: `<empty>`
+
+---
+
+## avatar
+
+
+
+### gravatarexpiration
+
+When using gravatar, this is the duration in seconds until a cached gravatar user avatar expires
+
+Default: `3600`
+
+---
+
+## backgrounds
+
+
+
+### enabled
+
+Whether to enable backgrounds for lists at all.
+
+Default: `true`
+
+### providers
+
+Default: `<empty>`
+
+---
+
+## legal
+
+Legal urls
+Will be shown in the frontend if configured here
+
+
+
+### imprinturl
+
+Default: `<empty>`
+
+### privacyurl
+
+Default: `<empty>`
+
+---
+
+## keyvalue
+
+Key Value Storage settings
+The Key Value Storage is used for different kinds of things like metrics and a few cache systems.
+
+
+
+### type
+
+The type of the storage backend. Can be either "memory" or "redis". If "redis" is chosen it needs to be configured seperately.
+
+Default: `memory`
+

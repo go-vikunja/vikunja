@@ -26,7 +26,9 @@ import (
 	"fmt"
 	"github.com/magefile/mage/mg"
 	"golang.org/x/sync/errgroup"
+	"gopkg.in/yaml.v3"
 	"io"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -62,6 +64,7 @@ var (
 		"check:got-swag":       Check.GotSwag,
 		"release:os-package":   Release.OsPackage,
 		"dev:create-migration": Dev.CreateMigration,
+		"generate-docs":        GenerateDocs,
 	}
 )
 
@@ -728,4 +731,173 @@ func init() {
 
 	_, err = f.WriteString(migration)
 	return err
+}
+
+type configOption struct {
+	key          string
+	description  string
+	defaultValue string
+
+	children []*configOption
+}
+
+func parseYamlConfigNode(node *yaml.Node) (config *configOption) {
+	config = &configOption{
+		key:         node.Value,
+		description: strings.ReplaceAll(node.HeadComment, "# ", ""),
+	}
+
+	valMap := make(map[string]*configOption)
+
+	var lastOption *configOption
+
+	for i, n2 := range node.Content {
+		coo := &configOption{
+			key:         n2.Value,
+			description: strings.ReplaceAll(n2.HeadComment, "# ", ""),
+		}
+
+		// If there's a key in valMap for the current key we should use that to append etc
+		// Else we just create a new configobject
+		co, exists := valMap[n2.Value]
+		if exists {
+			co.description = coo.description
+		} else {
+			valMap[n2.Value] = coo
+			config.children = append(config.children, coo)
+		}
+
+		//		fmt.Println(i, coo.key, coo.description, n2.Value)
+
+		if i%2 == 0 {
+			lastOption = coo
+			continue
+		} else {
+			lastOption.defaultValue = n2.Value
+		}
+
+		if i-1 >= 0 && i-1 <= len(node.Content) && node.Content[i-1].Value != "" {
+			coo.defaultValue = n2.Value
+			coo.key = node.Content[i-1].Value
+		}
+
+		if len(n2.Content) > 0 {
+			for _, n := range n2.Content {
+				coo.children = append(coo.children, parseYamlConfigNode(n))
+			}
+		}
+	}
+
+	return config
+}
+
+func printConfig(config []*configOption, level int) (rendered string) {
+
+	// Keep track of what we already printed to prevent printing things twice
+	printed := make(map[string]bool)
+
+	for _, option := range config {
+
+		if option.key != "" {
+
+			// Filter out all config objects where the default value == key
+			// Yaml is weired: It gives you a slice with an entry each for the key and their value.
+			if printed[option.key] {
+				continue
+			}
+
+			if level == 0 {
+				rendered += "---\n\n"
+			}
+
+			rendered += "#"
+			for i := 0; i <= level; i++ {
+				rendered += "#"
+			}
+			rendered += " " + option.key + "\n\n"
+
+			if option.description != "" {
+				rendered += option.description + "\n\n"
+			}
+
+			// Top level config values never have a default value
+			if level > 0 {
+				rendered += "Default: `" + option.defaultValue
+				if option.defaultValue == "" {
+					rendered += "<empty>"
+				}
+				rendered += "`\n"
+			}
+		}
+
+		printed[option.key] = true
+		rendered += "\n" + printConfig(option.children, level+1)
+	}
+
+	return
+}
+
+const (
+	configDocPath       = `docs/content/doc/setup/config.md`
+	configInjectComment = `<!-- Generated config will be injected here -->`
+)
+
+// Generates the error docs from a commented config.yml.sample file in the repo root.
+func GenerateDocs() error {
+
+	config, err := ioutil.ReadFile("config.yml.sample")
+	if err != nil {
+		return err
+	}
+
+	var d yaml.Node
+	err = yaml.Unmarshal(config, &d)
+	if err != nil {
+		return err
+	}
+
+	conf := []*configOption{}
+
+	for _, node := range d.Content {
+		for _, n := range node.Content {
+			co := parseYamlConfigNode(n)
+			conf = append(conf, co)
+		}
+	}
+
+	renderedConfig := printConfig(conf, 0)
+
+	// Rebuild the config
+	file, err := os.OpenFile(configDocPath, os.O_RDWR, 0)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	// We read the config doc up until the marker, then stop and append our generated config
+	fullConfig := ""
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		t := scanner.Text()
+		fullConfig += t + "\n"
+
+		if t == configInjectComment {
+			break
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		return err
+	}
+
+	fullConfig += "\n" + renderedConfig
+
+	// We write the full file to prevent old content leftovers at the end
+	// I know, there are probably better ways to do this.
+	if err := ioutil.WriteFile(configDocPath, []byte(fullConfig), 0); err != nil {
+		return err
+	}
+
+	return nil
 }
