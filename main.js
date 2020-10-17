@@ -1,4 +1,6 @@
 const {app, BrowserWindow, shell} = require('electron')
+const express = require('express')
+const eApp = express()
 
 function createWindow() {
 	// Create the browser window.
@@ -18,6 +20,14 @@ function createWindow() {
 
 	// Hide the toolbar
 	mainWindow.setMenuBarVisibility(false)
+
+	// Start a local express server to serve static files
+	// TODO: Handle things like /login not found
+	eApp.use(express.static('frontend/'))
+	const server = eApp.listen(0,  '127.0.0.1', () => {
+		console.log(`Server started on port ${server.address().port}`)
+		mainWindow.loadURL(`http://127.0.0.1:${server.address().port}`)
+	})
 
 
 	// Open the DevTools.
@@ -43,3 +53,4 @@ app.whenReady().then(() => {
 app.on('window-all-closed', () => {
 	if (process.platform !== 'darwin') app.quit()
 })
+
