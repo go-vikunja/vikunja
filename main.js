@@ -34,9 +34,6 @@ function createWindow() {
 		console.log(`Server started on port ${server.address().port}`)
 		mainWindow.loadURL(`http://127.0.0.1:${server.address().port}`)
 	})
-
-	// Open the DevTools.
-	// mainWindow.webContents.openDevTools()
 }
 
 // This method will be called when Electron has finished
