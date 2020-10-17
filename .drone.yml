@@ -23,7 +23,7 @@ steps:
       - unzip vikunja-frontend-master.zip -d frontend
       - sed -i 's/\\/api\\/v1//g' frontend/index.html
       # Make sure that the -master suffix is added to release files
-      - sed -i 's/\\$\{version\}/master/g' package.json
+      - sed -i 's/\$\{version\}/master/g' package.json
       - yarn install
       - yarn dist --linux --windows
 
