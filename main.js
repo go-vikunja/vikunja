@@ -2,6 +2,8 @@ const {app, BrowserWindow, shell} = require('electron')
 const express = require('express')
 const eApp = express()
 
+const frontendPath = 'frontend/'
+
 function createWindow() {
 	// Create the browser window.
 	const mainWindow = new BrowserWindow({
@@ -22,13 +24,15 @@ function createWindow() {
 	mainWindow.setMenuBarVisibility(false)
 
 	// Start a local express server to serve static files
-	// TODO: Handle things like /login not found
-	eApp.use(express.static('frontend/'))
+	eApp.use(express.static(frontendPath))
+	// Handle urls set by the frontend
+	eApp.get('*', (request, response, next) => {
+		response.sendFile(`${__dirname}/${frontendPath}index.html`);
+	})
 	const server = eApp.listen(0,  '127.0.0.1', () => {
 		console.log(`Server started on port ${server.address().port}`)
 		mainWindow.loadURL(`http://127.0.0.1:${server.address().port}`)
 	})
-
 
 	// Open the DevTools.
 	// mainWindow.webContents.openDevTools()
