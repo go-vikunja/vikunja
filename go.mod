@@ -30,7 +30,7 @@ require (
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/disintegration/imaging v1.6.2
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
-	github.com/fzipp/gocyclo v0.2.0
+	github.com/fzipp/gocyclo v0.3.0
 	github.com/gabriel-vasile/mimetype v1.1.1
 	github.com/getsentry/sentry-go v0.7.0
 	github.com/go-errors/errors v1.1.1
