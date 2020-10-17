@@ -16,6 +16,7 @@ steps:
   - name: build
     image: electronuserland/builder:wine
     pull: true
+    depends_on: [ fetch-tags ]
     commands:
       # TODO: Move to a yarn script
       - wget https://dl.vikunja.io/frontend/vikunja-frontend-master.zip
@@ -42,3 +43,4 @@ steps:
       source: dist/*
       target: /desktop/master/
     depends_on: [ build ]
+
