@@ -18,6 +18,7 @@
   "build": {
     "appId": "io.vikunja.desktop",
     "productName": "Vikunja Desktop",
+    "artifactName": "${productName}-${version}.${ext}",
     "linux": {
       "target": [
         "deb",
