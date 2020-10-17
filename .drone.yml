@@ -2,10 +2,9 @@ kind: pipeline
 name: release-latest
 
 trigger:
-  branch:
-    - master
-  event:
-    - push
+  ref:
+    - refs/heads/master
+    - "refs/tags/**"
 
 steps:
   - name: fetch-tags
