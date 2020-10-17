@@ -2,7 +2,7 @@
   "name": "vikunja-desktop",
   "version": "0.14.0",
   "description": "Vikunja's frontend as a standalone desktop application.",
-  "main": "src/index.js",
+  "main": "main.js",
   "repository": "https://code.vikunja.io/desktop",
   "license": "GPL-3.0-or-later",
   "author": {
@@ -11,17 +11,13 @@
   },
   "homepage": "https://vikunja.io",
   "scripts": {
-    "start": "electron-forge start",
+    "start": "electron .",
     "pack": "electron-builder --dir",
     "dist": "electron-builder"
   },
   "build": {
     "appId": "io.vikunja.desktop",
     "productName": "Vikunja Desktop",
-    "files": [
-      "./frontend/**/*",
-      "./src/index.js"
-    ],
     "linux": {
       "target": [
         "deb",
@@ -53,9 +49,7 @@
     }
   },
   "devDependencies": {
-    "@electron-forge/cli": "6.0.0-beta.52",
-    "asar": "^3.0.3",
-    "electron": "9.1.0",
-    "electron-builder": "^22.8.1"
+    "electron": "^10.1.3",
+    "electron-builder": "^22.9.1"
   }
 }
