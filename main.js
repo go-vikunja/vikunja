@@ -8,8 +8,8 @@ const frontendPath = 'frontend/'
 function createWindow() {
 	// Create the browser window.
 	const mainWindow = new BrowserWindow({
-		width: 800,
-		height: 600,
+		width: 1680,
+		height: 960,
 		webPreferences: {
 			nodeIntegration: true,
 		}
