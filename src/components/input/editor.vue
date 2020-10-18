@@ -387,7 +387,7 @@ export default {
 }
 
 .CodeMirror {
-	padding: 0;
+	padding: .5rem;
 	border: 1px solid $editor-border-color;
 
 	&-lines pre {
@@ -395,8 +395,12 @@ export default {
 	}
 }
 
-.CodeMirror-scroll {
-	padding: .5em;
+.editor-preview {
+	padding: 0;
+
+	&-side {
+		padding: .5rem;
+	}
 }
 
 .editor-toolbar {
