@@ -124,6 +124,23 @@ steps:
 
 ---
 kind: pipeline
+name: trigger-desktop-update
+
+depends_on:
+  - release-latest
+
+steps:
+  - name: trigger
+    image: plugins/downstream
+    settings:
+      server: https://drone.kolaente.de
+      token:
+        from_secret: drone_token
+      repositories:
+        - vikunja/desktop@master
+
+---
+kind: pipeline
 type: docker
 name: docker-arm-release
 
