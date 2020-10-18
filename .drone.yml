@@ -44,10 +44,9 @@ steps:
       source: dist/*
       target: /desktop/master/
     trigger:
-      branch:
-        - master
       event:
-        - push
+        exclude:
+          - tag
     depends_on: [ build ]
 
   - name: release-version
