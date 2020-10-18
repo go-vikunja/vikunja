@@ -29,7 +29,6 @@ require (
 	github.com/d4l3k/messagediff v1.2.1 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/disintegration/imaging v1.6.2
-	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/fzipp/gocyclo v0.3.0
 	github.com/gabriel-vasile/mimetype v1.1.1
 	github.com/getsentry/sentry-go v0.7.0
@@ -39,6 +38,7 @@ require (
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/go-testfixtures/testfixtures/v3 v3.4.0
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
+	github.com/google/go-cmp v0.5.2 // indirect
 	github.com/gordonklaus/ineffassign v0.0.0-20200809085317-e36bfde3bb78
 	github.com/iancoleman/strcase v0.1.2
 	github.com/imdario/mergo v0.3.11
@@ -51,18 +51,19 @@ require (
 	github.com/magefile/mage v1.10.0
 	github.com/mailru/easyjson v0.7.6 // indirect
 	github.com/mattn/go-sqlite3 v1.14.4
+	github.com/mitchellh/mapstructure v1.3.2 // indirect
 	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
 	github.com/olekukonko/tablewriter v0.0.4
-	github.com/onsi/ginkgo v1.12.0 // indirect
-	github.com/onsi/gomega v1.9.0 // indirect
+	github.com/onsi/ginkgo v1.13.0 // indirect
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
-	github.com/pelletier/go-toml v1.4.0 // indirect
+	github.com/pelletier/go-toml v1.8.0 // indirect
 	github.com/pquerna/otp v1.2.0
 	github.com/prometheus/client_golang v1.8.0
 	github.com/samedi/caldav-go v3.0.0+incompatible
 	github.com/shurcooL/httpfs v0.0.0-20190707220628-8d4bc4ba7749
 	github.com/shurcooL/vfsgen v0.0.0-20200824052919-0d455de96546
 	github.com/spf13/afero v1.4.1
+	github.com/spf13/cast v1.3.1 // indirect
 	github.com/spf13/cobra v1.1.0
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/viper v1.7.1
@@ -79,7 +80,8 @@ require (
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
 	gopkg.in/d4l3k/messagediff.v1 v1.2.1
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
-	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
+	gopkg.in/ini.v1 v1.57.0 // indirect
+	gopkg.in/yaml.v3 v3.0.0-20200605160147-a5ece683394c
 	honnef.co/go/tools v0.0.1-2020.1.5
 	src.techknowlogick.com/xgo v1.1.1-0.20200811225412-bff6512e7c9c
 	src.techknowlogick.com/xormigrate v1.3.0

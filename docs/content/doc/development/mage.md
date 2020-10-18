@@ -118,14 +118,13 @@ binary to be able to use it.
 * `mage release:compress` compresses all build binaries with `upx` to save space
 * `mage release:zip` paclages a zip file for the files created by `release:os-package`
 
-### Build debian packages
+### Build os packages
 
 {{< highlight bash >}}
-mage release:deb
+mage release:packages
 {{< /highlight >}}
 
-Will build a `.deb` package into the current folder. 
-You need to have [fpm](https://fpm.readthedocs.io/en/latest/intro.html) installed to be able to do this.
+Will build `.deb`, `.rpm` and `.apk` packages to `dist/os-packages`.
 
 ### Make a debian repo
 

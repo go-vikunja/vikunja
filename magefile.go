@@ -643,29 +643,44 @@ func (Release) Zip() error {
 	return nil
 }
 
-// Creates a debian package from a built binary
-func (Release) Deb() {
-	runAndStreamOutput(
-		"fpm",
-		"-s", "dir",
-		"-t", "deb",
-		"--url", "https://vikunja.io",
-		"-n", "vikunja",
-		"-v", PkgVersion,
-		"--license", "GPLv3",
-		"--directories", "/opt/vikunja",
-		"--after-install", "./build/after-install.sh",
-		"--description", "'Vikunja is an open-source todo application, written in Go. It lets you create lists,tasks and share them via teams or directly between users.'",
-		"-m", "maintainers@vikunja.io",
-		"-p", RootPath+"/"+Executable+"-"+Version+"_amd64.deb",
-		RootPath+"/"+BinLocation+"=/opt/vikunja/vikunja",
-		"./config.yml.sample=/etc/vikunja/config.yml",
-	)
-}
-
 // Creates a debian repo structure
 func (Release) Reprepro() {
-	runAndStreamOutput("reprepro_expect", "debian", "includedeb", "strech", RootPath+"/"+Executable+"-"+Version+"_amd64.deb")
+	mg.Deps(setVersion, setBinLocation)
+	runAndStreamOutput("reprepro_expect", "debian", "includedeb", "strech", RootPath+"/"+DIST+"/os-packages/"+Executable+"_"+strings.ReplaceAll(VersionNumber, "v0", "0")+"_amd64.deb")
+}
+
+// Creates deb, rpm and apk packages
+func (Release) Packages() error {
+	mg.Deps(initVars)
+	if err := exec.Command("nfpm").Run(); err != nil && strings.Contains(err.Error(), "executable file not found") {
+		fmt.Println("Please manually install nfpm by running")
+		fmt.Println("curl -sfL https://install.goreleaser.com/github.com/goreleaser/nfpm.sh | sh -s -- -b $(go env GOPATH)/bin")
+		os.Exit(1)
+	}
+
+	// Because nfpm does not  support templating, we replace the values in the config file and restore it after running
+	nfpmConfigPath := RootPath + "/nfpm.yaml"
+	nfpmconfig, err := ioutil.ReadFile(nfpmConfigPath)
+	if err != nil {
+		return err
+	}
+
+	fixedConfig := strings.ReplaceAll(string(nfpmconfig), "<version>", VersionNumber)
+	fixedConfig = strings.ReplaceAll(fixedConfig, "<binlocation>", BinLocation)
+	if err := ioutil.WriteFile(nfpmConfigPath, []byte(fixedConfig), 0); err != nil {
+		return err
+	}
+
+	releasePath := RootPath + "/" + DIST + "/os-packages/"
+	if err := os.MkdirAll(releasePath, 0755); err != nil {
+		return err
+	}
+
+	runAndStreamOutput("nfpm", "pkg", "--packager", "deb", "--target", releasePath)
+	runAndStreamOutput("nfpm", "pkg", "--packager", "rpm", "--target", releasePath)
+	runAndStreamOutput("nfpm", "pkg", "--packager", "apk", "--target", releasePath)
+
+	return ioutil.WriteFile(nfpmConfigPath, nfpmconfig, 0)
 }
 
 type Dev mg.Namespace

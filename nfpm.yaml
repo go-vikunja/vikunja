@@ -1,0 +1,18 @@
+name: "vikunja"
+arch: "amd64"
+platform: "linux"
+version: "<version>"
+description: "Vikunja is an open-source todo application, written in Go. It lets you create lists,tasks and share them via teams or directly between users."
+maintainer: "Vikunja Maintainers <maintainers@vikunja.io>"
+homepage: "https://vikunja.io"
+section: "default"
+priority: "extra"
+license: "GPLv3"
+files:
+  <binlocation>: /opt/vikunja/vikunja
+config_files:
+  ./config.yml.sample: /etc/vikunja/config.yml
+symlinks:
+  /opt/vikunja/vikunja: /usr/local/bin/vikunja
+scripts:
+  postinstall: ./build/after-install.sh
