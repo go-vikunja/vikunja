@@ -26,11 +26,11 @@ import (
 	"github.com/laurent22/ical-go"
 )
 
-func getCaldavTodosForTasks(list *models.List) string {
+func getCaldavTodosForTasks(list *models.List, listTasks []*models.Task) string {
 
 	// Make caldav todos from Vikunja todos
 	var caldavtodos []*caldav.Todo
-	for _, t := range list.Tasks {
+	for _, t := range listTasks {
 
 		duration := t.EndDate.Sub(t.StartDate)
 

@@ -317,8 +317,9 @@ func (vcls *VikunjaCaldavListStorage) DeleteResource(rpath string) error {
 
 // VikunjaListResourceAdapter holds the actual resource
 type VikunjaListResourceAdapter struct {
-	list *models.List
-	task *models.Task
+	list      *models.List
+	listTasks []*models.Task
+	task      *models.Task
 
 	isPrincipal  bool
 	isCollection bool
@@ -354,12 +355,12 @@ func (vlra *VikunjaListResourceAdapter) CalculateEtag() string {
 // GetContent returns the content string of a resource (a task in our case)
 func (vlra *VikunjaListResourceAdapter) GetContent() string {
 	if vlra.list != nil && vlra.list.Tasks != nil {
-		return getCaldavTodosForTasks(vlra.list)
+		return getCaldavTodosForTasks(vlra.list, vlra.listTasks)
 	}
 
 	if vlra.task != nil {
 		list := models.List{Tasks: []*models.Task{vlra.task}}
-		return getCaldavTodosForTasks(&list)
+		return getCaldavTodosForTasks(&list, list.Tasks)
 	}
 
 	return ""
@@ -397,8 +398,27 @@ func (vcls *VikunjaCaldavListStorage) getListRessource(isCollection bool) (rr Vi
 		return
 	}
 
+	listTasks := vcls.list.Tasks
+	if listTasks == nil {
+		tk := models.TaskCollection{
+			ListID: vcls.list.ID,
+		}
+		iface, _, _, err := tk.ReadAll(vcls.user, "", 1, 1000)
+		if err != nil {
+			return rr, err
+		}
+		tasks, ok := iface.([]*models.Task)
+		if !ok {
+			panic("Tasks returned from TaskCollection.ReadAll are not []*models.Task!")
+		}
+
+		listTasks = tasks
+		vcls.list.Tasks = tasks
+	}
+
 	rr = VikunjaListResourceAdapter{
 		list:         vcls.list,
+		listTasks:    listTasks,
 		isCollection: isCollection,
 	}
 
