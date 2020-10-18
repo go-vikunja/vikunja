@@ -419,8 +419,9 @@ steps:
       target: /api/master/
     trigger:
       branch:
-        include:
-          - master
+        - master
+      event:
+        - push
     depends_on: [ sign-release ]
 
   - name: release-version
@@ -439,11 +440,8 @@ steps:
       source: dist/zip/*
       target: /api/${DRONE_TAG##v}/
     trigger:
-      ref:
-        - "refs/tags/**"
-      branch:
-        exclude:
-          - master
+      event:
+        - tag
     depends_on: [ sign-release ]
 
   # Build os packages and push it to our bucket
@@ -472,8 +470,9 @@ steps:
       target: /api/master/
     trigger:
       branch:
-        include:
-          - master
+        - master
+      event:
+        - push
     depends_on: [ build-os-packages ]
 
   - name: release-os-version
@@ -492,11 +491,8 @@ steps:
       source: dist/os-packages/*
       target: /api/${DRONE_TAG##v}/
     trigger:
-      ref:
-        - "refs/tags/**"
-      branch:
-        exclude:
-          - master
+      event:
+        - tag
     depends_on: [ build-os-packages ]
 
   - name: deb-structure
