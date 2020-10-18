@@ -126,6 +126,12 @@ steps:
 kind: pipeline
 name: trigger-desktop-update
 
+trigger:
+  branch:
+    - master
+  event:
+    - push
+
 depends_on:
   - release-latest
 
