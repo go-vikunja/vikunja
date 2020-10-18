@@ -1,5 +1,5 @@
 kind: pipeline
-name: release-latest
+name: release
 
 trigger:
   ref:
