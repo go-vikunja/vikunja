@@ -449,6 +449,7 @@ steps:
     image: goreleaser/nfpm
     pull: true
     commands:
+      - apk add git
       - ./mage-static release:packages
     depends_on: [ static-build-linux ]
 
