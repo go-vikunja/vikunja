@@ -43,7 +43,7 @@ steps:
       strip_prefix: dist/
       source: dist/*
       target: /desktop/master/
-    trigger:
+    when:
       event:
         exclude:
           - tag
@@ -64,7 +64,7 @@ steps:
       strip_prefix: dist/
       source: dist/*
       target: /desktop/${DRONE_TAG##v}/
-    trigger:
+    when:
       event:
         - tag
     depends_on: [ build ]
