@@ -18,6 +18,7 @@ package caldav
 
 import (
 	"strconv"
+	"strings"
 	"time"
 
 	"code.vikunja.io/api/pkg/caldav"
@@ -111,12 +112,19 @@ func parseTaskFromVTODO(content string) (vTask *models.Task, err error) {
 	return
 }
 
+// https://tools.ietf.org/html/rfc5545#section-3.3.5
 func caldavTimeToTimestamp(tstring string) time.Time {
 	if tstring == "" {
 		return time.Time{}
 	}
 
-	t, err := time.Parse(caldav.DateFormat, tstring)
+	format := caldav.DateFormat
+
+	if strings.HasSuffix(tstring, "Z") {
+		format = `20060102T150405Z`
+	}
+
+	t, err := time.Parse(format, tstring)
 	if err != nil {
 		log.Warningf("Error while parsing caldav time %s to TimeStamp: %s", tstring, err)
 		return time.Time{}

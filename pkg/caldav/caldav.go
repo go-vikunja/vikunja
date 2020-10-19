@@ -27,7 +27,7 @@ import (
 	"code.vikunja.io/api/pkg/utils"
 )
 
-// DateFormat ist the caldav date format
+// DateFormat is the caldav date format
 const DateFormat = `20060102T150405`
 
 // Event holds a single caldav event
