@@ -9,6 +9,160 @@ All releases can be found on https://code.vikunja.io/frontend/releases.
 
 The releases aim at the api versions which is why there are missing versions.
 
+## [0.15.0 - 2020-10-19]
+
+### Added
+
+* Add app shortcuts when using vikunja as pwa
+* Add build hash as meta tag to index.html to ensure always loading the new index file
+* Add checkbox to show only tasks which have a due date
+* Add creating labels when creating a task (#192)
+* Add debug logs for loading list + kanban buckets
+* Add deferring task's due dates directly from the overview (#199)
+* Add easymde & markdown preview for editing descriptions and comments (#183)
+* Add github sponsor link
+* Add limits for kanban boards (#234)
+* Add loading spinner when duplicating a list
+* Add more debugging when loading lists or buckets
+* Add more prefetching of components
+* Add notice to a list if it has no tasks
+* Add options to show tasks in range on the overview pages
+* Add Page Titles Everywhere (#177)
+* Allow setting api url from the login screen (#264)
+* Favorite lists (#237)
+* Favorite tasks (#236)
+* Keyboard Shortcuts (#193)
+* Saved filters (#239)
+* Show caldav url in settings if it's enabled server side
+* Show legal links from api if configured
+
+### Fixed
+
+* Fix archived lists still showing up in the side menu
+* Fix Assignees being deleted when adding a due date (#254)
+* Fix bottom padding on kanban
+* Fix bottom white margin
+* Fix checking for existing migration from other services
+* Fix comparing the currently loaded list with the current list to make sure to only load the list if needed
+* Fix create new bucket button having no margin to the right
+* Fix due date changes not saved on mobile
+* Fix editor spacing
+* Fix long text overflowing in task comments
+* Fix pagination button hover color
+* Fix pwa icon for iOS
+* Fix related tasks list spacing
+* Fix sort order when marking a task as done from the overview
+* Fix task in list style for tasks with assignees
+* Fix task layout in kanban
+* Fix task list if it has tasks with a long unbreakable title
+* Fix task title input taking up almost no space if empty
+* Fix update available breaking the navbar position
+* Make sure to always load the home route when starting the app
+* Make sure to make the list id from the route an int to not fail the comparison
+* More avatar providers (#200)
+* Only show the list at the end of the task if it was not specially required to show the list
+* Only trigger desktop rebuilds on pushes to master
+* Pin dependencies (#184)
+* Pin dependency vue-advanced-cropper to 0.16.10 (#201)
+* Pin dependency vue-shortkey to 3.1.7 (#194)
+* Pin telegram notify in drone
+* Prevent loading the list + kanban board again when closing the task popup
+* Prevent rendering html in tooltips
+* Release preparations
+* Remove html from tooltip
+* Replace renovate tokens with env
+
+### Changed
+
+* Always focus inputs on kanban when adding a new task or bucket
+* Automatically scroll to the bottom of a bucket after adding a new task to it
+* Bump http-proxy from 1.18.0 to 1.18.1
+* Cleanup code & make sure it has a common code style
+* Disabele spellcheck on bucket titles
+* Don't cache everything in the service worker, only explicitly assets
+* Don't create a label through quick add if the title is empty
+* Don't show a confusing message if no options are available
+* Hide the user menu if clicked outside of it
+* Hide UI elements if the user does not have the right to use them (#211)
+* Include fonts css in the main css bundle
+* Make task list, teams and settings pages max width of $desktop and centered
+* Make the task view full width for shares if the list has a background
+* Mark tasks as done from the kanban board with ctrl+click
+* Open unsplash author links in a new window
+* Put the editor container higher up for task description
+* Redirect to current list view on click on list in menu again
+* Switch release bucket to scaleway s3
+* Trigger a rebuild of the desktop app on builds to master for the frontend
+* Trigger @change when pasting content into editor
+* Update dependency axios to v0.20.0 (#216)
+* Update dependency bulma to v0.9.1 (#252)
+* Update dependency date-fns to v2.15.0 (#190)
+* Update dependency date-fns to v2.16.0 (#220)
+* Update dependency date-fns to v2.16.1 (#223)
+* Update dependency dompurify to v2.0.14 (#221)
+* Update dependency dompurify to v2.0.15 (#229)
+* Update dependency dompurify to v2.0.17 (#241)
+* Update dependency dompurify to v2.1.0 (#245)
+* Update dependency dompurify to v2.1.1 (#248)
+* Update dependency eslint-plugin-vue to v7.0.1 (#257)
+* Update dependency eslint-plugin-vue to v7.1.0 (#271)
+* Update dependency eslint-plugin-vue to v7 (#255)
+* Update dependency eslint to v7.10.0 (#250)
+* Update dependency eslint to v7.11.0 (#263)
+* Update dependency eslint to v7.4.0 (#175)
+* Update dependency eslint to v7.5.0 (#191)
+* Update dependency eslint to v7.6.0 (#198)
+* Update dependency eslint to v7.7.0 (#213)
+* Update dependency eslint to v7.8.0 (#225)
+* Update dependency eslint to v7.8.1 (#228)
+* Update dependency eslint to v7.9.0 (#242)
+* Update dependency @fortawesome/vue-fontawesome to v2 (#226)
+* Update dependency http-proxy from 1.18.0 to 1.18.1
+* Update dependency lodash to v4.17.16 (#178)
+* Update dependency lodash to v4.17.17 (#179)
+* Update dependency lodash to v4.17.18 (#180)
+* Update dependency lodash to v4.17.19 (#181)
+* Update dependency lodash to v4.17.20 (#212)
+* Update dependency marked to v1.1.1 (#185)
+* Update dependency marked to v1.2.0 (#251)
+* Update dependency sass-loader to v10.0.1 (#219)
+* Update dependency sass-loader to v10.0.2 (#230)
+* Update dependency sass-loader to v10.0.3 (#262)
+* Update dependency sass-loader to v10 (#217)
+* Update dependency sass-loader to v9.0.1 (#174)
+* Update dependency sass-loader to v9.0.2 (#176)
+* Update dependency sass-loader to v9.0.3 (#203)
+* Update dependency sass-loader to v9 (#173)
+* Update dependency vue-advanced-cropper to v0.17.0 (#231)
+* Update dependency vue-advanced-cropper to v0.17.1 (#232)
+* Update dependency vue-advanced-cropper to v0.17.2 (#238)
+* Update dependency vue-advanced-cropper to v0.17.3 (#243)
+* Update dependency vue-drag-resize to v1.4.1 (#182)
+* Update dependency vue-drag-resize to v1.4.2 (#197)
+* Update dependency vue-easymde to v1.2.2 (#187)
+* Update dependency vue-easymde to v1.3.0 (#256)
+* Update dependency vue-flatpickr-component to v8.1.6 (#222)
+* Update dependency vue-router to v3.4.0 (#202)
+* Update dependency vue-router to v3.4.1 (#204)
+* Update dependency vue-router to v3.4.2 (#205)
+* Update dependency vue-router to v3.4.3 (#210)
+* Update dependency vue-router to v3.4.4 (#247)
+* Update dependency vue-router to v3.4.5 (#249)
+* Update dependency vue-router to v3.4.6 (#260)
+* Update dependency vue-router to v3.4.7 (#269)
+* Update Font Awesome (#188)
+* Update Font Awesome (#253)
+* Update Font Awesome (#258)
+* Update renovate token
+* Update vue monorepo to v2.6.12 (#215)
+* Update vue monorepo to v4.5.2 (#208)
+* Update vue monorepo to v4.5.3 (#209)
+* Update vue monorepo to v4.5.4 (#214)
+* Update vue monorepo to v4.5.6 (#244)
+* Update vue monorepo to v4.5.7 (#259)
+* Update vue monorepo to v4.5.8 (#272)
+* Use team update route to update a team member's admin status
+
 ## [0.14.1 - 2020-08-06]
 
 ### Fixed
