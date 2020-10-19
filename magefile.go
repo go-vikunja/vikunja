@@ -652,7 +652,14 @@ func (Release) Reprepro() {
 // Creates deb, rpm and apk packages
 func (Release) Packages() error {
 	mg.Deps(initVars)
-	if err := exec.Command("nfpm").Run(); err != nil && strings.Contains(err.Error(), "executable file not found") {
+	var err error
+	binpath := "nfpm"
+	err = exec.Command(binpath).Run()
+	if err != nil && strings.Contains(err.Error(), "executable file not found") {
+		binpath = "/nfpm"
+		err = exec.Command(binpath).Run()
+	}
+	if err != nil && strings.Contains(err.Error(), "executable file not found") {
 		fmt.Println("Please manually install nfpm by running")
 		fmt.Println("curl -sfL https://install.goreleaser.com/github.com/goreleaser/nfpm.sh | sh -s -- -b $(go env GOPATH)/bin")
 		os.Exit(1)
@@ -676,9 +683,9 @@ func (Release) Packages() error {
 		return err
 	}
 
-	runAndStreamOutput("nfpm", "pkg", "--packager", "deb", "--target", releasePath)
-	runAndStreamOutput("nfpm", "pkg", "--packager", "rpm", "--target", releasePath)
-	runAndStreamOutput("nfpm", "pkg", "--packager", "apk", "--target", releasePath)
+	runAndStreamOutput(binpath, "pkg", "--packager", "deb", "--target", releasePath)
+	runAndStreamOutput(binpath, "pkg", "--packager", "rpm", "--target", releasePath)
+	runAndStreamOutput(binpath, "pkg", "--packager", "apk", "--target", releasePath)
 
 	return ioutil.WriteFile(nfpmConfigPath, nfpmconfig, 0)
 }
