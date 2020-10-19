@@ -417,7 +417,7 @@ steps:
       strip_prefix: dist/zip/
       source: dist/zip/*
       target: /api/master/
-    trigger:
+    when:
       branch:
         - master
       event:
@@ -439,7 +439,7 @@ steps:
       strip_prefix: dist/zip/
       source: dist/zip/*
       target: /api/${DRONE_TAG##v}/
-    trigger:
+    when:
       event:
         - tag
     depends_on: [ sign-release ]
@@ -469,7 +469,7 @@ steps:
       strip_prefix: dist/os-packages/
       source: dist/os-packages/*
       target: /api/master/
-    trigger:
+    when:
       branch:
         - master
       event:
@@ -491,7 +491,7 @@ steps:
       strip_prefix: dist/os-packages/
       source: dist/os-packages/*
       target: /api/${DRONE_TAG##v}/
-    trigger:
+    when:
       event:
         - tag
     depends_on: [ build-os-packages ]
