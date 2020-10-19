@@ -7,6 +7,151 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 All releases can be found on https://code.vikunja.io/api/releases.
 
+## [0.15.0] - 2020-10-19
+
+### Added
+
+* Add app support info for DAV (#692)
+* Add better tests for namespaces
+* Add caldav enabled/disabled to /info endpoint
+* Add checks if tasks exist in maps before trying to access them
+* Add config option to force ssl connections to connect with the mailer
+* Add dav proxy directions to example proxy configurations
+* Add docs about using vikunja with utf-8 characters
+* Add FreeBSD guide to installation docs
+* Add github sponsor link
+* Add Golangci Lint (#676)
+* Add mage command to create a new migration
+* Add option to configure legal urls
+* Add rootpath to deb command to not include everything in the deb file
+* Add toc to docs
+* Add update route to toggle team member admin status
+* Add util function to move files
+* Disable gocyclo for migration modules
+* Favorite lists (#654)
+* Favorite tasks (#653)
+* Generate config docs from sample config (#684)
+* Kanban bucket limits (#652)
+* Key-Value Storages (#674)
+* Manage users via cli (#632)
+* Mention client_max_body_size in nginx proxy settings
+* More avatar providers (#622)
+* Return rights when reading a single item (#626)
+* Saved filters (#655)
+
+### Fixed
+
+* Cleanup references to make
+* Don't add a subtask to the top level of tasks to not add it twice in the list
+* Fetch tasks for caldav lists (#641)
+* Fix building for darwin with mage
+* Fix creating lists with non ascii characters (#607)
+* Fix decoding active users from redis
+* Fix dockerimage build
+* Fix docs index links
+* Fix duplicating a list with background
+* "Fix" gocyclo
+* Fix loading list background information for uploaded backgrounds
+* Fix migrating items with large items from todoist
+* Fix nfpm command in drone
+* Fix parsing todoist reminder dates
+* Fix reading passwords on windows
+* Fix release commands in drone
+* Fix release trigger
+* Fix release trigger in drone
+* Fix token renew for link shares
+* Fix trigger for pushing release artifacts to drone
+* Fix updating team admin status
+* Fix upload avatar not working
+* Fix users with disabled totp but not enrolled being unable to login
+* Makefile: make add EXTRA_GOFLAG to GOFLAGS (#605)
+* Make sure built binary files are executable when compressing with upx
+* Make sure lists which would have a duplicate identifier can still be duplicated
+* Make sure the metrics map accesses only happen explicitly
+* Make sure to copy the permissions as well when moving files
+* Make sure to only initialize all variables when needed
+* Make sure to require admin rights when modifying list/namespace users to be consistent with teams
+* Make sure we have git installed when building os packages
+* Make sure we have go installed when building os packages (for build step dependencies)
+* Only check if a bucket limit is exceeded when moving a task between buckets
+* Only try to download attachments from todoist when there is a url
+* Pin telegram notification plugin in drone
+* Regenerate swagger docs
+* Skip directories when moving build release artefacts in drone
+* Support absolute iCal timestamps in CalDAV requests (#691)
+* Work around tasks with attachments not being duplicated
+
+### Changed
+
+* Replace renovate tokens with env
+* Switch s3 release bucket to scaleway
+* Switch to mage (#651)
+* Testing improvements (#666)
+* Update docs with testmail command + reorder
+* Update github.com/asaskevich/govalidator commit hash to 29e1ff8 (#639)
+* Update github.com/asaskevich/govalidator commit hash to 50839af (#637)
+* Update github.com/asaskevich/govalidator commit hash to 7a23bdc (#657)
+* Update github.com/asaskevich/govalidator commit hash to df4adff (#552)
+* Update github.com/c2h5oh/datasize commit hash to 48ed595 (#644)
+* Update github.com/gordonklaus/ineffassign commit hash to e36bfde (#625)
+* Update github.com/jgautheron/goconst commit hash to 8f5268c (#658)
+* Update github.com/shurcooL/vfsgen commit hash to 0d455de (#642)
+* Update golang.org/x/crypto commit hash to 123391f (#619)
+* Update golang.org/x/crypto commit hash to 5c72a88 (#640)
+* Update golang.org/x/crypto commit hash to 7f63de1 (#672)
+* Update golang.org/x/crypto commit hash to 84dcc77 (#678)
+* Update golang.org/x/crypto commit hash to 948cd5f (#609)
+* Update golang.org/x/crypto commit hash to 9e8e0b3 (#685)
+* Update golang.org/x/crypto commit hash to ab33eee (#608)
+* Update golang.org/x/crypto commit hash to afb6bcd (#668)
+* Update golang.org/x/crypto commit hash to c90954c (#671)
+* Update golang.org/x/crypto commit hash to eb9a90e (#669)
+* Update golang.org/x/image commit hash to 4578eab (#663)
+* Update golang.org/x/image commit hash to a67d67e (#664)
+* Update golang.org/x/image commit hash to e162460 (#665)
+* Update golang.org/x/image commit hash to e59bae6 (#659)
+* Update golang.org/x/sync commit hash to 3042136 (#667)
+* Update golang.org/x/sync commit hash to b3e1573 (#675)
+* Update module 4d63.com/tz to v1.2.0 (#631)
+* Update module fzipp/gocyclo to v0.2.0 (#686)
+* Update module fzipp/gocyclo to v0.3.0 (#687)
+* Update module getsentry/sentry-go to v0.7.0 (#617)
+* Update module go-errors/errors to v1.1.1 (#677)
+* Update module go-testfixtures/testfixtures/v3 to v3.4.0 (#627)
+* Update module go-testfixtures/testfixtures/v3 to v3.4.1 (#693)
+* Update module iancoleman/strcase to v0.1.0 (#636)
+* Update module iancoleman/strcase to v0.1.1 (#645)
+* Update module iancoleman/strcase to v0.1.2 (#660)
+* Update module imdario/mergo to v0.3.10 (#615)
+* Update module imdario/mergo to v0.3.11 (#629)
+* Update module labstack/echo/v4 to v4.1.17 (#646)
+* Update module lib/pq to v1.7.1 (#616)
+* Update module lib/pq to v1.8.0 (#618)
+* Update module mattn/go-sqlite3 to v1.14.1 (#638)
+* Update module mattn/go-sqlite3 to v1.14.2 (#647)
+* Update module mattn/go-sqlite3 to v1.14.3 (#661)
+* Update module mattn/go-sqlite3 to v1.14.4 (#670)
+* Update module prometheus/client_golang to v1.8.0 (#681)
+* Update module spf13/afero to v1.3.2 (#610)
+* Update module spf13/afero to v1.3.3 (#623)
+* Update module spf13/afero to v1.3.4 (#628)
+* Update module spf13/afero to v1.3.5 (#650)
+* Update module spf13/afero to v1.4.0 (#662)
+* Update module spf13/afero to v1.4.1 (#673)
+* Update module spf13/cobra to v1.1.0 (#679)
+* Update module spf13/cobra to v1.1.1 (#690)
+* Update module spf13/viper to v1.7.1 (#620)
+* Update module src.techknowlogick.com/xgo to v1.1.0+1.15.0 (#630)
+* Update module src.techknowlogick.com/xgo to v1 (#613)
+* Update module swaggo/swag to v1.6.8 (#680)
+* Update renovate token
+* Update src.techknowlogick.com/xgo commit hash to 7c2e3c9 (#611)
+* Update src.techknowlogick.com/xgo commit hash to 96de19c (#612)
+* update theme
+* Update xgo to v1.0.0+1.14.6
+* Use db sessions for task-related things (#621)
+* Use nfpm to build deb, rpm and apk packages (#689)
+
 ## [0.14.1] - 2020-07-07
 
 ### Fixed
