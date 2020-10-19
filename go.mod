@@ -36,7 +36,7 @@ require (
 	github.com/go-openapi/swag v0.19.9 // indirect
 	github.com/go-redis/redis/v7 v7.4.0
 	github.com/go-sql-driver/mysql v1.5.0
-	github.com/go-testfixtures/testfixtures/v3 v3.4.0
+	github.com/go-testfixtures/testfixtures/v3 v3.4.1
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/google/go-cmp v0.5.2 // indirect
 	github.com/gordonklaus/ineffassign v0.0.0-20200809085317-e36bfde3bb78
