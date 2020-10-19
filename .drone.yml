@@ -21,7 +21,7 @@ steps:
       - if [ -z "$$VERSION" ]; then export VERSION=${DRONE_BRANCH}; fi
       # TODO: Move to a yarn script
       - wget https://dl.vikunja.io/frontend/vikunja-frontend-$$VERSION.zip
-      - unzip vikunja-frontend-master.zip -d frontend
+      - unzip vikunja-frontend-$$VERSION.zip -d frontend
       - sed -i 's/\\/api\\/v1//g' frontend/index.html
       # Make sure that the -master suffix is added to release files
       - sed -i "s/\$${version}/$$VERSION/g" package.json
