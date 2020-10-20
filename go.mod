@@ -68,7 +68,7 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/viper v1.7.1
 	github.com/stretchr/testify v1.6.1
-	github.com/swaggo/swag v1.6.8
+	github.com/swaggo/swag v1.6.9
 	github.com/ulule/limiter/v3 v3.5.0
 	golang.org/x/crypto v0.0.0-20201016220609-9e8e0b390897
 	golang.org/x/image v0.0.0-20200927104501-e162460cd6b5
