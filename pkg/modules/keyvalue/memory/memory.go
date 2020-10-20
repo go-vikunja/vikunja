@@ -72,11 +72,7 @@ func (s *Storage) IncrBy(key string, update int64) (err error) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
-	v, err := s.Get(key)
-	if err != nil && !e.IsErrValueNotFoundForKey(err) {
-		return err
-	}
-	val, is := v.(int64)
+	val, is := s.store[key].(int64)
 	if !is {
 		return &e.ErrValueHasWrongType{Key: key, ExpectedValue: "int64"}
 	}
@@ -90,11 +86,7 @@ func (s *Storage) DecrBy(key string, update int64) (err error) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
-	v, err := s.Get(key)
-	if err != nil && !e.IsErrValueNotFoundForKey(err) {
-		return err
-	}
-	val, is := v.(int64)
+	val, is := s.store[key].(int64)
 	if !is {
 		return &e.ErrValueHasWrongType{Key: key, ExpectedValue: "int64"}
 	}
