@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 All releases can be found on https://code.vikunja.io/api/releases.
 
+## [0.15.1] - 2020-10-20
+
+### Fixed
+
+* Fix not possible to create tasks if metrics were enabled
+
 ## [0.15.0] - 2020-10-19
 
 ### Added
