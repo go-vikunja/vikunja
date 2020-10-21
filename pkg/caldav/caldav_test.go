@@ -241,11 +241,131 @@ DTEND:20181202T050320
 END:VEVENT
 END:VCALENDAR`,
 		},
+		{
+			name: "Test caldavparsing with multiline description",
+			args: args{
+				config: &Config{
+					Name:   "test",
+					ProdID: "RandomProdID which is not random",
+				},
+				events: []*Event{
+					{
+						Summary: "Event #1",
+						Description: `Lorem Ipsum
+Dolor sit amet`,
+						UID:       "randommduid",
+						Timestamp: time.Unix(1543626724, 0).In(config.GetTimeZone()),
+						Start:     time.Unix(1543626724, 0).In(config.GetTimeZone()),
+						End:       time.Unix(1543627824, 0).In(config.GetTimeZone()),
+					},
+				},
+			},
+			wantCaldavevents: `BEGIN:VCALENDAR
+VERSION:2.0
+METHOD:PUBLISH
+X-PUBLISHED-TTL:PT4H
+X-WR-CALNAME:test
+PRODID:-//RandomProdID which is not random//EN
+BEGIN:VEVENT
+UID:randommduid
+SUMMARY:Event #1
+DESCRIPTION:Lorem Ipsum\nDolor sit amet
+DTSTAMP:20181201T011204
+DTSTART:20181201T011204
+DTEND:20181201T013024
+END:VEVENT
+END:VCALENDAR`,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			gotCaldavevents := ParseEvents(tt.args.config, tt.args.events)
 			assert.Equal(t, gotCaldavevents, tt.wantCaldavevents)
+		})
+	}
+}
+
+func TestParseTodos(t *testing.T) {
+	type args struct {
+		config *Config
+		todos  []*Todo
+	}
+	tests := []struct {
+		name            string
+		args            args
+		wantCaldavtasks string
+	}{
+		{
+			name: "Test caldavparsing with multiline description",
+			args: args{
+				config: &Config{
+					Name:   "test",
+					ProdID: "RandomProdID which is not random",
+				},
+				todos: []*Todo{
+					{
+						Summary: "Todo #1",
+						Description: `Lorem Ipsum
+Dolor sit amet`,
+						UID:       "randommduid",
+						Timestamp: time.Unix(1543626724, 0).In(config.GetTimeZone()),
+					},
+				},
+			},
+			wantCaldavtasks: `BEGIN:VCALENDAR
+VERSION:2.0
+METHOD:PUBLISH
+X-PUBLISHED-TTL:PT4H
+X-WR-CALNAME:test
+PRODID:-//RandomProdID which is not random//EN
+BEGIN:VTODO
+UID:randommduid
+DTSTAMP:20181201T011204
+SUMMARY:Todo #1
+DESCRIPTION:Lorem Ipsum\nDolor sit amet
+LAST-MODIFIED:00010101T000000
+END:VTODO
+END:VCALENDAR`,
+		},
+		{
+			name: "Test caldavparsing with completed task",
+			args: args{
+				config: &Config{
+					Name:   "test",
+					ProdID: "RandomProdID which is not random",
+				},
+				todos: []*Todo{
+					{
+						Summary:     "Todo #1",
+						Description: "Lorem Ipsum",
+						UID:         "randommduid",
+						Timestamp:   time.Unix(1543626724, 0).In(config.GetTimeZone()),
+						Completed:   time.Unix(1543627824, 0).In(config.GetTimeZone()),
+					},
+				},
+			},
+			wantCaldavtasks: `BEGIN:VCALENDAR
+VERSION:2.0
+METHOD:PUBLISH
+X-PUBLISHED-TTL:PT4H
+X-WR-CALNAME:test
+PRODID:-//RandomProdID which is not random//EN
+BEGIN:VTODO
+UID:randommduid
+DTSTAMP:20181201T011204
+SUMMARY:Todo #1
+DESCRIPTION:Lorem Ipsum
+COMPLETED:20181201T013024
+STATUS:COMPLETED
+LAST-MODIFIED:00010101T000000
+END:VTODO
+END:VCALENDAR`,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotCaldavtasks := ParseTodos(tt.args.config, tt.args.todos)
+			assert.Equal(t, gotCaldavtasks, tt.wantCaldavtasks)
 		})
 	}
 }

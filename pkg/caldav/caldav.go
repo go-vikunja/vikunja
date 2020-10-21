@@ -18,6 +18,7 @@ package caldav
 
 import (
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -92,11 +93,17 @@ PRODID:-//` + config.ProdID + `//EN`
 			e.UID = makeCalDavTimeFromTimeStamp(e.Timestamp) + utils.Sha256(e.Summary)
 		}
 
+		formattedDescription := ""
+		if e.Description != "" {
+			re := regexp.MustCompile(`\r?\n`)
+			formattedDescription = re.ReplaceAllString(e.Description, "\\n")
+		}
+
 		caldavevents += `
 BEGIN:VEVENT
 UID:` + e.UID + `
 SUMMARY:` + e.Summary + `
-DESCRIPTION:` + e.Description + `
+DESCRIPTION:` + formattedDescription + `
 DTSTAMP:` + makeCalDavTimeFromTimeStamp(e.Timestamp) + `
 DTSTART:` + makeCalDavTimeFromTimeStamp(e.Start) + `
 DTEND:` + makeCalDavTimeFromTimeStamp(e.End)
@@ -152,12 +159,15 @@ DTSTART: ` + makeCalDavTimeFromTimeStamp(t.Start)
 DTEND: ` + makeCalDavTimeFromTimeStamp(t.End)
 		}
 		if t.Description != "" {
+			re := regexp.MustCompile(`\r?\n`)
+			formattedDescription := re.ReplaceAllString(t.Description, "\\n")
 			caldavtodos += `
-DESCRIPTION:` + t.Description
+DESCRIPTION:` + formattedDescription
 		}
 		if t.Completed.Unix() > 0 {
 			caldavtodos += `
-COMPLETED: ` + makeCalDavTimeFromTimeStamp(t.Completed)
+COMPLETED:` + makeCalDavTimeFromTimeStamp(t.Completed) + `
+STATUS:COMPLETED`
 		}
 		if t.Organizer != nil {
 			caldavtodos += `
