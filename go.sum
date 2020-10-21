@@ -159,6 +159,8 @@ github.com/fsnotify/fsnotify v1.4.9 h1:hsms1Qyu0jgnwNXIxa+/V/PDsU6CfLf6CNO8H7IWo
 github.com/fsnotify/fsnotify v1.4.9/go.mod h1:znqG4EE+3YCdAaPaxE2ZRY/06pZUdp0tY4IgpuI1SZQ=
 github.com/fzipp/gocyclo v0.3.0 h1:GGYiyz9o4lDXRn4hA3FidRkR3agaTwbDEMd98qFG6Lk=
 github.com/fzipp/gocyclo v0.3.0/go.mod h1:DJHO6AUmbdqj2ET4Z9iArSuwWgYDRryYt2wASxc7x3E=
+github.com/fzipp/gocyclo v0.3.1 h1:A9UeX3HJSXTBzvHzhqoYVuE0eAhe+aM8XBCCwsPMZOc=
+github.com/fzipp/gocyclo v0.3.1/go.mod h1:DJHO6AUmbdqj2ET4Z9iArSuwWgYDRryYt2wASxc7x3E=
 github.com/gabriel-vasile/mimetype v1.1.1 h1:qbN9MPuRf3bstHu9zkI9jDWNfH//9+9kHxr9oRBBBOA=
 github.com/gabriel-vasile/mimetype v1.1.1/go.mod h1:6CDPel/o/3/s4+bp6kIbsWATq8pmgOisOPG40CJa6To=
 github.com/garyburd/redigo v1.6.0 h1:0VruCpn7yAIIu7pWVClQC8wxCJEcG3nyzpMSHKi1PQc=
