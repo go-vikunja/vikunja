@@ -1,6 +1,7 @@
 .reminders {
   .reminder-input {
-    margin: 0;
+    display: flex;
+    align-items: center;
 
     &.overdue input {
       color: $red;
@@ -12,11 +13,11 @@
 
     a {
       color: $red;
-      vertical-align: sub;
+      padding-left: .5rem;
     }
 
     input {
-      width: 90%;
+      width: 100%;
       border: none;
 
       &:focus {
