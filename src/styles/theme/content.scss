@@ -9,7 +9,7 @@
     z-index: 2;
 
     &.is-menu-enabled {
-      margin-left: 17vw;
+      margin-left: $navbar-width;
     }
 
     @media screen and (max-width: $tablet) {
