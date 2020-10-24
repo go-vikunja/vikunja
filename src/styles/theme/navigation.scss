@@ -132,20 +132,6 @@
       left: 0;
     }
 
-    .collapse-menu-button {
-      font-size: .75rem;
-      color: $grey;
-      text-align: center;
-      display: block;
-      width: 100%;
-      margin: $navbar-padding / 2 0 $navbar-padding;
-      cursor: pointer;
-
-      @media screen and (max-width: $tablet) {
-        display: none;
-      }
-    }
-
     .menu {
       .menu-label {
         font-size: 1em;
@@ -307,6 +293,10 @@
           display: block;
         }
       }
+
+      &.namespaces-lists {
+        padding-top: $navbar-padding / 2;
+      }
     }
 
     .top-menu {
@@ -387,6 +377,10 @@
   }
 }
 
+.navbar-brand .menu-show-button {
+  display: block;
+}
+
 .mobile-overlay {
   display: none;
   position: fixed;
@@ -420,10 +414,6 @@
   .navbar.is-dark .navbar-brand > .navbar-item {
     margin: 0 auto;
   }
-}
-
-.menu-show-button.is-visible {
-  display: block;
 }
 
 .logout-icon {

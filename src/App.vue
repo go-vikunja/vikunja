@@ -15,9 +15,10 @@
 						<img alt="Vikunja" src="/images/logo-full.svg" v-else/>
 					</router-link>
 					<a
-						:class="{'is-visible': !menuActive}"
-						@click="menuActive = true"
+						@click="menuActive = !menuActive"
 						class="menu-show-button"
+						@shortkey="() => menuActive = !menuActive"
+						v-shortkey="['ctrl', 'e']"
 					>
 						<icon icon="bars"></icon>
 					</a>
@@ -148,14 +149,6 @@
 								</li>
 							</ul>
 						</div>
-
-						<a
-							@click="menuActive = false"
-							@shortkey="() => menuActive = !menuActive"
-							class="collapse-menu-button"
-							v-shortkey="['ctrl', 'e']">
-							Collapse Menu
-						</a>
 
 						<aside class="menu namespaces-lists">
 							<template v-for="n in namespaces">
