@@ -5,7 +5,7 @@
 				<h2
 					:ref="`bucket${bucket.id}title`"
 					@focusout="() => saveBucketTitle(bucket.id)"
-					@keyup.ctrl.enter="() => saveBucketTitle(bucket.id)"
+					@keyup.enter="() => saveBucketTitle(bucket.id)"
 					class="title input"
 					contenteditable="true"
 					spellcheck="false">{{ bucket.title }}</h2>
@@ -497,7 +497,8 @@ export default {
 				})
 		},
 		saveBucketTitle(bucketId) {
-			const bucketTitle = this.$refs[`bucket${bucketId}title`][0].textContent
+			const bucketTitleElement = this.$refs[`bucket${bucketId}title`][0]
+			const bucketTitle = bucketTitleElement.textContent
 			const bucket = new BucketModel({
 				id: bucketId,
 				title: bucketTitle,
@@ -515,6 +516,7 @@ export default {
 			this.$store.dispatch('kanban/updateBucket', bucket)
 				.then(r => {
 					realBucket.title = r.title
+					bucketTitleElement.blur()
 				})
 				.catch(e => {
 					this.error(e, this)

@@ -124,7 +124,7 @@ export default {
 				.then(r => {
 					ctx.commit('setBuckets', r)
 					ctx.commit('setListId', listId)
-					return Promise.resolve()
+					return Promise.resolve(r)
 				})
 				.catch(e => {
 					return Promise.reject(e)
