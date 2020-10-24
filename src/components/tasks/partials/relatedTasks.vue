@@ -187,7 +187,6 @@ export default {
 						this.$set(this.relatedTasks, this.newTaskRelationKind, [])
 					}
 					this.relatedTasks[this.newTaskRelationKind].push(this.newTaskRelationTask)
-					this.newTaskRelationKind = 'unset'
 					this.newTaskRelationTask = new TaskModel()
 				})
 				.catch(e => {
