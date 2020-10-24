@@ -9,15 +9,19 @@
 				:config="flatPickerConfig"
 				:data-index="index"
 				:disabled="disabled"
-				:id="'taskreminderdate' + index"
-				:v-model="reminders"
 				:value="r"
-				placeholder="Add a new reminder..."
-			>
-			</flat-pickr>
-			<a @click="removeReminderByIndex(index)" v-if="index !== (reminders.length - 1) && !disabled">
+			/>
+			<a @click="removeReminderByIndex(index)" v-if="!disabled">
 				<icon icon="times"></icon>
 			</a>
+		</div>
+		<div class="reminder-input" v-if="showNewReminder">
+			<flat-pickr
+				:config="flatPickerConfig"
+				:disabled="disabled"
+				:value="null"
+				placeholder="Add a new reminder..."
+			/>
 		</div>
 	</div>
 </template>
@@ -33,6 +37,7 @@ export default {
 			reminders: [],
 			lastReminder: 0,
 			nowUnix: new Date(),
+			showNewReminder: true,
 			flatPickerConfig: {
 				altFormat: 'j M Y H:i',
 				altInput: true,
@@ -72,20 +77,27 @@ export default {
 			this.lastReminder = +new Date(selectedDates[0])
 		},
 		addReminderDate(selectedDates, dateStr, instance) {
-			let newDate = +new Date(selectedDates[0])
+			const newDate = +new Date(selectedDates[0])
 
 			// Don't update if nothing changed
 			if (newDate === this.lastReminder) {
 				return
 			}
 
-			let index = parseInt(instance.input.dataset.index)
-			this.reminders[index] = newDate
+			// No date selected
+			if (isNaN(newDate)) {
+				return
+			}
 
-			let lastIndex = this.reminders.length - 1
-			// put a new null at the end if we changed something
-			if (lastIndex === index && !isNaN(newDate)) {
-				this.reminders.push(null)
+			const index = parseInt(instance.input.dataset.index)
+			if (isNaN(index)) {
+				this.reminders.push(newDate)
+				// This is a workaround to recreate the flatpicker instance which essentially resets it.
+				// Even though flatpickr itself has a reset event, the Vue component does not expose it.
+				this.showNewReminder = false
+				this.$nextTick(() => this.showNewReminder = true)
+			} else {
+				this.reminders[index] = newDate
 			}
 
 			this.updateData()

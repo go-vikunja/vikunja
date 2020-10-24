@@ -27,7 +27,6 @@ export default class TaskModel extends AbstractModel {
 					this.scheduleNotification(d)
 					return d
 				})
-				this.reminderDates.push(null) // To trigger the datepicker
 			})
 
 		// Parse the repeat after into something usable

@@ -527,10 +527,7 @@ export default {
 			this.activeFields.percentDone = this.task.percentDone > 0
 			this.activeFields.startDate = this.task.startDate !== null
 			this.activeFields.endDate = this.task.endDate !== null
-			// On chrome, reminderDates.length holds the actual number of reminders that are not null.
-			// Unlike on desktop where it holds all reminders, including the ones which are null.
-			// This causes the reminders to dissapear entierly when only one is set and the user is on mobile.
-			this.activeFields.reminders = this.task.reminderDates.length > 1 || (window.innerWidth < 769 && this.task.reminderDates.length > 0)
+			this.activeFields.reminders = this.task.reminderDates.length > 0
 			this.activeFields.repeatAfter = this.task.repeatAfter.amount > 0
 			this.activeFields.labels = this.task.labels.length > 0
 			this.activeFields.attachments = this.task.attachments.length > 0
