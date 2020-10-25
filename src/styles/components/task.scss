@@ -185,6 +185,12 @@
       justify-content: left;
     }
   }
+
+  .created {
+    font-size: .75rem;
+    color: $grey;
+    text-align: right;
+  }
 }
 
 .task-view-container {

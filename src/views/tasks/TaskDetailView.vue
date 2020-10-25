@@ -343,10 +343,18 @@
 						<span class="icon is-small"><icon icon="trash-alt"/></span>
 						Delete task
 					</a>
+
+					<!-- Created / Updated [by] -->
+					<p class="created">
+						Created <span v-tooltip="formatDate(task.created)">{{ formatDateSince(task.created) }}</span> by {{ task.createdBy.username }}
+						<template v-if="+new Date(task.created) !== +new Date(task.updated)">
+							<br/>
+							<!-- Computed properties to show the actual date every time it gets updated -->
+							Updated <span v-tooltip="updatedFormatted">{{ updatedSince }}</span>
+						</template>
+					</p>
 				</div>
 			</div>
-
-			<!-- Created / Updated [by] -->
 		</div>
 
 		<modal
@@ -496,6 +504,12 @@ export default {
 		},
 		canWrite() {
 			return this.task && this.task.maxRight && this.task.maxRight > rights.READ
+		},
+		updatedSince() {
+			return this.formatDateSince(this.task.updated)
+		},
+		updatedFormatted() {
+			return this.formatDate(this.task.updated)
 		},
 	},
 	methods: {
