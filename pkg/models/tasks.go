@@ -917,6 +917,15 @@ func (t *Task) Update() (err error) {
 		_ = s.Rollback()
 		return err
 	}
+	// Get the task updated timestamp in a new struct - if we'd just try to put it into t which we already have, it
+	// would still contain the old updated date.
+	nt := &Task{}
+	_, err = s.ID(t.ID).Get(nt)
+	if err != nil {
+		_ = s.Rollback()
+		return err
+	}
+	t.Updated = nt.Updated
 
 	err = updateListLastUpdatedS(s, &List{ID: t.ListID})
 	if err != nil {
