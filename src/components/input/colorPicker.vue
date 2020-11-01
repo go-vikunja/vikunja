@@ -1,6 +1,15 @@
 <template>
 	<div class="color-picker-container">
 		<verte
+			:showHistory="true"
+			:colorHistory="[
+				'#1973ff',
+				'#7F23FF',
+				'#ff4136',
+				'#ff851b',
+				'#ffeb10',
+				'#00db60',
+			]"
 			:enableAlpha="false"
 			:menuPosition="menuPosition"
 			:rgbSliders="true"
