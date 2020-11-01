@@ -44,7 +44,7 @@ export default {
 			params = null,
 		) {
 
-			// Because this function is triggered every time on navigation, we're putting a condition here to only load it when we actually want to show tasks
+			// Because this function is triggered every time on topNavigation, we're putting a condition here to only load it when we actually want to show tasks
 			// FIXME: This is a bit hacky -> Cleanup.
 			if (
 				this.$route.name !== 'list.list' &&

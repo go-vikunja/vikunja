@@ -88,11 +88,13 @@
 </template>
 
 <script>
+import {KEYBOARD_SHORTCUTS_ACTIVE} from '@/store/mutation-types'
+
 export default {
 	name: 'keyboard-shortcuts',
 	methods: {
 		close() {
-			this.$emit('close')
+			this.$store.commit(KEYBOARD_SHORTCUTS_ACTIVE, false)
 		},
 	},
 }

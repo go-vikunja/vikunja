@@ -1,6 +1,15 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
-import {CURRENT_LIST, ERROR_MESSAGE, HAS_TASKS, IS_FULLPAGE, LOADING, ONLINE} from './mutation-types'
+import {
+	CURRENT_LIST,
+	ERROR_MESSAGE,
+	HAS_TASKS,
+	IS_FULLPAGE,
+	KEYBOARD_SHORTCUTS_ACTIVE,
+	LOADING,
+	MENU_ACTIVE,
+	ONLINE,
+} from './mutation-types'
 import config from './modules/config'
 import auth from './modules/auth'
 import namespaces from './modules/namespaces'
@@ -33,6 +42,8 @@ export const store = new Vuex.Store({
 		currentList: {id: 0},
 		background: '',
 		hasTasks: false,
+		menuActive: true,
+		keyboardShortcutsActive: false,
 	},
 	mutations: {
 		[LOADING](state, loading) {
@@ -96,6 +107,15 @@ export const store = new Vuex.Store({
 		},
 		[HAS_TASKS](state, hasTasks) {
 			state.hasTasks = hasTasks
+		},
+		[MENU_ACTIVE](state, menuActive) {
+			state.menuActive = menuActive
+		},
+		toggleMenu(state) {
+			state.menuActive = !state.menuActive
+		},
+		[KEYBOARD_SHORTCUTS_ACTIVE](state, active) {
+			state.keyboardShortcutsActive = active
 		},
 	},
 })
