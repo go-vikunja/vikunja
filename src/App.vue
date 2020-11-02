@@ -52,6 +52,7 @@ export default {
 	},
 	beforeCreate() {
 		this.$store.dispatch('config/update')
+		this.$store.dispatch('auth/checkAuth')
 	},
 	created() {
 		// Make sure to always load the home route when running with electron
@@ -59,20 +60,12 @@ export default {
 			this.$router.push({name: 'home'})
 		}
 	},
-	computed: {
-		authUser() {
-			return this.userAuthenticated && (this.userInfo && this.userInfo.type === authTypes.USER)
-		},
-		authLinkShare() {
-			return this.userAuthenticated && (this.userInfo && this.userInfo.type === authTypes.LINK_SHARE)
-		},
-		...mapState({
-			userInfo: state => state.auth.info,
-			userAuthenticated: state => state.auth.authenticated,
-			online: ONLINE,
-			keyboardShortcutsActive: KEYBOARD_SHORTCUTS_ACTIVE,
-		}),
-	},
+	computed: mapState({
+		authUser: state => state.auth.authenticated && (state.auth.info && state.auth.info.type === authTypes.USER),
+		authLinkShare: state => state.auth.authenticated && (state.auth.info && state.auth.info.type === authTypes.LINK_SHARE),
+		online: ONLINE,
+		keyboardShortcutsActive: KEYBOARD_SHORTCUTS_ACTIVE,
+	}),
 	methods: {
 		setupOnlineStatus() {
 			this.$store.commit(ONLINE, navigator.onLine)
