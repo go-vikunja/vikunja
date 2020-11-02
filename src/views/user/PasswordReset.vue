@@ -13,6 +13,7 @@
 							placeholder="e.g. ••••••••••••"
 							required
 							type="password"
+							autocomplete="new-password"
 							v-focus
 							v-model="credentials.password"/>
 					</div>
@@ -27,6 +28,7 @@
 							placeholder="e.g. ••••••••••••"
 							required
 							type="password"
+							autocomplete="new-password"
 							v-model="credentials.password2"/>
 					</div>
 				</div>

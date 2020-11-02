@@ -17,6 +17,7 @@
 							ref="username"
 							required
 							type="text"
+							autocomplete="username"
 							v-focus
 						/>
 					</div>
@@ -32,6 +33,7 @@
 							ref="password"
 							required
 							type="password"
+							autocomplete="current-password"
 						/>
 					</div>
 				</div>
