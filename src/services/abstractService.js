@@ -1,5 +1,6 @@
 import axios from 'axios'
-import {reduce, replace} from 'lodash'
+import reduce from 'lodash/reduce'
+import replace from 'lodash/replace'
 import {objectToSnakeCase} from '@/helpers/case'
 
 export default class AbstractService {

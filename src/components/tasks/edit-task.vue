@@ -199,7 +199,7 @@ export default {
 		PrioritySelect,
 		flatPickr,
 		editor: () => ({
-			component: import(/* webpackPrefetch: true *//* webpackChunkName: "editor" */ '../../components/input/editor'),
+			component: import(/* webpackChunkName: "editor" */ '../../components/input/editor'),
 			loading: LoadingComponent,
 			error: ErrorComponent,
 			timeout: 60000,

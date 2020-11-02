@@ -46,7 +46,7 @@ export default {
 	},
 	components: {
 		multiselect: () => ({
-			component: import(/* webpackPrefetch: true *//* webpackChunkName: "multiselect" */ 'vue-multiselect'),
+			component: import(/* webpackChunkName: "multiselect" */ 'vue-multiselect'),
 			loading: LoadingComponent,
 			error: ErrorComponent,
 			timeout: 60000,

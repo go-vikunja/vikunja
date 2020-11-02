@@ -1,5 +1,5 @@
 import UserModel from './user'
-import {merge} from 'lodash'
+import merge from 'lodash/merge'
 
 export default class TeamMemberModel extends UserModel {
 	defaults() {

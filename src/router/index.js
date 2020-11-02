@@ -31,58 +31,58 @@ import Table from '../views/list/views/Table'
 import CreateSavedFilter from '@/views/filters/CreateSavedFilter'
 
 const PasswordResetComponent = () => ({
-	component: import(/* webpackPrefetch: true *//* webpackChunkName: "user-settings" */'../views/user/PasswordReset'),
+	component: import(/* webpackChunkName: "user-settings" */'../views/user/PasswordReset'),
 	loading: LoadingComponent,
 	error: ErrorComponent,
 	timeout: 60000,
 })
 const GetPasswordResetComponent = () => ({
-	component: import(/* webpackPrefetch: true *//* webpackChunkName: "user-settings" */'../views/user/RequestPasswordReset'),
+	component: import(/* webpackChunkName: "user-settings" */'../views/user/RequestPasswordReset'),
 	loading: LoadingComponent,
 	error: ErrorComponent,
 	timeout: 60000,
 })
 const UserSettingsComponent = () => ({
-	component: import(/* webpackPrefetch: true *//* webpackChunkName: "user-settings" */'../views/user/Settings'),
+	component: import(/* webpackChunkName: "user-settings" */'../views/user/Settings'),
 	loading: LoadingComponent,
 	error: ErrorComponent,
 	timeout: 60000,
 })
 // List Handling
 const NewListComponent = () => ({
-	component: import(/* webpackPrefetch: true *//* webpackChunkName: "settings" */'../views/list/NewList'),
+	component: import(/* webpackChunkName: "settings" */'../views/list/NewList'),
 	loading: LoadingComponent,
 	error: ErrorComponent,
 	timeout: 60000,
 })
 const EditListComponent = () => ({
-	component: import(/* webpackPrefetch: true *//* webpackChunkName: "settings" */'../views/list/EditListView'),
+	component: import(/* webpackChunkName: "settings" */'../views/list/EditListView'),
 	loading: LoadingComponent,
 	error: ErrorComponent,
 	timeout: 60000,
 })
 // Namespace Handling
 const NewNamespaceComponent = () => ({
-	component: import(/* webpackPrefetch: true *//* webpackChunkName: "settings" */'../views/namespaces/NewNamespace'),
+	component: import(/* webpackChunkName: "settings" */'../views/namespaces/NewNamespace'),
 	loading: LoadingComponent,
 	error: ErrorComponent,
 	timeout: 60000,
 })
 const EditNamespaceComponent = () => ({
-	component: import(/* webpackPrefetch: true *//* webpackChunkName: "settings" */'../views/namespaces/EditNamespace'),
+	component: import(/* webpackChunkName: "settings" */'../views/namespaces/EditNamespace'),
 	loading: LoadingComponent,
 	error: ErrorComponent,
 	timeout: 60000,
 })
 
 const EditTeamComponent = () => ({
-	component: import(/* webpackPrefetch: true *//* webpackChunkName: "settings" */'../views/teams/EditTeam'),
+	component: import(/* webpackChunkName: "settings" */'../views/teams/EditTeam'),
 	loading: LoadingComponent,
 	error: ErrorComponent,
 	timeout: 60000,
 })
 const NewTeamComponent = () => ({
-	component: import(/* webpackPrefetch: true *//* webpackChunkName: "settings" */'../views/teams/NewTeam'),
+	component: import(/* webpackChunkName: "settings" */'../views/teams/NewTeam'),
 	loading: LoadingComponent,
 	error: ErrorComponent,
 	timeout: 60000,

@@ -1,5 +1,5 @@
 import TeamShareBaseModel from './teamShareBase'
-import {merge} from 'lodash'
+import merge from 'lodash/merge'
 
 export default class TeamNamespaceModel extends TeamShareBaseModel {
 	defaults() {

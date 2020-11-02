@@ -211,13 +211,13 @@ export default {
 	},
 	components: {
 		multiselect: () => ({
-			component: import(/* webpackPrefetch: true *//* webpackChunkName: "multiselect" */ 'vue-multiselect'),
+			component: import(/* webpackChunkName: "multiselect" */ 'vue-multiselect'),
 			loading: LoadingComponent,
 			error: ErrorComponent,
 			timeout: 60000,
 		}),
 		editor: () => ({
-			component: import(/* webpackPrefetch: true *//* webpackChunkName: "editor" */ '../../components/input/editor'),
+			component: import(/* webpackChunkName: "editor" */ '../../components/input/editor'),
 			loading: LoadingComponent,
 			error: ErrorComponent,
 			timeout: 60000,

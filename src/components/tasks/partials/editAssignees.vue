@@ -36,7 +36,7 @@
 </template>
 
 <script>
-import {differenceWith} from 'lodash'
+import differenceWith from 'lodash/differenceWith'
 
 import UserModel from '../../../models/user'
 import ListUserService from '../../../services/listUsers'
@@ -50,7 +50,7 @@ export default {
 	components: {
 		User,
 		multiselect: () => ({
-			component: import(/* webpackPrefetch: true *//* webpackChunkName: "multiselect" */ 'vue-multiselect'),
+			component: import(/* webpackChunkName: "multiselect" */ 'vue-multiselect'),
 			loading: LoadingComponent,
 			error: ErrorComponent,
 			timeout: 60000,

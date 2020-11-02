@@ -41,7 +41,7 @@
 </template>
 
 <script>
-import {differenceWith} from 'lodash'
+import differenceWith from 'lodash/differenceWith'
 
 import LabelService from '../../../services/label'
 import LabelModel from '../../../models/label'
@@ -76,7 +76,7 @@ export default {
 	},
 	components: {
 		multiselect: () => ({
-			component: import(/* webpackPrefetch: true *//* webpackChunkName: "multiselect" */ 'vue-multiselect'),
+			component: import(/* webpackChunkName: "multiselect" */ 'vue-multiselect'),
 			loading: LoadingComponent,
 			error: ErrorComponent,
 			timeout: 60000,
