@@ -42,7 +42,7 @@
     "core-js": "3.6.5",
     "eslint": "7.12.1",
     "eslint-plugin-vue": "7.1.0",
-    "node-sass": "4.14.1",
+    "node-sass": "5.0.0",
     "sass-loader": "10.0.5",
     "vue-flatpickr-component": "8.1.6",
     "vue-multiselect": "2.1.6",
