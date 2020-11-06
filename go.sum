@@ -129,6 +129,7 @@ github.com/denisenkom/go-mssqldb v0.0.0-20190707035753-2be1aa521ff4/go.mod h1:zA
 github.com/denisenkom/go-mssqldb v0.0.0-20191128021309-1d7a30a10f73/go.mod h1:xbL0rPBG9cCiLr28tMa8zpbdarY27NDyej4t/EjAShU=
 github.com/denisenkom/go-mssqldb v0.0.0-20200428022330-06a60b6afbbc h1:VRRKCwnzqk8QCaRC4os14xoKDdbHqqlJtJA0oc1ZAjg=
 github.com/denisenkom/go-mssqldb v0.0.0-20200428022330-06a60b6afbbc/go.mod h1:xbL0rPBG9cCiLr28tMa8zpbdarY27NDyej4t/EjAShU=
+github.com/denisenkom/go-mssqldb v0.0.0-20200910202707-1e08a3fab204/go.mod h1:xbL0rPBG9cCiLr28tMa8zpbdarY27NDyej4t/EjAShU=
 github.com/dgraph-io/badger v1.6.0/go.mod h1:zwt7syl517jmP8s94KqSxTlM6IMsdhYy6psNgSztDR4=
 github.com/dgrijalva/jwt-go v3.2.0+incompatible h1:7qlOGliEKZXTDg6OTjfoBKDXWrumCAMpl/TFQ4/5kLM=
 github.com/dgrijalva/jwt-go v3.2.0+incompatible/go.mod h1:E3ru+11k8xSBh+hMPgOLZmtrrCbhqsmaPHjLKYnJCaQ=
@@ -1141,6 +1142,8 @@ src.techknowlogick.com/xgo v1.1.1-0.20200811225412-bff6512e7c9c h1:1W7owgaAgZHvJ
 src.techknowlogick.com/xgo v1.1.1-0.20200811225412-bff6512e7c9c/go.mod h1:31CE1YKtDOrKTk9PSnjTpe6YbO6W/0LTYZ1VskL09oU=
 src.techknowlogick.com/xormigrate v1.3.0 h1:cCOEk8CjhRqxMtE8X8aV0qd6b2njwU1c3++ZuyaTsA0=
 src.techknowlogick.com/xormigrate v1.3.0/go.mod h1:lmB01Zzm8lkvGE+qvlZoaIl39c8iEvHtYMtSFiHg250=
+src.techknowlogick.com/xormigrate v1.4.0 h1:gAfLoDwcVfMiFhSXg5Qwm7LNnG1iUbBVDUNfHagDLQc=
+src.techknowlogick.com/xormigrate v1.4.0/go.mod h1:xCtbAK00lJ0v4zP2O6VBVMG3RHm7W5Yo1Dz0r9kL/ho=
 xorm.io/builder v0.3.7 h1:2pETdKRK+2QG4mLX4oODHEhn5Z8j1m8sXa7jfu+/SZI=
 xorm.io/builder v0.3.7/go.mod h1:aUW0S9eb9VCaPohFCH3j7czOx1PMW3i1HrSzbLYGBSE=
 xorm.io/core v0.7.3 h1:W8ws1PlrnkS1CZU1YWaYLMQcQilwAmQXU0BJDJon+H0=
