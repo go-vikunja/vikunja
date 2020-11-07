@@ -19,6 +19,7 @@ module code.vikunja.io/api
 require (
 	4d63.com/tz v1.2.0
 	code.vikunja.io/web v0.0.0-20200809154828-8767618f181f
+	dmitri.shuralyov.com/go/generated v0.0.0-20170818220700-b1254a446363 // indirect
 	gitea.com/xorm/xorm-redis-cache v0.2.0
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
 	github.com/asaskevich/govalidator v0.0.0-20200907205600-7a23bdc65eef
@@ -39,7 +40,7 @@ require (
 	github.com/go-testfixtures/testfixtures/v3 v3.4.1
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/google/go-cmp v0.5.2 // indirect
-	github.com/gordonklaus/ineffassign v0.0.0-20200809085317-e36bfde3bb78
+	github.com/gordonklaus/ineffassign v0.0.0-20201107091007-3b93a8888063
 	github.com/iancoleman/strcase v0.1.2
 	github.com/imdario/mergo v0.3.11
 	github.com/jgautheron/goconst v0.0.0-20200920201509-8f5268ce89d5
