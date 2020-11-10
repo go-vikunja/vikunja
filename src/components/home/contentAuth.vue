@@ -53,6 +53,7 @@ export default {
 		currentList: CURRENT_LIST,
 		background: 'background',
 		menuActive: MENU_ACTIVE,
+		userInfo: state => state.auth.info,
 	}),
 	methods: {
 		doStuffAfterRoute() {
