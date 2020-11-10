@@ -56,8 +56,6 @@ import {
 } from '@fortawesome/free-solid-svg-icons'
 import {faCalendarAlt, faClock, faComments, faSave, faStar, faTimesCircle} from '@fortawesome/free-regular-svg-icons'
 import {FontAwesomeIcon} from '@fortawesome/vue-fontawesome'
-// Tooltip
-import VTooltip from 'v-tooltip'
 // PWA
 import './registerServiceWorker'
 
@@ -140,12 +138,13 @@ library.add(faStarSolid)
 
 Vue.component('icon', FontAwesomeIcon)
 
-Vue.use(VTooltip, {defaultHtml: false})
-
 Vue.use(vueShortkey)
 
 import focus from '@/directives/focus'
 Vue.directive('focus', focus)
+
+import tooltip from '@/directives/tooltip'
+Vue.directive('tooltip', tooltip)
 
 Vue.mixin({
 	methods: {

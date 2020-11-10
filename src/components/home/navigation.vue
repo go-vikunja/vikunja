@@ -63,7 +63,7 @@
 						:to="{name: 'namespace.edit', params: {id: n.id} }"
 						class="nsettings"
 						v-if="n.id > 0"
-						v-tooltip.right="'Settings'">
+						v-tooltip="'Settings'">
 						<span class="icon">
 							<icon icon="cog"/>
 						</span>
