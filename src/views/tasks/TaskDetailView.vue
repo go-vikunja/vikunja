@@ -271,7 +271,7 @@
 						@click="setFieldActive('assignees')"
 						@shortkey="setFieldActive('assignees')"
 						class="button"
-						v-shortkey="['ctrl', 'shift', 'a']">
+						v-shortkey="['a']">
 						<span class="icon is-small"><icon icon="users"/></span>
 						Assign this task to a user
 					</a>
@@ -279,7 +279,7 @@
 						@click="setFieldActive('labels')"
 						@shortkey="setFieldActive('labels')"
 						class="button"
-						v-shortkey="['ctrl', 'shift', 'l']">
+						v-shortkey="['l']">
 						<span class="icon is-small"><icon icon="tags"/></span>
 						Add labels
 					</a>
@@ -291,7 +291,7 @@
 						@click="setFieldActive('dueDate')"
 						@shortkey="setFieldActive('dueDate')"
 						class="button"
-						v-shortkey="['ctrl', 'shift', 'd']">
+						v-shortkey="['d']">
 						<span class="icon is-small"><icon icon="calendar"/></span>
 						Set Due Date
 					</a>
@@ -319,7 +319,7 @@
 						@click="setFieldActive('attachments')"
 						@shortkey="setFieldActive('attachments')"
 						class="button"
-						v-shortkey="['ctrl', 'shift', 'f']">
+						v-shortkey="['f']">
 						<span class="icon is-small"><icon icon="paperclip"/></span>
 						Add attachments
 					</a>
@@ -327,7 +327,7 @@
 						@click="setFieldActive('relatedTasks')"
 						@shortkey="setFieldActive('relatedTasks')"
 						class="button"
-						v-shortkey="['ctrl', 'shift', 'r']">
+						v-shortkey="['r']">
 						<span class="icon is-small"><icon icon="tasks"/></span>
 						Add task relations
 					</a>

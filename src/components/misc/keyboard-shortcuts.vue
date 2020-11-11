@@ -32,50 +32,30 @@
 							<p>
 								<strong>Assign this task to a user</strong>
 								<span class="shortcuts">
-									<span>ctrl</span>
-									<i>+</i>
-									<span>shift</span>
-									<i>+</i>
 									<span>a</span>
 								</span>
 							</p>
 							<p>
 								<strong>Add labels to this task</strong>
 								<span class="shortcuts">
-									<span>ctrl</span>
-									<i>+</i>
-									<span>shift</span>
-									<i>+</i>
 									<span>l</span>
 								</span>
 							</p>
 							<p>
 								<strong>Change the due date of this task</strong>
 								<span class="shortcuts">
-									<span>ctrl</span>
-									<i>+</i>
-									<span>shift</span>
-									<i>+</i>
 									<span>d</span>
 								</span>
 							</p>
 							<p>
 								<strong>Add an attachment to this task</strong>
 								<span class="shortcuts">
-									<span>ctrl</span>
-									<i>+</i>
-									<span>shift</span>
-									<i>+</i>
 									<span>f</span>
 								</span>
 							</p>
 							<p>
 								<strong>Modify related tasks of this task</strong>
 								<span class="shortcuts">
-									<span>ctrl</span>
-									<i>+</i>
-									<span>shift</span>
-									<i>+</i>
 									<span>r</span>
 								</span>
 							</p>

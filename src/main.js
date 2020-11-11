@@ -138,7 +138,7 @@ library.add(faStarSolid)
 
 Vue.component('icon', FontAwesomeIcon)
 
-Vue.use(vueShortkey)
+Vue.use(vueShortkey, { prevent: ['input', 'textarea', '.input'] })
 
 import focus from '@/directives/focus'
 Vue.directive('focus', focus)
