@@ -27,10 +27,16 @@ module.exports = {
 					"type": "image/png"
 				},
 				{
-					"src": "./images/icons/android-chrome-192x192.png",
+					"src": "./images/icons/android-chrome-512x512.png",
 					"sizes": "512x512",
 					"type": "image/png"
-				}
+				},
+				{
+					"src": "./images/icons/icon-maskable.png",
+					"sizes": "1024x1024",
+					"type": "image/png",
+					"purpose": "maskable"
+				},
 			],
 			shortcuts: [
 				{
