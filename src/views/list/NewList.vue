@@ -64,12 +64,10 @@ export default {
 			this.showError = false
 
 			this.list.namespaceId = this.$route.params.id
-			this.listService.create(this.list)
-				.then(response => {
-					response.namespaceId = this.list.namespaceId
-					this.$store.commit('namespaces/addListToNamespace', response)
+			this.$store.dispatch('lists/createList', this.list)
+				.then(r => {
 					this.success({message: 'The list was successfully created.'}, this)
-					router.push({name: 'list.index', params: {listId: response.id}})
+					router.push({name: 'list.index', params: {listId: r.id}})
 				})
 				.catch(e => {
 					this.error(e, this)

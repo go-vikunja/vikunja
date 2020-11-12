@@ -52,5 +52,19 @@ export default {
 					return Promise.reject(e)
 				})
 		},
+		createList(ctx, list) {
+			const listService = new ListService()
+
+			return listService.create(list)
+				.then(r => {
+					r.namespaceId = list.namespaceId
+					ctx.commit('namespaces/addListToNamespace', r, {root: true})
+					ctx.commit('addList', r)
+					return Promise.resolve(r)
+				})
+				.catch(e => {
+					return Promise.reject(e)
+				})
+		},
 	},
 }
