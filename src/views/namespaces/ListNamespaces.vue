@@ -1,5 +1,5 @@
 <template>
-	<div class="content namespaces-list">
+	<div class="content namespaces-list loader-container" :class="{'is-loading': loading}">
 		<router-link :to="{name: 'namespace.create'}" class="button is-success new-namespace">
 			<span class="icon is-small">
 				<icon icon="plus"/>
@@ -66,6 +66,7 @@
 import {mapState} from 'vuex'
 import ListService from '../../services/list'
 import Fancycheckbox from '../../components/input/fancycheckbox'
+import {LOADING} from '@/store/mutation-types'
 
 export default {
 	name: 'ListNamespaces',
@@ -89,6 +90,7 @@ export default {
 		namespaces(state) {
 			return state.namespaces.namespaces.filter(n => this.showArchived ? true : !n.isArchived)
 		},
+		loading: LOADING,
 	}),
 	methods: {
 		loadBackgroundsForLists() {

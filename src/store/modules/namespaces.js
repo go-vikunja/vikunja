@@ -1,6 +1,7 @@
 import Vue from 'vue'
 
 import NamespaceService from '../../services/namespace'
+import {setLoading} from '@/store/helper'
 
 export default {
 	namespaced: true,
@@ -87,6 +88,8 @@ export default {
 	},
 	actions: {
 		loadNamespaces(ctx) {
+			const cancel = setLoading(ctx)
+
 			const namespaceService = new NamespaceService()
 			// We always load all namespaces and filter them on the frontend
 			return namespaceService.getAll({}, {is_archived: true})
@@ -107,6 +110,9 @@ export default {
 				})
 				.catch(e => {
 					return Promise.reject(e)
+				})
+				.finally(() => {
+					cancel()
 				})
 		},
 		loadNamespacesIfFavoritesDontExist(ctx) {

@@ -16,6 +16,10 @@ $lists-per-row: 5;
     margin-bottom: 1rem;
   }
 
+  &.loader-container.is-loading {
+    min-height: calc(100vh - #{$navbar-height + 1.5rem + 1rem + 1.5rem});
+  }
+
   .namespace {
     &:not(:last-child) {
       margin-bottom: 1rem;

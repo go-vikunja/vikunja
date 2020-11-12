@@ -297,6 +297,14 @@
       &.namespaces-lists {
         padding-top: $navbar-padding / 2;
       }
+
+      &.loader-container.is-loading:after {
+        width: 1.5em;
+        height: 1.5em;
+        top: calc(50% - .75em);
+        left: calc(50% - .75em);
+        border-width: 2px;
+      }
     }
 
     .top-menu {

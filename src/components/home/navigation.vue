@@ -56,7 +56,7 @@
 			</ul>
 		</div>
 
-		<aside class="menu namespaces-lists">
+		<aside class="menu namespaces-lists loader-container" :class="{'is-loading': loading}">
 			<template v-for="n in namespaces">
 				<div :key="n.id">
 					<router-link
@@ -141,7 +141,7 @@
 
 <script>
 import {mapState} from 'vuex'
-import {CURRENT_LIST, IS_FULLPAGE, MENU_ACTIVE} from '@/store/mutation-types'
+import {CURRENT_LIST, IS_FULLPAGE, LOADING, MENU_ACTIVE} from '@/store/mutation-types'
 
 export default {
 	name: 'navigation',
@@ -153,6 +153,7 @@ export default {
 		currentList: CURRENT_LIST,
 		background: 'background',
 		menuActive: MENU_ACTIVE,
+		loading: LOADING,
 	}),
 	beforeCreate() {
 		this.$store.dispatch('namespaces/loadNamespaces')
