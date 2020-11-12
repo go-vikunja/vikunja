@@ -269,6 +269,7 @@ export default {
 			this.listDuplicateService.create(listDuplicate)
 				.then(r => {
 					this.$store.commit('namespaces/addListToNamespace', r.list)
+					this.$store.commit('lists/addList', r.list)
 					this.success({message: 'The list was successfully duplicated.'}, this)
 					router.push({name: 'list.index', params: {listId: r.list.id}})
 				})
