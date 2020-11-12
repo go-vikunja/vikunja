@@ -250,6 +250,7 @@ export default {
 		deleteList() {
 			this.listService.delete(this.list)
 				.then(() => {
+					this.$store.commit('namespaces/removeListFromNamespaceById', this.list)
 					this.success({message: 'The list was successfully deleted.'}, this)
 					router.push({name: 'home'})
 				})
