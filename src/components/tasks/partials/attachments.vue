@@ -37,7 +37,7 @@
 				<th>Size</th>
 				<th>Type</th>
 				<th>Date</th>
-				<th>Created By</th>
+				<th>Created&nbsp;By</th>
 				<th>Action</th>
 			</tr>
 			<tr :key="a.id" class="attachment" v-for="a in attachments">
@@ -47,8 +47,8 @@
 				<td>{{ a.file.getHumanSize() }}</td>
 				<td>{{ a.file.mime }}</td>
 				<td v-tooltip="formatDate(a.created)">{{ formatDateSince(a.created) }}</td>
-				<td>
-					<user :avatar-size="30" :user="a.createdBy"/>
+				<td class="has-text-centered">
+					<user :avatar-size="30" :user="a.createdBy" :show-username="false" :is-inline="true"/>
 				</td>
 				<td>
 					<div class="buttons has-addons">
@@ -89,7 +89,7 @@
 		<modal
 			@close="showDeleteModal = false"
 			v-if="showDeleteModal"
-			v-on:submit="deleteAttachment()">
+			@submit="deleteAttachment()">
 			<span slot="header">Delete attachment</span>
 			<p slot="text">Are you sure you want to delete the attachment {{ attachmentToDelete.file.name }}?<br/>
 				<b>This CANNOT BE UNDONE!</b></p>
