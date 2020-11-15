@@ -196,6 +196,10 @@ $gantt-vertical-border-color: lighten($grey, 45);
       font-size: .68em;
     }
   }
+
+  .filter-container {
+    margin-top: -133px;
+  }
 }
 
 .gantt-options {

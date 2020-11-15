@@ -1,5 +1,22 @@
 <template>
 	<div class="gantt-chart box">
+		<div class="filter-container">
+			<div class="items">
+				<button @click="showTaskFilter = !showTaskFilter" class="button">
+					<span class="icon is-small">
+						<icon icon="filter"/>
+					</span>
+					Filters
+				</button>
+			</div>
+			<transition name="fade">
+				<filters
+					@change="loadTasks"
+					v-if="showTaskFilter"
+					v-model="params"
+				/>
+			</transition>
+		</div>
 		<div class="dates">
 			<template v-for="(y, yk) in days">
 				<div :key="yk + 'year'" class="months">
@@ -149,10 +166,12 @@ import PriorityLabel from './partials/priorityLabel'
 import TaskCollectionService from '../../services/taskCollection'
 import {mapState} from 'vuex'
 import Rights from '../../models/rights.json'
+import Filters from '@/components/list/partials/filters'
 
 export default {
 	name: 'GanttChart',
 	components: {
+		Filters,
 		PriorityLabel,
 		EditTask,
 		VueDragResize,
@@ -196,6 +215,16 @@ export default {
 			newTaskFieldActive: false,
 			priorities: {},
 			taskCollectionService: TaskCollectionService,
+			showTaskFilter: false,
+
+			params: {
+				sort_by: ['done', 'id'],
+				order_by: ['asc', 'desc'],
+				filter_by: ['done'],
+				filter_value: ['false'],
+				filter_comparator: ['equals'],
+				filter_concat: 'and',
+			},
 		}
 	},
 	watch: {
@@ -245,12 +274,14 @@ export default {
 		},
 		parseTasks() {
 			this.setDates()
-			this.prepareTasks()
+			this.loadTasks()
 		},
-		prepareTasks() {
+		loadTasks() {
+			this.$set(this, 'theTasks', [])
+			this.$set(this, 'tasksWithoutDates', [])
 
 			const getAllTasks = (page = 1) => {
-				return this.taskCollectionService.getAll({listId: this.listId}, {}, page)
+				return this.taskCollectionService.getAll({listId: this.listId}, this.params, page)
 					.then(tasks => {
 						if (page < this.taskCollectionService.totalPages) {
 							return getAllTasks(page + 1)
