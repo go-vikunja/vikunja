@@ -7,19 +7,21 @@
 			Comments
 		</h1>
 		<div class="comments">
-			<progress class="progress is-small is-info" max="100" v-if="taskCommentService.loading">Loading
-				comments...
+			<progress class="progress is-small is-info" max="100" v-if="taskCommentService.loading">
+				Loading comments...
 			</progress>
 			<div :key="c.id" class="media comment" v-for="c in comments">
-				<figure class="media-left">
+				<figure class="media-left is-hidden-mobile">
 					<img :src="c.author.getAvatarUrl(48)" alt="" class="image is-avatar" height="48" width="48"/>
 				</figure>
 				<div class="media-content">
-					<div :class="{'is-pulled-up': canWrite}" class="comment-info">
+					<div class="comment-info">
+						<img :src="c.author.getAvatarUrl(20)" alt="" class="image is-avatar" height="20" width="20"/>
 						<strong>{{ c.author.username }}</strong>&nbsp;
-						<small v-tooltip="formatDate(c.created)">{{ formatDateSince(c.created) }}</small>
-						<small v-if="+new Date(c.created) !== +new Date(c.updated)" v-tooltip="formatDate(c.updated)"> ·
-							edited {{ formatDateSince(c.updated) }}</small>
+						<span v-tooltip="formatDate(c.created)">{{ formatDateSince(c.created) }}</span>
+						<span v-if="+new Date(c.created) !== +new Date(c.updated)" v-tooltip="formatDate(c.updated)">
+							· edited {{ formatDateSince(c.updated) }}
+						</span>
 					</div>
 					<editor
 						:has-preview="true"
@@ -28,14 +30,13 @@
 						:upload-enabled="true"
 						@change="() => {toggleEdit(c);editComment()}"
 						v-model="c.comment"
+						:has-edit-bottom="true"
+						:bottom-actions="actions[c.id]"
 					/>
-					<div class="comment-actions" v-if="canWrite">
-						<a @click="toggleDelete(c.id)">Remove</a>
-					</div>
 				</div>
 			</div>
 			<div class="media comment" v-if="canWrite">
-				<figure class="media-left">
+				<figure class="media-left is-hidden-mobile">
 					<img :src="userAvatar" alt="" class="image is-avatar" height="48" width="48"/>
 				</figure>
 				<div class="media-content">
@@ -114,6 +115,7 @@ export default {
 			taskCommentService: TaskCommentService,
 			newComment: TaskCommentModel,
 			editorActive: true,
+			actions: {},
 		}
 	},
 	created() {
@@ -130,6 +132,9 @@ export default {
 		taskId() {
 			this.loadComments()
 		},
+		canWrite() {
+			this.makeActions()
+		},
 	},
 	computed: {
 		userAvatar() {
@@ -141,6 +146,7 @@ export default {
 			this.taskCommentService.getAll({taskId: this.taskId})
 				.then(r => {
 					this.$set(this, 'comments', r)
+					this.makeActions()
 				})
 				.catch(e => {
 					this.error(e, this)
@@ -212,6 +218,16 @@ export default {
 					this.showDeleteModal = false
 				})
 		},
+		makeActions() {
+			if (this.canWrite) {
+				this.comments.forEach(c => {
+					this.$set(this.actions, c.id, [{
+						action: () => this.toggleDelete(c.id),
+						title: 'Remove',
+					}])
+				})
+			}
+		}
 	},
 }
 </script>

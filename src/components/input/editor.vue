@@ -1,6 +1,6 @@
 <template>
 	<div :class="{'is-pulled-up': isEditEnabled}" class="editor">
-		<div class="tabs is-right" v-if="hasPreview && isEditEnabled">
+		<div class="tabs is-right" v-if="hasPreview && isEditEnabled && !hasEditBottom">
 			<ul>
 				<li :class="{'is-active': isPreviewActive}" v-if="isEditActive">
 					<a @click="showPreview">Preview</a>
@@ -21,6 +21,20 @@
 
 		<div class="preview content" v-html="preview" v-if="isPreviewActive">
 		</div>
+
+		<ul class="actions">
+			<li v-for="(action, k) in bottomActions" :key="k">
+				<a @click="action.action">{{ action.title }}</a>
+			</li>
+			<template v-if="hasEditBottom">
+				<li :class="{'is-active': isPreviewActive}" v-if="isEditActive">
+					<a @click="showPreview">Preview</a>
+				</li>
+				<li :class="{'is-active': isEditActive}">
+					<a @click="() => {isPreviewActive = false; isEditActive = true}">Edit</a>
+				</li>
+			</template>
+		</ul>
 	</div>
 </template>
 
@@ -66,6 +80,13 @@ export default {
 		},
 		isEditEnabled: {
 			default: true,
+		},
+		hasEditBottom: {
+			type: Boolean,
+			default: false,
+		},
+		bottomActions: {
+			default: () => [],
 		},
 	},
 	data() {
@@ -434,5 +455,35 @@ pre.CodeMirror-line {
 .cm-header {
 	font-family: $vikunja-font;
 	font-weight: 400;
+}
+
+ul.actions {
+	font-size: .8em;
+	margin: 0;
+
+	li {
+		display: inline-block;
+
+		&:after {
+			content: '·';
+			padding: 0 .25rem;
+		}
+
+		&:last-child:after {
+			content: '';
+		}
+	}
+
+	&, a {
+		color: $grey;
+	}
+
+	a:hover {
+		text-decoration: underline;
+	}
+}
+
+.vue-easymde.content {
+	margin-bottom: 0 !important;
 }
 </style>

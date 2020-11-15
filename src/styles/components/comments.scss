@@ -5,29 +5,36 @@
     margin: 0 1em;
   }
 
-  @media screen and (min-width: $tablet) {
-    .comment-info.is-pulled-up {
-      margin-bottom: -3rem;
+  .comment-info {
+    display: flex;
+    align-items: center;
+
+    * {
+      padding-right: .5rem;
+    }
+
+    img {
+      display: none;
+    }
+
+    @media screen and (max-width: $tablet) {
+      img {
+        display: block;
+        width: 20px;
+        height: 20px;
+        padding-right: 0;
+        margin-right: .5rem;
+      }
+    }
+
+    span {
+      font-size: .75rem;
+      line-height: 1;
     }
   }
 
-  .editor .tabs {
-    margin-bottom: 0;
-
-    ul {
-      border-bottom: none;
-    }
+  .editor {
+    margin-top: .5rem;
   }
 
-  .comment-actions {
-    font-size: .8em;
-
-    &, a {
-      color: $grey;
-    }
-
-    a:hover {
-      text-decoration: underline;
-    }
-  }
 }
