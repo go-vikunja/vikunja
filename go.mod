@@ -43,7 +43,7 @@ require (
 	github.com/gordonklaus/ineffassign v0.0.0-20201107091007-3b93a8888063
 	github.com/iancoleman/strcase v0.1.2
 	github.com/imdario/mergo v0.3.11
-	github.com/jgautheron/goconst v0.0.0-20201108215931-f8e4fe8351cd
+	github.com/jgautheron/goconst v0.0.0-20201117150253-ccae5bf973f3
 	github.com/kr/text v0.2.0 // indirect
 	github.com/labstack/echo/v4 v4.1.17
 	github.com/labstack/gommon v0.3.0

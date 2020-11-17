@@ -425,6 +425,8 @@ github.com/jgautheron/goconst v0.0.0-20201108141142-b58d7cf68fc6 h1:Q1jWnSiUwwb5
 github.com/jgautheron/goconst v0.0.0-20201108141142-b58d7cf68fc6/go.mod h1:aAosetZ5zaeC/2EfMeRswtxUFBpe2Hr7HzkgX4fanO4=
 github.com/jgautheron/goconst v0.0.0-20201108215931-f8e4fe8351cd h1:xfrCuNSOStubQgCjSKriU45JXwfj2Ew5PZgoPgWm6OQ=
 github.com/jgautheron/goconst v0.0.0-20201108215931-f8e4fe8351cd/go.mod h1:aAosetZ5zaeC/2EfMeRswtxUFBpe2Hr7HzkgX4fanO4=
+github.com/jgautheron/goconst v0.0.0-20201117150253-ccae5bf973f3 h1:7nkB9fLPMwtn/R6qfPcHileL/x9ydlhw8XyDrLI1ZXg=
+github.com/jgautheron/goconst v0.0.0-20201117150253-ccae5bf973f3/go.mod h1:aAosetZ5zaeC/2EfMeRswtxUFBpe2Hr7HzkgX4fanO4=
 github.com/jmespath/go-jmespath v0.0.0-20180206201540-c2b33e8439af/go.mod h1:Nht3zPeWKUH0NzdCt2Blrr5ys8VGpn0CEB0cQHVjt7k=
 github.com/joho/godotenv v1.3.0 h1:Zjp+RcGpHhGlrMbJzXTrZZPrWj+1vfm90La1wgB6Bhc=
 github.com/joho/godotenv v1.3.0/go.mod h1:7hK45KPybAkOC6peb+G5yklZfMxEjkZhHbwpqxOKXbg=
