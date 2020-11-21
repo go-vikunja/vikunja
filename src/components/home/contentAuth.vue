@@ -59,6 +59,7 @@ export default {
 		doStuffAfterRoute() {
 			// this.setTitle('') // Reset the title if the page component does not set one itself
 			this.$store.commit(IS_FULLPAGE, false)
+			this.hideMenuOnMobile()
 			this.resetCurrentList()
 		},
 		resetCurrentList() {
@@ -102,6 +103,11 @@ export default {
 					console.debug('renewed token')
 				}
 			})
+		},
+		hideMenuOnMobile() {
+			if (window.innerWidth < 769) {
+				this.$store.commit(MENU_ACTIVE, false)
+			}
 		},
 	},
 }
