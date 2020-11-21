@@ -28,8 +28,8 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/routes"
-	v1 "code.vikunja.io/api/pkg/routes/api/v1"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
 	"code.vikunja.io/web/handler"
@@ -119,7 +119,7 @@ func newTestRequest(t *testing.T, method string, handler func(ctx echo.Context) 
 
 func addUserTokenToContext(t *testing.T, user *user.User, c echo.Context) {
 	// Get the token as a string
-	token, err := v1.NewUserJWTAuthtoken(user)
+	token, err := auth.NewUserJWTAuthtoken(user)
 	assert.NoError(t, err)
 	// We send the string token through the parsing function to get a valid jwt.Token
 	tken, err := jwt.Parse(token, func(t *jwt.Token) (interface{}, error) {
@@ -131,7 +131,7 @@ func addUserTokenToContext(t *testing.T, user *user.User, c echo.Context) {
 
 func addLinkShareTokenToContext(t *testing.T, share *models.LinkSharing, c echo.Context) {
 	// Get the token as a string
-	token, err := v1.NewLinkShareJWTAuthtoken(share)
+	token, err := auth.NewLinkShareJWTAuthtoken(share)
 	assert.NoError(t, err)
 	// We send the string token through the parsing function to get a valid jwt.Token
 	tken, err := jwt.Parse(token, func(t *jwt.Token) (interface{}, error) {

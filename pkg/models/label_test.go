@@ -52,6 +52,7 @@ func TestLabel_ReadAll(t *testing.T) {
 		Username: "user1",
 		Password: "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
 		IsActive: true,
+		Issuer:   "local",
 		Created:  testCreatedTime,
 		Updated:  testUpdatedTime,
 	}
@@ -99,6 +100,7 @@ func TestLabel_ReadAll(t *testing.T) {
 							ID:       2,
 							Username: "user2",
 							Password: "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
+							Issuer:   "local",
 							Created:  testCreatedTime,
 							Updated:  testUpdatedTime,
 						},
@@ -159,6 +161,7 @@ func TestLabel_ReadOne(t *testing.T) {
 		Username: "user1",
 		Password: "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
 		IsActive: true,
+		Issuer:   "local",
 		Created:  testCreatedTime,
 		Updated:  testUpdatedTime,
 	}
@@ -217,6 +220,7 @@ func TestLabel_ReadOne(t *testing.T) {
 					ID:       2,
 					Username: "user2",
 					Password: "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
+					Issuer:   "local",
 					Created:  testCreatedTime,
 					Updated:  testUpdatedTime,
 				},

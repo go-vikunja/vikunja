@@ -53,6 +53,8 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/modules/auth"
+	"code.vikunja.io/api/pkg/modules/auth/openid"
 	"code.vikunja.io/api/pkg/modules/background"
 	backgroundHandler "code.vikunja.io/api/pkg/modules/background/handler"
 	"code.vikunja.io/api/pkg/modules/background/unsplash"
@@ -165,7 +167,7 @@ func NewEcho() *echo.Echo {
 
 	// Handler config
 	handler.SetAuthProvider(&web.Auths{
-		AuthObject: apiv1.GetAuthFromClaims,
+		AuthObject: auth.GetAuthFromClaims,
 	})
 	handler.SetLoggingProvider(log.GetLogger())
 	handler.SetMaxItemsPerPage(config.ServiceMaxItemsPerPage.GetInt())
@@ -220,12 +222,18 @@ func registerAPIRoutes(a *echo.Group) {
 	// Prometheus endpoint
 	setupMetrics(n)
 
-	// User stuff
-	n.POST("/login", apiv1.Login)
-	n.POST("/register", apiv1.RegisterUser)
-	n.POST("/user/password/token", apiv1.UserRequestResetPasswordToken)
-	n.POST("/user/password/reset", apiv1.UserResetPassword)
-	n.POST("/user/confirm", apiv1.UserConfirmEmail)
+	if config.AuthLocalEnabled.GetBool() {
+		// User stuff
+		n.POST("/login", apiv1.Login)
+		n.POST("/register", apiv1.RegisterUser)
+		n.POST("/user/password/token", apiv1.UserRequestResetPasswordToken)
+		n.POST("/user/password/reset", apiv1.UserResetPassword)
+		n.POST("/user/confirm", apiv1.UserConfirmEmail)
+	}
+
+	if config.AuthOpenIDEnabled.GetBool() {
+		n.POST("/auth/openid/:provider/callback", openid.HandleCallback)
+	}
 
 	// Info endpoint
 	n.GET("/info", apiv1.Info)

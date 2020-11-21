@@ -26,6 +26,7 @@ import (
 
 	"code.vikunja.io/api/pkg/initialize"
 	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
@@ -157,9 +158,14 @@ var userCreateCmd = &cobra.Command{
 			Email:    userFlagEmail,
 			Password: getPasswordFromFlagOrInput(),
 		}
-		_, err := user.CreateUser(u)
+		newUser, err := user.CreateUser(u)
 		if err != nil {
 			log.Fatalf("Error creating new user: %s", err)
+		}
+
+		err = models.CreateNewNamespaceForUser(newUser)
+		if err != nil {
+			log.Fatalf("Error creating new namespace for user: %s", err)
 		}
 
 		fmt.Printf("\nUser was created successfully.\n")

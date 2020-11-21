@@ -52,6 +52,11 @@ const (
 	ServiceEnableTotp            Key = `service.enabletotp`
 	ServiceSentryDsn             Key = `service.sentrydsn`
 
+	AuthLocalEnabled      Key = `auth.local.enabled`
+	AuthOpenIDEnabled     Key = `auth.openid.enabled`
+	AuthOpenIDRedirectURL Key = `auth.openid.redirecturl`
+	AuthOpenIDProviders   Key = `auth.openid.providers`
+
 	LegalImprintURL Key = `legal.imprinturl`
 	LegalPrivacyURL Key = `legal.privacyurl`
 
@@ -158,6 +163,11 @@ func (k Key) GetStringSlice() []string {
 	return viper.GetStringSlice(string(k))
 }
 
+// Get returns the raw value from a config option
+func (k Key) Get() interface{} {
+	return viper.Get(string(k))
+}
+
 var timezone *time.Location
 
 // GetTimeZone returns the time zone configured for vikunja
@@ -215,6 +225,10 @@ func InitDefaultConfig() {
 	ServiceTimeZone.setDefault("GMT")
 	ServiceEnableTaskComments.setDefault(true)
 	ServiceEnableTotp.setDefault(true)
+
+	// Auth
+	AuthLocalEnabled.setDefault(true)
+	AuthOpenIDEnabled.setDefault(false)
 
 	// Database
 	DatabaseType.setDefault("sqlite")
@@ -320,6 +334,10 @@ func InitConfig() {
 
 	if RateLimitStore.GetString() == "keyvalue" {
 		RateLimitStore.Set(KeyvalueType.GetString())
+	}
+
+	if AuthOpenIDRedirectURL.GetString() == "" {
+		AuthOpenIDRedirectURL.Set(ServiceFrontendurl.GetString() + "auth/openid/")
 	}
 
 	log.Printf("Using config file: %s", viper.ConfigFileUsed())

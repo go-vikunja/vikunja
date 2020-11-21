@@ -445,6 +445,16 @@ func (n *Namespace) Create(a web.Auth) (err error) {
 	return
 }
 
+// CreateNewNamespaceForUser creates a new namespace for a user. To prevent import cycles, we can't do that
+// directly in the user.Create function.
+func CreateNewNamespaceForUser(user *user.User) (err error) {
+	newN := &Namespace{
+		Title:       user.Username,
+		Description: user.Username + "'s namespace.",
+	}
+	return newN.Create(user)
+}
+
 // Delete deletes a namespace
 // @Summary Deletes a namespace
 // @Description Delets a namespace

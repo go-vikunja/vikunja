@@ -57,8 +57,7 @@ func RegisterUser(c echo.Context) error {
 	}
 
 	// Add its namespace
-	newN := &models.Namespace{Title: newUser.Username, Description: newUser.Username + "'s namespace.", Owner: newUser}
-	err = newN.Create(newUser)
+	err = models.CreateNewNamespaceForUser(newUser)
 	if err != nil {
 		return handler.HandleHTTPError(err, c)
 	}

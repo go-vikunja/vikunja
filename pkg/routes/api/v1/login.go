@@ -20,16 +20,12 @@ import (
 	"net/http"
 
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/modules/auth"
 	user2 "code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web/handler"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo/v4"
 )
-
-// Token represents an authentification token
-type Token struct {
-	Token string `json:"token"`
-}
 
 // Login is the login handler
 // @Summary Login
@@ -38,7 +34,7 @@ type Token struct {
 // @Accept json
 // @Produce json
 // @Param credentials body user.Login true "The login credentials"
-// @Success 200 {object} v1.Token
+// @Success 200 {object} auth.Token
 // @Failure 400 {object} models.Message "Invalid user password model."
 // @Failure 412 {object} models.Message "Invalid totp passcode."
 // @Failure 403 {object} models.Message "Invalid username or password."
@@ -71,12 +67,7 @@ func Login(c echo.Context) error {
 	}
 
 	// Create token
-	t, err := NewUserJWTAuthtoken(user)
-	if err != nil {
-		return err
-	}
-
-	return c.JSON(http.StatusOK, Token{Token: t})
+	return auth.NewUserAuthTokenResponse(user, c)
 }
 
 // RenewToken gives a new token to every user with a valid token
@@ -86,7 +77,7 @@ func Login(c echo.Context) error {
 // @tags user
 // @Accept json
 // @Produce json
-// @Success 200 {object} v1.Token
+// @Success 200 {object} auth.Token
 // @Failure 400 {object} models.Message "Only user token are available for renew."
 // @Router /user/token [post]
 func RenewToken(c echo.Context) (err error) {
@@ -94,18 +85,18 @@ func RenewToken(c echo.Context) (err error) {
 	jwtinf := c.Get("user").(*jwt.Token)
 	claims := jwtinf.Claims.(jwt.MapClaims)
 	typ := int(claims["type"].(float64))
-	if typ == AuthTypeLinkShare {
+	if typ == auth.AuthTypeLinkShare {
 		share := &models.LinkSharing{}
 		share.ID = int64(claims["id"].(float64))
 		err := share.ReadOne()
 		if err != nil {
 			return handler.HandleHTTPError(err, c)
 		}
-		t, err := NewLinkShareJWTAuthtoken(share)
+		t, err := auth.NewLinkShareJWTAuthtoken(share)
 		if err != nil {
 			return handler.HandleHTTPError(err, c)
 		}
-		return c.JSON(http.StatusOK, Token{Token: t})
+		return c.JSON(http.StatusOK, auth.Token{Token: t})
 	}
 
 	user, err := user2.GetUserFromClaims(claims)
@@ -114,10 +105,5 @@ func RenewToken(c echo.Context) (err error) {
 	}
 
 	// Create token
-	t, err := NewUserJWTAuthtoken(user)
-	if err != nil {
-		return err
-	}
-
-	return c.JSON(http.StatusOK, Token{Token: t})
+	return auth.NewUserAuthTokenResponse(user, c)
 }

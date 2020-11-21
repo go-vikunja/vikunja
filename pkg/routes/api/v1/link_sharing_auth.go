@@ -20,13 +20,14 @@ import (
 	"net/http"
 
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/web/handler"
 	"github.com/labstack/echo/v4"
 )
 
 // LinkShareToken represents a link share auth token with extra infos about the actual link share
 type LinkShareToken struct {
-	Token
+	auth.Token
 	*models.LinkSharing
 	ListID int64 `json:"list_id"`
 }
@@ -38,7 +39,7 @@ type LinkShareToken struct {
 // @Accept json
 // @Produce json
 // @Param share path string true "The share hash"
-// @Success 200 {object} v1.Token "The valid jwt auth token."
+// @Success 200 {object} auth.Token "The valid jwt auth token."
 // @Failure 400 {object} web.HTTPError "Invalid link share object provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /shares/{share}/auth [post]
@@ -49,13 +50,13 @@ func AuthenticateLinkShare(c echo.Context) error {
 		return handler.HandleHTTPError(err, c)
 	}
 
-	t, err := NewLinkShareJWTAuthtoken(share)
+	t, err := auth.NewLinkShareJWTAuthtoken(share)
 	if err != nil {
 		return handler.HandleHTTPError(err, c)
 	}
 
 	return c.JSON(http.StatusOK, LinkShareToken{
-		Token:       Token{Token: t},
+		Token:       auth.Token{Token: t},
 		LinkSharing: share,
 		ListID:      share.ListID,
 	})

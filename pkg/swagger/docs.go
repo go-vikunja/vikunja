@@ -32,6 +32,58 @@ var doc = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/auth/openid/{provider}/callback": {
+            "post": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "After a redirect from the OpenID Connect provider to the frontend has been made with the authentication ` + "`" + `code` + "`" + `, this endpoint can be used to obtain a jwt token for that user and thus log them in.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Authenticate a user with OpenID Connect",
+                "parameters": [
+                    {
+                        "description": "The openid callback",
+                        "name": "callback",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/openid.Callback"
+                        }
+                    },
+                    {
+                        "type": "integer",
+                        "description": "The OpenID Connect provider key as returned by the /info endpoint",
+                        "name": "provider",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/auth.Token"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
         "/backgrounds/unsplash/image/{image}": {
             "get": {
                 "security": [
@@ -2426,7 +2478,7 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/v1.Token"
+                            "$ref": "#/definitions/auth.Token"
                         }
                     },
                     "400": {
@@ -3671,7 +3723,7 @@ var doc = `{
                     "200": {
                         "description": "The valid jwt auth token.",
                         "schema": {
-                            "$ref": "#/definitions/v1.Token"
+                            "$ref": "#/definitions/auth.Token"
                         }
                     },
                     "400": {
@@ -6240,7 +6292,7 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/v1.Token"
+                            "$ref": "#/definitions/auth.Token"
                         }
                     },
                     "400": {
@@ -6352,6 +6404,14 @@ var doc = `{
         }
     },
     "definitions": {
+        "auth.Token": {
+            "type": "object",
+            "properties": {
+                "token": {
+                    "type": "string"
+                }
+            }
+        },
         "background.Image": {
             "type": "object",
             "properties": {
@@ -7430,6 +7490,34 @@ var doc = `{
                 }
             }
         },
+        "openid.Callback": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "scope": {
+                    "type": "string"
+                }
+            }
+        },
+        "openid.Provider": {
+            "type": "object",
+            "properties": {
+                "auth_url": {
+                    "type": "string"
+                },
+                "client_id": {
+                    "type": "string"
+                },
+                "key": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "todoist.Migration": {
             "type": "object",
             "properties": {
@@ -7577,14 +7665,6 @@ var doc = `{
                 }
             }
         },
-        "v1.Token": {
-            "type": "object",
-            "properties": {
-                "token": {
-                    "type": "string"
-                }
-            }
-        },
         "v1.UserAvatarProvider": {
             "type": "object",
             "properties": {
@@ -7604,6 +7684,17 @@ var doc = `{
                 }
             }
         },
+        "v1.authInfo": {
+            "type": "object",
+            "properties": {
+                "local": {
+                    "$ref": "#/definitions/v1.localAuthInfo"
+                },
+                "openid_connect": {
+                    "$ref": "#/definitions/v1.openIDAuthInfo"
+                }
+            }
+        },
         "v1.legalInfo": {
             "type": "object",
             "properties": {
@@ -7615,9 +7706,37 @@ var doc = `{
                 }
             }
         },
+        "v1.localAuthInfo": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "v1.openIDAuthInfo": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "providers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/openid.Provider"
+                    }
+                },
+                "redirect_url": {
+                    "type": "string"
+                }
+            }
+        },
         "v1.vikunjaInfos": {
             "type": "object",
             "properties": {
+                "auth": {
+                    "$ref": "#/definitions/v1.authInfo"
+                },
                 "available_migrators": {
                     "type": "array",
                     "items": {

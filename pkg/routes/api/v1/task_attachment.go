@@ -20,6 +20,7 @@ import (
 	"net/http"
 
 	"code.vikunja.io/api/pkg/models"
+	auth2 "code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/web/handler"
 	"github.com/labstack/echo/v4"
 )
@@ -46,7 +47,7 @@ func UploadTaskAttachment(c echo.Context) error {
 	}
 
 	// Rights check
-	auth, err := GetAuthFromClaims(c)
+	auth, err := auth2.GetAuthFromClaims(c)
 	if err != nil {
 		return handler.HandleHTTPError(err, c)
 	}
@@ -116,7 +117,7 @@ func GetTaskAttachment(c echo.Context) error {
 	}
 
 	// Rights check
-	auth, err := GetAuthFromClaims(c)
+	auth, err := auth2.GetAuthFromClaims(c)
 	if err != nil {
 		return handler.HandleHTTPError(err, c)
 	}

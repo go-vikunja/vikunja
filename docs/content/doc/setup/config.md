@@ -563,3 +563,27 @@ The type of the storage backend. Can be either "memory" or "redis". If "redis" i
 
 Default: `memory`
 
+---
+
+## auth
+
+
+
+### local
+
+Local authentication will let users log in and register (if enabled) through the db.
+This is the default auth mechanism and does not require any additional configuration.
+
+Default: `<empty>`
+
+### openid
+
+OpenID configuration will allow users to authenticate through a third-party OpenID Connect compatible provider.<br/>
+The provider needs to support the `openid`, `profile` and `email` scopes.<br/>
+**Note:** The frontend expects to be redirected after authentication by the third party
+to <frontend-url>/auth/openid/<auth key>. Please make sure to configure the redirect url with your third party
+auth service accordingy if you're using the default vikunja frontend.
+Take a look at the [default config file](https://kolaente.dev/vikunja/api/src/branch/master/config.yml.sample) for more information about how to configure openid authentication.
+
+Default: `<empty>`
+

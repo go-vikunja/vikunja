@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package v1
+package auth
 
 import (
 	"net/http"
@@ -34,6 +34,21 @@ const (
 	AuthTypeUser
 	AuthTypeLinkShare
 )
+
+// Token represents an authentification token
+type Token struct {
+	Token string `json:"token"`
+}
+
+// NewUserAuthTokenResponse creates a new user auth token response from a user object.
+func NewUserAuthTokenResponse(u *user.User, c echo.Context) error {
+	t, err := NewUserJWTAuthtoken(u)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, Token{Token: t})
+}
 
 // NewUserJWTAuthtoken generates and signes a new jwt token for a user. This is a global function to be able to call it from integration tests.
 func NewUserJWTAuthtoken(user *user.User) (token string, err error) {

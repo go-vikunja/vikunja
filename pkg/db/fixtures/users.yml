@@ -4,6 +4,7 @@
   password: '$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.' # 1234
   email: 'user1@example.com'
   is_active: true
+  issuer: local
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 -
@@ -11,6 +12,7 @@
   username: 'user2'
   password: '$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.' # 1234
   email: 'user2@example.com'
+  issuer: local
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 -
@@ -19,6 +21,7 @@
   password: '$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.' # 1234
   email: 'user3@example.com'
   password_reset_token: passwordresettesttoken
+  issuer: local
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 -
@@ -27,6 +30,7 @@
   password: '$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.' # 1234
   email: 'user4@example.com'
   email_confirm_token: tiepiQueed8ahc7zeeFe1eveiy4Ein8osooxegiephauph2Ael
+  issuer: local
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 -
@@ -36,6 +40,7 @@
   email: 'user5@example.com'
   email_confirm_token: tiepiQueed8ahc7zeeFe1eveiy4Ein8osooxegiephauph2Ael
   is_active: false
+  issuer: local
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 # This use is used to create a whole bunch of lists which are then shared directly with a user
@@ -44,6 +49,7 @@
   password: '$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.' # 1234
   email: 'user6@example.com'
   is_active: true
+  issuer: local
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 - id: 7
@@ -51,6 +57,7 @@
   password: '$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.' # 1234
   email: 'user7@example.com'
   is_active: true
+  issuer: local
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 - id: 8
@@ -58,6 +65,7 @@
   password: '$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.' # 1234
   email: 'user8@example.com'
   is_active: true
+  issuer: local
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 - id: 9
@@ -65,6 +73,7 @@
   password: '$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.' # 1234
   email: 'user9@example.com'
   is_active: true
+  issuer: local
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 - id: 10
@@ -72,6 +81,7 @@
   password: '$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.' # 1234
   email: 'user10@example.com'
   is_active: true
+  issuer: local
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 - id: 11
@@ -79,6 +89,7 @@
   password: '$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.' # 1234
   email: 'user11@example.com'
   is_active: true
+  issuer: local
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 - id: 12
@@ -86,6 +97,7 @@
   password: '$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.' # 1234
   email: 'user12@example.com'
   is_active: true
+  issuer: local
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 - id: 13
@@ -93,5 +105,15 @@
   password: '$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.' # 1234
   email: 'user14@example.com'
   is_active: true
+  issuer: local
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
+- id: 14
+  username: 'user14'
+  password: '$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.' # 1234
+  email: 'user15@some.service.com'
+  is_active: true
+  issuer: 'https://some.service.com'
+  subject: '12345'
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12

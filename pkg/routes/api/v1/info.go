@@ -20,6 +20,7 @@ import (
 	"net/http"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/modules/auth/openid"
 	"code.vikunja.io/api/pkg/modules/migration/todoist"
 	"code.vikunja.io/api/pkg/modules/migration/wunderlist"
 	"code.vikunja.io/api/pkg/version"
@@ -39,6 +40,22 @@ type vikunjaInfos struct {
 	TotpEnabled                bool      `json:"totp_enabled"`
 	Legal                      legalInfo `json:"legal"`
 	CaldavEnabled              bool      `json:"caldav_enabled"`
+	AuthInfo                   authInfo  `json:"auth"`
+}
+
+type authInfo struct {
+	Local         localAuthInfo  `json:"local"`
+	OpenIDConnect openIDAuthInfo `json:"openid_connect"`
+}
+
+type localAuthInfo struct {
+	Enabled bool `json:"enabled"`
+}
+
+type openIDAuthInfo struct {
+	Enabled     bool               `json:"enabled"`
+	RedirectURL string             `json:"redirect_url"`
+	Providers   []*openid.Provider `json:"providers"`
 }
 
 type legalInfo struct {
@@ -68,7 +85,23 @@ func Info(c echo.Context) error {
 			ImprintURL:       config.LegalImprintURL.GetString(),
 			PrivacyPolicyURL: config.LegalPrivacyURL.GetString(),
 		},
+		AuthInfo: authInfo{
+			Local: localAuthInfo{
+				Enabled: config.AuthLocalEnabled.GetBool(),
+			},
+			OpenIDConnect: openIDAuthInfo{
+				Enabled:     config.AuthOpenIDEnabled.GetBool(),
+				RedirectURL: config.AuthOpenIDRedirectURL.GetString(),
+			},
+		},
 	}
+
+	providers, err := openid.GetAllProviders()
+	if err != nil {
+		return err
+	}
+
+	info.AuthInfo.OpenIDConnect.Providers = providers
 
 	// Migrators
 	if config.MigrationWunderlistEnable.GetBool() {

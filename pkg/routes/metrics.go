@@ -22,7 +22,7 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/metrics"
 	"code.vikunja.io/api/pkg/models"
-	v1 "code.vikunja.io/api/pkg/routes/api/v1"
+	auth2 "code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/user"
 	"github.com/labstack/echo/v4"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -95,7 +95,7 @@ func setupMetricsMiddleware(a *echo.Group) {
 
 // updateActiveUsersFromContext updates the currently active users in redis
 func updateActiveUsersFromContext(c echo.Context) (err error) {
-	auth, err := v1.GetAuthFromClaims(c)
+	auth, err := auth2.GetAuthFromClaims(c)
 	if err != nil {
 		return
 	}

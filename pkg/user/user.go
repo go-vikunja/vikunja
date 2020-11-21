@@ -23,10 +23,6 @@ import (
 	"reflect"
 	"time"
 
-	"code.vikunja.io/api/pkg/config"
-	"code.vikunja.io/api/pkg/mail"
-	"code.vikunja.io/api/pkg/metrics"
-	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/web"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo/v4"
@@ -49,7 +45,7 @@ type User struct {
 	ID int64 `xorm:"int(11) autoincr not null unique pk" json:"id"`
 	// The username of the user. Is always unique.
 	Username string `xorm:"varchar(250) not null unique" json:"username" valid:"length(1|250)" minLength:"1" maxLength:"250"`
-	Password string `xorm:"varchar(250) not null" json:"-"`
+	Password string `xorm:"varchar(250) null" json:"-"`
 	// The user's email address.
 	Email    string `xorm:"varchar(250) null" json:"email,omitempty" valid:"email,length(0|250)" maxLength:"250"`
 	IsActive bool   `xorm:"null" json:"-"`
@@ -59,6 +55,10 @@ type User struct {
 
 	AvatarProvider string `xorm:"varchar(255) null" json:"-"`
 	AvatarFileID   int64  `xorn:"null" json:"-"`
+
+	// Issuer and Subject contain the issuer and subject from the source the user authenticated with.
+	Issuer  string `xorm:"text null" json:"-"`
+	Subject string `xorm:"text null" json:"-"`
 
 	// A timestamp when this task was created. You cannot change this value.
 	Created time.Time `xorm:"created not null" json:"created"`
@@ -222,97 +222,6 @@ func GetUserFromClaims(claims jwt.MapClaims) (user *User, err error) {
 	return
 }
 
-// CreateUser creates a new user and inserts it into the database
-func CreateUser(user *User) (newUser *User, err error) {
-
-	newUser = user
-
-	// Check if we have all needed informations
-	if newUser.Password == "" || newUser.Username == "" || newUser.Email == "" {
-		return &User{}, ErrNoUsernamePassword{}
-	}
-
-	// Check if the user already existst with that username
-	exists := true
-	_, err = GetUserByUsername(newUser.Username)
-	if err != nil {
-		if IsErrUserDoesNotExist(err) {
-			exists = false
-		} else {
-			return &User{}, err
-		}
-	}
-	if exists {
-		return &User{}, ErrUsernameExists{newUser.ID, newUser.Username}
-	}
-
-	// Check if the user already existst with that email
-	exists = true
-	_, err = GetUser(&User{Email: newUser.Email})
-	if err != nil {
-		if IsErrUserDoesNotExist(err) {
-			exists = false
-		} else {
-			return &User{}, err
-		}
-	}
-	if exists {
-		return &User{}, ErrUserEmailExists{newUser.ID, newUser.Email}
-	}
-
-	// Hash the password
-	newUser.Password, err = hashPassword(user.Password)
-	if err != nil {
-		return &User{}, err
-	}
-
-	newUser.IsActive = true
-	if config.MailerEnabled.GetBool() {
-		// The new user should not be activated until it confirms his mail address
-		newUser.IsActive = false
-		// Generate a confirm token
-		newUser.EmailConfirmToken = utils.MakeRandomString(60)
-	}
-
-	newUser.AvatarProvider = "initials"
-
-	// Insert it
-	_, err = x.Insert(newUser)
-	if err != nil {
-		return &User{}, err
-	}
-
-	// Update the metrics
-	metrics.UpdateCount(1, metrics.ActiveUsersKey)
-
-	// Get the  full new User
-	newUserOut, err := GetUser(newUser)
-	if err != nil {
-		return &User{}, err
-	}
-
-	// Dont send a mail if we're testing
-	if !config.MailerEnabled.GetBool() {
-		return newUserOut, err
-	}
-
-	// Send the user a mail with a link to confirm the mail
-	data := map[string]interface{}{
-		"User":  newUserOut,
-		"IsNew": true,
-	}
-
-	mail.SendMailWithTemplate(user.Email, newUserOut.Username+" + Vikunja = <3", "confirm-email", data)
-
-	return newUserOut, err
-}
-
-// HashPassword hashes a password
-func hashPassword(password string) (string, error) {
-	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 11)
-	return string(bytes), err
-}
-
 // UpdateUser updates a user
 func UpdateUser(user *User) (updatedUser *User, err error) {
 
@@ -340,7 +249,11 @@ func UpdateUser(user *User) (updatedUser *User, err error) {
 	if user.Email == "" {
 		user.Email = theUser.Email
 	} else {
-		uu, err := getUser(&User{Email: user.Email}, true)
+		uu, err := getUser(&User{
+			Email:   user.Email,
+			Issuer:  user.Issuer,
+			Subject: user.Subject,
+		}, true)
 		if err != nil && !IsErrUserDoesNotExist(err) {
 			return nil, err
 		}

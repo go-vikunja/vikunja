@@ -25,9 +25,9 @@ import (
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
+	auth2 "code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/modules/background"
 	"code.vikunja.io/api/pkg/modules/background/unsplash"
-	v1 "code.vikunja.io/api/pkg/routes/api/v1"
 	"code.vikunja.io/web"
 	"code.vikunja.io/web/handler"
 	"github.com/gabriel-vasile/mimetype"
@@ -69,7 +69,7 @@ func (bp *BackgroundProvider) SearchBackgrounds(c echo.Context) error {
 
 // This function does all kinds of preparations for setting and uploading a background
 func (bp *BackgroundProvider) setBackgroundPreparations(c echo.Context) (list *models.List, auth web.Auth, err error) {
-	auth, err = v1.GetAuthFromClaims(c)
+	auth, err = auth2.GetAuthFromClaims(c)
 	if err != nil {
 		return nil, nil, echo.NewHTTPError(http.StatusBadRequest, "Invalid auth token: "+err.Error())
 	}
@@ -180,7 +180,7 @@ func (bp *BackgroundProvider) UploadBackground(c echo.Context) error {
 // @Router /lists/{id}/background [get]
 func GetListBackground(c echo.Context) error {
 
-	auth, err := v1.GetAuthFromClaims(c)
+	auth, err := auth2.GetAuthFromClaims(c)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid auth token: "+err.Error())
 	}

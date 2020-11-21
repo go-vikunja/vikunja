@@ -88,6 +88,26 @@ func TestCreateUser(t *testing.T) {
 		assert.Error(t, err)
 		assert.True(t, IsErrNoUsernamePassword(err))
 	})
+	t.Run("same email but different issuer", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		_, err := CreateUser(&User{
+			Username: "somenewuser",
+			Email:    "user1@example.com",
+			Issuer:   "https://some.site",
+			Subject:  "12345",
+		})
+		assert.NoError(t, err)
+	})
+	t.Run("same subject but different issuer", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		_, err := CreateUser(&User{
+			Username: "somenewuser",
+			Email:    "somenewuser@example.com",
+			Issuer:   "https://some.site",
+			Subject:  "12345",
+		})
+		assert.NoError(t, err)
+	})
 }
 
 func TestGetUser(t *testing.T) {
@@ -256,7 +276,7 @@ func TestListUsers(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		all, err := ListUsers("")
 		assert.NoError(t, err)
-		assert.Len(t, all, 13)
+		assert.Len(t, all, 14)
 	})
 }
 

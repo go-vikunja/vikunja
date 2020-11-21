@@ -31,6 +31,7 @@ func TestListUsersFromList(t *testing.T) {
 		Username: "user1",
 		Password: "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
 		IsActive: true,
+		Issuer:   "local",
 		Created:  testCreatedTime,
 		Updated:  testUpdatedTime,
 	}
@@ -38,6 +39,7 @@ func TestListUsersFromList(t *testing.T) {
 		ID:       2,
 		Username: "user2",
 		Password: "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
+		Issuer:   "local",
 		Created:  testCreatedTime,
 		Updated:  testUpdatedTime,
 	}
@@ -46,6 +48,7 @@ func TestListUsersFromList(t *testing.T) {
 		Username:           "user3",
 		Password:           "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
 		PasswordResetToken: "passwordresettesttoken",
+		Issuer:             "local",
 		Created:            testCreatedTime,
 		Updated:            testUpdatedTime,
 	}
@@ -55,6 +58,7 @@ func TestListUsersFromList(t *testing.T) {
 		Password:          "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
 		IsActive:          false,
 		EmailConfirmToken: "tiepiQueed8ahc7zeeFe1eveiy4Ein8osooxegiephauph2Ael",
+		Issuer:            "local",
 		Created:           testCreatedTime,
 		Updated:           testUpdatedTime,
 	}
@@ -64,6 +68,7 @@ func TestListUsersFromList(t *testing.T) {
 		Password:          "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
 		IsActive:          false,
 		EmailConfirmToken: "tiepiQueed8ahc7zeeFe1eveiy4Ein8osooxegiephauph2Ael",
+		Issuer:            "local",
 		Created:           testCreatedTime,
 		Updated:           testUpdatedTime,
 	}
@@ -72,6 +77,7 @@ func TestListUsersFromList(t *testing.T) {
 		Username: "user6",
 		Password: "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
 		IsActive: true,
+		Issuer:   "local",
 		Created:  testCreatedTime,
 		Updated:  testUpdatedTime,
 	}
@@ -80,6 +86,7 @@ func TestListUsersFromList(t *testing.T) {
 		Username: "user7",
 		Password: "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
 		IsActive: true,
+		Issuer:   "local",
 		Created:  testCreatedTime,
 		Updated:  testUpdatedTime,
 	}
@@ -88,6 +95,7 @@ func TestListUsersFromList(t *testing.T) {
 		Username: "user8",
 		Password: "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
 		IsActive: true,
+		Issuer:   "local",
 		Created:  testCreatedTime,
 		Updated:  testUpdatedTime,
 	}
@@ -96,6 +104,7 @@ func TestListUsersFromList(t *testing.T) {
 		Username: "user9",
 		Password: "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
 		IsActive: true,
+		Issuer:   "local",
 		Created:  testCreatedTime,
 		Updated:  testUpdatedTime,
 	}
@@ -104,6 +113,7 @@ func TestListUsersFromList(t *testing.T) {
 		Username: "user10",
 		Password: "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
 		IsActive: true,
+		Issuer:   "local",
 		Created:  testCreatedTime,
 		Updated:  testUpdatedTime,
 	}
@@ -112,6 +122,7 @@ func TestListUsersFromList(t *testing.T) {
 		Username: "user11",
 		Password: "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
 		IsActive: true,
+		Issuer:   "local",
 		Created:  testCreatedTime,
 		Updated:  testUpdatedTime,
 	}
@@ -120,6 +131,7 @@ func TestListUsersFromList(t *testing.T) {
 		Username: "user12",
 		Password: "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
 		IsActive: true,
+		Issuer:   "local",
 		Created:  testCreatedTime,
 		Updated:  testUpdatedTime,
 	}
@@ -128,6 +140,7 @@ func TestListUsersFromList(t *testing.T) {
 		Username: "user13",
 		Password: "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
 		IsActive: true,
+		Issuer:   "local",
 		Created:  testCreatedTime,
 		Updated:  testUpdatedTime,
 	}

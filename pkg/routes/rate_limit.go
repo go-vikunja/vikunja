@@ -24,8 +24,8 @@ import (
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
+	auth2 "code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/red"
-	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
 	"github.com/labstack/echo/v4"
 	"github.com/ulule/limiter/v3"
 	"github.com/ulule/limiter/v3/drivers/store/memory"
@@ -41,7 +41,7 @@ func RateLimit(rateLimiter *limiter.Limiter, rateLimitKind string) echo.Middlewa
 			case "ip":
 				rateLimitKey = c.RealIP()
 			case "user":
-				auth, err := apiv1.GetAuthFromClaims(c)
+				auth, err := auth2.GetAuthFromClaims(c)
 				if err != nil {
 					log.Errorf("Error getting auth from jwt claims: %v", err)
 				}

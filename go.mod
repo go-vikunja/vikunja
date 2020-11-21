@@ -26,10 +26,12 @@ require (
 	github.com/beevik/etree v1.1.0 // indirect
 	github.com/c2h5oh/datasize v0.0.0-20200825124411-48ed595a09d2
 	github.com/client9/misspell v0.3.4
+	github.com/coreos/go-oidc v2.2.1+incompatible
 	github.com/cweill/gotests v1.5.3
 	github.com/d4l3k/messagediff v1.2.1 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/disintegration/imaging v1.6.2
+	github.com/dustinkirkland/golang-petname v0.0.0-20191129215211-8e5a1ed0cff0
 	github.com/fzipp/gocyclo v0.3.1
 	github.com/gabriel-vasile/mimetype v1.1.2
 	github.com/getsentry/sentry-go v0.8.0
@@ -59,6 +61,7 @@ require (
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/pelletier/go-toml v1.8.0 // indirect
 	github.com/pquerna/otp v1.3.0
+	github.com/pquerna/cachecontrol v0.0.0-20200921180117-858c6e7e6b7e // indirect
 	github.com/prometheus/client_golang v1.8.0
 	github.com/samedi/caldav-go v3.0.0+incompatible
 	github.com/shurcooL/httpfs v0.0.0-20190707220628-8d4bc4ba7749
@@ -75,6 +78,7 @@ require (
 	golang.org/x/image v0.0.0-20200927104501-e162460cd6b5
 	golang.org/x/lint v0.0.0-20200302205851-738671d3881b
 	golang.org/x/net v0.0.0-20201016165138-7b1cca2348c0 // indirect
+	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9
 	golang.org/x/tools v0.0.0-20201017001424-6003fad69a88 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
@@ -82,6 +86,7 @@ require (
 	gopkg.in/d4l3k/messagediff.v1 v1.2.1
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 	gopkg.in/ini.v1 v1.57.0 // indirect
+	gopkg.in/square/go-jose.v2 v2.5.1 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200605160147-a5ece683394c
 	honnef.co/go/tools v0.0.1-2020.1.5
 	src.techknowlogick.com/xgo v1.1.1-0.20200811225412-bff6512e7c9c

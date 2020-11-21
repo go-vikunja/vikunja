@@ -21,6 +21,7 @@ import (
 	"strconv"
 
 	"code.vikunja.io/api/pkg/models"
+	auth2 "code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web/handler"
 	"github.com/labstack/echo/v4"
@@ -74,7 +75,7 @@ func ListUsersForList(c echo.Context) error {
 	}
 
 	list := models.List{ID: listID}
-	auth, err := GetAuthFromClaims(c)
+	auth, err := auth2.GetAuthFromClaims(c)
 	if err != nil {
 		return handler.HandleHTTPError(err, c)
 	}

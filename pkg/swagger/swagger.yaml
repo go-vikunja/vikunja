@@ -1,5 +1,10 @@
 basePath: /api/v1
 definitions:
+  auth.Token:
+    properties:
+      token:
+        type: string
+    type: object
   background.Image:
     properties:
       id:
@@ -795,6 +800,24 @@ definitions:
         minLength: 1
         type: string
     type: object
+  openid.Callback:
+    properties:
+      code:
+        type: string
+      scope:
+        type: string
+    type: object
+  openid.Provider:
+    properties:
+      auth_url:
+        type: string
+      client_id:
+        type: string
+      key:
+        type: string
+      name:
+        type: string
+    type: object
   todoist.Migration:
     properties:
       code:
@@ -899,11 +922,6 @@ definitions:
         minLength: 1
         type: string
     type: object
-  v1.Token:
-    properties:
-      token:
-        type: string
-    type: object
   v1.UserAvatarProvider:
     properties:
       avatar_provider:
@@ -916,6 +934,13 @@ definitions:
       old_password:
         type: string
     type: object
+  v1.authInfo:
+    properties:
+      local:
+        $ref: '#/definitions/v1.localAuthInfo'
+      openid_connect:
+        $ref: '#/definitions/v1.openIDAuthInfo'
+    type: object
   v1.legalInfo:
     properties:
       imprint_url:
@@ -923,8 +948,26 @@ definitions:
       privacy_policy_url:
         type: string
     type: object
+  v1.localAuthInfo:
+    properties:
+      enabled:
+        type: boolean
+    type: object
+  v1.openIDAuthInfo:
+    properties:
+      enabled:
+        type: boolean
+      providers:
+        items:
+          $ref: '#/definitions/openid.Provider'
+        type: array
+      redirect_url:
+        type: string
+    type: object
   v1.vikunjaInfos:
     properties:
+      auth:
+        $ref: '#/definitions/v1.authInfo'
       available_migrators:
         items:
           type: string
@@ -1021,6 +1064,39 @@ paths:
       summary: User Avatar
       tags:
       - user
+  /auth/openid/{provider}/callback:
+    post:
+      consumes:
+      - application/json
+      description: After a redirect from the OpenID Connect provider to the frontend has been made with the authentication `code`, this endpoint can be used to obtain a jwt token for that user and thus log them in.
+      parameters:
+      - description: The openid callback
+        in: body
+        name: callback
+        required: true
+        schema:
+          $ref: '#/definitions/openid.Callback'
+      - description: The OpenID Connect provider key as returned by the /info endpoint
+        in: path
+        name: provider
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/auth.Token'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Authenticate a user with OpenID Connect
+      tags:
+      - auth
   /backgrounds/unsplash/image/{image}:
     get:
       description: Get an unsplash image. **Returns json on error.**
@@ -2558,7 +2634,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/v1.Token'
+            $ref: '#/definitions/auth.Token'
         "400":
           description: Invalid user password model.
           schema:
@@ -3354,7 +3430,7 @@ paths:
         "200":
           description: The valid jwt auth token.
           schema:
-            $ref: '#/definitions/v1.Token'
+            $ref: '#/definitions/auth.Token'
         "400":
           description: Invalid link share object provided.
           schema:
@@ -4997,7 +5073,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/v1.Token'
+            $ref: '#/definitions/auth.Token'
         "400":
           description: Only user token are available for renew.
           schema:
