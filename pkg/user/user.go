@@ -43,6 +43,8 @@ type Login struct {
 type User struct {
 	// The unique, numeric id of this user.
 	ID int64 `xorm:"int(11) autoincr not null unique pk" json:"id"`
+	// The full name of the user.
+	Name string `xorm:"text null" json:"name"`
 	// The username of the user. Is always unique.
 	Username string `xorm:"varchar(250) not null unique" json:"username" valid:"length(1|250)" minLength:"1" maxLength:"250"`
 	Password string `xorm:"varchar(250) null" json:"-"`
@@ -217,6 +219,7 @@ func GetUserFromClaims(claims jwt.MapClaims) (user *User, err error) {
 		ID:       int64(userID),
 		Email:    claims["email"].(string),
 		Username: claims["username"].(string),
+		Name:     claims["name"].(string),
 	}
 
 	return
@@ -243,6 +246,11 @@ func UpdateUser(user *User) (updatedUser *User, err error) {
 		if uu.ID != 0 && uu.ID != user.ID {
 			return nil, &ErrUsernameExists{Username: user.Username, UserID: uu.ID}
 		}
+	}
+
+	// Check if we have a name
+	if user.Name == "" {
+		user.Name = theUser.Name
 	}
 
 	// Check if the email is already used
@@ -280,7 +288,9 @@ func UpdateUser(user *User) (updatedUser *User, err error) {
 			"email",
 			"avatar_provider",
 			"avatar_file_id",
-			"is_active").
+			"is_active",
+			"name",
+		).
 		Update(user)
 	if err != nil {
 		return &User{}, err

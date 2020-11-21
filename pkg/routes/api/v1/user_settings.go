@@ -27,7 +27,14 @@ import (
 
 // UserAvatarProvider holds the user avatar provider type
 type UserAvatarProvider struct {
+	// The avatar provider. Valid types are `gravatar` (uses the user email), `upload`, `initials`, `default`.
 	AvatarProvider string `json:"avatar_provider"`
+}
+
+// UserName holds the user's name
+type UserName struct {
+	// The new name of the current user.
+	Name string `json:"name"`
 }
 
 // GetUserAvatarProvider returns the currently set user avatar
@@ -65,7 +72,7 @@ func GetUserAvatarProvider(c echo.Context) error {
 // @Produce json
 // @Security JWTKeyAuth
 // @Param avatar body UserAvatarProvider true "The user's avatar setting"
-// @Success 200 {object} UserAvatarProvider
+// @Success 200 {object} models.Message
 // @Failure 400 {object} web.HTTPError "Something's invalid."
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /user/settings/avatar [post]
@@ -95,4 +102,43 @@ func ChangeUserAvatarProvider(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, &models.Message{Message: "Avatar was changed successfully."})
+}
+
+// ChangeUserName is the handler to change the name of the current user
+// @Summary Change the current user's name
+// @Description Changes the current user's name. It is also possible to reset the name.
+// @tags user
+// @Accept json
+// @Produce json
+// @Security JWTKeyAuth
+// @Param avatar body UserName true "The updated user name"
+// @Success 200 {object} models.Message
+// @Failure 400 {object} web.HTTPError "Something's invalid."
+// @Failure 500 {object} models.Message "Internal server error."
+// @Router /user/settings/name [post]
+func UpdateUserName(c echo.Context) error {
+	un := &UserName{}
+	err := c.Bind(un)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Bad user name provided.")
+	}
+
+	u, err := user2.GetCurrentUser(c)
+	if err != nil {
+		return handler.HandleHTTPError(err, c)
+	}
+
+	user, err := user2.GetUserWithEmail(u)
+	if err != nil {
+		return handler.HandleHTTPError(err, c)
+	}
+
+	user.Name = un.Name
+
+	_, err = user2.UpdateUser(user)
+	if err != nil {
+		return handler.HandleHTTPError(err, c)
+	}
+
+	return c.JSON(http.StatusOK, &models.Message{Message: "Name was changed successfully."})
 }

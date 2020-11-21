@@ -189,11 +189,17 @@ func getOrCreateUser(cl *claims, issuer, subject string) (u *user.User, err erro
 	}
 
 	// If it exists, check if the email address changed and change it if not
-	if cl.Email != u.Email {
-		u.Email = cl.Email
+	if cl.Email != u.Email || cl.Name != u.Name {
+		if cl.Email != u.Email {
+			u.Email = cl.Email
+		}
+		if cl.Name != u.Name {
+			u.Name = cl.Name
+		}
 		u, err = user.UpdateUser(&user.User{
 			ID:      u.ID,
-			Email:   cl.Email,
+			Email:   u.Email,
+			Name:    u.Name,
 			Issuer:  issuer,
 			Subject: subject,
 		})

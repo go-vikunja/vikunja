@@ -5911,7 +5911,7 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/v1.UserAvatarProvider"
+                            "$ref": "#/definitions/models.Message"
                         }
                     },
                     "400": {
@@ -6028,6 +6028,57 @@ var doc = `{
                     },
                     "404": {
                         "description": "User does not exist.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/settings/name": {
+            "post": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Changes the current user's name. It is also possible to reset the name.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "Change the current user's name",
+                "parameters": [
+                    {
+                        "description": "The updated user name",
+                        "name": "avatar",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/v1.UserName"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "400": {
+                        "description": "Something's invalid.",
                         "schema": {
                             "$ref": "#/definitions/web.HTTPError"
                         }
@@ -7406,6 +7457,10 @@ var doc = `{
                     "description": "The unique, numeric id of this user.",
                     "type": "integer"
                 },
+                "name": {
+                    "description": "The full name of the user.",
+                    "type": "string"
+                },
                 "updated": {
                     "description": "A timestamp when this task was last updated. You cannot change this value.",
                     "type": "string"
@@ -7474,6 +7529,10 @@ var doc = `{
                 "id": {
                     "description": "The unique, numeric id of this user.",
                     "type": "integer"
+                },
+                "name": {
+                    "description": "The full name of the user.",
+                    "type": "string"
                 },
                 "right": {
                     "type": "integer"
@@ -7653,6 +7712,10 @@ var doc = `{
                     "description": "The unique, numeric id of this user.",
                     "type": "integer"
                 },
+                "name": {
+                    "description": "The full name of the user.",
+                    "type": "string"
+                },
                 "updated": {
                     "description": "A timestamp when this task was last updated. You cannot change this value.",
                     "type": "string"
@@ -7669,6 +7732,16 @@ var doc = `{
             "type": "object",
             "properties": {
                 "avatar_provider": {
+                    "description": "The avatar provider. Valid types are ` + "`" + `gravatar` + "`" + ` (uses the user email), ` + "`" + `upload` + "`" + `, ` + "`" + `initials` + "`" + `, ` + "`" + `default` + "`" + `.",
+                    "type": "string"
+                }
+            }
+        },
+        "v1.UserName": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "description": "The new name of the current user.",
                     "type": "string"
                 }
             }

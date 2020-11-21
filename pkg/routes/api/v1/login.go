@@ -99,7 +99,12 @@ func RenewToken(c echo.Context) (err error) {
 		return c.JSON(http.StatusOK, auth.Token{Token: t})
 	}
 
-	user, err := user2.GetUserFromClaims(claims)
+	u, err := user2.GetUserFromClaims(claims)
+	if err != nil {
+		return handler.HandleHTTPError(err, c)
+	}
+
+	user, err := user2.GetUserWithEmail(&user2.User{ID: u.ID})
 	if err != nil {
 		return handler.HandleHTTPError(err, c)
 	}

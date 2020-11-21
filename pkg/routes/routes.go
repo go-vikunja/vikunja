@@ -269,6 +269,7 @@ func registerAPIRoutes(a *echo.Group) {
 	u.GET("/settings/avatar", apiv1.GetUserAvatarProvider)
 	u.POST("/settings/avatar", apiv1.ChangeUserAvatarProvider)
 	u.PUT("/settings/avatar/upload", apiv1.UploadAvatar)
+	u.POST("/settings/name", apiv1.UpdateUserName)
 
 	if config.ServiceEnableTotp.GetBool() {
 		u.GET("/settings/totp", apiv1.UserTOTP)

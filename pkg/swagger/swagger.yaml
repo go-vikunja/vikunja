@@ -738,6 +738,9 @@ definitions:
       id:
         description: The unique, numeric id of this user.
         type: integer
+      name:
+        description: The full name of the user.
+        type: string
       updated:
         description: A timestamp when this task was last updated. You cannot change this value.
         type: string
@@ -789,6 +792,9 @@ definitions:
       id:
         description: The unique, numeric id of this user.
         type: integer
+      name:
+        description: The full name of the user.
+        type: string
       right:
         type: integer
       updated:
@@ -913,6 +919,9 @@ definitions:
       id:
         description: The unique, numeric id of this user.
         type: integer
+      name:
+        description: The full name of the user.
+        type: string
       updated:
         description: A timestamp when this task was last updated. You cannot change this value.
         type: string
@@ -925,6 +934,13 @@ definitions:
   v1.UserAvatarProvider:
     properties:
       avatar_provider:
+        description: The avatar provider. Valid types are `gravatar` (uses the user email), `upload`, `initials`, `default`.
+        type: string
+    type: object
+  v1.UserName:
+    properties:
+      name:
+        description: The new name of the current user.
         type: string
     type: object
   v1.UserPassword:
@@ -4830,7 +4846,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/v1.UserAvatarProvider'
+            $ref: '#/definitions/models.Message'
         "400":
           description: Something's invalid.
           schema:
@@ -4913,6 +4929,38 @@ paths:
       security:
       - JWTKeyAuth: []
       summary: Update email address
+      tags:
+      - user
+  /user/settings/name:
+    post:
+      consumes:
+      - application/json
+      description: Changes the current user's name. It is also possible to reset the name.
+      parameters:
+      - description: The updated user name
+        in: body
+        name: avatar
+        required: true
+        schema:
+          $ref: '#/definitions/v1.UserName'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Message'
+        "400":
+          description: Something's invalid.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal server error.
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Change the current user's name
       tags:
       - user
   /user/settings/totp:
