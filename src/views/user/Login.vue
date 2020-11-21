@@ -6,7 +6,7 @@
 				You successfully confirmed your email! You can log in now.
 			</div>
 			<api-config/>
-			<form @submit.prevent="submit" id="loginform">
+			<form @submit.prevent="submit" id="loginform" v-if="localAuthEnabled">
 				<div class="field">
 					<label class="label" for="username">Username</label>
 					<div class="control">
@@ -54,15 +54,16 @@
 
 				<div class="field is-grouped login-buttons">
 					<div class="control is-expanded">
-						<button class="button is-primary" type="submit" v-bind:class="{ 'is-loading': loading}">Login
+						<button class="button is-primary" type="submit" v-bind:class="{ 'is-loading': loading}">
+							Login
 						</button>
-						<router-link :to="{ name: 'user.register' }" class="button" v-if="registrationEnabled">Register
+						<router-link :to="{ name: 'user.register' }" class="button" v-if="registrationEnabled">
+							Register
 						</router-link>
 					</div>
 					<div class="control">
-						<router-link :to="{ name: 'user.password-reset.request' }" class="reset-password-link">Reset
-							your
-							password
+						<router-link :to="{ name: 'user.password-reset.request' }" class="reset-password-link">
+							Reset your password
 						</router-link>
 					</div>
 				</div>
@@ -70,6 +71,13 @@
 					{{ errorMessage }}
 				</div>
 			</form>
+
+			<div v-if="openidConnect.enabled && openidConnect.providers.length > 0" class="mt-4">
+				<a @click="redirectToProvider(p)" v-for="(p, k) in openidConnect.providers" :key="k" class="button is-fullwidth">
+					Log in with {{ p.name }}
+				</a>
+			</div>
+
 			<legal/>
 		</div>
 	</div>
@@ -128,6 +136,8 @@ export default {
 		errorMessage: ERROR_MESSAGE,
 		needsTotpPasscode: state => state.auth.needsTotpPasscode,
 		authenticated: state => state.auth.authenticated,
+		localAuthEnabled: state => state.config.auth.local.enabled,
+		openidConnect: state => state.config.auth.openidConnect,
 	}),
 	methods: {
 		submit() {
@@ -150,6 +160,12 @@ export default {
 				})
 				.catch(() => {
 				})
+		},
+		redirectToProvider(provider) {
+			const state = Math.random().toString(36).substring(2, 24)
+			localStorage.setItem('state', state)
+
+			window.location.href = `${provider.authUrl}?client_id=${provider.clientId}&redirect_uri=${this.openidConnect.redirectUrl}${provider.key}&response_type=code&scope=&state=${state}`
 		},
 	},
 }

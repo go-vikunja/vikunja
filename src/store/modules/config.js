@@ -1,5 +1,8 @@
+import Vue from 'vue'
+
 import {CONFIG} from '../mutation-types'
 import {HTTPFactory} from '@/http-common'
+import {objectToCamelCase} from '@/helpers/case'
 
 export default {
 	namespaced: true,
@@ -20,6 +23,16 @@ export default {
 			privacyPolicyUrl: '',
 		},
 		caldavEnabled: false,
+		auth: {
+			local: {
+				enabled: true,
+			},
+			openidConnect: {
+				enabled: false,
+				redirectUrl: '',
+				providers: [],
+			},
+		},
 	}),
 	mutations: {
 		[CONFIG](state, config) {
@@ -36,6 +49,11 @@ export default {
 			state.legal.imprintUrl = config.legal.imprint_url
 			state.legal.privacyPolicyUrl = config.legal.privacy_policy_url
 			state.caldavEnabled = config.caldav_enabled
+			const auth = objectToCamelCase(config.auth)
+			state.auth.local.enabled = auth.local.enabled
+			state.auth.openidConnect.enabled = auth.openidConnect.enabled
+			state.auth.openidConnect.redirectUrl = auth.openidConnect.redirectUrl
+			Vue.set(state.auth.openidConnect, 'providers', auth.openidConnect.providers)
 		},
 	},
 	actions: {

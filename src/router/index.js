@@ -8,6 +8,7 @@ import ErrorComponent from '../components/misc/error'
 // User Handling
 import LoginComponent from '../views/user/Login'
 import RegisterComponent from '../views/user/Register'
+import OpenIdAuth from '@/views/user/OpenIdAuth'
 // Tasks
 import ShowTasksInRangeComponent from '../views/tasks/ShowTasksInRange'
 import LinkShareAuthComponent from '../views/sharing/LinkSharingAuth'
@@ -266,6 +267,11 @@ export default new Router({
 			path: '/filters/new',
 			name: 'filters.create',
 			component: CreateSavedFilter,
+		},
+		{
+			path: '/auth/openid/:provider',
+			name: 'openid.auth',
+			component: OpenIdAuth,
 		},
 	],
 })

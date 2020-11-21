@@ -98,6 +98,40 @@ export default {
 					ctx.commit(LOADING, false, {root: true})
 				})
 		},
+		openIdAuth(ctx, {provider, code}) {
+			const HTTP = HTTPFactory()
+			ctx.commit(LOADING, true, {root: true})
+
+			const data = {
+				code: code,
+			}
+
+			// Delete an eventually preexisting old token
+			localStorage.removeItem('token')
+			return HTTP.post(`/auth/openid/${provider}/callback`, data)
+				.then(response => {
+					// Save the token to local storage for later use
+					localStorage.setItem('token', response.data.token)
+
+					// Tell others the user is autheticated
+					ctx.commit('isLinkShareAuth', false)
+					ctx.dispatch('checkAuth')
+					return Promise.resolve()
+				})
+				.catch(e => {
+					if (e.response) {
+						let errorMsg = e.response.data.message
+						if (e.response.status === 401) {
+							errorMsg = 'Wrong username or password.'
+						}
+						ctx.commit(ERROR_MESSAGE, errorMsg, {root: true})
+					}
+					return Promise.reject()
+				})
+				.finally(() => {
+					ctx.commit(LOADING, false, {root: true})
+				})
+		},
 
 		linkShareAuth(ctx, hash) {
 			const HTTP = HTTPFactory()

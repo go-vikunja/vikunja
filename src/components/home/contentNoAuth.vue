@@ -32,7 +32,8 @@ export default {
 				this.$route.name !== 'user.password-reset.request' &&
 				this.$route.name !== 'user.password-reset.reset' &&
 				this.$route.name !== 'user.register' &&
-				this.$route.name !== 'link-share.auth'
+				this.$route.name !== 'link-share.auth' &&
+				this.$route.name !== 'openid.auth'
 			) {
 				this.$router.push({name: 'user.login'})
 			}
