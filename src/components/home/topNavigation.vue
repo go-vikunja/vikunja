@@ -45,7 +45,7 @@
 				<div class="dropdown is-right is-active">
 					<div class="dropdown-trigger">
 						<button @click.stop="userMenuActive = !userMenuActive" class="button noshadow">
-							<span class="username">{{ userInfo.username }}</span>
+							<span class="username">{{ userInfo.name !== '' ? userInfo.name : userInfo.username }}</span>
 							<span class="icon is-small">
 									<icon icon="chevron-down"/>
 								</span>

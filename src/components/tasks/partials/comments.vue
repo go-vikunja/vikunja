@@ -17,7 +17,7 @@
 				<div class="media-content">
 					<div class="comment-info">
 						<img :src="c.author.getAvatarUrl(20)" alt="" class="image is-avatar" height="20" width="20"/>
-						<strong>{{ c.author.username }}</strong>&nbsp;
+						<strong>{{ c.author.getDisplayName() }}</strong>&nbsp;
 						<span v-tooltip="formatDate(c.created)">{{ formatDateSince(c.created) }}</span>
 						<span v-if="+new Date(c.created) !== +new Date(c.updated)" v-tooltip="formatDate(c.updated)">
 							· edited {{ formatDateSince(c.updated) }}

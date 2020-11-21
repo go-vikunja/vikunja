@@ -16,6 +16,9 @@ export default {
 			state.info = info
 			state.avatarUrl = info.getAvatarUrl()
 		},
+		setUserName(state, name) {
+			state.info.name = name
+		},
 		authenticated(state, authenticated) {
 			state.authenticated = authenticated
 		},

@@ -12,6 +12,7 @@ export default class UserModel extends AbstractModel {
 			id: 0,
 			email: '',
 			username: '',
+			name: '',
 			created: null,
 			updated: null,
 		}
@@ -19,5 +20,13 @@ export default class UserModel extends AbstractModel {
 
 	getAvatarUrl(size = 50) {
 		return `${window.API_URL}/${this.username}/avatar?size=${size}`
+	}
+
+	getDisplayName() {
+		if (this.name !== '') {
+			return this.name
+		}
+
+		return this.username
 	}
 }

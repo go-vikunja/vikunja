@@ -107,7 +107,7 @@
 			<label class="label" for="">Assignees</label>
 			<ul class="assingees">
 				<li :key="a.id" v-for="(a, index) in taskEditTask.assignees">
-					{{ a.username }}
+					{{ a.getDisplayName() }}
 					<a @click="deleteAssigneeByIndex(index)">
 						<icon icon="times"/>
 					</a>

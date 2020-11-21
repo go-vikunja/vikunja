@@ -106,6 +106,38 @@
 			</div>
 		</div>
 
+		<!-- Name -->
+		<div class="card">
+			<header class="card-header">
+				<p class="card-header-title">
+					Update your name
+				</p>
+			</header>
+			<div class="card-content">
+				<div class="content">
+						<div class="field">
+							<label class="label" for="newEmail">Name</label>
+							<div class="control">
+								<input
+									@keyup.enter="updateName"
+									class="input"
+									id="newEmail"
+									placeholder="The new name"
+									type="text"
+									v-model="name"/>
+							</div>
+						</div>
+
+					<div class="bigbuttons">
+						<button :class="{ 'is-loading': userNameService.loading}" @click="updateName()"
+								class="button is-primary is-fullwidth">
+							Save
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
 		<!-- Avatar -->
 		<avatar-settings/>
 
@@ -234,6 +266,8 @@ import EmailUpdateService from '../../services/emailUpdate'
 import EmailUpdateModel from '../../models/emailUpdate'
 import TotpModel from '../../models/totp'
 import TotpService from '../../services/totp'
+import UserNameService from '../../services/userName'
+import UserNameModel from '../../models/userName'
 
 import {mapState} from 'vuex'
 
@@ -260,6 +294,9 @@ export default {
 			totpDisablePassword: '',
 
 			caldavUrl: '',
+
+			name: '',
+			userNameService: UserNameService,
 		}
 	},
 	components: {
@@ -274,6 +311,9 @@ export default {
 
 		this.totpService = new TotpService()
 		this.totp = new TotpModel()
+
+		this.userNameService = new UserNameService()
+		this.name = this.$store.state.auth.info.name
 
 		this.totpStatus()
 		this.buildCaldavUrl()
@@ -356,6 +396,16 @@ export default {
 					this.totpEnrolled = false
 					this.$set(this, 'totp', new TotpModel())
 					this.success({message: 'Two factor authentication was sucessfully disabled.'}, this)
+				})
+				.catch(e => this.error(e, this))
+		},
+		updateName() {
+			const name = new UserNameModel({name: this.name})
+
+			this.userNameService.update(name)
+				.then(() => {
+					this.$store.commit('auth/setUserName', this.name)
+					this.success({message: 'The name was successfully changed.'}, this)
 				})
 				.catch(e => this.error(e, this))
 		},

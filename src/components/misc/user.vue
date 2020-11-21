@@ -6,8 +6,8 @@
 			:width="avatarSize"
 			alt=""
 			class="avatar"
-			v-tooltip="user.username"/>
-		<span class="username" v-if="showUsername">{{ user.username }}</span>
+			v-tooltip="user.getDisplayName()"/>
+		<span class="username" v-if="showUsername">{{ user.getDisplayName() }}</span>
 	</div>
 </template>
 

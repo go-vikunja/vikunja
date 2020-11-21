@@ -46,7 +46,7 @@
 				<tbody>
 				<tr :key="s.id" v-for="s in sharables">
 					<template v-if="shareType === 'user'">
-						<td>{{ s.username }}</td>
+						<td>{{ s.getDisplayName() }}</td>
 						<td>
 							<template v-if="s.id === userInfo.id">
 								<b class="is-success">You</b>

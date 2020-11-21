@@ -52,7 +52,7 @@
 							</div>
 						</td>
 						<td>
-							{{ s.sharedBy.username }}
+							{{ s.sharedBy.getDisplayName() }}
 						</td>
 						<td class="type">
 							<template v-if="s.right === rights.ADMIN">

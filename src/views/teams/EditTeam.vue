@@ -106,7 +106,7 @@
 				<table class="table is-striped is-hoverable is-fullwidth">
 					<tbody>
 					<tr :key="m.id" v-for="m in team.members">
-						<td>{{ m.username }}</td>
+						<td>{{ m.getDisplayName() }}</td>
 						<td>
 							<template v-if="m.id === userInfo.id">
 								<b class="is-success">You</b>

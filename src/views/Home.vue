@@ -1,6 +1,6 @@
 <template>
 	<div class="content has-text-centered">
-		<h2>Hi {{ userInfo.username }}!</h2>
+		<h2>Hi {{ userInfo.name !== '' ? userInfo.name : userInfo.username }}!</h2>
 		<template v-if="!hasTasks">
 			<p>Click on a list or namespace on the left to get started.</p>
 			<router-link

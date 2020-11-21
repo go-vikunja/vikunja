@@ -346,7 +346,7 @@
 
 					<!-- Created / Updated [by] -->
 					<p class="created">
-						Created <span v-tooltip="formatDate(task.created)">{{ formatDateSince(task.created) }}</span> by {{ task.createdBy.username }}
+						Created <span v-tooltip="formatDate(task.created)">{{ formatDateSince(task.created) }}</span> by {{ task.createdBy.getDisplayName() }}
 						<template v-if="+new Date(task.created) !== +new Date(task.updated)">
 							<br/>
 							<!-- Computed properties to show the actual date every time it gets updated -->
