@@ -55,7 +55,7 @@ func GetUserAvatarProvider(c echo.Context) error {
 		return handler.HandleHTTPError(err, c)
 	}
 
-	user, err := user2.GetUserWithEmail(u)
+	user, err := user2.GetUserWithEmail(&user2.User{ID: u.ID})
 	if err != nil {
 		return handler.HandleHTTPError(err, c)
 	}
@@ -89,7 +89,7 @@ func ChangeUserAvatarProvider(c echo.Context) error {
 		return handler.HandleHTTPError(err, c)
 	}
 
-	user, err := user2.GetUserWithEmail(u)
+	user, err := user2.GetUserWithEmail(&user2.User{ID: u.ID})
 	if err != nil {
 		return handler.HandleHTTPError(err, c)
 	}
@@ -128,7 +128,7 @@ func UpdateUserName(c echo.Context) error {
 		return handler.HandleHTTPError(err, c)
 	}
 
-	user, err := user2.GetUserWithEmail(u)
+	user, err := user2.GetUserWithEmail(&user2.User{ID: u.ID})
 	if err != nil {
 		return handler.HandleHTTPError(err, c)
 	}
