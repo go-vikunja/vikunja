@@ -1,23 +1,7 @@
 <template>
 	<div :class="{ 'is-loading': taskService.loading}" class="loader-container task-view-container">
 		<div class="task-view">
-			<div class="heading">
-				<h1 class="title task-id" v-if="task.identifier === ''">
-					#{{ task.index }}
-				</h1>
-				<h1 class="title task-id" v-else>
-					{{ task.identifier }}
-				</h1>
-				<div class="is-done" v-if="task.done">Done</div>
-				<h1
-					@focusout="saveTaskOnChange()"
-					@keyup.ctrl.enter="saveTaskOnChange()"
-					class="title input"
-					contenteditable="true"
-					ref="taskTitle">
-					{{ task.title }}
-				</h1>
-			</div>
+			<heading v-model="task"/>
 			<h6 class="subtitle" v-if="parent && parent.namespace && parent.list">
 				{{ parent.namespace.title }} >
 				<router-link :to="{ name: listViewName, params: { listId: parent.list.id } }">
@@ -67,7 +51,7 @@
 									:class="{ 'disabled': taskService.loading}"
 									:config="flatPickerConfig"
 									:disabled="taskService.loading || !canWrite"
-									@on-close="saveTask"
+									@on-close="() => saveTask()"
 									class="input"
 									placeholder="Click here to set a due date"
 									ref="dueDate"
@@ -104,7 +88,7 @@
 									:class="{ 'disabled': taskService.loading}"
 									:config="flatPickerConfig"
 									:disabled="taskService.loading || !canWrite"
-									@on-close="saveTask"
+									@on-close="() => saveTask()"
 									class="input"
 									placeholder="Click here to set a start date"
 									ref="startDate"
@@ -129,7 +113,7 @@
 									:class="{ 'disabled': taskService.loading}"
 									:config="flatPickerConfig"
 									:disabled="taskService.loading || !canWrite"
-									@on-close="saveTask"
+									@on-close="() => saveTask()"
 									class="input"
 									placeholder="Click here to set an end date"
 									ref="endDate"
@@ -194,19 +178,11 @@
 
 					<!-- Description -->
 					<div :class="{ 'has-top-border': activeFields.labels }" class="details content description">
-						<h3>
-							<span class="icon is-grey">
-								<icon icon="align-left"/>
-							</span>
-							Description
-						</h3>
-						<editor
-							:is-edit-enabled="canWrite"
-							:upload-callback="attachmentUpload"
-							:upload-enabled="true"
-							@change="saveTask"
-							placeholder="Click here to enter a description..."
-							v-model="task.description"/>
+						<description
+							v-model="task"
+							:can-write="canWrite"
+							:attachment-upload="attachmentUpload"
+						/>
 					</div>
 
 					<!-- Attachments -->
@@ -346,7 +322,8 @@
 
 					<!-- Created / Updated [by] -->
 					<p class="created">
-						Created <span v-tooltip="formatDate(task.created)">{{ formatDateSince(task.created) }}</span> by {{ task.createdBy.getDisplayName() }}
+						Created <span v-tooltip="formatDate(task.created)">{{ formatDateSince(task.created) }}</span>
+						by {{ task.createdBy.getDisplayName() }}
 						<template v-if="+new Date(task.created) !== +new Date(task.updated)">
 							<br/>
 							<!-- Computed properties to show the actual date every time it gets updated -->
@@ -393,10 +370,10 @@ import Reminders from '../../components/tasks/partials/reminders'
 import Comments from '../../components/tasks/partials/comments'
 import router from '../../router'
 import ListSearch from '../../components/tasks/partials/listSearch'
+import description from '@/components/tasks/partials/description'
 import ColorPicker from '../../components/input/colorPicker'
 import attachmentUpload from '../../components/tasks/mixins/attachmentUpload'
-import LoadingComponent from '../../components/misc/loading'
-import ErrorComponent from '../../components/misc/error'
+import heading from '@/components/tasks/partials/heading'
 
 export default {
 	name: 'TaskDetailView',
@@ -413,12 +390,8 @@ export default {
 		PrioritySelect,
 		Comments,
 		flatPickr,
-		editor: () => ({
-			component: import(/* webpackChunkName: "editor" */ '../../components/input/editor'),
-			loading: LoadingComponent,
-			error: ErrorComponent,
-			timeout: 60000,
-		}),
+		description,
+		heading,
 	},
 	mixins: [
 		attachmentUpload,
@@ -441,9 +414,11 @@ export default {
 			taskColor: '',
 
 			showDeleteModal: false,
-			taskTitle: '',
 			descriptionChanged: false,
 			listViewName: 'list.list',
+
+			descriptionSaving: false,
+			descriptionRecentlySaved: false,
 
 			priorities: priorites,
 			flatPickerConfig: {
@@ -519,7 +494,6 @@ export default {
 				.then(r => {
 					this.$set(this, 'task', r)
 					this.$store.commit('attachments/set', r.attachments)
-					this.taskTitle = this.task.title
 					this.taskColor = this.task.hexColor
 					this.setActiveFields()
 					this.setTitle(this.task.title)
@@ -547,23 +521,7 @@ export default {
 			this.activeFields.attachments = this.task.attachments.length > 0
 			this.activeFields.relatedTasks = Object.keys(this.task.relatedTasks).length > 0
 		},
-		saveTaskOnChange() {
-			this.$refs.taskTitle.spellcheck = false
-
-			// Pull the task title from the contenteditable
-			let taskTitle = this.$refs.taskTitle.textContent
-			this.task.title = taskTitle
-
-			// We only want to save if the title was actually change.
-			// Because the contenteditable does not have a change event,
-			// we're building it ourselves and only calling saveTask()
-			// if the task title changed.
-			if (this.task.title !== this.taskTitle) {
-				this.saveTask()
-				this.taskTitle = taskTitle
-			}
-		},
-		saveTask(undoCallback = null) {
+		saveTask(showNotification = true, undoCallback = null) {
 
 			if (!this.canWrite) {
 				return
@@ -584,15 +542,20 @@ export default {
 				this.$store.dispatch('tasks/update', this.task)
 					.then(r => {
 						this.$set(this, 'task', r)
+						this.setActiveFields()
+
+						if (!showNotification) {
+							return
+						}
+
 						let actions = []
 						if (undoCallback !== null) {
 							actions = [{
 								title: 'Undo',
 								callback: undoCallback,
 							}]
-							this.success({message: 'The task was saved successfully.'}, this, actions)
 						}
-						this.setActiveFields()
+						this.success({message: 'The task was saved successfully.'}, this, actions)
 					})
 					.catch(e => {
 						this.error(e, this)
@@ -610,7 +573,7 @@ export default {
 		deleteTask() {
 			this.$store.dispatch('tasks/delete', this.task)
 				.then(() => {
-					this.success({message: 'The task been deleted successfully.'}, this)
+					this.success({message: 'The task has been deleted successfully.'}, this)
 					router.back()
 				})
 				.catch(e => {
@@ -619,7 +582,7 @@ export default {
 		},
 		toggleTaskDone() {
 			this.task.done = !this.task.done
-			this.saveTask(() => this.toggleTaskDone())
+			this.saveTask(true, () => this.toggleTaskDone())
 		},
 		setDescriptionChanged(e) {
 			if (e.key === 'Enter' || e.key === 'Control') {

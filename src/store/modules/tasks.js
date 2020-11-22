@@ -3,12 +3,15 @@ import TaskAssigneeService from '../../services/taskAssignee'
 import TaskAssigneeModel from '../../models/taskAssignee'
 import LabelTaskModel from '../../models/labelTask'
 import LabelTaskService from '../../services/labelTask'
+import {setLoading} from '@/store/helper'
 
 export default {
 	namespaced: true,
 	state: () => ({}),
 	actions: {
 		update(ctx, task) {
+			const cancel = setLoading(ctx)
+
 			const taskService = new TaskService()
 			return taskService.update(task)
 				.then(t => {
@@ -17,6 +20,9 @@ export default {
 				})
 				.catch(e => {
 					return Promise.reject(e)
+				})
+				.finally(() => {
+					cancel()
 				})
 		},
 		delete(ctx, task) {

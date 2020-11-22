@@ -7,9 +7,10 @@
 			Comments
 		</h1>
 		<div class="comments">
-			<progress class="progress is-small is-info" max="100" v-if="taskCommentService.loading">
+			<span class="is-inline-flex is-align-items-center" v-if="taskCommentService.loading && saving === null && !creating">
+				<span class="loader is-inline-block mr-2"></span>
 				Loading comments...
-			</progress>
+			</span>
 			<div :key="c.id" class="media comment" v-for="c in comments">
 				<figure class="media-left is-hidden-mobile">
 					<img :src="c.author.getAvatarUrl(48)" alt="" class="image is-avatar" height="48" width="48"/>
@@ -22,6 +23,15 @@
 						<span v-if="+new Date(c.created) !== +new Date(c.updated)" v-tooltip="formatDate(c.updated)">
 							· edited {{ formatDateSince(c.updated) }}
 						</span>
+						<transition name="fade">
+							<span class="is-inline-flex" v-if="taskCommentService.loading && saving === c.id">
+								<span class="loader is-inline-block mr-2"></span>
+								Saving...
+							</span>
+							<span class="has-text-success" v-if="!taskCommentService.loading && saved === c.id">
+								Saved!
+							</span>
+						</transition>
 					</div>
 					<editor
 						:has-preview="true"
@@ -41,6 +51,12 @@
 				</figure>
 				<div class="media-content">
 					<div class="form">
+						<transition name="fade">
+							<span class="is-inline-flex" v-if="taskCommentService.loading && creating">
+								<span class="loader is-inline-block mr-2"></span>
+								Creating comment...
+							</span>
+						</transition>
 						<div class="field">
 							<editor
 								:class="{'is-loading': taskCommentService.loading && !isCommentEdit}"
@@ -116,6 +132,10 @@ export default {
 			newComment: TaskCommentModel,
 			editorActive: true,
 			actions: {},
+
+			saved: null,
+			saving: null,
+			creating: false,
 		}
 	},
 	created() {
@@ -164,14 +184,19 @@ export default {
 			// See https://github.com/NikulinIlya/vue-easymde/issues/3
 			this.editorActive = false
 			this.$nextTick(() => this.editorActive = true)
+			this.creating = true
 
 			this.taskCommentService.create(this.newComment)
 				.then(r => {
 					this.comments.push(r)
 					this.newComment.comment = ''
+					this.success({message: 'The comment was added successfully.'}, this)
 				})
 				.catch(e => {
 					this.error(e, this)
+				})
+				.finally(() => {
+					this.creating = false
 				})
 		},
 		toggleEdit(comment) {
@@ -186,6 +211,9 @@ export default {
 			if (this.commentEdit.comment === '') {
 				return
 			}
+
+			this.saving = this.commentEdit.id
+
 			this.commentEdit.taskId = this.taskId
 			this.taskCommentService.update(this.commentEdit)
 				.then(r => {
@@ -194,12 +222,17 @@ export default {
 							this.$set(this.comments, c, r)
 						}
 					}
+					this.saved = this.commentEdit.id
+					setTimeout(() => {
+						this.saved = null
+					}, 2000)
 				})
 				.catch(e => {
 					this.error(e, this)
 				})
 				.finally(() => {
 					this.isCommentEdit = false
+					this.saving = null
 				})
 		},
 		deleteComment() {

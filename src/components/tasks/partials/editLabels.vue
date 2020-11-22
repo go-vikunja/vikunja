@@ -13,7 +13,7 @@
 		:showNoOptions="false"
 		:taggable="true"
 		@search-change="findLabel"
-		@select="addLabel"
+		@select="label => addLabel(label)"
 		@tag="createAndAddLabel"
 		label="title"
 		placeholder="Type to add a new label..."
@@ -121,10 +121,13 @@ export default {
 		clearAllLabels() {
 			this.$set(this, 'foundLabels', [])
 		},
-		addLabel(label) {
+		addLabel(label, showNotification = true) {
 			this.$store.dispatch('tasks/addLabel', {label: label, taskId: this.taskId})
 				.then(() => {
 					this.$emit('input', this.labels)
+					if (showNotification) {
+						this.success({message: 'The label has been added successfully.'}, this)
+					}
 				})
 				.catch(e => {
 					this.error(e, this)
@@ -140,6 +143,7 @@ export default {
 						}
 					}
 					this.$emit('input', this.labels)
+					this.success({message: 'The label has been removed successfully.'}, this)
 				})
 				.catch(e => {
 					this.error(e, this)
@@ -149,8 +153,9 @@ export default {
 			let newLabel = new LabelModel({title: title})
 			this.labelService.create(newLabel)
 				.then(r => {
-					this.addLabel(r)
+					this.addLabel(r, false)
 					this.labels.push(r)
+					this.success({message: 'The label has been created successfully.'}, this)
 				})
 				.catch(e => {
 					this.error(e, this)

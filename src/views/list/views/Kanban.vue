@@ -1,104 +1,105 @@
 <template>
-	<div :class="{ 'is-loading': loading}" class="kanban loader-container">
-		<div :key="`bucket${bucket.id}`" class="bucket" v-for="bucket in buckets">
-			<div class="bucket-header">
-				<h2
-					:ref="`bucket${bucket.id}title`"
-					@focusout="() => saveBucketTitle(bucket.id)"
-					@keyup.enter="() => saveBucketTitle(bucket.id)"
-					class="title input"
-					contenteditable="true"
-					spellcheck="false">{{ bucket.title }}</h2>
-				<span
-					:class="{'is-max': bucket.tasks.length >= bucket.limit}"
-					class="limit"
-					v-if="bucket.limit > 0">
+	<div>
+		<div :class="{ 'is-loading': loading}" class="kanban loader-container">
+			<div :key="`bucket${bucket.id}`" class="bucket" v-for="bucket in buckets">
+				<div class="bucket-header">
+					<h2
+						:ref="`bucket${bucket.id}title`"
+						@focusout="() => saveBucketTitle(bucket.id)"
+						@keyup.enter="() => saveBucketTitle(bucket.id)"
+						class="title input"
+						contenteditable="true"
+						spellcheck="false">{{ bucket.title }}</h2>
+					<span
+						:class="{'is-max': bucket.tasks.length >= bucket.limit}"
+						class="limit"
+						v-if="bucket.limit > 0">
 					{{ bucket.tasks.length }}/{{ bucket.limit }}
 				</span>
-				<div
-					:class="{ 'is-active': bucketOptionsDropDownActive[bucket.id] }"
-					class="dropdown is-right options"
-					v-if="canWrite"
-				>
-					<div @click.stop="toggleBucketDropdown(bucket.id)" class="dropdown-trigger">
+					<div
+						:class="{ 'is-active': bucketOptionsDropDownActive[bucket.id] }"
+						class="dropdown is-right options"
+						v-if="canWrite"
+					>
+						<div @click.stop="toggleBucketDropdown(bucket.id)" class="dropdown-trigger">
 						<span class="icon">
 							<icon icon="ellipsis-v"/>
 						</span>
-					</div>
-					<div class="dropdown-menu" role="menu">
-						<div class="dropdown-content">
-							<a
-								@click.stop="showSetLimitInput = true"
-								class="dropdown-item"
-							>
-								<div class="field has-addons" v-if="showSetLimitInput">
-									<div class="control">
-										<input
-											@change="() => updateBucket(bucket)"
-											@keyup.enter="() => updateBucket(bucket)"
-											class="input"
-											type="number"
-											v-focus.always
-											v-model="bucket.limit"
-										/>
-									</div>
-									<div class="control">
-										<a class="button is-primary has-no-shadow">
+						</div>
+						<div class="dropdown-menu" role="menu">
+							<div class="dropdown-content">
+								<a
+									@click.stop="showSetLimitInput = true"
+									class="dropdown-item"
+								>
+									<div class="field has-addons" v-if="showSetLimitInput">
+										<div class="control">
+											<input
+												@change="() => updateBucket(bucket)"
+												@keyup.enter="() => updateBucket(bucket)"
+												class="input"
+												type="number"
+												v-focus.always
+												v-model="bucket.limit"
+											/>
+										</div>
+										<div class="control">
+											<a class="button is-primary has-no-shadow">
 											<span class="icon">
 												<icon :icon="['far', 'save']"/>
 											</span>
-										</a>
+											</a>
+										</div>
 									</div>
-								</div>
-								<template v-else>
-									Limit: {{ bucket.limit > 0 ? bucket.limit : 'Not set' }}
-								</template>
-							</a>
-							<a
-								:class="{'is-disabled': buckets.length <= 1}"
-								@click="() => deleteBucketModal(bucket.id)"
-								class="dropdown-item has-text-danger"
-								v-tooltip="buckets.length <= 1 ? 'You cannot remove the last bucket.' : ''"
-							>
-								<span class="icon is-small"><icon icon="trash-alt"/></span>
-								Delete
-							</a>
+									<template v-else>
+										Limit: {{ bucket.limit > 0 ? bucket.limit : 'Not set' }}
+									</template>
+								</a>
+								<a
+									:class="{'is-disabled': buckets.length <= 1}"
+									@click="() => deleteBucketModal(bucket.id)"
+									class="dropdown-item has-text-danger"
+									v-tooltip="buckets.length <= 1 ? 'You cannot remove the last bucket.' : ''"
+								>
+									<span class="icon is-small"><icon icon="trash-alt"/></span>
+									Delete
+								</a>
+							</div>
 						</div>
 					</div>
 				</div>
-			</div>
-			<div :ref="`tasks-container${bucket.id}`" class="tasks">
-				<!-- Make the component either a div or a draggable component based on the user rights -->
-				<component
-					:animation-duration="150"
-					:drop-placeholder="dropPlaceholderOptions"
-					:get-child-payload="getTaskPayload(bucket.id)"
-					:is="canWrite ? 'Container' : 'div'"
-					:should-accept-drop="() => shouldAcceptDrop(bucket)"
-					@drop="e => onDrop(bucket.id, e)"
-					drag-class="ghost-task"
-					drag-class-drop="ghost-task-drop"
-					drag-handle-selector=".task.draggable"
-					group-name="buckets"
-				>
+				<div :ref="`tasks-container${bucket.id}`" class="tasks">
 					<!-- Make the component either a div or a draggable component based on the user rights -->
 					<component
-						:is="canWrite ? 'Draggable' : 'div'"
-						:key="`bucket${bucket.id}-task${task.id}`"
-						v-for="task in bucket.tasks"
+						:animation-duration="150"
+						:drop-placeholder="dropPlaceholderOptions"
+						:get-child-payload="getTaskPayload(bucket.id)"
+						:is="canWrite ? 'Container' : 'div'"
+						:should-accept-drop="() => shouldAcceptDrop(bucket)"
+						@drop="e => onDrop(bucket.id, e)"
+						drag-class="ghost-task"
+						drag-class-drop="ghost-task-drop"
+						drag-handle-selector=".task.draggable"
+						group-name="buckets"
 					>
-						<div
-							:class="{
+						<!-- Make the component either a div or a draggable component based on the user rights -->
+						<component
+							:is="canWrite ? 'Draggable' : 'div'"
+							:key="`bucket${bucket.id}-task${task.id}`"
+							v-for="task in bucket.tasks"
+						>
+							<div
+								:class="{
 							'is-loading': taskService.loading && taskUpdating[task.id],
 							'draggable': !taskService.loading || !taskUpdating[task.id],
 							'has-light-text': !colorIsDark(task.hexColor) && task.hexColor !== `#${task.defaultColor}` && task.hexColor !== task.defaultColor,
 						}"
-							:style="{'background-color': task.hexColor !== '#' && task.hexColor !== `#${task.defaultColor}` ? task.hexColor : false}"
-							@click.ctrl="() => markTaskAsDone(task)"
-							@click.exact="() => $router.push({ name: 'task.kanban.detail', params: { id: task.id } })"
-							@click.meta="() => markTaskAsDone(task)"
-							class="task loader-container draggable"
-						>
+								:style="{'background-color': task.hexColor !== '#' && task.hexColor !== `#${task.defaultColor}` ? task.hexColor : false}"
+								@click.ctrl="() => markTaskAsDone(task)"
+								@click.exact="() => $router.push({ name: 'task.kanban.detail', params: { id: task.id } })"
+								@click.meta="() => markTaskAsDone(task)"
+								class="task loader-container draggable"
+							>
 							<span class="task-id">
 								<span class="is-done" v-if="task.done">Done</span>
 								<template v-if="task.identifier === ''">
@@ -108,11 +109,11 @@
 									{{ task.identifier }}
 								</template>
 							</span>
-							<span
-								:class="{'overdue': task.dueDate <= new Date() && !task.done}"
-								class="due-date"
-								v-if="task.dueDate > 0"
-								v-tooltip="formatDate(task.dueDate)">
+								<span
+									:class="{'overdue': task.dueDate <= new Date() && !task.done}"
+									class="due-date"
+									v-if="task.dueDate > 0"
+									v-tooltip="formatDate(task.dueDate)">
 								<span class="icon">
 									<icon :icon="['far', 'calendar-alt']"/>
 								</span>
@@ -120,22 +121,22 @@
 									{{ formatDateSince(task.dueDate) }}
 								</span>
 							</span>
-							<h3>{{ task.title }}</h3>
-							<labels :labels="task.labels"/>
-							<div class="footer">
-								<div class="items">
-									<priority-label :priority="task.priority" class="priority-label"/>
-									<div class="assignees" v-if="task.assignees.length > 0">
-										<user
-											:avatar-size="24"
-											:key="task.id + 'assignee' + u.id"
-											:show-username="false"
-											:user="u"
-											v-for="u in task.assignees"
-										/>
+								<h3>{{ task.title }}</h3>
+								<labels :labels="task.labels"/>
+								<div class="footer">
+									<div class="items">
+										<priority-label :priority="task.priority" class="priority-label"/>
+										<div class="assignees" v-if="task.assignees.length > 0">
+											<user
+												:avatar-size="24"
+												:key="task.id + 'assignee' + u.id"
+												:show-username="false"
+												:user="u"
+												v-for="u in task.assignees"
+											/>
+										</div>
 									</div>
-								</div>
-								<div>
+									<div>
 									<span class="icon" v-if="task.attachments.length > 0">
 										<svg fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
 											<rect fill="none" rx="0" ry="0"></rect>
@@ -145,74 +146,75 @@
 												fill-rule="evenodd"></path>
 										</svg>
 									</span>
+									</div>
 								</div>
 							</div>
-						</div>
+						</component>
 					</component>
-				</component>
-			</div>
-			<div class="bucket-footer" v-if="canWrite">
-				<div class="field" v-if="showNewTaskInput[bucket.id]">
-					<div class="control">
-						<input
-
-							:class="{'is-loading': taskService.loading}"
-							:disabled="taskService.loading"
-							@focusout="toggleShowNewTaskInput(bucket.id)"
-							@keyup.enter="addTaskToBucket(bucket.id)"
-							@keyup.esc="toggleShowNewTaskInput(bucket.id)"
-							class="input"
-							placeholder="Enter the new task text..."
-							type="text"
-							v-focus.always
-							v-model="newTaskText"
-						/>
-					</div>
-					<p class="help is-danger" v-if="newTaskError[bucket.id] && newTaskText === ''">
-						Please specify a title.
-					</p>
 				</div>
-				<a
-					@click="toggleShowNewTaskInput(bucket.id)"
-					class="button noshadow is-transparent is-fullwidth has-text-centered"
-					v-if="!showNewTaskInput[bucket.id]">
+				<div class="bucket-footer" v-if="canWrite">
+					<div class="field" v-if="showNewTaskInput[bucket.id]">
+						<div class="control">
+							<input
+
+								:class="{'is-loading': taskService.loading}"
+								:disabled="taskService.loading"
+								@focusout="toggleShowNewTaskInput(bucket.id)"
+								@keyup.enter="addTaskToBucket(bucket.id)"
+								@keyup.esc="toggleShowNewTaskInput(bucket.id)"
+								class="input"
+								placeholder="Enter the new task text..."
+								type="text"
+								v-focus.always
+								v-model="newTaskText"
+							/>
+						</div>
+						<p class="help is-danger" v-if="newTaskError[bucket.id] && newTaskText === ''">
+							Please specify a title.
+						</p>
+					</div>
+					<a
+						@click="toggleShowNewTaskInput(bucket.id)"
+						class="button noshadow is-transparent is-fullwidth has-text-centered"
+						v-if="!showNewTaskInput[bucket.id]">
 						<span class="icon is-small">
 							<icon icon="plus"/>
 						</span>
-					<span v-if="bucket.tasks.length === 0">
+						<span v-if="bucket.tasks.length === 0">
 						Add a task
 					</span>
-					<span v-else>
+						<span v-else>
 						Add another task
 					</span>
-				</a>
+					</a>
+				</div>
 			</div>
-		</div>
 
-		<div class="bucket new-bucket" v-if="!loading && canWrite">
-			<input
-				:class="{'is-loading': loading}"
-				:disabled="loading"
-				@focusout="() => showNewBucketInput = false"
-				@keyup.enter="createNewBucket"
-				@keyup.esc="() => showNewBucketInput = false"
-				class="input"
-				placeholder="Enter the new bucket title..."
-				type="text"
-				v-focus.always
-				v-if="showNewBucketInput"
-				v-model="newBucketTitle"
-			/>
-			<a
-				@click="() => showNewBucketInput = true"
-				class="button noshadow is-transparent is-fullwidth has-text-centered" v-if="!showNewBucketInput">
+			<div class="bucket new-bucket" v-if="!loading && canWrite">
+				<input
+					:class="{'is-loading': loading}"
+					:disabled="loading"
+					@focusout="() => showNewBucketInput = false"
+					@keyup.enter="createNewBucket"
+					@keyup.esc="() => showNewBucketInput = false"
+					class="input"
+					placeholder="Enter the new bucket title..."
+					type="text"
+					v-focus.always
+					v-if="showNewBucketInput"
+					v-model="newBucketTitle"
+				/>
+				<a
+					@click="() => showNewBucketInput = true"
+					class="button noshadow is-transparent is-fullwidth has-text-centered" v-if="!showNewBucketInput">
 				<span class="icon is-small">
 					<icon icon="plus"/>
 				</span>
-				<span>
+					<span>
 					Create a new bucket
 				</span>
-			</a>
+				</a>
+			</div>
 		</div>
 
 		<!-- This router view is used to show the task popup while keeping the kanban board itself -->

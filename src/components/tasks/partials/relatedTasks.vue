@@ -1,7 +1,18 @@
 <template>
 	<div class="task-relations">
 		<template v-if="editEnabled">
-			<label class="label">New Task Relation</label>
+			<label class="label">
+				New Task Relation
+				<transition name="fade">
+					<span class="is-inline-flex" v-if="taskRelationService.loading">
+						<span class="loader is-inline-block mr-2"></span>
+						Saving...
+					</span>
+					<span class="has-text-success" v-if="!taskRelationService.loading && saved">
+						Saved!
+					</span>
+				</transition>
+			</label>
 			<div class="field">
 				<multiselect
 					:internal-search="true"
@@ -112,6 +123,7 @@ export default {
 			taskRelationService: TaskRelationService,
 			showDeleteModal: false,
 			relationToDelete: {},
+			saved: false,
 		}
 	},
 	components: {
@@ -188,6 +200,10 @@ export default {
 					}
 					this.relatedTasks[this.newTaskRelationKind].push(this.newTaskRelationTask)
 					this.newTaskRelationTask = new TaskModel()
+					this.saved = true
+					setTimeout(() => {
+						this.saved = false
+					}, 2000)
 				})
 				.catch(e => {
 					this.error(e, this)
@@ -208,6 +224,10 @@ export default {
 							}
 						}
 					})
+					this.saved = true
+					setTimeout(() => {
+						this.saved = false
+					}, 2000)
 				})
 				.catch(e => {
 					this.error(e, this)
