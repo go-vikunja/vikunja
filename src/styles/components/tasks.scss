@@ -279,3 +279,17 @@
   width: 100%;
   max-width: $desktop;
 }
+
+.tasktext {
+  :focus {
+    box-shadow: inset 0 0 0 2px rgba($primary, 0.5);
+  }
+
+  :focus:not(:focus-visible) {
+    outline: 0;
+  }
+
+  :focus-visible, :-moz-focusring {
+    box-shadow: inset 0 0 0 2px rgba($primary, 0.5);
+  }
+}
