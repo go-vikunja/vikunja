@@ -29,6 +29,10 @@
 				v-model="cEndDate"
 			/>
 		</h3>
+		<div>
+			<a @click="setDatesToNextWeek()" class="button is-primary is-outlined noshadow mr-2">Next Week</a>
+			<a @click="setDatesToNextMonth()" class="button is-primary is-outlined noshadow">Next Month</a>
+		</div>
 		<template v-if="!taskService.loading && (!hasUndoneTasks || !tasks || tasks.length === 0)">
 			<h3 class="nothing">Nothing to do - Have a nice day!</h3>
 			<img alt="" src="/images/cool.svg"/>
@@ -180,6 +184,16 @@ export default {
 					break
 				}
 			}
+		},
+		setDatesToNextWeek() {
+			this.cStartDate = new Date()
+			this.cEndDate = new Date((new Date()).getTime() + 7 * 24 * 60 * 60 * 1000)
+			this.loadPendingTasks()
+		},
+		setDatesToNextMonth() {
+			this.cStartDate = new Date()
+			this.cEndDate = new Date((new Date()).setMonth((new Date()).getMonth() + 1))
+			this.loadPendingTasks()
 		},
 	},
 }

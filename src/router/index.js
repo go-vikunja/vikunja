@@ -181,7 +181,7 @@ export default new Router({
 			component: TaskDetailView,
 		},
 		{
-			path: '/tasks/by/:type',
+			path: '/tasks/by/upcoming',
 			name: 'tasks.range',
 			component: ShowTasksInRangeComponent,
 		},

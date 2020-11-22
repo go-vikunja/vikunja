@@ -14,19 +14,11 @@
 					</router-link>
 				</li>
 				<li>
-					<router-link :to="{ name: 'tasks.range', params: {type: 'week'}}">
-						<span class="icon">
-							<icon icon="calendar-week"/>
-						</span>
-						Next Week
-					</router-link>
-				</li>
-				<li>
-					<router-link :to="{ name: 'tasks.range', params: {type: 'month'}}">
+					<router-link :to="{ name: 'tasks.range'}">
 						<span class="icon">
 							<icon :icon="['far', 'calendar-alt']"/>
 						</span>
-						Next Month
+						Upcoming
 					</router-link>
 				</li>
 				<li>

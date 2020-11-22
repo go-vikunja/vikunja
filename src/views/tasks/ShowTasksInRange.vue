@@ -22,24 +22,15 @@ export default {
 		}
 	},
 	watch: {
-		// call again the method if the route changes
-		'$route': 'setDates',
+		'$route': 'setDatesToNextWeek',
 	},
 	created() {
-		this.setDates()
+		this.setDatesToNextWeek()
 	},
 	methods: {
-		setDates() {
-			switch (this.$route.params.type) {
-				case 'week':
-					this.startDate = new Date()
-					this.endDate = new Date((new Date()).getTime() + 7 * 24 * 60 * 60 * 1000)
-					break
-				case 'month':
-					this.startDate = new Date()
-					this.endDate = new Date((new Date()).setMonth((new Date()).getMonth() + 1))
-					break
-			}
+		setDatesToNextWeek() {
+			this.startDate = new Date()
+			this.endDate = new Date((new Date()).getTime() + 7 * 24 * 60 * 60 * 1000)
 		},
 	},
 }
