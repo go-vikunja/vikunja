@@ -33,7 +33,12 @@ import (
 func GetAllProviders() (providers []*Provider, err error) {
 	ps, err := keyvalue.Get("openid_providers")
 	if err != nil && kerr.IsErrValueNotFoundForKey(err) {
-		rawProvider := config.AuthOpenIDProviders.Get().([]interface{})
+		rawProviders := config.AuthOpenIDProviders.Get()
+		if rawProviders == nil {
+			return nil, nil
+		}
+
+		rawProvider := rawProviders.([]interface{})
 
 		for _, p := range rawProvider {
 			pi := p.(map[interface{}]interface{})

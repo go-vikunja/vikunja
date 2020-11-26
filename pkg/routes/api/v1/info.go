@@ -17,6 +17,7 @@
 package v1
 
 import (
+	"code.vikunja.io/api/pkg/log"
 	"net/http"
 
 	"code.vikunja.io/api/pkg/config"
@@ -98,7 +99,8 @@ func Info(c echo.Context) error {
 
 	providers, err := openid.GetAllProviders()
 	if err != nil {
-		return err
+		log.Errorf("Error while getting openid providers for /info: %s", err)
+		// No return here to not break /info
 	}
 
 	info.AuthInfo.OpenIDConnect.Providers = providers
