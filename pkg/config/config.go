@@ -51,6 +51,7 @@ const (
 	ServiceEnableTaskComments    Key = `service.enabletaskcomments`
 	ServiceEnableTotp            Key = `service.enabletotp`
 	ServiceSentryDsn             Key = `service.sentrydsn`
+	ServiceTestingtoken          Key = `service.testingtoken`
 
 	AuthLocalEnabled      Key = `auth.local.enabled`
 	AuthOpenIDEnabled     Key = `auth.openid.enabled`

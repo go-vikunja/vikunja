@@ -4653,6 +4653,33 @@ paths:
       summary: Toggle a team member's admin status
       tags:
       - team
+  /test/{table}:
+    patch:
+      consumes:
+      - application/json
+      description: 'Fills the specified table with the content provided in the payload. You need to enable the testing endpoint before doing this and provide the `Authorization: <token>` secret when making requests to this endpoint. See docs for more details.'
+      parameters:
+      - description: The table to reset
+        in: path
+        name: table
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Everything has been imported successfully.
+          schema:
+            items:
+              $ref: '#/definitions/user.User'
+            type: array
+        "500":
+          description: Internal server error.
+          schema:
+            $ref: '#/definitions/models.Message'
+      summary: Reset the db to a defined state
+      tags:
+      - testing
   /user:
     get:
       consumes:

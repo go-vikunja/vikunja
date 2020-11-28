@@ -16,7 +16,11 @@
 
 package db
 
-import "encoding/json"
+import (
+	"encoding/json"
+
+	"xorm.io/xorm/schemas"
+)
 
 // Dump dumps all database tables
 func Dump() (data map[string][]byte, err error) {
@@ -51,4 +55,23 @@ func Restore(table string, contents []map[string]interface{}) (err error) {
 	}
 
 	return
+}
+
+// RestoreAndTruncate removes all content from the table before restoring it from the contents map
+func RestoreAndTruncate(table string, contents []map[string]interface{}) (err error) {
+	if _, err := x.IsTableExist(table); err != nil {
+		return err
+	}
+
+	if x.Dialect().URI().DBType == schemas.SQLITE {
+		if _, err := x.Query("DELETE FROM " + table); err != nil {
+			return err
+		}
+	} else {
+		if _, err := x.Query("TRUNCATE TABLE ?", table); err != nil {
+			return err
+		}
+	}
+
+	return Restore(table, contents)
 }

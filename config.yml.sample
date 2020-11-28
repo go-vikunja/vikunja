@@ -34,6 +34,11 @@ service:
   enabletotp: true
   # If not empty, enables logging of crashes and unhandled errors in sentry.
   sentrydsn: ''
+  # If not empty, this will enable `/test/{table}` endpoints which allow to put any content in the database.
+  # Used to reset the db before frontend tests. Because this is quite a dangerous feature allowing for lots of harm,
+  # each request made to this endpoint neefs to provide an `Authorization: <token>` header with the token from below. <br/>
+  # **You should never use this unless you know exactly what you're doing**
+  testingtoken: ''
 
 database:
   # Database type to use. Supported types are mysql, postgres and sqlite.

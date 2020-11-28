@@ -17,8 +17,9 @@
 package v1
 
 import (
-	"code.vikunja.io/api/pkg/log"
 	"net/http"
+
+	"code.vikunja.io/api/pkg/log"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/modules/auth/openid"

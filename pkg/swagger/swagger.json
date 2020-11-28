@@ -5588,6 +5588,47 @@
                 }
             }
         },
+        "/test/{table}": {
+            "patch": {
+                "description": "Fills the specified table with the content provided in the payload. You need to enable the testing endpoint before doing this and provide the `Authorization: \u003ctoken\u003e` secret when making requests to this endpoint. See docs for more details.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "testing"
+                ],
+                "summary": "Reset the db to a defined state",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "The table to reset",
+                        "name": "table",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Everything has been imported successfully.",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/user.User"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
         "/user": {
             "get": {
                 "security": [

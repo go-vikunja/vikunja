@@ -235,6 +235,11 @@ func registerAPIRoutes(a *echo.Group) {
 		n.POST("/auth/openid/:provider/callback", openid.HandleCallback)
 	}
 
+	// Testing
+	if config.ServiceTestingtoken.GetString() != "" {
+		n.PATCH("/test/:table", apiv1.HandleTesting)
+	}
+
 	// Info endpoint
 	n.GET("/info", apiv1.Info)
 
