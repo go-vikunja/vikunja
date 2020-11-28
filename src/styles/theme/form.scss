@@ -179,6 +179,14 @@
     background: $input-background-color;
     border-color: $input-focus-border-color;
   }
+
+  &.disabled {
+    &:focus, &:hover {
+      background: transparent !important;
+      border-color: transparent !important;
+      cursor: default !important;
+    }
+  }
 }
 
 h1, h2, h3 {

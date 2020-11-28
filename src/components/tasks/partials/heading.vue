@@ -8,10 +8,11 @@
 		</h1>
 		<div class="is-done" v-if="task.done">Done</div>
 		<h1
+			class="title input"
+			:class="{'disabled': !canWrite}"
 			@focusout="save()"
 			@keyup.ctrl.enter="save()"
-			class="title input"
-			contenteditable="true"
+			:contenteditable="canWrite ? 'true' : 'false'"
 			ref="taskTitle">
 			{{ task.title }}
 		</h1>
@@ -48,6 +49,10 @@ export default {
 	props: {
 		value: {
 			required: true,
+		},
+		canWrite: {
+			type: Boolean,
+			default: false,
 		},
 	},
 	watch: {
