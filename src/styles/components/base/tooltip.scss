@@ -1,5 +1,5 @@
 .tooltip {
-  display: block !important;
+  visibility: collapse;
   z-index: 10000;
   font-size: 0.8em;
   text-align: center;
@@ -17,7 +17,7 @@
   &-arrow {
     opacity: 0;
     content: '';
-    display: block;
+    visibility: collapse;
     position: absolute;
     transition: opacity $transition;
     z-index: 10000;
@@ -35,6 +35,7 @@
 
   &.visible, &-arrow.visible {
     opacity: 1;
+    visibility: visible;
   }
 
   &[x-placement^="top"] {
