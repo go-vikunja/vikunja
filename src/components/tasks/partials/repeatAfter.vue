@@ -1,26 +1,28 @@
 <template>
 	<div class="control repeat-after-input columns">
-		<p class="column is-1">
-			Each
-		</p>
-		<div class="column is-7 field has-addons">
-			<div class="control">
-				<input
-					:disabled="disabled"
-					@change="updateData"
-					class="input"
-					placeholder="Specify an amount..."
-					v-model="repeatAfter.amount"/>
-			</div>
-			<div class="control">
-				<div class="select">
-					<select :disabled="disabled" @change="updateData" v-model="repeatAfter.type">
-						<option value="hours">Hours</option>
-						<option value="days">Days</option>
-						<option value="weeks">Weeks</option>
-						<option value="months">Months</option>
-						<option value="years">Years</option>
-					</select>
+		<div class="is-flex column">
+			<p class="pr-4">
+				Each
+			</p>
+			<div class="field has-addons is-fullwidth">
+				<div class="control">
+					<input
+						:disabled="disabled"
+						@change="updateData"
+						class="input"
+						placeholder="Specify an amount..."
+						v-model="repeatAfter.amount"/>
+				</div>
+				<div class="control">
+					<div class="select">
+						<select :disabled="disabled" @change="updateData" v-model="repeatAfter.type">
+							<option value="hours">Hours</option>
+							<option value="days">Days</option>
+							<option value="weeks">Weeks</option>
+							<option value="months">Months</option>
+							<option value="years">Years</option>
+						</select>
+					</div>
 				</div>
 			</div>
 		</div>
