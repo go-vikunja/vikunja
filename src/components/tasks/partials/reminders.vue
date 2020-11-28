@@ -1,70 +1,79 @@
 <template>
 	<div class="reminders">
 		<div
-			:class="{ 'overdue': (r < nowUnix && index !== (reminders.length - 1))}"
+			v-for="(r, index) in reminders"
 			:key="index"
+			:class="{ 'overdue': r < new Date()}"
 			class="reminder-input"
-			v-for="(r, index) in reminders">
-			<flat-pickr
-				:config="flatPickerConfig"
-				:data-index="index"
+		>
+			<datepicker
+				v-model="reminders[index]"
 				:disabled="disabled"
-				:value="r"
+				@close-on-change="() => addReminderDate(index)"
 			/>
-			<a @click="removeReminderByIndex(index)" v-if="!disabled">
+			<a @click="removeReminderByIndex(index)" v-if="!disabled" class="remove">
 				<icon icon="times"></icon>
 			</a>
 		</div>
-		<div class="reminder-input" v-if="showNewReminder">
-			<flat-pickr
-				:config="flatPickerConfig"
-				:disabled="disabled"
-				:value="null"
-				placeholder="Add a new reminder..."
+		<div class="reminder-input" v-if="!disabled">
+			<datepicker
+				v-model="newReminder"
+				@close-on-change="() => addReminderDate()"
+				choose-date-label="Add a new reminder..."
 			/>
 		</div>
 	</div>
 </template>
 
 <script>
-import flatPickr from 'vue-flatpickr-component'
-import 'flatpickr/dist/flatpickr.css'
+import datepicker from '@/components/input/datepicker'
 
 export default {
 	name: 'reminders',
 	data() {
 		return {
+			newReminder: null,
 			reminders: [],
-			lastReminder: 0,
-			nowUnix: new Date(),
-			showNewReminder: true,
-			flatPickerConfig: {
-				altFormat: 'j M Y H:i',
-				altInput: true,
-				dateFormat: 'Y-m-d H:i',
-				enableTime: true,
-				onOpen: this.updateLastReminderDate,
-				onClose: this.addReminderDate,
-			},
 		}
 	},
 	props: {
 		value: {
 			default: () => [],
-			type: Array,
+			validator: prop => {
+				// This allows arrays of Dates and strings
+				if (!(prop instanceof Array)) {
+					return false
+				}
+
+				for (const e of prop) {
+					const isDate = e instanceof Date
+					const isString = typeof e === 'string'
+					if (!isDate && !isString) {
+						console.log('validation failed', e, e instanceof Date)
+						return false
+					}
+				}
+
+				return true
+			},
 		},
 		disabled: {
 			default: false,
 		},
 	},
 	components: {
-		flatPickr,
+		datepicker,
 	},
 	mounted() {
 		this.reminders = this.value
 	},
 	watch: {
 		value(newVal) {
+			for (const i in newVal) {
+				if (typeof newVal[i] === 'string') {
+					newVal[i] = new Date(newVal[i])
+				}
+			}
 			this.reminders = newVal
 		},
 	},
@@ -73,40 +82,22 @@ export default {
 			this.$emit('input', this.reminders)
 			this.$emit('change')
 		},
-		updateLastReminderDate(selectedDates) {
-			this.lastReminder = +new Date(selectedDates[0])
-		},
-		addReminderDate(selectedDates, dateStr, instance) {
-			const newDate = +new Date(selectedDates[0])
-
-			// Don't update if nothing changed
-			if (newDate === this.lastReminder) {
+		addReminderDate(index = null) {
+			// New Date
+			if (index === null) {
+				if (this.newReminder === null) {
+					return
+				}
+				this.reminders.push(new Date(this.newReminder))
+				this.newReminder = null
+			} else if(this.reminders[index] === null) {
 				return
-			}
-
-			// No date selected
-			if (isNaN(newDate)) {
-				return
-			}
-
-			const index = parseInt(instance.input.dataset.index)
-			if (isNaN(index)) {
-				this.reminders.push(newDate)
-				// This is a workaround to recreate the flatpicker instance which essentially resets it.
-				// Even though flatpickr itself has a reset event, the Vue component does not expose it.
-				this.showNewReminder = false
-				this.$nextTick(() => this.showNewReminder = true)
-			} else {
-				this.reminders[index] = newDate
 			}
 
 			this.updateData()
 		},
 		removeReminderByIndex(index) {
 			this.reminders.splice(index, 1)
-			// Reset the last to 0 to have the "add reminder" button
-			this.reminders[this.reminders.length - 1] = null
-
 			this.updateData()
 		},
 	},

@@ -53,8 +53,12 @@ import {
 	faTrashAlt,
 	faUser,
 	faUsers,
+	faForward,
+	faChessKnight,
+	faCoffee,
+	faCocktail,
 } from '@fortawesome/free-solid-svg-icons'
-import {faCalendarAlt, faClock, faComments, faSave, faStar, faTimesCircle} from '@fortawesome/free-regular-svg-icons'
+import {faCalendarAlt, faClock, faComments, faSave, faStar, faTimesCircle, faSun} from '@fortawesome/free-regular-svg-icons'
 import {FontAwesomeIcon} from '@fortawesome/vue-fontawesome'
 // PWA
 import './registerServiceWorker'
@@ -135,6 +139,11 @@ library.add(faFillDrip)
 library.add(faKeyboard)
 library.add(faSave)
 library.add(faStarSolid)
+library.add(faForward)
+library.add(faSun)
+library.add(faChessKnight)
+library.add(faCoffee)
+library.add(faCocktail)
 
 Vue.component('icon', FontAwesomeIcon)
 
@@ -145,6 +154,13 @@ Vue.directive('focus', focus)
 
 import tooltip from '@/directives/tooltip'
 Vue.directive('tooltip', tooltip)
+
+const formatDate = (date, f) => {
+	if (typeof date === 'string') {
+		date = new Date(date)
+	}
+	return date ? format(date, f) : ''
+}
 
 Vue.mixin({
 	methods: {
@@ -169,6 +185,9 @@ Vue.mixin({
 				date = new Date(date)
 			}
 			return date ? format(date, 'PPPPpppp') : ''
+		},
+		formatDateShort: date => {
+			return formatDate(date, 'PPpp')
 		},
 		error: (e, context, actions = []) => message.error(e, context, actions),
 		success: (s, context, actions = []) => message.success(s, context, actions),

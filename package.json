@@ -5,7 +5,8 @@
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build --modern",
-    "lint": "vue-cli-service lint"
+    "lint": "vue-cli-service lint --ignore-pattern '*.test.*'",
+    "test": "jest"
   },
   "dependencies": {
     "bulma": "0.9.1",
@@ -40,6 +41,7 @@
     "babel-eslint": "10.1.0",
     "eslint": "7.14.0",
     "eslint-plugin-vue": "7.1.0",
+    "jest": "^26.6.3",
     "node-sass": "5.0.0",
     "sass-loader": "10.1.0",
     "vue-flatpickr-component": "8.1.6",

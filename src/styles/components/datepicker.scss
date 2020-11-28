@@ -1,0 +1,68 @@
+.datepicker {
+	input.input {
+		display: none;
+	}
+
+	&.disabled a {
+		cursor: default;
+	}
+
+	.datepicker-popup {
+		position: absolute;
+		z-index: 99;
+		width: 320px;
+		background: $white;
+		border-radius: $radius;
+		box-shadow: $card-shadow;
+
+		a {
+			display: flex;
+			align-items: center;
+			padding: 0 .5rem;
+			width: 100%;
+			height: 2.25rem;
+			color: $text;
+			transition: all $transition;
+
+			&:first-child {
+				border-radius: $radius $radius 0 0;
+			}
+
+			&:hover {
+				background: $light;
+			}
+
+			.text {
+				width: 100%;
+				font-size: .85rem;
+				display: flex;
+				justify-content: space-between;
+				padding-right: .25rem;
+
+				.weekday {
+					color: $text-light;
+					text-transform: capitalize;
+				}
+			}
+
+			.icon {
+				width: 2rem;
+				text-align: center;
+			}
+
+			&.button {
+				margin: 1rem;
+				width: calc(100% - 2rem);
+			}
+		}
+
+		.flatpickr-calendar {
+			margin: 0 auto 8px;
+			box-shadow: none;
+		}
+
+		@media screen and (max-width: ($tablet)) {
+			width: calc(100vw - 4rem);
+		}
+	}
+}

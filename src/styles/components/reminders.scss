@@ -3,7 +3,7 @@
     display: flex;
     align-items: center;
 
-    &.overdue input {
+    &.overdue .datepicker a.show {
       color: $red;
     }
 
@@ -11,19 +11,9 @@
       margin-bottom: 0.75rem;
     }
 
-    a {
+    a.remove {
       color: $red;
       padding-left: .5rem;
-    }
-
-    input {
-      width: 100%;
-      border: none;
-
-      &:focus {
-        border: none;
-        box-shadow: none;
-      }
     }
   }
 }

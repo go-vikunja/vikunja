@@ -19,7 +19,12 @@ steps:
       - yarn --frozen-lockfile --network-timeout 100000
       - yarn run lint
       - yarn run build
-
+  - name: test
+    image: node:13
+    pull: true
+    group: build-static
+    commands:
+      - yarn test
 ---
 kind: pipeline
 name: release-latest

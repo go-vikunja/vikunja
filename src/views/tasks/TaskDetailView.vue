@@ -47,18 +47,14 @@
 								Due Date
 							</div>
 							<div class="date-input">
-								<flat-pickr
-									:class="{ 'disabled': taskService.loading}"
-									:config="flatPickerConfig"
+								<datepicker
+									v-model="task.dueDate"
+									@close-on-change="() => saveTask()"
+									choose-date-label="Click here to set a due date"
 									:disabled="taskService.loading || !canWrite"
-									@on-close="() => saveTask()"
-									class="input"
-									placeholder="Click here to set a due date"
 									ref="dueDate"
-									v-model="dueDate"
-								>
-								</flat-pickr>
-								<a @click="() => {dueDate = task.dueDate = null;saveTask()}" v-if="dueDate && canWrite">
+									/>
+								<a @click="() => {task.dueDate = null;saveTask()}" v-if="task.dueDate && canWrite" class="remove">
 									<span class="icon is-small">
 										<icon icon="times"></icon>
 									</span>
@@ -84,18 +80,14 @@
 								Start Date
 							</div>
 							<div class="date-input">
-								<flat-pickr
-									:class="{ 'disabled': taskService.loading}"
-									:config="flatPickerConfig"
-									:disabled="taskService.loading || !canWrite"
-									@on-close="() => saveTask()"
-									class="input"
-									placeholder="Click here to set a start date"
-									ref="startDate"
+								<datepicker
 									v-model="task.startDate"
-								>
-								</flat-pickr>
-								<a @click="() => {task.startDate = null;saveTask()}" v-if="task.startDate && canWrite">
+									@close-on-change="() => saveTask()"
+									choose-date-label="Click here to set a start date"
+									:disabled="taskService.loading || !canWrite"
+									ref="startDate"
+								/>
+								<a @click="() => {task.startDate = null;saveTask()}" v-if="task.startDate && canWrite" class="remove">
 									<span class="icon is-small">
 										<icon icon="times"></icon>
 									</span>
@@ -109,18 +101,14 @@
 								End Date
 							</div>
 							<div class="date-input">
-								<flat-pickr
-									:class="{ 'disabled': taskService.loading}"
-									:config="flatPickerConfig"
-									:disabled="taskService.loading || !canWrite"
-									@on-close="() => saveTask()"
-									class="input"
-									placeholder="Click here to set an end date"
-									ref="endDate"
+								<datepicker
 									v-model="task.endDate"
-								>
-								</flat-pickr>
-								<a @click="() => {task.endDate = null;saveTask()}" v-if="task.endDate && canWrite">
+									@close-on-change="() => saveTask()"
+									choose-date-label="Click here to set an end date"
+									:disabled="taskService.loading || !canWrite"
+									ref="endDate"
+								/>
+								<a @click="() => {task.endDate = null;saveTask()}" v-if="task.endDate && canWrite" class="remove">
 									<span class="icon is-small">
 										<icon icon="times"></icon>
 									</span>
@@ -356,9 +344,6 @@ import relationKinds from '../../models/relationKinds.json'
 import priorites from '../../models/priorities.json'
 import rights from '../../models/rights.json'
 
-import flatPickr from 'vue-flatpickr-component'
-import 'flatpickr/dist/flatpickr.css'
-
 import PrioritySelect from '../../components/tasks/partials/prioritySelect'
 import PercentDoneSelect from '../../components/tasks/partials/percentDoneSelect'
 import EditLabels from '../../components/tasks/partials/editLabels'
@@ -374,10 +359,12 @@ import description from '@/components/tasks/partials/description'
 import ColorPicker from '../../components/input/colorPicker'
 import attachmentUpload from '../../components/tasks/mixins/attachmentUpload'
 import heading from '@/components/tasks/partials/heading'
+import Datepicker from '@/components/input/datepicker'
 
 export default {
 	name: 'TaskDetailView',
 	components: {
+		Datepicker,
 		ColorPicker,
 		ListSearch,
 		Reminders,
@@ -389,7 +376,6 @@ export default {
 		PercentDoneSelect,
 		PrioritySelect,
 		Comments,
-		flatPickr,
 		description,
 		heading,
 	},
@@ -402,9 +388,6 @@ export default {
 			taskService: TaskService,
 			task: TaskModel,
 			relationKinds: relationKinds,
-			// The due date is a seperate property in the task to prevent flatpickr from modifying the task model
-			// in store right after updating it from the api resulting in the wrong due date format being saved in the task.
-			dueDate: null,
 			// We doubled the task color property here because verte does not have a real change property, leading
 			// to the color property change being triggered when the # is removed from it, leading to an update,
 			// which leads in turn to a change... This creates an infinite loop in which the task is updated, changed,
@@ -421,13 +404,6 @@ export default {
 			descriptionRecentlySaved: false,
 
 			priorities: priorites,
-			flatPickerConfig: {
-				altFormat: 'j M Y H:i',
-				altInput: true,
-				dateFormat: 'Y-m-d H:i',
-				enableTime: true,
-				time_24hr: true,
-			},
 			activeFields: {
 				assignees: false,
 				priority: false,
@@ -504,7 +480,6 @@ export default {
 		},
 		setActiveFields() {
 
-			this.dueDate = this.task.dueDate ? this.task.dueDate : null
 			this.task.startDate = this.task.startDate ? this.task.startDate : null
 			this.task.endDate = this.task.endDate ? this.task.endDate : null
 
@@ -530,7 +505,6 @@ export default {
 			// We're doing the whole update in a nextTick because sometimes race conditions can occur when
 			// setting the due date on mobile which leads to no due date change being saved.
 			this.$nextTick(() => {
-				this.task.dueDate = this.dueDate
 				this.task.hexColor = this.taskColor
 
 				// If no end date is being set, but a start date and due date,
