@@ -154,15 +154,13 @@
 				</div>
 				<div class="bucket-footer" v-if="canWrite">
 					<div class="field" v-if="showNewTaskInput[bucket.id]">
-						<div class="control">
+						<div class="control" :class="{'is-loading': taskService.loading}">
 							<input
-
-								:class="{'is-loading': taskService.loading}"
+								class="input"
 								:disabled="taskService.loading"
 								@focusout="toggleShowNewTaskInput(bucket.id)"
 								@keyup.enter="addTaskToBucket(bucket.id)"
 								@keyup.esc="toggleShowNewTaskInput(bucket.id)"
-								class="input"
 								placeholder="Enter the new task text..."
 								type="text"
 								v-focus.always
@@ -182,7 +180,7 @@
 						</span>
 						<span v-if="bucket.tasks.length === 0">
 						Add a task
-					</span>
+						</span>
 						<span v-else>
 						Add another task
 					</span>
