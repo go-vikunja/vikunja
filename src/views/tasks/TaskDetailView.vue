@@ -317,6 +317,10 @@
 							<!-- Computed properties to show the actual date every time it gets updated -->
 							Updated <span v-tooltip="updatedFormatted">{{ updatedSince }}</span>
 						</template>
+						<template v-if="task.done">
+							<br/>
+							Done  <span v-tooltip="doneFormatted">{{ doneSince }}</span>
+						</template>
 					</p>
 				</div>
 			</div>
@@ -461,6 +465,12 @@ export default {
 		},
 		updatedFormatted() {
 			return this.formatDate(this.task.updated)
+		},
+		doneSince() {
+			return this.formatDateSince(this.task.doneAt)
+		},
+		doneFormatted() {
+			return this.formatDate(this.task.doneAt)
 		},
 	},
 	methods: {

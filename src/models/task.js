@@ -69,6 +69,7 @@ export default class TaskModel extends AbstractModel {
 
 		this.created = new Date(this.created)
 		this.updated = new Date(this.updated)
+		this.doneAt = this.doneAt ? new Date(this.doneAt) : null
 	}
 
 	defaults() {
@@ -77,6 +78,7 @@ export default class TaskModel extends AbstractModel {
 			title: '',
 			description: '',
 			done: false,
+			doneAt: null,
 			priority: 0,
 			labels: [],
 			assignees: [],
