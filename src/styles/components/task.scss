@@ -234,6 +234,7 @@
   border-radius: $radius;
   padding: 1em;
   color: $text;
+  background-color: $light-background !important;
 
   .task {
     max-width: 500px;
@@ -243,4 +244,8 @@
     border-radius: 0;
     padding-top: 2rem;
   }
+}
+
+.link-share-container .task-view {
+  background-color: transparent;
 }
