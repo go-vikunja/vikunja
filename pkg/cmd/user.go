@@ -30,7 +30,7 @@ import (
 	"code.vikunja.io/api/pkg/user"
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
-	"golang.org/x/crypto/ssh/terminal"
+	"golang.org/x/term"
 )
 
 var (
@@ -73,12 +73,12 @@ func getPasswordFromFlagOrInput() (pw string) {
 	pw = userFlagPassword
 	if userFlagPassword == "" {
 		fmt.Print("Enter Password: ")
-		bytePW, err := terminal.ReadPassword(int(os.Stdin.Fd()))
+		bytePW, err := term.ReadPassword(int(os.Stdin.Fd()))
 		if err != nil {
 			log.Fatalf("Error reading password: %s", err)
 		}
 		fmt.Printf("\nConfirm Password: ")
-		byteConfirmPW, err := terminal.ReadPassword(int(os.Stdin.Fd()))
+		byteConfirmPW, err := term.ReadPassword(int(os.Stdin.Fd()))
 		if err != nil {
 			log.Fatalf("Error reading password: %s", err)
 		}
