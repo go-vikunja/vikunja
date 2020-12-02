@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "bulma": "0.9.1",
-    "camel-case": "4.1.1",
+    "camel-case": "4.1.2",
     "copy-to-clipboard": "3.3.1",
     "date-fns": "2.16.1",
     "dompurify": "2.2.2",
