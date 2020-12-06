@@ -11,20 +11,74 @@ trigger:
       - pull_request
 
 steps:
+  - name: restore-cache
+    image: meltwater/drone-cache:dev
+    pull: true
+    environment:
+      AWS_ACCESS_KEY_ID:
+        from_secret: cache_aws_access_key_id
+      AWS_SECRET_ACCESS_KEY:
+        from_secret: cache_aws_secret_access_key
+    settings:
+      restore: true
+      bucket: kolaente.dev-drone-dependency-cache
+      endpoint: https://s3.fr-par.scw.cloud
+      region: fr-par
+      path_style: true
+      mount:
+        - '.cache'
+
+  - name: dependencies
+    image: node:13
+    pull: true
+    group: build-static
+    environment:
+      YARN_CACHE_FOLDER: .cache
+    commands:
+      - yarn --frozen-lockfile --network-timeout 100000
+    depends_on:
+      - restore-cache
+
+  - name: rebuild-cache
+    image: meltwater/drone-cache:dev
+    pull: true
+    environment:
+      AWS_ACCESS_KEY_ID:
+        from_secret: cache_aws_access_key_id
+      AWS_SECRET_ACCESS_KEY:
+        from_secret: cache_aws_secret_access_key
+    settings:
+      rebuild: true
+      bucket: kolaente.dev-drone-dependency-cache
+      endpoint: https://s3.fr-par.scw.cloud
+      region: fr-par
+      path_style: true
+      mount:
+        - '.cache'
+    depends_on:
+      - dependencies
+
   - name: build
     image: node:13
     pull: true
     group: build-static
+    environment:
+      YARN_CACHE_FOLDER: .cache
     commands:
-      - yarn --frozen-lockfile --network-timeout 100000
       - yarn run lint
       - yarn run build
+    depends_on:
+      - dependencies
+
   - name: test
     image: node:13
     pull: true
     group: build-static
     commands:
       - yarn test
+    depends_on:
+      - dependencies
+
 ---
 kind: pipeline
 name: release-latest
@@ -41,10 +95,29 @@ steps:
     commands:
       - git fetch --tags
 
+  - name: restore-cache
+    image: meltwater/drone-cache:dev
+    pull: true
+    environment:
+      AWS_ACCESS_KEY_ID:
+        from_secret: cache_aws_access_key_id
+      AWS_SECRET_ACCESS_KEY:
+        from_secret: cache_aws_secret_access_key
+    settings:
+      restore: true
+      bucket: kolaente.dev-drone-dependency-cache
+      endpoint: https://s3.fr-par.scw.cloud
+      region: fr-par
+      path_style: true
+      mount:
+        - '.cache'
+
   - name: build
     image: node:13
     pull: true
     group: build-static
+    environment:
+      YARN_CACHE_FOLDER: .cache
     commands:
       - yarn --frozen-lockfile --network-timeout 100000
       - yarn run lint
@@ -91,10 +164,29 @@ steps:
     commands:
       - git fetch --tags
 
+  - name: restore-cache
+    image: meltwater/drone-cache:dev
+    pull: true
+    environment:
+      AWS_ACCESS_KEY_ID:
+        from_secret: cache_aws_access_key_id
+      AWS_SECRET_ACCESS_KEY:
+        from_secret: cache_aws_secret_access_key
+    settings:
+      restore: true
+      bucket: kolaente.dev-drone-dependency-cache
+      endpoint: https://s3.fr-par.scw.cloud
+      region: fr-par
+      path_style: true
+      mount:
+        - '.cache'
+
   - name: build
     image: node:13
     pull: true
     group: build-static
+    environment:
+      YARN_CACHE_FOLDER: .cache
     commands:
       - yarn --frozen-lockfile --network-timeout 100000
       - yarn run lint
