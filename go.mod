@@ -88,7 +88,7 @@ require (
 	gopkg.in/square/go-jose.v2 v2.5.1 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200605160147-a5ece683394c
 	honnef.co/go/tools v0.0.1-2020.1.5
-	src.techknowlogick.com/xgo v1.1.1-0.20200811225412-bff6512e7c9c
+	src.techknowlogick.com/xgo v1.2.1-0.20201205054505-b97762e7a76b
 	src.techknowlogick.com/xormigrate v1.4.0
 	xorm.io/builder v0.3.7
 	xorm.io/core v0.7.3
