@@ -36,7 +36,6 @@ require (
 	github.com/gabriel-vasile/mimetype v1.1.2
 	github.com/getsentry/sentry-go v0.8.0
 	github.com/go-errors/errors v1.1.1
-	github.com/go-openapi/swag v0.19.9 // indirect
 	github.com/go-redis/redis/v7 v7.4.0
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/go-testfixtures/testfixtures/v3 v3.4.1
@@ -72,17 +71,15 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/viper v1.7.1
 	github.com/stretchr/testify v1.6.1
-	github.com/swaggo/swag v1.6.9
+	github.com/swaggo/swag v1.7.0
 	github.com/ulule/limiter/v3 v3.5.0
 	golang.org/x/crypto v0.0.0-20201203163018-be400aefbc4c
 	golang.org/x/image v0.0.0-20200927104501-e162460cd6b5
 	golang.org/x/lint v0.0.0-20200302205851-738671d3881b
-	golang.org/x/net v0.0.0-20201016165138-7b1cca2348c0 // indirect
 	golang.org/x/oauth2 v0.0.0-20201203001011-0b49973bad19
 	golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9
 	golang.org/x/sys v0.0.0-20201201145000-ef89a241ccb3 // indirect
 	golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1
-	golang.org/x/tools v0.0.0-20201017001424-6003fad69a88 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
 	gopkg.in/d4l3k/messagediff.v1 v1.2.1
