@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<div :class="{ 'is-loading': loading}" class="kanban loader-container">
+		<div :class="{ 'is-loading': loading && !oneTaskUpdating}" class="kanban loader-container">
 			<div :key="`bucket${bucket.id}`" class="bucket" v-for="bucket in buckets">
 				<div class="bucket-header">
 					<h2
@@ -90,8 +90,8 @@
 						>
 							<div
 								:class="{
-							'is-loading': taskService.loading && taskUpdating[task.id],
-							'draggable': !taskService.loading || !taskUpdating[task.id],
+							'is-loading': (taskService.loading || loading) && taskUpdating[task.id],
+							'draggable': !(taskService.loading || loading) || !taskUpdating[task.id],
 							'has-light-text': !colorIsDark(task.hexColor) && task.hexColor !== `#${task.defaultColor}` && task.hexColor !== task.defaultColor,
 						}"
 								:style="{'background-color': task.hexColor !== '#' && task.hexColor !== `#${task.defaultColor}` ? task.hexColor : false}"
@@ -154,10 +154,10 @@
 				</div>
 				<div class="bucket-footer" v-if="canWrite">
 					<div class="field" v-if="showNewTaskInput[bucket.id]">
-						<div class="control" :class="{'is-loading': taskService.loading}">
+						<div class="control" :class="{'is-loading': taskService.loading || loading}">
 							<input
 								class="input"
-								:disabled="taskService.loading"
+								:disabled="taskService.loading || loading"
 								@focusout="toggleShowNewTaskInput(bucket.id)"
 								@keyup.enter="addTaskToBucket(bucket.id)"
 								@keyup.esc="toggleShowNewTaskInput(bucket.id)"
@@ -284,6 +284,7 @@ export default {
 
 			// We're using this to show the loading animation only at the task when updating it
 			taskUpdating: {},
+			oneTaskUpdating: false,
 		}
 	},
 	created() {
@@ -360,6 +361,7 @@ export default {
 				const taskAfter = typeof this.buckets[bucketIndex].tasks[taskIndex + 1] === 'undefined' ? null : this.buckets[bucketIndex].tasks[taskIndex + 1]
 				const task = this.buckets[bucketIndex].tasks[taskIndex]
 				this.$set(this.taskUpdating, task.id, true)
+				this.oneTaskUpdating = true
 
 				// If there is no task before, our task is the first task in which case we let it have half of the position of the task after it
 				if (taskBefore === null && taskAfter !== null) {
@@ -382,10 +384,13 @@ export default {
 					})
 					.finally(() => {
 						this.$set(this.taskUpdating, task.id, false)
+						this.oneTaskUpdating = false
 					})
 			}
 		},
 		markTaskAsDone(task) {
+			this.oneTaskUpdating = true
+			this.$set(this.taskUpdating, task.id, true)
 			task.done = !task.done
 			this.$store.dispatch('tasks/update', task)
 				.catch(e => {
@@ -393,6 +398,7 @@ export default {
 				})
 				.finally(() => {
 					this.$set(this.taskUpdating, task.id, false)
+					this.oneTaskUpdating = false
 				})
 		},
 		getTaskPayload(bucketId) {
