@@ -25,6 +25,7 @@ steps:
       endpoint: https://s3.fr-par.scw.cloud
       region: fr-par
       path_style: true
+      cache_key: '{{ .Repo.Name }}_{{ checksum "yarn.lock" }}_{{ arch }}_{{ os }}'
       mount:
         - '.cache'
 
@@ -53,6 +54,7 @@ steps:
       endpoint: https://s3.fr-par.scw.cloud
       region: fr-par
       path_style: true
+      cache_key: '{{ .Repo.Name }}_{{ checksum "yarn.lock" }}_{{ arch }}_{{ os }}'
       mount:
         - '.cache'
     depends_on:
@@ -109,6 +111,7 @@ steps:
       endpoint: https://s3.fr-par.scw.cloud
       region: fr-par
       path_style: true
+      cache_key: '{{ .Repo.Name }}_{{ checksum "yarn.lock" }}_{{ arch }}_{{ os }}'
       mount:
         - '.cache'
 
@@ -178,6 +181,7 @@ steps:
       endpoint: https://s3.fr-par.scw.cloud
       region: fr-par
       path_style: true
+      cache_key: '{{ .Repo.Name }}_{{ checksum "yarn.lock" }}_{{ arch }}_{{ os }}'
       mount:
         - '.cache'
 
