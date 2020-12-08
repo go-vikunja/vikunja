@@ -34,7 +34,7 @@ require (
 	github.com/dustinkirkland/golang-petname v0.0.0-20191129215211-8e5a1ed0cff0
 	github.com/fzipp/gocyclo v0.3.1
 	github.com/gabriel-vasile/mimetype v1.1.2
-	github.com/getsentry/sentry-go v0.8.0
+	github.com/getsentry/sentry-go v0.9.0
 	github.com/go-errors/errors v1.1.1
 	github.com/go-redis/redis/v7 v7.4.0
 	github.com/go-sql-driver/mysql v1.5.0
