@@ -345,27 +345,33 @@ export default {
 			// not already made available.
 			// Some docs at https://stackoverflow.com/q/62865160/10924593
 			this.$nextTick(() => {
-				document.getElementsByClassName('attachment-image').forEach(img => {
-					// The url is something like /tasks/<id>/attachments/<id>
-					const parts = img.dataset.src.substr(window.API_URL.length + 1).split('/')
-					const taskId = parseInt(parts[1])
-					const attachmentId = parseInt(parts[3])
-					const attachment = new AttachmentModel({taskId: taskId, id: attachmentId})
+				const attachmentImage = document.getElementsByClassName('attachment-image')
+				if(attachmentImage) {
+					attachmentImage.forEach(img => {
+						// The url is something like /tasks/<id>/attachments/<id>
+						const parts = img.dataset.src.substr(window.API_URL.length + 1).split('/')
+						const taskId = parseInt(parts[1])
+						const attachmentId = parseInt(parts[3])
+						const attachment = new AttachmentModel({taskId: taskId, id: attachmentId})
+	
+						if (this.attachmentService === null) {
+							this.attachmentService = new AttachmentService()
+						}
+	
+						this.attachmentService.getBlobUrl(attachment)
+							.then(url => {
+								img.src = url
+							})
+					})
+				}
 
-					if (this.attachmentService === null) {
-						this.attachmentService = new AttachmentService()
-					}
-
-					this.attachmentService.getBlobUrl(attachment)
-						.then(url => {
-							img.src = url
-						})
-				})
-
-				document.getElementsByClassName(`text-checkbox-${this._uid}`).forEach(check => {
-					check.removeEventListener('change', this.handleCheckboxClick)
-					check.addEventListener('change', this.handleCheckboxClick)
-				})
+				const textCheckbox = document.getElementsByClassName(`text-checkbox-${this._uid}`)
+				if(textCheckbox) {
+					textCheckbox.forEach(check => {
+						check.removeEventListener('change', this.handleCheckboxClick)
+						check.addEventListener('change', this.handleCheckboxClick)
+					})
+				}
 			})
 		},
 		handleCheckboxClick(e) {
