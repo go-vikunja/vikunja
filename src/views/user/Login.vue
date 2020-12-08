@@ -165,7 +165,7 @@ export default {
 			const state = Math.random().toString(36).substring(2, 24)
 			localStorage.setItem('state', state)
 
-			window.location.href = `${provider.authUrl}?client_id=${provider.clientId}&redirect_uri=${this.openidConnect.redirectUrl}${provider.key}&response_type=code&scope=&state=${state}`
+			window.location.href = `${provider.authUrl}?client_id=${provider.clientId}&redirect_uri=${this.openidConnect.redirectUrl}${provider.key}&response_type=code&scope=openid&state=${state}`
 		},
 	},
 }
