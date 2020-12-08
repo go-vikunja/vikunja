@@ -353,11 +353,11 @@ export default {
 						const taskId = parseInt(parts[1])
 						const attachmentId = parseInt(parts[3])
 						const attachment = new AttachmentModel({taskId: taskId, id: attachmentId})
-	
+
 						if (this.attachmentService === null) {
 							this.attachmentService = new AttachmentService()
 						}
-	
+
 						this.attachmentService.getBlobUrl(attachment)
 							.then(url => {
 								img.src = url
@@ -410,6 +410,10 @@ export default {
 .editor {
 	.tabs ul {
 		margin-left: 0;
+	}
+
+	.preview.content ul li input[type="checkbox"] {
+		margin-right: .5rem;
 	}
 }
 
