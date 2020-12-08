@@ -5,6 +5,14 @@ import LabelService from './label'
 
 import {formatISO} from 'date-fns'
 
+const parseDate = date => {
+	if (date) {
+		return formatISO(new Date(date))
+	}
+
+	return null
+}
+
 export default class TaskService extends AbstractService {
 	constructor() {
 		super({
@@ -34,12 +42,12 @@ export default class TaskService extends AbstractService {
 		model.listId = Number(model.listId)
 
 		// Convert dates into an iso string
-		model.dueDate = !model.dueDate ? null : formatISO(new Date(model.dueDate))
-		model.startDate = !model.startDate ? null : formatISO(new Date(model.startDate))
-		model.endDate = !model.endDate ? null : formatISO(new Date(model.endDate))
+		model.dueDate = parseDate(model.dueDate)
+		model.startDate = parseDate(model.startDate)
+		model.endDate = parseDate(model.endDate)
+		model.doneAt = parseDate(model.doneAt)
 		model.created = formatISO(new Date(model.created))
 		model.updated = formatISO(new Date(model.updated))
-		model.doneAt = formatISO(new Date(model.doneAt))
 
 		// remove all nulls, these would create empty reminders
 		for (const index in model.reminderDates) {

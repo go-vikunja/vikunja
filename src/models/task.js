@@ -3,6 +3,13 @@ import UserModel from './user'
 import LabelModel from './label'
 import AttachmentModel from './attachment'
 
+const parseDate = date => {
+	if (date && !date.startsWith('0001')) {
+		return new Date(date)
+	}
+	return null
+}
+
 export default class TaskModel extends AbstractModel {
 
 	defaultColor = '198CFF'
@@ -14,9 +21,10 @@ export default class TaskModel extends AbstractModel {
 		this.listId = Number(this.listId)
 
 		// Make date objects from timestamps
-		this.dueDate = this.dueDate && !this.dueDate.startsWith('0001') ? new Date(this.dueDate) : null
-		this.startDate = this.startDate && !this.startDate.startsWith('0001') ? new Date(this.startDate) : null
-		this.endDate = this.endDate && !this.endDate.startsWith('0001') ? new Date(this.endDate) : null
+		this.dueDate = parseDate(this.dueDate)
+		this.startDate = parseDate(this.startDate)
+		this.endDate = parseDate(this.endDate)
+		this.doneAt = parseDate(this.doneAt)
 
 		// Cancel all scheduled notifications for this task to be sure to only have available notifications
 		this.cancelScheduledNotifications()
@@ -69,7 +77,6 @@ export default class TaskModel extends AbstractModel {
 
 		this.created = new Date(this.created)
 		this.updated = new Date(this.updated)
-		this.doneAt = this.doneAt ? new Date(this.doneAt) : null
 	}
 
 	defaults() {
