@@ -309,24 +309,6 @@ steps:
     commands:
       - git fetch --tags
 
-  - name: restore-cache
-    image: meltwater/drone-cache:dev
-    pull: true
-    environment:
-      AWS_ACCESS_KEY_ID:
-        from_secret: cache_aws_access_key_id
-      AWS_SECRET_ACCESS_KEY:
-        from_secret: cache_aws_secret_access_key
-    settings:
-      restore: true
-      bucket: kolaente.dev-drone-dependency-cache
-      endpoint: https://s3.fr-par.scw.cloud
-      region: fr-par
-      path_style: true
-      cache_key: '{{ .Repo.Name }}_{{ checksum "yarn.lock" }}_{{ arch }}_{{ os }}'
-      mount:
-        - '.cache'
-
   - name: docker
     image: plugins/docker:linux-arm
     pull: true
@@ -340,7 +322,6 @@ steps:
       auto_tag_suffix: linux-arm
     depends_on: 
       - fetch-tags
-      - restore-cache
 
 ---
 kind: pipeline
