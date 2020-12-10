@@ -163,7 +163,7 @@ steps:
     pull: true
     group: build-static
     environment:
-      YARN_CACHE_FOLDER: .cache
+      YARN_CACHE_FOLDER: .cache/yarn/
     commands:
       - yarn --frozen-lockfile --network-timeout 100000
       - yarn run lint
@@ -233,7 +233,7 @@ steps:
     pull: true
     group: build-static
     environment:
-      YARN_CACHE_FOLDER: .cache
+      YARN_CACHE_FOLDER: .cache/yarn/
     commands:
       - yarn --frozen-lockfile --network-timeout 100000
       - yarn run lint
@@ -308,6 +308,25 @@ steps:
     image: docker:git
     commands:
       - git fetch --tags
+
+  - name: restore-cache
+    image: meltwater/drone-cache:dev
+    pull: true
+    environment:
+      AWS_ACCESS_KEY_ID:
+        from_secret: cache_aws_access_key_id
+      AWS_SECRET_ACCESS_KEY:
+        from_secret: cache_aws_secret_access_key
+    settings:
+      restore: true
+      bucket: kolaente.dev-drone-dependency-cache
+      endpoint: https://s3.fr-par.scw.cloud
+      region: fr-par
+      path_style: true
+      cache_key: '{{ .Repo.Name }}_{{ checksum "yarn.lock" }}_{{ arch }}_{{ os }}'
+      mount:
+        - '.cache'
+
   - name: docker
     image: plugins/docker:linux-arm
     pull: true
@@ -319,7 +338,9 @@ steps:
       repo: vikunja/frontend
       auto_tag: true
       auto_tag_suffix: linux-arm
-    depends_on: [ fetch-tags ]
+    depends_on: 
+      - fetch-tags
+      - restore-cache
 
 ---
 kind: pipeline
@@ -340,6 +361,25 @@ steps:
     image: docker:git
     commands:
       - git fetch --tags
+
+  - name: restore-cache
+    image: meltwater/drone-cache:dev
+    pull: true
+    environment:
+      AWS_ACCESS_KEY_ID:
+        from_secret: cache_aws_access_key_id
+      AWS_SECRET_ACCESS_KEY:
+        from_secret: cache_aws_secret_access_key
+    settings:
+      restore: true
+      bucket: kolaente.dev-drone-dependency-cache
+      endpoint: https://s3.fr-par.scw.cloud
+      region: fr-par
+      path_style: true
+      cache_key: '{{ .Repo.Name }}_{{ checksum "yarn.lock" }}_{{ arch }}_{{ os }}'
+      mount:
+        - '.cache'
+
   - name: docker
     image: plugins/docker:linux-amd64
     pull: true
@@ -351,7 +391,9 @@ steps:
       repo: vikunja/frontend
       auto_tag: true
       auto_tag_suffix: linux-amd64
-    depends_on: [ fetch-tags ]
+    depends_on: 
+      - fetch-tags
+      - restore-cache
 
 ---
 kind: pipeline

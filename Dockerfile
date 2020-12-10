@@ -3,6 +3,7 @@ FROM node:13.14.0 AS compile-image
 
 WORKDIR /build
 
+ENV YARN_CACHE_FOLDER .cache/yarn/
 COPY .  ./
 
 RUN \
