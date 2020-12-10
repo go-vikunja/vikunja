@@ -20,3 +20,7 @@ yarn-error.log*
 *.njsproj
 *.sln
 *.sw*
+
+# Test files
+cypress/screenshots
+cypress/videos

@@ -357,7 +357,6 @@ import RelatedTasks from '../../components/tasks/partials/relatedTasks'
 import RepeatAfter from '../../components/tasks/partials/repeatAfter'
 import Reminders from '../../components/tasks/partials/reminders'
 import Comments from '../../components/tasks/partials/comments'
-import router from '../../router'
 import ListSearch from '../../components/tasks/partials/listSearch'
 import description from '@/components/tasks/partials/description'
 import ColorPicker from '../../components/input/colorPicker'
@@ -403,9 +402,6 @@ export default {
 			showDeleteModal: false,
 			descriptionChanged: false,
 			listViewName: 'list.list',
-
-			descriptionSaving: false,
-			descriptionRecentlySaved: false,
 
 			priorities: priorites,
 			activeFields: {
@@ -558,7 +554,7 @@ export default {
 			this.$store.dispatch('tasks/delete', this.task)
 				.then(() => {
 					this.success({message: 'The task has been deleted successfully.'}, this)
-					router.back()
+					this.$router.push({name: 'list.index', params: {listId: this.task.listId}})
 				})
 				.catch(e => {
 					this.error(e, this)

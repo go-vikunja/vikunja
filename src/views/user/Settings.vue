@@ -107,7 +107,7 @@
 		</div>
 
 		<!-- Name -->
-		<div class="card">
+		<div class="card update-name">
 			<header class="card-header">
 				<p class="card-header-title">
 					Update your name
@@ -116,12 +116,12 @@
 			<div class="card-content">
 				<div class="content">
 						<div class="field">
-							<label class="label" for="newEmail">Name</label>
+							<label class="label" for="newName">Name</label>
 							<div class="control">
 								<input
 									@keyup.enter="updateName"
 									class="input"
-									id="newEmail"
+									id="newName"
 									placeholder="The new name"
 									type="text"
 									v-model="name"/>

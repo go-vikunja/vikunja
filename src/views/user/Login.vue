@@ -72,7 +72,7 @@
 				</div>
 			</form>
 
-			<div v-if="openidConnect.enabled && openidConnect.providers.length > 0" class="mt-4">
+			<div v-if="openidConnect.enabled && openidConnect.providers && openidConnect.providers.length > 0" class="mt-4">
 				<a @click="redirectToProvider(p)" v-for="(p, k) in openidConnect.providers" :key="k" class="button is-fullwidth">
 					Log in with {{ p.name }}
 				</a>

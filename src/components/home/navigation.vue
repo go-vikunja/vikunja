@@ -151,10 +151,7 @@ export default {
 		this.$store.dispatch('namespaces/loadNamespaces')
 	},
 	created() {
-		// Hide the menu by default on mobile
-		if (window.innerWidth < 770) {
-			this.$store.commit(MENU_ACTIVE, false)
-		}
+		window.addEventListener('resize', this.resize)
 	},
 	methods: {
 		toggleFavoriteList(list) {
@@ -165,6 +162,14 @@ export default {
 			}
 			this.$store.dispatch('lists/toggleListFavorite', list)
 				.catch(e => this.error(e, this))
+		},
+		resize() {
+			// Hide the menu by default on mobile
+			if (window.innerWidth < 770) {
+				this.$store.commit(MENU_ACTIVE, false)
+			} else {
+				this.$store.commit(MENU_ACTIVE, true)
+			}
 		},
 	},
 }

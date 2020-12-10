@@ -1,5 +1,5 @@
 <template>
-	<notifications position="bottom left" :max="2">
+	<notifications position="bottom left" :max="2" class="global-notification">
 		<template slot="body" slot-scope="props">
 			<div :class="['vue-notification-template', 'vue-notification', props.item.type]" @click="close(props)">
 				<div

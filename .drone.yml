@@ -1,5 +1,5 @@
 kind: pipeline
-name: testing
+name: build
 
 trigger:
   branch:
@@ -9,6 +9,13 @@ trigger:
     include:
       - push
       - pull_request
+
+services:
+  - name: api
+    image: vikunja/api
+    environment:
+      VIKUNJA_SERVICE_TESTINGTOKEN: averyLongSecretToSe33dtheDB
+      VIKUNJA_LOG_LEVEL: DEBUG
 
 steps:
   - name: restore-cache
@@ -30,11 +37,11 @@ steps:
         - '.cache'
 
   - name: dependencies
-    image: node:13
+    image: node:12
     pull: true
-    group: build-static
     environment:
-      YARN_CACHE_FOLDER: .cache
+      YARN_CACHE_FOLDER: .cache/yarn/
+      CYPRESS_CACHE_FOLDER: .cache/cypress/
     commands:
       - yarn --frozen-lockfile --network-timeout 100000
     depends_on:
@@ -61,25 +68,61 @@ steps:
       - dependencies
 
   - name: build
-    image: node:13
+    image: node:12
     pull: true
-    group: build-static
     environment:
-      YARN_CACHE_FOLDER: .cache
+      YARN_CACHE_FOLDER: .cache/yarn/
+      CYPRESS_CACHE_FOLDER: .cache/cypress/
     commands:
       - yarn run lint
       - yarn run build
     depends_on:
       - dependencies
 
-  - name: test
-    image: node:13
+  - name: test-unit
+    image: node:12
     pull: true
-    group: build-static
     commands:
-      - yarn test
+      - yarn test:unit
     depends_on:
       - dependencies
+
+  - name: test-frontend
+    image: cypress/browsers:node12.18.3-chrome87-ff82
+    pull: true
+    environment:
+      CYPRESS_API_URL: http://api:3456/api/v1
+      CYPRESS_TEST_SECRET: averyLongSecretToSe33dtheDB
+      YARN_CACHE_FOLDER: .cache/yarn/
+      CYPRESS_CACHE_FOLDER: .cache/cypress/
+    commands:
+      - sed -i 's/localhost/api/g' public/index.html
+      - yarn serve & npx wait-on http://localhost:8080
+      - yarn test:frontend --browser chrome
+    depends_on:
+      - dependencies
+
+  - name: upload-test-results
+    image: plugins/s3:1
+    pull: true
+    settings:
+      bucket: drone-test-results
+      access_key:
+        from_secret: test_results_aws_access_key_id
+      secret_key:
+        from_secret: test_results_aws_secret_access_key
+      endpoint: https://s3.fr-par.scw.cloud
+      region: fr-par
+      path_style: true
+      source: cypress/screenshots/**/**/*
+      strip_prefix: cypress/screenshots/
+      target: /${DRONE_REPO}/${DRONE_PULL_REQUEST}_${DRONE_BRANCH}/${DRONE_BUILD_NUMBER}/
+    depends_on: 
+      - test-frontend
+    when:
+      status:
+        - failure
+        - success
 
 ---
 kind: pipeline
@@ -116,7 +159,7 @@ steps:
         - '.cache'
 
   - name: build
-    image: node:13
+    image: node:12
     pull: true
     group: build-static
     environment:
@@ -186,7 +229,7 @@ steps:
         - '.cache'
 
   - name: build
-    image: node:13
+    image: node:12
     pull: true
     group: build-static
     environment:

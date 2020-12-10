@@ -62,7 +62,7 @@
 
 				<div class="field is-grouped">
 					<div class="control">
-						<button class="button is-primary" type="submit" v-bind:class="{ 'is-loading': loading}">
+						<button class="button is-primary" type="submit" :class="{ 'is-loading': loading}" id="register-submit">
 							Register
 						</button>
 						<router-link :to="{ name: 'user.login' }" class="button">Login</router-link>

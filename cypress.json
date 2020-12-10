@@ -1,0 +1,8 @@
+{
+  "baseUrl": "http://localhost:8080",
+  "env": {
+    "API_URL": "http://localhost:3456/api/v1",
+    "TEST_SECRET": "testingS3cr3et"
+  },
+  "video": false
+}
