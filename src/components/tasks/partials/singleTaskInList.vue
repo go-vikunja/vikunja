@@ -1,6 +1,11 @@
 <template>
 	<div :class="{'is-loading': taskService.loading}" class="task loader-container">
 		<fancycheckbox :disabled="isArchived || disabled" @change="markAsDone" v-model="task.done"/>
+		<span
+			:style="{backgroundColor: listColor }"
+			class="color-bubble"
+			v-if="listColor !== ''">
+		</span>
 		<span :class="{ 'done': task.done}" class="tasktext">
 			<router-link :to="{ name: taskDetailRoute, params: { id: task.id } }">
 				<router-link
@@ -121,6 +126,10 @@ export default {
 		this.taskService = new TaskService()
 	},
 	computed: {
+		listColor() {
+			const list = this.$store.getters['lists/getListById'](this.task.listId)
+			return list !== null ? list.hexColor : ''
+		},
 		currentList() {
 			return typeof this.$store.state.currentList === 'undefined' ? {
 				id: 0,
