@@ -185,6 +185,7 @@ export default {
 				.catch(e => {
 					// eslint-disable-next-line
 					console.log('Error renewing token: ', e)
+					ctx.dispatch('logout')
 				})
 		},
 		logout(ctx) {
