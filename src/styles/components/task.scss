@@ -44,6 +44,15 @@
       color: lighten($grey, 25%);
       white-space: nowrap;
     }
+
+    @media screen and (max-width: $tablet) {
+      flex-direction: column;
+      align-items: start;
+
+      .title.input {
+        margin: 0 -.3em .5rem -.3em; // the title has 0.3em padding - this make the text inside of it align with the rest
+      }
+    }
   }
 
   .date-input {
