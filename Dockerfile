@@ -3,10 +3,19 @@ FROM node:13.14.0 AS compile-image
 
 WORKDIR /build
 
+ARG USE_RELEASE=false
+ARG RELEASE_VERSION=master
+
 ENV YARN_CACHE_FOLDER .cache/yarn/
 COPY .  ./
 
 RUN \
+  if [ $USE_RELEASE ]; then \
+    rm -rf dist/ && \
+    wget https://dl.vikunja.io/frontend/vikunja-frontend-$RELEASE_VERSION.zip -O frontend-release.zip && \
+    unzip frontend-release.zip -d dist/ && \
+    exit 0; \
+  fi && \
   # Build the frontend
   yarn install --frozen-lockfile --network-timeout 100000 && \
   echo '{"VERSION": "'$(git describe --tags --always --abbrev=10 | sed 's/-/+/' | sed 's/^v//' | sed 's/-g/-/')'"}' > src/version.json && \
