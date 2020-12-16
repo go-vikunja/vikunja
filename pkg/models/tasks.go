@@ -1028,79 +1028,22 @@ func updateDone(oldTask *Task, newTask *Task) {
 	}
 }
 
-// Creates or deletes all necessary reminders without unneded db operations.
+// Removes all old reminders and adds the new ones. This is a lot easier and less buggy than
+// trying to figure out which reminders changed and then only re-add those needed. And since it does
+// not make a performance difference we'll just do that.
 // The parameter is a slice with unix dates which holds the new reminders.
 func (t *Task) updateReminders(s *xorm.Session, reminders []time.Time) (err error) {
 
-	// Load the current reminders
-	taskReminders, err := getRemindersForTasks([]int64{t.ID})
+	_, err = s.
+		Where("task_id = ?", t.ID).
+		Delete(&TaskReminder{})
 	if err != nil {
-		return err
+		return
 	}
 
-	t.Reminders = make([]time.Time, 0, len(taskReminders))
-	for _, reminder := range taskReminders {
-		t.Reminders = append(t.Reminders, reminder.Reminder)
-	}
-
-	// If we're removing everything, delete all reminders right away
-	if len(reminders) == 0 && len(t.Reminders) > 0 {
-		_, err = s.Where("task_id = ?", t.ID).
-			Delete(TaskReminder{})
-		t.Reminders = nil
-		return err
-	}
-
-	// If we didn't change anything (from 0 to zero) don't do anything.
-	if len(reminders) == 0 && len(t.Reminders) == 0 {
-		return nil
-	}
-
-	// Make a hashmap of the new reminders for easier comparison
-	newReminders := make(map[time.Time]*TaskReminder, len(reminders))
-	for _, newReminder := range reminders {
-		newReminders[newReminder] = &TaskReminder{Reminder: newReminder}
-	}
-
-	// Get old reminders to delete
-	var found bool
-	var remindersToDelete []time.Time
-	oldReminders := make(map[time.Time]*TaskReminder, len(t.Reminders))
-	for _, oldReminder := range t.Reminders {
-		found = false
-		// If a new reminder is already in the list with old reminders
-		if newReminders[oldReminder] != nil {
-			found = true
-		}
-
-		// Put all reminders which are only on the old list to the trash
-		if !found {
-			remindersToDelete = append(remindersToDelete, oldReminder)
-		}
-
-		oldReminders[oldReminder] = &TaskReminder{Reminder: oldReminder}
-	}
-
-	// Delete all reminders not passed
-	if len(remindersToDelete) > 0 {
-		_, err = s.In("reminder", remindersToDelete).
-			And("task_id = ?", t.ID).
-			Delete(TaskReminder{})
-		if err != nil {
-			return err
-		}
-	}
-
-	// Loop through our reminders and add them
+	// Loop through all reminders and add them
 	for _, r := range reminders {
-		// Check if the reminder already exists and only inserts it if not
-		if oldReminders[r] != nil {
-			// continue outer loop
-			continue
-		}
-
-		// Add the new reminder
-		_, err = s.Insert(TaskReminder{TaskID: t.ID, Reminder: r})
+		_, err = s.Insert(&TaskReminder{TaskID: t.ID, Reminder: r})
 		if err != nil {
 			return err
 		}
