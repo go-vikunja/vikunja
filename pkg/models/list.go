@@ -50,6 +50,9 @@ type List struct {
 	// Deprecated: you should use the dedicated task list endpoint because it has support for pagination and filtering
 	Tasks []*Task `xorm:"-" json:"-"`
 
+	// Only used for migration.
+	Buckets []*Bucket `xorm:"-" json:"-"`
+
 	// Whether or not a list is archived.
 	IsArchived bool `xorm:"not null default false" json:"is_archived" query:"is_archived"`
 

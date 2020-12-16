@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"sort"
 	"strings"
 	"time"
 
@@ -151,6 +152,15 @@ type reminder struct {
 	IsDeleted int64    `json:"is_deleted"`
 }
 
+type section struct {
+	ID           int64     `json:"id"`
+	DateAdded    time.Time `json:"date_added"`
+	IsDeleted    bool      `json:"is_deleted"`
+	Name         string    `json:"name"`
+	ProjectID    int64     `json:"project_id"`
+	SectionOrder int64     `json:"section_order"`
+}
+
 type sync struct {
 	Projects     []*project     `json:"projects"`
 	Items        []*item        `json:"items"`
@@ -158,6 +168,7 @@ type sync struct {
 	Notes        []*note        `json:"notes"`
 	ProjectNotes []*projectNote `json:"project_notes"`
 	Reminders    []*reminder    `json:"reminders"`
+	Sections     []*section     `json:"sections"`
 }
 
 var todoistColors = map[int64]string{}
@@ -258,6 +269,22 @@ func convertTodoistToVikunja(sync *sync) (fullVikunjaHierachie []*models.Namespa
 		newNamespace.Lists = append(newNamespace.Lists, list)
 	}
 
+	sort.Slice(sync.Sections, func(i, j int) bool {
+		return sync.Sections[i].SectionOrder < sync.Sections[j].SectionOrder
+	})
+
+	for _, section := range sync.Sections {
+		if section.IsDeleted || section.ProjectID == 0 {
+			continue
+		}
+
+		lists[section.ProjectID].Buckets = append(lists[section.ProjectID].Buckets, &models.Bucket{
+			ID:      section.ID,
+			Title:   section.Name,
+			Created: section.DateAdded,
+		})
+	}
+
 	for _, label := range sync.Labels {
 		labels[label.ID] = &models.Label{
 			Title:    label.Name,
@@ -267,9 +294,10 @@ func convertTodoistToVikunja(sync *sync) (fullVikunjaHierachie []*models.Namespa
 
 	for _, i := range sync.Items {
 		task := &models.Task{
-			Title:   i.Content,
-			Created: i.DateAdded.In(config.GetTimeZone()),
-			Done:    i.Checked == 1,
+			Title:    i.Content,
+			Created:  i.DateAdded.In(config.GetTimeZone()),
+			Done:     i.Checked == 1,
+			BucketID: i.SectionID,
 		}
 
 		// Only try to parse the task done at date if the task is actually done

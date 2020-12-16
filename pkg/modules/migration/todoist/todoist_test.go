@@ -143,7 +143,18 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 			makeTestItem(400000106, 396936926, true, true, true),
 			makeTestItem(400000107, 396936926, false, false, true),
 			makeTestItem(400000108, 396936926, false, false, true),
-			makeTestItem(400000109, 396936926, false, false, true),
+			{
+				ID:            400000109,
+				UserID:        1855589,
+				ProjectID:     396936926,
+				Content:       "Task400000109",
+				Priority:      1,
+				ChildOrder:    1,
+				Checked:       1,
+				DateAdded:     time1,
+				DateCompleted: time3,
+				SectionID:     1234,
+			},
 
 			makeTestItem(400000007, 396936927, true, false, false),
 			makeTestItem(400000008, 396936927, true, false, false),
@@ -311,6 +322,13 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 				},
 			},
 		},
+		Sections: []*section{
+			{
+				ID:        1234,
+				Name:      "Some Bucket",
+				ProjectID: 396936926,
+			},
+		},
 	}
 
 	vikunjaLabels := []*models.Label{
@@ -342,6 +360,12 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 					Title:       "Project1",
 					Description: "Lorem Ipsum dolor sit amet\nLorem Ipsum dolor sit amet 2\nLorem Ipsum dolor sit amet 3",
 					HexColor:    todoistColors[30],
+					Buckets: []*models.Bucket{
+						{
+							ID:    1234,
+							Title: "Some Bucket",
+						},
+					},
 					Tasks: []*models.Task{
 						{
 							Title:       "Task400000000",
@@ -434,10 +458,11 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 							DoneAt:  time3,
 						},
 						{
-							Title:   "Task400000109",
-							Done:    true,
-							Created: time1,
-							DoneAt:  time3,
+							Title:    "Task400000109",
+							Done:     true,
+							Created:  time1,
+							DoneAt:   time3,
+							BucketID: 1234,
 						},
 					},
 				},

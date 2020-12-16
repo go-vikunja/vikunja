@@ -45,9 +45,10 @@ func InsertFromStructure(str []*models.NamespaceWithLists, user *user.User) (err
 
 		// Create all lists
 		for _, l := range n.Lists {
-			// The tasks slice is going to be reset during the creation of the list so we rescue it here to be able
-			// to still loop over the tasks aftere the list was created.
+			// The tasks and bucket slices are going to be reset during the creation of the list so we rescue it here
+			// to be able to still loop over them aftere the list was created.
 			tasks := l.Tasks
+			originalBuckets := l.Buckets
 
 			l.NamespaceID = n.ID
 			err = l.Create(user)
@@ -56,10 +57,36 @@ func InsertFromStructure(str []*models.NamespaceWithLists, user *user.User) (err
 			}
 
 			log.Debugf("[creating structure] Created list %d", l.ID)
+
+			// Create all buckets
+			buckets := make(map[int64]*models.Bucket) // old bucket id is the key
+			if len(l.Buckets) > 0 {
+				log.Debugf("[creating structure] Creating %d buckets", len(l.Buckets))
+			}
+			for _, bucket := range originalBuckets {
+				oldID := bucket.ID
+				bucket.ID = 0 // We want a new id
+				bucket.ListID = l.ID
+				err = bucket.Create(user)
+				if err != nil {
+					return
+				}
+				buckets[oldID] = bucket
+				log.Debugf("[creating structure] Created bucket %d, old ID was %d", bucket.ID, oldID)
+			}
+
 			log.Debugf("[creating structure] Creating %d tasks", len(tasks))
 
 			// Create all tasks
 			for _, t := range tasks {
+				bucket, exists := buckets[t.BucketID]
+				if exists {
+					t.BucketID = bucket.ID
+				} else if t.BucketID > 0 {
+					log.Debugf("[creating structure] No bucket created for original bucket id %d", t.BucketID)
+					t.BucketID = 0
+				}
+
 				t.ListID = l.ID
 				err = t.Create(user)
 				if err != nil {
@@ -150,6 +177,9 @@ func InsertFromStructure(str []*models.NamespaceWithLists, user *user.User) (err
 					log.Debugf("[creating structure] Associated task %d with label %d", t.ID, lb.ID)
 				}
 			}
+
+			l.Tasks = tasks
+			l.Buckets = originalBuckets
 		}
 	}
 

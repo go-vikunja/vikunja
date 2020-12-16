@@ -42,6 +42,12 @@ func TestInsertFromStructure(t *testing.T) {
 					{
 						Title:       "Testlist1",
 						Description: "Something",
+						Buckets: []*models.Bucket{
+							{
+								ID:    1234,
+								Title: "Test Bucket",
+							},
+						},
 						Tasks: []*models.Task{
 							{
 								Title:       "Task1",
@@ -92,6 +98,14 @@ func TestInsertFromStructure(t *testing.T) {
 									},
 								},
 							},
+							{
+								Title:    "Task in a bucket",
+								BucketID: 1234,
+							},
+							{
+								Title:    "Task in a nonexisting bucket",
+								BucketID: 1111,
+							},
 						},
 					},
 				},
@@ -99,5 +113,23 @@ func TestInsertFromStructure(t *testing.T) {
 		}
 		err := InsertFromStructure(testStructure, u)
 		assert.NoError(t, err)
+		db.AssertExists(t, "namespaces", map[string]interface{}{
+			"title":       testStructure[0].Namespace.Title,
+			"description": testStructure[0].Namespace.Description,
+		}, false)
+		db.AssertExists(t, "list", map[string]interface{}{
+			"title":       testStructure[0].Lists[0].Title,
+			"description": testStructure[0].Lists[0].Description,
+		}, false)
+		db.AssertExists(t, "tasks", map[string]interface{}{
+			"title":     testStructure[0].Lists[0].Tasks[5].Title,
+			"bucket_id": testStructure[0].Lists[0].Buckets[0].ID,
+		}, false)
+		db.AssertMissing(t, "tasks", map[string]interface{}{
+			"title":     testStructure[0].Lists[0].Tasks[6].Title,
+			"bucket_id": 1111, // No task with that bucket should exist
+		})
+		assert.NotEqual(t, 0, testStructure[0].Lists[0].Tasks[0].BucketID) // Should get the default bucket
+		assert.NotEqual(t, 0, testStructure[0].Lists[0].Tasks[6].BucketID) // Should get the default bucket
 	})
 }
