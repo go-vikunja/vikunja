@@ -88,7 +88,7 @@ cors:
   # Note: If you want to put the frontend and the api on seperate domains or ports, you will need to enable this.
   #       Otherwise the frontend won't be able to make requests to the api through the browser.
   enable: true
-  # A list of origins which may access the api.
+  # A list of origins which may access the api. These need to include the protocol (`http://` or `https://`) and port, if any.
   origins:
     - "*"
   # How long (in seconds) the results of a preflight request can be cached.
