@@ -16,6 +16,11 @@
       margin-left: 0;
       padding-top: 1.5em;
       min-height: calc(100vh - 4rem);
+
+      &.is-menu-enabled {
+        min-width: 100%;
+        margin-left: 0;
+      }
     }
 
     .card {

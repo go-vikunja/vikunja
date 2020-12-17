@@ -153,6 +153,9 @@ export default {
 	created() {
 		window.addEventListener('resize', this.resize)
 	},
+	mounted() {
+		this.resize()
+	},
 	methods: {
 		toggleFavoriteList(list) {
 			// The favorites pseudo list is always favorite
