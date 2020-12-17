@@ -64,7 +64,7 @@ export default {
 			isMigrating: false,
 			lastMigrationDate: null,
 			message: '',
-			wunderlistCode: '',
+			migratorAuthCode: '',
 		}
 	},
 	props: {
@@ -82,13 +82,25 @@ export default {
 		this.getAuthUrl()
 		this.message = ''
 
-		if (typeof this.$route.query.code !== 'undefined') {
-			this.wunderlistCode = this.$route.query.code
+		if (typeof this.$route.query.code !== 'undefined' || location.hash.startsWith('#token=')) {
+			if (location.hash.startsWith('#token=')) {
+				this.migratorAuthCode = location.hash.substring(7)
+				console.log(location.hash.substring(7))
+			} else {
+				this.migratorAuthCode = this.$route.query.code
+			}
 			this.migrationService.getStatus()
 				.then(r => {
 					if (r.time) {
-						this.lastMigrationDate = new Date(r.time)
-						return
+						if (typeof r.time === 'string' && r.time.startsWith('0001-')) {
+							this.lastMigrationDate = null
+						} else {
+							this.lastMigrationDate = new Date(r.time)
+						}
+
+						if (this.lastMigrationDate) {
+							return
+						}
 					}
 					this.migrate()
 				})
@@ -109,10 +121,12 @@ export default {
 		},
 		migrate() {
 			this.isMigrating = true
-			this.lastMigrationDate = 0
-			this.migrationService.migrate({code: this.wunderlistCode})
+			this.lastMigrationDate = null
+			this.message = ''
+			this.migrationService.migrate({code: this.migratorAuthCode})
 				.then(r => {
 					this.message = r.message
+					this.$store.dispatch('namespaces/loadNamespaces')
 				})
 				.catch(e => {
 					this.error(e, this)
