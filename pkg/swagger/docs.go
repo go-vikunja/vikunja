@@ -2609,6 +2609,113 @@ var doc = `{
                 }
             }
         },
+        "/migration/trello/auth": {
+            "get": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Returns the auth url where the user needs to get its auth code. This code can then be used to migrate everything from trello to Vikunja.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "migration"
+                ],
+                "summary": "Get the auth url from trello",
+                "responses": {
+                    "200": {
+                        "description": "The auth url.",
+                        "schema": {
+                            "$ref": "#/definitions/handler.AuthURL"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/migration/trello/migrate": {
+            "post": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Migrates all projects, tasks, notes, reminders, subtasks and files from trello to vikunja.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "migration"
+                ],
+                "summary": "Migrate all lists, tasks etc. from trello",
+                "parameters": [
+                    {
+                        "description": "The auth token previously obtained from the auth url. See the docs for /migration/trello/auth.",
+                        "name": "migrationCode",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/trello.Migration"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A message telling you everything was migrated successfully.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/migration/trello/status": {
+            "get": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Returns if the current user already did the migation or not. This is useful to show a confirmation message in the frontend if the user is trying to do the same migration again.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "migration"
+                ],
+                "summary": "Get migration status",
+                "responses": {
+                    "200": {
+                        "description": "The migration status",
+                        "schema": {
+                            "$ref": "#/definitions/migration.Status"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
         "/migration/wunderlist/auth": {
             "get": {
                 "security": [
@@ -7619,6 +7726,14 @@ var doc = `{
             }
         },
         "todoist.Migration": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                }
+            }
+        },
+        "trello.Migration": {
             "type": "object",
             "properties": {
                 "code": {

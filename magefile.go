@@ -24,9 +24,6 @@ import (
 	"context"
 	"crypto/sha256"
 	"fmt"
-	"github.com/magefile/mage/mg"
-	"golang.org/x/sync/errgroup"
-	"gopkg.in/yaml.v3"
 	"io"
 	"io/ioutil"
 	"os"
@@ -35,6 +32,10 @@ import (
 	"runtime"
 	"strings"
 	"time"
+
+	"github.com/magefile/mage/mg"
+	"golang.org/x/sync/errgroup"
+	"gopkg.in/yaml.v3"
 )
 
 const (
@@ -65,6 +66,7 @@ var (
 		"release:os-package":   Release.OsPackage,
 		"dev:create-migration": Dev.CreateMigration,
 		"generate-docs":        GenerateDocs,
+		"check:golangci-fix":   Check.GolangciFix,
 	}
 )
 

@@ -161,6 +161,15 @@ If not empty, enables logging of crashes and unhandled errors in sentry.
 
 Default: `<empty>`
 
+### testingtoken
+
+If not empty, this will enable `/test/{table}` endpoints which allow to put any content in the database.
+Used to reset the db before frontend tests. Because this is quite a dangerous feature allowing for lots of harm,
+each request made to this endpoint neefs to provide an `Authorization: <token>` header with the token from below. <br/>
+**You should never use this unless you know exactly what you're doing**
+
+Default: `<empty>`
+
 ---
 
 ## database
@@ -300,7 +309,7 @@ Default: `true`
 
 ### origins
 
-A list of origins which may access the api.
+A list of origins which may access the api. These need to include the protocol (`http://` or `https://`) and port, if any.
 
 Default: `<empty>`
 
@@ -500,6 +509,10 @@ These are the settings for the wunderlist migrator
 Default: `<empty>`
 
 ### todoist
+
+Default: `<empty>`
+
+### trello
 
 Default: `<empty>`
 

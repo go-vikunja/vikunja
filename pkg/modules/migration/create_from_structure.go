@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"io/ioutil"
 
+	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
@@ -49,6 +50,8 @@ func InsertFromStructure(str []*models.NamespaceWithLists, user *user.User) (err
 			// to be able to still loop over them aftere the list was created.
 			tasks := l.Tasks
 			originalBuckets := l.Buckets
+			originalBackgroundInformation := l.BackgroundInformation
+			needsDefaultBucket := false
 
 			l.NamespaceID = n.ID
 			err = l.Create(user)
@@ -57,6 +60,23 @@ func InsertFromStructure(str []*models.NamespaceWithLists, user *user.User) (err
 			}
 
 			log.Debugf("[creating structure] Created list %d", l.ID)
+
+			backgroundFile, is := originalBackgroundInformation.(*bytes.Buffer)
+			if is {
+				log.Debugf("[creating structure] Creating a background file for list %d", l.ID)
+
+				file, err := files.Create(backgroundFile, "", uint64(backgroundFile.Len()), user)
+				if err != nil {
+					return err
+				}
+
+				err = models.SetListBackground(l.ID, file)
+				if err != nil {
+					return err
+				}
+
+				log.Debugf("[creating structure] Created a background file as new file %d for list %d", file.ID, l.ID)
+			}
 
 			// Create all buckets
 			buckets := make(map[int64]*models.Bucket) // old bucket id is the key
@@ -85,6 +105,9 @@ func InsertFromStructure(str []*models.NamespaceWithLists, user *user.User) (err
 				} else if t.BucketID > 0 {
 					log.Debugf("[creating structure] No bucket created for original bucket id %d", t.BucketID)
 					t.BucketID = 0
+				}
+				if !exists || t.BucketID == 0 {
+					needsDefaultBucket = true
 				}
 
 				t.ListID = l.ID
@@ -175,6 +198,20 @@ func InsertFromStructure(str []*models.NamespaceWithLists, user *user.User) (err
 						return err
 					}
 					log.Debugf("[creating structure] Associated task %d with label %d", t.ID, lb.ID)
+				}
+			}
+
+			// All tasks brought their own bucket with them, therefore the newly created default bucket is just extra space
+			if !needsDefaultBucket {
+				b := &models.Bucket{ListID: l.ID}
+				bucketsIn, _, _, err := b.ReadAll(user, "", 1, 1)
+				if err != nil {
+					return err
+				}
+				buckets := bucketsIn.([]*models.Bucket)
+				err = buckets[0].Delete()
+				if err != nil {
+					return err
 				}
 			}
 

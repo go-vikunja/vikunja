@@ -19,6 +19,8 @@ package v1
 import (
 	"net/http"
 
+	"code.vikunja.io/api/pkg/modules/migration/trello"
+
 	"code.vikunja.io/api/pkg/log"
 
 	"code.vikunja.io/api/pkg/config"
@@ -113,6 +115,10 @@ func Info(c echo.Context) error {
 	}
 	if config.MigrationTodoistEnable.GetBool() {
 		m := &todoist.Migration{}
+		info.AvailableMigrators = append(info.AvailableMigrators, m.Name())
+	}
+	if config.MigrationTrelloEnable.GetBool() {
+		m := &trello.Migration{}
 		info.AvailableMigrators = append(info.AvailableMigrators, m.Name())
 	}
 

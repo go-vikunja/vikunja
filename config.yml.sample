@@ -174,7 +174,7 @@ migration:
   todoist:
     # Wheter to enable the todoist migrator or not
     enable: false
-    # The client id, required for making requests to the wunderlist api
+    # The client id, required for making requests to the todoist api
     # You need to register your vikunja instance at https://developer.todoist.com/appconsole.html to get this
     clientid:
     # The client secret, also required for making requests to the todoist api
@@ -185,6 +185,18 @@ migration:
     # with the code obtained from the todoist api.
     # Note that the vikunja frontend expects this to be /migrate/todoist
     redirecturl:
+  trello:
+    # Wheter to enable the trello migrator or not
+    enable: false
+    # The client id, required for making requests to the trello api
+    # You need to register your vikunja instance at https://trello.com/app-key (log in before you visit that link) to get this
+    key:
+    # The url where clients are redirected after they authorized Vikunja to access their trello cards.
+    # This needs to match the url you entered when registering your Vikunja instance at trello.
+    # This is usually the frontend url where the frontend then makes a request to /migration/trello/migrate
+    # with the code obtained from the trello api.
+    # Note that the vikunja frontend expects this to end on /migrate/trello.
+    redirecturl: <frontend url>/migrate/trello
 
 avatar:
   # When using gravatar, this is the duration in seconds until a cached gravatar user avatar expires

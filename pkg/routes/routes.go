@@ -50,6 +50,8 @@ import (
 	"strings"
 	"time"
 
+	"code.vikunja.io/api/pkg/modules/migration/trello"
+
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
@@ -529,6 +531,16 @@ func registerAPIRoutes(a *echo.Group) {
 			},
 		}
 		todoistMigrationHandler.RegisterRoutes(m)
+	}
+
+	// Trello
+	if config.MigrationTrelloEnable.GetBool() {
+		trelloMigrationHandler := &migrationHandler.MigrationWeb{
+			MigrationStruct: func() migration.Migrator {
+				return &trello.Migration{}
+			},
+		}
+		trelloMigrationHandler.RegisterRoutes(m)
 	}
 
 	// List Backgrounds

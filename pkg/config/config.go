@@ -118,6 +118,9 @@ const (
 	MigrationTodoistClientID        Key = `migration.todoist.clientid`
 	MigrationTodoistClientSecret    Key = `migration.todoist.clientsecret`
 	MigrationTodoistRedirectURL     Key = `migration.todoist.redirecturl`
+	MigrationTrelloEnable           Key = `migration.trello.enable`
+	MigrationTrelloKey              Key = `migration.trello.key`
+	MigrationTrelloRedirectURL      Key = `migration.trello.redirecturl`
 
 	CorsEnable  Key = `cors.enable`
 	CorsOrigins Key = `cors.origins`
@@ -288,6 +291,7 @@ func InitDefaultConfig() {
 	// Migration
 	MigrationWunderlistEnable.setDefault(false)
 	MigrationTodoistEnable.setDefault(false)
+	MigrationTrelloEnable.setDefault(false)
 	// Avatar
 	AvatarGravaterExpiration.setDefault(3600)
 	// List Backgrounds
@@ -339,6 +343,10 @@ func InitConfig() {
 
 	if AuthOpenIDRedirectURL.GetString() == "" {
 		AuthOpenIDRedirectURL.Set(ServiceFrontendurl.GetString() + "auth/openid/")
+	}
+
+	if MigrationTrelloRedirectURL.GetString() == "" {
+		MigrationTrelloRedirectURL.Set(ServiceFrontendurl.GetString() + "migrate/trello")
 	}
 
 	log.Printf("Using config file: %s", viper.ConfigFileUsed())

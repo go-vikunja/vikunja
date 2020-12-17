@@ -21,6 +21,7 @@ require (
 	code.vikunja.io/web v0.0.0-20200809154828-8767618f181f
 	dmitri.shuralyov.com/go/generated v0.0.0-20170818220700-b1254a446363 // indirect
 	gitea.com/xorm/xorm-redis-cache v0.2.0
+	github.com/adlio/trello v1.8.0
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
 	github.com/asaskevich/govalidator v0.0.0-20200907205600-7a23bdc65eef
 	github.com/beevik/etree v1.1.0 // indirect
@@ -28,7 +29,7 @@ require (
 	github.com/client9/misspell v0.3.4
 	github.com/coreos/go-oidc v2.2.1+incompatible
 	github.com/cweill/gotests v1.5.3
-	github.com/d4l3k/messagediff v1.2.1 // indirect
+	github.com/d4l3k/messagediff v1.2.1
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/disintegration/imaging v1.6.2
 	github.com/dustinkirkland/golang-petname v0.0.0-20191129215211-8e5a1ed0cff0
@@ -96,6 +97,7 @@ require (
 )
 
 replace (
+	github.com/adlio/trello => github.com/kolaente/trello v1.7.1-0.20201216234312-5c4ef79b531e
 	github.com/coreos/bbolt => go.etcd.io/bbolt v1.3.4
 	github.com/coreos/go-systemd => github.com/coreos/go-systemd/v22 v22.0.0
 	github.com/hpcloud/tail => github.com/jeffbean/tail v1.0.1 // See https://github.com/hpcloud/tail/pull/159

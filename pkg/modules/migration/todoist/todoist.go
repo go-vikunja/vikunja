@@ -382,18 +382,7 @@ func convertTodoistToVikunja(sync *sync) (fullVikunjaHierachie []*models.Namespa
 		// Only add the attachment if there's something to download
 		if len(n.FileAttachment.FileURL) > 0 {
 			// Download the attachment and put it in the file
-			req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, n.FileAttachment.FileURL, nil)
-			if err != nil {
-				return nil, err
-			}
-			hc := http.Client{}
-			resp, err := hc.Do(req)
-			if err != nil {
-				return nil, err
-			}
-			defer resp.Body.Close()
-			buf := &bytes.Buffer{}
-			_, err = buf.ReadFrom(resp.Body)
+			buf, err := migration.DownloadFile(n.FileAttachment.FileURL)
 			if err != nil {
 				return nil, err
 			}
