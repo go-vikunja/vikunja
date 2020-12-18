@@ -37,11 +37,10 @@ require (
 	github.com/gabriel-vasile/mimetype v1.1.2
 	github.com/getsentry/sentry-go v0.9.0
 	github.com/go-errors/errors v1.1.1
-	github.com/go-redis/redis/v7 v7.4.0
+	github.com/go-redis/redis/v8 v8.4.2
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/go-testfixtures/testfixtures/v3 v3.4.1
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
-	github.com/google/go-cmp v0.5.2 // indirect
 	github.com/gordonklaus/ineffassign v0.0.0-20201107091007-3b93a8888063
 	github.com/iancoleman/strcase v0.1.2
 	github.com/imdario/mergo v0.3.11
@@ -57,7 +56,6 @@ require (
 	github.com/mitchellh/mapstructure v1.3.2 // indirect
 	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
 	github.com/olekukonko/tablewriter v0.0.4
-	github.com/onsi/ginkgo v1.13.0 // indirect
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/pelletier/go-toml v1.8.0 // indirect
 	github.com/pquerna/cachecontrol v0.0.0-20200921180117-858c6e7e6b7e // indirect
@@ -73,7 +71,7 @@ require (
 	github.com/spf13/viper v1.7.1
 	github.com/stretchr/testify v1.6.1
 	github.com/swaggo/swag v1.7.0
-	github.com/ulule/limiter/v3 v3.5.0
+	github.com/ulule/limiter/v3 v3.8.0
 	golang.org/x/crypto v0.0.0-20201217014255-9d1352758620
 	golang.org/x/image v0.0.0-20201208152932-35266b937fa6
 	golang.org/x/lint v0.0.0-20201208152925-83fdc39ff7b5

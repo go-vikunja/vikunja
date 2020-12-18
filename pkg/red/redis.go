@@ -17,9 +17,11 @@
 package red
 
 import (
+	"context"
+
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
-	"github.com/go-redis/redis/v7"
+	"github.com/go-redis/redis/v8"
 )
 
 var r *redis.Client
@@ -44,7 +46,7 @@ func InitRedis() {
 		DB:       config.RedisDB.GetInt(),
 	})
 
-	err := r.Ping().Err()
+	err := r.Ping(context.Background()).Err()
 	if err != nil {
 		log.Fatal(err.Error())
 	}
