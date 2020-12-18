@@ -141,6 +141,22 @@ func GetUserWithEmail(user *User) (userOut *User, err error) {
 	return getUser(user, true)
 }
 
+// GetUsersByIDs returns a map of users from a slice of user ids
+func GetUsersByIDs(userIDs []int64) (users map[int64]*User, err error) {
+	users = make(map[int64]*User)
+	err = x.In("id", userIDs).Find(&users)
+	if err != nil {
+		return
+	}
+
+	// Obfuscate all user emails
+	for _, u := range users {
+		u.Email = ""
+	}
+
+	return
+}
+
 // getUser is a small helper function to avoid having duplicated code for almost the same use case
 func getUser(user *User, withEmail bool) (userOut *User, err error) {
 	userOut = &User{} // To prevent a panic if user is nil

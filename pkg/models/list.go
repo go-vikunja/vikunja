@@ -287,6 +287,13 @@ func GetListSimplByTaskID(taskID int64) (l *List, err error) {
 	return &list, nil
 }
 
+// GetListsByIDs returns a map of lists from a slice with list ids
+func GetListsByIDs(listIDs []int64) (lists map[int64]*List, err error) {
+	lists = make(map[int64]*List, len(listIDs))
+	err = x.In("id", listIDs).Find(&lists)
+	return
+}
+
 type listOptions struct {
 	search     string
 	user       *user.User

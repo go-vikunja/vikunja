@@ -431,26 +431,8 @@ func (t *Task) setIdentifier(list *List) {
 	t.Identifier = list.Identifier + "-" + strconv.FormatInt(t.Index, 10)
 }
 
-// This function takes a map with pointers and returns a slice with pointers to tasks
-// It adds more stuff like assignees/labels/etc to a bunch of tasks
-func addMoreInfoToTasks(taskMap map[int64]*Task) (err error) {
-
-	// No need to iterate over users and stuff if the list doesn't has tasks
-	if len(taskMap) == 0 {
-		return
-	}
-
-	// Get all users & task ids and put them into the array
-	var userIDs []int64
-	var taskIDs []int64
-	var listIDs []int64
-	for _, i := range taskMap {
-		taskIDs = append(taskIDs, i.ID)
-		userIDs = append(userIDs, i.CreatedByID)
-		listIDs = append(listIDs, i.ListID)
-	}
-
-	// Get all assignees
+// Get all assignees
+func addAssigneesToTasks(taskIDs []int64, taskMap map[int64]*Task) (err error) {
 	taskAssignees, err := getRawTaskAssigneesForTasks(taskIDs)
 	if err != nil {
 		return
@@ -463,7 +445,11 @@ func addMoreInfoToTasks(taskMap map[int64]*Task) (err error) {
 		}
 	}
 
-	// Get all labels for all the tasks
+	return
+}
+
+// Get all labels for all the tasks
+func addLabelsToTasks(taskIDs []int64, taskMap map[int64]*Task) (err error) {
 	labels, _, _, err := getLabelsByTaskIDs(&LabelByTaskIDsOptions{
 		TaskIDs: taskIDs,
 		Page:    -1,
@@ -477,29 +463,24 @@ func addMoreInfoToTasks(taskMap map[int64]*Task) (err error) {
 		}
 	}
 
-	// Get task attachments
+	return
+}
+
+// Get task attachments
+func addAttachmentsToTasks(taskIDs []int64, taskMap map[int64]*Task) (err error) {
 	attachments, err := getTaskAttachmentsByTaskIDs(taskIDs)
 	if err != nil {
 		return
 	}
 
-	// Get all users of a task
-	// aka the ones who created a task
-	users := make(map[int64]*user.User)
-	err = x.In("id", userIDs).Find(&users)
-	if err != nil {
-		return
-	}
-
-	// Obfuscate all user emails
-	for _, u := range users {
-		u.Email = ""
-	}
-
-	// Put the users and files in task attachments
 	for _, a := range attachments {
 		taskMap[a.TaskID].Attachments = append(taskMap[a.TaskID].Attachments, a)
 	}
+	return
+}
+
+func getTaskReminderMap(taskIDs []int64) (taskReminders map[int64][]time.Time, err error) {
+	taskReminders = make(map[int64][]time.Time)
 
 	// Get all reminders and put them in a map to have it easier later
 	reminders, err := getRemindersForTasks(taskIDs)
@@ -507,35 +488,14 @@ func addMoreInfoToTasks(taskMap map[int64]*Task) (err error) {
 		return
 	}
 
-	taskReminders := make(map[int64][]time.Time)
 	for _, r := range reminders {
 		taskReminders[r.TaskID] = append(taskReminders[r.TaskID], r.Reminder)
 	}
 
-	// Get all identifiers
-	lists := make(map[int64]*List, len(listIDs))
-	err = x.In("id", listIDs).Find(&lists)
-	if err != nil {
-		return
-	}
+	return
+}
 
-	// Add all user objects to the appropriate tasks
-	for _, task := range taskMap {
-
-		// Make created by user objects
-		task.CreatedBy = users[task.CreatedByID]
-
-		// Add the reminders
-		task.Reminders = taskReminders[task.ID]
-
-		// Prepare the subtasks
-		task.RelatedTasks = make(RelatedTaskMap)
-
-		// Build the task identifier from the list identifier and task index
-		task.setIdentifier(lists[task.ListID])
-	}
-
-	// Get all related tasks
+func addRelatedTasksToTasks(taskIDs []int64, taskMap map[int64]*Task) (err error) {
 	relatedTasks := []*TaskRelation{}
 	err = x.In("task_id", taskIDs).Find(&relatedTasks)
 	if err != nil {
@@ -560,6 +520,77 @@ func addMoreInfoToTasks(taskMap map[int64]*Task) (err error) {
 		taskMap[rt.TaskID].RelatedTasks[rt.RelationKind] = append(taskMap[rt.TaskID].RelatedTasks[rt.RelationKind], fullRelatedTasks[rt.OtherTaskID])
 	}
 
+	return
+}
+
+// This function takes a map with pointers and returns a slice with pointers to tasks
+// It adds more stuff like assignees/labels/etc to a bunch of tasks
+func addMoreInfoToTasks(taskMap map[int64]*Task) (err error) {
+
+	// No need to iterate over users and stuff if the list doesn't have tasks
+	if len(taskMap) == 0 {
+		return
+	}
+
+	// Get all users & task ids and put them into the array
+	var userIDs []int64
+	var taskIDs []int64
+	var listIDs []int64
+	for _, i := range taskMap {
+		taskIDs = append(taskIDs, i.ID)
+		userIDs = append(userIDs, i.CreatedByID)
+		listIDs = append(listIDs, i.ListID)
+	}
+
+	err = addAssigneesToTasks(taskIDs, taskMap)
+	if err != nil {
+		return
+	}
+
+	err = addLabelsToTasks(taskIDs, taskMap)
+	if err != nil {
+		return
+	}
+
+	err = addAttachmentsToTasks(taskIDs, taskMap)
+	if err != nil {
+		return
+	}
+
+	users, err := user.GetUsersByIDs(userIDs)
+	if err != nil {
+		return
+	}
+
+	taskReminders, err := getTaskReminderMap(taskIDs)
+	if err != nil {
+		return err
+	}
+
+	// Get all identifiers
+	lists, err := GetListsByIDs(listIDs)
+	if err != nil {
+		return err
+	}
+
+	// Add all objects to their tasks
+	for _, task := range taskMap {
+
+		// Make created by user objects
+		task.CreatedBy = users[task.CreatedByID]
+
+		// Add the reminders
+		task.Reminders = taskReminders[task.ID]
+
+		// Prepare the subtasks
+		task.RelatedTasks = make(RelatedTaskMap)
+
+		// Build the task identifier from the list identifier and task index
+		task.setIdentifier(lists[task.ListID])
+	}
+
+	// Get all related tasks
+	err = addRelatedTasksToTasks(taskIDs, taskMap)
 	return
 }
 
