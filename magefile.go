@@ -648,7 +648,7 @@ func (Release) Zip() error {
 // Creates a debian repo structure
 func (Release) Reprepro() {
 	mg.Deps(setVersion, setBinLocation)
-	runAndStreamOutput("reprepro_expect", "debian", "includedeb", "strech", RootPath+"/"+DIST+"/os-packages/"+Executable+"_"+strings.ReplaceAll(VersionNumber, "v0", "0")+"_amd64.deb")
+	runAndStreamOutput("reprepro_expect", "debian", "includedeb", "buster", RootPath+"/"+DIST+"/os-packages/"+Executable+"_"+strings.ReplaceAll(VersionNumber, "v0", "0")+"_amd64.deb")
 }
 
 // Creates deb, rpm and apk packages

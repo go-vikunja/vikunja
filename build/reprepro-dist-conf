@@ -1,8 +1,8 @@
 Origin: dl.vikunja.io
 Label: Vikunja
-Codename: strech
+Codename: buster
 Architectures: amd64
 Components: main
 Description: The debian repo for Vikunja builds.
 SignWith: yes
-Pull: strech
+Pull: buster
