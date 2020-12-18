@@ -17,7 +17,6 @@
 package models
 
 import (
-	"strings"
 	"time"
 
 	"code.vikunja.io/api/pkg/files"
@@ -447,43 +446,6 @@ func (l *List) CheckIsArchived() (err error) {
 	return nil
 }
 
-// GenerateListIdentifier generates a unique random list identifier based on the list title.
-// If it is not able to find one, the list identifier will be empty.
-func GenerateListIdentifier(l *List, sess *xorm.Engine) (err error) {
-
-	// The general idea here is to take the title and slice it into pieces, until we found a unique piece.
-
-	var exists = true
-	titleSlug := []rune(strings.ReplaceAll(strings.ToUpper(l.Title), " ", ""))
-
-	// We can save at most 10 characters in the db, so we need to ensure it has at most 10 characters
-	if len(titleSlug) > 10 {
-		titleSlug = titleSlug[0:9]
-	}
-
-	var i = 0
-
-	for exists {
-
-		// Prevent endless looping
-		if i == len(titleSlug) {
-			break
-		}
-
-		// Take a random part of the title slug, starting at the beginning
-		l.Identifier = string(titleSlug[i:])
-		exists, err = sess.
-			Where("identifier = ?", l.Identifier).
-			And("id != ?", l.ID).
-			Exist(&List{})
-		if err != nil {
-			return
-		}
-		i++
-	}
-	return nil
-}
-
 // CreateOrUpdateList updates a list or creates it if it doesn't exist
 func CreateOrUpdateList(list *List) (err error) {
 
@@ -506,14 +468,6 @@ func CreateOrUpdateList(list *List) (err error) {
 		}
 		if exists {
 			return ErrListIdentifierIsNotUnique{Identifier: list.Identifier}
-		}
-	}
-
-	// Generate a random list identifier base on the list title
-	if list.ID == 0 && list.Identifier == "" {
-		err = GenerateListIdentifier(list, x)
-		if err != nil {
-			return
 		}
 	}
 
