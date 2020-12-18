@@ -248,7 +248,7 @@ func registerAPIRoutes(a *echo.Group) {
 	n.GET("/info", apiv1.Info)
 
 	// Avatar endpoint
-	n.GET("/:username/avatar", apiv1.GetAvatar)
+	n.GET("/avatar/:username", apiv1.GetAvatar)
 
 	// Link share auth
 	if config.ServiceEnableLinkSharing.GetBool() {
