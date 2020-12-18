@@ -30,7 +30,7 @@ import (
 // List represents a list of tasks
 type List struct {
 	// The unique, numeric id of this list.
-	ID int64 `xorm:"int(11) autoincr not null unique pk" json:"id" param:"list"`
+	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id" param:"list"`
 	// The title of the list. You'll see this in the namespace overview.
 	Title string `xorm:"varchar(250) not null" json:"title" valid:"required,runelength(1|250)" minLength:"1" maxLength:"250"`
 	// The description of the list.
@@ -40,8 +40,8 @@ type List struct {
 	// The hex color of this list
 	HexColor string `xorm:"varchar(6) null" json:"hex_color" valid:"runelength(0|6)" maxLength:"6"`
 
-	OwnerID     int64 `xorm:"int(11) INDEX not null" json:"-"`
-	NamespaceID int64 `xorm:"int(11) INDEX not null" json:"namespace_id" param:"namespace"`
+	OwnerID     int64 `xorm:"bigint INDEX not null" json:"-"`
+	NamespaceID int64 `xorm:"bigint INDEX not null" json:"namespace_id" param:"namespace"`
 
 	// The user who created this list.
 	Owner *user.User `xorm:"-" json:"owner" valid:"-"`

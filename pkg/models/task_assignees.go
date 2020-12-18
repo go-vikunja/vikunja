@@ -26,9 +26,9 @@ import (
 
 // TaskAssginee represents an assignment of a user to a task
 type TaskAssginee struct {
-	ID      int64     `xorm:"int(11) autoincr not null unique pk" json:"-"`
-	TaskID  int64     `xorm:"int(11) INDEX not null" json:"-" param:"listtask"`
-	UserID  int64     `xorm:"int(11) INDEX not null" json:"user_id" param:"user"`
+	ID      int64     `xorm:"bigint autoincr not null unique pk" json:"-"`
+	TaskID  int64     `xorm:"bigint INDEX not null" json:"-" param:"listtask"`
+	UserID  int64     `xorm:"bigint INDEX not null" json:"user_id" param:"user"`
 	Created time.Time `xorm:"created not null"`
 
 	web.CRUDable `xorm:"-" json:"-"`

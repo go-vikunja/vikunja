@@ -26,14 +26,14 @@ import (
 // NamespaceUser represents a namespace <-> user relation
 type NamespaceUser struct {
 	// The unique, numeric id of this namespace <-> user relation.
-	ID int64 `xorm:"int(11) autoincr not null unique pk" json:"id" param:"namespace"`
+	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id" param:"namespace"`
 	// The username.
 	Username string `xorm:"-" json:"user_id" param:"user"`
-	UserID   int64  `xorm:"int(11) not null INDEX" json:"-"`
+	UserID   int64  `xorm:"bigint not null INDEX" json:"-"`
 	// The namespace id
-	NamespaceID int64 `xorm:"int(11) not null INDEX" json:"-" param:"namespace"`
+	NamespaceID int64 `xorm:"bigint not null INDEX" json:"-" param:"namespace"`
 	// The right this user has. 0 = Read only, 1 = Read & Write, 2 = Admin. See the docs for more details.
-	Right Right `xorm:"int(11) INDEX not null default 0" json:"right" valid:"length(0|2)" maximum:"2" default:"0"`
+	Right Right `xorm:"bigint INDEX not null default 0" json:"right" valid:"length(0|2)" maximum:"2" default:"0"`
 
 	// A timestamp when this relation was created. You cannot change this value.
 	Created time.Time `xorm:"created not null" json:"created"`

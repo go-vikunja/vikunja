@@ -30,12 +30,12 @@ import (
 // Namespace holds informations about a namespace
 type Namespace struct {
 	// The unique, numeric id of this namespace.
-	ID int64 `xorm:"int(11) autoincr not null unique pk" json:"id" param:"namespace"`
+	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id" param:"namespace"`
 	// The name of this namespace.
 	Title string `xorm:"varchar(250) not null" json:"title" valid:"required,runelength(1|250)" minLength:"1" maxLength:"250"`
 	// The description of the namespace
 	Description string `xorm:"longtext null" json:"description"`
-	OwnerID     int64  `xorm:"int(11) not null INDEX" json:"-"`
+	OwnerID     int64  `xorm:"bigint not null INDEX" json:"-"`
 
 	// The hex color of this namespace
 	HexColor string `xorm:"varchar(6) null" json:"hex_color" valid:"runelength(0|6)" maxLength:"6"`

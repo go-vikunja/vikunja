@@ -24,8 +24,8 @@ import (
 
 // Status represents this migration status
 type Status struct {
-	ID           int64     `xorm:"int(11) autoincr not null unique pk" json:"id"`
-	UserID       int64     `xorm:"int(11) not null" json:"-"`
+	ID           int64     `xorm:"bigint autoincr not null unique pk" json:"id"`
+	UserID       int64     `xorm:"bigint not null" json:"-"`
 	MigratorName string    `xorm:"varchar(255)" json:"migrator_name"`
 	Created      time.Time `xorm:"created not null 'created'" json:"time"`
 }

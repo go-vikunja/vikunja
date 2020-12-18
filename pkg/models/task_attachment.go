@@ -27,11 +27,11 @@ import (
 
 // TaskAttachment is the definition of a task attachment
 type TaskAttachment struct {
-	ID     int64 `xorm:"int(11) autoincr not null unique pk" json:"id" param:"attachment"`
-	TaskID int64 `xorm:"int(11) not null" json:"task_id" param:"task"`
-	FileID int64 `xorm:"int(11) not null" json:"-"`
+	ID     int64 `xorm:"bigint autoincr not null unique pk" json:"id" param:"attachment"`
+	TaskID int64 `xorm:"bigint not null" json:"task_id" param:"task"`
+	FileID int64 `xorm:"bigint not null" json:"-"`
 
-	CreatedByID int64      `xorm:"int(11) not null" json:"-"`
+	CreatedByID int64      `xorm:"bigint not null" json:"-"`
 	CreatedBy   *user.User `xorm:"-" json:"created_by"`
 
 	File *files.File `xorm:"-" json:"file"`

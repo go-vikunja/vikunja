@@ -76,15 +76,15 @@ func (rk RelationKind) isValid() bool {
 // TaskRelation represents a kind of relation between two tasks
 type TaskRelation struct {
 	// The unique, numeric id of this relation.
-	ID int64 `xorm:"int(11) autoincr not null unique pk" json:"-"`
+	ID int64 `xorm:"bigint autoincr not null unique pk" json:"-"`
 	// The ID of the "base" task, the task which has a relation to another.
-	TaskID int64 `xorm:"int(11) not null" json:"task_id" param:"task"`
+	TaskID int64 `xorm:"bigint not null" json:"task_id" param:"task"`
 	// The ID of the other task, the task which is being related.
-	OtherTaskID int64 `xorm:"int(11) not null" json:"other_task_id"`
+	OtherTaskID int64 `xorm:"bigint not null" json:"other_task_id"`
 	// The kind of the relation.
 	RelationKind RelationKind `xorm:"varchar(50) not null" json:"relation_kind"`
 
-	CreatedByID int64 `xorm:"int(11) not null" json:"-"`
+	CreatedByID int64 `xorm:"bigint not null" json:"-"`
 	// The user who created this relation
 	CreatedBy *user.User `xorm:"-" json:"created_by"`
 

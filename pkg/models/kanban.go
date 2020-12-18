@@ -28,11 +28,11 @@ import (
 // Bucket represents a kanban bucket
 type Bucket struct {
 	// The unique, numeric id of this bucket.
-	ID int64 `xorm:"int(11) autoincr not null unique pk" json:"id" param:"bucket"`
+	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id" param:"bucket"`
 	// The title of this bucket.
 	Title string `xorm:"text not null" valid:"required" minLength:"1" json:"title"`
 	// The list this bucket belongs to.
-	ListID int64 `xorm:"int(11) not null" json:"list_id" param:"list"`
+	ListID int64 `xorm:"bigint not null" json:"list_id" param:"list"`
 	// All tasks which belong to this bucket.
 	Tasks []*Task `xorm:"-" json:"tasks"`
 
@@ -46,7 +46,7 @@ type Bucket struct {
 
 	// The user who initially created the bucket.
 	CreatedBy   *user.User `xorm:"-" json:"created_by" valid:"-"`
-	CreatedByID int64      `xorm:"int(11) not null" json:"-"`
+	CreatedByID int64      `xorm:"bigint not null" json:"-"`
 
 	web.Rights   `xorm:"-" json:"-"`
 	web.CRUDable `xorm:"-" json:"-"`

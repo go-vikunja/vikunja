@@ -26,8 +26,8 @@ import (
 
 // TOTP holds a user's totp setting in the database.
 type TOTP struct {
-	ID     int64  `xorm:"int(11) autoincr not null unique pk" json:"-"`
-	UserID int64  `xorm:"int(11) not null" json:"-"`
+	ID     int64  `xorm:"bigint autoincr not null unique pk" json:"-"`
+	UserID int64  `xorm:"bigint not null" json:"-"`
 	Secret string `xorm:"text not null" json:"secret"`
 	// The totp entry will only be enabled after the user verified they have a working totp setup.
 	Enabled bool `xorm:"null" json:"enabled"`

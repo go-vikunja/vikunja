@@ -39,20 +39,20 @@ const (
 // LinkSharing represents a shared list
 type LinkSharing struct {
 	// The ID of the shared thing
-	ID int64 `xorm:"int(11) autoincr not null unique pk" json:"id" param:"share"`
+	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id" param:"share"`
 	// The public id to get this shared list
 	Hash string `xorm:"varchar(40) not null unique" json:"hash" param:"hash"`
 	// The ID of the shared list
-	ListID int64 `xorm:"int(11) not null" json:"-" param:"list"`
+	ListID int64 `xorm:"bigint not null" json:"-" param:"list"`
 	// The right this list is shared with. 0 = Read only, 1 = Read & Write, 2 = Admin. See the docs for more details.
-	Right Right `xorm:"int(11) INDEX not null default 0" json:"right" valid:"length(0|2)" maximum:"2" default:"0"`
+	Right Right `xorm:"bigint INDEX not null default 0" json:"right" valid:"length(0|2)" maximum:"2" default:"0"`
 
 	// The kind of this link. 0 = undefined, 1 = without password, 2 = with password (currently not implemented).
-	SharingType SharingType `xorm:"int(11) INDEX not null default 0" json:"sharing_type" valid:"length(0|2)" maximum:"2" default:"0"`
+	SharingType SharingType `xorm:"bigint INDEX not null default 0" json:"sharing_type" valid:"length(0|2)" maximum:"2" default:"0"`
 
 	// The user who shared this list
 	SharedBy   *user.User `xorm:"-" json:"shared_by"`
-	SharedByID int64      `xorm:"int(11) INDEX not null" json:"-"`
+	SharedByID int64      `xorm:"bigint INDEX not null" json:"-"`
 
 	// A timestamp when this list was shared. You cannot change this value.
 	Created time.Time `xorm:"created not null" json:"created"`

@@ -23,13 +23,13 @@ As an example, this is the definition of a list with all comments:
 // List represents a list of tasks
 type List struct {
 	// The unique, numeric id of this list.
-	ID int64 `xorm:"int(11) autoincr not null unique pk" json:"id" param:"list"`
+	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id" param:"list"`
 	// The title of the list. You'll see this in the namespace overview.
 	Title string `xorm:"varchar(250)" json:"title" valid:"required,runelength(3|250)" minLength:"3" maxLength:"250"`
 	// The description of the list.
 	Description string `xorm:"varchar(1000)" json:"description" valid:"runelength(0|1000)" maxLength:"1000"`
-	OwnerID     int64  `xorm:"int(11) INDEX" json:"-"`
-	NamespaceID int64  `xorm:"int(11) INDEX" json:"-" param:"namespace"`
+	OwnerID     int64  `xorm:"bigint INDEX" json:"-"`
+	NamespaceID int64  `xorm:"bigint INDEX" json:"-" param:"namespace"`
 
 	// The user who created this list.
 	Owner User `xorm:"-" json:"owner" valid:"-"`

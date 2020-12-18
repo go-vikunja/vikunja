@@ -36,7 +36,7 @@ import (
 // Task represents an task in a todolist
 type Task struct {
 	// The unique, numeric id of this task.
-	ID int64 `xorm:"int(11) autoincr not null unique pk" json:"id" param:"listtask"`
+	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id" param:"listtask"`
 	// The task text. This is what you'll see in the list.
 	Title string `xorm:"varchar(250) not null" json:"title" valid:"runelength(1|250)" minLength:"1" maxLength:"250"`
 	// The task description.
@@ -49,15 +49,15 @@ type Task struct {
 	DueDate time.Time `xorm:"DATETIME INDEX null 'due_date'" json:"due_date"`
 	// An array of datetimes when the user wants to be reminded of the task.
 	Reminders   []time.Time `xorm:"-" json:"reminder_dates"`
-	CreatedByID int64       `xorm:"int(11) not null" json:"-"` // ID of the user who put that task on the list
+	CreatedByID int64       `xorm:"bigint not null" json:"-"` // ID of the user who put that task on the list
 	// The list this task belongs to.
-	ListID int64 `xorm:"int(11) INDEX not null" json:"list_id" param:"list"`
+	ListID int64 `xorm:"bigint INDEX not null" json:"list_id" param:"list"`
 	// An amount in seconds this task repeats itself. If this is set, when marking the task as done, it will mark itself as "undone" and then increase all remindes and the due date by its amount.
-	RepeatAfter int64 `xorm:"int(11) INDEX null" json:"repeat_after"`
+	RepeatAfter int64 `xorm:"bigint INDEX null" json:"repeat_after"`
 	// If specified, a repeating task will repeat from the current date rather than the last set date.
 	RepeatFromCurrentDate bool `xorm:"null" json:"repeat_from_current_date"`
 	// The task priority. Can be anything you want, it is possible to sort by this later.
-	Priority int64 `xorm:"int(11) null" json:"priority"`
+	Priority int64 `xorm:"bigint null" json:"priority"`
 	// When this task starts.
 	StartDate time.Time `xorm:"DATETIME INDEX null 'start_date'" json:"start_date" query:"-"`
 	// When this task ends.
@@ -74,7 +74,7 @@ type Task struct {
 	// The task identifier, based on the list identifier and the task's index
 	Identifier string `xorm:"-" json:"identifier"`
 	// The task index, calculated per list
-	Index int64 `xorm:"int(11) not null default 0" json:"index"`
+	Index int64 `xorm:"bigint not null default 0" json:"index"`
 
 	// The UID is currently not used for anything other than caldav, which is why we don't expose it over json
 	UID string `xorm:"varchar(250) null" json:"-"`
@@ -94,7 +94,7 @@ type Task struct {
 	Updated time.Time `xorm:"updated not null" json:"updated"`
 
 	// BucketID is the ID of the kanban bucket this task belongs to.
-	BucketID int64 `xorm:"int(11) null" json:"bucket_id"`
+	BucketID int64 `xorm:"bigint null" json:"bucket_id"`
 
 	// The position of the task - any task list can be sorted as usual by this parameter.
 	// When accessing tasks via kanban buckets, this is primarily used to sort them based on a range
@@ -118,8 +118,8 @@ func (Task) TableName() string {
 
 // TaskReminder holds a reminder on a task
 type TaskReminder struct {
-	ID       int64     `xorm:"int(11) autoincr not null unique pk"`
-	TaskID   int64     `xorm:"int(11) not null INDEX"`
+	ID       int64     `xorm:"bigint autoincr not null unique pk"`
+	TaskID   int64     `xorm:"bigint not null INDEX"`
 	Reminder time.Time `xorm:"DATETIME not null INDEX 'reminder'"`
 	Created  time.Time `xorm:"created not null"`
 }

@@ -29,13 +29,13 @@ import (
 
 // File holds all information about a file
 type File struct {
-	ID   int64  `xorm:"int(11) autoincr not null unique pk" json:"id"`
+	ID   int64  `xorm:"bigint autoincr not null unique pk" json:"id"`
 	Name string `xorm:"text not null" json:"name"`
 	Mime string `xorm:"text null" json:"mime"`
-	Size uint64 `xorm:"int(11) not null" json:"size"`
+	Size uint64 `xorm:"bigint not null" json:"size"`
 
 	Created     time.Time `xorm:"created" json:"created"`
-	CreatedByID int64     `xorm:"int(11) not null" json:"-"`
+	CreatedByID int64     `xorm:"bigint not null" json:"-"`
 
 	File afero.File `xorm:"-" json:"-"`
 	// This ReadCloser is only used for migration purposes. Use with care!

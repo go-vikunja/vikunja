@@ -27,10 +27,10 @@ import (
 // LabelTask represents a relation between a label and a task
 type LabelTask struct {
 	// The unique, numeric id of this label.
-	ID     int64 `xorm:"int(11) autoincr not null unique pk" json:"-"`
-	TaskID int64 `xorm:"int(11) INDEX not null" json:"-" param:"listtask"`
+	ID     int64 `xorm:"bigint autoincr not null unique pk" json:"-"`
+	TaskID int64 `xorm:"bigint INDEX not null" json:"-" param:"listtask"`
 	// The label id you want to associate with a task.
-	LabelID int64 `xorm:"int(11) INDEX not null" json:"label_id" param:"label"`
+	LabelID int64 `xorm:"bigint INDEX not null" json:"label_id" param:"label"`
 	// A timestamp when this task was created. You cannot change this value.
 	Created time.Time `xorm:"created not null" json:"created"`
 

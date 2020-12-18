@@ -33,7 +33,7 @@ type SavedFilter struct {
 	Title string `xorm:"varchar(250) not null" json:"title" valid:"required,runelength(1|250)" minLength:"1" maxLength:"250"`
 	// The description of the filter
 	Description string `xorm:"longtext null" json:"description"`
-	OwnerID     int64  `xorm:"int(11) not null INDEX" json:"-"`
+	OwnerID     int64  `xorm:"bigint not null INDEX" json:"-"`
 
 	// The user who owns this filter
 	Owner *user.User `xorm:"-" json:"owner" valid:"-"`

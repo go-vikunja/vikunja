@@ -26,7 +26,7 @@ import (
 // Label represents a label
 type Label struct {
 	// The unique, numeric id of this label.
-	ID int64 `xorm:"int(11) autoincr not null unique pk" json:"id" param:"label"`
+	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id" param:"label"`
 	// The title of the lable. You'll see this one on tasks associated with it.
 	Title string `xorm:"varchar(250) not null" json:"title" valid:"runelength(1|250)" minLength:"1" maxLength:"250"`
 	// The label description.
@@ -34,7 +34,7 @@ type Label struct {
 	// The color this label has
 	HexColor string `xorm:"varchar(6) null" json:"hex_color" valid:"runelength(0|6)" maxLength:"6"`
 
-	CreatedByID int64 `xorm:"int(11) not null" json:"-"`
+	CreatedByID int64 `xorm:"bigint not null" json:"-"`
 	// The user who created this label
 	CreatedBy *user.User `xorm:"-" json:"created_by"`
 

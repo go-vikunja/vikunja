@@ -28,12 +28,12 @@ import (
 // Team holds a team object
 type Team struct {
 	// The unique, numeric id of this team.
-	ID int64 `xorm:"int(11) autoincr not null unique pk" json:"id" param:"team"`
+	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id" param:"team"`
 	// The name of this team.
 	Name string `xorm:"varchar(250) not null" json:"name" valid:"required,runelength(1|250)" minLength:"1" maxLength:"250"`
 	// The team's description.
 	Description string `xorm:"longtext null" json:"description"`
-	CreatedByID int64  `xorm:"int(11) not null INDEX" json:"-"`
+	CreatedByID int64  `xorm:"bigint not null INDEX" json:"-"`
 
 	// The user who created this team.
 	CreatedBy *user.User `xorm:"-" json:"created_by"`
@@ -61,13 +61,13 @@ func (t *Team) AfterLoad() {
 // TeamMember defines the relationship between a user and a team
 type TeamMember struct {
 	// The unique, numeric id of this team member relation.
-	ID int64 `xorm:"int(11) autoincr not null unique pk" json:"id"`
+	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id"`
 	// The team id.
-	TeamID int64 `xorm:"int(11) not null INDEX" json:"-" param:"team"`
+	TeamID int64 `xorm:"bigint not null INDEX" json:"-" param:"team"`
 	// The username of the member. We use this to prevent automated user id entering.
 	Username string `xorm:"-" json:"username" param:"user"`
 	// Used under the hood to manage team members
-	UserID int64 `xorm:"int(11) not null INDEX" json:"-"`
+	UserID int64 `xorm:"bigint not null INDEX" json:"-"`
 	// Whether or not the member is an admin of the team. See the docs for more about what a team admin can do
 	Admin bool `xorm:"null" json:"admin"`
 
