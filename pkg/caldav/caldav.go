@@ -37,6 +37,7 @@ type Event struct {
 	Description string
 	UID         string
 	Alarms      []Alarm
+	Color       string
 
 	Timestamp time.Time
 	Start     time.Time
@@ -56,6 +57,7 @@ type Todo struct {
 	Organizer    *user.User
 	Priority     int64 // 0-9, 1 is highest
 	RelatedToUID string
+	Color        string
 
 	Start    time.Time
 	End      time.Time
@@ -76,6 +78,24 @@ type Alarm struct {
 type Config struct {
 	Name   string
 	ProdID string
+	Color  string
+}
+
+func getCaldavColor(color string) (caldavcolor string) {
+	if color == "" {
+		return ""
+	}
+
+	if !strings.HasPrefix(color, "#") {
+		color = "#" + color
+	}
+
+	color += "FF"
+
+	return `
+X-APPLE-CALENDAR-COLOR:` + color + `
+X-OUTLOOK-COLOR:` + color + `
+X-FUNAMBOL-COLOR:` + color
 }
 
 // ParseEvents parses an array of caldav events and gives them back as string
@@ -85,7 +105,7 @@ VERSION:2.0
 METHOD:PUBLISH
 X-PUBLISHED-TTL:PT4H
 X-WR-CALNAME:` + config.Name + `
-PRODID:-//` + config.ProdID + `//EN`
+PRODID:-//` + config.ProdID + `//EN` + getCaldavColor(config.Color)
 
 	for _, e := range events {
 
@@ -102,7 +122,7 @@ PRODID:-//` + config.ProdID + `//EN`
 		caldavevents += `
 BEGIN:VEVENT
 UID:` + e.UID + `
-SUMMARY:` + e.Summary + `
+SUMMARY:` + e.Summary + getCaldavColor(e.Color) + `
 DESCRIPTION:` + formattedDescription + `
 DTSTAMP:` + makeCalDavTimeFromTimeStamp(e.Timestamp) + `
 DTSTART:` + makeCalDavTimeFromTimeStamp(e.Start) + `
@@ -137,7 +157,7 @@ VERSION:2.0
 METHOD:PUBLISH
 X-PUBLISHED-TTL:PT4H
 X-WR-CALNAME:` + config.Name + `
-PRODID:-//` + config.ProdID + `//EN`
+PRODID:-//` + config.ProdID + `//EN` + getCaldavColor(config.Color)
 
 	for _, t := range todos {
 		if t.UID == "" {
@@ -148,7 +168,7 @@ PRODID:-//` + config.ProdID + `//EN`
 BEGIN:VTODO
 UID:` + t.UID + `
 DTSTAMP:` + makeCalDavTimeFromTimeStamp(t.Timestamp) + `
-SUMMARY:` + t.Summary
+SUMMARY:` + t.Summary + getCaldavColor(t.Color)
 
 		if t.Start.Unix() > 0 {
 			caldavtodos += `

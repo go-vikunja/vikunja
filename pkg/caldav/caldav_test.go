@@ -40,6 +40,7 @@ func TestParseEvents(t *testing.T) {
 				config: &Config{
 					Name:   "test",
 					ProdID: "RandomProdID which is not random",
+					Color:  "ffffff",
 				},
 				events: []*Event{
 					{
@@ -49,6 +50,7 @@ func TestParseEvents(t *testing.T) {
 						Timestamp:   time.Unix(1543626724, 0).In(config.GetTimeZone()),
 						Start:       time.Unix(1543626724, 0).In(config.GetTimeZone()),
 						End:         time.Unix(1543627824, 0).In(config.GetTimeZone()),
+						Color:       "affffe",
 					},
 					{
 						Summary:   "Event #2",
@@ -72,9 +74,15 @@ METHOD:PUBLISH
 X-PUBLISHED-TTL:PT4H
 X-WR-CALNAME:test
 PRODID:-//RandomProdID which is not random//EN
+X-APPLE-CALENDAR-COLOR:#ffffffFF
+X-OUTLOOK-COLOR:#ffffffFF
+X-FUNAMBOL-COLOR:#ffffffFF
 BEGIN:VEVENT
 UID:randommduid
 SUMMARY:Event #1
+X-APPLE-CALENDAR-COLOR:#affffeFF
+X-OUTLOOK-COLOR:#affffeFF
+X-FUNAMBOL-COLOR:#affffeFF
 DESCRIPTION:Lorem Ipsum
 DTSTAMP:20181201T011204
 DTSTART:20181201T011204
@@ -301,6 +309,7 @@ func TestParseTodos(t *testing.T) {
 				config: &Config{
 					Name:   "test",
 					ProdID: "RandomProdID which is not random",
+					Color:  "ffffff",
 				},
 				todos: []*Todo{
 					{
@@ -309,6 +318,7 @@ func TestParseTodos(t *testing.T) {
 Dolor sit amet`,
 						UID:       "randommduid",
 						Timestamp: time.Unix(1543626724, 0).In(config.GetTimeZone()),
+						Color:     "affffe",
 					},
 				},
 			},
@@ -318,10 +328,16 @@ METHOD:PUBLISH
 X-PUBLISHED-TTL:PT4H
 X-WR-CALNAME:test
 PRODID:-//RandomProdID which is not random//EN
+X-APPLE-CALENDAR-COLOR:#ffffffFF
+X-OUTLOOK-COLOR:#ffffffFF
+X-FUNAMBOL-COLOR:#ffffffFF
 BEGIN:VTODO
 UID:randommduid
 DTSTAMP:20181201T011204
 SUMMARY:Todo #1
+X-APPLE-CALENDAR-COLOR:#affffeFF
+X-OUTLOOK-COLOR:#affffeFF
+X-FUNAMBOL-COLOR:#affffeFF
 DESCRIPTION:Lorem Ipsum\nDolor sit amet
 LAST-MODIFIED:00010101T000000
 END:VTODO
