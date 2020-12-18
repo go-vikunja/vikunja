@@ -72,7 +72,7 @@
 
 		<modal
 			@close="showDeleteModal = false"
-			@submit="deleteList()"
+			@submit="() => deleteSavedFilter()"
 			v-if="showDeleteModal">
 			<span slot="header">Delete this saved filter</span>
 			<p slot="text">
@@ -149,6 +149,15 @@ export default {
 					this.success({message: 'The filter was saved successfully.'}, this)
 					this.filter = r
 					this.filters = objectToSnakeCase(this.filter.filters)
+				})
+				.catch(e => this.error(e, this))
+		},
+		deleteSavedFilter() {
+			this.filterService.delete(this.filter)
+				.then(() => {
+					this.$store.dispatch('namespaces/loadNamespaces')
+					this.success({message: 'The filter was deleted successfully.'}, this)
+					this.$router.push({name: 'namespaces.index'})
 				})
 				.catch(e => this.error(e, this))
 		},
