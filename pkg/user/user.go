@@ -176,22 +176,38 @@ func getUser(user *User, withEmail bool) (userOut *User, err error) {
 	return userOut, err
 }
 
+func getUserByUsernameOrEmail(usernameOrEmail string) (u *User, err error) {
+	u = &User{}
+	exists, err := x.
+		Where("username = ? OR email = ?", usernameOrEmail, usernameOrEmail).
+		Get(u)
+	if err != nil {
+		return nil, err
+	}
+	if !exists {
+		return nil, ErrUserDoesNotExist{}
+	}
+
+	u.Email = ""
+	return
+}
+
 // CheckUserCredentials checks user credentials
 func CheckUserCredentials(u *Login) (*User, error) {
 	// Check if we have any credentials
 	if u.Password == "" || u.Username == "" {
-		return &User{}, ErrNoUsernamePassword{}
+		return nil, ErrNoUsernamePassword{}
 	}
 
 	// Check if the user exists
-	user, err := GetUserByUsername(u.Username)
+	user, err := getUserByUsernameOrEmail(u.Username)
 	if err != nil {
 		// hashing the password takes a long time, so we hash something to not make it clear if the username was wrong
 		_, _ = bcrypt.GenerateFromPassword([]byte(u.Username), 14)
-		return &User{}, ErrWrongUsernameOrPassword{}
+		return nil, ErrWrongUsernameOrPassword{}
 	}
 
-	// User is invalid if it needs to verify its email address
+	// The user is invalid if they need to verify their email address
 	if !user.IsActive {
 		return &User{}, ErrEmailNotConfirmed{UserID: user.ID}
 	}
@@ -199,7 +215,7 @@ func CheckUserCredentials(u *Login) (*User, error) {
 	// Check the users password
 	err = CheckUserPassword(user, u.Password)
 	if err != nil {
-		return &User{}, err
+		return nil, err
 	}
 
 	return user, nil

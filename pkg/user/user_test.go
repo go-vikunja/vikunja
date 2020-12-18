@@ -201,6 +201,11 @@ func TestCheckUserCredentials(t *testing.T) {
 		assert.Error(t, err)
 		assert.True(t, IsErrNoUsernamePassword(err))
 	})
+	t.Run("email", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		_, err := CheckUserCredentials(&Login{Username: "user1@example.com", Password: "1234"})
+		assert.NoError(t, err)
+	})
 }
 
 func TestUpdateUser(t *testing.T) {
