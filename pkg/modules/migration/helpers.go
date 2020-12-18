@@ -20,6 +20,8 @@ import (
 	"bytes"
 	"context"
 	"net/http"
+	"net/url"
+	"strings"
 )
 
 // DownloadFile downloads a file and returns its contents
@@ -37,4 +39,16 @@ func DownloadFile(url string) (buf *bytes.Buffer, err error) {
 	buf = &bytes.Buffer{}
 	_, err = buf.ReadFrom(resp.Body)
 	return
+}
+
+// DoPost makes a form encoded post request
+func DoPost(url string, form url.Values) (resp *http.Response, err error) {
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, url, strings.NewReader(form.Encode()))
+	if err != nil {
+		return
+	}
+
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	hc := http.Client{}
+	return hc.Do(req)
 }

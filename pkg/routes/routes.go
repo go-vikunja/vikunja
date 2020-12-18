@@ -50,6 +50,8 @@ import (
 	"strings"
 	"time"
 
+	microsofttodo "code.vikunja.io/api/pkg/modules/migration/microsoft-todo"
+
 	"code.vikunja.io/api/pkg/modules/migration/trello"
 
 	"code.vikunja.io/api/pkg/config"
@@ -541,6 +543,16 @@ func registerAPIRoutes(a *echo.Group) {
 			},
 		}
 		trelloMigrationHandler.RegisterRoutes(m)
+	}
+
+	// Microsoft Todo
+	if config.MigrationMicrosoftTodoEnable.GetBool() {
+		microsoftTodoMigrationHandler := &migrationHandler.MigrationWeb{
+			MigrationStruct: func() migration.Migrator {
+				return &microsofttodo.Migration{}
+			},
+		}
+		microsoftTodoMigrationHandler.RegisterRoutes(m)
 	}
 
 	// List Backgrounds

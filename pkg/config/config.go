@@ -110,17 +110,21 @@ const (
 	FilesBasePath Key = `files.basepath`
 	FilesMaxSize  Key = `files.maxsize`
 
-	MigrationWunderlistEnable       Key = `migration.wunderlist.enable`
-	MigrationWunderlistClientID     Key = `migration.wunderlist.clientid`
-	MigrationWunderlistClientSecret Key = `migration.wunderlist.clientsecret`
-	MigrationWunderlistRedirectURL  Key = `migration.wunderlist.redirecturl`
-	MigrationTodoistEnable          Key = `migration.todoist.enable`
-	MigrationTodoistClientID        Key = `migration.todoist.clientid`
-	MigrationTodoistClientSecret    Key = `migration.todoist.clientsecret`
-	MigrationTodoistRedirectURL     Key = `migration.todoist.redirecturl`
-	MigrationTrelloEnable           Key = `migration.trello.enable`
-	MigrationTrelloKey              Key = `migration.trello.key`
-	MigrationTrelloRedirectURL      Key = `migration.trello.redirecturl`
+	MigrationWunderlistEnable          Key = `migration.wunderlist.enable`
+	MigrationWunderlistClientID        Key = `migration.wunderlist.clientid`
+	MigrationWunderlistClientSecret    Key = `migration.wunderlist.clientsecret`
+	MigrationWunderlistRedirectURL     Key = `migration.wunderlist.redirecturl`
+	MigrationTodoistEnable             Key = `migration.todoist.enable`
+	MigrationTodoistClientID           Key = `migration.todoist.clientid`
+	MigrationTodoistClientSecret       Key = `migration.todoist.clientsecret`
+	MigrationTodoistRedirectURL        Key = `migration.todoist.redirecturl`
+	MigrationTrelloEnable              Key = `migration.trello.enable`
+	MigrationTrelloKey                 Key = `migration.trello.key`
+	MigrationTrelloRedirectURL         Key = `migration.trello.redirecturl`
+	MigrationMicrosoftTodoEnable       Key = `migration.microsofttodo.enable`
+	MigrationMicrosoftTodoClientID     Key = `migration.microsofttodo.clientid`
+	MigrationMicrosoftTodoClientSecret Key = `migration.microsofttodo.clientsecret`
+	MigrationMicrosoftTodoRedirectURL  Key = `migration.microsofttodo.redirecturl`
 
 	CorsEnable  Key = `cors.enable`
 	CorsOrigins Key = `cors.origins`
@@ -292,6 +296,7 @@ func InitDefaultConfig() {
 	MigrationWunderlistEnable.setDefault(false)
 	MigrationTodoistEnable.setDefault(false)
 	MigrationTrelloEnable.setDefault(false)
+	MigrationMicrosoftTodoEnable.setDefault(false)
 	// Avatar
 	AvatarGravaterExpiration.setDefault(3600)
 	// List Backgrounds
@@ -347,6 +352,10 @@ func InitConfig() {
 
 	if MigrationTrelloRedirectURL.GetString() == "" {
 		MigrationTrelloRedirectURL.Set(ServiceFrontendurl.GetString() + "migrate/trello")
+	}
+
+	if MigrationMicrosoftTodoRedirectURL.GetString() == "" {
+		MigrationMicrosoftTodoRedirectURL.Set(ServiceFrontendurl.GetString() + "migrate/microsoft-todo")
 	}
 
 	log.Printf("Using config file: %s", viper.ConfigFileUsed())

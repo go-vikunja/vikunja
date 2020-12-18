@@ -35,6 +35,11 @@ definitions:
       url:
         type: string
     type: object
+  microsofttodo.Migration:
+    properties:
+      code:
+        type: string
+    type: object
   migration.Status:
     properties:
       id:
@@ -2671,6 +2676,72 @@ paths:
       summary: Login
       tags:
       - user
+  /migration/microsoft-todo/auth:
+    get:
+      description: Returns the auth url where the user needs to get its auth code. This code can then be used to migrate everything from Microsoft Todo to Vikunja.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The auth url.
+          schema:
+            $ref: '#/definitions/handler.AuthURL'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get the auth url from Microsoft Todo
+      tags:
+      - migration
+  /migration/microsoft-todo/migrate:
+    post:
+      consumes:
+      - application/json
+      description: Migrates all tasklinsts, tasks, notes and reminders from Microsoft Todo to Vikunja.
+      parameters:
+      - description: The auth token previously obtained from the auth url. See the docs for /migration/microsoft-todo/auth.
+        in: body
+        name: migrationCode
+        required: true
+        schema:
+          $ref: '#/definitions/microsofttodo.Migration'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: A message telling you everything was migrated successfully.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Migrate all lists, tasks etc. from Microsoft Todo
+      tags:
+      - migration
+  /migration/microsoft-todo/status:
+    get:
+      description: Returns if the current user already did the migation or not. This is useful to show a confirmation message in the frontend if the user is trying to do the same migration again.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The migration status
+          schema:
+            $ref: '#/definitions/migration.Status'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get migration status
+      tags:
+      - migration
   /migration/todoist/auth:
     get:
       description: Returns the auth url where the user needs to get its auth code. This code can then be used to migrate everything from todoist to Vikunja.

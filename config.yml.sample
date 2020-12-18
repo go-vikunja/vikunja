@@ -197,6 +197,21 @@ migration:
     # with the code obtained from the trello api.
     # Note that the vikunja frontend expects this to end on /migrate/trello.
     redirecturl: <frontend url>/migrate/trello
+  microsofttodo:
+    # Wheter to enable the microsoft todo migrator or not
+    enable: false
+    # The client id, required for making requests to the microsoft graph api
+    # See https://docs.microsoft.com/en-us/azure/active-directory/develop/quickstart-register-app#register-an-application
+    # for information about how to register your vikuinja instance.
+    clientid:
+    # The client secret, also required for making requests to the microsoft graph api
+    clientsecret:
+    # The url where clients are redirected after they authorized Vikunja to access their microsoft todo tasks.
+    # This needs to match the url you entered when registering your Vikunja instance at microsoft.
+    # This is usually the frontend url where the frontend then makes a request to /migration/microsoft-todo/migrate
+    # with the code obtained from the microsoft graph api.
+    # Note that the vikunja frontend expects this to be /migrate/microsoft-todo
+    redirecturl: <frontend url>/migrate/microsoft-todo
 
 avatar:
   # When using gravatar, this is the duration in seconds until a cached gravatar user avatar expires

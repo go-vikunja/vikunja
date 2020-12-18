@@ -18,13 +18,10 @@ package todoist
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"net/url"
 	"sort"
-	"strings"
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
@@ -227,17 +224,6 @@ func (m *Migration) AuthURL() string {
 		"?client_id=" + config.MigrationTodoistClientID.GetString() +
 		"&scope=data:read" +
 		"&state=" + utils.MakeRandomString(32)
-}
-
-func doPost(url string, form url.Values) (resp *http.Response, err error) {
-	req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, url, strings.NewReader(form.Encode()))
-	if err != nil {
-		return
-	}
-
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-	hc := http.Client{}
-	return hc.Do(req)
 }
 
 func convertTodoistToVikunja(sync *sync) (fullVikunjaHierachie []*models.NamespaceWithLists, err error) {
@@ -451,7 +437,7 @@ func getAccessTokenFromAuthToken(authToken string) (accessToken string, err erro
 		"code":          []string{authToken},
 		"redirect_uri":  []string{config.MigrationTodoistRedirectURL.GetString()},
 	}
-	resp, err := doPost("https://todoist.com/oauth/access_token", form)
+	resp, err := migration.DoPost("https://todoist.com/oauth/access_token", form)
 	if err != nil {
 		return
 	}
@@ -503,7 +489,7 @@ func (m *Migration) Migrate(u *user.User) (err error) {
 		"sync_token":     []string{"*"},
 		"resource_types": []string{"[\"all\"]"},
 	}
-	resp, err := doPost("https://api.todoist.com/sync/v8/sync", form)
+	resp, err := migration.DoPost("https://api.todoist.com/sync/v8/sync", form)
 	if err != nil {
 		return
 	}

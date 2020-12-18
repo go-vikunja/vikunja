@@ -19,6 +19,8 @@ package v1
 import (
 	"net/http"
 
+	microsofttodo "code.vikunja.io/api/pkg/modules/migration/microsoft-todo"
+
 	"code.vikunja.io/api/pkg/modules/migration/trello"
 
 	"code.vikunja.io/api/pkg/log"
@@ -119,6 +121,10 @@ func Info(c echo.Context) error {
 	}
 	if config.MigrationTrelloEnable.GetBool() {
 		m := &trello.Migration{}
+		info.AvailableMigrators = append(info.AvailableMigrators, m.Name())
+	}
+	if config.MigrationMicrosoftTodoEnable.GetBool() {
+		m := &microsofttodo.Migration{}
 		info.AvailableMigrators = append(info.AvailableMigrators, m.Name())
 	}
 
