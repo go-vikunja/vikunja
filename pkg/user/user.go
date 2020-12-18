@@ -62,6 +62,9 @@ type User struct {
 	Issuer  string `xorm:"text null" json:"-"`
 	Subject string `xorm:"text null" json:"-"`
 
+	// If enabled, sends email reminders of tasks to the user.
+	EmailRemindersEnabled bool `xorm:"bool default true" json:"-"`
+
 	// A timestamp when this task was created. You cannot change this value.
 	Created time.Time `xorm:"created not null" json:"created"`
 	// A timestamp when this task was last updated. You cannot change this value.
@@ -322,6 +325,7 @@ func UpdateUser(user *User) (updatedUser *User, err error) {
 			"avatar_file_id",
 			"is_active",
 			"name",
+			"email_reminders_enabled",
 		).
 		Update(user)
 	if err != nil {

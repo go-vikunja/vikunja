@@ -39,6 +39,9 @@ service:
   # each request made to this endpoint neefs to provide an `Authorization: <token>` header with the token from below. <br/>
   # **You should never use this unless you know exactly what you're doing**
   testingtoken: ''
+  # If enabled, vikunja will send an email to everyone who is either assigned to a task or created it when a task reminder
+  # is due.
+  enableemailreminders: true
 
 database:
   # Database type to use. Supported types are mysql, postgres and sqlite.

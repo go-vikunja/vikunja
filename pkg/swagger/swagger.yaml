@@ -947,17 +947,20 @@ definitions:
         description: The avatar provider. Valid types are `gravatar` (uses the user email), `upload`, `initials`, `default`.
         type: string
     type: object
-  v1.UserName:
-    properties:
-      name:
-        description: The new name of the current user.
-        type: string
-    type: object
   v1.UserPassword:
     properties:
       new_password:
         type: string
       old_password:
+        type: string
+    type: object
+  v1.UserSettings:
+    properties:
+      email_reminders_enabled:
+        description: If enabled, sends email reminders of tasks to the user.
+        type: boolean
+      name:
+        description: The new name of the current user.
         type: string
     type: object
   v1.authInfo:
@@ -999,6 +1002,8 @@ definitions:
           type: string
         type: array
       caldav_enabled:
+        type: boolean
+      email_reminders_enabled:
         type: boolean
       enabled_background_providers:
         items:
@@ -5100,18 +5105,17 @@ paths:
       summary: Update email address
       tags:
       - user
-  /user/settings/name:
+  /user/settings/general:
     post:
       consumes:
       - application/json
-      description: Changes the current user's name. It is also possible to reset the name.
       parameters:
-      - description: The updated user name
+      - description: The updated user settings
         in: body
         name: avatar
         required: true
         schema:
-          $ref: '#/definitions/v1.UserName'
+          $ref: '#/definitions/v1.UserSettings'
       produces:
       - application/json
       responses:
@@ -5129,7 +5133,7 @@ paths:
             $ref: '#/definitions/models.Message'
       security:
       - JWTKeyAuth: []
-      summary: Change the current user's name
+      summary: Change general user settings of the current user.
       tags:
       - user
   /user/settings/totp:

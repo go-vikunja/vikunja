@@ -31,30 +31,33 @@ import (
 func TestTaskCollection_ReadAll(t *testing.T) {
 	// Dummy users
 	user1 := &user.User{
-		ID:       1,
-		Username: "user1",
-		Password: "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
-		IsActive: true,
-		Issuer:   "local",
-		Created:  testCreatedTime,
-		Updated:  testUpdatedTime,
+		ID:                    1,
+		Username:              "user1",
+		Password:              "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
+		IsActive:              true,
+		Issuer:                "local",
+		EmailRemindersEnabled: true,
+		Created:               testCreatedTime,
+		Updated:               testUpdatedTime,
 	}
 	user2 := &user.User{
-		ID:       2,
-		Username: "user2",
-		Password: "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
-		Issuer:   "local",
-		Created:  testCreatedTime,
-		Updated:  testUpdatedTime,
+		ID:                    2,
+		Username:              "user2",
+		Password:              "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
+		Issuer:                "local",
+		EmailRemindersEnabled: true,
+		Created:               testCreatedTime,
+		Updated:               testUpdatedTime,
 	}
 	user6 := &user.User{
-		ID:       6,
-		Username: "user6",
-		Password: "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
-		Issuer:   "local",
-		IsActive: true,
-		Created:  testCreatedTime,
-		Updated:  testUpdatedTime,
+		ID:                    6,
+		Username:              "user6",
+		Password:              "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
+		Issuer:                "local",
+		IsActive:              true,
+		EmailRemindersEnabled: true,
+		Created:               testCreatedTime,
+		Updated:               testUpdatedTime,
 	}
 
 	loc := config.GetTimeZone()

@@ -170,6 +170,13 @@ each request made to this endpoint neefs to provide an `Authorization: <token>` 
 
 Default: `<empty>`
 
+### enableemailreminders
+
+If enabled, vikunja will send an email to everyone who is either assigned to a task or created it when a task reminder
+is due.
+
+Default: `true`
+
 ---
 
 ## database

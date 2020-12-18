@@ -1,0 +1,9 @@
+Hi {{if .User.Name}}{{.User.Name}}{{else}}{{.User.Username}}{{end}},
+
+This is a friendly reminder of the task "{{.Task.Title}}".
+
+You can view the task at:
+
+{{.FrontendURL}}tasks/{{.Task.ID}}
+
+Have a nice day!

@@ -6296,14 +6296,13 @@ var doc = `{
                 }
             }
         },
-        "/user/settings/name": {
+        "/user/settings/general": {
             "post": {
                 "security": [
                     {
                         "JWTKeyAuth": []
                     }
                 ],
-                "description": "Changes the current user's name. It is also possible to reset the name.",
                 "consumes": [
                     "application/json"
                 ],
@@ -6313,15 +6312,15 @@ var doc = `{
                 "tags": [
                     "user"
                 ],
-                "summary": "Change the current user's name",
+                "summary": "Change general user settings of the current user.",
                 "parameters": [
                     {
-                        "description": "The updated user name",
+                        "description": "The updated user settings",
                         "name": "avatar",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/v1.UserName"
+                            "$ref": "#/definitions/v1.UserSettings"
                         }
                     }
                 ],
@@ -8008,15 +8007,6 @@ var doc = `{
                 }
             }
         },
-        "v1.UserName": {
-            "type": "object",
-            "properties": {
-                "name": {
-                    "description": "The new name of the current user.",
-                    "type": "string"
-                }
-            }
-        },
         "v1.UserPassword": {
             "type": "object",
             "properties": {
@@ -8024,6 +8014,19 @@ var doc = `{
                     "type": "string"
                 },
                 "old_password": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1.UserSettings": {
+            "type": "object",
+            "properties": {
+                "email_reminders_enabled": {
+                    "description": "If enabled, sends email reminders of tasks to the user.",
+                    "type": "boolean"
+                },
+                "name": {
+                    "description": "The new name of the current user.",
                     "type": "string"
                 }
             }
@@ -8088,6 +8091,9 @@ var doc = `{
                     }
                 },
                 "caldav_enabled": {
+                    "type": "boolean"
+                },
+                "email_reminders_enabled": {
                     "type": "boolean"
                 },
                 "enabled_background_providers": {

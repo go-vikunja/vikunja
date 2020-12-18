@@ -18,6 +18,7 @@ package initialize
 
 import (
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/cron"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/mail"
@@ -80,4 +81,8 @@ func FullInit() {
 
 	// Start the mail daemon
 	mail.StartMailDaemon()
+
+	// Start the cron
+	cron.Init()
+	models.RegisterReminderCron()
 }

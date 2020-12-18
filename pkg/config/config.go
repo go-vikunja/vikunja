@@ -52,6 +52,7 @@ const (
 	ServiceEnableTotp            Key = `service.enabletotp`
 	ServiceSentryDsn             Key = `service.sentrydsn`
 	ServiceTestingtoken          Key = `service.testingtoken`
+	ServiceEnableEmailReminders  Key = `service.enableemailreminders`
 
 	AuthLocalEnabled      Key = `auth.local.enabled`
 	AuthOpenIDEnabled     Key = `auth.openid.enabled`
@@ -233,6 +234,7 @@ func InitDefaultConfig() {
 	ServiceTimeZone.setDefault("GMT")
 	ServiceEnableTaskComments.setDefault(true)
 	ServiceEnableTotp.setDefault(true)
+	ServiceEnableEmailReminders.setDefault(true)
 
 	// Auth
 	AuthLocalEnabled.setDefault(true)

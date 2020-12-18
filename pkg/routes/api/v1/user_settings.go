@@ -31,10 +31,12 @@ type UserAvatarProvider struct {
 	AvatarProvider string `json:"avatar_provider"`
 }
 
-// UserName holds the user's name
-type UserName struct {
+// UserSettings holds all user settings
+type UserSettings struct {
 	// The new name of the current user.
 	Name string `json:"name"`
+	// If enabled, sends email reminders of tasks to the user.
+	EmailRemindersEnabled bool `xorm:"bool default false" json:"email_reminders_enabled"`
 }
 
 // GetUserAvatarProvider returns the currently set user avatar
@@ -104,21 +106,20 @@ func ChangeUserAvatarProvider(c echo.Context) error {
 	return c.JSON(http.StatusOK, &models.Message{Message: "Avatar was changed successfully."})
 }
 
-// ChangeUserName is the handler to change the name of the current user
-// @Summary Change the current user's name
-// @Description Changes the current user's name. It is also possible to reset the name.
+// UpdateGeneralUserSettings is the handler to change general user settings
+// @Summary Change general user settings of the current user.
 // @tags user
 // @Accept json
 // @Produce json
 // @Security JWTKeyAuth
-// @Param avatar body UserName true "The updated user name"
+// @Param avatar body UserSettings true "The updated user settings"
 // @Success 200 {object} models.Message
 // @Failure 400 {object} web.HTTPError "Something's invalid."
 // @Failure 500 {object} models.Message "Internal server error."
-// @Router /user/settings/name [post]
-func UpdateUserName(c echo.Context) error {
-	un := &UserName{}
-	err := c.Bind(un)
+// @Router /user/settings/general [post]
+func UpdateGeneralUserSettings(c echo.Context) error {
+	us := &UserSettings{}
+	err := c.Bind(us)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Bad user name provided.")
 	}
@@ -133,12 +134,13 @@ func UpdateUserName(c echo.Context) error {
 		return handler.HandleHTTPError(err, c)
 	}
 
-	user.Name = un.Name
+	user.Name = us.Name
+	user.EmailRemindersEnabled = us.EmailRemindersEnabled
 
 	_, err = user2.UpdateUser(user)
 	if err != nil {
 		return handler.HandleHTTPError(err, c)
 	}
 
-	return c.JSON(http.StatusOK, &models.Message{Message: "Name was changed successfully."})
+	return c.JSON(http.StatusOK, &models.Message{Message: "The settings were updated successfully."})
 }

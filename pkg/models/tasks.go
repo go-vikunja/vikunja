@@ -116,19 +116,6 @@ func (Task) TableName() string {
 	return "tasks"
 }
 
-// TaskReminder holds a reminder on a task
-type TaskReminder struct {
-	ID       int64     `xorm:"bigint autoincr not null unique pk"`
-	TaskID   int64     `xorm:"bigint not null INDEX"`
-	Reminder time.Time `xorm:"DATETIME not null INDEX 'reminder'"`
-	Created  time.Time `xorm:"created not null"`
-}
-
-// TableName returns a pretty table name
-func (TaskReminder) TableName() string {
-	return "task_reminders"
-}
-
 type taskFilterConcatinator string
 
 const (

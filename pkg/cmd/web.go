@@ -22,6 +22,8 @@ import (
 	"os/signal"
 	"time"
 
+	"code.vikunja.io/api/pkg/cron"
+
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/initialize"
 	"code.vikunja.io/api/pkg/log"
@@ -70,5 +72,6 @@ var webCmd = &cobra.Command{
 		if err := e.Shutdown(ctx); err != nil {
 			e.Logger.Fatal(err)
 		}
+		cron.Stop()
 	},
 }
