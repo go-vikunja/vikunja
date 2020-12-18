@@ -70,10 +70,10 @@ Vikunja **currently does not** support these properties:
 
 * [Evolution](https://wiki.gnome.org/Apps/Evolution/)
 * [OpenTasks](https://opentasks.app/) + [DAVx⁵](https://www.davx5.com/)
+* [Tasks (Android)](https://tasks.org/)
 
 ### Not working
 
-* [Tasks (Android)](https://tasks.org/)
 * [Thunderbird (68)](https://www.thunderbird.net/)
 
 ## Dev logs
