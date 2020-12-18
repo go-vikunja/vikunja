@@ -8,7 +8,7 @@
 			<api-config/>
 			<form @submit.prevent="submit" id="loginform" v-if="localAuthEnabled">
 				<div class="field">
-					<label class="label" for="username">Username</label>
+					<label class="label" for="username">Username Or Email Address</label>
 					<div class="control">
 						<input
 							class="input" id="username"
