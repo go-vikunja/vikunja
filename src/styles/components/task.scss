@@ -245,10 +245,6 @@
   color: $text;
   background-color: $light-background !important;
 
-  .task {
-    max-width: 500px;
-  }
-
   @media screen and (max-width: 800px) {
     border-radius: 0;
     padding-top: 2rem;
