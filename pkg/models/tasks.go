@@ -156,6 +156,37 @@ func (t *Task) ReadAll(a web.Auth, search string, page int, perPage int) (result
 	return nil, 0, 0, nil
 }
 
+func getFilterCond(f *taskFilter, includeNulls bool) (cond builder.Cond, err error) {
+	switch f.comparator {
+	case taskFilterComparatorEquals:
+		cond = &builder.Eq{f.field: f.value}
+	case taskFilterComparatorNotEquals:
+		cond = &builder.Neq{f.field: f.value}
+	case taskFilterComparatorGreater:
+		cond = &builder.Gt{f.field: f.value}
+	case taskFilterComparatorGreateEquals:
+		cond = &builder.Gte{f.field: f.value}
+	case taskFilterComparatorLess:
+		cond = &builder.Lt{f.field: f.value}
+	case taskFilterComparatorLessEquals:
+		cond = &builder.Lte{f.field: f.value}
+	case taskFilterComparatorLike:
+		val, is := f.value.(string)
+		if !is {
+			return nil, ErrInvalidTaskFilterValue{Field: f.field, Value: f.value}
+		}
+		cond = &builder.Like{f.field, "%" + val + "%"}
+	case taskFilterComparatorInvalid:
+		// Nothing to do
+	}
+
+	if includeNulls {
+		cond = builder.Or(cond, &builder.IsNull{f.field})
+	}
+
+	return
+}
+
 //nolint:gocyclo
 func getRawTasksForLists(lists []*List, a web.Auth, opts *taskOptions) (tasks []*Task, resultCount int, totalItems int64, err error) {
 
@@ -215,52 +246,27 @@ func getRawTasksForLists(lists []*List, a web.Auth, opts *taskOptions) (tasks []
 		}
 	}
 
+	// Reminder filters need a special treatment since they are in a separate database
+	reminderFilters := []builder.Cond{}
+
 	var filters = make([]builder.Cond, 0, len(opts.filters))
 	// To still find tasks with nil values, we exclude 0s when comparing with >/< values.
 	for _, f := range opts.filters {
-		switch f.comparator {
-		case taskFilterComparatorEquals:
-			filters = append(filters, &builder.Eq{f.field: f.value})
-		case taskFilterComparatorNotEquals:
-			filters = append(filters, &builder.Neq{f.field: f.value})
-		case taskFilterComparatorGreater:
-			if opts.filterIncludeNulls {
-				filters = append(filters, builder.Or(&builder.Gt{f.field: f.value}, &builder.IsNull{f.field}))
-			} else {
-				filters = append(filters, &builder.Gt{f.field: f.value})
+		if f.field == "reminders" {
+			f.field = "reminder" // This is the name in the db
+			filter, err := getFilterCond(f, opts.filterIncludeNulls)
+			if err != nil {
+				return nil, 0, 0, err
 			}
-		case taskFilterComparatorGreateEquals:
-			if opts.filterIncludeNulls {
-				filters = append(filters, builder.Or(&builder.Gte{f.field: f.value}, &builder.IsNull{f.field}))
-			} else {
-				filters = append(filters, &builder.Gte{f.field: f.value})
-			}
-		case taskFilterComparatorLess:
-			if opts.filterIncludeNulls {
-				filters = append(filters, builder.Or(&builder.Lt{f.field: f.value}, &builder.IsNull{f.field}))
-			} else {
-				filters = append(filters, &builder.Lt{f.field: f.value})
-			}
-		case taskFilterComparatorLessEquals:
-			if opts.filterIncludeNulls {
-				filters = append(filters, builder.Or(&builder.Lte{f.field: f.value}, &builder.IsNull{f.field}))
-			} else {
-				filters = append(filters, &builder.Lte{f.field: f.value})
-			}
-		case taskFilterComparatorLike:
-			val, is := f.value.(string)
-			if !is {
-				return nil, 0, 0, ErrInvalidTaskFilterValue{Field: f.field, Value: f.value}
-			}
-			c := &builder.Like{f.field, "%" + val + "%"}
-			if opts.filterIncludeNulls {
-				filters = append(filters, builder.Or(c, &builder.IsNull{f.field}))
-			} else {
-				filters = append(filters, c)
-			}
-		case taskFilterComparatorInvalid:
-			// Nothing to do
+			reminderFilters = append(reminderFilters, filter)
+			continue
 		}
+
+		filter, err := getFilterCond(f, opts.filterIncludeNulls)
+		if err != nil {
+			return nil, 0, 0, err
+		}
+		filters = append(filters, filter)
 	}
 
 	// Then return all tasks for that lists
@@ -306,6 +312,25 @@ func getRawTasksForLists(lists []*List, a web.Auth, opts *taskOptions) (tasks []
 		}
 
 		listCond = builder.Or(listIDCond, builder.And(builder.Eq{"is_favorite": true}, builder.In("list_id", userListIDs)))
+	}
+
+	if len(reminderFilters) > 0 {
+		var filtercond builder.Cond
+		if opts.filterConcat == filterConcatOr {
+			filtercond = builder.Or(reminderFilters...)
+		}
+		if opts.filterConcat == filterConcatAnd {
+			filtercond = builder.And(reminderFilters...)
+		}
+		reminderFilter := builder.In(
+			"id",
+			builder.
+				Select("task_id").
+				From("task_reminders").
+				Where(filtercond),
+		)
+
+		filters = append(filters, reminderFilter)
 	}
 
 	query = query.Where(listCond)

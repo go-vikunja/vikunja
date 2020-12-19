@@ -163,6 +163,14 @@ func getNativeValueForTaskField(fieldName, value string) (nativeValue interface{
 			nativeValue, err = time.Parse(time.RFC3339, value)
 			nativeValue = nativeValue.(time.Time).In(config.GetTimeZone())
 		}
+	case reflect.Slice:
+		t := reflect.SliceOf(schemas.TimeType)
+		if t != nil {
+			nativeValue, err = time.Parse(time.RFC3339, value)
+			nativeValue = nativeValue.(time.Time).In(config.GetTimeZone())
+			return
+		}
+		fallthrough
 	default:
 		panic(fmt.Errorf("unrecognized filter type %s for field %s, value %s", field.Type.String(), fieldName, value))
 	}

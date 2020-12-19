@@ -879,6 +879,19 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name: "filtered reminders",
+			fields: fields{
+				FilterBy:         []string{"reminders", "reminders"},
+				FilterValue:      []string{"2018-10-01T00:00:00+00:00", "2018-12-10T00:00:00+00:00"},
+				FilterComparator: []string{"greater", "less"},
+			},
+			args: defaultArgs,
+			want: []*Task{
+				task27,
+			},
+			wantErr: false,
+		},
 	}
 
 	for _, tt := range tests {

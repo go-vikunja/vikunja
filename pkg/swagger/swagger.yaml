@@ -2443,7 +2443,7 @@ paths:
         in: query
         name: order_by
         type: string
-      - description: The name of the field to filter by. Accepts an array for multiple filters which will be chanied together, all supplied filter must match.
+      - description: The name of the field to filter by. Allowed values are all task properties except `labels`, `assignees`, `list` and `namespace`. Task properties which are their own object require passing in the id of that entity. Accepts an array for multiple filters which will be chanied together, all supplied filter must match.
         in: query
         name: filter_by
         type: string
