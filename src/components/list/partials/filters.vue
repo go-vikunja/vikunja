@@ -71,6 +71,18 @@
 				</div>
 			</div>
 			<div class="field">
+				<label class="label">Reminders</label>
+				<div class="control">
+					<flat-pickr
+						:config="flatPickerConfig"
+						@on-close="setReminderFilter"
+						class="input"
+						placeholder="Reminder Date Range"
+						v-model="filters.reminders"
+					/>
+				</div>
+			</div>
+			<div class="field">
 				<label class="label">Percent Done</label>
 				<div class="control single-value-control">
 					<percent-done-select
@@ -128,6 +140,7 @@ export default {
 				endDate: '',
 				percentDone: 0,
 				usePercentDone: false,
+				reminders: '',
 			},
 			flatPickerConfig: {
 				altFormat: 'j M Y H:i',
@@ -333,6 +346,9 @@ export default {
 		setPercentDoneFilter() {
 			this.setSingleValueFilter('percent_done', 'percentDone', 'usePercentDone')
 		},
+		setReminderFilter() {
+			this.setDateFilter('reminders', 'reminders')
+		},
 		prepareDueDate() {
 			this.prepareDate('due_date', 'dueDate')
 		},
@@ -347,6 +363,9 @@ export default {
 		},
 		preparePercentDone() {
 			this.prepareSingleValue('percent_done', 'percentDone', 'usePercentDone', true)
+		},
+		prepareReminders() {
+			this.prepareDate('reminders', 'reminders')
 		},
 	},
 }
