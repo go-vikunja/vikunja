@@ -93,7 +93,7 @@ func validateTaskField(fieldName string) error {
 // @Param order_by query string false "The ordering parameter. Possible values to order by are `asc` or `desc`. Default is `asc`."
 // @Param filter_by query string false "The name of the field to filter by. Accepts an array for multiple filters which will be chanied together, all supplied filter must match."
 // @Param filter_value query string false "The value to filter for."
-// @Param filter_comparator query string false "The comparator to use for a filter. Available values are `equals`, `greater`, `greater_equals`, `less` and `less_equals`. Defaults to `equals`"
+// @Param filter_comparator query string false "The comparator to use for a filter. Available values are `equals`, `greater`, `greater_equals`, `less`, `less_equals` and `like`. Defaults to `equals`"
 // @Param filter_concat query string false "The concatinator to use for filters. Available values are `and` or `or`. Defaults to `or`."
 // @Param filter_include_nulls query string false "If set to true the result will include filtered fields whose value is set to `null`. Available values are `true` or `false`. Defaults to `false`."
 // @Security JWTKeyAuth

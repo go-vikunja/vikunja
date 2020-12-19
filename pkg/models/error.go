@@ -737,7 +737,7 @@ func (err ErrInvalidTaskFilterConcatinator) HTTPError() web.HTTPError {
 
 // ErrInvalidTaskFilterValue represents an error where the provided task filter value is invalid
 type ErrInvalidTaskFilterValue struct {
-	Value string
+	Value interface{}
 	Field string
 }
 
@@ -748,7 +748,7 @@ func IsErrInvalidTaskFilterValue(err error) bool {
 }
 
 func (err ErrInvalidTaskFilterValue) Error() string {
-	return fmt.Sprintf("Task filter value is invalid [Value: %s, Field: %s]", err.Value, err.Field)
+	return fmt.Sprintf("Task filter value is invalid [Value: %v, Field: %s]", err.Value, err.Field)
 }
 
 // ErrCodeInvalidTaskFilterValue holds the unique world-error code of this error

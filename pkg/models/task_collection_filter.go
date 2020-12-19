@@ -39,6 +39,7 @@ const (
 	taskFilterComparatorLess         taskFilterComparator = "<"
 	taskFilterComparatorLessEquals   taskFilterComparator = "<="
 	taskFilterComparatorNotEquals    taskFilterComparator = "!="
+	taskFilterComparatorLike         taskFilterComparator = "like"
 )
 
 type taskFilter struct {
@@ -111,7 +112,8 @@ func validateTaskFieldComparator(comparator taskFilterComparator) error {
 		taskFilterComparatorGreateEquals,
 		taskFilterComparatorLess,
 		taskFilterComparatorLessEquals,
-		taskFilterComparatorNotEquals:
+		taskFilterComparatorNotEquals,
+		taskFilterComparatorLike:
 		return nil
 	case taskFilterComparatorInvalid:
 		fallthrough
@@ -134,6 +136,8 @@ func getFilterComparatorFromString(comparator string) (taskFilterComparator, err
 		return taskFilterComparatorLessEquals, nil
 	case "not_equals":
 		return taskFilterComparatorNotEquals, nil
+	case "like":
+		return taskFilterComparatorLike, nil
 	default:
 		return taskFilterComparatorInvalid, ErrInvalidTaskFilterComparator{Comparator: taskFilterComparator(comparator)}
 	}

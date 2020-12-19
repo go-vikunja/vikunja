@@ -247,6 +247,17 @@ func getRawTasksForLists(lists []*List, a web.Auth, opts *taskOptions) (tasks []
 			} else {
 				filters = append(filters, &builder.Lte{f.field: f.value})
 			}
+		case taskFilterComparatorLike:
+			val, is := f.value.(string)
+			if !is {
+				return nil, 0, 0, ErrInvalidTaskFilterValue{Field: f.field, Value: f.value}
+			}
+			c := &builder.Like{f.field, "%" + val + "%"}
+			if opts.filterIncludeNulls {
+				filters = append(filters, builder.Or(c, &builder.IsNull{f.field}))
+			} else {
+				filters = append(filters, c)
+			}
 		case taskFilterComparatorInvalid:
 			// Nothing to do
 		}

@@ -1904,7 +1904,7 @@ var doc = `{
                     },
                     {
                         "type": "string",
-                        "description": "The comparator to use for a filter. Available values are ` + "`" + `equals` + "`" + `, ` + "`" + `greater` + "`" + `, ` + "`" + `greater_equals` + "`" + `, ` + "`" + `less` + "`" + ` and ` + "`" + `less_equals` + "`" + `. Defaults to ` + "`" + `equals` + "`" + `",
+                        "description": "The comparator to use for a filter. Available values are ` + "`" + `equals` + "`" + `, ` + "`" + `greater` + "`" + `, ` + "`" + `greater_equals` + "`" + `, ` + "`" + `less` + "`" + `, ` + "`" + `less_equals` + "`" + ` and ` + "`" + `like` + "`" + `. Defaults to ` + "`" + `equals` + "`" + `",
                         "name": "filter_comparator",
                         "in": "query"
                     },

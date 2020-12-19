@@ -858,6 +858,27 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				// Task 34 is also a favorite, but on a list user 1 has no access to.
 			},
 		},
+		{
+			name: "filtered with like",
+			fields: fields{
+				FilterBy:         []string{"title"},
+				FilterValue:      []string{"with"},
+				FilterComparator: []string{"like"},
+			},
+			args: defaultArgs,
+			want: []*Task{
+				task7,
+				task8,
+				task9,
+				task27,
+				task28,
+				task29,
+				task30,
+				task31,
+				task33,
+			},
+			wantErr: false,
+		},
 	}
 
 	for _, tt := range tests {

@@ -2451,7 +2451,7 @@ paths:
         in: query
         name: filter_value
         type: string
-      - description: The comparator to use for a filter. Available values are `equals`, `greater`, `greater_equals`, `less` and `less_equals`. Defaults to `equals`
+      - description: The comparator to use for a filter. Available values are `equals`, `greater`, `greater_equals`, `less`, `less_equals` and `like`. Defaults to `equals`
         in: query
         name: filter_comparator
         type: string
