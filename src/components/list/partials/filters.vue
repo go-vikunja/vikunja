@@ -19,18 +19,6 @@
 				</div>
 			</div>
 			<div class="field">
-				<label class="label">Due Date</label>
-				<div class="control">
-					<flat-pickr
-						:config="flatPickerConfig"
-						@on-close="setDueDateFilter"
-						class="input"
-						placeholder="Due Date Range"
-						v-model="filters.dueDate"
-					/>
-				</div>
-			</div>
-			<div class="field">
 				<label class="label">Priority</label>
 				<div class="control single-value-control">
 					<priority-select
@@ -44,6 +32,34 @@
 					>
 						Enable Filter By Priority
 					</fancycheckbox>
+				</div>
+			</div>
+			<div class="field">
+				<label class="label">Percent Done</label>
+				<div class="control single-value-control">
+					<percent-done-select
+						v-model.number="filters.percentDone"
+						@change="setPercentDoneFilter"
+						:disabled="!filters.usePercentDone"
+					/>
+					<fancycheckbox
+						v-model="filters.usePercentDone"
+						@change="setPercentDoneFilter"
+					>
+						Enable Filter By Percent Done
+					</fancycheckbox>
+				</div>
+			</div>
+			<div class="field">
+				<label class="label">Due Date</label>
+				<div class="control">
+					<flat-pickr
+						:config="flatPickerConfig"
+						@on-close="setDueDateFilter"
+						class="input"
+						placeholder="Due Date Range"
+						v-model="filters.dueDate"
+					/>
 				</div>
 			</div>
 			<div class="field">
@@ -82,20 +98,37 @@
 					/>
 				</div>
 			</div>
+
 			<div class="field">
-				<label class="label">Percent Done</label>
-				<div class="control single-value-control">
-					<percent-done-select
-						v-model.number="filters.percentDone"
-						@change="setPercentDoneFilter"
-						:disabled="!filters.usePercentDone"
-					/>
-					<fancycheckbox
-						v-model="filters.usePercentDone"
-						@change="setPercentDoneFilter"
+				<label class="label">Assignees</label>
+				<div class="control">
+					<multiselect
+						:clear-on-select="true"
+						:close-on-select="true"
+						:hide-selected="true"
+						:internal-search="true"
+						:loading="userService.loading"
+						:multiple="true"
+						:options="foundUsers"
+						:options-limit="300"
+						:searchable="true"
+						:showNoOptions="false"
+						:taggable="false"
+						@search-change="findUser"
+						@select="user => addUser(user)"
+						@remove="removeUser"
+						label="username"
+						placeholder="Type to search for a user..."
+						track-by="id"
+						v-model="users"
 					>
-						Enable Filter By Percent Done
-					</fancycheckbox>
+						<template slot="clear" slot-scope="props">
+							<div
+								@mousedown.prevent.stop="clearAllUsers(props.search)"
+								class="multiselect__clear"
+								v-if="users.length"></div>
+						</template>
+					</multiselect>
 				</div>
 			</div>
 		</div>
@@ -106,10 +139,15 @@
 import Fancycheckbox from '../../input/fancycheckbox'
 import flatPickr from 'vue-flatpickr-component'
 import 'flatpickr/dist/flatpickr.css'
+import Multiselect from 'vue-multiselect'
 
 import {formatISO} from 'date-fns'
+import differenceWith from 'lodash/differenceWith'
+
 import PrioritySelect from '@/components/tasks/partials/prioritySelect'
 import PercentDoneSelect from '@/components/tasks/partials/percentDoneSelect'
+
+import UserService from '../../../services/user'
 
 export default {
 	name: 'filters',
@@ -118,6 +156,7 @@ export default {
 		Fancycheckbox,
 		flatPickr,
 		PercentDoneSelect,
+		Multiselect,
 	},
 	data() {
 		return {
@@ -141,6 +180,7 @@ export default {
 				percentDone: 0,
 				usePercentDone: false,
 				reminders: '',
+				assignees: '',
 			},
 			flatPickerConfig: {
 				altFormat: 'j M Y H:i',
@@ -150,7 +190,14 @@ export default {
 				time_24hr: true,
 				mode: 'range',
 			},
+
+			userService: UserService,
+			foundUsers: [],
+			users: [],
 		}
+	},
+	created() {
+		this.userService = new UserService()
 	},
 	mounted() {
 		this.params = this.value
@@ -254,8 +301,8 @@ export default {
 				this.filters[variableName] = `${start.getFullYear()}-${start.getMonth() + 1}-${start.getDate()} to ${end.getFullYear()}-${end.getMonth() + 1}-${end.getDate()}`
 			}
 		},
-		setSingleValueFilter(filterName, variableName, useVariableName) {
-			if (!this.filters[useVariableName]) {
+		setSingleValueFilter(filterName, variableName, useVariableName = '', comparator = 'equals') {
+			if (useVariableName !== '' && !this.filters[useVariableName]) {
 				this.removePropertyFromFilter(filterName)
 				return
 			}
@@ -270,7 +317,7 @@ export default {
 
 			if (!found) {
 				this.params.filter_by.push(filterName)
-				this.params.filter_comparator.push('equals')
+				this.params.filter_comparator.push(comparator)
 				this.params.filter_value.push(this.filters[variableName])
 			}
 
@@ -366,6 +413,51 @@ export default {
 		},
 		prepareReminders() {
 			this.prepareDate('reminders', 'reminders')
+		},
+		clearUsers() {
+			this.$set(this, 'foundUsers', [])
+		},
+		findUser(query) {
+
+			if(query === '') {
+				this.clearUsers()
+			}
+
+			this.userService.getAll({}, {s: query})
+				.then(response => {
+					// Filter the results to not include users who are already assigneid
+					this.$set(this, 'foundUsers', differenceWith(response, this.users, (first, second) => {
+						return first.id === second.id
+					}))
+				})
+				.catch(e => {
+					this.error(e, this)
+				})
+		},
+		addUser() {
+			this.$nextTick(() => {
+				this.changeAssigneeFilter()
+			})
+		},
+		removeUser() {
+			this.$nextTick(() => {
+				this.changeAssigneeFilter()
+			})
+		},
+		changeAssigneeFilter() {
+			if(this.users.length === 0) {
+				this.removePropertyFromFilter('assignees')
+				this.change()
+				return
+			}
+
+			let userIDs = []
+			this.users.forEach(u => {
+				userIDs.push(u.id)
+			})
+
+			this.$set(this.filters, 'assignees', userIDs.join(','))
+			this.setSingleValueFilter('assignees', 'assignees', '', 'in')
 		},
 	},
 }
