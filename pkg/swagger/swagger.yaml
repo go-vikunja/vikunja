@@ -2443,7 +2443,7 @@ paths:
         in: query
         name: order_by
         type: string
-      - description: The name of the field to filter by. Allowed values are all task properties except `labels`, `assignees`, `list` and `namespace`. Task properties which are their own object require passing in the id of that entity. Accepts an array for multiple filters which will be chanied together, all supplied filter must match.
+      - description: The name of the field to filter by. Allowed values are all task properties except `labels`, `list` and `namespace`. Task properties which are their own object require passing in the id of that entity. Accepts an array for multiple filters which will be chanied together, all supplied filter must match.
         in: query
         name: filter_by
         type: string
@@ -2451,7 +2451,7 @@ paths:
         in: query
         name: filter_value
         type: string
-      - description: The comparator to use for a filter. Available values are `equals`, `greater`, `greater_equals`, `less`, `less_equals` and `like`. Defaults to `equals`
+      - description: The comparator to use for a filter. Available values are `equals`, `greater`, `greater_equals`, `less`, `less_equals`, `like` and `in`. `in` expects comma-separated values in `filter_value`. Defaults to `equals`
         in: query
         name: filter_comparator
         type: string
@@ -4459,7 +4459,7 @@ paths:
         in: query
         name: s
         type: string
-      - description: The sorting parameter. You can pass this multiple times to get the tasks ordered by multiple different parametes, along with `order_by`. Possible values to sort by are `id`, `text`, `description`, `done`, `done_at`, `due_date`, `created_by_id`, `list_id`, `repeat_after`, `priority`, `start_date`, `end_date`, `hex_color`, `percent_done`, `uid`, `created`, `updated`. Default is `id`.
+      - description: The sorting parameter. You can pass this multiple times to get the tasks ordered by multiple different parametes, along with `order_by`. Possible values to sort by are `id`, `title`, `description`, `done`, `done_at`, `due_date`, `created_by_id`, `list_id`, `repeat_after`, `priority`, `start_date`, `end_date`, `hex_color`, `percent_done`, `uid`, `created`, `updated`. Default is `id`.
         in: query
         name: sort_by
         type: string
@@ -4467,7 +4467,7 @@ paths:
         in: query
         name: order_by
         type: string
-      - description: The name of the field to filter by. Accepts an array for multiple filters which will be chanied together, all supplied filter must match.
+      - description: The name of the field to filter by. Allowed values are all task properties except `labels`, `list` and `namespace`. Task properties which are their own object require passing in the id of that entity. Accepts an array for multiple filters which will be chanied together, all supplied filter must match.
         in: query
         name: filter_by
         type: string
@@ -4475,13 +4475,17 @@ paths:
         in: query
         name: filter_value
         type: string
-      - description: The comparator to use for a filter. Available values are `equals`, `greater`, `greater_equals`, `less` and `less_equals`. Defaults to `equals`
+      - description: The comparator to use for a filter. Available values are `equals`, `greater`, `greater_equals`, `less`, `less_equals`, `like` and `in`. `in` expects comma-separated values in `filter_value`. Defaults to `equals`
         in: query
         name: filter_comparator
         type: string
       - description: The concatinator to use for filters. Available values are `and` or `or`. Defaults to `or`.
         in: query
         name: filter_concat
+        type: string
+      - description: If set to true the result will include filtered fields whose value is set to `null`. Available values are `true` or `false`. Defaults to `false`.
+        in: query
+        name: filter_include_nulls
         type: string
       produces:
       - application/json

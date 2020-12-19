@@ -892,6 +892,46 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name: "filter in",
+			fields: fields{
+				FilterBy:         []string{"id"},
+				FilterValue:      []string{"1,2,34"}, // Task 34 is forbidden for user 1
+				FilterComparator: []string{"in"},
+			},
+			args: defaultArgs,
+			want: []*Task{
+				task1,
+				task2,
+			},
+			wantErr: false,
+		},
+		{
+			name: "filter assignees",
+			fields: fields{
+				FilterBy:         []string{"assignees"},
+				FilterValue:      []string{"1"},
+				FilterComparator: []string{"equals"},
+			},
+			args: defaultArgs,
+			want: []*Task{
+				task30,
+			},
+			wantErr: false,
+		},
+		{
+			name: "filter assignees in",
+			fields: fields{
+				FilterBy:         []string{"assignees"},
+				FilterValue:      []string{"1,2"},
+				FilterComparator: []string{"in"},
+			},
+			args: defaultArgs,
+			want: []*Task{
+				task30,
+			},
+			wantErr: false,
+		},
 	}
 
 	for _, tt := range tests {

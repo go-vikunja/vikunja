@@ -142,12 +142,13 @@ type taskOptions struct {
 // @Param page query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
 // @Param per_page query int false "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page."
 // @Param s query string false "Search tasks by task text."
-// @Param sort_by query string false "The sorting parameter. You can pass this multiple times to get the tasks ordered by multiple different parametes, along with `order_by`. Possible values to sort by are `id`, `text`, `description`, `done`, `done_at`, `due_date`, `created_by_id`, `list_id`, `repeat_after`, `priority`, `start_date`, `end_date`, `hex_color`, `percent_done`, `uid`, `created`, `updated`. Default is `id`."
+// @Param sort_by query string false "The sorting parameter. You can pass this multiple times to get the tasks ordered by multiple different parametes, along with `order_by`. Possible values to sort by are `id`, `title`, `description`, `done`, `done_at`, `due_date`, `created_by_id`, `list_id`, `repeat_after`, `priority`, `start_date`, `end_date`, `hex_color`, `percent_done`, `uid`, `created`, `updated`. Default is `id`."
 // @Param order_by query string false "The ordering parameter. Possible values to order by are `asc` or `desc`. Default is `asc`."
-// @Param filter_by query string false "The name of the field to filter by. Accepts an array for multiple filters which will be chanied together, all supplied filter must match."
+// @Param filter_by query string false "The name of the field to filter by. Allowed values are all task properties except `labels`, `list` and `namespace`. Task properties which are their own object require passing in the id of that entity. Accepts an array for multiple filters which will be chanied together, all supplied filter must match."
 // @Param filter_value query string false "The value to filter for."
-// @Param filter_comparator query string false "The comparator to use for a filter. Available values are `equals`, `greater`, `greater_equals`, `less` and `less_equals`. Defaults to `equals`"
+// @Param filter_comparator query string false "The comparator to use for a filter. Available values are `equals`, `greater`, `greater_equals`, `less`, `less_equals`, `like` and `in`. `in` expects comma-separated values in `filter_value`. Defaults to `equals`"
 // @Param filter_concat query string false "The concatinator to use for filters. Available values are `and` or `or`. Defaults to `or`."
+// @Param filter_include_nulls query string false "If set to true the result will include filtered fields whose value is set to `null`. Available values are `true` or `false`. Defaults to `false`."
 // @Security JWTKeyAuth
 // @Success 200 {array} models.Task "The tasks"
 // @Failure 500 {object} models.Message "Internal error"
@@ -176,6 +177,8 @@ func getFilterCond(f *taskFilter, includeNulls bool) (cond builder.Cond, err err
 			return nil, ErrInvalidTaskFilterValue{Field: f.field, Value: f.value}
 		}
 		cond = &builder.Like{f.field, "%" + val + "%"}
+	case taskFilterComparatorIn:
+		cond = builder.In(f.field, f.value)
 	case taskFilterComparatorInvalid:
 		// Nothing to do
 	}
@@ -185,6 +188,24 @@ func getFilterCond(f *taskFilter, includeNulls bool) (cond builder.Cond, err err
 	}
 
 	return
+}
+
+func getFilterCondForSeparateTable(table string, concat taskFilterConcatinator, conds []builder.Cond) builder.Cond {
+	var filtercond builder.Cond
+	if concat == filterConcatOr {
+		filtercond = builder.Or(conds...)
+	}
+	if concat == filterConcatAnd {
+		filtercond = builder.And(conds...)
+	}
+
+	return builder.In(
+		"id",
+		builder.
+			Select("task_id").
+			From(table).
+			Where(filtercond),
+	)
 }
 
 //nolint:gocyclo
@@ -246,8 +267,9 @@ func getRawTasksForLists(lists []*List, a web.Auth, opts *taskOptions) (tasks []
 		}
 	}
 
-	// Reminder filters need a special treatment since they are in a separate database
+	// Some filters need a special treatment since they are in a separate table
 	reminderFilters := []builder.Cond{}
+	assigneeFilters := []builder.Cond{}
 
 	var filters = make([]builder.Cond, 0, len(opts.filters))
 	// To still find tasks with nil values, we exclude 0s when comparing with >/< values.
@@ -259,6 +281,16 @@ func getRawTasksForLists(lists []*List, a web.Auth, opts *taskOptions) (tasks []
 				return nil, 0, 0, err
 			}
 			reminderFilters = append(reminderFilters, filter)
+			continue
+		}
+
+		if f.field == "assignees" {
+			f.field = "user_id"
+			filter, err := getFilterCond(f, opts.filterIncludeNulls)
+			if err != nil {
+				return nil, 0, 0, err
+			}
+			assigneeFilters = append(assigneeFilters, filter)
 			continue
 		}
 
@@ -315,22 +347,11 @@ func getRawTasksForLists(lists []*List, a web.Auth, opts *taskOptions) (tasks []
 	}
 
 	if len(reminderFilters) > 0 {
-		var filtercond builder.Cond
-		if opts.filterConcat == filterConcatOr {
-			filtercond = builder.Or(reminderFilters...)
-		}
-		if opts.filterConcat == filterConcatAnd {
-			filtercond = builder.And(reminderFilters...)
-		}
-		reminderFilter := builder.In(
-			"id",
-			builder.
-				Select("task_id").
-				From("task_reminders").
-				Where(filtercond),
-		)
+		filters = append(filters, getFilterCondForSeparateTable("task_reminders", opts.filterConcat, reminderFilters))
+	}
 
-		filters = append(filters, reminderFilter)
+	if len(assigneeFilters) > 0 {
+		filters = append(filters, getFilterCondForSeparateTable("task_assignees", opts.filterConcat, assigneeFilters))
 	}
 
 	query = query.Where(listCond)
