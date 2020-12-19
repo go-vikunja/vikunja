@@ -106,30 +106,36 @@
 			</div>
 		</div>
 
-		<!-- Name -->
+		<!-- General -->
 		<div class="card update-name">
 			<header class="card-header">
 				<p class="card-header-title">
-					Update your name
+					General Settings
 				</p>
 			</header>
 			<div class="card-content">
 				<div class="content">
-						<div class="field">
-							<label class="label" for="newName">Name</label>
-							<div class="control">
-								<input
-									@keyup.enter="updateName"
-									class="input"
-									id="newName"
-									placeholder="The new name"
-									type="text"
-									v-model="name"/>
-							</div>
+					<div class="field">
+						<label class="label" for="newName">Name</label>
+						<div class="control">
+							<input
+								@keyup.enter="updateSettings"
+								class="input"
+								id="newName"
+								placeholder="The new name"
+								type="text"
+								v-model="settings.name"/>
 						</div>
+					</div>
+					<div class="field">
+						<label class="checkbox">
+							<input type="checkbox" v-model="settings.emailRemindersEnabled"/>
+							Send me Reminders for tasks via Email
+						</label>
+					</div>
 
 					<div class="bigbuttons">
-						<button :class="{ 'is-loading': userNameService.loading}" @click="updateName()"
+						<button :class="{ 'is-loading': userSettingsService.loading}" @click="updateSettings()"
 								class="button is-primary is-fullwidth">
 							Save
 						</button>
@@ -217,7 +223,7 @@
 			<div class="card-content">
 				<router-link
 					:to="{name: 'migrate.start'}"
-					class="button is-primary is-right noshadow is-outlined"
+					class="button is-primary"
 					v-if="migratorsEnabled"
 				>
 					Import your data into Vikunja
@@ -266,8 +272,8 @@ import EmailUpdateService from '../../services/emailUpdate'
 import EmailUpdateModel from '../../models/emailUpdate'
 import TotpModel from '../../models/totp'
 import TotpService from '../../services/totp'
-import UserNameService from '../../services/userName'
-import UserNameModel from '../../models/userName'
+import UserSettingsService from '../../services/userSettings'
+import UserSettingsModel from '../../models/userSettings'
 
 import {mapState} from 'vuex'
 
@@ -295,8 +301,8 @@ export default {
 
 			caldavUrl: '',
 
-			name: '',
-			userNameService: UserNameService,
+			settings: UserSettingsModel,
+			userSettingsService: UserSettingsService,
 		}
 	},
 	components: {
@@ -312,8 +318,11 @@ export default {
 		this.totpService = new TotpService()
 		this.totp = new TotpModel()
 
-		this.userNameService = new UserNameService()
-		this.name = this.$store.state.auth.info.name
+		this.userSettingsService = new UserSettingsService()
+		this.settings = new UserSettingsModel({
+			name: this.$store.state.auth.info.name,
+			emailRemindersEnabled: this.$store.state.auth.info.emailRemindersEnabled ?? false,
+		})
 
 		this.totpStatus()
 		this.buildCaldavUrl()
@@ -399,12 +408,10 @@ export default {
 				})
 				.catch(e => this.error(e, this))
 		},
-		updateName() {
-			const name = new UserNameModel({name: this.name})
-
-			this.userNameService.update(name)
+		updateSettings() {
+			this.userSettingsService.update(this.settings)
 				.then(() => {
-					this.$store.commit('auth/setUserName', this.name)
+					this.$store.commit('auth/setUserSettings', this.settings)
 					this.success({message: 'The name was successfully changed.'}, this)
 				})
 				.catch(e => this.error(e, this))

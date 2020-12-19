@@ -16,8 +16,9 @@ export default {
 			state.info = info
 			state.avatarUrl = info.getAvatarUrl()
 		},
-		setUserName(state, name) {
+		setUserSettings(state, {name, emailRemindersEnabled}) {
 			state.info.name = name
+			state.info.emailRemindersEnabled = emailRemindersEnabled
 		},
 		authenticated(state, authenticated) {
 			state.authenticated = authenticated
