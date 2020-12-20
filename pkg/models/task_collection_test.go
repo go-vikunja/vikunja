@@ -62,6 +62,15 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 
 	loc := config.GetTimeZone()
 
+	label4 := &Label{
+		ID:          4,
+		Title:       "Label #4 - visible via other task",
+		CreatedByID: 2,
+		CreatedBy:   user2,
+		Created:     testCreatedTime,
+		Updated:     testUpdatedTime,
+	}
+
 	// We use individual variables for the tasks here to be able to rearrange or remove ones more easily
 	task1 := &Task{
 		ID:          1,
@@ -75,14 +84,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		BucketID:    1,
 		IsFavorite:  true,
 		Labels: []*Label{
-			{
-				ID:          4,
-				Title:       "Label #4 - visible via other task",
-				CreatedByID: 2,
-				CreatedBy:   user2,
-				Created:     testCreatedTime,
-				Updated:     testUpdatedTime,
-			},
+			label4,
 		},
 		RelatedTasks: map[RelationKind][]*Task{
 			RelationKindSubtask: {
@@ -137,14 +139,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		ListID:      1,
 		BucketID:    1,
 		Labels: []*Label{
-			{
-				ID:          4,
-				Title:       "Label #4 - visible via other task",
-				CreatedByID: 2,
-				CreatedBy:   user2,
-				Created:     testCreatedTime,
-				Updated:     testUpdatedTime,
-			},
+			label4,
 		},
 		RelatedTasks: map[RelationKind][]*Task{},
 		Created:      time.Unix(1543626724, 0).In(loc),
@@ -929,6 +924,20 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			args: defaultArgs,
 			want: []*Task{
 				task30,
+			},
+			wantErr: false,
+		},
+		{
+			name: "filter labels",
+			fields: fields{
+				FilterBy:         []string{"labels"},
+				FilterValue:      []string{"4"},
+				FilterComparator: []string{"equals"},
+			},
+			args: defaultArgs,
+			want: []*Task{
+				task1,
+				task2,
 			},
 			wantErr: false,
 		},
