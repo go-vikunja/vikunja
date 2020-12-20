@@ -131,6 +131,47 @@
 					</multiselect>
 				</div>
 			</div>
+
+			<div class="field">
+				<label class="label">Labels</label>
+				<div class="control">
+					<multiselect
+						:clear-on-select="true"
+						:close-on-select="false"
+						:hide-selected="true"
+						:internal-search="true"
+						:loading="labelService.loading"
+						:multiple="true"
+						:options="foundLabels"
+						:options-limit="300"
+						:searchable="true"
+						:showNoOptions="false"
+						@search-change="findLabels"
+						@select="label => addLabel(label)"
+						label="title"
+						placeholder="Type to search for a label..."
+						track-by="id"
+						v-model="labels"
+					>
+						<template
+							slot="tag"
+							slot-scope="{ option }">
+							<span
+								:style="{'background': option.hexColor, 'color': option.textColor}"
+								class="tag mr-2 mb-2">
+								<span>{{ option.title }}</span>
+								<a @click="removeLabel(option)" class="delete is-small"></a>
+							</span>
+						</template>
+						<template slot="clear" slot-scope="props">
+							<div
+								@mousedown.prevent.stop="clearLabels(props.search)"
+								class="multiselect__clear"
+								v-if="labels.length"></div>
+						</template>
+					</multiselect>
+				</div>
+			</div>
 		</div>
 	</div>
 </template>
@@ -147,7 +188,8 @@ import differenceWith from 'lodash/differenceWith'
 import PrioritySelect from '@/components/tasks/partials/prioritySelect'
 import PercentDoneSelect from '@/components/tasks/partials/percentDoneSelect'
 
-import UserService from '../../../services/user'
+import UserService from '@/services/user'
+import LabelService from '@/services/label'
 
 export default {
 	name: 'filters',
@@ -194,10 +236,15 @@ export default {
 			userService: UserService,
 			foundUsers: [],
 			users: [],
+
+			labelService: LabelService,
+			foundLabels: [],
+			labels: [],
 		}
 	},
 	created() {
 		this.userService = new UserService()
+		this.labelService = new LabelService()
 	},
 	mounted() {
 		this.params = this.value
@@ -419,7 +466,7 @@ export default {
 		},
 		findUser(query) {
 
-			if(query === '') {
+			if (query === '') {
 				this.clearUsers()
 			}
 
@@ -445,7 +492,7 @@ export default {
 			})
 		},
 		changeAssigneeFilter() {
-			if(this.users.length === 0) {
+			if (this.users.length === 0) {
 				this.removePropertyFromFilter('assignees')
 				this.change()
 				return
@@ -458,6 +505,58 @@ export default {
 
 			this.$set(this.filters, 'assignees', userIDs.join(','))
 			this.setSingleValueFilter('assignees', 'assignees', '', 'in')
+		},
+		clearLabels() {
+			this.$set(this, 'foundLabels', [])
+		},
+		findLabels(query) {
+
+			if (query === '') {
+				this.clearLabels()
+			}
+
+			this.labelService.getAll({}, {s: query})
+				.then(response => {
+					// Filter the results to not include labels already selected
+					this.$set(this, 'foundLabels', differenceWith(response, this.labels, (first, second) => {
+						return first.id === second.id
+					}))
+				})
+				.catch(e => {
+					this.error(e, this)
+				})
+		},
+		addLabel() {
+			this.$nextTick(() => {
+				this.changeLabelFilter()
+			})
+		},
+		removeLabel(label) {
+			this.$nextTick(() => {
+				for (const l in this.labels) {
+					if (this.labels[l].id === label.id) {
+						this.labels.splice(l, 1)
+					}
+					break
+				}
+
+				this.changeLabelFilter()
+			})
+		},
+		changeLabelFilter() {
+			if (this.labels.length === 0) {
+				this.removePropertyFromFilter('labels')
+				this.change()
+				return
+			}
+
+			let labelIDs = []
+			this.labels.forEach(u => {
+				labelIDs.push(u.id)
+			})
+
+			this.$set(this.filters, 'labels', labelIDs.join(','))
+			this.setSingleValueFilter('labels', 'labels', '', 'in')
 		},
 	},
 }
