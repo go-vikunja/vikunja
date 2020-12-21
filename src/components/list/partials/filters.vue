@@ -107,16 +107,16 @@
 						:close-on-select="true"
 						:hide-selected="true"
 						:internal-search="true"
-						:loading="userService.loading"
+						:loading="usersService.loading"
 						:multiple="true"
-						:options="foundUsers"
+						:options="foundusers"
 						:options-limit="300"
 						:searchable="true"
 						:showNoOptions="false"
 						:taggable="false"
-						@search-change="findUser"
-						@select="user => addUser(user)"
-						@remove="removeUser"
+						@search-change="query => find('users', query)"
+						@select="() => add('users', 'assignees')"
+						@remove="() => remove('users', 'assignees')"
 						label="username"
 						placeholder="Type to search for a user..."
 						track-by="id"
@@ -124,7 +124,7 @@
 					>
 						<template slot="clear" slot-scope="props">
 							<div
-								@mousedown.prevent.stop="clearAllUsers(props.search)"
+								@mousedown.prevent.stop="clear('users', props.search)"
 								class="multiselect__clear"
 								v-if="users.length"></div>
 						</template>
@@ -172,6 +172,73 @@
 					</multiselect>
 				</div>
 			</div>
+
+			<template v-if="$route.name === 'filters.create' || $route.name === 'list.edit'">
+				<div class="field">
+					<label class="label">Lists</label>
+					<div class="control">
+						<multiselect
+							:clear-on-select="true"
+							:close-on-select="true"
+							:hide-selected="true"
+							:internal-search="true"
+							:loading="listsService.loading"
+							:multiple="true"
+							:options="foundlists"
+							:options-limit="300"
+							:searchable="true"
+							:showNoOptions="false"
+							:taggable="false"
+							@search-change="query => find('lists', query)"
+							@select="() => add('lists', 'list_id')"
+							@remove="() => remove('lists', 'list_id')"
+							label="title"
+							placeholder="Type to search for a list..."
+							track-by="id"
+							v-model="lists"
+						>
+							<template slot="clear" slot-scope="props">
+								<div
+									@mousedown.prevent.stop="clear('lists', props.search)"
+									class="multiselect__clear"
+									v-if="lists.length"></div>
+							</template>
+						</multiselect>
+					</div>
+				</div>
+				<div class="field">
+					<label class="label">Namespaces</label>
+					<div class="control">
+						<multiselect
+							:clear-on-select="true"
+							:close-on-select="true"
+							:hide-selected="true"
+							:internal-search="true"
+							:loading="namespaceService.loading"
+							:multiple="true"
+							:options="foundnamespace"
+							:options-limit="300"
+							:searchable="true"
+							:showNoOptions="false"
+							:taggable="false"
+							@search-change="query => find('namespace', query)"
+							@select="() => add('namespace', 'namespace')"
+							@remove="() => remove('namespace', 'namespace')"
+							label="title"
+							placeholder="Type to search for a namespace..."
+							track-by="id"
+							v-model="namespace"
+						>
+							<template slot="clear" slot-scope="props">
+								<div
+									@mousedown.prevent.stop="clear('namespace', props.search)"
+									class="multiselect__clear"
+									v-if="namespace.length"></div>
+							</template>
+						</multiselect>
+					</div>
+				</div>
+			</template>
 		</div>
 	</div>
 </template>
@@ -190,6 +257,8 @@ import PercentDoneSelect from '@/components/tasks/partials/percentDoneSelect'
 
 import UserService from '@/services/user'
 import LabelService from '@/services/label'
+import ListService from '@/services/list'
+import NamespaceService from '@/services/namespace'
 
 export default {
 	name: 'filters',
@@ -223,6 +292,9 @@ export default {
 				usePercentDone: false,
 				reminders: '',
 				assignees: '',
+				labels: '',
+				list_id: '',
+				namespace: '',
 			},
 			flatPickerConfig: {
 				altFormat: 'j M Y H:i',
@@ -233,18 +305,28 @@ export default {
 				mode: 'range',
 			},
 
-			userService: UserService,
-			foundUsers: [],
+			usersService: UserService,
+			foundusers: [],
 			users: [],
 
 			labelService: LabelService,
 			foundLabels: [],
 			labels: [],
+
+			listsService: ListService,
+			foundlists: [],
+			lists: [],
+
+			namespaceService: NamespaceService,
+			foundnamespace: [],
+			namespace: [],
 		}
 	},
 	created() {
-		this.userService = new UserService()
+		this.usersService = new UserService()
 		this.labelService = new LabelService()
+		this.listsService = new ListService()
+		this.namespaceService = new NamespaceService()
 	},
 	mounted() {
 		this.params = this.value
@@ -269,11 +351,16 @@ export default {
 		},
 		prepareFilters() {
 			this.prepareDone()
-			this.prepareDueDate()
-			this.prepareStartDate()
-			this.prepareEndDate()
-			this.preparePriority()
-			this.preparePercentDone()
+			this.prepareDate('due_date', 'dueDate')
+			this.prepareDate('start_date', 'startDate')
+			this.prepareDate('end_date', 'endDate')
+			this.prepareSingleValue('priority', 'priority', 'usePriority', true)
+			this.prepareSingleValue('percent_done', 'percentDone', 'usePercentDone', true)
+			this.prepareDate('reminders')
+			this.prepareRelatedObjectFilter('users', 'assignees')
+			this.prepareRelatedObjectFilter('labels', 'labels', 'label')
+			this.prepareRelatedObjectFilter('lists', 'list_id')
+			this.prepareRelatedObjectFilter('namespace')
 		},
 		removePropertyFromFilter(propertyName) {
 			for (const i in this.params.filter_by) {
@@ -370,7 +457,18 @@ export default {
 
 			this.change()
 		},
-		prepareSingleValue(filterName, variableName, useVariableName, isNumber = false) {
+		/**
+		 *
+		 * @param filterName The filter name in the api.
+		 * @param variableName The name of the variable in this.filters.
+		 * @param useVariableName The name of the variable of the "Use this filter" variable. Will only be set if the parameter is not null.
+		 * @param isNumber Toggles if the value should be parsed as a number.
+		 */
+		prepareSingleValue(filterName, variableName = null, useVariableName = null, isNumber = false) {
+			if (variableName === null) {
+				variableName = filterName
+			}
+
 			let found = false
 			for (const i in this.params.filter_by) {
 				if (this.params.filter_by[i] === filterName) {
@@ -379,7 +477,7 @@ export default {
 				}
 			}
 
-			if (found === false) {
+			if (found === false && useVariableName !== null) {
 				this.filters[useVariableName] = false
 				return
 			}
@@ -390,7 +488,9 @@ export default {
 				this.filters[variableName] = this.params.filter_value[found]
 			}
 
-			this.filters[useVariableName] = true
+			if (useVariableName !== null) {
+				this.filters[useVariableName] = true
+			}
 		},
 		prepareDone() {
 			// Set filters.done based on params
@@ -406,6 +506,24 @@ export default {
 			})
 			if (foundDone === false) {
 				this.$set(this.filters, 'done', true)
+			}
+		},
+		prepareRelatedObjectFilter(kind, filterName = null, servicePrefix = null) {
+			if (filterName === null) {
+				filterName = kind
+			}
+
+			if (servicePrefix === null) {
+				servicePrefix = kind
+			}
+
+			this.prepareSingleValue(filterName)
+			if (this.filters[filterName] !== '') {
+				this[`${servicePrefix}Service`].getAll({}, {s: this.filters[filterName]})
+					.then(r => {
+						this.$set(this, kind, r)
+					})
+					.catch(e => this.error(e, this))
 			}
 		},
 		setDoneFilter() {
@@ -441,39 +559,21 @@ export default {
 			this.setSingleValueFilter('percent_done', 'percentDone', 'usePercentDone')
 		},
 		setReminderFilter() {
-			this.setDateFilter('reminders', 'reminders')
+			this.setDateFilter('reminders')
 		},
-		prepareDueDate() {
-			this.prepareDate('due_date', 'dueDate')
+		clear(kind) {
+			this.$set(this, `found${kind}`, [])
 		},
-		preparePriority() {
-			this.prepareSingleValue('priority', 'priority', 'usePriority', true)
-		},
-		prepareStartDate() {
-			this.prepareDate('start_date', 'startDate')
-		},
-		prepareEndDate() {
-			this.prepareDate('end_date', 'endDate')
-		},
-		preparePercentDone() {
-			this.prepareSingleValue('percent_done', 'percentDone', 'usePercentDone', true)
-		},
-		prepareReminders() {
-			this.prepareDate('reminders', 'reminders')
-		},
-		clearUsers() {
-			this.$set(this, 'foundUsers', [])
-		},
-		findUser(query) {
+		find(kind, query) {
 
 			if (query === '') {
-				this.clearUsers()
+				this.clear(kind)
 			}
 
-			this.userService.getAll({}, {s: query})
+			this[`${kind}Service`].getAll({}, {s: query})
 				.then(response => {
 					// Filter the results to not include users who are already assigneid
-					this.$set(this, 'foundUsers', differenceWith(response, this.users, (first, second) => {
+					this.$set(this, `found${kind}`, differenceWith(response, this[kind], (first, second) => {
 						return first.id === second.id
 					}))
 				})
@@ -481,30 +581,30 @@ export default {
 					this.error(e, this)
 				})
 		},
-		addUser() {
+		add(kind, filterName) {
 			this.$nextTick(() => {
-				this.changeAssigneeFilter()
+				this.changeMultiselectFilter(kind, filterName)
 			})
 		},
-		removeUser() {
+		remove(kind, filterName) {
 			this.$nextTick(() => {
-				this.changeAssigneeFilter()
+				this.changeMultiselectFilter(kind, filterName)
 			})
 		},
-		changeAssigneeFilter() {
-			if (this.users.length === 0) {
-				this.removePropertyFromFilter('assignees')
+		changeMultiselectFilter(kind, filterName) {
+			if (this[kind].length === 0) {
+				this.removePropertyFromFilter(filterName)
 				this.change()
 				return
 			}
 
-			let userIDs = []
-			this.users.forEach(u => {
-				userIDs.push(u.id)
+			let ids = []
+			this[kind].forEach(u => {
+				ids.push(u.id)
 			})
 
-			this.$set(this.filters, 'assignees', userIDs.join(','))
-			this.setSingleValueFilter('assignees', 'assignees', '', 'in')
+			this.$set(this.filters, filterName, ids.join(','))
+			this.setSingleValueFilter(filterName, filterName, '', 'in')
 		},
 		clearLabels() {
 			this.$set(this, 'foundLabels', [])
