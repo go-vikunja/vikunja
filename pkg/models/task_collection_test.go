@@ -941,6 +941,46 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name: "filter list",
+			fields: fields{
+				FilterBy:         []string{"list_id"},
+				FilterValue:      []string{"6"},
+				FilterComparator: []string{"equals"},
+			},
+			args: defaultArgs,
+			want: []*Task{
+				task15,
+			},
+			wantErr: false,
+		},
+		{
+			name: "filter namespace",
+			fields: fields{
+				FilterBy:         []string{"namespace"},
+				FilterValue:      []string{"7"},
+				FilterComparator: []string{"equals"},
+			},
+			args: defaultArgs,
+			want: []*Task{
+				task21,
+			},
+			wantErr: false,
+		},
+		{
+			name: "filter namespace in",
+			fields: fields{
+				FilterBy:         []string{"namespace"},
+				FilterValue:      []string{"7,8"},
+				FilterComparator: []string{"in"},
+			},
+			args: defaultArgs,
+			want: []*Task{
+				task21,
+				task22,
+			},
+			wantErr: false,
+		},
 	}
 
 	for _, tt := range tests {

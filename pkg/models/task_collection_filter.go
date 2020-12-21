@@ -188,9 +188,24 @@ func getValueForField(field reflect.StructField, rawValue string) (value interfa
 
 func getNativeValueForTaskField(fieldName string, comparator taskFilterComparator, value string) (nativeValue interface{}, err error) {
 
-	var realFieldName = strcase.ToCamel(fieldName)
-	if strings.ToLower(fieldName) == "id" {
-		realFieldName = "ID"
+	realFieldName := strings.ReplaceAll(strcase.ToCamel(fieldName), "Id", "ID")
+
+	if realFieldName == "Namespace" {
+		if comparator == taskFilterComparatorIn {
+			vals := strings.Split(value, ",")
+			valueSlice := []interface{}{}
+			for _, val := range vals {
+				v, err := strconv.ParseInt(val, 10, 64)
+				if err != nil {
+					return nil, err
+				}
+				valueSlice = append(valueSlice, v)
+			}
+			return valueSlice, nil
+		}
+
+		nativeValue, err = strconv.ParseInt(value, 10, 64)
+		return
 	}
 
 	field, ok := reflect.TypeOf(&Task{}).Elem().FieldByName(realFieldName)

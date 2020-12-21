@@ -17,7 +17,11 @@
 package models
 
 import (
+	"strconv"
+	"strings"
 	"time"
+
+	"code.vikunja.io/api/pkg/log"
 
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/metrics"
@@ -320,6 +324,24 @@ func getRawListsForUser(opts *listOptions) (lists []*List, resultCount int, tota
 
 	limit, start := getLimitFromPageIndex(opts.page, opts.perPage)
 
+	var filterCond builder.Cond
+	vals := strings.Split(opts.search, ",")
+	ids := []int64{}
+	for _, val := range vals {
+		v, err := strconv.ParseInt(val, 10, 64)
+		if err != nil {
+			log.Debugf("List search string part '%s' is not a number: %s", val, err)
+			continue
+		}
+		ids = append(ids, v)
+	}
+
+	if len(ids) > 0 {
+		filterCond = builder.In("l.id", ids)
+	} else {
+		filterCond = &builder.Like{"l.title", "%" + opts.search + "%"}
+	}
+
 	// Gets all Lists where the user is either owner or in a team which has access to the list
 	// Or in a team which has namespace read access
 	query := x.Select("l.*").
@@ -340,7 +362,7 @@ func getRawListsForUser(opts *listOptions) (lists []*List, resultCount int, tota
 			builder.Eq{"l.owner_id": fullUser.ID},
 		)).
 		GroupBy("l.id").
-		Where("l.title LIKE ?", "%"+opts.search+"%").
+		Where(filterCond).
 		Where(isArchivedCond)
 	if limit > 0 {
 		query = query.Limit(limit, start)
@@ -368,7 +390,7 @@ func getRawListsForUser(opts *listOptions) (lists []*List, resultCount int, tota
 			builder.Eq{"l.owner_id": fullUser.ID},
 		)).
 		GroupBy("l.id").
-		Where("l.title LIKE ?", "%"+opts.search+"%").
+		Where(filterCond).
 		Where(isArchivedCond).
 		Count(&List{})
 	return lists, len(lists), totalItems, err

@@ -18,7 +18,11 @@ package models
 
 import (
 	"sort"
+	"strconv"
+	"strings"
 	"time"
+
+	"code.vikunja.io/api/pkg/log"
 
 	"code.vikunja.io/api/pkg/metrics"
 	"code.vikunja.io/api/pkg/user"
@@ -50,6 +54,9 @@ type Namespace struct {
 	Created time.Time `xorm:"created not null" json:"created"`
 	// A timestamp when this namespace was last updated. You cannot change this value.
 	Updated time.Time `xorm:"updated not null" json:"updated"`
+
+	// If set to true, will only return the namespaces, not their lists.
+	NamespacesOnly bool `xorm:"-" json:"-" query:"namespaces_only"`
 
 	web.CRUDable `xorm:"-" json:"-"`
 	web.Rights   `xorm:"-" json:"-"`
@@ -171,6 +178,19 @@ type NamespaceWithLists struct {
 	Lists     []*List `xorm:"-" json:"lists"`
 }
 
+func makeNamespaceSliceFromMap(namespaces map[int64]*NamespaceWithLists, userMap map[int64]*user.User) []*NamespaceWithLists {
+	all := make([]*NamespaceWithLists, 0, len(namespaces))
+	for _, n := range namespaces {
+		n.Owner = userMap[n.OwnerID]
+		all = append(all, n)
+	}
+	sort.Slice(all, func(i, j int) bool {
+		return all[i].ID < all[j].ID
+	})
+
+	return all
+}
+
 // ReadAll gets all namespaces a user has access to
 // @Summary Get all namespaces a user has access to
 // @Description Returns all namespaces a user has access to.
@@ -181,10 +201,12 @@ type NamespaceWithLists struct {
 // @Param per_page query int false "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page."
 // @Param s query string false "Search namespaces by name."
 // @Param is_archived query bool false "If true, also returns all archived namespaces."
+// @Param namespaces_only query bool false "If true, also returns only namespaces without their lists."
 // @Security JWTKeyAuth
 // @Success 200 {array} models.NamespaceWithLists "The Namespaces."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces [get]
+//nolint:gocyclo
 func (n *Namespace) ReadAll(a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
 	if _, is := a.(*LinkSharing); is {
 		return nil, 0, 0, ErrGenericForbidden{}
@@ -210,6 +232,22 @@ func (n *Namespace) ReadAll(a web.Auth, search string, page int, perPage int) (r
 		)
 	}
 
+	var filterCond builder.Cond = &builder.Like{"namespaces.title", "%" + search + "%"}
+	vals := strings.Split(search, ",")
+	ids := []int64{}
+	for _, val := range vals {
+		v, err := strconv.ParseInt(val, 10, 64)
+		if err != nil {
+			log.Debugf("Namespace search string part '%s' is not a number: %s", val, err)
+			continue
+		}
+		ids = append(ids, v)
+	}
+
+	if len(ids) > 0 {
+		filterCond = builder.In("namespaces.id", ids)
+	}
+
 	limit, start := getLimitFromPageIndex(page, perPage)
 	query := x.Select("namespaces.*").
 		Table("namespaces").
@@ -220,12 +258,28 @@ func (n *Namespace) ReadAll(a web.Auth, search string, page int, perPage int) (r
 		Or("namespaces.owner_id = ?", doer.ID).
 		Or("users_namespace.user_id = ?", doer.ID).
 		GroupBy("namespaces.id").
-		Where("namespaces.title LIKE ?", "%"+search+"%").
+		Where(filterCond).
 		Where(isArchivedCond)
 	if limit > 0 {
 		query = query.Limit(limit, start)
 	}
 	err = query.Find(&namespaces)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	numberOfTotalItems, err = x.
+		Table("namespaces").
+		Join("LEFT", "team_namespaces", "namespaces.id = team_namespaces.namespace_id").
+		Join("LEFT", "team_members", "team_members.team_id = team_namespaces.team_id").
+		Join("LEFT", "users_namespace", "users_namespace.namespace_id = namespaces.id").
+		Where("team_members.user_id = ?", doer.ID).
+		Or("namespaces.owner_id = ?", doer.ID).
+		Or("users_namespace.user_id = ?", doer.ID).
+		And("namespaces.is_archived = false").
+		GroupBy("namespaces.id").
+		Where(filterCond).
+		Count(&NamespaceWithLists{})
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -245,6 +299,11 @@ func (n *Namespace) ReadAll(a web.Auth, search string, page int, perPage int) (r
 		return nil, 0, 0, err
 	}
 
+	if n.NamespacesOnly {
+		all := makeNamespaceSliceFromMap(namespaces, userMap)
+		return all, len(all), numberOfTotalItems, nil
+	}
+
 	// Get all lists
 	lists := []*List{}
 	listQuery := x.
@@ -254,22 +313,6 @@ func (n *Namespace) ReadAll(a web.Auth, search string, page int, perPage int) (r
 		listQuery.And("is_archived = false")
 	}
 	err = listQuery.Find(&lists)
-	if err != nil {
-		return nil, 0, 0, err
-	}
-
-	numberOfTotalItems, err = x.
-		Table("namespaces").
-		Join("LEFT", "team_namespaces", "namespaces.id = team_namespaces.namespace_id").
-		Join("LEFT", "team_members", "team_members.team_id = team_namespaces.team_id").
-		Join("LEFT", "users_namespace", "users_namespace.namespace_id = namespaces.id").
-		Where("team_members.user_id = ?", doer.ID).
-		Or("namespaces.owner_id = ?", doer.ID).
-		Or("users_namespace.user_id = ?", doer.ID).
-		And("namespaces.is_archived = false").
-		GroupBy("namespaces.id").
-		Where("namespaces.title LIKE ?", "%"+search+"%").
-		Count(&NamespaceWithLists{})
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -397,15 +440,7 @@ func (n *Namespace) ReadAll(a web.Auth, search string, page int, perPage int) (r
 
 	//////////////////////
 	// Put it all together (and sort it)
-	all := make([]*NamespaceWithLists, 0, len(namespaces))
-	for _, n := range namespaces {
-		n.Owner = userMap[n.OwnerID]
-		all = append(all, n)
-	}
-	sort.Slice(all, func(i, j int) bool {
-		return all[i].ID < all[j].ID
-	})
-
+	all := makeNamespaceSliceFromMap(namespaces, userMap)
 	return all, len(all), numberOfTotalItems, nil
 }
 

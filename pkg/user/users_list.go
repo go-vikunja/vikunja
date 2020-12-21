@@ -17,20 +17,41 @@
 
 package user
 
+import (
+	"strconv"
+	"strings"
+
+	"code.vikunja.io/api/pkg/log"
+)
+
 // ListUsers returns a list with all users, filtered by an optional searchstring
-func ListUsers(searchterm string) (users []User, err error) {
+func ListUsers(searchterm string) (users []*User, err error) {
+
+	vals := strings.Split(searchterm, ",")
+	ids := []int64{}
+	for _, val := range vals {
+		v, err := strconv.ParseInt(val, 10, 64)
+		if err != nil {
+			log.Debugf("User search string part '%s' is not a number: %s", val, err)
+			continue
+		}
+		ids = append(ids, v)
+	}
+
+	if len(ids) > 0 {
+		err = x.
+			In("id", ids).
+			Find(&users)
+		return
+	}
 
 	if searchterm == "" {
 		err = x.Find(&users)
-	} else {
-		err = x.
-			Where("username LIKE ?", "%"+searchterm+"%").
-			Find(&users)
+		return
 	}
 
-	if err != nil {
-		return []User{}, err
-	}
-
-	return users, nil
+	err = x.
+		Where("username LIKE ?", "%"+searchterm+"%").
+		Find(&users)
+	return
 }

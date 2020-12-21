@@ -2443,7 +2443,7 @@ paths:
         in: query
         name: order_by
         type: string
-      - description: The name of the field to filter by. Allowed values are all task properties except `list` and `namespace`. Task properties which are their own object require passing in the id of that entity. Accepts an array for multiple filters which will be chanied together, all supplied filter must match.
+      - description: The name of the field to filter by. Allowed values are all task properties. Task properties which are their own object require passing in the id of that entity. Accepts an array for multiple filters which will be chanied together, all supplied filter must match.
         in: query
         name: filter_by
         type: string
@@ -3007,6 +3007,10 @@ paths:
       - description: If true, also returns all archived namespaces.
         in: query
         name: is_archived
+        type: boolean
+      - description: If true, also returns only namespaces without their lists.
+        in: query
+        name: namespaces_only
         type: boolean
       produces:
       - application/json
@@ -4467,7 +4471,7 @@ paths:
         in: query
         name: order_by
         type: string
-      - description: The name of the field to filter by. Allowed values are all task properties except `list` and `namespace`. Task properties which are their own object require passing in the id of that entity. Accepts an array for multiple filters which will be chanied together, all supplied filter must match.
+      - description: The name of the field to filter by. Allowed values are all task properties. Task properties which are their own object require passing in the id of that entity. Accepts an array for multiple filters which will be chanied together, all supplied filter must match.
         in: query
         name: filter_by
         type: string

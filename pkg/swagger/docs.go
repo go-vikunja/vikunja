@@ -1892,7 +1892,7 @@ var doc = `{
                     },
                     {
                         "type": "string",
-                        "description": "The name of the field to filter by. Allowed values are all task properties except ` + "`" + `list` + "`" + ` and ` + "`" + `namespace` + "`" + `. Task properties which are their own object require passing in the id of that entity. Accepts an array for multiple filters which will be chanied together, all supplied filter must match.",
+                        "description": "The name of the field to filter by. Allowed values are all task properties. Task properties which are their own object require passing in the id of that entity. Accepts an array for multiple filters which will be chanied together, all supplied filter must match.",
                         "name": "filter_by",
                         "in": "query"
                     },
@@ -3036,6 +3036,12 @@ var doc = `{
                         "description": "If true, also returns all archived namespaces.",
                         "name": "is_archived",
                         "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "If true, also returns only namespaces without their lists.",
+                        "name": "namespaces_only",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -4006,7 +4012,7 @@ var doc = `{
                     },
                     {
                         "type": "string",
-                        "description": "The name of the field to filter by. Allowed values are all task properties except ` + "`" + `list` + "`" + ` and ` + "`" + `namespace` + "`" + `. Task properties which are their own object require passing in the id of that entity. Accepts an array for multiple filters which will be chanied together, all supplied filter must match.",
+                        "description": "The name of the field to filter by. Allowed values are all task properties. Task properties which are their own object require passing in the id of that entity. Accepts an array for multiple filters which will be chanied together, all supplied filter must match.",
                         "name": "filter_by",
                         "in": "query"
                     },

@@ -17,7 +17,11 @@
 package models
 
 import (
+	"strconv"
+	"strings"
 	"time"
+
+	"code.vikunja.io/api/pkg/log"
 
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
@@ -171,13 +175,29 @@ func getLabelsByTaskIDs(opts *LabelByTaskIDsOptions) (ls []*labelWithTaskID, res
 		cond = builder.Or(cond, builder.Eq{"labels.created_by_id": opts.User.ID})
 	}
 
+	vals := strings.Split(opts.Search, ",")
+	ids := []int64{}
+	for _, val := range vals {
+		v, err := strconv.ParseInt(val, 10, 64)
+		if err != nil {
+			log.Debugf("Label search string part '%s' is not a number: %s", val, err)
+			continue
+		}
+		ids = append(ids, v)
+	}
+
+	if len(ids) > 0 {
+		cond = builder.And(cond, builder.In("labels.id", ids))
+	} else {
+		cond = builder.And(cond, &builder.Like{"labels.title", "%" + opts.Search + "%"})
+	}
+
 	limit, start := getLimitFromPageIndex(opts.Page, opts.PerPage)
 
 	query := x.Table("labels").
 		Select(selectStmt).
 		Join("LEFT", "label_task", "label_task.label_id = labels.id").
 		Where(cond).
-		And("labels.title LIKE ?", "%"+opts.Search+"%").
 		GroupBy(groupBy).
 		OrderBy("labels.id ASC")
 	if limit > 0 {

@@ -144,7 +144,7 @@ type taskOptions struct {
 // @Param s query string false "Search tasks by task text."
 // @Param sort_by query string false "The sorting parameter. You can pass this multiple times to get the tasks ordered by multiple different parametes, along with `order_by`. Possible values to sort by are `id`, `title`, `description`, `done`, `done_at`, `due_date`, `created_by_id`, `list_id`, `repeat_after`, `priority`, `start_date`, `end_date`, `hex_color`, `percent_done`, `uid`, `created`, `updated`. Default is `id`."
 // @Param order_by query string false "The ordering parameter. Possible values to order by are `asc` or `desc`. Default is `asc`."
-// @Param filter_by query string false "The name of the field to filter by. Allowed values are all task properties except `list` and `namespace`. Task properties which are their own object require passing in the id of that entity. Accepts an array for multiple filters which will be chanied together, all supplied filter must match."
+// @Param filter_by query string false "The name of the field to filter by. Allowed values are all task properties. Task properties which are their own object require passing in the id of that entity. Accepts an array for multiple filters which will be chanied together, all supplied filter must match."
 // @Param filter_value query string false "The value to filter for."
 // @Param filter_comparator query string false "The comparator to use for a filter. Available values are `equals`, `greater`, `greater_equals`, `less`, `less_equals`, `like` and `in`. `in` expects comma-separated values in `filter_value`. Defaults to `equals`"
 // @Param filter_concat query string false "The concatinator to use for filters. Available values are `and` or `or`. Defaults to `or`."
@@ -271,6 +271,7 @@ func getRawTasksForLists(lists []*List, a web.Auth, opts *taskOptions) (tasks []
 	reminderFilters := []builder.Cond{}
 	assigneeFilters := []builder.Cond{}
 	labelFilters := []builder.Cond{}
+	namespaceFilters := []builder.Cond{}
 
 	var filters = make([]builder.Cond, 0, len(opts.filters))
 	// To still find tasks with nil values, we exclude 0s when comparing with >/< values.
@@ -302,6 +303,16 @@ func getRawTasksForLists(lists []*List, a web.Auth, opts *taskOptions) (tasks []
 				return nil, 0, 0, err
 			}
 			labelFilters = append(labelFilters, filter)
+			continue
+		}
+
+		if f.field == "namespace" {
+			f.field = "namespace_id"
+			filter, err := getFilterCond(f, opts.filterIncludeNulls)
+			if err != nil {
+				return nil, 0, 0, err
+			}
+			namespaceFilters = append(namespaceFilters, filter)
 			continue
 		}
 
@@ -367,6 +378,25 @@ func getRawTasksForLists(lists []*List, a web.Auth, opts *taskOptions) (tasks []
 
 	if len(labelFilters) > 0 {
 		filters = append(filters, getFilterCondForSeparateTable("label_task", opts.filterConcat, labelFilters))
+	}
+
+	if len(namespaceFilters) > 0 {
+		var filtercond builder.Cond
+		if opts.filterConcat == filterConcatOr {
+			filtercond = builder.Or(namespaceFilters...)
+		}
+		if opts.filterConcat == filterConcatAnd {
+			filtercond = builder.And(namespaceFilters...)
+		}
+
+		cond := builder.In(
+			"list_id",
+			builder.
+				Select("id").
+				From("list").
+				Where(filtercond),
+		)
+		filters = append(filters, cond)
 	}
 
 	query = query.Where(listCond)

@@ -148,6 +148,7 @@ func TestNamespace_Delete(t *testing.T) {
 
 func TestNamespace_ReadAll(t *testing.T) {
 	user1 := &user.User{ID: 1}
+	user7 := &user.User{ID: 7}
 	user11 := &user.User{ID: 11}
 	user12 := &user.User{ID: 12}
 
@@ -157,7 +158,7 @@ func TestNamespace_ReadAll(t *testing.T) {
 		assert.NoError(t, err)
 		namespaces := nn.([]*NamespaceWithLists)
 		assert.NotNil(t, namespaces)
-		assert.Len(t, namespaces, 11)                // Total of 10 including shared, favorites and saved filters
+		assert.Len(t, namespaces, 11)                // Total of 11 including shared, favorites and saved filters
 		assert.Equal(t, int64(-3), namespaces[0].ID) // The first one should be the one with shared filters
 		assert.Equal(t, int64(-2), namespaces[1].ID) // The second one should be the one with favorites
 		assert.Equal(t, int64(-1), namespaces[2].ID) // The third one should be the one with the shared namespaces
@@ -168,6 +169,43 @@ func TestNamespace_ReadAll(t *testing.T) {
 				assert.False(t, list.IsArchived)
 			}
 		}
+	})
+	t.Run("namespaces only", func(t *testing.T) {
+		n := &Namespace{
+			NamespacesOnly: true,
+		}
+		nn, _, _, err := n.ReadAll(user1, "", 1, -1)
+		assert.NoError(t, err)
+		namespaces := nn.([]*NamespaceWithLists)
+		assert.NotNil(t, namespaces)
+		assert.Len(t, namespaces, 8) // Total of 8 - excluding shared, favorites and saved filters (normally 11)
+		// Ensure every namespace does not contain lists
+		for _, namespace := range namespaces {
+			assert.Nil(t, namespace.Lists)
+		}
+	})
+	t.Run("ids only", func(t *testing.T) {
+		n := &Namespace{
+			NamespacesOnly: true,
+		}
+		nn, _, _, err := n.ReadAll(user7, "13,14", 1, -1)
+		assert.NoError(t, err)
+		namespaces := nn.([]*NamespaceWithLists)
+		assert.NotNil(t, namespaces)
+		assert.Len(t, namespaces, 2)
+		assert.Equal(t, int64(13), namespaces[0].ID)
+		assert.Equal(t, int64(14), namespaces[1].ID)
+	})
+	t.Run("ids only but ids with other people's namespace", func(t *testing.T) {
+		n := &Namespace{
+			NamespacesOnly: true,
+		}
+		nn, _, _, err := n.ReadAll(user1, "1,w", 1, -1)
+		assert.NoError(t, err)
+		namespaces := nn.([]*NamespaceWithLists)
+		assert.NotNil(t, namespaces)
+		assert.Len(t, namespaces, 1)
+		assert.Equal(t, int64(1), namespaces[0].ID)
 	})
 	t.Run("archived", func(t *testing.T) {
 		n := &Namespace{
