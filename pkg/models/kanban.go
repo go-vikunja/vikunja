@@ -48,6 +48,9 @@ type Bucket struct {
 	CreatedBy   *user.User `xorm:"-" json:"created_by" valid:"-"`
 	CreatedByID int64      `xorm:"bigint not null" json:"-"`
 
+	// Including the task collection type so we can use task filters on kanban
+	TaskCollection `xorm:"-" json:"-"`
+
 	web.Rights   `xorm:"-" json:"-"`
 	web.CRUDable `xorm:"-" json:"-"`
 }
@@ -86,6 +89,11 @@ func getDefaultBucket(s *xorm.Session, listID int64) (bucket *Bucket, err error)
 // @Produce json
 // @Security JWTKeyAuth
 // @Param id path int true "List Id"
+// @Param filter_by query string false "The name of the field to filter by. Allowed values are all task properties. Task properties which are their own object require passing in the id of that entity. Accepts an array for multiple filters which will be chanied together, all supplied filter must match."
+// @Param filter_value query string false "The value to filter for."
+// @Param filter_comparator query string false "The comparator to use for a filter. Available values are `equals`, `greater`, `greater_equals`, `less`, `less_equals`, `like` and `in`. `in` expects comma-separated values in `filter_value`. Defaults to `equals`"
+// @Param filter_concat query string false "The concatinator to use for filters. Available values are `and` or `or`. Defaults to `or`."
+// @Param filter_include_nulls query string false "If set to true the result will include filtered fields whose value is set to `null`. Available values are `true` or `false`. Defaults to `false`."
 // @Success 200 {array} models.Bucket "The buckets with their tasks"
 // @Failure 500 {object} models.Message "Internal server error"
 // @Router /lists/{id}/buckets [get]
@@ -121,18 +129,15 @@ func (b *Bucket) ReadAll(auth web.Auth, search string, page int, perPage int) (r
 	}
 
 	// Get all tasks for this list
-	opts := &taskOptions{
-		sortby: []*sortParam{
-			{
-				sortBy:  taskPropertyPosition,
-				orderBy: orderAscending,
-			},
-		},
-	}
-	tasks, _, _, err := getTasksForLists([]*List{{ID: b.ListID}}, auth, opts)
+	b.TaskCollection.ListID = b.ListID
+	b.TaskCollection.OrderBy = []string{string(orderAscending)}
+	b.TaskCollection.SortBy = []string{taskPropertyPosition}
+	ts, _, _, err := b.TaskCollection.ReadAll(auth, "", -1, 0)
 	if err != nil {
 		return
 	}
+
+	tasks := ts.([]*Task)
 
 	// Put all tasks in their buckets
 	// All tasks which are not associated to any bucket will have bucket id 0 which is the nil value for int64

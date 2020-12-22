@@ -25,43 +25,64 @@ import (
 )
 
 func TestBucket_ReadAll(t *testing.T) {
-	db.LoadAndAssertFixtures(t)
+	t.Run("normal", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
 
-	testuser := &user.User{ID: 1}
-	b := &Bucket{ListID: 1}
-	bucketsInterface, _, _, err := b.ReadAll(testuser, "", 0, 0)
-	assert.NoError(t, err)
+		testuser := &user.User{ID: 1}
+		b := &Bucket{ListID: 1}
+		bucketsInterface, _, _, err := b.ReadAll(testuser, "", 0, 0)
+		assert.NoError(t, err)
 
-	buckets, is := bucketsInterface.([]*Bucket)
-	assert.True(t, is)
+		buckets, is := bucketsInterface.([]*Bucket)
+		assert.True(t, is)
 
-	// Assert that we have a user for each bucket
-	assert.Equal(t, testuser.ID, buckets[0].CreatedBy.ID)
-	assert.Equal(t, testuser.ID, buckets[1].CreatedBy.ID)
-	assert.Equal(t, testuser.ID, buckets[2].CreatedBy.ID)
+		// Assert that we have a user for each bucket
+		assert.Equal(t, testuser.ID, buckets[0].CreatedBy.ID)
+		assert.Equal(t, testuser.ID, buckets[1].CreatedBy.ID)
+		assert.Equal(t, testuser.ID, buckets[2].CreatedBy.ID)
 
-	// Assert our three test buckets
-	assert.Len(t, buckets, 3)
+		// Assert our three test buckets
+		assert.Len(t, buckets, 3)
 
-	// Assert all tasks are in the right bucket
-	assert.Len(t, buckets[0].Tasks, 12)
-	assert.Len(t, buckets[1].Tasks, 3)
-	assert.Len(t, buckets[2].Tasks, 3)
+		// Assert all tasks are in the right bucket
+		assert.Len(t, buckets[0].Tasks, 12)
+		assert.Len(t, buckets[1].Tasks, 3)
+		assert.Len(t, buckets[2].Tasks, 3)
 
-	// Assert we have bucket 0, 1, 2, 3 but not 4 (that belongs to a different list)
-	assert.Equal(t, int64(1), buckets[0].ID)
-	assert.Equal(t, int64(2), buckets[1].ID)
-	assert.Equal(t, int64(3), buckets[2].ID)
+		// Assert we have bucket 0, 1, 2, 3 but not 4 (that belongs to a different list)
+		assert.Equal(t, int64(1), buckets[0].ID)
+		assert.Equal(t, int64(2), buckets[1].ID)
+		assert.Equal(t, int64(3), buckets[2].ID)
 
-	// Kinda assert all tasks are in the right buckets
-	assert.Equal(t, int64(1), buckets[0].Tasks[0].BucketID)
-	assert.Equal(t, int64(1), buckets[0].Tasks[1].BucketID)
-	assert.Equal(t, int64(2), buckets[1].Tasks[0].BucketID)
-	assert.Equal(t, int64(2), buckets[1].Tasks[1].BucketID)
-	assert.Equal(t, int64(2), buckets[1].Tasks[2].BucketID)
-	assert.Equal(t, int64(3), buckets[2].Tasks[0].BucketID)
-	assert.Equal(t, int64(3), buckets[2].Tasks[1].BucketID)
-	assert.Equal(t, int64(3), buckets[2].Tasks[2].BucketID)
+		// Kinda assert all tasks are in the right buckets
+		assert.Equal(t, int64(1), buckets[0].Tasks[0].BucketID)
+		assert.Equal(t, int64(1), buckets[0].Tasks[1].BucketID)
+		assert.Equal(t, int64(2), buckets[1].Tasks[0].BucketID)
+		assert.Equal(t, int64(2), buckets[1].Tasks[1].BucketID)
+		assert.Equal(t, int64(2), buckets[1].Tasks[2].BucketID)
+		assert.Equal(t, int64(3), buckets[2].Tasks[0].BucketID)
+		assert.Equal(t, int64(3), buckets[2].Tasks[1].BucketID)
+		assert.Equal(t, int64(3), buckets[2].Tasks[2].BucketID)
+	})
+	t.Run("filtered", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		testuser := &user.User{ID: 1}
+		b := &Bucket{
+			ListID: 1,
+			TaskCollection: TaskCollection{
+				FilterBy:         []string{"title"},
+				FilterComparator: []string{"like"},
+				FilterValue:      []string{"done"},
+			},
+		}
+		bucketsInterface, _, _, err := b.ReadAll(testuser, "", 0, 0)
+		assert.NoError(t, err)
+
+		buckets := bucketsInterface.([]*Bucket)
+		assert.Len(t, buckets, 3)
+		assert.Equal(t, int64(2), buckets[0].Tasks[0].ID)
+	})
 }
 
 func TestBucket_Delete(t *testing.T) {

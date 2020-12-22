@@ -1222,6 +1222,36 @@ var doc = `{
                         "name": "id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "The name of the field to filter by. Allowed values are all task properties. Task properties which are their own object require passing in the id of that entity. Accepts an array for multiple filters which will be chanied together, all supplied filter must match.",
+                        "name": "filter_by",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "The value to filter for.",
+                        "name": "filter_value",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "The comparator to use for a filter. Available values are ` + "`" + `equals` + "`" + `, ` + "`" + `greater` + "`" + `, ` + "`" + `greater_equals` + "`" + `, ` + "`" + `less` + "`" + `, ` + "`" + `less_equals` + "`" + `, ` + "`" + `like` + "`" + ` and ` + "`" + `in` + "`" + `. ` + "`" + `in` + "`" + ` expects comma-separated values in ` + "`" + `filter_value` + "`" + `. Defaults to ` + "`" + `equals` + "`" + `",
+                        "name": "filter_comparator",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "The concatinator to use for filters. Available values are ` + "`" + `and` + "`" + ` or ` + "`" + `or` + "`" + `. Defaults to ` + "`" + `or` + "`" + `.",
+                        "name": "filter_concat",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "If set to true the result will include filtered fields whose value is set to ` + "`" + `null` + "`" + `. Available values are ` + "`" + `true` + "`" + ` or ` + "`" + `false` + "`" + `. Defaults to ` + "`" + `false` + "`" + `.",
+                        "name": "filter_include_nulls",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -6808,6 +6838,35 @@ var doc = `{
                     "description": "The user who initially created the bucket.",
                     "$ref": "#/definitions/user.User"
                 },
+                "filter_by": {
+                    "description": "The field name of the field to filter by",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "filter_comparator": {
+                    "description": "The comparator for field and value",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "filter_concat": {
+                    "description": "The way all filter conditions are concatenated together, can be either \"and\" or \"or\".,",
+                    "type": "string"
+                },
+                "filter_include_nulls": {
+                    "description": "If set to true, the result will also include null values",
+                    "type": "boolean"
+                },
+                "filter_value": {
+                    "description": "The value of the field name to filter by",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "id": {
                     "description": "The unique, numeric id of this bucket.",
                     "type": "integer"
@@ -6819,6 +6878,20 @@ var doc = `{
                 "list_id": {
                     "description": "The list this bucket belongs to.",
                     "type": "integer"
+                },
+                "order_by": {
+                    "description": "The query parameter to order the items by. This can be either asc or desc, with asc being the default.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "sort_by": {
+                    "description": "The query parameter to sort by. This is for ex. done, priority, etc.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "tasks": {
                     "description": "All tasks which belong to this bucket.",

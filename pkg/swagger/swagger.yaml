@@ -57,6 +57,27 @@ definitions:
       created_by:
         $ref: '#/definitions/user.User'
         description: The user who initially created the bucket.
+      filter_by:
+        description: The field name of the field to filter by
+        items:
+          type: string
+        type: array
+      filter_comparator:
+        description: The comparator for field and value
+        items:
+          type: string
+        type: array
+      filter_concat:
+        description: The way all filter conditions are concatenated together, can be either "and" or "or".,
+        type: string
+      filter_include_nulls:
+        description: If set to true, the result will also include null values
+        type: boolean
+      filter_value:
+        description: The value of the field name to filter by
+        items:
+          type: string
+        type: array
       id:
         description: The unique, numeric id of this bucket.
         type: integer
@@ -66,6 +87,16 @@ definitions:
       list_id:
         description: The list this bucket belongs to.
         type: integer
+      order_by:
+        description: The query parameter to order the items by. This can be either asc or desc, with asc being the default.
+        items:
+          type: string
+        type: array
+      sort_by:
+        description: The query parameter to sort by. This is for ex. done, priority, etc.
+        items:
+          type: string
+        type: array
       tasks:
         description: All tasks which belong to this bucket.
         items:
@@ -1849,6 +1880,26 @@ paths:
         name: id
         required: true
         type: integer
+      - description: The name of the field to filter by. Allowed values are all task properties. Task properties which are their own object require passing in the id of that entity. Accepts an array for multiple filters which will be chanied together, all supplied filter must match.
+        in: query
+        name: filter_by
+        type: string
+      - description: The value to filter for.
+        in: query
+        name: filter_value
+        type: string
+      - description: The comparator to use for a filter. Available values are `equals`, `greater`, `greater_equals`, `less`, `less_equals`, `like` and `in`. `in` expects comma-separated values in `filter_value`. Defaults to `equals`
+        in: query
+        name: filter_comparator
+        type: string
+      - description: The concatinator to use for filters. Available values are `and` or `or`. Defaults to `or`.
+        in: query
+        name: filter_concat
+        type: string
+      - description: If set to true the result will include filtered fields whose value is set to `null`. Available values are `true` or `false`. Defaults to `false`.
+        in: query
+        name: filter_include_nulls
+        type: string
       produces:
       - application/json
       responses:
