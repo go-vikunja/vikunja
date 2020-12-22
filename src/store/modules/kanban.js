@@ -113,14 +113,14 @@ export default {
 		},
 	},
 	actions: {
-		loadBucketsForList(ctx, listId) {
+		loadBucketsForList(ctx, {listId, params}) {
 			const cancel = setLoading(ctx)
 
 			// Clear everything to prevent having old buckets in the list if loading the buckets from this list takes a few moments
 			ctx.commit('setBuckets', [])
 
 			const bucketService = new BucketService()
-			return bucketService.getAll({listId: listId})
+			return bucketService.getAll({listId: listId}, params)
 				.then(r => {
 					ctx.commit('setBuckets', r)
 					ctx.commit('setListId', listId)

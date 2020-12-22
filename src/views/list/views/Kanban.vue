@@ -1,5 +1,22 @@
 <template>
 	<div>
+		<div class="filter-container">
+			<div class="items">
+				<button @click="showFilters = !showFilters" class="button">
+					<span class="icon is-small">
+						<icon icon="filter"/>
+					</span>
+					Filters
+				</button>
+			</div>
+			<transition name="fade">
+				<filters
+					@change="() => {filtersChanged = true; loadBuckets()}"
+					v-if="showFilters"
+					v-model="params"
+				/>
+			</transition>
+		</div>
 		<div :class="{ 'is-loading': loading && !oneTaskUpdating}" class="kanban loader-container">
 			<div :key="`bucket${bucket.id}`" class="bucket" v-for="bucket in buckets">
 				<div class="bucket-header">
@@ -243,6 +260,7 @@ import {Container, Draggable} from 'vue-smooth-dnd'
 import PriorityLabel from '../../../components/tasks/partials/priorityLabel'
 import User from '../../../components/misc/user'
 import Labels from '../../../components/tasks/partials/labels'
+import Filters from '../../../components/list/partials/filters'
 
 import {filterObject} from '@/helpers/filterObject'
 import {applyDrag} from '@/helpers/applyDrag'
@@ -259,6 +277,7 @@ export default {
 		Labels,
 		User,
 		PriorityLabel,
+		Filters,
 	},
 	data() {
 		return {
@@ -285,6 +304,15 @@ export default {
 			// We're using this to show the loading animation only at the task when updating it
 			taskUpdating: {},
 			oneTaskUpdating: false,
+
+			params: {
+				filter_by: [],
+				filter_value: [],
+				filter_comparator: [],
+				filter_concat: 'and',
+			},
+			showFilters: false,
+			filtersChanged: false, // To trigger a reload of the board
 		}
 	},
 	created() {
@@ -315,15 +343,17 @@ export default {
 
 			// Only load buckets if we don't already loaded them
 			if (
+				!this.filtersChanged && (
 				this.loadedListId === this.$route.params.listId ||
-				this.loadedListId === parseInt(this.$route.params.listId)
+				this.loadedListId === parseInt(this.$route.params.listId))
 			) {
 				return
 			}
 
 			console.debug(`Loading buckets, loadedListId = ${this.loadedListId}, $route.params =`, this.$route.params)
+			this.filtersChanged = false
 
-			this.$store.dispatch('kanban/loadBucketsForList', this.$route.params.listId)
+			this.$store.dispatch('kanban/loadBucketsForList', {listId: this.$route.params.listId, params: this.params})
 				.catch(e => {
 					this.error(e, this)
 				})

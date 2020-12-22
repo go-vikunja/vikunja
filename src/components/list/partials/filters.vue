@@ -518,7 +518,7 @@ export default {
 			}
 
 			this.prepareSingleValue(filterName)
-			if (this.filters[filterName] !== '') {
+			if (typeof this.filters[filterName] !== 'undefined' && this.filters[filterName] !== '') {
 				this[`${servicePrefix}Service`].getAll({}, {s: this.filters[filterName]})
 					.then(r => {
 						this.$set(this, kind, r)
