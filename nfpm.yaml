@@ -7,12 +7,15 @@ maintainer: "Vikunja Maintainers <maintainers@vikunja.io>"
 homepage: "https://vikunja.io"
 section: "default"
 priority: "extra"
-license: "GPLv3"
-files:
-  <binlocation>: /opt/vikunja/vikunja
-config_files:
-  ./config.yml.sample: /etc/vikunja/config.yml
-symlinks:
-  /opt/vikunja/vikunja: /usr/local/bin/vikunja
+license: "AGPLv3"
+contents:
+  - src: <binlocation>
+    dst: /opt/vikunja/vikunja
+  - src: ./config.yml.sample
+    dst: /etc/vikunja/config.yml
+    type: "config"
+  - src: /opt/vikunja/vikunja
+    dst: /usr/local/bin/vikunja
+    type: "symlink"
 scripts:
   postinstall: ./build/after-install.sh
