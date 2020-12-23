@@ -29,7 +29,7 @@
 				v-model="cEndDate"
 			/>
 		</h3>
-		<div>
+		<div v-if="!showAll">
 			<a @click="setDatesToNextWeek()" class="button is-primary is-outlined noshadow mr-2">Next Week</a>
 			<a @click="setDatesToNextMonth()" class="button is-primary is-outlined noshadow">Next Month</a>
 		</div>
