@@ -22,14 +22,6 @@
 					</router-link>
 				</li>
 				<li>
-					<router-link :to="{ name: 'teams.index'}">
-						<span class="icon">
-							<icon icon="users"/>
-						</span>
-						Teams
-					</router-link>
-				</li>
-				<li>
 					<router-link :to="{ name: 'namespaces.index'}">
 						<span class="icon">
 							<icon icon="layer-group"/>
@@ -43,6 +35,14 @@
 							<icon icon="tags"/>
 						</span>
 						Labels
+					</router-link>
+				</li>
+				<li>
+					<router-link :to="{ name: 'teams.index'}">
+						<span class="icon">
+							<icon icon="users"/>
+						</span>
+						Teams
 					</router-link>
 				</li>
 			</ul>
