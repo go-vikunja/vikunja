@@ -50,11 +50,8 @@ import (
 	"strings"
 	"time"
 
-	microsofttodo "code.vikunja.io/api/pkg/modules/migration/microsoft-todo"
-
-	"code.vikunja.io/api/pkg/modules/migration/trello"
-
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
@@ -65,7 +62,9 @@ import (
 	"code.vikunja.io/api/pkg/modules/background/upload"
 	"code.vikunja.io/api/pkg/modules/migration"
 	migrationHandler "code.vikunja.io/api/pkg/modules/migration/handler"
+	microsofttodo "code.vikunja.io/api/pkg/modules/migration/microsoft-todo"
 	"code.vikunja.io/api/pkg/modules/migration/todoist"
+	"code.vikunja.io/api/pkg/modules/migration/trello"
 	"code.vikunja.io/api/pkg/modules/migration/wunderlist"
 	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
 	"code.vikunja.io/api/pkg/routes/caldav"
@@ -175,6 +174,7 @@ func NewEcho() *echo.Echo {
 	})
 	handler.SetLoggingProvider(log.GetLogger())
 	handler.SetMaxItemsPerPage(config.ServiceMaxItemsPerPage.GetInt())
+	handler.SetSessionFactory(db.NewSession)
 
 	return e
 }
@@ -601,11 +601,19 @@ func caldavBasicAuth(username, password string, c echo.Context) (bool, error) {
 		Username: username,
 		Password: password,
 	}
-	u, err := user.CheckUserCredentials(creds)
+	s := db.NewSession()
+	defer s.Close()
+	u, err := user.CheckUserCredentials(s, creds)
 	if err != nil {
+		_ = s.Rollback()
 		log.Errorf("Error during basic auth for caldav: %v", err)
 		return false, nil
 	}
+
+	if err := s.Commit(); err != nil {
+		return false, err
+	}
+
 	// Save the user in echo context for later use
 	c.Set("userBasicAuth", u)
 	return true, nil

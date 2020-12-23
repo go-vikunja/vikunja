@@ -986,6 +986,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
 
 			lt := &TaskCollection{
 				ListID:  tt.fields.ListID,
@@ -1000,7 +1002,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				CRUDable: tt.fields.CRUDable,
 				Rights:   tt.fields.Rights,
 			}
-			got, _, _, err := lt.ReadAll(tt.args.a, tt.args.search, tt.args.page, 50)
+			got, _, _, err := lt.ReadAll(s, tt.args.a, tt.args.search, tt.args.page, 50)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Test %s, Task.ReadAll() error = %v, wantErr %v", tt.name, err, tt.wantErr)
 				return

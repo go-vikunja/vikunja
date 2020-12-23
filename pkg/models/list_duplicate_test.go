@@ -29,6 +29,8 @@ func TestListDuplicate(t *testing.T) {
 
 	db.LoadAndAssertFixtures(t)
 	files.InitTestFileFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
 
 	u := &user.User{
 		ID: 1,
@@ -38,10 +40,10 @@ func TestListDuplicate(t *testing.T) {
 		ListID:      1,
 		NamespaceID: 1,
 	}
-	can, err := l.CanCreate(u)
+	can, err := l.CanCreate(s, u)
 	assert.NoError(t, err)
 	assert.True(t, can)
-	err = l.Create(u)
+	err = l.Create(s, u)
 	assert.NoError(t, err)
 	// To make this test 100% useful, it would need to assert a lot more stuff, but it is good enough for now.
 	// Also, we're lacking utility functions to do all needed assertions.

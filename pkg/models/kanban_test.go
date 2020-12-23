@@ -27,10 +27,12 @@ import (
 func TestBucket_ReadAll(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
 
 		testuser := &user.User{ID: 1}
 		b := &Bucket{ListID: 1}
-		bucketsInterface, _, _, err := b.ReadAll(testuser, "", 0, 0)
+		bucketsInterface, _, _, err := b.ReadAll(s, testuser, "", 0, 0)
 		assert.NoError(t, err)
 
 		buckets, is := bucketsInterface.([]*Bucket)
@@ -66,6 +68,8 @@ func TestBucket_ReadAll(t *testing.T) {
 	})
 	t.Run("filtered", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
 
 		testuser := &user.User{ID: 1}
 		b := &Bucket{
@@ -76,7 +80,7 @@ func TestBucket_ReadAll(t *testing.T) {
 				FilterValue:      []string{"done"},
 			},
 		}
-		bucketsInterface, _, _, err := b.ReadAll(testuser, "", 0, 0)
+		bucketsInterface, _, _, err := b.ReadAll(s, testuser, "", 0, 0)
 		assert.NoError(t, err)
 
 		buckets := bucketsInterface.([]*Bucket)
@@ -88,16 +92,21 @@ func TestBucket_ReadAll(t *testing.T) {
 func TestBucket_Delete(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
 		b := &Bucket{
 			ID:     2, // The second bucket only has 3 tasks
 			ListID: 1,
 		}
-		err := b.Delete()
+		err := b.Delete(s)
+		assert.NoError(t, err)
+		err = s.Commit()
 		assert.NoError(t, err)
 
 		// Assert all tasks have been moved to bucket 1 as that one is the first
 		tasks := []*Task{}
-		err = x.Where("bucket_id = ?", 1).Find(&tasks)
+		err = s.Where("bucket_id = ?", 1).Find(&tasks)
 		assert.NoError(t, err)
 		assert.Len(t, tasks, 15)
 		db.AssertMissing(t, "buckets", map[string]interface{}{
@@ -107,13 +116,19 @@ func TestBucket_Delete(t *testing.T) {
 	})
 	t.Run("last bucket in list", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
 		b := &Bucket{
 			ID:     34,
 			ListID: 18,
 		}
-		err := b.Delete()
+		err := b.Delete(s)
 		assert.Error(t, err)
 		assert.True(t, IsErrCannotRemoveLastBucket(err))
+		err = s.Commit()
+		assert.NoError(t, err)
+
 		db.AssertExists(t, "buckets", map[string]interface{}{
 			"id":      34,
 			"list_id": 18,

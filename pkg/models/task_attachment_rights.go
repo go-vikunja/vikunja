@@ -16,25 +16,28 @@
 
 package models
 
-import "code.vikunja.io/web"
+import (
+	"code.vikunja.io/web"
+	"xorm.io/xorm"
+)
 
 // CanRead checks if the user can see an attachment
-func (ta *TaskAttachment) CanRead(a web.Auth) (bool, int, error) {
+func (ta *TaskAttachment) CanRead(s *xorm.Session, a web.Auth) (bool, int, error) {
 	t := &Task{ID: ta.TaskID}
-	return t.CanRead(a)
+	return t.CanRead(s, a)
 }
 
 // CanDelete checks if the user can delete an attachment
-func (ta *TaskAttachment) CanDelete(a web.Auth) (bool, error) {
+func (ta *TaskAttachment) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
 	t := &Task{ID: ta.TaskID}
-	return t.CanWrite(a)
+	return t.CanWrite(s, a)
 }
 
 // CanCreate checks if the user can create an attachment
-func (ta *TaskAttachment) CanCreate(a web.Auth) (bool, error) {
-	t, err := GetTaskByIDSimple(ta.TaskID)
+func (ta *TaskAttachment) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
+	t, err := GetTaskByIDSimple(s, ta.TaskID)
 	if err != nil {
 		return false, err
 	}
-	return t.CanCreate(a)
+	return t.CanCreate(s, a)
 }

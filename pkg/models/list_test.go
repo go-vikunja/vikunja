@@ -35,12 +35,15 @@ func TestList_CreateOrUpdate(t *testing.T) {
 	t.Run("create", func(t *testing.T) {
 		t.Run("normal", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
 			list := List{
 				Title:       "test",
 				Description: "Lorem Ipsum",
 				NamespaceID: 1,
 			}
-			err := list.Create(usr)
+			err := list.Create(s, usr)
+			assert.NoError(t, err)
+			err = s.Commit()
 			assert.NoError(t, err)
 			db.AssertExists(t, "list", map[string]interface{}{
 				"id":           list.ID,
@@ -51,49 +54,56 @@ func TestList_CreateOrUpdate(t *testing.T) {
 		})
 		t.Run("nonexistant namespace", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
 			list := List{
 				Title:       "test",
 				Description: "Lorem Ipsum",
 				NamespaceID: 999999,
 			}
-
-			err := list.Create(usr)
+			err := list.Create(s, usr)
 			assert.Error(t, err)
 			assert.True(t, IsErrNamespaceDoesNotExist(err))
+			_ = s.Close()
 		})
 		t.Run("nonexistant owner", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
 			usr := &user.User{ID: 9482385}
 			list := List{
 				Title:       "test",
 				Description: "Lorem Ipsum",
 				NamespaceID: 1,
 			}
-			err := list.Create(usr)
+			err := list.Create(s, usr)
 			assert.Error(t, err)
 			assert.True(t, user.IsErrUserDoesNotExist(err))
+			_ = s.Close()
 		})
 		t.Run("existing identifier", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
 			list := List{
 				Title:       "test",
 				Description: "Lorem Ipsum",
 				Identifier:  "test1",
 				NamespaceID: 1,
 			}
-
-			err := list.Create(usr)
+			err := list.Create(s, usr)
 			assert.Error(t, err)
 			assert.True(t, IsErrListIdentifierIsNotUnique(err))
+			_ = s.Close()
 		})
 		t.Run("non ascii characters", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
 			list := List{
 				Title:       "приффки фсем",
 				Description: "Lorem Ipsum",
 				NamespaceID: 1,
 			}
-			err := list.Create(usr)
+			err := list.Create(s, usr)
+			assert.NoError(t, err)
+			err = s.Commit()
 			assert.NoError(t, err)
 			db.AssertExists(t, "list", map[string]interface{}{
 				"id":           list.ID,
@@ -107,6 +117,7 @@ func TestList_CreateOrUpdate(t *testing.T) {
 	t.Run("update", func(t *testing.T) {
 		t.Run("normal", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
 			list := List{
 				ID:          1,
 				Title:       "test",
@@ -114,7 +125,9 @@ func TestList_CreateOrUpdate(t *testing.T) {
 				NamespaceID: 1,
 			}
 			list.Description = "Lorem Ipsum dolor sit amet."
-			err := list.Update()
+			err := list.Update(s)
+			assert.NoError(t, err)
+			err = s.Commit()
 			assert.NoError(t, err)
 			db.AssertExists(t, "list", map[string]interface{}{
 				"id":           list.ID,
@@ -125,37 +138,43 @@ func TestList_CreateOrUpdate(t *testing.T) {
 		})
 		t.Run("nonexistant", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
 			list := List{
 				ID:    99999999,
 				Title: "test",
 			}
-			err := list.Update()
+			err := list.Update(s)
 			assert.Error(t, err)
 			assert.True(t, IsErrListDoesNotExist(err))
+			_ = s.Close()
 
 		})
 		t.Run("existing identifier", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
 			list := List{
 				Title:       "test",
 				Description: "Lorem Ipsum",
 				Identifier:  "test1",
 				NamespaceID: 1,
 			}
-
-			err := list.Create(usr)
+			err := list.Create(s, usr)
 			assert.Error(t, err)
 			assert.True(t, IsErrListIdentifierIsNotUnique(err))
+			_ = s.Close()
 		})
 	})
 }
 
 func TestList_Delete(t *testing.T) {
 	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
 	list := List{
 		ID: 1,
 	}
-	err := list.Delete()
+	err := list.Delete(s)
+	assert.NoError(t, err)
+	err = s.Commit()
 	assert.NoError(t, err)
 	db.AssertMissing(t, "list", map[string]interface{}{
 		"id": 1,
@@ -165,30 +184,34 @@ func TestList_Delete(t *testing.T) {
 func TestList_ReadAll(t *testing.T) {
 	t.Run("all in namespace", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
 		// Get all lists for our namespace
-		lists, err := GetListsByNamespaceID(1, &user.User{})
+		lists, err := GetListsByNamespaceID(s, 1, &user.User{})
 		assert.NoError(t, err)
 		assert.Equal(t, len(lists), 2)
+		_ = s.Close()
 	})
 	t.Run("all lists for user", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
-
+		s := db.NewSession()
 		u := &user.User{ID: 1}
 		list := List{}
-		lists3, _, _, err := list.ReadAll(u, "", 1, 50)
+		lists3, _, _, err := list.ReadAll(s, u, "", 1, 50)
 
 		assert.NoError(t, err)
 		assert.Equal(t, reflect.TypeOf(lists3).Kind(), reflect.Slice)
-		s := reflect.ValueOf(lists3)
-		assert.Equal(t, 16, s.Len())
+		ls := reflect.ValueOf(lists3)
+		assert.Equal(t, 16, ls.Len())
+		_ = s.Close()
 	})
 	t.Run("lists for nonexistant user", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
-
+		s := db.NewSession()
 		usr := &user.User{ID: 999999}
 		list := List{}
-		_, _, _, err := list.ReadAll(usr, "", 1, 50)
+		_, _, _, err := list.ReadAll(s, usr, "", 1, 50)
 		assert.Error(t, err)
 		assert.True(t, user.IsErrUserDoesNotExist(err))
+		_ = s.Close()
 	})
 }

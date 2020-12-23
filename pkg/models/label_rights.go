@@ -20,26 +20,27 @@ import (
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
 	"xorm.io/builder"
+	"xorm.io/xorm"
 )
 
 // CanUpdate checks if a user can update a label
-func (l *Label) CanUpdate(a web.Auth) (bool, error) {
-	return l.isLabelOwner(a) // Only owners should be allowed to update a label
+func (l *Label) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
+	return l.isLabelOwner(s, a) // Only owners should be allowed to update a label
 }
 
 // CanDelete checks if a user can delete a label
-func (l *Label) CanDelete(a web.Auth) (bool, error) {
-	return l.isLabelOwner(a) // Only owners should be allowed to delete a label
+func (l *Label) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
+	return l.isLabelOwner(s, a) // Only owners should be allowed to delete a label
 }
 
 // CanRead checks if a user can read a label
-func (l *Label) CanRead(a web.Auth) (bool, int, error) {
-	return l.hasAccessToLabel(a)
+func (l *Label) CanRead(s *xorm.Session, a web.Auth) (bool, int, error) {
+	return l.hasAccessToLabel(s, a)
 }
 
 // CanCreate checks if the user can create a label
 // Currently a dummy.
-func (l *Label) CanCreate(a web.Auth) (bool, error) {
+func (l *Label) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
 	if _, is := a.(*LinkSharing); is {
 		return false, nil
 	}
@@ -47,13 +48,13 @@ func (l *Label) CanCreate(a web.Auth) (bool, error) {
 	return true, nil
 }
 
-func (l *Label) isLabelOwner(a web.Auth) (bool, error) {
+func (l *Label) isLabelOwner(s *xorm.Session, a web.Auth) (bool, error) {
 
 	if _, is := a.(*LinkSharing); is {
 		return false, nil
 	}
 
-	lorig, err := getLabelByIDSimple(l.ID)
+	lorig, err := getLabelByIDSimple(s, l.ID)
 	if err != nil {
 		return false, err
 	}
@@ -61,19 +62,19 @@ func (l *Label) isLabelOwner(a web.Auth) (bool, error) {
 }
 
 // Helper method to check if a user can see a specific label
-func (l *Label) hasAccessToLabel(a web.Auth) (has bool, maxRight int, err error) {
+func (l *Label) hasAccessToLabel(s *xorm.Session, a web.Auth) (has bool, maxRight int, err error) {
 
 	// TODO: add an extra check for link share handling
 
 	// Get all tasks
-	taskIDs, err := getUserTaskIDs(&user.User{ID: a.GetID()})
+	taskIDs, err := getUserTaskIDs(s, &user.User{ID: a.GetID()})
 	if err != nil {
 		return false, 0, err
 	}
 
 	// Get all labels associated with these tasks
 	ll := &LabelTask{}
-	has, err = x.Table("labels").
+	has, err = s.Table("labels").
 		Select("label_task.*").
 		Join("LEFT", "label_task", "label_task.label_id = labels.id").
 		Where("label_task.label_id is not null OR labels.created_by_id = ?", a.GetID()).
@@ -87,7 +88,7 @@ func (l *Label) hasAccessToLabel(a web.Auth) (has bool, maxRight int, err error)
 	// Since the right depends on the task the label is associated with, we need to check that too.
 	if ll.TaskID > 0 {
 		t := &Task{ID: ll.TaskID}
-		_, maxRight, err = t.CanRead(a)
+		_, maxRight, err = t.CanRead(s, a)
 		if err != nil {
 			return
 		}

@@ -91,6 +91,7 @@ func TestLabelTask_ReadAll(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
 
 			l := &LabelTask{
 				ID:       tt.fields.ID,
@@ -100,7 +101,7 @@ func TestLabelTask_ReadAll(t *testing.T) {
 				CRUDable: tt.fields.CRUDable,
 				Rights:   tt.fields.Rights,
 			}
-			gotLabels, _, _, err := l.ReadAll(tt.args.a, tt.args.search, tt.args.page, 0)
+			gotLabels, _, _, err := l.ReadAll(s, tt.args.a, tt.args.search, tt.args.page, 0)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("LabelTask.ReadAll() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -111,6 +112,8 @@ func TestLabelTask_ReadAll(t *testing.T) {
 			if diff, equal := messagediff.PrettyDiff(gotLabels, tt.wantLabels); !equal {
 				t.Errorf("LabelTask.ReadAll() = %v, want %v, diff: %v", l, tt.wantLabels, diff)
 			}
+
+			s.Close()
 		})
 	}
 }
@@ -186,6 +189,8 @@ func TestLabelTask_Create(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
 
+			s := db.NewSession()
+
 			l := &LabelTask{
 				ID:       tt.fields.ID,
 				TaskID:   tt.fields.TaskID,
@@ -194,11 +199,11 @@ func TestLabelTask_Create(t *testing.T) {
 				CRUDable: tt.fields.CRUDable,
 				Rights:   tt.fields.Rights,
 			}
-			allowed, _ := l.CanCreate(tt.args.a)
+			allowed, _ := l.CanCreate(s, tt.args.a)
 			if !allowed && !tt.wantForbidden {
 				t.Errorf("LabelTask.CanCreate() forbidden, want %v", tt.wantForbidden)
 			}
-			err := l.Create(tt.args.a)
+			err := l.Create(s, tt.args.a)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("LabelTask.Create() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -212,6 +217,7 @@ func TestLabelTask_Create(t *testing.T) {
 					"label_id": l.LabelID,
 				}, false)
 			}
+			s.Close()
 		})
 	}
 }
@@ -282,6 +288,8 @@ func TestLabelTask_Delete(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
 
+			s := db.NewSession()
+
 			l := &LabelTask{
 				ID:       tt.fields.ID,
 				TaskID:   tt.fields.TaskID,
@@ -290,11 +298,11 @@ func TestLabelTask_Delete(t *testing.T) {
 				CRUDable: tt.fields.CRUDable,
 				Rights:   tt.fields.Rights,
 			}
-			allowed, _ := l.CanDelete(tt.auth)
+			allowed, _ := l.CanDelete(s, tt.auth)
 			if !allowed && !tt.wantForbidden {
 				t.Errorf("LabelTask.CanDelete() forbidden, want %v", tt.wantForbidden)
 			}
-			err := l.Delete()
+			err := l.Delete(s)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("LabelTask.Delete() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -307,6 +315,7 @@ func TestLabelTask_Delete(t *testing.T) {
 					"task_id":  l.TaskID,
 				})
 			}
+			s.Close()
 		})
 	}
 }

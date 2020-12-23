@@ -31,6 +31,7 @@ import (
 	"xorm.io/core"
 	"xorm.io/xorm"
 	"xorm.io/xorm/caches"
+	"xorm.io/xorm/schemas"
 
 	_ "github.com/go-sql-driver/mysql" // Because.
 	_ "github.com/lib/pq"              // Because.
@@ -210,4 +211,14 @@ func WipeEverything() error {
 	}
 
 	return nil
+}
+
+// NewSession creates a new xorm session
+func NewSession() *xorm.Session {
+	return x.NewSession()
+}
+
+// Type returns the db type of the currently configured db
+func Type() schemas.DBType {
+	return x.Dialect().URI().DBType
 }

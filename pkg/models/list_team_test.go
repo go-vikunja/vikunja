@@ -37,20 +37,24 @@ func TestTeamList_ReadAll(t *testing.T) {
 			ListID: 3,
 		}
 		db.LoadAndAssertFixtures(t)
-		teams, _, _, err := tl.ReadAll(u, "", 1, 50)
+		s := db.NewSession()
+		teams, _, _, err := tl.ReadAll(s, u, "", 1, 50)
 		assert.NoError(t, err)
 		assert.Equal(t, reflect.TypeOf(teams).Kind(), reflect.Slice)
-		s := reflect.ValueOf(teams)
-		assert.Equal(t, s.Len(), 1)
+		ts := reflect.ValueOf(teams)
+		assert.Equal(t, ts.Len(), 1)
+		_ = s.Close()
 	})
 	t.Run("nonexistant list", func(t *testing.T) {
 		tl := TeamList{
 			ListID: 99999,
 		}
 		db.LoadAndAssertFixtures(t)
-		_, _, _, err := tl.ReadAll(u, "", 1, 50)
+		s := db.NewSession()
+		_, _, _, err := tl.ReadAll(s, u, "", 1, 50)
 		assert.Error(t, err)
 		assert.True(t, IsErrListDoesNotExist(err))
+		_ = s.Close()
 	})
 	t.Run("namespace owner", func(t *testing.T) {
 		tl := TeamList{
@@ -59,8 +63,10 @@ func TestTeamList_ReadAll(t *testing.T) {
 			Right:  RightAdmin,
 		}
 		db.LoadAndAssertFixtures(t)
-		_, _, _, err := tl.ReadAll(u, "", 1, 50)
+		s := db.NewSession()
+		_, _, _, err := tl.ReadAll(s, u, "", 1, 50)
 		assert.NoError(t, err)
+		_ = s.Close()
 	})
 	t.Run("no access", func(t *testing.T) {
 		tl := TeamList{
@@ -69,9 +75,11 @@ func TestTeamList_ReadAll(t *testing.T) {
 			Right:  RightAdmin,
 		}
 		db.LoadAndAssertFixtures(t)
-		_, _, _, err := tl.ReadAll(u, "", 1, 50)
+		s := db.NewSession()
+		_, _, _, err := tl.ReadAll(s, u, "", 1, 50)
 		assert.Error(t, err)
 		assert.True(t, IsErrNeedToHaveListReadAccess(err))
+		_ = s.Close()
 	})
 }
 
@@ -79,14 +87,17 @@ func TestTeamList_Create(t *testing.T) {
 	u := &user.User{ID: 1}
 	t.Run("normal", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
 		tl := TeamList{
 			TeamID: 1,
 			ListID: 1,
 			Right:  RightAdmin,
 		}
-		allowed, _ := tl.CanCreate(u)
+		allowed, _ := tl.CanCreate(s, u)
 		assert.True(t, allowed)
-		err := tl.Create(u)
+		err := tl.Create(s, u)
+		assert.NoError(t, err)
+		err = s.Commit()
 		assert.NoError(t, err)
 		db.AssertExists(t, "team_list", map[string]interface{}{
 			"team_id": 1,
@@ -96,56 +107,67 @@ func TestTeamList_Create(t *testing.T) {
 	})
 	t.Run("team already has access", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
 		tl := TeamList{
 			TeamID: 1,
 			ListID: 3,
 			Right:  RightAdmin,
 		}
-		err := tl.Create(u)
+		err := tl.Create(s, u)
 		assert.Error(t, err)
 		assert.True(t, IsErrTeamAlreadyHasAccess(err))
+		_ = s.Close()
 	})
 	t.Run("wrong rights", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
 		tl := TeamList{
 			TeamID: 1,
 			ListID: 1,
 			Right:  RightUnknown,
 		}
-		err := tl.Create(u)
+		err := tl.Create(s, u)
 		assert.Error(t, err)
 		assert.True(t, IsErrInvalidRight(err))
+		_ = s.Close()
 	})
 	t.Run("nonexistant team", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
 		tl := TeamList{
 			TeamID: 9999,
 			ListID: 1,
 		}
-		err := tl.Create(u)
+		err := tl.Create(s, u)
 		assert.Error(t, err)
 		assert.True(t, IsErrTeamDoesNotExist(err))
+		_ = s.Close()
 	})
 	t.Run("nonexistant list", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
 		tl := TeamList{
 			TeamID: 1,
 			ListID: 9999,
 		}
-		err := tl.Create(u)
+		err := tl.Create(s, u)
 		assert.Error(t, err)
 		assert.True(t, IsErrListDoesNotExist(err))
+		_ = s.Close()
 	})
 }
 
 func TestTeamList_Delete(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
 		tl := TeamList{
 			TeamID: 1,
 			ListID: 3,
 		}
-		err := tl.Delete()
+		err := tl.Delete(s)
+		assert.NoError(t, err)
+		err = s.Commit()
 		assert.NoError(t, err)
 		db.AssertMissing(t, "team_list", map[string]interface{}{
 			"team_id": 1,
@@ -154,23 +176,27 @@ func TestTeamList_Delete(t *testing.T) {
 	})
 	t.Run("nonexistant team", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
 		tl := TeamList{
 			TeamID: 9999,
 			ListID: 1,
 		}
-		err := tl.Delete()
+		err := tl.Delete(s)
 		assert.Error(t, err)
 		assert.True(t, IsErrTeamDoesNotExist(err))
+		_ = s.Close()
 	})
 	t.Run("nonexistant list", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
 		tl := TeamList{
 			TeamID: 1,
 			ListID: 9999,
 		}
-		err := tl.Delete()
+		err := tl.Delete(s)
 		assert.Error(t, err)
 		assert.True(t, IsErrTeamDoesNotHaveAccessToList(err))
+		_ = s.Close()
 	})
 }
 
@@ -229,6 +255,7 @@ func TestTeamList_Update(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
 
 			tl := &TeamList{
 				ID:       tt.fields.ID,
@@ -240,13 +267,15 @@ func TestTeamList_Update(t *testing.T) {
 				CRUDable: tt.fields.CRUDable,
 				Rights:   tt.fields.Rights,
 			}
-			err := tl.Update()
+			err := tl.Update(s)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("TeamList.Update() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			if (err != nil) && tt.wantErr && !tt.errType(err) {
 				t.Errorf("TeamList.Update() Wrong error type! Error = %v, want = %v", err, runtime.FuncForPC(reflect.ValueOf(tt.errType).Pointer()).Name())
 			}
+			err = s.Commit()
+			assert.NoError(t, err)
 			if !tt.wantErr {
 				db.AssertExists(t, "team_list", map[string]interface{}{
 					"list_id": tt.fields.ListID,

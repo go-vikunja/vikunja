@@ -82,6 +82,8 @@ func TestTeam_CanDoSomething(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
 
 			tm := &Team{
 				ID:          tt.fields.ID,
@@ -96,19 +98,19 @@ func TestTeam_CanDoSomething(t *testing.T) {
 				Rights:      tt.fields.Rights,
 			}
 
-			if got, _ := tm.CanCreate(tt.args.a); got != tt.want["CanCreate"] { // CanCreate is currently always true
+			if got, _ := tm.CanCreate(s, tt.args.a); got != tt.want["CanCreate"] { // CanCreate is currently always true
 				t.Errorf("Team.CanCreate() = %v, want %v", got, tt.want["CanCreate"])
 			}
-			if got, _ := tm.CanDelete(tt.args.a); got != tt.want["CanDelete"] {
+			if got, _ := tm.CanDelete(s, tt.args.a); got != tt.want["CanDelete"] {
 				t.Errorf("Team.CanDelete() = %v, want %v", got, tt.want["CanDelete"])
 			}
-			if got, _ := tm.CanUpdate(tt.args.a); got != tt.want["CanUpdate"] {
+			if got, _ := tm.CanUpdate(s, tt.args.a); got != tt.want["CanUpdate"] {
 				t.Errorf("Team.CanUpdate() = %v, want %v", got, tt.want["CanUpdate"])
 			}
-			if got, _, _ := tm.CanRead(tt.args.a); got != tt.want["CanRead"] {
+			if got, _, _ := tm.CanRead(s, tt.args.a); got != tt.want["CanRead"] {
 				t.Errorf("Team.CanRead() = %v, want %v", got, tt.want["CanRead"])
 			}
-			if got, _ := tm.IsAdmin(tt.args.a); got != tt.want["IsAdmin"] {
+			if got, _ := tm.IsAdmin(s, tt.args.a); got != tt.want["IsAdmin"] {
 				t.Errorf("Team.IsAdmin() = %v, want %v", got, tt.want["IsAdmin"])
 			}
 		})

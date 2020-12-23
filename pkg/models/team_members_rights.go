@@ -18,32 +18,34 @@ package models
 
 import (
 	"code.vikunja.io/web"
+	"xorm.io/xorm"
 )
 
 // CanCreate checks if the user can add a new tem member
-func (tm *TeamMember) CanCreate(a web.Auth) (bool, error) {
-	return tm.IsAdmin(a)
+func (tm *TeamMember) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
+	return tm.IsAdmin(s, a)
 }
 
 // CanDelete checks if the user can delete a new team member
-func (tm *TeamMember) CanDelete(a web.Auth) (bool, error) {
-	return tm.IsAdmin(a)
+func (tm *TeamMember) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
+	return tm.IsAdmin(s, a)
 }
 
 // CanUpdate checks if the user can modify a team member's right
-func (tm *TeamMember) CanUpdate(a web.Auth) (bool, error) {
-	return tm.IsAdmin(a)
+func (tm *TeamMember) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
+	return tm.IsAdmin(s, a)
 }
 
 // IsAdmin checks if the user is team admin
-func (tm *TeamMember) IsAdmin(a web.Auth) (bool, error) {
+func (tm *TeamMember) IsAdmin(s *xorm.Session, a web.Auth) (bool, error) {
 	// Don't allow anything if we're dealing with a list share here
 	if _, is := a.(*LinkSharing); is {
 		return false, nil
 	}
 
 	// A user can add a member to a team if he is admin of that team
-	exists, err := x.Where("user_id = ? AND team_id = ? AND admin = ?", a.GetID(), tm.TeamID, true).
+	exists, err := s.
+		Where("user_id = ? AND team_id = ? AND admin = ?", a.GetID(), tm.TeamID, true).
 		Get(&TeamMember{})
 	return exists, err
 }

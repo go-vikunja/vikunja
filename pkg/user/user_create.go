@@ -22,12 +22,13 @@ import (
 	"code.vikunja.io/api/pkg/metrics"
 	"code.vikunja.io/api/pkg/utils"
 	"golang.org/x/crypto/bcrypt"
+	"xorm.io/xorm"
 )
 
 const issuerLocal = `local`
 
 // CreateUser creates a new user and inserts it into the database
-func CreateUser(user *User) (newUser *User, err error) {
+func CreateUser(s *xorm.Session, user *User) (newUser *User, err error) {
 
 	if user.Issuer == "" {
 		user.Issuer = issuerLocal
@@ -40,7 +41,7 @@ func CreateUser(user *User) (newUser *User, err error) {
 	}
 
 	// Check if the user already exists with that username
-	err = checkIfUserExists(user)
+	err = checkIfUserExists(s, user)
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +65,7 @@ func CreateUser(user *User) (newUser *User, err error) {
 	user.AvatarProvider = "initials"
 
 	// Insert it
-	_, err = x.Insert(user)
+	_, err = s.Insert(user)
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +74,7 @@ func CreateUser(user *User) (newUser *User, err error) {
 	metrics.UpdateCount(1, metrics.ActiveUsersKey)
 
 	// Get the  full new User
-	newUserOut, err := GetUserByID(user.ID)
+	newUserOut, err := GetUserByID(s, user.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -100,9 +101,9 @@ func checkIfUserIsValid(user *User) error {
 	return nil
 }
 
-func checkIfUserExists(user *User) (err error) {
+func checkIfUserExists(s *xorm.Session, user *User) (err error) {
 	exists := true
-	_, err = GetUserByUsername(user.Username)
+	_, err = GetUserByUsername(s, user.Username)
 	if err != nil {
 		if IsErrUserDoesNotExist(err) {
 			exists = false
@@ -126,7 +127,7 @@ func checkIfUserExists(user *User) (err error) {
 		userToCheck.Email = ""
 	}
 
-	_, err = GetUser(userToCheck)
+	_, err = getUser(s, userToCheck, false)
 	if err != nil {
 		if IsErrUserDoesNotExist(err) {
 			exists = false

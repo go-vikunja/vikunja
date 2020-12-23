@@ -21,6 +21,7 @@ import (
 
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
+	"xorm.io/xorm"
 )
 
 // Label represents a label
@@ -64,7 +65,7 @@ func (Label) TableName() string {
 // @Failure 400 {object} web.HTTPError "Invalid label object provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /labels [put]
-func (l *Label) Create(a web.Auth) (err error) {
+func (l *Label) Create(s *xorm.Session, a web.Auth) (err error) {
 	u, err := user.GetFromAuth(a)
 	if err != nil {
 		return
@@ -73,7 +74,7 @@ func (l *Label) Create(a web.Auth) (err error) {
 	l.CreatedBy = u
 	l.CreatedByID = u.ID
 
-	_, err = x.Insert(l)
+	_, err = s.Insert(l)
 	return
 }
 
@@ -92,8 +93,8 @@ func (l *Label) Create(a web.Auth) (err error) {
 // @Failure 404 {object} web.HTTPError "Label not found."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /labels/{id} [put]
-func (l *Label) Update() (err error) {
-	_, err = x.
+func (l *Label) Update(s *xorm.Session) (err error) {
+	_, err = s.
 		ID(l.ID).
 		Cols(
 			"title",
@@ -105,7 +106,7 @@ func (l *Label) Update() (err error) {
 		return
 	}
 
-	err = l.ReadOne()
+	err = l.ReadOne(s)
 	return
 }
 
@@ -122,8 +123,8 @@ func (l *Label) Update() (err error) {
 // @Failure 404 {object} web.HTTPError "Label not found."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /labels/{id} [delete]
-func (l *Label) Delete() (err error) {
-	_, err = x.ID(l.ID).Delete(&Label{})
+func (l *Label) Delete(s *xorm.Session) (err error) {
+	_, err = s.ID(l.ID).Delete(&Label{})
 	return err
 }
 
@@ -140,7 +141,7 @@ func (l *Label) Delete() (err error) {
 // @Success 200 {array} models.Label "The labels"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /labels [get]
-func (l *Label) ReadAll(a web.Auth, search string, page int, perPage int) (ls interface{}, resultCount int, numberOfEntries int64, err error) {
+func (l *Label) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (ls interface{}, resultCount int, numberOfEntries int64, err error) {
 	if _, is := a.(*LinkSharing); is {
 		return nil, 0, 0, ErrGenericForbidden{}
 	}
@@ -148,12 +149,12 @@ func (l *Label) ReadAll(a web.Auth, search string, page int, perPage int) (ls in
 	u := &user.User{ID: a.GetID()}
 
 	// Get all tasks
-	taskIDs, err := getUserTaskIDs(u)
+	taskIDs, err := getUserTaskIDs(s, u)
 	if err != nil {
 		return nil, 0, 0, err
 	}
 
-	return getLabelsByTaskIDs(&LabelByTaskIDsOptions{
+	return getLabelsByTaskIDs(s, &LabelByTaskIDsOptions{
 		Search:              search,
 		User:                u,
 		TaskIDs:             taskIDs,
@@ -177,25 +178,25 @@ func (l *Label) ReadAll(a web.Auth, search string, page int, perPage int) (ls in
 // @Failure 404 {object} web.HTTPError "Label not found"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /labels/{id} [get]
-func (l *Label) ReadOne() (err error) {
-	label, err := getLabelByIDSimple(l.ID)
+func (l *Label) ReadOne(s *xorm.Session) (err error) {
+	label, err := getLabelByIDSimple(s, l.ID)
 	if err != nil {
 		return err
 	}
 	*l = *label
 
-	user, err := user.GetUserByID(l.CreatedByID)
+	u, err := user.GetUserByID(s, l.CreatedByID)
 	if err != nil {
 		return err
 	}
 
-	l.CreatedBy = user
+	l.CreatedBy = u
 	return
 }
 
-func getLabelByIDSimple(labelID int64) (*Label, error) {
+func getLabelByIDSimple(s *xorm.Session, labelID int64) (*Label, error) {
 	label := Label{}
-	exists, err := x.ID(labelID).Get(&label)
+	exists, err := s.ID(labelID).Get(&label)
 	if err != nil {
 		return &label, err
 	}
@@ -207,18 +208,21 @@ func getLabelByIDSimple(labelID int64) (*Label, error) {
 }
 
 // Helper method to get all task ids a user has
-func getUserTaskIDs(u *user.User) (taskIDs []int64, err error) {
+func getUserTaskIDs(s *xorm.Session, u *user.User) (taskIDs []int64, err error) {
 
 	// Get all lists
-	lists, _, _, err := getRawListsForUser(&listOptions{
-		user: u,
-		page: -1,
-	})
+	lists, _, _, err := getRawListsForUser(
+		s,
+		&listOptions{
+			user: u,
+			page: -1,
+		},
+	)
 	if err != nil {
 		return nil, err
 	}
 
-	tasks, _, _, err := getRawTasksForLists(lists, u, &taskOptions{
+	tasks, _, _, err := getRawTasksForLists(s, lists, u, &taskOptions{
 		page:    -1,
 		perPage: 0,
 	})

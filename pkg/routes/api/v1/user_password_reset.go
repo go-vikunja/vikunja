@@ -19,6 +19,8 @@ package v1
 import (
 	"net/http"
 
+	"code.vikunja.io/api/pkg/db"
+
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web/handler"
@@ -43,8 +45,17 @@ func UserResetPassword(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "No password provided.")
 	}
 
-	err := user.ResetPassword(&pwReset)
+	s := db.NewSession()
+	defer s.Close()
+
+	err := user.ResetPassword(s, &pwReset)
 	if err != nil {
+		_ = s.Rollback()
+		return handler.HandleHTTPError(err, c)
+	}
+
+	if err := s.Commit(); err != nil {
+		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)
 	}
 
@@ -73,8 +84,17 @@ func UserRequestResetPasswordToken(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err)
 	}
 
-	err := user.RequestUserPasswordResetTokenByEmail(&pwTokenReset)
+	s := db.NewSession()
+	defer s.Close()
+
+	err := user.RequestUserPasswordResetTokenByEmail(s, &pwTokenReset)
 	if err != nil {
+		_ = s.Rollback()
+		return handler.HandleHTTPError(err, c)
+	}
+
+	if err := s.Commit(); err != nil {
+		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)
 	}
 

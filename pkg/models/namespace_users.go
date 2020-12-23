@@ -21,6 +21,7 @@ import (
 
 	user2 "code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
+	"xorm.io/xorm"
 )
 
 // NamespaceUser represents a namespace <-> user relation
@@ -64,7 +65,7 @@ func (NamespaceUser) TableName() string {
 // @Failure 403 {object} web.HTTPError "The user does not have access to the namespace"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces/{id}/users [put]
-func (nu *NamespaceUser) Create(a web.Auth) (err error) {
+func (nu *NamespaceUser) Create(s *xorm.Session, a web.Auth) (err error) {
 	// Reset the id
 	nu.ID = 0
 
@@ -74,13 +75,13 @@ func (nu *NamespaceUser) Create(a web.Auth) (err error) {
 	}
 
 	// Check if the namespace exists
-	l, err := GetNamespaceByID(nu.NamespaceID)
+	l, err := GetNamespaceByID(s, nu.NamespaceID)
 	if err != nil {
 		return
 	}
 
 	// Check if the user exists
-	user, err := user2.GetUserByUsername(nu.Username)
+	user, err := user2.GetUserByUsername(s, nu.Username)
 	if err != nil {
 		return err
 	}
@@ -92,7 +93,9 @@ func (nu *NamespaceUser) Create(a web.Auth) (err error) {
 		return ErrUserAlreadyHasNamespaceAccess{UserID: nu.UserID, NamespaceID: nu.NamespaceID}
 	}
 
-	exist, err := x.Where("namespace_id = ? AND user_id = ?", nu.NamespaceID, nu.UserID).Get(&NamespaceUser{})
+	exist, err := s.
+		Where("namespace_id = ? AND user_id = ?", nu.NamespaceID, nu.UserID).
+		Get(&NamespaceUser{})
 	if err != nil {
 		return
 	}
@@ -101,7 +104,7 @@ func (nu *NamespaceUser) Create(a web.Auth) (err error) {
 	}
 
 	// Insert user <-> namespace relation
-	_, err = x.Insert(nu)
+	_, err = s.Insert(nu)
 
 	return
 }
@@ -119,17 +122,18 @@ func (nu *NamespaceUser) Create(a web.Auth) (err error) {
 // @Failure 404 {object} web.HTTPError "user or namespace does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces/{namespaceID}/users/{userID} [delete]
-func (nu *NamespaceUser) Delete() (err error) {
+func (nu *NamespaceUser) Delete(s *xorm.Session) (err error) {
 
 	// Check if the user exists
-	user, err := user2.GetUserByUsername(nu.Username)
+	user, err := user2.GetUserByUsername(s, nu.Username)
 	if err != nil {
 		return
 	}
 	nu.UserID = user.ID
 
 	// Check if the user has access to the namespace
-	has, err := x.Where("user_id = ? AND namespace_id = ?", nu.UserID, nu.NamespaceID).
+	has, err := s.
+		Where("user_id = ? AND namespace_id = ?", nu.UserID, nu.NamespaceID).
 		Get(&NamespaceUser{})
 	if err != nil {
 		return
@@ -138,7 +142,8 @@ func (nu *NamespaceUser) Delete() (err error) {
 		return ErrUserDoesNotHaveAccessToNamespace{NamespaceID: nu.NamespaceID, UserID: nu.UserID}
 	}
 
-	_, err = x.Where("user_id = ? AND namespace_id = ?", nu.UserID, nu.NamespaceID).
+	_, err = s.
+		Where("user_id = ? AND namespace_id = ?", nu.UserID, nu.NamespaceID).
 		Delete(&NamespaceUser{})
 	return
 }
@@ -158,10 +163,10 @@ func (nu *NamespaceUser) Delete() (err error) {
 // @Failure 403 {object} web.HTTPError "No right to see the namespace."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces/{id}/users [get]
-func (nu *NamespaceUser) ReadAll(a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
+func (nu *NamespaceUser) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
 	// Check if the user has access to the namespace
 	l := Namespace{ID: nu.NamespaceID}
-	canRead, _, err := l.CanRead(a)
+	canRead, _, err := l.CanRead(s, a)
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -174,7 +179,7 @@ func (nu *NamespaceUser) ReadAll(a web.Auth, search string, page int, perPage in
 
 	limit, start := getLimitFromPageIndex(page, perPage)
 
-	query := x.
+	query := s.
 		Join("INNER", "users_namespace", "user_id = users.id").
 		Where("users_namespace.namespace_id = ?", nu.NamespaceID).
 		Where("users.username LIKE ?", "%"+search+"%")
@@ -191,7 +196,7 @@ func (nu *NamespaceUser) ReadAll(a web.Auth, search string, page int, perPage in
 		u.Email = ""
 	}
 
-	numberOfTotalItems, err = x.
+	numberOfTotalItems, err = s.
 		Join("INNER", "users_namespace", "user_id = users.id").
 		Where("users_namespace.namespace_id = ?", nu.NamespaceID).
 		Where("users.username LIKE ?", "%"+search+"%").
@@ -215,7 +220,7 @@ func (nu *NamespaceUser) ReadAll(a web.Auth, search string, page int, perPage in
 // @Failure 404 {object} web.HTTPError "User or namespace does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces/{namespaceID}/users/{userID} [post]
-func (nu *NamespaceUser) Update() (err error) {
+func (nu *NamespaceUser) Update(s *xorm.Session) (err error) {
 
 	// Check if the right is valid
 	if err := nu.Right.isValid(); err != nil {
@@ -223,13 +228,13 @@ func (nu *NamespaceUser) Update() (err error) {
 	}
 
 	// Check if the user exists
-	user, err := user2.GetUserByUsername(nu.Username)
+	user, err := user2.GetUserByUsername(s, nu.Username)
 	if err != nil {
 		return err
 	}
 	nu.UserID = user.ID
 
-	_, err = x.
+	_, err = s.
 		Where("namespace_id = ? AND user_id = ?", nu.NamespaceID, nu.UserID).
 		Cols("right").
 		Update(nu)

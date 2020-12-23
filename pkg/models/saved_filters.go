@@ -21,6 +21,7 @@ import (
 
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
+	"xorm.io/xorm"
 )
 
 // SavedFilter represents a saved bunch of filters
@@ -48,14 +49,14 @@ type SavedFilter struct {
 }
 
 // TableName returns a better table name for saved filters
-func (s *SavedFilter) TableName() string {
+func (sf *SavedFilter) TableName() string {
 	return "saved_filters"
 }
 
-func (s *SavedFilter) getTaskCollection() *TaskCollection {
+func (sf *SavedFilter) getTaskCollection() *TaskCollection {
 	// We're resetting the listID to return tasks from all lists
-	s.Filters.ListID = 0
-	return s.Filters
+	sf.Filters.ListID = 0
+	return sf.Filters
 }
 
 // Returns the saved filter ID from a list ID. Will not check if the filter actually exists.
@@ -79,13 +80,13 @@ func getListIDFromSavedFilterID(filterID int64) (listID int64) {
 	return
 }
 
-func getSavedFiltersForUser(auth web.Auth) (filters []*SavedFilter, err error) {
+func getSavedFiltersForUser(s *xorm.Session, auth web.Auth) (filters []*SavedFilter, err error) {
 	// Link shares can't view or modify saved filters, therefore we can error out right away
 	if _, is := auth.(*LinkSharing); is {
 		return nil, ErrSavedFilterNotAvailableForLinkShare{LinkShareID: auth.GetID()}
 	}
 
-	err = x.Where("owner_id = ?", auth.GetID()).Find(&filters)
+	err = s.Where("owner_id = ?", auth.GetID()).Find(&filters)
 	return
 }
 
@@ -100,17 +101,17 @@ func getSavedFiltersForUser(auth web.Auth) (filters []*SavedFilter, err error) {
 // @Failure 403 {object} web.HTTPError "The user does not have access to that saved filter."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /filters [put]
-func (s *SavedFilter) Create(auth web.Auth) error {
-	s.OwnerID = auth.GetID()
-	_, err := x.Insert(s)
+func (sf *SavedFilter) Create(s *xorm.Session, auth web.Auth) error {
+	sf.OwnerID = auth.GetID()
+	_, err := s.Insert(sf)
 	return err
 }
 
-func getSavedFilterSimpleByID(id int64) (s *SavedFilter, err error) {
-	s = &SavedFilter{}
-	exists, err := x.
+func getSavedFilterSimpleByID(s *xorm.Session, id int64) (sf *SavedFilter, err error) {
+	sf = &SavedFilter{}
+	exists, err := s.
 		Where("id = ?", id).
-		Get(s)
+		Get(sf)
 	if err != nil {
 		return nil, err
 	}
@@ -132,10 +133,10 @@ func getSavedFilterSimpleByID(id int64) (s *SavedFilter, err error) {
 // @Failure 403 {object} web.HTTPError "The user does not have access to that saved filter."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /filters/{id} [get]
-func (s *SavedFilter) ReadOne() error {
+func (sf *SavedFilter) ReadOne(s *xorm.Session) error {
 	// s already contains almost the full saved filter from the rights check, we only need to add the user
-	u, err := user.GetUserByID(s.OwnerID)
-	s.Owner = u
+	u, err := user.GetUserByID(s, sf.OwnerID)
+	sf.Owner = u
 	return err
 }
 
@@ -152,15 +153,15 @@ func (s *SavedFilter) ReadOne() error {
 // @Failure 404 {object} web.HTTPError "The saved filter does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /filters/{id} [post]
-func (s *SavedFilter) Update() error {
-	_, err := x.
-		Where("id = ?", s.ID).
+func (sf *SavedFilter) Update(s *xorm.Session) error {
+	_, err := s.
+		Where("id = ?", sf.ID).
 		Cols(
 			"title",
 			"description",
 			"filters",
 		).
-		Update(s)
+		Update(sf)
 	return err
 }
 
@@ -177,7 +178,9 @@ func (s *SavedFilter) Update() error {
 // @Failure 404 {object} web.HTTPError "The saved filter does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /filters/{id} [delete]
-func (s *SavedFilter) Delete() error {
-	_, err := x.Where("id = ?", s.ID).Delete(s)
+func (sf *SavedFilter) Delete(s *xorm.Session) error {
+	_, err := s.
+		Where("id = ?", sf.ID).
+		Delete(sf)
 	return err
 }

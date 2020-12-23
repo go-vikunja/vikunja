@@ -20,6 +20,7 @@ package models
 import (
 	"code.vikunja.io/api/pkg/user"
 	"xorm.io/builder"
+	"xorm.io/xorm"
 )
 
 // ListUIDs hold all kinds of user IDs from accounts who have somehow access to a list
@@ -33,11 +34,11 @@ type ListUIDs struct {
 }
 
 // ListUsersFromList returns a list with all users who have access to a list, regardless of the method which gave them access
-func ListUsersFromList(l *List, search string) (users []*user.User, err error) {
+func ListUsersFromList(s *xorm.Session, l *List, search string) (users []*user.User, err error) {
 
 	userids := []*ListUIDs{}
 
-	err = x.
+	err = s.
 		Select(`l.owner_id as listOwner,
 			un.user_id as unID,
 			ul.user_id as ulID,
@@ -97,7 +98,7 @@ func ListUsersFromList(l *List, search string) (users []*user.User, err error) {
 	}
 
 	// Get all users
-	err = x.
+	err = s.
 		Table("users").
 		Select("*").
 		In("id", uids).

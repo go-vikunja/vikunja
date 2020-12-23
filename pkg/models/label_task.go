@@ -22,10 +22,10 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/log"
-
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
 	"xorm.io/builder"
+	"xorm.io/xorm"
 )
 
 // LabelTask represents a relation between a label and a task
@@ -61,8 +61,8 @@ func (LabelTask) TableName() string {
 // @Failure 404 {object} web.HTTPError "Label not found."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{task}/labels/{label} [delete]
-func (lt *LabelTask) Delete() (err error) {
-	_, err = x.Delete(&LabelTask{LabelID: lt.LabelID, TaskID: lt.TaskID})
+func (lt *LabelTask) Delete(s *xorm.Session) (err error) {
+	_, err = s.Delete(&LabelTask{LabelID: lt.LabelID, TaskID: lt.TaskID})
 	return err
 }
 
@@ -81,9 +81,9 @@ func (lt *LabelTask) Delete() (err error) {
 // @Failure 404 {object} web.HTTPError "The label does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{task}/labels [put]
-func (lt *LabelTask) Create(a web.Auth) (err error) {
+func (lt *LabelTask) Create(s *xorm.Session, a web.Auth) (err error) {
 	// Check if the label is already added
-	exists, err := x.Exist(&LabelTask{LabelID: lt.LabelID, TaskID: lt.TaskID})
+	exists, err := s.Exist(&LabelTask{LabelID: lt.LabelID, TaskID: lt.TaskID})
 	if err != nil {
 		return err
 	}
@@ -92,12 +92,12 @@ func (lt *LabelTask) Create(a web.Auth) (err error) {
 	}
 
 	// Insert it
-	_, err = x.Insert(lt)
+	_, err = s.Insert(lt)
 	if err != nil {
 		return err
 	}
 
-	err = updateListByTaskID(lt.TaskID)
+	err = updateListByTaskID(s, lt.TaskID)
 	return
 }
 
@@ -115,10 +115,10 @@ func (lt *LabelTask) Create(a web.Auth) (err error) {
 // @Success 200 {array} models.Label "The labels"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{task}/labels [get]
-func (lt *LabelTask) ReadAll(a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
+func (lt *LabelTask) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
 	// Check if the user has the right to see the task
 	task := Task{ID: lt.TaskID}
-	canRead, _, err := task.CanRead(a)
+	canRead, _, err := task.CanRead(s, a)
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -126,7 +126,7 @@ func (lt *LabelTask) ReadAll(a web.Auth, search string, page int, perPage int) (
 		return nil, 0, 0, ErrNoRightToSeeTask{lt.TaskID, a.GetID()}
 	}
 
-	return getLabelsByTaskIDs(&LabelByTaskIDsOptions{
+	return getLabelsByTaskIDs(s, &LabelByTaskIDsOptions{
 		User:    &user.User{ID: a.GetID()},
 		Search:  search,
 		Page:    page,
@@ -153,7 +153,7 @@ type LabelByTaskIDsOptions struct {
 
 // Helper function to get all labels for a set of tasks
 // Used when getting all labels for one task as well when getting all lables
-func getLabelsByTaskIDs(opts *LabelByTaskIDsOptions) (ls []*labelWithTaskID, resultCount int, totalEntries int64, err error) {
+func getLabelsByTaskIDs(s *xorm.Session, opts *LabelByTaskIDsOptions) (ls []*labelWithTaskID, resultCount int, totalEntries int64, err error) {
 	// We still need the task ID when we want to get all labels for a task, but because of this, we get the same label
 	// multiple times when it is associated to more than one task.
 	// Because of this whole thing, we need this extra switch here to only group by Task IDs if needed.
@@ -194,7 +194,7 @@ func getLabelsByTaskIDs(opts *LabelByTaskIDsOptions) (ls []*labelWithTaskID, res
 
 	limit, start := getLimitFromPageIndex(opts.Page, opts.PerPage)
 
-	query := x.Table("labels").
+	query := s.Table("labels").
 		Select(selectStmt).
 		Join("LEFT", "label_task", "label_task.label_id = labels.id").
 		Where(cond).
@@ -214,7 +214,7 @@ func getLabelsByTaskIDs(opts *LabelByTaskIDsOptions) (ls []*labelWithTaskID, res
 		userids = append(userids, l.CreatedByID)
 	}
 	users := make(map[int64]*user.User)
-	err = x.In("id", userids).Find(&users)
+	err = s.In("id", userids).Find(&users)
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -230,7 +230,7 @@ func getLabelsByTaskIDs(opts *LabelByTaskIDsOptions) (ls []*labelWithTaskID, res
 	}
 
 	// Get the total number of entries
-	totalEntries, err = x.Table("labels").
+	totalEntries, err = s.Table("labels").
 		Select("count(DISTINCT labels.id)").
 		Join("LEFT", "label_task", "label_task.label_id = labels.id").
 		Where(cond).
@@ -244,11 +244,11 @@ func getLabelsByTaskIDs(opts *LabelByTaskIDsOptions) (ls []*labelWithTaskID, res
 }
 
 // Create or update a bunch of task labels
-func (t *Task) updateTaskLabels(creator web.Auth, labels []*Label) (err error) {
+func (t *Task) updateTaskLabels(s *xorm.Session, creator web.Auth, labels []*Label) (err error) {
 
 	// If we don't have any new labels, delete everything right away. Saves us some hassle.
 	if len(labels) == 0 && len(t.Labels) > 0 {
-		_, err = x.Where("task_id = ?", t.ID).
+		_, err = s.Where("task_id = ?", t.ID).
 			Delete(LabelTask{})
 		return err
 	}
@@ -289,7 +289,7 @@ func (t *Task) updateTaskLabels(creator web.Auth, labels []*Label) (err error) {
 
 	// Delete all labels not passed
 	if len(labelsToDelete) > 0 {
-		_, err = x.In("label_id", labelsToDelete).
+		_, err = s.In("label_id", labelsToDelete).
 			And("task_id = ?", t.ID).
 			Delete(LabelTask{})
 		if err != nil {
@@ -306,13 +306,13 @@ func (t *Task) updateTaskLabels(creator web.Auth, labels []*Label) (err error) {
 		}
 
 		// Add the new label
-		label, err := getLabelByIDSimple(l.ID)
+		label, err := getLabelByIDSimple(s, l.ID)
 		if err != nil {
 			return err
 		}
 
 		// Check if the user has the rights to see the label he is about to add
-		hasAccessToLabel, _, err := label.hasAccessToLabel(creator)
+		hasAccessToLabel, _, err := label.hasAccessToLabel(s, creator)
 		if err != nil {
 			return err
 		}
@@ -322,14 +322,14 @@ func (t *Task) updateTaskLabels(creator web.Auth, labels []*Label) (err error) {
 		}
 
 		// Insert it
-		_, err = x.Insert(&LabelTask{LabelID: l.ID, TaskID: t.ID})
+		_, err = s.Insert(&LabelTask{LabelID: l.ID, TaskID: t.ID})
 		if err != nil {
 			return err
 		}
 		t.Labels = append(t.Labels, label)
 	}
 
-	err = updateListLastUpdated(&List{ID: t.ListID})
+	err = updateListLastUpdated(s, &List{ID: t.ListID})
 	return
 }
 
@@ -356,12 +356,12 @@ type LabelTaskBulk struct {
 // @Failure 400 {object} web.HTTPError "Invalid label object provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/labels/bulk [post]
-func (ltb *LabelTaskBulk) Create(a web.Auth) (err error) {
-	task, err := GetTaskByIDSimple(ltb.TaskID)
+func (ltb *LabelTaskBulk) Create(s *xorm.Session, a web.Auth) (err error) {
+	task, err := GetTaskByIDSimple(s, ltb.TaskID)
 	if err != nil {
 		return
 	}
-	labels, _, _, err := getLabelsByTaskIDs(&LabelByTaskIDsOptions{
+	labels, _, _, err := getLabelsByTaskIDs(s, &LabelByTaskIDsOptions{
 		TaskIDs: []int64{ltb.TaskID},
 	})
 	if err != nil {
@@ -370,5 +370,5 @@ func (ltb *LabelTaskBulk) Create(a web.Auth) (err error) {
 	for _, l := range labels {
 		task.Labels = append(task.Labels, &l.Label)
 	}
-	return task.updateTaskLabels(a, ltb.Labels)
+	return task.updateTaskLabels(s, a, ltb.Labels)
 }

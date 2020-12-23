@@ -18,47 +18,48 @@ package models
 
 import (
 	"code.vikunja.io/web"
+	"xorm.io/xorm"
 )
 
 // CanDelete checks if the user can delete an task
-func (t *Task) CanDelete(a web.Auth) (bool, error) {
-	return t.canDoTask(a)
+func (t *Task) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
+	return t.canDoTask(s, a)
 }
 
 // CanUpdate determines if a user has the right to update a list task
-func (t *Task) CanUpdate(a web.Auth) (bool, error) {
-	return t.canDoTask(a)
+func (t *Task) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
+	return t.canDoTask(s, a)
 }
 
 // CanCreate determines if a user has the right to create a list task
-func (t *Task) CanCreate(a web.Auth) (bool, error) {
+func (t *Task) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
 	// A user can do a task if he has write acces to its list
 	l := &List{ID: t.ListID}
-	return l.CanWrite(a)
+	return l.CanWrite(s, a)
 }
 
 // CanRead determines if a user can read a task
-func (t *Task) CanRead(a web.Auth) (canRead bool, maxRight int, err error) {
+func (t *Task) CanRead(s *xorm.Session, a web.Auth) (canRead bool, maxRight int, err error) {
 	// Get the task, error out if it doesn't exist
-	*t, err = GetTaskByIDSimple(t.ID)
+	*t, err = GetTaskByIDSimple(s, t.ID)
 	if err != nil {
 		return
 	}
 
 	// A user can read a task if it has access to the list
 	l := &List{ID: t.ListID}
-	return l.CanRead(a)
+	return l.CanRead(s, a)
 }
 
 // CanWrite checks if a user has write access to a task
-func (t *Task) CanWrite(a web.Auth) (canWrite bool, err error) {
-	return t.canDoTask(a)
+func (t *Task) CanWrite(s *xorm.Session, a web.Auth) (canWrite bool, err error) {
+	return t.canDoTask(s, a)
 }
 
 // Helper function to check if a user can do stuff on a list task
-func (t *Task) canDoTask(a web.Auth) (bool, error) {
+func (t *Task) canDoTask(s *xorm.Session, a web.Auth) (bool, error) {
 	// Get the task
-	ot, err := GetTaskByIDSimple(t.ID)
+	ot, err := GetTaskByIDSimple(s, t.ID)
 	if err != nil {
 		return false, err
 	}
@@ -66,7 +67,7 @@ func (t *Task) canDoTask(a web.Auth) (bool, error) {
 	// Check if we're moving the task into a different list to check if the user has sufficient rights for that on the new list
 	if t.ListID != 0 && t.ListID != ot.ListID {
 		newList := &List{ID: t.ListID}
-		can, err := newList.CanWrite(a)
+		can, err := newList.CanWrite(s, a)
 		if err != nil {
 			return false, err
 		}
@@ -77,5 +78,5 @@ func (t *Task) canDoTask(a web.Auth) (bool, error) {
 
 	// A user can do a task if it has write acces to its list
 	l := &List{ID: ot.ListID}
-	return l.CanWrite(a)
+	return l.CanWrite(s, a)
 }

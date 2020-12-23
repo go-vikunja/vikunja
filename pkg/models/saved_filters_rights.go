@@ -16,28 +16,31 @@
 
 package models
 
-import "code.vikunja.io/web"
+import (
+	"code.vikunja.io/web"
+	"xorm.io/xorm"
+)
 
 // CanRead checks if a user has the right to read a saved filter
-func (s *SavedFilter) CanRead(auth web.Auth) (bool, int, error) {
-	can, err := s.canDoFilter(auth)
+func (sf *SavedFilter) CanRead(s *xorm.Session, auth web.Auth) (bool, int, error) {
+	can, err := sf.canDoFilter(s, auth)
 	return can, int(RightAdmin), err
 }
 
 // CanDelete checks if a user has the right to delete a saved filter
-func (s *SavedFilter) CanDelete(auth web.Auth) (bool, error) {
-	return s.canDoFilter(auth)
+func (sf *SavedFilter) CanDelete(s *xorm.Session, auth web.Auth) (bool, error) {
+	return sf.canDoFilter(s, auth)
 }
 
 // CanUpdate checks if a user has the right to update a saved filter
-func (s *SavedFilter) CanUpdate(auth web.Auth) (bool, error) {
+func (sf *SavedFilter) CanUpdate(s *xorm.Session, auth web.Auth) (bool, error) {
 	// A normal check would replace the passed struct which in our case would override the values we want to update.
-	sf := &SavedFilter{ID: s.ID}
-	return sf.canDoFilter(auth)
+	sff := &SavedFilter{ID: sf.ID}
+	return sff.canDoFilter(s, auth)
 }
 
 // CanCreate checks if a user has the right to update a saved filter
-func (s *SavedFilter) CanCreate(auth web.Auth) (bool, error) {
+func (sf *SavedFilter) CanCreate(s *xorm.Session, auth web.Auth) (bool, error) {
 	if _, is := auth.(*LinkSharing); is {
 		return false, nil
 	}
@@ -46,23 +49,23 @@ func (s *SavedFilter) CanCreate(auth web.Auth) (bool, error) {
 }
 
 // Helper function to check saved filter rights sind they all have the same logic
-func (s *SavedFilter) canDoFilter(auth web.Auth) (can bool, err error) {
+func (sf *SavedFilter) canDoFilter(s *xorm.Session, auth web.Auth) (can bool, err error) {
 	// Link shares can't view or modify saved filters, therefore we can error out right away
 	if _, is := auth.(*LinkSharing); is {
-		return false, ErrSavedFilterNotAvailableForLinkShare{LinkShareID: auth.GetID(), SavedFilterID: s.ID}
+		return false, ErrSavedFilterNotAvailableForLinkShare{LinkShareID: auth.GetID(), SavedFilterID: sf.ID}
 	}
 
-	sf, err := getSavedFilterSimpleByID(s.ID)
+	sff, err := getSavedFilterSimpleByID(s, sf.ID)
 	if err != nil {
 		return false, err
 	}
 
 	// Only owners are allowed to do something with a saved filter
-	if sf.OwnerID != auth.GetID() {
+	if sff.OwnerID != auth.GetID() {
 		return false, nil
 	}
 
-	*s = *sf
+	*sf = *sff
 
 	return true, nil
 }

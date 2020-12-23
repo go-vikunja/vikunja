@@ -19,6 +19,7 @@ package models
 import (
 	user2 "code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
+	"xorm.io/xorm"
 )
 
 // Create implements the create method to assign a user to a team
@@ -35,23 +36,24 @@ import (
 // @Failure 403 {object} web.HTTPError "The user does not have access to the team"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /teams/{id}/members [put]
-func (tm *TeamMember) Create(a web.Auth) (err error) {
+func (tm *TeamMember) Create(s *xorm.Session, a web.Auth) (err error) {
 
 	// Check if the team extst
-	_, err = GetTeamByID(tm.TeamID)
+	_, err = GetTeamByID(s, tm.TeamID)
 	if err != nil {
 		return
 	}
 
 	// Check if the user exists
-	user, err := user2.GetUserByUsername(tm.Username)
+	user, err := user2.GetUserByUsername(s, tm.Username)
 	if err != nil {
 		return
 	}
 	tm.UserID = user.ID
 
 	// Check if that user is already part of the team
-	exists, err := x.Where("team_id = ? AND user_id = ?", tm.TeamID, tm.UserID).
+	exists, err := s.
+		Where("team_id = ? AND user_id = ?", tm.TeamID, tm.UserID).
 		Get(&TeamMember{})
 	if err != nil {
 		return
@@ -61,7 +63,7 @@ func (tm *TeamMember) Create(a web.Auth) (err error) {
 	}
 
 	// Insert the user
-	_, err = x.Insert(tm)
+	_, err = s.Insert(tm)
 	return
 }
 
@@ -76,9 +78,9 @@ func (tm *TeamMember) Create(a web.Auth) (err error) {
 // @Success 200 {object} models.Message "The user was successfully removed from the team."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /teams/{id}/members/{userID} [delete]
-func (tm *TeamMember) Delete() (err error) {
+func (tm *TeamMember) Delete(s *xorm.Session) (err error) {
 
-	total, err := x.Where("team_id = ?", tm.TeamID).Count(&TeamMember{})
+	total, err := s.Where("team_id = ?", tm.TeamID).Count(&TeamMember{})
 	if err != nil {
 		return
 	}
@@ -87,13 +89,13 @@ func (tm *TeamMember) Delete() (err error) {
 	}
 
 	// Find the numeric user id
-	user, err := user2.GetUserByUsername(tm.Username)
+	user, err := user2.GetUserByUsername(s, tm.Username)
 	if err != nil {
 		return
 	}
 	tm.UserID = user.ID
 
-	_, err = x.Where("team_id = ? AND user_id = ?", tm.TeamID, tm.UserID).Delete(&TeamMember{})
+	_, err = s.Where("team_id = ? AND user_id = ?", tm.TeamID, tm.UserID).Delete(&TeamMember{})
 	return
 }
 
@@ -108,9 +110,9 @@ func (tm *TeamMember) Delete() (err error) {
 // @Success 200 {object} models.Message "The member right was successfully changed."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /teams/{id}/members/{userID}/admin [post]
-func (tm *TeamMember) Update() (err error) {
+func (tm *TeamMember) Update(s *xorm.Session) (err error) {
 	// Find the numeric user id
-	user, err := user2.GetUserByUsername(tm.Username)
+	user, err := user2.GetUserByUsername(s, tm.Username)
 	if err != nil {
 		return
 	}
@@ -118,7 +120,7 @@ func (tm *TeamMember) Update() (err error) {
 
 	// Get the full member object and change the admin right
 	ttm := &TeamMember{}
-	_, err = x.
+	_, err = s.
 		Where("team_id = ? AND user_id = ?", tm.TeamID, tm.UserID).
 		Get(ttm)
 	if err != nil {
@@ -127,7 +129,7 @@ func (tm *TeamMember) Update() (err error) {
 	ttm.Admin = !ttm.Admin
 
 	// Do the update
-	_, err = x.
+	_, err = s.
 		Where("team_id = ? AND user_id = ?", tm.TeamID, tm.UserID).
 		Cols("admin").
 		Update(ttm)

@@ -21,11 +21,13 @@ import (
 	"strconv"
 	"strings"
 
+	"xorm.io/xorm"
+
 	"code.vikunja.io/api/pkg/log"
 )
 
 // ListUsers returns a list with all users, filtered by an optional searchstring
-func ListUsers(searchterm string) (users []*User, err error) {
+func ListUsers(s *xorm.Session, searchterm string) (users []*User, err error) {
 
 	vals := strings.Split(searchterm, ",")
 	ids := []int64{}
@@ -39,18 +41,18 @@ func ListUsers(searchterm string) (users []*User, err error) {
 	}
 
 	if len(ids) > 0 {
-		err = x.
+		err = s.
 			In("id", ids).
 			Find(&users)
 		return
 	}
 
 	if searchterm == "" {
-		err = x.Find(&users)
+		err = s.Find(&users)
 		return
 	}
 
-	err = x.
+	err = s.
 		Where("username LIKE ?", "%"+searchterm+"%").
 		Find(&users)
 	return

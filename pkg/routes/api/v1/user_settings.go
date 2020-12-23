@@ -19,6 +19,8 @@ package v1
 import (
 	"net/http"
 
+	"code.vikunja.io/api/pkg/db"
+
 	"code.vikunja.io/api/pkg/models"
 	user2 "code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web/handler"
@@ -57,8 +59,17 @@ func GetUserAvatarProvider(c echo.Context) error {
 		return handler.HandleHTTPError(err, c)
 	}
 
-	user, err := user2.GetUserWithEmail(&user2.User{ID: u.ID})
+	s := db.NewSession()
+	defer s.Close()
+
+	user, err := user2.GetUserWithEmail(s, &user2.User{ID: u.ID})
 	if err != nil {
+		_ = s.Rollback()
+		return handler.HandleHTTPError(err, c)
+	}
+
+	if err := s.Commit(); err != nil {
+		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)
 	}
 
@@ -91,15 +102,25 @@ func ChangeUserAvatarProvider(c echo.Context) error {
 		return handler.HandleHTTPError(err, c)
 	}
 
-	user, err := user2.GetUserWithEmail(&user2.User{ID: u.ID})
+	s := db.NewSession()
+	defer s.Close()
+
+	user, err := user2.GetUserWithEmail(s, &user2.User{ID: u.ID})
 	if err != nil {
+		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)
 	}
 
 	user.AvatarProvider = uap.AvatarProvider
 
-	_, err = user2.UpdateUser(user)
+	_, err = user2.UpdateUser(s, user)
 	if err != nil {
+		_ = s.Rollback()
+		return handler.HandleHTTPError(err, c)
+	}
+
+	if err := s.Commit(); err != nil {
+		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)
 	}
 
@@ -129,16 +150,26 @@ func UpdateGeneralUserSettings(c echo.Context) error {
 		return handler.HandleHTTPError(err, c)
 	}
 
-	user, err := user2.GetUserWithEmail(&user2.User{ID: u.ID})
+	s := db.NewSession()
+	defer s.Close()
+
+	user, err := user2.GetUserWithEmail(s, &user2.User{ID: u.ID})
 	if err != nil {
+		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)
 	}
 
 	user.Name = us.Name
 	user.EmailRemindersEnabled = us.EmailRemindersEnabled
 
-	_, err = user2.UpdateUser(user)
+	_, err = user2.UpdateUser(s, user)
 	if err != nil {
+		_ = s.Rollback()
+		return handler.HandleHTTPError(err, c)
+	}
+
+	if err := s.Commit(); err != nil {
+		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)
 	}
 

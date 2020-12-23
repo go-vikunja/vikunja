@@ -23,6 +23,9 @@ import (
 	"net/http"
 	"time"
 
+	"code.vikunja.io/api/pkg/db"
+	"xorm.io/xorm"
+
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
@@ -130,8 +133,17 @@ func HandleCallback(c echo.Context) error {
 		return err
 	}
 
+	s := db.NewSession()
+	defer s.Close()
+
 	// Check if we have seen this user before
-	u, err := getOrCreateUser(cl, idToken.Issuer, idToken.Subject)
+	u, err := getOrCreateUser(s, cl, idToken.Issuer, idToken.Subject)
+	if err != nil {
+		_ = s.Rollback()
+		return err
+	}
+
+	err = s.Commit()
 	if err != nil {
 		return err
 	}
@@ -140,9 +152,9 @@ func HandleCallback(c echo.Context) error {
 	return auth.NewUserAuthTokenResponse(u, c)
 }
 
-func getOrCreateUser(cl *claims, issuer, subject string) (u *user.User, err error) {
+func getOrCreateUser(s *xorm.Session, cl *claims, issuer, subject string) (u *user.User, err error) {
 	// Check if the user exists for that issuer and subject
-	u, err = user.GetUserWithEmail(&user.User{
+	u, err = user.GetUserWithEmail(s, &user.User{
 		Issuer:  issuer,
 		Subject: subject,
 	})
@@ -165,7 +177,7 @@ func getOrCreateUser(cl *claims, issuer, subject string) (u *user.User, err erro
 			uu.Username = petname.Generate(3, "-")
 		}
 
-		u, err = user.CreateUser(uu)
+		u, err = user.CreateUser(s, uu)
 		if err != nil && !user.IsErrUsernameExists(err) {
 			return nil, err
 		}
@@ -173,14 +185,14 @@ func getOrCreateUser(cl *claims, issuer, subject string) (u *user.User, err erro
 		// If their preferred username is already taken, create some random one from the email and subject
 		if user.IsErrUsernameExists(err) {
 			uu.Username = petname.Generate(3, "-")
-			u, err = user.CreateUser(uu)
+			u, err = user.CreateUser(s, uu)
 			if err != nil {
 				return nil, err
 			}
 		}
 
 		// And create its namespace
-		err = models.CreateNewNamespaceForUser(u)
+		err = models.CreateNewNamespaceForUser(s, u)
 		if err != nil {
 			return nil, err
 		}
@@ -196,7 +208,7 @@ func getOrCreateUser(cl *claims, issuer, subject string) (u *user.User, err erro
 		if cl.Name != u.Name {
 			u.Name = cl.Name
 		}
-		u, err = user.UpdateUser(&user.User{
+		u, err = user.UpdateUser(s, &user.User{
 			ID:      u.ID,
 			Email:   u.Email,
 			Name:    u.Name,

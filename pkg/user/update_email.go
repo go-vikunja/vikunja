@@ -20,6 +20,7 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/mail"
 	"code.vikunja.io/api/pkg/utils"
+	"xorm.io/xorm"
 )
 
 // EmailUpdate is the data structure to update a user's email address
@@ -32,11 +33,11 @@ type EmailUpdate struct {
 }
 
 // UpdateEmail lets a user update their email address
-func UpdateEmail(update *EmailUpdate) (err error) {
+func UpdateEmail(s *xorm.Session, update *EmailUpdate) (err error) {
 
 	// Check the email is not already used
 	user := &User{}
-	has, err := x.Where("email = ?", update.NewEmail).Get(user)
+	has, err := s.Where("email = ?", update.NewEmail).Get(user)
 	if err != nil {
 		return
 	}
@@ -46,7 +47,7 @@ func UpdateEmail(update *EmailUpdate) (err error) {
 	}
 
 	// Set the user as unconfirmed and the new email address
-	update.User, err = GetUserWithEmail(&User{ID: update.User.ID})
+	update.User, err = GetUserWithEmail(s, &User{ID: update.User.ID})
 	if err != nil {
 		return
 	}
@@ -54,7 +55,7 @@ func UpdateEmail(update *EmailUpdate) (err error) {
 	update.User.IsActive = false
 	update.User.Email = update.NewEmail
 	update.User.EmailConfirmToken = utils.MakeRandomString(64)
-	_, err = x.
+	_, err = s.
 		Where("id = ?", update.User.ID).
 		Cols("email", "is_active", "email_confirm_token").
 		Update(update.User)

@@ -17,6 +17,7 @@
 package v1
 
 import (
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
@@ -56,8 +57,11 @@ func GetAvatar(c echo.Context) error {
 	// Get the username
 	username := c.Param("username")
 
+	s := db.NewSession()
+	defer s.Close()
+
 	// Get the user
-	u, err := user.GetUserWithEmail(&user.User{Username: username})
+	u, err := user.GetUserWithEmail(s, &user.User{Username: username})
 	if err != nil {
 		log.Errorf("Error getting user for avatar: %v", err)
 		return handler.HandleHTTPError(err, c)
@@ -113,22 +117,28 @@ func GetAvatar(c echo.Context) error {
 // @Router /user/settings/avatar/upload [put]
 func UploadAvatar(c echo.Context) (err error) {
 
+	s := db.NewSession()
+	defer s.Close()
+
 	uc, err := user.GetCurrentUser(c)
 	if err != nil {
 		return handler.HandleHTTPError(err, c)
 	}
-	u, err := user.GetUserByID(uc.ID)
+	u, err := user.GetUserByID(s, uc.ID)
 	if err != nil {
+		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)
 	}
 
 	// Get + upload the image
 	file, err := c.FormFile("avatar")
 	if err != nil {
+		_ = s.Rollback()
 		return err
 	}
 	src, err := file.Open()
 	if err != nil {
+		_ = s.Rollback()
 		return err
 	}
 	defer src.Close()
@@ -136,6 +146,7 @@ func UploadAvatar(c echo.Context) (err error) {
 	// Validate we're dealing with an image
 	mime, err := mimetype.DetectReader(src)
 	if err != nil {
+		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)
 	}
 	if !strings.HasPrefix(mime.String(), "image") {
@@ -148,6 +159,7 @@ func UploadAvatar(c echo.Context) (err error) {
 		f := &files.File{ID: u.AvatarFileID}
 		if err := f.Delete(); err != nil {
 			if !files.IsErrFileDoesNotExist(err) {
+				_ = s.Rollback()
 				return handler.HandleHTTPError(err, c)
 			}
 		}
@@ -157,11 +169,13 @@ func UploadAvatar(c echo.Context) (err error) {
 	// Resize the new file to a max height of 1024
 	img, _, err := image.Decode(src)
 	if err != nil {
+		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)
 	}
 	resizedImg := imaging.Resize(img, 0, 1024, imaging.Lanczos)
 	buf := &bytes.Buffer{}
 	if err := png.Encode(buf, resizedImg); err != nil {
+		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)
 	}
 
@@ -170,6 +184,7 @@ func UploadAvatar(c echo.Context) (err error) {
 	// Save the file
 	f, err := files.CreateWithMime(buf, file.Filename, uint64(file.Size), u, "image/png")
 	if err != nil {
+		_ = s.Rollback()
 		if files.IsErrFileIsTooLarge(err) {
 			return echo.ErrBadRequest
 		}
@@ -180,7 +195,13 @@ func UploadAvatar(c echo.Context) (err error) {
 	u.AvatarFileID = f.ID
 	u.AvatarProvider = "upload"
 
-	if _, err := user.UpdateUser(u); err != nil {
+	if _, err := user.UpdateUser(s, u); err != nil {
+		_ = s.Rollback()
+		return handler.HandleHTTPError(err, c)
+	}
+
+	if err := s.Commit(); err != nil {
+		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)
 	}
 

@@ -45,6 +45,9 @@ func TestSavedFilter_getFilterIDFromListID(t *testing.T) {
 
 func TestSavedFilter_Create(t *testing.T) {
 	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
 	sf := &SavedFilter{
 		Title:       "test",
 		Description: "Lorem Ipsum dolor sit amet",
@@ -52,9 +55,11 @@ func TestSavedFilter_Create(t *testing.T) {
 	}
 
 	u := &user.User{ID: 1}
-	err := sf.Create(u)
+	err := sf.Create(s, u)
 	assert.NoError(t, err)
 	assert.Equal(t, u.ID, sf.OwnerID)
+	err = s.Commit()
+	assert.NoError(t, err)
 	vals := map[string]interface{}{
 		"title":       "'test'",
 		"description": "'Lorem Ipsum dolor sit amet'",
@@ -62,7 +67,7 @@ func TestSavedFilter_Create(t *testing.T) {
 		"owner_id":    1,
 	}
 	// Postgres can't compare json values directly, see https://dba.stackexchange.com/a/106290/210721
-	if x.Dialect().URI().DBType == schemas.POSTGRES {
+	if db.Type() == schemas.POSTGRES {
 		vals["filters::jsonb"] = vals["filters"].(string) + "::jsonb"
 		delete(vals, "filters")
 	}
@@ -72,26 +77,34 @@ func TestSavedFilter_Create(t *testing.T) {
 func TestSavedFilter_ReadOne(t *testing.T) {
 	user1 := &user.User{ID: 1}
 	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
 	sf := &SavedFilter{
 		ID: 1,
 	}
 	// canRead pre-populates the struct
-	_, _, err := sf.CanRead(user1)
+	_, _, err := sf.CanRead(s, user1)
 	assert.NoError(t, err)
-	err = sf.ReadOne()
+	err = sf.ReadOne(s)
 	assert.NoError(t, err)
 	assert.NotNil(t, sf.Owner)
 }
 
 func TestSavedFilter_Update(t *testing.T) {
 	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
 	sf := &SavedFilter{
 		ID:          1,
 		Title:       "NewTitle",
 		Description: "", // Explicitly reset the description
 		Filters:     &TaskCollection{},
 	}
-	err := sf.Update()
+	err := sf.Update(s)
+	assert.NoError(t, err)
+	err = s.Commit()
 	assert.NoError(t, err)
 	db.AssertExists(t, "saved_filters", map[string]interface{}{
 		"id":          1,
@@ -102,10 +115,15 @@ func TestSavedFilter_Update(t *testing.T) {
 
 func TestSavedFilter_Delete(t *testing.T) {
 	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
 	sf := &SavedFilter{
 		ID: 1,
 	}
-	err := sf.Delete()
+	err := sf.Delete(s)
+	assert.NoError(t, err)
+	err = s.Commit()
 	assert.NoError(t, err)
 	db.AssertMissing(t, "saved_filters", map[string]interface{}{
 		"id": 1,
@@ -120,50 +138,65 @@ func TestSavedFilter_Rights(t *testing.T) {
 	t.Run("create", func(t *testing.T) {
 		// Should always be true
 		db.LoadAndAssertFixtures(t)
-		can, err := (&SavedFilter{}).CanCreate(user1)
+		s := db.NewSession()
+		defer s.Close()
+
+		can, err := (&SavedFilter{}).CanCreate(s, user1)
 		assert.NoError(t, err)
 		assert.True(t, can)
 	})
 	t.Run("read", func(t *testing.T) {
 		t.Run("owner", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+
 			sf := &SavedFilter{
 				ID:    1,
 				Title: "Lorem",
 			}
-			can, max, err := sf.CanRead(user1)
+			can, max, err := sf.CanRead(s, user1)
 			assert.NoError(t, err)
 			assert.Equal(t, int(RightAdmin), max)
 			assert.True(t, can)
 		})
 		t.Run("not owner", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+
 			sf := &SavedFilter{
 				ID:    1,
 				Title: "Lorem",
 			}
-			can, _, err := sf.CanRead(user2)
+			can, _, err := sf.CanRead(s, user2)
 			assert.NoError(t, err)
 			assert.False(t, can)
 		})
 		t.Run("nonexisting", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+
 			sf := &SavedFilter{
 				ID:    9999,
 				Title: "Lorem",
 			}
-			can, _, err := sf.CanRead(user1)
+			can, _, err := sf.CanRead(s, user1)
 			assert.Error(t, err)
 			assert.True(t, IsErrSavedFilterDoesNotExist(err))
 			assert.False(t, can)
 		})
 		t.Run("link share", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+
 			sf := &SavedFilter{
 				ID:    1,
 				Title: "Lorem",
 			}
-			can, _, err := sf.CanRead(ls)
+			can, _, err := sf.CanRead(s, ls)
 			assert.Error(t, err)
 			assert.True(t, IsErrSavedFilterNotAvailableForLinkShare(err))
 			assert.False(t, can)
@@ -172,42 +205,54 @@ func TestSavedFilter_Rights(t *testing.T) {
 	t.Run("update", func(t *testing.T) {
 		t.Run("owner", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+
 			sf := &SavedFilter{
 				ID:    1,
 				Title: "Lorem",
 			}
-			can, err := sf.CanUpdate(user1)
+			can, err := sf.CanUpdate(s, user1)
 			assert.NoError(t, err)
 			assert.True(t, can)
 		})
 		t.Run("not owner", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+
 			sf := &SavedFilter{
 				ID:    1,
 				Title: "Lorem",
 			}
-			can, err := sf.CanUpdate(user2)
+			can, err := sf.CanUpdate(s, user2)
 			assert.NoError(t, err)
 			assert.False(t, can)
 		})
 		t.Run("nonexisting", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+
 			sf := &SavedFilter{
 				ID:    9999,
 				Title: "Lorem",
 			}
-			can, err := sf.CanUpdate(user1)
+			can, err := sf.CanUpdate(s, user1)
 			assert.Error(t, err)
 			assert.True(t, IsErrSavedFilterDoesNotExist(err))
 			assert.False(t, can)
 		})
 		t.Run("link share", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+
 			sf := &SavedFilter{
 				ID:    1,
 				Title: "Lorem",
 			}
-			can, err := sf.CanUpdate(ls)
+			can, err := sf.CanUpdate(s, ls)
 			assert.Error(t, err)
 			assert.True(t, IsErrSavedFilterNotAvailableForLinkShare(err))
 			assert.False(t, can)
@@ -216,40 +261,52 @@ func TestSavedFilter_Rights(t *testing.T) {
 	t.Run("delete", func(t *testing.T) {
 		t.Run("owner", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+
 			sf := &SavedFilter{
 				ID: 1,
 			}
-			can, err := sf.CanDelete(user1)
+			can, err := sf.CanDelete(s, user1)
 			assert.NoError(t, err)
 			assert.True(t, can)
 		})
 		t.Run("not owner", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+
 			sf := &SavedFilter{
 				ID: 1,
 			}
-			can, err := sf.CanDelete(user2)
+			can, err := sf.CanDelete(s, user2)
 			assert.NoError(t, err)
 			assert.False(t, can)
 		})
 		t.Run("nonexisting", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+
 			sf := &SavedFilter{
 				ID:    9999,
 				Title: "Lorem",
 			}
-			can, err := sf.CanDelete(user1)
+			can, err := sf.CanDelete(s, user1)
 			assert.Error(t, err)
 			assert.True(t, IsErrSavedFilterDoesNotExist(err))
 			assert.False(t, can)
 		})
 		t.Run("link share", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+
 			sf := &SavedFilter{
 				ID:    1,
 				Title: "Lorem",
 			}
-			can, err := sf.CanDelete(ls)
+			can, err := sf.CanDelete(s, ls)
 			assert.Error(t, err)
 			assert.True(t, IsErrSavedFilterNotAvailableForLinkShare(err))
 			assert.False(t, can)

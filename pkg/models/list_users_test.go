@@ -24,9 +24,9 @@ import (
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/user"
-	"gopkg.in/d4l3k/messagediff.v1"
-
 	"code.vikunja.io/web"
+	"github.com/stretchr/testify/assert"
+	"gopkg.in/d4l3k/messagediff.v1"
 )
 
 func TestListUser_Create(t *testing.T) {
@@ -108,6 +108,7 @@ func TestListUser_Create(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
 
 			ul := &ListUser{
 				ID:       tt.fields.ID,
@@ -120,13 +121,17 @@ func TestListUser_Create(t *testing.T) {
 				CRUDable: tt.fields.CRUDable,
 				Rights:   tt.fields.Rights,
 			}
-			err := ul.Create(tt.args.a)
+			err := ul.Create(s, tt.args.a)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ListUser.Create() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			if (err != nil) && tt.wantErr && !tt.errType(err) {
 				t.Errorf("ListUser.Create() Wrong error type! Error = %v, want = %v", err, runtime.FuncForPC(reflect.ValueOf(tt.errType).Pointer()).Name())
 			}
+
+			err = s.Commit()
+			assert.NoError(t, err)
+
 			if !tt.wantErr {
 				db.AssertExists(t, "users_list", map[string]interface{}{
 					"user_id": ul.UserID,
@@ -212,6 +217,7 @@ func TestListUser_ReadAll(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
 
 			ul := &ListUser{
 				ID:       tt.fields.ID,
@@ -223,7 +229,7 @@ func TestListUser_ReadAll(t *testing.T) {
 				CRUDable: tt.fields.CRUDable,
 				Rights:   tt.fields.Rights,
 			}
-			got, _, _, err := ul.ReadAll(tt.args.a, tt.args.search, tt.args.page, 50)
+			got, _, _, err := ul.ReadAll(s, tt.args.a, tt.args.search, tt.args.page, 50)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ListUser.ReadAll() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -233,6 +239,7 @@ func TestListUser_ReadAll(t *testing.T) {
 			if diff, equal := messagediff.PrettyDiff(got, tt.want); !equal {
 				t.Errorf("ListUser.ReadAll() = %v, want %v, diff: %v", got, tt.want, diff)
 			}
+			_ = s.Close()
 		})
 	}
 }
@@ -292,6 +299,7 @@ func TestListUser_Update(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
 
 			lu := &ListUser{
 				ID:       tt.fields.ID,
@@ -303,13 +311,17 @@ func TestListUser_Update(t *testing.T) {
 				CRUDable: tt.fields.CRUDable,
 				Rights:   tt.fields.Rights,
 			}
-			err := lu.Update()
+			err := lu.Update(s)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ListUser.Update() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			if (err != nil) && tt.wantErr && !tt.errType(err) {
 				t.Errorf("ListUser.Update() Wrong error type! Error = %v, want = %v", err, runtime.FuncForPC(reflect.ValueOf(tt.errType).Pointer()).Name())
 			}
+
+			err = s.Commit()
+			assert.NoError(t, err)
+
 			if !tt.wantErr {
 				db.AssertExists(t, "users_list", map[string]interface{}{
 					"list_id": tt.fields.ListID,
@@ -369,6 +381,7 @@ func TestListUser_Delete(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
 
 			lu := &ListUser{
 				ID:       tt.fields.ID,
@@ -380,13 +393,17 @@ func TestListUser_Delete(t *testing.T) {
 				CRUDable: tt.fields.CRUDable,
 				Rights:   tt.fields.Rights,
 			}
-			err := lu.Delete()
+			err := lu.Delete(s)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ListUser.Delete() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			if (err != nil) && tt.wantErr && !tt.errType(err) {
 				t.Errorf("ListUser.Delete() Wrong error type! Error = %v, want = %v", err, runtime.FuncForPC(reflect.ValueOf(tt.errType).Pointer()).Name())
 			}
+
+			err = s.Commit()
+			assert.NoError(t, err)
+
 			if !tt.wantErr {
 				db.AssertMissing(t, "users_list", map[string]interface{}{
 					"user_id": tt.fields.UserID,

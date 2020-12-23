@@ -20,6 +20,7 @@ package models
 import (
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
+	"xorm.io/xorm"
 )
 
 // TaskCollection is a struct used to hold filter details and not clutter the Task struct with information not related to actual tasks.
@@ -100,17 +101,17 @@ func validateTaskField(fieldName string) error {
 // @Success 200 {array} models.Task "The tasks"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{listID}/tasks [get]
-func (tf *TaskCollection) ReadAll(a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
+func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
 
 	// If the list id is < -1 this means we're dealing with a saved filter - in that case we get and populate the filter
 	// -1 is the favorites list which works as intended
 	if tf.ListID < -1 {
-		s, err := getSavedFilterSimpleByID(getSavedFilterIDFromListID(tf.ListID))
+		sf, err := getSavedFilterSimpleByID(s, getSavedFilterIDFromListID(tf.ListID))
 		if err != nil {
 			return nil, 0, 0, err
 		}
 
-		return s.getTaskCollection().ReadAll(a, search, page, perPage)
+		return sf.getTaskCollection().ReadAll(s, a, search, page, perPage)
 	}
 
 	if len(tf.SortByArr) > 0 {
@@ -156,28 +157,30 @@ func (tf *TaskCollection) ReadAll(a web.Auth, search string, page int, perPage i
 
 	shareAuth, is := a.(*LinkSharing)
 	if is {
-		list := &List{ID: shareAuth.ListID}
-		err := list.GetSimpleByID()
+		list, err := GetListSimpleByID(s, shareAuth.ListID)
 		if err != nil {
 			return nil, 0, 0, err
 		}
-		return getTasksForLists([]*List{list}, a, taskopts)
+		return getTasksForLists(s, []*List{list}, a, taskopts)
 	}
 
 	// If the list ID is not set, we get all tasks for the user.
 	// This allows to use this function in Task.ReadAll with a possibility to deprecate the latter at some point.
 	if tf.ListID == 0 {
-		tf.Lists, _, _, err = getRawListsForUser(&listOptions{
-			user: &user.User{ID: a.GetID()},
-			page: -1,
-		})
+		tf.Lists, _, _, err = getRawListsForUser(
+			s,
+			&listOptions{
+				user: &user.User{ID: a.GetID()},
+				page: -1,
+			},
+		)
 		if err != nil {
 			return nil, 0, 0, err
 		}
 	} else {
 		// Check the list exists and the user has acess on it
 		list := &List{ID: tf.ListID}
-		canRead, _, err := list.CanRead(a)
+		canRead, _, err := list.CanRead(s, a)
 		if err != nil {
 			return nil, 0, 0, err
 		}
@@ -187,5 +190,5 @@ func (tf *TaskCollection) ReadAll(a web.Auth, search string, page int, perPage i
 		tf.Lists = []*List{{ID: tf.ListID}}
 	}
 
-	return getTasksForLists(tf.Lists, a, taskopts)
+	return getTasksForLists(s, tf.Lists, a, taskopts)
 }

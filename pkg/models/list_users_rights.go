@@ -18,24 +18,25 @@ package models
 
 import (
 	"code.vikunja.io/web"
+	"xorm.io/xorm"
 )
 
 // CanCreate checks if the user can create a new user <-> list relation
-func (lu *ListUser) CanCreate(a web.Auth) (bool, error) {
-	return lu.canDoListUser(a)
+func (lu *ListUser) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
+	return lu.canDoListUser(s, a)
 }
 
 // CanDelete checks if the user can delete a user <-> list relation
-func (lu *ListUser) CanDelete(a web.Auth) (bool, error) {
-	return lu.canDoListUser(a)
+func (lu *ListUser) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
+	return lu.canDoListUser(s, a)
 }
 
 // CanUpdate checks if the user can update a user <-> list relation
-func (lu *ListUser) CanUpdate(a web.Auth) (bool, error) {
-	return lu.canDoListUser(a)
+func (lu *ListUser) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
+	return lu.canDoListUser(s, a)
 }
 
-func (lu *ListUser) canDoListUser(a web.Auth) (bool, error) {
+func (lu *ListUser) canDoListUser(s *xorm.Session, a web.Auth) (bool, error) {
 	// Link shares aren't allowed to do anything
 	if _, is := a.(*LinkSharing); is {
 		return false, nil
@@ -43,5 +44,5 @@ func (lu *ListUser) canDoListUser(a web.Auth) (bool, error) {
 
 	// Get the list and check if the user has write access on it
 	l := List{ID: lu.ListID}
-	return l.IsAdmin(a)
+	return l.IsAdmin(s, a)
 }

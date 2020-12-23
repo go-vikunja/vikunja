@@ -20,6 +20,8 @@ import (
 	"bytes"
 	"io/ioutil"
 
+	"code.vikunja.io/api/pkg/db"
+
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
@@ -34,10 +36,14 @@ func InsertFromStructure(str []*models.NamespaceWithLists, user *user.User) (err
 
 	labels := make(map[string]*models.Label)
 
+	s := db.NewSession()
+	defer s.Close()
+
 	// Create all namespaces
 	for _, n := range str {
-		err = n.Create(user)
+		err = n.Create(s, user)
 		if err != nil {
+			_ = s.Rollback()
 			return
 		}
 
@@ -54,8 +60,9 @@ func InsertFromStructure(str []*models.NamespaceWithLists, user *user.User) (err
 			needsDefaultBucket := false
 
 			l.NamespaceID = n.ID
-			err = l.Create(user)
+			err = l.Create(s, user)
 			if err != nil {
+				_ = s.Rollback()
 				return
 			}
 
@@ -67,11 +74,13 @@ func InsertFromStructure(str []*models.NamespaceWithLists, user *user.User) (err
 
 				file, err := files.Create(backgroundFile, "", uint64(backgroundFile.Len()), user)
 				if err != nil {
+					_ = s.Rollback()
 					return err
 				}
 
-				err = models.SetListBackground(l.ID, file)
+				err = models.SetListBackground(s, l.ID, file)
 				if err != nil {
+					_ = s.Rollback()
 					return err
 				}
 
@@ -87,8 +96,9 @@ func InsertFromStructure(str []*models.NamespaceWithLists, user *user.User) (err
 				oldID := bucket.ID
 				bucket.ID = 0 // We want a new id
 				bucket.ListID = l.ID
-				err = bucket.Create(user)
+				err = bucket.Create(s, user)
 				if err != nil {
+					_ = s.Rollback()
 					return
 				}
 				buckets[oldID] = bucket
@@ -111,8 +121,9 @@ func InsertFromStructure(str []*models.NamespaceWithLists, user *user.User) (err
 				}
 
 				t.ListID = l.ID
-				err = t.Create(user)
+				err = t.Create(s, user)
 				if err != nil {
+					_ = s.Rollback()
 					return
 				}
 
@@ -132,8 +143,9 @@ func InsertFromStructure(str []*models.NamespaceWithLists, user *user.User) (err
 						// First create the related tasks if they do not exist
 						if rt.ID == 0 {
 							rt.ListID = t.ListID
-							err = rt.Create(user)
+							err = rt.Create(s, user)
 							if err != nil {
+								_ = s.Rollback()
 								return
 							}
 							log.Debugf("[creating structure] Created related task %d", rt.ID)
@@ -145,8 +157,9 @@ func InsertFromStructure(str []*models.NamespaceWithLists, user *user.User) (err
 							OtherTaskID:  rt.ID,
 							RelationKind: kind,
 						}
-						err = taskRel.Create(user)
+						err = taskRel.Create(s, user)
 						if err != nil {
+							_ = s.Rollback()
 							return
 						}
 
@@ -164,8 +177,9 @@ func InsertFromStructure(str []*models.NamespaceWithLists, user *user.User) (err
 					if len(a.File.FileContent) > 0 {
 						a.TaskID = t.ID
 						fr := ioutil.NopCloser(bytes.NewReader(a.File.FileContent))
-						err = a.NewAttachment(fr, a.File.Name, a.File.Size, user)
+						err = a.NewAttachment(s, fr, a.File.Name, a.File.Size, user)
 						if err != nil {
+							_ = s.Rollback()
 							return
 						}
 						log.Debugf("[creating structure] Created new attachment %d", a.ID)
@@ -180,8 +194,9 @@ func InsertFromStructure(str []*models.NamespaceWithLists, user *user.User) (err
 					var exists bool
 					lb, exists = labels[label.Title+label.HexColor]
 					if !exists {
-						err = label.Create(user)
+						err = label.Create(s, user)
 						if err != nil {
+							_ = s.Rollback()
 							return err
 						}
 						log.Debugf("[creating structure] Created new label %d", label.ID)
@@ -193,8 +208,9 @@ func InsertFromStructure(str []*models.NamespaceWithLists, user *user.User) (err
 						LabelID: lb.ID,
 						TaskID:  t.ID,
 					}
-					err = lt.Create(user)
+					err = lt.Create(s, user)
 					if err != nil {
+						_ = s.Rollback()
 						return err
 					}
 					log.Debugf("[creating structure] Associated task %d with label %d", t.ID, lb.ID)
@@ -204,13 +220,15 @@ func InsertFromStructure(str []*models.NamespaceWithLists, user *user.User) (err
 			// All tasks brought their own bucket with them, therefore the newly created default bucket is just extra space
 			if !needsDefaultBucket {
 				b := &models.Bucket{ListID: l.ID}
-				bucketsIn, _, _, err := b.ReadAll(user, "", 1, 1)
+				bucketsIn, _, _, err := b.ReadAll(s, user, "", 1, 1)
 				if err != nil {
+					_ = s.Rollback()
 					return err
 				}
 				buckets := bucketsIn.([]*models.Bucket)
-				err = buckets[0].Delete()
+				err = buckets[0].Delete(s)
 				if err != nil {
+					_ = s.Rollback()
 					return err
 				}
 			}
@@ -222,5 +240,5 @@ func InsertFromStructure(str []*models.NamespaceWithLists, user *user.User) (err
 
 	log.Debugf("[creating structure] Done inserting new task structure")
 
-	return nil
+	return s.Commit()
 }

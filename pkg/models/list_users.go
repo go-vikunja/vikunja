@@ -21,6 +21,7 @@ import (
 
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
+	"xorm.io/xorm"
 )
 
 // ListUser represents a list <-> user relation
@@ -71,7 +72,7 @@ type UserWithRight struct {
 // @Failure 403 {object} web.HTTPError "The user does not have access to the list"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{id}/users [put]
-func (lu *ListUser) Create(a web.Auth) (err error) {
+func (lu *ListUser) Create(s *xorm.Session, a web.Auth) (err error) {
 
 	// Check if the right is valid
 	if err := lu.Right.isValid(); err != nil {
@@ -79,17 +80,17 @@ func (lu *ListUser) Create(a web.Auth) (err error) {
 	}
 
 	// Check if the list exists
-	l := &List{ID: lu.ListID}
-	if err = l.GetSimpleByID(); err != nil {
+	l, err := GetListSimpleByID(s, lu.ListID)
+	if err != nil {
 		return
 	}
 
 	// Check if the user exists
-	user, err := user.GetUserByUsername(lu.Username)
+	u, err := user.GetUserByUsername(s, lu.Username)
 	if err != nil {
 		return err
 	}
-	lu.UserID = user.ID
+	lu.UserID = u.ID
 
 	// Check if the user already has access or is owner of that list
 	// We explicitly DONT check for teams here
@@ -97,7 +98,7 @@ func (lu *ListUser) Create(a web.Auth) (err error) {
 		return ErrUserAlreadyHasAccess{UserID: lu.UserID, ListID: lu.ListID}
 	}
 
-	exist, err := x.Where("list_id = ? AND user_id = ?", lu.ListID, lu.UserID).Get(&ListUser{})
+	exist, err := s.Where("list_id = ? AND user_id = ?", lu.ListID, lu.UserID).Get(&ListUser{})
 	if err != nil {
 		return
 	}
@@ -106,12 +107,12 @@ func (lu *ListUser) Create(a web.Auth) (err error) {
 	}
 
 	// Insert user <-> list relation
-	_, err = x.Insert(lu)
+	_, err = s.Insert(lu)
 	if err != nil {
 		return err
 	}
 
-	err = updateListLastUpdated(l)
+	err = updateListLastUpdated(s, l)
 	return
 }
 
@@ -128,17 +129,18 @@ func (lu *ListUser) Create(a web.Auth) (err error) {
 // @Failure 404 {object} web.HTTPError "user or list does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{listID}/users/{userID} [delete]
-func (lu *ListUser) Delete() (err error) {
+func (lu *ListUser) Delete(s *xorm.Session) (err error) {
 
 	// Check if the user exists
-	user, err := user.GetUserByUsername(lu.Username)
+	u, err := user.GetUserByUsername(s, lu.Username)
 	if err != nil {
 		return
 	}
-	lu.UserID = user.ID
+	lu.UserID = u.ID
 
 	// Check if the user has access to the list
-	has, err := x.Where("user_id = ? AND list_id = ?", lu.UserID, lu.ListID).
+	has, err := s.
+		Where("user_id = ? AND list_id = ?", lu.UserID, lu.ListID).
 		Get(&ListUser{})
 	if err != nil {
 		return
@@ -147,13 +149,14 @@ func (lu *ListUser) Delete() (err error) {
 		return ErrUserDoesNotHaveAccessToList{ListID: lu.ListID, UserID: lu.UserID}
 	}
 
-	_, err = x.Where("user_id = ? AND list_id = ?", lu.UserID, lu.ListID).
+	_, err = s.
+		Where("user_id = ? AND list_id = ?", lu.UserID, lu.ListID).
 		Delete(&ListUser{})
 	if err != nil {
 		return err
 	}
 
-	err = updateListLastUpdated(&List{ID: lu.ListID})
+	err = updateListLastUpdated(s, &List{ID: lu.ListID})
 	return
 }
 
@@ -172,10 +175,10 @@ func (lu *ListUser) Delete() (err error) {
 // @Failure 403 {object} web.HTTPError "No right to see the list."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{id}/users [get]
-func (lu *ListUser) ReadAll(a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
+func (lu *ListUser) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
 	// Check if the user has access to the list
 	l := &List{ID: lu.ListID}
-	canRead, _, err := l.CanRead(a)
+	canRead, _, err := l.CanRead(s, a)
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -187,7 +190,7 @@ func (lu *ListUser) ReadAll(a web.Auth, search string, page int, perPage int) (r
 
 	// Get all users
 	all := []*UserWithRight{}
-	query := x.
+	query := s.
 		Join("INNER", "users_list", "user_id = users.id").
 		Where("users_list.list_id = ?", lu.ListID).
 		Where("users.username LIKE ?", "%"+search+"%")
@@ -204,7 +207,7 @@ func (lu *ListUser) ReadAll(a web.Auth, search string, page int, perPage int) (r
 		u.Email = ""
 	}
 
-	numberOfTotalItems, err = x.
+	numberOfTotalItems, err = s.
 		Join("INNER", "users_list", "user_id = users.id").
 		Where("users_list.list_id = ?", lu.ListID).
 		Where("users.username LIKE ?", "%"+search+"%").
@@ -228,7 +231,7 @@ func (lu *ListUser) ReadAll(a web.Auth, search string, page int, perPage int) (r
 // @Failure 404 {object} web.HTTPError "User or list does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{listID}/users/{userID} [post]
-func (lu *ListUser) Update() (err error) {
+func (lu *ListUser) Update(s *xorm.Session) (err error) {
 
 	// Check if the right is valid
 	if err := lu.Right.isValid(); err != nil {
@@ -236,13 +239,13 @@ func (lu *ListUser) Update() (err error) {
 	}
 
 	// Check if the user exists
-	u, err := user.GetUserByUsername(lu.Username)
+	u, err := user.GetUserByUsername(s, lu.Username)
 	if err != nil {
 		return err
 	}
 	lu.UserID = u.ID
 
-	_, err = x.
+	_, err = s.
 		Where("list_id = ? AND user_id = ?", lu.ListID, lu.UserID).
 		Cols("right").
 		Update(lu)
@@ -250,6 +253,6 @@ func (lu *ListUser) Update() (err error) {
 		return err
 	}
 
-	err = updateListLastUpdated(&List{ID: lu.ListID})
+	err = updateListLastUpdated(s, &List{ID: lu.ListID})
 	return
 }

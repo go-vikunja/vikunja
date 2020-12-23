@@ -20,6 +20,8 @@ package models
 import (
 	"time"
 
+	"xorm.io/xorm"
+
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
 )
@@ -57,19 +59,19 @@ func (tc *TaskComment) TableName() string {
 // @Failure 400 {object} web.HTTPError "Invalid task comment object provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/comments [put]
-func (tc *TaskComment) Create(a web.Auth) (err error) {
+func (tc *TaskComment) Create(s *xorm.Session, a web.Auth) (err error) {
 	// Check if the task exists
-	_, err = GetTaskSimple(&Task{ID: tc.TaskID})
+	_, err = GetTaskSimple(s, &Task{ID: tc.TaskID})
 	if err != nil {
 		return err
 	}
 
 	tc.AuthorID = a.GetID()
-	_, err = x.Insert(tc)
+	_, err = s.Insert(tc)
 	if err != nil {
 		return
 	}
-	tc.Author, err = user.GetUserByID(a.GetID())
+	tc.Author, err = user.GetUserByID(s, a.GetID())
 	return
 }
 
@@ -87,8 +89,11 @@ func (tc *TaskComment) Create(a web.Auth) (err error) {
 // @Failure 404 {object} web.HTTPError "The task comment was not found."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/comments/{commentID} [delete]
-func (tc *TaskComment) Delete() error {
-	deleted, err := x.ID(tc.ID).NoAutoCondition().Delete(tc)
+func (tc *TaskComment) Delete(s *xorm.Session) error {
+	deleted, err := s.
+		ID(tc.ID).
+		NoAutoCondition().
+		Delete(tc)
 	if deleted == 0 {
 		return ErrTaskCommentDoesNotExist{ID: tc.ID}
 	}
@@ -109,8 +114,11 @@ func (tc *TaskComment) Delete() error {
 // @Failure 404 {object} web.HTTPError "The task comment was not found."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/comments/{commentID} [post]
-func (tc *TaskComment) Update() error {
-	updated, err := x.ID(tc.ID).Cols("comment").Update(tc)
+func (tc *TaskComment) Update(s *xorm.Session) error {
+	updated, err := s.
+		ID(tc.ID).
+		Cols("comment").
+		Update(tc)
 	if updated == 0 {
 		return ErrTaskCommentDoesNotExist{ID: tc.ID}
 	}
@@ -131,8 +139,8 @@ func (tc *TaskComment) Update() error {
 // @Failure 404 {object} web.HTTPError "The task comment was not found."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/comments/{commentID} [get]
-func (tc *TaskComment) ReadOne() (err error) {
-	exists, err := x.Get(tc)
+func (tc *TaskComment) ReadOne(s *xorm.Session) (err error) {
+	exists, err := s.Get(tc)
 	if err != nil {
 		return
 	}
@@ -145,7 +153,7 @@ func (tc *TaskComment) ReadOne() (err error) {
 
 	// Get the author
 	author := &user.User{}
-	_, err = x.
+	_, err = s.
 		Where("id = ?", tc.AuthorID).
 		Get(author)
 	tc.Author = author
@@ -163,10 +171,10 @@ func (tc *TaskComment) ReadOne() (err error) {
 // @Success 200 {array} models.TaskComment "The array with all task comments"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/comments [get]
-func (tc *TaskComment) ReadAll(auth web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
+func (tc *TaskComment) ReadAll(s *xorm.Session, auth web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
 
 	// Check if the user has access to the task
-	canRead, _, err := tc.CanRead(auth)
+	canRead, _, err := tc.CanRead(s, auth)
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -184,7 +192,7 @@ func (tc *TaskComment) ReadAll(auth web.Auth, search string, page int, perPage i
 	limit, start := getLimitFromPageIndex(page, perPage)
 
 	comments := []*TaskComment{}
-	query := x.
+	query := s.
 		Where("task_id = ? AND comment like ?", tc.TaskID, "%"+search+"%").
 		Join("LEFT", "users", "users.id = task_comments.author_id")
 	if limit > 0 {
@@ -197,7 +205,7 @@ func (tc *TaskComment) ReadAll(auth web.Auth, search string, page int, perPage i
 
 	// Get all authors
 	authors := make(map[int64]*user.User)
-	err = x.
+	err = s.
 		Select("users.*").
 		Table("task_comments").
 		Where("task_id = ? AND comment like ?", tc.TaskID, "%"+search+"%").
@@ -211,7 +219,7 @@ func (tc *TaskComment) ReadAll(auth web.Auth, search string, page int, perPage i
 		comment.Author = authors[comment.AuthorID]
 	}
 
-	numberOfTotalItems, err = x.
+	numberOfTotalItems, err = s.
 		Where("task_id = ? AND comment like ?", tc.TaskID, "%"+search+"%").
 		Count(&TaskCommentWithAuthor{})
 	return comments, len(comments), numberOfTotalItems, err

@@ -28,14 +28,20 @@ func TestTaskComment_Create(t *testing.T) {
 	u := &user.User{ID: 1}
 	t.Run("normal", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
 		tc := &TaskComment{
 			Comment: "test",
 			TaskID:  1,
 		}
-		err := tc.Create(u)
+		err := tc.Create(s, u)
 		assert.NoError(t, err)
 		assert.Equal(t, "test", tc.Comment)
 		assert.Equal(t, int64(1), tc.Author.ID)
+		err = s.Commit()
+		assert.NoError(t, err)
+
 		db.AssertExists(t, "task_comments", map[string]interface{}{
 			"id":        tc.ID,
 			"author_id": u.ID,
@@ -45,11 +51,14 @@ func TestTaskComment_Create(t *testing.T) {
 	})
 	t.Run("nonexisting task", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
 		tc := &TaskComment{
 			Comment: "test",
 			TaskID:  99999,
 		}
-		err := tc.Create(u)
+		err := tc.Create(s, u)
 		assert.Error(t, err)
 		assert.True(t, IsErrTaskDoesNotExist(err))
 	})
@@ -58,17 +67,26 @@ func TestTaskComment_Create(t *testing.T) {
 func TestTaskComment_Delete(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
 		tc := &TaskComment{ID: 1}
-		err := tc.Delete()
+		err := tc.Delete(s)
 		assert.NoError(t, err)
+		err = s.Commit()
+		assert.NoError(t, err)
+
 		db.AssertMissing(t, "task_comments", map[string]interface{}{
 			"id": 1,
 		})
 	})
 	t.Run("nonexisting comment", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
 		tc := &TaskComment{ID: 9999}
-		err := tc.Delete()
+		err := tc.Delete(s)
 		assert.Error(t, err)
 		assert.True(t, IsErrTaskCommentDoesNotExist(err))
 	})
@@ -77,12 +95,18 @@ func TestTaskComment_Delete(t *testing.T) {
 func TestTaskComment_Update(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
 		tc := &TaskComment{
 			ID:      1,
 			Comment: "testing",
 		}
-		err := tc.Update()
+		err := tc.Update(s)
 		assert.NoError(t, err)
+		err = s.Commit()
+		assert.NoError(t, err)
+
 		db.AssertExists(t, "task_comments", map[string]interface{}{
 			"id":      1,
 			"comment": "testing",
@@ -90,10 +114,13 @@ func TestTaskComment_Update(t *testing.T) {
 	})
 	t.Run("nonexisting comment", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
 		tc := &TaskComment{
 			ID: 9999,
 		}
-		err := tc.Update()
+		err := tc.Update(s)
 		assert.Error(t, err)
 		assert.True(t, IsErrTaskCommentDoesNotExist(err))
 	})
@@ -102,16 +129,22 @@ func TestTaskComment_Update(t *testing.T) {
 func TestTaskComment_ReadOne(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
 		tc := &TaskComment{ID: 1}
-		err := tc.ReadOne()
+		err := tc.ReadOne(s)
 		assert.NoError(t, err)
 		assert.Equal(t, "Lorem Ipsum Dolor Sit Amet", tc.Comment)
 		assert.NotEmpty(t, tc.Author.ID)
 	})
 	t.Run("nonexisting", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
 		tc := &TaskComment{ID: 9999}
-		err := tc.ReadOne()
+		err := tc.ReadOne(s)
 		assert.Error(t, err)
 		assert.True(t, IsErrTaskCommentDoesNotExist(err))
 	})
@@ -120,9 +153,12 @@ func TestTaskComment_ReadOne(t *testing.T) {
 func TestTaskComment_ReadAll(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
 		tc := &TaskComment{TaskID: 1}
 		u := &user.User{ID: 1}
-		result, resultCount, total, err := tc.ReadAll(u, "", 0, -1)
+		result, resultCount, total, err := tc.ReadAll(s, u, "", 0, -1)
 		resultComment := result.([]*TaskComment)
 		assert.NoError(t, err)
 		assert.Equal(t, 1, resultCount)
@@ -133,9 +169,12 @@ func TestTaskComment_ReadAll(t *testing.T) {
 	})
 	t.Run("no access to task", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
 		tc := &TaskComment{TaskID: 14}
 		u := &user.User{ID: 1}
-		_, _, _, err := tc.ReadAll(u, "", 0, -1)
+		_, _, _, err := tc.ReadAll(s, u, "", 0, -1)
 		assert.Error(t, err)
 		assert.True(t, IsErrGenericForbidden(err))
 	})

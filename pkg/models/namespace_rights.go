@@ -19,37 +19,38 @@ package models
 import (
 	"code.vikunja.io/web"
 	"xorm.io/builder"
+	"xorm.io/xorm"
 )
 
 // CanWrite checks if a user has write access to a namespace
-func (n *Namespace) CanWrite(a web.Auth) (bool, error) {
-	can, _, err := n.checkRight(a, RightWrite, RightAdmin)
+func (n *Namespace) CanWrite(s *xorm.Session, a web.Auth) (bool, error) {
+	can, _, err := n.checkRight(s, a, RightWrite, RightAdmin)
 	return can, err
 }
 
 // IsAdmin returns true or false if the user is admin on that namespace or not
-func (n *Namespace) IsAdmin(a web.Auth) (bool, error) {
-	is, _, err := n.checkRight(a, RightAdmin)
+func (n *Namespace) IsAdmin(s *xorm.Session, a web.Auth) (bool, error) {
+	is, _, err := n.checkRight(s, a, RightAdmin)
 	return is, err
 }
 
 // CanRead checks if a user has read access to that namespace
-func (n *Namespace) CanRead(a web.Auth) (bool, int, error) {
-	return n.checkRight(a, RightRead, RightWrite, RightAdmin)
+func (n *Namespace) CanRead(s *xorm.Session, a web.Auth) (bool, int, error) {
+	return n.checkRight(s, a, RightRead, RightWrite, RightAdmin)
 }
 
 // CanUpdate checks if the user can update the namespace
-func (n *Namespace) CanUpdate(a web.Auth) (bool, error) {
-	return n.IsAdmin(a)
+func (n *Namespace) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
+	return n.IsAdmin(s, a)
 }
 
 // CanDelete checks if the user can delete a namespace
-func (n *Namespace) CanDelete(a web.Auth) (bool, error) {
-	return n.IsAdmin(a)
+func (n *Namespace) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
+	return n.IsAdmin(s, a)
 }
 
 // CanCreate checks if the user can create a new namespace
-func (n *Namespace) CanCreate(a web.Auth) (bool, error) {
+func (n *Namespace) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
 	if _, is := a.(*LinkSharing); is {
 		return false, nil
 	}
@@ -58,7 +59,7 @@ func (n *Namespace) CanCreate(a web.Auth) (bool, error) {
 	return true, nil
 }
 
-func (n *Namespace) checkRight(a web.Auth, rights ...Right) (bool, int, error) {
+func (n *Namespace) checkRight(s *xorm.Session, a web.Auth, rights ...Right) (bool, int, error) {
 
 	// If the auth is a link share, don't do anything
 	if _, is := a.(*LinkSharing); is {
@@ -66,13 +67,12 @@ func (n *Namespace) checkRight(a web.Auth, rights ...Right) (bool, int, error) {
 	}
 
 	// Get the namespace and check the right
-	nn := &Namespace{ID: n.ID}
-	err := nn.GetSimpleByID()
+	nn, err := getNamespaceSimpleByID(s, n.ID)
 	if err != nil {
 		return false, 0, err
 	}
 
-	if a.GetID() == n.OwnerID {
+	if a.GetID() == nn.OwnerID {
 		return true, int(RightAdmin), nil
 	}
 
@@ -113,7 +113,8 @@ func (n *Namespace) checkRight(a web.Auth, rights ...Right) (bool, int, error) {
 
 	var maxRights = 0
 	r := &allRights{}
-	exists, err := x.Select("*").
+	exists, err := s.
+		Select("*").
 		Table("namespaces").
 		// User stuff
 		Join("LEFT", "users_namespace", "users_namespace.namespace_id = namespaces.id").

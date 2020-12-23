@@ -80,6 +80,8 @@ func TestNamespaceUser_CanDoSomething(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
 
 			nu := &NamespaceUser{
 				ID:          tt.fields.ID,
@@ -91,13 +93,13 @@ func TestNamespaceUser_CanDoSomething(t *testing.T) {
 				CRUDable:    tt.fields.CRUDable,
 				Rights:      tt.fields.Rights,
 			}
-			if got, _ := nu.CanCreate(tt.args.a); got != tt.want["CanCreate"] {
+			if got, _ := nu.CanCreate(s, tt.args.a); got != tt.want["CanCreate"] {
 				t.Errorf("NamespaceUser.CanCreate() = %v, want %v", got, tt.want["CanCreate"])
 			}
-			if got, _ := nu.CanDelete(tt.args.a); got != tt.want["CanDelete"] {
+			if got, _ := nu.CanDelete(s, tt.args.a); got != tt.want["CanDelete"] {
 				t.Errorf("NamespaceUser.CanDelete() = %v, want %v", got, tt.want["CanDelete"])
 			}
-			if got, _ := nu.CanUpdate(tt.args.a); got != tt.want["CanUpdate"] {
+			if got, _ := nu.CanUpdate(s, tt.args.a); got != tt.want["CanUpdate"] {
 				t.Errorf("NamespaceUser.CanUpdate() = %v, want %v", got, tt.want["CanUpdate"])
 			}
 		})

@@ -18,22 +18,23 @@ package models
 
 import (
 	"code.vikunja.io/web"
+	"xorm.io/xorm"
 )
 
 // CanCreate checks if one can create a new team <-> namespace relation
-func (tn *TeamNamespace) CanCreate(a web.Auth) (bool, error) {
+func (tn *TeamNamespace) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
 	n := &Namespace{ID: tn.NamespaceID}
-	return n.IsAdmin(a)
+	return n.IsAdmin(s, a)
 }
 
 // CanDelete checks if a user can remove a team from a namespace. Only namespace admins can do that.
-func (tn *TeamNamespace) CanDelete(a web.Auth) (bool, error) {
+func (tn *TeamNamespace) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
 	n := &Namespace{ID: tn.NamespaceID}
-	return n.IsAdmin(a)
+	return n.IsAdmin(s, a)
 }
 
 // CanUpdate checks if a user can update a team from a  Only namespace admins can do that.
-func (tn *TeamNamespace) CanUpdate(a web.Auth) (bool, error) {
+func (tn *TeamNamespace) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
 	n := &Namespace{ID: tn.NamespaceID}
-	return n.IsAdmin(a)
+	return n.IsAdmin(s, a)
 }

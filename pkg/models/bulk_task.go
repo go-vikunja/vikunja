@@ -19,6 +19,7 @@ package models
 import (
 	"code.vikunja.io/web"
 	"github.com/imdario/mergo"
+	"xorm.io/xorm"
 )
 
 // BulkTask is the definition of a bulk update task
@@ -29,9 +30,9 @@ type BulkTask struct {
 	Task
 }
 
-func (bt *BulkTask) checkIfTasksAreOnTheSameList() (err error) {
+func (bt *BulkTask) checkIfTasksAreOnTheSameList(s *xorm.Session) (err error) {
 	// Get the tasks
-	err = bt.GetTasksByIDs()
+	err = bt.GetTasksByIDs(s)
 	if err != nil {
 		return err
 	}
@@ -52,16 +53,16 @@ func (bt *BulkTask) checkIfTasksAreOnTheSameList() (err error) {
 }
 
 // CanUpdate checks if a user is allowed to update a task
-func (bt *BulkTask) CanUpdate(a web.Auth) (bool, error) {
+func (bt *BulkTask) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
 
-	err := bt.checkIfTasksAreOnTheSameList()
+	err := bt.checkIfTasksAreOnTheSameList(s)
 	if err != nil {
 		return false, err
 	}
 
 	// A user can update an task if he has write acces to its list
 	l := &List{ID: bt.Tasks[0].ListID}
-	return l.CanWrite(a)
+	return l.CanWrite(s, a)
 }
 
 // Update updates a bunch of tasks at once
@@ -77,23 +78,14 @@ func (bt *BulkTask) CanUpdate(a web.Auth) (bool, error) {
 // @Failure 403 {object} web.HTTPError "The user does not have access to the task (aka its list)"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/bulk [post]
-func (bt *BulkTask) Update() (err error) {
-
-	sess := x.NewSession()
-	defer sess.Close()
-
-	err = sess.Begin()
-	if err != nil {
-		return
-	}
-
+func (bt *BulkTask) Update(s *xorm.Session) (err error) {
 	for _, oldtask := range bt.Tasks {
 
 		// When a repeating task is marked as done, we update all deadlines and reminders and set it as undone
 		updateDone(oldtask, &bt.Task)
 
 		// Update the assignees
-		if err := oldtask.updateTaskAssignees(sess, bt.Assignees); err != nil {
+		if err := oldtask.updateTaskAssignees(s, bt.Assignees); err != nil {
 			return err
 		}
 
@@ -109,7 +101,7 @@ func (bt *BulkTask) Update() (err error) {
 			oldtask.Done = false
 		}
 
-		_, err = sess.ID(oldtask.ID).
+		_, err = s.ID(oldtask.ID).
 			Cols("title",
 				"description",
 				"done",
@@ -121,14 +113,8 @@ func (bt *BulkTask) Update() (err error) {
 				"end_date").
 			Update(oldtask)
 		if err != nil {
-			_ = sess.Rollback()
 			return err
 		}
-	}
-
-	err = sess.Commit()
-	if err != nil {
-		return
 	}
 
 	return

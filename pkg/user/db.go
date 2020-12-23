@@ -20,20 +20,10 @@ package user
 import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
-	"code.vikunja.io/api/pkg/log"
-	"xorm.io/xorm"
 )
-
-var x *xorm.Engine
 
 // InitDB sets up the database connection to use in this module
 func InitDB() (err error) {
-	x, err = db.CreateDBEngine()
-	if err != nil {
-		log.Criticalf("Could not connect to db: %v", err.Error())
-		return
-	}
-
 	// Cache
 	if config.CacheEnabled.GetBool() && config.CacheType.GetString() == "redis" {
 		db.RegisterTableStructsForCache(GetTables())

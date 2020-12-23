@@ -22,6 +22,9 @@ import (
 	"strconv"
 	"strings"
 
+	"code.vikunja.io/api/pkg/db"
+	"xorm.io/xorm"
+
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
@@ -59,8 +62,17 @@ func (bp *BackgroundProvider) SearchBackgrounds(c echo.Context) error {
 		}
 	}
 
-	result, err := p.Search(search, page)
+	s := db.NewSession()
+	defer s.Close()
+
+	result, err := p.Search(s, search, page)
 	if err != nil {
+		_ = s.Rollback()
+		return echo.NewHTTPError(http.StatusBadRequest, "An error occurred: "+err.Error())
+	}
+
+	if err := s.Commit(); err != nil {
+		_ = s.Rollback()
 		return echo.NewHTTPError(http.StatusBadRequest, "An error occurred: "+err.Error())
 	}
 
@@ -68,7 +80,7 @@ func (bp *BackgroundProvider) SearchBackgrounds(c echo.Context) error {
 }
 
 // This function does all kinds of preparations for setting and uploading a background
-func (bp *BackgroundProvider) setBackgroundPreparations(c echo.Context) (list *models.List, auth web.Auth, err error) {
+func (bp *BackgroundProvider) setBackgroundPreparations(s *xorm.Session, c echo.Context) (list *models.List, auth web.Auth, err error) {
 	auth, err = auth2.GetAuthFromClaims(c)
 	if err != nil {
 		return nil, nil, echo.NewHTTPError(http.StatusBadRequest, "Invalid auth token: "+err.Error())
@@ -81,7 +93,7 @@ func (bp *BackgroundProvider) setBackgroundPreparations(c echo.Context) (list *m
 
 	// Check if the user has the right to change the list background
 	list = &models.List{ID: listID}
-	can, err := list.CanUpdate(auth)
+	can, err := list.CanUpdate(s, auth)
 	if err != nil {
 		return
 	}
@@ -90,14 +102,18 @@ func (bp *BackgroundProvider) setBackgroundPreparations(c echo.Context) (list *m
 		return list, auth, models.ErrGenericForbidden{}
 	}
 	// Load the list
-	err = list.GetSimpleByID()
+	list, err = models.GetListSimpleByID(s, list.ID)
 	return
 }
 
 // SetBackground sets an Image as list background
 func (bp *BackgroundProvider) SetBackground(c echo.Context) error {
-	list, auth, err := bp.setBackgroundPreparations(c)
+	s := db.NewSession()
+	defer s.Close()
+
+	list, auth, err := bp.setBackgroundPreparations(s, c)
 	if err != nil {
+		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)
 	}
 
@@ -106,11 +122,13 @@ func (bp *BackgroundProvider) SetBackground(c echo.Context) error {
 	image := &background.Image{}
 	err = c.Bind(image)
 	if err != nil {
+		_ = s.Rollback()
 		return echo.NewHTTPError(http.StatusBadRequest, "No or invalid model provided: "+err.Error())
 	}
 
-	err = p.Set(image, list, auth)
+	err = p.Set(s, image, list, auth)
 	if err != nil {
+		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)
 	}
 	return c.JSON(http.StatusOK, list)
@@ -118,8 +136,12 @@ func (bp *BackgroundProvider) SetBackground(c echo.Context) error {
 
 // UploadBackground uploads a background and passes the id of the uploaded file as an Image to the Set function of the BackgroundProvider.
 func (bp *BackgroundProvider) UploadBackground(c echo.Context) error {
-	list, auth, err := bp.setBackgroundPreparations(c)
+	s := db.NewSession()
+	defer s.Close()
+
+	list, auth, err := bp.setBackgroundPreparations(s, c)
 	if err != nil {
+		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)
 	}
 
@@ -128,10 +150,12 @@ func (bp *BackgroundProvider) UploadBackground(c echo.Context) error {
 	// Get + upload the image
 	file, err := c.FormFile("background")
 	if err != nil {
+		_ = s.Rollback()
 		return err
 	}
 	src, err := file.Open()
 	if err != nil {
+		_ = s.Rollback()
 		return err
 	}
 	defer src.Close()
@@ -139,9 +163,11 @@ func (bp *BackgroundProvider) UploadBackground(c echo.Context) error {
 	// Validate we're dealing with an image
 	mime, err := mimetype.DetectReader(src)
 	if err != nil {
+		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)
 	}
 	if !strings.HasPrefix(mime.String(), "image") {
+		_ = s.Rollback()
 		return c.JSON(http.StatusBadRequest, models.Message{Message: "Uploaded file is no image."})
 	}
 	_, _ = src.Seek(0, io.SeekStart)
@@ -149,6 +175,7 @@ func (bp *BackgroundProvider) UploadBackground(c echo.Context) error {
 	// Save the file
 	f, err := files.CreateWithMime(src, file.Filename, uint64(file.Size), auth, mime.String())
 	if err != nil {
+		_ = s.Rollback()
 		if files.IsErrFileIsTooLarge(err) {
 			return echo.ErrBadRequest
 		}
@@ -158,10 +185,17 @@ func (bp *BackgroundProvider) UploadBackground(c echo.Context) error {
 
 	image := &background.Image{ID: strconv.FormatInt(f.ID, 10)}
 
-	err = p.Set(image, list, auth)
+	err = p.Set(s, image, list, auth)
 	if err != nil {
+		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)
 	}
+
+	if err := s.Commit(); err != nil {
+		_ = s.Rollback()
+		return handler.HandleHTTPError(err, c)
+	}
+
 	return c.JSON(http.StatusOK, list)
 }
 
@@ -190,17 +224,23 @@ func GetListBackground(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid list ID: "+err.Error())
 	}
 
+	s := db.NewSession()
+	defer s.Close()
+
 	// Check if a background for this list exists + Rights
 	list := &models.List{ID: listID}
-	can, _, err := list.CanRead(auth)
+	can, _, err := list.CanRead(s, auth)
 	if err != nil {
+		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)
 	}
 	if !can {
+		_ = s.Rollback()
 		log.Infof("Tried to get list background of list %d while not having the rights for it (User: %v)", listID, auth)
 		return echo.NewHTTPError(http.StatusForbidden)
 	}
 	if list.BackgroundFileID == 0 {
+		_ = s.Rollback()
 		return echo.NotFoundHandler(c)
 	}
 
@@ -209,13 +249,19 @@ func GetListBackground(c echo.Context) error {
 		ID: list.BackgroundFileID,
 	}
 	if err := bgFile.LoadFileByID(); err != nil {
+		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)
 	}
 
 	// Unsplash requires pingbacks as per their api usage guidelines.
 	// To do this in a privacy-preserving manner, we do the ping from inside of Vikunja to not expose any user details.
 	// FIXME: This should use an event once we have events
-	unsplash.Pingback(bgFile)
+	unsplash.Pingback(s, bgFile)
+
+	if err := s.Commit(); err != nil {
+		_ = s.Rollback()
+		return handler.HandleHTTPError(err, c)
+	}
 
 	// Serve the file
 	return c.Stream(http.StatusOK, "image/jpg", bgFile.File)

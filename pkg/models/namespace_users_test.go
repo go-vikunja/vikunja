@@ -25,6 +25,7 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
+	"github.com/stretchr/testify/assert"
 	"gopkg.in/d4l3k/messagediff.v1"
 )
 
@@ -108,6 +109,7 @@ func TestNamespaceUser_Create(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
 
 			un := &NamespaceUser{
 				ID:          tt.fields.ID,
@@ -119,13 +121,16 @@ func TestNamespaceUser_Create(t *testing.T) {
 				CRUDable:    tt.fields.CRUDable,
 				Rights:      tt.fields.Rights,
 			}
-			err := un.Create(tt.args.a)
+			err := un.Create(s, tt.args.a)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NamespaceUser.Create() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			if (err != nil) && tt.wantErr && !tt.errType(err) {
 				t.Errorf("NamespaceUser.Create() Wrong error type! Error = %v, want = %v", err, runtime.FuncForPC(reflect.ValueOf(tt.errType).Pointer()).Name())
 			}
+			err = s.Commit()
+			assert.NoError(t, err)
+
 			if !tt.wantErr {
 				db.AssertExists(t, "users_namespace", map[string]interface{}{
 					"user_id":      tt.fields.UserID,
@@ -211,6 +216,8 @@ func TestNamespaceUser_ReadAll(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
 
 			un := &NamespaceUser{
 				ID:          tt.fields.ID,
@@ -222,7 +229,7 @@ func TestNamespaceUser_ReadAll(t *testing.T) {
 				CRUDable:    tt.fields.CRUDable,
 				Rights:      tt.fields.Rights,
 			}
-			got, _, _, err := un.ReadAll(tt.args.a, tt.args.search, tt.args.page, 50)
+			got, _, _, err := un.ReadAll(s, tt.args.a, tt.args.search, tt.args.page, 50)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NamespaceUser.ReadAll() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -296,6 +303,7 @@ func TestNamespaceUser_Update(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
 
 			nu := &NamespaceUser{
 				ID:          tt.fields.ID,
@@ -307,13 +315,16 @@ func TestNamespaceUser_Update(t *testing.T) {
 				CRUDable:    tt.fields.CRUDable,
 				Rights:      tt.fields.Rights,
 			}
-			err := nu.Update()
+			err := nu.Update(s)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NamespaceUser.Update() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			if (err != nil) && tt.wantErr && !tt.errType(err) {
 				t.Errorf("NamespaceUser.Update() Wrong error type! Error = %v, want = %v", err, runtime.FuncForPC(reflect.ValueOf(tt.errType).Pointer()).Name())
 			}
+			err = s.Commit()
+			assert.NoError(t, err)
+
 			if !tt.wantErr {
 				db.AssertExists(t, "users_namespace", map[string]interface{}{
 					"user_id":      tt.fields.UserID,
@@ -373,6 +384,7 @@ func TestNamespaceUser_Delete(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
 
 			nu := &NamespaceUser{
 				ID:          tt.fields.ID,
@@ -384,13 +396,16 @@ func TestNamespaceUser_Delete(t *testing.T) {
 				CRUDable:    tt.fields.CRUDable,
 				Rights:      tt.fields.Rights,
 			}
-			err := nu.Delete()
+			err := nu.Delete(s)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NamespaceUser.Delete() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			if (err != nil) && tt.wantErr && !tt.errType(err) {
 				t.Errorf("NamespaceUser.Delete() Wrong error type! Error = %v, want = %v", err, runtime.FuncForPC(reflect.ValueOf(tt.errType).Pointer()).Name())
 			}
+			err = s.Commit()
+			assert.NoError(t, err)
+
 			if !tt.wantErr {
 				db.AssertMissing(t, "users_namespace", map[string]interface{}{
 					"user_id":      tt.fields.UserID,

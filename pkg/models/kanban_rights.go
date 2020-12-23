@@ -16,30 +16,33 @@
 
 package models
 
-import "code.vikunja.io/web"
+import (
+	"code.vikunja.io/web"
+	"xorm.io/xorm"
+)
 
 // CanCreate checks if a user can create a new bucket
-func (b *Bucket) CanCreate(a web.Auth) (bool, error) {
+func (b *Bucket) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
 	l := &List{ID: b.ListID}
-	return l.CanWrite(a)
+	return l.CanWrite(s, a)
 }
 
 // CanUpdate checks if a user can update an existing bucket
-func (b *Bucket) CanUpdate(a web.Auth) (bool, error) {
-	return b.canDoBucket(a)
+func (b *Bucket) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
+	return b.canDoBucket(s, a)
 }
 
 // CanDelete checks if a user can delete an existing bucket
-func (b *Bucket) CanDelete(a web.Auth) (bool, error) {
-	return b.canDoBucket(a)
+func (b *Bucket) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
+	return b.canDoBucket(s, a)
 }
 
 // canDoBucket checks if the bucket exists and if the user has the right to act on it
-func (b *Bucket) canDoBucket(a web.Auth) (bool, error) {
-	bb, err := getBucketByID(x.NewSession(), b.ID)
+func (b *Bucket) canDoBucket(s *xorm.Session, a web.Auth) (bool, error) {
+	bb, err := getBucketByID(s, b.ID)
 	if err != nil {
 		return false, err
 	}
 	l := &List{ID: bb.ListID}
-	return l.CanWrite(a)
+	return l.CanWrite(s, a)
 }

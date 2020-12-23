@@ -22,6 +22,8 @@ import (
 	"image/jpeg"
 	"net/http"
 
+	"code.vikunja.io/api/pkg/db"
+
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
@@ -47,8 +49,17 @@ func UserTOTPEnroll(c echo.Context) error {
 		return handler.HandleHTTPError(err, c)
 	}
 
-	t, err := user.EnrollTOTP(u)
+	s := db.NewSession()
+	defer s.Close()
+
+	t, err := user.EnrollTOTP(s, u)
 	if err != nil {
+		_ = s.Rollback()
+		return handler.HandleHTTPError(err, c)
+	}
+
+	if err := s.Commit(); err != nil {
+		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)
 	}
 
@@ -86,8 +97,17 @@ func UserTOTPEnable(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid model provided.")
 	}
 
-	err = user.EnableTOTP(passcode)
+	s := db.NewSession()
+	defer s.Close()
+
+	err = user.EnableTOTP(s, passcode)
 	if err != nil {
+		_ = s.Rollback()
+		return handler.HandleHTTPError(err, c)
+	}
+
+	if err := s.Commit(); err != nil {
+		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)
 	}
 
@@ -122,18 +142,29 @@ func UserTOTPDisable(c echo.Context) error {
 		return handler.HandleHTTPError(err, c)
 	}
 
-	u, err = user.GetUserByID(u.ID)
+	s := db.NewSession()
+	defer s.Close()
+
+	u, err = user.GetUserByID(s, u.ID)
 	if err != nil {
+		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)
 	}
 
 	err = user.CheckUserPassword(u, login.Password)
 	if err != nil {
+		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)
 	}
 
-	err = user.DisableTOTP(u)
+	err = user.DisableTOTP(s, u)
 	if err != nil {
+		_ = s.Rollback()
+		return handler.HandleHTTPError(err, c)
+	}
+
+	if err := s.Commit(); err != nil {
+		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)
 	}
 
@@ -156,14 +187,24 @@ func UserTOTPQrCode(c echo.Context) error {
 		return handler.HandleHTTPError(err, c)
 	}
 
-	qrcode, err := user.GetTOTPQrCodeForUser(u)
+	s := db.NewSession()
+	defer s.Close()
+
+	qrcode, err := user.GetTOTPQrCodeForUser(s, u)
 	if err != nil {
+		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)
 	}
 
 	buff := &bytes.Buffer{}
 	err = jpeg.Encode(buff, qrcode, nil)
 	if err != nil {
+		_ = s.Rollback()
+		return handler.HandleHTTPError(err, c)
+	}
+
+	if err := s.Commit(); err != nil {
+		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)
 	}
 
@@ -186,8 +227,17 @@ func UserTOTP(c echo.Context) error {
 		return handler.HandleHTTPError(err, c)
 	}
 
-	t, err := user.GetTOTPForUser(u)
+	s := db.NewSession()
+	defer s.Close()
+
+	t, err := user.GetTOTPForUser(s, u)
 	if err != nil {
+		_ = s.Rollback()
+		return handler.HandleHTTPError(err, c)
+	}
+
+	if err := s.Commit(); err != nil {
+		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)
 	}
 

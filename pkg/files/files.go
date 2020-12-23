@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/web"
 	"github.com/c2h5oh/datasize"
 	"github.com/spf13/afero"
@@ -93,27 +94,44 @@ func CreateWithMime(f io.Reader, realname string, realsize uint64, a web.Auth, m
 		Mime:        mime,
 	}
 
-	_, err = x.Insert(file)
+	s := db.NewSession()
+	defer s.Close()
+
+	_, err = s.Insert(file)
 	if err != nil {
+		_ = s.Rollback()
 		return
 	}
 
 	// Save the file to storage with its new ID as path
 	err = file.Save(f)
+	if err != nil {
+		_ = s.Rollback()
+		return
+	}
 	return
 }
 
 // Delete removes a file from the DB and the file system
 func (f *File) Delete() (err error) {
-	deleted, err := x.Where("id = ?", f.ID).Delete(f)
+	s := db.NewSession()
+	defer s.Close()
+
+	deleted, err := s.Where("id = ?", f.ID).Delete(f)
 	if err != nil {
+		_ = s.Rollback()
 		return err
 	}
 	if deleted == 0 {
+		_ = s.Rollback()
 		return ErrFileDoesNotExist{FileID: f.ID}
 	}
 
 	err = afs.Remove(f.getFileName())
+	if err != nil {
+		_ = s.Rollback()
+		return err
+	}
 	return
 }
 

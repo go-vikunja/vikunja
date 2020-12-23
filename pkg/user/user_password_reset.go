@@ -21,6 +21,7 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/mail"
 	"code.vikunja.io/api/pkg/utils"
+	"xorm.io/xorm"
 )
 
 // PasswordReset holds the data to reset a password
@@ -32,7 +33,7 @@ type PasswordReset struct {
 }
 
 // ResetPassword resets a users password
-func ResetPassword(reset *PasswordReset) (err error) {
+func ResetPassword(s *xorm.Session, reset *PasswordReset) (err error) {
 
 	// Check if the password is not empty
 	if reset.NewPassword == "" {
@@ -41,7 +42,9 @@ func ResetPassword(reset *PasswordReset) (err error) {
 
 	// Check if we have a token
 	var user User
-	exists, err := x.Where("password_reset_token = ?", reset.Token).Get(&user)
+	exists, err := s.
+		Where("password_reset_token = ?", reset.Token).
+		Get(&user)
 	if err != nil {
 		return
 	}
@@ -57,7 +60,9 @@ func ResetPassword(reset *PasswordReset) (err error) {
 	}
 
 	// Save it
-	_, err = x.Where("id = ?", user.ID).Update(&user)
+	_, err = s.
+		Where("id = ?", user.ID).
+		Update(&user)
 	if err != nil {
 		return
 	}
@@ -83,27 +88,29 @@ type PasswordTokenRequest struct {
 }
 
 // RequestUserPasswordResetTokenByEmail inserts a random token to reset a users password into the databsse
-func RequestUserPasswordResetTokenByEmail(tr *PasswordTokenRequest) (err error) {
+func RequestUserPasswordResetTokenByEmail(s *xorm.Session, tr *PasswordTokenRequest) (err error) {
 	if tr.Email == "" {
 		return ErrNoUsernamePassword{}
 	}
 
 	// Check if the user exists
-	user, err := GetUserWithEmail(&User{Email: tr.Email})
+	user, err := GetUserWithEmail(s, &User{Email: tr.Email})
 	if err != nil {
 		return
 	}
 
-	return RequestUserPasswordResetToken(user)
+	return RequestUserPasswordResetToken(s, user)
 }
 
 // RequestUserPasswordResetToken sends a user a password reset email.
-func RequestUserPasswordResetToken(user *User) (err error) {
+func RequestUserPasswordResetToken(s *xorm.Session, user *User) (err error) {
 	// Generate a token and save it
 	user.PasswordResetToken = utils.MakeRandomString(400)
 
 	// Save it
-	_, err = x.Where("id = ?", user.ID).Update(user)
+	_, err = s.
+		Where("id = ?", user.ID).
+		Update(user)
 	if err != nil {
 		return
 	}

@@ -22,6 +22,8 @@ import (
 	"strconv"
 	"time"
 
+	"code.vikunja.io/api/pkg/db"
+
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/metrics"
 	"code.vikunja.io/api/pkg/user"
@@ -153,7 +155,7 @@ type taskOptions struct {
 // @Success 200 {array} models.Task "The tasks"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/all [get]
-func (t *Task) ReadAll(a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
+func (t *Task) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
 	return nil, 0, 0, nil
 }
 
@@ -209,7 +211,7 @@ func getFilterCondForSeparateTable(table string, concat taskFilterConcatinator, 
 }
 
 //nolint:gocyclo
-func getRawTasksForLists(lists []*List, a web.Auth, opts *taskOptions) (tasks []*Task, resultCount int, totalItems int64, err error) {
+func getRawTasksForLists(s *xorm.Session, lists []*List, a web.Auth, opts *taskOptions) (tasks []*Task, resultCount int, totalItems int64, err error) {
 
 	// If the user does not have any lists, don't try to get any tasks
 	if len(lists) == 0 {
@@ -253,7 +255,7 @@ func getRawTasksForLists(lists []*List, a web.Auth, opts *taskOptions) (tasks []
 
 		// Postgres sorts by default entries with null values after ones with values.
 		// To make that consistent with the sort order we have and other dbms, we're adding a separate clause here.
-		if x.Dialect().URI().DBType == schemas.POSTGRES {
+		if db.Type() == schemas.POSTGRES {
 			if param.orderBy == orderAscending {
 				orderby += " NULLS FIRST"
 			}
@@ -324,9 +326,7 @@ func getRawTasksForLists(lists []*List, a web.Auth, opts *taskOptions) (tasks []
 	}
 
 	// Then return all tasks for that lists
-	query := x.NewSession().
-		OrderBy(orderby)
-	queryCount := x.NewSession()
+	var where builder.Cond
 
 	if len(opts.search) > 0 {
 		// Postgres' is case sensitive by default.
@@ -335,11 +335,9 @@ func getRawTasksForLists(lists []*List, a web.Auth, opts *taskOptions) (tasks []
 		// See https://stackoverflow.com/q/7005302/10924593
 		// Seems okay to use that now, we may need to find a better solution overall in the future.
 		if config.DatabaseType.GetString() == "postgres" {
-			query = query.Where("title ILIKE ?", "%"+opts.search+"%")
-			queryCount = queryCount.Where("title ILIKE ?", "%"+opts.search+"%")
+			where = builder.Expr("title ILIKE ?", "%"+opts.search+"%")
 		} else {
-			query = query.Where("title LIKE ?", "%"+opts.search+"%")
-			queryCount = queryCount.Where("title LIKE ?", "%"+opts.search+"%")
+			where = &builder.Like{"title", "%" + opts.search + "%"}
 		}
 	}
 
@@ -352,10 +350,13 @@ func getRawTasksForLists(lists []*List, a web.Auth, opts *taskOptions) (tasks []
 
 	if hasFavoriteLists {
 		// Make sure users can only see their favorites
-		userLists, _, _, err := getRawListsForUser(&listOptions{
-			user: &user.User{ID: a.GetID()},
-			page: -1,
-		})
+		userLists, _, _, err := getRawListsForUser(
+			s,
+			&listOptions{
+				user: &user.User{ID: a.GetID()},
+				page: -1,
+			},
+		)
 		if err != nil {
 			return nil, 0, 0, err
 		}
@@ -399,32 +400,31 @@ func getRawTasksForLists(lists []*List, a web.Auth, opts *taskOptions) (tasks []
 		filters = append(filters, cond)
 	}
 
-	query = query.Where(listCond)
-	queryCount = queryCount.Where(listCond)
-
+	var filterCond builder.Cond
 	if len(filters) > 0 {
 		if opts.filterConcat == filterConcatOr {
-			query = query.Where(builder.Or(filters...))
-			queryCount = queryCount.Where(builder.Or(filters...))
+			filterCond = builder.Or(filters...)
 		}
 		if opts.filterConcat == filterConcatAnd {
-			query = query.Where(builder.And(filters...))
-			queryCount = queryCount.Where(builder.And(filters...))
+			filterCond = builder.And(filters...)
 		}
 	}
 
 	limit, start := getLimitFromPageIndex(opts.page, opts.perPage)
+	cond := builder.And(listCond, where, filterCond)
 
+	query := s.Where(cond)
 	if limit > 0 {
 		query = query.Limit(limit, start)
 	}
 
 	tasks = []*Task{}
-	err = query.Find(&tasks)
+	err = query.OrderBy(orderby).Find(&tasks)
 	if err != nil {
 		return nil, 0, 0, err
 	}
 
+	queryCount := s.Where(cond)
 	totalItems, err = queryCount.
 		Count(&Task{})
 	if err != nil {
@@ -434,9 +434,9 @@ func getRawTasksForLists(lists []*List, a web.Auth, opts *taskOptions) (tasks []
 	return tasks, len(tasks), totalItems, nil
 }
 
-func getTasksForLists(lists []*List, a web.Auth, opts *taskOptions) (tasks []*Task, resultCount int, totalItems int64, err error) {
+func getTasksForLists(s *xorm.Session, lists []*List, a web.Auth, opts *taskOptions) (tasks []*Task, resultCount int, totalItems int64, err error) {
 
-	tasks, resultCount, totalItems, err = getRawTasksForLists(lists, a, opts)
+	tasks, resultCount, totalItems, err = getRawTasksForLists(s, lists, a, opts)
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -446,7 +446,7 @@ func getTasksForLists(lists []*List, a web.Auth, opts *taskOptions) (tasks []*Ta
 		taskMap[t.ID] = t
 	}
 
-	err = addMoreInfoToTasks(taskMap)
+	err = addMoreInfoToTasks(s, taskMap)
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -455,18 +455,18 @@ func getTasksForLists(lists []*List, a web.Auth, opts *taskOptions) (tasks []*Ta
 }
 
 // GetTaskByIDSimple returns a raw task without extra data by the task ID
-func GetTaskByIDSimple(taskID int64) (task Task, err error) {
+func GetTaskByIDSimple(s *xorm.Session, taskID int64) (task Task, err error) {
 	if taskID < 1 {
 		return Task{}, ErrTaskDoesNotExist{taskID}
 	}
 
-	return GetTaskSimple(&Task{ID: taskID})
+	return GetTaskSimple(s, &Task{ID: taskID})
 }
 
 // GetTaskSimple returns a raw task without extra data
-func GetTaskSimple(t *Task) (task Task, err error) {
+func GetTaskSimple(s *xorm.Session, t *Task) (task Task, err error) {
 	task = *t
-	exists, err := x.Get(&task)
+	exists, err := s.Get(&task)
 	if err != nil {
 		return Task{}, err
 	}
@@ -478,14 +478,14 @@ func GetTaskSimple(t *Task) (task Task, err error) {
 }
 
 // GetTasksByIDs returns all tasks for a list of ids
-func (bt *BulkTask) GetTasksByIDs() (err error) {
+func (bt *BulkTask) GetTasksByIDs(s *xorm.Session) (err error) {
 	for _, id := range bt.IDs {
 		if id < 1 {
 			return ErrTaskDoesNotExist{id}
 		}
 	}
 
-	err = x.In("id", bt.IDs).Find(&bt.Tasks)
+	err = s.In("id", bt.IDs).Find(&bt.Tasks)
 	if err != nil {
 		return
 	}
@@ -494,9 +494,9 @@ func (bt *BulkTask) GetTasksByIDs() (err error) {
 }
 
 // GetTasksByUIDs gets all tasks from a bunch of uids
-func GetTasksByUIDs(uids []string) (tasks []*Task, err error) {
+func GetTasksByUIDs(s *xorm.Session, uids []string) (tasks []*Task, err error) {
 	tasks = []*Task{}
-	err = x.In("uid", uids).Find(&tasks)
+	err = s.In("uid", uids).Find(&tasks)
 	if err != nil {
 		return
 	}
@@ -506,13 +506,13 @@ func GetTasksByUIDs(uids []string) (tasks []*Task, err error) {
 		taskMap[t.ID] = t
 	}
 
-	err = addMoreInfoToTasks(taskMap)
+	err = addMoreInfoToTasks(s, taskMap)
 	return
 }
 
-func getRemindersForTasks(taskIDs []int64) (reminders []*TaskReminder, err error) {
+func getRemindersForTasks(s *xorm.Session, taskIDs []int64) (reminders []*TaskReminder, err error) {
 	reminders = []*TaskReminder{}
-	err = x.In("task_id", taskIDs).Find(&reminders)
+	err = s.In("task_id", taskIDs).Find(&reminders)
 	return
 }
 
@@ -521,8 +521,8 @@ func (t *Task) setIdentifier(list *List) {
 }
 
 // Get all assignees
-func addAssigneesToTasks(taskIDs []int64, taskMap map[int64]*Task) (err error) {
-	taskAssignees, err := getRawTaskAssigneesForTasks(taskIDs)
+func addAssigneesToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]*Task) (err error) {
+	taskAssignees, err := getRawTaskAssigneesForTasks(s, taskIDs)
 	if err != nil {
 		return
 	}
@@ -538,8 +538,8 @@ func addAssigneesToTasks(taskIDs []int64, taskMap map[int64]*Task) (err error) {
 }
 
 // Get all labels for all the tasks
-func addLabelsToTasks(taskIDs []int64, taskMap map[int64]*Task) (err error) {
-	labels, _, _, err := getLabelsByTaskIDs(&LabelByTaskIDsOptions{
+func addLabelsToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]*Task) (err error) {
+	labels, _, _, err := getLabelsByTaskIDs(s, &LabelByTaskIDsOptions{
 		TaskIDs: taskIDs,
 		Page:    -1,
 	})
@@ -556,8 +556,8 @@ func addLabelsToTasks(taskIDs []int64, taskMap map[int64]*Task) (err error) {
 }
 
 // Get task attachments
-func addAttachmentsToTasks(taskIDs []int64, taskMap map[int64]*Task) (err error) {
-	attachments, err := getTaskAttachmentsByTaskIDs(taskIDs)
+func addAttachmentsToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]*Task) (err error) {
+	attachments, err := getTaskAttachmentsByTaskIDs(s, taskIDs)
 	if err != nil {
 		return
 	}
@@ -568,11 +568,11 @@ func addAttachmentsToTasks(taskIDs []int64, taskMap map[int64]*Task) (err error)
 	return
 }
 
-func getTaskReminderMap(taskIDs []int64) (taskReminders map[int64][]time.Time, err error) {
+func getTaskReminderMap(s *xorm.Session, taskIDs []int64) (taskReminders map[int64][]time.Time, err error) {
 	taskReminders = make(map[int64][]time.Time)
 
 	// Get all reminders and put them in a map to have it easier later
-	reminders, err := getRemindersForTasks(taskIDs)
+	reminders, err := getRemindersForTasks(s, taskIDs)
 	if err != nil {
 		return
 	}
@@ -584,9 +584,9 @@ func getTaskReminderMap(taskIDs []int64) (taskReminders map[int64][]time.Time, e
 	return
 }
 
-func addRelatedTasksToTasks(taskIDs []int64, taskMap map[int64]*Task) (err error) {
+func addRelatedTasksToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]*Task) (err error) {
 	relatedTasks := []*TaskRelation{}
-	err = x.In("task_id", taskIDs).Find(&relatedTasks)
+	err = s.In("task_id", taskIDs).Find(&relatedTasks)
 	if err != nil {
 		return
 	}
@@ -597,7 +597,7 @@ func addRelatedTasksToTasks(taskIDs []int64, taskMap map[int64]*Task) (err error
 		relatedTaskIDs = append(relatedTaskIDs, rt.OtherTaskID)
 	}
 	fullRelatedTasks := make(map[int64]*Task)
-	err = x.In("id", relatedTaskIDs).Find(&fullRelatedTasks)
+	err = s.In("id", relatedTaskIDs).Find(&fullRelatedTasks)
 	if err != nil {
 		return
 	}
@@ -614,7 +614,7 @@ func addRelatedTasksToTasks(taskIDs []int64, taskMap map[int64]*Task) (err error
 
 // This function takes a map with pointers and returns a slice with pointers to tasks
 // It adds more stuff like assignees/labels/etc to a bunch of tasks
-func addMoreInfoToTasks(taskMap map[int64]*Task) (err error) {
+func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task) (err error) {
 
 	// No need to iterate over users and stuff if the list doesn't have tasks
 	if len(taskMap) == 0 {
@@ -631,33 +631,33 @@ func addMoreInfoToTasks(taskMap map[int64]*Task) (err error) {
 		listIDs = append(listIDs, i.ListID)
 	}
 
-	err = addAssigneesToTasks(taskIDs, taskMap)
+	err = addAssigneesToTasks(s, taskIDs, taskMap)
 	if err != nil {
 		return
 	}
 
-	err = addLabelsToTasks(taskIDs, taskMap)
+	err = addLabelsToTasks(s, taskIDs, taskMap)
 	if err != nil {
 		return
 	}
 
-	err = addAttachmentsToTasks(taskIDs, taskMap)
+	err = addAttachmentsToTasks(s, taskIDs, taskMap)
 	if err != nil {
 		return
 	}
 
-	users, err := user.GetUsersByIDs(userIDs)
+	users, err := user.GetUsersByIDs(s, userIDs)
 	if err != nil {
 		return
 	}
 
-	taskReminders, err := getTaskReminderMap(taskIDs)
+	taskReminders, err := getTaskReminderMap(s, taskIDs)
 	if err != nil {
 		return err
 	}
 
 	// Get all identifiers
-	lists, err := GetListsByIDs(listIDs)
+	lists, err := GetListsByIDs(s, listIDs)
 	if err != nil {
 		return err
 	}
@@ -679,7 +679,7 @@ func addMoreInfoToTasks(taskMap map[int64]*Task) (err error) {
 	}
 
 	// Get all related tasks
-	err = addRelatedTasksToTasks(taskIDs, taskMap)
+	err = addRelatedTasksToTasks(s, taskIDs, taskMap)
 	return
 }
 
@@ -739,14 +739,8 @@ func checkBucketLimit(s *xorm.Session, t *Task, bucket *Bucket) (err error) {
 // @Failure 403 {object} web.HTTPError "The user does not have access to the list"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{id} [put]
-func (t *Task) Create(a web.Auth) (err error) {
-	s := x.NewSession()
-	err = createTask(s, t, a, true)
-	if err != nil {
-		_ = s.Rollback()
-		return err
-	}
-	return s.Commit()
+func (t *Task) Create(s *xorm.Session, a web.Auth) (err error) {
+	return createTask(s, t, a, true)
 }
 
 func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool) (err error) {
@@ -759,16 +753,16 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool) (err
 	}
 
 	// Check if the list exists
-	l := &List{ID: t.ListID}
-	if err = l.getSimpleByID(s); err != nil {
-		return
+	l, err := GetListSimpleByID(s, t.ListID)
+	if err != nil {
+		return err
 	}
 
 	if _, is := a.(*LinkSharing); is {
 		// A negative user id indicates user share links
 		t.CreatedByID = a.GetID() * -1
 	} else {
-		u, err := user.GetUserByID(a.GetID())
+		u, err := user.GetUserByID(s, a.GetID())
 		if err != nil {
 			return err
 		}
@@ -834,7 +828,7 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool) (err
 
 	t.setIdentifier(l)
 
-	err = updateListLastUpdatedS(s, &List{ID: t.ListID})
+	err = updateListLastUpdated(s, &List{ID: t.ListID})
 	return
 }
 
@@ -853,21 +847,17 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool) (err
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{id} [post]
 //nolint:gocyclo
-func (t *Task) Update() (err error) {
-
-	s := x.NewSession()
+func (t *Task) Update(s *xorm.Session) (err error) {
 
 	// Check if the task exists and get the old values
-	ot, err := GetTaskByIDSimple(t.ID)
+	ot, err := GetTaskByIDSimple(s, t.ID)
 	if err != nil {
-		_ = s.Rollback()
 		return
 	}
 
 	// Get the reminders
-	reminders, err := getRemindersForTasks([]int64{t.ID})
+	reminders, err := getRemindersForTasks(s, []int64{t.ID})
 	if err != nil {
-		_ = s.Rollback()
 		return
 	}
 
@@ -881,20 +871,17 @@ func (t *Task) Update() (err error) {
 
 	// Update the assignees
 	if err := ot.updateTaskAssignees(s, t.Assignees); err != nil {
-		_ = s.Rollback()
 		return err
 	}
 
 	// Update the reminders
 	if err := ot.updateReminders(s, t.Reminders); err != nil {
-		_ = s.Rollback()
 		return err
 	}
 
 	// If there is a bucket set, make sure they belong to the same list as the task
 	err = checkBucketAndTaskBelongToSameList(s, &ot, t.BucketID)
 	if err != nil {
-		_ = s.Rollback()
 		return
 	}
 
@@ -923,7 +910,6 @@ func (t *Task) Update() (err error) {
 	if t.BucketID == 0 || (t.ListID != 0 && ot.ListID != t.ListID) {
 		bucket, err = getDefaultBucket(s, t.ListID)
 		if err != nil {
-			_ = s.Rollback()
 			return err
 		}
 		t.BucketID = bucket.ID
@@ -934,7 +920,6 @@ func (t *Task) Update() (err error) {
 		latestTask := &Task{}
 		_, err = s.Where("list_id = ?", t.ListID).OrderBy("id desc").Get(latestTask)
 		if err != nil {
-			_ = s.Rollback()
 			return err
 		}
 
@@ -946,7 +931,6 @@ func (t *Task) Update() (err error) {
 	// Only check the bucket limit if the task is being moved between buckets, allow reordering the task within a bucket
 	if t.BucketID != ot.BucketID {
 		if err := checkBucketLimit(s, t, bucket); err != nil {
-			_ = s.Rollback()
 			return err
 		}
 	}
@@ -972,7 +956,6 @@ func (t *Task) Update() (err error) {
 	// Which is why we merge the actual task struct with the one we got from the db
 	// The user struct overrides values in the actual one.
 	if err := mergo.Merge(&ot, t, mergo.WithOverride); err != nil {
-		_ = s.Rollback()
 		return err
 	}
 
@@ -1034,7 +1017,6 @@ func (t *Task) Update() (err error) {
 		Update(ot)
 	*t = ot
 	if err != nil {
-		_ = s.Rollback()
 		return err
 	}
 	// Get the task updated timestamp in a new struct - if we'd just try to put it into t which we already have, it
@@ -1042,17 +1024,11 @@ func (t *Task) Update() (err error) {
 	nt := &Task{}
 	_, err = s.ID(t.ID).Get(nt)
 	if err != nil {
-		_ = s.Rollback()
 		return err
 	}
 	t.Updated = nt.Updated
 
-	err = updateListLastUpdatedS(s, &List{ID: t.ListID})
-	if err != nil {
-		_ = s.Rollback()
-		return err
-	}
-	return s.Commit()
+	return updateListLastUpdated(s, &List{ID: t.ListID})
 }
 
 // This helper function updates the reminders, doneAt, start and end dates of the *old* task
@@ -1174,7 +1150,7 @@ func (t *Task) updateReminders(s *xorm.Session, reminders []time.Time) (err erro
 		t.Reminders = nil
 	}
 
-	err = updateListLastUpdatedS(s, &List{ID: t.ListID})
+	err = updateListLastUpdated(s, &List{ID: t.ListID})
 	return
 }
 
@@ -1190,20 +1166,20 @@ func (t *Task) updateReminders(s *xorm.Session, reminders []time.Time) (err erro
 // @Failure 403 {object} web.HTTPError "The user does not have access to the list"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{id} [delete]
-func (t *Task) Delete() (err error) {
+func (t *Task) Delete(s *xorm.Session) (err error) {
 
-	if _, err = x.ID(t.ID).Delete(Task{}); err != nil {
+	if _, err = s.ID(t.ID).Delete(Task{}); err != nil {
 		return err
 	}
 
 	// Delete assignees
-	if _, err = x.Where("task_id = ?", t.ID).Delete(TaskAssginee{}); err != nil {
+	if _, err = s.Where("task_id = ?", t.ID).Delete(TaskAssginee{}); err != nil {
 		return err
 	}
 
 	metrics.UpdateCount(-1, metrics.TaskCountKey)
 
-	err = updateListLastUpdated(&List{ID: t.ListID})
+	err = updateListLastUpdated(s, &List{ID: t.ListID})
 	return
 }
 
@@ -1219,16 +1195,16 @@ func (t *Task) Delete() (err error) {
 // @Failure 404 {object} models.Message "Task not found"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{ID} [get]
-func (t *Task) ReadOne() (err error) {
+func (t *Task) ReadOne(s *xorm.Session) (err error) {
 
 	taskMap := make(map[int64]*Task, 1)
 	taskMap[t.ID] = &Task{}
-	*taskMap[t.ID], err = GetTaskByIDSimple(t.ID)
+	*taskMap[t.ID], err = GetTaskByIDSimple(s, t.ID)
 	if err != nil {
 		return
 	}
 
-	err = addMoreInfoToTasks(taskMap)
+	err = addMoreInfoToTasks(s, taskMap)
 	if err != nil {
 		return
 	}

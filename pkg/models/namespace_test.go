@@ -36,8 +36,12 @@ func TestNamespace_Create(t *testing.T) {
 
 	t.Run("normal", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
-		err := dummynamespace.Create(user1)
+		s := db.NewSession()
+		err := dummynamespace.Create(s, user1)
 		assert.NoError(t, err)
+		err = s.Commit()
+		assert.NoError(t, err)
+
 		db.AssertExists(t, "namespaces", map[string]interface{}{
 			"title":       "Test",
 			"description": "Lorem Ipsum",
@@ -45,18 +49,22 @@ func TestNamespace_Create(t *testing.T) {
 	})
 	t.Run("no title", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
 		n2 := Namespace{}
-		err := n2.Create(user1)
+		err := n2.Create(s, user1)
 		assert.Error(t, err)
 		assert.True(t, IsErrNamespaceNameCannotBeEmpty(err))
+		_ = s.Close()
 	})
 	t.Run("nonexistant user", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
 		nUser := &user.User{ID: 9482385}
 		dnsp2 := dummynamespace
-		err := dnsp2.Create(nUser)
+		err := dnsp2.Create(s, nUser)
 		assert.Error(t, err)
 		assert.True(t, user.IsErrUserDoesNotExist(err))
+		_ = s.Close()
 	})
 }
 
@@ -64,28 +72,36 @@ func TestNamespace_ReadOne(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		n := &Namespace{ID: 1}
 		db.LoadAndAssertFixtures(t)
-		err := n.ReadOne()
+		s := db.NewSession()
+		err := n.ReadOne(s)
 		assert.NoError(t, err)
 		assert.Equal(t, n.Title, "testnamespace")
+		_ = s.Close()
 	})
 	t.Run("nonexistant", func(t *testing.T) {
 		n := &Namespace{ID: 99999}
 		db.LoadAndAssertFixtures(t)
-		err := n.ReadOne()
+		s := db.NewSession()
+		err := n.ReadOne(s)
 		assert.Error(t, err)
 		assert.True(t, IsErrNamespaceDoesNotExist(err))
+		_ = s.Close()
 	})
 }
 
 func TestNamespace_Update(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
 		n := &Namespace{
 			ID:    1,
 			Title: "Lorem Ipsum",
 		}
-		err := n.Update()
+		err := n.Update(s)
 		assert.NoError(t, err)
+		err = s.Commit()
+		assert.NoError(t, err)
+
 		db.AssertExists(t, "namespaces", map[string]interface{}{
 			"id":    1,
 			"title": "Lorem Ipsum",
@@ -93,56 +109,68 @@ func TestNamespace_Update(t *testing.T) {
 	})
 	t.Run("nonexisting", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
 		n := &Namespace{
 			ID:    99999,
 			Title: "Lorem Ipsum",
 		}
-		err := n.Update()
+		err := n.Update(s)
 		assert.Error(t, err)
 		assert.True(t, IsErrNamespaceDoesNotExist(err))
+		_ = s.Close()
 	})
 	t.Run("nonexisting owner", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
 		n := &Namespace{
 			ID:    1,
 			Title: "Lorem Ipsum",
 			Owner: &user.User{ID: 99999},
 		}
-		err := n.Update()
+		err := n.Update(s)
 		assert.Error(t, err)
 		assert.True(t, user.IsErrUserDoesNotExist(err))
+		_ = s.Close()
 	})
 	t.Run("no title", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
 		n := &Namespace{
 			ID: 1,
 		}
-		err := n.Update()
+		err := n.Update(s)
 		assert.Error(t, err)
 		assert.True(t, IsErrNamespaceNameCannotBeEmpty(err))
+		_ = s.Close()
 	})
 }
 
 func TestNamespace_Delete(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
 		n := &Namespace{
 			ID: 1,
 		}
-		err := n.Delete()
+		err := n.Delete(s)
 		assert.NoError(t, err)
+		err = s.Commit()
+		assert.NoError(t, err)
+
 		db.AssertMissing(t, "namespaces", map[string]interface{}{
 			"id": 1,
 		})
 	})
 	t.Run("nonexisting", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
 		n := &Namespace{
 			ID: 9999,
 		}
-		err := n.Delete()
+		err := n.Delete(s)
 		assert.Error(t, err)
 		assert.True(t, IsErrNamespaceDoesNotExist(err))
+		_ = s.Close()
 	})
 }
 
@@ -152,9 +180,12 @@ func TestNamespace_ReadAll(t *testing.T) {
 	user11 := &user.User{ID: 11}
 	user12 := &user.User{ID: 12}
 
+	s := db.NewSession()
+	defer s.Close()
+
 	t.Run("normal", func(t *testing.T) {
 		n := &Namespace{}
-		nn, _, _, err := n.ReadAll(user1, "", 1, -1)
+		nn, _, _, err := n.ReadAll(s, user1, "", 1, -1)
 		assert.NoError(t, err)
 		namespaces := nn.([]*NamespaceWithLists)
 		assert.NotNil(t, namespaces)
@@ -174,7 +205,7 @@ func TestNamespace_ReadAll(t *testing.T) {
 		n := &Namespace{
 			NamespacesOnly: true,
 		}
-		nn, _, _, err := n.ReadAll(user1, "", 1, -1)
+		nn, _, _, err := n.ReadAll(s, user1, "", 1, -1)
 		assert.NoError(t, err)
 		namespaces := nn.([]*NamespaceWithLists)
 		assert.NotNil(t, namespaces)
@@ -188,7 +219,7 @@ func TestNamespace_ReadAll(t *testing.T) {
 		n := &Namespace{
 			NamespacesOnly: true,
 		}
-		nn, _, _, err := n.ReadAll(user7, "13,14", 1, -1)
+		nn, _, _, err := n.ReadAll(s, user7, "13,14", 1, -1)
 		assert.NoError(t, err)
 		namespaces := nn.([]*NamespaceWithLists)
 		assert.NotNil(t, namespaces)
@@ -200,7 +231,7 @@ func TestNamespace_ReadAll(t *testing.T) {
 		n := &Namespace{
 			NamespacesOnly: true,
 		}
-		nn, _, _, err := n.ReadAll(user1, "1,w", 1, -1)
+		nn, _, _, err := n.ReadAll(s, user1, "1,w", 1, -1)
 		assert.NoError(t, err)
 		namespaces := nn.([]*NamespaceWithLists)
 		assert.NotNil(t, namespaces)
@@ -211,7 +242,7 @@ func TestNamespace_ReadAll(t *testing.T) {
 		n := &Namespace{
 			IsArchived: true,
 		}
-		nn, _, _, err := n.ReadAll(user1, "", 1, -1)
+		nn, _, _, err := n.ReadAll(s, user1, "", 1, -1)
 		namespaces := nn.([]*NamespaceWithLists)
 		assert.NoError(t, err)
 		assert.NotNil(t, namespaces)
@@ -222,7 +253,7 @@ func TestNamespace_ReadAll(t *testing.T) {
 	})
 	t.Run("no favorites", func(t *testing.T) {
 		n := &Namespace{}
-		nn, _, _, err := n.ReadAll(user11, "", 1, -1)
+		nn, _, _, err := n.ReadAll(s, user11, "", 1, -1)
 		namespaces := nn.([]*NamespaceWithLists)
 		assert.NoError(t, err)
 		// Assert the first namespace is not the favorites namespace
@@ -230,7 +261,7 @@ func TestNamespace_ReadAll(t *testing.T) {
 	})
 	t.Run("no favorite tasks but namespace", func(t *testing.T) {
 		n := &Namespace{}
-		nn, _, _, err := n.ReadAll(user12, "", 1, -1)
+		nn, _, _, err := n.ReadAll(s, user12, "", 1, -1)
 		namespaces := nn.([]*NamespaceWithLists)
 		assert.NoError(t, err)
 		// Assert the first namespace is the favorites namespace and contains lists
@@ -239,7 +270,7 @@ func TestNamespace_ReadAll(t *testing.T) {
 	})
 	t.Run("no saved filters", func(t *testing.T) {
 		n := &Namespace{}
-		nn, _, _, err := n.ReadAll(user11, "", 1, -1)
+		nn, _, _, err := n.ReadAll(s, user11, "", 1, -1)
 		namespaces := nn.([]*NamespaceWithLists)
 		assert.NoError(t, err)
 		// Assert the first namespace is not the favorites namespace

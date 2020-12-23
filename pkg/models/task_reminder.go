@@ -19,6 +19,9 @@ package models
 import (
 	"time"
 
+	"code.vikunja.io/api/pkg/db"
+	"xorm.io/xorm"
+
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/cron"
 	"code.vikunja.io/api/pkg/log"
@@ -44,10 +47,10 @@ type taskUser struct {
 	User *user.User `xorm:"extends"`
 }
 
-func getTaskUsersForTasks(taskIDs []int64) (taskUsers []*taskUser, err error) {
+func getTaskUsersForTasks(s *xorm.Session, taskIDs []int64) (taskUsers []*taskUser, err error) {
 	// Get all creators of tasks
 	creators := make(map[int64]*user.User, len(taskIDs))
-	err = x.
+	err = s.
 		Select("users.id, users.username, users.email, users.name").
 		Join("LEFT", "tasks", "tasks.created_by_id = users.id").
 		In("tasks.id", taskIDs).
@@ -58,13 +61,13 @@ func getTaskUsersForTasks(taskIDs []int64) (taskUsers []*taskUser, err error) {
 		return
 	}
 
-	assignees, err := getRawTaskAssigneesForTasks(taskIDs)
+	assignees, err := getRawTaskAssigneesForTasks(s, taskIDs)
 	if err != nil {
 		return
 	}
 
 	taskMap := make(map[int64]*Task, len(taskIDs))
-	err = x.In("id", taskIDs).Find(&taskMap)
+	err = s.In("id", taskIDs).Find(&taskMap)
 	if err != nil {
 		return
 	}
@@ -106,6 +109,8 @@ func RegisterReminderCron() {
 
 	log.Debugf("[Task Reminder Cron] Timezone is %s", tz)
 
+	s := db.NewSession()
+
 	err := cron.Schedule("* * * * *", func() {
 		// By default, time.Now() includes nanoseconds which we don't save. That results in getting the wrong dates,
 		// so we make sure the time we use to get the reminders don't contain nanoseconds.
@@ -116,7 +121,7 @@ func RegisterReminderCron() {
 		log.Debugf("[Task Reminder Cron] Looking for reminders between %s and %s to send...", now, nextMinute)
 
 		reminders := []*TaskReminder{}
-		err := x.
+		err := s.
 			Where("reminder >= ? and reminder < ?", now.Format(dbFormat), nextMinute.Format(dbFormat)).
 			Find(&reminders)
 		if err != nil {
@@ -136,7 +141,7 @@ func RegisterReminderCron() {
 			taskIDs = append(taskIDs, r.TaskID)
 		}
 
-		users, err := getTaskUsersForTasks(taskIDs)
+		users, err := getTaskUsersForTasks(s, taskIDs)
 		if err != nil {
 			log.Errorf("[Task Reminder Cron] Could not get task users to send them reminders: %s", err)
 			return

@@ -18,10 +18,11 @@ package models
 
 import (
 	"code.vikunja.io/web"
+	"xorm.io/xorm"
 )
 
 // CanCreate checks if the user can create a new team
-func (t *Team) CanCreate(a web.Auth) (bool, error) {
+func (t *Team) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
 	if _, is := a.(*LinkSharing); is {
 		return false, nil
 	}
@@ -31,39 +32,40 @@ func (t *Team) CanCreate(a web.Auth) (bool, error) {
 }
 
 // CanUpdate checks if the user can update a team
-func (t *Team) CanUpdate(a web.Auth) (bool, error) {
-	return t.IsAdmin(a)
+func (t *Team) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
+	return t.IsAdmin(s, a)
 }
 
 // CanDelete checks if a user can delete a team
-func (t *Team) CanDelete(a web.Auth) (bool, error) {
-	return t.IsAdmin(a)
+func (t *Team) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
+	return t.IsAdmin(s, a)
 }
 
 // IsAdmin returns true when the user is admin of a team
-func (t *Team) IsAdmin(a web.Auth) (bool, error) {
+func (t *Team) IsAdmin(s *xorm.Session, a web.Auth) (bool, error) {
 	// Don't do anything if we're deadling with a link share auth here
 	if _, is := a.(*LinkSharing); is {
 		return false, nil
 	}
 
 	// Check if the team exists to be able to return a proper error message if not
-	_, err := GetTeamByID(t.ID)
+	_, err := GetTeamByID(s, t.ID)
 	if err != nil {
 		return false, err
 	}
 
-	return x.Where("team_id = ?", t.ID).
+	return s.Where("team_id = ?", t.ID).
 		And("user_id = ?", a.GetID()).
 		And("admin = ?", true).
 		Get(&TeamMember{})
 }
 
 // CanRead returns true if the user has read access to the team
-func (t *Team) CanRead(a web.Auth) (bool, int, error) {
+func (t *Team) CanRead(s *xorm.Session, a web.Auth) (bool, int, error) {
 	// Check if the user is in the team
 	tm := &TeamMember{}
-	can, err := x.Where("team_id = ?", t.ID).
+	can, err := s.
+		Where("team_id = ?", t.ID).
 		And("user_id = ?", a.GetID()).
 		Get(tm)
 

@@ -24,8 +24,7 @@ import (
 
 // InitTests handles the actual bootstrapping of the test env
 func InitTests() {
-	var err error
-	x, err = db.CreateTestEngine()
+	x, err := db.CreateTestEngine()
 	if err != nil {
 		log.Fatal(err)
 	}

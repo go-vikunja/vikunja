@@ -19,6 +19,8 @@ package v1
 import (
 	"net/http"
 
+	"code.vikunja.io/api/pkg/db"
+
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web/handler"
@@ -43,8 +45,17 @@ func UserConfirmEmail(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "No token provided.")
 	}
 
-	err := user.ConfirmEmail(&emailConfirm)
+	s := db.NewSession()
+	defer s.Close()
+
+	err := user.ConfirmEmail(s, &emailConfirm)
 	if err != nil {
+		_ = s.Rollback()
+		return handler.HandleHTTPError(err, c)
+	}
+
+	if err := s.Commit(); err != nil {
+		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)
 	}
 

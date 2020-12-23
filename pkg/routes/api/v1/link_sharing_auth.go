@@ -19,6 +19,8 @@ package v1
 import (
 	"net/http"
 
+	"code.vikunja.io/api/pkg/db"
+
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/web/handler"
@@ -45,8 +47,18 @@ type LinkShareToken struct {
 // @Router /shares/{share}/auth [post]
 func AuthenticateLinkShare(c echo.Context) error {
 	hash := c.Param("share")
-	share, err := models.GetLinkShareByHash(hash)
+
+	s := db.NewSession()
+	defer s.Close()
+
+	share, err := models.GetLinkShareByHash(s, hash)
 	if err != nil {
+		_ = s.Rollback()
+		return handler.HandleHTTPError(err, c)
+	}
+
+	if err := s.Commit(); err != nil {
+		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)
 	}
 

@@ -34,13 +34,19 @@ func TestCreateUser(t *testing.T) {
 
 	t.Run("normal", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
-		createdUser, err := CreateUser(dummyuser)
+		s := db.NewSession()
+		defer s.Close()
+
+		createdUser, err := CreateUser(s, dummyuser)
 		assert.NoError(t, err)
 		assert.NotZero(t, createdUser.Created)
 	})
 	t.Run("already existing", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
-		_, err := CreateUser(&User{
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := CreateUser(s, &User{
 			Username: "user1",
 			Password: "12345",
 			Email:    "email@example.com",
@@ -50,7 +56,10 @@ func TestCreateUser(t *testing.T) {
 	})
 	t.Run("same email", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
-		_, err := CreateUser(&User{
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := CreateUser(s, &User{
 			Username: "testuser",
 			Password: "12345",
 			Email:    "user1@example.com",
@@ -60,7 +69,10 @@ func TestCreateUser(t *testing.T) {
 	})
 	t.Run("no username", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
-		_, err := CreateUser(&User{
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := CreateUser(s, &User{
 			Username: "",
 			Password: "12345",
 			Email:    "user1@example.com",
@@ -70,7 +82,10 @@ func TestCreateUser(t *testing.T) {
 	})
 	t.Run("no password", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
-		_, err := CreateUser(&User{
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := CreateUser(s, &User{
 			Username: "testuser",
 			Password: "",
 			Email:    "user1@example.com",
@@ -80,7 +95,10 @@ func TestCreateUser(t *testing.T) {
 	})
 	t.Run("no email", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
-		_, err := CreateUser(&User{
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := CreateUser(s, &User{
 			Username: "testuser",
 			Password: "12345",
 			Email:    "",
@@ -90,7 +108,10 @@ func TestCreateUser(t *testing.T) {
 	})
 	t.Run("same email but different issuer", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
-		_, err := CreateUser(&User{
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := CreateUser(s, &User{
 			Username: "somenewuser",
 			Email:    "user1@example.com",
 			Issuer:   "https://some.site",
@@ -100,7 +121,10 @@ func TestCreateUser(t *testing.T) {
 	})
 	t.Run("same subject but different issuer", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
-		_, err := CreateUser(&User{
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := CreateUser(s, &User{
 			Username: "somenewuser",
 			Email:    "somenewuser@example.com",
 			Issuer:   "https://some.site",
@@ -113,25 +137,41 @@ func TestCreateUser(t *testing.T) {
 func TestGetUser(t *testing.T) {
 	t.Run("by name", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
-		theuser, err := GetUser(&User{
-			Username: "user1",
-		})
+		s := db.NewSession()
+		defer s.Close()
+
+		theuser, err := getUser(
+			s,
+			&User{
+				Username: "user1",
+			},
+			false,
+		)
 		assert.NoError(t, err)
 		assert.Equal(t, theuser.ID, int64(1))
 		assert.Empty(t, theuser.Email)
 	})
 	t.Run("by email", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
-		theuser, err := GetUser(&User{
-			Email: "user1@example.com",
-		})
+		s := db.NewSession()
+		defer s.Close()
+
+		theuser, err := getUser(
+			s,
+			&User{
+				Email: "user1@example.com",
+			},
+			false)
 		assert.NoError(t, err)
 		assert.Equal(t, theuser.ID, int64(1))
 		assert.Empty(t, theuser.Email)
 	})
 	t.Run("by id", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
-		theuser, err := GetUserByID(1)
+		s := db.NewSession()
+		defer s.Close()
+
+		theuser, err := GetUserByID(s, 1)
 		assert.NoError(t, err)
 		assert.Equal(t, theuser.ID, int64(1))
 		assert.Equal(t, theuser.Username, "user1")
@@ -139,25 +179,37 @@ func TestGetUser(t *testing.T) {
 	})
 	t.Run("invalid id", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
-		_, err := GetUserByID(99999)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := GetUserByID(s, 99999)
 		assert.Error(t, err)
 		assert.True(t, IsErrUserDoesNotExist(err))
 	})
 	t.Run("nonexistant", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
-		_, err := GetUserByID(0)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := GetUserByID(s, 0)
 		assert.Error(t, err)
 		assert.True(t, IsErrUserDoesNotExist(err))
 	})
 	t.Run("empty name", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
-		_, err := GetUserByUsername("")
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := GetUserByUsername(s, "")
 		assert.Error(t, err)
 		assert.True(t, IsErrUserDoesNotExist(err))
 	})
 	t.Run("with email", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
-		theuser, err := GetUserWithEmail(&User{ID: 1})
+		s := db.NewSession()
+		defer s.Close()
+
+		theuser, err := GetUserWithEmail(s, &User{ID: 1})
 		assert.NoError(t, err)
 		assert.Equal(t, theuser.ID, int64(1))
 		assert.Equal(t, theuser.Username, "user1")
@@ -168,42 +220,63 @@ func TestGetUser(t *testing.T) {
 func TestCheckUserCredentials(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
-		_, err := CheckUserCredentials(&Login{Username: "user1", Password: "1234"})
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := CheckUserCredentials(s, &Login{Username: "user1", Password: "1234"})
 		assert.NoError(t, err)
 	})
 	t.Run("unverified email", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
-		_, err := CheckUserCredentials(&Login{Username: "user5", Password: "1234"})
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := CheckUserCredentials(s, &Login{Username: "user5", Password: "1234"})
 		assert.Error(t, err)
 		assert.True(t, IsErrEmailNotConfirmed(err))
 	})
 	t.Run("wrong password", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
-		_, err := CheckUserCredentials(&Login{Username: "user1", Password: "12345"})
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := CheckUserCredentials(s, &Login{Username: "user1", Password: "12345"})
 		assert.Error(t, err)
 		assert.True(t, IsErrWrongUsernameOrPassword(err))
 	})
 	t.Run("nonexistant user", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
-		_, err := CheckUserCredentials(&Login{Username: "dfstestuu", Password: "1234"})
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := CheckUserCredentials(s, &Login{Username: "dfstestuu", Password: "1234"})
 		assert.Error(t, err)
 		assert.True(t, IsErrWrongUsernameOrPassword(err))
 	})
 	t.Run("empty password", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
-		_, err := CheckUserCredentials(&Login{Username: "user1"})
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := CheckUserCredentials(s, &Login{Username: "user1"})
 		assert.Error(t, err)
 		assert.True(t, IsErrNoUsernamePassword(err))
 	})
 	t.Run("empty username", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
-		_, err := CheckUserCredentials(&Login{Password: "1234"})
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := CheckUserCredentials(s, &Login{Password: "1234"})
 		assert.Error(t, err)
 		assert.True(t, IsErrNoUsernamePassword(err))
 	})
 	t.Run("email", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
-		_, err := CheckUserCredentials(&Login{Username: "user1@example.com", Password: "1234"})
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := CheckUserCredentials(s, &Login{Username: "user1@example.com", Password: "1234"})
 		assert.NoError(t, err)
 	})
 }
@@ -211,7 +284,10 @@ func TestCheckUserCredentials(t *testing.T) {
 func TestUpdateUser(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
-		uuser, err := UpdateUser(&User{
+		s := db.NewSession()
+		defer s.Close()
+
+		uuser, err := UpdateUser(s, &User{
 			ID:       1,
 			Password: "LoremIpsum",
 			Email:    "testing@example.com",
@@ -222,7 +298,10 @@ func TestUpdateUser(t *testing.T) {
 	})
 	t.Run("change username", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
-		uuser, err := UpdateUser(&User{
+		s := db.NewSession()
+		defer s.Close()
+
+		uuser, err := UpdateUser(s, &User{
 			ID:       1,
 			Username: "changedname",
 		})
@@ -232,7 +311,10 @@ func TestUpdateUser(t *testing.T) {
 	})
 	t.Run("nonexistant", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
-		_, err := UpdateUser(&User{
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := UpdateUser(s, &User{
 			ID: 99999,
 		})
 		assert.Error(t, err)
@@ -244,15 +326,20 @@ func TestUpdateUserPassword(t *testing.T) {
 
 	t.Run("normal", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
-		err := UpdateUserPassword(&User{
+		s := db.NewSession()
+		defer s.Close()
+
+		err := UpdateUserPassword(s, &User{
 			ID: 1,
-		}, "12345",
-		)
+		}, "12345")
 		assert.NoError(t, err)
 	})
 	t.Run("nonexistant user", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
-		err := UpdateUserPassword(&User{
+		s := db.NewSession()
+		defer s.Close()
+
+		err := UpdateUserPassword(s, &User{
 			ID: 9999,
 		}, "12345")
 		assert.Error(t, err)
@@ -260,10 +347,12 @@ func TestUpdateUserPassword(t *testing.T) {
 	})
 	t.Run("empty password", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
-		err := UpdateUserPassword(&User{
+		s := db.NewSession()
+		defer s.Close()
+
+		err := UpdateUserPassword(s, &User{
 			ID: 1,
-		}, "",
-		)
+		}, "")
 		assert.Error(t, err)
 		assert.True(t, IsErrEmptyNewPassword(err))
 	})
@@ -272,14 +361,20 @@ func TestUpdateUserPassword(t *testing.T) {
 func TestListUsers(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
-		all, err := ListUsers("user1")
+		s := db.NewSession()
+		defer s.Close()
+
+		all, err := ListUsers(s, "user1")
 		assert.NoError(t, err)
 		assert.True(t, len(all) > 0)
 		assert.Equal(t, all[0].Username, "user1")
 	})
 	t.Run("all users", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
-		all, err := ListUsers("")
+		s := db.NewSession()
+		defer s.Close()
+
+		all, err := ListUsers(s, "")
 		assert.NoError(t, err)
 		assert.Len(t, all, 14)
 	})
@@ -288,39 +383,51 @@ func TestListUsers(t *testing.T) {
 func TestUserPasswordReset(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
 		reset := &PasswordReset{
 			Token:       "passwordresettesttoken",
 			NewPassword: "12345",
 		}
-		err := ResetPassword(reset)
+		err := ResetPassword(s, reset)
 		assert.NoError(t, err)
 	})
 	t.Run("without password", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
 		reset := &PasswordReset{
 			Token: "passwordresettesttoken",
 		}
-		err := ResetPassword(reset)
+		err := ResetPassword(s, reset)
 		assert.Error(t, err)
 		assert.True(t, IsErrNoUsernamePassword(err))
 	})
 	t.Run("empty token", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
 		reset := &PasswordReset{
 			Token:       "somethingsomething",
 			NewPassword: "12345",
 		}
-		err := ResetPassword(reset)
+		err := ResetPassword(s, reset)
 		assert.Error(t, err)
 		assert.True(t, IsErrInvalidPasswordResetToken(err))
 	})
 	t.Run("wrong token", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
 		reset := &PasswordReset{
 			Token:       "somethingsomething",
 			NewPassword: "12345",
 		}
-		err := ResetPassword(reset)
+		err := ResetPassword(s, reset)
 		assert.Error(t, err)
 		assert.True(t, IsErrInvalidPasswordResetToken(err))
 	})

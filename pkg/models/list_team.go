@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"code.vikunja.io/web"
+	"xorm.io/xorm"
 )
 
 // TeamList defines the relation between a team and a list
@@ -68,7 +69,7 @@ type TeamWithRight struct {
 // @Failure 403 {object} web.HTTPError "The user does not have access to the list"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{id}/teams [put]
-func (tl *TeamList) Create(a web.Auth) (err error) {
+func (tl *TeamList) Create(s *xorm.Session, a web.Auth) (err error) {
 
 	// Check if the rights are valid
 	if err = tl.Right.isValid(); err != nil {
@@ -76,19 +77,19 @@ func (tl *TeamList) Create(a web.Auth) (err error) {
 	}
 
 	// Check if the team exists
-	_, err = GetTeamByID(tl.TeamID)
+	_, err = GetTeamByID(s, tl.TeamID)
 	if err != nil {
 		return
 	}
 
 	// Check if the list exists
-	l := &List{ID: tl.ListID}
-	if err := l.GetSimpleByID(); err != nil {
+	l, err := GetListSimpleByID(s, tl.ListID)
+	if err != nil {
 		return err
 	}
 
 	// Check if the team is already on the list
-	exists, err := x.Where("team_id = ?", tl.TeamID).
+	exists, err := s.Where("team_id = ?", tl.TeamID).
 		And("list_id = ?", tl.ListID).
 		Get(&TeamList{})
 	if err != nil {
@@ -99,12 +100,12 @@ func (tl *TeamList) Create(a web.Auth) (err error) {
 	}
 
 	// Insert the new team
-	_, err = x.Insert(tl)
+	_, err = s.Insert(tl)
 	if err != nil {
 		return err
 	}
 
-	err = updateListLastUpdated(l)
+	err = updateListLastUpdated(s, l)
 	return
 }
 
@@ -121,16 +122,17 @@ func (tl *TeamList) Create(a web.Auth) (err error) {
 // @Failure 404 {object} web.HTTPError "Team or list does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{listID}/teams/{teamID} [delete]
-func (tl *TeamList) Delete() (err error) {
+func (tl *TeamList) Delete(s *xorm.Session) (err error) {
 
 	// Check if the team exists
-	_, err = GetTeamByID(tl.TeamID)
+	_, err = GetTeamByID(s, tl.TeamID)
 	if err != nil {
 		return
 	}
 
 	// Check if the team has access to the list
-	has, err := x.Where("team_id = ? AND list_id = ?", tl.TeamID, tl.ListID).
+	has, err := s.
+		Where("team_id = ? AND list_id = ?", tl.TeamID, tl.ListID).
 		Get(&TeamList{})
 	if err != nil {
 		return
@@ -140,14 +142,14 @@ func (tl *TeamList) Delete() (err error) {
 	}
 
 	// Delete the relation
-	_, err = x.Where("team_id = ?", tl.TeamID).
+	_, err = s.Where("team_id = ?", tl.TeamID).
 		And("list_id = ?", tl.ListID).
 		Delete(TeamList{})
 	if err != nil {
 		return err
 	}
 
-	err = updateListLastUpdated(&List{ID: tl.ListID})
+	err = updateListLastUpdated(s, &List{ID: tl.ListID})
 	return
 }
 
@@ -166,10 +168,10 @@ func (tl *TeamList) Delete() (err error) {
 // @Failure 403 {object} web.HTTPError "No right to see the list."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{id}/teams [get]
-func (tl *TeamList) ReadAll(a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
+func (tl *TeamList) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
 	// Check if the user can read the namespace
 	l := &List{ID: tl.ListID}
-	canRead, _, err := l.CanRead(a)
+	canRead, _, err := l.CanRead(s, a)
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -181,7 +183,7 @@ func (tl *TeamList) ReadAll(a web.Auth, search string, page int, perPage int) (r
 
 	// Get the teams
 	all := []*TeamWithRight{}
-	query := x.
+	query := s.
 		Table("teams").
 		Join("INNER", "team_list", "team_id = teams.id").
 		Where("team_list.list_id = ?", tl.ListID).
@@ -199,12 +201,12 @@ func (tl *TeamList) ReadAll(a web.Auth, search string, page int, perPage int) (r
 		teams = append(teams, &t.Team)
 	}
 
-	err = addMoreInfoToTeams(teams)
+	err = addMoreInfoToTeams(s, teams)
 	if err != nil {
 		return
 	}
 
-	totalItems, err = x.
+	totalItems, err = s.
 		Table("teams").
 		Join("INNER", "team_list", "team_id = teams.id").
 		Where("team_list.list_id = ?", tl.ListID).
@@ -232,14 +234,14 @@ func (tl *TeamList) ReadAll(a web.Auth, search string, page int, perPage int) (r
 // @Failure 404 {object} web.HTTPError "Team or list does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{listID}/teams/{teamID} [post]
-func (tl *TeamList) Update() (err error) {
+func (tl *TeamList) Update(s *xorm.Session) (err error) {
 
 	// Check if the right is valid
 	if err := tl.Right.isValid(); err != nil {
 		return err
 	}
 
-	_, err = x.
+	_, err = s.
 		Where("list_id = ? AND team_id = ?", tl.ListID, tl.TeamID).
 		Cols("right").
 		Update(tl)
@@ -247,6 +249,6 @@ func (tl *TeamList) Update() (err error) {
 		return err
 	}
 
-	err = updateListLastUpdated(&List{ID: tl.ListID})
+	err = updateListLastUpdated(s, &List{ID: tl.ListID})
 	return
 }

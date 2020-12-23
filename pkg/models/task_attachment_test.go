@@ -33,11 +33,14 @@ import (
 func TestTaskAttachment_ReadOne(t *testing.T) {
 	t.Run("Normal File", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
 		files.InitTestFileFixtures(t)
 		ta := &TaskAttachment{
 			ID: 1,
 		}
-		err := ta.ReadOne()
+		err := ta.ReadOne(s)
 		assert.NoError(t, err)
 		assert.NotNil(t, ta.File)
 		assert.True(t, ta.File.ID == ta.FileID && ta.FileID != 0)
@@ -54,21 +57,27 @@ func TestTaskAttachment_ReadOne(t *testing.T) {
 	})
 	t.Run("Nonexisting Attachment", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
 		files.InitTestFileFixtures(t)
 		ta := &TaskAttachment{
 			ID: 9999,
 		}
-		err := ta.ReadOne()
+		err := ta.ReadOne(s)
 		assert.Error(t, err)
 		assert.True(t, IsErrTaskAttachmentDoesNotExist(err))
 	})
 	t.Run("Existing Attachment, Nonexisting File", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
 		files.InitTestFileFixtures(t)
 		ta := &TaskAttachment{
 			ID: 2,
 		}
-		err := ta.ReadOne()
+		err := ta.ReadOne(s)
 		assert.Error(t, err)
 		assert.EqualError(t, err, "file 9999 does not exist")
 	})
@@ -94,6 +103,9 @@ func (t *testfile) Close() error {
 
 func TestTaskAttachment_NewAttachment(t *testing.T) {
 	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
 	files.InitTestFileFixtures(t)
 	// Assert the file is being stored correctly
 	ta := TaskAttachment{
@@ -104,7 +116,7 @@ func TestTaskAttachment_NewAttachment(t *testing.T) {
 	}
 	testuser := &user.User{ID: 1}
 
-	err := ta.NewAttachment(tf, "testfile", 100, testuser)
+	err := ta.NewAttachment(s, tf, "testfile", 100, testuser)
 	assert.NoError(t, err)
 	assert.NotEqual(t, 0, ta.FileID)
 	_, err = files.FileStat("files/" + strconv.FormatInt(ta.FileID, 10))
@@ -125,9 +137,12 @@ func TestTaskAttachment_NewAttachment(t *testing.T) {
 
 func TestTaskAttachment_ReadAll(t *testing.T) {
 	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
 	files.InitTestFileFixtures(t)
 	ta := &TaskAttachment{TaskID: 1}
-	as, _, _, err := ta.ReadAll(&user.User{ID: 1}, "", 0, 50)
+	as, _, _, err := ta.ReadAll(s, &user.User{ID: 1}, "", 0, 50)
 	attachments, _ := as.([]*TaskAttachment)
 	assert.NoError(t, err)
 	assert.Len(t, attachments, 2)
@@ -136,10 +151,13 @@ func TestTaskAttachment_ReadAll(t *testing.T) {
 
 func TestTaskAttachment_Delete(t *testing.T) {
 	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
 	files.InitTestFileFixtures(t)
 	t.Run("Normal", func(t *testing.T) {
 		ta := &TaskAttachment{ID: 1}
-		err := ta.Delete()
+		err := ta.Delete(s)
 		assert.NoError(t, err)
 		// Check if the file itself was deleted
 		_, err = files.FileStat("/1") // The new file has the id 2 since it's the second attachment
@@ -148,14 +166,14 @@ func TestTaskAttachment_Delete(t *testing.T) {
 	t.Run("Nonexisting", func(t *testing.T) {
 		files.InitTestFileFixtures(t)
 		ta := &TaskAttachment{ID: 9999}
-		err := ta.Delete()
+		err := ta.Delete(s)
 		assert.Error(t, err)
 		assert.True(t, IsErrTaskAttachmentDoesNotExist(err))
 	})
 	t.Run("Existing attachment, nonexisting file", func(t *testing.T) {
 		files.InitTestFileFixtures(t)
 		ta := &TaskAttachment{ID: 2}
-		err := ta.Delete()
+		err := ta.Delete(s)
 		assert.NoError(t, err)
 	})
 }
@@ -165,15 +183,21 @@ func TestTaskAttachment_Rights(t *testing.T) {
 	t.Run("Can Read", func(t *testing.T) {
 		t.Run("Allowed", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+
 			ta := &TaskAttachment{TaskID: 1}
-			can, _, err := ta.CanRead(u)
+			can, _, err := ta.CanRead(s, u)
 			assert.NoError(t, err)
 			assert.True(t, can)
 		})
 		t.Run("Forbidden", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+
 			ta := &TaskAttachment{TaskID: 14}
-			can, _, err := ta.CanRead(u)
+			can, _, err := ta.CanRead(s, u)
 			assert.NoError(t, err)
 			assert.False(t, can)
 		})
@@ -181,22 +205,31 @@ func TestTaskAttachment_Rights(t *testing.T) {
 	t.Run("Can Delete", func(t *testing.T) {
 		t.Run("Allowed", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+
 			ta := &TaskAttachment{TaskID: 1}
-			can, err := ta.CanDelete(u)
+			can, err := ta.CanDelete(s, u)
 			assert.NoError(t, err)
 			assert.True(t, can)
 		})
 		t.Run("Forbidden, no access", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+
 			ta := &TaskAttachment{TaskID: 14}
-			can, err := ta.CanDelete(u)
+			can, err := ta.CanDelete(s, u)
 			assert.NoError(t, err)
 			assert.False(t, can)
 		})
 		t.Run("Forbidden, shared read only", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+
 			ta := &TaskAttachment{TaskID: 15}
-			can, err := ta.CanDelete(u)
+			can, err := ta.CanDelete(s, u)
 			assert.NoError(t, err)
 			assert.False(t, can)
 		})
@@ -204,22 +237,31 @@ func TestTaskAttachment_Rights(t *testing.T) {
 	t.Run("Can Create", func(t *testing.T) {
 		t.Run("Allowed", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+
 			ta := &TaskAttachment{TaskID: 1}
-			can, err := ta.CanCreate(u)
+			can, err := ta.CanCreate(s, u)
 			assert.NoError(t, err)
 			assert.True(t, can)
 		})
 		t.Run("Forbidden, no access", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+
 			ta := &TaskAttachment{TaskID: 14}
-			can, err := ta.CanCreate(u)
+			can, err := ta.CanCreate(s, u)
 			assert.NoError(t, err)
 			assert.False(t, can)
 		})
 		t.Run("Forbidden, shared read only", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+
 			ta := &TaskAttachment{TaskID: 15}
-			can, err := ta.CanCreate(u)
+			can, err := ta.CanCreate(s, u)
 			assert.NoError(t, err)
 			assert.False(t, can)
 		})

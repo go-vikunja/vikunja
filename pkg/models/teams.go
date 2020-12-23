@@ -19,6 +19,8 @@ package models
 import (
 	"time"
 
+	"xorm.io/xorm"
+
 	"code.vikunja.io/api/pkg/metrics"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
@@ -52,10 +54,6 @@ type Team struct {
 // TableName makes beautiful table names
 func (Team) TableName() string {
 	return "teams"
-}
-
-// AfterLoad gets the created by user object
-func (t *Team) AfterLoad() {
 }
 
 // TeamMember defines the relationship between a user and a team
@@ -92,14 +90,14 @@ type TeamUser struct {
 }
 
 // GetTeamByID gets a team by its ID
-func GetTeamByID(id int64) (team *Team, err error) {
+func GetTeamByID(s *xorm.Session, id int64) (team *Team, err error) {
 	if id < 1 {
 		return team, ErrTeamDoesNotExist{id}
 	}
 
 	t := Team{}
 
-	exists, err := x.
+	exists, err := s.
 		Where("id = ?", id).
 		Get(&t)
 	if err != nil {
@@ -110,7 +108,7 @@ func GetTeamByID(id int64) (team *Team, err error) {
 	}
 
 	teamSlice := []*Team{&t}
-	err = addMoreInfoToTeams(teamSlice)
+	err = addMoreInfoToTeams(s, teamSlice)
 	if err != nil {
 		return
 	}
@@ -120,7 +118,7 @@ func GetTeamByID(id int64) (team *Team, err error) {
 	return
 }
 
-func addMoreInfoToTeams(teams []*Team) (err error) {
+func addMoreInfoToTeams(s *xorm.Session, teams []*Team) (err error) {
 	// Put the teams in a map to make assigning more info to it more efficient
 	teamMap := make(map[int64]*Team, len(teams))
 	var teamIDs []int64
@@ -133,7 +131,8 @@ func addMoreInfoToTeams(teams []*Team) (err error) {
 
 	// Get all owners and team members
 	users := make(map[int64]*TeamUser)
-	err = x.Select("*").
+	err = s.
+		Select("*").
 		Table("users").
 		Join("LEFT", "team_members", "team_members.user_id = users.id").
 		Join("LEFT", "teams", "team_members.team_id = teams.id").
@@ -178,8 +177,8 @@ func addMoreInfoToTeams(teams []*Team) (err error) {
 // @Failure 403 {object} web.HTTPError "The user does not have access to the team"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /teams/{id} [get]
-func (t *Team) ReadOne() (err error) {
-	team, err := GetTeamByID(t.ID)
+func (t *Team) ReadOne(s *xorm.Session) (err error) {
+	team, err := GetTeamByID(s, t.ID)
 	if team != nil {
 		*t = *team
 	}
@@ -199,7 +198,7 @@ func (t *Team) ReadOne() (err error) {
 // @Success 200 {array} models.Team "The teams."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /teams [get]
-func (t *Team) ReadAll(a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
+func (t *Team) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
 	if _, is := a.(*LinkSharing); is {
 		return nil, 0, 0, ErrGenericForbidden{}
 	}
@@ -207,7 +206,7 @@ func (t *Team) ReadAll(a web.Auth, search string, page int, perPage int) (result
 	limit, start := getLimitFromPageIndex(page, perPage)
 
 	all := []*Team{}
-	query := x.Select("teams.*").
+	query := s.Select("teams.*").
 		Table("teams").
 		Join("INNER", "team_members", "team_members.team_id = teams.id").
 		Where("team_members.user_id = ?", a.GetID()).
@@ -220,12 +219,12 @@ func (t *Team) ReadAll(a web.Auth, search string, page int, perPage int) (result
 		return nil, 0, 0, err
 	}
 
-	err = addMoreInfoToTeams(all)
+	err = addMoreInfoToTeams(s, all)
 	if err != nil {
 		return nil, 0, 0, err
 	}
 
-	numberOfTotalItems, err = x.
+	numberOfTotalItems, err = s.
 		Table("teams").
 		Join("INNER", "team_members", "team_members.team_id = teams.id").
 		Where("team_members.user_id = ?", a.GetID()).
@@ -246,7 +245,7 @@ func (t *Team) ReadAll(a web.Auth, search string, page int, perPage int) (result
 // @Failure 400 {object} web.HTTPError "Invalid team object provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /teams [put]
-func (t *Team) Create(a web.Auth) (err error) {
+func (t *Team) Create(s *xorm.Session, a web.Auth) (err error) {
 	doer, err := user.GetFromAuth(a)
 	if err != nil {
 		return err
@@ -260,14 +259,14 @@ func (t *Team) Create(a web.Auth) (err error) {
 	t.CreatedByID = doer.ID
 	t.CreatedBy = doer
 
-	_, err = x.Insert(t)
+	_, err = s.Insert(t)
 	if err != nil {
 		return
 	}
 
 	// Insert the current user as member and admin
 	tm := TeamMember{TeamID: t.ID, Username: doer.Username, Admin: true}
-	if err = tm.Create(doer); err != nil {
+	if err = tm.Create(s, doer); err != nil {
 		return err
 	}
 
@@ -286,28 +285,28 @@ func (t *Team) Create(a web.Auth) (err error) {
 // @Failure 400 {object} web.HTTPError "Invalid team object provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /teams/{id} [delete]
-func (t *Team) Delete() (err error) {
+func (t *Team) Delete(s *xorm.Session) (err error) {
 
 	// Delete the team
-	_, err = x.ID(t.ID).Delete(&Team{})
+	_, err = s.ID(t.ID).Delete(&Team{})
 	if err != nil {
 		return
 	}
 
 	// Delete team members
-	_, err = x.Where("team_id = ?", t.ID).Delete(&TeamMember{})
+	_, err = s.Where("team_id = ?", t.ID).Delete(&TeamMember{})
 	if err != nil {
 		return
 	}
 
 	// Delete team <-> namespace relations
-	_, err = x.Where("team_id = ?", t.ID).Delete(&TeamNamespace{})
+	_, err = s.Where("team_id = ?", t.ID).Delete(&TeamNamespace{})
 	if err != nil {
 		return
 	}
 
 	// Delete team <-> lists relations
-	_, err = x.Where("team_id = ?", t.ID).Delete(&TeamList{})
+	_, err = s.Where("team_id = ?", t.ID).Delete(&TeamList{})
 	if err != nil {
 		return
 	}
@@ -329,25 +328,25 @@ func (t *Team) Delete() (err error) {
 // @Failure 400 {object} web.HTTPError "Invalid team object provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /teams/{id} [post]
-func (t *Team) Update() (err error) {
+func (t *Team) Update(s *xorm.Session) (err error) {
 	// Check if we have a name
 	if t.Name == "" {
 		return ErrTeamNameCannotBeEmpty{}
 	}
 
 	// Check if the team exists
-	_, err = GetTeamByID(t.ID)
+	_, err = GetTeamByID(s, t.ID)
 	if err != nil {
 		return
 	}
 
-	_, err = x.ID(t.ID).Update(t)
+	_, err = s.ID(t.ID).Update(t)
 	if err != nil {
 		return
 	}
 
 	// Get the newly updated team
-	team, err := GetTeamByID(t.ID)
+	team, err := GetTeamByID(s, t.ID)
 	if team != nil {
 		*t = *team
 	}

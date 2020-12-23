@@ -24,6 +24,7 @@ import (
 	"strings"
 	"time"
 
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/initialize"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
@@ -31,6 +32,7 @@ import (
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
+	"xorm.io/xorm"
 )
 
 var (
@@ -91,13 +93,13 @@ func getPasswordFromFlagOrInput() (pw string) {
 	return
 }
 
-func getUserFromArg(arg string) *user.User {
+func getUserFromArg(s *xorm.Session, arg string) *user.User {
 	id, err := strconv.ParseInt(arg, 10, 64)
 	if err != nil {
 		log.Fatalf("Invalid user id: %s", err)
 	}
 
-	u, err := user.GetUserByID(id)
+	u, err := user.GetUserByID(s, id)
 	if err != nil {
 		log.Fatalf("Could not get user: %s", err)
 	}
@@ -116,8 +118,16 @@ var userListCmd = &cobra.Command{
 		initialize.FullInit()
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		users, err := user.ListUsers("")
+		s := db.NewSession()
+		defer s.Close()
+
+		users, err := user.ListUsers(s, "")
 		if err != nil {
+			_ = s.Rollback()
+			log.Fatalf("Error getting users: %s", err)
+		}
+
+		if err := s.Commit(); err != nil {
 			log.Fatalf("Error getting users: %s", err)
 		}
 
@@ -153,19 +163,28 @@ var userCreateCmd = &cobra.Command{
 		initialize.FullInit()
 	},
 	Run: func(cmd *cobra.Command, args []string) {
+		s := db.NewSession()
+		defer s.Close()
+
 		u := &user.User{
 			Username: userFlagUsername,
 			Email:    userFlagEmail,
 			Password: getPasswordFromFlagOrInput(),
 		}
-		newUser, err := user.CreateUser(u)
+		newUser, err := user.CreateUser(s, u)
 		if err != nil {
+			_ = s.Rollback()
 			log.Fatalf("Error creating new user: %s", err)
 		}
 
-		err = models.CreateNewNamespaceForUser(newUser)
+		err = models.CreateNewNamespaceForUser(s, newUser)
 		if err != nil {
+			_ = s.Rollback()
 			log.Fatalf("Error creating new namespace for user: %s", err)
+		}
+
+		if err := s.Commit(); err != nil {
+			log.Fatalf("Error saving everything: %s", err)
 		}
 
 		fmt.Printf("\nUser was created successfully.\n")
@@ -180,7 +199,10 @@ var userUpdateCmd = &cobra.Command{
 		initialize.FullInit()
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		u := getUserFromArg(args[0])
+		s := db.NewSession()
+		defer s.Close()
+
+		u := getUserFromArg(s, args[0])
 
 		if userFlagUsername != "" {
 			u.Username = userFlagUsername
@@ -192,9 +214,14 @@ var userUpdateCmd = &cobra.Command{
 			u.AvatarProvider = userFlagAvatar
 		}
 
-		_, err := user.UpdateUser(u)
+		_, err := user.UpdateUser(s, u)
 		if err != nil {
+			_ = s.Rollback()
 			log.Fatalf("Error updating the user: %s", err)
+		}
+
+		if err := s.Commit(); err != nil {
+			log.Fatalf("Error saving everything: %s", err)
 		}
 
 		fmt.Println("User updated successfully.")
@@ -209,21 +236,30 @@ var userResetPasswordCmd = &cobra.Command{
 	},
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		u := getUserFromArg(args[0])
+		s := db.NewSession()
+		defer s.Close()
+
+		u := getUserFromArg(s, args[0])
 
 		// By default we reset as usual, only with specific flag directly.
 		if userFlagResetPasswordDirectly {
-			err := user.UpdateUserPassword(u, getPasswordFromFlagOrInput())
+			err := user.UpdateUserPassword(s, u, getPasswordFromFlagOrInput())
 			if err != nil {
+				_ = s.Rollback()
 				log.Fatalf("Could not update user password: %s", err)
 			}
 			fmt.Println("Password updated successfully.")
 		} else {
-			err := user.RequestUserPasswordResetToken(u)
+			err := user.RequestUserPasswordResetToken(s, u)
 			if err != nil {
+				_ = s.Rollback()
 				log.Fatalf("Could not send password reset email: %s", err)
 			}
 			fmt.Println("Password reset email sent successfully.")
+		}
+
+		if err := s.Commit(); err != nil {
+			log.Fatalf("Could not send password reset email: %s", err)
 		}
 	},
 }
@@ -236,7 +272,10 @@ var userChangeEnabledCmd = &cobra.Command{
 	},
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		u := getUserFromArg(args[0])
+		s := db.NewSession()
+		defer s.Close()
+
+		u := getUserFromArg(s, args[0])
 
 		if userFlagEnableUser {
 			u.IsActive = true
@@ -245,9 +284,14 @@ var userChangeEnabledCmd = &cobra.Command{
 		} else {
 			u.IsActive = !u.IsActive
 		}
-		_, err := user.UpdateUser(u)
+		_, err := user.UpdateUser(s, u)
 		if err != nil {
+			_ = s.Rollback()
 			log.Fatalf("Could not enable the user")
+		}
+
+		if err := s.Commit(); err != nil {
+			log.Fatalf("Error saving everything: %s", err)
 		}
 
 		fmt.Printf("User status successfully changed, user is now active: %t.\n", u.IsActive)

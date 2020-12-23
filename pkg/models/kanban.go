@@ -97,14 +97,14 @@ func getDefaultBucket(s *xorm.Session, listID int64) (bucket *Bucket, err error)
 // @Success 200 {array} models.Bucket "The buckets with their tasks"
 // @Failure 500 {object} models.Message "Internal server error"
 // @Router /lists/{id}/buckets [get]
-func (b *Bucket) ReadAll(auth web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
+func (b *Bucket) ReadAll(s *xorm.Session, auth web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
 
 	// Note: I'm ignoring pagination for now since I've yet to figure out a way on how to make it work
 	// I'll probably just don't do it and instead make individual tasks archivable.
 
 	// Get all buckets for this list
 	buckets := []*Bucket{}
-	err = x.Where("list_id = ?", b.ListID).Find(&buckets)
+	err = s.Where("list_id = ?", b.ListID).Find(&buckets)
 	if err != nil {
 		return
 	}
@@ -119,7 +119,7 @@ func (b *Bucket) ReadAll(auth web.Auth, search string, page int, perPage int) (r
 
 	// Get all users
 	users := make(map[int64]*user.User)
-	err = x.In("id", userIDs).Find(&users)
+	err = s.In("id", userIDs).Find(&users)
 	if err != nil {
 		return
 	}
@@ -132,7 +132,7 @@ func (b *Bucket) ReadAll(auth web.Auth, search string, page int, perPage int) (r
 	b.TaskCollection.ListID = b.ListID
 	b.TaskCollection.OrderBy = []string{string(orderAscending)}
 	b.TaskCollection.SortBy = []string{taskPropertyPosition}
-	ts, _, _, err := b.TaskCollection.ReadAll(auth, "", -1, 0)
+	ts, _, _, err := b.TaskCollection.ReadAll(s, auth, "", -1, 0)
 	if err != nil {
 		return
 	}
@@ -168,10 +168,10 @@ func (b *Bucket) ReadAll(auth web.Auth, search string, page int, perPage int) (r
 // @Failure 404 {object} web.HTTPError "The list does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{id}/buckets [put]
-func (b *Bucket) Create(a web.Auth) (err error) {
+func (b *Bucket) Create(s *xorm.Session, a web.Auth) (err error) {
 	b.CreatedByID = a.GetID()
 
-	_, err = x.Insert(b)
+	_, err = s.Insert(b)
 	return
 }
 
@@ -190,8 +190,8 @@ func (b *Bucket) Create(a web.Auth) (err error) {
 // @Failure 404 {object} web.HTTPError "The bucket does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{listID}/buckets/{bucketID} [post]
-func (b *Bucket) Update() (err error) {
-	_, err = x.Where("id = ?", b.ID).Update(b)
+func (b *Bucket) Update(s *xorm.Session) (err error) {
+	_, err = s.Where("id = ?", b.ID).Update(b)
 	return
 }
 
@@ -208,14 +208,11 @@ func (b *Bucket) Update() (err error) {
 // @Failure 404 {object} web.HTTPError "The bucket does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{listID}/buckets/{bucketID} [delete]
-func (b *Bucket) Delete() (err error) {
-
-	s := x.NewSession()
+func (b *Bucket) Delete(s *xorm.Session) (err error) {
 
 	// Prevent removing the last bucket
 	total, err := s.Where("list_id = ?", b.ListID).Count(&Bucket{})
 	if err != nil {
-		_ = s.Rollback()
 		return
 	}
 	if total <= 1 {
@@ -228,23 +225,19 @@ func (b *Bucket) Delete() (err error) {
 	// Remove the bucket itself
 	_, err = s.Where("id = ?", b.ID).Delete(&Bucket{})
 	if err != nil {
-		_ = s.Rollback()
 		return
 	}
 
 	// Get the default bucket
 	defaultBucket, err := getDefaultBucket(s, b.ListID)
 	if err != nil {
-		_ = s.Rollback()
 		return
 	}
 
 	// Remove all associations of tasks to that bucket
-	_, err = s.Where("bucket_id = ?", b.ID).Cols("bucket_id").Update(&Task{BucketID: defaultBucket.ID})
-	if err != nil {
-		_ = s.Rollback()
-		return
-	}
-
-	return s.Commit()
+	_, err = s.
+		Where("bucket_id = ?", b.ID).
+		Cols("bucket_id").
+		Update(&Task{BucketID: defaultBucket.ID})
+	return
 }

@@ -19,6 +19,7 @@ package background
 import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/web"
+	"xorm.io/xorm"
 )
 
 // Image represents an image which can be used as a list background
@@ -33,7 +34,7 @@ type Image struct {
 // Provider represents something that is able to get a list of images and set one of them as background
 type Provider interface {
 	// Search is used to either return a pre-defined list of Image or let the user search for an image
-	Search(search string, page int64) (result []*Image, err error)
+	Search(s *xorm.Session, search string, page int64) (result []*Image, err error)
 	// Set sets an image which was most likely previously obtained by Search as list background
-	Set(image *Image, list *models.List, auth web.Auth) (err error)
+	Set(s *xorm.Session, image *Image, list *models.List, auth web.Auth) (err error)
 }

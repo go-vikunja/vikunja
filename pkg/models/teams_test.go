@@ -32,11 +32,16 @@ func TestTeam_Create(t *testing.T) {
 	}
 	t.Run("normal", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
 		team := &Team{
 			Name:        "Testteam293",
 			Description: "Lorem Ispum",
 		}
-		err := team.Create(doer)
+		err := team.Create(s, doer)
+		assert.NoError(t, err)
+		err = s.Commit()
 		assert.NoError(t, err)
 		db.AssertExists(t, "teams", map[string]interface{}{
 			"id":          team.ID,
@@ -46,8 +51,11 @@ func TestTeam_Create(t *testing.T) {
 	})
 	t.Run("empty name", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
 		team := &Team{}
-		err := team.Create(doer)
+		err := team.Create(s, doer)
 		assert.Error(t, err)
 		assert.True(t, IsErrTeamNameCannotBeEmpty(err))
 	})
@@ -56,8 +64,11 @@ func TestTeam_Create(t *testing.T) {
 func TestTeam_ReadOne(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
 		team := &Team{ID: 1}
-		err := team.ReadOne()
+		err := team.ReadOne(s)
 		assert.NoError(t, err)
 		assert.Equal(t, "testteam1", team.Name)
 		assert.Equal(t, "Lorem Ipsum", team.Description)
@@ -66,15 +77,21 @@ func TestTeam_ReadOne(t *testing.T) {
 	})
 	t.Run("invalid id", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
 		team := &Team{ID: -1}
-		err := team.ReadOne()
+		err := team.ReadOne(s)
 		assert.Error(t, err)
 		assert.True(t, IsErrTeamDoesNotExist(err))
 	})
 	t.Run("nonexisting", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
 		team := &Team{ID: 99999}
-		err := team.ReadOne()
+		err := team.ReadOne(s)
 		assert.Error(t, err)
 		assert.True(t, IsErrTeamDoesNotExist(err))
 	})
@@ -83,23 +100,31 @@ func TestTeam_ReadOne(t *testing.T) {
 func TestTeam_ReadAll(t *testing.T) {
 	doer := &user.User{ID: 1}
 	t.Run("normal", func(t *testing.T) {
+		s := db.NewSession()
+		defer s.Close()
+
 		team := &Team{}
-		ts, _, _, err := team.ReadAll(doer, "", 1, 50)
+		teams, _, _, err := team.ReadAll(s, doer, "", 1, 50)
 		assert.NoError(t, err)
-		assert.Equal(t, reflect.TypeOf(ts).Kind(), reflect.Slice)
-		s := reflect.ValueOf(ts)
-		assert.Equal(t, 8, s.Len())
+		assert.Equal(t, reflect.TypeOf(teams).Kind(), reflect.Slice)
+		ts := reflect.ValueOf(teams)
+		assert.Equal(t, 8, ts.Len())
 	})
 }
 
 func TestTeam_Update(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
 		team := &Team{
 			ID:   1,
 			Name: "SomethingNew",
 		}
-		err := team.Update()
+		err := team.Update(s)
+		assert.NoError(t, err)
+		err = s.Commit()
 		assert.NoError(t, err)
 		db.AssertExists(t, "teams", map[string]interface{}{
 			"id":   team.ID,
@@ -108,21 +133,27 @@ func TestTeam_Update(t *testing.T) {
 	})
 	t.Run("empty name", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
 		team := &Team{
 			ID:   1,
 			Name: "",
 		}
-		err := team.Update()
+		err := team.Update(s)
 		assert.Error(t, err)
 		assert.True(t, IsErrTeamNameCannotBeEmpty(err))
 	})
 	t.Run("nonexisting", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
 		team := &Team{
 			ID:   9999,
 			Name: "SomethingNew",
 		}
-		err := team.Update()
+		err := team.Update(s)
 		assert.Error(t, err)
 		assert.True(t, IsErrTeamDoesNotExist(err))
 	})
@@ -131,10 +162,15 @@ func TestTeam_Update(t *testing.T) {
 func TestTeam_Delete(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
 		team := &Team{
 			ID: 1,
 		}
-		err := team.Delete()
+		err := team.Delete(s)
+		assert.NoError(t, err)
+		err = s.Commit()
 		assert.NoError(t, err)
 		db.AssertMissing(t, "teams", map[string]interface{}{
 			"id": 1,

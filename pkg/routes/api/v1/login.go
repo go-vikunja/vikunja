@@ -19,6 +19,8 @@ package v1
 import (
 	"net/http"
 
+	"code.vikunja.io/api/pkg/db"
+
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
 	user2 "code.vikunja.io/api/pkg/user"
@@ -45,25 +47,36 @@ func Login(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, models.Message{Message: "Please provide a username and password."})
 	}
 
+	s := db.NewSession()
+	defer s.Close()
+
 	// Check user
-	user, err := user2.CheckUserCredentials(&u)
+	user, err := user2.CheckUserCredentials(s, &u)
 	if err != nil {
+		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)
 	}
 
-	totpEnabled, err := user2.TOTPEnabledForUser(user)
+	totpEnabled, err := user2.TOTPEnabledForUser(s, user)
 	if err != nil {
+		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)
 	}
 
 	if totpEnabled {
-		_, err = user2.ValidateTOTPPasscode(&user2.TOTPPasscode{
+		_, err = user2.ValidateTOTPPasscode(s, &user2.TOTPPasscode{
 			User:     user,
 			Passcode: u.TOTPPasscode,
 		})
 		if err != nil {
+			_ = s.Rollback()
 			return handler.HandleHTTPError(err, c)
 		}
+	}
+
+	if err := s.Commit(); err != nil {
+		_ = s.Rollback()
+		return handler.HandleHTTPError(err, c)
 	}
 
 	// Create token
@@ -82,18 +95,23 @@ func Login(c echo.Context) error {
 // @Router /user/token [post]
 func RenewToken(c echo.Context) (err error) {
 
+	s := db.NewSession()
+	defer s.Close()
+
 	jwtinf := c.Get("user").(*jwt.Token)
 	claims := jwtinf.Claims.(jwt.MapClaims)
 	typ := int(claims["type"].(float64))
 	if typ == auth.AuthTypeLinkShare {
 		share := &models.LinkSharing{}
 		share.ID = int64(claims["id"].(float64))
-		err := share.ReadOne()
+		err := share.ReadOne(s)
 		if err != nil {
+			_ = s.Rollback()
 			return handler.HandleHTTPError(err, c)
 		}
 		t, err := auth.NewLinkShareJWTAuthtoken(share)
 		if err != nil {
+			_ = s.Rollback()
 			return handler.HandleHTTPError(err, c)
 		}
 		return c.JSON(http.StatusOK, auth.Token{Token: t})
@@ -101,11 +119,18 @@ func RenewToken(c echo.Context) (err error) {
 
 	u, err := user2.GetUserFromClaims(claims)
 	if err != nil {
+		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)
 	}
 
-	user, err := user2.GetUserWithEmail(&user2.User{ID: u.ID})
+	user, err := user2.GetUserWithEmail(s, &user2.User{ID: u.ID})
 	if err != nil {
+		_ = s.Rollback()
+		return handler.HandleHTTPError(err, c)
+	}
+
+	if err := s.Commit(); err != nil {
+		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)
 	}
 

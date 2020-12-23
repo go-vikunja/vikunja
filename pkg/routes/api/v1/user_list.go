@@ -20,6 +20,8 @@ import (
 	"net/http"
 	"strconv"
 
+	"code.vikunja.io/api/pkg/db"
+
 	"code.vikunja.io/api/pkg/models"
 	auth2 "code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/user"
@@ -40,9 +42,19 @@ import (
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /users [get]
 func UserList(c echo.Context) error {
-	s := c.QueryParam("s")
-	users, err := user.ListUsers(s)
+	search := c.QueryParam("s")
+
+	s := db.NewSession()
+	defer s.Close()
+
+	users, err := user.ListUsers(s, search)
 	if err != nil {
+		_ = s.Rollback()
+		return handler.HandleHTTPError(err, c)
+	}
+
+	if err := s.Commit(); err != nil {
+		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)
 	}
 
@@ -80,17 +92,27 @@ func ListUsersForList(c echo.Context) error {
 		return handler.HandleHTTPError(err, c)
 	}
 
-	canRead, _, err := list.CanRead(auth)
+	s := db.NewSession()
+	defer s.Close()
+
+	canRead, _, err := list.CanRead(s, auth)
 	if err != nil {
+		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)
 	}
 	if !canRead {
 		return echo.ErrForbidden
 	}
 
-	s := c.QueryParam("s")
-	users, err := models.ListUsersFromList(&list, s)
+	search := c.QueryParam("s")
+	users, err := models.ListUsersFromList(s, &list, search)
 	if err != nil {
+		_ = s.Rollback()
+		return handler.HandleHTTPError(err, c)
+	}
+
+	if err := s.Commit(); err != nil {
+		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)
 	}
 

@@ -20,6 +20,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"code.vikunja.io/api/pkg/db"
+
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
@@ -56,16 +58,26 @@ func UpdateUserEmail(c echo.Context) (err error) {
 		return handler.HandleHTTPError(err, c)
 	}
 
-	emailUpdate.User, err = user.CheckUserCredentials(&user.Login{
+	s := db.NewSession()
+	defer s.Close()
+
+	emailUpdate.User, err = user.CheckUserCredentials(s, &user.Login{
 		Username: emailUpdate.User.Username,
 		Password: emailUpdate.Password,
 	})
 	if err != nil {
+		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)
 	}
 
-	err = user.UpdateEmail(emailUpdate)
+	err = user.UpdateEmail(s, emailUpdate)
 	if err != nil {
+		_ = s.Rollback()
+		return handler.HandleHTTPError(err, c)
+	}
+
+	if err := s.Commit(); err != nil {
+		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)
 	}
 

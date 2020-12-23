@@ -23,12 +23,11 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/log"
-
 	"code.vikunja.io/api/pkg/metrics"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
-	"github.com/imdario/mergo"
 	"xorm.io/builder"
+	"xorm.io/xorm"
 )
 
 // Namespace holds informations about a namespace
@@ -95,55 +94,48 @@ func (Namespace) TableName() string {
 }
 
 // GetSimpleByID gets a namespace without things like the owner, it more or less only checks if it exists.
-func (n *Namespace) GetSimpleByID() (err error) {
-	if n.ID == 0 {
-		return ErrNamespaceDoesNotExist{ID: n.ID}
+func getNamespaceSimpleByID(s *xorm.Session, id int64) (namespace *Namespace, err error) {
+	if id == 0 {
+		return nil, ErrNamespaceDoesNotExist{ID: id}
 	}
 
 	// Get the namesapce with shared lists
-	if n.ID == -1 {
-		*n = SharedListsPseudoNamespace
-		return
+	if id == -1 {
+		return &SharedListsPseudoNamespace, nil
 	}
 
-	if n.ID == FavoritesPseudoNamespace.ID {
-		*n = FavoritesPseudoNamespace
-		return
+	if id == FavoritesPseudoNamespace.ID {
+		return &FavoritesPseudoNamespace, nil
 	}
 
-	namespaceFromDB := &Namespace{}
-	exists, err := x.Where("id = ?", n.ID).Get(namespaceFromDB)
+	namespace = &Namespace{}
+
+	exists, err := s.Where("id = ?", id).Get(namespace)
 	if err != nil {
 		return
 	}
 	if !exists {
-		return ErrNamespaceDoesNotExist{ID: n.ID}
+		return nil, ErrNamespaceDoesNotExist{ID: id}
 	}
-	// We don't want to override the provided user struct because this would break updating, so we have to merge it
-	if err := mergo.Merge(namespaceFromDB, n, mergo.WithOverride); err != nil {
-		return err
-	}
-	*n = *namespaceFromDB
 
 	return
 }
 
 // GetNamespaceByID returns a namespace object by its ID
-func GetNamespaceByID(id int64) (namespace Namespace, err error) {
-	namespace = Namespace{ID: id}
-	err = namespace.GetSimpleByID()
+func GetNamespaceByID(s *xorm.Session, id int64) (namespace *Namespace, err error) {
+	namespace, err = getNamespaceSimpleByID(s, id)
 	if err != nil {
 		return
 	}
 
 	// Get the namespace Owner
-	namespace.Owner, err = user.GetUserByID(namespace.OwnerID)
+	namespace.Owner, err = user.GetUserByID(s, namespace.OwnerID)
 	return
 }
 
 // CheckIsArchived returns an ErrNamespaceIsArchived if the namepace is archived.
-func (n *Namespace) CheckIsArchived() error {
-	exists, err := x.
+func (n *Namespace) CheckIsArchived(s *xorm.Session) error {
+	exists, err := s.
 		Where("id = ? AND is_archived = true", n.ID).
 		Exist(&Namespace{})
 	if err != nil {
@@ -167,8 +159,12 @@ func (n *Namespace) CheckIsArchived() error {
 // @Failure 403 {object} web.HTTPError "The user does not have access to that namespace."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces/{id} [get]
-func (n *Namespace) ReadOne() (err error) {
-	*n, err = GetNamespaceByID(n.ID)
+func (n *Namespace) ReadOne(s *xorm.Session) (err error) {
+	nn, err := GetNamespaceByID(s, n.ID)
+	if err != nil {
+		return err
+	}
+	*n = *nn
 	return
 }
 
@@ -207,7 +203,7 @@ func makeNamespaceSliceFromMap(namespaces map[int64]*NamespaceWithLists, userMap
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces [get]
 //nolint:gocyclo
-func (n *Namespace) ReadAll(a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
+func (n *Namespace) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
 	if _, is := a.(*LinkSharing); is {
 		return nil, 0, 0, ErrGenericForbidden{}
 	}
@@ -249,7 +245,7 @@ func (n *Namespace) ReadAll(a web.Auth, search string, page int, perPage int) (r
 	}
 
 	limit, start := getLimitFromPageIndex(page, perPage)
-	query := x.Select("namespaces.*").
+	query := s.Select("namespaces.*").
 		Table("namespaces").
 		Join("LEFT", "team_namespaces", "namespaces.id = team_namespaces.namespace_id").
 		Join("LEFT", "team_members", "team_members.team_id = team_namespaces.team_id").
@@ -268,7 +264,7 @@ func (n *Namespace) ReadAll(a web.Auth, search string, page int, perPage int) (r
 		return nil, 0, 0, err
 	}
 
-	numberOfTotalItems, err = x.
+	numberOfTotalItems, err = s.
 		Table("namespaces").
 		Join("LEFT", "team_namespaces", "namespaces.id = team_namespaces.namespace_id").
 		Join("LEFT", "team_members", "team_members.team_id = team_namespaces.team_id").
@@ -294,7 +290,7 @@ func (n *Namespace) ReadAll(a web.Auth, search string, page int, perPage int) (r
 
 	// Get all owners
 	userMap := make(map[int64]*user.User)
-	err = x.In("id", userIDs).Find(&userMap)
+	err = s.In("id", userIDs).Find(&userMap)
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -306,7 +302,7 @@ func (n *Namespace) ReadAll(a web.Auth, search string, page int, perPage int) (r
 
 	// Get all lists
 	lists := []*List{}
-	listQuery := x.
+	listQuery := s.
 		In("namespace_id", namespaceids)
 
 	if !n.IsArchived {
@@ -330,7 +326,7 @@ func (n *Namespace) ReadAll(a web.Auth, search string, page int, perPage int) (r
 
 	// Get all lists individually shared with our user (not via a namespace)
 	individualLists := []*List{}
-	iListQuery := x.Select("l.*").
+	iListQuery := s.Select("l.*").
 		Table("list").
 		Alias("l").
 		Join("LEFT", []string{"team_list", "tl"}, "l.id = tl.list_id").
@@ -360,7 +356,7 @@ func (n *Namespace) ReadAll(a web.Auth, search string, page int, perPage int) (r
 	}
 
 	// More details for the lists
-	err = AddListDetails(lists)
+	err = addListDetails(s, lists)
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -386,7 +382,7 @@ func (n *Namespace) ReadAll(a web.Auth, search string, page int, perPage int) (r
 
 	// Check if we have any favorites or favorited lists and remove the favorites namespace from the list if not
 	var favoriteCount int64
-	favoriteCount, err = x.
+	favoriteCount, err = s.
 		Join("INNER", "list", "tasks.list_id = list.id").
 		Join("INNER", "namespaces", "list.namespace_id = namespaces.id").
 		Where(builder.And(builder.Eq{"tasks.is_favorite": true}, builder.In("namespaces.id", namespaceids))).
@@ -413,7 +409,7 @@ func (n *Namespace) ReadAll(a web.Auth, search string, page int, perPage int) (r
 	/////////////////
 	// Saved Filters
 
-	savedFilters, err := getSavedFiltersForUser(a)
+	savedFilters, err := getSavedFiltersForUser(s, a)
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -457,7 +453,7 @@ func (n *Namespace) ReadAll(a web.Auth, search string, page int, perPage int) (r
 // @Failure 403 {object} web.HTTPError "The user does not have access to the namespace"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces [put]
-func (n *Namespace) Create(a web.Auth) (err error) {
+func (n *Namespace) Create(s *xorm.Session, a web.Auth) (err error) {
 	// Check if we have at least a name
 	if n.Title == "" {
 		return ErrNamespaceNameCannotBeEmpty{NamespaceID: 0, UserID: a.GetID()}
@@ -465,14 +461,14 @@ func (n *Namespace) Create(a web.Auth) (err error) {
 	n.ID = 0 // This would otherwise prevent the creation of new lists after one was created
 
 	// Check if the User exists
-	n.Owner, err = user.GetUserByID(a.GetID())
+	n.Owner, err = user.GetUserByID(s, a.GetID())
 	if err != nil {
 		return
 	}
 	n.OwnerID = n.Owner.ID
 
 	// Insert
-	if _, err = x.Insert(n); err != nil {
+	if _, err = s.Insert(n); err != nil {
 		return err
 	}
 
@@ -482,12 +478,12 @@ func (n *Namespace) Create(a web.Auth) (err error) {
 
 // CreateNewNamespaceForUser creates a new namespace for a user. To prevent import cycles, we can't do that
 // directly in the user.Create function.
-func CreateNewNamespaceForUser(user *user.User) (err error) {
+func CreateNewNamespaceForUser(s *xorm.Session, user *user.User) (err error) {
 	newN := &Namespace{
 		Title:       user.Username,
 		Description: user.Username + "'s namespace.",
 	}
-	return newN.Create(user)
+	return newN.Create(s, user)
 }
 
 // Delete deletes a namespace
@@ -502,22 +498,22 @@ func CreateNewNamespaceForUser(user *user.User) (err error) {
 // @Failure 403 {object} web.HTTPError "The user does not have access to the namespace"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces/{id} [delete]
-func (n *Namespace) Delete() (err error) {
+func (n *Namespace) Delete(s *xorm.Session) (err error) {
 
 	// Check if the namespace exists
-	_, err = GetNamespaceByID(n.ID)
+	_, err = GetNamespaceByID(s, n.ID)
 	if err != nil {
 		return
 	}
 
 	// Delete the namespace
-	_, err = x.ID(n.ID).Delete(&Namespace{})
+	_, err = s.ID(n.ID).Delete(&Namespace{})
 	if err != nil {
 		return
 	}
 
 	// Delete all lists with their tasks
-	lists, err := GetListsByNamespaceID(n.ID, &user.User{})
+	lists, err := GetListsByNamespaceID(s, n.ID, &user.User{})
 	if err != nil {
 		return
 	}
@@ -530,13 +526,13 @@ func (n *Namespace) Delete() (err error) {
 	}
 
 	// Delete tasks
-	_, err = x.In("list_id", listIDs).Delete(&Task{})
+	_, err = s.In("list_id", listIDs).Delete(&Task{})
 	if err != nil {
 		return
 	}
 
 	// Delete the lists
-	_, err = x.In("id", listIDs).Delete(&List{})
+	_, err = s.In("id", listIDs).Delete(&List{})
 	if err != nil {
 		return
 	}
@@ -560,14 +556,14 @@ func (n *Namespace) Delete() (err error) {
 // @Failure 403 {object} web.HTTPError "The user does not have access to the namespace"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespace/{id} [post]
-func (n *Namespace) Update() (err error) {
+func (n *Namespace) Update(s *xorm.Session) (err error) {
 	// Check if we have at least a name
 	if n.Title == "" {
 		return ErrNamespaceNameCannotBeEmpty{NamespaceID: n.ID}
 	}
 
 	// Check if the namespace exists
-	currentNamespace, err := GetNamespaceByID(n.ID)
+	currentNamespace, err := GetNamespaceByID(s, n.ID)
 	if err != nil {
 		return
 	}
@@ -581,7 +577,7 @@ func (n *Namespace) Update() (err error) {
 	if n.Owner != nil {
 		n.OwnerID = n.Owner.ID
 		if currentNamespace.OwnerID != n.OwnerID {
-			n.Owner, err = user.GetUserByID(n.OwnerID)
+			n.Owner, err = user.GetUserByID(s, n.OwnerID)
 			if err != nil {
 				return
 			}
@@ -599,7 +595,7 @@ func (n *Namespace) Update() (err error) {
 	}
 
 	// Do the actual update
-	_, err = x.
+	_, err = s.
 		ID(currentNamespace.ID).
 		Cols(colsToUpdate...).
 		Update(n)

@@ -23,6 +23,8 @@ import (
 	"reflect"
 	"time"
 
+	"xorm.io/xorm"
+
 	"code.vikunja.io/web"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo/v4"
@@ -116,38 +118,33 @@ func (apiUser *APIUserPassword) APIFormat() *User {
 }
 
 // GetUserByID gets informations about a user by its ID
-func GetUserByID(id int64) (user *User, err error) {
+func GetUserByID(s *xorm.Session, id int64) (user *User, err error) {
 	// Apparently xorm does otherwise look for all users but return only one, which leads to returing one even if the ID is 0
 	if id < 1 {
 		return &User{}, ErrUserDoesNotExist{}
 	}
 
-	return GetUser(&User{ID: id})
+	return getUser(s, &User{ID: id}, false)
 }
 
 // GetUserByUsername gets a user from its user name. This is an extra function to be able to add an extra error check.
-func GetUserByUsername(username string) (user *User, err error) {
+func GetUserByUsername(s *xorm.Session, username string) (user *User, err error) {
 	if username == "" {
 		return &User{}, ErrUserDoesNotExist{}
 	}
 
-	return GetUser(&User{Username: username})
-}
-
-// GetUser gets a user object
-func GetUser(user *User) (userOut *User, err error) {
-	return getUser(user, false)
+	return getUser(s, &User{Username: username}, false)
 }
 
 // GetUserWithEmail returns a user object with email
-func GetUserWithEmail(user *User) (userOut *User, err error) {
-	return getUser(user, true)
+func GetUserWithEmail(s *xorm.Session, user *User) (userOut *User, err error) {
+	return getUser(s, user, true)
 }
 
 // GetUsersByIDs returns a map of users from a slice of user ids
-func GetUsersByIDs(userIDs []int64) (users map[int64]*User, err error) {
+func GetUsersByIDs(s *xorm.Session, userIDs []int64) (users map[int64]*User, err error) {
 	users = make(map[int64]*User)
-	err = x.In("id", userIDs).Find(&users)
+	err = s.In("id", userIDs).Find(&users)
 	if err != nil {
 		return
 	}
@@ -161,10 +158,10 @@ func GetUsersByIDs(userIDs []int64) (users map[int64]*User, err error) {
 }
 
 // getUser is a small helper function to avoid having duplicated code for almost the same use case
-func getUser(user *User, withEmail bool) (userOut *User, err error) {
+func getUser(s *xorm.Session, user *User, withEmail bool) (userOut *User, err error) {
 	userOut = &User{} // To prevent a panic if user is nil
 	*userOut = *user
-	exists, err := x.Get(userOut)
+	exists, err := s.Get(userOut)
 	if err != nil {
 		return nil, err
 	}
@@ -179,9 +176,9 @@ func getUser(user *User, withEmail bool) (userOut *User, err error) {
 	return userOut, err
 }
 
-func getUserByUsernameOrEmail(usernameOrEmail string) (u *User, err error) {
+func getUserByUsernameOrEmail(s *xorm.Session, usernameOrEmail string) (u *User, err error) {
 	u = &User{}
-	exists, err := x.
+	exists, err := s.
 		Where("username = ? OR email = ?", usernameOrEmail, usernameOrEmail).
 		Get(u)
 	if err != nil {
@@ -196,14 +193,14 @@ func getUserByUsernameOrEmail(usernameOrEmail string) (u *User, err error) {
 }
 
 // CheckUserCredentials checks user credentials
-func CheckUserCredentials(u *Login) (*User, error) {
+func CheckUserCredentials(s *xorm.Session, u *Login) (*User, error) {
 	// Check if we have any credentials
 	if u.Password == "" || u.Username == "" {
 		return nil, ErrNoUsernamePassword{}
 	}
 
 	// Check if the user exists
-	user, err := getUserByUsernameOrEmail(u.Username)
+	user, err := getUserByUsernameOrEmail(s, u.Username)
 	if err != nil {
 		// hashing the password takes a long time, so we hash something to not make it clear if the username was wrong
 		_, _ = bcrypt.GenerateFromPassword([]byte(u.Username), 14)
@@ -261,10 +258,10 @@ func GetUserFromClaims(claims jwt.MapClaims) (user *User, err error) {
 }
 
 // UpdateUser updates a user
-func UpdateUser(user *User) (updatedUser *User, err error) {
+func UpdateUser(s *xorm.Session, user *User) (updatedUser *User, err error) {
 
 	// Check if it exists
-	theUser, err := GetUserWithEmail(&User{ID: user.ID})
+	theUser, err := GetUserWithEmail(s, &User{ID: user.ID})
 	if err != nil {
 		return &User{}, err
 	}
@@ -274,7 +271,7 @@ func UpdateUser(user *User) (updatedUser *User, err error) {
 		user.Username = theUser.Username // Dont change the username if we dont have one
 	} else {
 		// Check if the new username already exists
-		uu, err := GetUserByUsername(user.Username)
+		uu, err := GetUserByUsername(s, user.Username)
 		if err != nil && !IsErrUserDoesNotExist(err) {
 			return nil, err
 		}
@@ -292,7 +289,7 @@ func UpdateUser(user *User) (updatedUser *User, err error) {
 	if user.Email == "" {
 		user.Email = theUser.Email
 	} else {
-		uu, err := getUser(&User{
+		uu, err := getUser(s, &User{
 			Email:   user.Email,
 			Issuer:  user.Issuer,
 			Subject: user.Subject,
@@ -316,7 +313,7 @@ func UpdateUser(user *User) (updatedUser *User, err error) {
 	}
 
 	// Update it
-	_, err = x.
+	_, err = s.
 		ID(user.ID).
 		Cols(
 			"username",
@@ -333,7 +330,7 @@ func UpdateUser(user *User) (updatedUser *User, err error) {
 	}
 
 	// Get the newly updated user
-	updatedUser, err = GetUserByID(user.ID)
+	updatedUser, err = GetUserByID(s, user.ID)
 	if err != nil {
 		return &User{}, err
 	}
@@ -342,14 +339,14 @@ func UpdateUser(user *User) (updatedUser *User, err error) {
 }
 
 // UpdateUserPassword updates the password of a user
-func UpdateUserPassword(user *User, newPassword string) (err error) {
+func UpdateUserPassword(s *xorm.Session, user *User, newPassword string) (err error) {
 
 	if newPassword == "" {
 		return ErrEmptyNewPassword{}
 	}
 
 	// Get all user details
-	theUser, err := GetUserByID(user.ID)
+	theUser, err := GetUserByID(s, user.ID)
 	if err != nil {
 		return err
 	}
@@ -362,7 +359,7 @@ func UpdateUserPassword(user *User, newPassword string) (err error) {
 	theUser.Password = hashed
 
 	// Update it
-	_, err = x.ID(user.ID).Update(theUser)
+	_, err = s.ID(user.ID).Update(theUser)
 	if err != nil {
 		return err
 	}

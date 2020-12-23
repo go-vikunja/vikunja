@@ -17,28 +17,31 @@
 
 package models
 
-import "code.vikunja.io/web"
+import (
+	"code.vikunja.io/web"
+	"xorm.io/xorm"
+)
 
 // CanRead checks if a user can read a comment
-func (tc *TaskComment) CanRead(a web.Auth) (bool, int, error) {
+func (tc *TaskComment) CanRead(s *xorm.Session, a web.Auth) (bool, int, error) {
 	t := Task{ID: tc.TaskID}
-	return t.CanRead(a)
+	return t.CanRead(s, a)
 }
 
 // CanDelete checks if a user can delete a comment
-func (tc *TaskComment) CanDelete(a web.Auth) (bool, error) {
+func (tc *TaskComment) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
 	t := Task{ID: tc.TaskID}
-	return t.CanWrite(a)
+	return t.CanWrite(s, a)
 }
 
 // CanUpdate checks if a user can update a comment
-func (tc *TaskComment) CanUpdate(a web.Auth) (bool, error) {
+func (tc *TaskComment) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
 	t := Task{ID: tc.TaskID}
-	return t.CanWrite(a)
+	return t.CanWrite(s, a)
 }
 
 // CanCreate checks if a user can create a new comment
-func (tc *TaskComment) CanCreate(a web.Auth) (bool, error) {
+func (tc *TaskComment) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
 	t := Task{ID: tc.TaskID}
-	return t.CanWrite(a)
+	return t.CanWrite(s, a)
 }

@@ -19,6 +19,8 @@ package v1
 import (
 	"net/http"
 
+	"code.vikunja.io/api/pkg/db"
+
 	"code.vikunja.io/api/pkg/models"
 	auth2 "code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/web/handler"
@@ -52,8 +54,12 @@ func UploadTaskAttachment(c echo.Context) error {
 		return handler.HandleHTTPError(err, c)
 	}
 
-	can, err := taskAttachment.CanCreate(auth)
+	s := db.NewSession()
+	defer s.Close()
+
+	can, err := taskAttachment.CanCreate(s, auth)
 	if err != nil {
+		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)
 	}
 	if !can {
@@ -63,6 +69,7 @@ func UploadTaskAttachment(c echo.Context) error {
 	// Multipart form
 	form, err := c.MultipartForm()
 	if err != nil {
+		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)
 	}
 
@@ -85,12 +92,17 @@ func UploadTaskAttachment(c echo.Context) error {
 		}
 		defer f.Close()
 
-		err = ta.NewAttachment(f, file.Filename, uint64(file.Size), auth)
+		err = ta.NewAttachment(s, f, file.Filename, uint64(file.Size), auth)
 		if err != nil {
 			r.Errors = append(r.Errors, handler.HandleHTTPError(err, c))
 			continue
 		}
 		r.Success = append(r.Success, ta)
+	}
+
+	if err := s.Commit(); err != nil {
+		_ = s.Rollback()
+		return handler.HandleHTTPError(err, c)
 	}
 
 	return c.JSON(http.StatusOK, r)
@@ -121,8 +133,13 @@ func GetTaskAttachment(c echo.Context) error {
 	if err != nil {
 		return handler.HandleHTTPError(err, c)
 	}
-	can, _, err := taskAttachment.CanRead(auth)
+
+	s := db.NewSession()
+	defer s.Close()
+
+	can, _, err := taskAttachment.CanRead(s, auth)
 	if err != nil {
+		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)
 	}
 	if !can {
@@ -130,14 +147,21 @@ func GetTaskAttachment(c echo.Context) error {
 	}
 
 	// Get the attachment incl file
-	err = taskAttachment.ReadOne()
+	err = taskAttachment.ReadOne(s)
 	if err != nil {
+		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)
 	}
 
 	// Open an send the file to the client
 	err = taskAttachment.File.LoadFileByID()
 	if err != nil {
+		_ = s.Rollback()
+		return handler.HandleHTTPError(err, c)
+	}
+
+	if err := s.Commit(); err != nil {
+		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)
 	}
 

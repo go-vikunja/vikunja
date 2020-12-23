@@ -17,6 +17,8 @@
 
 package user
 
+import "xorm.io/xorm"
+
 // EmailConfirm holds the token to confirm a mail address
 type EmailConfirm struct {
 	// The email confirm token sent via email.
@@ -24,7 +26,7 @@ type EmailConfirm struct {
 }
 
 // ConfirmEmail handles the confirmation of an email address
-func ConfirmEmail(c *EmailConfirm) (err error) {
+func ConfirmEmail(s *xorm.Session, c *EmailConfirm) (err error) {
 
 	// Check if we have an email confirm token
 	if c.Token == "" {
@@ -33,7 +35,9 @@ func ConfirmEmail(c *EmailConfirm) (err error) {
 
 	// Check if the token is valid
 	user := User{}
-	has, err := x.Where("email_confirm_token = ?", c.Token).Get(&user)
+	has, err := s.
+		Where("email_confirm_token = ?", c.Token).
+		Get(&user)
 	if err != nil {
 		return
 	}
@@ -44,6 +48,9 @@ func ConfirmEmail(c *EmailConfirm) (err error) {
 
 	user.IsActive = true
 	user.EmailConfirmToken = ""
-	_, err = x.Where("id = ?", user.ID).Cols("is_active", "email_confirm_token").Update(&user)
+	_, err = s.
+		Where("id = ?", user.ID).
+		Cols("is_active", "email_confirm_token").
+		Update(&user)
 	return
 }

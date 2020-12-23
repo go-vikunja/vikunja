@@ -36,12 +36,15 @@ func TestTask_Create(t *testing.T) {
 
 	t.Run("normal", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
 		task := &Task{
 			Title:       "Lorem",
 			Description: "Lorem Ipsum Dolor",
 			ListID:      1,
 		}
-		err := task.Create(usr)
+		err := task.Create(s, usr)
 		assert.NoError(t, err)
 		// Assert getting a uid
 		assert.NotEmpty(t, task.UID)
@@ -50,6 +53,9 @@ func TestTask_Create(t *testing.T) {
 		assert.Equal(t, int64(18), task.Index)
 		// Assert moving it into the default bucket
 		assert.Equal(t, int64(1), task.BucketID)
+		err = s.Commit()
+		assert.NoError(t, err)
+
 		db.AssertExists(t, "tasks", map[string]interface{}{
 			"id":            task.ID,
 			"title":         "Lorem",
@@ -62,47 +68,59 @@ func TestTask_Create(t *testing.T) {
 	})
 	t.Run("empty title", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
 		task := &Task{
 			Title:       "",
 			Description: "Lorem Ipsum Dolor",
 			ListID:      1,
 		}
-		err := task.Create(usr)
+		err := task.Create(s, usr)
 		assert.Error(t, err)
 		assert.True(t, IsErrTaskCannotBeEmpty(err))
 	})
 	t.Run("nonexistant list", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
 		task := &Task{
 			Title:       "Test",
 			Description: "Lorem Ipsum Dolor",
 			ListID:      9999999,
 		}
-		err := task.Create(usr)
+		err := task.Create(s, usr)
 		assert.Error(t, err)
 		assert.True(t, IsErrListDoesNotExist(err))
 	})
 	t.Run("noneixtant user", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
 		nUser := &user.User{ID: 99999999}
 		task := &Task{
 			Title:       "Test",
 			Description: "Lorem Ipsum Dolor",
 			ListID:      1,
 		}
-		err := task.Create(nUser)
+		err := task.Create(s, nUser)
 		assert.Error(t, err)
 		assert.True(t, user.IsErrUserDoesNotExist(err))
 	})
 	t.Run("full bucket", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
 		task := &Task{
 			Title:       "Lorem",
 			Description: "Lorem Ipsum Dolor",
 			ListID:      1,
 			BucketID:    2, // Bucket 2 already has 3 tasks and a limit of 3
 		}
-		err := task.Create(usr)
+		err := task.Create(s, usr)
 		assert.Error(t, err)
 		assert.True(t, IsErrBucketLimitExceeded(err))
 	})
@@ -111,14 +129,20 @@ func TestTask_Create(t *testing.T) {
 func TestTask_Update(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
 		task := &Task{
 			ID:          1,
 			Title:       "test10000",
 			Description: "Lorem Ipsum Dolor",
 			ListID:      1,
 		}
-		err := task.Update()
+		err := task.Update(s)
 		assert.NoError(t, err)
+		err = s.Commit()
+		assert.NoError(t, err)
+
 		db.AssertExists(t, "tasks", map[string]interface{}{
 			"id":          1,
 			"title":       "test10000",
@@ -128,18 +152,24 @@ func TestTask_Update(t *testing.T) {
 	})
 	t.Run("nonexistant task", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
 		task := &Task{
 			ID:          9999999,
 			Title:       "test10000",
 			Description: "Lorem Ipsum Dolor",
 			ListID:      1,
 		}
-		err := task.Update()
+		err := task.Update(s)
 		assert.Error(t, err)
 		assert.True(t, IsErrTaskDoesNotExist(err))
 	})
 	t.Run("full bucket", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
 		task := &Task{
 			ID:          1,
 			Title:       "test10000",
@@ -147,12 +177,15 @@ func TestTask_Update(t *testing.T) {
 			ListID:      1,
 			BucketID:    2, // Bucket 2 already has 3 tasks and a limit of 3
 		}
-		err := task.Update()
+		err := task.Update(s)
 		assert.Error(t, err)
 		assert.True(t, IsErrBucketLimitExceeded(err))
 	})
 	t.Run("full bucket but not changing the bucket", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
 		task := &Task{
 			ID:          4,
 			Title:       "test10000",
@@ -161,7 +194,7 @@ func TestTask_Update(t *testing.T) {
 			ListID:      1,
 			BucketID:    2, // Bucket 2 already has 3 tasks and a limit of 3
 		}
-		err := task.Update()
+		err := task.Update(s)
 		assert.NoError(t, err)
 	})
 }
@@ -169,11 +202,17 @@ func TestTask_Update(t *testing.T) {
 func TestTask_Delete(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
 		task := &Task{
 			ID: 1,
 		}
-		err := task.Delete()
+		err := task.Delete(s)
 		assert.NoError(t, err)
+		err = s.Commit()
+		assert.NoError(t, err)
+
 		db.AssertMissing(t, "tasks", map[string]interface{}{
 			"id": 1,
 		})
@@ -183,6 +222,9 @@ func TestTask_Delete(t *testing.T) {
 func TestUpdateDone(t *testing.T) {
 	t.Run("marking a task as done", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
 		oldTask := &Task{Done: false}
 		newTask := &Task{Done: true}
 		updateDone(oldTask, newTask)
@@ -190,6 +232,9 @@ func TestUpdateDone(t *testing.T) {
 	})
 	t.Run("unmarking a task as done", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
 		oldTask := &Task{Done: true}
 		newTask := &Task{Done: false}
 		updateDone(oldTask, newTask)
@@ -397,15 +442,21 @@ func TestUpdateDone(t *testing.T) {
 func TestTask_ReadOne(t *testing.T) {
 	t.Run("default", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
 		task := &Task{ID: 1}
-		err := task.ReadOne()
+		err := task.ReadOne(s)
 		assert.NoError(t, err)
 		assert.Equal(t, "task #1", task.Title)
 	})
 	t.Run("nonexisting", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
 		task := &Task{ID: 99999}
-		err := task.ReadOne()
+		err := task.ReadOne(s)
 		assert.Error(t, err)
 		assert.True(t, IsErrTaskDoesNotExist(err))
 	})

@@ -19,6 +19,8 @@ package user
 import (
 	"image"
 
+	"xorm.io/xorm"
+
 	"code.vikunja.io/api/pkg/config"
 	"github.com/pquerna/otp"
 	"github.com/pquerna/otp/totp"
@@ -47,19 +49,19 @@ type TOTPPasscode struct {
 }
 
 // TOTPEnabledForUser checks if totp is enabled for a user - not if it is activated, use GetTOTPForUser to check that.
-func TOTPEnabledForUser(user *User) (bool, error) {
+func TOTPEnabledForUser(s *xorm.Session, user *User) (bool, error) {
 	if !config.ServiceEnableTotp.GetBool() {
 		return false, nil
 	}
 	t := &TOTP{}
-	_, err := x.Where("user_id = ?", user.ID).Get(t)
+	_, err := s.Where("user_id = ?", user.ID).Get(t)
 	return t.Enabled, err
 }
 
 // GetTOTPForUser returns the current state of totp settings for the user.
-func GetTOTPForUser(user *User) (t *TOTP, err error) {
+func GetTOTPForUser(s *xorm.Session, user *User) (t *TOTP, err error) {
 	t = &TOTP{}
-	exists, err := x.Where("user_id = ?", user.ID).Get(t)
+	exists, err := s.Where("user_id = ?", user.ID).Get(t)
 	if err != nil {
 		return
 	}
@@ -71,8 +73,8 @@ func GetTOTPForUser(user *User) (t *TOTP, err error) {
 }
 
 // EnrollTOTP creates a new TOTP entry for the user - it does not enable it yet.
-func EnrollTOTP(user *User) (t *TOTP, err error) {
-	isEnrolled, err := x.Where("user_id = ?", user.ID).Exist(&TOTP{})
+func EnrollTOTP(s *xorm.Session, user *User) (t *TOTP, err error) {
+	isEnrolled, err := s.Where("user_id = ?", user.ID).Exist(&TOTP{})
 	if err != nil {
 		return
 	}
@@ -94,18 +96,18 @@ func EnrollTOTP(user *User) (t *TOTP, err error) {
 		Enabled: false,
 		URL:     key.URL(),
 	}
-	_, err = x.Insert(t)
+	_, err = s.Insert(t)
 	return
 }
 
 // EnableTOTP enables totp for a user. The provided passcode is used to verify the user has a working totp setup.
-func EnableTOTP(passcode *TOTPPasscode) (err error) {
-	t, err := ValidateTOTPPasscode(passcode)
+func EnableTOTP(s *xorm.Session, passcode *TOTPPasscode) (err error) {
+	t, err := ValidateTOTPPasscode(s, passcode)
 	if err != nil {
 		return
 	}
 
-	_, err = x.
+	_, err = s.
 		Where("id = ?", t.ID).
 		Cols("enabled").
 		Update(&TOTP{Enabled: true})
@@ -113,14 +115,16 @@ func EnableTOTP(passcode *TOTPPasscode) (err error) {
 }
 
 // DisableTOTP removes all totp settings for a user.
-func DisableTOTP(user *User) (err error) {
-	_, err = x.Where("user_id = ?", user.ID).Delete(&TOTP{})
+func DisableTOTP(s *xorm.Session, user *User) (err error) {
+	_, err = s.
+		Where("user_id = ?", user.ID).
+		Delete(&TOTP{})
 	return
 }
 
 // ValidateTOTPPasscode validated totp codes of users.
-func ValidateTOTPPasscode(passcode *TOTPPasscode) (t *TOTP, err error) {
-	t, err = GetTOTPForUser(passcode.User)
+func ValidateTOTPPasscode(s *xorm.Session, passcode *TOTPPasscode) (t *TOTP, err error) {
+	t, err = GetTOTPForUser(s, passcode.User)
 	if err != nil {
 		return
 	}
@@ -133,8 +137,8 @@ func ValidateTOTPPasscode(passcode *TOTPPasscode) (t *TOTP, err error) {
 }
 
 // GetTOTPQrCodeForUser returns a qrcode for a user's totp setting
-func GetTOTPQrCodeForUser(user *User) (qrcode image.Image, err error) {
-	t, err := GetTOTPForUser(user)
+func GetTOTPQrCodeForUser(s *xorm.Session, user *User) (qrcode image.Image, err error) {
+	t, err := GetTOTPForUser(s, user)
 	if err != nil {
 		return
 	}

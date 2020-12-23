@@ -21,6 +21,7 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/web"
+	"xorm.io/xorm"
 )
 
 // ListDuplicate holds everything needed to duplicate a list
@@ -38,17 +39,17 @@ type ListDuplicate struct {
 }
 
 // CanCreate checks if a user has the right to duplicate a list
-func (ld *ListDuplicate) CanCreate(a web.Auth) (canCreate bool, err error) {
+func (ld *ListDuplicate) CanCreate(s *xorm.Session, a web.Auth) (canCreate bool, err error) {
 	// List Exists + user has read access to list
 	ld.List = &List{ID: ld.ListID}
-	canRead, _, err := ld.List.CanRead(a)
+	canRead, _, err := ld.List.CanRead(s, a)
 	if err != nil || !canRead {
 		return canRead, err
 	}
 
 	// Namespace exists + user has write access to is (-> can create new lists)
 	ld.List.NamespaceID = ld.NamespaceID
-	return ld.List.CanCreate(a)
+	return ld.List.CanCreate(s, a)
 }
 
 // Create duplicates a list
@@ -66,7 +67,7 @@ func (ld *ListDuplicate) CanCreate(a web.Auth) (canCreate bool, err error) {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{listID}/duplicate [put]
 //nolint:gocyclo
-func (ld *ListDuplicate) Create(a web.Auth) (err error) {
+func (ld *ListDuplicate) Create(s *xorm.Session, a web.Auth) (err error) {
 
 	log.Debugf("Duplicating list %d", ld.ListID)
 
@@ -74,7 +75,7 @@ func (ld *ListDuplicate) Create(a web.Auth) (err error) {
 	ld.List.Identifier = "" // Reset the identifier to trigger regenerating a new one
 	// Set the owner to the current user
 	ld.List.OwnerID = a.GetID()
-	if err := CreateOrUpdateList(ld.List); err != nil {
+	if err := CreateOrUpdateList(s, ld.List); err != nil {
 		// If there is no available unique list identifier, just reset it.
 		if IsErrListIdentifierIsNotUnique(err) {
 			ld.List.Identifier = ""
@@ -90,7 +91,7 @@ func (ld *ListDuplicate) Create(a web.Auth) (err error) {
 	// Used to map the newly created tasks to their new buckets
 	bucketMap := make(map[int64]int64)
 	buckets := []*Bucket{}
-	err = x.Where("list_id = ?", ld.ListID).Find(&buckets)
+	err = s.Where("list_id = ?", ld.ListID).Find(&buckets)
 	if err != nil {
 		return
 	}
@@ -98,7 +99,7 @@ func (ld *ListDuplicate) Create(a web.Auth) (err error) {
 		oldID := b.ID
 		b.ID = 0
 		b.ListID = ld.List.ID
-		if err := b.Create(a); err != nil {
+		if err := b.Create(s, a); err != nil {
 			return err
 		}
 		bucketMap[oldID] = b.ID
@@ -107,7 +108,7 @@ func (ld *ListDuplicate) Create(a web.Auth) (err error) {
 	log.Debugf("Duplicated all buckets from list %d into %d", ld.ListID, ld.List.ID)
 
 	// Get all tasks + all task details
-	tasks, _, _, err := getTasksForLists([]*List{{ID: ld.ListID}}, a, &taskOptions{})
+	tasks, _, _, err := getTasksForLists(s, []*List{{ID: ld.ListID}}, a, &taskOptions{})
 	if err != nil {
 		return err
 	}
@@ -123,10 +124,8 @@ func (ld *ListDuplicate) Create(a web.Auth) (err error) {
 		t.ListID = ld.List.ID
 		t.BucketID = bucketMap[t.BucketID]
 		t.UID = ""
-		s := x.NewSession()
 		err := createTask(s, t, a, false)
 		if err != nil {
-			_ = s.Rollback()
 			return err
 		}
 		taskMap[oldID] = t.ID
@@ -138,7 +137,7 @@ func (ld *ListDuplicate) Create(a web.Auth) (err error) {
 	// Save all attachments
 	// We also duplicate all underlying files since they could be modified in one list which would result in
 	// file changes in the other list which is not something we want.
-	attachments, err := getTaskAttachmentsByTaskIDs(oldTaskIDs)
+	attachments, err := getTaskAttachmentsByTaskIDs(s, oldTaskIDs)
 	if err != nil {
 		return err
 	}
@@ -164,7 +163,7 @@ func (ld *ListDuplicate) Create(a web.Auth) (err error) {
 			return err
 		}
 
-		err := attachment.NewAttachment(attachment.File.File, attachment.File.Name, attachment.File.Size, a)
+		err := attachment.NewAttachment(s, attachment.File.File, attachment.File.Name, attachment.File.Size, a)
 		if err != nil {
 			return err
 		}
@@ -180,7 +179,7 @@ func (ld *ListDuplicate) Create(a web.Auth) (err error) {
 
 	// Copy label tasks (not the labels)
 	labelTasks := []*LabelTask{}
-	err = x.In("task_id", oldTaskIDs).Find(&labelTasks)
+	err = s.In("task_id", oldTaskIDs).Find(&labelTasks)
 	if err != nil {
 		return
 	}
@@ -188,7 +187,7 @@ func (ld *ListDuplicate) Create(a web.Auth) (err error) {
 	for _, lt := range labelTasks {
 		lt.ID = 0
 		lt.TaskID = taskMap[lt.TaskID]
-		if _, err := x.Insert(lt); err != nil {
+		if _, err := s.Insert(lt); err != nil {
 			return err
 		}
 	}
@@ -198,7 +197,7 @@ func (ld *ListDuplicate) Create(a web.Auth) (err error) {
 	// Assignees
 	// Only copy those assignees who have access to the task
 	assignees := []*TaskAssginee{}
-	err = x.In("task_id", oldTaskIDs).Find(&assignees)
+	err = s.In("task_id", oldTaskIDs).Find(&assignees)
 	if err != nil {
 		return
 	}
@@ -207,7 +206,7 @@ func (ld *ListDuplicate) Create(a web.Auth) (err error) {
 			ID:     taskMap[a.TaskID],
 			ListID: ld.List.ID,
 		}
-		if err := t.addNewAssigneeByID(a.UserID, ld.List); err != nil {
+		if err := t.addNewAssigneeByID(s, a.UserID, ld.List); err != nil {
 			if IsErrUserDoesNotHaveAccessToList(err) {
 				continue
 			}
@@ -219,14 +218,14 @@ func (ld *ListDuplicate) Create(a web.Auth) (err error) {
 
 	// Comments
 	comments := []*TaskComment{}
-	err = x.In("task_id", oldTaskIDs).Find(&comments)
+	err = s.In("task_id", oldTaskIDs).Find(&comments)
 	if err != nil {
 		return
 	}
 	for _, c := range comments {
 		c.ID = 0
 		c.TaskID = taskMap[c.TaskID]
-		if _, err := x.Insert(c); err != nil {
+		if _, err := s.Insert(c); err != nil {
 			return err
 		}
 	}
@@ -237,7 +236,7 @@ func (ld *ListDuplicate) Create(a web.Auth) (err error) {
 	// Low-Effort: Only copy those relations which are between tasks in the same list
 	// because we can do that without a lot of hassle
 	relations := []*TaskRelation{}
-	err = x.In("task_id", oldTaskIDs).Find(&relations)
+	err = s.In("task_id", oldTaskIDs).Find(&relations)
 	if err != nil {
 		return
 	}
@@ -249,7 +248,7 @@ func (ld *ListDuplicate) Create(a web.Auth) (err error) {
 		r.ID = 0
 		r.OtherTaskID = otherTaskID
 		r.TaskID = taskMap[r.TaskID]
-		if _, err := x.Insert(r); err != nil {
+		if _, err := s.Insert(r); err != nil {
 			return err
 		}
 	}
@@ -276,19 +275,19 @@ func (ld *ListDuplicate) Create(a web.Auth) (err error) {
 		}
 
 		// Get unsplash info if applicable
-		up, err := GetUnsplashPhotoByFileID(ld.List.BackgroundFileID)
+		up, err := GetUnsplashPhotoByFileID(s, ld.List.BackgroundFileID)
 		if err != nil && files.IsErrFileIsNotUnsplashFile(err) {
 			return err
 		}
 		if up != nil {
 			up.ID = 0
 			up.FileID = file.ID
-			if err := up.Save(); err != nil {
+			if err := up.Save(s); err != nil {
 				return err
 			}
 		}
 
-		if err := SetListBackground(ld.List.ID, file); err != nil {
+		if err := SetListBackground(s, ld.List.ID, file); err != nil {
 			return err
 		}
 
@@ -298,14 +297,14 @@ func (ld *ListDuplicate) Create(a web.Auth) (err error) {
 	// Rights / Shares
 	// To keep it simple(r) we will only copy rights which are directly used with the list, no namespace changes.
 	users := []*ListUser{}
-	err = x.Where("list_id = ?", ld.ListID).Find(&users)
+	err = s.Where("list_id = ?", ld.ListID).Find(&users)
 	if err != nil {
 		return
 	}
 	for _, u := range users {
 		u.ID = 0
 		u.ListID = ld.List.ID
-		if _, err := x.Insert(u); err != nil {
+		if _, err := s.Insert(u); err != nil {
 			return err
 		}
 	}
@@ -313,21 +312,21 @@ func (ld *ListDuplicate) Create(a web.Auth) (err error) {
 	log.Debugf("Duplicated user shares from list %d into %d", ld.ListID, ld.List.ID)
 
 	teams := []*TeamList{}
-	err = x.Where("list_id = ?", ld.ListID).Find(&teams)
+	err = s.Where("list_id = ?", ld.ListID).Find(&teams)
 	if err != nil {
 		return
 	}
 	for _, t := range teams {
 		t.ID = 0
 		t.ListID = ld.List.ID
-		if _, err := x.Insert(t); err != nil {
+		if _, err := s.Insert(t); err != nil {
 			return err
 		}
 	}
 
 	// Generate new link shares if any are available
 	linkShares := []*LinkSharing{}
-	err = x.Where("list_id = ?", ld.ListID).Find(&linkShares)
+	err = s.Where("list_id = ?", ld.ListID).Find(&linkShares)
 	if err != nil {
 		return
 	}
@@ -335,7 +334,7 @@ func (ld *ListDuplicate) Create(a web.Auth) (err error) {
 		share.ID = 0
 		share.ListID = ld.List.ID
 		share.Hash = utils.MakeRandomString(40)
-		if _, err := x.Insert(share); err != nil {
+		if _, err := s.Insert(share); err != nil {
 			return err
 		}
 	}

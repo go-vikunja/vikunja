@@ -17,17 +17,20 @@
 
 package models
 
-import "code.vikunja.io/web"
+import (
+	"code.vikunja.io/web"
+	"xorm.io/xorm"
+)
 
 // CanDelete checks if a user can delete a task relation
-func (rel *TaskRelation) CanDelete(a web.Auth) (bool, error) {
+func (rel *TaskRelation) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
 	// A user can delete a relation if it can update the base task
 	baseTask := &Task{ID: rel.TaskID}
-	return baseTask.CanUpdate(a)
+	return baseTask.CanUpdate(s, a)
 }
 
 // CanCreate checks if a user can create a new relation between two relations
-func (rel *TaskRelation) CanCreate(a web.Auth) (bool, error) {
+func (rel *TaskRelation) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
 	// Check if the relation kind is valid
 	if !rel.RelationKind.isValid() {
 		return false, ErrInvalidRelationKind{Kind: rel.RelationKind}
@@ -35,14 +38,14 @@ func (rel *TaskRelation) CanCreate(a web.Auth) (bool, error) {
 
 	// Needs have write access to the base task and at least read access to the other task
 	baseTask := &Task{ID: rel.TaskID}
-	has, err := baseTask.CanUpdate(a)
+	has, err := baseTask.CanUpdate(s, a)
 	if err != nil || !has {
 		return false, err
 	}
 
 	// We explicitly don't check if the two tasks are on the same list.
 	otherTask := &Task{ID: rel.OtherTaskID}
-	has, _, err = otherTask.CanRead(a)
+	has, _, err = otherTask.CanRead(s, a)
 	if err != nil {
 		return false, err
 	}

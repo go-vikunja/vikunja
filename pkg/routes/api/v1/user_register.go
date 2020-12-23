@@ -19,6 +19,8 @@ package v1
 import (
 	"net/http"
 
+	"code.vikunja.io/api/pkg/db"
+
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
@@ -50,15 +52,25 @@ func RegisterUser(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, models.Message{Message: "No or invalid user model provided."})
 	}
 
+	s := db.NewSession()
+	defer s.Close()
+
 	// Insert the user
-	newUser, err := user.CreateUser(datUser.APIFormat())
+	newUser, err := user.CreateUser(s, datUser.APIFormat())
 	if err != nil {
+		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)
 	}
 
 	// Add its namespace
-	err = models.CreateNewNamespaceForUser(newUser)
+	err = models.CreateNewNamespaceForUser(s, newUser)
 	if err != nil {
+		_ = s.Rollback()
+		return handler.HandleHTTPError(err, c)
+	}
+
+	if err := s.Commit(); err != nil {
+		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)
 	}
 

@@ -18,24 +18,25 @@ package models
 
 import (
 	"code.vikunja.io/web"
+	"xorm.io/xorm"
 )
 
 // CanCreate checks if the user can create a new user <-> namespace relation
-func (nu *NamespaceUser) CanCreate(a web.Auth) (bool, error) {
-	return nu.canDoNamespaceUser(a)
+func (nu *NamespaceUser) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
+	return nu.canDoNamespaceUser(s, a)
 }
 
 // CanDelete checks if the user can delete a user <-> namespace relation
-func (nu *NamespaceUser) CanDelete(a web.Auth) (bool, error) {
-	return nu.canDoNamespaceUser(a)
+func (nu *NamespaceUser) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
+	return nu.canDoNamespaceUser(s, a)
 }
 
 // CanUpdate checks if the user can update a user <-> namespace relation
-func (nu *NamespaceUser) CanUpdate(a web.Auth) (bool, error) {
-	return nu.canDoNamespaceUser(a)
+func (nu *NamespaceUser) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
+	return nu.canDoNamespaceUser(s, a)
 }
 
-func (nu *NamespaceUser) canDoNamespaceUser(a web.Auth) (bool, error) {
+func (nu *NamespaceUser) canDoNamespaceUser(s *xorm.Session, a web.Auth) (bool, error) {
 	n := &Namespace{ID: nu.NamespaceID}
-	return n.IsAdmin(a)
+	return n.IsAdmin(s, a)
 }

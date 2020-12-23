@@ -19,6 +19,8 @@ package v1
 import (
 	"net/http"
 
+	"code.vikunja.io/api/pkg/db"
+
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web/handler"
@@ -61,13 +63,23 @@ func UserChangePassword(c echo.Context) error {
 		return handler.HandleHTTPError(user.ErrEmptyOldPassword{}, c)
 	}
 
+	s := db.NewSession()
+	defer s.Close()
+
 	// Check the current password
-	if _, err = user.CheckUserCredentials(&user.Login{Username: doer.Username, Password: newPW.OldPassword}); err != nil {
+	if _, err = user.CheckUserCredentials(s, &user.Login{Username: doer.Username, Password: newPW.OldPassword}); err != nil {
+		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)
 	}
 
 	// Update the password
-	if err = user.UpdateUserPassword(doer, newPW.NewPassword); err != nil {
+	if err = user.UpdateUserPassword(s, doer, newPW.NewPassword); err != nil {
+		_ = s.Rollback()
+		return handler.HandleHTTPError(err, c)
+	}
+
+	if err := s.Commit(); err != nil {
+		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)
 	}
 

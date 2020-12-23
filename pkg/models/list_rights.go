@@ -20,10 +20,11 @@ import (
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
 	"xorm.io/builder"
+	"xorm.io/xorm"
 )
 
 // CanWrite return whether the user can write on that list or not
-func (l *List) CanWrite(a web.Auth) (bool, error) {
+func (l *List) CanWrite(s *xorm.Session, a web.Auth) (bool, error) {
 
 	// The favorite list can't be edited
 	if l.ID == FavoritesPseudoList.ID {
@@ -31,15 +32,14 @@ func (l *List) CanWrite(a web.Auth) (bool, error) {
 	}
 
 	// Get the list and check the right
-	originalList := &List{ID: l.ID}
-	err := originalList.GetSimpleByID()
+	originalList, err := GetListSimpleByID(s, l.ID)
 	if err != nil {
 		return false, err
 	}
 
 	// We put the result of the is archived check in a separate variable to be able to return it later without
 	// needing to recheck it again
-	errIsArchived := originalList.CheckIsArchived()
+	errIsArchived := originalList.CheckIsArchived(s)
 
 	var canWrite bool
 
@@ -59,7 +59,7 @@ func (l *List) CanWrite(a web.Auth) (bool, error) {
 		return canWrite, errIsArchived
 	}
 
-	canWrite, _, err = originalList.checkRight(a, RightWrite, RightAdmin)
+	canWrite, _, err = originalList.checkRight(s, a, RightWrite, RightAdmin)
 	if err != nil {
 		return false, err
 	}
@@ -67,7 +67,7 @@ func (l *List) CanWrite(a web.Auth) (bool, error) {
 }
 
 // CanRead checks if a user has read access to a list
-func (l *List) CanRead(a web.Auth) (bool, int, error) {
+func (l *List) CanRead(s *xorm.Session, a web.Auth) (bool, int, error) {
 
 	// The favorite list needs a special treatment
 	if l.ID == FavoritesPseudoList.ID {
@@ -84,13 +84,17 @@ func (l *List) CanRead(a web.Auth) (bool, int, error) {
 	// Saved Filter Lists need a special case
 	if getSavedFilterIDFromListID(l.ID) > 0 {
 		sf := &SavedFilter{ID: getSavedFilterIDFromListID(l.ID)}
-		return sf.CanRead(a)
+		return sf.CanRead(s, a)
 	}
 
 	// Check if the user is either owner or can read
-	if err := l.GetSimpleByID(); err != nil {
+	var err error
+	originalList, err := GetListSimpleByID(s, l.ID)
+	if err != nil {
 		return false, 0, err
 	}
+
+	*l = *originalList
 
 	// Check if we're dealing with a share auth
 	shareAuth, ok := a.(*LinkSharing)
@@ -102,16 +106,16 @@ func (l *List) CanRead(a web.Auth) (bool, int, error) {
 	if l.isOwner(&user.User{ID: a.GetID()}) {
 		return true, int(RightAdmin), nil
 	}
-	return l.checkRight(a, RightRead, RightWrite, RightAdmin)
+	return l.checkRight(s, a, RightRead, RightWrite, RightAdmin)
 }
 
 // CanUpdate checks if the user can update a list
-func (l *List) CanUpdate(a web.Auth) (canUpdate bool, err error) {
+func (l *List) CanUpdate(s *xorm.Session, a web.Auth) (canUpdate bool, err error) {
 	// The favorite list can't be edited
 	if l.ID == FavoritesPseudoList.ID {
 		return false, nil
 	}
-	canUpdate, err = l.CanWrite(a)
+	canUpdate, err = l.CanWrite(s, a)
 	// If the list is archived and the user tries to un-archive it, let the request through
 	if IsErrListIsArchived(err) && !l.IsArchived {
 		err = nil
@@ -120,26 +124,25 @@ func (l *List) CanUpdate(a web.Auth) (canUpdate bool, err error) {
 }
 
 // CanDelete checks if the user can delete a list
-func (l *List) CanDelete(a web.Auth) (bool, error) {
-	return l.IsAdmin(a)
+func (l *List) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
+	return l.IsAdmin(s, a)
 }
 
 // CanCreate checks if the user can create a list
-func (l *List) CanCreate(a web.Auth) (bool, error) {
+func (l *List) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
 	// A user can create a list if they have write access to the namespace
 	n := &Namespace{ID: l.NamespaceID}
-	return n.CanWrite(a)
+	return n.CanWrite(s, a)
 }
 
 // IsAdmin returns whether the user has admin rights on the list or not
-func (l *List) IsAdmin(a web.Auth) (bool, error) {
+func (l *List) IsAdmin(s *xorm.Session, a web.Auth) (bool, error) {
 	// The favorite list can't be edited
 	if l.ID == FavoritesPseudoList.ID {
 		return false, nil
 	}
 
-	originalList := &List{ID: l.ID}
-	err := originalList.GetSimpleByID()
+	originalList, err := GetListSimpleByID(s, l.ID)
 	if err != nil {
 		return false, err
 	}
@@ -156,7 +159,7 @@ func (l *List) IsAdmin(a web.Auth) (bool, error) {
 	if originalList.isOwner(&user.User{ID: a.GetID()}) {
 		return true, nil
 	}
-	is, _, err := originalList.checkRight(a, RightAdmin)
+	is, _, err := originalList.checkRight(s, a, RightAdmin)
 	return is, err
 }
 
@@ -166,7 +169,7 @@ func (l *List) isOwner(u *user.User) bool {
 }
 
 // Checks n different rights for any given user
-func (l *List) checkRight(a web.Auth, rights ...Right) (bool, int, error) {
+func (l *List) checkRight(s *xorm.Session, a web.Auth, rights ...Right) (bool, int, error) {
 
 	/*
 			The following loop creates an sql condition like this one:
@@ -218,7 +221,7 @@ func (l *List) checkRight(a web.Auth, rights ...Right) (bool, int, error) {
 
 	r := &allListRights{}
 	var maxRight = 0
-	exists, err := x.
+	exists, err := s.
 		Table("list").
 		Alias("l").
 		// User stuff

@@ -57,18 +57,22 @@ func TestBulkTask_Update(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
 
+			s := db.NewSession()
+
 			bt := &BulkTask{
 				IDs:   tt.fields.IDs,
 				Tasks: tt.fields.Tasks,
 				Task:  tt.fields.Task,
 			}
-			allowed, _ := bt.CanUpdate(tt.fields.User)
+			allowed, _ := bt.CanUpdate(s, tt.fields.User)
 			if !allowed != tt.wantForbidden {
 				t.Errorf("BulkTask.Update() want forbidden, got %v, want %v", allowed, tt.wantForbidden)
 			}
-			if err := bt.Update(); (err != nil) != tt.wantErr {
+			if err := bt.Update(s); (err != nil) != tt.wantErr {
 				t.Errorf("BulkTask.Update() error = %v, wantErr %v", err, tt.wantErr)
 			}
+
+			s.Close()
 		})
 	}
 }

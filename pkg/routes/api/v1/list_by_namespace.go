@@ -20,6 +20,9 @@ import (
 	"net/http"
 	"strconv"
 
+	"code.vikunja.io/api/pkg/db"
+	"xorm.io/xorm"
+
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web/handler"
@@ -41,8 +44,11 @@ import (
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces/{id}/lists [get]
 func GetListsByNamespaceID(c echo.Context) error {
+	s := db.NewSession()
+	defer s.Close()
+
 	// Get our namespace
-	namespace, err := getNamespace(c)
+	namespace, err := getNamespace(s, c)
 	if err != nil {
 		return handler.HandleHTTPError(err, c)
 	}
@@ -53,14 +59,14 @@ func GetListsByNamespaceID(c echo.Context) error {
 		return handler.HandleHTTPError(err, c)
 	}
 
-	lists, err := models.GetListsByNamespaceID(namespace.ID, doer)
+	lists, err := models.GetListsByNamespaceID(s, namespace.ID, doer)
 	if err != nil {
 		return handler.HandleHTTPError(err, c)
 	}
 	return c.JSON(http.StatusOK, lists)
 }
 
-func getNamespace(c echo.Context) (namespace *models.Namespace, err error) {
+func getNamespace(s *xorm.Session, c echo.Context) (namespace *models.Namespace, err error) {
 	// Check if we have our ID
 	id := c.Param("namespace")
 	// Make int
@@ -75,12 +81,12 @@ func getNamespace(c echo.Context) (namespace *models.Namespace, err error) {
 	}
 
 	// Check if the user has acces to that namespace
-	user, err := user.GetCurrentUser(c)
+	u, err := user.GetCurrentUser(c)
 	if err != nil {
 		return
 	}
 	namespace = &models.Namespace{ID: namespaceID}
-	canRead, _, err := namespace.CanRead(user)
+	canRead, _, err := namespace.CanRead(s, u)
 	if err != nil {
 		return namespace, err
 	}

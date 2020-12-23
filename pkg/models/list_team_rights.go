@@ -18,29 +18,30 @@ package models
 
 import (
 	"code.vikunja.io/web"
+	"xorm.io/xorm"
 )
 
 // CanCreate checks if the user can create a team <-> list relation
-func (tl *TeamList) CanCreate(a web.Auth) (bool, error) {
-	return tl.canDoTeamList(a)
+func (tl *TeamList) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
+	return tl.canDoTeamList(s, a)
 }
 
 // CanDelete checks if the user can delete a team <-> list relation
-func (tl *TeamList) CanDelete(a web.Auth) (bool, error) {
-	return tl.canDoTeamList(a)
+func (tl *TeamList) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
+	return tl.canDoTeamList(s, a)
 }
 
 // CanUpdate checks if the user can update a team <-> list relation
-func (tl *TeamList) CanUpdate(a web.Auth) (bool, error) {
-	return tl.canDoTeamList(a)
+func (tl *TeamList) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
+	return tl.canDoTeamList(s, a)
 }
 
-func (tl *TeamList) canDoTeamList(a web.Auth) (bool, error) {
+func (tl *TeamList) canDoTeamList(s *xorm.Session, a web.Auth) (bool, error) {
 	// Link shares aren't allowed to do anything
 	if _, is := a.(*LinkSharing); is {
 		return false, nil
 	}
 
 	l := List{ID: tl.ListID}
-	return l.IsAdmin(a)
+	return l.IsAdmin(s, a)
 }

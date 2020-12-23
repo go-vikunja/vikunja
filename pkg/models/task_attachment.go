@@ -23,6 +23,7 @@ import (
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
+	"xorm.io/xorm"
 )
 
 // TaskAttachment is the definition of a task attachment
@@ -49,7 +50,7 @@ func (TaskAttachment) TableName() string {
 
 // NewAttachment creates a new task attachment
 // Note: I'm not sure if only accepting an io.ReadCloser and not an afero.File or os.File instead is a good way of doing things.
-func (ta *TaskAttachment) NewAttachment(f io.ReadCloser, realname string, realsize uint64, a web.Auth) error {
+func (ta *TaskAttachment) NewAttachment(s *xorm.Session, f io.ReadCloser, realname string, realsize uint64, a web.Auth) error {
 
 	// Store the file
 	file, err := files.Create(f, realname, realsize, a)
@@ -64,7 +65,7 @@ func (ta *TaskAttachment) NewAttachment(f io.ReadCloser, realname string, realsi
 	// Add an entry to the db
 	ta.FileID = file.ID
 	ta.CreatedByID = a.GetID()
-	_, err = x.Insert(ta)
+	_, err = s.Insert(ta)
 	if err != nil {
 		// remove the  uploaded file if adding it to the db fails
 		if err2 := file.Delete(); err2 != nil {
@@ -77,8 +78,8 @@ func (ta *TaskAttachment) NewAttachment(f io.ReadCloser, realname string, realsi
 }
 
 // ReadOne returns a task attachment
-func (ta *TaskAttachment) ReadOne() (err error) {
-	exists, err := x.Where("id = ?", ta.ID).Get(ta)
+func (ta *TaskAttachment) ReadOne(s *xorm.Session) (err error) {
+	exists, err := s.Where("id = ?", ta.ID).Get(ta)
 	if err != nil {
 		return
 	}
@@ -110,12 +111,12 @@ func (ta *TaskAttachment) ReadOne() (err error) {
 // @Failure 404 {object} models.Message "The task does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{id}/attachments [get]
-func (ta *TaskAttachment) ReadAll(a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
+func (ta *TaskAttachment) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
 	attachments := []*TaskAttachment{}
 
 	limit, start := getLimitFromPageIndex(page, perPage)
 
-	query := x.
+	query := s.
 		Where("task_id = ?", ta.TaskID)
 	if limit > 0 {
 		query = query.Limit(limit, start)
@@ -133,13 +134,13 @@ func (ta *TaskAttachment) ReadAll(a web.Auth, search string, page int, perPage i
 	}
 
 	fs := make(map[int64]*files.File)
-	err = x.In("id", fileIDs).Find(&fs)
+	err = s.In("id", fileIDs).Find(&fs)
 	if err != nil {
 		return nil, 0, 0, err
 	}
 
 	us := make(map[int64]*user.User)
-	err = x.In("id", userIDs).Find(&us)
+	err = s.In("id", userIDs).Find(&us)
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -153,7 +154,7 @@ func (ta *TaskAttachment) ReadAll(a web.Auth, search string, page int, perPage i
 		r.CreatedBy = us[r.CreatedByID]
 	}
 
-	numberOfTotalItems, err = x.
+	numberOfTotalItems, err = s.
 		Where("task_id = ?", ta.TaskID).
 		Count(&TaskAttachment{})
 	return attachments, len(attachments), numberOfTotalItems, err
@@ -173,15 +174,17 @@ func (ta *TaskAttachment) ReadAll(a web.Auth, search string, page int, perPage i
 // @Failure 404 {object} models.Message "The task does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{id}/attachments/{attachmentID} [delete]
-func (ta *TaskAttachment) Delete() error {
+func (ta *TaskAttachment) Delete(s *xorm.Session) error {
 	// Load the attachment
-	err := ta.ReadOne()
+	err := ta.ReadOne(s)
 	if err != nil && !files.IsErrFileDoesNotExist(err) {
 		return err
 	}
 
 	// Delete it
-	_, err = x.Where("task_id = ? AND id = ?", ta.TaskID, ta.ID).Delete(ta)
+	_, err = s.
+		Where("task_id = ? AND id = ?", ta.TaskID, ta.ID).
+		Delete(ta)
 	if err != nil {
 		return err
 	}
@@ -195,9 +198,9 @@ func (ta *TaskAttachment) Delete() error {
 	return err
 }
 
-func getTaskAttachmentsByTaskIDs(taskIDs []int64) (attachments []*TaskAttachment, err error) {
+func getTaskAttachmentsByTaskIDs(s *xorm.Session, taskIDs []int64) (attachments []*TaskAttachment, err error) {
 	attachments = []*TaskAttachment{}
-	err = x.
+	err = s.
 		In("task_id", taskIDs).
 		Find(&attachments)
 	if err != nil {
@@ -213,13 +216,13 @@ func getTaskAttachmentsByTaskIDs(taskIDs []int64) (attachments []*TaskAttachment
 
 	// Get all files
 	fs := make(map[int64]*files.File)
-	err = x.In("id", fileIDs).Find(&fs)
+	err = s.In("id", fileIDs).Find(&fs)
 	if err != nil {
 		return
 	}
 
 	users := make(map[int64]*user.User)
-	err = x.In("id", userIDs).Find(&users)
+	err = s.In("id", userIDs).Find(&users)
 	if err != nil {
 		return
 	}

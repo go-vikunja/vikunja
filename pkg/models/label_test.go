@@ -133,7 +133,8 @@ func TestLabel_ReadAll(t *testing.T) {
 				Rights:      tt.fields.Rights,
 			}
 			db.LoadAndAssertFixtures(t)
-			gotLs, _, _, err := l.ReadAll(tt.args.a, tt.args.search, tt.args.page, 0)
+			s := db.NewSession()
+			gotLs, _, _, err := l.ReadAll(s, tt.args.a, tt.args.search, tt.args.page, 0)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Label.ReadAll() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -141,6 +142,7 @@ func TestLabel_ReadAll(t *testing.T) {
 			if diff, equal := messagediff.PrettyDiff(gotLs, tt.wantLs); !equal {
 				t.Errorf("Label.ReadAll() = %v, want %v, diff: %v", gotLs, tt.wantLs, diff)
 			}
+			s.Close()
 		})
 	}
 }
@@ -249,11 +251,13 @@ func TestLabel_ReadOne(t *testing.T) {
 				Rights:      tt.fields.Rights,
 			}
 
-			allowed, _, _ := l.CanRead(tt.auth)
+			s := db.NewSession()
+
+			allowed, _, _ := l.CanRead(s, tt.auth)
 			if !allowed && !tt.wantForbidden {
 				t.Errorf("Label.CanRead() forbidden, want %v", tt.wantForbidden)
 			}
-			err := l.ReadOne()
+			err := l.ReadOne(s)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Label.ReadOne() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -263,6 +267,8 @@ func TestLabel_ReadOne(t *testing.T) {
 			if diff, equal := messagediff.PrettyDiff(l, tt.want); !equal && !tt.wantErr && !tt.wantForbidden {
 				t.Errorf("Label.ReadAll() = %v, want %v, diff: %v", l, tt.want, diff)
 			}
+
+			s.Close()
 		})
 	}
 }
@@ -316,11 +322,12 @@ func TestLabel_Create(t *testing.T) {
 				CRUDable:    tt.fields.CRUDable,
 				Rights:      tt.fields.Rights,
 			}
-			allowed, _ := l.CanCreate(tt.args.a)
+			s := db.NewSession()
+			allowed, _ := l.CanCreate(s, tt.args.a)
 			if !allowed && !tt.wantForbidden {
 				t.Errorf("Label.CanCreate() forbidden, want %v", tt.wantForbidden)
 			}
-			if err := l.Create(tt.args.a); (err != nil) != tt.wantErr {
+			if err := l.Create(s, tt.args.a); (err != nil) != tt.wantErr {
 				t.Errorf("Label.Create() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			if !tt.wantErr {
@@ -331,6 +338,7 @@ func TestLabel_Create(t *testing.T) {
 					"hex_color":   l.HexColor,
 				}, false)
 			}
+			_ = s.Close()
 		})
 	}
 }
@@ -406,11 +414,12 @@ func TestLabel_Update(t *testing.T) {
 				CRUDable:    tt.fields.CRUDable,
 				Rights:      tt.fields.Rights,
 			}
-			allowed, _ := l.CanUpdate(tt.auth)
+			s := db.NewSession()
+			allowed, _ := l.CanUpdate(s, tt.auth)
 			if !allowed && !tt.wantForbidden {
 				t.Errorf("Label.CanUpdate() forbidden, want %v", tt.wantForbidden)
 			}
-			if err := l.Update(); (err != nil) != tt.wantErr {
+			if err := l.Update(s); (err != nil) != tt.wantErr {
 				t.Errorf("Label.Update() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			if !tt.wantErr && !tt.wantForbidden {
@@ -419,6 +428,7 @@ func TestLabel_Update(t *testing.T) {
 					"title": tt.fields.Title,
 				}, false)
 			}
+			_ = s.Close()
 		})
 	}
 }
@@ -490,11 +500,12 @@ func TestLabel_Delete(t *testing.T) {
 				CRUDable:    tt.fields.CRUDable,
 				Rights:      tt.fields.Rights,
 			}
-			allowed, _ := l.CanDelete(tt.auth)
+			s := db.NewSession()
+			allowed, _ := l.CanDelete(s, tt.auth)
 			if !allowed && !tt.wantForbidden {
 				t.Errorf("Label.CanDelete() forbidden, want %v", tt.wantForbidden)
 			}
-			if err := l.Delete(); (err != nil) != tt.wantErr {
+			if err := l.Delete(s); (err != nil) != tt.wantErr {
 				t.Errorf("Label.Delete() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			if !tt.wantErr && !tt.wantForbidden {
@@ -502,6 +513,7 @@ func TestLabel_Delete(t *testing.T) {
 					"id": l.ID,
 				})
 			}
+			_ = s.Close()
 		})
 	}
 }

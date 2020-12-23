@@ -96,9 +96,9 @@ var FavoritesPseudoList = List{
 }
 
 // GetListsByNamespaceID gets all lists in a namespace
-func GetListsByNamespaceID(nID int64, doer *user.User) (lists []*List, err error) {
+func GetListsByNamespaceID(s *xorm.Session, nID int64, doer *user.User) (lists []*List, err error) {
 	if nID == -1 {
-		err = x.Select("l.*").
+		err = s.Select("l.*").
 			Table("list").
 			Join("LEFT", []string{"team_list", "tl"}, "l.id = tl.list_id").
 			Join("LEFT", []string{"team_members", "tm"}, "tm.team_id = tl.team_id").
@@ -111,7 +111,7 @@ func GetListsByNamespaceID(nID int64, doer *user.User) (lists []*List, err error
 			GroupBy("l.id").
 			Find(&lists)
 	} else {
-		err = x.Select("l.*").
+		err = s.Select("l.*").
 			Alias("l").
 			Join("LEFT", []string{"namespaces", "n"}, "l.namespace_id = n.id").
 			Where("l.is_archived = false").
@@ -124,7 +124,7 @@ func GetListsByNamespaceID(nID int64, doer *user.User) (lists []*List, err error
 	}
 
 	// get more list details
-	err = AddListDetails(lists)
+	err = addListDetails(s, lists)
 	return lists, err
 }
 
@@ -143,33 +143,34 @@ func GetListsByNamespaceID(nID int64, doer *user.User) (lists []*List, err error
 // @Failure 403 {object} web.HTTPError "The user does not have access to the list"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists [get]
-func (l *List) ReadAll(a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
+func (l *List) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
 	// Check if we're dealing with a share auth
 	shareAuth, ok := a.(*LinkSharing)
 	if ok {
-		list := &List{ID: shareAuth.ListID}
-		err := list.GetSimpleByID()
+		list, err := GetListSimpleByID(s, shareAuth.ListID)
 		if err != nil {
 			return nil, 0, 0, err
 		}
 		lists := []*List{list}
-		err = AddListDetails(lists)
+		err = addListDetails(s, lists)
 		return lists, 0, 0, err
 	}
 
-	lists, resultCount, totalItems, err := getRawListsForUser(&listOptions{
-		search:     search,
-		user:       &user.User{ID: a.GetID()},
-		page:       page,
-		perPage:    perPage,
-		isArchived: l.IsArchived,
-	})
+	lists, resultCount, totalItems, err := getRawListsForUser(
+		s,
+		&listOptions{
+			search:     search,
+			user:       &user.User{ID: a.GetID()},
+			page:       page,
+			perPage:    perPage,
+			isArchived: l.IsArchived,
+		})
 	if err != nil {
 		return nil, 0, 0, err
 	}
 
 	// Add more list details
-	err = AddListDetails(lists)
+	err = addListDetails(s, lists)
 	return lists, resultCount, totalItems, err
 }
 
@@ -185,7 +186,7 @@ func (l *List) ReadAll(a web.Auth, search string, page int, perPage int) (result
 // @Failure 403 {object} web.HTTPError "The user does not have access to the list"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{id} [get]
-func (l *List) ReadOne() (err error) {
+func (l *List) ReadOne(s *xorm.Session) (err error) {
 
 	if l.ID == FavoritesPseudoList.ID {
 		// Already "built" the list in CanRead
@@ -194,7 +195,7 @@ func (l *List) ReadOne() (err error) {
 
 	// Check for saved filters
 	if getSavedFilterIDFromListID(l.ID) > 0 {
-		sf, err := getSavedFilterSimpleByID(getSavedFilterIDFromListID(l.ID))
+		sf, err := getSavedFilterSimpleByID(s, getSavedFilterIDFromListID(l.ID))
 		if err != nil {
 			return err
 		}
@@ -206,13 +207,13 @@ func (l *List) ReadOne() (err error) {
 	}
 
 	// Get list owner
-	l.Owner, err = user.GetUserByID(l.OwnerID)
+	l.Owner, err = user.GetUserByID(s, l.OwnerID)
 	if err != nil {
 		return err
 	}
 	// Check if the namespace is archived and set the namespace to archived if it is not already archived individually.
 	if !l.IsArchived {
-		err = l.CheckIsArchived()
+		err = l.CheckIsArchived(s)
 		if err != nil {
 			if !IsErrNamespaceIsArchived(err) && !IsErrListIsArchived(err) {
 				return
@@ -224,7 +225,7 @@ func (l *List) ReadOne() (err error) {
 	// Get any background information if there is one set
 	if l.BackgroundFileID != 0 {
 		// Unsplash image
-		l.BackgroundInformation, err = GetUnsplashPhotoByFileID(l.BackgroundFileID)
+		l.BackgroundInformation, err = GetUnsplashPhotoByFileID(s, l.BackgroundFileID)
 		if err != nil && !files.IsErrFileIsNotUnsplashFile(err) {
 			return
 		}
@@ -237,44 +238,33 @@ func (l *List) ReadOne() (err error) {
 	return nil
 }
 
-// GetSimpleByID gets a list with only the basic items, aka no tasks or user objects. Returns an error if the list does not exist.
-func (l *List) GetSimpleByID() (err error) {
-	s := x.NewSession()
-	err = l.getSimpleByID(s)
-	if err != nil {
-		_ = s.Rollback()
-		return err
-	}
-	return nil
-}
+// GetListSimpleByID gets a list with only the basic items, aka no tasks or user objects. Returns an error if the list does not exist.
+func GetListSimpleByID(s *xorm.Session, listID int64) (list *List, err error) {
 
-func (l *List) getSimpleByID(s *xorm.Session) (err error) {
-	if l.ID < 1 {
-		return ErrListDoesNotExist{ID: l.ID}
+	list = &List{}
+
+	if listID < 1 {
+		return nil, ErrListDoesNotExist{ID: listID}
 	}
 
-	// We need to re-init our list object, because otherwise xorm creates a "where for every item in that list object,
-	// leading to not finding anything if the id is good, but for example the title is different.
-	id := l.ID
-	*l = List{}
-	exists, err := s.Where("id = ?", id).Get(l)
+	exists, err := s.Where("id = ?", listID).Get(list)
 	if err != nil {
 		return
 	}
 
 	if !exists {
-		return ErrListDoesNotExist{ID: l.ID}
+		return nil, ErrListDoesNotExist{ID: listID}
 	}
 
 	return
 }
 
 // GetListSimplByTaskID gets a list by a task id
-func GetListSimplByTaskID(taskID int64) (l *List, err error) {
+func GetListSimplByTaskID(s *xorm.Session, taskID int64) (l *List, err error) {
 	// We need to re-init our list object, because otherwise xorm creates a "where for every item in that list object,
 	// leading to not finding anything if the id is good, but for example the title is different.
 	var list List
-	exists, err := x.
+	exists, err := s.
 		Select("list.*").
 		Table(List{}).
 		Join("INNER", "tasks", "list.id = tasks.list_id").
@@ -292,9 +282,9 @@ func GetListSimplByTaskID(taskID int64) (l *List, err error) {
 }
 
 // GetListsByIDs returns a map of lists from a slice with list ids
-func GetListsByIDs(listIDs []int64) (lists map[int64]*List, err error) {
+func GetListsByIDs(s *xorm.Session, listIDs []int64) (lists map[int64]*List, err error) {
 	lists = make(map[int64]*List, len(listIDs))
-	err = x.In("id", listIDs).Find(&lists)
+	err = s.In("id", listIDs).Find(&lists)
 	return
 }
 
@@ -307,8 +297,8 @@ type listOptions struct {
 }
 
 // Gets the lists only, without any tasks or so
-func getRawListsForUser(opts *listOptions) (lists []*List, resultCount int, totalItems int64, err error) {
-	fullUser, err := user.GetUserByID(opts.user.ID)
+func getRawListsForUser(s *xorm.Session, opts *listOptions) (lists []*List, resultCount int, totalItems int64, err error) {
+	fullUser, err := user.GetUserByID(s, opts.user.ID)
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -344,7 +334,7 @@ func getRawListsForUser(opts *listOptions) (lists []*List, resultCount int, tota
 
 	// Gets all Lists where the user is either owner or in a team which has access to the list
 	// Or in a team which has namespace read access
-	query := x.Select("l.*").
+	query := s.Select("l.*").
 		Table("list").
 		Alias("l").
 		Join("INNER", []string{"namespaces", "n"}, "l.namespace_id = n.id").
@@ -372,7 +362,7 @@ func getRawListsForUser(opts *listOptions) (lists []*List, resultCount int, tota
 		return nil, 0, 0, err
 	}
 
-	totalItems, err = x.
+	totalItems, err = s.
 		Table("list").
 		Alias("l").
 		Join("INNER", []string{"namespaces", "n"}, "l.namespace_id = n.id").
@@ -396,8 +386,8 @@ func getRawListsForUser(opts *listOptions) (lists []*List, resultCount int, tota
 	return lists, len(lists), totalItems, err
 }
 
-// AddListDetails adds owner user objects and list tasks to all lists in the slice
-func AddListDetails(lists []*List) (err error) {
+// addListDetails adds owner user objects and list tasks to all lists in the slice
+func addListDetails(s *xorm.Session, lists []*List) (err error) {
 	var ownerIDs []int64
 	for _, l := range lists {
 		ownerIDs = append(ownerIDs, l.OwnerID)
@@ -405,7 +395,7 @@ func AddListDetails(lists []*List) (err error) {
 
 	// Get all list owners
 	owners := map[int64]*user.User{}
-	err = x.In("id", ownerIDs).Find(&owners)
+	err = s.In("id", ownerIDs).Find(&owners)
 	if err != nil {
 		return
 	}
@@ -423,7 +413,7 @@ func AddListDetails(lists []*List) (err error) {
 
 	// Unsplash background file info
 	us := []*UnsplashPhoto{}
-	err = x.In("file_id", fileIDs).Find(&us)
+	err = s.In("file_id", fileIDs).Find(&us)
 	if err != nil {
 		return
 	}
@@ -450,15 +440,15 @@ type NamespaceList struct {
 }
 
 // CheckIsArchived returns an ErrListIsArchived or ErrNamespaceIsArchived if the list or its namespace is archived.
-func (l *List) CheckIsArchived() (err error) {
+func (l *List) CheckIsArchived(s *xorm.Session) (err error) {
 	// When creating a new list, we check if the namespace is archived
 	if l.ID == 0 {
 		n := &Namespace{ID: l.NamespaceID}
-		return n.CheckIsArchived()
+		return n.CheckIsArchived(s)
 	}
 
 	nl := &NamespaceList{}
-	exists, err := x.
+	exists, err := s.
 		Table("list").
 		Join("LEFT", "namespaces", "list.namespace_id = namespaces.id").
 		Where("list.id = ? AND (list.is_archived = true OR namespaces.is_archived = true)", l.ID).
@@ -476,11 +466,11 @@ func (l *List) CheckIsArchived() (err error) {
 }
 
 // CreateOrUpdateList updates a list or creates it if it doesn't exist
-func CreateOrUpdateList(list *List) (err error) {
+func CreateOrUpdateList(s *xorm.Session, list *List) (err error) {
 
 	// Check if the namespace exists
 	if list.NamespaceID != 0 && list.NamespaceID != FavoritesPseudoNamespace.ID {
-		_, err = GetNamespaceByID(list.NamespaceID)
+		_, err = GetNamespaceByID(s, list.NamespaceID)
 		if err != nil {
 			return err
 		}
@@ -488,7 +478,7 @@ func CreateOrUpdateList(list *List) (err error) {
 
 	// Check if the identifier is unique and not empty
 	if list.Identifier != "" {
-		exists, err := x.
+		exists, err := s.
 			Where("identifier = ?", list.Identifier).
 			And("id != ?", list.ID).
 			Exist(&List{})
@@ -501,7 +491,7 @@ func CreateOrUpdateList(list *List) (err error) {
 	}
 
 	if list.ID == 0 {
-		_, err = x.Insert(list)
+		_, err = s.Insert(list)
 		metrics.UpdateCount(1, metrics.ListCountKey)
 	} else {
 		// We need to specify the cols we want to update here to be able to un-archive lists
@@ -516,7 +506,7 @@ func CreateOrUpdateList(list *List) (err error) {
 			colsToUpdate = append(colsToUpdate, "description")
 		}
 
-		_, err = x.
+		_, err = s.
 			ID(list.ID).
 			Cols(colsToUpdate...).
 			Update(list)
@@ -526,12 +516,13 @@ func CreateOrUpdateList(list *List) (err error) {
 		return
 	}
 
-	err = list.GetSimpleByID()
+	l, err := GetListSimpleByID(s, list.ID)
 	if err != nil {
-		return
+		return err
 	}
 
-	err = list.ReadOne()
+	*list = *l
+	err = list.ReadOne(s)
 	return
 
 }
@@ -550,33 +541,23 @@ func CreateOrUpdateList(list *List) (err error) {
 // @Failure 403 {object} web.HTTPError "The user does not have access to the list"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{id} [post]
-func (l *List) Update() (err error) {
-	return CreateOrUpdateList(l)
+func (l *List) Update(s *xorm.Session) (err error) {
+	return CreateOrUpdateList(s, l)
 }
 
-func updateListLastUpdated(list *List) (err error) {
-	s := x.NewSession()
-	err = updateListLastUpdatedS(s, list)
-	if err != nil {
-		_ = s.Rollback()
-		return err
-	}
-	return nil
-}
-
-func updateListLastUpdatedS(s *xorm.Session, list *List) error {
+func updateListLastUpdated(s *xorm.Session, list *List) error {
 	_, err := s.ID(list.ID).Cols("updated").Update(list)
 	return err
 }
 
-func updateListByTaskID(taskID int64) (err error) {
+func updateListByTaskID(s *xorm.Session, taskID int64) (err error) {
 	// need to get the task to update the list last updated timestamp
-	task, err := GetTaskByIDSimple(taskID)
+	task, err := GetTaskByIDSimple(s, taskID)
 	if err != nil {
 		return err
 	}
 
-	return updateListLastUpdated(&List{ID: task.ListID})
+	return updateListLastUpdated(s, &List{ID: task.ListID})
 }
 
 // Create implements the create method of CRUDable
@@ -593,8 +574,8 @@ func updateListByTaskID(taskID int64) (err error) {
 // @Failure 403 {object} web.HTTPError "The user does not have access to the list"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces/{namespaceID}/lists [put]
-func (l *List) Create(a web.Auth) (err error) {
-	err = l.CheckIsArchived()
+func (l *List) Create(s *xorm.Session, a web.Auth) (err error) {
+	err = l.CheckIsArchived(s)
 	if err != nil {
 		return err
 	}
@@ -608,7 +589,7 @@ func (l *List) Create(a web.Auth) (err error) {
 	l.Owner = doer
 	l.ID = 0 // Otherwise only the first time a new list would be created
 
-	err = CreateOrUpdateList(l)
+	err = CreateOrUpdateList(s, l)
 	if err != nil {
 		return
 	}
@@ -618,7 +599,7 @@ func (l *List) Create(a web.Auth) (err error) {
 		ListID: l.ID,
 		Title:  "New Bucket",
 	}
-	return b.Create(a)
+	return b.Create(s, a)
 }
 
 // Delete implements the delete method of CRUDable
@@ -633,27 +614,27 @@ func (l *List) Create(a web.Auth) (err error) {
 // @Failure 403 {object} web.HTTPError "The user does not have access to the list"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{id} [delete]
-func (l *List) Delete() (err error) {
+func (l *List) Delete(s *xorm.Session) (err error) {
 
 	// Delete the list
-	_, err = x.ID(l.ID).Delete(&List{})
+	_, err = s.ID(l.ID).Delete(&List{})
 	if err != nil {
 		return
 	}
 	metrics.UpdateCount(-1, metrics.ListCountKey)
 
 	// Delete all todotasks on that list
-	_, err = x.Where("list_id = ?", l.ID).Delete(&Task{})
+	_, err = s.Where("list_id = ?", l.ID).Delete(&Task{})
 	return
 }
 
 // SetListBackground sets a background file as list background in the db
-func SetListBackground(listID int64, background *files.File) (err error) {
+func SetListBackground(s *xorm.Session, listID int64, background *files.File) (err error) {
 	l := &List{
 		ID:               listID,
 		BackgroundFileID: background.ID,
 	}
-	_, err = x.
+	_, err = s.
 		Where("id = ?", l.ID).
 		Cols("background_file_id").
 		Update(l)

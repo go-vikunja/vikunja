@@ -19,6 +19,8 @@ package upload
 import (
 	"strconv"
 
+	"xorm.io/xorm"
+
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/background"
@@ -30,7 +32,7 @@ type Provider struct {
 }
 
 // Search is only used to implement the interface
-func (p *Provider) Search(search string, page int64) (result []*background.Image, err error) {
+func (p *Provider) Search(s *xorm.Session, search string, page int64) (result []*background.Image, err error) {
 	return
 }
 
@@ -50,7 +52,7 @@ func (p *Provider) Search(search string, page int64) (result []*background.Image
 // @Failure 404 {object} models.Message "The list does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{id}/backgrounds/upload [put]
-func (p *Provider) Set(image *background.Image, list *models.List, auth web.Auth) (err error) {
+func (p *Provider) Set(s *xorm.Session, image *background.Image, list *models.List, auth web.Auth) (err error) {
 	// Remove the old background if one exists
 	if list.BackgroundFileID != 0 {
 		file := files.File{ID: list.BackgroundFileID}
@@ -67,5 +69,5 @@ func (p *Provider) Set(image *background.Image, list *models.List, auth web.Auth
 
 	list.BackgroundInformation = &models.ListBackgroundType{Type: models.ListBackgroundUpload}
 
-	return models.SetListBackground(list.ID, file)
+	return models.SetListBackground(s, list.ID, file)
 }

@@ -65,7 +65,10 @@ func TestUserEmailConfirm(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
-			if err := ConfirmEmail(tt.args.c); (err != nil) != tt.wantErr {
+			s := db.NewSession()
+			defer s.Close()
+
+			if err := ConfirmEmail(s, tt.args.c); (err != nil) != tt.wantErr {
 				t.Errorf("ConfirmEmail() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

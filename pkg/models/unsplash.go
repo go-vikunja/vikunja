@@ -16,7 +16,10 @@
 
 package models
 
-import "code.vikunja.io/api/pkg/files"
+import (
+	"code.vikunja.io/api/pkg/files"
+	"xorm.io/xorm"
+)
 
 // Unsplash requires us to do pingbacks to their site and also name the image author.
 // To do this properly, we need to save these information somewhere.
@@ -36,15 +39,15 @@ func (u *UnsplashPhoto) TableName() string {
 }
 
 // Save persists an unsplash photo to the db
-func (u *UnsplashPhoto) Save() error {
-	_, err := x.Insert(u)
+func (u *UnsplashPhoto) Save(s *xorm.Session) error {
+	_, err := s.Insert(u)
 	return err
 }
 
 // GetUnsplashPhotoByFileID returns an unsplash photo by its saved file id
-func GetUnsplashPhotoByFileID(fileID int64) (u *UnsplashPhoto, err error) {
+func GetUnsplashPhotoByFileID(s *xorm.Session, fileID int64) (u *UnsplashPhoto, err error) {
 	u = &UnsplashPhoto{}
-	exists, err := x.Where("file_id = ?", fileID).Get(u)
+	exists, err := s.Where("file_id = ?", fileID).Get(u)
 	if err != nil {
 		return
 	}
@@ -55,10 +58,10 @@ func GetUnsplashPhotoByFileID(fileID int64) (u *UnsplashPhoto, err error) {
 }
 
 // RemoveUnsplashPhoto removes an unsplash photo from the db
-func RemoveUnsplashPhoto(fileID int64) (err error) {
+func RemoveUnsplashPhoto(s *xorm.Session, fileID int64) (err error) {
 	// This is intentionally "fire and forget" which is why we don't check if we have an
 	// unsplash entry for that file at all. If there is one, it will be deleted.
 	// We do this to keep the function simple.
-	_, err = x.Where("file_id = ?", fileID).Delete(&UnsplashPhoto{})
+	_, err = s.Where("file_id = ?", fileID).Delete(&UnsplashPhoto{})
 	return
 }

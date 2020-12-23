@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"code.vikunja.io/web"
+	"xorm.io/xorm"
 )
 
 // TeamNamespace defines the relationship between a Team and a Namespace
@@ -62,7 +63,7 @@ func (TeamNamespace) TableName() string {
 // @Failure 403 {object} web.HTTPError "The team does not have access to the namespace"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces/{id}/teams [put]
-func (tn *TeamNamespace) Create(a web.Auth) (err error) {
+func (tn *TeamNamespace) Create(s *xorm.Session, a web.Auth) (err error) {
 
 	// Check if the rights are valid
 	if err = tn.Right.isValid(); err != nil {
@@ -70,19 +71,20 @@ func (tn *TeamNamespace) Create(a web.Auth) (err error) {
 	}
 
 	// Check if the team exists
-	_, err = GetTeamByID(tn.TeamID)
+	_, err = GetTeamByID(s, tn.TeamID)
 	if err != nil {
 		return
 	}
 
 	// Check if the namespace exists
-	_, err = GetNamespaceByID(tn.NamespaceID)
+	_, err = GetNamespaceByID(s, tn.NamespaceID)
 	if err != nil {
 		return
 	}
 
 	// Check if the team already has access to the namespace
-	exists, err := x.Where("team_id = ?", tn.TeamID).
+	exists, err := s.
+		Where("team_id = ?", tn.TeamID).
 		And("namespace_id = ?", tn.NamespaceID).
 		Get(&TeamNamespace{})
 	if err != nil {
@@ -93,7 +95,7 @@ func (tn *TeamNamespace) Create(a web.Auth) (err error) {
 	}
 
 	// Insert the new team
-	_, err = x.Insert(tn)
+	_, err = s.Insert(tn)
 	return
 }
 
@@ -110,16 +112,17 @@ func (tn *TeamNamespace) Create(a web.Auth) (err error) {
 // @Failure 404 {object} web.HTTPError "team or namespace does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces/{namespaceID}/teams/{teamID} [delete]
-func (tn *TeamNamespace) Delete() (err error) {
+func (tn *TeamNamespace) Delete(s *xorm.Session) (err error) {
 
 	// Check if the team exists
-	_, err = GetTeamByID(tn.TeamID)
+	_, err = GetTeamByID(s, tn.TeamID)
 	if err != nil {
 		return
 	}
 
 	// Check if the team has access to the namespace
-	has, err := x.Where("team_id = ? AND namespace_id = ?", tn.TeamID, tn.NamespaceID).
+	has, err := s.
+		Where("team_id = ? AND namespace_id = ?", tn.TeamID, tn.NamespaceID).
 		Get(&TeamNamespace{})
 	if err != nil {
 		return
@@ -129,7 +132,8 @@ func (tn *TeamNamespace) Delete() (err error) {
 	}
 
 	// Delete the relation
-	_, err = x.Where("team_id = ?", tn.TeamID).
+	_, err = s.
+		Where("team_id = ?", tn.TeamID).
 		And("namespace_id = ?", tn.NamespaceID).
 		Delete(TeamNamespace{})
 
@@ -151,10 +155,10 @@ func (tn *TeamNamespace) Delete() (err error) {
 // @Failure 403 {object} web.HTTPError "No right to see the namespace."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces/{id}/teams [get]
-func (tn *TeamNamespace) ReadAll(a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
+func (tn *TeamNamespace) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
 	// Check if the user can read the namespace
 	n := Namespace{ID: tn.NamespaceID}
-	canRead, _, err := n.CanRead(a)
+	canRead, _, err := n.CanRead(s, a)
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -167,7 +171,8 @@ func (tn *TeamNamespace) ReadAll(a web.Auth, search string, page int, perPage in
 
 	limit, start := getLimitFromPageIndex(page, perPage)
 
-	query := x.Table("teams").
+	query := s.
+		Table("teams").
 		Join("INNER", "team_namespaces", "team_id = teams.id").
 		Where("team_namespaces.namespace_id = ?", tn.NamespaceID).
 		Where("teams.name LIKE ?", "%"+search+"%")
@@ -184,12 +189,13 @@ func (tn *TeamNamespace) ReadAll(a web.Auth, search string, page int, perPage in
 		teams = append(teams, &t.Team)
 	}
 
-	err = addMoreInfoToTeams(teams)
+	err = addMoreInfoToTeams(s, teams)
 	if err != nil {
 		return
 	}
 
-	numberOfTotalItems, err = x.Table("teams").
+	numberOfTotalItems, err = s.
+		Table("teams").
 		Join("INNER", "team_namespaces", "team_id = teams.id").
 		Where("team_namespaces.namespace_id = ?", tn.NamespaceID).
 		Where("teams.name LIKE ?", "%"+search+"%").
@@ -213,14 +219,14 @@ func (tn *TeamNamespace) ReadAll(a web.Auth, search string, page int, perPage in
 // @Failure 404 {object} web.HTTPError "Team or namespace does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces/{namespaceID}/teams/{teamID} [post]
-func (tn *TeamNamespace) Update() (err error) {
+func (tn *TeamNamespace) Update(s *xorm.Session) (err error) {
 
 	// Check if the right is valid
 	if err := tn.Right.isValid(); err != nil {
 		return err
 	}
 
-	_, err = x.
+	_, err = s.
 		Where("namespace_id = ? AND team_id = ?", tn.NamespaceID, tn.TeamID).
 		Cols("right").
 		Update(tn)

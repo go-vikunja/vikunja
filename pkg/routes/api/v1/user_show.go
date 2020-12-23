@@ -19,6 +19,8 @@ package v1
 import (
 	"net/http"
 
+	"code.vikunja.io/api/pkg/db"
+
 	user2 "code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web/handler"
 	"github.com/labstack/echo/v4"
@@ -41,8 +43,17 @@ func UserShow(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Error getting current user.")
 	}
 
-	user, err := user2.GetUserByID(userInfos.ID)
+	s := db.NewSession()
+	defer s.Close()
+
+	user, err := user2.GetUserByID(s, userInfos.ID)
 	if err != nil {
+		_ = s.Rollback()
+		return handler.HandleHTTPError(err, c)
+	}
+
+	if err := s.Commit(); err != nil {
+		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)
 	}
 

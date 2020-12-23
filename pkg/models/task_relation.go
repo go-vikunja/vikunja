@@ -20,6 +20,8 @@ package models
 import (
 	"time"
 
+	"xorm.io/xorm"
+
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
 )
@@ -117,7 +119,7 @@ type RelatedTaskMap map[RelationKind][]*Task
 // @Failure 400 {object} web.HTTPError "Invalid task relation object provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/relations [put]
-func (rel *TaskRelation) Create(a web.Auth) error {
+func (rel *TaskRelation) Create(s *xorm.Session, a web.Auth) error {
 
 	// Check if both tasks are the same
 	if rel.TaskID == rel.OtherTaskID {
@@ -128,7 +130,7 @@ func (rel *TaskRelation) Create(a web.Auth) error {
 	}
 
 	// Check if the relation already exists, in one form or the other.
-	exists, err := x.
+	exists, err := s.
 		Where("(task_id = ? AND other_task_id = ? AND relation_kind = ?) OR (task_id = ? AND other_task_id = ? AND relation_kind = ?)",
 			rel.TaskID, rel.OtherTaskID, rel.RelationKind, rel.TaskID, rel.OtherTaskID, rel.RelationKind).
 		Exist(rel)
@@ -180,7 +182,7 @@ func (rel *TaskRelation) Create(a web.Auth) error {
 	}
 
 	// Finally insert everything
-	_, err = x.Insert(&[]*TaskRelation{
+	_, err = s.Insert(&[]*TaskRelation{
 		rel,
 		otherRelation,
 	})
@@ -200,9 +202,9 @@ func (rel *TaskRelation) Create(a web.Auth) error {
 // @Failure 404 {object} web.HTTPError "The task relation was not found."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/relations [delete]
-func (rel *TaskRelation) Delete() error {
+func (rel *TaskRelation) Delete(s *xorm.Session) error {
 	// Check if the relation exists
-	exists, err := x.
+	exists, err := s.
 		Cols("task_id", "other_task_id", "relation_kind").
 		Get(rel)
 	if err != nil {
@@ -216,6 +218,6 @@ func (rel *TaskRelation) Delete() error {
 		}
 	}
 
-	_, err = x.Delete(rel)
+	_, err = s.Delete(rel)
 	return err
 }

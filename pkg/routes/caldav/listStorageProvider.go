@@ -21,6 +21,8 @@ import (
 	"strings"
 	"time"
 
+	"code.vikunja.io/api/pkg/db"
+
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	user2 "code.vikunja.io/api/pkg/user"
@@ -90,9 +92,16 @@ func (vcls *VikunjaCaldavListStorage) GetResources(rpath string, withChildren bo
 		return []data.Resource{r}, nil
 	}
 
+	s := db.NewSession()
+	defer s.Close()
+
 	// Otherwise get all lists
-	thelists, _, _, err := vcls.list.ReadAll(vcls.user, "", -1, 50)
+	thelists, _, _, err := vcls.list.ReadAll(s, vcls.user, "", -1, 50)
 	if err != nil {
+		_ = s.Rollback()
+		return nil, err
+	}
+	if err := s.Commit(); err != nil {
 		return nil, err
 	}
 	lists := thelists.([]*models.List)
@@ -125,10 +134,17 @@ func (vcls *VikunjaCaldavListStorage) GetResourcesByList(rpaths []string) ([]dat
 		uids = append(uids, string(uid[:endlen]))
 	}
 
+	s := db.NewSession()
+	defer s.Close()
+
 	// GetTasksByUIDs...
 	// Parse these into ressources...
-	tasks, err := models.GetTasksByUIDs(uids)
+	tasks, err := models.GetTasksByUIDs(s, uids)
 	if err != nil {
+		_ = s.Rollback()
+		return nil, err
+	}
+	if err := s.Commit(); err != nil {
 		return nil, err
 	}
 
@@ -187,13 +203,20 @@ func (vcls *VikunjaCaldavListStorage) GetResource(rpath string) (*data.Resource,
 
 	// If the task is not nil, we need to get the task and not the list
 	if vcls.task != nil {
+		s := db.NewSession()
+		defer s.Close()
+
 		// save and override the updated unix date to not break any later etag checks
 		updated := vcls.task.Updated
-		task, err := models.GetTaskSimple(&models.Task{ID: vcls.task.ID, UID: vcls.task.UID})
+		task, err := models.GetTaskSimple(s, &models.Task{ID: vcls.task.ID, UID: vcls.task.UID})
 		if err != nil {
+			_ = s.Rollback()
 			if models.IsErrTaskDoesNotExist(err) {
 				return nil, false, errs.ResourceNotFoundError
 			}
+			return nil, false, err
+		}
+		if err := s.Commit(); err != nil {
 			return nil, false, err
 		}
 
@@ -230,6 +253,9 @@ func (vcls *VikunjaCaldavListStorage) GetShallowResource(rpath string) (*data.Re
 // CreateResource creates a new resource
 func (vcls *VikunjaCaldavListStorage) CreateResource(rpath, content string) (*data.Resource, error) {
 
+	s := db.NewSession()
+	defer s.Close()
+
 	vTask, err := parseTaskFromVTODO(content)
 	if err != nil {
 		return nil, err
@@ -238,7 +264,7 @@ func (vcls *VikunjaCaldavListStorage) CreateResource(rpath, content string) (*da
 	vTask.ListID = vcls.list.ID
 
 	// Check the rights
-	canCreate, err := vTask.CanCreate(vcls.user)
+	canCreate, err := vTask.CanCreate(s, vcls.user)
 	if err != nil {
 		return nil, err
 	}
@@ -247,8 +273,13 @@ func (vcls *VikunjaCaldavListStorage) CreateResource(rpath, content string) (*da
 	}
 
 	// Create the task
-	err = vTask.Create(vcls.user)
+	err = vTask.Create(s, vcls.user)
 	if err != nil {
+		_ = s.Rollback()
+		return nil, err
+	}
+
+	if err := s.Commit(); err != nil {
 		return nil, err
 	}
 
@@ -272,18 +303,28 @@ func (vcls *VikunjaCaldavListStorage) UpdateResource(rpath, content string) (*da
 	// At this point, we already have the right task in vcls.task, so we can use that ID directly
 	vTask.ID = vcls.task.ID
 
+	s := db.NewSession()
+	defer s.Close()
+
 	// Check the rights
-	canUpdate, err := vTask.CanUpdate(vcls.user)
+	canUpdate, err := vTask.CanUpdate(s, vcls.user)
 	if err != nil {
+		_ = s.Rollback()
 		return nil, err
 	}
 	if !canUpdate {
+		_ = s.Rollback()
 		return nil, errs.ForbiddenError
 	}
 
 	// Update the task
-	err = vTask.Update()
+	err = vTask.Update(s)
 	if err != nil {
+		_ = s.Rollback()
+		return nil, err
+	}
+
+	if err := s.Commit(); err != nil {
 		return nil, err
 	}
 
@@ -299,9 +340,13 @@ func (vcls *VikunjaCaldavListStorage) UpdateResource(rpath, content string) (*da
 // DeleteResource deletes a resource
 func (vcls *VikunjaCaldavListStorage) DeleteResource(rpath string) error {
 	if vcls.task != nil {
+		s := db.NewSession()
+		defer s.Close()
+
 		// Check the rights
-		canDelete, err := vcls.task.CanDelete(vcls.user)
+		canDelete, err := vcls.task.CanDelete(s, vcls.user)
 		if err != nil {
+			_ = s.Rollback()
 			return err
 		}
 		if !canDelete {
@@ -309,7 +354,13 @@ func (vcls *VikunjaCaldavListStorage) DeleteResource(rpath string) error {
 		}
 
 		// Delete it
-		return vcls.task.Delete()
+		err = vcls.task.Delete(s)
+		if err != nil {
+			_ = s.Rollback()
+			return err
+		}
+
+		return s.Commit()
 	}
 
 	return nil
@@ -385,16 +436,22 @@ func (vlra *VikunjaListResourceAdapter) GetModTime() time.Time {
 }
 
 func (vcls *VikunjaCaldavListStorage) getListRessource(isCollection bool) (rr VikunjaListResourceAdapter, err error) {
-	can, _, err := vcls.list.CanRead(vcls.user)
+	s := db.NewSession()
+	defer s.Close()
+
+	can, _, err := vcls.list.CanRead(s, vcls.user)
 	if err != nil {
+		_ = s.Rollback()
 		return
 	}
 	if !can {
+		_ = s.Rollback()
 		log.Errorf("User %v tried to access a caldav resource (List %v) which they are not allowed to access", vcls.user.Username, vcls.list.ID)
 		return rr, models.ErrUserDoesNotHaveAccessToList{ListID: vcls.list.ID}
 	}
-	err = vcls.list.ReadOne()
+	err = vcls.list.ReadOne(s)
 	if err != nil {
+		_ = s.Rollback()
 		return
 	}
 
@@ -403,8 +460,9 @@ func (vcls *VikunjaCaldavListStorage) getListRessource(isCollection bool) (rr Vi
 		tk := models.TaskCollection{
 			ListID: vcls.list.ID,
 		}
-		iface, _, _, err := tk.ReadAll(vcls.user, "", 1, 1000)
+		iface, _, _, err := tk.ReadAll(s, vcls.user, "", 1, 1000)
 		if err != nil {
+			_ = s.Rollback()
 			return rr, err
 		}
 		tasks, ok := iface.([]*models.Task)
@@ -414,6 +472,10 @@ func (vcls *VikunjaCaldavListStorage) getListRessource(isCollection bool) (rr Vi
 
 		listTasks = tasks
 		vcls.list.Tasks = tasks
+	}
+
+	if err := s.Commit(); err != nil {
+		return rr, err
 	}
 
 	rr = VikunjaListResourceAdapter{

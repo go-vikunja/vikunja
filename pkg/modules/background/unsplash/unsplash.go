@@ -26,6 +26,8 @@ import (
 	"strings"
 	"time"
 
+	"xorm.io/xorm"
+
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
@@ -150,7 +152,7 @@ func getUnsplashPhotoInfoByID(photoID string) (photo *Photo, err error) {
 // @Success 200 {array} background.Image "An array with photos"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /backgrounds/unsplash/search [get]
-func (p *Provider) Search(search string, page int64) (result []*background.Image, err error) {
+func (p *Provider) Search(s *xorm.Session, search string, page int64) (result []*background.Image, err error) {
 
 	// If we don't have a search query, return results from the unsplash featured collection
 	if search == "" {
@@ -243,7 +245,7 @@ func (p *Provider) Search(search string, page int64) (result []*background.Image
 // @Failure 403 {object} web.HTTPError "The user does not have access to the list"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{id}/backgrounds/unsplash [post]
-func (p *Provider) Set(image *background.Image, list *models.List, auth web.Auth) (err error) {
+func (p *Provider) Set(s *xorm.Session, image *background.Image, list *models.List, auth web.Auth) (err error) {
 
 	// Find the photo
 	photo, err := getUnsplashPhotoInfoByID(image.ID)
@@ -292,7 +294,7 @@ func (p *Provider) Set(image *background.Image, list *models.List, auth web.Auth
 			return err
 		}
 
-		if err := models.RemoveUnsplashPhoto(list.BackgroundFileID); err != nil {
+		if err := models.RemoveUnsplashPhoto(s, list.BackgroundFileID); err != nil {
 			return err
 		}
 	}
@@ -304,7 +306,7 @@ func (p *Provider) Set(image *background.Image, list *models.List, auth web.Auth
 		Author:     photo.User.Username,
 		AuthorName: photo.User.Name,
 	}
-	err = unsplashPhoto.Save()
+	err = unsplashPhoto.Save(s)
 	if err != nil {
 		return
 	}
@@ -315,13 +317,13 @@ func (p *Provider) Set(image *background.Image, list *models.List, auth web.Auth
 	list.BackgroundInformation = unsplashPhoto
 
 	// Set it as the list background
-	return models.SetListBackground(list.ID, file)
+	return models.SetListBackground(s, list.ID, file)
 }
 
 // Pingback pings the unsplash api if an unsplash photo has been accessed.
-func Pingback(f *files.File) {
+func Pingback(s *xorm.Session, f *files.File) {
 	// Check if the file is actually downloaded from unsplash
-	unsplashPhoto, err := models.GetUnsplashPhotoByFileID(f.ID)
+	unsplashPhoto, err := models.GetUnsplashPhotoByFileID(s, f.ID)
 	if err != nil {
 		if files.IsErrFileIsNotUnsplashFile(err) {
 			return

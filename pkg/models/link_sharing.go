@@ -24,6 +24,7 @@ import (
 	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/web"
 	"github.com/dgrijalva/jwt-go"
+	"xorm.io/xorm"
 )
 
 // SharingType holds the sharing type
@@ -99,7 +100,7 @@ func GetLinkShareFromClaims(claims jwt.MapClaims) (share *LinkSharing, err error
 // @Failure 404 {object} web.HTTPError "The list does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{list}/shares [put]
-func (share *LinkSharing) Create(a web.Auth) (err error) {
+func (share *LinkSharing) Create(s *xorm.Session, a web.Auth) (err error) {
 
 	err = share.Right.isValid()
 	if err != nil {
@@ -108,7 +109,7 @@ func (share *LinkSharing) Create(a web.Auth) (err error) {
 
 	share.SharedByID = a.GetID()
 	share.Hash = utils.MakeRandomString(40)
-	_, err = x.Insert(share)
+	_, err = s.Insert(share)
 	share.SharedBy, _ = user.GetFromAuth(a)
 	return
 }
@@ -127,8 +128,8 @@ func (share *LinkSharing) Create(a web.Auth) (err error) {
 // @Failure 404 {object} web.HTTPError "Share Link not found."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{list}/shares/{share} [get]
-func (share *LinkSharing) ReadOne() (err error) {
-	exists, err := x.Where("id = ?", share.ID).Get(share)
+func (share *LinkSharing) ReadOne(s *xorm.Session) (err error) {
+	exists, err := s.Where("id = ?", share.ID).Get(share)
 	if err != nil {
 		return err
 	}
@@ -152,9 +153,9 @@ func (share *LinkSharing) ReadOne() (err error) {
 // @Success 200 {array} models.LinkSharing "The share links"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{list}/shares [get]
-func (share *LinkSharing) ReadAll(a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
+func (share *LinkSharing) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
 	list := &List{ID: share.ListID}
-	can, _, err := list.CanRead(a)
+	can, _, err := list.CanRead(s, a)
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -165,7 +166,7 @@ func (share *LinkSharing) ReadAll(a web.Auth, search string, page int, perPage i
 	limit, start := getLimitFromPageIndex(page, perPage)
 
 	var shares []*LinkSharing
-	query := x.
+	query := s.
 		Where("list_id = ? AND hash LIKE ?", share.ListID, "%"+search+"%")
 	if limit > 0 {
 		query = query.Limit(limit, start)
@@ -182,7 +183,7 @@ func (share *LinkSharing) ReadAll(a web.Auth, search string, page int, perPage i
 	}
 
 	users := make(map[int64]*user.User)
-	err = x.In("id", userIDs).Find(&users)
+	err = s.In("id", userIDs).Find(&users)
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -192,7 +193,7 @@ func (share *LinkSharing) ReadAll(a web.Auth, search string, page int, perPage i
 	}
 
 	// Total count
-	totalItems, err = x.
+	totalItems, err = s.
 		Where("list_id = ? AND hash LIKE ?", share.ListID, "%"+search+"%").
 		Count(&LinkSharing{})
 	if err != nil {
@@ -216,15 +217,15 @@ func (share *LinkSharing) ReadAll(a web.Auth, search string, page int, perPage i
 // @Failure 404 {object} web.HTTPError "Share Link not found."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{list}/shares/{share} [delete]
-func (share *LinkSharing) Delete() (err error) {
-	_, err = x.Where("id = ?", share.ID).Delete(share)
+func (share *LinkSharing) Delete(s *xorm.Session) (err error) {
+	_, err = s.Where("id = ?", share.ID).Delete(share)
 	return
 }
 
 // GetLinkShareByHash returns a link share by hash
-func GetLinkShareByHash(hash string) (share *LinkSharing, err error) {
+func GetLinkShareByHash(s *xorm.Session, hash string) (share *LinkSharing, err error) {
 	share = &LinkSharing{}
-	has, err := x.Where("hash = ?", hash).Get(share)
+	has, err := s.Where("hash = ?", hash).Get(share)
 	if err != nil {
 		return
 	}
@@ -235,13 +236,12 @@ func GetLinkShareByHash(hash string) (share *LinkSharing, err error) {
 }
 
 // GetListByShareHash returns a link share by its hash
-func GetListByShareHash(hash string) (list *List, err error) {
-	share, err := GetLinkShareByHash(hash)
+func GetListByShareHash(s *xorm.Session, hash string) (list *List, err error) {
+	share, err := GetLinkShareByHash(s, hash)
 	if err != nil {
 		return
 	}
 
-	list = &List{ID: share.ListID}
-	err = list.GetSimpleByID()
+	list, err = GetListSimpleByID(s, share.ListID)
 	return
 }

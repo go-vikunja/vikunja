@@ -19,6 +19,7 @@ package migration
 import (
 	"time"
 
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/user"
 )
 
@@ -37,17 +38,26 @@ func (s *Status) TableName() string {
 
 // SetMigrationStatus sets the migration status for a user
 func SetMigrationStatus(m Migrator, u *user.User) (err error) {
+	s := db.NewSession()
+	defer s.Close()
+
 	status := &Status{
 		UserID:       u.ID,
 		MigratorName: m.Name(),
 	}
-	_, err = x.Insert(status)
+	_, err = s.Insert(status)
 	return
 }
 
 // GetMigrationStatus returns the migration status for a migration and a user
 func GetMigrationStatus(m Migrator, u *user.User) (status *Status, err error) {
+	s := db.NewSession()
+	defer s.Close()
+
 	status = &Status{}
-	_, err = x.Where("user_id = ? and migrator_name = ?", u.ID, m.Name()).Desc("id").Get(status)
+	_, err = s.
+		Where("user_id = ? and migrator_name = ?", u.ID, m.Name()).
+		Desc("id").
+		Get(status)
 	return
 }

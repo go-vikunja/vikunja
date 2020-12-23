@@ -16,53 +16,55 @@
 
 package models
 
-import "code.vikunja.io/web"
+import (
+	"code.vikunja.io/web"
+	"xorm.io/xorm"
+)
 
 // CanRead implements the read right check for a link share
-func (share *LinkSharing) CanRead(a web.Auth) (bool, int, error) {
+func (share *LinkSharing) CanRead(s *xorm.Session, a web.Auth) (bool, int, error) {
 	// Don't allow creating link shares if the user itself authenticated with a link share
 	if _, is := a.(*LinkSharing); is {
 		return false, 0, nil
 	}
 
-	l, err := GetListByShareHash(share.Hash)
+	l, err := GetListByShareHash(s, share.Hash)
 	if err != nil {
 		return false, 0, err
 	}
-	return l.CanRead(a)
+	return l.CanRead(s, a)
 }
 
 // CanDelete implements the delete right check for a link share
-func (share *LinkSharing) CanDelete(a web.Auth) (bool, error) {
-	return share.canDoLinkShare(a)
+func (share *LinkSharing) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
+	return share.canDoLinkShare(s, a)
 }
 
 // CanUpdate implements the update right check for a link share
-func (share *LinkSharing) CanUpdate(a web.Auth) (bool, error) {
-	return share.canDoLinkShare(a)
+func (share *LinkSharing) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
+	return share.canDoLinkShare(s, a)
 }
 
 // CanCreate implements the create right check for a link share
-func (share *LinkSharing) CanCreate(a web.Auth) (bool, error) {
-	return share.canDoLinkShare(a)
+func (share *LinkSharing) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
+	return share.canDoLinkShare(s, a)
 }
 
-func (share *LinkSharing) canDoLinkShare(a web.Auth) (bool, error) {
+func (share *LinkSharing) canDoLinkShare(s *xorm.Session, a web.Auth) (bool, error) {
 	// Don't allow creating link shares if the user itself authenticated with a link share
 	if _, is := a.(*LinkSharing); is {
 		return false, nil
 	}
 
-	l := &List{ID: share.ListID}
-	err := l.GetSimpleByID()
+	l, err := GetListSimpleByID(s, share.ListID)
 	if err != nil {
 		return false, err
 	}
 
 	// Check if the user is admin when the link right is admin
 	if share.Right == RightAdmin {
-		return l.IsAdmin(a)
+		return l.IsAdmin(s, a)
 	}
 
-	return l.CanWrite(a)
+	return l.CanWrite(s, a)
 }

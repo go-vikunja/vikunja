@@ -32,12 +32,18 @@ func TestTeamMember_Create(t *testing.T) {
 
 	t.Run("normal", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
 		tm := &TeamMember{
 			TeamID:   1,
 			Username: "user3",
 		}
-		err := tm.Create(doer)
+		err := tm.Create(s, doer)
 		assert.NoError(t, err)
+		err = s.Commit()
+		assert.NoError(t, err)
+
 		db.AssertExists(t, "team_members", map[string]interface{}{
 			"id":      tm.ID,
 			"team_id": 1,
@@ -46,31 +52,40 @@ func TestTeamMember_Create(t *testing.T) {
 	})
 	t.Run("already existing", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
 		tm := &TeamMember{
 			TeamID:   1,
 			Username: "user1",
 		}
-		err := tm.Create(doer)
+		err := tm.Create(s, doer)
 		assert.Error(t, err)
 		assert.True(t, IsErrUserIsMemberOfTeam(err))
 	})
 	t.Run("nonexisting user", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
 		tm := &TeamMember{
 			TeamID:   1,
 			Username: "nonexistinguser",
 		}
-		err := tm.Create(doer)
+		err := tm.Create(s, doer)
 		assert.Error(t, err)
 		assert.True(t, user.IsErrUserDoesNotExist(err))
 	})
 	t.Run("nonexisting team", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
 		tm := &TeamMember{
 			TeamID:   9999999,
 			Username: "user1",
 		}
-		err := tm.Create(doer)
+		err := tm.Create(s, doer)
 		assert.Error(t, err)
 		assert.True(t, IsErrTeamDoesNotExist(err))
 	})
@@ -79,12 +94,18 @@ func TestTeamMember_Create(t *testing.T) {
 func TestTeamMember_Delete(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
 		tm := &TeamMember{
 			TeamID:   1,
 			Username: "user1",
 		}
-		err := tm.Delete()
+		err := tm.Delete(s)
 		assert.NoError(t, err)
+		err = s.Commit()
+		assert.NoError(t, err)
+
 		db.AssertMissing(t, "team_members", map[string]interface{}{
 			"team_id": 1,
 			"user_id": 1,
@@ -95,14 +116,20 @@ func TestTeamMember_Delete(t *testing.T) {
 func TestTeamMember_Update(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
 		tm := &TeamMember{
 			TeamID:   1,
 			Username: "user1",
 			Admin:    true,
 		}
-		err := tm.Update()
+		err := tm.Update(s)
 		assert.NoError(t, err)
 		assert.False(t, tm.Admin) // Since this endpoint toggles the right, we should get a false for admin back.
+		err = s.Commit()
+		assert.NoError(t, err)
+
 		db.AssertExists(t, "team_members", map[string]interface{}{
 			"team_id": 1,
 			"user_id": 1,
@@ -113,14 +140,20 @@ func TestTeamMember_Update(t *testing.T) {
 	// should ignore what was passed.
 	t.Run("explicitly false in payload", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
 		tm := &TeamMember{
 			TeamID:   1,
 			Username: "user1",
 			Admin:    true,
 		}
-		err := tm.Update()
+		err := tm.Update(s)
 		assert.NoError(t, err)
 		assert.False(t, tm.Admin)
+		err = s.Commit()
+		assert.NoError(t, err)
+
 		db.AssertExists(t, "team_members", map[string]interface{}{
 			"team_id": 1,
 			"user_id": 1,
