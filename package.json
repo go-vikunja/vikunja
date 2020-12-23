@@ -85,7 +85,7 @@
     "last 2 versions",
     "not ie <= 8"
   ],
-  "license": "LGPL-3.0-or-later",
+  "license": "AGPL-3.0-or-later",
   "jest": {
     "testPathIgnorePatterns": ["cypress"]
   }
