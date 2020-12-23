@@ -205,7 +205,7 @@
 				</div>
 			</div>
 
-			<div class="bucket new-bucket" v-if="!loading && canWrite">
+			<div class="bucket new-bucket" v-if="canWrite">
 				<input
 					:class="{'is-loading': loading}"
 					:disabled="loading"
@@ -222,12 +222,12 @@
 				<a
 					@click="() => showNewBucketInput = true"
 					class="button noshadow is-transparent is-fullwidth has-text-centered" v-if="!showNewBucketInput">
-				<span class="icon is-small">
-					<icon icon="plus"/>
-				</span>
+					<span class="icon is-small">
+						<icon icon="plus"/>
+					</span>
 					<span>
-					Create a new bucket
-				</span>
+						Create a new bucket
+					</span>
 				</a>
 			</div>
 		</div>
