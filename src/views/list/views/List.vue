@@ -1,6 +1,6 @@
 <template>
 	<div :class="{ 'is-loading': taskCollectionService.loading}" class="loader-container is-max-width-desktop">
-		<div class="filter-container">
+		<div class="filter-container" v-if="list.isSavedFilter && !list.isSavedFilter()">
 			<div class="items">
 				<div class="search">
 					<div :class="{ 'hidden': !showTaskSearch }" class="field has-addons">

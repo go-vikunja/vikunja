@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<div class="filter-container">
+		<div class="filter-container" v-if="list.isSavedFilter && !list.isSavedFilter()">
 			<div class="items">
 				<button @click="showFilters = !showFilters" class="button">
 					<span class="icon is-small">
@@ -332,6 +332,7 @@ export default {
 		loadedListId: state => state.kanban.listId,
 		loading: LOADING,
 		canWrite: state => state.currentList.maxRight > Rights.READ,
+		list: state => state.currentList,
 	}),
 	methods: {
 		loadBuckets() {
