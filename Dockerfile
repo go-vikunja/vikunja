@@ -10,7 +10,7 @@ ENV YARN_CACHE_FOLDER .cache/yarn/
 COPY .  ./
 
 RUN \
-  if [ $USE_RELEASE ]; then \
+  if [ $USE_RELEASE = true ]; then \
     rm -rf dist/ && \
     wget https://dl.vikunja.io/frontend/vikunja-frontend-$RELEASE_VERSION.zip -O frontend-release.zip && \
     unzip frontend-release.zip -d dist/ && \
