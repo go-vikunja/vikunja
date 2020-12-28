@@ -309,7 +309,7 @@ describe('Lists', () => {
 				.should('contain', 'New Bucket Title')
 		})
 
-		it('Can delete a bucket', () => {
+		it.only('Can delete a bucket', () => {
 			cy.visit('/lists/1/kanban')
 
 			cy.get('.kanban .bucket .bucket-header .dropdown.options .dropdown-trigger')
@@ -327,6 +327,9 @@ describe('Lists', () => {
 			cy.get('.kanban .bucket .title')
 				.contains(buckets[0].title)
 				.should('not.exist')
+			cy.get('.kanban .bucket .title')
+				.contains(buckets[1].title)
+				.should('exist')
 		})
 
 

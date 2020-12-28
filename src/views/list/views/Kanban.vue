@@ -31,8 +31,8 @@
 						:class="{'is-max': bucket.tasks.length >= bucket.limit}"
 						class="limit"
 						v-if="bucket.limit > 0">
-					{{ bucket.tasks.length }}/{{ bucket.limit }}
-				</span>
+						{{ bucket.tasks.length }}/{{ bucket.limit }}
+					</span>
 					<div
 						:class="{ 'is-active': bucketOptionsDropDownActive[bucket.id] }"
 						class="dropdown is-right options"

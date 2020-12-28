@@ -157,7 +157,7 @@ export default {
 				.then(r => {
 					ctx.commit('removeBucket', bucket)
 					// We reload all buckets because tasks are being moved from the deleted bucket
-					ctx.dispatch('loadBucketsForList', bucket.listId)
+					ctx.dispatch('loadBucketsForList', {listId: bucket.listId})
 					return Promise.resolve(r)
 				})
 				.catch(e => {
