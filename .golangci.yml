@@ -22,11 +22,11 @@ linters:
     - unused
   fast: false
 
-linter-settings:
+linters-settings:
   nestif:
     min-complexity: 6
   goheader:
-    template-path: code-hesader-template.txt
+    template-path: code-header-template.txt
 
 issues:
   exclude-rules:
@@ -74,3 +74,9 @@ issues:
     - path: pkg/modules/migration
       linters:
         - gocyclo
+    - path: pkg/routes/api/v1/docs.go
+      linters:
+        - goheader
+    - text: "Missed string"
+      linters:
+        - goheader

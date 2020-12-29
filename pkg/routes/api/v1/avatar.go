@@ -1,4 +1,4 @@
-// Vikunja is a to-do-list application to facilitate your life.
+// Vikunja is a to-do list application to facilitate your life.
 // Copyright 2018-2020 Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
