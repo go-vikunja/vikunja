@@ -163,8 +163,8 @@
         }
 
         .color-bubble {
-          width: 14px; // Without this, the bubble is only 10.2342357612px wide and seems squashed.
           height: 12px;
+          flex: 1 0 12px;
         }
 
         .favorite {
