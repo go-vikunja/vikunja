@@ -19,6 +19,7 @@ import ListNamespaces from '../views/namespaces/ListNamespaces'
 import ListTeamsComponent from '../views/teams/ListTeams'
 // Label Handling
 import ListLabelsComponent from '../views/labels/ListLabels'
+import NewLabelComponent from '../views/labels/NewLabel'
 // Migration
 import MigrationComponent from '../views/migrator/Migrate'
 import MigrateServiceComponent from '../views/migrator/MigrateService'
@@ -252,6 +253,11 @@ export default new Router({
 			path: '/labels',
 			name: 'labels.index',
 			component: ListLabelsComponent,
+		},
+		{
+			path: '/labels/new',
+			name: 'labels.create',
+			component: NewLabelComponent,
 		},
 		{
 			path: '/migrate',

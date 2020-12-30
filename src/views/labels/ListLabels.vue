@@ -1,5 +1,11 @@
 <template>
 	<div :class="{ 'is-loading': labelService.loading}" class="loader-container content">
+		<router-link :to="{name:'labels.create'}" class="button is-success button-right">
+			<span class="icon is-small">
+				<icon icon="plus"/>
+			</span>
+			New label
+		</router-link>
 		<h1>Manage labels</h1>
 		<p>
 			Click on a label to edit it.
