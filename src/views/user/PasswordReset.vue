@@ -96,7 +96,7 @@ export default {
 			let passwordReset = new PasswordResetModel({newPassword: this.credentials.password})
 			this.passwordResetService.resetPassword(passwordReset)
 				.then(response => {
-					this.successMessage = response.data.message
+					this.successMessage = response.message
 					localStorage.removeItem('passwordResetToken')
 				})
 				.catch(e => {

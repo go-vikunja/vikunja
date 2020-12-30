@@ -73,14 +73,14 @@ export default {
 			window.addEventListener('offline', () => this.$store.commit(ONLINE, navigator.onLine))
 		},
 		setupPasswortResetRedirect() {
-			if (this.$route.query.userPasswordReset !== undefined) {
+			if (typeof this.$route.query.userPasswordReset !== 'undefined') {
 				localStorage.removeItem('passwordResetToken') // Delete an eventually preexisting old token
 				localStorage.setItem('passwordResetToken', this.$route.query.userPasswordReset)
 				this.$router.push({name: 'user.password-reset.reset'})
 			}
 		},
 		setupEmailVerificationRedirect() {
-			if (this.$route.query.userEmailConfirm !== undefined) {
+			if (typeof this.$route.query.userEmailConfirm !== 'undefined') {
 				localStorage.removeItem('emailConfirmToken') // Delete an eventually preexisting old token
 				localStorage.setItem('emailConfirmToken', this.$route.query.userEmailConfirm)
 				this.$router.push({name: 'user.login'})

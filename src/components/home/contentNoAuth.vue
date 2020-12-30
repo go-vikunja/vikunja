@@ -33,7 +33,9 @@ export default {
 				this.$route.name !== 'user.password-reset.reset' &&
 				this.$route.name !== 'user.register' &&
 				this.$route.name !== 'link-share.auth' &&
-				this.$route.name !== 'openid.auth'
+				this.$route.name !== 'openid.auth' &&
+				localStorage.getItem('passwordResetToken') === null &&
+				localStorage.getItem('emailConfirmToken') === null
 			) {
 				this.$router.push({name: 'user.login'})
 			}
