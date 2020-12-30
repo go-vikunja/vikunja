@@ -157,6 +157,12 @@ func (err ErrNoPasswordResetToken) HTTPError() web.HTTPError {
 	return web.HTTPError{HTTPCode: http.StatusPreconditionFailed, Code: ErrCodeNoPasswordResetToken, Message: "No token to reset a user's password provided."}
 }
 
+// IsErrNoPasswordResetToken checks if an error is ErrNoPasswordResetToken
+func IsErrNoPasswordResetToken(err error) bool {
+	_, ok := err.(ErrNoPasswordResetToken)
+	return ok
+}
+
 // ErrInvalidPasswordResetToken is an error where the password reset token is invalid
 type ErrInvalidPasswordResetToken struct {
 	Token string

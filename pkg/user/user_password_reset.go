@@ -39,6 +39,10 @@ func ResetPassword(s *xorm.Session, reset *PasswordReset) (err error) {
 		return ErrNoUsernamePassword{}
 	}
 
+	if reset.Token == "" {
+		return ErrNoPasswordResetToken{}
+	}
+
 	// Check if we have a token
 	var user User
 	exists, err := s.

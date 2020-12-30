@@ -410,12 +410,12 @@ func TestUserPasswordReset(t *testing.T) {
 		defer s.Close()
 
 		reset := &PasswordReset{
-			Token:       "somethingsomething",
+			Token:       "",
 			NewPassword: "12345",
 		}
 		err := ResetPassword(s, reset)
 		assert.Error(t, err)
-		assert.True(t, IsErrInvalidPasswordResetToken(err))
+		assert.True(t, IsErrNoPasswordResetToken(err))
 	})
 	t.Run("wrong token", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
