@@ -63,7 +63,9 @@ func ResetPassword(s *xorm.Session, reset *PasswordReset) (err error) {
 	}
 
 	// Save it
+	user.PasswordResetToken = ""
 	_, err = s.
+		Cols("password", "password_reset_token").
 		Where("id = ?", user.ID).
 		Update(&user)
 	if err != nil {
