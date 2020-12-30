@@ -2,11 +2,9 @@
 	<div :class="{'is-pulled-up': isEditEnabled}" class="editor">
 		<div class="tabs is-right" v-if="hasPreview && isEditEnabled && !hasEditBottom">
 			<ul>
-				<li :class="{'is-active': isPreviewActive}" v-if="isEditActive">
-					<a @click="showPreview">Preview</a>
-				</li>
-				<li :class="{'is-active': isEditActive}">
-					<a @click="() => {isPreviewActive = false; isEditActive = true}">Edit</a>
+				<li>
+					<a v-if="!isEditActive" @click="toggleEdit">Edit</a>
+					<a v-else @click="toggleEdit">Done</a>
 				</li>
 			</ul>
 		</div>
@@ -23,17 +21,15 @@
 		</div>
 
 		<ul class="actions">
+			<template v-if="hasEditBottom">
+				<li>
+					<a v-if="!isEditActive" @click="toggleEdit">Edit</a>
+					<a v-else @click="toggleEdit">Done</a>
+				</li>
+			</template>
 			<li v-for="(action, k) in bottomActions" :key="k">
 				<a @click="action.action">{{ action.title }}</a>
 			</li>
-			<template v-if="hasEditBottom">
-				<li :class="{'is-active': isPreviewActive}" v-if="isEditActive">
-					<a @click="showPreview">Preview</a>
-				</li>
-				<li :class="{'is-active': isEditActive}">
-					<a @click="() => {isPreviewActive = false; isEditActive = true}">Edit</a>
-				</li>
-			</template>
 		</ul>
 	</div>
 </template>
@@ -394,10 +390,16 @@ export default {
 			this.bubble()
 			this.renderPreview()
 		},
-		showPreview() {
-			this.isPreviewActive = true
-			this.isEditActive = false
-			this.renderPreview()
+		toggleEdit() {
+			if (this.isEditActive) {
+				this.isPreviewActive = true;
+				this.isEditActive = false;
+				this.renderPreview();
+				this.bubble(0); // save instantly
+			} else {
+				this.isPreviewActive = false;
+				this.isEditActive = true;
+			}
 		},
 	},
 }
