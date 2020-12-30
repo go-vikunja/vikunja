@@ -70,6 +70,15 @@
       width: 27px;
     }
 
+    .list-task-icon {
+      margin-left: 6px;
+
+      &:not(:first-of-type) {
+        margin-left: 8px;
+      }
+        
+    }
+
     a {
       color: $text;
       transition: color ease $transition-duration;

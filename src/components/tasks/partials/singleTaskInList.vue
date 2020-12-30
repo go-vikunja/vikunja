@@ -47,6 +47,14 @@
 				<defer-task v-if="+new Date(task.dueDate) > 0 && showDefer" v-model="task"/>
 			</transition>
 			<priority-label :priority="task.priority"/>
+			<span>
+				<span class="list-task-icon" v-if="task.attachments.length > 0">
+					<icon icon="paperclip"/>
+				</span>
+				<span class="list-task-icon" v-if="task.description">
+					<icon icon="align-left"/>
+				</span>
+			</span>
 		</span>
 		<router-link
 			:to="{ name: 'list.list', params: { listId: task.listId } }"
