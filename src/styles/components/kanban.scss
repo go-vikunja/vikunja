@@ -72,6 +72,12 @@ $crazy-height-calculation: '100vh - 4.5rem - 1.5rem - 1em - 1.5em - 8px';
           font-size: .85rem;
           word-break: break-word;
         }
+        
+        .progress {
+          margin: 8px 0 0 0;
+          width: 100%;
+          height: 0.5rem;
+        }
 
         .due-date {
           float: right;

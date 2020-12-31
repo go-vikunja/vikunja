@@ -139,6 +139,12 @@
 								</span>
 							</span>
 								<h3>{{ task.title }}</h3>
+								<progress
+									class="progress is-small"
+									v-if="task.percentDone > 0"
+									:value="task.percentDone * 100" max="100">
+									{{ task.percentDone * 100 }}%
+								</progress>
 								<labels :labels="task.labels"/>
 								<div class="footer">
 									<div class="items">

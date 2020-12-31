@@ -56,6 +56,12 @@
 				</span>
 			</span>
 		</span>
+		<progress
+			class="progress is-small"
+			v-if="task.percentDone > 0"
+			:value="task.percentDone * 100" max="100">
+			{{ task.percentDone * 100 }}%
+		</progress>
 		<router-link
 			:to="{ name: 'list.list', params: { listId: task.listId } }"
 			class="task-list"
