@@ -42,7 +42,7 @@ require (
 	github.com/go-testfixtures/testfixtures/v3 v3.4.1
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/golang/snappy v0.0.2 // indirect
-	github.com/gordonklaus/ineffassign v0.0.0-20201107091007-3b93a8888063
+	github.com/gordonklaus/ineffassign v0.0.0-20210104184537-8eed68eb605f
 	github.com/iancoleman/strcase v0.1.2
 	github.com/imdario/mergo v0.3.11
 	github.com/jgautheron/goconst v0.0.0-20201117150253-ccae5bf973f3

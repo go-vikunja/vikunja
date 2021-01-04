@@ -337,6 +337,8 @@ github.com/gopherjs/gopherjs v0.0.0-20181017120253-0766667cb4d1 h1:EGx4pi6eqNxGa
 github.com/gopherjs/gopherjs v0.0.0-20181017120253-0766667cb4d1/go.mod h1:wJfORRmW1u3UXTncJ5qlYoELFm8eSnnEO6hX4iZ3EWY=
 github.com/gordonklaus/ineffassign v0.0.0-20201107091007-3b93a8888063 h1:dKprcOvlsvqfWn/iGvz+oYuC2axESeSMuF8dDrWMNsE=
 github.com/gordonklaus/ineffassign v0.0.0-20201107091007-3b93a8888063/go.mod h1:cuNKsD1zp2v6XfE/orVX2QE1LC+i254ceGcVeDT3pTU=
+github.com/gordonklaus/ineffassign v0.0.0-20210104184537-8eed68eb605f h1:wHGrcNkjqm/QJeljJ9bkFWtND9I0ASarwpBlRcwRymk=
+github.com/gordonklaus/ineffassign v0.0.0-20210104184537-8eed68eb605f/go.mod h1:cuNKsD1zp2v6XfE/orVX2QE1LC+i254ceGcVeDT3pTU=
 github.com/gorilla/context v1.1.1/go.mod h1:kBGZzfjB9CEq2AlWe17Uuf7NDRt0dE0s8S51q0aT7Yg=
 github.com/gorilla/mux v1.6.2/go.mod h1:1lud6UwP+6orDFRuTfBEV8e9/aOM/c4fVVCaMa2zaAs=
 github.com/gorilla/mux v1.7.3/go.mod h1:1lud6UwP+6orDFRuTfBEV8e9/aOM/c4fVVCaMa2zaAs=
