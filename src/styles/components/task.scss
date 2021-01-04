@@ -254,3 +254,16 @@
 .link-share-container .task-view {
   background-color: transparent;
 }
+
+.flash-background-enter, .flash-background-enter-active  {
+  animation: flash-background $flash-background-duration ease 1;
+}
+
+@keyframes flash-background {
+  0% {
+    background: lighten($primary, 30);
+  }
+  100% {
+    background: transparent;
+  }
+}
