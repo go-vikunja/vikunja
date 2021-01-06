@@ -15,29 +15,16 @@
 			</label>
 			<div class="field">
 				<multiselect
-					:internal-search="true"
-					:loading="taskService.loading"
-					:multiple="false"
-					:options="foundTasks"
-					:searchable="true"
-					:showNoOptions="false"
-					:taggable="true"
-					@search-change="findTasks"
-					@tag="createAndRelateTask"
-					label="title"
 					placeholder="Type search for a new task to add as related..."
-					tag-placeholder="Add this as new related task"
-					track-by="id"
+					@search="findTasks"
+					:loading="taskService.loading"
+					:search-results="foundTasks"
+					label="title"
 					v-model="newTaskRelationTask"
-				>
-					<template slot="clear" slot-scope="props">
-						<div
-							@mousedown.prevent.stop="clearAllFoundTasks(props.search)"
-							class="multiselect__clear"
-							v-if="newTaskRelationTask !== null && newTaskRelationTask.id !== 0"></div>
-					</template>
-					<span slot="noResult">No task found. Consider changing the search query.</span>
-				</multiselect>
+					:creatable="true"
+					create-placeholder="Add this as new related task"
+					@create="createAndRelateTask"
+				/>
 			</div>
 			<div class="field has-addons">
 				<div class="control is-expanded">
@@ -60,7 +47,7 @@
 			<template v-if="rts.length > 0">
 				<span class="title">{{ relationKindTitle(kind, rts.length) }}</span>
 				<div class="tasks noborder">
-					<div :key="t.id" class="task" v-for="t in rts">
+					<div :key="t.id" class="task" v-for="t in rts.filter(t => t)">
 						<router-link :to="{ name: $route.name, params: { id: t.id } }">
 							<span :class="{ 'done': t.done}" class="tasktext">
 								<span
@@ -107,8 +94,7 @@ import TaskRelationService from '../../../services/taskRelation'
 import relationKinds from '../../../models/relationKinds'
 import TaskRelationModel from '../../../models/taskRelation'
 
-import LoadingComponent from '../../misc/loading'
-import ErrorComponent from '../../misc/error'
+import Multiselect from '@/components/input/multiselect'
 
 export default {
 	name: 'relatedTasks',
@@ -127,12 +113,7 @@ export default {
 		}
 	},
 	components: {
-		multiselect: () => ({
-			component: import(/* webpackChunkName: "multiselect" */ 'vue-multiselect'),
-			loading: LoadingComponent,
-			error: ErrorComponent,
-			timeout: 60000,
-		}),
+		Multiselect,
 	},
 	props: {
 		taskId: {
@@ -171,11 +152,6 @@ export default {
 	},
 	methods: {
 		findTasks(query) {
-			if (query === '') {
-				this.clearAllFoundTasks()
-				return
-			}
-
 			this.taskService.getAll({}, {s: query})
 				.then(response => {
 					this.$set(this, 'foundTasks', response)
@@ -183,9 +159,6 @@ export default {
 				.catch(e => {
 					this.error(e, this)
 				})
-		},
-		clearAllFoundTasks() {
-			this.$set(this, 'foundTasks', [])
 		},
 		addTaskRelation() {
 			let rel = new TaskRelationModel({
@@ -199,7 +172,7 @@ export default {
 						this.$set(this.relatedTasks, this.newTaskRelationKind, [])
 					}
 					this.relatedTasks[this.newTaskRelationKind].push(this.newTaskRelationTask)
-					this.newTaskRelationTask = new TaskModel()
+					this.newTaskRelationTask = null
 					this.saved = true
 					setTimeout(() => {
 						this.saved = false

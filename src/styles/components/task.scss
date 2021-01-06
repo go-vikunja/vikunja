@@ -117,32 +117,13 @@
     }
 
     &.labels-list, .assignees {
-      .multiselect__tags {
-        padding: 3px 0 0 3px;
-        border: none;
-        background: transparent;
-      }
-
-      .multiselect__input, .multiselect__single {
-        width: auto !important;
-        margin: 0;
-        padding: .35em !important;
-        position: relative !important;
-        background: transparent;
-        max-width: 100%;
-      }
-
-      .multiselect__placeholder {
-        display: none;
-      }
-
-      .multiselect__select {
-        // We may need to enable this since it may also be responsable for showing the loading spinner
-        display: none;
-      }
-
-      .multiselect__content-wrapper {
-        border: none;
+      .multiselect {
+        .input-wrapper {
+          &:not(:focus-within):not(:hover) {
+            background: transparent !important;
+            border-color: transparent !important;
+          }
+        }
       }
     }
 

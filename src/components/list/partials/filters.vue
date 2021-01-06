@@ -1,5 +1,5 @@
 <template>
-	<div class="card filters">
+	<div class="card filters has-overflow">
 		<div class="card-content">
 			<fancycheckbox v-model="params.filter_include_nulls">
 				Include Tasks which don't have a value set
@@ -103,32 +103,16 @@
 				<label class="label">Assignees</label>
 				<div class="control">
 					<multiselect
-						:clear-on-select="true"
-						:close-on-select="true"
-						:hide-selected="true"
-						:internal-search="true"
 						:loading="usersService.loading"
-						:multiple="true"
-						:options="foundusers"
-						:options-limit="300"
-						:searchable="true"
-						:showNoOptions="false"
-						:taggable="false"
-						@search-change="query => find('users', query)"
-						@select="() => add('users', 'assignees')"
-						@remove="() => remove('users', 'assignees')"
-						label="username"
 						placeholder="Type to search for a user..."
-						track-by="id"
+						@search="query => find('users', query)"
+						:search-results="foundusers"
+						@select="() => add('users', 'assignees')"
+						label="username"
+						:multiple="true"
+						@remove="() => remove('users', 'assignees')"
 						v-model="users"
-					>
-						<template slot="clear" slot-scope="props">
-							<div
-								@mousedown.prevent.stop="clear('users', props.search)"
-								class="multiselect__clear"
-								v-if="users.length"></div>
-						</template>
-					</multiselect>
+					/>
 				</div>
 			</div>
 
@@ -136,38 +120,22 @@
 				<label class="label">Labels</label>
 				<div class="control">
 					<multiselect
-						:clear-on-select="true"
-						:close-on-select="false"
-						:hide-selected="true"
-						:internal-search="true"
 						:loading="labelService.loading"
-						:multiple="true"
-						:options="foundLabels"
-						:options-limit="300"
-						:searchable="true"
-						:showNoOptions="false"
-						@search-change="findLabels"
+						placeholder="Type to search for a label..."
+						@search="findLabels"
+						:search-results="foundLabels"
 						@select="label => addLabel(label)"
 						label="title"
-						placeholder="Type to search for a label..."
-						track-by="id"
+						:multiple="true"
 						v-model="labels"
 					>
-						<template
-							slot="tag"
-							slot-scope="{ option }">
+						<template v-slot:tag="props">
 							<span
-								:style="{'background': option.hexColor, 'color': option.textColor}"
-								class="tag mr-2 mb-2">
-								<span>{{ option.title }}</span>
-								<a @click="removeLabel(option)" class="delete is-small"></a>
+								:style="{'background': props.item.hexColor, 'color': props.item.textColor}"
+								class="tag ml-2 mt-2">
+								<span>{{ props.item.title }}</span>
+								<a @click="removeLabel(props.item)" class="delete is-small"></a>
 							</span>
-						</template>
-						<template slot="clear" slot-scope="props">
-							<div
-								@mousedown.prevent.stop="clearLabels(props.search)"
-								class="multiselect__clear"
-								v-if="labels.length"></div>
 						</template>
 					</multiselect>
 				</div>
@@ -178,64 +146,32 @@
 					<label class="label">Lists</label>
 					<div class="control">
 						<multiselect
-							:clear-on-select="true"
-							:close-on-select="true"
-							:hide-selected="true"
-							:internal-search="true"
 							:loading="listsService.loading"
-							:multiple="true"
-							:options="foundlists"
-							:options-limit="300"
-							:searchable="true"
-							:showNoOptions="false"
-							:taggable="false"
-							@search-change="query => find('lists', query)"
-							@select="() => add('lists', 'list_id')"
-							@remove="() => remove('lists', 'list_id')"
-							label="title"
 							placeholder="Type to search for a list..."
-							track-by="id"
+							@search="query => find('lists', query)"
+							:search-results="foundlists"
+							@select="() => add('lists', 'list_id')"
+							label="title"
+							@remove="() => remove('lists', 'list_id')"
+							:multiple="true"
 							v-model="lists"
-						>
-							<template slot="clear" slot-scope="props">
-								<div
-									@mousedown.prevent.stop="clear('lists', props.search)"
-									class="multiselect__clear"
-									v-if="lists.length"></div>
-							</template>
-						</multiselect>
+						/>
 					</div>
 				</div>
 				<div class="field">
 					<label class="label">Namespaces</label>
 					<div class="control">
 						<multiselect
-							:clear-on-select="true"
-							:close-on-select="true"
-							:hide-selected="true"
-							:internal-search="true"
 							:loading="namespaceService.loading"
-							:multiple="true"
-							:options="foundnamespace"
-							:options-limit="300"
-							:searchable="true"
-							:showNoOptions="false"
-							:taggable="false"
-							@search-change="query => find('namespace', query)"
-							@select="() => add('namespace', 'namespace')"
-							@remove="() => remove('namespace', 'namespace')"
-							label="title"
 							placeholder="Type to search for a namespace..."
-							track-by="id"
+							@search="query => find('namespace', query)"
+							:search-results="foundnamespace"
+							@select="() => add('namespace', 'namespace')"
+							label="title"
+							@remove="() => remove('namespace', 'namespace')"
+							:multiple="true"
 							v-model="namespace"
-						>
-							<template slot="clear" slot-scope="props">
-								<div
-									@mousedown.prevent.stop="clear('namespace', props.search)"
-									class="multiselect__clear"
-									v-if="namespace.length"></div>
-							</template>
-						</multiselect>
+						/>
 					</div>
 				</div>
 			</template>
@@ -247,13 +183,13 @@
 import Fancycheckbox from '../../input/fancycheckbox'
 import flatPickr from 'vue-flatpickr-component'
 import 'flatpickr/dist/flatpickr.css'
-import Multiselect from 'vue-multiselect'
 
 import {formatISO} from 'date-fns'
 import differenceWith from 'lodash/differenceWith'
 
 import PrioritySelect from '@/components/tasks/partials/prioritySelect'
 import PercentDoneSelect from '@/components/tasks/partials/percentDoneSelect'
+import Multiselect from '@/components/input/multiselect'
 
 import UserService from '@/services/user'
 import LabelService from '@/services/label'

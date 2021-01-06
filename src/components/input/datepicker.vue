@@ -115,6 +115,7 @@ import 'flatpickr/dist/flatpickr.css'
 import {calculateDayInterval} from '@/helpers/time/calculateDayInterval'
 import {format} from 'date-fns'
 import {calculateNearestHours} from '@/helpers/time/calculateNearestHours'
+import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
 
 export default {
 	name: 'datepicker',
@@ -188,25 +189,7 @@ export default {
 		},
 		hideDatePopup(e) {
 			if (this.show) {
-
-				// We walk up the tree to see if any parent of the clicked element is the datepicker element.
-				// If it is not, we hide the popup. We're doing all this hassle to prevent the popup from closing when
-				// clicking an element of flatpickr.
-				let parent = e.target.parentElement
-				while (parent !== this.$refs.datepickerPopup) {
-					if (parent.parentElement === null) {
-						parent = null
-						break
-					}
-
-					parent = parent.parentElement
-				}
-
-				if (parent === this.$refs.datepickerPopup) {
-					return
-				}
-
-				this.close()
+				closeWhenClickedOutside(e, this.$refs.datepickerPopup, this.close)
 			}
 		},
 		close() {

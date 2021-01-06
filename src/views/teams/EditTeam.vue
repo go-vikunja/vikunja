@@ -1,5 +1,5 @@
 <template>
-	<div class="loader-container is-max-width-desktop" v-bind:class="{ 'is-loading': teamService.loading}">
+	<div class="loader-container is-max-width-desktop" :class="{ 'is-loading': teamService.loading}">
 		<div class="card is-fullwidth" v-if="userIsAdmin">
 			<header class="card-header">
 				<p class="card-header-title">
@@ -8,7 +8,7 @@
 			</header>
 			<div class="card-content">
 				<div class="content">
-					<form @submit.prevent="submit()">
+					<form @submit.prevent="save()">
 						<div class="field">
 							<label class="label" for="teamtext">Team Name</label>
 							<div class="control">
@@ -43,7 +43,7 @@
 
 					<div class="columns bigbuttons">
 						<div class="column">
-							<button :class="{ 'is-loading': teamService.loading}" @click="submit()"
+							<button :class="{ 'is-loading': teamService.loading}" @click="save()"
 									class="button is-primary is-fullwidth">
 								Save
 							</button>
@@ -60,96 +60,75 @@
 				</div>
 			</div>
 		</div>
-		<div class="card is-fullwidth">
+		<div class="card is-fullwidth has-overflow">
 			<header class="card-header">
 				<p class="card-header-title">
 					Team Members
 				</p>
 			</header>
-			<div class="card-content content team-members">
-				<form @submit.prevent="addUser()" class="add-member-form" v-if="userIsAdmin">
-					<div class="field is-grouped">
-						<p
-							:class="{ 'is-loading': teamMemberService.loading}"
-							class="control has-icons-left is-expanded">
-							<multiselect
-								:internal-search="true"
-								:loading="userService.loading"
-								:multiple="false"
-								:options="foundUsers"
-								:searchable="true"
-								:showNoOptions="false"
-								@search-change="findUser"
-								label="username"
-								placeholder="Type to search..."
-								track-by="id"
-								v-model="newMember">
-								<template slot="clear" slot-scope="props">
-									<div
-										@mousedown.prevent.stop="clearAll(props.search)" class="multiselect__clear"
-										v-if="newMember !== null && newMember.id !== 0">
-									</div>
-								</template>
-								<span slot="noResult">Oops! No user found. Consider changing the search query.</span>
-							</multiselect>
-						</p>
-						<p class="control">
-							<button class="button is-success" type="submit">
-								<span class="icon is-small">
-									<icon icon="plus"/>
-								</span>
-								Add
-							</button>
-						</p>
+			<div class="card-content" v-if="userIsAdmin">
+				<div class="field has-addons">
+					<div class="control is-expanded">
+						<multiselect
+							:loading="userService.loading"
+							placeholder="Type to search..."
+							@search="findUser"
+							:search-results="foundUsers"
+							label="username"
+							v-model="newMember"
+						/>
 					</div>
-				</form>
-				<table class="table is-striped is-hoverable is-fullwidth">
-					<tbody>
-					<tr :key="m.id" v-for="m in team.members">
-						<td>{{ m.getDisplayName() }}</td>
-						<td>
-							<template v-if="m.id === userInfo.id">
-								<b class="is-success">You</b>
-							</template>
-						</td>
-						<td class="type">
-							<template v-if="m.admin">
-									<span class="icon is-small">
-										<icon icon="lock"/>
-									</span>
-								Admin
-							</template>
-							<template v-else>
-									<span class="icon is-small">
-										<icon icon="user"/>
-									</span>
-								Member
-							</template>
-						</td>
-						<td class="actions" v-if="userIsAdmin">
-							<button :class="{'is-loading': teamMemberService.loading}" @click="toggleUserType(m)"
-									class="button buttonright is-primary"
-									v-if="m.id !== userInfo.id">
-								Make
-								<template v-if="!m.admin">
-									Admin
-								</template>
-								<template v-else>
-									Member
-								</template>
-							</button>
-							<button :class="{'is-loading': teamMemberService.loading}" @click="() => {member = m; showUserDeleteModal = true}"
-									class="button is-danger"
-									v-if="m.id !== userInfo.id">
-									<span class="icon is-small">
-										<icon icon="trash-alt"/>
-									</span>
-							</button>
-						</td>
-					</tr>
-					</tbody>
-				</table>
+					<div class="control">
+						<button class="button is-primary" @click="addUser">
+							<span class="icon is-small">
+								<icon icon="plus"/>
+							</span>
+							Add To Team
+						</button>
+					</div>
+				</div>
 			</div>
+			<table class="table is-striped is-hoverable is-fullwidth">
+				<tbody>
+				<tr :key="m.id" v-for="m in team.members">
+					<td>{{ m.getDisplayName() }}</td>
+					<td>
+						<template v-if="m.id === userInfo.id">
+							<b class="is-success">You</b>
+						</template>
+					</td>
+					<td class="type">
+						<template v-if="m.admin">
+							<span class="icon is-small">
+								<icon icon="lock"/>
+							</span>
+							Admin
+						</template>
+						<template v-else>
+							<span class="icon is-small">
+								<icon icon="user"/>
+							</span>
+							Member
+						</template>
+					</td>
+					<td class="actions" v-if="userIsAdmin">
+						<button :class="{'is-loading': teamMemberService.loading}" @click="() => toggleUserType(m)"
+							class="button buttonright is-primary"
+							v-if="m.id !== userInfo.id">
+							Make {{ m.admin ? 'Member' : 'Admin' }}
+						</button>
+						<button :class="{'is-loading': teamMemberService.loading}"
+							@click="() => {member = m; showUserDeleteModal = true}"
+							class="button is-danger"
+							v-if="m.id !== userInfo.id">
+							<span class="icon is-small">
+								<icon icon="trash-alt"/>
+							</span>
+						</button>
+					</td>
+				</tr>
+				</tbody>
+			</table>
 		</div>
 
 		<!-- Team delete modal -->
@@ -185,9 +164,12 @@ import TeamMemberService from '../../services/teamMember'
 import TeamMemberModel from '../../models/teamMember'
 import UserModel from '../../models/user'
 import UserService from '../../services/user'
+import Rights from '../../models/rights.json'
+
 import LoadingComponent from '../../components/misc/loading'
 import ErrorComponent from '../../components/misc/error'
-import Rights from '../../models/rights.json'
+
+import Multiselect from '@/components/input/multiselect'
 
 export default {
 	name: 'EditTeam',
@@ -210,12 +192,7 @@ export default {
 		}
 	},
 	components: {
-		multiselect: () => ({
-			component: import(/* webpackChunkName: "multiselect" */ 'vue-multiselect'),
-			loading: LoadingComponent,
-			error: ErrorComponent,
-			timeout: 60000,
-		}),
+		Multiselect,
 		editor: () => ({
 			component: import(/* webpackChunkName: "editor" */ '../../components/input/editor'),
 			loading: LoadingComponent,
@@ -253,7 +230,7 @@ export default {
 					this.error(e, this)
 				})
 		},
-		submit() {
+		save() {
 			if (this.team.name === '') {
 				this.showError = true
 				return
@@ -308,6 +285,7 @@ export default {
 		},
 		toggleUserType(member) {
 			member.admin = !member.admin
+			member.teamId = this.teamId
 			this.teamMemberService.update(member)
 				.then(r => {
 					for (const tm in this.team.members) {
@@ -342,21 +320,3 @@ export default {
 	},
 }
 </script>
-
-<style lang="scss" scoped>
-.card {
-	margin-bottom: 1rem;
-
-	.add-member-form {
-		margin: 1rem;
-	}
-}
-
-.team-members {
-	padding: 0;
-
-	.table {
-		border-top: 0;
-	}
-}
-</style>

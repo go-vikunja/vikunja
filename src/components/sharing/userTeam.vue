@@ -1,106 +1,87 @@
 <template>
-	<div class="card is-fullwidth">
+	<div class="card is-fullwidth has-overflow">
 		<header class="card-header">
 			<p class="card-header-title">
 				Shared with these {{ shareType }}s
 			</p>
 		</header>
-		<div class="card-content content sharables-list">
-			<form @submit.prevent="add()" class="add-form" v-if="userIsAdmin">
-				<div class="field is-grouped">
-					<p class="control is-expanded" v-bind:class="{ 'is-loading': searchService.loading}">
-						<multiselect
-							:internal-search="true"
-							:label="searchLabel"
-							:loading="searchService.loading"
-							:multiple="false"
-							:options="found"
-							:searchable="true"
-							:showNoOptions="false"
-							@search-change="find"
-							placeholder="Type to search..."
-							track-by="id"
-							v-model="sharable">
-							<template slot="clear" slot-scope="props">
-								<div
-									@mousedown.prevent.stop="clearAll(props.search)"
-									class="multiselect__clear"
-									v-if="sharable.id !== 0"></div>
-							</template>
-							<span slot="noResult">
-								Oops! No {{ shareType }} found. Consider changing the search query.
-							</span>
-						</multiselect>
-					</p>
-					<p class="control">
-						<button class="button is-success" type="submit">
-								<span class="icon is-small">
-									<icon icon="plus"/>
-								</span>
-							Add
-						</button>
-					</p>
-				</div>
-			</form>
-			<table class="table is-striped is-hoverable is-fullwidth">
-				<tbody>
-				<tr :key="s.id" v-for="s in sharables">
-					<template v-if="shareType === 'user'">
-						<td>{{ s.getDisplayName() }}</td>
-						<td>
-							<template v-if="s.id === userInfo.id">
-								<b class="is-success">You</b>
-							</template>
-						</td>
-					</template>
-					<template v-if="shareType === 'team'">
-						<td>
-							<router-link :to="{name: 'teams.edit', params: {id: s.id}}">
-								{{ s.name }}
-							</router-link>
-						</td>
-					</template>
-					<td class="type">
-						<template v-if="s.right === rights.ADMIN">
+		<div class="card-content" v-if="userIsAdmin">
+			<div class="field has-addons">
+				<p class="control is-expanded" v-bind:class="{ 'is-loading': searchService.loading}">
+					<multiselect
+						:loading="searchService.loading"
+						placeholder="Type to search..."
+						@search="find"
+						:search-results="found"
+						:label="searchLabel"
+						v-model="sharable"
+					/>
+				</p>
+				<p class="control">
+					<button class="button is-primary" @click="add()">
+						Share
+					</button>
+				</p>
+			</div>
+		</div>
+		<table class="table is-striped is-hoverable is-fullwidth">
+			<tbody>
+			<tr :key="s.id" v-for="s in sharables">
+				<template v-if="shareType === 'user'">
+					<td>{{ s.getDisplayName() }}</td>
+					<td>
+						<template v-if="s.id === userInfo.id">
+							<b class="is-success">You</b>
+						</template>
+					</td>
+				</template>
+				<template v-if="shareType === 'team'">
+					<td>
+						<router-link :to="{name: 'teams.edit', params: {id: s.id}}">
+							{{ s.name }}
+						</router-link>
+					</td>
+				</template>
+				<td class="type">
+					<template v-if="s.right === rights.ADMIN">
 							<span class="icon is-small">
 								<icon icon="lock"/>
 							</span>
-							Admin
-						</template>
-						<template v-else-if="s.right === rights.READ_WRITE">
+						Admin
+					</template>
+					<template v-else-if="s.right === rights.READ_WRITE">
 							<span class="icon is-small">
 								<icon icon="pen"/>
 							</span>
-							Write
-						</template>
-						<template v-else>
+						Write
+					</template>
+					<template v-else>
 							<span class="icon is-small">
 								<icon icon="users"/>
 							</span>
-							Read-only
-						</template>
-					</td>
-					<td class="actions" v-if="userIsAdmin">
-						<div class="select">
-							<select @change="toggleType(s)" class="button buttonright" v-model="selectedRight[s.id]">
-								<option :selected="s.right === rights.READ" :value="rights.READ">Read only</option>
-								<option :selected="s.right === rights.READ_WRITE" :value="rights.READ_WRITE">Read &
-									write
-								</option>
-								<option :selected="s.right === rights.ADMIN" :value="rights.ADMIN">Admin</option>
-							</select>
-						</div>
-						<button @click="() => {sharable = s; showDeleteModal = true}"
-								class="button is-danger icon-only">
+						Read-only
+					</template>
+				</td>
+				<td class="actions" v-if="userIsAdmin">
+					<div class="select">
+						<select @change="toggleType(s)" class="button buttonright" v-model="selectedRight[s.id]">
+							<option :selected="s.right === rights.READ" :value="rights.READ">Read only</option>
+							<option :selected="s.right === rights.READ_WRITE" :value="rights.READ_WRITE">Read &
+								write
+							</option>
+							<option :selected="s.right === rights.ADMIN" :value="rights.ADMIN">Admin</option>
+						</select>
+					</div>
+					<button @click="() => {sharable = s; showDeleteModal = true}"
+							class="button is-danger icon-only">
 							<span class="icon is-small">
 								<icon icon="trash-alt"/>
 							</span>
-						</button>
-					</td>
-				</tr>
-				</tbody>
-			</table>
-		</div>
+					</button>
+				</td>
+			</tr>
+			</tbody>
+		</table>
 
 		<modal
 			@close="showDeleteModal = false"
@@ -131,8 +112,7 @@ import TeamService from '../../services/team'
 import TeamModel from '../../models/team'
 
 import rights from '../../models/rights'
-import LoadingComponent from '../misc/loading'
-import ErrorComponent from '../misc/error'
+import Multiselect from '@/components/input/multiselect'
 
 export default {
 	name: 'userTeamShare',
@@ -172,12 +152,7 @@ export default {
 		}
 	},
 	components: {
-		multiselect: () => ({
-			component: import(/* webpackChunkName: "multiselect" */ 'vue-multiselect'),
-			loading: LoadingComponent,
-			error: ErrorComponent,
-			timeout: 60000,
-		}),
+		Multiselect,
 	},
 	computed: mapState({
 		userInfo: state => state.auth.info,

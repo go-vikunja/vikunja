@@ -1,37 +1,24 @@
 <template>
 	<multiselect
-		:clear-on-select="true"
-		:close-on-select="false"
-		:disabled="disabled"
-		:hide-selected="true"
-		:internal-search="true"
 		:loading="listUserService.loading"
+		placeholder="Type to assign a user..."
+		:disabled="disabled"
 		:multiple="true"
-		:options="foundUsers"
-		:options-limit="300"
-		:searchable="true"
-		:showNoOptions="false"
-		@search-change="findUser"
+		@search="findUser"
+		:search-results="foundUsers"
 		@select="addAssignee"
 		label="username"
-		placeholder="Type to assign a user..."
-		select-label="Assign this user"
-		track-by="id"
+		select-placeholder="Assign this user"
 		v-model="assignees"
 	>
-		<template slot="tag" slot-scope="{ option }">
-			<user :avatar-size="30" :show-username="false" :user="option"/>
-			<a @click="removeAssignee(option)" class="remove-assignee" v-if="!disabled">
-				<icon icon="times"/>
-			</a>
+		<template v-slot:tag="props">
+			<span class="assignee">
+				<user :avatar-size="32" :show-username="false" :user="props.item"/>
+				<a @click="removeAssignee(props.item)" class="remove-assignee" v-if="!disabled">
+					<icon icon="times"/>
+				</a>
+			</span>
 		</template>
-		<template slot="clear" slot-scope="props">
-			<div
-				@mousedown.prevent.stop="clearAllFoundUsers(props.search)"
-				class="multiselect__clear"
-				v-if="newAssignee !== null && newAssignee.id !== 0"></div>
-		</template>
-		<span slot="noResult">No user found. Consider changing the search query.</span>
 	</multiselect>
 </template>
 
@@ -42,19 +29,13 @@ import UserModel from '../../../models/user'
 import ListUserService from '../../../services/listUsers'
 import TaskAssigneeService from '../../../services/taskAssignee'
 import User from '../../misc/user'
-import LoadingComponent from '../../misc/loading'
-import ErrorComponent from '../../misc/error'
+import Multiselect from '@/components/input/multiselect'
 
 export default {
 	name: 'editAssignees',
 	components: {
 		User,
-		multiselect: () => ({
-			component: import(/* webpackChunkName: "multiselect" */ 'vue-multiselect'),
-			loading: LoadingComponent,
-			error: ErrorComponent,
-			timeout: 60000,
-		}),
+		Multiselect,
 	},
 	props: {
 		taskId: {

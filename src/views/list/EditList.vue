@@ -99,7 +99,7 @@
 			</div>
 		</div>
 
-		<div class="card">
+		<div class="card has-overflow">
 			<header class="card-header">
 				<p class="card-header-title">
 					Duplicate this list
@@ -108,22 +108,20 @@
 			<div class="card-content">
 				<div class="content">
 					<p>Select a namespace which should hold the duplicated list:</p>
-					<div class="field is-grouped">
-						<p class="control is-expanded">
+
+					<div class="field has-addons">
+						<div class="control is-expanded">
 							<namespace-search @selected="selectNamespace"/>
-						</p>
-						<p class="control">
+						</div>
+						<div class="control">
 							<button
 								:class="{'is-loading': listDuplicateService.loading}"
 								@click="duplicateList"
-								class="button is-success"
+								class="button is-primary"
 								type="submit">
-								<span class="icon is-small">
-									<icon icon="plus"/>
-								</span>
-								Add
+								Duplicate
 							</button>
-						</p>
+						</div>
 					</div>
 				</div>
 			</div>

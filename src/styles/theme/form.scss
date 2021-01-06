@@ -128,10 +128,8 @@
   }
 }
 
-.field.has-addons {
-  .control .select select {
-    height: 2.25em;
-  }
+.field.has-addons .control .select select {
+    height: 100%;
 }
 
 .bigbuttons {

@@ -7,6 +7,8 @@ export class TaskCommentFactory extends Factory {
 	static table = 'task_comments'
 
 	static factory() {
+		const now = new Date()
+
 		return {
 			id: '{increment}',
 			comment: faker.lorem.text(3),

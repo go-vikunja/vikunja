@@ -1,41 +1,24 @@
 <template>
 	<multiselect
-		:clear-on-select="true"
-		:close-on-select="false"
-		:disabled="disabled"
-		:hide-selected="true"
-		:internal-search="true"
 		:loading="labelService.loading || labelTaskService.loading"
-		:multiple="true"
-		:options="foundLabels"
-		:options-limit="300"
-		:searchable="true"
-		:showNoOptions="false"
-		:taggable="true"
-		@search-change="findLabel"
-		@select="label => addLabel(label)"
-		@tag="createAndAddLabel"
-		label="title"
 		placeholder="Type to add a new label..."
-		tag-placeholder="Add this as new label"
-		track-by="id"
+		:multiple="true"
+		@search="findLabel"
+		:search-results="foundLabels"
+		@select="addLabel"
+		label="title"
+		:creatable="true"
+		@create="createAndAddLabel"
+		create-placeholder="Add this as new label"
 		v-model="labels"
 	>
-		<template
-			slot="tag"
-			slot-scope="{ option }">
+		<template v-slot:tag="props">
 			<span
-				:style="{'background': option.hexColor, 'color': option.textColor}"
-				class="tag">
-				<span>{{ option.title }}</span>
-				<a @click="removeLabel(option)" class="delete is-small"></a>
+				:style="{'background': props.item.hexColor, 'color': props.item.textColor}"
+				class="tag ml-2 mt-2">
+				<span>{{ props.item.title }}</span>
+				<a @click="removeLabel(props.item)" class="delete is-small"></a>
 			</span>
-		</template>
-		<template slot="clear" slot-scope="props">
-			<div
-				@mousedown.prevent.stop="clearAllLabels(props.search)"
-				class="multiselect__clear"
-				v-if="labels.length"></div>
 		</template>
 	</multiselect>
 </template>
@@ -46,8 +29,8 @@ import differenceWith from 'lodash/differenceWith'
 import LabelService from '../../../services/label'
 import LabelModel from '../../../models/label'
 import LabelTaskService from '../../../services/labelTask'
-import LoadingComponent from '../../misc/loading'
-import ErrorComponent from '../../misc/error'
+
+import Multiselect from '@/components/input/multiselect'
 
 export default {
 	name: 'edit-labels',
@@ -75,12 +58,7 @@ export default {
 		}
 	},
 	components: {
-		multiselect: () => ({
-			component: import(/* webpackChunkName: "multiselect" */ 'vue-multiselect'),
-			loading: LoadingComponent,
-			error: ErrorComponent,
-			timeout: 60000,
-		}),
+		Multiselect,
 	},
 	watch: {
 		value(newLabels) {

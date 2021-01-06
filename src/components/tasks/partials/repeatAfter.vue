@@ -92,15 +92,6 @@ p {
 	padding-top: 6px;
 }
 
-.field.has-addons {
-
-	margin-bottom: .5rem;
-
-	.control .select select {
-		height: 2.5em;
-	}
-}
-
 .columns {
 	align-items: center;
 }
