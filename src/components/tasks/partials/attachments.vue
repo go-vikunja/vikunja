@@ -31,7 +31,7 @@
 			{{ attachmentService.uploadProgress }}%
 		</progress>
 
-		<table>
+		<table v-if="attachments.length > 0">
 			<tr>
 				<th>Name</th>
 				<th>Size</th>
