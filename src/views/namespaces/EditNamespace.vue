@@ -95,7 +95,7 @@
 		<modal
 			@close="showDeleteModal = false"
 			v-if="showDeleteModal"
-			v-on:submit="deleteNamespace()">
+			@submit="deleteNamespace()">
 			<span slot="header">Delete the namespace</span>
 			<p slot="text">Are you sure you want to delete this namespace and all of its contents?
 				<br/>This includes lists & tasks and <b>CANNOT BE UNDONE!</b></p>
@@ -192,6 +192,7 @@ export default {
 		deleteNamespace() {
 			this.namespaceService.delete(this.namespace)
 				.then(() => {
+					this.$store.commit('namespaces/removeNamespaceById', this.namespace.id)
 					this.success({message: 'The namespace was successfully deleted.'}, this)
 					router.push({name: 'home'})
 				})
