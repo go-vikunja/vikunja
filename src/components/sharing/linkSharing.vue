@@ -21,69 +21,68 @@
 						</div>
 					</div>
 					<div class="control">
-						<button class="button is-success" type="submit">
+						<button class="button is-primary" type="submit">
 							Share
 						</button>
 					</div>
 				</div>
 			</form>
-			<table class="table is-striped is-hoverable is-fullwidth link-share-list">
-				<tbody>
+			<table class="table is-striped is-hoverable is-fullwidth link-share-list" v-if="linkShares.length > 0">
+				<thead>
 				<tr>
 					<th>Link</th>
 					<th>Shared by</th>
 					<th>Right</th>
 					<th>Delete</th>
 				</tr>
-				<template v-if="linkShares.length > 0">
-					<tr :key="s.id" v-for="s in linkShares">
-						<td>
-							<div class="field has-addons no-input-mobile">
-								<div class="control">
-									<input :value="getShareLink(s.hash)" class="input" readonly type="text"/>
-								</div>
-								<div class="control">
-									<a @click="copy(getShareLink(s.hash))" class="button is-success noshadow" v-tooltip="'Copy to clipboard'">
+				</thead>
+				<tbody>
+				<tr :key="s.id" v-for="s in linkShares">
+					<td>
+						<div class="field has-addons no-input-mobile">
+							<div class="control">
+								<input :value="getShareLink(s.hash)" class="input" readonly type="text"/>
+							</div>
+							<div class="control">
+								<a @click="copy(getShareLink(s.hash))" class="button is-primary noshadow" v-tooltip="'Copy to clipboard'">
 									<span class="icon">
 										<icon icon="paste"/>
 									</span>
-									</a>
-								</div>
+								</a>
 							</div>
-						</td>
-						<td>
-							{{ s.sharedBy.getDisplayName() }}
-						</td>
-						<td class="type">
-							<template v-if="s.right === rights.ADMIN">
-						<span class="icon is-small">
-							<icon icon="lock"/>
-						</span>
-								Admin
-							</template>
-							<template v-else-if="s.right === rights.READ_WRITE">
-						<span class="icon is-small">
-							<icon icon="pen"/>
-						</span>
-								Write
-							</template>
-							<template v-else>
-						<span class="icon is-small">
-							<icon icon="users"/>
-						</span>
-								Read-only
-							</template>
-						</td>
-						<td class="actions">
-							<button @click="() => {linkIdToDelete = s.id; showDeleteModal = true}"
-									class="button is-danger icon-only">
+						</div>
+					</td>
+					<td>
+						{{ s.sharedBy.getDisplayName() }}
+					</td>
+					<td class="type">
+						<template v-if="s.right === rights.ADMIN">
+							<span class="icon is-small">
+								<icon icon="lock"/>
+							</span>
+							Admin
+						</template>
+						<template v-else-if="s.right === rights.READ_WRITE">
+							<span class="icon is-small">
+								<icon icon="pen"/>
+							</span>
+							Write
+						</template>
+						<template v-else>
+							<span class="icon is-small">
+								<icon icon="users"/>
+							</span>
+							Read-only
+						</template>
+					</td>
+					<td class="actions">
+						<button @click="() => {linkIdToDelete = s.id; showDeleteModal = true}" class="button is-danger icon-only">
 							<span class="icon">
 								<icon icon="trash-alt"/>
 							</span>
-							</button>
-						</td>
-					</tr>
-				</template>
+						</button>
+					</td>
+				</tr>
 				</tbody>
 			</table>
 		</div>
