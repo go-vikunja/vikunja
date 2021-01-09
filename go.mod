@@ -37,7 +37,7 @@ require (
 	github.com/gabriel-vasile/mimetype v1.1.2
 	github.com/getsentry/sentry-go v0.9.0
 	github.com/go-errors/errors v1.1.1
-	github.com/go-redis/redis/v8 v8.4.4
+	github.com/go-redis/redis/v8 v8.4.6
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/go-testfixtures/testfixtures/v3 v3.4.1
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
