@@ -7,6 +7,7 @@ import {
 	IS_FULLPAGE,
 	KEYBOARD_SHORTCUTS_ACTIVE,
 	LOADING,
+	LOADING_MODULE,
 	MENU_ACTIVE,
 	ONLINE,
 } from './mutation-types'
@@ -35,6 +36,7 @@ export const store = new Vuex.Store({
 	},
 	state: {
 		loading: false,
+		loadingModule: null,
 		errorMessage: '',
 		online: true,
 		isFullpage: false,
@@ -48,6 +50,9 @@ export const store = new Vuex.Store({
 	mutations: {
 		[LOADING](state, loading) {
 			state.loading = loading
+		},
+		[LOADING_MODULE](state, module) {
+			state.loadingModule = module
 		},
 		[ERROR_MESSAGE](state, error) {
 			state.errorMessage = error

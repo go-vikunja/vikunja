@@ -133,7 +133,7 @@
 
 <script>
 import {mapState} from 'vuex'
-import {CURRENT_LIST, IS_FULLPAGE, MENU_ACTIVE} from '@/store/mutation-types'
+import {CURRENT_LIST, IS_FULLPAGE, MENU_ACTIVE, LOADING, LOADING_MODULE} from '@/store/mutation-types'
 
 export default {
 	name: 'navigation',
@@ -145,7 +145,7 @@ export default {
 		currentList: CURRENT_LIST,
 		background: 'background',
 		menuActive: MENU_ACTIVE,
-		loading: state => state.namespaces.loading,
+		loading: state => state[LOADING] && state[LOADING_MODULE] === 'namespaces',
 	}),
 	beforeCreate() {
 		this.$store.dispatch('namespaces/loadNamespaces')

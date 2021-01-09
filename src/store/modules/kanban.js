@@ -114,7 +114,7 @@ export default {
 	},
 	actions: {
 		loadBucketsForList(ctx, {listId, params}) {
-			const cancel = setLoading(ctx)
+			const cancel = setLoading(ctx, 'kanban')
 
 			// Clear everything to prevent having old buckets in the list if loading the buckets from this list takes a few moments
 			ctx.commit('setBuckets', [])
@@ -134,7 +134,7 @@ export default {
 				})
 		},
 		createBucket(ctx, bucket) {
-			const cancel = setLoading(ctx)
+			const cancel = setLoading(ctx, 'kanban')
 
 			const bucketService = new BucketService()
 			return bucketService.create(bucket)
@@ -150,7 +150,7 @@ export default {
 				})
 		},
 		deleteBucket(ctx, bucket) {
-			const cancel = setLoading(ctx)
+			const cancel = setLoading(ctx, 'kanban')
 
 			const bucketService = new BucketService()
 			return bucketService.delete(bucket)
@@ -168,7 +168,7 @@ export default {
 				})
 		},
 		updateBucket(ctx, bucket) {
-			const cancel = setLoading(ctx)
+			const cancel = setLoading(ctx, 'kanban')
 
 			const bucketService = new BucketService()
 			return bucketService.update(bucket)

@@ -7,7 +7,6 @@ export default {
 	namespaced: true,
 	state: () => ({
 		namespaces: [],
-		loading: false,
 	}),
 	mutations: {
 		namespaces(state, namespaces) {
@@ -97,9 +96,7 @@ export default {
 	},
 	actions: {
 		loadNamespaces(ctx) {
-			const cancel = setLoading(ctx, status => {
-				ctx.commit('loading', status, {root: true})
-			})
+			const cancel = setLoading(ctx, 'namespaces')
 
 			const namespaceService = new NamespaceService()
 			// We always load all namespaces and filter them on the frontend

@@ -107,8 +107,8 @@
 						>
 							<div
 								:class="{
-							'is-loading': (taskService.loading || loading) && taskUpdating[task.id],
-							'draggable': !(taskService.loading || loading) || !taskUpdating[task.id],
+							'is-loading': (taskService.loading || taskLoading) && taskUpdating[task.id],
+							'draggable': !(taskService.loading || taskLoading) || !taskUpdating[task.id],
 							'has-light-text': !colorIsDark(task.hexColor) && task.hexColor !== `#${task.defaultColor}` && task.hexColor !== task.defaultColor,
 						}"
 								:style="{'background-color': task.hexColor !== '#' && task.hexColor !== `#${task.defaultColor}` ? task.hexColor : false}"
@@ -268,9 +268,9 @@ import Filters from '../../../components/list/partials/filters'
 import {filterObject} from '@/helpers/filterObject'
 import {applyDrag} from '@/helpers/applyDrag'
 import {mapState} from 'vuex'
-import {LOADING} from '@/store/mutation-types'
 import {saveListView} from '@/helpers/saveListView'
 import Rights from '../../../models/rights.json'
+import { LOADING, LOADING_MODULE } from '../../../store/mutation-types'
 
 export default {
 	name: 'Kanban',
@@ -333,7 +333,8 @@ export default {
 	computed: mapState({
 		buckets: state => state.kanban.buckets,
 		loadedListId: state => state.kanban.listId,
-		loading: LOADING,
+		loading: state => state[LOADING] && state[LOADING_MODULE] === 'kanban',
+		taskLoading: state => state[LOADING] && state[LOADING_MODULE] === 'tasks',
 		canWrite: state => state.currentList.maxRight > Rights.READ,
 		list: state => state.currentList,
 	}),
