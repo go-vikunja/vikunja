@@ -92,6 +92,40 @@ func getTaskUsersForTasks(s *xorm.Session, taskIDs []int64) (taskUsers []*taskUs
 	return
 }
 
+func getTasksWithRemindersInTheNextMinute(s *xorm.Session, now time.Time) (taskIDs []int64, err error) {
+
+	tz := config.GetTimeZone()
+	const dbFormat = `2006-01-02 15:04:05`
+
+	// By default, time.Now() includes nanoseconds which we don't save. That results in getting the wrong dates,
+	// so we make sure the time we use to get the reminders don't contain nanoseconds.
+	now = time.Date(now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute(), 0, 0, now.Location()).In(tz)
+	nextMinute := now.Add(1 * time.Minute)
+
+	log.Debugf("[Task Reminder Cron] Looking for reminders between %s and %s to send...", now, nextMinute)
+
+	reminders := []*TaskReminder{}
+	err = s.
+		Where("reminder >= ? and reminder < ?", now.Format(dbFormat), nextMinute.Format(dbFormat)).
+		Find(&reminders)
+	if err != nil {
+		return
+	}
+
+	log.Debugf("[Task Reminder Cron] Found %d reminders", len(reminders))
+
+	if len(reminders) == 0 {
+		return
+	}
+
+	// We're sending a reminder to everyone who is assigned to the task or has created it.
+	for _, r := range reminders {
+		taskIDs = append(taskIDs, r.TaskID)
+	}
+
+	return
+}
+
 // RegisterReminderCron registers a cron function which runs every minute to check if any reminders are due the
 // next minute to send emails.
 func RegisterReminderCron() {
@@ -105,40 +139,18 @@ func RegisterReminderCron() {
 	}
 
 	tz := config.GetTimeZone()
-	const dbFormat = `2006-01-02 15:04:05`
 
 	log.Debugf("[Task Reminder Cron] Timezone is %s", tz)
 
 	s := db.NewSession()
 
 	err := cron.Schedule("* * * * *", func() {
-		// By default, time.Now() includes nanoseconds which we don't save. That results in getting the wrong dates,
-		// so we make sure the time we use to get the reminders don't contain nanoseconds.
+
 		now := time.Now()
-		now = time.Date(now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute(), 0, 0, now.Location()).In(tz)
-		nextMinute := now.Add(1 * time.Minute)
-
-		log.Debugf("[Task Reminder Cron] Looking for reminders between %s and %s to send...", now, nextMinute)
-
-		reminders := []*TaskReminder{}
-		err := s.
-			Where("reminder >= ? and reminder < ?", now.Format(dbFormat), nextMinute.Format(dbFormat)).
-			Find(&reminders)
+		taskIDs, err := getTasksWithRemindersInTheNextMinute(s, now)
 		if err != nil {
-			log.Errorf("[Task Reminder Cron] Could not get reminders for the next minute: %s", err)
+			log.Errorf("[Task Reminder Cron] Could not get tasks with reminders in the next minute: %s", err)
 			return
-		}
-
-		log.Debugf("[Task Reminder Cron] Found %d reminders", len(reminders))
-
-		if len(reminders) == 0 {
-			return
-		}
-
-		// We're sending a reminder to everyone who is assigned to the task or has created it.
-		var taskIDs []int64
-		for _, r := range reminders {
-			taskIDs = append(taskIDs, r.TaskID)
 		}
 
 		users, err := getTaskUsersForTasks(s, taskIDs)
