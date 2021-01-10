@@ -40,6 +40,14 @@
 			}
 		}
 
+		&.has-multiple .input-loader-wrapper {
+			max-width: 250px;
+
+			input {
+				padding-left: 0;
+			}
+		}
+
 		&:focus-within {
 			border-color: $primary !important;
 			background: $white !important;
@@ -110,11 +118,12 @@
 		position: relative;
 
 		&:not(:first-child) {
-			margin-left: -1.75rem;
+			margin-left: -1.5rem;
 		}
 
 		.user img {
 			border: 2px solid $white;
+			margin-right: 0;
 		}
 
 		.remove-assignee {
