@@ -20,4 +20,8 @@ sed -i 's/\/api\/v1//g' frontend/index.html # Make sure to trigger the "enter th
 
 ## Building for release
 
+1. Run the snippet from above, but with a valid frontend version instead of `master`
+2. Change the version in `package.json` (That's the one that will be used by electron-builder`
+3. `yarn install`
+4. `yarn dist --linux --windows`
 
