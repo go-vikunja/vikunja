@@ -40,7 +40,7 @@
 					@keydown.up.prevent="() => preSelect(-2)"
 					@keydown.down.prevent="() => preSelect(0)"
 					@keyup.enter.prevent="create"
-					@click="create"
+					@click.prevent.stop="create"
 				>
 					<span>
 						<slot name="searchResult" :option="query">
@@ -59,8 +59,7 @@
 					:ref="`result-${key}`"
 					@keydown.up.prevent="() => preSelect(key - 1)"
 					@keydown.down.prevent="() => preSelect(key + 1)"
-					@keyup.enter.prevent="() => select(data)"
-					@click="() => select(data)"
+					@click.prevent.stop="() => select(data)"
 				>
 					<span>
 						<slot name="searchResult" :option="data">
