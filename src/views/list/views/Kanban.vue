@@ -131,13 +131,13 @@
 									class="due-date"
 									v-if="task.dueDate > 0"
 									v-tooltip="formatDate(task.dueDate)">
-								<span class="icon">
-									<icon :icon="['far', 'calendar-alt']"/>
+									<span class="icon">
+										<icon :icon="['far', 'calendar-alt']"/>
+									</span>
+									<span>
+										{{ formatDateSince(task.dueDate) }}
+									</span>
 								</span>
-								<span>
-									{{ formatDateSince(task.dueDate) }}
-								</span>
-							</span>
 								<h3>{{ task.title }}</h3>
 								<progress
 									class="progress is-small"
@@ -145,28 +145,30 @@
 									:value="task.percentDone * 100" max="100">
 									{{ task.percentDone * 100 }}%
 								</progress>
-								<labels :labels="task.labels"/>
 								<div class="footer">
-									<div class="items">
-										<priority-label :priority="task.priority" class="priority-label"/>
-										<div class="assignees" v-if="task.assignees.length > 0">
-											<user
-												:avatar-size="24"
-												:key="task.id + 'assignee' + u.id"
-												:show-username="false"
-												:user="u"
-												v-for="u in task.assignees"
-											/>
-										</div>
+									<span
+										:key="label.id"
+										:style="{'background': label.hexColor, 'color': label.textColor}"
+										class="tag"
+										v-for="label in task.labels">
+										<span>{{ label.title }}</span>
+									</span>
+									<priority-label :priority="task.priority"/>
+									<div class="assignees" v-if="task.assignees.length > 0">
+										<user
+											:avatar-size="24"
+											:key="task.id + 'assignee' + u.id"
+											:show-username="false"
+											:user="u"
+											v-for="u in task.assignees"
+										/>
 									</div>
-									<div class="icons-container">
-										<span class="icon" v-if="task.attachments.length > 0">
-											<icon icon="paperclip"/>	
-										</span>
-										<span v-if="task.description" class="icon">
-											<icon icon="align-left"/>
-										</span>
-									</div>
+									<span class="icon" v-if="task.attachments.length > 0">
+										<icon icon="paperclip"/>	
+									</span>
+									<span v-if="task.description" class="icon">
+										<icon icon="align-left"/>
+									</span>
 								</div>
 							</div>
 						</component>

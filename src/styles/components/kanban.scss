@@ -85,8 +85,7 @@ $crazy-height-calculation: '100vh - 4.5rem - 1.5rem - 1em - 1.5em - 8px';
           align-items: center;
 
           .icon {
-            margin-right: 2px;
-            margin-left: 5px;
+            margin-right: .25rem;
           }
 
           &.overdue {
@@ -102,16 +101,12 @@ $crazy-height-calculation: '100vh - 4.5rem - 1.5rem - 1em - 1.5em - 8px';
           background: transparent;
           padding: 0;
           display: flex;
-          justify-content: space-between;
-          margin-top: 8px;
+          flex-wrap: wrap;
+          align-items: center;
 
-          .items {
-            display: flex;
-            align-items: center;
-
-            > :not(:last-child) {
-              margin-right: .5em;
-            }
+          .tag, .assignees, .icon, .priority-label {
+            margin-top: .25rem;
+            margin-right: .25rem;
           }
 
           .assignees {
@@ -119,36 +114,26 @@ $crazy-height-calculation: '100vh - 4.5rem - 1.5rem - 1em - 1.5em - 8px';
 
             .user {
               display: inline;
-              margin: 0 -12px 0 0;
+              margin: 0;
 
               img {
-                margin-right: 0;
-              }
-            }
-          }
-
-          .icons-container {
-            display: flex;
-            align-items: flex-end;
-            .icon {
-              padding: 0px .4rem;
-              &:not(:first-child) {
-                margin-left: 4px;
-              }
-              svg {
                 margin: 0;
               }
             }
           }
 
-          .icon {
-            svg {
-              margin: 4px 0 4px 4px;
-              fill: $dark;
+          .tag {
+            margin-left: 0;
+          }
 
-              &:not(.svg-inline--fa) {
-                width: 16px;
-              }
+          .priority-label {
+            font-size: .75rem;
+            height: 2em;
+
+            .icon {
+              height: 1rem;
+              padding: 0 .25rem;
+              margin-top: 0;
             }
           }
         }
@@ -158,12 +143,11 @@ $crazy-height-calculation: '100vh - 4.5rem - 1.5rem - 1em - 1.5em - 8px';
         .priority-label {
           background: darken($task-background, 5%);
           border-radius: $radius;
-          padding-right: 5px;
+          padding: 0 .5rem;
         }
 
-        .priority-label {
-          margin: .5em 0;
-          display: inline-block;
+        .due-date {
+          padding: 0 .25rem;
         }
 
         .task-id {
