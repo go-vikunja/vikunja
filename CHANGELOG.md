@@ -7,6 +7,98 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 All releases can be found on https://code.vikunja.io/api/releases.
 
+## [0.16.0] - 2021-01-10
+
+### Added
+
+* Add colors for caldav (#738)
+* Add email reminders (#743)
+* Add "like" filter comparator
+* Add login via email (#740)
+* Add Microsoft Todo migration (#737)
+* Add name field to users
+* Add support for migrating todoist boards (#732)
+* Add task filter for assignees (#746)
+* Add task filter for labels (#747)
+* Add task filter for lists and namespaces (#748)
+* Add task filter for reminders (#745)
+* Add task filters for kanban
+* Add testing endpoint to reset db tables (#716)
+* Add tests for sending task reminders (#757)
+* Add trello migration (#734)
+* Authentication with OpenID Connect providers (#713)
+
+### Fixed
+
+* Fix completion status in DAV for OpenTasks and multiline descriptions (#697)
+* Fix docs about caldav tasks.org
+* Fix drone badge in README
+* Fix getting current user when updating avatar or user name
+* Fix go header lint
+* Fix /info endpoint 500 error when no openid providers were configured
+* Fix missing auto increments from b0d4902406 on mysql
+* Fix not possible to create tasks if metrics were enabled
+* Fix password reset without a reseet token
+* Fix task updated timestamp not being updated in the response after updating a task
+
+### Changed
+
+* Change avatar endpoint
+* Change license to AGPLv3
+* Clarify docs about cors configuration
+* Don't create a list identifier by default
+* Make sure all int64 db fields are using bigint when actually storing the data (#741)
+* Make sure a password reset token can be used only once
+* Make the debian repo structure for buster instead of strech
+* Refactor adding more details to tasks (#739)
+* Simplify updating task reminders
+* Update code header template
+* Update github.com/gordonklaus/ineffassign commit hash to 3b93a88 (#701)
+* Update github.com/gordonklaus/ineffassign commit hash to 8eed68e (#755)
+* Update github.com/jgautheron/goconst commit hash to b58d7cf (#702)
+* Update github.com/jgautheron/goconst commit hash to ccae5bf (#712)
+* Update github.com/jgautheron/goconst commit hash to f8e4fe8 (#703)
+* Update golang.org/x/crypto commit hash to 0c6587e (#706)
+* Update golang.org/x/crypto commit hash to 5f87f34 (#729)
+* Update golang.org/x/crypto commit hash to 8b5274c (#733)
+* Update golang.org/x/crypto commit hash to 9d13527 (#736)
+* Update golang.org/x/crypto commit hash to be400ae (#719)
+* Update golang.org/x/crypto commit hash to c8d3bf9 (#710)
+* Update golang.org/x/crypto commit hash to eec23a3 (#749)
+* Update golang.org/x/image commit hash to 35266b9 (#727)
+* Update golang.org/x/lint commit hash to 83fdc39 (#728)
+* Update golang.org/x/oauth2 commit hash to 08078c5 (#722)
+* Update golang.org/x/oauth2 commit hash to 0b49973 (#718)
+* Update golang.org/x/oauth2 commit hash to 9fd6049 (#714)
+* Update golang.org/x/sync commit hash to 09787c9 (#725)
+* Update golang.org/x/sync commit hash to 67f06af (#695)
+* Update golang.org/x/term commit hash to 2321bbc (#731)
+* Update golang.org/x/term commit hash to ee85cb9 (#726)
+* Update module cweill/gotests to v1.6.0 (#752)
+* Update module fzipp/gocyclo to v0.3.1 (#696)
+* Update module gabriel-vasile/mimetype to v1.1.2 (#708)
+* Update module getsentry/sentry-go to v0.8.0 (#709)
+* Update module getsentry/sentry-go to v0.9.0 (#723)
+* Update module go-redis/redis/v8 to v8.4.4 (#742)
+* Update module go-redis/redis/v8 to v8.4.6 (#756)
+* Update module go-redis/redis/v8 to v8.4.7 (#758)
+* Update module go-redis/redis/v8 to v8.4.8 (#759)
+* Update module lib/pq to v1.9.0 (#717)
+* Update module magefile/mage to v1.11.0 (#754)
+* Update module mattn/go-sqlite3 to v1.14.5 (#711)
+* Update module mattn/go-sqlite3 to v1.14.6 (#751)
+* Update module pquerna/otp to v1.3.0 (#705)
+* Update module prometheus/client_golang to v1.9.0 (#735)
+* Update module spf13/afero to v1.5.0 (#724)
+* Update module spf13/afero to v1.5.1 (#730)
+* Update module src.techknowlogick.com/xgo to v1.2.0+1.15.6 (#720)
+* Update module src.techknowlogick.com/xormigrate to v1.4.0 (#700)
+* Update module swaggo/swag to v1.6.9 (#694)
+* Update module swaggo/swag to v1.7.0 (#721)
+* Update module ulule/limiter/v3 to v3.8.0 (#699)
+* Update nfpm config for nfpm v2
+* Use db sessions everywere (#750)
+
 ## [0.15.1] - 2020-10-20
 
 ### Fixed
