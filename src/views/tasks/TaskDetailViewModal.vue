@@ -29,6 +29,14 @@ export default {
 			vm.lastRoute = from
 		})
 	},
+	beforeRouteLeave(to, from, next) {
+		if (from.name === 'task.kanban.detail' && to.name === 'task.detail') {
+			this.$router.replace({name: 'task.kanban.detail', params: to.params})
+			return
+		}
+
+		next()
+	},
 	methods: {
 		close() {
 			if (this.lastRoute === null) {
