@@ -13,16 +13,29 @@
 
 <script>
 import TaskDetailView from './TaskDetailView'
-import router from '../../router'
 
 export default {
 	name: 'TaskDetailViewModal',
 	components: {
 		TaskDetailView,
 	},
+	data() {
+		return {
+			lastRoute: null,
+		}
+	},
+	beforeRouteEnter(to, from, next) {
+		next(vm => {
+			vm.lastRoute = from
+		})
+	},
 	methods: {
 		close() {
-			router.back()
+			if (this.lastRoute === null) {
+				this.$router.back()
+			} else {
+				this.$router.push(this.lastRoute)
+			}
 		},
 	},
 }
