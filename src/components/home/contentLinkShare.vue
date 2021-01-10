@@ -22,6 +22,9 @@
 						</a>
 					</div>
 					<router-view/>
+					<a class="menu-bottom-link" href="https://vikunja.io" target="_blank">
+						Powered by Vikunja
+					</a>
 				</div>
 			</div>
 		</div>
