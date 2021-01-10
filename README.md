@@ -1,8 +1,8 @@
 # Vikunja desktop
 
 [![Build Status](https://drone.kolaente.de/api/badges/vikunja/desktop/status.svg)](https://drone.kolaente.de/vikunja/desktop)
-[![License: LGPL v3](https://img.shields.io/badge/License-LGPL%20v3-blue.svg)](LICENSE)
-[![Download](https://img.shields.io/badge/download-v0.15.0-brightgreen.svg)](https://dl.vikunja.io)
+[![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](LICENSE)
+[![Download](https://img.shields.io/badge/download-v0.16.0-brightgreen.svg)](https://dl.vikunja.io)
 
 The Vikunja frontend all repackaged as an electron app to run as a desktop app!
 
@@ -20,4 +20,4 @@ sed -i 's/\/api\/v1//g' frontend/index.html # Make sure to trigger the "enter th
 
 ## Building for release
 
-TODO
+
