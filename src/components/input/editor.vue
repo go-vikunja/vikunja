@@ -329,6 +329,11 @@ export default {
 						return `<input type="checkbox" data-checkbox-num="${checkboxNum}" ${checked} class="text-checkbox-${this._uid}"/>`
 					},
 				},
+				highlight: function(code, language) {
+					const hljs = require('highlight.js');
+					const validLanguage = hljs.getLanguage(language) ? language : 'plaintext';
+					return hljs.highlight(validLanguage, code).value;
+				},
 			})
 
 			this.preview = DOMPurify.sanitize(marked(this.text))
@@ -406,6 +411,7 @@ export default {
 </script>
 
 <style lang="scss">
+@import '../../../node_modules/highlight.js/scss/atelier-heath-light';
 @import '../../../node_modules/easymde/dist/easymde.min.css';
 @import '../../styles/theme/variables';
 
