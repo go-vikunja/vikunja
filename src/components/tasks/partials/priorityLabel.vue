@@ -47,7 +47,7 @@ export default {
 @import '../../../styles/theme/variables';
 
 .priority-label {
-	display: flex;
+	display: inline-flex;
 	align-items: center;
 }
 
