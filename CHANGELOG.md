@@ -9,6 +9,173 @@ All releases can be found on https://code.vikunja.io/frontend/releases.
 
 The releases aim at the api versions which is why there are missing versions.
 
+## [0.16.0 - 2021-01-10]
+
+### Added
+
+* Add autocomplete attributes to login and register forms
+* Add color indicators to task list (#321)
+* Add default color palette to picker
+* Add disabled state for task titles
+* Add downloading assets when building docker images
+* Add filters to gantt chart
+* Add login via email
+* Add maskable icon
+* Add Microsoft Todo migration (#339)
+* Add more spacing for checkboxes in the editor
+* Add more spacing to the "Archived" badge in namespace overview
+* Add "new label" button to label management (#359)
+* Add openid scope when redirecting to external openid provider
+* Add proper focus styles
+* Add setting for sending reminder emails (#343)
+* Add showing and modifying user name (#306)
+* Add task filter for assignees (#349)
+* Add task filter for kanban
+* Add task filter for labels (#350)
+* Add task filter for lists and namespaces (#351)
+* Add task filter for reminders (#347)
+* Add trello migration (#336)
+* Add wait in cypress test for user settings
+* Add yarn cache to drone (#312)
+* Authentication with OpenID Connect providers (#305)
+* Better reminders (#308)
+* Better save messages for tasks (#307)
+* Build custom v-tooltip (#290)
+* Build modern build for modern browsers
+* Frontend Testing With Cypress (#313)
+
+### Fixed
+
+* Don't hide the "new bucket" when updating tasks
+* Don't reset task relation kind after adding a task relation
+* Don't show filter and search buttons for saved filter lists
+* Don't show the "next week/month" buttons on the start page
+* Fix avatar icon of attachments created by
+* Fix deleting a saved filter
+* Fixed squishy color bubble (#358)
+* Fix list not added to lists when duplicating
+* Fix list not being removed from the menu list when deleting it
+* Fix loading states for unrelated components (#370)
+* Fix logging out after reloading the page
+* Fix logging the user out when renewing the token while the api is not reachable
+* Fix non-release docker builds (#357)
+* Fix parsing task done at date
+* Fix password reset
+* Fix related tasks width when the task is opened in a modal
+* Fix reminder inputs and the close buttons not properly aligned
+* Fix removing a kanban bucket
+* Fix removing a namespace not removing it from the list
+* Fix renewing token on focus
+* Fix repeat after layout
+* Fix resetting list rights after updating the list
+* Fix showing the keyboard shortcuts from the menu
+* Fix task background color for link shares
+* Fix tooltip still existing in viewport after hiding them
+* Get rid of the null reminder to fix jumping inputs when updating reminders
+* Hide menu on mobile after navigating
+* Hide share links table header when no share links are available yet
+* Make sure task title and task id are properly shown on mobile (#334)
+* Make sure the editor does not break if the text has checkboxes
+* Make the menu have a fixed width
+* Mobile Menu Fixes (#332)
+* Only show a loading spinner per task when updating a task on the kanban board
+* Only show attachments table header when there are attachments
+* Only show loading spinner over menu when loading namespaces
+* Only show the list with teams if there are any teams
+* Performance improvements (#288)
+* Properly cache html files
+* Refactor app component (#283)
+
+### Changed
+
+* Bump ini from 1.3.5 to 1.3.8
+* Change avatar endpoint
+* Change cache key for dependencies
+* Change license to AGPLv3
+* Change test waits (I wish I wouldn't need them)
+* Create list through store to make sure it is updated everywhere
+* Improve comment avatars on mobile
+* Improve editor buttons UX (#361)
+* Log the user out if the token could not be renewed
+* Make adding fields to tasks more intuitive (#365)
+* Make keyboard shortcuts single keys
+* Move focus directive to seperate file
+* Move next week/next month task overview pages into a single "Upcoming" page and allow toggle
+* Move "Teams" menu further down the list
+* Pin dependencies (#324)
+* Pin dependency jest to 26.6.3 (#311)
+* Remove "collapse menu button" and make the hamburger button always visible
+* Remove core-js from direct dependencies
+* Remove leftover '.only' modifier
+* Remove the drone cache image since there is no arm compatible image available
+* Remove the focus of the bucket title element after saving the title
+* Replace vue-multiselect with a custom component (#366)
+* Show all available shortcuts everywhere but indicate which work on the current page
+* Show a loading spinner when creating a new kanban task
+* Show an icon if a task has non-empty description (Kanban view and List view) (#360)
+* Show created/updated by for tasks
+* Show done at in task detail view
+* Show loading spinner when loading namespaces & lists
+* Show task progress on task (#354)
+* Update browserlist db
+* Update dependency axios to v0.21.0 (#278)
+* Update dependency axios to v0.21.1 (#353)
+* Update dependency camel-case to v4.1.2 (#315)
+* Update dependency cypress to v6.1.0 (#325)
+* Update dependency cypress to v6.2.0 (#352)
+* Update dependency cypress to v6.2.1 (#367)
+* Update dependency dompurify to v2.2.0 (#274)
+* Update dependency dompurify to v2.2.1 (#287)
+* Update dependency dompurify to v2.2.2 (#289)
+* Update dependency dompurify to v2.2.3 (#320)
+* Update dependency dompurify to v2.2.4 (#330)
+* Update dependency dompurify to v2.2.5 (#340)
+* Update dependency dompurify to v2.2.6 (#342)
+* Update dependency eslint-plugin-vue to v7.2.0 (#319)
+* Update dependency eslint-plugin-vue to v7.3.0 (#333)
+* Update dependency eslint-plugin-vue to v7.4.0 (#356)
+* Update dependency eslint-plugin-vue to v7.4.1 (#368)
+* Update dependency eslint to v7.12.0 (#279)
+* Update dependency eslint to v7.12.1 (#281)
+* Update dependency eslint to v7.13.0 (#293)
+* Update dependency eslint to v7.14.0 (#303)
+* Update dependency eslint to v7.15.0 (#318)
+* Update dependency eslint to v7.16.0 (#344)
+* Update dependency eslint to v7.17.0 (#364)
+* Update dependency @fortawesome/vue-fontawesome to v2.0.2 (#337)
+* Update dependency marked to v1.2.2 (#275)
+* Update dependency marked to v1.2.3 (#291)
+* Update dependency marked to v1.2.4 (#299)
+* Update dependency marked to v1.2.5 (#302)
+* Update dependency marked to v1.2.6 (#326)
+* Update dependency marked to v1.2.7 (#331)
+* Update dependency node-sass to v5 (#282)
+* Update dependency register-service-worker to v1.7.2 (#323)
+* Update dependency sass-loader to v10.0.4 (#276)
+* Update dependency sass-loader to v10.0.5 (#286)
+* Update dependency sass-loader to v10.1.0 (#295)
+* Update dependency snake-case to v3.0.4 (#316)
+* Update dependency vue-advanced-cropper to v0.17.4 (#273)
+* Update dependency vue-advanced-cropper to v0.17.6 (#277)
+* Update dependency vue-advanced-cropper to v0.17.7 (#284)
+* Update dependency vue-advanced-cropper to v0.17.8 (#294)
+* Update dependency vue-advanced-cropper to v0.17.9 (#300)
+* Update dependency vue-advanced-cropper to v0.18.1 (#322)
+* Update dependency vue-advanced-cropper to v0.19.1 (#327)
+* Update dependency vue-advanced-cropper to v0.19.2 (#328)
+* Update dependency vue-advanced-cropper to v0.19.3 (#338)
+* Update dependency vue-advanced-cropper to v0.20.0 (#346)
+* Update dependency vue-advanced-cropper to v0.20.1 (#348)
+* Update dependency vue-easymde to v1.3.1 (#298)
+* Update dependency vue-easymde to v1.3.2 (#335)
+* Update dependency vue-router to v3.4.8 (#280)
+* Update dependency vue-router to v3.4.9 (#292)
+* Update dependency vuex to v3.6.0 (#309)
+* Update dependency wait-on to v5.2.1 (#355)
+* Update vue monorepo to v4.5.10 (#369)
+* Update vue monorepo to v4.5.9 (#301)
+* Use yarn caches when building docker images
+
 ## [0.15.0 - 2020-10-19]
 
 ### Added
