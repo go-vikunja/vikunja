@@ -40,7 +40,7 @@ require (
 	github.com/go-errors/errors v1.1.1
 	github.com/go-redis/redis/v8 v8.4.8
 	github.com/go-sql-driver/mysql v1.5.0
-	github.com/go-testfixtures/testfixtures/v3 v3.4.1
+	github.com/go-testfixtures/testfixtures/v3 v3.5.0
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/golang/snappy v0.0.2 // indirect
 	github.com/gordonklaus/ineffassign v0.0.0-20210104184537-8eed68eb605f
