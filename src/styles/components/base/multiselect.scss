@@ -80,23 +80,25 @@
 			text-transform: none;
 			font-family: $family-sans-serif;
 			font-weight: normal;
+			padding: 0;
 
 			display: flex;
 			justify-content: space-between;
 			align-items: center;
 			overflow: hidden;
 
-			span:first-child {
+			.search-result {
 				white-space: nowrap;
 				text-overflow: ellipsis;
 				overflow: hidden;
+				padding: .5rem 1rem;
 			}
 
 			.hint-text {
 				font-size: .75rem;
 				color: transparent;
 				transition: color $transition;
-				padding-left: .5rem;
+				padding: 0 .5rem;
 			}
 
 			&:focus, &:hover {

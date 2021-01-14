@@ -20,6 +20,19 @@
 				<a @click="removeLabel(props.item)" class="delete is-small"></a>
 			</span>
 		</template>
+		<template v-slot:searchResult="props">
+			<span
+				v-if="typeof props.option === 'string'"
+				class="tag ml-2">
+				<span>{{ props.option }}</span>
+			</span>
+			<span
+				v-else
+				:style="{'background': props.option.hexColor, 'color': props.option.textColor}"
+				class="tag ml-2">
+				<span>{{ props.option.title }}</span>
+			</span>
+		</template>
 	</multiselect>
 </template>
 

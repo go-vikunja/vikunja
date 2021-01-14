@@ -44,7 +44,9 @@
 				>
 					<span>
 						<slot name="searchResult" :option="query">
-							{{ query }}
+							<span class="search-result">
+								{{ query }}
+							</span>
 						</slot>
 					</span>
 					<span class="hint-text">
@@ -63,7 +65,7 @@
 				>
 					<span>
 						<slot name="searchResult" :option="data">
-							{{ label !== '' ? data[label] : data }}
+							<span class="search-result">{{ label !== '' ? data[label] : data }}</span>
 						</slot>
 					</span>
 					<span class="hint-text">
