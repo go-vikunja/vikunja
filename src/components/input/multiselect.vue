@@ -4,7 +4,7 @@
 		:class="{'has-search-results': searchResultsVisible}"
 		ref="multiselectRoot"
 	>
-		<div class="input-wrapper input" :class="{'has-multiple': multiple}">
+		<div class="input-wrapper input" :class="{'has-multiple': multiple && Array.isArray(internalValue) && internalValue.length > 0}">
 			<template v-if="Array.isArray(internalValue)">
 				<template v-for="(item, key) in internalValue">
 					<slot name="tag" :item="item">
