@@ -205,7 +205,7 @@ describe('Task', () => {
 			cy.get('.task-view .action-buttons .button')
 				.contains('Move task')
 				.click()
-			cy.get('.task-view .content.details .field .multiselect.control .input-wrapper .input-loader-wrapper input')
+			cy.get('.task-view .content.details .field .multiselect.control .input-wrapper input')
 				.type(`${lists[1].title}{enter}`)
 			// The requests happen with a 200ms timeout. Because of that, the results are not yet there when cypress 
 			// presses enter and we can't simulate pressing on enter to select the item.
