@@ -2,6 +2,10 @@
 	width: 100%;
 	position: relative;
 
+	.control.is-loading::after {
+		top: .75rem;
+	}
+
 	&.has-search-results .input-wrapper {
 		border-radius: $radius $radius 0 0;
 		border-color: $primary !important;
@@ -23,24 +27,21 @@
 			border-color: $grey-light !important;
 		}
 
-		.input-loader-wrapper {
+		.input {
 			display: flex;
 			max-width: 100%;
 			width: 100%;
 			align-items: center;
+			border: none !important;
+			background: transparent;
+			height: auto;
 
-			.input {
-				border: none !important;
-				background: transparent;
-				height: auto;
-
-				&::placeholder {
-					font-style: normal !important;
-				}
+			&::placeholder {
+				font-style: normal !important;
 			}
 		}
 
-		&.has-multiple .input-loader-wrapper {
+		&.has-multiple .input {
 			max-width: 250px;
 
 			input {

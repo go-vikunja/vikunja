@@ -4,18 +4,19 @@
 		:class="{'has-search-results': searchResultsVisible}"
 		ref="multiselectRoot"
 	>
-		<div class="input-wrapper input" :class="{'has-multiple': multiple && Array.isArray(internalValue) && internalValue.length > 0}">
-			<template v-if="Array.isArray(internalValue)">
-				<template v-for="(item, key) in internalValue">
-					<slot name="tag" :item="item">
+		<div class="control" :class="{'is-loading': loading || localLoading}">
+			<div class="input-wrapper input" :class="{'has-multiple': multiple && Array.isArray(internalValue) && internalValue.length > 0}">
+				<template v-if="Array.isArray(internalValue)">
+					<template v-for="(item, key) in internalValue">
+						<slot name="tag" :item="item">
 						<span :key="`item${key}`" class="tag ml-2 mt-2">
 							{{ label !== '' ? item[label] : item }}
 							<a @click="() => remove(item)" class="delete is-small"></a>
 						</span>
-					</slot>
+						</slot>
+					</template>
 				</template>
-			</template>
-			<div class="input-loader-wrapper">
+
 				<input
 					type="text"
 					class="input"
@@ -27,7 +28,6 @@
 					ref="searchInput"
 					@focus="() => showSearchResults = true"
 				/>
-				<span class="loader is-loading" v-if="loading || localLoading"></span>
 			</div>
 		</div>
 
