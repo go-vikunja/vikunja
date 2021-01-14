@@ -329,10 +329,10 @@ export default {
 						return `<input type="checkbox" data-checkbox-num="${checkboxNum}" ${checked} class="text-checkbox-${this._uid}"/>`
 					},
 				},
-				highlight: function(code, language) {
-					const hljs = require('highlight.js');
-					const validLanguage = hljs.getLanguage(language) ? language : 'plaintext';
-					return hljs.highlight(validLanguage, code).value;
+				highlight: function (code, language) {
+					const hljs = require('highlight.js')
+					const validLanguage = hljs.getLanguage(language) ? language : 'plaintext'
+					return hljs.highlight(validLanguage, code).value
 				},
 			})
 
@@ -347,8 +347,8 @@ export default {
 			// Some docs at https://stackoverflow.com/q/62865160/10924593
 			this.$nextTick(() => {
 				const attachmentImage = document.getElementsByClassName('attachment-image')
-				if(attachmentImage) {
-					attachmentImage.forEach(img => {
+				if (attachmentImage) {
+					for (const img of attachmentImage) {
 						// The url is something like /tasks/<id>/attachments/<id>
 						const parts = img.dataset.src.substr(window.API_URL.length + 1).split('/')
 						const taskId = parseInt(parts[1])
@@ -363,15 +363,15 @@ export default {
 							.then(url => {
 								img.src = url
 							})
-					})
+					}
 				}
 
 				const textCheckbox = document.getElementsByClassName(`text-checkbox-${this._uid}`)
-				if(textCheckbox) {
-					textCheckbox.forEach(check => {
+				if (textCheckbox) {
+					for (const check of textCheckbox) {
 						check.removeEventListener('change', this.handleCheckboxClick)
 						check.addEventListener('change', this.handleCheckboxClick)
-					})
+					}
 				}
 			})
 		},
@@ -382,10 +382,10 @@ export default {
 
 			const index = this.findNthIndex(this.text, numMarkdownCheck)
 			if (index < 0 || typeof index === 'undefined') {
-				console.log('no index found')
+				console.debug('no index found')
 				return
 			}
-			console.log(index, this.text.substr(index, 9))
+			console.debug(index, this.text.substr(index, 9))
 
 			if (checked) {
 				this.text = this.replaceAt(this.text, index, '* [x] ')
@@ -397,13 +397,13 @@ export default {
 		},
 		toggleEdit() {
 			if (this.isEditActive) {
-				this.isPreviewActive = true;
-				this.isEditActive = false;
-				this.renderPreview();
-				this.bubble(0); // save instantly
+				this.isPreviewActive = true
+				this.isEditActive = false
+				this.renderPreview()
+				this.bubble(0) // save instantly
 			} else {
-				this.isPreviewActive = false;
-				this.isEditActive = true;
+				this.isPreviewActive = false
+				this.isEditActive = true
 			}
 		},
 	},
