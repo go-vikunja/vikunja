@@ -73,14 +73,14 @@
 					<label
 						:for="n.id + 'checker'"
 						class="menu-label"
-						v-tooltip="n.title + ' (' + n.lists.length + ')'">
+						v-tooltip="n.title + ' (' + n.lists.filter(l => !l.isArchived).length + ')'">
 						<span class="name">
 							<span
 								:style="{ backgroundColor: n.hexColor }"
 								class="color-bubble"
 								v-if="n.hexColor !== ''">
 							</span>
-							{{ n.title }} ({{ n.lists.length }})
+							{{ n.title }} ({{ n.lists.filter(l => !l.isArchived).length }})
 						</span>
 					</label>
 				</div>
@@ -122,7 +122,7 @@
 						</template>
 					</ul>
 					<label :for="n.id + 'checker'" class="hidden-hint">
-						Show hidden lists ({{ n.lists.length }})...
+						Show hidden lists ({{ n.lists.filter(l => !l.isArchived).length }})...
 					</label>
 				</div>
 			</template>
