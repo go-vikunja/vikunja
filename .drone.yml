@@ -128,6 +128,9 @@ steps:
 kind: pipeline
 name: release-latest
 
+depends_on:
+  - build
+
 trigger:
   branch:
     - master
@@ -199,6 +202,9 @@ steps:
 ---
 kind: pipeline
 name: release-version
+
+depends_on:
+  - build
 
 trigger:
   event:
