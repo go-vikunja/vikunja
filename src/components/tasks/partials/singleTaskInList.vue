@@ -6,8 +6,11 @@
 			class="color-bubble"
 			v-if="listColor !== ''">
 		</span>
-		<span :class="{ 'done': task.done}" class="tasktext">
-			<router-link :to="{ name: taskDetailRoute, params: { id: task.id } }">
+		<router-link
+			:to="{ name: taskDetailRoute, params: { id: task.id } }"
+			:class="{ 'done': task.done}"
+			class="tasktext">
+			<span>
 				<router-link
 					:to="{ name: 'list.list', params: { listId: task.listId } }"
 					class="task-list"
@@ -16,7 +19,7 @@
 					{{ $store.getters['lists/getListById'](task.listId).title }}
 				</router-link>
 
-				<!-- Show any parent tasks to make it clear this task is a sub task of something -->
+					<!-- Show any parent tasks to make it clear this task is a sub task of something -->
 				<span class="parent-tasks" v-if="typeof task.relatedTasks.parenttask !== 'undefined'">
 					<template v-for="(pt, i) in task.relatedTasks.parenttask">
 						{{ pt.title }}<template v-if="(i + 1) < task.relatedTasks.parenttask.length">,&nbsp;</template>
@@ -24,7 +27,7 @@
 					>
 				</span>
 				{{ task.title }}
-			</router-link>
+			</span>
 
 			<labels :labels="task.labels"/>
 			<user
@@ -55,7 +58,7 @@
 					<icon icon="align-left"/>
 				</span>
 			</span>
-		</span>
+		</router-link>
 		<progress
 			class="progress is-small"
 			v-if="task.percentDone > 0"

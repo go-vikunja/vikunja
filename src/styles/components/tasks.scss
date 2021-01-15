@@ -169,17 +169,19 @@
   }
 }
 
-.is-menu-enabled .tasks .task span:not(.tag) {
-  .tasktext, &.tasktext {
-    @media screen and (max-width: $desktop) {
-      max-width: calc(100vw - 27px - 2rem - 1.5rem - 3rem - #{$navbar-width}); // 1.5rem is the padding of the tasks container, 3rem is the padding of .app-container
-    }
+.is-menu-enabled .tasks .task {
+  span:not(.tag), a {
+    .tasktext, &.tasktext {
+	  @media screen and (max-width: $desktop) {
+	    max-width: calc(100vw - 27px - 2rem - 1.5rem - 3rem - #{$navbar-width}); // 1.5rem is the padding of the tasks container, 3rem is the padding of .app-container
+      }
 
-    // Duplicated rule to have it work properly in at least some browsers
-    // This should be fine as the ui doesn't work in rare edge cases to begin with
-    @media screen and (max-width: calc(#{$desktop} + #{$navbar-width})) {
-      max-width: calc(100vw - 27px - 2rem - 1.5rem - 3rem - #{$navbar-width}); // 1.5rem is the padding of the tasks container, 3rem is the padding of .app-container
-    }
+	  // Duplicated rule to have it work properly in at least some browsers
+	  // This should be fine as the ui doesn't work in rare edge cases to begin with
+	  @media screen and (max-width: calc(#{$desktop} + #{$navbar-width})) {
+	    max-width: calc(100vw - 27px - 2rem - 1.5rem - 3rem - #{$navbar-width}); // 1.5rem is the padding of the tasks container, 3rem is the padding of .app-container
+      }
+	}
   }
 }
 
