@@ -11,11 +11,9 @@
 			class="title input"
 			:class="{'disabled': !canWrite}"
 			@focusout="save()"
-			@keyup.ctrl.enter="save()"
+			@keydown.enter.prevent.stop="save()"
 			:contenteditable="canWrite ? 'true' : 'false'"
-			ref="taskTitle">
-			{{ task.title }}
-		</h1>
+			ref="taskTitle">{{ task.title.trim() }}</h1>
 		<transition name="fade">
 			<span class="is-inline-flex is-align-items-center" v-if="loading && saving">
 				<span class="loader is-inline-block mr-2"></span>
@@ -78,6 +76,7 @@ export default {
 			// we're building it ourselves and only calling saveTask()
 			// if the task title changed.
 			if (this.task.title !== this.taskTitle) {
+				this.$refs.taskTitle.blur()
 				this.saveTask()
 				this.taskTitle = taskTitle
 			}
