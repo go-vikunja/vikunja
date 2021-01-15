@@ -5,14 +5,6 @@
 				<icon icon="paperclip"/>
 			</span>
 			Attachments
-			<a
-				:disabled="attachmentService.loading"
-				@click="$refs.files.click()"
-				class="button is-primary is-outlined is-small noshadow"
-				v-if="editEnabled">
-				<span class="icon is-small"><icon icon="cloud-upload-alt"/></span>
-				Upload attachment
-			</a>
 		</h3>
 
 		<input
@@ -31,47 +23,47 @@
 			{{ attachmentService.uploadProgress }}%
 		</progress>
 
-		<table v-if="attachments.length > 0">
-			<tr>
-				<th>Name</th>
-				<th>Size</th>
-				<th>Type</th>
-				<th>Date</th>
-				<th>Created&nbsp;By</th>
-				<th>Action</th>
-			</tr>
-			<tr :key="a.id" class="attachment" v-for="a in attachments">
-				<td>
-					{{ a.file.name }}
-				</td>
-				<td>{{ a.file.getHumanSize() }}</td>
-				<td>{{ a.file.mime }}</td>
-				<td v-tooltip="formatDate(a.created)">{{ formatDateSince(a.created) }}</td>
-				<td class="has-text-centered">
-					<user :avatar-size="30" :user="a.createdBy" :show-username="false" :is-inline="true"/>
-				</td>
-				<td>
-					<div class="buttons has-addons">
+		<div class="files" v-if="attachments.length > 0">
+			<div :key="a.id" class="attachment" v-for="a in attachments">
+				<div class="filename">{{ a.file.name }}</div>
+				<div class="info">
+					<p class="collapses">
+						<span>
+							created <span v-tooltip="formatDate(a.created)">{{ formatDateSince(a.created) }}</span> by
+							<user :avatar-size="24" :user="a.createdBy" :is-inline="true"/>
+						</span>
+						<span>
+							{{ a.file.getHumanSize() }}
+						</span>
+						<span v-if="a.file.mime">
+							{{ a.file.mime }}
+						</span>
+					</p>
+					<p>
 						<a
 							@click="downloadAttachment(a)"
-							class="button is-primary noshadow"
 							v-tooltip="'Download this attachment'">
-							<span class="icon">
-								<icon icon="cloud-download-alt"/>
-							</span>
+							Download
 						</a>
 						<a
 							@click="() => {attachmentToDelete = a; showDeleteModal = true}"
-							class="button is-danger noshadow" v-if="editEnabled"
+							v-if="editEnabled"
 							v-tooltip="'Delete this attachment'">
-							<span class="icon">
-								<icon icon="trash-alt"/>
-							</span>
+							Delete
 						</a>
-					</div>
-				</td>
-			</tr>
-		</table>
+					</p>
+				</div>
+			</div>
+		</div>
+
+		<a
+			:disabled="attachmentService.loading"
+			@click="$refs.files.click()"
+			class="button is-primary mb-4"
+			v-if="editEnabled">
+			<span class="icon is-small"><icon icon="cloud-upload-alt"/></span>
+			Upload attachment
+		</a>
 
 		<!-- Dropzone -->
 		<div :class="{ 'hidden': !showDropzone }" class="dropzone" v-if="editEnabled">

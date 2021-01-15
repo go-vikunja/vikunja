@@ -3,6 +3,56 @@
     display: none;
   }
 
+  .files {
+    margin-bottom: 1rem;
+
+    .attachment {
+      margin-bottom: .75rem;
+
+      .filename {
+        font-weight: bold;
+        margin-bottom: .25rem;
+      }
+
+      .info {
+        color: $grey;
+        font-size: .9rem;
+
+        p {
+          margin-bottom: 0;
+          display: flex;
+
+          > span:not(:last-child):after,
+          > a:not(:last-child):after {
+            content: '·';
+            padding: 0 .25rem;
+          }
+
+          @media screen and (max-width: $mobile) {
+            &.collapses {
+              flex-direction: column;
+
+              > span:not(:last-child):after,
+              > a:not(:last-child):after {
+                display: none;
+              }
+
+              .user .username {
+                display: none;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  @media screen and (max-width: $tablet) {
+    .button {
+      width: 100%;
+    }
+  }
+
   .dropzone {
     position: fixed;
     background: rgba(250, 250, 250, 0.8);
