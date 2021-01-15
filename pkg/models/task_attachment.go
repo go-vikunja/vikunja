@@ -74,6 +74,8 @@ func (ta *TaskAttachment) NewAttachment(s *xorm.Session, f io.ReadCloser, realna
 		return err
 	}
 
+	ta.CreatedBy, _ = user.GetFromAuth(a) // Ignoring cases where the auth is not a user
+
 	return nil
 }
 
