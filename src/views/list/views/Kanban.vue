@@ -23,7 +23,7 @@
 					<h2
 						:ref="`bucket${bucket.id}title`"
 						@focusout="() => saveBucketTitle(bucket.id)"
-						@keyup.enter="() => saveBucketTitle(bucket.id)"
+						@keydown.enter.prevent.stop="() => saveBucketTitle(bucket.id)"
 						class="title input"
 						contenteditable="true"
 						spellcheck="false">{{ bucket.title }}</h2>
@@ -532,6 +532,9 @@ export default {
 			})
 
 			this.$store.dispatch('kanban/deleteBucket', bucket)
+				.then(() => {
+					this.success({message: 'The bucket has been deleted successfully.'}, this)
+				})
 				.catch(e => {
 					this.error(e, this)
 				})
@@ -560,6 +563,7 @@ export default {
 				.then(r => {
 					realBucket.title = r.title
 					bucketTitleElement.blur()
+					this.success({message: 'The bucket title has been saved successfully.'}, this)
 				})
 				.catch(e => {
 					this.error(e, this)
@@ -568,6 +572,9 @@ export default {
 		updateBucket(bucket) {
 			bucket.limit = parseInt(bucket.limit)
 			this.$store.dispatch('kanban/updateBucket', bucket)
+				.then(() => {
+					this.success({message: 'The bucket limit been saved successfully.'}, this)
+				})
 				.catch(e => {
 					this.error(e, this)
 				})
