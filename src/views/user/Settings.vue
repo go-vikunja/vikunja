@@ -299,8 +299,6 @@ export default {
 			totpDisableForm: false,
 			totpDisablePassword: '',
 
-			caldavUrl: '',
-
 			settings: UserSettingsModel,
 			userSettingsService: UserSettingsService,
 		}
@@ -325,17 +323,29 @@ export default {
 		})
 
 		this.totpStatus()
-		this.buildCaldavUrl()
 	},
 	mounted() {
 		this.setTitle('Settings')
 	},
-	computed: mapState({
-		totpEnabled: state => state.config.totpEnabled,
-		migratorsEnabled: state => state.config.availableMigrators !== null && state.config.availableMigrators.length > 0,
-		caldavEnabled: state => state.config.caldavEnabled,
-		userInfo: state => state.auth.info,
-	}),
+	computed: {
+		caldavUrl() {
+			let apiBase = window.API_URL.replace('/api/v1', '')
+			if (apiBase === '') { // Frontend and api on the same host which means we need to prefix the frontend url
+				apiBase = this.$store.state.config.frontendUrl
+			}
+			if (apiBase.endsWith('/')) {
+				apiBase = apiBase.substr(0, apiBase.length - 1)
+			}
+
+			return `${apiBase}/dav/principals/${this.userInfo.username}/`
+		},
+		...mapState({
+			totpEnabled: state => state.config.totpEnabled,
+			migratorsEnabled: state => state.config.availableMigrators !== null && state.config.availableMigrators.length > 0,
+			caldavEnabled: state => state.config.caldavEnabled,
+			userInfo: state => state.auth.info,
+		})
+	},
 	methods: {
 		updatePassword() {
 			if (this.passwordConfirm !== this.passwordUpdate.newPassword) {
@@ -415,10 +425,6 @@ export default {
 					this.success({message: 'The name was successfully changed.'}, this)
 				})
 				.catch(e => this.error(e, this))
-		},
-		buildCaldavUrl() {
-			const apiBase = window.API_URL.replace('/api/v1', '')
-			this.caldavUrl = `${apiBase}/dav/principals/${this.userInfo.username}/`
 		},
 		copy(text) {
 			copy(text)
