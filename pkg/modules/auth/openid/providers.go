@@ -31,6 +31,10 @@ import (
 
 // GetAllProviders returns all configured providers
 func GetAllProviders() (providers []*Provider, err error) {
+	if !config.AuthOpenIDEnabled.GetBool() {
+		return nil, nil
+	}
+
 	ps, err := keyvalue.Get("openid_providers")
 	if err != nil && kerr.IsErrValueNotFoundForKey(err) {
 		rawProviders := config.AuthOpenIDProviders.Get()
@@ -92,7 +96,12 @@ func getKeyFromName(name string) string {
 }
 
 func getProviderFromMap(pi map[interface{}]interface{}) (*Provider, error) {
-	k := getKeyFromName(pi["name"].(string))
+	name, is := pi["name"].(string)
+	if !is {
+		return nil, nil
+	}
+
+	k := getKeyFromName(name)
 
 	provider := &Provider{
 		Name:         pi["name"].(string),
