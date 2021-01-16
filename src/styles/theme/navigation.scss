@@ -277,7 +277,6 @@
           border-left: $vikunja-nav-selected-width solid transparent;
 
           .icon {
-            color: lighten($vikunja-nav-color, 20);
             height: 1rem;
             vertical-align: middle;
             padding-bottom: 4px;
@@ -319,6 +318,10 @@
         top: calc(50% - .75em);
         left: calc(50% - .75em);
         border-width: 2px;
+      }
+
+      .icon {
+        color: $grey-almost-light;
       }
     }
 
