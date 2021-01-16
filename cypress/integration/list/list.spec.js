@@ -21,7 +21,7 @@ describe('Lists', () => {
 
 	it('Should create a new list', () => {
 		cy.visit('/')
-		cy.get('a.nsettings[href="/namespaces/1/list"]')
+		cy.get('.namespace-title a[href="/namespaces/1/list"]')
 			.click()
 		cy.url()
 			.should('contain', '/namespaces/1/list')
