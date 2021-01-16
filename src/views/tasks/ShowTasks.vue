@@ -30,6 +30,7 @@
 			/>
 		</h3>
 		<div v-if="!showAll">
+			<a @click="showTodaysTasks()" class="button is-primary is-outlined noshadow mr-2">Today</a>
 			<a @click="setDatesToNextWeek()" class="button is-primary is-outlined noshadow mr-2">Next Week</a>
 			<a @click="setDatesToNextMonth()" class="button is-primary is-outlined noshadow">Next Month</a>
 		</div>
@@ -72,6 +73,7 @@ export default {
 			hasUndoneTasks: false,
 			taskService: TaskService,
 			showNulls: true,
+			showOverdue: false,
 
 			cStartDate: null,
 			cEndDate: null,
@@ -151,9 +153,11 @@ export default {
 				params.filter_value.push(this.cEndDate)
 				params.filter_comparator.push('less')
 
-				params.filter_by.push('due_date')
-				params.filter_value.push(this.cStartDate)
-				params.filter_comparator.push('greater')
+				if (!this.showOverdue) {
+					params.filter_by.push('due_date')
+					params.filter_value.push(this.cStartDate)
+					params.filter_comparator.push('greater')
+				}
 			}
 
 			this.taskService.getAll({}, params)
@@ -188,11 +192,21 @@ export default {
 		setDatesToNextWeek() {
 			this.cStartDate = new Date()
 			this.cEndDate = new Date((new Date()).getTime() + 7 * 24 * 60 * 60 * 1000)
+			this.showOverdue = false
 			this.loadPendingTasks()
 		},
 		setDatesToNextMonth() {
 			this.cStartDate = new Date()
 			this.cEndDate = new Date((new Date()).setMonth((new Date()).getMonth() + 1))
+			this.showOverdue = false
+			this.loadPendingTasks()
+		},
+		showTodaysTasks() {
+			const d = new Date()
+			this.cStartDate = new Date()
+			this.cEndDate = new Date(d.setDate(d.getDate() + 1))
+			this.showNulls = false
+			this.showOverdue = true
 			this.loadPendingTasks()
 		},
 	},
