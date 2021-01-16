@@ -210,7 +210,7 @@
 				</div>
 			</div>
 
-			<div class="bucket new-bucket" v-if="canWrite">
+			<div class="bucket new-bucket" v-if="canWrite && !loading && buckets.length > 0">
 				<input
 					:class="{'is-loading': loading}"
 					:disabled="loading"
