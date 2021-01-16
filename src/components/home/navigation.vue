@@ -50,26 +50,7 @@
 
 		<aside class="menu namespaces-lists loader-container" :class="{'is-loading': loading}">
 			<template v-for="n in namespaces">
-				<div :key="n.id">
-					<router-link
-						:to="{name: 'namespace.edit', params: {id: n.id} }"
-						class="nsettings"
-						v-if="n.id > 0"
-						v-tooltip="'Settings'">
-						<span class="icon">
-							<icon icon="cog"/>
-						</span>
-					</router-link>
-					<router-link
-						:key="n.id + 'list.create'"
-						:to="{ name: 'list.create', params: { id: n.id} }"
-						class="nsettings"
-						v-if="n.id > 0"
-						v-tooltip="'Add a new list in the ' + n.title + ' namespace'">
-						<span class="icon">
-							<icon icon="plus"/>
-						</span>
-					</router-link>
+				<div :key="n.id" class="namespace-title">
 					<label
 						:for="n.id + 'checker'"
 						class="menu-label"
@@ -83,6 +64,25 @@
 							{{ n.title }} ({{ n.lists.filter(l => !l.isArchived).length }})
 						</span>
 					</label>
+					<div class="actions">
+						<router-link
+							:key="n.id + 'list.create'"
+							:to="{ name: 'list.create', params: { id: n.id} }"
+							v-if="n.id > 0"
+							v-tooltip="'Add a new list in the ' + n.title + ' namespace'">
+							<span class="icon">
+								<icon icon="plus"/>
+							</span>
+						</router-link>
+						<router-link
+							:to="{name: 'namespace.edit', params: {id: n.id} }"
+							v-if="n.id > 0"
+							v-tooltip="'Settings'">
+							<span class="icon">
+								<icon icon="cog"/>
+							</span>
+						</router-link>
+					</div>
 				</div>
 				<input
 					:id="n.id + 'checker'"

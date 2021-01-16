@@ -141,12 +141,9 @@
         color: $grey;
         font-weight: 500;
         min-height: 2.5em;
-        padding-top: $navbar-padding * 0.3;
+        padding-top: 0;
         padding-left: $navbar-padding;
 
-        display: block;
-        white-space: nowrap;
-        text-overflow: ellipsis;
         overflow: hidden;
       }
 
@@ -198,9 +195,30 @@
         }
       }
 
-      .nsettings {
-        float: right;
-        padding: 10px 0.3em 0;
+      .namespace-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        .menu-label {
+          margin-bottom: 0;
+          flex: 1 1 auto;
+
+          .name {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+        }
+
+        .actions {
+          flex: 0 0 auto;
+
+          a {
+            color: $vikunja-nav-color;
+            padding: 0 .25rem;
+          }
+        }
       }
 
       .menu-label, .nsettings, .menu-list span.list-menu-link, .menu-list a {
