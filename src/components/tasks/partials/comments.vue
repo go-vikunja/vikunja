@@ -1,11 +1,11 @@
 <template>
-	<div :class="{'has-top-border': canWrite || comments.length > 0}" class="content details">
-		<h1 v-if="canWrite || comments.length > 0">
+	<div class="content details">
+		<h3 v-if="canWrite || comments.length > 0">
 			<span class="icon is-grey">
 				<icon :icon="['far', 'comments']"/>
 			</span>
 			Comments
-		</h1>
+		</h3>
 		<div class="comments">
 			<span class="is-inline-flex is-align-items-center" v-if="taskCommentService.loading && saving === null && !creating">
 				<span class="loader is-inline-block mr-2"></span>

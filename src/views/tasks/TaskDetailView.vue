@@ -181,7 +181,7 @@
 					</div>
 
 					<!-- Description -->
-					<div :class="{ 'has-top-border': activeFields.labels }" class="details content description">
+					<div class="details content description">
 						<description
 							v-model="task"
 							:can-write="canWrite"
@@ -190,7 +190,7 @@
 					</div>
 
 					<!-- Attachments -->
-					<div class="content attachments has-top-border" v-if="activeFields.attachments">
+					<div class="content attachments" v-if="activeFields.attachments">
 						<attachments
 							:edit-enabled="canWrite"
 							:task-id="taskId"
@@ -199,7 +199,7 @@
 					</div>
 
 					<!-- Related Tasks -->
-					<div class="content details has-top-border" v-if="activeFields.relatedTasks">
+					<div class="content details mb-0" v-if="activeFields.relatedTasks">
 						<h3>
 							<span class="icon is-grey">
 								<icon icon="tasks"/>
@@ -217,7 +217,7 @@
 					</div>
 
 					<!-- Move Task -->
-					<div class="content details has-top-border" v-if="activeFields.moveList">
+					<div class="content details" v-if="activeFields.moveList">
 						<h3>
 							<span class="icon is-grey">
 								<icon icon="list"/>

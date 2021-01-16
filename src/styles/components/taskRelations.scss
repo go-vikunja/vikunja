@@ -1,8 +1,6 @@
 $remove-icon-width: 24px;
 
 .task-relations {
-  padding-bottom: 1em;
-
   &.is-narrow .columns {
     display: block;
 
@@ -12,8 +10,6 @@ $remove-icon-width: 24px;
   }
 
   .related-tasks {
-    margin-bottom: .75em;
-
     .title {
       font-size: 1em;
       margin: 0;
