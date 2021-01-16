@@ -59,7 +59,7 @@
 		<a
 			:disabled="attachmentService.loading"
 			@click="$refs.files.click()"
-			class="button is-primary mb-4"
+			class="button mb-4 has-no-shadow"
 			v-if="editEnabled">
 			<span class="icon is-small"><icon icon="cloud-upload-alt"/></span>
 			Upload attachment
