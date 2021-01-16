@@ -1,40 +1,47 @@
 <template>
-	<div class="control repeat-after-input columns">
-		<div class="is-flex column">
-			<p class="pr-4">
-				Each
-			</p>
-			<div class="field has-addons is-fullwidth">
-				<div class="control">
-					<input
-						:disabled="disabled"
-						@change="updateData"
-						class="input"
-						placeholder="Specify an amount..."
-						v-model="repeatAfter.amount"/>
-				</div>
-				<div class="control">
-					<div class="select">
-						<select :disabled="disabled" @change="updateData" v-model="repeatAfter.type">
-							<option value="hours">Hours</option>
-							<option value="days">Days</option>
-							<option value="weeks">Weeks</option>
-							<option value="months">Months</option>
-							<option value="years">Years</option>
-						</select>
+	<div class="control repeat-after-input">
+		<div class="buttons has-addons is-centered mt-2">
+			<button class="button is-small" @click="() => setRepeatAfter(1, 'days')">Every Day</button>
+			<button class="button is-small" @click="() => setRepeatAfter(1, 'weeks')">Every Week</button>
+			<button class="button is-small" @click="() => setRepeatAfter(1, 'months')">Every Month</button>
+		</div>
+		<div class="columns is-align-items-center">
+			<div class="is-flex column">
+				<p class="pr-4">
+					Each
+				</p>
+				<div class="field has-addons is-fullwidth">
+					<div class="control">
+						<input
+							:disabled="disabled"
+							@change="updateData"
+							class="input"
+							placeholder="Specify an amount..."
+							v-model="repeatAfter.amount"/>
+					</div>
+					<div class="control">
+						<div class="select">
+							<select :disabled="disabled" @change="updateData" v-model="repeatAfter.type">
+								<option value="hours">Hours</option>
+								<option value="days">Days</option>
+								<option value="weeks">Weeks</option>
+								<option value="months">Months</option>
+								<option value="years">Years</option>
+							</select>
+						</div>
 					</div>
 				</div>
 			</div>
+			<fancycheckbox
+				:disabled="disabled"
+				@change="updateData"
+				class="column"
+				v-model="task.repeatFromCurrentDate"
+				v-tooltip="'When marking the task as done, all dates will be set relative to the current date rather than the date they had before.'"
+			>
+				Repeat from current date
+			</fancycheckbox>
 		</div>
-		<fancycheckbox
-			:disabled="disabled"
-			@change="updateData"
-			class="column"
-			v-model="task.repeatFromCurrentDate"
-			v-tooltip="'When marking the task as done, all dates will be set relative to the current date rather than the date they had before.'"
-		>
-			Repeat from current date
-		</fancycheckbox>
 	</div>
 </template>
 
@@ -83,6 +90,11 @@ export default {
 			this.$emit('input', this.task)
 			this.$emit('change')
 		},
+		setRepeatAfter(amount, type) {
+			this.repeatAfter.amount = amount
+			this.repeatAfter.type = type
+			this.updateData()
+		},
 	},
 }
 </script>
@@ -92,7 +104,11 @@ p {
 	padding-top: 6px;
 }
 
-.columns {
-	align-items: center;
+.input {
+	min-width: 2rem;
+}
+
+.fancycheckbox {
+	padding: 0;
 }
 </style>
