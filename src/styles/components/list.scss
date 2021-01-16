@@ -139,6 +139,21 @@
   }
 }
 
+.link-share-container .filter-container {
+  right: 9rem;
+  margin-top: -56px;
+}
+
+.link-share-container {
+  .list-view .filter-container {
+    margin-top: -44px;
+  }
+
+  .gantt-chart-container .filter-container {
+    margin-top: -133px;
+  }
+}
+
 .list-namespace-title {
   color: $grey;
 }

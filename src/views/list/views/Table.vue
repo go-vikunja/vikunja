@@ -23,23 +23,16 @@
 						<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.id">#</fancycheckbox>
 						<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.done">Done</fancycheckbox>
 						<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.title">Title</fancycheckbox>
-						<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.priority">Priority
-						</fancycheckbox>
+						<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.priority">Priority</fancycheckbox>
 						<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.labels">Labels</fancycheckbox>
-						<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.assignees">Assignees
-						</fancycheckbox>
-						<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.dueDate">Due Date
-						</fancycheckbox>
-						<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.startDate">Start Date
-						</fancycheckbox>
-						<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.endDate">End Date
-						</fancycheckbox>
-						<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.percentDone">% Done
-						</fancycheckbox>
+						<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.assignees">Assignees</fancycheckbox>
+						<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.dueDate">Due Date</fancycheckbox>
+						<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.startDate">Start Date</fancycheckbox>
+						<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.endDate">End Date</fancycheckbox>
+						<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.percentDone">% Done</fancycheckbox>
 						<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.created">Created</fancycheckbox>
 						<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.updated">Updated</fancycheckbox>
-						<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.createdBy">Created By
-						</fancycheckbox>
+						<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.createdBy">Created By</fancycheckbox>
 					</div>
 				</div>
 				<filters

@@ -1,5 +1,5 @@
 <template>
-	<div :class="{ 'is-loading': taskCollectionService.loading}" class="loader-container is-max-width-desktop">
+	<div :class="{ 'is-loading': taskCollectionService.loading}" class="loader-container is-max-width-desktop list-view">
 		<div class="filter-container" v-if="list.isSavedFilter && !list.isSavedFilter()">
 			<div class="items">
 				<div class="search">

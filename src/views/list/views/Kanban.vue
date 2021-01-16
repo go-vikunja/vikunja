@@ -1,5 +1,5 @@
 <template>
-	<div>
+	<div class="kanban-view">
 		<div class="filter-container" v-if="list.isSavedFilter && !list.isSavedFilter()">
 			<div class="items">
 				<button @click="showFilters = !showFilters" class="button">
