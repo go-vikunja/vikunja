@@ -41,17 +41,21 @@
 						</div>
 					</form>
 
-					<div class="columns bigbuttons">
-						<div class="column">
-							<button :class="{ 'is-loading': teamService.loading}" @click="save()"
-									class="button is-primary is-fullwidth">
+					<div class="field has-addons mt-4">
+						<div class="control is-fullwidth">
+							<button
+								@click="save()"
+								:class="{ 'is-loading': teamService.loading}"
+								class="button is-primary is-fullwidth">
 								Save
 							</button>
 						</div>
-						<div class="column is-1">
-							<button :class="{ 'is-loading': teamService.loading}" @click="showDeleteModal = true"
-									class="button is-danger is-fullwidth">
-								<span class="icon is-small">
+						<div class="control">
+							<button
+								@click="showDeleteModal = true"
+								:class="{ 'is-loading': teamService.loading}"
+								class="button is-danger">
+								<span class="icon">
 									<icon icon="trash-alt"/>
 								</span>
 							</button>
@@ -60,6 +64,7 @@
 				</div>
 			</div>
 		</div>
+
 		<div class="card is-fullwidth has-overflow">
 			<header class="card-header">
 				<p class="card-header-title">
@@ -121,7 +126,7 @@
 							@click="() => {member = m; showUserDeleteModal = true}"
 							class="button is-danger"
 							v-if="m.id !== userInfo.id">
-							<span class="icon is-small">
+							<span class="icon">
 								<icon icon="trash-alt"/>
 							</span>
 						</button>

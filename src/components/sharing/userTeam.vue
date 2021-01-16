@@ -74,7 +74,7 @@
 					</div>
 					<button @click="() => {sharable = s; showDeleteModal = true}"
 							class="button is-danger icon-only">
-							<span class="icon is-small">
+							<span class="icon">
 								<icon icon="trash-alt"/>
 							</span>
 					</button>

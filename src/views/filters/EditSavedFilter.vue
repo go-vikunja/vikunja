@@ -50,17 +50,21 @@
 						</div>
 					</form>
 
-					<div class="columns bigbuttons">
-						<div class="column">
-							<button :class="{ 'is-loading': filterService.loading}" @click="save()"
-									class="button is-primary is-fullwidth">
+					<div class="field has-addons mt-4">
+						<div class="control is-fullwidth">
+							<button
+								@click="save()"
+								:class="{ 'is-loading': filterService.loading}"
+								class="button is-primary is-fullwidth">
 								Save
 							</button>
 						</div>
-						<div class="column is-1">
-							<button :class="{ 'is-loading': filterService.loading}" @click="showDeleteModal = true"
-									class="button is-danger is-fullwidth">
-								<span class="icon is-small">
+						<div class="control">
+							<button
+								@click="showDeleteModal = true"
+								:class="{ 'is-loading': filterService.loading}"
+								class="button is-danger">
+								<span class="icon">
 									<icon icon="trash-alt"/>
 								</span>
 							</button>
