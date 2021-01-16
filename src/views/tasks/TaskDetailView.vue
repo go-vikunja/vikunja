@@ -263,9 +263,9 @@
 						<span class="icon is-small"><icon icon="tags"/></span>
 						Add labels
 					</a>
-					<a @click="setFieldActive('reminders')" class="button">
-						<span class="icon is-small"><icon icon="history"/></span>
-						Set Reminders
+					<a @click="setFieldActive('priority')" class="button">
+						<span class="icon is-small"><icon :icon="['far', 'star']"/></span>
+						Set Priority
 					</a>
 					<a
 						@click="setFieldActive('dueDate')"
@@ -283,13 +283,13 @@
 						<span class="icon is-small"><icon icon="calendar-week"/></span>
 						Set an End Date
 					</a>
+					<a @click="setFieldActive('reminders')" class="button">
+						<span class="icon is-small"><icon icon="history"/></span>
+						Set Reminders
+					</a>
 					<a @click="setFieldActive('repeatAfter')" class="button">
 						<span class="icon is-small"><icon :icon="['far', 'clock']"/></span>
 						Set a repeating interval
-					</a>
-					<a @click="setFieldActive('priority')" class="button">
-						<span class="icon is-small"><icon :icon="['far', 'star']"/></span>
-						Set Priority
 					</a>
 					<a @click="setFieldActive('percentDone')" class="button">
 						<span class="icon is-small"><icon icon="percent"/></span>
