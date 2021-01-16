@@ -1,8 +1,9 @@
 <template>
 	<transition name="modal">
 		<div class="modal-mask">
-			<div class="modal-container">
+			<div class="modal-container" @click.prevent.stop="$emit('close')">
 				<div class="modal-content">
+					<slot>
 					<div class="header">
 						<slot name="header"></slot>
 					</div>
@@ -13,6 +14,7 @@
 						<button @click="$emit('close')" class="button is-danger is-inverted noshadow">Cancel</button>
 						<button @click="$emit('submit')" class="button is-success noshadow">Do it!</button>
 					</div>
+					</slot>
 				</div>
 			</div>
 		</div>

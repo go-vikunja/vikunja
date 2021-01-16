@@ -24,7 +24,11 @@
 		</progress>
 
 		<div class="files" v-if="attachments.length > 0">
-			<div :key="a.id" class="attachment" v-for="a in attachments">
+			<a
+				class="attachment"
+				v-for="a in attachments"
+				:key="a.id"
+				@click="viewOrDownload(a)">
 				<div class="filename">{{ a.file.name }}</div>
 				<div class="info">
 					<p class="collapses">
@@ -53,7 +57,7 @@
 						</a>
 					</p>
 				</div>
-			</div>
+			</a>
 		</div>
 
 		<a
@@ -86,6 +90,15 @@
 			<p slot="text">Are you sure you want to delete the attachment {{ attachmentToDelete.file.name }}?<br/>
 				<b>This CANNOT BE UNDONE!</b></p>
 		</modal>
+
+		<transition name="modal">
+			<modal
+				@close="() => {showImageModal = false; attachmentImageBlobUrl = null}"
+				v-if="showImageModal"
+			>
+				<img :src="attachmentImageBlobUrl" alt=""/>
+			</modal>
+		</transition>
 	</div>
 </template>
 
@@ -107,6 +120,9 @@ export default {
 
 			showDeleteModal: false,
 			attachmentToDelete: AttachmentModel,
+
+			showImageModal: false,
+			attachmentImageBlobUrl: null,
 		}
 	},
 	props: {
@@ -198,6 +214,20 @@ export default {
 				.finally(() => {
 					this.showDeleteModal = false
 				})
+		},
+		viewOrDownload(attachment) {
+			if (attachment.file.name.endsWith('.jpg') ||
+				attachment.file.name.endsWith('.png') ||
+				attachment.file.name.endsWith('.bmp') ||
+				attachment.file.name.endsWith('.gif')) {
+				this.showImageModal = true
+				this.attachmentService.getBlobUrl(attachment)
+					.then(url => {
+						this.attachmentImageBlobUrl = url
+					})
+			} else {
+				this.downloadAttachment(attachment)
+			}
 		},
 	},
 }
