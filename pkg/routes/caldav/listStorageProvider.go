@@ -397,6 +397,11 @@ func (vlra *VikunjaListResourceAdapter) CalculateEtag() string {
 	if vlra.task != nil {
 		return `"` + strconv.FormatInt(vlra.task.ID, 10) + `-` + strconv.FormatInt(vlra.task.Updated.Unix(), 10) + `"`
 	}
+
+	if vlra.list == nil {
+		return ""
+	}
+
 	// This also returns the etag of the list, and not of the task,
 	// which becomes problematic because the client uses this etag (= the one from the list) to make
 	// Requests to update a task. These do not match and thus updating a task fails.
@@ -438,6 +443,10 @@ func (vlra *VikunjaListResourceAdapter) GetModTime() time.Time {
 func (vcls *VikunjaCaldavListStorage) getListRessource(isCollection bool) (rr VikunjaListResourceAdapter, err error) {
 	s := db.NewSession()
 	defer s.Close()
+
+	if vcls.list == nil {
+		return
+	}
 
 	can, _, err := vcls.list.CanRead(s, vcls.user)
 	if err != nil {
