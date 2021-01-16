@@ -1,47 +1,58 @@
 <template>
 	<div class="task-relations">
-		<template v-if="editEnabled">
-			<label class="label">
-				New Task Relation
-				<transition name="fade">
-					<span class="is-inline-flex" v-if="taskRelationService.loading">
-						<span class="loader is-inline-block mr-2"></span>
-						Saving...
-					</span>
-					<span class="has-text-success" v-if="!taskRelationService.loading && saved">
-						Saved!
-					</span>
-				</transition>
-			</label>
-			<div class="field">
-				<multiselect
-					placeholder="Type search for a new task to add as related..."
-					@search="findTasks"
-					:loading="taskService.loading"
-					:search-results="foundTasks"
-					label="title"
-					v-model="newTaskRelationTask"
-					:creatable="true"
-					create-placeholder="Add this as new related task"
-					@create="createAndRelateTask"
-				/>
-			</div>
-			<div class="field has-addons">
-				<div class="control is-expanded">
-					<div class="select is-fullwidth has-defaults">
-						<select v-model="newTaskRelationKind">
-							<option value="unset">Select a relation kind</option>
-							<option :key="rk" :value="rk" v-for="(label, rk) in relationKinds">
-								{{ label[0] }}
-							</option>
-						</select>
+		<button
+			class="button is-pulled-right add-task-relation-button"
+			:class="{'is-active': showNewRelationForm}"
+			@click="showNewRelationForm = !showNewRelationForm"
+			v-tooltip="'Add a New Task Relation'"
+			v-if="Object.keys(relatedTasks).length > 0"
+		>
+			<icon icon="plus"/>
+		</button>
+		<transition-group name="fade">
+			<template v-if="editEnabled && showCreate">
+				<label class="label" key="label">
+					New Task Relation
+					<transition name="fade">
+						<span class="is-inline-flex" v-if="taskRelationService.loading">
+							<span class="loader is-inline-block mr-2"></span>
+							Saving...
+						</span>
+						<span class="has-text-success" v-if="!taskRelationService.loading && saved">
+							Saved!
+						</span>
+					</transition>
+				</label>
+				<div class="field" key="field-search">
+					<multiselect
+						placeholder="Type search for a new task to add as related..."
+						@search="findTasks"
+						:loading="taskService.loading"
+						:search-results="foundTasks"
+						label="title"
+						v-model="newTaskRelationTask"
+						:creatable="true"
+						create-placeholder="Add this as new related task"
+						@create="createAndRelateTask"
+					/>
+				</div>
+				<div class="field has-addons mb-4" key="field-kind">
+					<div class="control is-expanded">
+						<div class="select is-fullwidth has-defaults">
+							<select v-model="newTaskRelationKind">
+								<option value="unset">Select a relation kind</option>
+								<option :key="rk" :value="rk" v-for="(label, rk) in relationKinds">
+									{{ label[0] }}
+								</option>
+							</select>
+						</div>
+					</div>
+					<div class="control">
+						<a @click="addTaskRelation()" class="button is-primary">Add Task Relation</a>
 					</div>
 				</div>
-				<div class="control">
-					<a @click="addTaskRelation()" class="button is-primary">Add task Relation</a>
-				</div>
-			</div>
-		</template>
+			</template>
+		</transition-group>
 
 		<div :key="kind" class="related-tasks" v-for="(rts, kind ) in relatedTasks">
 			<template v-if="rts.length > 0">
@@ -110,6 +121,7 @@ export default {
 			showDeleteModal: false,
 			relationToDelete: {},
 			saved: false,
+			showNewRelationForm: false,
 		}
 	},
 	components: {
@@ -150,6 +162,11 @@ export default {
 	mounted() {
 		this.relatedTasks = this.initialRelatedTasks
 	},
+	computed: {
+		showCreate() {
+			return Object.keys(this.relatedTasks).length === 0 || this.showNewRelationForm
+		},
+	},
 	methods: {
 		findTasks(query) {
 			this.taskService.getAll({}, {s: query})
@@ -174,6 +191,7 @@ export default {
 					this.relatedTasks[this.newTaskRelationKind].push(this.newTaskRelationTask)
 					this.newTaskRelationTask = null
 					this.saved = true
+					this.showNewRelationForm = false
 					setTimeout(() => {
 						this.saved = false
 					}, 2000)
@@ -229,3 +247,19 @@ export default {
 	},
 }
 </script>
+
+<style lang="scss" scoped>
+@import '@/styles/theme/variables';
+
+.add-task-relation-button {
+	margin-top: -3rem;
+
+	svg {
+		transition: transform $transition;
+	}
+
+	&.is-active svg {
+		transform: rotate(45deg);
+	}
+}
+</style>
