@@ -1,11 +1,12 @@
 <template>
 	<div class="content loader-container is-max-width-desktop" v-bind:class="{ 'is-loading': teamService.loading}">
-		<router-link :to="{name:'teams.create'}" class="button is-primary button-right">
-			<span class="icon is-small">
-				<icon icon="plus"/>
-			</span>
+		<x-button
+			:to="{name:'teams.create'}"
+			class="is-pulled-right"
+			icon="plus"
+		>
 			New Team
-		</router-link>
+		</x-button>
 
 		<h1>Teams</h1>
 		<ul class="teams box" v-if="teams.length > 0">

@@ -18,12 +18,14 @@
 					v-model="list.title"/>
 			</p>
 			<p class="control">
-				<button :disabled="list.title === ''" @click="newList()" class="button is-primary has-no-shadow">
-						<span class="icon is-small">
-							<icon icon="plus"/>
-						</span>
+				<x-button
+					:disabled="list.title === ''"
+					@click="newList()"
+					icon="plus"
+					:shadow="false"
+				>
 					Add
-				</button>
+				</x-button>
 			</p>
 		</div>
 		<p class="help is-danger" v-if="showError && list.title === ''">

@@ -18,12 +18,14 @@
 					v-model="namespace.title"/>
 			</p>
 			<p class="control">
-				<button :disabled="namespace.title === ''" @click="newNamespace()" class="button is-primary has-no-shadow">
-						<span class="icon is-small">
-							<icon icon="plus"/>
-						</span>
+				<x-button
+					:disabled="namespace.title === ''"
+					@click="newNamespace()"
+					:shadow="false"
+					icon="plus"
+				>
 					Add
-				</button>
+				</x-button>
 			</p>
 		</div>
 		<p class="help is-danger" v-if="showError && namespace.title === ''">

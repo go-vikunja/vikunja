@@ -14,12 +14,12 @@
 				</h1>
 				<div class="box has-text-left view">
 					<div class="logout">
-						<a @click="logout()" class="button">
+						<x-button @click="logout()" type="secondary">
 							<span>Logout</span>
 							<span class="icon is-small">
-									<icon icon="sign-out-alt"/>
-								</span>
-						</a>
+								<icon icon="sign-out-alt"/>
+							</span>
+						</x-button>
 					</div>
 					<router-view/>
 					<a class="menu-bottom-link" href="https://vikunja.io" target="_blank">
@@ -49,7 +49,3 @@ export default {
 	},
 }
 </script>
-
-<style scoped>
-
-</style>

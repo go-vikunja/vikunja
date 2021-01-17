@@ -1,77 +1,75 @@
 <template>
-	<div class="loader-container is-max-width-desktop" :class="{ 'is-loading': teamService.loading}">
-		<div class="card is-fullwidth" v-if="userIsAdmin">
-			<header class="card-header">
-				<p class="card-header-title">
-					Edit Team
-				</p>
-			</header>
-			<div class="card-content">
-				<div class="content">
-					<form @submit.prevent="save()">
-						<div class="field">
-							<label class="label" for="teamtext">Team Name</label>
-							<div class="control">
-								<input
-									:class="{ 'disabled': teamMemberService.loading}"
-									:disabled="teamMemberService.loading"
-									class="input"
-									id="teamtext"
-									placeholder="The team text is here..."
-									type="text"
-									v-focus
-									v-model="team.name"/>
-							</div>
-						</div>
-						<p class="help is-danger" v-if="showError && team.name === ''">
-							Please specify a name.
-						</p>
-						<div class="field">
-							<label class="label" for="teamdescription">Description</label>
-							<div class="control">
-								<editor
-									:class="{ 'disabled': teamService.loading}"
-									:disabled="teamService.loading"
-									:preview-is-default="false"
-									id="teamdescription"
-									placeholder="The teams description goes here..."
-									v-model="team.description"
-								/>
-							</div>
-						</div>
-					</form>
-
-					<div class="field has-addons mt-4">
-						<div class="control is-fullwidth">
-							<button
-								@click="save()"
-								:class="{ 'is-loading': teamService.loading}"
-								class="button is-primary is-fullwidth">
-								Save
-							</button>
-						</div>
-						<div class="control">
-							<button
-								@click="showDeleteModal = true"
-								:class="{ 'is-loading': teamService.loading}"
-								class="button is-danger">
-								<span class="icon">
-									<icon icon="trash-alt"/>
-								</span>
-							</button>
-						</div>
+	<div
+		class="loader-container is-max-width-desktop"
+		:class="{ 'is-loading': teamService.loading }"
+	>
+		<card class="is-fullwidth" v-if="userIsAdmin" title="Edit Team">
+			<form @submit.prevent="save()">
+				<div class="field">
+					<label class="label" for="teamtext"
+					>Team Name</label
+					>
+					<div class="control">
+						<input
+							:class="{
+										disabled: teamMemberService.loading,
+									}"
+							:disabled="teamMemberService.loading"
+							class="input"
+							id="teamtext"
+							placeholder="The team text is here..."
+							type="text"
+							v-focus
+							v-model="team.name"
+						/>
 					</div>
 				</div>
-			</div>
-		</div>
-
-		<div class="card is-fullwidth has-overflow">
-			<header class="card-header">
-				<p class="card-header-title">
-					Team Members
+				<p
+					class="help is-danger"
+					v-if="showError && team.name === ''"
+				>
+					Please specify a name.
 				</p>
-			</header>
-			<div class="card-content" v-if="userIsAdmin">
+				<div class="field">
+					<label class="label" for="teamdescription"
+					>Description</label
+					>
+					<div class="control">
+						<editor
+							:class="{ disabled: teamService.loading }"
+							:disabled="teamService.loading"
+							:preview-is-default="false"
+							id="teamdescription"
+							placeholder="The teams description goes here..."
+							v-model="team.description"
+						/>
+					</div>
+				</div>
+			</form>
+
+			<div class="field has-addons mt-4">
+				<div class="control is-fullwidth">
+					<x-button
+						@click="save()"
+						:loading="teamService.loading"
+						class="is-fullwidth"
+					>
+						Save
+					</x-button>
+				</div>
+				<div class="control">
+					<x-button
+						@click="showDeleteModal = true"
+						:loading="teamService.loading"
+						class="is-danger"
+						icon="trash-alt"
+					/>
+				</div>
+			</div>
+		</card>
+
+		<card class="is-fullwidth has-overflow" title="Team Members">
+			<div class="p-4" v-if="userIsAdmin">
 				<div class="field has-addons">
 					<div class="control is-expanded">
 						<multiselect
@@ -84,12 +82,9 @@
 						/>
 					</div>
 					<div class="control">
-						<button class="button is-primary" @click="addUser">
-							<span class="icon is-small">
-								<icon icon="plus"/>
-							</span>
+						<x-button @click="addUser" icon="plus">
 							Add To Team
-						</button>
+						</x-button>
 					</div>
 				</div>
 			</div>
@@ -104,57 +99,68 @@
 					</td>
 					<td class="type">
 						<template v-if="m.admin">
-							<span class="icon is-small">
-								<icon icon="lock"/>
-							</span>
+								<span class="icon is-small">
+									<icon icon="lock"/>
+								</span>
 							Admin
 						</template>
 						<template v-else>
-							<span class="icon is-small">
-								<icon icon="user"/>
-							</span>
+								<span class="icon is-small">
+									<icon icon="user"/>
+								</span>
 							Member
 						</template>
 					</td>
 					<td class="actions" v-if="userIsAdmin">
-						<button :class="{'is-loading': teamMemberService.loading}" @click="() => toggleUserType(m)"
-							class="button buttonright is-primary"
-							v-if="m.id !== userInfo.id">
+						<x-button
+							:loading="teamMemberService.loading"
+							@click="() => toggleUserType(m)"
+							class="mr-2"
+							v-if="m.id !== userInfo.id"
+						>
 							Make {{ m.admin ? 'Member' : 'Admin' }}
-						</button>
-						<button :class="{'is-loading': teamMemberService.loading}"
+						</x-button>
+						<x-button
+							:loading="teamMemberService.loading"
 							@click="() => {member = m; showUserDeleteModal = true}"
-							class="button is-danger"
-							v-if="m.id !== userInfo.id">
-							<span class="icon">
-								<icon icon="trash-alt"/>
-							</span>
-						</button>
+							class="is-danger"
+							v-if="m.id !== userInfo.id"
+							icon="trash-alt"
+						/>
 					</td>
 				</tr>
 				</tbody>
 			</table>
-		</div>
+		</card>
 
 		<!-- Team delete modal -->
 		<modal
 			@close="showDeleteModal = false"
 			@submit="deleteTeam()"
-			v-if="showDeleteModal">
+			v-if="showDeleteModal"
+		>
 			<span slot="header">Delete the team</span>
-			<p slot="text">Are you sure you want to delete this team and all of its members?<br/>
-				All team members will loose access to lists and namespaces shared with this team.<br/>
-				<b>This CANNOT BE UNDONE!</b></p>
+			<p slot="text">
+				Are you sure you want to delete this team and all of its
+				members?<br/>
+				All team members will loose access to lists and namespaces
+				shared with this team.<br/>
+				<b>This CANNOT BE UNDONE!</b>
+			</p>
 		</modal>
 		<!-- User delete modal -->
 		<modal
 			@close="showUserDeleteModal = false"
 			@submit="deleteUser()"
-			v-if="showUserDeleteModal">
+			v-if="showUserDeleteModal"
+		>
 			<span slot="header">Remove a user from the team</span>
-			<p slot="text">Are you sure you want to remove this user from the team?<br/>
-				They will loose access to all lists and namespaces this team has access to.<br/>
-				<b>This CANNOT BE UNDONE!</b></p>
+			<p slot="text">
+				Are you sure you want to remove this user from the team?<br/>
+				They will loose access to all lists and namespaces this team has
+				access to.<br/>
+				<b>This CANNOT BE UNDONE!</b>
+			</p>
 		</modal>
 	</div>
 </template>
@@ -199,7 +205,9 @@ export default {
 	components: {
 		Multiselect,
 		editor: () => ({
-			component: import(/* webpackChunkName: "editor" */ '../../components/input/editor'),
+			component: import(
+				/* webpackChunkName: "editor" */ '../../components/input/editor'
+				),
 			loading: LoadingComponent,
 			error: ErrorComponent,
 			timeout: 60000,
@@ -213,25 +221,30 @@ export default {
 	},
 	watch: {
 		// call again the method if the route changes
-		'$route': 'loadTeam',
+		$route: 'loadTeam',
 	},
 	computed: {
 		userIsAdmin() {
-			return this.team && this.team.maxRight && this.team.maxRight > Rights.READ
+			return (
+				this.team &&
+				this.team.maxRight &&
+				this.team.maxRight > Rights.READ
+			)
 		},
 		...mapState({
-			userInfo: state => state.auth.info,
+			userInfo: (state) => state.auth.info,
 		}),
 	},
 	methods: {
 		loadTeam() {
 			this.team = new TeamModel({id: this.teamId})
-			this.teamService.get(this.team)
-				.then(response => {
+			this.teamService
+				.get(this.team)
+				.then((response) => {
 					this.$set(this, 'team', response)
 					this.setTitle(`Edit Team ${this.team.name}`)
 				})
-				.catch(e => {
+				.catch((e) => {
 					this.error(e, this)
 				})
 		},
@@ -242,32 +255,47 @@ export default {
 			}
 			this.showError = false
 
-			this.teamService.update(this.team)
-				.then(response => {
+			this.teamService
+				.update(this.team)
+				.then((response) => {
 					this.team = response
-					this.success({message: 'The team was successfully updated.'}, this)
+					this.success(
+						{message: 'The team was successfully updated.'},
+						this
+					)
 				})
-				.catch(e => {
+				.catch((e) => {
 					this.error(e, this)
 				})
 		},
 		deleteTeam() {
-			this.teamService.delete(this.team)
+			this.teamService
+				.delete(this.team)
 				.then(() => {
-					this.success({message: 'The team was successfully deleted.'}, this)
+					this.success(
+						{message: 'The team was successfully deleted.'},
+						this
+					)
 					router.push({name: 'teams.index'})
 				})
-				.catch(e => {
+				.catch((e) => {
 					this.error(e, this)
 				})
 		},
 		deleteUser() {
-			this.teamMemberService.delete(this.member)
+			this.teamMemberService
+				.delete(this.member)
 				.then(() => {
-					this.success({message: 'The user was successfully deleted from the team.'}, this)
+					this.success(
+						{
+							message:
+								'The user was successfully deleted from the team.',
+						},
+						this
+					)
 					this.loadTeam()
 				})
-				.catch(e => {
+				.catch((e) => {
 					this.error(e, this)
 				})
 				.finally(() => {
@@ -279,29 +307,42 @@ export default {
 				teamId: this.teamId,
 				username: this.newMember.username,
 			})
-			this.teamMemberService.create(newMember)
+			this.teamMemberService
+				.create(newMember)
 				.then(() => {
 					this.loadTeam()
-					this.success({message: 'The team member was successfully added.'}, this)
+					this.success(
+						{message: 'The team member was successfully added.'},
+						this
+					)
 				})
-				.catch(e => {
+				.catch((e) => {
 					this.error(e, this)
 				})
 		},
 		toggleUserType(member) {
 			member.admin = !member.admin
 			member.teamId = this.teamId
-			this.teamMemberService.update(member)
-				.then(r => {
+			this.teamMemberService
+				.update(member)
+				.then((r) => {
 					for (const tm in this.team.members) {
 						if (this.team.members[tm].id === member.id) {
 							this.$set(this.team.members[tm], 'admin', r.admin)
 							break
 						}
 					}
-					this.success({message: 'The team member was successfully made ' + (member.admin ? 'admin' : 'member') + '.'}, this)
+					this.success(
+						{
+							message:
+								'The team member was successfully made ' +
+								(member.admin ? 'admin' : 'member') +
+								'.',
+						},
+						this
+					)
 				})
-				.catch(e => {
+				.catch((e) => {
 					this.error(e, this)
 				})
 		},
@@ -311,11 +352,12 @@ export default {
 				return
 			}
 
-			this.userService.getAll({}, {s: query})
-				.then(response => {
+			this.userService
+				.getAll({}, {s: query})
+				.then((response) => {
 					this.$set(this, 'foundUsers', response)
 				})
-				.catch(e => {
+				.catch((e) => {
 					this.error(e, this)
 				})
 		},

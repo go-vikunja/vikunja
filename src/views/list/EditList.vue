@@ -4,132 +4,112 @@
 			This list is archived.
 			It is not possible to create new or edit tasks or it.
 		</div>
-		<div class="card">
-			<header class="card-header">
-				<p class="card-header-title">
-					Edit List
-				</p>
-			</header>
-			<div class="card-content">
-				<div class="content">
-					<form @submit.prevent="submit()">
-						<div class="field">
-							<label class="label" for="listtext">List Name</label>
-							<div class="control">
-								<input
-									:class="{ 'disabled': listService.loading}"
-									:disabled="listService.loading"
-									@keyup.enter="submit"
-									class="input"
-									id="listtext"
-									placeholder="The list title goes here..."
-									type="text"
-									v-focus
-									v-model="list.title"/>
-							</div>
-						</div>
-						<div class="field">
-							<label
-								class="label"
-								for="listtext"
-								v-tooltip="'The list identifier can be used to uniquely identify a task across lists. You can set it to empty to disable it.'">
-								List Identifier
-							</label>
-							<div class="control">
-								<input
-									:class="{ 'disabled': listService.loading}"
-									:disabled="listService.loading"
-									@keyup.enter="submit"
-									class="input"
-									id="listtext"
-									placeholder="The list identifier goes here..."
-									type="text"
-									v-focus
-									v-model="list.identifier"/>
-							</div>
-						</div>
-						<div class="field">
-							<label class="label" for="listdescription">Description</label>
-							<div class="control">
-								<editor
-									:class="{ 'disabled': listService.loading}"
-									:disabled="listService.loading"
-									:preview-is-default="false"
-									id="listdescription"
-									placeholder="The lists description goes here..."
-									v-model="list.description"
-								/>
-							</div>
-						</div>
-						<div class="field">
-							<label class="label" for="isArchivedCheck">Is Archived</label>
-							<div class="control">
-								<fancycheckbox
-									v-model="list.isArchived"
-									v-tooltip="'If a list is archived, you cannot create new tasks or edit the list or existing tasks.'">
-									This list is archived
-								</fancycheckbox>
-							</div>
-						</div>
-						<div class="field">
-							<label class="label">Color</label>
-							<div class="control">
-								<color-picker v-model="list.hexColor"/>
-							</div>
-						</div>
-					</form>
-
-					<div class="field has-addons mt-4">
-						<div class="control is-fullwidth">
-							<button
-								@click="submit()"
-								:class="{ 'is-loading': listService.loading}"
-								class="button is-primary is-fullwidth">
-								Save
-							</button>
-						</div>
-						<div class="control">
-							<button
-								@click="showDeleteModal = true"
-								:class="{ 'is-loading': listService.loading}"
-								class="button is-danger">
-								<span class="icon">
-									<icon icon="trash-alt"/>
-								</span>
-							</button>
-						</div>
+		<card title="Edit List">
+			<form @submit.prevent="submit()">
+				<div class="field">
+					<label class="label" for="listtext">List Name</label>
+					<div class="control">
+						<input
+							:class="{ 'disabled': listService.loading}"
+							:disabled="listService.loading"
+							@keyup.enter="submit"
+							class="input"
+							id="listtext"
+							placeholder="The list title goes here..."
+							type="text"
+							v-focus
+							v-model="list.title"/>
 					</div>
 				</div>
-			</div>
-		</div>
-
-		<div class="card has-overflow">
-			<header class="card-header">
-				<p class="card-header-title">
-					Duplicate this list
-				</p>
-			</header>
-			<div class="card-content">
-				<div class="content">
-					<p>Select a namespace which should hold the duplicated list:</p>
-
-					<div class="field has-addons">
-						<div class="control is-expanded">
-							<namespace-search @selected="selectNamespace"/>
-						</div>
-						<div class="control">
-							<button
-								:class="{'is-loading': listDuplicateService.loading}"
-								@click="duplicateList"
-								class="button is-primary"
-								type="submit">
-								Duplicate
-							</button>
-						</div>
+				<div class="field">
+					<label
+						class="label"
+						for="listtext"
+						v-tooltip="'The list identifier can be used to uniquely identify a task across lists. You can set it to empty to disable it.'">
+						List Identifier
+					</label>
+					<div class="control">
+						<input
+							:class="{ 'disabled': listService.loading}"
+							:disabled="listService.loading"
+							@keyup.enter="submit"
+							class="input"
+							id="listtext"
+							placeholder="The list identifier goes here..."
+							type="text"
+							v-focus
+							v-model="list.identifier"/>
 					</div>
 				</div>
+				<div class="field">
+					<label class="label" for="listdescription">Description</label>
+					<div class="control">
+						<editor
+							:class="{ 'disabled': listService.loading}"
+							:disabled="listService.loading"
+							:preview-is-default="false"
+							id="listdescription"
+							placeholder="The lists description goes here..."
+							v-model="list.description"
+						/>
+					</div>
+				</div>
+				<div class="field">
+					<label class="label" for="isArchivedCheck">Is Archived</label>
+					<div class="control">
+						<fancycheckbox
+							v-model="list.isArchived"
+							v-tooltip="'If a list is archived, you cannot create new tasks or edit the list or existing tasks.'">
+							This list is archived
+						</fancycheckbox>
+					</div>
+				</div>
+				<div class="field">
+					<label class="label">Color</label>
+					<div class="control">
+						<color-picker v-model="list.hexColor"/>
+					</div>
+				</div>
+			</form>
+
+			<div class="field has-addons mt-4">
+				<div class="control is-fullwidth">
+					<x-button
+						@click="submit()"
+						:loading="listService.loading"
+						class="is-fullwidth">
+						Save
+					</x-button>
+				</div>
+				<div class="control">
+					<x-button
+						@click="showDeleteModal = true"
+						:locading="listService.loading"
+						icon="trash-alt"
+						class="is-danger"
+					/>
+				</div>
 			</div>
-		</div>
+		</card>
+
+		<!-- Duplicate list -->
+		<card class="has-overflow" title="Duplicate this list">
+			<p>Select a namespace which should hold the duplicated list:</p>
+
+			<div class="field has-addons">
+				<div class="control is-expanded">
+					<namespace-search @selected="selectNamespace"/>
+				</div>
+				<div class="control">
+					<x-button
+						:loading="listDuplicateService.loading"
+						@click="duplicateList"
+					>
+						Duplicate
+					</x-button>
+				</div>
+			</div>
+		</card>
 
 		<background :list-id="$route.params.id"/>
 

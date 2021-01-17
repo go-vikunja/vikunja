@@ -35,7 +35,7 @@
 			<div class="search-results" v-if="searchResultsVisible">
 				<button
 					v-if="creatableAvailable"
-					class="button is-ghost is-fullwidth"
+					class="is-fullwidth"
 					ref="result--1"
 					@keydown.up.prevent="() => preSelect(-2)"
 					@keydown.down.prevent="() => preSelect(0)"
@@ -55,7 +55,7 @@
 				</button>
 
 				<button
-					class="button is-ghost is-fullwidth"
+					class="is-fullwidth"
 					v-for="(data, key) in filteredSearchResults"
 					:key="key"
 					:ref="`result-${key}`"

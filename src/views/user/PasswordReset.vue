@@ -35,9 +35,12 @@
 
 				<div class="field is-grouped">
 					<div class="control">
-						<button :class="{ 'is-loading': this.passwordResetService.loading}" class="button is-primary"
-								type="submit">Reset your password
-						</button>
+						<x-button
+							:loading="this.passwordResetService.loading"
+							@click="submit"
+						>
+							Reset your password
+						</x-button>
 					</div>
 				</div>
 				<div class="notification is-info" v-if="this.passwordResetService.loading">
@@ -51,7 +54,9 @@
 				<div class="notification is-success">
 					{{ successMessage }}
 				</div>
-				<router-link :to="{ name: 'user.login' }" class="button is-primary">Login</router-link>
+				<x-button :to="{ name: 'user.login' }">
+					Login
+				</x-button>
 			</div>
 			<legal/>
 		</div>

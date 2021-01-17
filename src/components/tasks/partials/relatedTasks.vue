@@ -1,14 +1,14 @@
 <template>
 	<div class="task-relations">
-		<button
-			class="button is-pulled-right add-task-relation-button"
-			:class="{'is-active': showNewRelationForm}"
-			@click="showNewRelationForm = !showNewRelationForm"
-			v-tooltip="'Add a New Task Relation'"
+		<x-button
 			v-if="Object.keys(relatedTasks).length > 0"
-		>
-			<icon icon="plus"/>
-		</button>
+			@click="showNewRelationForm = !showNewRelationForm"
+			class="is-pulled-right add-task-relation-button"
+			:class="{'is-active': showNewRelationForm}"
+			v-tooltip="'Add a New Task Relation'"
+			type="secondary"
+			icon="plus"
+		/>
 		<transition-group name="fade">
 			<template v-if="editEnabled && showCreate">
 				<label class="label" key="label">
@@ -48,7 +48,7 @@
 						</div>
 					</div>
 					<div class="control">
-						<a @click="addTaskRelation()" class="button is-primary">Add Task Relation</a>
+						<x-button @click="addTaskRelation()">Add Task Relation</x-button>
 					</div>
 				</div>
 			</template>
@@ -248,7 +248,7 @@ export default {
 }
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
 @import '@/styles/theme/variables';
 
 .add-task-relation-button {

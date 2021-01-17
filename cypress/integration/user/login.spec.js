@@ -4,7 +4,7 @@ const testAndAssertFailed = fixture => {
 	cy.visit('/login')
 	cy.get('input[id=username]').type(fixture.username)
 	cy.get('input[id=password]').type(fixture.password)
-	cy.get('button').contains('Login').click()
+	cy.get('.button').contains('Login').click()
 
 	cy.wait(5000) // It can take waaaayy too long to log the user in
 	cy.url().should('include', '/')
@@ -32,7 +32,7 @@ context('Login', () => {
 		cy.visit('/login')
 		cy.get('input[id=username]').type(fixture.username)
 		cy.get('input[id=password]').type(fixture.password)
-		cy.get('button').contains('Login').click()
+		cy.get('.button').contains('Login').click()
 		cy.url().should('include', '/')
 		cy.get('h2').should('contain', `Hi ${fixture.username}!`)
 	})

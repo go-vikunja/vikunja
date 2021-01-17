@@ -162,6 +162,12 @@ const formatDate = (date, f) => {
 	return date ? format(date, f) : ''
 }
 
+import Button from '@/components/input/button'
+Vue.component('x-button', Button)
+
+import Card from '@/components/misc/card'
+Vue.component('card', Card)
+
 Vue.mixin({
 	methods: {
 		formatDateSince: date => {

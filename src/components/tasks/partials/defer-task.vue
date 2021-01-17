@@ -1,13 +1,34 @@
 <template>
-	<div :class="{'is-loading': taskService.loading}" class="defer-task loading-container">
+	<div
+		:class="{ 'is-loading': taskService.loading }"
+		class="defer-task loading-container"
+	>
 		<label class="label">Defer due date</label>
 		<div class="defer-days">
-			<button @click="() => deferDays(1)" class="button has-no-shadow">1 day</button>
-			<button @click="() => deferDays(3)" class="button has-no-shadow">3 days</button>
-			<button @click="() => deferDays(7)" class="button has-no-shadow">1 week</button>
+			<x-button
+				@click.prevent.stop="() => deferDays(1)"
+				:shadow="false"
+				type="secondary"
+			>
+				1 day
+			</x-button>
+			<x-button
+				@click.prevent.stop="() => deferDays(3)"
+				:shadow="false"
+				type="secondary"
+			>
+				3 days
+			</x-button>
+			<x-button
+				@click.prevent.stop="() => deferDays(7)"
+				:shadow="false"
+				type="secondary"
+			>
+				1 week
+			</x-button>
 		</div>
 		<flat-pickr
-			:class="{ 'disabled': taskService.loading}"
+			:class="{ disabled: taskService.loading }"
 			:config="flatPickerConfig"
 			:disabled="taskService.loading"
 			class="input"
@@ -97,13 +118,14 @@ export default {
 			}
 
 			this.task.dueDate = new Date(this.dueDate)
-			this.taskService.update(this.task)
-				.then(r => {
+			this.taskService
+				.update(this.task)
+				.then((r) => {
 					this.lastValue = r.dueDate
 					this.task = r
 					this.$emit('input', r)
 				})
-				.catch(e => {
+				.catch((e) => {
 					this.error(e, this)
 				})
 		},

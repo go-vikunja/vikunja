@@ -1,12 +1,22 @@
 <template>
 	<div :class="{'is-pulled-up': isEditEnabled}" class="editor">
 		<div class="is-pulled-right mb-4" v-if="hasPreview && isEditEnabled && !hasEditBottom">
-			<a v-if="!isEditActive" @click="toggleEdit" class="button has-no-shadow">
+			<x-button 
+				v-if="!isEditActive"
+				@click="toggleEdit"
+				:shadow="false"
+				type="secondary"
+			>
 				<icon icon="pen"/>
-			</a>
-			<a v-else @click="toggleEdit" class="button has-no-shadow">
+			</x-button>
+			<x-button 
+				v-else 
+				@click="toggleEdit"
+				:shadow="false"
+				type="secondary"
+			>
 				Done
-			</a>
+			</x-button>
 		</div>
 
 		<div class="clear"></div>

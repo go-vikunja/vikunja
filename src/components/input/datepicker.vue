@@ -97,12 +97,13 @@
 					v-model="flatPickrDate"
 				/>
 
-				<a
-					class="button is-primary has-no-shadow is-fullwidth"
+				<x-button
+					class="is-fullwidth"
+					:shadow="false"
 					@click="close"
 				>
 					Confirm
-				</a>
+				</x-button>
 			</div>
 		</transition>
 	</div>

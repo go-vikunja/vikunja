@@ -1,9 +1,9 @@
 <template>
 	<div class="control repeat-after-input">
 		<div class="buttons has-addons is-centered mt-2">
-			<button class="button is-small" @click="() => setRepeatAfter(1, 'days')">Every Day</button>
-			<button class="button is-small" @click="() => setRepeatAfter(1, 'weeks')">Every Week</button>
-			<button class="button is-small" @click="() => setRepeatAfter(1, 'months')">Every Month</button>
+			<x-button type="secondary" class="is-small" @click="() => setRepeatAfter(1, 'days')">Every Day</x-button>
+			<x-button type="secondary" class="is-small" @click="() => setRepeatAfter(1, 'weeks')">Every Week</x-button>
+			<x-button type="secondary" class="is-small" @click="() => setRepeatAfter(1, 'months')">Every Month</x-button>
 		</div>
 		<div class="columns is-align-items-center">
 			<div class="is-flex column">

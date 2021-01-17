@@ -3,13 +3,13 @@
 		<h2>Hi {{ userInfo.name !== '' ? userInfo.name : userInfo.username }}!</h2>
 		<template v-if="!hasTasks">
 			<p>Click on a list or namespace on the left to get started.</p>
-			<router-link
+			<x-button
 				:to="{name: 'migrate.start'}"
-				class="button is-primary has-no-shadow"
+				:shadow="false"
 				v-if="migratorsEnabled"
 			>
 				Import your data into Vikunja
-			</router-link>
+			</x-button>
 		</template>
 		<ShowTasks :show-all="true"/>
 	</div>

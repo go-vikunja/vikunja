@@ -1,5 +1,7 @@
 <template>
-	<div :class="{ 'is-loading': taskCollectionService.loading}" class="loader-container is-max-width-desktop list-view">
+	<div
+		:class="{ 'is-loading': taskCollectionService.loading}"
+		class="loader-container is-max-width-desktop list-view">
 		<div class="filter-container" v-if="list.isSavedFilter && !list.isSavedFilter()">
 			<div class="items">
 				<div class="search">
@@ -18,26 +20,29 @@
 							</span>
 						</div>
 						<div class="control">
-							<button
-								:class="{'is-loading': taskCollectionService.loading}"
+							<x-button
+								:loading="taskCollectionService.loading"
 								@click="searchTasks"
-								class="button has-no-shadow is-primary">
+								:shadow="false"
+							>
 								Search
-							</button>
+							</x-button>
 						</div>
 					</div>
-					<button @click="showTaskSearch = !showTaskSearch" class="button" v-if="!showTaskSearch">
-						<span class="icon">
-							<icon icon="search"/>
-						</span>
-					</button>
+					<x-button
+						@click="showTaskSearch = !showTaskSearch"
+						icon="search"
+						type="secondary"
+						v-if="!showTaskSearch"
+					/>
 				</div>
-				<button @click.prevent.stop="showTaskFilter = !showTaskFilter" class="button">
-					<span class="icon is-small">
-						<icon icon="filter"/>
-					</span>
+				<x-button
+					@click.prevent.stop="showTaskFilter = !showTaskFilter"
+					type="secondary"
+					icon="filter"
+				>
 					Filters
-				</button>
+				</x-button>
 			</div>
 			<filter-popup
 				@change="loadTasks(1)"
@@ -62,12 +67,13 @@
 					</span>
 				</p>
 				<p class="control">
-					<button :disabled="newTaskText.length === 0" @click="addTask()" class="button is-primary">
-						<span class="icon is-small">
-							<icon icon="plus"/>
-						</span>
+					<x-button
+						:disabled="newTaskText.length === 0"
+						@click="addTask()"
+						icon="plus"
+					>
 						Add
-					</button>
+					</x-button>
 				</p>
 			</div>
 			<p class="help is-danger" v-if="showError && newTaskText === ''">
@@ -97,23 +103,9 @@
 				</div>
 			</div>
 			<div class="column is-4" v-if="isTaskEdit">
-				<div class="card taskedit">
-					<header class="card-header">
-						<p class="card-header-title">
-							Edit Task
-						</p>
-						<a @click="isTaskEdit = false" class="card-header-icon">
-							<span class="icon">
-								<icon icon="angle-right"/>
-							</span>
-						</a>
-					</header>
-					<div class="card-content">
-						<div class="content">
-							<edit-task :task="taskEditTask"/>
-						</div>
-					</div>
-				</div>
+				<card class="taskedit" title="Edit Task" :has-close="true" @close="() => isTaskEdit = false">
+					<edit-task :task="taskEditTask"/>
+				</card>
 			</div>
 		</div>
 

@@ -30,7 +30,7 @@ describe('Namepaces', () => {
 			.should('contain', 'Create a new namespace')
 		cy.get('input.input')
 			.type('New Namespace')
-		cy.get('button')
+		cy.get('.button')
 			.contains('Add')
 			.click()
 		cy.url()

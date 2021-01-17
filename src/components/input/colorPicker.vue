@@ -16,9 +16,9 @@
 			model="hex"
 			picker="square"
 			v-model="color"/>
-		<a @click="reset" class="button has-no-shadow is-small ml-2">
+		<x-button @click="reset" class="is-small ml-2" :shadow="false" type="secondary">
 			Reset Color
-		</a>
+		</x-button>
 	</div>
 </template>
 

@@ -54,12 +54,19 @@
 
 				<div class="field is-grouped login-buttons">
 					<div class="control is-expanded">
-						<button class="button is-primary" type="submit" v-bind:class="{ 'is-loading': loading}">
+						<x-button
+							@click="submit"
+							:loading="loading"
+						>
 							Login
-						</button>
-						<router-link :to="{ name: 'user.register' }" class="button" v-if="registrationEnabled">
+						</x-button>
+						<x-button
+							:to="{ name: 'user.register' }"
+							v-if="registrationEnabled"
+							type="secondary"
+						>
 							Register
-						</router-link>
+						</x-button>
 					</div>
 					<div class="control">
 						<router-link :to="{ name: 'user.password-reset.request' }" class="reset-password-link">
@@ -73,9 +80,15 @@
 			</form>
 
 			<div v-if="openidConnect.enabled && openidConnect.providers && openidConnect.providers.length > 0" class="mt-4">
-				<a @click="redirectToProvider(p)" v-for="(p, k) in openidConnect.providers" :key="k" class="button is-fullwidth">
+				<x-button
+					@click="redirectToProvider(p)"
+					v-for="(p, k) in openidConnect.providers"
+					:key="k"
+					type="secondary"
+					class="is-fullwidth"
+				>
 					Log in with {{ p.name }}
-				</a>
+				</x-button>
 			</div>
 
 			<legal/>

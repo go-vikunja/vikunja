@@ -44,12 +44,15 @@
 				<img :src="userAvatar" alt="" class="avatar"/>
 				<div class="dropdown is-right is-active">
 					<div class="dropdown-trigger">
-						<button @click.stop="userMenuActive = !userMenuActive" class="button has-no-shadow">
+						<x-button 
+							@click.stop="userMenuActive = !userMenuActive"
+							type="secondary" 
+							:shadow="false">
 							<span class="username">{{ userInfo.name !== '' ? userInfo.name : userInfo.username }}</span>
 							<span class="icon is-small">
-									<icon icon="chevron-down"/>
-								</span>
-						</button>
+								<icon icon="chevron-down"/>
+							</span>
+						</x-button>
 					</div>
 					<transition name="fade">
 						<div class="dropdown-menu" v-if="userMenuActive">

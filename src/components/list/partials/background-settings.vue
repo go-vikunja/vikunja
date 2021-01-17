@@ -1,68 +1,65 @@
 <template>
-	<div
+	<card
 		:class="{ 'is-loading': backgroundService.loading}"
-		class="card list-background-setting loader-container"
-		v-if="uploadBackgroundEnabled || unsplashBackgroundEnabled">
-		<header class="card-header">
-			<p class="card-header-title">
-				Set list background
-			</p>
-		</header>
-		<div class="card-content">
-			<div class="content" v-if="uploadBackgroundEnabled">
-				<input
-					@change="uploadBackground"
-					accept="image/*"
-					class="is-hidden"
-					ref="backgroundUploadInput"
-					type="file"
-				/>
-				<a
-					:class="{'is-loading': backgroundUploadService.loading}"
-					@click="$refs.backgroundUploadInput.click()"
-					class="button is-primary"
-				>
-					Choose a background from your pc
-				</a>
-			</div>
-			<div class="content" v-if="unsplashBackgroundEnabled">
-				<input
-					:class="{'is-loading': backgroundService.loading}"
-					@keyup="() => newBackgroundSearch()"
-					class="input is-expanded"
-					placeholder="Search for a background..."
-					type="text"
-					v-model="backgroundSearchTerm"
-				/>
-				<p class="unsplash-link"><a href="https://unsplash.com" target="_blank">Powered by Unsplash</a></p>
-				<div class="image-search-result">
-					<a
-						:key="im.id"
-						:style="{'background-image': `url(${backgroundThumbs[im.id]})`}"
-						@click="() => setBackground(im.id)"
-						class="image"
-						v-for="im in backgroundSearchResult">
-						<a :href="`https://unsplash.com/@${im.info.author}`" target="_blank" class="info">
-							{{ im.info.authorName }}
-						</a>
-					</a>
-				</div>
-				<a
-					:disabled="backgroundService.loading"
-					@click="() => searchBackgrounds(currentPage + 1)"
-					class="button is-centered is-load-more-button has-no-shadow mt-4"
-					v-if="backgroundSearchResult.length > 0"
-				>
-					<template v-if="backgroundService.loading">
-						Loading...
-					</template>
-					<template v-else>
-						Load more photos
-					</template>
-				</a>
-			</div>
+		class="list-background-setting loader-container"
+		v-if="uploadBackgroundEnabled || unsplashBackgroundEnabled"
+		title="Set list background"
+	>
+		<div class="mb-4" v-if="uploadBackgroundEnabled">
+			<input
+				@change="uploadBackground"
+				accept="image/*"
+				class="is-hidden"
+				ref="backgroundUploadInput"
+				type="file"
+			/>
+			<x-button
+				:loading="backgroundUploadService.loading"
+				@click="$refs.backgroundUploadInput.click()"
+				type="primary"
+			>
+				Choose a background from your pc
+			</x-button>
 		</div>
-	</div>
+		<template v-if="unsplashBackgroundEnabled">
+			<input
+				:class="{'is-loading': backgroundService.loading}"
+				@keyup="() => newBackgroundSearch()"
+				class="input is-expanded"
+				placeholder="Search for a background..."
+				type="text"
+				v-model="backgroundSearchTerm"
+			/>
+			<p class="unsplash-link"><a href="https://unsplash.com" target="_blank">Powered by Unsplash</a></p>
+			<div class="image-search-result">
+				<a
+					:key="im.id"
+					:style="{'background-image': `url(${backgroundThumbs[im.id]})`}"
+					@click="() => setBackground(im.id)"
+					class="image"
+					v-for="im in backgroundSearchResult">
+					<a :href="`https://unsplash.com/@${im.info.author}`" target="_blank" class="info">
+						{{ im.info.authorName }}
+					</a>
+				</a>
+			</div>
+			<x-button
+				:disabled="backgroundService.loading"
+				@click="() => searchBackgrounds(currentPage + 1)"
+				class="is-load-more-button mt-4"
+				:shadow="false"
+				type="secondary"
+				v-if="backgroundSearchResult.length > 0"
+			>
+				<template v-if="backgroundService.loading">
+					Loading...
+				</template>
+				<template v-else>
+					Load more photos
+				</template>
+			</x-button>
+		</template>
+	</card>
 </template>
 
 <script>

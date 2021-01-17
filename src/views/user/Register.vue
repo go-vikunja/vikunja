@@ -62,10 +62,15 @@
 
 				<div class="field is-grouped">
 					<div class="control">
-						<button class="button is-primary" type="submit" :class="{ 'is-loading': loading}" id="register-submit">
+						<x-button
+							:loading="loading"
+							id="register-submit"
+							@click="submit"
+							class="mr-2"
+						>
 							Register
-						</button>
-						<router-link :to="{ name: 'user.login' }" class="button">Login</router-link>
+						</x-button>
+						<x-button :to="{ name: 'user.login' }" type="secondary">Login</x-button>
 					</div>
 				</div>
 				<div class="notification is-info" v-if="loading">
@@ -136,9 +141,3 @@ export default {
 	},
 }
 </script>
-
-<style scoped>
-.button {
-	margin: 0 0.4em 0 0;
-}
-</style>

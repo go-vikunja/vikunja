@@ -1,32 +1,26 @@
 <template>
 	<div class="content namespaces-list loader-container" :class="{'is-loading': loading}">
-		<router-link :to="{name: 'namespace.create'}" class="button is-primary new-namespace">
-			<span class="icon is-small">
-				<icon icon="plus"/>
-			</span>
+		<x-button :to="{name: 'namespace.create'}" class="new-namespace" icon="plus">
 			Create namespace
-		</router-link>
-		<router-link :to="{name: 'filters.create'}" class="button is-primary new-namespace">
-			<span class="icon is-small">
-				<icon icon="filter"/>
-			</span>
+		</x-button>
+		<x-button :to="{name: 'filters.create'}" class="new-namespace" icon="filter">
 			Create saved filter
-		</router-link>
+		</x-button>
 
 		<fancycheckbox class="show-archived-check" v-model="showArchived">
 			Show Archived
 		</fancycheckbox>
 
 		<div :key="`n${n.id}`" class="namespace" v-for="n in namespaces">
-			<router-link
+			<x-button
 				:to="{name: 'list.create', params: {id:  n.id}}"
-				class="button is-pulled-right"
-				v-if="n.id > 0">
-				<span class="icon is-small">
-					<icon icon="plus"/>
-				</span>
+				class="is-pulled-right"
+				type="secondary"
+				v-if="n.id > 0"
+				icon="plus"
+			>
 				Create list
-			</router-link>
+			</x-button>
 
 			<h1>
 				<span>{{ n.title }}</span>

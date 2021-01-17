@@ -1,78 +1,67 @@
 <template>
 	<div :class="{ 'is-loading': filterService.loading}" class="loader-container edit-list is-max-width-desktop">
-		<div class="card">
-			<header class="card-header">
-				<p class="card-header-title">
-					Edit Saved Filter
-				</p>
-			</header>
-			<div class="card-content">
-				<div class="content">
-					<form @submit.prevent="save()">
-						<div class="field">
-							<label class="label" for="listtext">Filter Name</label>
-							<div class="control">
-								<input
-									:class="{ 'disabled': filterService.loading}"
-									:disabled="filterService.loading"
-									@keyup.enter="save"
-									class="input"
-									id="listtext"
-									placeholder="The list title goes here..."
-									type="text"
-									v-focus
-									v-model="filter.title"/>
-							</div>
-						</div>
-						<div class="field">
-							<label class="label" for="listdescription">Description</label>
-							<div class="control">
-								<editor
-									:class="{ 'disabled': filterService.loading}"
-									:disabled="filterService.loading"
-									:preview-is-default="false"
-									id="listdescription"
-									placeholder="The lists description goes here..."
-									v-model="filter.description"
-								/>
-							</div>
-						</div>
-						<div class="field">
-							<label class="label" for="filters">Filters</label>
-							<div class="control">
-								<filters
-									:class="{ 'disabled': filterService.loading}"
-									:disabled="filterService.loading"
-									class="has-no-shadow has-no-border"
-									v-model="filters"
-								/>
-							</div>
-						</div>
-					</form>
-
-					<div class="field has-addons mt-4">
-						<div class="control is-fullwidth">
-							<button
-								@click="save()"
-								:class="{ 'is-loading': filterService.loading}"
-								class="button is-primary is-fullwidth">
-								Save
-							</button>
-						</div>
-						<div class="control">
-							<button
-								@click="showDeleteModal = true"
-								:class="{ 'is-loading': filterService.loading}"
-								class="button is-danger">
-								<span class="icon">
-									<icon icon="trash-alt"/>
-								</span>
-							</button>
-						</div>
+		<card title="Edit Saved Filter">
+			<form @submit.prevent="save()">
+				<div class="field">
+					<label class="label" for="listtext">Filter Name</label>
+					<div class="control">
+						<input
+							:class="{ 'disabled': filterService.loading}"
+							:disabled="filterService.loading"
+							@keyup.enter="save"
+							class="input"
+							id="listtext"
+							placeholder="The list title goes here..."
+							type="text"
+							v-focus
+							v-model="filter.title"/>
 					</div>
 				</div>
+				<div class="field">
+					<label class="label" for="listdescription">Description</label>
+					<div class="control">
+						<editor
+							:class="{ 'disabled': filterService.loading}"
+							:disabled="filterService.loading"
+							:preview-is-default="false"
+							id="listdescription"
+							placeholder="The lists description goes here..."
+							v-model="filter.description"
+						/>
+					</div>
+				</div>
+				<div class="field">
+					<label class="label" for="filters">Filters</label>
+					<div class="control">
+						<filters
+							:class="{ 'disabled': filterService.loading}"
+							:disabled="filterService.loading"
+							class="has-no-shadow has-no-border"
+							v-model="filters"
+						/>
+					</div>
+				</div>
+			</form>
+
+			<div class="field has-addons mt-4">
+				<div class="control is-fullwidth">
+					<x-button
+						@click="save()"
+						:loading="filterService.loading"
+						class="is-fullwidth">
+						Save
+					</x-button>
+				</div>
+				<div class="control">
+					<x-button
+						@click="showDeleteModal = true"
+						:loading="filterService.loading"
+						class="is-danger"
+						icon="trash-alt"
+					/>
+				</div>
 			</div>
-		</div>
+		</card>
 
 		<modal
 			@close="showDeleteModal = false"

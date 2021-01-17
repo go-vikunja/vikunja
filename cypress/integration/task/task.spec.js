@@ -28,7 +28,7 @@ describe('Task', () => {
 		cy.visit('/lists/1/list')
 		cy.get('input.input[placeholder="Add a new task..."')
 			.type('New Task')
-		cy.get('button.button')
+		cy.get('.button')
 			.contains('Add')
 			.click()
 		cy.get('.tasks .task .tasktext')
@@ -44,7 +44,7 @@ describe('Task', () => {
 			.should('not.exist')
 		cy.get('input.input[placeholder="Add a new task..."')
 			.type('New Task')
-		cy.get('button.button')
+		cy.get('.button')
 			.contains('Add')
 			.click()
 
@@ -175,7 +175,7 @@ describe('Task', () => {
 				.should('exist')
 		})
 
-		it('Can add a new comment', () => {
+		it.only('Can add a new comment', () => {
 			const tasks = TaskFactory.create(1, {
 				id: 1,
 			})
@@ -183,7 +183,7 @@ describe('Task', () => {
 
 			cy.get('.task-view .comments .media.comment .editor .vue-easymde .EasyMDEContainer .CodeMirror-scroll')
 				.type('{selectall}New Comment')
-			cy.get('.task-view .comments .media.comment .button.is-primary')
+			cy.get('.task-view .comments .media.comment .button:not([disabled])')
 				.contains('Comment')
 				.click()
 

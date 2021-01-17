@@ -2,33 +2,70 @@
 	<div class="content details">
 		<h3 v-if="canWrite || comments.length > 0">
 			<span class="icon is-grey">
-				<icon :icon="['far', 'comments']"/>
+				<icon :icon="['far', 'comments']" />
 			</span>
 			Comments
 		</h3>
 		<div class="comments">
-			<span class="is-inline-flex is-align-items-center" v-if="taskCommentService.loading && saving === null && !creating">
+			<span
+				class="is-inline-flex is-align-items-center"
+				v-if="
+					taskCommentService.loading && saving === null && !creating
+				"
+			>
 				<span class="loader is-inline-block mr-2"></span>
 				Loading comments...
 			</span>
 			<div :key="c.id" class="media comment" v-for="c in comments">
 				<figure class="media-left is-hidden-mobile">
-					<img :src="c.author.getAvatarUrl(48)" alt="" class="image is-avatar" height="48" width="48"/>
+					<img
+						:src="c.author.getAvatarUrl(48)"
+						alt=""
+						class="image is-avatar"
+						height="48"
+						width="48"
+					/>
 				</figure>
 				<div class="media-content">
 					<div class="comment-info">
-						<img :src="c.author.getAvatarUrl(20)" alt="" class="image is-avatar" height="20" width="20"/>
-						<strong>{{ c.author.getDisplayName() }}</strong>&nbsp;
-						<span v-tooltip="formatDate(c.created)">{{ formatDateSince(c.created) }}</span>
-						<span v-if="+new Date(c.created) !== +new Date(c.updated)" v-tooltip="formatDate(c.updated)">
+						<img
+							:src="c.author.getAvatarUrl(20)"
+							alt=""
+							class="image is-avatar"
+							height="20"
+							width="20"
+						/>
+						<strong>{{ c.author.getDisplayName() }}</strong
+						>&nbsp;
+						<span v-tooltip="formatDate(c.created)">{{
+							formatDateSince(c.created)
+						}}</span>
+						<span
+							v-if="+new Date(c.created) !== +new Date(c.updated)"
+							v-tooltip="formatDate(c.updated)"
+						>
 							· edited {{ formatDateSince(c.updated) }}
 						</span>
 						<transition name="fade">
-							<span class="is-inline-flex" v-if="taskCommentService.loading && saving === c.id">
-								<span class="loader is-inline-block mr-2"></span>
+							<span
+								class="is-inline-flex"
+								v-if="
+									taskCommentService.loading &&
+									saving === c.id
+								"
+							>
+								<span
+									class="loader is-inline-block mr-2"
+								></span>
 								Saving...
 							</span>
-							<span class="has-text-success" v-if="!taskCommentService.loading && saved === c.id">
+							<span
+								class="has-text-success"
+								v-if="
+									!taskCommentService.loading &&
+									saved === c.id
+								"
+							>
 								Saved!
 							</span>
 						</transition>
@@ -38,7 +75,12 @@
 						:is-edit-enabled="canWrite"
 						:upload-callback="attachmentUpload"
 						:upload-enabled="true"
-						@change="() => {toggleEdit(c);editComment()}"
+						@change="
+							() => {
+								toggleEdit(c)
+								editComment()
+							}
+						"
 						v-model="c.comment"
 						:has-edit-bottom="true"
 						:bottom-actions="actions[c.id]"
@@ -47,19 +89,34 @@
 			</div>
 			<div class="media comment" v-if="canWrite">
 				<figure class="media-left is-hidden-mobile">
-					<img :src="userAvatar" alt="" class="image is-avatar" height="48" width="48"/>
+					<img
+						:src="userAvatar"
+						alt=""
+						class="image is-avatar"
+						height="48"
+						width="48"
+					/>
 				</figure>
 				<div class="media-content">
 					<div class="form">
 						<transition name="fade">
-							<span class="is-inline-flex" v-if="taskCommentService.loading && creating">
-								<span class="loader is-inline-block mr-2"></span>
+							<span
+								class="is-inline-flex"
+								v-if="taskCommentService.loading && creating"
+							>
+								<span
+									class="loader is-inline-block mr-2"
+								></span>
 								Creating comment...
 							</span>
 						</transition>
 						<div class="field">
 							<editor
-								:class="{'is-loading': taskCommentService.loading && !isCommentEdit}"
+								:class="{
+									'is-loading':
+										taskCommentService.loading &&
+										!isCommentEdit,
+								}"
 								:has-preview="false"
 								:upload-callback="attachmentUpload"
 								:upload-enabled="true"
@@ -69,10 +126,15 @@
 							/>
 						</div>
 						<div class="field">
-							<button :class="{'is-loading': taskCommentService.loading && !isCommentEdit}"
-									:disabled="newComment.comment === ''"
-									@click="addComment()" class="button is-primary">Comment
-							</button>
+							<x-button
+								:loading="
+									taskCommentService.loading && !isCommentEdit
+								"
+								:disabled="newComment.comment === ''"
+								@click="addComment()"
+							>
+								Comment
+							</x-button>
 						</div>
 					</div>
 				</div>
@@ -81,10 +143,13 @@
 		<modal
 			@close="showDeleteModal = false"
 			@submit="deleteComment()"
-			v-if="showDeleteModal">
+			v-if="showDeleteModal"
+		>
 			<span slot="header">Delete this comment</span>
-			<p slot="text">Are you sure you want to delete this comment?
-				<br/>This <b>CANNOT BE UNDONE!</b></p>
+			<p slot="text">
+				Are you sure you want to delete this comment? <br />This
+				<b>CANNOT BE UNDONE!</b>
+			</p>
 		</modal>
 	</div>
 </template>
@@ -100,15 +165,15 @@ export default {
 	name: 'comments',
 	components: {
 		editor: () => ({
-			component: import(/* webpackChunkName: "editor" */ '../../input/editor'),
+			component: import(
+				/* webpackChunkName: "editor" */ '../../input/editor'
+			),
 			loading: LoadingComponent,
 			error: ErrorComponent,
 			timeout: 60000,
 		}),
 	},
-	mixins: [
-		attachmentUpload,
-	],
+	mixins: [attachmentUpload],
 	props: {
 		taskId: {
 			type: Number,
@@ -140,9 +205,9 @@ export default {
 	},
 	created() {
 		this.taskCommentService = new TaskCommentService()
-		this.newComment = new TaskCommentModel({taskId: this.taskId})
-		this.commentEdit = new TaskCommentModel({taskId: this.taskId})
-		this.commentToDelete = new TaskCommentModel({taskId: this.taskId})
+		this.newComment = new TaskCommentModel({ taskId: this.taskId })
+		this.commentEdit = new TaskCommentModel({ taskId: this.taskId })
+		this.commentToDelete = new TaskCommentModel({ taskId: this.taskId })
 		this.comments = []
 	},
 	mounted() {
@@ -163,12 +228,13 @@ export default {
 	},
 	methods: {
 		loadComments() {
-			this.taskCommentService.getAll({taskId: this.taskId})
-				.then(r => {
+			this.taskCommentService
+				.getAll({ taskId: this.taskId })
+				.then((r) => {
 					this.$set(this, 'comments', r)
 					this.makeActions()
 				})
-				.catch(e => {
+				.catch((e) => {
 					this.error(e, this)
 				})
 		},
@@ -183,16 +249,20 @@ export default {
 			// not update if new content from the outside was made available.
 			// See https://github.com/NikulinIlya/vue-easymde/issues/3
 			this.editorActive = false
-			this.$nextTick(() => this.editorActive = true)
+			this.$nextTick(() => (this.editorActive = true))
 			this.creating = true
 
-			this.taskCommentService.create(this.newComment)
-				.then(r => {
+			this.taskCommentService
+				.create(this.newComment)
+				.then((r) => {
 					this.comments.push(r)
 					this.newComment.comment = ''
-					this.success({message: 'The comment was added successfully.'}, this)
+					this.success(
+						{ message: 'The comment was added successfully.' },
+						this
+					)
 				})
-				.catch(e => {
+				.catch((e) => {
 					this.error(e, this)
 				})
 				.finally(() => {
@@ -215,8 +285,9 @@ export default {
 			this.saving = this.commentEdit.id
 
 			this.commentEdit.taskId = this.taskId
-			this.taskCommentService.update(this.commentEdit)
-				.then(r => {
+			this.taskCommentService
+				.update(this.commentEdit)
+				.then((r) => {
 					for (const c in this.comments) {
 						if (this.comments[c].id === this.commentEdit.id) {
 							this.$set(this.comments, c, r)
@@ -227,7 +298,7 @@ export default {
 						this.saved = null
 					}, 2000)
 				})
-				.catch(e => {
+				.catch((e) => {
 					this.error(e, this)
 				})
 				.finally(() => {
@@ -236,7 +307,8 @@ export default {
 				})
 		},
 		deleteComment() {
-			this.taskCommentService.delete(this.commentToDelete)
+			this.taskCommentService
+				.delete(this.commentToDelete)
 				.then(() => {
 					for (const a in this.comments) {
 						if (this.comments[a].id === this.commentToDelete.id) {
@@ -244,7 +316,7 @@ export default {
 						}
 					}
 				})
-				.catch(e => {
+				.catch((e) => {
 					this.error(e, this)
 				})
 				.finally(() => {
@@ -253,14 +325,16 @@ export default {
 		},
 		makeActions() {
 			if (this.canWrite) {
-				this.comments.forEach(c => {
-					this.$set(this.actions, c.id, [{
-						action: () => this.toggleDelete(c.id),
-						title: 'Remove',
-					}])
+				this.comments.forEach((c) => {
+					this.$set(this.actions, c.id, [
+						{
+							action: () => this.toggleDelete(c.id),
+							title: 'Remove',
+						},
+					])
 				})
 			}
-		}
+		},
 	},
 }
 </script>

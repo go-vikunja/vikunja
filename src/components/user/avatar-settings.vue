@@ -1,69 +1,64 @@
 <template>
-	<div class="card">
-		<header class="card-header">
-			<p class="card-header-title">
-				Avatar
-			</p>
-		</header>
-		<div class="card-content">
-			<div class="control mb-4">
-				<label class="radio">
-					<input name="avatarProvider" type="radio" v-model="avatarProvider" value="default"/>
-					Default
-				</label>
-				<label class="radio">
-					<input name="avatarProvider" type="radio" v-model="avatarProvider" value="initials"/>
-					Initials
-				</label>
-				<label class="radio">
-					<input name="avatarProvider" type="radio" v-model="avatarProvider" value="gravatar"/>
-					Gravatar
-				</label>
-				<label class="radio">
-					<input name="avatarProvider" type="radio" v-model="avatarProvider" value="upload"/>
-					Upload
-				</label>
-			</div>
-
-			<template v-if="avatarProvider === 'upload'">
-				<input
-					@change="cropAvatar"
-					accept="image/*"
-					class="is-hidden"
-					ref="avatarUploadInput"
-					type="file"
-				/>
-				<a
-					:class="{ 'is-loading': avatarService.loading || loading}"
-					@click="$refs.avatarUploadInput.click()"
-					class="button is-primary"
-					v-if="!isCropAvatar">
-					Upload Avatar
-				</a>
-				<template v-else>
-					<cropper
-						:src="avatarToCrop"
-						:stencil-props="{aspectRatio: 1}"
-						@ready="() => loading = false"
-						class="mb-4"
-						ref="cropper"/>
-					<a
-						:class="{ 'is-loading': avatarService.loading || loading}"
-						@click="uploadAvatar"
-						class="button is-primary">
-						Upload Avatar
-					</a>
-				</template>
-			</template>
-
-			<div class="bigbuttons" v-if="avatarProvider !== 'upload'">
-				<button :class="{ 'is-loading': avatarService.loading || loading}" @click="updateAvatarStatus()"
-						class="button is-primary is-fullwidth">
-					Save
-				</button>
-			</div>
+	<card title="Avatar">
+		<div class="control mb-4">
+			<label class="radio">
+				<input name="avatarProvider" type="radio" v-model="avatarProvider" value="default"/>
+				Default
+			</label>
+			<label class="radio">
+				<input name="avatarProvider" type="radio" v-model="avatarProvider" value="initials"/>
+				Initials
+			</label>
+			<label class="radio">
+				<input name="avatarProvider" type="radio" v-model="avatarProvider" value="gravatar"/>
+				Gravatar
+			</label>
+			<label class="radio">
+				<input name="avatarProvider" type="radio" v-model="avatarProvider" value="upload"/>
+				Upload
+			</label>
 		</div>
-	</div>
+
+		<template v-if="avatarProvider === 'upload'">
+			<input
+				@change="cropAvatar"
+				accept="image/*"
+				class="is-hidden"
+				ref="avatarUploadInput"
+				type="file"
+			/>
+			<x-button
+				:loading="avatarService.loading || loading"
+				@click="$refs.avatarUploadInput.click()"
+				v-if="!isCropAvatar">
+				Upload Avatar
+			</x-button>
+			<template v-else>
+				<cropper
+					:src="avatarToCrop"
+					:stencil-props="{aspectRatio: 1}"
+					@ready="() => loading = false"
+					class="mb-4"
+					ref="cropper"/>
+				<x-button
+					:loading="avatarService.loading || loading"
+					@click="uploadAvatar"
+				>
+					Upload Avatar
+				</x-button>
+			</template>
+		</template>
+
+		<div class="mt-2" v-if="avatarProvider !== 'upload'">
+			<x-button
+				:loading="avatarService.loading || loading"
+				@click="updateAvatarStatus()"
+				class="is-fullwidth"
+			>
+				Save
+			</x-button>
+		</div>
+	</card>
 </template>
 
 <script>

@@ -2,12 +2,13 @@
 	<div class="kanban-view">
 		<div class="filter-container" v-if="list.isSavedFilter && !list.isSavedFilter()">
 			<div class="items">
-				<button @click.prevent.stop="showFilters = !showFilters" class="button">
-					<span class="icon is-small">
-						<icon icon="filter"/>
-					</span>
+				<x-button
+					@click.prevent.stop="showFilters = !showFilters"
+					icon="filter"
+					type="secondary"
+				>
 					Filters
-				</button>
+				</x-button>
 			</div>
 			<filter-popup
 				@change="() => {filtersChanged = true; loadBuckets()}"
@@ -59,11 +60,10 @@
 											/>
 										</div>
 										<div class="control">
-											<a class="button is-primary has-no-shadow">
-											<span class="icon">
-												<icon :icon="['far', 'save']"/>
-											</span>
-											</a>
+											<x-button
+												:icon="['far', 'save']"
+												:shadow="false"
+											/>
 										</div>
 									</div>
 									<template v-else>
@@ -191,20 +191,21 @@
 							Please specify a title.
 						</p>
 					</div>
-					<a
+					<x-button
 						@click="toggleShowNewTaskInput(bucket.id)"
-						class="button has-no-shadow is-transparent is-fullwidth has-text-centered"
-						v-if="!showNewTaskInput[bucket.id]">
-						<span class="icon is-small">
-							<icon icon="plus"/>
-						</span>
-						<span v-if="bucket.tasks.length === 0">
-						Add a task
-						</span>
-						<span v-else>
-						Add another task
-					</span>
-					</a>
+						class="is-transparent is-fullwidth has-text-centered"
+						:shadow="false"
+						v-if="!showNewTaskInput[bucket.id]"
+						icon="plus"
+						type="secondary"
+					>
+						<template v-if="bucket.tasks.length === 0">
+							Add a task
+						</template>
+						<template v-else>
+							Add another task
+						</template>
+					</x-button>
 				</div>
 			</div>
 
@@ -222,16 +223,16 @@
 					v-if="showNewBucketInput"
 					v-model="newBucketTitle"
 				/>
-				<a
+				<x-button
 					@click="() => showNewBucketInput = true"
-					class="button has-no-shadow is-transparent is-fullwidth has-text-centered" v-if="!showNewBucketInput">
-					<span class="icon is-small">
-						<icon icon="plus"/>
-					</span>
-					<span>
-						Create a new bucket
-					</span>
-				</a>
+					:shadow="false"
+					class="is-transparent is-fullwidth has-text-centered"
+					v-if="!showNewBucketInput"
+					type="secondary"
+					icon="plus"
+				>
+					Create a new bucket
+				</x-button>
 			</div>
 		</div>
 
@@ -269,7 +270,7 @@ import {applyDrag} from '@/helpers/applyDrag'
 import {mapState} from 'vuex'
 import {saveListView} from '@/helpers/saveListView'
 import Rights from '../../../models/rights.json'
-import { LOADING, LOADING_MODULE } from '../../../store/mutation-types'
+import {LOADING, LOADING_MODULE} from '../../../store/mutation-types'
 import FilterPopup from '@/components/list/partials/filter-popup'
 
 export default {

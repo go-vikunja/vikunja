@@ -1,182 +1,180 @@
 <template>
-	<div class="card filters has-overflow">
-		<div class="card-content">
-			<fancycheckbox v-model="params.filter_include_nulls">
-				Include Tasks which don't have a value set
-			</fancycheckbox>
-			<fancycheckbox
-				v-model="filters.requireAllFilters"
-				@change="setFilterConcat()"
-			>
-				Require all filters to be true for a task to show up
-			</fancycheckbox>
-			<div class="field">
-				<label class="label">Show Done Tasks</label>
-				<div class="control">
-					<fancycheckbox @change="setDoneFilter" v-model="filters.done">
-						Show Done Tasks
-					</fancycheckbox>
-				</div>
+	<card class="filters has-overflow">
+		<fancycheckbox v-model="params.filter_include_nulls">
+			Include Tasks which don't have a value set
+		</fancycheckbox>
+		<fancycheckbox
+			v-model="filters.requireAllFilters"
+			@change="setFilterConcat()"
+		>
+			Require all filters to be true for a task to show up
+		</fancycheckbox>
+		<div class="field">
+			<label class="label">Show Done Tasks</label>
+			<div class="control">
+				<fancycheckbox @change="setDoneFilter" v-model="filters.done">
+					Show Done Tasks
+				</fancycheckbox>
 			</div>
-			<div class="field">
-				<label class="label">Priority</label>
-				<div class="control single-value-control">
-					<priority-select
-						:disabled="!filters.usePriority"
-						v-model.number="filters.priority"
-						@change="setPriority"
-					/>
-					<fancycheckbox
-						v-model="filters.usePriority"
-						@change="setPriority"
-					>
-						Enable Filter By Priority
-					</fancycheckbox>
-				</div>
+		</div>
+		<div class="field">
+			<label class="label">Priority</label>
+			<div class="control single-value-control">
+				<priority-select
+					:disabled="!filters.usePriority"
+					v-model.number="filters.priority"
+					@change="setPriority"
+				/>
+				<fancycheckbox
+					v-model="filters.usePriority"
+					@change="setPriority"
+				>
+					Enable Filter By Priority
+				</fancycheckbox>
 			</div>
-			<div class="field">
-				<label class="label">Percent Done</label>
-				<div class="control single-value-control">
-					<percent-done-select
-						v-model.number="filters.percentDone"
-						@change="setPercentDoneFilter"
-						:disabled="!filters.usePercentDone"
-					/>
-					<fancycheckbox
-						v-model="filters.usePercentDone"
-						@change="setPercentDoneFilter"
-					>
-						Enable Filter By Percent Done
-					</fancycheckbox>
-				</div>
+		</div>
+		<div class="field">
+			<label class="label">Percent Done</label>
+			<div class="control single-value-control">
+				<percent-done-select
+					v-model.number="filters.percentDone"
+					@change="setPercentDoneFilter"
+					:disabled="!filters.usePercentDone"
+				/>
+				<fancycheckbox
+					v-model="filters.usePercentDone"
+					@change="setPercentDoneFilter"
+				>
+					Enable Filter By Percent Done
+				</fancycheckbox>
 			</div>
-			<div class="field">
-				<label class="label">Due Date</label>
-				<div class="control">
-					<flat-pickr
-						:config="flatPickerConfig"
-						@on-close="setDueDateFilter"
-						class="input"
-						placeholder="Due Date Range"
-						v-model="filters.dueDate"
-					/>
-				</div>
+		</div>
+		<div class="field">
+			<label class="label">Due Date</label>
+			<div class="control">
+				<flat-pickr
+					:config="flatPickerConfig"
+					@on-close="setDueDateFilter"
+					class="input"
+					placeholder="Due Date Range"
+					v-model="filters.dueDate"
+				/>
 			</div>
-			<div class="field">
-				<label class="label">Start Date</label>
-				<div class="control">
-					<flat-pickr
-						:config="flatPickerConfig"
-						@on-close="setStartDateFilter"
-						class="input"
-						placeholder="Start Date Range"
-						v-model="filters.startDate"
-					/>
-				</div>
+		</div>
+		<div class="field">
+			<label class="label">Start Date</label>
+			<div class="control">
+				<flat-pickr
+					:config="flatPickerConfig"
+					@on-close="setStartDateFilter"
+					class="input"
+					placeholder="Start Date Range"
+					v-model="filters.startDate"
+				/>
 			</div>
-			<div class="field">
-				<label class="label">End Date</label>
-				<div class="control">
-					<flat-pickr
-						:config="flatPickerConfig"
-						@on-close="setEndDateFilter"
-						class="input"
-						placeholder="End Date Range"
-						v-model="filters.endDate"
-					/>
-				</div>
+		</div>
+		<div class="field">
+			<label class="label">End Date</label>
+			<div class="control">
+				<flat-pickr
+					:config="flatPickerConfig"
+					@on-close="setEndDateFilter"
+					class="input"
+					placeholder="End Date Range"
+					v-model="filters.endDate"
+				/>
 			</div>
-			<div class="field">
-				<label class="label">Reminders</label>
-				<div class="control">
-					<flat-pickr
-						:config="flatPickerConfig"
-						@on-close="setReminderFilter"
-						class="input"
-						placeholder="Reminder Date Range"
-						v-model="filters.reminders"
-					/>
-				</div>
+		</div>
+		<div class="field">
+			<label class="label">Reminders</label>
+			<div class="control">
+				<flat-pickr
+					:config="flatPickerConfig"
+					@on-close="setReminderFilter"
+					class="input"
+					placeholder="Reminder Date Range"
+					v-model="filters.reminders"
+				/>
 			</div>
+		</div>
 
-			<div class="field">
-				<label class="label">Assignees</label>
-				<div class="control">
-					<multiselect
-						:loading="usersService.loading"
-						placeholder="Type to search for a user..."
-						@search="query => find('users', query)"
-						:search-results="foundusers"
-						@select="() => add('users', 'assignees')"
-						label="username"
-						:multiple="true"
-						@remove="() => remove('users', 'assignees')"
-						v-model="users"
-					/>
-				</div>
+		<div class="field">
+			<label class="label">Assignees</label>
+			<div class="control">
+				<multiselect
+					:loading="usersService.loading"
+					placeholder="Type to search for a user..."
+					@search="query => find('users', query)"
+					:search-results="foundusers"
+					@select="() => add('users', 'assignees')"
+					label="username"
+					:multiple="true"
+					@remove="() => remove('users', 'assignees')"
+					v-model="users"
+				/>
 			</div>
+		</div>
 
-			<div class="field">
-				<label class="label">Labels</label>
-				<div class="control">
-					<multiselect
-						:loading="labelService.loading"
-						placeholder="Type to search for a label..."
-						@search="findLabels"
-						:search-results="foundLabels"
-						@select="label => addLabel(label)"
-						label="title"
-						:multiple="true"
-						v-model="labels"
-					>
-						<template v-slot:tag="props">
+		<div class="field">
+			<label class="label">Labels</label>
+			<div class="control">
+				<multiselect
+					:loading="labelService.loading"
+					placeholder="Type to search for a label..."
+					@search="findLabels"
+					:search-results="foundLabels"
+					@select="label => addLabel(label)"
+					label="title"
+					:multiple="true"
+					v-model="labels"
+				>
+					<template v-slot:tag="props">
 							<span
 								:style="{'background': props.item.hexColor, 'color': props.item.textColor}"
 								class="tag ml-2 mt-2">
 								<span>{{ props.item.title }}</span>
 								<a @click="removeLabel(props.item)" class="delete is-small"></a>
 							</span>
-						</template>
-					</multiselect>
+					</template>
+				</multiselect>
+			</div>
+		</div>
+
+		<template v-if="$route.name === 'filters.create' || $route.name === 'list.edit'">
+			<div class="field">
+				<label class="label">Lists</label>
+				<div class="control">
+					<multiselect
+						:loading="listsService.loading"
+						placeholder="Type to search for a list..."
+						@search="query => find('lists', query)"
+						:search-results="foundlists"
+						@select="() => add('lists', 'list_id')"
+						label="title"
+						@remove="() => remove('lists', 'list_id')"
+						:multiple="true"
+						v-model="lists"
+					/>
 				</div>
 			</div>
-
-			<template v-if="$route.name === 'filters.create' || $route.name === 'list.edit'">
-				<div class="field">
-					<label class="label">Lists</label>
-					<div class="control">
-						<multiselect
-							:loading="listsService.loading"
-							placeholder="Type to search for a list..."
-							@search="query => find('lists', query)"
-							:search-results="foundlists"
-							@select="() => add('lists', 'list_id')"
-							label="title"
-							@remove="() => remove('lists', 'list_id')"
-							:multiple="true"
-							v-model="lists"
-						/>
-					</div>
+			<div class="field">
+				<label class="label">Namespaces</label>
+				<div class="control">
+					<multiselect
+						:loading="namespaceService.loading"
+						placeholder="Type to search for a namespace..."
+						@search="query => find('namespace', query)"
+						:search-results="foundnamespace"
+						@select="() => add('namespace', 'namespace')"
+						label="title"
+						@remove="() => remove('namespace', 'namespace')"
+						:multiple="true"
+						v-model="namespace"
+					/>
 				</div>
-				<div class="field">
-					<label class="label">Namespaces</label>
-					<div class="control">
-						<multiselect
-							:loading="namespaceService.loading"
-							placeholder="Type to search for a namespace..."
-							@search="query => find('namespace', query)"
-							:search-results="foundnamespace"
-							@select="() => add('namespace', 'namespace')"
-							label="title"
-							@remove="() => remove('namespace', 'namespace')"
-							:multiple="true"
-							v-model="namespace"
-						/>
-					</div>
-				</div>
-			</template>
-		</div>
-	</div>
+			</div>
+		</template>
+	</card>
 </template>
 
 <script>

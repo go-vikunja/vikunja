@@ -4,16 +4,28 @@
 			<div class="modal-container" @click.prevent.stop="$emit('close')">
 				<div class="modal-content">
 					<slot>
-					<div class="header">
-						<slot name="header"></slot>
-					</div>
-					<div class="content">
-						<slot name="text"></slot>
-					</div>
-					<div class="actions">
-						<button @click="$emit('close')" class="button is-text has-text-danger is-inverted has-no-shadow underline-none">Cancel</button>
-						<button @click="$emit('submit')" class="button is-primary has-no-shadow">Do it!</button>
-					</div>
+						<div class="header">
+							<slot name="header"></slot>
+						</div>
+						<div class="content">
+							<slot name="text"></slot>
+						</div>
+						<div class="actions">
+							<x-button
+								@click="$emit('close')"
+								type="tertary"
+								class="has-text-danger"
+							>
+								Cancel
+							</x-button>
+							<x-button
+								@click="$emit('submit')"
+								type="primary"
+								:shadow="false"
+							>
+								Do it!
+							</x-button>
+						</div>
 					</slot>
 				</div>
 			</div>

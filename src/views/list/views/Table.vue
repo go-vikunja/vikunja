@@ -2,39 +2,37 @@
 	<div :class="{'is-loading': taskCollectionService.loading}" class="table-view loader-container">
 		<div class="filter-container">
 			<div class="items">
-				<button @click.prevent.stop="() => {showActiveColumnsFilter = !showActiveColumnsFilter; showTaskFilter = false}"
-						class="button">
-					<span class="icon is-small">
-						<icon icon="th"/>
-					</span>
+				<x-button
+					@click.prevent.stop="() => {showActiveColumnsFilter = !showActiveColumnsFilter; showTaskFilter = false}"
+					icon="th"
+					type="secondary"
+				>
 					Columns
-				</button>
-				<button @click.prevent.stop="() => {showTaskFilter = !showTaskFilter; showActiveColumnsFilter = false}"
-						class="button">
-					<span class="icon is-small">
-						<icon icon="filter"/>
-					</span>
+				</x-button>
+				<x-button
+					@click.prevent.stop="() => {showTaskFilter = !showTaskFilter; showActiveColumnsFilter = false}"
+					icon="filter"
+					type="secondary"
+				>
 					Filters
-				</button>
+				</x-button>
 			</div>
 			<transition name="fade">
-				<div class="card" v-if="showActiveColumnsFilter">
-					<div class="card-content">
-						<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.id">#</fancycheckbox>
-						<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.done">Done</fancycheckbox>
-						<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.title">Title</fancycheckbox>
-						<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.priority">Priority</fancycheckbox>
-						<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.labels">Labels</fancycheckbox>
-						<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.assignees">Assignees</fancycheckbox>
-						<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.dueDate">Due Date</fancycheckbox>
-						<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.startDate">Start Date</fancycheckbox>
-						<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.endDate">End Date</fancycheckbox>
-						<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.percentDone">% Done</fancycheckbox>
-						<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.created">Created</fancycheckbox>
-						<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.updated">Updated</fancycheckbox>
-						<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.createdBy">Created By</fancycheckbox>
-					</div>
-				</div>
+				<card v-if="showActiveColumnsFilter">
+					<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.id">#</fancycheckbox>
+					<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.done">Done</fancycheckbox>
+					<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.title">Title</fancycheckbox>
+					<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.priority">Priority</fancycheckbox>
+					<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.labels">Labels</fancycheckbox>
+					<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.assignees">Assignees</fancycheckbox>
+					<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.dueDate">Due Date</fancycheckbox>
+					<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.startDate">Start Date</fancycheckbox>
+					<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.endDate">End Date</fancycheckbox>
+					<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.percentDone">% Done</fancycheckbox>
+					<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.created">Created</fancycheckbox>
+					<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.updated">Updated</fancycheckbox>
+					<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.createdBy">Created By</fancycheckbox>
+				</card>
 			</transition>
 			<filter-popup
 				@change="loadTasks(1)"
@@ -174,7 +172,8 @@
 							:aria-label="'Goto page ' + p.number"
 							:class="{'is-current': p.number === currentPage}"
 							:to="getRouteForPagination(p.number, 'table')"
-							class="pagination-link">{{ p.number }}
+							class="pagination-link">
+							{{ p.number }}
 						</router-link>
 					</li>
 				</template>

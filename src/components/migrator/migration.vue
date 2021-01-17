@@ -4,13 +4,13 @@
 		<p>Vikunja will import all lists, tasks, notes, reminders and files you have access to.</p>
 		<template v-if="isMigrating === false && message === '' && lastMigrationDate === null">
 			<p>To authorize Vikunja to access your {{ name }} Account, click the button below.</p>
-			<a
-				:class="{'is-loading': migrationService.loading}"
+			<x-button
+				:loading="migrationService.loading"
 				:disabled="migrationService.loading"
 				:href="authUrl"
-				class="button is-primary">
+			>
 				Get Started
-			</a>
+			</x-button>
 		</template>
 		<div
 			class="migration-in-progress-container"
@@ -38,8 +38,8 @@
 				Are you sure?
 			</p>
 			<div class="buttons">
-				<button @click="migrate" class="button is-primary">I am sure, please start migrating now!</button>
-				<router-link :to="{name: 'home'}" class="button is-text has-text-danger is-inverted has-no-shadow underline-none">Cancel</router-link>
+				<x-button @click="migrate">I am sure, please start migrating now!</x-button>
+				<x-button :to="{name: 'home'}" type="tertary" class="has-text-danger">Cancel</x-button>
 			</div>
 		</div>
 		<div v-else>
@@ -48,7 +48,7 @@
 					{{ message }}
 				</div>
 			</div>
-			<router-link :to="{name: 'home'}" class="button is-primary">Refresh</router-link>
+			<x-button :to="{name: 'home'}">Refresh</x-button>
 		</div>
 	</div>
 </template>

@@ -4,84 +4,74 @@
 			This namespace is archived.
 			It is not possible to create new lists or edit it.
 		</div>
-		<div class="card">
-			<header class="card-header">
-				<p class="card-header-title">
-					Edit Namespace
-				</p>
-			</header>
-			<div class="card-content">
-				<div class="content">
-					<form @submit.prevent="submit()">
-						<div class="field">
-							<label class="label" for="namespacetext">Namespace Name</label>
-							<div class="control">
-								<input
-									:class="{ 'disabled': namespaceService.loading}"
-									:disabled="namespaceService.loading"
-									class="input"
-									id="namespacetext"
-									placeholder="The namespace text is here..."
-									type="text"
-									v-focus
-									v-model="namespace.title"/>
-							</div>
-						</div>
-						<div class="field">
-							<label class="label" for="namespacedescription">Description</label>
-							<div class="control">
-								<editor
-									:class="{ 'disabled': namespaceService.loading}"
-									:disabled="namespaceService.loading"
-									:preview-is-default="false"
-									id="namespacedescription"
-									placeholder="The namespaces description goes here..."
-									v-if="editorActive"
-									v-model="namespace.description"
-								/>
-							</div>
-						</div>
-						<div class="field">
-							<label class="label" for="isArchivedCheck">Is Archived</label>
-							<div class="control">
-								<fancycheckbox
-									v-model="namespace.isArchived"
-									v-tooltip="'If a namespace is archived, you cannot create new lists or edit it.'">
-									This namespace is archived
-								</fancycheckbox>
-							</div>
-						</div>
-						<div class="field">
-							<label class="label">Color</label>
-							<div class="control">
-								<color-picker v-model="namespace.hexColor"/>
-							</div>
-						</div>
-					</form>
-
-					<div class="field has-addons mt-4">
-						<div class="control is-fullwidth">
-							<button
-								@click="submit()"
-								:class="{ 'is-loading': namespaceService.loading}"
-								class="button is-primary is-fullwidth">
-								Save
-							</button>
-						</div>
-						<div class="control">
-							<button
-								@click="showDeleteModal = true"
-								:class="{ 'is-loading': namespaceService.loading}"
-								class="button is-danger">
-								<span class="icon">
-									<icon icon="trash-alt"/>
-								</span>
-							</button>
-						</div>
+		<card title="Edit Namespace">
+			<form @submit.prevent="submit()">
+				<div class="field">
+					<label class="label" for="namespacetext">Namespace Name</label>
+					<div class="control">
+						<input
+							:class="{ 'disabled': namespaceService.loading}"
+							:disabled="namespaceService.loading"
+							class="input"
+							id="namespacetext"
+							placeholder="The namespace text is here..."
+							type="text"
+							v-focus
+							v-model="namespace.title"/>
 					</div>
 				</div>
+				<div class="field">
+					<label class="label" for="namespacedescription">Description</label>
+					<div class="control">
+						<editor
+							:class="{ 'disabled': namespaceService.loading}"
+							:disabled="namespaceService.loading"
+							:preview-is-default="false"
+							id="namespacedescription"
+							placeholder="The namespaces description goes here..."
+							v-if="editorActive"
+							v-model="namespace.description"
+						/>
+					</div>
+				</div>
+				<div class="field">
+					<label class="label" for="isArchivedCheck">Is Archived</label>
+					<div class="control">
+						<fancycheckbox
+							v-model="namespace.isArchived"
+							v-tooltip="'If a namespace is archived, you cannot create new lists or edit it.'">
+							This namespace is archived
+						</fancycheckbox>
+					</div>
+				</div>
+				<div class="field">
+					<label class="label">Color</label>
+					<div class="control">
+						<color-picker v-model="namespace.hexColor"/>
+					</div>
+				</div>
+			</form>
+
+			<div class="field has-addons mt-4">
+				<div class="control is-fullwidth">
+					<x-button
+						@click="submit()"
+						:loading="namespaceService.loading"
+						class="is-fullwidth"
+					>
+						Save
+					</x-button>
+				</div>
+				<div class="control">
+					<x-button
+						@click="showDeleteModal = true"
+						:loading="namespaceService.loading"
+						class="is-danger"
+						icon="trash-alt"
+					/>
+				</div>
 			</div>
-		</div>
+		</card>
 
 		<component
 			:id="namespace.id"

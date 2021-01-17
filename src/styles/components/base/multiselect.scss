@@ -81,7 +81,9 @@
 			text-transform: none;
 			font-family: $family-sans-serif;
 			font-weight: normal;
-			padding: 0;
+			padding: .5rem 0;
+			border: none;
+			cursor: pointer;
 
 			display: flex;
 			justify-content: space-between;

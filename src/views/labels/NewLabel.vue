@@ -15,12 +15,13 @@
 						v-model="label.title"/>
 				</p>
 				<p class="control">
-					<button class="button is-primary has-no-shadow" type="submit">
-						<span class="icon is-small">
-							<icon icon="plus"/>
-						</span>
+					<x-button
+						:shadow="false"
+						icon="plus"
+						@click="newlabel"
+					>
 						Add
-					</button>
+					</x-button>
 				</p>
 			</div>
 			<p class="help is-danger" v-if="showError && label.title === ''">

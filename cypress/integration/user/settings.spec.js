@@ -32,7 +32,7 @@ describe('User Settings', () => {
 
 		cy.get('input#newName')
 			.type('Lorem Ipsum')
-		cy.get('.card.update-name button.button.is-primary')
+		cy.get('.card.general-settings .button.is-primary')
 			.contains('Save')
 			.click()
 

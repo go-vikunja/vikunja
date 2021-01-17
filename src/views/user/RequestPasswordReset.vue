@@ -20,11 +20,13 @@
 
 				<div class="field is-grouped">
 					<div class="control">
-						<button class="button is-primary" type="submit"
-								v-bind:class="{ 'is-loading': passwordResetService.loading}">Send me a password reset
-							link
-						</button>
-						<router-link :to="{ name: 'user.login' }" class="button">Login</router-link>
+						<x-button
+							@click="submit"
+							:loading="passwordResetService.loading"
+						>
+							Send me a password reset link
+						</x-button>
+						<x-button :to="{ name: 'user.login' }" type="secondary">Login</x-button>
 					</div>
 				</div>
 				<div class="notification is-danger" v-if="errorMsg">
@@ -35,7 +37,7 @@
 				<div class="notification is-success">
 					Check your inbox! You should have a mail with instructions on how to reset your password.
 				</div>
-				<router-link :to="{ name: 'user.login' }" class="button is-primary">Login</router-link>
+				<x-button :to="{ name: 'user.login' }">Login</x-button>
 			</div>
 			<legal/>
 		</div>

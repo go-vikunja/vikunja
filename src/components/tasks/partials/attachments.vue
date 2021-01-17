@@ -2,7 +2,7 @@
 	<div class="attachments">
 		<h3>
 			<span class="icon is-grey">
-				<icon icon="paperclip"/>
+				<icon icon="paperclip" />
 			</span>
 			Attachments
 		</h3>
@@ -14,12 +14,14 @@
 			multiple
 			ref="files"
 			type="file"
-			v-if="editEnabled"/>
+			v-if="editEnabled"
+		/>
 		<progress
 			:value="attachmentService.uploadProgress"
 			class="progress is-primary"
 			max="100"
-			v-if="attachmentService.uploadProgress > 0">
+			v-if="attachmentService.uploadProgress > 0"
+		>
 			{{ attachmentService.uploadProgress }}%
 		</progress>
 
@@ -28,13 +30,22 @@
 				class="attachment"
 				v-for="a in attachments"
 				:key="a.id"
-				@click="viewOrDownload(a)">
+				@click="viewOrDownload(a)"
+			>
 				<div class="filename">{{ a.file.name }}</div>
 				<div class="info">
 					<p class="collapses">
 						<span>
-							created <span v-tooltip="formatDate(a.created)">{{ formatDateSince(a.created) }}</span> by
-							<user :avatar-size="24" :user="a.createdBy" :is-inline="true"/>
+							created
+							<span v-tooltip="formatDate(a.created)">{{
+								formatDateSince(a.created)
+							}}</span>
+							by
+							<user
+								:avatar-size="24"
+								:user="a.createdBy"
+								:is-inline="true"
+							/>
 						</span>
 						<span>
 							{{ a.file.getHumanSize() }}
@@ -46,13 +57,20 @@
 					<p>
 						<a
 							@click="downloadAttachment(a)"
-							v-tooltip="'Download this attachment'">
+							v-tooltip="'Download this attachment'"
+						>
 							Download
 						</a>
 						<a
-							@click="() => {attachmentToDelete = a; showDeleteModal = true}"
+							@click="
+								() => {
+									attachmentToDelete = a
+									showDeleteModal = true
+								}
+							"
 							v-if="editEnabled"
-							v-tooltip="'Delete this attachment'">
+							v-tooltip="'Delete this attachment'"
+						>
 							Delete
 						</a>
 					</p>
@@ -60,24 +78,29 @@
 			</a>
 		</div>
 
-		<a
+		<x-button
+			v-if="editEnabled"
 			:disabled="attachmentService.loading"
 			@click="$refs.files.click()"
-			class="button mb-4 has-no-shadow"
-			v-if="editEnabled">
-			<span class="icon is-small"><icon icon="cloud-upload-alt"/></span>
+			class="mb-4"
+			icon="cloud-upload-alt"
+			type="secondary"
+			:shadow="false"
+		>
 			Upload attachment
-		</a>
+		</x-button>
 
 		<!-- Dropzone -->
-		<div :class="{ 'hidden': !showDropzone }" class="dropzone" v-if="editEnabled">
+		<div
+			:class="{ hidden: !showDropzone }"
+			class="dropzone"
+			v-if="editEnabled"
+		>
 			<div class="drop-hint">
 				<div class="icon">
-					<icon icon="cloud-upload-alt"/>
+					<icon icon="cloud-upload-alt" />
 				</div>
-				<div class="hint">
-					Drop files here to upload
-				</div>
+				<div class="hint">Drop files here to upload</div>
 			</div>
 		</div>
 
@@ -85,18 +108,27 @@
 		<modal
 			@close="showDeleteModal = false"
 			v-if="showDeleteModal"
-			@submit="deleteAttachment()">
+			@submit="deleteAttachment()"
+		>
 			<span slot="header">Delete attachment</span>
-			<p slot="text">Are you sure you want to delete the attachment {{ attachmentToDelete.file.name }}?<br/>
-				<b>This CANNOT BE UNDONE!</b></p>
+			<p slot="text">
+				Are you sure you want to delete the attachment
+				{{ attachmentToDelete.file.name }}?<br />
+				<b>This CANNOT BE UNDONE!</b>
+			</p>
 		</modal>
 
 		<transition name="modal">
 			<modal
-				@close="() => {showImageModal = false; attachmentImageBlobUrl = null}"
+				@close="
+					() => {
+						showImageModal = false
+						attachmentImageBlobUrl = null
+					}
+				"
 				v-if="showImageModal"
 			>
-				<img :src="attachmentImageBlobUrl" alt=""/>
+				<img :src="attachmentImageBlobUrl" alt="" />
 			</modal>
 		</transition>
 	</div>
@@ -106,7 +138,7 @@
 import AttachmentService from '../../../services/attachment'
 import AttachmentModel from '../../../models/attachment'
 import User from '../../misc/user'
-import {mapState} from 'vuex'
+import { mapState } from 'vuex'
 
 export default {
 	name: 'attachments',
@@ -141,28 +173,28 @@ export default {
 		this.attachmentService = new AttachmentService()
 	},
 	computed: mapState({
-		attachments: state => state.attachments.attachments,
+		attachments: (state) => state.attachments.attachments,
 	}),
 	mounted() {
-		document.addEventListener('dragenter', e => {
+		document.addEventListener('dragenter', (e) => {
 			e.stopPropagation()
 			e.preventDefault()
 			this.showDropzone = true
 		})
 
-		window.addEventListener('dragleave', e => {
+		window.addEventListener('dragleave', (e) => {
 			e.stopPropagation()
 			e.preventDefault()
 			this.showDropzone = false
 		})
 
-		document.addEventListener('dragover', e => {
+		document.addEventListener('dragover', (e) => {
 			e.stopPropagation()
 			e.preventDefault()
 			this.showDropzone = true
 		})
 
-		document.addEventListener('drop', e => {
+		document.addEventListener('drop', (e) => {
 			e.stopPropagation()
 			e.preventDefault()
 
@@ -183,32 +215,40 @@ export default {
 			this.uploadFiles(this.$refs.files.files)
 		},
 		uploadFiles(files) {
-			const attachmentModel = new AttachmentModel({taskId: this.taskId})
-			this.attachmentService.create(attachmentModel, files)
-				.then(r => {
+			const attachmentModel = new AttachmentModel({ taskId: this.taskId })
+			this.attachmentService
+				.create(attachmentModel, files)
+				.then((r) => {
 					if (r.success !== null) {
-						r.success.forEach(a => {
+						r.success.forEach((a) => {
 							this.$store.commit('attachments/add', a)
-							this.$store.dispatch('tasks/addTaskAttachment', {taskId: this.taskId, attachment: a})
+							this.$store.dispatch('tasks/addTaskAttachment', {
+								taskId: this.taskId,
+								attachment: a,
+							})
 						})
 					}
 					if (r.errors !== null) {
-						r.errors.forEach(m => {
+						r.errors.forEach((m) => {
 							this.error(m)
 						})
 					}
 				})
-				.catch(e => {
+				.catch((e) => {
 					this.error(e, this)
 				})
 		},
 		deleteAttachment() {
-			this.attachmentService.delete(this.attachmentToDelete)
-				.then(r => {
-					this.$store.commit('attachments/removeById', this.attachmentToDelete.id)
+			this.attachmentService
+				.delete(this.attachmentToDelete)
+				.then((r) => {
+					this.$store.commit(
+						'attachments/removeById',
+						this.attachmentToDelete.id
+					)
 					this.success(r, this)
 				})
-				.catch(e => {
+				.catch((e) => {
 					this.error(e, this)
 				})
 				.finally(() => {
@@ -216,15 +256,16 @@ export default {
 				})
 		},
 		viewOrDownload(attachment) {
-			if (attachment.file.name.endsWith('.jpg') ||
+			if (
+				attachment.file.name.endsWith('.jpg') ||
 				attachment.file.name.endsWith('.png') ||
 				attachment.file.name.endsWith('.bmp') ||
-				attachment.file.name.endsWith('.gif')) {
+				attachment.file.name.endsWith('.gif')
+			) {
 				this.showImageModal = true
-				this.attachmentService.getBlobUrl(attachment)
-					.then(url => {
-						this.attachmentImageBlobUrl = url
-					})
+				this.attachmentService.getBlobUrl(attachment).then((url) => {
+					this.attachmentImageBlobUrl = url
+				})
 			} else {
 				this.downloadAttachment(attachment)
 			}
