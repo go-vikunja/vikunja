@@ -44,7 +44,7 @@
 								<input :value="getShareLink(s.hash)" class="input" readonly type="text"/>
 							</div>
 							<div class="control">
-								<a @click="copy(getShareLink(s.hash))" class="button is-primary noshadow" v-tooltip="'Copy to clipboard'">
+								<a @click="copy(getShareLink(s.hash))" class="button is-primary has-no-shadow" v-tooltip="'Copy to clipboard'">
 									<span class="icon">
 										<icon icon="paste"/>
 									</span>

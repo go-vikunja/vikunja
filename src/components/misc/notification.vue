@@ -19,7 +19,7 @@
 					<button
 						:key="'action_'+i"
 						@click="action.callback"
-						class="button noshadow is-small" v-for="(action, i) in props.item.data.actions">
+						class="button has-no-shadow is-small" v-for="(action, i) in props.item.data.actions">
 						{{ action.title }}
 					</button>
 				</div>

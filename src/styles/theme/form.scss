@@ -58,19 +58,6 @@
     color: $white;
   }
 
-  &.noshadow {
-    &,
-    &.is-hovered,
-    &:hover,
-    &.is-active,
-    &.is-focused,
-    &:active,
-    &:focus,
-    &:focus:not(:active) {
-      box-shadow: none;
-    }
-  }
-
   &.is-small {
     border-radius: $radius;
   }

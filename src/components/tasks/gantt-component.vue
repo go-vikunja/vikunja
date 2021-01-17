@@ -124,7 +124,7 @@
 					v-model="newTaskTitle"
 				/>
 			</transition>
-			<button @click="showCreateNewTask" class="button is-primary noshadow">
+			<button @click="showCreateNewTask" class="button is-primary has-no-shadow">
 				<span class="icon is-small">
 					<icon icon="plus"/>
 				</span>

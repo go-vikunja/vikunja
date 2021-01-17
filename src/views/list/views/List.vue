@@ -21,7 +21,7 @@
 							<button
 								:class="{'is-loading': taskCollectionService.loading}"
 								@click="searchTasks"
-								class="button noshadow is-primary">
+								class="button has-no-shadow is-primary">
 								Search
 							</button>
 						</div>

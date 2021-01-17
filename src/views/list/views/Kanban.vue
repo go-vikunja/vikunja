@@ -193,7 +193,7 @@
 					</div>
 					<a
 						@click="toggleShowNewTaskInput(bucket.id)"
-						class="button noshadow is-transparent is-fullwidth has-text-centered"
+						class="button has-no-shadow is-transparent is-fullwidth has-text-centered"
 						v-if="!showNewTaskInput[bucket.id]">
 						<span class="icon is-small">
 							<icon icon="plus"/>
@@ -224,7 +224,7 @@
 				/>
 				<a
 					@click="() => showNewBucketInput = true"
-					class="button noshadow is-transparent is-fullwidth has-text-centered" v-if="!showNewBucketInput">
+					class="button has-no-shadow is-transparent is-fullwidth has-text-centered" v-if="!showNewBucketInput">
 					<span class="icon is-small">
 						<icon icon="plus"/>
 					</span>

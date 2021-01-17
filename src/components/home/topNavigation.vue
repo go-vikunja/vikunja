@@ -44,7 +44,7 @@
 				<img :src="userAvatar" alt="" class="avatar"/>
 				<div class="dropdown is-right is-active">
 					<div class="dropdown-trigger">
-						<button @click.stop="userMenuActive = !userMenuActive" class="button noshadow">
+						<button @click.stop="userMenuActive = !userMenuActive" class="button has-no-shadow">
 							<span class="username">{{ userInfo.name !== '' ? userInfo.name : userInfo.username }}</span>
 							<span class="icon is-small">
 									<icon icon="chevron-down"/>

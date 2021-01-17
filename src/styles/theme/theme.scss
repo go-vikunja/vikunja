@@ -1,10 +1,13 @@
-@import '../../../node_modules/bulma/bulma';
+@import "../../../node_modules/bulma/bulma";
 
-@import 'fonts';
+@import "fonts";
 
-@import 'variables-derived';
+@import "variables-derived";
 
-*, *:hover, *:active, *:focus {
+*,
+*:hover,
+*:active,
+*:focus {
   outline: none;
 }
 
@@ -16,12 +19,13 @@
   outline: 0;
 }
 
-:focus-visible, :-moz-focusring {
+:focus-visible,
+:-moz-focusring {
   box-shadow: 0 0 0 2px rgba($primary, 0.5);
 }
 
 body {
-  background: url('../../public/images/llama.svg') no-repeat bottom left fixed $light-background;
+  background: url("../../public/images/llama.svg") no-repeat bottom left fixed $light-background;
   min-height: 100vh;
 
   @media screen and (max-width: $tablet) {
@@ -31,13 +35,17 @@ body {
   }
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: $vikunja-font;
   font-weight: 400 !important;
 }
 
 .logo {
-
   padding-left: 2rem !important;
 
   img {
@@ -81,7 +89,8 @@ button.table {
 .pagination {
   padding-bottom: 1em;
 
-  .pagination-previous, .pagination-next {
+  .pagination-previous,
+  .pagination-next {
     &:not(:disabled):hover {
       background: $button-background-color;
       cursor: pointer;
@@ -96,7 +105,16 @@ button.table {
 }
 
 .has-no-shadow {
-  box-shadow: none !important;
+  &,
+  &.is-hovered,
+  &:hover,
+  &.is-active,
+  &.is-focused,
+  &:active,
+  &:focus,
+  &:focus:not(:active) {
+    box-shadow: none !important;
+  }
 }
 
 .is-fullwidth {

@@ -1,7 +1,7 @@
 <template>
 	<div class="update-notification" v-if="updateAvailable">
 		<p>There is an update for Vikunja available!</p>
-		<a @click="refreshApp()" class="button is-primary noshadow">Update Now</a>
+		<a @click="refreshApp()" class="button is-primary has-no-shadow">Update Now</a>
 	</div>
 </template>
 

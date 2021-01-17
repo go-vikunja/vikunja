@@ -18,7 +18,7 @@
 					v-model="list.title"/>
 			</p>
 			<p class="control">
-				<button :disabled="list.title === ''" @click="newList()" class="button is-primary noshadow">
+				<button :disabled="list.title === ''" @click="newList()" class="button is-primary has-no-shadow">
 						<span class="icon is-small">
 							<icon icon="plus"/>
 						</span>

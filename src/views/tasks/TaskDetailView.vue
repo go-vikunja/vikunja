@@ -319,7 +319,7 @@
 						<span class="icon is-small"><icon icon="fill-drip"/></span>
 						Set task color
 					</a>
-					<a @click="showDeleteModal = true" class="button is-danger is-outlined noshadow has-no-border">
+					<a @click="showDeleteModal = true" class="button is-danger is-outlined has-no-shadow has-no-border">
 						<span class="icon is-small"><icon icon="trash-alt"/></span>
 						Delete task
 					</a>
