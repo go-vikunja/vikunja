@@ -15,7 +15,7 @@
 		<template v-slot:tag="props">
 			<span
 				:style="{'background': props.item.hexColor, 'color': props.item.textColor}"
-				class="tag ml-2 mt-2">
+				class="tag">
 				<span>{{ props.item.title }}</span>
 				<a @click="removeLabel(props.item)" class="delete is-small"></a>
 			</span>
@@ -23,13 +23,13 @@
 		<template v-slot:searchResult="props">
 			<span
 				v-if="typeof props.option === 'string'"
-				class="tag ml-2">
+				class="tag">
 				<span>{{ props.option }}</span>
 			</span>
 			<span
 				v-else
 				:style="{'background': props.option.hexColor, 'color': props.option.textColor}"
-				class="tag ml-2">
+				class="tag">
 				<span>{{ props.option.title }}</span>
 			</span>
 		</template>
