@@ -22,7 +22,7 @@ describe('Namepaces', () => {
 	it('Should create a new Namespace', () => {
 		cy.visit('/namespaces')
 		cy.get('a.button')
-			.contains('Create new namespace')
+			.contains('Create namespace')
 			.click()
 		cy.url()
 			.should('contain', '/namespaces/new')
