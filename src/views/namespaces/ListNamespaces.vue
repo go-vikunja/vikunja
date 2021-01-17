@@ -1,16 +1,16 @@
 <template>
 	<div class="content namespaces-list loader-container" :class="{'is-loading': loading}">
-		<router-link :to="{name: 'namespace.create'}" class="button is-success new-namespace">
+		<router-link :to="{name: 'namespace.create'}" class="button is-primary new-namespace">
 			<span class="icon is-small">
 				<icon icon="plus"/>
 			</span>
-			Create new namespace
+			Create namespace
 		</router-link>
 		<router-link :to="{name: 'filters.create'}" class="button is-primary new-namespace">
 			<span class="icon is-small">
 				<icon icon="filter"/>
 			</span>
-			Create a new saved filter
+			Create saved filter
 		</router-link>
 
 		<fancycheckbox class="show-archived-check" v-model="showArchived">
@@ -18,6 +18,16 @@
 		</fancycheckbox>
 
 		<div :key="`n${n.id}`" class="namespace" v-for="n in namespaces">
+			<router-link
+				:to="{name: 'list.create', params: {id:  n.id}}"
+				class="button is-pulled-right"
+				v-if="n.id > 0">
+				<span class="icon is-small">
+					<icon icon="plus"/>
+				</span>
+				Create list
+			</router-link>
+
 			<h1>
 				<span>{{ n.title }}</span>
 				<span class="is-archived" v-if="n.isArchived">
