@@ -2,20 +2,18 @@
 	<div class="kanban-view">
 		<div class="filter-container" v-if="list.isSavedFilter && !list.isSavedFilter()">
 			<div class="items">
-				<button @click="showFilters = !showFilters" class="button">
+				<button @click.prevent.stop="showFilters = !showFilters" class="button">
 					<span class="icon is-small">
 						<icon icon="filter"/>
 					</span>
 					Filters
 				</button>
 			</div>
-			<transition name="fade">
-				<filters
-					@change="() => {filtersChanged = true; loadBuckets()}"
-					v-if="showFilters"
-					v-model="params"
-				/>
-			</transition>
+			<filter-popup
+				@change="() => {filtersChanged = true; loadBuckets()}"
+				:visible="showFilters"
+				v-model="params"
+			/>
 		</div>
 		<div :class="{ 'is-loading': loading && !oneTaskUpdating}" class="kanban loader-container">
 			<div :key="`bucket${bucket.id}`" class="bucket" v-for="bucket in buckets">
@@ -265,7 +263,6 @@ import {Container, Draggable} from 'vue-smooth-dnd'
 import PriorityLabel from '../../../components/tasks/partials/priorityLabel'
 import User from '../../../components/misc/user'
 import Labels from '../../../components/tasks/partials/labels'
-import Filters from '../../../components/list/partials/filters'
 
 import {filterObject} from '@/helpers/filterObject'
 import {applyDrag} from '@/helpers/applyDrag'
@@ -273,16 +270,17 @@ import {mapState} from 'vuex'
 import {saveListView} from '@/helpers/saveListView'
 import Rights from '../../../models/rights.json'
 import { LOADING, LOADING_MODULE } from '../../../store/mutation-types'
+import FilterPopup from '@/components/list/partials/filter-popup'
 
 export default {
 	name: 'Kanban',
 	components: {
+		FilterPopup,
 		Container,
 		Draggable,
 		Labels,
 		User,
 		PriorityLabel,
-		Filters,
 	},
 	data() {
 		return {

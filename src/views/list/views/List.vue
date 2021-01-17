@@ -32,20 +32,18 @@
 						</span>
 					</button>
 				</div>
-				<button @click="showTaskFilter = !showTaskFilter" class="button">
+				<button @click.prevent.stop="showTaskFilter = !showTaskFilter" class="button">
 					<span class="icon is-small">
 						<icon icon="filter"/>
 					</span>
 					Filters
 				</button>
 			</div>
-			<transition name="fade">
-				<filters
-					@change="loadTasks(1)"
-					v-if="showTaskFilter"
-					v-model="params"
-				/>
-			</transition>
+			<filter-popup
+				@change="loadTasks(1)"
+				:visible="showTaskFilter"
+				v-model="params"
+			/>
 		</div>
 
 		<div class="field task-add" v-if="!list.isArchived && canWrite && list.id > 0">
@@ -174,9 +172,9 @@ import EditTask from '../../../components/tasks/edit-task'
 import SingleTaskInList from '../../../components/tasks/partials/singleTaskInList'
 import taskList from '../../../components/tasks/mixins/taskList'
 import {saveListView} from '@/helpers/saveListView'
-import Filters from '../../../components/list/partials/filters'
 import Rights from '../../../models/rights.json'
 import {mapState} from 'vuex'
+import FilterPopup from '@/components/list/partials/filter-popup'
 
 export default {
 	name: 'List',
@@ -196,7 +194,7 @@ export default {
 		taskList,
 	],
 	components: {
-		Filters,
+		FilterPopup,
 		SingleTaskInList,
 		EditTask,
 	},

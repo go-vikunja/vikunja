@@ -19,7 +19,7 @@
 					{{ $store.getters['lists/getListById'](task.listId).title }}
 				</router-link>
 
-					<!-- Show any parent tasks to make it clear this task is a sub task of something -->
+				<!-- Show any parent tasks to make it clear this task is a sub task of something -->
 				<span class="parent-tasks" v-if="typeof task.relatedTasks.parenttask !== 'undefined'">
 					<template v-for="(pt, i) in task.relatedTasks.parenttask">
 						{{ pt.title }}<template v-if="(i + 1) < task.relatedTasks.parenttask.length">,&nbsp;</template>
@@ -40,14 +40,14 @@
 			/>
 			<i
 				:class="{'overdue': task.dueDate <= new Date() && !task.done}"
-				@click.stop="showDefer = !showDefer"
+				@click.prevent.stop="showDefer = !showDefer"
 				v-if="+new Date(task.dueDate) > 0"
 				v-tooltip="formatDate(task.dueDate)"
 			>
 				- Due {{ formatDateSince(task.dueDate) }}
 			</i>
 			<transition name="fade">
-				<defer-task v-if="+new Date(task.dueDate) > 0 && showDefer" v-model="task"/>
+				<defer-task v-if="+new Date(task.dueDate) > 0 && showDefer" v-model="task" ref="deferDueDate"/>
 			</transition>
 			<priority-label :priority="task.priority"/>
 			<span>
@@ -91,6 +91,7 @@ import Labels from './labels'
 import User from '../../misc/user'
 import Fancycheckbox from '../../input/fancycheckbox'
 import DeferTask from './defer-task'
+import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
 
 export default {
 	name: 'singleTaskInList',
@@ -137,10 +138,14 @@ export default {
 	},
 	mounted() {
 		this.task = this.theTask
+		document.addEventListener('click', this.hideDeferDueDatePopup)
 	},
 	created() {
 		this.task = new TaskModel()
 		this.taskService = new TaskService()
+	},
+	beforeDestroy() {
+		document.removeEventListener('click', this.hideDeferDueDatePopup)
 	},
 	computed: {
 		listColor() {
@@ -196,6 +201,13 @@ export default {
 				.catch(e => {
 					this.error(e, this)
 				})
+		},
+		hideDeferDueDatePopup(e) {
+			if (this.showDefer) {
+				closeWhenClickedOutside(e, this.$refs.deferDueDate.$el, () => {
+					this.showDefer = false
+				})
+			}
 		},
 	},
 }

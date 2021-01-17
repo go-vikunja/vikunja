@@ -2,20 +2,18 @@
 	<div class="gantt-chart box">
 		<div class="filter-container">
 			<div class="items">
-				<button @click="showTaskFilter = !showTaskFilter" class="button">
+				<button @click.prevent.stop="showTaskFilter = !showTaskFilter" class="button">
 					<span class="icon is-small">
 						<icon icon="filter"/>
 					</span>
 					Filters
 				</button>
 			</div>
-			<transition name="fade">
-				<filters
-					@change="loadTasks"
-					v-if="showTaskFilter"
-					v-model="params"
-				/>
-			</transition>
+			<filter-popup
+				@change="loadTasks"
+				:visible="showTaskFilter"
+				v-model="params"
+			/>
 		</div>
 		<div class="dates">
 			<template v-for="(y, yk) in days">
@@ -166,12 +164,12 @@ import PriorityLabel from './partials/priorityLabel'
 import TaskCollectionService from '../../services/taskCollection'
 import {mapState} from 'vuex'
 import Rights from '../../models/rights.json'
-import Filters from '@/components/list/partials/filters'
+import FilterPopup from '@/components/list/partials/filter-popup'
 
 export default {
 	name: 'GanttChart',
 	components: {
-		Filters,
+		FilterPopup,
 		PriorityLabel,
 		EditTask,
 		VueDragResize,

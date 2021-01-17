@@ -11,7 +11,7 @@ export const closeWhenClickedOutside = (event, rootElement, closeCallback) => {
 	// closing callback when a click happens outside of the rootElement.
 	let parent = event.target.parentElement
 	while (parent !== rootElement) {
-		if (parent.parentElement === null) {
+		if (parent === null || parent.parentElement === null) {
 			parent = null
 			break
 		}

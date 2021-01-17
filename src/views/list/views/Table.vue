@@ -2,14 +2,14 @@
 	<div :class="{'is-loading': taskCollectionService.loading}" class="table-view loader-container">
 		<div class="filter-container">
 			<div class="items">
-				<button @click="() => {showActiveColumnsFilter = !showActiveColumnsFilter; showTaskFilter = false}"
+				<button @click.prevent.stop="() => {showActiveColumnsFilter = !showActiveColumnsFilter; showTaskFilter = false}"
 						class="button">
 					<span class="icon is-small">
 						<icon icon="th"/>
 					</span>
 					Columns
 				</button>
-				<button @click="() => {showTaskFilter = !showTaskFilter; showActiveColumnsFilter = false}"
+				<button @click.prevent.stop="() => {showTaskFilter = !showTaskFilter; showActiveColumnsFilter = false}"
 						class="button">
 					<span class="icon is-small">
 						<icon icon="filter"/>
@@ -35,12 +35,12 @@
 						<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.createdBy">Created By</fancycheckbox>
 					</div>
 				</div>
-				<filters
-					@change="loadTasks(1)"
-					v-if="showTaskFilter"
-					v-model="params"
-				/>
 			</transition>
+			<filter-popup
+				@change="loadTasks(1)"
+				:visible="showTaskFilter"
+				v-model="params"
+			/>
 		</div>
 
 		<table class="table is-hoverable is-fullwidth">
@@ -198,12 +198,12 @@ import DateTableCell from '../../../components/tasks/partials/date-table-cell'
 import Fancycheckbox from '../../../components/input/fancycheckbox'
 import Sort from '../../../components/tasks/partials/sort'
 import {saveListView} from '@/helpers/saveListView'
-import Filters from '../../../components/list/partials/filters'
+import FilterPopup from '@/components/list/partials/filter-popup'
 
 export default {
 	name: 'Table',
 	components: {
-		Filters,
+		FilterPopup,
 		Sort,
 		Fancycheckbox,
 		DateTableCell,
