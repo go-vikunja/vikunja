@@ -5,11 +5,11 @@
   font-size: 0.85rem;
   font-weight: bold;
   height: $button-height;
-  box-shadow: .2rem 0.2rem .5rem $grey-light;
+  box-shadow: .2rem 0.2rem .5rem $grey-lighter;
 
   &.is-hovered,
   &:hover {
-    box-shadow: .1rem .1rem 1rem $grey-light;
+    box-shadow: .1rem .1rem 1rem $grey-lighter;
   }
 
   &.fullheight {
