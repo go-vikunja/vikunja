@@ -163,7 +163,6 @@ describe('Task', () => {
 			cy.visit(`/tasks/${tasks[0].id}`)
 
 			cy.get('.task-view .details.content.description .editor a')
-				.contains('Edit')
 				.click()
 			cy.get('.task-view .details.content.description .editor .vue-easymde .EasyMDEContainer .CodeMirror-scroll')
 				.type('{selectall}New Description')
