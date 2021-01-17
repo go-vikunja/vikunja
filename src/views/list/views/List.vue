@@ -61,7 +61,9 @@
 						placeholder="Add a new task..."
 						type="text"
 						v-focus
-						v-model="newTaskText"/>
+						v-model="newTaskText"
+						ref="newTaskInput"
+					/>
 					<span class="icon is-small is-left">
 						<icon icon="tasks"/>
 					</span>
@@ -81,8 +83,9 @@
 			</p>
 		</div>
 
-		<p class="list-is-empty-notice" v-if="tasks.length === 0">
+		<p class="has-text-centered has-text-grey" v-if="tasks.length === 0">
 			This list is currently empty.
+			<a @click="$refs.newTaskInput.focus()">Create a new task.</a>
 		</p>
 
 		<div class="columns">

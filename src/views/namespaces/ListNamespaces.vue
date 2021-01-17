@@ -11,12 +11,19 @@
 			Show Archived
 		</fancycheckbox>
 
+		<p class="has-text-centered has-text-grey mt-4" v-if="namespaces.length === 0">
+			You don't have any namespaces right now.
+			<router-link :to="{name: 'namespace.create'}">
+				Create a namespace.
+			</router-link>
+		</p>
+
 		<div :key="`n${n.id}`" class="namespace" v-for="n in namespaces">
 			<x-button
 				:to="{name: 'list.create', params: {id:  n.id}}"
 				class="is-pulled-right"
 				type="secondary"
-				v-if="n.id > 0"
+				v-if="n.id > 0 && n.lists.length > 0"
 				icon="plus"
 			>
 				Create list
@@ -28,6 +35,13 @@
 					Archived
 				</span>
 			</h1>
+
+			<p class="has-text-centered has-text-grey mt-4" v-if="n.lists.length === 0">
+				This namespace does not contain any lists.
+				<router-link :to="{name: 'list.create', params: {id:  n.id}}">
+					Create a new list in this namespace.
+				</router-link>
+			</p>
 
 			<div class="lists">
 				<template v-for="l in n.lists">

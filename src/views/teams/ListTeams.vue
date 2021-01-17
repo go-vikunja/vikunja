@@ -16,7 +16,12 @@
 				</router-link>
 			</li>
 		</ul>
-		<p v-else class="has-text-centered has-text-grey">You are currently not part of any teams.</p>
+		<p v-else class="has-text-centered has-text-grey">
+			You are currently not part of any teams.
+			<router-link :to="{name: 'teams.create'}">
+				Create a new team.
+			</router-link>
+		</p>
 	</div>
 </template>
 

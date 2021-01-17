@@ -10,11 +10,14 @@
 
 		<div class="content">
 			<h1>Manage labels</h1>
-			<p>
+			<p v-if="labels.length > 0">
 				Click on a label to edit it.
 				You can edit all labels you created, you can use all labels which are associated with a task to whose
-				list
-				you have access.
+				list you have access.
+			</p>
+			<p v-else class="has-text-centered has-text-grey">
+				You currently do not have any labels.
+				<router-link :to="{name:'labels.create'}">Create a new label.</router-link>
 			</p>
 		</div>
 
