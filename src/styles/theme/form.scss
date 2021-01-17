@@ -5,11 +5,11 @@
   font-size: 0.85rem;
   font-weight: bold;
   height: $button-height;
-  box-shadow: 0.3em 0.3em 1em lighten($dark, 75);
+  box-shadow: .2rem 0.2rem .5rem $grey-light;
 
   &.is-hovered,
   &:hover {
-    box-shadow: 0.6em 0.6em 1em lighten($dark, 75);
+    box-shadow: .1rem .1rem 1rem $grey-light;
   }
 
   &.fullheight {
@@ -22,36 +22,7 @@
   &:active,
   &:focus,
   &:focus:not(:active) {
-    box-shadow: 0.1em 0.1em 0.7em lighten($dark, 75) !important;
-  }
-
-  &.icon-only {
-    padding-left: 16px;
-  }
-
-  @each $name, $pair in $colors {
-    $color: nth($pair, 1);
-
-    &.is-#{$name} {
-      box-shadow: 0.3em 0.3em 1em lighten($color, 30);
-
-      &.is-hovered,
-      &:hover {
-        box-shadow: 0.6em 0.6em 1em lighten($color, 30);
-      }
-
-      &.is-active,
-      &.is-focused,
-      &:active,
-      &:focus,
-      &:focus:not(:active) {
-        box-shadow: 0.1em 0.1em 0.7em lighten($color, 30) !important;
-      }
-
-      &.is-outlined {
-        border: 2px solid $color;
-      }
-    }
+    box-shadow: .1rem .1rem .75rem $grey-lighter !important;
   }
 
   &.is-primary.is-outlined:hover {
