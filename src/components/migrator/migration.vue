@@ -39,7 +39,7 @@
 			</p>
 			<div class="buttons">
 				<button @click="migrate" class="button is-primary">I am sure, please start migrating now!</button>
-				<router-link :to="{name: 'home'}" class="button is-danger is-outlined">Cancel</router-link>
+				<router-link :to="{name: 'home'}" class="button is-text has-text-danger is-inverted noshadow underline-none">Cancel</router-link>
 			</div>
 		</div>
 		<div v-else>

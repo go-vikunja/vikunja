@@ -1,6 +1,6 @@
 <template>
 	<div :class="{ 'is-loading': labelService.loading}" class="loader-container content">
-		<router-link :to="{name:'labels.create'}" class="button is-success button-right">
+		<router-link :to="{name:'labels.create'}" class="button is-primary button-right">
 			<span class="icon is-small">
 				<icon icon="plus"/>
 			</span>

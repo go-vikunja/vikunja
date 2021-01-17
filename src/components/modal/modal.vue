@@ -11,8 +11,8 @@
 						<slot name="text"></slot>
 					</div>
 					<div class="actions">
-						<button @click="$emit('close')" class="button is-danger is-inverted noshadow">Cancel</button>
-						<button @click="$emit('submit')" class="button is-success noshadow">Do it!</button>
+						<button @click="$emit('close')" class="button is-text has-text-danger is-inverted noshadow underline-none">Cancel</button>
+						<button @click="$emit('submit')" class="button is-primary noshadow">Do it!</button>
 					</div>
 					</slot>
 				</div>

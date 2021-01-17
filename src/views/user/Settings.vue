@@ -248,7 +248,7 @@
 						<input type="text" v-model="caldavUrl" class="input" readonly/>
 					</div>
 					<div class="control">
-						<a @click="copy(caldavUrl)" class="button is-success noshadow" v-tooltip="'Copy to clipboard'">
+						<a @click="copy(caldavUrl)" class="button is-primary noshadow" v-tooltip="'Copy to clipboard'">
 							<span class="icon">
 								<icon icon="paste"/>
 							</span>

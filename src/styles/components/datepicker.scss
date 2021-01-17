@@ -15,7 +15,7 @@
 		border-radius: $radius;
 		box-shadow: $card-shadow;
 
-		a {
+		a:not(.button) {
 			display: flex;
 			align-items: center;
 			padding: 0 .5rem;
@@ -49,11 +49,11 @@
 				width: 2rem;
 				text-align: center;
 			}
-
-			&.button {
-				margin: 1rem;
-				width: calc(100% - 2rem);
-			}
+		}
+			
+		a.button {
+			margin: 1rem;
+			width: calc(100% - 2rem);
 		}
 
 		.flatpickr-calendar {

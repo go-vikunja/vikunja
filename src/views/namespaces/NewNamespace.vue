@@ -18,7 +18,7 @@
 					v-model="namespace.title"/>
 			</p>
 			<p class="control">
-				<button :disabled="namespace.title === ''" @click="newNamespace()" class="button is-success noshadow">
+				<button :disabled="namespace.title === ''" @click="newNamespace()" class="button is-primary noshadow">
 						<span class="icon is-small">
 							<icon icon="plus"/>
 						</span>

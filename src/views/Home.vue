@@ -5,7 +5,7 @@
 			<p>Click on a list or namespace on the left to get started.</p>
 			<router-link
 				:to="{name: 'migrate.start'}"
-				class="button is-primary is-right noshadow is-outlined"
+				class="button is-primary has-no-shadow"
 				v-if="migratorsEnabled"
 			>
 				Import your data into Vikunja

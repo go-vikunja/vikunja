@@ -16,7 +16,7 @@
 						v-model="team.name"/>
 				</p>
 				<p class="control">
-					<button class="button is-success noshadow" type="submit">
+					<button class="button is-primary noshadow" type="submit">
 						<span class="icon is-small">
 							<icon icon="plus"/>
 						</span>

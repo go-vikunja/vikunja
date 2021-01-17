@@ -138,7 +138,7 @@
 			class="is-narrow"
 		/>
 
-		<button :class="{ 'is-loading': taskService.loading}" class="button is-success is-fullwidth" type="submit">
+		<button :class="{ 'is-loading': taskService.loading}" class="button is-primary is-fullwidth" type="submit">
 			Save
 		</button>
 

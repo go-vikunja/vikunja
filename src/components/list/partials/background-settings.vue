@@ -50,7 +50,7 @@
 				<a
 					:disabled="backgroundService.loading"
 					@click="() => searchBackgrounds(currentPage + 1)"
-					class="button is-primary is-centered is-load-more-button is-outlined noshadow"
+					class="button is-centered is-load-more-button has-no-shadow mt-4"
 					v-if="backgroundSearchResult.length > 0"
 				>
 					<template v-if="backgroundService.loading">

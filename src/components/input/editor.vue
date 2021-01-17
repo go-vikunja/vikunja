@@ -1,13 +1,15 @@
 <template>
 	<div :class="{'is-pulled-up': isEditEnabled}" class="editor">
-		<div class="tabs is-right" v-if="hasPreview && isEditEnabled && !hasEditBottom">
-			<ul>
-				<li>
-					<a v-if="!isEditActive" @click="toggleEdit">Edit</a>
-					<a v-else @click="toggleEdit">Done</a>
-				</li>
-			</ul>
+		<div class="is-pulled-right mb-4" v-if="hasPreview && isEditEnabled && !hasEditBottom">
+			<a v-if="!isEditActive" @click="toggleEdit" class="button has-no-shadow">
+				<icon icon="pen"/>
+			</a>
+			<a v-else @click="toggleEdit" class="button has-no-shadow">
+				Done
+			</a>
 		</div>
+
+		<div class="clear"></div>
 
 		<vue-easymde
 			:configs="config"
@@ -416,8 +418,8 @@ export default {
 @import '../../styles/theme/variables';
 
 .editor {
-	.tabs ul {
-		margin-left: 0;
+	.clear {
+		clear: both;
 	}
 
 	.preview.content ul li input[type="checkbox"] {

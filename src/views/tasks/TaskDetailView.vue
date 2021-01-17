@@ -236,9 +236,9 @@
 				</div>
 				<div class="column is-one-third action-buttons" v-if="canWrite">
 					<a
-						:class="{'is-success': !task.done}"
+						:class="{'is-success': !task.done, 'has-no-shadow': !task.done}"
 						@click="toggleTaskDone()"
-						class="button is-outlined noshadow has-no-border">
+						class="button is-outlined has-no-border">
 						<span class="icon is-small"><icon icon="check-double"/></span>
 						<template v-if="task.done">
 							Mark as undone

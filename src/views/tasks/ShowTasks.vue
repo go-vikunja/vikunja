@@ -30,9 +30,9 @@
 			/>
 		</h3>
 		<div v-if="!showAll">
-			<a @click="showTodaysTasks()" class="button is-primary is-outlined noshadow mr-2">Today</a>
-			<a @click="setDatesToNextWeek()" class="button is-primary is-outlined noshadow mr-2">Next Week</a>
-			<a @click="setDatesToNextMonth()" class="button is-primary is-outlined noshadow">Next Month</a>
+			<a @click="showTodaysTasks()"     class="button noshadow mr-2">Today</a>
+			<a @click="setDatesToNextWeek()"  class="button noshadow mr-2">Next Week</a>
+			<a @click="setDatesToNextMonth()" class="button noshadow">Next Month</a>
 		</div>
 		<template v-if="!taskService.loading && (!hasUndoneTasks || !tasks || tasks.length === 0)">
 			<h3 class="nothing">Nothing to do - Have a nice day!</h3>

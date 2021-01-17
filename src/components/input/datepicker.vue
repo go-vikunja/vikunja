@@ -98,7 +98,7 @@
 				/>
 
 				<a
-					class="button is-outlined is-primary has-no-shadow is-fullwidth"
+					class="button is-primary has-no-shadow is-fullwidth"
 					@click="close"
 				>
 					Confirm

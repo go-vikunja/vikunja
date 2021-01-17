@@ -2,9 +2,9 @@
 	<div :class="{'is-loading': taskService.loading}" class="defer-task loading-container">
 		<label class="label">Defer due date</label>
 		<div class="defer-days">
-			<button @click="() => deferDays(1)" class="button is-outlined is-primary has-no-shadow">1 day</button>
-			<button @click="() => deferDays(3)" class="button is-outlined is-primary has-no-shadow">3 days</button>
-			<button @click="() => deferDays(7)" class="button is-outlined is-primary has-no-shadow">1 week</button>
+			<button @click="() => deferDays(1)" class="button has-no-shadow">1 day</button>
+			<button @click="() => deferDays(3)" class="button has-no-shadow">3 days</button>
+			<button @click="() => deferDays(7)" class="button has-no-shadow">1 week</button>
 		</div>
 		<flat-pickr
 			:class="{ 'disabled': taskService.loading}"
