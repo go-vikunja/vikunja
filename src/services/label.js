@@ -1,6 +1,7 @@
 import AbstractService from './abstractService'
 import LabelModel from '../models/label'
 import {formatISO} from 'date-fns'
+import {colorFromHex} from '@/helpers/color/colorFromHex'
 
 export default class LabelService extends AbstractService {
 	constructor() {
@@ -16,7 +17,7 @@ export default class LabelService extends AbstractService {
 	processModel(label) {
 		label.created = formatISO(new Date(label.created))
 		label.updated = formatISO(new Date(label.updated))
-		label.hexColor = label.hexColor.substring(1, 7)
+		label.hexColor = colorFromHex(label.hexColor)
 		return label
 	}
 

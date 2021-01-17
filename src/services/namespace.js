@@ -1,6 +1,7 @@
 import AbstractService from './abstractService'
 import NamespaceModel from '../models/namespace'
 import {formatISO} from 'date-fns'
+import {colorFromHex} from '@/helpers/color/colorFromHex'
 
 export default class NamespaceService extends AbstractService {
 	constructor() {
@@ -24,12 +25,12 @@ export default class NamespaceService extends AbstractService {
 	}
 
 	beforeUpdate(namespace) {
-		namespace.hexColor = namespace.hexColor.substring(1, 7)
+		namespace.hexColor = colorFromHex(namespace.hexColor)
 		return namespace
 	}
 
 	beforeCreate(namespace) {
-		namespace.hexColor = namespace.hexColor.substring(1, 7)
+		namespace.hexColor = colorFromHex(namespace.hexColor)
 		return namespace
 	}
 }

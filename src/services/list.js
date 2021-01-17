@@ -2,6 +2,7 @@ import AbstractService from './abstractService'
 import ListModel from '../models/list'
 import TaskService from './task'
 import {formatISO} from 'date-fns'
+import {colorFromHex} from '@/helpers/color/colorFromHex'
 
 export default class ListService extends AbstractService {
 	constructor() {
@@ -29,12 +30,12 @@ export default class ListService extends AbstractService {
 		model.tasks = model.tasks.map(task => {
 			return taskService.beforeUpdate(task)
 		})
-		model.hexColor = model.hexColor.substring(1, 7)
+		model.hexColor = colorFromHex(model.hexColor)
 		return model
 	}
 
 	beforeCreate(list) {
-		list.hexColor = list.hexColor.substring(1, 7)
+		list.hexColor = colorFromHex(list.hexColor)
 		return list
 	}
 

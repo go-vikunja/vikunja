@@ -4,6 +4,7 @@ import AttachmentService from './attachment'
 import LabelService from './label'
 
 import {formatISO} from 'date-fns'
+import {colorFromHex} from '@/helpers/color/colorFromHex'
 
 const parseDate = date => {
 	if (date) {
@@ -86,9 +87,7 @@ export default class TaskService extends AbstractService {
 		}
 		model.repeatAfter = repeatAfterSeconds
 
-		if (model.hexColor.substring(0, 1) === '#') {
-			model.hexColor = model.hexColor.substring(1, 7)
-		}
+		model.hexColor = colorFromHex(model.hexColor)
 
 		// Do the same for all related tasks
 		Object.keys(model.relatedTasks).forEach(relationKind => {

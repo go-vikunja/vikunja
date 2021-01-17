@@ -68,7 +68,7 @@ import vueShortkey from 'vue-shortkey'
 // Mixins
 import message from './message'
 import {format, formatDistance} from 'date-fns'
-import {colorIsDark} from './helpers/colorIsDark'
+import {colorIsDark} from './helpers/color/colorIsDark'
 import {setTitle} from './helpers/setTitle'
 // Vuex
 import {store} from './store'

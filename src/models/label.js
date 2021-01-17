@@ -1,6 +1,6 @@
 import AbstractModel from './abstractModel'
 import UserModel from './user'
-import {colorIsDark} from '@/helpers/colorIsDark'
+import {colorIsDark} from '@/helpers/color/colorIsDark'
 
 export default class LabelModel extends AbstractModel {
 	constructor(data) {
