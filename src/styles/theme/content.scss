@@ -29,18 +29,23 @@
   }
 }
 
-.noauth-container {
-  max-width: 450px;
-  width: 100%;
-  margin: 0 auto;
-  padding: 1rem;
+.no-auth-wrapper {
+  background: url('../../public/images/llama.svg') no-repeat bottom left fixed $light-background;
+  min-height: 100vh;
 
-  @media screen and (max-width: 450px) {
-    .login-buttons {
-      flex-direction: column;
+  .noauth-container {
+    max-width: 450px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 1rem;
 
-      .control:first-child {
-        margin-bottom: 1rem;
+    @media screen and (max-width: 450px) {
+      .login-buttons {
+        flex-direction: column;
+
+        .control:first-child {
+          margin-bottom: 1rem;
+        }
       }
     }
   }

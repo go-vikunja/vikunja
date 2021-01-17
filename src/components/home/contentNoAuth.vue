@@ -1,15 +1,17 @@
 <template>
-	<div class="noauth-container">
-		<img alt="Vikunja" src="/images/logo-full.svg"/>
-		<div class="message is-info" v-if="motd !== ''">
-			<div class="message-header">
-				<p>Info</p>
+	<div class="no-auth-wrapper">
+		<div class="noauth-container">
+			<img alt="Vikunja" src="/images/logo-full.svg"/>
+			<div class="message is-info" v-if="motd !== ''">
+				<div class="message-header">
+					<p>Info</p>
+				</div>
+				<div class="message-body">
+					{{ motd }}
+				</div>
 			</div>
-			<div class="message-body">
-				{{ motd }}
-			</div>
+			<router-view/>
 		</div>
-		<router-view/>
 	</div>
 </template>
 

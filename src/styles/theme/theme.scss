@@ -25,14 +25,8 @@
 }
 
 body {
-  background: url("../../public/images/llama.svg") no-repeat bottom left fixed $light-background;
+  background: $light-background;
   min-height: 100vh;
-
-  @media screen and (max-width: $tablet) {
-    &:not(.has-llama) {
-      background: $light-background;
-    }
-  }
 }
 
 h1,
