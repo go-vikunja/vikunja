@@ -29,7 +29,7 @@ describe('Lists', () => {
 			.contains('Create a new list')
 		cy.get('input.input')
 			.type('New List')
-		cy.get('button.is-success')
+		cy.get('button')
 			.contains('Add')
 			.click()
 

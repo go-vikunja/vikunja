@@ -17,7 +17,7 @@ describe('Team', () => {
 			.contains('Create a new team')
 		cy.get('input.input')
 			.type('New Team')
-		cy.get('button.is-success')
+		cy.get('button')
 			.contains('Add')
 			.click()
 

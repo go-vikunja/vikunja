@@ -28,7 +28,7 @@ describe('Task', () => {
 		cy.visit('/lists/1/list')
 		cy.get('input.input[placeholder="Add a new task..."')
 			.type('New Task')
-		cy.get('button.button.is-success')
+		cy.get('button.button')
 			.contains('Add')
 			.click()
 		cy.get('.tasks .task .tasktext')
@@ -44,7 +44,7 @@ describe('Task', () => {
 			.should('not.exist')
 		cy.get('input.input[placeholder="Add a new task..."')
 			.type('New Task')
-		cy.get('button.button.is-success')
+		cy.get('button.button')
 			.contains('Add')
 			.click()
 
