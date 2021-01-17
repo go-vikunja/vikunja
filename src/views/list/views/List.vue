@@ -170,6 +170,7 @@ import {saveListView} from '@/helpers/saveListView'
 import Rights from '../../../models/rights.json'
 import {mapState} from 'vuex'
 import FilterPopup from '@/components/list/partials/filter-popup'
+import {HAS_TASKS} from '@/store/mutation-types'
 
 export default {
 	name: 'List',
@@ -322,6 +323,7 @@ export default {
 								this.taskService.update(task)
 									.then(updatedTask => {
 										this.updateTasks(updatedTask)
+										this.$store.commit(HAS_TASKS, true)
 									})
 									.catch(e => {
 										this.error(e, this)

@@ -8,8 +8,8 @@
 		>
 			Show tasks without dates
 		</fancycheckbox>
-		<h3 v-if="showAll">Current tasks</h3>
-		<h3 v-else>
+		<h3 v-if="showAll && tasks.length > 0">Current tasks</h3>
+		<h3 v-else-if="!showAll">
 			Tasks from
 			<flat-pickr
 				:class="{ 'disabled': taskService.loading}"
