@@ -200,7 +200,7 @@
 					</div>
 
 					<!-- Attachments -->
-					<div class="content attachments" v-if="activeFields.attachments">
+					<div class="content attachments" v-if="activeFields.attachments || hasAttachments">
 						<attachments
 							:edit-enabled="canWrite"
 							:task-id="taskId"
@@ -523,6 +523,9 @@ export default {
 		},
 		doneFormatted() {
 			return this.formatDate(this.task.doneAt)
+		},
+		hasAttachments() {
+			return this.$store.state.attachments.attachments.length > 0
 		},
 	},
 	methods: {

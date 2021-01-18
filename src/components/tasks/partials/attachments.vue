@@ -56,18 +56,13 @@
 					</p>
 					<p>
 						<a
-							@click="downloadAttachment(a)"
+							@click.prevent.stop="downloadAttachment(a)"
 							v-tooltip="'Download this attachment'"
 						>
 							Download
 						</a>
 						<a
-							@click="
-								() => {
-									attachmentToDelete = a
-									showDeleteModal = true
-								}
-							"
+							@click.prevent.stop="() => {attachmentToDelete = a; showDeleteModal = true}"
 							v-if="editEnabled"
 							v-tooltip="'Delete this attachment'"
 						>
@@ -138,6 +133,7 @@
 import AttachmentService from '../../../services/attachment'
 import AttachmentModel from '../../../models/attachment'
 import User from '../../misc/user'
+import attachmentUpload from '@/components/tasks/mixins/attachmentUpload'
 import { mapState } from 'vuex'
 
 export default {
@@ -145,6 +141,9 @@ export default {
 	components: {
 		User,
 	},
+	mixins: [
+		attachmentUpload,
+	],
 	data() {
 		return {
 			attachmentService: AttachmentService,
@@ -215,28 +214,7 @@ export default {
 			this.uploadFiles(this.$refs.files.files)
 		},
 		uploadFiles(files) {
-			const attachmentModel = new AttachmentModel({ taskId: this.taskId })
-			this.attachmentService
-				.create(attachmentModel, files)
-				.then((r) => {
-					if (r.success !== null) {
-						r.success.forEach((a) => {
-							this.$store.commit('attachments/add', a)
-							this.$store.dispatch('tasks/addTaskAttachment', {
-								taskId: this.taskId,
-								attachment: a,
-							})
-						})
-					}
-					if (r.errors !== null) {
-						r.errors.forEach((m) => {
-							this.error(m)
-						})
-					}
-				})
-				.catch((e) => {
-					this.error(e, this)
-				})
+			this.createAttachment(this.attachmentService, files)
 		},
 		deleteAttachment() {
 			this.attachmentService

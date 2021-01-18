@@ -302,8 +302,6 @@ export default {
 		},
 		createOrSelectOnEnter() {
 
-			console.log('enter', this.creatableAvailable, this.searchResults.length)
-
 			if (!this.creatableAvailable && this.searchResults.length === 1) {
 				this.select(this.searchResults[0])
 				return
