@@ -61,8 +61,9 @@ describe('Lists', () => {
 			cy.get('.list-title a.icon')
 				.should('have.attr', 'href')
 				.and('include', '/lists/1/edit')
-			cy.get('.list-is-empty-notice')
-				.should('contain', 'This list is currently empty.')
+			cy.get('p')
+				.contains('This list is currently empty.')
+				.should('exist')
 		})
 
 		it('Should navigate to the task when the title is clicked', () => {
