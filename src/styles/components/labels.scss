@@ -15,8 +15,13 @@
       }
     }
   }
+
+  .multiselect .tag {
+    margin: 0 0 0 .5rem;
+  }
 }
 
 .tasks .task span.tag span {
   width: auto;
 }
+

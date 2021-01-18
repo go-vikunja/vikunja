@@ -205,6 +205,11 @@ export default {
 	methods: {
 		// Searching will be triggered with a 200ms delay to avoid searching on every keyup event.
 		search() {
+
+			// Updating the query with a binding does not work on mobile for some reason,
+			// getting the value manual does.
+			this.query = this.$refs.searchInput.value
+				
 			if (this.searchTimeout !== null) {
 				clearTimeout(this.searchTimeout)
 				this.searchTimeout = null
