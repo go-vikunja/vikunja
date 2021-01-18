@@ -5,8 +5,8 @@
   font-size: .8em;
   box-shadow: 0.3em 0.3em 0.8em darken($light, 6);
   height: $switch-view-height;
-  margin-bottom: 1em;
-
+  margin-bottom: 1rem;
+  
   a {
     padding: .5em;
     display: inline-block;
@@ -36,5 +36,12 @@
     &:hover {
       background: lighten($primary, 5);
     }
+  }
+}
+
+@media screen and (max-width: $tablet) {
+  .switch-view-container {
+    display: flex;
+    justify-content: center;
   }
 }

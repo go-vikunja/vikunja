@@ -3,27 +3,29 @@
 		:class="{ 'is-loading': listService.loading}"
 		class="loader-container"
 	>
-		<div class="switch-view">
-			<router-link
-				:class="{'is-active': $route.name === 'list.list'}"
-				:to="{ name: 'list.list',   params: { listId: listId } }">
-				List
-			</router-link>
-			<router-link
-				:class="{'is-active': $route.name === 'list.gantt'}"
-				:to="{ name: 'list.gantt',  params: { listId: listId } }">
-				Gantt
-			</router-link>
-			<router-link
-				:class="{'is-active': $route.name === 'list.table'}"
-				:to="{ name: 'list.table',  params: { listId: listId } }">
-				Table
-			</router-link>
-			<router-link
-				:class="{'is-active': $route.name === 'list.kanban'}"
-				:to="{ name: 'list.kanban', params: { listId: listId } }">
-				Kanban
-			</router-link>
+		<div class="switch-view-container">
+			<div class="switch-view">
+				<router-link
+					:class="{'is-active': $route.name === 'list.list'}"
+					:to="{ name: 'list.list',   params: { listId: listId } }">
+					List
+				</router-link>
+				<router-link
+					:class="{'is-active': $route.name === 'list.gantt'}"
+					:to="{ name: 'list.gantt',  params: { listId: listId } }">
+					Gantt
+				</router-link>
+				<router-link
+					:class="{'is-active': $route.name === 'list.table'}"
+					:to="{ name: 'list.table',  params: { listId: listId } }">
+					Table
+				</router-link>
+				<router-link
+					:class="{'is-active': $route.name === 'list.kanban'}"
+					:to="{ name: 'list.kanban', params: { listId: listId } }">
+					Kanban
+				</router-link>
+			</div>
 		</div>
 		<div class="notification is-warning" v-if="list.isArchived">
 			This list is archived.

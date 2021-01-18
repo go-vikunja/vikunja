@@ -66,7 +66,7 @@
   max-width: 180px;
   position: absolute;
   right: 1.5em;
-  margin-top: -56px;
+  margin-top: -59px;
   z-index: 4;
 
   .items {
@@ -85,7 +85,6 @@
   .card {
     text-align: left;
     margin-top: calc(1rem - 1px);
-    float: right;
   }
 
   .fancycheckbox {
@@ -125,9 +124,13 @@
 
   @media screen and (max-width: $tablet) {
     position: static;
-    margin: 1rem 0;
+    margin: 0 0 1rem 0;
     max-width: 100%;
     min-width: auto;
+
+    .items {
+      justify-content: center;
+    }
 
     .search {
       width: 100%;
@@ -141,16 +144,16 @@
 
 .link-share-container .gantt-chart-container .filter-container,
 .gantt-chart-container .filter-container {
-  margin-top: -133px;
+  margin-top: -136px;
 }
 
 .link-share-container .list-view .filter-container {
-  margin-top: -44px;
+  margin-top: -47px;
 }
 
 .link-share-container .filter-container {
   right: 9rem;
-  margin-top: -56px;
+  margin-top: -59px;
 }
 
 .list-namespace-title {
