@@ -317,6 +317,9 @@ export default {
 			return checkboxes[n]
 		},
 		renderPreview() {
+			const renderer = new marked.Renderer()
+			const linkRenderer = renderer.link
+
 			let checkboxNum = -1
 			marked.use({
 				renderer: {
@@ -340,6 +343,11 @@ export default {
 						checkboxNum++
 						return `<input type="checkbox" data-checkbox-num="${checkboxNum}" ${checked} class="text-checkbox-${this._uid}"/>`
 					},
+					link: (href, title, text) => {
+						const isLocal = href.startsWith(`${location.protocol}//${location.hostname}`)
+						const html = linkRenderer.call(renderer, href, title, text)
+						return isLocal ? html : html.replace(/^<a /, `<a target="_blank" rel="noreferrer noopener nofollow" `)
+					},
 				},
 				highlight: function (code, language) {
 					const hljs = require('highlight.js')
@@ -348,7 +356,7 @@ export default {
 				},
 			})
 
-			this.preview = DOMPurify.sanitize(marked(this.text))
+			this.preview = DOMPurify.sanitize(marked(this.text), { ADD_ATTR: ['target'] })
 
 			// Since the render function is synchronous, we can't do async http requests in it.
 			// Therefore, we can't resolve the blob url at (markdown) compile time.
