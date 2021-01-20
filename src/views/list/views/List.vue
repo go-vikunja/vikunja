@@ -83,7 +83,7 @@
 			</p>
 		</div>
 
-		<p class="has-text-centered has-text-grey" v-if="tasks.length === 0">
+		<p class="has-text-centered has-text-grey" v-if="ctaVisiable && tasks.length === 0 && !taskCollectionService.loading">
 			This list is currently empty.
 			<a @click="$refs.newTaskInput.focus()">Create a new task.</a>
 		</p>
@@ -184,6 +184,8 @@ export default {
 			showError: false,
 			labelTaskService: LabelTaskService,
 			labelService: LabelService,
+
+			ctaVisible: false,
 		}
 	},
 	mixins: [
@@ -207,6 +209,9 @@ export default {
 		canWrite: state => state.currentList.maxRight > Rights.READ,
 		list: state => state.currentList,
 	}),
+	mounted() {
+		this.$nextTick(() => this.ctaVisible = true)
+	},
 	methods: {
 		// This function initializes the tasks page and loads the first page of tasks
 		initTasks(page, search = '') {
