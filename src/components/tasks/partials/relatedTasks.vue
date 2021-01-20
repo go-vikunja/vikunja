@@ -8,6 +8,7 @@
 			v-tooltip="'Add a New Task Relation'"
 			type="secondary"
 			icon="plus"
+			:shadow="false"
 		/>
 		<transition-group name="fade">
 			<template v-if="editEnabled && showCreate">
