@@ -20,9 +20,9 @@
 				class="app-content"
 			>
 				<a @click="$store.commit('menuActive', false)" class="mobile-overlay" v-if="menuActive"></a>
-				<transition name="fade">
-					<router-view/>
-				</transition>
+				
+				<router-view/>
+				
 				<a @click="$store.commit('keyboardShortcutsActive', true)" class="keyboard-shortcuts-button">
 					<icon icon="keyboard"/>
 				</a>
