@@ -29,8 +29,13 @@
 			v-if="isEditActive"
 			v-model="text"/>
 
-		<div class="preview content" v-html="preview" v-if="isPreviewActive">
+		<div class="preview content" v-html="preview" v-if="isPreviewActive && text !== ''">
 		</div>
+
+		<p class="has-text-centered has-text-grey is-italic" v-if="isPreviewActive && text === '' && emptyText !== ''">
+			{{ emptyText }}
+			<a @click="toggleEdit">Edit</a>.
+		</p>
 
 		<ul class="actions">
 			<template v-if="hasEditBottom">
@@ -95,6 +100,10 @@ export default {
 		},
 		bottomActions: {
 			default: () => [],
+		},
+		emptyText: {
+			type: String,
+			default: () => '',
 		},
 	},
 	data() {

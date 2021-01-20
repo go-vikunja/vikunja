@@ -22,6 +22,7 @@
 			:upload-enabled="true"
 			@change="save"
 			placeholder="Click here to enter a description..."
+			empty-text="No description available yet."
 			v-model="task.description"/>
 	</div>
 </template>
