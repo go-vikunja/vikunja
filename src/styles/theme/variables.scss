@@ -31,7 +31,8 @@ $vikunja-nav-background: $light-background;
 $vikunja-nav-color: lighten($black, 25);
 $vikunja-nav-selected-width: 0.4em;
 
-$transition: 150ms ease;
+$transition-duration: 150ms;
+$transition: $transition-duration ease;
 
 $multiselect-primary: $green;
 $multiselect-dark: #35495e;

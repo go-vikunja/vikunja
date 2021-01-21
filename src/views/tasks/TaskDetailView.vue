@@ -1,5 +1,5 @@
 <template>
-	<div :class="{ 'is-loading': taskService.loading}" class="loader-container task-view-container">
+	<div :class="{ 'is-loading': taskService.loading, 'visible': visible}" class="loader-container task-view-container">
 		<div class="task-view">
 			<heading v-model="task" :can-write="canWrite" ref="heading"/>
 			<h6 class="subtitle" v-if="parent && parent.namespace && parent.list">
@@ -458,6 +458,8 @@ export default {
 			showDeleteModal: false,
 			descriptionChanged: false,
 			listViewName: 'list.list',
+			// Used to avoid flashing of empty elements if the task content is not yet loaded.
+			visible: false,
 
 			priorities: priorites,
 			activeFields: {
@@ -491,6 +493,8 @@ export default {
 		if (parts.length > 2 && parts[2] === 'detail') {
 			this.listViewName = `list.${parts[1]}`
 		}
+
+		console.log(this.task)
 
 		this.loadTask()
 	},
@@ -543,6 +547,7 @@ export default {
 					this.error(e, this)
 				})
 				.finally(() => {
+					this.$nextTick(() => this.visible = true)
 					this.scrollToHeading()
 				})
 		},

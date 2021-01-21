@@ -200,7 +200,24 @@
 }
 
 .task-view-container {
-  padding-bottom: 1em;
+  padding-bottom: 1rem;
+
+  .task-view * {
+    opacity: 0;
+    transition: opacity 50ms ease;
+  }
+
+  &.is-loading {
+    opacity: 1;
+
+    .task-view * {
+      opacity: 0;
+    }
+  }
+
+  &.visible:not(.is-loading) .task-view * {
+    opacity: 1;
+  }
 }
 
 .is-done {
