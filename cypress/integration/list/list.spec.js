@@ -361,9 +361,8 @@ describe('Lists', () => {
 			})
 			cy.visit('/lists/1/kanban')
 
-			cy.get('.kanban .bucket .tasks .task')
-				.contains(tasks[0].title)
-				.should('exist')
+			cy.get('.kanban .bucket .tasks')
+				.should('contain', tasks[0].title)
 			
 			cy.get('.kanban .bucket .tasks .task')
 				.contains(tasks[0].title)
