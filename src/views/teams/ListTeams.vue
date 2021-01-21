@@ -16,7 +16,7 @@
 				</router-link>
 			</li>
 		</ul>
-		<p v-else-if="!teamService.loading" class="has-text-centered has-text-grey">
+		<p v-else-if="!teamService.loading" class="has-text-centered has-text-grey is-italic">
 			You are currently not part of any teams.
 			<router-link :to="{name: 'teams.create'}">
 				Create a new team.

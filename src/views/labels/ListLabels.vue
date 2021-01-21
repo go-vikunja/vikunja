@@ -15,7 +15,7 @@
 				You can edit all labels you created, you can use all labels which are associated with a task to whose
 				list you have access.
 			</p>
-			<p v-else class="has-text-centered has-text-grey">
+			<p v-else class="has-text-centered has-text-grey is-italic">
 				You currently do not have any labels.
 				<router-link :to="{name:'labels.create'}">Create a new label.</router-link>
 			</p>

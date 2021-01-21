@@ -11,7 +11,7 @@
 			Show Archived
 		</fancycheckbox>
 
-		<p class="has-text-centered has-text-grey mt-4" v-if="namespaces.length === 0">
+		<p class="has-text-centered has-text-grey mt-4 is-italic" v-if="namespaces.length === 0">
 			You don't have any namespaces right now.
 			<router-link :to="{name: 'namespace.create'}">
 				Create a namespace.
@@ -36,7 +36,7 @@
 				</span>
 			</h1>
 
-			<p class="has-text-centered has-text-grey mt-4" v-if="n.lists.length === 0">
+			<p class="has-text-centered has-text-grey mt-4 is-italic" v-if="n.lists.length === 0">
 				This namespace does not contain any lists.
 				<router-link :to="{name: 'list.create', params: {id:  n.id}}">
 					Create a new list in this namespace.

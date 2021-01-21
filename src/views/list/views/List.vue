@@ -83,7 +83,7 @@
 			</p>
 		</div>
 
-		<p class="has-text-centered has-text-grey" v-if="ctaVisiable && tasks.length === 0 && !taskCollectionService.loading">
+		<p class="has-text-centered has-text-grey is-italic" v-if="ctaVisible && tasks.length === 0 && !taskCollectionService.loading">
 			This list is currently empty.
 			<a @click="$refs.newTaskInput.focus()">Create a new task.</a>
 		</p>
