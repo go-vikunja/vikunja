@@ -8,6 +8,8 @@ describe('Team', () => {
         TeamFactory.truncate()
         cy.visit('/teams')
 
+        const newTeamName = 'New Team'
+
         cy.get('a.button')
             .contains('New Team')
             .click()
@@ -16,7 +18,7 @@ describe('Team', () => {
 		cy.get('h3')
 			.contains('Create a new team')
 		cy.get('input.input')
-			.type('New Team')
+			.type(newTeamName)
 		cy.get('.button')
 			.contains('Add')
 			.click()
@@ -25,9 +27,8 @@ describe('Team', () => {
             .should('not.exist')
 		cy.url()
             .should('contain', '/edit')
-        cy.get('.card-header .card-header-title')
-            .contains('Edit Team')
-            .should('exist')
+        cy.get('input#teamtext')
+            .should('have.value', newTeamName)
     })
 
     it('Shows all teams', () => {

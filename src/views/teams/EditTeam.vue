@@ -68,7 +68,7 @@
 			</div>
 		</card>
 
-		<card class="is-fullwidth has-overflow" title="Team Members">
+		<card class="is-fullwidth has-overflow" title="Team Members" :padding="false">
 			<div class="p-4" v-if="userIsAdmin">
 				<div class="field has-addons">
 					<div class="control is-expanded">
