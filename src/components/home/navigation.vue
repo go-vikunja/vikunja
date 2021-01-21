@@ -133,12 +133,11 @@
 
 <script>
 import {mapState} from 'vuex'
-import {CURRENT_LIST, IS_FULLPAGE, MENU_ACTIVE, LOADING, LOADING_MODULE} from '@/store/mutation-types'
+import {CURRENT_LIST, MENU_ACTIVE, LOADING, LOADING_MODULE} from '@/store/mutation-types'
 
 export default {
 	name: 'navigation',
 	computed: mapState({
-		fullpage: IS_FULLPAGE,
 		namespaces(state) {
 			return state.namespaces.namespaces.filter(n => !n.isArchived)
 		},

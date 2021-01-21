@@ -1,12 +1,12 @@
 <template>
-	<div class="card">
+	<div class="card" :class="{'has-no-shadow': !shadow}">
 		<header class="card-header" v-if="title !== ''">
 			<p class="card-header-title">
 				{{ title }}
 			</p>
 			<a @click="$emit('close')" class="card-header-icon" v-if="hasClose">
 				<span class="icon">
-					<icon icon="angle-right"/>
+					<icon :icon="closeIcon"/>
 				</span>
 			</a>
 		</header>
@@ -33,6 +33,14 @@ export default {
 		hasClose: {
 			type: Boolean,
 			default: false,
+		},
+		closeIcon: {
+			type: String,
+			default: 'angle-right',
+		},
+		shadow: {
+			type: Boolean,
+			default: true,
 		},
 	},
 }

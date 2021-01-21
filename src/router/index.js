@@ -159,7 +159,9 @@ export default new Router({
 		{
 			path: '/namespaces/new',
 			name: 'namespace.create',
-			component: NewNamespaceComponent,
+			components: {
+				popup: NewNamespaceComponent,
+			},
 		},
 		{
 			path: '/namespaces/:id/edit',
@@ -169,7 +171,9 @@ export default new Router({
 		{
 			path: '/namespaces/:id/list',
 			name: 'list.create',
-			component: NewListComponent,
+			components: {
+				popup: NewListComponent,
+			}
 		},
 		{
 			path: '/lists/:id/edit',
@@ -242,7 +246,9 @@ export default new Router({
 		{
 			path: '/teams/new',
 			name: 'teams.create',
-			component: NewTeamComponent,
+			components: {
+				popup: NewTeamComponent,
+			},
 		},
 		{
 			path: '/teams/:id/edit',
@@ -257,7 +263,9 @@ export default new Router({
 		{
 			path: '/labels/new',
 			name: 'labels.create',
-			component: NewLabelComponent,
+			components: {
+				popup: NewLabelComponent,
+			},
 		},
 		{
 			path: '/migrate',
@@ -272,7 +280,9 @@ export default new Router({
 		{
 			path: '/filters/new',
 			name: 'filters.create',
-			component: CreateSavedFilter,
+			components: {
+				popup: CreateSavedFilter,
+			},
 		},
 		{
 			path: '/auth/openid/:provider',

@@ -1,44 +1,41 @@
 <template>
-	<div class="fullpage">
-		<a @click="back()" class="close">
-			<icon :icon="['far', 'times-circle']">
-			</icon>
-		</a>
-		<h3>Create a new list</h3>
-		<div class="field is-grouped">
-			<p :class="{ 'is-loading': listService.loading}" class="control is-expanded">
+	<create title="Create a new list" @create="newList()" :create-disabled="list.title === ''">
+		<div class="field">
+			<label class="label" for="listTitle">List Title</label>
+			<div
+				:class="{ 'is-loading': listService.loading }"
+				class="control"
+			>
 				<input
-					:class="{ 'disabled': listService.loading}"
+					:class="{ disabled: listService.loading }"
 					@keyup.enter="newList()"
-					@keyup.esc="back()"
+					@keyup.esc="$router.back()"
 					class="input"
-					placeholder="The list's name goes here..."
+					placeholder="The list's title goes here..."
 					type="text"
+					name="listTitle"
 					v-focus
-					v-model="list.title"/>
-			</p>
-			<p class="control">
-				<x-button
-					:disabled="list.title === ''"
-					@click="newList()"
-					icon="plus"
-					:shadow="false"
-				>
-					Add
-				</x-button>
-			</p>
+					v-model="list.title"
+				/>
+			</div>
 		</div>
 		<p class="help is-danger" v-if="showError && list.title === ''">
 			Please specify a title.
 		</p>
-	</div>
+		<div class="field">
+			<label class="label">Color</label>
+			<div class="control">
+				<color-picker v-model="list.hexColor" />
+			</div>
+		</div>
+	</create>
 </template>
 
 <script>
-import router from '../../router'
 import ListService from '../../services/list'
 import ListModel from '../../models/list'
-import {IS_FULLPAGE} from '@/store/mutation-types'
+import Create from '@/components/misc/create'
+import ColorPicker from '../../components/input/colorPicker'
 
 export default {
 	name: 'NewList',
@@ -49,10 +46,13 @@ export default {
 			listService: ListService,
 		}
 	},
+	components: {
+		Create,
+		ColorPicker,
+	},
 	created() {
 		this.list = new ListModel()
 		this.listService = new ListService()
-		this.$store.commit(IS_FULLPAGE, true)
 	},
 	mounted() {
 		this.setTitle('Create a new list')
@@ -66,17 +66,21 @@ export default {
 			this.showError = false
 
 			this.list.namespaceId = this.$route.params.id
-			this.$store.dispatch('lists/createList', this.list)
-				.then(r => {
-					this.success({message: 'The list was successfully created.'}, this)
-					router.push({name: 'list.index', params: {listId: r.id}})
+			this.$store
+				.dispatch('lists/createList', this.list)
+				.then((r) => {
+					this.success(
+						{ message: 'The list was successfully created.' },
+						this
+					)
+					this.$router.push({
+						name: 'list.index',
+						params: { listId: r.id },
+					})
 				})
-				.catch(e => {
+				.catch((e) => {
 					this.error(e, this)
 				})
-		},
-		back() {
-			router.go(-1)
 		},
 	},
 }

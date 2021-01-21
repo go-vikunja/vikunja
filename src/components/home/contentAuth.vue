@@ -12,7 +12,6 @@
 			<div
 				:class="[
 					{
-						'fullpage-overlay': fullpage,
 						'is-menu-enabled': menuActive,
 					},
 					$route.name,
@@ -22,6 +21,10 @@
 				<a @click="$store.commit('menuActive', false)" class="mobile-overlay" v-if="menuActive"></a>
 				
 				<router-view/>
+				
+				<transition name="modal">
+					<router-view name="popup"/>
+				</transition>
 				
 				<a @click="$store.commit('keyboardShortcutsActive', true)" class="keyboard-shortcuts-button">
 					<icon icon="keyboard"/>
@@ -33,7 +36,7 @@
 
 <script>
 import {mapState} from 'vuex'
-import {CURRENT_LIST, IS_FULLPAGE, MENU_ACTIVE} from '@/store/mutation-types'
+import {CURRENT_LIST, MENU_ACTIVE} from '@/store/mutation-types'
 import Navigation from '@/components/home/navigation'
 
 export default {
@@ -46,7 +49,6 @@ export default {
 		this.renewTokenOnFocus()
 	},
 	computed: mapState({
-		fullpage: IS_FULLPAGE,
 		namespaces(state) {
 			return state.namespaces.namespaces.filter(n => !n.isArchived)
 		},
@@ -58,7 +60,6 @@ export default {
 	methods: {
 		doStuffAfterRoute() {
 			// this.setTitle('') // Reset the title if the page component does not set one itself
-			this.$store.commit(IS_FULLPAGE, false)
 			this.hideMenuOnMobile()
 			this.resetCurrentList()
 		},

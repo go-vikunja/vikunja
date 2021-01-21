@@ -25,12 +25,12 @@ describe('Lists', () => {
 			.click()
 		cy.url()
 			.should('contain', '/namespaces/1/list')
-		cy.get('h3')
+		cy.get('.card-header-title')
 			.contains('Create a new list')
 		cy.get('input.input')
 			.type('New List')
 		cy.get('.button')
-			.contains('Add')
+			.contains('Create')
 			.click()
 
 		cy.wait(1000) // Waiting until the request to create the new list is done
@@ -142,9 +142,8 @@ describe('Lists', () => {
 			})
 			cy.visit('/lists/1/table')
 
-			cy.get('.table-view table.table a')
+			cy.get('.table-view table.table')
 				.contains(tasks[0].title)
-				.first()
 				.click()
 
 			cy.url()
@@ -364,7 +363,6 @@ describe('Lists', () => {
 
 			cy.get('.kanban .bucket .tasks .task')
 				.contains(tasks[0].title)
-				.first()
 				.click()
 
 			cy.url()

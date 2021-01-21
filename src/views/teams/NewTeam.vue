@@ -1,38 +1,38 @@
 <template>
-	<div class="fullpage">
-		<a @click="back()" class="close">
-			<icon :icon="['far', 'times-circle']">
-			</icon>
-		</a>
-		<h3>Create a new team</h3>
-		<form @keyup.esc="back()" @submit.prevent="newTeam">
-			<div class="field is-grouped">
-				<p class="control is-expanded" v-bind:class="{ 'is-loading': teamService.loading}">
-					<input
-						:class="{ 'disabled': teamService.loading}"
-						class="input"
-						placeholder="The team's name goes here..." type="text"
-						v-focus
-						v-model="team.name"/>
-				</p>
-				<p class="control">
-					<x-button :shadow="false" @click="newTeam" icon="plus">
-						Add
-					</x-button>
-				</p>
+	<create
+		title="Create a new team"
+		@create="newTeam()"
+		:create-disabled="team.name === ''"
+	>
+		<div class="field">
+			<label class="label" for="teamName">Team Name</label>
+			<div
+				class="control is-expanded"
+				:class="{ 'is-loading': teamService.loading }"
+			>
+				<input
+					:class="{ 'disabled': teamService.loading }"
+					class="input"
+					id="teamName"
+					placeholder="The team's name goes here..."
+					type="text"
+					v-focus
+					v-model="team.name"
+					@keyup.enter="newTeam"
+				/>
 			</div>
-			<p class="help is-danger" v-if="showError && team.name === ''">
-				Please specify a name.
-			</p>
-		</form>
-	</div>
+		</div>
+		<p class="help is-danger" v-if="showError && team.name === ''">
+			Please specify a name.
+		</p>
+	</create>
 </template>
 
 <script>
 import router from '../../router'
 import TeamModel from '../../models/team'
 import TeamService from '../../services/team'
-import {IS_FULLPAGE} from '@/store/mutation-types'
+import Create from '@/components/misc/create'
 
 export default {
 	name: 'NewTeam',
@@ -43,29 +43,37 @@ export default {
 			showError: false,
 		}
 	},
+	components: {
+		Create,
+	},
 	created() {
 		this.teamService = new TeamService()
 		this.team = new TeamModel()
-		this.$store.commit(IS_FULLPAGE, true)
 	},
 	mounted() {
 		this.setTitle('Create a new Team')
 	},
 	methods: {
 		newTeam() {
-
 			if (this.team.name === '') {
 				this.showError = true
 				return
 			}
 			this.showError = false
 
-			this.teamService.create(this.team)
-				.then(response => {
-					router.push({name: 'teams.edit', params: {id: response.id}})
-					this.success({message: 'The team was successfully created.'}, this)
+			this.teamService
+				.create(this.team)
+				.then((response) => {
+					router.push({
+						name: 'teams.edit',
+						params: { id: response.id },
+					})
+					this.success(
+						{ message: 'The team was successfully created.' },
+						this
+					)
 				})
-				.catch(e => {
+				.catch((e) => {
 					this.error(e, this)
 				})
 		},

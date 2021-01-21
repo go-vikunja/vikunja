@@ -4,7 +4,6 @@ import {
 	CURRENT_LIST,
 	ERROR_MESSAGE,
 	HAS_TASKS,
-	IS_FULLPAGE,
 	KEYBOARD_SHORTCUTS_ACTIVE,
 	LOADING,
 	LOADING_MODULE,
@@ -39,7 +38,6 @@ export const store = new Vuex.Store({
 		loadingModule: null,
 		errorMessage: '',
 		online: true,
-		isFullpage: false,
 		// This is used to highlight the current list in menu for all list related views
 		currentList: {id: 0},
 		background: '',
@@ -59,9 +57,6 @@ export const store = new Vuex.Store({
 		},
 		[ONLINE](state, online) {
 			state.online = online
-		},
-		[IS_FULLPAGE](state, fullpage) {
-			state.isFullpage = fullpage
 		},
 		[CURRENT_LIST](state, currentList) {
 

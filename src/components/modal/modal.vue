@@ -1,8 +1,8 @@
 <template>
 	<transition name="modal">
 		<div class="modal-mask">
-			<div class="modal-container" @click.prevent.stop="$emit('close')">
-				<div class="modal-content">
+			<div class="modal-container" @click.self.prevent.stop="$emit('close')">
+				<div class="modal-content" :class="{'has-overflow': overflow}">
 					<slot>
 						<div class="header">
 							<slot name="header"></slot>
@@ -43,6 +43,12 @@ export default {
 				this.$emit('close')
 			}
 		})
+	},
+	props: {
+		overflow: {
+			type: Boolean,
+			default: false,
+		},
 	},
 }
 </script>
