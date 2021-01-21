@@ -26,8 +26,8 @@ describe('Team', () => {
 		cy.url()
             .should('contain', '/edit')
         cy.get('.card-header .card-header-title')
-            .first()
-            .should('contain', 'Edit Team')
+            .contains('Edit Team')
+            .should('exist')
     })
 
     it('Shows all teams', () => {
