@@ -363,6 +363,10 @@ describe('Lists', () => {
 
 			cy.get('.kanban .bucket .tasks .task')
 				.contains(tasks[0].title)
+				.should('exist')
+			
+			cy.get('.kanban .bucket .tasks .task')
+				.contains(tasks[0].title)
 				.click()
 
 			cy.url()
