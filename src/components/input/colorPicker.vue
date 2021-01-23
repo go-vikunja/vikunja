@@ -15,7 +15,9 @@
 			:rgbSliders="true"
 			model="hex"
 			picker="square"
-			v-model="color"/>
+			v-model="color"
+			:class="{'is-empty': empty}"
+		/>
 		<x-button @click="reset" class="is-small ml-2" :shadow="false" type="secondary">
 			Reset Color
 		</x-button>
@@ -57,8 +59,17 @@ export default {
 	mounted() {
 		this.color = this.value
 	},
+	computed: {
+		empty() {
+			return this.color === '#000000' || this.color === ''
+		},
+	},
 	methods: {
 		update() {
+
+			if(this.empty) {
+				return
+			}
 
 			if (this.lastChangeTimeout !== null) {
 				clearTimeout(this.lastChangeTimeout)
@@ -78,3 +89,15 @@ export default {
 	},
 }
 </script>
+
+<style lang="scss">
+.verte.is-empty {
+	.verte__icon {
+		opacity: 0;
+	}
+
+	.verte__guide {
+		background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAGklEQVQYlWM4c+bMf3TMgA0MBYWDzDkUKQQAlHCpV9ycHeMAAAAASUVORK5CYII=);
+	}
+}
+</style>
