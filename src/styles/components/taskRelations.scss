@@ -9,6 +9,11 @@ $remove-icon-width: 24px;
     }
   }
 
+  .different-list {
+    color: $grey-500;
+    width: auto;
+  }
+
   .related-tasks {
     .title {
       font-size: 1rem;
@@ -20,11 +25,6 @@ $remove-icon-width: 24px;
 
       a:not(.remove) {
         width: calc(100% - #{$remove-icon-width});
-
-        .different-list {
-          color: $grey-500;
-          width: auto;
-        }
       }
 
       .task .tasktext {

@@ -35,7 +35,22 @@
 						:creatable="true"
 						create-placeholder="Add this as new related task"
 						@create="createAndRelateTask"
-					/>
+					>
+						<template v-slot:searchResult="props">
+							<span v-if="typeof props.option !== 'string'" class="search-result">
+								<span
+									class="different-list"
+									v-if="props.option.listId !== listId"
+									v-tooltip="'This task belongs to a different list.'">
+									{{ $store.getters['lists/getListById'](props.option.listId) === null ? '' : $store.getters['lists/getListById'](props.option.listId).title }} >
+								</span>
+								{{ props.option.title }}
+							</span>
+							<span class="search-result" v-else>
+								{{ props.option }}
+							</span>
+						</template>
+					</multiselect>
 				</div>
 				<div class="field has-addons mb-4" key="field-kind">
 					<div class="control is-expanded">
