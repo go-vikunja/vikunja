@@ -2,7 +2,7 @@
 	<div class="attachments">
 		<h3>
 			<span class="icon is-grey">
-				<icon icon="paperclip" />
+				<icon icon="paperclip"/>
 			</span>
 			Attachments
 		</h3>
@@ -38,8 +38,8 @@
 						<span>
 							created
 							<span v-tooltip="formatDate(a.created)">{{
-								formatDateSince(a.created)
-							}}</span>
+									formatDateSince(a.created)
+								}}</span>
 							by
 							<user
 								:avatar-size="24"
@@ -93,25 +93,27 @@
 		>
 			<div class="drop-hint">
 				<div class="icon">
-					<icon icon="cloud-upload-alt" />
+					<icon icon="cloud-upload-alt"/>
 				</div>
 				<div class="hint">Drop files here to upload</div>
 			</div>
 		</div>
 
 		<!-- Delete modal -->
-		<modal
-			@close="showDeleteModal = false"
-			v-if="showDeleteModal"
-			@submit="deleteAttachment()"
-		>
-			<span slot="header">Delete attachment</span>
-			<p slot="text">
-				Are you sure you want to delete the attachment
-				{{ attachmentToDelete.file.name }}?<br />
-				<b>This CANNOT BE UNDONE!</b>
-			</p>
-		</modal>
+		<transition name="modal">
+			<modal
+				@close="showDeleteModal = false"
+				v-if="showDeleteModal"
+				@submit="deleteAttachment()"
+			>
+				<span slot="header">Delete attachment</span>
+				<p slot="text">
+					Are you sure you want to delete the attachment
+					{{ attachmentToDelete.file.name }}?<br/>
+					<b>This CANNOT BE UNDONE!</b>
+				</p>
+			</modal>
+		</transition>
 
 		<transition name="modal">
 			<modal
@@ -123,7 +125,7 @@
 				"
 				v-if="showImageModal"
 			>
-				<img :src="attachmentImageBlobUrl" alt="" />
+				<img :src="attachmentImageBlobUrl" alt=""/>
 			</modal>
 		</transition>
 	</div>
@@ -134,7 +136,7 @@ import AttachmentService from '../../../services/attachment'
 import AttachmentModel from '../../../models/attachment'
 import User from '../../misc/user'
 import attachmentUpload from '@/components/tasks/mixins/attachmentUpload'
-import { mapState } from 'vuex'
+import {mapState} from 'vuex'
 
 export default {
 	name: 'attachments',

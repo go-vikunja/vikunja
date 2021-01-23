@@ -86,14 +86,16 @@
 			shareType="team"
 			type="namespace"/>
 
-		<modal
-			@close="showDeleteModal = false"
-			v-if="showDeleteModal"
-			@submit="deleteNamespace()">
-			<span slot="header">Delete the namespace</span>
-			<p slot="text">Are you sure you want to delete this namespace and all of its contents?
-				<br/>This includes lists & tasks and <b>CANNOT BE UNDONE!</b></p>
-		</modal>
+		<transition name="modal">
+			<modal
+				@close="showDeleteModal = false"
+				v-if="showDeleteModal"
+				@submit="deleteNamespace()">
+				<span slot="header">Delete the namespace</span>
+				<p slot="text">Are you sure you want to delete this namespace and all of its contents?
+					<br/>This includes lists & tasks and <b>CANNOT BE UNDONE!</b></p>
+			</modal>
+		</transition>
 	</div>
 </template>
 

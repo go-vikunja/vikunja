@@ -134,34 +134,38 @@
 		</card>
 
 		<!-- Team delete modal -->
-		<modal
-			@close="showDeleteModal = false"
-			@submit="deleteTeam()"
-			v-if="showDeleteModal"
-		>
-			<span slot="header">Delete the team</span>
-			<p slot="text">
-				Are you sure you want to delete this team and all of its
-				members?<br/>
-				All team members will loose access to lists and namespaces
-				shared with this team.<br/>
-				<b>This CANNOT BE UNDONE!</b>
-			</p>
-		</modal>
+		<transition name="modal">
+			<modal
+				@close="showDeleteModal = false"
+				@submit="deleteTeam()"
+				v-if="showDeleteModal"
+			>
+				<span slot="header">Delete the team</span>
+				<p slot="text">
+					Are you sure you want to delete this team and all of its
+					members?<br/>
+					All team members will loose access to lists and namespaces
+					shared with this team.<br/>
+					<b>This CANNOT BE UNDONE!</b>
+				</p>
+			</modal>
+		</transition>
 		<!-- User delete modal -->
-		<modal
-			@close="showUserDeleteModal = false"
-			@submit="deleteUser()"
-			v-if="showUserDeleteModal"
-		>
-			<span slot="header">Remove a user from the team</span>
-			<p slot="text">
-				Are you sure you want to remove this user from the team?<br/>
-				They will loose access to all lists and namespaces this team has
-				access to.<br/>
-				<b>This CANNOT BE UNDONE!</b>
-			</p>
-		</modal>
+		<transition name="modal">
+			<modal
+				@close="showUserDeleteModal = false"
+				@submit="deleteUser()"
+				v-if="showUserDeleteModal"
+			>
+				<span slot="header">Remove a user from the team</span>
+				<p slot="text">
+					Are you sure you want to remove this user from the team?<br/>
+					They will loose access to all lists and namespaces this team has
+					access to.<br/>
+					<b>This CANNOT BE UNDONE!</b>
+				</p>
+			</modal>
+		</transition>
 	</div>
 </template>
 

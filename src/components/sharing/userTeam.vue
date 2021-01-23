@@ -16,114 +16,116 @@
 					/>
 				</p>
 				<p class="control">
-					<x-button @click="add()"> Share </x-button>
+					<x-button @click="add()"> Share</x-button>
 				</p>
 			</div>
 		</div>
 		<table class="table is-striped is-hoverable is-fullwidth">
 			<tbody>
-				<tr :key="s.id" v-for="s in sharables">
-					<template v-if="shareType === 'user'">
-						<td>{{ s.getDisplayName() }}</td>
-						<td>
-							<template v-if="s.id === userInfo.id">
-								<b class="is-success">You</b>
-							</template>
-						</td>
-					</template>
-					<template v-if="shareType === 'team'">
-						<td>
-							<router-link
-								:to="{
+			<tr :key="s.id" v-for="s in sharables">
+				<template v-if="shareType === 'user'">
+					<td>{{ s.getDisplayName() }}</td>
+					<td>
+						<template v-if="s.id === userInfo.id">
+							<b class="is-success">You</b>
+						</template>
+					</td>
+				</template>
+				<template v-if="shareType === 'team'">
+					<td>
+						<router-link
+							:to="{
 									name: 'teams.edit',
 									params: { id: s.id },
 								}"
-							>
-								{{ s.name }}
-							</router-link>
-						</td>
-					</template>
-					<td class="type">
-						<template v-if="s.right === rights.ADMIN">
-							<span class="icon is-small">
-								<icon icon="lock" />
-							</span>
-							Admin
-						</template>
-						<template v-else-if="s.right === rights.READ_WRITE">
-							<span class="icon is-small">
-								<icon icon="pen" />
-							</span>
-							Write
-						</template>
-						<template v-else>
-							<span class="icon is-small">
-								<icon icon="users" />
-							</span>
-							Read-only
-						</template>
+						>
+							{{ s.name }}
+						</router-link>
 					</td>
-					<td class="actions" v-if="userIsAdmin">
-						<div class="select">
-							<select
-								@change="toggleType(s)"
-								class="button mr-2"
-								v-model="selectedRight[s.id]"
+				</template>
+				<td class="type">
+					<template v-if="s.right === rights.ADMIN">
+							<span class="icon is-small">
+								<icon icon="lock"/>
+							</span>
+						Admin
+					</template>
+					<template v-else-if="s.right === rights.READ_WRITE">
+							<span class="icon is-small">
+								<icon icon="pen"/>
+							</span>
+						Write
+					</template>
+					<template v-else>
+							<span class="icon is-small">
+								<icon icon="users"/>
+							</span>
+						Read-only
+					</template>
+				</td>
+				<td class="actions" v-if="userIsAdmin">
+					<div class="select">
+						<select
+							@change="toggleType(s)"
+							class="button mr-2"
+							v-model="selectedRight[s.id]"
+						>
+							<option
+								:selected="s.right === rights.READ"
+								:value="rights.READ"
 							>
-								<option
-									:selected="s.right === rights.READ"
-									:value="rights.READ"
-								>
-									Read only
-								</option>
-								<option
-									:selected="s.right === rights.READ_WRITE"
-									:value="rights.READ_WRITE"
-								>
-									Read & write
-								</option>
-								<option
-									:selected="s.right === rights.ADMIN"
-									:value="rights.ADMIN"
-								>
-									Admin
-								</option>
-							</select>
-						</div>
-						<x-button
-							@click="
+								Read only
+							</option>
+							<option
+								:selected="s.right === rights.READ_WRITE"
+								:value="rights.READ_WRITE"
+							>
+								Read & write
+							</option>
+							<option
+								:selected="s.right === rights.ADMIN"
+								:value="rights.ADMIN"
+							>
+								Admin
+							</option>
+						</select>
+					</div>
+					<x-button
+						@click="
 								() => {
 									sharable = s
 									showDeleteModal = true
 								}
 							"
-							class="is-danger"
-							icon="trash-alt"
-						/>
-					</td>
-				</tr>
+						class="is-danger"
+						icon="trash-alt"
+					/>
+				</td>
+			</tr>
 			</tbody>
 		</table>
 
-		<modal
-			@close="showDeleteModal = false"
-			@submit="deleteSharable()"
-			v-if="showDeleteModal"
-		>
-			<span slot="header"
-				>Remove a {{ shareType }} from the {{ typeString }}</span
+		<transition name="modal">
+			<modal
+				@close="showDeleteModal = false"
+				@submit="deleteSharable()"
+				v-if="showDeleteModal"
 			>
-			<p slot="text">
-				Are you sure you want to remove this {{ shareType }} from the
-				{{ typeString }}?<br />
-				<b>This CANNOT BE UNDONE!</b>
-			</p>
-		</modal>
+			<span slot="header"
+			>Remove a {{ shareType }} from the {{ typeString }}</span
+			>
+				<p slot="text">
+					Are you sure you want to remove this {{ shareType }} from the
+					{{ typeString }}?<br/>
+					<b>This CANNOT BE UNDONE!</b>
+				</p>
+			</modal>
+		</transition>
 	</card>
 </template>
 
 <script>
-import { mapState } from 'vuex'
+import {mapState} from 'vuex'
 
 import UserNamespaceService from '../../services/userNamespace'
 import UserNamespaceModel from '../../models/userNamespace'
@@ -194,7 +196,7 @@ export default {
 			if (this.type === 'list') {
 				this.typeString = `list`
 				this.stuffService = new UserListService()
-				this.stuffModel = new UserListModel({ listId: this.id })
+				this.stuffModel = new UserListModel({listId: this.id})
 			} else if (this.type === 'namespace') {
 				this.typeString = `namespace`
 				this.stuffService = new UserNamespaceService()
@@ -212,7 +214,7 @@ export default {
 			if (this.type === 'list') {
 				this.typeString = `list`
 				this.stuffService = new TeamListService()
-				this.stuffModel = new TeamListModel({ listId: this.id })
+				this.stuffModel = new TeamListModel({listId: this.id})
 			} else if (this.type === 'namespace') {
 				this.typeString = `namespace`
 				this.stuffService = new TeamNamespaceService()
@@ -362,7 +364,7 @@ export default {
 			}
 
 			this.searchService
-				.getAll({}, { s: query })
+				.getAll({}, {s: query})
 				.then((response) => {
 					this.$set(this, 'found', response)
 				})

@@ -128,14 +128,16 @@
 
 		<link-sharing :list-id="$route.params.id" v-if="linkSharingEnabled"/>
 
-		<modal
-			@close="showDeleteModal = false"
-			@submit="deleteList()"
-			v-if="showDeleteModal">
-			<span slot="header">Delete the list</span>
-			<p slot="text">Are you sure you want to delete this list and all of its contents?
-				<br/>This includes all tasks and <b>CANNOT BE UNDONE!</b></p>
-		</modal>
+		<transition name="modal">
+			<modal
+				@close="showDeleteModal = false"
+				@submit="deleteList()"
+				v-if="showDeleteModal">
+				<span slot="header">Delete the list</span>
+				<p slot="text">Are you sure you want to delete this list and all of its contents?
+					<br/>This includes all tasks and <b>CANNOT BE UNDONE!</b></p>
+			</modal>
+		</transition>
 	</div>
 </template>
 

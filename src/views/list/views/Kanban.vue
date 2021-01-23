@@ -33,8 +33,7 @@
 						{{ bucket.tasks.length }}/{{ bucket.limit }}
 					</span>
 					<div
-						:class="{ 'is-active': bucketOptionsDropDownActive[bucket.id] }"
-						class="dropdown is-right options"
+						class="dropdown is-right is-active options"
 						v-if="canWrite"
 					>
 						<div @click.stop="toggleBucketDropdown(bucket.id)" class="dropdown-trigger">
@@ -42,45 +41,47 @@
 							<icon icon="ellipsis-v"/>
 						</span>
 						</div>
-						<div class="dropdown-menu" role="menu">
-							<div class="dropdown-content">
-								<a
-									@click.stop="showSetLimitInput = true"
-									class="dropdown-item"
-								>
-									<div class="field has-addons" v-if="showSetLimitInput">
-										<div class="control">
-											<input
-												@change="() => updateBucket(bucket)"
-												@keyup.enter="() => updateBucket(bucket)"
-												class="input"
-												type="number"
-												v-focus.always
-												v-model="bucket.limit"
-											/>
+						<transition name="fade">
+							<div class="dropdown-menu" role="menu" v-if="bucketOptionsDropDownActive[bucket.id]">
+								<div class="dropdown-content">
+									<a
+										@click.stop="showSetLimitInput = true"
+										class="dropdown-item"
+									>
+										<div class="field has-addons" v-if="showSetLimitInput">
+											<div class="control">
+												<input
+													@change="() => updateBucket(bucket)"
+													@keyup.enter="() => updateBucket(bucket)"
+													class="input"
+													type="number"
+													v-focus.always
+													v-model="bucket.limit"
+												/>
+											</div>
+											<div class="control">
+												<x-button
+													:icon="['far', 'save']"
+													:shadow="false"
+												/>
+											</div>
 										</div>
-										<div class="control">
-											<x-button
-												:icon="['far', 'save']"
-												:shadow="false"
-											/>
-										</div>
-									</div>
-									<template v-else>
-										Limit: {{ bucket.limit > 0 ? bucket.limit : 'Not set' }}
-									</template>
-								</a>
-								<a
-									:class="{'is-disabled': buckets.length <= 1}"
-									@click="() => deleteBucketModal(bucket.id)"
-									class="dropdown-item has-text-danger"
-									v-tooltip="buckets.length <= 1 ? 'You cannot remove the last bucket.' : ''"
-								>
-									<span class="icon is-small"><icon icon="trash-alt"/></span>
-									Delete
-								</a>
+										<template v-else>
+											Limit: {{ bucket.limit > 0 ? bucket.limit : 'Not set' }}
+										</template>
+									</a>
+									<a
+										:class="{'is-disabled': buckets.length <= 1}"
+										@click="() => deleteBucketModal(bucket.id)"
+										class="dropdown-item has-text-danger"
+										v-tooltip="buckets.length <= 1 ? 'You cannot remove the last bucket.' : ''"
+									>
+										<span class="icon is-small"><icon icon="trash-alt"/></span>
+										Delete
+									</a>
+								</div>
 							</div>
-						</div>
+						</transition>
 					</div>
 				</div>
 				<div :ref="`tasks-container${bucket.id}`" class="tasks">
@@ -241,17 +242,18 @@
 			<router-view/>
 		</transition>
 
-		<modal
-			@close="showBucketDeleteModal = false"
-			@submit="deleteBucket()"
-			v-if="showBucketDeleteModal">
-			<span slot="header">Delete the bucket</span>
-			<p slot="text">
-				Are you sure you want to delete this bucket?<br/>
-				This will not delete any tasks but move them into the default bucket.
-			</p>
-		</modal>
-
+		<transition name="modal">
+			<modal
+				@close="showBucketDeleteModal = false"
+				@submit="deleteBucket()"
+				v-if="showBucketDeleteModal">
+				<span slot="header">Delete the bucket</span>
+				<p slot="text">
+					Are you sure you want to delete this bucket?<br/>
+					This will not delete any tasks but move them into the default bucket.
+				</p>
+			</modal>
+		</transition>
 	</div>
 </template>
 
@@ -448,8 +450,9 @@ export default {
 			this.$set(this.showNewTaskInput, bucket, !this.showNewTaskInput[bucket])
 		},
 		toggleBucketDropdown(bucketId) {
+			const oldState = this.bucketOptionsDropDownActive[bucketId]
 			this.closeBucketDropdowns() // Close all eventually open dropdowns
-			this.$set(this.bucketOptionsDropDownActive, bucketId, !this.bucketOptionsDropDownActive[bucketId])
+			this.$set(this.bucketOptionsDropDownActive, bucketId, !oldState)
 		},
 		closeBucketDropdowns() {
 			this.showSetLimitInput = false

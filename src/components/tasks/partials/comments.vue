@@ -2,7 +2,7 @@
 	<div class="content details">
 		<h3 v-if="canWrite || comments.length > 0">
 			<span class="icon is-grey">
-				<icon :icon="['far', 'comments']" />
+				<icon :icon="['far', 'comments']"/>
 			</span>
 			Comments
 		</h3>
@@ -38,8 +38,8 @@
 						<strong>{{ c.author.getDisplayName() }}</strong
 						>&nbsp;
 						<span v-tooltip="formatDate(c.created)">{{
-							formatDateSince(c.created)
-						}}</span>
+								formatDateSince(c.created)
+							}}</span>
 						<span
 							v-if="+new Date(c.created) !== +new Date(c.updated)"
 							v-tooltip="formatDate(c.updated)"
@@ -140,17 +140,20 @@
 				</div>
 			</div>
 		</div>
-		<modal
-			@close="showDeleteModal = false"
-			@submit="deleteComment()"
-			v-if="showDeleteModal"
-		>
-			<span slot="header">Delete this comment</span>
-			<p slot="text">
-				Are you sure you want to delete this comment? <br />This
-				<b>CANNOT BE UNDONE!</b>
-			</p>
-		</modal>
+
+		<transition name="modal">
+			<modal
+				@close="showDeleteModal = false"
+				@submit="deleteComment()"
+				v-if="showDeleteModal"
+			>
+				<span slot="header">Delete this comment</span>
+				<p slot="text">
+					Are you sure you want to delete this comment? <br/>This
+					<b>CANNOT BE UNDONE!</b>
+				</p>
+			</modal>
+		</transition>
 	</div>
 </template>
 
@@ -167,7 +170,7 @@ export default {
 		editor: () => ({
 			component: import(
 				/* webpackChunkName: "editor" */ '../../input/editor'
-			),
+				),
 			loading: LoadingComponent,
 			error: ErrorComponent,
 			timeout: 60000,
@@ -205,9 +208,9 @@ export default {
 	},
 	created() {
 		this.taskCommentService = new TaskCommentService()
-		this.newComment = new TaskCommentModel({ taskId: this.taskId })
-		this.commentEdit = new TaskCommentModel({ taskId: this.taskId })
-		this.commentToDelete = new TaskCommentModel({ taskId: this.taskId })
+		this.newComment = new TaskCommentModel({taskId: this.taskId})
+		this.commentEdit = new TaskCommentModel({taskId: this.taskId})
+		this.commentToDelete = new TaskCommentModel({taskId: this.taskId})
 		this.comments = []
 	},
 	mounted() {
@@ -229,7 +232,7 @@ export default {
 	methods: {
 		loadComments() {
 			this.taskCommentService
-				.getAll({ taskId: this.taskId })
+				.getAll({taskId: this.taskId})
 				.then((r) => {
 					this.$set(this, 'comments', r)
 					this.makeActions()
@@ -258,7 +261,7 @@ export default {
 					this.comments.push(r)
 					this.newComment.comment = ''
 					this.success(
-						{ message: 'The comment was added successfully.' },
+						{message: 'The comment was added successfully.'},
 						this
 					)
 				})

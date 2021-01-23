@@ -97,19 +97,21 @@
 			</table>
 		</div>
 
-		<modal
-			@close="showDeleteModal = false"
-			@submit="remove()"
-			v-if="showDeleteModal"
-		>
-			<span slot="header">Remove a link share</span>
-			<p slot="text">
-				Are you sure you want to remove this link share?<br/>
-				It will no longer be possible to access this list with this link
-				share.<br/>
-				<b>This CANNOT BE UNDONE!</b>
-			</p>
-		</modal>
+		<transition name="modal">
+			<modal
+				@close="showDeleteModal = false"
+				@submit="remove()"
+				v-if="showDeleteModal"
+			>
+				<span slot="header">Remove a link share</span>
+				<p slot="text">
+					Are you sure you want to remove this link share?<br/>
+					It will no longer be possible to access this list with this link
+					share.<br/>
+					<b>This CANNOT BE UNDONE!</b>
+				</p>
+			</modal>
+		</transition>
 	</card>
 </template>
 

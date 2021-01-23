@@ -382,17 +382,19 @@
 			</div>
 		</div>
 
-		<modal
-			@close="showDeleteModal = false"
-			@submit="deleteTask()"
-			v-if="showDeleteModal">
-			<span slot="header">Delete this task</span>
-			<p slot="text">
-				Are you sure you want to remove this task? <br/>
-				This will also remove all attachments, reminders and relations associated with this task and
-				<b>cannot be undone!</b>
-			</p>
-		</modal>
+		<transition name="modal">
+			<modal
+				@close="showDeleteModal = false"
+				@submit="deleteTask()"
+				v-if="showDeleteModal">
+				<span slot="header">Delete this task</span>
+				<p slot="text">
+					Are you sure you want to remove this task? <br/>
+					This will also remove all attachments, reminders and relations associated with this task and
+					<b>cannot be undone!</b>
+				</p>
+			</modal>
+		</transition>
 	</div>
 </template>
 

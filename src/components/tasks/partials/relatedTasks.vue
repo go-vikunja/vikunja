@@ -88,14 +88,16 @@
 		</p>
 
 		<!-- Delete modal -->
-		<modal
-			@close="showDeleteModal = false"
-			@submit="removeTaskRelation()"
-			v-if="showDeleteModal">
-			<span slot="header">Delete Task Relation</span>
-			<p slot="text">Are you sure you want to delete this task relation?<br/>
-				<b>This CANNOT BE UNDONE!</b></p>
-		</modal>
+		<transition name="modal">
+			<modal
+				@close="showDeleteModal = false"
+				@submit="removeTaskRelation()"
+				v-if="showDeleteModal">
+				<span slot="header">Delete Task Relation</span>
+				<p slot="text">Are you sure you want to delete this task relation?<br/>
+					<b>This CANNOT BE UNDONE!</b></p>
+			</modal>
+		</transition>
 	</div>
 </template>
 
