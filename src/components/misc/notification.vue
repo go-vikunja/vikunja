@@ -58,6 +58,6 @@ export default {
 }
 
 .buttons {
-	margin-top: 0.5em;
+	margin-top: 0.5rem;
 }
 </style>

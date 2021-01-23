@@ -85,6 +85,6 @@ export default {
 
 <style scoped>
 .button {
-	margin: 0 0.4em 0 0;
+	margin: 0 0.4rem 0 0;
 }
 </style>

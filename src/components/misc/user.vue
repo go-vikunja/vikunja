@@ -40,7 +40,7 @@ export default {
 
 <style lang="scss" scoped>
 .user {
-	margin: .5em;
+	margin: .5rem;
 
 	&.is-inline {
 		display: inline;
@@ -52,7 +52,7 @@ export default {
 		border-radius: 100%;
 
 		vertical-align: middle;
-		margin-right: .5em;
+		margin-right: .5rem;
 	}
 }
 </style>

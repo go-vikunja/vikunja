@@ -1,18 +1,10 @@
 .notification {
   border: $thickness solid $border;
-
-  @each $name, $pair in $colors {
-    $color: nth($pair, 1);
-
-    &.is-#{$name} {
-      border-color: darken($color, 5);
-    }
-  }
 }
 
 .notifications {
-  left: 0.5em !important;
-  bottom: 1em !important;
+  left: 0.5rem !important;
+  bottom: 1rem !important;
 
   .notification-wrapper .notification {
     -webkit-border-radius: 0;
@@ -21,7 +13,7 @@
     border-top-width: 0;
     border-right-width: 0;
     border-bottom-width: 0;
-    border-left-width: 0.4em;
+    border-left-width: 0.4rem;
   }
 }
 

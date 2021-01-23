@@ -7,11 +7,11 @@
     &:after {
       @include loader;
       position: absolute;
-      top: calc(50% - 2.5em);
-      left: calc(50% - 2.5em);
-      width: 5em;
-      height: 5em;
-      border-width: 0.25em;
+      top: calc(50% - 2.5rem);
+      left: calc(50% - 2.5rem);
+      width: 5rem;
+      height: 5rem;
+      border-width: 0.25rem;
     }
   }
 }
@@ -22,13 +22,13 @@
 
     &:after {
       @include loader;
-      width: 2em;
-      height: 2em;
-      margin-left: calc(50% - 1em);
+      width: 2rem;
+      height: 2rem;
+      margin-left: calc(50% - 1rem);
       position: absolute;
-      margin-top: 1em;
+      margin-top: 1rem;
       z-index: 999;
-      border-width: 0.25em;
+      border-width: 0.25rem;
     }
   }
 }

@@ -12,19 +12,19 @@
 		background: $white !important;
 
 		&, &:focus-within {
-			border-bottom-color: $grey-lighter !important;
+			border-bottom-color: $grey-200 !important;
 		}
 	}
 
 	.input-wrapper {
 		padding: 0;
 		background: $white !important;
-		border-color: $grey-lighter !important;
+		border-color: $grey-200 !important;
 		flex-wrap: wrap;
 		height: auto;
 
 		&:hover {
-			border-color: $grey-light !important;
+			border-color: $grey-300 !important;
 		}
 
 		.input {
@@ -105,7 +105,7 @@
 			}
 
 			&:focus, &:hover {
-				background: $grey-lightest;
+				background: $grey-100;
 				box-shadow: none !important;
 
 				.hint-text {
@@ -114,7 +114,7 @@
 			}
 
 			&:active {
-				background: $grey-lighter;
+				background: $grey-200;
 			}
 		}
 	}

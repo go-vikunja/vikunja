@@ -21,13 +21,13 @@
     display: flex;
     flex-wrap: wrap;
     padding: 0.5rem 1rem;
-    border-bottom: 1px solid darken(#fff, 10%);
+    border-bottom: 1px solid $grey-200;
     transition: background-color $transition;
     align-items: center;
     cursor: pointer;
 
     &:hover {
-      background-color: darken($light-background, 3);
+      background-color: $grey-200;
     }
 
     .tasktext,
@@ -45,8 +45,8 @@
 
     .task-list {
       width: auto;
-      color: lighten($grey, 25%);
-      font-size: .9em;
+      color: $grey-400;
+      font-size: .9rem;
       white-space: nowrap;
     }
 
@@ -60,7 +60,7 @@
     }
 
     .tag {
-      margin: 0 0.5em;
+      margin: 0 0.5rem;
     }
 
     .avatar {
@@ -85,7 +85,7 @@
       transition: color ease $transition-duration;
 
       &:hover {
-        color: darken($text, 40%);
+        color: $grey-900;
       }
     }
 
@@ -120,11 +120,11 @@
 
     .tasktext.done {
       text-decoration: line-through;
-      color: $grey;
+      color: $grey-500;
     }
 
     span.parent-tasks {
-      color: lighten($dark, 50);
+      color: $grey-500;
       width: auto;
     }
 
@@ -143,12 +143,12 @@
     }
 
     &.loader-container.is-loading:after {
-      top: calc(50% - 1em);
-      left: calc(50% - 1em);
-      width: 2em;
-      height: 2em;
-      border-left-color: $grey-light;
-      border-bottom-color: $grey-light;
+      top: calc(50% - 1rem);
+      left: calc(50% - 1rem);
+      width: 2rem;
+      height: 2rem;
+      border-left-color: $grey-300;
+      border-bottom-color: $grey-300;
     }
   }
 
@@ -189,7 +189,6 @@
   min-height: calc(100% - 1rem);
   margin-top: 1rem;
 
-
   .priority-select {
     .select, select {
       width: 100%;
@@ -201,23 +200,19 @@
     margin: 0;
 
     li {
-      padding: 0.5em 0.5em 0;
+      padding: 0.5rem 0.5rem 0;
 
       a {
         float: right;
         color: $red;
         transition: all $transition;
-
-        &:hover {
-          color: darken($red, 15);
-        }
       }
     }
   }
 
   .tag {
-    margin-right: 0.5em;
-    margin-bottom: 0.5em;
+    margin-right: 0.5rem;
+    margin-bottom: 0.5rem;
 
     &:last-child {
       margin-right: 0;
@@ -231,7 +226,7 @@
 
     &.nothing {
       text-align: center;
-      margin-top: 3em;
+      margin-top: 3rem;
     }
 
     .input {
@@ -242,7 +237,7 @@
   }
 
   img {
-    margin-top: 2em;
+    margin-top: 2rem;
   }
 
   .user img{
@@ -250,7 +245,7 @@
   }
 
   .spinner.is-loading:after {
-    margin-left: calc(40% - 1em);
+    margin-left: calc(40% - 1rem);
   }
 }
 
@@ -261,7 +256,7 @@
   width: 100%;
   max-width: $defer-task-max-width;
   border-radius: $radius;
-  border: 1px solid $grey-lighter;
+  border: 1px solid $grey-200;
   padding: 1rem;
   margin: 1rem;
   background: $white;

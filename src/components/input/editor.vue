@@ -442,7 +442,7 @@ export default {
 <style lang="scss">
 @import '../../../node_modules/highlight.js/scss/atelier-heath-light';
 @import '../../../node_modules/easymde/dist/easymde.min.css';
-@import '../../styles/theme/variables';
+@import '../../styles/theme/variables/all';
 
 .editor {
 	.clear {
@@ -505,7 +505,7 @@ pre.CodeMirror-line {
 }
 
 ul.actions {
-	font-size: .8em;
+	font-size: .8rem;
 	margin: 0;
 
 	li {
@@ -522,7 +522,7 @@ ul.actions {
 	}
 
 	&, a {
-		color: $grey;
+		color: $grey-500;
 	}
 
 	a:hover {

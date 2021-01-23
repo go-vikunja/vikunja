@@ -5,19 +5,19 @@
     font-size: .8rem;
 
     a {
-      color: $grey-dark;
+      color: $grey-800;
     }
   }
 
   .image-search-result {
-    margin-top: 1em;
+    margin-top: 1rem;
     display: flex;
     flex-flow: row wrap;
 
     .image {
-      width: calc(100% / 5 - 1em);
+      width: calc(100% / 5 - 1rem);
       height: 120px;
-      margin: .5em;
+      margin: .5rem;
       background-size: cover;
       background-position: center;
       display: flex;
@@ -30,7 +30,7 @@
       }
 
       @media screen and (max-width: $desktop) {
-        width: calc(100% / 4 - 1em);
+        width: calc(100% / 4 - 1rem);
 
         &:nth-child(4n) {
           page-break-after: always; // CSS 2.1 syntax
@@ -39,7 +39,7 @@
       }
 
       @media screen and (max-width: $tablet) {
-        width: calc(100% / 2 - 1em);
+        width: calc(100% / 2 - 1rem);
 
         &:nth-child(2n) {
           page-break-after: always; // CSS 2.1 syntax
@@ -48,7 +48,7 @@
       }
 
       @media screen and (max-width: ($mobile)) {
-        width: calc(100% - 1em);
+        width: calc(100% - 1rem);
 
         &:nth-child(1n) {
           page-break-after: always; // CSS 2.1 syntax
@@ -61,10 +61,10 @@
         display: block;
         opacity: 0;
         width: 100%;
-        padding: .25em 0;
+        padding: .25rem 0;
         text-align: center;
         background: rgba(0, 0, 0, 0.5);
-        font-size: .75em;
+        font-size: .75rem;
         font-weight: bold;
         color: $white;
         transition: opacity $transition;

@@ -1,52 +1,45 @@
+@import 'colors';
+
 $black: hsl(0, 0%, 4%) !default;
 $orange: #ff851b;
 $green: #00db60;
 $red: #ff4136;
 $blue: #1973ff;
 $primary: $blue;
-$dark: lighten($black, 8);
-$grey: hsl(0, 0%, 48%);
-$grey-almost-light: hsl(0, 0%, 57%);
+$dark: $grey-900;
 
 $info-invert: #fff;
 $family-sans-serif: 'Open Sans', Helvetica, Arial, sans-serif;
 $thickness: 1px;
-$pagination-current-border: darken($primary, 5);
+$pagination-current-border: $primary;
 $navbar-item-active-color: $primary;
 $dropdown-content-shadow: none;
 $navbar-dropdown-boxed-shadow: $dropdown-content-shadow;
 $bulmaswatch-import-font: false !default;
-$light-background: #F1F5F8;
+$light-background: $grey-100;
 $transition-duration: 100ms;
 $flash-background-duration: 750ms;
 $transparent-background-light: rgba($light-background, 0.9);
 
 $vikunja-font: 'Quicksand', sans-serif;
-$vikunja-light-text: darken(#fff, 10%);
+$vikunja-light-text: $grey-100;
 $vikunja-blue: #7F23FF; // #7F23FF; // #5974d9
 $vikunja-green: #4DB788;
 
-$navbar-padding: 2em;
+$navbar-padding: 2rem;
 $vikunja-nav-background: $light-background;
-$vikunja-nav-color: lighten($black, 25);
-$vikunja-nav-selected-width: 0.4em;
+$vikunja-nav-color: $grey-800;
+$vikunja-nav-selected-width: 0.4rem;
 
 $transition-duration: 150ms;
 $transition: $transition-duration ease;
 
-$multiselect-primary: $green;
-$multiselect-dark: #35495e;
-$multiselect-border: #e8e8e8;
-$multiselect-highlight: $green;
-$multiselect-highlight-negative: $red;
-$multiselect-disabled: darken(#fff, 40);
-
 $scrollbar-height: 8px;
-$scrollbar-track-color: lighten($dark, 65);
-$scrollbar-thumb-color: lighten($dark, 40);
-$scrollbar-hover-color: lighten($dark, 30);
+$scrollbar-track-color: $grey-300;
+$scrollbar-thumb-color: $grey-500;
+$scrollbar-hover-color: $grey-700;
 
-$button-height: 2.648em;
+$button-height: 2.648rem;
 
 $switch-view-height: 43px;
 
@@ -57,3 +50,5 @@ $navbar-height: 4rem;
 $navbar-width: 300px;
 
 $editor-border-color: #ddd;
+
+$dropdown-item-hover-background-color: $grey-100;

@@ -12,9 +12,10 @@ ul.teams {
       color: #363636;
       display: block;
       padding: 0.5rem 1rem;
+      transition: background-color $transition;
 
       &:hover {
-        background: darken(#fff, 2%);
+        background: $grey-100;
       }
     }
   }

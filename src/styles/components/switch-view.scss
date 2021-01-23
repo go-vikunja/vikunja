@@ -1,16 +1,16 @@
 .switch-view {
   background: $white;
-  display: inline-block;
+  display: inline-flex;
   border-radius: $radius;
-  font-size: .8em;
-  box-shadow: 0.3em 0.3em 0.8em darken($light, 6);
+  font-size: .75rem;
+  box-shadow: $shadow-sm;
   height: $switch-view-height;
   margin-bottom: 1rem;
-  
+  padding: .5rem;
+
   a {
-    padding: .5em;
-    display: inline-block;
-    margin: .4em;
+    padding: .25rem .5rem;
+    display: block;
     border-radius: $radius;
 
     -webkit-transition: all 100ms;
@@ -20,7 +20,7 @@
     transition: all 100ms;
 
     &:not(:last-child) {
-      margin-right: 0;
+      margin-right: .5rem;
     }
 
     &.is-active, &:hover {
@@ -30,11 +30,11 @@
     &.is-active {
       background: $primary;
       font-weight: bold;
-      box-shadow: 0.3em 0.3em 0.8em darken($light, 6);
+      box-shadow: $shadow-xs;
     }
 
     &:hover {
-      background: lighten($primary, 5);
+      background: $primary;
     }
   }
 }

@@ -5,11 +5,11 @@
   font-size: 0.85rem;
   font-weight: bold;
   height: $button-height;
-  box-shadow: .2rem 0.2rem .5rem $grey-lighter;
+  box-shadow: $shadow-sm;
 
   &.is-hovered,
   &:hover {
-    box-shadow: .1rem .1rem 1rem $grey-lighter;
+    box-shadow: $shadow-md;
   }
 
   &.fullheight {
@@ -22,7 +22,7 @@
   &:active,
   &:focus,
   &:focus:not(:active) {
-    box-shadow: .1rem .1rem .75rem $grey-lighter !important;
+    box-shadow: $shadow-xs !important;
   }
 
   &.is-primary.is-outlined:hover {
@@ -60,21 +60,21 @@
       &:active,
       &:focus,
       &:focus:not(:active) {
-        border-color: darken($color, 10);
+        border-color: $color;
       }
     }
   }
 }
 
 .select:after {
-  margin-top: -0.575em;
+  margin-top: -0.575rem;
 }
 
 .select select {
   border-width: $thickness;
 
   &:not([multiple]) {
-    height: calc(2.25em + #{$thickness});
+    height: calc(2.25rem + #{$thickness});
   }
 
   &.is-active,
@@ -119,9 +119,9 @@
   font-weight: 400 !important;
   background: transparent;
   border-color: transparent;
-  margin: 0 .3em;
+  margin: 0 .3rem;
   height: auto;
-  padding: .3em;
+  padding: .3rem;
 
   &:focus {
     background: $input-background-color;

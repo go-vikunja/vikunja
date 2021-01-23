@@ -1,18 +1,18 @@
 .update-notification {
-  margin: 1em;
+  margin: 1rem;
   display: flex;
   align-items: center;
   background: $warning;
-  padding: 0 0 0 .5em;
+  padding: 0 0 0 .5rem;
   border-radius: $radius;
-  font-size: .9em;
-  color: darken($dark, 5);
+  font-size: .9rem;
+  color: $grey-900;
   justify-content: space-between;
 
   @media screen and (max-width: $desktop) {
     & {
       position: fixed;
-      bottom: 1em;
+      bottom: 1rem;
       margin: 0;
       width: 450px;
       left: calc(50vw - 225px);
@@ -22,9 +22,9 @@
   @media screen and (max-width: $tablet) {
     & {
       position: fixed;
-      left: 1em;
-      right: 1em;
-      bottom: 1em;
+      left: 1rem;
+      right: 1rem;
+      bottom: 1rem;
       width: auto;
     }
   }
@@ -35,6 +35,6 @@
   }
 
   .button {
-    margin-left: .5em;
+    margin-left: .5rem;
   }
 }

@@ -6,17 +6,13 @@
 
 ::-webkit-scrollbar-track {
   background: $scrollbar-track-color;
-  border-radius: 10px;
+  border-radius: .5rem;
 }
 
 ::-webkit-scrollbar-thumb {
-  border-radius: 10px;
+  border-radius: .5rem;
   background: $scrollbar-thumb-color;
-  -webkit-transition: background-color $transition;
-  -moz-transition: background-color $transition;
-  -ms-transition: background-color $transition;
-  -o-transition: background-color $transition;
-  transition: background-color $transition;
+  transition: all $transition;
 
   &:hover {
     background: $scrollbar-hover-color;

@@ -23,8 +23,6 @@ describe('Team', () => {
 			.contains('Create')
 			.click()
 
-        cy.get('.fullpage')
-            .should('not.exist')
 		cy.url()
             .should('contain', '/edit')
         cy.get('input#teamtext')

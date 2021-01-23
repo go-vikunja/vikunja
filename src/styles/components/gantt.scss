@@ -1,8 +1,8 @@
-$gantt-border: 1px solid $grey-lighter;
-$gantt-vertical-border-color: lighten($grey, 45);
+$gantt-border: 1px solid $grey-200;
+$gantt-vertical-border-color: $grey-100;
 
 .gantt-chart-container {
-  padding-bottom: 1em;
+  padding-bottom: 1rem;
 }
 
 .gantt-chart {
@@ -17,7 +17,7 @@ $gantt-vertical-border-color: lighten($grey, 45);
       display: flex;
 
       .month {
-        padding: 0.5em 0 0;
+        padding: 0.5rem 0 0;
         border-right: $gantt-border;
         font-family: $vikunja-font;
         font-weight: bold;
@@ -30,7 +30,7 @@ $gantt-vertical-border-color: lighten($grey, 45);
           display: flex;
 
           .day {
-            padding: 0.5em 0;
+            padding: 0.5rem 0;
             font-weight: normal;
 
             &.today {
@@ -41,13 +41,13 @@ $gantt-vertical-border-color: lighten($grey, 45);
             }
 
             .theday {
-              padding: 0 .5em;
+              padding: 0 .5rem;
               width: 100%;
               display: block;
             }
 
             .weekday {
-              font-size: 0.8em;
+              font-size: 0.8rem;
             }
           }
         }
@@ -66,11 +66,10 @@ $gantt-vertical-border-color: lighten($grey, 45);
       .task {
         display: inline-block;
         border: 2px solid $primary;
-        background: lighten($primary, 40);
-        font-size: 0.85em;
-        margin: 0.5em;
+        font-size: 0.85rem;
+        margin: 0.5rem;
         border-radius: 6px;
-        padding: 0.25em 0.5em;
+        padding: 0.25rem 0.5rem;
         cursor: grab;
         position: relative;
 
@@ -147,7 +146,7 @@ $gantt-vertical-border-color: lighten($grey, 45);
         }
 
         .high-priority {
-          margin: 0 0 0 .5em;
+          margin: 0 0 0 .5rem;
           vertical-align: bottom;
         }
 
@@ -158,8 +157,8 @@ $gantt-vertical-border-color: lighten($grey, 45);
         }
 
         &.nodate {
-          border: 2px dashed $grey-light;
-          background: lighten($grey-light, 40);
+          border: 2px dashed $grey-300;
+          background: $grey-100;
         }
 
         &:active {
@@ -183,17 +182,17 @@ $gantt-vertical-border-color: lighten($grey, 45);
   }
 
   .add-new-task {
-    padding: 1em .7em .4em .7em;
+    padding: 1rem .7rem .4rem .7rem;
     display: flex;
     max-width: 450px;
 
     .input {
-      margin-right: .7em;
-      font-size: .8em;
+      margin-right: .7rem;
+      font-size: .8rem;
     }
 
     .button {
-      font-size: .68em;
+      font-size: .68rem;
     }
   }
 
@@ -209,14 +208,14 @@ $gantt-vertical-border-color: lighten($grey, 45);
 
   .range-picker {
     display: flex;
-    margin-bottom: 1em;
+    margin-bottom: 1rem;
 
     .field {
-      margin: 0 0 0 .5em;
+      margin: 0 0 0 .5rem;
       max-width: 100px;
 
       &, .input {
-        font-size: .8em;
+        font-size: .8rem;
       }
 
       .select {
@@ -225,12 +224,12 @@ $gantt-vertical-border-color: lighten($grey, 45);
 
       select {
         height: auto;
-        font-size: 0.75em;
+        font-size: 0.75rem;
       }
 
       .label {
-        font-size: .9em;
-        padding-left: .4em;
+        font-size: .9rem;
+        padding-left: .4rem;
       }
     }
   }

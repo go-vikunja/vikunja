@@ -44,7 +44,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import '../../../styles/theme/variables';
+@import '../../../styles/theme/variables/all';
 
 .priority-label {
 	display: inline-flex;
@@ -58,7 +58,7 @@ span.high-priority {
 	.icon {
 		vertical-align: middle;
 		width: auto !important;
-		padding: 0 .5em;
+		padding: 0 .5rem;
 	}
 
 	&.not-so-high {

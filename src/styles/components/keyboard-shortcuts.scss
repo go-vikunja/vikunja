@@ -4,7 +4,7 @@
   right: 1rem;
   z-index: 4500; // The modal has a z-index of 4000
 
-  color: $grey;
+  color: $grey-500;
   transition: color $transition;
 }
 
@@ -33,8 +33,8 @@
 
         span {
           padding: .1rem .35rem;
-          border: 1px solid $grey-light;
-          background: lighten($grey-lightest, 2.5);
+          border: 1px solid $grey-300;
+          background: $grey-100;
           border-radius: 3px;
           font-size: .75rem;
         }

@@ -1,14 +1,14 @@
 .task-view {
   // This is a workaround to hide the llama background from the top on the task detail page
-  margin-top: -1.5em;
-  padding: 1em;
+  margin-top: -1.5rem;
+  padding: 1rem;
   background-color: $light-background;
 
   .subtitle {
-    color: $grey;
+    color: $grey-500;
 
     a {
-      color: $grey-dark;
+      color: $grey-800;
     }
   }
 
@@ -17,7 +17,7 @@
   }
 
   .icon.is-grey {
-    color: lighten($grey, 5%);
+    color: $grey-400;
   }
 
   .heading {
@@ -30,13 +30,13 @@
       margin-bottom: 0;
 
       &.input {
-        // 1.8rem is the font-size, 1.125 is the line-height, .3em padding everywhere, 1px border around the whole thing.
-        min-height: calc(1.8rem * 1.125 + .6em + 2px);
+        // 1.8rem is the font-size, 1.125 is the line-height, .3rem padding everywhere, 1px border around the whole thing.
+        min-height: calc(1.8rem * 1.125 + .6rem + 2px);
       }
     }
 
     .title.task-id {
-      color: lighten($grey, 25%);
+      color: $grey-400;
       white-space: nowrap;
     }
 
@@ -45,7 +45,7 @@
       align-items: start;
 
       .title.input {
-        margin: 0 -.3em .5rem -.3em; // the title has 0.3em padding - this make the text inside of it align with the rest
+        margin: 0 -.3rem .5rem -.3rem; // the title has 0.3rem padding - this make the text inside of it align with the rest
       }
     }
   }
@@ -57,7 +57,7 @@
     a.remove {
       color: $red;
       vertical-align: middle;
-      padding-left: .5em;
+      padding-left: .5rem;
       line-height: 1;
     }
   }
@@ -93,12 +93,12 @@
   }
 
   .details {
-    padding-bottom: 0.75em;
+    padding-bottom: 0.75rem;
     flex-flow: row wrap;
 
     .detail-title {
       display: block;
-      color: lighten($grey, 15%);
+      color: $grey-400;
     }
 
     .none {
@@ -187,14 +187,14 @@
   .action-buttons {
     a.button {
       width: 100%;
-      margin-bottom: .5em;
+      margin-bottom: .5rem;
       justify-content: left;
     }
   }
 
   .created {
     font-size: .75rem;
-    color: $grey;
+    color: $grey-500;
     text-align: right;
   }
 }
@@ -223,9 +223,9 @@
 .is-done {
   background: $green;
   color: $white;
-  padding: .5em;
-  font-size: 1.5em;
-  margin-left: .5em;
+  padding: .5rem;
+  font-size: 1.5rem;
+  margin-left: .5rem;
   font-weight: bold;
   line-height: 1;
   border-radius: 4px;
@@ -234,7 +234,7 @@
 
 .modal-container .task-view {
   border-radius: $radius;
-  padding: 1em;
+  padding: 1rem;
   color: $text;
   background-color: $light-background !important;
 

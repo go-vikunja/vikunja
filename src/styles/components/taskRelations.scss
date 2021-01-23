@@ -11,7 +11,7 @@ $remove-icon-width: 24px;
 
   .related-tasks {
     .title {
-      font-size: 1em;
+      font-size: 1rem;
       margin: 0;
     }
 
@@ -21,14 +21,9 @@ $remove-icon-width: 24px;
       a:not(.remove) {
         width: calc(100% - #{$remove-icon-width});
 
-        .task {
-          padding: .5em;
-          max-width: 100%;
-
-          .different-list {
-            color: lighten($dark, 50);
-            width: auto;
-          }
+        .different-list {
+          color: $grey-500;
+          width: auto;
         }
       }
 

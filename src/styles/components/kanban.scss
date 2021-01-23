@@ -3,7 +3,7 @@ $task-background: $white;
 $ease-out: all .3s cubic-bezier(0.23, 1, 0.32, 1);
 $bucket-width: 300px;
 
-$crazy-height-calculation: '100vh - 4.5rem - 1.5rem - 1em - 1.5em - 11px';
+$crazy-height-calculation: '100vh - 4.5rem - 1.5rem - 1rem - 1.5rem - 11px';
 
 .app-content.list\.kanban {
   padding-bottom: 0;
@@ -17,22 +17,21 @@ $crazy-height-calculation: '100vh - 4.5rem - 1.5rem - 1em - 1.5em - 11px';
   overflow-y: hidden;
   height: calc(#{$crazy-height-calculation});
   margin: 0 -1.5rem;
-  padding: 0 1.5em;
+  padding: 0 1.5rem;
 
   .bucket {
-
     background-color: $bucket-background;
     border-radius: $radius;
     position: relative;
 
     flex: 0 0 $bucket-width;
-    margin: 0 1em 0 0;
+    margin: 0 1rem 0 0;
     max-height: 100%;
     min-height: 20px;
     max-width: $bucket-width;
 
     .tasks {
-      max-height: calc(#{$crazy-height-calculation} - 1rem - 2.5rem - 2em - #{$button-height} - 1em);
+      max-height: calc(#{$crazy-height-calculation} - 1rem - 2.5rem - 2rem - #{$button-height} - 1rem);
       overflow: auto;
 
       .task {
@@ -50,20 +49,20 @@ $crazy-height-calculation: '100vh - 4.5rem - 1.5rem - 1em - 1.5em - 11px';
 
         transition: $ease-out;
         cursor: pointer;
-        box-shadow: 2px 2px 2px darken($white, 12%);
+        box-shadow: $shadow-xs;
         display: block;
 
-        font-size: .9em;
-        padding: .5em;
-        margin: .5em;
+        font-size: .9rem;
+        padding: .5rem;
+        margin: .5rem;
         border-radius: $radius;
         background: $task-background;
 
         &.loader-container.is-loading:after {
-          width: 1.5em;
-          height: 1.5em;
-          top: calc(50% - .75em);
-          left: calc(50% - .75em);
+          width: 1.5rem;
+          height: 1.5rem;
+          top: calc(50% - .75rem);
+          left: calc(50% - .75rem);
           border-width: 2px;
         }
 
@@ -94,7 +93,7 @@ $crazy-height-calculation: '100vh - 4.5rem - 1.5rem - 1em - 1.5em - 11px';
         }
 
         .label-wrapper .tag {
-          margin: .5em .5em 0 0;
+          margin: .5rem .5rem 0 0;
         }
 
         .footer {
@@ -128,7 +127,7 @@ $crazy-height-calculation: '100vh - 4.5rem - 1.5rem - 1em - 1.5em - 11px';
 
           .priority-label {
             font-size: .75rem;
-            height: 2em;
+            height: 2rem;
 
             .icon {
               height: 1rem;
@@ -141,7 +140,7 @@ $crazy-height-calculation: '100vh - 4.5rem - 1.5rem - 1em - 1.5em - 11px';
         .footer .icon,
         .due-date,
         .priority-label {
-          background: darken($task-background, 5%);
+          background: $grey-100;
           border-radius: $radius;
           padding: 0 .5rem;
         }
@@ -151,14 +150,14 @@ $crazy-height-calculation: '100vh - 4.5rem - 1.5rem - 1em - 1.5em - 11px';
         }
 
         .task-id {
-          color: $grey;
+          color: $grey-500;
           font-size: .8rem;
         }
 
         .is-done {
           margin: 0;
-          font-size: .8em;
-          padding: .25em .5em;
+          font-size: .8rem;
+          padding: .25rem .5rem;
         }
 
         &.is-moving {
@@ -173,13 +172,13 @@ $crazy-height-calculation: '100vh - 4.5rem - 1.5rem - 1em - 1.5em - 11px';
           color: $white;
 
           .task-id {
-            color: $grey-lighter;
+            color: $grey-200;
           }
 
           .footer .icon,
           .due-date,
           .priority-label {
-            background: darken($task-background, 80%);
+            background: $grey-800;
           }
 
           .footer {
@@ -192,9 +191,9 @@ $crazy-height-calculation: '100vh - 4.5rem - 1.5rem - 1em - 1.5em - 11px';
 
       .drop-preview {
         border-radius: $radius;
-        margin: 0 .5em .5em;
+        margin: 0 .5rem .5rem;
         background: transparent;
-        border: 3px dashed darken($bucket-background, 5%);
+        border: 3px dashed $grey-300;
       }
     }
 
@@ -228,7 +227,7 @@ $crazy-height-calculation: '100vh - 4.5rem - 1.5rem - 1em - 1.5em - 11px';
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: .5em;
+    padding: .5rem;
 
     .limit {
       padding-left: .5rem;
@@ -245,13 +244,13 @@ $crazy-height-calculation: '100vh - 4.5rem - 1.5rem - 1em - 1.5em - 11px';
 
     .title.input {
       height: auto;
-      padding: .4em .5em;
+      padding: .4rem .5rem;
       display: inline-block;
     }
   }
 
   .bucket-footer {
-    padding: .5em;
+    padding: .5rem;
 
     .button {
       background-color: transparent;

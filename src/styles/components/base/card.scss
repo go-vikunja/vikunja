@@ -1,5 +1,5 @@
 .card {
-  background-color: rgba($grey-lighter, 0.075);
+  background-color: $white;
   border-radius: $radius;
   margin-bottom: 1rem;
 
@@ -11,12 +11,12 @@
 
   .card-header {
     box-shadow: none;
-    border-bottom: 1px solid $grey-lighter;
+    border-bottom: 1px solid $grey-200;
     border-radius: $radius $radius 0 0;
   }
 }
 
 .box, .card {
-  border: $thickness solid $border;
-  box-shadow: 0.3em 0.3em 0.8em darken($light, 6);
+  border: 1px solid $grey-200;
+  box-shadow: $shadow-md;
 }

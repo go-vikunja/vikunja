@@ -10,7 +10,7 @@
   }
 
   .table {
-    border-top: 1px solid darken(#fff, 15%);
+    border-top: 1px solid $grey-100;
     border-radius: 4px;
     overflow: hidden;
 
@@ -29,7 +29,7 @@
 }
 
 .task-add .button {
-  padding: 10px 1em;
+  padding: 10px 1rem;
   height: 40px;
 }
 
@@ -48,7 +48,7 @@
   }
 
   .icon {
-    color: $grey-almost-light;
+    color: $grey-400;
     margin-left: 1rem;
     height: 1rem;
     width: 1rem;
@@ -56,7 +56,7 @@
 }
 
 .edit-list {
-  padding-bottom: 1em;
+  padding-bottom: 1rem;
 }
 
 .filter-container {
@@ -65,7 +65,7 @@
   min-width: 400px;
   max-width: 180px;
   position: absolute;
-  right: 1.5em;
+  right: 1.5rem;
   margin-top: -59px;
   z-index: 4;
 
@@ -74,7 +74,7 @@
     justify-content: flex-end;
 
     .button:not(:last-child) {
-      margin-right: .5em;
+      margin-right: .5rem;
     }
   }
 
@@ -95,7 +95,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-right: .5em;
+    margin-right: .5rem;
 
     .button, .input {
       height: $switch-view-height;
@@ -119,7 +119,7 @@
   }
 
   .filters input {
-    font-size: .9em;
+    font-size: .9rem;
   }
 
   @media screen and (max-width: $tablet) {
@@ -157,5 +157,5 @@
 }
 
 .list-namespace-title {
-  color: $grey;
+  color: $grey-500;
 }

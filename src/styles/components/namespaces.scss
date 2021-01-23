@@ -32,7 +32,7 @@ $lists-per-row: 5;
 
     .is-archived {
       font-size: 0.75rem;
-      border: 1px solid $grey;
+      border: 1px solid $grey-500;
       color: $grey !important;
       padding: 2px 4px;
       border-radius: 3px;
@@ -53,7 +53,7 @@ $lists-per-row: 5;
         margin: 0 1rem 1rem 0;
         padding: 1rem;
         border-radius: $radius;
-        box-shadow: 0.3em 0.3em 1em lighten($dark, 75);
+        box-shadow: $shadow-sm;
         transition: box-shadow $transition;
 
         display: flex;
@@ -61,7 +61,13 @@ $lists-per-row: 5;
         flex-wrap: wrap;
 
         &:hover {
-          box-shadow: 0 0 1em lighten($dark, 65);
+          box-shadow: $shadow-md;
+        }
+
+        &:active,
+        &:focus,
+        &:focus:not(:active) {
+          box-shadow: $shadow-xs !important;
         }
 
         @media screen and (min-width: $widescreen) {
@@ -105,7 +111,7 @@ $lists-per-row: 5;
           text-align: right;
 
           .is-archived {
-            font-size: .75em;
+            font-size: .75rem;
             float: left;
           }
         }
@@ -130,7 +136,7 @@ $lists-per-row: 5;
           background-position: center;
 
           .title {
-            text-shadow: 0 0 10px $black, 1px 1px 5px $grey-darker, -1px -1px 5px $grey-darker;
+            text-shadow: 0 0 10px $black, 1px 1px 5px $grey-700, -1px -1px 5px $grey-700;
             color: $white;
           }
         }

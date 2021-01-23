@@ -1,15 +1,6 @@
 .navbar {
   z-index: 2;
 
-  @each $name, $pair in $colors {
-    $color: nth($pair, 1);
-    $color-invert: nth($pair, 2);
-
-    &.is-#{$name} {
-      border-color: darken($color, 5);
-    }
-  }
-
   .navbar-dropdown {
     box-shadow: $navbar-dropdown-boxed-shadow;
     top: 101%;
@@ -99,7 +90,7 @@
 }
 
 .navbar-menu .navbar-item .icon {
-  margin: 0 0.5em;
+  margin: 0 0.5rem;
 }
 
 .navbar {
@@ -119,7 +110,7 @@
     overflow-x: auto;
     width: $navbar-width;
 
-    padding: 0 0 1em;
+    padding: 0 0 1rem;
     left: -147vw;
     bottom: 0;
 
@@ -134,13 +125,13 @@
 
     .menu {
       .menu-label {
-        font-size: 1em;
+        font-size: 1rem;
         font-weight: 700;
         font-weight: bold;
         font-family: $vikunja-font;
-        color: $grey;
+        color: $vikunja-nav-color;
         font-weight: 500;
-        min-height: 2.5em;
+        min-height: 2.5rem;
         padding-top: 0;
         padding-left: $navbar-padding;
 
@@ -246,9 +237,9 @@
         opacity: 0;
         height: 0;
         text-align: center;
-        color: $grey;
+        color: $grey-500;
         cursor: pointer;
-        font-size: 0.8em;
+        font-size: 0.8rem;
       }
 
       .menu-list {
@@ -264,7 +255,7 @@
         }
 
         span.list-menu-link, a {
-          padding: 0.75em .5em 0.75em $navbar-padding * 1.5;
+          padding: 0.75rem .5rem 0.75rem $navbar-padding * 1.5;
           transition: all 0.2s ease;
 
           -webkit-border-radius: 0;
@@ -280,12 +271,12 @@
             height: 1rem;
             vertical-align: middle;
             padding-bottom: 4px;
-            padding-right: 0.5em;
+            padding-right: 0.5rem;
           }
 
           &.router-link-exact-active {
             color: $primary;
-            border-left: $vikunja-nav-selected-width solid darken($primary, 5%);
+            border-left: $vikunja-nav-selected-width solid $primary;
 
             .icon {
               color: $primary;
@@ -294,7 +285,7 @@
 
           &:hover {
             background: $white;
-            border-left: $vikunja-nav-selected-width solid darken($primary, 3%);
+            border-left: $vikunja-nav-selected-width solid $primary;
           }
 
         }
@@ -313,15 +304,15 @@
       }
 
       &.loader-container.is-loading:after {
-        width: 1.5em;
-        height: 1.5em;
-        top: calc(50% - .75em);
-        left: calc(50% - .75em);
+        width: 1.5rem;
+        height: 1.5rem;
+        top: calc(50% - .75rem);
+        left: calc(50% - .75rem);
         border-width: 2px;
       }
 
       .icon {
-        color: $grey-almost-light;
+        color: $grey-400;
       }
     }
 
@@ -335,7 +326,7 @@
         }
 
         span.list-menu-link, a {
-          padding-left: 2em;
+          padding-left: 2rem;
           display: inline-block;
         }
       }
@@ -357,7 +348,7 @@
   }
 
   .logout-icon {
-    color: lighten($black, 10);
+    color: $grey-900;
 
     .icon {
       vertical-align: middle;
@@ -377,7 +368,7 @@
 
   .dropdown-menu {
     .dropdown-content {
-      box-shadow: 0.3em 0.3em 0.8em darken($light, 6);
+      box-shadow: $shadow-md;
     }
   }
 }
@@ -386,12 +377,12 @@
   display: none;
   z-index: 31;
   font-weight: bold;
-  font-size: 2em;
+  font-size: 2rem;
   color: $dark;
   line-height: 1;
 
   &:hover, &:focus {
-    color: darken($dark, 20);
+    color: $grey-900;
   }
 }
 
@@ -443,14 +434,14 @@
 }
 
 .logout-icon {
-  margin-right: 0.85em !important;
+  margin-right: 0.85rem !important;
 }
 
 .menu-bottom-link {
   width: 100%;
-  color: $grey-light;
+  color: $grey-300;
   text-align: center;
   display: block;
-  margin: 1em 0;
-  font-size: .8em;
+  margin: 1rem 0;
+  font-size: .8rem;
 }

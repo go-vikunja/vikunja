@@ -250,7 +250,7 @@ export default {
 </script>
 
 <style lang="scss">
-@import '@/styles/theme/variables';
+@import '@/styles/theme/variables/all';
 
 .add-task-relation-button {
 	margin-top: -3rem;

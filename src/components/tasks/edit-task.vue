@@ -284,6 +284,6 @@ export default {
 
 <style scoped>
 form {
-	margin-bottom: 1em;
+	margin-bottom: 1rem;
 }
 </style>
