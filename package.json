@@ -45,7 +45,7 @@
     "axios": "0.21.1",
     "babel-eslint": "10.1.0",
     "cypress": "6.3.0",
-    "cypress-file-upload": "4.1.1",
+    "cypress-file-upload": "5.0.2",
     "eslint": "7.18.0",
     "eslint-plugin-vue": "7.5.0",
     "faker": "5.1.0",
