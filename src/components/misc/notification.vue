@@ -31,6 +31,7 @@
 						@click="action.callback"
 						:shadow="false"
 						class="is-small"
+						type="secondary"
 						v-for="(action, i) in props.item.data.actions"
 					>
 						{{ action.title }}
