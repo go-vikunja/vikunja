@@ -9,7 +9,7 @@
 			Show tasks without dates
 		</fancycheckbox>
 		<h3 v-if="showAll && tasks.length > 0">Current tasks</h3>
-		<h3 v-else-if="!showAll">
+		<h3 v-else-if="!showAll" class="mb-2">
 			Tasks from
 			<flat-pickr
 				:class="{ 'disabled': taskService.loading}"
@@ -29,25 +29,28 @@
 				v-model="cEndDate"
 			/>
 		</h3>
-		<div v-if="!showAll">
-			<x-button type="secondary" @click="showTodaysTasks()" :shadow="false" class="mr-2">Today</x-button>
-			<x-button type="secondary" @click="setDatesToNextWeek()" :shadow="false" class="mr-2">Next Week</x-button>
-			<x-button type="secondary" @click="setDatesToNextMonth()" :shadow="false">Next Month</x-button>
+		<div v-if="!showAll" class="mb-4">
+			<x-button type="secondary" @click="showTodaysTasks()" class="mr-2">Today</x-button>
+			<x-button type="secondary" @click="setDatesToNextWeek()" class="mr-2">Next Week</x-button>
+			<x-button type="secondary" @click="setDatesToNextMonth()">Next Month</x-button>
 		</div>
-		<template v-if="!taskService.loading && (!hasUndoneTasks || !tasks || tasks.length === 0)">
+		<template v-if="!taskService.loading && (!hasUndoneTasks || !tasks || tasks.length === 0) && showNothingToDo">
 			<h3 class="nothing">Nothing to do - Have a nice day!</h3>
 			<img alt="" src="/images/cool.svg"/>
 		</template>
 		<div :class="{ 'is-loading': taskService.loading}" class="spinner"></div>
-		<div class="tasks" v-if="tasks && tasks.length > 0">
-			<single-task-in-list
-				:key="t.id"
-				class="task"
-				v-for="t in tasks"
-				:show-list="true"
-				:the-task="t"
-				@taskUpdated="updateTasks"/>
-		</div>
+
+		<card :padding="false" :has-content="false" v-if="tasks && tasks.length > 0">
+			<div class="tasks">
+				<single-task-in-list
+					:key="t.id"
+					class="task"
+					v-for="t in tasks"
+					:show-list="true"
+					:the-task="t"
+					@taskUpdated="updateTasks"/>
+			</div>
+		</card>
 	</div>
 </template>
 <script>
@@ -78,6 +81,8 @@ export default {
 			cStartDate: null,
 			cEndDate: null,
 
+			showNothingToDo: false,
+
 			flatPickerConfig: {
 				altFormat: 'j M Y H:i',
 				altInput: true,
@@ -97,6 +102,9 @@ export default {
 		this.cStartDate = this.startDate
 		this.cEndDate = this.endDate
 		this.loadPendingTasks()
+	},
+	mounted() {
+		setTimeout(() => this.showNothingToDo = true, 100)
 	},
 	watch: {
 		'$route': 'loadPendingTasks',

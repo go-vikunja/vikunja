@@ -144,7 +144,7 @@
 
 .link-share-container .gantt-chart-container .filter-container,
 .gantt-chart-container .filter-container {
-  margin-top: -136px;
+  margin-top: calc(-138px - 2rem);
 }
 
 .link-share-container .list-view .filter-container {

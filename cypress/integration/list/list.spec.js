@@ -156,7 +156,7 @@ describe('Lists', () => {
 			TaskFactory.create(1)
 			cy.visit('/lists/1/gantt')
 
-			cy.get('.gantt-chart-container .gantt-chart.box .tasks')
+			cy.get('.gantt-chart-container .gantt-chart .tasks')
 				.should('be.empty')
 		})
 
@@ -164,7 +164,7 @@ describe('Lists', () => {
 			const now = new Date()
 			cy.visit('/lists/1/gantt')
 
-			cy.get('.gantt-chart-container .gantt-chart.box .months')
+			cy.get('.gantt-chart-container .gantt-chart .months')
 				.should('contain', format(now, 'MMMM'))
 				.should('contain', format(now.setMonth(now.getMonth() + 1), 'MMMM'))
 		})
@@ -177,9 +177,9 @@ describe('Lists', () => {
 			})
 			cy.visit('/lists/1/gantt')
 
-			cy.get('.gantt-chart-container .gantt-chart.box .tasks')
+			cy.get('.gantt-chart-container .gantt-chart .tasks')
 				.should('not.be.empty')
-			cy.get('.gantt-chart-container .gantt-chart.box .tasks')
+			cy.get('.gantt-chart-container .gantt-chart .tasks')
 				.should('contain', tasks[0].title)
 		})
 
@@ -194,9 +194,9 @@ describe('Lists', () => {
 				.contains('Show tasks which don\'t have dates set')
 				.click()
 
-			cy.get('.gantt-chart-container .gantt-chart.box .tasks')
+			cy.get('.gantt-chart-container .gantt-chart .tasks')
 				.should('not.be.empty')
-			cy.get('.gantt-chart-container .gantt-chart.box .tasks .task.nodate')
+			cy.get('.gantt-chart-container .gantt-chart .tasks .task.nodate')
 				.should('exist')
 		})
 
@@ -208,7 +208,7 @@ describe('Lists', () => {
 			})
 			cy.visit('/lists/1/gantt')
 
-			cy.get('.gantt-chart-container .gantt-chart.box .tasks .task')
+			cy.get('.gantt-chart-container .gantt-chart .tasks .task')
 				.first()
 				.trigger('mousedown', {which: 1})
 				.trigger('mousemove', {clientX: 500, clientY: 0})

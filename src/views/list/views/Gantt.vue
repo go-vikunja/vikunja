@@ -1,6 +1,7 @@
 <template>
 	<div class="gantt-chart-container">
-		<div class="gantt-options">
+		<card :padding="false" class="has-overflow">
+		<div class="gantt-options p-4">
 			<fancycheckbox class="is-block" v-model="showTaskswithoutDates">
 				Show tasks which don't have dates set
 			</fancycheckbox>
@@ -56,6 +57,7 @@
 			<router-view/>
 		</transition>
 
+		</card>
 	</div>
 </template>
 

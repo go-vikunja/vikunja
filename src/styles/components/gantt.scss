@@ -6,8 +6,8 @@ $gantt-vertical-border-color: $grey-100;
 }
 
 .gantt-chart {
-  padding: 5px 0;
   overflow-x: auto;
+  border-top: 1px solid $grey-200;
 
   .dates {
     display: flex;
@@ -194,10 +194,6 @@ $gantt-vertical-border-color: $grey-100;
     .button {
       font-size: .68rem;
     }
-  }
-
-  .filter-container {
-    margin-top: -136px;
   }
 }
 

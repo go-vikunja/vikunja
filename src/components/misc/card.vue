@@ -11,7 +11,7 @@
 			</a>
 		</header>
 		<div class="card-content" :class="{'p-0': !padding}">
-			<div class="content">
+			<div :class="{'content': hasContent}">
 				<slot></slot>
 			</div>
 		</div>
@@ -39,6 +39,10 @@ export default {
 			default: 'angle-right',
 		},
 		shadow: {
+			type: Boolean,
+			default: true,
+		},
+		hasContent: {
 			type: Boolean,
 			default: true,
 		},

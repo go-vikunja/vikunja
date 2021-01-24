@@ -1,5 +1,5 @@
 <template>
-	<div class="gantt-chart box">
+	<div class="gantt-chart">
 		<div class="filter-container">
 			<div class="items">
 				<x-button

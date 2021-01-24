@@ -1,3 +1,15 @@
+.tasks-container {
+  display: flex;
+
+  .tasks {
+    width: 100%;
+  }
+
+  .taskedit {
+    width: 50%;
+  }
+}
+
 .tasks {
   margin-top: 1rem;
   padding: 0;
@@ -20,14 +32,19 @@
   .task {
     display: flex;
     flex-wrap: wrap;
-    padding: 0.5rem 1rem;
-    border-bottom: 1px solid $grey-200;
+    padding: 0.5rem;
     transition: background-color $transition;
     align-items: center;
     cursor: pointer;
+    margin: 0 .5rem;
+    border-radius: $radius;
+
+    &:last-child {
+      margin-bottom: .5rem;
+    }
 
     &:hover {
-      background-color: $grey-200;
+      background-color: $grey-100;
     }
 
     .tasktext,
@@ -112,6 +129,7 @@
     .fancycheckbox {
       height: 18px;
       padding-top: 0;
+      padding-right: .5rem;
 
       span {
         display: none;
@@ -300,7 +318,6 @@
 }
 
 .is-max-width-desktop .tasks .task {
-  width: 100%;
   max-width: $desktop;
 }
 

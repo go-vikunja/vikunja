@@ -51,46 +51,48 @@
 			/>
 		</div>
 
-		<div class="field task-add" v-if="!list.isArchived && canWrite && list.id > 0">
-			<div class="field is-grouped">
-				<p :class="{ 'is-loading': taskService.loading}" class="control has-icons-left is-expanded">
-					<input
-						:class="{ 'disabled': taskService.loading}"
-						@keyup.enter="addTask()"
-						class="input"
-						placeholder="Add a new task..."
-						type="text"
-						v-focus
-						v-model="newTaskText"
-						ref="newTaskInput"
-					/>
-					<span class="icon is-small is-left">
+		<card :padding="false" :has-content="false">
+			<div class="field task-add p-4 mb-0" v-if="!list.isArchived && canWrite && list.id > 0">
+				<div class="field is-grouped">
+					<p :class="{ 'is-loading': taskService.loading}" class="control has-icons-left is-expanded">
+						<input
+							:class="{ 'disabled': taskService.loading}"
+							@keyup.enter="addTask()"
+							class="input"
+							placeholder="Add a new task..."
+							type="text"
+							v-focus
+							v-model="newTaskText"
+							ref="newTaskInput"
+						/>
+						<span class="icon is-small is-left">
 						<icon icon="tasks"/>
 					</span>
-				</p>
-				<p class="control">
-					<x-button
-						:disabled="newTaskText.length === 0"
-						@click="addTask()"
-						icon="plus"
-					>
-						Add
-					</x-button>
+					</p>
+					<p class="control">
+						<x-button
+							:disabled="newTaskText.length === 0"
+							@click="addTask()"
+							icon="plus"
+						>
+							Add
+						</x-button>
+					</p>
+				</div>
+				<p class="help is-danger" v-if="showError && newTaskText === ''">
+					Please specify a list title.
 				</p>
 			</div>
-			<p class="help is-danger" v-if="showError && newTaskText === ''">
-				Please specify a list title.
+
+			<p
+				class="has-text-centered has-text-grey is-italic p-4 mb-4"
+				v-if="ctaVisible && tasks.length === 0 && !taskCollectionService.loading">
+				This list is currently empty.
+				<a @click="$refs.newTaskInput.focus()">Create a new task.</a>
 			</p>
-		</div>
 
-		<p class="has-text-centered has-text-grey is-italic" v-if="ctaVisible && tasks.length === 0 && !taskCollectionService.loading">
-			This list is currently empty.
-			<a @click="$refs.newTaskInput.focus()">Create a new task.</a>
-		</p>
-
-		<div class="columns">
-			<div class="column">
-				<div :class="{'short': isTaskEdit}" class="tasks" v-if="tasks && tasks.length > 0">
+			<div class="tasks-container">
+				<div :class="{'short': isTaskEdit}" class="tasks mt-0" v-if="tasks && tasks.length > 0">
 					<single-task-in-list
 						:disabled="!canWrite"
 						:key="t.id"
@@ -104,48 +106,49 @@
 						</div>
 					</single-task-in-list>
 				</div>
-			</div>
-			<div class="column is-4" v-if="isTaskEdit">
-				<card class="taskedit" title="Edit Task" :has-close="true" @close="() => isTaskEdit = false">
+				<card
+					v-if="isTaskEdit"
+					class="taskedit mt-0" title="Edit Task" :has-close="true" @close="() => isTaskEdit = false"
+					:shadow="false">
 					<edit-task :task="taskEditTask"/>
 				</card>
 			</div>
-		</div>
 
-		<nav
-			aria-label="pagination"
-			class="pagination is-centered"
-			role="navigation"
-			v-if="taskCollectionService.totalPages > 1">
-			<router-link
-				:disabled="currentPage === 1"
-				:to="getRouteForPagination(currentPage - 1)"
-				class="pagination-previous"
-				tag="button">
-				Previous
-			</router-link>
-			<router-link
-				:disabled="currentPage === taskCollectionService.totalPages"
-				:to="getRouteForPagination(currentPage + 1)"
-				class="pagination-next"
-				tag="button">
-				Next page
-			</router-link>
-			<ul class="pagination-list">
-				<template v-for="(p, i) in pages">
-					<li :key="'page'+i" v-if="p.isEllipsis"><span class="pagination-ellipsis">&hellip;</span></li>
-					<li :key="'page'+i" v-else>
-						<router-link
-							:aria-label="'Goto page ' + p.number"
-							:class="{'is-current': p.number === currentPage}"
-							:to="getRouteForPagination(p.number)"
-							class="pagination-link">
-							{{ p.number }}
-						</router-link>
-					</li>
-				</template>
-			</ul>
-		</nav>
+			<nav
+				aria-label="pagination"
+				class="pagination is-centered p-4"
+				role="navigation"
+				v-if="taskCollectionService.totalPages > 1">
+				<router-link
+					:disabled="currentPage === 1"
+					:to="getRouteForPagination(currentPage - 1)"
+					class="pagination-previous"
+					tag="button">
+					Previous
+				</router-link>
+				<router-link
+					:disabled="currentPage === taskCollectionService.totalPages"
+					:to="getRouteForPagination(currentPage + 1)"
+					class="pagination-next"
+					tag="button">
+					Next page
+				</router-link>
+				<ul class="pagination-list">
+					<template v-for="(p, i) in pages">
+						<li :key="'page'+i" v-if="p.isEllipsis"><span class="pagination-ellipsis">&hellip;</span></li>
+						<li :key="'page'+i" v-else>
+							<router-link
+								:aria-label="'Goto page ' + p.number"
+								:class="{'is-current': p.number === currentPage}"
+								:to="getRouteForPagination(p.number)"
+								class="pagination-link">
+								{{ p.number }}
+							</router-link>
+						</li>
+					</template>
+				</ul>
+			</nav>
+		</card>
 
 		<!-- This router view is used to show the task popup while keeping the kanban board itself -->
 		<transition name="modal">
