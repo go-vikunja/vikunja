@@ -39,6 +39,10 @@
     margin: 0 .5rem;
     border-radius: $radius;
 
+    &:first-child {
+      margin-top: .5rem;
+    }
+
     &:last-child {
       margin-bottom: .5rem;
     }
