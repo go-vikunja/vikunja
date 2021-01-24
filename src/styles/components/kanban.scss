@@ -162,12 +162,14 @@ $filter-container-height: '1rem - #{$switch-view-height}';
         .task-id {
           color: $grey-500;
           font-size: .8rem;
+          margin-bottom: .25rem;
+          display: flex;
         }
 
         .is-done {
-          margin: 0;
-          font-size: .8rem;
-          padding: .25rem .5rem;
+          font-size: .75rem;
+          padding: .2rem .3rem;
+          margin: 0 .25rem 0 0;
         }
 
         &.is-moving {
