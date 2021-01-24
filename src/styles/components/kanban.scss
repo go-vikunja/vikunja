@@ -4,6 +4,8 @@ $ease-out: all .3s cubic-bezier(0.23, 1, 0.32, 1);
 $bucket-width: 300px;
 
 $crazy-height-calculation: '100vh - 4.5rem - 1.5rem - 1rem - 1.5rem - 11px';
+$crazy-height-calculation-tasks: '#{$crazy-height-calculation} - 1rem - 2.5rem - 2rem - #{$button-height} - 1rem';
+$filter-container-height: '1rem - #{$switch-view-height}';
 
 .app-content.list\.kanban {
   padding-bottom: 0;
@@ -19,6 +21,10 @@ $crazy-height-calculation: '100vh - 4.5rem - 1.5rem - 1rem - 1.5rem - 11px';
   margin: 0 -1.5rem;
   padding: 0 1.5rem;
 
+  @media screen and (max-width: $tablet) {
+    height: calc(#{$crazy-height-calculation} - #{$filter-container-height});
+  }
+
   .bucket {
     background-color: $bucket-background;
     border-radius: $radius;
@@ -31,8 +37,12 @@ $crazy-height-calculation: '100vh - 4.5rem - 1.5rem - 1rem - 1.5rem - 11px';
     max-width: $bucket-width;
 
     .tasks {
-      max-height: calc(#{$crazy-height-calculation} - 1rem - 2.5rem - 2rem - #{$button-height} - 1rem);
+      max-height: calc(#{$crazy-height-calculation-tasks});
       overflow: auto;
+
+      @media screen and (max-width: $tablet) {
+        max-height: calc(#{$crazy-height-calculation-tasks} - #{$filter-container-height});
+      }
 
       .task {
 
