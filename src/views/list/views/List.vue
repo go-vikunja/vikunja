@@ -51,7 +51,7 @@
 			/>
 		</div>
 
-		<card :padding="false" :has-content="false">
+		<card :padding="false" :has-content="false" class="has-overflow">
 			<div class="field task-add" v-if="!list.isArchived && canWrite && list.id > 0">
 				<div class="field is-grouped">
 					<p :class="{ 'is-loading': taskService.loading}" class="control has-icons-left is-expanded">

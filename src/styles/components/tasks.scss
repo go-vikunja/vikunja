@@ -285,6 +285,7 @@
   color: $text;
   cursor: default;
   z-index: 10;
+  box-shadow: $shadow-lg;
 
   input.input {
     display: none;

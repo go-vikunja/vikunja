@@ -40,7 +40,7 @@
 		</template>
 		<div :class="{ 'is-loading': taskService.loading}" class="spinner"></div>
 
-		<card :padding="false" :has-content="false" v-if="tasks && tasks.length > 0">
+		<card :padding="false" class="has-overflow" :has-content="false" v-if="tasks && tasks.length > 0">
 			<div class="tasks">
 				<single-task-in-list
 					:key="t.id"
