@@ -15,7 +15,9 @@
 							type="text"
 							autocomplete="username"
 							v-focus
-							v-model="credentials.username"/>
+							v-model="credentials.username"
+							@keyup.enter="submit"
+						/>
 					</div>
 				</div>
 				<div class="field">
@@ -28,7 +30,9 @@
 							placeholder="e.g. frederic@vikunja.io"
 							required
 							type="email"
-							v-model="credentials.email"/>
+							v-model="credentials.email"
+							@keyup.enter="submit"
+						/>
 					</div>
 				</div>
 				<div class="field">
@@ -42,7 +46,9 @@
 							required
 							type="password"
 							autocomplete="new-password"
-							v-model="credentials.password"/>
+							v-model="credentials.password"
+							@keyup.enter="submit"
+						/>
 					</div>
 				</div>
 				<div class="field">
@@ -56,7 +62,9 @@
 							required
 							type="password"
 							autocomplete="new-password"
-							v-model="credentials.password2"/>
+							v-model="credentials.password2"
+							@keyup.enter="submit"
+						/>
 					</div>
 				</div>
 

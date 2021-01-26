@@ -19,6 +19,7 @@
 							type="text"
 							autocomplete="username"
 							v-focus
+							@keyup.enter="submit"
 						/>
 					</div>
 				</div>
@@ -34,6 +35,7 @@
 							required
 							type="password"
 							autocomplete="current-password"
+							@keyup.enter="submit"
 						/>
 					</div>
 				</div>
@@ -48,6 +50,7 @@
 							required
 							type="text"
 							v-focus
+							@keyup.enter="submit"
 						/>
 					</div>
 				</div>
