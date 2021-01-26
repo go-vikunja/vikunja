@@ -66,29 +66,6 @@
   }
 }
 
-.hero {
-  .navbar {
-    border: none;
-    box-shadow: none;
-  }
-
-  @each $name, $pair in $colors {
-    $color: nth($pair, 1);
-    $color-invert: nth($pair, 2);
-
-    &.is-#{$name} {
-      .navbar {
-        box-shadow: none;
-      }
-    }
-  }
-  @include touch {
-    .navbar-menu {
-      box-shadow: none;
-    }
-  }
-}
-
 .navbar-menu .navbar-item .icon {
   margin: 0 0.5rem;
 }
@@ -378,7 +355,7 @@
   z-index: 31;
   font-weight: bold;
   font-size: 2rem;
-  color: $dark;
+  color: $text;
   line-height: 1;
 
   &:hover, &:focus {
@@ -390,7 +367,7 @@
   position: fixed;
 
   &:hover, &:focus {
-    color: $dark;
+    color: $text;
   }
 }
 

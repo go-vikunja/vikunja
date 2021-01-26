@@ -97,14 +97,14 @@ $gantt-vertical-border-color: $grey-100;
         }
 
         &.has-dark-text {
-          color: $dark;
+          color: $text;
 
           &.done span:after {
             border-top: 1px solid $dark;
           }
 
           .edit-toggle {
-            color: $dark;
+            color: $text;
           }
         }
 

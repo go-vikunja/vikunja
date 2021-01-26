@@ -461,6 +461,11 @@ export default {
 	&-lines pre {
 		margin: 0 !important;
 	}
+
+	&-placeholder {
+		color: $grey-400;
+		font-style: italic;
+	}
 }
 
 .editor-preview {
@@ -497,6 +502,7 @@ export default {
 
 pre.CodeMirror-line {
 	margin-bottom: 0 !important;
+	color: $grey-700 !important;
 }
 
 .cm-header {
