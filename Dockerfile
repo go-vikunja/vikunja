@@ -1,7 +1,7 @@
 
 ##############
 # Build stage
-FROM golang:1-alpine AS build-env
+FROM golang:1-alpine3.12 AS build-env
 
 ARG VIKUNJA_VERSION
 ENV TAGS "sqlite"
