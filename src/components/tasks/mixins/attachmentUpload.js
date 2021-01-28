@@ -17,7 +17,6 @@ export default {
 					console.debug(`Uploaded attachments for task ${this.taskId}, response was`, r)
 					if (r.success !== null) {
 						r.success.forEach(a => {
-							this.$store.commit('attachments/removeById', a.id)
 							this.$store.dispatch('tasks/addTaskAttachment', {
 								taskId: this.taskId,
 								attachment: a,

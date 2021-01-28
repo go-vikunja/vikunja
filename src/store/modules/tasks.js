@@ -41,6 +41,7 @@ export default {
 		addTaskAttachment(ctx, {taskId, attachment}) {
 			const t = ctx.rootGetters['kanban/getTaskById'](taskId)
 			if (t.task === null) {
+				ctx.commit('attachments/add', attachment, {root: true})
 				return
 			}
 			t.task.attachments.push(attachment)
