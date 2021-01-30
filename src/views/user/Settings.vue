@@ -108,6 +108,12 @@
 					Send me Reminders for tasks via Email
 				</label>
 			</div>
+			<div class="field">
+				<label class="checkbox">
+					<input type="checkbox" v-model="playSoundWhenDone"/>
+					Play a sound when marking tasks as done
+				</label>
+			</div>
 
 			<x-button
 				:loading="userSettingsService.loading"
@@ -225,6 +231,7 @@ import TotpModel from '../../models/totp'
 import TotpService from '../../services/totp'
 import UserSettingsService from '../../services/userSettings'
 import UserSettingsModel from '../../models/userSettings'
+import {playSoundWhenDoneKey} from '@/helpers/playPop'
 
 import {mapState} from 'vuex'
 
@@ -249,6 +256,7 @@ export default {
 			totpConfirmPasscode: '',
 			totpDisableForm: false,
 			totpDisablePassword: '',
+			playSoundWhenDone: false,
 
 			settings: UserSettingsModel,
 			userSettingsService: UserSettingsService,
@@ -272,6 +280,8 @@ export default {
 			name: this.$store.state.auth.info.name,
 			emailRemindersEnabled: this.$store.state.auth.info.emailRemindersEnabled ?? false,
 		})
+
+		this.playSoundWhenDone = localStorage.getItem(playSoundWhenDoneKey) === 'true' || localStorage.getItem(playSoundWhenDoneKey) === null
 
 		this.totpStatus()
 	},
@@ -370,6 +380,8 @@ export default {
 				.catch(e => this.error(e, this))
 		},
 		updateSettings() {
+			localStorage.setItem(playSoundWhenDoneKey, this.playSoundWhenDone)
+
 			this.userSettingsService.update(this.settings)
 				.then(() => {
 					this.$store.commit('auth/setUserSettings', this.settings)

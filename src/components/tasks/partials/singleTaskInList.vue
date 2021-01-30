@@ -92,6 +92,7 @@ import User from '../../misc/user'
 import Fancycheckbox from '../../input/fancycheckbox'
 import DeferTask from './defer-task'
 import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
+import {playPop} from '@/helpers/playPop'
 
 export default {
 	name: 'singleTaskInList',
@@ -164,6 +165,9 @@ export default {
 			const updateFunc = () => {
 				this.taskService.update(this.task)
 					.then(t => {
+						if(this.task.done) {
+							playPop()
+						}
 						this.task = t
 						this.$emit('task-updated', t)
 						this.success(

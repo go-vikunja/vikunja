@@ -421,6 +421,7 @@ import ColorPicker from '../../components/input/colorPicker'
 import attachmentUpload from '../../components/tasks/mixins/attachmentUpload'
 import heading from '@/components/tasks/partials/heading'
 import Datepicker from '@/components/input/datepicker'
+import {playPop} from '@/helpers/playPop'
 
 export default {
 	name: 'TaskDetailView',
@@ -644,6 +645,11 @@ export default {
 		},
 		toggleTaskDone() {
 			this.task.done = !this.task.done
+
+			if(this.task.done) {
+				playPop()
+			}
+
 			this.saveTask(true, () => this.toggleTaskDone())
 		},
 		setDescriptionChanged(e) {

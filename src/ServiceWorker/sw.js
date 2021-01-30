@@ -4,7 +4,7 @@
 // Cache assets
 workbox.routing.registerRoute(
 	// This regexp matches all files in precache-manifest
-	new RegExp('.+\\.(css|json|js|svg|woff2|png|html|txt)$'),
+	new RegExp('.+\\.(css|json|js|svg|woff2|png|html|txt|wav)$'),
 	new workbox.strategies.StaleWhileRevalidate(),
 )
 

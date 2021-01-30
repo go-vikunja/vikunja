@@ -265,6 +265,7 @@ import Rights from '../../../models/rights.json'
 import {LOADING, LOADING_MODULE} from '@/store/mutation-types'
 import FilterPopup from '@/components/list/partials/filter-popup'
 import Dropdown from '@/components/misc/dropdown'
+import {playPop} from '@/helpers/playPop'
 
 export default {
 	name: 'Kanban',
@@ -421,6 +422,11 @@ export default {
 			this.$set(this.taskUpdating, task.id, true)
 			task.done = !task.done
 			this.$store.dispatch('tasks/update', task)
+				.then(() => {
+					if(task.done) {
+						playPop()
+					}
+				})
 				.catch(e => {
 					this.error(e, this)
 				})
