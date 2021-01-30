@@ -7,7 +7,7 @@
 			Create saved filter
 		</x-button>
 
-		<fancycheckbox class="show-archived-check" v-model="showArchived">
+		<fancycheckbox class="show-archived-check" v-model="showArchived" @change="saveShowArchivedState">
 			Show Archived
 		</fancycheckbox>
 
@@ -99,6 +99,7 @@ export default {
 		}
 	},
 	created() {
+		this.showArchived = localStorage.getItem('showArchived') ?? false
 		this.loadBackgroundsForLists()
 	},
 	mounted() {
@@ -135,6 +136,9 @@ export default {
 			}
 			this.$store.dispatch('lists/toggleListFavorite', list)
 				.catch(e => this.error(e, this))
+		},
+		saveShowArchivedState() {
+			localStorage.setItem('showArchived', this.showArchived)
 		},
 	},
 }
