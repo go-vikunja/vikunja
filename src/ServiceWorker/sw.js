@@ -4,7 +4,7 @@
 // Cache assets
 workbox.routing.registerRoute(
 	// This regexp matches all files in precache-manifest
-	new RegExp('.+\\.(css|json|js|eot|svg|ttf|woff|woff2|png|html|txt)$'),
+	new RegExp('.+\\.(css|json|js|svg|woff2|png|html|txt)$'),
 	new workbox.strategies.StaleWhileRevalidate(),
 )
 
@@ -74,7 +74,7 @@ self.addEventListener('notificationclick', function (event) {
 	switch (event.action) {
 		case 'mark-as-done':
 			// FIXME: Ugly as hell, but no other way of doing this, since we can't use modules
-			// in service workersfor now.
+			// in service workers for now.
 			fetch('/config.json')
 				.then(r => r.json())
 				.then(config => {
