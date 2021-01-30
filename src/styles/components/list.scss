@@ -8,24 +8,6 @@
   .content {
     padding: 0;
   }
-
-  .table {
-    border-top: 1px solid $grey-100;
-    border-radius: 4px;
-    overflow: hidden;
-
-    td {
-      vertical-align: middle;
-    }
-
-    td.type, td.actions {
-      width: 250px;
-    }
-
-    td.actions {
-      text-align: right;
-    }
-  }
 }
 
 .task-add {
@@ -51,17 +33,22 @@
     margin: 0;
   }
 
-  .icon {
+  .dropdown-trigger {
     color: $grey-400;
     margin-left: 1rem;
     height: 1rem;
     width: 1rem;
+    cursor: pointer;
   }
 }
 
 .edit-list {
   padding-bottom: 1rem;
 }
+
+$filter-container-top-default: -59px;
+$filter-container-top-link-share-gantt: -138px;
+$filter-container-top-link-share-list: -47px;
 
 .filter-container {
   text-align: right;
@@ -70,7 +57,7 @@
   max-width: 180px;
   position: absolute;
   right: 1.5rem;
-  margin-top: -59px;
+  margin-top: $filter-container-top-default;
   z-index: 4;
 
   .items {
@@ -146,20 +133,42 @@
   }
 }
 
+.list-namespace-title {
+  color: $grey-500;
+}
+
 .link-share-container .gantt-chart-container .filter-container,
 .gantt-chart-container .filter-container {
-  margin-top: calc(-138px - 2rem);
+  right: 0;
+  margin-top: calc(#{$filter-container-top-link-share-gantt} - 2rem);
 }
 
 .link-share-container .list-view .filter-container {
-  margin-top: -47px;
+  margin-top: $filter-container-top-link-share-list;
 }
 
 .link-share-container .filter-container {
   right: 9rem;
-  margin-top: -59px;
+  margin-top: $filter-container-top-default;
 }
 
-.list-namespace-title {
-  color: $grey-500;
+.is-archived {
+  $notification-height: 1.25rem + 1.25rem + 1.5rem + 1.5rem;
+
+  .filter-container {
+    margin-top: calc(#{$filter-container-top-default} - #{$notification-height});
+  }
+
+  .link-share-container .gantt-chart-container .filter-container,
+  .gantt-chart-container .filter-container {
+    margin-top: calc(#{$filter-container-top-link-share-gantt} - 2rem - #{$notification-height});
+  }
+  
+  .link-share-container .list-view .filter-container {
+    margin-top: calc(#{$filter-container-top-link-share-list} - #{$notification-height});
+  }
+  
+  .link-share-container .filter-container {
+    margin-top: calc(#{$filter-container-top-default} - #{$notification-height});
+  }
 }

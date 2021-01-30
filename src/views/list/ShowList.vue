@@ -1,36 +1,38 @@
 <template>
 	<div
-		:class="{ 'is-loading': listService.loading}"
+		:class="{ 'is-loading': listService.loading, 'is-archived': currentList.isArchived}"
 		class="loader-container"
 	>
 		<div class="switch-view-container">
 			<div class="switch-view">
 				<router-link
-					:class="{'is-active': $route.name === 'list.list'}"
+					:class="{'is-active': $route.name.includes('list.list')}"
 					:to="{ name: 'list.list',   params: { listId: listId } }">
 					List
 				</router-link>
 				<router-link
-					:class="{'is-active': $route.name === 'list.gantt'}"
+					:class="{'is-active': $route.name.includes('list.gantt')}"
 					:to="{ name: 'list.gantt',  params: { listId: listId } }">
 					Gantt
 				</router-link>
 				<router-link
-					:class="{'is-active': $route.name === 'list.table'}"
+					:class="{'is-active': $route.name.includes('list.table')}"
 					:to="{ name: 'list.table',  params: { listId: listId } }">
 					Table
 				</router-link>
 				<router-link
-					:class="{'is-active': $route.name === 'list.kanban'}"
+					:class="{'is-active': $route.name.includes('list.kanban')}"
 					:to="{ name: 'list.kanban', params: { listId: listId } }">
 					Kanban
 				</router-link>
 			</div>
 		</div>
-		<div class="notification is-warning" v-if="list.isArchived">
-			This list is archived.
-			It is not possible to create new or edit tasks or it.
-		</div>
+		<transition name="fade">
+			<div class="notification is-warning" v-if="currentList.isArchived">
+				This list is archived.
+				It is not possible to create new or edit tasks or it.
+			</div>
+		</transition>
 
 		<router-view/>
 	</div>
@@ -75,6 +77,7 @@ export default {
 			return typeof this.$store.state.currentList === 'undefined' ? {
 				id: 0,
 				title: '',
+				isArchived: false,
 			} : this.$store.state.currentList
 		},
 	},
@@ -86,6 +89,10 @@ export default {
 			return
 		},
 		loadList() {
+			if(this.$route.name.includes('.settings.')) {
+				return
+			}
+
 			this.setTitle(this.currentList.title)
 
 			// This invalidates the loaded list at the kanban board which lets it reload its content when

@@ -1,9 +1,11 @@
 <template>
-	<card
-		:class="{ 'is-loading': backgroundService.loading}"
-		class="list-background-setting loader-container"
-		v-if="uploadBackgroundEnabled || unsplashBackgroundEnabled"
+	<create-edit
 		title="Set list background"
+		primary-label=""
+		:loading="backgroundService.loading"
+		class="list-background-setting"
+		:wide="true"
+		v-if="uploadBackgroundEnabled || unsplashBackgroundEnabled"
 	>
 		<div class="mb-4" v-if="uploadBackgroundEnabled">
 			<input
@@ -51,24 +53,21 @@
 				type="secondary"
 				v-if="backgroundSearchResult.length > 0"
 			>
-				<template v-if="backgroundService.loading">
-					Loading...
-				</template>
-				<template v-else>
-					Load more photos
-				</template>
+				{{ backgroundService.loading ? 'Loading...' : 'Load more photos'}}
 			</x-button>
 		</template>
-	</card>
+	</create-edit>
 </template>
 
 <script>
 import BackgroundUnsplashService from '../../../services/backgroundUnsplash'
 import BackgroundUploadService from '../../../services/backgroundUpload'
 import {CURRENT_LIST} from '@/store/mutation-types'
+import CreateEdit from '@/components/misc/create-edit'
 
 export default {
-	name: 'background-settings',
+	name: 'list-setting-background',
+	components: {CreateEdit},
 	data() {
 		return {
 			backgroundSearchTerm: '',
@@ -81,12 +80,6 @@ export default {
 			backgroundUploadService: null,
 		}
 	},
-	props: {
-		listId: {
-			default: 0,
-			required: true,
-		},
-	},
 	computed: {
 		unsplashBackgroundEnabled() {
 			return this.$store.state.config.enabledBackgroundProviders.includes('unsplash')
@@ -98,6 +91,7 @@ export default {
 	created() {
 		this.backgroundService = new BackgroundUnsplashService()
 		this.backgroundUploadService = new BackgroundUploadService()
+		this.setTitle('Set a list background')
 		// Show the default collection of backgrounds
 		this.newBackgroundSearch()
 	},
@@ -142,7 +136,7 @@ export default {
 				return
 			}
 
-			this.backgroundService.update({id: backgroundId, listId: this.listId})
+			this.backgroundService.update({id: backgroundId, listId: this.$route.params.listId})
 				.then(l => {
 					this.$store.commit(CURRENT_LIST, l)
 					this.$store.commit('namespaces/setListInNamespaceById', l)
@@ -157,7 +151,7 @@ export default {
 				return
 			}
 
-			this.backgroundUploadService.create(this.listId, this.$refs.backgroundUploadInput.files[0])
+			this.backgroundUploadService.create(this.$route.params.listId, this.$refs.backgroundUploadInput.files[0])
 				.then(l => {
 					this.$store.commit(CURRENT_LIST, l)
 					this.$store.commit('namespaces/setListInNamespaceById', l)

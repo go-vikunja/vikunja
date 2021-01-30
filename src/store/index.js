@@ -106,7 +106,7 @@ export const store = new Vuex.Store({
 			// Server updates don't return the right. Therefore the right is reset after updating the list which is
 			// confusing because all the buttons will disappear in that case. To prevent this, we're keeping the right
 			// when updating the list in global state.
-			if(typeof state.currentList.maxRight !== 'undefined') {
+			if (typeof state.currentList.maxRight !== 'undefined') {
 				currentList.maxRight = state.currentList.maxRight
 			}
 			state.currentList = currentList

@@ -29,6 +29,20 @@ import Kanban from '../views/list/views/Kanban'
 import List from '../views/list/views/List'
 import Gantt from '../views/list/views/Gantt'
 import Table from '../views/list/views/Table'
+// List Settings
+import ListSettingEdit from '@/views/list/settings/edit'
+import ListSettingBackground from '@/views/list/settings/background'
+import ListSettingDuplicate from '@/views/list/settings/duplicate'
+import ListSettingShare from '@/views/list/settings/share'
+import ListSettingDelete from '@/views/list/settings/delete'
+import ListSettingArchive from '@/views/list/settings/archive'
+import FilterSettingEdit from '@/views/filters/settings/edit'
+import FilterSettingDelete from '@/views/filters/settings/delete'
+// Namespace Settings
+import NamespaceSettingEdit from '@/views/namespaces/settings/edit'
+import NamespaceSettingShare from '@/views/namespaces/settings/share'
+import NamespaceSettingArchive from '@/views/namespaces/settings/archive'
+import NamespaceSettingDelete from '@/views/namespaces/settings/delete'
 // Saved Filters
 import CreateSavedFilter from '@/views/filters/CreateSavedFilter'
 
@@ -57,21 +71,9 @@ const NewListComponent = () => ({
 	error: ErrorComponent,
 	timeout: 60000,
 })
-const EditListComponent = () => ({
-	component: import(/* webpackChunkName: "settings" */'../views/list/EditListView'),
-	loading: LoadingComponent,
-	error: ErrorComponent,
-	timeout: 60000,
-})
 // Namespace Handling
 const NewNamespaceComponent = () => ({
 	component: import(/* webpackChunkName: "settings" */'../views/namespaces/NewNamespace'),
-	loading: LoadingComponent,
-	error: ErrorComponent,
-	timeout: 60000,
-})
-const EditNamespaceComponent = () => ({
-	component: import(/* webpackChunkName: "settings" */'../views/namespaces/EditNamespace'),
 	loading: LoadingComponent,
 	error: ErrorComponent,
 	timeout: 60000,
@@ -164,11 +166,6 @@ export default new Router({
 			},
 		},
 		{
-			path: '/namespaces/:id/edit',
-			name: 'namespace.edit',
-			component: EditNamespaceComponent,
-		},
-		{
 			path: '/namespaces/:id/list',
 			name: 'list.create',
 			components: {
@@ -176,9 +173,32 @@ export default new Router({
 			}
 		},
 		{
-			path: '/lists/:id/edit',
-			name: 'list.edit',
-			component: EditListComponent,
+			path: '/namespaces/:id/settings/edit',
+			name: 'namespace.settings.edit',
+			components: {
+				popup: NamespaceSettingEdit,
+			},
+		},
+		{
+			path: '/namespaces/:id/settings/share',
+			name: 'namespace.settings.share',
+			components: {
+				popup: NamespaceSettingShare,
+			},
+		},
+		{
+			path: '/namespaces/:id/settings/archive',
+			name: 'namespace.settings.archive',
+			components: {
+				popup: NamespaceSettingArchive,
+			},
+		},
+		{
+			path: '/namespaces/:id/settings/delete',
+			name: 'namespace.settings.delete',
+			components: {
+				popup: NamespaceSettingDelete,
+			},
 		},
 		{
 			path: '/tasks/:id',
@@ -189,6 +209,62 @@ export default new Router({
 			path: '/tasks/by/upcoming',
 			name: 'tasks.range',
 			component: ShowTasksInRangeComponent,
+		},
+		{
+			path: '/lists/:listId/settings/edit',
+			name: 'list.settings.edit',
+			components: {
+				popup: ListSettingEdit,
+			},
+		},
+		{
+			path: '/lists/:listId/settings/background',
+			name: 'list.settings.background',
+			components: {
+				popup: ListSettingBackground,
+			},
+		},
+		{
+			path: '/lists/:listId/settings/duplicate',
+			name: 'list.settings.duplicate',
+			components: {
+				popup: ListSettingDuplicate,
+			},
+		},
+		{
+			path: '/lists/:listId/settings/share',
+			name: 'list.settings.share',
+			components: {
+				popup: ListSettingShare,
+			},
+		},
+		{
+			path: '/lists/:listId/settings/delete',
+			name: 'list.settings.delete',
+			components: {
+				popup: ListSettingDelete,
+			},
+		},
+		{
+			path: '/lists/:listId/settings/archive',
+			name: 'list.settings.archive',
+			components: {
+				popup: ListSettingArchive,
+			},
+		},
+		{
+			path: '/lists/:listId/settings/edit',
+			name: 'filter.settings.edit',
+			components: {
+				popup: FilterSettingEdit,
+			},
+		},
+		{
+			path: '/lists/:listId/settings/delete',
+			name: 'filter.settings.delete',
+			components: {
+				popup: FilterSettingDelete,
+			},
 		},
 		{
 			path: '/lists/:listId',
@@ -205,6 +281,46 @@ export default new Router({
 							name: 'task.list.detail',
 							component: TaskDetailViewModal,
 						},
+						{
+							path: '/lists/:listId/settings/edit',
+							name: 'list.list.settings.edit',
+							component: ListSettingEdit,
+						},
+						{
+							path: '/lists/:listId/settings/background',
+							name: 'list.list.settings.background',
+							component: ListSettingBackground,
+						},
+						{
+							path: '/lists/:listId/settings/duplicate',
+							name: 'list.list.settings.duplicate',
+							component: ListSettingDuplicate,
+						},
+						{
+							path: '/lists/:listId/settings/share',
+							name: 'list.list.settings.share',
+							component: ListSettingShare,
+						},
+						{
+							path: '/lists/:listId/settings/delete',
+							name: 'list.list.settings.delete',
+							component: ListSettingDelete,
+						},
+						{
+							path: '/lists/:listId/settings/archive',
+							name: 'list.list.settings.archive',
+							component: ListSettingArchive,
+						},
+						{
+							path: '/lists/:listId/settings/edit',
+							name: 'filter.list.settings.edit',
+							component: FilterSettingEdit,
+						},
+						{
+							path: '/lists/:listId/settings/delete',
+							name: 'filter.list.settings.delete',
+							component: FilterSettingDelete,
+						},
 					],
 				},
 				{
@@ -217,12 +333,94 @@ export default new Router({
 							name: 'task.gantt.detail',
 							component: TaskDetailViewModal,
 						},
+						{
+							path: '/lists/:listId/settings/edit',
+							name: 'list.gantt.settings.edit',
+							component: ListSettingEdit,
+						},
+						{
+							path: '/lists/:listId/settings/background',
+							name: 'list.gantt.settings.background',
+							component: ListSettingBackground,
+						},
+						{
+							path: '/lists/:listId/settings/duplicate',
+							name: 'list.gantt.settings.duplicate',
+							component: ListSettingDuplicate,
+						},
+						{
+							path: '/lists/:listId/settings/share',
+							name: 'list.gantt.settings.share',
+							component: ListSettingShare,
+						},
+						{
+							path: '/lists/:listId/settings/delete',
+							name: 'list.gantt.settings.delete',
+							component: ListSettingDelete,
+						},
+						{
+							path: '/lists/:listId/settings/archive',
+							name: 'list.gantt.settings.archive',
+							component: ListSettingArchive,
+						},
+						{
+							path: '/lists/:listId/settings/edit',
+							name: 'filter.gantt.settings.edit',
+							component: FilterSettingEdit,
+						},
+						{
+							path: '/lists/:listId/settings/delete',
+							name: 'filter.gantt.settings.delete',
+							component: FilterSettingDelete,
+						},
 					],
 				},
 				{
 					path: '/lists/:listId/table',
 					name: 'list.table',
 					component: Table,
+					children: [
+						{
+							path: '/lists/:listId/settings/edit',
+							name: 'list.table.settings.edit',
+							component: ListSettingEdit,
+						},
+						{
+							path: '/lists/:listId/settings/background',
+							name: 'list.table.settings.background',
+							component: ListSettingBackground,
+						},
+						{
+							path: '/lists/:listId/settings/duplicate',
+							name: 'list.table.settings.duplicate',
+							component: ListSettingDuplicate,
+						},
+						{
+							path: '/lists/:listId/settings/share',
+							name: 'list.table.settings.share',
+							component: ListSettingShare,
+						},
+						{
+							path: '/lists/:listId/settings/delete',
+							name: 'list.table.settings.delete',
+							component: ListSettingDelete,
+						},
+						{
+							path: '/lists/:listId/settings/archive',
+							name: 'list.table.settings.archive',
+							component: ListSettingArchive,
+						},
+						{
+							path: '/lists/:listId/settings/edit',
+							name: 'filter.table.settings.edit',
+							component: FilterSettingEdit,
+						},
+						{
+							path: '/lists/:listId/settings/delete',
+							name: 'filter.table.settings.delete',
+							component: FilterSettingDelete,
+						},
+					],
 				},
 				{
 					path: '/lists/:listId/kanban',
@@ -233,6 +431,46 @@ export default new Router({
 							path: '/tasks/:id',
 							name: 'task.kanban.detail',
 							component: TaskDetailViewModal,
+						},
+						{
+							path: '/lists/:listId/settings/edit',
+							name: 'list.kanban.settings.edit',
+							component: ListSettingEdit,
+						},
+						{
+							path: '/lists/:listId/settings/background',
+							name: 'list.kanban.settings.background',
+							component: ListSettingBackground,
+						},
+						{
+							path: '/lists/:listId/settings/duplicate',
+							name: 'list.kanban.settings.duplicate',
+							component: ListSettingDuplicate,
+						},
+						{
+							path: '/lists/:listId/settings/share',
+							name: 'list.kanban.settings.share',
+							component: ListSettingShare,
+						},
+						{
+							path: '/lists/:listId/settings/delete',
+							name: 'list.kanban.settings.delete',
+							component: ListSettingDelete,
+						},
+						{
+							path: '/lists/:listId/settings/archive',
+							name: 'list.kanban.settings.archive',
+							component: ListSettingArchive,
+						},
+						{
+							path: '/lists/:listId/settings/edit',
+							name: 'filter.kanban.settings.edit',
+							component: FilterSettingEdit,
+						},
+						{
+							path: '/lists/:listId/settings/delete',
+							name: 'filter.kanban.settings.delete',
+							component: FilterSettingDelete,
 						},
 					],
 				},

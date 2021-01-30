@@ -64,3 +64,17 @@
 .underline-none {
   text-decoration: none !important;
 }
+
+.table.has-actions {
+  border-top: 1px solid $grey-100;
+  border-radius: 4px;
+  overflow: hidden;
+
+  td {
+    vertical-align: middle;
+  }
+
+  td.actions {
+    text-align: right;
+  }
+}

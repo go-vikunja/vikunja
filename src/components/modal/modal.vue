@@ -2,7 +2,7 @@
 	<transition name="modal">
 		<div class="modal-mask">
 			<div class="modal-container" @click.self.prevent.stop="$emit('close')">
-				<div class="modal-content" :class="{'has-overflow': overflow}">
+				<div class="modal-content" :class="{'has-overflow': overflow, 'is-wide': wide}">
 					<slot>
 						<div class="header">
 							<slot name="header"></slot>
@@ -46,6 +46,10 @@ export default {
 	},
 	props: {
 		overflow: {
+			type: Boolean,
+			default: false,
+		},
+		wide: {
 			type: Boolean,
 			default: false,
 		},

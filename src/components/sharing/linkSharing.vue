@@ -1,5 +1,6 @@
 <template>
-	<card title="Share links" class="is-fullwidth" :padding="false">
+	<div>
+		<p class="has-text-weight-bold">Share Links</p>
 		<div class="sharables-list">
 			<div class="p-4">
 				<p>Share with a link:</p>
@@ -21,7 +22,7 @@
 				</div>
 			</div>
 			<table
-				class="table is-striped is-hoverable is-fullwidth link-share-list"
+				class="table has-actions is-striped is-hoverable is-fullwidth link-share-list"
 				v-if="linkShares.length > 0"
 			>
 				<thead>
@@ -112,7 +113,7 @@
 				</p>
 			</modal>
 		</transition>
-	</card>
+	</div>
 </template>
 
 <script>

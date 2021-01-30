@@ -72,11 +72,26 @@ button.table {
   margin-bottom: 0 !important;
 }
 
-.dropdown-item.is-disabled {
-  cursor: not-allowed;
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  justify-content: left !important;
 
-  &:hover {
-    background-color: transparent;
+  .icon {
+    padding-right: .5rem;
+    color: $grey-300 !important;
+  }
+
+  &.has-text-danger .icon {
+    color: $danger !important;
+  }
+
+  &.is-disabled {
+    cursor: not-allowed;
+
+    &:hover {
+      background-color: transparent;
+    }
   }
 }
 
@@ -119,4 +134,10 @@ button.table {
   display: inline-block;
   border-radius: 100%;
   margin-right: 4px;
+}
+
+.dropdown-menu {
+  .dropdown-content {
+    box-shadow: $shadow-md;
+  }
 }

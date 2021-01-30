@@ -1,4 +1,8 @@
 export const saveListView = (listId, routeName) => {
+	if(routeName.includes('settings.')) {
+		return
+	}
+
 	const savedListView = localStorage.getItem('listView')
 	let savedListViewJson = false
 	if (savedListView !== null) {

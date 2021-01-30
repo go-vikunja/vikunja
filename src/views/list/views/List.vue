@@ -84,12 +84,10 @@
 				</p>
 			</div>
 
-			<p
-				class="has-text-centered has-text-grey is-italic p-4 mb-4"
-				v-if="ctaVisible && tasks.length === 0 && !taskCollectionService.loading">
+			<nothing v-if="ctaVisible && tasks.length === 0 && !taskCollectionService.loading">
 				This list is currently empty.
 				<a @click="$refs.newTaskInput.focus()">Create a new task.</a>
-			</p>
+			</nothing>
 
 			<div class="tasks-container">
 				<div :class="{'short': isTaskEdit}" class="tasks mt-0" v-if="tasks && tasks.length > 0">
@@ -174,6 +172,7 @@ import Rights from '../../../models/rights.json'
 import {mapState} from 'vuex'
 import FilterPopup from '@/components/list/partials/filter-popup'
 import {HAS_TASKS} from '@/store/mutation-types'
+import Nothing from '@/components/misc/nothing'
 
 export default {
 	name: 'List',
@@ -195,6 +194,7 @@ export default {
 		taskList,
 	],
 	components: {
+		Nothing,
 		FilterPopup,
 		SingleTaskInList,
 		EditTask,

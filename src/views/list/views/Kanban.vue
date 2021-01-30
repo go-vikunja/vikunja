@@ -32,57 +32,47 @@
 						v-if="bucket.limit > 0">
 						{{ bucket.tasks.length }}/{{ bucket.limit }}
 					</span>
-					<div
-						class="dropdown is-right is-active options"
+					<dropdown
+						class="is-right options"
 						v-if="canWrite"
+						trigger-icon="ellipsis-v"
 					>
-						<div @click.stop="toggleBucketDropdown(bucket.id)" class="dropdown-trigger">
-						<span class="icon">
-							<icon icon="ellipsis-v"/>
-						</span>
-						</div>
-						<transition name="fade">
-							<div class="dropdown-menu" role="menu" v-if="bucketOptionsDropDownActive[bucket.id]">
-								<div class="dropdown-content">
-									<a
-										@click.stop="showSetLimitInput = true"
-										class="dropdown-item"
-									>
-										<div class="field has-addons" v-if="showSetLimitInput">
-											<div class="control">
-												<input
-													@change="() => updateBucket(bucket)"
-													@keyup.enter="() => updateBucket(bucket)"
-													class="input"
-													type="number"
-													v-focus.always
-													v-model="bucket.limit"
-												/>
-											</div>
-											<div class="control">
-												<x-button
-													:icon="['far', 'save']"
-													:shadow="false"
-												/>
-											</div>
-										</div>
-										<template v-else>
-											Limit: {{ bucket.limit > 0 ? bucket.limit : 'Not set' }}
-										</template>
-									</a>
-									<a
-										:class="{'is-disabled': buckets.length <= 1}"
-										@click="() => deleteBucketModal(bucket.id)"
-										class="dropdown-item has-text-danger"
-										v-tooltip="buckets.length <= 1 ? 'You cannot remove the last bucket.' : ''"
-									>
-										<span class="icon is-small"><icon icon="trash-alt"/></span>
-										Delete
-									</a>
+						<a
+							@click.stop="showSetLimitInput = true"
+							class="dropdown-item"
+						>
+							<div class="field has-addons" v-if="showSetLimitInput">
+								<div class="control">
+									<input
+										@change="() => updateBucket(bucket)"
+										@keyup.enter="() => updateBucket(bucket)"
+										class="input"
+										type="number"
+										v-focus.always
+										v-model="bucket.limit"
+									/>
+								</div>
+								<div class="control">
+									<x-button
+										:icon="['far', 'save']"
+										:shadow="false"
+									/>
 								</div>
 							</div>
-						</transition>
-					</div>
+							<template v-else>
+								Limit: {{ bucket.limit > 0 ? bucket.limit : 'Not set' }}
+							</template>
+						</a>
+						<a
+							:class="{'is-disabled': buckets.length <= 1}"
+							@click="() => deleteBucketModal(bucket.id)"
+							class="dropdown-item has-text-danger"
+							v-tooltip="buckets.length <= 1 ? 'You cannot remove the last bucket.' : ''"
+						>
+							<span class="icon is-small"><icon icon="trash-alt"/></span>
+							Delete
+						</a>
+					</dropdown>
 				</div>
 				<div :ref="`tasks-container${bucket.id}`" class="tasks">
 					<!-- Make the component either a div or a draggable component based on the user rights -->
@@ -272,12 +262,14 @@ import {applyDrag} from '@/helpers/applyDrag'
 import {mapState} from 'vuex'
 import {saveListView} from '@/helpers/saveListView'
 import Rights from '../../../models/rights.json'
-import {LOADING, LOADING_MODULE} from '../../../store/mutation-types'
+import {LOADING, LOADING_MODULE} from '@/store/mutation-types'
 import FilterPopup from '@/components/list/partials/filter-popup'
+import Dropdown from '@/components/misc/dropdown'
 
 export default {
 	name: 'Kanban',
 	components: {
+		Dropdown,
 		FilterPopup,
 		Container,
 		Draggable,
@@ -295,7 +287,6 @@ export default {
 				showOnTop: true,
 			},
 			sourceBucket: 0,
-			bucketOptionsDropDownActive: {},
 
 			showBucketDeleteModal: false,
 			bucketToDelete: 0,
@@ -324,7 +315,6 @@ export default {
 	created() {
 		this.taskService = new TaskService()
 		this.loadBuckets()
-		this.$nextTick(() => document.addEventListener('click', this.closeBucketDropdowns))
 
 		// Save the current list view to local storage
 		// We use local storage and not vuex here to make it persistent across reloads.
@@ -448,17 +438,6 @@ export default {
 		},
 		toggleShowNewTaskInput(bucket) {
 			this.$set(this.showNewTaskInput, bucket, !this.showNewTaskInput[bucket])
-		},
-		toggleBucketDropdown(bucketId) {
-			const oldState = this.bucketOptionsDropDownActive[bucketId]
-			this.closeBucketDropdowns() // Close all eventually open dropdowns
-			this.$set(this.bucketOptionsDropDownActive, bucketId, !oldState)
-		},
-		closeBucketDropdowns() {
-			this.showSetLimitInput = false
-			for (const bucketId in this.bucketOptionsDropDownActive) {
-				this.bucketOptionsDropDownActive[bucketId] = false
-			}
 		},
 		addTaskToBucket(bucketId) {
 

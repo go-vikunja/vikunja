@@ -10,7 +10,7 @@
 				</span>
 			</a>
 		</header>
-		<div class="card-content" :class="{'p-0': !padding}">
+		<div class="card-content loader-container" :class="{'p-0': !padding, 'is-loading': loading}">
 			<div :class="{'content': hasContent}">
 				<slot></slot>
 			</div>
@@ -45,6 +45,10 @@ export default {
 		hasContent: {
 			type: Boolean,
 			default: true,
+		},
+		loading: {
+			type: Boolean,
+			default: false,
 		},
 	},
 }

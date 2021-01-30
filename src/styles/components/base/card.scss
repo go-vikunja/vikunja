@@ -14,6 +14,11 @@
     border-bottom: 1px solid $grey-200;
     border-radius: $radius $radius 0 0;
   }
+
+  .modal-card-foot {
+    background: $grey-50;
+    border-top: 0;
+  }
 }
 
 .box, .card {

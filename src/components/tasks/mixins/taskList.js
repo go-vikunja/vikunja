@@ -12,6 +12,8 @@ export default {
 			pages: [],
 			currentPage: 0,
 
+			loadedList: null,
+
 			showTaskSearch: false,
 			searchTerm: '',
 
@@ -53,6 +55,17 @@ export default {
 				return
 			}
 
+			const list = {listId: parseInt(this.$route.params.listId)}
+
+			const currentList = {
+				id: list.listId,
+				params: params,
+				search: search,
+			}
+			if (JSON.stringify(currentList) === JSON.stringify(this.loadedList)) {
+				return
+			}
+
 			this.$set(this, 'tasks', [])
 
 			if (params === null) {
@@ -62,7 +75,8 @@ export default {
 			if (search !== '') {
 				params.s = search
 			}
-			this.taskCollectionService.getAll({listId: this.$route.params.listId}, params, page)
+
+			this.taskCollectionService.getAll(list, params, page)
 				.then(r => {
 					this.$set(this, 'tasks', r)
 					this.$set(this, 'pages', [])
@@ -95,6 +109,8 @@ export default {
 							isEllipsis: false,
 						})
 					}
+
+					this.loadedList = currentList
 				})
 				.catch(e => {
 					this.error(e, this)

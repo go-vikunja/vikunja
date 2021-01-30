@@ -57,6 +57,10 @@ import {
 	faChessKnight,
 	faCoffee,
 	faCocktail,
+	faEllipsisH,
+	faArchive,
+	faShareAlt,
+	faImage,
 } from '@fortawesome/free-solid-svg-icons'
 import {faCalendarAlt, faClock, faComments, faSave, faStar, faTimesCircle, faSun} from '@fortawesome/free-regular-svg-icons'
 import {FontAwesomeIcon} from '@fortawesome/vue-fontawesome'
@@ -144,6 +148,10 @@ library.add(faSun)
 library.add(faChessKnight)
 library.add(faCoffee)
 library.add(faCocktail)
+library.add(faEllipsisH)
+library.add(faArchive)
+library.add(faShareAlt)
+library.add(faImage)
 
 Vue.component('icon', FontAwesomeIcon)
 

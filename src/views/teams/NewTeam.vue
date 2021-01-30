@@ -1,5 +1,5 @@
 <template>
-	<create
+	<create-edit
 		title="Create a new team"
 		@create="newTeam()"
 		:create-disabled="team.name === ''"
@@ -25,14 +25,14 @@
 		<p class="help is-danger" v-if="showError && team.name === ''">
 			Please specify a name.
 		</p>
-	</create>
+	</create-edit>
 </template>
 
 <script>
 import router from '../../router'
 import TeamModel from '../../models/team'
 import TeamService from '../../services/team'
-import Create from '@/components/misc/create'
+import CreateEdit from '@/components/misc/create-edit'
 
 export default {
 	name: 'NewTeam',
@@ -44,7 +44,7 @@ export default {
 		}
 	},
 	components: {
-		Create,
+		CreateEdit,
 	},
 	created() {
 		this.teamService = new TeamService()

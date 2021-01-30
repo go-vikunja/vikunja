@@ -250,15 +250,16 @@ $filter-container-height: '1rem - #{$switch-view-height}';
       }
     }
 
-    .dropdown-trigger {
-      cursor: pointer;
-    }
-
     .title.input {
       height: auto;
       padding: .4rem .5rem;
       display: inline-block;
     }
+  }
+
+  .dropdown-trigger {
+    cursor: pointer;
+    padding: .5rem;
   }
 
   .bucket-footer {

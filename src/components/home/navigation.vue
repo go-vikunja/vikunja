@@ -64,25 +64,7 @@
 							{{ n.title }} ({{ n.lists.filter(l => !l.isArchived).length }})
 						</span>
 					</label>
-					<div class="actions">
-						<router-link
-							:key="n.id + 'list.create'"
-							:to="{ name: 'list.create', params: { id: n.id} }"
-							v-if="n.id > 0"
-							v-tooltip="'Add a new list in the ' + n.title + ' namespace'">
-							<span class="icon">
-								<icon icon="plus"/>
-							</span>
-						</router-link>
-						<router-link
-							:to="{name: 'namespace.edit', params: {id: n.id} }"
-							v-if="n.id > 0"
-							v-tooltip="'Settings'">
-							<span class="icon">
-								<icon icon="cog"/>
-							</span>
-						</router-link>
-					</div>
+					<namespace-settings-dropdown :namespace="n" v-if="n.id > 0"/>
 				</div>
 				<input
 					:id="n.id + 'checker'"
@@ -118,6 +100,7 @@
 										<icon :icon="['far', 'star']" v-else/>
 									</span>
 								</router-link>
+								<list-settings-dropdown :list="l"/>
 							</li>
 						</template>
 					</ul>
@@ -134,9 +117,15 @@
 <script>
 import {mapState} from 'vuex'
 import {CURRENT_LIST, MENU_ACTIVE, LOADING, LOADING_MODULE} from '@/store/mutation-types'
+import ListSettingsDropdown from '@/components/list/list-settings-dropdown'
+import NamespaceSettingsDropdown from '@/components/namespace/namespace-settings-dropdown.vue'
 
 export default {
 	name: 'navigation',
+	components: {
+		ListSettingsDropdown,
+		NamespaceSettingsDropdown,
+	},
 	computed: mapState({
 		namespaces(state) {
 			return state.namespaces.namespaces.filter(n => !n.isArchived)

@@ -1,10 +1,11 @@
 <template>
-	<card class="is-fullwidth has-overflow" :title="`Shared with these ${shareType}s`" :padding="false">
-		<div class="p-4" v-if="userIsAdmin">
+	<div>
+		<p class="has-text-weight-bold">Shared with these {{ shareType }}s</p>
+		<div v-if="userIsAdmin">
 			<div class="field has-addons">
 				<p
 					class="control is-expanded"
-					v-bind:class="{ 'is-loading': searchService.loading }"
+					:class="{ 'is-loading': searchService.loading }"
 				>
 					<multiselect
 						:loading="searchService.loading"
@@ -20,7 +21,8 @@
 				</p>
 			</div>
 		</div>
-		<table class="table is-striped is-hoverable is-fullwidth">
+
+		<table class="table has-actions is-striped is-hoverable is-fullwidth mb-4" v-if="sharables.length > 0">
 			<tbody>
 			<tr :key="s.id" v-for="s in sharables">
 				<template v-if="shareType === 'user'">
@@ -105,6 +107,10 @@
 			</tbody>
 		</table>
 
+		<nothing v-else>
+			Not shared with any {{ shareType }} yet.
+		</nothing>
+
 		<transition name="modal">
 			<modal
 				@close="showDeleteModal = false"
@@ -121,7 +127,7 @@
 				</p>
 			</modal>
 		</transition>
-	</card>
+	</div>
 </template>
 
 <script>
@@ -143,6 +149,7 @@ import TeamModel from '../../models/team'
 
 import rights from '../../models/rights'
 import Multiselect from '@/components/input/multiselect'
+import Nothing from '@/components/misc/nothing'
 
 export default {
 	name: 'userTeamShare',
@@ -182,6 +189,7 @@ export default {
 		}
 	},
 	components: {
+		Nothing,
 		Multiselect,
 	},
 	computed: mapState({

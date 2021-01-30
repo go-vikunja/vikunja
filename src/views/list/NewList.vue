@@ -1,5 +1,5 @@
 <template>
-	<create title="Create a new list" @create="newList()" :create-disabled="list.title === ''">
+	<create-edit title="Create a new list" @create="newList()" :create-disabled="list.title === ''">
 		<div class="field">
 			<label class="label" for="listTitle">List Title</label>
 			<div
@@ -28,13 +28,13 @@
 				<color-picker v-model="list.hexColor" />
 			</div>
 		</div>
-	</create>
+	</create-edit>
 </template>
 
 <script>
 import ListService from '../../services/list'
 import ListModel from '../../models/list'
-import Create from '@/components/misc/create'
+import CreateEdit from '@/components/misc/create-edit'
 import ColorPicker from '../../components/input/colorPicker'
 
 export default {
@@ -47,7 +47,7 @@ export default {
 		}
 	},
 	components: {
-		Create,
+		CreateEdit,
 		ColorPicker,
 	},
 	created() {

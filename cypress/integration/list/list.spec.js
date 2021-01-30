@@ -21,7 +21,10 @@ describe('Lists', () => {
 
 	it('Should create a new list', () => {
 		cy.visit('/')
-		cy.get('.namespace-title a[href="/namespaces/1/list"]')
+		cy.get('.namespace-title .dropdown-trigger')
+			.click()
+		cy.get('.namespace-title .dropdown .dropdown-item')
+			.contains('New list')
 			.click()
 		cy.url()
 			.should('contain', '/namespaces/1/list')
@@ -58,9 +61,8 @@ describe('Lists', () => {
 				.should('contain', '/lists/1/list')
 			cy.get('.list-title h1')
 				.should('contain', 'First List')
-			cy.get('.list-title a.icon')
-				.should('have.attr', 'href')
-				.and('include', '/lists/1/edit')
+			cy.get('.list-title .dropdown')
+				.should('exist')
 			cy.get('p')
 				.contains('This list is currently empty.')
 				.should('exist')
@@ -363,6 +365,7 @@ describe('Lists', () => {
 
 			cy.getAttached('.kanban .bucket .tasks .task')
 				.contains(tasks[0].title)
+				.should('be.visible')
 				.click()
 
 			cy.url()

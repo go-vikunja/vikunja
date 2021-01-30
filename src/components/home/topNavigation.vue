@@ -31,58 +31,49 @@
 				class="title">
 				{{ currentList.title === '' ? 'Loading...' : currentList.title }}
 			</h1>
-			<router-link
-				:to="{ name: 'list.edit', params: { id: currentList.id } }"
-				class="icon"
-				v-if="canWriteCurrentList">
-				<icon icon="cog" size="2x"/>
-			</router-link>
+
+			<list-settings-dropdown v-if="canWriteCurrentList" :list="currentList"/>
 		</div>
+
 		<div class="navbar-end">
 			<update/>
 			<div class="user">
 				<img :src="userAvatar" alt="" class="avatar"/>
-				<div class="dropdown is-right is-active">
-					<div class="dropdown-trigger">
-						<x-button 
-							@click.stop="userMenuActive = !userMenuActive"
-							type="secondary" 
+				<dropdown class="is-right">
+					<template v-slot:trigger>
+						<x-button
+							type="secondary"
 							:shadow="false">
 							<span class="username">{{ userInfo.name !== '' ? userInfo.name : userInfo.username }}</span>
 							<span class="icon is-small">
 								<icon icon="chevron-down"/>
 							</span>
 						</x-button>
-					</div>
-					<transition name="fade">
-						<div class="dropdown-menu" v-if="userMenuActive">
-							<div class="dropdown-content">
-								<router-link :to="{name: 'user.settings'}" class="dropdown-item">
-									Settings
-								</router-link>
-								<a
-									:href="imprintUrl"
-									class="dropdown-item"
-									target="_blank"
-									v-if="imprintUrl">
-									Imprint
-								</a>
-								<a
-									:href="privacyPolicyUrl"
-									class="dropdown-item"
-									target="_blank"
-									v-if="privacyPolicyUrl">
-									Privacy policy
-								</a>
-								<a @click="$store.commit('keyboardShortcutsActive', true)" class="dropdown-item">Keyboard
-									Shortcuts</a>
-								<a @click="logout()" class="dropdown-item">
-									Logout
-								</a>
-							</div>
-						</div>
-					</transition>
-				</div>
+					</template>
+
+					<router-link :to="{name: 'user.settings'}" class="dropdown-item">
+						Settings
+					</router-link>
+					<a
+						:href="imprintUrl"
+						class="dropdown-item"
+						target="_blank"
+						v-if="imprintUrl">
+						Imprint
+					</a>
+					<a
+						:href="privacyPolicyUrl"
+						class="dropdown-item"
+						target="_blank"
+						v-if="privacyPolicyUrl">
+						Privacy policy
+					</a>
+					<a @click="$store.commit('keyboardShortcutsActive', true)" class="dropdown-item">Keyboard
+						Shortcuts</a>
+					<a @click="logout()" class="dropdown-item">
+						Logout
+					</a>
+				</dropdown>
 			</div>
 		</div>
 	</nav>
@@ -93,20 +84,15 @@ import {mapState} from 'vuex'
 import {CURRENT_LIST} from '@/store/mutation-types'
 import Rights from '@/models/rights.json'
 import Update from '@/components/home/update'
+import ListSettingsDropdown from '@/components/list/list-settings-dropdown'
+import Dropdown from '@/components/misc/dropdown'
 
 export default {
 	name: 'topNavigation',
-	data() {
-		return {
-			userMenuActive: false,
-		}
-	},
 	components: {
+		Dropdown,
+		ListSettingsDropdown,
 		Update,
-	},
-	created() {
-		// This will hide the menu once clicked outside of it
-		this.$nextTick(() => document.addEventListener('click', () => this.userMenuActive = false))
 	},
 	computed: mapState({
 		userInfo: state => state.auth.info,

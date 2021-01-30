@@ -1,5 +1,5 @@
 <template>
-	<create
+	<create-edit
 		title="Create a new namespace"
 		@create="newNamespace()"
 		:create-disabled="namespace.title === ''"
@@ -39,13 +39,13 @@
 		>
 			What's a namespace?
 		</p>
-	</create>
+	</create-edit>
 </template>
 
 <script>
 import NamespaceModel from '../../models/namespace'
 import NamespaceService from '../../services/namespace'
-import Create from '@/components/misc/create'
+import CreateEdit from '@/components/misc/create-edit'
 import ColorPicker from '../../components/input/colorPicker'
 
 export default {
@@ -59,7 +59,7 @@ export default {
 	},
 	components: {
 		ColorPicker,
-		Create,
+		CreateEdit,
 	},
 	created() {
 		this.namespace = new NamespaceModel()

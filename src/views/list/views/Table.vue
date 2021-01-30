@@ -42,7 +42,7 @@
 		</div>
 
 		<card :padding="false" :has-content="false">
-			<table class="table is-hoverable is-fullwidth mb-0">
+			<table class="table has-actions is-hoverable is-fullwidth mb-0">
 				<thead>
 				<tr>
 					<th v-if="activeColumns.id">

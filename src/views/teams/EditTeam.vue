@@ -88,7 +88,7 @@
 					</div>
 				</div>
 			</div>
-			<table class="table is-striped is-hoverable is-fullwidth">
+			<table class="table has-actions is-striped is-hoverable is-fullwidth">
 				<tbody>
 				<tr :key="m.id" v-for="m in team.members">
 					<td>{{ m.getDisplayName() }}</td>

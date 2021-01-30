@@ -36,6 +36,11 @@
 
 .field.has-addons .button {
   height: 2.5rem;
+  margin-left: 0 !important;
+}
+
+.field.has-addons .select select {
+  margin-right: 0;
 }
 
 .input,

@@ -39,6 +39,12 @@
       transform: translate(-50%, -50%);
       text-align: center;
 
+      @media screen and (max-width: $tablet) {
+        margin: 0;
+        top: 25%;
+        transform: translate(-50%, -25%);
+      }
+
       .header {
         font-size: 2rem;
         font-weight: 700;
@@ -55,6 +61,11 @@
       right: 26px;
       color: $white;
       font-size: 2rem;
+    }
+
+    .is-wide {
+      max-width: $desktop;
+      width: calc(100% - 2rem);
     }
   }
 }

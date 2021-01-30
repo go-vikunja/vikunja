@@ -1,5 +1,5 @@
 <template>
-	<create
+	<create-edit
 		title="Create a new label"
 		@create="newLabel()"
 		:create-disabled="label.title === ''"
@@ -31,7 +31,7 @@
 				<color-picker v-model="label.hexColor" />
 			</div>
 		</div>
-	</create>
+	</create-edit>
 </template>
 
 <script>
@@ -39,7 +39,7 @@ import labelModel from '../../models/label'
 import labelService from '../../services/label'
 import LabelModel from '../../models/label'
 import LabelService from '../../services/label'
-import Create from '@/components/misc/create'
+import CreateEdit from '@/components/misc/create-edit'
 import ColorPicker from '../../components/input/colorPicker'
 
 export default {
@@ -52,7 +52,7 @@ export default {
 		}
 	},
 	components: {
-		Create,
+		CreateEdit,
 		ColorPicker,
 	},
 	created() {
