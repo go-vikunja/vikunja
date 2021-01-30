@@ -278,6 +278,11 @@ export default {
 		// it a higher timeout to make the timouts cancel each other in that case so
 		// that in the end, only one change event is triggered to the outside per change.
 		handleInput(val) {
+			// Don't bubble if the text is up to date
+			if(val === this.text) {
+				return
+			}
+
 			this.text = val
 			this.bubble(1000)
 		},
