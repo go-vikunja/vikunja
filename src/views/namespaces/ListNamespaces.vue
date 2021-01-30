@@ -28,6 +28,15 @@
 			>
 				Create list
 			</x-button>
+			<x-button
+				:to="{name: 'namespace.settings.archive', params: {id:  n.id}}"
+				class="is-pulled-right mr-4"
+				type="secondary"
+				v-if="n.isArchived"
+				icon="archive"
+			>
+				Un-Archive
+			</x-button>
 
 			<h1>
 				<span>{{ n.title }}</span>
