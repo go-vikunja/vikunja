@@ -65,9 +65,9 @@ export default {
 		},
 	},
 	methods: {
-		update() {
+		update(force = false) {
 
-			if(this.empty) {
+			if(this.empty && !force) {
 				return
 			}
 
@@ -84,7 +84,7 @@ export default {
 			// FIXME: I havn't found a way to make it clear to the user the color war reset.
 			//  Not sure if verte is capable of this - it does not show the change when setting this.color = ''
 			this.color = ''
-			this.update()
+			this.update(true)
 		},
 	},
 }
