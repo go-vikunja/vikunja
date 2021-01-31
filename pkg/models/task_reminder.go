@@ -106,7 +106,9 @@ func getTasksWithRemindersInTheNextMinute(s *xorm.Session, now time.Time) (taskI
 
 	reminders := []*TaskReminder{}
 	err = s.
+		Join("INNER", "tasks", "tasks.id = task_reminders.task_id").
 		Where("reminder >= ? and reminder < ?", now.Format(dbFormat), nextMinute.Format(dbFormat)).
+		And("tasks.done = false").
 		Find(&reminders)
 	if err != nil {
 		return
