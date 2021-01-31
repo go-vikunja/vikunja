@@ -18,6 +18,7 @@ package models
 
 import (
 	"testing"
+	"xorm.io/xorm"
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/user"
@@ -133,5 +134,49 @@ func TestBucket_Delete(t *testing.T) {
 			"id":      34,
 			"list_id": 18,
 		}, false)
+	})
+}
+
+func TestBucket_Update(t *testing.T) {
+
+	testAndAssertBucketUpdate := func(t *testing.T, b *Bucket, s *xorm.Session) {
+		err := b.Update(s)
+		assert.NoError(t, err)
+
+		err = s.Commit()
+		assert.NoError(t, err)
+
+		db.AssertExists(t, "buckets", map[string]interface{}{
+			"id":    1,
+			"title": b.Title,
+			"limit": b.Limit,
+		}, false)
+	}
+
+	t.Run("normal", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		b := &Bucket{
+			ID:    1,
+			Title: "New Name",
+			Limit: 2,
+		}
+
+		testAndAssertBucketUpdate(t, b, s)
+	})
+	t.Run("reset limit", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		b := &Bucket{
+			ID:    1,
+			Title: "testbucket1",
+			Limit: 0,
+		}
+
+		testAndAssertBucketUpdate(t, b, s)
 	})
 }

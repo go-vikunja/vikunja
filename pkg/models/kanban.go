@@ -191,7 +191,10 @@ func (b *Bucket) Create(s *xorm.Session, a web.Auth) (err error) {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{listID}/buckets/{bucketID} [post]
 func (b *Bucket) Update(s *xorm.Session) (err error) {
-	_, err = s.Where("id = ?", b.ID).Update(b)
+	_, err = s.
+		Where("id = ?", b.ID).
+		Cols("title", "limit").
+		Update(b)
 	return
 }
 
