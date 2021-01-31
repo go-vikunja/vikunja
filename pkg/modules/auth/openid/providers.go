@@ -24,7 +24,6 @@ import (
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
-	kerr "code.vikunja.io/api/pkg/modules/keyvalue/error"
 	"github.com/coreos/go-oidc"
 	"golang.org/x/oauth2"
 )
@@ -35,8 +34,8 @@ func GetAllProviders() (providers []*Provider, err error) {
 		return nil, nil
 	}
 
-	ps, err := keyvalue.Get("openid_providers")
-	if err != nil && kerr.IsErrValueNotFoundForKey(err) {
+	ps, exists, err := keyvalue.Get("openid_providers")
+	if !exists {
 		rawProviders := config.AuthOpenIDProviders.Get()
 		if rawProviders == nil {
 			return nil, nil
@@ -73,14 +72,14 @@ func GetAllProviders() (providers []*Provider, err error) {
 // GetProvider retrieves a provider from keyvalue
 func GetProvider(key string) (provider *Provider, err error) {
 	var p interface{}
-	p, err = keyvalue.Get("openid_provider_" + key)
-	if err != nil && kerr.IsErrValueNotFoundForKey(err) {
+	p, exists, err := keyvalue.Get("openid_provider_" + key)
+	if exists {
 		_, err = GetAllProviders() // This will put all providers in cache
 		if err != nil {
 			return nil, err
 		}
 
-		p, err = keyvalue.Get("openid_provider_" + key)
+		p, _, err = keyvalue.Get("openid_provider_" + key)
 	}
 
 	if p != nil {

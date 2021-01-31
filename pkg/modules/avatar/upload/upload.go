@@ -26,7 +26,6 @@ import (
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
-	e "code.vikunja.io/api/pkg/modules/keyvalue/error"
 	"code.vikunja.io/api/pkg/user"
 	"github.com/disintegration/imaging"
 )
@@ -40,8 +39,8 @@ func (p *Provider) GetAvatar(u *user.User, size int64) (avatar []byte, mimeType 
 
 	cacheKey := "avatar_upload_" + strconv.Itoa(int(u.ID))
 
-	ai, err := keyvalue.Get(cacheKey)
-	if err != nil && !e.IsErrValueNotFoundForKey(err) {
+	ai, exists, err := keyvalue.Get(cacheKey)
+	if err != nil {
 		return nil, "", err
 	}
 
@@ -51,7 +50,7 @@ func (p *Provider) GetAvatar(u *user.User, size int64) (avatar []byte, mimeType 
 		cached = ai.(map[int64][]byte)
 	}
 
-	if err != nil && e.IsErrValueNotFoundForKey(err) {
+	if !exists {
 		// Nothing ever cached for this user so we need to create the size map to avoid panics
 		cached = make(map[int64][]byte)
 	} else {

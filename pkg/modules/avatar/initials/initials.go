@@ -27,7 +27,6 @@ import (
 
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
-	e "code.vikunja.io/api/pkg/modules/keyvalue/error"
 	"code.vikunja.io/api/pkg/user"
 	"github.com/disintegration/imaging"
 	"github.com/golang/freetype/truetype"
@@ -128,12 +127,12 @@ func getCacheKey(prefix string, keys ...int64) string {
 func getAvatarForUser(u *user.User) (fullSizeAvatar *image.RGBA64, err error) {
 	cacheKey := getCacheKey("full", u.ID)
 
-	a, err := keyvalue.Get(cacheKey)
-	if err != nil && !e.IsErrValueNotFoundForKey(err) {
+	a, exists, err := keyvalue.Get(cacheKey)
+	if err != nil {
 		return nil, err
 	}
 
-	if err != nil && e.IsErrValueNotFoundForKey(err) {
+	if !exists {
 		log.Debugf("Initials avatar for user %d not cached, creating...", u.ID)
 		firstRune := []rune(strings.ToUpper(u.Username))[0]
 		bg := avatarBgColors[int(u.ID)%len(avatarBgColors)] // Random color based on the user id
@@ -157,12 +156,12 @@ func getAvatarForUser(u *user.User) (fullSizeAvatar *image.RGBA64, err error) {
 func (p *Provider) GetAvatar(u *user.User, size int64) (avatar []byte, mimeType string, err error) {
 	cacheKey := getCacheKey("resized", u.ID, size)
 
-	a, err := keyvalue.Get(cacheKey)
-	if err != nil && !e.IsErrValueNotFoundForKey(err) {
+	a, exists, err := keyvalue.Get(cacheKey)
+	if err != nil {
 		return nil, "", err
 	}
 
-	if err != nil && e.IsErrValueNotFoundForKey(err) {
+	if !exists {
 		log.Debugf("Initials avatar for user %d and size %d not cached, creating...", u.ID, size)
 		fullAvatar, err := getAvatarForUser(u)
 		if err != nil {

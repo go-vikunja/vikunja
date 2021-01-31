@@ -34,7 +34,6 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/background"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
-	e "code.vikunja.io/api/pkg/modules/keyvalue/error"
 	"code.vikunja.io/web"
 )
 
@@ -123,12 +122,12 @@ func getImageID(fullURL string) string {
 // Gets an unsplash photo either from cache or directly from the unsplash api
 func getUnsplashPhotoInfoByID(photoID string) (photo *Photo, err error) {
 
-	p, err := keyvalue.Get(cachePrefix + photoID)
-	if err != nil && !e.IsErrValueNotFoundForKey(err) {
+	p, exists, err := keyvalue.Get(cachePrefix + photoID)
+	if err != nil {
 		return nil, err
 	}
 
-	if err != nil && e.IsErrValueNotFoundForKey(err) {
+	if !exists {
 		log.Debugf("Image information for unsplash photo %s not cached, requesting from unsplash...", photoID)
 		photo = &Photo{}
 		err = doGet("photos/"+photoID, photo)

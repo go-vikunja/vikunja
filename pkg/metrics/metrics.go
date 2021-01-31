@@ -20,7 +20,6 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
-	e "code.vikunja.io/api/pkg/modules/keyvalue/error"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 )
@@ -97,13 +96,14 @@ func InitMetrics() {
 
 // GetCount returns the current count from redis
 func GetCount(key string) (count int64, err error) {
-	cnt, err := keyvalue.Get(key)
+	cnt, exists, err := keyvalue.Get(key)
 	if err != nil {
-		if e.IsErrValueNotFoundForKey(err) {
-			return 0, nil
-		}
 		return 0, err
 	}
+	if !exists {
+		return 0, nil
+	}
+
 	count = cnt.(int64)
 
 	return

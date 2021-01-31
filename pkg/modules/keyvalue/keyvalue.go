@@ -25,7 +25,7 @@ import (
 // Storage defines an interface for saving key-value pairs
 type Storage interface {
 	Put(key string, value interface{}) (err error)
-	Get(key string) (value interface{}, err error)
+	Get(key string) (value interface{}, exists bool, err error)
 	Del(key string) (err error)
 	IncrBy(key string, update int64) (err error)
 	DecrBy(key string, update int64) (err error)
@@ -51,7 +51,7 @@ func Put(key string, value interface{}) error {
 }
 
 // Get returns a value from a storage backend
-func Get(key string) (value interface{}, err error) {
+func Get(key string) (value interface{}, exists bool, err error) {
 	return store.Get(key)
 }
 

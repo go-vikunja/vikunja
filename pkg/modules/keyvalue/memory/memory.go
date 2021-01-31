@@ -44,16 +44,11 @@ func (s *Storage) Put(key string, value interface{}) (err error) {
 }
 
 // Get retrieves a saved value from memory storage
-func (s *Storage) Get(key string) (value interface{}, err error) {
+func (s *Storage) Get(key string) (value interface{}, exists bool, err error) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
-	var exists bool
 	value, exists = s.store[key]
-	if !exists {
-		return nil, &e.ErrValueNotFoundForKey{Key: key}
-	}
-
 	return
 }
 
