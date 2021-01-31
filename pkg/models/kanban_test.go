@@ -18,6 +18,7 @@ package models
 
 import (
 	"testing"
+
 	"xorm.io/xorm"
 
 	"code.vikunja.io/api/pkg/db"
