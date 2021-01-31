@@ -332,8 +332,14 @@ func (n *Namespace) ReadAll(s *xorm.Session, a web.Auth, search string, page int
 		Join("LEFT", []string{"team_list", "tl"}, "l.id = tl.list_id").
 		Join("LEFT", []string{"team_members", "tm"}, "tm.team_id = tl.team_id").
 		Join("LEFT", []string{"users_list", "ul"}, "ul.list_id = l.id").
-		Where("tm.user_id = ?", doer.ID).
-		Or("ul.user_id = ?", doer.ID).
+		Where(builder.And(
+			builder.Eq{"tm.user_id": doer.ID},
+			builder.Neq{"l.owner_id": doer.ID},
+		)).
+		Or(builder.And(
+			builder.Eq{"ul.user_id": doer.ID},
+			builder.Neq{"l.owner_id": doer.ID},
+		)).
 		GroupBy("l.id")
 	if !n.IsArchived {
 		iListQuery.And("l.is_archived = false")

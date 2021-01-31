@@ -142,8 +142,11 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			label4,
 		},
 		RelatedTasks: map[RelationKind][]*Task{},
-		Created:      time.Unix(1543626724, 0).In(loc),
-		Updated:      time.Unix(1543626724, 0).In(loc),
+		Reminders: []time.Time{
+			time.Unix(1543626824, 0).In(loc),
+		},
+		Created: time.Unix(1543626724, 0).In(loc),
+		Updated: time.Unix(1543626724, 0).In(loc),
 	}
 	task3 := &Task{
 		ID:           3,
@@ -883,6 +886,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			},
 			args: defaultArgs,
 			want: []*Task{
+				task2,
 				task27,
 			},
 			wantErr: false,
