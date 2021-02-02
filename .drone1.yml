@@ -496,23 +496,24 @@ steps:
         - tag
     depends_on: [ build-os-packages ]
 
-  - name: deb-structure
-    image: kolaente/reprepro
-    pull: true
-    environment:
-      GPG_PRIVATE_KEY:
-        from_secret: gpg_privatekey
-    commands:
-      - export GPG_TTY=$(tty)
-      - gpg -qk
-      - echo "use-agent" >>  ~/.gnupg/gpg.conf
-      - gpgconf --kill gpg-agent
-      - echo $GPG_PRIVATE_KEY > ~/frederik.gpg
-      - gpg --import ~/frederik.gpg
-      - mkdir debian/conf -p
-      - cp build/reprepro-dist-conf debian/conf/distributions
-      - ./mage-static release:reprepro
-    depends_on: [ build-os-packages ]
+### Broken, disabled until we figure out how to fix it
+#  - name: deb-structure
+#    image: kolaente/reprepro
+#    pull: true
+#    environment:
+#      GPG_PRIVATE_KEY:
+#        from_secret: gpg_privatekey
+#    commands:
+#      - export GPG_TTY=$(tty)
+#      - gpg -qk
+#      - echo "use-agent" >>  ~/.gnupg/gpg.conf
+#      - gpgconf --kill gpg-agent
+#      - echo $GPG_PRIVATE_KEY > ~/frederik.gpg
+#      - gpg --import ~/frederik.gpg
+#      - mkdir debian/conf -p
+#      - cp build/reprepro-dist-conf debian/conf/distributions
+#      - ./mage-static release:reprepro
+#    depends_on: [ build-os-packages ]
 
   # Push the releases to our pseudo-s3-bucket
   - name: release-deb
@@ -530,7 +531,7 @@ steps:
       strip_prefix: debian
       source: debian/*/*/*/*/*
       target: /deb/
-    depends_on: [ deb-structure ]
+#    depends_on: [ deb-structure ]
 
 ---
 kind: pipeline
