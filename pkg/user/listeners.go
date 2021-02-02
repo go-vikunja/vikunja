@@ -14,31 +14,32 @@
 // You should have received a copy of the GNU Affero General Public Licensee
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package migration
+package user
 
 import (
-	"os"
-	"testing"
-
 	"code.vikunja.io/api/pkg/events"
-
-	"code.vikunja.io/api/pkg/config"
-	"code.vikunja.io/api/pkg/files"
-	"code.vikunja.io/api/pkg/models"
-	"code.vikunja.io/api/pkg/user"
+	"code.vikunja.io/api/pkg/metrics"
+	"code.vikunja.io/api/pkg/modules/keyvalue"
+	"github.com/ThreeDotsLabs/watermill/message"
 )
 
-// TestMain is the main test function used to bootstrap the test env
-func TestMain(m *testing.M) {
-	// Set default config
-	config.InitDefaultConfig()
-	// We need to set the root path even if we're not using the config, otherwise fixtures are not loaded correctly
-	config.ServiceRootpath.Set(os.Getenv("VIKUNJA_SERVICE_ROOTPATH"))
+func RegisterListeners() {
+	events.RegisterListener((&CreatedEvent{}).Name(), &IncreaseUserCounter{})
+}
 
-	// Some tests use the file engine, so we'll need to initialize that
-	files.InitTests()
-	user.InitTests()
-	models.SetupTests()
-	events.Fake()
-	os.Exit(m.Run())
+///////
+// User Events
+
+// IncreaseUserCounter  represents a listener
+type IncreaseUserCounter struct {
+}
+
+// Name defines the name for the IncreaseUserCounter listener
+func (s *IncreaseUserCounter) Name() string {
+	return "increase.user.counter"
+}
+
+// Hanlde is executed when the event IncreaseUserCounter listens on is fired
+func (s *IncreaseUserCounter) Handle(payload message.Payload) (err error) {
+	return keyvalue.IncrBy(metrics.UserCountKey, 1)
 }

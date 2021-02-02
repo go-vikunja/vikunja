@@ -17,7 +17,6 @@
 package metrics
 
 import (
-	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"github.com/prometheus/client_golang/prometheus"
@@ -41,6 +40,18 @@ const (
 	TeamCountKey = `teamcount`
 )
 
+var registry *prometheus.Registry
+
+func GetRegistry() *prometheus.Registry {
+	if registry == nil {
+		registry = prometheus.NewRegistry()
+		registry.MustRegister(prometheus.NewProcessCollector(prometheus.ProcessCollectorOpts{}))
+		registry.MustRegister(prometheus.NewGoCollector())
+	}
+
+	return registry
+}
+
 // InitMetrics Initializes the metrics
 func InitMetrics() {
 	// init active users, sometimes we'll have garbage from previous runs in redis instead
@@ -48,50 +59,67 @@ func InitMetrics() {
 		log.Fatalf("Could not set initial count for active users, error was %s", err)
 	}
 
+	GetRegistry()
+
 	// Register total list count metric
-	promauto.NewGaugeFunc(prometheus.GaugeOpts{
+	err := registry.Register(promauto.NewGaugeFunc(prometheus.GaugeOpts{
 		Name: "vikunja_list_count",
 		Help: "The number of lists on this instance",
 	}, func() float64 {
 		count, _ := GetCount(ListCountKey)
 		return float64(count)
-	})
+	}))
+	if err != nil {
+		log.Criticalf("Could not register metrics for %s: %s", ListCountKey, err)
+	}
 
 	// Register total user count metric
-	promauto.NewGaugeFunc(prometheus.GaugeOpts{
+	err = registry.Register(promauto.NewGaugeFunc(prometheus.GaugeOpts{
 		Name: "vikunja_user_count",
 		Help: "The total number of users on this instance",
 	}, func() float64 {
 		count, _ := GetCount(UserCountKey)
 		return float64(count)
-	})
+	}))
+	if err != nil {
+		log.Criticalf("Could not register metrics for %s: %s", UserCountKey, err)
+	}
 
 	// Register total Namespaces count metric
-	promauto.NewGaugeFunc(prometheus.GaugeOpts{
-		Name: "vikunja_namespcae_count",
+	err = registry.Register(promauto.NewGaugeFunc(prometheus.GaugeOpts{
+		Name: "vikunja_namespace_count",
 		Help: "The total number of namespaces on this instance",
 	}, func() float64 {
 		count, _ := GetCount(NamespaceCountKey)
 		return float64(count)
-	})
+	}))
+	if err != nil {
+		log.Criticalf("Could not register metrics for %s: %s", NamespaceCountKey, err)
+	}
 
 	// Register total Tasks count metric
-	promauto.NewGaugeFunc(prometheus.GaugeOpts{
+	err = registry.Register(promauto.NewGaugeFunc(prometheus.GaugeOpts{
 		Name: "vikunja_task_count",
 		Help: "The total number of tasks on this instance",
 	}, func() float64 {
 		count, _ := GetCount(TaskCountKey)
 		return float64(count)
-	})
+	}))
+	if err != nil {
+		log.Criticalf("Could not register metrics for %s: %s", TaskCountKey, err)
+	}
 
 	// Register total user count metric
-	promauto.NewGaugeFunc(prometheus.GaugeOpts{
+	err = registry.Register(promauto.NewGaugeFunc(prometheus.GaugeOpts{
 		Name: "vikunja_team_count",
 		Help: "The total number of teams on this instance",
 	}, func() float64 {
 		count, _ := GetCount(TeamCountKey)
 		return float64(count)
-	})
+	}))
+	if err != nil {
+		log.Criticalf("Could not register metrics for %s: %s", TeamCountKey, err)
+	}
 }
 
 // GetCount returns the current count from redis
@@ -112,23 +140,4 @@ func GetCount(key string) (count int64, err error) {
 // SetCount sets the list count to a given value
 func SetCount(count int64, key string) error {
 	return keyvalue.Put(key, count)
-}
-
-// UpdateCount updates a count with a given amount
-func UpdateCount(update int64, key string) {
-	if !config.ServiceEnableMetrics.GetBool() {
-		return
-	}
-	if update > 0 {
-		err := keyvalue.IncrBy(key, update)
-		if err != nil {
-			log.Error(err.Error())
-		}
-	}
-	if update < 0 {
-		err := keyvalue.DecrBy(key, update)
-		if err != nil {
-			log.Error(err.Error())
-		}
-	}
 }

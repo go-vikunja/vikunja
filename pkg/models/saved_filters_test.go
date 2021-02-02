@@ -86,7 +86,7 @@ func TestSavedFilter_ReadOne(t *testing.T) {
 	// canRead pre-populates the struct
 	_, _, err := sf.CanRead(s, user1)
 	assert.NoError(t, err)
-	err = sf.ReadOne(s)
+	err = sf.ReadOne(s, user1)
 	assert.NoError(t, err)
 	assert.NotNil(t, sf.Owner)
 }
@@ -102,7 +102,7 @@ func TestSavedFilter_Update(t *testing.T) {
 		Description: "", // Explicitly reset the description
 		Filters:     &TaskCollection{},
 	}
-	err := sf.Update(s)
+	err := sf.Update(s, &user.User{ID: 1})
 	assert.NoError(t, err)
 	err = s.Commit()
 	assert.NoError(t, err)
@@ -121,7 +121,7 @@ func TestSavedFilter_Delete(t *testing.T) {
 	sf := &SavedFilter{
 		ID: 1,
 	}
-	err := sf.Delete(s)
+	err := sf.Delete(s, &user.User{ID: 1})
 	assert.NoError(t, err)
 	err = s.Commit()
 	assert.NoError(t, err)

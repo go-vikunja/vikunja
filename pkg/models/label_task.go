@@ -61,7 +61,7 @@ func (LabelTask) TableName() string {
 // @Failure 404 {object} web.HTTPError "Label not found."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{task}/labels/{label} [delete]
-func (lt *LabelTask) Delete(s *xorm.Session) (err error) {
+func (lt *LabelTask) Delete(s *xorm.Session, a web.Auth) (err error) {
 	_, err = s.Delete(&LabelTask{LabelID: lt.LabelID, TaskID: lt.TaskID})
 	return err
 }
@@ -206,6 +206,10 @@ func getLabelsByTaskIDs(s *xorm.Session, opts *LabelByTaskIDsOptions) (ls []*lab
 	err = query.Find(&labels)
 	if err != nil {
 		return nil, 0, 0, err
+	}
+
+	if len(labels) == 0 {
+		return nil, 0, 0, nil
 	}
 
 	// Get all created by users

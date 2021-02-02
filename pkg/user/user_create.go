@@ -18,8 +18,8 @@ package user
 
 import (
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/mail"
-	"code.vikunja.io/api/pkg/metrics"
 	"code.vikunja.io/api/pkg/utils"
 	"golang.org/x/crypto/bcrypt"
 	"xorm.io/xorm"
@@ -70,11 +70,15 @@ func CreateUser(s *xorm.Session, user *User) (newUser *User, err error) {
 		return nil, err
 	}
 
-	// Update the metrics
-	metrics.UpdateCount(1, metrics.ActiveUsersKey)
-
 	// Get the  full new User
 	newUserOut, err := GetUserByID(s, user.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	err = events.Dispatch(&CreatedEvent{
+		User: newUserOut,
+	})
 	if err != nil {
 		return nil, err
 	}

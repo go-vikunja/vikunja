@@ -19,6 +19,8 @@ package models
 import (
 	"time"
 
+	"code.vikunja.io/api/pkg/events"
+
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
 	"xorm.io/xorm"
@@ -112,6 +114,15 @@ func (lu *ListUser) Create(s *xorm.Session, a web.Auth) (err error) {
 		return err
 	}
 
+	err = events.Dispatch(&ListSharedWithUserEvent{
+		List: l,
+		User: u,
+		Doer: a,
+	})
+	if err != nil {
+		return err
+	}
+
 	err = updateListLastUpdated(s, l)
 	return
 }
@@ -129,7 +140,7 @@ func (lu *ListUser) Create(s *xorm.Session, a web.Auth) (err error) {
 // @Failure 404 {object} web.HTTPError "user or list does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{listID}/users/{userID} [delete]
-func (lu *ListUser) Delete(s *xorm.Session) (err error) {
+func (lu *ListUser) Delete(s *xorm.Session, a web.Auth) (err error) {
 
 	// Check if the user exists
 	u, err := user.GetUserByUsername(s, lu.Username)
@@ -231,7 +242,7 @@ func (lu *ListUser) ReadAll(s *xorm.Session, a web.Auth, search string, page int
 // @Failure 404 {object} web.HTTPError "User or list does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{listID}/users/{userID} [post]
-func (lu *ListUser) Update(s *xorm.Session) (err error) {
+func (lu *ListUser) Update(s *xorm.Session, a web.Auth) (err error) {
 
 	// Check if the right is valid
 	if err := lu.Right.isValid(); err != nil {

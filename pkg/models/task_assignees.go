@@ -19,6 +19,8 @@ package models
 import (
 	"time"
 
+	"code.vikunja.io/api/pkg/events"
+
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
 	"xorm.io/xorm"
@@ -57,7 +59,7 @@ func getRawTaskAssigneesForTasks(s *xorm.Session, taskIDs []int64) (taskAssignee
 }
 
 // Create or update a bunch of task assignees
-func (t *Task) updateTaskAssignees(s *xorm.Session, assignees []*user.User) (err error) {
+func (t *Task) updateTaskAssignees(s *xorm.Session, assignees []*user.User, doer web.Auth) (err error) {
 
 	// Load the current assignees
 	currentAssignees, err := getRawTaskAssigneesForTasks(s, []int64{t.ID})
@@ -132,7 +134,7 @@ func (t *Task) updateTaskAssignees(s *xorm.Session, assignees []*user.User) (err
 		}
 
 		// Add the new assignee
-		err = t.addNewAssigneeByID(s, u.ID, list)
+		err = t.addNewAssigneeByID(s, u.ID, list, doer)
 		if err != nil {
 			return err
 		}
@@ -166,7 +168,7 @@ func (t *Task) setTaskAssignees(assignees []*user.User) {
 // @Failure 403 {object} web.HTTPError "Not allowed to delete the assignee."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/assignees/{userID} [delete]
-func (la *TaskAssginee) Delete(s *xorm.Session) (err error) {
+func (la *TaskAssginee) Delete(s *xorm.Session, a web.Auth) (err error) {
 	_, err = s.Delete(&TaskAssginee{TaskID: la.TaskID, UserID: la.UserID})
 	if err != nil {
 		return err
@@ -198,10 +200,10 @@ func (la *TaskAssginee) Create(s *xorm.Session, a web.Auth) (err error) {
 	}
 
 	task := &Task{ID: la.TaskID}
-	return task.addNewAssigneeByID(s, la.UserID, list)
+	return task.addNewAssigneeByID(s, la.UserID, list, a)
 }
 
-func (t *Task) addNewAssigneeByID(s *xorm.Session, newAssigneeID int64, list *List) (err error) {
+func (t *Task) addNewAssigneeByID(s *xorm.Session, newAssigneeID int64, list *List, auth web.Auth) (err error) {
 	// Check if the user exists and has access to the list
 	newAssignee, err := user.GetUserByID(s, newAssigneeID)
 	if err != nil {
@@ -218,6 +220,15 @@ func (t *Task) addNewAssigneeByID(s *xorm.Session, newAssigneeID int64, list *Li
 	_, err = s.Insert(TaskAssginee{
 		TaskID: t.ID,
 		UserID: newAssigneeID,
+	})
+	if err != nil {
+		return err
+	}
+
+	err = events.Dispatch(&TaskAssigneeCreatedEvent{
+		Task:     t,
+		Assignee: newAssignee,
+		Doer:     auth,
 	})
 	if err != nil {
 		return err
@@ -313,6 +324,6 @@ func (ba *BulkAssignees) Create(s *xorm.Session, a web.Auth) (err error) {
 		task.Assignees = append(task.Assignees, &a.User)
 	}
 
-	err = task.updateTaskAssignees(s, ba.Assignees)
+	err = task.updateTaskAssignees(s, ba.Assignees, a)
 	return
 }

@@ -311,7 +311,7 @@ func TestListUser_Update(t *testing.T) {
 				CRUDable: tt.fields.CRUDable,
 				Rights:   tt.fields.Rights,
 			}
-			err := lu.Update(s)
+			err := lu.Update(s, &user.User{ID: 1})
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ListUser.Update() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -393,7 +393,7 @@ func TestListUser_Delete(t *testing.T) {
 				CRUDable: tt.fields.CRUDable,
 				Rights:   tt.fields.Rights,
 			}
-			err := lu.Delete(s)
+			err := lu.Delete(s, &user.User{ID: 1})
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ListUser.Delete() error = %v, wantErr %v", err, tt.wantErr)
 			}

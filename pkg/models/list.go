@@ -21,10 +21,11 @@ import (
 	"strings"
 	"time"
 
+	"code.vikunja.io/api/pkg/events"
+
 	"code.vikunja.io/api/pkg/log"
 
 	"code.vikunja.io/api/pkg/files"
-	"code.vikunja.io/api/pkg/metrics"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
 	"xorm.io/builder"
@@ -186,7 +187,7 @@ func (l *List) ReadAll(s *xorm.Session, a web.Auth, search string, page int, per
 // @Failure 403 {object} web.HTTPError "The user does not have access to the list"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{id} [get]
-func (l *List) ReadOne(s *xorm.Session) (err error) {
+func (l *List) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 
 	if l.ID == FavoritesPseudoList.ID {
 		// Already "built" the list in CanRead
@@ -388,6 +389,10 @@ func getRawListsForUser(s *xorm.Session, opts *listOptions) (lists []*List, resu
 
 // addListDetails adds owner user objects and list tasks to all lists in the slice
 func addListDetails(s *xorm.Session, lists []*List) (err error) {
+	if len(lists) == 0 {
+		return
+	}
+
 	var ownerIDs []int64
 	for _, l := range lists {
 		ownerIDs = append(ownerIDs, l.OwnerID)
@@ -409,6 +414,10 @@ func addListDetails(s *xorm.Session, lists []*List) (err error) {
 			l.BackgroundInformation = &ListBackgroundType{Type: ListBackgroundUpload}
 		}
 		fileIDs = append(fileIDs, l.BackgroundFileID)
+	}
+
+	if len(fileIDs) == 0 {
+		return
 	}
 
 	// Unsplash background file info
@@ -466,7 +475,7 @@ func (l *List) CheckIsArchived(s *xorm.Session) (err error) {
 }
 
 // CreateOrUpdateList updates a list or creates it if it doesn't exist
-func CreateOrUpdateList(s *xorm.Session, list *List) (err error) {
+func CreateOrUpdateList(s *xorm.Session, list *List, auth web.Auth) (err error) {
 
 	// Check if the namespace exists
 	if list.NamespaceID != 0 && list.NamespaceID != FavoritesPseudoNamespace.ID {
@@ -492,7 +501,6 @@ func CreateOrUpdateList(s *xorm.Session, list *List) (err error) {
 
 	if list.ID == 0 {
 		_, err = s.Insert(list)
-		metrics.UpdateCount(1, metrics.ListCountKey)
 	} else {
 		// We need to specify the cols we want to update here to be able to un-archive lists
 		colsToUpdate := []string{
@@ -522,7 +530,7 @@ func CreateOrUpdateList(s *xorm.Session, list *List) (err error) {
 	}
 
 	*list = *l
-	err = list.ReadOne(s)
+	err = list.ReadOne(s, auth)
 	return
 
 }
@@ -541,8 +549,16 @@ func CreateOrUpdateList(s *xorm.Session, list *List) (err error) {
 // @Failure 403 {object} web.HTTPError "The user does not have access to the list"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{id} [post]
-func (l *List) Update(s *xorm.Session) (err error) {
-	return CreateOrUpdateList(s, l)
+func (l *List) Update(s *xorm.Session, a web.Auth) (err error) {
+	err = CreateOrUpdateList(s, l, a)
+	if err != nil {
+		return err
+	}
+
+	return events.Dispatch(&ListUpdatedEvent{
+		List: l,
+		Doer: a,
+	})
 }
 
 func updateListLastUpdated(s *xorm.Session, list *List) error {
@@ -589,7 +605,7 @@ func (l *List) Create(s *xorm.Session, a web.Auth) (err error) {
 	l.Owner = doer
 	l.ID = 0 // Otherwise only the first time a new list would be created
 
-	err = CreateOrUpdateList(s, l)
+	err = CreateOrUpdateList(s, l, a)
 	if err != nil {
 		return
 	}
@@ -599,7 +615,15 @@ func (l *List) Create(s *xorm.Session, a web.Auth) (err error) {
 		ListID: l.ID,
 		Title:  "New Bucket",
 	}
-	return b.Create(s, a)
+	err = b.Create(s, a)
+	if err != nil {
+		return
+	}
+
+	return events.Dispatch(&ListCreatedEvent{
+		List: l,
+		Doer: a,
+	})
 }
 
 // Delete implements the delete method of CRUDable
@@ -614,18 +638,24 @@ func (l *List) Create(s *xorm.Session, a web.Auth) (err error) {
 // @Failure 403 {object} web.HTTPError "The user does not have access to the list"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{id} [delete]
-func (l *List) Delete(s *xorm.Session) (err error) {
+func (l *List) Delete(s *xorm.Session, a web.Auth) (err error) {
 
 	// Delete the list
 	_, err = s.ID(l.ID).Delete(&List{})
 	if err != nil {
 		return
 	}
-	metrics.UpdateCount(-1, metrics.ListCountKey)
 
-	// Delete all todotasks on that list
+	// Delete all tasks on that list
 	_, err = s.Where("list_id = ?", l.ID).Delete(&Task{})
-	return
+	if err != nil {
+		return
+	}
+
+	return events.Dispatch(&ListDeletedEvent{
+		List: l,
+		Doer: a,
+	})
 }
 
 // SetListBackground sets a background file as list background in the db

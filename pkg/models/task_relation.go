@@ -201,7 +201,7 @@ func (rel *TaskRelation) Create(s *xorm.Session, a web.Auth) error {
 // @Failure 404 {object} web.HTTPError "The task relation was not found."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/relations [delete]
-func (rel *TaskRelation) Delete(s *xorm.Session) error {
+func (rel *TaskRelation) Delete(s *xorm.Session, a web.Auth) error {
 	// Check if the relation exists
 	exists, err := s.
 		Cols("task_id", "other_task_id", "relation_kind").

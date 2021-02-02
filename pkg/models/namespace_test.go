@@ -69,11 +69,13 @@ func TestNamespace_Create(t *testing.T) {
 }
 
 func TestNamespace_ReadOne(t *testing.T) {
+	u := &user.User{ID: 1}
+
 	t.Run("normal", func(t *testing.T) {
 		n := &Namespace{ID: 1}
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
-		err := n.ReadOne(s)
+		err := n.ReadOne(s, u)
 		assert.NoError(t, err)
 		assert.Equal(t, n.Title, "testnamespace")
 		_ = s.Close()
@@ -82,7 +84,7 @@ func TestNamespace_ReadOne(t *testing.T) {
 		n := &Namespace{ID: 99999}
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
-		err := n.ReadOne(s)
+		err := n.ReadOne(s, u)
 		assert.Error(t, err)
 		assert.True(t, IsErrNamespaceDoesNotExist(err))
 		_ = s.Close()
@@ -90,6 +92,8 @@ func TestNamespace_ReadOne(t *testing.T) {
 }
 
 func TestNamespace_Update(t *testing.T) {
+	u := &user.User{ID: 1}
+
 	t.Run("normal", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
@@ -97,7 +101,7 @@ func TestNamespace_Update(t *testing.T) {
 			ID:    1,
 			Title: "Lorem Ipsum",
 		}
-		err := n.Update(s)
+		err := n.Update(s, u)
 		assert.NoError(t, err)
 		err = s.Commit()
 		assert.NoError(t, err)
@@ -114,7 +118,7 @@ func TestNamespace_Update(t *testing.T) {
 			ID:    99999,
 			Title: "Lorem Ipsum",
 		}
-		err := n.Update(s)
+		err := n.Update(s, u)
 		assert.Error(t, err)
 		assert.True(t, IsErrNamespaceDoesNotExist(err))
 		_ = s.Close()
@@ -127,7 +131,7 @@ func TestNamespace_Update(t *testing.T) {
 			Title: "Lorem Ipsum",
 			Owner: &user.User{ID: 99999},
 		}
-		err := n.Update(s)
+		err := n.Update(s, u)
 		assert.Error(t, err)
 		assert.True(t, user.IsErrUserDoesNotExist(err))
 		_ = s.Close()
@@ -138,7 +142,7 @@ func TestNamespace_Update(t *testing.T) {
 		n := &Namespace{
 			ID: 1,
 		}
-		err := n.Update(s)
+		err := n.Update(s, u)
 		assert.Error(t, err)
 		assert.True(t, IsErrNamespaceNameCannotBeEmpty(err))
 		_ = s.Close()
@@ -146,13 +150,15 @@ func TestNamespace_Update(t *testing.T) {
 }
 
 func TestNamespace_Delete(t *testing.T) {
+	u := &user.User{ID: 1}
+
 	t.Run("normal", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		n := &Namespace{
 			ID: 1,
 		}
-		err := n.Delete(s)
+		err := n.Delete(s, u)
 		assert.NoError(t, err)
 		err = s.Commit()
 		assert.NoError(t, err)
@@ -167,7 +173,7 @@ func TestNamespace_Delete(t *testing.T) {
 		n := &Namespace{
 			ID: 9999,
 		}
-		err := n.Delete(s)
+		err := n.Delete(s, u)
 		assert.Error(t, err)
 		assert.True(t, IsErrNamespaceDoesNotExist(err))
 		_ = s.Close()

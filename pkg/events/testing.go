@@ -14,31 +14,36 @@
 // You should have received a copy of the GNU Affero General Public Licensee
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package migration
+package events
 
 import (
-	"os"
 	"testing"
 
-	"code.vikunja.io/api/pkg/events"
-
-	"code.vikunja.io/api/pkg/config"
-	"code.vikunja.io/api/pkg/files"
-	"code.vikunja.io/api/pkg/models"
-	"code.vikunja.io/api/pkg/user"
+	"github.com/stretchr/testify/assert"
 )
 
-// TestMain is the main test function used to bootstrap the test env
-func TestMain(m *testing.M) {
-	// Set default config
-	config.InitDefaultConfig()
-	// We need to set the root path even if we're not using the config, otherwise fixtures are not loaded correctly
-	config.ServiceRootpath.Set(os.Getenv("VIKUNJA_SERVICE_ROOTPATH"))
+var (
+	isUnderTest          bool
+	dispatchedTestEvents []Event
+)
 
-	// Some tests use the file engine, so we'll need to initialize that
-	files.InitTests()
-	user.InitTests()
-	models.SetupTests()
-	events.Fake()
-	os.Exit(m.Run())
+// Fake sets up the "test mode" of the events package. Typically you'd call this function in the TestMain function
+// in the package you're testing. It will prevent any events from being fired, instead they will be recorded and be
+// available for assertions.
+func Fake() {
+	isUnderTest = true
+	dispatchedTestEvents = nil
+}
+
+// AssertDispatched asserts an event has been dispatched.
+func AssertDispatched(t *testing.T, event Event) {
+	var found bool
+	for _, testEvent := range dispatchedTestEvents {
+		if event.Name() == testEvent.Name() {
+			found = true
+			break
+		}
+	}
+
+	assert.True(t, found, "Failed to assert "+event.Name()+" has been dispatched.")
 }

@@ -157,7 +157,7 @@ func TestTeamNamespace_Delete(t *testing.T) {
 		s := db.NewSession()
 		allowed, _ := tn.CanDelete(s, u)
 		assert.True(t, allowed)
-		err := tn.Delete(s)
+		err := tn.Delete(s, u)
 		assert.NoError(t, err)
 		err = s.Commit()
 		assert.NoError(t, err)
@@ -174,7 +174,7 @@ func TestTeamNamespace_Delete(t *testing.T) {
 		}
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
-		err := tn.Delete(s)
+		err := tn.Delete(s, u)
 		assert.Error(t, err)
 		assert.True(t, IsErrTeamDoesNotExist(err))
 		_ = s.Close()
@@ -186,7 +186,7 @@ func TestTeamNamespace_Delete(t *testing.T) {
 		}
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
-		err := tn.Delete(s)
+		err := tn.Delete(s, u)
 		assert.Error(t, err)
 		assert.True(t, IsErrTeamDoesNotHaveAccessToNamespace(err))
 		_ = s.Close()
@@ -260,7 +260,7 @@ func TestTeamNamespace_Update(t *testing.T) {
 				CRUDable:    tt.fields.CRUDable,
 				Rights:      tt.fields.Rights,
 			}
-			err := tl.Update(s)
+			err := tl.Update(s, &user.User{ID: 1})
 			if (err != nil) != tt.wantErr {
 				t.Errorf("TeamNamespace.Update() error = %v, wantErr %v", err, tt.wantErr)
 			}

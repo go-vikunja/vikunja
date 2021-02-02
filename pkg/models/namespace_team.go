@@ -19,6 +19,8 @@ package models
 import (
 	"time"
 
+	"code.vikunja.io/api/pkg/events"
+
 	"code.vikunja.io/web"
 	"xorm.io/xorm"
 )
@@ -71,15 +73,15 @@ func (tn *TeamNamespace) Create(s *xorm.Session, a web.Auth) (err error) {
 	}
 
 	// Check if the team exists
-	_, err = GetTeamByID(s, tn.TeamID)
+	team, err := GetTeamByID(s, tn.TeamID)
 	if err != nil {
-		return
+		return err
 	}
 
 	// Check if the namespace exists
-	_, err = GetNamespaceByID(s, tn.NamespaceID)
+	namespace, err := GetNamespaceByID(s, tn.NamespaceID)
 	if err != nil {
-		return
+		return err
 	}
 
 	// Check if the team already has access to the namespace
@@ -96,7 +98,15 @@ func (tn *TeamNamespace) Create(s *xorm.Session, a web.Auth) (err error) {
 
 	// Insert the new team
 	_, err = s.Insert(tn)
-	return
+	if err != nil {
+		return err
+	}
+
+	return events.Dispatch(&NamespaceSharedWithTeamEvent{
+		Namespace: namespace,
+		Team:      team,
+		Doer:      a,
+	})
 }
 
 // Delete deletes a team <-> namespace relation based on the namespace & team id
@@ -112,7 +122,7 @@ func (tn *TeamNamespace) Create(s *xorm.Session, a web.Auth) (err error) {
 // @Failure 404 {object} web.HTTPError "team or namespace does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces/{namespaceID}/teams/{teamID} [delete]
-func (tn *TeamNamespace) Delete(s *xorm.Session) (err error) {
+func (tn *TeamNamespace) Delete(s *xorm.Session, a web.Auth) (err error) {
 
 	// Check if the team exists
 	_, err = GetTeamByID(s, tn.TeamID)
@@ -219,7 +229,7 @@ func (tn *TeamNamespace) ReadAll(s *xorm.Session, a web.Auth, search string, pag
 // @Failure 404 {object} web.HTTPError "Team or namespace does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces/{namespaceID}/teams/{teamID} [post]
-func (tn *TeamNamespace) Update(s *xorm.Session) (err error) {
+func (tn *TeamNamespace) Update(s *xorm.Session, a web.Auth) (err error) {
 
 	// Check if the right is valid
 	if err := tn.Right.isValid(); err != nil {

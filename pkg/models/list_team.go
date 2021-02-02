@@ -19,6 +19,8 @@ package models
 import (
 	"time"
 
+	"code.vikunja.io/api/pkg/events"
+
 	"code.vikunja.io/web"
 	"xorm.io/xorm"
 )
@@ -77,9 +79,9 @@ func (tl *TeamList) Create(s *xorm.Session, a web.Auth) (err error) {
 	}
 
 	// Check if the team exists
-	_, err = GetTeamByID(s, tl.TeamID)
+	team, err := GetTeamByID(s, tl.TeamID)
 	if err != nil {
-		return
+		return err
 	}
 
 	// Check if the list exists
@@ -105,6 +107,15 @@ func (tl *TeamList) Create(s *xorm.Session, a web.Auth) (err error) {
 		return err
 	}
 
+	err = events.Dispatch(&ListSharedWithTeamEvent{
+		List: l,
+		Team: team,
+		Doer: a,
+	})
+	if err != nil {
+		return err
+	}
+
 	err = updateListLastUpdated(s, l)
 	return
 }
@@ -122,7 +133,7 @@ func (tl *TeamList) Create(s *xorm.Session, a web.Auth) (err error) {
 // @Failure 404 {object} web.HTTPError "Team or list does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{listID}/teams/{teamID} [delete]
-func (tl *TeamList) Delete(s *xorm.Session) (err error) {
+func (tl *TeamList) Delete(s *xorm.Session, a web.Auth) (err error) {
 
 	// Check if the team exists
 	_, err = GetTeamByID(s, tl.TeamID)
@@ -234,7 +245,7 @@ func (tl *TeamList) ReadAll(s *xorm.Session, a web.Auth, search string, page int
 // @Failure 404 {object} web.HTTPError "Team or list does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{listID}/teams/{teamID} [post]
-func (tl *TeamList) Update(s *xorm.Session) (err error) {
+func (tl *TeamList) Update(s *xorm.Session, a web.Auth) (err error) {
 
 	// Check if the right is valid
 	if err := tl.Right.isValid(); err != nil {

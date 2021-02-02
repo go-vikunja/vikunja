@@ -24,6 +24,8 @@ import (
 	"strings"
 	"testing"
 
+	"code.vikunja.io/api/pkg/events"
+
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/files"
@@ -85,6 +87,7 @@ func setupTestEnv() (e *echo.Echo, err error) {
 	files.InitTests()
 	user.InitTests()
 	models.SetupTests()
+	events.Fake()
 
 	err = db.LoadFixtures()
 	if err != nil {

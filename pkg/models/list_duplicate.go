@@ -67,15 +67,15 @@ func (ld *ListDuplicate) CanCreate(s *xorm.Session, a web.Auth) (canCreate bool,
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{listID}/duplicate [put]
 //nolint:gocyclo
-func (ld *ListDuplicate) Create(s *xorm.Session, a web.Auth) (err error) {
+func (ld *ListDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
 
 	log.Debugf("Duplicating list %d", ld.ListID)
 
 	ld.List.ID = 0
 	ld.List.Identifier = "" // Reset the identifier to trigger regenerating a new one
 	// Set the owner to the current user
-	ld.List.OwnerID = a.GetID()
-	if err := CreateOrUpdateList(s, ld.List); err != nil {
+	ld.List.OwnerID = doer.GetID()
+	if err := CreateOrUpdateList(s, ld.List, doer); err != nil {
 		// If there is no available unique list identifier, just reset it.
 		if IsErrListIdentifierIsNotUnique(err) {
 			ld.List.Identifier = ""
@@ -99,7 +99,7 @@ func (ld *ListDuplicate) Create(s *xorm.Session, a web.Auth) (err error) {
 		oldID := b.ID
 		b.ID = 0
 		b.ListID = ld.List.ID
-		if err := b.Create(s, a); err != nil {
+		if err := b.Create(s, doer); err != nil {
 			return err
 		}
 		bucketMap[oldID] = b.ID
@@ -108,7 +108,7 @@ func (ld *ListDuplicate) Create(s *xorm.Session, a web.Auth) (err error) {
 	log.Debugf("Duplicated all buckets from list %d into %d", ld.ListID, ld.List.ID)
 
 	// Get all tasks + all task details
-	tasks, _, _, err := getTasksForLists(s, []*List{{ID: ld.ListID}}, a, &taskOptions{})
+	tasks, _, _, err := getTasksForLists(s, []*List{{ID: ld.ListID}}, doer, &taskOptions{})
 	if err != nil {
 		return err
 	}
@@ -124,7 +124,7 @@ func (ld *ListDuplicate) Create(s *xorm.Session, a web.Auth) (err error) {
 		t.ListID = ld.List.ID
 		t.BucketID = bucketMap[t.BucketID]
 		t.UID = ""
-		err := createTask(s, t, a, false)
+		err := createTask(s, t, doer, false)
 		if err != nil {
 			return err
 		}
@@ -163,7 +163,7 @@ func (ld *ListDuplicate) Create(s *xorm.Session, a web.Auth) (err error) {
 			return err
 		}
 
-		err := attachment.NewAttachment(s, attachment.File.File, attachment.File.Name, attachment.File.Size, a)
+		err := attachment.NewAttachment(s, attachment.File.File, attachment.File.Name, attachment.File.Size, doer)
 		if err != nil {
 			return err
 		}
@@ -206,7 +206,7 @@ func (ld *ListDuplicate) Create(s *xorm.Session, a web.Auth) (err error) {
 			ID:     taskMap[a.TaskID],
 			ListID: ld.List.ID,
 		}
-		if err := t.addNewAssigneeByID(s, a.UserID, ld.List); err != nil {
+		if err := t.addNewAssigneeByID(s, a.UserID, ld.List, doer); err != nil {
 			if IsErrUserDoesNotHaveAccessToList(err) {
 				continue
 			}
@@ -269,7 +269,7 @@ func (ld *ListDuplicate) Create(s *xorm.Session, a web.Auth) (err error) {
 		}
 		defer f.File.Close()
 
-		file, err := files.Create(f.File, f.Name, f.Size, a)
+		file, err := files.Create(f.File, f.Name, f.Size, doer)
 		if err != nil {
 			return err
 		}

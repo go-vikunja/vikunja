@@ -84,7 +84,7 @@ func TestBulkTask_Update(t *testing.T) {
 			if !allowed != tt.wantForbidden {
 				t.Errorf("BulkTask.Update() want forbidden, got %v, want %v", allowed, tt.wantForbidden)
 			}
-			if err := bt.Update(s); (err != nil) != tt.wantErr {
+			if err := bt.Update(s, tt.fields.User); (err != nil) != tt.wantErr {
 				t.Errorf("BulkTask.Update() error = %v, wantErr %v", err, tt.wantErr)
 			}
 

@@ -446,6 +446,18 @@ Echo has its own logging which usually is unnessecary, which is why it is disabl
 
 Default: `off`
 
+### events
+
+Whether or not to log events. Useful for debugging. Possible values are stdout, stderr, file or off to disable events logging.
+
+Default: `stdout`
+
+### eventslevel
+
+The log level for event log messages. Possible values (case-insensitive) are ERROR, INFO, DEBUG.
+
+Default: `info`
+
 ---
 
 ## ratelimit

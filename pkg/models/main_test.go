@@ -22,6 +22,8 @@ import (
 	"testing"
 	"time"
 
+	"code.vikunja.io/api/pkg/events"
+
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/user"
@@ -63,6 +65,8 @@ func TestMain(m *testing.M) {
 	user.InitTests()
 
 	SetupTests()
+
+	events.Fake()
 
 	os.Exit(m.Run())
 }

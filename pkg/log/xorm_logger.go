@@ -44,7 +44,7 @@ func NewXormLogger(lvl string) *XormLogger {
 	}
 	level, err := logging.LogLevel(lvl)
 	if err != nil {
-		Critical("Error setting database log level: %s", err.Error())
+		Criticalf("Error setting database log level: %s", err.Error())
 	}
 
 	xormLogger := &XormLogger{

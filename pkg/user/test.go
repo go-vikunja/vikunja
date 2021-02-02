@@ -18,6 +18,7 @@ package user
 
 import (
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
 )
 
@@ -37,4 +38,6 @@ func InitTests() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	events.Fake()
 }

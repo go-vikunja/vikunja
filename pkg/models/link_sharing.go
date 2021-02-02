@@ -127,7 +127,7 @@ func (share *LinkSharing) Create(s *xorm.Session, a web.Auth) (err error) {
 // @Failure 404 {object} web.HTTPError "Share Link not found."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{list}/shares/{share} [get]
-func (share *LinkSharing) ReadOne(s *xorm.Session) (err error) {
+func (share *LinkSharing) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 	exists, err := s.Where("id = ?", share.ID).Get(share)
 	if err != nil {
 		return err
@@ -216,7 +216,7 @@ func (share *LinkSharing) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 // @Failure 404 {object} web.HTTPError "Share Link not found."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{list}/shares/{share} [delete]
-func (share *LinkSharing) Delete(s *xorm.Session) (err error) {
+func (share *LinkSharing) Delete(s *xorm.Session, a web.Auth) (err error) {
 	_, err = s.Where("id = ?", share.ID).Delete(share)
 	return
 }

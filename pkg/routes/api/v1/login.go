@@ -104,7 +104,7 @@ func RenewToken(c echo.Context) (err error) {
 	if typ == auth.AuthTypeLinkShare {
 		share := &models.LinkSharing{}
 		share.ID = int64(claims["id"].(float64))
-		err := share.ReadOne(s)
+		err := share.ReadOne(s, share)
 		if err != nil {
 			_ = s.Rollback()
 			return handler.HandleHTTPError(err, c)

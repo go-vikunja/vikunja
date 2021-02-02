@@ -125,7 +125,7 @@ func TestList_CreateOrUpdate(t *testing.T) {
 				NamespaceID: 1,
 			}
 			list.Description = "Lorem Ipsum dolor sit amet."
-			err := list.Update(s)
+			err := list.Update(s, usr)
 			assert.NoError(t, err)
 			err = s.Commit()
 			assert.NoError(t, err)
@@ -143,7 +143,7 @@ func TestList_CreateOrUpdate(t *testing.T) {
 				ID:    99999999,
 				Title: "test",
 			}
-			err := list.Update(s)
+			err := list.Update(s, usr)
 			assert.Error(t, err)
 			assert.True(t, IsErrListDoesNotExist(err))
 			_ = s.Close()
@@ -172,7 +172,7 @@ func TestList_Delete(t *testing.T) {
 	list := List{
 		ID: 1,
 	}
-	err := list.Delete(s)
+	err := list.Delete(s, &user.User{ID: 1})
 	assert.NoError(t, err)
 	err = s.Commit()
 	assert.NoError(t, err)

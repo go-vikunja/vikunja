@@ -78,14 +78,14 @@ func (bt *BulkTask) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
 // @Failure 403 {object} web.HTTPError "The user does not have access to the task (aka its list)"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/bulk [post]
-func (bt *BulkTask) Update(s *xorm.Session) (err error) {
+func (bt *BulkTask) Update(s *xorm.Session, a web.Auth) (err error) {
 	for _, oldtask := range bt.Tasks {
 
 		// When a repeating task is marked as done, we update all deadlines and reminders and set it as undone
 		updateDone(oldtask, &bt.Task)
 
 		// Update the assignees
-		if err := oldtask.updateTaskAssignees(s, bt.Assignees); err != nil {
+		if err := oldtask.updateTaskAssignees(s, bt.Assignees, a); err != nil {
 			return err
 		}
 

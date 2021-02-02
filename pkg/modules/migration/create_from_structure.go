@@ -226,7 +226,7 @@ func InsertFromStructure(str []*models.NamespaceWithLists, user *user.User) (err
 					return err
 				}
 				buckets := bucketsIn.([]*models.Bucket)
-				err = buckets[0].Delete(s)
+				err = buckets[0].Delete(s, user)
 				if err != nil {
 					_ = s.Rollback()
 					return err

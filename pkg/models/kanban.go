@@ -190,7 +190,7 @@ func (b *Bucket) Create(s *xorm.Session, a web.Auth) (err error) {
 // @Failure 404 {object} web.HTTPError "The bucket does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{listID}/buckets/{bucketID} [post]
-func (b *Bucket) Update(s *xorm.Session) (err error) {
+func (b *Bucket) Update(s *xorm.Session, a web.Auth) (err error) {
 	_, err = s.
 		Where("id = ?", b.ID).
 		Cols("title", "limit").
@@ -211,7 +211,7 @@ func (b *Bucket) Update(s *xorm.Session) (err error) {
 // @Failure 404 {object} web.HTTPError "The bucket does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{listID}/buckets/{bucketID} [delete]
-func (b *Bucket) Delete(s *xorm.Session) (err error) {
+func (b *Bucket) Delete(s *xorm.Session, a web.Auth) (err error) {
 
 	// Prevent removing the last bucket
 	total, err := s.Where("list_id = ?", b.ListID).Count(&Bucket{})

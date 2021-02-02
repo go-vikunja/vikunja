@@ -97,6 +97,8 @@ func TestTaskRelation_Create(t *testing.T) {
 }
 
 func TestTaskRelation_Delete(t *testing.T) {
+	u := &user.User{ID: 1}
+
 	t.Run("Normal", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
@@ -107,7 +109,7 @@ func TestTaskRelation_Delete(t *testing.T) {
 			OtherTaskID:  29,
 			RelationKind: RelationKindSubtask,
 		}
-		err := rel.Delete(s)
+		err := rel.Delete(s, u)
 		assert.NoError(t, err)
 		err = s.Commit()
 		assert.NoError(t, err)
@@ -127,7 +129,7 @@ func TestTaskRelation_Delete(t *testing.T) {
 			OtherTaskID:  3,
 			RelationKind: RelationKindSubtask,
 		}
-		err := rel.Delete(s)
+		err := rel.Delete(s, u)
 		assert.Error(t, err)
 		assert.True(t, IsErrRelationDoesNotExist(err))
 	})

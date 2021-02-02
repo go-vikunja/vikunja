@@ -315,7 +315,7 @@ func TestNamespaceUser_Update(t *testing.T) {
 				CRUDable:    tt.fields.CRUDable,
 				Rights:      tt.fields.Rights,
 			}
-			err := nu.Update(s)
+			err := nu.Update(s, &user.User{ID: 1})
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NamespaceUser.Update() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -396,7 +396,7 @@ func TestNamespaceUser_Delete(t *testing.T) {
 				CRUDable:    tt.fields.CRUDable,
 				Rights:      tt.fields.Rights,
 			}
-			err := nu.Delete(s)
+			err := nu.Delete(s, &user.User{ID: 1})
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NamespaceUser.Delete() error = %v, wantErr %v", err, tt.wantErr)
 			}

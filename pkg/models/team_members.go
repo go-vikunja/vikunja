@@ -17,6 +17,7 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/events"
 	user2 "code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
 	"xorm.io/xorm"
@@ -39,9 +40,9 @@ import (
 func (tm *TeamMember) Create(s *xorm.Session, a web.Auth) (err error) {
 
 	// Check if the team extst
-	_, err = GetTeamByID(s, tm.TeamID)
+	team, err := GetTeamByID(s, tm.TeamID)
 	if err != nil {
-		return
+		return err
 	}
 
 	// Check if the user exists
@@ -64,7 +65,15 @@ func (tm *TeamMember) Create(s *xorm.Session, a web.Auth) (err error) {
 
 	// Insert the user
 	_, err = s.Insert(tm)
-	return
+	if err != nil {
+		return err
+	}
+
+	return events.Dispatch(&TeamMemberAddedEvent{
+		Team:   team,
+		Member: user,
+		Doer:   a,
+	})
 }
 
 // Delete deletes a user from a team
@@ -78,7 +87,7 @@ func (tm *TeamMember) Create(s *xorm.Session, a web.Auth) (err error) {
 // @Success 200 {object} models.Message "The user was successfully removed from the team."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /teams/{id}/members/{userID} [delete]
-func (tm *TeamMember) Delete(s *xorm.Session) (err error) {
+func (tm *TeamMember) Delete(s *xorm.Session, a web.Auth) (err error) {
 
 	total, err := s.Where("team_id = ?", tm.TeamID).Count(&TeamMember{})
 	if err != nil {
@@ -110,7 +119,7 @@ func (tm *TeamMember) Delete(s *xorm.Session) (err error) {
 // @Success 200 {object} models.Message "The member right was successfully changed."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /teams/{id}/members/{userID}/admin [post]
-func (tm *TeamMember) Update(s *xorm.Session) (err error) {
+func (tm *TeamMember) Update(s *xorm.Session, a web.Auth) (err error) {
 	// Find the numeric user id
 	user, err := user2.GetUserByUsername(s, tm.Username)
 	if err != nil {

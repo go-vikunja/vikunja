@@ -18,9 +18,9 @@ module code.vikunja.io/api
 
 require (
 	4d63.com/tz v1.2.0
-	code.vikunja.io/web v0.0.0-20201223143420-588abb73703a
-	dmitri.shuralyov.com/go/generated v0.0.0-20170818220700-b1254a446363 // indirect
+	code.vikunja.io/web v0.0.0-20210131201003-26386be9a9ae
 	gitea.com/xorm/xorm-redis-cache v0.2.0
+	github.com/ThreeDotsLabs/watermill v1.1.1
 	github.com/adlio/trello v1.8.0
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
 	github.com/asaskevich/govalidator v0.0.0-20200907205600-7a23bdc65eef
@@ -28,7 +28,6 @@ require (
 	github.com/c2h5oh/datasize v0.0.0-20200825124411-48ed595a09d2
 	github.com/client9/misspell v0.3.4
 	github.com/coreos/go-oidc v2.2.1+incompatible
-	github.com/coreos/go-oidc/v3 v3.0.0
 	github.com/cweill/gotests v1.6.0
 	github.com/d4l3k/messagediff v1.2.1
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
@@ -37,7 +36,7 @@ require (
 	github.com/fzipp/gocyclo v0.3.1
 	github.com/gabriel-vasile/mimetype v1.1.2
 	github.com/getsentry/sentry-go v0.9.0
-	github.com/go-errors/errors v1.1.1
+	github.com/go-errors/errors v1.1.1 // indirect
 	github.com/go-redis/redis/v8 v8.4.11
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/go-testfixtures/testfixtures/v3 v3.5.0
@@ -82,8 +81,9 @@ require (
 	golang.org/x/net v0.0.0-20201216054612-986b41b23924 // indirect
 	golang.org/x/oauth2 v0.0.0-20210201163806-010130855d6c
 	golang.org/x/sync v0.0.0-20201207232520-09787c993a3a
-	golang.org/x/sys v0.0.0-20201223074533-0d417f636930 // indirect
+	golang.org/x/sys v0.0.0-20210124154548-22da62e12c0c // indirect
 	golang.org/x/term v0.0.0-20201210144234-2321bbc49cbf
+	golang.org/x/text v0.3.5 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
 	gopkg.in/d4l3k/messagediff.v1 v1.2.1
@@ -94,9 +94,9 @@ require (
 	honnef.co/go/tools v0.0.1-2020.1.5
 	src.techknowlogick.com/xgo v1.2.1-0.20201205054505-b97762e7a76b
 	src.techknowlogick.com/xormigrate v1.4.0
-	xorm.io/builder v0.3.7
+	xorm.io/builder v0.3.8
 	xorm.io/core v0.7.3
-	xorm.io/xorm v1.0.5
+	xorm.io/xorm v1.0.7
 )
 
 replace (

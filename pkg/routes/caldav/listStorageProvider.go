@@ -318,7 +318,7 @@ func (vcls *VikunjaCaldavListStorage) UpdateResource(rpath, content string) (*da
 	}
 
 	// Update the task
-	err = vTask.Update(s)
+	err = vTask.Update(s, vcls.user)
 	if err != nil {
 		_ = s.Rollback()
 		return nil, err
@@ -354,7 +354,7 @@ func (vcls *VikunjaCaldavListStorage) DeleteResource(rpath string) error {
 		}
 
 		// Delete it
-		err = vcls.task.Delete(s)
+		err = vcls.task.Delete(s, vcls.user)
 		if err != nil {
 			_ = s.Rollback()
 			return err
@@ -458,7 +458,7 @@ func (vcls *VikunjaCaldavListStorage) getListRessource(isCollection bool) (rr Vi
 		log.Errorf("User %v tried to access a caldav resource (List %v) which they are not allowed to access", vcls.user.Username, vcls.list.ID)
 		return rr, models.ErrUserDoesNotHaveAccessToList{ListID: vcls.list.ID}
 	}
-	err = vcls.list.ReadOne(s)
+	err = vcls.list.ReadOne(s, vcls.user)
 	if err != nil {
 		_ = s.Rollback()
 		return

@@ -71,7 +71,7 @@ func setupMetrics(a *echo.Group) {
 		}
 	}
 
-	a.GET("/metrics", echo.WrapHandler(promhttp.Handler()))
+	a.GET("/metrics", echo.WrapHandler(promhttp.HandlerFor(metrics.GetRegistry(), promhttp.HandlerOpts{})))
 }
 
 func setupMetricsMiddleware(a *echo.Group) {

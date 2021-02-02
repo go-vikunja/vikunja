@@ -30,6 +30,8 @@ import (
 )
 
 func TestTaskAttachment_ReadOne(t *testing.T) {
+	u := &user.User{ID: 1}
+
 	t.Run("Normal File", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
@@ -39,7 +41,7 @@ func TestTaskAttachment_ReadOne(t *testing.T) {
 		ta := &TaskAttachment{
 			ID: 1,
 		}
-		err := ta.ReadOne(s)
+		err := ta.ReadOne(s, u)
 		assert.NoError(t, err)
 		assert.NotNil(t, ta.File)
 		assert.True(t, ta.File.ID == ta.FileID && ta.FileID != 0)
@@ -63,7 +65,7 @@ func TestTaskAttachment_ReadOne(t *testing.T) {
 		ta := &TaskAttachment{
 			ID: 9999,
 		}
-		err := ta.ReadOne(s)
+		err := ta.ReadOne(s, u)
 		assert.Error(t, err)
 		assert.True(t, IsErrTaskAttachmentDoesNotExist(err))
 	})
@@ -76,7 +78,7 @@ func TestTaskAttachment_ReadOne(t *testing.T) {
 		ta := &TaskAttachment{
 			ID: 2,
 		}
-		err := ta.ReadOne(s)
+		err := ta.ReadOne(s, u)
 		assert.Error(t, err)
 		assert.EqualError(t, err, "file 9999 does not exist")
 	})
@@ -153,10 +155,12 @@ func TestTaskAttachment_Delete(t *testing.T) {
 	s := db.NewSession()
 	defer s.Close()
 
+	u := &user.User{ID: 1}
+
 	files.InitTestFileFixtures(t)
 	t.Run("Normal", func(t *testing.T) {
 		ta := &TaskAttachment{ID: 1}
-		err := ta.Delete(s)
+		err := ta.Delete(s, u)
 		assert.NoError(t, err)
 		// Check if the file itself was deleted
 		_, err = files.FileStat("/1") // The new file has the id 2 since it's the second attachment
@@ -165,14 +169,14 @@ func TestTaskAttachment_Delete(t *testing.T) {
 	t.Run("Nonexisting", func(t *testing.T) {
 		files.InitTestFileFixtures(t)
 		ta := &TaskAttachment{ID: 9999}
-		err := ta.Delete(s)
+		err := ta.Delete(s, u)
 		assert.Error(t, err)
 		assert.True(t, IsErrTaskAttachmentDoesNotExist(err))
 	})
 	t.Run("Existing attachment, nonexisting file", func(t *testing.T) {
 		files.InitTestFileFixtures(t)
 		ta := &TaskAttachment{ID: 2}
-		err := ta.Delete(s)
+		err := ta.Delete(s, u)
 		assert.NoError(t, err)
 	})
 }

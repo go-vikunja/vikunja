@@ -92,6 +92,8 @@ func TestBucket_ReadAll(t *testing.T) {
 }
 
 func TestBucket_Delete(t *testing.T) {
+	user := &user.User{ID: 1}
+
 	t.Run("normal", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
@@ -101,7 +103,7 @@ func TestBucket_Delete(t *testing.T) {
 			ID:     2, // The second bucket only has 3 tasks
 			ListID: 1,
 		}
-		err := b.Delete(s)
+		err := b.Delete(s, user)
 		assert.NoError(t, err)
 		err = s.Commit()
 		assert.NoError(t, err)
@@ -125,7 +127,7 @@ func TestBucket_Delete(t *testing.T) {
 			ID:     34,
 			ListID: 18,
 		}
-		err := b.Delete(s)
+		err := b.Delete(s, user)
 		assert.Error(t, err)
 		assert.True(t, IsErrCannotRemoveLastBucket(err))
 		err = s.Commit()
@@ -141,7 +143,7 @@ func TestBucket_Delete(t *testing.T) {
 func TestBucket_Update(t *testing.T) {
 
 	testAndAssertBucketUpdate := func(t *testing.T, b *Bucket, s *xorm.Session) {
-		err := b.Update(s)
+		err := b.Update(s, &user.User{ID: 1})
 		assert.NoError(t, err)
 
 		err = s.Commit()

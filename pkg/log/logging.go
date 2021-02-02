@@ -49,6 +49,7 @@ func InitLogger() {
 		config.LogDatabase.Set("off")
 		config.LogHTTP.Set("off")
 		config.LogEcho.Set("off")
+		config.LogEvents.Set("off")
 		return
 	}
 

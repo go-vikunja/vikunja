@@ -158,6 +158,8 @@ func TestTeamList_Create(t *testing.T) {
 }
 
 func TestTeamList_Delete(t *testing.T) {
+	user := &user.User{ID: 1}
+
 	t.Run("normal", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
@@ -165,7 +167,7 @@ func TestTeamList_Delete(t *testing.T) {
 			TeamID: 1,
 			ListID: 3,
 		}
-		err := tl.Delete(s)
+		err := tl.Delete(s, user)
 		assert.NoError(t, err)
 		err = s.Commit()
 		assert.NoError(t, err)
@@ -181,7 +183,7 @@ func TestTeamList_Delete(t *testing.T) {
 			TeamID: 9999,
 			ListID: 1,
 		}
-		err := tl.Delete(s)
+		err := tl.Delete(s, user)
 		assert.Error(t, err)
 		assert.True(t, IsErrTeamDoesNotExist(err))
 		_ = s.Close()
@@ -193,7 +195,7 @@ func TestTeamList_Delete(t *testing.T) {
 			TeamID: 1,
 			ListID: 9999,
 		}
-		err := tl.Delete(s)
+		err := tl.Delete(s, user)
 		assert.Error(t, err)
 		assert.True(t, IsErrTeamDoesNotHaveAccessToList(err))
 		_ = s.Close()
@@ -267,7 +269,7 @@ func TestTeamList_Update(t *testing.T) {
 				CRUDable: tt.fields.CRUDable,
 				Rights:   tt.fields.Rights,
 			}
-			err := tl.Update(s)
+			err := tl.Update(s, &user.User{ID: 1})
 			if (err != nil) != tt.wantErr {
 				t.Errorf("TeamList.Update() error = %v, wantErr %v", err, tt.wantErr)
 			}

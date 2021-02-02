@@ -101,6 +101,8 @@ const (
 	LogHTTP          Key = `log.http`
 	LogEcho          Key = `log.echo`
 	LogPath          Key = `log.path`
+	LogEvents        Key = `log.events`
+	LogEventsLevel   Key = `log.eventslevel`
 
 	RateLimitEnabled Key = `ratelimit.enabled`
 	RateLimitKind    Key = `ratelimit.kind`
@@ -281,6 +283,8 @@ func InitDefaultConfig() {
 	LogHTTP.setDefault("stdout")
 	LogEcho.setDefault("off")
 	LogPath.setDefault(ServiceRootpath.GetString() + "/logs")
+	LogEvents.setDefault("stdout")
+	LogEventsLevel.setDefault("INFO")
 	// Rate Limit
 	RateLimitEnabled.setDefault(false)
 	RateLimitKind.setDefault("user")

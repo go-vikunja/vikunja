@@ -22,10 +22,11 @@ import (
 	"strconv"
 	"time"
 
+	"code.vikunja.io/api/pkg/events"
+
 	"code.vikunja.io/api/pkg/db"
 
 	"code.vikunja.io/api/pkg/config"
-	"code.vikunja.io/api/pkg/metrics"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/web"
@@ -596,6 +597,11 @@ func addRelatedTasksToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]
 	for _, rt := range relatedTasks {
 		relatedTaskIDs = append(relatedTaskIDs, rt.OtherTaskID)
 	}
+
+	if len(relatedTaskIDs) == 0 {
+		return
+	}
+
 	fullRelatedTasks := make(map[int64]*Task)
 	err = s.In("id", relatedTaskIDs).Find(&fullRelatedTasks)
 	if err != nil {
@@ -814,7 +820,7 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool) (err
 
 	// Update the assignees
 	if updateAssignees {
-		if err := t.updateTaskAssignees(s, t.Assignees); err != nil {
+		if err := t.updateTaskAssignees(s, t.Assignees, a); err != nil {
 			return err
 		}
 	}
@@ -824,9 +830,15 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool) (err
 		return err
 	}
 
-	metrics.UpdateCount(1, metrics.TaskCountKey)
-
 	t.setIdentifier(l)
+
+	err = events.Dispatch(&TaskCreatedEvent{
+		Task: t,
+		Doer: a,
+	})
+	if err != nil {
+		return err
+	}
 
 	err = updateListLastUpdated(s, &List{ID: t.ListID})
 	return
@@ -847,7 +859,7 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool) (err
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{id} [post]
 //nolint:gocyclo
-func (t *Task) Update(s *xorm.Session) (err error) {
+func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 
 	// Check if the task exists and get the old values
 	ot, err := GetTaskByIDSimple(s, t.ID)
@@ -870,7 +882,7 @@ func (t *Task) Update(s *xorm.Session) (err error) {
 	updateDone(&ot, t)
 
 	// Update the assignees
-	if err := ot.updateTaskAssignees(s, t.Assignees); err != nil {
+	if err := ot.updateTaskAssignees(s, t.Assignees, a); err != nil {
 		return err
 	}
 
@@ -1028,6 +1040,14 @@ func (t *Task) Update(s *xorm.Session) (err error) {
 	}
 	t.Updated = nt.Updated
 
+	err = events.Dispatch(&TaskUpdatedEvent{
+		Task: t,
+		Doer: a,
+	})
+	if err != nil {
+		return err
+	}
+
 	return updateListLastUpdated(s, &List{ID: t.ListID})
 }
 
@@ -1166,7 +1186,7 @@ func (t *Task) updateReminders(s *xorm.Session, reminders []time.Time) (err erro
 // @Failure 403 {object} web.HTTPError "The user does not have access to the list"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{id} [delete]
-func (t *Task) Delete(s *xorm.Session) (err error) {
+func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
 
 	if _, err = s.ID(t.ID).Delete(Task{}); err != nil {
 		return err
@@ -1177,7 +1197,13 @@ func (t *Task) Delete(s *xorm.Session) (err error) {
 		return err
 	}
 
-	metrics.UpdateCount(-1, metrics.TaskCountKey)
+	err = events.Dispatch(&TaskDeletedEvent{
+		Task: t,
+		Doer: a,
+	})
+	if err != nil {
+		return
+	}
 
 	err = updateListLastUpdated(s, &List{ID: t.ListID})
 	return
@@ -1195,7 +1221,7 @@ func (t *Task) Delete(s *xorm.Session) (err error) {
 // @Failure 404 {object} models.Message "Task not found"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{ID} [get]
-func (t *Task) ReadOne(s *xorm.Session) (err error) {
+func (t *Task) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 
 	taskMap := make(map[int64]*Task, 1)
 	taskMap[t.ID] = &Task{}

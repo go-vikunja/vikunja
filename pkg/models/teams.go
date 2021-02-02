@@ -19,9 +19,10 @@ package models
 import (
 	"time"
 
+	"code.vikunja.io/api/pkg/events"
+
 	"xorm.io/xorm"
 
-	"code.vikunja.io/api/pkg/metrics"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
 	"xorm.io/builder"
@@ -119,6 +120,11 @@ func GetTeamByID(s *xorm.Session, id int64) (team *Team, err error) {
 }
 
 func addMoreInfoToTeams(s *xorm.Session, teams []*Team) (err error) {
+
+	if len(teams) == 0 {
+		return nil
+	}
+
 	// Put the teams in a map to make assigning more info to it more efficient
 	teamMap := make(map[int64]*Team, len(teams))
 	var teamIDs []int64
@@ -177,7 +183,7 @@ func addMoreInfoToTeams(s *xorm.Session, teams []*Team) (err error) {
 // @Failure 403 {object} web.HTTPError "The user does not have access to the team"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /teams/{id} [get]
-func (t *Team) ReadOne(s *xorm.Session) (err error) {
+func (t *Team) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 	team, err := GetTeamByID(s, t.ID)
 	if team != nil {
 		*t = *team
@@ -270,8 +276,10 @@ func (t *Team) Create(s *xorm.Session, a web.Auth) (err error) {
 		return err
 	}
 
-	metrics.UpdateCount(1, metrics.TeamCountKey)
-	return
+	return events.Dispatch(&TeamCreatedEvent{
+		Team: t,
+		Doer: a,
+	})
 }
 
 // Delete deletes a team
@@ -285,7 +293,7 @@ func (t *Team) Create(s *xorm.Session, a web.Auth) (err error) {
 // @Failure 400 {object} web.HTTPError "Invalid team object provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /teams/{id} [delete]
-func (t *Team) Delete(s *xorm.Session) (err error) {
+func (t *Team) Delete(s *xorm.Session, a web.Auth) (err error) {
 
 	// Delete the team
 	_, err = s.ID(t.ID).Delete(&Team{})
@@ -311,8 +319,10 @@ func (t *Team) Delete(s *xorm.Session) (err error) {
 		return
 	}
 
-	metrics.UpdateCount(-1, metrics.TeamCountKey)
-	return
+	return events.Dispatch(&TeamDeletedEvent{
+		Team: t,
+		Doer: a,
+	})
 }
 
 // Update is the handler to create a team
@@ -328,7 +338,7 @@ func (t *Team) Delete(s *xorm.Session) (err error) {
 // @Failure 400 {object} web.HTTPError "Invalid team object provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /teams/{id} [post]
-func (t *Team) Update(s *xorm.Session) (err error) {
+func (t *Team) Update(s *xorm.Session, a web.Auth) (err error) {
 	// Check if we have a name
 	if t.Name == "" {
 		return ErrTeamNameCannotBeEmpty{}

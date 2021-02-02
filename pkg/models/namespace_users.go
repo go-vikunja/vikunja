@@ -19,6 +19,8 @@ package models
 import (
 	"time"
 
+	"code.vikunja.io/api/pkg/events"
+
 	user2 "code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
 	"xorm.io/xorm"
@@ -75,7 +77,7 @@ func (nu *NamespaceUser) Create(s *xorm.Session, a web.Auth) (err error) {
 	}
 
 	// Check if the namespace exists
-	l, err := GetNamespaceByID(s, nu.NamespaceID)
+	n, err := GetNamespaceByID(s, nu.NamespaceID)
 	if err != nil {
 		return
 	}
@@ -89,7 +91,7 @@ func (nu *NamespaceUser) Create(s *xorm.Session, a web.Auth) (err error) {
 
 	// Check if the user already has access or is owner of that namespace
 	// We explicitly DO NOT check for teams here
-	if l.OwnerID == nu.UserID {
+	if n.OwnerID == nu.UserID {
 		return ErrUserAlreadyHasNamespaceAccess{UserID: nu.UserID, NamespaceID: nu.NamespaceID}
 	}
 
@@ -105,8 +107,15 @@ func (nu *NamespaceUser) Create(s *xorm.Session, a web.Auth) (err error) {
 
 	// Insert user <-> namespace relation
 	_, err = s.Insert(nu)
+	if err != nil {
+		return err
+	}
 
-	return
+	return events.Dispatch(&NamespaceSharedWithUserEvent{
+		Namespace: n,
+		User:      user,
+		Doer:      a,
+	})
 }
 
 // Delete deletes a namespace <-> user relation
@@ -122,7 +131,7 @@ func (nu *NamespaceUser) Create(s *xorm.Session, a web.Auth) (err error) {
 // @Failure 404 {object} web.HTTPError "user or namespace does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces/{namespaceID}/users/{userID} [delete]
-func (nu *NamespaceUser) Delete(s *xorm.Session) (err error) {
+func (nu *NamespaceUser) Delete(s *xorm.Session, a web.Auth) (err error) {
 
 	// Check if the user exists
 	user, err := user2.GetUserByUsername(s, nu.Username)
@@ -220,7 +229,7 @@ func (nu *NamespaceUser) ReadAll(s *xorm.Session, a web.Auth, search string, pag
 // @Failure 404 {object} web.HTTPError "User or namespace does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces/{namespaceID}/users/{userID} [post]
-func (nu *NamespaceUser) Update(s *xorm.Session) (err error) {
+func (nu *NamespaceUser) Update(s *xorm.Session, a web.Auth) (err error) {
 
 	// Check if the right is valid
 	if err := nu.Right.isValid(); err != nil {

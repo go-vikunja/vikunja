@@ -20,6 +20,8 @@ import (
 	"testing"
 	"time"
 
+	"code.vikunja.io/api/pkg/events"
+
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/user"
 	"github.com/stretchr/testify/assert"
@@ -65,6 +67,7 @@ func TestTask_Create(t *testing.T) {
 			"bucket_id":     1,
 		}, false)
 
+		events.AssertDispatched(t, &TaskCreatedEvent{})
 	})
 	t.Run("empty title", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -127,6 +130,8 @@ func TestTask_Create(t *testing.T) {
 }
 
 func TestTask_Update(t *testing.T) {
+	u := &user.User{ID: 1}
+
 	t.Run("normal", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
@@ -138,7 +143,7 @@ func TestTask_Update(t *testing.T) {
 			Description: "Lorem Ipsum Dolor",
 			ListID:      1,
 		}
-		err := task.Update(s)
+		err := task.Update(s, u)
 		assert.NoError(t, err)
 		err = s.Commit()
 		assert.NoError(t, err)
@@ -161,7 +166,7 @@ func TestTask_Update(t *testing.T) {
 			Description: "Lorem Ipsum Dolor",
 			ListID:      1,
 		}
-		err := task.Update(s)
+		err := task.Update(s, u)
 		assert.Error(t, err)
 		assert.True(t, IsErrTaskDoesNotExist(err))
 	})
@@ -177,7 +182,7 @@ func TestTask_Update(t *testing.T) {
 			ListID:      1,
 			BucketID:    2, // Bucket 2 already has 3 tasks and a limit of 3
 		}
-		err := task.Update(s)
+		err := task.Update(s, u)
 		assert.Error(t, err)
 		assert.True(t, IsErrBucketLimitExceeded(err))
 	})
@@ -194,7 +199,7 @@ func TestTask_Update(t *testing.T) {
 			ListID:      1,
 			BucketID:    2, // Bucket 2 already has 3 tasks and a limit of 3
 		}
-		err := task.Update(s)
+		err := task.Update(s, u)
 		assert.NoError(t, err)
 	})
 }
@@ -208,7 +213,7 @@ func TestTask_Delete(t *testing.T) {
 		task := &Task{
 			ID: 1,
 		}
-		err := task.Delete(s)
+		err := task.Delete(s, &user.User{ID: 1})
 		assert.NoError(t, err)
 		err = s.Commit()
 		assert.NoError(t, err)
@@ -440,13 +445,15 @@ func TestUpdateDone(t *testing.T) {
 }
 
 func TestTask_ReadOne(t *testing.T) {
+	u := &user.User{ID: 1}
+
 	t.Run("default", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
 
 		task := &Task{ID: 1}
-		err := task.ReadOne(s)
+		err := task.ReadOne(s, u)
 		assert.NoError(t, err)
 		assert.Equal(t, "task #1", task.Title)
 	})
@@ -456,7 +463,7 @@ func TestTask_ReadOne(t *testing.T) {
 		defer s.Close()
 
 		task := &Task{ID: 99999}
-		err := task.ReadOne(s)
+		err := task.ReadOne(s, u)
 		assert.Error(t, err)
 		assert.True(t, IsErrTaskDoesNotExist(err))
 	})

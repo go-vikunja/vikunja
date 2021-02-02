@@ -17,8 +17,11 @@
 package initialize
 
 import (
+	"time"
+
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/cron"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/mail"
@@ -85,4 +88,21 @@ func FullInit() {
 	// Start the cron
 	cron.Init()
 	models.RegisterReminderCron()
+
+	// Start processing events
+	go func() {
+		models.RegisterListeners()
+		user.RegisterListeners()
+		err := events.InitEvents()
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+
+		err = events.Dispatch(&BootedEvent{
+			BootedAt: time.Now(),
+		})
+		if err != nil {
+			log.Fatal(err)
+		}
+	}()
 }

@@ -24,6 +24,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"fmt"
+	"github.com/iancoleman/strcase"
 	"io"
 	"io/ioutil"
 	"os"
@@ -60,13 +61,15 @@ var (
 
 	// Aliases are mage aliases of targets
 	Aliases = map[string]interface{}{
-		"build":                Build.Build,
-		"do-the-swag":          DoTheSwag,
-		"check:got-swag":       Check.GotSwag,
-		"release:os-package":   Release.OsPackage,
-		"dev:create-migration": Dev.CreateMigration,
-		"generate-docs":        GenerateDocs,
-		"check:golangci-fix":   Check.GolangciFix,
+		"build":              Build.Build,
+		"do-the-swag":        DoTheSwag,
+		"check:got-swag":     Check.GotSwag,
+		"release:os-package": Release.OsPackage,
+		"dev:make-migration": Dev.MakeMigration,
+		"dev:make-event":     Dev.MakeEvent,
+		"dev:make-listener":  Dev.MakeListener,
+		"generate-docs":      GenerateDocs,
+		"check:golangci-fix": Check.GolangciFix,
 	}
 )
 
@@ -292,6 +295,25 @@ func moveFile(src, dst string) error {
 		return fmt.Errorf("failed removing original file: %s", err)
 	}
 	return nil
+}
+
+func appendToFile(filename, content string) error {
+	f, err := os.OpenFile(filename, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+	if err != nil {
+		return err
+	}
+
+	defer f.Close()
+
+	_, err = f.WriteString(content)
+	return err
+}
+
+const InfoColor = "\033[1;32m%s\033[0m"
+
+func printSuccess(text string, args ...interface{}) {
+	text = fmt.Sprintf(text, args...)
+	fmt.Printf(InfoColor+"\n", text)
 }
 
 // Formats the code using go fmt
@@ -695,7 +717,7 @@ func (Release) Packages() error {
 type Dev mg.Namespace
 
 // Creates a new bare db migration skeleton in pkg/migration with the current date
-func (Dev) CreateMigration() error {
+func (Dev) MakeMigration() error {
 
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Print("Enter the name of the struct: ")
@@ -747,14 +769,129 @@ func init() {
 	})
 }
 `
-	f, err := os.Create(RootPath + "/pkg/migration/" + date + ".go")
+	filename := "/pkg/migration/" + date + ".go"
+	f, err := os.Create(RootPath + filename)
 	defer f.Close()
 	if err != nil {
 		return err
 	}
 
-	_, err = f.WriteString(migration)
-	return err
+	if _, err := f.WriteString(migration); err != nil {
+		return err
+	}
+
+	printSuccess("Migration has been created at %s!", filename)
+
+	return nil
+}
+
+// Create a new event. Takes the name of the event as the first argument and the module where the event should be created as the second argument. Events will be appended to the pkg/<module>/events.go file.
+func (Dev) MakeEvent(name, module string) error {
+
+	name = strcase.ToCamel(name)
+
+	if !strings.HasSuffix(name, "Event") {
+		name += "Event"
+	}
+
+	eventName := strings.ReplaceAll(strcase.ToDelimited(name, '.'), ".event", "")
+
+	newEventCode := `
+// ` + name + ` represents a ` + name + ` event
+type ` + name + ` struct {
+}
+
+// Name defines the name for ` + name + `
+func (t *` + name + `) Name() string {
+	return "` + eventName + `"
+}
+`
+	filename := "./pkg/" + module + "/events.go"
+	if err := appendToFile(filename, newEventCode); err != nil {
+		return err
+	}
+
+	printSuccess("The new event has been created successfully! Head over to %s and adjust its content.", filename)
+
+	return nil
+}
+
+// Create a new listener for an event. Takes the name of the listener, the name of the event to listen to and the module where everything should be placed as parameters.
+func (Dev) MakeListener(name, event, module string) error {
+	name = strcase.ToCamel(name)
+	listenerName := strcase.ToDelimited(name, '.')
+	listenerCode := `
+// ` + name + `  represents a listener
+type ` + name + ` struct {
+}
+
+// Name defines the name for the ` + name + ` listener
+func (s *` + name + `) Name() string {
+	return "` + listenerName + `"
+}
+
+// Hanlde is executed when the event ` + name + ` listens on is fired
+func (s *` + name + `) Handle(payload message.Payload) (err error) {
+	event := &` + event + `{}
+	err = json.Unmarshal(payload, event)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+`
+	filename := "./pkg/" + module + "/listeners.go"
+
+	//////
+	// Register the listener
+
+	file, err := os.Open(filename)
+	if err != nil {
+		return err
+	}
+
+	scanner := bufio.NewScanner(file)
+	var idx int64 = 0
+	for scanner.Scan() {
+		if scanner.Text() == "}" {
+			//idx -= int64(len(scanner.Text()))
+			break
+		}
+		idx += int64(len(scanner.Bytes()) + 1)
+	}
+	file.Close()
+
+	registerListenerCode := `	events.RegisterListener((&` + event + `{}).Name(), &` + name + `{})
+`
+
+	f, err := os.OpenFile(filename, os.O_RDWR, 0600)
+	if err != nil {
+		return err
+	}
+
+	defer f.Close()
+
+	if _, err := f.Seek(idx, 0); err != nil {
+		return err
+	}
+	remainder, err := ioutil.ReadAll(f)
+	if err != nil {
+		return err
+	}
+	f.Seek(idx, 0)
+	f.Write([]byte(registerListenerCode))
+	f.Write(remainder)
+
+	///////
+	// Append the listener code
+	if err := appendToFile(filename, listenerCode); err != nil {
+		return err
+	}
+
+	printSuccess("The new listener has been created successfully! Head over to %s and adjust its content.", filename)
+
+	return nil
 }
 
 type configOption struct {

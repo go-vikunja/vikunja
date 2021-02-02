@@ -80,7 +80,7 @@ func (ta *TaskAttachment) NewAttachment(s *xorm.Session, f io.ReadCloser, realna
 }
 
 // ReadOne returns a task attachment
-func (ta *TaskAttachment) ReadOne(s *xorm.Session) (err error) {
+func (ta *TaskAttachment) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 	exists, err := s.Where("id = ?", ta.ID).Get(ta)
 	if err != nil {
 		return
@@ -176,9 +176,9 @@ func (ta *TaskAttachment) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 // @Failure 404 {object} models.Message "The task does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{id}/attachments/{attachmentID} [delete]
-func (ta *TaskAttachment) Delete(s *xorm.Session) error {
+func (ta *TaskAttachment) Delete(s *xorm.Session, a web.Auth) error {
 	// Load the attachment
-	err := ta.ReadOne(s)
+	err := ta.ReadOne(s, a)
 	if err != nil && !files.IsErrFileDoesNotExist(err) {
 		return err
 	}
@@ -206,6 +206,10 @@ func getTaskAttachmentsByTaskIDs(s *xorm.Session, taskIDs []int64) (attachments 
 		In("task_id", taskIDs).
 		Find(&attachments)
 	if err != nil {
+		return
+	}
+
+	if len(attachments) == 0 {
 		return
 	}
 

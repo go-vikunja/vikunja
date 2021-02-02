@@ -136,6 +136,10 @@ log:
   http: "stdout"
   # Echo has its own logging which usually is unnessecary, which is why it is disabled by default. Possible values are stdout, stderr, file or off to disable standard logging.
   echo: "off"
+  # Whether or not to log events. Useful for debugging. Possible values are stdout, stderr, file or off to disable events logging.
+  events: "stdout"
+  # The log level for event log messages. Possible values (case-insensitive) are ERROR, INFO, DEBUG.
+  eventslevel: "info"
 
 ratelimit:
   # whether or not to enable the rate limit

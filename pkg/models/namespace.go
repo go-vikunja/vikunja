@@ -22,8 +22,9 @@ import (
 	"strings"
 	"time"
 
+	"code.vikunja.io/api/pkg/events"
+
 	"code.vikunja.io/api/pkg/log"
-	"code.vikunja.io/api/pkg/metrics"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
 	"xorm.io/builder"
@@ -159,7 +160,7 @@ func (n *Namespace) CheckIsArchived(s *xorm.Session) error {
 // @Failure 403 {object} web.HTTPError "The user does not have access to that namespace."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces/{id} [get]
-func (n *Namespace) ReadOne(s *xorm.Session) (err error) {
+func (n *Namespace) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 	nn, err := GetNamespaceByID(s, n.ID)
 	if err != nil {
 		return err
@@ -478,7 +479,14 @@ func (n *Namespace) Create(s *xorm.Session, a web.Auth) (err error) {
 		return err
 	}
 
-	metrics.UpdateCount(1, metrics.NamespaceCountKey)
+	err = events.Dispatch(&NamespaceCreatedEvent{
+		Namespace: n,
+		Doer:      a,
+	})
+	if err != nil {
+		return err
+	}
+
 	return
 }
 
@@ -504,7 +512,7 @@ func CreateNewNamespaceForUser(s *xorm.Session, user *user.User) (err error) {
 // @Failure 403 {object} web.HTTPError "The user does not have access to the namespace"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces/{id} [delete]
-func (n *Namespace) Delete(s *xorm.Session) (err error) {
+func (n *Namespace) Delete(s *xorm.Session, a web.Auth) (err error) {
 
 	// Check if the namespace exists
 	_, err = GetNamespaceByID(s, n.ID)
@@ -523,6 +531,14 @@ func (n *Namespace) Delete(s *xorm.Session) (err error) {
 	if err != nil {
 		return
 	}
+
+	if len(lists) == 0 {
+		return events.Dispatch(&NamespaceDeletedEvent{
+			Namespace: n,
+			Doer:      a,
+		})
+	}
+
 	var listIDs []int64
 	// We need to do that for here because we need the list ids to delete two times:
 	// 1) to delete the lists itself
@@ -543,9 +559,10 @@ func (n *Namespace) Delete(s *xorm.Session) (err error) {
 		return
 	}
 
-	metrics.UpdateCount(-1, metrics.NamespaceCountKey)
-
-	return
+	return events.Dispatch(&NamespaceDeletedEvent{
+		Namespace: n,
+		Doer:      a,
+	})
 }
 
 // Update implements the update method via the interface
@@ -562,7 +579,7 @@ func (n *Namespace) Delete(s *xorm.Session) (err error) {
 // @Failure 403 {object} web.HTTPError "The user does not have access to the namespace"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespace/{id} [post]
-func (n *Namespace) Update(s *xorm.Session) (err error) {
+func (n *Namespace) Update(s *xorm.Session, a web.Auth) (err error) {
 	// Check if we have at least a name
 	if n.Title == "" {
 		return ErrNamespaceNameCannotBeEmpty{NamespaceID: n.ID}
@@ -605,5 +622,12 @@ func (n *Namespace) Update(s *xorm.Session) (err error) {
 		ID(currentNamespace.ID).
 		Cols(colsToUpdate...).
 		Update(n)
-	return
+	if err != nil {
+		return err
+	}
+
+	return events.Dispatch(&NamespaceUpdatedEvent{
+		Namespace: n,
+		Doer:      a,
+	})
 }

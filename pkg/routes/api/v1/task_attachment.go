@@ -147,7 +147,7 @@ func GetTaskAttachment(c echo.Context) error {
 	}
 
 	// Get the attachment incl file
-	err = taskAttachment.ReadOne(s)
+	err = taskAttachment.ReadOne(s, auth)
 	if err != nil {
 		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)

@@ -19,6 +19,8 @@ package models
 import (
 	"time"
 
+	"code.vikunja.io/api/pkg/events"
+
 	"xorm.io/xorm"
 
 	"code.vikunja.io/api/pkg/user"
@@ -60,7 +62,7 @@ func (tc *TaskComment) TableName() string {
 // @Router /tasks/{taskID}/comments [put]
 func (tc *TaskComment) Create(s *xorm.Session, a web.Auth) (err error) {
 	// Check if the task exists
-	_, err = GetTaskSimple(s, &Task{ID: tc.TaskID})
+	task, err := GetTaskSimple(s, &Task{ID: tc.TaskID})
 	if err != nil {
 		return err
 	}
@@ -70,6 +72,16 @@ func (tc *TaskComment) Create(s *xorm.Session, a web.Auth) (err error) {
 	if err != nil {
 		return
 	}
+
+	err = events.Dispatch(&TaskCommentCreatedEvent{
+		Task:    &task,
+		Comment: tc,
+		Doer:    a,
+	})
+	if err != nil {
+		return err
+	}
+
 	tc.Author, err = user.GetUserByID(s, a.GetID())
 	return
 }
@@ -88,7 +100,7 @@ func (tc *TaskComment) Create(s *xorm.Session, a web.Auth) (err error) {
 // @Failure 404 {object} web.HTTPError "The task comment was not found."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/comments/{commentID} [delete]
-func (tc *TaskComment) Delete(s *xorm.Session) error {
+func (tc *TaskComment) Delete(s *xorm.Session, a web.Auth) error {
 	deleted, err := s.
 		ID(tc.ID).
 		NoAutoCondition().
@@ -113,7 +125,7 @@ func (tc *TaskComment) Delete(s *xorm.Session) error {
 // @Failure 404 {object} web.HTTPError "The task comment was not found."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/comments/{commentID} [post]
-func (tc *TaskComment) Update(s *xorm.Session) error {
+func (tc *TaskComment) Update(s *xorm.Session, a web.Auth) error {
 	updated, err := s.
 		ID(tc.ID).
 		Cols("comment").
@@ -138,7 +150,7 @@ func (tc *TaskComment) Update(s *xorm.Session) error {
 // @Failure 404 {object} web.HTTPError "The task comment was not found."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/comments/{commentID} [get]
-func (tc *TaskComment) ReadOne(s *xorm.Session) (err error) {
+func (tc *TaskComment) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 	exists, err := s.Get(tc)
 	if err != nil {
 		return

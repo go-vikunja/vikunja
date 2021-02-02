@@ -318,7 +318,7 @@ func TestLabelTask_Delete(t *testing.T) {
 			if !allowed && !tt.wantForbidden {
 				t.Errorf("LabelTask.CanDelete() forbidden, want %v", tt.wantForbidden)
 			}
-			err := l.Delete(s)
+			err := l.Delete(s, tt.auth)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("LabelTask.Delete() error = %v, wantErr %v", err, tt.wantErr)
 			}
