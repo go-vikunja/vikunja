@@ -66,6 +66,11 @@ func (s *Storage) IncrBy(key string, update int64) (err error) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
+	_, exists := s.store[key]
+	if !exists {
+		s.store[key] = int64(0)
+	}
+
 	val, is := s.store[key].(int64)
 	if !is {
 		return &e.ErrValueHasWrongType{Key: key, ExpectedValue: "int64"}
@@ -79,6 +84,11 @@ func (s *Storage) IncrBy(key string, update int64) (err error) {
 func (s *Storage) DecrBy(key string, update int64) (err error) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
+
+	_, exists := s.store[key]
+	if !exists {
+		s.store[key] = int64(0)
+	}
 
 	val, is := s.store[key].(int64)
 	if !is {
