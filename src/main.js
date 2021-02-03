@@ -201,6 +201,7 @@ Vue.mixin({
 			return date ? format(date, 'PPPPpppp') : ''
 		},
 		formatDateShort: date => {
+			console.log('short date', date)
 			return formatDate(date, 'PPpp')
 		},
 		error: (e, context, actions = []) => message.error(e, context, actions),

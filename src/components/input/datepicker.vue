@@ -113,10 +113,11 @@
 import flatPickr from 'vue-flatpickr-component'
 import 'flatpickr/dist/flatpickr.css'
 
-import {calculateDayInterval} from '@/helpers/time/calculateDayInterval'
 import {format} from 'date-fns'
+import {calculateDayInterval} from '@/helpers/time/calculateDayInterval'
 import {calculateNearestHours} from '@/helpers/time/calculateNearestHours'
 import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
+import {createDateFromString} from '@/helpers/time/createDateFromString'
 
 export default {
 	name: 'datepicker',
@@ -168,10 +169,10 @@ export default {
 				this.date = null
 				return
 			}
-			this.date = new Date(newVal)
+			this.date = createDateFromString(newVal)
 		},
 		flatPickrDate(newVal) {
-			this.date = new Date(newVal)
+			this.date = createDateFromString(newVal)
 			this.updateData()
 		},
 	},

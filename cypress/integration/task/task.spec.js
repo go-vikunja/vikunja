@@ -175,7 +175,7 @@ describe('Task', () => {
 				.should('exist')
 		})
 
-		it.only('Can add a new comment', () => {
+		it('Can add a new comment', () => {
 			const tasks = TaskFactory.create(1, {
 				id: 1,
 			})
@@ -376,6 +376,35 @@ describe('Task', () => {
 				.should('contain', 'Success')
 			cy.get('.task-view .details.labels-list .multiselect .input-wrapper')
 				.should('not.contain', labels[0].title)
+		})
+
+		it('Can set a due date for a task', () => {
+			const tasks = TaskFactory.create(1, {
+				id: 1,
+				done: false,
+			})
+			cy.visit(`/tasks/${tasks[0].id}`)
+
+			cy.get('.task-view .action-buttons .button')
+				.contains('Set Due Date')
+				.click()
+			cy.get('.task-view .columns.details .column')
+				.contains('Due Date')
+				.get('.date-input .datepicker .show')
+				.click()
+			cy.get('.datepicker .datepicker-popup a')
+				.contains('Tomorrow')
+				.click()
+			cy.get('.datepicker .datepicker-popup a.button')
+				.contains('Confirm')
+				.click()
+
+			cy.get('.task-view .columns.details .column')
+				.contains('Due Date')
+				.get('.date-input .datepicker-popup')
+				.should('not.exist')
+			cy.get('.global-notification')
+				.should('contain', 'Success')
 		})
 	})
 })
