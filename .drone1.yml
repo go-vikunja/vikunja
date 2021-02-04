@@ -596,7 +596,7 @@ depends_on:
 
 platform:
   os: linux
-  arch: arm
+  arch: arm64
 
 trigger:
   ref:
@@ -619,6 +619,18 @@ steps:
       repo: vikunja/api
       auto_tag: true
       auto_tag_suffix: linux-arm
+    depends_on: [ fetch-tags ]
+  - name: docker
+    image: plugins/docker:linux-arm64
+    pull: true
+    settings:
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
+      repo: vikunja/api
+      auto_tag: true
+      auto_tag_suffix: linux-arm64
     depends_on: [ fetch-tags ]
 
 ---
