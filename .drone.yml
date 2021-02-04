@@ -332,6 +332,8 @@ steps:
     when:
       ref:
         - refs/heads/master
+    depends_on:
+      - clone
 
   - name: docker-version
     image: plugins/docker:linux-arm
@@ -350,6 +352,8 @@ steps:
     when:
       ref:
         - "refs/tags/**"
+    depends_on:
+      - clone
 
   - name: docker-latest-arm64
     image: plugins/docker:linux-arm64
@@ -368,6 +372,8 @@ steps:
     when:
       ref:
         - refs/heads/master
+    depends_on:
+      - clone
 
   - name: docker-version-arm64
     image: plugins/docker:linux-arm64
@@ -386,6 +392,8 @@ steps:
     when:
       ref:
         - "refs/tags/**"
+    depends_on:
+      - clone
 
 ---
 kind: pipeline
