@@ -613,7 +613,7 @@ func (l *List) Create(s *xorm.Session, a web.Auth) (err error) {
 	// Create a new first bucket for this list
 	b := &Bucket{
 		ListID: l.ID,
-		Title:  "New Bucket",
+		Title:  "Backlog",
 	}
 	err = b.Create(s, a)
 	if err != nil {
