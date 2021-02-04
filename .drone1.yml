@@ -608,7 +608,7 @@ steps:
     image: docker:git
     commands:
       - git fetch --tags
-  - name: docker
+  - name: docker-arm
     image: plugins/docker:linux-arm
     pull: true
     settings:
@@ -620,7 +620,7 @@ steps:
       auto_tag: true
       auto_tag_suffix: linux-arm
     depends_on: [ fetch-tags ]
-  - name: docker
+  - name: docker-arm64
     image: plugins/docker:linux-arm64
     pull: true
     settings:
