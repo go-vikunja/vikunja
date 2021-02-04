@@ -226,6 +226,18 @@ func (m *Migration) AuthURL() string {
 		"&state=" + utils.MakeRandomString(32)
 }
 
+func parseDate(dateString string) (date time.Time, err error) {
+	date, err = time.Parse("2006-01-02T15:04:05Z", dateString)
+	if err != nil {
+		date, err = time.Parse("2006-01-02T15:04:05", dateString)
+	}
+	if err != nil {
+		date, err = time.Parse("2006-01-02", dateString)
+	}
+
+	return date, err
+}
+
 func convertTodoistToVikunja(sync *sync) (fullVikunjaHierachie []*models.NamespaceWithLists, err error) {
 
 	newNamespace := &models.NamespaceWithLists{
@@ -299,7 +311,7 @@ func convertTodoistToVikunja(sync *sync) (fullVikunjaHierachie []*models.Namespa
 
 		// Put the due date together
 		if i.Due != nil {
-			dueDate, err := time.Parse("2006-01-02", i.Due.Date)
+			dueDate, err := parseDate(i.Due.Date)
 			if err != nil {
 				return nil, err
 			}
@@ -408,15 +420,7 @@ func convertTodoistToVikunja(sync *sync) (fullVikunjaHierachie []*models.Namespa
 			log.Debugf("Could not find task %d for reminder %d while trying to resolve reminders", r.ItemID, r.ID)
 		}
 
-		var err error
-		var date time.Time
-		date, err = time.Parse("2006-01-02T15:04:05Z", r.Due.Date)
-		if err != nil {
-			date, err = time.Parse("2006-01-02T15:04:05", r.Due.Date)
-		}
-		if err != nil {
-			date, err = time.Parse("2006-01-02", r.Due.Date)
-		}
+		date, err := parseDate(r.Due.Date)
 		if err != nil {
 			return nil, err
 		}

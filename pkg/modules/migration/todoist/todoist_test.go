@@ -42,6 +42,9 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 	dueTime, err := time.Parse(time.RFC3339Nano, "2020-05-31T00:00:00Z")
 	assert.NoError(t, err)
 	dueTime = dueTime.In(config.GetTimeZone())
+	dueTimeWithTime, err := time.Parse(time.RFC3339Nano, "2021-01-31T19:00:00Z")
+	assert.NoError(t, err)
+	dueTimeWithTime = dueTimeWithTime.In(config.GetTimeZone())
 	nilTime, err := time.Parse(time.RFC3339Nano, "0001-01-01T00:00:00Z")
 	assert.NoError(t, err)
 	exampleFile, err := ioutil.ReadFile(config.ServiceRootpath.GetString() + "/pkg/modules/migration/wunderlist/testimage.jpg")
@@ -140,7 +143,29 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 				Checked:    0,
 				DateAdded:  time1,
 			},
-			makeTestItem(400000106, 396936926, true, true, true),
+			{
+				ID:            400000106,
+				UserID:        1855589,
+				ProjectID:     396936926,
+				Content:       "Task400000106",
+				Priority:      1,
+				ParentID:      0,
+				ChildOrder:    1,
+				DateAdded:     time1,
+				Checked:       1,
+				DateCompleted: time3,
+				Due: &dueDate{
+					Date:        "2021-01-31T19:00:00Z",
+					Timezone:    nil,
+					IsRecurring: false,
+				},
+				Labels: []int64{
+					80000,
+					80001,
+					80002,
+					80003,
+				},
+			},
 			makeTestItem(400000107, 396936926, false, false, true),
 			makeTestItem(400000108, 396936926, false, false, true),
 			{
@@ -440,7 +465,7 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 						{
 							Title:   "Task400000106",
 							Done:    true,
-							DueDate: dueTime,
+							DueDate: dueTimeWithTime,
 							Created: time1,
 							DoneAt:  time3,
 							Labels:  vikunjaLabels,
