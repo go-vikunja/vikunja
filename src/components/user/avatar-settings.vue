@@ -38,8 +38,9 @@
 					:src="avatarToCrop"
 					:stencil-props="{aspectRatio: 1}"
 					@ready="() => loading = false"
-					class="mb-4"
-					ref="cropper"/>
+					class="mb-4 cropper"
+					ref="cropper"
+				/>
 				<x-button
 					:loading="avatarService.loading || loading"
 					@click="uploadAvatar"
@@ -63,6 +64,7 @@
 
 <script>
 import {Cropper} from 'vue-advanced-cropper'
+import 'vue-advanced-cropper/dist/style.css'
 
 import AvatarService from '../../services/avatar'
 import AvatarModel from '../../models/avatar'
@@ -142,3 +144,16 @@ export default {
 	},
 }
 </script>
+
+<style lang="scss">
+@import '../../styles/theme/variables/all';
+
+.cropper {
+	height: 80vh;
+	background: transparent;
+}
+
+.vue-advanced-cropper__background {
+	background: $white;
+}
+</style>
