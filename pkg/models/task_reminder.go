@@ -155,6 +155,10 @@ func RegisterReminderCron() {
 			return
 		}
 
+		if len(taskIDs) == 0 {
+			return
+		}
+
 		users, err := getTaskUsersForTasks(s, taskIDs)
 		if err != nil {
 			log.Errorf("[Task Reminder Cron] Could not get task users to send them reminders: %s", err)
