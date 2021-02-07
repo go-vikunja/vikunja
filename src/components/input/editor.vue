@@ -468,7 +468,7 @@ export default {
 	}
 
 	&-placeholder {
-		color: $grey-400;
+		color: $grey-400 !important;
 		font-style: italic;
 	}
 }
