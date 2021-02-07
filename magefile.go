@@ -61,15 +61,16 @@ var (
 
 	// Aliases are mage aliases of targets
 	Aliases = map[string]interface{}{
-		"build":              Build.Build,
-		"do-the-swag":        DoTheSwag,
-		"check:got-swag":     Check.GotSwag,
-		"release:os-package": Release.OsPackage,
-		"dev:make-migration": Dev.MakeMigration,
-		"dev:make-event":     Dev.MakeEvent,
-		"dev:make-listener":  Dev.MakeListener,
-		"generate-docs":      GenerateDocs,
-		"check:golangci-fix": Check.GolangciFix,
+		"build":                 Build.Build,
+		"do-the-swag":           DoTheSwag,
+		"check:got-swag":        Check.GotSwag,
+		"release:os-package":    Release.OsPackage,
+		"dev:make-migration":    Dev.MakeMigration,
+		"dev:make-event":        Dev.MakeEvent,
+		"dev:make-listener":     Dev.MakeListener,
+		"dev:make-notification": Dev.MakeNotification,
+		"generate-docs":         GenerateDocs,
+		"check:golangci-fix":    Check.GolangciFix,
 	}
 )
 
@@ -434,16 +435,9 @@ func (Build) Clean() error {
 	return nil
 }
 
-// Generates static content into the final binary
-func (Build) Generate() {
-	mg.Deps(initVars)
-	runAndStreamOutput("go", "generate", PACKAGE+"/pkg/static")
-}
-
 // Builds a vikunja binary, ready to run
 func (Build) Build() {
 	mg.Deps(initVars)
-	mg.Deps(Build.Generate)
 	runAndStreamOutput("go", "build", Goflags[0], "-tags", Tags, "-ldflags", "-s -w "+Ldflags, "-o", Executable)
 }
 
@@ -452,7 +446,7 @@ type Release mg.Namespace
 // Runs all steps in the right order to create release packages for various platforms
 func (Release) Release(ctx context.Context) error {
 	mg.Deps(initVars)
-	mg.Deps(Build.Generate, Release.Dirs)
+	mg.Deps(Release.Dirs)
 	mg.Deps(Release.Windows, Release.Linux, Release.Darwin)
 
 	// Run compiling in parallel to speed it up
@@ -890,6 +884,44 @@ func (s *` + name + `) Handle(payload message.Payload) (err error) {
 	}
 
 	printSuccess("The new listener has been created successfully! Head over to %s and adjust its content.", filename)
+
+	return nil
+}
+
+// Create a new notification. Takes the name of the notification as the first argument and the module where the notification should be created as the second argument. Notifications will be appended to the pkg/<module>/notifications.go file.
+func (Dev) MakeNotification(name, module string) error {
+
+	name = strcase.ToCamel(name)
+
+	if !strings.HasSuffix(name, "Notification") {
+		name += "Notification"
+	}
+
+	newNotificationCode := `
+// ` + name + ` represents a ` + name + ` notification
+type ` + name + ` struct {
+}
+
+// ToMail returns the mail notification for ` + name + `
+func (n *` + name + `) ToMail() *notifications.Mail {
+	return notifications.NewMail().
+		Subject("").
+		Greeting("Hi ").
+		Line("").
+		Action("", "")
+}
+
+// ToDB returns the ` + name + ` notification in a format which can be saved in the db
+func (n *` + name + `) ToDB() interface{} {
+	return nil
+}
+`
+	filename := "./pkg/" + module + "/notifications.go"
+	if err := appendToFile(filename, newNotificationCode); err != nil {
+		return err
+	}
+
+	printSuccess("The new notification has been created successfully! Head over to %s and adjust its content.", filename)
 
 	return nil
 }

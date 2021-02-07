@@ -14,8 +14,42 @@
 // You should have received a copy of the GNU Affero General Public Licensee
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-//go:generate go run -tags=dev templates_generate.go
+package notifications
 
-package static
+import (
+	"os"
+	"testing"
 
-// The single purpose of this file is to invoke the generation of static files
+	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/mail"
+
+	"code.vikunja.io/api/pkg/config"
+)
+
+// SetupTests initializes all db tests
+func SetupTests() {
+	var err error
+	x, err := db.CreateTestEngine()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = x.Sync2(&DatabaseNotification{})
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+// TestMain is the main test function used to bootstrap the test env
+func TestMain(m *testing.M) {
+	// Set default config
+	config.InitDefaultConfig()
+	// We need to set the root path even if we're not using the config, otherwise fixtures are not loaded correctly
+	config.ServiceRootpath.Set(os.Getenv("VIKUNJA_SERVICE_ROOTPATH"))
+
+	SetupTests()
+
+	mail.Fake()
+	os.Exit(m.Run())
+}

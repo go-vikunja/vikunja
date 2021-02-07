@@ -82,7 +82,6 @@ steps:
       GOPROXY: 'https://goproxy.kolaente.de'
     depends_on: [ build ]
     commands:
-      - ./mage-static build:generate
       - ./mage-static check:got-swag
       - wget -O - -q https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.31.0
       - ./mage-static check:golangci
@@ -158,7 +157,6 @@ steps:
     environment:
       GOPROXY: 'https://goproxy.kolaente.de'
     commands:
-      - ./mage-static build:generate
       - ./mage-static test:unit
     depends_on: [ fetch-tags, mage ]
     when:
@@ -172,7 +170,6 @@ steps:
       VIKUNJA_TESTS_USE_CONFIG: 1
       VIKUNJA_DATABASE_TYPE: sqlite
     commands:
-      - ./mage-static build:generate
       - ./mage-static test:unit
     depends_on: [ fetch-tags, mage ]
     when:
@@ -190,7 +187,6 @@ steps:
       VIKUNJA_DATABASE_PASSWORD: vikunjatest
       VIKUNJA_DATABASE_DATABASE: vikunjatest
     commands:
-      - ./mage-static build:generate
       - ./mage-static test:unit
     depends_on: [ fetch-tags, mage ]
     when:
@@ -209,7 +205,6 @@ steps:
       VIKUNJA_DATABASE_DATABASE: vikunjatest
       VIKUNJA_DATABASE_SSLMODE: disable
     commands:
-      - ./mage-static build:generate
       - ./mage-static test:unit
     depends_on: [ fetch-tags, mage ]
     when:
@@ -221,7 +216,6 @@ steps:
     environment:
       GOPROXY: 'https://goproxy.kolaente.de'
     commands:
-      - ./mage-static build:generate
       - ./mage-static test:integration
     depends_on: [ fetch-tags, mage ]
     when:
@@ -235,7 +229,6 @@ steps:
       VIKUNJA_TESTS_USE_CONFIG: 1
       VIKUNJA_DATABASE_TYPE: sqlite
     commands:
-      - ./mage-static build:generate
       - ./mage-static test:integration
     depends_on: [ fetch-tags, mage ]
     when:
@@ -253,7 +246,6 @@ steps:
       VIKUNJA_DATABASE_PASSWORD: vikunjatest
       VIKUNJA_DATABASE_DATABASE: vikunjatest
     commands:
-      - ./mage-static build:generate
       - ./mage-static test:integration
     depends_on: [ fetch-tags, mage ]
     when:
@@ -272,7 +264,6 @@ steps:
       VIKUNJA_DATABASE_DATABASE: vikunjatest
       VIKUNJA_DATABASE_SSLMODE: disable
     commands:
-      - ./mage-static build:generate
       - ./mage-static test:integration
     depends_on: [ fetch-tags, mage ]
     when:
@@ -323,7 +314,6 @@ steps:
     commands:
       - export PATH=$PATH:$GOPATH/bin
       - go install github.com/magefile/mage
-      - ./mage-static build:generate
       - ./mage-static release:dirs
     depends_on: [ fetch-tags, mage ]
 
@@ -496,24 +486,24 @@ steps:
         - tag
     depends_on: [ build-os-packages ]
 
-### Broken, disabled until we figure out how to fix it
-#  - name: deb-structure
-#    image: kolaente/reprepro
-#    pull: true
-#    environment:
-#      GPG_PRIVATE_KEY:
-#        from_secret: gpg_privatekey
-#    commands:
-#      - export GPG_TTY=$(tty)
-#      - gpg -qk
-#      - echo "use-agent" >>  ~/.gnupg/gpg.conf
-#      - gpgconf --kill gpg-agent
-#      - echo $GPG_PRIVATE_KEY > ~/frederik.gpg
-#      - gpg --import ~/frederik.gpg
-#      - mkdir debian/conf -p
-#      - cp build/reprepro-dist-conf debian/conf/distributions
-#      - ./mage-static release:reprepro
-#    depends_on: [ build-os-packages ]
+  ### Broken, disabled until we figure out how to fix it
+  #  - name: deb-structure
+  #    image: kolaente/reprepro
+  #    pull: true
+  #    environment:
+  #      GPG_PRIVATE_KEY:
+  #        from_secret: gpg_privatekey
+  #    commands:
+  #      - export GPG_TTY=$(tty)
+  #      - gpg -qk
+  #      - echo "use-agent" >>  ~/.gnupg/gpg.conf
+  #      - gpgconf --kill gpg-agent
+  #      - echo $GPG_PRIVATE_KEY > ~/frederik.gpg
+  #      - gpg --import ~/frederik.gpg
+  #      - mkdir debian/conf -p
+  #      - cp build/reprepro-dist-conf debian/conf/distributions
+  #      - ./mage-static release:reprepro
+  #    depends_on: [ build-os-packages ]
 
   # Push the releases to our pseudo-s3-bucket
   - name: release-deb

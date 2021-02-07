@@ -18,7 +18,7 @@ package user
 
 import (
 	"code.vikunja.io/api/pkg/config"
-	"code.vikunja.io/api/pkg/mail"
+	"code.vikunja.io/api/pkg/notifications"
 	"code.vikunja.io/api/pkg/utils"
 	"xorm.io/xorm"
 )
@@ -44,10 +44,10 @@ func ResetPassword(s *xorm.Session, reset *PasswordReset) (err error) {
 	}
 
 	// Check if we have a token
-	var user User
+	user := &User{}
 	exists, err := s.
 		Where("password_reset_token = ?", reset.Token).
-		Get(&user)
+		Get(user)
 	if err != nil {
 		return
 	}
@@ -67,7 +67,7 @@ func ResetPassword(s *xorm.Session, reset *PasswordReset) (err error) {
 	_, err = s.
 		Cols("password", "password_reset_token").
 		Where("id = ?", user.ID).
-		Update(&user)
+		Update(user)
 	if err != nil {
 		return
 	}
@@ -78,12 +78,11 @@ func ResetPassword(s *xorm.Session, reset *PasswordReset) (err error) {
 	}
 
 	// Send a mail to the user to notify it his password was changed.
-	data := map[string]interface{}{
-		"User": user,
+	n := &PasswordChangedNotification{
+		User: user,
 	}
 
-	mail.SendMailWithTemplate(user.Email, "Your password on Vikunja was changed", "password-changed", data)
-
+	err = notifications.Notify(user, n)
 	return
 }
 
@@ -125,11 +124,10 @@ func RequestUserPasswordResetToken(s *xorm.Session, user *User) (err error) {
 		return
 	}
 
-	data := map[string]interface{}{
-		"User": user,
+	n := &ResetPasswordNotification{
+		User: user,
 	}
 
-	// Send the user a mail with the reset token
-	mail.SendMailWithTemplate(user.Email, "Reset your password on Vikunja", "reset-password", data)
+	err = notifications.Notify(user, n)
 	return
 }

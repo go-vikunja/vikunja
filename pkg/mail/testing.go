@@ -14,24 +14,35 @@
 // You should have received a copy of the GNU Affero General Public Licensee
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// +build ignore
-
-package main
+package mail
 
 import (
-	"log"
-	"net/http"
+	"reflect"
+	"testing"
 
-	"github.com/shurcooL/vfsgen"
+	"github.com/stretchr/testify/assert"
 )
 
-func main() {
-	err := vfsgen.Generate(http.Dir(`../../templates/mail`), vfsgen.Options{
-		PackageName:  "static",
-		BuildTags:    "!dev",
-		VariableName: "Templates",
-	})
-	if err != nil {
-		log.Fatalln(err)
+var (
+	isUnderTest bool
+	sentMails   []*Opts
+)
+
+// Fake stops any mails from being sent and instead allows for recording and querying them.
+func Fake() {
+	isUnderTest = true
+	sentMails = nil
+}
+
+// AssertSent asserts if a mail has been sent
+func AssertSent(t *testing.T, opts *Opts) {
+	var found bool
+	for _, testMail := range sentMails {
+		if reflect.DeepEqual(testMail, opts) {
+			found = true
+			break
+		}
 	}
+
+	assert.True(t, found, "Failed to assert mail '%v' has been sent.", opts)
 }

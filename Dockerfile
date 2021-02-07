@@ -17,7 +17,7 @@ WORKDIR ${GOPATH}/src/code.vikunja.io/api
 # Checkout version if set
 RUN if [ -n "${VIKUNJA_VERSION}" ]; then git checkout "${VIKUNJA_VERSION}"; fi \
  && go install github.com/magefile/mage \
- && mage build:clean build:build
+ && mage build:clean build
 
 ###################
 # The actual image

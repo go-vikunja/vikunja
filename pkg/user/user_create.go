@@ -19,7 +19,7 @@ package user
 import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/events"
-	"code.vikunja.io/api/pkg/mail"
+	"code.vikunja.io/api/pkg/notifications"
 	"code.vikunja.io/api/pkg/utils"
 	"golang.org/x/crypto/bcrypt"
 	"xorm.io/xorm"
@@ -83,8 +83,17 @@ func CreateUser(s *xorm.Session, user *User) (newUser *User, err error) {
 		return nil, err
 	}
 
-	sendConfirmEmail(user)
+	// Dont send a mail if no mailer is configured
+	if !config.MailerEnabled.GetBool() {
+		return newUserOut, err
+	}
 
+	n := &EmailConfirmNotification{
+		User:  user,
+		IsNew: false,
+	}
+
+	err = notifications.Notify(user, n)
 	return newUserOut, err
 }
 
@@ -144,19 +153,4 @@ func checkIfUserExists(s *xorm.Session, user *User) (err error) {
 	}
 
 	return nil
-}
-
-func sendConfirmEmail(user *User) {
-	// Dont send a mail if no mailer is configured
-	if !config.MailerEnabled.GetBool() {
-		return
-	}
-
-	// Send the user a mail with a link to confirm the mail
-	data := map[string]interface{}{
-		"User":  user,
-		"IsNew": true,
-	}
-
-	mail.SendMailWithTemplate(user.Email, user.Username+" + Vikunja = <3", "confirm-email", data)
 }

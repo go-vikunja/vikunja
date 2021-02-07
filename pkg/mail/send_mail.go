@@ -17,19 +17,14 @@
 package mail
 
 import (
-	"bytes"
-	"html/template"
-
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
-	"code.vikunja.io/api/pkg/static"
-	"code.vikunja.io/api/pkg/utils"
-	"github.com/shurcooL/httpfs/html/vfstemplate"
 	"gopkg.in/gomail.v2"
 )
 
 // Opts holds infos for a mail
 type Opts struct {
+	From        string
 	To          string
 	Subject     string
 	Message     string
@@ -56,7 +51,7 @@ type header struct {
 
 // SendTestMail sends a test mail to a receipient.
 // It works without a queue.
-func SendTestMail(to string) error {
+func SendTestMail(opts *Opts) error {
 	if config.MailerHost.GetString() == "" {
 		log.Warning("Mailer seems to be not configured! Please see the config docs for more details.")
 		return nil
@@ -69,19 +64,17 @@ func SendTestMail(to string) error {
 	}
 	defer s.Close()
 
-	m := gomail.NewMessage()
-	m.SetHeader("From", config.MailerFromEmail.GetString())
-	m.SetHeader("To", to)
-	m.SetHeader("Subject", "Test from Vikunja")
-	m.SetBody("text/plain", "This is a test mail! If you got this, Vikunja is correctly set up to send emails.")
+	m := sendMail(opts)
 
 	return gomail.Send(s, m)
 }
 
-// SendMail puts a mail in the queue
-func SendMail(opts *Opts) {
+func sendMail(opts *Opts) *gomail.Message {
 	m := gomail.NewMessage()
-	m.SetHeader("From", config.MailerFromEmail.GetString())
+	if opts.From == "" {
+		opts.From = config.MailerFromEmail.GetString()
+	}
+	m.SetHeader("From", opts.From)
 	m.SetHeader("To", opts.To)
 	m.SetHeader("Subject", opts.Subject)
 	for _, h := range opts.Headers {
@@ -97,49 +90,16 @@ func SendMail(opts *Opts) {
 		m.SetBody("text/plain", opts.Message)
 		m.AddAlternative("text/html", opts.HTMLMessage)
 	}
+	return m
+}
 
+// SendMail puts a mail in the queue
+func SendMail(opts *Opts) {
+	if isUnderTest {
+		sentMails = append(sentMails, opts)
+		return
+	}
+
+	m := sendMail(opts)
 	Queue <- m
-}
-
-// Template holds a pointer about a template
-type Template struct {
-	Templates *template.Template
-}
-
-// SendMailWithTemplate parses a template and sends it via mail
-func SendMailWithTemplate(to, subject, tpl string, data map[string]interface{}) {
-	var htmlContent bytes.Buffer
-	var plainContent bytes.Buffer
-
-	t, err := vfstemplate.ParseGlob(static.Templates, nil, "*.tmpl")
-	if err != nil {
-		log.Errorf("SendMailWithTemplate: ParseGlob: %v", err)
-		return
-	}
-
-	boundary := "np" + utils.MakeRandomString(13)
-
-	data["Boundary"] = boundary
-	data["FrontendURL"] = config.ServiceFrontendurl.GetString()
-
-	if err := t.ExecuteTemplate(&htmlContent, tpl+".html.tmpl", data); err != nil {
-		log.Errorf("ExecuteTemplate: %v", err)
-		return
-	}
-
-	if err := t.ExecuteTemplate(&plainContent, tpl+".plain.tmpl", data); err != nil {
-		log.Errorf("ExecuteTemplate: %v", err)
-		return
-	}
-
-	opts := &Opts{
-		To:          to,
-		Subject:     subject,
-		Message:     plainContent.String(),
-		HTMLMessage: htmlContent.String(),
-		ContentType: ContentTypeMultipart,
-		Boundary:    boundary,
-	}
-
-	SendMail(opts)
 }

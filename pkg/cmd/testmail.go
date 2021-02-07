@@ -17,9 +17,11 @@
 package cmd
 
 import (
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/initialize"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/mail"
+	"code.vikunja.io/api/pkg/notifications"
 	"github.com/spf13/cobra"
 )
 
@@ -39,8 +41,20 @@ var testmailCmd = &cobra.Command{
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		log.Info("Sending testmail...")
-		email := args[0]
-		if err := mail.SendTestMail(email); err != nil {
+		message := notifications.NewMail().
+			From(config.MailerFromEmail.GetString()).
+			To(args[0]).
+			Subject("Test from Vikunja").
+			Line("This is a test mail!").
+			Line("If you received this, Vikunja is correctly set up to send emails.").
+			Action("Go to your instance", config.ServiceFrontendurl.GetString())
+
+		opts, err := notifications.RenderMail(message)
+		if err != nil {
+			log.Errorf("Error sending test mail: %s", err.Error())
+			return
+		}
+		if err := mail.SendTestMail(opts); err != nil {
 			log.Errorf("Error sending test mail: %s", err.Error())
 			return
 		}

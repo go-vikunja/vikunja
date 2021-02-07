@@ -14,10 +14,35 @@
 // You should have received a copy of the GNU Affero General Public Licensee
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// +build dev
+package migration
 
-package static
+import (
+	"time"
 
-import "net/http"
+	"src.techknowlogick.com/xormigrate"
+	"xorm.io/xorm"
+)
 
-var Templates http.FileSystem = http.Dir(`templates/mail`)
+type notifications20210207192805 struct {
+	ID           int64       `xorm:"bigint autoincr not null unique pk" json:"id"`
+	NotifiableID int64       `xorm:"bigint not null" json:"-"`
+	Notification interface{} `xorm:"json not null" json:"notification"`
+	Created      time.Time   `xorm:"created not null" json:"created"`
+}
+
+func (notifications20210207192805) TableName() string {
+	return "notifications"
+}
+
+func init() {
+	migrations = append(migrations, &xormigrate.Migration{
+		ID:          "20210207192805",
+		Description: "Add notifications table",
+		Migrate: func(tx *xorm.Engine) error {
+			return tx.Sync2(notifications20210207192805{})
+		},
+		Rollback: func(tx *xorm.Engine) error {
+			return nil
+		},
+	})
+}

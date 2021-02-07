@@ -19,13 +19,14 @@ package models
 import (
 	"time"
 
+	"code.vikunja.io/api/pkg/notifications"
+
 	"code.vikunja.io/api/pkg/db"
 	"xorm.io/xorm"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/cron"
 	"code.vikunja.io/api/pkg/log"
-	"code.vikunja.io/api/pkg/mail"
 	"code.vikunja.io/api/pkg/user"
 )
 
@@ -61,11 +62,6 @@ func getTaskUsersForTasks(s *xorm.Session, taskIDs []int64) (taskUsers []*taskUs
 		return
 	}
 
-	assignees, err := getRawTaskAssigneesForTasks(s, taskIDs)
-	if err != nil {
-		return
-	}
-
 	taskMap := make(map[int64]*Task, len(taskIDs))
 	err = s.In("id", taskIDs).Find(&taskMap)
 	if err != nil {
@@ -73,10 +69,20 @@ func getTaskUsersForTasks(s *xorm.Session, taskIDs []int64) (taskUsers []*taskUs
 	}
 
 	for _, taskID := range taskIDs {
+		u, exists := creators[taskMap[taskID].CreatedByID]
+		if !exists {
+			continue
+		}
+
 		taskUsers = append(taskUsers, &taskUser{
 			Task: taskMap[taskID],
-			User: creators[taskMap[taskID].CreatedByID],
+			User: u,
 		})
+	}
+
+	assignees, err := getRawTaskAssigneesForTasks(s, taskIDs)
+	if err != nil {
+		return
 	}
 
 	for _, assignee := range assignees {
@@ -168,12 +174,17 @@ func RegisterReminderCron() {
 		log.Debugf("[Task Reminder Cron] Sending reminders to %d users", len(users))
 
 		for _, u := range users {
-			data := map[string]interface{}{
-				"User": u.User,
-				"Task": u.Task,
+			n := &ReminderDueNotification{
+				User: u.User,
+				Task: u.Task,
 			}
 
-			mail.SendMailWithTemplate(u.User.Email, `Reminder for "`+u.Task.Title+`"`, "reminder-email", data)
+			err = notifications.Notify(u.User, n)
+			if err != nil {
+				log.Errorf("[Task Reminder Cron] Could not notify user %d: %s", u.User.ID, err)
+				return
+			}
+
 			log.Debugf("[Task Reminder Cron] Sent reminder email for task %d to user %d", u.Task.ID, u.User.ID)
 		}
 	})

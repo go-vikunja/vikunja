@@ -74,6 +74,16 @@ type User struct {
 	web.Auth `xorm:"-" json:"-"`
 }
 
+// RouteForMail routes all notifications for a user to its email address
+func (u *User) RouteForMail() string {
+	return u.Email
+}
+
+// RouteForDB routes all notifications for a user to their id
+func (u *User) RouteForDB() int64 {
+	return u.ID
+}
+
 // GetID implements the Auth interface
 func (u *User) GetID() int64 {
 	return u.ID
@@ -82,6 +92,15 @@ func (u *User) GetID() int64 {
 // TableName returns the table name for users
 func (User) TableName() string {
 	return "users"
+}
+
+// GetName returns the name if the user has one and the username otherwise.
+func (u *User) GetName() string {
+	if u.Name != "" {
+		return u.Name
+	}
+
+	return u.Username
 }
 
 // GetFromAuth returns a user object from a web.Auth object and returns an error if the underlying type

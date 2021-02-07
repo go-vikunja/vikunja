@@ -18,7 +18,7 @@ package user
 
 import (
 	"code.vikunja.io/api/pkg/config"
-	"code.vikunja.io/api/pkg/mail"
+	"code.vikunja.io/api/pkg/notifications"
 	"code.vikunja.io/api/pkg/utils"
 	"xorm.io/xorm"
 )
@@ -69,12 +69,11 @@ func UpdateEmail(s *xorm.Session, update *EmailUpdate) (err error) {
 	}
 
 	// Send the user a mail with a link to confirm the mail
-	data := map[string]interface{}{
-		"User":  update.User,
-		"IsNew": false,
+	n := &EmailConfirmNotification{
+		User:  update.User,
+		IsNew: false,
 	}
 
-	mail.SendMailWithTemplate(update.User.Email, update.User.Username+", please confirm your email address at Vikunja", "confirm-email", data)
-
+	err = notifications.Notify(update.User, n)
 	return
 }

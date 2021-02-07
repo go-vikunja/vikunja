@@ -1,9 +1,0 @@
-Hi {{.User.Username}},
-
-{{if .IsNew}}
-    Welcome to Vikunja!
-
-{{end}}
-To confirm your email address, copy the link below and paste it in your browser:
-
-{{.FrontendURL}}?userEmailConfirm={{.User.EmailConfirmToken}}
