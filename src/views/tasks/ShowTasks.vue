@@ -139,7 +139,7 @@ export default {
 
 			const params = {
 				sort_by: ['due_date', 'id'],
-				order_by: ['desc', 'desc'],
+				order_by: ['asc', 'desc'],
 				filter_by: ['done'],
 				filter_value: [false],
 				filter_comparator: ['equals'],
