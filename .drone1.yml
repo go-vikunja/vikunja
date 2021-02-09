@@ -441,6 +441,9 @@ steps:
     commands:
       - apk add git go
       - ./mage-static release:packages
+      - mv dist/os-packages/vikunja*.x86_64.rpm dist/os-packages/vikunja-master-x86_64.rpm
+      - mv dist/os-packages/vikunja*_amd64.deb dist/os-packages/vikunja-master-amd64.deb
+      - mv dist/os-packages/vikunja*_x86_64.apk dist/os-packages/vikunja-master-x86_64.apk
     depends_on: [ static-build-linux ]
 
   # Push the os releases to our pseudo-s3-bucket
