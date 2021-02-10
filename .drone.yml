@@ -4,7 +4,7 @@ name: build
 trigger:
   branch:
     include:
-      - master
+      - main
   event:
     include:
       - push
@@ -134,7 +134,7 @@ depends_on:
 
 trigger:
   branch:
-    - master
+    - main
   event:
     - push
 
@@ -180,7 +180,7 @@ steps:
     pull: true
     commands:
       - cd dist
-      - zip -r ../vikunja-frontend-master.zip *
+      - zip -r ../vikunja-frontend-unstable.zip *
       - cd ..
     depends_on: [ build ]
 
@@ -196,7 +196,7 @@ steps:
       endpoint: https://s3.fr-par.scw.cloud
       region: fr-par
       path_style: true
-      source: vikunja-frontend-master.zip
+      source: vikunja-frontend-unstable.zip
       target: /frontend/
     depends_on: [ static ]
 
@@ -279,7 +279,7 @@ name: trigger-desktop-update
 
 trigger:
   branch:
-    - master
+    - main
   event:
     - push
 
@@ -294,7 +294,7 @@ steps:
       token:
         from_secret: drone_token
       repositories:
-        - vikunja/desktop@master
+        - vikunja/desktop@main
 
 ---
 kind: pipeline
@@ -311,7 +311,7 @@ platform:
 
 trigger:
   ref:
-    - refs/heads/master
+    - refs/heads/main
     - "refs/tags/**"
 
 steps:
@@ -328,10 +328,10 @@ steps:
       auto_tag_suffix: linux-arm
       build_args:
         - USE_RELEASE=true
-        - RELEASE_VERSION=master
+        - RELEASE_VERSION=unstable
     when:
       ref:
-        - refs/heads/master
+        - refs/heads/main
     depends_on:
       - clone
 
@@ -368,10 +368,10 @@ steps:
       auto_tag_suffix: linux-arm64
       build_args:
         - USE_RELEASE=true
-        - RELEASE_VERSION=master
+        - RELEASE_VERSION=unstable
     when:
       ref:
-        - refs/heads/master
+        - refs/heads/main
     depends_on:
       - clone
 
@@ -410,7 +410,7 @@ depends_on:
 
 trigger:
   ref:
-    - refs/heads/master
+    - refs/heads/main
     - "refs/tags/**"
 
 steps:
@@ -427,10 +427,10 @@ steps:
       auto_tag_suffix: linux-amd64
       build_args:
         - USE_RELEASE=true
-        - RELEASE_VERSION=master
+        - RELEASE_VERSION=unstable
     when:
       ref:
-        - refs/heads/master
+        - refs/heads/main
 
   - name: docker-version
     image: plugins/docker:linux-amd64
@@ -457,7 +457,7 @@ name: docker-manifest
 
 trigger:
   ref:
-    - refs/heads/master
+    - refs/heads/main
     - "refs/tags/**"
 
 depends_on:
@@ -484,7 +484,7 @@ name: notify
 
 trigger:
   ref:
-    - refs/heads/master
+    - refs/heads/main
     - "refs/tags/**"
 
 depends_on:

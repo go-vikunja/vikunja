@@ -4,7 +4,7 @@ FROM node:13.14.0 AS compile-image
 WORKDIR /build
 
 ARG USE_RELEASE=false
-ARG RELEASE_VERSION=master
+ARG RELEASE_VERSION=main
 
 ENV YARN_CACHE_FOLDER .cache/yarn/
 COPY .  ./
