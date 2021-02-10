@@ -3,7 +3,7 @@ name: release
 
 trigger:
   ref:
-    - refs/heads/master
+    - refs/heads/main
     - "refs/tags/**"
 
 steps:
@@ -45,7 +45,7 @@ steps:
       - wget https://dl.vikunja.io/frontend/vikunja-frontend-$$VERSION.zip
       - unzip vikunja-frontend-$$VERSION.zip -d frontend
       - sed -i 's/\\/api\\/v1//g' frontend/index.html
-      # Make sure that the -master suffix is added to release files
+      # Make sure that the -main suffix is added to release files
       - sed -i "s/\$${version}/$$VERSION/g" package.json
       - yarn install
       - yarn dist --linux --windows
@@ -84,7 +84,7 @@ steps:
       path_style: true
       strip_prefix: dist/
       source: dist/*
-      target: /desktop/master/
+      target: /desktop/main/
     when:
       event:
         exclude:
