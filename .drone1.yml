@@ -93,8 +93,8 @@ steps:
     pull: true
     commands:
       # Get the latest version
-      - wget https://dl.vikunja.io/api/main/vikunja-main-linux-amd64-full.zip -q -O vikunja-latest.zip
-      - unzip vikunja-latest.zip vikunja-main-linux-amd64
+      - wget https://dl.vikunja.io/api/unstable/vikunja-unstable-linux-amd64-full.zip -q -O vikunja-latest.zip
+      - unzip vikunja-latest.zip vikunja-unstable-linux-amd64
 
   - name: test-migration-sqlite
     image: kolaente/toolbox:latest
@@ -106,7 +106,7 @@ steps:
       VIKUNJA_LOG_DATABASE: stdout
       VIKUNJA_LOG_DATABASELEVEL: debug
     commands:
-      - ./vikunja-main-linux-amd64 migrate
+      - ./vikunja-unstable-linux-amd64 migrate
       # Run the migrations from the binary build in the step before
       - ./vikunja migrate
     when:
@@ -125,7 +125,7 @@ steps:
       VIKUNJA_LOG_DATABASE: stdout
       VIKUNJA_LOG_DATABASELEVEL: debug
     commands:
-      - ./vikunja-main-linux-amd64 migrate
+      - ./vikunja-unstable-linux-amd64 migrate
       # Run the migrations from the binary build in the step before
       - ./vikunja migrate
     when:
@@ -145,7 +145,7 @@ steps:
       VIKUNJA_LOG_DATABASE: stdout
       VIKUNJA_LOG_DATABASELEVEL: debug
     commands:
-      - ./vikunja-main-linux-amd64 migrate
+      - ./vikunja-unstable-linux-amd64 migrate
       # Run the migrations from the binary build in the step before
       - ./vikunja migrate
     when:
