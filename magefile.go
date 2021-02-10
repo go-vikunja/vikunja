@@ -52,9 +52,9 @@ var (
 	Ldflags       = ""
 	Tags          = ""
 	VersionNumber = "dev"
-	Version       = "master" // This holds the built version, master by default, when building from a tag or release branch, their name
+	Version       = "unstable" // This holds the built version, unstable by default, when building from a tag or release branch, their name
 	BinLocation   = ""
-	PkgVersion    = "master"
+	PkgVersion    = "unstable"
 	ApiPackages   = []string{}
 	RootPath      = ""
 	GoFiles       = []string{}
@@ -101,7 +101,7 @@ func setBinLocation() {
 }
 
 func setPkgVersion() {
-	if Version == "master" {
+	if Version == "unstable" {
 		PkgVersion = VersionNumber
 	}
 }
