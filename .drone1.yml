@@ -40,7 +40,7 @@ services:
 trigger:
   branch:
     include:
-      - master
+      - main
   event:
     include:
       - push
@@ -286,7 +286,7 @@ workspace:
 
 trigger:
   ref:
-    - refs/heads/master
+    - refs/heads/main
     - "refs/tags/**"
 
 steps:
@@ -406,10 +406,10 @@ steps:
       path_style: true
       strip_prefix: dist/zip/
       source: dist/zip/*
-      target: /api/master/
+      target: /api/main/
     when:
       branch:
-        - master
+        - main
       event:
         - push
     depends_on: [ sign-release ]
@@ -461,10 +461,10 @@ steps:
       path_style: true
       strip_prefix: dist/os-packages/
       source: dist/os-packages/*
-      target: /api/master/
+      target: /api/unstable/
     when:
       branch:
-        - master
+        - main
       event:
         - push
     depends_on: [ build-os-packages ]
@@ -541,7 +541,7 @@ trigger:
   event:
     - push
   branch:
-    - master
+    - main
 
 steps:
   - name: submodules
@@ -593,7 +593,7 @@ platform:
 
 trigger:
   ref:
-    - refs/heads/master
+    - refs/heads/main
     - "refs/tags/**"
 
 steps:
@@ -640,7 +640,7 @@ platform:
 
 trigger:
   ref:
-    - refs/heads/master
+    - refs/heads/main
     - "refs/tags/**"
 
 steps:
@@ -668,7 +668,7 @@ name: docker-manifest
 
 trigger:
   ref:
-    - refs/heads/master
+    - refs/heads/main
     - "refs/tags/**"
 
 depends_on:
@@ -695,7 +695,7 @@ name: notify
 
 trigger:
   ref:
-    - refs/heads/master
+    - refs/heads/main
     - "refs/tags/**"
 
 depends_on:
