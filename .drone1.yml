@@ -61,6 +61,7 @@ steps:
       GOPROXY: 'https://goproxy.kolaente.de'
     commands:
       - mage -compile ./mage-static
+      - env
     when:
       event: [ push, tag, pull_request ]
 
