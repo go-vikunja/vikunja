@@ -40,7 +40,7 @@ steps:
       - restore-cache
     commands:
       - export VERSION=${DRONE_TAG##v}
-      - if [ -z "$$VERSION" ]; then export VERSION=${DRONE_BRANCH}; fi
+      - if [ -z "$$VERSION" ]; then export VERSION=unstable; fi
       # TODO: Move to a yarn script
       - wget https://dl.vikunja.io/frontend/vikunja-frontend-$$VERSION.zip
       - unzip vikunja-frontend-$$VERSION.zip -d frontend
