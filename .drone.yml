@@ -118,7 +118,7 @@ steps:
       source: cypress/screenshots/**/**/*
       strip_prefix: cypress/screenshots/
       target: /${DRONE_REPO}/${DRONE_PULL_REQUEST}_${DRONE_BRANCH}/${DRONE_BUILD_NUMBER}/
-    depends_on: 
+    depends_on:
       - test-frontend
     when:
       status:
@@ -328,8 +328,7 @@ steps:
       password:
         from_secret: docker_password
       repo: vikunja/frontend
-      auto_tag: true
-      auto_tag_suffix: linux-arm
+      tags: latest-linux-arm
       build_args:
         - USE_RELEASE=true
         - RELEASE_VERSION=unstable
@@ -368,8 +367,7 @@ steps:
       password:
         from_secret: docker_password
       repo: vikunja/frontend
-      auto_tag: true
-      auto_tag_suffix: linux-arm64
+      tags: latest-linux-arm64
       build_args:
         - USE_RELEASE=true
         - RELEASE_VERSION=unstable
@@ -427,8 +425,7 @@ steps:
       password:
         from_secret: docker_password
       repo: vikunja/frontend
-      auto_tag: true
-      auto_tag_suffix: linux-amd64
+      tags: latest-linux-amd64
       build_args:
         - USE_RELEASE=true
         - RELEASE_VERSION=unstable
@@ -473,6 +470,20 @@ steps:
     pull: always
     image: plugins/manifest
     settings:
+      tags: latest
+      spec: docker-manifest.tmpl
+      password:
+        from_secret: docker_password
+      username:
+        from_secret: docker_username
+    when:
+      ref:
+        - refs/heads/main
+
+  - name: manifest
+    pull: always
+    image: plugins/manifest
+    settings:
       auto_tag: true
       ignore_missing: true
       spec: docker-manifest.tmpl
@@ -480,6 +491,9 @@ steps:
         from_secret: docker_password
       username:
         from_secret: docker_username
+    when:
+      ref:
+        - "refs/tags/**"
 
 ---
 kind: pipeline
