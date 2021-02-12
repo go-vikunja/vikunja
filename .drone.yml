@@ -466,7 +466,7 @@ depends_on:
   - docker-arm-release
 
 steps:
-  - name: manifest
+  - name: manifest-latest
     pull: always
     image: plugins/manifest
     settings:
@@ -480,7 +480,7 @@ steps:
       ref:
         - refs/heads/main
 
-  - name: manifest
+  - name: manifest-release
     pull: always
     image: plugins/manifest
     settings:
