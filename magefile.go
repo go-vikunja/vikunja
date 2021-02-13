@@ -90,6 +90,10 @@ func setVersion() {
 	} else if os.Getenv("DRONE_BRANCH") != "" {
 		Version = strings.Replace(os.Getenv("DRONE_BRANCH"), "release/v", "", 1)
 	}
+
+	if Version == "main" {
+		Version = "unstable"
+	}
 }
 
 func setBinLocation() {
@@ -447,7 +451,6 @@ type Release mg.Namespace
 func (Release) Release(ctx context.Context) error {
 	mg.Deps(initVars)
 	mg.Deps(Release.Dirs)
-	mg.Deps(Release.Windows, Release.Linux, Release.Darwin)
 
 	// Run compiling in parallel to speed it up
 	errs, _ := errgroup.WithContext(ctx)
