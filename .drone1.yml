@@ -89,68 +89,68 @@ steps:
     when:
       event: [ push, tag, pull_request ]
 
-#  - name: test-migration-prepare
-#    image: kolaente/toolbox:latest
-#    pull: true
-#    commands:
-#      # Get the latest version
-#      - wget https://dl.vikunja.io/api/unstable/vikunja-unstable-linux-amd64-full.zip -q -O vikunja-latest.zip
-#      - unzip vikunja-latest.zip vikunja-unstable-linux-amd64
-#
-#  - name: test-migration-sqlite
-#    image: kolaente/toolbox:latest
-#    pull: true
-#    depends_on: [ test-migration-prepare, build ]
-#    environment:
-#      VIKUNJA_DATABASE_TYPE: sqlite
-#      VIKUNJA_DATABASE_PATH: ./vikunja-migration-test.db
-#      VIKUNJA_LOG_DATABASE: stdout
-#      VIKUNJA_LOG_DATABASELEVEL: debug
-#    commands:
-#      - ./vikunja-unstable-linux-amd64 migrate
-#      # Run the migrations from the binary build in the step before
-#      - ./vikunja migrate
-#    when:
-#      event: [ push, tag, pull_request ]
-#
-#  - name: test-migration-mysql
-#    image: kolaente/toolbox:latest
-#    pull: true
-#    depends_on: [ test-migration-prepare, build ]
-#    environment:
-#      VIKUNJA_DATABASE_TYPE: mysql
-#      VIKUNJA_DATABASE_HOST: test-mysql-migration
-#      VIKUNJA_DATABASE_USER: root
-#      VIKUNJA_DATABASE_PASSWORD: vikunjatest
-#      VIKUNJA_DATABASE_DATABASE: vikunjatest
-#      VIKUNJA_LOG_DATABASE: stdout
-#      VIKUNJA_LOG_DATABASELEVEL: debug
-#    commands:
-#      - ./vikunja-unstable-linux-amd64 migrate
-#      # Run the migrations from the binary build in the step before
-#      - ./vikunja migrate
-#    when:
-#      event: [ push, tag, pull_request ]
-#
-#  - name: test-migration-psql
-#    image: kolaente/toolbox:latest
-#    pull: true
-#    depends_on: [ test-migration-prepare, build ]
-#    environment:
-#      VIKUNJA_DATABASE_TYPE: postgres
-#      VIKUNJA_DATABASE_HOST: test-postgres-migration
-#      VIKUNJA_DATABASE_USER: postgres
-#      VIKUNJA_DATABASE_PASSWORD: vikunjatest
-#      VIKUNJA_DATABASE_DATABASE: vikunjatest
-#      VIKUNJA_DATABASE_SSLMODE: disable
-#      VIKUNJA_LOG_DATABASE: stdout
-#      VIKUNJA_LOG_DATABASELEVEL: debug
-#    commands:
-#      - ./vikunja-unstable-linux-amd64 migrate
-#      # Run the migrations from the binary build in the step before
-#      - ./vikunja migrate
-#    when:
-#      event: [ push, tag, pull_request ]
+  - name: test-migration-prepare
+    image: kolaente/toolbox:latest
+    pull: true
+    commands:
+      # Get the latest version
+      - wget https://dl.vikunja.io/api/unstable/vikunja-unstable-linux-amd64-full.zip -q -O vikunja-latest.zip
+      - unzip vikunja-latest.zip vikunja-unstable-linux-amd64
+
+  - name: test-migration-sqlite
+    image: kolaente/toolbox:latest
+    pull: true
+    depends_on: [ test-migration-prepare, build ]
+    environment:
+      VIKUNJA_DATABASE_TYPE: sqlite
+      VIKUNJA_DATABASE_PATH: ./vikunja-migration-test.db
+      VIKUNJA_LOG_DATABASE: stdout
+      VIKUNJA_LOG_DATABASELEVEL: debug
+    commands:
+      - ./vikunja-unstable-linux-amd64 migrate
+      # Run the migrations from the binary build in the step before
+      - ./vikunja migrate
+    when:
+      event: [ push, tag, pull_request ]
+
+  - name: test-migration-mysql
+    image: kolaente/toolbox:latest
+    pull: true
+    depends_on: [ test-migration-prepare, build ]
+    environment:
+      VIKUNJA_DATABASE_TYPE: mysql
+      VIKUNJA_DATABASE_HOST: test-mysql-migration
+      VIKUNJA_DATABASE_USER: root
+      VIKUNJA_DATABASE_PASSWORD: vikunjatest
+      VIKUNJA_DATABASE_DATABASE: vikunjatest
+      VIKUNJA_LOG_DATABASE: stdout
+      VIKUNJA_LOG_DATABASELEVEL: debug
+    commands:
+      - ./vikunja-unstable-linux-amd64 migrate
+      # Run the migrations from the binary build in the step before
+      - ./vikunja migrate
+    when:
+      event: [ push, tag, pull_request ]
+
+  - name: test-migration-psql
+    image: kolaente/toolbox:latest
+    pull: true
+    depends_on: [ test-migration-prepare, build ]
+    environment:
+      VIKUNJA_DATABASE_TYPE: postgres
+      VIKUNJA_DATABASE_HOST: test-postgres-migration
+      VIKUNJA_DATABASE_USER: postgres
+      VIKUNJA_DATABASE_PASSWORD: vikunjatest
+      VIKUNJA_DATABASE_DATABASE: vikunjatest
+      VIKUNJA_DATABASE_SSLMODE: disable
+      VIKUNJA_LOG_DATABASE: stdout
+      VIKUNJA_LOG_DATABASELEVEL: debug
+    commands:
+      - ./vikunja-unstable-linux-amd64 migrate
+      # Run the migrations from the binary build in the step before
+      - ./vikunja migrate
+    when:
+      event: [ push, tag, pull_request ]
 
   - name: test
     image: vikunja/golang-build:latest
