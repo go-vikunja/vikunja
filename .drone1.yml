@@ -602,6 +602,21 @@ steps:
     image: docker:git
     commands:
       - git fetch --tags
+  - name: docker-arm-latest
+    image: plugins/docker:linux-arm
+    pull: true
+    settings:
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
+      repo: vikunja/api
+      tags: latest-linux-arm
+    depends_on: [ fetch-tags ]
+    when:
+      ref:
+        - refs/heads/main
+
   - name: docker-arm
     image: plugins/docker:linux-arm
     pull: true
@@ -614,6 +629,25 @@ steps:
       auto_tag: true
       auto_tag_suffix: linux-arm
     depends_on: [ fetch-tags ]
+    when:
+      ref:
+        - "refs/tags/**"
+
+  - name: docker-arm64-latest
+    image: plugins/docker:linux-arm64
+    pull: true
+    settings:
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
+      repo: vikunja/api
+      tags: latest-linux-arm64
+    depends_on: [ fetch-tags ]
+    when:
+      ref:
+        - refs/heads/main
+
   - name: docker-arm64
     image: plugins/docker:linux-arm64
     pull: true
@@ -626,6 +660,9 @@ steps:
       auto_tag: true
       auto_tag_suffix: linux-arm64
     depends_on: [ fetch-tags ]
+    when:
+      ref:
+        - "refs/tags/**"
 
 ---
 kind: pipeline
@@ -649,6 +686,21 @@ steps:
     image: docker:git
     commands:
       - git fetch --tags
+  - name: docker-latest
+    image: plugins/docker:linux-amd64
+    pull: true
+    settings:
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
+      repo: vikunja/api
+      tags: latest-linux-amd64
+    depends_on: [ fetch-tags ]
+    when:
+      ref:
+        - refs/heads/main
+
   - name: docker
     image: plugins/docker:linux-amd64
     pull: true
@@ -661,6 +713,9 @@ steps:
       auto_tag: true
       auto_tag_suffix: linux-amd64
     depends_on: [ fetch-tags ]
+    when:
+      ref:
+        - "refs/tags/**"
 
 ---
 kind: pipeline
@@ -677,6 +732,21 @@ depends_on:
   - docker-arm-release
 
 steps:
+  - name: manifest-latest
+    pull: always
+    image: plugins/manifest
+    settings:
+      tags: latest
+      ignore_missing: true
+      spec: docker-manifest.tmpl
+      password:
+        from_secret: docker_password
+      username:
+        from_secret: docker_username
+    when:
+      ref:
+        - refs/heads/main
+
   - name: manifest
     pull: always
     image: plugins/manifest
@@ -688,6 +758,9 @@ steps:
         from_secret: docker_password
       username:
         from_secret: docker_username
+    when:
+      ref:
+        - "refs/tags/**"
 
 ---
 kind: pipeline
