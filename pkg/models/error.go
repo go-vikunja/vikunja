@@ -1423,3 +1423,63 @@ func (err ErrSavedFilterNotAvailableForLinkShare) HTTPError() web.HTTPError {
 		Message:  "Saved filters are not available for link shares.",
 	}
 }
+
+// =============
+// Subscriptions
+// =============
+
+// ErrUnknownSubscriptionEntityType represents an error where a subscription entity type is unknown
+type ErrUnknownSubscriptionEntityType struct {
+	EntityType SubscriptionEntityType
+}
+
+// IsErrUnknownSubscriptionEntityType checks if an error is ErrUnknownSubscriptionEntityType.
+func IsErrUnknownSubscriptionEntityType(err error) bool {
+	_, ok := err.(*ErrUnknownSubscriptionEntityType)
+	return ok
+}
+
+func (err *ErrUnknownSubscriptionEntityType) Error() string {
+	return fmt.Sprintf("Subscription entity type is unkowns [EntityType: %d]", err.EntityType)
+}
+
+// ErrCodeUnknownSubscriptionEntityType holds the unique world-error code of this error
+const ErrCodeUnknownSubscriptionEntityType = 12001
+
+// HTTPError holds the http error description
+func (err ErrUnknownSubscriptionEntityType) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusPreconditionFailed,
+		Code:     ErrCodeUnknownSubscriptionEntityType,
+		Message:  "The subscription entity type is invalid.",
+	}
+}
+
+// ErrSubscriptionAlreadyExists represents an error where a subscription entity already exists
+type ErrSubscriptionAlreadyExists struct {
+	EntityID   int64
+	EntityType SubscriptionEntityType
+	UserID     int64
+}
+
+// IsErrSubscriptionAlreadyExists checks if an error is ErrSubscriptionAlreadyExists.
+func IsErrSubscriptionAlreadyExists(err error) bool {
+	_, ok := err.(*ErrSubscriptionAlreadyExists)
+	return ok
+}
+
+func (err *ErrSubscriptionAlreadyExists) Error() string {
+	return fmt.Sprintf("Subscription for this (entity_id, entity_type, user_id) already exists [EntityType: %d, EntityID: %d, UserID: %d]", err.EntityType, err.EntityID, err.UserID)
+}
+
+// ErrCodeSubscriptionAlreadyExists holds the unique world-error code of this error
+const ErrCodeSubscriptionAlreadyExists = 12002
+
+// HTTPError holds the http error description
+func (err ErrSubscriptionAlreadyExists) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusPreconditionFailed,
+		Code:     ErrCodeSubscriptionAlreadyExists,
+		Message:  "You're already subscribed.",
+	}
+}

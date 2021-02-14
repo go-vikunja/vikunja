@@ -59,6 +59,7 @@ func SetupTests() {
 		"users_namespace",
 		"buckets",
 		"saved_filters",
+		"subscriptions",
 	)
 	if err != nil {
 		log.Fatal(err)

@@ -512,6 +512,15 @@ func registerAPIRoutes(a *echo.Group) {
 	a.DELETE("/teams/:team/members/:user", teamMemberHandler.DeleteWeb)
 	a.POST("/teams/:team/members/:user/admin", teamMemberHandler.UpdateWeb)
 
+	// Subscriptions
+	subscriptionHandler := &handler.WebHandler{
+		EmptyStruct: func() handler.CObject {
+			return &models.Subscription{}
+		},
+	}
+	a.PUT("/subscriptions/:entity/:entityID", subscriptionHandler.CreateWeb)
+	a.DELETE("/subscriptions/:entity/:entityID", subscriptionHandler.DeleteWeb)
+
 	// Migrations
 	m := a.Group("/migration")
 

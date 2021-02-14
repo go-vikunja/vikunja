@@ -215,3 +215,34 @@ func TestList_ReadAll(t *testing.T) {
 		_ = s.Close()
 	})
 }
+
+func TestList_ReadOne(t *testing.T) {
+	t.Run("normal", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		u := &user.User{ID: 1}
+		l := &List{ID: 1}
+		can, _, err := l.CanRead(s, u)
+		assert.NoError(t, err)
+		assert.True(t, can)
+		err = l.ReadOne(s, u)
+		assert.NoError(t, err)
+		assert.Equal(t, "Test1", l.Title)
+	})
+	t.Run("with subscription", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		u := &user.User{ID: 6}
+		l := &List{ID: 12}
+		can, _, err := l.CanRead(s, u)
+		assert.NoError(t, err)
+		assert.True(t, can)
+		err = l.ReadOne(s, u)
+		assert.NoError(t, err)
+		assert.NotNil(t, l.Subscription)
+	})
+}

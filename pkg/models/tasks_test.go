@@ -467,4 +467,16 @@ func TestTask_ReadOne(t *testing.T) {
 		assert.Error(t, err)
 		assert.True(t, IsErrTaskDoesNotExist(err))
 	})
+	t.Run("with subscription", func(t *testing.T) {
+		u = &user.User{ID: 6}
+
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		task := &Task{ID: 22}
+		err := task.ReadOne(s, u)
+		assert.NoError(t, err)
+		assert.NotNil(t, task.Subscription)
+	})
 }

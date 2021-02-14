@@ -210,6 +210,11 @@ definitions:
       start_date:
         description: When this task starts.
         type: string
+      subscription:
+        $ref: '#/definitions/models.Subscription'
+        description: |-
+          The subscription status for the user reading this task. You can only read this property, use the subscription endpoints to modify it.
+          Will only returned when retreiving one task.
       task_ids:
         description: A list of task ids to update
         items:
@@ -330,6 +335,11 @@ definitions:
       owner:
         $ref: '#/definitions/user.User'
         description: The user who created this list.
+      subscription:
+        $ref: '#/definitions/models.Subscription'
+        description: |-
+          The subscription status for the user reading this list. You can only read this property, use the subscription endpoints to modify it.
+          Will only returned when retreiving one list.
       title:
         description: The title of the list. You'll see this in the namespace overview.
         maxLength: 250
@@ -395,6 +405,11 @@ definitions:
       owner:
         $ref: '#/definitions/user.User'
         description: The user who owns this namespace
+      subscription:
+        $ref: '#/definitions/models.Subscription'
+        description: |-
+          The subscription status for the user reading this namespace. You can only read this property, use the subscription endpoints to modify it.
+          Will only returned when retreiving one namespace.
       title:
         description: The name of this namespace.
         maxLength: 250
@@ -449,6 +464,11 @@ definitions:
       owner:
         $ref: '#/definitions/user.User'
         description: The user who owns this namespace
+      subscription:
+        $ref: '#/definitions/models.Subscription'
+        description: |-
+          The subscription status for the user reading this namespace. You can only read this property, use the subscription endpoints to modify it.
+          Will only returned when retreiving one namespace.
       title:
         description: The name of this namespace.
         maxLength: 250
@@ -489,6 +509,23 @@ definitions:
       updated:
         description: A timestamp when this filter was last updated. You cannot change this value.
         type: string
+    type: object
+  models.Subscription:
+    properties:
+      created:
+        description: A timestamp when this subscription was created. You cannot change this value.
+        type: string
+      entity:
+        type: string
+      entity_id:
+        description: The id of the entity to subscribe to.
+        type: integer
+      id:
+        description: The numeric ID of the subscription
+        type: integer
+      user:
+        $ref: '#/definitions/user.User'
+        description: The user who made this subscription
     type: object
   models.Task:
     properties:
@@ -582,6 +619,11 @@ definitions:
       start_date:
         description: When this task starts.
         type: string
+      subscription:
+        $ref: '#/definitions/models.Subscription'
+        description: |-
+          The subscription status for the user reading this task. You can only read this property, use the subscription endpoints to modify it.
+          Will only returned when retreiving one task.
       title:
         description: The task text. This is what you'll see in the list.
         maxLength: 250
@@ -3660,6 +3702,85 @@ paths:
       summary: Get an auth token for a share
       tags:
       - sharing
+  /subscriptions/{entity}/{entityID}:
+    delete:
+      consumes:
+      - application/json
+      description: Unsubscribes the current user to an entity.
+      parameters:
+      - description: The entity the user subscribed to. Can be either `namespace`, `list` or `task`.
+        in: path
+        name: entity
+        required: true
+        type: string
+      - description: The numeric id of the subscribed entity to.
+        in: path
+        name: entityID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The subscription
+          schema:
+            $ref: '#/definitions/models.Subscription'
+        "403":
+          description: The user does not have access to subscribe to this entity.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "404":
+          description: The subscription does not exist.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Unsubscribe the current user from an entity.
+      tags:
+      - subscriptions
+    put:
+      consumes:
+      - application/json
+      description: Subscribes the current user to an entity.
+      parameters:
+      - description: The entity the user subscribes to. Can be either `namespace`, `list` or `task`.
+        in: path
+        name: entity
+        required: true
+        type: string
+      - description: The numeric id of the entity to subscribe to.
+        in: path
+        name: entityID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The subscription
+          schema:
+            $ref: '#/definitions/models.Subscription'
+        "403":
+          description: The user does not have access to subscribe to this entity.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "412":
+          description: The subscription entity is invalid.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Subscribes the current user to an entity.
+      tags:
+      - subscriptions
   /tasks/{ID}:
     get:
       consumes:

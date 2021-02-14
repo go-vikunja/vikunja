@@ -50,6 +50,10 @@ type Namespace struct {
 	// The user who owns this namespace
 	Owner *user.User `xorm:"-" json:"owner" valid:"-"`
 
+	// The subscription status for the user reading this namespace. You can only read this property, use the subscription endpoints to modify it.
+	// Will only returned when retreiving one namespace.
+	Subscription *Subscription `xorm:"-" json:"subscription,omitempty"`
+
 	// A timestamp when this namespace was created. You cannot change this value.
 	Created time.Time `xorm:"created not null" json:"created"`
 	// A timestamp when this namespace was last updated. You cannot change this value.
@@ -166,6 +170,8 @@ func (n *Namespace) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 		return err
 	}
 	*n = *nn
+
+	n.Subscription, err = GetSubscription(s, SubscriptionEntityNamespace, n.ID, a)
 	return
 }
 
@@ -175,10 +181,11 @@ type NamespaceWithLists struct {
 	Lists     []*List `xorm:"-" json:"lists"`
 }
 
-func makeNamespaceSliceFromMap(namespaces map[int64]*NamespaceWithLists, userMap map[int64]*user.User) []*NamespaceWithLists {
+func makeNamespaceSliceFromMap(namespaces map[int64]*NamespaceWithLists, userMap map[int64]*user.User, subscriptions map[int64]*Subscription) []*NamespaceWithLists {
 	all := make([]*NamespaceWithLists, 0, len(namespaces))
 	for _, n := range namespaces {
 		n.Owner = userMap[n.OwnerID]
+		n.Subscription = subscriptions[n.ID]
 		all = append(all, n)
 	}
 	sort.Slice(all, func(i, j int) bool {
@@ -289,6 +296,21 @@ func (n *Namespace) ReadAll(s *xorm.Session, a web.Auth, search string, page int
 		userIDs = append(userIDs, nsp.OwnerID)
 	}
 
+	// Get all subscriptions
+	subscriptions := []*Subscription{}
+	err = s.
+		Where("entity_type = ? AND user_id = ?", SubscriptionEntityNamespace, a.GetID()).
+		In("entity_id", namespaceids).
+		Find(&subscriptions)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+	subscriptionsMap := make(map[int64]*Subscription)
+	for _, sub := range subscriptions {
+		sub.Entity = sub.EntityType.String()
+		subscriptionsMap[sub.EntityID] = sub
+	}
+
 	// Get all owners
 	userMap := make(map[int64]*user.User)
 	err = s.In("id", userIDs).Find(&userMap)
@@ -297,7 +319,7 @@ func (n *Namespace) ReadAll(s *xorm.Session, a web.Auth, search string, page int
 	}
 
 	if n.NamespacesOnly {
-		all := makeNamespaceSliceFromMap(namespaces, userMap)
+		all := makeNamespaceSliceFromMap(namespaces, userMap, subscriptionsMap)
 		return all, len(all), numberOfTotalItems, nil
 	}
 
@@ -443,7 +465,7 @@ func (n *Namespace) ReadAll(s *xorm.Session, a web.Auth, search string, page int
 
 	//////////////////////
 	// Put it all together (and sort it)
-	all := makeNamespaceSliceFromMap(namespaces, userMap)
+	all := makeNamespaceSliceFromMap(namespaces, userMap, subscriptionsMap)
 	return all, len(all), numberOfTotalItems, nil
 }
 

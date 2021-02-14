@@ -68,6 +68,10 @@ type List struct {
 	// True if a list is a favorite. Favorite lists show up in a separate namespace.
 	IsFavorite bool `xorm:"default false" json:"is_favorite"`
 
+	// The subscription status for the user reading this list. You can only read this property, use the subscription endpoints to modify it.
+	// Will only returned when retreiving one list.
+	Subscription *Subscription `xorm:"-" json:"subscription,omitempty"`
+
 	// A timestamp when this list was created. You cannot change this value.
 	Created time.Time `xorm:"created not null" json:"created"`
 	// A timestamp when this list was last updated. You cannot change this value.
@@ -236,7 +240,8 @@ func (l *List) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 		}
 	}
 
-	return nil
+	l.Subscription, err = GetSubscription(s, SubscriptionEntityList, l.ID, a)
+	return
 }
 
 // GetListSimpleByID gets a list with only the basic items, aka no tasks or user objects. Returns an error if the list does not exist.
@@ -622,7 +627,7 @@ func (l *List) Create(s *xorm.Session, a web.Auth) (err error) {
 
 	return events.Dispatch(&ListCreatedEvent{
 		List: l,
-		Doer: a,
+		Doer: doer,
 	})
 }
 

@@ -75,19 +75,31 @@ func TestNamespace_ReadOne(t *testing.T) {
 		n := &Namespace{ID: 1}
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
+		defer s.Close()
+
 		err := n.ReadOne(s, u)
 		assert.NoError(t, err)
 		assert.Equal(t, n.Title, "testnamespace")
-		_ = s.Close()
 	})
 	t.Run("nonexistant", func(t *testing.T) {
 		n := &Namespace{ID: 99999}
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
+		defer s.Close()
+
 		err := n.ReadOne(s, u)
 		assert.Error(t, err)
 		assert.True(t, IsErrNamespaceDoesNotExist(err))
-		_ = s.Close()
+	})
+	t.Run("with subscription", func(t *testing.T) {
+		n := &Namespace{ID: 8}
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		err := n.ReadOne(s, &user.User{ID: 6})
+		assert.NoError(t, err)
+		assert.NotNil(t, n.Subscription)
 	})
 }
 

@@ -17,9 +17,14 @@
 package models
 
 import (
+	"encoding/json"
+
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/metrics"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
+	"code.vikunja.io/api/pkg/notifications"
 	"github.com/ThreeDotsLabs/watermill/message"
 )
 
@@ -33,6 +38,10 @@ func RegisterListeners() {
 	events.RegisterListener((&TaskDeletedEvent{}).Name(), &DecreaseTaskCounter{})
 	events.RegisterListener((&TeamDeletedEvent{}).Name(), &DecreaseTeamCounter{})
 	events.RegisterListener((&TeamCreatedEvent{}).Name(), &IncreaseTeamCounter{})
+	events.RegisterListener((&TaskCommentCreatedEvent{}).Name(), &SendTaskCommentNotification{})
+	events.RegisterListener((&TaskAssigneeCreatedEvent{}).Name(), &SendTaskAssignedNotification{})
+	events.RegisterListener((&TaskDeletedEvent{}).Name(), &SendTaskDeletedNotification{})
+	events.RegisterListener((&ListCreatedEvent{}).Name(), &SendListCreatedNotification{})
 }
 
 //////
@@ -66,6 +75,143 @@ func (s *DecreaseTaskCounter) Handle(payload message.Payload) (err error) {
 	return keyvalue.DecrBy(metrics.TaskCountKey, 1)
 }
 
+// SendTaskCommentNotification  represents a listener
+type SendTaskCommentNotification struct {
+}
+
+// Name defines the name for the SendTaskCommentNotification listener
+func (s *SendTaskCommentNotification) Name() string {
+	return "send.task.comment.notification"
+}
+
+// Handle is executed when the event SendTaskCommentNotification listens on is fired
+func (s *SendTaskCommentNotification) Handle(payload message.Payload) (err error) {
+	event := &TaskCommentCreatedEvent{}
+	err = json.Unmarshal(payload, event)
+	if err != nil {
+		return err
+	}
+
+	sess := db.NewSession()
+	defer sess.Close()
+
+	subscribers, err := getSubscribersForEntity(sess, SubscriptionEntityTask, event.Task.ID)
+	if err != nil {
+		return err
+	}
+
+	log.Debugf("Sending task comment notifications to %d subscribers for task %d", len(subscribers), event.Task.ID)
+
+	for _, subscriber := range subscribers {
+		if subscriber.UserID == event.Doer.ID {
+			continue
+		}
+
+		n := &TaskCommentNotification{
+			Doer:    event.Doer,
+			Task:    event.Task,
+			Comment: event.Comment,
+		}
+		err = notifications.Notify(subscriber.User, n)
+		if err != nil {
+			return
+		}
+	}
+
+	return
+}
+
+// SendTaskAssignedNotification  represents a listener
+type SendTaskAssignedNotification struct {
+}
+
+// Name defines the name for the SendTaskAssignedNotification listener
+func (s *SendTaskAssignedNotification) Name() string {
+	return "send.task.assigned.notification"
+}
+
+// Handle is executed when the event SendTaskAssignedNotification listens on is fired
+func (s *SendTaskAssignedNotification) Handle(payload message.Payload) (err error) {
+	event := &TaskAssigneeCreatedEvent{}
+	err = json.Unmarshal(payload, event)
+	if err != nil {
+		return err
+	}
+
+	sess := db.NewSession()
+	defer sess.Close()
+
+	subscribers, err := getSubscribersForEntity(sess, SubscriptionEntityTask, event.Task.ID)
+	if err != nil {
+		return err
+	}
+
+	log.Debugf("Sending task assigned notifications to %d subscribers for task %d", len(subscribers), event.Task.ID)
+
+	for _, subscriber := range subscribers {
+		if subscriber.UserID == event.Doer.ID {
+			continue
+		}
+
+		n := &TaskAssignedNotification{
+			Doer:     event.Doer,
+			Task:     event.Task,
+			Assignee: event.Assignee,
+		}
+		err = notifications.Notify(subscriber.User, n)
+		if err != nil {
+			return
+		}
+	}
+
+	return nil
+}
+
+// SendTaskDeletedNotification  represents a listener
+type SendTaskDeletedNotification struct {
+}
+
+// Name defines the name for the SendTaskDeletedNotification listener
+func (s *SendTaskDeletedNotification) Name() string {
+	return "send.task.deleted.notification"
+}
+
+// Handle is executed when the event SendTaskDeletedNotification listens on is fired
+func (s *SendTaskDeletedNotification) Handle(payload message.Payload) (err error) {
+	event := &TaskDeletedEvent{}
+	err = json.Unmarshal(payload, event)
+	if err != nil {
+		return err
+	}
+
+	sess := db.NewSession()
+	defer sess.Close()
+
+	subscribers, err := getSubscribersForEntity(sess, SubscriptionEntityTask, event.Task.ID)
+	if err != nil {
+		return err
+	}
+
+	log.Debugf("Sending task deleted notifications to %d subscribers for task %d", len(subscribers), event.Task.ID)
+
+	for _, subscriber := range subscribers {
+		if subscriber.UserID == event.Doer.ID {
+			continue
+		}
+
+		n := &TaskDeletedNotification{
+			Doer: event.Doer,
+			Task: event.Task,
+		}
+		err = notifications.Notify(subscriber.User, n)
+		if err != nil {
+			return
+		}
+	}
+
+	return nil
+}
+
 ///////
 // List Event Listeners
 
@@ -89,6 +235,51 @@ func (s *DecreaseListCounter) Name() string {
 
 func (s *DecreaseListCounter) Handle(payload message.Payload) (err error) {
 	return keyvalue.DecrBy(metrics.ListCountKey, 1)
+}
+
+// SendListCreatedNotification  represents a listener
+type SendListCreatedNotification struct {
+}
+
+// Name defines the name for the SendListCreatedNotification listener
+func (s *SendListCreatedNotification) Name() string {
+	return "send.list.created.notification"
+}
+
+// Handle is executed when the event SendListCreatedNotification listens on is fired
+func (s *SendListCreatedNotification) Handle(payload message.Payload) (err error) {
+	event := &ListCreatedEvent{}
+	err = json.Unmarshal(payload, event)
+	if err != nil {
+		return err
+	}
+
+	sess := db.NewSession()
+	defer sess.Close()
+
+	subscribers, err := getSubscribersForEntity(sess, SubscriptionEntityList, event.List.ID)
+	if err != nil {
+		return err
+	}
+
+	log.Debugf("Sending list created notifications to %d subscribers for list %d", len(subscribers), event.List.ID)
+
+	for _, subscriber := range subscribers {
+		if subscriber.UserID == event.Doer.ID {
+			continue
+		}
+
+		n := &ListCreatedNotification{
+			Doer: event.Doer,
+			List: event.List,
+		}
+		err = notifications.Notify(subscriber.User, n)
+		if err != nil {
+			return
+		}
+	}
+
+	return nil
 }
 
 //////

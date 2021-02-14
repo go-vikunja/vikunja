@@ -17,7 +17,9 @@
 package models
 
 import (
+	"bufio"
 	"strconv"
+	"strings"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/notifications"
@@ -43,5 +45,90 @@ func (n *ReminderDueNotification) ToMail() *notifications.Mail {
 
 // ToDB returns the ReminderDueNotification notification in a format which can be saved in the db
 func (n *ReminderDueNotification) ToDB() interface{} {
+	return nil
+}
+
+// TaskCommentNotification represents a TaskCommentNotification notification
+type TaskCommentNotification struct {
+	Doer    *user.User
+	Task    *Task
+	Comment *TaskComment
+}
+
+// ToMail returns the mail notification for TaskCommentNotification
+func (n *TaskCommentNotification) ToMail() *notifications.Mail {
+
+	mail := notifications.NewMail().
+		From(n.Doer.GetName() + " via Vikunja <" + config.MailerFromEmail.GetString() + ">").
+		Subject("Re: " + n.Task.Title)
+
+	lines := bufio.NewScanner(strings.NewReader(n.Comment.Comment))
+	for lines.Scan() {
+		mail.Line(lines.Text())
+	}
+
+	return mail.
+		Action("View Task", n.Task.GetFrontendURL())
+}
+
+// ToDB returns the TaskCommentNotification notification in a format which can be saved in the db
+func (n *TaskCommentNotification) ToDB() interface{} {
+	return n
+}
+
+// TaskAssignedNotification represents a TaskAssignedNotification notification
+type TaskAssignedNotification struct {
+	Doer     *user.User
+	Task     *Task
+	Assignee *user.User
+}
+
+// ToMail returns the mail notification for TaskAssignedNotification
+func (n *TaskAssignedNotification) ToMail() *notifications.Mail {
+	return notifications.NewMail().
+		Subject(n.Task.Title+"("+n.Task.GetFullIdentifier()+")"+" has been assigned to "+n.Assignee.GetName()).
+		Line(n.Doer.GetName()+" has assigned this task to "+n.Assignee.GetName()).
+		Action("View Task", n.Task.GetFrontendURL())
+}
+
+// ToDB returns the TaskAssignedNotification notification in a format which can be saved in the db
+func (n *TaskAssignedNotification) ToDB() interface{} {
+	return n
+}
+
+// TaskDeletedNotification represents a TaskDeletedNotification notification
+type TaskDeletedNotification struct {
+	Doer *user.User
+	Task *Task
+}
+
+// ToMail returns the mail notification for TaskDeletedNotification
+func (n *TaskDeletedNotification) ToMail() *notifications.Mail {
+	return notifications.NewMail().
+		Subject(n.Task.Title + "(" + n.Task.GetFullIdentifier() + ")" + " has been delete").
+		Line(n.Doer.GetName() + " has deleted the task " + n.Task.Title + "(" + n.Task.GetFullIdentifier() + ")")
+}
+
+// ToDB returns the TaskDeletedNotification notification in a format which can be saved in the db
+func (n *TaskDeletedNotification) ToDB() interface{} {
+	return n
+}
+
+// ListCreatedNotification represents a ListCreatedNotification notification
+type ListCreatedNotification struct {
+	Doer *user.User
+	List *List
+}
+
+// ToMail returns the mail notification for ListCreatedNotification
+func (n *ListCreatedNotification) ToMail() *notifications.Mail {
+	return notifications.NewMail().
+		Subject(n.Doer.GetName()+` created the list "`+n.List.Title+`"`).
+		Line(n.Doer.GetName()+` created the list "`+n.List.Title+`"`).
+		Action("View List", config.ServiceFrontendurl.GetString()+"lists/")
+}
+
+// ToDB returns the ListCreatedNotification notification in a format which can be saved in the db
+func (n *ListCreatedNotification) ToDB() interface{} {
 	return nil
 }

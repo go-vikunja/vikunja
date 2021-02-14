@@ -28,7 +28,7 @@ import (
 // TaskCreatedEvent represents an event where a task has been created
 type TaskCreatedEvent struct {
 	Task *Task
-	Doer web.Auth
+	Doer *user.User
 }
 
 // Name defines the name for TaskCreatedEvent
@@ -39,7 +39,7 @@ func (t *TaskCreatedEvent) Name() string {
 // TaskUpdatedEvent represents an event where a task has been updated
 type TaskUpdatedEvent struct {
 	Task *Task
-	Doer web.Auth
+	Doer *user.User
 }
 
 // Name defines the name for TaskUpdatedEvent
@@ -50,7 +50,7 @@ func (t *TaskUpdatedEvent) Name() string {
 // TaskDeletedEvent represents a TaskDeletedEvent event
 type TaskDeletedEvent struct {
 	Task *Task
-	Doer web.Auth
+	Doer *user.User
 }
 
 // Name defines the name for TaskDeletedEvent
@@ -62,7 +62,7 @@ func (t *TaskDeletedEvent) Name() string {
 type TaskAssigneeCreatedEvent struct {
 	Task     *Task
 	Assignee *user.User
-	Doer     web.Auth
+	Doer     *user.User
 }
 
 // Name defines the name for TaskAssigneeCreatedEvent
@@ -74,7 +74,7 @@ func (t *TaskAssigneeCreatedEvent) Name() string {
 type TaskCommentCreatedEvent struct {
 	Task    *Task
 	Comment *TaskComment
-	Doer    web.Auth
+	Doer    *user.User
 }
 
 // Name defines the name for TaskCommentCreatedEvent
@@ -126,7 +126,7 @@ func (t *NamespaceDeletedEvent) Name() string {
 // ListCreatedEvent represents an event where a list has been created
 type ListCreatedEvent struct {
 	List *List
-	Doer web.Auth
+	Doer *user.User
 }
 
 // Name defines the name for ListCreatedEvent

@@ -827,7 +827,7 @@ func (s *` + name + `) Name() string {
 	return "` + listenerName + `"
 }
 
-// Hanlde is executed when the event ` + name + ` listens on is fired
+// Handle is executed when the event ` + name + ` listens on is fired
 func (s *` + name + `) Handle(payload message.Payload) (err error) {
 	event := &` + event + `{}
 	err = json.Unmarshal(payload, event)

@@ -3991,6 +3991,128 @@ var doc = `{
                 }
             }
         },
+        "/subscriptions/{entity}/{entityID}": {
+            "put": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Subscribes the current user to an entity.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "subscriptions"
+                ],
+                "summary": "Subscribes the current user to an entity.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "The entity the user subscribes to. Can be either ` + "`" + `namespace` + "`" + `, ` + "`" + `list` + "`" + ` or ` + "`" + `task` + "`" + `.",
+                        "name": "entity",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "The numeric id of the entity to subscribe to.",
+                        "name": "entityID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The subscription",
+                        "schema": {
+                            "$ref": "#/definitions/models.Subscription"
+                        }
+                    },
+                    "403": {
+                        "description": "The user does not have access to subscribe to this entity.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "412": {
+                        "description": "The subscription entity is invalid.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Unsubscribes the current user to an entity.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "subscriptions"
+                ],
+                "summary": "Unsubscribe the current user from an entity.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "The entity the user subscribed to. Can be either ` + "`" + `namespace` + "`" + `, ` + "`" + `list` + "`" + ` or ` + "`" + `task` + "`" + `.",
+                        "name": "entity",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "The numeric id of the subscribed entity to.",
+                        "name": "entityID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The subscription",
+                        "schema": {
+                            "$ref": "#/definitions/models.Subscription"
+                        }
+                    },
+                    "403": {
+                        "description": "The user does not have access to subscribe to this entity.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "The subscription does not exist.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
         "/tasks/all": {
             "get": {
                 "security": [
@@ -7039,6 +7161,10 @@ var doc = `{
                     "description": "When this task starts.",
                     "type": "string"
                 },
+                "subscription": {
+                    "description": "The subscription status for the user reading this task. You can only read this property, use the subscription endpoints to modify it.\nWill only returned when retreiving one task.",
+                    "$ref": "#/definitions/models.Subscription"
+                },
                 "task_ids": {
                     "description": "A list of task ids to update",
                     "type": "array",
@@ -7201,6 +7327,10 @@ var doc = `{
                     "description": "The user who created this list.",
                     "$ref": "#/definitions/user.User"
                 },
+                "subscription": {
+                    "description": "The subscription status for the user reading this list. You can only read this property, use the subscription endpoints to modify it.\nWill only returned when retreiving one list.",
+                    "$ref": "#/definitions/models.Subscription"
+                },
                 "title": {
                     "description": "The title of the list. You'll see this in the namespace overview.",
                     "type": "string",
@@ -7290,6 +7420,10 @@ var doc = `{
                     "description": "The user who owns this namespace",
                     "$ref": "#/definitions/user.User"
                 },
+                "subscription": {
+                    "description": "The subscription status for the user reading this namespace. You can only read this property, use the subscription endpoints to modify it.\nWill only returned when retreiving one namespace.",
+                    "$ref": "#/definitions/models.Subscription"
+                },
                 "title": {
                     "description": "The name of this namespace.",
                     "type": "string",
@@ -7363,6 +7497,10 @@ var doc = `{
                     "description": "The user who owns this namespace",
                     "$ref": "#/definitions/user.User"
                 },
+                "subscription": {
+                    "description": "The subscription status for the user reading this namespace. You can only read this property, use the subscription endpoints to modify it.\nWill only returned when retreiving one namespace.",
+                    "$ref": "#/definitions/models.Subscription"
+                },
                 "title": {
                     "description": "The name of this namespace.",
                     "type": "string",
@@ -7416,6 +7554,30 @@ var doc = `{
                 "updated": {
                     "description": "A timestamp when this filter was last updated. You cannot change this value.",
                     "type": "string"
+                }
+            }
+        },
+        "models.Subscription": {
+            "type": "object",
+            "properties": {
+                "created": {
+                    "description": "A timestamp when this subscription was created. You cannot change this value.",
+                    "type": "string"
+                },
+                "entity": {
+                    "type": "string"
+                },
+                "entity_id": {
+                    "description": "The id of the entity to subscribe to.",
+                    "type": "integer"
+                },
+                "id": {
+                    "description": "The numeric ID of the subscription",
+                    "type": "integer"
+                },
+                "user": {
+                    "description": "The user who made this subscription",
+                    "$ref": "#/definitions/user.User"
                 }
             }
         },
@@ -7534,6 +7696,10 @@ var doc = `{
                 "start_date": {
                     "description": "When this task starts.",
                     "type": "string"
+                },
+                "subscription": {
+                    "description": "The subscription status for the user reading this task. You can only read this property, use the subscription endpoints to modify it.\nWill only returned when retreiving one task.",
+                    "$ref": "#/definitions/models.Subscription"
                 },
                 "title": {
                     "description": "The task text. This is what you'll see in the list.",

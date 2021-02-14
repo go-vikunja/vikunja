@@ -73,10 +73,11 @@ func (tc *TaskComment) Create(s *xorm.Session, a web.Auth) (err error) {
 		return
 	}
 
+	doer, _ := user.GetFromAuth(a)
 	err = events.Dispatch(&TaskCommentCreatedEvent{
 		Task:    &task,
 		Comment: tc,
-		Doer:    a,
+		Doer:    doer,
 	})
 	if err != nil {
 		return err

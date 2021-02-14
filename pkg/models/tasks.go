@@ -91,6 +91,10 @@ type Task struct {
 	// True if a task is a favorite task. Favorite tasks show up in a separate "Important" list
 	IsFavorite bool `xorm:"default false" json:"is_favorite"`
 
+	// The subscription status for the user reading this task. You can only read this property, use the subscription endpoints to modify it.
+	// Will only returned when retreiving one task.
+	Subscription *Subscription `xorm:"-" json:"subscription,omitempty"`
+
 	// A timestamp when this task was created. You cannot change this value.
 	Created time.Time `xorm:"created not null" json:"created"`
 	// A timestamp when this task was last updated. You cannot change this value.
@@ -117,6 +121,19 @@ type Task struct {
 // TableName returns the table name for listtasks
 func (Task) TableName() string {
 	return "tasks"
+}
+
+// GetFullIdentifier returns the task identifier if the task has one and the index prefixed with # otherwise.
+func (t *Task) GetFullIdentifier() string {
+	if t.Identifier != "" {
+		return t.Identifier
+	}
+
+	return "#" + strconv.FormatInt(t.Index, 10)
+}
+
+func (t *Task) GetFrontendURL() string {
+	return config.ServiceFrontendurl.GetString() + "tasks/" + strconv.FormatInt(t.ID, 10)
 }
 
 type taskFilterConcatinator string
@@ -832,9 +849,10 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool) (err
 
 	t.setIdentifier(l)
 
+	doer, _ := user.GetFromAuth(a)
 	err = events.Dispatch(&TaskCreatedEvent{
 		Task: t,
-		Doer: a,
+		Doer: doer,
 	})
 	if err != nil {
 		return err
@@ -1040,9 +1058,10 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 	}
 	t.Updated = nt.Updated
 
+	doer, _ := user.GetFromAuth(a)
 	err = events.Dispatch(&TaskUpdatedEvent{
 		Task: t,
-		Doer: a,
+		Doer: doer,
 	})
 	if err != nil {
 		return err
@@ -1197,9 +1216,10 @@ func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
 		return err
 	}
 
+	doer, _ := user.GetFromAuth(a)
 	err = events.Dispatch(&TaskDeletedEvent{
 		Task: t,
-		Doer: a,
+		Doer: doer,
 	})
 	if err != nil {
 		return
@@ -1241,5 +1261,6 @@ func (t *Task) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 
 	*t = *taskMap[t.ID]
 
+	t.Subscription, err = GetSubscription(s, SubscriptionEntityTask, t.ID, a)
 	return
 }

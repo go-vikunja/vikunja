@@ -1,11 +1,10 @@
 ---
 date: "2019-02-12:00:00+02:00"
 title: "Errors"
-draft: false
-type: "doc"
+draft: false type: "doc"
 menu:
-  sidebar:
-    parent: "usage"
+sidebar:
+parent: "usage"
 ---
 
 # Errors
@@ -142,3 +141,10 @@ This document describes the different errors Vikunja can return.
 |-----------|------------------|-------------|
 | 11001 | 404 | The saved filter does not exist. |
 | 11002 | 412 | Saved filters are not available for link shares. | 
+
+## Subscriptions
+
+| ErrorCode | HTTP Status Code | Description |
+|-----------|------------------|-------------|
+| 12001 | 412 | The subscription entity type is invalid. |
+| 12002 | 412 | The user is already subscribed to the entity itself or a parent entity. |
