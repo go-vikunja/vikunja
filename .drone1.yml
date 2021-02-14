@@ -83,9 +83,8 @@ steps:
       GOPROXY: 'https://goproxy.kolaente.de'
     depends_on: [ build ]
     commands:
-      - ./mage-static check:got-swag
       - wget -O - -q https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.31.0
-      - ./mage-static check:golangci
+      - ./mage-static check:all
     when:
       event: [ push, tag, pull_request ]
 
