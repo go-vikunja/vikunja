@@ -1,6 +1,7 @@
 import AbstractModel from './abstractModel'
 import ListModel from './list'
 import UserModel from './user'
+import SubscriptionModel from '@/models/subscription'
 
 export default class NamespaceModel extends AbstractModel {
 	constructor(data) {
@@ -13,7 +14,12 @@ export default class NamespaceModel extends AbstractModel {
 		this.lists = this.lists.map(l => {
 			return new ListModel(l)
 		})
+
 		this.owner = new UserModel(this.owner)
+
+		if(typeof this.subscription !== 'undefined' && this.subscription !== null) {
+			this.subscription = new SubscriptionModel(this.subscription)
+		}
 
 		this.created = new Date(this.created)
 		this.updated = new Date(this.updated)
@@ -29,6 +35,7 @@ export default class NamespaceModel extends AbstractModel {
 			lists: [],
 			isArchived: false,
 			hexColor: '',
+			subscription: null,
 
 			created: null,
 			updated: null,

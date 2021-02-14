@@ -2,6 +2,7 @@ import AbstractModel from './abstractModel'
 import UserModel from './user'
 import LabelModel from './label'
 import AttachmentModel from './attachment'
+import SubscriptionModel from '@/models/subscription'
 
 const parseDate = date => {
 	if (date && !date.startsWith('0001')) {
@@ -75,6 +76,10 @@ export default class TaskModel extends AbstractModel {
 			this.identifier = ''
 		}
 
+		if(typeof this.subscription !== 'undefined' && this.subscription !== null) {
+			this.subscription = new SubscriptionModel(this.subscription)
+		}
+
 		this.created = new Date(this.created)
 		this.updated = new Date(this.updated)
 	}
@@ -104,6 +109,7 @@ export default class TaskModel extends AbstractModel {
 			identifier: '',
 			index: 0,
 			isFavorite: false,
+			subscription: null,
 
 			createdBy: UserModel,
 			created: null,

@@ -33,6 +33,14 @@
 			>
 				Archive
 			</dropdown-item>
+			<task-subscription
+				class="dropdown-item has-no-shadow"
+				:is-button="false"
+				entity="namespace"
+				:entity-id="namespace.id"
+				:subscription="subscription"
+				@change="sub => subscription = sub"
+			/>
 			<dropdown-item
 				:to="{ name: 'namespace.settings.delete', params: { id: namespace.id } }"
 				icon="trash-alt"
@@ -47,17 +55,27 @@
 <script>
 import Dropdown from '@/components/misc/dropdown'
 import DropdownItem from '@/components/misc/dropdown-item'
+import TaskSubscription from '@/components/misc/subscription'
 
 export default {
 	name: 'namespace-settings-dropdown',
+	data() {
+		return {
+			subscription: null,
+		}
+	},
 	components: {
 		DropdownItem,
 		Dropdown,
+		TaskSubscription,
 	},
 	props: {
 		namespace: {
 			required: true,
 		},
+	},
+	mounted() {
+		this.subscription = this.namespace.subscription
 	},
 }
 </script>

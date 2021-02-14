@@ -255,6 +255,12 @@
 					>
 						{{ task.done ? 'Mark as undone' : 'Done!' }}
 					</x-button>
+					<task-subscription
+						entity="task"
+						:entity-id="task.id"
+						:subscription="task.subscription"
+						@change="sub => task.subscription = sub"
+					/>
 					<x-button
 						@click="setFieldActive('assignees')"
 						@shortkey="setFieldActive('assignees')"
@@ -422,10 +428,12 @@ import attachmentUpload from '../../components/tasks/mixins/attachmentUpload'
 import heading from '@/components/tasks/partials/heading'
 import Datepicker from '@/components/input/datepicker'
 import {playPop} from '@/helpers/playPop'
+import TaskSubscription from '@/components/misc/subscription'
 
 export default {
 	name: 'TaskDetailView',
 	components: {
+		TaskSubscription,
 		Datepicker,
 		ColorPicker,
 		ListSearch,

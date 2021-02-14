@@ -54,6 +54,14 @@
 			>
 				Archive
 			</dropdown-item>
+			<task-subscription
+				class="dropdown-item has-no-shadow"
+				:is-button="false"
+				entity="list"
+				:entity-id="list.id"
+				:subscription="subscription"
+				@change="sub => subscription = sub"
+			/>
 			<dropdown-item
 				:to="{ name: `${listRoutePrefix}.settings.delete`, params: { listId: list.id } }"
 				icon="trash-alt"
@@ -69,10 +77,17 @@
 import {getSavedFilterIdFromListId} from '@/helpers/savedFilter'
 import Dropdown from '@/components/misc/dropdown'
 import DropdownItem from '@/components/misc/dropdown-item'
+import TaskSubscription from '@/components/misc/subscription'
 
 export default {
 	name: 'list-settings-dropdown',
+	data() {
+		return {
+			subscription: null,
+		}
+	},
 	components: {
+		TaskSubscription,
 		DropdownItem,
 		Dropdown,
 	},
@@ -80,6 +95,9 @@ export default {
 		list: {
 			required: true,
 		},
+	},
+	mounted() {
+		this.subscription = this.list.subscription
 	},
 	computed: {
 		backgroundsEnabled() {

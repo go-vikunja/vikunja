@@ -2,6 +2,7 @@ import AbstractModel from './abstractModel'
 import TaskModel from './task'
 import UserModel from './user'
 import {getSavedFilterIdFromListId} from '@/helpers/savedFilter'
+import SubscriptionModel from '@/models/subscription'
 
 export default class ListModel extends AbstractModel {
 
@@ -18,6 +19,10 @@ export default class ListModel extends AbstractModel {
 		})
 
 		this.owner = new UserModel(this.owner)
+
+		if(typeof this.subscription !== 'undefined' && this.subscription !== null) {
+			this.subscription = new SubscriptionModel(this.subscription)
+		}
 
 		this.created = new Date(this.created)
 		this.updated = new Date(this.updated)
@@ -37,6 +42,7 @@ export default class ListModel extends AbstractModel {
 			identifier: '',
 			backgroundInformation: null,
 			isFavorite: false,
+			subscription: null,
 
 			created: null,
 			updated: null,

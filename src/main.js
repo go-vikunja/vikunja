@@ -61,8 +61,9 @@ import {
 	faArchive,
 	faShareAlt,
 	faImage,
+	faBell,
 } from '@fortawesome/free-solid-svg-icons'
-import {faCalendarAlt, faClock, faComments, faSave, faStar, faTimesCircle, faSun} from '@fortawesome/free-regular-svg-icons'
+import {faCalendarAlt, faClock, faComments, faSave, faStar, faTimesCircle, faSun, faBellSlash} from '@fortawesome/free-regular-svg-icons'
 import {FontAwesomeIcon} from '@fortawesome/vue-fontawesome'
 // PWA
 import './registerServiceWorker'
@@ -152,6 +153,8 @@ library.add(faEllipsisH)
 library.add(faArchive)
 library.add(faShareAlt)
 library.add(faImage)
+library.add(faBell)
+library.add(faBellSlash)
 
 Vue.component('icon', FontAwesomeIcon)
 
