@@ -737,7 +737,7 @@ steps:
     settings:
       tags: latest
       ignore_missing: true
-      spec: docker-manifest.tmpl
+      spec: docker-manifest-latest.tmpl
       password:
         from_secret: docker_password
       username:
