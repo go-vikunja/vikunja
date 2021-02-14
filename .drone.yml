@@ -471,7 +471,7 @@ steps:
     image: plugins/manifest
     settings:
       tags: latest
-      spec: docker-manifest.tmpl
+      spec: docker-manifest-latest.tmpl
       password:
         from_secret: docker_password
       username:

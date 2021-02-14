@@ -1,0 +1,17 @@
+image: vikunja/frontend:latest
+manifests:
+  -
+    image: vikunja/frontend:latest-linux-amd64
+    platform:
+      architecture: amd64
+      os: linux
+  -
+    image: vikunja/frontend:latest-linux-arm64
+    platform:
+      architecture: arm64
+      os: linux
+  -
+    image: vikunja/frontend:latest-linux-arm
+    platform:
+      architecture: arm
+      os: linux
