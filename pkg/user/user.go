@@ -17,11 +17,12 @@
 package user
 
 import (
-	"code.vikunja.io/api/pkg/db"
 	"errors"
 	"fmt"
 	"reflect"
 	"time"
+
+	"code.vikunja.io/api/pkg/db"
 
 	"xorm.io/xorm"
 
