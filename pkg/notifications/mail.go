@@ -32,9 +32,7 @@ type Mail struct {
 
 // NewMail creates a new mail object with a default greeting
 func NewMail() *Mail {
-	return &Mail{
-		greeting: "Hi,",
-	}
+	return &Mail{}
 }
 
 // From sets the from name and email address

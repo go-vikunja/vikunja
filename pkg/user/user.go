@@ -17,6 +17,7 @@
 package user
 
 import (
+	"code.vikunja.io/api/pkg/db"
 	"errors"
 	"fmt"
 	"reflect"
@@ -75,8 +76,19 @@ type User struct {
 }
 
 // RouteForMail routes all notifications for a user to its email address
-func (u *User) RouteForMail() string {
-	return u.Email
+func (u *User) RouteForMail() (string, error) {
+
+	if u.Email == "" {
+		s := db.NewSession()
+		defer s.Close()
+		user, err := getUser(s, &User{ID: u.ID}, true)
+		if err != nil {
+			return "", err
+		}
+		return user.Email, nil
+	}
+
+	return u.Email, nil
 }
 
 // RouteForDB routes all notifications for a user to their id

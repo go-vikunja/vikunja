@@ -32,7 +32,7 @@ type Notification interface {
 // Notifiable is an entity which can be notified. Usually a user.
 type Notifiable interface {
 	// Should return the email address this notifiable has.
-	RouteForMail() string
+	RouteForMail() (string, error)
 	// Should return the id of the notifiable entity
 	RouteForDB() int64
 }
@@ -73,7 +73,11 @@ func notifyMail(notifiable Notifiable, notification Notification) error {
 		return nil
 	}
 
-	mail.To(notifiable.RouteForMail())
+	to, err := notifiable.RouteForMail()
+	if err != nil {
+		return err
+	}
+	mail.To(to)
 
 	return SendMail(mail)
 }
