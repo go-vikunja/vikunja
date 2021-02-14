@@ -48,8 +48,8 @@ type testNotifiable struct {
 }
 
 // RouteForMail routes a test notification for mail
-func (t *testNotifiable) RouteForMail() string {
-	return "some@email.com"
+func (t *testNotifiable) RouteForMail() (string, error) {
+	return "some@email.com", nil
 }
 
 // RouteForDB routes a test notification for db
