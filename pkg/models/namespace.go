@@ -181,7 +181,7 @@ type NamespaceWithLists struct {
 	Lists     []*List `xorm:"-" json:"lists"`
 }
 
-func makeNamespaceSliceFromMap(namespaces map[int64]*NamespaceWithLists, userMap map[int64]*user.User, subscriptions map[int64]*Subscription) []*NamespaceWithLists {
+func makeNamespaceSlice(namespaces map[int64]*NamespaceWithLists, userMap map[int64]*user.User, subscriptions map[int64]*Subscription) []*NamespaceWithLists {
 	all := make([]*NamespaceWithLists, 0, len(namespaces))
 	for _, n := range namespaces {
 		n.Owner = userMap[n.OwnerID]
@@ -193,6 +193,254 @@ func makeNamespaceSliceFromMap(namespaces map[int64]*NamespaceWithLists, userMap
 	})
 
 	return all
+}
+
+func getNamespaceFilterCond(search string) (filterCond builder.Cond) {
+	filterCond = &builder.Like{"namespaces.title", "%" + search + "%"}
+
+	if search == "" {
+		return
+	}
+
+	vals := strings.Split(search, ",")
+
+	if len(vals) == 0 {
+		return
+	}
+
+	ids := []int64{}
+	for _, val := range vals {
+		v, err := strconv.ParseInt(val, 10, 64)
+		if err != nil {
+			log.Debugf("Namespace search string part '%s' is not a number: %s", val, err)
+			continue
+		}
+		ids = append(ids, v)
+	}
+
+	if len(ids) > 0 {
+		filterCond = builder.In("namespaces.id", ids)
+	}
+
+	return
+}
+
+func getNamespaceArchivedCond(archived bool) builder.Cond {
+	// Adding a 1=1 condition by default here because xorm always needs a condition and cannot handle nil conditions
+	var isArchivedCond builder.Cond = builder.Eq{"1": 1}
+	if !archived {
+		isArchivedCond = builder.And(
+			builder.Eq{"namespaces.is_archived": false},
+		)
+	}
+
+	return isArchivedCond
+}
+
+func getNamespacesWithLists(s *xorm.Session, namespaces *map[int64]*NamespaceWithLists, search string, isArchived bool, page, perPage int, userID int64) (numberOfTotalItems int64, err error) {
+	isArchivedCond := getNamespaceArchivedCond(isArchived)
+	filterCond := getNamespaceFilterCond(search)
+
+	limit, start := getLimitFromPageIndex(page, perPage)
+	query := s.Select("namespaces.*").
+		Table("namespaces").
+		Join("LEFT", "team_namespaces", "namespaces.id = team_namespaces.namespace_id").
+		Join("LEFT", "team_members", "team_members.team_id = team_namespaces.team_id").
+		Join("LEFT", "users_namespace", "users_namespace.namespace_id = namespaces.id").
+		Where("team_members.user_id = ?", userID).
+		Or("namespaces.owner_id = ?", userID).
+		Or("users_namespace.user_id = ?", userID).
+		GroupBy("namespaces.id").
+		Where(filterCond).
+		Where(isArchivedCond)
+	if limit > 0 {
+		query = query.Limit(limit, start)
+	}
+	err = query.Find(namespaces)
+	if err != nil {
+		return 0, err
+	}
+
+	numberOfTotalItems, err = s.
+		Table("namespaces").
+		Join("LEFT", "team_namespaces", "namespaces.id = team_namespaces.namespace_id").
+		Join("LEFT", "team_members", "team_members.team_id = team_namespaces.team_id").
+		Join("LEFT", "users_namespace", "users_namespace.namespace_id = namespaces.id").
+		Where("team_members.user_id = ?", userID).
+		Or("namespaces.owner_id = ?", userID).
+		Or("users_namespace.user_id = ?", userID).
+		And("namespaces.is_archived = false").
+		GroupBy("namespaces.id").
+		Where(filterCond).
+		Where(isArchivedCond).
+		Count(&NamespaceWithLists{})
+	return numberOfTotalItems, err
+}
+
+func getNamespaceOwnerIDs(namespaces map[int64]*NamespaceWithLists) (namespaceIDs, ownerIDs []int64) {
+	for _, nsp := range namespaces {
+		namespaceIDs = append(namespaceIDs, nsp.ID)
+		ownerIDs = append(ownerIDs, nsp.OwnerID)
+	}
+
+	return
+}
+
+func getNamespaceSubscriptions(s *xorm.Session, namespaceIDs []int64, userID int64) (map[int64]*Subscription, error) {
+	subscriptions := []*Subscription{}
+	err := s.
+		Where("entity_type = ? AND user_id = ?", SubscriptionEntityNamespace, userID).
+		In("entity_id", namespaceIDs).
+		Find(&subscriptions)
+	if err != nil {
+		return nil, err
+	}
+	subscriptionsMap := make(map[int64]*Subscription)
+	for _, sub := range subscriptions {
+		sub.Entity = sub.EntityType.String()
+		subscriptionsMap[sub.EntityID] = sub
+	}
+
+	return subscriptionsMap, err
+}
+
+func getListsForNamespaces(s *xorm.Session, namespaceIDs []int64, archived bool) ([]*List, error) {
+	lists := []*List{}
+	listQuery := s.
+		In("namespace_id", namespaceIDs)
+
+	if !archived {
+		listQuery.And("is_archived = false")
+	}
+	err := listQuery.Find(&lists)
+	return lists, err
+}
+
+func getSharedListsInNamespace(s *xorm.Session, archived bool, doer *user.User) (sharedListsNamespace *NamespaceWithLists, err error) {
+	// Create our pseudo namespace to hold the shared lists
+	sharedListsPseudonamespace := SharedListsPseudoNamespace
+	sharedListsPseudonamespace.Owner = doer
+	sharedListsNamespace = &NamespaceWithLists{
+		sharedListsPseudonamespace,
+		[]*List{},
+	}
+
+	// Get all lists individually shared with our user (not via a namespace)
+	individualLists := []*List{}
+	iListQuery := s.Select("l.*").
+		Table("list").
+		Alias("l").
+		Join("LEFT", []string{"team_list", "tl"}, "l.id = tl.list_id").
+		Join("LEFT", []string{"team_members", "tm"}, "tm.team_id = tl.team_id").
+		Join("LEFT", []string{"users_list", "ul"}, "ul.list_id = l.id").
+		Where(builder.And(
+			builder.Eq{"tm.user_id": doer.ID},
+			builder.Neq{"l.owner_id": doer.ID},
+		)).
+		Or(builder.And(
+			builder.Eq{"ul.user_id": doer.ID},
+			builder.Neq{"l.owner_id": doer.ID},
+		)).
+		GroupBy("l.id")
+	if !archived {
+		iListQuery.And("l.is_archived = false")
+	}
+	err = iListQuery.Find(&individualLists)
+	if err != nil {
+		return
+	}
+
+	// Make the namespace -1 so we now later which one it was
+	// + Append it to all lists we already have
+	for _, l := range individualLists {
+		l.NamespaceID = sharedListsNamespace.ID
+	}
+
+	sharedListsNamespace.Lists = individualLists
+
+	// Remove the sharedListsPseudonamespace if we don't have any shared lists
+	if len(individualLists) == 0 {
+		sharedListsNamespace = nil
+	}
+
+	return
+}
+
+func getFavoriteLists(s *xorm.Session, lists []*List, namespaceIDs []int64, doer *user.User) (favoriteNamespace *NamespaceWithLists, err error) {
+	// Create our pseudo namespace with favorite lists
+	pseudoFavoriteNamespace := FavoritesPseudoNamespace
+	pseudoFavoriteNamespace.Owner = doer
+	favoriteNamespace = &NamespaceWithLists{
+		Namespace: pseudoFavoriteNamespace,
+		Lists:     []*List{{}},
+	}
+	*favoriteNamespace.Lists[0] = FavoritesPseudoList // Copying the list to be able to modify it later
+
+	for _, list := range lists {
+		if !list.IsFavorite {
+			continue
+		}
+		favoriteNamespace.Lists = append(favoriteNamespace.Lists, list)
+	}
+
+	// Check if we have any favorites or favorited lists and remove the favorites namespace from the list if not
+	var favoriteCount int64
+	favoriteCount, err = s.
+		Join("INNER", "list", "tasks.list_id = list.id").
+		Join("INNER", "namespaces", "list.namespace_id = namespaces.id").
+		Where(builder.And(builder.Eq{"tasks.is_favorite": true}, builder.In("namespaces.id", namespaceIDs))).
+		Count(&Task{})
+	if err != nil {
+		return
+	}
+
+	// If we don't have any favorites in the favorites pseudo list, remove that pseudo list from the namespace
+	if favoriteCount == 0 {
+		for in, l := range favoriteNamespace.Lists {
+			if l.ID == FavoritesPseudoList.ID {
+				favoriteNamespace.Lists = append(favoriteNamespace.Lists[:in], favoriteNamespace.Lists[in+1:]...)
+				break
+			}
+		}
+	}
+
+	// If we don't have any favorites in the namespace, remove it
+	if len(favoriteNamespace.Lists) == 0 {
+		return nil, nil
+	}
+
+	return
+}
+
+func getSavedFilters(s *xorm.Session, doer *user.User) (savedFiltersNamespace *NamespaceWithLists, err error) {
+	savedFilters, err := getSavedFiltersForUser(s, doer)
+	if err != nil {
+		return
+	}
+
+	if len(savedFilters) == 0 {
+		return nil, nil
+	}
+
+	savedFiltersPseudoNamespace := SavedFiltersPseudoNamespace
+	savedFiltersPseudoNamespace.Owner = doer
+	savedFiltersNamespace = &NamespaceWithLists{
+		Namespace: savedFiltersPseudoNamespace,
+		Lists:     make([]*List, 0, len(savedFilters)),
+	}
+
+	for _, filter := range savedFilters {
+		savedFiltersNamespace.Lists = append(savedFiltersNamespace.Lists, &List{
+			ID:          getListIDFromSavedFilterID(filter.ID),
+			Title:       filter.Title,
+			Description: filter.Description,
+			Created:     filter.Created,
+			Updated:     filter.Updated,
+			Owner:       doer,
+		})
+	}
+
+	return
 }
 
 // ReadAll gets all namespaces a user has access to
@@ -228,110 +476,30 @@ func (n *Namespace) ReadAll(s *xorm.Session, a web.Auth, search string, page int
 		return nil, 0, 0, err
 	}
 
-	// Adding a 1=1 condition by default here because xorm always needs a condition and cannot handle nil conditions
-	var isArchivedCond builder.Cond = builder.Eq{"1": 1}
-	if !n.IsArchived {
-		isArchivedCond = builder.And(
-			builder.Eq{"namespaces.is_archived": false},
-		)
-	}
-
-	var filterCond builder.Cond = &builder.Like{"namespaces.title", "%" + search + "%"}
-	vals := strings.Split(search, ",")
-	ids := []int64{}
-	for _, val := range vals {
-		v, err := strconv.ParseInt(val, 10, 64)
-		if err != nil {
-			log.Debugf("Namespace search string part '%s' is not a number: %s", val, err)
-			continue
-		}
-		ids = append(ids, v)
-	}
-
-	if len(ids) > 0 {
-		filterCond = builder.In("namespaces.id", ids)
-	}
-
-	limit, start := getLimitFromPageIndex(page, perPage)
-	query := s.Select("namespaces.*").
-		Table("namespaces").
-		Join("LEFT", "team_namespaces", "namespaces.id = team_namespaces.namespace_id").
-		Join("LEFT", "team_members", "team_members.team_id = team_namespaces.team_id").
-		Join("LEFT", "users_namespace", "users_namespace.namespace_id = namespaces.id").
-		Where("team_members.user_id = ?", doer.ID).
-		Or("namespaces.owner_id = ?", doer.ID).
-		Or("users_namespace.user_id = ?", doer.ID).
-		GroupBy("namespaces.id").
-		Where(filterCond).
-		Where(isArchivedCond)
-	if limit > 0 {
-		query = query.Limit(limit, start)
-	}
-	err = query.Find(&namespaces)
+	numberOfTotalItems, err = getNamespacesWithLists(s, &namespaces, search, n.IsArchived, page, perPage, doer.ID)
 	if err != nil {
 		return nil, 0, 0, err
 	}
 
-	numberOfTotalItems, err = s.
-		Table("namespaces").
-		Join("LEFT", "team_namespaces", "namespaces.id = team_namespaces.namespace_id").
-		Join("LEFT", "team_members", "team_members.team_id = team_namespaces.team_id").
-		Join("LEFT", "users_namespace", "users_namespace.namespace_id = namespaces.id").
-		Where("team_members.user_id = ?", doer.ID).
-		Or("namespaces.owner_id = ?", doer.ID).
-		Or("users_namespace.user_id = ?", doer.ID).
-		And("namespaces.is_archived = false").
-		GroupBy("namespaces.id").
-		Where(filterCond).
-		Count(&NamespaceWithLists{})
+	namespaceIDs, ownerIDs := getNamespaceOwnerIDs(namespaces)
+
+	subscriptionsMap, err := getNamespaceSubscriptions(s, namespaceIDs, doer.ID)
 	if err != nil {
 		return nil, 0, 0, err
 	}
 
-	// Make a list of namespace ids
-	var namespaceids []int64
-	var userIDs []int64
-	for _, nsp := range namespaces {
-		namespaceids = append(namespaceids, nsp.ID)
-		userIDs = append(userIDs, nsp.OwnerID)
-	}
-
-	// Get all subscriptions
-	subscriptions := []*Subscription{}
-	err = s.
-		Where("entity_type = ? AND user_id = ?", SubscriptionEntityNamespace, a.GetID()).
-		In("entity_id", namespaceids).
-		Find(&subscriptions)
-	if err != nil {
-		return nil, 0, 0, err
-	}
-	subscriptionsMap := make(map[int64]*Subscription)
-	for _, sub := range subscriptions {
-		sub.Entity = sub.EntityType.String()
-		subscriptionsMap[sub.EntityID] = sub
-	}
-
-	// Get all owners
-	userMap := make(map[int64]*user.User)
-	err = s.In("id", userIDs).Find(&userMap)
+	ownerMap, err := user.GetUsersByIDs(s, ownerIDs)
 	if err != nil {
 		return nil, 0, 0, err
 	}
 
 	if n.NamespacesOnly {
-		all := makeNamespaceSliceFromMap(namespaces, userMap, subscriptionsMap)
+		all := makeNamespaceSlice(namespaces, ownerMap, subscriptionsMap)
 		return all, len(all), numberOfTotalItems, nil
 	}
 
 	// Get all lists
-	lists := []*List{}
-	listQuery := s.
-		In("namespace_id", namespaceids)
-
-	if !n.IsArchived {
-		listQuery.And("is_archived = false")
-	}
-	err = listQuery.Find(&lists)
+	lists, err := getListsForNamespaces(s, namespaceIDs, n.IsArchived)
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -339,134 +507,54 @@ func (n *Namespace) ReadAll(s *xorm.Session, a web.Auth, search string, page int
 	///////////////
 	// Shared Lists
 
-	// Create our pseudo namespace to hold the shared lists
-	sharedListsPseudonamespace := SharedListsPseudoNamespace
-	sharedListsPseudonamespace.Owner = doer
-	namespaces[sharedListsPseudonamespace.ID] = &NamespaceWithLists{
-		sharedListsPseudonamespace,
-		[]*List{},
-	}
-
-	// Get all lists individually shared with our user (not via a namespace)
-	individualLists := []*List{}
-	iListQuery := s.Select("l.*").
-		Table("list").
-		Alias("l").
-		Join("LEFT", []string{"team_list", "tl"}, "l.id = tl.list_id").
-		Join("LEFT", []string{"team_members", "tm"}, "tm.team_id = tl.team_id").
-		Join("LEFT", []string{"users_list", "ul"}, "ul.list_id = l.id").
-		Where(builder.And(
-			builder.Eq{"tm.user_id": doer.ID},
-			builder.Neq{"l.owner_id": doer.ID},
-		)).
-		Or(builder.And(
-			builder.Eq{"ul.user_id": doer.ID},
-			builder.Neq{"l.owner_id": doer.ID},
-		)).
-		GroupBy("l.id")
-	if !n.IsArchived {
-		iListQuery.And("l.is_archived = false")
-	}
-	err = iListQuery.Find(&individualLists)
+	sharedListsNamespace, err := getSharedListsInNamespace(s, n.IsArchived, doer)
 	if err != nil {
 		return nil, 0, 0, err
 	}
 
-	// Make the namespace -1 so we now later which one it was
-	// + Append it to all lists we already have
-	for _, l := range individualLists {
-		l.NamespaceID = -1
-		lists = append(lists, l)
-	}
-
-	// Remove the sharedListsPseudonamespace if we don't have any shared lists
-	if len(individualLists) == 0 {
-		delete(namespaces, sharedListsPseudonamespace.ID)
-	}
-
-	// More details for the lists
-	err = addListDetails(s, lists)
-	if err != nil {
-		return nil, 0, 0, err
+	if sharedListsNamespace != nil {
+		namespaces[sharedListsNamespace.ID] = sharedListsNamespace
+		lists = append(lists, sharedListsNamespace.Lists...)
 	}
 
 	/////////////////
 	// Favorite lists
 
-	// Create our pseudo namespace with favorite lists
-	pseudoFavoriteNamespace := FavoritesPseudoNamespace
-	pseudoFavoriteNamespace.Owner = doer
-	namespaces[pseudoFavoriteNamespace.ID] = &NamespaceWithLists{
-		Namespace: pseudoFavoriteNamespace,
-		Lists:     []*List{{}},
-	}
-	*namespaces[pseudoFavoriteNamespace.ID].Lists[0] = FavoritesPseudoList // Copying the list to be able to modify it later
-
-	for _, list := range lists {
-		if list.IsFavorite {
-			namespaces[pseudoFavoriteNamespace.ID].Lists = append(namespaces[pseudoFavoriteNamespace.ID].Lists, list)
-		}
-		namespaces[list.NamespaceID].Lists = append(namespaces[list.NamespaceID].Lists, list)
-	}
-
-	// Check if we have any favorites or favorited lists and remove the favorites namespace from the list if not
-	var favoriteCount int64
-	favoriteCount, err = s.
-		Join("INNER", "list", "tasks.list_id = list.id").
-		Join("INNER", "namespaces", "list.namespace_id = namespaces.id").
-		Where(builder.And(builder.Eq{"tasks.is_favorite": true}, builder.In("namespaces.id", namespaceids))).
-		Count(&Task{})
+	favoritesNamespace, err := getFavoriteLists(s, lists, namespaceIDs, doer)
 	if err != nil {
 		return nil, 0, 0, err
 	}
 
-	// If we don't have any favorites in the favorites pseudo list, remove that pseudo list from the namespace
-	if favoriteCount == 0 {
-		for in, l := range namespaces[pseudoFavoriteNamespace.ID].Lists {
-			if l.ID == FavoritesPseudoList.ID {
-				namespaces[pseudoFavoriteNamespace.ID].Lists = append(namespaces[pseudoFavoriteNamespace.ID].Lists[:in], namespaces[pseudoFavoriteNamespace.ID].Lists[in+1:]...)
-				break
-			}
-		}
-	}
-
-	// If we don't have any favorites in the namespace, remove it
-	if len(namespaces[pseudoFavoriteNamespace.ID].Lists) == 0 {
-		delete(namespaces, pseudoFavoriteNamespace.ID)
+	if favoritesNamespace != nil {
+		namespaces[favoritesNamespace.ID] = favoritesNamespace
 	}
 
 	/////////////////
 	// Saved Filters
 
-	savedFilters, err := getSavedFiltersForUser(s, a)
+	savedFiltersNamespace, err := getSavedFilters(s, doer)
 	if err != nil {
 		return nil, 0, 0, err
 	}
 
-	if len(savedFilters) > 0 {
-		savedFiltersPseudoNamespace := SavedFiltersPseudoNamespace
-		savedFiltersPseudoNamespace.Owner = doer
-		namespaces[savedFiltersPseudoNamespace.ID] = &NamespaceWithLists{
-			Namespace: savedFiltersPseudoNamespace,
-			Lists:     make([]*List, 0, len(savedFilters)),
-		}
-
-		for _, filter := range savedFilters {
-			namespaces[savedFiltersPseudoNamespace.ID].Lists = append(namespaces[savedFiltersPseudoNamespace.ID].Lists, &List{
-				ID:          getListIDFromSavedFilterID(filter.ID),
-				Title:       filter.Title,
-				Description: filter.Description,
-				Created:     filter.Created,
-				Updated:     filter.Updated,
-				Owner:       doer,
-			})
-		}
+	if savedFiltersNamespace != nil {
+		namespaces[savedFiltersNamespace.ID] = savedFiltersNamespace
 	}
 
 	//////////////////////
-	// Put it all together (and sort it)
-	all := makeNamespaceSliceFromMap(namespaces, userMap, subscriptionsMap)
-	return all, len(all), numberOfTotalItems, nil
+	// Put it all together
+
+	err = addListDetails(s, lists)
+	if err != nil {
+		return
+	}
+
+	for _, list := range lists {
+		namespaces[list.NamespaceID].Lists = append(namespaces[list.NamespaceID].Lists, list)
+	}
+
+	all := makeNamespaceSlice(namespaces, ownerMap, subscriptionsMap)
+	return all, len(all), numberOfTotalItems, err
 }
 
 // Create implements the creation method via the interface

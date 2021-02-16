@@ -198,10 +198,11 @@ func TestNamespace_ReadAll(t *testing.T) {
 	user11 := &user.User{ID: 11}
 	user12 := &user.User{ID: 12}
 
-	s := db.NewSession()
-	defer s.Close()
-
 	t.Run("normal", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
 		n := &Namespace{}
 		nn, _, _, err := n.ReadAll(s, user1, "", 1, -1)
 		assert.NoError(t, err)
@@ -220,6 +221,10 @@ func TestNamespace_ReadAll(t *testing.T) {
 		}
 	})
 	t.Run("namespaces only", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
 		n := &Namespace{
 			NamespacesOnly: true,
 		}
@@ -234,6 +239,10 @@ func TestNamespace_ReadAll(t *testing.T) {
 		}
 	})
 	t.Run("ids only", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
 		n := &Namespace{
 			NamespacesOnly: true,
 		}
@@ -246,6 +255,10 @@ func TestNamespace_ReadAll(t *testing.T) {
 		assert.Equal(t, int64(14), namespaces[1].ID)
 	})
 	t.Run("ids only but ids with other people's namespace", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
 		n := &Namespace{
 			NamespacesOnly: true,
 		}
@@ -257,6 +270,10 @@ func TestNamespace_ReadAll(t *testing.T) {
 		assert.Equal(t, int64(1), namespaces[0].ID)
 	})
 	t.Run("archived", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
 		n := &Namespace{
 			IsArchived: true,
 		}
@@ -270,6 +287,10 @@ func TestNamespace_ReadAll(t *testing.T) {
 		assert.Equal(t, int64(-1), namespaces[2].ID) // The third one should be the one with the shared namespaces
 	})
 	t.Run("no favorites", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
 		n := &Namespace{}
 		nn, _, _, err := n.ReadAll(s, user11, "", 1, -1)
 		namespaces := nn.([]*NamespaceWithLists)
@@ -278,6 +299,10 @@ func TestNamespace_ReadAll(t *testing.T) {
 		assert.NotEqual(t, FavoritesPseudoNamespace.ID, namespaces[0].ID)
 	})
 	t.Run("no favorite tasks but namespace", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
 		n := &Namespace{}
 		nn, _, _, err := n.ReadAll(s, user12, "", 1, -1)
 		namespaces := nn.([]*NamespaceWithLists)
@@ -287,6 +312,10 @@ func TestNamespace_ReadAll(t *testing.T) {
 		assert.NotEqual(t, 0, namespaces[0].Lists)
 	})
 	t.Run("no saved filters", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
 		n := &Namespace{}
 		nn, _, _, err := n.ReadAll(s, user11, "", 1, -1)
 		namespaces := nn.([]*NamespaceWithLists)
