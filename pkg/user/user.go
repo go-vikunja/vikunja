@@ -22,6 +22,8 @@ import (
 	"reflect"
 	"time"
 
+	"code.vikunja.io/api/pkg/config"
+
 	"code.vikunja.io/api/pkg/db"
 
 	"xorm.io/xorm"
@@ -114,6 +116,11 @@ func (u *User) GetName() string {
 	}
 
 	return u.Username
+}
+
+// GetNameAndFromEmail returns the name and email address for a user. Useful to use in notifications.
+func (u *User) GetNameAndFromEmail() string {
+	return u.GetName() + " via Vikunja <" + config.MailerFromEmail.GetString() + ">"
 }
 
 // GetFromAuth returns a user object from a web.Auth object and returns an error if the underlying type

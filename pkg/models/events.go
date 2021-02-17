@@ -216,7 +216,7 @@ func (n *NamespaceSharedWithTeamEvent) Name() string {
 type TeamMemberAddedEvent struct {
 	Team   *Team
 	Member *user.User
-	Doer   web.Auth
+	Doer   *user.User
 }
 
 // Name defines the name for TeamMemberAddedEvent

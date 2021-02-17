@@ -59,7 +59,7 @@ type TaskCommentNotification struct {
 func (n *TaskCommentNotification) ToMail() *notifications.Mail {
 
 	mail := notifications.NewMail().
-		From(n.Doer.GetName() + " via Vikunja <" + config.MailerFromEmail.GetString() + ">").
+		From(n.Doer.GetNameAndFromEmail()).
 		Subject("Re: " + n.Task.Title)
 
 	lines := bufio.NewScanner(strings.NewReader(n.Comment.Comment))
@@ -130,5 +130,27 @@ func (n *ListCreatedNotification) ToMail() *notifications.Mail {
 
 // ToDB returns the ListCreatedNotification notification in a format which can be saved in the db
 func (n *ListCreatedNotification) ToDB() interface{} {
+	return nil
+}
+
+// TeamMemberAddedNotification represents a TeamMemberAddedNotification notification
+type TeamMemberAddedNotification struct {
+	Member *user.User
+	Doer   *user.User
+	Team   *Team
+}
+
+// ToMail returns the mail notification for TeamMemberAddedNotification
+func (n *TeamMemberAddedNotification) ToMail() *notifications.Mail {
+	return notifications.NewMail().
+		Subject(n.Doer.GetName()+" added you to the "+n.Team.Name+" team in Vikunja").
+		From(n.Doer.GetNameAndFromEmail()).
+		Greeting("Hi "+n.Member.GetName()+",").
+		Line(n.Doer.GetName()+" has just added you to the "+n.Team.Name+" team in Vikunja.").
+		Action("View Team", config.ServiceFrontendurl.GetString()+"teams/"+strconv.FormatInt(n.Team.ID, 10)+"/edit")
+}
+
+// ToDB returns the TeamMemberAddedNotification notification in a format which can be saved in the db
+func (n *TeamMemberAddedNotification) ToDB() interface{} {
 	return nil
 }

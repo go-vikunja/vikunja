@@ -46,11 +46,11 @@ func (tm *TeamMember) Create(s *xorm.Session, a web.Auth) (err error) {
 	}
 
 	// Check if the user exists
-	user, err := user2.GetUserByUsername(s, tm.Username)
+	member, err := user2.GetUserByUsername(s, tm.Username)
 	if err != nil {
 		return
 	}
-	tm.UserID = user.ID
+	tm.UserID = member.ID
 
 	// Check if that user is already part of the team
 	exists, err := s.
@@ -69,10 +69,11 @@ func (tm *TeamMember) Create(s *xorm.Session, a web.Auth) (err error) {
 		return err
 	}
 
+	doer, _ := user2.GetFromAuth(a)
 	return events.Dispatch(&TeamMemberAddedEvent{
 		Team:   team,
-		Member: user,
-		Doer:   a,
+		Member: member,
+		Doer:   doer,
 	})
 }
 

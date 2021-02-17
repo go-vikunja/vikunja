@@ -43,6 +43,7 @@ func RegisterListeners() {
 	events.RegisterListener((&TaskDeletedEvent{}).Name(), &SendTaskDeletedNotification{})
 	events.RegisterListener((&ListCreatedEvent{}).Name(), &SendListCreatedNotification{})
 	events.RegisterListener((&TaskAssigneeCreatedEvent{}).Name(), &SubscribeAssigneeToTask{})
+	events.RegisterListener((&TeamMemberAddedEvent{}).Name(), &SendTeamMemberAddedNotification{})
 }
 
 //////
@@ -376,4 +377,28 @@ func (s *DecreaseTeamCounter) Name() string {
 // Hanlde is executed when the event DecreaseTeamCounter listens on is fired
 func (s *DecreaseTeamCounter) Handle(payload message.Payload) (err error) {
 	return keyvalue.DecrBy(metrics.TeamCountKey, 1)
+}
+
+// SendTeamMemberAddedNotification  represents a listener
+type SendTeamMemberAddedNotification struct {
+}
+
+// Name defines the name for the SendTeamMemberAddedNotification listener
+func (s *SendTeamMemberAddedNotification) Name() string {
+	return "send.team.member.added.notification"
+}
+
+// Handle is executed when the event SendTeamMemberAddedNotification listens on is fired
+func (s *SendTeamMemberAddedNotification) Handle(payload message.Payload) (err error) {
+	event := &TeamMemberAddedEvent{}
+	err = json.Unmarshal(payload, event)
+	if err != nil {
+		return err
+	}
+
+	return notifications.Notify(event.Member, &TeamMemberAddedNotification{
+		Member: event.Member,
+		Doer:   event.Doer,
+		Team:   event.Team,
+	})
 }
