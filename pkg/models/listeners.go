@@ -83,7 +83,7 @@ type SendTaskCommentNotification struct {
 
 // Name defines the name for the SendTaskCommentNotification listener
 func (s *SendTaskCommentNotification) Name() string {
-	return "send.task.comment.notification"
+	return "task.comment.notification.send"
 }
 
 // Handle is executed when the event SendTaskCommentNotification listens on is fired
@@ -129,7 +129,7 @@ type SendTaskAssignedNotification struct {
 
 // Name defines the name for the SendTaskAssignedNotification listener
 func (s *SendTaskAssignedNotification) Name() string {
-	return "send.task.assigned.notification"
+	return "task.assigned.notification.send"
 }
 
 // Handle is executed when the event SendTaskAssignedNotification listens on is fired
@@ -175,7 +175,7 @@ type SendTaskDeletedNotification struct {
 
 // Name defines the name for the SendTaskDeletedNotification listener
 func (s *SendTaskDeletedNotification) Name() string {
-	return "send.task.deleted.notification"
+	return "task.deleted.notification.send"
 }
 
 // Handle is executed when the event SendTaskDeletedNotification listens on is fired
@@ -219,7 +219,7 @@ type SubscribeAssigneeToTask struct {
 
 // Name defines the name for the SubscribeAssigneeToTask listener
 func (s *SubscribeAssigneeToTask) Name() string {
-	return "subscribe.assignee.to.task"
+	return "task.assignee.subscribe"
 }
 
 // Handle is executed when the event SubscribeAssigneeToTask listens on is fired
@@ -385,7 +385,7 @@ type SendTeamMemberAddedNotification struct {
 
 // Name defines the name for the SendTeamMemberAddedNotification listener
 func (s *SendTeamMemberAddedNotification) Name() string {
-	return "send.team.member.added.notification"
+	return "team.member.added.notification"
 }
 
 // Handle is executed when the event SendTeamMemberAddedNotification listens on is fired
