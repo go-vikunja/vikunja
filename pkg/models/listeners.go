@@ -42,6 +42,7 @@ func RegisterListeners() {
 	events.RegisterListener((&TaskAssigneeCreatedEvent{}).Name(), &SendTaskAssignedNotification{})
 	events.RegisterListener((&TaskDeletedEvent{}).Name(), &SendTaskDeletedNotification{})
 	events.RegisterListener((&ListCreatedEvent{}).Name(), &SendListCreatedNotification{})
+	events.RegisterListener((&TaskAssigneeCreatedEvent{}).Name(), &SubscribeAssigneeToTask{})
 }
 
 //////
@@ -210,6 +211,39 @@ func (s *SendTaskDeletedNotification) Handle(payload message.Payload) (err error
 	}
 
 	return nil
+}
+
+type SubscribeAssigneeToTask struct {
+}
+
+// Name defines the name for the SubscribeAssigneeToTask listener
+func (s *SubscribeAssigneeToTask) Name() string {
+	return "subscribe.assignee.to.task"
+}
+
+// Handle is executed when the event SubscribeAssigneeToTask listens on is fired
+func (s *SubscribeAssigneeToTask) Handle(payload message.Payload) (err error) {
+	event := &TaskAssigneeCreatedEvent{}
+	err = json.Unmarshal(payload, event)
+	if err != nil {
+		return err
+	}
+
+	sub := &Subscription{
+		UserID:     event.Assignee.ID,
+		EntityType: SubscriptionEntityTask,
+		EntityID:   event.Task.ID,
+	}
+
+	sess := db.NewSession()
+	defer sess.Close()
+
+	err = sub.Create(sess, event.Assignee)
+	if err != nil && !IsErrSubscriptionAlreadyExists(err) {
+		return err
+	}
+
+	return sess.Commit()
 }
 
 ///////
