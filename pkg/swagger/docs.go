@@ -5313,7 +5313,9 @@ var doc = `{
                         }
                     }
                 }
-            },
+            }
+        },
+        "/tasks/{taskID}/relations/{relationKind}/{otherTaskId}": {
             "delete": {
                 "security": [
                     {
@@ -5344,6 +5346,20 @@ var doc = `{
                         "type": "integer",
                         "description": "Task ID",
                         "name": "taskID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "The kind of the relation. See the TaskRelation type for more info.",
+                        "name": "relationKind",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "The id of the other task.",
+                        "name": "otherTaskID",
                         "in": "path",
                         "required": true
                     }

@@ -392,7 +392,7 @@ func registerAPIRoutes(a *echo.Group) {
 		},
 	}
 	a.PUT("/tasks/:task/relations", taskRelationHandler.CreateWeb)
-	a.DELETE("/tasks/:task/relations", taskRelationHandler.DeleteWeb)
+	a.DELETE("/tasks/:task/relations/:relationKind/:otherTask", taskRelationHandler.DeleteWeb)
 
 	if config.ServiceEnableTaskAttachments.GetBool() {
 		taskAttachmentHandler := &handler.WebHandler{

@@ -4542,45 +4542,6 @@ paths:
       tags:
       - labels
   /tasks/{taskID}/relations:
-    delete:
-      consumes:
-      - application/json
-      parameters:
-      - description: The relation object
-        in: body
-        name: relation
-        required: true
-        schema:
-          $ref: '#/definitions/models.TaskRelation'
-      - description: Task ID
-        in: path
-        name: taskID
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: The task relation was successfully deleted.
-          schema:
-            $ref: '#/definitions/models.Message'
-        "400":
-          description: Invalid task relation object provided.
-          schema:
-            $ref: '#/definitions/web.HTTPError'
-        "404":
-          description: The task relation was not found.
-          schema:
-            $ref: '#/definitions/web.HTTPError'
-        "500":
-          description: Internal error
-          schema:
-            $ref: '#/definitions/models.Message'
-      security:
-      - JWTKeyAuth: []
-      summary: Remove a task relation
-      tags:
-      - task
     put:
       consumes:
       - application/json
@@ -4615,6 +4576,56 @@ paths:
       security:
       - JWTKeyAuth: []
       summary: Create a new relation between two tasks
+      tags:
+      - task
+  /tasks/{taskID}/relations/{relationKind}/{otherTaskId}:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: The relation object
+        in: body
+        name: relation
+        required: true
+        schema:
+          $ref: '#/definitions/models.TaskRelation'
+      - description: Task ID
+        in: path
+        name: taskID
+        required: true
+        type: integer
+      - description: The kind of the relation. See the TaskRelation type for more info.
+        in: path
+        name: relationKind
+        required: true
+        type: string
+      - description: The id of the other task.
+        in: path
+        name: otherTaskID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The task relation was successfully deleted.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "400":
+          description: Invalid task relation object provided.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "404":
+          description: The task relation was not found.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Remove a task relation
       tags:
       - task
   /tasks/all:

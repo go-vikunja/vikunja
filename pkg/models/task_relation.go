@@ -81,9 +81,9 @@ type TaskRelation struct {
 	// The ID of the "base" task, the task which has a relation to another.
 	TaskID int64 `xorm:"bigint not null" json:"task_id" param:"task"`
 	// The ID of the other task, the task which is being related.
-	OtherTaskID int64 `xorm:"bigint not null" json:"other_task_id"`
+	OtherTaskID int64 `xorm:"bigint not null" json:"other_task_id" param:"otherTask"`
 	// The kind of the relation.
-	RelationKind RelationKind `xorm:"varchar(50) not null" json:"relation_kind"`
+	RelationKind RelationKind `xorm:"varchar(50) not null" json:"relation_kind" param:"relationKind"`
 
 	CreatedByID int64 `xorm:"bigint not null" json:"-"`
 	// The user who created this relation
@@ -196,16 +196,18 @@ func (rel *TaskRelation) Create(s *xorm.Session, a web.Auth) error {
 // @Security JWTKeyAuth
 // @Param relation body models.TaskRelation true "The relation object"
 // @Param taskID path int true "Task ID"
+// @Param relationKind path string true "The kind of the relation. See the TaskRelation type for more info."
+// @Param otherTaskID path int true "The id of the other task."
 // @Success 200 {object} models.Message "The task relation was successfully deleted."
 // @Failure 400 {object} web.HTTPError "Invalid task relation object provided."
 // @Failure 404 {object} web.HTTPError "The task relation was not found."
 // @Failure 500 {object} models.Message "Internal error"
-// @Router /tasks/{taskID}/relations [delete]
+// @Router /tasks/{taskID}/relations/{relationKind}/{otherTaskId} [delete]
 func (rel *TaskRelation) Delete(s *xorm.Session, a web.Auth) error {
 	// Check if the relation exists
 	exists, err := s.
-		Cols("task_id", "other_task_id", "relation_kind").
-		Get(rel)
+		Where("task_id = ? AND other_task_id = ? AND relation_kind = ?", rel.TaskID, rel.OtherTaskID, rel.RelationKind).
+		Exist(&TaskRelation{})
 	if err != nil {
 		return err
 	}
