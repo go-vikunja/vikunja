@@ -533,7 +533,7 @@ func (Release) Linux() error {
 
 // Builds binaries for darwin
 func (Release) Darwin() error {
-	return runXgo("darwin/*")
+	return runXgo("darwin-10.15/*")
 }
 
 // Compresses the built binaries in dist/binaries/ to reduce their filesize
