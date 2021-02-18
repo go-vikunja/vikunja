@@ -219,7 +219,7 @@ export default {
 				})
 		},
 		removeTaskRelation() {
-			let rel = new TaskRelationModel({
+			const rel = new TaskRelationModel({
 				relationKind: this.relationToDelete.relationKind,
 				taskId: this.taskId,
 				otherTaskId: this.relationToDelete.otherTaskId,

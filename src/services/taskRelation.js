@@ -6,7 +6,7 @@ export default class TaskRelationService extends AbstractService {
 	constructor() {
 		super({
 			create: '/tasks/{taskId}/relations',
-			delete: '/tasks/{taskId}/relations',
+			delete: '/tasks/{taskId}/relations/{relationKind}/{otherTaskId}',
 		})
 	}
 
