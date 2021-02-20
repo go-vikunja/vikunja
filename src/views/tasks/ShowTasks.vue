@@ -34,7 +34,7 @@
 			<x-button type="secondary" @click="setDatesToNextWeek()" class="mr-2">Next Week</x-button>
 			<x-button type="secondary" @click="setDatesToNextMonth()">Next Month</x-button>
 		</div>
-		<template v-if="!taskService.loading && (!hasUndoneTasks || !tasks || tasks.length === 0) && showNothingToDo">
+		<template v-if="!taskService.loading && (!tasks || tasks.length === 0) && showNothingToDo">
 			<h3 class="nothing">Nothing to do - Have a nice day!</h3>
 			<img alt="" src="/images/cool.svg"/>
 		</template>
@@ -73,7 +73,6 @@ export default {
 	data() {
 		return {
 			tasks: [],
-			hasUndoneTasks: false,
 			taskService: TaskService,
 			showNulls: true,
 			showOverdue: false,
@@ -139,7 +138,7 @@ export default {
 
 			const params = {
 				sort_by: ['due_date', 'id'],
-				order_by: ['asc', 'desc'],
+				order_by: ['desc', 'desc'],
 				filter_by: ['done'],
 				filter_value: [false],
 				filter_comparator: ['equals'],
@@ -170,14 +169,19 @@ export default {
 
 			this.taskService.getAll({}, params)
 				.then(r => {
-					if (r.length > 0) {
-						for (const index in r) {
-							if (r[index].done !== true) {
-								this.hasUndoneTasks = true
-							}
-						}
-					}
-					this.$set(this, 'tasks', r.filter(t => !t.done))
+
+					// Sort all tasks to put those with a due date before the ones without a due date, the
+					// soonest before the later ones.
+					// We can't use the api sorting here because that sorts tasks with a due date after
+					// ones without a due date.
+					r.sort((a, b) => {
+						return a.dueDate === null && b.dueDate === null ? -1 : 1
+					})
+					const tasks = r.
+						filter(t => t.dueDate !== null).
+						concat(r.filter(t => t.dueDate === null))
+
+					this.$set(this, 'tasks', tasks)
 					this.$store.commit(HAS_TASKS, r.length > 0)
 				})
 				.catch(e => {
