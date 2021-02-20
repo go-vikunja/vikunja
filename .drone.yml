@@ -31,7 +31,7 @@ steps:
         - '.cache'
 
   - name: build
-    image: electronuserland/builder:wine
+    image: electronuserland/builder:wine-mono
     pull: true
     environment:
       YARN_CACHE_FOLDER: .cache/yarn/
