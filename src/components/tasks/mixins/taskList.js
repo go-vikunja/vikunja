@@ -70,6 +70,7 @@ export default {
 				id: list.listId,
 				params: params,
 				search: search,
+				page: page,
 			}
 			if (JSON.stringify(currentList) === JSON.stringify(this.loadedList)) {
 				return

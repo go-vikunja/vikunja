@@ -117,6 +117,29 @@ describe('Lists', () => {
 			cy.get('.tasks-container .tasks .color-bubble')
 				.should('not.exist')
 		})
+
+		it('Should paginate for > 50 tasks', () => {
+			const tasks = TaskFactory.create(100, {
+				id: '{increment}',
+				title: i => `task${i}`,
+				list_id: 1,
+			})
+			cy.visit('/lists/1/list')
+
+			cy.get('.tasks-container .tasks')
+				.should('contain', tasks[99].title)
+
+			cy.get('.card-content .pagination .pagination-link')
+				.contains('2')
+				.click()
+
+			cy.url()
+				.should('contain', '?page=2')
+			cy.get('.tasks-container .tasks')
+				.should('contain', tasks[1].title)
+			cy.get('.tasks-container .tasks')
+				.should('not.contain', tasks[99].title)
+		})
 	})
 
 	describe('Table View', () => {

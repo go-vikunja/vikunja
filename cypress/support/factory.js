@@ -27,6 +27,10 @@ export class Factory {
 		for (let i = 1; i <= count; i++) {
 			const entry = merge(this.factory(), override)
 			for (const e in entry) {
+				if(typeof entry[e] === 'function') {
+					entry[e] = entry[e](i)
+					continue
+				}
 				if (entry[e] === '{increment}') {
 					entry[e] = i
 				}
