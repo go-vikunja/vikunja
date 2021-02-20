@@ -117,6 +117,7 @@ export default {
 				.then(r => {
 					this.$store.commit('namespaces/setListInNamespaceById', r)
 					this.success({message: 'The list was successfully updated.'}, this)
+					this.$router.back()
 				})
 				.catch(e => {
 					this.error(e, this)

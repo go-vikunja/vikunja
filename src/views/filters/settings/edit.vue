@@ -120,6 +120,7 @@ export default {
 					this.success({message: 'The filter was saved successfully.'}, this)
 					this.filter = r
 					this.filters = objectToSnakeCase(this.filter.filters)
+					this.$router.back()
 				})
 				.catch(e => this.error(e, this))
 		},

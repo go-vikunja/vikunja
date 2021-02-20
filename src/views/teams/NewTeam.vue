@@ -29,7 +29,6 @@
 </template>
 
 <script>
-import router from '../../router'
 import TeamModel from '../../models/team'
 import TeamService from '../../services/team'
 import CreateEdit from '@/components/misc/create-edit'
@@ -64,7 +63,7 @@ export default {
 			this.teamService
 				.create(this.team)
 				.then((response) => {
-					router.push({
+					this.$router.push({
 						name: 'teams.edit',
 						params: { id: response.id },
 					})
@@ -76,9 +75,6 @@ export default {
 				.catch((e) => {
 					this.error(e, this)
 				})
-		},
-		back() {
-			router.go(-1)
 		},
 	},
 }

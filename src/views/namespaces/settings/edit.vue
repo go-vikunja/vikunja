@@ -127,6 +127,7 @@ export default {
 					// Update the namespace in the parent
 					this.$store.commit('namespaces/setNamespaceById', r)
 					this.success({message: 'The namespace was successfully updated.'}, this)
+					this.$router.back()
 				})
 				.catch(e => {
 					this.error(e, this)
