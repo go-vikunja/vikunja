@@ -114,7 +114,7 @@ export default {
 
 					ctx.commit('lists/addLists', lists, {root: true})
 
-					return Promise.resolve()
+					return Promise.resolve(r)
 				})
 				.catch(e => {
 					return Promise.reject(e)

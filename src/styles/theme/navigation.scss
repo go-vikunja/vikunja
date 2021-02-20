@@ -194,40 +194,15 @@
         color: $vikunja-nav-color;
       }
 
-      .checkinput {
-        display: none;
-      }
-
-      .checkinput:checked + .more-container {
-        .menu-list.can-be-hidden {
-          opacity: 1;
-          height: auto;
-        }
-      }
-
-      .checkinput:not(:checked) + .more-container .hidden-hint {
-        opacity: 1;
-        height: auto;
-      }
-
       .hidden-hint {
         display: block;
-        opacity: 0;
-        height: 0;
         text-align: center;
         color: $grey-500;
         cursor: pointer;
-        font-size: 0.8rem;
+        font-size: 0.75rem;
       }
 
       .menu-list {
-        &.can-be-hidden {
-          transition: all $transition;
-          height: 0;
-          //overflow: hidden;
-          opacity: 0;
-        }
-
         li {
           height: 44px;
           display: flex;

@@ -51,8 +51,8 @@
 		<aside class="menu namespaces-lists loader-container" :class="{'is-loading': loading}">
 			<template v-for="n in namespaces">
 				<div :key="n.id" class="namespace-title">
-					<label
-						:for="n.id + 'checker'"
+					<span
+						@click="toggleLists(n.id)"
 						class="menu-label"
 						v-tooltip="n.title + ' (' + n.lists.filter(l => !l.isArchived).length + ')'">
 						<span class="name">
@@ -63,16 +63,10 @@
 							</span>
 							{{ n.title }} ({{ n.lists.filter(l => !l.isArchived).length }})
 						</span>
-					</label>
+					</span>
 					<namespace-settings-dropdown :namespace="n" v-if="n.id > 0"/>
 				</div>
-				<input
-					:id="n.id + 'checker'"
-					:key="n.id + 'checker'"
-					checked="checked"
-					class="checkinput"
-					type="checkbox"/>
-				<div :key="n.id + 'child'" class="more-container">
+				<div :key="n.id + 'child'" class="more-container" v-if="listsVisible[n.id]">
 					<ul class="menu-list can-be-hidden">
 						<template v-for="l in n.lists">
 							<!-- This is a bit ugly but vue wouldn't want to let me filter this - probably because the lists
@@ -104,10 +98,14 @@
 							</li>
 						</template>
 					</ul>
-					<label :for="n.id + 'checker'" class="hidden-hint">
-						Show hidden lists ({{ n.lists.filter(l => !l.isArchived).length }})...
-					</label>
 				</div>
+				<span
+					@click="toggleLists(n.id)"
+					:key="`${n.id}_hidden_hint`"
+					class="hidden-hint"
+					v-else-if="n.lists.filter(l => !l.isArchived).length > 0">
+					Show hidden lists ({{ n.lists.filter(l => !l.isArchived).length }})...
+				</span>
 			</template>
 		</aside>
 		<a class="menu-bottom-link" href="https://vikunja.io" target="_blank">Powered by Vikunja</a>
@@ -122,6 +120,11 @@ import NamespaceSettingsDropdown from '@/components/namespace/namespace-settings
 
 export default {
 	name: 'navigation',
+	data() {
+		return {
+			listsVisible: {},
+		}
+	},
 	components: {
 		ListSettingsDropdown,
 		NamespaceSettingsDropdown,
@@ -137,6 +140,11 @@ export default {
 	}),
 	beforeCreate() {
 		this.$store.dispatch('namespaces/loadNamespaces')
+			.then(namespaces => {
+				namespaces.forEach(n => {
+					this.$set(this.listsVisible, n.id, true)
+				})
+			})
 	},
 	created() {
 		window.addEventListener('resize', this.resize)
@@ -161,6 +169,9 @@ export default {
 			} else {
 				this.$store.commit(MENU_ACTIVE, true)
 			}
+		},
+		toggleLists(namespaceId) {
+			this.$set(this.listsVisible, namespaceId, !this.listsVisible[namespaceId] ?? false)
 		},
 	},
 }
