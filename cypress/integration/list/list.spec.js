@@ -102,6 +102,21 @@ describe('Lists', () => {
 			cy.get('input.input[placeholder="Add a new task..."')
 				.should('not.exist')
 		})
+
+		it('Should only show the color of a list in the navigation and not in the list view', () => {
+			const lists = ListFactory.create(1, {
+				hex_color: '00db60',
+			})
+			TaskFactory.create(10, {
+				list_id: lists[0].id,
+			})
+			cy.visit(`/lists/${lists[0].id}/`)
+
+			cy.get('.menu-list li .list-menu-link .color-bubble')
+				.should('have.css', 'background-color', 'rgb(0, 219, 96)')
+			cy.get('.tasks-container .tasks .color-bubble')
+				.should('not.exist')
+		})
 	})
 
 	describe('Table View', () => {

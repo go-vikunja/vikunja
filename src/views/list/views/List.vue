@@ -92,6 +92,7 @@
 			<div class="tasks-container">
 				<div :class="{'short': isTaskEdit}" class="tasks mt-0" v-if="tasks && tasks.length > 0">
 					<single-task-in-list
+						:show-list-color="false"
 						:disabled="!canWrite"
 						:key="t.id"
 						:the-task="t"

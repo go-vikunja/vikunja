@@ -2,9 +2,10 @@
 	<div :class="{'is-loading': taskService.loading}" class="task loader-container">
 		<fancycheckbox :disabled="isArchived || disabled" @change="markAsDone" v-model="task.done"/>
 		<span
+			v-if="showListColor && listColor !== ''"
 			:style="{backgroundColor: listColor }"
 			class="color-bubble"
-			v-if="listColor !== ''">
+		>
 		</span>
 		<router-link
 			:to="{ name: taskDetailRoute, params: { id: task.id } }"
@@ -131,6 +132,10 @@ export default {
 			type: Boolean,
 			default: false,
 		},
+		showListColor: {
+			type: Boolean,
+			default: true,
+		}
 	},
 	watch: {
 		theTask(newVal) {
