@@ -679,6 +679,7 @@ export default {
 		changeList(list) {
 			this.task.listId = list.id
 			this.saveTask()
+			this.$store.commit('kanban/removeTaskInBucket', this.task)
 		},
 	},
 }
