@@ -19,7 +19,7 @@
     "date-fns": "2.17.0",
     "dompurify": "2.2.6",
     "highlight.js": "10.6.0",
-    "lodash": "4.17.20",
+    "lodash": "4.17.21",
     "marked": "2.0.0",
     "register-service-worker": "1.7.2",
     "snake-case": "3.0.4",
