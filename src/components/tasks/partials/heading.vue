@@ -1,10 +1,7 @@
 <template>
 	<div class="heading">
-		<h1 class="title task-id" v-if="task.identifier === ''">
-			#{{ task.index }}
-		</h1>
-		<h1 class="title task-id" v-else>
-			{{ task.identifier }}
+		<h1 class="title task-id">
+			{{ task.getTextIdentifier() }}
 		</h1>
 		<div class="is-done" v-if="task.done">Done</div>
 		<h1

@@ -1,0 +1,7 @@
+{
+  "TASK_COMMENT": "task.comment",
+  "TASK_ASSIGNED": "task.assigned",
+  "TASK_DELETED": "task.deleted",
+  "LIST_CREATED": "list.created",
+  "TEAM_MEMBER_ADDED": "team.member.added"
+}

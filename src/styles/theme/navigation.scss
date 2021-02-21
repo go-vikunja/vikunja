@@ -29,6 +29,7 @@
   .navbar-end {
     margin-left: 0;
     align-items: center;
+    display: flex;
   }
 
   @media screen and (max-width: $desktop) {

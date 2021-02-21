@@ -37,6 +37,7 @@
 
 		<div class="navbar-end">
 			<update/>
+			<notifications/>
 			<div class="user">
 				<img :src="userAvatar" alt="" class="avatar"/>
 				<dropdown class="is-right">
@@ -86,10 +87,12 @@ import Rights from '@/models/rights.json'
 import Update from '@/components/home/update'
 import ListSettingsDropdown from '@/components/list/list-settings-dropdown'
 import Dropdown from '@/components/misc/dropdown'
+import Notifications from '@/components/notifications/notifications'
 
 export default {
 	name: 'topNavigation',
 	components: {
+		Notifications,
 		Dropdown,
 		ListSettingsDropdown,
 		Update,
