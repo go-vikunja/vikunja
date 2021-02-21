@@ -22,6 +22,7 @@ Each notification has to implement this interface:
 type Notification interface {
     ToMail() *Mail
     ToDB() interface{}
+    Name() string
 }
 ```
 
@@ -59,7 +60,9 @@ If not provided, the `from` field of the mail contains the value configured in [
 
 ### Database notifications
 
-All data returned from the `ToDB()` method is serialized to json and saved into the database, along with the id of the notifiable and a time stamp.
+All data returned from the `ToDB()` method is serialized to json and saved into the database, along with the id of the 
+notifiable, the name of the notification and a time stamp.
+If you don't use the database notification, the `Name()` function can return an empty string.
 
 ## Creating a new notification
 

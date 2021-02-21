@@ -14,32 +14,32 @@
 // You should have received a copy of the GNU Affero General Public Licensee
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package user
+package migration
 
 import (
-	"code.vikunja.io/api/pkg/events"
-	"code.vikunja.io/api/pkg/metrics"
-	"code.vikunja.io/api/pkg/modules/keyvalue"
-	"github.com/ThreeDotsLabs/watermill/message"
+	"time"
+
+	"src.techknowlogick.com/xormigrate"
+	"xorm.io/xorm"
 )
 
-func RegisterListeners() {
-	events.RegisterListener((&CreatedEvent{}).Name(), &IncreaseUserCounter{})
+type notifications20210220222121 struct {
+	ReadAt time.Time `xorm:"datetime null" json:"read_at"`
 }
 
-///////
-// User Events
-
-// IncreaseUserCounter  represents a listener
-type IncreaseUserCounter struct {
+func (notifications20210220222121) TableName() string {
+	return "notifications"
 }
 
-// Name defines the name for the IncreaseUserCounter listener
-func (s *IncreaseUserCounter) Name() string {
-	return "increase.user.counter"
-}
-
-// Hanlde is executed when the event IncreaseUserCounter listens on is fired
-func (s *IncreaseUserCounter) Handle(msg *message.Message) (err error) {
-	return keyvalue.IncrBy(metrics.UserCountKey, 1)
+func init() {
+	migrations = append(migrations, &xormigrate.Migration{
+		ID:          "20210220222121",
+		Description: "Add a read_at column to notifications",
+		Migrate: func(tx *xorm.Engine) error {
+			return tx.Sync2(notifications20210220222121{})
+		},
+		Rollback: func(tx *xorm.Engine) error {
+			return nil
+		},
+	})
 }

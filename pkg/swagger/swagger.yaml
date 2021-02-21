@@ -229,6 +229,29 @@ definitions:
         description: A timestamp when this task was last updated. You cannot change this value.
         type: string
     type: object
+  models.DatabaseNotifications:
+    properties:
+      created:
+        description: A timestamp when this notification was created. You cannot change this value.
+        type: string
+      id:
+        description: The unique, numeric id of this notification.
+        type: integer
+      name:
+        description: The name of the notification
+        type: string
+      notification:
+        description: The actual content of the notification.
+        type: object
+      read:
+        description: |-
+          Whether or not to mark this notification as read or unread.
+          True is read, false is unread.
+        type: boolean
+      read_at:
+        description: When this notification is marked as read, this will be updated with the current timestamp.
+        type: string
+    type: object
   models.Label:
     properties:
       created:
@@ -882,6 +905,24 @@ definitions:
         description: The username of the user. Is always unique.
         maxLength: 250
         minLength: 1
+        type: string
+    type: object
+  notifications.DatabaseNotification:
+    properties:
+      created:
+        description: A timestamp when this notification was created. You cannot change this value.
+        type: string
+      id:
+        description: The unique, numeric id of this notification.
+        type: integer
+      name:
+        description: The name of the notification
+        type: string
+      notification:
+        description: The actual content of the notification.
+        type: object
+      read_at:
+        description: When this notification is marked as read, this will be updated with the current timestamp.
         type: string
     type: object
   openid.Callback:
@@ -3643,6 +3684,77 @@ paths:
       summary: Update a user <-> namespace relation
       tags:
       - sharing
+  /notifications:
+    get:
+      consumes:
+      - application/json
+      description: Returns an array with all notifications for the current user.
+      parameters:
+      - description: The page number. Used for pagination. If not provided, the first page of results is returned.
+        in: query
+        name: page
+        type: integer
+      - description: The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page.
+        in: query
+        name: per_page
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The notifications
+          schema:
+            items:
+              $ref: '#/definitions/notifications.DatabaseNotification'
+            type: array
+        "403":
+          description: Link shares cannot have notifications.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get all notifications for the current user
+      tags:
+      - subscriptions
+  /notifications/{id}:
+    post:
+      consumes:
+      - application/json
+      description: Marks a notification as either read or unread. A user can only mark their own notifications as read.
+      parameters:
+      - description: Notification ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The notification to mark as read.
+          schema:
+            $ref: '#/definitions/models.DatabaseNotifications'
+        "403":
+          description: Link shares cannot have notifications.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "404":
+          description: The notification does not exist.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Mark a notification as (un-)read
+      tags:
+      - subscriptions
   /register:
     post:
       consumes:

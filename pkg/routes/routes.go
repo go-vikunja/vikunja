@@ -521,6 +521,15 @@ func registerAPIRoutes(a *echo.Group) {
 	a.PUT("/subscriptions/:entity/:entityID", subscriptionHandler.CreateWeb)
 	a.DELETE("/subscriptions/:entity/:entityID", subscriptionHandler.DeleteWeb)
 
+	// Notifications
+	notificationHandler := &handler.WebHandler{
+		EmptyStruct: func() handler.CObject {
+			return &models.DatabaseNotifications{}
+		},
+	}
+	a.GET("/notifications", notificationHandler.ReadAllWeb)
+	a.POST("/notifications/:notificationid", notificationHandler.UpdateWeb)
+
 	// Migrations
 	m := a.Group("/migration")
 

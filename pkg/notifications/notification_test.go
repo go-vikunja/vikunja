@@ -44,6 +44,11 @@ func (n *testNotification) ToDB() interface{} {
 	return data
 }
 
+// Name returns the name of the notification
+func (n *testNotification) Name() string {
+	return "test.notification"
+}
+
 type testNotifiable struct {
 }
 

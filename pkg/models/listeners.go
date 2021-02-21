@@ -59,7 +59,7 @@ func (s *IncreaseTaskCounter) Name() string {
 }
 
 // Hanlde is executed when the event IncreaseTaskCounter listens on is fired
-func (s *IncreaseTaskCounter) Handle(payload message.Payload) (err error) {
+func (s *IncreaseTaskCounter) Handle(msg *message.Message) (err error) {
 	return keyvalue.IncrBy(metrics.TaskCountKey, 1)
 }
 
@@ -73,7 +73,7 @@ func (s *DecreaseTaskCounter) Name() string {
 }
 
 // Hanlde is executed when the event DecreaseTaskCounter listens on is fired
-func (s *DecreaseTaskCounter) Handle(payload message.Payload) (err error) {
+func (s *DecreaseTaskCounter) Handle(msg *message.Message) (err error) {
 	return keyvalue.DecrBy(metrics.TaskCountKey, 1)
 }
 
@@ -87,9 +87,9 @@ func (s *SendTaskCommentNotification) Name() string {
 }
 
 // Handle is executed when the event SendTaskCommentNotification listens on is fired
-func (s *SendTaskCommentNotification) Handle(payload message.Payload) (err error) {
+func (s *SendTaskCommentNotification) Handle(msg *message.Message) (err error) {
 	event := &TaskCommentCreatedEvent{}
-	err = json.Unmarshal(payload, event)
+	err = json.Unmarshal(msg.Payload, event)
 	if err != nil {
 		return err
 	}
@@ -133,9 +133,9 @@ func (s *SendTaskAssignedNotification) Name() string {
 }
 
 // Handle is executed when the event SendTaskAssignedNotification listens on is fired
-func (s *SendTaskAssignedNotification) Handle(payload message.Payload) (err error) {
+func (s *SendTaskAssignedNotification) Handle(msg *message.Message) (err error) {
 	event := &TaskAssigneeCreatedEvent{}
-	err = json.Unmarshal(payload, event)
+	err = json.Unmarshal(msg.Payload, event)
 	if err != nil {
 		return err
 	}
@@ -179,9 +179,9 @@ func (s *SendTaskDeletedNotification) Name() string {
 }
 
 // Handle is executed when the event SendTaskDeletedNotification listens on is fired
-func (s *SendTaskDeletedNotification) Handle(payload message.Payload) (err error) {
+func (s *SendTaskDeletedNotification) Handle(msg *message.Message) (err error) {
 	event := &TaskDeletedEvent{}
-	err = json.Unmarshal(payload, event)
+	err = json.Unmarshal(msg.Payload, event)
 	if err != nil {
 		return err
 	}
@@ -223,9 +223,9 @@ func (s *SubscribeAssigneeToTask) Name() string {
 }
 
 // Handle is executed when the event SubscribeAssigneeToTask listens on is fired
-func (s *SubscribeAssigneeToTask) Handle(payload message.Payload) (err error) {
+func (s *SubscribeAssigneeToTask) Handle(msg *message.Message) (err error) {
 	event := &TaskAssigneeCreatedEvent{}
-	err = json.Unmarshal(payload, event)
+	err = json.Unmarshal(msg.Payload, event)
 	if err != nil {
 		return err
 	}
@@ -257,7 +257,7 @@ func (s *IncreaseListCounter) Name() string {
 	return "list.counter.increase"
 }
 
-func (s *IncreaseListCounter) Handle(payload message.Payload) (err error) {
+func (s *IncreaseListCounter) Handle(msg *message.Message) (err error) {
 	return keyvalue.IncrBy(metrics.ListCountKey, 1)
 }
 
@@ -268,7 +268,7 @@ func (s *DecreaseListCounter) Name() string {
 	return "list.counter.decrease"
 }
 
-func (s *DecreaseListCounter) Handle(payload message.Payload) (err error) {
+func (s *DecreaseListCounter) Handle(msg *message.Message) (err error) {
 	return keyvalue.DecrBy(metrics.ListCountKey, 1)
 }
 
@@ -282,9 +282,9 @@ func (s *SendListCreatedNotification) Name() string {
 }
 
 // Handle is executed when the event SendListCreatedNotification listens on is fired
-func (s *SendListCreatedNotification) Handle(payload message.Payload) (err error) {
+func (s *SendListCreatedNotification) Handle(msg *message.Message) (err error) {
 	event := &ListCreatedEvent{}
-	err = json.Unmarshal(payload, event)
+	err = json.Unmarshal(msg.Payload, event)
 	if err != nil {
 		return err
 	}
@@ -330,7 +330,7 @@ func (s *IncreaseNamespaceCounter) Name() string {
 }
 
 // Hanlde is executed when the event IncreaseNamespaceCounter listens on is fired
-func (s *IncreaseNamespaceCounter) Handle(payload message.Payload) (err error) {
+func (s *IncreaseNamespaceCounter) Handle(msg *message.Message) (err error) {
 	return keyvalue.IncrBy(metrics.NamespaceCountKey, 1)
 }
 
@@ -344,7 +344,7 @@ func (s *DecreaseNamespaceCounter) Name() string {
 }
 
 // Hanlde is executed when the event DecreaseNamespaceCounter listens on is fired
-func (s *DecreaseNamespaceCounter) Handle(payload message.Payload) (err error) {
+func (s *DecreaseNamespaceCounter) Handle(msg *message.Message) (err error) {
 	return keyvalue.DecrBy(metrics.NamespaceCountKey, 1)
 }
 
@@ -361,7 +361,7 @@ func (s *IncreaseTeamCounter) Name() string {
 }
 
 // Hanlde is executed when the event IncreaseTeamCounter listens on is fired
-func (s *IncreaseTeamCounter) Handle(payload message.Payload) (err error) {
+func (s *IncreaseTeamCounter) Handle(msg *message.Message) (err error) {
 	return keyvalue.IncrBy(metrics.TeamCountKey, 1)
 }
 
@@ -375,7 +375,7 @@ func (s *DecreaseTeamCounter) Name() string {
 }
 
 // Hanlde is executed when the event DecreaseTeamCounter listens on is fired
-func (s *DecreaseTeamCounter) Handle(payload message.Payload) (err error) {
+func (s *DecreaseTeamCounter) Handle(msg *message.Message) (err error) {
 	return keyvalue.DecrBy(metrics.TeamCountKey, 1)
 }
 
@@ -389,9 +389,9 @@ func (s *SendTeamMemberAddedNotification) Name() string {
 }
 
 // Handle is executed when the event SendTeamMemberAddedNotification listens on is fired
-func (s *SendTeamMemberAddedNotification) Handle(payload message.Payload) (err error) {
+func (s *SendTeamMemberAddedNotification) Handle(msg *message.Message) (err error) {
 	event := &TeamMemberAddedEvent{}
-	err = json.Unmarshal(payload, event)
+	err = json.Unmarshal(msg.Payload, event)
 	if err != nil {
 		return err
 	}

@@ -828,9 +828,9 @@ func (s *` + name + `) Name() string {
 }
 
 // Handle is executed when the event ` + name + ` listens on is fired
-func (s *` + name + `) Handle(payload message.Payload) (err error) {
+func (s *` + name + `) Handle(msg *message.Message) (err error) {
 	event := &` + event + `{}
-	err = json.Unmarshal(payload, event)
+	err = json.Unmarshal(msg.Payload, event)
 	if err != nil {
 		return err
 	}
@@ -900,6 +900,8 @@ func (Dev) MakeNotification(name, module string) error {
 		name += "Notification"
 	}
 
+	notficationName := strings.ReplaceAll(strcase.ToDelimited(name, '.'), ".notification", "")
+
 	newNotificationCode := `
 // ` + name + ` represents a ` + name + ` notification
 type ` + name + ` struct {
@@ -918,6 +920,12 @@ func (n *` + name + `) ToMail() *notifications.Mail {
 func (n *` + name + `) ToDB() interface{} {
 	return nil
 }
+
+// Name returns the name of the notification
+func (n *` + name + `) Name() string {
+	return "` + notficationName + `"
+}
+
 `
 	filename := "./pkg/" + module + "/notifications.go"
 	if err := appendToFile(filename, newNotificationCode); err != nil {

@@ -3901,6 +3901,118 @@ var doc = `{
                 }
             }
         },
+        "/notifications": {
+            "get": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Returns an array with all notifications for the current user.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "subscriptions"
+                ],
+                "summary": "Get all notifications for the current user",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "The page number. Used for pagination. If not provided, the first page of results is returned.",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page.",
+                        "name": "per_page",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The notifications",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/notifications.DatabaseNotification"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Link shares cannot have notifications.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/notifications/{id}": {
+            "post": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Marks a notification as either read or unread. A user can only mark their own notifications as read.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "subscriptions"
+                ],
+                "summary": "Mark a notification as (un-)read",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Notification ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The notification to mark as read.",
+                        "schema": {
+                            "$ref": "#/definitions/models.DatabaseNotifications"
+                        }
+                    },
+                    "403": {
+                        "description": "Link shares cannot have notifications.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "The notification does not exist.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
         "/register": {
             "post": {
                 "description": "Creates a new user account.",
@@ -7200,6 +7312,35 @@ var doc = `{
                 }
             }
         },
+        "models.DatabaseNotifications": {
+            "type": "object",
+            "properties": {
+                "created": {
+                    "description": "A timestamp when this notification was created. You cannot change this value.",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "The unique, numeric id of this notification.",
+                    "type": "integer"
+                },
+                "name": {
+                    "description": "The name of the notification",
+                    "type": "string"
+                },
+                "notification": {
+                    "description": "The actual content of the notification.",
+                    "type": "object"
+                },
+                "read": {
+                    "description": "Whether or not to mark this notification as read or unread.\nTrue is read, false is unread.",
+                    "type": "boolean"
+                },
+                "read_at": {
+                    "description": "When this notification is marked as read, this will be updated with the current timestamp.",
+                    "type": "string"
+                }
+            }
+        },
         "models.Label": {
             "type": "object",
             "properties": {
@@ -8075,6 +8216,31 @@ var doc = `{
                     "type": "string",
                     "maxLength": 250,
                     "minLength": 1
+                }
+            }
+        },
+        "notifications.DatabaseNotification": {
+            "type": "object",
+            "properties": {
+                "created": {
+                    "description": "A timestamp when this notification was created. You cannot change this value.",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "The unique, numeric id of this notification.",
+                    "type": "integer"
+                },
+                "name": {
+                    "description": "The name of the notification",
+                    "type": "string"
+                },
+                "notification": {
+                    "description": "The actual content of the notification.",
+                    "type": "object"
+                },
+                "read_at": {
+                    "description": "When this notification is marked as read, this will be updated with the current timestamp.",
+                    "type": "string"
                 }
             }
         },

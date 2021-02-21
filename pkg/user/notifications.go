@@ -54,6 +54,11 @@ func (n *EmailConfirmNotification) ToDB() interface{} {
 	return nil
 }
 
+// Name returns the name of the notification
+func (n *EmailConfirmNotification) Name() string {
+	return ""
+}
+
 // PasswordChangedNotification represents a PasswordChangedNotification notification
 type PasswordChangedNotification struct {
 	User *User
@@ -71,6 +76,11 @@ func (n *PasswordChangedNotification) ToMail() *notifications.Mail {
 // ToDB returns the PasswordChangedNotification notification in a format which can be saved in the db
 func (n *PasswordChangedNotification) ToDB() interface{} {
 	return nil
+}
+
+// Name returns the name of the notification
+func (n *PasswordChangedNotification) Name() string {
+	return ""
 }
 
 // ResetPasswordNotification represents a ResetPasswordNotification notification
@@ -91,4 +101,9 @@ func (n *ResetPasswordNotification) ToMail() *notifications.Mail {
 // ToDB returns the ResetPasswordNotification notification in a format which can be saved in the db
 func (n *ResetPasswordNotification) ToDB() interface{} {
 	return nil
+}
+
+// Name returns the name of the notification
+func (n *ResetPasswordNotification) Name() string {
+	return ""
 }

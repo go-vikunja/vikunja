@@ -71,9 +71,7 @@ func InitEvents() (err error) {
 
 	for topic, funcs := range listeners {
 		for _, handler := range funcs {
-			router.AddNoPublisherHandler(topic+"."+handler.Name(), topic, pubsub, func(msg *message.Message) error {
-				return handler.Handle(msg.Payload)
-			})
+			router.AddNoPublisherHandler(topic+"."+handler.Name(), topic, pubsub, handler.Handle)
 		}
 	}
 

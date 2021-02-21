@@ -28,8 +28,8 @@ import (
 
 // ReminderDueNotification represents a ReminderDueNotification notification
 type ReminderDueNotification struct {
-	User *user.User
-	Task *Task
+	User *user.User `json:"user"`
+	Task *Task      `json:"task"`
 }
 
 // ToMail returns the mail notification for ReminderDueNotification
@@ -48,11 +48,16 @@ func (n *ReminderDueNotification) ToDB() interface{} {
 	return nil
 }
 
+// Name returns the name of the notification
+func (n *ReminderDueNotification) Name() string {
+	return ""
+}
+
 // TaskCommentNotification represents a TaskCommentNotification notification
 type TaskCommentNotification struct {
-	Doer    *user.User
-	Task    *Task
-	Comment *TaskComment
+	Doer    *user.User   `json:"doer"`
+	Task    *Task        `json:"task"`
+	Comment *TaskComment `json:"comment"`
 }
 
 // ToMail returns the mail notification for TaskCommentNotification
@@ -76,11 +81,16 @@ func (n *TaskCommentNotification) ToDB() interface{} {
 	return n
 }
 
+// Name returns the name of the notification
+func (n *TaskCommentNotification) Name() string {
+	return "task.comment"
+}
+
 // TaskAssignedNotification represents a TaskAssignedNotification notification
 type TaskAssignedNotification struct {
-	Doer     *user.User
-	Task     *Task
-	Assignee *user.User
+	Doer     *user.User `json:"doer"`
+	Task     *Task      `json:"task"`
+	Assignee *user.User `json:"assignee"`
 }
 
 // ToMail returns the mail notification for TaskAssignedNotification
@@ -96,10 +106,15 @@ func (n *TaskAssignedNotification) ToDB() interface{} {
 	return n
 }
 
+// Name returns the name of the notification
+func (n *TaskAssignedNotification) Name() string {
+	return "task.assigned"
+}
+
 // TaskDeletedNotification represents a TaskDeletedNotification notification
 type TaskDeletedNotification struct {
-	Doer *user.User
-	Task *Task
+	Doer *user.User `json:"doer"`
+	Task *Task      `json:"task"`
 }
 
 // ToMail returns the mail notification for TaskDeletedNotification
@@ -114,10 +129,15 @@ func (n *TaskDeletedNotification) ToDB() interface{} {
 	return n
 }
 
+// Name returns the name of the notification
+func (n *TaskDeletedNotification) Name() string {
+	return "task.deleted"
+}
+
 // ListCreatedNotification represents a ListCreatedNotification notification
 type ListCreatedNotification struct {
-	Doer *user.User
-	List *List
+	Doer *user.User `json:"doer"`
+	List *List      `json:"list"`
 }
 
 // ToMail returns the mail notification for ListCreatedNotification
@@ -130,14 +150,19 @@ func (n *ListCreatedNotification) ToMail() *notifications.Mail {
 
 // ToDB returns the ListCreatedNotification notification in a format which can be saved in the db
 func (n *ListCreatedNotification) ToDB() interface{} {
-	return nil
+	return n
+}
+
+// Name returns the name of the notification
+func (n *ListCreatedNotification) Name() string {
+	return "list.created"
 }
 
 // TeamMemberAddedNotification represents a TeamMemberAddedNotification notification
 type TeamMemberAddedNotification struct {
-	Member *user.User
-	Doer   *user.User
-	Team   *Team
+	Member *user.User `json:"member"`
+	Doer   *user.User `json:"doer"`
+	Team   *Team      `json:"team"`
 }
 
 // ToMail returns the mail notification for TeamMemberAddedNotification
@@ -152,5 +177,10 @@ func (n *TeamMemberAddedNotification) ToMail() *notifications.Mail {
 
 // ToDB returns the TeamMemberAddedNotification notification in a format which can be saved in the db
 func (n *TeamMemberAddedNotification) ToDB() interface{} {
-	return nil
+	return n
+}
+
+// Name returns the name of the notification
+func (n *TeamMemberAddedNotification) Name() string {
+	return "team.member.added"
 }

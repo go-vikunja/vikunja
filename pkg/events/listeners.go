@@ -20,7 +20,7 @@ import "github.com/ThreeDotsLabs/watermill/message"
 
 // Listener represents something that listens to events
 type Listener interface {
-	Handle(payload message.Payload) error
+	Handle(msg *message.Message) error
 	Name() string
 }
 

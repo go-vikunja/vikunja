@@ -18,7 +18,6 @@ package notifications
 
 import (
 	"encoding/json"
-	"time"
 
 	"code.vikunja.io/api/pkg/db"
 )
@@ -27,6 +26,7 @@ import (
 type Notification interface {
 	ToMail() *Mail
 	ToDB() interface{}
+	Name() string
 }
 
 // Notifiable is an entity which can be notified. Usually a user.
@@ -35,25 +35,6 @@ type Notifiable interface {
 	RouteForMail() (string, error)
 	// Should return the id of the notifiable entity
 	RouteForDB() int64
-}
-
-// DatabaseNotification represents a notification that was saved to the database
-type DatabaseNotification struct {
-	// The unique, numeric id of this notification.
-	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id"`
-
-	// The ID of the notifiable this notification is associated with.
-	NotifiableID int64 `xorm:"bigint not null" json:"-"`
-	// The actual content of the notification.
-	Notification interface{} `xorm:"json not null" json:"notification"`
-
-	// A timestamp when this notification was created. You cannot change this value.
-	Created time.Time `xorm:"created not null" json:"created"`
-}
-
-// TableName resolves to a better table name for notifications
-func (d *DatabaseNotification) TableName() string {
-	return "notifications"
 }
 
 // Notify notifies a notifiable of a notification
@@ -98,6 +79,7 @@ func notifyDB(notifiable Notifiable, notification Notification) (err error) {
 	dbNotification := &DatabaseNotification{
 		NotifiableID: notifiable.RouteForDB(),
 		Notification: content,
+		Name:         notification.Name(),
 	}
 
 	_, err = s.Insert(dbNotification)
