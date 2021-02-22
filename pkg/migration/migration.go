@@ -26,6 +26,7 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/migration"
+	"code.vikunja.io/api/pkg/notifications"
 	"code.vikunja.io/api/pkg/user"
 	"github.com/olekukonko/tablewriter"
 	"src.techknowlogick.com/xormigrate"
@@ -163,5 +164,6 @@ func initSchema(tx *xorm.Engine) error {
 	schemeBeans = append(schemeBeans, files.GetTables()...)
 	schemeBeans = append(schemeBeans, migration.GetTables()...)
 	schemeBeans = append(schemeBeans, user.GetTables()...)
+	schemeBeans = append(schemeBeans, notifications.GetTables()...)
 	return tx.Sync2(schemeBeans...)
 }

@@ -29,6 +29,7 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
 	migrator "code.vikunja.io/api/pkg/modules/migration"
+	"code.vikunja.io/api/pkg/notifications"
 	"code.vikunja.io/api/pkg/red"
 	"code.vikunja.io/api/pkg/user"
 )
@@ -63,6 +64,10 @@ func InitEngines() {
 		log.Fatal(err.Error())
 	}
 	err = migrator.InitDB()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	err = notifications.InitDB()
 	if err != nil {
 		log.Fatal(err.Error())
 	}
