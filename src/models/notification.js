@@ -72,7 +72,7 @@ export default class NotificationModel extends AbstractModel {
 			case names.TEAM_MEMBER_ADDED:
 				who = `${this.notification.member.getDisplayName()}`
 
-				if (user !== null && user.id === this.notification.memeber.id) {
+				if (user !== null && user.id === this.notification.member.id) {
 					who = 'you'
 				}
 
