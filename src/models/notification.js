@@ -76,7 +76,7 @@ export default class NotificationModel extends AbstractModel {
 					who = 'you'
 				}
 
-				return `added ${who} to the ${this.notification.team.title} team`
+				return `added ${who} to the ${this.notification.team.name} team`
 		}
 
 		return ''
