@@ -111,3 +111,113 @@ steps:
         - tag
     depends_on: [ build ]
 
+---
+kind: pipeline
+name: release-darwin
+
+platform:
+  os: darwin
+  arch: amd64
+
+steps:
+  - name: fetch-tags
+    image: docker:git
+    commands:
+      - git fetch --tags
+
+  - name: restore-cache
+    image: meltwater/drone-cache:dev
+    pull: true
+    environment:
+      AWS_ACCESS_KEY_ID:
+        from_secret: cache_aws_access_key_id
+      AWS_SECRET_ACCESS_KEY:
+        from_secret: cache_aws_secret_access_key
+    settings:
+      restore: true
+      bucket: kolaente.dev-drone-dependency-cache
+      endpoint: https://s3.fr-par.scw.cloud
+      region: fr-par
+      path_style: true
+      cache_key: '{{ .Repo.Name }}_{{ checksum "yarn.lock" }}_{{ arch }}_{{ os }}'
+      mount:
+        - '.cache'
+
+  - name: build
+    environment:
+      YARN_CACHE_FOLDER: .cache/yarn/
+    depends_on:
+      - fetch-tags
+      - restore-cache
+    commands:
+      - export VERSION=${DRONE_TAG##v}
+      - if [ -z "$$VERSION" ]; then export VERSION=unstable; fi
+      # TODO: Move to a yarn script
+      - wget https://dl.vikunja.io/frontend/vikunja-frontend-$$VERSION.zip
+      - unzip vikunja-frontend-$$VERSION.zip -d frontend
+      - sed -i 's/\\/api\\/v1//g' frontend/index.html
+      # Make sure that the -main suffix is added to release files
+      - sed -i "s/\$${version}/$$VERSION/g" package.json
+      - yarn install
+      - yarn dist --mac
+
+  - name: rebuild-cache
+    image: meltwater/drone-cache:dev
+    pull: true
+    environment:
+      AWS_ACCESS_KEY_ID:
+        from_secret: cache_aws_access_key_id
+      AWS_SECRET_ACCESS_KEY:
+        from_secret: cache_aws_secret_access_key
+    settings:
+      rebuild: true
+      bucket: kolaente.dev-drone-dependency-cache
+      endpoint: https://s3.fr-par.scw.cloud
+      region: fr-par
+      path_style: true
+      cache_key: '{{ .Repo.Name }}_{{ checksum "yarn.lock" }}_{{ arch }}_{{ os }}'
+      mount:
+        - '.cache'
+    depends_on:
+      - build
+
+  - name: release-latest
+    image: plugins/s3:1
+    pull: true
+    settings:
+      bucket: vikunja-releases
+      access_key:
+        from_secret: aws_access_key_id
+      secret_key:
+        from_secret: aws_secret_access_key
+      endpoint: https://s3.fr-par.scw.cloud
+      region: fr-par
+      path_style: true
+      strip_prefix: dist/
+      source: dist/*
+      target: /desktop/unstable/
+    when:
+      event:
+        exclude:
+          - tag
+    depends_on: [ build ]
+
+  - name: release-version
+    image: plugins/s3:1
+    pull: true
+    settings:
+      bucket: vikunja-releases
+      access_key:
+        from_secret: aws_access_key_id
+      secret_key:
+        from_secret: aws_secret_access_key
+      endpoint: https://s3.fr-par.scw.cloud
+      region: fr-par
+      path_style: true
+      strip_prefix: dist/
+      source: dist/*
+      target: /desktop/${DRONE_TAG##v}/
+    when:
+      event:
+        - tag
+    depends_on: [ build ]
