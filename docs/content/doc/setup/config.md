@@ -100,13 +100,6 @@ The max number of items which can be returned per page
 
 Default: `50`
 
-### enablemetrics
-
-If set to true, enables a /metrics endpoint for prometheus to collect metrics about the system
-You'll need to use redis for this in order to enable common metrics over multiple nodes
-
-Default: `false`
-
 ### enablecaldav
 
 Enable the caldav endpoint, see the docs for more details
@@ -620,6 +613,32 @@ The provider needs to support the `openid`, `profile` and `email` scopes.<br/>
 to <frontend-url>/auth/openid/<auth key>. Please make sure to configure the redirect url with your third party
 auth service accordingy if you're using the default vikunja frontend.
 Take a look at the [default config file](https://kolaente.dev/vikunja/api/src/branch/master/config.yml.sample) for more information about how to configure openid authentication.
+
+Default: `<empty>`
+
+---
+
+## metrics
+
+Prometheus metrics endpoint
+
+
+
+### enabled
+
+If set to true, enables a /metrics endpoint for prometheus to collect metrics about Vikunja.
+
+Default: `false`
+
+### username
+
+If set to a non-empty value the /metrics endpoint will require this as a username via basic auth in combination with the password below.
+
+Default: `<empty>`
+
+### password
+
+If set to a non-empty value the /metrics endpoint will require this as a password via basic auth in combination with the username below.
 
 Default: `<empty>`
 

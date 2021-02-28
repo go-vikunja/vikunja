@@ -17,6 +17,8 @@
 package routes
 
 import (
+	"crypto/subtle"
+
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/metrics"
@@ -24,11 +26,12 @@ import (
 	auth2 "code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/user"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 func setupMetrics(a *echo.Group) {
-	if !config.ServiceEnableMetrics.GetBool() {
+	if !config.MetricsEnabled.GetBool() {
 		return
 	}
 
@@ -71,11 +74,23 @@ func setupMetrics(a *echo.Group) {
 		}
 	}
 
-	a.GET("/metrics", echo.WrapHandler(promhttp.HandlerFor(metrics.GetRegistry(), promhttp.HandlerOpts{})))
+	r := a.Group("/metrics")
+
+	if config.MetricsUsername.GetString() != "" && config.MetricsPassword.GetString() != "" {
+		r.Use(middleware.BasicAuth(func(username, password string, c echo.Context) (bool, error) {
+			if subtle.ConstantTimeCompare([]byte(username), []byte(config.MetricsUsername.GetString())) == 1 &&
+				subtle.ConstantTimeCompare([]byte(password), []byte(config.MetricsPassword.GetString())) == 1 {
+				return true, nil
+			}
+			return false, nil
+		}))
+	}
+
+	r.GET("", echo.WrapHandler(promhttp.HandlerFor(metrics.GetRegistry(), promhttp.HandlerOpts{})))
 }
 
 func setupMetricsMiddleware(a *echo.Group) {
-	if !config.ServiceEnableMetrics.GetBool() {
+	if !config.MetricsEnabled.GetBool() {
 		return
 	}
 

@@ -13,9 +13,6 @@ service:
   rootpath: <rootpath>
   # The max number of items which can be returned per page
   maxitemsperpage: 50
-  # If set to true, enables a /metrics endpoint for prometheus to collect metrics about the system
-  # You'll need to use redis for this in order to enable common metrics over multiple nodes
-  enablemetrics: false
   # Enable the caldav endpoint, see the docs for more details
   enablecaldav: true
   # Set the motd message, available from the /info endpoint
@@ -283,3 +280,12 @@ auth:
         clientid:
         # The client secret used to authenticate Vikunja at the OpenID Connect provider.
         clientsecret:
+
+# Prometheus metrics endpoint
+metrics:
+  # If set to true, enables a /metrics endpoint for prometheus to collect metrics about Vikunja.
+  enabled: false
+  # If set to a non-empty value the /metrics endpoint will require this as a username via basic auth in combination with the password below.
+  username:
+  # If set to a non-empty value the /metrics endpoint will require this as a password via basic auth in combination with the username below.
+  password:

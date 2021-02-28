@@ -36,12 +36,13 @@ type Key string
 // These constants hold all config value keys
 const (
 	// #nosec
-	ServiceJWTSecret             Key = `service.JWTSecret`
-	ServiceInterface             Key = `service.interface`
-	ServiceFrontendurl           Key = `service.frontendurl`
-	ServiceEnableCaldav          Key = `service.enablecaldav`
-	ServiceRootpath              Key = `service.rootpath`
-	ServiceMaxItemsPerPage       Key = `service.maxitemsperpage`
+	ServiceJWTSecret       Key = `service.JWTSecret`
+	ServiceInterface       Key = `service.interface`
+	ServiceFrontendurl     Key = `service.frontendurl`
+	ServiceEnableCaldav    Key = `service.enablecaldav`
+	ServiceRootpath        Key = `service.rootpath`
+	ServiceMaxItemsPerPage Key = `service.maxitemsperpage`
+	// Deprecated. Use metrics.enabled
 	ServiceEnableMetrics         Key = `service.enablemetrics`
 	ServiceMotd                  Key = `service.motd`
 	ServiceEnableLinkSharing     Key = `service.enablelinksharing`
@@ -142,6 +143,10 @@ const (
 	BackgroundsUnsplashApplicationID Key = `backgrounds.providers.unsplash.applicationid`
 
 	KeyvalueType Key = `keyvalue.type`
+
+	MetricsEnabled  Key = `metrics.enabled`
+	MetricsUsername Key = `metrics.username`
+	MetricsPassword Key = `metrics.password`
 )
 
 // GetString returns a string config value
@@ -311,6 +316,8 @@ func InitDefaultConfig() {
 	BackgroundsUnsplashEnabled.setDefault(false)
 	// Key Value
 	KeyvalueType.setDefault("memory")
+	// Metrics
+	MetricsEnabled.setDefault(false)
 }
 
 // InitConfig initializes the config, sets defaults etc.
@@ -362,6 +369,11 @@ func InitConfig() {
 
 	if MigrationMicrosoftTodoRedirectURL.GetString() == "" {
 		MigrationMicrosoftTodoRedirectURL.Set(ServiceFrontendurl.GetString() + "migrate/microsoft-todo")
+	}
+
+	if ServiceEnableMetrics.GetBool() {
+		log.Println("WARNING: service.enablemetrics is deprecated and will be removed in a future release. Please use metrics.enable.")
+		MetricsEnabled.Set(true)
 	}
 
 	log.Printf("Using config file: %s", viper.ConfigFileUsed())
