@@ -182,6 +182,11 @@ func GetUserWithEmail(s *xorm.Session, user *User) (userOut *User, err error) {
 // GetUsersByIDs returns a map of users from a slice of user ids
 func GetUsersByIDs(s *xorm.Session, userIDs []int64) (users map[int64]*User, err error) {
 	users = make(map[int64]*User)
+
+	if len(userIDs) == 0 {
+		return users, nil
+	}
+
 	err = s.In("id", userIDs).Find(&users)
 	if err != nil {
 		return

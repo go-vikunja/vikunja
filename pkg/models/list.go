@@ -290,6 +290,11 @@ func GetListSimplByTaskID(s *xorm.Session, taskID int64) (l *List, err error) {
 // GetListsByIDs returns a map of lists from a slice with list ids
 func GetListsByIDs(s *xorm.Session, listIDs []int64) (lists map[int64]*List, err error) {
 	lists = make(map[int64]*List, len(listIDs))
+
+	if len(listIDs) == 0 {
+		return
+	}
+
 	err = s.In("id", listIDs).Find(&lists)
 	return
 }
@@ -405,9 +410,11 @@ func addListDetails(s *xorm.Session, lists []*List) (err error) {
 
 	// Get all list owners
 	owners := map[int64]*user.User{}
-	err = s.In("id", ownerIDs).Find(&owners)
-	if err != nil {
-		return
+	if len(ownerIDs) > 0 {
+		err = s.In("id", ownerIDs).Find(&owners)
+		if err != nil {
+			return
+		}
 	}
 
 	var fileIDs []int64

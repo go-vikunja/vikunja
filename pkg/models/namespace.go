@@ -657,6 +657,13 @@ func (n *Namespace) Delete(s *xorm.Session, a web.Auth) (err error) {
 		listIDs = append(listIDs, l.ID)
 	}
 
+	if len(listIDs) == 0 {
+		return events.Dispatch(&NamespaceDeletedEvent{
+			Namespace: n,
+			Doer:      a,
+		})
+	}
+
 	// Delete tasks
 	_, err = s.In("list_id", listIDs).Delete(&Task{})
 	if err != nil {

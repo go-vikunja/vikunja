@@ -128,6 +128,10 @@ func (ta *TaskAttachment) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 		return nil, 0, 0, err
 	}
 
+	if len(attachments) == 0 {
+		return
+	}
+
 	fileIDs := make([]int64, 0, len(attachments))
 	userIDs := make([]int64, 0, len(attachments))
 	for _, r := range attachments {
@@ -228,9 +232,11 @@ func getTaskAttachmentsByTaskIDs(s *xorm.Session, taskIDs []int64) (attachments 
 	}
 
 	users := make(map[int64]*user.User)
-	err = s.In("id", userIDs).Find(&users)
-	if err != nil {
-		return
+	if len(userIDs) > 0 {
+		err = s.In("id", userIDs).Find(&users)
+		if err != nil {
+			return
+		}
 	}
 
 	// Obfuscate all user emails

@@ -218,9 +218,11 @@ func getLabelsByTaskIDs(s *xorm.Session, opts *LabelByTaskIDsOptions) (ls []*lab
 		userids = append(userids, l.CreatedByID)
 	}
 	users := make(map[int64]*user.User)
-	err = s.In("id", userids).Find(&users)
-	if err != nil {
-		return nil, 0, 0, err
+	if len(userids) > 0 {
+		err = s.In("id", userids).Find(&users)
+		if err != nil {
+			return nil, 0, 0, err
+		}
 	}
 
 	// Obfuscate all user emails

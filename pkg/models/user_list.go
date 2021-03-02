@@ -96,12 +96,20 @@ func ListUsersFromList(s *xorm.Session, l *List, search string) (users []*user.U
 		uids = append(uids, id)
 	}
 
+	var cond builder.Cond = builder.Like{"username", "%" + search + "%"}
+
+	if len(uids) > 0 {
+		cond = builder.And(
+			builder.In("id", uids),
+			cond,
+		)
+	}
+
 	// Get all users
 	err = s.
 		Table("users").
 		Select("*").
-		In("id", uids).
-		And("username LIKE ?", "%"+search+"%").
+		Where(cond).
 		GroupBy("id").
 		OrderBy("id").
 		Find(&users)

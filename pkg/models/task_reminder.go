@@ -49,6 +49,10 @@ type taskUser struct {
 }
 
 func getTaskUsersForTasks(s *xorm.Session, taskIDs []int64) (taskUsers []*taskUser, err error) {
+	if len(taskIDs) == 0 {
+		return
+	}
+
 	// Get all creators of tasks
 	creators := make(map[int64]*user.User, len(taskIDs))
 	err = s.

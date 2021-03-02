@@ -182,9 +182,11 @@ func (share *LinkSharing) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 	}
 
 	users := make(map[int64]*user.User)
-	err = s.In("id", userIDs).Find(&users)
-	if err != nil {
-		return nil, 0, 0, err
+	if len(userIDs) > 0 {
+		err = s.In("id", userIDs).Find(&users)
+		if err != nil {
+			return nil, 0, 0, err
+		}
 	}
 
 	for _, s := range shares {

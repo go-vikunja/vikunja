@@ -60,7 +60,7 @@ func concatFields(fields watermill.LogFields) string {
 	full := ""
 
 	for key, val := range fields {
-		full += fmt.Sprintf("%s=%s, ", key, val)
+		full += fmt.Sprintf("%s=%v, ", key, val)
 	}
 
 	if full != "" {
