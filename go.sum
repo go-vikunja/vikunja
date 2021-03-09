@@ -496,6 +496,8 @@ github.com/labstack/echo/v4 v4.1.16 h1:8swiwjE5Jkai3RPfZoahp8kjVCRNq+y7Q0hPji2Kz
 github.com/labstack/echo/v4 v4.1.16/go.mod h1:awO+5TzAjvL8XpibdsfXxPgHr+orhtXZJZIQCVjogKI=
 github.com/labstack/echo/v4 v4.2.0 h1:jkCSsjXmBmapVXF6U4BrSz/cgofWM0CU3Q74wQvXkIc=
 github.com/labstack/echo/v4 v4.2.0/go.mod h1:AA49e0DZ8kk5jTOOCKNuPR6oTnBS0dYiM4FW1e6jwpg=
+github.com/labstack/echo/v4 v4.2.1 h1:LF5Iq7t/jrtUuSutNuiEWtB5eiHfZ5gSe2pcu5exjQw=
+github.com/labstack/echo/v4 v4.2.1/go.mod h1:AA49e0DZ8kk5jTOOCKNuPR6oTnBS0dYiM4FW1e6jwpg=
 github.com/labstack/gommon v0.3.0 h1:JEeO0bvc78PKdyHxloTKiF8BD5iGrH8T6MSeGvSgob0=
 github.com/labstack/gommon v0.3.0/go.mod h1:MULnywXg0yavhxWKc+lOruYdAhDwPK9wf0OL7NoOu+k=
 github.com/laurent22/ical-go v0.1.1-0.20181107184520-7e5d6ade8eef h1:RZnRnSID1skF35j/15KJ6hKZkdIC/teQClJK5wP5LU4=
