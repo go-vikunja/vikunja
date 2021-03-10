@@ -89,6 +89,9 @@ func getDefaultBucket(s *xorm.Session, listID int64) (bucket *Bucket, err error)
 // @Produce json
 // @Security JWTKeyAuth
 // @Param id path int true "List Id"
+// @Param page query int false "The page number for tasks. Used for pagination. If not provided, the first page of results is returned."
+// @Param per_page query int false "The maximum number of tasks per bucket per page. This parameter is limited by the configured maximum of items per page."
+// @Param s query string false "Search tasks by task text."
 // @Param filter_by query string false "The name of the field to filter by. Allowed values are all task properties. Task properties which are their own object require passing in the id of that entity. Accepts an array for multiple filters which will be chanied together, all supplied filter must match."
 // @Param filter_value query string false "The value to filter for."
 // @Param filter_comparator query string false "The comparator to use for a filter. Available values are `equals`, `greater`, `greater_equals`, `less`, `less_equals`, `like` and `in`. `in` expects comma-separated values in `filter_value`. Defaults to `equals`"
@@ -98,9 +101,6 @@ func getDefaultBucket(s *xorm.Session, listID int64) (bucket *Bucket, err error)
 // @Failure 500 {object} models.Message "Internal server error"
 // @Router /lists/{id}/buckets [get]
 func (b *Bucket) ReadAll(s *xorm.Session, auth web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
-
-	// Note: I'm ignoring pagination for now since I've yet to figure out a way on how to make it work
-	// I'll probably just don't do it and instead make individual tasks archivable.
 
 	// Get all buckets for this list
 	buckets := []*Bucket{}
@@ -130,16 +130,62 @@ func (b *Bucket) ReadAll(s *xorm.Session, auth web.Auth, search string, page int
 		bb.CreatedBy = users[bb.CreatedByID]
 	}
 
-	// Get all tasks for this list
-	b.TaskCollection.ListID = b.ListID
-	b.TaskCollection.OrderBy = []string{string(orderAscending)}
-	b.TaskCollection.SortBy = []string{taskPropertyPosition}
-	ts, _, _, err := b.TaskCollection.ReadAll(s, auth, "", -1, 0)
+	tasks := []*Task{}
+
+	opts, err := getTaskFilterOptsFromCollection(&b.TaskCollection)
 	if err != nil {
-		return
+		return nil, 0, 0, err
 	}
 
-	tasks := ts.([]*Task)
+	opts.sortby = []*sortParam{
+		{
+			orderBy: orderAscending,
+			sortBy:  taskPropertyPosition,
+		},
+	}
+	opts.page = page
+	opts.perPage = perPage
+	opts.search = search
+	opts.filterConcat = filterConcatAnd
+
+	var bucketFilterIndex int
+	for i, filter := range opts.filters {
+		if filter.field == taskPropertyBucketID {
+			bucketFilterIndex = i
+			break
+		}
+	}
+
+	if bucketFilterIndex == 0 {
+		opts.filters = append(opts.filters, &taskFilter{
+			field:      taskPropertyBucketID,
+			value:      0,
+			comparator: taskFilterComparatorEquals,
+		})
+		bucketFilterIndex = len(opts.filters) - 1
+	}
+
+	for id, bucket := range bucketMap {
+
+		opts.filters[bucketFilterIndex].value = id
+
+		ts, _, _, err := getRawTasksForLists(s, []*List{{ID: bucket.ListID}}, auth, opts)
+		if err != nil {
+			return nil, 0, 0, err
+		}
+
+		tasks = append(tasks, ts...)
+	}
+
+	taskMap := make(map[int64]*Task, len(tasks))
+	for _, t := range tasks {
+		taskMap[t.ID] = t
+	}
+
+	err = addMoreInfoToTasks(s, taskMap)
+	if err != nil {
+		return nil, 0, 0, err
+	}
 
 	// Put all tasks in their buckets
 	// All tasks which are not associated to any bucket will have bucket id 0 which is the nil value for int64

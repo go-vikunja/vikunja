@@ -306,7 +306,7 @@ func getRawTasksForLists(s *xorm.Session, lists []*List, a web.Auth, opts *taskO
 			continue
 		}
 
-		if f.field == "assignees" {
+		if f.field == "assignees" || f.field == "user_id" {
 			f.field = "user_id"
 			filter, err := getFilterCond(f, opts.filterIncludeNulls)
 			if err != nil {
@@ -316,7 +316,7 @@ func getRawTasksForLists(s *xorm.Session, lists []*List, a web.Auth, opts *taskO
 			continue
 		}
 
-		if f.field == "labels" {
+		if f.field == "labels" || f.field == "label_id" {
 			f.field = "label_id"
 			filter, err := getFilterCond(f, opts.filterIncludeNulls)
 			if err != nil {
@@ -326,7 +326,7 @@ func getRawTasksForLists(s *xorm.Session, lists []*List, a web.Auth, opts *taskO
 			continue
 		}
 
-		if f.field == "namespace" {
+		if f.field == "namespace" || f.field == "namespace_id" {
 			f.field = "namespace_id"
 			filter, err := getFilterCond(f, opts.filterIncludeNulls)
 			if err != nil {

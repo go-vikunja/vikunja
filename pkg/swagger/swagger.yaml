@@ -1963,6 +1963,18 @@ paths:
         name: id
         required: true
         type: integer
+      - description: The page number for tasks. Used for pagination. If not provided, the first page of results is returned.
+        in: query
+        name: page
+        type: integer
+      - description: The maximum number of tasks per bucket per page. This parameter is limited by the configured maximum of items per page.
+        in: query
+        name: per_page
+        type: integer
+      - description: Search tasks by task text.
+        in: query
+        name: s
+        type: string
       - description: The name of the field to filter by. Allowed values are all task properties. Task properties which are their own object require passing in the id of that entity. Accepts an array for multiple filters which will be chanied together, all supplied filter must match.
         in: query
         name: filter_by

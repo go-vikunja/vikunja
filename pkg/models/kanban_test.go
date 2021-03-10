@@ -82,7 +82,7 @@ func TestBucket_ReadAll(t *testing.T) {
 				FilterValue:      []string{"done"},
 			},
 		}
-		bucketsInterface, _, _, err := b.ReadAll(s, testuser, "", 0, 0)
+		bucketsInterface, _, _, err := b.ReadAll(s, testuser, "", -1, 0)
 		assert.NoError(t, err)
 
 		buckets := bucketsInterface.([]*Bucket)

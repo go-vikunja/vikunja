@@ -1224,6 +1224,24 @@ var doc = `{
                         "required": true
                     },
                     {
+                        "type": "integer",
+                        "description": "The page number for tasks. Used for pagination. If not provided, the first page of results is returned.",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "The maximum number of tasks per bucket per page. This parameter is limited by the configured maximum of items per page.",
+                        "name": "per_page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search tasks by task text.",
+                        "name": "s",
+                        "in": "query"
+                    },
+                    {
                         "type": "string",
                         "description": "The name of the field to filter by. Allowed values are all task properties. Task properties which are their own object require passing in the id of that entity. Accepts an array for multiple filters which will be chanied together, all supplied filter must match.",
                         "name": "filter_by",

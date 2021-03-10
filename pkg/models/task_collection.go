@@ -72,11 +72,50 @@ func validateTaskField(fieldName string) error {
 		taskPropertyUID,
 		taskPropertyCreated,
 		taskPropertyUpdated,
-		taskPropertyPosition:
+		taskPropertyPosition,
+		taskPropertyBucketID:
 		return nil
 	}
 	return ErrInvalidTaskField{TaskField: fieldName}
 
+}
+
+func getTaskFilterOptsFromCollection(tf *TaskCollection) (opts *taskOptions, err error) {
+	if len(tf.SortByArr) > 0 {
+		tf.SortBy = append(tf.SortBy, tf.SortByArr...)
+	}
+
+	if len(tf.OrderByArr) > 0 {
+		tf.OrderBy = append(tf.OrderBy, tf.OrderByArr...)
+	}
+
+	var sort = make([]*sortParam, 0, len(tf.SortBy))
+	for i, s := range tf.SortBy {
+		param := &sortParam{
+			sortBy:  s,
+			orderBy: orderAscending,
+		}
+		// This checks if tf.OrderBy has an entry with the same index as the current entry from tf.SortBy
+		// Taken from https://stackoverflow.com/a/27252199/10924593
+		if len(tf.OrderBy) > i {
+			param.orderBy = getSortOrderFromString(tf.OrderBy[i])
+		}
+
+		// Param validation
+		if err := param.validate(); err != nil {
+			return nil, err
+		}
+		sort = append(sort, param)
+	}
+
+	opts = &taskOptions{
+		sortby:             sort,
+		filterConcat:       taskFilterConcatinator(tf.FilterConcat),
+		filterIncludeNulls: tf.FilterIncludeNulls,
+	}
+
+	opts.filters, err = getTaskFiltersByCollections(tf)
+	return opts, err
 }
 
 // ReadAll gets all tasks for a collection
@@ -113,46 +152,14 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 		return sf.getTaskCollection().ReadAll(s, a, search, page, perPage)
 	}
 
-	if len(tf.SortByArr) > 0 {
-		tf.SortBy = append(tf.SortBy, tf.SortByArr...)
-	}
-
-	if len(tf.OrderByArr) > 0 {
-		tf.OrderBy = append(tf.OrderBy, tf.OrderByArr...)
-	}
-
-	var sort = make([]*sortParam, 0, len(tf.SortBy))
-	for i, s := range tf.SortBy {
-		param := &sortParam{
-			sortBy:  s,
-			orderBy: orderAscending,
-		}
-		// This checks if tf.OrderBy has an entry with the same index as the current entry from tf.SortBy
-		// Taken from https://stackoverflow.com/a/27252199/10924593
-		if len(tf.OrderBy) > i {
-			param.orderBy = getSortOrderFromString(tf.OrderBy[i])
-		}
-
-		// Param validation
-		if err := param.validate(); err != nil {
-			return nil, 0, 0, err
-		}
-		sort = append(sort, param)
-	}
-
-	taskopts := &taskOptions{
-		search:             search,
-		page:               page,
-		perPage:            perPage,
-		sortby:             sort,
-		filterConcat:       taskFilterConcatinator(tf.FilterConcat),
-		filterIncludeNulls: tf.FilterIncludeNulls,
-	}
-
-	taskopts.filters, err = getTaskFiltersByCollections(tf)
+	taskopts, err := getTaskFilterOptsFromCollection(tf)
 	if err != nil {
-		return
+		return nil, 0, 0, err
 	}
+
+	taskopts.search = search
+	taskopts.page = page
+	taskopts.perPage = perPage
 
 	shareAuth, is := a.(*LinkSharing)
 	if is {
