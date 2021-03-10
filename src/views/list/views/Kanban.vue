@@ -358,8 +358,9 @@ export default {
 				.then(bs => {
 					bs.forEach(b => {
 						const e = this.$refs[`tasks-container${b.id}`][0]
-						e.onscroll = () => {
-							if (e.scrollTopMax <= e.scrollTop + e.scrollTop * minScrollHeightPercent) {
+						e.addEventListener('scroll', () => {
+							const scrollTopMax = e.scrollHeight - e.clientHeight
+							if (scrollTopMax <= e.scrollTop + e.scrollTop * minScrollHeightPercent) {
 								this.$store.dispatch('kanban/loadNextTasksForBucket', {
 									listId: this.$route.params.listId,
 									params: this.params,
@@ -369,7 +370,7 @@ export default {
 										this.error(e, this)
 									})
 							}
-						}
+						})
 					})
 				})
 				.catch(e => {
