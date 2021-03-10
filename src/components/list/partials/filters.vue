@@ -18,6 +18,18 @@
 			</div>
 		</div>
 		<div class="field">
+			<label class="label">Search</label>
+			<div class="control">
+				<input
+					class="input"
+					placeholder="Search"
+					v-model="params.s"
+					@blur="change()"
+					@keyup.enter="change()"
+				/>
+			</div>
+		</div>
+		<div class="field">
 			<label class="label">Priority</label>
 			<div class="control single-value-control">
 				<priority-select
@@ -213,6 +225,7 @@ export default {
 				filter_comparator: [],
 				filter_include_nulls: true,
 				filter_concat: 'or',
+				s: '',
 			},
 			filters: {
 				done: false,
