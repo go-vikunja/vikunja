@@ -44,7 +44,7 @@ require (
 	github.com/golang/snappy v0.0.2 // indirect
 	github.com/gordonklaus/ineffassign v0.0.0-20210225214923-2e10b2664254
 	github.com/iancoleman/strcase v0.1.3
-	github.com/imdario/mergo v0.3.11
+	github.com/imdario/mergo v0.3.12
 	github.com/jgautheron/goconst v1.4.0
 	github.com/kr/text v0.2.0 // indirect
 	github.com/labstack/echo/v4 v4.2.1
