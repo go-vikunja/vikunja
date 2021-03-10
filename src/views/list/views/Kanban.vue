@@ -352,7 +352,26 @@ export default {
 			console.debug(`Loading buckets, loadedListId = ${this.loadedListId}, $route.params =`, this.$route.params)
 			this.filtersChanged = false
 
+			const minScrollHeightPercent = 0.25
+
 			this.$store.dispatch('kanban/loadBucketsForList', {listId: this.$route.params.listId, params: this.params})
+				.then(bs => {
+					bs.forEach(b => {
+						const e = this.$refs[`tasks-container${b.id}`][0]
+						e.onscroll = () => {
+							if (e.scrollTopMax <= e.scrollTop + e.scrollTop * minScrollHeightPercent) {
+								this.$store.dispatch('kanban/loadNextTasksForBucket', {
+									listId: this.$route.params.listId,
+									params: this.params,
+									bucketId: b.id,
+								})
+									.catch(e => {
+										this.error(e, this)
+									})
+							}
+						}
+					})
+				})
 				.catch(e => {
 					this.error(e, this)
 				})
@@ -423,7 +442,7 @@ export default {
 			task.done = !task.done
 			this.$store.dispatch('tasks/update', task)
 				.then(() => {
-					if(task.done) {
+					if (task.done) {
 						playPop()
 					}
 				})
@@ -518,7 +537,7 @@ export default {
 				listId: this.$route.params.listId,
 			})
 
-			this.$store.dispatch('kanban/deleteBucket', bucket)
+			this.$store.dispatch('kanban/deleteBucket', {bucket: bucket, params: this.params})
 				.then(() => {
 					this.success({message: 'The bucket has been deleted successfully.'}, this)
 				})

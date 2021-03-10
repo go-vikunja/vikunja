@@ -22,8 +22,6 @@ export default {
 			text: err,
 			actions: actions,
 		})
-
-		context.loading = false
 	},
 	success(e, context, actions = []) {
 		// Build the notification text from error response
@@ -41,7 +39,5 @@ export default {
 				actions: actions,
 			},
 		})
-
-		context.loading = false
 	},
 }
