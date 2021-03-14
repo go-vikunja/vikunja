@@ -550,6 +550,10 @@ func (n *Namespace) ReadAll(s *xorm.Session, a web.Auth, search string, page int
 	}
 
 	for _, list := range lists {
+		if list.NamespaceID == SharedListsPseudoNamespace.ID {
+			// Shared lists are already in the namespace
+			continue
+		}
 		namespaces[list.NamespaceID].Lists = append(namespaces[list.NamespaceID].Lists, list)
 	}
 
