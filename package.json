@@ -33,9 +33,9 @@
     "vuex": "3.6.2"
   },
   "devDependencies": {
-    "@fortawesome/fontawesome-svg-core": "1.2.34",
-    "@fortawesome/free-regular-svg-icons": "5.15.2",
-    "@fortawesome/free-solid-svg-icons": "5.15.2",
+    "@fortawesome/fontawesome-svg-core": "1.2.35",
+    "@fortawesome/free-regular-svg-icons": "5.15.3",
+    "@fortawesome/free-solid-svg-icons": "5.15.3",
     "@fortawesome/vue-fontawesome": "2.0.2",
     "@vue/cli": "4.5.11",
     "@vue/cli-plugin-babel": "4.5.11",
