@@ -113,6 +113,10 @@ func getNamespaceSimpleByID(s *xorm.Session, id int64) (namespace *Namespace, er
 		return &FavoritesPseudoNamespace, nil
 	}
 
+	if id == SavedFiltersPseudoNamespace.ID {
+		return &SavedFiltersPseudoNamespace, nil
+	}
+
 	namespace = &Namespace{}
 
 	exists, err := s.Where("id = ?", id).Get(namespace)

@@ -72,7 +72,10 @@ func (n *Namespace) checkRight(s *xorm.Session, a web.Auth, rights ...Right) (bo
 		return false, 0, err
 	}
 
-	if a.GetID() == nn.OwnerID {
+	if a.GetID() == nn.OwnerID ||
+		nn.ID == SharedListsPseudoNamespace.ID ||
+		nn.ID == FavoritesPseudoNamespace.ID ||
+		nn.ID == SavedFiltersPseudoNamespace.ID {
 		return true, int(RightAdmin), nil
 	}
 

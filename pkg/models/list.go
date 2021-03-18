@@ -102,20 +102,42 @@ var FavoritesPseudoList = List{
 
 // GetListsByNamespaceID gets all lists in a namespace
 func GetListsByNamespaceID(s *xorm.Session, nID int64, doer *user.User) (lists []*List, err error) {
-	if nID == -1 {
-		err = s.Select("l.*").
-			Table("list").
-			Join("LEFT", []string{"team_list", "tl"}, "l.id = tl.list_id").
-			Join("LEFT", []string{"team_members", "tm"}, "tm.team_id = tl.team_id").
-			Join("LEFT", []string{"users_list", "ul"}, "ul.list_id = l.id").
-			Join("LEFT", []string{"namespaces", "n"}, "l.namespace_id = n.id").
-			Where("tm.user_id = ?", doer.ID).
-			Where("l.is_archived = false").
-			Where("n.is_archived = false").
-			Or("ul.user_id = ?", doer.ID).
-			GroupBy("l.id").
-			Find(&lists)
-	} else {
+	switch nID {
+	case SharedListsPseudoNamespace.ID:
+		nnn, err := getSharedListsInNamespace(s, false, doer)
+		if err != nil {
+			return nil, err
+		}
+		if nnn != nil && nnn.Lists != nil {
+			lists = nnn.Lists
+		}
+	case FavoritesPseudoNamespace.ID:
+		namespaces := make(map[int64]*NamespaceWithLists)
+		_, err := getNamespacesWithLists(s, &namespaces, "", false, 0, -1, doer.ID)
+		if err != nil {
+			return nil, err
+		}
+		namespaceIDs, _ := getNamespaceOwnerIDs(namespaces)
+		ls, err := getListsForNamespaces(s, namespaceIDs, false)
+		if err != nil {
+			return nil, err
+		}
+		nnn, err := getFavoriteLists(s, ls, namespaceIDs, doer)
+		if err != nil {
+			return nil, err
+		}
+		if nnn != nil && nnn.Lists != nil {
+			lists = nnn.Lists
+		}
+	case SavedFiltersPseudoNamespace.ID:
+		nnn, err := getSavedFilters(s, doer)
+		if err != nil {
+			return nil, err
+		}
+		if nnn != nil && nnn.Lists != nil {
+			lists = nnn.Lists
+		}
+	default:
 		err = s.Select("l.*").
 			Alias("l").
 			Join("LEFT", []string{"namespaces", "n"}, "l.namespace_id = n.id").
