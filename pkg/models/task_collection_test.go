@@ -985,6 +985,19 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name: "filter by index",
+			fields: fields{
+				FilterBy:         []string{"index"},
+				FilterValue:      []string{"5"},
+				FilterComparator: []string{"equals"},
+			},
+			args: defaultArgs,
+			want: []*Task{
+				task5,
+			},
+			wantErr: false,
+		},
 	}
 
 	for _, tt := range tests {

@@ -178,33 +178,34 @@ func (t *Task) ReadAll(s *xorm.Session, a web.Auth, search string, page int, per
 }
 
 func getFilterCond(f *taskFilter, includeNulls bool) (cond builder.Cond, err error) {
+	field := "`" + f.field + "`"
 	switch f.comparator {
 	case taskFilterComparatorEquals:
-		cond = &builder.Eq{f.field: f.value}
+		cond = &builder.Eq{field: f.value}
 	case taskFilterComparatorNotEquals:
-		cond = &builder.Neq{f.field: f.value}
+		cond = &builder.Neq{field: f.value}
 	case taskFilterComparatorGreater:
-		cond = &builder.Gt{f.field: f.value}
+		cond = &builder.Gt{field: f.value}
 	case taskFilterComparatorGreateEquals:
-		cond = &builder.Gte{f.field: f.value}
+		cond = &builder.Gte{field: f.value}
 	case taskFilterComparatorLess:
-		cond = &builder.Lt{f.field: f.value}
+		cond = &builder.Lt{field: f.value}
 	case taskFilterComparatorLessEquals:
-		cond = &builder.Lte{f.field: f.value}
+		cond = &builder.Lte{field: f.value}
 	case taskFilterComparatorLike:
 		val, is := f.value.(string)
 		if !is {
-			return nil, ErrInvalidTaskFilterValue{Field: f.field, Value: f.value}
+			return nil, ErrInvalidTaskFilterValue{Field: field, Value: f.value}
 		}
-		cond = &builder.Like{f.field, "%" + val + "%"}
+		cond = &builder.Like{field, "%" + val + "%"}
 	case taskFilterComparatorIn:
-		cond = builder.In(f.field, f.value)
+		cond = builder.In(field, f.value)
 	case taskFilterComparatorInvalid:
 		// Nothing to do
 	}
 
 	if includeNulls {
-		cond = builder.Or(cond, &builder.IsNull{f.field})
+		cond = builder.Or(cond, &builder.IsNull{field})
 	}
 
 	return
