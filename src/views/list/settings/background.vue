@@ -6,6 +6,8 @@
 		class="list-background-setting"
 		:wide="true"
 		v-if="uploadBackgroundEnabled || unsplashBackgroundEnabled"
+		:tertary="hasBackground ? 'Remove Background' : ''"
+		@tertary="removeBackground()"
 	>
 		<div class="mb-4" v-if="uploadBackgroundEnabled">
 			<input
@@ -53,15 +55,17 @@
 				type="secondary"
 				v-if="backgroundSearchResult.length > 0"
 			>
-				{{ backgroundService.loading ? 'Loading...' : 'Load more photos'}}
+				{{ backgroundService.loading ? 'Loading...' : 'Load more photos' }}
 			</x-button>
 		</template>
 	</create-edit>
 </template>
 
 <script>
+import {mapState} from 'vuex'
 import BackgroundUnsplashService from '../../../services/backgroundUnsplash'
 import BackgroundUploadService from '../../../services/backgroundUpload'
+import ListService from '@/services/list'
 import {CURRENT_LIST} from '@/store/mutation-types'
 import CreateEdit from '@/components/misc/create-edit'
 
@@ -78,19 +82,19 @@ export default {
 			backgroundSearchTimeout: null,
 
 			backgroundUploadService: null,
+			listService: null,
 		}
 	},
-	computed: {
-		unsplashBackgroundEnabled() {
-			return this.$store.state.config.enabledBackgroundProviders.includes('unsplash')
-		},
-		uploadBackgroundEnabled() {
-			return this.$store.state.config.enabledBackgroundProviders.includes('upload')
-		},
-	},
+	computed: mapState({
+		unsplashBackgroundEnabled: state => state.config.enabledBackgroundProviders.includes('unsplash'),
+		uploadBackgroundEnabled: state => state.config.enabledBackgroundProviders.includes('upload'),
+		currentList: state => state.currentList,
+		hasBackground: state => state.background !== null,
+	}),
 	created() {
 		this.backgroundService = new BackgroundUnsplashService()
 		this.backgroundUploadService = new BackgroundUploadService()
+		this.listService = new ListService()
 		this.setTitle('Set a list background')
 		// Show the default collection of backgrounds
 		this.newBackgroundSearch()
@@ -156,6 +160,18 @@ export default {
 					this.$store.commit(CURRENT_LIST, l)
 					this.$store.commit('namespaces/setListInNamespaceById', l)
 					this.success({message: 'The background has been set successfully!'}, this)
+				})
+				.catch(e => {
+					this.error(e, this)
+				})
+		},
+		removeBackground() {
+			this.listService.removeBackground(this.currentList)
+				.then(l => {
+					this.$store.commit(CURRENT_LIST, l)
+					this.$store.commit('namespaces/setListInNamespaceById', l)
+					this.success({message: 'The background has been removed successfully!'}, this)
+					this.$router.back()
 				})
 				.catch(e => {
 					this.error(e, this)

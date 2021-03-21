@@ -103,6 +103,10 @@ export const store = new Vuex.Store({
 				}
 			}
 
+			if (typeof currentList.backgroundInformation === 'undefined' || currentList.backgroundInformation === null) {
+				state.background = null
+			}
+
 			// Server updates don't return the right. Therefore the right is reset after updating the list which is
 			// confusing because all the buttons will disappear in that case. To prevent this, we're keeping the right
 			// when updating the list in global state.

@@ -56,4 +56,19 @@ export default class ListService extends AbstractService {
 				return e
 			})
 	}
+
+	removeBackground(list) {
+		const cancel = this.setLoading()
+
+		return this.http.delete(`/lists/${list.id}/background`, list)
+			.then(response => {
+				return Promise.resolve(response.data)
+			})
+			.catch(error => {
+				return this.errorHandler(error)
+			})
+			.finally(() => {
+				cancel()
+			})
+	}
 }
