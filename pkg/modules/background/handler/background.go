@@ -199,6 +199,33 @@ func (bp *BackgroundProvider) UploadBackground(c echo.Context) error {
 	return c.JSON(http.StatusOK, list)
 }
 
+func checkListBackgroundRights(s *xorm.Session, c echo.Context) (list *models.List, auth web.Auth, err error) {
+	auth, err = auth2.GetAuthFromClaims(c)
+	if err != nil {
+		return nil, auth, echo.NewHTTPError(http.StatusBadRequest, "Invalid auth token: "+err.Error())
+	}
+
+	listID, err := strconv.ParseInt(c.Param("list"), 10, 64)
+	if err != nil {
+		return nil, auth, echo.NewHTTPError(http.StatusBadRequest, "Invalid list ID: "+err.Error())
+	}
+
+	// Check if a background for this list exists + Rights
+	list = &models.List{ID: listID}
+	can, _, err := list.CanRead(s, auth)
+	if err != nil {
+		_ = s.Rollback()
+		return nil, auth, handler.HandleHTTPError(err, c)
+	}
+	if !can {
+		_ = s.Rollback()
+		log.Infof("Tried to get list background of list %d while not having the rights for it (User: %v)", listID, auth)
+		return nil, auth, echo.NewHTTPError(http.StatusForbidden)
+	}
+
+	return
+}
+
 // GetListBackground serves a previously set background from a list
 // It has no knowledge of the provider that was responsible for setting the background.
 // @Summary Get the list background
@@ -214,31 +241,14 @@ func (bp *BackgroundProvider) UploadBackground(c echo.Context) error {
 // @Router /lists/{id}/background [get]
 func GetListBackground(c echo.Context) error {
 
-	auth, err := auth2.GetAuthFromClaims(c)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid auth token: "+err.Error())
-	}
-
-	listID, err := strconv.ParseInt(c.Param("list"), 10, 64)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid list ID: "+err.Error())
-	}
-
 	s := db.NewSession()
 	defer s.Close()
 
-	// Check if a background for this list exists + Rights
-	list := &models.List{ID: listID}
-	can, _, err := list.CanRead(s, auth)
+	list, _, err := checkListBackgroundRights(s, c)
 	if err != nil {
-		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+		return err
 	}
-	if !can {
-		_ = s.Rollback()
-		log.Infof("Tried to get list background of list %d while not having the rights for it (User: %v)", listID, auth)
-		return echo.NewHTTPError(http.StatusForbidden)
-	}
+
 	if list.BackgroundFileID == 0 {
 		_ = s.Rollback()
 		return echo.NotFoundHandler(c)
@@ -265,4 +275,35 @@ func GetListBackground(c echo.Context) error {
 
 	// Serve the file
 	return c.Stream(http.StatusOK, "image/jpg", bgFile.File)
+}
+
+// RemoveListBackground removes a list background, no matter the background provider
+// @Summary Remove a list background
+// @Description Removes a previously set list background, regardless of the list provider used to set the background. It does not throw an error if the list does not have a background.
+// @tags list
+// @Produce json
+// @Param id path int true "List ID"
+// @Security JWTKeyAuth
+// @Success 200 {object} models.List "The list"
+// @Failure 403 {object} models.Message "No access to this list."
+// @Failure 404 {object} models.Message "The list does not exist."
+// @Failure 500 {object} models.Message "Internal error"
+// @Router /lists/{id}/background [delete]
+func RemoveListBackground(c echo.Context) error {
+	s := db.NewSession()
+	defer s.Close()
+
+	list, auth, err := checkListBackgroundRights(s, c)
+	if err != nil {
+		return err
+	}
+
+	list.BackgroundFileID = 0
+	list.BackgroundInformation = nil
+	err = list.Update(s, auth)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, list)
 }

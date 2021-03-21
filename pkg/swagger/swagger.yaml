@@ -1835,6 +1835,38 @@ paths:
       tags:
       - task
   /lists/{id}/background:
+    delete:
+      description: Removes a previously set list background, regardless of the list provider used to set the background. It does not throw an error if the list does not have a background.
+      parameters:
+      - description: List ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The list
+          schema:
+            $ref: '#/definitions/models.List'
+        "403":
+          description: No access to this list.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "404":
+          description: The list does not exist.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Remove a list background
+      tags:
+      - list
     get:
       description: Get the list background of a specific list. **Returns json on error.**
       parameters:

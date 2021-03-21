@@ -543,6 +543,7 @@ func CreateOrUpdateList(s *xorm.Session, list *List, auth web.Auth) (err error) 
 			"identifier",
 			"hex_color",
 			"is_favorite",
+			"background_file_id",
 		}
 		if list.Description != "" {
 			colsToUpdate = append(colsToUpdate, "description")

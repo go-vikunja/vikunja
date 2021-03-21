@@ -576,6 +576,7 @@ func registerAPIRoutes(a *echo.Group) {
 	// List Backgrounds
 	if config.BackgroundsEnabled.GetBool() {
 		a.GET("/lists/:list/background", backgroundHandler.GetListBackground)
+		a.DELETE("/lists/:list/background", backgroundHandler.RemoveListBackground)
 		if config.BackgroundsUploadEnabled.GetBool() {
 			uploadBackgroundProvider := &backgroundHandler.BackgroundProvider{
 				Provider: func() background.Provider {

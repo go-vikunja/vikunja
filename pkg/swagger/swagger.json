@@ -1046,6 +1046,56 @@
                         }
                     }
                 }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Removes a previously set list background, regardless of the list provider used to set the background. It does not throw an error if the list does not have a background.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "list"
+                ],
+                "summary": "Remove a list background",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "List ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The list",
+                        "schema": {
+                            "$ref": "#/definitions/models.List"
+                        }
+                    },
+                    "403": {
+                        "description": "No access to this list.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "404": {
+                        "description": "The list does not exist.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
             }
         },
         "/lists/{id}/backgrounds/unsplash": {
