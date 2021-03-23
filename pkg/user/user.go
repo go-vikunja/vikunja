@@ -61,7 +61,7 @@ type User struct {
 	EmailConfirmToken  string `xorm:"varchar(450) null" json:"-"`
 
 	AvatarProvider string `xorm:"varchar(255) null" json:"-"`
-	AvatarFileID   int64  `xorn:"null" json:"-"`
+	AvatarFileID   int64  `xorm:"null" json:"-"`
 
 	// Issuer and Subject contain the issuer and subject from the source the user authenticated with.
 	Issuer  string `xorm:"text null" json:"-"`
