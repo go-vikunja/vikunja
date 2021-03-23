@@ -1,7 +1,7 @@
 <template>
 	<div class="heading">
 		<h1 class="title task-id">
-			{{ task.getTextIdentifier() }}
+			{{ task.getTextIdentifier && task.getTextIdentifier() ? task.getTextIdentifier() : '' }}
 		</h1>
 		<div class="is-done" v-if="task.done">Done</div>
 		<h1

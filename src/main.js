@@ -182,6 +182,10 @@ Vue.component('card', Card)
 Vue.mixin({
 	methods: {
 		formatDateSince: date => {
+			if (date === null) {
+				return ''
+			}
+
 			if (typeof date === 'string') {
 				date = new Date(date)
 			}
@@ -198,6 +202,10 @@ Vue.mixin({
 			return formatted
 		},
 		formatDate: date => {
+			if (date === null) {
+				return ''
+			}
+
 			if (typeof date === 'string') {
 				date = new Date(date)
 			}
