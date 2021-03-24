@@ -149,6 +149,7 @@ type LabelByTaskIDsOptions struct {
 	TaskIDs             []int64
 	GetUnusedLabels     bool
 	GroupByLabelIDsOnly bool
+	GetForUser          int64
 }
 
 // Helper function to get all labels for a set of tasks
@@ -168,22 +169,32 @@ func getLabelsByTaskIDs(s *xorm.Session, opts *LabelByTaskIDsOptions) (ls []*lab
 	// Get all labels associated with these tasks
 	var labels []*labelWithTaskID
 	cond := builder.And(builder.NotNull{"label_task.label_id"})
-	if len(opts.TaskIDs) > 0 {
+	if len(opts.TaskIDs) > 0 && opts.GetForUser == 0 {
 		cond = builder.And(builder.In("label_task.task_id", opts.TaskIDs), cond)
+	}
+	if opts.GetForUser != 0 {
+		cond = builder.And(builder.In("label_task.task_id",
+			builder.
+				Select("id").
+				From("tasks").
+				Where(builder.In("list_id", getUserListsStatement(opts.GetForUser).Select("l.id"))),
+		), cond)
 	}
 	if opts.GetUnusedLabels {
 		cond = builder.Or(cond, builder.Eq{"labels.created_by_id": opts.User.ID})
 	}
 
-	vals := strings.Split(opts.Search, ",")
 	ids := []int64{}
-	for _, val := range vals {
-		v, err := strconv.ParseInt(val, 10, 64)
-		if err != nil {
-			log.Debugf("Label search string part '%s' is not a number: %s", val, err)
-			continue
+	if opts.Search != "" {
+		vals := strings.Split(opts.Search, ",")
+		for _, val := range vals {
+			v, err := strconv.ParseInt(val, 10, 64)
+			if err != nil {
+				log.Debugf("Label search string part '%s' is not a number: %s", val, err)
+				continue
+			}
+			ids = append(ids, v)
 		}
-		ids = append(ids, v)
 	}
 
 	if len(ids) > 0 {

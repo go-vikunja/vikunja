@@ -146,10 +146,7 @@ func (l *Label) ReadAll(s *xorm.Session, a web.Auth, search string, page int, pe
 		return nil, 0, 0, ErrGenericForbidden{}
 	}
 
-	u := &user.User{ID: a.GetID()}
-
-	// Get all tasks
-	taskIDs, err := getUserTaskIDs(s, u)
+	u, err := user.GetUserByID(s, a.GetID())
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -157,7 +154,7 @@ func (l *Label) ReadAll(s *xorm.Session, a web.Auth, search string, page int, pe
 	return getLabelsByTaskIDs(s, &LabelByTaskIDsOptions{
 		Search:              search,
 		User:                u,
-		TaskIDs:             taskIDs,
+		GetForUser:          u.ID,
 		Page:                page,
 		PerPage:             perPage,
 		GetUnusedLabels:     true,
@@ -205,35 +202,4 @@ func getLabelByIDSimple(s *xorm.Session, labelID int64) (*Label, error) {
 		return &Label{}, ErrLabelDoesNotExist{labelID}
 	}
 	return &label, err
-}
-
-// Helper method to get all task ids a user has
-func getUserTaskIDs(s *xorm.Session, u *user.User) (taskIDs []int64, err error) {
-
-	// Get all lists
-	lists, _, _, err := getRawListsForUser(
-		s,
-		&listOptions{
-			user: u,
-			page: -1,
-		},
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	tasks, _, _, err := getRawTasksForLists(s, lists, u, &taskOptions{
-		page:    -1,
-		perPage: 0,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	// make a slice of task ids
-	for _, t := range tasks {
-		taskIDs = append(taskIDs, t.ID)
-	}
-
-	return
 }

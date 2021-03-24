@@ -64,21 +64,28 @@ func (l *Label) isLabelOwner(s *xorm.Session, a web.Auth) (bool, error) {
 // Helper method to check if a user can see a specific label
 func (l *Label) hasAccessToLabel(s *xorm.Session, a web.Auth) (has bool, maxRight int, err error) {
 
-	// TODO: add an extra check for link share handling
+	if _, is := a.(*LinkSharing); is {
+		return false, 0, nil
+	}
 
-	// Get all tasks
-	taskIDs, err := getUserTaskIDs(s, &user.User{ID: a.GetID()})
+	u, err := user.GetUserByID(s, a.GetID())
 	if err != nil {
 		return false, 0, err
 	}
 
-	// Get all labels associated with these tasks
+	cond := builder.In("label_task.task_id",
+		builder.
+			Select("id").
+			From("tasks").
+			Where(builder.In("list_id", getUserListsStatement(u.ID).Select("l.id"))),
+	)
+
 	ll := &LabelTask{}
 	has, err = s.Table("labels").
 		Select("label_task.*").
 		Join("LEFT", "label_task", "label_task.label_id = labels.id").
-		Where("label_task.label_id is not null OR labels.created_by_id = ?", a.GetID()).
-		Or(builder.In("label_task.task_id", taskIDs)).
+		Where("label_task.label_id is not null OR labels.created_by_id = ?", u.ID).
+		Or(cond).
 		And("labels.id = ?", l.ID).
 		Exist(ll)
 	if err != nil {

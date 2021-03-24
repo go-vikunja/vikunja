@@ -21,11 +21,10 @@ import (
 	"strings"
 	"time"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/events"
-
-	"code.vikunja.io/api/pkg/log"
-
 	"code.vikunja.io/api/pkg/files"
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
 	"xorm.io/builder"
@@ -329,6 +328,32 @@ type listOptions struct {
 	isArchived bool
 }
 
+func getUserListsStatement(userID int64) *builder.Builder {
+	dialect := config.DatabaseType.GetString()
+	if dialect == "sqlite" {
+		dialect = builder.SQLITE
+	}
+
+	return builder.Dialect(dialect).
+		Select("l.*").
+		From("list", "l").
+		Join("INNER", "namespaces n", "l.namespace_id = n.id").
+		Join("LEFT", "team_namespaces tn", "tn.namespace_id = n.id").
+		Join("LEFT", "team_members tm", "tm.team_id = tn.team_id").
+		Join("LEFT", "team_list tl", "l.id = tl.list_id").
+		Join("LEFT", "team_members tm2", "tm2.team_id = tl.team_id").
+		Join("LEFT", "users_list ul", "ul.list_id = l.id").
+		Join("LEFT", "users_namespace un", "un.namespace_id = l.namespace_id").
+		Where(builder.Or(
+			builder.Eq{"tm.user_id": userID},
+			builder.Eq{"tm2.user_id": userID},
+			builder.Eq{"ul.user_id": userID},
+			builder.Eq{"un.user_id": userID},
+			builder.Eq{"l.owner_id": userID},
+		)).
+		GroupBy("l.id")
+}
+
 // Gets the lists only, without any tasks or so
 func getRawListsForUser(s *xorm.Session, opts *listOptions) (lists []*List, resultCount int, totalItems int64, err error) {
 	fullUser, err := user.GetUserByID(s, opts.user.ID)
@@ -367,54 +392,23 @@ func getRawListsForUser(s *xorm.Session, opts *listOptions) (lists []*List, resu
 
 	// Gets all Lists where the user is either owner or in a team which has access to the list
 	// Or in a team which has namespace read access
-	query := s.Select("l.*").
-		Table("list").
-		Alias("l").
-		Join("INNER", []string{"namespaces", "n"}, "l.namespace_id = n.id").
-		Join("LEFT", []string{"team_namespaces", "tn"}, "tn.namespace_id = n.id").
-		Join("LEFT", []string{"team_members", "tm"}, "tm.team_id = tn.team_id").
-		Join("LEFT", []string{"team_list", "tl"}, "l.id = tl.list_id").
-		Join("LEFT", []string{"team_members", "tm2"}, "tm2.team_id = tl.team_id").
-		Join("LEFT", []string{"users_list", "ul"}, "ul.list_id = l.id").
-		Join("LEFT", []string{"users_namespace", "un"}, "un.namespace_id = l.namespace_id").
-		Where(builder.Or(
-			builder.Eq{"tm.user_id": fullUser.ID},
-			builder.Eq{"tm2.user_id": fullUser.ID},
-			builder.Eq{"ul.user_id": fullUser.ID},
-			builder.Eq{"un.user_id": fullUser.ID},
-			builder.Eq{"l.owner_id": fullUser.ID},
-		)).
-		GroupBy("l.id").
+
+	query := getUserListsStatement(fullUser.ID).
 		Where(filterCond).
 		Where(isArchivedCond)
 	if limit > 0 {
 		query = query.Limit(limit, start)
 	}
-	err = query.Find(&lists)
+	err = s.SQL(query).Find(&lists)
 	if err != nil {
 		return nil, 0, 0, err
 	}
 
-	totalItems, err = s.
-		Table("list").
-		Alias("l").
-		Join("INNER", []string{"namespaces", "n"}, "l.namespace_id = n.id").
-		Join("LEFT", []string{"team_namespaces", "tn"}, "tn.namespace_id = n.id").
-		Join("LEFT", []string{"team_members", "tm"}, "tm.team_id = tn.team_id").
-		Join("LEFT", []string{"team_list", "tl"}, "l.id = tl.list_id").
-		Join("LEFT", []string{"team_members", "tm2"}, "tm2.team_id = tl.team_id").
-		Join("LEFT", []string{"users_list", "ul"}, "ul.list_id = l.id").
-		Join("LEFT", []string{"users_namespace", "un"}, "un.namespace_id = l.namespace_id").
-		Where(builder.Or(
-			builder.Eq{"tm.user_id": fullUser.ID},
-			builder.Eq{"tm2.user_id": fullUser.ID},
-			builder.Eq{"ul.user_id": fullUser.ID},
-			builder.Eq{"un.user_id": fullUser.ID},
-			builder.Eq{"l.owner_id": fullUser.ID},
-		)).
-		GroupBy("l.id").
+	query = getUserListsStatement(fullUser.ID).
 		Where(filterCond).
-		Where(isArchivedCond).
+		Where(isArchivedCond)
+	totalItems, err = s.
+		SQL(query.Select("count(*)")).
 		Count(&List{})
 	return lists, len(lists), totalItems, err
 }
