@@ -282,6 +282,26 @@ func TestTask_Update(t *testing.T) {
 			"bucket_id": 3,
 		}, false)
 	})
+	t.Run("move task to another list", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		task := &Task{
+			ID:     1,
+			ListID: 2,
+		}
+		err := task.Update(s, u)
+		assert.NoError(t, err)
+		err = s.Commit()
+		assert.NoError(t, err)
+
+		db.AssertExists(t, "tasks", map[string]interface{}{
+			"id":        1,
+			"list_id":   2,
+			"bucket_id": 4,
+		}, false)
+	})
 }
 
 func TestTask_Delete(t *testing.T) {
