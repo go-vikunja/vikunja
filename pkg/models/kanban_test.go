@@ -182,4 +182,19 @@ func TestBucket_Update(t *testing.T) {
 
 		testAndAssertBucketUpdate(t, b, s)
 	})
+	t.Run("only one done bucket per list", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		b := &Bucket{
+			ID:           1,
+			ListID:       1,
+			IsDoneBucket: true,
+		}
+
+		err := b.Update(s, &user.User{ID: 1})
+		assert.Error(t, err)
+		assert.True(t, IsErrOnlyOneDoneBucketPerList(err))
+	})
 }

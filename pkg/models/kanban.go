@@ -38,6 +38,8 @@ type Bucket struct {
 
 	// How many tasks can be at the same time on this board max
 	Limit int64 `xorm:"default 0" json:"limit"`
+	// If this bucket is the "done bucket". All tasks moved into this bucket will automatically marked as done. All tasks marked as done from elsewhere will be moved into this bucket.
+	IsDoneBucket bool `xorm:"BOOL" json:"is_done_bucket"`
 
 	// A timestamp when this bucket was created. You cannot change this value.
 	Created time.Time `xorm:"created not null" json:"created"`
@@ -78,6 +80,21 @@ func getDefaultBucket(s *xorm.Session, listID int64) (bucket *Bucket, err error)
 		Where("list_id = ?", listID).
 		OrderBy("id asc").
 		Get(bucket)
+	return
+}
+
+func getDoneBucketForList(s *xorm.Session, listID int64) (bucket *Bucket, err error) {
+	bucket = &Bucket{}
+	exists, err := s.
+		Where("list_id = ? and is_done_bucket = ?", listID, true).
+		Get(bucket)
+	if err != nil {
+		return nil, err
+	}
+	if !exists {
+		bucket = nil
+	}
+
 	return
 }
 
@@ -239,9 +256,26 @@ func (b *Bucket) Create(s *xorm.Session, a web.Auth) (err error) {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{listID}/buckets/{bucketID} [post]
 func (b *Bucket) Update(s *xorm.Session, a web.Auth) (err error) {
+	doneBucket, err := getDoneBucketForList(s, b.ListID)
+	if err != nil {
+		return err
+	}
+
+	if doneBucket != nil && doneBucket.IsDoneBucket && b.IsDoneBucket {
+		return &ErrOnlyOneDoneBucketPerList{
+			BucketID:     b.ID,
+			ListID:       b.ListID,
+			DoneBucketID: doneBucket.ID,
+		}
+	}
+
 	_, err = s.
 		Where("id = ?", b.ID).
-		Cols("title", "limit").
+		Cols(
+			"title",
+			"limit",
+			"is_done_bucket",
+		).
 		Update(b)
 	return
 }

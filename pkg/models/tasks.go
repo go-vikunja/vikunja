@@ -707,34 +707,19 @@ func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task) (err error) {
 	return
 }
 
-func checkBucketAndTaskBelongToSameList(s *xorm.Session, fullTask *Task, bucketID int64) (err error) {
-	if bucketID != 0 {
-		b, err := getBucketByID(s, bucketID)
-		if err != nil {
-			return err
-		}
-		if fullTask.ListID != b.ListID {
-			return ErrBucketDoesNotBelongToList{
-				ListID:   fullTask.ListID,
-				BucketID: fullTask.BucketID,
-			}
+func checkBucketAndTaskBelongToSameList(fullTask *Task, bucket *Bucket) (err error) {
+	if fullTask.ListID != bucket.ListID {
+		return ErrBucketDoesNotBelongToList{
+			ListID:   fullTask.ListID,
+			BucketID: fullTask.BucketID,
 		}
 	}
+
 	return
 }
 
 // Checks if adding a new task would exceed the bucket limit
 func checkBucketLimit(s *xorm.Session, t *Task, bucket *Bucket) (err error) {
-
-	// We need the bucket to check if it has more tasks than the limit allows
-	if bucket == nil {
-		bucket, err = getBucketByID(s, t.BucketID)
-		if err != nil {
-			return err
-		}
-	}
-
-	// Check the limit
 	if bucket.Limit > 0 {
 		taskCount, err := s.
 			Where("bucket_id = ?", bucket.ID).
@@ -746,6 +731,56 @@ func checkBucketLimit(s *xorm.Session, t *Task, bucket *Bucket) (err error) {
 			return ErrBucketLimitExceeded{TaskID: t.ID, BucketID: bucket.ID, Limit: bucket.Limit}
 		}
 	}
+	return nil
+}
+
+// Contains all the task logic to figure out what bucket to use for this task.
+func setTaskBucket(s *xorm.Session, task *Task, originalTask *Task, doCheckBucketLimit bool) (err error) {
+	// Make sure we have a bucket
+	var bucket *Bucket
+	if task.Done && originalTask != nil && !originalTask.Done {
+		bucket, err := getDoneBucketForList(s, task.ListID)
+		if err != nil {
+			return err
+		}
+		if bucket != nil {
+			task.BucketID = bucket.ID
+		}
+	}
+
+	if task.BucketID == 0 || (originalTask != nil && task.ListID != 0 && originalTask.ListID != task.ListID) {
+		bucket, err = getDefaultBucket(s, task.ListID)
+		if err != nil {
+			return err
+		}
+		task.BucketID = bucket.ID
+	}
+
+	if bucket == nil {
+		bucket, err = getBucketByID(s, task.BucketID)
+		if err != nil {
+			return err
+		}
+	}
+
+	// If there is a bucket set, make sure they belong to the same list as the task
+	err = checkBucketAndTaskBelongToSameList(task, bucket)
+	if err != nil {
+		return
+	}
+
+	// Check the bucket limit
+	// Only check the bucket limit if the task is being moved between buckets, allow reordering the task within a bucket
+	if doCheckBucketLimit {
+		if err := checkBucketLimit(s, task, bucket); err != nil {
+			return err
+		}
+	}
+
+	if bucket.IsDoneBucket && originalTask != nil && !originalTask.Done {
+		task.Done = true
+	}
+
 	return nil
 }
 
@@ -799,25 +834,10 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool) (err
 		t.UID = utils.MakeRandomString(40)
 	}
 
-	// If there is a bucket set, make sure they belong to the same list as the task
-	err = checkBucketAndTaskBelongToSameList(s, t, t.BucketID)
+	// Get the default bucket and move the task there
+	err = setTaskBucket(s, t, nil, true)
 	if err != nil {
 		return
-	}
-
-	// Get the default bucket and move the task there
-	var bucket *Bucket
-	if t.BucketID == 0 {
-		bucket, err = getDefaultBucket(s, t.ListID)
-		if err != nil {
-			return err
-		}
-		t.BucketID = bucket.ID
-	}
-
-	// Bucket Limit
-	if err := checkBucketLimit(s, t, bucket); err != nil {
-		return err
 	}
 
 	// Get the index for this task
@@ -886,6 +906,10 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 		return
 	}
 
+	if t.ListID == 0 {
+		t.ListID = ot.ListID
+	}
+
 	// Get the reminders
 	reminders, err := getRemindersForTasks(s, []int64{t.ID})
 	if err != nil {
@@ -897,9 +921,6 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 		ot.Reminders[i] = r.Reminder
 	}
 
-	// When a repeating task is marked as done, we update all deadlines and reminders and set it as undone
-	updateDone(&ot, t)
-
 	// Update the assignees
 	if err := ot.updateTaskAssignees(s, t.Assignees, a); err != nil {
 		return err
@@ -908,12 +929,6 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 	// Update the reminders
 	if err := ot.updateReminders(s, t.Reminders); err != nil {
 		return err
-	}
-
-	// If there is a bucket set, make sure they belong to the same list as the task
-	err = checkBucketAndTaskBelongToSameList(s, &ot, t.BucketID)
-	if err != nil {
-		return
 	}
 
 	// All columns to update in a separate variable to be able to add to them
@@ -936,15 +951,13 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 		"is_favorite",
 	}
 
-	// Make sure we have a bucket
-	var bucket *Bucket
-	if t.BucketID == 0 || (t.ListID != 0 && ot.ListID != t.ListID) {
-		bucket, err = getDefaultBucket(s, t.ListID)
-		if err != nil {
-			return err
-		}
-		t.BucketID = bucket.ID
+	err = setTaskBucket(s, t, &ot, t.BucketID != ot.BucketID)
+	if err != nil {
+		return err
 	}
+
+	// When a repeating task is marked as done, we update all deadlines and reminders and set it as undone
+	updateDone(&ot, t)
 
 	// If the task is being moved between lists, make sure to move the bucket + index as well
 	if t.ListID != 0 && ot.ListID != t.ListID {
@@ -956,14 +969,6 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 
 		t.Index = latestTask.Index + 1
 		colsToUpdate = append(colsToUpdate, "index")
-	}
-
-	// Check the bucket limit
-	// Only check the bucket limit if the task is being moved between buckets, allow reordering the task within a bucket
-	if t.BucketID != ot.BucketID {
-		if err := checkBucketLimit(s, t, bucket); err != nil {
-			return err
-		}
 	}
 
 	// Update the labels

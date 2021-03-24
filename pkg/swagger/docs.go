@@ -7189,6 +7189,10 @@ var doc = `{
                     "description": "The unique, numeric id of this bucket.",
                     "type": "integer"
                 },
+                "is_done_bucket": {
+                    "description": "If this bucket is the \"done bucket\". All tasks moved into this bucket will automatically marked as done. All tasks marked as done from elsewhere will be moved into this bucket.",
+                    "type": "boolean"
+                },
                 "limit": {
                     "description": "How many tasks can be at the same time on this board max",
                     "type": "integer"

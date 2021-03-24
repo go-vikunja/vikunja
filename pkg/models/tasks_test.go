@@ -202,6 +202,86 @@ func TestTask_Update(t *testing.T) {
 		err := task.Update(s, u)
 		assert.NoError(t, err)
 	})
+	t.Run("bucket on other list", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		task := &Task{
+			ID:          1,
+			Title:       "test10000",
+			Description: "Lorem Ipsum Dolor",
+			ListID:      1,
+			BucketID:    4, // Bucket 4 belongs to list 2
+		}
+		err := task.Update(s, u)
+		assert.Error(t, err)
+		assert.True(t, IsErrBucketDoesNotBelongToList(err))
+	})
+	t.Run("moving a task to the done bucket", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		task := &Task{
+			ID:       1,
+			Title:    "test",
+			ListID:   1,
+			BucketID: 3, // Bucket 3 is the done bucket
+		}
+		err := task.Update(s, u)
+		assert.NoError(t, err)
+		err = s.Commit()
+		assert.NoError(t, err)
+		assert.True(t, task.Done)
+
+		db.AssertExists(t, "tasks", map[string]interface{}{
+			"id":        1,
+			"done":      true,
+			"title":     "test",
+			"list_id":   1,
+			"bucket_id": 3,
+		}, false)
+	})
+	t.Run("default bucket when moving a task between lists", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		task := &Task{
+			ID:     1,
+			ListID: 2,
+		}
+		err := task.Update(s, u)
+		assert.NoError(t, err)
+		err = s.Commit()
+		assert.NoError(t, err)
+
+		assert.Equal(t, int64(4), task.BucketID) // bucket 4 is the default bucket on list 2
+		assert.True(t, task.Done)                // bucket 4 is the done bucket, so the task should be marked as done as well
+	})
+	t.Run("marking a task as done should move it to the done bucket", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		task := &Task{
+			ID:   1,
+			Done: true,
+		}
+		err := task.Update(s, u)
+		assert.NoError(t, err)
+		err = s.Commit()
+		assert.NoError(t, err)
+		assert.True(t, task.Done)
+		assert.Equal(t, int64(3), task.BucketID)
+
+		db.AssertExists(t, "tasks", map[string]interface{}{
+			"id":        1,
+			"done":      true,
+			"bucket_id": 3,
+		}, false)
+	})
 }
 
 func TestTask_Delete(t *testing.T) {

@@ -1365,6 +1365,35 @@ func (err ErrBucketLimitExceeded) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrOnlyOneDoneBucketPerList represents an error where a bucket is set to the done bucket but one already exists for its list.
+type ErrOnlyOneDoneBucketPerList struct {
+	BucketID     int64
+	ListID       int64
+	DoneBucketID int64
+}
+
+// IsErrOnlyOneDoneBucketPerList checks if an error is ErrBucketLimitExceeded.
+func IsErrOnlyOneDoneBucketPerList(err error) bool {
+	_, ok := err.(*ErrOnlyOneDoneBucketPerList)
+	return ok
+}
+
+func (err *ErrOnlyOneDoneBucketPerList) Error() string {
+	return fmt.Sprintf("There can be only one done bucket per list [BucketID: %d, ListID: %d]", err.BucketID, err.ListID)
+}
+
+// ErrCodeOnlyOneDoneBucketPerList holds the unique world-error code of this error
+const ErrCodeOnlyOneDoneBucketPerList = 10005
+
+// HTTPError holds the http error description
+func (err *ErrOnlyOneDoneBucketPerList) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusPreconditionFailed,
+		Code:     ErrCodeOnlyOneDoneBucketPerList,
+		Message:  "There can be only one done bucket per list.",
+	}
+}
+
 // =============
 // Saved Filters
 // =============
