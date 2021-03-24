@@ -8,6 +8,12 @@ import TaskCollectionService from '@/services/taskCollection'
 
 const tasksPerBucket = 25
 
+const addTaskToBucketAndSort = (state, task) => {
+	const bi = filterObject(state.buckets, b => b.id === task.bucketId)
+	state.buckets[bi].tasks.push(task)
+	state.buckets[bi].tasks.sort((a, b) => a.position > b.position ? 1 : -1)
+}
+
 /**
  * This store is intended to hold the currently active kanban view.
  * It should hold only the current buckets.
@@ -64,16 +70,38 @@ export default {
 				return
 			}
 
+			let found = false
+
+			const findAndUpdate = b => {
+				for (const t in state.buckets[b].tasks) {
+					if (state.buckets[b].tasks[t].id === task.id) {
+						const bucket = state.buckets[b]
+						bucket.tasks[t] = task
+
+						if (bucket.id !== task.bucketId) {
+							bucket.tasks.splice(t, 1)
+							addTaskToBucketAndSort(state, task)
+						}
+
+						Vue.set(state.buckets, b, bucket)
+						found = true
+						return
+					}
+				}
+			}
+
 			for (const b in state.buckets) {
 				if (state.buckets[b].id === task.bucketId) {
-					for (const t in state.buckets[b].tasks) {
-						if (state.buckets[b].tasks[t].id === task.id) {
-							const bucket = state.buckets[b]
-							bucket.tasks[t] = task
-							Vue.set(state.buckets, b, bucket)
-							return
-						}
+					findAndUpdate(b)
+					if (found) {
+						return
 					}
+				}
+			}
+
+			for (const b in state.buckets) {
+				findAndUpdate(b)
+				if (found) {
 					return
 				}
 			}

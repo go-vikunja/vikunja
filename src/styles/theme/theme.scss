@@ -79,6 +79,9 @@ button.table {
 
   .icon {
     padding-right: .5rem;
+  }
+
+  .icon:not(.has-text-success) {
     color: $grey-300 !important;
   }
 

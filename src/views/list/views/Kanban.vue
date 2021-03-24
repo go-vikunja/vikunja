@@ -19,6 +19,13 @@
 		<div :class="{ 'is-loading': loading && !oneTaskUpdating}" class="kanban loader-container">
 			<div :key="`bucket${bucket.id}`" class="bucket" v-for="bucket in buckets">
 				<div class="bucket-header">
+					<span
+						v-if="bucket.isDoneBucket"
+						class="icon is-small has-text-success mr-2"
+						v-tooltip="'All tasks moved into this bucket will automatically marked as done.'"
+					>
+						<icon icon="check-double"/>
+					</span>
 					<h2
 						:ref="`bucket${bucket.id}title`"
 						@focusout="() => saveBucketTitle(bucket.id)"
@@ -62,6 +69,14 @@
 							<template v-else>
 								Limit: {{ bucket.limit > 0 ? bucket.limit : 'Not set' }}
 							</template>
+						</a>
+						<a
+							@click="toggleDoneBucket(bucket)"
+							class="dropdown-item"
+							v-tooltip="'All tasks moved into the done bucket will be marked as done automatically. All tasks marked as done from elsewhere will be moved as well.'"
+						>
+							<span class="icon is-small" :class="{'has-text-success': bucket.isDoneBucket}"><icon icon="check-double"/></span>
+							Done bucket
 						</a>
 						<a
 							:class="{'is-disabled': buckets.length <= 1}"
@@ -590,6 +605,17 @@ export default {
 			return bucket.id === this.sourceBucket || // When dragging from a bucket who has its limit reached, dragging should still be possible
 				bucket.limit === 0 || // If there is no limit set, dragging & dropping should always work
 				bucket.tasks.length < bucket.limit // Disallow dropping to buckets which have their limit reached
+		},
+		toggleDoneBucket(bucket) {
+			bucket.isDoneBucket = !bucket.isDoneBucket
+			this.$store.dispatch('kanban/updateBucket', bucket)
+				.then(() => {
+					this.success({message: 'The done bucket has been saved successfully.'}, this)
+				})
+				.catch(e => {
+					this.error(e, this)
+					bucket.isDoneBucket = !bucket.isDoneBucket
+				})
 		},
 	},
 }
