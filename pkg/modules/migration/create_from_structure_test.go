@@ -117,7 +117,7 @@ func TestInsertFromStructure(t *testing.T) {
 			"title":       testStructure[0].Namespace.Title,
 			"description": testStructure[0].Namespace.Description,
 		}, false)
-		db.AssertExists(t, "list", map[string]interface{}{
+		db.AssertExists(t, "lists", map[string]interface{}{
 			"title":       testStructure[0].Lists[0].Title,
 			"description": testStructure[0].Lists[0].Description,
 		}, false)

@@ -215,11 +215,11 @@ func TestLabelTask_Create(t *testing.T) {
 				CRUDable: tt.fields.CRUDable,
 				Rights:   tt.fields.Rights,
 			}
-			allowed, _ := l.CanCreate(s, tt.args.a)
+			allowed, err := l.CanCreate(s, tt.args.a)
 			if !allowed && !tt.wantForbidden {
-				t.Errorf("LabelTask.CanCreate() forbidden, want %v", tt.wantForbidden)
+				t.Errorf("LabelTask.CanCreate() forbidden, want %v, err %v", tt.wantForbidden, err)
 			}
-			err := l.Create(s, tt.args.a)
+			err = l.Create(s, tt.args.a)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("LabelTask.Create() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -227,7 +227,7 @@ func TestLabelTask_Create(t *testing.T) {
 				t.Errorf("LabelTask.Create() Wrong error type! Error = %v, want = %v", err, runtime.FuncForPC(reflect.ValueOf(tt.errType).Pointer()).Name())
 			}
 			if !tt.wantErr {
-				db.AssertExists(t, "label_task", map[string]interface{}{
+				db.AssertExists(t, "label_tasks", map[string]interface{}{
 					"id":       l.ID,
 					"task_id":  l.TaskID,
 					"label_id": l.LabelID,
@@ -326,7 +326,7 @@ func TestLabelTask_Delete(t *testing.T) {
 				t.Errorf("LabelTask.Delete() Wrong error type! Error = %v, want = %v", err, runtime.FuncForPC(reflect.ValueOf(tt.errType).Pointer()).Name())
 			}
 			if !tt.wantForbidden {
-				db.AssertMissing(t, "label_task", map[string]interface{}{
+				db.AssertMissing(t, "label_tasks", map[string]interface{}{
 					"label_id": l.LabelID,
 					"task_id":  l.TaskID,
 				})

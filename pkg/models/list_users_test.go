@@ -133,7 +133,7 @@ func TestListUser_Create(t *testing.T) {
 			assert.NoError(t, err)
 
 			if !tt.wantErr {
-				db.AssertExists(t, "users_list", map[string]interface{}{
+				db.AssertExists(t, "users_lists", map[string]interface{}{
 					"user_id": ul.UserID,
 					"list_id": tt.fields.ListID,
 				}, false)
@@ -323,7 +323,7 @@ func TestListUser_Update(t *testing.T) {
 			assert.NoError(t, err)
 
 			if !tt.wantErr {
-				db.AssertExists(t, "users_list", map[string]interface{}{
+				db.AssertExists(t, "users_lists", map[string]interface{}{
 					"list_id": tt.fields.ListID,
 					"user_id": lu.UserID,
 					"right":   tt.fields.Right,
@@ -405,7 +405,7 @@ func TestListUser_Delete(t *testing.T) {
 			assert.NoError(t, err)
 
 			if !tt.wantErr {
-				db.AssertMissing(t, "users_list", map[string]interface{}{
+				db.AssertMissing(t, "users_lists", map[string]interface{}{
 					"user_id": tt.fields.UserID,
 					"list_id": tt.fields.ListID,
 				})

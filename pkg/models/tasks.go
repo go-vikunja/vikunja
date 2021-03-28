@@ -397,7 +397,7 @@ func getRawTasksForLists(s *xorm.Session, lists []*List, a web.Auth, opts *taskO
 	}
 
 	if len(labelFilters) > 0 {
-		filters = append(filters, getFilterCondForSeparateTable("label_task", opts.filterConcat, labelFilters))
+		filters = append(filters, getFilterCondForSeparateTable("label_tasks", opts.filterConcat, labelFilters))
 	}
 
 	if len(namespaceFilters) > 0 {
@@ -413,7 +413,7 @@ func getRawTasksForLists(s *xorm.Session, lists []*List, a web.Auth, opts *taskO
 			"list_id",
 			builder.
 				Select("id").
-				From("list").
+				From("lists").
 				Where(filtercond),
 		)
 		filters = append(filters, cond)

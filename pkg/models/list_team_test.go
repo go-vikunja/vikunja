@@ -99,7 +99,7 @@ func TestTeamList_Create(t *testing.T) {
 		assert.NoError(t, err)
 		err = s.Commit()
 		assert.NoError(t, err)
-		db.AssertExists(t, "team_list", map[string]interface{}{
+		db.AssertExists(t, "team_lists", map[string]interface{}{
 			"team_id": 1,
 			"list_id": 1,
 			"right":   RightAdmin,
@@ -171,7 +171,7 @@ func TestTeamList_Delete(t *testing.T) {
 		assert.NoError(t, err)
 		err = s.Commit()
 		assert.NoError(t, err)
-		db.AssertMissing(t, "team_list", map[string]interface{}{
+		db.AssertMissing(t, "team_lists", map[string]interface{}{
 			"team_id": 1,
 			"list_id": 3,
 		})
@@ -279,7 +279,7 @@ func TestTeamList_Update(t *testing.T) {
 			err = s.Commit()
 			assert.NoError(t, err)
 			if !tt.wantErr {
-				db.AssertExists(t, "team_list", map[string]interface{}{
+				db.AssertExists(t, "team_lists", map[string]interface{}{
 					"list_id": tt.fields.ListID,
 					"team_id": tt.fields.TeamID,
 					"right":   tt.fields.Right,

@@ -186,7 +186,7 @@ func getSubscriberCondForEntity(entityType SubscriptionEntityType, entityID int6
 			builder.And(
 				builder.Eq{"entity_id": builder.
 					Select("namespace_id").
-					From("list").
+					From("lists").
 					Where(builder.Eq{"id": entityID}),
 				},
 				builder.Eq{"entity_type": SubscriptionEntityNamespace},
@@ -203,8 +203,8 @@ func getSubscriberCondForEntity(entityType SubscriptionEntityType, entityID int6
 			builder.And(
 				builder.Eq{"entity_id": builder.
 					Select("namespace_id").
-					From("list").
-					Join("INNER", "tasks", "list.id = tasks.list_id").
+					From("lists").
+					Join("INNER", "tasks", "lists.id = tasks.list_id").
 					Where(builder.Eq{"tasks.id": entityID}),
 				},
 				builder.Eq{"entity_type": SubscriptionEntityNamespace},

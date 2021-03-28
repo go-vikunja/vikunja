@@ -50,7 +50,7 @@ type ListUser struct {
 
 // TableName is the table name for ListUser
 func (ListUser) TableName() string {
-	return "users_list"
+	return "users_lists"
 }
 
 // UserWithRight represents a user in combination with the right it can have on a list/namespace
@@ -202,8 +202,8 @@ func (lu *ListUser) ReadAll(s *xorm.Session, a web.Auth, search string, page int
 	// Get all users
 	all := []*UserWithRight{}
 	query := s.
-		Join("INNER", "users_list", "user_id = users.id").
-		Where("users_list.list_id = ?", lu.ListID).
+		Join("INNER", "users_lists", "user_id = users.id").
+		Where("users_lists.list_id = ?", lu.ListID).
 		Where("users.username LIKE ?", "%"+search+"%")
 	if limit > 0 {
 		query = query.Limit(limit, start)
@@ -219,8 +219,8 @@ func (lu *ListUser) ReadAll(s *xorm.Session, a web.Auth, search string, page int
 	}
 
 	numberOfTotalItems, err = s.
-		Join("INNER", "users_list", "user_id = users.id").
-		Where("users_list.list_id = ?", lu.ListID).
+		Join("INNER", "users_lists", "user_id = users.id").
+		Where("users_lists.list_id = ?", lu.ListID).
 		Where("users.username LIKE ?", "%"+search+"%").
 		Count(&UserWithRight{})
 

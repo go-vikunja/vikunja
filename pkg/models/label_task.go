@@ -44,7 +44,7 @@ type LabelTask struct {
 
 // TableName makes a pretty table name
 func (LabelTask) TableName() string {
-	return "label_task"
+	return "label_tasks"
 }
 
 // Delete deletes a label on a task
@@ -159,8 +159,8 @@ func getLabelsByTaskIDs(s *xorm.Session, opts *LabelByTaskIDsOptions) (ls []*lab
 	// multiple times when it is associated to more than one task.
 	// Because of this whole thing, we need this extra switch here to only group by Task IDs if needed.
 	// Probably not the most ideal solution.
-	var groupBy = "labels.id,label_task.task_id"
-	var selectStmt = "labels.*, label_task.task_id"
+	var groupBy = "labels.id,label_tasks.task_id"
+	var selectStmt = "labels.*, label_tasks.task_id"
 	if opts.GroupByLabelIDsOnly {
 		groupBy = "labels.id"
 		selectStmt = "labels.*"
@@ -168,12 +168,12 @@ func getLabelsByTaskIDs(s *xorm.Session, opts *LabelByTaskIDsOptions) (ls []*lab
 
 	// Get all labels associated with these tasks
 	var labels []*labelWithTaskID
-	cond := builder.And(builder.NotNull{"label_task.label_id"})
+	cond := builder.And(builder.NotNull{"label_tasks.label_id"})
 	if len(opts.TaskIDs) > 0 && opts.GetForUser == 0 {
-		cond = builder.And(builder.In("label_task.task_id", opts.TaskIDs), cond)
+		cond = builder.And(builder.In("label_tasks.task_id", opts.TaskIDs), cond)
 	}
 	if opts.GetForUser != 0 {
-		cond = builder.And(builder.In("label_task.task_id",
+		cond = builder.And(builder.In("label_tasks.task_id",
 			builder.
 				Select("id").
 				From("tasks").
@@ -207,7 +207,7 @@ func getLabelsByTaskIDs(s *xorm.Session, opts *LabelByTaskIDsOptions) (ls []*lab
 
 	query := s.Table("labels").
 		Select(selectStmt).
-		Join("LEFT", "label_task", "label_task.label_id = labels.id").
+		Join("LEFT", "label_tasks", "label_tasks.label_id = labels.id").
 		Where(cond).
 		GroupBy(groupBy).
 		OrderBy("labels.id ASC")
@@ -249,7 +249,7 @@ func getLabelsByTaskIDs(s *xorm.Session, opts *LabelByTaskIDsOptions) (ls []*lab
 	// Get the total number of entries
 	totalEntries, err = s.Table("labels").
 		Select("count(DISTINCT labels.id)").
-		Join("LEFT", "label_task", "label_task.label_id = labels.id").
+		Join("LEFT", "label_tasks", "label_tasks.label_id = labels.id").
 		Where(cond).
 		And("labels.title LIKE ?", "%"+opts.Search+"%").
 		Count(&Label{})

@@ -73,7 +73,7 @@ func (l *Label) hasAccessToLabel(s *xorm.Session, a web.Auth) (has bool, maxRigh
 		return false, 0, err
 	}
 
-	cond := builder.In("label_task.task_id",
+	cond := builder.In("label_tasks.task_id",
 		builder.
 			Select("id").
 			From("tasks").
@@ -82,9 +82,9 @@ func (l *Label) hasAccessToLabel(s *xorm.Session, a web.Auth) (has bool, maxRigh
 
 	ll := &LabelTask{}
 	has, err = s.Table("labels").
-		Select("label_task.*").
-		Join("LEFT", "label_task", "label_task.label_id = labels.id").
-		Where("label_task.label_id is not null OR labels.created_by_id = ?", u.ID).
+		Select("label_tasks.*").
+		Join("LEFT", "label_tasks", "label_tasks.label_id = labels.id").
+		Where("label_tasks.label_id is not null OR labels.created_by_id = ?", u.ID).
 		Or(cond).
 		And("labels.id = ?", l.ID).
 		Exist(ll)

@@ -47,7 +47,7 @@ type TeamList struct {
 
 // TableName makes beautiful table names
 func (TeamList) TableName() string {
-	return "team_list"
+	return "team_lists"
 }
 
 // TeamWithRight represents a team, combined with rights.
@@ -196,8 +196,8 @@ func (tl *TeamList) ReadAll(s *xorm.Session, a web.Auth, search string, page int
 	all := []*TeamWithRight{}
 	query := s.
 		Table("teams").
-		Join("INNER", "team_list", "team_id = teams.id").
-		Where("team_list.list_id = ?", tl.ListID).
+		Join("INNER", "team_lists", "team_id = teams.id").
+		Where("team_lists.list_id = ?", tl.ListID).
 		Where("teams.name LIKE ?", "%"+search+"%")
 	if limit > 0 {
 		query = query.Limit(limit, start)
@@ -219,8 +219,8 @@ func (tl *TeamList) ReadAll(s *xorm.Session, a web.Auth, search string, page int
 
 	totalItems, err = s.
 		Table("teams").
-		Join("INNER", "team_list", "team_id = teams.id").
-		Where("team_list.list_id = ?", tl.ListID).
+		Join("INNER", "team_lists", "team_id = teams.id").
+		Where("team_lists.list_id = ?", tl.ListID).
 		Where("teams.name LIKE ?", "%"+search+"%").
 		Count(&TeamWithRight{})
 	if err != nil {

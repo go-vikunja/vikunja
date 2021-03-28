@@ -65,7 +65,7 @@ type LinkSharing struct {
 
 // TableName holds the table name
 func (LinkSharing) TableName() string {
-	return "link_sharing"
+	return "link_shares"
 }
 
 // GetID returns the ID of the links sharing object

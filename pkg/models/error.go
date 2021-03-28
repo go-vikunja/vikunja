@@ -252,7 +252,7 @@ const ErrCodeListIsArchived = 3008
 
 // HTTPError holds the http error description
 func (err ErrListIsArchived) HTTPError() web.HTTPError {
-	return web.HTTPError{HTTPCode: http.StatusPreconditionFailed, Code: ErrCodeListIsArchived, Message: "This lists is archived. Editing or creating new tasks is not possible."}
+	return web.HTTPError{HTTPCode: http.StatusPreconditionFailed, Code: ErrCodeListIsArchived, Message: "This list is archived. Editing or creating new tasks is not possible."}
 }
 
 // ================

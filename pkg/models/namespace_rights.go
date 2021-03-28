@@ -83,7 +83,7 @@ func (n *Namespace) checkRight(s *xorm.Session, a web.Auth, rights ...Right) (bo
 		The following loop creates an sql condition like this one:
 
 		namespaces.owner_id = 1 OR
-		(users_namespace.user_id = 1 AND users_namespace.right = 1) OR
+		(users_namespaces.user_id = 1 AND users_namespaces.right = 1) OR
 		(team_members.user_id = 1 AND team_namespaces.right = 1) OR
 
 
@@ -97,8 +97,8 @@ func (n *Namespace) checkRight(s *xorm.Session, a web.Auth, rights ...Right) (bo
 		// User conditions
 		// If the namespace was shared directly with the user and the user has the right
 		conds = append(conds, builder.And(
-			builder.Eq{"users_namespace.user_id": a.GetID()},
-			builder.Eq{"users_namespace.right": r},
+			builder.Eq{"users_namespaces.user_id": a.GetID()},
+			builder.Eq{"users_namespaces.right": r},
 		))
 
 		// Team rights
@@ -120,7 +120,7 @@ func (n *Namespace) checkRight(s *xorm.Session, a web.Auth, rights ...Right) (bo
 		Select("*").
 		Table("namespaces").
 		// User stuff
-		Join("LEFT", "users_namespace", "users_namespace.namespace_id = namespaces.id").
+		Join("LEFT", "users_namespaces", "users_namespaces.namespace_id = namespaces.id").
 		// Teams stuff
 		Join("LEFT", "team_namespaces", "namespaces.id = team_namespaces.namespace_id").
 		Join("LEFT", "team_members", "team_members.team_id = team_namespaces.team_id").

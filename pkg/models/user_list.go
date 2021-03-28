@@ -44,16 +44,16 @@ func ListUsersFromList(s *xorm.Session, l *List, search string) (users []*user.U
 			n.owner_id as nOwner,
 			tm.user_id as tnUID,
 			tm2.user_id as tlUID`).
-		Table("list").
+		Table("lists").
 		Alias("l").
 		// User stuff
-		Join("LEFT", []string{"users_namespace", "un"}, "un.namespace_id = l.namespace_id").
-		Join("LEFT", []string{"users_list", "ul"}, "ul.list_id = l.id").
+		Join("LEFT", []string{"users_namespaces", "un"}, "un.namespace_id = l.namespace_id").
+		Join("LEFT", []string{"users_lists", "ul"}, "ul.list_id = l.id").
 		Join("LEFT", []string{"namespaces", "n"}, "n.id = l.namespace_id").
 		// Team stuff
 		Join("LEFT", []string{"team_namespaces", "tn"}, " l.namespace_id = tn.namespace_id").
 		Join("LEFT", []string{"team_members", "tm"}, "tm.team_id = tn.team_id").
-		Join("LEFT", []string{"team_list", "tl"}, "l.id = tl.list_id").
+		Join("LEFT", []string{"team_lists", "tl"}, "l.id = tl.list_id").
 		Join("LEFT", []string{"team_members", "tm2"}, "tm2.team_id = tl.team_id").
 		// The actual condition
 		Where(

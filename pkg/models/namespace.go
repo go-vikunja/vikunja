@@ -250,10 +250,10 @@ func getNamespacesWithLists(s *xorm.Session, namespaces *map[int64]*NamespaceWit
 		Table("namespaces").
 		Join("LEFT", "team_namespaces", "namespaces.id = team_namespaces.namespace_id").
 		Join("LEFT", "team_members", "team_members.team_id = team_namespaces.team_id").
-		Join("LEFT", "users_namespace", "users_namespace.namespace_id = namespaces.id").
+		Join("LEFT", "users_namespaces", "users_namespaces.namespace_id = namespaces.id").
 		Where("team_members.user_id = ?", userID).
 		Or("namespaces.owner_id = ?", userID).
-		Or("users_namespace.user_id = ?", userID).
+		Or("users_namespaces.user_id = ?", userID).
 		GroupBy("namespaces.id").
 		Where(filterCond).
 		Where(isArchivedCond)
@@ -269,10 +269,10 @@ func getNamespacesWithLists(s *xorm.Session, namespaces *map[int64]*NamespaceWit
 		Table("namespaces").
 		Join("LEFT", "team_namespaces", "namespaces.id = team_namespaces.namespace_id").
 		Join("LEFT", "team_members", "team_members.team_id = team_namespaces.team_id").
-		Join("LEFT", "users_namespace", "users_namespace.namespace_id = namespaces.id").
+		Join("LEFT", "users_namespaces", "users_namespaces.namespace_id = namespaces.id").
 		Where("team_members.user_id = ?", userID).
 		Or("namespaces.owner_id = ?", userID).
-		Or("users_namespace.user_id = ?", userID).
+		Or("users_namespaces.user_id = ?", userID).
 		And("namespaces.is_archived = false").
 		GroupBy("namespaces.id").
 		Where(filterCond).
@@ -332,11 +332,11 @@ func getSharedListsInNamespace(s *xorm.Session, archived bool, doer *user.User) 
 	// Get all lists individually shared with our user (not via a namespace)
 	individualLists := []*List{}
 	iListQuery := s.Select("l.*").
-		Table("list").
+		Table("lists").
 		Alias("l").
-		Join("LEFT", []string{"team_list", "tl"}, "l.id = tl.list_id").
+		Join("LEFT", []string{"team_lists", "tl"}, "l.id = tl.list_id").
 		Join("LEFT", []string{"team_members", "tm"}, "tm.team_id = tl.team_id").
-		Join("LEFT", []string{"users_list", "ul"}, "ul.list_id = l.id").
+		Join("LEFT", []string{"users_lists", "ul"}, "ul.list_id = l.id").
 		Where(builder.And(
 			builder.Eq{"tm.user_id": doer.ID},
 			builder.Neq{"l.owner_id": doer.ID},
@@ -390,8 +390,8 @@ func getFavoriteLists(s *xorm.Session, lists []*List, namespaceIDs []int64, doer
 	// Check if we have any favorites or favorited lists and remove the favorites namespace from the list if not
 	var favoriteCount int64
 	favoriteCount, err = s.
-		Join("INNER", "list", "tasks.list_id = list.id").
-		Join("INNER", "namespaces", "list.namespace_id = namespaces.id").
+		Join("INNER", "lists", "tasks.list_id = lists.id").
+		Join("INNER", "namespaces", "lists.namespace_id = namespaces.id").
 		Where(builder.And(builder.Eq{"tasks.is_favorite": true}, builder.In("namespaces.id", namespaceIDs))).
 		Count(&Task{})
 	if err != nil {

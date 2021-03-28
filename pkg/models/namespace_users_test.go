@@ -132,7 +132,7 @@ func TestNamespaceUser_Create(t *testing.T) {
 			assert.NoError(t, err)
 
 			if !tt.wantErr {
-				db.AssertExists(t, "users_namespace", map[string]interface{}{
+				db.AssertExists(t, "users_namespaces", map[string]interface{}{
 					"user_id":      tt.fields.UserID,
 					"namespace_id": tt.fields.NamespaceID,
 				}, false)
@@ -326,7 +326,7 @@ func TestNamespaceUser_Update(t *testing.T) {
 			assert.NoError(t, err)
 
 			if !tt.wantErr {
-				db.AssertExists(t, "users_namespace", map[string]interface{}{
+				db.AssertExists(t, "users_namespaces", map[string]interface{}{
 					"user_id":      tt.fields.UserID,
 					"namespace_id": tt.fields.NamespaceID,
 					"right":        tt.fields.Right,
@@ -407,7 +407,7 @@ func TestNamespaceUser_Delete(t *testing.T) {
 			assert.NoError(t, err)
 
 			if !tt.wantErr {
-				db.AssertMissing(t, "users_namespace", map[string]interface{}{
+				db.AssertMissing(t, "users_namespaces", map[string]interface{}{
 					"user_id":      tt.fields.UserID,
 					"namespace_id": tt.fields.NamespaceID,
 				})

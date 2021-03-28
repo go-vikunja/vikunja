@@ -49,7 +49,7 @@ type NamespaceUser struct {
 
 // TableName is the table name for NamespaceUser
 func (NamespaceUser) TableName() string {
-	return "users_namespace"
+	return "users_namespaces"
 }
 
 // Create creates a new namespace <-> user relation
@@ -189,8 +189,8 @@ func (nu *NamespaceUser) ReadAll(s *xorm.Session, a web.Auth, search string, pag
 	limit, start := getLimitFromPageIndex(page, perPage)
 
 	query := s.
-		Join("INNER", "users_namespace", "user_id = users.id").
-		Where("users_namespace.namespace_id = ?", nu.NamespaceID).
+		Join("INNER", "users_namespaces", "user_id = users.id").
+		Where("users_namespaces.namespace_id = ?", nu.NamespaceID).
 		Where("users.username LIKE ?", "%"+search+"%")
 	if limit > 0 {
 		query = query.Limit(limit, start)
@@ -206,8 +206,8 @@ func (nu *NamespaceUser) ReadAll(s *xorm.Session, a web.Auth, search string, pag
 	}
 
 	numberOfTotalItems, err = s.
-		Join("INNER", "users_namespace", "user_id = users.id").
-		Where("users_namespace.namespace_id = ?", nu.NamespaceID).
+		Join("INNER", "users_namespaces", "user_id = users.id").
+		Where("users_namespaces.namespace_id = ?", nu.NamespaceID).
 		Where("users.username LIKE ?", "%"+search+"%").
 		Count(&UserWithRight{})
 

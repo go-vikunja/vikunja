@@ -45,7 +45,7 @@ func TestList_CreateOrUpdate(t *testing.T) {
 			assert.NoError(t, err)
 			err = s.Commit()
 			assert.NoError(t, err)
-			db.AssertExists(t, "list", map[string]interface{}{
+			db.AssertExists(t, "lists", map[string]interface{}{
 				"id":           list.ID,
 				"title":        list.Title,
 				"description":  list.Description,
@@ -105,7 +105,7 @@ func TestList_CreateOrUpdate(t *testing.T) {
 			assert.NoError(t, err)
 			err = s.Commit()
 			assert.NoError(t, err)
-			db.AssertExists(t, "list", map[string]interface{}{
+			db.AssertExists(t, "lists", map[string]interface{}{
 				"id":           list.ID,
 				"title":        list.Title,
 				"description":  list.Description,
@@ -129,7 +129,7 @@ func TestList_CreateOrUpdate(t *testing.T) {
 			assert.NoError(t, err)
 			err = s.Commit()
 			assert.NoError(t, err)
-			db.AssertExists(t, "list", map[string]interface{}{
+			db.AssertExists(t, "lists", map[string]interface{}{
 				"id":           list.ID,
 				"title":        list.Title,
 				"description":  list.Description,
@@ -176,7 +176,7 @@ func TestList_Delete(t *testing.T) {
 	assert.NoError(t, err)
 	err = s.Commit()
 	assert.NoError(t, err)
-	db.AssertMissing(t, "list", map[string]interface{}{
+	db.AssertMissing(t, "lists", map[string]interface{}{
 		"id": 1,
 	})
 }

@@ -80,6 +80,11 @@ type List struct {
 	web.Rights   `xorm:"-" json:"-"`
 }
 
+// TableName returns a better name for the lists table
+func (l *List) TableName() string {
+	return "lists"
+}
+
 // ListBackgroundType holds a list background type
 type ListBackgroundType struct {
 	Type string
@@ -292,9 +297,9 @@ func GetListSimplByTaskID(s *xorm.Session, taskID int64) (l *List, err error) {
 	// leading to not finding anything if the id is good, but for example the title is different.
 	var list List
 	exists, err := s.
-		Select("list.*").
+		Select("lists.*").
 		Table(List{}).
-		Join("INNER", "tasks", "list.id = tasks.list_id").
+		Join("INNER", "tasks", "lists.id = tasks.list_id").
 		Where("tasks.id = ?", taskID).
 		Get(&list)
 	if err != nil {
@@ -336,14 +341,14 @@ func getUserListsStatement(userID int64) *builder.Builder {
 
 	return builder.Dialect(dialect).
 		Select("l.*").
-		From("list", "l").
+		From("lists", "l").
 		Join("INNER", "namespaces n", "l.namespace_id = n.id").
 		Join("LEFT", "team_namespaces tn", "tn.namespace_id = n.id").
 		Join("LEFT", "team_members tm", "tm.team_id = tn.team_id").
-		Join("LEFT", "team_list tl", "l.id = tl.list_id").
+		Join("LEFT", "team_lists tl", "l.id = tl.list_id").
 		Join("LEFT", "team_members tm2", "tm2.team_id = tl.team_id").
-		Join("LEFT", "users_list ul", "ul.list_id = l.id").
-		Join("LEFT", "users_namespace un", "un.namespace_id = l.namespace_id").
+		Join("LEFT", "users_lists ul", "ul.list_id = l.id").
+		Join("LEFT", "users_namespaces un", "un.namespace_id = l.namespace_id").
 		Where(builder.Or(
 			builder.Eq{"tm.user_id": userID},
 			builder.Eq{"tm2.user_id": userID},
@@ -373,15 +378,17 @@ func getRawListsForUser(s *xorm.Session, opts *listOptions) (lists []*List, resu
 	limit, start := getLimitFromPageIndex(opts.page, opts.perPage)
 
 	var filterCond builder.Cond
-	vals := strings.Split(opts.search, ",")
 	ids := []int64{}
-	for _, val := range vals {
-		v, err := strconv.ParseInt(val, 10, 64)
-		if err != nil {
-			log.Debugf("List search string part '%s' is not a number: %s", val, err)
-			continue
+	if opts.search != "" {
+		vals := strings.Split(opts.search, ",")
+		for _, val := range vals {
+			v, err := strconv.ParseInt(val, 10, 64)
+			if err != nil {
+				log.Debugf("List search string part '%s' is not a number: %s", val, err)
+				continue
+			}
+			ids = append(ids, v)
 		}
-		ids = append(ids, v)
 	}
 
 	if len(ids) > 0 {
@@ -486,9 +493,9 @@ func (l *List) CheckIsArchived(s *xorm.Session) (err error) {
 
 	nl := &NamespaceList{}
 	exists, err := s.
-		Table("list").
-		Join("LEFT", "namespaces", "list.namespace_id = namespaces.id").
-		Where("list.id = ? AND (list.is_archived = true OR namespaces.is_archived = true)", l.ID).
+		Table("lists").
+		Join("LEFT", "namespaces", "lists.namespace_id = namespaces.id").
+		Where("lists.id = ? AND (lists.is_archived = true OR namespaces.is_archived = true)", l.ID).
 		Get(nl)
 	if err != nil {
 		return

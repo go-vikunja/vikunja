@@ -158,6 +158,29 @@ func modifyColumn(x *xorm.Engine, tableName, col, newDefinition string) error {
 	return nil
 }
 
+func renameTable(x *xorm.Engine, oldName, newName string) error {
+	switch config.DatabaseType.GetString() {
+	case "sqlite":
+		_, err := x.Exec("ALTER TABLE `" + oldName + "` RENAME TO `" + newName + "`")
+		if err != nil {
+			return err
+		}
+	case "mysql":
+		_, err := x.Exec("RENAME TABLE `" + oldName + "` TO `" + newName + "`")
+		if err != nil {
+			return err
+		}
+	case "postgres":
+		_, err := x.Exec("ALTER TABLE `" + oldName + "` RENAME TO `" + newName + "`")
+		if err != nil {
+			return err
+		}
+	default:
+		log.Fatal("Unknown db.")
+	}
+	return nil
+}
+
 func initSchema(tx *xorm.Engine) error {
 	schemeBeans := []interface{}{}
 	schemeBeans = append(schemeBeans, models.GetTables()...)
