@@ -8,6 +8,8 @@ homepage: "https://vikunja.io"
 section: "default"
 priority: "extra"
 license: "AGPLv3"
+depends:
+  - systemd
 contents:
   - src: <binlocation>
     dst: /opt/vikunja/vikunja
@@ -17,5 +19,7 @@ contents:
   - src: /opt/vikunja/vikunja
     dst: /usr/local/bin/vikunja
     type: "symlink"
+  - src: vikunja.service
+    dst: /usr/lib/systemd/system/vikunja.service
 scripts:
   postinstall: ./build/after-install.sh
