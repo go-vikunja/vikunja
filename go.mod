@@ -21,7 +21,7 @@ require (
 	code.vikunja.io/web v0.0.0-20210131201003-26386be9a9ae
 	gitea.com/xorm/xorm-redis-cache v0.2.0
 	github.com/ThreeDotsLabs/watermill v1.1.1
-	github.com/adlio/trello v1.8.0
+	github.com/adlio/trello v1.9.0
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
 	github.com/asaskevich/govalidator v0.0.0-20200907205600-7a23bdc65eef
 	github.com/beevik/etree v1.1.0 // indirect
