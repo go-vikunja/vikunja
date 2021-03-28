@@ -410,7 +410,7 @@ func (Check) GolangciFix() {
 	runAndStreamOutput("golangci-lint", "run", "--fix")
 }
 
-// Runs fmt-check, lint, got-swag, misspell-check, ineffasign-check, gocyclo-check, static-check, gosec-check, goconst-check all in parallel
+// Runs golangci and the swagger test in parralel
 func (Check) All() {
 	mg.Deps(initVars)
 	mg.Deps(
