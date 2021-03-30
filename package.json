@@ -27,7 +27,7 @@
     "vue": "2.6.12",
     "vue-advanced-cropper": "1.3.4",
     "vue-drag-resize": "1.4.2",
-    "vue-easymde": "1.3.2",
+    "vue-easymde": "1.4.0",
     "vue-shortkey": "3.1.7",
     "vue-smooth-dnd": "0.8.1",
     "vuex": "3.6.2"
