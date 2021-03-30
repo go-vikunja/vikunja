@@ -3,7 +3,7 @@ import {formatISO} from "date-fns"
 import faker from 'faker'
 
 export class LinkShareFactory extends Factory {
-	static table = 'link_sharing'
+	static table = 'link_shares'
 
 	static factory() {
 		const now = new Date()

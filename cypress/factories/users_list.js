@@ -2,7 +2,7 @@ import {Factory} from '../support/factory'
 import {formatISO} from "date-fns"
 
 export class UserListFactory extends Factory {
-	static table = 'users_list'
+	static table = 'users_lists'
 
 	static factory() {
 		const now = new Date()

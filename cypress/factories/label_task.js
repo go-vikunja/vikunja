@@ -2,7 +2,7 @@ import {Factory} from '../support/factory'
 import {formatISO} from 'date-fns'
 
 export class LabelTaskFactory extends Factory {
-	static table = 'label_task'
+	static table = 'label_tasks'
 
 	static factory() {
 		const now = new Date()

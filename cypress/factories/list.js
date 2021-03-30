@@ -3,7 +3,7 @@ import {formatISO} from "date-fns"
 import faker from 'faker'
 
 export class ListFactory extends Factory {
-	static table = 'list'
+	static table = 'lists'
 
 	static factory() {
 		const now = new Date()
