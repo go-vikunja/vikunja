@@ -7770,6 +7770,10 @@ var doc = `{
                     "description": "The unique numeric id of this saved filter",
                     "type": "integer"
                 },
+                "is_favorite": {
+                    "description": "True if the filter is a favorite. Favorite filters show up in a separate namespace together with favorite lists.",
+                    "type": "boolean"
+                },
                 "owner": {
                     "description": "The user who owns this filter",
                     "$ref": "#/definitions/user.User"

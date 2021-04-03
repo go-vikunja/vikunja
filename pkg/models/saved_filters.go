@@ -29,7 +29,7 @@ type SavedFilter struct {
 	// The unique numeric id of this saved filter
 	ID int64 `xorm:"autoincr not null unique pk" json:"id" param:"filter"`
 	// The actual filters this filter contains
-	Filters *TaskCollection `xorm:"JSON not null" json:"filters"`
+	Filters *TaskCollection `xorm:"JSON not null" json:"filters" valid:"required"`
 	// The title of the filter.
 	Title string `xorm:"varchar(250) not null" json:"title" valid:"required,runelength(1|250)" minLength:"1" maxLength:"250"`
 	// The description of the filter
@@ -38,6 +38,9 @@ type SavedFilter struct {
 
 	// The user who owns this filter
 	Owner *user.User `xorm:"-" json:"owner" valid:"-"`
+
+	// True if the filter is a favorite. Favorite filters show up in a separate namespace together with favorite lists.
+	IsFavorite bool `xorm:"default false" json:"is_favorite"`
 
 	// A timestamp when this filter was created. You cannot change this value.
 	Created time.Time `xorm:"created not null" json:"created"`
@@ -88,6 +91,18 @@ func getSavedFiltersForUser(s *xorm.Session, auth web.Auth) (filters []*SavedFil
 
 	err = s.Where("owner_id = ?", auth.GetID()).Find(&filters)
 	return
+}
+
+func (sf *SavedFilter) toList() *List {
+	return &List{
+		ID:          getListIDFromSavedFilterID(sf.ID),
+		Title:       sf.Title,
+		Description: sf.Description,
+		IsFavorite:  sf.IsFavorite,
+		Created:     sf.Created,
+		Updated:     sf.Updated,
+		Owner:       sf.Owner,
+	}
 }
 
 // Create creates a new saved filter
@@ -154,12 +169,22 @@ func (sf *SavedFilter) ReadOne(s *xorm.Session, a web.Auth) error {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /filters/{id} [post]
 func (sf *SavedFilter) Update(s *xorm.Session, a web.Auth) error {
-	_, err := s.
+	origFilter, err := getSavedFilterSimpleByID(s, sf.ID)
+	if err != nil {
+		return err
+	}
+
+	if sf.Filters == nil {
+		sf.Filters = origFilter.Filters
+	}
+
+	_, err = s.
 		Where("id = ?", sf.ID).
 		Cols(
 			"title",
 			"description",
 			"filters",
+			"is_favorite",
 		).
 		Update(sf)
 	return err

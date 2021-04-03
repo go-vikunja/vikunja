@@ -115,6 +115,17 @@ func (l *List) CanUpdate(s *xorm.Session, a web.Auth) (canUpdate bool, err error
 	if l.ID == FavoritesPseudoList.ID {
 		return false, nil
 	}
+
+	fid := getSavedFilterIDFromListID(l.ID)
+	if fid > 0 {
+		sf, err := getSavedFilterSimpleByID(s, fid)
+		if err != nil {
+			return false, err
+		}
+
+		return sf.CanUpdate(s, a)
+	}
+
 	canUpdate, err = l.CanWrite(s, a)
 	// If the list is archived and the user tries to un-archive it, let the request through
 	if IsErrListIsArchived(err) && !l.IsArchived {

@@ -586,6 +586,25 @@ func CreateOrUpdateList(s *xorm.Session, list *List, auth web.Auth) (err error) 
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{id} [post]
 func (l *List) Update(s *xorm.Session, a web.Auth) (err error) {
+	fid := getSavedFilterIDFromListID(l.ID)
+	if fid > 0 {
+		f, err := getSavedFilterSimpleByID(s, fid)
+		if err != nil {
+			return err
+		}
+
+		f.IsFavorite = l.IsFavorite
+		f.Title = l.Title
+		f.Description = l.Description
+		err = f.Update(s, a)
+		if err != nil {
+			return err
+		}
+
+		*l = *f.toList()
+		return nil
+	}
+
 	err = CreateOrUpdateList(s, l, a)
 	if err != nil {
 		return err

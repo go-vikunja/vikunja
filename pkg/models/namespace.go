@@ -434,14 +434,10 @@ func getSavedFilters(s *xorm.Session, doer *user.User) (savedFiltersNamespace *N
 	}
 
 	for _, filter := range savedFilters {
-		savedFiltersNamespace.Lists = append(savedFiltersNamespace.Lists, &List{
-			ID:          getListIDFromSavedFilterID(filter.ID),
-			Title:       filter.Title,
-			Description: filter.Description,
-			Created:     filter.Created,
-			Updated:     filter.Updated,
-			Owner:       doer,
-		})
+		filterList := filter.toList()
+		filterList.NamespaceID = savedFiltersNamespace.ID
+		filterList.Owner = doer
+		savedFiltersNamespace.Lists = append(savedFiltersNamespace.Lists, filterList)
 	}
 
 	return
@@ -522,6 +518,19 @@ func (n *Namespace) ReadAll(s *xorm.Session, a web.Auth, search string, page int
 	}
 
 	/////////////////
+	// Saved Filters
+
+	savedFiltersNamespace, err := getSavedFilters(s, doer)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	if savedFiltersNamespace != nil {
+		namespaces[savedFiltersNamespace.ID] = savedFiltersNamespace
+		lists = append(lists, savedFiltersNamespace.Lists...)
+	}
+
+	/////////////////
 	// Favorite lists
 
 	favoritesNamespace, err := getFavoriteLists(s, lists, namespaceIDs, doer)
@@ -533,18 +542,6 @@ func (n *Namespace) ReadAll(s *xorm.Session, a web.Auth, search string, page int
 		namespaces[favoritesNamespace.ID] = favoritesNamespace
 	}
 
-	/////////////////
-	// Saved Filters
-
-	savedFiltersNamespace, err := getSavedFilters(s, doer)
-	if err != nil {
-		return nil, 0, 0, err
-	}
-
-	if savedFiltersNamespace != nil {
-		namespaces[savedFiltersNamespace.ID] = savedFiltersNamespace
-	}
-
 	//////////////////////
 	// Put it all together
 
@@ -554,8 +551,8 @@ func (n *Namespace) ReadAll(s *xorm.Session, a web.Auth, search string, page int
 	}
 
 	for _, list := range lists {
-		if list.NamespaceID == SharedListsPseudoNamespace.ID {
-			// Shared lists are already in the namespace
+		if list.NamespaceID == SharedListsPseudoNamespace.ID || list.NamespaceID == SavedFiltersPseudoNamespace.ID {
+			// Shared lists and filtered lists are already in the namespace
 			continue
 		}
 		namespaces[list.NamespaceID].Lists = append(namespaces[list.NamespaceID].Lists, list)
