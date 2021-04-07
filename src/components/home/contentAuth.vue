@@ -56,6 +56,7 @@ export default {
 		background: 'background',
 		menuActive: MENU_ACTIVE,
 		userInfo: state => state.auth.info,
+		authenticated: state => state.auth.authenticated,
 	}),
 	methods: {
 		doStuffAfterRoute() {
@@ -87,6 +88,10 @@ export default {
 
 			// Check if the token is still valid if the window gets focus again to maybe renew it
 			window.addEventListener('focus', () => {
+
+				if (!this.authenticated) {
+					return
+				}
 
 				const expiresIn = (this.userInfo !== null ? this.userInfo.exp : 0) - +new Date() / 1000
 
