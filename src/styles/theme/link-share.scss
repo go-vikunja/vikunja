@@ -55,3 +55,20 @@
     margin: 0;
   }
 }
+
+.link-share-container:not(.has-background) {
+  .list-view {
+    max-width: 100%;
+  }
+
+  .loader-container, .gantt-chart-container {
+    > .card {
+      box-shadow: none !important;
+      border: none;
+
+      .task-add {
+        padding: 1rem 0 0;
+      }
+    }
+  }
+}

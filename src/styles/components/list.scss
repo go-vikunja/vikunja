@@ -144,7 +144,7 @@ $filter-container-top-link-share-list: -47px;
 }
 
 .link-share-container .list-view .filter-container {
-  margin-top: $filter-container-top-link-share-list;
+  margin-top: $filter-container-top-link-share-list - 10px;
 }
 
 .link-share-container .filter-container {
