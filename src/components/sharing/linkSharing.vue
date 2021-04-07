@@ -6,6 +6,14 @@
 				<p>Share with a link:</p>
 				<div class="field has-addons">
 					<div class="control">
+						<input
+							class="input"
+							placeholder="Name"
+							v-tooltip="'All actions done by this link share will show up with the name.'"
+							v-model="name"
+						/>
+					</div>
+					<div class="control">
 						<div class="select">
 							<select v-model="selectedRight">
 								<option :value="rights.READ">Read only</option>
@@ -28,7 +36,8 @@
 				<thead>
 				<tr>
 					<th>Link</th>
-					<th>Shared by</th>
+					<th>Name</th>
+					<th>Shared&nbsp;by</th>
 					<th>Right</th>
 					<th>Delete</th>
 				</tr>
@@ -51,33 +60,39 @@
 									:shadow="false"
 									v-tooltip="'Copy to clipboard'"
 								>
-										<span class="icon">
-											<icon icon="paste"/>
-										</span>
+									<span class="icon">
+										<icon icon="paste"/>
+									</span>
 								</x-button>
 							</div>
 						</div>
+					</td>
+					<td>
+						<template v-if="s.name !== ''">
+							{{ s.name }}
+						</template>
+						<i v-else>No name set</i>
 					</td>
 					<td>
 						{{ s.sharedBy.getDisplayName() }}
 					</td>
 					<td class="type">
 						<template v-if="s.right === rights.ADMIN">
-								<span class="icon is-small">
-									<icon icon="lock"/>
-								</span>
+							<span class="icon is-small">
+								<icon icon="lock"/>
+							</span>&nbsp;
 							Admin
 						</template>
 						<template v-else-if="s.right === rights.READ_WRITE">
-								<span class="icon is-small">
-									<icon icon="pen"/>
-								</span>
+							<span class="icon is-small">
+								<icon icon="pen"/>
+							</span>&nbsp;
 							Write
 						</template>
 						<template v-else>
-								<span class="icon is-small">
-									<icon icon="users"/>
-								</span>
+							<span class="icon is-small">
+								<icon icon="users"/>
+							</span>&nbsp;
 							Read-only
 						</template>
 					</td>
@@ -140,6 +155,7 @@ export default {
 			newLinkShare: LinkShareModel,
 			rights: rights,
 			selectedRight: rights.READ,
+			name: '',
 			showDeleteModal: false,
 			linkIdToDelete: 0,
 		}
@@ -180,6 +196,7 @@ export default {
 			let newLinkShare = new LinkShareModel({
 				right: this.selectedRight,
 				listId: this.listId,
+				name: this.name,
 			})
 			this.linkShareService
 				.create(newLinkShare)
