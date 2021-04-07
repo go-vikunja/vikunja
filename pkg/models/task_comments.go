@@ -67,7 +67,7 @@ func (tc *TaskComment) Create(s *xorm.Session, a web.Auth) (err error) {
 		return err
 	}
 
-	tc.Author, err = getUserOrLinkShareUser(s, a)
+	tc.Author, err = GetUserOrLinkShareUser(s, a)
 	if err != nil {
 		return err
 	}

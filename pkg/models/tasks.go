@@ -817,7 +817,7 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool) (err
 		return err
 	}
 
-	createdBy, err := getUserOrLinkShareUser(s, a)
+	createdBy, err := GetUserOrLinkShareUser(s, a)
 	if err != nil {
 		return err
 	}

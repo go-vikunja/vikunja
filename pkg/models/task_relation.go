@@ -144,7 +144,7 @@ func (rel *TaskRelation) Create(s *xorm.Session, a web.Auth) error {
 		}
 	}
 
-	rel.CreatedBy, err = getUserOrLinkShareUser(s, a)
+	rel.CreatedBy, err = GetUserOrLinkShareUser(s, a)
 	if err != nil {
 		return err
 	}

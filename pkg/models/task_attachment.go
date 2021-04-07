@@ -65,7 +65,7 @@ func (ta *TaskAttachment) NewAttachment(s *xorm.Session, f io.ReadCloser, realna
 	// Add an entry to the db
 	ta.FileID = file.ID
 
-	ta.CreatedBy, err = getUserOrLinkShareUser(s, a)
+	ta.CreatedBy, err = GetUserOrLinkShareUser(s, a)
 	if err != nil {
 		// remove the  uploaded file if adding it to the db fails
 		if err2 := file.Delete(); err2 != nil {

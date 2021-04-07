@@ -231,7 +231,7 @@ func (b *Bucket) ReadAll(s *xorm.Session, auth web.Auth, search string, page int
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{id}/buckets [put]
 func (b *Bucket) Create(s *xorm.Session, a web.Auth) (err error) {
-	b.CreatedBy, err = getUserOrLinkShareUser(s, a)
+	b.CreatedBy, err = GetUserOrLinkShareUser(s, a)
 	if err != nil {
 		return
 	}

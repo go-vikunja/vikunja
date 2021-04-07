@@ -22,8 +22,8 @@ import (
 	"xorm.io/xorm"
 )
 
-// Returns either a user or a link share disguised as a user.
-func getUserOrLinkShareUser(s *xorm.Session, a web.Auth) (uu *user.User, err error) {
+// GetUserOrLinkShareUser returns either a user or a link share disguised as a user.
+func GetUserOrLinkShareUser(s *xorm.Session, a web.Auth) (uu *user.User, err error) {
 	if u, is := a.(*user.User); is {
 		uu, err = user.GetUserByID(s, u.ID)
 		return
