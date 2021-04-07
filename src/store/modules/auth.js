@@ -7,14 +7,17 @@ export default {
 	state: () => ({
 		authenticated: false,
 		isLinkShareAuth: false,
-		info: {},
+		info: null,
 		needsTotpPasscode: false,
 		avatarUrl: '',
+		lastUserInfoRefresh: null,
 	}),
 	mutations: {
 		info(state, info) {
 			state.info = info
-			state.avatarUrl = info.getAvatarUrl()
+			if (info !== null) {
+				state.avatarUrl = info.getAvatarUrl()
+			}
 		},
 		setUserSettings(state, {name, emailRemindersEnabled}) {
 			state.info.name = name
@@ -31,6 +34,9 @@ export default {
 		},
 		reloadAvatar(state) {
 			state.avatarUrl = `${state.info.getAvatarUrl()}&=${+new Date()}`
+		},
+		lastUserRefresh(state) {
+			state.lastUserInfoRefresh = new Date()
 		},
 	},
 	actions: {
@@ -58,6 +64,7 @@ export default {
 
 					// Tell others the user is autheticated
 					ctx.commit('isLinkShareAuth', false)
+					console.log('login')
 					ctx.dispatch('checkAuth')
 					return Promise.resolve()
 				})
@@ -150,6 +157,13 @@ export default {
 		},
 		// Populates user information from jwt token saved in local storage in store
 		checkAuth(ctx) {
+
+			// This function can be called from multiple places at the same time and shortly after one another.
+			// To prevent hitting the api too frequently or race conditions, we check at most once per minute.
+			if (ctx.state.lastUserInfoRefresh !== null && ctx.state.lastUserInfoRefresh > (new Date()).setMinutes((new Date()).getMinutes() + 1)) {
+				return Promise.resolve()
+			}
+
 			const jwt = localStorage.getItem('token')
 			let authenticated = false
 			if (jwt) {
@@ -159,12 +173,40 @@ export default {
 					.replace('_', '/')
 				const info = new UserModel(JSON.parse(window.atob(base64)))
 				const ts = Math.round((new Date()).getTime() / 1000)
-				if (info.exp >= ts) {
-					authenticated = true
-				}
+				authenticated = info.exp >= ts
 				ctx.commit('info', info)
+
+				if (authenticated ) {
+					const HTTP = HTTPFactory()
+					// We're not returning the promise here to prevent blocking the initial ui render if the user is
+					// accessing the site with a token in local storage
+					HTTP.get('user', {
+						headers: {
+							Authorization: `Bearer ${jwt}`,
+						},
+					})
+						.then(r => {
+							const info = new UserModel(r.data)
+							info.type = ctx.state.info.type
+							info.email = ctx.state.info.email
+							info.exp = ctx.state.info.exp
+							info.emailRemindersEnabled = ctx.state.info.emailRemindersEnabled
+
+							ctx.commit('info', info)
+							ctx.commit('authenticated', authenticated)
+							ctx.commit('lastUserRefresh')
+						})
+						.catch(e => {
+							console.error('Error while refreshing user info:', e)
+						})
+				}
 			}
+
 			ctx.commit('authenticated', authenticated)
+			if (!authenticated) {
+				ctx.commit('info', null)
+			}
+
 			return Promise.resolve()
 		},
 		// Renews the api token and saves it to local storage
