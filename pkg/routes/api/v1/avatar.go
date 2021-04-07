@@ -62,14 +62,13 @@ func GetAvatar(c echo.Context) error {
 
 	// Get the user
 	u, err := user.GetUserWithEmail(s, &user.User{Username: username})
-	if err != nil {
+	if err != nil && !user.IsErrUserDoesNotExist(err) {
 		log.Errorf("Error getting user for avatar: %v", err)
 		return handler.HandleHTTPError(err, c)
 	}
 
-	// Initialize the avatar provider
-	// For now, we only have one avatar provider, in the future there could be multiple which
-	// could be changed based on user settings etc.
+	found := !(err != nil && user.IsErrUserDoesNotExist(err))
+
 	var avatarProvider avatar.Provider
 	switch u.AvatarProvider {
 	case "gravatar":
@@ -79,6 +78,10 @@ func GetAvatar(c echo.Context) error {
 	case "upload":
 		avatarProvider = &upload.Provider{}
 	default:
+		avatarProvider = &empty.Provider{}
+	}
+
+	if !found {
 		avatarProvider = &empty.Provider{}
 	}
 
