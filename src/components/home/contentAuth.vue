@@ -88,7 +88,7 @@ export default {
 			// Check if the token is still valid if the window gets focus again to maybe renew it
 			window.addEventListener('focus', () => {
 
-				const expiresIn = this.userInfo.exp - +new Date() / 1000
+				const expiresIn = (this.userInfo !== null ? this.userInfo.exp : 0) - +new Date() / 1000
 
 				// If the token expiry is negative, it is already expired and we have no choice but to redirect
 				// the user to the login page
