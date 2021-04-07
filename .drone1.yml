@@ -772,21 +772,23 @@ trigger:
     - "refs/tags/**"
 
 depends_on:
+  - testing
   - release
+  - deploy-docs
+  - docker-arm-release
+  - docker-amd64-release
   - docker-manifest
 
 steps:
-  - name: telegram
-    image: appleboy/drone-telegram:1-linux-amd64
+  - name: notify
+    image: plugins/matrix
     settings:
-      token:
-        from_secret: TELEGRAM_TOKEN
-      to:
-        from_secret: TELEGRAM_TO
-      message: >
-        {{repo.owner}}/{{repo.name}}: \[{{build.status}}] Build {{build.number}}
-        {{commit.author}} pushed to {{commit.branch}} {{commit.sha}}: `{{commit.message}}`
-        Build started at {{datetime build.started "2006-Jan-02T15:04:05Z" "GMT+2"}} finished at {{datetime build.finished "2006-Jan-02T15:04:05Z" "GMT+2"}}.
+      homeserver: https://matrix.org
+      roomid: vikunja-dev:matrix.org
+      username:
+        from_secret: matrix_username
+      password:
+        from_secret: matrix_password
     when:
       status:
         - success
