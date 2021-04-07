@@ -11,6 +11,7 @@ export default {
 		needsTotpPasscode: false,
 		avatarUrl: '',
 		lastUserInfoRefresh: null,
+		settings: {},
 	}),
 	mutations: {
 		info(state, info) {
@@ -18,10 +19,15 @@ export default {
 			if (info !== null) {
 				state.avatarUrl = info.getAvatarUrl()
 			}
+			if (info.settings) {
+				state.settings = info.settings
+			}
 		},
-		setUserSettings(state, {name, emailRemindersEnabled}) {
-			state.info.name = name
-			state.info.emailRemindersEnabled = emailRemindersEnabled
+		setUserSettings(state, settings) {
+			state.settings = settings
+			const info = state.info !== null ? state.info : {}
+			info.name = settings.name
+			state.info = info
 		},
 		authenticated(state, authenticated) {
 			state.authenticated = authenticated
@@ -176,7 +182,7 @@ export default {
 				authenticated = info.exp >= ts
 				ctx.commit('info', info)
 
-				if (authenticated ) {
+				if (authenticated) {
 					const HTTP = HTTPFactory()
 					// We're not returning the promise here to prevent blocking the initial ui render if the user is
 					// accessing the site with a token in local storage
@@ -190,7 +196,6 @@ export default {
 							info.type = ctx.state.info.type
 							info.email = ctx.state.info.email
 							info.exp = ctx.state.info.exp
-							info.emailRemindersEnabled = ctx.state.info.emailRemindersEnabled
 
 							ctx.commit('info', info)
 							ctx.commit('authenticated', authenticated)

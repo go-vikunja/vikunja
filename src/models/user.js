@@ -1,8 +1,14 @@
 import AbstractModel from './abstractModel'
+import UserSettingsModel from '@/models/userSettings'
 
 export default class UserModel extends AbstractModel {
 	constructor(data) {
 		super(data)
+
+		if (this.settings !== null) {
+			this.settings = new UserSettingsModel(this.settings)
+		}
+
 		this.created = new Date(this.created)
 		this.updated = new Date(this.updated)
 	}
@@ -15,6 +21,7 @@ export default class UserModel extends AbstractModel {
 			name: '',
 			created: null,
 			updated: null,
+			settings: null,
 		}
 	}
 

@@ -110,6 +110,18 @@
 			</div>
 			<div class="field">
 				<label class="checkbox">
+					<input type="checkbox" v-model="settings.discoverableByName"/>
+					Let other users find me when they search for my name
+				</label>
+			</div>
+			<div class="field">
+				<label class="checkbox">
+					<input type="checkbox" v-model="settings.discoverableByEmail"/>
+					Let other users find me when they search for my full email
+				</label>
+			</div>
+			<div class="field">
+				<label class="checkbox">
 					<input type="checkbox" v-model="playSoundWhenDone"/>
 					Play a sound when marking tasks as done
 				</label>
@@ -276,10 +288,7 @@ export default {
 		this.totp = new TotpModel()
 
 		this.userSettingsService = new UserSettingsService()
-		this.settings = new UserSettingsModel({
-			name: this.$store.state.auth.info.name,
-			emailRemindersEnabled: this.$store.state.auth.info.emailRemindersEnabled ?? false,
-		})
+		this.settings = this.$store.state.auth.settings
 
 		this.playSoundWhenDone = localStorage.getItem(playSoundWhenDoneKey) === 'true' || localStorage.getItem(playSoundWhenDoneKey) === null
 

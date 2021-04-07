@@ -6,6 +6,8 @@ export default class UserSettingsModel extends AbstractModel {
 		return {
 			name: '',
 			emailRemindersEnabled: true,
+			discoverableByName: false,
+			discoverableByEmail: false,
 		}
 	}
 }

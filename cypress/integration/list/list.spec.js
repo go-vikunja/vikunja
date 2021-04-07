@@ -410,7 +410,7 @@ describe('Lists', () => {
 				.should('contain', `/tasks/${tasks[0].id}`)
 		})
 
-		it.only('Should remove a task from the kanban board when moving it to another list', () => {
+		it('Should remove a task from the kanban board when moving it to another list', () => {
 			const lists = ListFactory.create(2)
 			BucketFactory.create(2, {
 				list_id: '{increment}',
