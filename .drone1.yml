@@ -784,7 +784,7 @@ steps:
     image: plugins/matrix
     settings:
       homeserver: https://matrix.org
-      roomid: vikunja-dev:matrix.org
+      roomid: WqBDCxzghKcNflkErL:matrix.org
       username:
         from_secret: matrix_username
       password:
