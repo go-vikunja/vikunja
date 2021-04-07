@@ -7489,6 +7489,10 @@ var doc = `{
                     "description": "The ID of the shared thing",
                     "type": "integer"
                 },
+                "name": {
+                    "description": "The name of this link share. All actions someone takes while being authenticated with that link will appear with that name.",
+                    "type": "string"
+                },
                 "right": {
                     "description": "The right this list is shared with. 0 = Read only, 1 = Read \u0026 Write, 2 = Admin. See the docs for more details.",
                     "type": "integer",

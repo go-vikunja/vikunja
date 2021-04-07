@@ -19,6 +19,8 @@ package integrations
 import (
 	"testing"
 
+	"code.vikunja.io/api/pkg/db"
+
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/web/handler"
 	"github.com/labstack/echo/v4"
@@ -28,6 +30,20 @@ import (
 func TestTask(t *testing.T) {
 	testHandler := webHandlerTest{
 		user: &testuser1,
+		strFunc: func() handler.CObject {
+			return &models.Task{}
+		},
+		t: t,
+	}
+	testHandlerLinkShareWrite := webHandlerTest{
+		linkShare: &models.LinkSharing{
+			ID:          2,
+			Hash:        "test2",
+			ListID:      2,
+			Right:       models.RightWrite,
+			SharingType: models.SharingTypeWithoutPassword,
+			SharedByID:  1,
+		},
 		strFunc: func() handler.CObject {
 			return &models.Task{}
 		},
@@ -488,6 +504,16 @@ func TestTask(t *testing.T) {
 				assert.Error(t, err)
 				assertHandlerErrorCode(t, err, models.ErrCodeBucketDoesNotExist)
 			})
+		})
+		t.Run("Link Share", func(t *testing.T) {
+			rec, err := testHandlerLinkShareWrite.testCreateWithLinkShare(nil, map[string]string{"list": "2"}, `{"title":"Lorem Ipsum"}`)
+			assert.NoError(t, err)
+			assert.Contains(t, rec.Body.String(), `"title":"Lorem Ipsum"`)
+			db.AssertExists(t, "tasks", map[string]interface{}{
+				"list_id":       2,
+				"title":         "Lorem Ipsum",
+				"created_by_id": -2,
+			}, false)
 		})
 	})
 }

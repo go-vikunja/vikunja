@@ -67,24 +67,22 @@ func (tc *TaskComment) Create(s *xorm.Session, a web.Auth) (err error) {
 		return err
 	}
 
-	tc.AuthorID = a.GetID()
+	tc.Author, err = getUserOrLinkShareUser(s, a)
+	if err != nil {
+		return err
+	}
+	tc.AuthorID = tc.Author.ID
+
 	_, err = s.Insert(tc)
 	if err != nil {
 		return
 	}
 
-	doer, _ := user.GetFromAuth(a)
-	err = events.Dispatch(&TaskCommentCreatedEvent{
+	return events.Dispatch(&TaskCommentCreatedEvent{
 		Task:    &task,
 		Comment: tc,
-		Doer:    doer,
+		Doer:    tc.Author,
 	})
-	if err != nil {
-		return err
-	}
-
-	tc.Author, err = user.GetUserByID(s, a.GetID())
-	return
 }
 
 // Delete removes a task comment
@@ -215,14 +213,12 @@ func (tc *TaskComment) ReadAll(s *xorm.Session, auth web.Auth, search string, pa
 		return
 	}
 
-	// Get all authors
-	authors := make(map[int64]*user.User)
-	err = s.
-		Select("users.*").
-		Table("task_comments").
-		Where("task_id = ? AND comment like ?", tc.TaskID, "%"+search+"%").
-		Join("INNER", "users", "users.id = task_comments.author_id").
-		Find(&authors)
+	var authorIDs []int64
+	for _, comment := range comments {
+		authorIDs = append(authorIDs, comment.AuthorID)
+	}
+
+	authors, err := getUsersOrLinkSharesFromIDs(s, authorIDs)
 	if err != nil {
 		return
 	}

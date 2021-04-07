@@ -64,7 +64,17 @@ func (ta *TaskAttachment) NewAttachment(s *xorm.Session, f io.ReadCloser, realna
 
 	// Add an entry to the db
 	ta.FileID = file.ID
-	ta.CreatedByID = a.GetID()
+
+	ta.CreatedBy, err = getUserOrLinkShareUser(s, a)
+	if err != nil {
+		// remove the  uploaded file if adding it to the db fails
+		if err2 := file.Delete(); err2 != nil {
+			return err2
+		}
+		return err
+	}
+	ta.CreatedByID = ta.CreatedBy.ID
+
 	_, err = s.Insert(ta)
 	if err != nil {
 		// remove the  uploaded file if adding it to the db fails
@@ -73,8 +83,6 @@ func (ta *TaskAttachment) NewAttachment(s *xorm.Session, f io.ReadCloser, realna
 		}
 		return err
 	}
-
-	ta.CreatedBy, _ = user.GetFromAuth(a) // Ignoring cases where the auth is not a user
 
 	return nil
 }
@@ -145,19 +153,19 @@ func (ta *TaskAttachment) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 		return nil, 0, 0, err
 	}
 
-	us := make(map[int64]*user.User)
-	err = s.In("id", userIDs).Find(&us)
+	users, err := getUsersOrLinkSharesFromIDs(s, userIDs)
 	if err != nil {
 		return nil, 0, 0, err
 	}
 
 	for _, r := range attachments {
+		r.CreatedBy = users[r.CreatedByID]
+
 		// If the actual file does not exist, don't try to load it as that would fail with nil panic
 		if _, exists := fs[r.FileID]; !exists {
 			continue
 		}
 		r.File = fs[r.FileID]
-		r.CreatedBy = us[r.CreatedByID]
 	}
 
 	numberOfTotalItems, err = s.
@@ -231,12 +239,9 @@ func getTaskAttachmentsByTaskIDs(s *xorm.Session, taskIDs []int64) (attachments 
 		return
 	}
 
-	users := make(map[int64]*user.User)
-	if len(userIDs) > 0 {
-		err = s.In("id", userIDs).Find(&users)
-		if err != nil {
-			return
-		}
+	users, err := getUsersOrLinkSharesFromIDs(s, userIDs)
+	if err != nil {
+		return nil, err
 	}
 
 	// Obfuscate all user emails

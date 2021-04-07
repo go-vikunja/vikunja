@@ -579,4 +579,17 @@ func TestTask_ReadOne(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotNil(t, task.Subscription)
 	})
+	t.Run("created by link share", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		task := &Task{ID: 37}
+		err := task.ReadOne(s, u)
+		assert.NoError(t, err)
+		assert.Equal(t, "task #37", task.Title)
+		assert.Equal(t, int64(-2), task.CreatedByID)
+		assert.NotNil(t, task.CreatedBy)
+		assert.Equal(t, int64(-2), task.CreatedBy.ID)
+	})
 }

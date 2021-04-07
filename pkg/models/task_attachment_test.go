@@ -146,8 +146,13 @@ func TestTaskAttachment_ReadAll(t *testing.T) {
 	as, _, _, err := ta.ReadAll(s, &user.User{ID: 1}, "", 0, 50)
 	attachments, _ := as.([]*TaskAttachment)
 	assert.NoError(t, err)
-	assert.Len(t, attachments, 2)
+	assert.Len(t, attachments, 3)
 	assert.Equal(t, "test", attachments[0].File.Name)
+	for _, a := range attachments {
+		assert.NotNil(t, a.CreatedBy)
+	}
+	assert.Equal(t, int64(-2), attachments[2].CreatedByID)
+	assert.Equal(t, int64(-2), attachments[2].CreatedBy.ID)
 }
 
 func TestTaskAttachment_Delete(t *testing.T) {

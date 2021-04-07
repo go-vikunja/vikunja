@@ -144,13 +144,17 @@ func (rel *TaskRelation) Create(s *xorm.Session, a web.Auth) error {
 		}
 	}
 
-	rel.CreatedByID = a.GetID()
+	rel.CreatedBy, err = getUserOrLinkShareUser(s, a)
+	if err != nil {
+		return err
+	}
+	rel.CreatedByID = rel.CreatedBy.ID
 
 	// Build up the other relation (see the comment above for explanation)
 	otherRelation := &TaskRelation{
 		TaskID:      rel.OtherTaskID,
 		OtherTaskID: rel.TaskID,
-		CreatedByID: a.GetID(),
+		CreatedByID: rel.CreatedByID,
 	}
 
 	switch rel.RelationKind {

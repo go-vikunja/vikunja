@@ -42,6 +42,8 @@ type LinkSharing struct {
 	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id" param:"share"`
 	// The public id to get this shared list
 	Hash string `xorm:"varchar(40) not null unique" json:"hash" param:"hash"`
+	// The name of this link share. All actions someone takes while being authenticated with that link will appear with that name.
+	Name string `xorm:"text null" json:"name"`
 	// The ID of the shared list
 	ListID int64 `xorm:"bigint not null" json:"-" param:"list"`
 	// The right this list is shared with. 0 = Read only, 1 = Read & Write, 2 = Admin. See the docs for more details.
@@ -82,6 +84,25 @@ func GetLinkShareFromClaims(claims jwt.MapClaims) (share *LinkSharing, err error
 	share.Right = Right(claims["right"].(float64))
 	share.SharedByID = int64(claims["sharedByID"].(float64))
 	return
+}
+
+func (share *LinkSharing) getUserID() int64 {
+	return share.ID * -1
+}
+
+func (share *LinkSharing) toUser() *user.User {
+	suffix := "Link Share"
+	if share.Name != "" {
+		suffix = " (" + suffix + ")"
+	}
+
+	return &user.User{
+		ID:       share.getUserID(),
+		Name:     share.Name + suffix,
+		Username: share.Name,
+		Created:  share.Created,
+		Updated:  share.Updated,
+	}
 }
 
 // Create creates a new link share for a given list
@@ -244,5 +265,25 @@ func GetListByShareHash(s *xorm.Session, hash string) (list *List, err error) {
 	}
 
 	list, err = GetListSimpleByID(s, share.ListID)
+	return
+}
+
+// GetLinkShareByID returns a link share by its id.
+func GetLinkShareByID(s *xorm.Session, id int64) (share *LinkSharing, err error) {
+	share = &LinkSharing{}
+	has, err := s.Where("id = ?", id).Get(share)
+	if err != nil {
+		return
+	}
+	if !has {
+		return share, ErrListShareDoesNotExist{ID: id}
+	}
+	return
+}
+
+// GetLinkSharesByIDs returns all link shares from a slice of ids
+func GetLinkSharesByIDs(s *xorm.Session, ids []int64) (shares map[int64]*LinkSharing, err error) {
+	shares = make(map[int64]*LinkSharing)
+	err = s.In("id", ids).Find(&shares)
 	return
 }

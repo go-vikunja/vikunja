@@ -59,6 +59,12 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		Created:               testCreatedTime,
 		Updated:               testUpdatedTime,
 	}
+	linkShareUser2 := &user.User{
+		ID:      -2,
+		Name:    "Link Share",
+		Created: testCreatedTime,
+		Updated: testUpdatedTime,
+	}
 
 	loc := config.GetTimeZone()
 
@@ -123,6 +129,21 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				CreatedByID: 1,
 				CreatedBy:   user1,
 				Created:     testCreatedTime,
+			},
+			{
+				ID:          3,
+				TaskID:      1,
+				FileID:      1,
+				CreatedByID: -2,
+				CreatedBy:   linkShareUser2,
+				Created:     testCreatedTime,
+				File: &files.File{
+					ID:          1,
+					Name:        "test",
+					Size:        100,
+					Created:     time.Unix(1570998791, 0).In(loc),
+					CreatedByID: 1,
+				},
 			},
 		},
 		Created: time.Unix(1543626724, 0).In(loc),

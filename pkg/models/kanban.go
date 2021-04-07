@@ -135,12 +135,9 @@ func (b *Bucket) ReadAll(s *xorm.Session, auth web.Auth, search string, page int
 	}
 
 	// Get all users
-	users := make(map[int64]*user.User)
-	if len(userIDs) > 0 {
-		err = s.In("id", userIDs).Find(&users)
-		if err != nil {
-			return
-		}
+	users, err := getUsersOrLinkSharesFromIDs(s, userIDs)
+	if err != nil {
+		return
 	}
 
 	for _, bb := range buckets {
@@ -234,7 +231,11 @@ func (b *Bucket) ReadAll(s *xorm.Session, auth web.Auth, search string, page int
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{id}/buckets [put]
 func (b *Bucket) Create(s *xorm.Session, a web.Auth) (err error) {
-	b.CreatedByID = a.GetID()
+	b.CreatedBy, err = getUserOrLinkShareUser(s, a)
+	if err != nil {
+		return
+	}
+	b.CreatedByID = b.CreatedBy.ID
 
 	_, err = s.Insert(b)
 	return

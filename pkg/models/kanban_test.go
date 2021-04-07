@@ -89,6 +89,20 @@ func TestBucket_ReadAll(t *testing.T) {
 		assert.Len(t, buckets, 3)
 		assert.Equal(t, int64(2), buckets[0].Tasks[0].ID)
 	})
+	t.Run("link share", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		testuser := &user.User{ID: 1}
+		b := &Bucket{ListID: 23}
+		result, _, _, err := b.ReadAll(s, testuser, "", 0, 0)
+		assert.NoError(t, err)
+		buckets, _ := result.([]*Bucket)
+		assert.Len(t, buckets, 1)
+		assert.NotNil(t, buckets[0].CreatedBy)
+		assert.Equal(t, int64(-2), buckets[0].CreatedByID)
+	})
 }
 
 func TestBucket_Delete(t *testing.T) {

@@ -184,4 +184,18 @@ func TestTaskComment_ReadAll(t *testing.T) {
 		assert.Error(t, err)
 		assert.True(t, IsErrGenericForbidden(err))
 	})
+	t.Run("comment from link share", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		tc := &TaskComment{TaskID: 35}
+		u := &user.User{ID: 1}
+		result, _, _, err := tc.ReadAll(s, u, "", 0, -1)
+		comments := result.([]*TaskComment)
+		assert.NoError(t, err)
+		assert.Len(t, comments, 2)
+		assert.Equal(t, int64(-2), comments[1].AuthorID)
+		assert.NotNil(t, comments[1].Author)
+	})
 }

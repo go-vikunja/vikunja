@@ -670,7 +670,7 @@ func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task) (err error) {
 		return
 	}
 
-	users, err := user.GetUsersByIDs(s, userIDs)
+	users, err := getUsersOrLinkSharesFromIDs(s, userIDs)
 	if err != nil {
 		return
 	}
@@ -817,17 +817,11 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool) (err
 		return err
 	}
 
-	if _, is := a.(*LinkSharing); is {
-		// A negative user id indicates user share links
-		t.CreatedByID = a.GetID() * -1
-	} else {
-		u, err := user.GetUserByID(s, a.GetID())
-		if err != nil {
-			return err
-		}
-		t.CreatedByID = u.ID
-		t.CreatedBy = u
+	createdBy, err := getUserOrLinkShareUser(s, a)
+	if err != nil {
+		return err
 	}
+	t.CreatedByID = createdBy.ID
 
 	// Generate a uuid if we don't already have one
 	if t.UID == "" {
@@ -856,6 +850,8 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool) (err
 		return err
 	}
 
+	t.CreatedBy = createdBy
+
 	// Update the assignees
 	if updateAssignees {
 		if err := t.updateTaskAssignees(s, t.Assignees, a); err != nil {
@@ -870,10 +866,9 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool) (err
 
 	t.setIdentifier(l)
 
-	doer, _ := user.GetFromAuth(a)
 	err = events.Dispatch(&TaskCreatedEvent{
 		Task: t,
-		Doer: doer,
+		Doer: createdBy,
 	})
 	if err != nil {
 		return err

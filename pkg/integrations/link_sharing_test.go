@@ -553,7 +553,7 @@ func TestLinkSharing(t *testing.T) {
 				rec, err := testHandlerTaskWriteCollection.testReadAllWithLinkShare(nil, nil)
 				assert.NoError(t, err)
 				assert.NotContains(t, rec.Body.String(), `task #2`)
-				assert.NotContains(t, rec.Body.String(), `task #3`)
+				assert.NotContains(t, rec.Body.String(), `task #3"`)
 				assert.NotContains(t, rec.Body.String(), `task #4`)
 				assert.NotContains(t, rec.Body.String(), `task #5`)
 				assert.NotContains(t, rec.Body.String(), `task #6`)

@@ -209,3 +209,9 @@
   created_by_id: 1
   created: 2020-04-18 21:13:52
   updated: 2020-04-18 21:13:52
+- id: 35
+  title: testbucket35
+  list_id: 23
+  created_by_id: -2
+  created: 2020-04-18 21:13:52
+  updated: 2020-04-18 21:13:52
