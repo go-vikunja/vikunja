@@ -19,6 +19,8 @@ package v1
 import (
 	"net/http"
 
+	"code.vikunja.io/api/pkg/user"
+
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
 
@@ -27,6 +29,11 @@ import (
 	"code.vikunja.io/web/handler"
 	"github.com/labstack/echo/v4"
 )
+
+type userWithSettings struct {
+	user.User
+	Settings *UserSettings `json:"settings"`
+}
 
 // UserShow gets all informations about the current user
 // @Summary Get user information
@@ -48,10 +55,20 @@ func UserShow(c echo.Context) error {
 	s := db.NewSession()
 	defer s.Close()
 
-	user, err := models.GetUserOrLinkShareUser(s, a)
+	u, err := models.GetUserOrLinkShareUser(s, a)
 	if err != nil {
 		return handler.HandleHTTPError(err, c)
 	}
 
-	return c.JSON(http.StatusOK, user)
+	us := &userWithSettings{
+		User: *u,
+		Settings: &UserSettings{
+			Name:                  u.Name,
+			EmailRemindersEnabled: u.EmailRemindersEnabled,
+			DiscoverableByName:    u.DiscoverableByName,
+			DiscoverableByEmail:   u.DiscoverableByEmail,
+		},
+	}
+
+	return c.JSON(http.StatusOK, us)
 }

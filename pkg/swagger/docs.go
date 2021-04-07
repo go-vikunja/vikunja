@@ -6976,7 +6976,7 @@ var doc = `{
                         "JWTKeyAuth": []
                     }
                 ],
-                "description": "Lists all users (without emailadresses). Also possible to search for a specific user.",
+                "description": "Search for a user by its username, name or full email. Name (not username) or email require that the user has enabled this in their settings.",
                 "consumes": [
                     "application/json"
                 ],
@@ -6990,7 +6990,7 @@ var doc = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Search for a user by its name.",
+                        "description": "The search criteria.",
                         "name": "s",
                         "in": "query"
                     }
@@ -8534,6 +8534,14 @@ var doc = `{
         "v1.UserSettings": {
             "type": "object",
             "properties": {
+                "discoverable_by_email": {
+                    "description": "If true, the user can be found when searching for their exact email.",
+                    "type": "boolean"
+                },
+                "discoverable_by_name": {
+                    "description": "If true, this user can be found by their name or parts of it when searching for it.",
+                    "type": "boolean"
+                },
                 "email_reminders_enabled": {
                     "description": "If enabled, sends email reminders of tasks to the user.",
                     "type": "boolean"

@@ -28,11 +28,7 @@ func TestUserList(t *testing.T) {
 	t.Run("Normal test", func(t *testing.T) {
 		rec, err := newTestRequestWithUser(t, http.MethodPost, apiv1.UserList, &testuser1, "", nil, nil)
 		assert.NoError(t, err)
-		assert.Contains(t, rec.Body.String(), `user1`)
-		assert.Contains(t, rec.Body.String(), `user2`)
-		assert.Contains(t, rec.Body.String(), `user3`)
-		assert.Contains(t, rec.Body.String(), `user4`)
-		assert.Contains(t, rec.Body.String(), `user5`)
+		assert.Equal(t, "null\n", rec.Body.String())
 	})
 	t.Run("Search for user3", func(t *testing.T) {
 		rec, err := newTestRequestWithUser(t, http.MethodPost, apiv1.UserList, &testuser1, "", map[string][]string{"s": {"user3"}}, nil)

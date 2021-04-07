@@ -31,11 +31,11 @@ import (
 
 // UserList gets all information about a user
 // @Summary Get users
-// @Description Lists all users (without emailadresses). Also possible to search for a specific user.
+// @Description Search for a user by its username, name or full email. Name (not username) or email require that the user has enabled this in their settings.
 // @tags user
 // @Accept json
 // @Produce json
-// @Param s query string false "Search for a user by its name."
+// @Param s query string false "The search criteria."
 // @Security JWTKeyAuth
 // @Success 200 {array} user.User "All (found) users."
 // @Failure 400 {object} web.HTTPError "Something's invalid."

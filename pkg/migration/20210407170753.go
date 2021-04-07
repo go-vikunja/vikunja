@@ -14,43 +14,31 @@
 // You should have received a copy of the GNU Affero General Public Licensee
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package user
+package migration
 
 import (
-	"strings"
-
-	"xorm.io/builder"
+	"src.techknowlogick.com/xormigrate"
 	"xorm.io/xorm"
 )
 
-// ListUsers returns a list with all users, filtered by an optional searchstring
-func ListUsers(s *xorm.Session, search string) (users []*User, err error) {
-
-	// Prevent searching for placeholders
-	search = strings.ReplaceAll(search, "%", "")
-
-	if search == "" || strings.ReplaceAll(search, " ", "") == "" {
-		return
-	}
-
-	err = s.
-		Where(builder.Or(
-			builder.Like{"username", "%" + search + "%"},
-			builder.And(
-				builder.Eq{"email": search},
-				builder.Eq{"discoverable_by_email": true},
-			),
-			builder.And(
-				builder.Like{"name", "%" + search + "%"},
-				builder.Eq{"discoverable_by_name": true},
-			),
-		)).
-		Find(&users)
-	return
+type users20210407170753 struct {
+	DiscoverableByName  bool `xorm:"bool default false index" json:"-"`
+	DiscoverableByEmail bool `xorm:"bool default false index" json:"-"`
 }
 
-// ListAllUsers returns all users
-func ListAllUsers(s *xorm.Session) (users []*User, err error) {
-	err = s.Find(&users)
-	return
+func (users20210407170753) TableName() string {
+	return "users"
+}
+
+func init() {
+	migrations = append(migrations, &xormigrate.Migration{
+		ID:          "20210407170753",
+		Description: "Add discoverable by email or name columns",
+		Migrate: func(tx *xorm.Engine) error {
+			return tx.Sync2(users20210407170753{})
+		},
+		Rollback: func(tx *xorm.Engine) error {
+			return nil
+		},
+	})
 }

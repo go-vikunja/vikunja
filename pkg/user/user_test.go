@@ -373,9 +373,62 @@ func TestListUsers(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		all, err := ListUsers(s, "")
+		all, err := ListAllUsers(s)
 		assert.NoError(t, err)
 		assert.Len(t, all, 14)
+	})
+	t.Run("no search term", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		all, err := ListUsers(s, "")
+		assert.NoError(t, err)
+		assert.Len(t, all, 0)
+	})
+	t.Run("not discoverable by email", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		all, err := ListUsers(s, "user1@example.com")
+		assert.NoError(t, err)
+		assert.Len(t, all, 0)
+		db.AssertExists(t, "users", map[string]interface{}{
+			"email": "user1@example.com",
+		}, false)
+	})
+	t.Run("not discoverable by name", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		all, err := ListUsers(s, "one else")
+		assert.NoError(t, err)
+		assert.Len(t, all, 0)
+		db.AssertExists(t, "users", map[string]interface{}{
+			"name": "Some one else",
+		}, false)
+	})
+	t.Run("discoverable by email", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		all, err := ListUsers(s, "user7@example.com")
+		assert.NoError(t, err)
+		assert.Len(t, all, 1)
+		assert.Equal(t, int64(7), all[0].ID)
+	})
+	t.Run("discoverable by partial name", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		all, err := ListUsers(s, "with space")
+		assert.NoError(t, err)
+		assert.Len(t, all, 1)
+		assert.Equal(t, int64(12), all[0].ID)
 	})
 }
 

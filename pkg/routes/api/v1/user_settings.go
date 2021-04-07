@@ -38,7 +38,11 @@ type UserSettings struct {
 	// The new name of the current user.
 	Name string `json:"name"`
 	// If enabled, sends email reminders of tasks to the user.
-	EmailRemindersEnabled bool `xorm:"bool default false" json:"email_reminders_enabled"`
+	EmailRemindersEnabled bool `json:"email_reminders_enabled"`
+	// If true, this user can be found by their name or parts of it when searching for it.
+	DiscoverableByName bool `json:"discoverable_by_name"`
+	// If true, the user can be found when searching for their exact email.
+	DiscoverableByEmail bool `json:"discoverable_by_email"`
 }
 
 // GetUserAvatarProvider returns the currently set user avatar
@@ -161,6 +165,8 @@ func UpdateGeneralUserSettings(c echo.Context) error {
 
 	user.Name = us.Name
 	user.EmailRemindersEnabled = us.EmailRemindersEnabled
+	user.DiscoverableByEmail = us.DiscoverableByEmail
+	user.DiscoverableByName = us.DiscoverableByName
 
 	_, err = user2.UpdateUser(s, user)
 	if err != nil {

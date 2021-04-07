@@ -1079,6 +1079,12 @@ definitions:
     type: object
   v1.UserSettings:
     properties:
+      discoverable_by_email:
+        description: If true, the user can be found when searching for their exact email.
+        type: boolean
+      discoverable_by_name:
+        description: If true, this user can be found by their name or parts of it when searching for it.
+        type: boolean
       email_reminders_enabled:
         description: If enabled, sends email reminders of tasks to the user.
         type: boolean
@@ -5662,9 +5668,9 @@ paths:
     get:
       consumes:
       - application/json
-      description: Lists all users (without emailadresses). Also possible to search for a specific user.
+      description: Search for a user by its username, name or full email. Name (not username) or email require that the user has enabled this in their settings.
       parameters:
-      - description: Search for a user by its name.
+      - description: The search criteria.
         in: query
         name: s
         type: string

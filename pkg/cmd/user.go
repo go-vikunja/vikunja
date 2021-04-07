@@ -120,7 +120,7 @@ var userListCmd = &cobra.Command{
 		s := db.NewSession()
 		defer s.Close()
 
-		users, err := user.ListUsers(s, "")
+		users, err := user.ListAllUsers(s)
 		if err != nil {
 			_ = s.Rollback()
 			log.Fatalf("Error getting users: %s", err)

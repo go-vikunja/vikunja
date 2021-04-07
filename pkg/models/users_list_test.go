@@ -93,6 +93,7 @@ func TestListUsersFromList(t *testing.T) {
 		IsActive:              true,
 		Issuer:                "local",
 		EmailRemindersEnabled: true,
+		DiscoverableByEmail:   true,
 		Created:               testCreatedTime,
 		Updated:               testUpdatedTime,
 	}
@@ -129,6 +130,7 @@ func TestListUsersFromList(t *testing.T) {
 	testuser11 := &user.User{
 		ID:                    11,
 		Username:              "user11",
+		Name:                  "Some one else",
 		Password:              "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
 		IsActive:              true,
 		Issuer:                "local",
@@ -139,10 +141,12 @@ func TestListUsersFromList(t *testing.T) {
 	testuser12 := &user.User{
 		ID:                    12,
 		Username:              "user12",
+		Name:                  "Name with spaces",
 		Password:              "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
 		IsActive:              true,
 		Issuer:                "local",
 		EmailRemindersEnabled: true,
+		DiscoverableByName:    true,
 		Created:               testCreatedTime,
 		Updated:               testUpdatedTime,
 	}
