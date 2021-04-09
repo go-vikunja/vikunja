@@ -171,11 +171,7 @@ export default {
 			}
 
 			this.$store.dispatch('auth/login', credentials)
-				.then(() => {
-					router.push({name: 'home'})
-				})
-				.catch(() => {
-				})
+				.catch(() => {})
 		},
 		redirectToProvider(provider) {
 			const state = Math.random().toString(36).substring(2, 24)

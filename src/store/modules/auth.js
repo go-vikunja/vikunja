@@ -18,9 +18,10 @@ export default {
 			state.info = info
 			if (info !== null) {
 				state.avatarUrl = info.getAvatarUrl()
-			}
-			if (info.settings) {
-				state.settings = info.settings
+
+				if (info.settings) {
+					state.settings = info.settings
+				}
 			}
 		},
 		setUserSettings(state, settings) {
@@ -70,7 +71,6 @@ export default {
 
 					// Tell others the user is autheticated
 					ctx.commit('isLinkShareAuth', false)
-					console.log('login')
 					ctx.dispatch('checkAuth')
 					return Promise.resolve()
 				})
@@ -81,12 +81,13 @@ export default {
 							return Promise.reject()
 						}
 
-						let errorMsg = e.response.data.message
+						let errorMsg = typeof e.response.data.message !== 'undefined' ? e.response.data.message : null
 						if (e.response.status === 401) {
 							errorMsg = 'Wrong username or password.'
 						}
 						ctx.commit(ERROR_MESSAGE, errorMsg, {root: true})
 					}
+
 					return Promise.reject()
 				})
 				.finally(() => {
@@ -106,10 +107,11 @@ export default {
 					return ctx.dispatch('login', credentials)
 				})
 				.catch(e => {
-					if (e.response) {
+					if (e.response && e.response.data && e.response.data.message) {
 						ctx.commit(ERROR_MESSAGE, e.response.data.message, {root: true})
 					}
-					return Promise.reject()
+
+					return Promise.reject(e)
 				})
 				.finally(() => {
 					ctx.commit(LOADING, false, {root: true})
@@ -137,7 +139,7 @@ export default {
 				})
 				.catch(e => {
 					if (e.response) {
-						let errorMsg = e.response.data.message
+						let errorMsg = typeof e.response.data.message !== 'undefined' ? e.response.data.message : null
 						if (e.response.status === 401) {
 							errorMsg = 'Wrong username or password.'
 						}
