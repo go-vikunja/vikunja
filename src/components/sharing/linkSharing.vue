@@ -1,21 +1,33 @@
 <template>
 	<div>
-		<p class="has-text-weight-bold">Share Links</p>
+		<p class="has-text-weight-bold">
+			Share Links
+			<span
+
+				class="is-size-7"
+				v-tooltip="'Share Links allow you to easily share a list with other users who don\'t have an account on Vikunja.'">
+				What is a share link?
+			</span>
+		</p>
+
 		<div class="sharables-list">
-			<div class="p-4">
-				<p>Share with a link:</p>
-				<div class="field has-addons">
-					<div class="control">
-						<input
-							class="input"
-							placeholder="Name"
-							v-tooltip="'All actions done by this link share will show up with the name.'"
-							v-model="name"
-						/>
-					</div>
+
+			<x-button
+				v-if="!(linkShares.length === 0 || showNewForm)"
+				@click="showNewForm = true"
+				icon="plus"
+				class="mb-4">
+				Create a new link share
+			</x-button>
+
+			<div class="p-4" v-if="linkShares.length === 0 || showNewForm">
+				<div class="field">
+					<label class="label" for="linkShareRight">
+						Right
+					</label>
 					<div class="control">
 						<div class="select">
-							<select v-model="selectedRight">
+							<select v-model="selectedRight" id="linkShareRight">
 								<option :value="rights.READ">Read only</option>
 								<option :value="rights.READ_WRITE">
 									Read & write
@@ -24,11 +36,39 @@
 							</select>
 						</div>
 					</div>
+				</div>
+				<div class="field">
+					<label class="label" for="linkShareName">
+						Name (optional)
+					</label>
 					<div class="control">
-						<x-button @click="add"> Share</x-button>
+						<input
+							id="linkShareName"
+							class="input"
+							placeholder="e.g. Lorem Ipsum"
+							v-tooltip="'All actions done by this link share will show up with the name.'"
+							v-model="name"
+						/>
 					</div>
 				</div>
+				<div class="field">
+					<label class="label" for="linkSharePassword">
+						Password (optional)
+					</label>
+					<div class="control">
+						<input
+							id="linkSharePassword"
+							type="password"
+							class="input"
+							placeholder="e.g. ••••••••••••"
+							v-tooltip="'When authenticating, the user will be required to enter this password.'"
+							v-model="password"
+						/>
+					</div>
+				</div>
+				<x-button @click="add" icon="plus">Share</x-button>
 			</div>
+
 			<table
 				class="table has-actions is-striped is-hoverable is-fullwidth link-share-list"
 				v-if="linkShares.length > 0"
@@ -156,8 +196,10 @@ export default {
 			rights: rights,
 			selectedRight: rights.READ,
 			name: '',
+			password: '',
 			showDeleteModal: false,
 			linkIdToDelete: 0,
+			showNewForm: false,
 		}
 	},
 	beforeMount() {
@@ -193,15 +235,19 @@ export default {
 				})
 		},
 		add() {
-			let newLinkShare = new LinkShareModel({
+			const newLinkShare = new LinkShareModel({
 				right: this.selectedRight,
 				listId: this.listId,
 				name: this.name,
+				password: this.password,
 			})
 			this.linkShareService
 				.create(newLinkShare)
 				.then(() => {
 					this.selectedRight = rights.READ
+					this.name = ''
+					this.password = ''
+					this.showNewForm = false
 					this.success(
 						{message: 'The link share was successfully created'},
 						this
@@ -213,7 +259,7 @@ export default {
 				})
 		},
 		remove() {
-			let linkshare = new LinkShareModel({
+			const linkshare = new LinkShareModel({
 				id: this.linkIdToDelete,
 				listId: this.listId,
 			})

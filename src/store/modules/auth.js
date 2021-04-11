@@ -151,10 +151,11 @@ export default {
 					ctx.commit(LOADING, false, {root: true})
 				})
 		},
-
-		linkShareAuth(ctx, hash) {
+		linkShareAuth(ctx, {hash, password}) {
 			const HTTP = HTTPFactory()
-			return HTTP.post('/shares/' + hash + '/auth')
+			return HTTP.post('/shares/' + hash + '/auth', {
+				password: password,
+			})
 				.then(r => {
 					localStorage.setItem('token', r.data.token)
 					ctx.dispatch('checkAuth')

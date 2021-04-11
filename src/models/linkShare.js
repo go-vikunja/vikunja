@@ -23,6 +23,7 @@ export default class ListModel extends AbstractModel {
 			sharingType: 0,
 			listId: 0,
 			name: '',
+			password: '',
 
 			created: null,
 			updated: null,
