@@ -34,38 +34,52 @@ type LinkShareToken struct {
 	ListID int64 `json:"list_id"`
 }
 
+// LinkShareAuth represents everything required to authenticate a link share
+type LinkShareAuth struct {
+	Hash     string `param:"share" json:"-"`
+	Password string `json:"password"`
+}
+
 // AuthenticateLinkShare gives a jwt auth token for valid share hashes
 // @Summary Get an auth token for a share
 // @Description Get a jwt auth token for a shared list from a share hash.
 // @tags sharing
 // @Accept json
 // @Produce json
+// @Param password body v1.LinkShareAuth true "The password for link shares which require one."
 // @Param share path string true "The share hash"
 // @Success 200 {object} auth.Token "The valid jwt auth token."
 // @Failure 400 {object} web.HTTPError "Invalid link share object provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /shares/{share}/auth [post]
 func AuthenticateLinkShare(c echo.Context) error {
-	hash := c.Param("share")
+	sh := &LinkShareAuth{}
+	err := c.Bind(sh)
+	if err != nil {
+		return handler.HandleHTTPError(err, c)
+	}
 
 	s := db.NewSession()
 	defer s.Close()
 
-	share, err := models.GetLinkShareByHash(s, hash)
+	share, err := models.GetLinkShareByHash(s, sh.Hash)
 	if err != nil {
-		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)
 	}
 
-	if err := s.Commit(); err != nil {
-		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+	if share.SharingType == models.SharingTypeWithPassword {
+		err := models.VerifyLinkSharePassword(share, sh.Password)
+		if err != nil {
+			return handler.HandleHTTPError(err, c)
+		}
 	}
 
 	t, err := auth.NewLinkShareJWTAuthtoken(share)
 	if err != nil {
 		return handler.HandleHTTPError(err, c)
 	}
+
+	share.Password = ""
 
 	return c.JSON(http.StatusOK, LinkShareToken{
 		Token:       auth.Token{Token: t},

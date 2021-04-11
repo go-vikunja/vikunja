@@ -57,7 +57,7 @@ func ResetPassword(s *xorm.Session, reset *PasswordReset) (err error) {
 	}
 
 	// Hash the password
-	user.Password, err = hashPassword(reset.NewPassword)
+	user.Password, err = HashPassword(reset.NewPassword)
 	if err != nil {
 		return
 	}

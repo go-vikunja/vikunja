@@ -114,8 +114,8 @@ func bootstrapTestRequest(t *testing.T, method string, payload string, queryPara
 	return
 }
 
-func newTestRequest(t *testing.T, method string, handler func(ctx echo.Context) error, payload string) (rec *httptest.ResponseRecorder, err error) {
-	c, rec := bootstrapTestRequest(t, method, payload, nil)
+func newTestRequest(t *testing.T, method string, handler func(ctx echo.Context) error, payload string, queryParams url.Values, urlParams map[string]string) (rec *httptest.ResponseRecorder, err error) {
+	rec, c := testRequestSetup(t, method, payload, queryParams, urlParams)
 	err = handler(c)
 	return
 }

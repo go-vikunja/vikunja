@@ -150,3 +150,10 @@ This document describes the different errors Vikunja can return.
 |-----------|------------------|-------------|
 | 12001 | 412 | The subscription entity type is invalid. |
 | 12002 | 412 | The user is already subscribed to the entity itself or a parent entity. |
+
+## Link Shares
+
+| ErrorCode | HTTP Status Code | Description |
+|-----------|------------------|-------------|
+| 13001 | 412 | This link share requires a password for authentication, but none was provided. |
+| 13002 | 403 | The provided link share password was invalid. |

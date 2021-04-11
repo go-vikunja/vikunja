@@ -1512,3 +1512,61 @@ func (err ErrSubscriptionAlreadyExists) HTTPError() web.HTTPError {
 		Message:  "You're already subscribed.",
 	}
 }
+
+// =================
+// Link Share errors
+// =================
+
+// ErrLinkSharePasswordRequired represents an error where a link share authentication requires a password and none was provided
+type ErrLinkSharePasswordRequired struct {
+	ShareID int64
+}
+
+// IsErrLinkSharePasswordRequired checks if an error is ErrLinkSharePasswordRequired.
+func IsErrLinkSharePasswordRequired(err error) bool {
+	_, ok := err.(*ErrLinkSharePasswordRequired)
+	return ok
+}
+
+func (err *ErrLinkSharePasswordRequired) Error() string {
+	return fmt.Sprintf("Link Share requires a password for authentication [ShareID: %d]", err.ShareID)
+}
+
+// ErrCodeLinkSharePasswordRequired holds the unique world-error code of this error
+const ErrCodeLinkSharePasswordRequired = 13001
+
+// HTTPError holds the http error description
+func (err ErrLinkSharePasswordRequired) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusPreconditionFailed,
+		Code:     ErrCodeLinkSharePasswordRequired,
+		Message:  "This link share requires a password for authentication, but none was provided.",
+	}
+}
+
+// ErrLinkSharePasswordInvalid represents an error where a subscription entity type is unknown
+type ErrLinkSharePasswordInvalid struct {
+	ShareID int64
+}
+
+// IsErrLinkSharePasswordInvalid checks if an error is ErrLinkSharePasswordInvalid.
+func IsErrLinkSharePasswordInvalid(err error) bool {
+	_, ok := err.(*ErrLinkSharePasswordInvalid)
+	return ok
+}
+
+func (err *ErrLinkSharePasswordInvalid) Error() string {
+	return fmt.Sprintf("Provided Link Share password did not match the saved one [ShareID: %d]", err.ShareID)
+}
+
+// ErrCodeLinkSharePasswordInvalid holds the unique world-error code of this error
+const ErrCodeLinkSharePasswordInvalid = 13002
+
+// HTTPError holds the http error description
+func (err ErrLinkSharePasswordInvalid) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusForbidden,
+		Code:     ErrCodeLinkSharePasswordInvalid,
+		Message:  "The provided link share password is invalid.",
+	}
+}

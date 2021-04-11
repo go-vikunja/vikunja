@@ -4125,6 +4125,15 @@
                 "summary": "Get an auth token for a share",
                 "parameters": [
                     {
+                        "description": "The password for link shares which require one.",
+                        "name": "password",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/v1.LinkShareAuth"
+                        }
+                    },
+                    {
                         "type": "string",
                         "description": "The share hash",
                         "name": "share",
@@ -7476,6 +7485,10 @@
                     "description": "The name of this link share. All actions someone takes while being authenticated with that link will appear with that name.",
                     "type": "string"
                 },
+                "password": {
+                    "description": "The password of this link share. You can only set it, not retrieve it after the link share has been created.",
+                    "type": "string"
+                },
                 "right": {
                     "description": "The right this list is shared with. 0 = Read only, 1 = Read \u0026 Write, 2 = Admin. See the docs for more details.",
                     "type": "integer",
@@ -7487,7 +7500,7 @@
                     "$ref": "#/definitions/user.User"
                 },
                 "sharing_type": {
-                    "description": "The kind of this link. 0 = undefined, 1 = without password, 2 = with password (currently not implemented).",
+                    "description": "The kind of this link. 0 = undefined, 1 = without password, 2 = with password.",
                     "type": "integer",
                     "default": 0,
                     "maximum": 2
@@ -8491,6 +8504,14 @@
                     "type": "string",
                     "maxLength": 250,
                     "minLength": 1
+                }
+            }
+        },
+        "v1.LinkShareAuth": {
+            "type": "object",
+            "properties": {
+                "password": {
+                    "type": "string"
                 }
             }
         },

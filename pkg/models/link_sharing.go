@@ -17,7 +17,10 @@
 package models
 
 import (
+	"errors"
 	"time"
+
+	"golang.org/x/crypto/bcrypt"
 
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
@@ -49,8 +52,11 @@ type LinkSharing struct {
 	// The right this list is shared with. 0 = Read only, 1 = Read & Write, 2 = Admin. See the docs for more details.
 	Right Right `xorm:"bigint INDEX not null default 0" json:"right" valid:"length(0|2)" maximum:"2" default:"0"`
 
-	// The kind of this link. 0 = undefined, 1 = without password, 2 = with password (currently not implemented).
+	// The kind of this link. 0 = undefined, 1 = without password, 2 = with password.
 	SharingType SharingType `xorm:"bigint INDEX not null default 0" json:"sharing_type" valid:"length(0|2)" maximum:"2" default:"0"`
+
+	// The password of this link share. You can only set it, not retrieve it after the link share has been created.
+	Password string `xorm:"text null" json:"password"`
 
 	// The user who shared this list
 	SharedBy   *user.User `xorm:"-" json:"shared_by"`
@@ -129,7 +135,19 @@ func (share *LinkSharing) Create(s *xorm.Session, a web.Auth) (err error) {
 
 	share.SharedByID = a.GetID()
 	share.Hash = utils.MakeRandomString(40)
+
+	if share.Password != "" {
+		share.SharingType = SharingTypeWithPassword
+		share.Password, err = user.HashPassword(share.Password)
+		if err != nil {
+			return
+		}
+	} else {
+		share.SharingType = SharingTypeWithoutPassword
+	}
+
 	_, err = s.Insert(share)
+	share.Password = ""
 	share.SharedBy, _ = user.GetFromAuth(a)
 	return
 }
@@ -156,6 +174,7 @@ func (share *LinkSharing) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 	if !exists {
 		return ErrListShareDoesNotExist{ID: share.ID, Hash: share.Hash}
 	}
+	share.Password = ""
 	return
 }
 
@@ -212,6 +231,7 @@ func (share *LinkSharing) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 
 	for _, s := range shares {
 		s.SharedBy = users[s.SharedByID]
+		s.Password = ""
 	}
 
 	// Total count
@@ -286,4 +306,21 @@ func GetLinkSharesByIDs(s *xorm.Session, ids []int64) (shares map[int64]*LinkSha
 	shares = make(map[int64]*LinkSharing)
 	err = s.In("id", ids).Find(&shares)
 	return
+}
+
+// VerifyLinkSharePassword checks if a password of a link share matches a provided one.
+func VerifyLinkSharePassword(share *LinkSharing, password string) (err error) {
+	if password == "" {
+		return &ErrLinkSharePasswordRequired{ShareID: share.ID}
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(share.Password), []byte(password))
+	if err != nil {
+		if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
+			return &ErrLinkSharePasswordInvalid{ShareID: share.ID}
+		}
+		return err
+	}
+
+	return nil
 }

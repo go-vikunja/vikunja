@@ -30,12 +30,12 @@ func TestLogin(t *testing.T) {
 		rec, err := newTestRequest(t, http.MethodPost, apiv1.Login, `{
   "username": "user1",
   "password": "1234"
-}`)
+}`, nil, nil)
 		assert.NoError(t, err)
 		assert.Contains(t, rec.Body.String(), "token")
 	})
 	t.Run("Empty payload", func(t *testing.T) {
-		_, err := newTestRequest(t, http.MethodPost, apiv1.Login, `{}`)
+		_, err := newTestRequest(t, http.MethodPost, apiv1.Login, `{}`, nil, nil)
 		assert.Error(t, err)
 		assertHandlerErrorCode(t, err, user.ErrCodeNoUsernamePassword)
 	})
@@ -43,7 +43,7 @@ func TestLogin(t *testing.T) {
 		_, err := newTestRequest(t, http.MethodPost, apiv1.Login, `{
   "username": "userWichDoesNotExist",
   "password": "1234"
-}`)
+}`, nil, nil)
 		assert.Error(t, err)
 		assertHandlerErrorCode(t, err, user.ErrCodeWrongUsernameOrPassword)
 	})
@@ -51,7 +51,7 @@ func TestLogin(t *testing.T) {
 		_, err := newTestRequest(t, http.MethodPost, apiv1.Login, `{
   "username": "user1",
   "password": "wrong"
-}`)
+}`, nil, nil)
 		assert.Error(t, err)
 		assertHandlerErrorCode(t, err, user.ErrCodeWrongUsernameOrPassword)
 	})
@@ -59,7 +59,7 @@ func TestLogin(t *testing.T) {
 		_, err := newTestRequest(t, http.MethodPost, apiv1.Login, `{
   "username": "user5",
   "password": "1234"
-}`)
+}`, nil, nil)
 		assert.Error(t, err)
 		assertHandlerErrorCode(t, err, user.ErrCodeEmailNotConfirmed)
 	})

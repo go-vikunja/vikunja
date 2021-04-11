@@ -31,12 +31,12 @@ func TestRegister(t *testing.T) {
   "username": "newUser",
   "password": "1234",
   "email": "email@example.com"
-}`)
+}`, nil, nil)
 		assert.NoError(t, err)
 		assert.Contains(t, rec.Body.String(), `"username":"newUser"`)
 	})
 	t.Run("Empty payload", func(t *testing.T) {
-		_, err := newTestRequest(t, http.MethodPost, apiv1.RegisterUser, `{}`)
+		_, err := newTestRequest(t, http.MethodPost, apiv1.RegisterUser, `{}`, nil, nil)
 		assert.Error(t, err)
 		assertHandlerErrorCode(t, err, user.ErrCodeNoUsernamePassword)
 	})
@@ -45,7 +45,7 @@ func TestRegister(t *testing.T) {
   "username": "",
   "password": "1234",
   "email": "email@example.com"
-}`)
+}`, nil, nil)
 		assert.Error(t, err)
 		assertHandlerErrorCode(t, err, user.ErrCodeNoUsernamePassword)
 	})
@@ -54,7 +54,7 @@ func TestRegister(t *testing.T) {
   "username": "newUser",
   "password": "",
   "email": "email@example.com"
-}`)
+}`, nil, nil)
 		assert.Error(t, err)
 		assertHandlerErrorCode(t, err, user.ErrCodeNoUsernamePassword)
 	})
@@ -63,7 +63,7 @@ func TestRegister(t *testing.T) {
   "username": "newUser",
   "password": "1234",
   "email": ""
-}`)
+}`, nil, nil)
 		assert.Error(t, err)
 		assertHandlerErrorCode(t, err, user.ErrCodeNoUsernamePassword)
 	})
@@ -72,7 +72,7 @@ func TestRegister(t *testing.T) {
   "username": "user1",
   "password": "1234",
   "email": "email@example.com"
-}`)
+}`, nil, nil)
 		assert.Error(t, err)
 		assertHandlerErrorCode(t, err, user.ErrorCodeUsernameExists)
 	})
@@ -81,7 +81,7 @@ func TestRegister(t *testing.T) {
   "username": "newUser",
   "password": "1234",
   "email": "user1@example.com"
-}`)
+}`, nil, nil)
 		assert.Error(t, err)
 		assertHandlerErrorCode(t, err, user.ErrorCodeUserEmailExists)
 	})

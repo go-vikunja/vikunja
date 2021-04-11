@@ -48,7 +48,7 @@ func CreateUser(s *xorm.Session, user *User) (newUser *User, err error) {
 
 	if user.Issuer == issuerLocal {
 		// Hash the password
-		user.Password, err = hashPassword(user.Password)
+		user.Password, err = HashPassword(user.Password)
 		if err != nil {
 			return nil, err
 		}
@@ -98,7 +98,7 @@ func CreateUser(s *xorm.Session, user *User) (newUser *User, err error) {
 }
 
 // HashPassword hashes a password
-func hashPassword(password string) (string, error) {
+func HashPassword(password string) (string, error) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 11)
 	return string(bytes), err
 }

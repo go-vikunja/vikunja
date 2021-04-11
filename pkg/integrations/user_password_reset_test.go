@@ -31,12 +31,12 @@ func TestUserPasswordReset(t *testing.T) {
 		rec, err := newTestRequest(t, http.MethodPost, apiv1.UserResetPassword, `{
 	"new_password": "1234",
 	"token": "passwordresettesttoken"
-}`)
+}`, nil, nil)
 		assert.NoError(t, err)
 		assert.Contains(t, rec.Body.String(), `The password was updated successfully.`)
 	})
 	t.Run("Empty payload", func(t *testing.T) {
-		_, err := newTestRequest(t, http.MethodPost, apiv1.UserResetPassword, `{}`)
+		_, err := newTestRequest(t, http.MethodPost, apiv1.UserResetPassword, `{}`, nil, nil)
 		assert.Error(t, err)
 		assert.Equal(t, http.StatusBadRequest, err.(*echo.HTTPError).Code)
 	})
@@ -44,7 +44,7 @@ func TestUserPasswordReset(t *testing.T) {
 		_, err := newTestRequest(t, http.MethodPost, apiv1.UserResetPassword, `{
 	"new_password": "",
 	"token": "passwordresettesttoken"
-}`)
+}`, nil, nil)
 		assert.Error(t, err)
 		assertHandlerErrorCode(t, err, user.ErrCodeNoUsernamePassword)
 	})
@@ -52,7 +52,7 @@ func TestUserPasswordReset(t *testing.T) {
 		_, err := newTestRequest(t, http.MethodPost, apiv1.UserResetPassword, `{
 	"new_password": "1234",
 	"token": "invalidtoken"
-}`)
+}`, nil, nil)
 		assert.Error(t, err)
 		assertHandlerErrorCode(t, err, user.ErrCodeInvalidPasswordResetToken)
 	})

@@ -400,7 +400,7 @@ func UpdateUserPassword(s *xorm.Session, user *User, newPassword string) (err er
 	}
 
 	// Hash the new password and set it
-	hashed, err := hashPassword(newPassword)
+	hashed, err := HashPassword(newPassword)
 	if err != nil {
 		return err
 	}
