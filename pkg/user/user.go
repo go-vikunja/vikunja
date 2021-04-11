@@ -67,11 +67,10 @@ type User struct {
 	Issuer  string `xorm:"text null" json:"-"`
 	Subject string `xorm:"text null" json:"-"`
 
-	// If enabled, sends email reminders of tasks to the user.
-	EmailRemindersEnabled bool `xorm:"bool default true" json:"-"`
-
-	DiscoverableByName  bool `xorm:"bool default false index" json:"-"`
-	DiscoverableByEmail bool `xorm:"bool default false index" json:"-"`
+	EmailRemindersEnabled        bool `xorm:"bool default true" json:"-"`
+	DiscoverableByName           bool `xorm:"bool default false index" json:"-"`
+	DiscoverableByEmail          bool `xorm:"bool default false index" json:"-"`
+	OverdueTasksRemindersEnabled bool `xorm:"bool default true index" json:"-"`
 
 	// A timestamp when this task was created. You cannot change this value.
 	Created time.Time `xorm:"created not null" json:"created"`
@@ -371,6 +370,7 @@ func UpdateUser(s *xorm.Session, user *User) (updatedUser *User, err error) {
 			"email_reminders_enabled",
 			"discoverable_by_name",
 			"discoverable_by_email",
+			"overdue_tasks_reminders_enabled",
 		).
 		Update(user)
 	if err != nil {

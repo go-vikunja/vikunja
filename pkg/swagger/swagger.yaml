@@ -10,7 +10,8 @@ definitions:
       id:
         type: string
       info:
-        description: This can be used to supply extra information from an image provider to clients
+        description: This can be used to supply extra information from an image provider
+          to clients
         type: object
       thumb:
         type: string
@@ -52,7 +53,8 @@ definitions:
   models.Bucket:
     properties:
       created:
-        description: A timestamp when this bucket was created. You cannot change this value.
+        description: A timestamp when this bucket was created. You cannot change this
+          value.
         type: string
       created_by:
         $ref: '#/definitions/user.User'
@@ -68,7 +70,8 @@ definitions:
           type: string
         type: array
       filter_concat:
-        description: The way all filter conditions are concatenated together, can be either "and" or "or".,
+        description: The way all filter conditions are concatenated together, can
+          be either "and" or "or".,
         type: string
       filter_include_nulls:
         description: If set to true, the result will also include null values
@@ -82,7 +85,9 @@ definitions:
         description: The unique, numeric id of this bucket.
         type: integer
       is_done_bucket:
-        description: If this bucket is the "done bucket". All tasks moved into this bucket will automatically marked as done. All tasks marked as done from elsewhere will be moved into this bucket.
+        description: If this bucket is the "done bucket". All tasks moved into this
+          bucket will automatically marked as done. All tasks marked as done from
+          elsewhere will be moved into this bucket.
         type: boolean
       limit:
         description: How many tasks can be at the same time on this board max
@@ -91,12 +96,14 @@ definitions:
         description: The list this bucket belongs to.
         type: integer
       order_by:
-        description: The query parameter to order the items by. This can be either asc or desc, with asc being the default.
+        description: The query parameter to order the items by. This can be either
+          asc or desc, with asc being the default.
         items:
           type: string
         type: array
       sort_by:
-        description: The query parameter to sort by. This is for ex. done, priority, etc.
+        description: The query parameter to sort by. This is for ex. done, priority,
+          etc.
         items:
           type: string
         type: array
@@ -110,7 +117,8 @@ definitions:
         minLength: 1
         type: string
       updated:
-        description: A timestamp when this bucket was last updated. You cannot change this value.
+        description: A timestamp when this bucket was last updated. You cannot change
+          this value.
         type: string
     type: object
   models.BulkAssignees:
@@ -137,7 +145,8 @@ definitions:
         description: BucketID is the ID of the kanban bucket this task belongs to.
         type: integer
       created:
-        description: A timestamp when this task was created. You cannot change this value.
+        description: A timestamp when this task was created. You cannot change this
+          value.
         type: string
       created_by:
         $ref: '#/definitions/user.User'
@@ -165,13 +174,15 @@ definitions:
         description: The unique, numeric id of this task.
         type: integer
       identifier:
-        description: The task identifier, based on the list identifier and the task's index
+        description: The task identifier, based on the list identifier and the task's
+          index
         type: string
       index:
         description: The task index, calculated per list
         type: integer
       is_favorite:
-        description: True if a task is a favorite task. Favorite tasks show up in a separate "Important" list
+        description: True if a task is a favorite task. Favorite tasks show up in
+          a separate "Important" list
         type: boolean
       labels:
         description: An array of labels which are associated with this task.
@@ -194,21 +205,26 @@ definitions:
           which also leaves a lot of room for rearranging and sorting later.
         type: number
       priority:
-        description: The task priority. Can be anything you want, it is possible to sort by this later.
+        description: The task priority. Can be anything you want, it is possible to
+          sort by this later.
         type: integer
       related_tasks:
         $ref: '#/definitions/models.RelatedTaskMap'
         description: All related tasks, grouped by their relation kind
       reminder_dates:
-        description: An array of datetimes when the user wants to be reminded of the task.
+        description: An array of datetimes when the user wants to be reminded of the
+          task.
         items:
           type: string
         type: array
       repeat_after:
-        description: An amount in seconds this task repeats itself. If this is set, when marking the task as done, it will mark itself as "undone" and then increase all remindes and the due date by its amount.
+        description: An amount in seconds this task repeats itself. If this is set,
+          when marking the task as done, it will mark itself as "undone" and then
+          increase all remindes and the due date by its amount.
         type: integer
       repeat_from_current_date:
-        description: If specified, a repeating task will repeat from the current date rather than the last set date.
+        description: If specified, a repeating task will repeat from the current date
+          rather than the last set date.
         type: boolean
       start_date:
         description: When this task starts.
@@ -229,13 +245,15 @@ definitions:
         minLength: 1
         type: string
       updated:
-        description: A timestamp when this task was last updated. You cannot change this value.
+        description: A timestamp when this task was last updated. You cannot change
+          this value.
         type: string
     type: object
   models.DatabaseNotifications:
     properties:
       created:
-        description: A timestamp when this notification was created. You cannot change this value.
+        description: A timestamp when this notification was created. You cannot change
+          this value.
         type: string
       id:
         description: The unique, numeric id of this notification.
@@ -252,13 +270,15 @@ definitions:
           True is read, false is unread.
         type: boolean
       read_at:
-        description: When this notification is marked as read, this will be updated with the current timestamp.
+        description: When this notification is marked as read, this will be updated
+          with the current timestamp.
         type: string
     type: object
   models.Label:
     properties:
       created:
-        description: A timestamp when this label was created. You cannot change this value.
+        description: A timestamp when this label was created. You cannot change this
+          value.
         type: string
       created_by:
         $ref: '#/definitions/user.User'
@@ -274,18 +294,21 @@ definitions:
         description: The unique, numeric id of this label.
         type: integer
       title:
-        description: The title of the lable. You'll see this one on tasks associated with it.
+        description: The title of the lable. You'll see this one on tasks associated
+          with it.
         maxLength: 250
         minLength: 1
         type: string
       updated:
-        description: A timestamp when this label was last updated. You cannot change this value.
+        description: A timestamp when this label was last updated. You cannot change
+          this value.
         type: string
     type: object
   models.LabelTask:
     properties:
       created:
-        description: A timestamp when this task was created. You cannot change this value.
+        description: A timestamp when this task was created. You cannot change this
+          value.
         type: string
       label_id:
         description: The label id you want to associate with a task.
@@ -302,7 +325,8 @@ definitions:
   models.LinkSharing:
     properties:
       created:
-        description: A timestamp when this list was shared. You cannot change this value.
+        description: A timestamp when this list was shared. You cannot change this
+          value.
         type: string
       hash:
         description: The public id to get this shared list
@@ -311,14 +335,17 @@ definitions:
         description: The ID of the shared thing
         type: integer
       name:
-        description: The name of this link share. All actions someone takes while being authenticated with that link will appear with that name.
+        description: The name of this link share. All actions someone takes while
+          being authenticated with that link will appear with that name.
         type: string
       password:
-        description: The password of this link share. You can only set it, not retrieve it after the link share has been created.
+        description: The password of this link share. You can only set it, not retrieve
+          it after the link share has been created.
         type: string
       right:
         default: 0
-        description: The right this list is shared with. 0 = Read only, 1 = Read & Write, 2 = Admin. See the docs for more details.
+        description: The right this list is shared with. 0 = Read only, 1 = Read &
+          Write, 2 = Admin. See the docs for more details.
         maximum: 2
         type: integer
       shared_by:
@@ -326,20 +353,25 @@ definitions:
         description: The user who shared this list
       sharing_type:
         default: 0
-        description: The kind of this link. 0 = undefined, 1 = without password, 2 = with password.
+        description: The kind of this link. 0 = undefined, 1 = without password, 2
+          = with password.
         maximum: 2
         type: integer
       updated:
-        description: A timestamp when this share was last updated. You cannot change this value.
+        description: A timestamp when this share was last updated. You cannot change
+          this value.
         type: string
     type: object
   models.List:
     properties:
       background_information:
-        description: Holds extra information about the background set since some background providers require attribution or similar. If not null, the background can be accessed at /lists/{listID}/background
+        description: Holds extra information about the background set since some background
+          providers require attribution or similar. If not null, the background can
+          be accessed at /lists/{listID}/background
         type: object
       created:
-        description: A timestamp when this list was created. You cannot change this value.
+        description: A timestamp when this list was created. You cannot change this
+          value.
         type: string
       description:
         description: The description of the list.
@@ -360,7 +392,8 @@ definitions:
         description: Whether or not a list is archived.
         type: boolean
       is_favorite:
-        description: True if a list is a favorite. Favorite lists show up in a separate namespace.
+        description: True if a list is a favorite. Favorite lists show up in a separate
+          namespace.
         type: boolean
       namespace_id:
         type: integer
@@ -378,7 +411,8 @@ definitions:
         minLength: 1
         type: string
       updated:
-        description: A timestamp when this list was last updated. You cannot change this value.
+        description: A timestamp when this list was last updated. You cannot change
+          this value.
         type: string
     type: object
   models.ListDuplicate:
@@ -393,18 +427,21 @@ definitions:
   models.ListUser:
     properties:
       created:
-        description: A timestamp when this relation was created. You cannot change this value.
+        description: A timestamp when this relation was created. You cannot change
+          this value.
         type: string
       id:
         description: The unique, numeric id of this list <-> user relation.
         type: integer
       right:
         default: 0
-        description: The right this user has. 0 = Read only, 1 = Read & Write, 2 = Admin. See the docs for more details.
+        description: The right this user has. 0 = Read only, 1 = Read & Write, 2 =
+          Admin. See the docs for more details.
         maximum: 2
         type: integer
       updated:
-        description: A timestamp when this relation was last updated. You cannot change this value.
+        description: A timestamp when this relation was last updated. You cannot change
+          this value.
         type: string
       user_id:
         description: The username.
@@ -419,7 +456,8 @@ definitions:
   models.Namespace:
     properties:
       created:
-        description: A timestamp when this namespace was created. You cannot change this value.
+        description: A timestamp when this namespace was created. You cannot change
+          this value.
         type: string
       description:
         description: The description of the namespace
@@ -448,24 +486,28 @@ definitions:
         minLength: 1
         type: string
       updated:
-        description: A timestamp when this namespace was last updated. You cannot change this value.
+        description: A timestamp when this namespace was last updated. You cannot
+          change this value.
         type: string
     type: object
   models.NamespaceUser:
     properties:
       created:
-        description: A timestamp when this relation was created. You cannot change this value.
+        description: A timestamp when this relation was created. You cannot change
+          this value.
         type: string
       id:
         description: The unique, numeric id of this namespace <-> user relation.
         type: integer
       right:
         default: 0
-        description: The right this user has. 0 = Read only, 1 = Read & Write, 2 = Admin. See the docs for more details.
+        description: The right this user has. 0 = Read only, 1 = Read & Write, 2 =
+          Admin. See the docs for more details.
         maximum: 2
         type: integer
       updated:
-        description: A timestamp when this relation was last updated. You cannot change this value.
+        description: A timestamp when this relation was last updated. You cannot change
+          this value.
         type: string
       user_id:
         description: The username.
@@ -474,7 +516,8 @@ definitions:
   models.NamespaceWithLists:
     properties:
       created:
-        description: A timestamp when this namespace was created. You cannot change this value.
+        description: A timestamp when this namespace was created. You cannot change
+          this value.
         type: string
       description:
         description: The description of the namespace
@@ -507,7 +550,8 @@ definitions:
         minLength: 1
         type: string
       updated:
-        description: A timestamp when this namespace was last updated. You cannot change this value.
+        description: A timestamp when this namespace was last updated. You cannot
+          change this value.
         type: string
     type: object
   models.RelatedTaskMap:
@@ -519,7 +563,8 @@ definitions:
   models.SavedFilter:
     properties:
       created:
-        description: A timestamp when this filter was created. You cannot change this value.
+        description: A timestamp when this filter was created. You cannot change this
+          value.
         type: string
       description:
         description: The description of the filter
@@ -531,7 +576,8 @@ definitions:
         description: The unique numeric id of this saved filter
         type: integer
       is_favorite:
-        description: True if the filter is a favorite. Favorite filters show up in a separate namespace together with favorite lists.
+        description: True if the filter is a favorite. Favorite filters show up in
+          a separate namespace together with favorite lists.
         type: boolean
       owner:
         $ref: '#/definitions/user.User'
@@ -542,13 +588,15 @@ definitions:
         minLength: 1
         type: string
       updated:
-        description: A timestamp when this filter was last updated. You cannot change this value.
+        description: A timestamp when this filter was last updated. You cannot change
+          this value.
         type: string
     type: object
   models.Subscription:
     properties:
       created:
-        description: A timestamp when this subscription was created. You cannot change this value.
+        description: A timestamp when this subscription was created. You cannot change
+          this value.
         type: string
       entity:
         type: string
@@ -578,7 +626,8 @@ definitions:
         description: BucketID is the ID of the kanban bucket this task belongs to.
         type: integer
       created:
-        description: A timestamp when this task was created. You cannot change this value.
+        description: A timestamp when this task was created. You cannot change this
+          value.
         type: string
       created_by:
         $ref: '#/definitions/user.User'
@@ -606,13 +655,15 @@ definitions:
         description: The unique, numeric id of this task.
         type: integer
       identifier:
-        description: The task identifier, based on the list identifier and the task's index
+        description: The task identifier, based on the list identifier and the task's
+          index
         type: string
       index:
         description: The task index, calculated per list
         type: integer
       is_favorite:
-        description: True if a task is a favorite task. Favorite tasks show up in a separate "Important" list
+        description: True if a task is a favorite task. Favorite tasks show up in
+          a separate "Important" list
         type: boolean
       labels:
         description: An array of labels which are associated with this task.
@@ -635,21 +686,26 @@ definitions:
           which also leaves a lot of room for rearranging and sorting later.
         type: number
       priority:
-        description: The task priority. Can be anything you want, it is possible to sort by this later.
+        description: The task priority. Can be anything you want, it is possible to
+          sort by this later.
         type: integer
       related_tasks:
         $ref: '#/definitions/models.RelatedTaskMap'
         description: All related tasks, grouped by their relation kind
       reminder_dates:
-        description: An array of datetimes when the user wants to be reminded of the task.
+        description: An array of datetimes when the user wants to be reminded of the
+          task.
         items:
           type: string
         type: array
       repeat_after:
-        description: An amount in seconds this task repeats itself. If this is set, when marking the task as done, it will mark itself as "undone" and then increase all remindes and the due date by its amount.
+        description: An amount in seconds this task repeats itself. If this is set,
+          when marking the task as done, it will mark itself as "undone" and then
+          increase all remindes and the due date by its amount.
         type: integer
       repeat_from_current_date:
-        description: If specified, a repeating task will repeat from the current date rather than the last set date.
+        description: If specified, a repeating task will repeat from the current date
+          rather than the last set date.
         type: boolean
       start_date:
         description: When this task starts.
@@ -665,7 +721,8 @@ definitions:
         minLength: 1
         type: string
       updated:
-        description: A timestamp when this task was last updated. You cannot change this value.
+        description: A timestamp when this task was last updated. You cannot change
+          this value.
         type: string
     type: object
   models.TaskAssginee:
@@ -701,7 +758,8 @@ definitions:
           type: string
         type: array
       filter_concat:
-        description: The way all filter conditions are concatenated together, can be either "and" or "or".,
+        description: The way all filter conditions are concatenated together, can
+          be either "and" or "or".,
         type: string
       filter_include_nulls:
         description: If set to true, the result will also include null values
@@ -712,12 +770,14 @@ definitions:
           type: string
         type: array
       order_by:
-        description: The query parameter to order the items by. This can be either asc or desc, with asc being the default.
+        description: The query parameter to order the items by. This can be either
+          asc or desc, with asc being the default.
         items:
           type: string
         type: array
       sort_by:
-        description: The query parameter to sort by. This is for ex. done, priority, etc.
+        description: The query parameter to sort by. This is for ex. done, priority,
+          etc.
         items:
           type: string
         type: array
@@ -738,7 +798,8 @@ definitions:
   models.TaskRelation:
     properties:
       created:
-        description: A timestamp when this label was created. You cannot change this value.
+        description: A timestamp when this label was created. You cannot change this
+          value.
         type: string
       created_by:
         $ref: '#/definitions/user.User'
@@ -756,7 +817,8 @@ definitions:
   models.Team:
     properties:
       created:
-        description: A timestamp when this relation was created. You cannot change this value.
+        description: A timestamp when this relation was created. You cannot change
+          this value.
         type: string
       created_by:
         $ref: '#/definitions/user.User'
@@ -778,71 +840,83 @@ definitions:
         minLength: 1
         type: string
       updated:
-        description: A timestamp when this relation was last updated. You cannot change this value.
+        description: A timestamp when this relation was last updated. You cannot change
+          this value.
         type: string
     type: object
   models.TeamList:
     properties:
       created:
-        description: A timestamp when this relation was created. You cannot change this value.
+        description: A timestamp when this relation was created. You cannot change
+          this value.
         type: string
       id:
         description: The unique, numeric id of this list <-> team relation.
         type: integer
       right:
         default: 0
-        description: The right this team has. 0 = Read only, 1 = Read & Write, 2 = Admin. See the docs for more details.
+        description: The right this team has. 0 = Read only, 1 = Read & Write, 2 =
+          Admin. See the docs for more details.
         maximum: 2
         type: integer
       team_id:
         description: The team id.
         type: integer
       updated:
-        description: A timestamp when this relation was last updated. You cannot change this value.
+        description: A timestamp when this relation was last updated. You cannot change
+          this value.
         type: string
     type: object
   models.TeamMember:
     properties:
       admin:
-        description: Whether or not the member is an admin of the team. See the docs for more about what a team admin can do
+        description: Whether or not the member is an admin of the team. See the docs
+          for more about what a team admin can do
         type: boolean
       created:
-        description: A timestamp when this relation was created. You cannot change this value.
+        description: A timestamp when this relation was created. You cannot change
+          this value.
         type: string
       id:
         description: The unique, numeric id of this team member relation.
         type: integer
       username:
-        description: The username of the member. We use this to prevent automated user id entering.
+        description: The username of the member. We use this to prevent automated
+          user id entering.
         type: string
     type: object
   models.TeamNamespace:
     properties:
       created:
-        description: A timestamp when this relation was created. You cannot change this value.
+        description: A timestamp when this relation was created. You cannot change
+          this value.
         type: string
       id:
         description: The unique, numeric id of this namespace <-> team relation.
         type: integer
       right:
         default: 0
-        description: The right this team has. 0 = Read only, 1 = Read & Write, 2 = Admin. See the docs for more details.
+        description: The right this team has. 0 = Read only, 1 = Read & Write, 2 =
+          Admin. See the docs for more details.
         maximum: 2
         type: integer
       team_id:
         description: The team id.
         type: integer
       updated:
-        description: A timestamp when this relation was last updated. You cannot change this value.
+        description: A timestamp when this relation was last updated. You cannot change
+          this value.
         type: string
     type: object
   models.TeamUser:
     properties:
       admin:
-        description: Whether or not the member is an admin of the team. See the docs for more about what a team admin can do
+        description: Whether or not the member is an admin of the team. See the docs
+          for more about what a team admin can do
         type: boolean
       created:
-        description: A timestamp when this task was created. You cannot change this value.
+        description: A timestamp when this task was created. You cannot change this
+          value.
         type: string
       email:
         description: The user's email address.
@@ -855,7 +929,8 @@ definitions:
         description: The full name of the user.
         type: string
       updated:
-        description: A timestamp when this task was last updated. You cannot change this value.
+        description: A timestamp when this task was last updated. You cannot change
+          this value.
         type: string
       username:
         description: The username of the user. Is always unique.
@@ -866,7 +941,8 @@ definitions:
   models.TeamWithRight:
     properties:
       created:
-        description: A timestamp when this relation was created. You cannot change this value.
+        description: A timestamp when this relation was created. You cannot change
+          this value.
         type: string
       created_by:
         $ref: '#/definitions/user.User'
@@ -890,13 +966,15 @@ definitions:
       right:
         type: integer
       updated:
-        description: A timestamp when this relation was last updated. You cannot change this value.
+        description: A timestamp when this relation was last updated. You cannot change
+          this value.
         type: string
     type: object
   models.UserWithRight:
     properties:
       created:
-        description: A timestamp when this task was created. You cannot change this value.
+        description: A timestamp when this task was created. You cannot change this
+          value.
         type: string
       email:
         description: The user's email address.
@@ -911,7 +989,8 @@ definitions:
       right:
         type: integer
       updated:
-        description: A timestamp when this task was last updated. You cannot change this value.
+        description: A timestamp when this task was last updated. You cannot change
+          this value.
         type: string
       username:
         description: The username of the user. Is always unique.
@@ -922,7 +1001,8 @@ definitions:
   notifications.DatabaseNotification:
     properties:
       created:
-        description: A timestamp when this notification was created. You cannot change this value.
+        description: A timestamp when this notification was created. You cannot change
+          this value.
         type: string
       id:
         description: The unique, numeric id of this notification.
@@ -934,7 +1014,8 @@ definitions:
         description: The actual content of the notification.
         type: object
       read_at:
-        description: When this notification is marked as read, this will be updated with the current timestamp.
+        description: When this notification is marked as read, this will be updated
+          with the current timestamp.
         type: string
     type: object
   openid.Callback:
@@ -975,7 +1056,8 @@ definitions:
         description: The unique, numeric id of this user.
         type: integer
       password:
-        description: The user's password in clear text. Only used when registering the user.
+        description: The user's password in clear text. Only used when registering
+          the user.
         maxLength: 250
         minLength: 8
         type: string
@@ -1030,7 +1112,8 @@ definitions:
   user.TOTP:
     properties:
       enabled:
-        description: The totp entry will only be enabled after the user verified they have a working totp setup.
+        description: The totp entry will only be enabled after the user verified they
+          have a working totp setup.
         type: boolean
       secret:
         type: string
@@ -1046,7 +1129,8 @@ definitions:
   user.User:
     properties:
       created:
-        description: A timestamp when this task was created. You cannot change this value.
+        description: A timestamp when this task was created. You cannot change this
+          value.
         type: string
       email:
         description: The user's email address.
@@ -1059,7 +1143,8 @@ definitions:
         description: The full name of the user.
         type: string
       updated:
-        description: A timestamp when this task was last updated. You cannot change this value.
+        description: A timestamp when this task was last updated. You cannot change
+          this value.
         type: string
       username:
         description: The username of the user. Is always unique.
@@ -1075,7 +1160,8 @@ definitions:
   v1.UserAvatarProvider:
     properties:
       avatar_provider:
-        description: The avatar provider. Valid types are `gravatar` (uses the user email), `upload`, `initials`, `default`.
+        description: The avatar provider. Valid types are `gravatar` (uses the user
+          email), `upload`, `initials`, `default`.
         type: string
     type: object
   v1.UserPassword:
@@ -1088,10 +1174,12 @@ definitions:
   v1.UserSettings:
     properties:
       discoverable_by_email:
-        description: If true, the user can be found when searching for their exact email.
+        description: If true, the user can be found when searching for their exact
+          email.
         type: boolean
       discoverable_by_name:
-        description: If true, this user can be found by their name or parts of it when searching for it.
+        description: If true, this user can be found by their name or parts of it
+          when searching for it.
         type: boolean
       email_reminders_enabled:
         description: If enabled, sends email reminders of tasks to the user.
@@ -1099,6 +1187,10 @@ definitions:
       name:
         description: The new name of the current user.
         type: string
+      overdue_tasks_reminders_enabled:
+        description: If enabled, the user will get an email for their overdue tasks
+          each morning.
+        type: boolean
     type: object
   v1.authInfo:
     properties:
@@ -1236,7 +1328,9 @@ paths:
     post:
       consumes:
       - application/json
-      description: After a redirect from the OpenID Connect provider to the frontend has been made with the authentication `code`, this endpoint can be used to obtain a jwt token for that user and thus log them in.
+      description: After a redirect from the OpenID Connect provider to the frontend
+        has been made with the authentication `code`, this endpoint can be used to
+        obtain a jwt token for that user and thus log them in.
       parameters:
       - description: The openid callback
         in: body
@@ -1296,7 +1390,8 @@ paths:
       - list
   /backgrounds/unsplash/image/{image}/thumb:
     get:
-      description: Get an unsplash thumbnail image. The thumbnail is cropped to a max width of 200px. **Returns json on error.**
+      description: Get an unsplash thumbnail image. The thumbnail is cropped to a
+        max width of 200px. **Returns json on error.**
       parameters:
       - description: Unsplash Image ID
         in: path
@@ -1331,7 +1426,8 @@ paths:
         in: query
         name: s
         type: string
-      - description: The page number. Used for pagination. If not provided, the first page of results is returned.
+      - description: The page number. Used for pagination. If not provided, the first
+          page of results is returned.
         in: query
         name: p
         type: integer
@@ -1479,7 +1575,8 @@ paths:
       - filter
   /info:
     get:
-      description: Returns the version, frontendurl, motd and various settings of Vikunja
+      description: Returns the version, frontendurl, motd and various settings of
+        Vikunja
       produces:
       - application/json
       responses:
@@ -1494,13 +1591,16 @@ paths:
     get:
       consumes:
       - application/json
-      description: Returns all labels which are either created by the user or associated with a task the user has at least read-access to.
+      description: Returns all labels which are either created by the user or associated
+        with a task the user has at least read-access to.
       parameters:
-      - description: The page number. Used for pagination. If not provided, the first page of results is returned.
+      - description: The page number. Used for pagination. If not provided, the first
+          page of results is returned.
         in: query
         name: page
         type: integer
-      - description: The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page.
+      - description: The maximum number of items per page. Note this parameter is
+          limited by the configured maximum of items per page.
         in: query
         name: per_page
         type: integer
@@ -1561,7 +1661,8 @@ paths:
     delete:
       consumes:
       - application/json
-      description: Delete an existing label. The user needs to be the creator of the label to be able to do this.
+      description: Delete an existing label. The user needs to be the creator of the
+        label to be able to do this.
       parameters:
       - description: Label ID
         in: path
@@ -1629,7 +1730,8 @@ paths:
     put:
       consumes:
       - application/json
-      description: Update an existing label. The user needs to be the creator of the label to be able to do this.
+      description: Update an existing label. The user needs to be the creator of the
+        label to be able to do this.
       parameters:
       - description: Label ID
         in: path
@@ -1676,11 +1778,13 @@ paths:
       - application/json
       description: Returns all lists a user has access to.
       parameters:
-      - description: The page number. Used for pagination. If not provided, the first page of results is returned.
+      - description: The page number. Used for pagination. If not provided, the first
+          page of results is returned.
         in: query
         name: page
         type: integer
-      - description: The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page.
+      - description: The maximum number of items per page. Note this parameter is
+          limited by the configured maximum of items per page.
         in: query
         name: per_page
         type: integer
@@ -1859,7 +1963,9 @@ paths:
       - task
   /lists/{id}/background:
     delete:
-      description: Removes a previously set list background, regardless of the list provider used to set the background. It does not throw an error if the list does not have a background.
+      description: Removes a previously set list background, regardless of the list
+        provider used to set the background. It does not throw an error if the list
+        does not have a background.
       parameters:
       - description: List ID
         in: path
@@ -2011,18 +2117,21 @@ paths:
     get:
       consumes:
       - application/json
-      description: Returns all kanban buckets with belong to a list including their tasks.
+      description: Returns all kanban buckets with belong to a list including their
+        tasks.
       parameters:
       - description: List Id
         in: path
         name: id
         required: true
         type: integer
-      - description: The page number for tasks. Used for pagination. If not provided, the first page of results is returned.
+      - description: The page number for tasks. Used for pagination. If not provided,
+          the first page of results is returned.
         in: query
         name: page
         type: integer
-      - description: The maximum number of tasks per bucket per page. This parameter is limited by the configured maximum of items per page.
+      - description: The maximum number of tasks per bucket per page. This parameter
+          is limited by the configured maximum of items per page.
         in: query
         name: per_page
         type: integer
@@ -2030,7 +2139,10 @@ paths:
         in: query
         name: s
         type: string
-      - description: The name of the field to filter by. Allowed values are all task properties. Task properties which are their own object require passing in the id of that entity. Accepts an array for multiple filters which will be chanied together, all supplied filter must match.
+      - description: The name of the field to filter by. Allowed values are all task
+          properties. Task properties which are their own object require passing in
+          the id of that entity. Accepts an array for multiple filters which will
+          be chanied together, all supplied filter must match.
         in: query
         name: filter_by
         type: string
@@ -2038,15 +2150,20 @@ paths:
         in: query
         name: filter_value
         type: string
-      - description: The comparator to use for a filter. Available values are `equals`, `greater`, `greater_equals`, `less`, `less_equals`, `like` and `in`. `in` expects comma-separated values in `filter_value`. Defaults to `equals`
+      - description: The comparator to use for a filter. Available values are `equals`,
+          `greater`, `greater_equals`, `less`, `less_equals`, `like` and `in`. `in`
+          expects comma-separated values in `filter_value`. Defaults to `equals`
         in: query
         name: filter_comparator
         type: string
-      - description: The concatinator to use for filters. Available values are `and` or `or`. Defaults to `or`.
+      - description: The concatinator to use for filters. Available values are `and`
+          or `or`. Defaults to `or`.
         in: query
         name: filter_concat
         type: string
-      - description: If set to true the result will include filtered fields whose value is set to `null`. Available values are `true` or `false`. Defaults to `false`.
+      - description: If set to true the result will include filtered fields whose
+          value is set to `null`. Available values are `true` or `false`. Defaults
+          to `false`.
         in: query
         name: filter_include_nulls
         type: string
@@ -2112,7 +2229,8 @@ paths:
     get:
       consumes:
       - application/json
-      description: Lists all users (without emailadresses). Also possible to search for a specific user.
+      description: Lists all users (without emailadresses). Also possible to search
+        for a specific user.
       parameters:
       - description: Search for a user by its name.
         in: query
@@ -2160,11 +2278,13 @@ paths:
         name: id
         required: true
         type: integer
-      - description: The page number. Used for pagination. If not provided, the first page of results is returned.
+      - description: The page number. Used for pagination. If not provided, the first
+          page of results is returned.
         in: query
         name: page
         type: integer
-      - description: The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page.
+      - description: The maximum number of items per page. Note this parameter is
+          limited by the configured maximum of items per page.
         in: query
         name: per_page
         type: integer
@@ -2249,11 +2369,13 @@ paths:
         name: id
         required: true
         type: integer
-      - description: The page number. Used for pagination. If not provided, the first page of results is returned.
+      - description: The page number. Used for pagination. If not provided, the first
+          page of results is returned.
         in: query
         name: page
         type: integer
-      - description: The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page.
+      - description: The maximum number of items per page. Note this parameter is
+          limited by the configured maximum of items per page.
         in: query
         name: per_page
         type: integer
@@ -2338,11 +2460,13 @@ paths:
         name: list
         required: true
         type: integer
-      - description: The page number. Used for pagination. If not provided, the first page of results is returned.
+      - description: The page number. Used for pagination. If not provided, the first
+          page of results is returned.
         in: query
         name: page
         type: integer
-      - description: The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page.
+      - description: The maximum number of items per page. Note this parameter is
+          limited by the configured maximum of items per page.
         in: query
         name: per_page
         type: integer
@@ -2371,7 +2495,8 @@ paths:
     put:
       consumes:
       - application/json
-      description: Share a list via link. The user needs to have write-access to the list to be able do this.
+      description: Share a list via link. The user needs to have write-access to the
+        list to be able do this.
       parameters:
       - description: List ID
         in: path
@@ -2416,7 +2541,8 @@ paths:
     delete:
       consumes:
       - application/json
-      description: Remove a link share. The user needs to have write-access to the list to be able do this.
+      description: Remove a link share. The user needs to have write-access to the
+        list to be able do this.
       parameters:
       - description: List ID
         in: path
@@ -2495,7 +2621,8 @@ paths:
     delete:
       consumes:
       - application/json
-      description: Deletes an existing kanban bucket and dissociates all of its task. It does not delete any tasks. You cannot delete the last bucket on a list.
+      description: Deletes an existing kanban bucket and dissociates all of its task.
+        It does not delete any tasks. You cannot delete the last bucket on a list.
       parameters:
       - description: List Id
         in: path
@@ -2576,7 +2703,10 @@ paths:
     put:
       consumes:
       - application/json
-      description: Copies the list, tasks, files, kanban data, assignees, comments, attachments, lables, relations, backgrounds, user/team rights and link shares from one list to a new namespace. The user needs read access in the list and write access in the namespace of the new list.
+      description: Copies the list, tasks, files, kanban data, assignees, comments,
+        attachments, lables, relations, backgrounds, user/team rights and link shares
+        from one list to a new namespace. The user needs read access in the list and
+        write access in the namespace of the new list.
       parameters:
       - description: The list ID to duplicate
         in: path
@@ -2624,11 +2754,13 @@ paths:
         name: listID
         required: true
         type: integer
-      - description: The page number. Used for pagination. If not provided, the first page of results is returned.
+      - description: The page number. Used for pagination. If not provided, the first
+          page of results is returned.
         in: query
         name: page
         type: integer
-      - description: The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page.
+      - description: The maximum number of items per page. Note this parameter is
+          limited by the configured maximum of items per page.
         in: query
         name: per_page
         type: integer
@@ -2636,15 +2768,24 @@ paths:
         in: query
         name: s
         type: string
-      - description: The sorting parameter. You can pass this multiple times to get the tasks ordered by multiple different parametes, along with `order_by`. Possible values to sort by are `id`, `title`, `description`, `done`, `done_at`, `due_date`, `created_by_id`, `list_id`, `repeat_after`, `priority`, `start_date`, `end_date`, `hex_color`, `percent_done`, `uid`, `created`, `updated`. Default is `id`.
+      - description: The sorting parameter. You can pass this multiple times to get
+          the tasks ordered by multiple different parametes, along with `order_by`.
+          Possible values to sort by are `id`, `title`, `description`, `done`, `done_at`,
+          `due_date`, `created_by_id`, `list_id`, `repeat_after`, `priority`, `start_date`,
+          `end_date`, `hex_color`, `percent_done`, `uid`, `created`, `updated`. Default
+          is `id`.
         in: query
         name: sort_by
         type: string
-      - description: The ordering parameter. Possible values to order by are `asc` or `desc`. Default is `asc`.
+      - description: The ordering parameter. Possible values to order by are `asc`
+          or `desc`. Default is `asc`.
         in: query
         name: order_by
         type: string
-      - description: The name of the field to filter by. Allowed values are all task properties. Task properties which are their own object require passing in the id of that entity. Accepts an array for multiple filters which will be chanied together, all supplied filter must match.
+      - description: The name of the field to filter by. Allowed values are all task
+          properties. Task properties which are their own object require passing in
+          the id of that entity. Accepts an array for multiple filters which will
+          be chanied together, all supplied filter must match.
         in: query
         name: filter_by
         type: string
@@ -2652,15 +2793,20 @@ paths:
         in: query
         name: filter_value
         type: string
-      - description: The comparator to use for a filter. Available values are `equals`, `greater`, `greater_equals`, `less`, `less_equals`, `like` and `in`. `in` expects comma-separated values in `filter_value`. Defaults to `equals`
+      - description: The comparator to use for a filter. Available values are `equals`,
+          `greater`, `greater_equals`, `less`, `less_equals`, `like` and `in`. `in`
+          expects comma-separated values in `filter_value`. Defaults to `equals`
         in: query
         name: filter_comparator
         type: string
-      - description: The concatinator to use for filters. Available values are `and` or `or`. Defaults to `or`.
+      - description: The concatinator to use for filters. Available values are `and`
+          or `or`. Defaults to `or`.
         in: query
         name: filter_concat
         type: string
-      - description: If set to true the result will include filtered fields whose value is set to `null`. Available values are `true` or `false`. Defaults to `false`.
+      - description: If set to true the result will include filtered fields whose
+          value is set to `null`. Available values are `true` or `false`. Defaults
+          to `false`.
         in: query
         name: filter_include_nulls
         type: string
@@ -2684,7 +2830,8 @@ paths:
       - task
   /lists/{listID}/teams/{teamID}:
     delete:
-      description: Delets a team from a list. The team won't have access to the list anymore.
+      description: Delets a team from a list. The team won't have access to the list
+        anymore.
       parameters:
       - description: List ID
         in: path
@@ -2723,7 +2870,8 @@ paths:
     post:
       consumes:
       - application/json
-      description: Update a team <-> list relation. Mostly used to update the right that team has.
+      description: Update a team <-> list relation. Mostly used to update the right
+        that team has.
       parameters:
       - description: List ID
         in: path
@@ -2767,7 +2915,8 @@ paths:
       - sharing
   /lists/{listID}/users/{userID}:
     delete:
-      description: Delets a user from a list. The user won't have access to the list anymore.
+      description: Delets a user from a list. The user won't have access to the list
+        anymore.
       parameters:
       - description: List ID
         in: path
@@ -2806,7 +2955,8 @@ paths:
     post:
       consumes:
       - application/json
-      description: Update a user <-> list relation. Mostly used to update the right that user has.
+      description: Update a user <-> list relation. Mostly used to update the right
+        that user has.
       parameters:
       - description: List ID
         in: path
@@ -2884,7 +3034,8 @@ paths:
       - user
   /migration/microsoft-todo/auth:
     get:
-      description: Returns the auth url where the user needs to get its auth code. This code can then be used to migrate everything from Microsoft Todo to Vikunja.
+      description: Returns the auth url where the user needs to get its auth code.
+        This code can then be used to migrate everything from Microsoft Todo to Vikunja.
       produces:
       - application/json
       responses:
@@ -2905,9 +3056,11 @@ paths:
     post:
       consumes:
       - application/json
-      description: Migrates all tasklinsts, tasks, notes and reminders from Microsoft Todo to Vikunja.
+      description: Migrates all tasklinsts, tasks, notes and reminders from Microsoft
+        Todo to Vikunja.
       parameters:
-      - description: The auth token previously obtained from the auth url. See the docs for /migration/microsoft-todo/auth.
+      - description: The auth token previously obtained from the auth url. See the
+          docs for /migration/microsoft-todo/auth.
         in: body
         name: migrationCode
         required: true
@@ -2931,7 +3084,9 @@ paths:
       - migration
   /migration/microsoft-todo/status:
     get:
-      description: Returns if the current user already did the migation or not. This is useful to show a confirmation message in the frontend if the user is trying to do the same migration again.
+      description: Returns if the current user already did the migation or not. This
+        is useful to show a confirmation message in the frontend if the user is trying
+        to do the same migration again.
       produces:
       - application/json
       responses:
@@ -2950,7 +3105,8 @@ paths:
       - migration
   /migration/todoist/auth:
     get:
-      description: Returns the auth url where the user needs to get its auth code. This code can then be used to migrate everything from todoist to Vikunja.
+      description: Returns the auth url where the user needs to get its auth code.
+        This code can then be used to migrate everything from todoist to Vikunja.
       produces:
       - application/json
       responses:
@@ -2971,9 +3127,11 @@ paths:
     post:
       consumes:
       - application/json
-      description: Migrates all projects, tasks, notes, reminders, subtasks and files from todoist to vikunja.
+      description: Migrates all projects, tasks, notes, reminders, subtasks and files
+        from todoist to vikunja.
       parameters:
-      - description: The auth code previously obtained from the auth url. See the docs for /migration/todoist/auth.
+      - description: The auth code previously obtained from the auth url. See the
+          docs for /migration/todoist/auth.
         in: body
         name: migrationCode
         required: true
@@ -2997,7 +3155,9 @@ paths:
       - migration
   /migration/todoist/status:
     get:
-      description: Returns if the current user already did the migation or not. This is useful to show a confirmation message in the frontend if the user is trying to do the same migration again.
+      description: Returns if the current user already did the migation or not. This
+        is useful to show a confirmation message in the frontend if the user is trying
+        to do the same migration again.
       produces:
       - application/json
       responses:
@@ -3016,7 +3176,8 @@ paths:
       - migration
   /migration/trello/auth:
     get:
-      description: Returns the auth url where the user needs to get its auth code. This code can then be used to migrate everything from trello to Vikunja.
+      description: Returns the auth url where the user needs to get its auth code.
+        This code can then be used to migrate everything from trello to Vikunja.
       produces:
       - application/json
       responses:
@@ -3037,9 +3198,11 @@ paths:
     post:
       consumes:
       - application/json
-      description: Migrates all projects, tasks, notes, reminders, subtasks and files from trello to vikunja.
+      description: Migrates all projects, tasks, notes, reminders, subtasks and files
+        from trello to vikunja.
       parameters:
-      - description: The auth token previously obtained from the auth url. See the docs for /migration/trello/auth.
+      - description: The auth token previously obtained from the auth url. See the
+          docs for /migration/trello/auth.
         in: body
         name: migrationCode
         required: true
@@ -3063,7 +3226,9 @@ paths:
       - migration
   /migration/trello/status:
     get:
-      description: Returns if the current user already did the migation or not. This is useful to show a confirmation message in the frontend if the user is trying to do the same migration again.
+      description: Returns if the current user already did the migation or not. This
+        is useful to show a confirmation message in the frontend if the user is trying
+        to do the same migration again.
       produces:
       - application/json
       responses:
@@ -3082,7 +3247,8 @@ paths:
       - migration
   /migration/wunderlist/auth:
     get:
-      description: Returns the auth url where the user needs to get its auth code. This code can then be used to migrate everything from wunderlist to Vikunja.
+      description: Returns the auth url where the user needs to get its auth code.
+        This code can then be used to migrate everything from wunderlist to Vikunja.
       produces:
       - application/json
       responses:
@@ -3103,9 +3269,11 @@ paths:
     post:
       consumes:
       - application/json
-      description: Migrates all folders, lists, tasks, notes, reminders, subtasks and files from wunderlist to vikunja.
+      description: Migrates all folders, lists, tasks, notes, reminders, subtasks
+        and files from wunderlist to vikunja.
       parameters:
-      - description: The auth code previously obtained from the auth url. See the docs for /migration/wunderlist/auth.
+      - description: The auth code previously obtained from the auth url. See the
+          docs for /migration/wunderlist/auth.
         in: body
         name: migrationCode
         required: true
@@ -3129,7 +3297,9 @@ paths:
       - migration
   /migration/wunderlist/status:
     get:
-      description: Returns if the current user already did the migation or not. This is useful to show a confirmation message in the frontend if the user is trying to do the same migration again.
+      description: Returns if the current user already did the migation or not. This
+        is useful to show a confirmation message in the frontend if the user is trying
+        to do the same migration again.
       produces:
       - application/json
       responses:
@@ -3193,11 +3363,13 @@ paths:
       - application/json
       description: Returns all namespaces a user has access to.
       parameters:
-      - description: The page number. Used for pagination. If not provided, the first page of results is returned.
+      - description: The page number. Used for pagination. If not provided, the first
+          page of results is returned.
         in: query
         name: page
         type: integer
-      - description: The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page.
+      - description: The maximum number of items per page. Note this parameter is
+          limited by the configured maximum of items per page.
         in: query
         name: per_page
         type: integer
@@ -3370,18 +3542,21 @@ paths:
     get:
       consumes:
       - application/json
-      description: Returns a namespace with all teams which have access on a given namespace.
+      description: Returns a namespace with all teams which have access on a given
+        namespace.
       parameters:
       - description: Namespace ID
         in: path
         name: id
         required: true
         type: integer
-      - description: The page number. Used for pagination. If not provided, the first page of results is returned.
+      - description: The page number. Used for pagination. If not provided, the first
+          page of results is returned.
         in: query
         name: page
         type: integer
-      - description: The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page.
+      - description: The maximum number of items per page. Note this parameter is
+          limited by the configured maximum of items per page.
         in: query
         name: per_page
         type: integer
@@ -3459,18 +3634,21 @@ paths:
     get:
       consumes:
       - application/json
-      description: Returns a namespace with all users which have access on a given namespace.
+      description: Returns a namespace with all users which have access on a given
+        namespace.
       parameters:
       - description: Namespace ID
         in: path
         name: id
         required: true
         type: integer
-      - description: The page number. Used for pagination. If not provided, the first page of results is returned.
+      - description: The page number. Used for pagination. If not provided, the first
+          page of results is returned.
         in: query
         name: page
         type: integer
-      - description: The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page.
+      - description: The maximum number of items per page. Note this parameter is
+          limited by the configured maximum of items per page.
         in: query
         name: per_page
         type: integer
@@ -3548,7 +3726,8 @@ paths:
     put:
       consumes:
       - application/json
-      description: Creates a new list in a given namespace. The user needs write-access to the namespace.
+      description: Creates a new list in a given namespace. The user needs write-access
+        to the namespace.
       parameters:
       - description: Namespace ID
         in: path
@@ -3587,7 +3766,8 @@ paths:
       - list
   /namespaces/{namespaceID}/teams/{teamID}:
     delete:
-      description: Delets a team from a namespace. The team won't have access to the namespace anymore.
+      description: Delets a team from a namespace. The team won't have access to the
+        namespace anymore.
       parameters:
       - description: Namespace ID
         in: path
@@ -3626,7 +3806,8 @@ paths:
     post:
       consumes:
       - application/json
-      description: Update a team <-> namespace relation. Mostly used to update the right that team has.
+      description: Update a team <-> namespace relation. Mostly used to update the
+        right that team has.
       parameters:
       - description: Namespace ID
         in: path
@@ -3670,7 +3851,8 @@ paths:
       - sharing
   /namespaces/{namespaceID}/users/{userID}:
     delete:
-      description: Delets a user from a namespace. The user won't have access to the namespace anymore.
+      description: Delets a user from a namespace. The user won't have access to the
+        namespace anymore.
       parameters:
       - description: Namespace ID
         in: path
@@ -3709,7 +3891,8 @@ paths:
     post:
       consumes:
       - application/json
-      description: Update a user <-> namespace relation. Mostly used to update the right that user has.
+      description: Update a user <-> namespace relation. Mostly used to update the
+        right that user has.
       parameters:
       - description: Namespace ID
         in: path
@@ -3757,11 +3940,13 @@ paths:
       - application/json
       description: Returns an array with all notifications for the current user.
       parameters:
-      - description: The page number. Used for pagination. If not provided, the first page of results is returned.
+      - description: The page number. Used for pagination. If not provided, the first
+          page of results is returned.
         in: query
         name: page
         type: integer
-      - description: The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page.
+      - description: The maximum number of items per page. Note this parameter is
+          limited by the configured maximum of items per page.
         in: query
         name: per_page
         type: integer
@@ -3791,7 +3976,8 @@ paths:
     post:
       consumes:
       - application/json
-      description: Marks a notification as either read or unread. A user can only mark their own notifications as read.
+      description: Marks a notification as either read or unread. A user can only
+        mark their own notifications as read.
       parameters:
       - description: Notification ID
         in: path
@@ -3842,7 +4028,8 @@ paths:
           schema:
             $ref: '#/definitions/user.User'
         "400":
-          description: No or invalid user register object provided / User already exists.
+          description: No or invalid user register object provided / User already
+            exists.
           schema:
             $ref: '#/definitions/web.HTTPError'
         "500":
@@ -3893,7 +4080,8 @@ paths:
       - application/json
       description: Unsubscribes the current user to an entity.
       parameters:
-      - description: The entity the user subscribed to. Can be either `namespace`, `list` or `task`.
+      - description: The entity the user subscribed to. Can be either `namespace`,
+          `list` or `task`.
         in: path
         name: entity
         required: true
@@ -3932,7 +4120,8 @@ paths:
       - application/json
       description: Subscribes the current user to an entity.
       parameters:
-      - description: The entity the user subscribes to. Can be either `namespace`, `list` or `task`.
+      - description: The entity the user subscribes to. Can be either `namespace`,
+          `list` or `task`.
         in: path
         name: entity
         required: true
@@ -4033,7 +4222,9 @@ paths:
     post:
       consumes:
       - application/json
-      description: Updates a task. This includes marking it as done. Assignees you pass will be updated, see their individual endpoints for more details on how this is done. To update labels, see the description of the endpoint.
+      description: Updates a task. This includes marking it as done. Assignees you
+        pass will be updated, see their individual endpoints for more details on how
+        this is done. To update labels, see the description of the endpoint.
       parameters:
       - description: Task ID
         in: path
@@ -4081,11 +4272,13 @@ paths:
         name: id
         required: true
         type: integer
-      - description: The page number. Used for pagination. If not provided, the first page of results is returned.
+      - description: The page number. Used for pagination. If not provided, the first
+          page of results is returned.
         in: query
         name: page
         type: integer
-      - description: The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page.
+      - description: The maximum number of items per page. Note this parameter is
+          limited by the configured maximum of items per page.
         in: query
         name: per_page
         type: integer
@@ -4118,7 +4311,8 @@ paths:
     put:
       consumes:
       - multipart/form-data
-      description: Upload a task attachment. You can pass multiple files with the files form param.
+      description: Upload a task attachment. You can pass multiple files with the
+        files form param.
       parameters:
       - description: Task ID
         in: path
@@ -4242,11 +4436,13 @@ paths:
         name: task
         required: true
         type: integer
-      - description: The page number. Used for pagination. If not provided, the first page of results is returned.
+      - description: The page number. Used for pagination. If not provided, the first
+          page of results is returned.
         in: query
         name: page
         type: integer
-      - description: The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page.
+      - description: The maximum number of items per page. Note this parameter is
+          limited by the configured maximum of items per page.
         in: query
         name: per_page
         type: integer
@@ -4275,7 +4471,8 @@ paths:
     put:
       consumes:
       - application/json
-      description: Add a label to a task. The user needs to have write-access to the list to be able do this.
+      description: Add a label to a task. The user needs to have write-access to the
+        list to be able do this.
       parameters:
       - description: Task ID
         in: path
@@ -4320,7 +4517,8 @@ paths:
     delete:
       consumes:
       - application/json
-      description: Remove a label from a task. The user needs to have write-access to the list to be able do this.
+      description: Remove a label from a task. The user needs to have write-access
+        to the list to be able do this.
       parameters:
       - description: Task ID
         in: path
@@ -4362,11 +4560,13 @@ paths:
       - application/json
       description: Returns an array with all assignees for this task.
       parameters:
-      - description: The page number. Used for pagination. If not provided, the first page of results is returned.
+      - description: The page number. Used for pagination. If not provided, the first
+          page of results is returned.
         in: query
         name: page
         type: integer
-      - description: The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page.
+      - description: The maximum number of items per page. Note this parameter is
+          limited by the configured maximum of items per page.
         in: query
         name: per_page
         type: integer
@@ -4400,7 +4600,8 @@ paths:
     put:
       consumes:
       - application/json
-      description: Adds a new assignee to a task. The assignee needs to have access to the list, the doer must be able to edit this task.
+      description: Adds a new assignee to a task. The assignee needs to have access
+        to the list, the doer must be able to edit this task.
       parameters:
       - description: The assingee object
         in: body
@@ -4473,7 +4674,10 @@ paths:
     post:
       consumes:
       - application/json
-      description: Adds multiple new assignees to a task. The assignee needs to have access to the list, the doer must be able to edit this task. Every user not in the list will be unassigned from the task, pass an empty array to unassign everyone.
+      description: Adds multiple new assignees to a task. The assignee needs to have
+        access to the list, the doer must be able to edit this task. Every user not
+        in the list will be unassigned from the task, pass an empty array to unassign
+        everyone.
       parameters:
       - description: The array of assignees
         in: body
@@ -4510,7 +4714,8 @@ paths:
     get:
       consumes:
       - application/json
-      description: Get all task comments. The user doing this need to have at least read access to the task.
+      description: Get all task comments. The user doing this need to have at least
+        read access to the task.
       parameters:
       - description: Task ID
         in: path
@@ -4538,7 +4743,8 @@ paths:
     put:
       consumes:
       - application/json
-      description: Create a new task comment. The user doing this need to have at least write access to the task this comment should belong to.
+      description: Create a new task comment. The user doing this need to have at
+        least write access to the task this comment should belong to.
       parameters:
       - description: The task comment object
         in: body
@@ -4575,7 +4781,8 @@ paths:
     delete:
       consumes:
       - application/json
-      description: Remove a task comment. The user doing this need to have at least write access to the task this comment belongs to.
+      description: Remove a task comment. The user doing this need to have at least
+        write access to the task this comment belongs to.
       parameters:
       - description: Task ID
         in: path
@@ -4614,7 +4821,8 @@ paths:
     get:
       consumes:
       - application/json
-      description: Remove a task comment. The user doing this need to have at least read access to the task this comment belongs to.
+      description: Remove a task comment. The user doing this need to have at least
+        read access to the task this comment belongs to.
       parameters:
       - description: Task ID
         in: path
@@ -4653,7 +4861,8 @@ paths:
     post:
       consumes:
       - application/json
-      description: Update an existing task comment. The user doing this need to have at least write access to the task this comment belongs to.
+      description: Update an existing task comment. The user doing this need to have
+        at least write access to the task this comment belongs to.
       parameters:
       - description: Task ID
         in: path
@@ -4693,7 +4902,10 @@ paths:
     post:
       consumes:
       - application/json
-      description: Updates all labels on a task. Every label which is not passed but exists on the task will be deleted. Every label which does not exist on the task will be added. All labels which are passed and already exist on the task won't be touched.
+      description: Updates all labels on a task. Every label which is not passed but
+        exists on the task will be deleted. Every label which does not exist on the
+        task will be added. All labels which are passed and already exist on the task
+        won't be touched.
       parameters:
       - description: The array of labels
         in: body
@@ -4730,7 +4942,10 @@ paths:
     put:
       consumes:
       - application/json
-      description: Creates a new relation between two tasks. The user needs to have update rights on the base task and at least read rights on the other task. Both tasks do not need to be on the same list. Take a look at the docs for available task relation kinds.
+      description: Creates a new relation between two tasks. The user needs to have
+        update rights on the base task and at least read rights on the other task.
+        Both tasks do not need to be on the same list. Take a look at the docs for
+        available task relation kinds.
       parameters:
       - description: The relation object
         in: body
@@ -4779,7 +4994,8 @@ paths:
         name: taskID
         required: true
         type: integer
-      - description: The kind of the relation. See the TaskRelation type for more info.
+      - description: The kind of the relation. See the TaskRelation type for more
+          info.
         in: path
         name: relationKind
         required: true
@@ -4819,11 +5035,13 @@ paths:
       - application/json
       description: Returns all tasks on any list the user has access to.
       parameters:
-      - description: The page number. Used for pagination. If not provided, the first page of results is returned.
+      - description: The page number. Used for pagination. If not provided, the first
+          page of results is returned.
         in: query
         name: page
         type: integer
-      - description: The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page.
+      - description: The maximum number of items per page. Note this parameter is
+          limited by the configured maximum of items per page.
         in: query
         name: per_page
         type: integer
@@ -4831,15 +5049,24 @@ paths:
         in: query
         name: s
         type: string
-      - description: The sorting parameter. You can pass this multiple times to get the tasks ordered by multiple different parametes, along with `order_by`. Possible values to sort by are `id`, `title`, `description`, `done`, `done_at`, `due_date`, `created_by_id`, `list_id`, `repeat_after`, `priority`, `start_date`, `end_date`, `hex_color`, `percent_done`, `uid`, `created`, `updated`. Default is `id`.
+      - description: The sorting parameter. You can pass this multiple times to get
+          the tasks ordered by multiple different parametes, along with `order_by`.
+          Possible values to sort by are `id`, `title`, `description`, `done`, `done_at`,
+          `due_date`, `created_by_id`, `list_id`, `repeat_after`, `priority`, `start_date`,
+          `end_date`, `hex_color`, `percent_done`, `uid`, `created`, `updated`. Default
+          is `id`.
         in: query
         name: sort_by
         type: string
-      - description: The ordering parameter. Possible values to order by are `asc` or `desc`. Default is `asc`.
+      - description: The ordering parameter. Possible values to order by are `asc`
+          or `desc`. Default is `asc`.
         in: query
         name: order_by
         type: string
-      - description: The name of the field to filter by. Allowed values are all task properties. Task properties which are their own object require passing in the id of that entity. Accepts an array for multiple filters which will be chanied together, all supplied filter must match.
+      - description: The name of the field to filter by. Allowed values are all task
+          properties. Task properties which are their own object require passing in
+          the id of that entity. Accepts an array for multiple filters which will
+          be chanied together, all supplied filter must match.
         in: query
         name: filter_by
         type: string
@@ -4847,15 +5074,20 @@ paths:
         in: query
         name: filter_value
         type: string
-      - description: The comparator to use for a filter. Available values are `equals`, `greater`, `greater_equals`, `less`, `less_equals`, `like` and `in`. `in` expects comma-separated values in `filter_value`. Defaults to `equals`
+      - description: The comparator to use for a filter. Available values are `equals`,
+          `greater`, `greater_equals`, `less`, `less_equals`, `like` and `in`. `in`
+          expects comma-separated values in `filter_value`. Defaults to `equals`
         in: query
         name: filter_comparator
         type: string
-      - description: The concatinator to use for filters. Available values are `and` or `or`. Defaults to `or`.
+      - description: The concatinator to use for filters. Available values are `and`
+          or `or`. Defaults to `or`.
         in: query
         name: filter_concat
         type: string
-      - description: If set to true the result will include filtered fields whose value is set to `null`. Available values are `true` or `false`. Defaults to `false`.
+      - description: If set to true the result will include filtered fields whose
+          value is set to `null`. Available values are `true` or `false`. Defaults
+          to `false`.
         in: query
         name: filter_include_nulls
         type: string
@@ -4881,9 +5113,12 @@ paths:
     post:
       consumes:
       - application/json
-      description: 'Updates a bunch of tasks at once. This includes marking them as done. Note: although you could supply another ID, it will be ignored. Use task_ids instead.'
+      description: 'Updates a bunch of tasks at once. This includes marking them as
+        done. Note: although you could supply another ID, it will be ignored. Use
+        task_ids instead.'
       parameters:
-      - description: The task object. Looks like a normal task, the only difference is it uses an array of list_ids to update.
+      - description: The task object. Looks like a normal task, the only difference
+          is it uses an array of list_ids to update.
         in: body
         name: task
         required: true
@@ -4919,11 +5154,13 @@ paths:
       - application/json
       description: Returns all teams the current user is part of.
       parameters:
-      - description: The page number. Used for pagination. If not provided, the first page of results is returned.
+      - description: The page number. Used for pagination. If not provided, the first
+          page of results is returned.
         in: query
         name: page
         type: integer
-      - description: The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page.
+      - description: The maximum number of items per page. Note this parameter is
+          limited by the configured maximum of items per page.
         in: query
         name: per_page
         type: integer
@@ -4952,7 +5189,8 @@ paths:
     put:
       consumes:
       - application/json
-      description: Creates a new team in a given namespace. The user needs write-access to the namespace.
+      description: Creates a new team in a given namespace. The user needs write-access
+        to the namespace.
       parameters:
       - description: The team you want to create.
         in: body
@@ -4982,7 +5220,8 @@ paths:
       - team
   /teams/{id}:
     delete:
-      description: Delets a team. This will also remove the access for all users in that team.
+      description: Delets a team. This will also remove the access for all users in
+        that team.
       parameters:
       - description: Team ID
         in: path
@@ -5118,7 +5357,8 @@ paths:
       - team
   /teams/{id}/members/{userID}:
     delete:
-      description: Remove a user from a team. This will also revoke any access this user might have via that team.
+      description: Remove a user from a team. This will also revoke any access this
+        user might have via that team.
       parameters:
       - description: Team ID
         in: path
@@ -5180,7 +5420,10 @@ paths:
     patch:
       consumes:
       - application/json
-      description: 'Fills the specified table with the content provided in the payload. You need to enable the testing endpoint before doing this and provide the `Authorization: <token>` secret when making requests to this endpoint. See docs for more details.'
+      description: 'Fills the specified table with the content provided in the payload.
+        You need to enable the testing endpoint before doing this and provide the
+        `Authorization: <token>` secret when making requests to this endpoint. See
+        docs for more details.'
       parameters:
       - description: The table to reset
         in: path
@@ -5328,7 +5571,8 @@ paths:
     post:
       consumes:
       - application/json
-      description: Requests a token to reset a users password. The token is sent via email.
+      description: Requests a token to reset a users password. The token is sent via
+        email.
       parameters:
       - description: The username of the user to request a token for.
         in: body
@@ -5382,7 +5626,8 @@ paths:
     post:
       consumes:
       - application/json
-      description: Changes the user avatar. Valid types are gravatar (uses the user email), upload, initials, default.
+      description: Changes the user avatar. Valid types are gravatar (uses the user
+        email), upload, initials, default.
       parameters:
       - description: The user's avatar setting
         in: body
@@ -5414,7 +5659,8 @@ paths:
     put:
       consumes:
       - multipart/form-data
-      description: Upload a user avatar. This will also set the user's avatar provider to "upload"
+      description: Upload a user avatar. This will also set the user's avatar provider
+        to "upload"
       parameters:
       - description: The avatar as single file.
         in: formData
@@ -5516,7 +5762,8 @@ paths:
     get:
       consumes:
       - application/json
-      description: Returns the current user totp setting or an error if it is not enabled.
+      description: Returns the current user totp setting or an error if it is not
+        enabled.
       produces:
       - application/json
       responses:
@@ -5573,7 +5820,8 @@ paths:
     post:
       consumes:
       - application/json
-      description: Enables a previously enrolled totp setting by providing a totp passcode.
+      description: Enables a previously enrolled totp setting by providing a totp
+        passcode.
       parameters:
       - description: The totp passcode.
         in: body
@@ -5613,7 +5861,9 @@ paths:
     post:
       consumes:
       - application/json
-      description: Creates an initial setup for the user in the db. After this step, the user needs to verify they have a working totp setup with the "enable totp" endpoint.
+      description: Creates an initial setup for the user in the db. After this step,
+        the user needs to verify they have a working totp setup with the "enable totp"
+        endpoint.
       produces:
       - application/json
       responses:
@@ -5682,7 +5932,8 @@ paths:
     get:
       consumes:
       - application/json
-      description: Search for a user by its username, name or full email. Name (not username) or email require that the user has enabled this in their settings.
+      description: Search for a user by its username, name or full email. Name (not
+        username) or email require that the user has enabled this in their settings.
       parameters:
       - description: The search criteria.
         in: query

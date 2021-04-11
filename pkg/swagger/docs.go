@@ -8570,6 +8570,10 @@ var doc = `{
                 "name": {
                     "description": "The new name of the current user.",
                     "type": "string"
+                },
+                "overdue_tasks_reminders_enabled": {
+                    "description": "If enabled, the user will get an email for their overdue tasks each morning.",
+                    "type": "boolean"
                 }
             }
         },

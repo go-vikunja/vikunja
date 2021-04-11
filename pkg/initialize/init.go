@@ -93,6 +93,7 @@ func FullInit() {
 	// Start the cron
 	cron.Init()
 	models.RegisterReminderCron()
+	models.RegisterOverdueReminderCron()
 
 	// Start processing events
 	go func() {

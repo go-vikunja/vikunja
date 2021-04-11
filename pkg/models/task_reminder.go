@@ -19,6 +19,9 @@ package models
 import (
 	"time"
 
+	"code.vikunja.io/api/pkg/utils"
+	"xorm.io/builder"
+
 	"code.vikunja.io/api/pkg/notifications"
 
 	"code.vikunja.io/api/pkg/db"
@@ -48,7 +51,9 @@ type taskUser struct {
 	User *user.User `xorm:"extends"`
 }
 
-func getTaskUsersForTasks(s *xorm.Session, taskIDs []int64) (taskUsers []*taskUser, err error) {
+const dbTimeFormat = `2006-01-02 15:04:05`
+
+func getTaskUsersForTasks(s *xorm.Session, taskIDs []int64, cond builder.Cond) (taskUsers []*taskUser, err error) {
 	if len(taskIDs) == 0 {
 		return
 	}
@@ -59,7 +64,7 @@ func getTaskUsersForTasks(s *xorm.Session, taskIDs []int64) (taskUsers []*taskUs
 		Select("users.id, users.username, users.email, users.name").
 		Join("LEFT", "tasks", "tasks.created_by_id = users.id").
 		In("tasks.id", taskIDs).
-		Where("users.email_reminders_enabled = true").
+		Where(cond).
 		GroupBy("tasks.id, users.id, users.username, users.email, users.name").
 		Find(&creators)
 	if err != nil {
@@ -84,15 +89,18 @@ func getTaskUsersForTasks(s *xorm.Session, taskIDs []int64) (taskUsers []*taskUs
 		})
 	}
 
-	assignees, err := getRawTaskAssigneesForTasks(s, taskIDs)
+	var assignees []*TaskAssigneeWithUser
+	err = s.Table("task_assignees").
+		Select("task_id, users.*").
+		In("task_id", taskIDs).
+		Join("INNER", "users", "task_assignees.user_id = users.id").
+		Where(cond).
+		Find(&assignees)
 	if err != nil {
 		return
 	}
 
 	for _, assignee := range assignees {
-		if !assignee.EmailRemindersEnabled { // Can't filter that through a query directly since we're using another function
-			continue
-		}
 		taskUsers = append(taskUsers, &taskUser{
 			Task: taskMap[assignee.TaskID],
 			User: &assignee.User,
@@ -103,13 +111,8 @@ func getTaskUsersForTasks(s *xorm.Session, taskIDs []int64) (taskUsers []*taskUs
 }
 
 func getTasksWithRemindersInTheNextMinute(s *xorm.Session, now time.Time) (taskIDs []int64, err error) {
+	now = utils.GetTimeWithoutNanoSeconds(now)
 
-	tz := config.GetTimeZone()
-	const dbFormat = `2006-01-02 15:04:05`
-
-	// By default, time.Now() includes nanoseconds which we don't save. That results in getting the wrong dates,
-	// so we make sure the time we use to get the reminders don't contain nanoseconds.
-	now = time.Date(now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute(), 0, 0, now.Location()).In(tz)
 	nextMinute := now.Add(1 * time.Minute)
 
 	log.Debugf("[Task Reminder Cron] Looking for reminders between %s and %s to send...", now, nextMinute)
@@ -117,7 +120,7 @@ func getTasksWithRemindersInTheNextMinute(s *xorm.Session, now time.Time) (taskI
 	reminders := []*TaskReminder{}
 	err = s.
 		Join("INNER", "tasks", "tasks.id = task_reminders.task_id").
-		Where("reminder >= ? and reminder < ?", now.Format(dbFormat), nextMinute.Format(dbFormat)).
+		Where("reminder >= ? and reminder < ?", now.Format(dbTimeFormat), nextMinute.Format(dbTimeFormat)).
 		And("tasks.done = false").
 		Find(&reminders)
 	if err != nil {
@@ -154,9 +157,9 @@ func RegisterReminderCron() {
 
 	log.Debugf("[Task Reminder Cron] Timezone is %s", tz)
 
-	s := db.NewSession()
-
 	err := cron.Schedule("* * * * *", func() {
+		s := db.NewSession()
+		defer s.Close()
 
 		now := time.Now()
 		taskIDs, err := getTasksWithRemindersInTheNextMinute(s, now)
@@ -169,7 +172,7 @@ func RegisterReminderCron() {
 			return
 		}
 
-		users, err := getTaskUsersForTasks(s, taskIDs)
+		users, err := getTaskUsersForTasks(s, taskIDs, builder.Eq{"users.email_reminders_enabled": true})
 		if err != nil {
 			log.Errorf("[Task Reminder Cron] Could not get task users to send them reminders: %s", err)
 			return

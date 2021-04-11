@@ -43,6 +43,8 @@ type UserSettings struct {
 	DiscoverableByName bool `json:"discoverable_by_name"`
 	// If true, the user can be found when searching for their exact email.
 	DiscoverableByEmail bool `json:"discoverable_by_email"`
+	// If enabled, the user will get an email for their overdue tasks each morning.
+	OverdueTasksRemindersEnabled bool `json:"overdue_tasks_reminders_enabled"`
 }
 
 // GetUserAvatarProvider returns the currently set user avatar
@@ -167,6 +169,7 @@ func UpdateGeneralUserSettings(c echo.Context) error {
 	user.EmailRemindersEnabled = us.EmailRemindersEnabled
 	user.DiscoverableByEmail = us.DiscoverableByEmail
 	user.DiscoverableByName = us.DiscoverableByName
+	user.OverdueTasksRemindersEnabled = us.OverdueTasksRemindersEnabled
 
 	_, err = user2.UpdateUser(s, user)
 	if err != nil {

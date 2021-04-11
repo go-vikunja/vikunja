@@ -48,14 +48,15 @@ func TestLabel_ReadAll(t *testing.T) {
 		page   int
 	}
 	user1 := &user.User{
-		ID:                    1,
-		Username:              "user1",
-		Password:              "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
-		IsActive:              true,
-		Issuer:                "local",
-		EmailRemindersEnabled: true,
-		Created:               testCreatedTime,
-		Updated:               testUpdatedTime,
+		ID:                           1,
+		Username:                     "user1",
+		Password:                     "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
+		IsActive:                     true,
+		Issuer:                       "local",
+		EmailRemindersEnabled:        true,
+		OverdueTasksRemindersEnabled: true,
+		Created:                      testCreatedTime,
+		Updated:                      testUpdatedTime,
 	}
 	tests := []struct {
 		name    string
@@ -98,13 +99,14 @@ func TestLabel_ReadAll(t *testing.T) {
 						Updated:     testUpdatedTime,
 						CreatedByID: 2,
 						CreatedBy: &user.User{
-							ID:                    2,
-							Username:              "user2",
-							Password:              "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
-							Issuer:                "local",
-							EmailRemindersEnabled: true,
-							Created:               testCreatedTime,
-							Updated:               testUpdatedTime,
+							ID:                           2,
+							Username:                     "user2",
+							Password:                     "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
+							Issuer:                       "local",
+							EmailRemindersEnabled:        true,
+							OverdueTasksRemindersEnabled: true,
+							Created:                      testCreatedTime,
+							Updated:                      testUpdatedTime,
 						},
 					},
 				},
@@ -161,14 +163,15 @@ func TestLabel_ReadOne(t *testing.T) {
 		Rights      web.Rights
 	}
 	user1 := &user.User{
-		ID:                    1,
-		Username:              "user1",
-		Password:              "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
-		IsActive:              true,
-		Issuer:                "local",
-		EmailRemindersEnabled: true,
-		Created:               testCreatedTime,
-		Updated:               testUpdatedTime,
+		ID:                           1,
+		Username:                     "user1",
+		Password:                     "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
+		IsActive:                     true,
+		Issuer:                       "local",
+		EmailRemindersEnabled:        true,
+		OverdueTasksRemindersEnabled: true,
+		Created:                      testCreatedTime,
+		Updated:                      testUpdatedTime,
 	}
 	tests := []struct {
 		name          string
@@ -222,13 +225,14 @@ func TestLabel_ReadOne(t *testing.T) {
 				Title:       "Label #4 - visible via other task",
 				CreatedByID: 2,
 				CreatedBy: &user.User{
-					ID:                    2,
-					Username:              "user2",
-					Password:              "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
-					Issuer:                "local",
-					EmailRemindersEnabled: true,
-					Created:               testCreatedTime,
-					Updated:               testUpdatedTime,
+					ID:                           2,
+					Username:                     "user2",
+					Password:                     "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
+					Issuer:                       "local",
+					EmailRemindersEnabled:        true,
+					OverdueTasksRemindersEnabled: true,
+					Created:                      testCreatedTime,
+					Updated:                      testUpdatedTime,
 				},
 				Created: testCreatedTime,
 				Updated: testUpdatedTime,

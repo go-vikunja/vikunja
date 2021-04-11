@@ -63,10 +63,11 @@ func UserShow(c echo.Context) error {
 	us := &userWithSettings{
 		User: *u,
 		Settings: &UserSettings{
-			Name:                  u.Name,
-			EmailRemindersEnabled: u.EmailRemindersEnabled,
-			DiscoverableByName:    u.DiscoverableByName,
-			DiscoverableByEmail:   u.DiscoverableByEmail,
+			Name:                         u.Name,
+			EmailRemindersEnabled:        u.EmailRemindersEnabled,
+			DiscoverableByName:           u.DiscoverableByName,
+			DiscoverableByEmail:          u.DiscoverableByEmail,
+			OverdueTasksRemindersEnabled: u.OverdueTasksRemindersEnabled,
 		},
 	}
 

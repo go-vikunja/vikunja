@@ -20,6 +20,7 @@ import (
 	"bufio"
 	"strconv"
 	"strings"
+	"time"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/notifications"
@@ -183,4 +184,30 @@ func (n *TeamMemberAddedNotification) ToDB() interface{} {
 // Name returns the name of the notification
 func (n *TeamMemberAddedNotification) Name() string {
 	return "team.member.added"
+}
+
+// UndoneTaskOverdueNotification represents a UndoneTaskOverdueNotification notification
+type UndoneTaskOverdueNotification struct {
+	User *user.User
+	Task *Task
+}
+
+// ToMail returns the mail notification for UndoneTaskOverdueNotification
+func (n *UndoneTaskOverdueNotification) ToMail() *notifications.Mail {
+	return notifications.NewMail().
+		Subject(`Task "`+n.Task.Title+`" is overdue`).
+		Greeting("Hi "+n.User.GetName()+",").
+		Line(`This is a friendly reminder of the task "`+n.Task.Title+`" which is overdue since `+time.Until(n.Task.DueDate).String()+` and not yet done.`).
+		Action("Open Task", config.ServiceFrontendurl.GetString()+"tasks/"+strconv.FormatInt(n.Task.ID, 10)).
+		Line("Have a nice day!")
+}
+
+// ToDB returns the UndoneTaskOverdueNotification notification in a format which can be saved in the db
+func (n *UndoneTaskOverdueNotification) ToDB() interface{} {
+	return nil
+}
+
+// Name returns the name of the notification
+func (n *UndoneTaskOverdueNotification) Name() string {
+	return "task.undone.overdue"
 }
