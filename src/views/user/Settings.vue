@@ -105,7 +105,13 @@
 			<div class="field">
 				<label class="checkbox">
 					<input type="checkbox" v-model="settings.emailRemindersEnabled"/>
-					Send me Reminders for tasks via Email
+					Send me reminders for tasks via Email
+				</label>
+			</div>
+			<div class="field">
+				<label class="checkbox">
+					<input type="checkbox" v-model="settings.overdueTasksRemindersEnabled"/>
+					Send me reminders for overdue undone tasks via email each morning
 				</label>
 			</div>
 			<div class="field">
