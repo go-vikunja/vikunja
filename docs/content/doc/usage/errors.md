@@ -4,8 +4,8 @@ title: "Errors"
 draft: false
 type: "doc"
 menu:
-sidebar:
-parent: "usage"
+  sidebar:
+    parent: "usage"
 ---
 
 # Errors
