@@ -7345,9 +7345,9 @@
                     "description": "An amount in seconds this task repeats itself. If this is set, when marking the task as done, it will mark itself as \"undone\" and then increase all remindes and the due date by its amount.",
                     "type": "integer"
                 },
-                "repeat_from_current_date": {
-                    "description": "If specified, a repeating task will repeat from the current date rather than the last set date.",
-                    "type": "boolean"
+                "repeat_mode": {
+                    "description": "Can have three possible values which will trigger when the task is marked as done: 0 = repeats after the amount specified in repeat_after, 1 = repeats all dates each months (ignoring repeat_after), 3 = repeats from the current date rather than the last set date.",
+                    "type": "integer"
                 },
                 "start_date": {
                     "description": "When this task starts.",
@@ -7922,9 +7922,9 @@
                     "description": "An amount in seconds this task repeats itself. If this is set, when marking the task as done, it will mark itself as \"undone\" and then increase all remindes and the due date by its amount.",
                     "type": "integer"
                 },
-                "repeat_from_current_date": {
-                    "description": "If specified, a repeating task will repeat from the current date rather than the last set date.",
-                    "type": "boolean"
+                "repeat_mode": {
+                    "description": "Can have three possible values which will trigger when the task is marked as done: 0 = repeats after the amount specified in repeat_after, 1 = repeats all dates each months (ignoring repeat_after), 3 = repeats from the current date rather than the last set date.",
+                    "type": "integer"
                 },
                 "start_date": {
                     "description": "When this task starts.",
