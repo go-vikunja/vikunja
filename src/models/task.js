@@ -2,6 +2,8 @@ import AbstractModel from './abstractModel'
 import UserModel from './user'
 import LabelModel from './label'
 import AttachmentModel from './attachment'
+import {REPEAT_MODE_DEFAULT} from './taskRepeatModes'
+
 import SubscriptionModel from '@/models/subscription'
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 
@@ -94,6 +96,7 @@ export default class TaskModel extends AbstractModel {
 			endDate: 0,
 			repeatAfter: 0,
 			repeatFromCurrentDate: false,
+			repeatMode: REPEAT_MODE_DEFAULT,
 			reminderDates: [],
 			parentTaskId: 0,
 			hexColor: '',
@@ -114,7 +117,7 @@ export default class TaskModel extends AbstractModel {
 	}
 
 	getTextIdentifier() {
-		if(this.identifier === '') {
+		if (this.identifier === '') {
 			return `#${this.index}`
 		}
 
