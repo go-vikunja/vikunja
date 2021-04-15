@@ -51,16 +51,18 @@
 							<div class="field has-addons" v-if="showSetLimitInput">
 								<div class="control">
 									<input
-										@change="() => updateBucket(bucket)"
-										@keyup.enter="() => updateBucket(bucket)"
+										@change="() => setBucketLimit(bucket)"
+										@keyup.enter="() => setBucketLimit(bucket)"
 										class="input"
 										type="number"
+										min="0"
 										v-focus.always
 										v-model="bucket.limit"
 									/>
 								</div>
 								<div class="control">
 									<x-button
+										:disabled="bucket.limit < 0"
 										:icon="['far', 'save']"
 										:shadow="false"
 									/>
@@ -75,7 +77,8 @@
 							class="dropdown-item"
 							v-tooltip="'All tasks moved into the done bucket will be marked as done automatically. All tasks marked as done from elsewhere will be moved as well.'"
 						>
-							<span class="icon is-small" :class="{'has-text-success': bucket.isDoneBucket}"><icon icon="check-double"/></span>
+							<span class="icon is-small" :class="{'has-text-success': bucket.isDoneBucket}"><icon
+								icon="check-double"/></span>
 							Done bucket
 						</a>
 						<a
@@ -600,6 +603,13 @@ export default {
 				.catch(e => {
 					this.error(e, this)
 				})
+		},
+		setBucketLimit(bucket) {
+			if (bucket.limit < 0) {
+				return
+			}
+
+			this.updateBucket(bucket)
 		},
 		shouldAcceptDrop(bucket) {
 			return bucket.id === this.sourceBucket || // When dragging from a bucket who has its limit reached, dragging should still be possible
