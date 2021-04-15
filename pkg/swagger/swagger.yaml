@@ -91,6 +91,7 @@ definitions:
         type: boolean
       limit:
         description: How many tasks can be at the same time on this board max
+        minimum: 0
         type: integer
       list_id:
         description: The list this bucket belongs to.

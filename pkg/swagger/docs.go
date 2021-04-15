@@ -7204,7 +7204,8 @@ var doc = `{
                 },
                 "limit": {
                     "description": "How many tasks can be at the same time on this board max",
-                    "type": "integer"
+                    "type": "integer",
+                    "minimum": 0
                 },
                 "list_id": {
                     "description": "The list this bucket belongs to.",

@@ -37,7 +37,7 @@ type Bucket struct {
 	Tasks []*Task `xorm:"-" json:"tasks"`
 
 	// How many tasks can be at the same time on this board max
-	Limit int64 `xorm:"default 0" json:"limit"`
+	Limit int64 `xorm:"default 0" json:"limit" minimum:"0" valid:"range(0|9223372036854775807)"`
 	// If this bucket is the "done bucket". All tasks moved into this bucket will automatically marked as done. All tasks marked as done from elsewhere will be moved into this bucket.
 	IsDoneBucket bool `xorm:"BOOL" json:"is_done_bucket"`
 
