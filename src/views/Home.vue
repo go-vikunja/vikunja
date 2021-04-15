@@ -16,7 +16,10 @@
 			<p class="mt-4" v-if="migratorsEnabled">
 				Or import your lists and tasks from other services into Vikunja:
 			</p>
-			<x-button :to="{ name: 'migrate.start' }" :shadow="false">
+			<x-button
+				v-if="migratorsEnabled"
+				:to="{ name: 'migrate.start' }"
+				:shadow="false">
 				Import your data into Vikunja
 			</x-button>
 		</template>
