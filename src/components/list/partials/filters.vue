@@ -310,6 +310,8 @@ export default {
 			this.prepareRelatedObjectFilter('namespace')
 		},
 		removePropertyFromFilter(propertyName) {
+			// Because of the way arrays work, we can only ever remove one element at once.
+			// To remove multiple filter elements of the same name this function has to be called multiple times.
 			for (const i in this.params.filter_by) {
 				if (this.params.filter_by[i] === propertyName) {
 					this.params.filter_by.splice(i, 1)
@@ -354,7 +356,12 @@ export default {
 					this.params.filter_value.push(formatISO(new Date(parts[1])))
 				}
 				this.change()
+				return
 			}
+
+			this.removePropertyFromFilter(filterName)
+			this.removePropertyFromFilter(filterName)
+			this.change()
 		},
 		prepareDate(filterName, variableName) {
 			if (typeof this.params.filter_by === 'undefined') {
