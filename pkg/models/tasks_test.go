@@ -302,6 +302,28 @@ func TestTask_Update(t *testing.T) {
 			"bucket_id": 4,
 		}, false)
 	})
+	t.Run("repeating tasks should not be moved to the done bucket", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		task := &Task{
+			ID:   28,
+			Done: true,
+		}
+		err := task.Update(s, u)
+		assert.NoError(t, err)
+		err = s.Commit()
+		assert.NoError(t, err)
+		assert.False(t, task.Done)
+		assert.Equal(t, int64(1), task.BucketID)
+
+		db.AssertExists(t, "tasks", map[string]interface{}{
+			"id":        28,
+			"done":      false,
+			"bucket_id": 1,
+		}, false)
+	})
 }
 
 func TestTask_Delete(t *testing.T) {

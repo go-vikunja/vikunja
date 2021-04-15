@@ -954,13 +954,13 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 		"repeat_mode",
 	}
 
+	// When a repeating task is marked as done, we update all deadlines and reminders and set it as undone
+	updateDone(&ot, t)
+
 	err = setTaskBucket(s, t, &ot, t.BucketID != ot.BucketID)
 	if err != nil {
 		return err
 	}
-
-	// When a repeating task is marked as done, we update all deadlines and reminders and set it as undone
-	updateDone(&ot, t)
 
 	// If the task is being moved between lists, make sure to move the bucket + index as well
 	if t.ListID != 0 && ot.ListID != t.ListID {
