@@ -43,6 +43,7 @@
 						class="is-right options"
 						v-if="canWrite"
 						trigger-icon="ellipsis-v"
+						@close="() => showSetLimitInput = false"
 					>
 						<a
 							@click.stop="showSetLimitInput = true"
@@ -53,6 +54,7 @@
 									<input
 										@change="() => setBucketLimit(bucket)"
 										@keyup.enter="() => setBucketLimit(bucket)"
+										@keyup.esc="() => showSetLimitInput = false"
 										class="input"
 										type="number"
 										min="0"

@@ -42,6 +42,7 @@ export default {
 			if (this.open) {
 				closeWhenClickedOutside(e, this.$refs.dropdown, () => {
 					this.open = false
+					this.$emit('close', e)
 				})
 			}
 		},
