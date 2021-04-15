@@ -170,7 +170,7 @@ export default {
 			const updateFunc = () => {
 				this.taskService.update(this.task)
 					.then(t => {
-						if(this.task.done) {
+						if (this.task.done) {
 							playPop()
 						}
 						this.task = t
@@ -180,11 +180,10 @@ export default {
 							this,
 							[{
 								title: 'Undo',
-								callback: () => this.markAsDone({
-									target: {
-										checked: !checked,
-									},
-								}),
+								callback: () => {
+									this.task.done = !this.task.done
+									this.markAsDone(!checked)
+								}
 							}],
 						)
 					})
