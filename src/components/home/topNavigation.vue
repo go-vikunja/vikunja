@@ -69,8 +69,9 @@
 						v-if="privacyPolicyUrl">
 						Privacy policy
 					</a>
-					<a @click="$store.commit('keyboardShortcutsActive', true)" class="dropdown-item">Keyboard
-						Shortcuts</a>
+					<a @click="$store.commit('keyboardShortcutsActive', true)" class="dropdown-item">
+						Keyboard Shortcuts
+					</a>
 					<a @click="logout()" class="dropdown-item">
 						Logout
 					</a>

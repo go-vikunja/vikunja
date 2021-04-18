@@ -19,14 +19,19 @@
 				class="app-content"
 			>
 				<a @click="$store.commit('menuActive', false)" class="mobile-overlay" v-if="menuActive"></a>
-				
+
 				<router-view/>
-				
+
 				<transition name="modal">
 					<router-view name="popup"/>
 				</transition>
-				
-				<a @click="$store.commit('keyboardShortcutsActive', true)" class="keyboard-shortcuts-button">
+
+				<a
+					class="keyboard-shortcuts-button"
+					@click="showKeyboardShortcuts()"
+					@shortkey="showKeyboardShortcuts()"
+					v-shortkey="['?']"
+				>
 					<icon icon="keyboard"/>
 				</a>
 			</div>
@@ -36,7 +41,7 @@
 
 <script>
 import {mapState} from 'vuex'
-import {CURRENT_LIST, MENU_ACTIVE} from '@/store/mutation-types'
+import {CURRENT_LIST, KEYBOARD_SHORTCUTS_ACTIVE, MENU_ACTIVE} from '@/store/mutation-types'
 import Navigation from '@/components/home/navigation'
 
 export default {
@@ -114,6 +119,9 @@ export default {
 			if (window.innerWidth < 769) {
 				this.$store.commit(MENU_ACTIVE, false)
 			}
+		},
+		showKeyboardShortcuts() {
+			this.$store.commit(KEYBOARD_SHORTCUTS_ACTIVE, true)
 		},
 	},
 }
