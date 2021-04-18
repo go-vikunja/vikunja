@@ -37,9 +37,9 @@
 						/>
 						<strong>{{ c.author.getDisplayName() }}</strong
 						>&nbsp;
-						<span v-tooltip="formatDate(c.created)">{{
-								formatDateSince(c.created)
-							}}</span>
+						<span v-tooltip="formatDate(c.created)" class="has-text-grey">
+							{{ formatDateSince(c.created) }}
+						</span>
 						<span
 							v-if="+new Date(c.created) !== +new Date(c.updated)"
 							v-tooltip="formatDate(c.updated)"
