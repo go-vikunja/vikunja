@@ -1,6 +1,6 @@
 <template>
 	<div class="modal-mask">
-		<div @click.self="close()" class="modal-container">
+		<div @mousedown.self="close()" class="modal-container">
 			<div class="scrolling-content">
 				<a @click="close()" class="close">
 					<icon icon="times"/>
