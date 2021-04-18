@@ -90,6 +90,7 @@ func TestRenderMail(t *testing.T) {
 		Subject("Testmail").
 		Greeting("Hi there,").
 		Line("This is a line").
+		Line("This **line** contains [a link](https://vikunja.io)").
 		Line("And another one").
 		Action("The action", "https://example.com").
 		Line("This should be an outro line").
@@ -104,6 +105,8 @@ func TestRenderMail(t *testing.T) {
 Hi there,
 
 This is a line
+
+This **line** contains [a link](https://vikunja.io)
 
 And another one
 
@@ -132,13 +135,14 @@ And one more, because why not?
 </p>
 
 
-	<p>
-		This is a line
-	</p>
+	<p>This is a line</p>
 
-	<p>
-		And another one
-	</p>
+
+	<p>This <strong>line</strong> contains <a href="https://vikunja.io">a link</a></p>
+
+
+	<p>And another one</p>
+
 
 
 
@@ -149,13 +153,11 @@ And one more, because why not?
 
 
 
-	<p>
-		This should be an outro line
-	</p>
+	<p>This should be an outro line</p>
 
-	<p>
-		And one more, because why not?
-	</p>
+
+	<p>And one more, because why not?</p>
+
 
 
 

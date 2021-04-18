@@ -19,6 +19,8 @@ package models
 import (
 	"time"
 
+	"code.vikunja.io/api/pkg/user"
+
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/cron"
 	"code.vikunja.io/api/pkg/db"
@@ -46,6 +48,11 @@ func getUndoneOverdueTasks(s *xorm.Session, now time.Time) (taskIDs []int64, err
 	}
 
 	return
+}
+
+type userWithTasks struct {
+	user  *user.User
+	tasks []*Task
 }
 
 // RegisterOverdueReminderCron registers a function which checks once a day for tasks that are overdue and not done.
@@ -76,21 +83,41 @@ func RegisterOverdueReminderCron() {
 			return
 		}
 
+		uts := make(map[int64]*userWithTasks)
+		for _, t := range users {
+			_, exists := uts[t.User.ID]
+			if !exists {
+				uts[t.User.ID] = &userWithTasks{
+					user:  t.User,
+					tasks: []*Task{},
+				}
+			}
+			uts[t.User.ID].tasks = append(uts[t.User.ID].tasks, t.Task)
+		}
+
 		log.Debugf("[Undone Overdue Tasks Reminder] Sending reminders to %d users", len(users))
 
-		for _, u := range users {
-			n := &UndoneTaskOverdueNotification{
-				User: u.User,
-				Task: u.Task,
+		for _, ut := range uts {
+			var n notifications.Notification = &UndoneTasksOverdueNotification{
+				User:  ut.user,
+				Tasks: ut.tasks,
 			}
 
-			err = notifications.Notify(u.User, n)
+			if len(ut.tasks) == 1 {
+				n = &UndoneTaskOverdueNotification{
+					User: ut.user,
+					Task: ut.tasks[0],
+				}
+			}
+
+			err = notifications.Notify(ut.user, n)
 			if err != nil {
-				log.Errorf("[Undone Overdue Tasks Reminder] Could not notify user %d: %s", u.User.ID, err)
+				log.Errorf("[Undone Overdue Tasks Reminder] Could not notify user %d: %s", ut.user.ID, err)
 				return
 			}
 
-			log.Debugf("[Undone Overdue Tasks Reminder] Sent reminder email for task %d to user %d", u.Task.ID, u.User.ID)
+			log.Debugf("[Undone Overdue Tasks Reminder] Sent reminder email for %d tasks to user %d", len(ut.tasks), ut.user.ID)
+			continue
 		}
 	})
 	if err != nil {

@@ -214,3 +214,37 @@ func (n *UndoneTaskOverdueNotification) ToDB() interface{} {
 func (n *UndoneTaskOverdueNotification) Name() string {
 	return "task.undone.overdue"
 }
+
+// UndoneTasksOverdueNotification represents a UndoneTasksOverdueNotification notification
+type UndoneTasksOverdueNotification struct {
+	User  *user.User
+	Tasks []*Task
+}
+
+// ToMail returns the mail notification for UndoneTasksOverdueNotification
+func (n *UndoneTasksOverdueNotification) ToMail() *notifications.Mail {
+
+	overdueLine := ""
+	for _, task := range n.Tasks {
+		until := time.Until(task.DueDate).Round(1*time.Hour) * -1
+		overdueLine += `* [` + task.Title + `](` + config.ServiceFrontendurl.GetString() + "tasks/" + strconv.FormatInt(task.ID, 10) + `), overdue since ` + utils.HumanizeDuration(until) + "\n"
+	}
+
+	return notifications.NewMail().
+		Subject(`Your overdue tasks`).
+		Greeting("Hi "+n.User.GetName()+",").
+		Line("You have the following overdue tasks:").
+		Line(overdueLine).
+		Action("Open Vikunja", config.ServiceFrontendurl.GetString()).
+		Line("Have a nice day!")
+}
+
+// ToDB returns the UndoneTasksOverdueNotification notification in a format which can be saved in the db
+func (n *UndoneTasksOverdueNotification) ToDB() interface{} {
+	return nil
+}
+
+// Name returns the name of the notification
+func (n *UndoneTasksOverdueNotification) Name() string {
+	return "task.undone.overdue"
+}

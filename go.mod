@@ -69,6 +69,7 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/swaggo/swag v1.7.0
 	github.com/ulule/limiter/v3 v3.8.0
+	github.com/yuin/goldmark v1.3.5
 	golang.org/x/crypto v0.0.0-20210415154028-4f45737414dc
 	golang.org/x/image v0.0.0-20210220032944-ac19c3e999fb
 	golang.org/x/oauth2 v0.0.0-20210413134643-5e61552d6c78
@@ -99,4 +100,4 @@ replace (
 	gopkg.in/fsnotify.v1 => github.com/kolaente/fsnotify v1.4.10-0.20200411160148-1bc3c8ff4048 // See https://github.com/fsnotify/fsnotify/issues/328 and https://github.com/golang/go/issues/26904
 )
 
-go 1.13
+go 1.15

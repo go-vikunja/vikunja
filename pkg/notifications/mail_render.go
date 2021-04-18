@@ -24,6 +24,8 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/mail"
 	"code.vikunja.io/api/pkg/utils"
+
+	"github.com/yuin/goldmark"
 )
 
 const mailTemplatePlain = `
@@ -54,10 +56,8 @@ const mailTemplateHTML = `
 	{{ .Greeting }}
 </p>
 
-{{ range $line := .IntroLines}}
-	<p>
-		{{ $line }}
-	</p>
+{{ range $line := .IntroLinesHTML}}
+	{{ $line }}
 {{ end }}
 
 {{ if .ActionURL }}
@@ -67,10 +67,8 @@ const mailTemplateHTML = `
 	</a>
 {{end}}
 
-{{ range $line := .OutroLines}}
-	<p>
-		{{ $line }}
-	</p>
+{{ range $line := .OutroLinesHTML}}
+	{{ $line }}
 {{ end }}
 
 {{ if .ActionURL }}
@@ -113,6 +111,32 @@ func RenderMail(m *Mail) (mailOpts *mail.Opts, err error) {
 	data["ActionURL"] = m.actionURL
 	data["Boundary"] = boundary
 	data["FrontendURL"] = config.ServiceFrontendurl.GetString()
+
+	var introLinesHTML []templatehtml.HTML
+	for _, line := range m.introLines {
+		md := []byte(templatehtml.HTMLEscapeString(line))
+		var buf bytes.Buffer
+		err = goldmark.Convert(md, &buf)
+		if err != nil {
+			return nil, err
+		}
+		//#nosec - the html is escaped few lines before
+		introLinesHTML = append(introLinesHTML, templatehtml.HTML(buf.String()))
+	}
+	data["IntroLinesHTML"] = introLinesHTML
+
+	var outroLinesHTML []templatehtml.HTML
+	for _, line := range m.outroLines {
+		md := []byte(templatehtml.HTMLEscapeString(line))
+		var buf bytes.Buffer
+		err = goldmark.Convert(md, &buf)
+		if err != nil {
+			return nil, err
+		}
+		//#nosec - the html is escaped few lines before
+		outroLinesHTML = append(outroLinesHTML, templatehtml.HTML(buf.String()))
+	}
+	data["OutroLinesHTML"] = outroLinesHTML
 
 	err = plain.Execute(&plainContent, data)
 	if err != nil {
