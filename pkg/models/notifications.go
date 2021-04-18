@@ -22,6 +22,8 @@ import (
 	"strings"
 	"time"
 
+	"code.vikunja.io/api/pkg/utils"
+
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/notifications"
 	"code.vikunja.io/api/pkg/user"
@@ -194,10 +196,11 @@ type UndoneTaskOverdueNotification struct {
 
 // ToMail returns the mail notification for UndoneTaskOverdueNotification
 func (n *UndoneTaskOverdueNotification) ToMail() *notifications.Mail {
+	until := time.Until(n.Task.DueDate).Round(1*time.Hour) * -1
 	return notifications.NewMail().
 		Subject(`Task "`+n.Task.Title+`" is overdue`).
 		Greeting("Hi "+n.User.GetName()+",").
-		Line(`This is a friendly reminder of the task "`+n.Task.Title+`" which is overdue since `+time.Until(n.Task.DueDate).String()+` and not yet done.`).
+		Line(`This is a friendly reminder of the task "`+n.Task.Title+`" which is overdue since `+utils.HumanizeDuration(until)+` and not yet done.`).
 		Action("Open Task", config.ServiceFrontendurl.GetString()+"tasks/"+strconv.FormatInt(n.Task.ID, 10)).
 		Line("Have a nice day!")
 }
