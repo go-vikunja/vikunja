@@ -1,7 +1,7 @@
 <template>
 	<form @submit.prevent="editTaskSubmit()">
 		<div class="field">
-			<label class="label" for="tasktext">Task Text</label>
+			<label class="label" for="tasktext">Title</label>
 			<div class="control">
 				<input
 					:class="{ disabled: taskService.loading }"
@@ -29,117 +29,11 @@
 			</div>
 		</div>
 
-		<b>Reminder Dates</b>
+		<strong>Reminders</strong>
 		<reminders
 			@change="editTaskSubmit()"
 			v-model="taskEditTask.reminderDates"
 		/>
-
-		<div class="field">
-			<label class="label" for="taskduedate">Due Date</label>
-			<div class="control">
-				<flat-pickr
-					:class="{ disabled: taskService.loading }"
-					:config="flatPickerConfig"
-					:disabled="taskService.loading"
-					@on-close="editTaskSubmit()"
-					class="input"
-					id="taskduedate"
-					placeholder="The tasks due date is here..."
-					v-model="taskEditTask.dueDate"
-				>
-				</flat-pickr>
-			</div>
-		</div>
-
-		<div class="field">
-			<label class="label" for="">Duration</label>
-			<div class="control columns">
-				<div class="column">
-					<flat-pickr
-						:class="{ disabled: taskService.loading }"
-						:config="flatPickerConfig"
-						:disabled="taskService.loading"
-						@on-close="editTaskSubmit()"
-						class="input"
-						id="taskduedate"
-						placeholder="Start date"
-						v-model="taskEditTask.startDate"
-					>
-					</flat-pickr>
-				</div>
-				<div class="column">
-					<flat-pickr
-						:class="{ disabled: taskService.loading }"
-						:config="flatPickerConfig"
-						:disabled="taskService.loading"
-						@on-close="editTaskSubmit()"
-						class="input"
-						id="taskduedate"
-						placeholder="End date"
-						v-model="taskEditTask.endDate"
-					>
-					</flat-pickr>
-				</div>
-			</div>
-		</div>
-
-		<div class="field">
-			<label class="label" for="">Repeat after</label>
-			<repeat-after
-				@change="editTaskSubmit()"
-				v-model="taskEditTask.repeatAfter"
-			/>
-		</div>
-
-		<div class="field">
-			<label class="label" for="">Priority</label>
-			<div class="control priority-select">
-				<priority-select
-					@change="editTaskSubmit()"
-					v-model="taskEditTask.priority"
-				/>
-			</div>
-		</div>
-
-		<div class="field">
-			<label class="label">Percent Done</label>
-			<div class="control">
-				<percent-done-select
-					@change="editTaskSubmit()"
-					v-model="taskEditTask.percentDone"
-				/>
-			</div>
-		</div>
-
-		<div class="field">
-			<label class="label">Color</label>
-			<div class="control">
-				<color-picker v-model="taskEditTask.hexColor" />
-			</div>
-		</div>
-
-		<div class="field">
-			<label class="label" for="">Assignees</label>
-			<ul class="assingees">
-				<li :key="a.id" v-for="(a, index) in taskEditTask.assignees">
-					{{ a.getDisplayName() }}
-					<a @click="deleteAssigneeByIndex(index)">
-						<icon icon="times" />
-					</a>
-				</li>
-			</ul>
-		</div>
-
-		<div class="field has-addons">
-			<div class="control is-expanded">
-				<edit-assignees
-					:initial-assignees="taskEditTask.assignees"
-					:list-id="taskEditTask.listId"
-					:task-id="taskEditTask.id"
-				/>
-			</div>
-		</div>
 
 		<div class="field">
 			<label class="label">Labels</label>
@@ -151,12 +45,12 @@
 			</div>
 		</div>
 
-		<related-tasks
-			:initial-related-tasks="task.relatedTasks"
-			:list-id="task.listId"
-			:task-id="task.id"
-			class="is-narrow"
-		/>
+		<div class="field">
+			<label class="label">Color</label>
+			<div class="control">
+				<color-picker v-model="taskEditTask.hexColor" />
+			</div>
+		</div>
 
 		<x-button
 			:loading="taskService.loading"
@@ -165,23 +59,22 @@
 		>
 			Save
 		</x-button>
+
+		<router-link
+			class="mt-2 has-text-centered is-block"
+			:to="{name: 'task.detail', params: {id: taskEditTask.id}}"
+		>
+			Open task detail view
+		</router-link>
 	</form>
 </template>
 
 <script>
-import flatPickr from 'vue-flatpickr-component'
-import 'flatpickr/dist/flatpickr.css'
-
 import ListService from '../../services/list'
 import TaskService from '../../services/task'
 import TaskModel from '../../models/task'
 import priorities from '../../models/priorities'
-import PrioritySelect from './partials/prioritySelect'
-import PercentDoneSelect from './partials/percentDoneSelect'
 import EditLabels from './partials/editLabels'
-import EditAssignees from './partials/editAssignees'
-import RelatedTasks from './partials/relatedTasks'
-import RepeatAfter from './partials/repeatAfter'
 import Reminders from './partials/reminders'
 import ColorPicker from '../input/colorPicker'
 import LoadingComponent from '../misc/loading'
@@ -214,17 +107,9 @@ export default {
 	components: {
 		ColorPicker,
 		Reminders,
-		RepeatAfter,
-		RelatedTasks,
-		EditAssignees,
 		EditLabels,
-		PercentDoneSelect,
-		PrioritySelect,
-		flatPickr,
 		editor: () => ({
-			component: import(
-				/* webpackChunkName: "editor" */ '../../components/input/editor'
-			),
+			component: import(/* webpackChunkName: "editor" */ '../../components/input/editor'),
 			loading: LoadingComponent,
 			error: ErrorComponent,
 			timeout: 60000,
@@ -273,6 +158,7 @@ export default {
 				.then((r) => {
 					this.$set(this, 'taskEditTask', r)
 					this.initTaskFields()
+					this.success({message: 'The task has been saved successfully.'}, this)
 				})
 				.catch((e) => {
 					this.error(e, this)
@@ -281,9 +167,3 @@ export default {
 	},
 }
 </script>
-
-<style scoped>
-form {
-	margin-bottom: 1rem;
-}
-</style>
