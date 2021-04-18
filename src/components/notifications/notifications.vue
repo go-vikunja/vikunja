@@ -16,16 +16,22 @@
 					<div class="read-indicator" :class="{'read': n.readAt !== null}"></div>
 					<user
 						:user="n.notification.doer"
-						:show-username="true"
+						:show-username="false"
 						:avatar-size="16"
 						v-if="n.notification.doer"/>
 					<span class="detail">
+						<p>
+
+						<span class="has-text-weight-bold" v-if="n.notification.doer">
+							{{ n.notification.doer.getDisplayName() }}
+						</span>
 						<a @click="() => to(n, index)()">
 							{{ n.toText(userInfo) }}
 						</a>
-						<span class="created" v-tooltip="formatDate(n.created)">
-							{{ formatDateSince(n.created) }}
-						</span>
+						</p>
+					<div class="created" v-tooltip="formatDate(n.created)">
+						{{ formatDateSince(n.created) }}
+					</div>
 					</span>
 				</div>
 				<p class="nothing" v-if="notifications.length === 0">
@@ -52,7 +58,7 @@ export default {
 	data() {
 		return {
 			notificationService: NotificationService,
-			notifications: [],
+			allNotifications: [],
 			showNotifications: false,
 			interval: null,
 		}
@@ -73,6 +79,9 @@ export default {
 		unreadNotifications() {
 			return this.notifications.filter(n => n.readAt === null).length
 		},
+		notifications() {
+			return this.allNotifications.filter(n => n.name !== '')
+		},
 		...mapState({
 			userInfo: state => state.auth.info,
 		}),
@@ -86,7 +95,7 @@ export default {
 		loadNotifications() {
 			this.notificationService.getAll()
 				.then(r => {
-					this.$set(this, 'notifications', r)
+					this.$set(this, 'allNotifications', r)
 				})
 				.catch(e => {
 					this.error(e, this)
@@ -125,7 +134,7 @@ export default {
 				n.read = true
 				this.notificationService.update(n)
 					.then(r => {
-						this.$set(this.notifications, index, r)
+						this.$set(this.allNotifications, index, r)
 					})
 					.catch(e => this.error(e, this))
 			}

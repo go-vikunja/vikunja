@@ -49,6 +49,7 @@
 		.single-notification {
 			display: flex;
 			align-items: center;
+			padding: 0.25rem 0;
 
 			transition: background-color $transition;
 
@@ -70,10 +71,10 @@
 			}
 
 			.user {
-				display: flex;
+				display: inline-flex;
 				align-items: center;
 				width: auto;
-				margin-right: .25rem;
+				margin: 0 .5rem;
 
 				span {
 					font-family: $family-sans-serif;
@@ -82,9 +83,13 @@
 				.avatar {
 					height: 16px;
 				}
+
+				img {
+					margin-right: 0;
+				}
 			}
 
-			.detail .created {
+			.created {
 				color: $grey-400;
 			}
 
