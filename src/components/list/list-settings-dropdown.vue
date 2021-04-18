@@ -106,7 +106,7 @@ export default {
 		listRoutePrefix() {
 			let name = 'list'
 
-			if (this.$route.name.startsWith('list.')) {
+			if (this.$route.name !== null && this.$route.name.startsWith('list.')) {
 				name = this.$route.name
 			}
 

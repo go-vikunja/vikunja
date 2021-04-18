@@ -67,12 +67,12 @@
 					</div>
 				</div>
 				<div class="field">
-					<label class="label" for="currentPassword">Current Password</label>
+					<label class="label" for="currentPasswordEmail">Current Password</label>
 					<div class="control">
 						<input
 							@keyup.enter="updateEmail"
 							class="input"
-							id="currentPassword"
+							id="currentPasswordEmail"
 							placeholder="Your current password"
 							type="password"
 							v-model="emailUpdate.password"/>
