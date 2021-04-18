@@ -77,8 +77,8 @@
 						done: t.done,
 						'is-current-edit':
 							taskToEdit !== null && taskToEdit.id === t.id,
-						'has-light-text': !colorIsDark(t.hexColor),
-						'has-dark-text': colorIsDark(t.hexColor),
+						'has-light-text': !colorIsDark(t.getHexColor()),
+						'has-dark-text': colorIsDark(t.getHexColor()),
 					}"
 					:gridX="dayWidth"
 					:h="31"
@@ -89,8 +89,8 @@
 					:snapToGrid="true"
 					:sticks="['mr', 'ml']"
 					:style="{
-						'border-color': t.hexColor,
-						'background-color': t.hexColor,
+						'border-color': t.getHexColor(),
+						'background-color': t.getHexColor(),
 					}"
 					:w="t.durationDays * dayWidth"
 					:x="t.offsetDays * dayWidth - 6"

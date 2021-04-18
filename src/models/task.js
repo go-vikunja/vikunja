@@ -47,11 +47,7 @@ export default class TaskModel extends AbstractModel {
 			return new LabelModel(l)
 		})
 
-		// Set the default color
-		if (this.hexColor === '') {
-			this.hexColor = this.defaultColor
-		}
-		if (this.hexColor.substring(0, 1) !== '#') {
+		if (this.hexColor !== '' && this.hexColor.substring(0, 1) !== '#') {
 			this.hexColor = '#' + this.hexColor
 		}
 
@@ -122,6 +118,14 @@ export default class TaskModel extends AbstractModel {
 		}
 
 		return this.identifier
+	}
+
+	getHexColor() {
+		if (this.hexColor === '') {
+			return `#${this.defaultColor}`
+		}
+
+		return this.hexColor
 	}
 
 	/////////////////
