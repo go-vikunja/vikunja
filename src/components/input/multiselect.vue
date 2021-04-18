@@ -3,6 +3,8 @@
 		class="multiselect"
 		:class="{'has-search-results': searchResultsVisible}"
 		ref="multiselectRoot"
+		tabindex="-1"
+		@focus="focus"
 	>
 		<div class="control" :class="{'is-loading': loading || localLoading}">
 			<div class="input-wrapper input" :class="{'has-multiple': multiple && Array.isArray(internalValue) && internalValue.length > 0}">
@@ -323,6 +325,9 @@ export default {
 
 			this.$emit('input', this.internalValue)
 			this.$emit('remove', item)
+		},
+		focus() {
+			this.$refs.searchInput.focus()
 		},
 	},
 }

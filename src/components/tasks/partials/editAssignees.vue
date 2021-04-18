@@ -1,25 +1,31 @@
 <template>
-	<multiselect
-		:loading="listUserService.loading"
-		placeholder="Type to assign a user..."
-		:disabled="disabled"
-		:multiple="true"
-		@search="findUser"
-		:search-results="foundUsers"
-		@select="addAssignee"
-		label="username"
-		select-placeholder="Assign this user"
-		v-model="assignees"
+	<div
+		tabindex="-1"
+		@focus="focus"
 	>
-		<template v-slot:tag="props">
-			<span class="assignee">
-				<user :avatar-size="32" :show-username="false" :user="props.item"/>
-				<a @click="removeAssignee(props.item)" class="remove-assignee" v-if="!disabled">
-					<icon icon="times"/>
-				</a>
-			</span>
-		</template>
-	</multiselect>
+		<multiselect
+			:loading="listUserService.loading"
+			placeholder="Type to assign a user..."
+			:disabled="disabled"
+			:multiple="true"
+			@search="findUser"
+			:search-results="foundUsers"
+			@select="addAssignee"
+			label="username"
+			select-placeholder="Assign this user"
+			v-model="assignees"
+			ref="multiselect"
+		>
+			<template v-slot:tag="props">
+				<span class="assignee">
+					<user :avatar-size="32" :show-username="false" :user="props.item"/>
+					<a @click="removeAssignee(props.item)" class="remove-assignee" v-if="!disabled">
+						<icon icon="times"/>
+					</a>
+				</span>
+			</template>
+		</multiselect>
+	</div>
 </template>
 
 <script>
@@ -118,6 +124,9 @@ export default {
 		},
 		clearAllFoundUsers() {
 			this.$set(this, 'foundUsers', [])
+		},
+		focus() {
+			this.$refs.multiselect.focus()
 		},
 	},
 }

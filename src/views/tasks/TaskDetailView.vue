@@ -654,7 +654,7 @@ export default {
 		toggleTaskDone() {
 			this.task.done = !this.task.done
 
-			if(this.task.done) {
+			if (this.task.done) {
 				playPop()
 			}
 
