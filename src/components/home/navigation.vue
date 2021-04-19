@@ -66,7 +66,7 @@
 					</span>
 					<namespace-settings-dropdown :namespace="n" v-if="n.id > 0"/>
 				</div>
-				<div :key="n.id + 'child'" class="more-container" v-if="listsVisible[n.id]">
+				<div :key="n.id + 'child'" class="more-container" v-if="typeof listsVisible[n.id] !== 'undefined' ? listsVisible[n.id] : true">
 					<ul class="menu-list can-be-hidden">
 						<template v-for="l in n.lists">
 							<!-- This is a bit ugly but vue wouldn't want to let me filter this - probably because the lists
@@ -142,7 +142,9 @@ export default {
 		this.$store.dispatch('namespaces/loadNamespaces')
 			.then(namespaces => {
 				namespaces.forEach(n => {
-					this.$set(this.listsVisible, n.id, true)
+					if (typeof this.listsVisible[n.id] === 'undefined') {
+						this.$set(this.listsVisible, n.id, true)
+					}
 				})
 			})
 	},

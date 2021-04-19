@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<template v-if="online">
+		<div :class="{'is-hidden': !online}">
 			<!-- This is a workaround to get the sw to "see" the to-be-cached version of the offline background image -->
 			<div class="offline" style="height: 0;width: 0;"></div>
 			<top-navigation v-if="authUser"/>
@@ -8,8 +8,8 @@
 			<content-link-share v-else-if="authLinkShare"/>
 			<content-no-auth v-else/>
 			<notification/>
-		</template>
-		<div class="app offline" v-else>
+		</div>
+		<div class="app offline" v-if="!online">
 			<div class="offline-message">
 				<h1>You are offline.</h1>
 				<p>Please check your network connection and try again.</p>
