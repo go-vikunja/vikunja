@@ -50,7 +50,7 @@
 
 		<aside class="menu namespaces-lists loader-container" :class="{'is-loading': loading}">
 			<template v-for="n in namespaces">
-				<div :key="n.id" class="namespace-title">
+				<div :key="n.id" class="namespace-title" :class="{'has-menu': n.id > 0}">
 					<span
 						@click="toggleLists(n.id)"
 						class="menu-label"
@@ -64,6 +64,12 @@
 							{{ n.title }} ({{ n.lists.filter(l => !l.isArchived).length }})
 						</span>
 					</span>
+					<a
+						class="icon is-small toggle-lists-icon"
+						:class="{'active': typeof listsVisible[n.id] !== 'undefined' ? listsVisible[n.id] : true}"
+						@click="toggleLists(n.id)">
+						<icon icon="chevron-down"/>
+					</a>
 					<namespace-settings-dropdown :namespace="n" v-if="n.id > 0"/>
 				</div>
 				<div :key="n.id + 'child'" class="more-container" v-if="typeof listsVisible[n.id] !== 'undefined' ? listsVisible[n.id] : true">
@@ -99,13 +105,6 @@
 						</template>
 					</ul>
 				</div>
-				<span
-					@click="toggleLists(n.id)"
-					:key="`${n.id}_hidden_hint`"
-					class="hidden-hint"
-					v-else-if="n.lists.filter(l => !l.isArchived).length > 0">
-					Show hidden lists ({{ n.lists.filter(l => !l.isArchived).length }})...
-				</span>
 			</template>
 		</aside>
 		<a class="menu-bottom-link" href="https://vikunja.io" target="_blank">Powered by Vikunja</a>

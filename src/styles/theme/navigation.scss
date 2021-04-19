@@ -189,18 +189,31 @@
           padding: .5rem;
           cursor: pointer;
         }
+
+        .toggle-lists-icon {
+          svg {
+            transition: all $transition;
+            transform: rotate(90deg);
+            opacity: 1;
+          }
+
+          &.active svg {
+            transform: rotate(0deg);
+            opacity: 0;
+          }
+        }
+
+        &:hover .toggle-lists-icon svg {
+          opacity: 1;
+        }
+
+        &:not(.has-menu) .toggle-lists-icon {
+          padding-right: 1rem;
+        }
       }
 
       .menu-label, .nsettings, .menu-list span.list-menu-link, .menu-list a {
         color: $vikunja-nav-color;
-      }
-
-      .hidden-hint {
-        display: block;
-        text-align: center;
-        color: $grey-500;
-        cursor: pointer;
-        font-size: 0.75rem;
       }
 
       .menu-list {
@@ -285,7 +298,7 @@
       }
 
       .icon {
-        color: $grey-400;
+        color: $grey-400 !important;
       }
     }
 
