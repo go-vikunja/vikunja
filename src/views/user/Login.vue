@@ -5,8 +5,8 @@
 			<div class="notification is-success has-text-centered" v-if="confirmedEmailSuccess">
 				You successfully confirmed your email! You can log in now.
 			</div>
-			<api-config/>
-			<form @submit.prevent="submit" id="loginform" v-if="localAuthEnabled">
+			<api-config @foundApi="hasApiUrl = true"/>
+			<form @submit.prevent="submit" id="loginform" v-if="hasApiUrl && localAuthEnabled">
 				<div class="field">
 					<label class="label" for="username">Username Or Email Address</label>
 					<div class="control">
@@ -82,7 +82,7 @@
 				</div>
 			</form>
 
-			<div v-if="openidConnect.enabled && openidConnect.providers && openidConnect.providers.length > 0" class="mt-4">
+			<div v-if="hasApiUrl && openidConnect.enabled && openidConnect.providers && openidConnect.providers.length > 0" class="mt-4">
 				<x-button
 					@click="redirectToProvider(p)"
 					v-for="(p, k) in openidConnect.providers"
@@ -117,6 +117,7 @@ export default {
 	data() {
 		return {
 			confirmedEmailSuccess: false,
+			hasApiUrl: false,
 		}
 	},
 	beforeMount() {
@@ -144,6 +145,7 @@ export default {
 		}
 	},
 	created() {
+		this.hasApiUrl = window.API_URL !== ''
 		this.setTitle('Login')
 	},
 	computed: mapState({

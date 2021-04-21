@@ -189,6 +189,7 @@ export default {
 						localStorage.setItem('API_URL', window.API_URL)
 						this.configureApi = false
 						this.apiUrl = window.API_URL
+						this.$emit('foundApi', this.apiUrl)
 					}
 				})
 		},
