@@ -99,6 +99,19 @@ func getDefaultBucket(s *xorm.Session, listID int64) (bucket *Bucket, err error)
 // @Router /lists/{id}/buckets [get]
 func (b *Bucket) ReadAll(s *xorm.Session, auth web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
 
+	list, err := GetListSimpleByID(s, b.ListID)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	can, _, err := list.CanRead(s, auth)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+	if !can {
+		return nil, 0, 0, ErrGenericForbidden{}
+	}
+
 	// Note: I'm ignoring pagination for now since I've yet to figure out a way on how to make it work
 	// I'll probably just don't do it and instead make individual tasks archivable.
 
