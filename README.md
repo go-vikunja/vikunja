@@ -13,11 +13,16 @@
 
 # Table of contents
 
+* [Security Reports](#security-reports)
 * [Features](#features)
 * [Docs](#docs)
 * [Roadmap](#roadmap)
 * [Contributing](#contributing)
 * [License](#license)
+
+## Security Reports
+
+If you find any security-related issues you don't want to disclose publicly, please use [the contact information on our website](https://vikunja.io/contact/#security).
 
 ## Features
 
