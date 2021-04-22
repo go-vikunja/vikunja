@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 All releases can be found on https://code.vikunja.io/api/releases.
 
+## [0.16.1] - 2021-04-22
+
+### Fixed
+
+* Fix checking list rights when accessing a bucket
+
 ## [0.16.0] - 2021-01-10
 
 ### Added
