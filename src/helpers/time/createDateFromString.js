@@ -7,6 +7,10 @@
  * @returns {Date}
  */
 export const createDateFromString = dateString => {
+	if (dateString instanceof Date) {
+		return dateString
+	}
+
 	if (dateString.includes('-')) {
 		dateString = dateString.replace(/-/g, "/")
 	}

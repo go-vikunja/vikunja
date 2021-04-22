@@ -2,7 +2,9 @@ import Vue from 'vue'
 import App from './App.vue'
 import router from './router'
 
+import {createDateFromString} from '@/helpers/time/createDateFromString'
 import {VERSION} from './version.json'
+
 // Register the modal
 import Modal from './components/modal/modal'
 // Add CSS
@@ -166,10 +168,21 @@ Vue.directive('focus', focus)
 import tooltip from '@/directives/tooltip'
 Vue.directive('tooltip', tooltip)
 
-const formatDate = (date, f) => {
-	if (typeof date === 'string') {
-		date = new Date(date)
+const dateIsValid = date => {
+	if (date === null) {
+		return false
 	}
+
+	return date instanceof Date && !isNaN(date)
+}
+
+const formatDate = (date, f) => {
+	if (!dateIsValid(date)) {
+		return ''
+	}
+
+	date = createDateFromString(date)
+
 	return date ? format(date, f) : ''
 }
 
@@ -182,13 +195,12 @@ Vue.component('card', Card)
 Vue.mixin({
 	methods: {
 		formatDateSince: date => {
-			if (date === null) {
+			if (!dateIsValid(date)) {
 				return ''
 			}
 
-			if (typeof date === 'string') {
-				date = new Date(date)
-			}
+			date = createDateFromString(date)
+
 			const currentDate = new Date()
 			let formatted = ''
 			if (date > currentDate) {
@@ -201,20 +213,8 @@ Vue.mixin({
 
 			return formatted
 		},
-		formatDate: date => {
-			if (date === null) {
-				return ''
-			}
-
-			if (typeof date === 'string') {
-				date = new Date(date)
-			}
-			return date ? format(date, 'PPPPpppp') : ''
-		},
-		formatDateShort: date => {
-			console.log('short date', date)
-			return formatDate(date, 'PPpp')
-		},
+		formatDate: date => formatDate(date, 'PPPPpppp'),
+		formatDateShort: date => formatDate(date, 'PPpp'),
 		error: (e, context, actions = []) => message.error(e, context, actions),
 		success: (s, context, actions = []) => message.success(s, context, actions),
 		colorIsDark: colorIsDark,

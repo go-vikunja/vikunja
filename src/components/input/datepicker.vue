@@ -157,7 +157,7 @@ export default {
 		}
 	},
 	mounted() {
-		this.date = this.value
+		this.setDateValue(this.value)
 		document.addEventListener('click', this.hideDatePopup)
 	},
 	beforeDestroy() {
@@ -165,11 +165,7 @@ export default {
 	},
 	watch: {
 		value(newVal) {
-			if(newVal === null) {
-				this.date = null
-				return
-			}
-			this.date = createDateFromString(newVal)
+			this.setDateValue(newVal)
 		},
 		flatPickrDate(newVal) {
 			this.date = createDateFromString(newVal)
@@ -177,6 +173,13 @@ export default {
 		},
 	},
 	methods: {
+		setDateValue(newVal) {
+			if(newVal === null) {
+				this.date = null
+				return
+			}
+			this.date = createDateFromString(newVal)
+		},
 		updateData() {
 			this.changed = true
 			this.$emit('input', this.date)
