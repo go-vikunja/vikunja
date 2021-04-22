@@ -544,20 +544,15 @@ trigger:
     - main
 
 steps:
-  - name: submodules
-    image: docker:git
-    commands:
-      - git submodule update --init
-      - git submodule update --recursive --remote
-
   - name: theme
-    image: kolaente/yarn
+    image: kolaente/toolbox
     pull: true
     group: build-static
     commands:
+      - mkdir docs/themes/vikunja -p
       - cd docs/themes/vikunja
-      - yarn --production=false
-      - ./node_modules/.bin/gulp prod
+      - wget https://dl.vikunja.io/theme/vikunja-theme.tar.gz
+      - tar -xzf vikunja-theme.tar.gz
 
   - name: build
     image: monachus/hugo:v0.54.0
