@@ -119,6 +119,19 @@ func getDoneBucketForList(s *xorm.Session, listID int64) (bucket *Bucket, err er
 // @Router /lists/{id}/buckets [get]
 func (b *Bucket) ReadAll(s *xorm.Session, auth web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
 
+	list, err := GetListSimpleByID(s, b.ListID)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	can, _, err := list.CanRead(s, auth)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+	if !can {
+		return nil, 0, 0, ErrGenericForbidden{}
+	}
+
 	// Get all buckets for this list
 	buckets := []*Bucket{}
 	err = s.Where("list_id = ?", b.ListID).Find(&buckets)
