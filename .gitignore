@@ -4,6 +4,7 @@
 config.yml
 config.yaml
 !docs/config.yml
+docs/themes/
 *.db
 Run
 dist/
