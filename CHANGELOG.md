@@ -12,6 +12,8 @@ All releases can be found on https://code.vikunja.io/api/releases.
 ### Fixed
 
 * Fix checking list rights when accessing a bucket
+* Remove old deb-structure ci step
+* Fix docker from
 
 ## [0.16.0] - 2021-01-10
 
