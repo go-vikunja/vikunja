@@ -72,6 +72,7 @@ $gantt-vertical-border-color: $grey-100;
         padding: 0.25rem 0.5rem;
         cursor: grab;
         position: relative;
+        height: 31px !important;
 
         -webkit-touch-callout: none; // iOS Safari
         -webkit-user-select: none; // Safari

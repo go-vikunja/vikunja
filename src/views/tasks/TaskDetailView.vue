@@ -505,8 +505,6 @@ export default {
 			this.listViewName = `list.${parts[1]}`
 		}
 
-		console.log(this.task)
-
 		this.loadTask()
 	},
 	computed: {

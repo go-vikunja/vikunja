@@ -85,7 +85,7 @@ export default {
 		if (typeof this.$route.query.code !== 'undefined' || location.hash.startsWith('#token=')) {
 			if (location.hash.startsWith('#token=')) {
 				this.migratorAuthCode = location.hash.substring(7)
-				console.log(location.hash.substring(7))
+				console.debug(location.hash.substring(7))
 			} else {
 				this.migratorAuthCode = this.$route.query.code
 			}
