@@ -168,9 +168,7 @@ export default {
 	name: 'comments',
 	components: {
 		editor: () => ({
-			component: import(
-				/* webpackChunkName: "editor" */ '../../input/editor'
-				),
+			component: import(/* webpackChunkName: "editor" */ '../../input/editor'),
 			loading: LoadingComponent,
 			error: ErrorComponent,
 			timeout: 60000,
@@ -233,7 +231,7 @@ export default {
 		loadComments() {
 			this.taskCommentService
 				.getAll({taskId: this.taskId})
-				.then((r) => {
+				.then(r => {
 					this.$set(this, 'comments', r)
 					this.makeActions()
 				})

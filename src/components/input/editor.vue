@@ -253,14 +253,17 @@ export default {
 			this.$nextTick(this.renderPreview)
 		},
 		text(newVal, oldVal) {
-			if (oldVal === '') {
+			// Only bubble the new value if it actually changed, but not if the component just got mounted and the text changed from the outside.
+			if (oldVal === '' && this.text === this.value) {
 				return
 			}
 			this.bubble()
 		},
 	},
-	beforeMount() {
-		this.text = this.value
+	mounted() {
+		if (this.value !== '') {
+			this.text = this.value
+		}
 
 		if (this.previewIsDefault && this.hasPreview) {
 			this.$nextTick(this.renderPreview)
@@ -293,7 +296,7 @@ export default {
 
 			this.changeTimeout = setTimeout(() => {
 				this.$emit('input', this.text)
-				this.$emit('change')
+				this.$emit('change', this.text)
 			}, timeout)
 		},
 		replaceAt(str, index, replacement) {
