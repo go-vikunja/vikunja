@@ -74,7 +74,7 @@ require (
 	golang.org/x/image v0.0.0-20210220032944-ac19c3e999fb
 	golang.org/x/oauth2 v0.0.0-20210427180440-81ed05c6b58c
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
-	golang.org/x/term v0.0.0-20210429154555-c04ba851c2a4
+	golang.org/x/term v0.0.0-20210503060354-a79de5458b56
 	golang.org/x/text v0.3.5 // indirect
 	golang.org/x/tools v0.1.0 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
