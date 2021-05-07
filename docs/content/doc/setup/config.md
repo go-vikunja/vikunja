@@ -132,7 +132,7 @@ Default: `true`
 
 ### timezone
 
-The time zone all timestamps are in
+The time zone all timestamps are in. Please note that time zones have to use [the official tz database names](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones). UTC or GMT offsets won't work.
 
 Default: `GMT`
 

@@ -1046,7 +1046,7 @@ const (
 	configInjectComment = `<!-- Generated config will be injected here -->`
 )
 
-// Generates the error docs from a commented config.yml.sample file in the repo root.
+// Generates the config docs from a commented config.yml.sample file in the repo root.
 func GenerateDocs() error {
 
 	config, err := ioutil.ReadFile("config.yml.sample")

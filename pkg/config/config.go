@@ -25,8 +25,8 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+	_ "time/tzdata" // Imports time zone data instead of relying on the os
 
-	"4d63.com/tz"
 	"github.com/spf13/viper"
 )
 
@@ -191,7 +191,7 @@ var timezone *time.Location
 // it way easier, especially when testing.
 func GetTimeZone() *time.Location {
 	if timezone == nil {
-		loc, err := tz.LoadLocation(ServiceTimeZone.GetString())
+		loc, err := time.LoadLocation(ServiceTimeZone.GetString())
 		if err != nil {
 			fmt.Printf("Error parsing time zone: %s", err)
 			os.Exit(1)

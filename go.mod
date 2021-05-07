@@ -17,7 +17,6 @@
 module code.vikunja.io/api
 
 require (
-	4d63.com/tz v1.2.0
 	code.vikunja.io/web v0.0.0-20210131201003-26386be9a9ae
 	gitea.com/xorm/xorm-redis-cache v0.2.0
 	github.com/ThreeDotsLabs/watermill v1.1.1
