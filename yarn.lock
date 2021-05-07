@@ -13390,7 +13390,14 @@ vue-codemod@^0.0.5:
     source-map "^0.6.1"
     yargs "^16.2.0"
 
-vue-drag-resize@1.5.1, vue-drag-resize@^1.5.0-rc3:
+vue-drag-resize@1.5.2:
+  version "1.5.2"
+  resolved "https://registry.yarnpkg.com/vue-drag-resize/-/vue-drag-resize-1.5.2.tgz#fc658436c908675b25b5636485d4018411741be1"
+  integrity sha512-cFSG4w/YVM4P78hkOfw63zjTKD30O2EId5qMYQlRkoF788CCjUIR8ib439JZkLdqLaEhTvN3iYQh1da5CA22Sw==
+  dependencies:
+    vue-drag-resize "^1.5.0-rc3"
+
+vue-drag-resize@^1.5.0-rc3:
   version "1.5.1"
   resolved "https://registry.yarnpkg.com/vue-drag-resize/-/vue-drag-resize-1.5.1.tgz#4c6e18dfb60cf2c7cbf8152047dcd0ee55e37499"
   integrity sha512-fGiV/aha+2gja4zxNFQIrZQ26gMd1w/tvYejwwMBYeBLGGB7lUd9sO+XZIOLYuyeFII3ItlTiFjzuB5glmEtQg==
