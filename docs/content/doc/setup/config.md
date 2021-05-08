@@ -237,6 +237,12 @@ Secure connection mode. Only used with postgres.
 
 Default: `disable`
 
+### tls
+
+Enable SSL/TLS for mysql connections. Options: false, true, skip-verify, preferred
+
+Default: `false`
+
 ---
 
 ## cache

@@ -62,6 +62,8 @@ database:
   # Secure connection mode. Only used with postgres.
   # (see https://pkg.go.dev/github.com/lib/pq?tab=doc#hdr-Connection_String_Parameters)
   sslmode: disable
+  # Enable SSL/TLS for mysql connections. Options: false, true, skip-verify, preferred
+  tls: false
 
 cache:
   # If cache is enabled or not
