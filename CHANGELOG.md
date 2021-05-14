@@ -7,6 +7,179 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 All releases can be found on https://code.vikunja.io/api/releases.
 
+## [0.17.0] - 2021-05-14
+
+### Added
+
+* Add a "done" option to kanban buckets (#821)
+* Add arm64 builds
+* Add basic auth for metrics endpoint
+* Add bucket limit validation
+* Add crud endpoints for notifications (#801)
+* Add endpoint to remove a list background
+* Add events (#777)
+* Add github funding link
+* Add link share password authentication (#831)
+* Add names for link shares (#829)
+* Add notifications package for easy sending of notifications (#779)
+* Add reminders for overdue tasks (#832)
+* Add repeat monthly setting for tasks (#834)
+* Add security information to readme
+* Add separate docker manifest file for latest docker images
+* Add systemd service file to linux packages
+* Add test for moving a task to another list
+* Enable searching users by full email or name
+* Expose tls parameter of Go MySQL driver to config file (#855)
+* Pagingation for tasks in kanban buckets (#805)
+
+### Changed
+
+* Change keyvalue.Get to return if a value exists or not instead of an error
+* Change main branch to main
+* Change test file names to unstable
+* Change the name of the newly created bucket from "New Bucket" to "Backlog"
+* Change unstable versions in migration tests
+* Check if we're on main and change the version name accordingly if that's the case
+* Cleanup listener names
+* Cleanup old docs themes submodule
+* Disable deb repo in drone
+* Don't keep old releases from os packages when releasing for master
+* Don't try to get users for tasks if no tasks were found when looking for reminders
+* Explicitly add docker build step for latest
+* Explicitly check if there are Ids before trying to get items by a list of Ids
+* Improve duration format of overdue tasks in reminders
+* Improve loading labels performance (#824)
+* Improve sending overdue task reminders by only sending one for all overdue tasks
+* Make sure all tables are properly pluralized
+* Only send reminders for undone tasks
+* Re-Enable migration test steps in pipeline
+* Refactor getting all namespaces
+* Remove unused tools from tools.go
+* Run all lint checks at once
+* Send a notification to the user when they are added to the list
+* Show empty avatar when the user was not found
+* Subscribe a user to a task when they are assigned to it
+* Subscriptions and notifications for namespaces, tasks and lists (#786)
+* Switch building the docs to download the theme instead of building
+* Switch telegram notifications to matrix notifications
+* Temporarily disable migration step
+* Temporary build fix
+* Update changelog
+* Update copyright year
+* Update README (#858)
+* Use golang's tzdata package to handle time zones
+
+### Fixed
+
+* Explicitly set darwin-10.15 when building binaries
+* Fix build
+* Fix checking list rights when accessing a bucket
+* Fix /dav/principals/*/ throwing a server error when accessed with GET instead of PROPFIND (#769)
+* Fix deleting task relations
+* Fix docs
+* Fix drone file
+* Fix due dates with times when migrating from todoist
+* Fix event error handler retrying infinitely
+* Fix filter for task index
+* Fix getting lists for shared, favorite and saved lists namespace
+* Fix getting user info from /user endpoint for link shares
+* Fix IncrBy and DecrBy in memory keyvalue implementation if there was no value set previously
+* Fix lint
+* Fix matrix notify room id
+* Fix moving repeating tasks to the done bucket
+* Fix multiarch docker image building
+* Fix not able to make saved filters favorite
+* Fix notifications table not being created on initial setup
+* Fix resetting the bucket limit
+* Fix retrieving over openid providers if there are none
+* Fix sending notifications to users if the user object didn't have an email
+* Fix setting the user in created_by when uploading an attachment
+* Fix shared lists showing up twice
+* Fix tests
+* Fix the shared lists pseudo namespace containing owned lists
+* Fix unstable version build file names
+* Fix user uploaded avatars
+* Pin golang alpine builder image to 3.12 to fix builds on arm
+* Revert "Update alpine Docker tag to v3.13 (#768)"
+
+### Dependency Updates
+
+* Update alpine Docker tag to v3.13 (#768)
+* Update github.com/gordonklaus/ineffassign commit hash to 2e10b26 (#803)
+* Update github.com/gordonklaus/ineffassign commit hash to d0e41b2 (#780)
+* Update golang.org/x/crypto commit hash to 0c34fe9 (#822)
+* Update golang.org/x/crypto commit hash to 3497b51 (#853)
+* Update golang.org/x/crypto commit hash to 38f3c27 (#854)
+* Update golang.org/x/crypto commit hash to 4f45737 (#836)
+* Update golang.org/x/crypto commit hash to 513c2a4 (#817)
+* Update golang.org/x/crypto commit hash to 5bf0f12 (#839)
+* Update golang.org/x/crypto commit hash to 5ea612d (#797)
+* Update golang.org/x/crypto commit hash to 83a5a9b (#840)
+* Update golang.org/x/crypto commit hash to b8e89b7 (#793)
+* Update golang.org/x/crypto commit hash to c07d793 (#861)
+* Update golang.org/x/crypto commit hash to cd7d49e (#860)
+* Update golang.org/x/crypto commit hash to e6e6c4f (#816)
+* Update golang.org/x/crypto commit hash to e9a3299 (#851)
+* Update golang.org/x/image commit hash to 4410531 (#788)
+* Update golang.org/x/image commit hash to 55ae14f (#787)
+* Update golang.org/x/image commit hash to 7319ad4 (#852)
+* Update golang.org/x/image commit hash to ac19c3e (#798)
+* Update golang.org/x/oauth2 commit hash to 0101308 (#776)
+* Update golang.org/x/oauth2 commit hash to 01de73c (#762)
+* Update golang.org/x/oauth2 commit hash to 16ff188 (#789)
+* Update golang.org/x/oauth2 commit hash to 22b0ada (#823)
+* Update golang.org/x/oauth2 commit hash to 2e8d934 (#827)
+* Update golang.org/x/oauth2 commit hash to 5366d9d (#813)
+* Update golang.org/x/oauth2 commit hash to 5e61552 (#833)
+* Update golang.org/x/oauth2 commit hash to 6667018 (#783)
+* Update golang.org/x/oauth2 commit hash to 81ed05c (#848)
+* Update golang.org/x/oauth2 commit hash to 8b1d76f (#764)
+* Update golang.org/x/oauth2 commit hash to 9bb9049 (#796)
+* Update golang.org/x/oauth2 commit hash to af13f52 (#773)
+* Update golang.org/x/oauth2 commit hash to ba52d33 (#794)
+* Update golang.org/x/oauth2 commit hash to cd4f82c (#815)
+* Update golang.org/x/oauth2 commit hash to d3ed898 (#765)
+* Update golang.org/x/oauth2 commit hash to f9ce19e (#775)
+* Update golang.org/x/sync commit hash to 036812b (#799)
+* Update golang.org/x/term commit hash to 6a3ed07 (#800)
+* Update golang.org/x/term commit hash to 72f3dc4 (#828)
+* Update golang.org/x/term commit hash to a79de54 (#850)
+* Update golang.org/x/term commit hash to b80969c (#843)
+* Update golang.org/x/term commit hash to c04ba85 (#849)
+* Update golang.org/x/term commit hash to de623e6 (#818)
+* Update golang.org/x/term commit hash to f5beecf (#845)
+* Update module adlio/trello to v1.9.0 (#825)
+* Update module coreos/go-oidc to v3 (#760)
+* Update module gabriel-vasile/mimetype to v1.2.0 (#812)
+* Update module gabriel-vasile/mimetype to v1.3.0 (#857)
+* Update module getsentry/sentry-go to v0.10.0 (#792)
+* Update module go-redis/redis/v8 to v8.4.10 (#771)
+* Update module go-redis/redis/v8 to v8.4.11 (#774)
+* Update module go-redis/redis/v8 to v8.4.9 (#770)
+* Update module go-redis/redis/v8 to v8.5.0 (#778)
+* Update module go-redis/redis/v8 to v8.6.0 (#795)
+* Update module go-sql-driver/mysql to v1.6.0 (#826)
+* Update module go-testfixtures/testfixtures/v3 to v3.5.0 (#761)
+* Update module go-testfixtures/testfixtures/v3 to v3.6.0 (#838)
+* Update module iancoleman/strcase to v0.1.3 (#766)
+* Update module imdario/mergo to v0.3.12 (#811)
+* Update module jgautheron/goconst to v1 (#804)
+* Update module labstack/echo/v4 to v4.2.0 (#785)
+* Update module labstack/echo/v4 to v4.2.1 (#810)
+* Update module labstack/echo/v4 to v4.2.2 (#830)
+* Update module labstack/echo/v4 to v4.3.0 (#856)
+* Update module lib/pq to v1.10.0 (#809)
+* Update module lib/pq to v1.10.1 (#841)
+* Update module mattn/go-sqlite3 to v1.14.7 (#835)
+* Update module olekukonko/tablewriter to v0.0.5 (#782)
+* Update module prometheus/client_golang to v1.10.0 (#819)
+* Update module spf13/afero to v1.6.0 (#820)
+* Update module spf13/cobra to v1.1.2 (#781)
+* Update module spf13/cobra to v1.1.3 (#784)
+* Update module src.techknowlogick.com/xgo to v1.3.0+1.16.0 (#791)
+* Update module src.techknowlogick.com/xgo to v1.4.0+1.16.2 (#814)
+* Update module stretchr/testify to v1.7.0 (#763)
+
 ## [0.16.1] - 2021-04-22
 
 ### Fixed
