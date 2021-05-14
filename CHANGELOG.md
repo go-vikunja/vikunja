@@ -9,6 +9,271 @@ All releases can be found on https://code.vikunja.io/frontend/releases.
 
 The releases aim at the api versions which is why there are missing versions.
 
+## [0.17.0 - 2021-05-14]
+
+### Added
+
+* Add a "done" option to kanban buckets (#440)
+* Add arm64 builds
+* Add button to un-archive a namespace
+* Add clearer call to action when no lists are available yet
+* Add code highlighting for rendered user input text
+* Add github sponsoring
+* Add link share password authentication (#466)
+* Add names to link shares when creating them (#456)
+* Add notifications overview (#414)
+* Add option to remove a list background
+* Add overdue task reminder notification setting
+* Add repeat after one-click intervals
+* Add repeat mode setting for tasks
+* Add security information to readme
+* Add separate manifest template for latest
+* Add settings for user search (#458)
+* Add success message when modifying buckets
+* Add "today" task filter
+* Add view image modal for image attachments
+* Pagingation for tasks in kanban buckets (#419)
+* Persist show archived state
+* Play a sound when marking a task as done
+
+### Fixed
+
+* Fix adding a label twice when selecting it and pressing enter
+* Fix attachment hover
+* Fix attachment not being added if the task was not a kanban task
+* Fix attachments being added mutliple times
+* Fix bucket test fixture when moving tasks between lists test
+* Fix button height
+* Fix caldav url not containing the api url if the frontend and api are on the same domain
+* Fix checking for undefined behaviour when viewing a task
+* Fix closing popups when clicking outside of them (#378)
+* Fix "create new list" and import buttons on home page
+* Fix create new list test
+* Fix create new namespace test
+* Fix current password id being available twice
+* Fix datepicker popup not fully aligned on mobile
+* Fix defer due date popup
+* Fix delete buttons in forms
+* Fix deleting task relations
+* Fix editor buttons alignment
+* Fix editor placeholder color
+* Fix edit task description test
+* Fix empty call to actions
+* Fix filter container positioning
+* Fix filter container positioning in link shares
+* Fix flaky test
+* Fix flaky test part 2
+* Fix font caching in docker image
+* Fix formatting invalid dates
+* Fix getting back to the default task view when navigating back from a task modal
+* Fix getting back to the kanban board after closing a task popup
+* Fix iterating over check boxes and attachment images in the editor rendering
+* Fix kanban board slightly scrolling
+* Fix kanban height on mobile
+* Fix kanban infinite scrolling on chrome
+* Fix label spacing
+* Fix labels randomly changing color after saving
+* Fix list counter in the navigation counting archived lists
+* Fix list layout when the list has no background for link shares
+* Fix login or register not working when pressing enter
+* Fix logout test
+* Fix map_hash_max_size for docker images
+* Fix misspelling (#415)
+* Fix multiselect on mobile
+* Fix namespace actions alignment in the menu
+* Fix no color selected in the color picket
+* Fix notification parsing for team memeber added
+* Fix notification styling
+* Fix pasting text into task comments or task descriptions
+* Fix priority label width in task list
+* Fix release pipeline steps
+* Fix reloading the task list after changing a filter
+* Fix removing dates from a filter
+* Fix resetting colors from the color picker
+* Fix setting a default color when none was saved
+* Fix setting dates in safari
+* Fix showing and hiding lists in the menu
+* Fix sorting task by due date on task overview
+* Fix spacing for lists with no rights to add new tasks
+* Fix table names in test fixtures
+* Fix task detail view spacings
+* Fix task filter toggle button if the list has a background
+* Fix task icon size
+* Fix task icons on kanban if there were multiple different ones
+* Fix task id spacing
+* Fix task pagination
+* Fix task relation search test
+* Fix tasks moving infinitely in gantt chart (#493)
+* Fix tasks not disappearing from the kanban board when moving them between lists
+* Fix task title heading ux
+* Fix team edit test
+* Fix team edit test (#382)
+* Fix team name in team member added notification
+* Fix test
+* Fix tests after changing button classes
+* Fix text color
+* Fix transition between pages
+* Fix undo when marking a task as done
+* Fix waiting for dependency step when building
+* Fix yarn.lock
+* Only check for token renew when the user is authenticated
+* Only show the llama background for unauthenticated users
+* Only use dark shadows for buttons
+* Prevent setting a bucket limit < 0
+
+### Changed
+
+* Automatically go back after saving from a popup
+* Better wording of new namespace and list buttons
+* Bring up the keyboard shortcuts when pressing ?
+* Change bucket background color
+* Change main branch to main
+* Cleanup font caching and requesting
+* Don't hide all lists of namespaces when loosing network connectivity
+* Don't save the editor text when it is loaded
+* Don't show the list color in the list view
+* Don't show the "new bucket" button when buckets are still loading
+* Focus task detail elements when they show up
+* Hide new related tasks form when related tasks exist
+* Hide task elements while the task is loading
+* Hide the bucket limit input when clicked away
+* Hide the login form if no api url is configured
+* Improve consistency of the layout (#386)
+* Inline mutliselect search input for multiple elements
+* Make filter buttons look better on mobile
+* Make full task in task list clickable
+* Make hidden lists in the menu more compact
+* Make message undo button secondary
+* Make release steps on master depend on building/testing
+* Make sure all arm64 build steps run in parallel
+* Make sure all empty pages have a call to action
+* Make sure all popups & dropdowns are animated
+* Make sure attachements are only added once to the list after uploading + Make sure the attachment list shows up every time after adding an attachment
+* Make sure no cta's are visible while the page is loading
+* Make sure the loading spinner is always visible at the end of the page
+* Make the button shadow lighter
+* Make the icons in the menu light grey
+* Make the input full width by default
+* Make the scrollbars a lighter grey (#394)
+* Make the "upload attachment" button less obvious
+* Move all content to cards (#387)
+* Move all create views to better looking popups (#383)
+* Move buttons to separate component (#380)
+* Move list edit/namespace to separate pages and in a menu (#397)
+* Move the search input to filters
+* Open links to external sites in a new window
+* Rearrange task actions
+* Reduce quick task edit fields
+* Remove the shadow at the "+" button for related tasks
+* Rename .noshadow to .has-no-shadow
+* Rework attachments list to look great everywhere
+* Set user info from api instead of only relying on the info encoded in the jwt token
+* Show call to action for task description if there is none
+* Show label colors when searching for labels
+* Show list if the search result for a task belongs to a different list
+* Show "powered by Vikunja" in link shares
+* Subscriptions and notifications for namespaces, tasks and lists (#410)
+* Switch node-sass to sass
+* Switch telegram notifications to matrix
+* Update ShowTasks view to sort tasks by ascending (#406)
+* Use a lighter grey for comment created dates
+* Use buttons more consistently
+* Use mousedown instead of click event to close modals
+* Work around auto tag for main branch
+
+### Dependency Updates
+
+* Pin dependency browserslist to 4.16.6 (#500)
+* Pin dependency highlight.js to 10.5.0 (#371)
+* Update browserlist and caniuse-lite db
+* Update dependency bulma to v0.9.2 (#392)
+* Update dependency cypress-file-upload to v5.0.3 (#437)
+* Update dependency cypress-file-upload to v5.0.4 (#455)
+* Update dependency cypress-file-upload to v5.0.5 (#461)
+* Update dependency cypress-file-upload to v5.0.6 (#481)
+* Update dependency cypress-file-upload to v5.0.7 (#498)
+* Update dependency cypress-file-upload to v5 (#379)
+* Update dependency cypress to v6.3.0 (#381)
+* Update dependency cypress to v6.4.0 (#399)
+* Update dependency cypress to v6.5.0 (#412)
+* Update dependency cypress to v6.6.0 (#421)
+* Update dependency cypress to v6.7.1 (#430)
+* Update dependency cypress to v6.8.0 (#435)
+* Update dependency cypress to v6.9.1 (#452)
+* Update dependency cypress to v7.1.0 (#472)
+* Update dependency cypress to v7.2.0 (#494)
+* Update dependency cypress to v7 (#453)
+* Update dependency date-fns to v2.17.0 (#403)
+* Update dependency date-fns to v2.18.0 (#420)
+* Update dependency date-fns to v2.19.0 (#423)
+* Update dependency date-fns to v2.20.0 (#459)
+* Update dependency date-fns to v2.20.1 (#463)
+* Update dependency date-fns to v2.20.2 (#470)
+* Update dependency date-fns to v2.20.3 (#473)
+* Update dependency date-fns to v2.21.0 (#477)
+* Update dependency date-fns to v2.21.1 (#482)
+* Update dependency date-fns to v2.21.2 (#499)
+* Update dependency date-fns to v2.21.3 (#505)
+* Update dependency dompurify to v2.2.7 (#426)
+* Update dependency dompurify to v2.2.8 (#496)
+* Update dependency eslint-plugin-vue to v7.5.0 (#384)
+* Update dependency eslint-plugin-vue to v7.6.0 (#411)
+* Update dependency eslint-plugin-vue to v7.7.0 (#422)
+* Update dependency eslint-plugin-vue to v7.8.0 (#438)
+* Update dependency eslint-plugin-vue to v7.9.0 (#469)
+* Update dependency eslint to v7.18.0 (#376)
+* Update dependency eslint to v7.19.0 (#398)
+* Update dependency eslint to v7.20.0 (#409)
+* Update dependency eslint to v7.21.0 (#418)
+* Update dependency eslint to v7.22.0 (#427)
+* Update dependency eslint to v7.23.0 (#443)
+* Update dependency eslint to v7.24.0 (#464)
+* Update dependency eslint to v7.25.0 (#490)
+* Update dependency eslint to v7.26.0 (#504)
+* Update dependency faker to v5.2.0 (#389)
+* Update dependency faker to v5.3.1 (#400)
+* Update dependency faker to v5.4.0 (#408)
+* Update dependency faker to v5.5.0 (#442)
+* Update dependency faker to v5.5.1 (#444)
+* Update dependency faker to v5.5.2 (#450)
+* Update dependency faker to v5.5.3 (#462)
+* Update dependency highlight.js to v10.6.0 (#407)
+* Update dependency highlight.js to v10.7.1 (#436)
+* Update dependency highlight.js to v10.7.2 (#451)
+* Update dependency lodash to v4.17.21 (#413)
+* Update dependency marked to v1.2.8 (#391)
+* Update dependency marked to v1.2.9 (#401)
+* Update dependency marked to v2.0.1 (#417)
+* Update dependency marked to v2.0.2 (#465)
+* Update dependency marked to v2.0.3 (#468)
+* Update dependency marked to v2 (#405)
+* Update dependency sass-loader to v10.1.1 (#372)
+* Update dependency sass-loader to v10.2.0 (#506)
+* Update dependency sass to v1.32.13 (#509)
+* Update dependency vue-advanced-cropper to v1.3.0 (#404)
+* Update dependency vue-advanced-cropper to v1.3.1 (#424)
+* Update dependency vue-advanced-cropper to v1.3.2 (#425)
+* Update dependency vue-advanced-cropper to v1.3.3 (#439)
+* Update dependency vue-advanced-cropper to v1.3.4 (#441)
+* Update dependency vue-advanced-cropper to v1 (#393)
+* Update dependency vue-advanced-cropper to v1.4.0 (#454)
+* Update dependency vue-advanced-cropper to v1.4.1 (#460)
+* Update dependency vue-advanced-cropper to v1.5.0 (#471)
+* Update dependency vue-advanced-cropper to v1.5.1 (#495)
+* Update dependency vue-advanced-cropper to v1.5.2 (#497)
+* Update dependency vue-drag-resize to v1.5.1 (#457)
+* Update dependency vue-drag-resize to v1.5.2 (#501)
+* Update dependency vue-drag-resize to v1.5.4 (#502)
+* Update dependency vue-easymde to v1.4.0 (#449)
+* Update dependency vue-router to v3.5.0 (#388)
+* Update dependency wait-on to v5.3.0 (#434)
+* Update Font Awesome (#374)
+* Update Font Awesome (#432)
+* Update vue monorepo (#390)
+* Update vue monorepo to v4.5.11 (#385)
+* Update vue monorepo to v4.5.12 (#433)
+* Update vue monorepo to v4.5.13 (#503)
+
 ## [0.16.0 - 2021-01-10]
 
 ### Added
