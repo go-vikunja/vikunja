@@ -17,6 +17,7 @@
 package openid
 
 import (
+	"code.vikunja.io/api/pkg/log"
 	"context"
 	"regexp"
 	"strconv"
@@ -48,7 +49,11 @@ func GetAllProviders() (providers []*Provider, err error) {
 
 			provider, err := getProviderFromMap(pi)
 			if err != nil {
-				return nil, err
+				if provider != nil {
+					log.Errorf("Error while getting openid provider %s: %s", provider.Name, err)
+				}
+				log.Errorf("Error while getting openid provider: %s", err)
+				continue
 			}
 
 			providers = append(providers, provider)
@@ -119,7 +124,7 @@ func getProviderFromMap(pi map[interface{}]interface{}) (*Provider, error) {
 	var err error
 	provider.OpenIDProvider, err = oidc.NewProvider(context.Background(), provider.AuthURL)
 	if err != nil {
-		return nil, err
+		return provider, err
 	}
 
 	provider.Oauth2Config = &oauth2.Config{
