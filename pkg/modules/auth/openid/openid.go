@@ -23,6 +23,8 @@ import (
 	"net/http"
 	"time"
 
+	"code.vikunja.io/web/handler"
+
 	"code.vikunja.io/api/pkg/db"
 	"xorm.io/xorm"
 
@@ -86,7 +88,7 @@ func HandleCallback(c echo.Context) error {
 	provider, err := GetProvider(providerKey)
 	if err != nil {
 		log.Error(err)
-		return err
+		return handler.HandleHTTPError(err, c)
 	}
 	if provider == nil {
 		return c.JSON(http.StatusBadRequest, models.Message{Message: "Provider does not exist"})
@@ -100,7 +102,8 @@ func HandleCallback(c echo.Context) error {
 
 			details := make(map[string]interface{})
 			if err := json.Unmarshal(rerr.Body, &details); err != nil {
-				return err
+				log.Errorf("Error unmarshaling token for provider %s: %v", provider.Name, err)
+				return handler.HandleHTTPError(err, c)
 			}
 
 			return c.JSON(http.StatusBadRequest, map[string]interface{}{
@@ -109,7 +112,7 @@ func HandleCallback(c echo.Context) error {
 			})
 		}
 
-		return err
+		return handler.HandleHTTPError(err, c)
 	}
 
 	// Extract the ID Token from OAuth2 token.
@@ -123,14 +126,21 @@ func HandleCallback(c echo.Context) error {
 	// Parse and verify ID Token payload.
 	idToken, err := verifier.Verify(context.Background(), rawIDToken)
 	if err != nil {
-		return err
+		log.Errorf("Error verifying token for provider %s: %v", provider.Name, err)
+		return handler.HandleHTTPError(err, c)
 	}
 
 	// Extract custom claims
 	cl := &claims{}
 	err = idToken.Claims(cl)
 	if err != nil {
-		return err
+		log.Errorf("Error getting token claims for provider %s: %v", provider.Name, err)
+		return handler.HandleHTTPError(err, c)
+	}
+
+	if cl.Email == "" {
+		log.Errorf("Claim does not contain an email address for provider %s", provider.Name)
+		return handler.HandleHTTPError(&user.ErrNoOpenIDEmailProvided{}, c)
 	}
 
 	s := db.NewSession()
@@ -140,12 +150,13 @@ func HandleCallback(c echo.Context) error {
 	u, err := getOrCreateUser(s, cl, idToken.Issuer, idToken.Subject)
 	if err != nil {
 		_ = s.Rollback()
-		return err
+		log.Errorf("Error creating new user for provider %s: %v", provider.Name, err)
+		return handler.HandleHTTPError(err, c)
 	}
 
 	err = s.Commit()
 	if err != nil {
-		return err
+		return handler.HandleHTTPError(err, c)
 	}
 
 	// Create token

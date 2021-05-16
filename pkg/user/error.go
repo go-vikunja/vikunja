@@ -399,3 +399,29 @@ func (err ErrInvalidAvatarProvider) HTTPError() web.HTTPError {
 		Message:  "Invalid avatar provider setting. See docs for valid types.",
 	}
 }
+
+// ErrNoOpenIDEmailProvided represents a "NoEmailProvided" kind of error.
+type ErrNoOpenIDEmailProvided struct {
+}
+
+// IsErrNoEmailProvided checks if an error is a ErrNoOpenIDEmailProvided.
+func IsErrNoEmailProvided(err error) bool {
+	_, ok := err.(*ErrNoOpenIDEmailProvided)
+	return ok
+}
+
+func (err *ErrNoOpenIDEmailProvided) Error() string {
+	return "No email provided"
+}
+
+// ErrCodeNoOpenIDEmailProvided holds the unique world-error code of this error
+const ErrCodeNoOpenIDEmailProvided = 1019
+
+// HTTPError holds the http error description
+func (err *ErrNoOpenIDEmailProvided) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusPreconditionFailed,
+		Code:     ErrCodeNoOpenIDEmailProvided,
+		Message:  "No email address available. Please make sure the openid provider publicly provides an email address for your account.",
+	}
+}
