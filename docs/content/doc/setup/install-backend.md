@@ -28,7 +28,7 @@ wget <download-url>
 ### Verify the GPG signature
 
 Starting with version `0.7`, all releases are signed using pgp.
-Releases from `master` will always be signed.
+Releases from `main` will always be signed.
 
 To validate the downloaded zip file use the signiture file `.asc` and the key `FF054DACD908493A`:
 

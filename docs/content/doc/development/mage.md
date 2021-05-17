@@ -39,7 +39,7 @@ There are multiple categories of subcommands in the magefile:
 
 ## CI
 
-These tasks are automatically run in our CI every time someone pushes to master or you update a pull request:
+These tasks are automatically run in our CI every time someone pushes to main or you update a pull request:
 
 * `mage check:lint`
 * `mage check:fmt`

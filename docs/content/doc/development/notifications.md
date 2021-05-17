@@ -110,4 +110,4 @@ If it was called, no mails are being sent and you can instead assert they have b
 
 ## Example
 
-Take a look at the [pkg/user/notifications.go](https://code.vikunja.io/api/src/branch/master/pkg/user/notifications.go) file for a good example.
+Take a look at the [pkg/user/notifications.go](https://code.vikunja.io/api/src/branch/main/pkg/user/notifications.go) file for a good example.

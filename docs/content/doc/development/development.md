@@ -15,7 +15,7 @@ menu:
 We use go modules to vendor libraries for Vikunja, so you'll need at least go `1.11` to use these.
 If you don't intend to add new dependencies, go `1.9` and above should be fine.
 
-To contribute to Vikunja, fork the project and work on the master branch.
+To contribute to Vikunja, fork the project and work on the main branch.
 
 A lot of developing tasks are automated using a Magefile, so make sure to [take a look at it]({{< ref "mage.md">}}).
 
