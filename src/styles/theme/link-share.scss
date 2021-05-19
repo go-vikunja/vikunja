@@ -47,12 +47,16 @@
   overflow-y: auto
 }
 
-.link-share-container.has-background .container {
-  max-width: 100vw;
+.link-share-container {
+  &.has-background,&.list\.kanban-view {
+    .container {
+      max-width: 100vw;
 
-  .column {
-    width: 100%;
-    margin: 0;
+      .column {
+        width: 100%;
+        margin: 0;
+      }
+    }
   }
 }
 

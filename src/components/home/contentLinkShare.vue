@@ -1,6 +1,6 @@
 <template>
 	<div
-		:class="{'has-background': background}"
+		:class="[background ? 'has-background' : '', $route.name+'-view']"
 		:style="{'background-image': `url(${background})`}"
 		class="link-share-container"
 	>
