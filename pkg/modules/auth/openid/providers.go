@@ -79,7 +79,7 @@ func GetAllProviders() (providers []*Provider, err error) {
 func GetProvider(key string) (provider *Provider, err error) {
 	var p interface{}
 	p, exists, err := keyvalue.Get("openid_provider_" + key)
-	if exists {
+	if !exists {
 		_, err = GetAllProviders() // This will put all providers in cache
 		if err != nil {
 			return nil, err
