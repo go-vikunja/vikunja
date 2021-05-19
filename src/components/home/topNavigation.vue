@@ -32,7 +32,7 @@
 				{{ currentList.title === '' ? 'Loading...' : currentList.title }}
 			</h1>
 
-			<list-settings-dropdown v-if="canWriteCurrentList" :list="currentList"/>
+			<list-settings-dropdown v-if="canWriteCurrentList && currentList.id !== -1" :list="currentList"/>
 		</div>
 
 		<div class="navbar-end">

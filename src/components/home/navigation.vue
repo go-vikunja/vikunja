@@ -67,7 +67,8 @@
 					<a
 						class="icon is-small toggle-lists-icon"
 						:class="{'active': typeof listsVisible[n.id] !== 'undefined' ? listsVisible[n.id] : true}"
-						@click="toggleLists(n.id)">
+						@click="toggleLists(n.id)"
+					>
 						<icon icon="chevron-down"/>
 					</a>
 					<namespace-settings-dropdown :namespace="n" v-if="n.id > 0"/>
@@ -100,7 +101,8 @@
 										<icon :icon="['far', 'star']" v-else/>
 									</span>
 								</router-link>
-								<list-settings-dropdown :list="l"/>
+								<list-settings-dropdown :list="l" v-if="l.id > 0"/>
+								<span class="list-setting-spacer" v-else></span>
 							</li>
 						</template>
 					</ul>
@@ -177,3 +179,10 @@ export default {
 	},
 }
 </script>
+
+<style scoped>
+.list-setting-spacer {
+	width: 32px;
+	flex-shrink: 0;
+}
+</style>
