@@ -21,7 +21,7 @@
     "dompurify": "2.2.8",
     "highlight.js": "10.7.2",
     "lodash": "4.17.21",
-    "marked": "2.0.4",
+    "marked": "2.0.5",
     "register-service-worker": "1.7.2",
     "sass": "1.34.0",
     "snake-case": "3.0.4",
