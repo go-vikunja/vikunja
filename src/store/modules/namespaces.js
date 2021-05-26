@@ -135,5 +135,15 @@ export default {
 				return Promise.resolve()
 			}
 		},
+		deleteNamespace(ctx, namespace) {
+			const namespaceService = new NamespaceService()
+
+			return namespaceService.delete(namespace)
+				.then(r => {
+					ctx.commit('removeNamespaceById', namespace.id)
+					return Promise.resolve(r)
+				})
+				.catch(Promise.reject)
+		},
 	},
 }

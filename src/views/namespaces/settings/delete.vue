@@ -29,9 +29,8 @@ export default {
 		deleteNamespace() {
 			const namespace = this.$store.getters['namespaces/getNamespaceById'](this.$route.params.id)
 
-			this.namespaceService.delete(namespace)
+			this.$store.dispatch('namespaces/deleteNamespace', namespace)
 				.then(() => {
-					this.$store.commit('namespaces/removeNamespaceFromNamespaceById', namespace)
 					this.success({message: 'The namespace was successfully deleted.'}, this)
 					this.$router.push({name: 'home'})
 				})

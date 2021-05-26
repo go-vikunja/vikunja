@@ -131,9 +131,7 @@ export default {
 		NamespaceSettingsDropdown,
 	},
 	computed: mapState({
-		namespaces(state) {
-			return state.namespaces.namespaces.filter(n => !n.isArchived)
-		},
+		namespaces: state => state.namespaces.namespaces.filter(n => !n.isArchived),
 		currentList: CURRENT_LIST,
 		background: 'background',
 		menuActive: MENU_ACTIVE,
