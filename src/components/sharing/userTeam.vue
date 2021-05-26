@@ -258,31 +258,20 @@ export default {
 			} else if (this.shareType === 'team') {
 				this.stuffModel.teamId = this.sharable.id
 			}
+
 			this.stuffService
 				.delete(this.stuffModel)
 				.then(() => {
 					this.showDeleteModal = false
 					for (const i in this.sharables) {
 						if (
-							(this.sharables[i].id === this.stuffModel.userId &&
-								this.shareType === 'user') ||
-							(this.sharables[i].id === this.stuffModel.teamId &&
-								this.shareType === 'team')
+							(this.sharables[i].username === this.stuffModel.userId && this.shareType === 'user') ||
+							(this.sharables[i].id === this.stuffModel.teamId && this.shareType === 'team')
 						) {
 							this.sharables.splice(i, 1)
 						}
 					}
-					this.success(
-						{
-							message:
-								'The ' +
-								this.shareType +
-								' was successfully deleted from the ' +
-								this.typeString +
-								'.',
-						},
-						this
-					)
+					this.success({message: `The ${this.shareType} was successfully deleted from the ${this.typeString}.`}, this)
 				})
 				.catch((e) => {
 					this.error(e, this)
