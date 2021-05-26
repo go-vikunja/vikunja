@@ -291,6 +291,11 @@ func getNamespaceOwnerIDs(namespaces map[int64]*NamespaceWithLists) (namespaceID
 }
 
 func getNamespaceSubscriptions(s *xorm.Session, namespaceIDs []int64, userID int64) (map[int64]*Subscription, error) {
+	subscriptionsMap := make(map[int64]*Subscription)
+	if len(namespaceIDs) == 0 {
+		return subscriptionsMap, nil
+	}
+
 	subscriptions := []*Subscription{}
 	err := s.
 		Where("entity_type = ? AND user_id = ?", SubscriptionEntityNamespace, userID).
@@ -299,7 +304,6 @@ func getNamespaceSubscriptions(s *xorm.Session, namespaceIDs []int64, userID int
 	if err != nil {
 		return nil, err
 	}
-	subscriptionsMap := make(map[int64]*Subscription)
 	for _, sub := range subscriptions {
 		sub.Entity = sub.EntityType.String()
 		subscriptionsMap[sub.EntityID] = sub
