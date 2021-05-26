@@ -113,9 +113,8 @@ export default {
 				})
 		},
 		save() {
-			this.listService.update(this.list)
-				.then(r => {
-					this.$store.commit('namespaces/setListInNamespaceById', r)
+			this.$store.dispatch('lists/updateList', this.list)
+				.then(() => {
 					this.success({message: 'The list was successfully updated.'}, this)
 					this.$router.back()
 				})

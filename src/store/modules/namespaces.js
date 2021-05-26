@@ -112,7 +112,7 @@ export default {
 						})
 					})
 
-					ctx.commit('lists/addLists', lists, {root: true})
+					ctx.commit('lists/setLists', lists, {root: true})
 
 					return Promise.resolve(r)
 				})
