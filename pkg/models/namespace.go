@@ -487,6 +487,10 @@ func (n *Namespace) ReadAll(s *xorm.Session, a web.Auth, search string, page int
 
 	namespaceIDs, ownerIDs := getNamespaceOwnerIDs(namespaces)
 
+	if len(namespaceIDs) == 0 {
+		return nil, 0, 0, nil
+	}
+
 	subscriptionsMap, err := getNamespaceSubscriptions(s, namespaceIDs, doer.ID)
 	if err != nil {
 		return nil, 0, 0, err
