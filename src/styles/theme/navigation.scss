@@ -1,3 +1,5 @@
+@use "sass:math";
+
 .navbar {
   z-index: 2;
 
@@ -286,7 +288,7 @@
       }
 
       &.namespaces-lists {
-        padding-top: $navbar-padding / 2;
+        padding-top: math.div($navbar-padding, 2);
       }
 
       &.loader-container.is-loading:after {
@@ -303,7 +305,7 @@
     }
 
     .top-menu {
-      margin-top: $navbar-padding / 2;
+      margin-top: math.div($navbar-padding, 2);
 
       .menu-list {
         li {
