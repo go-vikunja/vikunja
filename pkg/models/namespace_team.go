@@ -59,7 +59,7 @@ func (TeamNamespace) TableName() string {
 // @Security JWTKeyAuth
 // @Param id path int true "Namespace ID"
 // @Param namespace body models.TeamNamespace true "The team you want to add to the namespace."
-// @Success 200 {object} models.TeamNamespace "The created team<->namespace relation."
+// @Success 201 {object} models.TeamNamespace "The created team<->namespace relation."
 // @Failure 400 {object} web.HTTPError "Invalid team namespace object provided."
 // @Failure 404 {object} web.HTTPError "The team does not exist."
 // @Failure 403 {object} web.HTTPError "The team does not have access to the namespace"

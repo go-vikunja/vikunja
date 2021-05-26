@@ -56,7 +56,7 @@ func (tc *TaskComment) TableName() string {
 // @Security JWTKeyAuth
 // @Param relation body models.TaskComment true "The task comment object"
 // @Param taskID path int true "Task ID"
-// @Success 200 {object} models.TaskComment "The created task comment object."
+// @Success 201 {object} models.TaskComment "The created task comment object."
 // @Failure 400 {object} web.HTTPError "Invalid task comment object provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/comments [put]

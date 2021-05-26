@@ -75,7 +75,7 @@ func (lt *LabelTask) Delete(s *xorm.Session, a web.Auth) (err error) {
 // @Security JWTKeyAuth
 // @Param task path int true "Task ID"
 // @Param label body models.LabelTask true "The label object"
-// @Success 200 {object} models.LabelTask "The created label relation object."
+// @Success 201 {object} models.LabelTask "The created label relation object."
 // @Failure 400 {object} web.HTTPError "Invalid label object provided."
 // @Failure 403 {object} web.HTTPError "Not allowed to add the label."
 // @Failure 404 {object} web.HTTPError "The label does not exist."
@@ -369,7 +369,7 @@ type LabelTaskBulk struct {
 // @Security JWTKeyAuth
 // @Param label body models.LabelTaskBulk true "The array of labels"
 // @Param taskID path int true "Task ID"
-// @Success 200 {object} models.LabelTaskBulk "The updated labels object."
+// @Success 201 {object} models.LabelTaskBulk "The updated labels object."
 // @Failure 400 {object} web.HTTPError "Invalid label object provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/labels/bulk [post]

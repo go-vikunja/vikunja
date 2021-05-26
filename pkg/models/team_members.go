@@ -32,7 +32,7 @@ import (
 // @Security JWTKeyAuth
 // @Param id path int true "Team ID"
 // @Param team body models.TeamMember true "The user to be added to a team."
-// @Success 200 {object} models.TeamMember "The newly created member object"
+// @Success 201 {object} models.TeamMember "The newly created member object"
 // @Failure 400 {object} web.HTTPError "Invalid member object provided."
 // @Failure 403 {object} web.HTTPError "The user does not have access to the team"
 // @Failure 500 {object} models.Message "Internal error"

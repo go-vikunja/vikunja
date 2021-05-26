@@ -114,7 +114,7 @@ func (et SubscriptionEntityType) validate() error {
 // @Security JWTKeyAuth
 // @Param entity path string true "The entity the user subscribes to. Can be either `namespace`, `list` or `task`."
 // @Param entityID path string true "The numeric id of the entity to subscribe to."
-// @Success 200 {object} models.Subscription "The subscription"
+// @Success 201 {object} models.Subscription "The subscription"
 // @Failure 403 {object} web.HTTPError "The user does not have access to subscribe to this entity."
 // @Failure 412 {object} web.HTTPError "The subscription already exists."
 // @Failure 412 {object} web.HTTPError "The subscription entity is invalid."

@@ -61,7 +61,7 @@ func (Label) TableName() string {
 // @Produce json
 // @Security JWTKeyAuth
 // @Param label body models.Label true "The label object"
-// @Success 200 {object} models.Label "The created label object."
+// @Success 201 {object} models.Label "The created label object."
 // @Failure 400 {object} web.HTTPError "Invalid label object provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /labels [put]

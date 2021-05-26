@@ -114,7 +114,7 @@ type RelatedTaskMap map[RelationKind][]*Task
 // @Security JWTKeyAuth
 // @Param relation body models.TaskRelation true "The relation object"
 // @Param taskID path int true "Task ID"
-// @Success 200 {object} models.TaskRelation "The created task relation object."
+// @Success 201 {object} models.TaskRelation "The created task relation object."
 // @Failure 400 {object} web.HTTPError "Invalid task relation object provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/relations [put]

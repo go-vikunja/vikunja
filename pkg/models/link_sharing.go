@@ -120,7 +120,7 @@ func (share *LinkSharing) toUser() *user.User {
 // @Security JWTKeyAuth
 // @Param list path int true "List ID"
 // @Param label body models.LinkSharing true "The new link share object"
-// @Success 200 {object} models.LinkSharing "The created link share object."
+// @Success 201 {object} models.LinkSharing "The created link share object."
 // @Failure 400 {object} web.HTTPError "Invalid link share object provided."
 // @Failure 403 {object} web.HTTPError "Not allowed to add the list share."
 // @Failure 404 {object} web.HTTPError "The list does not exist."

@@ -247,7 +247,7 @@ func (t *Team) ReadAll(s *xorm.Session, a web.Auth, search string, page int, per
 // @Produce json
 // @Security JWTKeyAuth
 // @Param team body models.Team true "The team you want to create."
-// @Success 200 {object} models.Team "The created team."
+// @Success 201 {object} models.Team "The created team."
 // @Failure 400 {object} web.HTTPError "Invalid team object provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /teams [put]

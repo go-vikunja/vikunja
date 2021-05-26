@@ -640,7 +640,7 @@ func updateListByTaskID(s *xorm.Session, taskID int64) (err error) {
 // @Security JWTKeyAuth
 // @Param namespaceID path int true "Namespace ID"
 // @Param list body models.List true "The list you want to create."
-// @Success 200 {object} models.List "The created list."
+// @Success 201 {object} models.List "The created list."
 // @Failure 400 {object} web.HTTPError "Invalid list object provided."
 // @Failure 403 {object} web.HTTPError "The user does not have access to the list"
 // @Failure 500 {object} models.Message "Internal error"

@@ -1462,7 +1462,7 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        "201":
           description: The Saved Filter
           schema:
             $ref: '#/definitions/models.SavedFilter'
@@ -1645,7 +1645,7 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        "201":
           description: The created label object.
           schema:
             $ref: '#/definitions/models.Label'
@@ -1945,7 +1945,7 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        "201":
           description: The created task object.
           schema:
             $ref: '#/definitions/models.Task'
@@ -2338,7 +2338,7 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        "201":
           description: The created team<->list relation.
           schema:
             $ref: '#/definitions/models.TeamList'
@@ -2429,7 +2429,7 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        "201":
           description: The created user<->list relation.
           schema:
             $ref: '#/definitions/models.ListUser'
@@ -2517,7 +2517,7 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        "201":
           description: The created link share object.
           schema:
             $ref: '#/definitions/models.LinkSharing'
@@ -2727,7 +2727,7 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        "201":
           description: The created list.
           schema:
             $ref: '#/definitions/models.ListDuplicate'
@@ -3422,7 +3422,7 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        "201":
           description: The created namespace.
           schema:
             $ref: '#/definitions/models.Namespace'
@@ -3610,7 +3610,7 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        "201":
           description: The created team<->namespace relation.
           schema:
             $ref: '#/definitions/models.TeamNamespace'
@@ -3702,7 +3702,7 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        "201":
           description: The created user<->namespace relation.
           schema:
             $ref: '#/definitions/models.NamespaceUser'
@@ -3748,7 +3748,7 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        "201":
           description: The created list.
           schema:
             $ref: '#/definitions/models.List'
@@ -4139,7 +4139,7 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        "201":
           description: The subscription
           schema:
             $ref: '#/definitions/models.Subscription'
@@ -4493,7 +4493,7 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        "201":
           description: The created label relation object.
           schema:
             $ref: '#/definitions/models.LabelTask'
@@ -4622,7 +4622,7 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        "201":
           description: The created assingee object.
           schema:
             $ref: '#/definitions/models.TaskAssginee'
@@ -4698,7 +4698,7 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        "201":
           description: The created assingees object.
           schema:
             $ref: '#/definitions/models.TaskAssginee'
@@ -4765,7 +4765,7 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        "201":
           description: The created task comment object.
           schema:
             $ref: '#/definitions/models.TaskComment'
@@ -4926,7 +4926,7 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        "201":
           description: The updated labels object.
           schema:
             $ref: '#/definitions/models.LabelTaskBulk'
@@ -4966,7 +4966,7 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        "201":
           description: The created task relation object.
           schema:
             $ref: '#/definitions/models.TaskRelation'
@@ -5206,7 +5206,7 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        "201":
           description: The created team.
           schema:
             $ref: '#/definitions/models.Team'
@@ -5339,7 +5339,7 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        "201":
           description: The newly created member object
           schema:
             $ref: '#/definitions/models.TeamMember'

@@ -243,7 +243,7 @@ var doc = `{
                 ],
                 "summary": "Creates a new saved filter",
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "The Saved Filter",
                         "schema": {
                             "$ref": "#/definitions/models.SavedFilter"
@@ -524,7 +524,7 @@ var doc = `{
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "The created label object.",
                         "schema": {
                             "$ref": "#/definitions/models.Label"
@@ -874,7 +874,7 @@ var doc = `{
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "The created task object.",
                         "schema": {
                             "$ref": "#/definitions/models.Task"
@@ -1572,7 +1572,7 @@ var doc = `{
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "The created team\u003c-\u003elist relation.",
                         "schema": {
                             "$ref": "#/definitions/models.TeamList"
@@ -1710,7 +1710,7 @@ var doc = `{
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "The created user\u003c-\u003elist relation.",
                         "schema": {
                             "$ref": "#/definitions/models.ListUser"
@@ -1905,7 +1905,7 @@ var doc = `{
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "The created list.",
                         "schema": {
                             "$ref": "#/definitions/models.ListDuplicate"
@@ -2393,7 +2393,7 @@ var doc = `{
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "The created link share object.",
                         "schema": {
                             "$ref": "#/definitions/models.LinkSharing"
@@ -3189,7 +3189,7 @@ var doc = `{
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "The created namespace.",
                         "schema": {
                             "$ref": "#/definitions/models.Namespace"
@@ -3478,7 +3478,7 @@ var doc = `{
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "The created team\u003c-\u003enamespace relation.",
                         "schema": {
                             "$ref": "#/definitions/models.TeamNamespace"
@@ -3616,7 +3616,7 @@ var doc = `{
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "The created user\u003c-\u003enamespace relation.",
                         "schema": {
                             "$ref": "#/definitions/models.NamespaceUser"
@@ -3686,7 +3686,7 @@ var doc = `{
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "The created list.",
                         "schema": {
                             "$ref": "#/definitions/models.List"
@@ -4215,7 +4215,7 @@ var doc = `{
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "The subscription",
                         "schema": {
                             "$ref": "#/definitions/models.Subscription"
@@ -4969,7 +4969,7 @@ var doc = `{
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "The created assingee object.",
                         "schema": {
                             "$ref": "#/definitions/models.TaskAssginee"
@@ -5027,7 +5027,7 @@ var doc = `{
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "The created assingees object.",
                         "schema": {
                             "$ref": "#/definitions/models.TaskAssginee"
@@ -5185,7 +5185,7 @@ var doc = `{
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "The created task comment object.",
                         "schema": {
                             "$ref": "#/definitions/models.TaskComment"
@@ -5425,7 +5425,7 @@ var doc = `{
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "The updated labels object.",
                         "schema": {
                             "$ref": "#/definitions/models.LabelTaskBulk"
@@ -5483,7 +5483,7 @@ var doc = `{
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "The created task relation object.",
                         "schema": {
                             "$ref": "#/definitions/models.TaskRelation"
@@ -5680,7 +5680,7 @@ var doc = `{
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "The created label relation object.",
                         "schema": {
                             "$ref": "#/definitions/models.LabelTask"
@@ -5860,7 +5860,7 @@ var doc = `{
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "The created team.",
                         "schema": {
                             "$ref": "#/definitions/models.Team"
@@ -6067,7 +6067,7 @@ var doc = `{
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "The newly created member object",
                         "schema": {
                             "$ref": "#/definitions/models.TeamMember"

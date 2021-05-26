@@ -65,7 +65,7 @@ type TeamWithRight struct {
 // @Security JWTKeyAuth
 // @Param id path int true "List ID"
 // @Param list body models.TeamList true "The team you want to add to the list."
-// @Success 200 {object} models.TeamList "The created team<->list relation."
+// @Success 201 {object} models.TeamList "The created team<->list relation."
 // @Failure 400 {object} web.HTTPError "Invalid team list object provided."
 // @Failure 404 {object} web.HTTPError "The team does not exist."
 // @Failure 403 {object} web.HTTPError "The user does not have access to the list"

@@ -112,7 +112,7 @@ func (sf *SavedFilter) toList() *List {
 // @Accept json
 // @Produce json
 // @Security JWTKeyAuth
-// @Success 200 {object} models.SavedFilter "The Saved Filter"
+// @Success 201 {object} models.SavedFilter "The Saved Filter"
 // @Failure 403 {object} web.HTTPError "The user does not have access to that saved filter."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /filters [put]

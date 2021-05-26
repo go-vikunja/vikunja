@@ -187,7 +187,7 @@ func (la *TaskAssginee) Delete(s *xorm.Session, a web.Auth) (err error) {
 // @Security JWTKeyAuth
 // @Param assignee body models.TaskAssginee true "The assingee object"
 // @Param taskID path int true "Task ID"
-// @Success 200 {object} models.TaskAssginee "The created assingee object."
+// @Success 201 {object} models.TaskAssginee "The created assingee object."
 // @Failure 400 {object} web.HTTPError "Invalid assignee object provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/assignees [put]
@@ -308,7 +308,7 @@ type BulkAssignees struct {
 // @Security JWTKeyAuth
 // @Param assignee body models.BulkAssignees true "The array of assignees"
 // @Param taskID path int true "Task ID"
-// @Success 200 {object} models.TaskAssginee "The created assingees object."
+// @Success 201 {object} models.TaskAssginee "The created assingees object."
 // @Failure 400 {object} web.HTTPError "Invalid assignee object provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/assignees/bulk [post]

@@ -61,7 +61,7 @@ func (NamespaceUser) TableName() string {
 // @Security JWTKeyAuth
 // @Param id path int true "Namespace ID"
 // @Param namespace body models.NamespaceUser true "The user you want to add to the namespace."
-// @Success 200 {object} models.NamespaceUser "The created user<->namespace relation."
+// @Success 201 {object} models.NamespaceUser "The created user<->namespace relation."
 // @Failure 400 {object} web.HTTPError "Invalid user namespace object provided."
 // @Failure 404 {object} web.HTTPError "The user does not exist."
 // @Failure 403 {object} web.HTTPError "The user does not have access to the namespace"
