@@ -10,10 +10,12 @@ import {BucketFactory} from '../../factories/bucket'
 import '../../support/authenticateUser'
 
 describe('Lists', () => {
+	let lists
+
 	beforeEach(() => {
 		UserFactory.create(1)
 		NamespaceFactory.create(1)
-		const lists = ListFactory.create(1, {
+		lists = ListFactory.create(1, {
 			title: 'First List'
 		})
 		TaskFactory.truncate()
@@ -52,6 +54,64 @@ describe('Lists', () => {
 		cy.visit('/lists/1')
 		cy.url()
 			.should('contain', '/lists/1/kanban')
+	})
+
+	it('Should rename the list in all places', () => {
+		const tasks = TaskFactory.create(5, {
+			id: '{increment}',
+			list_id: 1,
+		})
+		const newListName = 'New list name'
+
+		cy.visit('/lists/1')
+		cy.get('.list-title h1')
+			.should('contain', 'First List')
+
+		cy.get('.namespace-container .menu.namespaces-lists .more-container .menu-list li:first-child .dropdown .dropdown-trigger')
+			.click()
+		cy.get('.namespace-container .menu.namespaces-lists .more-container .menu-list li:first-child .dropdown .dropdown-content')
+			.contains('Edit')
+			.click()
+		cy.get('#listtext')
+			.type(`{selectall}${newListName}`)
+		cy.get('footer.modal-card-foot .button')
+			.contains('Save')
+			.click()
+
+		cy.get('.global-notification')
+			.should('contain', 'Success')
+		cy.get('.list-title h1')
+			.should('contain', newListName)
+			.should('not.contain', lists[0].title)
+		cy.get('.namespace-container .menu.namespaces-lists .more-container .menu-list li:first-child')
+			.should('contain', newListName)
+			.should('not.contain', lists[0].title)
+		cy.visit('/')
+		cy.get('.card-content .tasks')
+			.should('contain', newListName)
+			.should('not.contain', lists[0].title)
+	})
+
+	it('Should remove a list', () => {
+		cy.visit(`/lists/${lists[0].id}`)
+
+		cy.get('.namespace-container .menu.namespaces-lists .more-container .menu-list li:first-child .dropdown .dropdown-trigger')
+			.click()
+		cy.get('.namespace-container .menu.namespaces-lists .more-container .menu-list li:first-child .dropdown .dropdown-content')
+			.contains('Delete')
+			.click()
+		cy.url()
+			.should('contain', '/settings/delete')
+		cy.get('.modal-mask .modal-container .modal-content .actions a.button')
+			.contains('Do it')
+			.click()
+
+		cy.get('.global-notification')
+			.should('contain', 'Success')
+		cy.get('.namespace-container .menu.namespaces-lists .more-container .menu-list')
+			.should('not.contain', lists[0].title)
+		cy.location('pathname')
+			.should('equal', '/')
 	})
 
 	describe('List View', () => {

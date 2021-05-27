@@ -3,6 +3,7 @@ import {UserFactory} from '../../factories/user'
 import '../../support/authenticateUser'
 import {ListFactory} from '../../factories/list'
 import {NamespaceFactory} from '../../factories/namespace'
+import {TaskFactory} from '../../factories/task'
 
 describe('Namepaces', () => {
 	let namespaces
@@ -20,20 +21,82 @@ describe('Namepaces', () => {
 	})
 
 	it('Should create a new Namespace', () => {
+		const newNamespaceTitle = 'New Namespace'
+
 		cy.visit('/namespaces')
 		cy.get('a.button')
 			.contains('Create namespace')
 			.click()
+
 		cy.url()
 			.should('contain', '/namespaces/new')
 		cy.get('.card-header-title')
 			.should('contain', 'Create a new namespace')
 		cy.get('input.input')
-			.type('New Namespace')
+			.type(newNamespaceTitle)
 		cy.get('.button')
 			.contains('Create')
 			.click()
+
+		cy.get('.global-notification')
+			.should('contain', 'Success')
+		cy.get('.namespace-container')
+			.should('contain', newNamespaceTitle)
 		cy.url()
 			.should('contain', '/namespaces')
+	})
+
+	it('Should rename the namespace all places', () => {
+		const newNamespaces = NamespaceFactory.create(5)
+		const newNamespaceName = 'New namespace name'
+
+		cy.visit('/namespaces')
+
+		cy.get(`.namespace-container .menu.namespaces-lists .namespace-title:contains(${newNamespaces[0].title}) .dropdown .dropdown-trigger`)
+			.click()
+		cy.get('.namespace-container .menu.namespaces-lists .namespace-title .dropdown .dropdown-content')
+			.contains('Edit')
+			.click()
+		cy.url()
+			.should('contain', '/settings/edit')
+		cy.get('#namespacetext')
+			.invoke('val')
+			.should('equal', newNamespaces[0].title) // wait until the namespace data is loaded
+		cy.get('#namespacetext')
+			.type(`{selectall}${newNamespaceName}`)
+		cy.get('footer.modal-card-foot .button')
+			.contains('Save')
+			.click()
+
+		cy.get('.global-notification')
+			.should('contain', 'Success')
+		cy.get('.namespace-container .menu.namespaces-lists')
+			.should('contain', newNamespaceName)
+			.should('not.contain', newNamespaces[0].title)
+		cy.get('.content.namespaces-list')
+			.should('contain', newNamespaceName)
+			.should('not.contain', newNamespaces[0].title)
+	})
+
+	it('Should remove a namespace when deleting it', () => {
+		const newNamespaces = NamespaceFactory.create(5)
+
+		cy.visit('/')
+
+		cy.get(`.namespace-container .menu.namespaces-lists .namespace-title:contains(${newNamespaces[0].title}) .dropdown .dropdown-trigger`)
+			.click()
+		cy.get('.namespace-container .menu.namespaces-lists .namespace-title .dropdown .dropdown-content')
+			.contains('Delete')
+			.click()
+		cy.url()
+			.should('contain', '/settings/delete')
+		cy.get('.modal-mask .modal-container .modal-content .actions a.button')
+			.contains('Do it')
+			.click()
+
+		cy.get('.global-notification')
+			.should('contain', 'Success')
+		cy.get('.namespace-container .menu.namespaces-lists')
+			.should('not.contain', newNamespaces[0].title)
 	})
 })
