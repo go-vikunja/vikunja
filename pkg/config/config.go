@@ -378,6 +378,10 @@ func InitConfig() {
 		MetricsEnabled.Set(true)
 	}
 
+	if ServiceFrontendurl.GetString() != "" && !strings.HasSuffix(ServiceFrontendurl.GetString(), "/") {
+		ServiceFrontendurl.Set(ServiceFrontendurl.GetString() + "/")
+	}
+
 	log.Printf("Using config file: %s", viper.ConfigFileUsed())
 }
 
