@@ -361,6 +361,10 @@ func InitConfig() {
 		RateLimitStore.Set(KeyvalueType.GetString())
 	}
 
+	if ServiceFrontendurl.GetString() != "" && !strings.HasSuffix(ServiceFrontendurl.GetString(), "/") {
+		ServiceFrontendurl.Set(ServiceFrontendurl.GetString() + "/")
+	}
+
 	if AuthOpenIDRedirectURL.GetString() == "" {
 		AuthOpenIDRedirectURL.Set(ServiceFrontendurl.GetString() + "auth/openid/")
 	}
@@ -376,10 +380,6 @@ func InitConfig() {
 	if ServiceEnableMetrics.GetBool() {
 		log.Println("WARNING: service.enablemetrics is deprecated and will be removed in a future release. Please use metrics.enable.")
 		MetricsEnabled.Set(true)
-	}
-
-	if ServiceFrontendurl.GetString() != "" && !strings.HasSuffix(ServiceFrontendurl.GetString(), "/") {
-		ServiceFrontendurl.Set(ServiceFrontendurl.GetString() + "/")
 	}
 
 	log.Printf("Using config file: %s", viper.ConfigFileUsed())
