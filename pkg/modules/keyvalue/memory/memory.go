@@ -17,6 +17,7 @@
 package memory
 
 import (
+	"reflect"
 	"sync"
 
 	e "code.vikunja.io/api/pkg/modules/keyvalue/error"
@@ -50,6 +51,21 @@ func (s *Storage) Get(key string) (value interface{}, exists bool, err error) {
 
 	value, exists = s.store[key]
 	return
+}
+
+func (s *Storage) GetWithValue(key string, value interface{}) (exists bool, err error) {
+	v, exists, err := s.Get(key)
+	if !exists {
+		return exists, err
+	}
+
+	val := reflect.ValueOf(value)
+	if val.Kind() != reflect.Ptr {
+		panic("some: check must be a pointer")
+	}
+
+	val.Elem().Set(reflect.ValueOf(v))
+	return exists, err
 }
 
 // Del removes a saved value from a memory storage

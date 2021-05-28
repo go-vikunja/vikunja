@@ -122,7 +122,8 @@ func getImageID(fullURL string) string {
 // Gets an unsplash photo either from cache or directly from the unsplash api
 func getUnsplashPhotoInfoByID(photoID string) (photo *Photo, err error) {
 
-	p, exists, err := keyvalue.Get(cachePrefix + photoID)
+	photo = &Photo{}
+	exists, err := keyvalue.GetWithValue(cachePrefix+photoID, photo)
 	if err != nil {
 		return nil, err
 	}
@@ -134,8 +135,6 @@ func getUnsplashPhotoInfoByID(photoID string) (photo *Photo, err error) {
 		if err != nil {
 			return
 		}
-	} else {
-		photo = p.(*Photo)
 	}
 	return
 }

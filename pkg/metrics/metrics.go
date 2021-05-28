@@ -17,6 +17,8 @@
 package metrics
 
 import (
+	"strconv"
+
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"github.com/prometheus/client_golang/prometheus"
@@ -132,7 +134,11 @@ func GetCount(key string) (count int64, err error) {
 		return 0, nil
 	}
 
-	count = cnt.(int64)
+	if s, is := cnt.(string); is {
+		count, err = strconv.ParseInt(s, 10, 64)
+	} else {
+		count = cnt.(int64)
+	}
 
 	return
 }

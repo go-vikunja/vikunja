@@ -91,12 +91,8 @@ func SetUserActive(a web.Auth) (err error) {
 
 // getActiveUsers returns the active users from redis
 func getActiveUsers() (users activeUsersMap, err error) {
-	u, _, err := keyvalue.Get(ActiveUsersKey)
-	if err != nil {
-		return nil, err
-	}
-
-	users = u.(activeUsersMap)
+	users = activeUsersMap{}
+	_, err = keyvalue.GetWithValue(ActiveUsersKey, &users)
 	return
 }
 

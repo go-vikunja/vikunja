@@ -46,12 +46,12 @@ type Callback struct {
 
 // Provider is the structure of an OpenID Connect provider
 type Provider struct {
-	Name           string         `json:"name"`
-	Key            string         `json:"key"`
-	AuthURL        string         `json:"auth_url"`
-	ClientID       string         `json:"client_id"`
-	ClientSecret   string         `json:"-"`
-	OpenIDProvider *oidc.Provider `json:"-"`
+	Name           string `json:"name"`
+	Key            string `json:"key"`
+	AuthURL        string `json:"auth_url"`
+	ClientID       string `json:"client_id"`
+	ClientSecret   string `json:"-"`
+	openIDProvider *oidc.Provider
 	Oauth2Config   *oauth2.Config `json:"-"`
 }
 
@@ -64,6 +64,11 @@ type claims struct {
 
 func init() {
 	rand.Seed(time.Now().UTC().UnixNano())
+}
+
+func (p *Provider) setOicdProvider() (err error) {
+	p.openIDProvider, err = oidc.NewProvider(context.Background(), p.AuthURL)
+	return err
 }
 
 // HandleCallback handles the auth request callback after redirecting from the provider with an auth code
@@ -122,7 +127,7 @@ func HandleCallback(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, models.Message{Message: "Missing token"})
 	}
 
-	verifier := provider.OpenIDProvider.Verifier(&oidc.Config{ClientID: provider.ClientID})
+	verifier := provider.openIDProvider.Verifier(&oidc.Config{ClientID: provider.ClientID})
 
 	// Parse and verify ID Token payload.
 	idToken, err := verifier.Verify(context.Background(), rawIDToken)
@@ -140,7 +145,7 @@ func HandleCallback(c echo.Context) error {
 	}
 
 	if cl.Email == "" || cl.Name == "" || cl.PreferredUsername == "" {
-		info, err := provider.OpenIDProvider.UserInfo(context.Background(), provider.Oauth2Config.TokenSource(context.Background(), oauth2Token))
+		info, err := provider.openIDProvider.UserInfo(context.Background(), provider.Oauth2Config.TokenSource(context.Background(), oauth2Token))
 		if err != nil {
 			log.Errorf("Error getting userinfo for provider %s: %v", provider.Name, err)
 			return handler.HandleHTTPError(err, c)
