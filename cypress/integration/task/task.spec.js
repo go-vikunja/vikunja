@@ -11,6 +11,7 @@ import '../../support/authenticateUser'
 import {TaskAssigneeFactory} from '../../factories/task_assignee'
 import {LabelFactory} from '../../factories/labels'
 import {LabelTaskFactory} from '../../factories/label_task'
+import {BucketFactory} from '../../factories/bucket'
 
 describe('Task', () => {
 	let namespaces
@@ -195,6 +196,9 @@ describe('Task', () => {
 
 		it('Can move a task to another list', () => {
 			const lists = ListFactory.create(2)
+			BucketFactory.create(2, {
+				list_id: '{increment}'
+			})
 			const tasks = TaskFactory.create(1, {
 				id: 1,
 				list_id: lists[0].id,
