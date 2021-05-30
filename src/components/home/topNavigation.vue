@@ -37,6 +37,14 @@
 
 		<div class="navbar-end">
 			<update/>
+			<a
+				@click="openQuickActions"
+				class="trigger-button pr-0"
+				@shortkey="openQuickActions"
+				v-shortkey="['ctrl', 'k']"
+			>
+				<icon icon="search"/>
+			</a>
 			<notifications/>
 			<div class="user">
 				<img :src="userAvatar" alt="" class="avatar"/>
@@ -83,7 +91,7 @@
 
 <script>
 import {mapState} from 'vuex'
-import {CURRENT_LIST} from '@/store/mutation-types'
+import {CURRENT_LIST, QUICK_ACTIONS_ACTIVE} from '@/store/mutation-types'
 import Rights from '@/models/rights.json'
 import Update from '@/components/home/update'
 import ListSettingsDropdown from '@/components/list/list-settings-dropdown'
@@ -112,6 +120,9 @@ export default {
 		logout() {
 			this.$store.dispatch('auth/logout')
 			this.$router.push({name: 'user.login'})
+		},
+		openQuickActions() {
+			this.$store.commit(QUICK_ACTIONS_ACTIVE, true)
 		},
 	},
 }

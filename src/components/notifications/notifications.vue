@@ -1,6 +1,6 @@
 <template>
 	<div class="notifications">
-		<a @click.stop="showNotifications = !showNotifications" class="trigger">
+		<a @click.stop="showNotifications = !showNotifications" class="trigger-button">
 			<span class="unread-indicator" v-if="unreadNotifications > 0"></span>
 			<icon icon="bell"/>
 		</a>

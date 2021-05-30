@@ -1,24 +1,16 @@
 .notifications {
 	width: 50px;
 
-	.trigger {
-		cursor: pointer;
-		color: $grey-400;
-		padding: 1rem;
-		font-size: 1.25rem;
-		position: relative;
+	.unread-indicator {
+		position: absolute;
+		top: 1rem;
+		right: .75rem;
+		width: .75rem;
+		height: .75rem;
 
-		.unread-indicator {
-			position: absolute;
-			top: 1rem;
-			right: .75rem;
-			width: .75rem;
-			height: .75rem;
-
-			background: $primary;
-			border-radius: 100%;
-			border: 2px solid $white;
-		}
+		background: $primary;
+		border-radius: 100%;
+		border: 2px solid $white;
 	}
 
 	.notifications-list {

@@ -34,7 +34,7 @@
 		</div>
 
 		<transition name="fade">
-			<div class="search-results" v-if="searchResultsVisible">
+			<div class="search-results" :class="{'search-results-inline': inline}" v-if="searchResultsVisible">
 				<button
 					v-if="creatableAvailable"
 					class="is-fullwidth"
@@ -166,6 +166,27 @@ export default {
 				return false
 			},
 		},
+		// If true, displays the search results inline instead of using a dropdown.
+		inline: {
+			type: Boolean,
+			default() {
+				return false
+			},
+		},
+		// If true, shows search results when no query is specified.
+		showEmpty: {
+			type: Boolean,
+			default() {
+				return true
+			},
+		},
+		// The delay in ms after which the search event will be fired. Used to avoid hitting the network on every keystroke.
+		searchDelay: {
+			type: Number,
+			default() {
+				return 200
+			},
+		},
 	},
 	mounted() {
 		document.addEventListener('click', this.hideSearchResultsHandler)
@@ -181,10 +202,14 @@ export default {
 	},
 	computed: {
 		searchResultsVisible() {
+			if(this.query === '' && !this.showEmpty) {
+				return false
+			}
+
 			return this.showSearchResults && (
-				(this.filteredSearchResults.length > 0) ||
-				(this.creatable && this.query !== '')
-			)
+					(this.filteredSearchResults.length > 0) ||
+					(this.creatable && this.query !== '')
+				)
 		},
 		creatableAvailable() {
 			return this.creatable && this.query !== '' && !this.filteredSearchResults.some(elem => {
@@ -211,7 +236,7 @@ export default {
 			// Updating the query with a binding does not work on mobile for some reason,
 			// getting the value manual does.
 			this.query = this.$refs.searchInput.value
-				
+
 			if (this.searchTimeout !== null) {
 				clearTimeout(this.searchTimeout)
 				this.searchTimeout = null
@@ -225,7 +250,7 @@ export default {
 					this.localLoading = false
 				}, 100) // The duration of the loading timeout of the services
 				this.showSearchResults = true
-			}, 200)
+			}, this.searchDelay)
 		},
 		hideSearchResultsHandler(e) {
 			closeWhenClickedOutside(e, this.$refs.multiselectRoot, this.closeSearchResults)

@@ -8,7 +8,7 @@ import {
 	LOADING,
 	LOADING_MODULE,
 	MENU_ACTIVE,
-	ONLINE,
+	ONLINE, QUICK_ACTIONS_ACTIVE,
 } from './mutation-types'
 import config from './modules/config'
 import auth from './modules/auth'
@@ -44,6 +44,7 @@ export const store = new Vuex.Store({
 		hasTasks: false,
 		menuActive: true,
 		keyboardShortcutsActive: false,
+		quickActionsActive: false,
 	},
 	mutations: {
 		[LOADING](state, loading) {
@@ -59,6 +60,12 @@ export const store = new Vuex.Store({
 			state.online = online
 		},
 		[CURRENT_LIST](state, currentList) {
+
+			if (currentList === null) {
+				state.currentList = {}
+				state.background = null
+				return
+			}
 
 			setTitle(currentList.title)
 
@@ -126,6 +133,9 @@ export const store = new Vuex.Store({
 		},
 		[KEYBOARD_SHORTCUTS_ACTIVE](state, active) {
 			state.keyboardShortcutsActive = active
+		},
+		[QUICK_ACTIONS_ACTIVE](state, active) {
+			state.quickActionsActive = active
 		},
 	},
 })

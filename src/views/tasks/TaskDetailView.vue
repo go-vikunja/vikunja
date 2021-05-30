@@ -429,6 +429,7 @@ import heading from '@/components/tasks/partials/heading'
 import Datepicker from '@/components/input/datepicker'
 import {playPop} from '@/helpers/playPop'
 import TaskSubscription from '@/components/misc/subscription'
+import {CURRENT_LIST} from '@/store/mutation-types'
 
 export default {
 	name: 'TaskDetailView',
@@ -520,7 +521,9 @@ export default {
 				return null
 			}
 
-			return this.$store.getters['namespaces/getListAndNamespaceById'](this.task.listId)
+			const list = this.$store.getters['namespaces/getListAndNamespaceById'](this.task.listId)
+			this.$store.commit(CURRENT_LIST, list.list)
+			return list
 		},
 		canWrite() {
 			return this.task && this.task.maxRight && this.task.maxRight > rights.READ

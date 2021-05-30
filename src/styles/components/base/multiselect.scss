@@ -72,6 +72,10 @@
 		max-width: 100%;
 		min-width: 100%;
 
+		&-inline {
+			position: static;
+		}
+
 		button {
 			background: transparent;
 			display: block;
