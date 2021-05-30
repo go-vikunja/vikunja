@@ -3,14 +3,23 @@
 		<div @click.self="close()" class="modal-container">
 			<div class="modal-content">
 				<card class="has-background-white has-no-shadow" title="Available Keyboard Shortcuts">
+					<div class="message is-primary">
+						<div class="message-body">
+							These shortcuts work on all pages.
+						</div>
+					</div>
 					<p>
 						<strong>Toggle The Menu</strong>
 						<shortcut :keys="['ctrl', 'e']"/>
 					</p>
+					<p>
+						<strong>Open the search/quick action bar</strong>
+						<shortcut :keys="['ctrl', 'k']"/>
+					</p>
 					<h3>Kanban</h3>
 					<div class="message is-primary" v-if="$route.name === 'list.kanban'">
 						<div class="message-body">
-							These shortcuts work on the current page.
+							These shortcuts work only on the current page.
 						</div>
 					</div>
 					<p>
@@ -22,7 +31,7 @@
 						class="message is-primary"
 						v-if="$route.name === 'task.detail' || $route.name === 'task.list.detail' || $route.name === 'task.gantt.detail' || $route.name === 'task.kanban.detail' || $route.name === 'task.detail'">
 						<div class="message-body">
-							These shortcuts work on the current page.
+							These shortcuts work only on the current page.
 						</div>
 					</div>
 					<p>
