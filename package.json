@@ -19,7 +19,7 @@
     "copy-to-clipboard": "3.3.1",
     "date-fns": "2.22.1",
     "dompurify": "2.2.8",
-    "highlight.js": "10.7.2",
+    "highlight.js": "11.0.0",
     "lodash": "4.17.21",
     "marked": "2.0.6",
     "register-service-worker": "1.7.2",

@@ -369,7 +369,7 @@ export default {
 				highlight: function (code, language) {
 					const hljs = require('highlight.js')
 					const validLanguage = hljs.getLanguage(language) ? language : 'plaintext'
-					return hljs.highlight(validLanguage, code).value
+					return hljs.highlight(code, {language: validLanguage}).value
 				},
 			})
 
@@ -448,7 +448,7 @@ export default {
 </script>
 
 <style lang="scss">
-@import '../../../node_modules/highlight.js/scss/atelier-heath-light';
+@import '../../../node_modules/highlight.js/scss/base16/equilibrium-gray-light';
 @import '../../../node_modules/easymde/dist/easymde.min.css';
 @import '../../styles/theme/variables/all';
 
