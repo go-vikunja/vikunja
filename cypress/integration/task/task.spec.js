@@ -113,9 +113,10 @@ describe('Task', () => {
 			cy.visit(`/tasks/${tasks[0].id}`)
 
 			cy.get('.task-view .heading .is-done')
-				.should('exist')
+				.should('be.visible')
 				.should('contain', 'Done')
 			cy.get('.task-view .action-buttons p.created')
+				.should('be.visible')
 				.should('contain', 'Done')
 		})
 
@@ -183,9 +184,11 @@ describe('Task', () => {
 			cy.visit(`/tasks/${tasks[0].id}`)
 
 			cy.get('.task-view .comments .media.comment .editor .vue-easymde .EasyMDEContainer .CodeMirror-scroll')
+				.should('be.visible')
 				.type('{selectall}New Comment')
 			cy.get('.task-view .comments .media.comment .button:not([disabled])')
 				.contains('Comment')
+				.should('be.visible')
 				.click()
 
 			cy.get('.task-view .comments .media.comment .editor')
@@ -232,6 +235,7 @@ describe('Task', () => {
 			cy.visit(`/tasks/${tasks[0].id}`)
 
 			cy.get('.task-view .action-buttons .button')
+				.should('be.visible')
 				.contains('Delete task')
 				.click()
 			cy.get('.modal-mask .modal-container .modal-content .header')
@@ -314,6 +318,7 @@ describe('Task', () => {
 
 			cy.get('.task-view .action-buttons .button')
 				.contains('Add labels')
+				.should('be.visible')
 				.click()
 			cy.get('.task-view .details.labels-list .multiselect input')
 				.type(newLabelText)
@@ -369,6 +374,7 @@ describe('Task', () => {
 			cy.visit(`/tasks/${tasks[0].id}`)
 
 			cy.get('.task-view .details.labels-list .multiselect .input-wrapper')
+				.should('be.visible')
 				.should('contain', labels[0].title)
 			cy.get('.task-view .details.labels-list .multiselect .input-wrapper')
 				.children()

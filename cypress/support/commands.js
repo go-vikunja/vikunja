@@ -1,17 +1,33 @@
 /**
- * getAttached(selector)
- * getAttached(selectorFn)
+ * Recursively gets an element, returning only after it's determined to be attached to the DOM for good.
  *
- * Waits until the selector finds an attached element, then yields it (wrapped).
- * selectorFn, if provided, is passed $(document). Don't use cy methods inside selectorFn.
- *
- * Source: https://github.com/cypress-io/cypress/issues/5743#issuecomment-650421731
+ * Source: https://github.com/cypress-io/cypress/issues/7306#issuecomment-850621378
  */
-Cypress.Commands.add('getAttached', selector => {
-	const getElement = typeof selector === 'function' ? selector : $d => $d.find(selector);
-	let $el = null;
-	return cy.document().should($d => {
-		$el = getElement(Cypress.$($d));
-		expect(Cypress.dom.isDetached($el)).to.be.false;
-	}).then(() => cy.wrap($el));
-});
+Cypress.Commands.add('getSettled', (selector, opts = {}) => {
+	const retries = opts.retries || 3
+	const delay = opts.delay || 100
+
+	const isAttached = (resolve, count = 0) => {
+		const el = Cypress.$(selector)
+
+		// is element attached to the DOM?
+		count = Cypress.dom.isAttached(el) ? count + 1 : 0
+
+		// hit our base case, return the element
+		if (count >= retries) {
+			return resolve(el)
+		}
+
+		// retry after a bit of a delay
+		setTimeout(() => isAttached(resolve, count), delay)
+	}
+
+	// wrap, so we can chain cypress commands off the result
+	return cy.wrap(null).then(() => {
+		return new Cypress.Promise((resolve) => {
+			return isAttached(resolve, 0)
+		}).then((el) => {
+			return cy.wrap(el)
+		})
+	})
+})

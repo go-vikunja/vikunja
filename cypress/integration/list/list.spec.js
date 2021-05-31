@@ -262,11 +262,15 @@ describe('Lists', () => {
 
 		it('Shows tasks from the current and next month', () => {
 			const now = new Date()
+			const nextMonth = now
+			nextMonth.setDate(1)
+			nextMonth.setMonth(now.getMonth() + 1)
+
 			cy.visit('/lists/1/gantt')
 
 			cy.get('.gantt-chart-container .gantt-chart .months')
 				.should('contain', format(now, 'MMMM'))
-				.should('contain', format(now.setMonth(now.getMonth() + 1), 'MMMM'))
+				.should('contain', format(nextMonth, 'MMMM'))
 		})
 
 		it('Shows tasks with dates', () => {
@@ -461,7 +465,7 @@ describe('Lists', () => {
 			})
 			cy.visit('/lists/1/kanban')
 
-			cy.getAttached('.kanban .bucket .tasks .task')
+			cy.getSettled('.kanban .bucket .tasks .task')
 				.contains(tasks[0].title)
 				.should('be.visible')
 				.click()
@@ -483,7 +487,7 @@ describe('Lists', () => {
 			const task = tasks[0]
 			cy.visit('/lists/1/kanban')
 
-			cy.getAttached('.kanban .bucket .tasks .task')
+			cy.getSettled('.kanban .bucket .tasks .task')
 				.contains(task.title)
 				.should('be.visible')
 				.click()
