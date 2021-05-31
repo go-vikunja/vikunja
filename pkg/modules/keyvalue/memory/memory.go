@@ -17,10 +17,9 @@
 package memory
 
 import (
+	e "code.vikunja.io/api/pkg/modules/keyvalue/error"
 	"reflect"
 	"sync"
-
-	e "code.vikunja.io/api/pkg/modules/keyvalue/error"
 )
 
 // Storage is the memory implementation of a storage backend
@@ -40,6 +39,14 @@ func NewStorage() *Storage {
 func (s *Storage) Put(key string, value interface{}) (err error) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
+
+	val := reflect.ValueOf(value)
+	// Make sure to store the underlying value when value is a pointer to a value
+	if val.Kind() == reflect.Ptr {
+		s.store[key] = val.Elem().Interface()
+		return nil
+	}
+
 	s.store[key] = value
 	return nil
 }
@@ -53,18 +60,22 @@ func (s *Storage) Get(key string) (value interface{}, exists bool, err error) {
 	return
 }
 
-func (s *Storage) GetWithValue(key string, value interface{}) (exists bool, err error) {
-	v, exists, err := s.Get(key)
+func (s *Storage) GetWithValue(key string, ptr interface{}) (exists bool, err error) {
+	stored, exists, err := s.Get(key)
 	if !exists {
 		return exists, err
 	}
 
-	val := reflect.ValueOf(value)
+	val := reflect.ValueOf(ptr)
 	if val.Kind() != reflect.Ptr {
-		panic("some: check must be a pointer")
+		panic("value must be a pointer")
+	}
+	if val.IsNil() {
+		panic("pointer must not be a nil-pointer")
 	}
 
-	val.Elem().Set(reflect.ValueOf(v))
+	val.Elem().Set(reflect.ValueOf(stored))
+
 	return exists, err
 }
 
