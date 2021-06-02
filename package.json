@@ -26,7 +26,7 @@
     "sass": "1.34.0",
     "snake-case": "3.0.4",
     "verte": "0.0.12",
-    "vue": "2.6.12",
+    "vue": "2.6.13",
     "vue-advanced-cropper": "1.6.0",
     "vue-drag-resize": "1.5.4",
     "vue-easymde": "1.4.0",
@@ -56,7 +56,7 @@
     "vue-flatpickr-component": "8.1.6",
     "vue-notification": "1.3.20",
     "vue-router": "3.5.1",
-    "vue-template-compiler": "2.6.12",
+    "vue-template-compiler": "2.6.13",
     "wait-on": "5.3.0"
   },
   "eslintConfig": {
