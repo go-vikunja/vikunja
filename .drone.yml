@@ -95,7 +95,7 @@ steps:
       CYPRESS_TEST_SECRET: averyLongSecretToSe33dtheDB
       YARN_CACHE_FOLDER: .cache/yarn/
       CYPRESS_CACHE_FOLDER: .cache/cypress/
-      CYPRESS_DEFAULT_COMMAND_TIMEOUT: 60000
+      CYPRESS_DEFAULT_COMMAND_TIMEOUT: 20000
     commands:
       - sed -i 's/localhost/api/g' public/index.html
       - yarn serve & npx wait-on http://localhost:8080
