@@ -45,6 +45,9 @@ type UserSettings struct {
 	DiscoverableByEmail bool `json:"discoverable_by_email"`
 	// If enabled, the user will get an email for their overdue tasks each morning.
 	OverdueTasksRemindersEnabled bool `json:"overdue_tasks_reminders_enabled"`
+	// If a task is created without a specified list this value should be used. Applies
+	// to tasks made directly in API and from clients.
+	DefaultListID int64 `json:"default_list_id"`
 }
 
 // GetUserAvatarProvider returns the currently set user avatar
@@ -170,6 +173,7 @@ func UpdateGeneralUserSettings(c echo.Context) error {
 	user.DiscoverableByEmail = us.DiscoverableByEmail
 	user.DiscoverableByName = us.DiscoverableByName
 	user.OverdueTasksRemindersEnabled = us.OverdueTasksRemindersEnabled
+	user.DefaultListID = us.DefaultListID
 
 	_, err = user2.UpdateUser(s, user)
 	if err != nil {

@@ -8556,6 +8556,10 @@ var doc = `{
         "v1.UserSettings": {
             "type": "object",
             "properties": {
+                "default_list_id": {
+                    "description": "If a task is created without a specified list this value should be used. Applies\nto tasks made directly in API and from clients.",
+                    "type": "integer"
+                },
                 "discoverable_by_email": {
                     "description": "If true, the user can be found when searching for their exact email.",
                     "type": "boolean"
