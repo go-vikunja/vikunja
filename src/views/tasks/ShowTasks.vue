@@ -1,7 +1,7 @@
 <template>
 	<div class="is-max-width-desktop show-tasks">
 		<fancycheckbox
-			@change="loadPendingTasks"
+			@change="setDate"
 			class="is-pulled-right"
 			v-if="!showAll"
 			v-model="showNulls"
@@ -15,7 +15,7 @@
 				:class="{ 'disabled': taskService.loading}"
 				:config="flatPickerConfig"
 				:disabled="taskService.loading"
-				@on-close="loadPendingTasks"
+				@on-close="setDate"
 				class="input"
 				v-model="cStartDate"
 			/>
@@ -24,7 +24,7 @@
 				:class="{ 'disabled': taskService.loading}"
 				:config="flatPickerConfig"
 				:disabled="taskService.loading"
-				@on-close="loadPendingTasks"
+				@on-close="setDate"
 				class="input"
 				v-model="cEndDate"
 			/>
@@ -118,6 +118,17 @@ export default {
 		userAuthenticated: state => state.auth.authenticated,
 	}),
 	methods: {
+		setDate() {
+			this.$router.push({
+				name: this.$route.name,
+				query: {
+					from: +new Date(this.cStartDate),
+					to: +new Date(this.cEndDate),
+					showOverdue: this.showOverdue,
+					showNulls: this.showNulls,
+				},
+			})
+		},
 		loadPendingTasks() {
 			// Since this route is authentication only, users would get an error message if they access the page unauthenticated.
 			// Since this component is mounted as the home page before unauthenticated users get redirected
@@ -127,8 +138,15 @@ export default {
 			}
 
 			// Make sure all dates are date objects
-			this.cStartDate = new Date(this.cStartDate)
-			this.cEndDate = new Date(this.cEndDate)
+			if (typeof this.$route.query.from !== 'undefined' && typeof this.$route.query.to !== 'undefined') {
+				this.cStartDate = new Date(Number(this.$route.query.from))
+				this.cEndDate = new Date(Number(this.$route.query.to))
+			} else {
+				this.cStartDate = new Date(this.cStartDate)
+				this.cEndDate = new Date(this.cEndDate)
+			}
+			this.showOverdue = this.$route.query.showOverdue
+			this.showNulls = this.$route.query.showNulls
 
 			if (this.showAll) {
 				this.setTitle('Current Tasks')
@@ -177,9 +195,7 @@ export default {
 					r.sort((a, b) => {
 						return a.dueDate === null && b.dueDate === null ? -1 : 1
 					})
-					const tasks = r.
-						filter(t => t.dueDate !== null).
-						concat(r.filter(t => t.dueDate === null))
+					const tasks = r.filter(t => t.dueDate !== null).concat(r.filter(t => t.dueDate === null))
 
 					this.$set(this, 'tasks', tasks)
 					this.$store.commit(HAS_TASKS, r.length > 0)
@@ -205,21 +221,20 @@ export default {
 			this.cStartDate = new Date()
 			this.cEndDate = new Date((new Date()).getTime() + 7 * 24 * 60 * 60 * 1000)
 			this.showOverdue = false
-			this.loadPendingTasks()
+			this.setDate()
 		},
 		setDatesToNextMonth() {
 			this.cStartDate = new Date()
 			this.cEndDate = new Date((new Date()).setMonth((new Date()).getMonth() + 1))
 			this.showOverdue = false
-			this.loadPendingTasks()
+			this.setDate()
 		},
 		showTodaysTasks() {
 			const d = new Date()
 			this.cStartDate = new Date()
 			this.cEndDate = new Date(d.setDate(d.getDate() + 1))
-			this.showNulls = false
 			this.showOverdue = true
-			this.loadPendingTasks()
+			this.setDate()
 		},
 	},
 }

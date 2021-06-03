@@ -17,12 +17,9 @@ export default {
 	},
 	data() {
 		return {
-			startDate: new Date(this.$route.params.startDateUnix),
-			endDate: new Date(this.$route.params.endDateUnix),
+			startDate: null,
+			endDate: null,
 		}
-	},
-	watch: {
-		'$route': 'setDatesToNextWeek',
 	},
 	created() {
 		this.setDatesToNextWeek()
