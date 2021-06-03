@@ -152,23 +152,6 @@ $filter-container-top-link-share-list: -47px;
   margin-top: $filter-container-top-default;
 }
 
-.is-archived {
-  $notification-height: 1.25rem + 1.25rem + 1.5rem + 1.5rem;
-
-  .filter-container {
-    margin-top: calc(#{$filter-container-top-default} - #{$notification-height});
-  }
-
-  .link-share-container .gantt-chart-container .filter-container,
-  .gantt-chart-container .filter-container {
-    margin-top: calc(#{$filter-container-top-link-share-gantt} - 2rem - #{$notification-height});
-  }
-  
-  .link-share-container .list-view .filter-container {
-    margin-top: calc(#{$filter-container-top-link-share-list} - #{$notification-height});
-  }
-  
-  .link-share-container .filter-container {
-    margin-top: calc(#{$filter-container-top-default} - #{$notification-height});
-  }
+.is-archived .notification.is-warning {
+  margin-bottom: 1rem;
 }
