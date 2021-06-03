@@ -8,10 +8,10 @@
 			<label class="label" for="labelTitle">Label Title</label>
 			<div
 				class="control is-expanded"
-				:class="{ 'is-loading': labelService.loading }"
+				:class="{ 'is-loading': loading }"
 			>
 				<input
-					:class="{ disabled: labelService.loading }"
+					:class="{ disabled: loading }"
 					class="input"
 					placeholder="The label title goes here..."
 					type="text"
@@ -28,7 +28,7 @@
 		<div class="field">
 			<label class="label">Color</label>
 			<div class="control">
-				<color-picker v-model="label.hexColor" />
+				<color-picker v-model="label.hexColor"/>
 			</div>
 		</div>
 	</create-edit>
@@ -36,17 +36,16 @@
 
 <script>
 import labelModel from '../../models/label'
-import labelService from '../../services/label'
 import LabelModel from '../../models/label'
-import LabelService from '../../services/label'
 import CreateEdit from '@/components/misc/create-edit'
 import ColorPicker from '../../components/input/colorPicker'
+import {mapState} from 'vuex'
+import {LOADING, LOADING_MODULE} from '@/store/mutation-types'
 
 export default {
 	name: 'NewLabel',
 	data() {
 		return {
-			labelService: labelService,
 			label: labelModel,
 			showError: false,
 		}
@@ -56,12 +55,14 @@ export default {
 		ColorPicker,
 	},
 	created() {
-		this.labelService = new LabelService()
 		this.label = new LabelModel()
 	},
 	mounted() {
 		this.setTitle('Create a new label')
 	},
+	computed: mapState({
+		loading: state => state[LOADING] && state[LOADING_MODULE] === 'labels',
+	}),
 	methods: {
 		newLabel() {
 			if (this.label.title === '') {
@@ -70,17 +71,13 @@ export default {
 			}
 			this.showError = false
 
-			this.labelService
-				.create(this.label)
-				.then((response) => {
+			this.$store.dispatch('labels/createLabel', this.label)
+				.then(r => {
 					this.$router.push({
 						name: 'labels.index',
-						params: { id: response.id },
+						params: {id: r.id},
 					})
-					this.success(
-						{ message: 'The label was successfully created.' },
-						this
-					)
+					this.success({message: 'The label was successfully created.'}, this)
 				})
 				.catch((e) => {
 					this.error(e, this)

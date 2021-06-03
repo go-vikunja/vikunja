@@ -55,6 +55,7 @@ export default {
 	},
 	created() {
 		this.renewTokenOnFocus()
+		this.loadLabels()
 	},
 	computed: mapState({
 		namespaces(state) {
@@ -125,6 +126,12 @@ export default {
 		},
 		showKeyboardShortcuts() {
 			this.$store.commit(KEYBOARD_SHORTCUTS_ACTIVE, true)
+		},
+		loadLabels() {
+			this.$store.dispatch('labels/loadAllLabels')
+				.catch(e => {
+					this.error(e, this)
+				})
 		},
 	},
 }

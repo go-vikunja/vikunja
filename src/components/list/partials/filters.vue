@@ -131,7 +131,6 @@
 			<label class="label">Labels</label>
 			<div class="control">
 				<multiselect
-					:loading="labelService.loading"
 					placeholder="Type to search for a label..."
 					@search="findLabels"
 					:search-results="foundLabels"
@@ -202,7 +201,6 @@ import PercentDoneSelect from '@/components/tasks/partials/percentDoneSelect'
 import Multiselect from '@/components/input/multiselect'
 
 import UserService from '@/services/user'
-import LabelService from '@/services/label'
 import ListService from '@/services/list'
 import NamespaceService from '@/services/namespace'
 import {mapState} from 'vuex'
@@ -249,8 +247,7 @@ export default {
 			foundusers: [],
 			users: [],
 
-			labelService: LabelService,
-			foundLabels: [],
+			labelQuery: '',
 			labels: [],
 
 			listsService: ListService,
@@ -264,7 +261,6 @@ export default {
 	},
 	created() {
 		this.usersService = new UserService()
-		this.labelService = new LabelService()
 		this.listsService = new ListService()
 		this.namespaceService = new NamespaceService()
 	},
@@ -284,19 +280,30 @@ export default {
 			this.prepareFilters()
 		},
 	},
-	computed: mapState({
-		flatPickerConfig: state => ({
-			altFormat: 'j M Y H:i',
-			altInput: true,
-			dateFormat: 'Y-m-d H:i',
-			enableTime: true,
-			time_24hr: true,
-			mode: 'range',
-			locale: {
-				firstDayOfWeek: state.auth.settings.weekStart,
-			},
-		})
-	}),
+	computed: {
+		foundLabels() {
+			const labels = (Object.values(this.$store.state.labels.labels).filter(l => {
+				return l.title.toLowerCase().includes(this.labelQuery.toLowerCase())
+			}) ?? [])
+
+			return differenceWith(labels, this.labels, (first, second) => {
+				return first.id === second.id
+			})
+		},
+		...mapState({
+			flatPickerConfig: state => ({
+				altFormat: 'j M Y H:i',
+				altInput: true,
+				dateFormat: 'Y-m-d H:i',
+				enableTime: true,
+				time_24hr: true,
+				mode: 'range',
+				locale: {
+					firstDayOfWeek: state.auth.settings.weekStart,
+				},
+			}),
+		}),
+	},
 	methods: {
 		change() {
 			this.$emit('input', this.params)
@@ -566,25 +573,8 @@ export default {
 			this.$set(this.filters, filterName, ids.join(','))
 			this.setSingleValueFilter(filterName, filterName, '', 'in')
 		},
-		clearLabels() {
-			this.$set(this, 'foundLabels', [])
-		},
 		findLabels(query) {
-
-			if (query === '') {
-				this.clearLabels()
-			}
-
-			this.labelService.getAll({}, {s: query})
-				.then(response => {
-					// Filter the results to not include labels already selected
-					this.$set(this, 'foundLabels', differenceWith(response, this.labels, (first, second) => {
-						return first.id === second.id
-					}))
-				})
-				.catch(e => {
-					this.error(e, this)
-				})
+			this.labelQuery = query
 		},
 		addLabel() {
 			this.$nextTick(() => {

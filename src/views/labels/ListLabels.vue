@@ -1,5 +1,5 @@
 <template>
-	<div :class="{ 'is-loading': labelService.loading}" class="loader-container">
+	<div :class="{ 'is-loading': loading}" class="loader-container">
 		<x-button
 			:to="{name:'labels.create'}"
 			class="is-pulled-right"
@@ -76,7 +76,7 @@
 						<div class="field has-addons">
 							<div class="control is-expanded">
 								<x-button
-									:loading="labelService.loading"
+									:loading="loading"
 									class="is-fullwidth"
 									@click="editLabelSubmit()"
 								>
@@ -101,11 +101,11 @@
 <script>
 import {mapState} from 'vuex'
 
-import LabelService from '../../services/label'
 import LabelModel from '../../models/label'
 import ColorPicker from '../../components/input/colorPicker'
 import LoadingComponent from '../../components/misc/loading'
 import ErrorComponent from '../../components/misc/error'
+import {LOADING, LOADING_MODULE} from '@/store/mutation-types'
 
 export default {
 	name: 'ListLabels',
@@ -120,15 +120,12 @@ export default {
 	},
 	data() {
 		return {
-			labelService: LabelService,
-			labels: [],
 			labelEditLabel: LabelModel,
 			isLabelEdit: false,
 			editorActive: false,
 		}
 	},
 	created() {
-		this.labelService = new LabelService()
 		this.labelEditLabel = new LabelModel()
 		this.loadLabels()
 	},
@@ -137,43 +134,19 @@ export default {
 	},
 	computed: mapState({
 		userInfo: state => state.auth.info,
+		labels: state => state.labels.labels,
+		loading: state => state[LOADING] && state[LOADING_MODULE] === 'labels',
 	}),
 	methods: {
 		loadLabels() {
-			const getAllLabels = (page = 1) => {
-				return this.labelService.getAll({}, {}, page)
-					.then(labels => {
-						if (page < this.labelService.totalPages) {
-							return getAllLabels(page + 1)
-								.then(nextLabels => {
-									return labels.concat(nextLabels)
-								})
-						} else {
-							return labels
-						}
-					})
-					.catch(e => {
-						return Promise.reject(e)
-					})
-			}
-
-			getAllLabels()
-				.then(r => {
-					this.$set(this, 'labels', r)
-				})
+			this.$store.dispatch('labels/loadAllLabels')
 				.catch(e => {
 					this.error(e, this)
 				})
 		},
 		deleteLabel(label) {
-			this.labelService.delete(label)
+			this.$store.dispatch('labels/deleteLabel', label)
 				.then(() => {
-					// Remove the label from the list
-					for (const l in this.labels) {
-						if (this.labels[l].id === label.id) {
-							this.labels.splice(l, 1)
-						}
-					}
 					this.success({message: 'The label was successfully deleted.'}, this)
 				})
 				.catch(e => {
@@ -181,13 +154,8 @@ export default {
 				})
 		},
 		editLabelSubmit() {
-			this.labelService.update(this.labelEditLabel)
-				.then(r => {
-					for (const l in this.labels) {
-						if (this.labels[l].id === r.id) {
-							this.$set(this.labels, l, r)
-						}
-					}
+			this.$store.dispatch('labels/updateLabel', this.labelEditLabel)
+				.then(() => {
 					this.success({message: 'The label was successfully updated.'}, this)
 				})
 				.catch(e => {

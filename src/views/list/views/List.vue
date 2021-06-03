@@ -161,7 +161,6 @@
 import TaskService from '../../../services/task'
 import TaskModel from '../../../models/task'
 import LabelTaskService from '../../../services/labelTask'
-import LabelService from '../../../services/label'
 import LabelTask from '../../../models/labelTask'
 import LabelModel from '../../../models/label'
 
@@ -186,7 +185,6 @@ export default {
 
 			showError: false,
 			labelTaskService: LabelTaskService,
-			labelService: LabelService,
 
 			ctaVisible: false,
 		}
@@ -202,7 +200,6 @@ export default {
 	},
 	created() {
 		this.taskService = new TaskService()
-		this.labelService = new LabelService()
 		this.labelTaskService = new LabelTaskService()
 
 		// Save the current list view to local storage
@@ -236,6 +233,40 @@ export default {
 					this.tasks.push(task)
 					this.sortTasks()
 					this.newTaskText = ''
+
+					// Unlike a proper programming language, Javascript only knows references to objects and does not
+					// allow you to control what is a reference and what isnt. Because of this we can't just add
+					// all labels to the task they belong to right after we found and added them to the task since
+					// the task update method also ensures all data the api sees has the right format. That means
+					// it processes labels. That processing changes the date format and the label color and makes
+					// the label pretty much unusable for everything else. Normally, this is not a big deal, because
+					// the labels on a task get thrown away anyway and replaced with the new models from the api
+					// when we get the updated answer back. However, in this specific case because we're passing a
+					// label we obtained from vuex that reference is kept and not thrown away. The task itself gets
+					// a new label object - you won't notice the bad reference until you want to add the same label
+					// again and notice it doesn't have a color anymore.
+					// I think this is what happens: (or rather would happen without the hack I've put in)
+					//   1. Query the store for a label which matches the name
+					//   2. Find one - remember, we get only a *reference* to the label from the store, not a new label object.
+					//      (Now there's *two* places with a reference to the same label object: in the store and in the
+					//      variable which holds the label from the search in the store)
+					//   3. .push the label to the task
+					//   4. Update the task to remove the labels from the name
+					//   4.1. The task update processes all labels belonging to that task, changing attributes of our
+					//        label in the process. Because this is a reference, it is also "updated" in the store.
+					//   5. Get an api response back. The service handler now creates a new label object for all labels
+					//      returned from the api. It will throw away all references to the old label in the process.
+					//   6. Now we have two objects with the same label data: The old one we originally obtained from
+					//      the store and the one that was created when parsing the api response. The old one was
+					//      modified before sending the api request and thus, our store which still holds a reference
+					//      to the old label now contains old data.
+					//      I guess this is the point where normally the GC would come in and collect the old label
+					//      object if the store wouldn't still hold a reference to it.
+					//
+					// Now, as a workaround, I'm putting all new labels added to that task in this separate variable to
+					// add them only after the task was updated to circumvent the task update service processing the
+					// label before sending it. Feels more hacky than it probably is.
+					const newLabels = []
 
 					// Check if the task has words starting with ~ in the title and make them to labels
 					const parts = task.title.split(' ~')
@@ -271,17 +302,41 @@ export default {
 							}
 
 							// Check if the label exists
-							this.labelService.getAll({}, {s: labelTitle})
-								.then(res => {
-									// Label found, use it
-									if (res.length > 0 && res[0].title === labelTitle) {
+							const label = Object.values(this.$store.state.labels.labels).find(l => {
+								return l.title.toLowerCase() === labelTitle.toLowerCase()
+							})
+
+							// Label found, use it
+							if (typeof label !== 'undefined') {
+								const labelTask = new LabelTask({
+									taskId: task.id,
+									labelId: label.id,
+								})
+								this.labelTaskService.create(labelTask)
+									.then(result => {
+										newLabels.push(label)
+
+										// Remove the label text from the task title
+										task.title = task.title.replace(` ~${labelTitle}`, '')
+
+										// Make the promise done (the one with the index 0 does not exist)
+										labelAddings[index - 1].resolve(result)
+									})
+									.catch(e => {
+										this.error(e, this)
+									})
+							} else {
+								// label not found, create it
+								const label = new LabelModel({title: labelTitle})
+								this.$store.dispatch('labels/createLabel', label)
+									.then(res => {
 										const labelTask = new LabelTask({
 											taskId: task.id,
-											labelId: res[0].id,
+											labelId: res.id,
 										})
 										this.labelTaskService.create(labelTask)
 											.then(result => {
-												task.labels.push(res[0])
+												newLabels.push(res)
 
 												// Remove the label text from the task title
 												task.title = task.title.replace(` ~${labelTitle}`, '')
@@ -292,37 +347,11 @@ export default {
 											.catch(e => {
 												this.error(e, this)
 											})
-									} else {
-										// label not found, create it
-										const label = new LabelModel({title: labelTitle})
-										this.labelService.create(label)
-											.then(res => {
-												const labelTask = new LabelTask({
-													taskId: task.id,
-													labelId: res.id,
-												})
-												this.labelTaskService.create(labelTask)
-													.then(result => {
-														task.labels.push(res)
-
-														// Remove the label text from the task title
-														task.title = task.title.replace(` ~${labelTitle}`, '')
-
-														// Make the promise done (the one with the index 0 does not exist)
-														labelAddings[index - 1].resolve(result)
-													})
-													.catch(e => {
-														this.error(e, this)
-													})
-											})
-											.catch(e => {
-												this.error(e, this)
-											})
-									}
-								})
-								.catch(e => {
-									this.error(e, this)
-								})
+									})
+									.catch(e => {
+										this.error(e, this)
+									})
+							}
 						})
 
 						// This waits to update the task until all labels have been added and the title has
@@ -331,6 +360,7 @@ export default {
 							.then(() => {
 								this.taskService.update(task)
 									.then(updatedTask => {
+										updatedTask.labels = newLabels
 										this.updateTasks(updatedTask)
 										this.$store.commit(HAS_TASKS, true)
 									})

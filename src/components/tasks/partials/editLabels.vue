@@ -1,6 +1,6 @@
 <template>
 	<multiselect
-		:loading="labelService.loading || labelTaskService.loading"
+		:loading="loading"
 		placeholder="Type to add a new label..."
 		:multiple="true"
 		@search="findLabel"
@@ -39,11 +39,11 @@
 <script>
 import differenceWith from 'lodash/differenceWith'
 
-import LabelService from '../../../services/label'
 import LabelModel from '../../../models/label'
 import LabelTaskService from '../../../services/labelTask'
 
 import Multiselect from '@/components/input/multiselect'
+import {LOADING, LOADING_MODULE} from '@/store/mutation-types'
 
 export default {
 	name: 'edit-labels',
@@ -62,12 +62,10 @@ export default {
 	},
 	data() {
 		return {
-			labelService: LabelService,
 			labelTaskService: LabelTaskService,
-			foundLabels: [],
 			labelTimeout: null,
 			labels: [],
-			searchQuery: '',
+			query: '',
 		}
 	},
 	components: {
@@ -79,38 +77,26 @@ export default {
 		},
 	},
 	created() {
-		this.labelService = new LabelService()
 		this.labelTaskService = new LabelTaskService()
 		this.labels = this.value
 	},
+	computed: {
+		foundLabels() {
+			const labels = (Object.values(this.$store.state.labels.labels).filter(l => {
+				return l.title.toLowerCase().includes(this.query.toLowerCase())
+			}) ?? [])
+
+			return differenceWith(labels, this.labels, (first, second) => {
+				return first.id === second.id
+			})
+		},
+		loading() {
+			return this.labelTaskService.loading || (this.$store.state[LOADING] && this.$store.state[LOADING_MODULE] === 'labels')
+		},
+	},
 	methods: {
 		findLabel(query) {
-			this.searchQuery = query
-			if (query === '') {
-				this.clearAllLabels()
-				return
-			}
-
-			if (this.labelTimeout !== null) {
-				clearTimeout(this.labelTimeout)
-			}
-
-			// Delay the search 300ms to not send a request on every keystroke
-			this.labelTimeout = setTimeout(() => {
-				this.labelService.getAll({}, {s: query})
-					.then(response => {
-						this.$set(this, 'foundLabels', differenceWith(response, this.labels, (first, second) => {
-							return first.id === second.id
-						}))
-						this.labelTimeout = null
-					})
-					.catch(e => {
-						this.error(e, this)
-					})
-			}, 300)
-		},
-		clearAllLabels() {
-			this.$set(this, 'foundLabels', [])
+			this.query = query
 		},
 		addLabel(label, showNotification = true) {
 			this.$store.dispatch('tasks/addLabel', {label: label, taskId: this.taskId})
@@ -141,8 +127,8 @@ export default {
 				})
 		},
 		createAndAddLabel(title) {
-			let newLabel = new LabelModel({title: title})
-			this.labelService.create(newLabel)
+			const newLabel = new LabelModel({title: title})
+			this.$store.dispatch('labels/createLabel', newLabel)
 				.then(r => {
 					this.addLabel(r, false)
 					this.labels.push(r)
@@ -156,7 +142,3 @@ export default {
 	},
 }
 </script>
-
-<style scoped>
-
-</style>

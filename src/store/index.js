@@ -17,6 +17,7 @@ import kanban from './modules/kanban'
 import tasks from './modules/tasks'
 import lists from './modules/lists'
 import attachments from './modules/attachments'
+import labels from './modules/labels'
 
 import ListService from '../services/list'
 import {setTitle} from '@/helpers/setTitle'
@@ -32,6 +33,7 @@ export const store = new Vuex.Store({
 		tasks,
 		lists,
 		attachments,
+		labels,
 	},
 	state: {
 		loading: false,
