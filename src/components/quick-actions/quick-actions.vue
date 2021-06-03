@@ -20,7 +20,7 @@
 				/>
 			</div>
 
-			<div class="has-text-grey-light p-4" v-if="hintText !== ''">
+			<div class="help has-text-grey-light p-2" v-if="hintText !== ''">
 				{{ hintText }}
 			</div>
 
@@ -72,6 +72,11 @@ const CMD_NEW_LIST = 'newList'
 const CMD_NEW_NAMESPACE = 'newNamespace'
 const CMD_NEW_TEAM = 'newTeam'
 
+const SEARCH_MODE_ALL = 'all'
+const SEARCH_MODE_TASKS = 'tasks'
+const SEARCH_MODE_LISTS = 'lists'
+const SEARCH_MODE_TEAMS = 'teams'
+
 export default {
 	name: 'quick-actions',
 	data() {
@@ -84,6 +89,7 @@ export default {
 			taskService: null,
 
 			foundTeams: [],
+			teamSearchTimeout: null,
 			teamService: null,
 
 			namespaceService: null,
@@ -99,9 +105,17 @@ export default {
 			return active
 		},
 		results() {
-			const lists = (Object.values(this.$store.state.lists).filter(l => {
-				return l.title.toLowerCase().includes(this.query.toLowerCase())
-			}) ?? [])
+			let lists = []
+			if (this.searchMode === SEARCH_MODE_ALL || this.searchMode === SEARCH_MODE_LISTS) {
+				let query = this.query
+				if (this.searchMode === SEARCH_MODE_LISTS) {
+					query = query.substr(1)
+				}
+
+				lists = (Object.values(this.$store.state.lists).filter(l => {
+					return l.title.toLowerCase().includes(query.toLowerCase())
+				}) ?? [])
+			}
 
 			const cmds = this.availableCmds
 				.filter(a => a.title.toLowerCase().includes(this.query.toLowerCase()))
@@ -167,7 +181,7 @@ export default {
 				}
 			}
 
-			return ''
+			return 'You can use # to only seach for tasks, * to only search for lists and @ to only search for teams.'
 		},
 		currentList() {
 			return Object.keys(this.$store.state[CURRENT_LIST]).length === 0 ? null : this.$store.state[CURRENT_LIST]
@@ -196,6 +210,23 @@ export default {
 
 			return cmds
 		},
+		searchMode() {
+			if (this.query === '') {
+				return SEARCH_MODE_ALL
+			}
+
+			if (this.query.startsWith('#')) {
+				return SEARCH_MODE_TASKS
+			}
+			if (this.query.startsWith('*')) {
+				return SEARCH_MODE_LISTS
+			}
+			if (this.query.startsWith('@')) {
+				return SEARCH_MODE_TEAMS
+			}
+
+			return SEARCH_MODE_ALL
+		},
 	},
 	created() {
 		this.taskService = new TaskService()
@@ -206,9 +237,20 @@ export default {
 	methods: {
 		search() {
 			this.searchTasks()
+			this.searchTeams()
 		},
 		searchTasks() {
-			if (this.query === '' || this.selectedCmd !== null) {
+			if (this.searchMode !== SEARCH_MODE_ALL && this.searchMode !== SEARCH_MODE_TASKS) {
+				this.foundTasks = []
+				return
+			}
+
+			let query = this.query
+			if (this.searchMode === SEARCH_MODE_TASKS) {
+				query = query.substr(1)
+			}
+
+			if (query === '' || this.selectedCmd !== null) {
 				return
 			}
 
@@ -218,7 +260,7 @@ export default {
 			}
 
 			this.taskSearchTimeout = setTimeout(() => {
-				this.taskService.getAll({}, {s: this.query})
+				this.taskService.getAll({}, {s: query})
 					.then(r => {
 						r = r.map(t => {
 							t.type = TYPE_TASK
@@ -230,6 +272,37 @@ export default {
 							return t
 						})
 						this.$set(this, 'foundTasks', r)
+					})
+			}, 150)
+		},
+		searchTeams() {
+			if (this.searchMode !== SEARCH_MODE_ALL && this.searchMode !== SEARCH_MODE_TEAMS) {
+				this.foundTeams = []
+				return
+			}
+
+			let query = this.query
+			if (this.searchMode === SEARCH_MODE_TEAMS) {
+				query = query.substr(1)
+			}
+
+			if (query === '' || this.selectedCmd !== null) {
+				return
+			}
+
+			if (this.teamSearchTimeout !== null) {
+				clearTimeout(this.teamSearchTimeout)
+				this.teamSearchTimeout = null
+			}
+
+			this.teamSearchTimeout = setTimeout(() => {
+				this.teamService.getAll({}, {s: query})
+					.then(r => {
+						r = r.map(t => {
+							t.title = t.name
+							return t
+						})
+						this.$set(this, 'foundTeams', r)
 					})
 			}, 150)
 		},
@@ -321,7 +394,6 @@ export default {
 				.then(r => {
 					this.$store.commit('namespaces/addNamespace', r)
 					this.success({message: 'The namespace was successfully created.'}, this)
-					this.$router.back()
 					this.closeQuickActions()
 				})
 				.catch((e) => {
