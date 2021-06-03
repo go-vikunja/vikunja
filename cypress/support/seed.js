@@ -8,14 +8,14 @@
  * @param table
  * @param data
  */
-export function seed(table, data = {}) {
-	if(data === null) {
+export function seed(table, data = {}, truncate = true) {
+	if (data === null) {
 		data = []
 	}
 
 	cy.request({
 		method: 'PATCH',
-		url: `${Cypress.env('API_URL')}/test/${table}`,
+		url: `${Cypress.env('API_URL')}/test/${table}?truncate=${truncate ? 'true' : 'false'}`,
 		headers: {
 			'Authorization': Cypress.env('TEST_SECRET'),
 		},

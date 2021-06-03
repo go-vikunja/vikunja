@@ -3,7 +3,6 @@ import {UserFactory} from '../../factories/user'
 import '../../support/authenticateUser'
 import {ListFactory} from '../../factories/list'
 import {NamespaceFactory} from '../../factories/namespace'
-import {TaskFactory} from '../../factories/task'
 
 describe('Namepaces', () => {
 	let namespaces
@@ -98,5 +97,49 @@ describe('Namepaces', () => {
 			.should('contain', 'Success')
 		cy.get('.namespace-container .menu.namespaces-lists')
 			.should('not.contain', newNamespaces[0].title)
+	})
+
+	it('Should not show archived lists & namespaces if the filter is not checked', () => {
+		const n = NamespaceFactory.create(1, {
+			id: 2,
+			is_archived: true,
+		}, false)
+		ListFactory.create(1, {
+			id: 2,
+			namespace_id: n[0].id,
+		}, false)
+
+		ListFactory.create(1, {
+			id: 3,
+			is_archived: true,
+		}, false)
+
+		// Initial
+		cy.visit('/namespaces')
+		cy.get('.namespaces-list .namespace')
+			.should('not.contain', 'Archived')
+
+		// Show archived
+		cy.get('.namespaces-list .fancycheckbox.show-archived-check label.check span')
+			.should('be.visible')
+			.click()
+		cy.get('.namespaces-list .fancycheckbox.show-archived-check input')
+			.should('be.checked')
+		cy.get('.namespaces-list .namespace')
+			.should('contain', 'Archived')
+
+		// Don't show archived
+		cy.get('.namespaces-list .fancycheckbox.show-archived-check label.check span')
+			.should('be.visible')
+			.click()
+		cy.get('.namespaces-list .fancycheckbox.show-archived-check input')
+			.should('not.be.checked')
+
+		// Second time visiting after unchecking
+		cy.visit('/namespaces')
+		cy.get('.namespaces-list .fancycheckbox.show-archived-check input')
+			.should('not.be.checked')
+		cy.get('.namespaces-list .namespace')
+			.should('not.contain', 'Archived')
 	})
 })

@@ -21,7 +21,7 @@ export class Factory {
 	 * @param override
 	 * @returns {[]}
 	 */
-	static create(count = 1, override = {}) {
+	static create(count = 1, override = {}, truncate = true) {
 		const data = []
 
 		for (let i = 1; i <= count; i++) {
@@ -38,7 +38,7 @@ export class Factory {
 			data.push(entry)
 		}
 
-		seed(this.table, data)
+		seed(this.table, data, truncate)
 
 		return data
 	}

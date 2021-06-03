@@ -108,7 +108,7 @@ export default {
 		}
 	},
 	created() {
-		this.showArchived = localStorage.getItem('showArchived') ?? false
+		this.showArchived = JSON.parse(localStorage.getItem('showArchived')) ?? false
 		this.loadBackgroundsForLists()
 	},
 	mounted() {
@@ -147,7 +147,7 @@ export default {
 				.catch(e => this.error(e, this))
 		},
 		saveShowArchivedState() {
-			localStorage.setItem('showArchived', this.showArchived)
+			localStorage.setItem('showArchived', JSON.stringify(this.showArchived))
 		},
 	},
 }
