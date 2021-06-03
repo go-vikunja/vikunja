@@ -72,6 +72,7 @@ type User struct {
 	DiscoverableByEmail          bool  `xorm:"bool default false index" json:"-"`
 	OverdueTasksRemindersEnabled bool  `xorm:"bool default true index" json:"-"`
 	DefaultListID                int64 `xorm:"bigint null index" json:"-"`
+	WeekStart                    int   `xorm:"null" json:"-"`
 
 	// A timestamp when this task was created. You cannot change this value.
 	Created time.Time `xorm:"created not null" json:"created"`
@@ -373,6 +374,7 @@ func UpdateUser(s *xorm.Session, user *User) (updatedUser *User, err error) {
 			"discoverable_by_email",
 			"overdue_tasks_reminders_enabled",
 			"default_list_id",
+			"week_start",
 		).
 		Update(user)
 	if err != nil {

@@ -8579,6 +8579,10 @@ var doc = `{
                 "overdue_tasks_reminders_enabled": {
                     "description": "If enabled, the user will get an email for their overdue tasks each morning.",
                     "type": "boolean"
+                },
+                "week_start": {
+                    "description": "The day when the week starts for this user. 0 = sunday, 1 = monday, etc.",
+                    "type": "integer"
                 }
             }
         },

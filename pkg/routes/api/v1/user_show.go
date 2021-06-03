@@ -69,6 +69,7 @@ func UserShow(c echo.Context) error {
 			DiscoverableByEmail:          u.DiscoverableByEmail,
 			OverdueTasksRemindersEnabled: u.OverdueTasksRemindersEnabled,
 			DefaultListID:                u.DefaultListID,
+			WeekStart:                    u.WeekStart,
 		},
 	}
 

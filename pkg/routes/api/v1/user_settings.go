@@ -48,6 +48,8 @@ type UserSettings struct {
 	// If a task is created without a specified list this value should be used. Applies
 	// to tasks made directly in API and from clients.
 	DefaultListID int64 `json:"default_list_id"`
+	// The day when the week starts for this user. 0 = sunday, 1 = monday, etc.
+	WeekStart int `json:"week_start"`
 }
 
 // GetUserAvatarProvider returns the currently set user avatar
@@ -174,6 +176,7 @@ func UpdateGeneralUserSettings(c echo.Context) error {
 	user.DiscoverableByName = us.DiscoverableByName
 	user.OverdueTasksRemindersEnabled = us.OverdueTasksRemindersEnabled
 	user.DefaultListID = us.DefaultListID
+	user.WeekStart = us.WeekStart
 
 	_, err = user2.UpdateUser(s, user)
 	if err != nil {
