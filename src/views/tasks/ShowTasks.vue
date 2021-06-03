@@ -81,14 +81,6 @@ export default {
 			cEndDate: null,
 
 			showNothingToDo: false,
-
-			flatPickerConfig: {
-				altFormat: 'j M Y H:i',
-				altInput: true,
-				dateFormat: 'Y-m-d H:i',
-				enableTime: true,
-				time_24hr: true,
-			},
 		}
 	},
 	props: {
@@ -116,6 +108,16 @@ export default {
 	},
 	computed: mapState({
 		userAuthenticated: state => state.auth.authenticated,
+		flatPickerConfig: state => ({
+			altFormat: 'j M Y H:i',
+			altInput: true,
+			dateFormat: 'Y-m-d H:i',
+			enableTime: true,
+			time_24hr: true,
+			locale: {
+				firstDayOfWeek: state.auth.settings.weekStart,
+			},
+		})
 	}),
 	methods: {
 		setDate() {

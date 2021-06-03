@@ -94,14 +94,6 @@ export default {
 			newTask: TaskModel,
 			isTaskEdit: false,
 			taskEditTask: TaskModel,
-			flatPickerConfig: {
-				altFormat: 'j M Y H:i',
-				altInput: true,
-				dateFormat: 'Y-m-d H:i',
-				enableTime: true,
-				onOpen: this.updateLastReminderDate,
-				onClose: this.addReminderDate,
-			},
 		}
 	},
 	components: {

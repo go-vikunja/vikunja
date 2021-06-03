@@ -205,6 +205,7 @@ import UserService from '@/services/user'
 import LabelService from '@/services/label'
 import ListService from '@/services/list'
 import NamespaceService from '@/services/namespace'
+import {mapState} from 'vuex'
 
 export default {
 	name: 'filters',
@@ -242,14 +243,6 @@ export default {
 				labels: '',
 				list_id: '',
 				namespace: '',
-			},
-			flatPickerConfig: {
-				altFormat: 'j M Y H:i',
-				altInput: true,
-				dateFormat: 'Y-m-d H:i',
-				enableTime: true,
-				time_24hr: true,
-				mode: 'range',
 			},
 
 			usersService: UserService,
@@ -291,6 +284,19 @@ export default {
 			this.prepareFilters()
 		},
 	},
+	computed: mapState({
+		flatPickerConfig: state => ({
+			altFormat: 'j M Y H:i',
+			altInput: true,
+			dateFormat: 'Y-m-d H:i',
+			enableTime: true,
+			time_24hr: true,
+			mode: 'range',
+			locale: {
+				firstDayOfWeek: state.auth.settings.weekStart,
+			},
+		})
+	}),
 	methods: {
 		change() {
 			this.$emit('input', this.params)

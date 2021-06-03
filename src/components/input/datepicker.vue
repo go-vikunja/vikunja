@@ -118,6 +118,7 @@ import {calculateDayInterval} from '@/helpers/time/calculateDayInterval'
 import {calculateNearestHours} from '@/helpers/time/calculateNearestHours'
 import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
 import {createDateFromString} from '@/helpers/time/createDateFromString'
+import {mapState} from 'vuex'
 
 export default {
 	name: 'datepicker',
@@ -127,14 +128,6 @@ export default {
 			show: false,
 			changed: false,
 
-			flatPickerConfig: {
-				altFormat: 'j M Y H:i',
-				altInput: true,
-				dateFormat: 'Y-m-d H:i',
-				enableTime: true,
-				time_24hr: true,
-				inline: true,
-			},
 			// Since flatpickr dates are strings, we need to convert them to native date objects.
 			// To make that work, we need a separate variable since flatpickr does not have a change event.
 			flatPickrDate: null,
@@ -172,6 +165,19 @@ export default {
 			this.updateData()
 		},
 	},
+	computed: mapState({
+		flatPickerConfig: state => ({
+			altFormat: 'j M Y H:i',
+			altInput: true,
+			dateFormat: 'Y-m-d H:i',
+			enableTime: true,
+			time_24hr: true,
+			inline: true,
+			locale: {
+				firstDayOfWeek: state.auth.settings.weekStart,
+			},
+		})
+	}),
 	methods: {
 		setDateValue(newVal) {
 			if(newVal === null) {

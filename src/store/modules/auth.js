@@ -2,6 +2,13 @@ import {HTTPFactory} from '@/http-common'
 import {ERROR_MESSAGE, LOADING} from '../mutation-types'
 import UserModel from '../../models/user'
 
+const defaultSettings = settings => {
+	if (typeof settings.weekStart === 'undefined' || settings.weekStart === '') {
+		settings.weekStart = 0
+	}
+	return settings
+}
+
 export default {
 	namespaced: true,
 	state: () => ({
@@ -20,12 +27,12 @@ export default {
 				state.avatarUrl = info.getAvatarUrl()
 
 				if (info.settings) {
-					state.settings = info.settings
+					state.settings = defaultSettings(info.settings)
 				}
 			}
 		},
 		setUserSettings(state, settings) {
-			state.settings = settings
+			state.settings = defaultSettings(settings)
 			const info = state.info !== null ? state.info : {}
 			info.name = settings.name
 			state.info = info

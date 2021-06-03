@@ -40,6 +40,7 @@
 <script>
 import TaskService from '../../../services/task'
 import flatPickr from 'vue-flatpickr-component'
+import {mapState} from 'vuex'
 
 export default {
 	name: 'defer-task',
@@ -51,15 +52,6 @@ export default {
 			dueDate: null,
 			lastValue: null,
 			changeInterval: null,
-
-			flatPickerConfig: {
-				altFormat: 'j M Y H:i',
-				altInput: true,
-				dateFormat: 'Y-m-d H:i',
-				enableTime: true,
-				time_24hr: true,
-				inline: true,
-			},
 		}
 	},
 	components: {
@@ -102,6 +94,19 @@ export default {
 			this.lastValue = this.dueDate
 		},
 	},
+	computed: mapState({
+		flatPickerConfig: state => ({
+			altFormat: 'j M Y H:i',
+			altInput: true,
+			dateFormat: 'Y-m-d H:i',
+			enableTime: true,
+			time_24hr: true,
+			inline: true,
+			locale: {
+				firstDayOfWeek: state.auth.settings.weekStart,
+			},
+		})
+	}),
 	methods: {
 		deferDays(days) {
 			this.dueDate = new Date(this.dueDate)

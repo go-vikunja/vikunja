@@ -66,6 +66,7 @@ import GanttChart from '../../../components/tasks/gantt-component'
 import flatPickr from 'vue-flatpickr-component'
 import Fancycheckbox from '../../../components/input/fancycheckbox'
 import {saveListView} from '@/helpers/saveListView'
+import {mapState} from 'vuex'
 
 export default {
 	name: 'Gantt',
@@ -85,14 +86,19 @@ export default {
 			dayWidth: 35,
 			dateFrom: null,
 			dateTo: null,
-			flatPickerConfig: {
-				altFormat: 'j M Y',
-				altInput: true,
-				dateFormat: 'Y-m-d',
-				enableTime: false,
-			},
 		}
 	},
+	computed: mapState({
+		flatPickerConfig: state => ({
+			altFormat: 'j M Y',
+			altInput: true,
+			dateFormat: 'Y-m-d',
+			enableTime: false,
+			locale: {
+				firstDayOfWeek: state.auth.settings.weekStart,
+			},
+		})
+	}),
 	beforeMount() {
 		this.dateFrom = new Date((new Date()).setDate((new Date()).getDate() - 15))
 		this.dateTo = new Date((new Date()).setDate((new Date()).getDate() + 30))

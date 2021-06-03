@@ -132,6 +132,19 @@
 					Play a sound when marking tasks as done
 				</label>
 			</div>
+			<div class="field">
+				<label class="is-flex is-align-items-center">
+					<span>
+						Week starts on
+					</span>
+					<div class="select ml-2">
+						<select v-model.number="settings.weekStart">
+							<option value="0">Sunday</option>
+							<option value="1">Monday</option>
+						</select>
+					</div>
+				</label>
+			</div>
 
 			<x-button
 				:loading="userSettingsService.loading"
