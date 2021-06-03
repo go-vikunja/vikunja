@@ -26,7 +26,7 @@
 					@keyup="search"
 					@keyup.enter.exact.prevent="() => createOrSelectOnEnter()"
 					:placeholder="placeholder"
-					@keydown.down.exact.prevent="() => preSelect(0, true)"
+					@keydown.down.exact.prevent="() => preSelect(0)"
 					ref="searchInput"
 					@focus="() => showSearchResults = true"
 				/>
@@ -35,27 +35,6 @@
 
 		<transition name="fade">
 			<div class="search-results" :class="{'search-results-inline': inline}" v-if="searchResultsVisible">
-				<button
-					v-if="creatableAvailable"
-					class="is-fullwidth"
-					ref="result--1"
-					@keydown.up.prevent="() => preSelect(-2)"
-					@keydown.down.prevent="() => preSelect(0)"
-					@keyup.enter.prevent="create"
-					@click.prevent.stop="create"
-				>
-					<span>
-						<slot name="searchResult" :option="query">
-							<span class="search-result">
-								{{ query }}
-							</span>
-						</slot>
-					</span>
-					<span class="hint-text">
-						{{ createPlaceholder }}
-					</span>
-				</button>
-
 				<button
 					class="is-fullwidth"
 					v-for="(data, key) in filteredSearchResults"
@@ -72,6 +51,27 @@
 					</span>
 					<span class="hint-text">
 						{{ selectPlaceholder }}
+					</span>
+				</button>
+
+				<button
+					v-if="creatableAvailable"
+					class="is-fullwidth"
+					:ref="`result-${filteredSearchResults.length}`"
+					@keydown.up.prevent="() => preSelect(filteredSearchResults.length - 1)"
+					@keydown.down.prevent="() => preSelect(filteredSearchResults.length + 1)"
+					@keyup.enter.prevent="create"
+					@click.prevent.stop="create"
+				>
+					<span>
+						<slot name="searchResult" :option="query">
+							<span class="search-result">
+								{{ query }}
+							</span>
+						</slot>
+					</span>
+					<span class="hint-text">
+						{{ createPlaceholder }}
 					</span>
 				</button>
 			</div>
@@ -202,14 +202,14 @@ export default {
 	},
 	computed: {
 		searchResultsVisible() {
-			if(this.query === '' && !this.showEmpty) {
+			if (this.query === '' && !this.showEmpty) {
 				return false
 			}
 
 			return this.showSearchResults && (
-					(this.filteredSearchResults.length > 0) ||
-					(this.creatable && this.query !== '')
-				)
+				(this.filteredSearchResults.length > 0) ||
+				(this.creatable && this.query !== '')
+			)
 		},
 		creatableAvailable() {
 			return this.creatable && this.query !== '' && !this.filteredSearchResults.some(elem => {
@@ -295,13 +295,8 @@ export default {
 
 			this.query = this.label !== '' ? object[this.label] : object
 		},
-		preSelect(index, lookForCreatable = false) {
-
-			if (index === 0 && this.creatable && lookForCreatable) {
-				index = -1
-			}
-
-			if (index < -1) {
+		preSelect(index) {
+			if (index < 0) {
 				this.$refs.searchInput.focus()
 				return
 			}

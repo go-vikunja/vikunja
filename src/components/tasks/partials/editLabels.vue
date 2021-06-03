@@ -11,6 +11,7 @@
 		@create="createAndAddLabel"
 		create-placeholder="Add this as new label"
 		v-model="labels"
+		:search-delay="10"
 	>
 		<template v-slot:tag="props">
 			<span
