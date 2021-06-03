@@ -129,8 +129,7 @@ export default class AbstractService {
 	 * @param route
 	 * @returns object
 	 */
-	getRouteReplacements(route) {
-		let parameters = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {}
+	getRouteReplacements(route, parameters = {}) {
 		let replace$$1 = {}
 		let pattern = this.getRouteParameterPattern()
 		pattern = new RegExp(pattern instanceof RegExp ? pattern.source : pattern, 'g')

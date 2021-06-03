@@ -31,7 +31,7 @@
 						@focusout="() => saveBucketTitle(bucket.id)"
 						@keydown.enter.prevent.stop="() => saveBucketTitle(bucket.id)"
 						class="title input"
-						contenteditable="true"
+						:contenteditable="canWrite"
 						spellcheck="false">{{ bucket.title }}</h2>
 					<span
 						:class="{'is-max': bucket.tasks.length >= bucket.limit}"

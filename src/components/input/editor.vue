@@ -34,11 +34,13 @@
 
 		<p class="has-text-centered has-text-grey is-italic" v-if="isPreviewActive && text === '' && emptyText !== ''">
 			{{ emptyText }}
-			<a @click="toggleEdit">Edit</a>.
+			<template v-if="isEditEnabled">
+				<a @click="toggleEdit">Edit</a>.
+			</template>
 		</p>
 
 		<ul class="actions">
-			<template v-if="hasEditBottom">
+			<template v-if="hasEditBottom && isEditEnabled">
 				<li>
 					<a v-if="!isEditActive" @click="toggleEdit">Edit</a>
 					<a v-else @click="toggleEdit">Done</a>

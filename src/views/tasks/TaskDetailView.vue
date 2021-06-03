@@ -509,6 +509,9 @@ export default {
 		this.loadTask()
 	},
 	computed: {
+		currentList() {
+			return this.$store.state[CURRENT_LIST]
+		},
 		parent() {
 			if (!this.task.listId) {
 				return {
@@ -522,11 +525,11 @@ export default {
 			}
 
 			const list = this.$store.getters['namespaces/getListAndNamespaceById'](this.task.listId)
-			this.$store.commit(CURRENT_LIST, list.list)
+			this.$store.commit(CURRENT_LIST, list !== null ? list.list : this.currentList)
 			return list
 		},
 		canWrite() {
-			return this.task && this.task.maxRight && this.task.maxRight > rights.READ
+			return typeof this.task !== 'undefined' && typeof this.task.maxRight !== 'undefined' && this.task.maxRight > rights.READ
 		},
 		updatedSince() {
 			return this.formatDateSince(this.task.updated)
