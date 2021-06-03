@@ -58,7 +58,13 @@ func HandleTesting(c echo.Context) error {
 		})
 	}
 
-	err = db.RestoreAndTruncate(table, content)
+	truncate := c.QueryParam("truncate")
+	if truncate == "true" || truncate == "" {
+		err = db.RestoreAndTruncate(table, content)
+	} else {
+		err = db.Restore(table, content)
+	}
+
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
 			"error":   true,

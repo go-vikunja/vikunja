@@ -47,6 +47,9 @@ func Dump() (data map[string][]byte, err error) {
 
 // Restore restores a table with all its entries
 func Restore(table string, contents []map[string]interface{}) (err error) {
+	if _, err := x.IsTableExist(table); err != nil {
+		return err
+	}
 
 	for _, content := range contents {
 		if _, err := x.Table(table).Insert(content); err != nil {
