@@ -46,7 +46,7 @@
     "@vue/cli-service": "4.5.13",
     "axios": "0.21.1",
     "babel-eslint": "10.1.0",
-    "cypress": "7.4.0",
+    "cypress": "7.5.0",
     "cypress-file-upload": "5.0.7",
     "eslint": "7.28.0",
     "eslint-plugin-vue": "7.10.0",
