@@ -46,7 +46,18 @@ func GetAllProviders() (providers []*Provider, err error) {
 		rawProvider := rawProviders.([]interface{})
 
 		for _, p := range rawProvider {
-			pi := p.(map[interface{}]interface{})
+			var pi map[string]interface{}
+			var is bool
+			pi, is = p.(map[string]interface{})
+			// JSON config is a map[string]interface{}, other providers are not. Under the hood they are all strings so
+			// it is save to cast.
+			if !is {
+				pis := p.(map[interface{}]interface{})
+				pi = make(map[string]interface{}, len(pis))
+				for i, s := range pis {
+					pi[i.(string)] = s
+				}
+			}
 
 			provider, err := getProviderFromMap(pi)
 			if err != nil {
@@ -99,7 +110,7 @@ func getKeyFromName(name string) string {
 	return reg.ReplaceAllString(strings.ToLower(name), "")
 }
 
-func getProviderFromMap(pi map[interface{}]interface{}) (provider *Provider, err error) {
+func getProviderFromMap(pi map[string]interface{}) (provider *Provider, err error) {
 	name, is := pi["name"].(string)
 	if !is {
 		return nil, nil
