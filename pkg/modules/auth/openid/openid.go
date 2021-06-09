@@ -46,13 +46,14 @@ type Callback struct {
 
 // Provider is the structure of an OpenID Connect provider
 type Provider struct {
-	Name           string `json:"name"`
-	Key            string `json:"key"`
-	AuthURL        string `json:"auth_url"`
-	ClientID       string `json:"client_id"`
-	ClientSecret   string `json:"-"`
-	openIDProvider *oidc.Provider
-	Oauth2Config   *oauth2.Config `json:"-"`
+	Name            string `json:"name"`
+	Key             string `json:"key"`
+	OriginalAuthURL string `json:"-"`
+	AuthURL         string `json:"auth_url"`
+	ClientID        string `json:"client_id"`
+	ClientSecret    string `json:"-"`
+	openIDProvider  *oidc.Provider
+	Oauth2Config    *oauth2.Config `json:"-"`
 }
 
 type claims struct {
@@ -67,7 +68,7 @@ func init() {
 }
 
 func (p *Provider) setOicdProvider() (err error) {
-	p.openIDProvider, err = oidc.NewProvider(context.Background(), p.AuthURL)
+	p.openIDProvider, err = oidc.NewProvider(context.Background(), p.OriginalAuthURL)
 	return err
 }
 

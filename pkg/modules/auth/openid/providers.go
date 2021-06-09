@@ -119,10 +119,11 @@ func getProviderFromMap(pi map[string]interface{}) (provider *Provider, err erro
 	k := getKeyFromName(name)
 
 	provider = &Provider{
-		Name:         pi["name"].(string),
-		Key:          k,
-		AuthURL:      pi["authurl"].(string),
-		ClientSecret: pi["clientsecret"].(string),
+		Name:            pi["name"].(string),
+		Key:             k,
+		AuthURL:         pi["authurl"].(string),
+		OriginalAuthURL: pi["authurl"].(string),
+		ClientSecret:    pi["clientsecret"].(string),
 	}
 
 	cl, is := pi["clientid"].(int)
