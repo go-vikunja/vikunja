@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 All releases can be found on https://code.vikunja.io/api/releases.
 
+## [0.17.1] - 2021-06-09
+
+### Fixed 
+
+* Fix parsing openid config when using a json config file
+
 ## [0.17.0] - 2021-05-14
 
 ### Added
