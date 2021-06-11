@@ -21,7 +21,9 @@ import (
 
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
+
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 )
 
@@ -47,8 +49,8 @@ var registry *prometheus.Registry
 func GetRegistry() *prometheus.Registry {
 	if registry == nil {
 		registry = prometheus.NewRegistry()
-		registry.MustRegister(prometheus.NewProcessCollector(prometheus.ProcessCollectorOpts{}))
-		registry.MustRegister(prometheus.NewGoCollector())
+		registry.MustRegister(collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}))
+		registry.MustRegister(collectors.NewGoCollector())
 	}
 
 	return registry
