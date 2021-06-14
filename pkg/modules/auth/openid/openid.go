@@ -32,7 +32,7 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/user"
-	"github.com/coreos/go-oidc"
+	"github.com/coreos/go-oidc/v3/oidc"
 	petname "github.com/dustinkirkland/golang-petname"
 	"github.com/labstack/echo/v4"
 	"golang.org/x/oauth2"
