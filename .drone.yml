@@ -150,3 +150,8 @@ steps:
       - mc cp ./dist/*.dmg scw-fr-par/vikunja-releases/desktop/$VERSION/
       - mc cp ./dist/*.dmg.blockmap scw-fr-par/vikunja-releases/desktop/$VERSION/
 
+---
+kind: signature
+hmac: 2130f9579ba2f3818fc2b9fa4b3ea285122e1851989b61d456e0456643d43818
+
+...
