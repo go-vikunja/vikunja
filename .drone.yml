@@ -144,9 +144,10 @@ steps:
       - sed -i '' 's/\\/api\\/v1//g' frontend/index.html
       # Make sure that the -unstable suffix is added to release files
       - sed -i '' "s/\$${version}/$$VERSION/g" package.json
+      - brew install yarn
       - yarn install
       - yarn dist --mac
-      - brew install minio/stable/mc
+        #      - brew install minio/stable/mc
       - mc config host add scw-fr-par https://s3.fr-par.scw.cloud $ACCESS_KEY $SECRET_KEY --api S3v4
       - mc cp ./dist/* scw-fr-par/vikunja-releases/desktop/$VERSION/
 
