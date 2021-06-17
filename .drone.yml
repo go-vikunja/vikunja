@@ -1,3 +1,4 @@
+---
 kind: pipeline
 type: docker
 name: release
@@ -140,9 +141,9 @@ steps:
       # TODO: Move to a yarn script
       - wget https://dl.vikunja.io/frontend/vikunja-frontend-$$VERSION.zip
       - unzip vikunja-frontend-$$VERSION.zip -d frontend
-      - sed -i 's/\\/api\\/v1//g' frontend/index.html
+      - sed -i '' 's/\\/api\\/v1//g' frontend/index.html
       # Make sure that the -unstable suffix is added to release files
-      - sed -i "s/\$${version}/$$VERSION/g" package.json
+      - sed -i '' "s/\$${version}/$$VERSION/g" package.json
       - yarn install
       - yarn dist --mac
       - brew install minio/stable/mc
