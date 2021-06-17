@@ -147,5 +147,6 @@ steps:
       - yarn install
       - yarn dist --mac
       - mc config host add scw-fr-par https://s3.fr-par.scw.cloud $ACCESS_KEY $SECRET_KEY --api S3v4
-      - mc cp ./dist/* scw-fr-par/vikunja-releases/desktop/$VERSION/
+      - mc cp ./dist/*.dmg scw-fr-par/vikunja-releases/desktop/$VERSION/
+      - mc cp ./dist/*.dmg.blockmap scw-fr-par/vikunja-releases/desktop/$VERSION/
 
