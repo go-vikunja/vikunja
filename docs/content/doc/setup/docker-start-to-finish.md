@@ -36,6 +36,8 @@ services:
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     environment:
       MYSQL_ROOT_PASSWORD: supersecret
+      MYSQL_USER: vikunja
+      MYSQL_PASSWORD: secret
       MYSQL_DATABASE: vikunja
     volumes:
       - ./db:/var/lib/mysql
@@ -44,9 +46,9 @@ services:
     image: vikunja/api
     environment:
       VIKUNJA_DATABASE_HOST: db
-      VIKUNJA_DATABASE_PASSWORD: supersecret
+      VIKUNJA_DATABASE_PASSWORD: secret
       VIKUNJA_DATABASE_TYPE: mysql
-      VIKUNJA_DATABASE_USER: root
+      VIKUNJA_DATABASE_USER: vikunja
       VIKUNJA_DATABASE_DATABASE: vikunja
     volumes: 
       - ./files:/app/vikunja/files
