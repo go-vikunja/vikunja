@@ -361,12 +361,12 @@ export default {
 			})
 			this.taskService.create(newTask)
 				.then(r => {
-					this.success({message: 'The task was successfully created.'}, this)
+					this.success({message: 'The task was successfully created.'})
 					this.$router.push({name: 'task.detail', params: {id: r.id}})
 					this.closeQuickActions()
 				})
 				.catch((e) => {
-					this.error(e, this)
+					this.error(e)
 				})
 		},
 		newList() {
@@ -380,12 +380,12 @@ export default {
 			})
 			this.listService.create(newList)
 				.then(r => {
-					this.success({message: 'The list was successfully created.'}, this)
+					this.success({message: 'The list was successfully created.'})
 					this.$router.push({name: 'list.index', params: {listId: r.id}})
 					this.closeQuickActions()
 				})
 				.catch((e) => {
-					this.error(e, this)
+					this.error(e)
 				})
 		},
 		newNamespace() {
@@ -393,11 +393,11 @@ export default {
 			this.namespaceService.create(newNamespace)
 				.then(r => {
 					this.$store.commit('namespaces/addNamespace', r)
-					this.success({message: 'The namespace was successfully created.'}, this)
+					this.success({message: 'The namespace was successfully created.'})
 					this.closeQuickActions()
 				})
 				.catch((e) => {
-					this.error(e, this)
+					this.error(e)
 				})
 		},
 		newTeam() {
@@ -408,11 +408,11 @@ export default {
 						name: 'teams.edit',
 						params: {id: r.id},
 					})
-					this.success({message: 'The team was successfully created.'}, this)
+					this.success({message: 'The team was successfully created.'})
 					this.closeQuickActions()
 				})
 				.catch((e) => {
-					this.error(e, this)
+					this.error(e)
 				})
 		},
 		select(parentIndex, index) {

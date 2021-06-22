@@ -249,7 +249,7 @@ export default {
 					this.setTitle(`Edit Team ${this.team.name}`)
 				})
 				.catch((e) => {
-					this.error(e, this)
+					this.error(e)
 				})
 		},
 		save() {
@@ -263,44 +263,35 @@ export default {
 				.update(this.team)
 				.then((response) => {
 					this.team = response
-					this.success(
-						{message: 'The team was successfully updated.'},
-						this
-					)
+					this.success({message: 'The team was successfully updated.'})
 				})
 				.catch((e) => {
-					this.error(e, this)
+					this.error(e)
 				})
 		},
 		deleteTeam() {
 			this.teamService
 				.delete(this.team)
 				.then(() => {
-					this.success(
-						{message: 'The team was successfully deleted.'},
-						this
-					)
+					this.success({message: 'The team was successfully deleted.'})
 					router.push({name: 'teams.index'})
 				})
 				.catch((e) => {
-					this.error(e, this)
+					this.error(e)
 				})
 		},
 		deleteUser() {
 			this.teamMemberService
 				.delete(this.member)
 				.then(() => {
-					this.success(
-						{
-							message:
-								'The user was successfully deleted from the team.',
-						},
-						this
-					)
+					this.success({
+						message:
+							'The user was successfully deleted from the team.',
+					})
 					this.loadTeam()
 				})
 				.catch((e) => {
-					this.error(e, this)
+					this.error(e)
 				})
 				.finally(() => {
 					this.showUserDeleteModal = false
@@ -315,13 +306,10 @@ export default {
 				.create(newMember)
 				.then(() => {
 					this.loadTeam()
-					this.success(
-						{message: 'The team member was successfully added.'},
-						this
-					)
+					this.success({message: 'The team member was successfully added.'})
 				})
 				.catch((e) => {
-					this.error(e, this)
+					this.error(e)
 				})
 		},
 		toggleUserType(member) {
@@ -336,18 +324,15 @@ export default {
 							break
 						}
 					}
-					this.success(
-						{
-							message:
-								'The team member was successfully made ' +
-								(member.admin ? 'admin' : 'member') +
-								'.',
-						},
-						this
-					)
+					this.success({
+						message:
+							'The team member was successfully made ' +
+							(member.admin ? 'admin' : 'member') +
+							'.',
+					})
 				})
 				.catch((e) => {
-					this.error(e, this)
+					this.error(e)
 				})
 		},
 		findUser(query) {
@@ -362,7 +347,7 @@ export default {
 					this.$set(this, 'foundUsers', response)
 				})
 				.catch((e) => {
-					this.error(e, this)
+					this.error(e)
 				})
 		},
 		clearAll() {

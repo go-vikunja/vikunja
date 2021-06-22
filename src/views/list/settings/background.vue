@@ -130,7 +130,7 @@ export default {
 						})
 					})
 					.catch(e => {
-						this.error(e, this)
+						this.error(e)
 					})
 			}, 300)
 		},
@@ -144,10 +144,10 @@ export default {
 				.then(l => {
 					this.$store.commit(CURRENT_LIST, l)
 					this.$store.commit('namespaces/setListInNamespaceById', l)
-					this.success({message: 'The background has been set successfully!'}, this)
+					this.success({message: 'The background has been set successfully!'})
 				})
 				.catch(e => {
-					this.error(e, this)
+					this.error(e)
 				})
 		},
 		uploadBackground() {
@@ -159,10 +159,10 @@ export default {
 				.then(l => {
 					this.$store.commit(CURRENT_LIST, l)
 					this.$store.commit('namespaces/setListInNamespaceById', l)
-					this.success({message: 'The background has been set successfully!'}, this)
+					this.success({message: 'The background has been set successfully!'})
 				})
 				.catch(e => {
-					this.error(e, this)
+					this.error(e)
 				})
 		},
 		removeBackground() {
@@ -170,11 +170,11 @@ export default {
 				.then(l => {
 					this.$store.commit(CURRENT_LIST, l)
 					this.$store.commit('namespaces/setListInNamespaceById', l)
-					this.success({message: 'The background has been removed successfully!'}, this)
+					this.success({message: 'The background has been removed successfully!'})
 					this.$router.back()
 				})
 				.catch(e => {
-					this.error(e, this)
+					this.error(e)
 				})
 		},
 	},

@@ -236,7 +236,7 @@ export default {
 					this.makeActions()
 				})
 				.catch((e) => {
-					this.error(e, this)
+					this.error(e)
 				})
 		},
 		addComment() {
@@ -258,13 +258,10 @@ export default {
 				.then((r) => {
 					this.comments.push(r)
 					this.newComment.comment = ''
-					this.success(
-						{message: 'The comment was added successfully.'},
-						this
-					)
+					this.success({message: 'The comment was added successfully.'})
 				})
 				.catch((e) => {
-					this.error(e, this)
+					this.error(e)
 				})
 				.finally(() => {
 					this.creating = false
@@ -300,7 +297,7 @@ export default {
 					}, 2000)
 				})
 				.catch((e) => {
-					this.error(e, this)
+					this.error(e)
 				})
 				.finally(() => {
 					this.isCommentEdit = false
@@ -318,7 +315,7 @@ export default {
 					}
 				})
 				.catch((e) => {
-					this.error(e, this)
+					this.error(e)
 				})
 				.finally(() => {
 					this.showDeleteModal = false

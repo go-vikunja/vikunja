@@ -43,7 +43,7 @@ export default {
 					this.$set(this, 'namespaces', response)
 				})
 				.catch(e => {
-					this.error(e, this)
+					this.error(e)
 				})
 		},
 		clearAll() {

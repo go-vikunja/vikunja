@@ -90,7 +90,7 @@ export default {
 					}, 2000)
 				})
 				.catch(e => {
-					this.error(e, this)
+					this.error(e)
 				})
 				.finally(() => {
 					this.saving = false

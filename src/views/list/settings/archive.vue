@@ -38,10 +38,10 @@ export default {
 				.then(r => {
 					this.$store.commit('currentList', r)
 					this.$store.commit('namespaces/setListInNamespaceById', r)
-					this.success({message: 'The list was successfully archived.'}, this)
+					this.success({message: 'The list was successfully archived.'})
 				})
 				.catch(e => {
-					this.error(e, this)
+					this.error(e)
 				})
 				.finally(() => {
 					this.$router.back()

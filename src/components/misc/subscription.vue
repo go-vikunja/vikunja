@@ -96,10 +96,10 @@ export default {
 			this.subscriptionService.create(subscription)
 				.then(() => {
 					this.$emit('change', subscription)
-					this.success({message: `You are now subscribed to this ${this.entity}`}, this)
+					this.success({message: `You are now subscribed to this ${this.entity}`})
 				})
 				.catch(e => {
-					this.error(e, this)
+					this.error(e)
 				})
 		},
 		unsubscribe() {
@@ -110,10 +110,10 @@ export default {
 			this.subscriptionService.delete(subscription)
 				.then(() => {
 					this.$emit('change', null)
-					this.success({message: `You are now unsubscribed to this ${this.entity}`}, this)
+					this.success({message: `You are now unsubscribed to this ${this.entity}`})
 				})
 				.catch(e => {
-					this.error(e, this)
+					this.error(e)
 				})
 		}
 	},

@@ -31,7 +31,7 @@ export default {
 					}
 				})
 				.catch(e => {
-					this.error(e, this)
+					this.error(e)
 				})
 		},
 	},

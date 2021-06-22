@@ -175,20 +175,16 @@ export default {
 						}
 						this.task = t
 						this.$emit('task-updated', t)
-						this.success(
-							{message: 'The task was successfully ' + (this.task.done ? '' : 'un-') + 'marked as done.'},
-							this,
-							[{
-								title: 'Undo',
-								callback: () => {
-									this.task.done = !this.task.done
-									this.markAsDone(!checked)
-								}
-							}],
-						)
+						this.success({message: 'The task was successfully ' + (this.task.done ? '' : 'un-') + 'marked as done.'}, [{
+							title: 'Undo',
+							callback: () => {
+								this.task.done = !this.task.done
+								this.markAsDone(!checked)
+							}
+						}])
 					})
 					.catch(e => {
-						this.error(e, this)
+						this.error(e)
 					})
 			}
 
@@ -207,7 +203,7 @@ export default {
 					this.$store.dispatch('namespaces/loadNamespacesIfFavoritesDontExist')
 				})
 				.catch(e => {
-					this.error(e, this)
+					this.error(e)
 				})
 		},
 		hideDeferDueDatePopup(e) {

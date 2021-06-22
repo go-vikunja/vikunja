@@ -31,11 +31,11 @@ export default {
 			this.listService.delete(list)
 				.then(() => {
 					this.$store.commit('namespaces/removeListFromNamespaceById', list)
-					this.success({message: 'The list was successfully deleted.'}, this)
+					this.success({message: 'The list was successfully deleted.'})
 					this.$router.push({name: 'home'})
 				})
 				.catch(e => {
-					this.error(e, this)
+					this.error(e)
 				})
 		},
 	},

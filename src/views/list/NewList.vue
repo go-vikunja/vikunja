@@ -69,17 +69,14 @@ export default {
 			this.$store
 				.dispatch('lists/createList', this.list)
 				.then((r) => {
-					this.success(
-						{ message: 'The list was successfully created.' },
-						this
-					)
+					this.success({message: 'The list was successfully created.'})
 					this.$router.push({
 						name: 'list.index',
 						params: { listId: r.id },
 					})
 				})
 				.catch((e) => {
-					this.error(e, this)
+					this.error(e)
 				})
 		},
 	},

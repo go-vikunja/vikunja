@@ -150,10 +150,10 @@ export default {
 				.then((r) => {
 					this.$set(this, 'taskEditTask', r)
 					this.initTaskFields()
-					this.success({message: 'The task has been saved successfully.'}, this)
+					this.success({message: 'The task has been saved successfully.'})
 				})
 				.catch((e) => {
-					this.error(e, this)
+					this.error(e)
 				})
 		},
 	},

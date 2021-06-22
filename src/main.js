@@ -215,8 +215,12 @@ Vue.mixin({
 		},
 		formatDate: date => formatDate(date, 'PPPPpppp'),
 		formatDateShort: date => formatDate(date, 'PPpp'),
-		error: (e, context, actions = []) => message.error(e, context, actions),
-		success: (s, context, actions = []) => message.success(s, context, actions),
+		error(e, actions = []) {
+			return message.error(e, this, actions)
+		},
+		success(s, actions = []) {
+			return message.success(s, this, actions)
+		},
 		colorIsDark: colorIsDark,
 		setTitle: setTitle,
 	},

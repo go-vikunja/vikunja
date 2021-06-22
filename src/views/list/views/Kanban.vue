@@ -387,14 +387,14 @@ export default {
 									bucketId: b.id,
 								})
 									.catch(e => {
-										this.error(e, this)
+										this.error(e)
 									})
 							}
 						})
 					})
 				})
 				.catch(e => {
-					this.error(e, this)
+					this.error(e)
 				})
 		},
 		onDrop(bucketId, dropResult) {
@@ -449,7 +449,7 @@ export default {
 
 				this.$store.dispatch('tasks/update', task)
 					.catch(e => {
-						this.error(e, this)
+						this.error(e)
 					})
 					.finally(() => {
 						this.$set(this.taskUpdating, task.id, false)
@@ -468,7 +468,7 @@ export default {
 					}
 				})
 				.catch(e => {
-					this.error(e, this)
+					this.error(e)
 				})
 				.finally(() => {
 					this.$set(this.taskUpdating, task.id, false)
@@ -516,7 +516,7 @@ export default {
 					this.$store.commit('kanban/addTaskToBucket', r)
 				})
 				.catch(e => {
-					this.error(e, this)
+					this.error(e)
 				})
 				.finally(() => {
 					if (!this.$refs[`tasks-container${task.bucketId}`][0]) {
@@ -541,7 +541,7 @@ export default {
 					this.showNewBucketInput = false
 				})
 				.catch(e => {
-					this.error(e, this)
+					this.error(e)
 				})
 		},
 		deleteBucketModal(bucketId) {
@@ -560,10 +560,10 @@ export default {
 
 			this.$store.dispatch('kanban/deleteBucket', {bucket: bucket, params: this.params})
 				.then(() => {
-					this.success({message: 'The bucket has been deleted successfully.'}, this)
+					this.success({message: 'The bucket has been deleted successfully.'})
 				})
 				.catch(e => {
-					this.error(e, this)
+					this.error(e)
 				})
 				.finally(() => {
 					this.showBucketDeleteModal = false
@@ -590,20 +590,20 @@ export default {
 				.then(r => {
 					realBucket.title = r.title
 					bucketTitleElement.blur()
-					this.success({message: 'The bucket title has been saved successfully.'}, this)
+					this.success({message: 'The bucket title has been saved successfully.'})
 				})
 				.catch(e => {
-					this.error(e, this)
+					this.error(e)
 				})
 		},
 		updateBucket(bucket) {
 			bucket.limit = parseInt(bucket.limit)
 			this.$store.dispatch('kanban/updateBucket', bucket)
 				.then(() => {
-					this.success({message: 'The bucket limit been saved successfully.'}, this)
+					this.success({message: 'The bucket limit been saved successfully.'})
 				})
 				.catch(e => {
-					this.error(e, this)
+					this.error(e)
 				})
 		},
 		setBucketLimit(bucket) {
@@ -622,10 +622,10 @@ export default {
 			bucket.isDoneBucket = !bucket.isDoneBucket
 			this.$store.dispatch('kanban/updateBucket', bucket)
 				.then(() => {
-					this.success({message: 'The done bucket has been saved successfully.'}, this)
+					this.success({message: 'The done bucket has been saved successfully.'})
 				})
 				.catch(e => {
-					this.error(e, this)
+					this.error(e)
 					bucket.isDoneBucket = !bucket.isDoneBucket
 				})
 		},

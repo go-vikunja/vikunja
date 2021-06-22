@@ -104,11 +104,11 @@ export default {
 				.then(() => {
 					this.$emit('input', this.labels)
 					if (showNotification) {
-						this.success({message: 'The label has been added successfully.'}, this)
+						this.success({message: 'The label has been added successfully.'})
 					}
 				})
 				.catch(e => {
-					this.error(e, this)
+					this.error(e)
 				})
 		},
 		removeLabel(label) {
@@ -121,10 +121,10 @@ export default {
 						}
 					}
 					this.$emit('input', this.labels)
-					this.success({message: 'The label has been removed successfully.'}, this)
+					this.success({message: 'The label has been removed successfully.'})
 				})
 				.catch(e => {
-					this.error(e, this)
+					this.error(e)
 				})
 		},
 		createAndAddLabel(title) {
@@ -133,10 +133,10 @@ export default {
 				.then(r => {
 					this.addLabel(r, false)
 					this.labels.push(r)
-					this.success({message: 'The label has been created successfully.'}, this)
+					this.success({message: 'The label has been created successfully.'})
 				})
 				.catch(e => {
-					this.error(e, this)
+					this.error(e)
 				})
 		},
 

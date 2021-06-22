@@ -131,7 +131,7 @@ export default {
 								this.$set(this.backgrounds, l.id, b)
 							})
 							.catch(e => {
-								this.error(e, this)
+								this.error(e)
 							})
 					}
 				})
@@ -144,7 +144,7 @@ export default {
 				return
 			}
 			this.$store.dispatch('lists/toggleListFavorite', list)
-				.catch(e => this.error(e, this))
+				.catch(e => this.error(e))
 		},
 		saveShowArchivedState() {
 			localStorage.setItem('showArchived', JSON.stringify(this.showArchived))

@@ -249,7 +249,7 @@ export default {
 					)
 				})
 				.catch((e) => {
-					this.error(e, this)
+					this.error(e)
 				})
 		},
 		deleteSharable() {
@@ -271,10 +271,10 @@ export default {
 							this.sharables.splice(i, 1)
 						}
 					}
-					this.success({message: `The ${this.shareType} was successfully deleted from the ${this.typeString}.`}, this)
+					this.success({message: `The ${this.shareType} was successfully deleted from the ${this.typeString}.`})
 				})
 				.catch((e) => {
-					this.error(e, this)
+					this.error(e)
 				})
 		},
 		add(admin) {
@@ -295,19 +295,16 @@ export default {
 			this.stuffService
 				.create(this.stuffModel)
 				.then(() => {
-					this.success(
-						{
-							message:
-								'The ' +
-								this.shareType +
-								' was successfully added.',
-						},
-						this
-					)
+					this.success({
+						message:
+							'The ' +
+							this.shareType +
+							' was successfully added.',
+					})
 					this.load()
 				})
 				.catch((e) => {
-					this.error(e, this)
+					this.error(e)
 				})
 		},
 		toggleType(sharable) {
@@ -340,18 +337,15 @@ export default {
 							this.$set(this.sharables[i], 'right', r.right)
 						}
 					}
-					this.success(
-						{
-							message:
-								'The ' +
-								this.shareType +
-								' right was successfully updated.',
-						},
-						this
-					)
+					this.success({
+						message:
+							'The ' +
+							this.shareType +
+							' right was successfully updated.',
+					})
 				})
 				.catch((e) => {
-					this.error(e, this)
+					this.error(e)
 				})
 		},
 		find(query) {
@@ -366,7 +360,7 @@ export default {
 					this.$set(this, 'found', response)
 				})
 				.catch((e) => {
-					this.error(e, this)
+					this.error(e)
 				})
 		},
 		clearAll() {

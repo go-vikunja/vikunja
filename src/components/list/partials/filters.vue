@@ -490,7 +490,7 @@ export default {
 					.then(r => {
 						this.$set(this, kind, r)
 					})
-					.catch(e => this.error(e, this))
+					.catch(e => this.error(e))
 			}
 		},
 		setDoneFilter() {
@@ -545,7 +545,7 @@ export default {
 					}))
 				})
 				.catch(e => {
-					this.error(e, this)
+					this.error(e)
 				})
 		},
 		add(kind, filterName) {

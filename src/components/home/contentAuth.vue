@@ -130,7 +130,7 @@ export default {
 		loadLabels() {
 			this.$store.dispatch('labels/loadAllLabels')
 				.catch(e => {
-					this.error(e, this)
+					this.error(e)
 				})
 		},
 	},

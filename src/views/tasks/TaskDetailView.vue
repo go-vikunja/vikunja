@@ -559,7 +559,7 @@ export default {
 					this.setTitle(this.task.title)
 				})
 				.catch(e => {
-					this.error(e, this)
+					this.error(e)
 				})
 				.finally(() => {
 					this.$nextTick(() => this.visible = true)
@@ -620,10 +620,10 @@ export default {
 								callback: undoCallback,
 							}]
 						}
-						this.success({message: 'The task was saved successfully.'}, this, actions)
+						this.success({message: 'The task was saved successfully.'}, actions)
 					})
 					.catch(e => {
-						this.error(e, this)
+						this.error(e)
 					})
 			})
 		},
@@ -648,11 +648,11 @@ export default {
 		deleteTask() {
 			this.$store.dispatch('tasks/delete', this.task)
 				.then(() => {
-					this.success({message: 'The task has been deleted successfully.'}, this)
+					this.success({message: 'The task has been deleted successfully.'})
 					this.$router.push({name: 'list.index', params: {listId: this.task.listId}})
 				})
 				.catch(e => {
-					this.error(e, this)
+					this.error(e)
 				})
 		},
 		toggleTaskDone() {

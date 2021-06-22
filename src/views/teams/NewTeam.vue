@@ -67,13 +67,10 @@ export default {
 						name: 'teams.edit',
 						params: { id: response.id },
 					})
-					this.success(
-						{ message: 'The team was successfully created.' },
-						this
-					)
+					this.success({message: 'The team was successfully created.'})
 				})
 				.catch((e) => {
-					this.error(e, this)
+					this.error(e)
 				})
 		},
 	},

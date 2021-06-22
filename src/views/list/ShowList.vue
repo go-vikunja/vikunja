@@ -142,7 +142,7 @@ export default {
 					this.$store.commit(CURRENT_LIST, r)
 				})
 				.catch(e => {
-					this.error(e, this)
+					this.error(e)
 				})
 				.finally(() => {
 					this.listLoaded = this.$route.params.listId

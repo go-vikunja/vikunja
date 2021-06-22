@@ -203,7 +203,7 @@ export default {
 					this.$store.commit(HAS_TASKS, r.length > 0)
 				})
 				.catch(e => {
-					this.error(e, this)
+					this.error(e)
 				})
 		},
 		updateTasks(updatedTask) {

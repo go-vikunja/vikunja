@@ -110,19 +110,19 @@ export default {
 					this.filter = r
 					this.filters = objectToSnakeCase(this.filter.filters)
 				})
-				.catch(e => this.error(e, this))
+				.catch(e => this.error(e))
 		},
 		save() {
 			this.filter.filters = this.filters
 			this.filterService.update(this.filter)
 				.then(r => {
 					this.$store.dispatch('namespaces/loadNamespaces')
-					this.success({message: 'The filter was saved successfully.'}, this)
+					this.success({message: 'The filter was saved successfully.'})
 					this.filter = r
 					this.filters = objectToSnakeCase(this.filter.filters)
 					this.$router.back()
 				})
-				.catch(e => this.error(e, this))
+				.catch(e => this.error(e))
 		},
 	},
 }

@@ -161,7 +161,7 @@ export default {
 				return
 			}
 			this.$store.dispatch('lists/toggleListFavorite', list)
-				.catch(e => this.error(e, this))
+				.catch(e => this.error(e))
 		},
 		resize() {
 			// Hide the menu by default on mobile

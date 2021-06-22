@@ -338,22 +338,22 @@ export default {
 	methods: {
 		updatePassword() {
 			if (this.passwordConfirm !== this.passwordUpdate.newPassword) {
-				this.error({message: 'The new password and its confirmation don\'t match.'}, this)
+				this.error({message: 'The new password and its confirmation don\'t match.'})
 				return
 			}
 
 			this.passwordUpdateService.update(this.passwordUpdate)
 				.then(() => {
-					this.success({message: 'The password was successfully updated.'}, this)
+					this.success({message: 'The password was successfully updated.'})
 				})
-				.catch(e => this.error(e, this))
+				.catch(e => this.error(e))
 		},
 		updateEmail() {
 			this.emailUpdateService.update(this.emailUpdate)
 				.then(() => {
-					this.success({message: 'Your email address was successfully updated. We\'ve sent you a link to confirm it.'}, this)
+					this.success({message: 'Your email address was successfully updated. We\'ve sent you a link to confirm it.'})
 				})
-				.catch(e => this.error(e, this))
+				.catch(e => this.error(e))
 		},
 		totpStatus() {
 			if (!this.totpEnabled) {
@@ -371,7 +371,7 @@ export default {
 						return
 					}
 
-					this.error(e, this)
+					this.error(e)
 				})
 		},
 		totpSetQrCode() {
@@ -388,24 +388,24 @@ export default {
 					this.$set(this, 'totp', r)
 					this.totpSetQrCode()
 				})
-				.catch(e => this.error(e, this))
+				.catch(e => this.error(e))
 		},
 		totpConfirm() {
 			this.totpService.enable({passcode: this.totpConfirmPasscode})
 				.then(() => {
 					this.$set(this.totp, 'enabled', true)
-					this.success({message: 'You\'ve successfully confirmed your totp setup and can use it from now on!'}, this)
+					this.success({message: 'You\'ve successfully confirmed your totp setup and can use it from now on!'})
 				})
-				.catch(e => this.error(e, this))
+				.catch(e => this.error(e))
 		},
 		totpDisable() {
 			this.totpService.disable({password: this.totpDisablePassword})
 				.then(() => {
 					this.totpEnrolled = false
 					this.$set(this, 'totp', new TotpModel())
-					this.success({message: 'Two factor authentication was sucessfully disabled.'}, this)
+					this.success({message: 'Two factor authentication was sucessfully disabled.'})
 				})
-				.catch(e => this.error(e, this))
+				.catch(e => this.error(e))
 		},
 		updateSettings() {
 			localStorage.setItem(playSoundWhenDoneKey, this.playSoundWhenDone)
@@ -413,9 +413,9 @@ export default {
 			this.userSettingsService.update(this.settings)
 				.then(() => {
 					this.$store.commit('auth/setUserSettings', this.settings)
-					this.success({message: 'The name was successfully changed.'}, this)
+					this.success({message: 'The name was successfully changed.'})
 				})
-				.catch(e => this.error(e, this))
+				.catch(e => this.error(e))
 		},
 		copy(text) {
 			copy(text)

@@ -141,25 +141,25 @@ export default {
 		loadLabels() {
 			this.$store.dispatch('labels/loadAllLabels')
 				.catch(e => {
-					this.error(e, this)
+					this.error(e)
 				})
 		},
 		deleteLabel(label) {
 			this.$store.dispatch('labels/deleteLabel', label)
 				.then(() => {
-					this.success({message: 'The label was successfully deleted.'}, this)
+					this.success({message: 'The label was successfully deleted.'})
 				})
 				.catch(e => {
-					this.error(e, this)
+					this.error(e)
 				})
 		},
 		editLabelSubmit() {
 			this.$store.dispatch('labels/updateLabel', this.labelEditLabel)
 				.then(() => {
-					this.success({message: 'The label was successfully updated.'}, this)
+					this.success({message: 'The label was successfully updated.'})
 				})
 				.catch(e => {
-					this.error(e, this)
+					this.error(e)
 				})
 		},
 		editLabel(label) {

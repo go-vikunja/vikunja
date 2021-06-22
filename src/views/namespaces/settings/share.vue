@@ -69,7 +69,7 @@ export default {
 					this.setTitle(`Share "${this.namespace.title}"`)
 				})
 				.catch(e => {
-					this.error(e, this)
+					this.error(e)
 				})
 		},
 	},

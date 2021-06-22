@@ -110,7 +110,7 @@ export default {
 					this.$store.dispatch('namespaces/loadNamespaces')
 					this.$router.push({name: 'list.index', params: {listId: r.getListId()}})
 				})
-				.catch(e => this.error(e, this))
+				.catch(e => this.error(e))
 		},
 	},
 }

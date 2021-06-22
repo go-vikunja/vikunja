@@ -226,10 +226,10 @@ export default {
 						'attachments/removeById',
 						this.attachmentToDelete.id
 					)
-					this.success(r, this)
+					this.success(r)
 				})
 				.catch((e) => {
-					this.error(e, this)
+					this.error(e)
 				})
 				.finally(() => {
 					this.showDeleteModal = false

@@ -231,7 +231,7 @@ export default {
 					this.linkShares = r
 				})
 				.catch((e) => {
-					this.error(e, this)
+					this.error(e)
 				})
 		},
 		add() {
@@ -248,14 +248,11 @@ export default {
 					this.name = ''
 					this.password = ''
 					this.showNewForm = false
-					this.success(
-						{message: 'The link share was successfully created'},
-						this
-					)
+					this.success({message: 'The link share was successfully created'})
 					this.load()
 				})
 				.catch((e) => {
-					this.error(e, this)
+					this.error(e)
 				})
 		},
 		remove() {
@@ -266,14 +263,11 @@ export default {
 			this.linkShareService
 				.delete(linkshare)
 				.then(() => {
-					this.success(
-						{message: 'The link share was successfully deleted'},
-						this
-					)
+					this.success({message: 'The link share was successfully deleted'})
 					this.load()
 				})
 				.catch((e) => {
-					this.error(e, this)
+					this.error(e)
 				})
 				.finally(() => {
 					this.showDeleteModal = false

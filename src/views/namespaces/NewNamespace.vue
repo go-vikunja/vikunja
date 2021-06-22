@@ -80,14 +80,11 @@ export default {
 				.create(this.namespace)
 				.then((r) => {
 					this.$store.commit('namespaces/addNamespace', r)
-					this.success(
-						{ message: 'The namespace was successfully created.' },
-						this
-					)
+					this.success({message: 'The namespace was successfully created.'})
 					this.$router.back()
 				})
 				.catch((e) => {
-					this.error(e, this)
+					this.error(e)
 				})
 		},
 	},

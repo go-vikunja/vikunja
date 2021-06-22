@@ -109,17 +109,17 @@ export default {
 					this.setTitle(`Edit "${this.list.title}"`)
 				})
 				.catch(e => {
-					this.error(e, this)
+					this.error(e)
 				})
 		},
 		save() {
 			this.$store.dispatch('lists/updateList', this.list)
 				.then(() => {
-					this.success({message: 'The list was successfully updated.'}, this)
+					this.success({message: 'The list was successfully updated.'})
 					this.$router.back()
 				})
 				.catch(e => {
-					this.error(e, this)
+					this.error(e)
 				})
 		},
 	},

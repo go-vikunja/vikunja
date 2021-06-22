@@ -115,7 +115,7 @@ export default {
 					this.loadedList = cloneDeep(currentList)
 				})
 				.catch(e => {
-					this.error(e, this)
+					this.error(e)
 				})
 		},
 		loadTasksForPage(e) {

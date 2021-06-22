@@ -84,10 +84,10 @@ export default {
 			this.$store.dispatch('tasks/addAssignee', {user: user, taskId: this.taskId})
 				.then(() => {
 					this.$emit('input', this.assignees)
-					this.success({message: 'The user has been assigned successfully.'}, this)
+					this.success({message: 'The user has been assigned successfully.'})
 				})
 				.catch(e => {
-					this.error(e, this)
+					this.error(e)
 				})
 		},
 		removeAssignee(user) {
@@ -99,10 +99,10 @@ export default {
 							this.assignees.splice(a, 1)
 						}
 					}
-					this.success({message: 'The user has been unassinged successfully.'}, this)
+					this.success({message: 'The user has been unassinged successfully.'})
 				})
 				.catch(e => {
-					this.error(e, this)
+					this.error(e)
 				})
 		},
 		findUser(query) {
@@ -119,7 +119,7 @@ export default {
 					}))
 				})
 				.catch(e => {
-					this.error(e, this)
+					this.error(e)
 				})
 		},
 		clearAllFoundUsers() {

@@ -93,16 +93,16 @@ export default {
 				.then(r => {
 					this.avatarProvider = r.avatarProvider
 				})
-				.catch(e => this.error(e, this))
+				.catch(e => this.error(e))
 		},
 		updateAvatarStatus() {
 			const avatarStatus = new AvatarModel({avatarProvider: this.avatarProvider})
 			this.avatarService.update(avatarStatus)
 				.then(() => {
-					this.success({message: 'Avatar status was updated successfully!'}, this)
+					this.success({message: 'Avatar status was updated successfully!'})
 					this.$store.commit('auth/reloadAvatar')
 				})
-				.catch(e => this.error(e, this))
+				.catch(e => this.error(e))
 		},
 		uploadAvatar() {
 			this.loading = true
@@ -112,10 +112,10 @@ export default {
 				canvas.toBlob(blob => {
 					this.avatarService.create(blob)
 						.then(() => {
-							this.success({message: 'The avatar has been set successfully!'}, this)
+							this.success({message: 'The avatar has been set successfully!'})
 							this.$store.commit('auth/reloadAvatar')
 						})
-						.catch(e => this.error(e, this))
+						.catch(e => this.error(e))
 						.finally(() => {
 							this.loading = false
 							this.isCropAvatar = false

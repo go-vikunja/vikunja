@@ -131,7 +131,7 @@ export default {
 					this.$emit('input', r)
 				})
 				.catch((e) => {
-					this.error(e, this)
+					this.error(e)
 				})
 		},
 	},

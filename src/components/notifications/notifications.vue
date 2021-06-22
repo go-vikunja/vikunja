@@ -98,7 +98,7 @@ export default {
 					this.$set(this, 'allNotifications', r)
 				})
 				.catch(e => {
-					this.error(e, this)
+					this.error(e)
 				})
 		},
 		to(n, index) {
@@ -136,7 +136,7 @@ export default {
 					.then(r => {
 						this.$set(this.allNotifications, index, r)
 					})
-					.catch(e => this.error(e, this))
+					.catch(e => this.error(e))
 			}
 		},
 	},

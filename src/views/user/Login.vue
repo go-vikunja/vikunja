@@ -82,7 +82,9 @@
 				</div>
 			</form>
 
-			<div v-if="hasApiUrl && openidConnect.enabled && openidConnect.providers && openidConnect.providers.length > 0" class="mt-4">
+			<div
+				v-if="hasApiUrl && openidConnect.enabled && openidConnect.providers && openidConnect.providers.length > 0"
+				class="mt-4">
 				<x-button
 					@click="redirectToProvider(p)"
 					v-for="(p, k) in openidConnect.providers"
@@ -104,7 +106,6 @@ import {mapState} from 'vuex'
 
 import router from '../../router'
 import {HTTPFactory} from '@/http-common'
-import message from '../../message'
 import {ERROR_MESSAGE, LOADING} from '@/store/mutation-types'
 import legal from '../../components/misc/legal'
 import ApiConfig from '@/components/misc/api-config'
@@ -126,7 +127,7 @@ export default {
 		// FIXME: Why is this here? Can we find a better place for this?
 		let emailVerifyToken = localStorage.getItem('emailConfirmToken')
 		if (emailVerifyToken) {
-			const cancel = message.setLoading(this)
+			const cancel = this.setLoading()
 			HTTP.post(`user/confirm`, {token: emailVerifyToken})
 				.then(() => {
 					localStorage.removeItem('emailConfirmToken')
@@ -158,6 +159,15 @@ export default {
 		openidConnect: state => state.config.auth.openidConnect,
 	}),
 	methods: {
+		setLoading() {
+			const timeout = setTimeout(() => {
+				this.loading = true
+			}, 100)
+			return () => {
+				clearTimeout(timeout)
+				this.loading = false
+			}
+		},
 		submit() {
 			this.$store.commit(ERROR_MESSAGE, '')
 			// Some browsers prevent Vue bindings from working with autofilled values.
@@ -173,7 +183,8 @@ export default {
 			}
 
 			this.$store.dispatch('auth/login', credentials)
-				.catch(() => {})
+				.catch(() => {
+				})
 		},
 		redirectToProvider(provider) {
 			const state = Math.random().toString(36).substring(2, 24)

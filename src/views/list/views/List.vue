@@ -323,7 +323,7 @@ export default {
 										labelAddings[index - 1].resolve(result)
 									})
 									.catch(e => {
-										this.error(e, this)
+										this.error(e)
 									})
 							} else {
 								// label not found, create it
@@ -345,11 +345,11 @@ export default {
 												labelAddings[index - 1].resolve(result)
 											})
 											.catch(e => {
-												this.error(e, this)
+												this.error(e)
 											})
 									})
 									.catch(e => {
-										this.error(e, this)
+										this.error(e)
 									})
 							}
 						})
@@ -365,13 +365,13 @@ export default {
 										this.$store.commit(HAS_TASKS, true)
 									})
 									.catch(e => {
-										this.error(e, this)
+										this.error(e)
 									})
 							})
 					}
 				})
 				.catch(e => {
-					this.error(e, this)
+					this.error(e)
 				})
 		},
 		editTask(id) {
