@@ -1,31 +1,29 @@
+const getText = t => {
+
+	if (t.response && t.response.data && t.response.data.message) {
+		return [
+			t.message,
+			t.response.data.message
+		]
+	}
+
+	return [t.message]
+}
+
 export default {
 	error(e, context, actions = []) {
-		// Build the notification text from error response
-		let err = e.message
-		if (e.response && e.response.data && e.response.data.message) {
-			err += '<br/>' + e.response.data.message
-		}
-
-		// Fire a notification
 		context.$notify({
 			type: 'error',
 			title: 'Error',
-			text: err,
+			text: getText(e),
 			actions: actions,
 		})
 	},
 	success(e, context, actions = []) {
-		// Build the notification text from error response
-		let err = e.message
-		if (e.response && e.response.data && e.response.data.message) {
-			err += '<br/>' + e.response.data.message
-		}
-
-		// Fire a notification
 		context.$notify({
 			type: 'success',
 			title: 'Success',
-			text: err,
+			text: getText(e),
 			data: {
 				actions: actions,
 			},

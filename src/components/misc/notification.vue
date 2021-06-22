@@ -11,13 +11,17 @@
 			>
 				<div
 					class="notification-title"
-					v-html="props.item.title"
 					v-if="props.item.title"
-				></div>
+				>
+					{{ props.item.title }}
+				</div>
 				<div
 					class="notification-content"
-					v-html="props.item.text"
-				></div>
+				>
+					<template v-for="(t, k) in props.item.text">
+						{{ t }}<br :key="k"/>
+					</template>
+				</div>
 				<div
 					class="buttons is-right"
 					v-if="
