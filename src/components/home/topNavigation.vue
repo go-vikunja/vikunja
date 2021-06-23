@@ -25,7 +25,7 @@
 		>
 			<icon icon="bars"></icon>
 		</a>
-		<div class="list-title" v-if="currentList.id">
+		<div class="list-title" v-if="currentList.id" ref="listTitle">
 			<h1
 				:style="{ 'opacity': currentList.title === '' ? '0': '1' }"
 				class="title">
@@ -48,7 +48,7 @@
 			<notifications/>
 			<div class="user">
 				<img :src="userAvatar" alt="" class="avatar"/>
-				<dropdown class="is-right">
+				<dropdown class="is-right" ref="usernameDropdown">
 					<template v-slot:trigger>
 						<x-button
 							type="secondary"
@@ -116,6 +116,10 @@ export default {
 		privacyPolicyUrl: state => state.config.legal.privacyPolicyUrl,
 		canWriteCurrentList: state => state.currentList.maxRight > Rights.READ,
 	}),
+	mounted() {
+		const usernameWidth = this.$refs.usernameDropdown.$el.clientWidth
+		this.$refs.listTitle.style.setProperty('--nav-username-width', `${usernameWidth}px`)
+	},
 	methods: {
 		logout() {
 			this.$store.dispatch('auth/logout')

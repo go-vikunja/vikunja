@@ -1,9 +1,11 @@
 <template>
 	<div class="notifications">
-		<a @click.stop="showNotifications = !showNotifications" class="trigger-button">
-			<span class="unread-indicator" v-if="unreadNotifications > 0"></span>
-			<icon icon="bell"/>
-		</a>
+		<div class="is-flex is-justify-content-center">
+			<a @click.stop="showNotifications = !showNotifications" class="trigger-button">
+				<span class="unread-indicator" v-if="unreadNotifications > 0"></span>
+				<icon icon="bell"/>
+			</a>
+		</div>
 
 		<transition name="fade">
 			<div class="notifications-list" v-if="showNotifications" ref="popup">

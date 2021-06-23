@@ -1,7 +1,7 @@
 @use "sass:math";
 
 .navbar {
-  z-index: 2;
+  z-index: 4 !important;
 
   .navbar-dropdown {
     box-shadow: $navbar-dropdown-boxed-shadow;
@@ -11,6 +11,10 @@
   .navbar-brand {
     display: flex;
     align-items: center;
+
+    .logo img {
+      width: $vikunja-nav-logo-full-width;
+    }
   }
 }
 
@@ -71,10 +75,6 @@
 
 .navbar-menu .navbar-item .icon {
   margin: 0 0.5rem;
-}
-
-.navbar {
-  z-index: 4 !important;
 }
 
 .app-container {
@@ -327,9 +327,13 @@
   .trigger-button {
     cursor: pointer;
     color: $grey-400;
-    padding: 1rem;
+    padding: .5rem;
     font-size: 1.25rem;
     position: relative;
+  }
+
+  > * > .trigger-button {
+    width: $navbar-icon-width;
   }
 
   .user {
