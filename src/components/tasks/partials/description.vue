@@ -4,15 +4,15 @@
 			<span class="icon is-grey">
 				<icon icon="align-left"/>
 			</span>
-			Description
+			{{ $t('task.attributes.description') }}
 			<transition name="fade">
 				<span class="is-small is-inline-flex" v-if="loading && saving">
 					<span class="loader is-inline-block mr-2"></span>
-					Saving...
+					{{ $t('misc.saving') }}
 				</span>
 				<span class="is-small has-text-success" v-if="!loading && saved">
 					<icon icon="check"/>
-					Saved!
+					{{ $t('misc.saved') }}
 				</span>
 			</transition>
 		</h3>
@@ -21,8 +21,8 @@
 			:upload-callback="attachmentUpload"
 			:upload-enabled="true"
 			@change="save"
-			placeholder="Click here to enter a description..."
-			empty-text="No description available yet."
+			:placeholder="$t('task.description.placeholder')"
+			:empty-text="$t('task.description.empty')"
 			v-model="task.description"/>
 	</div>
 </template>

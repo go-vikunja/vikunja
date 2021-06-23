@@ -8,29 +8,28 @@
 				<router-link
 					:class="{'is-active': $route.name.includes('list.list')}"
 					:to="{ name: 'list.list',   params: { listId: listId } }">
-					List
+					{{ $t('list.list.title') }}
 				</router-link>
 				<router-link
 					:class="{'is-active': $route.name.includes('list.gantt')}"
 					:to="{ name: 'list.gantt',  params: { listId: listId } }">
-					Gantt
+					{{ $t('list.gantt.title') }}
 				</router-link>
 				<router-link
 					:class="{'is-active': $route.name.includes('list.table')}"
 					:to="{ name: 'list.table',  params: { listId: listId } }">
-					Table
+					{{ $t('list.table.title') }}
 				</router-link>
 				<router-link
 					:class="{'is-active': $route.name.includes('list.kanban')}"
 					:to="{ name: 'list.kanban', params: { listId: listId } }">
-					Kanban
+					{{ $t('list.kanban.title') }}
 				</router-link>
 			</div>
 		</div>
 		<transition name="fade">
 			<div class="notification is-warning" v-if="currentList.isArchived">
-				This list is archived.
-				It is not possible to create new or edit tasks or it.
+				{{ $t('list.archived') }}
 			</div>
 		</transition>
 

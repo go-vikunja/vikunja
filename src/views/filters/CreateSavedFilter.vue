@@ -2,13 +2,12 @@
 	<div class="modal-mask keyboard-shortcuts-modal">
 		<div @click.self="$router.back()" class="modal-container">
 			<div class="modal-content">
-				<card class="has-background-white has-no-shadow" title="Create A Saved Filter">
+				<card class="has-background-white has-no-shadow" :title="$t('filters.create.title')">
 					<p>
-						A saved filter is a virtual list which is computed from a set of filters each time it is
-						accessed. Once created, it will appear in a special namespace.
+						{{ $t('filters.create.description') }}
 					</p>
 					<div class="field">
-						<label class="label" for="title">Title</label>
+						<label class="label" for="title">{{ $t('filters.attributes.title') }}</label>
 						<div class="control">
 							<input
 								v-model="savedFilter.title"
@@ -16,14 +15,14 @@
 								:disabled="savedFilterService.loading"
 								class="input"
 								id="Title"
-								placeholder="The saved filter title goes here..."
+								:placeholder="$t('filters.attributes.titlePlaceholder')"
 								type="text"
 								v-focus
 							/>
 						</div>
 					</div>
 					<div class="field">
-						<label class="label" for="description">Description</label>
+						<label class="label" for="description">{{ $t('filters.attributes.description') }}</label>
 						<div class="control">
 							<editor
 								v-model="savedFilter.description"
@@ -31,13 +30,13 @@
 								:disabled="savedFilterService.loading"
 								:preview-is-default="false"
 								id="description"
-								placeholder="The description goes here..."
+								:placeholder="$t('filters.attributes.descriptionPlaceholder')"
 								v-if="editorActive"
 							/>
 						</div>
 					</div>
 					<div class="field">
-						<label class="label" for="filters">Filters</label>
+						<label class="label" for="filters">{{ $t('filters.title') }}</label>
 						<div class="control">
 							<filters
 								:class="{ 'disabled': savedFilterService.loading}"
@@ -53,7 +52,7 @@
 						@click="create()"
 						class="is-fullwidth"
 					>
-						Create new saved filter
+						{{ $t('filters.create.action') }}
 					</x-button>
 				</card>
 			</div>

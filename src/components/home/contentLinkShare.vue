@@ -10,12 +10,12 @@
 				<h1
 					:style="{ 'opacity': currentList.title === '' ? '0': '1' }"
 					class="title">
-					{{ currentList.title === '' ? 'Loading...' : currentList.title }}
+					{{ currentList.title === '' ? $t('misc.loading') : currentList.title }}
 				</h1>
 				<div class="box has-text-left view">
 					<div class="logout">
 						<x-button @click="logout()" type="secondary">
-							<span>Logout</span>
+							<span>{{ $t('user.auth.logout') }}</span>
 							<span class="icon is-small">
 								<icon icon="sign-out-alt"/>
 							</span>
@@ -23,7 +23,7 @@
 					</div>
 					<router-view/>
 					<a class="menu-bottom-link" href="https://vikunja.io" target="_blank">
-						Powered by Vikunja
+						{{ $t('misc.poweredBy') }}
 					</a>
 				</div>
 			</div>

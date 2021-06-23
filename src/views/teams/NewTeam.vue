@@ -1,11 +1,11 @@
 <template>
 	<create-edit
-		title="Create a new team"
+		:title="$t('team.create.title')"
 		@create="newTeam()"
 		:create-disabled="team.name === ''"
 	>
 		<div class="field">
-			<label class="label" for="teamName">Team Name</label>
+			<label class="label" for="teamName">{{ $t('team.attributes.name') }}</label>
 			<div
 				class="control is-expanded"
 				:class="{ 'is-loading': teamService.loading }"
@@ -14,7 +14,7 @@
 					:class="{ 'disabled': teamService.loading }"
 					class="input"
 					id="teamName"
-					placeholder="The team's name goes here..."
+					:placeholder="$t('team.attributes.namePlaceholder')"
 					type="text"
 					v-focus
 					v-model="team.name"
@@ -23,7 +23,7 @@
 			</div>
 		</div>
 		<p class="help is-danger" v-if="showError && team.name === ''">
-			Please specify a name.
+			{{ $t('team.attributes.nameRequired') }}
 		</p>
 	</create-edit>
 </template>
@@ -50,7 +50,7 @@ export default {
 		this.team = new TeamModel()
 	},
 	mounted() {
-		this.setTitle('Create a new Team')
+		this.setTitle(this.$t('team.create.title'))
 	},
 	methods: {
 		newTeam() {
@@ -67,7 +67,7 @@ export default {
 						name: 'teams.edit',
 						params: { id: response.id },
 					})
-					this.success({message: 'The team was successfully created.'})
+					this.success({message: this.$t('team.create.success') })
 				})
 				.catch((e) => {
 					this.error(e)

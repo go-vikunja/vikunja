@@ -7,12 +7,12 @@
 			<icon icon="exclamation"/>
 		</span>
 		<span>
-			<template v-if="priority === priorities.UNSET">Unset</template>
-			<template v-if="priority === priorities.LOW">Low</template>
-			<template v-if="priority === priorities.MEDIUM">Medium</template>
-			<template v-if="priority === priorities.HIGH">High</template>
-			<template v-if="priority === priorities.URGENT">Urgent</template>
-			<template v-if="priority === priorities.DO_NOW">DO NOW</template>
+			<template v-if="priority === priorities.UNSET">{{ $t('task.priority.unset') }}</template>
+			<template v-if="priority === priorities.LOW">{{ $t('task.priority.low') }}</template>
+			<template v-if="priority === priorities.MEDIUM">{{ $t('task.priority.medium') }}</template>
+			<template v-if="priority === priorities.HIGH">{{ $t('task.priority.high') }}</template>
+			<template v-if="priority === priorities.URGENT">{{ $t('task.priority.urgent') }}</template>
+			<template v-if="priority === priorities.DO_NOW">{{ $t('task.priority.doNow') }}</template>
 		</span>
 		<span class="icon" v-if="priority === priorities.DO_NOW">
 			<icon icon="exclamation"/>

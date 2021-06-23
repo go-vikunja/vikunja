@@ -24,7 +24,7 @@ describe('Namepaces', () => {
 
 		cy.visit('/namespaces')
 		cy.get('a.button')
-			.contains('Create namespace')
+			.contains('Create a new namespace')
 			.click()
 
 		cy.url()

@@ -4,7 +4,7 @@
 			<span class="icon is-grey">
 				<icon icon="paperclip"/>
 			</span>
-			Attachments
+			{{ $t('task.attachment.title') }}
 		</h3>
 
 		<input
@@ -35,18 +35,16 @@
 				<div class="filename">{{ a.file.name }}</div>
 				<div class="info">
 					<p class="collapses">
-						<span>
-							created
-							<span v-tooltip="formatDate(a.created)">{{
-									formatDateSince(a.created)
-								}}</span>
-							by
+						<i18n path="task.attachment.createdBy">
+							<span v-tooltip="formatDate(a.created)">
+								{{ formatDateSince(a.created) }}
+							</span>
 							<user
 								:avatar-size="24"
 								:user="a.createdBy"
 								:is-inline="true"
 							/>
-						</span>
+						</i18n>
 						<span>
 							{{ a.file.getHumanSize() }}
 						</span>
@@ -59,14 +57,14 @@
 							@click.prevent.stop="downloadAttachment(a)"
 							v-tooltip="'Download this attachment'"
 						>
-							Download
+							{{ $t('task.attachment.download') }}
 						</a>
 						<a
 							@click.prevent.stop="() => {attachmentToDelete = a; showDeleteModal = true}"
 							v-if="editEnabled"
 							v-tooltip="'Delete this attachment'"
 						>
-							Delete
+							{{ $t('misc.delete') }}
 						</a>
 					</p>
 				</div>
@@ -82,7 +80,7 @@
 			type="secondary"
 			:shadow="false"
 		>
-			Upload attachment
+			{{ $t('task.attachment.upload') }}
 		</x-button>
 
 		<!-- Dropzone -->
@@ -95,7 +93,7 @@
 				<div class="icon">
 					<icon icon="cloud-upload-alt"/>
 				</div>
-				<div class="hint">Drop files here to upload</div>
+				<div class="hint">{{ $t('task.attachment.drop') }}</div>
 			</div>
 		</div>
 
@@ -106,11 +104,10 @@
 				v-if="showDeleteModal"
 				@submit="deleteAttachment()"
 			>
-				<span slot="header">Delete attachment</span>
+				<span slot="header">{{ $t('task.attachment.delete') }}</span>
 				<p slot="text">
-					Are you sure you want to delete the attachment
-					{{ attachmentToDelete.file.name }}?<br/>
-					<b>This CANNOT BE UNDONE!</b>
+					{{ $t('task.attachment.deleteText1', {filename: attachmentUpload.file.name}) }}<br/>
+					<strong>{{ $t('task.attachment.deleteText2') }}</strong>
 				</p>
 			</modal>
 		</transition>

@@ -3,28 +3,28 @@
 		:class="{ 'is-loading': taskService.loading }"
 		class="defer-task loading-container"
 	>
-		<label class="label">Defer due date</label>
+		<label class="label">{{ $t('task.deferDueDate.title') }}</label>
 		<div class="defer-days">
 			<x-button
 				@click.prevent.stop="() => deferDays(1)"
 				:shadow="false"
 				type="secondary"
 			>
-				1 day
+				{{ $t('task.deferDueDate.1day') }}
 			</x-button>
 			<x-button
 				@click.prevent.stop="() => deferDays(3)"
 				:shadow="false"
 				type="secondary"
 			>
-				3 days
+				{{ $t('task.deferDueDate.3days') }}
 			</x-button>
 			<x-button
 				@click.prevent.stop="() => deferDays(7)"
 				:shadow="false"
 				type="secondary"
 			>
-				1 week
+				{{ $t('task.deferDueDate.1week') }}
 			</x-button>
 		</div>
 		<flat-pickr
@@ -40,7 +40,6 @@
 <script>
 import TaskService from '../../../services/task'
 import flatPickr from 'vue-flatpickr-component'
-import {mapState} from 'vuex'
 
 export default {
 	name: 'defer-task',
@@ -94,19 +93,21 @@ export default {
 			this.lastValue = this.dueDate
 		},
 	},
-	computed: mapState({
-		flatPickerConfig: state => ({
-			altFormat: 'j M Y H:i',
-			altInput: true,
-			dateFormat: 'Y-m-d H:i',
-			enableTime: true,
-			time_24hr: true,
-			inline: true,
-			locale: {
-				firstDayOfWeek: state.auth.settings.weekStart,
-			},
-		})
-	}),
+	computed: {
+		flatPickerConfig() {
+			return {
+				altFormat: this.$t('date.altFormatLong'),
+				altInput: true,
+				dateFormat: 'Y-m-d H:i',
+				enableTime: true,
+				time_24hr: true,
+				inline: true,
+				locale: {
+					firstDayOfWeek: this.$store.state.auth.settings.weekStart,
+				},
+			}
+		},
+	},
 	methods: {
 		deferDays(days) {
 			this.dueDate = new Date(this.dueDate)

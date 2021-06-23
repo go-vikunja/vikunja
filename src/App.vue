@@ -34,6 +34,7 @@ import TopNavigation from '@/components/home/topNavigation'
 import ContentAuth from '@/components/home/contentAuth'
 import ContentLinkShare from '@/components/home/contentLinkShare'
 import ContentNoAuth from '@/components/home/contentNoAuth'
+import {setLanguage} from '@/i18n/setup'
 
 export default {
 	name: 'app',
@@ -53,6 +54,8 @@ export default {
 	beforeCreate() {
 		this.$store.dispatch('config/update')
 		this.$store.dispatch('auth/checkAuth')
+
+		setLanguage()
 	},
 	created() {
 		// Make sure to always load the home route when running with electron

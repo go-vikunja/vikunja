@@ -26,7 +26,7 @@
 					type="secondary"
 					@click.prevent.stop="$router.back()"
 				>
-					Cancel
+					{{ $t('misc.cancel') }}
 				</x-button>
 				<x-button
 					type="primary"
@@ -52,7 +52,9 @@ export default {
 		},
 		primaryLabel: {
 			type: String,
-			default: 'Create',
+			default() {
+				return this.$t('misc.create')
+			},
 		},
 		primaryIcon: {
 			type: String,

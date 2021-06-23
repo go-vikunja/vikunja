@@ -16,7 +16,7 @@
 					:to="{ name: 'list.list', params: { listId: task.listId } }"
 					class="task-list"
 					v-if="showList && $store.getters['lists/getListById'](task.listId) !== null"
-					v-tooltip="`This task belongs to list '${$store.getters['lists/getListById'](task.listId).title}'`">
+					v-tooltip="$t('task.detail.belongsToList', {list: $store.getters['lists/getListById'](task.listId).title})">
 					{{ $store.getters['lists/getListById'](task.listId).title }}
 				</router-link>
 
@@ -45,7 +45,7 @@
 				v-if="+new Date(task.dueDate) > 0"
 				v-tooltip="formatDate(task.dueDate)"
 			>
-				- Due {{ formatDateSince(task.dueDate) }}
+				- {{ $t('task.detail.due', {at: formatDateSince(task.dueDate)}) }}
 			</i>
 			<transition name="fade">
 				<defer-task v-if="+new Date(task.dueDate) > 0 && showDefer" v-model="task" ref="deferDueDate"/>
@@ -70,7 +70,7 @@
 			:to="{ name: 'list.list', params: { listId: task.listId } }"
 			class="task-list"
 			v-if="!showList && currentList.id !== task.listId && $store.getters['lists/getListById'](task.listId) !== null"
-			v-tooltip="`This task belongs to list '${$store.getters['lists/getListById'](task.listId).title}'`">
+			v-tooltip="$t('task.detail.belongsToList', {list: $store.getters['lists/getListById'](task.listId).title})">
 			{{ $store.getters['lists/getListById'](task.listId).title }}
 		</router-link>
 		<a
@@ -175,7 +175,11 @@ export default {
 						}
 						this.task = t
 						this.$emit('task-updated', t)
-						this.success({message: 'The task was successfully ' + (this.task.done ? '' : 'un-') + 'marked as done.'}, [{
+						this.success({
+								message: this.task.done ?
+									this.$t('task.doneSuccess') :
+									this.$t('task.undoneSuccess')
+							}, [{
 							title: 'Undo',
 							callback: () => {
 								this.task.done = !this.task.done

@@ -85,17 +85,11 @@ export default {
 					if (e.response) {
 						if (e.response.data.code === 1017 && !credentials.totpPasscode) {
 							ctx.commit('needsTotpPasscode', true)
-							return Promise.reject()
+							return Promise.reject(e)
 						}
-
-						let errorMsg = typeof e.response.data.message !== 'undefined' ? e.response.data.message : null
-						if (e.response.status === 401) {
-							errorMsg = 'Wrong username or password.'
-						}
-						ctx.commit(ERROR_MESSAGE, errorMsg, {root: true})
 					}
 
-					return Promise.reject()
+					return Promise.reject(e)
 				})
 				.finally(() => {
 					ctx.commit(LOADING, false, {root: true})
@@ -145,14 +139,7 @@ export default {
 					return Promise.resolve()
 				})
 				.catch(e => {
-					if (e.response) {
-						let errorMsg = typeof e.response.data.message !== 'undefined' ? e.response.data.message : null
-						if (e.response.status === 401) {
-							errorMsg = 'Wrong username or password.'
-						}
-						ctx.commit(ERROR_MESSAGE, errorMsg, {root: true})
-					}
-					return Promise.reject()
+					return Promise.reject(e)
 				})
 				.finally(() => {
 					ctx.commit(LOADING, false, {root: true})

@@ -3,13 +3,13 @@
 		class="control is-expanded"
 		v-focus
 		:loading="listSerivce.loading"
-		placeholder="Type to search for a list..."
+		:placeholder="$t('list.search')"
 		@search="findLists"
 		:search-results="foundLists"
 		@select="select"
 		label="title"
 		v-model="list"
-		select-placeholder="Click or press enter to select this list"
+		:select-placeholder="$t('list.searchSelect')"
 	>
 		<template v-slot:searchResult="props">
 			<span class="list-namespace-title">{{ namespace(props.option.namespaceId) }} ></span>
@@ -65,7 +65,7 @@ export default {
 			if (namespace !== null) {
 				return namespace.title
 			}
-			return 'Shared Lists'
+			return this.$t('list.shared')
 		},
 	},
 }

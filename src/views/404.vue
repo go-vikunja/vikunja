@@ -1,7 +1,7 @@
 <template>
 	<div class="content has-text-centered">
-		<h1>Not found</h1>
-		<p>The page you requested does not exist.</p>
+		<h1>{{ $t('404.title') }}</h1>
+		<p>{{ $t('404.text') }}</p>
 	</div>
 </template>
 

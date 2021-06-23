@@ -5,7 +5,7 @@
 			@click="showNewRelationForm = !showNewRelationForm"
 			class="is-pulled-right add-task-relation-button"
 			:class="{'is-active': showNewRelationForm}"
-			v-tooltip="'Add a New Task Relation'"
+			v-tooltip="$t('task.relation.add')"
 			type="secondary"
 			icon="plus"
 			:shadow="false"
@@ -13,27 +13,27 @@
 		<transition-group name="fade">
 			<template v-if="editEnabled && showCreate">
 				<label class="label" key="label">
-					New Task Relation
+					{{ $t('task.relation.new') }}
 					<transition name="fade">
 						<span class="is-inline-flex" v-if="taskRelationService.loading">
 							<span class="loader is-inline-block mr-2"></span>
-							Saving...
+							{{ $t('misc.saving') }}
 						</span>
 						<span class="has-text-success" v-if="!taskRelationService.loading && saved">
-							Saved!
+							{{ $t('misc.saved') }}
 						</span>
 					</transition>
 				</label>
 				<div class="field" key="field-search">
 					<multiselect
-						placeholder="Type search for a new task to add as related..."
+						:placeholder="$t('task.relation.searchPlaceholder')"
 						@search="findTasks"
 						:loading="taskService.loading"
 						:search-results="foundTasks"
 						label="title"
 						v-model="newTaskRelationTask"
 						:creatable="true"
-						create-placeholder="Add this as new related task"
+						:create-placeholder="$t('task.relation.createPlaceholder')"
 						@create="createAndRelateTask"
 					>
 						<template v-slot:searchResult="props">
@@ -41,7 +41,7 @@
 								<span
 									class="different-list"
 									v-if="props.option.listId !== listId"
-									v-tooltip="'This task belongs to a different list.'">
+									v-tooltip="$t('task.relation.differentList')">
 									{{ $store.getters['lists/getListById'](props.option.listId) === null ? '' : $store.getters['lists/getListById'](props.option.listId).title }} >
 								</span>
 								{{ props.option.title }}
@@ -64,7 +64,7 @@
 						</div>
 					</div>
 					<div class="control">
-						<x-button @click="addTaskRelation()">Add Task Relation</x-button>
+						<x-button @click="addTaskRelation()">{{ $t('task.relation.add') }}</x-button>
 					</div>
 				</div>
 			</template>
@@ -80,7 +80,7 @@
 								<span
 									class="different-list"
 									v-if="t.listId !== listId"
-									v-tooltip="'This task belongs to a different list.'">
+									v-tooltip="$t('task.relation.differentList')">
 									{{
 										$store.getters['lists/getListById'](t.listId) === null ? '' : $store.getters['lists/getListById'](t.listId).title
 									}} >
@@ -99,7 +99,7 @@
 			</template>
 		</div>
 		<p class="none" v-if="showNoRelationsNotice && Object.keys(relatedTasks).length === 0">
-			No task relations yet.
+			{{ $t('task.relation.noneYet') }}
 		</p>
 
 		<!-- Delete modal -->
@@ -108,9 +108,11 @@
 				@close="showDeleteModal = false"
 				@submit="removeTaskRelation()"
 				v-if="showDeleteModal">
-				<span slot="header">Delete Task Relation</span>
-				<p slot="text">Are you sure you want to delete this task relation?<br/>
-					<b>This CANNOT BE UNDONE!</b></p>
+				<span slot="header">{{ $t('task.relation.delete') }}</span>
+				<p slot="text">
+					{{ $t('task.relation.deleteText1') }}<br/>
+					<strong>{{ $t('task.relation.deleteText2') }}</strong>
+				</p>
 			</modal>
 		</transition>
 	</div>

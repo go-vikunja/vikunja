@@ -10,7 +10,7 @@
 						<span class="icon">
 							<icon icon="calendar"/>
 						</span>
-						Overview
+						{{ $t('navigation.overview') }}
 					</router-link>
 				</li>
 				<li>
@@ -18,7 +18,7 @@
 						<span class="icon">
 							<icon :icon="['far', 'calendar-alt']"/>
 						</span>
-						Upcoming
+						{{ $t('navigation.upcoming') }}
 					</router-link>
 				</li>
 				<li>
@@ -26,7 +26,7 @@
 						<span class="icon">
 							<icon icon="layer-group"/>
 						</span>
-						Namespaces & Lists
+						{{ $t('namespace.title') }}
 					</router-link>
 				</li>
 				<li>
@@ -34,7 +34,7 @@
 						<span class="icon">
 							<icon icon="tags"/>
 						</span>
-						Labels
+						{{ $t('label.title') }}
 					</router-link>
 				</li>
 				<li>
@@ -42,7 +42,7 @@
 						<span class="icon">
 							<icon icon="users"/>
 						</span>
-						Teams
+						{{ $t('team.title') }}
 					</router-link>
 				</li>
 			</ul>
@@ -109,7 +109,9 @@
 				</div>
 			</template>
 		</aside>
-		<a class="menu-bottom-link" href="https://vikunja.io" target="_blank">Powered by Vikunja</a>
+		<a class="menu-bottom-link" href="https://vikunja.io" target="_blank">
+			{{ $t('misc.poweredBy') }}
+		</a>
 	</div>
 </template>
 

@@ -1,21 +1,21 @@
 <template>
-	<card title="Avatar">
+	<card :title="$t('user.settings.avatar.title')">
 		<div class="control mb-4">
 			<label class="radio">
 				<input name="avatarProvider" type="radio" v-model="avatarProvider" value="default"/>
-				Default
+				{{ $t('misc.default') }}
 			</label>
 			<label class="radio">
 				<input name="avatarProvider" type="radio" v-model="avatarProvider" value="initials"/>
-				Initials
+				{{ $t('user.settings.avatar.initials') }}
 			</label>
 			<label class="radio">
 				<input name="avatarProvider" type="radio" v-model="avatarProvider" value="gravatar"/>
-				Gravatar
+				{{ $t('user.settings.avatar.gravatar') }}
 			</label>
 			<label class="radio">
 				<input name="avatarProvider" type="radio" v-model="avatarProvider" value="upload"/>
-				Upload
+				{{ $t('user.settings.avatar.upload') }}
 			</label>
 		</div>
 
@@ -31,7 +31,7 @@
 				:loading="avatarService.loading || loading"
 				@click="$refs.avatarUploadInput.click()"
 				v-if="!isCropAvatar">
-				Upload Avatar
+				{{ $t('user.settings.avatar.uploadAvatar') }}
 			</x-button>
 			<template v-else>
 				<cropper
@@ -45,7 +45,7 @@
 					:loading="avatarService.loading || loading"
 					@click="uploadAvatar"
 				>
-					Upload Avatar
+					{{ $t('user.settings.avatar.uploadAvatar') }}
 				</x-button>
 			</template>
 		</template>
@@ -56,7 +56,7 @@
 				@click="updateAvatarStatus()"
 				class="is-fullwidth"
 			>
-				Save
+				{{ $t('misc.save') }}
 			</x-button>
 		</div>
 	</card>
@@ -99,7 +99,7 @@ export default {
 			const avatarStatus = new AvatarModel({avatarProvider: this.avatarProvider})
 			this.avatarService.update(avatarStatus)
 				.then(() => {
-					this.success({message: 'Avatar status was updated successfully!'})
+					this.success({message: this.$t('user.settings.avatar.statusUpdateSuccess')})
 					this.$store.commit('auth/reloadAvatar')
 				})
 				.catch(e => this.error(e))
@@ -112,7 +112,7 @@ export default {
 				canvas.toBlob(blob => {
 					this.avatarService.create(blob)
 						.then(() => {
-							this.success({message: 'The avatar has been set successfully!'})
+							this.success({message: this.$t('user.settings.avatar.setSuccess')})
 							this.$store.commit('auth/reloadAvatar')
 						})
 						.catch(e => this.error(e))

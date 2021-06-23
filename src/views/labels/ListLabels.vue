@@ -5,19 +5,17 @@
 			class="is-pulled-right"
 			icon="plus"
 		>
-			New label
+			{{ $t('label.create.header') }}
 		</x-button>
 
 		<div class="content">
-			<h1>Manage labels</h1>
-			<p v-if="labels.length > 0">
-				Click on a label to edit it.
-				You can edit all labels you created, you can use all labels which are associated with a task to whose
-				list you have access.
+			<h1>{{ $t('label.manage') }}</h1>
+			<p v-if="Object.entries(labels).length > 0">
+				{{ $t('label.description') }}
 			</p>
 			<p v-else class="has-text-centered has-text-grey is-italic">
-				You currently do not have any labels.
-				<router-link :to="{name:'labels.create'}">Create a new label.</router-link>
+				{{ $t('label.newCTA') }}
+				<router-link :to="{name:'labels.create'}">{{ $t('label.create.title') }}.</router-link>
 			</p>
 		</div>
 
@@ -31,7 +29,7 @@
 				>
 					<span
 						v-if="userInfo.id !== l.createdBy.id"
-						v-tooltip.bottom="'You are not allowed to edit this label because you dont own it.'">
+						v-tooltip.bottom="$t('label.edit.forbidden')">
 						{{ l.title }}
 					</span>
 					<a
@@ -44,31 +42,31 @@
 				</span>
 			</div>
 			<div class="column is-4" v-if="isLabelEdit">
-				<card title="Edit Label" :has-close="true" @close="() => isLabelEdit = false">
+				<card :title="$t('label.edit.header')" :has-close="true" @close="() => isLabelEdit = false">
 					<form @submit.prevent="editLabelSubmit()">
 						<div class="field">
-							<label class="label">Title</label>
+							<label class="label">{{ $t('label.attributes.title') }}</label>
 							<div class="control">
 								<input
 									class="input"
-									placeholder="Label title"
+									:placeholder="$t('label.attributes.titlePlaceholder')"
 									type="text"
 									v-model="labelEditLabel.title"/>
 							</div>
 						</div>
 						<div class="field">
-							<label class="label">Description</label>
+							<label class="label">{{ $t('label.attributes.description') }}</label>
 							<div class="control">
 								<editor
 									:preview-is-default="false"
-									placeholder="Label description"
+									:placeholder="$t('label.attributes.description')"
 									v-if="editorActive"
 									v-model="labelEditLabel.description"
 								/>
 							</div>
 						</div>
 						<div class="field">
-							<label class="label">Color</label>
+							<label class="label">{{ $t('label.attributes.color') }}</label>
 							<div class="control">
 								<color-picker v-model="labelEditLabel.hexColor"/>
 							</div>
@@ -80,7 +78,7 @@
 									class="is-fullwidth"
 									@click="editLabelSubmit()"
 								>
-									Save
+									{{ $t('misc.save') }}
 								</x-button>
 							</div>
 							<div class="control">
@@ -130,7 +128,7 @@ export default {
 		this.loadLabels()
 	},
 	mounted() {
-		this.setTitle('Labels')
+		this.setTitle(this.$t('label.title'))
 	},
 	computed: mapState({
 		userInfo: state => state.auth.info,
@@ -147,7 +145,7 @@ export default {
 		deleteLabel(label) {
 			this.$store.dispatch('labels/deleteLabel', label)
 				.then(() => {
-					this.success({message: 'The label was successfully deleted.'})
+					this.success({message: this.$t('label.deleteSuccess')})
 				})
 				.catch(e => {
 					this.error(e)
@@ -156,7 +154,7 @@ export default {
 		editLabelSubmit() {
 			this.$store.dispatch('labels/updateLabel', this.labelEditLabel)
 				.then(() => {
-					this.success({message: 'The label was successfully updated.'})
+					this.success({message: this.$t('label.edit.success')})
 				})
 				.catch(e => {
 					this.error(e)

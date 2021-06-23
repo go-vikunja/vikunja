@@ -1,27 +1,27 @@
 <template>
 	<div class="control repeat-after-input">
 		<div class="buttons has-addons is-centered mt-2">
-			<x-button type="secondary" class="is-small" @click="() => setRepeatAfter(1, 'days')">Every Day</x-button>
-			<x-button type="secondary" class="is-small" @click="() => setRepeatAfter(1, 'weeks')">Every Week</x-button>
-			<x-button type="secondary" class="is-small" @click="() => setRepeatAfter(1, 'months')">Every Month</x-button>
+			<x-button type="secondary" class="is-small" @click="() => setRepeatAfter(1, 'days')">{{ $t('task.repeat.everyDay') }}</x-button>
+			<x-button type="secondary" class="is-small" @click="() => setRepeatAfter(1, 'weeks')">{{ $t('task.repeat.everyWeek') }}</x-button>
+			<x-button type="secondary" class="is-small" @click="() => setRepeatAfter(1, 'months')">{{ $t('task.repeat.everyMonth') }}</x-button>
 		</div>
 		<div class="is-flex is-align-items-center mb-2">
 			<label for="repeatMode" class="is-fullwidth">
-				Repeat mode:
+				{{ $t('task.repeat.mode') }}:
 			</label>
 			<div class="control">
 				<div class="select">
 					<select @change="updateData" v-model="task.repeatMode" id="repeatMode">
-						<option :value="repeatModes.REPEAT_MODE_DEFAULT">Default</option>
-						<option :value="repeatModes.REPEAT_MODE_MONTH">Monthly</option>
-						<option :value="repeatModes.REPEAT_MODE_FROM_CURRENT_DATE">From Current Date</option>
+						<option :value="repeatModes.REPEAT_MODE_DEFAULT">{{ $t('misc.default') }}</option>
+						<option :value="repeatModes.REPEAT_MODE_MONTH">{{ $t('task.repeat.monthly') }}</option>
+						<option :value="repeatModes.REPEAT_MODE_FROM_CURRENT_DATE">{{ $t('task.repeat.fromCurrentDate') }}</option>
 					</select>
 				</div>
 			</div>
 		</div>
 		<div class="is-flex" v-if="task.repeatMode !== repeatModes.REPEAT_MODE_MONTH">
 			<p class="pr-4">
-				Each
+				{{ $t('task.repeat.each') }}
 			</p>
 			<div class="field has-addons is-fullwidth">
 				<div class="control">
@@ -29,7 +29,7 @@
 						:disabled="disabled"
 						@change="updateData"
 						class="input"
-						placeholder="Specify an amount..."
+						:placeholder="$t('task.repeat.specifyAmount')"
 						v-model="repeatAfter.amount"
 						type="number"
 					/>
@@ -37,11 +37,11 @@
 				<div class="control">
 					<div class="select">
 						<select :disabled="disabled" @change="updateData" v-model="repeatAfter.type">
-							<option value="hours">Hours</option>
-							<option value="days">Days</option>
-							<option value="weeks">Weeks</option>
-							<option value="months">Months</option>
-							<option value="years">Years</option>
+							<option value="hours">{{ $t('task.repeat.hours') }}</option>
+							<option value="days">{{ $t('task.repeat.days') }}</option>
+							<option value="weeks">{{ $t('task.repeat.weeks') }}</option>
+							<option value="months">{{ $t('task.repeat.months') }}</option>
+							<option value="years">{{ $t('task.repeat.years') }}</option>
 						</select>
 					</div>
 				</div>

@@ -5,6 +5,7 @@
 [![Build Status](https://drone.kolaente.de/api/badges/vikunja/frontend/status.svg)](https://drone.kolaente.de/vikunja/frontend)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
 [![Download](https://img.shields.io/badge/download-v0.17.0-brightgreen.svg)](https://dl.vikunja.io)
+[![Translation](https://hosted.weblate.org/widgets/vikunja/-/frontend/svg-badge.svg)](https://hosted.weblate.org/engage/vikunja/)
 
 This is the web frontend for Vikunja, written in Vue.js.
 

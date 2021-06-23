@@ -5,7 +5,7 @@
 				:to="{ name: 'namespace.settings.archive', params: { id: namespace.id } }"
 				icon="archive"
 			>
-				Un-Archive
+				{{ $t('menu.unarchive') }}
 			</dropdown-item>
 		</template>
 		<template v-else>
@@ -13,25 +13,25 @@
 				:to="{ name: 'namespace.settings.edit', params: { id: namespace.id } }"
 				icon="pen"
 			>
-				Edit
+				{{ $t('menu.edit') }}
 			</dropdown-item>
 			<dropdown-item
 				:to="{ name: 'namespace.settings.share', params: { id: namespace.id } }"
 				icon="share-alt"
 			>
-				Share
+				{{ $t('menu.share') }}
 			</dropdown-item>
 			<dropdown-item
 				:to="{ name: 'list.create', params: { id: namespace.id } }"
 				icon="plus"
 			>
-				New list
+				{{ $t('menu.newList') }}
 			</dropdown-item>
 			<dropdown-item
 				:to="{ name: 'namespace.settings.archive', params: { id: namespace.id } }"
 				icon="archive"
 			>
-				Archive
+				{{ $t('menu.archive') }}
 			</dropdown-item>
 			<task-subscription
 				class="dropdown-item has-no-shadow"
@@ -46,7 +46,7 @@
 				icon="trash-alt"
 				class="has-text-danger"
 			>
-				Delete
+				{{ $t('menu.delete') }}
 			</dropdown-item>
 		</template>
 	</dropdown>

@@ -1,20 +1,20 @@
 <template>
 	<div class="content namespaces-list loader-container" :class="{'is-loading': loading}">
 		<x-button :to="{name: 'namespace.create'}" class="new-namespace" icon="plus">
-			Create namespace
+			{{ $t('namespace.create.title') }}
 		</x-button>
 		<x-button :to="{name: 'filters.create'}" class="new-namespace" icon="filter">
-			Create saved filter
+			{{ $t('filters.create.title') }}
 		</x-button>
 
 		<fancycheckbox class="show-archived-check" v-model="showArchived" @change="saveShowArchivedState">
-			Show Archived
+			{{ $t('namespace.showArchived') }}
 		</fancycheckbox>
 
 		<p class="has-text-centered has-text-grey mt-4 is-italic" v-if="namespaces.length === 0">
-			You don't have any namespaces right now.
+			{{ $t('namespace.noneAvailable') }}
 			<router-link :to="{name: 'namespace.create'}">
-				Create a namespace.
+				{{ $t('namespace.create.title') }}.
 			</router-link>
 		</p>
 
@@ -26,7 +26,7 @@
 				v-if="n.id > 0 && n.lists.length > 0"
 				icon="plus"
 			>
-				Create list
+				{{ $t('list.create.header') }}
 			</x-button>
 			<x-button
 				:to="{name: 'namespace.settings.archive', params: {id:  n.id}}"
@@ -35,20 +35,20 @@
 				v-if="n.isArchived"
 				icon="archive"
 			>
-				Un-Archive
+				{{ $t('namespace.unarchive') }}
 			</x-button>
 
 			<h1>
 				<span>{{ n.title }}</span>
 				<span class="is-archived" v-if="n.isArchived">
-					Archived
+					{{ $t('namespace.archived') }}
 				</span>
 			</h1>
 
 			<p class="has-text-centered has-text-grey mt-4 is-italic" v-if="n.lists.length === 0">
-				This namespace does not contain any lists.
+				{{ $t('namespaces.noLists') }}
 				<router-link :to="{name: 'list.create', params: {id:  n.id}}">
-					Create a new list in this namespace.
+					{{ $t('namespace.createList') }}
 				</router-link>
 			</p>
 
@@ -71,7 +71,7 @@
 					>
 						<div class="is-archived-container">
 							<span class="is-archived" v-if="l.isArchived">
-								Archived
+								{{ $t('namespace.archived') }}
 							</span>
 							<span
 								:class="{'is-favorite': l.isFavorite, 'is-archived': l.isArchived}"
@@ -112,7 +112,7 @@ export default {
 		this.loadBackgroundsForLists()
 	},
 	mounted() {
-		this.setTitle('Namespaces & Lists')
+		this.setTitle(this.$t('namespace.title'))
 	},
 	computed: mapState({
 		namespaces(state) {

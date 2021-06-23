@@ -1,14 +1,14 @@
 <template>
 	<create-edit
-		title="Edit This List"
+		:title="$t('list.edit.header')"
 		primary-icon=""
-		primary-label="Save"
+		:primary-label="$t('misc.save')"
 		@primary="save"
-		tertary="Delete"
+		:tertary="$t('misc.delete')"
 		@tertary="$router.push({ name: 'list.list.settings.delete', params: { id: $route.params.listId } })"
 	>
 		<div class="field">
-			<label class="label" for="listtext">List Name</label>
+			<label class="label" for="listtext">{{ $t('list.title') }}</label>
 			<div class="control">
 				<input
 					:class="{ 'disabled': listService.loading}"
@@ -16,7 +16,7 @@
 					@keyup.enter="save"
 					class="input"
 					id="listtext"
-					placeholder="The list title goes here..."
+					:placeholder="$t('list.edit.titlePlaceholder')"
 					type="text"
 					v-focus
 					v-model="list.title"/>
@@ -26,8 +26,8 @@
 			<label
 				class="label"
 				for="listtext"
-				v-tooltip="'The list identifier can be used to uniquely identify a task across lists. You can set it to empty to disable it.'">
-				List Identifier
+				v-tooltip="$t('list.edit.identifierTooltip')">
+				{{ $t('list.edit.identifier') }}
 			</label>
 			<div class="control">
 				<input
@@ -36,27 +36,27 @@
 					@keyup.enter="save"
 					class="input"
 					id="listtext"
-					placeholder="The list identifier goes here..."
+					:placeholder="$t('list.edit.identifierPlaceholder')"
 					type="text"
 					v-focus
 					v-model="list.identifier"/>
 			</div>
 		</div>
 		<div class="field">
-			<label class="label" for="listdescription">Description</label>
+			<label class="label" for="listdescription">{{ $t('list.edit.description') }}</label>
 			<div class="control">
 				<editor
 					:class="{ 'disabled': listService.loading}"
 					:disabled="listService.loading"
 					:preview-is-default="false"
 					id="listdescription"
-					placeholder="The lists description goes here..."
+					:placeholder="$t('list.edit.descriptionPlaceholder')"
 					v-model="list.description"
 				/>
 			</div>
 		</div>
 		<div class="field">
-			<label class="label">Color</label>
+			<label class="label">{{ $t('list.edit.color') }}</label>
 			<div class="control">
 				<color-picker v-model="list.hexColor"/>
 			</div>
@@ -106,7 +106,7 @@ export default {
 				.then(r => {
 					this.$set(this, 'list', r)
 					this.$store.commit(CURRENT_LIST, r)
-					this.setTitle(`Edit "${this.list.title}"`)
+					this.setTitle(this.$t('list.edit.title', {list: this.list.title}))
 				})
 				.catch(e => {
 					this.error(e)
@@ -115,7 +115,7 @@ export default {
 		save() {
 			this.$store.dispatch('lists/updateList', this.list)
 				.then(() => {
-					this.success({message: 'The list was successfully updated.'})
+					this.success({message: this.$t('list.edit.success')})
 					this.$router.back()
 				})
 				.catch(e => {

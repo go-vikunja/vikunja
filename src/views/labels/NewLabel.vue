@@ -1,11 +1,11 @@
 <template>
 	<create-edit
-		title="Create a new label"
+		:title="$t('label.create.title')"
 		@create="newLabel()"
 		:create-disabled="label.title === ''"
 	>
 		<div class="field">
-			<label class="label" for="labelTitle">Label Title</label>
+			<label class="label" for="labelTitle">{{ $t('label.attributes.title') }}</label>
 			<div
 				class="control is-expanded"
 				:class="{ 'is-loading': loading }"
@@ -13,7 +13,7 @@
 				<input
 					:class="{ disabled: loading }"
 					class="input"
-					placeholder="The label title goes here..."
+					:placeholder="$t('label.attributes.titlePlaceholder')"
 					type="text"
 					id="labelTitle"
 					v-focus
@@ -23,10 +23,10 @@
 			</div>
 		</div>
 		<p class="help is-danger" v-if="showError && label.title === ''">
-			Please specify a title.
+			{{ $t('label.create.titleRequired') }}
 		</p>
 		<div class="field">
-			<label class="label">Color</label>
+			<label class="label">{{ $t('label.attributes.color') }}</label>
 			<div class="control">
 				<color-picker v-model="label.hexColor"/>
 			</div>
@@ -58,7 +58,7 @@ export default {
 		this.label = new LabelModel()
 	},
 	mounted() {
-		this.setTitle('Create a new label')
+		this.setTitle(this.$t('label.create.title'))
 	},
 	computed: mapState({
 		loading: state => state[LOADING] && state[LOADING_MODULE] === 'labels',
@@ -77,7 +77,7 @@ export default {
 						name: 'labels.index',
 						params: {id: r.id},
 					})
-					this.success({message: 'The label was successfully created.'})
+					this.success({message: this.$t('label.create.success')})
 				})
 				.catch((e) => {
 					this.error(e)

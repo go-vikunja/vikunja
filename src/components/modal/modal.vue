@@ -16,14 +16,14 @@
 								type="tertary"
 								class="has-text-danger"
 							>
-								Cancel
+								{{ $t('misc.cancel') }}
 							</x-button>
 							<x-button
 								@click="$emit('submit')"
 								type="primary"
 								:shadow="false"
 							>
-								Do it!
+								{{ $t('misc.doit') }}
 							</x-button>
 						</div>
 					</slot>

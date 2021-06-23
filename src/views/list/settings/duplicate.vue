@@ -1,12 +1,14 @@
 <template>
 	<create-edit
-		title="Duplicate this list"
+		:title="$t('list.duplicate.title')"
 		primary-icon="paste"
-		primary-label="Duplicate"
+		:primary-label="$t('list.duplicate.label')"
 		@primary="duplicateList"
 		:loading="listDuplicateService.loading"
 	>
-		<p>Select a namespace which should hold the duplicated list:</p>
+		<p>
+			{{ $t('list.duplicate.text') }}
+		</p>
 		<namespace-search @selected="selectNamespace"/>
 	</create-edit>
 </template>
@@ -31,7 +33,7 @@ export default {
 	},
 	created() {
 		this.listDuplicateService = new ListDuplicateService()
-		this.setTitle('Duplicate List')
+		this.setTitle(this.$t('list.duplicate.title'))
 	},
 	methods: {
 		selectNamespace(namespace) {
@@ -46,7 +48,7 @@ export default {
 				.then(r => {
 					this.$store.commit('namespaces/addListToNamespace', r.list)
 					this.$store.commit('lists/setList', r.list)
-					this.success({message: 'The list was successfully duplicated.'})
+					this.success({message: this.$t('list.duplicate.success')})
 					this.$router.push({name: 'list.index', params: {listId: r.list.id}})
 				})
 				.catch(e => {

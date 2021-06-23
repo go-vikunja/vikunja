@@ -123,22 +123,22 @@ export default {
 			return [
 				{
 					type: TYPE_CMD,
-					title: 'Commands',
+					title: this.$t('quickActions.commands'),
 					items: cmds,
 				},
 				{
 					type: TYPE_TASK,
-					title: 'Tasks',
+					title: this.$t('quickActions.tasks'),
 					items: this.foundTasks,
 				},
 				{
 					type: TYPE_LIST,
-					title: 'Lists',
+					title: this.$t('quickActions.lists'),
 					items: lists,
 				},
 				{
 					type: TYPE_TEAM,
-					title: 'Teams',
+					title: this.$t('quickActions.teams'),
 					items: this.foundTeams,
 				},
 			].filter(i => i.items.length > 0)
@@ -156,17 +156,17 @@ export default {
 			if (this.selectedCmd !== null) {
 				switch (this.selectedCmd.action) {
 					case CMD_NEW_TASK:
-						return 'Enter the title of the new task...'
+						return this.$t('quickActions.newTask')
 					case CMD_NEW_LIST:
-						return 'Enter the title of the new list...'
+						return this.$t('quickActions.newList')
 					case CMD_NEW_NAMESPACE:
-						return 'Enter the title of the new namespace...'
+						return this.$t('quickActions.newNamespace')
 					case CMD_NEW_TEAM:
-						return 'Enter the name of the new team...'
+						return this.$t('quickActions.newTeam')
 				}
 			}
 
-			return 'Type a command or search...'
+			return this.$t('quickActions.placeholder')
 		},
 		hintText() {
 			let namespace
@@ -174,14 +174,14 @@ export default {
 			if (this.selectedCmd !== null && this.currentList !== null) {
 				switch (this.selectedCmd.action) {
 					case CMD_NEW_TASK:
-						return `Create a task in the current list (${this.currentList.title})`
+						return this.$t('quickActions.createTask', {title: this.currentList.title})
 					case CMD_NEW_LIST:
 						namespace = this.$store.getters['namespaces/getNamespaceById'](this.currentList.namespaceId)
-						return `Create a list in the current namespace (${namespace.title})`
+						return this.$t('quickActions.createList', {title: namespace.title})
 				}
 			}
 
-			return 'You can use # to only seach for tasks, * to only search for lists and @ to only search for teams.'
+			return this.$t('quickActions.hint')
 		},
 		currentList() {
 			return Object.keys(this.$store.state[CURRENT_LIST]).length === 0 ? null : this.$store.state[CURRENT_LIST]
@@ -191,20 +191,20 @@ export default {
 
 			if (this.currentList !== null) {
 				cmds.push({
-					title: 'New task',
+					title: this.$t('quickActions.cmds.newTask'),
 					action: CMD_NEW_TASK,
 				})
 				cmds.push({
-					title: 'New list',
+					title: this.$t('quickActions.cmds.newList'),
 					action: CMD_NEW_LIST,
 				})
 			}
 			cmds.push({
-				title: 'New namespace',
+				title: this.$t('quickActions.cmds.newNamespace'),
 				action: CMD_NEW_NAMESPACE,
 			})
 			cmds.push({
-				title: 'New Team',
+				title: this.$t('quickActions.cmds.newTeam'),
 				action: CMD_NEW_TEAM,
 			})
 
@@ -361,7 +361,7 @@ export default {
 			})
 			this.taskService.create(newTask)
 				.then(r => {
-					this.success({message: 'The task was successfully created.'})
+					this.success({message: this.$t('task.createSuccess')})
 					this.$router.push({name: 'task.detail', params: {id: r.id}})
 					this.closeQuickActions()
 				})
@@ -380,7 +380,7 @@ export default {
 			})
 			this.listService.create(newList)
 				.then(r => {
-					this.success({message: 'The list was successfully created.'})
+					this.success({message: this.$t('list.create.createdSuccess')})
 					this.$router.push({name: 'list.index', params: {listId: r.id}})
 					this.closeQuickActions()
 				})
@@ -393,7 +393,7 @@ export default {
 			this.namespaceService.create(newNamespace)
 				.then(r => {
 					this.$store.commit('namespaces/addNamespace', r)
-					this.success({message: 'The namespace was successfully created.'})
+					this.success({message: this.$t('namespace.create.success')})
 					this.closeQuickActions()
 				})
 				.catch((e) => {
@@ -408,7 +408,7 @@ export default {
 						name: 'teams.edit',
 						params: {id: r.id},
 					})
-					this.success({message: 'The team was successfully created.'})
+					this.success({message: this.$t('team.create.success')})
 					this.closeQuickActions()
 				})
 				.catch((e) => {

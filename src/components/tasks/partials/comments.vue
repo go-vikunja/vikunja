@@ -4,17 +4,15 @@
 			<span class="icon is-grey">
 				<icon :icon="['far', 'comments']"/>
 			</span>
-			Comments
+			{{ $t('task.comment.title') }}
 		</h3>
 		<div class="comments">
 			<span
 				class="is-inline-flex is-align-items-center"
-				v-if="
-					taskCommentService.loading && saving === null && !creating
-				"
+				v-if="taskCommentService.loading && saving === null && !creating"
 			>
 				<span class="loader is-inline-block mr-2"></span>
-				Loading comments...
+				{{ $t('task.comment.loading') }}
 			</span>
 			<div :key="c.id" class="media comment" v-for="c in comments">
 				<figure class="media-left is-hidden-mobile">
@@ -35,8 +33,7 @@
 							height="20"
 							width="20"
 						/>
-						<strong>{{ c.author.getDisplayName() }}</strong
-						>&nbsp;
+						<strong>{{ c.author.getDisplayName() }}</strong>&nbsp;
 						<span v-tooltip="formatDate(c.created)" class="has-text-grey">
 							{{ formatDateSince(c.created) }}
 						</span>
@@ -44,7 +41,7 @@
 							v-if="+new Date(c.created) !== +new Date(c.updated)"
 							v-tooltip="formatDate(c.updated)"
 						>
-							· edited {{ formatDateSince(c.updated) }}
+							· {{ $t('task.comment.edited', {date: formatDateSince(c.updated)}) }}
 						</span>
 						<transition name="fade">
 							<span
@@ -54,10 +51,8 @@
 									saving === c.id
 								"
 							>
-								<span
-									class="loader is-inline-block mr-2"
-								></span>
-								Saving...
+								<span class="loader is-inline-block mr-2"></span>
+								{{ $t('misc.saving') }}
 							</span>
 							<span
 								class="has-text-success"
@@ -66,7 +61,7 @@
 									saved === c.id
 								"
 							>
-								Saved!
+								{{ $t('misc.saved') }}
 							</span>
 						</transition>
 					</div>
@@ -104,10 +99,8 @@
 								class="is-inline-flex"
 								v-if="taskCommentService.loading && creating"
 							>
-								<span
-									class="loader is-inline-block mr-2"
-								></span>
-								Creating comment...
+								<span class="loader is-inline-block mr-2"></span>
+								{{ $t('task.comment.creating') }}
 							</span>
 						</transition>
 						<div class="field">
@@ -120,20 +113,18 @@
 								:has-preview="false"
 								:upload-callback="attachmentUpload"
 								:upload-enabled="true"
-								placeholder="Add your comment..."
+								:placeholder="$t('task.comment.placeholder')"
 								v-if="editorActive"
 								v-model="newComment.comment"
 							/>
 						</div>
 						<div class="field">
 							<x-button
-								:loading="
-									taskCommentService.loading && !isCommentEdit
-								"
+								:loading="taskCommentService.loading && !isCommentEdit"
 								:disabled="newComment.comment === ''"
 								@click="addComment()"
 							>
-								Comment
+								{{ $t('task.comment.comment') }}
 							</x-button>
 						</div>
 					</div>
@@ -147,10 +138,10 @@
 				@submit="deleteComment()"
 				v-if="showDeleteModal"
 			>
-				<span slot="header">Delete this comment</span>
+				<span slot="header">{{ $t('task.comment.delete') }}</span>
 				<p slot="text">
-					Are you sure you want to delete this comment? <br/>This
-					<b>CANNOT BE UNDONE!</b>
+					{{ $t('task.comment.deleteText1') }}<br/>
+					<strong>{{ $t('task.comment.deleteText2') }}</strong>
 				</p>
 			</modal>
 		</transition>
@@ -258,7 +249,7 @@ export default {
 				.then((r) => {
 					this.comments.push(r)
 					this.newComment.comment = ''
-					this.success({message: 'The comment was added successfully.'})
+					this.success({message: this.$t('task.comment.addedSuccess')})
 				})
 				.catch((e) => {
 					this.error(e)
@@ -327,7 +318,7 @@ export default {
 					this.$set(this.actions, c.id, [
 						{
 							action: () => this.toggleDelete(c.id),
-							title: 'Remove',
+							title: this.$t('misc.delete'),
 						},
 					])
 				})

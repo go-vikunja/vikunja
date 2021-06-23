@@ -1,29 +1,44 @@
-const getText = t => {
+export const getErrorText = (r, $t) => {
 
-	if (t.response && t.response.data && t.response.data.message) {
-		return [
-			t.message,
-			t.response.data.message
-		]
+	if (r.response && r.response.data) {
+		if(r.response.data.code) {
+			const path = `error.${r.response.data.code}`
+			const message = $t(path)
+
+			// If message and path are equal no translation exists for that error code
+			if (path !== message) {
+				return [
+					r.message,
+					message,
+				]
+			}
+		}
+
+		if (r.response.data.message) {
+			return [
+				r.message,
+				r.response.data.message,
+			]
+		}
 	}
 
-	return [t.message]
+	return [r.message]
 }
 
 export default {
-	error(e, context, actions = []) {
+	error(e, context, $t, actions = []) {
 		context.$notify({
 			type: 'error',
-			title: 'Error',
-			text: getText(e),
+			title: $t('error.error'),
+			text: getErrorText(e, $t),
 			actions: actions,
 		})
 	},
-	success(e, context, actions = []) {
+	success(e, context, $t, actions = []) {
 		context.$notify({
 			type: 'success',
-			title: 'Success',
-			text: getText(e),
+			title: $t('error.success'),
+			text: getErrorText(e, $t),
 			data: {
 				actions: actions,
 			},

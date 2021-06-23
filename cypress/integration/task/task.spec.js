@@ -27,7 +27,7 @@ describe('Task', () => {
 
 	it('Should be created new', () => {
 		cy.visit('/lists/1/list')
-		cy.get('input.input[placeholder="Add a new task..."')
+		cy.get('input.input[placeholder="Add a new task…"')
 			.type('New Task')
 		cy.get('.button')
 			.contains('Add')
@@ -43,7 +43,7 @@ describe('Task', () => {
 		cy.visit('/lists/1/list')
 		cy.get('.list-is-empty-notice')
 			.should('not.exist')
-		cy.get('input.input[placeholder="Add a new task..."')
+		cy.get('input.input[placeholder="Add a new task…"')
 			.type('New Task')
 		cy.get('.button')
 			.contains('Add')

@@ -1,6 +1,6 @@
 <template>
 	<create-edit
-		title="Share this Namespace"
+		:title="title"
 		primary-label=""
 	>
 		<component
@@ -30,10 +30,10 @@ export default {
 	data() {
 		return {
 			namespaceService: NamespaceService,
+			namespace: NamespaceModel,
 			manageUsersComponent: '',
 			manageTeamsComponent: '',
-
-			namespace: NamespaceModel,
+			title: '',
 		}
 	},
 	components: {
@@ -66,7 +66,8 @@ export default {
 					// This will trigger the dynamic loading of components once we actually have all the data to pass to them
 					this.manageTeamsComponent = 'manageSharing'
 					this.manageUsersComponent = 'manageSharing'
-					this.setTitle(`Share "${this.namespace.title}"`)
+					this.title = this.$t('namespace.share.title', { namespace: this.namespace.title })
+					this.setTitle(this.title)
 				})
 				.catch(e => {
 					this.error(e)

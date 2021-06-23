@@ -1,53 +1,53 @@
 <template>
 	<create-edit
-		title="Edit This Namespace"
+		:title="title"
 		primary-icon=""
-		primary-label="Save"
+		:primary-label="$t('misc.save')"
 		@primary="save"
-		tertary="Delete"
+		:tertary="$t('misc.delete')"
 		@tertary="$router.push({ name: 'namespace.settings.delete', params: { id: $route.params.id } })"
 	>
 		<form @submit.prevent="save()">
 			<div class="field">
-				<label class="label" for="namespacetext">Namespace Name</label>
+				<label class="label" for="namespacetext">{{ $t('namespace.attributes.title') }}</label>
 				<div class="control">
 					<input
 						:class="{ 'disabled': namespaceService.loading}"
 						:disabled="namespaceService.loading"
 						class="input"
 						id="namespacetext"
-						placeholder="The namespace text is here..."
+						:placeholder="$t('namespace.attributes.titlePlaceholder')"
 						type="text"
 						v-focus
 						v-model="namespace.title"/>
 				</div>
 			</div>
 			<div class="field">
-				<label class="label" for="namespacedescription">Description</label>
+				<label class="label" for="namespacedescription">{{ $t('namespace.attributes.description') }}</label>
 				<div class="control">
 					<editor
 						:class="{ 'disabled': namespaceService.loading}"
 						:disabled="namespaceService.loading"
 						:preview-is-default="false"
 						id="namespacedescription"
-						placeholder="The namespaces description goes here..."
+						:placeholder="$t('namespace.attributes.descriptionPlaceholder')"
 						v-if="editorActive"
 						v-model="namespace.description"
 					/>
 				</div>
 			</div>
 			<div class="field">
-				<label class="label" for="isArchivedCheck">Is Archived</label>
+				<label class="label" for="isArchivedCheck">{{ $t('namespace.attributes.archived') }}</label>
 				<div class="control">
 					<fancycheckbox
 						v-model="namespace.isArchived"
-						v-tooltip="'If a namespace is archived, you cannot create new lists or edit it.'">
-						This namespace is archived
+						v-tooltip="$t('namespace.archive.description')">
+						{{ $t('namespace.attributes.isArchived') }}
 					</fancycheckbox>
 				</div>
 			</div>
 			<div class="field">
-				<label class="label">Color</label>
+				<label class="label">{{ $t('namespace.attributes.color') }}</label>
 				<div class="control">
 					<color-picker v-model="namespace.hexColor"/>
 				</div>
@@ -70,9 +70,9 @@ export default {
 	data() {
 		return {
 			namespaceService: NamespaceService,
-
 			namespace: NamespaceModel,
 			editorActive: false,
+			title: '',
 		}
 	},
 	components: {
@@ -115,7 +115,8 @@ export default {
 					// This will trigger the dynamic loading of components once we actually have all the data to pass to them
 					this.manageTeamsComponent = 'manageSharing'
 					this.manageUsersComponent = 'manageSharing'
-					this.setTitle(`Edit "${r.title}"`)
+					this.title = this.$t('namespace.edit.title', {namespace: r.title})
+					this.setTitle(this.title)
 				})
 				.catch(e => {
 					this.error(e)
@@ -126,7 +127,7 @@ export default {
 				.then(r => {
 					// Update the namespace in the parent
 					this.$store.commit('namespaces/setNamespaceById', r)
-					this.success({message: 'The namespace was successfully updated.'})
+					this.success({message: this.$t('namespace.edit.success')})
 					this.$router.back()
 				})
 				.catch(e => {

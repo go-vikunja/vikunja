@@ -2,7 +2,7 @@ import Vue from 'vue'
 import App from './App.vue'
 import router from './router'
 
-import {createDateFromString} from '@/helpers/time/createDateFromString'
+import {formatDate, formatDateSince} from '@/helpers/time/formatDate'
 import {VERSION} from './version.json'
 
 // Register the modal
@@ -65,7 +65,16 @@ import {
 	faImage,
 	faBell,
 } from '@fortawesome/free-solid-svg-icons'
-import {faCalendarAlt, faClock, faComments, faSave, faStar, faTimesCircle, faSun, faBellSlash} from '@fortawesome/free-regular-svg-icons'
+import {
+	faCalendarAlt,
+	faClock,
+	faComments,
+	faSave,
+	faStar,
+	faTimesCircle,
+	faSun,
+	faBellSlash
+} from '@fortawesome/free-regular-svg-icons'
 import {FontAwesomeIcon} from '@fortawesome/vue-fontawesome'
 // PWA
 import './registerServiceWorker'
@@ -74,11 +83,12 @@ import './registerServiceWorker'
 import vueShortkey from 'vue-shortkey'
 // Mixins
 import message from './message'
-import {format, formatDistance} from 'date-fns'
 import {colorIsDark} from './helpers/color/colorIsDark'
 import {setTitle} from './helpers/setTitle'
 // Vuex
 import {store} from './store'
+// i18n
+import {i18n} from './i18n/setup'
 
 console.info(`Vikunja frontend version ${VERSION}`)
 
@@ -160,66 +170,40 @@ library.add(faBellSlash)
 
 Vue.component('icon', FontAwesomeIcon)
 
-Vue.use(vueShortkey, { prevent: ['input', 'textarea', '.input'] })
+Vue.use(vueShortkey, {prevent: ['input', 'textarea', '.input']})
 
 import focus from '@/directives/focus'
+
 Vue.directive('focus', focus)
 
 import tooltip from '@/directives/tooltip'
+
 Vue.directive('tooltip', tooltip)
 
-const dateIsValid = date => {
-	if (date === null) {
-		return false
-	}
-
-	return date instanceof Date && !isNaN(date)
-}
-
-const formatDate = (date, f) => {
-	if (!dateIsValid(date)) {
-		return ''
-	}
-
-	date = createDateFromString(date)
-
-	return date ? format(date, f) : ''
-}
-
 import Button from '@/components/input/button'
+
 Vue.component('x-button', Button)
 
 import Card from '@/components/misc/card'
+
 Vue.component('card', Card)
 
 Vue.mixin({
 	methods: {
-		formatDateSince: date => {
-			if (!dateIsValid(date)) {
-				return ''
-			}
-
-			date = createDateFromString(date)
-
-			const currentDate = new Date()
-			let formatted = ''
-			if (date > currentDate) {
-				formatted += 'in '
-			}
-			formatted += formatDistance(date, currentDate)
-			if (date < currentDate) {
-				formatted += ' ago'
-			}
-
-			return formatted
+		formatDateSince(date) {
+			return formatDateSince(date, (p, params) => this.$t(p, params))
 		},
-		formatDate: date => formatDate(date, 'PPPPpppp'),
-		formatDateShort: date => formatDate(date, 'PPpp'),
+		formatDate(date) {
+			return formatDate(date, 'PPPPpppp', this.$t('date.locale'))
+		},
+		formatDateShort(date) {
+			return formatDate(date, 'PPpp', this.$t('date.locale'))
+		},
 		error(e, actions = []) {
-			return message.error(e, this, actions)
+			return message.error(e, this, p => this.$t(p), actions)
 		},
 		success(s, actions = []) {
-			return message.success(s, this, actions)
+			return message.success(s, this, p => this.$t(p), actions)
 		},
 		colorIsDark: colorIsDark,
 		setTitle: setTitle,
@@ -229,5 +213,6 @@ Vue.mixin({
 new Vue({
 	router,
 	store,
+	i18n,
 	render: h => h(App),
 }).$mount('#app')

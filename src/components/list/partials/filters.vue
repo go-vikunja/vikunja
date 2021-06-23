@@ -1,28 +1,30 @@
 <template>
 	<card class="filters has-overflow">
 		<fancycheckbox v-model="params.filter_include_nulls">
-			Include Tasks which don't have a value set
+			{{ $t('filters.attributes.includeNulls') }}
 		</fancycheckbox>
 		<fancycheckbox
 			v-model="filters.requireAllFilters"
 			@change="setFilterConcat()"
 		>
-			Require all filters to be true for a task to show up
+			{{ $t('filters.attributes.requireAll') }}
 		</fancycheckbox>
 		<div class="field">
-			<label class="label">Show Done Tasks</label>
+			<label class="label">
+				{{ $t('filters.attributes.showDoneTasks') }}
+			</label>
 			<div class="control">
 				<fancycheckbox @change="setDoneFilter" v-model="filters.done">
-					Show Done Tasks
+					{{ $t('filters.attributes.showDoneTasks') }}
 				</fancycheckbox>
 			</div>
 		</div>
 		<div class="field">
-			<label class="label">Search</label>
+			<label class="label">{{ $t('misc.search') }}</label>
 			<div class="control">
 				<input
 					class="input"
-					placeholder="Search"
+					:placeholder="$t('misc.search')"
 					v-model="params.s"
 					@blur="change()"
 					@keyup.enter="change()"
@@ -30,7 +32,7 @@
 			</div>
 		</div>
 		<div class="field">
-			<label class="label">Priority</label>
+			<label class="label">{{ $t('task.attributes.priority') }}</label>
 			<div class="control single-value-control">
 				<priority-select
 					:disabled="!filters.usePriority"
@@ -41,12 +43,12 @@
 					v-model="filters.usePriority"
 					@change="setPriority"
 				>
-					Enable Filter By Priority
+					{{ $t('filters.attributes.enablePriority') }}
 				</fancycheckbox>
 			</div>
 		</div>
 		<div class="field">
-			<label class="label">Percent Done</label>
+			<label class="label">{{ $t('task.attributes.percentDone') }}</label>
 			<div class="control single-value-control">
 				<percent-done-select
 					v-model.number="filters.percentDone"
@@ -57,65 +59,65 @@
 					v-model="filters.usePercentDone"
 					@change="setPercentDoneFilter"
 				>
-					Enable Filter By Percent Done
+					{{ $t('filters.attributes.enablePercentDone') }}
 				</fancycheckbox>
 			</div>
 		</div>
 		<div class="field">
-			<label class="label">Due Date</label>
+			<label class="label">{{ $t('task.attributes.dueDate') }}</label>
 			<div class="control">
 				<flat-pickr
 					:config="flatPickerConfig"
 					@on-close="setDueDateFilter"
 					class="input"
-					placeholder="Due Date Range"
+					:placeholder="$t('filters.attributes.dueDateRange')"
 					v-model="filters.dueDate"
 				/>
 			</div>
 		</div>
 		<div class="field">
-			<label class="label">Start Date</label>
+			<label class="label">{{ $t('task.attributes.startDate') }}</label>
 			<div class="control">
 				<flat-pickr
 					:config="flatPickerConfig"
 					@on-close="setStartDateFilter"
 					class="input"
-					placeholder="Start Date Range"
+					:placeholder="$t('filters.attributes.startDateRange')"
 					v-model="filters.startDate"
 				/>
 			</div>
 		</div>
 		<div class="field">
-			<label class="label">End Date</label>
+			<label class="label">{{ $t('task.attributes.endDate') }}</label>
 			<div class="control">
 				<flat-pickr
 					:config="flatPickerConfig"
 					@on-close="setEndDateFilter"
 					class="input"
-					placeholder="End Date Range"
+					:placeholder="$t('filters.attributes.endDateRange')"
 					v-model="filters.endDate"
 				/>
 			</div>
 		</div>
 		<div class="field">
-			<label class="label">Reminders</label>
+			<label class="label">{{ $t('task.attributes.reminders') }}</label>
 			<div class="control">
 				<flat-pickr
 					:config="flatPickerConfig"
 					@on-close="setReminderFilter"
 					class="input"
-					placeholder="Reminder Date Range"
+					:placeholder="$t('filters.attributes.reminderRange')"
 					v-model="filters.reminders"
 				/>
 			</div>
 		</div>
 
 		<div class="field">
-			<label class="label">Assignees</label>
+			<label class="label">{{ $t('task.attributes.assignees') }}</label>
 			<div class="control">
 				<multiselect
 					:loading="usersService.loading"
-					placeholder="Type to search for a user..."
+					:placeholder="$t('team.edit.search')"
 					@search="query => find('users', query)"
 					:search-results="foundusers"
 					@select="() => add('users', 'assignees')"
@@ -128,10 +130,10 @@
 		</div>
 
 		<div class="field">
-			<label class="label">Labels</label>
+			<label class="label">{{ $t('task.attributes.label') }}</label>
 			<div class="control">
 				<multiselect
-					placeholder="Type to search for a label..."
+					:placeholder="$t('label.search')"
 					@search="findLabels"
 					:search-results="foundLabels"
 					@select="label => addLabel(label)"
@@ -153,11 +155,11 @@
 
 		<template v-if="$route.name === 'filters.create' || $route.name === 'list.edit'">
 			<div class="field">
-				<label class="label">Lists</label>
+				<label class="label">{{ $t('list.lists') }}</label>
 				<div class="control">
 					<multiselect
 						:loading="listsService.loading"
-						placeholder="Type to search for a list..."
+						:placeholder="$t('list.search')"
 						@search="query => find('lists', query)"
 						:search-results="foundlists"
 						@select="() => add('lists', 'list_id')"
@@ -169,11 +171,11 @@
 				</div>
 			</div>
 			<div class="field">
-				<label class="label">Namespaces</label>
+				<label class="label">{{ $t('namespace.namespaces') }}</label>
 				<div class="control">
 					<multiselect
 						:loading="namespaceService.loading"
-						placeholder="Type to search for a namespace..."
+						:placeholder="$t('namespace.search')"
 						@search="query => find('namespace', query)"
 						:search-results="foundnamespace"
 						@select="() => add('namespace', 'namespace')"
@@ -203,7 +205,6 @@ import Multiselect from '@/components/input/multiselect'
 import UserService from '@/services/user'
 import ListService from '@/services/list'
 import NamespaceService from '@/services/namespace'
-import {mapState} from 'vuex'
 
 export default {
 	name: 'filters',
@@ -290,19 +291,19 @@ export default {
 				return first.id === second.id
 			})
 		},
-		...mapState({
-			flatPickerConfig: state => ({
-				altFormat: 'j M Y H:i',
+		flatPickerConfig() {
+			return {
+				altFormat: this.$t('date.altFormatLong'),
 				altInput: true,
 				dateFormat: 'Y-m-d H:i',
 				enableTime: true,
 				time_24hr: true,
 				mode: 'range',
 				locale: {
-					firstDayOfWeek: state.auth.settings.weekStart,
+					firstDayOfWeek: this.$store.state.auth.settings.weekStart,
 				},
-			}),
-		}),
+			}
+		},
 	},
 	methods: {
 		change() {

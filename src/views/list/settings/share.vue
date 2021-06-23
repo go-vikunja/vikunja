@@ -1,6 +1,6 @@
 <template>
 	<create-edit
-		title="Share this list"
+		:title="$t('list.share.header')"
 		primary-label=""
 	>
 		<component
@@ -67,7 +67,7 @@ export default {
 					// This will trigger the dynamic loading of components once we actually have all the data to pass to them
 					this.manageTeamsComponent = 'userTeam'
 					this.manageUsersComponent = 'userTeam'
-					this.setTitle(`Share "${this.list.title}"`)
+					this.setTitle(this.$t('list.share.title', {list: this.list.title}))
 				})
 				.catch(e => {
 					this.error(e)

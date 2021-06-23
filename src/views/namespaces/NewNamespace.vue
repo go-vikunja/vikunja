@@ -1,11 +1,11 @@
 <template>
 	<create-edit
-		title="Create a new namespace"
+		:title="$t('namespace.create.title')"
 		@create="newNamespace()"
 		:create-disabled="namespace.title === ''"
 	>
 		<div class="field">
-			<label class="label" for="namespaceTitle">Namespace Title</label>
+			<label class="label" for="namespaceTitle">{{ $t('namespace.attributes.title') }}</label>
 			<div
 				class="control is-expanded"
 				:class="{ 'is-loading': namespaceService.loading }"
@@ -14,7 +14,7 @@
 					@keyup.enter="newNamespace()"
 					@keyup.esc="back()"
 					class="input"
-					placeholder="The namespace's name goes here..."
+					:placeholder="$t('namespace.attributes.titlePlaceholder')"
 					type="text"
 					:class="{ disabled: namespaceService.loading }"
 					v-focus
@@ -23,21 +23,19 @@
 			</div>
 		</div>
 		<p class="help is-danger" v-if="showError && namespace.title === ''">
-			Please specify a title.
+			{{ $t('namespace.create.titleRequired') }}
 		</p>
 		<div class="field">
-			<label class="label">Color</label>
+			<label class="label">{{ $t('namespace.attributes.color') }}</label>
 			<div class="control">
 				<color-picker v-model="namespace.hexColor" />
 			</div>
 		</div>
 		<p
 			class="is-small has-text-centered"
-			v-tooltip.bottom="
-				'A namespace is a collection of lists you can share and use to organize your lists with. In fact, every list belongs to a namepace.'
-			"
+			v-tooltip.bottom="$t('namespace.create.explanation')"
 		>
-			What's a namespace?
+			{{ $t('namespace.create.tooltip') }}
 		</p>
 	</create-edit>
 </template>
@@ -66,7 +64,7 @@ export default {
 		this.namespaceService = new NamespaceService()
 	},
 	mounted() {
-		this.setTitle('Create a new namespace')
+		this.setTitle(this.$t('namespace.create.title'))
 	},
 	methods: {
 		newNamespace() {
@@ -80,7 +78,7 @@ export default {
 				.create(this.namespace)
 				.then((r) => {
 					this.$store.commit('namespaces/addNamespace', r)
-					this.success({message: 'The namespace was successfully created.'})
+					this.success({message: this.$t('namespace.create.success') })
 					this.$router.back()
 				})
 				.catch((e) => {

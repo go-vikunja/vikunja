@@ -5,14 +5,14 @@
 	>
 		<multiselect
 			:loading="listUserService.loading"
-			placeholder="Type to assign a user..."
+			:placeholder="$t('task.assignee.placeholder')"
 			:disabled="disabled"
 			:multiple="true"
 			@search="findUser"
 			:search-results="foundUsers"
 			@select="addAssignee"
 			label="username"
-			select-placeholder="Assign this user"
+			:select-placeholder="$t('task.assignee.selectPlaceholder')"
 			v-model="assignees"
 			ref="multiselect"
 		>
@@ -84,7 +84,7 @@ export default {
 			this.$store.dispatch('tasks/addAssignee', {user: user, taskId: this.taskId})
 				.then(() => {
 					this.$emit('input', this.assignees)
-					this.success({message: 'The user has been assigned successfully.'})
+					this.success({message: this.$t('task.assignee.assignSuccess')})
 				})
 				.catch(e => {
 					this.error(e)
@@ -99,7 +99,7 @@ export default {
 							this.assignees.splice(a, 1)
 						}
 					}
-					this.success({message: 'The user has been unassinged successfully.'})
+					this.success({message: this.$t('task.assignee.assignSuccess')})
 				})
 				.catch(e => {
 					this.error(e)

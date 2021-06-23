@@ -1,26 +1,26 @@
 <template>
 	<div class="content has-text-centered">
 		<h2>
-			Hi {{ userInfo.name !== '' ? userInfo.name : userInfo.username }}!
+			{{ $t('home.welcome', {username: userInfo.name !== '' ? userInfo.name : userInfo.username}) }}!
 		</h2>
 		<template v-if="!hasTasks">
-			<p>You can create a new list for your new tasks:</p>
+			<p>{{ $t('home.list.newText') }}</p>
 			<x-button
 				:to="{name: 'list.create', params: { id: defaultNamespaceId }}"
 				:shadow="false"
 				class="ml-2"
 				v-if="defaultNamespaceId > 0"
 			>
-				Create a new list
+				{{ $t('home.list.new') }}
 			</x-button>
 			<p class="mt-4" v-if="migratorsEnabled">
-				Or import your lists and tasks from other services into Vikunja:
+				{{ $t('home.list.importText') }}
 			</p>
 			<x-button
 				v-if="migratorsEnabled"
 				:to="{ name: 'migrate.start' }"
 				:shadow="false">
-				Import your data into Vikunja
+				{{ $t('home.list.import') }}
 			</x-button>
 		</template>
 		<ShowTasks :show-all="true" v-if="hasLists"/>
@@ -28,7 +28,7 @@
 </template>
 
 <script>
-import { mapState } from 'vuex'
+import {mapState} from 'vuex'
 import ShowTasks from './tasks/ShowTasks'
 
 export default {

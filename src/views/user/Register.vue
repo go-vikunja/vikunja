@@ -1,16 +1,16 @@
 <template>
 	<div>
-		<h2 class="title has-text-centered">Register</h2>
+		<h2 class="title has-text-centered">{{ $t('user.auth.register') }}</h2>
 		<div class="box">
 			<form @submit.prevent="submit" id="registerform">
 				<div class="field">
-					<label class="label" for="username">Username</label>
+					<label class="label" for="username">{{ $t('user.auth.username') }}</label>
 					<div class="control">
 						<input
 							class="input"
 							id="username"
 							name="username"
-							placeholder="e.g. frederick"
+							:placeholder="$t('user.auth.usernamePlaceholder')"
 							required
 							type="text"
 							autocomplete="username"
@@ -21,13 +21,13 @@
 					</div>
 				</div>
 				<div class="field">
-					<label class="label" for="email">E-mail address</label>
+					<label class="label" for="email">{{ $t('user.auth.email') }}</label>
 					<div class="control">
 						<input
 							class="input"
 							id="email"
 							name="email"
-							placeholder="e.g. frederic@vikunja.io"
+							:placeholder="$t('user.auth.emailPlaceholder')"
 							required
 							type="email"
 							v-model="credentials.email"
@@ -36,13 +36,13 @@
 					</div>
 				</div>
 				<div class="field">
-					<label class="label" for="password1">Password</label>
+					<label class="label" for="password1">{{ $t('user.auth.password') }}</label>
 					<div class="control">
 						<input
 							class="input"
 							id="password1"
 							name="password1"
-							placeholder="e.g. ••••••••••••"
+							:placeholder="$t('user.auth.passwordPlaceholder')"
 							required
 							type="password"
 							autocomplete="new-password"
@@ -52,13 +52,13 @@
 					</div>
 				</div>
 				<div class="field">
-					<label class="label" for="password2">Retype your password</label>
+					<label class="label" for="password2">{{ $t('user.auth.passwordRepeat') }}</label>
 					<div class="control">
 						<input
 							class="input"
 							id="password2"
 							name="password2"
-							placeholder="e.g. ••••••••••••"
+							:placeholder="$t('user.auth.passwordPlaceholder')"
 							required
 							type="password"
 							autocomplete="new-password"
@@ -76,13 +76,15 @@
 							@click="submit"
 							class="mr-2"
 						>
-							Register
+							{{ $t('user.auth.register') }}
 						</x-button>
-						<x-button :to="{ name: 'user.login' }" type="secondary">Login</x-button>
+						<x-button :to="{ name: 'user.login' }" type="secondary">
+							{{ $t('user.auth.login') }}
+						</x-button>
 					</div>
 				</div>
 				<div class="notification is-info" v-if="loading">
-					Loading...
+					{{ $t('misc.loading') }}
 				</div>
 				<div class="notification is-danger" v-if="errorMessage !== ''">
 					{{ errorMessage }}
@@ -120,7 +122,7 @@ export default {
 		}
 	},
 	mounted() {
-		this.setTitle('Register')
+		this.setTitle(this.$t('user.auth.register'))
 	},
 	computed: mapState({
 		authenticated: state => state.auth.authenticated,
@@ -133,7 +135,7 @@ export default {
 			this.$store.commit(ERROR_MESSAGE, '')
 
 			if (this.credentials.password2 !== this.credentials.password) {
-				this.$store.commit(ERROR_MESSAGE, 'Passwords don\'t match.')
+				this.$store.commit(ERROR_MESSAGE, this.$t('user.auth.passwordsDontMatch'))
 				this.$store.commit(LOADING, false)
 				return
 			}

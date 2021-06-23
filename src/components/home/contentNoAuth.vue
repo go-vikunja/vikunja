@@ -4,7 +4,7 @@
 			<img alt="Vikunja" src="/images/logo-full.svg"/>
 			<div class="message is-info" v-if="motd !== ''">
 				<div class="message-header">
-					<p>Info</p>
+					<p>{{ $t('misc.info') }}</p>
 				</div>
 				<div class="message-body">
 					{{ motd }}

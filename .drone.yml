@@ -528,3 +528,34 @@ steps:
       status:
         - success
         - failure
+---
+kind: pipeline
+name: ping-weblate
+
+depends_on:
+  - build
+
+trigger:
+  branch:
+    - main
+  event:
+    - push
+
+steps:
+  - name: update-translation-base
+    image: appleboy/drone-git-push
+    settings:
+      branch: translations
+      remote: ssh://git@kolaente.dev:9022/vikunja/frontend.git
+      ssh_key:
+        from_secret: translations_branch_update_ssh_key
+  - name: notify-weblate
+    image: curlimages/curl
+    depends_on:
+      - update-translation-base
+    environment:
+      WEBLATE_TOKEN:
+        from_secret: weblate_token
+    commands:
+      - 'curl -d operation=pull -H "Authorization: Token ${WEBLATE_TOKEN}" https://hosted.weblate.org/api/projects/vikunja/repository/'
+      - 'curl -d operation=push -H "Authorization: Token ${WEBLATE_TOKEN}" https://hosted.weblate.org/api/projects/vikunja/repository/'

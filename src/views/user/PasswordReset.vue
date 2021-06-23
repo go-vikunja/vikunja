@@ -1,16 +1,16 @@
 <template>
 	<div>
-		<h2 class="title has-text-centered">Reset your password</h2>
+		<h2 class="title has-text-centered">{{ $t('user.auth.resetPassword') }}</h2>
 		<div class="box">
 			<form @submit.prevent="submit" id="form" v-if="!successMessage">
 				<div class="field">
-					<label class="label" for="password1">Password</label>
+					<label class="label" for="password1">{{ $t('user.auth.password') }}</label>
 					<div class="control">
 						<input
 							class="input"
 							id="password1"
 							name="password1"
-							placeholder="e.g. ••••••••••••"
+							:placeholder="$t('user.auth.passwordPlaceholder')"
 							required
 							type="password"
 							autocomplete="new-password"
@@ -19,13 +19,13 @@
 					</div>
 				</div>
 				<div class="field">
-					<label class="label" for="password2">Retype your password</label>
+					<label class="label" for="password2">{{ $t('user.auth.passwordRepeat') }}</label>
 					<div class="control">
 						<input
 							class="input"
 							id="password2"
 							name="password2"
-							placeholder="e.g. ••••••••••••"
+							:placeholder="$t('user.auth.passwordPlaceholder')"
 							required
 							type="password"
 							autocomplete="new-password"
@@ -39,12 +39,12 @@
 							:loading="this.passwordResetService.loading"
 							@click="submit"
 						>
-							Reset your password
+							{{ $t('user.auth.resetPassoword') }}
 						</x-button>
 					</div>
 				</div>
 				<div class="notification is-info" v-if="this.passwordResetService.loading">
-					Loading...
+					{{ $t('misc.loading') }}
 				</div>
 				<div class="notification is-danger" v-if="errorMsg">
 					{{ errorMsg }}
@@ -55,7 +55,7 @@
 					{{ successMessage }}
 				</div>
 				<x-button :to="{ name: 'user.login' }">
-					Login
+					{{ $t('user.auth.login') }}
 				</x-button>
 			</div>
 			<legal/>
@@ -87,14 +87,14 @@ export default {
 		this.passwordResetService = new PasswordResetService()
 	},
 	mounted() {
-		this.setTitle('Reset your password')
+		this.setTitle(this.$t('user.auth.resetPassword'))
 	},
 	methods: {
 		submit() {
 			this.errorMsg = ''
 
 			if (this.credentials.password2 !== this.credentials.password) {
-				this.errorMsg = 'Passwords don\'t match'
+				this.errorMsg = this.$t('user.auth.passwordsDontMatch')
 				return
 			}
 

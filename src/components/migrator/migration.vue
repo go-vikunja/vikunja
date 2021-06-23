@@ -1,15 +1,15 @@
 <template>
 	<div class="content">
-		<h1>Import your data from {{ name }} to Vikunja</h1>
-		<p>Vikunja will import all lists, tasks, notes, reminders and files you have access to.</p>
+		<h1>{{ $t('migrate.titleService', { name: name }) }}</h1>
+		<p>{{ $t('migrate.descriptionDo') }}</p>
 		<template v-if="isMigrating === false && message === '' && lastMigrationDate === null">
-			<p>To authorize Vikunja to access your {{ name }} Account, click the button below.</p>
+			<p>{{ $t('migrate.authorize', {name: name}) }}</p>
 			<x-button
 				:loading="migrationService.loading"
 				:disabled="migrationService.loading"
 				:href="authUrl"
 			>
-				Get Started
+				{{ $t('migrate.getStarted') }}
 			</x-button>
 		</template>
 		<div
@@ -29,17 +29,16 @@
 				</div>
 				<img alt="Vikunja" src="/images/logo.svg">
 			</div>
-			<p>Importing in progress, hang tight...</p>
+			<p>{{ $t('migrate.inProgress') }}</p>
 		</div>
 		<div v-else-if="lastMigrationDate">
 			<p>
-				It looks like you've already imported your stuff from {{ name }} at {{ formatDate(lastMigrationDate) }}.<br/>
-				Importing again is possible, but might create duplicates.
-				Are you sure?
+				{{ $t('migrate.alreadyMigrated1', { name: name, date: formatDate(lastMigrationDate) }) }}<br/>
+				{{ $t('migrate.alreadyMigrated2') }}
 			</p>
 			<div class="buttons">
-				<x-button @click="migrate">I am sure, please start migrating now!</x-button>
-				<x-button :to="{name: 'home'}" type="tertary" class="has-text-danger">Cancel</x-button>
+				<x-button @click="migrate">{{ $t('migrate.confirm') }}</x-button>
+				<x-button :to="{name: 'home'}" type="tertary" class="has-text-danger">{{ $t('misc.cancel') }}</x-button>
 			</div>
 		</div>
 		<div v-else>
@@ -48,7 +47,7 @@
 					{{ message }}
 				</div>
 			</div>
-			<x-button :to="{name: 'home'}">Refresh</x-button>
+			<x-button :to="{name: 'home'}">{{ $t('misc.refresh') }}</x-button>
 		</div>
 	</div>
 </template>

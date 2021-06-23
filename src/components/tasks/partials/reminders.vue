@@ -19,7 +19,7 @@
 			<datepicker
 				v-model="newReminder"
 				@close-on-change="() => addReminderDate()"
-				choose-date-label="Add a new reminder..."
+				:choose-date-label="$t('task.addReminder')"
 			/>
 		</div>
 	</div>

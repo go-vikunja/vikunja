@@ -21,7 +21,7 @@ export default {
 		}
 	},
 	mounted() {
-		this.setTitle(`Import your data from ${this.name} into Vikunja`)
+		this.setTitle(this.$t('migrate.titleService', {name: this.name}))
 	},
 	created() {
 		switch (this.$route.params.service) {

@@ -1,8 +1,8 @@
 <template>
 	<div class="legal-links">
-		<a :href="imprintUrl" target="_blank" v-if="imprintUrl">Imprint</a>
+		<a :href="imprintUrl" target="_blank" v-if="imprintUrl">{{ $t('navigation.imprint') }}</a>
 		<span v-if="imprintUrl && privacyPolicyUrl"> | </span>
-		<a :href="privacyPolicyUrl" target="_blank" v-if="privacyPolicyUrl">Privacy policy</a>
+		<a :href="privacyPolicyUrl" target="_blank" v-if="privacyPolicyUrl">{{ $t('navigation.privacy') }}</a>
 	</div>
 </template>
 

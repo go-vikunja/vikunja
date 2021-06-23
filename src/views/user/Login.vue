@@ -3,17 +3,17 @@
 		<h2 class="title has-text-centered">Login</h2>
 		<div class="box">
 			<div class="notification is-success has-text-centered" v-if="confirmedEmailSuccess">
-				You successfully confirmed your email! You can log in now.
+				{{ $t('user.auth.confirmEmailSuccess') }}
 			</div>
 			<api-config @foundApi="hasApiUrl = true"/>
 			<form @submit.prevent="submit" id="loginform" v-if="hasApiUrl && localAuthEnabled">
 				<div class="field">
-					<label class="label" for="username">Username Or Email Address</label>
+					<label class="label" for="username">{{ $t('user.auth.usernameEmail') }}</label>
 					<div class="control">
 						<input
 							class="input" id="username"
 							name="username"
-							placeholder="e.g. frederick"
+							:placeholder="$t('user.auth.usernamePlaceholder')"
 							ref="username"
 							required
 							type="text"
@@ -24,13 +24,13 @@
 					</div>
 				</div>
 				<div class="field">
-					<label class="label" for="password">Password</label>
+					<label class="label" for="password">{{ $t('user.auth.password') }}</label>
 					<div class="control">
 						<input
 							class="input"
 							id="password"
 							name="password"
-							placeholder="e.g. ••••••••••••"
+							:placeholder="$t('user.auth.passwordPlaceholder')"
 							ref="password"
 							required
 							type="password"
@@ -40,12 +40,12 @@
 					</div>
 				</div>
 				<div class="field" v-if="needsTotpPasscode">
-					<label class="label" for="totpPasscode">Two Factor Authentication Code</label>
+					<label class="label" for="totpPasscode">{{ $t('user.auth.totpTitle') }}</label>
 					<div class="control">
 						<input
 							class="input"
 							id="totpPasscode"
-							placeholder="e.g. 123456"
+							:placeholder="$t('user.auth.totpPlaceholder')"
 							ref="totpPasscode"
 							required
 							type="text"
@@ -61,19 +61,19 @@
 							@click="submit"
 							:loading="loading"
 						>
-							Login
+							{{ $t('user.auth.login') }}
 						</x-button>
 						<x-button
 							:to="{ name: 'user.register' }"
 							v-if="registrationEnabled"
 							type="secondary"
 						>
-							Register
+							{{ $t('user.auth.register') }}
 						</x-button>
 					</div>
 					<div class="control">
 						<router-link :to="{ name: 'user.password-reset.request' }" class="reset-password-link">
-							Reset your password
+							{{ $t('user.auth.resetPassword') }}
 						</router-link>
 					</div>
 				</div>
@@ -92,7 +92,7 @@
 					type="secondary"
 					class="is-fullwidth mt-2"
 				>
-					Log in with {{ p.name }}
+					{{ $t('user.auth.loginWith', {provider: p.name}) }}
 				</x-button>
 			</div>
 
@@ -109,6 +109,7 @@ import {HTTPFactory} from '@/http-common'
 import {ERROR_MESSAGE, LOADING} from '@/store/mutation-types'
 import legal from '../../components/misc/legal'
 import ApiConfig from '@/components/misc/api-config'
+import {getErrorText} from '@/message'
 
 export default {
 	components: {
@@ -147,7 +148,7 @@ export default {
 	},
 	created() {
 		this.hasApiUrl = window.API_URL !== ''
-		this.setTitle('Login')
+		this.setTitle(this.$t('user.auth.login'))
 	},
 	computed: mapState({
 		registrationEnabled: state => state.config.registrationEnabled,
@@ -183,7 +184,14 @@ export default {
 			}
 
 			this.$store.dispatch('auth/login', credentials)
-				.catch(() => {
+				.catch(e => {
+					const err = getErrorText(e, p => this.$t(p))
+					if (typeof err[1] !== 'undefined') {
+						this.$store.commit(ERROR_MESSAGE, err[1])
+						return
+					}
+
+					this.$store.commit(ERROR_MESSAGE, err[0])
 				})
 		},
 		redirectToProvider(provider) {

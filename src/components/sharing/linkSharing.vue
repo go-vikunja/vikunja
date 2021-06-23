@@ -1,72 +1,76 @@
 <template>
 	<div>
 		<p class="has-text-weight-bold">
-			Share Links
+			{{ $t('list.share.links.title') }}
 			<span
-
 				class="is-size-7"
-				v-tooltip="'Share Links allow you to easily share a list with other users who don\'t have an account on Vikunja.'">
-				What is a share link?
+				v-tooltip="$t('list.share.links.explanation')">
+				{{ $t('list.share.links.what') }}
 			</span>
 		</p>
 
 		<div class="sharables-list">
-
 			<x-button
 				v-if="!(linkShares.length === 0 || showNewForm)"
 				@click="showNewForm = true"
 				icon="plus"
 				class="mb-4">
-				Create a new link share
+				{{ $t('list.share.links.create') }}
 			</x-button>
 
 			<div class="p-4" v-if="linkShares.length === 0 || showNewForm">
 				<div class="field">
 					<label class="label" for="linkShareRight">
-						Right
+						{{ $t('list.share.right.title') }}
 					</label>
 					<div class="control">
 						<div class="select">
 							<select v-model="selectedRight" id="linkShareRight">
-								<option :value="rights.READ">Read only</option>
-								<option :value="rights.READ_WRITE">
-									Read & write
+								<option :value="rights.READ">
+									{{ $t('list.share.right.read') }}
 								</option>
-								<option :value="rights.ADMIN">Admin</option>
+								<option :value="rights.READ_WRITE">
+									{{ $t('list.share.right.readWrite') }}
+								</option>
+								<option :value="rights.ADMIN">
+									{{ $t('list.share.right.admin') }}
+								</option>
 							</select>
 						</div>
 					</div>
 				</div>
 				<div class="field">
 					<label class="label" for="linkShareName">
-						Name (optional)
+						{{ $t('list.share.links.name') }}
 					</label>
 					<div class="control">
 						<input
 							id="linkShareName"
 							class="input"
-							placeholder="e.g. Lorem Ipsum"
-							v-tooltip="'All actions done by this link share will show up with the name.'"
+							:placeholder="$t('list.share.links.namePlaceholder')"
+							v-tooltip="$t('list.share.links.nameExplanation')"
 							v-model="name"
 						/>
 					</div>
 				</div>
 				<div class="field">
 					<label class="label" for="linkSharePassword">
-						Password (optional)
+						{{ $t('list.share.links.password') }}
 					</label>
 					<div class="control">
 						<input
 							id="linkSharePassword"
 							type="password"
 							class="input"
-							placeholder="e.g. ••••••••••••"
-							v-tooltip="'When authenticating, the user will be required to enter this password.'"
+							:placeholder="$t('user.auth.passwortPlaceholder')"
+							v-tooltip="$t('list.share.links.passwordExplanation')"
 							v-model="password"
 						/>
 					</div>
 				</div>
-				<x-button @click="add" icon="plus">Share</x-button>
+				<x-button @click="add" icon="plus">
+					{{ $t('list.share.share') }}
+				</x-button>
 			</div>
 
 			<table
@@ -75,11 +79,11 @@
 			>
 				<thead>
 				<tr>
-					<th>Link</th>
-					<th>Name</th>
-					<th>Shared&nbsp;by</th>
-					<th>Right</th>
-					<th>Delete</th>
+					<th>{{ $t('list.share.attributes.link') }}</th>
+					<th>{{ $t('list.share.attributes.name') }}</th>
+					<th>{{ $t('list.share.attributes.sharedBy') }}</th>
+					<th>{{ $t('list.share.attributes.right') }}</th>
+					<th>{{ $t('list.share.attributes.delete') }}</th>
 				</tr>
 				</thead>
 				<tbody>
@@ -98,7 +102,7 @@
 								<x-button
 									@click="copy(getShareLink(s.hash))"
 									:shadow="false"
-									v-tooltip="'Copy to clipboard'"
+									v-tooltip="$t('misc.copy')"
 								>
 									<span class="icon">
 										<icon icon="paste"/>
@@ -111,7 +115,7 @@
 						<template v-if="s.name !== ''">
 							{{ s.name }}
 						</template>
-						<i v-else>No name set</i>
+						<i v-else>{{ $t('list.share.links.noName') }}</i>
 					</td>
 					<td>
 						{{ s.sharedBy.getDisplayName() }}
@@ -121,19 +125,19 @@
 							<span class="icon is-small">
 								<icon icon="lock"/>
 							</span>&nbsp;
-							Admin
+							{{ $t('list.share.right.admin') }}
 						</template>
 						<template v-else-if="s.right === rights.READ_WRITE">
 							<span class="icon is-small">
 								<icon icon="pen"/>
 							</span>&nbsp;
-							Write
+							{{ $t('list.share.right.readWrite') }}
 						</template>
 						<template v-else>
 							<span class="icon is-small">
 								<icon icon="users"/>
 							</span>&nbsp;
-							Read-only
+							{{ $t('list.share.right.read') }}
 						</template>
 					</td>
 					<td class="actions">
@@ -159,12 +163,9 @@
 				@submit="remove()"
 				v-if="showDeleteModal"
 			>
-				<span slot="header">Remove a link share</span>
+				<span slot="header">{{ $t('list.share.links.remove') }}</span>
 				<p slot="text">
-					Are you sure you want to remove this link share?<br/>
-					It will no longer be possible to access this list with this link
-					share.<br/>
-					<b>This CANNOT BE UNDONE!</b>
+					{{ $t('list.share.links.removeText') }}
 				</p>
 			</modal>
 		</transition>
@@ -248,7 +249,7 @@ export default {
 					this.name = ''
 					this.password = ''
 					this.showNewForm = false
-					this.success({message: 'The link share was successfully created'})
+					this.success({message: this.$t('list.share.links.createSuccess')})
 					this.load()
 				})
 				.catch((e) => {
@@ -263,7 +264,7 @@ export default {
 			this.linkShareService
 				.delete(linkshare)
 				.then(() => {
-					this.success({message: 'The link share was successfully deleted'})
+					this.success({message: this.$t('list.share.links.deleteSuccess')})
 					this.load()
 				})
 				.catch((e) => {

@@ -7,7 +7,7 @@
 					type="secondary"
 					icon="filter"
 				>
-					Filters
+					{{ $t('filters.title') }}
 				</x-button>
 			</div>
 			<filter-popup
@@ -108,8 +108,9 @@
 							'has-super-high-priority':
 								t.priority === priorities.DO_NOW,
 						}"
-					>{{ t.title }}</span
 					>
+						{{ t.title }}
+					</span>
 					<priority-label :priority="t.priority"/>
 					<!-- using the key here forces vue to use the updated version model and not the response returned by the api -->
 					<a @click="editTask(theTasks[k])" class="edit-toggle">
@@ -148,7 +149,7 @@
 						@resizestop="resizeTask"
 						axis="x"
 						class="task nodate"
-						v-tooltip="'This task has no dates set.'"
+						v-tooltip="$t('list.gantt.noDates')"
 					>
 						<span>{{ t.title }}</span>
 					</VueDragResize>
@@ -172,14 +173,14 @@
 				/>
 			</transition>
 			<x-button @click="showCreateNewTask" :shadow="false" icon="plus">
-				Add a new task
+				{{ $t('list.list.newTaskCta') }}
 			</x-button>
 		</form>
 		<transition name="fade">
 			<card
 				v-if="isTaskEdit"
 				class="taskedit"
-				title="Edit Task"
+				:title="$t('list.list.editTask')"
 				@close="() => {isTaskEdit = false;taskToEdit = null}"
 				:has-close="true"
 			>

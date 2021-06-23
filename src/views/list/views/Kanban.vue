@@ -7,7 +7,7 @@
 					icon="filter"
 					type="secondary"
 				>
-					Filters
+					{{ $t('filters.title') }}
 				</x-button>
 			</div>
 			<filter-popup
@@ -22,7 +22,7 @@
 					<span
 						v-if="bucket.isDoneBucket"
 						class="icon is-small has-text-success mr-2"
-						v-tooltip="'All tasks moved into this bucket will automatically marked as done.'"
+						v-tooltip="$t('list.kanban.doneBucketHint')"
 					>
 						<icon icon="check-double"/>
 					</span>
@@ -71,26 +71,26 @@
 								</div>
 							</div>
 							<template v-else>
-								Limit: {{ bucket.limit > 0 ? bucket.limit : 'Not set' }}
+								{{ $t('list.kanban.limit', {limit: bucket.limit > 0 ? bucket.limit : $t('list.kanban.noLimit') }) }}
 							</template>
 						</a>
 						<a
 							@click="toggleDoneBucket(bucket)"
 							class="dropdown-item"
-							v-tooltip="'All tasks moved into the done bucket will be marked as done automatically. All tasks marked as done from elsewhere will be moved as well.'"
+							v-tooltip="$t('list.kanban.doneBucketHintExtended')"
 						>
 							<span class="icon is-small" :class="{'has-text-success': bucket.isDoneBucket}"><icon
 								icon="check-double"/></span>
-							Done bucket
+							{{ $t('list.kanban.doneBucket') }}
 						</a>
 						<a
 							:class="{'is-disabled': buckets.length <= 1}"
 							@click="() => deleteBucketModal(bucket.id)"
 							class="dropdown-item has-text-danger"
-							v-tooltip="buckets.length <= 1 ? 'You cannot remove the last bucket.' : ''"
+							v-tooltip="buckets.length <= 1 ? $t('list.kanban.deleteLast') : ''"
 						>
 							<span class="icon is-small"><icon icon="trash-alt"/></span>
-							Delete
+							{{ $t('misc.delete') }}
 						</a>
 					</dropdown>
 				</div>
@@ -192,14 +192,14 @@
 								@focusout="toggleShowNewTaskInput(bucket.id)"
 								@keyup.enter="addTaskToBucket(bucket.id)"
 								@keyup.esc="toggleShowNewTaskInput(bucket.id)"
-								placeholder="Enter the new task text..."
+								:placeholder="$t('list.kanban.addTaskPlaceholder')"
 								type="text"
 								v-focus.always
 								v-model="newTaskText"
 							/>
 						</div>
 						<p class="help is-danger" v-if="newTaskError[bucket.id] && newTaskText === ''">
-							Please specify a title.
+							{{ $t('list.list.addTitleRequired') }}
 						</p>
 					</div>
 					<x-button
@@ -210,12 +210,7 @@
 						icon="plus"
 						type="secondary"
 					>
-						<template v-if="bucket.tasks.length === 0">
-							Add a task
-						</template>
-						<template v-else>
-							Add another task
-						</template>
+						{{ bucket.tasks.length === 0 ? $t('list.kanban.addTask') : $t('list.kanban.addAnotherTask') }}
 					</x-button>
 				</div>
 			</div>
@@ -228,7 +223,7 @@
 					@keyup.enter="createNewBucket"
 					@keyup.esc="() => showNewBucketInput = false"
 					class="input"
-					placeholder="Enter the new bucket title..."
+					:placeholder="$t('list.kanban.addBucketPlaceholder')"
 					type="text"
 					v-focus.always
 					v-if="showNewBucketInput"
@@ -242,7 +237,7 @@
 					type="secondary"
 					icon="plus"
 				>
-					Create a new bucket
+					{{ $t('list.kanban.addBucket') }}
 				</x-button>
 			</div>
 		</div>
@@ -257,10 +252,10 @@
 				@close="showBucketDeleteModal = false"
 				@submit="deleteBucket()"
 				v-if="showBucketDeleteModal">
-				<span slot="header">Delete the bucket</span>
+				<span slot="header">{{ $t('list.kanban.deleteHeaderBucket') }}</span>
 				<p slot="text">
-					Are you sure you want to delete this bucket?<br/>
-					This will not delete any tasks but move them into the default bucket.
+					{{ $t('list.kanban.deleteBucketText1') }}<br/>
+					{{ $t('list.kanban.deleteBucketText2') }}
 				</p>
 			</modal>
 		</transition>
@@ -560,7 +555,7 @@ export default {
 
 			this.$store.dispatch('kanban/deleteBucket', {bucket: bucket, params: this.params})
 				.then(() => {
-					this.success({message: 'The bucket has been deleted successfully.'})
+					this.success({message: this.$t('list.kanban.deleteBucketSuccess')})
 				})
 				.catch(e => {
 					this.error(e)
@@ -590,7 +585,7 @@ export default {
 				.then(r => {
 					realBucket.title = r.title
 					bucketTitleElement.blur()
-					this.success({message: 'The bucket title has been saved successfully.'})
+					this.success({message: this.$t('list.kanban.bucketTitleSavedSuccess')})
 				})
 				.catch(e => {
 					this.error(e)
@@ -600,7 +595,7 @@ export default {
 			bucket.limit = parseInt(bucket.limit)
 			this.$store.dispatch('kanban/updateBucket', bucket)
 				.then(() => {
-					this.success({message: 'The bucket limit been saved successfully.'})
+					this.success({message: this.$t('list.kanban.bucketLimitSavedSuccess')})
 				})
 				.catch(e => {
 					this.error(e)
@@ -622,7 +617,7 @@ export default {
 			bucket.isDoneBucket = !bucket.isDoneBucket
 			this.$store.dispatch('kanban/updateBucket', bucket)
 				.then(() => {
-					this.success({message: 'The done bucket has been saved successfully.'})
+					this.success({message: this.$t('list.kanban.doneBucketSavedSuccess')})
 				})
 				.catch(e => {
 					this.error(e)

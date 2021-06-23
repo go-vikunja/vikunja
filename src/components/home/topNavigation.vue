@@ -25,14 +25,16 @@
 		>
 			<icon icon="bars"></icon>
 		</a>
-		<div class="list-title" v-if="currentList.id" ref="listTitle">
-			<h1
-				:style="{ 'opacity': currentList.title === '' ? '0': '1' }"
-				class="title">
-				{{ currentList.title === '' ? 'Loading...' : currentList.title }}
-			</h1>
+		<div class="list-title" ref="listTitle" :style="{'display': currentList.id ? '': 'none'}">
+			<template v-if="currentList.id">
+				<h1
+					:style="{ 'opacity': currentList.title === '' ? '0': '1' }"
+					class="title">
+					{{ currentList.title === '' ? $t('misc.loading') : currentList.title }}
+				</h1>
 
-			<list-settings-dropdown v-if="canWriteCurrentList && currentList.id !== -1" :list="currentList"/>
+				<list-settings-dropdown v-if="canWriteCurrentList && currentList.id !== -1" :list="currentList"/>
+			</template>
 		</div>
 
 		<div class="navbar-end">
@@ -61,27 +63,27 @@
 					</template>
 
 					<router-link :to="{name: 'user.settings'}" class="dropdown-item">
-						Settings
+						{{ $t('user.settings.title') }}
 					</router-link>
 					<a
 						:href="imprintUrl"
 						class="dropdown-item"
 						target="_blank"
 						v-if="imprintUrl">
-						Imprint
+						{{ $t('navigation.imprint') }}
 					</a>
 					<a
 						:href="privacyPolicyUrl"
 						class="dropdown-item"
 						target="_blank"
 						v-if="privacyPolicyUrl">
-						Privacy policy
+						{{ $t('navigation.privacy') }}
 					</a>
 					<a @click="$store.commit('keyboardShortcutsActive', true)" class="dropdown-item">
-						Keyboard Shortcuts
+						{{ $t('keyboardShortcuts.title') }}
 					</a>
 					<a @click="logout()" class="dropdown-item">
-						Logout
+						{{ $t('user.auth.logout') }}
 					</a>
 				</dropdown>
 			</div>
@@ -117,8 +119,14 @@ export default {
 		canWriteCurrentList: state => state.currentList.maxRight > Rights.READ,
 	}),
 	mounted() {
-		const usernameWidth = this.$refs.usernameDropdown.$el.clientWidth
-		this.$refs.listTitle.style.setProperty('--nav-username-width', `${usernameWidth}px`)
+		this.$nextTick(() => {
+			if (typeof this.$refs.usernameDropdown === 'undefined' || typeof this.$refs.listTitle === 'undefined') {
+				return
+			}
+
+			const usernameWidth = this.$refs.usernameDropdown.$el.clientWidth
+			this.$refs.listTitle.style.setProperty('--nav-username-width', `${usernameWidth}px`)
+		})
 	},
 	methods: {
 		logout() {

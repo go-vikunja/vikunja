@@ -1,15 +1,15 @@
 <template>
 	<create-edit
-		title="Edit This Saved Filter"
+		:title="$t('filters.edit.title')"
 		primary-icon=""
-		primary-label="Save"
+		:primary-label="$t('misc.save')"
 		@primary="save"
-		tertary="Delete"
+		:tertary="$t('misc.delete')"
 		@tertary="$router.push({ name: 'filter.list.settings.delete', params: { id: $route.params.listId } })"
 	>
 		<form @submit.prevent="save()">
 			<div class="field">
-				<label class="label" for="title">Filter Title</label>
+				<label class="label" for="title">{{ $t('filters.attributes.title') }}</label>
 				<div class="control">
 					<input
 						:class="{ 'disabled': filterService.loading}"
@@ -17,27 +17,27 @@
 						@keyup.enter="save"
 						class="input"
 						id="title"
-						placeholder="The title goes here..."
+						:placeholder="$t('filters.attributes.titlePlaceholder')"
 						type="text"
 						v-focus
 						v-model="filter.title"/>
 				</div>
 			</div>
 			<div class="field">
-				<label class="label" for="description">Description</label>
+				<label class="label" for="description">{{ $t('filters.attributes.description') }}</label>
 				<div class="control">
 					<editor
 						:class="{ 'disabled': filterService.loading}"
 						:disabled="filterService.loading"
 						:preview-is-default="false"
 						id="description"
-						placeholder="The description goes here..."
+						:placeholder="$t('filters.attributes.descriptionPlaceholder')"
 						v-model="filter.description"
 					/>
 				</div>
 			</div>
 			<div class="field">
-				<label class="label" for="filters">Filters</label>
+				<label class="label" for="filters">{{ $t('filters.title') }}</label>
 				<div class="control">
 					<filters
 						:class="{ 'disabled': filterService.loading}"
@@ -117,7 +117,7 @@ export default {
 			this.filterService.update(this.filter)
 				.then(r => {
 					this.$store.dispatch('namespaces/loadNamespaces')
-					this.success({message: 'The filter was saved successfully.'})
+					this.success({message: this.$t('filters.attributes.edit.success')})
 					this.filter = r
 					this.filters = objectToSnakeCase(this.filter.filters)
 					this.$router.back()

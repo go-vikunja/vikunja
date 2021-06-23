@@ -1,7 +1,7 @@
 <template>
-	<create-edit title="Create a new list" @create="newList()" :create-disabled="list.title === ''">
+	<create-edit :title="$t('list.create.header')" @create="newList()" :create-disabled="list.title === ''">
 		<div class="field">
-			<label class="label" for="listTitle">List Title</label>
+			<label class="label" for="listTitle">{{ $t('list.title') }}</label>
 			<div
 				:class="{ 'is-loading': listService.loading }"
 				class="control"
@@ -11,7 +11,7 @@
 					@keyup.enter="newList()"
 					@keyup.esc="$router.back()"
 					class="input"
-					placeholder="The list's title goes here..."
+					:placeholder="$t('list.create.titlePlaceholder')"
 					type="text"
 					name="listTitle"
 					v-focus
@@ -20,10 +20,10 @@
 			</div>
 		</div>
 		<p class="help is-danger" v-if="showError && list.title === ''">
-			Please specify a title.
+			{{ $t('list.create.addTitleRequired') }}
 		</p>
 		<div class="field">
-			<label class="label">Color</label>
+			<label class="label">{{ $t('list.color') }}</label>
 			<div class="control">
 				<color-picker v-model="list.hexColor" />
 			</div>
@@ -55,7 +55,7 @@ export default {
 		this.listService = new ListService()
 	},
 	mounted() {
-		this.setTitle('Create a new list')
+		this.setTitle(this.$t('list.create.header'))
 	},
 	methods: {
 		newList() {
@@ -69,7 +69,7 @@ export default {
 			this.$store
 				.dispatch('lists/createList', this.list)
 				.then((r) => {
-					this.success({message: 'The list was successfully created.'})
+					this.success({message: this.$t('list.create.createdSuccess') })
 					this.$router.push({
 						name: 'list.index',
 						params: { listId: r.id },

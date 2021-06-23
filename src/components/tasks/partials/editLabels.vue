@@ -1,7 +1,7 @@
 <template>
 	<multiselect
 		:loading="loading"
-		placeholder="Type to add a new label..."
+		:placeholder="$t('task.label.placeholder')"
 		:multiple="true"
 		@search="findLabel"
 		:search-results="foundLabels"
@@ -9,7 +9,7 @@
 		label="title"
 		:creatable="true"
 		@create="createAndAddLabel"
-		create-placeholder="Add this as new label"
+		:create-placeholder="$t('task.label.createPlaceholder')"
 		v-model="labels"
 		:search-delay="10"
 	>
@@ -104,7 +104,7 @@ export default {
 				.then(() => {
 					this.$emit('input', this.labels)
 					if (showNotification) {
-						this.success({message: 'The label has been added successfully.'})
+						this.success({message: this.$t('task.label.addSuccess')})
 					}
 				})
 				.catch(e => {
@@ -121,7 +121,7 @@ export default {
 						}
 					}
 					this.$emit('input', this.labels)
-					this.success({message: 'The label has been removed successfully.'})
+					this.success({message: this.$t('task.label.removeSuccess')})
 				})
 				.catch(e => {
 					this.error(e)
@@ -133,7 +133,7 @@ export default {
 				.then(r => {
 					this.addLabel(r, false)
 					this.labels.push(r)
-					this.success({message: 'The label has been created successfully.'})
+					this.success({message: this.$t('task.label.removeSuccess')})
 				})
 				.catch(e => {
 					this.error(e)

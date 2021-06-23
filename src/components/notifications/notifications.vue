@@ -37,9 +37,9 @@
 					</span>
 				</div>
 				<p class="nothing" v-if="notifications.length === 0">
-					You don't have any notifications. Have a nice day!<br/>
+					{{ $t('notification.none') }}<br/>
 					<span class="explainer">
-						Notifications will appear here when actions on namespaces, lists or tasks you subscribed to happen.
+						{{ $t('notification.explainer') }}
 					</span>
 				</p>
 			</div>

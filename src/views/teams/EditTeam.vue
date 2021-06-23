@@ -3,21 +3,17 @@
 		class="loader-container is-max-width-desktop"
 		:class="{ 'is-loading': teamService.loading }"
 	>
-		<card class="is-fullwidth" v-if="userIsAdmin" title="Edit Team">
+		<card class="is-fullwidth" v-if="userIsAdmin" :title="title">
 			<form @submit.prevent="save()">
 				<div class="field">
-					<label class="label" for="teamtext"
-					>Team Name</label
-					>
+					<label class="label" for="teamtext">{{ $t('team.attributes.name') }}</label>
 					<div class="control">
 						<input
-							:class="{
-										disabled: teamMemberService.loading,
-									}"
+							:class="{ disabled: teamMemberService.loading }"
 							:disabled="teamMemberService.loading"
 							class="input"
 							id="teamtext"
-							placeholder="The team text is here..."
+							:placeholder="$t('team.attributes.namePlaceholder')"
 							type="text"
 							v-focus
 							v-model="team.name"
@@ -28,19 +24,17 @@
 					class="help is-danger"
 					v-if="showError && team.name === ''"
 				>
-					Please specify a name.
+					{{ $t('team.attributes.nameRequired') }}
 				</p>
 				<div class="field">
-					<label class="label" for="teamdescription"
-					>Description</label
-					>
+					<label class="label" for="teamdescription">{{ $t('team.attributes.description') }}</label>
 					<div class="control">
 						<editor
 							:class="{ disabled: teamService.loading }"
 							:disabled="teamService.loading"
 							:preview-is-default="false"
 							id="teamdescription"
-							placeholder="The teams description goes here..."
+							:placeholder="$t('team.attributes.descriptionPlaceholder')"
 							v-model="team.description"
 						/>
 					</div>
@@ -54,7 +48,7 @@
 						:loading="teamService.loading"
 						class="is-fullwidth"
 					>
-						Save
+						{{ $t('misc.save') }}
 					</x-button>
 				</div>
 				<div class="control">
@@ -68,13 +62,13 @@
 			</div>
 		</card>
 
-		<card class="is-fullwidth has-overflow" title="Team Members" :padding="false">
+		<card class="is-fullwidth has-overflow" :title="$t('team.edit.members')" :padding="false">
 			<div class="p-4" v-if="userIsAdmin">
 				<div class="field has-addons">
 					<div class="control is-expanded">
 						<multiselect
 							:loading="userService.loading"
-							placeholder="Type to search..."
+							:placeholder="$t('team.edit.search')"
 							@search="findUser"
 							:search-results="foundUsers"
 							label="username"
@@ -83,7 +77,7 @@
 					</div>
 					<div class="control">
 						<x-button @click="addUser" icon="plus">
-							Add To Team
+							{{ $t('team.edit.addUser') }}
 						</x-button>
 					</div>
 				</div>
@@ -102,13 +96,13 @@
 								<span class="icon is-small">
 									<icon icon="lock"/>
 								</span>
-							Admin
+							{{ $t('team.attributes.admin') }}
 						</template>
 						<template v-else>
 								<span class="icon is-small">
 									<icon icon="user"/>
 								</span>
-							Member
+							{{ $t('team.attributes.member') }}
 						</template>
 					</td>
 					<td class="actions" v-if="userIsAdmin">
@@ -118,7 +112,7 @@
 							class="mr-2"
 							v-if="m.id !== userInfo.id"
 						>
-							Make {{ m.admin ? 'Member' : 'Admin' }}
+							{{ m.admin ? $t('team.edit.makeMember') : $t('team.edit.makeAdmin') }}
 						</x-button>
 						<x-button
 							:loading="teamMemberService.loading"
@@ -140,13 +134,10 @@
 				@submit="deleteTeam()"
 				v-if="showDeleteModal"
 			>
-				<span slot="header">Delete the team</span>
+				<span slot="header">{{ $t('team.edit.delete.header') }}</span>
 				<p slot="text">
-					Are you sure you want to delete this team and all of its
-					members?<br/>
-					All team members will loose access to lists and namespaces
-					shared with this team.<br/>
-					<b>This CANNOT BE UNDONE!</b>
+					{{ $t('team.edit.delete.text1') }}<br/>
+					{{ $t('team.edit.delete.text2') }}
 				</p>
 			</modal>
 		</transition>
@@ -157,12 +148,10 @@
 				@submit="deleteUser()"
 				v-if="showUserDeleteModal"
 			>
-				<span slot="header">Remove a user from the team</span>
+				<span slot="header">{{ $t('team.edit.deleteUser.header') }}</span>
 				<p slot="text">
-					Are you sure you want to remove this user from the team?<br/>
-					They will loose access to all lists and namespaces this team has
-					access to.<br/>
-					<b>This CANNOT BE UNDONE!</b>
+					{{ $t('team.edit.deleteUser.text1') }}
+					{{ $t('team.edit.deleteUser.text2') }}
 				</p>
 			</modal>
 		</transition>
@@ -170,7 +159,6 @@
 </template>
 
 <script>
-import router from '../../router'
 import {mapState} from 'vuex'
 
 import TeamService from '../../services/team'
@@ -204,14 +192,13 @@ export default {
 			userService: UserService,
 
 			showError: false,
+			title: '',
 		}
 	},
 	components: {
 		Multiselect,
 		editor: () => ({
-			component: import(
-				/* webpackChunkName: "editor" */ '../../components/input/editor'
-				),
+			component: import(/* webpackChunkName: "editor" */ '../../components/input/editor'),
 			loading: LoadingComponent,
 			error: ErrorComponent,
 			timeout: 60000,
@@ -246,7 +233,8 @@ export default {
 				.get(this.team)
 				.then((response) => {
 					this.$set(this, 'team', response)
-					this.setTitle(`Edit Team ${this.team.name}`)
+					this.title = this.$t('team.edit.title', {team: this.team.name})
+					this.setTitle(this.title)
 				})
 				.catch((e) => {
 					this.error(e)
@@ -263,7 +251,7 @@ export default {
 				.update(this.team)
 				.then((response) => {
 					this.team = response
-					this.success({message: 'The team was successfully updated.'})
+					this.success({message: this.$t('team.edit.success')})
 				})
 				.catch((e) => {
 					this.error(e)
@@ -273,8 +261,8 @@ export default {
 			this.teamService
 				.delete(this.team)
 				.then(() => {
-					this.success({message: 'The team was successfully deleted.'})
-					router.push({name: 'teams.index'})
+					this.success({message: this.$t('team.edit.delete.success')})
+					this.$router.push({name: 'teams.index'})
 				})
 				.catch((e) => {
 					this.error(e)
@@ -284,10 +272,7 @@ export default {
 			this.teamMemberService
 				.delete(this.member)
 				.then(() => {
-					this.success({
-						message:
-							'The user was successfully deleted from the team.',
-					})
+					this.success({message: this.$t('team.edit.deleteUser.success')})
 					this.loadTeam()
 				})
 				.catch((e) => {
@@ -306,7 +291,7 @@ export default {
 				.create(newMember)
 				.then(() => {
 					this.loadTeam()
-					this.success({message: 'The team member was successfully added.'})
+					this.success({message: this.$t('team.edit.userAddedSuccess')})
 				})
 				.catch((e) => {
 					this.error(e)
@@ -325,10 +310,9 @@ export default {
 						}
 					}
 					this.success({
-						message:
-							'The team member was successfully made ' +
-							(member.admin ? 'admin' : 'member') +
-							'.',
+						message: member.admin ?
+							this.$t('team.edit.madeAdmin') :
+							this.$t('team.edit.madeMember')
 					})
 				})
 				.catch((e) => {

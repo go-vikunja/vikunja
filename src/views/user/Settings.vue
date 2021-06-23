@@ -3,15 +3,15 @@
 		:class="{ 'is-loading': passwordUpdateService.loading || emailUpdateService.loading || totpService.loading }"
 		class="loader-container is-max-width-desktop">
 		<!-- General -->
-		<card title="General Settings" class="general-settings">
+		<card :title="$t('user.settings.general.title')" class="general-settings">
 			<div class="field">
-				<label class="label" for="newName">Name</label>
+				<label class="label" for="newName">{{ $t('user.settings.general.name') }}</label>
 				<div class="control">
 					<input
 						@keyup.enter="updateSettings"
 						class="input"
 						id="newName"
-						placeholder="The new name"
+						:placeholder="$t('user.settings.general.newName')"
 						type="text"
 						v-model="settings.name"/>
 				</div>
@@ -19,42 +19,54 @@
 			<div class="field">
 				<label class="checkbox">
 					<input type="checkbox" v-model="settings.emailRemindersEnabled"/>
-					Send me reminders for tasks via Email
+					{{ $t('user.settings.general.emailReminders') }}
 				</label>
 			</div>
 			<div class="field">
 				<label class="checkbox">
 					<input type="checkbox" v-model="settings.overdueTasksRemindersEnabled"/>
-					Send me reminders for overdue undone tasks via email each morning
+					{{ $t('user.settings.general.overdueReminders') }}
 				</label>
 			</div>
 			<div class="field">
 				<label class="checkbox">
 					<input type="checkbox" v-model="settings.discoverableByName"/>
-					Let other users find me when they search for my name
+					{{ $t('user.settings.general.discoverableByName') }}
 				</label>
 			</div>
 			<div class="field">
 				<label class="checkbox">
 					<input type="checkbox" v-model="settings.discoverableByEmail"/>
-					Let other users find me when they search for my full email
+					{{ $t('user.settings.general.discoverableByEmail') }}
 				</label>
 			</div>
 			<div class="field">
 				<label class="checkbox">
 					<input type="checkbox" v-model="playSoundWhenDone"/>
-					Play a sound when marking tasks as done
+					{{ $t('user.settings.general.playSoundWhenDone') }}
 				</label>
 			</div>
 			<div class="field">
 				<label class="is-flex is-align-items-center">
 					<span>
-						Week starts on
+						{{ $t('user.settings.general.weekStart') }}
 					</span>
 					<div class="select ml-2">
 						<select v-model.number="settings.weekStart">
-							<option value="0">Sunday</option>
-							<option value="1">Monday</option>
+							<option value="0">{{ $t('user.settings.general.weekStartSunday') }}</option>
+							<option value="1">{{ $t('user.settings.general.weekStartMonday') }}</option>
+						</select>
+					</div>
+				</label>
+			</div>
+			<div class="field">
+				<label class="is-flex is-align-items-center">
+					<span>
+						{{ $t('user.settings.general.language') }}
+					</span>
+					<div class="select ml-2">
+						<select v-model.number="language">
+							<option :value="l" v-for="(lang, l) in availableLanguages" :key="l">{{ lang }}</option>
 						</select>
 					</div>
 				</label>
@@ -65,7 +77,7 @@
 				@click="updateSettings()"
 				class="is-fullwidth mt-4"
 			>
-				Save
+				{{ $t('misc.save') }}
 			</x-button>
 		</card>
 
@@ -73,40 +85,40 @@
 		<avatar-settings/>
 
 		<!-- Password update -->
-		<card title="Update Your Password">
+		<card :title="$t('user.settings.newPasswordTitle')">
 			<form @submit.prevent="updatePassword()">
 				<div class="field">
-					<label class="label" for="newPassword">New Password</label>
+					<label class="label" for="newPassword">{{ $t('user.settings.newPassword') }}</label>
 					<div class="control">
 						<input
 							@keyup.enter="updatePassword"
 							class="input"
 							id="newPassword"
-							placeholder="The new password..."
+							:placeholder="$t('user.auth.passwordPlaceholder')"
 							type="password"
 							v-model="passwordUpdate.newPassword"/>
 					</div>
 				</div>
 				<div class="field">
-					<label class="label" for="newPasswordConfirm">New Password Confirmation</label>
+					<label class="label" for="newPasswordConfirm">{{ $t('user.settings.newPasswordConfirm') }}</label>
 					<div class="control">
 						<input
 							@keyup.enter="updatePassword"
 							class="input"
 							id="newPasswordConfirm"
-							placeholder="Confirm your new password..."
+							:placeholder="$t('user.auth.passwordPlaceholder')"
 							type="password"
 							v-model="passwordConfirm"/>
 					</div>
 				</div>
 				<div class="field">
-					<label class="label" for="currentPassword">Current Password</label>
+					<label class="label" for="currentPassword">{{ $t('user.settings.currentPassword') }}</label>
 					<div class="control">
 						<input
 							@keyup.enter="updatePassword"
 							class="input"
 							id="currentPassword"
-							placeholder="Your current password"
+							:placeholder="$t('user.settings.currentPasswordPlaceholder')"
 							type="password"
 							v-model="passwordUpdate.oldPassword"/>
 					</div>
@@ -117,33 +129,33 @@
 				:loading="passwordUpdateService.loading"
 				@click="updatePassword()"
 				class="is-fullwidth mt-4">
-				Save
+				{{ $t('misc.save') }}
 			</x-button>
 		</card>
 
 		<!-- Update E-Mail -->
-		<card title="Update Your E-Mail Address">
+		<card :title="$t('user.settings.updateEmailTitle')">
 			<form @submit.prevent="updateEmail()">
 				<div class="field">
-					<label class="label" for="newEmail">New Email Address</label>
+					<label class="label" for="newEmail">{{ $t('user.settings.updateEmailNew') }}</label>
 					<div class="control">
 						<input
 							@keyup.enter="updateEmail"
 							class="input"
 							id="newEmail"
-							placeholder="The new email address..."
+							:placeholder="$t('user.auth.emailPlaceholder')"
 							type="email"
 							v-model="emailUpdate.newEmail"/>
 					</div>
 				</div>
 				<div class="field">
-					<label class="label" for="currentPasswordEmail">Current Password</label>
+					<label class="label" for="currentPasswordEmail">{{ $t('user.settings.currentPassword') }}</label>
 					<div class="control">
 						<input
 							@keyup.enter="updateEmail"
 							class="input"
 							id="currentPasswordEmail"
-							placeholder="Your current password"
+							:placeholder="$t('user.settings.currentPasswordPlaceholder')"
 							type="password"
 							v-model="emailUpdate.password"/>
 					</div>
@@ -154,82 +166,83 @@
 				:loading="emailUpdateService.loading"
 				@click="updateEmail()"
 				class="is-fullwidth mt-4">
-				Save
+				{{ $t('misc.save') }}
 			</x-button>
 		</card>
 
 		<!-- TOTP -->
-		<card title="Two Factor Authentication" v-if="totpEnabled">
+		<card :title="$t('user.settings.totp.title')" v-if="totpEnabled">
 			<x-button
 				:loading="totpService.loading"
 				@click="totpEnroll()"
 				v-if="!totpEnrolled && totp.secret === ''">
-				Enroll
+				{{ $t('user.settings.totp.enroll') }}
 			</x-button>
 			<template v-else-if="totp.secret !== '' && !totp.enabled">
 				<p>
-					To finish your setup, use this secret in your totp app (Google Authenticator or similar):
+					{{ $t('user.settings.totp.finishSetupPart1') }}
 					<strong>{{ totp.secret }}</strong><br/>
-					After that, enter a code from your app below.
+					{{ $t('user.settings.totp.finishSetupPart2') }}
 				</p>
 				<p>
-					Alternatively you can scan this QR code:<br/>
+					{{ $t('user.settings.totp.scanQR') }}<br/>
 					<img :src="totpQR" alt=""/>
 				</p>
 				<div class="field">
-					<label class="label" for="totpConfirmPasscode">Passcode</label>
+					<label class="label" for="totpConfirmPasscode">{{ $t('user.settings.totp.passcode') }}</label>
 					<div class="control">
 						<input
 							@keyup.enter="totpConfirm()"
 							class="input"
 							id="totpConfirmPasscode"
-							placeholder="A code generated by your totp application"
+							:placeholder="$t('user.settings.totp.passcodePlaceholder')"
 							type="text"
 							v-model="totpConfirmPasscode"/>
 					</div>
 				</div>
-				<x-button @click="totpConfirm()">Confirm</x-button>
+				<x-button @click="totpConfirm()">{{ $t('misc.confirm') }}</x-button>
 			</template>
 			<template v-else-if="totp.secret !== '' && totp.enabled">
 				<p>
-					You've sucessfully set up two factor authentication!
+					{{ $t('user.settings.totp.setupSuccess') }}
 				</p>
 				<p v-if="!totpDisableForm">
-					<x-button @click="totpDisableForm = true" class="is-danger">Disable</x-button>
+					<x-button @click="totpDisableForm = true" class="is-danger">{{ $t('misc.disable') }}</x-button>
 				</p>
 				<div v-if="totpDisableForm">
 					<div class="field">
-						<label class="label" for="currentPassword">Please Enter Your Password</label>
+						<label class="label" for="currentPassword">{{ $t('user.settings.totp.enterPassword') }}</label>
 						<div class="control">
 							<input
 								@keyup.enter="totpDisable"
 								class="input"
 								id="currentPassword"
-								placeholder="Your current password"
+								:placeholder="$t('user.settings.currentPasswordPlaceholder')"
 								type="password"
 								v-focus
 								v-model="totpDisablePassword"/>
 						</div>
 					</div>
-					<x-button @click="totpDisable()" class="is-danger">Disable two factor authentication</x-button>
+					<x-button @click="totpDisable()" class="is-danger">
+						{{ $t('user.settings.totp.disable') }}
+					</x-button>
 				</div>
 			</template>
 		</card>
 
 		<!-- Migration -->
-		<card title="Migrate from other services to Vikunja" v-if="migratorsEnabled">
+		<card :title="$t('migrate.title')" v-if="migratorsEnabled">
 			<x-button
 				:to="{name: 'migrate.start'}"
 			>
-				Import your data into Vikunja
+				{{ $t('migrate.import') }}
 			</x-button>
 		</card>
 
 		<!-- Caldav -->
-		<card v-if="caldavEnabled" title="Caldav">
+		<card v-if="caldavEnabled" :title="$t('user.settings.caldav.title')">
 			<p>
-				You can connect Vikunja to caldav clients to view and manage all tasks from different clients.
-				Enter this url into your client:
+				{{ $t('user.settings.caldav.howTo') }}
 			</p>
 			<div class="field has-addons no-input-mobile">
 				<div class="control is-expanded">
@@ -239,14 +252,14 @@
 					<x-button
 						@click="copy(caldavUrl)"
 						:shadow="false"
-						v-tooltip="'Copy to clipboard'"
+						v-tooltip="$t('misc.copy')"
 						icon="paste"
 					/>
 				</div>
 			</div>
 			<p>
 				<a href="https://vikunja.io/docs/caldav/" target="_blank">
-					More information about caldav in Vikunja
+					{{ $t('user.settings.caldav.more') }}
 				</a>
 			</p>
 		</card>
@@ -263,6 +276,7 @@ import TotpService from '../../services/totp'
 import UserSettingsService from '../../services/userSettings'
 import UserSettingsModel from '../../models/userSettings'
 import {playSoundWhenDoneKey} from '@/helpers/playPop'
+import {availableLanguages, saveLanguage, getCurrentLanguage} from '@/i18n/setup'
 
 import {mapState} from 'vuex'
 
@@ -288,6 +302,7 @@ export default {
 			totpDisableForm: false,
 			totpDisablePassword: '',
 			playSoundWhenDone: false,
+			language: getCurrentLanguage(),
 
 			settings: UserSettingsModel,
 			userSettingsService: UserSettingsService,
@@ -314,7 +329,7 @@ export default {
 		this.totpStatus()
 	},
 	mounted() {
-		this.setTitle('Settings')
+		this.setTitle(this.$t('user.settings.title'))
 	},
 	computed: {
 		caldavUrl() {
@@ -328,6 +343,9 @@ export default {
 
 			return `${apiBase}/dav/principals/${this.userInfo.username}/`
 		},
+		availableLanguages() {
+			return availableLanguages
+		},
 		...mapState({
 			totpEnabled: state => state.config.totpEnabled,
 			migratorsEnabled: state => state.config.availableMigrators !== null && state.config.availableMigrators.length > 0,
@@ -338,20 +356,20 @@ export default {
 	methods: {
 		updatePassword() {
 			if (this.passwordConfirm !== this.passwordUpdate.newPassword) {
-				this.error({message: 'The new password and its confirmation don\'t match.'})
+				this.error({message: this.$t('user.settings.passwordsDontMatch')})
 				return
 			}
 
 			this.passwordUpdateService.update(this.passwordUpdate)
 				.then(() => {
-					this.success({message: 'The password was successfully updated.'})
+					this.success({message: this.$t('user.settings.passwordUpdateSuccess')})
 				})
 				.catch(e => this.error(e))
 		},
 		updateEmail() {
 			this.emailUpdateService.update(this.emailUpdate)
 				.then(() => {
-					this.success({message: 'Your email address was successfully updated. We\'ve sent you a link to confirm it.'})
+					this.success({message: this.$t('user.settings.updateEmailSuccess')})
 				})
 				.catch(e => this.error(e))
 		},
@@ -394,7 +412,7 @@ export default {
 			this.totpService.enable({passcode: this.totpConfirmPasscode})
 				.then(() => {
 					this.$set(this.totp, 'enabled', true)
-					this.success({message: 'You\'ve successfully confirmed your totp setup and can use it from now on!'})
+					this.success({message: this.$t('user.settings.totp.confirmSuccess')})
 				})
 				.catch(e => this.error(e))
 		},
@@ -403,17 +421,18 @@ export default {
 				.then(() => {
 					this.totpEnrolled = false
 					this.$set(this, 'totp', new TotpModel())
-					this.success({message: 'Two factor authentication was sucessfully disabled.'})
+					this.success({message: this.$t('user.settings.totp.disableSuccess')})
 				})
 				.catch(e => this.error(e))
 		},
 		updateSettings() {
 			localStorage.setItem(playSoundWhenDoneKey, this.playSoundWhenDone)
+			saveLanguage(this.language)
 
 			this.userSettingsService.update(this.settings)
 				.then(() => {
 					this.$store.commit('auth/setUserSettings', this.settings)
-					this.success({message: 'The name was successfully changed.'})
+					this.success({message: this.$t('user.settings.general.savedSuccess')})
 				})
 				.catch(e => this.error(e))
 		},

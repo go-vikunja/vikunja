@@ -1,12 +1,12 @@
 <template>
 	<create-edit
-		title="Set list background"
+		:title="$t('list.background.title')"
 		primary-label=""
 		:loading="backgroundService.loading"
 		class="list-background-setting"
 		:wide="true"
 		v-if="uploadBackgroundEnabled || unsplashBackgroundEnabled"
-		:tertary="hasBackground ? 'Remove Background' : ''"
+		:tertary="hasBackground ? $t('list.background.remove') : ''"
 		@tertary="removeBackground()"
 	>
 		<div class="mb-4" v-if="uploadBackgroundEnabled">
@@ -22,7 +22,7 @@
 				@click="$refs.backgroundUploadInput.click()"
 				type="primary"
 			>
-				Choose a background from your pc
+				{{ $t('list.background.upload') }}
 			</x-button>
 		</div>
 		<template v-if="unsplashBackgroundEnabled">
@@ -30,11 +30,13 @@
 				:class="{'is-loading': backgroundService.loading}"
 				@keyup="() => newBackgroundSearch()"
 				class="input is-expanded"
-				placeholder="Search for a background..."
+				:placeholder="$t('list.background.searchPlaceholder')"
 				type="text"
 				v-model="backgroundSearchTerm"
 			/>
-			<p class="unsplash-link"><a href="https://unsplash.com" target="_blank">Powered by Unsplash</a></p>
+			<p class="unsplash-link">
+				<a href="https://unsplash.com" target="_blank">{{ $t('list.background.poweredByUnsplash') }}</a>
+			</p>
 			<div class="image-search-result">
 				<a
 					:key="im.id"
@@ -55,7 +57,7 @@
 				type="secondary"
 				v-if="backgroundSearchResult.length > 0"
 			>
-				{{ backgroundService.loading ? 'Loading...' : 'Load more photos' }}
+				{{ backgroundService.loading ? $t('misc.loading') : $t('list.background.loadMore') }}
 			</x-button>
 		</template>
 	</create-edit>
@@ -95,7 +97,7 @@ export default {
 		this.backgroundService = new BackgroundUnsplashService()
 		this.backgroundUploadService = new BackgroundUploadService()
 		this.listService = new ListService()
-		this.setTitle('Set a list background')
+		this.setTitle(this.$t('list.background.title'))
 		// Show the default collection of backgrounds
 		this.newBackgroundSearch()
 	},
@@ -144,7 +146,7 @@ export default {
 				.then(l => {
 					this.$store.commit(CURRENT_LIST, l)
 					this.$store.commit('namespaces/setListInNamespaceById', l)
-					this.success({message: 'The background has been set successfully!'})
+					this.success({message: this.$t('list.background.success')})
 				})
 				.catch(e => {
 					this.error(e)
@@ -159,7 +161,7 @@ export default {
 				.then(l => {
 					this.$store.commit(CURRENT_LIST, l)
 					this.$store.commit('namespaces/setListInNamespaceById', l)
-					this.success({message: 'The background has been set successfully!'})
+					this.success({message: this.$t('list.background.success')})
 				})
 				.catch(e => {
 					this.error(e)
@@ -170,7 +172,7 @@ export default {
 				.then(l => {
 					this.$store.commit(CURRENT_LIST, l)
 					this.$store.commit('namespaces/setListInNamespaceById', l)
-					this.success({message: 'The background has been removed successfully!'})
+					this.success({message: this.$t('list.background.removeSuccess')})
 					this.$router.back()
 				})
 				.catch(e => {

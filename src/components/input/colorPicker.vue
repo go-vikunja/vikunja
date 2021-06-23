@@ -19,7 +19,7 @@
 			:class="{'is-empty': empty}"
 		/>
 		<x-button @click="reset" class="is-small ml-2" :shadow="false" type="secondary">
-			Reset Color
+			{{ $t('input.resetColor') }}
 		</x-button>
 	</div>
 </template>

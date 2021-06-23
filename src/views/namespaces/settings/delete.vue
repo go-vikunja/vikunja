@@ -3,9 +3,11 @@
 		@close="$router.back()"
 		@submit="deleteNamespace()"
 	>
-		<span slot="header">Delete this namespace</span>
-		<p slot="text">Are you sure you want to delete this namespace and all of its contents?
-			<br/>This includes all tasks and <b>CANNOT BE UNDONE!</b></p>
+		<span slot="header">{{ title }}</span>
+		<p slot="text">
+			{{ $t('namespace.delete.text1') }}<br/>
+			{{ $t('namespace.delete.text2') }}
+		</p>
 	</modal>
 </template>
 
@@ -17,13 +19,15 @@ export default {
 	data() {
 		return {
 			namespaceService: NamespaceService,
+			title: '',
 		}
 	},
 	created() {
 		this.namespaceService = new NamespaceService()
 
 		const namespace = this.$store.getters['namespaces/getNamespaceById'](this.$route.params.id)
-		this.setTitle(`Delete "${namespace.title}"`)
+		this.title = this.$t('namespace.delete.title', {namespace: namespace.title})
+		this.setTitle(this.title)
 	},
 	methods: {
 		deleteNamespace() {
@@ -31,7 +35,7 @@ export default {
 
 			this.$store.dispatch('namespaces/deleteNamespace', namespace)
 				.then(() => {
-					this.success({message: 'The namespace was successfully deleted.'})
+					this.success({message: this.$t('namespace.delete.success')})
 					this.$router.push({name: 'home'})
 				})
 				.catch(e => {

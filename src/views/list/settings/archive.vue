@@ -3,12 +3,12 @@
 		@close="$router.back()"
 		@submit="archiveList()"
 	>
-		<span slot="header">{{ list.isArchived ? 'Un-' : '' }}Archive this list</span>
+		<span slot="header">{{ list.isArchived ? $t('list.archive.unarchive') : $t('list.archive.archive') }}</span>
 		<p slot="text" v-if="list.isArchived">
-			You will be able to create new tasks or edit it.
+			{{ $t('list.archive.unarchiveText') }}
 		</p>
 		<p slot="text" v-else>
-			You won't be able to edit this list or create new tasks until you un-archive it.
+			{{ $t('list.archive.archiveText') }}
 		</p>
 	</modal>
 </template>
@@ -27,7 +27,7 @@ export default {
 	created() {
 		this.listService = new ListService()
 		this.list = this.$store.getters['lists/getListById'](this.$route.params.listId)
-		this.setTitle(`Archive "${this.list.title}"`)
+		this.setTitle(this.$t('list.archive.title', {list: this.list.title}))
 	},
 	methods: {
 		archiveList() {
@@ -38,7 +38,7 @@ export default {
 				.then(r => {
 					this.$store.commit('currentList', r)
 					this.$store.commit('namespaces/setListInNamespaceById', r)
-					this.success({message: 'The list was successfully archived.'})
+					this.success({message: this.$t('list.archive.success')})
 				})
 				.catch(e => {
 					this.error(e)

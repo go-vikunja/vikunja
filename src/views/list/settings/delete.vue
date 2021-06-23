@@ -3,9 +3,11 @@
 		@close="$router.back()"
 		@submit="deleteList()"
 	>
-		<span slot="header">Delete this list</span>
-		<p slot="text">Are you sure you want to delete this list and all of its contents?
-			<br/>This includes all tasks and <b>CANNOT BE UNDONE!</b></p>
+		<span slot="header">{{ $t('list.delete.header') }}</span>
+		<p slot="text">
+			{{ $t('list.delete.text1') }}<br/>
+			{{ $t('list.delete.text2') }}
+		</p>
 	</modal>
 </template>
 
@@ -22,7 +24,7 @@ export default {
 	created() {
 		this.listService = new ListService()
 		const list = this.$store.getters['lists/getListById'](this.$route.params.listId)
-		this.setTitle(`Delete "${list.title}"`)
+		this.setTitle(this.$t('list.delete.title', {list: list.title}))
 	},
 	methods: {
 		deleteList() {
@@ -31,7 +33,7 @@ export default {
 			this.listService.delete(list)
 				.then(() => {
 					this.$store.commit('namespaces/removeListFromNamespaceById', list)
-					this.success({message: 'The list was successfully deleted.'})
+					this.success({message: this.$t('list.delete.success')})
 					this.$router.push({name: 'home'})
 				})
 				.catch(e => {

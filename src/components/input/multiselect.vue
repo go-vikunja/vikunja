@@ -149,15 +149,15 @@ export default {
 		createPlaceholder: {
 			type: String,
 			default() {
-				return 'Create new'
-			},
+				return this.$t('input.multiselect.createPlaceholder')
+			}
 		},
 		// The text shown next to an option.
 		selectPlaceholder: {
 			type: String,
 			default() {
-				return 'Click or press enter to select'
-			},
+				return this.$t('input.multiselect.selectPlaceholder')
+			}
 		},
 		// If true, allows for selecting multiple items. v-model will be an array with all selected values in that case.
 		multiple: {

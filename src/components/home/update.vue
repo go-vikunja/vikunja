@@ -1,8 +1,8 @@
 <template>
 	<div class="update-notification" v-if="updateAvailable">
-		<p>There is an update for Vikunja available!</p>
+		<p>{{ $t('update.available') }}</p>
 		<x-button @click="refreshApp()" :shadow="false">
-			Update Now
+			{{ $t('update.do') }}
 		</x-button>
 	</div>
 </template>

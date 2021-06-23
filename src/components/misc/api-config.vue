@@ -1,13 +1,13 @@
 <template>
 	<div class="api-config">
 		<div v-if="configureApi">
-			<label class="label" for="api-url">Vikunja URL</label>
+			<label class="label" for="api-url">{{ $t('apiConfig.url') }}</label>
 			<div class="field has-addons">
 				<div class="control is-expanded">
 					<input
 						class="input"
 						id="api-url"
-						placeholder="eg. https://localhost:3456"
+						:placeholder="$t('apiConfig.urlPlaceholder')"
 						required
 						type="url"
 						v-focus
@@ -17,16 +17,17 @@
 				</div>
 				<div class="control">
 					<x-button @click="setApiUrl" :disabled="apiUrl === ''">
-						Change
+						{{ $t('apiConfig.change') }}
 					</x-button>
 				</div>
 			</div>
 		</div>
 		<div class="api-url-info" v-else>
-			Sign in to your Vikunja account on
-			<span v-tooltip="apiUrl"> {{ apiDomain() }} </span>
+			<i18n path="apiConfig.signInOn">
+				<span class="url" v-tooltip="apiUrl"> {{ apiDomain() }} </span>
+			</i18n>
 			<br />
-			<a @click="() => (configureApi = true)">change</a>
+			<a @click="() => (configureApi = true)">{{ $t('apiConfig.change') }}</a>
 		</div>
 
 		<div
@@ -178,14 +179,14 @@ export default {
 				.catch(() => {
 					// Still not found, url is still invalid
 					this.successMsg = ''
-					this.errorMsg = `Could not find or use Vikunja installation at "${this.apiDomain()}".`
+					this.errorMsg = this.$t('apiConfig.error', {domain: this.apiDomain()})
 					window.API_URL = oldUrl
 				})
 				.then((r) => {
 					if (typeof r !== 'undefined') {
 						// Set it + save it to local storage to save us the hoops
 						this.errorMsg = ''
-						this.successMsg = `Using Vikunja installation at "${this.apiDomain()}".`
+						this.successMsg = this.$t('apiConfig.success', {domain: this.apiDomain()})
 						localStorage.setItem('API_URL', window.API_URL)
 						this.configureApi = false
 						this.apiUrl = window.API_URL

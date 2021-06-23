@@ -1,7 +1,7 @@
 <template>
 	<multiselect
 		:loading="namespaceService.loading"
-		placeholder="Search for a namespace..."
+		:placeholder="$t('namespace.search')"
 		@search="findNamespaces"
 		:search-results="namespaces"
 		@select="select"

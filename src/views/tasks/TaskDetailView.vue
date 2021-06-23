@@ -18,7 +18,7 @@
 							<!-- Assignees -->
 							<div class="detail-title">
 								<icon icon="users"/>
-								Assignees
+								{{ $t('task.attributes.assignees') }}
 							</div>
 							<edit-assignees
 								:disabled="!canWrite"
@@ -33,7 +33,7 @@
 								<!-- Priority -->
 								<div class="detail-title">
 									<icon :icon="['far', 'star']"/>
-									Priority
+									{{ $t('task.attributes.priority') }}
 								</div>
 								<priority-select
 									:disabled="!canWrite"
@@ -47,13 +47,13 @@
 								<!-- Due Date -->
 								<div class="detail-title">
 									<icon icon="calendar"/>
-									Due Date
+									{{ $t('task.attributes.dueDate') }}
 								</div>
 								<div class="date-input">
 									<datepicker
 										v-model="task.dueDate"
 										@close-on-change="() => saveTask()"
-										choose-date-label="Click here to set a due date"
+										:choose-date-label="$t('task.detail.chooseDueDate')"
 										:disabled="taskService.loading || !canWrite"
 										ref="dueDate"
 									/>
@@ -73,7 +73,7 @@
 								<!-- Percent Done -->
 								<div class="detail-title">
 									<icon icon="percent"/>
-									Percent Done
+									{{ $t('task.attributes.percentDone') }}
 								</div>
 								<percent-done-select
 									:disabled="!canWrite"
@@ -87,13 +87,13 @@
 								<!-- Start Date -->
 								<div class="detail-title">
 									<icon icon="calendar-week"/>
-									Start Date
+									{{ $t('task.attributes.startDate') }}
 								</div>
 								<div class="date-input">
 									<datepicker
 										v-model="task.startDate"
 										@close-on-change="() => saveTask()"
-										choose-date-label="Click here to set a start date"
+										:choose-date-label="$t('task.detail.chooseStartDate')"
 										:disabled="taskService.loading || !canWrite"
 										ref="startDate"
 									/>
@@ -114,13 +114,13 @@
 								<!-- End Date -->
 								<div class="detail-title">
 									<icon icon="calendar-week"/>
-									End Date
+									{{ $t('task.attributes.endDate') }}
 								</div>
 								<div class="date-input">
 									<datepicker
 										v-model="task.endDate"
 										@close-on-change="() => saveTask()"
-										choose-date-label="Click here to set an end date"
+										:choose-date-label="$t('task.detail.chooseEndDate')"
 										:disabled="taskService.loading || !canWrite"
 										ref="endDate"
 									/>
@@ -140,7 +140,7 @@
 								<!-- Reminders -->
 								<div class="detail-title">
 									<icon icon="history"/>
-									Reminders
+									{{ $t('task.attributes.reminders') }}
 								</div>
 								<reminders
 									:disabled="!canWrite"
@@ -154,7 +154,7 @@
 								<!-- Repeat after -->
 								<div class="detail-title">
 									<icon :icon="['far', 'clock']"/>
-									Repeat
+									{{ $t('task.attributes.repeat') }}
 								</div>
 								<repeat-after
 									:disabled="!canWrite"
@@ -168,7 +168,7 @@
 								<!-- Color -->
 								<div class="detail-title">
 									<icon icon="fill-drip"/>
-									Color
+									{{ $t('task.attributes.color') }}
 								</div>
 								<color-picker
 									@change="saveTask"
@@ -185,7 +185,7 @@
 							<span class="icon is-grey">
 								<icon icon="tags"/>
 							</span>
-							Labels
+							{{ $t('task.attributes.labels') }}
 						</div>
 						<edit-labels :disabled="!canWrite" :task-id="taskId" ref="labels" v-model="task.labels"/>
 					</div>
@@ -214,7 +214,7 @@
 							<span class="icon is-grey">
 								<icon icon="tasks"/>
 							</span>
-							Related Tasks
+							{{ $t('task.attributes.relatedTasks') }}
 						</h3>
 						<related-tasks
 							:edit-enabled="canWrite"
@@ -232,7 +232,7 @@
 							<span class="icon is-grey">
 								<icon icon="list"/>
 							</span>
-							Move task to a different list
+							{{ $t('task.detail.move') }}
 						</h3>
 						<div class="field has-addons">
 							<div class="control is-expanded">
@@ -253,7 +253,7 @@
 						icon="check-double"
 						type="secondary"
 					>
-						{{ task.done ? 'Mark as undone' : 'Done!' }}
+						{{ task.done ? $t('task.detail.undone') : $t('task.detail.done') }}
 					</x-button>
 					<task-subscription
 						entity="task"
@@ -267,7 +267,7 @@
 						type="secondary"
 						v-shortkey="['a']">
 						<span class="icon is-small"><icon icon="users"/></span>
-						Assign this task to a user
+						{{ $t('task.detail.actions.assign') }}
 					</x-button>
 					<x-button
 						@click="setFieldActive('labels')"
@@ -276,14 +276,14 @@
 						v-shortkey="['l']"
 						icon="tags"
 					>
-						Add labels
+						{{ $t('task.detail.actions.label') }}
 					</x-button>
 					<x-button
 						@click="setFieldActive('priority')"
 						type="secondary"
 						:icon="['far', 'star']"
 					>
-						Set Priority
+						{{ $t('task.detail.actions.priority') }}
 					</x-button>
 					<x-button
 						@click="setFieldActive('dueDate')"
@@ -292,42 +292,42 @@
 						v-shortkey="['d']"
 						icon="calendar"
 					>
-						Set Due Date
+						{{ $t('task.detail.actions.dueDate') }}
 					</x-button>
 					<x-button
 						@click="setFieldActive('startDate')"
 						type="secondary"
 						icon="calendar-week"
 					>
-						Set a Start Date
+						{{ $t('task.detail.actions.startDate') }}
 					</x-button>
 					<x-button
 						@click="setFieldActive('endDate')"
 						type="secondary"
 						icon="calendar-week"
 					>
-						Set an End Date
+						{{ $t('task.detail.actions.endDate') }}
 					</x-button>
 					<x-button
 						@click="setFieldActive('reminders')"
 						type="secondary"
 						icon="history"
 					>
-						Set Reminders
+						{{ $t('task.detail.actions.reminders') }}
 					</x-button>
 					<x-button
 						@click="setFieldActive('repeatAfter')"
 						type="secondary"
 						:icon="['far', 'clock']"
 					>
-						Set a repeating interval
+						{{ $t('task.detail.actions.repeatAfter') }}
 					</x-button>
 					<x-button
 						@click="setFieldActive('percentDone')"
 						type="secondary"
 						icon="percent"
 					>
-						Set Percent Done
+						{{ $t('task.detail.actions.percentDone') }}
 					</x-button>
 					<x-button
 						@click="setFieldActive('attachments')"
@@ -336,7 +336,7 @@
 						v-shortkey="['f']"
 						icon="paperclip"
 					>
-						Add attachments
+						{{ $t('task.detail.actions.attachments') }}
 					</x-button>
 					<x-button
 						@click="setFieldActive('relatedTasks')"
@@ -345,21 +345,21 @@
 						v-shortkey="['r']"
 						icon="tasks"
 					>
-						Add task relations
+						{{ $t('task.detail.actions.relatedTasks') }}
 					</x-button>
 					<x-button
 						@click="setFieldActive('moveList')"
 						type="secondary"
 						icon="list"
 					>
-						Move task
+						{{ $t('task.detail.actions.moveList') }}
 					</x-button>
 					<x-button
 						@click="setFieldActive('color')"
 						type="secondary"
 						icon="fill-drip"
 					>
-						Set task color
+						{{ $t('task.detail.actions.color') }}
 					</x-button>
 					<x-button
 						@click="showDeleteModal = true"
@@ -367,21 +367,27 @@
 						:shadow="false"
 						class="is-danger is-outlined has-no-border"
 					>
-						Delete task
+						{{ $t('task.detail.actions.delete') }}
 					</x-button>
 
 					<!-- Created / Updated [by] -->
 					<p class="created">
-						Created <span v-tooltip="formatDate(task.created)">{{ formatDateSince(task.created) }}</span>
-						by {{ task.createdBy.getDisplayName() }}
+						<i18n path="task.detail.created">
+							<span v-tooltip="formatDate(task.created)">{{ formatDateSince(task.created) }}</span>
+							{{ task.createdBy.getDisplayName() }}
+						</i18n>
 						<template v-if="+new Date(task.created) !== +new Date(task.updated)">
 							<br/>
 							<!-- Computed properties to show the actual date every time it gets updated -->
-							Updated <span v-tooltip="updatedFormatted">{{ updatedSince }}</span>
+							<i18n path="task.detail.updated">
+								<span v-tooltip="updatedFormatted">{{ updatedSince }}</span>
+							</i18n>
 						</template>
 						<template v-if="task.done">
 							<br/>
-							Done <span v-tooltip="doneFormatted">{{ doneSince }}</span>
+							<i18n path="task.detail.doneAt">
+								<span v-tooltip="doneFormatted">{{ doneSince }}</span>
+							</i18n>
 						</template>
 					</p>
 				</div>
@@ -393,11 +399,10 @@
 				@close="showDeleteModal = false"
 				@submit="deleteTask()"
 				v-if="showDeleteModal">
-				<span slot="header">Delete this task</span>
+				<span slot="header">{{ $t('task.detail.delete.header') }}</span>
 				<p slot="text">
-					Are you sure you want to remove this task? <br/>
-					This will also remove all attachments, reminders and relations associated with this task and
-					<b>cannot be undone!</b>
+					{{ $t('task.detail.delete.text1') }}<br/>
+					{{ $t('task.detail.delete.text2') }}
 				</p>
 			</modal>
 		</transition>
@@ -620,7 +625,7 @@ export default {
 								callback: undoCallback,
 							}]
 						}
-						this.success({message: 'The task was saved successfully.'}, actions)
+						this.success({message: this.$t('task.detail.updateSuccess')}, actions)
 					})
 					.catch(e => {
 						this.error(e)
@@ -648,7 +653,7 @@ export default {
 		deleteTask() {
 			this.$store.dispatch('tasks/delete', this.task)
 				.then(() => {
-					this.success({message: 'The task has been deleted successfully.'})
+					this.success({message: this.$t('task.detail.deleteSuccess')})
 					this.$router.push({name: 'list.index', params: {listId: this.task.listId}})
 				})
 				.catch(e => {

@@ -7,31 +7,31 @@
 					icon="th"
 					type="secondary"
 				>
-					Columns
+					{{ $t('list.table.columns') }}
 				</x-button>
 				<x-button
 					@click.prevent.stop="() => {showTaskFilter = !showTaskFilter; showActiveColumnsFilter = false}"
 					icon="filter"
 					type="secondary"
 				>
-					Filters
+					{{ $t('filters.title') }}
 				</x-button>
 			</div>
 			<transition name="fade">
 				<card v-if="showActiveColumnsFilter">
 					<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.id">#</fancycheckbox>
-					<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.done">Done</fancycheckbox>
-					<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.title">Title</fancycheckbox>
-					<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.priority">Priority</fancycheckbox>
-					<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.labels">Labels</fancycheckbox>
-					<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.assignees">Assignees</fancycheckbox>
-					<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.dueDate">Due Date</fancycheckbox>
-					<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.startDate">Start Date</fancycheckbox>
-					<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.endDate">End Date</fancycheckbox>
-					<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.percentDone">% Done</fancycheckbox>
-					<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.created">Created</fancycheckbox>
-					<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.updated">Updated</fancycheckbox>
-					<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.createdBy">Created By</fancycheckbox>
+					<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.done">{{ $t('task.attributes.done') }}</fancycheckbox>
+					<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.title">{{ $t('task.attributes.title') }}</fancycheckbox>
+					<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.priority">{{ $t('task.attributes.priority') }}</fancycheckbox>
+					<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.labels">{{ $t('task.attributes.labels') }}</fancycheckbox>
+					<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.assignees">{{ $t('task.attributes.assignees') }}</fancycheckbox>
+					<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.dueDate">{{ $t('task.attributes.dueDate') }}</fancycheckbox>
+					<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.startDate">{{ $t('task.attributes.startDate') }}</fancycheckbox>
+					<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.endDate">{{ $t('task.attributes.endDate') }}</fancycheckbox>
+					<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.percentDone">{{ $t('task.attributes.percentDone') }}</fancycheckbox>
+					<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.created">{{ $t('task.attributes.created') }}</fancycheckbox>
+					<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.updated">{{ $t('task.attributes.updated') }}</fancycheckbox>
+					<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.createdBy">{{ $t('task.attributes.createdBy') }}</fancycheckbox>
 				</card>
 			</transition>
 			<filter-popup
@@ -50,49 +50,49 @@
 						<sort :order="sortBy.id" @click="sort('id')"/>
 					</th>
 					<th v-if="activeColumns.done">
-						Done
+						{{ $t('task.attributes.done') }}
 						<sort :order="sortBy.done" @click="sort('done')"/>
 					</th>
 					<th v-if="activeColumns.title">
-						Name
+						{{ $t('task.attributes.title') }}
 						<sort :order="sortBy.title" @click="sort('title')"/>
 					</th>
 					<th v-if="activeColumns.priority">
-						Priority
+						{{ $t('task.attributes.priority') }}
 						<sort :order="sortBy.priority" @click="sort('priority')"/>
 					</th>
 					<th v-if="activeColumns.labels">
-						Labels
+						{{ $t('task.attributes.labels') }}
 					</th>
 					<th v-if="activeColumns.assignees">
-						Assignees
+						{{ $t('task.attributes.assignees') }}
 					</th>
 					<th v-if="activeColumns.dueDate">
-						Due&nbsp;Date
+						{{ $t('task.attributes.dueDate') }}
 						<sort :order="sortBy.due_date" @click="sort('due_date')"/>
 					</th>
 					<th v-if="activeColumns.startDate">
-						Start&nbsp;Date
+						{{ $t('task.attributes.startDate') }}
 						<sort :order="sortBy.start_date" @click="sort('start_date')"/>
 					</th>
 					<th v-if="activeColumns.endDate">
-						End&nbsp;Date
+						{{ $t('task.attributes.endDate') }}
 						<sort :order="sortBy.end_date" @click="sort('end_date')"/>
 					</th>
 					<th v-if="activeColumns.percentDone">
-						%&nbsp;Done
+						{{ $t('task.attributes.percentDone') }}
 						<sort :order="sortBy.percent_done" @click="sort('percent_done')"/>
 					</th>
 					<th v-if="activeColumns.created">
-						Created
+						{{ $t('task.attributes.created') }}
 						<sort :order="sortBy.created" @click="sort('created')"/>
 					</th>
 					<th v-if="activeColumns.updated">
-						Updated
+						{{ $t('task.attributes.updated') }}
 						<sort :order="sortBy.updated" @click="sort('updated')"/>
 					</th>
 					<th v-if="activeColumns.createdBy">
-						Created&nbsp;By
+						{{ $t('task.attributes.createdBy') }}
 					</th>
 				</tr>
 				</thead>
@@ -156,14 +156,14 @@
 					:to="getRouteForPagination(currentPage - 1, 'table')"
 					class="pagination-previous"
 					tag="button">
-					Previous
+					{{ $t('misc.previous') }}
 				</router-link>
 				<router-link
 					:disabled="currentPage === taskCollectionService.totalPages"
 					:to="getRouteForPagination(currentPage + 1, 'table')"
 					class="pagination-next"
 					tag="button">
-					Next page
+					{{ $t('mist.next') }}
 				</router-link>
 				<ul class="pagination-list">
 					<template v-for="(p, i) in pages">

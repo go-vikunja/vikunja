@@ -11,7 +11,7 @@
 								@blur="hideSearchBar()"
 								@keyup.enter="searchTasks"
 								class="input"
-								placeholder="Search"
+								:placeholder="$t('misc.search')"
 								type="text"
 								v-focus
 								v-model="searchTerm"/>
@@ -25,7 +25,7 @@
 								@click="searchTasks"
 								:shadow="false"
 							>
-								Search
+								{{ $t('misc.search') }}
 							</x-button>
 						</div>
 					</div>
@@ -41,7 +41,7 @@
 					type="secondary"
 					icon="filter"
 				>
-					Filters
+					{{ $t('filters.title') }}
 				</x-button>
 			</div>
 			<filter-popup
@@ -59,7 +59,7 @@
 							:class="{ 'disabled': taskService.loading}"
 							@keyup.enter="addTask()"
 							class="input"
-							placeholder="Add a new task..."
+							:placeholder="$t('list.list.addPlaceholder')"
 							type="text"
 							v-focus
 							v-model="newTaskText"
@@ -75,18 +75,20 @@
 							@click="addTask()"
 							icon="plus"
 						>
-							Add
+							{{ $t('list.list.add') }}
 						</x-button>
 					</p>
 				</div>
 				<p class="help is-danger" v-if="showError && newTaskText === ''">
-					Please specify a list title.
+					{{ $t('list.list.addTitleRequired') }}
 				</p>
 			</div>
 
 			<nothing v-if="ctaVisible && tasks.length === 0 && !taskCollectionService.loading">
-				This list is currently empty.
-				<a @click="$refs.newTaskInput.focus()">Create a new task.</a>
+				{{ $t('list.list.empty') }}
+				<a @click="$refs.newTaskInput.focus()">
+					{{ $t('list.list.newTaskCta') }}
+				</a>
 			</nothing>
 
 			<div class="tasks-container">
@@ -107,7 +109,7 @@
 				</div>
 				<card
 					v-if="isTaskEdit"
-					class="taskedit mt-0" title="Edit Task" :has-close="true" @close="() => isTaskEdit = false"
+					class="taskedit mt-0" :title="$t('list.list.editTask')" :has-close="true" @close="() => isTaskEdit = false"
 					:shadow="false">
 					<edit-task :task="taskEditTask"/>
 				</card>
@@ -123,14 +125,14 @@
 					:to="getRouteForPagination(currentPage - 1)"
 					class="pagination-previous"
 					tag="button">
-					Previous
+					{{ $t('misc.previous') }}
 				</router-link>
 				<router-link
 					:disabled="currentPage === taskCollectionService.totalPages"
 					:to="getRouteForPagination(currentPage + 1)"
 					class="pagination-next"
 					tag="button">
-					Next page
+					{{ $t('misc.next') }}
 				</router-link>
 				<ul class="pagination-list">
 					<template v-for="(p, i) in pages">

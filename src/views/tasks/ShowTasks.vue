@@ -6,11 +6,13 @@
 			v-if="!showAll"
 			v-model="showNulls"
 		>
-			Show tasks without dates
+			{{ $t('task.show.noDates') }}
 		</fancycheckbox>
-		<h3 v-if="showAll && tasks.length > 0">Current tasks</h3>
+		<h3 v-if="showAll && tasks.length > 0">
+			{{ $t('task.show.current') }}
+		</h3>
 		<h3 v-else-if="!showAll" class="mb-2">
-			Tasks from
+			{{ $t('task.show.from') }}
 			<flat-pickr
 				:class="{ 'disabled': taskService.loading}"
 				:config="flatPickerConfig"
@@ -19,7 +21,7 @@
 				class="input"
 				v-model="cStartDate"
 			/>
-			until
+			{{ $t('task.show.until') }}
 			<flat-pickr
 				:class="{ 'disabled': taskService.loading}"
 				:config="flatPickerConfig"
@@ -30,12 +32,12 @@
 			/>
 		</h3>
 		<div v-if="!showAll" class="mb-4">
-			<x-button type="secondary" @click="showTodaysTasks()" class="mr-2">Today</x-button>
-			<x-button type="secondary" @click="setDatesToNextWeek()" class="mr-2">Next Week</x-button>
-			<x-button type="secondary" @click="setDatesToNextMonth()">Next Month</x-button>
+			<x-button type="secondary" @click="showTodaysTasks()" class="mr-2">{{ $t('task.show.today') }}</x-button>
+			<x-button type="secondary" @click="setDatesToNextWeek()" class="mr-2">{{ $t('task.show.nextWeek') }}</x-button>
+			<x-button type="secondary" @click="setDatesToNextMonth()">{{ $t('task.show.nextMonth') }}</x-button>
 		</div>
 		<template v-if="!taskService.loading && (!tasks || tasks.length === 0) && showNothingToDo">
-			<h3 class="nothing">Nothing to do - Have a nice day!</h3>
+			<h3 class="nothing">{{ $t('task.show.noTasks') }}</h3>
 			<img alt="" src="/images/cool.svg"/>
 		</template>
 		<div :class="{ 'is-loading': taskService.loading}" class="spinner"></div>
@@ -106,19 +108,23 @@ export default {
 			this.cEndDate = newVal
 		},
 	},
-	computed: mapState({
-		userAuthenticated: state => state.auth.authenticated,
-		flatPickerConfig: state => ({
-			altFormat: 'j M Y H:i',
-			altInput: true,
-			dateFormat: 'Y-m-d H:i',
-			enableTime: true,
-			time_24hr: true,
-			locale: {
-				firstDayOfWeek: state.auth.settings.weekStart,
-			},
-		})
-	}),
+	computed: {
+		flatPickerConfig() {
+			return {
+				altFormat: this.$t('date.altFormatLong'),
+				altInput: true,
+				dateFormat: 'Y-m-d H:i',
+				enableTime: true,
+				time_24hr: true,
+				locale: {
+					firstDayOfWeek: this.$store.state.auth.settings.weekStart,
+				},
+			}
+		},
+		...mapState({
+			userAuthenticated: state => state.auth.authenticated,
+		}),
+	},
 	methods: {
 		setDate() {
 			this.$router.push({
@@ -151,9 +157,9 @@ export default {
 			this.showNulls = this.$route.query.showNulls
 
 			if (this.showAll) {
-				this.setTitle('Current Tasks')
+				this.setTitle(this.$t('task.show.titleCurrent'))
 			} else {
-				this.setTitle(`Tasks from ${this.cStartDate.toLocaleDateString()} until ${this.cEndDate.toLocaleDateString()}`)
+				this.setTitle(this.$t('task.show.titleDates', { from: this.cStartDate.toLocaleDateString(), to: this.cEndDate.toLocaleDateString()}))
 			}
 
 			const params = {

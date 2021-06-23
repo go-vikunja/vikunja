@@ -4,7 +4,7 @@
 			{{ errorMessage }}
 		</div>
 		<div class="notification is-info" v-if="loading">
-			Authenticating...
+			{{ $t('user.auth.authenticating') }}
 		</div>
 	</div>
 </template>
@@ -13,6 +13,7 @@
 import {mapState} from 'vuex'
 
 import {ERROR_MESSAGE, LOADING} from '@/store/mutation-types'
+import {getErrorText} from '@/message'
 
 export default {
 	name: 'Auth',
@@ -41,7 +42,7 @@ export default {
 			const state = localStorage.getItem('state')
 			if(typeof this.$route.query.state === 'undefined' || this.$route.query.state !== state) {
 				localStorage.removeItem('authenticating')
-				this.$store.commit(ERROR_MESSAGE, 'State does not match, refusing to continue!')
+				this.$store.commit(ERROR_MESSAGE, this.$t('user.auth.openIdStateError'))
 				return
 			}
 
@@ -54,8 +55,14 @@ export default {
 				.then(() => {
 					this.$router.push({name: 'home'})
 				})
-				.catch(() => {
-					// Handled through global state
+				.catch(e => {
+					const err = getErrorText(e, p => this.$t(p))
+					if (typeof err[1] !== 'undefined') {
+						this.$store.commit(ERROR_MESSAGE, err[1])
+						return
+					}
+
+					this.$store.commit(ERROR_MESSAGE, err[0])
 				})
 				.finally(() => {
 					localStorage.removeItem('authenticating')

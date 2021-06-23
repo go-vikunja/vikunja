@@ -5,13 +5,13 @@
 				:to="{ name: `${listRoutePrefix}.settings.edit`, params: { listId: list.id } }"
 				icon="pen"
 			>
-				Edit
+				{{ $t('menu.edit') }}
 			</dropdown-item>
 			<dropdown-item
 				:to="{ name: `${listRoutePrefix}.settings.delete`, params: { listId: list.id } }"
 				icon="trash-alt"
 			>
-				Delete
+				{{ $t('misc.delete') }}
 			</dropdown-item>
 		</template>
 		<template v-else-if="list.isArchived">
@@ -19,7 +19,7 @@
 				:to="{ name: `${listRoutePrefix}.settings.archive`, params: { listId: list.id } }"
 				icon="archive"
 			>
-				Un-Archive
+				{{ $t('menu.unarchive') }}
 			</dropdown-item>
 		</template>
 		<template v-else>
@@ -27,32 +27,32 @@
 				:to="{ name: `${listRoutePrefix}.settings.edit`, params: { listId: list.id } }"
 				icon="pen"
 			>
-				Edit
+				{{ $t('menu.edit') }}
 			</dropdown-item>
 			<dropdown-item
 				:to="{ name: `${listRoutePrefix}.settings.background`, params: { listId: list.id } }"
 				v-if="backgroundsEnabled"
 				icon="image"
 			>
-				Set background
+				{{ $t('menu.setBackground') }}
 			</dropdown-item>
 			<dropdown-item
 				:to="{ name: `${listRoutePrefix}.settings.share`, params: { listId: list.id } }"
 				icon="share-alt"
 			>
-				Share
+				{{ $t('menu.share') }}
 			</dropdown-item>
 			<dropdown-item
 				:to="{ name: `${listRoutePrefix}.settings.duplicate`, params: { listId: list.id } }"
 				icon="paste"
 			>
-				Duplicate
+				{{ $t('menu.duplicate') }}
 			</dropdown-item>
 			<dropdown-item
 				:to="{ name: `${listRoutePrefix}.settings.archive`, params: { listId: list.id } }"
 				icon="archive"
 			>
-				Archive
+				{{ $t('menu.archive') }}
 			</dropdown-item>
 			<task-subscription
 				class="dropdown-item has-no-shadow"
@@ -67,7 +67,7 @@
 				icon="trash-alt"
 				class="has-text-danger"
 			>
-				Delete
+				{{ $t('menu.delete') }}
 			</dropdown-item>
 		</template>
 	</dropdown>

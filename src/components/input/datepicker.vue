@@ -18,7 +18,7 @@
 					</span>
 					<span class="text">
 						<span>
-							Today
+							{{ $t('input.datepicker.today') }}
 						</span>
 						<span class="weekday">
 							{{ getWeekdayFromStringInterval('today') }}
@@ -31,7 +31,7 @@
 					</span>
 					<span class="text">
 						<span>
-							Tomorrow
+							{{ $t('input.datepicker.tomorrow') }}
 						</span>
 						<span class="weekday">
 							{{ getWeekdayFromStringInterval('tomorrow') }}
@@ -44,7 +44,7 @@
 					</span>
 					<span class="text">
 						<span>
-							Next Monday
+							{{ $t('input.datepicker.nextMonday') }}
 						</span>
 						<span class="weekday">
 							{{ getWeekdayFromStringInterval('nextMonday') }}
@@ -57,7 +57,7 @@
 					</span>
 					<span class="text">
 						<span>
-							This Weekend
+							{{ $t('input.datepicker.thisWeekend') }}
 						</span>
 						<span class="weekday">
 							{{ getWeekdayFromStringInterval('thisWeekend') }}
@@ -70,7 +70,7 @@
 					</span>
 					<span class="text">
 						<span>
-							Later This Week
+							{{ $t('input.datepicker.laterThisWeek') }}
 						</span>
 						<span class="weekday">
 							{{ getWeekdayFromStringInterval('laterThisWeek') }}
@@ -83,7 +83,7 @@
 					</span>
 					<span class="text">
 						<span>
-							Next Week
+							{{ $t('input.datepicker.nextWeek') }}
 						</span>
 						<span class="weekday">
 							{{ getWeekdayFromStringInterval('nextWeek') }}
@@ -102,7 +102,7 @@
 					:shadow="false"
 					@click="close"
 				>
-					Confirm
+					{{ $t('misc.confirm') }}
 				</x-button>
 			</div>
 		</transition>
@@ -118,7 +118,6 @@ import {calculateDayInterval} from '@/helpers/time/calculateDayInterval'
 import {calculateNearestHours} from '@/helpers/time/calculateNearestHours'
 import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
 import {createDateFromString} from '@/helpers/time/createDateFromString'
-import {mapState} from 'vuex'
 
 export default {
 	name: 'datepicker',
@@ -142,7 +141,9 @@ export default {
 		},
 		chooseDateLabel: {
 			type: String,
-			default: 'Choose a date'
+			default() {
+				return this.$t('input.datepicker.chooseDate')
+			}
 		},
 		disabled: {
 			type: Boolean,
@@ -165,19 +166,21 @@ export default {
 			this.updateData()
 		},
 	},
-	computed: mapState({
-		flatPickerConfig: state => ({
-			altFormat: 'j M Y H:i',
-			altInput: true,
-			dateFormat: 'Y-m-d H:i',
-			enableTime: true,
-			time_24hr: true,
-			inline: true,
-			locale: {
-				firstDayOfWeek: state.auth.settings.weekStart,
-			},
-		})
-	}),
+	computed: {
+		flatPickerConfig() {
+			return {
+				altFormat: this.$t('date.altFormatLong'),
+				altInput: true,
+				dateFormat: 'Y-m-d H:i',
+				enableTime: true,
+				time_24hr: true,
+				inline: true,
+				locale: {
+					firstDayOfWeek: this.$store.state.auth.settings.weekStart,
+				},
+			}
+		},
+	},
 	methods: {
 		setDateValue(newVal) {
 			if(newVal === null) {

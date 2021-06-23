@@ -1,7 +1,7 @@
 <template>
 	<form @submit.prevent="editTaskSubmit()">
 		<div class="field">
-			<label class="label" for="tasktext">Title</label>
+			<label class="label" for="tasktext">{{ $t('task.attributes.title') }}</label>
 			<div class="control">
 				<input
 					:class="{ disabled: taskService.loading }"
@@ -9,7 +9,6 @@
 					@change="editTaskSubmit()"
 					class="input"
 					id="tasktext"
-					placeholder="The task text is here..."
 					type="text"
 					v-focus
 					v-model="taskEditTask.title"
@@ -17,26 +16,26 @@
 			</div>
 		</div>
 		<div class="field">
-			<label class="label" for="taskdescription">Description</label>
+			<label class="label" for="taskdescription">{{ $t('task.attributes.description') }}</label>
 			<div class="control">
 				<editor
 					:preview-is-default="false"
 					id="taskdescription"
-					placeholder="The tasks description goes here..."
+					:placeholder="$t('task.description.placeholder')"
 					v-if="editorActive"
 					v-model="taskEditTask.description"
 				/>
 			</div>
 		</div>
 
-		<strong>Reminders</strong>
+		<strong>{{ $t('task.attributes.reminders') }}</strong>
 		<reminders
 			@change="editTaskSubmit()"
 			v-model="taskEditTask.reminderDates"
 		/>
 
 		<div class="field">
-			<label class="label">Labels</label>
+			<label class="label">{{ $t('task.attributes.labels') }}</label>
 			<div class="control">
 				<edit-labels
 					:task-id="taskEditTask.id"
@@ -46,7 +45,7 @@
 		</div>
 
 		<div class="field">
-			<label class="label">Color</label>
+			<label class="label">{{ $t('task.attributes.color') }}</label>
 			<div class="control">
 				<color-picker v-model="taskEditTask.hexColor" />
 			</div>
@@ -57,14 +56,14 @@
 			class="is-fullwidth"
 			@click="editTaskSubmit()"
 		>
-			Save
+			{{ $t('misc.save') }}
 		</x-button>
 
 		<router-link
 			class="mt-2 has-text-centered is-block"
 			:to="{name: 'task.detail', params: {id: taskEditTask.id}}"
 		>
-			Open task detail view
+			{{ $t('task.openDetail') }}
 		</router-link>
 	</form>
 </template>
@@ -150,7 +149,7 @@ export default {
 				.then((r) => {
 					this.$set(this, 'taskEditTask', r)
 					this.initTaskFields()
-					this.success({message: 'The task has been saved successfully.'})
+					this.success({message: this.$t('task.detail.updateSuccess')})
 				})
 				.catch((e) => {
 					this.error(e)

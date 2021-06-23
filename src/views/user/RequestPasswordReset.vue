@@ -1,16 +1,16 @@
 <template>
 	<div>
-		<h2 class="title has-text-centered">Reset your password</h2>
+		<h2 class="title has-text-centered">{{ $t('user.auth.resetPassword') }}</h2>
 		<div class="box">
 			<form @submit.prevent="submit" v-if="!isSuccess">
 				<div class="field">
-					<label class="label" for="email">E-mail address</label>
+					<label class="label" for="email">{{ $t('user.auth.email') }}</label>
 					<div class="control">
 						<input
 							class="input"
 							id="email"
 							name="email"
-							placeholder="e.g. frederic@vikunja.io"
+							:placeholder="$t('user.auth.emailPlaceholder')"
 							required
 							type="email"
 							v-focus
@@ -24,9 +24,11 @@
 							@click="submit"
 							:loading="passwordResetService.loading"
 						>
-							Send me a password reset link
+							{{ $t('user.auth.resetPasswordAction') }}
 						</x-button>
-						<x-button :to="{ name: 'user.login' }" type="secondary">Login</x-button>
+						<x-button :to="{ name: 'user.login' }" type="secondary">
+							{{ $t('user.auth.login') }}
+						</x-button>
 					</div>
 				</div>
 				<div class="notification is-danger" v-if="errorMsg">
@@ -35,9 +37,11 @@
 			</form>
 			<div class="has-text-centered" v-if="isSuccess">
 				<div class="notification is-success">
-					Check your inbox! You should have a mail with instructions on how to reset your password.
+					{{ $t('user.auth.resetPasswordSuccess') }}
 				</div>
-				<x-button :to="{ name: 'user.login' }">Login</x-button>
+				<x-button :to="{ name: 'user.login' }">
+					{{ $t('user.auth.login') }}
+				</x-button>
 			</div>
 			<legal/>
 		</div>
@@ -66,7 +70,7 @@ export default {
 		this.passwordReset = new PasswordResetModel()
 	},
 	mounted() {
-		this.setTitle('Reset your password')
+		this.setTitle(this.$t('user.auth.resetPassword'))
 	},
 	methods: {
 		submit() {

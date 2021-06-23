@@ -3,9 +3,9 @@
 		@close="$router.back()"
 		@submit="deleteSavedFilter()"
 	>
-		<span slot="header">Delete this saved filter</span>
+		<span slot="header">{{ $t('filters.delete.header') }}</span>
 		<p slot="text">
-			Are you sure you want to delete this saved filter?
+			{{ $t('filters.delete.text') }}
 		</p>
 	</modal>
 </template>
@@ -34,7 +34,7 @@ export default {
 			this.filterService.delete(filter)
 				.then(() => {
 					this.$store.dispatch('namespaces/loadNamespaces')
-					this.success({message: 'The filter was deleted successfully.'})
+					this.success({message: this.$t('filters.delete.success')})
 					this.$router.push({name: 'namespaces.index'})
 				})
 				.catch(e => this.error(e))

@@ -11,7 +11,7 @@ describe('Team', () => {
         const newTeamName = 'New Team'
 
         cy.get('a.button')
-            .contains('New Team')
+            .contains('Create a new team')
             .click()
 		cy.url()
 			.should('contain', '/teams/new')
@@ -113,7 +113,7 @@ describe('Team', () => {
         cy.get('.card')
             .contains('Team Members')
             .get('.card-content .button')
-            .contains('Add To Team')
+            .contains('Add to team')
             .click()
         
         cy.get('table.table td')

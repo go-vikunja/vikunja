@@ -1,11 +1,11 @@
 <template>
 	<div>
 		<div class="notification is-info is-light has-text-centered" v-if="loading">
-			Authenticating...
+			{{ $t('sharing.authenticating') }}
 		</div>
 		<div v-if="authenticateWithPassword" class="box">
 			<p class="pb-2">
-				This shared list requires a password. Please enter it below:
+				{{ $t('sharing.passwordRequired') }}
 			</p>
 			<div class="field">
 				<div class="control">
@@ -13,7 +13,7 @@
 						id="linkSharePassword"
 						type="password"
 						class="input"
-						placeholder="e.g. ••••••••••••"
+						:placeholder="$t('user.auth.passwordPlaceholder')"
 						v-model="password"
 						v-focus
 						@keyup.enter.prevent="auth"
@@ -22,7 +22,7 @@
 			</div>
 
 			<x-button @click="auth" :loading="loading">
-				Login
+				{{ $t('user.auth.login') }}
 			</x-button>
 
 			<div class="notification is-danger mt-4" v-if="error !== ''">
@@ -52,7 +52,7 @@ export default {
 		this.auth()
 	},
 	mounted() {
-		this.setTitle('Authenticating...')
+		this.setTitle(this.$t('sharing.authenticating'))
 	},
 	computed: mapState({
 		authLinkShare: state => state.auth.authenticated && (state.auth.info && state.auth.info.type === authTypes.LINK_SHARE),
@@ -77,12 +77,13 @@ export default {
 						return
 					}
 
-					let error = 'An error occured.'
+					// TODO: Put this logic in a global error handler method which checks all auth codes
+					let error = this.$t('sharing.error')
 					if (e.response && e.response.data && e.response.data.message) {
 						error = e.response.data.message
 					}
 					if (typeof e.response.data.code !== 'undefined' && e.response.data.code === 13002) {
-						error = 'The password is invalid.'
+						error = this.$t('sharing.invalidPassword')
 					}
 					this.error = error
 				})

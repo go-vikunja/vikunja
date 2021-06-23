@@ -388,7 +388,7 @@ describe('Lists', () => {
 				.first()
 				.click()
 			cy.get('.kanban .bucket .bucket-header .dropdown.options .dropdown-menu .dropdown-item')
-				.contains('Limit: Not set')
+				.contains('Limit: Not Set')
 				.click()
 			cy.get('.kanban .bucket .bucket-header .dropdown.options .dropdown-menu .dropdown-item .field input.input')
 				.first()

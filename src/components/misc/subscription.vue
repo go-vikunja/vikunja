@@ -54,16 +54,19 @@ export default {
 	},
 	computed: {
 		tooltipText() {
-			if(this.disabled) {
-				return `You can't unsubscribe here because you are subscribed to this ${this.entity} through its ${this.subscription.entity}.`
+			if (this.disabled) {
+				return this.$t('task.subscription.subscribedThroughParent', {
+					entity: this.entity,
+					parent: this.subscription.entity
+				})
 			}
 
 			return this.subscription !== null ?
-				`You are currently subscribed to this ${this.entity} and will receive notifications for changes.` :
-				`You are not subscribed to this ${this.entity} and won't receive notifications for changes.`
+				this.$t('task.subscription.subscribed', {entity: this.entity}) :
+				this.$t('task.subscription.notSubscribed', {entity: this.entity})
 		},
 		buttonText() {
-			return this.subscription !== null ? 'Unsubscribe' : 'Subscribe'
+			return this.subscription !== null ? this.$t('task.subscription.unsubscribe') : this.$t('task.subscription.subscribe')
 		},
 		icon() {
 			return this.subscription !== null ? ['far', 'bell-slash'] : 'bell'
@@ -78,7 +81,7 @@ export default {
 	},
 	methods: {
 		changeSubscription() {
-			if(this.disabled) {
+			if (this.disabled) {
 				return
 			}
 
@@ -96,7 +99,7 @@ export default {
 			this.subscriptionService.create(subscription)
 				.then(() => {
 					this.$emit('change', subscription)
-					this.success({message: `You are now subscribed to this ${this.entity}`})
+					this.success({message: this.$t('task.subscription.subscribeSuccess', {entity: this.entity})})
 				})
 				.catch(e => {
 					this.error(e)
@@ -110,7 +113,7 @@ export default {
 			this.subscriptionService.delete(subscription)
 				.then(() => {
 					this.$emit('change', null)
-					this.success({message: `You are now unsubscribed to this ${this.entity}`})
+					this.success({message: this.$t('task.subscription.unsubscribeSuccess', {entity: this.entity})})
 				})
 				.catch(e => {
 					this.error(e)

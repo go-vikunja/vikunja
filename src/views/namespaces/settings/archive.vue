@@ -3,13 +3,12 @@
 		@close="$router.back()"
 		@submit="archiveNamespace()"
 	>
-		<span slot="header">{{ namespace.isArchived ? 'Un-' : '' }}Archive this namespace</span>
+		<span slot="header">{{ title }}</span>
 		<p slot="text" v-if="namespace.isArchived">
-			You will be able to create new lists or edit it.
+			{{ $t('namespace.archive.unarchiveText') }}
 		</p>
 		<p slot="text" v-else>
-			You won't be able to edit this namespace or create new list until you un-archive it.<br/>
-			This will also archive all lists in this namespace.
+			{{ $t('namespace.archive.archiveText') }}
 		</p>
 	</modal>
 </template>
@@ -23,12 +22,16 @@ export default {
 		return {
 			namespaceService: NamespaceService,
 			namespace: null,
+			title: ''
 		}
 	},
 	created() {
 		this.namespaceService = new NamespaceService()
 		this.namespace = this.$store.getters['namespaces/getNamespaceById'](this.$route.params.id)
-		this.setTitle(`Archive "${this.namespace.title}"`)
+		this.title = this.namespace.isArchived ?
+			this.$t('namespace.archive.titleUnarchive', { namespace: this.namespace.title }) :
+			this.$t('namespace.archive.titleArchive', { namespace: this.namespace.title })
+		this.setTitle(this.title)
 	},
 	methods: {
 		archiveNamespace() {
@@ -38,7 +41,7 @@ export default {
 			this.namespaceService.update(this.namespace)
 				.then(r => {
 					this.$store.commit('namespaces/setNamespaceById', r)
-					this.success({message: 'The namespace was successfully archived.'})
+					this.success({message: this.$t('namespace.archive.success')})
 				})
 				.catch(e => {
 					this.error(e)

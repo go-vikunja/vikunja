@@ -1,6 +1,8 @@
 <template>
 	<div>
-		<p class="has-text-weight-bold">Shared with these {{ shareType }}s</p>
+		<p class="has-text-weight-bold">
+			{{ $t('list.share.userTeam.shared', {type: shareTypeNames}) }}
+		</p>
 		<div v-if="userIsAdmin">
 			<div class="field has-addons">
 				<p
@@ -9,7 +11,7 @@
 				>
 					<multiselect
 						:loading="searchService.loading"
-						placeholder="Type to search..."
+						:placeholder="$t('misc.searchPlaceholder')"
 						@search="find"
 						:search-results="found"
 						:label="searchLabel"
@@ -17,7 +19,7 @@
 					/>
 				</p>
 				<p class="control">
-					<x-button @click="add()"> Share</x-button>
+					<x-button @click="add()">{{ $t('list.share.share') }}</x-button>
 				</p>
 			</div>
 		</div>
@@ -29,7 +31,7 @@
 					<td>{{ s.getDisplayName() }}</td>
 					<td>
 						<template v-if="s.id === userInfo.id">
-							<b class="is-success">You</b>
+							<b class="is-success">{{ $t('list.share.userTeam.you') }}</b>
 						</template>
 					</td>
 				</template>
@@ -50,19 +52,19 @@
 							<span class="icon is-small">
 								<icon icon="lock"/>
 							</span>
-						Admin
+						{{ $t('list.share.right.admin') }}
 					</template>
 					<template v-else-if="s.right === rights.READ_WRITE">
 							<span class="icon is-small">
 								<icon icon="pen"/>
 							</span>
-						Write
+						{{ $t('list.share.right.readWrite') }}
 					</template>
 					<template v-else>
 							<span class="icon is-small">
 								<icon icon="users"/>
 							</span>
-						Read-only
+						{{ $t('list.share.right.read') }}
 					</template>
 				</td>
 				<td class="actions" v-if="userIsAdmin">
@@ -76,19 +78,19 @@
 								:selected="s.right === rights.READ"
 								:value="rights.READ"
 							>
-								Read only
+								{{ $t('list.share.right.read') }}
 							</option>
 							<option
 								:selected="s.right === rights.READ_WRITE"
 								:value="rights.READ_WRITE"
 							>
-								Read & write
+								{{ $t('list.share.right.readWrite') }}
 							</option>
 							<option
 								:selected="s.right === rights.ADMIN"
 								:value="rights.ADMIN"
 							>
-								Admin
+								{{ $t('list.share.right.admin') }}
 							</option>
 						</select>
 					</div>
@@ -108,7 +110,7 @@
 		</table>
 
 		<nothing v-else>
-			Not shared with any {{ shareType }} yet.
+			{{ $t('list.share.userTeam.notShared', {type: shareTypeNames}) }}
 		</nothing>
 
 		<transition name="modal">
@@ -117,13 +119,11 @@
 				@submit="deleteSharable()"
 				v-if="showDeleteModal"
 			>
-			<span slot="header"
-			>Remove a {{ shareType }} from the {{ typeString }}</span
-			>
+			<span slot="header">
+				{{ $t('list.share.userTeam.removeHeader', {type: shareTypeName, sharable: sharableName}) }}
+			</span>
 				<p slot="text">
-					Are you sure you want to remove this {{ shareType }} from the
-					{{ typeString }}?<br/>
-					<b>This CANNOT BE UNDONE!</b>
+					{{ $t('list.share.userTeam.removeText', {type: shareTypeName, sharable: sharableName}) }}
 				</p>
 			</modal>
 		</transition>
@@ -131,8 +131,6 @@
 </template>
 
 <script>
-import {mapState} from 'vuex'
-
 import UserNamespaceService from '../../services/userNamespace'
 import UserNamespaceModel from '../../models/userNamespace'
 import UserListModel from '../../models/userList'
@@ -192,9 +190,44 @@ export default {
 		Nothing,
 		Multiselect,
 	},
-	computed: mapState({
-		userInfo: (state) => state.auth.info,
-	}),
+	computed: {
+		userInfo() {
+			return this.$store.state.auth.info
+		},
+		shareTypeNames() {
+			if (this.shareType === 'user') {
+				return this.$tc('list.share.userTeam.typeUser', 2)
+			}
+
+			if (this.shareType === 'team') {
+				return this.$tc('list.share.userTeam.typeTeam', 2)
+			}
+
+			return ''
+		},
+		shareTypeName() {
+			if (this.shareType === 'user') {
+				return this.$tc('list.share.userTeam.typeUser', 1)
+			}
+
+			if (this.shareType === 'team') {
+				return this.$tc('list.share.userTeam.typeTeam', 1)
+			}
+
+			return ''
+		},
+		sharableName() {
+			if (this.type === 'list') {
+				return this.$t('list.list.title')
+			}
+
+			if (this.shareType === 'namespace') {
+				return this.$t('namespace.namespace')
+			}
+
+			return ''
+		},
+	},
 	created() {
 		if (this.shareType === 'user') {
 			this.searchService = new UserService()
@@ -271,7 +304,7 @@ export default {
 							this.sharables.splice(i, 1)
 						}
 					}
-					this.success({message: `The ${this.shareType} was successfully deleted from the ${this.typeString}.`})
+					this.success({message: this.$t('list.share.userTeam.removeSuccess', {type: this.shareTypeName, sharable: this.sharableName})})
 				})
 				.catch((e) => {
 					this.error(e)
@@ -295,12 +328,7 @@ export default {
 			this.stuffService
 				.create(this.stuffModel)
 				.then(() => {
-					this.success({
-						message:
-							'The ' +
-							this.shareType +
-							' was successfully added.',
-					})
+					this.success({message: this.$t('list.share.userTeam.addedSuccess', {type: this.shareTypeName})})
 					this.load()
 				})
 				.catch((e) => {
@@ -337,12 +365,7 @@ export default {
 							this.$set(this.sharables[i], 'right', r.right)
 						}
 					}
-					this.success({
-						message:
-							'The ' +
-							this.shareType +
-							' right was successfully updated.',
-					})
+					this.success({message: this.$t('list.share.userTeam.updatedSuccess', {type: this.shareTypeName})})
 				})
 				.catch((e) => {
 					this.error(e)

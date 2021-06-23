@@ -5,10 +5,10 @@
 			class="is-pulled-right"
 			icon="plus"
 		>
-			New Team
+			{{ $t('team.create.title') }}
 		</x-button>
 
-		<h1>Teams</h1>
+		<h1>{{ $t('team.title') }}</h1>
 		<ul class="teams box" v-if="teams.length > 0">
 			<li :key="t.id" v-for="t in teams">
 				<router-link :to="{name: 'teams.edit', params: {id: t.id}}">
@@ -17,9 +17,9 @@
 			</li>
 		</ul>
 		<p v-else-if="!teamService.loading" class="has-text-centered has-text-grey is-italic">
-			You are currently not part of any teams.
+			{{ $t('team.noTeams') }}
 			<router-link :to="{name: 'teams.create'}">
-				Create a new team.
+				{{ $t('team.create.title') }}.
 			</router-link>
 		</p>
 	</div>
@@ -41,7 +41,7 @@ export default {
 		this.loadTeams()
 	},
 	mounted() {
-		this.setTitle('Teams')
+		this.setTitle(this.$t('team.title'))
 	},
 	methods: {
 		loadTeams() {

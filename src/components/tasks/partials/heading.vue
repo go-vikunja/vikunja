@@ -14,11 +14,11 @@
 		<transition name="fade">
 			<span class="is-inline-flex is-align-items-center" v-if="loading && saving">
 				<span class="loader is-inline-block mr-2"></span>
-				Saving...
+				{{ $t('misc.saving') }}
 			</span>
 			<span class="has-text-success is-inline-flex is-align-content-center" v-if="!loading && saved">
 				<icon icon="check" class="mr-2"/>
-				Saved!
+				{{ $t('misc.saved') }}
 			</span>
 		</transition>
 	</div>
