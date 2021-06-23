@@ -2,6 +2,76 @@
 	<div
 		:class="{ 'is-loading': passwordUpdateService.loading || emailUpdateService.loading || totpService.loading }"
 		class="loader-container is-max-width-desktop">
+		<!-- General -->
+		<card title="General Settings" class="general-settings">
+			<div class="field">
+				<label class="label" for="newName">Name</label>
+				<div class="control">
+					<input
+						@keyup.enter="updateSettings"
+						class="input"
+						id="newName"
+						placeholder="The new name"
+						type="text"
+						v-model="settings.name"/>
+				</div>
+			</div>
+			<div class="field">
+				<label class="checkbox">
+					<input type="checkbox" v-model="settings.emailRemindersEnabled"/>
+					Send me reminders for tasks via Email
+				</label>
+			</div>
+			<div class="field">
+				<label class="checkbox">
+					<input type="checkbox" v-model="settings.overdueTasksRemindersEnabled"/>
+					Send me reminders for overdue undone tasks via email each morning
+				</label>
+			</div>
+			<div class="field">
+				<label class="checkbox">
+					<input type="checkbox" v-model="settings.discoverableByName"/>
+					Let other users find me when they search for my name
+				</label>
+			</div>
+			<div class="field">
+				<label class="checkbox">
+					<input type="checkbox" v-model="settings.discoverableByEmail"/>
+					Let other users find me when they search for my full email
+				</label>
+			</div>
+			<div class="field">
+				<label class="checkbox">
+					<input type="checkbox" v-model="playSoundWhenDone"/>
+					Play a sound when marking tasks as done
+				</label>
+			</div>
+			<div class="field">
+				<label class="is-flex is-align-items-center">
+					<span>
+						Week starts on
+					</span>
+					<div class="select ml-2">
+						<select v-model.number="settings.weekStart">
+							<option value="0">Sunday</option>
+							<option value="1">Monday</option>
+						</select>
+					</div>
+				</label>
+			</div>
+
+			<x-button
+				:loading="userSettingsService.loading"
+				@click="updateSettings()"
+				class="is-fullwidth mt-4"
+			>
+				Save
+			</x-button>
+		</card>
+
+		<!-- Avatar -->
+		<avatar-settings/>
+
 		<!-- Password update -->
 		<card title="Update Your Password">
 			<form @submit.prevent="updatePassword()">
@@ -87,76 +157,6 @@
 				Save
 			</x-button>
 		</card>
-
-		<!-- General -->
-		<card title="General Settings" class="general-settings">
-			<div class="field">
-				<label class="label" for="newName">Name</label>
-				<div class="control">
-					<input
-						@keyup.enter="updateSettings"
-						class="input"
-						id="newName"
-						placeholder="The new name"
-						type="text"
-						v-model="settings.name"/>
-				</div>
-			</div>
-			<div class="field">
-				<label class="checkbox">
-					<input type="checkbox" v-model="settings.emailRemindersEnabled"/>
-					Send me reminders for tasks via Email
-				</label>
-			</div>
-			<div class="field">
-				<label class="checkbox">
-					<input type="checkbox" v-model="settings.overdueTasksRemindersEnabled"/>
-					Send me reminders for overdue undone tasks via email each morning
-				</label>
-			</div>
-			<div class="field">
-				<label class="checkbox">
-					<input type="checkbox" v-model="settings.discoverableByName"/>
-					Let other users find me when they search for my name
-				</label>
-			</div>
-			<div class="field">
-				<label class="checkbox">
-					<input type="checkbox" v-model="settings.discoverableByEmail"/>
-					Let other users find me when they search for my full email
-				</label>
-			</div>
-			<div class="field">
-				<label class="checkbox">
-					<input type="checkbox" v-model="playSoundWhenDone"/>
-					Play a sound when marking tasks as done
-				</label>
-			</div>
-			<div class="field">
-				<label class="is-flex is-align-items-center">
-					<span>
-						Week starts on
-					</span>
-					<div class="select ml-2">
-						<select v-model.number="settings.weekStart">
-							<option value="0">Sunday</option>
-							<option value="1">Monday</option>
-						</select>
-					</div>
-				</label>
-			</div>
-
-			<x-button
-				:loading="userSettingsService.loading"
-				@click="updateSettings()"
-				class="is-fullwidth mt-4"
-			>
-				Save
-			</x-button>
-		</card>
-
-		<!-- Avatar -->
-		<avatar-settings/>
 
 		<!-- TOTP -->
 		<card title="Two Factor Authentication" v-if="totpEnabled">
