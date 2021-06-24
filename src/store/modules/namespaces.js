@@ -116,9 +116,7 @@ export default {
 
 					return Promise.resolve(r)
 				})
-				.catch(e => {
-					return Promise.reject(e)
-				})
+				.catch(e => Promise.reject(e))
 				.finally(() => {
 					cancel()
 				})
@@ -136,6 +134,7 @@ export default {
 			}
 		},
 		deleteNamespace(ctx, namespace) {
+			const cancel = setLoading(ctx, 'namespaces')
 			const namespaceService = new NamespaceService()
 
 			return namespaceService.delete(namespace)
@@ -143,7 +142,20 @@ export default {
 					ctx.commit('removeNamespaceById', namespace.id)
 					return Promise.resolve(r)
 				})
-				.catch(Promise.reject)
+				.catch(e => Promise.reject(e))
+				.finally(() => cancel())
+		},
+		createNamespace(ctx, namespace) {
+			const cancel = setLoading(ctx, 'namespaces')
+			const namespaceService = new NamespaceService()
+
+			return namespaceService.create(namespace)
+				.then(r => {
+					ctx.commit('addNamespace', r)
+					return Promise.resolve(r)
+				})
+				.catch(e => Promise.reject(e))
+				.finally(() => cancel())
 		},
 	},
 }

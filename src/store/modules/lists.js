@@ -1,5 +1,6 @@
 import Vue from 'vue'
 import ListService from '@/services/list'
+import {setLoading} from '@/store/helper'
 
 const FavoriteListsNamespace = -2
 
@@ -32,6 +33,7 @@ export default {
 			return ctx.dispatch('updateList', list)
 		},
 		createList(ctx, list) {
+			const cancel = setLoading(ctx, 'lists')
 			const listService = new ListService()
 
 			return listService.create(list)
@@ -41,11 +43,11 @@ export default {
 					ctx.commit('setList', r)
 					return Promise.resolve(r)
 				})
-				.catch(e => {
-					return Promise.reject(e)
-				})
+				.catch(e => Promise.reject(e))
+				.finally(() => cancel())
 		},
 		updateList(ctx, list) {
+			const cancel = setLoading(ctx, 'lists')
 			const listService = new ListService()
 
 			return listService.update(list)
@@ -69,6 +71,7 @@ export default {
 					ctx.commit('setList', list)
 					return Promise.reject(e)
 				})
+				.finally(() => cancel())
 		}
 	},
 }

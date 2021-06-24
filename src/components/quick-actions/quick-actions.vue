@@ -51,15 +51,13 @@
 
 <script>
 import TaskService from '@/services/task'
-import ListService from '@/services/list'
-import NamespaceService from '@/services/namespace'
 import TeamService from '@/services/team'
 
 import TaskModel from '@/models/task'
 import NamespaceModel from '@/models/namespace'
 import TeamModel from '@/models/team'
 
-import {CURRENT_LIST, QUICK_ACTIONS_ACTIVE} from '@/store/mutation-types'
+import {CURRENT_LIST, LOADING, LOADING_MODULE, QUICK_ACTIONS_ACTIVE} from '@/store/mutation-types'
 import ListModel from '@/models/list'
 
 const TYPE_LIST = 'list'
@@ -91,9 +89,6 @@ export default {
 			foundTeams: [],
 			teamSearchTimeout: null,
 			teamService: null,
-
-			namespaceService: null,
-			listService: null,
 		}
 	},
 	computed: {
@@ -148,8 +143,8 @@ export default {
 		},
 		loading() {
 			return this.taskService.loading ||
-				this.listService.loading ||
-				this.namespaceService.loading ||
+				(this.$store.state[LOADING] && this.$store.state[LOADING_MODULE] === 'namespaces') ||
+				(this.$store.state[LOADING] && this.$store.state[LOADING_MODULE] === 'lists') ||
 				this.teamService.loading
 		},
 		placeholder() {
@@ -230,8 +225,6 @@ export default {
 	},
 	created() {
 		this.taskService = new TaskService()
-		this.listService = new ListService()
-		this.namespaceService = new NamespaceService()
 		this.teamService = new TeamService()
 	},
 	methods: {
@@ -378,7 +371,7 @@ export default {
 				title: this.query,
 				namespaceId: this.currentList.namespaceId,
 			})
-			this.listService.create(newList)
+			this.$store.dispatch('lists/createList', newList)
 				.then(r => {
 					this.success({message: this.$t('list.create.createdSuccess')})
 					this.$router.push({name: 'list.index', params: {listId: r.id}})
@@ -390,9 +383,9 @@ export default {
 		},
 		newNamespace() {
 			const newNamespace = new NamespaceModel({title: this.query})
-			this.namespaceService.create(newNamespace)
-				.then(r => {
-					this.$store.commit('namespaces/addNamespace', r)
+
+			this.$store.dispatch('namespaces/createNamespace', newNamespace)
+				.then(() => {
 					this.success({message: this.$t('namespace.create.success')})
 					this.closeQuickActions()
 				})
