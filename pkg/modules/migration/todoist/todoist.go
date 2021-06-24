@@ -418,6 +418,7 @@ func convertTodoistToVikunja(sync *sync) (fullVikunjaHierachie []*models.Namespa
 
 		if _, exists := tasks[r.ItemID]; !exists {
 			log.Debugf("Could not find task %d for reminder %d while trying to resolve reminders", r.ItemID, r.ID)
+			continue
 		}
 
 		date, err := parseDate(r.Due.Date)
