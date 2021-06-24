@@ -124,6 +124,13 @@ $lists-per-row: 5;
           color: $text;
           width: 100%;
           margin-bottom: 0;
+          max-height: calc(100% - 2rem); // 1rem padding, 1rem height of the "is archived" badge
+          overflow: hidden;
+          text-overflow: ellipsis;
+
+          display: -webkit-box;
+          -webkit-line-clamp: 3;
+          -webkit-box-orient: vertical;
         }
 
         &.has-light-text .title {
