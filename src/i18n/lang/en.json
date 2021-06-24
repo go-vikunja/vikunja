@@ -761,7 +761,7 @@
     "4017": "Invalid task filter comparator.",
     "4018": "Invalid task filter concatinator.",
     "4019": "Invalid task filter value.",
-    "5001": "The namspace does not exist.",
+    "5001": "The namespace does not exist.",
     "5003": "You do not have access to the specified namespace.",
     "5006": "The namespace name cannot be empty.",
     "5009": "You need to have namespace read access to perform that action.",

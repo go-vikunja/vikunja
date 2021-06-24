@@ -46,7 +46,7 @@
 			</h1>
 
 			<p class="has-text-centered has-text-grey mt-4 is-italic" v-if="n.lists.length === 0">
-				{{ $t('namespaces.noLists') }}
+				{{ $t('namespace.noLists') }}
 				<router-link :to="{name: 'list.create', params: {id:  n.id}}">
 					{{ $t('namespace.createList') }}
 				</router-link>
