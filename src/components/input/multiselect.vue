@@ -28,7 +28,7 @@
 					:placeholder="placeholder"
 					@keydown.down.exact.prevent="() => preSelect(0)"
 					ref="searchInput"
-					@focus="() => showSearchResults = true"
+					@focus="handleFocus"
 				/>
 			</div>
 		</div>
@@ -257,6 +257,13 @@ export default {
 		},
 		closeSearchResults() {
 			this.showSearchResults = false
+		},
+		handleFocus() {
+			// We need the timeout to avoid the hideSearchResultsHandler hiding the search results right after the input
+			// is focused. That would lead to flickering pre-loaded search results and hiding them right after showing.
+			setTimeout(() => {
+				this.showSearchResults = true
+			}, 10)
 		},
 		select(object) {
 			if (this.multiple) {
