@@ -544,6 +544,7 @@ trigger:
 steps:
   - name: update-translation-base
     image: appleboy/drone-git-push
+    failure: ignore
     settings:
       branch: translations
       remote: ssh://git@kolaente.dev:9022/vikunja/frontend.git
