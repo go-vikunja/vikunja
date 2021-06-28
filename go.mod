@@ -64,7 +64,7 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/swaggo/swag v1.7.0
 	github.com/ulule/limiter/v3 v3.8.0
-	github.com/yuin/goldmark v1.3.8
+	github.com/yuin/goldmark v1.3.9
 	golang.org/x/crypto v0.0.0-20210616213533-5ff15b29337e
 	golang.org/x/image v0.0.0-20210628002857-a66eb6448b8d
 	golang.org/x/net v0.0.0-20210520170846-37e1c6afe023 // indirect
