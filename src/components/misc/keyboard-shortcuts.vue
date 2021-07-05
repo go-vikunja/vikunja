@@ -1,5 +1,5 @@
 <template>
-	<div class="modal-mask keyboard-shortcuts-modal">
+	<div class="modal-mask hint-modal">
 		<div @click.self="close()" class="modal-container">
 			<div class="modal-content">
 				<card class="has-background-white has-no-shadow" :title="$t('keyboardShortcuts.title')">

@@ -25,6 +25,12 @@ export default {
 			}
 			return null
 		},
+		findListByExactname: state => name => {
+			const list = Object.values(state).find(l => {
+				return l.title.toLowerCase() === name.toLowerCase()
+			})
+			return typeof list === 'undefined' ? null : list
+		},
 	},
 	actions: {
 		toggleListFavorite(ctx, list) {

@@ -1,5 +1,5 @@
 <template>
-	<modal v-if="active" class="quick-actions" @close="closeQuickActions">
+	<modal v-if="active" class="quick-actions" @close="closeQuickActions" :overflow="isNewTaskCommand">
 		<div class="card">
 			<div class="action-input" :class="{'has-active-cmd': selectedCmd !== null}">
 				<div class="active-cmd tag" v-if="selectedCmd !== null">
@@ -20,9 +20,11 @@
 				/>
 			</div>
 
-			<div class="help has-text-grey-light p-2" v-if="hintText !== ''">
+			<div class="help has-text-grey-light p-2" v-if="hintText !== '' && !isNewTaskCommand">
 				{{ hintText }}
 			</div>
+
+			<quick-add-magic class="p-2 modal-container-smaller" v-if="isNewTaskCommand"/>
 
 			<div class="results" v-if="selectedCmd === null">
 				<div v-for="(r, k) in results" :key="k" class="result">
@@ -53,12 +55,13 @@
 import TaskService from '@/services/task'
 import TeamService from '@/services/team'
 
-import TaskModel from '@/models/task'
 import NamespaceModel from '@/models/namespace'
 import TeamModel from '@/models/team'
 
 import {CURRENT_LIST, LOADING, LOADING_MODULE, QUICK_ACTIONS_ACTIVE} from '@/store/mutation-types'
 import ListModel from '@/models/list'
+import createTask from '@/components/tasks/mixins/createTask'
+import QuickAddMagic from '@/components/tasks/partials/quick-add-magic'
 
 const TYPE_LIST = 'list'
 const TYPE_TASK = 'task'
@@ -77,6 +80,7 @@ const SEARCH_MODE_TEAMS = 'teams'
 
 export default {
 	name: 'quick-actions',
+	components: {QuickAddMagic},
 	data() {
 		return {
 			query: '',
@@ -91,6 +95,9 @@ export default {
 			teamService: null,
 		}
 	},
+	mixins: [
+		createTask,
+	],
 	computed: {
 		active() {
 			const active = this.$store.state[QUICK_ACTIONS_ACTIVE]
@@ -222,6 +229,9 @@ export default {
 
 			return SEARCH_MODE_ALL
 		},
+		isNewTaskCommand() {
+			return this.selectedCmd !== null && this.selectedCmd.action === CMD_NEW_TASK
+		},
 	},
 	created() {
 		this.taskService = new TaskService()
@@ -348,11 +358,7 @@ export default {
 				return
 			}
 
-			const newTask = new TaskModel({
-				title: this.query,
-				listId: this.currentList.id,
-			})
-			this.taskService.create(newTask)
+			this.createNewTask(this.query, 0, this.currentList.id)
 				.then(r => {
 					this.success({message: this.$t('task.createSuccess')})
 					this.$router.push({name: 'task.detail', params: {id: r.id}})

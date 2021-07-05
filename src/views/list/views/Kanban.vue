@@ -71,7 +71,9 @@
 								</div>
 							</div>
 							<template v-else>
-								{{ $t('list.kanban.limit', {limit: bucket.limit > 0 ? bucket.limit : $t('list.kanban.noLimit') }) }}
+								{{
+									$t('list.kanban.limit', {limit: bucket.limit > 0 ? bucket.limit : $t('list.kanban.noLimit')})
+								}}
 							</template>
 						</a>
 						<a
@@ -264,7 +266,6 @@
 
 <script>
 import TaskService from '../../../services/task'
-import TaskModel from '../../../models/task'
 import BucketModel from '../../../models/bucket'
 
 import {Container, Draggable} from 'vue-smooth-dnd'
@@ -281,6 +282,7 @@ import {LOADING, LOADING_MODULE} from '@/store/mutation-types'
 import FilterPopup from '@/components/list/partials/filter-popup'
 import Dropdown from '@/components/misc/dropdown'
 import {playPop} from '@/helpers/playPop'
+import createTask from '@/components/tasks/mixins/createTask'
 
 export default {
 	name: 'Kanban',
@@ -328,6 +330,9 @@ export default {
 			filtersChanged: false, // To trigger a reload of the board
 		}
 	},
+	mixins: [
+		createTask,
+	],
 	created() {
 		this.taskService = new TaskService()
 		this.loadBuckets()
@@ -488,24 +493,7 @@ export default {
 			}
 			this.$set(this.newTaskError, bucketId, false)
 
-			// We need the actual bucket index so we put that in a seperate function
-			const bucketIndex = () => {
-				for (const t in this.buckets) {
-					if (this.buckets[t].id === bucketId) {
-						return t
-					}
-				}
-			}
-
-			const bi = bucketIndex()
-
-			const task = new TaskModel({
-				title: this.newTaskText,
-				bucketId: this.buckets[bi].id,
-				listId: this.$route.params.listId,
-			})
-
-			this.taskService.create(task)
+			this.createNewTask(this.newTaskText, bucketId)
 				.then(r => {
 					this.newTaskText = ''
 					this.$store.commit('kanban/addTaskToBucket', r)
@@ -514,10 +502,10 @@ export default {
 					this.error(e)
 				})
 				.finally(() => {
-					if (!this.$refs[`tasks-container${task.bucketId}`][0]) {
+					if (!this.$refs[`tasks-container${bucketId}`][0]) {
 						return
 					}
-					this.$refs[`tasks-container${task.bucketId}`][0].scrollTop = this.$refs[`tasks-container${task.bucketId}`][0].scrollHeight
+					this.$refs[`tasks-container${bucketId}`][0].scrollTop = this.$refs[`tasks-container${bucketId}`][0].scrollHeight
 				})
 		},
 		createNewBucket() {

@@ -1,7 +1,7 @@
 <template>
 	<transition name="modal">
-		<div class="modal-mask">
-			<div class="modal-container" @mousedown.self.prevent.stop="$emit('close')">
+		<div class="modal-mask has-overflow" :class="{'has-overflow': overflow}">
+			<div class="modal-container" @mousedown.self.prevent.stop="$emit('close')" :class="{'has-overflow': overflow}">
 				<div class="modal-content" :class="{'has-overflow': overflow, 'is-wide': wide}">
 					<slot>
 						<div class="header">

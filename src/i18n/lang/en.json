@@ -597,6 +597,28 @@
       "weeks": "Weeks",
       "months": "Months",
       "years": "Years"
+    },
+    "quickAddMagic": {
+      "hint": "You can use Quick Add Magic",
+      "what": "What?",
+      "title": "Quick Add Magic",
+      "intro": "When creating a task, you can use special keywords to directly add attributes to the newly created task. This allows to add commonly used attributes to tasks much faster.",
+      "multiple": "You can use this multiple times.",
+      "label1": "To add a label, simply prefix the name of the label with {prefix}.",
+      "label2": "Vikunja will first check if the label already exist and create it if not.",
+      "label3": "To use spaces, simply add a \" around the label name.",
+      "label4": "For example: {prefix}\"Label with spaces\".",
+      "priority1": "To set a task's priority, add a number 1-5, prefixed with a {prefix}.",
+      "priority2": "The higher the number, the higher the priority.",
+      "assignees": "To directly assign the task to a user, add their username prefixed with @ to the task.",
+      "list1": "To set a list for the task to appear in, enter its name prefixed with {prefix}.",
+      "list2": "This will return an error if the list does not exist.",
+      "dateAndTime": "Date and time",
+      "date": "Any date will be used as the due date of the new task. You can use dates in any of these formats:",
+      "dateWeekday": "any weekday, will use the next date with that date",
+      "dateCurrentYear": "will use the current year",
+      "dateNth": "will use the {day}th of the current month",
+      "dateTime": "Combine any of the date formats with \"{time}\" (or {timePM}) to set a time."
     }
   },
   "team": {
