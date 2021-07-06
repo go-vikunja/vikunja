@@ -1,6 +1,6 @@
 import {createDateFromString} from '@/helpers/time/createDateFromString'
 import {format, formatDistance} from 'date-fns'
-import { enGB, de } from 'date-fns/locale'
+import {enGB, de} from 'date-fns/locale'
 
 const locales = {enGB, de}
 
@@ -30,7 +30,7 @@ export const formatDateSince = (date, $t) => {
 	date = createDateFromString(date)
 
 	const currentDate = new Date()
-	const distance = formatDistance(date, currentDate)
+	const distance = formatDistance(date, currentDate, {locale: locales[$t('date.locale')]})
 
 	if (date > currentDate) {
 		return $t('date.in', {date: distance})
