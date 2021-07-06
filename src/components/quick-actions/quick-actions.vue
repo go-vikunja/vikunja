@@ -114,7 +114,21 @@ export default {
 					query = query.substr(1)
 				}
 
+				const ncache = {}
+
 				lists = (Object.values(this.$store.state.lists).filter(l => {
+					if (l.isArchived) {
+						return false
+					}
+
+					if (typeof ncache[l.namespaceId] === 'undefined') {
+						ncache[l.namespaceId] = this.$store.getters['namespaces/getNamespaceById'](l.namespaceId)
+					}
+
+					if (ncache[l.namespaceId].isArchived) {
+						return false
+					}
+
 					return l.title.toLowerCase().includes(query.toLowerCase())
 				}) ?? [])
 			}
