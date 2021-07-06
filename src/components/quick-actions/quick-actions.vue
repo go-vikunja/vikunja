@@ -41,6 +41,7 @@
 							@click.prevent.stop="() => doAction(r.type, i)"
 							@keyup.prevent.enter="() => doAction(r.type, i)"
 							@keyup.prevent.esc="() => $refs.searchInput.focus()"
+							:class="{'is-strikethrough': i.done}"
 						>
 							{{ i.title }}
 						</button>
