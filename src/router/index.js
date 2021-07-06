@@ -5,6 +5,7 @@ import HomeComponent from '../views/Home'
 import NotFoundComponent from '../views/404'
 import LoadingComponent from '../components/misc/loading'
 import ErrorComponent from '../components/misc/error'
+import About from '../views/About'
 // User Handling
 import LoginComponent from '../views/user/Login'
 import RegisterComponent from '../views/user/Register'
@@ -526,6 +527,11 @@ export default new Router({
 			path: '/auth/openid/:provider',
 			name: 'openid.auth',
 			component: OpenIdAuth,
+		},
+		{
+			path: '/about',
+			name: 'about',
+			component: About,
 		},
 	],
 })

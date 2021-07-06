@@ -394,7 +394,8 @@
     "doit": "Do it!",
     "saving": "Saving…",
     "saved": "Saved!",
-    "default": "Default"
+    "default": "Default",
+    "close": "Close"
   },
   "input": {
     "resetColor": "Reset Color",
@@ -813,5 +814,10 @@
     "12002": "You are already subscribed to the entity itself or a parent entity.",
     "13001": "This link share requires a password for authentication, but none was provided.",
     "13002": "The provided link share password was invalid."
+  },
+  "about": {
+    "title": "About",
+    "frontendVersion": "Frontend Version: {version}",
+    "apiVersion": "API Version: {version}"
   }
 }

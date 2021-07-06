@@ -82,6 +82,9 @@
 					<a @click="$store.commit('keyboardShortcutsActive', true)" class="dropdown-item">
 						{{ $t('keyboardShortcuts.title') }}
 					</a>
+					<router-link :to="{name: 'about'}" class="dropdown-item">
+						{{ $t('about.title') }}
+					</router-link>
 					<a @click="logout()" class="dropdown-item">
 						{{ $t('user.auth.logout') }}
 					</a>
