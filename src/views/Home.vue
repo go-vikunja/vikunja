@@ -1,7 +1,7 @@
 <template>
 	<div class="content has-text-centered">
 		<h2>
-			{{ $t('home.welcome', {username: userInfo.name !== '' ? userInfo.name : userInfo.username}) }}!
+			{{ $t(`home.welcome${welcome}`, {username: userInfo.name !== '' ? userInfo.name : userInfo.username}) }}!
 		</h2>
 		<template v-if="!hasTasks">
 			<p>{{ $t('home.list.newText') }}</p>
@@ -43,25 +43,48 @@ export default {
 			tasks: [],
 		}
 	},
-	computed: mapState({
-		migratorsEnabled: state => state.config.availableMigrators !== null && state.config.availableMigrators.length > 0,
-		authenticated: state => state.auth.authenticated,
-		userInfo: state => state.auth.info,
-		hasTasks: state => state.hasTasks,
-		defaultNamespaceId: state => {
-			if (state.namespaces.namespaces.length === 0) {
-				return 0
+	computed: {
+		welcome() {
+			const now = new Date()
+
+			if (now.getHours() < 5) {
+				return 'Night'
 			}
 
-			return state.namespaces.namespaces[0].id
-		},
-		hasLists: state => {
-			if (state.namespaces.namespaces.length === 0) {
-				return false
+			if(now.getHours() < 11) {
+				return 'Morning'
 			}
 
-			return state.namespaces.namespaces[0].lists.length > 0
+			if(now.getHours() < 18) {
+				return 'Day'
+			}
+
+			if(now.getHours() < 23) {
+				return 'Evening'
+			}
+
+			return 'Night'
 		},
-	}),
+		...mapState({
+			migratorsEnabled: state => state.config.availableMigrators !== null && state.config.availableMigrators.length > 0,
+			authenticated: state => state.auth.authenticated,
+			userInfo: state => state.auth.info,
+			hasTasks: state => state.hasTasks,
+			defaultNamespaceId: state => {
+				if (state.namespaces.namespaces.length === 0) {
+					return 0
+				}
+
+				return state.namespaces.namespaces[0].id
+			},
+			hasLists: state => {
+				if (state.namespaces.namespaces.length === 0) {
+					return false
+				}
+
+				return state.namespaces.namespaces[0].lists.length > 0
+			},
+		}),
+	}
 }
 </script>
