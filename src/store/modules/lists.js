@@ -78,6 +78,6 @@ export default {
 					return Promise.reject(e)
 				})
 				.finally(() => cancel())
-		}
+		},
 	},
 }

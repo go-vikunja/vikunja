@@ -1,4 +1,8 @@
 export const colorIsDark = color => {
+	if (typeof color === 'undefined') {
+		return true // Defaults to dark
+	}
+
 	if (color === '#' || color === '') {
 		return true // Defaults to dark
 	}

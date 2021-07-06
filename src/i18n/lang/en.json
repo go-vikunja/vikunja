@@ -4,6 +4,7 @@
     "welcomeMorning": "Good Morning {username}",
     "welcomeDay": "Hi {username}",
     "welcomeEvening": "Good Evening {username}",
+    "lastViewed": "Last viewed",
     "list": {
       "newText": "You can create a new list for your new tasks:",
       "new": "Create a new list",

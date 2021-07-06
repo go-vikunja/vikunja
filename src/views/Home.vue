@@ -23,6 +23,17 @@
 				{{ $t('home.list.import') }}
 			</x-button>
 		</template>
+		<div v-if="listHistory.length > 0" class="is-max-width-desktop has-text-left">
+			<h3>{{ $t('home.lastViewed') }}</h3>
+			<div class="is-flex list-cards-wrapper-2-rows">
+				<list-card
+					v-for="(l, k) in listHistory"
+					:key="`l${k}`"
+					:list="l"
+					:background-resolver="() => null"
+				/>
+			</div>
+		</div>
 		<ShowTasks :show-all="true" v-if="hasLists"/>
 	</div>
 </template>
@@ -30,10 +41,13 @@
 <script>
 import {mapState} from 'vuex'
 import ShowTasks from './tasks/ShowTasks'
+import {getHistory} from '@/modules/listHistory'
+import ListCard from '@/components/list/partials/list-card'
 
 export default {
 	name: 'Home',
 	components: {
+		ListCard,
 		ShowTasks,
 	},
 	data() {
@@ -51,19 +65,25 @@ export default {
 				return 'Night'
 			}
 
-			if(now.getHours() < 11) {
+			if (now.getHours() < 11) {
 				return 'Morning'
 			}
 
-			if(now.getHours() < 18) {
+			if (now.getHours() < 18) {
 				return 'Day'
 			}
 
-			if(now.getHours() < 23) {
+			if (now.getHours() < 23) {
 				return 'Evening'
 			}
 
 			return 'Night'
+		},
+		listHistory() {
+			const history = getHistory()
+			return history.map(l => {
+				return this.$store.getters['lists/getListById'](l.id)
+			})
 		},
 		...mapState({
 			migratorsEnabled: state => state.config.availableMigrators !== null && state.config.availableMigrators.length > 0,

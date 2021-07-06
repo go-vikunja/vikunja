@@ -92,6 +92,7 @@
   "jest": {
     "testPathIgnorePatterns": [
       "cypress"
-    ]
+    ],
+    "testEnvironment": "jsdom"
   }
 }

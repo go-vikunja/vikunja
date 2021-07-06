@@ -44,6 +44,7 @@ import ListModel from '../../models/list'
 import ListService from '../../services/list'
 import {CURRENT_LIST} from '@/store/mutation-types'
 import {getListView} from '@/helpers/saveListView'
+import {saveListToHistory} from '@/modules/listHistory'
 
 export default {
 	data() {
@@ -92,6 +93,10 @@ export default {
 				return
 			}
 
+			const listData = {id: this.$route.params.listId}
+
+			saveListToHistory(listData)
+
 			this.setTitle(this.currentList.title)
 
 			// This invalidates the loaded list at the kanban board which lets it reload its content when
@@ -134,7 +139,7 @@ export default {
 			console.debug(`Loading list, $route.name = ${this.$route.name}, $route.params =`, this.$route.params, `, listLoaded = ${this.listLoaded}, currentList = `, this.currentList)
 
 			// We create an extra list object instead of creating it in this.list because that would trigger a ui update which would result in bad ux.
-			let list = new ListModel({id: this.$route.params.listId})
+			const list = new ListModel(listData)
 			this.listService.get(list)
 				.then(r => {
 					this.$set(this, 'list', r)
