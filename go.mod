@@ -17,7 +17,7 @@
 module code.vikunja.io/api
 
 require (
-	code.vikunja.io/web v0.0.0-20210131201003-26386be9a9ae
+	code.vikunja.io/web v0.0.0-20210706160506-d85def955bd3
 	gitea.com/xorm/xorm-redis-cache v0.2.0
 	github.com/ThreeDotsLabs/watermill v1.1.1
 	github.com/adlio/trello v1.9.0
@@ -38,7 +38,7 @@ require (
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/go-testfixtures/testfixtures/v3 v3.6.1
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
-	github.com/golang/snappy v0.0.2 // indirect
+	github.com/golang/snappy v0.0.4 // indirect
 	github.com/iancoleman/strcase v0.1.3
 	github.com/imdario/mergo v0.3.12
 	github.com/kr/text v0.2.0 // indirect
@@ -48,6 +48,7 @@ require (
 	github.com/lib/pq v1.10.2
 	github.com/magefile/mage v1.11.0
 	github.com/mailru/easyjson v0.7.6 // indirect
+	github.com/mattn/go-isatty v0.0.13 // indirect
 	github.com/mattn/go-sqlite3 v1.14.7
 	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
 	github.com/olekukonko/tablewriter v0.0.5
@@ -65,9 +66,10 @@ require (
 	github.com/yuin/goldmark v1.4.0
 	golang.org/x/crypto v0.0.0-20210616213533-5ff15b29337e
 	golang.org/x/image v0.0.0-20210628002857-a66eb6448b8d
-	golang.org/x/net v0.0.0-20210520170846-37e1c6afe023 // indirect
+	golang.org/x/net v0.0.0-20210614182718-04defd469f4e // indirect
 	golang.org/x/oauth2 v0.0.0-20210628180205-a41e5a781914
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
+	golang.org/x/sys v0.0.0-20210630005230-0f9fa26af87c // indirect
 	golang.org/x/term v0.0.0-20210615171337-6886f2dfbf5b
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
@@ -76,9 +78,9 @@ require (
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 	src.techknowlogick.com/xgo v1.4.1-0.20210311222705-d25c33fcd864
 	src.techknowlogick.com/xormigrate v1.4.0
-	xorm.io/builder v0.3.8
+	xorm.io/builder v0.3.9
 	xorm.io/core v0.7.3
-	xorm.io/xorm v1.0.7
+	xorm.io/xorm v1.1.2
 )
 
 replace (

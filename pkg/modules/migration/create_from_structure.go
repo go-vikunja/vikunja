@@ -19,6 +19,7 @@ package migration
 import (
 	"bytes"
 	"io/ioutil"
+	"xorm.io/xorm"
 
 	"code.vikunja.io/api/pkg/db"
 
@@ -31,19 +32,29 @@ import (
 // InsertFromStructure takes a fully nested Vikunja data structure and a user and then creates everything for this user
 // (Namespaces, tasks, etc. Even attachments and relations.)
 func InsertFromStructure(str []*models.NamespaceWithLists, user *user.User) (err error) {
+	s := db.NewSession()
+	defer s.Close()
+
+	err = insertFromStructure(s, str, user)
+	if err != nil {
+		log.Errorf("[creating structure] Error while creating structure: %s", err.Error())
+		_ = s.Rollback()
+		return err
+	}
+
+	return s.Commit()
+}
+
+func insertFromStructure(s *xorm.Session, str []*models.NamespaceWithLists, user *user.User) (err error) {
 
 	log.Debugf("[creating structure] Creating %d namespaces", len(str))
 
 	labels := make(map[string]*models.Label)
 
-	s := db.NewSession()
-	defer s.Close()
-
 	// Create all namespaces
 	for _, n := range str {
 		err = n.Create(s, user)
 		if err != nil {
-			_ = s.Rollback()
 			return
 		}
 
@@ -62,7 +73,6 @@ func InsertFromStructure(str []*models.NamespaceWithLists, user *user.User) (err
 			l.NamespaceID = n.ID
 			err = l.Create(s, user)
 			if err != nil {
-				_ = s.Rollback()
 				return
 			}
 
@@ -74,13 +84,11 @@ func InsertFromStructure(str []*models.NamespaceWithLists, user *user.User) (err
 
 				file, err := files.Create(backgroundFile, "", uint64(backgroundFile.Len()), user)
 				if err != nil {
-					_ = s.Rollback()
 					return err
 				}
 
 				err = models.SetListBackground(s, l.ID, file)
 				if err != nil {
-					_ = s.Rollback()
 					return err
 				}
 
@@ -98,7 +106,6 @@ func InsertFromStructure(str []*models.NamespaceWithLists, user *user.User) (err
 				bucket.ListID = l.ID
 				err = bucket.Create(s, user)
 				if err != nil {
-					_ = s.Rollback()
 					return
 				}
 				buckets[oldID] = bucket
@@ -123,7 +130,6 @@ func InsertFromStructure(str []*models.NamespaceWithLists, user *user.User) (err
 				t.ListID = l.ID
 				err = t.Create(s, user)
 				if err != nil {
-					_ = s.Rollback()
 					return
 				}
 
@@ -145,7 +151,6 @@ func InsertFromStructure(str []*models.NamespaceWithLists, user *user.User) (err
 							rt.ListID = t.ListID
 							err = rt.Create(s, user)
 							if err != nil {
-								_ = s.Rollback()
 								return
 							}
 							log.Debugf("[creating structure] Created related task %d", rt.ID)
@@ -159,7 +164,6 @@ func InsertFromStructure(str []*models.NamespaceWithLists, user *user.User) (err
 						}
 						err = taskRel.Create(s, user)
 						if err != nil {
-							_ = s.Rollback()
 							return
 						}
 
@@ -179,7 +183,6 @@ func InsertFromStructure(str []*models.NamespaceWithLists, user *user.User) (err
 						fr := ioutil.NopCloser(bytes.NewReader(a.File.FileContent))
 						err = a.NewAttachment(s, fr, a.File.Name, a.File.Size, user)
 						if err != nil {
-							_ = s.Rollback()
 							return
 						}
 						log.Debugf("[creating structure] Created new attachment %d", a.ID)
@@ -196,7 +199,6 @@ func InsertFromStructure(str []*models.NamespaceWithLists, user *user.User) (err
 					if !exists {
 						err = label.Create(s, user)
 						if err != nil {
-							_ = s.Rollback()
 							return err
 						}
 						log.Debugf("[creating structure] Created new label %d", label.ID)
@@ -210,7 +212,6 @@ func InsertFromStructure(str []*models.NamespaceWithLists, user *user.User) (err
 					}
 					err = lt.Create(s, user)
 					if err != nil {
-						_ = s.Rollback()
 						return err
 					}
 					log.Debugf("[creating structure] Associated task %d with label %d", t.ID, lb.ID)
@@ -222,13 +223,11 @@ func InsertFromStructure(str []*models.NamespaceWithLists, user *user.User) (err
 				b := &models.Bucket{ListID: l.ID}
 				bucketsIn, _, _, err := b.ReadAll(s, user, "", 1, 1)
 				if err != nil {
-					_ = s.Rollback()
 					return err
 				}
 				buckets := bucketsIn.([]*models.Bucket)
 				err = buckets[0].Delete(s, user)
 				if err != nil && !models.IsErrCannotRemoveLastBucket(err) {
-					_ = s.Rollback()
 					return err
 				}
 			}
@@ -240,5 +239,5 @@ func InsertFromStructure(str []*models.NamespaceWithLists, user *user.User) (err
 
 	log.Debugf("[creating structure] Done inserting new task structure")
 
-	return s.Commit()
+	return nil
 }
