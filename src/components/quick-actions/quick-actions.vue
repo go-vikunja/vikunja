@@ -63,6 +63,7 @@ import {CURRENT_LIST, LOADING, LOADING_MODULE, QUICK_ACTIONS_ACTIVE} from '@/sto
 import ListModel from '@/models/list'
 import createTask from '@/components/tasks/mixins/createTask'
 import QuickAddMagic from '@/components/tasks/partials/quick-add-magic'
+import {getHistory} from '@/modules/listHistory'
 
 const TYPE_LIST = 'list'
 const TYPE_TASK = 'task'
@@ -117,7 +118,15 @@ export default {
 
 				const ncache = {}
 
-				lists = (Object.values(this.$store.state.lists).filter(l => {
+				const history = getHistory()
+				// Puts recently visited lists at the top
+				const allLists = [...new Set([
+					...history.map(l => {
+						return this.$store.getters['lists/getListById'](l.id)
+					}),
+					...Object.values(this.$store.state.lists)])]
+
+				lists = (allLists.filter(l => {
 					if (l.isArchived) {
 						return false
 					}
