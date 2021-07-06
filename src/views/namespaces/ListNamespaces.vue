@@ -58,7 +58,6 @@
 					:key="`l${l.id}`"
 					:list="l"
 					:show-archived="showArchived"
-					:background-resolver="lId =>  typeof backgrounds[lId] !== 'undefined' ? backgrounds[lId] : null"
 				/>
 			</div>
 		</div>
@@ -67,7 +66,6 @@
 
 <script>
 import {mapState} from 'vuex'
-import ListService from '../../services/list'
 import Fancycheckbox from '../../components/input/fancycheckbox'
 import {LOADING} from '@/store/mutation-types'
 import ListCard from '@/components/list/partials/list-card'
@@ -81,13 +79,10 @@ export default {
 	data() {
 		return {
 			showArchived: false,
-			// listId is the key, the object is the background blob
-			backgrounds: {},
 		}
 	},
 	created() {
 		this.showArchived = JSON.parse(localStorage.getItem('showArchived')) ?? false
-		this.loadBackgroundsForLists()
 	},
 	mounted() {
 		this.setTitle(this.$t('namespace.title'))
@@ -99,22 +94,6 @@ export default {
 		loading: LOADING,
 	}),
 	methods: {
-		loadBackgroundsForLists() {
-			const listService = new ListService()
-			this.namespaces.forEach(n => {
-				n.lists.forEach(l => {
-					if (l.backgroundInformation) {
-						listService.background(l)
-							.then(b => {
-								this.$set(this.backgrounds, l.id, b)
-							})
-							.catch(e => {
-								this.error(e)
-							})
-					}
-				})
-			})
-		},
 		saveShowArchivedState() {
 			localStorage.setItem('showArchived', JSON.stringify(this.showArchived))
 		},

@@ -2,16 +2,16 @@
 	<router-link
 		:class="{
 			'has-light-text': !colorIsDark(list.hexColor),
-			'has-background': backgroundResolver(list.id) !== null
+			'has-background': background !== null
 		}"
 		:style="{
 			'background-color': list.hexColor,
-			'background-image': backgroundResolver(list.id) !== null ? `url(${backgroundResolver(list.id)})` : false,
+			'background-image': background !== null ? `url(${background})` : false,
 		}"
 		:to="{ name: 'list.index', params: { listId: list.id} }"
 		class="list-card"
 		tag="span"
-		v-if="showArchived ? true : !list.isArchived"
+		v-if="list !== null && (showArchived ? true : !list.isArchived)"
 	>
 		<div class="is-archived-container">
 			<span class="is-archived" v-if="list.isArchived">
@@ -30,8 +30,16 @@
 </template>
 
 <script>
+import ListService from '@/services/list'
+
 export default {
 	name: 'list-card',
+	data() {
+		return {
+			background: null,
+			backgroundLoading: false,
+		}
+	},
 	props: {
 		list: {
 			required: true,
@@ -40,13 +48,33 @@ export default {
 			default: false,
 			type: Boolean,
 		},
-		// A function, returning a background blob or null if none exists for that list.
-		// Receives the list id as parameter.
-		backgroundResolver: {
-			required: true,
+	},
+	watch: {
+		list() {
+			this.loadBackground()
 		},
 	},
+	created() {
+		this.loadBackground()
+	},
 	methods: {
+		loadBackground() {
+			if (this.list === null || !this.list.backgroundInformation || this.backgroundLoading) {
+				return
+			}
+
+			this.backgroundLoading = true
+
+			const listService = new ListService()
+			listService.background(this.list)
+				.then(b => {
+					this.$set(this, 'background', b)
+				})
+				.catch(e => {
+					this.error(e)
+				})
+				.finally(() => this.backgroundLoading = false)
+		},
 		toggleFavoriteList(list) {
 			// The favorites pseudo list is always favorite
 			// Archived lists cannot be marked favorite
