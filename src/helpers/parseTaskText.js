@@ -1,10 +1,10 @@
 import {parseDate} from './time/parseDate'
 import priorities from '../models/priorities.json'
 
-const LABEL_PREFIX = '~'
-const LIST_PREFIX = '*'
+const LABEL_PREFIX = '@'
+const LIST_PREFIX = '#'
 const PRIORITY_PREFIX = '!'
-const ASSIGNEE_PREFIX = '@'
+const ASSIGNEE_PREFIX = '+'
 
 /**
  * Parses task text for dates, assignees, labels, lists, priorities and returns an object with all found intents.

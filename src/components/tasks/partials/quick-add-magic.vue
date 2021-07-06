@@ -13,13 +13,13 @@
 
 							<h3>{{ $t('task.attributes.labels') }}</h3>
 							<p>
-								{{ $t('task.quickAddMagic.label1', {prefix: '~'}) }}
+								{{ $t('task.quickAddMagic.label1', {prefix: '@'}) }}
 								{{ $t('task.quickAddMagic.label2') }}
 								{{ $t('task.quickAddMagic.multiple') }}
 							</p>
 							<p>
 								{{ $t('task.quickAddMagic.label3') }}
-								{{ $t('task.quickAddMagic.label4', {prefix: '~'}) }}
+								{{ $t('task.quickAddMagic.label4', {prefix: '@'}) }}
 							</p>
 
 							<h3>{{ $t('task.attributes.priority') }}</h3>
@@ -36,7 +36,7 @@
 
 							<h3>{{ $t('list.list.title') }}</h3>
 							<p>
-								{{ $t('task.quickAddMagic.list1', {prefix: '*'}) }}
+								{{ $t('task.quickAddMagic.list1', {prefix: '#'}) }}
 								{{ $t('task.quickAddMagic.list2') }}
 							</p>
 
