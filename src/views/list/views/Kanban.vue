@@ -17,8 +17,13 @@
 			/>
 		</div>
 		<div :class="{ 'is-loading': loading && !oneTaskUpdating}" class="kanban loader-container">
-			<div :key="`bucket${bucket.id}`" class="bucket" v-for="bucket in buckets">
-				<div class="bucket-header">
+			<div
+				:key="`bucket${bucket.id}`"
+				class="bucket"
+				:class="{'is-collapsed': collapsedBuckets[bucket.id]}"
+				v-for="bucket in buckets"
+			>
+				<div class="bucket-header" @click="() => unCollapseBucket(bucket)">
 					<span
 						v-if="bucket.isDoneBucket"
 						class="icon is-small has-text-success mr-2"
@@ -31,7 +36,7 @@
 						@focusout="() => saveBucketTitle(bucket.id)"
 						@keydown.enter.prevent.stop="() => saveBucketTitle(bucket.id)"
 						class="title input"
-						:contenteditable="canWrite"
+						:contenteditable="canWrite && !collapsedBuckets[bucket.id]"
 						spellcheck="false">{{ bucket.title }}</h2>
 					<span
 						:class="{'is-max': bucket.tasks.length >= bucket.limit}"
@@ -41,7 +46,7 @@
 					</span>
 					<dropdown
 						class="is-right options"
-						v-if="canWrite"
+						v-if="canWrite && !collapsedBuckets[bucket.id]"
 						trigger-icon="ellipsis-v"
 						@close="() => showSetLimitInput = false"
 					>
@@ -77,7 +82,7 @@
 							</template>
 						</a>
 						<a
-							@click="toggleDoneBucket(bucket)"
+							@click.stop="toggleDoneBucket(bucket)"
 							class="dropdown-item"
 							v-tooltip="$t('list.kanban.doneBucketHintExtended')"
 						>
@@ -86,8 +91,14 @@
 							{{ $t('list.kanban.doneBucket') }}
 						</a>
 						<a
+							class="dropdown-item"
+							@click.stop="() => collapseBucket(bucket)"
+						>
+							{{ $t('list.kanban.collapse') }}
+						</a>
+						<a
 							:class="{'is-disabled': buckets.length <= 1}"
-							@click="() => deleteBucketModal(bucket.id)"
+							@click.stop="() => deleteBucketModal(bucket.id)"
 							class="dropdown-item has-text-danger"
 							v-tooltip="buckets.length <= 1 ? $t('list.kanban.deleteLast') : ''"
 						>
@@ -283,6 +294,7 @@ import FilterPopup from '@/components/list/partials/filter-popup'
 import Dropdown from '@/components/misc/dropdown'
 import {playPop} from '@/helpers/playPop'
 import createTask from '@/components/tasks/mixins/createTask'
+import {getCollapsedBucketState, saveCollapsedBucketState} from '@/helpers/saveCollapsedBucketState'
 
 export default {
 	name: 'Kanban',
@@ -315,6 +327,7 @@ export default {
 			showNewBucketInput: false,
 			newTaskError: {},
 			showSetLimitInput: false,
+			collapsedBuckets: {},
 
 			// We're using this to show the loading animation only at the task when updating it
 			taskUpdating: {},
@@ -368,6 +381,8 @@ export default {
 			) {
 				return
 			}
+
+			this.collapsedBuckets = getCollapsedBucketState(this.$route.params.listId)
 
 			console.debug(`Loading buckets, loadedListId = ${this.loadedListId}, $route.params =`, this.$route.params)
 			this.filtersChanged = false
@@ -611,6 +626,18 @@ export default {
 					this.error(e)
 					bucket.isDoneBucket = !bucket.isDoneBucket
 				})
+		},
+		collapseBucket(bucket) {
+			this.$set(this.collapsedBuckets, bucket.id, true)
+			saveCollapsedBucketState(this.$route.params.listId, this.collapsedBuckets)
+		},
+		unCollapseBucket(bucket) {
+			if (!this.collapsedBuckets[bucket.id]) {
+				return
+			}
+
+			this.$set(this.collapsedBuckets, bucket.id, false)
+			saveCollapsedBucketState(this.$route.params.listId, this.collapsedBuckets)
 		},
 	},
 }

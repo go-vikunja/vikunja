@@ -2,6 +2,8 @@ $bucket-background: $grey-100;
 $task-background: $white;
 $ease-out: all .3s cubic-bezier(0.23, 1, 0.32, 1);
 $bucket-width: 300px;
+$bucket-header-height: 60px;
+$bucket-right-margin: 1rem;
 
 $crazy-height-calculation: '100vh - 4.5rem - 1.5rem - 1rem - 1.5rem - 11px';
 $crazy-height-calculation-tasks: '#{$crazy-height-calculation} - 1rem - 2.5rem - 2rem - #{$button-height} - 1rem';
@@ -31,7 +33,7 @@ $filter-container-height: '1rem - #{$switch-view-height}';
     position: relative;
 
     flex: 0 0 $bucket-width;
-    margin: 0 1rem 0 0;
+    margin: 0 $bucket-right-margin 0 0;
     max-height: 100%;
     min-height: 20px;
     max-width: $bucket-width;
@@ -233,6 +235,18 @@ $filter-container-height: '1rem - #{$switch-view-height}';
     a.dropdown-item {
       padding-right: 1rem;
     }
+
+    &.is-collapsed {
+      transform: rotate(90deg) translateX($bucket-width / 2 - $bucket-header-height / 2);
+      // Using negative margins instead of translateY here to make all other buckets fill the empty space
+      margin-left: ($bucket-width / 2 - $bucket-header-height / 2) * -1;
+      margin-right: calc(#{($bucket-width / 2 - $bucket-header-height / 2) * -1} + #{$bucket-right-margin});
+      cursor: pointer;
+
+      .tasks, .bucket-footer {
+        display: none;
+      }
+    }
   }
 
   .bucket-header {
@@ -240,6 +254,7 @@ $filter-container-height: '1rem - #{$switch-view-height}';
     align-items: center;
     justify-content: space-between;
     padding: .5rem;
+    height: $bucket-header-height;
 
     .limit {
       padding-left: .5rem;

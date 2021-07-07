@@ -243,7 +243,8 @@
       "deleteBucketText2": "This will not delete any tasks but move them into the default bucket.",
       "deleteBucketSuccess": "The bucket has been deleted successfully.",
       "bucketTitleSavedSuccess": "The bucket title has been saved successfully.",
-      "bucketLimitSavedSuccess": "The bucket limit been saved successfully."
+      "bucketLimitSavedSuccess": "The bucket limit been saved successfully.",
+      "collapse": "Collapse this bucket"
     }
   },
   "namespace": {
