@@ -1,5 +1,5 @@
 # Stage 1: Build application
-FROM node:16.3.0 AS compile-image
+FROM node:16.4.1 AS compile-image
 
 WORKDIR /build
 
