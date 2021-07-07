@@ -55,14 +55,20 @@
 					<p>
 						<a
 							@click.prevent.stop="downloadAttachment(a)"
-							v-tooltip="'Download this attachment'"
+							v-tooltip="$t('task.attachment.downloadTooltip')"
 						>
 							{{ $t('task.attachment.download') }}
 						</a>
 						<a
+							@click.stop="copyUrl(a)"
+							v-tooltip="$t('task.attachment.copyUrlTooltip')"
+						>
+							{{ $t('task.attachment.copyUrl') }}
+						</a>
+						<a
 							@click.prevent.stop="() => {attachmentToDelete = a; showDeleteModal = true}"
 							v-if="editEnabled"
-							v-tooltip="'Delete this attachment'"
+							v-tooltip="$t('task.attachment.deleteTooltip')"
 						>
 							{{ $t('misc.delete') }}
 						</a>
@@ -106,7 +112,7 @@
 			>
 				<span slot="header">{{ $t('task.attachment.delete') }}</span>
 				<p slot="text">
-					{{ $t('task.attachment.deleteText1', {filename: attachmentUpload.file.name}) }}<br/>
+					{{ $t('task.attachment.deleteText1', {filename: attachmentToDelete.file.name}) }}<br/>
 					<strong>{{ $t('task.attachment.deleteText2') }}</strong>
 				</p>
 			</modal>
@@ -133,7 +139,9 @@ import AttachmentService from '../../../services/attachment'
 import AttachmentModel from '../../../models/attachment'
 import User from '../../misc/user'
 import attachmentUpload from '@/components/tasks/mixins/attachmentUpload'
+import {generateAttachmentUrl} from '@/helpers/generateAttachmentUrl'
 import {mapState} from 'vuex'
+import copy from 'copy-to-clipboard'
 
 export default {
 	name: 'attachments',
@@ -246,6 +254,9 @@ export default {
 			} else {
 				this.downloadAttachment(attachment)
 			}
+		},
+		copyUrl(attachment) {
+			copy(generateAttachmentUrl(this.taskId, attachment.id))
 		},
 	},
 }

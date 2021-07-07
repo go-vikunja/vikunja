@@ -1,5 +1,6 @@
 import AttachmentModel from '../../../models/attachment'
 import AttachmentService from '../../../services/attachment'
+import {generateAttachmentUrl} from '@/helpers/generateAttachmentUrl'
 
 export default {
 	methods: {
@@ -21,7 +22,7 @@ export default {
 								taskId: this.taskId,
 								attachment: a,
 							})
-							onSuccess(`${window.API_URL}/tasks/${this.taskId}/attachments/${a.id}`)
+							onSuccess(generateAttachmentUrl(this.taskId, a.id))
 						})
 					}
 					if (r.errors !== null) {

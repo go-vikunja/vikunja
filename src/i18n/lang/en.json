@@ -529,11 +529,15 @@
       "title": "Attachments",
       "createdBy": "created {0} by {1}",
       "download": "Download",
+      "downloadTooltip": "Download this attachment",
       "upload": "Upload attachment",
       "drop": "Drop files here to upload",
       "delete": "Delete attachment",
+      "deleteTooltip": "Delete this attachment",
       "deleteText1": "Are you sure you want to delete the attachment {filename}?",
-      "deleteText2": "This cannot be undone!"
+      "deleteText2": "This cannot be undone!",
+      "copyUrl": "Copy URL",
+      "copyUrlTooltip": "Copy the url of this attachment for usage in text"
     },
     "comment": {
       "title": "Comments",
