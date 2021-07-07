@@ -19,10 +19,10 @@ package migration
 import (
 	"bytes"
 	"io/ioutil"
+
 	"xorm.io/xorm"
 
 	"code.vikunja.io/api/pkg/db"
-
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
