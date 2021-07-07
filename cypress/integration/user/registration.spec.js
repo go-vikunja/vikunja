@@ -28,6 +28,7 @@ context('Registration', () => {
 		cy.get('#password2').type(fixture.password)
 		cy.get('#register-submit').click()
 		cy.url().should('include', '/')
+		cy.clock(1625656161057) // 13:00
 		cy.get('h2').should('contain', `Hi ${fixture.username}!`)
 	})
 

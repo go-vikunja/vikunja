@@ -34,6 +34,7 @@ context('Login', () => {
 		cy.get('input[id=password]').type(fixture.password)
 		cy.get('.button').contains('Login').click()
 		cy.url().should('include', '/')
+		cy.clock(1625656161057) // 13:00
 		cy.get('h2').should('contain', `Hi ${fixture.username}!`)
 	})
 
