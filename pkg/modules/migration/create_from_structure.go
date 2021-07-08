@@ -114,18 +114,22 @@ func insertFromStructure(s *xorm.Session, str []*models.NamespaceWithLists, user
 
 			log.Debugf("[creating structure] Creating %d tasks", len(tasks))
 
-			// Create all tasks
-			for _, t := range tasks {
-				bucket, exists := buckets[t.BucketID]
+			setBucketOrDefault := func(task *models.Task) {
+				bucket, exists := buckets[task.BucketID]
 				if exists {
-					t.BucketID = bucket.ID
-				} else if t.BucketID > 0 {
-					log.Debugf("[creating structure] No bucket created for original bucket id %d", t.BucketID)
-					t.BucketID = 0
+					task.BucketID = bucket.ID
+				} else if task.BucketID > 0 {
+					log.Debugf("[creating structure] No bucket created for original bucket id %d", task.BucketID)
+					task.BucketID = 0
 				}
-				if !exists || t.BucketID == 0 {
+				if !exists || task.BucketID == 0 {
 					needsDefaultBucket = true
 				}
+			}
+
+			// Create all tasks
+			for _, t := range tasks {
+				setBucketOrDefault(t)
 
 				t.ListID = l.ID
 				err = t.Create(s, user)
@@ -148,6 +152,7 @@ func insertFromStructure(s *xorm.Session, str []*models.NamespaceWithLists, user
 					for _, rt := range tasks {
 						// First create the related tasks if they do not exist
 						if rt.ID == 0 {
+							setBucketOrDefault(rt)
 							rt.ListID = t.ListID
 							err = rt.Create(s, user)
 							if err != nil {
