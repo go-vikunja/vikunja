@@ -38,6 +38,8 @@ const (
 	// #nosec
 	ServiceJWTSecret       Key = `service.JWTSecret`
 	ServiceInterface       Key = `service.interface`
+	ServiceUnixSocket      Key = `service.unixsocket`
+	ServiceUnixSocketMode  Key = `service.unixsocketmode`
 	ServiceFrontendurl     Key = `service.frontendurl`
 	ServiceEnableCaldav    Key = `service.enablecaldav`
 	ServiceRootpath        Key = `service.rootpath`
@@ -224,6 +226,7 @@ func InitDefaultConfig() {
 	// Service
 	ServiceJWTSecret.setDefault(random)
 	ServiceInterface.setDefault(":3456")
+	ServiceUnixSocket.setDefault("")
 	ServiceFrontendurl.setDefault("")
 	ServiceEnableCaldav.setDefault(true)
 

@@ -18,6 +18,7 @@ package cmd
 
 import (
 	"context"
+	"net"
 	"os"
 	"os/signal"
 	"time"
@@ -29,12 +30,39 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/routes"
 	"code.vikunja.io/api/pkg/swagger"
+	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/api/pkg/version"
+	"github.com/labstack/echo/v4"
 	"github.com/spf13/cobra"
 )
 
 func init() {
 	rootCmd.AddCommand(webCmd)
+}
+
+func setupUnixSocket(e *echo.Echo) error {
+	path := config.ServiceUnixSocket.GetString()
+
+	// Remove old unix socket that may have remained after a crash
+	if err := os.Remove(path); err != nil && !os.IsNotExist(err) {
+		return err
+	}
+
+	if config.ServiceUnixSocketMode.Get() != nil {
+		// Use Umask instead of Chmod to prevent insecure race condition
+		// (no-op on Windows)
+		mode := config.ServiceUnixSocketMode.GetInt()
+		oldmask := utils.Umask(0o777 &^ mode)
+		defer utils.Umask(oldmask)
+	}
+
+	l, err := net.Listen("unix", path)
+	if err != nil {
+		return err
+	}
+
+	e.Listener = l
+	return nil
 }
 
 var webCmd = &cobra.Command{
@@ -56,6 +84,12 @@ var webCmd = &cobra.Command{
 		routes.RegisterRoutes(e)
 		// Start server
 		go func() {
+			// Listen unix socket if needed (ServiceInterface will be ignored)
+			if config.ServiceUnixSocket.GetString() != "" {
+				if err := setupUnixSocket(e); err != nil {
+					e.Logger.Fatal(err)
+				}
+			}
 			if err := e.Start(config.ServiceInterface.GetString()); err != nil {
 				e.Logger.Info("shutting down...")
 			}

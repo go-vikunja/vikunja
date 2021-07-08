@@ -5,6 +5,10 @@ service:
   JWTSecret: "<jwt-secret>"
   # The interface on which to run the webserver
   interface: ":3456"
+  # Path to Unix socket. If set, it will be created and used instead of tcp
+  unixsocket:
+  # Permission bits for the Unix socket. Note that octal values must be prefixed by "0o", e.g. 0o660
+  unixsocketmode:
   # The URL of the frontend, used to send password reset emails.
   frontendurl: ""
   # The base path on the file system where the binary and assets are.
