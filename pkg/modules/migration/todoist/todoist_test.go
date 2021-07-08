@@ -586,7 +586,8 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 		},
 	}
 
-	hierachie, err := convertTodoistToVikunja(testSync)
+	doneItems := make(map[int64]*doneItem)
+	hierachie, err := convertTodoistToVikunja(testSync, doneItems)
 	assert.NoError(t, err)
 	assert.NotNil(t, hierachie)
 	if diff, equal := messagediff.PrettyDiff(hierachie, expectedHierachie); !equal {
