@@ -1,7 +1,7 @@
 <template>
 	<div :class="{'is-pulled-up': isEditEnabled}" class="editor">
 		<div class="is-pulled-right mb-4" v-if="hasPreview && isEditEnabled && !hasEditBottom">
-			<x-button 
+			<x-button
 				v-if="!isEditActive"
 				@click="toggleEdit"
 				:shadow="false"
@@ -9,8 +9,8 @@
 			>
 				<icon icon="pen"/>
 			</x-button>
-			<x-button 
-				v-else 
+			<x-button
+				v-else
 				@click="toggleEdit"
 				:shadow="false"
 				type="secondary"
@@ -117,6 +117,7 @@ export default {
 
 			preview: '',
 			attachmentService: null,
+			loadedAttachments: {},
 
 			config: {
 				autoDownloadFontAwesome: false,
@@ -284,7 +285,7 @@ export default {
 		// that in the end, only one change event is triggered to the outside per change.
 		handleInput(val) {
 			// Don't bubble if the text is up to date
-			if(val === this.text) {
+			if (val === this.text) {
 				return
 			}
 
@@ -375,7 +376,7 @@ export default {
 				},
 			})
 
-			this.preview = DOMPurify.sanitize(marked(this.text), { ADD_ATTR: ['target'] })
+			this.preview = DOMPurify.sanitize(marked(this.text), {ADD_ATTR: ['target']})
 
 			// Since the render function is synchronous, we can't do async http requests in it.
 			// Therefore, we can't resolve the blob url at (markdown) compile time.
@@ -392,6 +393,13 @@ export default {
 						const parts = img.dataset.src.substr(window.API_URL.length + 1).split('/')
 						const taskId = parseInt(parts[1])
 						const attachmentId = parseInt(parts[3])
+						const cacheKey = `${taskId}-${attachmentId}`
+
+						if (typeof this.loadedAttachments[cacheKey] !== 'undefined') {
+							img.src = this.loadedAttachments[cacheKey]
+							continue
+						}
+
 						const attachment = new AttachmentModel({taskId: taskId, id: attachmentId})
 
 						if (this.attachmentService === null) {
@@ -401,6 +409,7 @@ export default {
 						this.attachmentService.getBlobUrl(attachment)
 							.then(url => {
 								img.src = url
+								this.loadedAttachments[cacheKey] = url
 							})
 					}
 				}
