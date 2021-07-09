@@ -1,6 +1,7 @@
 import {HTTPFactory} from '@/http-common'
 import {ERROR_MESSAGE, LOADING} from '../mutation-types'
 import UserModel from '../../models/user'
+import {getToken, refreshToken, removeToken, saveToken} from '@/helpers/auth'
 
 const defaultSettings = settings => {
 	if (typeof settings.weekStart === 'undefined' || settings.weekStart === '') {
@@ -60,7 +61,7 @@ export default {
 			ctx.commit(LOADING, true, {root: true})
 
 			// Delete an eventually preexisting old token
-			localStorage.removeItem('token')
+			removeToken()
 
 			const data = {
 				username: credentials.username,
@@ -74,7 +75,7 @@ export default {
 			return HTTP.post('login', data)
 				.then(response => {
 					// Save the token to local storage for later use
-					localStorage.setItem('token', response.data.token)
+					saveToken(response.data.token)
 
 					// Tell others the user is autheticated
 					ctx.commit('isLinkShareAuth', false)
@@ -127,11 +128,11 @@ export default {
 			}
 
 			// Delete an eventually preexisting old token
-			localStorage.removeItem('token')
+			removeToken()
 			return HTTP.post(`/auth/openid/${provider}/callback`, data)
 				.then(response => {
 					// Save the token to local storage for later use
-					localStorage.setItem('token', response.data.token)
+					saveToken(response.data.token)
 
 					// Tell others the user is autheticated
 					ctx.commit('isLinkShareAuth', false)
@@ -151,7 +152,7 @@ export default {
 				password: password,
 			})
 				.then(r => {
-					localStorage.setItem('token', r.data.token)
+					saveToken(r.data.token, false)
 					ctx.dispatch('checkAuth')
 					return Promise.resolve(r.data)
 				}).catch(e => {
@@ -167,7 +168,7 @@ export default {
 				return Promise.resolve()
 			}
 
-			const jwt = localStorage.getItem('token')
+			const jwt = getToken()
 			let authenticated = false
 			if (jwt) {
 				const base64 = jwt
@@ -213,24 +214,15 @@ export default {
 		},
 		// Renews the api token and saves it to local storage
 		renewToken(ctx) {
-			const HTTP = HTTPFactory()
 			if (!ctx.state.authenticated) {
 				return
 			}
 
-			HTTP.post('user/token', null, {
-				headers: {
-					Authorization: 'Bearer ' + localStorage.getItem('token'),
-				},
-			})
-				.then(r => {
-					localStorage.setItem('token', r.data.token)
+			refreshToken()
+				.then(() => {
 					ctx.dispatch('checkAuth')
 				})
 				.catch(e => {
-					// eslint-disable-next-line
-					console.log('Error renewing token: ', e)
-
 					// Don't logout on network errors as the user would then get logged out if they don't have
 					// internet for a short period of time - such as when the laptop is still reconnecting
 					if (e.request.status) {
@@ -239,7 +231,7 @@ export default {
 				})
 		},
 		logout(ctx) {
-			localStorage.removeItem('token')
+			removeToken()
 			ctx.dispatch('checkAuth')
 		},
 	},

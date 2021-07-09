@@ -2,6 +2,7 @@ import axios from 'axios'
 import reduce from 'lodash/reduce'
 import replace from 'lodash/replace'
 import {objectToSnakeCase} from '@/helpers/case'
+import {getToken} from '@/helpers/auth'
 
 export default class AbstractService {
 
@@ -66,12 +67,9 @@ export default class AbstractService {
 		})
 
 		// Set the default auth header if we have a token
-		if (
-			localStorage.getItem('token') !== '' &&
-			localStorage.getItem('token') !== null &&
-			localStorage.getItem('token') !== undefined
-		) {
-			this.http.defaults.headers.common['Authorization'] = 'Bearer ' + localStorage.getItem('token')
+		const token = getToken()
+		if (token !== null) {
+			this.http.defaults.headers.common['Authorization'] = `Bearer ${token}`
 		}
 
 		this.paths = {
