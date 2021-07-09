@@ -39,7 +39,7 @@
 			</x-button>
 
 			<h1>
-				<span>{{ n.title }}</span>
+				<span>{{ getNamespaceTitle(n) }}</span>
 				<span class="is-archived" v-if="n.isArchived">
 					{{ $t('namespace.archived') }}
 				</span>

@@ -62,7 +62,7 @@
 							id="linkSharePassword"
 							type="password"
 							class="input"
-							:placeholder="$t('user.auth.passwortPlaceholder')"
+							:placeholder="$t('user.auth.passwordPlaceholder')"
 							v-tooltip="$t('list.share.links.passwordExplanation')"
 							v-model="password"
 						/>

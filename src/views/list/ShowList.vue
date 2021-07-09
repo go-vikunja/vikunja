@@ -97,7 +97,7 @@ export default {
 
 			saveListToHistory(listData)
 
-			this.setTitle(this.currentList.title)
+			this.setTitle(this.currentList.id ? this.getListTitle(this.currentList) : '')
 
 			// This invalidates the loaded list at the kanban board which lets it reload its content when
 			// switched to it. This ensures updates done to tasks in the gantt or list views are consistently
@@ -144,6 +144,7 @@ export default {
 				.then(r => {
 					this.$set(this, 'list', r)
 					this.$store.commit(CURRENT_LIST, r)
+					this.setTitle(this.getListTitle(r))
 				})
 				.catch(e => {
 					this.error(e)

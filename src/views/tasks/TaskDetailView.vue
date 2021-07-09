@@ -3,9 +3,9 @@
 		<div class="task-view">
 			<heading v-model="task" :can-write="canWrite" ref="heading"/>
 			<h6 class="subtitle" v-if="parent && parent.namespace && parent.list">
-				{{ parent.namespace.title }} >
+				{{ getNamespaceTitle(parent.namespace) }} >
 				<router-link :to="{ name: listViewName, params: { listId: parent.list.id } }">
-					{{ parent.list.title }}
+					{{ getListTitle(parent.list) }}
 				</router-link>
 			</h6>
 

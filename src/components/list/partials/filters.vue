@@ -130,7 +130,7 @@
 		</div>
 
 		<div class="field">
-			<label class="label">{{ $t('task.attributes.label') }}</label>
+			<label class="label">{{ $t('task.attributes.labels') }}</label>
 			<div class="control">
 				<multiselect
 					:placeholder="$t('label.search')"

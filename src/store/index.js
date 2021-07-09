@@ -20,7 +20,6 @@ import attachments from './modules/attachments'
 import labels from './modules/labels'
 
 import ListService from '../services/list'
-import {setTitle} from '@/helpers/setTitle'
 
 Vue.use(Vuex)
 
@@ -68,8 +67,6 @@ export const store = new Vuex.Store({
 				state.background = null
 				return
 			}
-
-			setTitle(currentList.title)
 
 			// Not sure if this is the right way to do it but hey, it works
 			if (

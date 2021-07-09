@@ -9,7 +9,7 @@
 
 		<transition name="fade">
 			<div class="notifications-list" v-if="showNotifications" ref="popup">
-				<span class="head">Notifications</span>
+				<span class="head">{{ $t('notification.title') }}</span>
 				<div
 					v-for="(n, index) in notifications"
 					:key="n.id"

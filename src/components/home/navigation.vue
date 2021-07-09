@@ -54,14 +54,14 @@
 					<span
 						@click="toggleLists(n.id)"
 						class="menu-label"
-						v-tooltip="n.title + ' (' + n.lists.filter(l => !l.isArchived).length + ')'">
+						v-tooltip="getNamespaceTitle(n) + ' (' + n.lists.filter(l => !l.isArchived).length + ')'">
 						<span class="name">
 							<span
 								:style="{ backgroundColor: n.hexColor }"
 								class="color-bubble"
 								v-if="n.hexColor !== ''">
 							</span>
-							{{ n.title }} ({{ n.lists.filter(l => !l.isArchived).length }})
+							{{ getNamespaceTitle(n) }} ({{ n.lists.filter(l => !l.isArchived).length }})
 						</span>
 					</span>
 					<a
@@ -91,7 +91,7 @@
 										v-if="l.hexColor !== ''">
 									</span>
 									<span class="list-menu-title">
-										{{ l.title }}
+										{{ getListTitle(l) }}
 									</span>
 									<span
 										:class="{'is-favorite': l.isFavorite}"

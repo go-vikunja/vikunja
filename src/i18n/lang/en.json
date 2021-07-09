@@ -245,6 +245,11 @@
       "bucketTitleSavedSuccess": "The bucket title has been saved successfully.",
       "bucketLimitSavedSuccess": "The bucket limit been saved successfully.",
       "collapse": "Collapse this bucket"
+    },
+    "pseudo": {
+      "favorites": {
+        "title": "Favorites"
+      }
     }
   },
   "namespace": {
@@ -294,6 +299,17 @@
       "color": "Color",
       "archived": "Is Archived",
       "isArchived": "This namespace is archived"
+    },
+    "pseudo": {
+      "sharedLists": {
+        "title": "Shared Lists"
+      },
+      "favorites": {
+        "title": "Favorites"
+      },
+      "savedFilters": {
+        "title": "Filters"
+      }
     }
   },
   "filters": {
@@ -414,6 +430,7 @@
       "chooseDate": "Choose a date"
     },
     "editor": {
+      "edit": "Edit",
       "done": "Done",
       "heading1": "Heading 1",
       "heading2": "Heading 2",
@@ -716,6 +733,7 @@
     "contact": "contact us"
   },
   "notification": {
+    "title": "Notifications",
     "none": "You don't have any notifications. Have a nice day!",
     "explainer": "Notifications will appear here when actions on namespaces, lists or tasks you subscribed to happen."
   },

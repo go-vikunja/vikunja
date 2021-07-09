@@ -35,15 +35,15 @@
 		<p class="has-text-centered has-text-grey is-italic" v-if="isPreviewActive && text === '' && emptyText !== ''">
 			{{ emptyText }}
 			<template v-if="isEditEnabled">
-				<a @click="toggleEdit">Edit</a>.
+				<a @click="toggleEdit">{{ $t('input.editor.edit') }}</a>.
 			</template>
 		</p>
 
 		<ul class="actions">
 			<template v-if="hasEditBottom && isEditEnabled">
 				<li>
-					<a v-if="!isEditActive" @click="toggleEdit">Edit</a>
-					<a v-else @click="toggleEdit">Done</a>
+					<a v-if="!isEditActive" @click="toggleEdit">{{ $t('input.editor.edit') }}</a>
+					<a v-else @click="toggleEdit">{{ $t('input.editor.done') }}</a>
 				</li>
 			</template>
 			<li v-for="(action, k) in bottomActions" :key="k">

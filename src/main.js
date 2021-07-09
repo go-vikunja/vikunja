@@ -85,6 +85,8 @@ import vueShortkey from 'vue-shortkey'
 import message from './message'
 import {colorIsDark} from './helpers/color/colorIsDark'
 import {setTitle} from './helpers/setTitle'
+import {getNamespaceTitle} from './helpers/getNamespaceTitle'
+import {getListTitle} from './helpers/getListTitle'
 // Vuex
 import {store} from './store'
 // i18n
@@ -198,6 +200,12 @@ Vue.mixin({
 		},
 		formatDateShort(date) {
 			return formatDate(date, 'PPpp', this.$t('date.locale'))
+		},
+		getNamespaceTitle(n) {
+			return getNamespaceTitle(n, p => this.$t(p))
+		},
+		getListTitle(l) {
+			return getListTitle(l, p => this.$t(p))
 		},
 		error(e, actions = []) {
 			return message.error(e, this, p => this.$t(p), actions)

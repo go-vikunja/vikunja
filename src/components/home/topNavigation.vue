@@ -30,7 +30,7 @@
 				<h1
 					:style="{ 'opacity': currentList.title === '' ? '0': '1' }"
 					class="title">
-					{{ currentList.title === '' ? $t('misc.loading') : currentList.title }}
+					{{ currentList.title === '' ? $t('misc.loading') : getListTitle(currentList) }}
 				</h1>
 
 				<list-settings-dropdown v-if="canWriteCurrentList && currentList.id !== -1" :list="currentList"/>
