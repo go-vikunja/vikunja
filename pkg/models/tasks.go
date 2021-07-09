@@ -49,7 +49,7 @@ type Task struct {
 	// The unique, numeric id of this task.
 	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id" param:"listtask"`
 	// The task text. This is what you'll see in the list.
-	Title string `xorm:"varchar(250) not null" json:"title" valid:"runelength(1|250)" minLength:"1" maxLength:"250"`
+	Title string `xorm:"TEXT not null" json:"title" valid:"minstringlength(1)" minLength:"1"`
 	// The task description.
 	Description string `xorm:"longtext null" json:"description"`
 	// Whether a task is done or not.

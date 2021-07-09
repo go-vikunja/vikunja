@@ -7385,7 +7385,6 @@ var doc = `{
                 "title": {
                     "description": "The task text. This is what you'll see in the list.",
                     "type": "string",
-                    "maxLength": 250,
                     "minLength": 1
                 },
                 "updated": {
@@ -7955,7 +7954,6 @@ var doc = `{
                 "title": {
                     "description": "The task text. This is what you'll see in the list.",
                     "type": "string",
-                    "maxLength": 250,
                     "minLength": 1
                 },
                 "updated": {
