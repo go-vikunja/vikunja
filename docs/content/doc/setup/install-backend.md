@@ -277,3 +277,8 @@ The API is now available through IP:
 ## Configuration
 
 See [available configuration options]({{< ref "config.md">}}).
+
+## Default Password
+
+After successfully installing Vikunja, there is no default user or password.
+You only need to register a new account and set all the details when creating it.
