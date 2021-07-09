@@ -25,8 +25,8 @@
 				{{ $t('user.auth.login') }}
 			</x-button>
 
-			<div class="notification is-danger mt-4" v-if="error !== ''">
-				{{ error }}
+			<div class="notification is-danger mt-4" v-if="errorMessage !== ''">
+				{{ errorMessage }}
 			</div>
 		</div>
 	</div>
@@ -42,7 +42,7 @@ export default {
 		return {
 			loading: true,
 			authenticateWithPassword: false,
-			error: '',
+			errorMessage: '',
 
 			hash: '',
 			password: '',
@@ -59,7 +59,7 @@ export default {
 	}),
 	methods: {
 		auth() {
-			this.error = ''
+			this.errorMessage = ''
 
 			if (this.authLinkShare) {
 				return
@@ -77,15 +77,15 @@ export default {
 						return
 					}
 
-					// TODO: Put this logic in a global error handler method which checks all auth codes
-					let error = this.$t('sharing.error')
+					// TODO: Put this logic in a global errorMessage handler method which checks all auth codes
+					let errorMessage = this.$t('sharing.errorMessage')
 					if (e.response && e.response.data && e.response.data.message) {
-						error = e.response.data.message
+						errorMessage = e.response.data.message
 					}
 					if (typeof e.response.data.code !== 'undefined' && e.response.data.code === 13002) {
-						error = this.$t('sharing.invalidPassword')
+						errorMessage = this.$t('sharing.invalidPassword')
 					}
-					this.error = error
+					this.errorMessage = errorMessage
 				})
 				.finally(() => {
 					this.loading = false
