@@ -83,15 +83,6 @@
     }
   }
 
-  table {
-    table-layout: fixed;
-
-    td {
-      overflow: hidden;
-      word-break: break-all;
-    }
-  }
-
   .details {
     padding-bottom: 0.75rem;
     flex-flow: row wrap;
