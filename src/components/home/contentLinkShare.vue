@@ -13,14 +13,6 @@
 					{{ currentList.title === '' ? $t('misc.loading') : currentList.title }}
 				</h1>
 				<div class="box has-text-left view">
-					<div class="logout">
-						<x-button @click="logout()" type="secondary">
-							<span>{{ $t('user.auth.logout') }}</span>
-							<span class="icon is-small">
-								<icon icon="sign-out-alt"/>
-							</span>
-						</x-button>
-					</div>
 					<router-view/>
 					<a class="menu-bottom-link" href="https://vikunja.io" target="_blank">
 						{{ $t('misc.poweredBy') }}
