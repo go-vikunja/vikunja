@@ -7322,7 +7322,7 @@ var doc = `{
                     "type": "integer"
                 },
                 "is_favorite": {
-                    "description": "True if a task is a favorite task. Favorite tasks show up in a separate \"Important\" list",
+                    "description": "True if a task is a favorite task. Favorite tasks show up in a separate \"Important\" list. This value depends on the user making the call to the api.",
                     "type": "boolean"
                 },
                 "labels": {
@@ -7563,7 +7563,7 @@ var doc = `{
                     "type": "boolean"
                 },
                 "is_favorite": {
-                    "description": "True if a list is a favorite. Favorite lists show up in a separate namespace.",
+                    "description": "True if a list is a favorite. Favorite lists show up in a separate namespace. This value depends on the user making the call to the api.",
                     "type": "boolean"
                 },
                 "namespace_id": {
@@ -7898,7 +7898,7 @@ var doc = `{
                     "type": "integer"
                 },
                 "is_favorite": {
-                    "description": "True if a task is a favorite task. Favorite tasks show up in a separate \"Important\" list",
+                    "description": "True if a task is a favorite task. Favorite tasks show up in a separate \"Important\" list. This value depends on the user making the call to the api.",
                     "type": "boolean"
                 },
                 "labels": {

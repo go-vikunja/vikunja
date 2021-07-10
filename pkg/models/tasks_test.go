@@ -718,14 +718,12 @@ func TestTask_ReadOne(t *testing.T) {
 		assert.True(t, IsErrTaskDoesNotExist(err))
 	})
 	t.Run("with subscription", func(t *testing.T) {
-		u = &user.User{ID: 6}
-
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
 
 		task := &Task{ID: 22}
-		err := task.ReadOne(s, u)
+		err := task.ReadOne(s, &user.User{ID: 6})
 		assert.NoError(t, err)
 		assert.NotNil(t, task.Subscription)
 	})
@@ -741,5 +739,25 @@ func TestTask_ReadOne(t *testing.T) {
 		assert.Equal(t, int64(-2), task.CreatedByID)
 		assert.NotNil(t, task.CreatedBy)
 		assert.Equal(t, int64(-2), task.CreatedBy.ID)
+	})
+	t.Run("favorite", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		task := &Task{ID: 1}
+		err := task.ReadOne(s, u)
+		assert.NoError(t, err)
+		assert.True(t, task.IsFavorite)
+	})
+	t.Run("favorite for a different user", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		task := &Task{ID: 1}
+		err := task.ReadOne(s, &user.User{ID: 2})
+		assert.NoError(t, err)
+		assert.False(t, task.IsFavorite)
 	})
 }

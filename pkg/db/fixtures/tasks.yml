@@ -8,7 +8,6 @@
   created: 2018-12-01 01:12:04
   updated: 2018-12-01 01:12:04
   bucket_id: 1
-  is_favorite: true
 - id: 2
   title: 'task #2 done'
   done: true
@@ -141,7 +140,6 @@
   list_id: 6
   index: 1
   bucket_id: 6
-  is_favorite: true
   created: 2018-12-01 01:12:04
   updated: 2018-12-01 01:12:04
 - id: 16
@@ -317,7 +315,6 @@
   list_id: 20
   index: 20
   bucket_id: 5
-  is_favorite: true
   created: 2018-12-01 01:12:04
   updated: 2018-12-01 01:12:04
 - id: 35

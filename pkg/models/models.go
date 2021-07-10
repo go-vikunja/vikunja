@@ -60,6 +60,7 @@ func GetTables() []interface{} {
 		&UnsplashPhoto{},
 		&SavedFilter{},
 		&Subscription{},
+		&Favorite{},
 	}
 }
 

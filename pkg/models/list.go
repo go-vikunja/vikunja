@@ -64,8 +64,8 @@ type List struct {
 	// Holds extra information about the background set since some background providers require attribution or similar. If not null, the background can be accessed at /lists/{listID}/background
 	BackgroundInformation interface{} `xorm:"-" json:"background_information"`
 
-	// True if a list is a favorite. Favorite lists show up in a separate namespace.
-	IsFavorite bool `xorm:"default false" json:"is_favorite"`
+	// True if a list is a favorite. Favorite lists show up in a separate namespace. This value depends on the user making the call to the api.
+	IsFavorite bool `xorm:"-" json:"is_favorite"`
 
 	// The subscription status for the user reading this list. You can only read this property, use the subscription endpoints to modify it.
 	// Will only returned when retreiving one list.
@@ -155,7 +155,7 @@ func GetListsByNamespaceID(s *xorm.Session, nID int64, doer *user.User) (lists [
 	}
 
 	// get more list details
-	err = addListDetails(s, lists)
+	err = addListDetails(s, lists, doer)
 	return lists, err
 }
 
@@ -183,7 +183,7 @@ func (l *List) ReadAll(s *xorm.Session, a web.Auth, search string, page int, per
 			return nil, 0, 0, err
 		}
 		lists := []*List{list}
-		err = addListDetails(s, lists)
+		err = addListDetails(s, lists, a)
 		return lists, 0, 0, err
 	}
 
@@ -201,7 +201,7 @@ func (l *List) ReadAll(s *xorm.Session, a web.Auth, search string, page int, per
 	}
 
 	// Add more list details
-	err = addListDetails(s, lists)
+	err = addListDetails(s, lists, a)
 	return lists, resultCount, totalItems, err
 }
 
@@ -264,6 +264,11 @@ func (l *List) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 		if err != nil && files.IsErrFileIsNotUnsplashFile(err) {
 			l.BackgroundInformation = &ListBackgroundType{Type: ListBackgroundUpload}
 		}
+	}
+
+	l.IsFavorite, err = isFavorite(s, l.ID, a, FavoriteKindList)
+	if err != nil {
+		return
 	}
 
 	l.Subscription, err = GetSubscription(s, SubscriptionEntityList, l.ID, a)
@@ -421,7 +426,7 @@ func getRawListsForUser(s *xorm.Session, opts *listOptions) (lists []*List, resu
 }
 
 // addListDetails adds owner user objects and list tasks to all lists in the slice
-func addListDetails(s *xorm.Session, lists []*List) (err error) {
+func addListDetails(s *xorm.Session, lists []*List, a web.Auth) (err error) {
 	if len(lists) == 0 {
 		return
 	}
@@ -441,7 +446,9 @@ func addListDetails(s *xorm.Session, lists []*List) (err error) {
 	}
 
 	var fileIDs []int64
+	var listIDs []int64
 	for _, l := range lists {
+		listIDs = append(listIDs, l.ID)
 		if o, exists := owners[l.OwnerID]; exists {
 			l.Owner = o
 		}
@@ -449,6 +456,15 @@ func addListDetails(s *xorm.Session, lists []*List) (err error) {
 			l.BackgroundInformation = &ListBackgroundType{Type: ListBackgroundUpload}
 		}
 		fileIDs = append(fileIDs, l.BackgroundFileID)
+	}
+
+	favs, err := getFavorites(s, listIDs, a, FavoriteKindList)
+	if err != nil {
+		return err
+	}
+
+	for _, list := range lists {
+		list.IsFavorite = favs[list.ID]
 	}
 
 	if len(fileIDs) == 0 {
@@ -536,6 +552,14 @@ func CreateOrUpdateList(s *xorm.Session, list *List, auth web.Auth) (err error) 
 
 	if list.ID == 0 {
 		_, err = s.Insert(list)
+		if err != nil {
+			return
+		}
+		if list.IsFavorite {
+			if err := addToFavorites(s, list.ID, auth, FavoriteKindList); err != nil {
+				return err
+			}
+		}
 	} else {
 		// We need to specify the cols we want to update here to be able to un-archive lists
 		colsToUpdate := []string{
@@ -543,17 +567,35 @@ func CreateOrUpdateList(s *xorm.Session, list *List, auth web.Auth) (err error) 
 			"is_archived",
 			"identifier",
 			"hex_color",
-			"is_favorite",
 			"background_file_id",
 		}
 		if list.Description != "" {
 			colsToUpdate = append(colsToUpdate, "description")
 		}
 
+		wasFavorite, err := isFavorite(s, list.ID, auth, FavoriteKindList)
+		if err != nil {
+			return err
+		}
+		if list.IsFavorite && !wasFavorite {
+			if err := addToFavorites(s, list.ID, auth, FavoriteKindList); err != nil {
+				return err
+			}
+		}
+
+		if !list.IsFavorite && wasFavorite {
+			if err := removeFromFavorite(s, list.ID, auth, FavoriteKindList); err != nil {
+				return err
+			}
+		}
+
 		_, err = s.
 			ID(list.ID).
 			Cols(colsToUpdate...).
 			Update(list)
+		if err != nil {
+			return err
+		}
 	}
 
 	if err != nil {
@@ -568,7 +610,6 @@ func CreateOrUpdateList(s *xorm.Session, list *List, auth web.Auth) (err error) 
 	*list = *l
 	err = list.ReadOne(s, auth)
 	return
-
 }
 
 // Update implements the update method of CRUDable
@@ -593,7 +634,6 @@ func (l *List) Update(s *xorm.Session, a web.Auth) (err error) {
 			return err
 		}
 
-		f.IsFavorite = l.IsFavorite
 		f.Title = l.Title
 		f.Description = l.Description
 		err = f.Update(s, a)

@@ -60,6 +60,7 @@ func SetupTests() {
 		"buckets",
 		"saved_filters",
 		"subscriptions",
+		"favorites",
 	)
 	if err != nil {
 		log.Fatal(err)

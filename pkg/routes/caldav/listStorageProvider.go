@@ -139,7 +139,7 @@ func (vcls *VikunjaCaldavListStorage) GetResourcesByList(rpaths []string) ([]dat
 
 	// GetTasksByUIDs...
 	// Parse these into ressources...
-	tasks, err := models.GetTasksByUIDs(s, uids)
+	tasks, err := models.GetTasksByUIDs(s, uids, vcls.user)
 	if err != nil {
 		_ = s.Rollback()
 		return nil, err

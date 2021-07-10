@@ -209,7 +209,7 @@ func (b *Bucket) ReadAll(s *xorm.Session, auth web.Auth, search string, page int
 		taskMap[t.ID] = t
 	}
 
-	err = addMoreInfoToTasks(s, taskMap)
+	err = addMoreInfoToTasks(s, taskMap, auth)
 	if err != nil {
 		return nil, 0, 0, err
 	}

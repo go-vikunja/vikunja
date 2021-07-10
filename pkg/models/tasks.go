@@ -59,8 +59,7 @@ type Task struct {
 	// The time when the task is due.
 	DueDate time.Time `xorm:"DATETIME INDEX null 'due_date'" json:"due_date"`
 	// An array of datetimes when the user wants to be reminded of the task.
-	Reminders   []time.Time `xorm:"-" json:"reminder_dates"`
-	CreatedByID int64       `xorm:"bigint not null" json:"-"` // ID of the user who put that task on the list
+	Reminders []time.Time `xorm:"-" json:"reminder_dates"`
 	// The list this task belongs to.
 	ListID int64 `xorm:"bigint INDEX not null" json:"list_id" param:"list"`
 	// An amount in seconds this task repeats itself. If this is set, when marking the task as done, it will mark itself as "undone" and then increase all remindes and the due date by its amount.
@@ -96,8 +95,8 @@ type Task struct {
 	// All attachments this task has
 	Attachments []*TaskAttachment `xorm:"-" json:"attachments"`
 
-	// True if a task is a favorite task. Favorite tasks show up in a separate "Important" list
-	IsFavorite bool `xorm:"default false" json:"is_favorite"`
+	// True if a task is a favorite task. Favorite tasks show up in a separate "Important" list. This value depends on the user making the call to the api.
+	IsFavorite bool `xorm:"-" json:"is_favorite"`
 
 	// The subscription status for the user reading this task. You can only read this property, use the subscription endpoints to modify it.
 	// Will only returned when retreiving one task.
@@ -120,7 +119,8 @@ type Task struct {
 	Position float64 `xorm:"double null" json:"position"`
 
 	// The user who initially created the task.
-	CreatedBy *user.User `xorm:"-" json:"created_by" valid:"-"`
+	CreatedBy   *user.User `xorm:"-" json:"created_by" valid:"-"`
+	CreatedByID int64      `xorm:"bigint not null" json:"-"` // ID of the user who put that task on the list
 
 	web.CRUDable `xorm:"-" json:"-"`
 	web.Rights   `xorm:"-" json:"-"`
@@ -252,10 +252,11 @@ func getRawTasksForLists(s *xorm.Session, lists []*List, a web.Auth, opts *taskO
 
 	// Get all list IDs and get the tasks
 	var listIDs []int64
-	var hasFavoriteLists bool
+	var hasFavoritesList bool
 	for _, l := range lists {
 		if l.ID == FavoritesPseudoList.ID {
-			hasFavoriteLists = true
+			hasFavoritesList = true
+			continue
 		}
 		listIDs = append(listIDs, l.ID)
 	}
@@ -375,7 +376,7 @@ func getRawTasksForLists(s *xorm.Session, lists []*List, a web.Auth, opts *taskO
 		listCond = listIDCond
 	}
 
-	if hasFavoriteLists {
+	if hasFavoritesList {
 		// Make sure users can only see their favorites
 		userLists, _, _, err := getRawListsForUser(
 			s,
@@ -393,7 +394,17 @@ func getRawTasksForLists(s *xorm.Session, lists []*List, a web.Auth, opts *taskO
 			userListIDs = append(userListIDs, l.ID)
 		}
 
-		listCond = builder.Or(listIDCond, builder.And(builder.Eq{"is_favorite": true}, builder.In("list_id", userListIDs)))
+		// All favorite tasks for that user
+		favCond := builder.
+			Select("entity_id").
+			From("favorites").
+			Where(
+				builder.And(
+					builder.Eq{"user_id": a.GetID()},
+					builder.Eq{"kind": FavoriteKindTask},
+				))
+
+		listCond = builder.And(listCond, builder.And(builder.In("id", favCond), builder.In("list_id", userListIDs)))
 	}
 
 	if len(reminderFilters) > 0 {
@@ -473,7 +484,7 @@ func getTasksForLists(s *xorm.Session, lists []*List, a web.Auth, opts *taskOpti
 		taskMap[t.ID] = t
 	}
 
-	err = addMoreInfoToTasks(s, taskMap)
+	err = addMoreInfoToTasks(s, taskMap, a)
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -521,7 +532,7 @@ func (bt *BulkTask) GetTasksByIDs(s *xorm.Session) (err error) {
 }
 
 // GetTasksByUIDs gets all tasks from a bunch of uids
-func GetTasksByUIDs(s *xorm.Session, uids []string) (tasks []*Task, err error) {
+func GetTasksByUIDs(s *xorm.Session, uids []string, a web.Auth) (tasks []*Task, err error) {
 	tasks = []*Task{}
 	err = s.In("uid", uids).Find(&tasks)
 	if err != nil {
@@ -533,7 +544,7 @@ func GetTasksByUIDs(s *xorm.Session, uids []string) (tasks []*Task, err error) {
 		taskMap[t.ID] = t
 	}
 
-	err = addMoreInfoToTasks(s, taskMap)
+	err = addMoreInfoToTasks(s, taskMap, a)
 	return
 }
 
@@ -611,7 +622,7 @@ func getTaskReminderMap(s *xorm.Session, taskIDs []int64) (taskReminders map[int
 	return
 }
 
-func addRelatedTasksToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]*Task) (err error) {
+func addRelatedTasksToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]*Task, a web.Auth) (err error) {
 	relatedTasks := []*TaskRelation{}
 	err = s.In("task_id", taskIDs).Find(&relatedTasks)
 	if err != nil {
@@ -634,10 +645,16 @@ func addRelatedTasksToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]
 		return
 	}
 
+	taskFavorites, err := getFavorites(s, relatedTaskIDs, a, FavoriteKindTask)
+	if err != nil {
+		return err
+	}
+
 	// NOTE: while it certainly be possible to run this function on	fullRelatedTasks again, we don't do this for performance reasons.
 
 	// Go through all task relations and put them into the task objects
 	for _, rt := range relatedTasks {
+		fullRelatedTasks[rt.OtherTaskID].IsFavorite = taskFavorites[rt.OtherTaskID]
 		taskMap[rt.TaskID].RelatedTasks[rt.RelationKind] = append(taskMap[rt.TaskID].RelatedTasks[rt.RelationKind], fullRelatedTasks[rt.OtherTaskID])
 	}
 
@@ -646,7 +663,7 @@ func addRelatedTasksToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]
 
 // This function takes a map with pointers and returns a slice with pointers to tasks
 // It adds more stuff like assignees/labels/etc to a bunch of tasks
-func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task) (err error) {
+func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth) (err error) {
 
 	// No need to iterate over users and stuff if the list doesn't have tasks
 	if len(taskMap) == 0 {
@@ -688,6 +705,11 @@ func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task) (err error) {
 		return err
 	}
 
+	taskFavorites, err := getFavorites(s, taskIDs, a, FavoriteKindTask)
+	if err != nil {
+		return err
+	}
+
 	// Get all identifiers
 	lists, err := GetListsByIDs(s, listIDs)
 	if err != nil {
@@ -708,10 +730,12 @@ func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task) (err error) {
 
 		// Build the task identifier from the list identifier and task index
 		task.setIdentifier(lists[task.ListID])
+
+		task.IsFavorite = taskFavorites[task.ID]
 	}
 
 	// Get all related tasks
-	err = addRelatedTasksToTasks(s, taskIDs, taskMap)
+	err = addRelatedTasksToTasks(s, taskIDs, taskMap, a)
 	return
 }
 
@@ -874,6 +898,12 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool) (err
 
 	t.setIdentifier(l)
 
+	if t.IsFavorite {
+		if err := addToFavorites(s, t.ID, createdBy, FavoriteKindTask); err != nil {
+			return err
+		}
+	}
+
 	err = events.Dispatch(&TaskCreatedEvent{
 		Task: t,
 		Doer: createdBy,
@@ -950,7 +980,6 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 		"list_id",
 		"bucket_id",
 		"position",
-		"is_favorite",
 		"repeat_mode",
 	}
 
@@ -972,6 +1001,22 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 
 		t.Index = latestTask.Index + 1
 		colsToUpdate = append(colsToUpdate, "index")
+	}
+
+	wasFavorite, err := isFavorite(s, t.ID, a, FavoriteKindTask)
+	if err != nil {
+		return
+	}
+	if t.IsFavorite && !wasFavorite {
+		if err := addToFavorites(s, t.ID, a, FavoriteKindTask); err != nil {
+			return err
+		}
+	}
+
+	if !t.IsFavorite && wasFavorite {
+		if err := removeFromFavorite(s, t.ID, a, FavoriteKindTask); err != nil {
+			return err
+		}
 	}
 
 	// Update the labels
@@ -1322,7 +1367,7 @@ func (t *Task) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 		return
 	}
 
-	err = addMoreInfoToTasks(s, taskMap)
+	err = addMoreInfoToTasks(s, taskMap, a)
 	if err != nil {
 		return
 	}

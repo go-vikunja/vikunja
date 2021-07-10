@@ -392,12 +392,21 @@ func getFavoriteLists(s *xorm.Session, lists []*List, namespaceIDs []int64, doer
 	}
 
 	// Check if we have any favorites or favorited lists and remove the favorites namespace from the list if not
-	var favoriteCount int64
-	favoriteCount, err = s.
+	cond := builder.
+		Select("tasks.id").
+		From("tasks").
 		Join("INNER", "lists", "tasks.list_id = lists.id").
 		Join("INNER", "namespaces", "lists.namespace_id = namespaces.id").
-		Where(builder.And(builder.Eq{"tasks.is_favorite": true}, builder.In("namespaces.id", namespaceIDs))).
-		Count(&Task{})
+		Where(builder.In("namespaces.id", namespaceIDs))
+
+	var favoriteCount int64
+	favoriteCount, err = s.
+		Where(builder.And(
+			builder.Eq{"user_id": doer.ID},
+			builder.Eq{"kind": FavoriteKindTask},
+			builder.In("entity_id", cond),
+		)).
+		Count(&Favorite{})
 	if err != nil {
 		return
 	}
@@ -539,6 +548,13 @@ func (n *Namespace) ReadAll(s *xorm.Session, a web.Auth, search string, page int
 	}
 
 	/////////////////
+	// Add list details (favorite state, among other things
+	err = addListDetails(s, lists, a)
+	if err != nil {
+		return
+	}
+
+	/////////////////
 	// Favorite lists
 
 	favoritesNamespace, err := getFavoriteLists(s, lists, namespaceIDs, doer)
@@ -552,11 +568,6 @@ func (n *Namespace) ReadAll(s *xorm.Session, a web.Auth, search string, page int
 
 	//////////////////////
 	// Put it all together
-
-	err = addListDetails(s, lists)
-	if err != nil {
-		return
-	}
 
 	for _, list := range lists {
 		if list.NamespaceID == SharedListsPseudoNamespace.ID || list.NamespaceID == SavedFiltersPseudoNamespace.ID {
