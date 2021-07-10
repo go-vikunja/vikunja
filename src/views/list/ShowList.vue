@@ -89,7 +89,7 @@ export default {
 			return
 		},
 		loadList() {
-			if(this.$route.name.includes('.settings.')) {
+			if (this.$route.name.includes('.settings.')) {
 				return
 			}
 
@@ -116,12 +116,16 @@ export default {
 				return this.replaceListView()
 			}
 
-			// Don't load the list if we either already loaded it or aren't dealing with a list at all currently
+			// Don't load the list if we either already loaded it or aren't dealing with a list at all currently and
+			// the currently loaded list has the right set.
 			if (
-				this.$route.params.listId === this.listLoaded ||
-				typeof this.$route.params.listId === 'undefined' ||
-				this.$route.params.listId === this.currentList.id ||
-				parseInt(this.$route.params.listId) === this.currentList.id
+				(
+					this.$route.params.listId === this.listLoaded ||
+					typeof this.$route.params.listId === 'undefined' ||
+					this.$route.params.listId === this.currentList.id ||
+					parseInt(this.$route.params.listId) === this.currentList.id
+				)
+				&& typeof this.currentList !== 'undefined' && this.currentList.maxRight !== null
 			) {
 				return
 			}
