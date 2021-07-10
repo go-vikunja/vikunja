@@ -214,21 +214,26 @@ export default {
 		},
 		// Renews the api token and saves it to local storage
 		renewToken(ctx) {
-			if (!ctx.state.authenticated) {
-				return
-			}
+			// Timeout to avoid race conditions when authenticated as a user (=auth token in localStorage) and as a
+			// link share in another tab. Without the timeout both the token renew and link share auth are executed at
+			// the same time and one might win over the other.
+			setTimeout(() => {
+				if (!ctx.state.authenticated) {
+					return
+				}
 
-			refreshToken()
-				.then(() => {
-					ctx.dispatch('checkAuth')
-				})
-				.catch(e => {
-					// Don't logout on network errors as the user would then get logged out if they don't have
-					// internet for a short period of time - such as when the laptop is still reconnecting
-					if (e.request.status) {
-						ctx.dispatch('logout')
-					}
-				})
+				refreshToken()
+					.then(() => {
+						ctx.dispatch('checkAuth')
+					})
+					.catch(e => {
+						// Don't logout on network errors as the user would then get logged out if they don't have
+						// internet for a short period of time - such as when the laptop is still reconnecting
+						if (e.request.status) {
+							ctx.dispatch('logout')
+						}
+					})
+			}, 5000)
 		},
 		logout(ctx) {
 			removeToken()
