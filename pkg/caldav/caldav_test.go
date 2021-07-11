@@ -377,6 +377,39 @@ LAST-MODIFIED:00010101T000000
 END:VTODO
 END:VCALENDAR`,
 		},
+		{
+			name: "with priority",
+			args: args{
+				config: &Config{
+					Name:   "test",
+					ProdID: "RandomProdID which is not random",
+				},
+				todos: []*Todo{
+					{
+						Summary:     "Todo #1",
+						Description: "Lorem Ipsum",
+						UID:         "randommduid",
+						Priority:    1,
+						Timestamp:   time.Unix(1543626724, 0).In(config.GetTimeZone()),
+					},
+				},
+			},
+			wantCaldavtasks: `BEGIN:VCALENDAR
+VERSION:2.0
+METHOD:PUBLISH
+X-PUBLISHED-TTL:PT4H
+X-WR-CALNAME:test
+PRODID:-//RandomProdID which is not random//EN
+BEGIN:VTODO
+UID:randommduid
+DTSTAMP:20181201T011204
+SUMMARY:Todo #1
+DESCRIPTION:Lorem Ipsum
+PRIORITY:9
+LAST-MODIFIED:00010101T000000
+END:VTODO
+END:VCALENDAR`,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

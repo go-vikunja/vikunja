@@ -21,21 +21,20 @@ import (
 	"strings"
 	"time"
 
-	"code.vikunja.io/api/pkg/caldav"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"github.com/laurent22/ical-go"
 )
 
-func getCaldavTodosForTasks(list *models.List, listTasks []*models.Task) string {
+func GetCaldavTodosForTasks(list *models.List, listTasks []*models.Task) string {
 
 	// Make caldav todos from Vikunja todos
-	var caldavtodos []*caldav.Todo
+	var caldavtodos []*Todo
 	for _, t := range listTasks {
 
 		duration := t.EndDate.Sub(t.StartDate)
 
-		caldavtodos = append(caldavtodos, &caldav.Todo{
+		caldavtodos = append(caldavtodos, &Todo{
 			Timestamp:   t.Updated,
 			UID:         t.UID,
 			Summary:     t.Title,
@@ -52,15 +51,15 @@ func getCaldavTodosForTasks(list *models.List, listTasks []*models.Task) string 
 		})
 	}
 
-	caldavConfig := &caldav.Config{
+	caldavConfig := &Config{
 		Name:   list.Title,
 		ProdID: "Vikunja Todo App",
 	}
 
-	return caldav.ParseTodos(caldavConfig, caldavtodos)
+	return ParseTodos(caldavConfig, caldavtodos)
 }
 
-func parseTaskFromVTODO(content string) (vTask *models.Task, err error) {
+func ParseTaskFromVTODO(content string) (vTask *models.Task, err error) {
 	parsed, err := ical.ParseCalendar(content)
 	if err != nil {
 		return nil, err
@@ -78,13 +77,15 @@ func parseTaskFromVTODO(content string) (vTask *models.Task, err error) {
 		}
 	}
 
-	// Parse the UID
+	// Parse the priority
 	var priority int64
 	if _, ok := task["PRIORITY"]; ok {
-		priority, err = strconv.ParseInt(task["PRIORITY"], 10, 64)
+		priorityParsed, err := strconv.ParseInt(task["PRIORITY"], 10, 64)
 		if err != nil {
 			return nil, err
 		}
+
+		priority = parseVTODOPriority(priorityParsed)
 	}
 
 	// Parse the enddate
@@ -118,7 +119,7 @@ func caldavTimeToTimestamp(tstring string) time.Time {
 		return time.Time{}
 	}
 
-	format := caldav.DateFormat
+	format := DateFormat
 
 	if strings.HasSuffix(tstring, "Z") {
 		format = `20060102T150405Z`

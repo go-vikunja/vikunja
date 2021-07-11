@@ -216,7 +216,7 @@ DURATION:PT` + fmt.Sprintf("%.6f", t.Duration.Hours()) + `H` + fmt.Sprintf("%.6f
 
 		if t.Priority != 0 {
 			caldavtodos += `
-PRIORITY:` + strconv.Itoa(int(t.Priority))
+PRIORITY:` + strconv.Itoa(mapPriorityToCaldav(t.Priority))
 		}
 
 		caldavtodos += `

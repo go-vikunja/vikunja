@@ -24,6 +24,7 @@ import (
 	"strconv"
 	"strings"
 
+	caldav2 "code.vikunja.io/api/pkg/caldav"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
@@ -66,7 +67,7 @@ func ListHandler(c echo.Context) error {
 	// Parse it
 	vtodo := string(body)
 	if vtodo != "" && strings.HasPrefix(vtodo, `BEGIN:VCALENDAR`) {
-		storage.task, err = parseTaskFromVTODO(vtodo)
+		storage.task, err = caldav2.ParseTaskFromVTODO(vtodo)
 		if err != nil {
 			log.Error(err)
 			return echo.ErrInternalServerError

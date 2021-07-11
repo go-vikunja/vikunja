@@ -21,8 +21,8 @@ import (
 	"strings"
 	"time"
 
+	"code.vikunja.io/api/pkg/caldav"
 	"code.vikunja.io/api/pkg/db"
-
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	user2 "code.vikunja.io/api/pkg/user"
@@ -256,7 +256,7 @@ func (vcls *VikunjaCaldavListStorage) CreateResource(rpath, content string) (*da
 	s := db.NewSession()
 	defer s.Close()
 
-	vTask, err := parseTaskFromVTODO(content)
+	vTask, err := caldav.ParseTaskFromVTODO(content)
 	if err != nil {
 		return nil, err
 	}
@@ -295,7 +295,7 @@ func (vcls *VikunjaCaldavListStorage) CreateResource(rpath, content string) (*da
 // UpdateResource updates a resource
 func (vcls *VikunjaCaldavListStorage) UpdateResource(rpath, content string) (*data.Resource, error) {
 
-	vTask, err := parseTaskFromVTODO(content)
+	vTask, err := caldav.ParseTaskFromVTODO(content)
 	if err != nil {
 		return nil, err
 	}
@@ -411,12 +411,12 @@ func (vlra *VikunjaListResourceAdapter) CalculateEtag() string {
 // GetContent returns the content string of a resource (a task in our case)
 func (vlra *VikunjaListResourceAdapter) GetContent() string {
 	if vlra.list != nil && vlra.list.Tasks != nil {
-		return getCaldavTodosForTasks(vlra.list, vlra.listTasks)
+		return caldav.GetCaldavTodosForTasks(vlra.list, vlra.listTasks)
 	}
 
 	if vlra.task != nil {
 		list := models.List{Tasks: []*models.Task{vlra.task}}
-		return getCaldavTodosForTasks(&list, list.Tasks)
+		return caldav.GetCaldavTodosForTasks(&list, list.Tasks)
 	}
 
 	return ""
