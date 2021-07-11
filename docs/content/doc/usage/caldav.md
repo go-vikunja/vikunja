@@ -75,6 +75,7 @@ Vikunja **currently does not** support these properties:
 ### Not working
 
 * [Thunderbird (68)](https://www.thunderbird.net/)
+* iOS calDAV Sync (See [#753](https://kolaente.dev/vikunja/api/issues/753))
 
 ## Dev logs
 
