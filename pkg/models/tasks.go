@@ -18,8 +18,10 @@ package models
 
 import (
 	"math"
+	"regexp"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"code.vikunja.io/api/pkg/events"
@@ -237,6 +239,15 @@ func getFilterCondForSeparateTable(table string, concat taskFilterConcatinator, 
 	)
 }
 
+func getTaskIndexFromSearchString(s string) (index int64) {
+	re := regexp.MustCompile("#([0-9]+)")
+	in := re.FindString(s)
+
+	stringIndex := strings.ReplaceAll(in, "#", "")
+	index, _ = strconv.ParseInt(stringIndex, 10, 64)
+	return
+}
+
 //nolint:gocyclo
 func getRawTasksForLists(s *xorm.Session, lists []*List, a web.Auth, opts *taskOptions) (tasks []*Task, resultCount int, totalItems int64, err error) {
 
@@ -356,7 +367,7 @@ func getRawTasksForLists(s *xorm.Session, lists []*List, a web.Auth, opts *taskO
 	// Then return all tasks for that lists
 	var where builder.Cond
 
-	if len(opts.search) > 0 {
+	if opts.search != "" {
 		// Postgres' is case sensitive by default.
 		// To work around this, we're using ILIKE as opposed to normal LIKE statements.
 		// ILIKE is preferred over LOWER(text) LIKE for performance reasons.
@@ -366,6 +377,11 @@ func getRawTasksForLists(s *xorm.Session, lists []*List, a web.Auth, opts *taskO
 			where = builder.Expr("title ILIKE ?", "%"+opts.search+"%")
 		} else {
 			where = &builder.Like{"title", "%" + opts.search + "%"}
+		}
+
+		searchIndex := getTaskIndexFromSearchString(opts.search)
+		if searchIndex > 0 {
+			where = builder.Or(where, builder.Eq{"`index`": searchIndex})
 		}
 	}
 

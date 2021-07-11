@@ -761,3 +761,37 @@ func TestTask_ReadOne(t *testing.T) {
 		assert.False(t, task.IsFavorite)
 	})
 }
+
+func Test_getTaskIndexFromSearchString(t *testing.T) {
+	type args struct {
+		s string
+	}
+	tests := []struct {
+		name      string
+		args      args
+		wantIndex int64
+	}{
+		{
+			name:      "task index in text",
+			args:      args{s: "Task #12"},
+			wantIndex: 12,
+		},
+		{
+			name:      "no task index",
+			args:      args{s: "Task"},
+			wantIndex: 0,
+		},
+		{
+			name:      "not numeric but with prefix",
+			args:      args{s: "Task #aaaaa"},
+			wantIndex: 0,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if gotIndex := getTaskIndexFromSearchString(tt.args.s); gotIndex != tt.wantIndex {
+				t.Errorf("getTaskIndexFromSearchString() = %v, want %v", gotIndex, tt.wantIndex)
+			}
+		})
+	}
+}

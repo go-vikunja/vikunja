@@ -1022,6 +1022,19 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name:   "search for task index",
+			fields: fields{},
+			args: args{
+				search: "number #17",
+				a:      &user.User{ID: 1},
+				page:   0,
+			},
+			want: []*Task{
+				task33, // has the index 17
+			},
+			wantErr: false,
+		},
 	}
 
 	for _, tt := range tests {
