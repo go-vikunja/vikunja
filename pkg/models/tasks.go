@@ -24,11 +24,10 @@ import (
 	"strings"
 	"time"
 
-	"code.vikunja.io/api/pkg/events"
-
-	"code.vikunja.io/api/pkg/db"
-
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/web"
@@ -670,6 +669,11 @@ func addRelatedTasksToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]
 
 	// Go through all task relations and put them into the task objects
 	for _, rt := range relatedTasks {
+		_, has := fullRelatedTasks[rt.OtherTaskID]
+		if !has {
+			log.Debugf("Related task not found for task relation: taskID=%d, otherTaskID=%d, relationKind=%v", rt.TaskID, rt.OtherTaskID, rt.RelationKind)
+			continue
+		}
 		fullRelatedTasks[rt.OtherTaskID].IsFavorite = taskFavorites[rt.OtherTaskID]
 		taskMap[rt.TaskID].RelatedTasks[rt.RelationKind] = append(taskMap[rt.TaskID].RelatedTasks[rt.RelationKind], fullRelatedTasks[rt.OtherTaskID])
 	}
