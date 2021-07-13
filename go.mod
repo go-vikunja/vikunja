@@ -39,7 +39,7 @@ require (
 	github.com/go-testfixtures/testfixtures/v3 v3.6.1
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/golang/snappy v0.0.4 // indirect
-	github.com/iancoleman/strcase v0.1.3
+	github.com/iancoleman/strcase v0.2.0
 	github.com/imdario/mergo v0.3.12
 	github.com/kr/text v0.2.0 // indirect
 	github.com/labstack/echo/v4 v4.4.0
