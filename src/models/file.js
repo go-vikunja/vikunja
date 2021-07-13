@@ -11,7 +11,7 @@ export default class FileModel extends AbstractModel {
 			id: 0,
 			mime: '',
 			name: '',
-			size: '',
+			size: 0,
 			created: null,
 		}
 	}
