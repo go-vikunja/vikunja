@@ -28,11 +28,11 @@ This document explains how events and listeners work in Vikunja, how to use them
 
 Each event has to implement this interface:
 
-```golang
+{{< highlight golang >}}
 type Event interface {
     Name() string
 }
-```
+{{< /highlight >}}
 
 An event can contain whatever data you need.
 
@@ -75,7 +75,7 @@ To dispatch an event, simply call the `events.Dispatch` method and pass in the e
 
 The `TaskCreatedEvent` is declared in the `pkg/models/events.go` file as follows:
 
-```golang
+{{< highlight golang >}}
 // TaskCreatedEvent represents an event where a task has been created
 type TaskCreatedEvent struct {
     Task *Task
@@ -86,11 +86,11 @@ type TaskCreatedEvent struct {
 func (t *TaskCreatedEvent) Name() string {
     return "task.created"
 }
-```
+{{< /highlight >}}
 
 It is dispatched in the `createTask` function of the `models` package:
 
-```golang
+{{< highlight golang >}}
 func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool) (err error) {
 
     // ...
@@ -102,7 +102,7 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool) (err
     
     // ...
 }
-```
+{{< /highlight >}}
 
 As you can see, the curent task and doer are injected into it.
 
@@ -122,13 +122,13 @@ A single event can have multiple listeners who are independent of each other.
 
 All listeners must implement this interface:
 
-```golang
+{{< highlight golang >}}
 // Listener represents something that listens to events
 type Listener interface {
     Handle(msg *message.Message) error
     Name() string
 }
-```
+{{< /highlight >}}
 
 The `Handle` method is executed when the event this listener listens on is dispatched. 
 * As the single parameter, it gets the payload of the event, which is the event struct when it was dispatched decoded as json object and passed as a slice of bytes.
@@ -165,7 +165,7 @@ See the example below.
 
 ### Example
 
-```golang
+{{< highlight golang >}}
 // RegisterListeners registers all event listeners
 func RegisterListeners() {
     events.RegisterListener((&ListCreatedEvent{}).Name(), &IncreaseListCounter{})
@@ -183,13 +183,13 @@ func (s *IncreaseTaskCounter) Name() string {
 func (s *IncreaseTaskCounter) Handle(payload message.Payload) (err error) {
     return keyvalue.IncrBy(metrics.TaskCountKey, 1)
 }
-```
+{{< /highlight >}}
 
 ## Testing
 
 When testing, you should call the `events.Fake()` method in the `TestMain` function of the package you want to test.
 This prevents any events from being fired and lets you assert an event has been dispatched like so:
 
-```golang
+{{< highlight golang >}}
 events.AssertDispatched(t, &TaskCreatedEvent{})
-```
+{{< /highlight >}}

@@ -63,7 +63,7 @@ if config.MigrationWunderlistEnable.GetBool() {
 }
 ```
 
-You should also document the routes with [swagger annotations]({{< ref "../practical-instructions/swagger-docs.md" >}}).
+You should also document the routes with [swagger annotations]({{< ref "swagger-docs.md" >}}).
 
 ## Insertion helper method
 

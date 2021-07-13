@@ -1,11 +1,11 @@
 ---
 date: "2019-02-12:00:00+02:00"
-title: "Add a new api endpoint"
+title: "New API Endpoints"
 draft: false
 type: "doc"
 menu:
   sidebar:
-    parent: "practical instructions"
+    parent: "development"
 ---
 
 # Add a new api endpoint/feature

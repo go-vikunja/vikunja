@@ -5,7 +5,7 @@ draft: false
 type: "doc"
 menu:
   sidebar:
-    parent: "practical instructions"
+    parent: "development"
 ---
 
 # Custom Errors

@@ -1,16 +1,18 @@
 ---
 date: "2019-02-12:00:00+02:00"
-title: "Modifying swagger api docs"
+title: "Modifying Swagger API Docs"
 draft: false
 type: "doc"
 menu:
   sidebar:
-    parent: "practical instructions"
+    parent: "development"
 ---
 
-# Adding/editing swagger api docs
+# Modifying swagger api docs
 
 The api documentation is generated using [swaggo](https://github.com/swaggo/swag) from comments.
+
+{{< table_of_contents >}}
 
 ## Documenting structs
 
@@ -43,5 +45,29 @@ type List struct {
 
 	web.CRUDable `xorm:"-" json:"-"`
 	web.Rights   `xorm:"-" json:"-"`
+}
+{{< /highlight >}}
+
+## Documenting api Endpoints
+
+All api routes should be documented with a comment above the handler function.
+When generating the api docs with mage, the swagger cli will pick these up and put them in a neat document.
+
+A comment looks like this:
+
+{{< highlight golang >}}
+// @Summary Login
+// @Description Logs a user in. Returns a JWT-Token to authenticate further requests.
+// @tags user
+// @Accept json
+// @Produce json
+// @Param credentials body user.Login true "The login credentials"
+// @Success 200 {object} auth.Token
+// @Failure 400 {object} models.Message "Invalid user password model."
+// @Failure 412 {object} models.Message "Invalid totp passcode."
+// @Failure 403 {object} models.Message "Invalid username or password."
+// @Router /login [post]
+func Login(c echo.Context) error {
+	// Handler logic
 }
 {{< /highlight >}}

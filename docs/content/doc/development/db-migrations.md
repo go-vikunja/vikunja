@@ -1,6 +1,6 @@
 ---
 date: "2019-03-29:00:00+02:00"
-title: "Database migrations"
+title: "Database Migrations"
 draft: false
 type: "doc"
 menu:
@@ -36,6 +36,11 @@ All migrations are sorted before being executed, since `init()` does not guarant
 
 When you're adding a new struct, you also need to add it to the `models.GetTables()` function
 to ensure it will be created on new installations.
+
+### Generating a new migration stub
+
+You can easily generate a pre-filled migration stub by running `mage dev:make-migration`.
+It will ask you for a table name and generate an empty migration similar to the example shown below.
 
 ### Example
 

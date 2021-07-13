@@ -18,13 +18,13 @@ Vikunjs provides a simple abstraction to send notifications per mail and in the 
 
 Each notification has to implement this interface:
 
-```golang
+{{< highlight golang >}}
 type Notification interface {
     ToMail() *Mail
     ToDB() interface{}
     Name() string
 }
-```
+{{< /highlight >}}
 
 Both functions return the formatted messages for mail and database.
 
@@ -35,7 +35,7 @@ For example, if your notification should not be recorded in the database but onl
 
 A list of chainable functions is available to compose a mail:
 
-```golang
+{{< highlight golang >}}
 mail := NewMail(). 
     // The optional sender of the mail message.
     From("test@example.com").
@@ -54,7 +54,7 @@ mail := NewMail().
     Action("The Action", "https://example.com").
 	// Another line of text.
     Line("This should be an outro line").
-```
+{{< /highlight >}}
 
 If not provided, the `from` field of the mail contains the value configured in [`mailer.fromemail`](https://vikunja.io/docs/config-options/#fromemail).
 
@@ -75,14 +75,14 @@ It takes the name of the notification and the package where the notification wil
 Notifiables can receive a notification.
 A notifiable is defined with this interface:
 
-```golang
+{{< highlight golang >}}
 type Notifiable interface {
     // Should return the email address this notifiable has.
     RouteForMail() string
     // Should return the id of the notifiable entity
     RouteForDB() int64
 }
-```
+{{< /highlight >}}
 
 The `User` type from the `user` package implements this interface.
 
@@ -93,7 +93,7 @@ It takes a notifiable and a notification as input.
 
 For example, the email confirm notification when a new user registers is sent like this:
 
-```golang
+{{< highlight golang >}}
 n := &EmailConfirmNotification{
     User:  update.User,
     IsNew: false,
@@ -101,7 +101,7 @@ n := &EmailConfirmNotification{
 
 err = notifications.Notify(update.User, n)
 return
-```
+{{< /highlight >}}
 
 ## Testing
 

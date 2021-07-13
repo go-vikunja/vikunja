@@ -5,7 +5,7 @@ draft: false
 type: "doc"
 menu:
   sidebar:
-    parent: "practical instructions"
+    parent: "development"
 ---
 
 # Metrics
@@ -17,7 +17,7 @@ The `metrics` package provides several functions to create and update metrics.
 
 {{< table_of_contents >}}
 
-## New metrics
+## Exposing New Metrics
 
 First, define a `const` with the metric key in redis. This is done in `pkg/metrics/metrics.go`.
 

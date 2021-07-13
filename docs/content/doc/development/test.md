@@ -10,7 +10,7 @@ menu:
 
 # Testing
 
-You can run unit tests with [our `Magefile`]({{< ref "mage.md">}}) with
+You can run unit tests with [mage]({{< ref "mage.md">}}) with
 
 {{< highlight bash >}}
 mage test:unit

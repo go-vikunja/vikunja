@@ -1,6 +1,6 @@
 ---
 date: "2019-03-31:00:00+01:00"
-title: "Adding new cli commands"
+title: "Cli Commands"
 draft: false
 type: "doc"
 menu:

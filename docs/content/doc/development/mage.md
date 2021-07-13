@@ -57,15 +57,13 @@ These tasks are automatically run in our CI every time someone pushes to main or
 mage build:build
 {{< /highlight >}}
 
-Builds a `vikunja`-binary in the root directory of the repo for the platform it is run on.
-
-### Statically compile all templates into the binary
+or
 
 {{< highlight bash >}}
-mage build:generate
+mage build
 {{< /highlight >}}
 
-This generates static code with all templates, meaning no template need to be referenced at runtime.
+Builds a `vikunja`-binary in the root directory of the repo for the platform it is run on.
 
 ### clean
 
@@ -73,7 +71,7 @@ This generates static code with all templates, meaning no template need to be re
 mage build:clean
 {{< /highlight >}}
 
-Cleans all build, executable and bindata files
+Cleans all build and executable files
 
 ## Check
 
@@ -172,6 +170,8 @@ mage dev:create-migration
 
 Creates a new migration with the current date. 
 Will ask for the name of the struct you want to create a migration for.
+
+See also [migration docs]({{< ref "mage.md" >}}).
 
 ## Misc
 

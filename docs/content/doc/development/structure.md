@@ -1,6 +1,6 @@
 ---
 date: "2019-02-12:00:00+02:00"
-title: "Project structure"
+title: "Project Structure"
 draft: false
 type: "doc"
 menu:
@@ -10,40 +10,7 @@ menu:
 
 # Project structure
 
-In general, this api repo has the following structure:
-
-* `docker`
-* `docs`
-* `pkg`
-  * `caldav`
-  * `cmd`
-  * `config`
-  * `db`
-    * `fixtures`
-  * `files`
-  * `integration`
-  * `log`
-  * `mail`
-  * `metrics`
-  * `migration`
-  * `models`
-  * `modules`
-    * `migration`
-      * `handler`
-      * `wunderlist`
-  * `red`
-  * `routes`
-    * `api/v1`
-  * `static`
-  * `swagger`
-  * `user`
-  * `utils`
-  * `version`
-* `REST-Tests`
-* `templates`
-* `vendor`
-
-This document will explain what these mean and what you can find where.
+This document explains what each package does.
 
 {{< table_of_contents >}}
 
@@ -52,18 +19,13 @@ This document will explain what these mean and what you can find where.
 The root directory is where [the config file]({{< ref "../setup/config.md">}}), [Magefile]({{< ref "mage.md">}}), license, drone config, 
 application entry point (`main.go`) and so on are located.
 
-## docker
-
-This directory holds additonal files needed to build and run the docker container, mainly service configuration to properly run Vikunja inside a docker 
-container.
-
 ## pkg
 
 This is where most of the magic happens. Most packages with actual code are located in this folder.
 
 ### caldav
 
-This folder holds a simple caldav implementation which is responsible for returning the caldav feature.
+This folder holds a simple caldav implementation which is responsible for the caldav feature.
 
 ### cmd
 
@@ -75,10 +37,15 @@ To learn more about how to use this cli, see [the cli usage docs]({{< ref "../us
 
 ### config
 
-This package configures the config. It sets default values and sets up viper and tells it where to look for config files, 
-how to interpret which env variables for config etc.
+This package configures handling of Vikunja's runtime configuration.
+It sets default values and sets up viper and tells it where to look for config files, how to interpret which env variables 
+for config etc.
 
-If you want to add a new config parameter, you should add default value in this package.
+See also the [docs about adding a new configuration parameter]({{< ref "config.md" >}}).
+
+### cron
+
+See [how to add a cron task]({{< ref "cron.md" >}}).
 
 ### db
 
@@ -102,17 +69,17 @@ This init is called in `main.go` after the config init is done.
 
 ### mail
 
-This package handles all mail sending. To learn how to send a mail, see [sending emails]({{< ref "../practical-instructions/mail.md">}}).
+This package handles all mail sending. To learn how to send a mail, see [notifications]({{< ref "notifications.md" >}}).
 
 ### metrics
 
 This package handles all metrics which are exposed to the prometheus endpoint.
-To learn how it works and how to add new metrics, take a look at [how metrics work]({{< ref "../practical-instructions/metrics.md">}}).
+To learn how it works and how to add new metrics, take a look at [how metrics work]({{< ref "metrics.md">}}).
 
 ### migration
 
 This package handles all migrations.
-All migrations are stored and executed here.
+All migrations are stored and executed in this package.
 
 To learn more, take a look at the [migrations docs]({{< ref "../development/db-migrations.md">}}).
 
@@ -123,10 +90,34 @@ When adding new features or upgrading existing ones, that most likely happens he
 
 Because this package is pretty huge, there are several documents and how-to's about it:
 
-* [Adding a feature]({{< ref "../practical-instructions/feature.md">}})
-* [Making calls to the database]({{< ref "../practical-instructions/database.md">}})
+* [Adding a feature]({{< ref "feature.md">}})
+* [Making calls to the database]({{< ref "database.md">}})
 
 ### modules
+
+Everything that can have multiple implementations (like a task migrator from a third-party task provider) lives in a 
+respective sub package in this package.
+
+#### auth
+
+Contains openid related authentication.
+
+#### avatar
+
+Contains all possible avatar providers a user can choose to set their avatar.
+
+#### background
+
+All list background providers are in sub-packages of this package.
+
+#### dump
+
+Handles everything related to the `dump` and `restore` commands of Vikunja.
+
+#### keyvalue
+
+A simple key-value store with an implementation for memory and redis. 
+Can be used to cache values.
 
 #### migration
 
@@ -142,19 +133,18 @@ to talk to redis.
 
 It uses the [go-redis](https://github.com/go-redis/redis) library, please see their configuration on how to use it.
 
+**Note**: Only use this package directly if you have to use a direct redis connection.
+In most cases, using the `keyvalue` package is a better fit.
+
 ### routes
 
 This package defines all routes which are available for vikunja clients to use.
-To add a new route, see [adding a new route]({{< ref "../practical-instructions/feature.md">}}).
+To add a new route, see [adding a new route]({{< ref "feature.md">}}).
 
 #### api/v1
 
 This is where all http-handler functions for the api are stored. 
 Every handler function which does not use the standard web handler should live here.
-
-### static
-
-All static files generated by `mage generate` live here.
 
 ### swagger
 
@@ -179,23 +169,3 @@ See their function definitions for instructions on how to use them.
 The single purpouse of this package is to hold the current vikunja version which gets overridden through build flags 
 each time `mage release` or `mage build` is run.
 It is a seperate package to avoid import cycles with other packages.
-
-## REST-Tests
-
-Holds all kinds of test files to directly test the api from inside of [jetbrains ide's](https://www.jetbrains.com/help/idea/http-client-in-product-code-editor.html).
-
-These files are currently more an experiment, maybe we will drop them in the future to use something we could integrate in the testing process with drone.
-Therefore, this has no claim to be complete yet even working, you're free to change whatever is needed to get it working for you.
-
-## templates
-
-Holds the email templates used to send plain text and html emails for new user registration and password changes.
-
-## vendor
-
-All libraries needed to build Vikunja. 
-
-We keep all libraries used for Vikunja around in the `vendor/` folder to still be able to build the project even if
-some maintainers take their libraries down like [it happened in the past](https://github.com/jteeuwen/go-bindata/issues/5).
-
-When adding a new  dependency, make sure to run `go mod vendor` to put it inside this directory.
