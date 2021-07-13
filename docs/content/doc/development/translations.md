@@ -15,7 +15,7 @@ This document provides documentation about how to translate Vikunja.
 
 ## Where to translate
 
-Translation happen at [weblate](https://hosted.weblate.org/projects/vikunja/frontend/).
+Translation happens at [crowdin](https://crowdin.com/project/vikunja).
 
 Currently, only the frontend (and by extension, the desktop app) is translatable.
 
