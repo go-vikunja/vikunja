@@ -18,12 +18,13 @@ package v1
 
 import (
 	"bytes"
-	"code.vikunja.io/api/pkg/log"
 	"encoding/json"
 	"net/http"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/log"
+
 	"github.com/labstack/echo/v4"
 )
 
