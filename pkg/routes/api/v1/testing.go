@@ -18,6 +18,7 @@ package v1
 
 import (
 	"bytes"
+	"code.vikunja.io/api/pkg/log"
 	"encoding/json"
 	"net/http"
 
@@ -52,6 +53,7 @@ func HandleTesting(c echo.Context) error {
 	content := []map[string]interface{}{}
 	err := json.Unmarshal(buf.Bytes(), &content)
 	if err != nil {
+		log.Errorf("Error replacing table data: %v", err)
 		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
 			"error":   true,
 			"message": err.Error(),
@@ -66,6 +68,7 @@ func HandleTesting(c echo.Context) error {
 	}
 
 	if err != nil {
+		log.Errorf("Error replacing table data: %v", err)
 		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
 			"error":   true,
 			"message": err.Error(),
