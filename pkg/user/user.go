@@ -44,6 +44,27 @@ type Login struct {
 	TOTPPasscode string `json:"totp_passcode"`
 }
 
+type Status int
+
+func (s Status) String() string {
+	switch s {
+	case StatusActive:
+		return "Active"
+	case StatusEmailConfirmationRequired:
+		return "Email Confirmation required"
+	case StatusDisabled:
+		return "Disabled"
+	}
+
+	return "Unknown"
+}
+
+const (
+	StatusActive = iota
+	StatusEmailConfirmationRequired
+	StatusDisabled
+)
+
 // User holds information about an user
 type User struct {
 	// The unique, numeric id of this user.
@@ -54,11 +75,9 @@ type User struct {
 	Username string `xorm:"varchar(250) not null unique" json:"username" valid:"length(1|250)" minLength:"1" maxLength:"250"`
 	Password string `xorm:"varchar(250) null" json:"-"`
 	// The user's email address.
-	Email    string `xorm:"varchar(250) null" json:"email,omitempty" valid:"email,length(0|250)" maxLength:"250"`
-	IsActive bool   `xorm:"null" json:"-"`
+	Email string `xorm:"varchar(250) null" json:"email,omitempty" valid:"email,length(0|250)" maxLength:"250"`
 
-	PasswordResetToken string `xorm:"varchar(450) null" json:"-"`
-	EmailConfirmToken  string `xorm:"varchar(450) null" json:"-"`
+	Status Status `xorm:"default 0" json:"-"`
 
 	AvatarProvider string `xorm:"varchar(255) null" json:"-"`
 	AvatarFileID   int64  `xorm:"null" json:"-"`
@@ -255,7 +274,7 @@ func CheckUserCredentials(s *xorm.Session, u *Login) (*User, error) {
 	}
 
 	// The user is invalid if they need to verify their email address
-	if !user.IsActive {
+	if user.Status == StatusEmailConfirmationRequired {
 		return &User{}, ErrEmailNotConfirmed{UserID: user.ID}
 	}
 

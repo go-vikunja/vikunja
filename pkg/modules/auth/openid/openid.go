@@ -216,7 +216,7 @@ func getOrCreateUser(s *xorm.Session, cl *claims, issuer, subject string) (u *us
 		uu := &user.User{
 			Username: cl.PreferredUsername,
 			Email:    cl.Email,
-			IsActive: true,
+			Status:   user.StatusActive,
 			Issuer:   issuer,
 			Subject:  subject,
 		}

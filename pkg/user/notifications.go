@@ -23,8 +23,9 @@ import (
 
 // EmailConfirmNotification represents a EmailConfirmNotification notification
 type EmailConfirmNotification struct {
-	User  *User
-	IsNew bool
+	User         *User
+	IsNew        bool
+	ConfirmToken string
 }
 
 // ToMail returns the mail notification for EmailConfirmNotification
@@ -45,7 +46,7 @@ func (n *EmailConfirmNotification) ToMail() *notifications.Mail {
 
 	return nn.
 		Line("To confirm your email address, click the link below:").
-		Action("Confirm your email address", config.ServiceFrontendurl.GetString()+"?userEmailConfirm="+n.User.EmailConfirmToken).
+		Action("Confirm your email address", config.ServiceFrontendurl.GetString()+"?userEmailConfirm="+n.ConfirmToken).
 		Line("Have a nice day!")
 }
 
@@ -85,7 +86,8 @@ func (n *PasswordChangedNotification) Name() string {
 
 // ResetPasswordNotification represents a ResetPasswordNotification notification
 type ResetPasswordNotification struct {
-	User *User
+	User  *User
+	Token *Token
 }
 
 // ToMail returns the mail notification for ResetPasswordNotification
@@ -94,7 +96,8 @@ func (n *ResetPasswordNotification) ToMail() *notifications.Mail {
 		Subject("Reset your password on Vikunja").
 		Greeting("Hi "+n.User.GetName()+",").
 		Line("To reset your password, click the link below:").
-		Action("Reset your password", config.ServiceFrontendurl.GetString()+"?userPasswordReset="+n.User.PasswordResetToken).
+		Action("Reset your password", config.ServiceFrontendurl.GetString()+"?userPasswordReset="+n.Token.Token).
+		Line("This link will be valid for 24 hours.").
 		Line("Have a nice day!")
 }
 

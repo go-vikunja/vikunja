@@ -20,7 +20,6 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/notifications"
-	"code.vikunja.io/api/pkg/utils"
 	"golang.org/x/crypto/bcrypt"
 	"xorm.io/xorm"
 )
@@ -54,14 +53,7 @@ func CreateUser(s *xorm.Session, user *User) (newUser *User, err error) {
 		}
 	}
 
-	user.IsActive = true
-	if config.MailerEnabled.GetBool() && user.Issuer == issuerLocal {
-		// The new user should not be activated until it confirms his mail address
-		user.IsActive = false
-		// Generate a confirm token
-		user.EmailConfirmToken = utils.MakeRandomString(60)
-	}
-
+	user.Status = StatusActive
 	user.AvatarProvider = "initials"
 
 	// Insert it
@@ -84,13 +76,28 @@ func CreateUser(s *xorm.Session, user *User) (newUser *User, err error) {
 	}
 
 	// Dont send a mail if no mailer is configured
-	if !config.MailerEnabled.GetBool() {
+	if !config.MailerEnabled.GetBool() || user.Issuer != issuerLocal {
 		return newUserOut, err
 	}
 
+	user.Status = StatusEmailConfirmationRequired
+	token, err := generateNewToken(s, user, TokenEmailConfirm)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = s.
+		Where("id = ?", user.ID).
+		Cols("email", "is_active").
+		Update(user)
+	if err != nil {
+		return
+	}
+
 	n := &EmailConfirmNotification{
-		User:  user,
-		IsNew: false,
+		User:         user,
+		IsNew:        true,
+		ConfirmToken: token.Token,
 	}
 
 	err = notifications.Notify(user, n)

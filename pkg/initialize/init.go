@@ -94,6 +94,7 @@ func FullInit() {
 	cron.Init()
 	models.RegisterReminderCron()
 	models.RegisterOverdueReminderCron()
+	user.RegisterTokenCleanupCron()
 
 	// Start processing events
 	go func() {

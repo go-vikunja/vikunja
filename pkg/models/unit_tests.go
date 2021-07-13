@@ -55,6 +55,7 @@ func SetupTests() {
 		"team_namespaces",
 		"teams",
 		"users",
+		"user_tokens",
 		"users_lists",
 		"users_namespaces",
 		"buckets",

@@ -24,11 +24,11 @@ import (
 	"strings"
 	"testing"
 
-	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/files"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
-	"code.vikunja.io/api/pkg/files"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/routes"
@@ -47,7 +47,6 @@ var (
 		Username: "user1",
 		Password: "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
 		Email:    "user1@example.com",
-		IsActive: true,
 	}
 	testuser2 = user.User{
 		ID:       2,
@@ -56,26 +55,23 @@ var (
 		Email:    "user2@example.com",
 	}
 	testuser3 = user.User{
-		ID:                 3,
-		Username:           "user3",
-		Password:           "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
-		Email:              "user3@example.com",
-		PasswordResetToken: "passwordresettesttoken",
+		ID:       3,
+		Username: "user3",
+		Password: "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
+		Email:    "user3@example.com",
 	}
 	testuser4 = user.User{
-		ID:                4,
-		Username:          "user4",
-		Password:          "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
-		Email:             "user4@example.com",
-		EmailConfirmToken: "tiepiQueed8ahc7zeeFe1eveiy4Ein8osooxegiephauph2Ael",
+		ID:       4,
+		Username: "user4",
+		Password: "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
+		Email:    "user4@example.com",
 	}
 	testuser5 = user.User{
-		ID:                4,
-		Username:          "user5",
-		Password:          "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
-		Email:             "user5@example.com",
-		EmailConfirmToken: "tiepiQueed8ahc7zeeFe1eveiy4Ein8osooxegiephauph2Ael",
-		IsActive:          false,
+		ID:       4,
+		Username: "user5",
+		Password: "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
+		Email:    "user5@example.com",
+		Status:   user.StatusDisabled,
 	}
 )
 

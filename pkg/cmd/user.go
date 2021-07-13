@@ -135,7 +135,7 @@ var userListCmd = &cobra.Command{
 			"ID",
 			"Username",
 			"Email",
-			"Active",
+			"Status",
 			"Created",
 			"Updated",
 		})
@@ -145,7 +145,7 @@ var userListCmd = &cobra.Command{
 				strconv.FormatInt(u.ID, 10),
 				u.Username,
 				u.Email,
-				strconv.FormatBool(u.IsActive),
+				u.Status.String(),
 				u.Created.Format(time.RFC3339),
 				u.Updated.Format(time.RFC3339),
 			})
@@ -277,11 +277,15 @@ var userChangeEnabledCmd = &cobra.Command{
 		u := getUserFromArg(s, args[0])
 
 		if userFlagEnableUser {
-			u.IsActive = true
+			u.Status = user.StatusActive
 		} else if userFlagDisableUser {
-			u.IsActive = false
+			u.Status = user.StatusDisabled
 		} else {
-			u.IsActive = !u.IsActive
+			if u.Status == user.StatusActive {
+				u.Status = user.StatusDisabled
+			} else {
+				u.Status = user.StatusActive
+			}
 		}
 		_, err := user.UpdateUser(s, u)
 		if err != nil {
@@ -293,6 +297,6 @@ var userChangeEnabledCmd = &cobra.Command{
 			log.Fatalf("Error saving everything: %s", err)
 		}
 
-		fmt.Printf("User status successfully changed, user is now active: %t.\n", u.IsActive)
+		fmt.Printf("User status successfully changed, status is now \"%s\"\n", u.Status)
 	},
 }

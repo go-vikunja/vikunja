@@ -59,10 +59,6 @@ func InitFixtures(tablenames ...string) (err error) {
 	}
 
 	fixtures, err = testfixtures.New(loaderOptions...)
-	if err != nil {
-		return err
-	}
-
 	return err
 }
 
@@ -106,7 +102,7 @@ func LoadFixtures() error {
 			}
 		}
 	}
-	return err
+	return nil
 }
 
 // LoadAndAssertFixtures loads all fixtures defined before and asserts they are correctly loaded
