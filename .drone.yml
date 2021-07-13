@@ -530,7 +530,7 @@ steps:
         - failure
 ---
 kind: pipeline
-name: ping-weblate
+name: update-translations
 
 depends_on:
   - build
@@ -542,20 +542,40 @@ trigger:
     - push
 
 steps:
-  - name: update-translation-base
-    image: appleboy/drone-git-push
-    failure: ignore
+#  - name: download
+#    pull: always
+#    image: jonasfranz/crowdin
+#    settings:
+#      download: true
+#      export_dir: src/i18n/lang/
+#      ignore_branch: true
+#      project_identifier: vikunja
+#    environment:
+#      CROWDIN_KEY:
+#        from_secret: crowdin_key
+#
+#  - name: push
+#    pull: always
+#    image: appleboy/drone-git-push
+#    settings:
+#      author_email: "frederik@vikunja.io"
+#      author_name: Frederick [Bot]
+#      branch: main
+#      commit: true
+#      commit_message: "[skip ci] Updated translations via Crowdin"
+#      remote: "git@kolaente.dev:9022/vikunja/frontend.git"
+#    environment:
+#      GIT_PUSH_SSH_KEY:
+#        from_secret: git_push_ssh_key
+
+  - name: upload
+    pull: always
+    image: jonasfranz/crowdin
     settings:
-      branch: translations
-      remote: ssh://git@kolaente.dev:9022/vikunja/frontend.git
-      ssh_key:
-        from_secret: translations_branch_update_ssh_key
-  - name: notify-weblate
-    image: curlimages/curl
-    depends_on:
-      - update-translation-base
+      files:
+        en.json: src/i18n/lang/en.json
+      ignore_branch: true
+      project_identifier: vikunja
     environment:
-      WEBLATE_TOKEN:
-        from_secret: weblate_token
-    commands:
-      - ./ping-weblate.sh
+      CROWDIN_KEY:
+        from_secret: crowdin_key
