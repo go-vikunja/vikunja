@@ -36,7 +36,7 @@ func (u user20210711173657) TableName() string {
 type userTokens20210711173657 struct {
 	ID      int64     `xorm:"bigint autoincr not null unique pk"`
 	UserID  int64     `xorm:"not null"`
-	Token   string    `xorm:"TEXT not null index"`
+	Token   string    `xorm:"varchar(450) not null index"`
 	Kind    int       `xorm:"not null"`
 	Created time.Time `xorm:"created not null"`
 }
