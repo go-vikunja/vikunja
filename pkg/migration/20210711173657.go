@@ -50,6 +50,8 @@ func init() {
 		ID:          "20210711173657",
 		Description: "Add user tokens table",
 		Migrate: func(tx *xorm.Engine) error {
+			_ = tx.DropTables(&userTokens20210711173657{}) // Allow running this migration multiple times
+
 			err := tx.Sync2(userTokens20210711173657{})
 			if err != nil {
 				return err
