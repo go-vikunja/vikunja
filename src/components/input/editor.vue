@@ -366,7 +366,7 @@ export default {
 					link: (href, title, text) => {
 						const isLocal = href.startsWith(`${location.protocol}//${location.hostname}`)
 						const html = linkRenderer.call(renderer, href, title, text)
-						return isLocal ? html : html.replace(/^<a /, `<a target="_blank" rel="noreferrer noopener nofollow" `)
+						return isLocal ? html : html.replace(/^<a /, '<a target="_blank" rel="noreferrer noopener nofollow" ')
 					},
 				},
 				highlight: function (code, language) {

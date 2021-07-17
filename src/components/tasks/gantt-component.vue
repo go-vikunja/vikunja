@@ -388,7 +388,7 @@ export default {
 
 			let startDate = new Date(this.startDate)
 			startDate.setDate(
-				startDate.getDate() + newRect.left / this.dayWidth
+				startDate.getDate() + newRect.left / this.dayWidth,
 			)
 			startDate.setUTCHours(0)
 			startDate.setUTCMinutes(0)
@@ -397,7 +397,7 @@ export default {
 			this.taskDragged.startDate = startDate
 			let endDate = new Date(startDate)
 			endDate.setDate(
-				startDate.getDate() + newRect.width / this.dayWidth
+				startDate.getDate() + newRect.width / this.dayWidth,
 			)
 			this.taskDragged.startDate = startDate
 			this.taskDragged.endDate = endDate
@@ -440,7 +440,7 @@ export default {
 								this.$set(
 									this.theTasks,
 									tt,
-									this.addGantAttributes(r)
+									this.addGantAttributes(r),
 								)
 								break
 							}

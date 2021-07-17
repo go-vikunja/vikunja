@@ -3,10 +3,15 @@
 		<h2>
 			{{ $t(`home.welcome${welcome}`, {username: userInfo.name !== '' ? userInfo.name : userInfo.username}) }}!
 		</h2>
+		<add-task
+			:listId="defaultListId"
+			@taskAdded="updateTaskList"
+			class="is-max-width-desktop"
+		/>
 		<template v-if="!hasTasks">
 			<p>{{ $t('home.list.newText') }}</p>
 			<x-button
-				:to="{name: 'list.create', params: { id: defaultNamespaceId }}"
+				:to="{ name: 'list.create', params: { id: defaultNamespaceId } }"
 				:shadow="false"
 				class="ml-2"
 				v-if="defaultNamespaceId > 0"
@@ -34,7 +39,7 @@
 				/>
 			</div>
 		</div>
-		<ShowTasks :show-all="true" v-if="hasLists"/>
+		<ShowTasks :show-all="true" v-if="hasLists" :key="showTasksKey"/>
 	</div>
 </template>
 
@@ -43,18 +48,21 @@ import {mapState} from 'vuex'
 import ShowTasks from './tasks/ShowTasks'
 import {getHistory} from '@/modules/listHistory'
 import ListCard from '@/components/list/partials/list-card'
+import AddTask from '../components/tasks/add-task'
 
 export default {
 	name: 'Home',
 	components: {
 		ListCard,
 		ShowTasks,
+		AddTask,
 	},
 	data() {
 		return {
 			loading: false,
 			currentDate: new Date(),
 			tasks: [],
+			showTasksKey: 0,
 		}
 	},
 	computed: {
@@ -86,10 +94,13 @@ export default {
 			})
 		},
 		...mapState({
-			migratorsEnabled: state => state.config.availableMigrators !== null && state.config.availableMigrators.length > 0,
+			migratorsEnabled: state =>
+				state.config.availableMigrators !== null &&
+				state.config.availableMigrators.length > 0,
 			authenticated: state => state.auth.authenticated,
 			userInfo: state => state.auth.info,
 			hasTasks: state => state.hasTasks,
+			defaultListId: state => state.auth.defaultListId,
 			defaultNamespaceId: state => {
 				if (state.namespaces.namespaces.length === 0) {
 					return 0
@@ -105,6 +116,13 @@ export default {
 				return state.namespaces.namespaces[0].lists.length > 0
 			},
 		}),
-	}
+	},
+	methods: {
+		// This is to reload the tasks list after adding a new task through the global task add.
+		// FIXME: Should use vuex (somehow?)
+		updateTaskList() {
+			this.showTasksKey++
+		},
+	},
 }
 </script>

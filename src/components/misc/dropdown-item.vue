@@ -22,7 +22,7 @@ export default {
 			type: String,
 			required: false,
 			default: '',
-		}
+		},
 	},
 }
 </script>

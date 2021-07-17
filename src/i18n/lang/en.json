@@ -65,7 +65,8 @@
         "weekStart": "Week starts on",
         "weekStartSunday": "Sunday",
         "weekStartMonday": "Monday",
-        "language": "Language"
+        "language": "Language",
+        "defaultList": "Default List"
       },
       "totp": {
         "title": "Two Factor Authentication",
@@ -109,7 +110,8 @@
       "header": "Create a new list",
       "titlePlaceholder": "The list's title goes here…",
       "addTitleRequired": "Please specify a title.",
-      "createdSuccess": "The list was successfully created."
+      "createdSuccess": "The list was successfully created.",
+      "addListRequired": "Please specify a list or set a default list in the settings."
     },
     "archive": {
       "title": "Archive \"{list}\"",
@@ -204,7 +206,6 @@
       "title": "List",
       "add": "Add",
       "addPlaceholder": "Add a new task…",
-      "addTitleRequired": "Please specify a title.",
       "empty": "This list is currently empty.",
       "newTaskCta": "Create a new task.",
       "editTask": "Edit Task"

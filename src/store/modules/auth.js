@@ -1,5 +1,5 @@
-import {HTTPFactory} from '@/http-common'
-import {ERROR_MESSAGE, LOADING} from '../mutation-types'
+import { HTTPFactory } from '@/http-common'
+import { ERROR_MESSAGE, LOADING } from '../mutation-types'
 import UserModel from '../../models/user'
 import {getToken, refreshToken, removeToken, saveToken} from '@/helpers/auth'
 
@@ -58,7 +58,7 @@ export default {
 		// Logs a user in with a set of credentials.
 		login(ctx, credentials) {
 			const HTTP = HTTPFactory()
-			ctx.commit(LOADING, true, {root: true})
+			ctx.commit(LOADING, true, { root: true })
 
 			// Delete an eventually preexisting old token
 			removeToken()
@@ -93,7 +93,7 @@ export default {
 					return Promise.reject(e)
 				})
 				.finally(() => {
-					ctx.commit(LOADING, false, {root: true})
+					ctx.commit(LOADING, false, { root: true })
 				})
 		},
 		// Registers a new user and logs them in.
@@ -110,18 +110,18 @@ export default {
 				})
 				.catch(e => {
 					if (e.response && e.response.data && e.response.data.message) {
-						ctx.commit(ERROR_MESSAGE, e.response.data.message, {root: true})
+						ctx.commit(ERROR_MESSAGE, e.response.data.message, { root: true })
 					}
 
 					return Promise.reject(e)
 				})
 				.finally(() => {
-					ctx.commit(LOADING, false, {root: true})
+					ctx.commit(LOADING, false, { root: true })
 				})
 		},
-		openIdAuth(ctx, {provider, code}) {
+		openIdAuth(ctx, { provider, code }) {
 			const HTTP = HTTPFactory()
-			ctx.commit(LOADING, true, {root: true})
+			ctx.commit(LOADING, true, { root: true })
 
 			const data = {
 				code: code,
@@ -143,10 +143,10 @@ export default {
 					return Promise.reject(e)
 				})
 				.finally(() => {
-					ctx.commit(LOADING, false, {root: true})
+					ctx.commit(LOADING, false, { root: true })
 				})
 		},
-		linkShareAuth(ctx, {hash, password}) {
+		linkShareAuth(ctx, { hash, password }) {
 			const HTTP = HTTPFactory()
 			return HTTP.post('/shares/' + hash + '/auth', {
 				password: password,

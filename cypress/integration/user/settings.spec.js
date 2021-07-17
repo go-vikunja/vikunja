@@ -36,7 +36,6 @@ describe('User Settings', () => {
 			.contains('Save')
 			.click()
 
-		cy.wait(3000) // Wait for the request to finish
 		cy.get('.global-notification')
 			.should('contain', 'Success')
 		cy.get('.navbar .user .username')

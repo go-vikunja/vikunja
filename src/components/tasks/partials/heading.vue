@@ -95,7 +95,7 @@ export default {
 				.finally(() => {
 					this.saving = false
 				})
-		}
+		},
 	},
 }
 </script>

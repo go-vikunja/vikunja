@@ -171,7 +171,7 @@ export default new Router({
 			name: 'list.create',
 			components: {
 				popup: NewListComponent,
-			}
+			},
 		},
 		{
 			path: '/namespaces/:id/settings/edit',

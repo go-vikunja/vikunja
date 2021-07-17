@@ -137,18 +137,18 @@ export default {
 	},
 	props: {
 		value: {
-			validator: prop => prop instanceof Date || prop === null || typeof prop === 'string'
+			validator: prop => prop instanceof Date || prop === null || typeof prop === 'string',
 		},
 		chooseDateLabel: {
 			type: String,
 			default() {
 				return this.$t('input.datepicker.chooseDate')
-			}
+			},
 		},
 		disabled: {
 			type: Boolean,
 			default: false,
-		}
+		},
 	},
 	mounted() {
 		this.setDateValue(this.value)

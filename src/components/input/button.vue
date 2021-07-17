@@ -55,7 +55,7 @@ export default {
 	computed: {
 		showIconOnly() {
 			return this.icon !== '' && typeof this.$slots.default === 'undefined'
-		}
+		},
 	},
 	methods: {
 		click(e) {

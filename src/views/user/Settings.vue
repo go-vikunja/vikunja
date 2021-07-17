@@ -17,6 +17,12 @@
 				</div>
 			</div>
 			<div class="field">
+				<label class="label">
+					{{ $t('user.settings.general.defaultList') }}
+				</label>
+				<list-search v-model="defaultList"/>
+			</div>
+			<div class="field">
 				<label class="checkbox">
 					<input type="checkbox" v-model="settings.emailRemindersEnabled"/>
 					{{ $t('user.settings.general.emailReminders') }}
@@ -282,6 +288,7 @@ import {mapState} from 'vuex'
 
 import AvatarSettings from '../../components/user/avatar-settings'
 import copy from 'copy-to-clipboard'
+import ListSearch from '@/components/tasks/partials/listSearch'
 
 export default {
 	name: 'Settings',
@@ -306,9 +313,12 @@ export default {
 
 			settings: UserSettingsModel,
 			userSettingsService: UserSettingsService,
+
+			defaultList: null,
 		}
 	},
 	components: {
+		ListSearch,
 		AvatarSettings,
 	},
 	created() {
@@ -325,6 +335,8 @@ export default {
 		this.settings = this.$store.state.auth.settings
 
 		this.playSoundWhenDone = localStorage.getItem(playSoundWhenDoneKey) === 'true' || localStorage.getItem(playSoundWhenDoneKey) === null
+
+		this.defaultList = this.$store.getters['lists/getListById'](this.settings.defaultListId)
 
 		this.totpStatus()
 	},
@@ -351,7 +363,7 @@ export default {
 			migratorsEnabled: state => state.config.availableMigrators !== null && state.config.availableMigrators.length > 0,
 			caldavEnabled: state => state.config.caldavEnabled,
 			userInfo: state => state.auth.info,
-		})
+		}),
 	},
 	methods: {
 		updatePassword() {
@@ -428,6 +440,7 @@ export default {
 		updateSettings() {
 			localStorage.setItem(playSoundWhenDoneKey, this.playSoundWhenDone)
 			saveLanguage(this.language)
+			this.settings.defaultListId = this.defaultList ? this.defaultList.id : 0
 
 			this.userSettingsService.update(this.settings)
 				.then(() => {

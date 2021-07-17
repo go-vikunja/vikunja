@@ -481,7 +481,7 @@ export default {
 		reset() {
 			this.query = ''
 			this.selectedCmd = null
-		}
+		},
 	},
 }
 </script>

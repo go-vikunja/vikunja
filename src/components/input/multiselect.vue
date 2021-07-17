@@ -108,21 +108,21 @@ export default {
 			type: Boolean,
 			default() {
 				return false
-			}
+			},
 		},
 		// The placeholder of the search input
 		placeholder: {
 			type: String,
 			default() {
 				return ''
-			}
+			},
 		},
 		// The search results where the @search listener needs to put the results into
 		searchResults: {
 			type: Array,
 			default() {
 				return []
-			}
+			},
 		},
 		// The name of the property of the searched object to show the user.
 		// If empty the component will show all raw data of an entry.
@@ -130,13 +130,13 @@ export default {
 			type: String,
 			default() {
 				return ''
-			}
+			},
 		},
 		// The object with the value, updated every time an entry is selected.
 		value: {
 			default() {
 				return null
-			}
+			},
 		},
 		// If true, will provide an "add this as a new value" entry which fires an @create event when clicking on it.
 		creatable: {
@@ -150,14 +150,14 @@ export default {
 			type: String,
 			default() {
 				return this.$t('input.multiselect.createPlaceholder')
-			}
+			},
 		},
 		// The text shown next to an option.
 		selectPlaceholder: {
 			type: String,
 			default() {
 				return this.$t('input.multiselect.selectPlaceholder')
-			}
+			},
 		},
 		// If true, allows for selecting multiple items. v-model will be an array with all selected values in that case.
 		multiple: {

@@ -129,7 +129,7 @@ export default {
 		let emailVerifyToken = localStorage.getItem('emailConfirmToken')
 		if (emailVerifyToken) {
 			const cancel = this.setLoading()
-			HTTP.post(`user/confirm`, {token: emailVerifyToken})
+			HTTP.post('user/confirm', {token: emailVerifyToken})
 				.then(() => {
 					localStorage.removeItem('emailConfirmToken')
 					this.confirmedEmailSuccess = true

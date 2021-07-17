@@ -20,21 +20,25 @@ If you find any security-related issues you don't want to disclose publicly, ple
 There is a [docker image available](https://hub.docker.com/r/vikunja/api) with support for http/2 and aggressive caching enabled.
 
 ## Project setup
-```
+
+```shell
 yarn install
 ```
 
 ### Compiles and hot-reloads for development
-```
+
+```shell
 yarn run serve
 ```
 
 ### Compiles and minifies for production
-```
+
+```shell
 yarn run build
 ```
 
 ### Lints and fixes files
-```
+
+```shell
 yarn run lint
 ```

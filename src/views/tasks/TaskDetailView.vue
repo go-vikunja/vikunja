@@ -645,7 +645,7 @@ export default {
 						this.$refs[fieldName].$el.scrollIntoView({
 							behavior: 'smooth',
 							block: 'center',
-							inline: 'nearest'
+							inline: 'nearest',
 						})
 				}
 			})

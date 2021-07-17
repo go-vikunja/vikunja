@@ -135,7 +135,7 @@ export default {
 		showListColor: {
 			type: Boolean,
 			default: true,
-		}
+		},
 	},
 	watch: {
 		theTask(newVal) {
@@ -178,13 +178,13 @@ export default {
 						this.success({
 								message: this.task.done ?
 									this.$t('task.doneSuccess') :
-									this.$t('task.undoneSuccess')
+									this.$t('task.undoneSuccess'),
 							}, [{
 							title: 'Undo',
 							callback: () => {
 								this.task.done = !this.task.done
 								this.markAsDone(!checked)
-							}
+							},
 						}])
 					})
 					.catch(e => {

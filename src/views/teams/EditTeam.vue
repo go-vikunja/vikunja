@@ -312,7 +312,7 @@ export default {
 					this.success({
 						message: member.admin ?
 							this.$t('team.edit.madeAdmin') :
-							this.$t('team.edit.madeMember')
+							this.$t('team.edit.madeMember'),
 					})
 				})
 				.catch((e) => {

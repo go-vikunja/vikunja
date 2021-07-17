@@ -235,11 +235,11 @@ export default {
 			this.searchLabel = 'username'
 
 			if (this.type === 'list') {
-				this.typeString = `list`
+				this.typeString = 'list'
 				this.stuffService = new UserListService()
 				this.stuffModel = new UserListModel({listId: this.id})
 			} else if (this.type === 'namespace') {
-				this.typeString = `namespace`
+				this.typeString = 'namespace'
 				this.stuffService = new UserNamespaceService()
 				this.stuffModel = new UserNamespaceModel({
 					namespaceId: this.id,
@@ -253,11 +253,11 @@ export default {
 			this.searchLabel = 'name'
 
 			if (this.type === 'list') {
-				this.typeString = `list`
+				this.typeString = 'list'
 				this.stuffService = new TeamListService()
 				this.stuffModel = new TeamListModel({listId: this.id})
 			} else if (this.type === 'namespace') {
-				this.typeString = `namespace`
+				this.typeString = 'namespace'
 				this.stuffService = new TeamNamespaceService()
 				this.stuffModel = new TeamNamespaceModel({
 					namespaceId: this.id,
@@ -278,7 +278,7 @@ export default {
 				.then((r) => {
 					this.$set(this, 'sharables', r)
 					r.forEach((s) =>
-						this.$set(this.selectedRight, s.id, s.right)
+						this.$set(this.selectedRight, s.id, s.right),
 					)
 				})
 				.catch((e) => {

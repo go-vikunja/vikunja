@@ -26,6 +26,11 @@ export default {
 			const parsedTask = parseTaskText(newTaskTitle)
 			const assignees = []
 
+			// Uses the following ways to get the list id of the new task:
+			//  1. If specified in quick add magic, look in store if it exists and use it if it does
+			//  2. Else check if a list was passed as parameter
+			//  3. Otherwise use the id from the route parameter
+			//  4. If none of the above worked, reject the promise with an error.
 			let listId = null
 			if (parsedTask.list !== null) {
 				const list = this.$store.getters['lists/findListByExactname'](parsedTask.list)
@@ -34,7 +39,11 @@ export default {
 			if (listId === null) {
 				listId = lId !== 0 ? lId : this.$route.params.listId
 			}
-
+			
+			if (typeof listId === 'undefined' || listId === 0) {
+				return Promise.reject('NO_LIST')
+			}
+			
 			// Separate closure because we need to wait for the results of the user search if users were entered in the
 			// task create request. Because _that_ happens in a promise, we'll need something to call when it resolves.
 			const createTask = () => {
@@ -83,7 +92,7 @@ export default {
 										.then(res => {
 											return addLabelToTask(res)
 										})
-										.catch(e => Promise.reject(e))
+										.catch(e => Promise.reject(e)),
 									)
 								}
 							})
@@ -110,7 +119,7 @@ export default {
 								assignees.push(user)
 							}
 							return Promise.resolve(users)
-						})
+						}),
 					)
 				})
 

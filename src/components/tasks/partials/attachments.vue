@@ -229,7 +229,7 @@ export default {
 				.then((r) => {
 					this.$store.commit(
 						'attachments/removeById',
-						this.attachmentToDelete.id
+						this.attachmentToDelete.id,
 					)
 					this.success(r)
 				})

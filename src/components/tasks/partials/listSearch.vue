@@ -32,12 +32,25 @@ export default {
 			foundLists: [],
 		}
 	},
+	props: {
+		value: {
+			required: false,
+		},
+	},
 	components: {
 		Multiselect,
 	},
 	beforeMount() {
 		this.listSerivce = new ListService()
 		this.list = new ListModel()
+	},
+	watch: {
+		value(newVal) {
+			this.list = newVal
+		},
+	},
+	mounted() {
+		this.list = this.value
 	},
 	methods: {
 		findLists(query) {
@@ -58,7 +71,9 @@ export default {
 			this.$set(this, 'foundLists', [])
 		},
 		select(list) {
+			this.list = list
 			this.$emit('selected', list)
+			this.$emit('input', list)
 		},
 		namespace(namespaceId) {
 			const namespace = this.$store.getters['namespaces/getNamespaceById'](namespaceId)

@@ -69,7 +69,24 @@
       "plugin:vue/essential",
       "eslint:recommended"
     ],
-    "rules": {},
+    "rules": {
+      "vue/html-quotes": [
+        "error",
+        "double"
+      ],
+      "quotes": [
+        "error",
+        "single"
+      ],
+      "comma-dangle": [
+        "error",
+        "always-multiline"
+      ],
+      "semi": [
+        "error",
+        "never"
+      ]
+    },
     "parserOptions": {
       "parser": "babel-eslint"
     },

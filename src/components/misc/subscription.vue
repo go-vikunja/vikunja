@@ -57,7 +57,7 @@ export default {
 			if (this.disabled) {
 				return this.$t('task.subscription.subscribedThroughParent', {
 					entity: this.entity,
-					parent: this.subscription.entity
+					parent: this.subscription.entity,
 				})
 			}
 
@@ -118,7 +118,7 @@ export default {
 				.catch(e => {
 					this.error(e)
 				})
-		}
+		},
 	},
 }
 </script>

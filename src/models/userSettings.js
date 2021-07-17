@@ -9,6 +9,7 @@ export default class UserSettingsModel extends AbstractModel {
 			discoverableByName: false,
 			discoverableByEmail: false,
 			overdueTasksRemindersEnabled: true,
+			defaultListId: undefined,
 			weekStart: 0,
 		}
 	}

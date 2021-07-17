@@ -12,7 +12,7 @@ export const createDateFromString = dateString => {
 	}
 
 	if (dateString.includes('-')) {
-		dateString = dateString.replace(/-/g, "/")
+		dateString = dateString.replace(/-/g, '/')
 	}
 
 	return new Date(dateString)

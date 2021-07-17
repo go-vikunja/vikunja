@@ -1,11 +1,15 @@
 <template>
 	<div
-		:class="{ 'is-loading': taskCollectionService.loading}"
-		class="loader-container is-max-width-desktop list-view">
-		<div class="filter-container" v-if="list.isSavedFilter && !list.isSavedFilter()">
+		:class="{ 'is-loading': taskCollectionService.loading }"
+		class="loader-container is-max-width-desktop list-view"
+	>
+		<div
+			class="filter-container"
+			v-if="list.isSavedFilter && !list.isSavedFilter()"
+		>
 			<div class="items">
 				<div class="search">
-					<div :class="{ 'hidden': !showTaskSearch }" class="field has-addons">
+					<div :class="{ hidden: !showTaskSearch }" class="field has-addons">
 						<div class="control has-icons-left has-icons-right">
 							<input
 								@blur="hideSearchBar()"
@@ -14,9 +18,10 @@
 								:placeholder="$t('misc.search')"
 								type="text"
 								v-focus
-								v-model="searchTerm"/>
+								v-model="searchTerm"
+							/>
 							<span class="icon is-left">
-								<icon icon="search"/>
+								<icon icon="search" />
 							</span>
 						</div>
 						<div class="control">
@@ -52,48 +57,30 @@
 		</div>
 
 		<card :padding="false" :has-content="false" class="has-overflow">
-			<div class="field task-add" v-if="!list.isArchived && canWrite && list.id > 0">
-				<div class="field is-grouped">
-					<p :class="{ 'is-loading': taskService.loading}" class="control has-icons-left is-expanded">
-						<input
-							:class="{ 'disabled': taskService.loading}"
-							@keyup.enter="addTask()"
-							class="input"
-							:placeholder="$t('list.list.addPlaceholder')"
-							type="text"
-							v-focus
-							v-model="newTaskText"
-							ref="newTaskInput"
-						/>
-						<span class="icon is-small is-left">
-						<icon icon="tasks"/>
-					</span>
-					</p>
-					<p class="control">
-						<x-button
-							:disabled="newTaskText.length === 0"
-							@click="addTask()"
-							icon="plus"
-						>
-							{{ $t('list.list.add') }}
-						</x-button>
-					</p>
-				</div>
-				<p class="help is-danger" v-if="showError && newTaskText === ''">
-					{{ $t('list.list.addTitleRequired') }}
-				</p>
-				<quick-add-magic v-if="!showError"/>
-			</div>
+			<template
+				v-if="!list.isArchived && canWrite && list.id > 0"
+			>
+				<add-task
+					@taskAdded="updateTaskList"
+					ref="newTaskInput"
+				/>
+			</template>
 
 			<nothing v-if="ctaVisible && tasks.length === 0 && !taskCollectionService.loading">
+
 				{{ $t('list.list.empty') }}
-				<a @click="$refs.newTaskInput.focus()">
+				<a @click="focusNewTaskInput()">
 					{{ $t('list.list.newTaskCta') }}
 				</a>
+
 			</nothing>
 
 			<div class="tasks-container">
-				<div :class="{'short': isTaskEdit}" class="tasks mt-0" v-if="tasks && tasks.length > 0">
+				<div
+					:class="{ short: isTaskEdit }"
+					class="tasks mt-0"
+					v-if="tasks && tasks.length > 0"
+				>
 					<single-task-in-list
 						:show-list-color="false"
 						:disabled="!canWrite"
@@ -103,8 +90,12 @@
 						task-detail-route="task.detail"
 						v-for="t in tasks"
 					>
-						<div @click="editTask(t.id)" class="icon settings" v-if="!list.isArchived && canWrite">
-							<icon icon="pencil-alt"/>
+						<div
+							@click="editTask(t.id)"
+							class="icon settings"
+							v-if="!list.isArchived && canWrite"
+						>
+							<icon icon="pencil-alt" />
 						</div>
 					</single-task-in-list>
 				</div>
@@ -121,7 +112,8 @@
 				aria-label="pagination"
 				class="pagination is-centered p-4"
 				role="navigation"
-				v-if="taskCollectionService.totalPages > 1">
+				v-if="taskCollectionService.totalPages > 1"
+			>
 				<router-link
 					:disabled="currentPage === 1"
 					:to="getRouteForPagination(currentPage - 1)"
@@ -138,13 +130,16 @@
 				</router-link>
 				<ul class="pagination-list">
 					<template v-for="(p, i) in pages">
-						<li :key="'page'+i" v-if="p.isEllipsis"><span class="pagination-ellipsis">&hellip;</span></li>
-						<li :key="'page'+i" v-else>
+						<li :key="'page' + i" v-if="p.isEllipsis">
+							<span class="pagination-ellipsis">&hellip;</span>
+						</li>
+						<li :key="'page' + i" v-else>
 							<router-link
 								:aria-label="'Goto page ' + p.number"
-								:class="{'is-current': p.number === currentPage}"
+								:class="{ 'is-current': p.number === currentPage }"
 								:to="getRouteForPagination(p.number)"
-								class="pagination-link">
+								class="pagination-link"
+							>
 								{{ p.number }}
 							</router-link>
 						</li>
@@ -155,10 +150,8 @@
 
 		<!-- This router view is used to show the task popup while keeping the kanban board itself -->
 		<transition name="modal">
-			<router-view/>
+			<router-view />
 		</transition>
-
-
 	</div>
 </template>
 
@@ -167,15 +160,16 @@ import TaskService from '../../../services/task'
 import TaskModel from '../../../models/task'
 
 import EditTask from '../../../components/tasks/edit-task'
+import AddTask from '../../../components/tasks/add-task'
 import SingleTaskInList from '../../../components/tasks/partials/singleTaskInList'
 import taskList from '../../../components/tasks/mixins/taskList'
-import {saveListView} from '@/helpers/saveListView'
+import { saveListView } from '@/helpers/saveListView'
 import Rights from '../../../models/rights.json'
-import {mapState} from 'vuex'
+import { mapState } from 'vuex'
 import FilterPopup from '@/components/list/partials/filter-popup'
+import { HAS_TASKS } from '@/store/mutation-types'
 import Nothing from '@/components/misc/nothing'
 import createTask from '@/components/tasks/mixins/createTask'
-import QuickAddMagic from '@/components/tasks/partials/quick-add-magic'
 
 export default {
 	name: 'List',
@@ -184,8 +178,6 @@ export default {
 			taskService: TaskService,
 			isTaskEdit: false,
 			taskEditTask: TaskModel,
-			newTaskText: '',
-			showError: false,
 			ctaVisible: false,
 		}
 	},
@@ -194,11 +186,11 @@ export default {
 		createTask,
 	],
 	components: {
-		QuickAddMagic,
 		Nothing,
 		FilterPopup,
 		SingleTaskInList,
 		EditTask,
+		AddTask,
 	},
 	created() {
 		this.taskService = new TaskService()
@@ -212,7 +204,7 @@ export default {
 		list: state => state.currentList,
 	}),
 	mounted() {
-		this.$nextTick(() => this.ctaVisible = true)
+		this.$nextTick(() => (this.ctaVisible = true))
 	},
 	methods: {
 		// This function initializes the tasks page and loads the first page of tasks
@@ -221,22 +213,13 @@ export default {
 			this.isTaskEdit = false
 			this.loadTasks(page, search)
 		},
-		addTask() {
-			if (this.newTaskText === '') {
-				this.showError = true
-				return
-			}
-			this.showError = false
-
-			this.createNewTask(this.newTaskText)
-				.then(task => {
-					this.tasks.push(task)
-					this.sortTasks()
-					this.newTaskText = ''
-				})
-				.catch(e => {
-					this.error(e)
-				})
+		focusNewTaskInput() {
+			this.$refs.newTaskInput.$refs.newTaskInput.focus()
+		},
+		updateTaskList(task) {
+			this.tasks.push(task)
+			this.sortTasks()
+			this.$store.commit(HAS_TASKS, true)
 		},
 		editTask(id) {
 			// Find the selected task and set it to the current object

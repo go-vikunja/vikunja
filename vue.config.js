@@ -20,22 +20,22 @@ module.exports = {
 			msTileImage: 'images/icons/msapplication-icon-144x144.png',
 		},
 		manifestOptions: {
-			"icons": [
+			'icons': [
 				{
-					"src": "./images/icons/android-chrome-192x192.png",
-					"sizes": "192x192",
-					"type": "image/png"
+					'src': './images/icons/android-chrome-192x192.png',
+					'sizes': '192x192',
+					'type': 'image/png',
 				},
 				{
-					"src": "./images/icons/android-chrome-512x512.png",
-					"sizes": "512x512",
-					"type": "image/png"
+					'src': './images/icons/android-chrome-512x512.png',
+					'sizes': '512x512',
+					'type': 'image/png',
 				},
 				{
-					"src": "./images/icons/icon-maskable.png",
-					"sizes": "1024x1024",
-					"type": "image/png",
-					"purpose": "maskable"
+					'src': './images/icons/icon-maskable.png',
+					'sizes': '1024x1024',
+					'type': 'image/png',
+					'purpose': 'maskable',
 				},
 			],
 			shortcuts: [
@@ -62,8 +62,8 @@ module.exports = {
 					name: 'Teams Overview',
 					short_name: 'Teams',
 					url: '/teams',
-				}
-			]
+				},
+			],
 		},
-	}
+	},
 }

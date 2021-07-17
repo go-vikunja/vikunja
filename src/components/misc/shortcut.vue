@@ -14,7 +14,7 @@ export default {
 		keys: {
 			type: Array,
 			required: true,
-		}
+		},
 	},
 }
 </script>
