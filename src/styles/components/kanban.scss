@@ -1,3 +1,5 @@
+@use 'sass:math';
+
 $bucket-background: $grey-100;
 $task-background: $white;
 $ease-out: all .3s cubic-bezier(0.23, 1, 0.32, 1);
@@ -237,10 +239,10 @@ $filter-container-height: '1rem - #{$switch-view-height}';
     }
 
     &.is-collapsed {
-      transform: rotate(90deg) translateX($bucket-width / 2 - $bucket-header-height / 2);
+      transform: rotate(90deg) translateX(math.div($bucket-width, 2) - math.div($bucket-header-height, 2));
       // Using negative margins instead of translateY here to make all other buckets fill the empty space
-      margin-left: ($bucket-width / 2 - $bucket-header-height / 2) * -1;
-      margin-right: calc(#{($bucket-width / 2 - $bucket-header-height / 2) * -1} + #{$bucket-right-margin});
+      margin-left: (math.div($bucket-width, 2) - math.div($bucket-header-height, 2)) * -1;
+      margin-right: calc(#{(math.div($bucket-width, 2) - math.div($bucket-header-height, 2)) * -1} + #{$bucket-right-margin});
       cursor: pointer;
 
       .tasks, .bucket-footer {
