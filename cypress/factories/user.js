@@ -13,7 +13,7 @@ export class UserFactory extends Factory {
             id: '{increment}',
             username: faker.lorem.word(10) + faker.random.uuid(),
             password: '$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.', // 1234
-            is_active: true,
+			status: 0,
 			created: formatISO(now),
 			updated: formatISO(now)
 		}
