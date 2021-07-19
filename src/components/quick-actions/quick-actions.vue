@@ -63,7 +63,7 @@ import {CURRENT_LIST, LOADING, LOADING_MODULE, QUICK_ACTIONS_ACTIVE} from '@/sto
 import ListModel from '@/models/list'
 import createTask from '@/components/tasks/mixins/createTask'
 import QuickAddMagic from '@/components/tasks/partials/quick-add-magic'
-import {getHistory} from '@/modules/listHistory'
+import {getHistory} from '../../modules/listHistory'
 
 const TYPE_LIST = 'list'
 const TYPE_TASK = 'task'

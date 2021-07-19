@@ -26,9 +26,9 @@ test('store list in history', () => {
 })
 
 test('store only the last 5 lists in history', () => {
-	let saved = null
+	let saved: string | null = null
 	Storage.prototype.getItem = jest.fn(() => saved)
-	Storage.prototype.setItem = jest.fn((key, lists) => {
+	Storage.prototype.setItem = jest.fn((key: string, lists: string) => {
 		saved = lists
 	})
 
@@ -42,33 +42,21 @@ test('store only the last 5 lists in history', () => {
 })
 
 test('don\'t store the same list twice', () => {
-	let saved = null
+	let saved: string | null = null
 	Storage.prototype.getItem = jest.fn(() => saved)
-	Storage.prototype.setItem = jest.fn((key, lists) => {
+	Storage.prototype.setItem = jest.fn((key: string, lists: string) => {
 		saved = lists
 	})
 
 	saveListToHistory({id: 1})
 	saveListToHistory({id: 1})
-	expect(saved).toBe('[{"id":1}]')
-})
-
-test('don\'t store the same list twice with different id types', () => {
-	let saved = null
-	Storage.prototype.getItem = jest.fn(() => saved)
-	Storage.prototype.setItem = jest.fn((key, lists) => {
-		saved = lists
-	})
-
-	saveListToHistory({id: 1})
-	saveListToHistory({id: '1'})
 	expect(saved).toBe('[{"id":1}]')
 })
 
 test('move a list to the beginning when storing it multiple times', () => {
-	let saved = null
+	let saved: string | null = null
 	Storage.prototype.getItem = jest.fn(() => saved)
-	Storage.prototype.setItem = jest.fn((key, lists) => {
+	Storage.prototype.setItem = jest.fn((key: string, lists: string) => {
 		saved = lists
 	})
 

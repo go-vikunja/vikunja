@@ -44,7 +44,7 @@ import ListModel from '../../models/list'
 import ListService from '../../services/list'
 import {CURRENT_LIST} from '@/store/mutation-types'
 import {getListView} from '@/helpers/saveListView'
-import {saveListToHistory} from '@/modules/listHistory'
+import {saveListToHistory} from '../../modules/listHistory'
 
 export default {
 	data() {
@@ -93,7 +93,7 @@ export default {
 				return
 			}
 
-			const listData = {id: this.$route.params.listId}
+			const listData = {id: parseInt(this.$route.params.listId)}
 
 			saveListToHistory(listData)
 

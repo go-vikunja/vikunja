@@ -46,7 +46,7 @@
 <script>
 import {mapState} from 'vuex'
 import ShowTasks from './tasks/ShowTasks'
-import {getHistory} from '@/modules/listHistory'
+import {getHistory} from '../modules/listHistory'
 import ListCard from '@/components/list/partials/list-card'
 import AddTask from '../components/tasks/add-task'
 

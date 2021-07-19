@@ -1,4 +1,8 @@
-export const getHistory = () => {
+interface ListHistory {
+	id: number;
+}
+
+export function getHistory(): ListHistory[] {
 	const savedHistory = localStorage.getItem('listHistory')
 	if (savedHistory === null) {
 		return []
@@ -7,17 +11,17 @@ export const getHistory = () => {
 	return JSON.parse(savedHistory)
 }
 
-export function saveListToHistory(list) {
+export function saveListToHistory(list: ListHistory) {
 	const history = getHistory()
 
-	list.id = parseInt(list.id)
+	// list.id = parseInt(list.id)
 
 	// Remove the element if it already exists in history, preventing duplicates and essentially moving it to the beginning
-	for (const i in history) {
-		if (history[i].id === list.id) {
+	history.forEach((l, i) => {
+		if (l.id === list.id) {
 			history.splice(i, 1)
 		}
-	}
+	})
 
 	// Add the new list to the beginning of the list
 	history.unshift(list)
