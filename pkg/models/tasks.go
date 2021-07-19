@@ -1353,6 +1353,49 @@ func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
 		return err
 	}
 
+	// Delete Favorites
+	err = removeFromFavorite(s, t.ID, a, FavoriteKindTask)
+	if err != nil {
+		return
+	}
+
+	// Delete label associations
+	_, err = s.Where("task_id = ?", t.ID).Delete(&LabelTask{})
+	if err != nil {
+		return
+	}
+
+	// Delete task attachments
+	attachments, err := getTaskAttachmentsByTaskIDs(s, []int64{t.ID})
+	if err != nil {
+		return err
+	}
+	for _, attachment := range attachments {
+		// Using the attachment delete method here because that takes care of removing all files properly
+		err = attachment.Delete(s, a)
+		if err != nil && !IsErrTaskAttachmentDoesNotExist(err) {
+			return err
+		}
+	}
+
+	// Delete all comments
+	_, err = s.Where("task_id = ?", t.ID).Delete(&TaskComment{})
+	if err != nil {
+		return
+	}
+
+	// Delete all relations
+	_, err = s.Where("task_id = ? OR other_task_id = ?", t.ID, t.ID).Delete(&TaskRelation{})
+	if err != nil {
+		return
+	}
+
+	// Delete all reminders
+	_, err = s.Where("task_id = ?", t.ID).Delete(&TaskReminder{})
+	if err != nil {
+		return
+	}
+
 	doer, _ := user.GetFromAuth(a)
 	err = events.Dispatch(&TaskDeletedEvent{
 		Task: t,
