@@ -41,7 +41,7 @@ export const loadLanguageAsync = lang => {
 			i18n.setLocaleMessage(lang, messages.default)
 			loadedLanguages.push(lang)
 			return setI18nLanguage(lang)
-		}
+		},
 	)
 }
 

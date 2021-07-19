@@ -48,10 +48,10 @@ const getItemsFromPrefix = (text, prefix) => {
 		}
 
 		let labelText
-		if (p.charAt(0) === `'`) {
-			labelText = p.split(`'`)[1]
-		} else if (p.charAt(0) === `"`) {
-			labelText = p.split(`"`)[1]
+		if (p.charAt(0) === '\'') {
+			labelText = p.split('\'')[1]
+		} else if (p.charAt(0) === '"') {
+			labelText = p.split('"')[1]
 		} else {
 			// Only until the next space
 			labelText = p.split(' ')[0]

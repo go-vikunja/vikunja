@@ -22,7 +22,7 @@ export default {
 		return {
 			namespaceService: NamespaceService,
 			namespace: null,
-			title: ''
+			title: '',
 		}
 	},
 	created() {

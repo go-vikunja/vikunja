@@ -73,7 +73,7 @@ import {
 	faStar,
 	faTimesCircle,
 	faSun,
-	faBellSlash
+	faBellSlash,
 } from '@fortawesome/free-regular-svg-icons'
 import {FontAwesomeIcon} from '@fortawesome/vue-fontawesome'
 // PWA
