@@ -4,7 +4,7 @@
 			<heading v-model="task" :can-write="canWrite" ref="heading"/>
 			<h6 class="subtitle" v-if="parent && parent.namespace && parent.list">
 				{{ getNamespaceTitle(parent.namespace) }} >
-				<router-link :to="{ name: listViewName, params: { listId: parent.list.id } }">
+				<router-link :to="{ name: 'list.index', params: { listId: parent.list.id } }">
 					{{ getListTitle(parent.list) }}
 				</router-link>
 			</h6>
@@ -474,7 +474,6 @@ export default {
 
 			showDeleteModal: false,
 			descriptionChanged: false,
-			listViewName: 'list.list',
 			// Used to avoid flashing of empty elements if the task content is not yet loaded.
 			visible: false,
 
@@ -504,13 +503,6 @@ export default {
 		this.task = new TaskModel()
 	},
 	mounted() {
-
-		// Build the list path from the task detail name to send the user to the view they came from.
-		const parts = this.$route.name.split('.')
-		if (parts.length > 2 && parts[2] === 'detail') {
-			this.listViewName = `list.${parts[1]}`
-		}
-
 		this.loadTask()
 	},
 	computed: {
