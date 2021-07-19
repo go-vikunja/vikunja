@@ -396,6 +396,11 @@ func (s *SendTeamMemberAddedNotification) Handle(msg *message.Message) (err erro
 		return err
 	}
 
+	// Don't notify the user themselves
+	if event.Doer.ID == event.Member.ID {
+		return nil
+	}
+
 	return notifications.Notify(event.Member, &TeamMemberAddedNotification{
 		Member: event.Member,
 		Doer:   event.Doer,
