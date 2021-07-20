@@ -26,6 +26,11 @@
     .card {
       background: $white;
     }
+	  
+	&.task\.detail {
+		padding-left: 0;
+		padding-right: 0;
+	}
   }
 }
 
