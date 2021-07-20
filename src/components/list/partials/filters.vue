@@ -132,24 +132,7 @@
 		<div class="field">
 			<label class="label">{{ $t('task.attributes.labels') }}</label>
 			<div class="control">
-				<multiselect
-					:placeholder="$t('label.search')"
-					@search="findLabels"
-					:search-results="foundLabels"
-					@select="label => addLabel(label)"
-					label="title"
-					:multiple="true"
-					v-model="labels"
-				>
-					<template v-slot:tag="props">
-							<span
-								:style="{'background': props.item.hexColor, 'color': props.item.textColor}"
-								class="tag ml-2 mt-2">
-								<span>{{ props.item.title }}</span>
-								<a @click="removeLabel(props.item)" class="delete is-small"></a>
-							</span>
-					</template>
-				</multiselect>
+				<edit-labels v-model="labels" @change="changeLabelFilter"/>
 			</div>
 		</div>
 
@@ -205,10 +188,12 @@ import Multiselect from '@/components/input/multiselect'
 import UserService from '@/services/user'
 import ListService from '@/services/list'
 import NamespaceService from '@/services/namespace'
+import EditLabels from '@/components/tasks/partials/editLabels'
 
 export default {
 	name: 'filters',
 	components: {
+		EditLabels,
 		PrioritySelect,
 		Fancycheckbox,
 		flatPickr,
@@ -319,9 +304,12 @@ export default {
 			this.prepareSingleValue('percent_done', 'percentDone', 'usePercentDone', true)
 			this.prepareDate('reminders')
 			this.prepareRelatedObjectFilter('users', 'assignees')
-			this.prepareRelatedObjectFilter('labels', 'labels', 'label')
 			this.prepareRelatedObjectFilter('lists', 'list_id')
 			this.prepareRelatedObjectFilter('namespace')
+
+			this.prepareSingleValue('labels')
+			const labelIds = (typeof this.filters.labels === 'string' ? this.filters.labels : '').split(',').map(i => parseInt(i))
+			this.labels = (Object.values(this.$store.state.labels.labels).filter(l => labelIds.includes(l.id)) ?? [])
 		},
 		removePropertyFromFilter(propertyName) {
 			// Because of the way arrays work, we can only ever remove one element at once.

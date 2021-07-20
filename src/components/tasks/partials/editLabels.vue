@@ -55,7 +55,8 @@ export default {
 		},
 		taskId: {
 			type: Number,
-			required: true,
+			required: false,
+			default: () => 0,
 		},
 		disabled: {
 			default: false,
@@ -100,9 +101,19 @@ export default {
 			this.query = query
 		},
 		addLabel(label, showNotification = true) {
+			const bubble = () => {
+				this.$emit('input', this.labels)
+				this.$emit('change', this.labels)
+			}
+			
+			if (this.taskId === 0) {
+				bubble()
+				return
+			}
+
 			this.$store.dispatch('tasks/addLabel', {label: label, taskId: this.taskId})
 				.then(() => {
-					this.$emit('input', this.labels)
+					bubble()
 					if (showNotification) {
 						this.success({message: this.$t('task.label.addSuccess')})
 					}
@@ -112,15 +123,24 @@ export default {
 				})
 		},
 		removeLabel(label) {
+			const removeFromState = () => {
+				for (const l in this.labels) {
+					if (this.labels[l].id === label.id) {
+						this.labels.splice(l, 1)
+					}
+				}
+				this.$emit('input', this.labels)
+				this.$emit('change', this.labels)
+			}
+
+			if (this.taskId === 0) {
+				removeFromState()
+				return
+			}
+
 			this.$store.dispatch('tasks/removeLabel', {label: label, taskId: this.taskId})
 				.then(() => {
-					// Remove the label from the list
-					for (const l in this.labels) {
-						if (this.labels[l].id === label.id) {
-							this.labels.splice(l, 1)
-						}
-					}
-					this.$emit('input', this.labels)
+					removeFromState()
 					this.success({message: this.$t('task.label.removeSuccess')})
 				})
 				.catch(e => {
@@ -128,6 +148,10 @@ export default {
 				})
 		},
 		createAndAddLabel(title) {
+			if (this.taskId === 0) {
+				return
+			}
+
 			const newLabel = new LabelModel({title: title})
 			this.$store.dispatch('labels/createLabel', newLabel)
 				.then(r => {
