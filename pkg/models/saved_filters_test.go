@@ -92,25 +92,46 @@ func TestSavedFilter_ReadOne(t *testing.T) {
 }
 
 func TestSavedFilter_Update(t *testing.T) {
-	db.LoadAndAssertFixtures(t)
-	s := db.NewSession()
-	defer s.Close()
+	t.Run("normal", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
 
-	sf := &SavedFilter{
-		ID:          1,
-		Title:       "NewTitle",
-		Description: "", // Explicitly reset the description
-		Filters:     &TaskCollection{},
-	}
-	err := sf.Update(s, &user.User{ID: 1})
-	assert.NoError(t, err)
-	err = s.Commit()
-	assert.NoError(t, err)
-	db.AssertExists(t, "saved_filters", map[string]interface{}{
-		"id":          1,
-		"title":       "NewTitle",
-		"description": "",
-	}, false)
+		sf := &SavedFilter{
+			ID:          1,
+			Title:       "NewTitle",
+			Description: "", // Explicitly reset the description
+			Filters:     &TaskCollection{},
+		}
+		err := sf.Update(s, &user.User{ID: 1})
+		assert.NoError(t, err)
+		err = s.Commit()
+		assert.NoError(t, err)
+		db.AssertExists(t, "saved_filters", map[string]interface{}{
+			"id":          1,
+			"title":       "NewTitle",
+			"description": "",
+		}, false)
+	})
+	t.Run("make favorite", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		sf := &SavedFilter{
+			ID:         1,
+			IsFavorite: true,
+			Filters:    &TaskCollection{},
+		}
+		err := sf.Update(s, &user.User{ID: 1})
+		assert.NoError(t, err)
+		err = s.Commit()
+		assert.NoError(t, err)
+		db.AssertExists(t, "saved_filters", map[string]interface{}{
+			"id":          1,
+			"is_favorite": true,
+		}, false)
+	})
 }
 
 func TestSavedFilter_Delete(t *testing.T) {

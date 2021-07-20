@@ -548,7 +548,7 @@ func (n *Namespace) ReadAll(s *xorm.Session, a web.Auth, search string, page int
 	}
 
 	/////////////////
-	// Add list details (favorite state, among other things
+	// Add list details (favorite state, among other things)
 	err = addListDetails(s, lists, a)
 	if err != nil {
 		return

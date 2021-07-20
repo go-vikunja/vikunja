@@ -464,6 +464,10 @@ func addListDetails(s *xorm.Session, lists []*List, a web.Auth) (err error) {
 	}
 
 	for _, list := range lists {
+		// Don't override the favorite state if it was already set from before (favorite saved filters do this)
+		if list.IsFavorite {
+			continue
+		}
 		list.IsFavorite = favs[list.ID]
 	}
 
@@ -636,6 +640,7 @@ func (l *List) Update(s *xorm.Session, a web.Auth) (err error) {
 
 		f.Title = l.Title
 		f.Description = l.Description
+		f.IsFavorite = l.IsFavorite
 		err = f.Update(s, a)
 		if err != nil {
 			return err

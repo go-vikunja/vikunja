@@ -102,6 +102,7 @@ func (sf *SavedFilter) toList() *List {
 		Created:     sf.Created,
 		Updated:     sf.Updated,
 		Owner:       sf.Owner,
+		NamespaceID: SavedFiltersPseudoNamespace.ID,
 	}
 }
 
