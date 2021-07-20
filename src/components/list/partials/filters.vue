@@ -323,7 +323,11 @@ export default {
 				}
 			}
 		},
-		setDateFilter(filterName, variableName) {
+		setDateFilter(filterName, variableName = null) {
+			if (variableName === null) {
+				variableName = filterName
+			}
+			
 			// Only filter if we have a start and end due date
 			if (this.filters[variableName] !== '') {
 
