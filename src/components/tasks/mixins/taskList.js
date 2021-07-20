@@ -31,6 +31,7 @@ export default {
 	},
 	watch: {
 		'$route.query': 'loadTasksForPage', // Only listen for query path changes
+		'$route.path': 'loadTasksOnSavedFilter',
 	},
 	beforeMount() {
 		// Triggering loading the tasks in beforeMount lets the component maintain the current page, therefore the page
@@ -45,13 +46,15 @@ export default {
 			page,
 			search = '',
 			params = null,
+			forceLoading = false,
 		) {
 
 			// Because this function is triggered every time on topNavigation, we're putting a condition here to only load it when we actually want to show tasks
 			// FIXME: This is a bit hacky -> Cleanup.
 			if (
 				this.$route.name !== 'list.list' &&
-				this.$route.name !== 'list.table'
+				this.$route.name !== 'list.table' &&
+				!forceLoading
 			) {
 				return
 			}
@@ -72,7 +75,7 @@ export default {
 				search: search,
 				page: page,
 			}
-			if (JSON.stringify(currentList) === JSON.stringify(this.loadedList)) {
+			if (JSON.stringify(currentList) === JSON.stringify(this.loadedList) && !forceLoading) {
 				return
 			}
 
@@ -129,6 +132,11 @@ export default {
 				search = ''
 			}
 			this.initTasks(page, search)
+		},
+		loadTasksOnSavedFilter() {
+			if(typeof this.$route.params.listId !== 'undefined' && parseInt(this.$route.params.listId) < 0) {
+				this.loadTasks(1, '', null, true)
+			}
 		},
 		sortTasks() {
 			if (this.tasks === null || this.tasks === []) {
