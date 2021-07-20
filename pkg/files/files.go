@@ -17,7 +17,9 @@
 package files
 
 import (
+	"code.vikunja.io/api/pkg/log"
 	"io"
+	"os"
 	"strconv"
 	"time"
 
@@ -129,9 +131,16 @@ func (f *File) Delete() (err error) {
 
 	err = afs.Remove(f.getFileName())
 	if err != nil {
+		if e, is := err.(*os.PathError); is {
+			// Don't fail when removing the file failed
+			log.Errorf("Error deleting file %d: %s", e.Error())
+			return s.Commit()
+		}
+
 		_ = s.Rollback()
 		return err
 	}
+
 	return
 }
 

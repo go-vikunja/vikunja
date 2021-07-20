@@ -195,7 +195,7 @@ func TestTaskComment_ReadAll(t *testing.T) {
 		comments := result.([]*TaskComment)
 		assert.NoError(t, err)
 		assert.Len(t, comments, 2)
-		assert.Equal(t, int64(-2), comments[1].AuthorID)
-		assert.NotNil(t, comments[1].Author)
+		assert.Equal(t, int64(-2), comments[0].AuthorID)
+		assert.NotNil(t, comments[0].Author)
 	})
 }
