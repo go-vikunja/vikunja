@@ -17,7 +17,6 @@
 package files
 
 import (
-	"code.vikunja.io/api/pkg/log"
 	"io"
 	"os"
 	"strconv"
@@ -25,6 +24,7 @@ import (
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/web"
 	"github.com/c2h5oh/datasize"
 	"github.com/spf13/afero"

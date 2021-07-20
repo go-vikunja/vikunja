@@ -195,7 +195,13 @@ func TestTaskComment_ReadAll(t *testing.T) {
 		comments := result.([]*TaskComment)
 		assert.NoError(t, err)
 		assert.Len(t, comments, 2)
-		assert.Equal(t, int64(-2), comments[0].AuthorID)
-		assert.NotNil(t, comments[0].Author)
+		var foundComment bool
+		for _, comment := range comments {
+			if comment.AuthorID == -2 {
+				foundComment = true
+			}
+			assert.NotNil(t, comment.Author)
+		}
+		assert.True(t, foundComment)
 	})
 }
