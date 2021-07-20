@@ -375,12 +375,47 @@
   z-index: 31;
   font-weight: bold;
   font-size: 2rem;
-  color: $text;
+  color: $grey-400;
   line-height: 1;
+  transition: all $transition;
 
   &:hover, &:focus {
-    color: $grey-900;
+	height: 1rem;
+    color: $grey-600;
   }
+}
+
+.menu-show-button {
+	height: .75rem;
+	width: 2rem;
+	
+	&:before, &:after {
+		display: block;
+		content: '';
+		border-top: 3px solid $grey-400;
+		border-radius: $radius;
+		transition: all $transition;
+	}
+	
+	&:before {
+		margin-bottom: .5rem;
+	}
+	
+	&:after {
+		margin-top: .5rem;
+	}
+
+	&:hover, &:focus {
+		color: $grey-600;
+		
+		&:before {
+			margin-bottom: .75rem;
+		}
+
+		&:after {
+			margin-top: .75rem;
+		}
+	}
 }
 
 .menu-hide-button {

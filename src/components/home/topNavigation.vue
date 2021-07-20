@@ -16,14 +16,12 @@
 				@shortkey="() => $store.commit('toggleMenu')"
 				v-shortkey="['ctrl', 'e']"
 			>
-				<icon icon="bars"></icon>
 			</a>
 		</div>
 		<a
 			@click="$store.commit('toggleMenu')"
 			class="menu-show-button"
 		>
-			<icon icon="bars"></icon>
 		</a>
 		<div class="list-title" ref="listTitle" :style="{'display': currentList.id ? '': 'none'}">
 			<template v-if="currentList.id">
