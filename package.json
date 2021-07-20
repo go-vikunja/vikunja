@@ -52,7 +52,7 @@
     "@vue/eslint-config-typescript": "7.0.0",
     "axios": "0.21.1",
     "babel-eslint": "10.1.0",
-    "cypress": "7.7.0",
+    "cypress": "8.0.0",
     "cypress-file-upload": "5.0.8",
     "eslint": "7.31.0",
     "eslint-plugin-vue": "7.14.0",
