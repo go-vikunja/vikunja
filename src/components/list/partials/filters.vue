@@ -131,7 +131,7 @@
 
 		<div class="field">
 			<label class="label">{{ $t('task.attributes.labels') }}</label>
-			<div class="control">
+			<div class="control labels-list">
 				<edit-labels v-model="labels" @change="changeLabelFilter"/>
 			</div>
 		</div>
