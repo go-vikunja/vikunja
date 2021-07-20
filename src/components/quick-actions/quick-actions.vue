@@ -127,7 +127,7 @@ export default {
 					...Object.values(this.$store.state.lists)])]
 
 				lists = (allLists.filter(l => {
-					if (typeof l === 'undefined') {
+					if (typeof l === 'undefined' || l === null) {
 						return false
 					}
 

@@ -91,7 +91,7 @@ export default {
 			const history = getHistory()
 			return history.map(l => {
 				return this.$store.getters['lists/getListById'](l.id)
-			})
+			}).filter(l => l !== null)
 		},
 		...mapState({
 			migratorsEnabled: state =>

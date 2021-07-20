@@ -12,17 +12,9 @@
 </template>
 
 <script>
-import ListService from '@/services/list'
-
 export default {
 	name: 'list-setting-delete',
-	data() {
-		return {
-			listService: ListService,
-		}
-	},
 	created() {
-		this.listService = new ListService()
 		const list = this.$store.getters['lists/getListById'](this.$route.params.listId)
 		this.setTitle(this.$t('list.delete.title', {list: list.title}))
 	},
@@ -30,9 +22,8 @@ export default {
 		deleteList() {
 			const list = this.$store.getters['lists/getListById'](this.$route.params.listId)
 
-			this.listService.delete(list)
+			this.$store.dispatch('lists/deleteList', list)
 				.then(() => {
-					this.$store.commit('namespaces/removeListFromNamespaceById', list)
 					this.success({message: this.$t('list.delete.success')})
 					this.$router.push({name: 'home'})
 				})

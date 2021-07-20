@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import ListService from '@/services/list'
 import {setLoading} from '@/store/helper'
+import {removeListFromHistory} from '@/modules/listHistory.ts'
 
 const FavoriteListsNamespace = -2
 
@@ -16,6 +17,9 @@ export default {
 			lists.forEach(l => {
 				Vue.set(state, l.id, l)
 			})
+		},
+		removeListById(state, list) {
+			delete state[list.id]
 		},
 	},
 	getters: {
@@ -75,6 +79,22 @@ export default {
 					// Reset the list state to the initial one to avoid confusion for the user
 					list.isFavorite = !list.isFavorite
 					ctx.commit('setList', list)
+					return Promise.reject(e)
+				})
+				.finally(() => cancel())
+		},
+		deleteList(ctx, list) {
+			const cancel = setLoading(ctx, 'lists')
+			const listService = new ListService()
+
+			return listService.delete(list)
+				.then(r => {
+					ctx.commit('removeListById', list)
+					ctx.commit('namespaces/removeListFromNamespaceById', list, {root: true})
+					removeListFromHistory({id: list.id})
+					return Promise.resolve(r)
+				})
+				.catch(e => {
 					return Promise.reject(e)
 				})
 				.finally(() => cancel())

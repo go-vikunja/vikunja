@@ -1,4 +1,4 @@
-import {getHistory, saveListToHistory} from './listHistory'
+import {getHistory, removeListFromHistory, saveListToHistory} from './listHistory'
 
 test('return an empty history when none was saved', () => {
 	Storage.prototype.getItem = jest.fn(() => null)
@@ -64,4 +64,18 @@ test('move a list to the beginning when storing it multiple times', () => {
 	saveListToHistory({id: 2})
 	saveListToHistory({id: 1})
 	expect(saved).toBe('[{"id":1},{"id":2}]')
+})
+
+test('remove list from history', () => {
+	let saved: string | null = '[{"id": 1}]'
+	Storage.prototype.getItem = jest.fn(() => null)
+	Storage.prototype.setItem = jest.fn((key: string, lists: string) => {
+		saved = lists
+	})
+	Storage.prototype.removeItem = jest.fn((key: string) => {
+		saved = null
+	})
+
+	removeListFromHistory({id: 1})
+	expect(saved).toBeNull()
 })

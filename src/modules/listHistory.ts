@@ -11,10 +11,17 @@ export function getHistory(): ListHistory[] {
 	return JSON.parse(savedHistory)
 }
 
-export function saveListToHistory(list: ListHistory) {
-	const history = getHistory()
+function saveHistory(history: ListHistory[]) {
+	if (history.length === 0) {
+		localStorage.removeItem('listHistory')
+		return
+	}
 
-	// list.id = parseInt(list.id)
+	localStorage.setItem('listHistory', JSON.stringify(history))
+}
+
+export function saveListToHistory(list: ListHistory) {
+	const history: ListHistory[] = getHistory()
 
 	// Remove the element if it already exists in history, preventing duplicates and essentially moving it to the beginning
 	history.forEach((l, i) => {
@@ -29,5 +36,16 @@ export function saveListToHistory(list: ListHistory) {
 	if (history.length > 5) {
 		history.pop()
 	}
-	localStorage.setItem('listHistory', JSON.stringify(history))
+	saveHistory(history)
+}
+
+export function removeListFromHistory(list: ListHistory) {
+	const history: ListHistory[] = getHistory()
+
+	history.forEach((l, i) => {
+		if (l.id === list.id) {
+			history.splice(i, 1)
+		}
+	})
+	saveHistory(history)
 }
