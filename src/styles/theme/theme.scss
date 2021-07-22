@@ -64,6 +64,11 @@ h6 {
   overflow: visible;
 }
 
+.has-horizontal-overflow {
+	overflow-y: hidden;
+	overflow-x: auto;
+}
+
 .image.is-avatar {
   border-radius: 100%;
 }
