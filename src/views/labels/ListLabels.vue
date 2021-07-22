@@ -132,7 +132,7 @@ export default {
 	},
 	computed: mapState({
 		userInfo: state => state.auth.info,
-		labels: state => state.labels.labels,
+		labels: state => Object.values(state.labels.labels).sort((f, s) => f.title > s.title), // Alphabetically sort the labels
 		loading: state => state[LOADING] && state[LOADING_MODULE] === 'labels',
 	}),
 	methods: {
