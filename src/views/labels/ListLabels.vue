@@ -164,7 +164,14 @@ export default {
 			if (label.createdBy.id !== this.userInfo.id) {
 				return
 			}
-			this.labelEditLabel = label
+			// Duplicating the label to make sure it does not look like changes take effect immediatly as the label 
+			// object passed to this function here still has a reference to the store.
+			this.labelEditLabel = new LabelModel({
+				id: label.id,
+				title: label.title,
+				description: label.description,
+				hexColor: label.hexColor,
+			})
 			this.isLabelEdit = true
 
 			// This makes the editor trigger its mounted function again which makes it forget every input
