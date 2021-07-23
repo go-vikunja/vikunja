@@ -67,7 +67,7 @@ steps:
     depends_on:
       - dependencies
 
-  - name: build
+  - name: lint
     image: node:16
     pull: true
     environment:
@@ -75,7 +75,29 @@ steps:
       CYPRESS_CACHE_FOLDER: .cache/cypress/
     commands:
       - yarn run lint
-      - yarn run build
+    depends_on:
+      - dependencies
+
+  # Building in dev mode to avoid the service worker for testing
+  - name: build-dev
+    image: node:16
+    pull: true
+    environment:
+      YARN_CACHE_FOLDER: .cache/yarn/
+      CYPRESS_CACHE_FOLDER: .cache/cypress/
+    commands:
+      - yarn build --mode dev
+    depends_on:
+      - dependencies
+
+  - name: build-prod
+    image: node:16
+    pull: true
+    environment:
+      YARN_CACHE_FOLDER: .cache/yarn/
+      CYPRESS_CACHE_FOLDER: .cache/cypress/
+    commands:
+      - yarn build --dest dist-prod
     depends_on:
       - dependencies
 
@@ -88,7 +110,7 @@ steps:
       - dependencies
 
   - name: test-frontend
-    image: cypress/browsers:node12.18.3-chrome87-ff82
+    image: cypress/browsers:node14.17.0-chrome91-ff89
     pull: true
     environment:
       CYPRESS_API_URL: http://api:3456/api/v1
@@ -97,11 +119,12 @@ steps:
       CYPRESS_CACHE_FOLDER: .cache/cypress/
       CYPRESS_DEFAULT_COMMAND_TIMEOUT: 60000
     commands:
-      - sed -i 's/localhost/api/g' public/index.html
-      - yarn serve & npx wait-on http://localhost:8080
+      - sed -i 's/localhost/api/g' dist/index.html
+      - yarn serve:dist & npx wait-on http://localhost:8080
       - yarn test:frontend --browser chrome
     depends_on:
       - dependencies
+      - build-dev
 
   - name: upload-test-results
     image: plugins/s3:1
