@@ -1,6 +1,6 @@
 import {parseTaskText} from './parseTaskText'
-import {getDateFromText, getDateFromTextIn} from './time/parseDate'
-import {calculateDayInterval} from './time/calculateDayInterval'
+import {getDateFromText, getDateFromTextIn} from '../helpers/time/parseDate'
+import {calculateDayInterval} from '../helpers/time/calculateDayInterval'
 import priorities from '../models/priorities.json'
 
 describe('Parse Task Text', () => {
@@ -194,6 +194,18 @@ describe('Parse Task Text', () => {
 			expect(result.text).toBe('Lorem Ipsum')
 			expect(result.date.getDate()).toBe(date.getDate() + 1)
 		})
+		it('should only recognize weekdays with a space before or after them 1', () => {
+			const result = parseTaskText('Lorem Ipsum renewed')
+			
+			expect(result.text).toBe('Lorem Ipsum renewed')
+			expect(result.date).toBeNull()
+		})
+		it('should only recognize weekdays with a space before or after them 2', () => {
+			const result = parseTaskText('Lorem Ipsum github')
+
+			expect(result.text).toBe('Lorem Ipsum github')
+			expect(result.date).toBeNull()
+		})
 
 		describe('Parse date from text', () => {
 			const now = new Date()
@@ -270,7 +282,6 @@ describe('Parse Task Text', () => {
 				})
 			}
 		})
-
 	})
 
 	describe('Labels', () => {

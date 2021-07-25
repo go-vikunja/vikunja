@@ -1,4 +1,4 @@
-export function calculateNearestHours(currentDate = new Date()) {
+export function calculateNearestHours(currentDate: Date = new Date()): number {
 	if (currentDate.getHours() <= 9 || currentDate.getHours() > 21) {
 		return 9
 	}
@@ -18,4 +18,7 @@ export function calculateNearestHours(currentDate = new Date()) {
 	if (currentDate.getHours() <= 21) {
 		return 21
 	}
+	
+	// Same case as in the first if, will never be called
+	return 9
 }

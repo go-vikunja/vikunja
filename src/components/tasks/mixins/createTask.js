@@ -1,4 +1,4 @@
-import {parseTaskText} from '@/helpers/parseTaskText'
+import {parseTaskText} from '@/modules/parseTaskText'
 import TaskModel from '@/models/task'
 import {formatISO} from 'date-fns'
 import LabelTask from '@/models/labelTask'

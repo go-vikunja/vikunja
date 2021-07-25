@@ -1,18 +1,38 @@
-import {parseDate} from './time/parseDate'
-import priorities from '../models/priorities.json'
+import {parseDate} from '../helpers/time/parseDate'
+import _priorities from '../models/priorities.json'
 
-const LABEL_PREFIX = '@'
-const LIST_PREFIX = '#'
-const PRIORITY_PREFIX = '!'
-const ASSIGNEE_PREFIX = '+'
+const LABEL_PREFIX: string = '@'
+const LIST_PREFIX: string = '#'
+const PRIORITY_PREFIX: string = '!'
+const ASSIGNEE_PREFIX: string = '+'
+
+const priorities: Priorites = _priorities
+
+interface Priorites {
+	UNSET: number,
+	LOW: number,
+	MEDIUM: number,
+	HIGH: number,
+	URGENT: number,
+	DO_NOW: number,
+}
+
+interface ParsedTaskText {
+	text: string,
+	date: Date | null,
+	labels: string[],
+	list: string | null,
+	priority: number | null,
+	assignees: string[],
+}
 
 /**
  * Parses task text for dates, assignees, labels, lists, priorities and returns an object with all found intents.
  *
  * @param text
  */
-export const parseTaskText = text => {
-	const result = {
+export const parseTaskText = (text: string): ParsedTaskText => {
+	const result: ParsedTaskText = {
 		text: text,
 		date: null,
 		labels: [],
@@ -23,7 +43,7 @@ export const parseTaskText = text => {
 
 	result.labels = getItemsFromPrefix(text, LABEL_PREFIX)
 
-	const lists = getItemsFromPrefix(text, LIST_PREFIX)
+	const lists: string[] = getItemsFromPrefix(text, LIST_PREFIX)
 	result.list = lists.length > 0 ? lists[0] : null
 
 	result.priority = getPriority(text)
@@ -37,8 +57,8 @@ export const parseTaskText = text => {
 	return cleanupResult(result)
 }
 
-const getItemsFromPrefix = (text, prefix) => {
-	const items = []
+const getItemsFromPrefix = (text: string, prefix: string): string[] => {
+	const items: string[] = []
 
 	const itemParts = text.split(prefix)
 	itemParts.forEach((p, index) => {
@@ -62,15 +82,15 @@ const getItemsFromPrefix = (text, prefix) => {
 	return Array.from(new Set(items))
 }
 
-const getPriority = text => {
+const getPriority = (text: string): number | null => {
 	const ps = getItemsFromPrefix(text, PRIORITY_PREFIX)
 	if (ps.length === 0) {
 		return null
 	}
 
 	for (const p of ps) {
-		for (const pi in priorities) {
-			if (priorities[pi] === parseInt(p)) {
+		for (const pi of Object.values(priorities)) {
+			if (pi === parseInt(p)) {
 				return parseInt(p)
 			}
 		}
@@ -79,7 +99,7 @@ const getPriority = text => {
 	return null
 }
 
-const cleanupItemText = (text, items, prefix) => {
+const cleanupItemText = (text: string, items: string[], prefix: string): string => {
 	items.forEach(l => {
 		text = text
 			.replace(`${prefix}'${l}' `, '')
@@ -92,10 +112,10 @@ const cleanupItemText = (text, items, prefix) => {
 	return text
 }
 
-const cleanupResult = result => {
+const cleanupResult = (result: ParsedTaskText): ParsedTaskText => {
 	result.text = cleanupItemText(result.text, result.labels, LABEL_PREFIX)
-	result.text = cleanupItemText(result.text, [result.list], LIST_PREFIX)
-	result.text = cleanupItemText(result.text, [result.priority], PRIORITY_PREFIX)
+	result.text = result.list !== null ? cleanupItemText(result.text, [result.list], LIST_PREFIX) : result.text
+	result.text = result.priority !== null ? cleanupItemText(result.text, [String(result.priority)], PRIORITY_PREFIX) : result.text
 	result.text = cleanupItemText(result.text, result.assignees, ASSIGNEE_PREFIX)
 	result.text = result.text.trim()
 

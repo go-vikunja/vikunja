@@ -2,8 +2,18 @@ import {calculateDayInterval} from './calculateDayInterval'
 import {calculateNearestHours} from './calculateNearestHours'
 import {replaceAll} from '../replaceAll'
 
-export const parseDate = text => {
-	const lowerText = text.toLowerCase()
+interface dateParseResult {
+	newText: string,
+	date: Date | null,
+}
+
+interface dateFoundResult {
+	foundText: string | null,
+	date: Date | null,
+}
+
+export const parseDate = (text: string): dateParseResult => {
+	const lowerText: string = text.toLowerCase()
 
 	if (lowerText.includes('today')) {
 		return addTimeToDate(text, getDateFromInterval(calculateDayInterval('today')), 'today')
@@ -27,7 +37,7 @@ export const parseDate = text => {
 		return addTimeToDate(text, getDateFromInterval(calculateDayInterval('nextWeek')), 'next week')
 	}
 	if (lowerText.includes('next month')) {
-		const date = new Date()
+		const date: Date = new Date()
 		date.setDate(1)
 		date.setMonth(date.getMonth() + 1)
 		date.setHours(calculateNearestHours(date))
@@ -37,8 +47,8 @@ export const parseDate = text => {
 		return addTimeToDate(text, date, 'next month')
 	}
 	if (lowerText.includes('end of month')) {
-		const curDate = new Date()
-		const date = new Date(curDate.getFullYear(), curDate.getMonth() + 1, 0)
+		const curDate: Date = new Date()
+		const date: Date = new Date(curDate.getFullYear(), curDate.getMonth() + 1, 0)
 		date.setHours(calculateNearestHours(date))
 		date.setMinutes(0)
 		date.setSeconds(0)
@@ -72,7 +82,14 @@ export const parseDate = text => {
 	}
 }
 
-const addTimeToDate = (text, date, match) => {
+const addTimeToDate = (text: string, date: Date, match: string | null): dateParseResult => {
+	if (match === null) {
+		return {
+			newText: text,
+			date: null,
+		}
+	}
+
 	const matcher = new RegExp(`(${match} (at|@) )([0-9][0-9]?(:[0-9][0-9]?)?( ?(a|p)m)?)`, 'ig')
 	const results = matcher.exec(text)
 
@@ -100,17 +117,17 @@ const addTimeToDate = (text, date, match) => {
 	}
 }
 
-export const getDateFromText = (text, now = new Date()) => {
-	const fullDateRegex = /([0-9][0-9]?\/[0-9][0-9]?\/[0-9][0-9]([0-9][0-9])?|[0-9][0-9][0-9][0-9]\/[0-9][0-9]?\/[0-9][0-9]?|[0-9][0-9][0-9][0-9]-[0-9][0-9]?-[0-9][0-9]?)/ig
+export const getDateFromText = (text: string, now: Date = new Date()) => {
+	const fullDateRegex: RegExp = /([0-9][0-9]?\/[0-9][0-9]?\/[0-9][0-9]([0-9][0-9])?|[0-9][0-9][0-9][0-9]\/[0-9][0-9]?\/[0-9][0-9]?|[0-9][0-9][0-9][0-9]-[0-9][0-9]?-[0-9][0-9]?)/ig
 
 	// 1. Try parsing the text as a "usual" date, like 2021-06-24 or 06/24/2021
-	let results = fullDateRegex.exec(text)
-	let result = results === null ? null : results[0]
-	let foundText = result
-	let containsYear = true
+	let results: string[] | null = fullDateRegex.exec(text)
+	let result: string | null = results === null ? null : results[0]
+	let foundText: string | null = result
+	let containsYear: boolean = true
 	if (result === null) {
 		// 2. Try parsing the date as something like "jan 21" or "21 jan"
-		const monthRegex = /((jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec) [0-9][0-9]?|[0-9][0-9]? (jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec))/ig
+		const monthRegex: RegExp = /((jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec) [0-9][0-9]?|[0-9][0-9]? (jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec))/ig
 		results = monthRegex.exec(text)
 		result = results === null ? null : `${results[0]} ${now.getFullYear()}`
 		foundText = results === null ? '' : results[0]
@@ -118,17 +135,24 @@ export const getDateFromText = (text, now = new Date()) => {
 
 		if (result === null) {
 			// 3. Try parsing the date as "27/01" or "01/27"
-			const monthNumericRegex = /([0-9][0-9]?\/[0-9][0-9]?)/ig
+			const monthNumericRegex:RegExp = /([0-9][0-9]?\/[0-9][0-9]?)/ig
 			results = monthNumericRegex.exec(text)
 
 			// Put the year before or after the date, depending on what works
 			result = results === null ? null : `${now.getFullYear()}/${results[0]}`
+			if(result === null) {
+				return {
+					foundText,
+					date: null,
+				}
+			}
+			
 			foundText = results === null ? '' : results[0]
-			if (isNaN(new Date(result))) {
+			if (result === null || isNaN(new Date(result).getTime())) {
 				result = results === null ? null : `${results[0]}/${now.getFullYear()}`
 			}
-			if (isNaN(new Date(result)) && results[0] !== null) {
-				const parts = results[0].split('/')
+			if (result === null || (isNaN(new Date(result).getTime()) && foundText !== '')) {
+				const parts = foundText.split('/')
 				result = `${parts[1]}/${parts[0]}/${now.getFullYear()}`
 			}
 		}
@@ -142,7 +166,7 @@ export const getDateFromText = (text, now = new Date()) => {
 	}
 
 	const date = new Date(result)
-	if (isNaN(date)) {
+	if (isNaN(date.getTime())) {
 		return {
 			foundText,
 			date: null,
@@ -159,7 +183,7 @@ export const getDateFromText = (text, now = new Date()) => {
 	}
 }
 
-export const getDateFromTextIn = (text, now = new Date()) => {
+export const getDateFromTextIn = (text: string, now: Date = new Date()) => {
 	const regex = /(in [0-9]+ (hours?|days?|weeks?|months?))/ig
 	const results = regex.exec(text)
 	if (results === null) {
@@ -169,7 +193,7 @@ export const getDateFromTextIn = (text, now = new Date()) => {
 		}
 	}
 
-	let foundText = results[0]
+	const foundText: string = results[0]
 	const date = new Date(now)
 	const parts = foundText.split(' ')
 	switch (parts[2]) {
@@ -197,9 +221,9 @@ export const getDateFromTextIn = (text, now = new Date()) => {
 	}
 }
 
-const getDateFromWeekday = text => {
-	const matcher = /(mon|monday|tue|tuesday|wed|wednesday|thu|thursday|fri|friday|sat|saturday|sun|sunday)/ig
-	const results = matcher.exec(text)
+const getDateFromWeekday = (text: string): dateFoundResult => {
+	const matcher: RegExp = / (mon|monday|tue|tuesday|wed|wednesday|thu|thursday|fri|friday|sat|saturday|sun|sunday)/ig
+	const results: string[] | null = matcher.exec(text)
 	if (results === null) {
 		return {
 			foundText: null,
@@ -207,11 +231,11 @@ const getDateFromWeekday = text => {
 		}
 	}
 
-	const date = new Date()
-	const currentDay = date.getDay()
-	let day = 0
+	const date: Date = new Date()
+	const currentDay: number = date.getDay()
+	let day: number = 0
 
-	switch (results[0]) {
+	switch (results[1]) {
 		case 'mon':
 		case 'monday':
 			day = 1
@@ -247,16 +271,16 @@ const getDateFromWeekday = text => {
 			}
 	}
 
-	const distance = (day + 7 - currentDay) % 7
+	const distance: number = (day + 7 - currentDay) % 7
 	date.setDate(date.getDate() + distance)
 
 	return {
-		foundText: results[0],
+		foundText: results[1],
 		date: date,
 	}
 }
 
-const getDayFromText = text => {
+const getDayFromText = (text: string) => {
 	const matcher = /(([1-2][0-9])|(3[01])|(0?[1-9]))(st|nd|rd|th|\.)/ig
 	const results = matcher.exec(text)
 	if (results === null) {
@@ -279,7 +303,7 @@ const getDayFromText = text => {
 	}
 }
 
-const getDateFromInterval = interval => {
+const getDateFromInterval = (interval: number): Date => {
 	const newDate = new Date()
 	newDate.setDate(newDate.getDate() + interval)
 	newDate.setHours(calculateNearestHours(newDate))
