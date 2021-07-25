@@ -1,5 +1,5 @@
 import Vue from 'vue'
-import {cloneDeep} from 'lodash'
+import cloneDeep from 'lodash/cloneDeep'
 
 import BucketService from '../../services/bucket'
 import {filterObject} from '@/helpers/filterObject'

@@ -1,5 +1,5 @@
 import TaskCollectionService from '../../../services/taskCollection'
-import {cloneDeep} from 'lodash'
+import cloneDeep from 'lodash/cloneDeep'
 
 /**
  * This mixin provides a base set of methods and properties to get tasks on a list.

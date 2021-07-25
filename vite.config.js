@@ -1,6 +1,7 @@
 const {createVuePlugin} = require('vite-plugin-vue2')
 const {VitePWA} = require('vite-plugin-pwa')
 const path = require('path')
+const {visualizer} = require('rollup-plugin-visualizer')
 
 module.exports = {
 	plugins: [
@@ -82,6 +83,9 @@ module.exports = {
 	build: {
 		target: 'es2015',
 		rollupOptions: {
+			plugins:[
+				visualizer(),
+			],
 			output: {
 				manualChunks: {
 					'user-settings': [
