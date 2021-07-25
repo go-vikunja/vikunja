@@ -2,8 +2,8 @@ const path = require('path')
 const express = require('express')
 const app = express()
 
-const p = path.join(__dirname, '..', 'dist')
-const port = 8080
+const p = path.join(__dirname, '..', 'dist-dev')
+const port = 5000
 
 app.use(express.static(p))
 // Handle urls set by the frontend

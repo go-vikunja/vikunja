@@ -15,9 +15,9 @@
 
 <script>
 import ListDuplicateService from '@/services/listDuplicateService'
-import NamespaceSearch from '@/components/namespace/namespace-search'
+import NamespaceSearch from '@/components/namespace/namespace-search.vue'
 import ListDuplicateModel from '@/models/listDuplicateModel'
-import CreateEdit from '@/components/misc/create-edit'
+import CreateEdit from '@/components/misc/create-edit.vue'
 
 export default {
 	name: 'list-setting-duplicate',

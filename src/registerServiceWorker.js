@@ -4,8 +4,8 @@ import {register} from 'register-service-worker'
 import swEvents from './ServiceWorker/events'
 import {getToken} from './helpers/auth'
 
-if (process.env.NODE_ENV === 'production') {
-	register(`${process.env.BASE_URL}sw.js`, {
+if (import.meta.env.PROD) {
+	register('/sw.js', {
 		ready() {
 			console.log('App is being served from cache by a service worker.')
 		},

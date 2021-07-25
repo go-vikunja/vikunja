@@ -118,7 +118,7 @@
 <script>
 import {mapState} from 'vuex'
 import {CURRENT_LIST, MENU_ACTIVE, LOADING, LOADING_MODULE} from '@/store/mutation-types'
-import ListSettingsDropdown from '@/components/list/list-settings-dropdown'
+import ListSettingsDropdown from '@/components/list/list-settings-dropdown.vue'
 import NamespaceSettingsDropdown from '@/components/namespace/namespace-settings-dropdown.vue'
 
 export default {

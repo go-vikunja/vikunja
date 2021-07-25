@@ -286,9 +286,9 @@ import {availableLanguages, saveLanguage, getCurrentLanguage} from '@/i18n/setup
 
 import {mapState} from 'vuex'
 
-import AvatarSettings from '../../components/user/avatar-settings'
+import AvatarSettings from '../../components/user/avatar-settings.vue'
 import copy from 'copy-to-clipboard'
-import ListSearch from '@/components/tasks/partials/listSearch'
+import ListSearch from '@/components/tasks/partials/listSearch.vue'
 
 export default {
 	name: 'Settings',

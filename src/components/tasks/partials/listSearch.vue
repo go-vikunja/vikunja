@@ -21,7 +21,7 @@
 <script>
 import ListService from '../../../services/list'
 import ListModel from '../../../models/list'
-import Multiselect from '@/components/input/multiselect'
+import Multiselect from '@/components/input/multiselect.vue'
 
 export default {
 	name: 'listSearch',

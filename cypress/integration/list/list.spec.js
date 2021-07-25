@@ -253,11 +253,11 @@ describe('Lists', () => {
 
 	describe('Gantt View', () => {
 		it('Hides tasks with no dates', () => {
-			TaskFactory.create(1)
+			const tasks = TaskFactory.create(1)
 			cy.visit('/lists/1/gantt')
 
 			cy.get('.gantt-chart-container .gantt-chart .tasks')
-				.should('be.empty')
+				.should('not.contain', tasks[0].title)
 		})
 
 		it('Shows tasks from the current and next month', () => {

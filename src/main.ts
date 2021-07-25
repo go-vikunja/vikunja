@@ -184,23 +184,20 @@ Vue.component('icon', FontAwesomeIcon)
 
 Vue.use(vueShortkey, {prevent: ['input', 'textarea', '.input']})
 
-import focus from '@/directives/focus'
-
+import focus from './directives/focus'
 Vue.directive('focus', focus)
 
-import tooltip from '@/directives/tooltip'
+import tooltip from './directives/tooltip'
 
 // @ts-ignore
 Vue.directive('tooltip', tooltip)
 
 // @ts-ignore
-import Button from '@/components/input/button'
-
+import Button from './components/input/button'
 Vue.component('x-button', Button)
 
 // @ts-ignore
-import Card from '@/components/misc/card'
-
+import Card from './components/misc/card'
 Vue.component('card', Card)
 
 Vue.mixin({

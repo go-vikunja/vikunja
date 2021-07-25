@@ -26,7 +26,7 @@
 </template>
 
 <script>
-import datepicker from '@/components/input/datepicker'
+import datepicker from '@/components/input/datepicker.vue'
 
 export default {
 	name: 'reminders',

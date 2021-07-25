@@ -146,8 +146,8 @@ import TeamService from '../../services/team'
 import TeamModel from '../../models/team'
 
 import rights from '../../models/rights'
-import Multiselect from '@/components/input/multiselect'
-import Nothing from '@/components/misc/nothing'
+import Multiselect from '@/components/input/multiselect.vue'
+import Nothing from '@/components/misc/nothing.vue'
 
 export default {
 	name: 'userTeamShare',

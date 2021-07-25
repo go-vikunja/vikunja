@@ -201,7 +201,7 @@ import PriorityLabel from './partials/priorityLabel'
 import TaskCollectionService from '../../services/taskCollection'
 import {mapState} from 'vuex'
 import Rights from '../../models/rights.json'
-import FilterPopup from '@/components/list/partials/filter-popup'
+import FilterPopup from '@/components/list/partials/filter-popup.vue'
 
 export default {
 	name: 'GanttChart',

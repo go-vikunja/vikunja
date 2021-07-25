@@ -86,7 +86,7 @@ steps:
       YARN_CACHE_FOLDER: .cache/yarn/
       CYPRESS_CACHE_FOLDER: .cache/cypress/
     commands:
-      - yarn build --mode dev
+      - yarn build:dev
     depends_on:
       - dependencies
 
@@ -95,7 +95,6 @@ steps:
     pull: true
     environment:
       YARN_CACHE_FOLDER: .cache/yarn/
-      CYPRESS_CACHE_FOLDER: .cache/cypress/
     commands:
       - yarn build --dest dist-prod
     depends_on:
@@ -119,8 +118,8 @@ steps:
       CYPRESS_CACHE_FOLDER: .cache/cypress/
       CYPRESS_DEFAULT_COMMAND_TIMEOUT: 60000
     commands:
-      - sed -i 's/localhost/api/g' dist/index.html
-      - yarn serve:dist & npx wait-on http://localhost:8080
+      - sed -i 's/localhost/api/g' dist-dev/index.html
+      - yarn serve:dist-dev & npx wait-on http://localhost:5000
       - yarn test:frontend --browser chrome
     depends_on:
       - dependencies

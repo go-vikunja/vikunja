@@ -9,7 +9,7 @@ import About from '../views/About'
 // User Handling
 import LoginComponent from '../views/user/Login'
 import RegisterComponent from '../views/user/Register'
-import OpenIdAuth from '@/views/user/OpenIdAuth'
+import OpenIdAuth from '../views/user/OpenIdAuth'
 // Tasks
 import ShowTasksInRangeComponent from '../views/tasks/ShowTasksInRange'
 import LinkShareAuthComponent from '../views/sharing/LinkSharingAuth'
@@ -31,63 +31,63 @@ import List from '../views/list/views/List'
 import Gantt from '../views/list/views/Gantt'
 import Table from '../views/list/views/Table'
 // List Settings
-import ListSettingEdit from '@/views/list/settings/edit'
-import ListSettingBackground from '@/views/list/settings/background'
-import ListSettingDuplicate from '@/views/list/settings/duplicate'
-import ListSettingShare from '@/views/list/settings/share'
-import ListSettingDelete from '@/views/list/settings/delete'
-import ListSettingArchive from '@/views/list/settings/archive'
-import FilterSettingEdit from '@/views/filters/settings/edit'
-import FilterSettingDelete from '@/views/filters/settings/delete'
+import ListSettingEdit from '../views/list/settings/edit'
+import ListSettingBackground from '../views/list/settings/background'
+import ListSettingDuplicate from '../views/list/settings/duplicate'
+import ListSettingShare from '../views/list/settings/share'
+import ListSettingDelete from '../views/list/settings/delete'
+import ListSettingArchive from '../views/list/settings/archive'
+import FilterSettingEdit from '../views/filters/settings/edit'
+import FilterSettingDelete from '../views/filters/settings/delete'
 // Namespace Settings
-import NamespaceSettingEdit from '@/views/namespaces/settings/edit'
-import NamespaceSettingShare from '@/views/namespaces/settings/share'
-import NamespaceSettingArchive from '@/views/namespaces/settings/archive'
-import NamespaceSettingDelete from '@/views/namespaces/settings/delete'
+import NamespaceSettingEdit from '../views/namespaces/settings/edit'
+import NamespaceSettingShare from '../views/namespaces/settings/share'
+import NamespaceSettingArchive from '../views/namespaces/settings/archive'
+import NamespaceSettingDelete from '../views/namespaces/settings/delete'
 // Saved Filters
-import CreateSavedFilter from '@/views/filters/CreateSavedFilter'
+import CreateSavedFilter from '../views/filters/CreateSavedFilter'
 
 const PasswordResetComponent = () => ({
-	component: import(/* webpackChunkName: "user-settings" */'../views/user/PasswordReset'),
+	component: import('../views/user/PasswordReset'),
 	loading: LoadingComponent,
 	error: ErrorComponent,
 	timeout: 60000,
 })
 const GetPasswordResetComponent = () => ({
-	component: import(/* webpackChunkName: "user-settings" */'../views/user/RequestPasswordReset'),
+	component: import('../views/user/RequestPasswordReset'),
 	loading: LoadingComponent,
 	error: ErrorComponent,
 	timeout: 60000,
 })
 const UserSettingsComponent = () => ({
-	component: import(/* webpackChunkName: "user-settings" */'../views/user/Settings'),
+	component: import('../views/user/Settings'),
 	loading: LoadingComponent,
 	error: ErrorComponent,
 	timeout: 60000,
 })
 // List Handling
 const NewListComponent = () => ({
-	component: import(/* webpackChunkName: "settings" */'../views/list/NewList'),
+	component: import('../views/list/NewList'),
 	loading: LoadingComponent,
 	error: ErrorComponent,
 	timeout: 60000,
 })
 // Namespace Handling
 const NewNamespaceComponent = () => ({
-	component: import(/* webpackChunkName: "settings" */'../views/namespaces/NewNamespace'),
+	component: import('../views/namespaces/NewNamespace'),
 	loading: LoadingComponent,
 	error: ErrorComponent,
 	timeout: 60000,
 })
 
 const EditTeamComponent = () => ({
-	component: import(/* webpackChunkName: "settings" */'../views/teams/EditTeam'),
+	component: import('../views/teams/EditTeam'),
 	loading: LoadingComponent,
 	error: ErrorComponent,
 	timeout: 60000,
 })
 const NewTeamComponent = () => ({
-	component: import(/* webpackChunkName: "settings" */'../views/teams/NewTeam'),
+	component: import('../views/teams/NewTeam'),
 	loading: LoadingComponent,
 	error: ErrorComponent,
 	timeout: 60000,

@@ -159,7 +159,7 @@ export default {
 	name: 'comments',
 	components: {
 		editor: () => ({
-			component: import(/* webpackChunkName: "editor" */ '../../input/editor'),
+			component: import('../../input/editor'),
 			loading: LoadingComponent,
 			error: ErrorComponent,
 			timeout: 60000,

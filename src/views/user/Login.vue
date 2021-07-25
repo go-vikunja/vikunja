@@ -108,7 +108,7 @@ import router from '../../router'
 import {HTTPFactory} from '@/http-common'
 import {ERROR_MESSAGE, LOADING} from '@/store/mutation-types'
 import legal from '../../components/misc/legal'
-import ApiConfig from '@/components/misc/api-config'
+import ApiConfig from '@/components/misc/api-config.vue'
 import {getErrorText} from '@/message'
 
 export default {

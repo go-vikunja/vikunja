@@ -44,8 +44,8 @@
 <script>
 import {mapState} from 'vuex'
 import {CURRENT_LIST, KEYBOARD_SHORTCUTS_ACTIVE, MENU_ACTIVE} from '@/store/mutation-types'
-import Navigation from '@/components/home/navigation'
-import QuickActions from '@/components/quick-actions/quick-actions'
+import Navigation from '@/components/home/navigation.vue'
+import QuickActions from '@/components/quick-actions/quick-actions.vue'
 
 export default {
 	name: 'contentAuth',

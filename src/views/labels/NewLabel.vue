@@ -37,7 +37,7 @@
 <script>
 import labelModel from '../../models/label'
 import LabelModel from '../../models/label'
-import CreateEdit from '@/components/misc/create-edit'
+import CreateEdit from '@/components/misc/create-edit.vue'
 import ColorPicker from '../../components/input/colorPicker'
 import {mapState} from 'vuex'
 import {LOADING, LOADING_MODULE} from '@/store/mutation-types'

@@ -59,11 +59,11 @@
 <script>
 import NamespaceService from '@/services/namespace'
 import NamespaceModel from '@/models/namespace'
-import Fancycheckbox from '@/components/input/fancycheckbox'
-import ColorPicker from '@/components/input/colorPicker'
-import LoadingComponent from '@/components/misc/loading'
-import ErrorComponent from '@/components/misc/error'
-import CreateEdit from '@/components/misc/create-edit'
+import Fancycheckbox from '@/components/input/fancycheckbox.vue'
+import ColorPicker from '@/components/input/colorPicker.vue'
+import LoadingComponent from '@/components/misc/loading.vue'
+import ErrorComponent from '@/components/misc/error.vue'
+import CreateEdit from '@/components/misc/create-edit.vue'
 
 export default {
 	name: 'namespace-setting-edit',
@@ -80,7 +80,7 @@ export default {
 		ColorPicker,
 		Fancycheckbox,
 		editor: () => ({
-			component: import(/* webpackChunkName: "editor" */ '@/components/input/editor'),
+			component: import('@/components/input/editor.vue'),
 			loading: LoadingComponent,
 			error: ErrorComponent,
 			timeout: 60000,

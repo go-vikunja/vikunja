@@ -35,7 +35,7 @@ import UserModel from '../../../models/user'
 import ListUserService from '../../../services/listUsers'
 import TaskAssigneeService from '../../../services/taskAssignee'
 import User from '../../misc/user'
-import Multiselect from '@/components/input/multiselect'
+import Multiselect from '@/components/input/multiselect.vue'
 
 export default {
 	name: 'editAssignees',

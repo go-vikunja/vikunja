@@ -68,12 +68,12 @@
 <script>
 import ListModel from '@/models/list'
 import ListService from '@/services/list'
-import ColorPicker from '@/components/input/colorPicker'
-import LoadingComponent from '@/components/misc/loading'
-import ErrorComponent from '@/components/misc/error'
+import ColorPicker from '@/components/input/colorPicker.vue'
+import LoadingComponent from '@/components/misc/loading.vue'
+import ErrorComponent from '@/components/misc/error.vue'
 import ListDuplicateService from '@/services/listDuplicateService'
 import {CURRENT_LIST} from '@/store/mutation-types'
-import CreateEdit from '@/components/misc/create-edit'
+import CreateEdit from '@/components/misc/create-edit.vue'
 
 export default {
 	name: 'list-setting-edit',
@@ -87,7 +87,7 @@ export default {
 		CreateEdit,
 		ColorPicker,
 		editor: () => ({
-			component: import(/* webpackChunkName: "editor" */ '@/components/input/editor'),
+			component: import('@/components/input/editor.vue'),
 			loading: LoadingComponent,
 			error: ErrorComponent,
 			timeout: 60000,

@@ -19,8 +19,8 @@
 </template>
 
 <script>
-import manageSharing from '@/components/sharing/userTeam'
-import CreateEdit from '@/components/misc/create-edit'
+import manageSharing from '@/components/sharing/userTeam.vue'
+import CreateEdit from '@/components/misc/create-edit.vue'
 
 import NamespaceService from '@/services/namespace'
 import NamespaceModel from '@/models/namespace'

@@ -69,7 +69,7 @@ import BackgroundUnsplashService from '../../../services/backgroundUnsplash'
 import BackgroundUploadService from '../../../services/backgroundUpload'
 import ListService from '@/services/list'
 import {CURRENT_LIST} from '@/store/mutation-types'
-import CreateEdit from '@/components/misc/create-edit'
+import CreateEdit from '@/components/misc/create-edit.vue'
 
 export default {
 	name: 'list-setting-background',

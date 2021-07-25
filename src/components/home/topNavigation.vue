@@ -96,10 +96,10 @@
 import {mapState} from 'vuex'
 import {CURRENT_LIST, QUICK_ACTIONS_ACTIVE} from '@/store/mutation-types'
 import Rights from '@/models/rights.json'
-import Update from '@/components/home/update'
-import ListSettingsDropdown from '@/components/list/list-settings-dropdown'
-import Dropdown from '@/components/misc/dropdown'
-import Notifications from '@/components/notifications/notifications'
+import Update from '@/components/home/update.vue'
+import ListSettingsDropdown from '@/components/list/list-settings-dropdown.vue'
+import Dropdown from '@/components/misc/dropdown.vue'
+import Notifications from '@/components/notifications/notifications.vue'
 
 export default {
 	name: 'topNavigation',

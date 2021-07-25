@@ -61,9 +61,9 @@
 </template>
 
 <script>
-import LoadingComponent from '@/components/misc/loading'
-import ErrorComponent from '@/components/misc/error'
-import Filters from '@/components/list/partials/filters'
+import LoadingComponent from '@/components/misc/loading.vue'
+import ErrorComponent from '@/components/misc/error.vue'
+import Filters from '@/components/list/partials/filters.vue'
 import SavedFilterService from '@/services/savedFilter'
 import SavedFilterModel from '@/models/savedFilter'
 
@@ -88,7 +88,7 @@ export default {
 	components: {
 		Filters,
 		editor: () => ({
-			component: import(/* webpackChunkName: "editor" */ '../../components/input/editor'),
+			component: import('../../components/input/editor'),
 			loading: LoadingComponent,
 			error: ErrorComponent,
 			timeout: 60000,

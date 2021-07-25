@@ -1,6 +1,12 @@
 /* eslint-disable no-console */
 /* eslint-disable no-undef */
 
+importScripts( '/workbox-v6.1.5/workbox-sw.js')
+workbox.setConfig({modulePathPrefix: '/workbox-v6.1.5'})
+
+import { precacheAndRoute } from 'workbox-precaching'
+precacheAndRoute(self.__WB_MANIFEST)
+
 // Cache assets
 workbox.routing.registerRoute(
 	// This regexp matches all files in precache-manifest

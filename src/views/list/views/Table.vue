@@ -225,7 +225,7 @@ import DateTableCell from '../../../components/tasks/partials/date-table-cell'
 import Fancycheckbox from '../../../components/input/fancycheckbox'
 import Sort from '../../../components/tasks/partials/sort'
 import {saveListView} from '@/helpers/saveListView'
-import FilterPopup from '@/components/list/partials/filter-popup'
+import FilterPopup from '@/components/list/partials/filter-popup.vue'
 
 export default {
 	name: 'Table',

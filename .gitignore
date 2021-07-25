@@ -1,6 +1,6 @@
 .DS_Store
 node_modules
-/dist
+/dist*
 *.zip
 
 # local env files
@@ -20,6 +20,7 @@ yarn-error.log*
 *.njsproj
 *.sln
 *.sw*
+!rollup.sw.js
 
 # Test files
 cypress/screenshots

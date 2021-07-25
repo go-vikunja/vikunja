@@ -181,14 +181,14 @@ import 'flatpickr/dist/flatpickr.css'
 import {formatISO} from 'date-fns'
 import differenceWith from 'lodash/differenceWith'
 
-import PrioritySelect from '@/components/tasks/partials/prioritySelect'
-import PercentDoneSelect from '@/components/tasks/partials/percentDoneSelect'
-import Multiselect from '@/components/input/multiselect'
+import PrioritySelect from '@/components/tasks/partials/prioritySelect.vue'
+import PercentDoneSelect from '@/components/tasks/partials/percentDoneSelect.vue'
+import Multiselect from '@/components/input/multiselect.vue'
 
 import UserService from '@/services/user'
 import ListService from '@/services/list'
 import NamespaceService from '@/services/namespace'
-import EditLabels from '@/components/tasks/partials/editLabels'
+import EditLabels from '@/components/tasks/partials/editLabels.vue'
 
 export default {
 	name: 'filters',

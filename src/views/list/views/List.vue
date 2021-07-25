@@ -166,9 +166,9 @@ import taskList from '../../../components/tasks/mixins/taskList'
 import { saveListView } from '@/helpers/saveListView'
 import Rights from '../../../models/rights.json'
 import { mapState } from 'vuex'
-import FilterPopup from '@/components/list/partials/filter-popup'
+import FilterPopup from '@/components/list/partials/filter-popup.vue'
 import { HAS_TASKS } from '@/store/mutation-types'
-import Nothing from '@/components/misc/nothing'
+import Nothing from '@/components/misc/nothing.vue'
 import createTask from '@/components/tasks/mixins/createTask'
 
 export default {

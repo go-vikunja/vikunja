@@ -25,9 +25,9 @@ import ListService from '@/services/list'
 import ListModel from '@/models/list'
 import {CURRENT_LIST} from '@/store/mutation-types'
 
-import CreateEdit from '@/components/misc/create-edit'
-import LinkSharing from '@/components/sharing/linkSharing'
-import userTeam from '@/components/sharing/userTeam'
+import CreateEdit from '@/components/misc/create-edit.vue'
+import LinkSharing from '@/components/sharing/linkSharing.vue'
+import userTeam from '@/components/sharing/userTeam.vue'
 
 export default {
 	name: 'list-setting-share',

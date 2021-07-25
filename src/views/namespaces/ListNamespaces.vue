@@ -66,9 +66,9 @@
 
 <script>
 import {mapState} from 'vuex'
-import Fancycheckbox from '../../components/input/fancycheckbox'
+import Fancycheckbox from '../../components/input/fancycheckbox.vue'
 import {LOADING} from '@/store/mutation-types'
-import ListCard from '@/components/list/partials/list-card'
+import ListCard from '@/components/list/partials/list-card.vue'
 
 export default {
 	name: 'ListNamespaces',

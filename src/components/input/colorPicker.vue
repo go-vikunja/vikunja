@@ -26,7 +26,6 @@
 
 <script>
 import verte from 'verte'
-import 'verte/dist/verte.css'
 
 export default {
 	name: 'colorPicker',
@@ -91,6 +90,8 @@ export default {
 </script>
 
 <style lang="scss">
+@import 'verte/dist/verte.css';
+
 .verte.is-empty {
 	.verte__icon {
 		opacity: 0;

@@ -34,7 +34,7 @@
 <script>
 import ListService from '../../services/list'
 import ListModel from '../../models/list'
-import CreateEdit from '@/components/misc/create-edit'
+import CreateEdit from '@/components/misc/create-edit.vue'
 import ColorPicker from '../../components/input/colorPicker'
 
 export default {

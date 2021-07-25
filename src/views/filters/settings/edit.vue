@@ -52,14 +52,14 @@
 </template>
 
 <script>
-import ErrorComponent from '@/components/misc/error'
-import LoadingComponent from '@/components/misc/loading'
-import CreateEdit from '@/components/misc/create-edit'
+import ErrorComponent from '@/components/misc/error.vue'
+import LoadingComponent from '@/components/misc/loading.vue'
+import CreateEdit from '@/components/misc/create-edit.vue'
 
 import SavedFilterModel from '@/models/savedFilter'
 import SavedFilterService from '@/services/savedFilter'
 import ListModel from '@/models/list'
-import Filters from '@/components/list/partials/filters'
+import Filters from '@/components/list/partials/filters.vue'
 import {objectToSnakeCase} from '@/helpers/case'
 
 export default {
@@ -85,7 +85,7 @@ export default {
 		CreateEdit,
 		Filters,
 		editor: () => ({
-			component: import(/* webpackChunkName: "editor" */ '@/components/input/editor'),
+			component: import('@/components/input/editor.vue'),
 			loading: LoadingComponent,
 			error: ErrorComponent,
 			timeout: 60000,

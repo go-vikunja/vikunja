@@ -100,7 +100,7 @@ export default {
 		Reminders,
 		EditLabels,
 		editor: () => ({
-			component: import(/* webpackChunkName: "editor" */ '../../components/input/editor'),
+			component: import('../../components/input/editor'),
 			loading: LoadingComponent,
 			error: ErrorComponent,
 			timeout: 60000,

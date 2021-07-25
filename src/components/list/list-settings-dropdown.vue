@@ -75,9 +75,9 @@
 
 <script>
 import {getSavedFilterIdFromListId} from '@/helpers/savedFilter'
-import Dropdown from '@/components/misc/dropdown'
-import DropdownItem from '@/components/misc/dropdown-item'
-import TaskSubscription from '@/components/misc/subscription'
+import Dropdown from '@/components/misc/dropdown.vue'
+import DropdownItem from '@/components/misc/dropdown-item.vue'
+import TaskSubscription from '@/components/misc/subscription.vue'
 
 export default {
 	name: 'list-settings-dropdown',

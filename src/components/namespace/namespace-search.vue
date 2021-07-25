@@ -14,7 +14,7 @@
 import NamespaceService from '../../services/namespace'
 import NamespaceModel from '../../models/namespace'
 
-import Multiselect from '@/components/input/multiselect'
+import Multiselect from '@/components/input/multiselect.vue'
 
 export default {
 	name: 'namespace-search',

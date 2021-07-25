@@ -43,7 +43,7 @@
 <script>
 import NamespaceModel from '../../models/namespace'
 import NamespaceService from '../../services/namespace'
-import CreateEdit from '@/components/misc/create-edit'
+import CreateEdit from '@/components/misc/create-edit.vue'
 import ColorPicker from '../../components/input/colorPicker'
 
 export default {

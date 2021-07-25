@@ -62,7 +62,7 @@ import TeamModel from '@/models/team'
 import {CURRENT_LIST, LOADING, LOADING_MODULE, QUICK_ACTIONS_ACTIVE} from '@/store/mutation-types'
 import ListModel from '@/models/list'
 import createTask from '@/components/tasks/mixins/createTask'
-import QuickAddMagic from '@/components/tasks/partials/quick-add-magic'
+import QuickAddMagic from '@/components/tasks/partials/quick-add-magic.vue'
 import {getHistory} from '../../modules/listHistory'
 
 const TYPE_LIST = 'list'

@@ -28,8 +28,8 @@
 </template>
 
 <script>
-import LoadingComponent from '@/components/misc/loading'
-import ErrorComponent from '@/components/misc/error'
+import LoadingComponent from '@/components/misc/loading.vue'
+import ErrorComponent from '@/components/misc/error.vue'
 
 import {LOADING} from '@/store/mutation-types'
 import {mapState} from 'vuex'
@@ -38,7 +38,7 @@ export default {
 	name: 'description',
 	components: {
 		editor: () => ({
-			component: import(/* webpackChunkName: "editor" */ '@/components/input/editor'),
+			component: import('@/components/input/editor.vue'),
 			loading: LoadingComponent,
 			error: ErrorComponent,
 			timeout: 60000,

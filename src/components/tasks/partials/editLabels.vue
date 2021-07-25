@@ -43,7 +43,7 @@ import differenceWith from 'lodash/differenceWith'
 import LabelModel from '../../../models/label'
 import LabelTaskService from '../../../services/labelTask'
 
-import Multiselect from '@/components/input/multiselect'
+import Multiselect from '@/components/input/multiselect.vue'
 import {LOADING, LOADING_MODULE} from '@/store/mutation-types'
 
 export default {

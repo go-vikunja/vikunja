@@ -40,7 +40,7 @@ import TaskService from '../../services/task'
 import LabelService from '../../services/label'
 import LabelTaskService from '../../services/labelTask'
 import createTask from '@/components/tasks/mixins/createTask'
-import QuickAddMagic from '@/components/tasks/partials/quick-add-magic'
+import QuickAddMagic from '@/components/tasks/partials/quick-add-magic.vue'
 
 export default {
 	name: 'add-task',

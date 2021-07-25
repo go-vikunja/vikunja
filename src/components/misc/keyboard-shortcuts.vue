@@ -62,7 +62,7 @@
 
 <script>
 import {KEYBOARD_SHORTCUTS_ACTIVE} from '@/store/mutation-types'
-import Shortcut from '@/components/misc/shortcut'
+import Shortcut from '@/components/misc/shortcut.vue'
 
 export default {
 	name: 'keyboard-shortcuts',
