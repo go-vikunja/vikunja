@@ -5,7 +5,7 @@
   "scripts": {
     "serve": "vue-cli-service serve",
     "serve:dist": "node scripts/serve-dist.js",
-    "build": "vue-cli-service build --modern",
+    "build": "vue-cli-service build",
     "build:report": "vue-cli-service build --report",
     "lint": "vue-cli-service lint --ignore-pattern '*.test.*'",
     "cypress:open": "cypress open",
@@ -111,7 +111,9 @@
   "browserslist": [
     "> 1%",
     "last 2 versions",
-    "not ie < 11"
+    "not ie > 0",
+    "not dead",
+    "Firefox ESR"
   ],
   "jest": {
     "testPathIgnorePatterns": [
