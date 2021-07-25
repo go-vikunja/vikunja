@@ -1,5 +1,5 @@
-import { HTTPFactory } from '@/http-common'
-import { ERROR_MESSAGE, LOADING } from '../mutation-types'
+import {HTTPFactory} from '@/http-common'
+import {ERROR_MESSAGE, LOADING} from '../mutation-types'
 import UserModel from '../../models/user'
 import {getToken, refreshToken, removeToken, saveToken} from '@/helpers/auth'
 
@@ -30,6 +30,8 @@ export default {
 				if (info.settings) {
 					state.settings = defaultSettings(info.settings)
 				}
+
+				state.isLinkShareAuth = info.id < 0
 			}
 		},
 		setUserSettings(state, settings) {
@@ -58,7 +60,7 @@ export default {
 		// Logs a user in with a set of credentials.
 		login(ctx, credentials) {
 			const HTTP = HTTPFactory()
-			ctx.commit(LOADING, true, { root: true })
+			ctx.commit(LOADING, true, {root: true})
 
 			// Delete an eventually preexisting old token
 			removeToken()
@@ -75,10 +77,9 @@ export default {
 			return HTTP.post('login', data)
 				.then(response => {
 					// Save the token to local storage for later use
-					saveToken(response.data.token)
+					saveToken(response.data.token, true)
 
 					// Tell others the user is autheticated
-					ctx.commit('isLinkShareAuth', false)
 					ctx.dispatch('checkAuth')
 					return Promise.resolve()
 				})
@@ -93,7 +94,7 @@ export default {
 					return Promise.reject(e)
 				})
 				.finally(() => {
-					ctx.commit(LOADING, false, { root: true })
+					ctx.commit(LOADING, false, {root: true})
 				})
 		},
 		// Registers a new user and logs them in.
@@ -110,18 +111,18 @@ export default {
 				})
 				.catch(e => {
 					if (e.response && e.response.data && e.response.data.message) {
-						ctx.commit(ERROR_MESSAGE, e.response.data.message, { root: true })
+						ctx.commit(ERROR_MESSAGE, e.response.data.message, {root: true})
 					}
 
 					return Promise.reject(e)
 				})
 				.finally(() => {
-					ctx.commit(LOADING, false, { root: true })
+					ctx.commit(LOADING, false, {root: true})
 				})
 		},
-		openIdAuth(ctx, { provider, code }) {
+		openIdAuth(ctx, {provider, code}) {
 			const HTTP = HTTPFactory()
-			ctx.commit(LOADING, true, { root: true })
+			ctx.commit(LOADING, true, {root: true})
 
 			const data = {
 				code: code,
@@ -132,10 +133,9 @@ export default {
 			return HTTP.post(`/auth/openid/${provider}/callback`, data)
 				.then(response => {
 					// Save the token to local storage for later use
-					saveToken(response.data.token)
+					saveToken(response.data.token, true)
 
 					// Tell others the user is autheticated
-					ctx.commit('isLinkShareAuth', false)
 					ctx.dispatch('checkAuth')
 					return Promise.resolve()
 				})
@@ -143,10 +143,10 @@ export default {
 					return Promise.reject(e)
 				})
 				.finally(() => {
-					ctx.commit(LOADING, false, { root: true })
+					ctx.commit(LOADING, false, {root: true})
 				})
 		},
-		linkShareAuth(ctx, { hash, password }) {
+		linkShareAuth(ctx, {hash, password}) {
 			const HTTP = HTTPFactory()
 			return HTTP.post('/shares/' + hash + '/auth', {
 				password: password,
@@ -222,7 +222,7 @@ export default {
 					return
 				}
 
-				refreshToken()
+				refreshToken(!ctx.state.isLinkShareAuth)
 					.then(() => {
 						ctx.dispatch('checkAuth')
 					})

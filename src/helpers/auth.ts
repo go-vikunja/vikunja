@@ -1,7 +1,7 @@
 import {HTTPFactory} from '@/http-common'
+import {AxiosResponse} from 'axios'
 
-let savedToken = null
-let persisted = false
+let savedToken: string | null = null
 
 /**
  * Saves a token while optionally saving it to lacal storage. This is used when viewing a link share:
@@ -9,10 +9,9 @@ let persisted = false
  * @param token
  * @param persist
  */
-export const saveToken = (token, persist = true) => {
+export const saveToken = (token: string, persist: boolean) => {
 	savedToken = token
 	if (persist) {
-		persisted = true
 		localStorage.setItem('token', token)
 	}
 }
@@ -21,7 +20,7 @@ export const saveToken = (token, persist = true) => {
  * Returns a saved token. If there is one saved in memory it will use that before anything else.
  * @returns {string|null}
  */
-export const getToken = () => {
+export const getToken = (): string | null => {
 	if (savedToken !== null) {
 		return savedToken
 	}
@@ -42,7 +41,7 @@ export const removeToken = () => {
  * Refreshes an auth token while ensuring it is updated everywhere.
  * @returns {Promise<AxiosResponse<any>>}
  */
-export const refreshToken = () => {
+export const refreshToken = (persist: boolean): Promise<AxiosResponse> => {
 	const HTTP = HTTPFactory()
 	return HTTP.post('user/token', null, {
 		headers: {
@@ -50,7 +49,7 @@ export const refreshToken = () => {
 		},
 	})
 		.then(r => {
-			saveToken(r.data.token, persisted)
+			saveToken(r.data.token, persist)
 			return Promise.resolve(r)
 		})
 		.catch(e => {
