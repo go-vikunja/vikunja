@@ -2,6 +2,15 @@ module.exports = {
 	configureWebpack: {
 		devtool: 'source-map',
 	},
+	chainWebpack: config => {
+		// Don't prefetch all languages
+		config.plugin('prefetch').tap(options => {
+			options[0].fileBlacklist = options[0].fileBlacklist || []
+			options[0].fileBlacklist.push(/lang(.)+?\.js$/)
+			options[0].fileBlacklist.push(/lang(.)+?\.js.map$/)
+			return options
+		})
+	},
 	productionSourceMap: false,
 	pwa: {
 		name: 'Vikunja',
