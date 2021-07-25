@@ -14511,7 +14511,7 @@ workbox-build@^4.3.1:
     workbox-sw "^4.3.1"
     workbox-window "^4.3.1"
 
-workbox-build@^6.1.1:
+workbox-build@^6.1.1, workbox-build@^6.1.5:
   version "6.1.5"
   resolved "https://registry.yarnpkg.com/workbox-build/-/workbox-build-6.1.5.tgz#31c3034a38527f1f7697335c15af9c5593168841"
   integrity sha512-P+fakR5QFVqJN9l9xHVXtmafga72gh9I+jM3A9HiB/6UNRmOAejXnDgD+RMegOHgQHPwnB44TalMToFaXKWIyA==
@@ -14568,10 +14568,10 @@ workbox-cacheable-response@^6.1.5:
   dependencies:
     workbox-core "^6.1.5"
 
-workbox-cli@6.1.1:
-  version "6.1.1"
-  resolved "https://registry.yarnpkg.com/workbox-cli/-/workbox-cli-6.1.1.tgz#5fe59fd2d6daf2b03ed745bbb021c396098870df"
-  integrity sha512-eWKCtpeHJ5Cmtfu+q03NN9b7YGPa6X1HNGgmT47IT07rrvjiSKQ0gWfQaAvSWsSSZLsb/kgS0Sc5wIqeYsa7LQ==
+workbox-cli@6.1.5:
+  version "6.1.5"
+  resolved "https://registry.yarnpkg.com/workbox-cli/-/workbox-cli-6.1.5.tgz#4e14adb20aae5978a82b3fed0719fa3f19e62b59"
+  integrity sha512-1/sfzXOxdnfqUti9mQPfLhoPCiKX3fYo+NojMAdCAYGnyGreI81R6O/00H9EozQAQutlLFngsxNtnR+WtGSElg==
   dependencies:
     chalk "^4.1.0"
     common-tags "^1.8.0"
@@ -14582,9 +14582,10 @@ workbox-cli@6.1.1:
     meow "^7.1.0"
     ora "^5.0.0"
     pretty-bytes "^5.3.0"
+    stringify-object "^3.3.0"
     upath "^1.2.0"
     update-notifier "^4.1.0"
-    workbox-build "^6.1.1"
+    workbox-build "^6.1.5"
 
 workbox-core@^4.3.1:
   version "4.3.1"
