@@ -2,236 +2,255 @@ $gantt-border: 1px solid $grey-200;
 $gantt-vertical-border-color: $grey-100;
 
 .gantt-chart-container {
-  padding-bottom: 1rem;
+	padding-bottom: 1rem;
 }
 
 .gantt-chart {
-  overflow-x: auto;
-  border-top: 1px solid $grey-200;
+	overflow-x: auto;
+	border-top: 1px solid $grey-200;
 
-  .dates {
-    display: flex;
-    text-align: center;
+	.dates {
+		display: flex;
+		text-align: center;
 
-    .months {
-      display: flex;
+		.months {
+			display: flex;
 
-      .month {
-        padding: 0.5rem 0 0;
-        border-right: $gantt-border;
-        font-family: $vikunja-font;
-        font-weight: bold;
+			.month {
+				padding: 0.5rem 0 0;
+				border-right: $gantt-border;
+				font-family: $vikunja-font;
+				font-weight: bold;
 
-        &:last-child {
-          border-right: none;
-        }
+				&:last-child {
+					border-right: none;
+				}
 
-        .days {
-          display: flex;
+				.days {
+					display: flex;
 
-          .day {
-            padding: 0.5rem 0;
-            font-weight: normal;
+					.day {
+						padding: 0.5rem 0;
+						font-weight: normal;
 
-            &.today {
-              background: $primary;
-              color: $white;
-              border-radius: 5px 5px 0 0;
-              font-weight: bold;
-            }
+						&.today {
+							background: $primary;
+							color: $white;
+							border-radius: 5px 5px 0 0;
+							font-weight: bold;
+						}
 
-            .theday {
-              padding: 0 .5rem;
-              width: 100%;
-              display: block;
-            }
+						.theday {
+							padding: 0 .5rem;
+							width: 100%;
+							display: block;
+						}
 
-            .weekday {
-              font-size: 0.8rem;
-            }
-          }
-        }
-      }
-    }
-  }
+						.weekday {
+							font-size: 0.8rem;
+						}
+					}
+				}
+			}
+		}
+	}
 
-  .tasks {
-    max-width: unset !important;
-    margin: 0;
-    border-top: $gantt-border;
+	.tasks {
+		max-width: unset !important;
+		margin: 0;
+		border-top: $gantt-border;
 
-    .row {
-      height: 45px;
+		.row {
+			height: 45px;
 
-      .task {
-        display: inline-block;
-        border: 2px solid $primary;
-        font-size: 0.85rem;
-        margin: 0.5rem;
-        border-radius: 6px;
-        padding: 0.25rem 0.5rem;
-        cursor: grab;
-        position: relative;
-        height: 31px !important;
+			.task {
+				display: inline-block;
+				border: 2px solid $primary;
+				font-size: 0.85rem;
+				margin: 0.5rem;
+				border-radius: 6px;
+				padding: 0.25rem 0.5rem;
+				cursor: grab;
+				position: relative;
+				height: 31px !important;
 
-        -webkit-touch-callout: none; // iOS Safari
-        -webkit-user-select: none; // Safari
-        -khtml-user-select: none; // Konqueror HTML
-        -moz-user-select: none; // Firefox
-        -ms-user-select: none; // Internet Explorer/Edge
-        user-select: none; // Non-prefixed version, currently  supported by Chrome and Opera
+				-webkit-touch-callout: none; // iOS Safari
+				-webkit-user-select: none; // Safari
+				-khtml-user-select: none; // Konqueror HTML
+				-moz-user-select: none; // Firefox
+				-ms-user-select: none; // Internet Explorer/Edge
+				user-select: none; // Non-prefixed version, currently  supported by Chrome and Opera
 
-        &.is-current-edit {
-          border-color: $orange !important;
-        }
+				&.is-current-edit {
+					border-color: $orange !important;
+				}
 
-        &.has-light-text {
-          color: $light;
+				&.has-light-text {
+					color: $light;
 
-          &.done span:after {
-            border-top: 1px solid $light;
-          }
+					&.done span:after {
+						border-top: 1px solid $light;
+					}
 
-          .edit-toggle {
-            color: $light;
-          }
-        }
+					.edit-toggle {
+						color: $light;
+					}
+				}
 
-        &.has-dark-text {
-          color: $text;
+				&.has-dark-text {
+					color: $text;
 
-          &.done span:after {
-            border-top: 1px solid $dark;
-          }
+					&.done span:after {
+						border-top: 1px solid $dark;
+					}
 
-          .edit-toggle {
-            color: $text;
-          }
-        }
+					.edit-toggle {
+						color: $text;
+					}
+				}
 
-        &.done span {
-          position: relative;
+				&.done span {
+					position: relative;
 
-          &:after {
-            content: '';
-            position: absolute;
-            right: 0;
-            left: 0;
-            top: 57%;
-          }
-        }
+					&:after {
+						content: '';
+						position: absolute;
+						right: 0;
+						left: 0;
+						top: 57%;
+					}
+				}
 
-        span:not(.high-priority) {
-          max-width: calc(100% - 20px);
-          display: inline-block;
-          white-space: nowrap;
-          text-overflow: ellipsis;
-          overflow: hidden;
+				span:not(.high-priority) {
+					max-width: calc(100% - 20px);
+					display: inline-block;
+					white-space: nowrap;
+					text-overflow: ellipsis;
+					overflow: hidden;
 
-          &.has-high-priority {
-            max-width: calc(100% - 90px);
-          }
+					&.has-high-priority {
+						max-width: calc(100% - 90px);
+					}
 
-          &.has-not-so-high-priority {
-            max-width: calc(100% - 70px);
-          }
+					&.has-not-so-high-priority {
+						max-width: calc(100% - 70px);
+					}
 
-          &.has-super-high-priority {
-            max-width: calc(100% - 111px);
-          }
+					&.has-super-high-priority {
+						max-width: calc(100% - 111px);
+					}
 
-          &.icon {
-            width: 10px;
-            text-align: center;
-          }
-        }
+					&.icon {
+						width: 10px;
+						text-align: center;
+					}
+				}
 
-        .high-priority {
-          margin: 0 0 0 .5rem;
-          vertical-align: bottom;
-        }
+				.high-priority {
+					margin: 0 0 0 .5rem;
+					vertical-align: bottom;
+				}
 
-        .edit-toggle {
-          float: right;
-          cursor: pointer;
-          margin-right: 4px;
-        }
+				.edit-toggle {
+					float: right;
+					cursor: pointer;
+					margin-right: 4px;
+				}
 
-        &.nodate {
-          border: 2px dashed $grey-300;
-          background: $grey-100;
-        }
+				&.nodate {
+					border: 2px dashed $grey-300;
+					background: $grey-100;
+				}
 
-        &:active {
-          cursor: grabbing;
-        }
-      }
-    }
-  }
+				&:active {
+					cursor: grabbing;
+				}
+			}
+		}
+	}
 
-  .taskedit {
-    position: fixed;
-    min-height: 0;
-    top: 10vh;
-    right: 10vw;
-    z-index: 5;
+	.taskedit {
+		position: fixed;
+		min-height: 0;
+		top: 10vh;
+		right: 10vw;
+		z-index: 5;
 
-    .card-content {
-      max-height: 60vh;
-      overflow-y: auto;
-    }
-  }
+		.card-content {
+			max-height: 60vh;
+			overflow-y: auto;
+		}
+	}
 
-  .add-new-task {
-    padding: 1rem .7rem .4rem .7rem;
-    display: flex;
-    max-width: 450px;
+	.add-new-task {
+		padding: 1rem .7rem .4rem .7rem;
+		display: flex;
+		max-width: 450px;
 
-    .input {
-      margin-right: .7rem;
-      font-size: .8rem;
-    }
+		.input {
+			margin-right: .7rem;
+			font-size: .8rem;
+		}
 
-    .button {
-      font-size: .68rem;
-    }
-  }
+		.button {
+			font-size: .68rem;
+		}
+	}
 }
 
 .gantt-options {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
 
-  .range-picker {
-    display: flex;
-    margin-bottom: 1rem;
+	@media screen and (max-width: $tablet) {
+		flex-direction: column;
+	}
 
-    .field {
-      margin: 0 0 0 .5rem;
-      max-width: 100px;
+	.range-picker {
+		display: flex;
+		margin-bottom: 1rem;
+		width: 50%;
 
-      &, .input {
-        font-size: .8rem;
-      }
+		@media screen and (max-width: $tablet) {
+			flex-direction: column;
+			width: 100%;
+		}
 
-      .select {
-        height: auto;
-      }
+		.field {
+			margin-bottom: 0;
+			width: 33%;
 
-      select {
-        height: auto;
-        font-size: 0.75rem;
-      }
+			&:not(:last-child) {
+				padding-right: .5rem;
+			}
 
-      .label {
-        font-size: .9rem;
-        padding-left: .4rem;
-      }
-    }
-  }
+			@media screen and (max-width: $tablet) {
+				width: 100%;
+				max-width: 100%;
+				margin-top: .5rem;
+				padding-right: 0 !important;
+			}
+
+			&, .input {
+				font-size: .8rem;
+			}
+
+			.select, .select select {
+				height: auto;
+				width: 100%;
+				font-size: .8rem;
+			}
+
+
+			.label {
+				font-size: .9rem;
+				padding-left: .4rem;
+			}
+		}
+	}
 }
 
 .vdr.active::before {
-  display: none;
+	display: none;
 }
