@@ -7,12 +7,11 @@ module.exports = {
 	plugins: [
 		createVuePlugin(),
 		VitePWA({
+			srcDir: 'src',
+			filename: 'sw.js',
+			base: '/',
 			strategies: 'injectManifest',
 			injectRegister: false,
-			injectManifest: {
-				swSrc: './src/ServiceWorker/sw.js',
-				swDest: './dist/sw.js',
-			},
 			manifest: {
 				name: 'Vikunja',
 				short_name: 'Vikunja',

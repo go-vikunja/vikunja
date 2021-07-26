@@ -1,7 +1,6 @@
 /* eslint-disable no-console */
 
 import {register} from 'register-service-worker'
-import swEvents from './ServiceWorker/events'
 import {getToken} from './helpers/auth'
 
 if (import.meta.env.PROD) {
@@ -22,7 +21,7 @@ if (import.meta.env.PROD) {
 			console.log('New content is available; please refresh.')
 			// Send an event with the updated info
 			document.dispatchEvent(
-				new CustomEvent(swEvents.SW_UPDATED, {detail: registration}),
+				new CustomEvent('swUpdated', {detail: registration}),
 			)
 		},
 		offline() {

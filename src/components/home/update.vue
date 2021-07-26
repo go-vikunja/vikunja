@@ -8,8 +8,6 @@
 </template>
 
 <script>
-import swEvents from '@/ServiceWorker/events.json'
-
 export default {
 	name: 'update',
 	data() {
@@ -20,7 +18,7 @@ export default {
 		}
 	},
 	created() {
-		document.addEventListener(swEvents.SW_UPDATED, this.showRefreshUI, {once: true})
+		document.addEventListener('swUpdated', this.showRefreshUI, {once: true})
 
 		if (navigator && navigator.serviceWorker) {
 			navigator.serviceWorker.addEventListener(
