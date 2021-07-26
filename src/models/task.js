@@ -46,7 +46,7 @@ export default class TaskModel extends AbstractModel {
 		this.labels = this.labels.map(l => {
 			return new LabelModel(l)
 		})
-			.sort((f, s) => f.title > s.title)
+			.sort((f, s) => f.title > s.title ? 1 : -1)
 
 		if (this.hexColor !== '' && this.hexColor.substring(0, 1) !== '#') {
 			this.hexColor = '#' + this.hexColor
