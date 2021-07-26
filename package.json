@@ -7,7 +7,7 @@
     "serve:dist-dev": "node scripts/serve-dist.js",
     "build": "vite build && rollup -c ./rollup.sw.js && workbox copyLibraries dist/",
     "build:dev": "vite build -m development --outDir dist-dev/",
-    "lint": "vue-cli-service lint --ignore-pattern '*.test.*'",
+    "lint": "eslint --ignore-pattern '*.test.*' ./src --ext .vue,.js,.ts",
     "cypress:open": "cypress open",
     "test:unit": "jest",
     "test:frontend": "cypress run"
@@ -45,15 +45,11 @@
     "@rollup/plugin-node-resolve": "13.0.4",
     "@rollup/plugin-replace": "3.0.0",
     "@types/jest": "26.0.24",
-    "@typescript-eslint/eslint-plugin": "4.28.4",
-    "@typescript-eslint/parser": "4.28.4",
-    "@vue/cli": "4.5.13",
-    "@vue/cli-plugin-babel": "4.5.13",
-    "@vue/cli-plugin-eslint": "4.5.13",
-    "@vue/cli-plugin-pwa": "4.5.13",
-    "@vue/cli-plugin-typescript": "4.5.13",
-    "@vue/cli-service": "4.5.13",
+    "@typescript-eslint/eslint-plugin": "^4.28.4",
+    "@typescript-eslint/parser": "^4.28.4",
+    "@vue/babel-preset-app": "^4.5.13",
     "@vue/eslint-config-typescript": "7.0.0",
+    "autoprefixer": "^10.3.1",
     "axios": "0.21.1",
     "babel-eslint": "10.1.0",
     "cypress": "8.0.0",
@@ -66,7 +62,6 @@
     "rollup-plugin-terser": "7.0.2",
     "rollup-plugin-visualizer": "5.5.2",
     "sass": "1.36.0",
-    "sass-loader": "10.2.0",
     "ts-jest": "27.0.4",
     "typescript": "4.3.5",
     "vite": "2.4.3",
@@ -111,7 +106,7 @@
       "parser": "@typescript-eslint/parser"
     },
     "ignorePatterns": [
-      "*.test.js",
+      "*.test.*",
       "cypress/*"
     ]
   },
