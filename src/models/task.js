@@ -224,10 +224,6 @@ export default class TaskModel extends AbstractModel {
 			data: {taskId: this.id},
 			actions: [
 				{
-					action: 'mark-as-done',
-					title: 'Done',
-				},
-				{
 					action: 'show-task',
 					title: 'Show task',
 				},

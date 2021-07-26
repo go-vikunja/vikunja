@@ -1,7 +1,6 @@
 /* eslint-disable no-console */
 
 import {register} from 'register-service-worker'
-import {getToken} from './helpers/auth'
 
 if (import.meta.env.PROD) {
 	register('/sw.js', {
@@ -32,26 +31,3 @@ if (import.meta.env.PROD) {
 		},
 	})
 }
-
-if (navigator && navigator.serviceWorker) {
-	navigator.serviceWorker.addEventListener('message', event => {
-		// for every message we expect an action field
-		// determining operation that we should perform
-		const {action} = event.data
-		// we use 2nd port provided by the message channel
-		const port = event.ports[0]
-
-		if (action === 'getBearerToken') {
-			console.debug('Token request from sw')
-			port.postMessage({
-				authToken: getToken(),
-			})
-		} else {
-			console.error('Unknown event', event)
-			port.postMessage({
-				error: 'Unknown request',
-			})
-		}
-	})
-}
-
