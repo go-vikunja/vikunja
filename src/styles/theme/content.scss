@@ -35,7 +35,7 @@
 }
 
 .no-auth-wrapper {
-  background: url('../../public/images/llama.svg') no-repeat bottom left fixed $light-background;
+  background: url('/images/llama.svg') no-repeat bottom left fixed $light-background;
   min-height: 100vh;
 
   .noauth-container {
