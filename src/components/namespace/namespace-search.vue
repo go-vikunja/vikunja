@@ -1,53 +1,43 @@
 <template>
 	<multiselect
-		:loading="namespaceService.loading"
 		:placeholder="$t('namespace.search')"
 		@search="findNamespaces"
 		:search-results="namespaces"
 		@select="select"
 		label="title"
-		v-model="namespace"
+		:search-delay="10"
 	/>
 </template>
 
 <script>
-import NamespaceService from '../../services/namespace'
-import NamespaceModel from '../../models/namespace'
-
 import Multiselect from '@/components/input/multiselect.vue'
 
 export default {
 	name: 'namespace-search',
 	data() {
 		return {
-			namespaceService: NamespaceService,
-			namespace: NamespaceModel,
-			namespaces: [],
+			query: '',
 		}
 	},
 	components: {
 		Multiselect,
 	},
-	created() {
-		this.namespaceService = new NamespaceService()
+	computed: {
+		namespaces() {
+			if (this.query === '') {
+				return []
+			}
+			
+			return this.$store.state.namespaces.namespaces.filter(n => {
+				return !n.isArchived && 
+					n.id > 0 &&
+					n.title.toLowerCase().includes(this.query.toLowerCase())
+			})
+		},
 	},
 	methods: {
 		findNamespaces(query) {
-			if (query === '') {
-				this.clearAll()
-				return
-			}
-
-			this.namespaceService.getAll({}, {s: query})
-				.then(response => {
-					this.$set(this, 'namespaces', response)
-				})
-				.catch(e => {
-					this.error(e)
-				})
-		},
-		clearAll() {
-			this.$set(this, 'namespaces', [])
+			this.query = query
 		},
 		select(namespace) {
 			this.$emit('selected', namespace)
