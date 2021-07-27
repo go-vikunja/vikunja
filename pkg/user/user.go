@@ -29,7 +29,7 @@ import (
 	"xorm.io/xorm"
 
 	"code.vikunja.io/web"
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
 	"golang.org/x/crypto/bcrypt"
 )
