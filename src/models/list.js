@@ -43,6 +43,7 @@ export default class ListModel extends AbstractModel {
 			backgroundInformation: null,
 			isFavorite: false,
 			subscription: null,
+			position: 0,
 
 			created: null,
 			updated: null,

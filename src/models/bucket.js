@@ -21,6 +21,7 @@ export default class BucketModel extends AbstractModel {
 			limit: 0,
 			tasks: [],
 			isDoneBucket: false,
+			position: 0,
 
 			createdBy: null,
 			created: null,
