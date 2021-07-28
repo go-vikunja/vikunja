@@ -196,10 +196,10 @@ func convertTrelloDataToVikunja(trelloData []*trello.Board) (fullVikunjaHierachi
 
 				// The usual stuff: Title, description, position, bucket id
 				task := &models.Task{
-					Title:       card.Name,
-					Description: card.Desc,
-					Position:    card.Pos,
-					BucketID:    bucketID,
+					Title:          card.Name,
+					Description:    card.Desc,
+					KanbanPosition: card.Pos,
+					BucketID:       bucketID,
 				}
 
 				if card.Due != nil {

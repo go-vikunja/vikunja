@@ -7218,6 +7218,10 @@ var doc = `{
                         "type": "string"
                     }
                 },
+                "position": {
+                    "description": "The position this bucket has when querying all buckets. See the tasks.position property on how to use this.",
+                    "type": "number"
+                },
                 "sort_by": {
                     "description": "The query parameter to sort by. This is for ex. done, priority, etc.",
                     "type": "array",
@@ -7324,6 +7328,10 @@ var doc = `{
                 "is_favorite": {
                     "description": "True if a task is a favorite task. Favorite tasks show up in a separate \"Important\" list. This value depends on the user making the call to the api.",
                     "type": "boolean"
+                },
+                "kanban_position": {
+                    "description": "The position of tasks in the kanban board. See the docs for the ` + "`" + `position` + "`" + ` property on how to use this.",
+                    "type": "number"
                 },
                 "labels": {
                     "description": "An array of labels which are associated with this task.",
@@ -7572,6 +7580,10 @@ var doc = `{
                 "owner": {
                     "description": "The user who created this list.",
                     "$ref": "#/definitions/user.User"
+                },
+                "position": {
+                    "description": "The position this list has when querying all lists. See the tasks.position property on how to use this.",
+                    "type": "number"
                 },
                 "subscription": {
                     "description": "The subscription status for the user reading this list. You can only read this property, use the subscription endpoints to modify it.\nWill only returned when retreiving one list.",
@@ -7900,6 +7912,10 @@ var doc = `{
                 "is_favorite": {
                     "description": "True if a task is a favorite task. Favorite tasks show up in a separate \"Important\" list. This value depends on the user making the call to the api.",
                     "type": "boolean"
+                },
+                "kanban_position": {
+                    "description": "The position of tasks in the kanban board. See the docs for the ` + "`" + `position` + "`" + ` property on how to use this.",
+                    "type": "number"
                 },
                 "labels": {
                     "description": "An array of labels which are associated with this task.",

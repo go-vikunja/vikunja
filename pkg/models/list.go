@@ -71,6 +71,9 @@ type List struct {
 	// Will only returned when retreiving one list.
 	Subscription *Subscription `xorm:"-" json:"subscription,omitempty"`
 
+	// The position this list has when querying all lists. See the tasks.position property on how to use this.
+	Position float64 `xorm:"double null" json:"position"`
+
 	// A timestamp when this list was created. You cannot change this value.
 	Created time.Time `xorm:"created not null" json:"created"`
 	// A timestamp when this list was last updated. You cannot change this value.
@@ -284,7 +287,10 @@ func GetListSimpleByID(s *xorm.Session, listID int64) (list *List, err error) {
 		return nil, ErrListDoesNotExist{ID: listID}
 	}
 
-	exists, err := s.Where("id = ?", listID).Get(list)
+	exists, err := s.
+		Where("id = ?", listID).
+		OrderBy("position").
+		Get(list)
 	if err != nil {
 		return
 	}
@@ -361,6 +367,7 @@ func getUserListsStatement(userID int64) *builder.Builder {
 			builder.Eq{"un.user_id": userID},
 			builder.Eq{"l.owner_id": userID},
 		)).
+		OrderBy("position").
 		GroupBy("l.id")
 }
 
@@ -559,6 +566,12 @@ func CreateOrUpdateList(s *xorm.Session, list *List, auth web.Auth) (err error) 
 		if err != nil {
 			return
 		}
+
+		list.Position = calculateDefaultPosition(list.ID, list.Position)
+		_, err = s.Where("id = ?", list.ID).Update(list)
+		if err != nil {
+			return
+		}
 		if list.IsFavorite {
 			if err := addToFavorites(s, list.ID, auth, FavoriteKindList); err != nil {
 				return err
@@ -572,6 +585,7 @@ func CreateOrUpdateList(s *xorm.Session, list *List, auth web.Auth) (err error) 
 			"identifier",
 			"hex_color",
 			"background_file_id",
+			"position",
 		}
 		if list.Description != "" {
 			colsToUpdate = append(colsToUpdate, "description")

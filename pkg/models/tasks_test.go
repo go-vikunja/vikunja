@@ -192,12 +192,12 @@ func TestTask_Update(t *testing.T) {
 		defer s.Close()
 
 		task := &Task{
-			ID:          4,
-			Title:       "test10000",
-			Description: "Lorem Ipsum Dolor",
-			Position:    10,
-			ListID:      1,
-			BucketID:    2, // Bucket 2 already has 3 tasks and a limit of 3
+			ID:             4,
+			Title:          "test10000",
+			Description:    "Lorem Ipsum Dolor",
+			KanbanPosition: 10,
+			ListID:         1,
+			BucketID:       2, // Bucket 2 already has 3 tasks and a limit of 3
 		}
 		err := task.Update(s, u)
 		assert.NoError(t, err)

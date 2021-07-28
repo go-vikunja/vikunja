@@ -209,11 +209,11 @@ func TestConvertTrelloToVikunja(t *testing.T) {
 					},
 					Tasks: []*models.Task{
 						{
-							Title:       "Test Card 1",
-							Description: "Card Description",
-							BucketID:    1,
-							Position:    123,
-							DueDate:     time1,
+							Title:          "Test Card 1",
+							Description:    "Card Description",
+							BucketID:       1,
+							KanbanPosition: 123,
+							DueDate:        time1,
 							Labels: []*models.Label{
 								{
 									Title:    "Label 1",
@@ -248,18 +248,18 @@ func TestConvertTrelloToVikunja(t *testing.T) {
 
 * [ ] Pending Task
 * [ ] Another Pending Task`,
-							BucketID: 1,
-							Position: 124,
+							BucketID:       1,
+							KanbanPosition: 124,
 						},
 						{
-							Title:    "Test Card 3",
-							BucketID: 1,
-							Position: 126,
+							Title:          "Test Card 3",
+							BucketID:       1,
+							KanbanPosition: 126,
 						},
 						{
-							Title:    "Test Card 4",
-							BucketID: 1,
-							Position: 127,
+							Title:          "Test Card 4",
+							BucketID:       1,
+							KanbanPosition: 127,
 							Labels: []*models.Label{
 								{
 									Title:    "Label 2",
@@ -268,9 +268,9 @@ func TestConvertTrelloToVikunja(t *testing.T) {
 							},
 						},
 						{
-							Title:    "Test Card 5",
-							BucketID: 2,
-							Position: 111,
+							Title:          "Test Card 5",
+							BucketID:       2,
+							KanbanPosition: 111,
 							Labels: []*models.Label{
 								{
 									Title:    "Label 3",
@@ -279,20 +279,20 @@ func TestConvertTrelloToVikunja(t *testing.T) {
 							},
 						},
 						{
-							Title:    "Test Card 6",
-							BucketID: 2,
-							Position: 222,
-							DueDate:  time1,
+							Title:          "Test Card 6",
+							BucketID:       2,
+							KanbanPosition: 222,
+							DueDate:        time1,
 						},
 						{
-							Title:    "Test Card 7",
-							BucketID: 2,
-							Position: 333,
+							Title:          "Test Card 7",
+							BucketID:       2,
+							KanbanPosition: 333,
 						},
 						{
-							Title:    "Test Card 8",
-							BucketID: 2,
-							Position: 444,
+							Title:          "Test Card 8",
+							BucketID:       2,
+							KanbanPosition: 444,
 						},
 					},
 				},
@@ -306,9 +306,9 @@ func TestConvertTrelloToVikunja(t *testing.T) {
 					},
 					Tasks: []*models.Task{
 						{
-							Title:    "Test Card 634",
-							BucketID: 3,
-							Position: 123,
+							Title:          "Test Card 634",
+							BucketID:       3,
+							KanbanPosition: 123,
 						},
 					},
 				},
@@ -323,9 +323,9 @@ func TestConvertTrelloToVikunja(t *testing.T) {
 					},
 					Tasks: []*models.Task{
 						{
-							Title:    "Test Card 63423",
-							BucketID: 4,
-							Position: 123,
+							Title:          "Test Card 63423",
+							BucketID:       4,
+							KanbanPosition: 123,
 						},
 					},
 				},

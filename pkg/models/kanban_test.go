@@ -49,21 +49,23 @@ func TestBucket_ReadAll(t *testing.T) {
 		assert.Len(t, buckets, 3)
 
 		// Assert all tasks are in the right bucket
-		assert.Len(t, buckets[0].Tasks, 12)
-		assert.Len(t, buckets[1].Tasks, 3)
+		assert.Len(t, buckets[0].Tasks, 3)
+		assert.Len(t, buckets[1].Tasks, 12)
 		assert.Len(t, buckets[2].Tasks, 3)
 
-		// Assert we have bucket 0, 1, 2, 3 but not 4 (that belongs to a different list)
-		assert.Equal(t, int64(1), buckets[0].ID)
-		assert.Equal(t, int64(2), buckets[1].ID)
+		// Assert we have bucket 1, 2, 3 but not 4 (that belongs to a different list) and their position
+		assert.Equal(t, int64(2), buckets[0].ID)
+		assert.Equal(t, int64(1), buckets[1].ID)
 		assert.Equal(t, int64(3), buckets[2].ID)
 
 		// Kinda assert all tasks are in the right buckets
-		assert.Equal(t, int64(1), buckets[0].Tasks[0].BucketID)
-		assert.Equal(t, int64(1), buckets[0].Tasks[1].BucketID)
-		assert.Equal(t, int64(2), buckets[1].Tasks[0].BucketID)
-		assert.Equal(t, int64(2), buckets[1].Tasks[1].BucketID)
-		assert.Equal(t, int64(2), buckets[1].Tasks[2].BucketID)
+		assert.Equal(t, int64(1), buckets[1].Tasks[0].BucketID)
+		assert.Equal(t, int64(1), buckets[1].Tasks[1].BucketID)
+
+		assert.Equal(t, int64(2), buckets[0].Tasks[0].BucketID)
+		assert.Equal(t, int64(2), buckets[0].Tasks[1].BucketID)
+		assert.Equal(t, int64(2), buckets[0].Tasks[2].BucketID)
+
 		assert.Equal(t, int64(3), buckets[2].Tasks[0].BucketID)
 		assert.Equal(t, int64(3), buckets[2].Tasks[1].BucketID)
 		assert.Equal(t, int64(3), buckets[2].Tasks[2].BucketID)
@@ -87,7 +89,8 @@ func TestBucket_ReadAll(t *testing.T) {
 
 		buckets := bucketsInterface.([]*Bucket)
 		assert.Len(t, buckets, 3)
-		assert.Equal(t, int64(2), buckets[0].Tasks[0].ID)
+		assert.Equal(t, int64(2), buckets[1].Tasks[0].ID)
+		assert.Equal(t, int64(33), buckets[1].Tasks[1].ID)
 	})
 	t.Run("accessed by link share", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)

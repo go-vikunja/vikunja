@@ -118,6 +118,8 @@ type Task struct {
 	// A 64-Bit float leaves plenty of room to initially give tasks a position with 2^16 difference to the previous task
 	// which also leaves a lot of room for rearranging and sorting later.
 	Position float64 `xorm:"double null" json:"position"`
+	// The position of tasks in the kanban board. See the docs for the `position` property on how to use this.
+	KanbanPosition float64 `xorm:"double null" json:"kanban_position"`
 
 	// The user who initially created the task.
 	CreatedBy   *user.User `xorm:"-" json:"created_by" valid:"-"`
@@ -836,6 +838,14 @@ func setTaskBucket(s *xorm.Session, task *Task, originalTask *Task, doCheckBucke
 	return nil
 }
 
+func calculateDefaultPosition(entityID int64, position float64) float64 {
+	if position == 0 {
+		return float64(entityID) * math.Pow(2, 16)
+	}
+
+	return position
+}
+
 // Create is the implementation to create a list task
 // @Summary Create a task
 // @Description Inserts a task into a list.
@@ -895,9 +905,8 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool) (err
 
 	t.Index = latestTask.Index + 1
 	// If no position was supplied, set a default one
-	if t.Position == 0 {
-		t.Position = float64(latestTask.ID+1) * math.Pow(2, 16)
-	}
+	t.Position = calculateDefaultPosition(latestTask.ID+1, t.Position)
+	t.KanbanPosition = calculateDefaultPosition(latestTask.ID+1, t.KanbanPosition)
 	if _, err = s.Insert(t); err != nil {
 		return err
 	}
@@ -1001,6 +1010,7 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 		"bucket_id",
 		"position",
 		"repeat_mode",
+		"kanban_position",
 	}
 
 	// When a repeating task is marked as done, we update all deadlines and reminders and set it as undone
@@ -1106,6 +1116,9 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 	// Position
 	if t.Position == 0 {
 		ot.Position = 0
+	}
+	if t.KanbanPosition == 0 {
+		ot.KanbanPosition = 0
 	}
 	// Repeat from current date
 	if t.RepeatMode == TaskRepeatModeDefault {

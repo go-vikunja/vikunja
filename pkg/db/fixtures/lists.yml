@@ -5,6 +5,7 @@
   identifier: test1
   owner_id: 1
   namespace_id: 1
+  position: 3
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 -
@@ -14,6 +15,7 @@
   identifier: test2
   owner_id: 3
   namespace_id: 1
+  position: 2
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 -
@@ -23,6 +25,7 @@
   identifier: test3
   owner_id: 3
   namespace_id: 2
+  position: 1
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 -
@@ -32,6 +35,7 @@
   identifier: test4
   owner_id: 3
   namespace_id: 3
+  position: 4
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 -
@@ -41,6 +45,7 @@
   identifier: test5
   owner_id: 5
   namespace_id: 5
+  position: 5
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 -
@@ -50,6 +55,7 @@
   identifier: test6
   owner_id: 6
   namespace_id: 6
+  position: 6
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 -
@@ -59,6 +65,7 @@
   identifier: test7
   owner_id: 6
   namespace_id: 6
+  position: 7
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 -
@@ -68,6 +75,7 @@
   identifier: test8
   owner_id: 6
   namespace_id: 6
+  position: 8
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 -
@@ -77,6 +85,7 @@
   identifier: test9
   owner_id: 6
   namespace_id: 6
+  position: 9
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 -
@@ -86,6 +95,7 @@
   identifier: test10
   owner_id: 6
   namespace_id: 6
+  position: 10
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 -
@@ -95,6 +105,7 @@
   identifier: test11
   owner_id: 6
   namespace_id: 6
+  position: 11
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 -
@@ -104,6 +115,7 @@
   identifier: test12
   owner_id: 6
   namespace_id: 7
+  position: 12
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 -
@@ -113,6 +125,7 @@
   identifier: test13
   owner_id: 6
   namespace_id: 8
+  position: 13
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 -
@@ -122,6 +135,7 @@
   identifier: test14
   owner_id: 6
   namespace_id: 9
+  position: 14
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 -
@@ -131,6 +145,7 @@
   identifier: test15
   owner_id: 6
   namespace_id: 10
+  position: 15
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 -
@@ -140,6 +155,7 @@
   identifier: test16
   owner_id: 6
   namespace_id: 11
+  position: 16
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 -
@@ -149,6 +165,7 @@
   identifier: test17
   owner_id: 6
   namespace_id: 12
+  position: 17
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 # This list is owned by user 7, and several other users have access to it via different methods.
@@ -160,6 +177,7 @@
   identifier: test18
   owner_id: 7
   namespace_id: 13
+  position: 18
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 -
@@ -169,6 +187,7 @@
   identifier: test19
   owner_id: 7
   namespace_id: 14
+  position: 19
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 # User 1 does not have access to this list
@@ -179,6 +198,7 @@
   identifier: test20
   owner_id: 13
   namespace_id: 15
+  position: 20
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 -
@@ -188,6 +208,7 @@
   identifier: test21
   owner_id: 1
   namespace_id: 16
+  position: 21
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 -
@@ -198,6 +219,7 @@
   owner_id: 1
   namespace_id: 1
   is_archived: 1
+  position: 22
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 -
@@ -207,5 +229,6 @@
   identifier: test23
   owner_id: 12
   namespace_id: 17
+  position: 23
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12

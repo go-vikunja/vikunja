@@ -73,11 +73,11 @@ func validateTaskField(fieldName string) error {
 		taskPropertyCreated,
 		taskPropertyUpdated,
 		taskPropertyPosition,
+		taskPropertyKanbanPosition,
 		taskPropertyBucketID:
 		return nil
 	}
 	return ErrInvalidTaskField{TaskField: fieldName}
-
 }
 
 func getTaskFilterOptsFromCollection(tf *TaskCollection) (opts *taskOptions, err error) {

@@ -3,6 +3,7 @@
   list_id: 1
   created_by_id: 1
   limit: 9999999 # This bucket has a limit we will never exceed in the tests to make sure the logic allows for buckets with limits
+  position: 2
   created: 2020-04-18 21:13:52
   updated: 2020-04-18 21:13:52
 - id: 2
@@ -10,6 +11,7 @@
   list_id: 1
   created_by_id: 1
   limit: 3
+  position: 1
   created: 2020-04-18 21:13:52
   updated: 2020-04-18 21:13:52
 - id: 3
@@ -17,6 +19,7 @@
   list_id: 1
   created_by_id: 1
   is_done_bucket: 1
+  position: 3
   created: 2020-04-18 21:13:52
   updated: 2020-04-18 21:13:52
 - id: 4

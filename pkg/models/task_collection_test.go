@@ -90,6 +90,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		ListID:      1,
 		BucketID:    1,
 		IsFavorite:  true,
+		Position:    2,
 		Labels: []*Label{
 			label4,
 		},
@@ -160,6 +161,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:   user1,
 		ListID:      1,
 		BucketID:    1,
+		Position:    4,
 		Labels: []*Label{
 			label4,
 		},
@@ -517,6 +519,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 					Created:     time.Unix(1543626724, 0).In(loc),
 					Updated:     time.Unix(1543626724, 0).In(loc),
 					BucketID:    1,
+					Position:    2,
 				},
 			},
 		},
@@ -1032,6 +1035,51 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task33, // has the index 17
 			},
 			wantErr: false,
+		},
+		{
+			name: "order by position",
+			fields: fields{
+				SortBy:  []string{"position", "id"},
+				OrderBy: []string{"asc", "asc"},
+			},
+			args: args{
+				a: &user.User{ID: 1},
+			},
+			want: []*Task{
+				// the other ones don't have a position set
+				task3,
+				task4,
+				task5,
+				task6,
+				task7,
+				task8,
+				task9,
+				task10,
+				task11,
+				task12,
+				task15,
+				task16,
+				task17,
+				task18,
+				task19,
+				task20,
+				task21,
+				task22,
+				task23,
+				task24,
+				task25,
+				task26,
+				task27,
+				task28,
+				task29,
+				task30,
+				task31,
+				task32,
+				task33,
+				// The only tasks with a position set
+				task1,
+				task2,
+			},
 		},
 	}
 

@@ -315,6 +315,7 @@ func getNamespaceSubscriptions(s *xorm.Session, namespaceIDs []int64, userID int
 func getListsForNamespaces(s *xorm.Session, namespaceIDs []int64, archived bool) ([]*List, error) {
 	lists := []*List{}
 	listQuery := s.
+		OrderBy("position").
 		In("namespace_id", namespaceIDs)
 
 	if !archived {

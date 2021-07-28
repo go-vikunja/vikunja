@@ -102,6 +102,10 @@ definitions:
         items:
           type: string
         type: array
+      position:
+        description: The position this bucket has when querying all buckets. See the
+          tasks.position property on how to use this.
+        type: number
       sort_by:
         description: The query parameter to sort by. This is for ex. done, priority,
           etc.
@@ -186,6 +190,10 @@ definitions:
           a separate "Important" list. This value depends on the user making the call
           to the api.
         type: boolean
+      kanban_position:
+        description: The position of tasks in the kanban board. See the docs for the
+          `position` property on how to use this.
+        type: number
       labels:
         description: An array of labels which are associated with this task.
         items:
@@ -403,6 +411,10 @@ definitions:
       owner:
         $ref: '#/definitions/user.User'
         description: The user who created this list.
+      position:
+        description: The position this list has when querying all lists. See the tasks.position
+          property on how to use this.
+        type: number
       subscription:
         $ref: '#/definitions/models.Subscription'
         description: |-
@@ -669,6 +681,10 @@ definitions:
           a separate "Important" list. This value depends on the user making the call
           to the api.
         type: boolean
+      kanban_position:
+        description: The position of tasks in the kanban board. See the docs for the
+          `position` property on how to use this.
+        type: number
       labels:
         description: An array of labels which are associated with this task.
         items:
