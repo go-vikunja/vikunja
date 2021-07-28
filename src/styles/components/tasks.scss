@@ -1,341 +1,363 @@
 .tasks-container {
-  display: flex;
+	display: flex;
 
-  .tasks {
-    width: 100%;
-  }
+	.tasks {
+		width: 100%;
 
-  .taskedit {
-    width: 50%;
-  }
+		.ghost {
+			border-radius: $radius;
+			background: $grey-100;
+			border: 2px dashed $grey-300;
+
+			* {
+				opacity: 0;
+			}
+		}
+	}
+
+	.taskedit {
+		width: 50%;
+	}
 }
 
 .tasks {
-  margin-top: 1rem;
-  padding: 0;
-  text-align: left;
+	margin-top: 1rem;
+	padding: 0;
+	text-align: left;
 
-  @media screen and (min-width: $tablet) {
-    &.short {
-      max-width: 53vw;
-    }
-  }
+	@media screen and (min-width: $tablet) {
+		&.short {
+			max-width: 53vw;
+		}
+	}
 
-  @media screen and (max-width: $tablet) {
-    max-width: 100%;
-  }
+	@media screen and (max-width: $tablet) {
+		max-width: 100%;
+	}
 
-  &.noborder {
-    margin: 1rem -0.5rem;
-  }
+	&.noborder {
+		margin: 1rem -0.5rem;
+	}
 
-  .task {
-    display: flex;
-    flex-wrap: wrap;
-    padding: 0.5rem;
-    transition: background-color $transition;
-    align-items: center;
-    cursor: pointer;
-    margin: 0 .5rem;
-    border-radius: $radius;
+	.task {
+		display: flex;
+		flex-wrap: wrap;
+		padding: .4rem;
+		transition: background-color $transition;
+		align-items: center;
+		cursor: pointer;
+		margin: 0 .5rem;
+		border-radius: $radius;
+		border: 2px solid transparent;
 
-    &:first-child {
-      margin-top: .5rem;
-    }
+		&:first-child {
+			margin-top: .5rem;
+		}
 
-    &:last-child {
-      margin-bottom: .5rem;
-    }
+		&:last-child {
+			margin-bottom: .5rem;
+		}
 
-    &:hover {
-      background-color: $grey-100;
-    }
+		&:hover {
+			background-color: $grey-100;
+		}
 
-    .tasktext,
-    &.tasktext {
-      white-space: nowrap;
-      text-overflow: ellipsis;
-      overflow: hidden;
-      display: inline-block;
-      flex: 1 0 50%;
+		.tasktext,
+		&.tasktext {
+			white-space: nowrap;
+			text-overflow: ellipsis;
+			overflow: hidden;
+			display: inline-block;
+			flex: 1 0 50%;
 
-      .overdue {
-        color: $red;
-      }
-    }
+			.overdue {
+				color: $red;
+			}
+		}
 
-    .task-list {
-      width: auto;
-      color: $grey-400;
-      font-size: .9rem;
-      white-space: nowrap;
-    }
+		.task-list {
+			width: auto;
+			color: $grey-400;
+			font-size: .9rem;
+			white-space: nowrap;
+		}
 
-    .fancycheckbox span {
-      display: none;
-    }
+		.fancycheckbox span {
+			display: none;
+		}
 
-    .color-bubble {
-      height: 10px;
-      flex: 0 0 10px;
-    }
+		.color-bubble {
+			height: 10px;
+			flex: 0 0 10px;
+		}
 
-    .tag {
-      margin: 0 0.5rem;
-    }
+		.tag {
+			margin: 0 0.5rem;
+		}
 
-    .avatar {
-      border-radius: 50%;
-      vertical-align: bottom;
-      margin-left: 5px;
-      height: 27px;
-      width: 27px;
-    }
+		.avatar {
+			border-radius: 50%;
+			vertical-align: bottom;
+			margin-left: 5px;
+			height: 27px;
+			width: 27px;
+		}
 
-    .list-task-icon {
-      margin-left: 6px;
+		.list-task-icon {
+			margin-left: 6px;
 
-      &:not(:first-of-type) {
-        margin-left: 8px;
-      }
-        
-    }
+			&:not(:first-of-type) {
+				margin-left: 8px;
+			}
 
-    a {
-      color: $text;
-      transition: color ease $transition-duration;
+		}
 
-      &:hover {
-        color: $grey-900;
-      }
-    }
+		a {
+			color: $text;
+			transition: color ease $transition-duration;
 
-    .favorite {
-      opacity: 0;
-      text-align: center;
-      width: 27px;
-      transition: opacity $transition, color $transition;
+			&:hover {
+				color: $grey-900;
+			}
+		}
 
-      &:hover {
-        color: $orange;
-      }
+		.favorite {
+			opacity: 0;
+			text-align: center;
+			width: 27px;
+			transition: opacity $transition, color $transition;
 
-      &.is-favorite {
-        opacity: 1;
-        color: $orange;
-      }
-    }
+			&:hover {
+				color: $orange;
+			}
 
-    &:hover .favorite {
-      opacity: 1;
-    }
+			&.is-favorite {
+				opacity: 1;
+				color: $orange;
+			}
+		}
 
-    .fancycheckbox {
-      height: 18px;
-      padding-top: 0;
-      padding-right: .5rem;
+		&:hover .favorite {
+			opacity: 1;
+		}
 
-      span {
-        display: none;
-      }
-    }
+		.handle {
+			opacity: 0;
+			transition: opacity $transition;
+			margin-right: .25rem;
+			cursor: grab;
+		}
 
-    .tasktext.done {
-      text-decoration: line-through;
-      color: $grey-500;
-    }
+		&:hover .handle {
+			opacity: 1;
+		}
 
-    span.parent-tasks {
-      color: $grey-500;
-      width: auto;
-    }
+		.fancycheckbox {
+			height: 18px;
+			padding-top: 0;
+			padding-right: .5rem;
 
-    .remove {
-      color: $red;
-    }
+			span {
+				display: none;
+			}
+		}
 
-    input[type="checkbox"] {
-      vertical-align: middle;
-    }
+		.tasktext.done {
+			text-decoration: line-through;
+			color: $grey-500;
+		}
 
-    .settings {
-      float: right;
-      width: 24px;
-      cursor: pointer;
-    }
+		span.parent-tasks {
+			color: $grey-500;
+			width: auto;
+		}
 
-    &.loader-container.is-loading:after {
-      top: calc(50% - 1rem);
-      left: calc(50% - 1rem);
-      width: 2rem;
-      height: 2rem;
-      border-left-color: $grey-300;
-      border-bottom-color: $grey-300;
-    }
-  }
+		.remove {
+			color: $red;
+		}
 
-  .progress {
-    width: 50px;
-    margin: 0 0.5rem 0 0;
-    flex: 3 1 auto;
+		input[type="checkbox"] {
+			vertical-align: middle;
+		}
 
-    @media screen and (max-width: $tablet) {
-      margin: 0.5rem 0 0 0;
-      order: 1;
-      width: 100%;
-    }
-  }
+		.settings {
+			float: right;
+			width: 24px;
+			cursor: pointer;
+		}
 
-  .task:last-child {
-    border-bottom: none;
-  }
+		&.loader-container.is-loading:after {
+			top: calc(50% - 1rem);
+			left: calc(50% - 1rem);
+			width: 2rem;
+			height: 2rem;
+			border-left-color: $grey-300;
+			border-bottom-color: $grey-300;
+		}
+	}
+
+	.progress {
+		width: 50px;
+		margin: 0 0.5rem 0 0;
+		flex: 3 1 auto;
+
+		@media screen and (max-width: $tablet) {
+			margin: 0.5rem 0 0 0;
+			order: 1;
+			width: 100%;
+		}
+	}
+
+	.task:last-child {
+		border-bottom: none;
+	}
 }
 
 .is-menu-enabled .tasks .task {
-  span:not(.tag), a {
-    .tasktext, &.tasktext {
-	  @media screen and (max-width: $desktop) {
-	    max-width: calc(100vw - 27px - 2rem - 1.5rem - 3rem - #{$navbar-width}); // 1.5rem is the padding of the tasks container, 3rem is the padding of .app-container
-      }
+	span:not(.tag), a {
+		.tasktext, &.tasktext {
+			@media screen and (max-width: $desktop) {
+				max-width: calc(100vw - 27px - 2rem - 1.5rem - 3rem - #{$navbar-width}); // 1.5rem is the padding of the tasks container, 3rem is the padding of .app-container
+			}
 
-	  // Duplicated rule to have it work properly in at least some browsers
-	  // This should be fine as the ui doesn't work in rare edge cases to begin with
-	  @media screen and (max-width: calc(#{$desktop} + #{$navbar-width})) {
-	    max-width: calc(100vw - 27px - 2rem - 1.5rem - 3rem - #{$navbar-width}); // 1.5rem is the padding of the tasks container, 3rem is the padding of .app-container
-      }
+			// Duplicated rule to have it work properly in at least some browsers
+			// This should be fine as the ui doesn't work in rare edge cases to begin with
+			@media screen and (max-width: calc(#{$desktop} + #{$navbar-width})) {
+				max-width: calc(100vw - 27px - 2rem - 1.5rem - 3rem - #{$navbar-width}); // 1.5rem is the padding of the tasks container, 3rem is the padding of .app-container
+			}
+		}
 	}
-  }
 }
 
 .taskedit {
-  min-height: calc(100% - 1rem);
-  margin-top: 1rem;
+	min-height: calc(100% - 1rem);
+	margin-top: 1rem;
 
-  .priority-select {
-    .select, select {
-      width: 100%;
-    }
-  }
+	.priority-select {
+		.select, select {
+			width: 100%;
+		}
+	}
 
-  ul.assingees {
-    list-style: none;
-    margin: 0;
+	ul.assingees {
+		list-style: none;
+		margin: 0;
 
-    li {
-      padding: 0.5rem 0.5rem 0;
+		li {
+			padding: 0.5rem 0.5rem 0;
 
-      a {
-        float: right;
-        color: $red;
-        transition: all $transition;
-      }
-    }
-  }
+			a {
+				float: right;
+				color: $red;
+				transition: all $transition;
+			}
+		}
+	}
 
-  .tag {
-    margin-right: 0.5rem;
-    margin-bottom: 0.5rem;
+	.tag {
+		margin-right: 0.5rem;
+		margin-bottom: 0.5rem;
 
-    &:last-child {
-      margin-right: 0;
-    }
-  }
+		&:last-child {
+			margin-right: 0;
+		}
+	}
 }
 
 .show-tasks {
-  h3 {
-    text-align: left;
+	h3 {
+		text-align: left;
 
-    &.nothing {
-      text-align: center;
-      margin-top: 3rem;
-    }
+		&.nothing {
+			text-align: center;
+			margin-top: 3rem;
+		}
 
-    .input {
-      width: 190px;
-      vertical-align: middle;
-      margin: .5rem 0;
-    }
-  }
+		.input {
+			width: 190px;
+			vertical-align: middle;
+			margin: .5rem 0;
+		}
+	}
 
-  img {
-    margin-top: 2rem;
-  }
+	img {
+		margin-top: 2rem;
+	}
 
-  .user img{
-    margin: 0;
-  }
+	.user img {
+		margin: 0;
+	}
 
-  .spinner.is-loading:after {
-    margin-left: calc(40% - 1rem);
-  }
+	.spinner.is-loading:after {
+		margin-left: calc(40% - 1rem);
+	}
 }
 
 .defer-task {
-  $defer-task-max-width: 350px;
+	$defer-task-max-width: 350px;
 
-  position: absolute;
-  width: 100%;
-  max-width: $defer-task-max-width;
-  border-radius: $radius;
-  border: 1px solid $grey-200;
-  padding: 1rem;
-  margin: 1rem;
-  background: $white;
-  color: $text;
-  cursor: default;
-  z-index: 10;
-  box-shadow: $shadow-lg;
+	position: absolute;
+	width: 100%;
+	max-width: $defer-task-max-width;
+	border-radius: $radius;
+	border: 1px solid $grey-200;
+	padding: 1rem;
+	margin: 1rem;
+	background: $white;
+	color: $text;
+	cursor: default;
+	z-index: 10;
+	box-shadow: $shadow-lg;
 
-  input.input {
-    display: none;
-  }
+	input.input {
+		display: none;
+	}
 
-  .flatpickr-calendar {
-    margin: 0 auto;
-    box-shadow: none;
+	.flatpickr-calendar {
+		margin: 0 auto;
+		box-shadow: none;
 
-    span {
-      width: auto !important;
-    }
-  }
+		span {
+			width: auto !important;
+		}
+	}
 
-  .defer-days {
-    justify-content: space-between;
-    display: flex;
-    margin: .5rem 0;
-  }
+	.defer-days {
+		justify-content: space-between;
+		display: flex;
+		margin: .5rem 0;
+	}
 
-  @media screen and (max-width: ($defer-task-max-width + 100px)) { // 100px is roughly the size the pane is pulled to the right
-    left: .5rem;
-    right: .5rem;
-    max-width: 100%;
-    width: calc(100vw - 1rem - 2rem);
+	@media screen and (max-width: ($defer-task-max-width + 100px)) { // 100px is roughly the size the pane is pulled to the right
+		left: .5rem;
+		right: .5rem;
+		max-width: 100%;
+		width: calc(100vw - 1rem - 2rem);
 
-    .flatpickr-calendar {
-      max-width: 100%;
+		.flatpickr-calendar {
+			max-width: 100%;
 
-      .flatpickr-innerContainer {
-        overflow: scroll;
-      }
-    }
-  }
+			.flatpickr-innerContainer {
+				overflow: scroll;
+			}
+		}
+	}
 }
 
 .is-max-width-desktop .tasks .task {
-  max-width: $desktop;
+	max-width: $desktop;
 }
 
 .tasktext {
-  :focus {
-    box-shadow: inset 0 0 0 2px rgba($primary, 0.5);
-  }
+	:focus {
+		box-shadow: inset 0 0 0 2px rgba($primary, 0.5);
+	}
 
-  :focus:not(:focus-visible) {
-    outline: 0;
-  }
+	:focus:not(:focus-visible) {
+		outline: 0;
+	}
 
-  :focus-visible, :-moz-focusring {
-    box-shadow: inset 0 0 0 2px rgba($primary, 0.5);
-  }
+	:focus-visible, :-moz-focusring {
+		box-shadow: inset 0 0 0 2px rgba($primary, 0.5);
+	}
 }

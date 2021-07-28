@@ -16,217 +16,165 @@
 				v-model="params"
 			/>
 		</div>
-		<div :class="{ 'is-loading': loading && !oneTaskUpdating}" class="kanban loader-container">
-			<div
-				:key="`bucket${bucket.id}`"
-				class="bucket"
-				:class="{'is-collapsed': collapsedBuckets[bucket.id]}"
-				v-for="bucket in buckets"
+		<div :class="{ 'is-loading': loading && !oneTaskUpdating}" class="kanban kanban-bucket-container loader-container">
+			<draggable
+				v-model="buckets"
+				@start="() => dragBucket = true"
+				@end="updateBucketPosition"
+				group="buckets"
+				v-bind="dragOptions"
+				:disabled="!canWrite"
 			>
-				<div class="bucket-header" @click="() => unCollapseBucket(bucket)">
-					<span
-						v-if="bucket.isDoneBucket"
-						class="icon is-small has-text-success mr-2"
-						v-tooltip="$t('list.kanban.doneBucketHint')"
+				<transition-group type="transition" :name="!dragBucket ? 'move-bucket': null" tag="div" class="kanban-bucket-container">
+					<div
+						:key="`bucket${bucket.id}`"
+						class="bucket"
+						:class="{'is-collapsed': collapsedBuckets[bucket.id]}"
+						v-for="(bucket, k) in buckets"
 					>
-						<icon icon="check-double"/>
-					</span>
-					<h2
-						:ref="`bucket${bucket.id}title`"
-						@focusout="() => saveBucketTitle(bucket.id)"
-						@keydown.enter.prevent.stop="() => saveBucketTitle(bucket.id)"
-						class="title input"
-						:contenteditable="canWrite && !collapsedBuckets[bucket.id]"
-						spellcheck="false">{{ bucket.title }}</h2>
-					<span
-						:class="{'is-max': bucket.tasks.length >= bucket.limit}"
-						class="limit"
-						v-if="bucket.limit > 0">
-						{{ bucket.tasks.length }}/{{ bucket.limit }}
-					</span>
-					<dropdown
-						class="is-right options"
-						v-if="canWrite && !collapsedBuckets[bucket.id]"
-						trigger-icon="ellipsis-v"
-						@close="() => showSetLimitInput = false"
-					>
-						<a
-							@click.stop="showSetLimitInput = true"
-							class="dropdown-item"
-						>
-							<div class="field has-addons" v-if="showSetLimitInput">
-								<div class="control">
-									<input
-										@change="() => setBucketLimit(bucket)"
-										@keyup.enter="() => setBucketLimit(bucket)"
-										@keyup.esc="() => showSetLimitInput = false"
-										class="input"
-										type="number"
-										min="0"
-										v-focus.always
-										v-model="bucket.limit"
-									/>
-								</div>
-								<div class="control">
-									<x-button
-										:disabled="bucket.limit < 0"
-										:icon="['far', 'save']"
-										:shadow="false"
-									/>
-								</div>
-							</div>
-							<template v-else>
-								{{
-									$t('list.kanban.limit', {limit: bucket.limit > 0 ? bucket.limit : $t('list.kanban.noLimit')})
-								}}
-							</template>
-						</a>
-						<a
-							@click.stop="toggleDoneBucket(bucket)"
-							class="dropdown-item"
-							v-tooltip="$t('list.kanban.doneBucketHintExtended')"
-						>
-							<span class="icon is-small" :class="{'has-text-success': bucket.isDoneBucket}"><icon
-								icon="check-double"/></span>
-							{{ $t('list.kanban.doneBucket') }}
-						</a>
-						<a
-							class="dropdown-item"
-							@click.stop="() => collapseBucket(bucket)"
-						>
-							{{ $t('list.kanban.collapse') }}
-						</a>
-						<a
-							:class="{'is-disabled': buckets.length <= 1}"
-							@click.stop="() => deleteBucketModal(bucket.id)"
-							class="dropdown-item has-text-danger"
-							v-tooltip="buckets.length <= 1 ? $t('list.kanban.deleteLast') : ''"
-						>
-							<span class="icon is-small"><icon icon="trash-alt"/></span>
-							{{ $t('misc.delete') }}
-						</a>
-					</dropdown>
-				</div>
-				<div :ref="`tasks-container${bucket.id}`" class="tasks">
-					<!-- Make the component either a div or a draggable component based on the user rights -->
-					<component
-						:animation-duration="150"
-						:drop-placeholder="dropPlaceholderOptions"
-						:get-child-payload="getTaskPayload(bucket.id)"
-						:is="canWrite ? 'Container' : 'div'"
-						:should-accept-drop="() => shouldAcceptDrop(bucket)"
-						@drop="e => onDrop(bucket.id, e)"
-						drag-class="ghost-task"
-						drag-class-drop="ghost-task-drop"
-						drag-handle-selector=".task.draggable"
-						group-name="buckets"
-					>
-						<!-- Make the component either a div or a draggable component based on the user rights -->
-						<component
-							:is="canWrite ? 'Draggable' : 'div'"
-							:key="`bucket${bucket.id}-task${task.id}`"
-							v-for="task in bucket.tasks"
-						>
-							<div
-								:class="{
-							'is-loading': (taskService.loading || taskLoading) && taskUpdating[task.id],
-							'draggable': !(taskService.loading || taskLoading) || !taskUpdating[task.id],
-							'has-light-text': !colorIsDark(task.hexColor) && task.hexColor !== `#${task.defaultColor}` && task.hexColor !== task.defaultColor,
-						}"
-								:style="{'background-color': task.hexColor !== '#' && task.hexColor !== `#${task.defaultColor}` ? task.hexColor : false}"
-								@click.ctrl="() => markTaskAsDone(task)"
-								@click.exact="() => $router.push({ name: 'task.kanban.detail', params: { id: task.id } })"
-								@click.meta="() => markTaskAsDone(task)"
-								class="task loader-container draggable"
+						<div class="bucket-header" @click="() => unCollapseBucket(bucket)">
+							<span
+								v-if="bucket.isDoneBucket"
+								class="icon is-small has-text-success mr-2"
+								v-tooltip="$t('list.kanban.doneBucketHint')"
 							>
-							<span class="task-id">
-								<span class="is-done" v-if="task.done">Done</span>
-								<template v-if="task.identifier === ''">
-									#{{ task.index }}
-								</template>
-								<template v-else>
-									{{ task.identifier }}
-								</template>
+								<icon icon="check-double"/>
 							</span>
-								<span
-									:class="{'overdue': task.dueDate <= new Date() && !task.done}"
-									class="due-date"
-									v-if="task.dueDate > 0"
-									v-tooltip="formatDate(task.dueDate)">
-									<span class="icon">
-										<icon :icon="['far', 'calendar-alt']"/>
-									</span>
-									<span>
-										{{ formatDateSince(task.dueDate) }}
-									</span>
-								</span>
-								<h3>{{ task.title }}</h3>
-								<progress
-									class="progress is-small"
-									v-if="task.percentDone > 0"
-									:value="task.percentDone * 100" max="100">
-									{{ task.percentDone * 100 }}%
-								</progress>
-								<div class="footer">
-									<span
-										:key="label.id"
-										:style="{'background': label.hexColor, 'color': label.textColor}"
-										class="tag"
-										v-for="label in task.labels">
-										<span>{{ label.title }}</span>
-									</span>
-									<priority-label :priority="task.priority"/>
-									<div class="assignees" v-if="task.assignees.length > 0">
-										<user
-											:avatar-size="24"
-											:key="task.id + 'assignee' + u.id"
-											:show-username="false"
-											:user="u"
-											v-for="u in task.assignees"
-										/>
+							<h2
+								:ref="`bucket${bucket.id}title`"
+								@focusout="() => saveBucketTitle(bucket.id)"
+								@keydown.enter.prevent.stop="() => saveBucketTitle(bucket.id)"
+								@click="focusBucketTitle"
+								class="title input"
+								:contenteditable="bucketTitleEditable && canWrite && !collapsedBuckets[bucket.id]"
+								spellcheck="false">{{ bucket.title }}</h2>
+							<span
+								:class="{'is-max': bucket.tasks.length >= bucket.limit}"
+								class="limit"
+								v-if="bucket.limit > 0">
+								{{ bucket.tasks.length }}/{{ bucket.limit }}
+							</span>
+							<dropdown
+								class="is-right options"
+								v-if="canWrite && !collapsedBuckets[bucket.id]"
+								trigger-icon="ellipsis-v"
+								@close="() => showSetLimitInput = false"
+							>
+								<a
+									@click.stop="showSetLimitInput = true"
+									class="dropdown-item"
+								>
+									<div class="field has-addons" v-if="showSetLimitInput">
+										<div class="control">
+											<input
+												@change="() => setBucketLimit(bucket)"
+												@keyup.enter="() => setBucketLimit(bucket)"
+												@keyup.esc="() => showSetLimitInput = false"
+												class="input"
+												type="number"
+												min="0"
+												v-focus.always
+												v-model="bucket.limit"
+											/>
+										</div>
+										<div class="control">
+											<x-button
+												:disabled="bucket.limit < 0"
+												:icon="['far', 'save']"
+												:shadow="false"
+											/>
+										</div>
 									</div>
-									<span class="icon" v-if="task.attachments.length > 0">
-										<icon icon="paperclip"/>	
+									<template v-else>
+										{{
+											$t('list.kanban.limit', {limit: bucket.limit > 0 ? bucket.limit : $t('list.kanban.noLimit')})
+										}}
+									</template>
+								</a>
+								<a
+									@click.stop="toggleDoneBucket(bucket)"
+									class="dropdown-item"
+									v-tooltip="$t('list.kanban.doneBucketHintExtended')"
+								>
+									<span class="icon is-small" :class="{'has-text-success': bucket.isDoneBucket}">
+										<icon icon="check-double"/>
 									</span>
-									<span v-if="task.description" class="icon">
-										<icon icon="align-left"/>
+									{{ $t('list.kanban.doneBucket') }}
+								</a>
+								<a
+									class="dropdown-item"
+									@click.stop="() => collapseBucket(bucket)"
+								>
+									{{ $t('list.kanban.collapse') }}
+								</a>
+								<a
+									:class="{'is-disabled': buckets.length <= 1}"
+									@click.stop="() => deleteBucketModal(bucket.id)"
+									class="dropdown-item has-text-danger"
+									v-tooltip="buckets.length <= 1 ? $t('list.kanban.deleteLast') : ''"
+								>
+									<span class="icon is-small">
+										<icon icon="trash-alt"/>
 									</span>
-								</div>
-							</div>
-						</component>
-					</component>
-				</div>
-				<div class="bucket-footer" v-if="canWrite">
-					<div class="field" v-if="showNewTaskInput[bucket.id]">
-						<div class="control" :class="{'is-loading': taskService.loading || loading}">
-							<input
-								class="input"
-								:disabled="taskService.loading || loading"
-								@focusout="toggleShowNewTaskInput(bucket.id)"
-								@keyup.enter="addTaskToBucket(bucket.id)"
-								@keyup.esc="toggleShowNewTaskInput(bucket.id)"
-								:placeholder="$t('list.kanban.addTaskPlaceholder')"
-								type="text"
-								v-focus.always
-								v-model="newTaskText"
-							/>
+									{{ $t('misc.delete') }}
+								</a>
+							</dropdown>
 						</div>
-						<p class="help is-danger" v-if="newTaskError[bucket.id] && newTaskText === ''">
-							{{ $t('list.list.addTitleRequired') }}
-						</p>
+						<div :ref="`tasks-container${bucket.id}`" class="tasks">
+							<draggable
+								v-model="bucket.tasks"
+								@start="() => drag = true"
+								@end="updateTaskPosition"
+								:group="{name: 'tasks', put: shouldAcceptDrop(bucket) && !dragBucket}"
+								v-bind="dragOptions"
+								:disabled="!canWrite"
+								:data-bucket-index="k"
+								class="dropper"
+							>
+								<transition-group type="transition" :name="!drag ? 'move-card': null" tag="div">
+									<kanban-card
+										:key="`bucket${bucket.id}-task${task.id}`"
+										v-for="task in bucket.tasks"
+										:task="task"
+									/>
+								</transition-group>
+							</draggable>
+						</div>
+						<div class="bucket-footer" v-if="canWrite">
+							<div class="field" v-if="showNewTaskInput[bucket.id]">
+								<div class="control" :class="{'is-loading': loading}">
+									<input
+										class="input"
+										:disabled="loading"
+										@focusout="toggleShowNewTaskInput(bucket.id)"
+										@keyup.enter="addTaskToBucket(bucket.id)"
+										@keyup.esc="toggleShowNewTaskInput(bucket.id)"
+										:placeholder="$t('list.kanban.addTaskPlaceholder')"
+										type="text"
+										v-focus.always
+										v-model="newTaskText"
+									/>
+								</div>
+								<p class="help is-danger" v-if="newTaskError[bucket.id] && newTaskText === ''">
+									{{ $t('list.list.addTitleRequired') }}
+								</p>
+							</div>
+							<x-button
+								@click="toggleShowNewTaskInput(bucket.id)"
+								class="is-transparent is-fullwidth has-text-centered"
+								:shadow="false"
+								v-if="!showNewTaskInput[bucket.id]"
+								icon="plus"
+								type="secondary"
+							>
+								{{
+									bucket.tasks.length === 0 ? $t('list.kanban.addTask') : $t('list.kanban.addAnotherTask')
+								}}
+							</x-button>
+						</div>
 					</div>
-					<x-button
-						@click="toggleShowNewTaskInput(bucket.id)"
-						class="is-transparent is-fullwidth has-text-centered"
-						:shadow="false"
-						v-if="!showNewTaskInput[bucket.id]"
-						icon="plus"
-						type="secondary"
-					>
-						{{ bucket.tasks.length === 0 ? $t('list.kanban.addTask') : $t('list.kanban.addAnotherTask') }}
-					</x-button>
-				</div>
-			</div>
+				</transition-group>
+			</draggable>
 
 			<div class="bucket new-bucket" v-if="canWrite && !loading && buckets.length > 0">
 				<input
@@ -276,50 +224,43 @@
 </template>
 
 <script>
-import TaskService from '../../../services/task'
 import BucketModel from '../../../models/bucket'
 
-import {Container, Draggable} from 'vue-smooth-dnd'
-import PriorityLabel from '../../../components/tasks/partials/priorityLabel'
-import User from '../../../components/misc/user'
-import Labels from '../../../components/tasks/partials/labels'
-
 import {filterObject} from '@/helpers/filterObject'
-import {applyDrag} from '@/helpers/applyDrag'
 import {mapState} from 'vuex'
 import {saveListView} from '@/helpers/saveListView'
 import Rights from '../../../models/rights.json'
 import {LOADING, LOADING_MODULE} from '@/store/mutation-types'
 import FilterPopup from '@/components/list/partials/filter-popup.vue'
 import Dropdown from '@/components/misc/dropdown.vue'
-import {playPop} from '@/helpers/playPop'
-import createTask from '@/components/tasks/mixins/createTask'
+import createTask from '../../../components/tasks/mixins/createTask'
 import {getCollapsedBucketState, saveCollapsedBucketState} from '@/helpers/saveCollapsedBucketState'
+import {calculateItemPosition} from '../../../helpers/calculateItemPosition'
+import draggable from 'vuedraggable'
+import KanbanCard from '../../../components/tasks/partials/kanban-card'
 
 export default {
 	name: 'Kanban',
 	components: {
+		KanbanCard,
 		Dropdown,
 		FilterPopup,
-		Container,
-		Draggable,
-		Labels,
-		User,
-		PriorityLabel,
+		draggable,
 	},
 	data() {
 		return {
-			taskService: TaskService,
-
-			dropPlaceholderOptions: {
-				className: 'drop-preview',
-				animationDuration: 150,
-				showOnTop: true,
+			drag: false,
+			dragBucket: false,
+			dragOptions: {
+				animation: 150,
+				ghostClass: 'ghost',
+				dragClass: 'task-dragging',
 			},
 			sourceBucket: 0,
 
 			showBucketDeleteModal: false,
 			bucketToDelete: 0,
+			bucketTitleEditable: false,
 
 			newTaskText: '',
 			showNewTaskInput: {},
@@ -347,7 +288,6 @@ export default {
 		createTask,
 	],
 	created() {
-		this.taskService = new TaskService()
 		this.loadBuckets()
 
 		// Save the current list view to local storage
@@ -357,14 +297,23 @@ export default {
 	watch: {
 		'$route.params.listId': 'loadBuckets',
 	},
-	computed: mapState({
-		buckets: state => state.kanban.buckets,
-		loadedListId: state => state.kanban.listId,
-		loading: state => state[LOADING] && state[LOADING_MODULE] === 'kanban',
-		taskLoading: state => state[LOADING] && state[LOADING_MODULE] === 'tasks',
-		canWrite: state => state.currentList.maxRight > Rights.READ,
-		list: state => state.currentList,
-	}),
+	computed: {
+		buckets: {
+			get() {
+				return this.$store.state.kanban.buckets
+			},
+			set(value) {
+				this.$store.commit('kanban/setBuckets', value)
+			},
+		},
+		...mapState({
+			loadedListId: state => state.kanban.listId,
+			loading: state => state[LOADING] && state[LOADING_MODULE] === 'kanban',
+			taskLoading: state => state[LOADING] && state[LOADING_MODULE] === 'tasks',
+			canWrite: state => state.currentList.maxRight > Rights.READ,
+			list: state => state.currentList,
+		}),
+	},
 	methods: {
 		loadBuckets() {
 
@@ -412,76 +361,23 @@ export default {
 					this.error(e)
 				})
 		},
-		onDrop(bucketId, dropResult) {
+		updateTaskPosition(e) {
+			this.drag = false
 
-			// Note: A lot of this example comes from the excellent kanban example on https://github.com/kutlugsahin/vue-smooth-dnd/blob/master/demo/src/pages/cards.vue
+			// While we could just pass the bucket index in through the function call, this would not give us the 
+			// new bucket id when a task has been moved between buckets, only the new bucket. Using the data-bucket-id
+			// of the drop target works all the time.
+			const bucketIndex = parseInt(e.to.parentNode.dataset.bucketIndex)
 
-			const bucketIndex = filterObject(this.buckets, b => b.id === bucketId)
+			const newBucket = this.buckets[bucketIndex]
+			const task = newBucket.tasks[e.newIndex]
+			const taskBefore = newBucket.tasks[e.newIndex - 1] ?? null
+			const taskAfter = newBucket.tasks[e.newIndex + 1] ?? null
 
-			if (dropResult.removedIndex !== null || dropResult.addedIndex !== null) {
+			task.kanbanPosition = calculateItemPosition(taskBefore !== null ? taskBefore.kanbanPosition : null, taskAfter !== null ? taskAfter.kanbanPosition : null)
+			task.bucketId = newBucket.id
 
-				// FIXME: This is probably not the best solution and more of a naive brute-force approach
-
-				// Duplicate the buckets to avoid stuff moving around without noticing
-				const buckets = Object.assign({}, this.buckets)
-				// Get the index of the bucket and the bucket itself
-				const bucket = buckets[bucketIndex]
-
-				// Rebuild the tasks from the bucket, removing/adding the moved task
-				bucket.tasks = applyDrag(bucket.tasks, dropResult)
-				// Update the bucket in the list of all buckets
-				delete buckets[bucketIndex]
-				buckets[bucketIndex] = bucket
-				// Set the buckets, triggering a state update in vue
-				// FIXME: This seems to set some task attributes (like due date) wrong. Commented out, but seems to still work?
-				//   Not sure what to do about this.
-				// this.$store.commit('kanban/setBuckets', buckets)
-			}
-
-			if (dropResult.addedIndex !== null) {
-
-				const taskIndex = dropResult.addedIndex
-				const taskBefore = typeof this.buckets[bucketIndex].tasks[taskIndex - 1] === 'undefined' ? null : this.buckets[bucketIndex].tasks[taskIndex - 1]
-				const taskAfter = typeof this.buckets[bucketIndex].tasks[taskIndex + 1] === 'undefined' ? null : this.buckets[bucketIndex].tasks[taskIndex + 1]
-				const task = this.buckets[bucketIndex].tasks[taskIndex]
-				this.$set(this.taskUpdating, task.id, true)
-				this.oneTaskUpdating = true
-
-				// If there is no task before, our task is the first task in which case we let it have half of the position of the task after it
-				if (taskBefore === null && taskAfter !== null) {
-					task.position = taskAfter.position / 2
-				}
-				// If there is no task after it, we just add 2^16 to the last position
-				if (taskBefore !== null && taskAfter === null) {
-					task.position = taskBefore.position + Math.pow(2, 16)
-				}
-				// If we have both a task before and after it, we acually calculate the position
-				if (taskAfter !== null && taskBefore !== null) {
-					task.position = taskBefore.position + (taskAfter.position - taskBefore.position) / 2
-				}
-
-				task.bucketId = bucketId
-
-				this.$store.dispatch('tasks/update', task)
-					.catch(e => {
-						this.error(e)
-					})
-					.finally(() => {
-						this.$set(this.taskUpdating, task.id, false)
-						this.oneTaskUpdating = false
-					})
-			}
-		},
-		markTaskAsDone(task) {
-			this.oneTaskUpdating = true
-			this.$set(this.taskUpdating, task.id, true)
-			task.done = !task.done
 			this.$store.dispatch('tasks/update', task)
-				.then(() => {
-					if (task.done) {
-						playPop()
-					}
-				})
 				.catch(e => {
 					this.error(e)
 				})
@@ -489,13 +385,6 @@ export default {
 					this.$set(this.taskUpdating, task.id, false)
 					this.oneTaskUpdating = false
 				})
-		},
-		getTaskPayload(bucketId) {
-			return index => {
-				const bucket = this.buckets[filterObject(this.buckets, b => b.id === bucketId)]
-				this.sourceBucket = bucket.id
-				return bucket.tasks[index]
-			}
 		},
 		toggleShowNewTaskInput(bucket) {
 			this.$set(this.showNewTaskInput, bucket, !this.showNewTaskInput[bucket])
@@ -567,7 +456,13 @@ export default {
 					this.showBucketDeleteModal = false
 				})
 		},
+		focusBucketTitle(e) {
+			// This little helper allows us to drag a bucket around at the title without focusing on it right away.
+			this.bucketTitleEditable = true
+			this.$nextTick(() => e.target.focus())
+		},
 		saveBucketTitle(bucketId) {
+			this.bucketTitleEditable = false
 			const bucketTitleElement = this.$refs[`bucket${bucketId}title`][0]
 			const bucketTitle = bucketTitleElement.textContent
 			const bucket = new BucketModel({
@@ -600,6 +495,20 @@ export default {
 				.then(() => {
 					this.success({message: this.$t('list.kanban.bucketLimitSavedSuccess')})
 				})
+				.catch(e => {
+					this.error(e)
+				})
+		},
+		updateBucketPosition(e) {
+			this.dragBucket = false
+
+			const bucket = this.buckets[e.newIndex]
+			const bucketBefore = this.buckets[e.newIndex - 1] ?? null
+			const bucketAfter = this.buckets[e.newIndex + 1] ?? null
+
+			bucket.position = calculateItemPosition(bucketBefore !== null ? bucketBefore.position : null, bucketAfter !== null ? bucketAfter.position : null)
+
+			this.$store.dispatch('kanban/updateBucket', bucket)
 				.catch(e => {
 					this.error(e)
 				})

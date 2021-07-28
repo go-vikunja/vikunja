@@ -104,6 +104,9 @@ export default class TaskModel extends AbstractModel {
 			index: 0,
 			isFavorite: false,
 			subscription: null,
+			
+			position: 0,
+			kanbanPosition: 0,
 
 			createdBy: UserModel,
 			created: null,

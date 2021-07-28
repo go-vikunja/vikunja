@@ -49,7 +49,7 @@
 		</div>
 
 		<aside class="menu namespaces-lists loader-container" :class="{'is-loading': loading}">
-			<template v-for="n in namespaces">
+			<template v-for="(n, nk) in namespaces">
 				<div :key="n.id" class="namespace-title" :class="{'has-menu': n.id > 0}">
 					<span
 						@click="toggleLists(n.id)"
@@ -73,38 +73,59 @@
 					</a>
 					<namespace-settings-dropdown :namespace="n" v-if="n.id > 0"/>
 				</div>
-				<div :key="n.id + 'child'" class="more-container" v-if="typeof listsVisible[n.id] !== 'undefined' ? listsVisible[n.id] : true">
+				<div
+					:key="n.id + 'child'"
+					class="more-container"
+					v-if="typeof listsVisible[n.id] !== 'undefined' ? listsVisible[n.id] : true"
+				>
 					<ul class="menu-list can-be-hidden">
-						<template v-for="l in n.lists">
-							<!-- This is a bit ugly but vue wouldn't want to let me filter this - probably because the lists
-									are nested inside of the namespaces makes it a lot harder.-->
-							<li :key="l.id" v-if="!l.isArchived">
-								<router-link
-									class="list-menu-link"
-									:class="{'router-link-exact-active': currentList.id === l.id}"
-									:to="{ name: 'list.index', params: { listId: l.id} }"
-									tag="span"
+						<draggable
+							v-model="n.lists"
+							:group="`namespace-${n.id}-lists`"
+							@start="() => drag = true"
+							@end="e => saveListPosition(e, nk)"
+							v-bind="dragOptions"
+							handle=".handle"
+						>
+							<transition-group type="transition" :name="!drag ? 'flip-list' : null">
+								<!-- eslint-disable vue/no-use-v-if-with-v-for,vue/no-confusing-v-for-v-if -->
+								<li
+									v-for="l in n.lists"
+									:key="l.id"
+									v-if="!l.isArchived"
+									class="loader-container"
+									:class="{'is-loading': listUpdating[l.id]}"
 								>
-									<span
-										:style="{ backgroundColor: l.hexColor }"
-										class="color-bubble"
-										v-if="l.hexColor !== ''">
-									</span>
-									<span class="list-menu-title">
-										{{ getListTitle(l) }}
-									</span>
-									<span
-										:class="{'is-favorite': l.isFavorite}"
-										@click.stop="toggleFavoriteList(l)"
-										class="favorite">
-										<icon icon="star" v-if="l.isFavorite"/>
-										<icon :icon="['far', 'star']" v-else/>
-									</span>
-								</router-link>
-								<list-settings-dropdown :list="l" v-if="l.id > 0"/>
-								<span class="list-setting-spacer" v-else></span>
-							</li>
-						</template>
+									<router-link
+										class="list-menu-link"
+										:class="{'router-link-exact-active': currentList.id === l.id}"
+										:to="{ name: 'list.index', params: { listId: l.id} }"
+										tag="span"
+									>
+										<span class="icon handle">
+											<icon icon="grip-lines"/>
+										</span>
+										<span
+											:style="{ backgroundColor: l.hexColor }"
+											class="color-bubble"
+											v-if="l.hexColor !== ''">
+										</span>
+										<span class="list-menu-title">
+											{{ getListTitle(l) }}
+										</span>
+										<span
+											:class="{'is-favorite': l.isFavorite}"
+											@click.stop="toggleFavoriteList(l)"
+											class="favorite">
+											<icon icon="star" v-if="l.isFavorite"/>
+											<icon :icon="['far', 'star']" v-else/>
+										</span>
+									</router-link>
+									<list-settings-dropdown :list="l" v-if="l.id > 0"/>
+									<span class="list-setting-spacer" v-else></span>
+								</li>
+							</transition-group>
+						</draggable>
 					</ul>
 				</div>
 			</template>
@@ -120,17 +141,26 @@ import {mapState} from 'vuex'
 import {CURRENT_LIST, MENU_ACTIVE, LOADING, LOADING_MODULE} from '@/store/mutation-types'
 import ListSettingsDropdown from '@/components/list/list-settings-dropdown.vue'
 import NamespaceSettingsDropdown from '@/components/namespace/namespace-settings-dropdown.vue'
+import draggable from 'vuedraggable'
+import {calculateItemPosition} from '@/helpers/calculateItemPosition'
 
 export default {
 	name: 'navigation',
 	data() {
 		return {
 			listsVisible: {},
+			drag: false,
+			dragOptions: {
+				animation: 100,
+				ghostClass: 'ghost',
+			},
+			listUpdating: {},
 		}
 	},
 	components: {
 		ListSettingsDropdown,
 		NamespaceSettingsDropdown,
+		draggable,
 	},
 	computed: mapState({
 		namespaces: state => state.namespaces.namespaces.filter(n => !n.isArchived),
@@ -175,6 +205,23 @@ export default {
 		},
 		toggleLists(namespaceId) {
 			this.$set(this.listsVisible, namespaceId, !this.listsVisible[namespaceId] ?? false)
+		},
+		saveListPosition(e, namespaceIndex) {
+			const listsFiltered = this.namespaces[namespaceIndex].lists.filter(l => !l.isArchived)
+			const list = listsFiltered[e.newIndex]
+			const listBefore = listsFiltered[e.newIndex - 1] ?? null
+			const listAfter = listsFiltered[e.newIndex + 1] ?? null
+			this.$set(this.listUpdating, list.id, true)
+
+			list.position = calculateItemPosition(listBefore !== null ? listBefore.position : null, listAfter !== null ? listAfter.position : null)
+
+			this.$store.dispatch('lists/updateList', list)
+				.catch(e => {
+					this.error(e)
+				})
+				.finally(() => {
+					this.$set(this.listUpdating, list.id, false)
+				})
 		},
 	},
 }

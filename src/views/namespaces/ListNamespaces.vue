@@ -90,6 +90,10 @@ export default {
 	computed: mapState({
 		namespaces(state) {
 			return state.namespaces.namespaces.filter(n => this.showArchived ? true : !n.isArchived)
+			// return state.namespaces.namespaces.filter(n => this.showArchived ? true : !n.isArchived).map(n => {
+			// 	n.lists = n.lists.filter(l => !l.isArchived)
+			// 	return n
+			// })
 		},
 		loading: LOADING,
 	}),

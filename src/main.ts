@@ -72,6 +72,7 @@ import {
 	faShareAlt,
 	faImage,
 	faBell,
+	faGripLines,
 } from '@fortawesome/free-solid-svg-icons'
 import {
 	faCalendarAlt,
@@ -179,6 +180,7 @@ library.add(faShareAlt)
 library.add(faImage)
 library.add(faBell)
 library.add(faBellSlash)
+library.add(faGripLines)
 
 Vue.component('icon', FontAwesomeIcon)
 

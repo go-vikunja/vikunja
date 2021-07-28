@@ -436,26 +436,23 @@ describe('Lists', () => {
 				.should('exist')
 		})
 
+		it('Can drag tasks around', () => {
+			const tasks = TaskFactory.create(2, {
+				list_id: 1,
+				bucket_id: 1,
+			})
+			cy.visit('/lists/1/kanban')
 
-		// The following test does not work. It seems like vue-smooth-dnd does not use either mousemove or dragstart
-		// (not sure why this actually works at all?) and as I'm planning to swap that out for vuedraggable/sortable.js
-		// anyway, I figured it wouldn't be worth the hassle right now.
-
-//		it('Can drag tasks around', () => {
-//			const tasks = TaskFactory.create(2, {
-//				list_id: 1,
-//				bucket_id: 1,
-//			})
-//			cy.visit('/lists/1/kanban')
-//
-//			cy.get('.kanban .bucket .tasks .task')
-//				.contains(tasks[0].title)
-//				.first()
-//				.drag('.kanban .bucket:nth-child(2) .tasks .smooth-dnd-container.vertical')
-//				.trigger('mousedown', {which: 1})
-//				.trigger('mousemove', {clientX: 500, clientY: 0})
-//				.trigger('mouseup', {force: true})
-//		})
+			cy.get('.kanban .bucket .tasks .task')
+				.contains(tasks[0].title)
+				.first()
+				.drag('.kanban .bucket:nth-child(2) .tasks .dropper div')
+			
+			cy.get('.kanban .bucket:nth-child(2) .tasks')
+				.should('contain', tasks[0].title)
+			cy.get('.kanban .bucket:nth-child(1) .tasks')
+				.should('not.contain', tasks[0].title)
+		})
 
 		it('Should navigate to the task when the task card is clicked', () => {
 			const tasks = TaskFactory.create(5, {

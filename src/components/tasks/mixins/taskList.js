@@ -1,5 +1,6 @@
 import TaskCollectionService from '../../../services/taskCollection'
 import cloneDeep from 'lodash/cloneDeep'
+import {calculateItemPosition} from '../../../helpers/calculateItemPosition'
 
 /**
  * This mixin provides a base set of methods and properties to get tasks on a list.
@@ -20,7 +21,7 @@ export default {
 
 			showTaskFilter: false,
 			params: {
-				sort_by: ['done', 'id'],
+				sort_by: ['position', 'id'],
 				order_by: ['asc', 'desc'],
 				filter_by: ['done'],
 				filter_value: ['false'],
@@ -148,9 +149,9 @@ export default {
 				if (a.done > b.done)
 					return 1
 
-				if (a.id > b.id)
+				if (a.position < b.position)
 					return -1
-				if (a.id < b.id)
+				if (a.position > b.position)
 					return 1
 				return 0
 			})
@@ -186,6 +187,23 @@ export default {
 					page: page,
 				},
 			}
+		},
+		saveTaskPosition(e) {
+			this.drag = false
+			
+			const task = this.tasks[e.newIndex]
+			const taskBefore = this.tasks[e.newIndex - 1] ?? null
+			const taskAfter = this.tasks[e.newIndex + 1] ??  null
+			
+			task.position = calculateItemPosition(taskBefore !== null ? taskBefore.position : null, taskAfter !== null ? taskAfter.position : null)
+
+			this.$store.dispatch('tasks/update', task)
+				.then(r => {
+					this.$set(this.tasks, e.newIndex, r)
+				})
+				.catch(e => {
+					this.error(e)
+				})
 		},
 	},
 }

@@ -153,3 +153,7 @@ button.table {
 .is-strikethrough {
   text-decoration: line-through;
 }
+
+.is-touch .handle {
+	opacity: 1 !important;
+}

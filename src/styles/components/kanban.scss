@@ -12,292 +12,314 @@ $crazy-height-calculation-tasks: '#{$crazy-height-calculation} - 1rem - 2.5rem -
 $filter-container-height: '1rem - #{$switch-view-height}';
 
 .app-content.list\.kanban {
-  padding-bottom: 0;
+	padding-bottom: 0;
 }
 
 .kanban {
 
-  display: flex;
-  align-items: flex-start;
-  overflow-x: auto;
-  overflow-y: hidden;
-  height: calc(#{$crazy-height-calculation});
-  margin: 0 -1.5rem;
-  padding: 0 1.5rem;
+	overflow-x: auto;
+	overflow-y: hidden;
+	height: calc(#{$crazy-height-calculation});
+	margin: 0 -1.5rem;
+	padding: 0 1.5rem;
 
-  @media screen and (max-width: $tablet) {
-    height: calc(#{$crazy-height-calculation} - #{$filter-container-height});
-  }
+	@media screen and (max-width: $tablet) {
+		height: calc(#{$crazy-height-calculation} - #{$filter-container-height});
+	}
 
-  .bucket {
-    background-color: $bucket-background;
-    border-radius: $radius;
-    position: relative;
+	&-bucket-container {
+		display: flex;
+		align-items: flex-start;
+	}
 
-    flex: 0 0 $bucket-width;
-    margin: 0 $bucket-right-margin 0 0;
-    max-height: 100%;
-    min-height: 20px;
-    max-width: $bucket-width;
+	.ghost {
+		background: transparent !important;
+		border: 3px dashed $grey-300 !important;
+		box-shadow: none !important;
 
-    .tasks {
-      max-height: calc(#{$crazy-height-calculation-tasks});
-      overflow: auto;
+		* {
+			opacity: 0;
+		}
+	}
 
-      @media screen and (max-width: $tablet) {
-        max-height: calc(#{$crazy-height-calculation-tasks} - #{$filter-container-height});
-      }
+	.bucket {
+		background-color: $bucket-background;
+		border-radius: $radius;
+		position: relative;
 
-      .task {
+		margin: 0 $bucket-right-margin 0 0;
+		max-height: 100%;
+		min-height: 20px;
+		width: $bucket-width;
 
-        &:first-child {
-          margin-top: 0;
-        }
+		.tasks {
+			max-height: calc(#{$crazy-height-calculation-tasks});
+			overflow: auto;
+			margin-top: 0;
 
-        -webkit-touch-callout: none; // iOS Safari
-        -webkit-user-select: none; // Safari
-        -khtml-user-select: none; // Konqueror HTML
-        -moz-user-select: none; // Old versions of Firefox
-        -ms-user-select: none; // Internet Explorer/Edge
-        user-select: none; // Non-prefixed version, currently supported by Chrome, Opera and Firefox
+			@media screen and (max-width: $tablet) {
+				max-height: calc(#{$crazy-height-calculation-tasks} - #{$filter-container-height});
+			}
 
-        transition: $ease-out;
-        cursor: pointer;
-        box-shadow: $shadow-xs;
-        display: block;
+			.task {
+				-webkit-touch-callout: none; // iOS Safari
+				-webkit-user-select: none; // Safari
+				-khtml-user-select: none; // Konqueror HTML
+				-moz-user-select: none; // Old versions of Firefox
+				-ms-user-select: none; // Internet Explorer/Edge
+				user-select: none; // Non-prefixed version, currently supported by Chrome, Opera and Firefox
 
-        font-size: .9rem;
-        padding: .5rem;
-        margin: .5rem;
-        border-radius: $radius;
-        background: $task-background;
+				//transition: $ease-out;
+				cursor: pointer;
+				box-shadow: $shadow-xs;
+				display: block;
+				border: 3px solid transparent;
 
-        &.loader-container.is-loading:after {
-          width: 1.5rem;
-          height: 1.5rem;
-          top: calc(50% - .75rem);
-          left: calc(50% - .75rem);
-          border-width: 2px;
-        }
+				font-size: .9rem;
+				padding: .5rem;
+				margin: .5rem;
+				border-radius: $radius;
+				background: $task-background;
 
-        h3 {
-          font-family: $family-sans-serif;
-          font-size: .85rem;
-          word-break: break-word;
-        }
+				&.loader-container.is-loading:after {
+					width: 1.5rem;
+					height: 1.5rem;
+					top: calc(50% - .75rem);
+					left: calc(50% - .75rem);
+					border-width: 2px;
+				}
 
-        .progress {
-          margin: 8px 0 0 0;
-          width: 100%;
-          height: 0.5rem;
-        }
+				h3 {
+					font-family: $family-sans-serif;
+					font-size: .85rem;
+					word-break: break-word;
+				}
 
-        .due-date {
-          float: right;
-          display: flex;
-          align-items: center;
+				.progress {
+					margin: 8px 0 0 0;
+					width: 100%;
+					height: 0.5rem;
+				}
 
-          .icon {
-            margin-right: .25rem;
-          }
+				.due-date {
+					float: right;
+					display: flex;
+					align-items: center;
 
-          &.overdue {
-            color: $red;
-          }
-        }
+					.icon {
+						margin-right: .25rem;
+					}
 
-        .label-wrapper .tag {
-          margin: .5rem .5rem 0 0;
-        }
+					&.overdue {
+						color: $red;
+					}
+				}
 
-        .footer {
-          background: transparent;
-          padding: 0;
-          display: flex;
-          flex-wrap: wrap;
-          align-items: center;
+				.label-wrapper .tag {
+					margin: .5rem .5rem 0 0;
+				}
 
-          .tag, .assignees, .icon, .priority-label {
-            margin-top: .25rem;
-            margin-right: .25rem;
-          }
+				.footer {
+					background: transparent;
+					padding: 0;
+					display: flex;
+					flex-wrap: wrap;
+					align-items: center;
 
-          .assignees {
-            display: flex;
+					.tag, .assignees, .icon, .priority-label {
+						margin-top: .25rem;
+						margin-right: .25rem;
+					}
 
-            .user {
-              display: inline;
-              margin: 0;
+					.assignees {
+						display: flex;
 
-              img {
-                margin: 0;
-              }
-            }
-          }
+						.user {
+							display: inline;
+							margin: 0;
 
-          .tag {
-            margin-left: 0;
-          }
+							img {
+								margin: 0;
+							}
+						}
+					}
 
-          .priority-label {
-            font-size: .75rem;
-            height: 2rem;
+					.tag {
+						margin-left: 0;
+					}
 
-            .icon {
-              height: 1rem;
-              padding: 0 .25rem;
-              margin-top: 0;
-            }
-          }
-        }
+					.priority-label {
+						font-size: .75rem;
+						height: 2rem;
 
-        .footer .icon,
-        .due-date,
-        .priority-label {
-          background: $grey-100;
-          border-radius: $radius;
-          padding: 0 .5rem;
-        }
+						.icon {
+							height: 1rem;
+							padding: 0 .25rem;
+							margin-top: 0;
+						}
+					}
+				}
 
-        .due-date {
-          padding: 0 .25rem;
-        }
+				.footer .icon,
+				.due-date,
+				.priority-label {
+					background: $grey-100;
+					border-radius: $radius;
+					padding: 0 .5rem;
+				}
 
-        .task-id {
-          color: $grey-500;
-          font-size: .8rem;
-          margin-bottom: .25rem;
-          display: flex;
-        }
+				.due-date {
+					padding: 0 .25rem;
+				}
 
-        .is-done {
-          font-size: .75rem;
-          padding: .2rem .3rem;
-          margin: 0 .25rem 0 0;
-        }
+				.task-id {
+					color: $grey-500;
+					font-size: .8rem;
+					margin-bottom: .25rem;
+					display: flex;
+				}
 
-        &.is-moving {
-          opacity: .5;
-        }
+				.is-done {
+					font-size: .75rem;
+					padding: .2rem .3rem;
+					margin: 0 .25rem 0 0;
+				}
 
-        span {
-          width: auto;
-        }
+				&.is-moving {
+					opacity: .5;
+				}
 
-        &.has-light-text {
-          color: $white;
+				span {
+					width: auto;
+				}
 
-          .task-id {
-            color: $grey-200;
-          }
+				&.has-light-text {
+					color: $white;
 
-          .footer .icon,
-          .due-date,
-          .priority-label {
-            background: $grey-800;
-          }
+					.task-id {
+						color: $grey-200;
+					}
 
-          .footer {
-            .icon svg {
-              fill: $white;
-            }
-          }
-        }
-      }
+					.footer .icon,
+					.due-date,
+					.priority-label {
+						background: $grey-800;
+					}
 
-      .drop-preview {
-        border-radius: $radius;
-        margin: 0 .5rem .5rem;
-        background: transparent;
-        border: 3px dashed $grey-300;
-      }
-    }
+					.footer {
+						.icon svg {
+							fill: $white;
+						}
+					}
+				}
 
-    h2 {
-      font-size: 1rem;
-      margin: 0;
-      font-weight: 600 !important;
-    }
+				&.v-leave, &.v-leave-to, &.v-leave-active
+				&.move-card-leave, &.move-card-leave-to, &.move-card-leave-active {
+					display: none;
+				}
+			}
 
-    &.new-bucket {
-      // Because of reasons, this button ignores the margin we gave it to the right.
-      // To make it still look like it has some, we modify the container to have a padding of 1rem,
-      // which is the same as the margin it should have. Then we make the container itself bigger
-      // to hide the fact we just made the button smaller.
-      min-width: calc(#{$bucket-width} + 1rem);
-      background: transparent;
-      padding-right: 1rem;
+			.dropper {
+				&, > div {
+					min-height: 40px;
+				}
+			}
+		}
 
-      .button {
-        background: $bucket-background;
-        width: 100%;
-      }
-    }
+		.move-card-move {
+			transition: transform $transition-duration;
+		}
 
-    a.dropdown-item {
-      padding-right: 1rem;
-    }
+		.no-move {
+			transition: transform 0s;
+		}
 
-    &.is-collapsed {
-      transform: rotate(90deg) translateX(math.div($bucket-width, 2) - math.div($bucket-header-height, 2));
-      // Using negative margins instead of translateY here to make all other buckets fill the empty space
-      margin-left: (math.div($bucket-width, 2) - math.div($bucket-header-height, 2)) * -1;
-      margin-right: calc(#{(math.div($bucket-width, 2) - math.div($bucket-header-height, 2)) * -1} + #{$bucket-right-margin});
-      cursor: pointer;
+		h2 {
+			font-size: 1rem;
+			margin: 0;
+			font-weight: 600 !important;
+		}
 
-      .tasks, .bucket-footer {
-        display: none;
-      }
-    }
-  }
+		&.new-bucket {
+			// Because of reasons, this button ignores the margin we gave it to the right.
+			// To make it still look like it has some, we modify the container to have a padding of 1rem,
+			// which is the same as the margin it should have. Then we make the container itself bigger
+			// to hide the fact we just made the button smaller.
+			min-width: calc(#{$bucket-width} + 1rem);
+			background: transparent;
+			padding-right: 1rem;
 
-  .bucket-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: .5rem;
-    height: $bucket-header-height;
+			.button {
+				background: $bucket-background;
+				width: 100%;
+			}
+		}
 
-    .limit {
-      padding-left: .5rem;
-      font-weight: bold;
+		a.dropdown-item {
+			padding-right: 1rem;
+		}
 
-      &.is-max {
-        color: $red;
-      }
-    }
+		&.is-collapsed {
+			transform: rotate(90deg) translateX(math.div($bucket-width, 2) - math.div($bucket-header-height, 2));
+			// Using negative margins instead of translateY here to make all other buckets fill the empty space
+			margin-left: (math.div($bucket-width, 2) - math.div($bucket-header-height, 2)) * -1;
+			margin-right: calc(#{(math.div($bucket-width, 2) - math.div($bucket-header-height, 2)) * -1} + #{$bucket-right-margin});
+			cursor: pointer;
 
-    .title.input {
-      height: auto;
-      padding: .4rem .5rem;
-      display: inline-block;
-    }
-  }
+			.tasks, .bucket-footer {
+				display: none;
+			}
+		}
+	}
 
-  .dropdown-trigger {
-    cursor: pointer;
-    padding: .5rem;
-  }
+	.bucket-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: .5rem;
+		height: $bucket-header-height;
 
-  .bucket-footer {
-    padding: .5rem;
+		.limit {
+			padding-left: .5rem;
+			font-weight: bold;
 
-    .button {
-      background-color: transparent;
+			&.is-max {
+				color: $red;
+			}
+		}
 
-      &:hover {
-        background-color: $white;
-      }
-    }
-  }
+		.title.input {
+			height: auto;
+			padding: .4rem .5rem;
+			display: inline-block;
+			cursor: pointer;
+		}
+	}
+
+	.dropdown-trigger {
+		cursor: pointer;
+		padding: .5rem;
+	}
+
+	.bucket-footer {
+		padding: .5rem;
+
+		.button {
+			background-color: transparent;
+
+			&:hover {
+				background-color: $white;
+			}
+		}
+	}
 }
 
-.ghost-task {
-  transition: transform 0.18s ease;
-  transform: rotateZ(3deg)
+.task-dragging {
+	transition: transform 0.18s ease;
+	transform: rotateZ(3deg)
 }
 
 .ghost-task-drop {
-  transition: transform 0.18s ease-in-out;
-  transform: rotateZ(0deg)
+	transition: transform 0.18s ease-in-out;
+	transform: rotateZ(0deg)
 }

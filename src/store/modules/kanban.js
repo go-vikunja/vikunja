@@ -11,7 +11,7 @@ const tasksPerBucket = 25
 const addTaskToBucketAndSort = (state, task) => {
 	const bi = filterObject(state.buckets, b => b.id === task.bucketId)
 	state.buckets[bi].tasks.push(task)
-	state.buckets[bi].tasks.sort((a, b) => a.position > b.position ? 1 : -1)
+	state.buckets[bi].tasks.sort((a, b) => a.kanbanPosition > b.kanbanPosition ? 1 : -1)
 }
 
 /**
@@ -208,7 +208,7 @@ export default {
 
 			const params = cloneDeep(ps)
 
-			params.sort_by = 'position'
+			params.sort_by = 'kanban_position'
 			params.order_by = 'asc'
 
 			let hasBucketFilter = false

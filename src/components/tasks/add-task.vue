@@ -66,6 +66,12 @@ export default {
 		this.labelService = new LabelService()
 		this.labelTaskService = new LabelTaskService()
 	},
+	props: {
+		defaultPosition: {
+			type: Number,
+			required: false,
+		},
+	},
 	methods: {
 		addTask() {
 			if (this.newTaskTitle === '') {
@@ -74,7 +80,7 @@ export default {
 			}
 			this.errorMessage = ''
 
-			this.createNewTask(this.newTaskTitle, 0, this.$store.state.auth.settings.defaultListId)
+			this.createNewTask(this.newTaskTitle, 0, this.$store.state.auth.settings.defaultListId, this.defaultPosition)
 				.then(task => {
 					this.newTaskTitle = ''
 					this.$emit('taskAdded', task)

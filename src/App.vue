@@ -1,5 +1,5 @@
 <template>
-	<div>
+	<div :class="{'is-touch': isTouch}">
 		<div :class="{'is-hidden': !online}">
 			<!-- This is a workaround to get the sw to "see" the to-be-cached version of the offline background image -->
 			<div class="offline" style="height: 0;width: 0;"></div>
@@ -24,6 +24,7 @@
 
 <script>
 import {mapState} from 'vuex'
+import isTouchDevice from 'is-touch-device'
 
 import authTypes from './models/authTypes'
 
@@ -63,12 +64,17 @@ export default {
 			this.$router.push({name: 'home'})
 		}
 	},
-	computed: mapState({
-		authUser: state => state.auth.authenticated && (state.auth.info && state.auth.info.type === authTypes.USER),
-		authLinkShare: state => state.auth.authenticated && (state.auth.info && state.auth.info.type === authTypes.LINK_SHARE),
-		online: ONLINE,
-		keyboardShortcutsActive: KEYBOARD_SHORTCUTS_ACTIVE,
-	}),
+	computed: {
+		isTouch() {
+			return isTouchDevice()
+		},
+		...mapState({
+			authUser: state => state.auth.authenticated && (state.auth.info && state.auth.info.type === authTypes.USER),
+			authLinkShare: state => state.auth.authenticated && (state.auth.info && state.auth.info.type === authTypes.LINK_SHARE),
+			online: ONLINE,
+			keyboardShortcutsActive: KEYBOARD_SHORTCUTS_ACTIVE,
+		}),
+	},
 	methods: {
 		setupOnlineStatus() {
 			this.$store.commit(ONLINE, navigator.onLine)

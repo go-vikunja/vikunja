@@ -6,10 +6,12 @@ import LabelModel from '@/models/label'
 import LabelTaskService from '@/services/labelTask'
 import {mapState} from 'vuex'
 import UserService from '@/services/user'
+import TaskService from '@/services/task'
 
 export default {
 	data() {
 		return {
+			taskService: TaskService,
 			labelTaskService: LabelTaskService,
 			userService: UserService,
 		}
@@ -17,12 +19,13 @@ export default {
 	created() {
 		this.labelTaskService = new LabelTaskService()
 		this.userService = new UserService()
+		this.taskService = new TaskService()
 	},
 	computed: mapState({
 		labels: state => state.labels.labels,
 	}),
 	methods: {
-		createNewTask(newTaskTitle, bucketId = 0, lId = 0) {
+		createNewTask(newTaskTitle, bucketId = 0, lId = 0, position = 0) {
 			const parsedTask = parseTaskText(newTaskTitle)
 			const assignees = []
 
@@ -36,14 +39,17 @@ export default {
 				const list = this.$store.getters['lists/findListByExactname'](parsedTask.list)
 				listId = list === null ? null : list.id
 			}
-			if (listId === null) {
-				listId = lId !== 0 ? lId : this.$route.params.listId
+			if (lId !== 0) {
+				listId = lId
+			}
+			if (typeof this.$route.params.listId !== 'undefined') {
+				listId = parseInt(this.$route.params.listId)
 			}
 			
-			if (typeof listId === 'undefined' || listId === 0) {
+			if (typeof listId === 'undefined' || listId === null) {
 				return Promise.reject('NO_LIST')
 			}
-			
+
 			// Separate closure because we need to wait for the results of the user search if users were entered in the
 			// task create request. Because _that_ happens in a promise, we'll need something to call when it resolves.
 			const createTask = () => {
@@ -54,6 +60,7 @@ export default {
 					priority: parsedTask.priority,
 					assignees: assignees,
 					bucketId: bucketId,
+					position: position,
 				})
 				return this.taskService.create(task)
 					.then(task => {
