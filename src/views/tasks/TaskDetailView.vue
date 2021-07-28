@@ -362,6 +362,13 @@
 						{{ $t('task.detail.actions.color') }}
 					</x-button>
 					<x-button
+						@click="toggleFavorite"
+						type="secondary"
+						:icon="task.isFavorite ? ['far', 'star'] : 'star'"
+					>
+						{{ task.isFavorite ? $t('task.detail.actions.favorite') : $t('task.detail.actions.unfavorite') }}
+					</x-button>
+					<x-button
 						@click="showDeleteModal = true"
 						icon="trash-alt"
 						:shadow="false"
@@ -681,6 +688,17 @@ export default {
 			this.task.listId = list.id
 			this.saveTask()
 			this.$store.commit('kanban/removeTaskInBucket', this.task)
+		},
+		toggleFavorite() {
+			this.task.isFavorite = !this.task.isFavorite
+			this.taskService.update(this.task)
+				.then(t => {
+					this.task = t
+					this.$store.dispatch('namespaces/loadNamespacesIfFavoritesDontExist')
+				})
+				.catch(e => {
+					this.error(e)
+				})
 		},
 	},
 }

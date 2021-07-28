@@ -512,7 +512,9 @@
         "relatedTasks": "Add task relations",
         "moveList": "Move task",
         "color": "Set task color",
-        "delete": "Delete task"
+        "delete": "Delete task",
+        "favorite": "Make this task as a favorite",
+        "unfavorite": "Don't make this task a favorite"
       }
     },
     "attributes": {
