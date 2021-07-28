@@ -14,7 +14,7 @@
 				</h1>
 				<div class="box has-text-left view">
 					<router-view/>
-					<a class="menu-bottom-link" href="https://vikunja.io" target="_blank">
+					<a class="menu-bottom-link" href="https://vikunja.io" target="_blank" rel="noreferrer noopener nofollow">
 						{{ $t('misc.poweredBy') }}
 					</a>
 				</div>

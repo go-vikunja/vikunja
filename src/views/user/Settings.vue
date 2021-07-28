@@ -264,7 +264,7 @@
 				</div>
 			</div>
 			<p>
-				<a href="https://vikunja.io/docs/caldav/" target="_blank">
+				<a href="https://vikunja.io/docs/caldav/" rel="noreferrer noopener nofollow" target="_blank">
 					{{ $t('user.settings.caldav.more') }}
 				</a>
 			</p>

@@ -7,8 +7,8 @@
 	>
 		<div class="navbar-brand">
 			<router-link :to="{name: 'home'}" class="navbar-item logo">
-				<img alt="Vikunja" src="/images/logo-full-pride.svg" v-if="(new Date()).getMonth() === 5"/>
-				<img alt="Vikunja" src="/images/logo-full.svg" v-else/>
+				<img width="164" height="48" alt="Vikunja" src="/images/logo-full-pride.svg" v-if="(new Date()).getMonth() === 5"/>
+				<img width="164" height="48" alt="Vikunja" src="/images/logo-full.svg" v-else/>
 			</router-link>
 			<a
 				@click="$store.commit('toggleMenu')"
@@ -47,7 +47,7 @@
 			</a>
 			<notifications/>
 			<div class="user">
-				<img :src="userAvatar" alt="" class="avatar"/>
+				<img :src="userAvatar" alt="" class="avatar" width="40" height="40"/>
 				<dropdown class="is-right" ref="usernameDropdown">
 					<template v-slot:trigger>
 						<x-button
@@ -67,6 +67,7 @@
 						:href="imprintUrl"
 						class="dropdown-item"
 						target="_blank"
+						rel="noreferrer noopener nofollow"
 						v-if="imprintUrl">
 						{{ $t('navigation.imprint') }}
 					</a>
@@ -74,6 +75,7 @@
 						:href="privacyPolicyUrl"
 						class="dropdown-item"
 						target="_blank"
+						rel="noreferrer noopener nofollow"
 						v-if="privacyPolicyUrl">
 						{{ $t('navigation.privacy') }}
 					</a>

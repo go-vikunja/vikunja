@@ -2,7 +2,7 @@
 	<div :class="{'is-active': menuActive}" class="namespace-container">
 		<div class="menu top-menu">
 			<router-link :to="{name: 'home'}" class="logo">
-				<img alt="Vikunja" src="/images/logo-full.svg"/>
+				<img alt="Vikunja" src="/images/logo-full.svg" width="164" height="48"/>
 			</router-link>
 			<ul class="menu-list">
 				<li>
@@ -78,59 +78,62 @@
 					class="more-container"
 					v-if="typeof listsVisible[n.id] !== 'undefined' ? listsVisible[n.id] : true"
 				>
-					<ul class="menu-list can-be-hidden">
-						<draggable
-							v-model="n.lists"
-							:group="`namespace-${n.id}-lists`"
-							@start="() => drag = true"
-							@end="e => saveListPosition(e, nk)"
-							v-bind="dragOptions"
-							handle=".handle"
+					<draggable
+						v-model="n.lists"
+						:group="`namespace-${n.id}-lists`"
+						@start="() => drag = true"
+						@end="e => saveListPosition(e, nk)"
+						v-bind="dragOptions"
+						handle=".handle"
+					>
+						<transition-group
+							type="transition"
+							:name="!drag ? 'flip-list' : null"
+							tag="ul"
+							class="menu-list can-be-hidden"
 						>
-							<transition-group type="transition" :name="!drag ? 'flip-list' : null">
-								<!-- eslint-disable vue/no-use-v-if-with-v-for,vue/no-confusing-v-for-v-if -->
-								<li
-									v-for="l in n.lists"
-									:key="l.id"
-									v-if="!l.isArchived"
-									class="loader-container"
-									:class="{'is-loading': listUpdating[l.id]}"
+							<!-- eslint-disable vue/no-use-v-if-with-v-for,vue/no-confusing-v-for-v-if -->
+							<li
+								v-for="l in n.lists"
+								:key="l.id"
+								v-if="!l.isArchived"
+								class="loader-container"
+								:class="{'is-loading': listUpdating[l.id]}"
+							>
+								<router-link
+									class="list-menu-link"
+									:class="{'router-link-exact-active': currentList.id === l.id}"
+									:to="{ name: 'list.index', params: { listId: l.id} }"
+									tag="span"
 								>
-									<router-link
-										class="list-menu-link"
-										:class="{'router-link-exact-active': currentList.id === l.id}"
-										:to="{ name: 'list.index', params: { listId: l.id} }"
-										tag="span"
-									>
-										<span class="icon handle">
-											<icon icon="grip-lines"/>
-										</span>
-										<span
-											:style="{ backgroundColor: l.hexColor }"
-											class="color-bubble"
-											v-if="l.hexColor !== ''">
-										</span>
-										<span class="list-menu-title">
-											{{ getListTitle(l) }}
-										</span>
-										<span
-											:class="{'is-favorite': l.isFavorite}"
-											@click.stop="toggleFavoriteList(l)"
-											class="favorite">
-											<icon icon="star" v-if="l.isFavorite"/>
-											<icon :icon="['far', 'star']" v-else/>
-										</span>
-									</router-link>
-									<list-settings-dropdown :list="l" v-if="l.id > 0"/>
-									<span class="list-setting-spacer" v-else></span>
-								</li>
-							</transition-group>
-						</draggable>
-					</ul>
+									<span class="icon handle">
+										<icon icon="grip-lines"/>
+									</span>
+									<span
+										:style="{ backgroundColor: l.hexColor }"
+										class="color-bubble"
+										v-if="l.hexColor !== ''">
+									</span>
+									<span class="list-menu-title">
+										{{ getListTitle(l) }}
+									</span>
+									<span
+										:class="{'is-favorite': l.isFavorite}"
+										@click.stop="toggleFavoriteList(l)"
+										class="favorite">
+										<icon icon="star" v-if="l.isFavorite"/>
+										<icon :icon="['far', 'star']" v-else/>
+									</span>
+								</router-link>
+								<list-settings-dropdown :list="l" v-if="l.id > 0"/>
+								<span class="list-setting-spacer" v-else></span>
+							</li>
+						</transition-group>
+					</draggable>
 				</div>
 			</template>
 		</aside>
-		<a class="menu-bottom-link" href="https://vikunja.io" target="_blank">
+		<a class="menu-bottom-link" href="https://vikunja.io" target="_blank" rel="noreferrer noopener nofollow">
 			{{ $t('misc.poweredBy') }}
 		</a>
 	</div>

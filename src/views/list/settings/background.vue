@@ -35,7 +35,7 @@
 				v-model="backgroundSearchTerm"
 			/>
 			<p class="unsplash-link">
-				<a href="https://unsplash.com" target="_blank">{{ $t('list.background.poweredByUnsplash') }}</a>
+				<a href="https://unsplash.com" rel="noreferrer noopener nofollow" target="_blank">{{ $t('list.background.poweredByUnsplash') }}</a>
 			</p>
 			<div class="image-search-result">
 				<a
@@ -44,7 +44,7 @@
 					@click="() => setBackground(im.id)"
 					class="image"
 					v-for="im in backgroundSearchResult">
-					<a :href="`https://unsplash.com/@${im.info.author}`" target="_blank" class="info">
+					<a :href="`https://unsplash.com/@${im.info.author}`" rel="noreferrer noopener nofollow" target="_blank" class="info">
 						{{ im.info.authorName }}
 					</a>
 				</a>
