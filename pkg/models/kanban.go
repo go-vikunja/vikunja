@@ -287,7 +287,7 @@ func (b *Bucket) Update(s *xorm.Session, a web.Auth) (err error) {
 		return err
 	}
 
-	if doneBucket != nil && doneBucket.IsDoneBucket && b.IsDoneBucket {
+	if doneBucket != nil && doneBucket.IsDoneBucket && b.IsDoneBucket && doneBucket.ID != b.ID {
 		return &ErrOnlyOneDoneBucketPerList{
 			BucketID:     b.ID,
 			ListID:       b.ListID,
