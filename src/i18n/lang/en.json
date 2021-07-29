@@ -513,8 +513,8 @@
         "moveList": "Move task",
         "color": "Set task color",
         "delete": "Delete task",
-        "favorite": "Make this task as a favorite",
-        "unfavorite": "Don't make this task a favorite"
+        "favorite": "Save as favorite",
+        "unfavorite": "Remove from favorites"
       }
     },
     "attributes": {

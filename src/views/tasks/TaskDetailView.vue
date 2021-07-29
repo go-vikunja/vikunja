@@ -364,9 +364,9 @@
 					<x-button
 						@click="toggleFavorite"
 						type="secondary"
-						:icon="task.isFavorite ? ['far', 'star'] : 'star'"
+						:icon="task.isFavorite ? 'star' : ['far', 'star']"
 					>
-						{{ task.isFavorite ? $t('task.detail.actions.favorite') : $t('task.detail.actions.unfavorite') }}
+						{{ task.isFavorite ? $t('task.detail.actions.unfavorite') : $t('task.detail.actions.favorite') }}
 					</x-button>
 					<x-button
 						@click="showDeleteModal = true"
