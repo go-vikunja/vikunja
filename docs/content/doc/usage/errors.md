@@ -40,6 +40,8 @@ This document describes the different errors Vikunja can return.
 | 1016 | 412 | Totp is not enabled for this user. |
 | 1017 | 412 | The provided Totp passcode is invalid. |
 | 1018 | 412 | The provided user avatar provider type setting is invalid. |
+| 1019 | 412 | No openid email address was provided. |
+| 1020 | 412 | This user account is disabled. |
 
 ## Validation
 

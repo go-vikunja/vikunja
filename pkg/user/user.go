@@ -458,3 +458,13 @@ func UpdateUserPassword(s *xorm.Session, user *User, newPassword string) (err er
 
 	return err
 }
+
+// SetStatus sets a users status in the database
+func (u *User) SetStatus(s *xorm.Session, status Status) (err error) {
+	u.Status = status
+	_, err = s.
+		Where("id = ?", u.ID).
+		Cols("status").
+		Update(u)
+	return
+}

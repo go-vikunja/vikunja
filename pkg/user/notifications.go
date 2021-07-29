@@ -135,3 +135,28 @@ func (n *InvalidTOTPNotification) ToDB() interface{} {
 func (n *InvalidTOTPNotification) Name() string {
 	return "totp.invalid"
 }
+
+// PasswordAccountLockedAfterInvalidTOTOPNotification represents a PasswordAccountLockedAfterInvalidTOTOPNotification notification
+type PasswordAccountLockedAfterInvalidTOTOPNotification struct {
+	User *User
+}
+
+// ToMail returns the mail notification for PasswordAccountLockedAfterInvalidTOTOPNotification
+func (n *PasswordAccountLockedAfterInvalidTOTOPNotification) ToMail() *notifications.Mail {
+	return notifications.NewMail().
+		Subject("We've disabled your account on Vikunja").
+		Greeting("Hi " + n.User.GetName() + ",").
+		Line("Someone tried to log in with your credentials but failed to provide a valid TOTP passcode.").
+		Line("After 10 failed attempts, we've disabled your account and reset your password. To set a new one, follow the instructions in the reset email we just sent you.").
+		Line("If you did not receive an email with reset instructions, you can always request a new one at [" + config.ServiceFrontendurl.GetString() + "get-password-reset](" + config.ServiceFrontendurl.GetString() + "get-password-reset).")
+}
+
+// ToDB returns the PasswordAccountLockedAfterInvalidTOTOPNotification notification in a format which can be saved in the db
+func (n *PasswordAccountLockedAfterInvalidTOTOPNotification) ToDB() interface{} {
+	return nil
+}
+
+// Name returns the name of the notification
+func (n *PasswordAccountLockedAfterInvalidTOTOPNotification) Name() string {
+	return "password.account.locked.after.invalid.totop"
+}

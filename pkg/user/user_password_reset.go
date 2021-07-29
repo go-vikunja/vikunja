@@ -67,8 +67,9 @@ func ResetPassword(s *xorm.Session, reset *PasswordReset) (err error) {
 		return
 	}
 
+	user.Status = StatusActive
 	_, err = s.
-		Cols("password").
+		Cols("password", "status").
 		Where("id = ?", user.ID).
 		Update(user)
 	if err != nil {

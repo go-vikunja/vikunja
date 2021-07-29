@@ -425,3 +425,30 @@ func (err *ErrNoOpenIDEmailProvided) HTTPError() web.HTTPError {
 		Message:  "No email address available. Please make sure the openid provider publicly provides an email address for your account.",
 	}
 }
+
+// ErrAccountDisabled represents a "AccountDisabled" kind of error.
+type ErrAccountDisabled struct {
+	UserID int64
+}
+
+// IsErrAccountDisabled checks if an error is a ErrAccountDisabled.
+func IsErrAccountDisabled(err error) bool {
+	_, ok := err.(*ErrAccountDisabled)
+	return ok
+}
+
+func (err *ErrAccountDisabled) Error() string {
+	return "Account is disabled"
+}
+
+// ErrCodeAccountDisabled holds the unique world-error code of this error
+const ErrCodeAccountDisabled = 1020
+
+// HTTPError holds the http error description
+func (err *ErrAccountDisabled) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusPreconditionFailed,
+		Code:     ErrCodeAccountDisabled,
+		Message:  "This account is disabled. Check your emails or ask your administrator.",
+	}
+}
