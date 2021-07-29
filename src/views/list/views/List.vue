@@ -87,6 +87,8 @@
 						@end="saveTaskPosition"
 						v-bind="dragOptions"
 						handle=".handle"
+						:disabled="!canWrite"
+						:class="{'dragging-disabled': !canWrite}"
 					>
 						<single-task-in-list
 							:show-list-color="false"

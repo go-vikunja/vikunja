@@ -85,6 +85,8 @@
 						@end="e => saveListPosition(e, nk)"
 						v-bind="dragOptions"
 						handle=".handle"
+						:disabled="n.id < 0"
+						:class="{'dragging-disabled': n.id < 0}"
 					>
 						<transition-group
 							type="transition"

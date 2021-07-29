@@ -24,6 +24,7 @@
 				group="buckets"
 				v-bind="dragOptions"
 				:disabled="!canWrite"
+				:class="{'dragging-disabled': !canWrite}"
 			>
 				<transition-group type="transition" :name="!dragBucket ? 'move-bucket': null" tag="div" class="kanban-bucket-container">
 					<div
@@ -128,6 +129,7 @@
 								:group="{name: 'tasks', put: shouldAcceptDrop(bucket) && !dragBucket}"
 								v-bind="dragOptions"
 								:disabled="!canWrite"
+								:class="{'dragging-disabled': !canWrite}"
 								:data-bucket-index="k"
 								class="dropper"
 							>

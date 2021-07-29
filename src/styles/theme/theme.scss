@@ -157,3 +157,7 @@ button.table {
 .is-touch .handle {
 	opacity: 1 !important;
 }
+
+.dragging-disabled .handle {
+	opacity: 0 !important;
+}
