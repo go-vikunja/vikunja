@@ -19,6 +19,8 @@ package models
 import (
 	"testing"
 
+	"code.vikunja.io/api/pkg/events"
+
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/user"
 	"github.com/stretchr/testify/assert"
@@ -41,6 +43,7 @@ func TestTaskComment_Create(t *testing.T) {
 		assert.Equal(t, int64(1), tc.Author.ID)
 		err = s.Commit()
 		assert.NoError(t, err)
+		events.AssertDispatched(t, &TaskCommentCreatedEvent{})
 
 		db.AssertExists(t, "task_comments", map[string]interface{}{
 			"id":        tc.ID,
@@ -61,6 +64,32 @@ func TestTaskComment_Create(t *testing.T) {
 		err := tc.Create(s, u)
 		assert.Error(t, err)
 		assert.True(t, IsErrTaskDoesNotExist(err))
+	})
+	t.Run("should send notifications for comment mentions", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		task, err := GetTaskByIDSimple(s, 32)
+		assert.NoError(t, err)
+		tc := &TaskComment{
+			Comment: "Lorem Ipsum @user2",
+			TaskID:  32, // user2 has access to the list that task belongs to
+		}
+		err = tc.Create(s, u)
+		assert.NoError(t, err)
+		ev := &TaskCommentCreatedEvent{
+			Task:    &task,
+			Doer:    u,
+			Comment: tc,
+		}
+
+		events.TestListener(t, ev, &SendTaskCommentNotification{})
+		db.AssertExists(t, "notifications", map[string]interface{}{
+			"subject_id":    tc.ID,
+			"notifiable_id": 2,
+			"name":          (&TaskCommentNotification{}).Name(),
+		}, false)
 	})
 }
 

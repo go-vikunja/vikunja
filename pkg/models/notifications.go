@@ -58,17 +58,29 @@ func (n *ReminderDueNotification) Name() string {
 
 // TaskCommentNotification represents a TaskCommentNotification notification
 type TaskCommentNotification struct {
-	Doer    *user.User   `json:"doer"`
-	Task    *Task        `json:"task"`
-	Comment *TaskComment `json:"comment"`
+	Doer      *user.User   `json:"doer"`
+	Task      *Task        `json:"task"`
+	Comment   *TaskComment `json:"comment"`
+	Mentioned bool         `json:"mentioned"`
+}
+
+func (n *TaskCommentNotification) SubjectID() int64 {
+	return n.Comment.ID
 }
 
 // ToMail returns the mail notification for TaskCommentNotification
 func (n *TaskCommentNotification) ToMail() *notifications.Mail {
 
 	mail := notifications.NewMail().
-		From(n.Doer.GetNameAndFromEmail()).
-		Subject("Re: " + n.Task.Title)
+		From(n.Doer.GetNameAndFromEmail())
+
+	subject := "Re: " + n.Task.Title
+	if n.Mentioned {
+		subject = n.Doer.GetName() + ` mentioned you in a comment in "` + n.Task.Title + `"`
+		mail.Line("**" + n.Doer.GetName() + "** mentioned you in a comment:")
+	}
+
+	mail.Subject(subject)
 
 	lines := bufio.NewScanner(strings.NewReader(n.Comment.Comment))
 	for lines.Scan() {
@@ -247,4 +259,46 @@ func (n *UndoneTasksOverdueNotification) ToDB() interface{} {
 // Name returns the name of the notification
 func (n *UndoneTasksOverdueNotification) Name() string {
 	return "task.undone.overdue"
+}
+
+// UserMentionedInTaskNotification represents a UserMentionedInTaskNotification notification
+type UserMentionedInTaskNotification struct {
+	Doer  *user.User `json:"doer"`
+	Task  *Task      `json:"task"`
+	IsNew bool       `json:"is_new"`
+}
+
+func (n *UserMentionedInTaskNotification) SubjectID() int64 {
+	return n.Task.ID
+}
+
+// ToMail returns the mail notification for UserMentionedInTaskNotification
+func (n *UserMentionedInTaskNotification) ToMail() *notifications.Mail {
+	subject := n.Doer.GetName() + ` mentioned you in a new task "` + n.Task.Title + `"`
+	if n.IsNew {
+		subject = n.Doer.GetName() + ` mentioned you in a task "` + n.Task.Title + `"`
+	}
+
+	mail := notifications.NewMail().
+		From(n.Doer.GetNameAndFromEmail()).
+		Subject(subject).
+		Line("**" + n.Doer.GetName() + "** mentioned you in a task:")
+
+	lines := bufio.NewScanner(strings.NewReader(n.Task.Description))
+	for lines.Scan() {
+		mail.Line(lines.Text())
+	}
+
+	return mail.
+		Action("View Task", n.Task.GetFrontendURL())
+}
+
+// ToDB returns the UserMentionedInTaskNotification notification in a format which can be saved in the db
+func (n *UserMentionedInTaskNotification) ToDB() interface{} {
+	return n
+}
+
+// Name returns the name of the notification
+func (n *UserMentionedInTaskNotification) Name() string {
+	return "task.mentioned"
 }

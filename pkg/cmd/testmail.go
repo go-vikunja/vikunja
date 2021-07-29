@@ -42,7 +42,7 @@ var testmailCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		log.Info("Sending testmail...")
 		message := notifications.NewMail().
-			From(config.MailerFromEmail.GetString()).
+			From("Vikunja <"+config.MailerFromEmail.GetString()+">").
 			To(args[0]).
 			Subject("Test from Vikunja").
 			Line("This is a test mail!").

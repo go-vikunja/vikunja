@@ -22,9 +22,8 @@ import (
 	"testing"
 	"time"
 
-	"code.vikunja.io/api/pkg/events"
-
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/user"
 )

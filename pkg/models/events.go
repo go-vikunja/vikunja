@@ -82,6 +82,18 @@ func (t *TaskCommentCreatedEvent) Name() string {
 	return "task.comment.created"
 }
 
+// TaskCommentUpdatedEvent represents a TaskCommentUpdatedEvent event
+type TaskCommentUpdatedEvent struct {
+	Task    *Task
+	Comment *TaskComment
+	Doer    *user.User
+}
+
+// Name defines the name for TaskCommentUpdatedEvent
+func (t *TaskCommentUpdatedEvent) Name() string {
+	return "task.comment.edited"
+}
+
 //////////////////////
 // Namespace Events //
 //////////////////////

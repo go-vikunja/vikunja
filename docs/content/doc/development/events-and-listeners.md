@@ -193,3 +193,19 @@ This prevents any events from being fired and lets you assert an event has been 
 {{< highlight golang >}}
 events.AssertDispatched(t, &TaskCreatedEvent{})
 {{< /highlight >}}
+
+### Testing a listener
+
+You can call an event listener manually with the `events.TestListener` method like so:
+
+{{< highlight golang >}}
+ev := &TaskCommentCreatedEvent{
+	Task:    &task,
+	Doer:    u,
+	Comment: tc,
+}
+
+events.TestListener(t, ev, &SendTaskCommentNotification{})
+{{< /highlight >}}
+
+This will call the listener's `Handle` method and assert it did not return an error when calling.

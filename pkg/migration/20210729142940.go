@@ -14,41 +14,30 @@
 // You should have received a copy of the GNU Affero General Public Licensee
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package notifications
+package migration
 
 import (
-	"os"
-	"testing"
-
-	"code.vikunja.io/api/pkg/config"
-	"code.vikunja.io/api/pkg/db"
-	"code.vikunja.io/api/pkg/log"
-	"code.vikunja.io/api/pkg/mail"
+	"src.techknowlogick.com/xormigrate"
+	"xorm.io/xorm"
 )
 
-// SetupTests initializes all db tests
-func SetupTests() {
-	var err error
-	x, err := db.CreateTestEngine()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	err = x.Sync2(&DatabaseNotification{})
-	if err != nil {
-		log.Fatal(err)
-	}
+type notifications20210729142940 struct {
+	SubjectID int64 `xorm:"bigint null" json:"-"`
 }
 
-// TestMain is the main test function used to bootstrap the test env
-func TestMain(m *testing.M) {
-	// Set default config
-	config.InitDefaultConfig()
-	// We need to set the root path even if we're not using the config, otherwise fixtures are not loaded correctly
-	config.ServiceRootpath.Set(os.Getenv("VIKUNJA_SERVICE_ROOTPATH"))
+func (notifications20210729142940) TableName() string {
+	return "notifications"
+}
 
-	SetupTests()
-
-	mail.Fake()
-	os.Exit(m.Run())
+func init() {
+	migrations = append(migrations, &xormigrate.Migration{
+		ID:          "20210729142940",
+		Description: "Add subject id to notification",
+		Migrate: func(tx *xorm.Engine) error {
+			return tx.Sync2(notifications20210729142940{})
+		},
+		Rollback: func(tx *xorm.Engine) error {
+			return nil
+		},
+	})
 }

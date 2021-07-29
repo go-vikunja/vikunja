@@ -132,7 +132,21 @@ func (tc *TaskComment) Update(s *xorm.Session, a web.Auth) error {
 	if updated == 0 {
 		return ErrTaskCommentDoesNotExist{ID: tc.ID}
 	}
-	return err
+
+	if err != nil {
+		return err
+	}
+
+	task, err := GetTaskSimple(s, &Task{ID: tc.TaskID})
+	if err != nil {
+		return err
+	}
+
+	return events.Dispatch(&TaskCommentUpdatedEvent{
+		Task:    &task,
+		Comment: tc,
+		Doer:    tc.Author,
+	})
 }
 
 // ReadOne handles getting a single comment

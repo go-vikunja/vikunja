@@ -33,6 +33,8 @@ type DatabaseNotification struct {
 	Notification interface{} `xorm:"json not null" json:"notification"`
 	// The name of the notification
 	Name string `xorm:"varchar(250) index not null" json:"name"`
+	// The thing the notification is about. Used to check if a notification for this thing already happened or not.
+	SubjectID int64 `xorm:"bigint null" json:"-"`
 
 	// When this notification is marked as read, this will be updated with the current timestamp.
 	ReadAt time.Time `xorm:"datetime null" json:"read_at"`
@@ -63,6 +65,13 @@ func GetNotificationsForUser(s *xorm.Session, notifiableID int64, limit, start i
 		Where("notifiable_id = ?", notifiableID).
 		Count(&DatabaseNotification{})
 	return notifications, len(notifications), total, err
+}
+
+func GetNotificationsForNameAndUser(s *xorm.Session, notifiableID int64, event string, subjectID int64) (notifications []*DatabaseNotification, err error) {
+	notifications = []*DatabaseNotification{}
+	err = s.Where("notifiable_id = ? AND name = ? AND subject_id = ?", notifiableID, event, subjectID).
+		Find(&notifications)
+	return
 }
 
 // CanMarkNotificationAsRead checks if a user can mark a notification as read.

@@ -197,6 +197,27 @@ func GetUserByUsername(s *xorm.Session, username string) (user *User, err error)
 	return getUser(s, &User{Username: username}, false)
 }
 
+// GetUsersByUsername returns a slice of users with the provided usernames
+func GetUsersByUsername(s *xorm.Session, usernames []string, withEmails bool) (users map[int64]*User, err error) {
+	if len(usernames) == 0 {
+		return
+	}
+
+	users = make(map[int64]*User)
+	err = s.In("username", usernames).Find(&users)
+	if err != nil {
+		return
+	}
+
+	if !withEmails {
+		for _, u := range users {
+			u.Email = ""
+		}
+	}
+
+	return
+}
+
 // GetUserWithEmail returns a user object with email
 func GetUserWithEmail(s *xorm.Session, user *User) (userOut *User, err error) {
 	return getUser(s, user, true)

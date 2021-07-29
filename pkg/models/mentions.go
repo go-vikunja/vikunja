@@ -14,41 +14,28 @@
 // You should have received a copy of the GNU Affero General Public Licensee
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package notifications
+package models
 
 import (
-	"os"
-	"testing"
+	"regexp"
+	"strings"
 
-	"code.vikunja.io/api/pkg/config"
-	"code.vikunja.io/api/pkg/db"
-	"code.vikunja.io/api/pkg/log"
-	"code.vikunja.io/api/pkg/mail"
+	"code.vikunja.io/api/pkg/user"
+
+	"xorm.io/xorm"
 )
 
-// SetupTests initializes all db tests
-func SetupTests() {
-	var err error
-	x, err := db.CreateTestEngine()
-	if err != nil {
-		log.Fatal(err)
+func FindMentionedUsersInText(s *xorm.Session, text string) (users map[int64]*user.User, err error) {
+	reg := regexp.MustCompile(`@\w+`)
+	matches := reg.FindAllString(text, -1)
+	if matches == nil {
+		return
 	}
 
-	err = x.Sync2(&DatabaseNotification{})
-	if err != nil {
-		log.Fatal(err)
+	usernames := []string{}
+	for _, match := range matches {
+		usernames = append(usernames, strings.TrimPrefix(match, "@"))
 	}
-}
 
-// TestMain is the main test function used to bootstrap the test env
-func TestMain(m *testing.M) {
-	// Set default config
-	config.InitDefaultConfig()
-	// We need to set the root path even if we're not using the config, otherwise fixtures are not loaded correctly
-	config.ServiceRootpath.Set(os.Getenv("VIKUNJA_SERVICE_ROOTPATH"))
-
-	SetupTests()
-
-	mail.Fake()
-	os.Exit(m.Run())
+	return user.GetUsersByUsername(s, usernames, true)
 }

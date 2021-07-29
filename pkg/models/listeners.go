@@ -25,7 +25,10 @@ import (
 	"code.vikunja.io/api/pkg/metrics"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/notifications"
+	"code.vikunja.io/api/pkg/user"
+
 	"github.com/ThreeDotsLabs/watermill/message"
+	"xorm.io/xorm"
 )
 
 // RegisterListeners registers all event listeners
@@ -44,6 +47,9 @@ func RegisterListeners() {
 	events.RegisterListener((&ListCreatedEvent{}).Name(), &SendListCreatedNotification{})
 	events.RegisterListener((&TaskAssigneeCreatedEvent{}).Name(), &SubscribeAssigneeToTask{})
 	events.RegisterListener((&TeamMemberAddedEvent{}).Name(), &SendTeamMemberAddedNotification{})
+	events.RegisterListener((&TaskCommentUpdatedEvent{}).Name(), &HandleTaskCommentEditMentions{})
+	events.RegisterListener((&TaskCreatedEvent{}).Name(), &HandleTaskCreateMentions{})
+	events.RegisterListener((&TaskUpdatedEvent{}).Name(), &HandleTaskUpdatedMentions{})
 }
 
 //////
@@ -58,7 +64,7 @@ func (s *IncreaseTaskCounter) Name() string {
 	return "task.counter.increase"
 }
 
-// Hanlde is executed when the event IncreaseTaskCounter listens on is fired
+// Handle is executed when the event IncreaseTaskCounter listens on is fired
 func (s *IncreaseTaskCounter) Handle(msg *message.Message) (err error) {
 	return keyvalue.IncrBy(metrics.TaskCountKey, 1)
 }
@@ -72,9 +78,54 @@ func (s *DecreaseTaskCounter) Name() string {
 	return "task.counter.decrease"
 }
 
-// Hanlde is executed when the event DecreaseTaskCounter listens on is fired
+// Handle is executed when the event DecreaseTaskCounter listens on is fired
 func (s *DecreaseTaskCounter) Handle(msg *message.Message) (err error) {
 	return keyvalue.DecrBy(metrics.TaskCountKey, 1)
+}
+
+func notifyMentionedUsers(sess *xorm.Session, task *Task, text string, n notifications.NotificationWithSubject) (users map[int64]*user.User, err error) {
+	users, err = FindMentionedUsersInText(sess, text)
+	if err != nil {
+		return
+	}
+
+	if len(users) == 0 {
+		return
+	}
+
+	log.Debugf("Processing %d mentioned users for text %d", len(users), n.SubjectID())
+
+	var notified int
+	for _, u := range users {
+		can, _, err := task.CanRead(sess, u)
+		if err != nil {
+			return users, err
+		}
+
+		if !can {
+			continue
+		}
+
+		// Don't notify a user if they were already notified
+		dbn, err := notifications.GetNotificationsForNameAndUser(sess, u.ID, n.Name(), n.SubjectID())
+		if err != nil {
+			return users, err
+		}
+
+		if len(dbn) > 0 {
+			continue
+		}
+
+		err = notifications.Notify(u, n)
+		if err != nil {
+			return users, err
+		}
+		notified++
+	}
+
+	log.Debugf("Notified %d mentioned users for text %d", notified, n.SubjectID())
+
+	return
 }
 
 // SendTaskCommentNotification  represents a listener
@@ -97,6 +148,17 @@ func (s *SendTaskCommentNotification) Handle(msg *message.Message) (err error) {
 	sess := db.NewSession()
 	defer sess.Close()
 
+	n := &TaskCommentNotification{
+		Doer:      event.Doer,
+		Task:      event.Task,
+		Comment:   event.Comment,
+		Mentioned: true,
+	}
+	mentionedUsers, err := notifyMentionedUsers(sess, event.Task, event.Comment.Comment, n)
+	if err != nil {
+		return err
+	}
+
 	subscribers, err := getSubscribersForEntity(sess, SubscriptionEntityTask, event.Task.ID)
 	if err != nil {
 		return err
@@ -106,6 +168,10 @@ func (s *SendTaskCommentNotification) Handle(msg *message.Message) (err error) {
 
 	for _, subscriber := range subscribers {
 		if subscriber.UserID == event.Doer.ID {
+			continue
+		}
+
+		if _, has := mentionedUsers[subscriber.UserID]; has {
 			continue
 		}
 
@@ -121,6 +187,36 @@ func (s *SendTaskCommentNotification) Handle(msg *message.Message) (err error) {
 	}
 
 	return
+}
+
+// HandleTaskCommentEditMentions  represents a listener
+type HandleTaskCommentEditMentions struct {
+}
+
+// Name defines the name for the HandleTaskCommentEditMentions listener
+func (s *HandleTaskCommentEditMentions) Name() string {
+	return "handle.task.comment.edit.mentions"
+}
+
+// Handle is executed when the event HandleTaskCommentEditMentions listens on is fired
+func (s *HandleTaskCommentEditMentions) Handle(msg *message.Message) (err error) {
+	event := &TaskCommentUpdatedEvent{}
+	err = json.Unmarshal(msg.Payload, event)
+	if err != nil {
+		return err
+	}
+
+	sess := db.NewSession()
+	defer sess.Close()
+
+	n := &TaskCommentNotification{
+		Doer:      event.Doer,
+		Task:      event.Task,
+		Comment:   event.Comment,
+		Mentioned: true,
+	}
+	_, err = notifyMentionedUsers(sess, event.Task, event.Comment.Comment, n)
+	return err
 }
 
 // SendTaskAssignedNotification  represents a listener
@@ -245,6 +341,65 @@ func (s *SubscribeAssigneeToTask) Handle(msg *message.Message) (err error) {
 	}
 
 	return sess.Commit()
+}
+
+// HandleTaskCreateMentions  represents a listener
+type HandleTaskCreateMentions struct {
+}
+
+// Name defines the name for the HandleTaskCreateMentions listener
+func (s *HandleTaskCreateMentions) Name() string {
+	return "task.created.mentions"
+}
+
+// Handle is executed when the event HandleTaskCreateMentions listens on is fired
+func (s *HandleTaskCreateMentions) Handle(msg *message.Message) (err error) {
+	event := &TaskCreatedEvent{}
+	err = json.Unmarshal(msg.Payload, event)
+	if err != nil {
+		return err
+	}
+
+	sess := db.NewSession()
+	defer sess.Close()
+
+	n := &UserMentionedInTaskNotification{
+		Task:  event.Task,
+		Doer:  event.Doer,
+		IsNew: true,
+	}
+	_, err = notifyMentionedUsers(sess, event.Task, event.Task.Description, n)
+	return err
+}
+
+// HandleTaskUpdatedMentions  represents a listener
+type HandleTaskUpdatedMentions struct {
+}
+
+// Name defines the name for the HandleTaskUpdatedMentions listener
+func (s *HandleTaskUpdatedMentions) Name() string {
+	return "task.updated.mentions"
+}
+
+// Handle is executed when the event HandleTaskUpdatedMentions listens on is fired
+func (s *HandleTaskUpdatedMentions) Handle(msg *message.Message) (err error) {
+	event := &TaskUpdatedEvent{}
+	err = json.Unmarshal(msg.Payload, event)
+	if err != nil {
+		return err
+	}
+
+	sess := db.NewSession()
+	defer sess.Close()
+
+	n := &UserMentionedInTaskNotification{
+		Task:  event.Task,
+		Doer:  event.Doer,
+		IsNew: false,
+	}
+	_, err = notifyMentionedUsers(sess, event.Task, event.Task.Description, n)
+	return err
+
 }
 
 ///////

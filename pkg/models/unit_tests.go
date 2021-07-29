@@ -21,6 +21,7 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/mail"
+	"code.vikunja.io/api/pkg/notifications"
 )
 
 // SetupTests takes care of seting up the db, fixtures etc.
@@ -32,7 +33,11 @@ func SetupTests() {
 		log.Fatal(err)
 	}
 
-	err = x.Sync2(GetTables()...)
+	tables := []interface{}{}
+	tables = append(tables, GetTables()...)
+	tables = append(tables, notifications.GetTables()...)
+
+	err = x.Sync2(tables...)
 	if err != nil {
 		log.Fatal(err)
 	}

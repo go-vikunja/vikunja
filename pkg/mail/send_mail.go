@@ -72,7 +72,7 @@ func SendTestMail(opts *Opts) error {
 func sendMail(opts *Opts) *gomail.Message {
 	m := gomail.NewMessage()
 	if opts.From == "" {
-		opts.From = config.MailerFromEmail.GetString()
+		opts.From = "Vikunja <" + config.MailerFromEmail.GetString() + ">"
 	}
 	m.SetHeader("From", opts.From)
 	m.SetHeader("To", opts.To)
