@@ -226,8 +226,10 @@
 </template>
 
 <script>
-import BucketModel from '../../../models/bucket'
+import isTouchDevice from 'is-touch-device'
+import draggable from 'vuedraggable'
 
+import BucketModel from '../../../models/bucket'
 import {filterObject} from '@/helpers/filterObject'
 import {mapState} from 'vuex'
 import {saveListView} from '@/helpers/saveListView'
@@ -238,7 +240,6 @@ import Dropdown from '@/components/misc/dropdown.vue'
 import createTask from '../../../components/tasks/mixins/createTask'
 import {getCollapsedBucketState, saveCollapsedBucketState} from '@/helpers/saveCollapsedBucketState'
 import {calculateItemPosition} from '../../../helpers/calculateItemPosition'
-import draggable from 'vuedraggable'
 import KanbanCard from '../../../components/tasks/partials/kanban-card'
 
 export default {
@@ -257,6 +258,7 @@ export default {
 				animation: 150,
 				ghostClass: 'ghost',
 				dragClass: 'task-dragging',
+				delay: isTouchDevice() ? 150 : 0,
 			},
 			sourceBucket: 0,
 
