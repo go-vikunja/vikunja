@@ -110,3 +110,28 @@ func (n *ResetPasswordNotification) ToDB() interface{} {
 func (n *ResetPasswordNotification) Name() string {
 	return ""
 }
+
+// InvalidTOTPNotification represents a InvalidTOTPNotification notification
+type InvalidTOTPNotification struct {
+	User *User
+}
+
+// ToMail returns the mail notification for InvalidTOTPNotification
+func (n *InvalidTOTPNotification) ToMail() *notifications.Mail {
+	return notifications.NewMail().
+		Subject("Someone just tried to login to your Vikunja account, but failed").
+		Greeting("Hi "+n.User.GetName()+",").
+		Line("Someone just tried to log in into your account with correct username and password but a wrong TOTP passcode.").
+		Line("**If this was not you, someone else knows your password. You should set a new one immediately!**").
+		Action("Reset your password", config.ServiceFrontendurl.GetString()+"get-password-reset")
+}
+
+// ToDB returns the InvalidTOTPNotification notification in a format which can be saved in the db
+func (n *InvalidTOTPNotification) ToDB() interface{} {
+	return nil
+}
+
+// Name returns the name of the notification
+func (n *InvalidTOTPNotification) Name() string {
+	return "totp.invalid"
+}

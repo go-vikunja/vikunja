@@ -20,11 +20,13 @@ import (
 	"net/http"
 
 	"code.vikunja.io/api/pkg/db"
-
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
+	"code.vikunja.io/api/pkg/notifications"
 	user2 "code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web/handler"
+
 	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
 )
@@ -64,11 +66,23 @@ func Login(c echo.Context) error {
 	}
 
 	if totpEnabled {
+		if u.TOTPPasscode == "" {
+			return handler.HandleHTTPError(user2.ErrInvalidTOTPPasscode{}, c)
+		}
+
 		_, err = user2.ValidateTOTPPasscode(s, &user2.TOTPPasscode{
 			User:     user,
 			Passcode: u.TOTPPasscode,
 		})
 		if err != nil {
+			if user2.IsErrInvalidTOTPPasscode(err) {
+				log.Errorf("Invalid TOTP credentials provided for user %d", user.ID)
+
+				err2 := notifications.Notify(user, &user2.InvalidTOTPNotification{User: user})
+				if err2 != nil {
+					log.Errorf("Could not send failed TOTP notification to user %d: %s", user.ID, err2)
+				}
+			}
 			_ = s.Rollback()
 			return handler.HandleHTTPError(err, c)
 		}
