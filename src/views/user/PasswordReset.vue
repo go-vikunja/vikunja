@@ -39,7 +39,7 @@
 							:loading="this.passwordResetService.loading"
 							@click="submit"
 						>
-							{{ $t('user.auth.resetPassoword') }}
+							{{ $t('user.auth.resetPassword') }}
 						</x-button>
 					</div>
 				</div>

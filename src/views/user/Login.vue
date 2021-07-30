@@ -184,7 +184,14 @@ export default {
 			}
 
 			this.$store.dispatch('auth/login', credentials)
+				.then(() => {
+					this.$store.commit('auth/needsTotpPasscode', false)
+				})
 				.catch(e => {
+					if (e.response && e.response.data.code === 1017 && !credentials.totpPasscode) {
+						return
+					}
+
 					const err = getErrorText(e, p => this.$t(p))
 					if (typeof err[1] !== 'undefined') {
 						this.$store.commit(ERROR_MESSAGE, err[1])
