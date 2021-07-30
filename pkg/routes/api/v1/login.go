@@ -19,6 +19,8 @@ package v1
 import (
 	"net/http"
 
+	"code.vikunja.io/api/pkg/modules/keyvalue"
+
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
@@ -85,6 +87,10 @@ func Login(c echo.Context) error {
 			_ = s.Rollback()
 			return handler.HandleHTTPError(err, c)
 		}
+	}
+
+	if err := keyvalue.Del(user.GetFailedTOTPAttemptsKey()); err != nil {
+		return err
 	}
 
 	if err := s.Commit(); err != nil {
