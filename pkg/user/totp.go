@@ -163,13 +163,8 @@ func (u *User) GetFailedTOTPAttemptsKey() string {
 func HandleFailedTOTPAuth(s *xorm.Session, user *User) {
 	log.Errorf("Invalid TOTP credentials provided for user %d", user.ID)
 
-	err := notifications.Notify(user, &InvalidTOTPNotification{User: user})
-	if err != nil {
-		log.Errorf("Could not send failed TOTP notification to user %d: %s", user.ID, err)
-	}
-
 	key := user.GetFailedTOTPAttemptsKey()
-	err = keyvalue.IncrBy(key, 1)
+	err := keyvalue.IncrBy(key, 1)
 	if err != nil {
 		log.Errorf("Could not increase failed TOTP attempts for user %d: %s", user.ID, err)
 	}
@@ -179,21 +174,31 @@ func HandleFailedTOTPAuth(s *xorm.Session, user *User) {
 		log.Errorf("Could get failed TOTP attempts for user %d: %s", user.ID, err)
 	}
 	attempts := a.(int64)
-	if attempts > 10 {
-		log.Infof("Blocking user account %d after 10 failed TOTP password attempts", user.ID)
-		err = RequestUserPasswordResetToken(s, user)
+
+	if attempts == 3 {
+		err = notifications.Notify(user, &InvalidTOTPNotification{User: user})
 		if err != nil {
-			log.Errorf("Could not reset password of user %d after 10 failed TOTP attempts: %s", user.ID, err)
+			log.Errorf("Could not send failed TOTP notification to user %d: %s", user.ID, err)
 		}
-		err = notifications.Notify(user, &PasswordAccountLockedAfterInvalidTOTOPNotification{
-			User: user,
-		})
-		if err != nil {
-			log.Errorf("Could send password information mail to user %d after 10 failed TOTP attempts: %s", user.ID, err)
-		}
-		err = user.SetStatus(s, StatusDisabled)
-		if err != nil {
-			log.Errorf("Could not disable user %d: %s", user.ID, err)
-		}
+	}
+
+	if attempts < 10 {
+		return
+	}
+
+	log.Infof("Blocking user account %d after 10 failed TOTP password attempts", user.ID)
+	err = RequestUserPasswordResetToken(s, user)
+	if err != nil {
+		log.Errorf("Could not reset password of user %d after 10 failed TOTP attempts: %s", user.ID, err)
+	}
+	err = notifications.Notify(user, &PasswordAccountLockedAfterInvalidTOTOPNotification{
+		User: user,
+	})
+	if err != nil {
+		log.Errorf("Could send password information mail to user %d after 10 failed TOTP attempts: %s", user.ID, err)
+	}
+	err = user.SetStatus(s, StatusDisabled)
+	if err != nil {
+		log.Errorf("Could not disable user %d: %s", user.ID, err)
 	}
 }
