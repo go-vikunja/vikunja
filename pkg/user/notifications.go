@@ -160,3 +160,29 @@ func (n *PasswordAccountLockedAfterInvalidTOTOPNotification) ToDB() interface{} 
 func (n *PasswordAccountLockedAfterInvalidTOTOPNotification) Name() string {
 	return "password.account.locked.after.invalid.totop"
 }
+
+// FailedLoginAttemptNotification represents a FailedLoginAttemptNotification notification
+type FailedLoginAttemptNotification struct {
+	User *User
+}
+
+// ToMail returns the mail notification for FailedLoginAttemptNotification
+func (n *FailedLoginAttemptNotification) ToMail() *notifications.Mail {
+	return notifications.NewMail().
+		Subject("Someone just tried to login to your Vikunja account, but failed to provide a correct password").
+		Greeting("Hi "+n.User.GetName()+",").
+		Line("Someone just tried to log in into your account with a wrong password three times in a row.").
+		Line("If this was not you, this could be someone else trying to break into your account.").
+		Line("To enhance the security of you account you may want to set a stronger password or enable TOTP authentication in the settings:").
+		Action("Go to settings", config.ServiceFrontendurl.GetString()+"user/settings")
+}
+
+// ToDB returns the FailedLoginAttemptNotification notification in a format which can be saved in the db
+func (n *FailedLoginAttemptNotification) ToDB() interface{} {
+	return nil
+}
+
+// Name returns the name of the notification
+func (n *FailedLoginAttemptNotification) Name() string {
+	return "failed.login.attempt"
+}

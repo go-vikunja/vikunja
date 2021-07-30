@@ -18,12 +18,10 @@ package user
 
 import (
 	"image"
-	"strconv"
-
-	"code.vikunja.io/api/pkg/modules/keyvalue"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/notifications"
 
 	"github.com/pquerna/otp"
@@ -155,10 +153,6 @@ func GetTOTPQrCodeForUser(s *xorm.Session, user *User) (qrcode image.Image, err 
 	return key.Image(300, 300)
 }
 
-func (u *User) GetFailedTOTPAttemptsKey() string {
-	return "failed_totp_attempts_" + strconv.FormatInt(u.ID, 10)
-}
-
 // HandleFailedTOTPAuth handles informing the user of failed TOTP attempts and blocking the account after 10 attempts
 func HandleFailedTOTPAuth(s *xorm.Session, user *User) {
 	log.Errorf("Invalid TOTP credentials provided for user %d", user.ID)
@@ -167,11 +161,13 @@ func HandleFailedTOTPAuth(s *xorm.Session, user *User) {
 	err := keyvalue.IncrBy(key, 1)
 	if err != nil {
 		log.Errorf("Could not increase failed TOTP attempts for user %d: %s", user.ID, err)
+		return
 	}
 
 	a, _, err := keyvalue.Get(key)
 	if err != nil {
 		log.Errorf("Could get failed TOTP attempts for user %d: %s", user.ID, err)
+		return
 	}
 	attempts := a.(int64)
 
@@ -179,6 +175,7 @@ func HandleFailedTOTPAuth(s *xorm.Session, user *User) {
 		err = notifications.Notify(user, &InvalidTOTPNotification{User: user})
 		if err != nil {
 			log.Errorf("Could not send failed TOTP notification to user %d: %s", user.ID, err)
+			return
 		}
 	}
 
@@ -190,12 +187,14 @@ func HandleFailedTOTPAuth(s *xorm.Session, user *User) {
 	err = RequestUserPasswordResetToken(s, user)
 	if err != nil {
 		log.Errorf("Could not reset password of user %d after 10 failed TOTP attempts: %s", user.ID, err)
+		return
 	}
 	err = notifications.Notify(user, &PasswordAccountLockedAfterInvalidTOTOPNotification{
 		User: user,
 	})
 	if err != nil {
 		log.Errorf("Could send password information mail to user %d after 10 failed TOTP attempts: %s", user.ID, err)
+		return
 	}
 	err = user.SetStatus(s, StatusDisabled)
 	if err != nil {

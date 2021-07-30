@@ -20,18 +20,20 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"strconv"
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
-
 	"code.vikunja.io/api/pkg/db"
-
-	"xorm.io/xorm"
+	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/modules/keyvalue"
+	"code.vikunja.io/api/pkg/notifications"
 
 	"code.vikunja.io/web"
 	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
 	"golang.org/x/crypto/bcrypt"
+	"xorm.io/xorm"
 )
 
 // Login Object to recive user credentials in JSON format
@@ -144,6 +146,14 @@ func (u *User) GetName() string {
 // GetNameAndFromEmail returns the name and email address for a user. Useful to use in notifications.
 func (u *User) GetNameAndFromEmail() string {
 	return u.GetName() + " via Vikunja <" + config.MailerFromEmail.GetString() + ">"
+}
+
+func (u *User) GetFailedTOTPAttemptsKey() string {
+	return "failed_totp_attempts_" + strconv.FormatInt(u.ID, 10)
+}
+
+func (u *User) GetFailedPasswordAttemptsKey() string {
+	return "failed_password_attempts_" + strconv.FormatInt(u.ID, 10)
 }
 
 // GetFromAuth returns a user object from a web.Auth object and returns an error if the underlying type
@@ -302,10 +312,46 @@ func CheckUserCredentials(s *xorm.Session, u *Login) (*User, error) {
 	// Check the users password
 	err = CheckUserPassword(user, u.Password)
 	if err != nil {
+		if IsErrWrongUsernameOrPassword(err) {
+			handleFailedPassword(user)
+		}
 		return nil, err
 	}
 
 	return user, nil
+}
+
+func handleFailedPassword(user *User) {
+	key := user.GetFailedPasswordAttemptsKey()
+	err := keyvalue.IncrBy(key, 1)
+	if err != nil {
+		log.Errorf("Could not set failed password attempts: %s", err)
+		return
+	}
+
+	a, _, err := keyvalue.Get(key)
+	if err != nil {
+		log.Errorf("Could get failed password attempts for user %d: %s", user.ID, err)
+		return
+	}
+	attempts := a.(int64)
+	if attempts != 3 {
+		return
+	}
+
+	err = notifications.Notify(user, &FailedLoginAttemptNotification{
+		User: user,
+	})
+	if err != nil {
+		log.Errorf("Could not send invalid password mail to user: %s", err)
+		return
+	}
+
+	err = keyvalue.Del(key)
+	if err != nil {
+		log.Errorf("Could not remove failed password attempts: %s", err)
+		return
+	}
 }
 
 // CheckUserPassword checks and verifies a user's password. The user object needs to contain the hashed password from the database.

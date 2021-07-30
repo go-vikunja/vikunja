@@ -92,6 +92,9 @@ func Login(c echo.Context) error {
 	if err := keyvalue.Del(user.GetFailedTOTPAttemptsKey()); err != nil {
 		return err
 	}
+	if err := keyvalue.Del(user.GetFailedPasswordAttemptsKey()); err != nil {
+		return err
+	}
 
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
