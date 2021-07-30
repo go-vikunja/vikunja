@@ -29,7 +29,9 @@
 							required
 							type="password"
 							autocomplete="new-password"
-							v-model="credentials.password2"/>
+							v-model="credentials.password2"
+							@keyup.enter="submit"
+						/>
 					</div>
 				</div>
 
