@@ -19,9 +19,11 @@ package models
 import (
 	"time"
 
-	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/db"
 
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/web"
+
 	"xorm.io/xorm"
 )
 
@@ -178,14 +180,12 @@ func (tn *TeamNamespace) ReadAll(s *xorm.Session, a web.Auth, search string, pag
 
 	// Get the teams
 	all := []*TeamWithRight{}
-
 	limit, start := getLimitFromPageIndex(page, perPage)
-
 	query := s.
 		Table("teams").
 		Join("INNER", "team_namespaces", "team_id = teams.id").
 		Where("team_namespaces.namespace_id = ?", tn.NamespaceID).
-		Where("teams.name LIKE ?", "%"+search+"%")
+		Where(db.ILIKE("teams.name", search))
 	if limit > 0 {
 		query = query.Limit(limit, start)
 	}

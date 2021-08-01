@@ -369,16 +369,7 @@ func getRawTasksForLists(s *xorm.Session, lists []*List, a web.Auth, opts *taskO
 	var where builder.Cond
 
 	if opts.search != "" {
-		// Postgres' is case sensitive by default.
-		// To work around this, we're using ILIKE as opposed to normal LIKE statements.
-		// ILIKE is preferred over LOWER(text) LIKE for performance reasons.
-		// See https://stackoverflow.com/q/7005302/10924593
-		// Seems okay to use that now, we may need to find a better solution overall in the future.
-		if config.DatabaseType.GetString() == "postgres" {
-			where = builder.Expr("title ILIKE ?", "%"+opts.search+"%")
-		} else {
-			where = &builder.Like{"title", "%" + opts.search + "%"}
-		}
+		where = db.ILIKE("title", opts.search)
 
 		searchIndex := getTaskIndexFromSearchString(opts.search)
 		if searchIndex > 0 {

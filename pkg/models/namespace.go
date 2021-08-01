@@ -22,10 +22,12 @@ import (
 	"strings"
 	"time"
 
-	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/db"
 
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/user"
+
 	"code.vikunja.io/web"
 	"xorm.io/builder"
 	"xorm.io/xorm"
@@ -200,7 +202,7 @@ func makeNamespaceSlice(namespaces map[int64]*NamespaceWithLists, userMap map[in
 }
 
 func getNamespaceFilterCond(search string) (filterCond builder.Cond) {
-	filterCond = &builder.Like{"namespaces.title", "%" + search + "%"}
+	filterCond = db.ILIKE("namespaces.title", search)
 
 	if search == "" {
 		return

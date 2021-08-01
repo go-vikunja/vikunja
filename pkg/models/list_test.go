@@ -217,6 +217,19 @@ func TestList_ReadAll(t *testing.T) {
 		assert.True(t, user.IsErrUserDoesNotExist(err))
 		_ = s.Close()
 	})
+	t.Run("search", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		u := &user.User{ID: 1}
+		list := List{}
+		lists3, _, _, err := list.ReadAll(s, u, "TEST10", 1, 50)
+
+		assert.NoError(t, err)
+		ls := lists3.([]*List)
+		assert.Equal(t, 1, len(ls))
+		assert.Equal(t, int64(10), ls[0].ID)
+		_ = s.Close()
+	})
 }
 
 func TestList_ReadOne(t *testing.T) {

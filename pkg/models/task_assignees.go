@@ -19,6 +19,10 @@ package models
 import (
 	"time"
 
+	"code.vikunja.io/api/pkg/db"
+
+	"xorm.io/builder"
+
 	"code.vikunja.io/api/pkg/events"
 
 	"code.vikunja.io/api/pkg/user"
@@ -267,12 +271,14 @@ func (la *TaskAssginee) ReadAll(s *xorm.Session, a web.Auth, search string, page
 		return nil, 0, 0, ErrGenericForbidden{}
 	}
 	limit, start := getLimitFromPageIndex(page, perPage)
-
 	var taskAssignees []*user.User
 	query := s.Table("task_assignees").
 		Select("users.*").
 		Join("INNER", "users", "task_assignees.user_id = users.id").
-		Where("task_id = ? AND users.username LIKE ?", la.TaskID, "%"+search+"%")
+		Where(builder.And(
+			builder.Eq{"task_id": la.TaskID},
+			db.ILIKE("users.username", search),
+		))
 	if limit > 0 {
 		query = query.Limit(limit, start)
 	}

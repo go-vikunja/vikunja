@@ -20,12 +20,15 @@ import (
 	"errors"
 	"time"
 
-	"golang.org/x/crypto/bcrypt"
+	"code.vikunja.io/api/pkg/db"
 
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
+
 	"code.vikunja.io/web"
 	"github.com/golang-jwt/jwt"
+	"golang.org/x/crypto/bcrypt"
+	"xorm.io/builder"
 	"xorm.io/xorm"
 )
 
@@ -206,7 +209,14 @@ func (share *LinkSharing) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 
 	var shares []*LinkSharing
 	query := s.
-		Where("list_id = ? AND hash LIKE ?", share.ListID, "%"+search+"%")
+		Where(builder.And(
+			builder.Eq{"list_id": share.ListID},
+			builder.Or(
+				db.ILIKE("hash", search),
+				db.ILIKE("name", search),
+			),
+		))
+
 	if limit > 0 {
 		query = query.Limit(limit, start)
 	}

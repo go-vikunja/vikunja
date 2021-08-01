@@ -21,6 +21,8 @@ import (
 	"strings"
 	"time"
 
+	"code.vikunja.io/api/pkg/db"
+
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/files"
@@ -403,10 +405,9 @@ func getRawListsForUser(s *xorm.Session, opts *listOptions) (lists []*List, resu
 		}
 	}
 
+	filterCond = db.ILIKE("l.title", opts.search)
 	if len(ids) > 0 {
 		filterCond = builder.In("l.id", ids)
-	} else {
-		filterCond = &builder.Like{"l.title", "%" + opts.search + "%"}
 	}
 
 	// Gets all Lists where the user is either owner or in a team which has access to the list

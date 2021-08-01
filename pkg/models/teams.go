@@ -19,13 +19,14 @@ package models
 import (
 	"time"
 
+	"code.vikunja.io/api/pkg/db"
+
 	"code.vikunja.io/api/pkg/events"
-
-	"xorm.io/xorm"
-
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
+
 	"xorm.io/builder"
+	"xorm.io/xorm"
 )
 
 // Team holds a team object
@@ -210,13 +211,12 @@ func (t *Team) ReadAll(s *xorm.Session, a web.Auth, search string, page int, per
 	}
 
 	limit, start := getLimitFromPageIndex(page, perPage)
-
 	all := []*Team{}
 	query := s.Select("teams.*").
 		Table("teams").
 		Join("INNER", "team_members", "team_members.team_id = teams.id").
 		Where("team_members.user_id = ?", a.GetID()).
-		Where("teams.name LIKE ?", "%"+search+"%")
+		Where(db.ILIKE("teams.name", search))
 	if limit > 0 {
 		query = query.Limit(limit, start)
 	}

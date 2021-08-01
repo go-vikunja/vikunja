@@ -81,6 +81,20 @@ func TestTeamList_ReadAll(t *testing.T) {
 		assert.True(t, IsErrNeedToHaveListReadAccess(err))
 		_ = s.Close()
 	})
+	t.Run("search", func(t *testing.T) {
+		tl := TeamList{
+			ListID: 19,
+		}
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		teams, _, _, err := tl.ReadAll(s, u, "TEAM9", 1, 50)
+		assert.NoError(t, err)
+		assert.Equal(t, reflect.TypeOf(teams).Kind(), reflect.Slice)
+		ts := teams.([]*TeamWithRight)
+		assert.Len(t, ts, 1)
+		assert.Equal(t, int64(9), ts[0].ID)
+		_ = s.Close()
+	})
 }
 
 func TestTeamList_Create(t *testing.T) {

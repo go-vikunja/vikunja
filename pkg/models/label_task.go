@@ -21,9 +21,12 @@ import (
 	"strings"
 	"time"
 
+	"code.vikunja.io/api/pkg/db"
+
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
+
 	"xorm.io/builder"
 	"xorm.io/xorm"
 )
@@ -200,7 +203,7 @@ func getLabelsByTaskIDs(s *xorm.Session, opts *LabelByTaskIDsOptions) (ls []*lab
 	if len(ids) > 0 {
 		cond = builder.And(cond, builder.In("labels.id", ids))
 	} else {
-		cond = builder.And(cond, &builder.Like{"labels.title", "%" + opts.Search + "%"})
+		cond = builder.And(cond, db.ILIKE("labels.title", opts.Search))
 	}
 
 	limit, start := getLimitFromPageIndex(opts.Page, opts.PerPage)

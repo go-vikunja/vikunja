@@ -142,6 +142,33 @@ func TestNamespaceUser_Create(t *testing.T) {
 }
 
 func TestNamespaceUser_ReadAll(t *testing.T) {
+	user1 := &UserWithRight{
+		User: user.User{
+			ID:                           1,
+			Username:                     "user1",
+			Password:                     "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
+			Issuer:                       "local",
+			EmailRemindersEnabled:        true,
+			OverdueTasksRemindersEnabled: true,
+			Created:                      testCreatedTime,
+			Updated:                      testUpdatedTime,
+		},
+		Right: RightRead,
+	}
+	user2 := &UserWithRight{
+		User: user.User{
+			ID:                           2,
+			Username:                     "user2",
+			Password:                     "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
+			Issuer:                       "local",
+			EmailRemindersEnabled:        true,
+			OverdueTasksRemindersEnabled: true,
+			Created:                      testCreatedTime,
+			Updated:                      testUpdatedTime,
+		},
+		Right: RightRead,
+	}
+
 	type fields struct {
 		ID          int64
 		UserID      int64
@@ -174,32 +201,8 @@ func TestNamespaceUser_ReadAll(t *testing.T) {
 				a: &user.User{ID: 3},
 			},
 			want: []*UserWithRight{
-				{
-					User: user.User{
-						ID:                           1,
-						Username:                     "user1",
-						Password:                     "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
-						Issuer:                       "local",
-						EmailRemindersEnabled:        true,
-						OverdueTasksRemindersEnabled: true,
-						Created:                      testCreatedTime,
-						Updated:                      testUpdatedTime,
-					},
-					Right: RightRead,
-				},
-				{
-					User: user.User{
-						ID:                           2,
-						Username:                     "user2",
-						Password:                     "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
-						Issuer:                       "local",
-						EmailRemindersEnabled:        true,
-						OverdueTasksRemindersEnabled: true,
-						Created:                      testCreatedTime,
-						Updated:                      testUpdatedTime,
-					},
-					Right: RightRead,
-				},
+				user1,
+				user2,
 			},
 		},
 		{
@@ -212,6 +215,19 @@ func TestNamespaceUser_ReadAll(t *testing.T) {
 			},
 			wantErr: true,
 			errType: IsErrNeedToHaveNamespaceReadAccess,
+		},
+		{
+			name: "Search",
+			fields: fields{
+				NamespaceID: 3,
+			},
+			args: args{
+				a:      &user.User{ID: 3},
+				search: "usER2",
+			},
+			want: []*UserWithRight{
+				user2,
+			},
 		},
 	}
 	for _, tt := range tests {

@@ -356,4 +356,17 @@ func TestNamespace_ReadAll(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Nil(t, nn)
 	})
+	t.Run("search", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		n := &Namespace{}
+		nn, _, _, err := n.ReadAll(s, user6, "NamespACE7", 1, -1)
+		assert.NoError(t, err)
+		namespaces := nn.([]*NamespaceWithLists)
+		assert.NotNil(t, namespaces)
+		assert.Len(t, namespaces, 2)
+		assert.Equal(t, int64(7), namespaces[1].ID)
+	})
 }

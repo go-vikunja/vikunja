@@ -19,10 +19,12 @@ package models
 import (
 	"time"
 
-	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/db"
 
+	"code.vikunja.io/api/pkg/events"
 	user2 "code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
+
 	"xorm.io/xorm"
 )
 
@@ -185,13 +187,11 @@ func (nu *NamespaceUser) ReadAll(s *xorm.Session, a web.Auth, search string, pag
 
 	// Get all users
 	all := []*UserWithRight{}
-
 	limit, start := getLimitFromPageIndex(page, perPage)
-
 	query := s.
 		Join("INNER", "users_namespaces", "user_id = users.id").
 		Where("users_namespaces.namespace_id = ?", nu.NamespaceID).
-		Where("users.username LIKE ?", "%"+search+"%")
+		Where(db.ILIKE("users.username", search))
 	if limit > 0 {
 		query = query.Limit(limit, start)
 	}

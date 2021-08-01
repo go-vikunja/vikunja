@@ -233,4 +233,16 @@ func TestTaskComment_ReadAll(t *testing.T) {
 		}
 		assert.True(t, foundComment)
 	})
+	t.Run("normal", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		tc := &TaskComment{TaskID: 35}
+		u := &user.User{ID: 1}
+		result, _, _, err := tc.ReadAll(s, u, "COMMENT 15", 0, -1)
+		resultComment := result.([]*TaskComment)
+		assert.NoError(t, err)
+		assert.Equal(t, int64(15), resultComment[0].ID)
+	})
 }

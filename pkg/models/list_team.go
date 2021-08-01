@@ -19,6 +19,8 @@ package models
 import (
 	"time"
 
+	"code.vikunja.io/api/pkg/db"
+
 	"code.vikunja.io/api/pkg/events"
 
 	"code.vikunja.io/web"
@@ -198,7 +200,7 @@ func (tl *TeamList) ReadAll(s *xorm.Session, a web.Auth, search string, page int
 		Table("teams").
 		Join("INNER", "team_lists", "team_id = teams.id").
 		Where("team_lists.list_id = ?", tl.ListID).
-		Where("teams.name LIKE ?", "%"+search+"%")
+		Where(db.ILIKE("teams.name", search))
 	if limit > 0 {
 		query = query.Limit(limit, start)
 	}

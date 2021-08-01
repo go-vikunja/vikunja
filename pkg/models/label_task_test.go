@@ -30,6 +30,24 @@ import (
 )
 
 func TestLabelTask_ReadAll(t *testing.T) {
+	label := Label{
+		ID:          4,
+		Title:       "Label #4 - visible via other task",
+		Created:     testCreatedTime,
+		Updated:     testUpdatedTime,
+		CreatedByID: 2,
+		CreatedBy: &user.User{
+			ID:                           2,
+			Username:                     "user2",
+			Password:                     "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
+			Issuer:                       "local",
+			EmailRemindersEnabled:        true,
+			OverdueTasksRemindersEnabled: true,
+			Created:                      testCreatedTime,
+			Updated:                      testUpdatedTime,
+		},
+	}
+
 	type fields struct {
 		ID       int64
 		TaskID   int64
@@ -62,23 +80,7 @@ func TestLabelTask_ReadAll(t *testing.T) {
 			wantLabels: []*labelWithTaskID{
 				{
 					TaskID: 1,
-					Label: Label{
-						ID:          4,
-						Title:       "Label #4 - visible via other task",
-						Created:     testCreatedTime,
-						Updated:     testUpdatedTime,
-						CreatedByID: 2,
-						CreatedBy: &user.User{
-							ID:                           2,
-							Username:                     "user2",
-							Password:                     "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
-							Issuer:                       "local",
-							EmailRemindersEnabled:        true,
-							OverdueTasksRemindersEnabled: true,
-							Created:                      testCreatedTime,
-							Updated:                      testUpdatedTime,
-						},
-					},
+					Label:  label,
 				},
 			},
 		},
@@ -103,6 +105,22 @@ func TestLabelTask_ReadAll(t *testing.T) {
 			},
 			wantErr: true,
 			errType: IsErrTaskDoesNotExist,
+		},
+		{
+			name: "search",
+			fields: fields{
+				TaskID: 1,
+			},
+			args: args{
+				a:      &user.User{ID: 1},
+				search: "VISIBLE",
+			},
+			wantLabels: []*labelWithTaskID{
+				{
+					TaskID: 1,
+					Label:  label,
+				},
+			},
 		},
 	}
 	for _, tt := range tests {

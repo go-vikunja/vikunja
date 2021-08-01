@@ -66,6 +66,21 @@ func TestTeamNamespace_ReadAll(t *testing.T) {
 		assert.True(t, IsErrNeedToHaveNamespaceReadAccess(err))
 		_ = s.Close()
 	})
+	t.Run("search", func(t *testing.T) {
+		tn := TeamNamespace{
+			NamespaceID: 3,
+		}
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		teams, _, _, err := tn.ReadAll(s, u, "READ_only_on_list6", 1, 50)
+		assert.NoError(t, err)
+		assert.Equal(t, reflect.TypeOf(teams).Kind(), reflect.Slice)
+		ts := teams.([]*TeamWithRight)
+		assert.Len(t, ts, 1)
+		assert.Equal(t, int64(2), ts[0].ID)
+
+		_ = s.Close()
+	})
 }
 
 func TestTeamNamespace_Create(t *testing.T) {

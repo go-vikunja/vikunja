@@ -103,6 +103,21 @@ func TestLinkSharing_ReadAll(t *testing.T) {
 			assert.Empty(t, sharing.Password)
 		}
 	})
+	t.Run("search", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		share := &LinkSharing{
+			ListID: 1,
+		}
+		all, _, _, err := share.ReadAll(s, doer, "wITHPASS", 1, -1)
+		shares := all.([]*LinkSharing)
+
+		assert.NoError(t, err)
+		assert.Len(t, shares, 1)
+		assert.Equal(t, int64(4), shares[0].ID)
+	})
 }
 
 func TestLinkSharing_ReadOne(t *testing.T) {

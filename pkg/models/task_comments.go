@@ -19,12 +19,14 @@ package models
 import (
 	"time"
 
+	"code.vikunja.io/api/pkg/db"
+
 	"code.vikunja.io/api/pkg/events"
-
-	"xorm.io/xorm"
-
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
+
+	"xorm.io/builder"
+	"xorm.io/xorm"
 )
 
 // TaskComment represents a task comment
@@ -214,10 +216,12 @@ func (tc *TaskComment) ReadAll(s *xorm.Session, auth web.Auth, search string, pa
 	}
 
 	limit, start := getLimitFromPageIndex(page, perPage)
-
 	comments := []*TaskComment{}
 	query := s.
-		Where("task_id = ? AND comment like ?", tc.TaskID, "%"+search+"%").
+		Where(builder.And(
+			builder.Eq{"task_id": tc.TaskID},
+			db.ILIKE("comment", search),
+		)).
 		Join("LEFT", "users", "users.id = task_comments.author_id")
 	if limit > 0 {
 		query = query.Limit(limit, start)

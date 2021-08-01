@@ -112,6 +112,18 @@ func TestTeam_ReadAll(t *testing.T) {
 		ts := reflect.ValueOf(teams)
 		assert.Equal(t, 8, ts.Len())
 	})
+	t.Run("search", func(t *testing.T) {
+		s := db.NewSession()
+		defer s.Close()
+
+		team := &Team{}
+		teams, _, _, err := team.ReadAll(s, doer, "READ_only_on_list6", 1, 50)
+		assert.NoError(t, err)
+		assert.Equal(t, reflect.TypeOf(teams).Kind(), reflect.Slice)
+		ts := teams.([]*Team)
+		assert.Len(t, ts, 1)
+		assert.Equal(t, int64(2), ts[0].ID)
+	})
 }
 
 func TestTeam_Update(t *testing.T) {
