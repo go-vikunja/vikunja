@@ -67,21 +67,24 @@ func StartMailDaemon() {
 				if !open {
 					if s, err = d.Dial(); err != nil {
 						log.Error("Error during connect to smtp server: %s", err)
+						break
 					}
 					open = true
 				}
 				if err := gomail.Send(s, m); err != nil {
 					log.Error("Error when sending mail: %s", err)
+					break
 				}
 				// Close the connection to the SMTP server if no email was sent in
 				// the last 30 seconds.
 			case <-time.After(config.MailerQueueTimeout.GetDuration() * time.Second):
 				if open {
+					open = false
 					if err := s.Close(); err != nil {
 						log.Error("Error closing the mail server connection: %s\n", err)
+						break
 					}
 					log.Infof("Closed connection to mailserver")
-					open = false
 				}
 			}
 		}
