@@ -47,12 +47,8 @@
 package routes
 
 import (
-	"errors"
-	"fmt"
 	"strings"
 	"time"
-
-	"github.com/golang-jwt/jwt"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
@@ -261,27 +257,7 @@ func registerAPIRoutes(a *echo.Group) {
 
 	// ===== Routes with Authetication =====
 	// Authetification
-	a.Use(middleware.JWTWithConfig(middleware.JWTConfig{
-		// Custom parse function to make the middleware work with the github.com/golang-jwt/jwt package.
-		// See https://github.com/labstack/echo/pull/1916#issuecomment-878046299
-		ParseTokenFunc: func(auth string, c echo.Context) (interface{}, error) {
-			keyFunc := func(t *jwt.Token) (interface{}, error) {
-				if t.Method.Alg() != "HS256" {
-					return nil, fmt.Errorf("unexpected jwt signing method=%v", t.Header["alg"])
-				}
-				return []byte(config.ServiceJWTSecret.GetString()), nil
-			}
-
-			token, err := jwt.Parse(auth, keyFunc)
-			if err != nil {
-				return nil, err
-			}
-			if !token.Valid {
-				return nil, errors.New("invalid token")
-			}
-			return token, nil
-		},
-	}))
+	a.Use(middleware.JWT([]byte(config.ServiceJWTSecret.GetString())))
 
 	// Rate limit
 	setupRateLimit(a, config.RateLimitKind.GetString())
