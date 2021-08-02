@@ -341,7 +341,7 @@ type Test mg.Namespace
 func (Test) Unit() {
 	mg.Deps(initVars)
 	// We run everything sequentially and not in parallel to prevent issues with real test databases
-	args := append([]string{"test", Goflags[0], "-p", "1"}, ApiPackages...)
+	args := append([]string{"test", Goflags[0], "-p", "1", "-timeout", "20s"}, ApiPackages...)
 	runAndStreamOutput("go", args...)
 }
 
@@ -356,7 +356,7 @@ func (Test) Coverage() {
 func (Test) Integration() {
 	mg.Deps(initVars)
 	// We run everything sequentially and not in parallel to prevent issues with real test databases
-	runAndStreamOutput("go", "test", Goflags[0], "-p", "1", PACKAGE+"/pkg/integrations")
+	runAndStreamOutput("go", "test", Goflags[0], "-p", "1", "-timeout", "20s", PACKAGE+"/pkg/integrations")
 }
 
 type Check mg.Namespace
