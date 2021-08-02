@@ -122,7 +122,7 @@ Put the following config in `cat /etc/apache2/sites-available/vikunja.conf`:
     ServerName localhost
     DocumentRoot /path/to/vikunja/static/frontend/files
     RewriteEngine On
-    RewriteRule ^\/?(config\.json|favicon\.ico|css|fonts|images|img|js) - [L]
+ 	RewriteRule ^\/?(favicon\.ico|assets|audio|fonts|images|manifest\.webmanifest|robots\.txt|sw\.js|workbox-.*|api|dav|\.well-known) - [L]
     RewriteRule ^(.*)$ /index.html [QSA,L]
 </VirtualHost>
 {{< /highlight >}}
