@@ -9,7 +9,7 @@
 			class="is-max-width-desktop"
 		/>
 		<template v-if="!hasTasks">
-			<p>{{ $t('home.list.newText') }}</p>
+			<p class="mt-4">{{ $t('home.list.newText') }}</p>
 			<x-button
 				:to="{ name: 'list.create', params: { id: defaultNamespaceId } }"
 				:shadow="false"
