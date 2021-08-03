@@ -30,7 +30,7 @@ import (
 	"code.vikunja.io/api/pkg/notifications"
 
 	"code.vikunja.io/web"
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/labstack/echo/v4"
 	"golang.org/x/crypto/bcrypt"
 	"xorm.io/xorm"

@@ -20,7 +20,7 @@ import (
 	"fmt"
 
 	"code.vikunja.io/api/pkg/models"
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/labstack/echo/v4"
 )
 
