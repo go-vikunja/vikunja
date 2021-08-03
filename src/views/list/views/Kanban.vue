@@ -16,7 +16,8 @@
 				v-model="params"
 			/>
 		</div>
-		<div :class="{ 'is-loading': loading && !oneTaskUpdating}" class="kanban kanban-bucket-container loader-container">
+		<div :class="{ 'is-loading': loading && !oneTaskUpdating}"
+			 class="kanban kanban-bucket-container loader-container">
 			<draggable
 				v-model="buckets"
 				@start="() => dragBucket = true"
@@ -26,7 +27,8 @@
 				:disabled="!canWrite"
 				:class="{'dragging-disabled': !canWrite}"
 			>
-				<transition-group type="transition" :name="!dragBucket ? 'move-bucket': null" tag="div" class="kanban-bucket-container">
+				<transition-group type="transition" :name="!dragBucket ? 'move-bucket': null" tag="div"
+								  class="kanban-bucket-container">
 					<div
 						:key="`bucket${bucket.id}`"
 						class="bucket"
@@ -254,12 +256,6 @@ export default {
 		return {
 			drag: false,
 			dragBucket: false,
-			dragOptions: {
-				animation: 150,
-				ghostClass: 'ghost',
-				dragClass: 'task-dragging',
-				delay: isTouchDevice() ? 150 : 0,
-			},
 			sourceBucket: 0,
 
 			showBucketDeleteModal: false,
@@ -309,6 +305,19 @@ export default {
 			set(value) {
 				this.$store.commit('kanban/setBuckets', value)
 			},
+		},
+		dragOptions() {
+			const options = {
+				animation: 150,
+				ghostClass: 'ghost',
+				dragClass: 'task-dragging',
+			}
+
+			if (isTouchDevice()) {
+				options.delay = 150
+			}
+
+			return options
 		},
 		...mapState({
 			loadedListId: state => state.kanban.listId,
