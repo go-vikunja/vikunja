@@ -16,8 +16,9 @@
 				v-model="params"
 			/>
 		</div>
-		<div :class="{ 'is-loading': loading && !oneTaskUpdating}"
-			 class="kanban kanban-bucket-container loader-container">
+		<div
+			:class="{ 'is-loading': loading && !oneTaskUpdating}"
+			class="kanban kanban-bucket-container loader-container">
 			<draggable
 				v-model="buckets"
 				@start="() => dragBucket = true"
@@ -27,8 +28,11 @@
 				:disabled="!canWrite"
 				:class="{'dragging-disabled': !canWrite}"
 			>
-				<transition-group type="transition" :name="!dragBucket ? 'move-bucket': null" tag="div"
-								  class="kanban-bucket-container">
+				<transition-group
+					type="transition"
+					:name="!dragBucket ? 'move-bucket': null"
+					tag="div"
+					class="kanban-bucket-container">
 					<div
 						:key="`bucket${bucket.id}`"
 						class="bucket"
