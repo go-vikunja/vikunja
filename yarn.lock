@@ -4092,7 +4092,7 @@ fast-deep-equal@^3.1.1, fast-deep-equal@^3.1.3:
   resolved "https://registry.yarnpkg.com/fast-deep-equal/-/fast-deep-equal-3.1.3.tgz#3a7d56b559d6cbc3eb512325244e619a65c6c525"
   integrity sha512-f3qQ9oQy9j2AhBe/H9VC91wLmKBCCU/gDOnKNAYG5hswO7BLKj09Hc5HYNz9cGI++xlpDCIgDaitVs03ATR84Q==
 
-fast-glob@^3.1.1, fast-glob@^3.2.5:
+fast-glob@^3.1.1, fast-glob@^3.2.7:
   version "3.2.7"
   resolved "https://registry.yarnpkg.com/fast-glob/-/fast-glob-3.2.7.tgz#fd6cb7a2d7e9aa7a7846111e85a196d6b2f766a1"
   integrity sha512-rYGMRwip6lUMvYD3BTScMwT1HtAs2d71SMv66Vrxs0IekGZEjhM0pcMfjQPnknBt2zeCwQMEupiN02ZP4DiT1Q==
@@ -7023,10 +7023,17 @@ rollup-plugin-visualizer@5.5.2:
     source-map "^0.7.3"
     yargs "^16.2.0"
 
-rollup@^2.35.1, rollup@^2.38.5, rollup@^2.43.1, rollup@^2.51.2:
+rollup@^2.35.1, rollup@^2.38.5, rollup@^2.43.1:
   version "2.54.0"
   resolved "https://registry.yarnpkg.com/rollup/-/rollup-2.54.0.tgz#99ea816e8e9b1c6af3ab957a4e7a8f78dbd87773"
   integrity sha512-RHzvstAVwm9A751NxWIbGPFXs3zL4qe/eYg+N7WwGtIXVLy1cK64MiU37+hXeFm1jqipK6DGgMi6Z2hhPuCC3A==
+  optionalDependencies:
+    fsevents "~2.3.2"
+
+rollup@^2.55.1:
+  version "2.55.1"
+  resolved "https://registry.yarnpkg.com/rollup/-/rollup-2.55.1.tgz#66a444648e2fb603d8e329e77a61c608a6510fda"
+  integrity sha512-1P9w5fpb6b4qroePh8vHKGIvPNxwoCQhjJpIqfZGHLKpZ0xcU2/XBmFxFbc9697/6bmHpmFTLk5R1dAQhFSo0g==
   optionalDependencies:
     fsevents "~2.3.2"
 
@@ -8043,15 +8050,15 @@ verte@0.0.12:
   dependencies:
     color-fns "^0.0.10"
 
-vite-plugin-pwa@0.8.2:
-  version "0.8.2"
-  resolved "https://registry.yarnpkg.com/vite-plugin-pwa/-/vite-plugin-pwa-0.8.2.tgz#2789a157e2f71faf834d968945efc22eee9ad64a"
-  integrity sha512-DuhFaTTV+a7FczxtKMgBEsaCOifJT5Kpe1KhHL72exb2buPkJ3Na+hoy6akAFDp7T3JuAvH0CAO9kivwbp0MPQ==
+vite-plugin-pwa@0.9.3:
+  version "0.9.3"
+  resolved "https://registry.yarnpkg.com/vite-plugin-pwa/-/vite-plugin-pwa-0.9.3.tgz#3c03df1e7b8c9a6406882b2f475d3920fecd2da9"
+  integrity sha512-o7UD6zMssH60dblwcTKqPeESlv1iF6tPQq2dx2N9smYMh5e5A6rlwWivV4fN8Nq2PVj82itcGRycIHDT+j32vg==
   dependencies:
     debug "^4.3.2"
-    fast-glob "^3.2.5"
+    fast-glob "^3.2.7"
     pretty-bytes "^5.6.0"
-    rollup "^2.51.2"
+    rollup "^2.55.1"
     workbox-build "^6.1.5"
     workbox-window "^6.1.5"
 
