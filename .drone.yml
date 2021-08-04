@@ -1,6 +1,84 @@
 ---
 kind: pipeline
 type: docker
+name: build
+
+trigger:  
+  branch:
+    exclude:
+      - main
+  event:
+    include:
+      - push
+      - pull_request
+
+steps:
+  - name: fetch-tags
+    image: docker:git
+    commands:
+      - git fetch --tags
+
+  - name: restore-cache
+    image: meltwater/drone-cache:dev
+    pull: true
+    environment:
+      AWS_ACCESS_KEY_ID:
+        from_secret: cache_aws_access_key_id
+      AWS_SECRET_ACCESS_KEY:
+        from_secret: cache_aws_secret_access_key
+    settings:
+      restore: true
+      bucket: kolaente.dev-drone-dependency-cache
+      endpoint: https://s3.fr-par.scw.cloud
+      region: fr-par
+      path_style: true
+      cache_key: '{{ .Repo.Name }}_{{ checksum "yarn.lock" }}_{{ arch }}_{{ os }}'
+      mount:
+        - '.cache'
+
+  - name: build
+    image: electronuserland/builder:wine-mono
+    pull: true
+    environment:
+      YARN_CACHE_FOLDER: .cache/yarn/
+    depends_on:
+      - fetch-tags
+      - restore-cache
+    commands:
+      - export VERSION=${DRONE_TAG##v}
+      - if [ -z "$$VERSION" ]; then export VERSION=unstable; fi
+      # TODO: Move to a yarn script
+      - wget https://dl.vikunja.io/frontend/vikunja-frontend-$$VERSION.zip
+      - unzip vikunja-frontend-$$VERSION.zip -d frontend
+      - sed -i 's/\\/api\\/v1//g' frontend/index.html
+      # Make sure that the -unstable suffix is added to release files
+      - sed -i "s/\$${version}/$$VERSION/g" package.json
+      - yarn install
+      - yarn dist --linux --windows
+
+  - name: rebuild-cache
+    image: meltwater/drone-cache:dev
+    pull: true
+    environment:
+      AWS_ACCESS_KEY_ID:
+        from_secret: cache_aws_access_key_id
+      AWS_SECRET_ACCESS_KEY:
+        from_secret: cache_aws_secret_access_key
+    settings:
+      rebuild: true
+      bucket: kolaente.dev-drone-dependency-cache
+      endpoint: https://s3.fr-par.scw.cloud
+      region: fr-par
+      path_style: true
+      cache_key: '{{ .Repo.Name }}_{{ checksum "yarn.lock" }}_{{ arch }}_{{ os }}'
+      mount:
+        - '.cache'
+    depends_on:
+      - build
+
+---
+kind: pipeline
+type: docker
 name: release
 
 trigger:
@@ -152,6 +230,6 @@ steps:
 
 ---
 kind: signature
-hmac: 2130f9579ba2f3818fc2b9fa4b3ea285122e1851989b61d456e0456643d43818
+hmac: 66d441eca03fb47037ec629d9ccd63650280759831b3f43ca6f805f9c44fe32b
 
 ...
