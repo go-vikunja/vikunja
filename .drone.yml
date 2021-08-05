@@ -314,7 +314,7 @@ depends_on:
 
 steps:
   - name: trigger
-    image: plugins/downstream
+    image: kolaente/drone-plugin-downstream
     settings:
       server: https://drone.kolaente.de
       token:
