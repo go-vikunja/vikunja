@@ -309,8 +309,8 @@ trigger:
   event:
     - push
 
-depends_on:
-  - release-latest
+      #depends_on:
+      # - release-latest
 
 steps:
   - name: trigger
