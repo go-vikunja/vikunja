@@ -1,5 +1,9 @@
 export const saveListView = (listId, routeName) => {
-	if(routeName.includes('settings.')) {
+	if (routeName.includes('settings.')) {
+		return
+	}
+
+	if (!listId) {
 		return
 	}
 

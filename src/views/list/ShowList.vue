@@ -38,12 +38,10 @@
 </template>
 
 <script>
-import router from '../../router'
-
 import ListModel from '../../models/list'
 import ListService from '../../services/list'
-import {CURRENT_LIST} from '@/store/mutation-types'
-import {getListView} from '@/helpers/saveListView'
+import {CURRENT_LIST} from '../../store/mutation-types'
+import {getListView} from '../../helpers/saveListView'
 import {saveListToHistory} from '../../modules/listHistory'
 
 export default {
@@ -84,9 +82,8 @@ export default {
 	methods: {
 		replaceListView() {
 			const savedListView = getListView(this.$route.params.listId)
-			router.replace({name: savedListView, params: {id: this.$route.params.listId}})
-			console.debug('Replaced list view with ', savedListView)
-			return
+			this.$router.replace({name: savedListView, params: {id: this.$route.params.listId}})
+			console.debug('Replaced list view with', savedListView)
 		},
 		loadList() {
 			if (this.$route.name.includes('.settings.')) {
