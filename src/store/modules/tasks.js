@@ -16,7 +16,7 @@ export default {
 			
 			return taskService.getAll({}, params)
 				.then(r => {
-					ctx.commit(HAS_TASKS, r.length > 0)
+					ctx.commit(HAS_TASKS, r.length > 0, {root: true})
 					return r
 				})
 				.catch(e => {
