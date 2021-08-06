@@ -610,7 +610,7 @@ export default {
 
 				this.$store.dispatch('tasks/update', this.task)
 					.then(r => {
-						this.$set(this, 'task', r)
+						this.task = r
 						this.setActiveFields()
 
 						if (!showNotification) {

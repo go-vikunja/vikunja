@@ -78,8 +78,9 @@ export default {
 			this.saving = true
 
 			this.$store.dispatch('tasks/update', this.task)
-				.then(() => {
-					this.$emit('input', this.task)
+				.then(t => {
+					this.task = t
+					this.$emit('input', t)
 					this.saved = true
 					setTimeout(() => {
 						this.saved = false
