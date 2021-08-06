@@ -12,7 +12,7 @@
 		:select-placeholder="$t('list.searchSelect')"
 	>
 		<template v-slot:searchResult="props">
-			<span class="list-namespace-title">{{ namespace(props.option.namespaceId) }} ></span>
+			<span class="list-namespace-title search-result">{{ namespace(props.option.namespaceId) }} ></span>
 			{{ props.option.title }}
 		</template>
 	</multiselect>
