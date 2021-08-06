@@ -309,12 +309,12 @@ trigger:
   event:
     - push
 
-      #depends_on:
-      # - release-latest
+depends_on:
+ - release-latest
 
 steps:
   - name: trigger
-    image: kolaente/drone-plugin-downstream
+    image: plugins/downstream
     settings:
       server: https://drone.kolaente.de
       token:
