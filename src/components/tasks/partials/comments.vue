@@ -250,6 +250,7 @@ export default {
 					this.comments.push(r)
 					this.newComment.comment = ''
 					this.success({message: this.$t('task.comment.addedSuccess')})
+					this.makeActions()
 				})
 				.catch((e) => {
 					this.error(e)
