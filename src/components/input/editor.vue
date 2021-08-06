@@ -58,6 +58,7 @@ import VueEasymde from 'vue-easymde'
 import EasyMDE from 'easymde'
 import marked from 'marked'
 import DOMPurify from 'dompurify'
+import hljs from 'highlight.js'
 
 import AttachmentModel from '../../models/attachment'
 import AttachmentService from '../../services/attachment'
@@ -370,7 +371,6 @@ export default {
 					},
 				},
 				highlight: function (code, language) {
-					const hljs = require('highlight.js')
 					const validLanguage = hljs.getLanguage(language) ? language : 'plaintext'
 					return hljs.highlight(code, {language: validLanguage}).value
 				},
