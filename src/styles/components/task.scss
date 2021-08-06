@@ -4,6 +4,10 @@
   padding: 1rem;
   background-color: $light-background;
 
+  @media screen and (max-width: $desktop) {
+    padding-bottom: 0;
+  }
+
   .subtitle {
     color: $grey-500;
 
@@ -197,6 +201,10 @@
 
 .task-view-container {
   padding-bottom: 1rem;
+	
+  @media screen and (max-width: $desktop) {
+	padding-bottom: 0;
+  }
 
   .task-view * {
     opacity: 0;

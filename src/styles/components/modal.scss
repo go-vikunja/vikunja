@@ -22,7 +22,7 @@
       width: 100%;
       margin: 4rem auto;
 
-      @media screen and (max-width: 1024px) {
+      @media screen and (max-width: $desktop) {
         margin: 0;
 
         .close {
