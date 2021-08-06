@@ -8,16 +8,17 @@
 			@taskAdded="updateTaskList"
 			class="is-max-width-desktop"
 		/>
-		<template v-if="!hasTasks">
-			<p class="mt-4">{{ $t('home.list.newText') }}</p>
-			<x-button
-				:to="{ name: 'list.create', params: { id: defaultNamespaceId } }"
-				:shadow="false"
-				class="ml-2"
-				v-if="defaultNamespaceId > 0"
-			>
-				{{ $t('home.list.new') }}
-			</x-button>
+		<template v-if="!hasTasks && !loading">
+			<template v-if="defaultNamespaceId > 0">
+				<p class="mt-4">{{ $t('home.list.newText') }}</p>
+				<x-button
+					:to="{ name: 'list.create', params: { id: defaultNamespaceId } }"
+					:shadow="false"
+					class="ml-2"
+				>
+					{{ $t('home.list.new') }}
+				</x-button>
+			</template>
 			<p class="mt-4" v-if="migratorsEnabled">
 				{{ $t('home.list.importText') }}
 			</p>
@@ -49,6 +50,7 @@ import ShowTasks from './tasks/ShowTasks.vue'
 import {getHistory} from '../modules/listHistory'
 import ListCard from '@/components/list/partials/list-card.vue'
 import AddTask from '../components/tasks/add-task.vue'
+import {LOADING, LOADING_MODULE} from '../store/mutation-types'
 
 export default {
 	name: 'Home',
@@ -59,7 +61,6 @@ export default {
 	},
 	data() {
 		return {
-			loading: false,
 			currentDate: new Date(),
 			tasks: [],
 			showTasksKey: 0,
@@ -115,6 +116,7 @@ export default {
 
 				return state.namespaces.namespaces[0].lists.length > 0
 			},
+			loading: state => state[LOADING] && state[LOADING_MODULE] === 'tasks',
 		}),
 	},
 	methods: {

@@ -3,12 +3,30 @@ import TaskAssigneeService from '../../services/taskAssignee'
 import TaskAssigneeModel from '../../models/taskAssignee'
 import LabelTaskModel from '../../models/labelTask'
 import LabelTaskService from '../../services/labelTask'
-import {setLoading} from '@/store/helper'
+import {HAS_TASKS} from '../mutation-types'
+import {setLoading} from '../helper'
 
 export default {
 	namespaced: true,
 	state: () => ({}),
 	actions: {
+		loadTasks(ctx, params) {
+			const cancel = setLoading(ctx, 'tasks')
+			const taskService = new TaskService()
+			
+			return taskService.getAll({}, params)
+				.then(r => {
+					ctx.commit(HAS_TASKS, r.length > 0)
+					return r
+				})
+				.catch(e => {
+					return Promise.reject(e)
+				})
+				.finally(() => {
+					cancel()
+				})
+			
+		},
 		update(ctx, task) {
 			const cancel = setLoading(ctx, 'tasks')
 

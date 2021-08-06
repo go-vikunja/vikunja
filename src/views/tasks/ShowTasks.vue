@@ -14,18 +14,18 @@
 		<h3 v-else-if="!showAll" class="mb-2">
 			{{ $t('task.show.from') }}
 			<flat-pickr
-				:class="{ 'disabled': taskService.loading}"
+				:class="{ 'disabled': loading}"
 				:config="flatPickerConfig"
-				:disabled="taskService.loading"
+				:disabled="loading"
 				@on-close="setDate"
 				class="input"
 				v-model="cStartDate"
 			/>
 			{{ $t('task.show.until') }}
 			<flat-pickr
-				:class="{ 'disabled': taskService.loading}"
+				:class="{ 'disabled': loading}"
 				:config="flatPickerConfig"
-				:disabled="taskService.loading"
+				:disabled="loading"
 				@on-close="setDate"
 				class="input"
 				v-model="cEndDate"
@@ -36,11 +36,11 @@
 			<x-button type="secondary" @click="setDatesToNextWeek()" class="mr-2">{{ $t('task.show.nextWeek') }}</x-button>
 			<x-button type="secondary" @click="setDatesToNextMonth()">{{ $t('task.show.nextMonth') }}</x-button>
 		</div>
-		<template v-if="!taskService.loading && (!tasks || tasks.length === 0) && showNothingToDo">
+		<template v-if="!loading && (!tasks || tasks.length === 0) && showNothingToDo">
 			<h3 class="nothing">{{ $t('task.show.noTasks') }}</h3>
 			<img alt="" src="/images/cool.svg"/>
 		</template>
-		<div :class="{ 'is-loading': taskService.loading}" class="spinner"></div>
+		<div :class="{ 'is-loading': loading}" class="spinner"></div>
 
 		<card :padding="false" class="has-overflow" :has-content="false" v-if="tasks && tasks.length > 0">
 			<div class="tasks">
@@ -56,14 +56,13 @@
 	</div>
 </template>
 <script>
-import TaskService from '../../services/task'
 import SingleTaskInList from '../../components/tasks/partials/singleTaskInList'
-import {HAS_TASKS} from '@/store/mutation-types'
 import {mapState} from 'vuex'
 
 import flatPickr from 'vue-flatpickr-component'
 import 'flatpickr/dist/flatpickr.css'
 import Fancycheckbox from '../../components/input/fancycheckbox'
+import {LOADING, LOADING_MODULE} from '../../store/mutation-types'
 
 export default {
 	name: 'ShowTasks',
@@ -75,7 +74,6 @@ export default {
 	data() {
 		return {
 			tasks: [],
-			taskService: TaskService,
 			showNulls: true,
 			showOverdue: false,
 
@@ -91,7 +89,6 @@ export default {
 		showAll: Boolean,
 	},
 	created() {
-		this.taskService = new TaskService()
 		this.cStartDate = this.startDate
 		this.cEndDate = this.endDate
 		this.loadPendingTasks()
@@ -123,6 +120,7 @@ export default {
 		},
 		...mapState({
 			userAuthenticated: state => state.auth.authenticated,
+			loading: state => state[LOADING] && state[LOADING_MODULE] === 'tasks',
 		}),
 	},
 	methods: {
@@ -193,7 +191,7 @@ export default {
 				}
 			}
 
-			this.taskService.getAll({}, params)
+			this.$store.dispatch('tasks/loadTasks', params)
 				.then(r => {
 
 					// Sort all tasks to put those with a due date before the ones without a due date, the
@@ -206,7 +204,6 @@ export default {
 					const tasks = r.filter(t => t.dueDate !== null).concat(r.filter(t => t.dueDate === null))
 
 					this.$set(this, 'tasks', tasks)
-					this.$store.commit(HAS_TASKS, r.length > 0)
 				})
 				.catch(e => {
 					this.error(e)
