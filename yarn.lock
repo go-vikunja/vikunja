@@ -8144,10 +8144,10 @@ vite@2.4.4:
   optionalDependencies:
     fsevents "~2.3.2"
 
-vue-advanced-cropper@1.7.0:
-  version "1.7.0"
-  resolved "https://registry.yarnpkg.com/vue-advanced-cropper/-/vue-advanced-cropper-1.7.0.tgz#8a0306009ce9983be51385df6a9d53e79fed1863"
-  integrity sha512-3z8b0hakcq9cBqNNAPt3OfPmOZPgcaXNjmYsxOi7cbSIJrdlS8nSbFzK1Wv4DNYvYeL0RO7OxqSz3luDvCJ8CA==
+vue-advanced-cropper@1.8.0:
+  version "1.8.0"
+  resolved "https://registry.yarnpkg.com/vue-advanced-cropper/-/vue-advanced-cropper-1.8.0.tgz#a67a9603051dab4c261756988a0d2b25e1479936"
+  integrity sha512-gF+WFhC0ukSMCQ1JezWh9I9OGLABvKvibRCtmZZF1mCWCx4i/avbqqtVnNMMSzAdoaLbG+dVdAKe170fRkdNAg==
   dependencies:
     classnames "^2.2.6"
     debounce "^1.2.0"
