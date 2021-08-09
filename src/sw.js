@@ -1,8 +1,8 @@
 /* eslint-disable no-console */
 /* eslint-disable no-undef */
 
-importScripts( '/workbox-v6.1.5/workbox-sw.js')
-workbox.setConfig({modulePathPrefix: '/workbox-v6.1.5'})
+importScripts( '/workbox-v6.2.2/workbox-sw.js')
+workbox.setConfig({modulePathPrefix: '/workbox-v6.2.2'})
 
 import { precacheAndRoute } from 'workbox-precaching'
 precacheAndRoute(self.__WB_MANIFEST)
