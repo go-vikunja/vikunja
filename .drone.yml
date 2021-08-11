@@ -6,37 +6,91 @@ workspace:
   base: /go
   path: src/code.vikunja.io/api
 
+volumes:
+  - name: tmp-sqlite-unit
+    temp:
+      medium: memory
+  - name: tmp-sqlite-integration
+    temp:
+      medium: memory
+  - name: tmp-sqlite-migration
+    temp:
+      medium: memory
+  - name: tmp-mysql-unit
+    temp:
+      medium: memory
+  - name: tmp-mysql-integration
+    temp:
+      medium: memory
+  - name: tmp-mysql-migration
+    temp:
+      medium: memory
+  - name: tmp-postgres-unit
+    temp:
+      medium: memory
+  - name: tmp-postgres-integration
+    temp:
+      medium: memory
+  - name: tmp-postgres-migration
+    temp:
+      medium: memory
+      
+
 services:
   - name: test-mysql-unit
     image: mariadb:10
     environment:
       MYSQL_ROOT_PASSWORD: vikunjatest
       MYSQL_DATABASE: vikunjatest
+    volumes:
+      - name: tmp-mysql-unit
+        path: /var/lib/mysql
   - name: test-mysql-integration
     image: mariadb:10
     environment:
       MYSQL_ROOT_PASSWORD: vikunjatest
       MYSQL_DATABASE: vikunjatest
+    volumes:
+      - name: tmp-mysql-integration
+        path: /var/lib/mysql
   - name: test-mysql-migration
     image: mariadb:10
     environment:
       MYSQL_ROOT_PASSWORD: vikunjatest
       MYSQL_DATABASE: vikunjatest
+    volumes:
+      - name: tmp-mysql-migration
+        path: /var/lib/mysql
   - name: test-postgres-unit
-    image: postgres:12
+    image: postgres:13
     environment:
       POSTGRES_PASSWORD: vikunjatest
       POSTGRES_DB: vikunjatest
+    volumes:
+      - name: tmp-postgres-unit
+        path: /var/lib/postgresql/data
+    commands:
+      - docker-entrypoint.sh -c fsync=off -c full_page_writes=off # turns of wal
   - name: test-postgres-integration
-    image: postgres:12
+    image: postgres:13
     environment:
       POSTGRES_PASSWORD: vikunjatest
       POSTGRES_DB: vikunjatest
+    volumes:
+      - name: tmp-postgres-integration
+        path: /var/lib/postgresql/data
+    commands:
+      - docker-entrypoint.sh -c fsync=off -c full_page_writes=off # turns of wal
   - name: test-postgres-migration
-    image: postgres:12
+    image: postgres:13
     environment:
       POSTGRES_PASSWORD: vikunjatest
       POSTGRES_DB: vikunjatest
+    volumes:
+      - name: tmp-postgres-migration
+        path: /var/lib/postgresql/data
+    commands:
+      - docker-entrypoint.sh -c fsync=off -c full_page_writes=off # turns of wal
 
 trigger:
   branch:
@@ -103,9 +157,12 @@ steps:
     depends_on: [ test-migration-prepare, build ]
     environment:
       VIKUNJA_DATABASE_TYPE: sqlite
-      VIKUNJA_DATABASE_PATH: ./vikunja-migration-test.db
+      VIKUNJA_DATABASE_PATH: /db/vikunja-migration-test.db
       VIKUNJA_LOG_DATABASE: stdout
       VIKUNJA_LOG_DATABASELEVEL: debug
+    volumes:
+      - name: tmp-sqlite-migration
+        path: /db
     commands:
       - ./vikunja-unstable-linux-amd64 migrate
       # Run the migrations from the binary build in the step before
@@ -170,6 +227,10 @@ steps:
       GOPROXY: 'https://goproxy.kolaente.de'
       VIKUNJA_TESTS_USE_CONFIG: 1
       VIKUNJA_DATABASE_TYPE: sqlite
+      VIKUNJA_DATABASE_PATH: /db/vikunja-test.db
+    volumes:
+      - name: tmp-sqlite-unit
+        path: /db
     commands:
       - ./mage-static test:unit
     depends_on: [ fetch-tags, mage ]
@@ -229,6 +290,10 @@ steps:
       GOPROXY: 'https://goproxy.kolaente.de'
       VIKUNJA_TESTS_USE_CONFIG: 1
       VIKUNJA_DATABASE_TYPE: sqlite
+      VIKUNJA_DATABASE_PATH: /db/vikunja-test.db
+    volumes:
+      - name: tmp-sqlite-integration
+        path: /db
     commands:
       - ./mage-static test:integration
     depends_on: [ fetch-tags, mage ]
@@ -791,6 +856,6 @@ steps:
         - failure
 ---
 kind: signature
-hmac: 41d8d825e31ec9c5c6bd1a70c1d4021f97717ef14d2cac41edfd01880895e8b1
+hmac: 673ff632397ce656d984182c8a007ff7d96c530ffc69fea824b45c12813ba4e5
 
 ...
