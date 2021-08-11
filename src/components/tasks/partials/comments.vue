@@ -208,6 +208,9 @@ export default {
 	watch: {
 		taskId() {
 			this.loadComments()
+			this.newComment.taskId = this.taskId
+			this.commentEdit.taskId = this.taskId
+			this.commentToDelete.taskId = this.taskId
 		},
 		canWrite() {
 			this.makeActions()
