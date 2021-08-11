@@ -650,7 +650,10 @@ func CreateNewNamespaceForUser(s *xorm.Session, user *user.User) (err error) {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces/{id} [delete]
 func (n *Namespace) Delete(s *xorm.Session, a web.Auth) (err error) {
+	return deleteNamespace(s, n, a, true)
+}
 
+func deleteNamespace(s *xorm.Session, n *Namespace, a web.Auth, withLists bool) (err error) {
 	// Check if the namespace exists
 	_, err = GetNamespaceByID(s, n.ID)
 	if err != nil {
@@ -663,6 +666,15 @@ func (n *Namespace) Delete(s *xorm.Session, a web.Auth) (err error) {
 		return
 	}
 
+	namespaceDeleted := &NamespaceDeletedEvent{
+		Namespace: n,
+		Doer:      a,
+	}
+
+	if !withLists {
+		return events.Dispatch(namespaceDeleted)
+	}
+
 	// Delete all lists with their tasks
 	lists, err := GetListsByNamespaceID(s, n.ID, &user.User{})
 	if err != nil {
@@ -670,43 +682,18 @@ func (n *Namespace) Delete(s *xorm.Session, a web.Auth) (err error) {
 	}
 
 	if len(lists) == 0 {
-		return events.Dispatch(&NamespaceDeletedEvent{
-			Namespace: n,
-			Doer:      a,
-		})
+		return events.Dispatch(namespaceDeleted)
 	}
 
-	var listIDs []int64
-	// We need to do that for here because we need the list ids to delete two times:
-	// 1) to delete the lists itself
-	// 2) to delete the list tasks
-	for _, l := range lists {
-		listIDs = append(listIDs, l.ID)
+	// Looping over all lists to let the list handle properly cleaning up the tasks and everything else associated with it.
+	for _, list := range lists {
+		err = list.Delete(s, a)
+		if err != nil {
+			return err
+		}
 	}
 
-	if len(listIDs) == 0 {
-		return events.Dispatch(&NamespaceDeletedEvent{
-			Namespace: n,
-			Doer:      a,
-		})
-	}
-
-	// Delete tasks
-	_, err = s.In("list_id", listIDs).Delete(&Task{})
-	if err != nil {
-		return
-	}
-
-	// Delete the lists
-	_, err = s.In("id", listIDs).Delete(&List{})
-	if err != nil {
-		return
-	}
-
-	return events.Dispatch(&NamespaceDeletedEvent{
-		Namespace: n,
-		Doer:      a,
-	})
+	return events.Dispatch(namespaceDeleted)
 }
 
 // Update implements the update method via the interface

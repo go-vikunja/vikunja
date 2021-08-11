@@ -312,6 +312,13 @@ func registerAPIRoutes(a *echo.Group) {
 		u.GET("/settings/totp/qrcode", apiv1.UserTOTPQrCode)
 	}
 
+	// User deletion
+	if config.ServiceEnableUserDeletion.GetBool() {
+		u.POST("/deletion/request", apiv1.UserRequestDeletion)
+		u.POST("/deletion/confirm", apiv1.UserConfirmDeletion)
+		u.POST("/deletion/cancel", apiv1.UserCancelDeletion)
+	}
+
 	listHandler := &handler.WebHandler{
 		EmptyStruct: func() handler.CObject {
 			return &models.List{}

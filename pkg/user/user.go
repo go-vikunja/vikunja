@@ -95,6 +95,9 @@ type User struct {
 	DefaultListID                int64 `xorm:"bigint null index" json:"-"`
 	WeekStart                    int   `xorm:"null" json:"-"`
 
+	DeletionScheduledAt      time.Time `xorm:"datetime null" json:"-"`
+	DeletionLastReminderSent time.Time `xorm:"datetime null" json:"-"`
+
 	// A timestamp when this task was created. You cannot change this value.
 	Created time.Time `xorm:"created not null" json:"created"`
 	// A timestamp when this task was last updated. You cannot change this value.
@@ -365,6 +368,16 @@ func CheckUserPassword(user *User, password string) error {
 	}
 
 	return nil
+}
+
+// GetCurrentUserFromDB gets a user from jwt claims and returns the full user from the db.
+func GetCurrentUserFromDB(s *xorm.Session, c echo.Context) (user *User, err error) {
+	u, err := GetCurrentUser(c)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetUserByID(s, u.ID)
 }
 
 // GetCurrentUser returns the current user based on its jwt token

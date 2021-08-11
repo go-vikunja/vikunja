@@ -43,6 +43,10 @@ service:
   # If enabled, vikunja will send an email to everyone who is either assigned to a task or created it when a task reminder
   # is due.
   enableemailreminders: true
+  # If true, will allow users to request the complete deletion of their account. When using external authentication methods 
+  # it may be required to coordinate with them in order to delete the account. This setting will not affect the cli commands
+  # for user deletion.
+  enableuserdeletion: true
 
 database:
   # Database type to use. Supported types are mysql, postgres and sqlite.

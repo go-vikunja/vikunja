@@ -95,6 +95,8 @@ func FullInit() {
 	models.RegisterReminderCron()
 	models.RegisterOverdueReminderCron()
 	user.RegisterTokenCleanupCron()
+	user.RegisterDeletionNotificationCron()
+	models.RegisterUserDeletionCron()
 
 	// Start processing events
 	go func() {

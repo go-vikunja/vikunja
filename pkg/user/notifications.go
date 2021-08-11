@@ -17,6 +17,8 @@
 package user
 
 import (
+	"strconv"
+
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/notifications"
 )
@@ -185,4 +187,87 @@ func (n *FailedLoginAttemptNotification) ToDB() interface{} {
 // Name returns the name of the notification
 func (n *FailedLoginAttemptNotification) Name() string {
 	return "failed.login.attempt"
+}
+
+// AccountDeletionConfirmNotification represents a AccountDeletionConfirmNotification notification
+type AccountDeletionConfirmNotification struct {
+	User         *User
+	ConfirmToken string
+}
+
+// ToMail returns the mail notification for AccountDeletionConfirmNotification
+func (n *AccountDeletionConfirmNotification) ToMail() *notifications.Mail {
+	return notifications.NewMail().
+		Subject("Please confirm the deletion of your Vikunja account").
+		Greeting("Hi "+n.User.GetName()+",").
+		Line("You have requested the deletion of your account. To confirm this, please click the link below:").
+		Action("Confirm the deletion of my account", config.ServiceFrontendurl.GetString()+"?accountDeletionConfirm="+n.ConfirmToken).
+		Line("This link will be valid for 24 hours.").
+		Line("Once you confirm the deletion we will schedule the deletion of your account in three days and send you another email until then.").
+		Line("If you proceed with the deletion of your account, we will remove all of your namespaces, lists and tasks you created. Everything you shared with another user or team will transfer ownership to them.").
+		Line("If you did not requested the deletion or changed your mind, you can simply ignore this email.").
+		Line("Have a nice day!")
+}
+
+// ToDB returns the AccountDeletionConfirmNotification notification in a format which can be saved in the db
+func (n *AccountDeletionConfirmNotification) ToDB() interface{} {
+	return nil
+}
+
+// Name returns the name of the notification
+func (n *AccountDeletionConfirmNotification) Name() string {
+	return "user.deletion.confirm"
+}
+
+// AccountDeletionNotification represents a AccountDeletionNotification notification
+type AccountDeletionNotification struct {
+	User               *User
+	NotificationNumber int
+}
+
+// ToMail returns the mail notification for AccountDeletionNotification
+func (n *AccountDeletionNotification) ToMail() *notifications.Mail {
+	return notifications.NewMail().
+		Subject("Your Vikunja account will be deleted in "+strconv.Itoa(n.NotificationNumber)+" days").
+		Greeting("Hi "+n.User.GetName()+",").
+		Line("You recently requested the deletion of your Vikunja account.").
+		Line("We will delete your account in "+strconv.Itoa(n.NotificationNumber)+" days.").
+		Line("If you changed your mind, simply click the link below to cancel the deletion and follow the instructions there:").
+		Action("Abort the deletion", config.ServiceFrontendurl.GetString()).
+		Line("Have a nice day!")
+}
+
+// ToDB returns the AccountDeletionNotification notification in a format which can be saved in the db
+func (n *AccountDeletionNotification) ToDB() interface{} {
+	return nil
+}
+
+// Name returns the name of the notification
+func (n *AccountDeletionNotification) Name() string {
+	return "user.deletion"
+}
+
+// AccountDeletedNotification represents a AccountDeletedNotification notification
+type AccountDeletedNotification struct {
+	User *User
+}
+
+// ToMail returns the mail notification for AccountDeletedNotification
+func (n *AccountDeletedNotification) ToMail() *notifications.Mail {
+	return notifications.NewMail().
+		Subject("Your Vikunja Account has been deleted").
+		Greeting("Hi " + n.User.GetName() + ",").
+		Line("As requested, we've deleted your Vikunja account.").
+		Line("This deletion is permanent. If did not create a backup and need your data back now, talk to your administrator.").
+		Line("Have a nice day!")
+}
+
+// ToDB returns the AccountDeletedNotification notification in a format which can be saved in the db
+func (n *AccountDeletedNotification) ToDB() interface{} {
+	return nil
+}
+
+// Name returns the name of the notification
+func (n *AccountDeletedNotification) Name() string {
+	return "user.deleted"
 }

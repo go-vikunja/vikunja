@@ -17,49 +17,27 @@
 package migration
 
 import (
-	"math"
+	"time"
 
 	"src.techknowlogick.com/xormigrate"
 	"xorm.io/xorm"
 )
 
-type buckets20210727211037 struct {
-	ID       int64   `xorm:"bigint autoincr not null" json:"id" param:"list"`
-	Position float64 `xorm:"double null" json:"position"`
+type users20210802081716 struct {
+	DeletionScheduledAt      time.Time `xorm:"datetime null" json:"-"`
+	DeletionLastReminderSent time.Time `xorm:"datetime null" json:"-"`
 }
 
-func (buckets20210727211037) TableName() string {
-	return "buckets"
+func (users20210802081716) TableName() string {
+	return "users"
 }
 
 func init() {
 	migrations = append(migrations, &xormigrate.Migration{
-		ID:          "20210727211037",
-		Description: "Add bucket position property",
+		ID:          "20210802081716",
+		Description: "Add account deletion schedule timestamps",
 		Migrate: func(tx *xorm.Engine) error {
-			err := tx.Sync2(buckets20210727211037{})
-			if err != nil {
-				return err
-			}
-
-			buckets := []*buckets20210727211037{}
-			err = tx.Find(&buckets)
-			if err != nil {
-				return err
-			}
-
-			for _, bucket := range buckets {
-				bucket.Position = float64(bucket.ID) * math.Pow(2, 16)
-
-				_, err = tx.
-					Where("id = ?", bucket.ID).
-					Update(bucket)
-				if err != nil {
-					return err
-				}
-			}
-
-			return nil
+			return tx.Sync2(users20210802081716{})
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return nil

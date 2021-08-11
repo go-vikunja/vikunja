@@ -48,6 +48,7 @@ type vikunjaInfos struct {
 	CaldavEnabled              bool      `json:"caldav_enabled"`
 	AuthInfo                   authInfo  `json:"auth"`
 	EmailRemindersEnabled      bool      `json:"email_reminders_enabled"`
+	UserDeletionEnabled        bool      `json:"user_deletion_enabled"`
 }
 
 type authInfo struct {
@@ -89,6 +90,7 @@ func Info(c echo.Context) error {
 		TotpEnabled:            config.ServiceEnableTotp.GetBool(),
 		CaldavEnabled:          config.ServiceEnableCaldav.GetBool(),
 		EmailRemindersEnabled:  config.ServiceEnableEmailReminders.GetBool(),
+		UserDeletionEnabled:    config.ServiceEnableUserDeletion.GetBool(),
 		Legal: legalInfo{
 			ImprintURL:       config.LegalImprintURL.GetString(),
 			PrivacyPolicyURL: config.LegalPrivacyURL.GetString(),

@@ -18,6 +18,7 @@ package v1
 
 import (
 	"net/http"
+	"time"
 
 	"code.vikunja.io/api/pkg/user"
 
@@ -32,7 +33,8 @@ import (
 
 type userWithSettings struct {
 	user.User
-	Settings *UserSettings `json:"settings"`
+	Settings            *UserSettings `json:"settings"`
+	DeletionScheduledAt time.Time     `json:"deletion_scheduled_at"`
 }
 
 // UserShow gets all informations about the current user
@@ -71,6 +73,7 @@ func UserShow(c echo.Context) error {
 			DefaultListID:                u.DefaultListID,
 			WeekStart:                    u.WeekStart,
 		},
+		DeletionScheduledAt: u.DeletionScheduledAt,
 	}
 
 	return c.JSON(http.StatusOK, us)

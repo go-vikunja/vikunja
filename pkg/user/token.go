@@ -33,6 +33,7 @@ const (
 	TokenUnknown TokenKind = iota
 	TokenPasswordReset
 	TokenEmailConfirm
+	TokenAccountDeletion
 
 	tokenSize = 64
 )
@@ -88,7 +89,7 @@ func RegisterTokenCleanupCron() {
 		defer s.Close()
 
 		deleted, err := s.
-			Where("created > ? AND kind = ?", time.Now().Add(time.Hour*24*-1), TokenPasswordReset).
+			Where("created > ? AND (kind = ? OR kind = ?)", time.Now().Add(time.Hour*24*-1), TokenPasswordReset, TokenAccountDeletion).
 			Delete(&Token{})
 		if err != nil {
 			log.Errorf(logPrefix+"Error removing old password reset tokens: %s", err)

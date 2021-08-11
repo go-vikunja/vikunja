@@ -24,7 +24,7 @@ import (
 )
 
 type tasks20210725153703 struct {
-	ID             int64   `xorm:"bigint autoincr not null unique pk" json:"id" param:"listtask"`
+	ID             int64   `xorm:"bigint autoincr not null" json:"id" param:"listtask"`
 	Position       float64 `xorm:"double null" json:"position"`
 	KanbanPosition float64 `xorm:"double null" json:"kanban_position"`
 }

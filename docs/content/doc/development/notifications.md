@@ -108,6 +108,13 @@ return
 The `mail` package provides a `Fake()` method which you should call in the `MainTest` functions of your package.
 If it was called, no mails are being sent and you can instead assert they have been sent with the `AssertSent` method.
 
+When testing, you should call the `notifications.Fake()` method in the `TestMain` function of the package you want to test.
+This prevents any notifications from being sent and lets you assert a notifications has been sent like this:
+
+{{< highlight golang >}}
+notifications.AssertSent(t, &ReminderDueNotification{})
+{{< /highlight >}}
+
 ## Example
 
 Take a look at the [pkg/user/notifications.go](https://code.vikunja.io/api/src/branch/main/pkg/user/notifications.go) file for a good example.

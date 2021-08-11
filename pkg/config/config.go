@@ -56,6 +56,7 @@ const (
 	ServiceSentryDsn             Key = `service.sentrydsn`
 	ServiceTestingtoken          Key = `service.testingtoken`
 	ServiceEnableEmailReminders  Key = `service.enableemailreminders`
+	ServiceEnableUserDeletion    Key = `service.enableuserdeletion`
 
 	AuthLocalEnabled      Key = `auth.local.enabled`
 	AuthOpenIDEnabled     Key = `auth.openid.enabled`
@@ -246,6 +247,7 @@ func InitDefaultConfig() {
 	ServiceEnableTaskComments.setDefault(true)
 	ServiceEnableTotp.setDefault(true)
 	ServiceEnableEmailReminders.setDefault(true)
+	ServiceEnableUserDeletion.setDefault(true)
 
 	// Auth
 	AuthLocalEnabled.setDefault(true)

@@ -762,9 +762,17 @@ func (l *List) Delete(s *xorm.Session, a web.Auth) (err error) {
 	}
 
 	// Delete all tasks on that list
-	_, err = s.Where("list_id = ?", l.ID).Delete(&Task{})
+	// Using the loop to make sure all related entities to all tasks are properly deleted as well.
+	tasks, _, _, err := getRawTasksForLists(s, []*List{l}, a, &taskOptions{})
 	if err != nil {
 		return
+	}
+
+	for _, task := range tasks {
+		err = task.Delete(s, a)
+		if err != nil {
+			return err
+		}
 	}
 
 	return events.Dispatch(&ListDeletedEvent{

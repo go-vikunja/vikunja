@@ -1185,6 +1185,16 @@ definitions:
           email), `upload`, `initials`, `default`.
         type: string
     type: object
+  v1.UserDeletionRequest:
+    properties:
+      password:
+        type: string
+    type: object
+  v1.UserDeletionRequestConfirm:
+    properties:
+      token:
+        type: string
+    type: object
   v1.UserPassword:
     properties:
       new_password:
@@ -1283,6 +1293,8 @@ definitions:
       task_attachments_enabled:
         type: boolean
       totp_enabled:
+        type: boolean
+      user_deletion_enabled:
         type: boolean
       version:
         type: string
@@ -5529,6 +5541,97 @@ paths:
           schema:
             $ref: '#/definitions/models.Message'
       summary: Confirm the email of a new user
+      tags:
+      - user
+  /user/deletion/cancel:
+    post:
+      consumes:
+      - application/json
+      description: Aborts an in-progress user deletion.
+      parameters:
+      - description: The user password to confirm.
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/v1.UserDeletionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Message'
+        "412":
+          description: Bad password provided.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      summary: Abort a user deletion request
+      tags:
+      - user
+  /user/deletion/confirm:
+    post:
+      consumes:
+      - application/json
+      description: Confirms the deletion request of a user sent via email.
+      parameters:
+      - description: The token.
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/v1.UserDeletionRequestConfirm'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Message'
+        "412":
+          description: Bad token provided.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      summary: Confirm a user deletion request
+      tags:
+      - user
+  /user/deletion/request:
+    post:
+      consumes:
+      - application/json
+      description: Requests the deletion of the current user. It will trigger an email
+        which has to be confirmed to start the deletion.
+      parameters:
+      - description: The user password.
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/v1.UserDeletionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Message'
+        "412":
+          description: Bad password provided.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      summary: Request the deletion of the user
       tags:
       - user
   /user/password:

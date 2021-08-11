@@ -6315,6 +6315,144 @@ var doc = `{
                 }
             }
         },
+        "/user/deletion/cancel": {
+            "post": {
+                "description": "Aborts an in-progress user deletion.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "Abort a user deletion request",
+                "parameters": [
+                    {
+                        "description": "The user password to confirm.",
+                        "name": "credentials",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/v1.UserDeletionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "412": {
+                        "description": "Bad password provided.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/deletion/confirm": {
+            "post": {
+                "description": "Confirms the deletion request of a user sent via email.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "Confirm a user deletion request",
+                "parameters": [
+                    {
+                        "description": "The token.",
+                        "name": "credentials",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/v1.UserDeletionRequestConfirm"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "412": {
+                        "description": "Bad token provided.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/deletion/request": {
+            "post": {
+                "description": "Requests the deletion of the current user. It will trigger an email which has to be confirmed to start the deletion.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "Request the deletion of the user",
+                "parameters": [
+                    {
+                        "description": "The user password.",
+                        "name": "credentials",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/v1.UserDeletionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "412": {
+                        "description": "Bad password provided.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
         "/user/password": {
             "post": {
                 "security": [
@@ -8556,6 +8694,22 @@ var doc = `{
                 }
             }
         },
+        "v1.UserDeletionRequest": {
+            "type": "object",
+            "properties": {
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1.UserDeletionRequestConfirm": {
+            "type": "object",
+            "properties": {
+                "token": {
+                    "type": "string"
+                }
+            }
+        },
         "v1.UserPassword": {
             "type": "object",
             "properties": {
@@ -8693,6 +8847,9 @@ var doc = `{
                     "type": "boolean"
                 },
                 "totp_enabled": {
+                    "type": "boolean"
+                },
+                "user_deletion_enabled": {
                     "type": "boolean"
                 },
                 "version": {

@@ -48,6 +48,10 @@ type Notifiable interface {
 
 // Notify notifies a notifiable of a notification
 func Notify(notifiable Notifiable, notification Notification) (err error) {
+	if isUnderTest {
+		sentTestNotifications = append(sentTestNotifications, notification)
+		return nil
+	}
 
 	err = notifyMail(notifiable, notification)
 	if err != nil {

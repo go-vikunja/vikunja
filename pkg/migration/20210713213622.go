@@ -22,7 +22,7 @@ import (
 )
 
 type users20210713213622 struct {
-	ID       int64 `xorm:"bigint autoincr not null unique pk" json:"id"`
+	ID       int64 `xorm:"bigint autoincr not null" json:"id"`
 	IsActive bool  `xorm:"null" json:"-"`
 	Status   int   `xorm:"default 0" json:"-"`
 }

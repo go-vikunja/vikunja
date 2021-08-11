@@ -24,7 +24,7 @@ import (
 )
 
 type lists20210727204942 struct {
-	ID       int64   `xorm:"bigint autoincr not null unique pk" json:"id" param:"list"`
+	ID       int64   `xorm:"bigint autoincr not null" json:"id" param:"list"`
 	Position float64 `xorm:"double null" json:"position"`
 }
 
