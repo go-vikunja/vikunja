@@ -1,3 +1,4 @@
+---
 kind: pipeline
 name: testing
 
@@ -788,3 +789,8 @@ steps:
       status:
         - success
         - failure
+---
+kind: signature
+hmac: 41d8d825e31ec9c5c6bd1a70c1d4021f97717ef14d2cac41edfd01880895e8b1
+
+...
