@@ -995,12 +995,19 @@ func parseYamlConfigNode(node *yaml.Node) (config *configOption) {
 	return config
 }
 
-func printConfig(config []*configOption, level int) (rendered string) {
+func printConfig(config []*configOption, level int, parent string) (rendered string) {
 
 	// Keep track of what we already printed to prevent printing things twice
 	printed := make(map[string]bool)
 
 	for _, option := range config {
+
+		// FIXME: Not a good solution. Ideally this would work without the level check, but since generating config
+		// for more than two levels is currently broken anyway, I'll fix this after moving the config generation
+		// to a better format than yaml.
+		if level == 0 && option.key != "" {
+			parent = option.key
+		}
 
 		if option.key != "" {
 
@@ -1030,12 +1037,17 @@ func printConfig(config []*configOption, level int) (rendered string) {
 				if option.defaultValue == "" {
 					rendered += "<empty>"
 				}
-				rendered += "`\n"
+				rendered += "`\n\n"
+
+				fullPath := parent + "." + option.key
+
+				rendered += "Full path: `" + fullPath + "`\n\n"
+				rendered += "Environment path: `VIKUNJA_" + strcase.ToScreamingSnake(fullPath) + "`\n\n"
 			}
 		}
 
 		printed[option.key] = true
-		rendered += "\n" + printConfig(option.children, level+1)
+		rendered += "\n" + printConfig(option.children, level+1, parent)
 	}
 
 	return
@@ -1069,7 +1081,7 @@ func GenerateDocs() error {
 		}
 	}
 
-	renderedConfig := printConfig(conf, 0)
+	renderedConfig := printConfig(conf, 0, "")
 
 	// Rebuild the config
 	file, err := os.OpenFile(configDocPath, os.O_RDWR, 0)
