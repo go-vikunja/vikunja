@@ -1,7 +1,6 @@
 <template>
 	<multiselect
 		class="control is-expanded"
-		v-focus
 		:loading="listSerivce.loading"
 		:placeholder="$t('list.search')"
 		@search="findLists"

@@ -3,6 +3,17 @@
 		<h2>
 			{{ $t(`home.welcome${welcome}`, {username: userInfo.name !== '' ? userInfo.name : userInfo.username}) }}!
 		</h2>
+		<div class="notification is-danger" v-if="deletionScheduledAt !== null">
+			{{
+				$t('user.deletion.scheduled', {
+					date: formatDateShort(deletionScheduledAt),
+					dateSince: formatDateSince(deletionScheduledAt),
+				})
+			}}
+			<router-link :to="{name: 'user.settings', hash: '#deletion'}">
+				{{ $t('user.deletion.scheduledCancel') }}
+			</router-link>
+		</div>
 		<add-task
 			:listId="defaultListId"
 			@taskAdded="updateTaskList"
@@ -51,6 +62,7 @@ import {getHistory} from '../modules/listHistory'
 import ListCard from '@/components/list/partials/list-card.vue'
 import AddTask from '../components/tasks/add-task.vue'
 import {LOADING, LOADING_MODULE} from '../store/mutation-types'
+import {parseDateOrNull} from '../helpers/parseDateOrNull'
 
 export default {
 	name: 'Home',
@@ -117,6 +129,7 @@ export default {
 				return state.namespaces.namespaces[0].lists.length > 0
 			},
 			loading: state => state[LOADING] && state[LOADING_MODULE] === 'tasks',
+			deletionScheduledAt: state => parseDateOrNull(state.auth.info.deletionScheduledAt),
 		}),
 	},
 	methods: {

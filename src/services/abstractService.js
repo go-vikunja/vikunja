@@ -72,12 +72,14 @@ export default class AbstractService {
 			this.http.defaults.headers.common['Authorization'] = `Bearer ${token}`
 		}
 
-		this.paths = {
-			create: paths.create !== undefined ? paths.create : '',
-			get: paths.get !== undefined ? paths.get : '',
-			getAll: paths.getAll !== undefined ? paths.getAll : '',
-			update: paths.update !== undefined ? paths.update : '',
-			delete: paths.delete !== undefined ? paths.delete : '',
+		if (paths) {
+			this.paths = {
+				create: paths.create !== undefined ? paths.create : '',
+				get: paths.get !== undefined ? paths.get : '',
+				getAll: paths.getAll !== undefined ? paths.getAll : '',
+				update: paths.update !== undefined ? paths.update : '',
+				delete: paths.delete !== undefined ? paths.delete : '',
+			}
 		}
 	}
 

@@ -245,6 +245,9 @@
 			</x-button>
 		</card>
 
+		<!-- Account deletion -->
+		<user-settings-deletion id="deletion"/>
+
 		<!-- Caldav -->
 		<card v-if="caldavEnabled" :title="$t('user.settings.caldav.title')">
 			<p>
@@ -289,6 +292,7 @@ import {mapState} from 'vuex'
 import AvatarSettings from '../../components/user/avatar-settings.vue'
 import copy from 'copy-to-clipboard'
 import ListSearch from '@/components/tasks/partials/listSearch.vue'
+import UserSettingsDeletion from '../../components/user/settings/deletion'
 
 export default {
 	name: 'Settings',
@@ -318,6 +322,7 @@ export default {
 		}
 	},
 	components: {
+		UserSettingsDeletion,
 		ListSearch,
 		AvatarSettings,
 	},
@@ -342,6 +347,7 @@ export default {
 	},
 	mounted() {
 		this.setTitle(this.$t('user.settings.title'))
+		this.anchorHashCheck()
 	},
 	computed: {
 		caldavUrl() {
@@ -451,6 +457,14 @@ export default {
 		},
 		copy(text) {
 			copy(text)
+		},
+		anchorHashCheck() {
+			if (window.location.hash === this.$route.hash) {
+				const el = document.getElementById(this.$route.hash.slice(1))
+				if (el) {
+					window.scrollTo(0, el.offsetTop)
+				}
+			}
 		},
 	},
 }

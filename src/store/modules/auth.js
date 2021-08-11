@@ -181,27 +181,8 @@ export default {
 				ctx.commit('info', info)
 
 				if (authenticated) {
-					const HTTP = HTTPFactory()
-					// We're not returning the promise here to prevent blocking the initial ui render if the user is
-					// accessing the site with a token in local storage
-					HTTP.get('user', {
-						headers: {
-							Authorization: `Bearer ${jwt}`,
-						},
-					})
-						.then(r => {
-							const info = new UserModel(r.data)
-							info.type = ctx.state.info.type
-							info.email = ctx.state.info.email
-							info.exp = ctx.state.info.exp
-
-							ctx.commit('info', info)
-							ctx.commit('authenticated', authenticated)
-							ctx.commit('lastUserRefresh')
-						})
-						.catch(e => {
-							console.error('Error while refreshing user info:', e)
-						})
+					ctx.dispatch('refreshUserInfo')
+					ctx.commit('authenticated', authenticated)
 				}
 			}
 
@@ -211,6 +192,33 @@ export default {
 			}
 
 			return Promise.resolve()
+		},
+		refreshUserInfo(ctx) {
+			const jwt = getToken()
+			if (!jwt) {
+				return
+			}
+			
+			const HTTP = HTTPFactory()
+			// We're not returning the promise here to prevent blocking the initial ui render if the user is
+			// accessing the site with a token in local storage
+			HTTP.get('user', {
+				headers: {
+					Authorization: `Bearer ${jwt}`,
+				},
+			})
+				.then(r => {
+					const info = new UserModel(r.data)
+					info.type = ctx.state.info.type
+					info.email = ctx.state.info.email
+					info.exp = ctx.state.info.exp
+
+					ctx.commit('info', info)
+					ctx.commit('lastUserRefresh')
+				})
+				.catch(e => {
+					console.error('Error while refreshing user info:', e)
+				})
 		},
 		// Renews the api token and saves it to local storage
 		renewToken(ctx) {

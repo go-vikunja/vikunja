@@ -23,6 +23,7 @@ export default {
 			privacyPolicyUrl: '',
 		},
 		caldavEnabled: false,
+		userDeletionEnabled: true,
 		auth: {
 			local: {
 				enabled: true,
@@ -49,6 +50,7 @@ export default {
 			state.legal.imprintUrl = config.legal.imprint_url
 			state.legal.privacyPolicyUrl = config.legal.privacy_policy_url
 			state.caldavEnabled = config.caldav_enabled
+			state.userDeletionEnabled = config.user_deletion_enabled
 			const auth = objectToCamelCase(config.auth)
 			state.auth.local.enabled = auth.local.enabled
 			state.auth.openidConnect.enabled = auth.openidConnect.enabled

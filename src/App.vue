@@ -36,6 +36,7 @@ import ContentAuth from './components/home/contentAuth'
 import ContentLinkShare from './components/home/contentLinkShare'
 import ContentNoAuth from './components/home/contentNoAuth'
 import {setLanguage} from './i18n/setup'
+import AccountDeleteService from '@/services/accountDelete'
 
 export default {
 	name: 'app',
@@ -51,6 +52,7 @@ export default {
 		this.setupOnlineStatus()
 		this.setupPasswortResetRedirect()
 		this.setupEmailVerificationRedirect()
+		this.setupAccountDeletionVerification()
 	},
 	beforeCreate() {
 		this.$store.dispatch('config/update')
@@ -93,6 +95,17 @@ export default {
 				localStorage.removeItem('emailConfirmToken') // Delete an eventually preexisting old token
 				localStorage.setItem('emailConfirmToken', this.$route.query.userEmailConfirm)
 				this.$router.push({name: 'user.login'})
+			}
+		},
+		setupAccountDeletionVerification() {
+			if (typeof this.$route.query.accountDeletionConfirm !== 'undefined') {
+				const accountDeletionService = new AccountDeleteService()
+				accountDeletionService.confirm(this.$route.query.accountDeletionConfirm)
+					.then(() => {
+						this.success({message: this.$t('user.deletion.confirmSuccess')})
+						this.$store.dispatch('auth/refreshUserInfo')
+					})
+					.catch(e => this.error(e))
 			}
 		},
 	},
