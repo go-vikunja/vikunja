@@ -621,7 +621,7 @@ steps:
       - tar -xzf vikunja-theme.tar.gz
 
   - name: build
-    image: monachus/hugo:v0.54.0
+    image: monachus/hugo:v0.75.1
     pull: true
     commands:
       - cd docs
@@ -856,6 +856,6 @@ steps:
         - failure
 ---
 kind: signature
-hmac: 673ff632397ce656d984182c8a007ff7d96c530ffc69fea824b45c12813ba4e5
+hmac: 2cee8cac22aae8b4a25ffa28c47d9defc6ce227e0d262b57677f9adbf8badc3e
 
 ...
