@@ -50,6 +50,10 @@ h6 {
 
 .progress {
   border-radius: $radius-large;
+
+	&::-moz-progress-bar, &::-webkit-progress-value {
+	  background: $grey-500;
+	}
 }
 
 .has-no-border {
