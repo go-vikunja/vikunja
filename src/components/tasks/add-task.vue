@@ -1,9 +1,9 @@
 <template>
 	<div class="task-add">
 		<div class="field is-grouped">
-			<p :class="{ 'is-loading': taskService.loading}" class="control has-icons-left is-expanded">
+			<p class="control has-icons-left is-expanded">
 				<input
-					:class="{ 'disabled': taskService.loading}"
+					:disabled="taskService.loading"
 					@keyup.enter="addTask()"
 					class="input"
 					:placeholder="$t('list.list.addPlaceholder')"
@@ -19,9 +19,10 @@
 			</p>
 			<p class="control">
 				<x-button
-					:disabled="newTaskTitle.length === 0"
+					:disabled="newTaskTitle === '' || taskService.loading"
 					@click="addTask()"
 					icon="plus"
+					:loading="taskService.loading"
 				>
 					{{ $t('list.list.add') }}
 				</x-button>
@@ -35,10 +36,7 @@
 </template>
 
 <script>
-import ListService from '../../services/list'
 import TaskService from '../../services/task'
-import LabelService from '../../services/label'
-import LabelTaskService from '../../services/labelTask'
 import createTask from '@/components/tasks/mixins/createTask'
 import QuickAddMagic from '@/components/tasks/partials/quick-add-magic.vue'
 
@@ -47,10 +45,7 @@ export default {
 	data() {
 		return {
 			newTaskTitle: '',
-			listService: ListService,
 			taskService: TaskService,
-			labelService: LabelService,
-			labelTaskService: LabelTaskService,
 			errorMessage: '',
 		}
 	},
@@ -61,10 +56,7 @@ export default {
 		QuickAddMagic,
 	},
 	created() {
-		this.listService = new ListService()
 		this.taskService = new TaskService()
-		this.labelService = new LabelService()
-		this.labelTaskService = new LabelTaskService()
 	},
 	props: {
 		defaultPosition: {
@@ -79,6 +71,10 @@ export default {
 				return
 			}
 			this.errorMessage = ''
+
+			if (this.taskService.loading) {
+				return
+			}
 
 			this.createNewTask(this.newTaskTitle, 0, this.$store.state.auth.settings.defaultListId, this.defaultPosition)
 				.then(task => {
