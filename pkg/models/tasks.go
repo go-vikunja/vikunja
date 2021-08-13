@@ -974,6 +974,13 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 		ot.Reminders[i] = r.Reminder
 	}
 
+	// When a repeating task is marked as done, we update all deadlines and reminders and set it as undone
+	updateDone(&ot, t)
+
+	if err := setTaskBucket(s, t, &ot, t.BucketID != ot.BucketID); err != nil {
+		return err
+	}
+
 	// Update the assignees
 	if err := ot.updateTaskAssignees(s, t.Assignees, a); err != nil {
 		return err
@@ -1002,14 +1009,6 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 		"position",
 		"repeat_mode",
 		"kanban_position",
-	}
-
-	// When a repeating task is marked as done, we update all deadlines and reminders and set it as undone
-	updateDone(&ot, t)
-
-	err = setTaskBucket(s, t, &ot, t.BucketID != ot.BucketID)
-	if err != nil {
-		return err
 	}
 
 	// If the task is being moved between lists, make sure to move the bucket + index as well
