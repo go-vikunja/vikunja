@@ -374,6 +374,10 @@ func InitConfig() {
 		AuthOpenIDRedirectURL.Set(ServiceFrontendurl.GetString() + "auth/openid/")
 	}
 
+	if MigrationTodoistRedirectURL.GetString() == "" {
+		MigrationTodoistRedirectURL.Set(ServiceFrontendurl.GetString() + "migrate/todoist")
+	}
+
 	if MigrationTrelloRedirectURL.GetString() == "" {
 		MigrationTrelloRedirectURL.Set(ServiceFrontendurl.GetString() + "migrate/trello")
 	}

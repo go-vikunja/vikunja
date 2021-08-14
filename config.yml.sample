@@ -198,7 +198,7 @@ migration:
     # This is usually the frontend url where the frontend then makes a request to /migration/todoist/migrate
     # with the code obtained from the todoist api.
     # Note that the vikunja frontend expects this to be /migrate/todoist
-    redirecturl:
+    redirecturl: <frontend url>/migrate/todoist
   trello:
     # Wheter to enable the trello migrator or not
     enable: false

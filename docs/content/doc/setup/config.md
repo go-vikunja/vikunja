@@ -272,6 +272,19 @@ Full path: `service.enableemailreminders`
 Environment path: `VIKUNJA_SERVICE_ENABLEEMAILREMINDERS`
 
 
+### enableuserdeletion
+
+If true, will allow users to request the complete deletion of their account. When using external authentication methods 
+it may be required to coordinate with them in order to delete the account. This setting will not affect the cli commands
+for user deletion.
+
+Default: `true`
+
+Full path: `service.enableuserdeletion`
+
+Environment path: `VIKUNJA_SERVICE_ENABLEUSERDELETION`
+
+
 ---
 
 ## database
