@@ -38,6 +38,7 @@
       "loginWith": "Log in with {provider}",
       "authenticating": "Authenticating…",
       "openIdStateError": "State does not match, refusing to continue!",
+      "openIdGeneralError": "An error occured while authenticating against the third party.",
       "logout": "Logout"
     },
     "settings": {

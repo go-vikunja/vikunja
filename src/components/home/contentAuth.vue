@@ -62,7 +62,7 @@ export default {
 			return state.namespaces.namespaces.filter(n => !n.isArchived)
 		},
 		currentList: CURRENT_LIST,
-		background: 'background',
+		background: 'background', // FIXME: Return the full thing or nothing at all to prevent calls to /null
 		menuActive: MENU_ACTIVE,
 		userInfo: state => state.auth.info,
 		authenticated: state => state.auth.authenticated,

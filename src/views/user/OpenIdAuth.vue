@@ -39,8 +39,18 @@ export default {
 			}
 			localStorage.setItem('authenticating', true)
 
+			if (typeof this.$route.query.error !== 'undefined') {
+				let error = this.$t('user.auth.openIdGeneralError')
+				if (typeof this.$route.query.message !== 'undefined') {
+					error = this.$route.query.message
+				}
+				localStorage.removeItem('authenticating')
+				this.$store.commit(ERROR_MESSAGE, error)
+				return
+			}
+
 			const state = localStorage.getItem('state')
-			if(typeof this.$route.query.state === 'undefined' || this.$route.query.state !== state) {
+			if (typeof this.$route.query.state === 'undefined' || this.$route.query.state !== state) {
 				localStorage.removeItem('authenticating')
 				this.$store.commit(ERROR_MESSAGE, this.$t('user.auth.openIdStateError'))
 				return
