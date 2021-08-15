@@ -8064,10 +8064,10 @@ vite-plugin-pwa@0.10.0:
     workbox-build "^6.1.5"
     workbox-window "^6.1.5"
 
-vite-plugin-vue2@1.8.0:
-  version "1.8.0"
-  resolved "https://registry.yarnpkg.com/vite-plugin-vue2/-/vite-plugin-vue2-1.8.0.tgz#f336cd58de7187c5347f74d49b56291300ce8942"
-  integrity sha512-7/4FQBYcGBzBvdcgh4sscQc4FLQumM8cjwlmMi514uNOSwJiG0jSl47Vwajn8s8k9X3itqaNBy+EGod2720GsQ==
+vite-plugin-vue2@1.8.1:
+  version "1.8.1"
+  resolved "https://registry.yarnpkg.com/vite-plugin-vue2/-/vite-plugin-vue2-1.8.1.tgz#51d8d3a09575d0d0b24328c9f73dd08c9ae4e504"
+  integrity sha512-arqvNRbo7pYlyflY9U2i7vWOhncLoR6DZQfhC0rf4hF+1riFtwX5n7nIGc6nqr819bpVQSnZ8+4J7aejbA9NfA==
   dependencies:
     "@babel/core" "^7.11.6"
     "@babel/parser" "^7.13.10"
