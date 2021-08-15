@@ -189,6 +189,7 @@ export default {
 			ctx.commit('authenticated', authenticated)
 			if (!authenticated) {
 				ctx.commit('info', null)
+				ctx.dispatch('config/redirectToProviderIfNothingElseIsEnabled', null, {root: true})
 			}
 
 			return Promise.resolve()
@@ -198,7 +199,7 @@ export default {
 			if (!jwt) {
 				return
 			}
-			
+
 			const HTTP = HTTPFactory()
 			// We're not returning the promise here to prevent blocking the initial ui render if the user is
 			// accessing the site with a token in local storage

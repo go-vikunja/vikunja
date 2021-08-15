@@ -83,7 +83,7 @@
 			</form>
 
 			<div
-				v-if="hasApiUrl && openidConnect.enabled && openidConnect.providers && openidConnect.providers.length > 0"
+				v-if="hasOpenIdProviders"
 				class="mt-4">
 				<x-button
 					@click="redirectToProvider(p)"
@@ -110,6 +110,7 @@ import {ERROR_MESSAGE, LOADING} from '@/store/mutation-types'
 import legal from '../../components/misc/legal'
 import ApiConfig from '@/components/misc/api-config.vue'
 import {getErrorText} from '@/message'
+import {redirectToProvider} from '../../helpers/redirectToProvider'
 
 export default {
 	components: {
@@ -150,15 +151,23 @@ export default {
 		this.hasApiUrl = window.API_URL !== ''
 		this.setTitle(this.$t('user.auth.login'))
 	},
-	computed: mapState({
-		registrationEnabled: state => state.config.registrationEnabled,
-		loading: LOADING,
-		errorMessage: ERROR_MESSAGE,
-		needsTotpPasscode: state => state.auth.needsTotpPasscode,
-		authenticated: state => state.auth.authenticated,
-		localAuthEnabled: state => state.config.auth.local.enabled,
-		openidConnect: state => state.config.auth.openidConnect,
-	}),
+	computed: {
+		hasOpenIdProviders() {
+			return this.hasApiUrl &&
+				this.openidConnect.enabled &&
+				this.openidConnect.providers &&
+				this.openidConnect.providers.length > 0
+		},
+		...mapState({
+			registrationEnabled: state => state.config.registrationEnabled,
+			loading: LOADING,
+			errorMessage: ERROR_MESSAGE,
+			needsTotpPasscode: state => state.auth.needsTotpPasscode,
+			authenticated: state => state.auth.authenticated,
+			localAuthEnabled: state => state.config.auth.local.enabled,
+			openidConnect: state => state.config.auth.openidConnect,
+		}),
+	},
 	methods: {
 		setLoading() {
 			const timeout = setTimeout(() => {
@@ -202,10 +211,7 @@ export default {
 				})
 		},
 		redirectToProvider(provider) {
-			const state = Math.random().toString(36).substring(2, 24)
-			localStorage.setItem('state', state)
-
-			window.location.href = `${provider.authUrl}?client_id=${provider.clientId}&redirect_uri=${this.openidConnect.redirectUrl}${provider.key}&response_type=code&scope=openid email profile&state=${state}`
+			redirectToProvider(provider, this.openidConnect.redirectUrl)
 		},
 	},
 }

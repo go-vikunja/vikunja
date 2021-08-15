@@ -3,6 +3,7 @@ import Vue from 'vue'
 import {CONFIG} from '../mutation-types'
 import {HTTPFactory} from '@/http-common'
 import {objectToCamelCase} from '@/helpers/case'
+import {redirectToProvider} from '../../helpers/redirectToProvider'
 
 export default {
 	namespaced: true,
@@ -68,6 +69,16 @@ export default {
 					return Promise.resolve(r)
 				})
 				.catch(e => Promise.reject(e))
+		},
+		redirectToProviderIfNothingElseIsEnabled(ctx) {
+			if (ctx.state.auth.local.enabled === false &&
+				ctx.state.auth.openidConnect.enabled &&
+				ctx.state.auth.openidConnect.providers &&
+				ctx.state.auth.openidConnect.providers.length === 1 &&
+				window.location.pathname.startsWith('/login') // Kinda hacky, but prevents an endless loop.
+			) {
+				redirectToProvider(ctx.state.auth.openidConnect.providers[0], ctx.state.auth.openidConnect.redirectUrl)
+			}
 		},
 	},
 }
