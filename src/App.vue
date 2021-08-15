@@ -59,6 +59,7 @@ export default {
 			.then(() => {
 				this.$store.dispatch('auth/checkAuth')
 			})
+		this.$store.dispatch('auth/checkAuth')
 
 		setLanguage()
 	},
