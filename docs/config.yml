@@ -45,3 +45,6 @@ menu:
     - name: Community
       url: https://community.vikunja.io/
       weight: 60
+    - name: Get it Hosted
+      url: https://vikunja.cloud/?utm_source=io&utm_medium=io&utm_campaign=menu
+      weight: 70
