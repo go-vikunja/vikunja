@@ -90,6 +90,10 @@ export default {
 	},
 	methods: {
 		updateData() {
+			if (this.task.repeatMode !== repeatModes.REPEAT_MODE_DEFAULT && this.repeatAfter.amount === 0) {
+				return
+			}
+			
 			this.task.repeatAfter = this.repeatAfter
 			this.$emit('input', this.task)
 			this.$emit('change')
