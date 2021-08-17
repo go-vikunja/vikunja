@@ -77,7 +77,6 @@
 							}
 						"
 						v-model="c.comment"
-						:has-edit-bottom="true"
 						:bottom-actions="actions[c.id]"
 					/>
 				</div>

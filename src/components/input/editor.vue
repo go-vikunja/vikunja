@@ -1,24 +1,5 @@
 <template>
-	<div :class="{'is-pulled-up': isEditEnabled}" class="editor">
-		<div class="is-pulled-right mb-4" v-if="hasPreview && isEditEnabled && !hasEditBottom">
-			<x-button
-				v-if="!isEditActive"
-				@click="toggleEdit"
-				:shadow="false"
-				type="secondary"
-			>
-				<icon icon="pen"/>
-			</x-button>
-			<x-button
-				v-else
-				@click="toggleEdit"
-				:shadow="false"
-				type="secondary"
-			>
-				{{ $t('input.editor.done') }}
-			</x-button>
-		</div>
-
+	<div class="editor">
 		<div class="clear"></div>
 
 		<vue-easymde
@@ -32,7 +13,7 @@
 		<div class="preview content" v-html="preview" v-if="isPreviewActive && text !== ''">
 		</div>
 
-		<p class="has-text-centered has-text-grey is-italic" v-if="isPreviewActive && text === '' && emptyText !== ''">
+		<p class="has-text-centered has-text-grey is-italic" v-if="showPreviewText">
 			{{ emptyText }}
 			<template v-if="isEditEnabled">
 				<a @click="toggleEdit">{{ $t('input.editor.edit') }}</a>.
@@ -40,10 +21,10 @@
 		</p>
 
 		<ul class="actions">
-			<template v-if="hasEditBottom && isEditEnabled">
+			<template v-if="isEditEnabled && !showPreviewText">
 				<li>
 					<a v-if="!isEditActive" @click="toggleEdit">{{ $t('input.editor.edit') }}</a>
-					<a v-else @click="toggleEdit">{{ $t('input.editor.done') }}</a>
+					<a v-else @click="toggleEdit" class="done-edit">{{ $t('input.editor.done') }}</a>
 				</li>
 			</template>
 			<li v-for="(action, k) in bottomActions" :key="k">
@@ -97,16 +78,17 @@ export default {
 		isEditEnabled: {
 			default: true,
 		},
-		hasEditBottom: {
-			type: Boolean,
-			default: false,
-		},
 		bottomActions: {
 			default: () => [],
 		},
 		emptyText: {
 			type: String,
 			default: () => '',
+		},
+	},
+	computed: {
+		showPreviewText() {
+			return this.isPreviewActive && this.text === '' && this.emptyText !== ''
 		},
 	},
 	data() {
@@ -468,8 +450,12 @@ export default {
 		clear: both;
 	}
 
-	.preview.content ul li input[type="checkbox"] {
-		margin-right: .5rem;
+	.preview.content {
+		margin-bottom: .5rem;
+
+		ul li input[type="checkbox"] {
+			margin-right: .5rem;
+		}
 	}
 }
 
@@ -548,6 +534,10 @@ ul.actions {
 
 	&, a {
 		color: $grey-500;
+
+		&.done-edit {
+			color: $primary;
+		}
 	}
 
 	a:hover {
