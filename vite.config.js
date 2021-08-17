@@ -82,7 +82,7 @@ module.exports = {
 	build: {
 		target: 'es2015',
 		rollupOptions: {
-			plugins:[
+			plugins: [
 				visualizer(),
 			],
 			output: {
@@ -97,6 +97,9 @@ module.exports = {
 						'./src/views/namespaces/NewNamespace',
 						'./src/views/teams/EditTeam',
 						'./src/views/teams/NewTeam',
+					],
+					'highlight': [
+						'highlight.js',
 					],
 				},
 			},
