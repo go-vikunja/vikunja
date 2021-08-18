@@ -20,17 +20,27 @@
 			</template>
 		</p>
 
-		<ul class="actions">
-			<template v-if="isEditEnabled && !showPreviewText">
+		<ul class="actions" v-if="bottomActions.length > 0">
+			<template v-if="isEditEnabled && !showPreviewText && showSave">
 				<li>
 					<a v-if="!isEditActive" @click="toggleEdit">{{ $t('input.editor.edit') }}</a>
-					<a v-else @click="toggleEdit" class="done-edit">{{ $t('input.editor.done') }}</a>
+					<a v-else @click="toggleEdit" class="done-edit">{{ $t('misc.save') }}</a>
 				</li>
 			</template>
 			<li v-for="(action, k) in bottomActions" :key="k">
 				<a @click="action.action">{{ action.title }}</a>
 			</li>
 		</ul>
+		<template v-else-if="showSave">
+			<ul v-if="!isEditActive" class="actions">
+				<li>
+					<a @click="toggleEdit">{{ $t('input.editor.edit') }}</a>
+				</li>
+			</ul>
+			<x-button v-else @click="toggleEdit" type="secondary" :shadow="false">
+				{{ $t('misc.save') }}
+			</x-button>
+		</template>
 	</div>
 </template>
 
@@ -84,6 +94,9 @@ export default {
 		emptyText: {
 			type: String,
 			default: () => '',
+		},
+		showSave: {
+			default: true,
 		},
 	},
 	computed: {

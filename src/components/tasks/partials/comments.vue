@@ -113,6 +113,7 @@
 								:upload-callback="attachmentUpload"
 								:upload-enabled="true"
 								:placeholder="$t('task.comment.placeholder')"
+								:show-save="false"
 								v-if="editorActive"
 								v-model="newComment.comment"
 							/>
