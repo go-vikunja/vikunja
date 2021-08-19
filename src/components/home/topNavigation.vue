@@ -49,7 +49,7 @@
 			<div class="user">
 				<img :src="userAvatar" alt="" class="avatar" width="40" height="40"/>
 				<dropdown class="is-right" ref="usernameDropdown">
-					<template v-slot:trigger>
+					<template #trigger>
 						<x-button
 							type="secondary"
 							:shadow="false">

@@ -220,12 +220,14 @@
 			<modal
 				@close="showBucketDeleteModal = false"
 				@submit="deleteBucket()"
-				v-if="showBucketDeleteModal">
-				<span slot="header">{{ $t('list.kanban.deleteHeaderBucket') }}</span>
-				<p slot="text">
-					{{ $t('list.kanban.deleteBucketText1') }}<br/>
-					{{ $t('list.kanban.deleteBucketText2') }}
-				</p>
+				v-if="showBucketDeleteModal"
+			>
+				<template #header><span>{{ $t('list.kanban.deleteHeaderBucket') }}</span></template>
+		
+				<template #text>
+					<p>{{ $t('list.kanban.deleteBucketText1') }}<br/>
+					{{ $t('list.kanban.deleteBucketText2') }}</p>
+				</template>
 			</modal>
 		</transition>
 	</div>

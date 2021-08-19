@@ -36,7 +36,7 @@
 						:create-placeholder="$t('task.relation.createPlaceholder')"
 						@create="createAndRelateTask"
 					>
-						<template v-slot:searchResult="props">
+						<template #searchResult="props">
 							<span v-if="typeof props.option !== 'string'" class="search-result">
 								<span
 									class="different-list"
@@ -107,12 +107,14 @@
 			<modal
 				@close="showDeleteModal = false"
 				@submit="removeTaskRelation()"
-				v-if="showDeleteModal">
-				<span slot="header">{{ $t('task.relation.delete') }}</span>
-				<p slot="text">
-					{{ $t('task.relation.deleteText1') }}<br/>
-					<strong>{{ $t('task.relation.deleteText2') }}</strong>
-				</p>
+				v-if="showDeleteModal"
+			>
+				<template #header><span>{{ $t('task.relation.delete') }}</span></template>
+				
+				<template #text>
+					<p>{{ $t('task.relation.deleteText1') }}<br/>
+					<strong>{{ $t('task.relation.deleteText2') }}</strong></p>
+				</template>
 			</modal>
 		</transition>
 	</div>

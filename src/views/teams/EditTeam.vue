@@ -134,11 +134,12 @@
 				@submit="deleteTeam()"
 				v-if="showDeleteModal"
 			>
-				<span slot="header">{{ $t('team.edit.delete.header') }}</span>
-				<p slot="text">
-					{{ $t('team.edit.delete.text1') }}<br/>
-					{{ $t('team.edit.delete.text2') }}
-				</p>
+				<template #header><span>{{ $t('team.edit.delete.header') }}</span></template>
+		
+				<template #text>
+					<p>{{ $t('team.edit.delete.text1') }}<br/>
+					{{ $t('team.edit.delete.text2') }}</p>
+				</template>
 			</modal>
 		</transition>
 		<!-- User delete modal -->
@@ -148,11 +149,12 @@
 				@submit="deleteUser()"
 				v-if="showUserDeleteModal"
 			>
-				<span slot="header">{{ $t('team.edit.deleteUser.header') }}</span>
-				<p slot="text">
-					{{ $t('team.edit.deleteUser.text1') }}
-					{{ $t('team.edit.deleteUser.text2') }}
-				</p>
+				<template #header><span>{{ $t('team.edit.deleteUser.header') }}</span></template>
+		
+				<template #text>
+					<p>{{ $t('team.edit.deleteUser.text1') }}<br/>
+					{{ $t('team.edit.deleteUser.text2') }}</p>
+				</template>
 			</modal>
 		</transition>
 	</div>

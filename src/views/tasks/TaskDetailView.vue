@@ -405,12 +405,14 @@
 			<modal
 				@close="showDeleteModal = false"
 				@submit="deleteTask()"
-				v-if="showDeleteModal">
-				<span slot="header">{{ $t('task.detail.delete.header') }}</span>
-				<p slot="text">
-					{{ $t('task.detail.delete.text1') }}<br/>
-					{{ $t('task.detail.delete.text2') }}
-				</p>
+				v-if="showDeleteModal"
+			>
+				<template #header><span>{{ $t('task.detail.delete.header') }}</span></template>
+		
+				<template #text>
+					<p>{{ $t('task.detail.delete.text1') }}<br/>
+					{{ $t('task.detail.delete.text2') }}</p>
+				</template>
 			</modal>
 		</transition>
 	</div>

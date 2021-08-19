@@ -10,7 +10,7 @@
 		v-model="list"
 		:select-placeholder="$t('list.searchSelect')"
 	>
-		<template v-slot:searchResult="props">
+		<template #searchResult="props">
 			<span class="list-namespace-title search-result">{{ namespace(props.option.namespaceId) }} ></span>
 			{{ props.option.title }}
 		</template>

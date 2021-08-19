@@ -3,10 +3,11 @@
 		@close="$router.back()"
 		@submit="deleteSavedFilter()"
 	>
-		<span slot="header">{{ $t('filters.delete.header') }}</span>
-		<p slot="text">
-			{{ $t('filters.delete.text') }}
-		</p>
+		<template #header><span>{{ $t('filters.delete.header') }}</span></template>
+		
+		<template #text>
+			<p>{{ $t('filters.delete.text') }}</p>
+		</template>
 	</modal>
 </template>
 

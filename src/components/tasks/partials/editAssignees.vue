@@ -16,7 +16,7 @@
 			v-model="assignees"
 			ref="multiselect"
 		>
-			<template v-slot:tag="props">
+			<template #tag="props">
 				<span class="assignee">
 					<user :avatar-size="32" :show-username="false" :user="props.item"/>
 					<a @click="removeAssignee(props.item)" class="remove-assignee" v-if="!disabled">

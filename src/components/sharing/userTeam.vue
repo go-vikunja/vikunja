@@ -119,12 +119,12 @@
 				@submit="deleteSharable()"
 				v-if="showDeleteModal"
 			>
-			<span slot="header">
-				{{ $t('list.share.userTeam.removeHeader', {type: shareTypeName, sharable: sharableName}) }}
-			</span>
-				<p slot="text">
-					{{ $t('list.share.userTeam.removeText', {type: shareTypeName, sharable: sharableName}) }}
-				</p>
+				<template #header>
+					<span>{{ $t('list.share.userTeam.removeHeader', {type: shareTypeName, sharable: sharableName}) }}</span>
+				</template>
+				<template #text>
+					<p>{{ $t('list.share.userTeam.removeText', {type: shareTypeName, sharable: sharableName}) }}</p>
+				</template>
 			</modal>
 		</transition>
 	</div>

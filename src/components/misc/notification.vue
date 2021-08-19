@@ -1,33 +1,24 @@
 <template>
 	<notifications position="bottom left" :max="2" class="global-notification">
-		<template slot="body" slot-scope="props">
+		<template #body="{ item, close }">
 			<div
 				:class="[
 					'vue-notification-template',
 					'vue-notification',
-					props.item.type,
+					item.type,
 				]"
-				@click="close(props)"
+				@click="close()"
 			>
-				<div
-					class="notification-title"
-					v-if="props.item.title"
-				>
-					{{ props.item.title }}
-				</div>
-				<div
-					class="notification-content"
-				>
-					<template v-for="(t, k) in props.item.text">
-						{{ t }}<br :key="k"/>
-					</template>
+				<div v-if="item.title" class="notification-title">{{ item.title }}</div>
+				<div class="notification-content">
+					<template v-for="(t, k) in item.text">{{ t }}<br :key="k"/></template>
 				</div>
 				<div
 					class="buttons is-right"
 					v-if="
-						props.item.data &&
-						props.item.data.actions &&
-						props.item.data.actions.length > 0
+						item.data &&
+						item.data.actions &&
+						item.data.actions.length > 0
 					"
 				>
 					<x-button
@@ -36,7 +27,7 @@
 						:shadow="false"
 						class="is-small"
 						type="secondary"
-						v-for="(action, i) in props.item.data.actions"
+						v-for="(action, i) in item.data.actions"
 					>
 						{{ action.title }}
 					</x-button>
@@ -49,11 +40,6 @@
 <script>
 export default {
 	name: 'notification',
-	methods: {
-		close(props) {
-			props.close()
-		},
-	},
 }
 </script>
 

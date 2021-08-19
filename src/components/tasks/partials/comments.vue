@@ -138,11 +138,12 @@
 				@submit="deleteComment()"
 				v-if="showDeleteModal"
 			>
-				<span slot="header">{{ $t('task.comment.delete') }}</span>
-				<p slot="text">
-					{{ $t('task.comment.deleteText1') }}<br/>
-					<strong>{{ $t('task.comment.deleteText2') }}</strong>
-				</p>
+				<template #header><span>{{ $t('task.comment.delete') }}</span></template>
+				
+				<template #text>
+					<p>{{ $t('task.comment.deleteText1') }}<br/>
+					<strong>{{ $t('task.comment.deleteText2') }}</strong></p>
+				</template>
 			</modal>
 		</transition>
 	</div>

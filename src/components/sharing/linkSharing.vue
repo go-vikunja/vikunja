@@ -163,10 +163,13 @@
 				@submit="remove()"
 				v-if="showDeleteModal"
 			>
-				<span slot="header">{{ $t('list.share.links.remove') }}</span>
-				<p slot="text">
-					{{ $t('list.share.links.removeText') }}
-				</p>
+				<template #header>
+					<span>{{ $t('list.share.links.remove') }}</span>
+				</template>
+				
+				<template #text>
+					<p>{{ $t('list.share.links.removeText') }}</p>
+				</template>
 			</modal>
 		</transition>
 	</div>

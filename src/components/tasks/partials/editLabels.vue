@@ -13,7 +13,7 @@
 		v-model="labels"
 		:search-delay="10"
 	>
-		<template v-slot:tag="props">
+		<template #tag="props">
 			<span
 				:style="{'background': props.item.hexColor, 'color': props.item.textColor}"
 				class="tag">
@@ -21,7 +21,7 @@
 				<a @click="removeLabel(props.item)" class="delete is-small"></a>
 			</span>
 		</template>
-		<template v-slot:searchResult="props">
+		<template #searchResult="props">
 			<span
 				v-if="typeof props.option === 'string'"
 				class="tag">

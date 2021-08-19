@@ -3,13 +3,11 @@
 		@close="$router.back()"
 		@submit="archiveList()"
 	>
-		<span slot="header">{{ list.isArchived ? $t('list.archive.unarchive') : $t('list.archive.archive') }}</span>
-		<p slot="text" v-if="list.isArchived">
-			{{ $t('list.archive.unarchiveText') }}
-		</p>
-		<p slot="text" v-else>
-			{{ $t('list.archive.archiveText') }}
-		</p>
+		<template #header><span>{{ list.isArchived ? $t('list.archive.unarchive') : $t('list.archive.archive') }}</span></template>
+		
+		<template #text>
+			<p>{{ list.isArchived ? $t('list.archive.unarchiveText') : $t('list.archive.archiveText') }}</p>
+		</template>
 	</modal>
 </template>
 

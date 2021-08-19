@@ -3,13 +3,11 @@
 		@close="$router.back()"
 		@submit="archiveNamespace()"
 	>
-		<span slot="header">{{ title }}</span>
-		<p slot="text" v-if="namespace.isArchived">
-			{{ $t('namespace.archive.unarchiveText') }}
-		</p>
-		<p slot="text" v-else>
-			{{ $t('namespace.archive.archiveText') }}
-		</p>
+		<template #header><span>{{ title }}</span></template>
+		
+		<template #text>
+			<p>{{ list.isArchived ? $t('namespace.archive.unarchiveText') : $t('namespace.archive.archiveText') }}</p>
+		</template>
 	</modal>
 </template>
 

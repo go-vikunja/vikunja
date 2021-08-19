@@ -3,11 +3,12 @@
 		@close="$router.back()"
 		@submit="deleteNamespace()"
 	>
-		<span slot="header">{{ title }}</span>
-		<p slot="text">
-			{{ $t('namespace.delete.text1') }}<br/>
-			{{ $t('namespace.delete.text2') }}
-		</p>
+		<template #header><span>{{ title }}</span></template>
+		
+		<template #text>
+			<p>{{ $t('namespace.delete.text1') }}<br/>
+			{{ $t('namespace.delete.text2') }}</p>
+		</template>
 	</modal>
 </template>
 

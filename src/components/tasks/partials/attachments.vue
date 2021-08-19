@@ -110,11 +110,12 @@
 				v-if="showDeleteModal"
 				@submit="deleteAttachment()"
 			>
-				<span slot="header">{{ $t('task.attachment.delete') }}</span>
-				<p slot="text">
-					{{ $t('task.attachment.deleteText1', {filename: attachmentToDelete.file.name}) }}<br/>
-					<strong>{{ $t('task.attachment.deleteText2') }}</strong>
-				</p>
+				<template #header><span>{{ $t('task.attachment.delete') }}</span></template>
+				
+				<template #text>
+					<p>{{ $t('task.attachment.deleteText1', {filename: attachmentToDelete.file.name}) }}<br/>
+					<strong>{{ $t('task.attachment.deleteText2') }}</strong></p>
+				</template>
 			</modal>
 		</transition>
 

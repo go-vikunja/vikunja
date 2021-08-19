@@ -3,11 +3,12 @@
 		@close="$router.back()"
 		@submit="deleteList()"
 	>
-		<span slot="header">{{ $t('list.delete.header') }}</span>
-		<p slot="text">
-			{{ $t('list.delete.text1') }}<br/>
-			{{ $t('list.delete.text2') }}
-		</p>
+		<template #header><span>{{ $t('list.delete.header') }}</span></template>
+		
+		<template #text>
+			<p>{{ $t('list.delete.text1') }}<br/>
+			{{ $t('list.delete.text2') }}</p>
+		</template>
 	</modal>
 </template>
 
