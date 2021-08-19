@@ -149,7 +149,7 @@ export default {
 		this.task = this.theTask
 		document.addEventListener('click', this.hideDeferDueDatePopup)
 	},
-	beforeDestroy() {
+	beforeUnmount() {
 		document.removeEventListener('click', this.hideDeferDueDatePopup)
 	},
 	computed: {

@@ -83,7 +83,7 @@ export default {
 
 		this.changeInterval = setInterval(this.updateDueDate, 1000)
 	},
-	beforeDestroy() {
+	beforeUnmount() {
 		if (this.changeInterval) {
 			clearInterval(this.changeInterval)
 		}

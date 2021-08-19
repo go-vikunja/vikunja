@@ -191,7 +191,7 @@ export default {
 	mounted() {
 		document.addEventListener('click', this.hideSearchResultsHandler)
 	},
-	beforeDestroy() {
+	beforeUnmount() {
 		document.removeEventListener('click', this.hideSearchResultsHandler)
 	},
 	watch: {

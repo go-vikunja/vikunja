@@ -72,7 +72,7 @@ export default {
 		document.addEventListener('click', this.hidePopup)
 		this.interval = setInterval(this.loadNotifications, LOAD_NOTIFICATIONS_INTERVAL)
 	},
-	beforeDestroy() {
+	beforeUnmount() {
 		document.removeEventListener('click', this.hidePopup)
 		clearInterval(this.interval)
 	},

@@ -27,7 +27,7 @@ export default {
 	mounted() {
 		document.addEventListener('click', this.hidePopup)
 	},
-	beforeDestroy() {
+	beforeUnmount() {
 		document.removeEventListener('click', this.hidePopup)
 	},
 	watch: {

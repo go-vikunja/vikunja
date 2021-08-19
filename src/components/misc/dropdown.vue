@@ -28,7 +28,7 @@ export default {
 	mounted() {
 		document.addEventListener('click', this.hide)
 	},
-	beforeDestroy() {
+	beforeUnmount() {
 		document.removeEventListener('click', this.hide)
 	},
 	props: {

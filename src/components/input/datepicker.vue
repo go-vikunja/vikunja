@@ -153,7 +153,7 @@ export default {
 	mounted() {
 		document.addEventListener('click', this.hideDatePopup)
 	},
-	beforeDestroy() {
+	beforeUnmount() {
 		document.removeEventListener('click', this.hideDatePopup)
 	},
 	watch: {
