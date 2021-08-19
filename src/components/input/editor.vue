@@ -45,7 +45,7 @@
 </template>
 
 <script>
-import VueEasymde from 'vue-easymde'
+import VueEasymde from './vue-easymde/vue-easymde.vue'
 import EasyMDE from 'easymde'
 import marked from 'marked'
 import DOMPurify from 'dompurify'
@@ -106,19 +106,8 @@ export default {
 		showPreviewText() {
 			return this.isPreviewActive && this.text === '' && this.emptyText !== ''
 		},
-	},
-	data() {
-		return {
-			text: '',
-			changeTimeout: null,
-			isEditActive: false,
-			isPreviewActive: true,
-
-			preview: '',
-			attachmentService: null,
-			loadedAttachments: {},
-
-			config: {
+		config() {
+			return {
 				autoDownloadFontAwesome: false,
 				spellChecker: false,
 				placeholder: this.placeholder,
@@ -246,7 +235,19 @@ export default {
 						icon: '<svg viewBox="0 0 24 24"><rect fill="none" rx="0" ry="0"/><path fill-rule="evenodd" clip-rule="evenodd" d="M19.4999 2.3999H6.4999C5.0699 2.3999 3.8999 3.5699 3.8999 4.9999V18.9999C3.8999 20.4299 5.0699 21.5999 6.4999 21.5999H19.4999C19.8299 21.5999 20.0999 21.3299 20.0999 20.9999V16.9999V2.9999C20.0999 2.6699 19.8299 2.3999 19.4999 2.3999ZM5.0999 4.9999V16.8118C5.50468 16.5513 5.98546 16.3999 6.4999 16.3999H18.8999V3.5999H6.4999C5.7299 3.5999 5.0999 4.2299 5.0999 4.9999ZM6.4999 17.5999H18.8999V20.3999H6.4999C5.7299 20.3999 5.0999 19.7699 5.0999 18.9999C5.0999 18.2299 5.7299 17.5999 6.4999 17.5999ZM8.4999 8.5999H15.4999C15.8299 8.5999 16.0999 8.3299 16.0999 7.9999C16.0999 7.6699 15.8299 7.3999 15.4999 7.3999H8.4999C8.1699 7.3999 7.8999 7.6699 7.8999 7.9999C7.8999 8.3299 8.1699 8.5999 8.4999 8.5999ZM15.4999 11.3999H8.4999C8.1699 11.3999 7.8999 11.6699 7.8999 11.9999C7.8999 12.3299 8.1699 12.5999 8.4999 12.5999H15.4999C15.8299 12.5999 16.0999 12.3299 16.0999 11.9999C16.0999 11.6699 15.8299 11.3999 15.4999 11.3999Z"/></svg>',
 					},
 				],
-			},
+			}
+		},
+	},
+	data() {
+		return {
+			text: '',
+			changeTimeout: null,
+			isEditActive: false,
+			isPreviewActive: true,
+
+			preview: '',
+			attachmentService: null,
+			loadedAttachments: {},
 		}
 	},
 	watch: {
@@ -433,8 +434,9 @@ export default {
 </script>
 
 <style lang="scss">
+@import '../../../node_modules/codemirror/lib/codemirror.css';
+@import './vue-easymde/vue-easymde.css';
 @import '../../../node_modules/highlight.js/scss/base16/equilibrium-gray-light';
-@import '../../../node_modules/easymde/dist/easymde.min.css';
 
 .editor {
 	.clear {
