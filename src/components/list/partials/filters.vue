@@ -344,11 +344,11 @@ export default {
 				this.params.filter_by.forEach((f, i) => {
 					if (f === filterName && this.params.filter_comparator[i] === 'greater_equals') {
 						foundStart = true
-						this.$set(this.params.filter_value, i, formatISO(new Date(parts[0])))
+						this.params.filter_value[i] = formatISO(new Date(parts[0]))
 					}
 					if (f === filterName && this.params.filter_comparator[i] === 'less_equals') {
 						foundEnd = true
-						this.$set(this.params.filter_value, i, formatISO(new Date(parts[1])))
+						this.params.filter_value[i] = formatISO(new Date(parts[1]))
 					}
 				})
 
@@ -406,7 +406,7 @@ export default {
 			this.params.filter_by.forEach((f, i) => {
 				if (f === filterName) {
 					found = true
-					this.$set(this.params.filter_value, i, this.filters[variableName])
+					this.params.filter_value[i] = this.filters[variableName]
 				}
 			})
 
@@ -466,7 +466,7 @@ export default {
 				}
 			})
 			if (foundDone === false) {
-				this.$set(this.filters, 'done', true)
+				this.filters.done = true
 			}
 		},
 		prepareRelatedObjectFilter(kind, filterName = null, servicePrefix = null) {
@@ -482,7 +482,7 @@ export default {
 			if (typeof this.filters[filterName] !== 'undefined' && this.filters[filterName] !== '') {
 				this[`${servicePrefix}Service`].getAll({}, {s: this.filters[filterName]})
 					.then(r => {
-						this.$set(this, kind, r)
+						this[kind] = r
 					})
 					.catch(e => this.$message.error(e))
 			}
@@ -523,7 +523,7 @@ export default {
 			this.setDateFilter('reminders')
 		},
 		clear(kind) {
-			this.$set(this, `found${kind}`, [])
+			this[`found${kind}`] = []
 		},
 		find(kind, query) {
 
@@ -534,9 +534,9 @@ export default {
 			this[`${kind}Service`].getAll({}, {s: query})
 				.then(response => {
 					// Filter the results to not include users who are already assigneid
-					this.$set(this, `found${kind}`, differenceWith(response, this[kind], (first, second) => {
+					this[`found${kind}`] = differenceWith(response, this[kind], (first, second) => {
 						return first.id === second.id
-					}))
+					})
 				})
 				.catch(e => {
 					this.$message.error(e)
@@ -564,7 +564,7 @@ export default {
 				ids.push(u.id)
 			})
 
-			this.$set(this.filters, filterName, ids.join(','))
+			this.filters[filterName] = ids.join(',')
 			this.setSingleValueFilter(filterName, filterName, '', 'in')
 		},
 		findLabels(query) {
@@ -599,7 +599,7 @@ export default {
 				labelIDs.push(u.id)
 			})
 
-			this.$set(this.filters, 'labels', labelIDs.join(','))
+			this.filters.labels = labelIDs.join(',')
 			this.setSingleValueFilter('labels', 'labels', '', 'in')
 		},
 	},

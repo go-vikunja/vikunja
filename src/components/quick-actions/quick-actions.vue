@@ -298,7 +298,7 @@ export default {
 
 							return t
 						})
-						this.$set(this, 'foundTasks', r)
+						this.foundTasks = r
 					})
 			}, 150)
 		},
@@ -329,7 +329,7 @@ export default {
 							t.title = t.name
 							return t
 						})
-						this.$set(this, 'foundTeams', r)
+						this.foundTeams = r
 					})
 			}, 150)
 		},

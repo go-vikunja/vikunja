@@ -279,7 +279,7 @@ export default {
 		updateTasks(updatedTask) {
 			for (const t in this.tasks) {
 				if (this.tasks[t].id === updatedTask.id) {
-					this.$set(this.tasks, t, updatedTask)
+					this.tasks[t] = updatedTask
 					break
 				}
 			}
@@ -299,7 +299,7 @@ export default {
 
 			this.$store.dispatch('tasks/update', newTask)
 				.then(r => {
-					this.$set(this.tasks, e.newIndex, r)
+					this.tasks[e.newIndex] = r
 				})
 				.catch(e => {
 					this.$message.error(e)

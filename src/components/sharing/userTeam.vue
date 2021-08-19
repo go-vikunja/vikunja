@@ -276,9 +276,9 @@ export default {
 			this.stuffService
 				.getAll(this.stuffModel)
 				.then((r) => {
-					this.$set(this, 'sharables', r)
+					this.sharables = r
 					r.forEach((s) =>
-						this.$set(this.selectedRight, s.id, s.right),
+						this.selectedRight[s.id] = s.right,
 					)
 				})
 				.catch((e) => {
@@ -362,7 +362,7 @@ export default {
 							(this.sharables[i].id === this.stuffModel.teamId &&
 								this.shareType === 'team')
 						) {
-							this.$set(this.sharables[i], 'right', r.right)
+							this.sharables[i].right = r.right
 						}
 					}
 					this.$message.success({message: this.$t('list.share.userTeam.updatedSuccess', {type: this.shareTypeName})})
@@ -373,21 +373,21 @@ export default {
 		},
 		find(query) {
 			if (query === '') {
-				this.$set(this, 'found', [])
+				this.clearAll()
 				return
 			}
 
 			this.searchService
 				.getAll({}, {s: query})
 				.then((response) => {
-					this.$set(this, 'found', response)
+					this.found = response
 				})
 				.catch((e) => {
 					this.$message.error(e)
 				})
 		},
 		clearAll() {
-			this.$set(this, 'found', [])
+			this.found = []
 		},
 	},
 }

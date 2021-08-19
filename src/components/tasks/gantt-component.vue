@@ -299,15 +299,15 @@ export default {
 				this.fullWidth += this.dayWidth
 			}
 			console.debug('prepareGanttDays; years:', years)
-			this.$set(this, 'days', years)
+			this.days = years
 		},
 		parseTasks() {
 			this.setDates()
 			this.loadTasks()
 		},
 		loadTasks() {
-			this.$set(this, 'theTasks', [])
-			this.$set(this, 'tasksWithoutDates', [])
+			this.theTasks = []
+			this.tasksWithoutDates = []
 
 			const getAllTasks = (page = 1) => {
 				return this.taskCollectionService
@@ -392,7 +392,7 @@ export default {
 			// prevent it from containing outdated Data in the first place.
 			for (const tt in this.theTasks) {
 				if (this.theTasks[tt].id === this.taskDragged.id) {
-					this.$set(this, 'taskDragged', this.theTasks[tt])
+					this.taskDragged = this.theTasks[tt]
 					break
 				}
 			}
@@ -422,11 +422,7 @@ export default {
 					} else {
 						for (const tt in this.theTasks) {
 							if (this.theTasks[tt].id === r.id) {
-								this.$set(
-									this.theTasks,
-									tt,
-									this.addGantAttributes(r),
-								)
+								this.theTasks[tt] = this.addGantAttributes(r)
 								break
 							}
 						}

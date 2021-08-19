@@ -284,7 +284,7 @@ export default {
 			this.closeSearchResults()
 		},
 		setSelectedObject(object, resetOnly = false) {
-			this.$set(this, 'internalValue', object)
+			this.internalValue = object
 
 			// We assume we're getting an array when multiple is enabled and can therefore leave the query
 			// value etc as it is

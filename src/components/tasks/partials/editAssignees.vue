@@ -111,16 +111,16 @@ export default {
 			this.listUserService.getAll({listId: this.listId}, {s: query})
 				.then(response => {
 					// Filter the results to not include users who are already assigned
-					this.$set(this, 'foundUsers', differenceWith(response, this.assignees, (first, second) => {
+					this.foundUsers = differenceWith(response, this.assignees, (first, second) => {
 						return first.id === second.id
-					}))
+					})
 				})
 				.catch(e => {
 					this.$message.error(e)
 				})
 		},
 		clearAllFoundUsers() {
-			this.$set(this, 'foundUsers', [])
+			this.foundUsers = []
 		},
 		focus() {
 			this.$refs.multiselect.focus()

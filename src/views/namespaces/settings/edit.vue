@@ -110,7 +110,7 @@ export default {
 			const namespace = new NamespaceModel({id: this.$route.params.id})
 			this.namespaceService.get(namespace)
 				.then(r => {
-					this.$set(this, 'namespace', r)
+					this.namespace = r
 					// This will trigger the dynamic loading of components once we actually have all the data to pass to them
 					this.manageTeamsComponent = 'manageSharing'
 					this.manageUsersComponent = 'manageSharing'

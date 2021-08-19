@@ -66,7 +66,7 @@ export default {
 			const listService = new ListService()
 			listService.background(this.list)
 				.then(b => {
-					this.$set(this, 'background', b)
+					this.background = b
 				})
 				.catch(e => {
 					this.$message.error(e)

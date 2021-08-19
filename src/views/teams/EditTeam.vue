@@ -232,7 +232,7 @@ export default {
 			this.teamService
 				.get(this.team)
 				.then((response) => {
-					this.$set(this, 'team', response)
+					this.team = response
 					this.title = this.$t('team.edit.title', {team: this.team.name})
 					this.setTitle(this.title)
 				})
@@ -305,7 +305,7 @@ export default {
 				.then((r) => {
 					for (const tm in this.team.members) {
 						if (this.team.members[tm].id === member.id) {
-							this.$set(this.team.members[tm], 'admin', r.admin)
+							this.team.members[tm].admin = r.admin
 							break
 						}
 					}
@@ -321,21 +321,21 @@ export default {
 		},
 		findUser(query) {
 			if (query === '') {
-				this.$set(this, 'foundUsers', [])
+				this.clearAll()
 				return
 			}
 
 			this.userService
 				.getAll({}, {s: query})
 				.then((response) => {
-					this.$set(this, 'foundUsers', response)
+					this.foundUsers = response
 				})
 				.catch((e) => {
 					this.$message.error(e)
 				})
 		},
 		clearAll() {
-			this.$set(this, 'foundUsers', [])
+			this.foundUsers = []
 		},
 	},
 }

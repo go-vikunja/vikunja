@@ -56,14 +56,14 @@ export default {
 
 			this.listSerivce.getAll({}, {s: query})
 				.then(response => {
-					this.$set(this, 'foundLists', response)
+					this.foundLists = response
 				})
 				.catch(e => {
 					this.$message.error(e)
 				})
 		},
 		clearAll() {
-			this.$set(this, 'foundLists', [])
+			this.foundLists = []
 		},
 		select(list) {
 			this.list = list

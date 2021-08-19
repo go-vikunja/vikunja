@@ -61,7 +61,7 @@ export default {
 
 			this.listService.get(list)
 				.then(r => {
-					this.$set(this, 'list', r)
+					this.list = r
 					this.$store.commit(CURRENT_LIST, r)
 					// This will trigger the dynamic loading of components once we actually have all the data to pass to them
 					this.manageTeamsComponent = 'userTeam'

@@ -1,5 +1,4 @@
 import LabelService from '@/services/label'
-import Vue from 'vue'
 import {setLoading} from '@/store/helper'
 
 export default {
@@ -12,14 +11,14 @@ export default {
 	mutations: {
 		setLabels(state, labels) {
 			labels.forEach(l => {
-				Vue.set(state.labels, l.id, l)
+				state.labels[l.id] = l
 			})
 		},
 		setLabel(state, label) {
-			Vue.set(state.labels, label.id, label)
+			state.labels[label.id] = label
 		},
 		removeLabelById(state, label) {
-			Vue.delete(state.labels, label.id)
+			delete state.labels[label.id]
 		},
 		setLoaded(state, loaded) {
 			state.loaded = loaded

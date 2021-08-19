@@ -96,7 +96,7 @@ export default {
 		loadNotifications() {
 			this.notificationService.getAll()
 				.then(r => {
-					this.$set(this, 'allNotifications', r)
+					this.allNotifications = r
 				})
 				.catch(e => {
 					this.$message.error(e)
@@ -135,7 +135,7 @@ export default {
 				n.read = true
 				this.notificationService.update(n)
 					.then(r => {
-						this.$set(this.allNotifications, index, r)
+						this.allNotifications[index] = r
 					})
 					.catch(e => this.$message.error(e))
 			}

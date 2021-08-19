@@ -46,7 +46,7 @@ export default {
 		loadTeams() {
 			this.teamService.getAll()
 				.then(response => {
-					this.$set(this, 'teams', response)
+					this.teams = response
 				})
 				.catch(e => {
 					this.$message.error(e)

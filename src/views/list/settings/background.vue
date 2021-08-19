@@ -104,8 +104,8 @@ export default {
 				return
 			}
 			// This is an extra method to reset a few things when searching to not break loading more photos.
-			this.$set(this, 'backgroundSearchResult', [])
-			this.$set(this, 'backgroundThumbs', {})
+			this.backgroundSearchResult = []
+			this.backgroundThumbs = {}
 			this.searchBackgrounds()
 		},
 		searchBackgrounds(page = 1) {
@@ -124,7 +124,7 @@ export default {
 						r.forEach(b => {
 							this.backgroundService.thumb(b)
 								.then(t => {
-									this.$set(this.backgroundThumbs, b.id, t)
+									this.backgroundThumbs[b.id] = t
 								})
 						})
 					})

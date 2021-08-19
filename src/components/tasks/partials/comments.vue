@@ -229,7 +229,7 @@ export default {
 			this.taskCommentService
 				.getAll({taskId: this.taskId})
 				.then(r => {
-					this.$set(this, 'comments', r)
+					this.comments = r
 					this.makeActions()
 				})
 				.catch((e) => {
@@ -286,7 +286,7 @@ export default {
 				.then((r) => {
 					for (const c in this.comments) {
 						if (this.comments[c].id === this.commentEdit.id) {
-							this.$set(this.comments, c, r)
+							this.comments[c] = r
 						}
 					}
 					this.saved = this.commentEdit.id
@@ -322,12 +322,12 @@ export default {
 		makeActions() {
 			if (this.canWrite) {
 				this.comments.forEach((c) => {
-					this.$set(this.actions, c.id, [
+					this.actions[c.id] = [
 						{
 							action: () => this.toggleDelete(c.id),
 							title: this.$t('misc.delete'),
 						},
-					])
+					]
 				})
 			}
 		},

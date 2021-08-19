@@ -409,7 +409,7 @@ export default {
 			}
 			this.totpService.get()
 				.then(r => {
-					this.$set(this, 'totp', r)
+					this.totp = r
 					this.totpSetQrCode()
 				})
 				.catch(e => {
@@ -433,7 +433,7 @@ export default {
 			this.totpService.enroll()
 				.then(r => {
 					this.totpEnrolled = true
-					this.$set(this, 'totp', r)
+					this.totp = r
 					this.totpSetQrCode()
 				})
 				.catch(e => this.$message.error(e))
@@ -441,7 +441,7 @@ export default {
 		totpConfirm() {
 			this.totpService.enable({passcode: this.totpConfirmPasscode})
 				.then(() => {
-					this.$set(this.totp, 'enabled', true)
+					this.totp.enabled = true
 					this.$message.success({message: this.$t('user.settings.totp.confirmSuccess')})
 				})
 				.catch(e => this.$message.error(e))
@@ -450,7 +450,7 @@ export default {
 			this.totpService.disable({password: this.totpDisablePassword})
 				.then(() => {
 					this.totpEnrolled = false
-					this.$set(this, 'totp', new TotpModel())
+					this.totp = new TotpModel()
 					this.$message.success({message: this.$t('user.settings.totp.disableSuccess')})
 				})
 				.catch(e => this.$message.error(e))

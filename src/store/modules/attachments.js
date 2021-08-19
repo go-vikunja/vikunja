@@ -1,5 +1,3 @@
-import Vue from 'vue'
-
 import {findIndexById} from '@/helpers/find'
 
 export default {
@@ -10,7 +8,7 @@ export default {
 	mutations: {
 		set(state, attachments) {
 			console.debug('Set attachments', attachments)
-			Vue.set(state, 'attachments', attachments)
+			state.attachments = attachments
 		},
 		add(state, attachment) {
 			console.debug('Add attachement', attachment)

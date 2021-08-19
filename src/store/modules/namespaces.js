@@ -1,5 +1,3 @@
-import Vue from 'vue'
-
 import NamespaceService from '../../services/namespace'
 import {setLoading} from '@/store/helper'
 
@@ -19,11 +17,13 @@ export default {
 				return
 			}
 
+			// FIXME: direct manipulation of the prop
+			// might not be a problem since this is happening in the mutation 
 			if (!namespace.lists || namespace.lists.length === 0) {
 				namespace.lists = state.namespaces[namespaceIndex].lists
 			}
-
-			Vue.set(state.namespaces, namespaceIndex, namespace)
+			
+			state.namespaces[namespaceIndex] = namespace
 		},
 		setListInNamespaceById(state, list) {
 			for (const n in state.namespaces) {
@@ -34,7 +34,7 @@ export default {
 						if (state.namespaces[n].lists[l].id === list.id) {
 							const namespace = state.namespaces[n]
 							namespace.lists[l] = list
-							Vue.set(state.namespaces, n, namespace)
+							state.namespaces[n] = namespace
 							return
 						}
 					}

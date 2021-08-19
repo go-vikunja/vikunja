@@ -143,7 +143,7 @@ export default {
 			this.taskService
 				.update(this.taskEditTask)
 				.then((r) => {
-					this.$set(this, 'taskEditTask', r)
+					this.taskEditTask = r
 					this.initTaskFields()
 					this.$message.success({message: this.$t('task.detail.updateSuccess')})
 				})

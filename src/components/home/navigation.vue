@@ -187,7 +187,7 @@ export default {
 			.then(namespaces => {
 				namespaces.forEach(n => {
 					if (typeof this.listsVisible[n.id] === 'undefined') {
-						this.$set(this.listsVisible, n.id, true)
+						this.listsVisible[n.id] = true
 					}
 				})
 			})
@@ -217,7 +217,7 @@ export default {
 			}
 		},
 		toggleLists(namespaceId) {
-			this.$set(this.listsVisible, namespaceId, !this.listsVisible[namespaceId] ?? false)
+			this.listsVisible[namespaceId] = !this.listsVisible[namespaceId] ?? false
 		},
 		updateActiveLists(namespace, activeLists) {
 			// this is a bit hacky: since we do have to filter out the archived items from the list
@@ -242,7 +242,7 @@ export default {
 			const list = listsActive[e.newIndex]
 			const listBefore = listsActive[e.newIndex - 1] ?? null
 			const listAfter = listsActive[e.newIndex + 1] ?? null
-			this.$set(this.listUpdating, list.id, true)
+			this.listUpdating[list.id] = true
 
 			const position = calculateItemPosition(listBefore !== null ? listBefore.position : null, listAfter !== null ? listAfter.position : null)
 
@@ -255,7 +255,7 @@ export default {
 					this.$message.error(e)
 				})
 				.finally(() => {
-					this.$set(this.listUpdating, list.id, false)
+					this.listUpdating[list.id] = false
 				})
 		},
 	},

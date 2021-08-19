@@ -106,7 +106,7 @@ export default {
 
 			this.listService.get(list)
 				.then(r => {
-					this.$set(this, 'list', r)
+					this.list = r
 					this.$store.commit(CURRENT_LIST, r)
 					this.setTitle(this.$t('list.edit.title', {list: this.list.title}))
 				})

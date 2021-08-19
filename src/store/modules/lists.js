@@ -1,4 +1,3 @@
-import Vue from 'vue'
 import ListService from '@/services/list'
 import {setLoading} from '@/store/helper'
 import {removeListFromHistory} from '@/modules/listHistory.ts'
@@ -11,11 +10,11 @@ export default {
 	state: () => ({}),
 	mutations: {
 		setList(state, list) {
-			Vue.set(state, list.id, list)
+			state[list.id] = list
 		},
 		setLists(state, lists) {
 			lists.forEach(l => {
-				Vue.set(state, l.id, l)
+				state[l.id] = l
 			})
 		},
 		removeListById(state, list) {

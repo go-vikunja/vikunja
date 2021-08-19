@@ -188,7 +188,7 @@ export default {
 		findTasks(query) {
 			this.taskService.getAll({}, {s: query})
 				.then(response => {
-					this.$set(this, 'foundTasks', response)
+					this.foundTasks = response
 				})
 				.catch(e => {
 					this.$message.error(e)
@@ -203,7 +203,7 @@ export default {
 			this.taskRelationService.create(rel)
 				.then(() => {
 					if (!this.relatedTasks[this.newTaskRelationKind]) {
-						this.$set(this.relatedTasks, this.newTaskRelationKind, [])
+						this.relatedTasks[this.newTaskRelationKind] = []
 					}
 					this.relatedTasks[this.newTaskRelationKind].push(this.newTaskRelationTask)
 					this.newTaskRelationTask = null

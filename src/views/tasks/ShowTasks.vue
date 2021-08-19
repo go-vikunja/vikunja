@@ -206,7 +206,7 @@ export default {
 					})
 					const tasks = r.filter(t => t.dueDate !== null).concat(r.filter(t => t.dueDate === null))
 
-					this.$set(this, 'tasks', tasks)
+					this.tasks = tasks
 				})
 				.catch(e => {
 					this.$message.error(e)
@@ -215,7 +215,7 @@ export default {
 		updateTasks(updatedTask) {
 			for (const t in this.tasks) {
 				if (this.tasks[t].id === updatedTask.id) {
-					this.$set(this.tasks, t, updatedTask)
+					this.tasks[t] = updatedTask
 					// Move the task to the end of the done tasks if it is now done
 					if (updatedTask.done) {
 						this.tasks.splice(t, 1)

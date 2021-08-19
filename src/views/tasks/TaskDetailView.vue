@@ -561,7 +561,7 @@ export default {
 			this.taskId = Number(this.$route.params.id)
 			this.taskService.get({id: this.taskId})
 				.then(r => {
-					this.$set(this, 'task', r)
+					this.task = r
 					this.$store.commit('attachments/set', r.attachments)
 					this.taskColor = this.task.hexColor
 					this.setActiveFields()

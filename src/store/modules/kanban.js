@@ -1,4 +1,3 @@
-import Vue from 'vue'
 import cloneDeep from 'lodash/cloneDeep'
 
 import BucketService from '../../services/bucket'
@@ -34,8 +33,8 @@ export default {
 		setBuckets(state, buckets) {
 			state.buckets = buckets
 			buckets.forEach(b => {
-				Vue.set(state.taskPagesPerBucket, b.id, 1)
-				Vue.set(state.allTasksLoadedForBucket, b.id, false)
+				state.taskPagesPerBucket[b.id] = 1
+				state.allTasksLoadedForBucket[b.id] = false
 			})
 		},
 		addBucket(state, bucket) {
@@ -51,18 +50,18 @@ export default {
 		setBucketById(state, bucket) {
 			for (const b in state.buckets) {
 				if (state.buckets[b].id === bucket.id) {
-					Vue.set(state.buckets, b, bucket)
+					state.buckets[b] = bucket
 					return
 				}
 			}
 		},
 		setBucketByIndex(state, {bucketIndex, bucket}) {
-			Vue.set(state.buckets, bucketIndex, bucket)
+			state.buckets[bucketIndex] = bucket
 		},
 		setTaskInBucketByIndex(state, {bucketIndex, taskIndex, task}) {
 			const bucket = state.buckets[bucketIndex]
 			bucket.tasks[taskIndex] = task
-			Vue.set(state.buckets, bucketIndex, bucket)
+			state.buckets[bucketIndex] = bucket
 		},
 		setTaskInBucket(state, task) {
 			// If this gets invoked without any tasks actually loaded, we can save the hassle of finding the task
@@ -83,7 +82,8 @@ export default {
 							addTaskToBucketAndSort(state, task)
 						}
 
-						Vue.set(state.buckets, b, bucket)
+						state.buckets[b] = bucket
+
 						found = true
 						return
 					}
@@ -129,7 +129,7 @@ export default {
 						if (state.buckets[b].tasks[t].id === task.id) {
 							const bucket = state.buckets[b]
 							bucket.tasks.splice(t, 1)
-							Vue.set(state.buckets, b, bucket)
+							state.buckets[b] = bucket
 							return
 						}
 					}
@@ -138,13 +138,14 @@ export default {
 			}
 		},
 		setBucketLoading(state, {bucketId, loading}) {
-			Vue.set(state.bucketLoading, bucketId, loading)
+			state.bucketLoading[bucketId] = loading
 		},
 		setTasksLoadedForBucketPage(state, {bucketId, page}) {
-			Vue.set(state.taskPagesPerBucket, bucketId, page)
+			state.taskPagesPerBucket[bucketId] = page
+
 		},
 		setAllTasksLoadedForBucket(state, bucketId) {
-			Vue.set(state.allTasksLoadedForBucket, bucketId, true)
+			state.allTasksLoadedForBucket[bucketId] = true
 		},
 	},
 	getters: {

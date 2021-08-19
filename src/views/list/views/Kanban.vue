@@ -398,20 +398,20 @@ export default {
 					this.$message.error(e)
 				})
 				.finally(() => {
-					this.$set(this.taskUpdating, task.id, false)
+					this.taskUpdating[task.id] = false
 					this.oneTaskUpdating = false
 				})
 		},
 		toggleShowNewTaskInput(bucket) {
-			this.$set(this.showNewTaskInput, bucket, !this.showNewTaskInput[bucket])
+			this.showNewTaskInput[bucket] = !this.showNewTaskInput[bucket]
 		},
 		addTaskToBucket(bucketId) {
 
 			if (this.newTaskText === '') {
-				this.$set(this.newTaskError, bucketId, true)
+				this.newTaskError[bucketId] = true
 				return
 			}
-			this.$set(this.newTaskError, bucketId, false)
+			this.newTaskError[bucketId] = false
 
 			this.createNewTask(this.newTaskText, bucketId)
 				.then(r => {
@@ -557,7 +557,7 @@ export default {
 				})
 		},
 		collapseBucket(bucket) {
-			this.$set(this.collapsedBuckets, bucket.id, true)
+			this.collapsedBuckets[bucket.id] = true
 			saveCollapsedBucketState(this.$route.params.listId, this.collapsedBuckets)
 		},
 		unCollapseBucket(bucket) {
@@ -565,7 +565,7 @@ export default {
 				return
 			}
 
-			this.$set(this.collapsedBuckets, bucket.id, false)
+			this.collapsedBuckets[bucket.id] = false
 			saveCollapsedBucketState(this.$route.params.listId, this.collapsedBuckets)
 		},
 	},
