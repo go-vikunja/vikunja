@@ -3030,11 +3030,6 @@ color-convert@^2.0.1:
   dependencies:
     color-name "~1.1.4"
 
-color-fns@^0.0.10:
-  version "0.0.10"
-  resolved "https://registry.yarnpkg.com/color-fns/-/color-fns-0.0.10.tgz#b03f34ab3bb3902ac24e7c86ff32d845fbbaf7bf"
-  integrity sha512-QFKowTE9CXCLp09Gz5cQo8VPUP55hf73iHEI52JC3NyKfMpQG2VoLWmTxYeTKH6ngkEnoMrCdEX//M6J4PVQBA==
-
 color-name@1.1.3:
   version "1.1.3"
   resolved "https://registry.yarnpkg.com/color-name/-/color-name-1.1.3.tgz#a7d0558bd89c42f795dd42328f740831ca53bc25"
@@ -7446,13 +7441,6 @@ verror@1.10.0:
     assert-plus "^1.0.0"
     core-util-is "1.0.2"
     extsprintf "^1.2.0"
-
-verte@0.0.12:
-  version "0.0.12"
-  resolved "https://registry.yarnpkg.com/verte/-/verte-0.0.12.tgz#f91b3f82cf2d6ea81ac2ccad66bb9aefe7997503"
-  integrity sha512-QEWpKkjAT8SLkNJzeiZxN7tJuUiTTFO51tg9dGIrkDlQhzbaM+bTT0wtDM2c/F+Ur9luE64qhsM4xI0Af3Ut1g==
-  dependencies:
-    color-fns "^0.0.10"
 
 vite-plugin-pwa@0.11.2:
   version "0.11.2"
