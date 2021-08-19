@@ -1,4 +1,5 @@
-import Vue from 'vue'
+import { createApp } from 'vue'
+
 import App from './App.vue'
 import router from './router'
 
@@ -14,9 +15,6 @@ import {formatDate, formatDateSince} from '@/helpers/time/formatDate'
 // @ts-ignore
 import {VERSION} from './version.json'
 
-// Register the modal
-// @ts-ignore
-import Modal from './components/modal/modal'
 // Add CSS
 import './styles/vikunja.scss'
 // Notifications
@@ -27,11 +25,6 @@ import './registerServiceWorker'
 // Shortcuts
 // @ts-ignore - no types available
 import vueShortkey from 'vue-shortkey'
-// Mixins
-import {colorIsDark} from './helpers/color/colorIsDark'
-import {setTitle} from './helpers/setTitle'
-import {getNamespaceTitle} from './helpers/getNamespaceTitle'
-import {getListTitle} from './helpers/getListTitle'
 // Vuex
 import {store} from './store'
 // i18n
@@ -51,57 +44,45 @@ if (window.API_URL.substr(window.API_URL.length - 1, window.API_URL.length) === 
 	window.API_URL = window.API_URL.substr(0, window.API_URL.length - 1)
 }
 
-Vue.component('modal', Modal)
-
-Vue.config.productionTip = false
+const app = createApp(App)
 
 Vue.use(Notifications)
 
-import FontAwesomeIcon from './icons'
-Vue.component('icon', FontAwesomeIcon)
 
 Vue.use(vueShortkey, {prevent: ['input', 'textarea', '.input', '[contenteditable]']})
 
-// define as global property
-const Message = {
-	install(Vue) {
-		if (this.installed) {
-			return
-		}
-		this.installed = true
-
-		const message = {
-			error(e, actions = []) {
-				return error(e, Vue.prototype, actions)
-			},
-			success(s, actions = []) {
-				return success(s, Vue.prototype, actions)
-			},
-		}
-	
-		Vue.prototype['$message'] = message
+app.config.globalProperties.$message = {
+	error(e, actions = []) {
+		return error(e, Vue.prototype, actions)
+	},
+	success(s, actions = []) {
+		return success(s, Vue.prototype, actions)
 	},
 }
 
-Vue.use(Message)
-
+// directives
 import focus from './directives/focus'
-Vue.directive('focus', focus)
-
 import tooltip from './directives/tooltip'
+app.directive('focus', focus)
+app.directive('tooltip', tooltip)
 
-// @ts-ignore
-Vue.directive('tooltip', tooltip)
+// global components
+import FontAwesomeIcon from './icons'
+import Button from './components/input/button.vue'
+import Modal from './components/modal/modal.vue'
+import Card from './components/misc/card.vue'
+app.component('icon', FontAwesomeIcon)
+app.component('x-button', Button)
+app.component('modal', Modal)
+app.component('card', Card)
 
-// @ts-ignore
-import Button from './components/input/button'
-Vue.component('x-button', Button)
-
-// @ts-ignore
-import Card from './components/misc/card'
-Vue.component('card', Card)
-
-Vue.mixin({
+// Mixins
+import message from './message'
+import {getNamespaceTitle} from './helpers/getNamespaceTitle'
+import {getListTitle} from './helpers/getListTitle'
+import {colorIsDark} from './helpers/color/colorIsDark'
+import {setTitle} from './helpers/setTitle'
+app.mixin({
 	methods: {
 		formatDateSince(date) {
 			return formatDateSince(date, (p: VueI18n.Path, params?: VueI18n.Values) => this.$t(p, params))
@@ -123,9 +104,8 @@ Vue.mixin({
 	},
 })
 
-new Vue({
-	router,
-	store,
-	i18n,
-	render: h => h(App),
-}).$mount('#app')
+app.use(router)
+app.use(store)
+app.use(i18n)
+
+app.mount('#app')

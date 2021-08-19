@@ -23,6 +23,7 @@
 </template>
 
 <script>
+import {defineComponent} from 'vue'
 import {mapState, mapGetters} from 'vuex'
 import isTouchDevice from 'is-touch-device'
 
@@ -36,7 +37,7 @@ import ContentNoAuth from './components/home/contentNoAuth'
 import {setLanguage} from './i18n/setup'
 import AccountDeleteService from '@/services/accountDelete'
 
-export default {
+export default defineComponent({
 	name: 'app',
 	components: {
 		ContentNoAuth,
@@ -112,5 +113,5 @@ export default {
 			}
 		},
 	},
-}
+})
 </script>

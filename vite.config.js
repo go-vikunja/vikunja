@@ -1,4 +1,4 @@
-const {createVuePlugin} = require('vite-plugin-vue2')
+import createVuePlugin from '@vitejs/plugin-vue'
 const {VitePWA} = require('vite-plugin-pwa')
 const path = require('path')
 const {visualizer} = require('rollup-plugin-visualizer')
@@ -16,7 +16,15 @@ module.exports = {
 		},
 	},
 	plugins: [
-		createVuePlugin(),
+		createVuePlugin({
+			template: {
+				compilerOptions: {
+					compatConfig: {
+						MODE: 2,
+					},
+				},
+			},
+		}),
 		VitePWA({
 			srcDir: 'src',
 			filename: 'sw.js',
@@ -79,6 +87,10 @@ module.exports = {
 	],
 	resolve: {
 		alias: [
+			{
+				find: 'vue',
+				replacement: '@vue/compat',
+			},
 			{
 				find: '@',
 				replacement: path.resolve(__dirname, 'src'),

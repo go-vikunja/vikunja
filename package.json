@@ -14,6 +14,7 @@
     "test:frontend": "cypress run"
   },
   "dependencies": {
+    "@vue/compat": "3.2.14",
     "browserslist": "4.17.1",
     "bulma": "0.9.3",
     "camel-case": "4.1.2",
@@ -27,7 +28,7 @@
     "register-service-worker": "1.7.2",
     "snake-case": "3.0.4",
     "ufo": "0.7.9",
-    "vue": "2.6.14",
+    "vue": "3.2.14",
     "vue-advanced-cropper": "1.8.2",
     "vue-drag-resize": "1.5.4",
     "vue-easymde": "1.4.0",
@@ -46,12 +47,12 @@
     "@types/jest": "27.0.2",
     "@typescript-eslint/eslint-plugin": "4.32.0",
     "@typescript-eslint/parser": "4.32.0",
+    "@vitejs/plugin-vue": "^1.9.0",
     "@vue/babel-preset-app": "4.5.13",
     "@vue/eslint-config-typescript": "7.0.0",
     "@vue/runtime-dom": "latest",
     "autoprefixer": "10.3.6",
     "axios": "0.21.4",
-    "babel-eslint": "10.1.0",
     "cypress": "8.5.0",
     "cypress-file-upload": "5.0.8",
     "esbuild": "0.13.3",
@@ -67,11 +68,9 @@
     "typescript": "4.4.3",
     "vite": "2.6.1",
     "vite-plugin-pwa": "0.11.2",
-    "vite-plugin-vue2": "1.8.2",
     "vue-flatpickr-component": "8.1.7",
     "vue-notification": "1.3.20",
     "vue-router": "3.5.2",
-    "vue-template-compiler": "2.6.14",
     "wait-on": "6.0.0",
     "workbox-cli": "6.3.0"
   },
@@ -84,7 +83,7 @@
     },
     "extends": [
       "eslint:recommended",
-      "plugin:vue/essential",
+      "plugin:vue/vue3-essential",
       "@vue/typescript"
     ],
     "rules": {
