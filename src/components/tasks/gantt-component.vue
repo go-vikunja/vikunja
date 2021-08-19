@@ -17,8 +17,8 @@
 			/>
 		</div>
 		<div class="dates">
-			<template v-for="(y, yk) in days">
-				<div :key="yk + 'year'" class="months">
+			<template v-for="(y, yk) in days" :key="yk + 'year'">
+				<div class="months">
 					<div
 						:key="mk + 'month'"
 						class="month"

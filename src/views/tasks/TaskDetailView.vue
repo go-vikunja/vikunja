@@ -265,7 +265,7 @@
 					/>
 					<x-button
 						@click="setFieldActive('assignees')"
-						@shortkey.native="setFieldActive('assignees')"
+						@shortkey="setFieldActive('assignees')"
 						type="secondary"
 						v-shortkey="['a']">
 						<span class="icon is-small"><icon icon="users"/></span>
@@ -273,7 +273,7 @@
 					</x-button>
 					<x-button
 						@click="setFieldActive('labels')"
-						@shortkey.native="setFieldActive('labels')"
+						@shortkey="setFieldActive('labels')"
 						type="secondary"
 						v-shortkey="['l']"
 						icon="tags"
@@ -289,7 +289,7 @@
 					</x-button>
 					<x-button
 						@click="setFieldActive('dueDate')"
-						@shortkey.native="setFieldActive('dueDate')"
+						@shortkey="setFieldActive('dueDate')"
 						type="secondary"
 						v-shortkey="['d']"
 						icon="calendar"
@@ -333,7 +333,7 @@
 					</x-button>
 					<x-button
 						@click="setFieldActive('attachments')"
-						@shortkey.native="setFieldActive('attachments')"
+						@shortkey="setFieldActive('attachments')"
 						type="secondary"
 						v-shortkey="['f']"
 						icon="paperclip"
@@ -342,7 +342,7 @@
 					</x-button>
 					<x-button
 						@click="setFieldActive('relatedTasks')"
-						@shortkey.native="setFieldActive('relatedTasks')"
+						@shortkey="setFieldActive('relatedTasks')"
 						type="secondary"
 						v-shortkey="['r']"
 						icon="tasks"

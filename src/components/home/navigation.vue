@@ -49,8 +49,8 @@
 		</div>
 
 		<aside class="menu namespaces-lists loader-container" :class="{'is-loading': loading}">
-			<template v-for="(n, nk) in namespaces">
-				<div :key="n.id" class="namespace-title" :class="{'has-menu': n.id > 0}">
+			<template v-for="(n, nk) in namespaces" :key="n.id" >
+				<div class="namespace-title" :class="{'has-menu': n.id > 0}">
 					<span
 						@click="toggleLists(n.id)"
 						class="menu-label"

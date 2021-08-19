@@ -11,7 +11,7 @@
 			>
 				<div v-if="item.title" class="notification-title">{{ item.title }}</div>
 				<div class="notification-content">
-					<template v-for="(t, k) in item.text">{{ t }}<br :key="k"/></template>
+					<template v-for="(t, k) in item.text" :key="k">{{ t }}<br /></template>
 				</div>
 				<div
 					class="buttons is-right"
