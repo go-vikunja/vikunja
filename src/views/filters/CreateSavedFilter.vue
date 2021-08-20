@@ -13,7 +13,7 @@
 							<input
 								v-model="savedFilter.title"
 								:class="{ 'disabled': savedFilterService.loading}"
-								:disabled="savedFilterService.loading"
+								:disabled="savedFilterService.loading || null"
 								class="input"
 								id="Title"
 								:placeholder="$t('filters.attributes.titlePlaceholder')"

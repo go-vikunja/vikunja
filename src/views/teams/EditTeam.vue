@@ -10,7 +10,7 @@
 					<div class="control">
 						<input
 							:class="{ disabled: teamMemberService.loading }"
-							:disabled="teamMemberService.loading"
+							:disabled="teamMemberService.loading || null"
 							class="input"
 							id="teamtext"
 							:placeholder="$t('team.attributes.namePlaceholder')"

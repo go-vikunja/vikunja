@@ -1,6 +1,6 @@
 <template>
 	<div class="select">
-		<select :disabled="disabled" @change="updateData" v-model="priority">
+		<select :disabled="disabled || null" @change="updateData" v-model="priority">
 			<option :value="priorities.UNSET">{{ $t('task.priority.unset') }}</option>
 			<option :value="priorities.LOW">{{ $t('task.priority.low') }}</option>
 			<option :value="priorities.MEDIUM">{{ $t('task.priority.medium') }}</option>

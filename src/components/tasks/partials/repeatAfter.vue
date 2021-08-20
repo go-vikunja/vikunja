@@ -26,7 +26,7 @@
 			<div class="field has-addons is-fullwidth">
 				<div class="control">
 					<input
-						:disabled="disabled"
+						:disabled="disabled || null"
 						@change="updateData"
 						class="input"
 						:placeholder="$t('task.repeat.specifyAmount')"
@@ -36,7 +36,7 @@
 				</div>
 				<div class="control">
 					<div class="select">
-						<select :disabled="disabled" @change="updateData" v-model="repeatAfter.type">
+						<select :disabled="disabled || null" @change="updateData" v-model="repeatAfter.type">
 							<option value="hours">{{ $t('task.repeat.hours') }}</option>
 							<option value="days">{{ $t('task.repeat.days') }}</option>
 							<option value="weeks">{{ $t('task.repeat.weeks') }}</option>

@@ -5,7 +5,7 @@
 			<div class="control">
 				<input
 					:class="{ disabled: taskService.loading }"
-					:disabled="taskService.loading"
+					:disabled="taskService.loading || null"
 					@change="editTaskSubmit()"
 					class="input"
 					id="tasktext"

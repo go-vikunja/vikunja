@@ -3,7 +3,7 @@
 		<div class="field is-grouped">
 			<p class="control has-icons-left is-expanded">
 				<input
-					:disabled="taskService.loading"
+					:disabled="taskService.loading || null"
 					@keyup.enter="addTask()"
 					class="input"
 					:placeholder="$t('list.list.addPlaceholder')"
@@ -19,7 +19,7 @@
 			</p>
 			<p class="control">
 				<x-button
-					:disabled="newTaskTitle === '' || taskService.loading"
+					:disabled="newTaskTitle === '' || taskService.loading || null"
 					@click="addTask()"
 					icon="plus"
 					:loading="taskService.loading"

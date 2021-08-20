@@ -13,7 +13,7 @@
 				<div class="control">
 					<input
 						:class="{ 'disabled': namespaceService.loading}"
-						:disabled="namespaceService.loading"
+						:disabled="namespaceService.loading || null"
 						class="input"
 						id="namespacetext"
 						:placeholder="$t('namespace.attributes.titlePlaceholder')"

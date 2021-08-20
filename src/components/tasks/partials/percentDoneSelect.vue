@@ -1,6 +1,6 @@
 <template>
 	<div class="select">
-		<select :disabled="disabled" @change="updateData" v-model.number="percentDone">
+		<select :disabled="disabled || null" @change="updateData" v-model.number="percentDone">
 			<option value="0">0%</option>
 			<option value="0.1">10%</option>
 			<option value="0.2">20%</option>

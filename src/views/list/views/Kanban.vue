@@ -153,7 +153,7 @@
 								<div class="control" :class="{'is-loading': loading}">
 									<input
 										class="input"
-										:disabled="loading"
+										:disabled="loading || null"
 										@focusout="toggleShowNewTaskInput(bucket.id)"
 										@keyup.enter="addTaskToBucket(bucket.id)"
 										@keyup.esc="toggleShowNewTaskInput(bucket.id)"
@@ -187,7 +187,7 @@
 			<div class="bucket new-bucket" v-if="canWrite && !loading && buckets.length > 0">
 				<input
 					:class="{'is-loading': loading}"
-					:disabled="loading"
+					:disabled="loading || null"
 					@focusout="() => showNewBucketInput = false"
 					@keyup.enter="createNewBucket"
 					@keyup.esc="() => showNewBucketInput = false"

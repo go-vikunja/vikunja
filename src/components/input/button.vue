@@ -9,9 +9,9 @@
 			'is-text is-inverted has-no-shadow underline-none':
 				type === 'tertary',
 		}"
-		:disabled="disabled"
+		:disabled="disabled || null"
 		@click="click"
-		:href="href !== '' ? href : false"
+		:href="href !== '' ? href : null"
 	>
 		<icon :icon="icon" v-if="showIconOnly"/>
 		<span class="icon is-small" v-else-if="icon !== ''">
