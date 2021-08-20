@@ -78,6 +78,7 @@
 						"
 						v-model="c.comment"
 						:bottom-actions="actions[c.id]"
+						:show-save="true"
 					/>
 				</div>
 			</div>
@@ -113,7 +114,6 @@
 								:upload-callback="attachmentUpload"
 								:upload-enabled="true"
 								:placeholder="$t('task.comment.placeholder')"
-								:show-save="false"
 								v-if="editorActive"
 								v-model="newComment.comment"
 							/>

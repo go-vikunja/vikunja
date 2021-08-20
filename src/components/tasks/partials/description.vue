@@ -23,7 +23,9 @@
 			@change="save"
 			:placeholder="$t('task.description.placeholder')"
 			:empty-text="$t('task.description.empty')"
-			v-model="task.description"/>
+			:show-save="true"
+			v-model="task.description"
+		/>
 	</div>
 </template>
 

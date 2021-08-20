@@ -96,7 +96,8 @@ export default {
 			default: () => '',
 		},
 		showSave: {
-			default: true,
+			type: Boolean,
+			default: false,
 		},
 	},
 	computed: {

@@ -169,7 +169,7 @@ describe('Task', () => {
 			cy.get('.task-view .details.content.description .editor .vue-easymde .EasyMDEContainer .CodeMirror-scroll')
 				.type('{selectall}New Description')
 			cy.get('.task-view .details.content.description .editor a')
-				.contains('Done')
+				.contains('save')
 				.click()
 
 			cy.get('.task-view .details.content.description h3 span.is-small.has-text-success')
