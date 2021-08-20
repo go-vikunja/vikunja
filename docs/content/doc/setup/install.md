@@ -39,3 +39,8 @@ This document provides an overview and instructions for the different methods.
 * [Reverse proxies]({{< ref "reverse-proxies.md">}})
 * [Full docker example]({{< ref "full-docker-example.md">}})
 * [Backups]({{< ref "backups.md">}})
+
+## Installation on kubernetes
+
+A third-party Helm Chart is available from the k8s-at-home project [here](https://github.com/k8s-at-home/charts/tree/master/charts/stable/vikunja).
+
