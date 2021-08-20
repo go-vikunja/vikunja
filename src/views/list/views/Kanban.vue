@@ -27,17 +27,14 @@
 				group="buckets"
 				:disabled="!canWrite"
 				:class="{'dragging-disabled': !canWrite}"
+				tag="transition-group"
+				:item-key="({id}) => `bucket${id}`"
+				:component-data="bucketDraggableComponentData"
 			>
-				<transition-group
-					type="transition"
-					:name="!dragBucket ? 'move-bucket': null"
-					tag="div"
-					class="kanban-bucket-container">
+				<template #item="{element: bucket, index: bucketIndex }">
 					<div
-						:key="`bucket${bucket.id}`"
 						class="bucket"
 						:class="{'is-collapsed': collapsedBuckets[bucket.id]}"
-						v-for="(bucket, k) in buckets"
 					>
 						<div class="bucket-header" @click="() => unCollapseBucket(bucket)">
 							<span
@@ -136,16 +133,15 @@
 								:group="{name: 'tasks', put: shouldAcceptDrop(bucket) && !dragBucket}"
 								:disabled="!canWrite"
 								:class="{'dragging-disabled': !canWrite}"
-								:data-bucket-index="k"
+								:data-bucket-index="bucketIndex"
 								class="dropper"
+								tag="transition-group"
+								:item-key="(task) => `bucket${bucket.id}-task${task.id}`"
+								:component-data="taskDraggableTaskComponentData"
 							>
-								<transition-group type="transition" :name="!drag ? 'move-card': null" tag="div">
-									<kanban-card
-										:key="`bucket${bucket.id}-task${task.id}`"
-										v-for="task in bucket.tasks"
-										:task="task"
-									/>
-								</transition-group>
+								<template #item="{element: task}">
+									<kanban-card :task="task" />
+								</template>
 							</draggable>
 						</div>
 						<div class="bucket-footer" v-if="canWrite">
@@ -181,7 +177,7 @@
 							</x-button>
 						</div>
 					</div>
-				</transition-group>
+				</template>
 			</draggable>
 
 			<div class="bucket new-bucket" v-if="canWrite && !loading && buckets.length > 0">
@@ -251,6 +247,15 @@ import {getCollapsedBucketState, saveCollapsedBucketState} from '@/helpers/saveC
 import {calculateItemPosition} from '../../../helpers/calculateItemPosition'
 import KanbanCard from '../../../components/tasks/partials/kanban-card'
 
+const DRAG_OPTIONS = {
+	// sortable options
+	animation: 150,
+	ghostClass: 'ghost',
+	dragClass: 'task-dragging',
+	delayOnTouchOnly: true,
+	delay: 150,
+}
+
 export default {
 	name: 'Kanban',
 	components: {
@@ -261,6 +266,8 @@ export default {
 	},
 	data() {
 		return {
+			dragOptions: DRAG_OPTIONS,
+
 			drag: false,
 			dragBucket: false,
 			sourceBucket: 0,
@@ -305,6 +312,21 @@ export default {
 		'$route.params.listId': 'loadBuckets',
 	},
 	computed: {
+		bucketDraggableComponentData() {
+			return {
+				type: 'transition',
+				tag: 'div',
+				name: !this.dragBucket ? 'move-bucket': null,
+				class: 'kanban-bucket-container',
+			}
+		},
+		taskDraggableTaskComponentData() {
+			return {
+				type: 'transition',
+				tag: 'div',
+				name: !this.drag ? 'move-card': null,
+			}
+		},
 		buckets: {
 			get() {
 				return this.$store.state.kanban.buckets
@@ -312,17 +334,6 @@ export default {
 			set(value) {
 				this.$store.commit('kanban/setBuckets', value)
 			},
-		},
-		dragOptions() {
-			const options = {
-				animation: 150,
-				ghostClass: 'ghost',
-				dragClass: 'task-dragging',
-				delay: 150,
-				delayOnTouchOnly: true,
-			}
-
-			return options
 		},
 		...mapState({
 			loadedListId: state => state.kanban.listId,

@@ -89,27 +89,28 @@
 						handle=".handle"
 						:disabled="!canWrite"
 						:class="{'dragging-disabled': !canWrite}"
+						item-key="id"
 					>
-						<single-task-in-list
-							:show-list-color="false"
-							:disabled="!canWrite"
-							:key="t.id"
-							:the-task="t"
-							@taskUpdated="updateTasks"
-							task-detail-route="task.detail"
-							v-for="t in tasks"
-						>
-							<span class="icon handle">
-								<icon icon="grip-lines"/>
-							</span>
-							<div
-								@click="editTask(t.id)"
-								class="icon settings"
-								v-if="!list.isArchived && canWrite"
+						<template #item="{element: t}">
+							<single-task-in-list
+								:show-list-color="false"
+								:disabled="!canWrite"
+								:the-task="t"
+								@taskUpdated="updateTasks"
+								task-detail-route="task.detail"
 							>
-								<icon icon="pencil-alt"/>
-							</div>
-						</single-task-in-list>
+								<span class="icon handle">
+									<icon icon="grip-lines"/>
+								</span>
+								<div
+									@click="editTask(t.id)"
+									class="icon settings"
+									v-if="!list.isArchived && canWrite"
+								>
+									<icon icon="pencil-alt"/>
+								</div>
+							</single-task-in-list>
+						</template>
 					</draggable>
 				</div>
 				<card

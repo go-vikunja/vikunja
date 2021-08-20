@@ -1293,6 +1293,11 @@
     "@types/yargs" "^16.0.0"
     chalk "^4.0.0"
 
+"@kyvg/vue3-notification@2.3.3":
+  version "2.3.3"
+  resolved "https://registry.yarnpkg.com/@kyvg/vue3-notification/-/vue3-notification-2.3.3.tgz#7de890cbf000cf063da47bb49caa83bfb0350108"
+  integrity sha512-NxFejSs7FlaUzsPQ4jJyrB+UCFfsBUqICcQH70wHId52Hc9G9i0rBp2Wj3UsNj21H/HitP3r92rfz4ly2ImyMA==
+
 "@nodelib/fs.scandir@2.1.5":
   version "2.1.5"
   resolved "https://registry.yarnpkg.com/@nodelib/fs.scandir/-/fs.scandir-2.1.5.tgz#7619c2eb21b25483f6d167548b4cfd5a7488c3d5"
@@ -2807,11 +2812,6 @@ csstype@^2.6.8:
   resolved "https://registry.yarnpkg.com/csstype/-/csstype-2.6.17.tgz#4cf30eb87e1d1a005d8b6510f95292413f6a1c0e"
   integrity sha512-u1wmTI1jJGzCJzWndZo8mk4wnPTZd1eOIYTYvuEyOQGfmDl3TrabCCfKnOC86FZwW/9djqTl933UF/cS425i9A==
 
-custom-event-polyfill@^1.0.7:
-  version "1.0.7"
-  resolved "https://registry.yarnpkg.com/custom-event-polyfill/-/custom-event-polyfill-1.0.7.tgz#9bc993ddda937c1a30ccd335614c6c58c4f87aee"
-  integrity sha512-TDDkd5DkaZxZFM8p+1I3yAlvM3rSr1wbrOliG4yJiwinMZN8z/iGL7BTlDkrJcYTmgUSb4ywVCc3ZaUtOtC76w==
-
 cypress-file-upload@5.0.8:
   version "5.0.8"
   resolved "https://registry.yarnpkg.com/cypress-file-upload/-/cypress-file-upload-5.0.8.tgz#d8824cbeaab798e44be8009769f9a6c9daa1b4a1"
@@ -3095,11 +3095,6 @@ electron-to-chromium@^1.3.846:
   version "1.3.846"
   resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.3.846.tgz#a55fd59613dbcaed609e965e3e88f42b08c401d3"
   integrity sha512-2jtSwgyiRzybHRxrc2nKI+39wH3AwQgn+sogQ+q814gv8hIFwrcZbV07Ea9f8AmK0ufPVZUvvAG1uZJ+obV4Jw==
-
-element-matches@^0.1.2:
-  version "0.1.2"
-  resolved "https://registry.yarnpkg.com/element-matches/-/element-matches-0.1.2.tgz#7345cb71e965bd2b12f725e524591c102198361a"
-  integrity sha512-yWh1otcs3OKUWDvu/IxyI36ZI3WNaRZlI0uG/DK6fu0pap0VYZ0J5pEGTk1zakme+hT0OKHwhlHc0N5TJhY6yQ==
 
 emittery@^0.8.1:
   version "0.8.1"
@@ -6907,21 +6902,19 @@ vite@2.6.1:
   optionalDependencies:
     fsevents "~2.3.2"
 
-vue-advanced-cropper@1.8.2:
-  version "1.8.2"
-  resolved "https://registry.yarnpkg.com/vue-advanced-cropper/-/vue-advanced-cropper-1.8.2.tgz#c163e54584cd568e9fb2b63bc0fe08a58c060421"
-  integrity sha512-dngjbph+QbqLpk4DWCoCajWcThyy08NorFhMcmrnGFJvdxTFiuJ+XjOtrXhNpDdl7U6E/csrkx6i6E8V+BwmoQ==
+vue-advanced-cropper@^2.6.3:
+  version "2.6.3"
+  resolved "https://registry.yarnpkg.com/vue-advanced-cropper/-/vue-advanced-cropper-2.6.3.tgz#3ec29584a53954f915a86e0f28069b79d7c29719"
+  integrity sha512-EWZ4dXnP7NpTNsCOlgGjUvBYtPtrWX+wMdW0w3PjwOk4UtQfvKz2IPYtIBzZqvxwUq0OIUq1K5y3VnCvs1DBDA==
   dependencies:
     classnames "^2.2.6"
     debounce "^1.2.0"
     easy-bem "^1.0.2"
 
-vue-drag-resize@1.5.4, vue-drag-resize@^1.5.0-rc3:
-  version "1.5.4"
-  resolved "https://registry.yarnpkg.com/vue-drag-resize/-/vue-drag-resize-1.5.4.tgz#f583f40f356e5792aa89109b3d13ba4407c25198"
-  integrity sha512-SR3U7n6TAZEBgP7zw7bR9mjtAlYBjqIoaWTDPz5HXN/nYhOxKSA31aD7p71fmq1jtyt9reAnCx62valNL9ZAcg==
-  dependencies:
-    vue-drag-resize "^1.5.0-rc3"
+vue-drag-resize@^2.0.3:
+  version "2.0.3"
+  resolved "https://registry.yarnpkg.com/vue-drag-resize/-/vue-drag-resize-2.0.3.tgz#1faf0813f43304205bb355fbb3dacc548dd9398a"
+  integrity sha512-5q03tZ/LyvQsg1iHRcqs+wI2OKNbNIWl9+7V8rVL6MxJhZLCIYSSgbAUaDE38LhD6dFd5aJhdgNmES61AxjXuw==
 
 vue-easymde@1.4.0:
   version "1.4.0"
@@ -6944,10 +6937,10 @@ vue-eslint-parser@^7.0.0, vue-eslint-parser@^7.10.0:
     lodash "^4.17.21"
     semver "^6.3.0"
 
-vue-flatpickr-component@9.0.4:
-  version "9.0.4"
-  resolved "https://registry.yarnpkg.com/vue-flatpickr-component/-/vue-flatpickr-component-9.0.4.tgz#b064fffb11b0e351213434d2f6b2a291d753438c"
-  integrity sha512-E8XfzLhrPsQBtZluWYEn3m21VHn7PArYnel3QPYL3auBrVMc07WaK6b20e04OK8LUCq9V+OKNZe4MoI0znY/Hw==
+vue-flatpickr-component@9.0.5:
+  version "9.0.5"
+  resolved "https://registry.yarnpkg.com/vue-flatpickr-component/-/vue-flatpickr-component-9.0.5.tgz#350ec73b7f3d7f80b050c170c088234f9c3bd14c"
+  integrity sha512-fKuz/D4ePQKi+jPo4xjYRgBCLTWrTsCoKbx8nam63x4kTDtSqvFOjNwLvy0QgwC0lC+aFpUWa1dNYTH0hgUcCA==
   dependencies:
     flatpickr "^4.6.9"
 
@@ -6961,25 +6954,12 @@ vue-i18n@9.2.0-beta.6:
     "@intlify/vue-devtools" "9.2.0-beta.6"
     "@vue/devtools-api" "^6.0.0-beta.13"
 
-vue-notification@1.3.20:
-  version "1.3.20"
-  resolved "https://registry.yarnpkg.com/vue-notification/-/vue-notification-1.3.20.tgz#d85618127763b46f3e25b8962b857947d5a97cbe"
-  integrity sha512-vPj67Ah72p8xvtyVE8emfadqVWguOScAjt6OJDEUdcW5hW189NsqvfkOrctxHUUO9UYl9cTbIkzAEcPnHu+zBQ==
-
 vue-router@4.0.11:
   version "4.0.11"
   resolved "https://registry.yarnpkg.com/vue-router/-/vue-router-4.0.11.tgz#cd649a0941c635281763a20965b599643ddc68ed"
   integrity sha512-sha6I8fx9HWtvTrFZfxZkiQQBpqSeT+UCwauYjkdOQYRvwsGwimlQQE2ayqUwuuXGzquFpCPoXzYKWlzL4OuXg==
   dependencies:
     "@vue/devtools-api" "^6.0.0-beta.14"
-
-vue-shortkey@3.1.7:
-  version "3.1.7"
-  resolved "https://registry.yarnpkg.com/vue-shortkey/-/vue-shortkey-3.1.7.tgz#31c09a99ed597331a6a49a45eeff894a78a19eef"
-  integrity sha512-Wm/vPXXS+4Wl/LoYpD+cZc0J0HIoVlY8Ep0JLIqqswmAya3XUBtsqKbhzEf9sXo+3rZ5p1YsUyZfXas8XD7YjQ==
-  dependencies:
-    custom-event-polyfill "^1.0.7"
-    element-matches "^0.1.2"
 
 vue@3.2.14:
   version "3.2.14"
@@ -6992,10 +6972,10 @@ vue@3.2.14:
     "@vue/server-renderer" "3.2.14"
     "@vue/shared" "3.2.14"
 
-vuedraggable@2.24.3:
-  version "2.24.3"
-  resolved "https://registry.yarnpkg.com/vuedraggable/-/vuedraggable-2.24.3.tgz#43c93849b746a24ce503e123d5b259c701ba0d19"
-  integrity sha512-6/HDXi92GzB+Hcs9fC6PAAozK1RLt1ewPTLjK0anTYguXLAeySDmcnqE8IC0xa7shvSzRjQXq3/+dsZ7ETGF3g==
+vuedraggable@4.0.1:
+  version "4.0.1"
+  resolved "https://registry.yarnpkg.com/vuedraggable/-/vuedraggable-4.0.1.tgz#3bcaab0808b7944030b7d9a29f9a63d59dfa12c5"
+  integrity sha512-7qN5jhB1SLfx5P+HCm3JUW+pvgA1bSLgYLSVOeLWBDH9z+zbaEH0OlyZBVMLOxFR+JUHJjwDD0oy7T4r9TEgDA==
   dependencies:
     sortablejs "1.10.2"
 

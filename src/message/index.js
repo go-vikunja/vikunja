@@ -1,4 +1,5 @@
 import {i18n} from '@/i18n'
+import { notify } from '@kyvg/vue3-notification'
 
 export const getErrorText = (r) => {
 
@@ -27,8 +28,8 @@ export const getErrorText = (r) => {
 	return [r.message]
 }
 
-export function error(e, context, actions = []) {
-	context.$notify({
+export function error(e, actions = []) {
+	notify({
 		type: 'error',
 		title: i18n.global.t('error.error'),
 		text: getErrorText(e),
@@ -37,8 +38,8 @@ export function error(e, context, actions = []) {
 	console.error(e, actions)
 }
 
-export function success(e, context, actions = []) {
-	context.$notify({
+export function success(e, actions = []) {
+	notify({
 		type: 'success',
 		title: i18n.global.t('error.success'),
 		text: getErrorText(e),

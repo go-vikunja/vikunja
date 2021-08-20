@@ -86,9 +86,8 @@
 					:w="t.durationDays * dayWidth"
 					:x="t.offsetDays * dayWidth - 6"
 					:y="0"
-					@clicked="setTaskDragged(t)"
-					@dragstop="resizeTask"
-					@resizestop="resizeTask"
+					@dragstop="(e) => resizeTask(t, e)"
+					@resizestop="(e) => resizeTask(t, e)"
 					axis="x"
 					class="task"
 				>
@@ -136,9 +135,8 @@
 						:sticks="['mr', 'ml']"
 						:x="dayOffsetUntilToday * dayWidth - 6"
 						:y="0"
-						@clicked="setTaskDragged(t)"
-						@dragstop="resizeTask"
-						@resizestop="resizeTask"
+						@dragstop="(e) => resizeTask(t, e)"
+						@resizestop="(e) => resizeTask(t, e)"
 						axis="x"
 						class="task nodate"
 						v-tooltip="$t('list.gantt.noDates')"
@@ -233,7 +231,6 @@ export default {
 			theTasks: [], // Pretty much a copy of the prop, since we cant mutate the prop directly
 			tasksWithoutDates: [],
 			taskService: new TaskService(),
-			taskDragged: null, // Saves to currently dragged task to be able to update it
 			fullWidth: 0,
 			now: new Date(),
 			dayOffsetUntilToday: 0,
@@ -361,15 +358,14 @@ export default {
 			t.offsetDays = Math.floor((t.startDate - this.startDate) / 1000 / 60 / 60 / 24)
 			return t
 		},
-		setTaskDragged(t) {
-			this.taskDragged = t
-		},
-		resizeTask(newRect) {
+		resizeTask(taskDragged, newRect) {
 			if (this.isTaskEdit) {
 				return
 			}
 
-			const didntHaveDates = this.taskDragged.startDate === null ? true : false
+			let newTask = { ...taskDragged }
+
+			const didntHaveDates = newTask.startDate === null ? true : false
 
 			let startDate = new Date(this.startDate)
 			startDate.setDate(
@@ -379,32 +375,32 @@ export default {
 			startDate.setUTCMinutes(0)
 			startDate.setUTCSeconds(0)
 			startDate.setUTCMilliseconds(0)
-			this.taskDragged.startDate = startDate
+			newTask.startDate = startDate
 			let endDate = new Date(startDate)
 			endDate.setDate(
 				startDate.getDate() + newRect.width / this.dayWidth,
 			)
-			this.taskDragged.startDate = startDate
-			this.taskDragged.endDate = endDate
+			newTask.startDate = startDate
+			newTask.endDate = endDate
 
 			// We take the task from the overall tasks array because the one in it has bad data after it was updated once.
 			// FIXME: This is a workaround. We should use a better mechanism to get the task or, even better,
 			// prevent it from containing outdated Data in the first place.
 			for (const tt in this.theTasks) {
-				if (this.theTasks[tt].id === this.taskDragged.id) {
-					this.taskDragged = this.theTasks[tt]
+				if (this.theTasks[tt].id === newTask.id) {
+					newTask = this.theTasks[tt]
 					break
 				}
 			}
 
 			const ganttData = {
-				endDate: this.taskDragged.endDate,
-				durationDays: this.taskDragged.durationDays,
-				offsetDays: this.taskDragged.offsetDays,
+				endDate: newTask.endDate,
+				durationDays: newTask.durationDays,
+				offsetDays: newTask.offsetDays,
 			}
 
 			this.taskService
-				.update(this.taskDragged)
+				.update(newTask)
 				.then(r => {
 					r.endDate = ganttData.endDate
 					r.durationDays = ganttData.durationDays

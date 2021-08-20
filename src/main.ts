@@ -1,4 +1,11 @@
-import { createApp } from 'vue'
+import { createApp, configureCompat } from 'vue'
+
+configureCompat({
+	COMPONENT_V_MODEL: false,
+	COMPONENT_ASYNC: false,
+	RENDER_FUNCTION: false,
+	WATCH_ARRAY: false, // TODO: check this again; this might lead to some problemes
+})
 
 import App from './App.vue'
 import router from './router'
@@ -18,13 +25,13 @@ import {VERSION} from './version.json'
 // Add CSS
 import './styles/vikunja.scss'
 // Notifications
-import Notifications from 'vue-notification'
+import Notifications from '@kyvg/vue3-notification'
+
 // PWA
 import './registerServiceWorker'
 
 // Shortcuts
-// @ts-ignore - no types available
-import vueShortkey from 'vue-shortkey'
+import shortkey from '@/plugins/shortkey'
 // Vuex
 import {store} from './store'
 // i18n
@@ -45,19 +52,11 @@ if (window.API_URL.substr(window.API_URL.length - 1, window.API_URL.length) === 
 
 const app = createApp(App)
 
-Vue.use(Notifications)
+app.use(Notifications)
 
 
-Vue.use(vueShortkey, {prevent: ['input', 'textarea', '.input', '[contenteditable]']})
 
-app.config.globalProperties.$message = {
-	error(e, actions = []) {
-		return error(e, Vue.prototype, actions)
-	},
-	success(s, actions = []) {
-		return success(s, Vue.prototype, actions)
-	},
-}
+app.use(shortkey, {prevent: ['input', 'textarea', '.input', '[contenteditable]']})
 
 // directives
 import focus from './directives/focus'
@@ -91,6 +90,15 @@ app.mixin({
 		setTitle,
 	},
 })
+
+app.config.errorHandler = (err, vm, info) => {
+	error(err)
+}
+
+app.config.globalProperties.$message = {
+	error,
+	success,
+}
 
 app.use(router)
 app.use(store)

@@ -91,17 +91,20 @@
 						@end="e => saveListPosition(e, nk)"
 						handle=".handle"
 						:disabled="n.id < 0"
-						:class="{'dragging-disabled': n.id < 0}"
+						tag="transition-group"
+						item-key="id"
+						:component-data="{
+							type: 'transition',
+							tag: 'ul',
+							name: !drag ? 'flip-list' : null,
+							class: [
+								'menu-list can-be-hidden',
+								{ 'dragging-disabled': n.id < 0 }
+							]
+						}"
 					>
-						<transition-group
-							type="transition"
-							:name="!drag ? 'flip-list' : null"
-							tag="ul"
-							class="menu-list can-be-hidden"
-						>
+						<template #item="{element: l}">
 							<li
-								v-for="l in activeLists[nk]"
-								:key="l.id"
 								class="loader-container"
 								:class="{'is-loading': listUpdating[l.id]}"
 							>
@@ -140,7 +143,7 @@
 								<list-settings-dropdown :list="l" v-if="l.id > 0"/>
 								<span class="list-setting-spacer" v-else></span>
 							</li>
-						</transition-group>
+						</template>
 					</draggable>
 				</div>
 			</template>

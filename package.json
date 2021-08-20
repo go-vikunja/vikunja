@@ -14,6 +14,7 @@
     "test:frontend": "cypress run"
   },
   "dependencies": {
+    "@kyvg/vue3-notification": "2.3.3",
     "@vue/compat": "3.2.14",
     "browserslist": "4.17.1",
     "bulma": "0.9.3",
@@ -29,14 +30,13 @@
     "snake-case": "3.0.4",
     "ufo": "0.7.9",
     "vue": "3.2.14",
-    "vue-advanced-cropper": "1.8.2",
-    "vue-drag-resize": "1.5.4",
+    "vue-advanced-cropper": "^2.6.3",
+    "vue-drag-resize": "^2.0.3",
     "vue-easymde": "1.4.0",
-    "vue-flatpickr-component": "9.0.4",
+    "vue-flatpickr-component": "9.0.5",
     "vue-i18n": "9.2.0-beta.6",
     "vue-router": "4.0.11",
-    "vue-shortkey": "3.1.7",
-    "vuedraggable": "2.24.3",
+    "vuedraggable": "4.0.1",
     "vuex": "4.0.2",
     "workbox-precaching": "6.3.0"
   },
@@ -70,7 +70,6 @@
     "typescript": "4.4.3",
     "vite": "2.6.1",
     "vite-plugin-pwa": "0.11.2",
-    "vue-notification": "1.3.20",
     "wait-on": "6.0.0",
     "workbox-cli": "6.3.0"
   },
