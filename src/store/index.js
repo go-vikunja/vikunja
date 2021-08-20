@@ -1,5 +1,4 @@
-import Vue from 'vue'
-import Vuex from 'vuex'
+import { createStore } from 'vuex'
 import {
 	CURRENT_LIST,
 	ERROR_MESSAGE,
@@ -21,9 +20,7 @@ import labels from './modules/labels'
 
 import ListService from '../services/list'
 
-Vue.use(Vuex)
-
-export const store = new Vuex.Store({
+export const store = createStore({
 	strict: import.meta.env.DEV,
 	modules: {
 		config,
