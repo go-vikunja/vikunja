@@ -381,22 +381,22 @@
 
 					<!-- Created / Updated [by] -->
 					<p class="created">
-						<i18n path="task.detail.created">
+						<i18n-t keypath="task.detail.created">
 							<span v-tooltip="formatDate(task.created)">{{ formatDateSince(task.created) }}</span>
 							{{ task.createdBy.getDisplayName() }}
-						</i18n>
+						</i18n-t>
 						<template v-if="+new Date(task.created) !== +new Date(task.updated)">
 							<br/>
 							<!-- Computed properties to show the actual date every time it gets updated -->
-							<i18n path="task.detail.updated">
+							<i18n-t keypath="task.detail.updated">
 								<span v-tooltip="updatedFormatted">{{ updatedSince }}</span>
-							</i18n>
+							</i18n-t>
 						</template>
 						<template v-if="task.done">
 							<br/>
-							<i18n path="task.detail.doneAt">
+							<i18n-t keypath="task.detail.doneAt">
 								<span v-tooltip="doneFormatted">{{ doneSince }}</span>
-							</i18n>
+							</i18n-t>
 						</template>
 					</p>
 				</div>

@@ -35,7 +35,7 @@
 				<div class="filename">{{ a.file.name }}</div>
 				<div class="info">
 					<p class="collapses">
-						<i18n path="task.attachment.createdBy">
+						<i18n-t keypath="task.attachment.createdBy">
 							<span v-tooltip="formatDate(a.created)">
 								{{ formatDateSince(a.created) }}
 							</span>
@@ -44,7 +44,7 @@
 								:user="a.createdBy"
 								:is-inline="true"
 							/>
-						</i18n>
+						</i18n-t>
 						<span>
 							{{ a.file.getHumanSize() }}
 						</span>

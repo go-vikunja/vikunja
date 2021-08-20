@@ -1,9 +1,9 @@
 <template>
 	<div class="notification is-danger">
-		<i18n path="loadingError.failed">
+		<i18n-t keypath="loadingError.failed">
 			<a @click="() => location.reload()">{{ $t('loadingError.tryAgain') }}</a>
 			<a href="https://vikunja.io/contact/" rel="noreferrer noopener nofollow" target="_blank">{{ $t('loadingError.contact') }}</a>
-		</i18n>
+		</i18n-t>
 	</div>
 </template>
 

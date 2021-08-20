@@ -66,7 +66,7 @@ export default {
 					this.$router.push({name: 'home'})
 				})
 				.catch(e => {
-					const err = getErrorText(e, p => this.$t(p))
+					const err = getErrorText(e)
 					if (typeof err[1] !== 'undefined') {
 						this.$store.commit(ERROR_MESSAGE, err[1])
 						return

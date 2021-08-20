@@ -81,6 +81,7 @@
 </template>
 
 <script>
+import { i18n } from '@/i18n'
 import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
 
 export default {
@@ -141,14 +142,14 @@ export default {
 		createPlaceholder: {
 			type: String,
 			default() {
-				return this.$t('input.multiselect.createPlaceholder')
+				return i18n.global.t('input.multiselect.createPlaceholder')
 			},
 		},
 		// The text shown next to an option.
 		selectPlaceholder: {
 			type: String,
 			default() {
-				return this.$t('input.multiselect.selectPlaceholder')
+				return i18n.global.t('input.multiselect.selectPlaceholder')
 			},
 		},
 		// If true, allows for selecting multiple items. v-model will be an array with all selected values in that case.

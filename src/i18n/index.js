@@ -1,12 +1,10 @@
-import Vue from 'vue'
-import VueI18n from 'vue-i18n'
+import { createI18n } from 'vue-i18n'
 import langEN from './lang/en.json'
 
-Vue.use(VueI18n)
-
-export const i18n = new VueI18n({
+export const i18n = createI18n({
 	locale: 'en', // set locale
 	fallbackLocale: 'en',
+	globalInjection: true,
 	messages: {
 		en: langEN,
 	},

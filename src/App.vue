@@ -34,7 +34,7 @@ import TopNavigation from './components/home/topNavigation'
 import ContentAuth from './components/home/contentAuth'
 import ContentLinkShare from './components/home/contentLinkShare'
 import ContentNoAuth from './components/home/contentNoAuth'
-import {setLanguage} from './i18n/setup'
+import {setLanguage} from './i18n'
 import AccountDeleteService from '@/services/accountDelete'
 
 export default defineComponent({

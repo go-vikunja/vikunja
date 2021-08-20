@@ -43,6 +43,8 @@
 </template>
 
 <script>
+import { i18n } from '@/i18n'
+
 export default {
 	name: 'create-edit',
 	props: {
@@ -53,7 +55,7 @@ export default {
 		primaryLabel: {
 			type: String,
 			default() {
-				return this.$t('misc.create')
+				return i18n.global.t('misc.create')
 			},
 		},
 		primaryIcon: {

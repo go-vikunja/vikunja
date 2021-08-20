@@ -112,6 +112,7 @@
 <script>
 import flatPickr from 'vue-flatpickr-component'
 import 'flatpickr/dist/flatpickr.css'
+import { i18n } from '@/i18n'
 
 import {format} from 'date-fns'
 import {calculateDayInterval} from '@/helpers/time/calculateDayInterval'
@@ -142,7 +143,7 @@ export default {
 		chooseDateLabel: {
 			type: String,
 			default() {
-				return this.$t('input.datepicker.chooseDate')
+				return i18n.global.t('input.datepicker.chooseDate')
 			},
 		},
 		disabled: {

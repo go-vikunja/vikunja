@@ -11,7 +11,7 @@ declare global {
 	}
 }
 
-import {formatDate, formatDateSince} from '@/helpers/time/formatDate'
+import {formatDateShort, formatDateLong, formatDateSince} from '@/helpers/time/formatDate'
 // @ts-ignore
 import {VERSION} from './version.json'
 
@@ -28,8 +28,7 @@ import vueShortkey from 'vue-shortkey'
 // Vuex
 import {store} from './store'
 // i18n
-import VueI18n from 'vue-i18n' // types
-import {i18n} from './i18n/setup'
+import {i18n} from './i18n'
 
 console.info(`Vikunja frontend version ${VERSION}`)
 
@@ -77,30 +76,19 @@ app.component('modal', Modal)
 app.component('card', Card)
 
 // Mixins
-import message from './message'
 import {getNamespaceTitle} from './helpers/getNamespaceTitle'
 import {getListTitle} from './helpers/getListTitle'
 import {colorIsDark} from './helpers/color/colorIsDark'
 import {setTitle} from './helpers/setTitle'
 app.mixin({
 	methods: {
-		formatDateSince(date) {
-			return formatDateSince(date, (p: VueI18n.Path, params?: VueI18n.Values) => this.$t(p, params))
-		},
-		formatDate(date) {
-			return formatDate(date, 'PPPPpppp', this.$t('date.locale'))
-		},
-		formatDateShort(date) {
-			return formatDate(date, 'PPpp', this.$t('date.locale'))
-		},
-		getNamespaceTitle(n) {
-			return getNamespaceTitle(n, (p: VueI18n.Path) => this.$t(p))
-		},
-		getListTitle(l) {
-			return getListTitle(l, (p: VueI18n.Path) => this.$t(p))
-		},
-		colorIsDark: colorIsDark,
-		setTitle: setTitle,
+		formatDateSince,
+		formatDate: formatDateLong,
+		formatDateShort: formatDateShort,
+		getNamespaceTitle,
+		getListTitle,
+		colorIsDark,
+		setTitle,
 	},
 })
 

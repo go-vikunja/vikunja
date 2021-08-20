@@ -300,7 +300,7 @@ import TotpService from '../../services/totp'
 import UserSettingsService from '../../services/userSettings'
 import UserSettingsModel from '../../models/userSettings'
 import {playSoundWhenDoneKey} from '@/helpers/playPop'
-import {availableLanguages, saveLanguage, getCurrentLanguage} from '../../i18n/setup'
+import {availableLanguages, saveLanguage, getCurrentLanguage} from '@/i18n'
 import {getQuickAddMagicMode, setQuickAddMagicMode} from '../../helpers/quickAddMagicMode'
 import {PrefixMode} from '../../modules/parseTaskText'
 

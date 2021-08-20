@@ -23,9 +23,9 @@
 			</div>
 		</div>
 		<div class="api-url-info" v-else>
-			<i18n path="apiConfig.signInOn">
+			<i18n-t keypath="apiConfig.signInOn">
 				<span class="url" v-tooltip="apiUrl"> {{ apiDomain }} </span>
-			</i18n>
+			</i18n-t>
 			<br />
 			<a @click="() => (configureApi = true)">{{ $t('apiConfig.change') }}</a>
 		</div>
