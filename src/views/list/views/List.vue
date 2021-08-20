@@ -128,9 +128,11 @@
 		</card>
 
 		<!-- This router view is used to show the task popup while keeping the kanban board itself -->
-		<transition name="modal">
-			<router-view/>
-		</transition>
+		<router-view v-slot="{ Component }">
+			<transition name="modal">
+				<component :is="Component" />
+			</transition>
+		</router-view>
 	</div>
 </template>
 

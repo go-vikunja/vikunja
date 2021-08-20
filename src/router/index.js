@@ -1,5 +1,4 @@
-import Vue from 'vue'
-import Router from 'vue-router'
+import { createRouter, createWebHistory } from 'vue-router'
 
 import HomeComponent from '../views/Home'
 import NotFoundComponent from '../views/404'
@@ -59,10 +58,8 @@ const NewNamespaceComponent = () => import('../views/namespaces/NewNamespace')
 const EditTeamComponent = () => import('../views/teams/EditTeam')
 const NewTeamComponent = () =>  import('../views/teams/NewTeam')
 
-Vue.use(Router)
-
-export default new Router({
-	mode: 'history',
+const router = createRouter({
+	history: createWebHistory(),
 	scrollBehavior(to, from, savedPosition) {
 		// If the user is using their forward/backward keys to navigate, we want to restore the scroll view
 		if (savedPosition) {
@@ -71,13 +68,11 @@ export default new Router({
 
 		// Scroll to anchor should still work
 		if (to.hash) {
-			return {
-				selector: to.hash,
-			}
+			return {el: document.getElementById(to.hash.slice(1))}
 		}
 
 		// Otherwise just scroll to the top
-		return {x: 0, y: 0}
+		return {left: 0, top: 0}
 	},
 	routes: [
 		{
@@ -86,8 +81,14 @@ export default new Router({
 			component: HomeComponent,
 		},
 		{
-			path: '*',
-			name: '404',
+			path: '/:pathMatch(.*)*',
+			name: 'not-found',
+			component: NotFoundComponent,
+		},
+		// if you omit the last `*`, the `/` character in params will be encoded when resolving or pushing
+		{
+			path: '/:pathMatch(.*)',
+			name: 'bad-not-found',
 			component: NotFoundComponent,
 		},
 		{
@@ -506,3 +507,17 @@ export default new Router({
 		},
 	],
 })
+
+// bad example if using named routes:
+router.resolve({
+	name: 'bad-not-found',
+	params: { pathMatch: 'not/found' },
+}).href // '/not%2Ffound'
+
+// good example:
+router.resolve({
+	name: 'not-found',
+	params: { pathMatch: ['not', 'found'] },
+}).href // '/not/found'
+
+export default router

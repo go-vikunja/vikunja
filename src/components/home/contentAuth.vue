@@ -22,9 +22,11 @@
 
 				<router-view/>
 
-				<transition name="modal">
-					<router-view name="popup"/>
-				</transition>
+				<router-view name="popup" v-slot="{ Component }">
+					<transition name="modal">
+						<component :is="Component" />
+					</transition>
+				</router-view>
 
 				<a
 					class="keyboard-shortcuts-button"

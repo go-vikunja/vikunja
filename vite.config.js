@@ -106,26 +106,10 @@ module.exports = {
 		target: 'es2015',
 		rollupOptions: {
 			plugins: [
-				visualizer(),
+				visualizer({
+					filename: 'stats.html',
+				}),
 			],
-			output: {
-				manualChunks: {
-					'user-settings': [
-						'./src/views/user/PasswordReset',
-						'./src/views/user/RequestPasswordReset',
-						'./src/views/user/Settings',
-					],
-					'settings': [
-						'./src/views/list/NewList',
-						'./src/views/namespaces/NewNamespace',
-						'./src/views/teams/EditTeam',
-						'./src/views/teams/NewTeam',
-					],
-					'highlight': [
-						'highlight.js',
-					],
-				},
-			},
 		},
 	},
 }

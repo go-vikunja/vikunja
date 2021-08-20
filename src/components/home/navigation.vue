@@ -106,29 +106,36 @@
 								:class="{'is-loading': listUpdating[l.id]}"
 							>
 								<router-link
-									class="list-menu-link"
-									:class="{'router-link-exact-active': currentList.id === l.id}"
 									:to="{ name: 'list.index', params: { listId: l.id} }"
-									tag="span"
+									v-slot="{ href, navigate, isActive }"
+									custom
 								>
-									<span class="icon handle">
-										<icon icon="grip-lines"/>
-									</span>
-									<span
-										:style="{ backgroundColor: l.hexColor }"
-										class="color-bubble"
-										v-if="l.hexColor !== ''">
-									</span>
-									<span class="list-menu-title">
-										{{ getListTitle(l) }}
-									</span>
-									<span
-										:class="{'is-favorite': l.isFavorite}"
-										@click.stop="toggleFavoriteList(l)"
-										class="favorite">
-										<icon icon="star" v-if="l.isFavorite"/>
-										<icon :icon="['far', 'star']" v-else/>
-									</span>
+									<a
+										@click="navigate"
+										:href="href"
+										:active="isActive"
+										class="list-menu-link"
+										:class="{'router-link-exact-active': currentList.id === l.id}"
+									>
+										<span class="icon handle">
+											<icon icon="grip-lines"/>
+										</span>
+										<span
+											:style="{ backgroundColor: l.hexColor }"
+											class="color-bubble"
+											v-if="l.hexColor !== ''">
+										</span>
+										<span class="list-menu-title">
+											{{ getListTitle(l) }}
+										</span>
+										<span
+											:class="{'is-favorite': l.isFavorite}"
+											@click.stop="toggleFavoriteList(l)"
+											class="favorite">
+											<icon icon="star" v-if="l.isFavorite"/>
+											<icon :icon="['far', 'star']" v-else/>
+										</span>
+									</a>
 								</router-link>
 								<list-settings-dropdown :list="l" v-if="l.id > 0"/>
 								<span class="list-setting-spacer" v-else></span>

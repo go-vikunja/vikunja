@@ -53,9 +53,11 @@
 		/>
 
 		<!-- This router view is used to show the task popup while keeping the gantt chart itself -->
-		<transition name="modal">
-			<router-view/>
-		</transition>
+		<router-view v-slot="{ Component }">
+			<transition name="modal">
+				<component :is="Component" />
+			</transition>
+		</router-view>
 
 		</card>
 	</div>
