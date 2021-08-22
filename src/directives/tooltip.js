@@ -22,7 +22,7 @@ const calculateArrowTop = (top, tooltip) => {
 const createdTooltips = {}
 
 export default {
-	inserted: (el, {value, modifiers}) => {
+	mounted(el, {value, modifiers}) {
 		// First, we create the tooltip and arrow elements
 		const tooltip = document.createElement('div')
 		tooltip.style.position = 'fixed'
@@ -74,7 +74,7 @@ export default {
 			arrow: arrow,
 		}
 	},
-	unbind: el => {
+	unmounted(el) {
 		if (typeof createdTooltips[el] !== 'undefined') {
 			createdTooltips[el].tooltip.remove()
 			createdTooltips[el].arrow.remove()
