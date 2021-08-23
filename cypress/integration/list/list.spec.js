@@ -72,7 +72,7 @@ describe('Lists', () => {
 		cy.get('.namespace-container .menu.namespaces-lists .more-container .menu-list li:first-child .dropdown .dropdown-content')
 			.contains('Edit')
 			.click()
-		cy.get('#listtext')
+		cy.get('#title')
 			.type(`{selectall}${newListName}`)
 		cy.get('footer.modal-card-foot .button')
 			.contains('Save')

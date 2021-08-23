@@ -8,14 +8,14 @@
 		@tertary="$router.push({ name: 'list.list.settings.delete', params: { id: $route.params.listId } })"
 	>
 		<div class="field">
-			<label class="label" for="listtext">{{ $t('list.title') }}</label>
+			<label class="label" for="title">{{ $t('list.title') }}</label>
 			<div class="control">
 				<input
 					:class="{ 'disabled': listService.loading}"
 					:disabled="listService.loading"
 					@keyup.enter="save"
 					class="input"
-					id="listtext"
+					id="title"
 					:placeholder="$t('list.edit.titlePlaceholder')"
 					type="text"
 					v-focus
@@ -25,7 +25,7 @@
 		<div class="field">
 			<label
 				class="label"
-				for="listtext"
+				for="identifier"
 				v-tooltip="$t('list.edit.identifierTooltip')">
 				{{ $t('list.edit.identifier') }}
 			</label>
@@ -35,7 +35,7 @@
 					:disabled="listService.loading"
 					@keyup.enter="save"
 					class="input"
-					id="listtext"
+					id="identifier"
 					:placeholder="$t('list.edit.identifierPlaceholder')"
 					type="text"
 					v-focus
