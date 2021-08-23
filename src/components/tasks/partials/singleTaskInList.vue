@@ -140,6 +140,7 @@ export default {
 			default: true,
 		},
 	},
+	emits: ['task-updated'],
 	watch: {
 		theTask(newVal) {
 			this.task = newVal

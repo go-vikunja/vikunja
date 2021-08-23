@@ -55,10 +55,11 @@ export default {
 		disabled: {
 			default: false,
 		},
-		value: {
+		modelValue: {
 			type: Array,
 		},
 	},
+	emits: ['update:modelValue'],
 	data() {
 		return {
 			newAssignee: new UserModel(),
@@ -69,7 +70,7 @@ export default {
 		}
 	},
 	watch: {
-		value: {
+		modelValue: {
 			handler(value) {
 				this.assignees = value
 			},
@@ -80,7 +81,7 @@ export default {
 		addAssignee(user) {
 			this.$store.dispatch('tasks/addAssignee', {user: user, taskId: this.taskId})
 				.then(() => {
-					this.$emit('input', this.assignees)
+					this.$emit('update:modelValue', this.assignees)
 					this.$message.success({message: this.$t('task.assignee.assignSuccess')})
 				})
 				.catch(e => {

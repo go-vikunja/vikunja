@@ -30,7 +30,7 @@ export default {
 		}
 	},
 	props: {
-		value: {
+		modelValue: {
 			required: false,
 		},
 		disabled: {
@@ -39,10 +39,11 @@ export default {
 			default: false,
 		},
 	},
+	emits: ['update:modelValue', 'change'],
 	watch: {
-		value: {
-			handler(value) {
-				this.checked = value
+		modelValue: {
+			handler(modelValue) {
+				this.checked = modelValue
 
 			},
 			immediate: true,
@@ -51,7 +52,7 @@ export default {
 	methods: {
 		updateData(checked) {
 			this.checked = checked
-			this.$emit('input', checked)
+			this.$emit('update:modelValue', checked)
 			this.$emit('change', checked)
 		},
 	},

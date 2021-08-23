@@ -5,7 +5,7 @@
 		<vue-easymde
 			:configs="config"
 			@change="bubble"
-			@input="handleInput"
+			@update:modelValue="handleInput"
 			class="content"
 			v-if="isEditActive"
 			v-model="text"/>
@@ -61,7 +61,7 @@ export default {
 		VueEasymde,
 	},
 	props: {
-		value: {
+		modelValue: {
 			type: String,
 			default: '',
 		},
@@ -101,6 +101,7 @@ export default {
 			default: false,
 		},
 	},
+	emits: ['update:modelValue', 'change'],
 	computed: {
 		showPreviewText() {
 			return this.isPreviewActive && this.text === '' && this.emptyText !== ''
@@ -249,21 +250,21 @@ export default {
 		}
 	},
 	watch: {
-		value(newVal) {
-			this.text = newVal
+		modelValue(modelValue) {
+			this.text = modelValue
 			this.$nextTick(this.renderPreview)
 		},
 		text(newVal, oldVal) {
 			// Only bubble the new value if it actually changed, but not if the component just got mounted and the text changed from the outside.
-			if (oldVal === '' && this.text === this.value) {
+			if (oldVal === '' && this.text === this.modelValue) {
 				return
 			}
 			this.bubble()
 		},
 	},
 	mounted() {
-		if (this.value !== '') {
-			this.text = this.value
+		if (this.modelValue !== '') {
+			this.text = this.modelValue
 		}
 
 		if (this.previewIsDefault && this.hasPreview) {
@@ -296,7 +297,7 @@ export default {
 			}
 
 			this.changeTimeout = setTimeout(() => {
-				this.$emit('input', this.text)
+				this.$emit('update:modelValue',this.text)
 				this.$emit('change', this.text)
 			}, timeout)
 		},

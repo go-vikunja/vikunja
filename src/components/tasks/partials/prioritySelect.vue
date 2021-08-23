@@ -23,7 +23,7 @@ export default {
 		}
 	},
 	props: {
-		value: {
+		modelValue: {
 			default: 0,
 			type: Number,
 		},
@@ -31,9 +31,10 @@ export default {
 			default: false,
 		},
 	},
+	emits: ['update:modelValue', 'change'],
 	watch: {
 		// Set the priority to the :value every time it changes from the outside
-		value: {
+		modelValue: {
 			handler(value) {
 				this.priority = value
 			},
@@ -42,7 +43,7 @@ export default {
 	},
 	methods: {
 		updateData() {
-			this.$emit('input', this.priority)
+			this.$emit('update:modelValue', this.priority)
 			this.$emit('change')
 		},
 	},

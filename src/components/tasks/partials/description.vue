@@ -57,7 +57,7 @@ export default {
 		loading: LOADING,
 	}),
 	props: {
-		value: {
+		modelValue: {
 			required: true,
 		},
 		attachmentUpload: {
@@ -67,8 +67,9 @@ export default {
 			required: true,
 		},
 	},
+	emits: ['update:modelValue'],
 	watch: {
-		value: {
+		modelValue: {
 			handler(value) {
 				this.task = value
 			},
@@ -82,7 +83,7 @@ export default {
 			this.$store.dispatch('tasks/update', this.task)
 				.then(t => {
 					this.task = t
-					this.$emit('input', t)
+					this.$emit('update:modelValue', t)
 					this.saved = true
 					setTimeout(() => {
 						this.saved = false

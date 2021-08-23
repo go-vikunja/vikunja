@@ -49,6 +49,7 @@ const cleanupTitle = title => {
 
 export default {
 	name: 'add-task',
+	emits: ['taskAdded'],
 	data() {
 		return {
 			newTaskTitle: '',

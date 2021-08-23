@@ -32,15 +32,16 @@ export default {
 		}
 	},
 	props: {
-		value: {
+		modelValue: {
 			required: false,
 		},
 	},
+	emits: ['update:modelValue', 'selected'],
 	components: {
 		Multiselect,
 	},
 	watch: {
-		value: {
+		modelValue: {
 			handler(value) {
 				this.list = value
 			},
@@ -68,7 +69,7 @@ export default {
 		select(list) {
 			this.list = list
 			this.$emit('selected', list)
-			this.$emit('input', list)
+			this.$emit('update:modelValue', list)
 		},
 		namespace(namespaceId) {
 			const namespace = this.$store.getters['namespaces/getNamespaceById'](namespaceId)

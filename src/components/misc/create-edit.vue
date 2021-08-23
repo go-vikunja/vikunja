@@ -77,6 +77,7 @@ export default {
 			default: false,
 		},
 	},
+	emits: ['create', 'primary', 'tertary'],
 	methods: {
 		primary() {
 			this.$emit('create')

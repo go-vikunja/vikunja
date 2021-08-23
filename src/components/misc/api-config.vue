@@ -60,6 +60,7 @@ export default {
 			successMsg: '',
 		}
 	},
+	emits: ['foundApi'],
 	created() {
 		if (this.apiUrl === '') {
 			this.configureApi = true

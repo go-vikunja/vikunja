@@ -84,8 +84,8 @@
 					--> 
 					<draggable
 						v-bind="dragOptions"
-						:value="activeLists[nk]"
-						@input="(lists) => updateActiveLists(n, lists)"
+						:modelValue="activeLists[nk]"
+						@update:modelValue="(lists) => updateActiveLists(n, lists)"
 						:group="`namespace-${n.id}-lists`"
 						@start="() => drag = true"
 						@end="e => saveListPosition(e, nk)"

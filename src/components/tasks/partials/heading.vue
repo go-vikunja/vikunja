@@ -39,14 +39,14 @@ export default {
 	computed: {
 		...mapState(['loading']),
 		task() {
-			return this.value
+			return this.modelValue
 		},
 		textIdentifier() {
 			return this.task?.getTextIdentifier() || ''
 		},
 	},
 	props: {
-		value: {
+		modelValue: {
 			required: true,
 		},
 		canWrite: {
@@ -54,6 +54,9 @@ export default {
 			default: false,
 		},
 	},
+
+	emits: ['update:modelValue'],
+
 	methods: {
 		save(title) {
 			// We only want to save if the title was actually changed.
@@ -73,7 +76,7 @@ export default {
 
 			this.$store.dispatch('tasks/update', newTask)
 				.then((task) => {
-					this.$emit('input', task)
+					this.$emit('update:modelValue', task)
 					this.showSavedMessage = true
 					setTimeout(() => {
 						this.showSavedMessage = false

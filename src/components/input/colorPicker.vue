@@ -53,7 +53,7 @@ export default {
 		}
 	},
 	props: {
-		value: {
+		modelValue: {
 			required: true,
 		},
 		menuPosition: {
@@ -61,10 +61,11 @@ export default {
 			default: 'top',
 		},
 	},
+	emits: ['update:modelValue', 'change'],
 	watch: {
-		value: {
-			handler(value) {
-				this.color = value
+		modelValue: {
+			handler(modelValue) {
+				this.color = modelValue
 			},
 			immediate: true,
 		},
@@ -89,7 +90,7 @@ export default {
 			}
 
 			this.lastChangeTimeout = setTimeout(() => {
-				this.$emit('input', this.color)
+				this.$emit('update:modelValue', this.color)
 				this.$emit('change')
 			}, 500)
 		},

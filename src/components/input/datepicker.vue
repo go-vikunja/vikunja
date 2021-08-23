@@ -136,7 +136,7 @@ export default {
 		flatPickr,
 	},
 	props: {
-		value: {
+		modelValue: {
 			validator: prop => prop instanceof Date || prop === null || typeof prop === 'string',
 		},
 		chooseDateLabel: {
@@ -150,6 +150,7 @@ export default {
 			default: false,
 		},
 	},
+	emits: ['update:modelValue', 'change', 'close', 'close-on-change'],
 	mounted() {
 		document.addEventListener('click', this.hideDatePopup)
 	},
@@ -157,7 +158,7 @@ export default {
 		document.removeEventListener('click', this.hideDatePopup)
 	},
 	watch: {
-		value: {
+		modelValue: {
 			handler: 'setDateValue',
 			immediate: true,
 		},
@@ -191,7 +192,7 @@ export default {
 		},
 		updateData() {
 			this.changed = true
-			this.$emit('input', this.date)
+			this.$emit('update:modelValue', this.date)
 			this.$emit('change', this.date)
 		},
 		toggleDatePopup() {

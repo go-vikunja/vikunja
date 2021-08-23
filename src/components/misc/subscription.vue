@@ -49,6 +49,7 @@ export default {
 			default: true,
 		},
 	},
+	emits: ['change'],
 	computed: {
 		tooltipText() {
 			if (this.disabled) {

@@ -15,6 +15,7 @@ import Filters from '../../../components/list/partials/filters'
 
 export default {
 	name: 'filter-popup',
+	emits: ['update:modelValue', 'change'],
 	data() {
 		return {
 			params: null,
@@ -31,7 +32,7 @@ export default {
 		document.removeEventListener('click', this.hidePopup)
 	},
 	watch: {
-		value: {
+		modelValue: {
 			handler(value) {
 				this.params = value
 			},
@@ -42,7 +43,7 @@ export default {
 		},
 	},
 	props: {
-		value: {
+		modelValue: {
 			required: true,
 		},
 		visible: {
@@ -53,7 +54,7 @@ export default {
 	methods: {
 		change() {
 			this.$emit('change', this.params)
-			this.$emit('input', this.params)
+			this.$emit('update:modelValue', this.params)
 		},
 		hidePopup(e) {
 			if (this.visibleInternal) {

@@ -254,12 +254,13 @@ export default {
 		this.filters.requireAllFilters = this.params.filter_concat === 'and'
 	},
 	props: {
-		value: {
+		modelValue: {
 			required: true,
 		},
 	},
+	emits: ['update:modelValue', 'change'],
 	watch: {
-		value: {
+		modelValue: {
 			handler(value) {
 				this.params = value
 				this.prepareFilters()
@@ -293,7 +294,7 @@ export default {
 	},
 	methods: {
 		change() {
-			this.$emit('input', this.params)
+			this.$emit('update:modelValue', this.params)
 			this.$emit('change', this.params)
 		},
 		prepareFilters() {

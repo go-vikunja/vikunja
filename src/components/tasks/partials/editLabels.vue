@@ -49,7 +49,7 @@ import {LOADING, LOADING_MODULE} from '@/store/mutation-types'
 export default {
 	name: 'edit-labels',
 	props: {
-		value: {
+		modelValue: {
 			default: () => [],
 			type: Array,
 		},
@@ -62,6 +62,7 @@ export default {
 			default: false,
 		},
 	},
+	emits: ['update:modelValue', 'change'],
 	data() {
 		return {
 			labelTaskService: new LabelTaskService(),
@@ -74,7 +75,7 @@ export default {
 		Multiselect,
 	},
 	watch: {
-		value: {
+		modelValue: {
 			handler(value) {
 				this.labels = value
 			},
@@ -101,7 +102,7 @@ export default {
 		},
 		addLabel(label, showNotification = true) {
 			const bubble = () => {
-				this.$emit('input', this.labels)
+				this.$emit('update:modelValue', this.labels)
 				this.$emit('change', this.labels)
 			}
 			
@@ -128,7 +129,7 @@ export default {
 						this.labels.splice(l, 1)
 					}
 				}
-				this.$emit('input', this.labels)
+				this.$emit('update:modelValue', this.labels)
 				this.$emit('change', this.labels)
 			}
 

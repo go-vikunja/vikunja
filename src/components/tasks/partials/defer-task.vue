@@ -57,12 +57,14 @@ export default {
 		flatPickr,
 	},
 	props: {
-		value: {
+		modelValue: {
 			required: true,
 		},
 	},
+	emits: ['update:modelValue'],
+
 	watch: {
-		value: {
+		modelValue: {
 			handler(value) {
 				this.task = value
 				this.dueDate = value.dueDate
@@ -125,7 +127,7 @@ export default {
 				.then((r) => {
 					this.lastValue = r.dueDate
 					this.task = r
-					this.$emit('input', r)
+					this.$emit('update:modelValue', r)
 				})
 				.catch((e) => {
 					this.$message.error(e)

@@ -37,6 +37,7 @@ export default {
 			default: 'ellipsis-h',
 		},
 	},
+	emits: ['close'],
 	methods: {
 		hide(e) {
 			if (this.open) {
