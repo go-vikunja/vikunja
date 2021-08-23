@@ -203,9 +203,9 @@ services:
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     environment:
       MYSQL_ROOT_PASSWORD: supersecret
-	  MYSQL_USER: vikunja
-	  MYSQL_PASSWORD: secret
-	  MYSQL_DATABASE: vikunja
+      MYSQL_USER: vikunja
+      MYSQL_PASSWORD: secret
+      MYSQL_DATABASE: vikunja
     volumes:
       - ./db:/var/lib/mysql
     restart: unless-stopped
@@ -260,10 +260,10 @@ services:
     image: mariadb:10
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     environment:
-      MYSQL_ROOT_PASSWORD: supersecret
-	  MYSQL_USER: vikunja
-	  MYSQL_PASSWORD: secret
-	  MYSQL_DATABASE: vikunja
+      MYSQL_ROOT_PASSWORD: supersecret 
+      MYSQL_USER: vikunja
+      MYSQL_PASSWORD: secret
+      MYSQL_DATABASE: vikunja
     volumes:
       - ./db:/var/lib/mysql
     restart: unless-stopped

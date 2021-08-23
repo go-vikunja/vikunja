@@ -44,3 +44,7 @@ This document provides an overview and instructions for the different methods.
 
 A third-party Helm Chart is available from the k8s-at-home project [here](https://github.com/k8s-at-home/charts/tree/master/charts/stable/vikunja).
 
+## Other installation resources
+
+* [Docker Compose is MUCH Easier Than you Think - Let's Install Vikunja](https://www.youtube.com/watch?v=fGlz2PkXjuo) (Youtube)
+* [Setup Vikunja using Docker Compose - Homelab Wiki](https://thehomelab.wiki/books/docker/page/setup-vikunja-using-docker-compose)
