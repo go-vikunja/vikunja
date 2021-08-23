@@ -69,6 +69,8 @@
 </template>
 
 <script>
+import AsyncEditor from '@/components/input/AsyncEditor'
+
 import ListService from '../../services/list'
 import TaskService from '../../services/task'
 import TaskModel from '../../models/task'
@@ -76,8 +78,6 @@ import priorities from '../../models/constants/priorities'
 import EditLabels from './partials/editLabels'
 import Reminders from './partials/reminders'
 import ColorPicker from '../input/colorPicker'
-import LoadingComponent from '../misc/loading'
-import ErrorComponent from '../misc/error'
 
 export default {
 	name: 'edit-task',
@@ -99,12 +99,7 @@ export default {
 		ColorPicker,
 		Reminders,
 		EditLabels,
-		editor: () => ({
-			component: import('../../components/input/editor'),
-			loading: LoadingComponent,
-			error: ErrorComponent,
-			timeout: 60000,
-		}),
+		editor: AsyncEditor,
 	},
 	props: {
 		task: {

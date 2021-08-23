@@ -57,12 +57,12 @@
 </template>
 
 <script>
+import AsyncEditor from '@/components/input/AsyncEditor'
+
 import NamespaceService from '@/services/namespace'
 import NamespaceModel from '@/models/namespace'
 import Fancycheckbox from '@/components/input/fancycheckbox.vue'
 import ColorPicker from '@/components/input/colorPicker.vue'
-import LoadingComponent from '@/components/misc/loading.vue'
-import ErrorComponent from '@/components/misc/error.vue'
 import CreateEdit from '@/components/misc/create-edit.vue'
 
 export default {
@@ -79,12 +79,7 @@ export default {
 		CreateEdit,
 		ColorPicker,
 		Fancycheckbox,
-		editor: () => ({
-			component: import('@/components/input/editor.vue'),
-			loading: LoadingComponent,
-			error: ErrorComponent,
-			timeout: 60000,
-		}),
+		editor: AsyncEditor,
 	},
 	beforeMount() {
 		this.namespace.id = this.$route.params.id

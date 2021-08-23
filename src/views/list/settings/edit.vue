@@ -66,11 +66,11 @@
 </template>
 
 <script>
+import AsyncEditor from '@/components/input/AsyncEditor'
+
 import ListModel from '@/models/list'
 import ListService from '@/services/list'
 import ColorPicker from '@/components/input/colorPicker.vue'
-import LoadingComponent from '@/components/misc/loading.vue'
-import ErrorComponent from '@/components/misc/error.vue'
 import ListDuplicateService from '@/services/listDuplicateService'
 import {CURRENT_LIST} from '@/store/mutation-types'
 import CreateEdit from '@/components/misc/create-edit.vue'
@@ -87,12 +87,7 @@ export default {
 	components: {
 		CreateEdit,
 		ColorPicker,
-		editor: () => ({
-			component: import('@/components/input/editor.vue'),
-			loading: LoadingComponent,
-			error: ErrorComponent,
-			timeout: 60000,
-		}),
+		editor: AsyncEditor,
 	},
 	watch: {
 		'$route.params.listId': {

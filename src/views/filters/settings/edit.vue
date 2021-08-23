@@ -52,8 +52,8 @@
 </template>
 
 <script>
-import ErrorComponent from '@/components/misc/error.vue'
-import LoadingComponent from '@/components/misc/loading.vue'
+import AsyncEditor from '@/components/input/AsyncEditor'
+
 import CreateEdit from '@/components/misc/create-edit.vue'
 
 import SavedFilterModel from '@/models/savedFilter'
@@ -84,12 +84,7 @@ export default {
 	components: {
 		CreateEdit,
 		Filters,
-		editor: () => ({
-			component: import('@/components/input/editor.vue'),
-			loading: LoadingComponent,
-			error: ErrorComponent,
-			timeout: 60000,
-		}),
+		editor: AsyncEditor,
 	},
 	watch: {
 		// call again the method if the route changes

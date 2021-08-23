@@ -30,8 +30,7 @@
 </template>
 
 <script>
-import LoadingComponent from '@/components/misc/loading.vue'
-import ErrorComponent from '@/components/misc/error.vue'
+import AsyncEditor from '@/components/input/AsyncEditor'
 
 import {LOADING} from '@/store/mutation-types'
 import {mapState} from 'vuex'
@@ -39,12 +38,7 @@ import {mapState} from 'vuex'
 export default {
 	name: 'description',
 	components: {
-		editor: () => ({
-			component: import('@/components/input/editor.vue'),
-			loading: LoadingComponent,
-			error: ErrorComponent,
-			timeout: 60000,
-		}),
+		editor: AsyncEditor,
 	},
 	data() {
 		return {

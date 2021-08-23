@@ -100,21 +100,16 @@
 import {mapState} from 'vuex'
 
 import LabelModel from '../../models/label'
-import ColorPicker from '../../components/input/colorPicker'
-import LoadingComponent from '../../components/misc/loading'
-import ErrorComponent from '../../components/misc/error'
 import {LOADING, LOADING_MODULE} from '@/store/mutation-types'
+
+import AsyncEditor from '@/components/input/AsyncEditor'
+import ColorPicker from '@/components/input/colorPicker'
 
 export default {
 	name: 'ListLabels',
 	components: {
 		ColorPicker,
-		editor: () => ({
-			component: import('../../components/input/editor'),
-			loading: LoadingComponent,
-			error: ErrorComponent,
-			timeout: 60000,
-		}),
+		editor: AsyncEditor,
 	},
 	data() {
 		return {

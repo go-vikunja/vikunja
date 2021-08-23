@@ -161,6 +161,7 @@
 </template>
 
 <script>
+import AsyncEditor from '@/components/input/AsyncEditor'
 import {mapState} from 'vuex'
 
 import TeamService from '../../services/team'
@@ -170,9 +171,6 @@ import TeamMemberModel from '../../models/teamMember'
 import UserModel from '../../models/user'
 import UserService from '../../services/user'
 import Rights from '../../models/constants/rights.json'
-
-import LoadingComponent from '../../components/misc/loading'
-import ErrorComponent from '../../components/misc/error'
 
 import Multiselect from '@/components/input/multiselect.vue'
 
@@ -199,12 +197,7 @@ export default {
 	},
 	components: {
 		Multiselect,
-		editor: () => ({
-			component: import('../../components/input/editor'),
-			loading: LoadingComponent,
-			error: ErrorComponent,
-			timeout: 60000,
-		}),
+		editor: AsyncEditor,
 	},
 	watch: {
 		// call again the method if the route changes

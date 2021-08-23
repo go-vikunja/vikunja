@@ -152,22 +152,17 @@
 </template>
 
 <script>
+import AsyncEditor from '@/components/input/AsyncEditor'
+
 import TaskCommentService from '../../../services/taskComment'
 import TaskCommentModel from '../../../models/taskComment'
-import LoadingComponent from '../../misc/loading'
-import ErrorComponent from '../../misc/error'
 import {uploadFile} from '@/helpers/attachments'
 import {mapState} from 'vuex'
 
 export default {
 	name: 'comments',
 	components: {
-		editor: () => ({
-			component: import('../../input/editor'),
-			loading: LoadingComponent,
-			error: ErrorComponent,
-			timeout: 60000,
-		}),
+		editor: AsyncEditor,
 	},
 	props: {
 		taskId: {
