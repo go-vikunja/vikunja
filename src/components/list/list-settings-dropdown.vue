@@ -101,7 +101,7 @@ export default {
 	},
 	computed: {
 		backgroundsEnabled() {
-			return this.$store.state.config.enabledBackgroundProviders.length > 0
+			return this.$store.state.config.enabledBackgroundProviders !== null && this.$store.state.config.enabledBackgroundProviders.length > 0
 		},
 		listRoutePrefix() {
 			let name = 'list'
