@@ -6,10 +6,7 @@ $font-files-path: '/fonts/';
   font-style: normal;
   font-weight: 300;
   font-display: swap;
-  src: local('Quicksand Light'), local('Quicksand-Light'),
-  url($font-files-path + 'quicksand-v7-latin-300.woff2') format('woff2'), /* Super Modern Browsers */
-  url($font-files-path + 'quicksand-v7-latin-300.woff') format('woff'), /* Modern Browsers */
-  url($font-files-path + 'quicksand-v7-latin-300.ttf') format('truetype'); /* Safari, Android, iOS */
+  src: url($font-files-path + 'quicksand-v7-latin-300.woff2') format('woff2');
 }
 
 /* quicksand-regular - latin */
@@ -18,10 +15,8 @@ $font-files-path: '/fonts/';
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: local('Quicksand Regular'), local('Quicksand-Regular'),
-  url($font-files-path + 'quicksand-v7-latin-regular.woff2') format('woff2'), /* Super Modern Browsers */
-  url($font-files-path + 'quicksand-v7-latin-regular.woff') format('woff'), /* Modern Browsers */
-  url($font-files-path + 'quicksand-v7-latin-regular.ttf') format('truetype'); /* Safari, Android, iOS */
+  src: url($font-files-path + 'quicksand-v7-latin-regular.woff2') format('woff2');
+  
 }
 
 /* quicksand-500 - latin */
@@ -30,10 +25,7 @@ $font-files-path: '/fonts/';
   font-style: normal;
   font-weight: 500;
   font-display: swap;
-  src: local('Quicksand Medium'), local('Quicksand-Medium'),
-  url($font-files-path + 'quicksand-v7-latin-500.woff2') format('woff2'), /* Super Modern Browsers */
-  url($font-files-path + 'quicksand-v7-latin-500.woff') format('woff'), /* Modern Browsers */
-  url($font-files-path + 'quicksand-v7-latin-500.ttf') format('truetype'); /* Safari, Android, iOS */
+  src: url($font-files-path + 'quicksand-v7-latin-500.woff2') format('woff2');
 }
 
 /* quicksand-700 - latin */
@@ -42,10 +34,7 @@ $font-files-path: '/fonts/';
   font-style: normal;
   font-weight: 700;
   font-display: swap;
-  src: local('Quicksand Bold'), local('Quicksand-Bold'),
-  url($font-files-path + 'quicksand-v7-latin-700.woff2') format('woff2'), /* Super Modern Browsers */
-  url($font-files-path + 'quicksand-v7-latin-700.woff') format('woff'), /* Modern Browsers */
-  url($font-files-path + 'quicksand-v7-latin-700.ttf') format('truetype'); /* Safari, Android, iOS */
+  src: url($font-files-path + 'quicksand-v7-latin-700.woff2') format('woff2');
 }
 
 /* open-sans-regular - latin */
@@ -54,10 +43,7 @@ $font-files-path: '/fonts/';
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: local('Open Sans Regular'), local('OpenSans-Regular'),
-  url($font-files-path + 'open-sans-v15-latin-regular.woff2') format('woff2'), /* Super Modern Browsers */
-  url($font-files-path + 'open-sans-v15-latin-regular.woff') format('woff'), /* Modern Browsers */
-  url($font-files-path + 'open-sans-v15-latin-regular.ttf') format('truetype'); /* Safari, Android, iOS */
+  src: url($font-files-path + 'open-sans-v15-latin-regular.woff2') format('woff2');
 }
 
 /* open-sans-italic - latin */
@@ -66,10 +52,7 @@ $font-files-path: '/fonts/';
   font-style: italic;
   font-weight: 400;
   font-display: swap;
-  src: local('Open Sans Italic'), local('OpenSans-Italic'),
-  url($font-files-path + 'open-sans-v15-latin-italic.woff2') format('woff2'), /* Super Modern Browsers */
-  url($font-files-path + 'open-sans-v15-latin-italic.woff') format('woff'), /* Modern Browsers */
-  url($font-files-path + 'open-sans-v15-latin-italic.ttf') format('truetype'); /* Safari, Android, iOS */
+  src: url($font-files-path + 'open-sans-v15-latin-italic.woff2') format('woff2');
 }
 
 /* open-sans-700 - latin */
@@ -78,10 +61,7 @@ $font-files-path: '/fonts/';
   font-style: normal;
   font-weight: 700;
   font-display: swap;
-  src: local('Open Sans Bold'), local('OpenSans-Bold'),
-  url($font-files-path + 'open-sans-v15-latin-700.woff2') format('woff2'), /* Super Modern Browsers */
-  url($font-files-path + 'open-sans-v15-latin-700.woff') format('woff'), /* Modern Browsers */
-  url($font-files-path + 'open-sans-v15-latin-700.ttf') format('truetype'); /* Safari, Android, iOS */
+  src: url($font-files-path + 'open-sans-v15-latin-700.woff2') format('woff2');
 }
 
 /* open-sans-700italic - latin */
@@ -90,8 +70,5 @@ $font-files-path: '/fonts/';
   font-style: italic;
   font-weight: 700;
   font-display: swap;
-  src: local('Open Sans Bold Italic'), local('OpenSans-BoldItalic'),
-  url($font-files-path + 'open-sans-v15-latin-700italic.woff2') format('woff2'), /* Super Modern Browsers */
-  url($font-files-path + 'open-sans-v15-latin-700italic.woff') format('woff'), /* Modern Browsers */
-  url($font-files-path + 'open-sans-v15-latin-700italic.ttf') format('truetype'); /* Safari, Android, iOS */
+  src: url($font-files-path + 'open-sans-v15-latin-700italic.woff2') format('woff2');
 }
