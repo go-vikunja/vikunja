@@ -24,6 +24,7 @@ import ListService from '../services/list'
 Vue.use(Vuex)
 
 export const store = new Vuex.Store({
+	strict: import.meta.env.DEV,
 	modules: {
 		config,
 		auth,

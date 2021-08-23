@@ -13,13 +13,13 @@ export default {
 			state.namespaces = namespaces
 		},
 		setNamespaceById(state, namespace) {
-			for (const n in state.namespaces) {
-				if (state.namespaces[n].id === namespace.id) {
-					namespace.lists = state.namespaces[n].lists
-					Vue.set(state.namespaces, n, namespace)
-					return
-				}
+			const namespaceIndex = state.namespaces.findIndex(n => n.id === namespace.id)
+			
+			if (namespaceIndex === -1) {
+				return
 			}
+			
+			Vue.set(state.namespaces, namespaceIndex, namespace)
 		},
 		setListInNamespaceById(state, list) {
 			for (const n in state.namespaces) {

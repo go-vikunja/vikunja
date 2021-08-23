@@ -78,8 +78,13 @@
 					class="more-container"
 					v-if="typeof listsVisible[n.id] !== 'undefined' ? listsVisible[n.id] : true"
 				>
+					<!--
+						NOTE: a v-model / computed setter is not possible, since the updateActiveLists function
+						triggered by the change needs to have access to the current namespace
+					--> 
 					<draggable
-						v-model="n.lists"
+						:value="activeLists[nk]"
+						@input="(lists) => updateActiveLists(n, lists)"
 						:group="`namespace-${n.id}-lists`"
 						@start="() => drag = true"
 						@end="e => saveListPosition(e, nk)"
@@ -94,11 +99,9 @@
 							tag="ul"
 							class="menu-list can-be-hidden"
 						>
-							<!-- eslint-disable vue/no-use-v-if-with-v-for,vue/no-confusing-v-for-v-if -->
 							<li
-								v-for="l in n.lists"
+								v-for="l in activeLists[nk]"
 								:key="l.id"
-								v-if="!l.isArchived"
 								class="loader-container"
 								:class="{'is-loading': listUpdating[l.id]}"
 							>
@@ -167,13 +170,18 @@ export default {
 		NamespaceSettingsDropdown,
 		draggable,
 	},
-	computed: mapState({
-		namespaces: state => state.namespaces.namespaces.filter(n => !n.isArchived),
-		currentList: CURRENT_LIST,
-		background: 'background',
-		menuActive: MENU_ACTIVE,
-		loading: state => state[LOADING] && state[LOADING_MODULE] === 'namespaces',
-	}),
+	computed: {
+		...mapState({
+			namespaces: state => state.namespaces.namespaces.filter(n => !n.isArchived),
+			currentList: CURRENT_LIST,
+			background: 'background',
+			menuActive: MENU_ACTIVE,
+			loading: state => state[LOADING] && state[LOADING_MODULE] === 'namespaces',
+		}),
+		activeLists() {
+			return this.namespaces.map(({lists}) => lists.filter(item => !item.isArchived))
+		},
+	},
 	beforeCreate() {
 		this.$store.dispatch('namespaces/loadNamespaces')
 			.then(namespaces => {
@@ -211,16 +219,38 @@ export default {
 		toggleLists(namespaceId) {
 			this.$set(this.listsVisible, namespaceId, !this.listsVisible[namespaceId] ?? false)
 		},
+		updateActiveLists(namespace, activeLists) {
+			// this is a bit hacky: since we do have to filter out the archived items from the list
+			// for vue draggable updating it is not as simple as replacing it.
+			// instead we iterate over the non archived items in the old list and replace them with the ones in their new order
+			const lists = namespace.lists.map((item) => {
+				if (item.isArchived) {
+					return item
+				}
+				return activeLists.shift()
+			})
+
+			const newNamespace = {
+				...namespace,
+				lists,
+			}
+
+			this.$store.commit('namespaces/setNamespaceById', newNamespace)
+		},
 		saveListPosition(e, namespaceIndex) {
-			const listsFiltered = this.namespaces[namespaceIndex].lists.filter(l => !l.isArchived)
-			const list = listsFiltered[e.newIndex]
-			const listBefore = listsFiltered[e.newIndex - 1] ?? null
-			const listAfter = listsFiltered[e.newIndex + 1] ?? null
+			const listsActive = this.activeLists[namespaceIndex]
+			const list = listsActive[e.newIndex]
+			const listBefore = listsActive[e.newIndex - 1] ?? null
+			const listAfter = listsActive[e.newIndex + 1] ?? null
 			this.$set(this.listUpdating, list.id, true)
 
-			list.position = calculateItemPosition(listBefore !== null ? listBefore.position : null, listAfter !== null ? listAfter.position : null)
+			const position = calculateItemPosition(listBefore !== null ? listBefore.position : null, listAfter !== null ? listAfter.position : null)
 
-			this.$store.dispatch('lists/updateList', list)
+			// create a copy of the list in order to not violate vuex mutations
+			this.$store.dispatch('lists/updateList', {
+				...list,
+				position,
+			})
 				.catch(e => {
 					this.error(e)
 				})

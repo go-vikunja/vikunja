@@ -39,6 +39,11 @@ export default class ListService extends AbstractService {
 		return list
 	}
 
+	update(model) {
+		const newModel = { ... model }
+		return super.update(newModel)
+	}
+
 	background(list) {
 		if (list.background === null) {
 			return Promise.resolve('')

@@ -38,9 +38,10 @@ export default {
 	},
 	actions: {
 		toggleListFavorite(ctx, list) {
-			list.isFavorite = !list.isFavorite
-
-			return ctx.dispatch('updateList', list)
+			return ctx.dispatch('updateList', {
+				...list,
+				isFavorite: !list.isFavorite,
+			})
 		},
 		createList(ctx, list) {
 			const cancel = setLoading(ctx, 'lists')
@@ -61,24 +62,31 @@ export default {
 			const listService = new ListService()
 
 			return listService.update(list)
-				.then(r => {
-					ctx.commit('setList', r)
-					ctx.commit('namespaces/setListInNamespaceById', r, {root: true})
-					if (r.isFavorite) {
-						r.namespaceId = FavoriteListsNamespace
-						ctx.commit('namespaces/addListToNamespace', r, {root: true})
+				.then(() => {
+					ctx.commit('setList', list)
+					ctx.commit('namespaces/setListInNamespaceById', list, {root: true})
+
+					// the returned list from listService.update is the same!
+					// in order to not validate vuex mutations we have to create a new copy
+					const newList = {
+						...list,
+						namespaceId: FavoriteListsNamespace,
+					}
+					if (list.isFavorite) {
+						ctx.commit('namespaces/addListToNamespace', newList, {root: true})
 					} else {
-						r.namespaceId = FavoriteListsNamespace
-						ctx.commit('namespaces/removeListFromNamespaceById', r, {root: true})
+						ctx.commit('namespaces/removeListFromNamespaceById', newList, {root: true})
 					}
 					ctx.dispatch('namespaces/loadNamespacesIfFavoritesDontExist', null, {root: true})
 					ctx.dispatch('namespaces/removeFavoritesNamespaceIfEmpty', null, {root: true})
-					return Promise.resolve(r)
+					return Promise.resolve(newList)
 				})
 				.catch(e => {
 					// Reset the list state to the initial one to avoid confusion for the user
-					list.isFavorite = !list.isFavorite
-					ctx.commit('setList', list)
+					ctx.commit('setList', {
+						...list,
+						isFavorite: !list.isFavorite,
+					})
 					return Promise.reject(e)
 				})
 				.finally(() => cancel())
