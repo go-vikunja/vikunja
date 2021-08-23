@@ -3,7 +3,16 @@ const {VitePWA} = require('vite-plugin-pwa')
 const path = require('path')
 const {visualizer} = require('rollup-plugin-visualizer')
 
+const pathSrc = path.resolve(__dirname, './src')
+
 module.exports = {
+	css: {
+		preprocessorOptions: {
+			scss: {
+				additionalData: `@import "${pathSrc}/styles/variables/_all.scss";`,
+			},
+		},
+	},
 	plugins: [
 		createVuePlugin(),
 		VitePWA({

@@ -44,8 +44,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import '../../../styles/theme/variables/all';
-
 .priority-label {
 	display: inline-flex;
 	align-items: center;

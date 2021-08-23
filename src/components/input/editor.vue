@@ -457,7 +457,6 @@ export default {
 <style lang="scss">
 @import '../../../node_modules/highlight.js/scss/base16/equilibrium-gray-light';
 @import '../../../node_modules/easymde/dist/easymde.min.css';
-@import '../../styles/theme/variables/all';
 
 .editor {
 	.clear {

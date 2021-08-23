@@ -146,8 +146,6 @@ export default {
 </script>
 
 <style lang="scss">
-@import '../../styles/theme/variables/all';
-
 .cropper {
 	height: 80vh;
 	background: transparent;
