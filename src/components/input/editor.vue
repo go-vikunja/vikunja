@@ -49,7 +49,7 @@ import VueEasymde from 'vue-easymde'
 import EasyMDE from 'easymde'
 import marked from 'marked'
 import DOMPurify from 'dompurify'
-import hljs from 'highlight.js'
+import hljs from 'highlight.js/lib/common'
 
 import AttachmentModel from '../../models/attachment'
 import AttachmentService from '../../services/attachment'
