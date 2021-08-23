@@ -3,8 +3,6 @@ import Router from 'vue-router'
 
 import HomeComponent from '../views/Home'
 import NotFoundComponent from '../views/404'
-import LoadingComponent from '../components/misc/loading'
-import ErrorComponent from '../components/misc/error'
 import About from '../views/About'
 // User Handling
 import LoginComponent from '../views/user/Login'
@@ -48,51 +46,18 @@ import NamespaceSettingDelete from '../views/namespaces/settings/delete'
 // Saved Filters
 import CreateSavedFilter from '../views/filters/CreateSavedFilter'
 
-const PasswordResetComponent = () => ({
-	component: import('../views/user/PasswordReset'),
-	loading: LoadingComponent,
-	error: ErrorComponent,
-	timeout: 60000,
-})
-const GetPasswordResetComponent = () => ({
-	component: import('../views/user/RequestPasswordReset'),
-	loading: LoadingComponent,
-	error: ErrorComponent,
-	timeout: 60000,
-})
-const UserSettingsComponent = () => ({
-	component: import('../views/user/Settings'),
-	loading: LoadingComponent,
-	error: ErrorComponent,
-	timeout: 60000,
-})
-// List Handling
-const NewListComponent = () => ({
-	component: import('../views/list/NewList'),
-	loading: LoadingComponent,
-	error: ErrorComponent,
-	timeout: 60000,
-})
-// Namespace Handling
-const NewNamespaceComponent = () => ({
-	component: import('../views/namespaces/NewNamespace'),
-	loading: LoadingComponent,
-	error: ErrorComponent,
-	timeout: 60000,
-})
+const PasswordResetComponent = () => import('../views/user/PasswordReset')
+const GetPasswordResetComponent = () => import('../views/user/RequestPasswordReset')
+const UserSettingsComponent = () => import('../views/user/Settings')
 
-const EditTeamComponent = () => ({
-	component: import('../views/teams/EditTeam'),
-	loading: LoadingComponent,
-	error: ErrorComponent,
-	timeout: 60000,
-})
-const NewTeamComponent = () => ({
-	component: import('../views/teams/NewTeam'),
-	loading: LoadingComponent,
-	error: ErrorComponent,
-	timeout: 60000,
-})
+// List Handling
+const NewListComponent = () => import('../views/list/NewList')
+
+// Namespace Handling
+const NewNamespaceComponent = () => import('../views/namespaces/NewNamespace')
+
+const EditTeamComponent = () => import('../views/teams/EditTeam')
+const NewTeamComponent = () =>  import('../views/teams/NewTeam')
 
 Vue.use(Router)
 
