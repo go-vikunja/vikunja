@@ -8022,10 +8022,10 @@ verte@0.0.12:
   dependencies:
     color-fns "^0.0.10"
 
-vite-plugin-pwa@0.11.0:
-  version "0.11.0"
-  resolved "https://registry.yarnpkg.com/vite-plugin-pwa/-/vite-plugin-pwa-0.11.0.tgz#2c63dab1865e925ac162f5c0651095faaab3a836"
-  integrity sha512-5YX0ThJnNwA6vXj8d6G/iGMC8Owd/Hf6XM5aQZdb4DfM8DmVPpWqAAl5iT+d9XG4ee1zo4nH3bVO9VDYDZLxDw==
+vite-plugin-pwa@0.11.2:
+  version "0.11.2"
+  resolved "https://registry.yarnpkg.com/vite-plugin-pwa/-/vite-plugin-pwa-0.11.2.tgz#21998b6b00b156c8f395700549a34fb9304db6cb"
+  integrity sha512-TlsXarwMrt8ccITZaag9yYkBfABn+HfUnZIFDxpX4TwON3F0KSpza72NSqVt8zIjt55+iU1tGonwjxvUAmKYxw==
   dependencies:
     debug "^4.3.2"
     fast-glob "^3.2.7"
