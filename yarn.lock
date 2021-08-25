@@ -5917,10 +5917,10 @@ map-visit@^1.0.0:
   dependencies:
     object-visit "^1.0.0"
 
-marked@3.0.1:
-  version "3.0.1"
-  resolved "https://registry.yarnpkg.com/marked/-/marked-3.0.1.tgz#fba5af166129771c60f4a7398ddcf35557dfe890"
-  integrity sha512-GQtec2MkSCp+ZecV2jBe7+J2fiDXeBFKUBr4981srZDjCaXg0WrtTo9eY2CVc2ZC5YQXkkc0Q8sTZ6c1DB1o2Q==
+marked@3.0.2:
+  version "3.0.2"
+  resolved "https://registry.yarnpkg.com/marked/-/marked-3.0.2.tgz#60ce97d6aec34dd882ab4bb4df82494666854e17"
+  integrity sha512-TMJQQ79Z0e3rJYazY0tIoMsFzteUGw9fB3FD+gzuIT3zLuG9L9ckIvUfF51apdJkcqc208jJN2KbtPbOvXtbjA==
 
 marked@^2.0.1, marked@^2.0.3:
   version "2.1.3"
