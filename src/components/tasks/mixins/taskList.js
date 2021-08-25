@@ -88,7 +88,7 @@ export default {
 					this.loadedList = cloneDeep(currentList)
 				})
 				.catch(e => {
-					this.error(e)
+					this.$message.error(e)
 				})
 		},
 
@@ -161,7 +161,7 @@ export default {
 					this.$set(this.tasks, e.newIndex, r)
 				})
 				.catch(e => {
-					this.error(e)
+					this.$message.error(e)
 				})
 		},
 	},

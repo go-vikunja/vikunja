@@ -61,10 +61,10 @@ export default {
 
 			this.dataExportService.request(this.password)
 				.then(() => {
-					this.success({message: this.$t('user.export.success')})
+					this.$message.success({message: this.$t('user.export.success')})
 					this.password = ''
 				})
-				.catch(e => this.error(e))
+				.catch(e => this.$message.error(e))
 		},
 	},
 }

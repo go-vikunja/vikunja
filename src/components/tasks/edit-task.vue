@@ -149,10 +149,10 @@ export default {
 				.then((r) => {
 					this.$set(this, 'taskEditTask', r)
 					this.initTaskFields()
-					this.success({message: this.$t('task.detail.updateSuccess')})
+					this.$message.success({message: this.$t('task.detail.updateSuccess')})
 				})
 				.catch((e) => {
-					this.error(e)
+					this.$message.error(e)
 				})
 		},
 	},

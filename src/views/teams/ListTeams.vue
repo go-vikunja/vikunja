@@ -50,7 +50,7 @@ export default {
 					this.$set(this, 'teams', response)
 				})
 				.catch(e => {
-					this.error(e)
+					this.$message.error(e)
 				})
 		},
 	},

@@ -63,7 +63,7 @@ export default {
 					this.$set(this, 'foundLists', response)
 				})
 				.catch(e => {
-					this.error(e)
+					this.$message.error(e)
 				})
 		},
 		clearAll() {

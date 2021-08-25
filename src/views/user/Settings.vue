@@ -383,22 +383,22 @@ export default {
 
 		updatePassword() {
 			if (this.passwordConfirm !== this.passwordUpdate.newPassword) {
-				this.error({message: this.$t('user.settings.passwordsDontMatch')})
+				this.$message.error({message: this.$t('user.settings.passwordsDontMatch')})
 				return
 			}
 
 			this.passwordUpdateService.update(this.passwordUpdate)
 				.then(() => {
-					this.success({message: this.$t('user.settings.passwordUpdateSuccess')})
+					this.$message.success({message: this.$t('user.settings.passwordUpdateSuccess')})
 				})
-				.catch(e => this.error(e))
+				.catch(e => this.$message.error(e))
 		},
 		updateEmail() {
 			this.emailUpdateService.update(this.emailUpdate)
 				.then(() => {
-					this.success({message: this.$t('user.settings.updateEmailSuccess')})
+					this.$message.success({message: this.$t('user.settings.updateEmailSuccess')})
 				})
-				.catch(e => this.error(e))
+				.catch(e => this.$message.error(e))
 		},
 		totpStatus() {
 			if (!this.totpEnabled) {
@@ -416,7 +416,7 @@ export default {
 						return
 					}
 
-					this.error(e)
+					this.$message.error(e)
 				})
 		},
 		totpSetQrCode() {
@@ -433,24 +433,24 @@ export default {
 					this.$set(this, 'totp', r)
 					this.totpSetQrCode()
 				})
-				.catch(e => this.error(e))
+				.catch(e => this.$message.error(e))
 		},
 		totpConfirm() {
 			this.totpService.enable({passcode: this.totpConfirmPasscode})
 				.then(() => {
 					this.$set(this.totp, 'enabled', true)
-					this.success({message: this.$t('user.settings.totp.confirmSuccess')})
+					this.$message.success({message: this.$t('user.settings.totp.confirmSuccess')})
 				})
-				.catch(e => this.error(e))
+				.catch(e => this.$message.error(e))
 		},
 		totpDisable() {
 			this.totpService.disable({password: this.totpDisablePassword})
 				.then(() => {
 					this.totpEnrolled = false
 					this.$set(this, 'totp', new TotpModel())
-					this.success({message: this.$t('user.settings.totp.disableSuccess')})
+					this.$message.success({message: this.$t('user.settings.totp.disableSuccess')})
 				})
-				.catch(e => this.error(e))
+				.catch(e => this.$message.error(e))
 		},
 		updateSettings() {
 			localStorage.setItem(playSoundWhenDoneKey, this.playSoundWhenDone)
@@ -460,9 +460,9 @@ export default {
 			this.userSettingsService.update(this.settings)
 				.then(() => {
 					this.$store.commit('auth/setUserSettings', this.settings)
-					this.success({message: this.$t('user.settings.general.savedSuccess')})
+					this.$message.success({message: this.$t('user.settings.general.savedSuccess')})
 				})
-				.catch(e => this.error(e))
+				.catch(e => this.$message.error(e))
 		},
 		anchorHashCheck() {
 			if (window.location.hash === this.$route.hash) {

@@ -70,7 +70,7 @@ export default {
 					this.setTitle(this.$t('list.share.title', {list: this.list.title}))
 				})
 				.catch(e => {
-					this.error(e)
+					this.$message.error(e)
 				})
 		},
 	},

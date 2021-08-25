@@ -35,10 +35,10 @@ export default {
 			this.filterService.delete(filter)
 				.then(() => {
 					this.$store.dispatch('namespaces/loadNamespaces')
-					this.success({message: this.$t('filters.delete.success')})
+					this.$message.success({message: this.$t('filters.delete.success')})
 					this.$router.push({name: 'namespaces.index'})
 				})
-				.catch(e => this.error(e))
+				.catch(e => this.$message.error(e))
 		},
 	},
 }

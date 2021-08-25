@@ -119,7 +119,7 @@ export default {
 					this.setTitle(this.title)
 				})
 				.catch(e => {
-					this.error(e)
+					this.$message.error(e)
 				})
 		},
 		save() {
@@ -127,11 +127,11 @@ export default {
 				.then(r => {
 					// Update the namespace in the parent
 					this.$store.commit('namespaces/setNamespaceById', r)
-					this.success({message: this.$t('namespace.edit.success')})
+					this.$message.success({message: this.$t('namespace.edit.success')})
 					this.$router.back()
 				})
 				.catch(e => {
-					this.error(e)
+					this.$message.error(e)
 				})
 		},
 	},

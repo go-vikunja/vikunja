@@ -25,11 +25,11 @@ export default {
 
 			this.$store.dispatch('lists/deleteList', list)
 				.then(() => {
-					this.success({message: this.$t('list.delete.success')})
+					this.$message.success({message: this.$t('list.delete.success')})
 					this.$router.push({name: 'home'})
 				})
 				.catch(e => {
-					this.error(e)
+					this.$message.error(e)
 				})
 		},
 	},

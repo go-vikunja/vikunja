@@ -239,7 +239,7 @@ export default {
 					this.setTitle(this.title)
 				})
 				.catch((e) => {
-					this.error(e)
+					this.$message.error(e)
 				})
 		},
 		save() {
@@ -253,32 +253,32 @@ export default {
 				.update(this.team)
 				.then((response) => {
 					this.team = response
-					this.success({message: this.$t('team.edit.success')})
+					this.$message.success({message: this.$t('team.edit.success')})
 				})
 				.catch((e) => {
-					this.error(e)
+					this.$message.error(e)
 				})
 		},
 		deleteTeam() {
 			this.teamService
 				.delete(this.team)
 				.then(() => {
-					this.success({message: this.$t('team.edit.delete.success')})
+					this.$message.success({message: this.$t('team.edit.delete.success')})
 					this.$router.push({name: 'teams.index'})
 				})
 				.catch((e) => {
-					this.error(e)
+					this.$message.error(e)
 				})
 		},
 		deleteUser() {
 			this.teamMemberService
 				.delete(this.member)
 				.then(() => {
-					this.success({message: this.$t('team.edit.deleteUser.success')})
+					this.$message.success({message: this.$t('team.edit.deleteUser.success')})
 					this.loadTeam()
 				})
 				.catch((e) => {
-					this.error(e)
+					this.$message.error(e)
 				})
 				.finally(() => {
 					this.showUserDeleteModal = false
@@ -293,10 +293,10 @@ export default {
 				.create(newMember)
 				.then(() => {
 					this.loadTeam()
-					this.success({message: this.$t('team.edit.userAddedSuccess')})
+					this.$message.success({message: this.$t('team.edit.userAddedSuccess')})
 				})
 				.catch((e) => {
-					this.error(e)
+					this.$message.error(e)
 				})
 		},
 		toggleUserType(member) {
@@ -311,14 +311,14 @@ export default {
 							break
 						}
 					}
-					this.success({
+					this.$message.success({
 						message: member.admin ?
 							this.$t('team.edit.madeAdmin') :
 							this.$t('team.edit.madeMember'),
 					})
 				})
 				.catch((e) => {
-					this.error(e)
+					this.$message.error(e)
 				})
 		},
 		findUser(query) {
@@ -333,7 +333,7 @@ export default {
 					this.$set(this, 'foundUsers', response)
 				})
 				.catch((e) => {
-					this.error(e)
+					this.$message.error(e)
 				})
 		},
 		clearAll() {

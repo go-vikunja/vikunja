@@ -71,7 +71,7 @@ export default {
 					this.$set(this, 'background', b)
 				})
 				.catch(e => {
-					this.error(e)
+					this.$message.error(e)
 				})
 				.finally(() => this.backgroundLoading = false)
 		},
@@ -82,7 +82,7 @@ export default {
 				return
 			}
 			this.$store.dispatch('lists/toggleListFavorite', list)
-				.catch(e => this.error(e))
+				.catch(e => this.$message.error(e))
 		},
 	},
 }

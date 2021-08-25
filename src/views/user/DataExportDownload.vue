@@ -57,7 +57,7 @@ export default {
 			}
 
 			this.dataExportService.download(this.password)
-				.catch(e => this.error(e))
+				.catch(e => this.$message.error(e))
 		},
 	},
 }

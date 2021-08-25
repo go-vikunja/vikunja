@@ -115,11 +115,11 @@ export default {
 				.then(() => {
 					bubble()
 					if (showNotification) {
-						this.success({message: this.$t('task.label.addSuccess')})
+						this.$message.success({message: this.$t('task.label.addSuccess')})
 					}
 				})
 				.catch(e => {
-					this.error(e)
+					this.$message.error(e)
 				})
 		},
 		removeLabel(label) {
@@ -141,10 +141,10 @@ export default {
 			this.$store.dispatch('tasks/removeLabel', {label: label, taskId: this.taskId})
 				.then(() => {
 					removeFromState()
-					this.success({message: this.$t('task.label.removeSuccess')})
+					this.$message.success({message: this.$t('task.label.removeSuccess')})
 				})
 				.catch(e => {
-					this.error(e)
+					this.$message.error(e)
 				})
 		},
 		createAndAddLabel(title) {
@@ -157,10 +157,10 @@ export default {
 				.then(r => {
 					this.addLabel(r, false)
 					this.labels.push(r)
-					this.success({message: this.$t('task.label.removeSuccess')})
+					this.$message.success({message: this.$t('task.label.removeSuccess')})
 				})
 				.catch(e => {
-					this.error(e)
+					this.$message.error(e)
 				})
 		},
 

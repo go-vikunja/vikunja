@@ -48,11 +48,11 @@ export default {
 				.then(r => {
 					this.$store.commit('namespaces/addListToNamespace', r.list)
 					this.$store.commit('lists/setList', r.list)
-					this.success({message: this.$t('list.duplicate.success')})
+					this.$message.success({message: this.$t('list.duplicate.success')})
 					this.$router.push({name: 'list.index', params: {listId: r.list.id}})
 				})
 				.catch(e => {
-					this.error(e)
+					this.$message.error(e)
 				})
 		},
 	},

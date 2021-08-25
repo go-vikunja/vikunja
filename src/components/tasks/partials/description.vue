@@ -89,7 +89,7 @@ export default {
 					}, 2000)
 				})
 				.catch(e => {
-					this.error(e)
+					this.$message.error(e)
 				})
 				.finally(() => {
 					this.saving = false

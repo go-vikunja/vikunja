@@ -132,7 +132,7 @@ export default {
 					this.$emit('input', r)
 				})
 				.catch((e) => {
-					this.error(e)
+					this.$message.error(e)
 				})
 		},
 	},

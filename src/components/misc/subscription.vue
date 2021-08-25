@@ -99,10 +99,10 @@ export default {
 			this.subscriptionService.create(subscription)
 				.then(() => {
 					this.$emit('change', subscription)
-					this.success({message: this.$t('task.subscription.subscribeSuccess', {entity: this.entity})})
+					this.$message.success({message: this.$t('task.subscription.subscribeSuccess', {entity: this.entity})})
 				})
 				.catch(e => {
-					this.error(e)
+					this.$message.error(e)
 				})
 		},
 		unsubscribe() {
@@ -113,10 +113,10 @@ export default {
 			this.subscriptionService.delete(subscription)
 				.then(() => {
 					this.$emit('change', null)
-					this.success({message: this.$t('task.subscription.unsubscribeSuccess', {entity: this.entity})})
+					this.$message.success({message: this.$t('task.subscription.unsubscribeSuccess', {entity: this.entity})})
 				})
 				.catch(e => {
-					this.error(e)
+					this.$message.error(e)
 				})
 		},
 	},

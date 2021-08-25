@@ -67,10 +67,10 @@ export default {
 						name: 'teams.edit',
 						params: { id: response.id },
 					})
-					this.success({message: this.$t('team.create.success') })
+					this.$message.success({message: this.$t('team.create.success') })
 				})
 				.catch((e) => {
-					this.error(e)
+					this.$message.error(e)
 				})
 		},
 	},

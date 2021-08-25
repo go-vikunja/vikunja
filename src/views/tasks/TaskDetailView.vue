@@ -567,7 +567,7 @@ export default {
 					this.setTitle(this.task.title)
 				})
 				.catch(e => {
-					this.error(e)
+					this.$message.error(e)
 				})
 				.finally(() => {
 					this.$nextTick(() => this.visible = true)
@@ -628,10 +628,10 @@ export default {
 								callback: undoCallback,
 							}]
 						}
-						this.success({message: this.$t('task.detail.updateSuccess')}, actions)
+						this.$message.success({message: this.$t('task.detail.updateSuccess')}, actions)
 					})
 					.catch(e => {
-						this.error(e)
+						this.$message.error(e)
 					})
 			})
 		},
@@ -656,11 +656,11 @@ export default {
 		deleteTask() {
 			this.$store.dispatch('tasks/delete', this.task)
 				.then(() => {
-					this.success({message: this.$t('task.detail.deleteSuccess')})
+					this.$message.success({message: this.$t('task.detail.deleteSuccess')})
 					this.$router.push({name: 'list.index', params: {listId: this.task.listId}})
 				})
 				.catch(e => {
-					this.error(e)
+					this.$message.error(e)
 				})
 		},
 		toggleTaskDone() {
@@ -701,7 +701,7 @@ export default {
 					this.$store.dispatch('namespaces/loadNamespacesIfFavoritesDontExist')
 				})
 				.catch(e => {
-					this.error(e)
+					this.$message.error(e)
 				})
 		},
 	},

@@ -175,7 +175,7 @@ export default {
 						}
 						this.task = t
 						this.$emit('task-updated', t)
-						this.success({
+						this.$message.success({
 								message: this.task.done ?
 									this.$t('task.doneSuccess') :
 									this.$t('task.undoneSuccess'),
@@ -188,7 +188,7 @@ export default {
 						}])
 					})
 					.catch(e => {
-						this.error(e)
+						this.$message.error(e)
 					})
 			}
 
@@ -207,7 +207,7 @@ export default {
 					this.$store.dispatch('namespaces/loadNamespacesIfFavoritesDontExist')
 				})
 				.catch(e => {
-					this.error(e)
+					this.$message.error(e)
 				})
 		},
 		hideDeferDueDatePopup(e) {

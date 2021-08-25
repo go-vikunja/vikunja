@@ -70,7 +70,7 @@ export default {
 					this.setTitle(this.title)
 				})
 				.catch(e => {
-					this.error(e)
+					this.$message.error(e)
 				})
 		},
 	},

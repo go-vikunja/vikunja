@@ -354,7 +354,7 @@ export default {
 						})
 				})
 				.catch((e) => {
-					this.error(e)
+					this.$message.error(e)
 				})
 		},
 		addGantAttributes(t) {
@@ -439,7 +439,7 @@ export default {
 					}
 				})
 				.catch((e) => {
-					this.error(e)
+					this.$message.error(e)
 				})
 		},
 		editTask(task) {
@@ -476,7 +476,7 @@ export default {
 					this.hideCrateNewTask()
 				})
 				.catch((e) => {
-					this.error(e)
+					this.$message.error(e)
 				})
 		},
 		formatYear(date) {

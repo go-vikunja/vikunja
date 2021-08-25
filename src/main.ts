@@ -2,6 +2,8 @@ import Vue from 'vue'
 import App from './App.vue'
 import router from './router'
 
+import {error, success} from './message'
+
 declare global {
 	interface Window {
 		API_URL: string;
@@ -26,7 +28,6 @@ import './registerServiceWorker'
 // @ts-ignore - no types available
 import vueShortkey from 'vue-shortkey'
 // Mixins
-import message from './message'
 import {colorIsDark} from './helpers/color/colorIsDark'
 import {setTitle} from './helpers/setTitle'
 import {getNamespaceTitle} from './helpers/getNamespaceTitle'
@@ -61,6 +62,29 @@ Vue.component('icon', FontAwesomeIcon)
 
 Vue.use(vueShortkey, {prevent: ['input', 'textarea', '.input', '[contenteditable]']})
 
+// define as global property
+const Message = {
+	install(Vue) {
+		if (this.installed) {
+			return
+		}
+		this.installed = true
+
+		const message = {
+			error(e, actions = []) {
+				return error(e, Vue.prototype, actions)
+			},
+			success(s, actions = []) {
+				return success(s, Vue.prototype, actions)
+			},
+		}
+	
+		Vue.prototype['$message'] = message
+	},
+}
+
+Vue.use(Message)
+
 import focus from './directives/focus'
 Vue.directive('focus', focus)
 
@@ -93,12 +117,6 @@ Vue.mixin({
 		},
 		getListTitle(l) {
 			return getListTitle(l, (p: VueI18n.Path) => this.$t(p))
-		},
-		error(e, actions = []) {
-			return message.error(e, this, (p: VueI18n.Path) => this.$t(p), actions)
-		},
-		success(s, actions = []) {
-			return message.success(s, this, (p: VueI18n.Path) => this.$t(p), actions)
 		},
 		colorIsDark: colorIsDark,
 		setTitle: setTitle,

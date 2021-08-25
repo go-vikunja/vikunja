@@ -282,7 +282,7 @@ export default {
 					)
 				})
 				.catch((e) => {
-					this.error(e)
+					this.$message.error(e)
 				})
 		},
 		deleteSharable() {
@@ -304,10 +304,10 @@ export default {
 							this.sharables.splice(i, 1)
 						}
 					}
-					this.success({message: this.$t('list.share.userTeam.removeSuccess', {type: this.shareTypeName, sharable: this.sharableName})})
+					this.$message.success({message: this.$t('list.share.userTeam.removeSuccess', {type: this.shareTypeName, sharable: this.sharableName})})
 				})
 				.catch((e) => {
-					this.error(e)
+					this.$message.error(e)
 				})
 		},
 		add(admin) {
@@ -328,11 +328,11 @@ export default {
 			this.stuffService
 				.create(this.stuffModel)
 				.then(() => {
-					this.success({message: this.$t('list.share.userTeam.addedSuccess', {type: this.shareTypeName})})
+					this.$message.success({message: this.$t('list.share.userTeam.addedSuccess', {type: this.shareTypeName})})
 					this.load()
 				})
 				.catch((e) => {
-					this.error(e)
+					this.$message.error(e)
 				})
 		},
 		toggleType(sharable) {
@@ -365,10 +365,10 @@ export default {
 							this.$set(this.sharables[i], 'right', r.right)
 						}
 					}
-					this.success({message: this.$t('list.share.userTeam.updatedSuccess', {type: this.shareTypeName})})
+					this.$message.success({message: this.$t('list.share.userTeam.updatedSuccess', {type: this.shareTypeName})})
 				})
 				.catch((e) => {
-					this.error(e)
+					this.$message.error(e)
 				})
 		},
 		find(query) {
@@ -383,7 +383,7 @@ export default {
 					this.$set(this, 'found', response)
 				})
 				.catch((e) => {
-					this.error(e)
+					this.$message.error(e)
 				})
 		},
 		clearAll() {

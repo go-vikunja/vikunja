@@ -388,12 +388,12 @@ export default {
 
 			this.createNewTask(this.query, 0, this.currentList.id)
 				.then(r => {
-					this.success({message: this.$t('task.createSuccess')})
+					this.$message.success({message: this.$t('task.createSuccess')})
 					this.$router.push({name: 'task.detail', params: {id: r.id}})
 					this.closeQuickActions()
 				})
 				.catch((e) => {
-					this.error(e)
+					this.$message.error(e)
 				})
 		},
 		newList() {
@@ -407,12 +407,12 @@ export default {
 			})
 			this.$store.dispatch('lists/createList', newList)
 				.then(r => {
-					this.success({message: this.$t('list.create.createdSuccess')})
+					this.$message.success({message: this.$t('list.create.createdSuccess')})
 					this.$router.push({name: 'list.index', params: {listId: r.id}})
 					this.closeQuickActions()
 				})
 				.catch((e) => {
-					this.error(e)
+					this.$message.error(e)
 				})
 		},
 		newNamespace() {
@@ -420,11 +420,11 @@ export default {
 
 			this.$store.dispatch('namespaces/createNamespace', newNamespace)
 				.then(() => {
-					this.success({message: this.$t('namespace.create.success')})
+					this.$message.success({message: this.$t('namespace.create.success')})
 					this.closeQuickActions()
 				})
 				.catch((e) => {
-					this.error(e)
+					this.$message.error(e)
 				})
 		},
 		newTeam() {
@@ -435,11 +435,11 @@ export default {
 						name: 'teams.edit',
 						params: {id: r.id},
 					})
-					this.success({message: this.$t('team.create.success')})
+					this.$message.success({message: this.$t('team.create.success')})
 					this.closeQuickActions()
 				})
 				.catch((e) => {
-					this.error(e)
+					this.$message.error(e)
 				})
 		},
 		select(parentIndex, index) {

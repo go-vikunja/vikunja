@@ -77,10 +77,10 @@ export default {
 						name: 'labels.index',
 						params: {id: r.id},
 					})
-					this.success({message: this.$t('label.create.success')})
+					this.$message.success({message: this.$t('label.create.success')})
 				})
 				.catch((e) => {
-					this.error(e)
+					this.$message.error(e)
 				})
 		},
 	},

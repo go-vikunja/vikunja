@@ -105,10 +105,10 @@ export default {
 				const accountDeletionService = new AccountDeleteService()
 				accountDeletionService.confirm(this.$route.query.accountDeletionConfirm)
 					.then(() => {
-						this.success({message: this.$t('user.deletion.confirmSuccess')})
+						this.$message.success({message: this.$t('user.deletion.confirmSuccess')})
 						this.$store.dispatch('auth/refreshUserInfo')
 					})
-					.catch(e => this.error(e))
+					.catch(e => this.$message.error(e))
 			}
 		},
 	},

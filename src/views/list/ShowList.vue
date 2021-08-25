@@ -148,7 +148,7 @@ export default {
 					this.setTitle(this.getListTitle(r))
 				})
 				.catch(e => {
-					this.error(e)
+					this.$message.error(e)
 				})
 				.finally(() => {
 					this.listLoaded = this.$route.params.listId

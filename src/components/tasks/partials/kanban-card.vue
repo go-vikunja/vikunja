@@ -102,7 +102,7 @@ export default {
 					}
 				})
 				.catch(e => {
-					this.error(e)
+					this.$message.error(e)
 				})
 				.finally(() => {
 					this.loadingInternal = false

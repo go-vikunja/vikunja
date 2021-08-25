@@ -196,7 +196,7 @@ export default {
 					this.$set(this, 'foundTasks', response)
 				})
 				.catch(e => {
-					this.error(e)
+					this.$message.error(e)
 				})
 		},
 		addTaskRelation() {
@@ -219,7 +219,7 @@ export default {
 					}, 2000)
 				})
 				.catch(e => {
-					this.error(e)
+					this.$message.error(e)
 				})
 		},
 		removeTaskRelation() {
@@ -243,7 +243,7 @@ export default {
 					}, 2000)
 				})
 				.catch(e => {
-					this.error(e)
+					this.$message.error(e)
 				})
 				.finally(() => {
 					this.showDeleteModal = false
@@ -257,7 +257,7 @@ export default {
 					this.addTaskRelation()
 				})
 				.catch(e => {
-					this.error(e)
+					this.$message.error(e)
 				})
 		},
 		relationKindTitle(kind, length) {

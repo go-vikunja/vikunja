@@ -206,7 +206,7 @@ export default {
 					this.$set(this, 'tasks', tasks)
 				})
 				.catch(e => {
-					this.error(e)
+					this.$message.error(e)
 				})
 		},
 		updateTasks(updatedTask) {

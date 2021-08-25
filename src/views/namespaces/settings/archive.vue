@@ -39,10 +39,10 @@ export default {
 			this.namespaceService.update(this.namespace)
 				.then(r => {
 					this.$store.commit('namespaces/setNamespaceById', r)
-					this.success({message: this.$t('namespace.archive.success')})
+					this.$message.success({message: this.$t('namespace.archive.success')})
 				})
 				.catch(e => {
-					this.error(e)
+					this.$message.error(e)
 				})
 				.finally(() => {
 					this.$router.back()

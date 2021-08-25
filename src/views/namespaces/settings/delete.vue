@@ -36,11 +36,11 @@ export default {
 
 			this.$store.dispatch('namespaces/deleteNamespace', namespace)
 				.then(() => {
-					this.success({message: this.$t('namespace.delete.success')})
+					this.$message.success({message: this.$t('namespace.delete.success')})
 					this.$router.push({name: 'home'})
 				})
 				.catch(e => {
-					this.error(e)
+					this.$message.error(e)
 				})
 		},
 	},

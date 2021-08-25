@@ -130,7 +130,7 @@ export default {
 					this.migrate()
 				})
 				.catch(e => {
-					this.error(e)
+					this.$message.error(e)
 				})
 		}
 	},
@@ -141,7 +141,7 @@ export default {
 					this.authUrl = r.url
 				})
 				.catch(e => {
-					this.error(e)
+					this.$message.error(e)
 				})
 		},
 		migrate() {
@@ -159,7 +159,7 @@ export default {
 					this.$store.dispatch('namespaces/loadNamespaces')
 				})
 				.catch(e => {
-					this.error(e)
+					this.$message.error(e)
 				})
 				.finally(() => {
 					this.isMigrating = false
@@ -176,7 +176,7 @@ export default {
 					this.$store.dispatch('namespaces/loadNamespaces')
 				})
 				.catch(e => {
-					this.error(e)
+					this.$message.error(e)
 				})
 				.finally(() => {
 					this.isMigrating = false

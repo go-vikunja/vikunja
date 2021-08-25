@@ -86,7 +86,7 @@ export default {
 						this.errorMessage = this.$t('list.create.addListRequired')
 						return
 					}
-					this.error(e)
+					this.$message.error(e)
 				})
 		},
 	},
