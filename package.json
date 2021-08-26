@@ -53,7 +53,7 @@
     "babel-eslint": "10.1.0",
     "cypress": "8.3.0",
     "cypress-file-upload": "5.0.8",
-    "esbuild": "0.12.22",
+    "esbuild": "0.12.23",
     "eslint": "7.32.0",
     "eslint-plugin-vue": "7.16.0",
     "express": "4.17.1",
