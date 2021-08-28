@@ -51,7 +51,7 @@
     "autoprefixer": "10.3.3",
     "axios": "0.21.1",
     "babel-eslint": "10.1.0",
-    "cypress": "8.3.0",
+    "cypress": "8.3.1",
     "cypress-file-upload": "5.0.8",
     "esbuild": "0.12.24",
     "eslint": "7.32.0",
