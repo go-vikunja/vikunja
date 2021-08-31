@@ -48,7 +48,7 @@ Strings in other languages will be synced through weblate and should not be adde
 
 ## Requesting a new language
 
-If you want to start translating Vikunja in a language not yet available in Vikunja, please request the language through the weblate interface.
-If you have issues with this or need a discussion before doing so, pleace [contact us](https://vikunja.io/contact/) or [start a discussion in the forum](https://community.vikunja.io).
+If you want to start translating Vikunja in a language not yet available in Vikunja, please request the language through the crowdin interface.
+If you have issues with this or need a discussion before doing so, please [contact us](https://vikunja.io/contact/) or [start a discussion in the forum](https://community.vikunja.io).
 
 Once at least 50% of all translation strings are translated and approved, they will be added and distributed with the Vikunja frontend for users to select and use Vikunja with them.
