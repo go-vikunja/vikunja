@@ -1,6 +1,7 @@
 ---
 title: "German Translation Instructions"
-date: 2021-06-23T23:47:34+02:00 draft: false
+date: 2021-06-23T23:47:34+02:00
+draft: false
 ---
 
 # German Translation Instructions
@@ -63,10 +64,10 @@ Beispiel: „Benutzer:in“
 
 ## Wörter und Ausdrücke
 
-| Englisches Original | Deutsche Übersetzung |
+| Englisches Original | Verwendung in deutscher Übersetzung |
 | ------------------- | -------------------- |
 | Bucket | Spalte |
-| Namespace | Namensraum |
+| Namespace | Namespace |
 | Link Share | Linkfreigabe |
 | Username | Anmeldename |
 
