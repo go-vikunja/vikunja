@@ -188,15 +188,15 @@ describe('Parse Task Text', () => {
 			expect(result.date.getMonth()).toBe(date.getMonth() + 1)
 		})
 		it('should recognize dates of the month in the future', () => {
-			const date = new Date()
-			const result = parseTaskText(`Lorem Ipsum ${date.getDate() + 1}nd`)
+			const nextDay = new Date(+new Date() + 60 * 60 * 24 * 1000)
+			const result = parseTaskText(`Lorem Ipsum ${nextDay.getDate()}nd`)
 
 			expect(result.text).toBe('Lorem Ipsum')
-			expect(result.date.getDate()).toBe(date.getDate() + 1)
+			expect(result.date.getDate()).toBe(nextDay.getDate())
 		})
 		it('should only recognize weekdays with a space before or after them 1', () => {
 			const result = parseTaskText('Lorem Ipsum renewed')
-			
+
 			expect(result.text).toBe('Lorem Ipsum renewed')
 			expect(result.date).toBeNull()
 		})
