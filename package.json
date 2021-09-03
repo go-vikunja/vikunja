@@ -48,7 +48,7 @@
     "@typescript-eslint/parser": "4.30.0",
     "@vue/babel-preset-app": "4.5.13",
     "@vue/eslint-config-typescript": "7.0.0",
-    "autoprefixer": "10.3.3",
+    "autoprefixer": "10.3.4",
     "axios": "0.21.1",
     "babel-eslint": "10.1.0",
     "cypress": "8.3.1",
