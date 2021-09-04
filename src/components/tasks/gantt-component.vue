@@ -25,17 +25,12 @@
 						v-for="(m, mk) in days[yk]"
 					>
 						{{
-							new Date(
-								new Date(yk).setMonth(mk)
-							).toLocaleString('en-us', {month: 'long'})
+							new Date(new Date(`${yk}-${parseInt(mk) + 1}-01`)).toLocaleString('en-us', {month: 'long'})
 						}},
 						{{ new Date(yk).getFullYear() }}
 						<div class="days">
 							<div
-								:class="{
-									today:
-										d.toDateString() === now.toDateString(),
-								}"
+								:class="{ today: d.toDateString() === now.toDateString() }"
 								:key="dk + 'day'"
 								:style="{ width: dayWidth + 'px' }"
 								class="day"
@@ -289,9 +284,7 @@ export default {
 			this.startDate = new Date(this.dateFrom)
 			this.endDate = new Date(this.dateTo)
 
-			this.dayOffsetUntilToday =
-				Math.floor((this.now - this.startDate) / 1000 / 60 / 60 / 24) +
-				1
+			this.dayOffsetUntilToday = Math.floor((this.now - this.startDate) / 1000 / 60 / 60 / 24) + 1
 		},
 		prepareGanttDays() {
 			// Layout: years => [months => [days]]
@@ -306,14 +299,14 @@ export default {
 					years[date.getFullYear() + ''] = {}
 				}
 				if (
-					years[date.getFullYear() + ''][date.getMonth() + ''] ===
-					undefined
+					years[date.getFullYear() + ''][date.getMonth() + ''] === undefined
 				) {
 					years[date.getFullYear() + ''][date.getMonth() + ''] = []
 				}
 				years[date.getFullYear() + ''][date.getMonth() + ''].push(date)
 				this.fullWidth += this.dayWidth
 			}
+			console.log(years)
 			this.$set(this, 'days', years)
 		},
 		parseTasks() {
