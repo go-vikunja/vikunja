@@ -47,19 +47,19 @@ export default class AbstractService {
 				case 'post':
 					if (this.useUpdateInterceptor()) {
 						config.data = self.beforeUpdate(config.data)
-						config.data = JSON.stringify(objectToSnakeCase(config.data))
+						config.data = objectToSnakeCase(config.data)
 					}
 					break
 				case 'put':
 					if (this.useCreateInterceptor()) {
 						config.data = self.beforeCreate(config.data)
-						config.data = JSON.stringify(objectToSnakeCase(config.data))
+						config.data = objectToSnakeCase(config.data)
 					}
 					break
 				case 'delete':
 					if (this.useDeleteInterceptor()) {
 						config.data = self.beforeDelete(config.data)
-						config.data = JSON.stringify(objectToSnakeCase(config.data))
+						config.data = objectToSnakeCase(config.data)
 					}
 					break
 			}
