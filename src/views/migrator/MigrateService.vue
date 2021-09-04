@@ -2,12 +2,13 @@
 	<migration
 		:identifier="identifier"
 		:name="name"
+		:is-file-migrator="isFileMigrator"
 	/>
 </template>
 
 <script>
 import Migration from '../../components/migrator/migration'
-import router from '../../router'
+import {getMigratorFromSlug} from '../../helpers/migrator'
 
 export default {
 	name: 'migrateService',
@@ -18,31 +19,20 @@ export default {
 		return {
 			name: '',
 			identifier: '',
+			isFileMigrator: false,
 		}
 	},
 	mounted() {
 		this.setTitle(this.$t('migrate.titleService', {name: this.name}))
 	},
 	created() {
-		switch (this.$route.params.service) {
-			case 'wunderlist':
-				this.name = 'Wunderlist'
-				this.identifier = 'wunderlist'
-				break
-			case 'todoist':
-				this.name = 'Todoist'
-				this.identifier = 'todoist'
-				break
-			case 'trello':
-				this.name = 'Trello'
-				this.identifier = 'trello'
-				break
-			case 'microsoft-todo':
-				this.name = 'Microsoft Todo'
-				this.identifier = 'microsoft-todo'
-				break
-			default:
-				router.push({name: '404'})
+		try {
+			const {name, identifier, isFileMigrator} = getMigratorFromSlug(this.$route.params.service)
+			this.name = name
+			this.identifier = identifier
+			this.isFileMigrator = isFileMigrator
+		} catch (e) {
+			this.$router.push({name: '404'})
 		}
 	},
 }

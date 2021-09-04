@@ -1,16 +1,34 @@
 <template>
 	<div class="content">
-		<h1>{{ $t('migrate.titleService', { name: name }) }}</h1>
+		<h1>{{ $t('migrate.titleService', {name: name}) }}</h1>
 		<p>{{ $t('migrate.descriptionDo') }}</p>
 		<template v-if="isMigrating === false && message === '' && lastMigrationDate === null">
-			<p>{{ $t('migrate.authorize', {name: name}) }}</p>
-			<x-button
-				:loading="migrationService.loading"
-				:disabled="migrationService.loading"
-				:href="authUrl"
-			>
-				{{ $t('migrate.getStarted') }}
-			</x-button>
+			<template v-if="isFileMigrator">
+				<p>{{ $t('migrate.importUpload', {name: name}) }}</p>
+				<input
+					@change="migrate"
+					class="is-hidden"
+					ref="uploadInput"
+					type="file"
+				/>
+				<x-button
+					:loading="migrationService.loading"
+					:disabled="migrationService.loading"
+					@click="$refs.uploadInput.click()"
+				>
+					{{ $t('migrate.upload') }}
+				</x-button>
+			</template>
+			<template v-else>
+				<p>{{ $t('migrate.authorize', {name: name}) }}</p>
+				<x-button
+					:loading="migrationService.loading"
+					:disabled="migrationService.loading"
+					:href="authUrl"
+				>
+					{{ $t('migrate.getStarted') }}
+				</x-button>
+			</template>
 		</template>
 		<div
 			class="migration-in-progress-container"
@@ -33,7 +51,7 @@
 		</div>
 		<div v-else-if="lastMigrationDate">
 			<p>
-				{{ $t('migrate.alreadyMigrated1', { name: name, date: formatDate(lastMigrationDate) }) }}<br/>
+				{{ $t('migrate.alreadyMigrated1', {name: name, date: formatDate(lastMigrationDate)}) }}<br/>
 				{{ $t('migrate.alreadyMigrated2') }}
 			</p>
 			<div class="buttons">
@@ -53,7 +71,8 @@
 </template>
 
 <script>
-import AbstractMigrationService from '../../services/migrator/abstractMigrationService'
+import AbstractMigrationService from '../../services/migrator/abstractMigration'
+import AbstractMigrationFileService from '../../services/migrator/abstractMigrationFile'
 
 export default {
 	name: 'migration',
@@ -75,11 +94,21 @@ export default {
 			type: String,
 			required: true,
 		},
+		isFileMigrator: {
+			type: Boolean,
+			default: false,
+		},
 	},
 	created() {
+		this.message = ''
+
+		if (this.isFileMigrator) {
+			this.migrationService = new AbstractMigrationFileService(this.identifier)
+			return
+		}
+		
 		this.migrationService = new AbstractMigrationService(this.identifier)
 		this.getAuthUrl()
-		this.message = ''
 
 		if (typeof this.$route.query.code !== 'undefined' || location.hash.startsWith('#token=')) {
 			if (location.hash.startsWith('#token=')) {
@@ -122,7 +151,29 @@ export default {
 			this.isMigrating = true
 			this.lastMigrationDate = null
 			this.message = ''
+
+			if (this.isFileMigrator) {
+				return this.migrateFile()
+			}
+
 			this.migrationService.migrate({code: this.migratorAuthCode})
+				.then(r => {
+					this.message = r.message
+					this.$store.dispatch('namespaces/loadNamespaces')
+				})
+				.catch(e => {
+					this.error(e)
+				})
+				.finally(() => {
+					this.isMigrating = false
+				})
+		},
+		migrateFile() {
+			if (this.$refs.uploadInput.files.length === 0) {
+				return
+			}
+
+			this.migrationService.migrate(this.$refs.uploadInput.files[0])
 				.then(r => {
 					this.message = r.message
 					this.$store.dispatch('namespaces/loadNamespaces')

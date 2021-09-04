@@ -319,6 +319,17 @@ export default class AbstractService {
 			})
 	}
 
+	getBlobUrl(url, method = 'GET', data = {}) {
+		return this.http({
+			url: url,
+			method: method,
+			responseType: 'blob',
+			data: data,
+		}).then(response => {
+			return window.URL.createObjectURL(new Blob([response.data]))
+		})
+	}
+
 	/**
 	 * Performs a get request to the url specified before.
 	 * The difference between this and get() is this one is used to get a bunch of data (an array), not just a single object.
@@ -487,6 +498,8 @@ export default class AbstractService {
 	 * @returns {Q.Promise<unknown>}
 	 */
 	uploadFormData(url, formData) {
+		console.log(formData, formData._boundary)
+
 		const cancel = this.setLoading()
 		return this.http.put(
 			url,

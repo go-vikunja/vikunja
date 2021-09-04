@@ -111,6 +111,13 @@
       "scheduledCancelText": "To cancel the deletion of your account, please enter your password below:",
       "scheduledCancelConfirm": "Cancel the deletion of my account",
       "scheduledCancelSuccess": "We will not delete your account."
+    },
+    "export": {
+      "title": "Export your Vikunja Data",
+      "description": "You can request a copy of all your Vikunja data. This include Namespaces, Lists, Tasks and everything associated to them. You can import this data in any Vikunja instance through the migration function.",
+      "descriptionPasswordRequired": "Please enter your password to proceed:",
+      "request": "Request a copy of my Vikunja Data",
+      "success": "You've successfully requested your Vikunja Data! We will send you an email once it's ready to download."
     }
   },
   "list": {
@@ -371,7 +378,9 @@
     "inProgress": "Importing in progress…",
     "alreadyMigrated1": "It looks like you've already imported your stuff from {name} at {date}.",
     "alreadyMigrated2": "Importing again is possible, but might create duplicates. Are you sure?",
-    "confirm": "I am sure, please start migrating now!"
+    "confirm": "I am sure, please start migrating now!",
+    "importUpload": "To import data from {name} into Vikunja, click the button below to select a file.",
+    "upload": "Upload file"
   },
   "label": {
     "title": "Labels",
@@ -432,7 +441,8 @@
     "saving": "Saving…",
     "saved": "Saved!",
     "default": "Default",
-    "close": "Close"
+    "close": "Close",
+    "download": "Download"
   },
   "input": {
     "resetColor": "Reset Color",
@@ -563,7 +573,6 @@
     "attachment": {
       "title": "Attachments",
       "createdBy": "created {0} by {1}",
-      "download": "Download",
       "downloadTooltip": "Download this attachment",
       "upload": "Upload attachment",
       "drop": "Drop files here to upload",

@@ -57,7 +57,7 @@
 							@click.prevent.stop="downloadAttachment(a)"
 							v-tooltip="$t('task.attachment.downloadTooltip')"
 						>
-							{{ $t('task.attachment.download') }}
+							{{ $t('misc.download') }}
 						</a>
 						<a
 							@click.stop="copyUrl(a)"

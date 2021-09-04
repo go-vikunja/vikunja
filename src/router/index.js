@@ -10,6 +10,7 @@ import About from '../views/About'
 import LoginComponent from '../views/user/Login'
 import RegisterComponent from '../views/user/Register'
 import OpenIdAuth from '../views/user/OpenIdAuth'
+import DataExportDownload from '../views/user/DataExportDownload'
 // Tasks
 import ShowTasksInRangeComponent from '../views/tasks/ShowTasksInRange'
 import LinkShareAuthComponent from '../views/sharing/LinkSharingAuth'
@@ -148,6 +149,11 @@ export default new Router({
 			path: '/user/settings',
 			name: 'user.settings',
 			component: UserSettingsComponent,
+		},
+		{
+			path: '/user/export/download',
+			name: 'user.export.download',
+			component: DataExportDownload,
 		},
 		{
 			path: '/share/:share/auth',

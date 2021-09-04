@@ -235,6 +235,9 @@
 				</div>
 			</template>
 		</card>
+		
+		<!-- Data export -->
+		<data-export/>
 
 		<!-- Migration -->
 		<card :title="$t('migrate.title')" v-if="migratorsEnabled">
@@ -293,6 +296,7 @@ import AvatarSettings from '../../components/user/avatar-settings.vue'
 import copy from 'copy-to-clipboard'
 import ListSearch from '@/components/tasks/partials/listSearch.vue'
 import UserSettingsDeletion from '../../components/user/settings/deletion'
+import DataExport from '../../components/user/settings/data-export'
 
 export default {
 	name: 'Settings',
@@ -325,6 +329,7 @@ export default {
 		UserSettingsDeletion,
 		ListSearch,
 		AvatarSettings,
+		DataExport,
 	},
 	created() {
 		this.passwordUpdateService = new PasswordUpdateService()

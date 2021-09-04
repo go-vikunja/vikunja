@@ -1,6 +1,7 @@
 import AbstractService from './abstractService'
 import AttachmentModel from '../models/attachment'
 import {formatISO} from 'date-fns'
+import {downloadBlob} from '@/helpers/downloadBlob'
 
 export default class AttachmentService extends AbstractService {
 	constructor() {
@@ -33,23 +34,12 @@ export default class AttachmentService extends AbstractService {
 	}
 
 	getBlobUrl(model) {
-		return this.http({
-			url: '/tasks/' + model.taskId + '/attachments/' + model.id,
-			method: 'GET',
-			responseType: 'blob',
-		}).then(response => {
-			return window.URL.createObjectURL(new Blob([response.data]))
-		})
+		return AbstractService.prototype.getBlobUrl.call(this, '/tasks/' + model.taskId + '/attachments/' + model.id)
 	}
 
 	download(model) {
-		this.getBlobUrl(model).then(url => {
-			const link = document.createElement('a')
-			link.href = url
-			link.setAttribute('download', model.file.name)
-			link.click()
-			window.URL.revokeObjectURL(url)
-		})
+		this.getBlobUrl(model)
+			.then(url => downloadBlob(url, model.file.name))
 	}
 
 	/**
