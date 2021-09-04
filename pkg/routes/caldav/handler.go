@@ -56,7 +56,7 @@ func ListHandler(c echo.Context) error {
 	}
 
 	storage := &VikunjaCaldavListStorage{
-		list: &models.List{ID: listID},
+		list: &models.ListWithTasksAndBuckets{List: models.List{ID: listID}},
 		user: u,
 	}
 
@@ -102,7 +102,7 @@ func TaskHandler(c echo.Context) error {
 	taskUID := strings.TrimSuffix(c.Param("task"), ".ics")
 
 	storage := &VikunjaCaldavListStorage{
-		list: &models.List{ID: listID},
+		list: &models.ListWithTasksAndBuckets{List: models.List{ID: listID}},
 		task: &models.Task{UID: taskUID},
 		user: u,
 	}

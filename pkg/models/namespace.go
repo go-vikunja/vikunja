@@ -187,6 +187,11 @@ type NamespaceWithLists struct {
 	Lists     []*List `xorm:"-" json:"lists"`
 }
 
+type NamespaceWithListsAndTasks struct {
+	Namespace
+	Lists []*ListWithTasksAndBuckets `xorm:"-" json:"lists"`
+}
+
 func makeNamespaceSlice(namespaces map[int64]*NamespaceWithLists, userMap map[int64]*user.User, subscriptions map[int64]*Subscription) []*NamespaceWithLists {
 	all := make([]*NamespaceWithLists, 0, len(namespaces))
 	for _, n := range namespaces {

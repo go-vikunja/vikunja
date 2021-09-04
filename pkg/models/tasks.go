@@ -129,6 +129,11 @@ type Task struct {
 	web.Rights   `xorm:"-" json:"-"`
 }
 
+type TaskWithComments struct {
+	Task
+	Comments []*TaskComment `xorm:"-" json:"comments"`
+}
+
 // TableName returns the table name for listtasks
 func (Task) TableName() string {
 	return "tasks"

@@ -302,3 +302,29 @@ func (n *UserMentionedInTaskNotification) ToDB() interface{} {
 func (n *UserMentionedInTaskNotification) Name() string {
 	return "task.mentioned"
 }
+
+// DataExportReadyNotification represents a DataExportReadyNotification notification
+type DataExportReadyNotification struct {
+	User *user.User `json:"user"`
+}
+
+// ToMail returns the mail notification for DataExportReadyNotification
+func (n *DataExportReadyNotification) ToMail() *notifications.Mail {
+	return notifications.NewMail().
+		Subject("Your Vikunja Data Export is ready").
+		Greeting("Hi "+n.User.GetName()+",").
+		Line("Your Vikunja Data Export is ready for you to download. Click the button below to download it:").
+		Action("Download", config.ServiceFrontendurl.GetString()+"user/export/download").
+		Line("The download will be available for the next 7 days.").
+		Line("Have a nice day!")
+}
+
+// ToDB returns the DataExportReadyNotification notification in a format which can be saved in the db
+func (n *DataExportReadyNotification) ToDB() interface{} {
+	return nil
+}
+
+// Name returns the name of the notification
+func (n *DataExportReadyNotification) Name() string {
+	return "data.export.ready"
+}

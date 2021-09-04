@@ -50,6 +50,7 @@ func RegisterListeners() {
 	events.RegisterListener((&TaskCommentUpdatedEvent{}).Name(), &HandleTaskCommentEditMentions{})
 	events.RegisterListener((&TaskCreatedEvent{}).Name(), &HandleTaskCreateMentions{})
 	events.RegisterListener((&TaskUpdatedEvent{}).Name(), &HandleTaskUpdatedMentions{})
+	events.RegisterListener((&UserDataExportRequestedEvent{}).Name(), &HandleUserDataExport{})
 }
 
 //////
@@ -561,4 +562,42 @@ func (s *SendTeamMemberAddedNotification) Handle(msg *message.Message) (err erro
 		Doer:   event.Doer,
 		Team:   event.Team,
 	})
+}
+
+// HandleUserDataExport  represents a listener
+type HandleUserDataExport struct {
+}
+
+// Name defines the name for the HandleUserDataExport listener
+func (s *HandleUserDataExport) Name() string {
+	return "handle.user.data.export"
+}
+
+// Handle is executed when the event HandleUserDataExport listens on is fired
+func (s *HandleUserDataExport) Handle(msg *message.Message) (err error) {
+	event := &UserDataExportRequestedEvent{}
+	err = json.Unmarshal(msg.Payload, event)
+	if err != nil {
+		return err
+	}
+
+	log.Debugf("Starting to export user data for user %d...", event.User.ID)
+
+	sess := db.NewSession()
+	defer sess.Close()
+	err = sess.Begin()
+	if err != nil {
+		return
+	}
+
+	err = ExportUserData(sess, event.User)
+	if err != nil {
+		_ = sess.Rollback()
+		return
+	}
+
+	log.Debugf("Done exporting user data for user %d...", event.User.ID)
+
+	err = sess.Commit()
+	return err
 }

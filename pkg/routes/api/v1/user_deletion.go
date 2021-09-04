@@ -27,7 +27,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-type UserDeletionRequest struct {
+type UserPasswordConfirmation struct {
 	Password string `json:"password" valid:"required"`
 }
 
@@ -41,13 +41,13 @@ type UserDeletionRequestConfirm struct {
 // @tags user
 // @Accept json
 // @Produce json
-// @Param credentials body v1.UserDeletionRequest true "The user password."
+// @Param credentials body v1.UserPasswordConfirmation true "The user password."
 // @Success 200 {object} models.Message
 // @Failure 412 {object} web.HTTPError "Bad password provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /user/deletion/request [post]
 func UserRequestDeletion(c echo.Context) error {
-	var deletionRequest UserDeletionRequest
+	var deletionRequest UserPasswordConfirmation
 	if err := c.Bind(&deletionRequest); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "No password provided.")
 	}
@@ -149,13 +149,13 @@ func UserConfirmDeletion(c echo.Context) error {
 // @tags user
 // @Accept json
 // @Produce json
-// @Param credentials body v1.UserDeletionRequest true "The user password to confirm."
+// @Param credentials body v1.UserPasswordConfirmation true "The user password to confirm."
 // @Success 200 {object} models.Message
 // @Failure 412 {object} web.HTTPError "Bad password provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /user/deletion/cancel [post]
 func UserCancelDeletion(c echo.Context) error {
-	var deletionRequest UserDeletionRequest
+	var deletionRequest UserPasswordConfirmation
 	if err := c.Bind(&deletionRequest); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "No password provided.")
 	}

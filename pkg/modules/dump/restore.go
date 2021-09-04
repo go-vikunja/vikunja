@@ -33,6 +33,7 @@ import (
 	"code.vikunja.io/api/pkg/initialize"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/migration"
+
 	"src.techknowlogick.com/xormigrate"
 )
 
@@ -194,6 +195,7 @@ func Restore(filename string) error {
 	///////
 	// Done
 	log.Infof("Done restoring dump.")
+	log.Infof("Restart Vikunja to make sure the new configuration file is applied.")
 
 	return nil
 }

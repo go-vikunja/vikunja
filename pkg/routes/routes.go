@@ -52,6 +52,8 @@ import (
 	"strings"
 	"time"
 
+	vikunja_file "code.vikunja.io/api/pkg/modules/migration/vikunja-file"
+
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
@@ -303,6 +305,8 @@ func registerAPIRoutes(a *echo.Group) {
 	u.POST("/settings/avatar", apiv1.ChangeUserAvatarProvider)
 	u.PUT("/settings/avatar/upload", apiv1.UploadAvatar)
 	u.POST("/settings/general", apiv1.UpdateGeneralUserSettings)
+	u.POST("/export/request", apiv1.RequestUserDataExport)
+	u.POST("/export/download", apiv1.DownloadUserDataExport)
 
 	if config.ServiceEnableTotp.GetBool() {
 		u.GET("/settings/totp", apiv1.UserTOTP)
@@ -563,7 +567,35 @@ func registerAPIRoutes(a *echo.Group) {
 
 	// Migrations
 	m := a.Group("/migration")
+	registerMigrations(m)
 
+	// List Backgrounds
+	if config.BackgroundsEnabled.GetBool() {
+		a.GET("/lists/:list/background", backgroundHandler.GetListBackground)
+		a.DELETE("/lists/:list/background", backgroundHandler.RemoveListBackground)
+		if config.BackgroundsUploadEnabled.GetBool() {
+			uploadBackgroundProvider := &backgroundHandler.BackgroundProvider{
+				Provider: func() background.Provider {
+					return &upload.Provider{}
+				},
+			}
+			a.PUT("/lists/:list/backgrounds/upload", uploadBackgroundProvider.UploadBackground)
+		}
+		if config.BackgroundsUnsplashEnabled.GetBool() {
+			unsplashBackgroundProvider := &backgroundHandler.BackgroundProvider{
+				Provider: func() background.Provider {
+					return &unsplash.Provider{}
+				},
+			}
+			a.GET("/backgrounds/unsplash/search", unsplashBackgroundProvider.SearchBackgrounds)
+			a.POST("/lists/:list/backgrounds/unsplash", unsplashBackgroundProvider.SetBackground)
+			a.GET("/backgrounds/unsplash/images/:image/thumb", unsplash.ProxyUnsplashThumb)
+			a.GET("/backgrounds/unsplash/images/:image", unsplash.ProxyUnsplashImage)
+		}
+	}
+}
+
+func registerMigrations(m *echo.Group) {
 	// Wunderlist
 	if config.MigrationWunderlistEnable.GetBool() {
 		wunderlistMigrationHandler := &migrationHandler.MigrationWeb{
@@ -604,30 +636,12 @@ func registerAPIRoutes(a *echo.Group) {
 		microsoftTodoMigrationHandler.RegisterRoutes(m)
 	}
 
-	// List Backgrounds
-	if config.BackgroundsEnabled.GetBool() {
-		a.GET("/lists/:list/background", backgroundHandler.GetListBackground)
-		a.DELETE("/lists/:list/background", backgroundHandler.RemoveListBackground)
-		if config.BackgroundsUploadEnabled.GetBool() {
-			uploadBackgroundProvider := &backgroundHandler.BackgroundProvider{
-				Provider: func() background.Provider {
-					return &upload.Provider{}
-				},
-			}
-			a.PUT("/lists/:list/backgrounds/upload", uploadBackgroundProvider.UploadBackground)
-		}
-		if config.BackgroundsUnsplashEnabled.GetBool() {
-			unsplashBackgroundProvider := &backgroundHandler.BackgroundProvider{
-				Provider: func() background.Provider {
-					return &unsplash.Provider{}
-				},
-			}
-			a.GET("/backgrounds/unsplash/search", unsplashBackgroundProvider.SearchBackgrounds)
-			a.POST("/lists/:list/backgrounds/unsplash", unsplashBackgroundProvider.SetBackground)
-			a.GET("/backgrounds/unsplash/images/:image/thumb", unsplash.ProxyUnsplashThumb)
-			a.GET("/backgrounds/unsplash/images/:image", unsplash.ProxyUnsplashImage)
-		}
+	vikunjaFileMigrationHandler := &migrationHandler.FileMigratorWeb{
+		MigrationStruct: func() migration.FileMigrator {
+			return &vikunja_file.FileMigrator{}
+		},
 	}
+	vikunjaFileMigrationHandler.RegisterRoutes(m)
 }
 
 func registerCalDavRoutes(c *echo.Group) {

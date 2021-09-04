@@ -51,12 +51,6 @@ type List struct {
 
 	// The user who created this list.
 	Owner *user.User `xorm:"-" json:"owner" valid:"-"`
-	// An array of tasks which belong to the list.
-	// Deprecated: you should use the dedicated task list endpoint because it has support for pagination and filtering
-	Tasks []*Task `xorm:"-" json:"-"`
-
-	// Only used for migration.
-	Buckets []*Bucket `xorm:"-" json:"-"`
 
 	// Whether or not a list is archived.
 	IsArchived bool `xorm:"not null default false" json:"is_archived" query:"is_archived"`
@@ -83,6 +77,15 @@ type List struct {
 
 	web.CRUDable `xorm:"-" json:"-"`
 	web.Rights   `xorm:"-" json:"-"`
+}
+
+type ListWithTasksAndBuckets struct {
+	List
+	// An array of tasks which belong to the list.
+	Tasks []*TaskWithComments `xorm:"-" json:"tasks"`
+	// Only used for migration.
+	Buckets          []*Bucket `xorm:"-" json:"buckets"`
+	BackgroundFileID int64     `xorm:"null" json:"background_file_id"`
 }
 
 // TableName returns a better name for the lists table

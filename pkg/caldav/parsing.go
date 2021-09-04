@@ -26,7 +26,7 @@ import (
 	"github.com/laurent22/ical-go"
 )
 
-func GetCaldavTodosForTasks(list *models.List, listTasks []*models.Task) string {
+func GetCaldavTodosForTasks(list *models.ListWithTasksAndBuckets, listTasks []*models.TaskWithComments) string {
 
 	// Make caldav todos from Vikunja todos
 	var caldavtodos []*Todo

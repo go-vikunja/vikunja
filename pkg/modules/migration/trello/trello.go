@@ -144,16 +144,16 @@ func getTrelloData(token string) (trelloData []*trello.Board, err error) {
 
 // Converts all previously obtained data from trello into the vikunja format.
 // `trelloData` should contain all boards with their lists and cards respectively.
-func convertTrelloDataToVikunja(trelloData []*trello.Board) (fullVikunjaHierachie []*models.NamespaceWithLists, err error) {
+func convertTrelloDataToVikunja(trelloData []*trello.Board) (fullVikunjaHierachie []*models.NamespaceWithListsAndTasks, err error) {
 
 	log.Debugf("[Trello Migration] ")
 
-	fullVikunjaHierachie = []*models.NamespaceWithLists{
+	fullVikunjaHierachie = []*models.NamespaceWithListsAndTasks{
 		{
 			Namespace: models.Namespace{
 				Title: "Imported from Trello",
 			},
-			Lists: []*models.List{},
+			Lists: []*models.ListWithTasksAndBuckets{},
 		},
 	}
 
@@ -162,10 +162,12 @@ func convertTrelloDataToVikunja(trelloData []*trello.Board) (fullVikunjaHierachi
 	log.Debugf("[Trello Migration] Converting %d boards to vikunja lists", len(trelloData))
 
 	for _, board := range trelloData {
-		list := &models.List{
-			Title:       board.Name,
-			Description: board.Desc,
-			IsArchived:  board.Closed,
+		list := &models.ListWithTasksAndBuckets{
+			List: models.List{
+				Title:       board.Name,
+				Description: board.Desc,
+				IsArchived:  board.Closed,
+			},
 		}
 
 		// Background
@@ -269,7 +271,7 @@ func convertTrelloDataToVikunja(trelloData []*trello.Board) (fullVikunjaHierachi
 					log.Debugf("[Trello Migration] Downloaded card attachment %s", attachment.ID)
 				}
 
-				list.Tasks = append(list.Tasks, task)
+				list.Tasks = append(list.Tasks, &models.TaskWithComments{Task: *task})
 			}
 
 			list.Buckets = append(list.Buckets, bucket)

@@ -142,11 +142,13 @@ type wunderlistContents struct {
 	subtasks  []*subtask
 }
 
-func convertListForFolder(listID int, list *list, content *wunderlistContents) (*models.List, error) {
+func convertListForFolder(listID int, list *list, content *wunderlistContents) (*models.ListWithTasksAndBuckets, error) {
 
-	l := &models.List{
-		Title:   list.Title,
-		Created: list.CreatedAt,
+	l := &models.ListWithTasksAndBuckets{
+		List: models.List{
+			Title:   list.Title,
+			Created: list.CreatedAt,
+		},
 	}
 
 	// Find all tasks belonging to this list and put them in
@@ -233,13 +235,13 @@ func convertListForFolder(listID int, list *list, content *wunderlistContents) (
 				}
 			}
 
-			l.Tasks = append(l.Tasks, newTask)
+			l.Tasks = append(l.Tasks, &models.TaskWithComments{Task: *newTask})
 		}
 	}
 	return l, nil
 }
 
-func convertWunderlistToVikunja(content *wunderlistContents) (fullVikunjaHierachie []*models.NamespaceWithLists, err error) {
+func convertWunderlistToVikunja(content *wunderlistContents) (fullVikunjaHierachie []*models.NamespaceWithListsAndTasks, err error) {
 
 	// Make a map from the list with the key being list id for easier handling
 	listMap := make(map[int]*list, len(content.lists))
@@ -249,7 +251,7 @@ func convertWunderlistToVikunja(content *wunderlistContents) (fullVikunjaHierach
 
 	// First, we look through all folders and create namespaces for them.
 	for _, folder := range content.folders {
-		namespace := &models.NamespaceWithLists{
+		namespace := &models.NamespaceWithListsAndTasks{
 			Namespace: models.Namespace{
 				Title:   folder.Title,
 				Created: folder.CreatedAt,
@@ -276,7 +278,7 @@ func convertWunderlistToVikunja(content *wunderlistContents) (fullVikunjaHierach
 
 	// At the end, loop over all lists which don't belong to a namespace and put them in a default namespace
 	if len(listMap) > 0 {
-		newNamespace := &models.NamespaceWithLists{
+		newNamespace := &models.NamespaceWithListsAndTasks{
 			Namespace: models.Namespace{
 				Title: "Migrated from wunderlist",
 			},

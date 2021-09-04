@@ -14,14 +14,27 @@
 // You should have received a copy of the GNU Affero General Public Licensee
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package user
+package handler
 
-// CreatedEvent represents a CreatedEvent event
-type CreatedEvent struct {
-	User *User
-}
+import (
+	"net/http"
 
-// Name defines the name for CreatedEvent
-func (t *CreatedEvent) Name() string {
-	return "user.created"
+	"code.vikunja.io/api/pkg/modules/migration"
+	user2 "code.vikunja.io/api/pkg/user"
+	"code.vikunja.io/web/handler"
+	"github.com/labstack/echo/v4"
+)
+
+func status(ms migration.MigratorName, c echo.Context) error {
+	user, err := user2.GetCurrentUser(c)
+	if err != nil {
+		return handler.HandleHTTPError(err, c)
+	}
+
+	status, err := migration.GetMigrationStatus(ms, user)
+	if err != nil {
+		return handler.HandleHTTPError(err, c)
+	}
+
+	return c.JSON(http.StatusOK, status)
 }

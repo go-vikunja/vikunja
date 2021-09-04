@@ -102,57 +102,79 @@ func TestConverting(t *testing.T) {
 		},
 	}
 
-	expectedHierachie := []*models.NamespaceWithLists{
+	expectedHierachie := []*models.NamespaceWithListsAndTasks{
 		{
 			Namespace: models.Namespace{
 				Title: "Migrated from Microsoft Todo",
 			},
-			Lists: []*models.List{
+			Lists: []*models.ListWithTasksAndBuckets{
 				{
-					Title: "List 1",
-					Tasks: []*models.Task{
+					List: models.List{
+						Title: "List 1",
+					},
+					Tasks: []*models.TaskWithComments{
 						{
-							Title:       "Task 1",
-							Description: "This is a description",
-						},
-						{
-							Title:  "Task 2",
-							Done:   true,
-							DoneAt: testtimeTime,
-						},
-						{
-							Title:    "Task 3",
-							Priority: 1,
-						},
-						{
-							Title:    "Task 4",
-							Priority: 3,
-						},
-						{
-							Title: "Task 5",
-							Reminders: []time.Time{
-								testtimeTime,
+							Task: models.Task{
+								Title:       "Task 1",
+								Description: "This is a description",
 							},
 						},
 						{
-							Title:   "Task 6",
-							DueDate: testtimeTime,
+							Task: models.Task{
+								Title:  "Task 2",
+								Done:   true,
+								DoneAt: testtimeTime,
+							},
 						},
 						{
-							Title:       "Task 7",
-							DueDate:     testtimeTime,
-							RepeatAfter: 60 * 60 * 24 * 7, // The amount of seconds in a week
+							Task: models.Task{
+								Title:    "Task 3",
+								Priority: 1,
+							},
+						},
+						{
+							Task: models.Task{
+								Title:    "Task 4",
+								Priority: 3,
+							},
+						},
+						{
+							Task: models.Task{
+								Title: "Task 5",
+								Reminders: []time.Time{
+									testtimeTime,
+								},
+							},
+						},
+						{
+							Task: models.Task{
+								Title:   "Task 6",
+								DueDate: testtimeTime,
+							},
+						},
+						{
+							Task: models.Task{
+								Title:       "Task 7",
+								DueDate:     testtimeTime,
+								RepeatAfter: 60 * 60 * 24 * 7, // The amount of seconds in a week
+							},
 						},
 					},
 				},
 				{
-					Title: "List 2",
-					Tasks: []*models.Task{
+					List: models.List{
+						Title: "List 2",
+					},
+					Tasks: []*models.TaskWithComments{
 						{
-							Title: "Task 1",
+							Task: models.Task{
+								Title: "Task 1",
+							},
 						},
 						{
-							Title: "Task 2",
+							Task: models.Task{
+								Title: "Task 2",
+							},
 						},
 					},
 				},

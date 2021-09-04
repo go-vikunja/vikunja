@@ -37,7 +37,7 @@ func (s *Status) TableName() string {
 }
 
 // SetMigrationStatus sets the migration status for a user
-func SetMigrationStatus(m Migrator, u *user.User) (err error) {
+func SetMigrationStatus(m MigratorName, u *user.User) (err error) {
 	s := db.NewSession()
 	defer s.Close()
 
@@ -50,7 +50,7 @@ func SetMigrationStatus(m Migrator, u *user.User) (err error) {
 }
 
 // GetMigrationStatus returns the migration status for a migration and a user
-func GetMigrationStatus(m Migrator, u *user.User) (status *Status, err error) {
+func GetMigrationStatus(m MigratorName, u *user.User) (status *Status, err error) {
 	s := db.NewSession()
 	defer s.Close()
 

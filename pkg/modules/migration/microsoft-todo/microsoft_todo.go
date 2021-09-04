@@ -243,15 +243,15 @@ func getMicrosoftTodoData(token string) (microsoftTodoData []*list, err error) {
 	return
 }
 
-func convertMicrosoftTodoData(todoData []*list) (vikunjsStructure []*models.NamespaceWithLists, err error) {
+func convertMicrosoftTodoData(todoData []*list) (vikunjsStructure []*models.NamespaceWithListsAndTasks, err error) {
 
 	// One namespace with all lists
-	vikunjsStructure = []*models.NamespaceWithLists{
+	vikunjsStructure = []*models.NamespaceWithListsAndTasks{
 		{
 			Namespace: models.Namespace{
 				Title: "Migrated from Microsoft Todo",
 			},
-			Lists: []*models.List{},
+			Lists: []*models.ListWithTasksAndBuckets{},
 		},
 	}
 
@@ -262,8 +262,10 @@ func convertMicrosoftTodoData(todoData []*list) (vikunjsStructure []*models.Name
 		log.Debugf("[Microsoft Todo Migration] Converting list %s", l.ID)
 
 		// Lists only with title
-		list := &models.List{
-			Title: l.DisplayName,
+		list := &models.ListWithTasksAndBuckets{
+			List: models.List{
+				Title: l.DisplayName,
+			},
 		}
 
 		log.Debugf("[Microsoft Todo Migration] Converting %d tasks", len(l.Tasks))
@@ -340,7 +342,7 @@ func convertMicrosoftTodoData(todoData []*list) (vikunjsStructure []*models.Name
 				}
 			}
 
-			list.Tasks = append(list.Tasks, task)
+			list.Tasks = append(list.Tasks, &models.TaskWithComments{Task: *task})
 			log.Debugf("[Microsoft Todo Migration] Done converted %d tasks", len(l.Tasks))
 		}
 

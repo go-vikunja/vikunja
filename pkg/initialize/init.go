@@ -97,6 +97,7 @@ func FullInit() {
 	user.RegisterTokenCleanupCron()
 	user.RegisterDeletionNotificationCron()
 	models.RegisterUserDeletionCron()
+	models.RegisterOldExportCleanupCron()
 
 	// Start processing events
 	go func() {

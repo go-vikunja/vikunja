@@ -19,6 +19,8 @@ package v1
 import (
 	"net/http"
 
+	vikunja_file "code.vikunja.io/api/pkg/modules/migration/vikunja-file"
+
 	microsofttodo "code.vikunja.io/api/pkg/modules/migration/microsoft-todo"
 
 	"code.vikunja.io/api/pkg/modules/migration/trello"
@@ -91,6 +93,9 @@ func Info(c echo.Context) error {
 		CaldavEnabled:          config.ServiceEnableCaldav.GetBool(),
 		EmailRemindersEnabled:  config.ServiceEnableEmailReminders.GetBool(),
 		UserDeletionEnabled:    config.ServiceEnableUserDeletion.GetBool(),
+		AvailableMigrators: []string{
+			(&vikunja_file.FileMigrator{}).Name(),
+		},
 		Legal: legalInfo{
 			ImprintURL:       config.LegalImprintURL.GetString(),
 			PrivacyPolicyURL: config.LegalPrivacyURL.GetString(),

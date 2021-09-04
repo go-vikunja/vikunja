@@ -17,11 +17,20 @@
 package migration
 
 import (
+	"io"
+
 	"code.vikunja.io/api/pkg/user"
 )
 
+type MigratorName interface {
+	// Name holds the name of the migration.
+	// This is used to show the name to users and to keep track of users who already migrated.
+	Name() string
+}
+
 // Migrator is the basic migrator interface which is shared among all migrators
 type Migrator interface {
+	MigratorName
 	// Migrate is the interface used to migrate a user's tasks from another platform to vikunja.
 	// The user object is the user who's tasks will be migrated.
 	Migrate(user *user.User) error
@@ -29,7 +38,12 @@ type Migrator interface {
 	// The use case for this are Oauth flows, where the server token should remain hidden and not
 	// known to the frontend.
 	AuthURL() string
-	// Title holds the name of the migration.
-	// This is used to show the name to users and to keep track of users who already migrated.
-	Name() string
+}
+
+// FileMigrator handles importing Vikunja data from a file. The implementation of it determines the format.
+type FileMigrator interface {
+	MigratorName
+	// Migrate is the interface used to migrate a user's tasks, list and other things from a file to vikunja.
+	// The user object is the user who's tasks will be migrated.
+	Migrate(user *user.User, file io.ReaderAt, size int64) error
 }

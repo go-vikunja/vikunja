@@ -31,7 +31,7 @@ import (
 
 // InsertFromStructure takes a fully nested Vikunja data structure and a user and then creates everything for this user
 // (Namespaces, tasks, etc. Even attachments and relations.)
-func InsertFromStructure(str []*models.NamespaceWithLists, user *user.User) (err error) {
+func InsertFromStructure(str []*models.NamespaceWithListsAndTasks, user *user.User) (err error) {
 	s := db.NewSession()
 	defer s.Close()
 
@@ -45,7 +45,7 @@ func InsertFromStructure(str []*models.NamespaceWithLists, user *user.User) (err
 	return s.Commit()
 }
 
-func insertFromStructure(s *xorm.Session, str []*models.NamespaceWithLists, user *user.User) (err error) {
+func insertFromStructure(s *xorm.Session, str []*models.NamespaceWithListsAndTasks, user *user.User) (err error) {
 
 	log.Debugf("[creating structure] Creating %d namespaces", len(str))
 
@@ -129,7 +129,7 @@ func insertFromStructure(s *xorm.Session, str []*models.NamespaceWithLists, user
 
 			// Create all tasks
 			for _, t := range tasks {
-				setBucketOrDefault(t)
+				setBucketOrDefault(&t.Task)
 
 				t.ListID = l.ID
 				err = t.Create(s, user)
@@ -220,6 +220,15 @@ func insertFromStructure(s *xorm.Session, str []*models.NamespaceWithLists, user
 						return err
 					}
 					log.Debugf("[creating structure] Associated task %d with label %d", t.ID, lb.ID)
+				}
+
+				for _, comment := range t.Comments {
+					comment.TaskID = t.ID
+					err = comment.Create(s, user)
+					if err != nil {
+						return
+					}
+					log.Debugf("[creating structure] Created new comment %d", comment.ID)
 				}
 			}
 

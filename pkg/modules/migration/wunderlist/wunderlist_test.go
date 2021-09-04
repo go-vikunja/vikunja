@@ -194,49 +194,55 @@ func TestWunderlistParsing(t *testing.T) {
 		},
 	}
 
-	expectedHierachie := []*models.NamespaceWithLists{
+	expectedHierachie := []*models.NamespaceWithListsAndTasks{
 		{
 			Namespace: models.Namespace{
 				Title:   "Lorem Ipsum",
 				Created: time1,
 				Updated: time2,
 			},
-			Lists: []*models.List{
+			Lists: []*models.ListWithTasksAndBuckets{
 				{
-					Created: time1,
-					Title:   "Lorem1",
-					Tasks: []*models.Task{
+					List: models.List{
+						Created: time1,
+						Title:   "Lorem1",
+					},
+					Tasks: []*models.TaskWithComments{
 						{
-							Title:       "Ipsum1",
-							DueDate:     time.Unix(1378339200, 0).In(config.GetTimeZone()),
-							Created:     time1,
-							Description: "Lorem Ipsum dolor sit amet",
-							Attachments: []*models.TaskAttachment{
-								{
-									File: &files.File{
-										Name:        "file.md",
-										Mime:        "text/plain",
-										Size:        12345,
-										Created:     time2,
-										FileContent: exampleFile,
+							Task: models.Task{
+								Title:       "Ipsum1",
+								DueDate:     time.Unix(1378339200, 0).In(config.GetTimeZone()),
+								Created:     time1,
+								Description: "Lorem Ipsum dolor sit amet",
+								Attachments: []*models.TaskAttachment{
+									{
+										File: &files.File{
+											Name:        "file.md",
+											Mime:        "text/plain",
+											Size:        12345,
+											Created:     time2,
+											FileContent: exampleFile,
+										},
+										Created: time2,
 									},
-									Created: time2,
 								},
+								Reminders: []time.Time{time4},
 							},
-							Reminders: []time.Time{time4},
 						},
 						{
-							Title:       "Ipsum2",
-							DueDate:     time.Unix(1378339200, 0).In(config.GetTimeZone()),
-							Created:     time1,
-							Description: "Lorem Ipsum dolor sit amet",
-							RelatedTasks: map[models.RelationKind][]*models.Task{
-								models.RelationKindSubtask: {
-									{
-										Title: "LoremSub1",
-									},
-									{
-										Title: "LoremSub2",
+							Task: models.Task{
+								Title:       "Ipsum2",
+								DueDate:     time.Unix(1378339200, 0).In(config.GetTimeZone()),
+								Created:     time1,
+								Description: "Lorem Ipsum dolor sit amet",
+								RelatedTasks: map[models.RelationKind][]*models.Task{
+									models.RelationKindSubtask: {
+										{
+											Title: "LoremSub1",
+										},
+										{
+											Title: "LoremSub2",
+										},
 									},
 								},
 							},
@@ -244,38 +250,44 @@ func TestWunderlistParsing(t *testing.T) {
 					},
 				},
 				{
-					Created: time1,
-					Title:   "Lorem2",
-					Tasks: []*models.Task{
+					List: models.List{
+						Created: time1,
+						Title:   "Lorem2",
+					},
+					Tasks: []*models.TaskWithComments{
 						{
-							Title:       "Ipsum3",
-							Done:        true,
-							DoneAt:      time1,
-							DueDate:     time.Unix(1378339200, 0).In(config.GetTimeZone()),
-							Created:     time1,
-							Description: "Lorem Ipsum dolor sit amet",
-							Attachments: []*models.TaskAttachment{
-								{
-									File: &files.File{
-										Name:        "file2.md",
-										Mime:        "text/plain",
-										Size:        12345,
-										Created:     time3,
-										FileContent: exampleFile,
-									},
-									Created: time3,
-								},
-							},
-						},
-						{
-							Title:     "Ipsum4",
-							DueDate:   time.Unix(1378339200, 0).In(config.GetTimeZone()),
-							Created:   time1,
-							Reminders: []time.Time{time3},
-							RelatedTasks: map[models.RelationKind][]*models.Task{
-								models.RelationKindSubtask: {
+							Task: models.Task{
+								Title:       "Ipsum3",
+								Done:        true,
+								DoneAt:      time1,
+								DueDate:     time.Unix(1378339200, 0).In(config.GetTimeZone()),
+								Created:     time1,
+								Description: "Lorem Ipsum dolor sit amet",
+								Attachments: []*models.TaskAttachment{
 									{
-										Title: "LoremSub3",
+										File: &files.File{
+											Name:        "file2.md",
+											Mime:        "text/plain",
+											Size:        12345,
+											Created:     time3,
+											FileContent: exampleFile,
+										},
+										Created: time3,
+									},
+								},
+							},
+						},
+						{
+							Task: models.Task{
+								Title:     "Ipsum4",
+								DueDate:   time.Unix(1378339200, 0).In(config.GetTimeZone()),
+								Created:   time1,
+								Reminders: []time.Time{time3},
+								RelatedTasks: map[models.RelationKind][]*models.Task{
+									models.RelationKindSubtask: {
+										{
+											Title: "LoremSub3",
+										},
 									},
 								},
 							},
@@ -283,52 +295,68 @@ func TestWunderlistParsing(t *testing.T) {
 					},
 				},
 				{
-					Created: time1,
-					Title:   "Lorem3",
-					Tasks: []*models.Task{
+					List: models.List{
+						Created: time1,
+						Title:   "Lorem3",
+					},
+					Tasks: []*models.TaskWithComments{
 						{
-							Title:   "Ipsum5",
-							DueDate: time.Unix(1378339200, 0).In(config.GetTimeZone()),
-							Created: time1,
+							Task: models.Task{
+								Title:   "Ipsum5",
+								DueDate: time.Unix(1378339200, 0).In(config.GetTimeZone()),
+								Created: time1,
+							},
 						},
 						{
-							Title:   "Ipsum6",
-							DueDate: time.Unix(1378339200, 0).In(config.GetTimeZone()),
-							Created: time1,
-							Done:    true,
-							DoneAt:  time1,
+							Task: models.Task{
+								Title:   "Ipsum6",
+								DueDate: time.Unix(1378339200, 0).In(config.GetTimeZone()),
+								Created: time1,
+								Done:    true,
+								DoneAt:  time1,
+							},
 						},
 						{
-							Title:   "Ipsum7",
-							DueDate: time.Unix(1378339200, 0).In(config.GetTimeZone()),
-							Created: time1,
-							Done:    true,
-							DoneAt:  time1,
+							Task: models.Task{
+								Title:   "Ipsum7",
+								DueDate: time.Unix(1378339200, 0).In(config.GetTimeZone()),
+								Created: time1,
+								Done:    true,
+								DoneAt:  time1,
+							},
 						},
 						{
-							Title:   "Ipsum8",
-							DueDate: time.Unix(1378339200, 0).In(config.GetTimeZone()),
-							Created: time1,
+							Task: models.Task{
+								Title:   "Ipsum8",
+								DueDate: time.Unix(1378339200, 0).In(config.GetTimeZone()),
+								Created: time1,
+							},
 						},
 					},
 				},
 				{
-					Created: time1,
-					Title:   "Lorem4",
-					Tasks: []*models.Task{
+					List: models.List{
+						Created: time1,
+						Title:   "Lorem4",
+					},
+					Tasks: []*models.TaskWithComments{
 						{
-							Title:   "Ipsum9",
-							DueDate: time.Unix(1378339200, 0).In(config.GetTimeZone()),
-							Created: time1,
-							Done:    true,
-							DoneAt:  time1,
+							Task: models.Task{
+								Title:   "Ipsum9",
+								DueDate: time.Unix(1378339200, 0).In(config.GetTimeZone()),
+								Created: time1,
+								Done:    true,
+								DoneAt:  time1,
+							},
 						},
 						{
-							Title:   "Ipsum10",
-							DueDate: time.Unix(1378339200, 0).In(config.GetTimeZone()),
-							Created: time1,
-							Done:    true,
-							DoneAt:  time1,
+							Task: models.Task{
+								Title:   "Ipsum10",
+								DueDate: time.Unix(1378339200, 0).In(config.GetTimeZone()),
+								Created: time1,
+								Done:    true,
+								DoneAt:  time1,
+							},
 						},
 					},
 				},
@@ -338,10 +366,12 @@ func TestWunderlistParsing(t *testing.T) {
 			Namespace: models.Namespace{
 				Title: "Migrated from wunderlist",
 			},
-			Lists: []*models.List{
+			Lists: []*models.ListWithTasksAndBuckets{
 				{
-					Created: time4,
-					Title:   "List without a namespace",
+					List: models.List{
+						Created: time4,
+						Title:   "List without a namespace",
+					},
 				},
 			},
 		},

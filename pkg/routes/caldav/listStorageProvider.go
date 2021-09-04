@@ -39,7 +39,7 @@ const ListBasePath = DavBasePath + `lists`
 // VikunjaCaldavListStorage represents a list storage
 type VikunjaCaldavListStorage struct {
 	// Used when handling a list
-	list *models.List
+	list *models.ListWithTasksAndBuckets
 	// Used when handling a single task, like updating
 	task *models.Task
 	// The current user
@@ -109,7 +109,9 @@ func (vcls *VikunjaCaldavListStorage) GetResources(rpath string, withChildren bo
 	var resources []data.Resource
 	for _, l := range lists {
 		rr := VikunjaListResourceAdapter{
-			list:         l,
+			list: &models.ListWithTasksAndBuckets{
+				List: *l,
+			},
 			isCollection: true,
 		}
 		r := data.NewResource(ListBasePath+"/"+strconv.FormatInt(l.ID, 10), &rr)
@@ -172,10 +174,10 @@ func (vcls *VikunjaCaldavListStorage) GetResourcesByFilters(rpath string, filter
 		for _, t := range vcls.list.Tasks {
 			rr := VikunjaListResourceAdapter{
 				list:         vcls.list,
-				task:         t,
+				task:         &t.Task,
 				isCollection: false,
 			}
-			r := data.NewResource(getTaskURL(t), &rr)
+			r := data.NewResource(getTaskURL(&t.Task), &rr)
 			r.Name = t.Title
 			resources = append(resources, r)
 		}
@@ -368,8 +370,8 @@ func (vcls *VikunjaCaldavListStorage) DeleteResource(rpath string) error {
 
 // VikunjaListResourceAdapter holds the actual resource
 type VikunjaListResourceAdapter struct {
-	list      *models.List
-	listTasks []*models.Task
+	list      *models.ListWithTasksAndBuckets
+	listTasks []*models.TaskWithComments
 	task      *models.Task
 
 	isPrincipal  bool
@@ -415,7 +417,7 @@ func (vlra *VikunjaListResourceAdapter) GetContent() string {
 	}
 
 	if vlra.task != nil {
-		list := models.List{Tasks: []*models.Task{vlra.task}}
+		list := models.ListWithTasksAndBuckets{Tasks: []*models.TaskWithComments{{Task: *vlra.task}}}
 		return caldav.GetCaldavTodosForTasks(&list, list.Tasks)
 	}
 
@@ -479,8 +481,10 @@ func (vcls *VikunjaCaldavListStorage) getListRessource(isCollection bool) (rr Vi
 			panic("Tasks returned from TaskCollection.ReadAll are not []*models.Task!")
 		}
 
-		listTasks = tasks
-		vcls.list.Tasks = tasks
+		for _, t := range tasks {
+			listTasks = append(listTasks, &models.TaskWithComments{Task: *t})
+		}
+		vcls.list.Tasks = listTasks
 	}
 
 	if err := s.Commit(); err != nil {

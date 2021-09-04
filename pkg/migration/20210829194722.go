@@ -14,14 +14,30 @@
 // You should have received a copy of the GNU Affero General Public Licensee
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package user
+package migration
 
-// CreatedEvent represents a CreatedEvent event
-type CreatedEvent struct {
-	User *User
+import (
+	"src.techknowlogick.com/xormigrate"
+	"xorm.io/xorm"
+)
+
+type users20210829194722 struct {
+	ExportFileID int64 `xorm:"bigint null" json:"-"`
 }
 
-// Name defines the name for CreatedEvent
-func (t *CreatedEvent) Name() string {
-	return "user.created"
+func (users20210829194722) TableName() string {
+	return "users"
+}
+
+func init() {
+	migrations = append(migrations, &xormigrate.Migration{
+		ID:          "20210829194722",
+		Description: "Add data export file id to users",
+		Migrate: func(tx *xorm.Engine) error {
+			return tx.Sync2(users20210829194722{})
+		},
+		Rollback: func(tx *xorm.Engine) error {
+			return nil
+		},
+	})
 }

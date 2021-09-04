@@ -1185,11 +1185,6 @@ definitions:
           email), `upload`, `initials`, `default`.
         type: string
     type: object
-  v1.UserDeletionRequest:
-    properties:
-      password:
-        type: string
-    type: object
   v1.UserDeletionRequestConfirm:
     properties:
       token:
@@ -1200,6 +1195,11 @@ definitions:
       new_password:
         type: string
       old_password:
+        type: string
+    type: object
+  v1.UserPasswordConfirmation:
+    properties:
+      password:
         type: string
     type: object
   v1.UserSettings:
@@ -3267,6 +3267,55 @@ paths:
       tags:
       - migration
   /migration/trello/status:
+    get:
+      description: Returns if the current user already did the migation or not. This
+        is useful to show a confirmation message in the frontend if the user is trying
+        to do the same migration again.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The migration status
+          schema:
+            $ref: '#/definitions/migration.Status'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get migration status
+      tags:
+      - migration
+  /migration/vikunja-file/migrate:
+    post:
+      consumes:
+      - application/json
+      description: Imports all projects, tasks, notes, reminders, subtasks and files
+        from a Vikunjda data export into Vikunja.
+      parameters:
+      - description: The Vikunja export zip file.
+        in: formData
+        name: import
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: A message telling you everything was migrated successfully.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Import all lists, tasks etc. from a Vikunja data export
+      tags:
+      - migration
+  /migration/vikunja-file/status:
     get:
       description: Returns if the current user already did the migation or not. This
         is useful to show a confirmation message in the frontend if the user is trying
@@ -5554,7 +5603,7 @@ paths:
         name: credentials
         required: true
         schema:
-          $ref: '#/definitions/v1.UserDeletionRequest'
+          $ref: '#/definitions/v1.UserPasswordConfirmation'
       produces:
       - application/json
       responses:
@@ -5615,7 +5664,7 @@ paths:
         name: credentials
         required: true
         schema:
-          $ref: '#/definitions/v1.UserDeletionRequest'
+          $ref: '#/definitions/v1.UserPasswordConfirmation'
       produces:
       - application/json
       responses:
@@ -5632,6 +5681,68 @@ paths:
           schema:
             $ref: '#/definitions/models.Message'
       summary: Request the deletion of the user
+      tags:
+      - user
+  /user/export/download:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: User password to confirm the download.
+        in: body
+        name: password
+        required: true
+        schema:
+          $ref: '#/definitions/v1.UserPasswordConfirmation'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Message'
+        "400":
+          description: Something's invalid.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal server error.
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Download a user data export.
+      tags:
+      - user
+  /user/export/request:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: User password to confirm the data export request.
+        in: body
+        name: password
+        required: true
+        schema:
+          $ref: '#/definitions/v1.UserPasswordConfirmation'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Message'
+        "400":
+          description: Something's invalid.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal server error.
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Request a user data export.
       tags:
       - user
   /user/password:

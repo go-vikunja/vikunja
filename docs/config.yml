@@ -31,10 +31,10 @@ menu:
       url: https://vikunja.io/en/
       weight: 10
     - name: Features
-      url: https://vikunja.io/en/features
+      url: https://vikunja.io/features
       weight: 20
     - name: Download
-      url: https://vikunja.io/en/download
+      url: https://vikunja.io/download
       weight: 30
     - name: Docs
       url: https://vikunja.io/docs

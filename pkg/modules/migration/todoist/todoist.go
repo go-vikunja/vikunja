@@ -252,28 +252,30 @@ func parseDate(dateString string) (date time.Time, err error) {
 	return date, err
 }
 
-func convertTodoistToVikunja(sync *sync, doneItems map[int64]*doneItem) (fullVikunjaHierachie []*models.NamespaceWithLists, err error) {
+func convertTodoistToVikunja(sync *sync, doneItems map[int64]*doneItem) (fullVikunjaHierachie []*models.NamespaceWithListsAndTasks, err error) {
 
-	newNamespace := &models.NamespaceWithLists{
+	newNamespace := &models.NamespaceWithListsAndTasks{
 		Namespace: models.Namespace{
 			Title: "Migrated from todoist",
 		},
 	}
 
 	// A map for all vikunja lists with the project id they're coming from as key
-	lists := make(map[int64]*models.List, len(sync.Projects))
+	lists := make(map[int64]*models.ListWithTasksAndBuckets, len(sync.Projects))
 
 	// A map for all vikunja tasks with the todoist task id as key to find them easily and add more data
-	tasks := make(map[int64]*models.Task, len(sync.Items))
+	tasks := make(map[int64]*models.TaskWithComments, len(sync.Items))
 
 	// A map for all vikunja labels with the todoist id as key to find them easier
 	labels := make(map[int64]*models.Label, len(sync.Labels))
 
 	for _, p := range sync.Projects {
-		list := &models.List{
-			Title:      p.Name,
-			HexColor:   todoistColors[p.Color],
-			IsArchived: p.IsArchived == 1,
+		list := &models.ListWithTasksAndBuckets{
+			List: models.List{
+				Title:      p.Name,
+				HexColor:   todoistColors[p.Color],
+				IsArchived: p.IsArchived == 1,
+			},
 		}
 
 		lists[p.ID] = list
@@ -305,11 +307,13 @@ func convertTodoistToVikunja(sync *sync, doneItems map[int64]*doneItem) (fullVik
 	}
 
 	for _, i := range sync.Items {
-		task := &models.Task{
-			Title:    i.Content,
-			Created:  i.DateAdded.In(config.GetTimeZone()),
-			Done:     i.Checked == 1,
-			BucketID: i.SectionID,
+		task := &models.TaskWithComments{
+			Task: models.Task{
+				Title:    i.Content,
+				Created:  i.DateAdded.In(config.GetTimeZone()),
+				Done:     i.Checked == 1,
+				BucketID: i.SectionID,
+			},
 		}
 
 		// Only try to parse the task done at date if the task is actually done
@@ -365,7 +369,7 @@ func convertTodoistToVikunja(sync *sync, doneItems map[int64]*doneItem) (fullVik
 			tasks[i.ParentID].RelatedTasks = make(models.RelatedTaskMap)
 		}
 
-		tasks[i.ParentID].RelatedTasks[models.RelationKindSubtask] = append(tasks[i.ParentID].RelatedTasks[models.RelationKindSubtask], tasks[i.ID])
+		tasks[i.ParentID].RelatedTasks[models.RelationKindSubtask] = append(tasks[i.ParentID].RelatedTasks[models.RelationKindSubtask], &tasks[i.ID].Task)
 
 		// Remove the task from the top level structure, otherwise it is added twice
 	outer:
@@ -449,7 +453,7 @@ func convertTodoistToVikunja(sync *sync, doneItems map[int64]*doneItem) (fullVik
 		tasks[r.ItemID].Reminders = append(tasks[r.ItemID].Reminders, date.In(config.GetTimeZone()))
 	}
 
-	return []*models.NamespaceWithLists{
+	return []*models.NamespaceWithListsAndTasks{
 		newNamespace,
 	}, err
 }

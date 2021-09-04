@@ -26,33 +26,20 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// MigrationWeb holds the web migration handler
-type MigrationWeb struct {
-	MigrationStruct func() migration.Migrator
-}
-
-// AuthURL is returned to the user when requesting the auth url
-type AuthURL struct {
-	URL string `json:"url"`
+type FileMigratorWeb struct {
+	MigrationStruct func() migration.FileMigrator
 }
 
 // RegisterRoutes registers all routes for migration
-func (mw *MigrationWeb) RegisterRoutes(g *echo.Group) {
-	ms := mw.MigrationStruct()
-	g.GET("/"+ms.Name()+"/auth", mw.AuthURL)
-	g.GET("/"+ms.Name()+"/status", mw.Status)
-	g.POST("/"+ms.Name()+"/migrate", mw.Migrate)
-}
-
-// AuthURL is the web handler to get the auth url
-func (mw *MigrationWeb) AuthURL(c echo.Context) error {
-	ms := mw.MigrationStruct()
-	return c.JSON(http.StatusOK, &AuthURL{URL: ms.AuthURL()})
+func (fw *FileMigratorWeb) RegisterRoutes(g *echo.Group) {
+	ms := fw.MigrationStruct()
+	g.GET("/"+ms.Name()+"/status", fw.Status)
+	g.PUT("/"+ms.Name()+"/migrate", fw.Migrate)
 }
 
 // Migrate calls the migration method
-func (mw *MigrationWeb) Migrate(c echo.Context) error {
-	ms := mw.MigrationStruct()
+func (fw *FileMigratorWeb) Migrate(c echo.Context) error {
+	ms := fw.MigrationStruct()
 
 	// Get the user from context
 	user, err := user2.GetCurrentUser(c)
@@ -60,14 +47,18 @@ func (mw *MigrationWeb) Migrate(c echo.Context) error {
 		return handler.HandleHTTPError(err, c)
 	}
 
-	// Bind user request stuff
-	err = c.Bind(ms)
+	file, err := c.FormFile("import")
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "No or invalid model provided: "+err.Error())
+		return err
 	}
+	src, err := file.Open()
+	if err != nil {
+		return err
+	}
+	defer src.Close()
 
 	// Do the migration
-	err = ms.Migrate(user)
+	err = ms.Migrate(user, src, file.Size)
 	if err != nil {
 		return handler.HandleHTTPError(err, c)
 	}
@@ -81,8 +72,8 @@ func (mw *MigrationWeb) Migrate(c echo.Context) error {
 }
 
 // Status returns whether or not a user has already done this migration
-func (mw *MigrationWeb) Status(c echo.Context) error {
-	ms := mw.MigrationStruct()
+func (fw *FileMigratorWeb) Status(c echo.Context) error {
+	ms := fw.MigrationStruct()
 
 	return status(ms, c)
 }
