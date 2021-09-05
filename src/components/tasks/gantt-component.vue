@@ -283,10 +283,12 @@ export default {
 		setDates() {
 			this.startDate = new Date(this.dateFrom)
 			this.endDate = new Date(this.dateTo)
+			console.debug('setDates; start date: ', this.startDate, 'end date:', this.endDate, 'date from:', this.dateFrom, 'date to:', this.dateTo)
 
 			this.dayOffsetUntilToday = Math.floor((this.now - this.startDate) / 1000 / 60 / 60 / 24) + 1
 		},
 		prepareGanttDays() {
+			console.debug('prepareGanttDays; start date: ', this.startDate, 'end date:', this.endDate)
 			// Layout: years => [months => [days]]
 			let years = {}
 			for (
@@ -298,15 +300,13 @@ export default {
 				if (years[date.getFullYear() + ''] === undefined) {
 					years[date.getFullYear() + ''] = {}
 				}
-				if (
-					years[date.getFullYear() + ''][date.getMonth() + ''] === undefined
-				) {
+				if (years[date.getFullYear() + ''][date.getMonth() + ''] === undefined) {
 					years[date.getFullYear() + ''][date.getMonth() + ''] = []
 				}
 				years[date.getFullYear() + ''][date.getMonth() + ''].push(date)
 				this.fullWidth += this.dayWidth
 			}
-			console.log(years)
+			console.debug('prepareGanttDays; years:', years)
 			this.$set(this, 'days', years)
 		},
 		parseTasks() {
