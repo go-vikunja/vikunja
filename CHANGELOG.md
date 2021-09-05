@@ -2,12 +2,318 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres
+to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 All releases can be found on https://code.vikunja.io/frontend/releases.
 
 The releases aim at the api versions which is why there are missing versions.
+
+## [0.18.0] - 2021-09-05
+
+### Added
+
+* Add a button to copy an attachment url from the attachment overview
+* Add collapsing kanban buckets
+* Add confirm with enter when setting a new password
+* Add default list setting & creating tasks from home (#520)
+* Add depends_on for push step
+* Add depends_on for upload step
+* Add drag delay on mobile
+* Add express for serve:dev
+* Add filters for quick action bar
+* Add frontend tests for list history
+* Add making tasks favorite from the task detail view
+* Add missing position property to list and bucket models
+* Add more debug logs for gantt charts
+* Add more global state tests (#521)
+* Add proofread languages to available languages
+* Add quick action bar shortcut to shortcut overview
+* Add setting for the first day of the week
+* Add showing version info in GUI
+* Add syncing translations to crowdin
+* Add timeout to fix race condition when authenticating as a link share and renewing the token simultaneously
+* Add translations (#562)
+* Add typescript support for helper functions (#598)
+* Add vite (#416)
+* Allow failure of the weblate update step
+* Always set the kanban board to full width for share links
+* Another day, another js date edge-case
+* Automatically update approved translations from crowdin
+* Break long list titles in list overview
+* Preload labels and use locally stored in vuex
+* PWA improvments (#622)
+* Quick Actions & global search (#528)
+* Quick add magic for tasks (#570)
+* Reorder tasks, lists and kanban buckets (#620)
+* Show last visited list on home page
+* Show recently visited lists in quick actions
+* Show salutation based on the time of day
+* Sort labels alphabetically on tasks
+* Switch the :latest docker image tag to contain the latest release instead of the latest unstable
+
+### Changed
+
+* Change building latest docker image
+* Change desktop downstream trigger plugin with our own debug build
+* Change menu hamburger icon
+* Change quick add magic characters to be more familiar with the todoist ones
+* Change the docker builder image to a working one on arm
+* chore: discard old font file formats (#673)
+* chore: only import common languages (#671)
+* Cleanup broken sw functions
+* Cleanup drone pipeline
+* Cleanup old vue cli config
+* Configure tests retries
+* Decrease page padding on task detail page
+* Directly redirect to the openid auth provider if that's the only auth method
+* Don't allow dragging a list when the user does not have the rights
+* Don't load already loaded task attachments again when saving an edited task description
+* Don't prefetch all i18n files
+* Don't show archived lists/namespaces in quick actions
+* feat: provide global variables in all components (#669)
+* Hide favorite list edit menu
+* Hide keyboard shortcuts indicator on mobile
+* Improve chunk size
+* Improve some translations (#581)
+* Improve tests
+* Indicate done tasks in quick actions
+* Load list background in list card
+* Make editor edit button at the bottom the default and make sure the done button stands out more
+* Make saving a text edit a button
+* Make sure highlight.js is always lazy-loaded
+* Make sure the task popup view takes up all the space it can on mobile
+* Make tests less flaky
+* Make the logo smaller on link shared lists
+* Make the progress bar color lighter
+* Move creation of new items to the bottom of the multiselect list
+* Move general settings to the top
+* Move translated files after downloading them
+* Move weblate ping to shell script
+* Only add a drag delay if on mobile instead of setting it to 0
+* Only build a bundle for modern browsers
+* Refactor success and error messages
+* Refactor success and error notifications to prevent html in them
+* Remove logout button for link shares
+* Run frontend-tests with dist in ci (#605)
+* Save auth tokens from link shares only in memory, don't persist them to localStorage
+* Search namespaces locally only when duplicating a list
+* Show errors from openid provider
+* Show labels alphabetically sorted in the overview
+* Small cleanups & code improvements
+* TOTP UX improvements & translation fixes
+
+### Fixed
+
+* Fix changing the repeat mode of a task when no value is entered yet
+* Fix comment on different task after clicking on a task notification
+* Fix CTA spacings
+* Fix date parsing parsing words with weekdays in them (#607)
+* fix(deps): update dependency marked to v3.0.1 (#677)
+* fix(deps): update dependency marked to v3.0.2 (#682)
+* Fix error property already defined as a function
+* Fix flickering pre-loaded search results when focusing the search input
+* Fix Gantt layout overflowsing on mobile
+* Fix gantt months being wrong
+* Fix git push remote to update crowdin translations
+* Fix global mutation of has tasks state
+* Fix header layout for long list titles
+* Fix highlight.js in editor
+* Fix home page tests
+* Fix keyboard shortcuts not working on the task detail page
+* Fix label changes appearing to be saved immediately when editing them
+* Fix labels list in saved filter spacing
+* Fix lint
+* Fix list archived notification mobile layout
+* Fix list settings not being available when list backgrounds are disabled
+* Fix lists showing up multiple times in history
+* Fix llama background url
+* Fix loading a list when it was already partially saved in vuex
+* Fix loading & disabled state on inputs when creating a new task
+* Fix loading labels when editing a saved filter
+* Fix menu styles
+* Fix missing background for tasks on a shared list with a background
+* Fix multiselect search padding
+* Fix new lists created with quick actions not showing up in the menu
+* fix: non unique ids (#672)
+* Fix not reloading tasks of a saved filter after editing it
+* Fix not updating list name in store when changing it
+* Fix other values getting pushed away when creating a new one through multiselect
+* Fix padding for kanban cards
+* Fix parsing dates on the last day of the month
+* Fix populating task details ater updating the description
+* Fix quick actions not opening
+* Fix quick actions not working when nonexisting lists where left over in history
+* Fix redirecting to /login for some routes
+* Fix removing a namespace from state after it was deleted
+* Fix resetting date filters from upcoming after viewing a task detail page (popup)
+* Fix sass division
+* Fix saving showing archived setting
+* Fix selecting a single value from multiselect
+* Fix sending openid scopes when authenticating
+* Fix sending the user back to the list view they came from when opening a task in detail view
+* Fix setting a task as favorite button
+* Fix setting delete button for newly created task comments
+* Fix setting filters for reminders
+* Fix setting secret for updating translations
+* Fix setting task favorite status in test fixtures
+* Fix showing an editor save button in cases where it wasn't required
+* Fix showing edit buttons when the user does not have the rights to use them
+* Fix showing import tasks cta when tasks are loading
+* Fix some translation strings
+* Fix sorting labels
+* Fix spacing for task detail view in lists with a background
+* Fix table headers wrapping in table view
+* Fix table text alignment in task detail page
+* Fix table view scrolling on mobile
+* Fix test for saving a task description
+* Fix tests failing on thursdays
+* Fix token in storage not getting renewed
+* Fix translating dates
+* Fix usage of / in sass
+* Fix user name and avatar alignment in navbar
+* Fix users not removed from the list in settings when unshared
+* Fix user test fixtures
+* fix: vuex mutation violation from draggable (#674)
+
+### Dependency Updates
+
+* chore(deps): update dependency @4tw/cypress-drag-drop to v1.8.1 (#693)
+* chore(deps): update dependency autoprefixer to v10.3.3 (#684)
+* chore(deps): update dependency autoprefixer to v10.3.4 (#697)
+* chore(deps): update dependency axios to v0.21.2 (#698)
+* chore(deps): update dependency axios to v0.21.3 (#700)
+* chore(deps): update dependency cypress to v8.3.1 (#689)
+* chore(deps): update dependency esbuild to v0.12.23 (#683)
+* chore(deps): update dependency esbuild to v0.12.24 (#688)
+* chore(deps): update dependency esbuild to v0.12.25 (#696)
+* chore(deps): update dependency eslint-plugin-vue to v7.17.0 (#686)
+* chore(deps): update dependency jest to v27.1.0 (#687)
+* chore(deps): update dependency sass to v1.38.1 (#679)
+* chore(deps): update dependency sass to v1.38.2 (#690)
+* chore(deps): update dependency sass to v1.39.0 (#695)
+* chore(deps): update dependency typescript to v4.4.2 (#685)
+* chore(deps): update dependency vite-plugin-pwa to v0.11.2 (#681)
+* chore(deps): update dependency vite to v2.5.1 (#680)
+* chore(deps): update dependency vite to v2.5.2 (#692)
+* chore(deps): update dependency vite to v2.5.3 (#694)
+* chore(deps): update typescript-eslint monorepo to v4.29.3 (#676)
+* chore(deps): update typescript-eslint monorepo to v4.30.0 (#691)
+* Update dependency autoprefixer to v10.3.2 (#670)
+* Update dependency browserslist to v4.16.7 (#634)
+* Update dependency browserslist to v4.16.8 (#664)
+* Update dependency browserslist to v4.17.0 (#701)
+* Update dependency bulma to v0.9.3 (#554)
+* Update dependency cypress-file-upload to v5.0.8 (#556)
+* Update dependency cypress to v7.3.0 (#507)
+* Update dependency cypress to v7.4.0 (#517)
+* Update dependency cypress to v7.5.0 (#541)
+* Update dependency cypress to v7.6.0 (#561)
+* Update dependency cypress to v7.7.0 (#577)
+* Update dependency cypress to v8.1.0 (#624)
+* Update dependency cypress to v8.2.0 (#637)
+* Update dependency cypress to v8.3.0 (#660)
+* Update dependency cypress to v8 (#601)
+* Update dependency date-fns to v2.22.0 (#523)
+* Update dependency date-fns to v2.22.1 (#524)
+* Update dependency date-fns to v2.23.0 (#604)
+* Update dependency dompurify to v2.2.9 (#529)
+* Update dependency dompurify to v2.3.0 (#573)
+* Update dependency dompurify to v2.3.1 (#655)
+* Update dependency esbuild to v0.12.15 (#610)
+* Update dependency esbuild to v0.12.16 (#614)
+* Update dependency esbuild to v0.12.17 (#623)
+* Update dependency esbuild to v0.12.18 (#638)
+* Update dependency esbuild to v0.12.19 (#643)
+* Update dependency esbuild to v0.12.20 (#654)
+* Update dependency esbuild to v0.12.21 (#666)
+* Update dependency esbuild to v0.12.22 (#668)
+* Update dependency eslint-plugin-vue to v7.10.0 (#525)
+* Update dependency eslint-plugin-vue to v7.11.0 (#547)
+* Update dependency eslint-plugin-vue to v7.11.1 (#548)
+* Update dependency eslint-plugin-vue to v7.12.1 (#565)
+* Update dependency eslint-plugin-vue to v7.13.0 (#574)
+* Update dependency eslint-plugin-vue to v7.14.0 (#597)
+* Update dependency eslint-plugin-vue to v7.15.0 (#625)
+* Update dependency eslint-plugin-vue to v7.15.1 (#633)
+* Update dependency eslint-plugin-vue to v7.16.0 (#648)
+* Update dependency eslint to v7.27.0 (#514)
+* Update dependency eslint to v7.28.0 (#539)
+* Update dependency eslint to v7.29.0 (#555)
+* Update dependency eslint to v7.30.0 (#571)
+* Update dependency eslint to v7.31.0 (#596)
+* Update dependency eslint to v7.32.0 (#627)
+* Update dependency highlight.js to v11.0.1 (#538)
+* Update dependency highlight.js to v11.1.0 (#582)
+* Update dependency highlight.js to v11.2.0 (#630)
+* Update dependency highlight.js to v11 (#527)
+* Update dependency jest to v27.0.3 (#526)
+* Update dependency jest to v27.0.4 (#535)
+* Update dependency jest to v27.0.5 (#558)
+* Update dependency jest to v27.0.6 (#569)
+* Update dependency jest to v27 (#519)
+* Update dependency marked to v2.0.4 (#510)
+* Update dependency marked to v2.0.5 (#513)
+* Update dependency marked to v2.0.6 (#522)
+* Update dependency marked to v2.0.7 (#532)
+* Update dependency marked to v2.1.0 (#552)
+* Update dependency marked to v2.1.1 (#553)
+* Update dependency marked to v2.1.2 (#559)
+* Update dependency marked to v2.1.3 (#567)
+* Update dependency marked to v3 (#657)
+* Update dependency @rollup/plugin-commonjs to v19.0.2 (#617)
+* Update dependency sass to v1.33.0 (#512)
+* Update dependency sass to v1.34.0 (#515)
+* Update dependency sass to v1.34.1 (#534)
+* Update dependency sass to v1.35.0 (#550)
+* Update dependency sass to v1.35.1 (#551)
+* Update dependency sass to v1.35.2 (#579)
+* Update dependency sass to v1.36.0 (#606)
+* Update dependency sass to v1.37.0 (#628)
+* Update dependency sass to v1.37.2 (#632)
+* Update dependency sass to v1.37.5 (#635)
+* Update dependency sass to v1.38.0 (#661)
+* Update dependency ts-jest to v27.0.4 (#602)
+* Update dependency ts-jest to v27.0.5 (#662)
+* Update dependency @types/jest to v27.0.1 (#653)
+* Update dependency @types/jest to v27 (#650)
+* Update dependency vite-plugin-pwa to v0.10.0 (#644)
+* Update dependency vite-plugin-pwa to v0.11.0 (#667)
+* Update dependency vite-plugin-pwa to v0.8.2 (#612)
+* Update dependency vite-plugin-pwa to v0.9.3 (#629)
+* Update dependency vite-plugin-vue2 to v1.7.3 (#613)
+* Update dependency vite-plugin-vue2 to v1.8.0 (#646)
+* Update dependency vite-plugin-vue2 to v1.8.1 (#656)
+* Update dependency vite to v2.4.3 (#611)
+* Update dependency vite to v2.4.4 (#619)
+* Update dependency vite to v2.5.0 (#658)
+* Update dependency vue-advanced-cropper to v1.6.0 (#516)
+* Update dependency vue-advanced-cropper to v1.7.0 (#543)
+* Update dependency vue-advanced-cropper to v1.8.0 (#641)
+* Update dependency vue-advanced-cropper to v1.8.1 (#642)
+* Update dependency vue-advanced-cropper to v1.8.2 (#645)
+* Update dependency vue-flatpickr-component to v8.1.7 (#572)
+* Update dependency vue-i18n to v8.24.5 (#564)
+* Update dependency vue-i18n to v8.25.0 (#595)
+* Update dependency vue-router to v3.5.2 (#557)
+* Update dependency wait-on to v6 (#568)
+* Update dependency workbox-cli to v6.1.5 (#609)
+* Update Font Awesome (#636)
+* Update Node.js (#549)
+* Update Node.js to v16.4.1 (#576)
+* Update Node.js to v16.4.2 (#578)
+* Update typescript-eslint monorepo to v4.28.4 (#600)
+* Update typescript-eslint monorepo to v4.28.5 (#618)
+* Update typescript-eslint monorepo to v4.29.0 (#631)
+* Update typescript-eslint monorepo to v4.29.1 (#647)
+* Update typescript-eslint monorepo to v4.29.2 (#659)
+* Update vue monorepo to v2.6.13 (#530)
+* Update vue monorepo to v2.6.14 (#540)
+* Update workbox monorepo to v6.2.0 (#639)
+* Update workbox monorepo to v6.2.2 (#640)
+* Update workbox monorepo to v6.2.4 (#649)
+* User account deletion (#651)
+* User Data Export and import (#699)
 
 ## [0.17.0 - 2021-05-14]
 
@@ -148,7 +454,8 @@ The releases aim at the api versions which is why there are missing versions.
 * Make sure all arm64 build steps run in parallel
 * Make sure all empty pages have a call to action
 * Make sure all popups & dropdowns are animated
-* Make sure attachements are only added once to the list after uploading + Make sure the attachment list shows up every time after adding an attachment
+* Make sure attachements are only added once to the list after uploading + Make sure the attachment list shows up every
+  time after adding an attachment
 * Make sure no cta's are visible while the page is loading
 * Make sure the loading spinner is always visible at the end of the page
 * Make the button shadow lighter
@@ -675,7 +982,7 @@ The releases aim at the api versions which is why there are missing versions.
 * Hide totp settings if it is disabled server side
 * Increase network timeout when building docker image
 * Make sure the version includes the tag when building docker images
-* #PrideMonth
+* # PrideMonth
 * Only renew user token on tab focus events
 * Redirect the user to login page if the token expired when the tab gets focus again
 * Remove title length restrictions
@@ -710,7 +1017,7 @@ The releases aim at the api versions which is why there are missing versions.
 
 ## [0.13] - 2020-05-12
 
-#### Added 
+#### Added
 
 * Add docker run script to change api url on startup
 * Add github token for renovate (#89)
@@ -1055,6 +1362,7 @@ The releases aim at the api versions which is why there are missing versions.
 * Use email instead of username when resetting a password
 
 ### Fixed
+
 * Fixed trying to verify an email when there was none
 * Fixed loading tasks when the user was not authenticated
 
