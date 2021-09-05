@@ -577,11 +577,19 @@ steps:
       CROWDIN_KEY:
         from_secret: crowdin_key
 
+  - name: move-files
+    pull: always
+    image: bash
+    depends_on:
+      - download
+    commands: 
+      - mv src/i18n/lang/*/*.json src/i18n/lang
+
   - name: push
     pull: always
     image: appleboy/drone-git-push
     depends_on:
-      - download
+      - move-files
     settings:
       author_email: "frederik@vikunja.io"
       author_name: Frederick [Bot]
