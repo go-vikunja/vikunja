@@ -580,6 +580,8 @@ steps:
   - name: push
     pull: always
     image: appleboy/drone-git-push
+    depends_on:
+      - download
     settings:
       author_email: "frederik@vikunja.io"
       author_name: Frederick [Bot]
