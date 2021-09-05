@@ -552,6 +552,7 @@ steps:
         - failure
 ---
 kind: pipeline
+type: docker
 name: update-translations
 
 depends_on:
@@ -586,8 +587,7 @@ steps:
       commit: true
       commit_message: "[skip ci] Updated translations via Crowdin"
       remote: "git@kolaente.dev:9022/vikunja/frontend.git"
-    environment:
-      GIT_PUSH_SSH_KEY:
+      ssh_key:
         from_secret: translation_git_push_ssh_key
 
   - name: upload
