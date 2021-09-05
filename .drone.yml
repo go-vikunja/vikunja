@@ -516,6 +516,23 @@ steps:
     when:
       ref:
         - "refs/tags/**"
+  
+  - name: manifest-release-latest
+    pull: always
+    image: plugins/manifest
+    depends_on:
+      - clone
+    settings:
+      tags: latest
+      ignore_missing: true
+      spec: docker-manifest.tmpl
+      password:
+        from_secret: docker_password
+      username:
+        from_secret: docker_username
+    when:
+      ref:
+        - "refs/tags/**"
 
 ---
 kind: pipeline
