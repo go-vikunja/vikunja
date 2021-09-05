@@ -1,0 +1,877 @@
+{
+  "home": {
+    "welcomeNight": "Guet Nacht, {username}",
+    "welcomeMorning": "Guete Morgä, {username}",
+    "welcomeDay": "Hoi {username}",
+    "welcomeEvening": "Guete Abig, {username}",
+    "lastViewed": "Zletscht ahglueget",
+    "list": {
+      "newText": "Du chasch e Liste für dini neue Uufgabe erstelle:",
+      "new": "Neui Liste erstelle",
+      "importText": "Oder importier dini Liste und Uufgabe us anderne Dienst nach Vikunja:",
+      "import": "Dini Date in Vikunja importiere"
+    }
+  },
+  "404": {
+    "title": "Nid gfunde",
+    "text": "Dini gsuechti Siite giz nid."
+  },
+  "user": {
+    "auth": {
+      "username": "Benutzernamä",
+      "usernameEmail": "Benutzernamä oder E-Mail Adrässe",
+      "usernamePlaceholder": "z.B. Hansruedi",
+      "email": "E-Mail Adrässe",
+      "emailPlaceholder": "z.B. hansruedi@vikunja.io",
+      "password": "Passwort",
+      "passwordRepeat": "Gib dis Passwort nomal iih",
+      "passwordPlaceholder": "z.B. •••••••••••",
+      "resetPassword": "Setz diis Passwort zrugg",
+      "resetPasswordAction": "Schick mir en Passwort zruggsetz Link",
+      "resetPasswordSuccess": "Prüfe deinen Posteingang! Du solltest eine E-Mail mit Anweisungen zum Zurücksetzen deines Passworts erhalten haben.",
+      "passwordsDontMatch": "Passwörter stimmed nid überiih",
+      "confirmEmailSuccess": "Du hesch dini E-Mail erfolgriich bestätigt! Du chasch dich jetzt iihlogge.",
+      "totpTitle": "Zweifaktor Authentifizierigs Ziffere",
+      "totpPlaceholder": "z.B. 123456",
+      "login": "Iihlogge",
+      "register": "Registriere",
+      "loginWith": "Iihlogge mit {provider}",
+      "authenticating": "Authentifiziere…",
+      "openIdStateError": "Status stimmt nid überiih, ich verweigerä wiiter zmache!",
+      "openIdGeneralError": "Es ist ein Fehler bei der externen Authentisierung aufgetreten.",
+      "logout": "Uuslogge"
+    },
+    "settings": {
+      "title": "Iihstellige",
+      "newPasswordTitle": "Diis Passwort aktualisierä",
+      "newPassword": "Neus Passwort",
+      "newPasswordConfirm": "Neui Passwort Bestätigung",
+      "currentPassword": "Momentans Passwort",
+      "currentPasswordPlaceholder": "Diis jetzige Passwort",
+      "passwordsDontMatch": "Dis neue Passwort und siini Bestätigung stimmed nid überiih.",
+      "passwordUpdateSuccess": "Dis Passwort isch erfolgriich aktualisiert wordä.",
+      "updateEmailTitle": "Dini E-Mail Adrässä änderä",
+      "updateEmailNew": "Neui E-Mail Adrässä",
+      "updateEmailSuccess": "Dini E-Mail Adrässä isch erfolgriich gänderet worde. Mir hend dir en Link gschickt, um si zu bestätigä.",
+      "general": {
+        "title": "Allgemeini Iihstellige",
+        "name": "Namä",
+        "newName": "De neu Namä",
+        "savedSuccess": "Die Iihstellige sind erfolgriich aktualisiert wordä.",
+        "emailReminders": "Schick mir e Errinnerig für Uufgabe per E-Mail",
+        "overdueReminders": "Schick mir jede Morge Errinnerige für überfälligi Uufgabe per E-Mail",
+        "discoverableByName": "Anderi Lüüt chend mi findä, wenn si nach miim Name sueched",
+        "discoverableByEmail": "Anderi Benutzer chend mich finde, wenns mini voll E-Mail Adressä sueched",
+        "playSoundWhenDone": "Spil es Tönli ab, wenn en Task als fertig markiert wird",
+        "weekStart": "D'Wuche fangt ah am",
+        "weekStartSunday": "Sunntig",
+        "weekStartMonday": "Määntig",
+        "language": "Sproch",
+        "defaultList": "Standard Liste"
+      },
+      "totp": {
+        "title": "Zweifaktor Authentifizierig",
+        "enroll": "Aktiviere",
+        "finishSetupPart1": "Um dini Iihrichtig fertigzstelle, benutz das Gheimniss i dinere Authentifizierigs App (Google Authentifikator oder ähnliches):",
+        "finishSetupPart2": "Denoch, gib de Code vo dinere App une iih.",
+        "scanQR": "Alternativ chasch au de QR Code scanne:",
+        "passcode": "Code",
+        "passcodePlaceholder": "En vo dinere Authentifikator App generierte code",
+        "setupSuccess": "Du hesch erfolgriich dini Zweifaktor Authentifizierig aktiviert!",
+        "enterPassword": "Bitte gib diis Passwort iih",
+        "disable": "Zweifaktor Authentifizierig uusschalte",
+        "confirmSuccess": "Du hesch erfolgriich dini Zweifaktor Authentifizierig aktiviert und chasch se vo jetzt au benutze!",
+        "disableSuccess": "Zweifaktor Authentifizierig isch erfolgriich uusgschalte wore."
+      },
+      "caldav": {
+        "title": "Caldav",
+        "howTo": "Du chasch Vikunja zu Caldav Applikatione verbinde, um dini Uufgabe vo verschidene Gräät zgseh. Gib die Url i dim Client iih:",
+        "more": "Meh Informatione über Caldav in Vikunja"
+      },
+      "avatar": {
+        "title": "Herr Der Elemente",
+        "initials": "Initialä",
+        "gravatar": "Gravatar",
+        "upload": "Ufeladä",
+        "uploadAvatar": "Profiilbild ufeladä",
+        "statusUpdateSuccess": "Avatar Zuestand erfolgriich aktualisiert!",
+        "setSuccess": "Diis Profilbild isch erfolgriich gsetzt worde!"
+      }
+    },
+    "deletion": {
+      "title": "Lösche deinen Vikunja-Account",
+      "text1": "Das Löschen deines Accounts ist dauerhaft und unwiderruflich. Alle Namensräume, Listen und zugehörige Daten werden gelöscht.",
+      "text2": "Zum Fortfahren gib bitte dein Passwort ein. Du erhältst eine E-Mail mit weiteren Anweisungen.",
+      "confirm": "Meinen Account löschen",
+      "requestSuccess": "Die Anfrage war erfolgreich. Du erhältst eine E-Mail mit weiteren Anweisungen.",
+      "passwordRequired": "Bitte gib dein Passwort ein.",
+      "confirmSuccess": "Du hast erfolgreich die Löschung deines Accounts bestätigt. Wir werden deinen Account innerhalb von drei Tagen löschen.",
+      "scheduled": "Wir werden deinen Vikunja-Account am {date} ({dateSince}) löschen.",
+      "scheduledCancel": "Um die Löschung deines Accounts abzubrechen, klicke hier.",
+      "scheduledCancelText": "Um die Löschung deines Accounts abzubrechen, gib bitte dein Passwort unten ein:",
+      "scheduledCancelConfirm": "Löschung meines Accounts abbrechen",
+      "scheduledCancelSuccess": "Wir werden deinen Account nicht löschen."
+    },
+    "export": {
+      "title": "Exportiere die Daten deines Vikunja-Accounts",
+      "description": "Du kannst eine Kopie deiner Daten bei Vikunja anfordern. Dazu gehören Namespaces, Listen, Aufgaben und alles, was damit zusammenhängt. Du kannst diese Daten dann in jeder Vikunja-Instanz über die Migrationsfunktion importieren.",
+      "descriptionPasswordRequired": "Bitte gib dein Passwort ein, um fortzufahren:",
+      "request": "Eine Kopie meiner Vikunja Daten anfordern",
+      "success": "Du hast deine Daten bei Vikunja erfolgreich angefordert! Wir schicken dir eine E-Mail, sobald sie zum Download bereitstehen."
+    }
+  },
+  "list": {
+    "archived": "Die Liste isch archiviert. Es isch nid möglich e neui Uufgab drin z'erstelle oder z'bearbeite.",
+    "title": "Liste Titl",
+    "color": "Farb",
+    "lists": "Listene",
+    "search": "Schriib, um nachere Liste z'sueche…",
+    "searchSelect": "Druck uf Enter um die Liste uuszwähle",
+    "shared": "Teilti Liste",
+    "create": {
+      "header": "Neui Liste erstelle",
+      "titlePlaceholder": "Listetitl da ahgeh…",
+      "addTitleRequired": "Bitte gib en Titl ah.",
+      "createdSuccess": "Liste erfolgriich erstellt.",
+      "addListRequired": "Bitte gib e Liste ah oder definier e standard Liste i de Iihstellige."
+    },
+    "archive": {
+      "title": "\"{list}\" archiviere",
+      "archive": "Die Liste archiviere",
+      "unarchive": "Die Liste nüm archiviere",
+      "unarchiveText": "Du chasch neui Uufgabe erstelle oder bearbeite.",
+      "archiveText": "Du chasch kei neui Uufgabe erstelle oder bearbeite bis du das nüm archiviert häsch.",
+      "success": "Die Liste isch erfolgriich archiviert worde."
+    },
+    "background": {
+      "title": "Listehintergrund setze",
+      "remove": "Listehintergrund entferne",
+      "upload": "Wähl en Hintergrund vo diim Pc uus",
+      "searchPlaceholder": "Suech nach emne Hintergrund…",
+      "poweredByUnsplash": "Unterstützt vo Unsplash",
+      "loadMore": "Meh Fotis ladä",
+      "success": "De Hintergrund isch erfolgriich gsetzt worde!",
+      "removeSuccess": "De Hintergrund isch erfolgriich entfernt worde!"
+    },
+    "delete": {
+      "title": "\"{list}\" chüble",
+      "header": "Die Liste chüble",
+      "text1": "Bisch du dir sicher, dass du die Liste und all ihren Inhalt chüble wetsch?",
+      "text2": "Das beinhalltet alli Uufgabe und CHAN NID RÜCKGÄNGIG GMACHT WERDE!",
+      "success": "Die Liste isch erfolgriich g'chüblet wore."
+    },
+    "duplicate": {
+      "title": "Die Liste dubliziere",
+      "label": "Dubliziere",
+      "text": "Wähl en Namensruum uus, wo die dubliziert Liste hii set gah:",
+      "success": "D'Liste isch erfolgriich dubliziert wore."
+    },
+    "edit": {
+      "header": "Die Liste bearbeite",
+      "title": "\"{list}\" bearbeite",
+      "titlePlaceholder": "Listetitl da ahgeh…",
+      "identifierTooltip": "De Liste Identifikator chan benutzt werde, um Uufgabe differenzierbar über mehreri Liste z'erkenne. Du chasch das Feld leer lah, um die Funktion z'deaktiviere.",
+      "identifier": "Liste Identifikator",
+      "identifierPlaceholder": "Listeidentifikator da ahgeh…",
+      "description": "Beschriibig",
+      "descriptionPlaceholder": "D'Listebeschriibig chunt da hane…",
+      "color": "Farb",
+      "success": "D'Liste isch erfolgriich aktualisiert wore."
+    },
+    "share": {
+      "header": "Die Liste teile",
+      "title": "\"{list}\" teile",
+      "share": "Teilä",
+      "links": {
+        "title": "Link teile",
+        "what": "Was isch en teilte Link?",
+        "explanation": "En Teilte Link git dir d'möglichkeit, e Liste mit anderne Benutzer wo kein Vikunja account hend, z'teile.",
+        "create": "En neue teilte Link erstelle",
+        "name": "Namä (optional)",
+        "namePlaceholder": "z.B. Reto Häberli",
+        "nameExplanation": "Alli aktione, wo mit dem teilte Link gmacht werdet, werded mit dem Name hinterleit.",
+        "password": "Passwort (optional)",
+        "passwordExplanation": "De Benutzer wird um es Passwort bättet, wenn er dadruf zuegriift.",
+        "noName": "Kein Name g'setzt",
+        "remove": "Linkfreigab lösche",
+        "removeText": "Bisch du sicher, dass du die Freigab lösche wetsch? Es wird nüme möglich sii, die Liste mit dem Link z'erreiche. Das chann nid rückgängig gmacht werde!",
+        "createSuccess": "De Freigabelink isch erfolgriich erstellt wore.",
+        "deleteSuccess": "De g'teilti Link isch erfolgriich g'chüblet wore"
+      },
+      "userTeam": {
+        "typeUser": "Benutzer | Benutzer",
+        "typeTeam": "Team | Teams",
+        "shared": "Mit dene {type} teilt",
+        "you": "Du",
+        "notShared": "Nid mit {type} teilt.",
+        "removeHeader": "{type} vo dere {sharable} entferne",
+        "removeText": "Bisch du sicher du wersch de {sharable} vo dem {type} entferne? Das cha nid rückgängig gmacht werde!",
+        "removeSuccess": "De {sharable} isch erfolgriich vom {type} entfernt wore.",
+        "addedSuccess": "De {type} isch erfolgriich hinzuegfüegt wore.",
+        "updatedSuccess": "De {type} isch erfolgriich hinzuegfüegt wore."
+      },
+      "right": {
+        "title": "Rechts",
+        "read": "Nur Lese",
+        "readWrite": "Lese und Schriibe",
+        "admin": "Chef"
+      },
+      "attributes": {
+        "link": "Link",
+        "name": "Namä",
+        "sharedBy": "Teilt vo",
+        "right": "Rechts",
+        "delete": "Chüble"
+      }
+    },
+    "list": {
+      "title": "Liste",
+      "add": "Hinzuefüege",
+      "addPlaceholder": "E neui Uufgab erstelle…",
+      "empty": "D'Liste isch momentan leer.",
+      "newTaskCta": "Neui Uufgab erstelle.",
+      "editTask": "Uufgab bearbeite"
+    },
+    "gantt": {
+      "title": "Gantt",
+      "showTasksWithoutDates": "Zeig Uufgabe, wo kei Date hend",
+      "size": "Grössi",
+      "default": "Standard",
+      "month": "Monet",
+      "day": "Taag",
+      "from": "Vo",
+      "to": "Bis",
+      "noDates": "Die Uufgab het no kei Datum gsetzt."
+    },
+    "table": {
+      "title": "Tabällä",
+      "columns": "Spaltä"
+    },
+    "kanban": {
+      "title": "Kanban",
+      "limit": "Limitä: {limit}",
+      "noLimit": "Nid gsetzt",
+      "doneBucket": "Fertig-Chübl",
+      "doneBucketHint": "Alli Uufgabe wo i de Chübl gworfe werded, sind automatisch als Färtig markiert.",
+      "doneBucketHintExtended": "Alli Uufgabe wo i de Chübl gworfe werded, sind automatisch als Färtig markiert. Alli Uufgabe wo vo irgendwo anders als Färtig markiert worde sind, werded au dahii gschobe.",
+      "doneBucketSavedSuccess": "De Färtig-Chübl isch erfolgriich gspeicheret worde.",
+      "deleteLast": "Du chasch de letscht Chübl nid entferne.",
+      "addTaskPlaceholder": "Neue Uufgabe Titl hinzuefüege…",
+      "addTask": "Uufgab hinzuefüegä",
+      "addAnotherTask": "Nomol e Uufgab hinzuefüege",
+      "addBucket": "Neue Chübl erstelle",
+      "addBucketPlaceholder": "Gib en neue Chübl-Name iih…",
+      "deleteHeaderBucket": "De Chübl chüblä",
+      "deleteBucketText1": "Bisch du dir sicher, dass du de Chübl chüblä wetsch?",
+      "deleteBucketText2": "Das löscht kei Uufgabe, aber wirft si in Standard-Chübl.",
+      "deleteBucketSuccess": "De Chübl isch erfolgriich g'chüblet worde.",
+      "bucketTitleSavedSuccess": "De Chübl Name isch erfolgriich gspeicheret worde.",
+      "bucketLimitSavedSuccess": "Das Chübl-Limit isch erfolgriich gspeicheret worde.",
+      "collapse": "De Chübl zemeklappe"
+    },
+    "pseudo": {
+      "favorites": {
+        "title": "Favoriite"
+      }
+    }
+  },
+  "namespace": {
+    "title": "Namensrüüm und Listene",
+    "namespace": "Namensruum",
+    "showArchived": "Archivierti aahzeige",
+    "noneAvailable": "Du hesch momentan kein Namensruuim.",
+    "unarchive": "Ent-archiviere",
+    "archived": "Archiviert",
+    "noLists": "De Namensruum het kei Listene drin.",
+    "createList": "E neui Liste i dem Namensruum erstelle.",
+    "namespaces": "Namensrüüm",
+    "search": "Schriib, um nachemne Namensruum z'sueche…",
+    "create": {
+      "title": "Neue Namensruum erstelle",
+      "titleRequired": "Bitte gib en Titl ah.",
+      "explanation": "En Namensruum isch e Gruppe vo Liste, wo du chasch zur Organisation benutze. Tatsächlich sind alli Listene emne Namensruum zuegwise.",
+      "tooltip": "Was isch en Namensruum?",
+      "success": "Namensruum erstellt."
+    },
+    "archive": {
+      "titleArchive": "\"{namespace}\" archiviere",
+      "titleUnarchive": "\"{namespace}\" ent-archiviere",
+      "archiveText": "Du hesch kei möglichkeit meh de Namensruum z'bearbeite oder neui Listene drin z'erstelle, bis du si wider ent-archiviert hesch. Das archiviert au grad alli Liste im Namensruum.",
+      "unarchiveText": "Du chasch neui Liste erstelle oder bearbeite.",
+      "success": "De Namensruum isch erfolgriich archiviert worde.",
+      "description": "Wenn en Namensruum archiviert isch, chasch du kei neui Liste erstelle oder die bearbeite."
+    },
+    "delete": {
+      "title": "\"{namespace}\" chüble",
+      "text1": "Bisch du dir sicher, dass du de Namensruum und all ihren Inhalt chüble wetsch?",
+      "text2": "Das beinhalltet alli Liste und Uufgabe und CHAN NID RÜCKGÄNGIG GMACHT WERDE!",
+      "success": "Namensruum g'chüblet."
+    },
+    "edit": {
+      "title": "\"{namespace}\" bearbeite",
+      "success": "Namensruum aktualisiert."
+    },
+    "share": {
+      "title": "\"{namespace}\" teile"
+    },
+    "attributes": {
+      "title": "Namensruumtitl",
+      "titlePlaceholder": "De Namensruumtitl chunt da ahne…",
+      "description": "Beschriibig",
+      "descriptionPlaceholder": "D'Namensruum Beschriibig chunt da ahne…",
+      "color": "Farb",
+      "archived": "Isch archiviert",
+      "isArchived": "De Namensruum isch archiviert"
+    },
+    "pseudo": {
+      "sharedLists": {
+        "title": "G'Teilti Liste"
+      },
+      "favorites": {
+        "title": "Favorite"
+      },
+      "savedFilters": {
+        "title": "Filter"
+      }
+    }
+  },
+  "filters": {
+    "title": "Filter",
+    "attributes": {
+      "title": "Titl",
+      "titlePlaceholder": "De Name für de g'speicheret Filter chunt da ahne…",
+      "description": "Beschriibig",
+      "descriptionPlaceholder": "D'Beschriibig chunt da hane…",
+      "includeNulls": "Uufgabe ohni Wert iihbezieh",
+      "requireAll": "Alli Filter mend wahr sii, demits die Uufgab ahzeigt",
+      "showDoneTasks": "Zeig die fertige Uufgabe",
+      "enablePriority": "Filter nach Priorität aktiviere",
+      "enablePercentDone": "Filter nach Prozent iihschalte",
+      "dueDateRange": "Fälligkeitsberiich",
+      "startDateRange": "Startdatumsbreiich",
+      "endDateRange": "Enddatumsberiich",
+      "reminderRange": "Errinnerigs Datumbereich"
+    },
+    "create": {
+      "title": "Neue gspeicherete Filter erstelle",
+      "description": "En gspeicherete Filter isch e virtuelli Liste, welche vomene Satz a Filter zemmegsetzt wird, sobald me uf sie zuegriift. Wenn sie mal erstellt worde isch, erhaltet si ihren eigene Namensruum.",
+      "action": "Neue gspeicherete Filter erstelle"
+    },
+    "delete": {
+      "header": "De g'speicheret Filter chüble",
+      "text": "Bisch du dir sicher, dass du de gspeicheret Filter chüble wetsch?",
+      "success": "De filter isch erfolgriich g'chüblet wore."
+    },
+    "edit": {
+      "title": "De g'speicheret Filter bearbeite",
+      "success": "De filter isch erfolgriich g'speichered wore."
+    }
+  },
+  "migrate": {
+    "title": "Vomene andere Dienst zu Vikunja migriere",
+    "titleService": "Dini Date vo {name} in Vikunja importiere",
+    "import": "Dini Date in Vikunja importiere",
+    "description": "Klick ufs Logo une vo eine vo de Drittabüüter um aahzfange.",
+    "descriptionDo": "Vikunja importiert alli Liste, Uufgabe, Notize, Erinnerige und Dateie, wo du Zuegriff druff hesch.",
+    "authorize": "Gib Vikunja zuegriff uf din {name} Account, idem du une uf de Chnopf drucksch.",
+    "getStarted": "Loslah",
+    "inProgress": "Importierä…",
+    "alreadyMigrated1": "Gseht so us als hettisch du scho alles vo {name} am {datum} importiert.",
+    "alreadyMigrated2": "Es erneuts Importiere isch scho mögli, aber chenti Duplikaat erstelle. Bisch der sicher?",
+    "confirm": "Ich bin sicher, fang mit de Migration ah!",
+    "importUpload": "Um Daten von {name} in Vikunja zu importieren, klicke auf die Schaltfläche unten, um eine Datei auszuwählen.",
+    "upload": "Datei hochladen"
+  },
+  "label": {
+    "title": "Labels",
+    "manage": "Label migriere",
+    "description": "Klick uf es Label ums z'editiere. Du chasch alli Labels, wo du erstellt hesch editiere. Du chasch au uf alli Labels zuegriife, wo ufere Liste sind, i dere du Zuegriff hesch.",
+    "newCTA": "Du hesch momentan kei Labels.",
+    "search": "Schriib, um nachemne Label z'sueche…",
+    "create": {
+      "header": "Neus Label",
+      "title": "Neus Label erstelle",
+      "titleRequired": "Bitte gib en Titl ah.",
+      "success": "Da Label isch erfolgriich erstellt wore."
+    },
+    "edit": {
+      "header": "Label editiere",
+      "forbidden": "Du derfsch da Label nid aahpasse, weils dir nid ghöört.",
+      "success": "Da Label isch erfolgriich aktualisiert wore."
+    },
+    "deleteSuccess": "Da Label isch erfolgriich g'chüblet wore.",
+    "attributes": {
+      "title": "Titl",
+      "titlePlaceholder": "Labeltitel da ahgeh…",
+      "description": "Beschriibig",
+      "descriptionPlaceholder": "Label Beschriibig",
+      "color": "Farb"
+    }
+  },
+  "sharing": {
+    "authenticating": "Authentifiziere…",
+    "passwordRequired": "Die teilt Liste bruucht es Passwort. Bitte gibs une ah:",
+    "error": "Het en Fähler geh. :(",
+    "invalidPassword": "Da Passwort isch ungültig."
+  },
+  "navigation": {
+    "overview": "Übersicht",
+    "upcoming": "Ahstehänd",
+    "settings": "Iihstellige",
+    "imprint": "Immpressum",
+    "privacy": "Dateschutzerchlärig"
+  },
+  "misc": {
+    "loading": "Ladä…",
+    "save": "Speichere",
+    "delete": "Chüble",
+    "confirm": "Bestätige",
+    "cancel": "Abbreche",
+    "refresh": "Neu lade",
+    "disable": "Deaktiviere",
+    "copy": "I'd Zwüscheablaag kopiere",
+    "search": "Sueche",
+    "searchPlaceholder": "Schriib zum sueche…",
+    "previous": "Vorherige",
+    "next": "Wiiter",
+    "poweredBy": "Unterstützt vo Vikunja",
+    "info": "Informationä",
+    "create": "Erstellä",
+    "doit": "Machs!",
+    "saving": "Speichere…",
+    "saved": "Gspeicheret!",
+    "default": "Standard",
+    "close": "Schlüüse",
+    "download": "Herunterladen"
+  },
+  "input": {
+    "resetColor": "Farb zruggsetze",
+    "datepicker": {
+      "today": "Hütt",
+      "tomorrow": "Morn",
+      "nextMonday": "Negste Määntig",
+      "thisWeekend": "Das Wuchenend",
+      "laterThisWeek": "Spöter i dere Wuche",
+      "nextWeek": "Negst Wuchä",
+      "chooseDate": "Es Datum uuswähle"
+    },
+    "editor": {
+      "edit": "Bearbeitä",
+      "done": "Fertig",
+      "heading1": "Überschrift 1",
+      "heading2": "Überschrift 2",
+      "heading3": "Überschrift 3",
+      "headingSmaller": "Chliini Überschrift",
+      "headingBigger": "Grösseri Überschrift",
+      "bold": "Fett",
+      "italic": "Kursiiv",
+      "strikethrough": "Duregstriche",
+      "code": "Code",
+      "quote": "Zitaat",
+      "unorderedList": "Ungordnedi Listä",
+      "orderedList": "Gordneti Listä",
+      "cleanBlock": "Formatierig Lösche",
+      "link": "Link",
+      "image": "Bild",
+      "table": "Tabällä",
+      "horizontalRule": "Horizontalä Strich",
+      "sideBySide": "Nebedenand",
+      "guide": "Hilfsliniä"
+    },
+    "multiselect": {
+      "createPlaceholder": "Neu erstelle",
+      "selectPlaceholder": "Druck uf Enter zum uuswähle"
+    }
+  },
+  "task": {
+    "task": "Uufgab",
+    "new": "Neui Uufgab erstelle",
+    "delete": "Die Uufgab chüble",
+    "createSuccess": "Die Uufgab isch erfolgriich erstellt wordä.",
+    "addReminder": "Neui Errinnerig erstelle…",
+    "doneSuccess": "Die Uufgab isch erfolgriich als \"Fertig\" markiert wordä.",
+    "undoneSuccess": "Die Uufgaab isch nüme als fertig markiert.",
+    "openDetail": "Uufgab i de Detailaahsicht öffne",
+    "show": {
+      "titleCurrent": "Momentani Uufgabe",
+      "titleDates": "Uufgabe vo {from} bis {to}",
+      "noDates": "Zeig Uufgabe ohni Datum",
+      "current": "Momentani Uufgabe",
+      "from": "Uufgabe vo",
+      "until": "bis",
+      "today": "Hütt",
+      "nextWeek": "Negst Wuchä",
+      "nextMonth": "Negste Monet",
+      "noTasks": "Git nix ztue! Heb e schös Tägli!"
+    },
+    "detail": {
+      "chooseDueDate": "Druck da, um es Fälligkeitsdatum z'setze",
+      "chooseStartDate": "Druck dah, um es Startdatum z'setze",
+      "chooseEndDate": "Druck da, um es Enddatum z'setze",
+      "move": "Schieb die Uufgab in e anderi Liste",
+      "done": "Fertig!",
+      "undone": "Als unerledigt markierä",
+      "created": "Erstellt am {0} vo {1}",
+      "updated": "{0} g'updatet",
+      "doneAt": "{0} erledigt",
+      "updateSuccess": "Die Uufgab isch erfolgriich g'speichered wore.",
+      "deleteSuccess": "Die Uufgab isch erfolgriich g'chüblet wore.",
+      "belongsToList": "Die Uufgab ghlrt zu de \"{list}\" Liste",
+      "due": "Fällig bis {at}",
+      "delete": {
+        "header": "Die Uufgab chüble",
+        "text1": "Bisch du dir sicher, dass du die Uufgab chüblä wetsch?",
+        "text2": "Das wird au alli Ahhäng, Errinnerige und Beziehige wo mit dere Uufgab verchnüpft sind chüble und cha nid rückgängig gmacht werde!"
+      },
+      "actions": {
+        "assign": "Die Uufgab emne Benutzer zuewiise",
+        "label": "Label hinzuefüege",
+        "priority": "Priorität setzä",
+        "dueDate": "Fälligkeitsdatum setze",
+        "startDate": "Startdatum setze",
+        "endDate": "Enddatum setze",
+        "reminders": "Errinnerig iihstelle",
+        "repeatAfter": "En wiederholende Intervall setze",
+        "percentDone": "Prozentuelli Erledigung setze",
+        "attachments": "Aahang hinzuefüege",
+        "relatedTasks": "Uufgabsbeziehig hinzufüege",
+        "moveList": "Uufgab verschiebe",
+        "color": "Uufgab Farb setze",
+        "delete": "Uufgab chüble",
+        "favorite": "In Favoriten speichern",
+        "unfavorite": "Aus Favoriten entfernen"
+      }
+    },
+    "attributes": {
+      "assignees": "Zuegwiseni",
+      "color": "Farb",
+      "created": "Erstellt",
+      "createdBy": "Erstellt vo",
+      "description": "Beschriibig",
+      "done": "Fertig",
+      "dueDate": "Fälligkeitsdatum",
+      "endDate": "Enddatum",
+      "labels": "Labels",
+      "percentDone": "% fertig",
+      "priority": "Priorität",
+      "relatedTasks": "Verwandti Uufgabe",
+      "reminders": "Errinnerige",
+      "repeat": "Widerhole",
+      "startDate": "Aahfangs Datum",
+      "title": "Titl",
+      "updated": "Aktualisiert"
+    },
+    "subscription": {
+      "subscribedThroughParent": "Du chasch da nid deabonnierä, weil du zu dere {entity} durch {parent} dezue abonniert bisch.",
+      "subscribed": "Du bisch momentan zu dere {entity} abonniert und bechunsch Benachrichtigunge für Änderige.",
+      "notSubscribed": "Du bisch momentan nid zu dere {entity} abonniert und bechunsch kei Benachrichtigunge für Änderige.",
+      "subscribe": "Abooniere",
+      "unsubscribe": "Deabonniere",
+      "subscribeSuccess": "Du hesch die {entity} abonniert",
+      "unsubscribeSuccess": "Du hesch die {entity} deabonniert"
+    },
+    "attachment": {
+      "title": "Aahhäng",
+      "createdBy": "{0} vo {1} erstellt",
+      "downloadTooltip": "De Aahang abeladä",
+      "upload": "Aahang ufeladä",
+      "drop": "Zieh dini Datei da ahne, um si ufezladä",
+      "delete": "Aahhang lösche",
+      "deleteTooltip": "De Aahhang lösche",
+      "deleteText1": "Bisch du dir sicher, dass du de Aahang {filename} lösche wetsch?",
+      "deleteText2": "Das chan nid rückgängig gmacht werde!",
+      "copyUrl": "URL Kopierä",
+      "copyUrlTooltip": "D'Url vo dem Aahang kopiere, um sie im Text zbruuche"
+    },
+    "comment": {
+      "title": "Kommentär",
+      "loading": "Kommentär werded gladä…",
+      "edited": "beartbeitet am {date}",
+      "creating": "Kommentar wird erstellt…",
+      "placeholder": "Din Kommentar wird hinzuegfüegt…",
+      "comment": "Kommentar",
+      "delete": "De Kommentar chüble",
+      "deleteText1": "Bisch du dir sicher, dass du de Kommentar chüble wetsch?",
+      "deleteText2": "Das chan nid rückgängig gmacht werde!",
+      "addedSuccess": "Din Kommentar isch erfolgriich hinzuegfüegt worde."
+    },
+    "deferDueDate": {
+      "title": "Fälligkeitsdatum verschiebe",
+      "1day": "Ein Taag",
+      "3days": "Drüü Tääg",
+      "1week": "Ei Wuche"
+    },
+    "description": {
+      "placeholder": "Klicke do, um e Beschriibig iihzfüege…",
+      "empty": "Momentan hets kei Beschriibig."
+    },
+    "assignee": {
+      "placeholder": "Schriib, um en User zuezwiise…",
+      "selectPlaceholder": "Dem User zuewiise",
+      "assignSuccess": "De Benutzer isch erfolgriich zuegwise worde.",
+      "unassignSuccess": "D'Zuewiisig vom Benutzer isch erfolgriich entfernt worde."
+    },
+    "label": {
+      "placeholder": "Schriib, um es neues Label hinzuezfüege…",
+      "createPlaceholder": "Das als neues Label hinzuefüege",
+      "addSuccess": "Das Label isch erfolgriich hinzuegfüegt worde.",
+      "createSuccess": "Das Label isch erfolgriich erstellt worde.",
+      "removeSuccess": "Das Label isch erfolgriich glöscht."
+    },
+    "priority": {
+      "unset": "Nid iihgstellt",
+      "low": "Tüüf",
+      "medium": "Mittl",
+      "high": "Hööch",
+      "urgent": "Dringänd",
+      "doNow": "JETZT MACHÄ"
+    },
+    "relation": {
+      "add": "Neui Uufgabe Beziehig hinzuefüege",
+      "new": "Neui Uufgabe Beziehig",
+      "searchPlaceholder": "Schriib, um e neui Uufgab als Zueghörigkeit hinzuezfüege…",
+      "createPlaceholder": "Das als en neui Zueghörigkeit hinzuefüege",
+      "differentList": "Die Uufgab ghöört zu ere andere Liste.",
+      "noneYet": "S'git kei Uufgabe Beziehige.",
+      "delete": "Uufgabe Beziehig chüble",
+      "deleteText1": "Bisch du dir sicher, dass du die Zueghörigkeit chüblä wetsch?",
+      "deleteText2": "Das chan nid rückgängig gmacht werde!"
+    },
+    "repeat": {
+      "everyDay": "Jedä Tag",
+      "everyWeek": "Jedi Wuche",
+      "everyMonth": "Jede Monet",
+      "mode": "Widerholigs Modus",
+      "monthly": "Monatlich",
+      "fromCurrentDate": "Vom Hüttige Datum",
+      "each": "Jedä",
+      "specifyAmount": "Gib e Ahzahl ah…",
+      "hours": "Stundä",
+      "days": "Tääg",
+      "weeks": "Wuchä",
+      "months": "Monet",
+      "years": "Jahr"
+    },
+    "quickAddMagic": {
+      "hint": "Du chasch Quick Add Magic verwendä",
+      "what": "Was?",
+      "title": "Quick Add Magic",
+      "intro": "Bim erstelle vonere Uufgab, chasch du spezielli Schlüsselwörter verwende, umm Attribute direkt zu dere Uufgab hinzuezfüege. Das Erlaubts, um pblichi Attribute schneller zu Uufgabe hinzuezfüege.",
+      "multiple": "Du chasch da mehrmals mache.",
+      "label1": "Um es Label hinzuezfüege, schriib eifach es {prefix} vorne ane.",
+      "label2": "Vikunja prüeft z'ersch, obs da Label bereits git und machst neu, falls nööd.",
+      "label3": "Um Leerschläg zverwende, setz eifach zwei \" um de Labelname.",
+      "label4": "Zum Blaistift: {prefix}\"Label mit Leerschlag\".",
+      "priority1": "Um e Task Priorität z'setze: füeg e nummere zwüsched 1 und 5, mit em {prefix} als Prefix iih.",
+      "priority2": "Je höher d'nummere, desto höher d'Priorität.",
+      "assignees": "Um direkt e Uufgab emne Benutzer zuezwiise, setz es @ vor ihren Benutzername.",
+      "list1": "Um e Liste ahzgeh, wo de Task drin erschiine set, gib de name vo de liste mit emne {prefix} ah.",
+      "list2": "Das wird en Fehler werfe, wenn d'Liste nid existiert.",
+      "dateAndTime": "Datum und Ziit",
+      "date": "Jedes Datum wird als Abgabedatum für di neu Uufgab gnoh. Du chasch Date i de folgende Format verwende:",
+      "dateWeekday": "jede Wuchetaag wird nimmt s'negste Datum mit dem Datum",
+      "dateCurrentYear": "nimmt das laufende Jahr",
+      "dateNth": "nimmt de {day}ti vom jetzige Monet",
+      "dateTime": "Kombiniere irgendeis vo dene Datumsformat mit \"{time}\" (oder {timePM}) um e Ziit z'setze."
+    }
+  },
+  "team": {
+    "title": "Teams",
+    "noTeams": "Du hesch momentan kei Team Ahghörigkeit.",
+    "create": {
+      "title": "E neus Team erstelle",
+      "success": "Da Team isch erfolgriich erstellt wordä."
+    },
+    "edit": {
+      "title": "Team „{team}“ bearbeite",
+      "members": "Teammitglieder",
+      "search": "Schriib, um en User z'sueche…",
+      "addUser": "Zum Team hinzufüge",
+      "makeMember": "Benutzer erstelle",
+      "makeAdmin": "Chef mache",
+      "success": "Team aktualisiert.",
+      "userAddedSuccess": "Teammitglied hinzugefüegt.",
+      "madeMember": "Das Teammitglied ist ez es normals Mitglied.",
+      "madeAdmin": "Teammitglied isch ez en Chef.",
+      "delete": {
+        "header": "Das Team chüble",
+        "text1": "Bischder sicher, dasst wetsch da Team mit allne Mitglieder lösche?",
+        "text2": "Alli Teammitglider werded ihren Zuegang zu de Liste und Namensrüüm wo mit dem Team verbunde sind verlüüre. Das CHAN NID RÜCKGÄNIG gmacht werde!",
+        "success": "Da Team isch erfolgriich g'chüblet wore."
+      },
+      "deleteUser": {
+        "header": "Benutzer usem Team entferne",
+        "text1": "Bisch du dir sicher, dass du de Benutzer usm Team werfe wetsch?",
+        "text2": "Er wird Zuegriff uf alli Liste und Namensrüüm verlüüre, wo da Team zuegriff druff het. Das CHAN NID RÜCKGÄNIG GMACHT WERDE!",
+        "success": "Benutzer erfolgriich usegworfe."
+      }
+    },
+    "attributes": {
+      "name": "Teamnamä",
+      "namePlaceholder": "Teamname da ahgeh…",
+      "nameRequired": "Bitte gib en Name an.",
+      "description": "Beschriibig",
+      "descriptionPlaceholder": "D'Team Beschriibig chunt da ahne…",
+      "admin": "Chef",
+      "member": "Mitglied"
+    }
+  },
+  "keyboardShortcuts": {
+    "title": "Tastatuurchürzl",
+    "allPages": "Die Chürzl funktioniered uf allne Siitene.",
+    "currentPageOnly": "Die Chürzl funktioniered nur uf de momentane Siite.",
+    "toggleMenu": "Menü umschalte",
+    "quickSearch": "Suechi und Schnellaktionsliste öffne",
+    "task": {
+      "title": "Uufgabesiite",
+      "done": "Uufgab als erledigt markiere",
+      "assign": "Die Uufgab emne Benutzer zuewiise",
+      "labels": "Labels ennere Uufgab hinzuefüege",
+      "dueDate": "S'Fälligkeitsdatum für die Uufgab ändere",
+      "attachment": "En Aahang dere Uufgab hinzuefüege",
+      "related": "Beziehige vo dere Uufgab bearbeite"
+    }
+  },
+  "update": {
+    "available": "Es het es Update für Vikiunja!",
+    "do": "Jetzt aktualisierä"
+  },
+  "menu": {
+    "edit": "Bearbeitä",
+    "archive": "Archiviere",
+    "duplicate": "Dublizierä",
+    "delete": "Chüble",
+    "unarchive": "Ent-archiviere",
+    "setBackground": "Hintergrund iihstelle",
+    "share": "Teilä",
+    "newList": "Neui Listä"
+  },
+  "apiConfig": {
+    "url": "Vikunja URL",
+    "urlPlaceholder": "z.B. https://localhost:3456",
+    "change": "ändere",
+    "signInOn": "Dich i diin Vikunja-Account Iihloge uf {0}",
+    "error": "Es het kei Vikunja Installation uf \"{domain}\".",
+    "success": "Benutze d'Vikunja Installation uf \"{domain}\"."
+  },
+  "loadingError": {
+    "failed": "Ladä isch fählgschlage, bitte {0}. Wenn de Fähler bestaht, denn {1}.",
+    "tryAgain": "nomal versueche",
+    "contact": "üs kontaktierä"
+  },
+  "notification": {
+    "title": "Benachrichtigunge",
+    "none": "Du hesch kei neui Benachrichtunge. Heb e schös Tägli!",
+    "explainer": "Benachrichtigunge landed do, wenn eppis bi de Namensrüüm, Liste oder Uufgabe passiert, welche du abonniert hesch."
+  },
+  "quickActions": {
+    "commands": "Befehl",
+    "placeholder": "Schriib en Befehl oder suech…",
+    "hint": "Du chasch en # benutze, um nur nach Uufgabe zsueche, * um nur nach Liste zsueche und @ um nur Teams z'sueche.",
+    "tasks": "Uufgabe",
+    "lists": "Listene",
+    "teams": "Teams",
+    "newList": "Gib en Titl für die neu Liste iih…",
+    "newTask": "Gib en Titl für die neu Uufgab iih…",
+    "newNamespace": "Gib en Titl für de neu Namensruum iih…",
+    "newTeam": "Gib en Name für da neui Team iih…",
+    "createTask": "Erstell e Uufgab i de momentane Listä ({title})",
+    "createList": "Erstell e Liste im momentane Namensruum ({title})",
+    "cmds": {
+      "newTask": "Neui Uufgab",
+      "newList": "Neui Liste",
+      "newNamespace": "Neue Namensruum",
+      "newTeam": "Neus Team"
+    }
+  },
+  "date": {
+    "locale": "ch",
+    "in": "in {date}",
+    "ago": "vor {date}",
+    "altFormatLong": "j M Y H:i",
+    "altFormatShort": "j M Y"
+  },
+  "error": {
+    "error": "Fähler",
+    "success": "Erfolg",
+    "0001": "Du komsch hier ned rein.",
+    "1001": "En Benutzer mit dem Benutzernamä existiert bereits.",
+    "1002": "En Benutzer mit derä E-Mail Adressä existiert bereits.",
+    "1004": "Kein Benutzername oder Passwort ahgeh.",
+    "1005": "De Benutzer gits nid.",
+    "1006": "Han die Id nid finde chöne.",
+    "1008": "Kei Password Zruggsetz-Token ahgäh.",
+    "1009": "Ungültiges Passwort Zruggsetz-Token.",
+    "1010": "Ungültiges E-Mail Bestätigungs-Token.",
+    "1011": "Falsche Benutzername oder Passwort.",
+    "1012": "Die E-Mail vo dem Benutzer isch nid bestätigt.",
+    "1013": "Neus Passwort isch läär.",
+    "1014": "Alts Passwort isch läär.",
+    "1015": "Totp isch für de Benutzer scho aktiv.",
+    "1016": "Totp isch für de Benutzer nid aktiv.",
+    "1017": "De Totp Code nid gültig.",
+    "1018": "Die Benutzer Profilbild Iihstellige sind nid gültig.",
+    "2001": "ID chann nid leer oder 0 sii.",
+    "2002": "Ebbis vo de Ahfragedate isch ungültig.",
+    "3001": "Die Liste giz nid.",
+    "3004": "Du hesch kei Läseberächtigung für die Liste um das durezfüehre.",
+    "3005": "De Titl cha nid leer sii.",
+    "3006": "Die Freigab giz nid.",
+    "3007": "E Liste mit dere Identifizierig giz scho.",
+    "3008": "Die Liste isch archiviert und chan desshalb nur glese werde. Das gliiche gilt für alli Uufgabe i dere Liste.",
+    "4001": "De Liste Uufgabe Titl cha nid leer sii.",
+    "4002": "Die Liste Uufgab giz nid.",
+    "4003": "Alli Massebearbeitige a Uufgabe müend i de selbe Liste passiere.",
+    "4004": "Es bruucht mindestens ei Uufgab, um e Masseänderig durezfüehre.",
+    "4005": "Du hesch kei Berechtigung, um die Uufgab ahzzeige.",
+    "4006": "Du chasch kei übergordneti Uufgab uf sich selbst refferenziere.",
+    "4007": "Du chasch kei Uufgab mit ere ungültige Beziehig erstelle.",
+    "4008": "Du chasch kei Beziehig erstelle, wos scho git.",
+    "4009": "Die Task Beziehig giz nid </3.",
+    "4010": "Du chasch e Uufgab nid mit sich selbst verchnüpfe.",
+    "4011": "De Aahang giz nid.",
+    "4012": "Din Aahang isch z'gross.",
+    "4013": "De Sortierigsparameter isch falsch.",
+    "4014": "Die Uufgabe Sortierigsreihefolg isch ungültig.",
+    "4015": "De Uufgabe Kommentar giz nid.",
+    "4016": "Ungültigs Uufgabefeld.",
+    "4017": "Ungültige Uufgabefilter vergliich.",
+    "4018": "Ungültige Uufgabefilter Zemmezug.",
+    "4019": "Ungültigi Uufgabe Filter Wert.",
+    "5001": "De Namensruum existiert nid.",
+    "5003": "Du hesch kei Zuegriff zu dem Namensruum.",
+    "5006": "De Namensruum Name cha nid leer sii.",
+    "5009": "Du bruuchsch Läsezuegriff uf de Namensruum, um das durezfüehre.",
+    "5010": "Da Team hett kei zuegriff uf de Namensruum.",
+    "5011": "De Benutzer hett bereits zuegriff uf de Namensruum.",
+    "5012": "De Namensruum isch momentan schriibgschützt weil er archiviert isch.",
+    "6001": "Der TeamName kann nicht leer sein.",
+    "6002": "Da Team giz nid.",
+    "6004": "Da Team het scho Zuegang zu dem Namensruum oder Liste.",
+    "6005": "De Benutzer isch scho bi dem Team.",
+    "6006": "Du chasch nid de letschti Benutzer vom Team lösche.",
+    "6007": "Da Team het kei Zuegriff uf die Liste, um das durezfüehre.",
+    "7002": "De Benutzer het scho Zuegriff uf die Liste.",
+    "7003": "Du hesch kei Zuegriff uf die Liste.",
+    "8001": "Da Label existiert scho für die Uufgab.",
+    "8002": "Das Label giz nid.",
+    "8003": "Du hesch kei Zuegriff uf da Label.",
+    "9001": "Die Berechtigung isch ungültig.",
+    "10001": "De Chübl gits nid.",
+    "10002": "De Chübl ghört nid i die Liste.",
+    "10003": "Du chasch de letscht Chübl nid vo de Liste neh.",
+    "10004": "Du chasch die Uufgab nid dem Chübl zue wiise, weil er d'Limite für Uufgabe erreicht het.",
+    "10005": "Es chan nur ein Fertig Chübl pro Liste geh.",
+    "11001": "De g'speicheret Filter giz nid.",
+    "11002": "G'speichereti Filter chend nid Teilt werde.",
+    "12001": "De Abonnement Entitätstyp isch ungültig.",
+    "12002": "Du bisch scho zu dere oder ere übergordnete Entität abonniert.",
+    "13001": "De teilti Link bruucht es Passwort, aber du hesch keis aahgeh.",
+    "13002": "Das Passwort wo du geh hesch isch ungültig."
+  },
+  "about": {
+    "title": "Über",
+    "frontendVersion": "Frontend Version: {version}",
+    "apiVersion": "API Version: {version}"
+  }
+}
