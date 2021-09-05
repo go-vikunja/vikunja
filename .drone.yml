@@ -555,8 +555,8 @@ kind: pipeline
 type: docker
 name: update-translations
 
-depends_on:
-  - build
+#depends_on:
+#  - build
 
 trigger:
   branch:
@@ -586,7 +586,7 @@ steps:
       branch: main
       commit: true
       commit_message: "[skip ci] Updated translations via Crowdin"
-      remote: "git@kolaente.dev:9022/vikunja/frontend.git"
+      remote: "ssh://git@kolaente.dev:9022/vikunja/frontend.git"
       ssh_key:
         from_secret: translation_git_push_ssh_key
 
