@@ -341,7 +341,7 @@ trigger:
     - "refs/tags/**"
 
 steps:
-  - name: docker-latest
+  - name: docker-unstable
     image: plugins/docker:linux-arm
     pull: true
     settings:
@@ -350,7 +350,7 @@ steps:
       password:
         from_secret: docker_password
       repo: vikunja/frontend
-      tags: latest-linux-arm
+      tags: unstable-linux-arm
       build_args:
         - USE_RELEASE=true
         - RELEASE_VERSION=unstable
@@ -380,7 +380,7 @@ steps:
     depends_on:
       - clone
 
-  - name: docker-latest-arm64
+  - name: docker-unstable-arm64
     image: plugins/docker:linux-arm64
     pull: true
     settings:
@@ -389,7 +389,7 @@ steps:
       password:
         from_secret: docker_password
       repo: vikunja/frontend
-      tags: latest-linux-arm64
+      tags: unstable-linux-arm64
       build_args:
         - USE_RELEASE=true
         - RELEASE_VERSION=unstable
@@ -438,7 +438,7 @@ trigger:
     - "refs/tags/**"
 
 steps:
-  - name: docker-latest
+  - name: docker-unstable
     image: plugins/docker:linux-amd64
     pull: true
     settings:
@@ -447,7 +447,7 @@ steps:
       password:
         from_secret: docker_password
       repo: vikunja/frontend
-      tags: latest-linux-amd64
+      tags: unstable-linux-amd64
       build_args:
         - USE_RELEASE=true
         - RELEASE_VERSION=unstable
@@ -488,12 +488,12 @@ depends_on:
   - docker-arm-release
 
 steps:
-  - name: manifest-latest
+  - name: manifest-unstable
     pull: always
     image: plugins/manifest
     settings:
-      tags: latest
-      spec: docker-manifest-latest.tmpl
+      tags: unstable
+      spec: docker-manifest-unstable.tmpl
       password:
         from_secret: docker_password
       username:
@@ -555,8 +555,8 @@ kind: pipeline
 type: docker
 name: update-translations
 
-#depends_on:
-#  - build
+depends_on:
+  - build
 
 trigger:
   branch:
