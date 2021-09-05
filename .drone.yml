@@ -593,6 +593,8 @@ steps:
   - name: upload
     pull: always
     image: jonasfranz/crowdin
+    depends_on:
+      - clone
     settings:
       files:
         en.json: src/i18n/lang/en.json
