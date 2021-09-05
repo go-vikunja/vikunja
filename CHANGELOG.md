@@ -2,10 +2,170 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres
+to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 All releases can be found on https://code.vikunja.io/api/releases.
+
+## [0.18.0] - 2021-09-05
+
+### Added
+
+* Add default list setting (#875)
+* Add menu link to Vikunja Cloud in docs
+* Add more logging and better error messages for openid authentication + clarify docs
+* Add more logging for test data api endpoint
+* Add searching for tasks by index
+* Add setting for first day of the week
+* Add support of Unix socket (#912)
+* Add truncate parameter to test fixtures setup
+* Notify the user after three failed login attempts
+* Reorder tasks, lists and kanban buckets (#923)
+* Send a notification on failed TOTP
+* Task mentions (#926)
+* Try to get more information about the user when authenticating with openid
+* User account deletion (#937)
+* User Data Export and import (#967)
+
+### Changed
+
+* Allow running migration 20210711173657 multiple times to fix issues when it didn't completely run through previously
+* Better logging for errors while importing a bunch of tasks
+* Change task title to TEXT instead of varchar(250) to allow for longer task titles
+* Disable the user account after 10 failed password attempts
+* Docs: Add a note about default password
+* Docs: Add another youtube tutorial
+* Docs: Add ios to the list of not working caldav clients
+* Docs: Add k8s-at-home Helm Chart for Vikunja
+* Docs: Add other installation resources
+* Docs: Add translation docs
+* Docs: Fix rewrite rules in apache example configs
+* Docs: Translation now happening at crowdin
+* Docs: Update translation guidelines
+* Don't fail when removing the last bucket in migration from other services
+* Don't notify the user who created the team
+* Don't use the mariadb root user in docker-compose examples
+* Ensure case insensitive search on postgres (#927)
+* Increase test timeout
+* Only filter out failing openid providers if multiple are configured and one of them failed
+* Only send an email about failed totp after three failed attempts
+* Rearrange setting frontend url in config
+* Refactor user email confirmation + password reset handling (#919)
+* Rename and sign drone config
+* Replace jwt-go with github.com/golang-jwt/jwt
+* Reset failed totp attempts when logging in successfully
+* Save user tokens as text and not varchar
+* Save user tokens as varchar(450) and not text to fix mysql indexing issues
+* Set todoist migration redirect url to the frontend url by default
+* Show config full paths and env variables with config options
+* Switch the :latest docker image tag to contain the latest release instead of the latest unstable
+* Tune test db server settings to speed up tests (#939)
+
+### Fixed
+
+* Fix authentication callback
+* Fix duplicating empty lists
+* Fix error handling when deleting an attachment file
+* Fix error when searching for a namespace returned no results
+* Fix error when searching for a namespace with subscribers
+* Fix goimports
+* Fix importing archived projects and done items from todoist
+* Fix jwt middleware
+* Fix lint
+* Fix mapping task priorities from Vikunja to calDAV
+* Fix moving the done bucket around
+* Fix old references to master in docs
+* Fix panic on invalid smtp config
+* Fix parsing openid config when using a json config file
+* Fix saving pointer values to memory keyvalue
+* Fix saving reminders of repeating tasks
+* Fix setting a saved filter as favorite
+* Fix setting task favorite status of related tasks
+* Fix setting up keyvalue storage in tests
+* Fix swagger docs for create requests
+* Fix task relations not getting properly cleaned up when deleting them
+* Fix tests & lint
+* Make sure a bucket exists or use the default bucket when importing tasks
+* Make sure all associated entities of a task are deleted when the task is deleted
+* Make sure list / task favorites are set per user, not per entity (#915)
+* Make sure the configured frontend url always has a / at the end
+* Refactor & fix storing struct-values in redis keyvalue
+* Todoist migration: don't panic if no reminder was found for task
+
+### Dependency updates
+
+* fix(deps): update golang.org/x/sys commit hash to 63515b4 (#959)
+* fix(deps): update golang.org/x/sys commit hash to 97244b9 (#965)
+* fix(deps): update golang.org/x/sys commit hash to f475640 (#962)
+* fix(deps): update golang.org/x/sys commit hash to f4d4317 (#961)
+* fix(deps): update module github.com/lib/pq to v1.10.3 (#963)
+* Update alpine Docker tag to v3.13 (#884)
+* Update alpine Docker tag to v3.14 (#889)
+* Update golang.org/x/crypto commit hash to 0a44fdf (#944)
+* Update golang.org/x/crypto commit hash to 0ba0e8f (#943)
+* Update golang.org/x/crypto commit hash to 32db794 (#949)
+* Update golang.org/x/crypto commit hash to 5ff15b2 (#891)
+* Update golang.org/x/crypto commit hash to a769d52 (#916)
+* Update golang.org/x/image commit hash to 775e3b0 (#880)
+* Update golang.org/x/image commit hash to a66eb64 (#900)
+* Update golang.org/x/image commit hash to e6eecd4 (#893)
+* Update golang.org/x/net commit hash to 37e1c6af
+* Update golang.org/x/oauth2 commit hash to 14747e6 (#894)
+* Update golang.org/x/oauth2 commit hash to 2bc19b1 (#955)
+* Update golang.org/x/oauth2 commit hash to 6f1e639 (#931)
+* Update golang.org/x/oauth2 commit hash to 7df4dd6 (#952)
+* Update golang.org/x/oauth2 commit hash to a41e5a7 (#902)
+* Update golang.org/x/oauth2 commit hash to a8dc77f (#896)
+* Update golang.org/x/oauth2 commit hash to bce0382 (#895)
+* Update golang.org/x/oauth2 commit hash to d040287 (#888)
+* Update golang.org/x/oauth2 commit hash to f6687ab (#862)
+* Update golang.org/x/oauth2 commit hash to faf39c7 (#935)
+* Update golang.org/x/sys commit hash to 00dd8d7 (#953)
+* Update golang.org/x/sys commit hash to 15123e1 (#946)
+* Update golang.org/x/sys commit hash to 1e6c022 (#947)
+* Update golang.org/x/sys commit hash to 30e4713 (#945)
+* Update golang.org/x/sys commit hash to 41cdb87 (#956)
+* Update golang.org/x/sys commit hash to 7d9622a (#948)
+* Update golang.org/x/sys commit hash to bfb29a6 (#951)
+* Update golang.org/x/sys commit hash to d867a43 (#934)
+* Update golang.org/x/sys commit hash to e5e7981 (#933)
+* Update golang.org/x/sys commit hash to f52c844 (#954)
+* Update golang.org/x/term commit hash to 6886f2d (#887)
+* Update module getsentry/sentry-go to v0.11.0 (#869)
+* Update module github.com/coreos/go-oidc to v3 (#885)
+* Update module github.com/gabriel-vasile/mimetype to v1.3.1 (#904)
+* Update module github.com/golang-jwt/jwt to v3.2.2 (#928)
+* Update module github.com/golang-jwt/jwt to v4 (#930)
+* Update module github.com/go-redis/redis/v8 to v8.11.0 (#903)
+* Update module github.com/go-redis/redis/v8 to v8.11.1 (#925)
+* Update module github.com/go-redis/redis/v8 to v8.11.2 (#932)
+* Update module github.com/go-redis/redis/v8 to v8.11.3 (#942)
+* Update module github.com/iancoleman/strcase to v0.2.0 (#918)
+* Update module github.com/labstack/echo/v4 to v4.4.0 (#917)
+* Update module github.com/labstack/echo/v4 to v4.5.0 (#929)
+* Update module github.com/mattn/go-sqlite3 to v1.14.8 (#921)
+* Update module github.com/spf13/cobra to v1.2.0 (#905)
+* Update module github.com/spf13/cobra to v1.2.1 (#906)
+* Update module github.com/spf13/viper to v1.8.0 (#890)
+* Update module github.com/spf13/viper to v1.8.1 (#899)
+* Update module github.com/swaggo/swag to v1.7.1 (#936)
+* Update module github.com/yuin/goldmark to v1.3.8 (#892)
+* Update module github.com/yuin/goldmark to v1.3.9 (#901)
+* Update module github.com/yuin/goldmark to v1.4.0 (#908)
+* Update module go-redis/redis/v8 to v8.10.0 (#882)
+* Update module go-redis/redis/v8 to v8.7.1 (#807)
+* Update module go-testfixtures/testfixtures/v3 to v3.6.1 (#868)
+* Update module lib/pq to v1.10.2 (#865)
+* Update module prometheus/client_golang to v1.11.0 (#879)
+* Update module yuin/goldmark to v1.3.6 (#863)
+* Update module yuin/goldmark to v1.3.7 (#867)
+* Update monachus/hugo Docker tag to v0.75.1 (#940)
+
+## [0.17.1] - 2021-06-09
+
+### Fixed
+
+* Fix parsing openid config when using a json config file
 
 ## [0.17.0] - 2021-05-14
 
@@ -446,7 +606,7 @@ All releases can be found on https://code.vikunja.io/api/releases.
 
 ## [0.14.0] - 2020-07-01
 
-### Added 
+### Added
 
 * Add ability to run the docker container with configurable user and group ids
 * Add better errors if the sqlite db file is not writable
@@ -660,7 +820,7 @@ All releases can be found on https://code.vikunja.io/api/releases.
 
 ## [0.12] - 2020-04-04
 
-#### Added 
+#### Added
 
 * Add support for archiving lists and namespaces (#152)
 * Colors for lists and namespaces (#155)
@@ -684,7 +844,7 @@ All releases can be found on https://code.vikunja.io/api/releases.
 
 ## [0.11] - 2020-03-01
 
-### Added 
+### Added
 
 * Add config options for cors handling (#124)
 * Add config options for task attachments (#125)
@@ -752,7 +912,7 @@ All releases can be found on https://code.vikunja.io/api/releases.
 
 ## [0.9] - 2019-11-24
 
-### Added 
+### Added
 
 * Task Attachments (#104)
 * Task Relations (#103)
@@ -765,7 +925,8 @@ All releases can be found on https://code.vikunja.io/api/releases.
 ### Fixed
 
 * Fix default logging settings (#107)
-* Fixed a bug where adding assignees or reminders via an update would re-create them and not respect already inserted ones, leaving a lot of garbage
+* Fixed a bug where adding assignees or reminders via an update would re-create them and not respect already inserted
+  ones, leaving a lot of garbage
 * Fixed a bug where deleting an attachment would cause a nil panic
 * Fixed building docs theme
 * Fixed error when setting max file size on 32-Bit systems
@@ -778,7 +939,7 @@ All releases can be found on https://code.vikunja.io/api/releases.
 * Fixed removing reminders
 * Small link share fixes (#96)
 
-### Changed 
+### Changed
 
 * Improve pagination (#105)
 * Moved `teams_{namespace|list}_*` to `{namespace|list}_teams_*` for better consistency (#101)
@@ -899,7 +1060,8 @@ All releases can be found on https://code.vikunja.io/api/releases.
 
 * Updated libraries
 * Updated drone to version 1
-* Releases are now signed with our pgp key (more info about this on [the download page](https://vikunja.io/en/download/)).
+* Releases are now signed with our pgp key (more info about this
+  on [the download page](https://vikunja.io/en/download/)).
 
 ## [0.5] - 2018-12-02
 
@@ -929,7 +1091,7 @@ All releases can be found on https://code.vikunja.io/api/releases.
 
 ## [0.3] - 2018-11-02
 
-### Added 
+### Added
 
 * Password reset
 * Email verification when registering
