@@ -71,8 +71,8 @@
 						{{ $t('user.settings.general.language') }}
 					</span>
 					<div class="select ml-2">
-						<select v-model.number="language">
-							<option :value="l" v-for="(lang, l) in availableLanguages" :key="l">{{ lang }}</option>
+						<select v-model="language">
+							<option :value="lang.code" v-for="lang in availableLanguages" :key="lang.code">{{ lang.title }}</option>
 						</select>
 					</div>
 				</label>
@@ -288,7 +288,7 @@ import TotpService from '../../services/totp'
 import UserSettingsService from '../../services/userSettings'
 import UserSettingsModel from '../../models/userSettings'
 import {playSoundWhenDoneKey} from '@/helpers/playPop'
-import {availableLanguages, saveLanguage, getCurrentLanguage} from '@/i18n/setup'
+import {availableLanguages, saveLanguage, getCurrentLanguage} from '../../i18n/setup'
 
 import {mapState} from 'vuex'
 
@@ -367,7 +367,9 @@ export default {
 			return `${apiBase}/dav/principals/${this.userInfo.username}/`
 		},
 		availableLanguages() {
-			return availableLanguages
+			return Object.entries(availableLanguages)
+				.map(l => ({code: l[0], title: l[1]}))
+				.sort((a, b) => a.title > b.title)
 		},
 		...mapState({
 			totpEnabled: state => state.config.totpEnabled,

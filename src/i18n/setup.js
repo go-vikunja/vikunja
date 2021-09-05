@@ -14,7 +14,10 @@ export const i18n = new VueI18n({
 
 export const availableLanguages = {
 	en: 'English',
-	de: 'Deutsch',
+	'de-DE': 'Deutsch',
+	'de-swiss': 'Schwizertütsch',
+	'ru-RU': 'Русский',
+	'fr-FR': 'Français',
 }
 
 const loadedLanguages = ['en'] // our default language that is preloaded
@@ -48,18 +51,16 @@ export const loadLanguageAsync = lang => {
 
 export const getCurrentLanguage = () => {
 	const savedLanguage = localStorage.getItem('language')
-	if(savedLanguage !== null) {
+	if (savedLanguage !== null) {
 		return savedLanguage
 	}
 
 	let browserLanguage = navigator.language || navigator.userLanguage
 
-	if (browserLanguage.startsWith('en-')) {
-		browserLanguage = 'en'
-	}
-
-	if (typeof availableLanguages[browserLanguage] !== 'undefined') {
-		return browserLanguage
+	for (let k in availableLanguages) {
+		if (browserLanguage[k] === browserLanguage || k.startsWith(browserLanguage + '-')) {
+			return k
+		}
 	}
 
 	return 'en'
