@@ -1,0 +1,877 @@
+{
+  "home": {
+    "welcomeNight": "Bonne nuit {username}",
+    "welcomeMorning": "Bonjour {username}",
+    "welcomeDay": "Salut {username}",
+    "welcomeEvening": "Bonsoir {username}",
+    "lastViewed": "Dernière consultation",
+    "list": {
+      "newText": "Tu peux créer une nouvelle liste pour tes nouvelles tâches :",
+      "new": "Créer une nouvelle liste",
+      "importText": "Ou importe tes listes et tâches d’autres services dans Vikunja :",
+      "import": "Importer tes données dans Vikunja"
+    }
+  },
+  "404": {
+    "title": "Non trouvé",
+    "text": "La page que tu as demandée n’existe pas."
+  },
+  "user": {
+    "auth": {
+      "username": "Nom d’utilisateur·rice",
+      "usernameEmail": "Nom d’utilisateur·rice ou adresse courriel",
+      "usernamePlaceholder": "p. ex. frederick",
+      "email": "Adresse courriel",
+      "emailPlaceholder": "p. ex. frederic@vikunja.io",
+      "password": "Mot de passe",
+      "passwordRepeat": "Retape ton mot de passe",
+      "passwordPlaceholder": "p. ex. •••••••••••",
+      "resetPassword": "Réinitialiser ton mot de passe",
+      "resetPasswordAction": "M’envoyer un lien de réinitialisation du mot de passe",
+      "resetPasswordSuccess": "",
+      "passwordsDontMatch": "Les mots de passe ne correspondent pas",
+      "confirmEmailSuccess": "Tu peux maintenant te connecter en utilisant votre adresse courriel.",
+      "totpTitle": "Code d’authentification à deux facteurs",
+      "totpPlaceholder": "p. ex. 123456",
+      "login": "Se connecter",
+      "register": "S’inscrire",
+      "loginWith": "Se connecter avec {provider}",
+      "authenticating": "Authentification…",
+      "openIdStateError": "L’état ne correspond pas, impossible de continuer !",
+      "openIdGeneralError": "",
+      "logout": "Se déconnecter"
+    },
+    "settings": {
+      "title": "Paramètres",
+      "newPasswordTitle": "Mets à jour ton mot de passe",
+      "newPassword": "Nouveau mot de passe",
+      "newPasswordConfirm": "Confirmation du nouveau mot de passe",
+      "currentPassword": "Mot de passe actuel",
+      "currentPasswordPlaceholder": "Ton mot de passe actuel",
+      "passwordsDontMatch": "Le nouveau mot de passe et sa confirmation ne correspondent pas.",
+      "passwordUpdateSuccess": "Mot de passe mis à jour.",
+      "updateEmailTitle": "Mets à jour ton adresse électronique",
+      "updateEmailNew": "Nouvelle adresse courriel",
+      "updateEmailSuccess": "Mise à jour de l’adresse électronique. Clique sur le lien dans le courriel qui t’a été envoyé pour le confirmer.",
+      "general": {
+        "title": "Paramètres généraux",
+        "name": "Nom",
+        "newName": "Le nouveau nom",
+        "savedSuccess": "Paramètres mis à jour.",
+        "emailReminders": "M’envoyer des rappels de tâches par courriel",
+        "overdueReminders": "M’envoyer des rappels pour les tâches en retard et non terminées par courriel chaque matin",
+        "discoverableByName": "Permettre aux autres de me trouver quand ils recherchent mon nom",
+        "discoverableByEmail": "Permettre aux autres de me trouver quand ils recherchent mon adresse courriel complète",
+        "playSoundWhenDone": "Jouer un son lors du marquage des tâches comme étant effectuées",
+        "weekStart": "La semaine commence le",
+        "weekStartSunday": "dimanche",
+        "weekStartMonday": "lundi",
+        "language": "Langue",
+        "defaultList": "Liste par défaut"
+      },
+      "totp": {
+        "title": "Authentification à deux facteurs",
+        "enroll": "S’inscrire",
+        "finishSetupPart1": "Pour terminer ta configuration, utilise ce secret dans ton appli de mot de passe à usage unique (andOTP ou similaire) :",
+        "finishSetupPart2": "Après cela, entre un code de ton application ci-dessous.",
+        "scanQR": "Tu peux également scanner ce code QR :",
+        "passcode": "Code",
+        "passcodePlaceholder": "Un code généré par ton appli de mot de passe à usage unique",
+        "setupSuccess": "Tu as maintenant configuré l’authentification à deux facteurs.",
+        "enterPassword": "Entre ton mot de passe",
+        "disable": "Désactiver l’authentification à deux facteurs",
+        "confirmSuccess": "Configuration du MDP à usage unique confirmée et utilisable.",
+        "disableSuccess": "Authentification à deux facteurs désactivée."
+      },
+      "caldav": {
+        "title": "CalDAV",
+        "howTo": "Tu peux connecter Vikunja à des clients CalDAV pour visualiser et gérer toutes les tâches de différents clients. Entre cette URL dans ton client :",
+        "more": "Plus d’informations sur CalDAV dans Vikunja"
+      },
+      "avatar": {
+        "title": "Avatar",
+        "initials": "Initiales",
+        "gravatar": "Gravatar",
+        "upload": "Téléverser",
+        "uploadAvatar": "Téléverser l’avatar",
+        "statusUpdateSuccess": "Statut de l’avatar mis à jour.",
+        "setSuccess": "Avatar défini."
+      }
+    },
+    "deletion": {
+      "title": "",
+      "text1": "",
+      "text2": "",
+      "confirm": "",
+      "requestSuccess": "",
+      "passwordRequired": "",
+      "confirmSuccess": "",
+      "scheduled": "",
+      "scheduledCancel": "",
+      "scheduledCancelText": "",
+      "scheduledCancelConfirm": "",
+      "scheduledCancelSuccess": ""
+    },
+    "export": {
+      "title": "",
+      "description": "",
+      "descriptionPasswordRequired": "",
+      "request": "",
+      "success": ""
+    }
+  },
+  "list": {
+    "archived": "Cette liste est archivée. Il n’est pas possible d’y créer de nouvelles tâches ou de les modifier.",
+    "title": "Nom de la liste",
+    "color": "Couleur",
+    "lists": "Listes",
+    "search": "Écris pour rechercher une liste…",
+    "searchSelect": "Clique ou appuie sur la touche Entrée pour sélectionner cette liste",
+    "shared": "Listes partagées",
+    "create": {
+      "header": "Créer une nouvelle liste",
+      "titlePlaceholder": "Entre le nom de la liste…",
+      "addTitleRequired": "Indique un nom.",
+      "createdSuccess": "Liste créée.",
+      "addListRequired": "Indique une liste ou définis une liste par défaut dans les paramètres."
+    },
+    "archive": {
+      "title": "Archiver « {list} »",
+      "archive": "Archiver cette liste",
+      "unarchive": "Désarchiver cette liste",
+      "unarchiveText": "Tu pourras créer de nouvelles tâches ou les modifier.",
+      "archiveText": "Tu ne pourras pas modifier cette liste ni créer de nouvelles tâches tant que tu ne l’auras pas désarchivée.",
+      "success": "Liste archivée."
+    },
+    "background": {
+      "title": "Définir l’arrière-plan de la liste",
+      "remove": "Retirer l’arrière-plan",
+      "upload": "Choisis un arrière-plan depuis ton ordinateur",
+      "searchPlaceholder": "Rechercher un arrière-plan…",
+      "poweredByUnsplash": "Propulsé par Unsplash",
+      "loadMore": "Charger plus de photos",
+      "success": "Arrière-plan défini.",
+      "removeSuccess": "Arrière-plan supprimé."
+    },
+    "delete": {
+      "title": "Supprimer « {list} »",
+      "header": "Supprimer cette liste",
+      "text1": "Supprimer cette liste et tout son contenu ?",
+      "text2": "Ceci inclut toutes les tâches et ne peut pas être annulé !",
+      "success": "Liste supprimée."
+    },
+    "duplicate": {
+      "title": "Dupliquer cette liste",
+      "label": "Dupliquer",
+      "text": "Sélectionne un espace de noms qui doit contenir la liste dupliquée :",
+      "success": "Liste dupliquée."
+    },
+    "edit": {
+      "header": "Modifier cette liste",
+      "title": "Modifier « {list} »",
+      "titlePlaceholder": "Entre le nom de la liste…",
+      "identifierTooltip": "L’identifiant de liste peut être utilisé pour identifier de manière unique une tâche dans toutes les listes. Tu peux le régler sur vide pour le désactiver.",
+      "identifier": "Identifiant de la liste",
+      "identifierPlaceholder": "L’identifiant de la liste va ici…",
+      "description": "Description",
+      "descriptionPlaceholder": "Entre la description de la liste…",
+      "color": "Couleur",
+      "success": "Liste mise à jour."
+    },
+    "share": {
+      "header": "Partager cette liste",
+      "title": "Partager « {list} »",
+      "share": "Partager",
+      "links": {
+        "title": "Liens de partage",
+        "what": "Qu’est-ce qu’un lien de partage ?",
+        "explanation": "Permet de partager une liste avec les personnes qui n’ont pas de compte sur Vikunja.",
+        "create": "Créer un nouveau lien de partage",
+        "name": "Nom (facultatif)",
+        "namePlaceholder": "p. ex. Lorem Ipsum",
+        "nameExplanation": "Toutes les actions effectuées par ce partage de lien apparaîtront avec le nom.",
+        "password": "Mot de passe (facultatif)",
+        "passwordExplanation": "L’utilisateur·rice doit saisir ce mot de passe pour se connecter.",
+        "noName": "Aucun nom défini",
+        "remove": "Retirer un lien de partage",
+        "removeText": "Retirer ce partage de lien ? Il ne sera plus possible d’accéder à cette liste avec ce partage de lien. Cette opération ne peut être annulée !",
+        "createSuccess": "Partage créé.",
+        "deleteSuccess": "Lien supprimé"
+      },
+      "userTeam": {
+        "typeUser": "utilisateur·rice | utilisateur·rice·s",
+        "typeTeam": "équipe | équipes",
+        "shared": "Partagé avec ces {type}",
+        "you": "Toi",
+        "notShared": "Pas encore partagé avec des {type}.",
+        "removeHeader": "Retirer un {type} de la liste {sharable}",
+        "removeText": "Retirer ce {sharable} du {type} ? Ceci ne peut pas être annulé !",
+        "removeSuccess": "{sharable} retiré de {type}.",
+        "addedSuccess": "{type} ajouté.",
+        "updatedSuccess": "{type} ajouté."
+      },
+      "right": {
+        "title": "Droit",
+        "read": "Lecture seule",
+        "readWrite": "Lecture et écriture",
+        "admin": "Admin"
+      },
+      "attributes": {
+        "link": "Lien",
+        "name": "Nom",
+        "sharedBy": "Partagé par",
+        "right": "Droit",
+        "delete": "Supprimer"
+      }
+    },
+    "list": {
+      "title": "Liste",
+      "add": "Ajouter",
+      "addPlaceholder": "Ajouter une nouvelle tâche…",
+      "empty": "Cette liste est actuellement vide.",
+      "newTaskCta": "Créer une nouvelle tâche.",
+      "editTask": "Modifier la tâche"
+    },
+    "gantt": {
+      "title": "Gantt",
+      "showTasksWithoutDates": "Afficher les tâches pour lesquelles aucune date n’a été fixée",
+      "size": "Taille",
+      "default": "Par défaut",
+      "month": "Mois",
+      "day": "Jour",
+      "from": "De",
+      "to": "À",
+      "noDates": "Aucune date n’a été fixée pour cette tâche."
+    },
+    "table": {
+      "title": "Tableau",
+      "columns": "Colonnes"
+    },
+    "kanban": {
+      "title": "Kanban",
+      "limit": "Limite : {limit}",
+      "noLimit": "Non défini",
+      "doneBucket": "Seau des terminés",
+      "doneBucketHint": "Toutes les tâches déplacées dans ce seau seront automatiquement marquées comme faites.",
+      "doneBucketHintExtended": "Toutes les tâches déplacées dans le seau des choses terminées seront marquées comme terminées automatiquement. Toutes les tâches marquées comme terminées ailleurs seront également déplacées.",
+      "doneBucketSavedSuccess": "Seau des terminés enregistré.",
+      "deleteLast": "Tu ne peux pas supprimer le dernier seau.",
+      "addTaskPlaceholder": "Entre le nom de la tâche…",
+      "addTask": "Ajouter une tâche",
+      "addAnotherTask": "Ajouter une autre tâche",
+      "addBucket": "Créer un nouveau seau",
+      "addBucketPlaceholder": "Entre le nouveau nom du seau…",
+      "deleteHeaderBucket": "Supprimer le seau",
+      "deleteBucketText1": "Supprimer ce seau ?",
+      "deleteBucketText2": "Ceci ne supprimera pas les tâches mais les déplacera dans le seau par défaut.",
+      "deleteBucketSuccess": "Seau supprimé.",
+      "bucketTitleSavedSuccess": "Nom du seau enregistré.",
+      "bucketLimitSavedSuccess": "Limite du seau enregistrée.",
+      "collapse": "Réduire ce seau"
+    },
+    "pseudo": {
+      "favorites": {
+        "title": "Favoris"
+      }
+    }
+  },
+  "namespace": {
+    "title": "Espaces de noms et listes",
+    "namespace": "Espace de noms",
+    "showArchived": "Montrer les archivés",
+    "noneAvailable": "Tu n’as pas d’espace de noms pour le moment.",
+    "unarchive": "Désarchiver",
+    "archived": "Archivé",
+    "noLists": "Cet espace de noms ne contient pas de listes.",
+    "createList": "Créer une nouvelle liste dans cet espace de noms.",
+    "namespaces": "Espaces de noms",
+    "search": "Écris pour rechercher un espace de noms…",
+    "create": {
+      "title": "Créer un nouvel espace de noms",
+      "titleRequired": "Indique un nom.",
+      "explanation": "Des collections de listes pour partager et organiser vos listes. En fait, chaque liste appartient à un espace de noms.",
+      "tooltip": "Qu’est-ce qu’un espace de noms ?",
+      "success": "Espace de noms créé."
+    },
+    "archive": {
+      "titleArchive": "Archiver « {namespace} »",
+      "titleUnarchive": "Désarchiver « {namespace} »",
+      "archiveText": "Tu ne pourras pas modifier cet espace de noms ou créer de nouvelles listes tant que tu ne l’auras pas désarchivé. Ceci archivera également toutes les listes de cet espace de noms.",
+      "unarchiveText": "Tu pourras créer de nouvelles listes ou les modifier.",
+      "success": "Espace de noms archivé.",
+      "description": "L’archivage d’un espace de noms signifie qu’on ne peut pas créer de nouvelles listes dans cet espace, ni le modifier."
+    },
+    "delete": {
+      "title": "Supprimer « {namespace} »",
+      "text1": "Supprimer cet espace de noms et tout son contenu ?",
+      "text2": "Ceci inclut toutes les listes et les tâches et ne peut être annulé !",
+      "success": "Espace de noms supprimé."
+    },
+    "edit": {
+      "title": "Modifier « {namespace} »",
+      "success": "Espace de noms mis à jour."
+    },
+    "share": {
+      "title": "Partager « {namespace} »"
+    },
+    "attributes": {
+      "title": "Nom de l’espace de noms",
+      "titlePlaceholder": "Entre le nom de l’espace de noms…",
+      "description": "Description",
+      "descriptionPlaceholder": "Entre la description de l’espace de noms…",
+      "color": "Couleur",
+      "archived": "Est archivé",
+      "isArchived": "Cet espace de noms est archivé"
+    },
+    "pseudo": {
+      "sharedLists": {
+        "title": "Listes partagées"
+      },
+      "favorites": {
+        "title": "Favoris"
+      },
+      "savedFilters": {
+        "title": "Filtres"
+      }
+    }
+  },
+  "filters": {
+    "title": "Filtres",
+    "attributes": {
+      "title": "Nom",
+      "titlePlaceholder": "Entre un nom de filtre enregistré…",
+      "description": "Description",
+      "descriptionPlaceholder": "Écris une description…",
+      "includeNulls": "Inclure les tâches sans valeurs",
+      "requireAll": "Exiger tous les filtres pour qu’une tâche s’affiche",
+      "showDoneTasks": "Afficher les tâches terminées",
+      "enablePriority": "Activer le filtre par priorité",
+      "enablePercentDone": "Par % d’achèvement",
+      "dueDateRange": "Plage de dates d’échéance",
+      "startDateRange": "Plage de dates de début",
+      "endDateRange": "Plage de dates de fin",
+      "reminderRange": "Plage de dates de rappel"
+    },
+    "create": {
+      "title": "Créer un filtre enregistré",
+      "description": "Un filtre enregistré est une liste virtuelle qui est calculée à partir d’un ensemble de filtres à chaque fois qu’on y accède. Une fois créé, il apparaît dans un espace de noms spécial.",
+      "action": "Créer un nouveau filtre enregistré"
+    },
+    "delete": {
+      "header": "Supprimer ce filtre enregistré",
+      "text": "Supprimer ce filtre enregistré ?",
+      "success": "Filtre supprimé."
+    },
+    "edit": {
+      "title": "Modifier ce filtre enregistré",
+      "success": "Filtre enregistré."
+    }
+  },
+  "migrate": {
+    "title": "Migrer d’autres services vers Vikunja",
+    "titleService": "Importe tes données depuis {name} dans Vikunja",
+    "import": "Importer tes données dans Vikunja",
+    "description": "Clique sur le logo d’un des services tiers ci-dessous pour commencer.",
+    "descriptionDo": "Vikunja importera toutes les listes, tâches, notes, rappels et fichiers auxquels tu as accès.",
+    "authorize": "Autorise Vikunja à accéder à ton compte {name} en cliquant sur le bouton ci-dessous.",
+    "getStarted": "Commencer",
+    "inProgress": "Importation en cours…",
+    "alreadyMigrated1": "Il semble que tu aies déjà importé tes affaires de {name} le {date}.",
+    "alreadyMigrated2": "Importer à nouveau est possible mais peut créer des doublons. Es-tu sûr·e ?",
+    "confirm": "Je suis sûr·e, commencer à migrer maintenant !",
+    "importUpload": "",
+    "upload": ""
+  },
+  "label": {
+    "title": "Étiquettes",
+    "manage": "Gérer les étiquettes",
+    "description": "Clique sur une étiquette pour la modifier. Tu peux modifier toutes les étiquettes que tu as créées, tu peux utiliser toutes les étiquettes qui sont associées à une tâche dont tu as accès à la liste.",
+    "newCTA": "Tu n’as actuellement aucune étiquette.",
+    "search": "Écris pour rechercher une étiquette…",
+    "create": {
+      "header": "Nouvelle étiquette",
+      "title": "Créer une nouvelle étiquette",
+      "titleRequired": "Indique un nom.",
+      "success": "Étiquette créée."
+    },
+    "edit": {
+      "header": "Modifier l’étiquette",
+      "forbidden": "Tu ne peux pas modifier cette étiquette car elle ne t’appartient pas.",
+      "success": "Étiquette mise à jour."
+    },
+    "deleteSuccess": "Étiquette supprimée.",
+    "attributes": {
+      "title": "Nom",
+      "titlePlaceholder": "Entre un nom d’étiquette…",
+      "description": "Description",
+      "descriptionPlaceholder": "Description de l’étiquette",
+      "color": "Couleur"
+    }
+  },
+  "sharing": {
+    "authenticating": "Authentification…",
+    "passwordRequired": "Cette liste partagée nécessite un mot de passe. Entre-le ci-dessous :",
+    "error": "Une erreur s’est produite.",
+    "invalidPassword": "Le mot de passe est invalide."
+  },
+  "navigation": {
+    "overview": "Vue d’ensemble",
+    "upcoming": "À venir",
+    "settings": "Paramètres",
+    "imprint": "Informations légales",
+    "privacy": "Politique de confidentialité"
+  },
+  "misc": {
+    "loading": "Chargement…",
+    "save": "Enregistrer",
+    "delete": "Supprimer",
+    "confirm": "Confirmer",
+    "cancel": "Annuler",
+    "refresh": "Actualiser",
+    "disable": "Désactiver",
+    "copy": "Copier dans le presse-papier",
+    "search": "Rechercher",
+    "searchPlaceholder": "Écris pour rechercher…",
+    "previous": "Précédent",
+    "next": "Suivant",
+    "poweredBy": "Propulsé par Vikunja",
+    "info": "Infos",
+    "create": "Créer",
+    "doit": "Faites-le !",
+    "saving": "Enregistrement en cours…",
+    "saved": "Enregistré !",
+    "default": "Par défaut",
+    "close": "Fermer",
+    "download": ""
+  },
+  "input": {
+    "resetColor": "Réinitialiser la couleur",
+    "datepicker": {
+      "today": "Aujourd’hui",
+      "tomorrow": "Demain",
+      "nextMonday": "Lundi prochain",
+      "thisWeekend": "Ce weekend",
+      "laterThisWeek": "Plus tard cette semaine",
+      "nextWeek": "La semaine prochaine",
+      "chooseDate": "Choisir une date"
+    },
+    "editor": {
+      "edit": "Modifier",
+      "done": "Terminé",
+      "heading1": "En-tête 1",
+      "heading2": "En-tête 2",
+      "heading3": "En-tête 3",
+      "headingSmaller": "En-tête plus petit",
+      "headingBigger": "En-tête plus grand",
+      "bold": "Gras",
+      "italic": "Italique",
+      "strikethrough": "Barré",
+      "code": "Code",
+      "quote": "Citation",
+      "unorderedList": "Liste non ordonnée",
+      "orderedList": "Liste ordonnée",
+      "cleanBlock": "Bloc propre",
+      "link": "Lien",
+      "image": "Image",
+      "table": "Tableau",
+      "horizontalRule": "Règle horizontale",
+      "sideBySide": "Côte à côte",
+      "guide": "Guide"
+    },
+    "multiselect": {
+      "createPlaceholder": "Créer un nouveau",
+      "selectPlaceholder": "Clique ou appuie sur la touche Entrée pour sélectionner"
+    }
+  },
+  "task": {
+    "task": "Tâche",
+    "new": "Créer une nouvelle tâche",
+    "delete": "Supprimer cette tâche",
+    "createSuccess": "Tâche créée.",
+    "addReminder": "Ajouter un nouveau rappel…",
+    "doneSuccess": "Tâche marquée comme terminée.",
+    "undoneSuccess": "Tâche marquée comme non terminée.",
+    "openDetail": "Ouvrir la vue détaillée de la tâche",
+    "show": {
+      "titleCurrent": "Tâches actuelles",
+      "titleDates": "Tâches du {from} au {to}",
+      "noDates": "Afficher les tâches sans date",
+      "current": "Tâches actuelles",
+      "from": "Tâches du",
+      "until": "au",
+      "today": "Aujourd’hui",
+      "nextWeek": "La semaine prochaine",
+      "nextMonth": "Le mois prochain",
+      "noTasks": "Rien à faire. Passe une bonne journée !"
+    },
+    "detail": {
+      "chooseDueDate": "Clique ici pour définir une date d’échéance",
+      "chooseStartDate": "Clique ici pour fixer une date de début",
+      "chooseEndDate": "Clique ici pour fixer une date de fin",
+      "move": "Déplacer une tâche vers une autre liste",
+      "done": "Terminé !",
+      "undone": "Marquer comme inachevé",
+      "created": "Créé {0} par {1}",
+      "updated": "Mis à jour {0}",
+      "doneAt": "Terminé {0}",
+      "updateSuccess": "Tâche enregistrée.",
+      "deleteSuccess": "Tâche supprimée.",
+      "belongsToList": "Cette tâche appartient à la liste « {list} »",
+      "due": "Échéance {at}",
+      "delete": {
+        "header": "Supprimer cette tâche",
+        "text1": "Retirer cette tâche ?",
+        "text2": "Ceci supprimera également toutes les pièces jointes, les rappels et les relations associés à cette tâche et ne pourra pas être annulé !"
+      },
+      "actions": {
+        "assign": "Assigner cette tâche à un·e utilisateur·rice",
+        "label": "Ajouter des étiquettes",
+        "priority": "Définir la priorité",
+        "dueDate": "Définir l’échéance",
+        "startDate": "Définir une date de début",
+        "endDate": "Fixer une date de fin",
+        "reminders": "Définir des rappels",
+        "repeatAfter": "Définir un intervalle de répétition",
+        "percentDone": "Définir le pourcentage d’achèvement",
+        "attachments": "Ajouter des pièces jointes",
+        "relatedTasks": "Ajouter des relations de tâches",
+        "moveList": "Déplacer la tâche",
+        "color": "Définir la couleur de la tâche",
+        "delete": "Supprimer la tâche",
+        "favorite": "",
+        "unfavorite": ""
+      }
+    },
+    "attributes": {
+      "assignees": "Attributaires",
+      "color": "Couleur",
+      "created": "Créé",
+      "createdBy": "Créé par",
+      "description": "Description",
+      "done": "Terminé",
+      "dueDate": "Date d’échéance",
+      "endDate": "Date de fin",
+      "labels": "Étiquettes",
+      "percentDone": "% terminé",
+      "priority": "Priorité",
+      "relatedTasks": "Tâches connexes",
+      "reminders": "Rappels",
+      "repeat": "Répéter",
+      "startDate": "Date de début",
+      "title": "Nom",
+      "updated": "Mis à jour"
+    },
+    "subscription": {
+      "subscribedThroughParent": "Tu ne peux pas te désabonner ici car tu es abonné·e à cette {entity} par le biais de son {parent}.",
+      "subscribed": "Tu es actuellement abonné·e à cette {entity} et recevras des notifications pour les changements.",
+      "notSubscribed": "Tu n’es pas abonné·e à cette {entity} et ne recevras pas de notifications pour les changements.",
+      "subscribe": "S’abonner",
+      "unsubscribe": "Se désabonner",
+      "subscribeSuccess": "Tu es maintenant abonné·e à cette {entity}",
+      "unsubscribeSuccess": "Tu es maintenant désabonné·e de cette {entity}"
+    },
+    "attachment": {
+      "title": "Pièces jointes",
+      "createdBy": "créé {0} par {1}",
+      "downloadTooltip": "Télécharger cette pièce jointe",
+      "upload": "Téléverser la pièce jointe",
+      "drop": "Dépose les fichiers ici pour les téléverser",
+      "delete": "Supprimer la pièce jointe",
+      "deleteTooltip": "Supprimer cette pièce jointe",
+      "deleteText1": "Supprimer la pièce jointe {filename} ?",
+      "deleteText2": "Ceci ne peut être annulé !",
+      "copyUrl": "Copier l’URL",
+      "copyUrlTooltip": "Copier l’URL de cette pièce jointe pour l’utiliser dans le texte"
+    },
+    "comment": {
+      "title": "Commentaires",
+      "loading": "Chargement des commentaires…",
+      "edited": "modifié {date}",
+      "creating": "Création d’un commentaire…",
+      "placeholder": "Ajoute ton commentaire…",
+      "comment": "Commentaire",
+      "delete": "Supprimer ce commentaire",
+      "deleteText1": "Supprimer ce commentaire ?",
+      "deleteText2": "Ceci ne peut être annulé !",
+      "addedSuccess": "Commentaire ajouté."
+    },
+    "deferDueDate": {
+      "title": "Reporter la date d’échéance",
+      "1day": "1 jour",
+      "3days": "3 jours",
+      "1week": "1 semaine"
+    },
+    "description": {
+      "placeholder": "Clique ici pour entrer une description…",
+      "empty": "Aucune description n’est encore disponible."
+    },
+    "assignee": {
+      "placeholder": "Écris pour affecter un·e utilisateur·rice…",
+      "selectPlaceholder": "Affecter cet·te utilisateur·rice",
+      "assignSuccess": "Affectation réussie.",
+      "unassignSuccess": "Désaffectation réussie."
+    },
+    "label": {
+      "placeholder": "Écris pour ajouter une nouvelle étiquette…",
+      "createPlaceholder": "Ajouter ceci comme nouvelle étiquette",
+      "addSuccess": "Étiquette ajoutée.",
+      "createSuccess": "Étiquette créée.",
+      "removeSuccess": "Étiquette retirée."
+    },
+    "priority": {
+      "unset": "Non définie",
+      "low": "Faible",
+      "medium": "Moyenne",
+      "high": "Élevée",
+      "urgent": "Urgente",
+      "doNow": "LE FAIRE MAINTENANT"
+    },
+    "relation": {
+      "add": "Ajouter une nouvelle relation de tâche",
+      "new": "Nouvelle relation de tâche",
+      "searchPlaceholder": "Écris la recherche d’une nouvelle tâche à ajouter comme connexe…",
+      "createPlaceholder": "Ajouter cette tâche comme nouvelle tâche connexe",
+      "differentList": "Cette tâche appartient à une autre liste.",
+      "noneYet": "Pas encore de relations de tâches.",
+      "delete": "Supprimer la relation de tâche",
+      "deleteText1": "Supprimer cette relation de tâche ?",
+      "deleteText2": "Ceci ne peut pas être annulé !"
+    },
+    "repeat": {
+      "everyDay": "Chaque jour",
+      "everyWeek": "Chaque semaine",
+      "everyMonth": "Chaque mois",
+      "mode": "Mode de répétition",
+      "monthly": "Mensuel",
+      "fromCurrentDate": "À partir de la date actuelle",
+      "each": "Tous/toutes les",
+      "specifyAmount": "Indique un nombre…",
+      "hours": "Heures",
+      "days": "Jours",
+      "weeks": "Semaines",
+      "months": "Mois",
+      "years": "Années"
+    },
+    "quickAddMagic": {
+      "hint": "Tu peux utiliser Quick Add Magic",
+      "what": "Quoi ?",
+      "title": "Quick Add Magic",
+      "intro": "Lors de la création d’une tâche, vous pouvez utiliser des mots-clés spéciaux pour ajouter directement des attributs à la tâche nouvellement créée. Ceci permet d’ajouter des attributs couramment utilisés aux tâches beaucoup plus rapidement.",
+      "multiple": "Tu peux utiliser ceci plusieurs fois.",
+      "label1": "Pour ajouter une étiquette, il suffit de préfixer le nom de l’étiquette avec {prefix}.",
+      "label2": "Vikunja va d’abord vérifier si l’étiquette existe déjà et la créer si ce n’est pas le cas.",
+      "label3": "Pour utiliser des espaces, il suffit d’ajouter \" autour du nom de l’étiquette.",
+      "label4": "Par exemple : {prefix}\"Étiquette avec espaces\".",
+      "priority1": "Pour définir la priorité d’une tâche, ajoutez un chiffre de 1 à 5, précédé d’un {prefix}.",
+      "priority2": "Plus le numéro est élevé, plus la priorité est élevée.",
+      "assignees": "Pour attribuer directement la tâche à une personne, ajoutez son nom d’utilisateur préfixé par @ à la tâche.",
+      "list1": "Pour définir une liste dans laquelle la tâche doit apparaître, entrez son nom précédé de {prefix}.",
+      "list2": "Ceci renverra une erreur si la liste n’existe pas.",
+      "dateAndTime": "Date et heure",
+      "date": "Toute date sera utilisée comme date d’échéance de la nouvelle tâche. Vous pouvez utiliser des dates dans un des formats suivants :",
+      "dateWeekday": "n’importe quel jour de la semaine, utilisera la date suivante avec cette date",
+      "dateCurrentYear": "utilisera l’année en cours",
+      "dateNth": "utilisera le {day}e du mois en cours",
+      "dateTime": "Combinez n’importe lequel des formats de date avec « {time} » (ou {timePM}) pour définir une heure."
+    }
+  },
+  "team": {
+    "title": "Équipes",
+    "noTeams": "Tu ne fais actuellement partie d’aucune équipe.",
+    "create": {
+      "title": "Créer une nouvelle équipe",
+      "success": "Équipe créée."
+    },
+    "edit": {
+      "title": "Modifier l’équipe « {team} »",
+      "members": "Membres de l’équipe",
+      "search": "Écris pour rechercher un·e utilisateur·rice…",
+      "addUser": "Ajouter à l’équipe",
+      "makeMember": "Ajouter comme membre",
+      "makeAdmin": "Rendre admin",
+      "success": "Équipe mise à jour.",
+      "userAddedSuccess": "Membre de l’équipe ajouté.",
+      "madeMember": "Le membre de l’équipe est devenu membre.",
+      "madeAdmin": "Membre de l’équipe nommé admin.",
+      "delete": {
+        "header": "Supprimer l’équipe",
+        "text1": "Supprimer cette équipe et tous ses membres ?",
+        "text2": "Tous les membres de l’équipe perdront l’accès aux listes et aux espaces de noms partagés avec cette équipe. Ceci ne peut pas être annulé !",
+        "success": "Équipe supprimée."
+      },
+      "deleteUser": {
+        "header": "Retirer un·e utilisateur·rice de l’équipe",
+        "text1": "Retirer cette personne de l’équipe ?",
+        "text2": "La personne perdra accès à toutes les listes et espaces de noms auxquels cette équipe a accès. Ceci ne peut pas être annulé !",
+        "success": "Utilisateur·rice retiré·e de l’équipe."
+      }
+    },
+    "attributes": {
+      "name": "Nom de l’équipe",
+      "namePlaceholder": "Entre le nom de l’équipe…",
+      "nameRequired": "Indique un nom.",
+      "description": "Description",
+      "descriptionPlaceholder": "La description des équipes va ici…",
+      "admin": "Admin",
+      "member": "Membre"
+    }
+  },
+  "keyboardShortcuts": {
+    "title": "Raccourcis clavier",
+    "allPages": "Fonctionne sur toutes les pages.",
+    "currentPageOnly": "Fonctionnent uniquement sur la page en cours.",
+    "toggleMenu": "Basculer le menu",
+    "quickSearch": "Ouvrir la barre de recherche/action rapide",
+    "task": {
+      "title": "Page de tâche",
+      "done": "Marquer une tâche comme terminée",
+      "assign": "Assigner cette tâche à un·e utilisateur·rice",
+      "labels": "Ajouter des étiquettes à cette tâche",
+      "dueDate": "Modifier la date d’échéance de cette tâche",
+      "attachment": "Ajouter une pièce jointe à cette tâche",
+      "related": "Modifier les tâches connexes de cette tâche"
+    }
+  },
+  "update": {
+    "available": "Il y a une mise à jour pour Vikunja disponible !",
+    "do": "Mettre à jour maintenant"
+  },
+  "menu": {
+    "edit": "Modifier",
+    "archive": "Archiver",
+    "duplicate": "Dupliquer",
+    "delete": "Supprimer",
+    "unarchive": "Désarchiver",
+    "setBackground": "Définir l’arrière-plan",
+    "share": "Partager",
+    "newList": "Nouvelle liste"
+  },
+  "apiConfig": {
+    "url": "URL Vikunja",
+    "urlPlaceholder": "Par exemple : https://localhost:3456",
+    "change": "changer",
+    "signInOn": "Se connecter à ton compte Vikunja sur {0}",
+    "error": "Impossible de trouver ou d’utiliser l’installation Vikunja à « {domain} ».",
+    "success": "Utilisation de l’installation Vikunja à « {domain} »."
+  },
+  "loadingError": {
+    "failed": "Le chargement a échoué, {0}. Si l’erreur persiste, {1}.",
+    "tryAgain": "réessaye",
+    "contact": "contacte-nous"
+  },
+  "notification": {
+    "title": "Notifications",
+    "none": "Tu n’as pas de notifications. Passe une bonne journée !",
+    "explainer": "Les notifications apparaissent ici lorsque des actions (pour les espaces de noms, les listes ou les tâches) auxquelles tu es abonné·e se produisent."
+  },
+  "quickActions": {
+    "commands": "Commandes",
+    "placeholder": "Écris une commande ou une recherche…",
+    "hint": "Tu peux utiliser # pour rechercher uniquement les tâches, * pour rechercher uniquement les listes et @ pour rechercher uniquement les équipes.",
+    "tasks": "Tâches",
+    "lists": "Listes",
+    "teams": "Équipes",
+    "newList": "Entre le nom de la liste…",
+    "newTask": "Entre le nom de la tâche…",
+    "newNamespace": "Entre le nom de l’espace de noms…",
+    "newTeam": "Entre le nom de la nouvelle équipe…",
+    "createTask": "Créer une tâche dans la liste actuelle ({title})",
+    "createList": "Créer une liste dans l’espace de noms actuel ({title})",
+    "cmds": {
+      "newTask": "Nouvelle tâche",
+      "newList": "Nouvelle liste",
+      "newNamespace": "Nouvel espace de noms",
+      "newTeam": "Nouvelle équipe"
+    }
+  },
+  "date": {
+    "locale": "fr",
+    "in": "en {date}",
+    "ago": "il y a {date}",
+    "altFormatLong": "j M Y H:i",
+    "altFormatShort": "j M Y"
+  },
+  "error": {
+    "error": "Erreur",
+    "success": "Succès",
+    "0001": "Tu n’as pas le droit de faire cela.",
+    "1001": "Un·e utilisateur·rice avec ce nom d’utilisateur·rice existe déjà.",
+    "1002": "Un·e utilisateur·rice avec cette adresse courriel existe déjà.",
+    "1004": "Aucun nom d’utilisateur·rice et mot de passe n’a été indiqué.",
+    "1005": "L’utilisateur·rice n’existe pas.",
+    "1006": "Impossible d’obtenir l’identifiant de l’utilisateur·rice.",
+    "1008": "Aucun jeton de réinitialisation du mot de passe n’est fourni.",
+    "1009": "Le jeton de réinitialisation du mot de passe est invalide.",
+    "1010": "Jeton de confirmation de courriel invalide.",
+    "1011": "Nom d’utilisateur·rice ou mot de passe erroné.",
+    "1012": "L’adresse courriel de l’utilisateur·rice n’est pas confirmée.",
+    "1013": "Le nouveau mot de passe est vide.",
+    "1014": "L’ancien mot de passe est vide.",
+    "1015": "Cette personne utilise déjà un MDP à usage unique.",
+    "1016": "Cette personne utilise un MDP à usage unique.",
+    "1017": "Code à usage unique invalide.",
+    "1018": "Le paramètre du type d’avatar de l’utilisateur·rice est invalide.",
+    "2001": "L’identifiant ne peut pas être vide ou égal à 0.",
+    "2002": "Certaines des données de la requête étaient invalides.",
+    "3001": "La liste n’existe pas.",
+    "3004": "Tu dois avoir des droits de lecture sur cette liste pour effectuer cette action.",
+    "3005": "Tu dois entrer un nom de liste.",
+    "3006": "Le partage de liste n’existe pas.",
+    "3007": "Une liste avec cet identifiant existe déjà.",
+    "3008": "La liste est archivée et ne peut donc être consultée qu’en lecture seule. Ceci est également vrai pour toutes les tâches associées à cette liste.",
+    "4001": "Le texte de la tâche de liste ne peut pas être vide.",
+    "4002": "La tâche de liste n’existe pas.",
+    "4003": "Toutes les tâches de modification en bloc doivent appartenir à la même liste.",
+    "4004": "Besoin d’au moins une tâche lors de la modification en bloc de tâches.",
+    "4005": "Tu n’as pas le droit de voir la tâche.",
+    "4006": "Tu ne peux pas définir une tâche parente comme tâche elle-même.",
+    "4007": "Tu ne peux pas créer une relation de tâche avec un type de relation invalide.",
+    "4008": "Tu ne peux pas créer une relation de tâche qui existe déjà.",
+    "4009": "La relation de tâche n’existe pas.",
+    "4010": "Impossible de relier une tâche avec elle-même.",
+    "4011": "La pièce jointe de la tâche n’existe pas.",
+    "4012": "La pièce jointe de la tâche est trop grande.",
+    "4013": "Paramètre de triage des tâches invalide.",
+    "4014": "L’ordre de tri des tâches est invalide.",
+    "4015": "Le commentaire de la tâche n’existe pas.",
+    "4016": "Champ de tâche invalide.",
+    "4017": "Comparateur de filtre de tâche invalide.",
+    "4018": "Concaténateur de filtre de tâche invalide.",
+    "4019": "Valeur de filtre de tâche invalide.",
+    "5001": "L’espace de noms n’existe pas.",
+    "5003": "Tu n’as pas accès à l’espace de noms indiqué.",
+    "5006": "Le nom de l’espace de noms ne peut pas être vide.",
+    "5009": "Accès en lecture à l’espace de noms nécessaire pour effectuer cette action.",
+    "5010": "Cette équipe n’a pas accès à cet espace de noms.",
+    "5011": "Cet·e utilisateur·rice a déjà accès à cet espace de noms.",
+    "5012": "L’espace de noms est archivé et ne peut donc être consulté qu’en lecture seule.",
+    "6001": "Le nom de l’équipe ne peut pas être vide.",
+    "6002": "L’équipe n’existe pas.",
+    "6004": "L’équipe a déjà accès à cet espace de noms ou à cette liste.",
+    "6005": "L’utilisateur·rice est déjà membre de cette équipe.",
+    "6006": "Impossible de supprimer le dernier membre de l’équipe.",
+    "6007": "L’équipe n’a pas accès à la liste pour effectuer cette action.",
+    "7002": "L’utilisateur·rice a déjà accès à cette liste.",
+    "7003": "Tu n’as pas accès à cette liste.",
+    "8001": "Cette étiquette existe déjà sur cette tâche.",
+    "8002": "L’étiquette n’existe pas.",
+    "8003": "Tu n’as pas accès à cette étiquette.",
+    "9001": "Le droit est invalide.",
+    "10001": "Le seau n’existe pas.",
+    "10002": "Le seau ne fait pas partie de cette liste.",
+    "10003": "Tu ne peux pas supprimer le dernier seau d’une liste.",
+    "10004": "Tu ne peux pas ajouter la tâche à ce seau car il a déjà dépassé la limite de tâches qu’il peut contenir.",
+    "10005": "Il peut y avoir seulement un seau des terminés par liste.",
+    "11001": "Le filtre enregistré n’existe pas.",
+    "11002": "Les filtres enregistrés ne sont pas disponibles pour les partages de liens.",
+    "12001": "Le type d’entité d’abonnement est invalide.",
+    "12002": "Tu es déjà abonné·e à l’entité elle-même ou à une entité parente.",
+    "13001": "Le mot de passe requis n’a pas été fourni pour ce partage de lien.",
+    "13002": "Mot de passe de partage de lien invalide."
+  },
+  "about": {
+    "title": "À propos",
+    "frontendVersion": "Version : {version}",
+    "apiVersion": "Version de l’API : {version}"
+  }
+}
