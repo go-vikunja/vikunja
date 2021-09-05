@@ -662,7 +662,7 @@ steps:
     image: docker:git
     commands:
       - git fetch --tags
-  - name: docker-arm-latest
+  - name: docker-arm-unstable
     image: plugins/docker:linux-arm
     pull: true
     settings:
@@ -671,7 +671,7 @@ steps:
       password:
         from_secret: docker_password
       repo: vikunja/api
-      tags: latest-linux-arm
+      tags: unstable-linux-arm
     depends_on: [ fetch-tags ]
     when:
       ref:
@@ -693,7 +693,7 @@ steps:
       ref:
         - "refs/tags/**"
 
-  - name: docker-arm64-latest
+  - name: docker-arm64-unstable
     image: plugins/docker:linux-arm64
     pull: true
     settings:
@@ -702,7 +702,7 @@ steps:
       password:
         from_secret: docker_password
       repo: vikunja/api
-      tags: latest-linux-arm64
+      tags: unstable-linux-arm64
     depends_on: [ fetch-tags ]
     when:
       ref:
@@ -746,7 +746,8 @@ steps:
     image: docker:git
     commands:
       - git fetch --tags
-  - name: docker-latest
+
+  - name: docker-unstable
     image: plugins/docker:linux-amd64
     pull: true
     settings:
@@ -755,7 +756,7 @@ steps:
       password:
         from_secret: docker_password
       repo: vikunja/api
-      tags: latest-linux-amd64
+      tags: unstable-linux-amd64
     depends_on: [ fetch-tags ]
     when:
       ref:
@@ -792,13 +793,13 @@ depends_on:
   - docker-arm-release
 
 steps:
-  - name: manifest-latest
+  - name: manifest-unstable
     pull: always
     image: plugins/manifest
     settings:
-      tags: latest
+      tags: unstable
       ignore_missing: true
-      spec: docker-manifest-latest.tmpl
+      spec: docker-manifest-unstable.tmpl
       password:
         from_secret: docker_password
       username:
@@ -807,11 +808,28 @@ steps:
       ref:
         - refs/heads/main
 
-  - name: manifest
+  - name: manifest-release
     pull: always
     image: plugins/manifest
     settings:
       auto_tag: true
+      ignore_missing: true
+      spec: docker-manifest.tmpl
+      password:
+        from_secret: docker_password
+      username:
+        from_secret: docker_username
+    when:
+      ref:
+        - "refs/tags/**"
+
+  - name: manifest-release-latest
+    pull: always
+    image: plugins/manifest
+    depends_on:
+      - clone
+    settings:
+      tags: latest
       ignore_missing: true
       spec: docker-manifest.tmpl
       password:
@@ -856,6 +874,6 @@ steps:
         - failure
 ---
 kind: signature
-hmac: 2cee8cac22aae8b4a25ffa28c47d9defc6ce227e0d262b57677f9adbf8badc3e
+hmac: 110b782e9b704b4b3b3d618678383718c92262cf3c214f4fe6705d40cd3da367
 
 ...
