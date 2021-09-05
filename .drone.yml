@@ -564,31 +564,31 @@ trigger:
     - push
 
 steps:
-#  - name: download
-#    pull: always
-#    image: jonasfranz/crowdin
-#    settings:
-#      download: true
-#      export_dir: src/i18n/lang/
-#      ignore_branch: true
-#      project_identifier: vikunja
-#    environment:
-#      CROWDIN_KEY:
-#        from_secret: crowdin_key
-#
-#  - name: push
-#    pull: always
-#    image: appleboy/drone-git-push
-#    settings:
-#      author_email: "frederik@vikunja.io"
-#      author_name: Frederick [Bot]
-#      branch: main
-#      commit: true
-#      commit_message: "[skip ci] Updated translations via Crowdin"
-#      remote: "git@kolaente.dev:9022/vikunja/frontend.git"
-#    environment:
-#      GIT_PUSH_SSH_KEY:
-#        from_secret: git_push_ssh_key
+  - name: download
+    pull: always
+    image: jonasfranz/crowdin
+    settings:
+      download: true
+      export_dir: src/i18n/lang/
+      ignore_branch: true
+      project_identifier: vikunja
+    environment:
+      CROWDIN_KEY:
+        from_secret: crowdin_key
+
+  - name: push
+    pull: always
+    image: appleboy/drone-git-push
+    settings:
+      author_email: "frederik@vikunja.io"
+      author_name: Frederick [Bot]
+      branch: main
+      commit: true
+      commit_message: "[skip ci] Updated translations via Crowdin"
+      remote: "git@kolaente.dev:9022/vikunja/frontend.git"
+    environment:
+      GIT_PUSH_SSH_KEY:
+        from_secret: translation_git_push_ssh_key
 
   - name: upload
     pull: always
