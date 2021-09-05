@@ -1,0 +1,877 @@
+{
+  "home": {
+    "welcomeNight": "Gute Nacht, {username}",
+    "welcomeMorning": "Guten Morgen, {username}",
+    "welcomeDay": "Hallo, {username}",
+    "welcomeEvening": "Guten Abend, {username}",
+    "lastViewed": "Zuletzt angesehen",
+    "list": {
+      "newText": "Du kannst eine neue Liste für deine neuen Aufgaben erstellen:",
+      "new": "Eine neue Liste erstellen",
+      "importText": "Oder importiere deine Listen und Aufgaben aus anderen Diensten in Vikunja:",
+      "import": "Deine Daten in Vikunja importieren"
+    }
+  },
+  "404": {
+    "title": "Nicht gefunden",
+    "text": "Die angeforderte Seite existiert nicht."
+  },
+  "user": {
+    "auth": {
+      "username": "Anmeldename",
+      "usernameEmail": "Anmeldename oder E-Mail-Adresse",
+      "usernamePlaceholder": "z.B. frederick",
+      "email": "E-Mail-Adresse",
+      "emailPlaceholder": "z.B. frederic@vikunja.io",
+      "password": "Passwort",
+      "passwordRepeat": "Gib dein Passwort erneut ein",
+      "passwordPlaceholder": "z.B. •••••••••••",
+      "resetPassword": "Setze dein Passwort zurück",
+      "resetPasswordAction": "Sende mir einen Link zum Zurücksetzen des Passworts",
+      "resetPasswordSuccess": "Prüfe deinen Posteingang! Du solltest eine E-Mail mit Anweisungen zum Zurücksetzen deines Passworts erhalten haben.",
+      "passwordsDontMatch": "Passwörter stimmen nicht überein",
+      "confirmEmailSuccess": "Du hast deine E-Mail-Adresse erfolgreich bestätigt! Du kannst dich jetzt einloggen.",
+      "totpTitle": "Zwei-Faktor-Authentifizierungscode",
+      "totpPlaceholder": "z.B. 123456",
+      "login": "Anmelden",
+      "register": "Registrieren",
+      "loginWith": "Mit {provider} anmelden",
+      "authenticating": "Authentifizierung…",
+      "openIdStateError": "Zustand stimmt nicht überein, fahre nicht fort!",
+      "openIdGeneralError": "Es ist ein Fehler bei der externen Authentisierung aufgetreten.",
+      "logout": "Abmelden"
+    },
+    "settings": {
+      "title": "Einstellungen",
+      "newPasswordTitle": "Aktualisiere dein Passwort",
+      "newPassword": "Neues Passwort",
+      "newPasswordConfirm": "Bestätigung des neuen Passworts",
+      "currentPassword": "Aktuelles Passwort",
+      "currentPasswordPlaceholder": "Dein aktuelles Passwort",
+      "passwordsDontMatch": "Das neue Passwort und seine Bestätigung stimmen nicht überein.",
+      "passwordUpdateSuccess": "Das Passwort wurde erfolgreich aktualisiert.",
+      "updateEmailTitle": "Aktualisiere deine E-Mail-Adresse",
+      "updateEmailNew": "Neue E-Mail-Adresse",
+      "updateEmailSuccess": "Deine E-Mail-Adresse wurde erfolgreich aktualisiert. Wir haben dir einen Link zur Bestätigung geschickt.",
+      "general": {
+        "title": "Allgemeine Einstellungen",
+        "name": "Name",
+        "newName": "Neuer Name",
+        "savedSuccess": "Die Einstellungen wurden erfolgreich aktualisiert.",
+        "emailReminders": "Erinnerungen an Aufgaben per E-Mail senden",
+        "overdueReminders": "Erinnerungen für überfällige, unerledigte Aufgaben jeden Morgen per E-Mail senden",
+        "discoverableByName": "Andere können mich finden, wenn sie nach meinem Namen suchen",
+        "discoverableByEmail": "Andere können mich finden, wenn sie nach meiner kompletten E-Mail-Adresse suchen",
+        "playSoundWhenDone": "Einen Ton abspielen, wenn Aufgaben als erledigt markiert werden",
+        "weekStart": "Woche beginnt am",
+        "weekStartSunday": "Sonntag",
+        "weekStartMonday": "Montag",
+        "language": "Sprache",
+        "defaultList": "Standard-Liste"
+      },
+      "totp": {
+        "title": "Zwei-Faktor-Authentifizierung",
+        "enroll": "Aktivieren",
+        "finishSetupPart1": "Um die Aktivierung zu vollenden, benutze diesen Token in deiner TOTP App (sowie OTP oder ähnlich):",
+        "finishSetupPart2": "Gib anschließend unten einen Code aus deiner Anwendung ein.",
+        "scanQR": "Alternativ kannst du auch diesen QR-Code scannen:",
+        "passcode": "Code",
+        "passcodePlaceholder": "Ein von deiner TOTP-App generierter code",
+        "setupSuccess": "Du hast die Zwei-Faktor-Authentifizierung erfolgreich eingerichtet!",
+        "enterPassword": "Bitte gib dein Passwort ein",
+        "disable": "Zwei-Faktor-Authentifizierung deaktivieren",
+        "confirmSuccess": "TOTP wurde verifiziert und ist nun verwendbar.",
+        "disableSuccess": "Die Zwei-Faktor-Authentifizierung wurde erfolgreich deaktiviert."
+      },
+      "caldav": {
+        "title": "CalDav",
+        "howTo": "Du kannst Vikunja mit CalDAV-Clients verbinden, um alle Aufgaben mit verschiedenen Clients anzuzeigen und zu verwalten. Gebe dazu diese Url in deine Client ein:",
+        "more": "Mehr Informationen über CalDAV in Vikunja"
+      },
+      "avatar": {
+        "title": "Avatar",
+        "initials": "Initialen",
+        "gravatar": "Gravatar",
+        "upload": "Hochladen",
+        "uploadAvatar": "Avatar hochladen",
+        "statusUpdateSuccess": "Avatar-Status wurde erfolgreich aktualisiert.",
+        "setSuccess": "Der Avatar wurde erfolgreich gesetzt!"
+      }
+    },
+    "deletion": {
+      "title": "Lösche deinen Vikunja-Account",
+      "text1": "Das Löschen deines Accounts ist dauerhaft und unwiderruflich. Alle Namensräume, Listen und zugehörige Daten werden gelöscht.",
+      "text2": "Zum Fortfahren gib bitte dein Passwort ein. Du erhältst eine E-Mail mit weiteren Anweisungen.",
+      "confirm": "Meinen Account löschen",
+      "requestSuccess": "Die Anfrage war erfolgreich. Du erhältst eine E-Mail mit weiteren Anweisungen.",
+      "passwordRequired": "Bitte gib dein Passwort ein.",
+      "confirmSuccess": "Du hast erfolgreich die Löschung deines Accounts bestätigt. Wir werden deinen Account innerhalb von drei Tagen löschen.",
+      "scheduled": "Wir werden deinen Vikunja-Account am {date} ({dateSince}) löschen.",
+      "scheduledCancel": "Um die Löschung deines Accounts abzubrechen, klicke hier.",
+      "scheduledCancelText": "Um die Löschung deines Accounts abzubrechen, gib bitte dein Passwort unten ein:",
+      "scheduledCancelConfirm": "Löschung meines Accounts abbrechen",
+      "scheduledCancelSuccess": "Wir werden deinen Account nicht löschen."
+    },
+    "export": {
+      "title": "Exportiere die Daten deines Vikunja-Accounts",
+      "description": "Du kannst eine Kopie deiner Daten bei Vikunja anfordern. Dazu gehören Namespaces, Listen, Aufgaben und alles, was damit zusammenhängt. Du kannst diese Daten dann in jeder Vikunja-Instanz über die Migrationsfunktion importieren.",
+      "descriptionPasswordRequired": "Bitte gib dein Passwort ein, um fortzufahren:",
+      "request": "Eine Kopie meiner Vikunja Daten anfordern",
+      "success": "Du hast deine Daten bei Vikunja erfolgreich angefordert! Wir schicken dir eine E-Mail, sobald sie zum Download bereitstehen."
+    }
+  },
+  "list": {
+    "archived": "Diese Liste ist archiviert. Es ist nicht möglich, neue Aufgaben zu erstellen oder sie zu bearbeiten.",
+    "title": "Listentitel",
+    "color": "Farbe",
+    "lists": "Listen",
+    "search": "Tippe, um nach einer Liste zu suchen…",
+    "searchSelect": "Klicke auf oder drücke die Eingabetaste, um diese Liste auszuwählen",
+    "shared": "Geteilte Listen",
+    "create": {
+      "header": "Eine neue Liste erstellen",
+      "titlePlaceholder": "Der Titel der Liste steht hier…",
+      "addTitleRequired": "Bitte gebe einen Namen an.",
+      "createdSuccess": "Die Liste wurde erfolgreich erstellt.",
+      "addListRequired": "Bitte gebe eine Liste an oder lege eine Standardliste in den Einstellungen fest."
+    },
+    "archive": {
+      "title": "„{list}“ archivieren",
+      "archive": "Diese Liste archivieren",
+      "unarchive": "Archivierung dieser Liste aufheben",
+      "unarchiveText": "Du wirst neue Aufgaben erstellen oder sie bearbeiten können.",
+      "archiveText": "Du kannst diese Liste nicht bearbeiten oder neue Aufgaben erstellen, bis du die Archivierung aufhebst.",
+      "success": "Die Liste wurde erfolgreich archiviert."
+    },
+    "background": {
+      "title": "Listenhintergrund festlegen",
+      "remove": "Hintergrund entfernen",
+      "upload": "Wähle einen Hintergrund von deinem Computer",
+      "searchPlaceholder": "Nach einem Hintergrund suchen…",
+      "poweredByUnsplash": "Powered by Unsplash",
+      "loadMore": "Weitere Bilder laden",
+      "success": "Der Hintergrund wurde erfolgreich eingestellt!",
+      "removeSuccess": "Der Hintergrund wurde erfolgreich entfernt!"
+    },
+    "delete": {
+      "title": "„{list}“ löschen",
+      "header": "Diese Liste löschen",
+      "text1": "Bist du sicher, dass du diese Liste und alle ihre Inhalte löschen willst?",
+      "text2": "Dies umfasst alle Aufgaben und kann NICHT rückgängig gemacht werden!",
+      "success": "Die Liste wurde erfolgreich gelöscht."
+    },
+    "duplicate": {
+      "title": "Diese Liste duplizieren",
+      "label": "Duplizieren",
+      "text": "Wähle einen Namespace aus, der die duplizierte Liste enthalten soll:",
+      "success": "Die Liste wurde erfolgreich dupliziert."
+    },
+    "edit": {
+      "header": "Diese Liste bearbeiten",
+      "title": "„{list}“ bearbeiten",
+      "titlePlaceholder": "Listenname eingeben …",
+      "identifierTooltip": "Der Listenbezeichner kann zur eindeutigen Identifizierung einer Aufgabe über Listen hinweg verwendet werden. Du kannst ihn auf leer setzen, um ihn zu deaktivieren.",
+      "identifier": "Listenbezeichner",
+      "identifierPlaceholder": "Der Listenbezeichner kommt hierhin…",
+      "description": "Beschreibung",
+      "descriptionPlaceholder": "Listenbeschreibung eingeben…",
+      "color": "Farbe",
+      "success": "Die Liste wurde erfolgreich aktualisiert."
+    },
+    "share": {
+      "header": "Diese Liste teilen",
+      "title": "„{list}“ teilen",
+      "share": "Teilen",
+      "links": {
+        "title": "Linkfreigaben",
+        "what": "Was ist eine Linkfreigabe?",
+        "explanation": "Mit Linkfreigaben kannst du Listen mit Benutzer:innen ohne Vikunja-Account teilen.",
+        "create": "Erstelle einen neue Linkfreigabe",
+        "name": "Name (optional)",
+        "namePlaceholder": "z.B. Max Muster",
+        "nameExplanation": "Alle Aktionen, die mit dieser Linkfreigabe durchgeführt werden, werden mit diesem Namen angezeigt.",
+        "password": "Passwort (optional)",
+        "passwordExplanation": "Bei der Authentifizierung wird der:die Benutzer:in aufgefordert, dieses Passwort einzugeben.",
+        "noName": "Kein Name angegeben",
+        "remove": "Eine Linkfreigabe löschen",
+        "removeText": "Bist du sicher, dass du diese Linkfreigabe unwiderruflich löschen möchtest? Über die Linkfreigabe ist danach der Zugriff auf die Liste nicht mehr möglich!",
+        "createSuccess": "Die Linkfreigabe wurde erfolgreich erstellt.",
+        "deleteSuccess": "Die Linkfreigabe wurde erfolgreich gelöscht"
+      },
+      "userTeam": {
+        "typeUser": "Benutzer:in | Benutzer:innen",
+        "typeTeam": "Team | Teams",
+        "shared": "Geteilt mit diesen {type}",
+        "you": "Du",
+        "notShared": "Noch nicht mit einem {type} geteilt.",
+        "removeHeader": "Einen {type} von {sharable} entfernen",
+        "removeText": "Diesen {sharable} von {type} entfernen? Dies kann nicht rückgängig gemacht werden!",
+        "removeSuccess": "{sharable} wurde erfolgreich von {type} entfernt.",
+        "addedSuccess": "{type} wurde erfolgreich hinzugefügt.",
+        "updatedSuccess": "{type} wurde erfolgreich hinzugefügt."
+      },
+      "right": {
+        "title": "Berechtigungen",
+        "read": "Nur Leserechte",
+        "readWrite": "Lesen & Schreiben",
+        "admin": "Admin"
+      },
+      "attributes": {
+        "link": "Link",
+        "name": "Name",
+        "sharedBy": "Geteilt von",
+        "right": "Berechtigungen",
+        "delete": "Löschen"
+      }
+    },
+    "list": {
+      "title": "Liste",
+      "add": "Hinzufügen",
+      "addPlaceholder": "Eine neue Aufgabe hinzufügen …",
+      "empty": "Diese Liste ist derzeit leer.",
+      "newTaskCta": "Eine neue Aufgabe erstellen.",
+      "editTask": "Aufgabe bearbeiten"
+    },
+    "gantt": {
+      "title": "Gantt",
+      "showTasksWithoutDates": "Aufgaben anzeigen, für die keine Daten festgelegt sind",
+      "size": "Größe",
+      "default": "Standard",
+      "month": "Monat",
+      "day": "Tag",
+      "from": "Von",
+      "to": "Bis",
+      "noDates": "Diese Aufgabe hat keine Daten definiert."
+    },
+    "table": {
+      "title": "Tabelle",
+      "columns": "Spalten"
+    },
+    "kanban": {
+      "title": "Kanban",
+      "limit": "Limit: {limit}",
+      "noLimit": "Nicht gesetzt",
+      "doneBucket": "Erledigt Spalte",
+      "doneBucketHint": "Alle Aufgaben, die in diese Spalte verschoben werden, werden automatisch als erledigt markiert.",
+      "doneBucketHintExtended": "Alle Aufgaben, die in die Erledigt Spalte verschoben wurden, werden automatisch als erledigt markiert. Aufgaben, die in einer anderen Spalte als Erledigt markiert wurden, werden auch in diese Spalte verschoben.",
+      "doneBucketSavedSuccess": "Erledigt Spalte gespeichert.",
+      "deleteLast": "Du kannst die letzte Spalte nicht entfernen.",
+      "addTaskPlaceholder": "Gebe einen Aufgabenamen ein …",
+      "addTask": "Eine Aufgabe hinzufügen",
+      "addAnotherTask": "Weitere Aufgabe hinzufügen",
+      "addBucket": "Eine neue Spalte erstellen",
+      "addBucketPlaceholder": "Gebe einen Spalten-Titel ein…",
+      "deleteHeaderBucket": "Spalte löschen",
+      "deleteBucketText1": "Bist du sicher, dass du diese Spalte löschen möchtest?",
+      "deleteBucketText2": "Dies löscht keine Aufgaben, sondern verschiebt sie in die Standard Spalte.",
+      "deleteBucketSuccess": "Die Spalte wurde erfolgreich gelöscht.",
+      "bucketTitleSavedSuccess": "Der Spaltenname wurde erfolgreich gespeichert.",
+      "bucketLimitSavedSuccess": "Das Spaltenlimit wurde erfolgreich gespeichert.",
+      "collapse": "Spalte einklappen"
+    },
+    "pseudo": {
+      "favorites": {
+        "title": "Favoriten"
+      }
+    }
+  },
+  "namespace": {
+    "title": "Namespaces & Listen",
+    "namespace": "Namespace",
+    "showArchived": "Archivierte anzeigen",
+    "noneAvailable": "Du hast momentan keine Namespaces.",
+    "unarchive": "Archivierung aufheben",
+    "archived": "Archiviert",
+    "noLists": "Dieser Namespace enthält keine Listen.",
+    "createList": "Erstelle eine neue Liste in diesem Namespace.",
+    "namespaces": "Namespaces",
+    "search": "Beginne zu schreiben, um einen Namespace zu suchen…",
+    "create": {
+      "title": "Einen neuen Namespace erstellen",
+      "titleRequired": "Bitte gebe einen Titel an.",
+      "explanation": "Ein Namespace ist eine Sammlung von Listen, die du teilen und zur Organisation verwenden kannst. Jede Liste zu einem Namespace.",
+      "tooltip": "Was ist ein Namespace?",
+      "success": "Der Namespace wurde erfolgreich erstellt."
+    },
+    "archive": {
+      "titleArchive": "„{namespace}“ archivieren",
+      "titleUnarchive": "Archivierung von \"{namespace}\" aufheben",
+      "archiveText": "Du kannst diesen Namespace nicht mehr bearbeiten oder neue Listen erstellen, bis du die Archivierung rückgängig machst. Das gilt auch für alle Listen in diesem Namespace.",
+      "unarchiveText": "Du kannst neue Aufgaben erstellen oder diese bearbeiten.",
+      "success": "Der Namespace wurde erfolgreich archiviert.",
+      "description": "In einem archivierten Namespace können Listen weder angelegt noch editiert werden."
+    },
+    "delete": {
+      "title": "„{namespace}“ löschen",
+      "text1": "Diesen Namespace mit sämtlichem Inhalt löschen?",
+      "text2": "Dies umfasst alle Listen und Aufgaben und kann NICHT rückgängig gemacht werden!",
+      "success": "Der Namespace wurde erfolgreich gelöscht."
+    },
+    "edit": {
+      "title": "„{namespace}“ bearbeiten",
+      "success": "Der Namespace wurde erfolgreich aktualisiert."
+    },
+    "share": {
+      "title": "„{namespace}“ teilen"
+    },
+    "attributes": {
+      "title": "Namespace Titel",
+      "titlePlaceholder": "Titel des Namespace angeben…",
+      "description": "Beschreibung",
+      "descriptionPlaceholder": "Beschreibung für den Namespace eingeben…",
+      "color": "Farbe",
+      "archived": "Ist archiviert",
+      "isArchived": "Dieser Namespace ist archiviert"
+    },
+    "pseudo": {
+      "sharedLists": {
+        "title": "Geteilte Listen"
+      },
+      "favorites": {
+        "title": "Favoriten"
+      },
+      "savedFilters": {
+        "title": "Filter"
+      }
+    }
+  },
+  "filters": {
+    "title": "Filter",
+    "attributes": {
+      "title": "Titel",
+      "titlePlaceholder": "Einen gespeicherten Filternamen eingeben …",
+      "description": "Beschreibung",
+      "descriptionPlaceholder": "Eine Beschreibung eingeben …",
+      "includeNulls": "Aufgaben ohne Werte einbeziehen",
+      "requireAll": "Alle Filterkriterien müssen erfüllt sein, damit eine Aufgabe angezeigt wird",
+      "showDoneTasks": "Erledigte Aufgaben anzeigen",
+      "enablePriority": "Filter nach Priorität aktivieren",
+      "enablePercentDone": "Filter nach % Erledigt aktivieren",
+      "dueDateRange": "Fälligkeitsbereich",
+      "startDateRange": "Startdatumsbereich",
+      "endDateRange": "Enddatumsbereich",
+      "reminderRange": "Erinnerungs-Datumsbereich"
+    },
+    "create": {
+      "title": "Einen gespeicherten Filter erstellen",
+      "description": "Ein gespeicherter Filter ist eine virtuelle Liste, die bei jedem Zugriff aus einem Satz von Filtern errechnet wird. Einmal erstellt, erscheint diese in einem speziellen Namespace.",
+      "action": "Neuen gespeicherten Filter erstellen"
+    },
+    "delete": {
+      "header": "Diesen gespeicherten Filter löschen",
+      "text": "Diesen gespeicherten Filter löschen?",
+      "success": "Der Filter wurde erfolgreich gelöscht."
+    },
+    "edit": {
+      "title": "Diesen gespeicherten Filter bearbeiten",
+      "success": "Filter gespeichert."
+    }
+  },
+  "migrate": {
+    "title": "Von einem anderen Dienst zu Vikunja migrieren",
+    "titleService": "Importiere deine Daten von {name} in Vikunja",
+    "import": "Importiere deine Daten in Vikunja",
+    "description": "Klicke auf das Logo eines der unten aufgeführten Drittanbieterdienste, um loszulegen.",
+    "descriptionDo": "Vikunja importiert alle Listen, Aufgaben, Notizen, Erinnerungen und Dateien, auf die du Zugriff hast.",
+    "authorize": "Ermögliche Vikunja den Zugriff auf deinem Account bei {name}, indem du auf die Schaltfläche unten klickst.",
+    "getStarted": "Loslegen",
+    "inProgress": "Importiere…",
+    "alreadyMigrated1": "Es scheint, dass du schon von {name} am {date} importiert hast.",
+    "alreadyMigrated2": "Ein erneutes Importieren ist möglich, kann aber Duplikate erzeugen. Bist du sicher?",
+    "confirm": "Ich bin sicher, bitte starte mit der Migration!",
+    "importUpload": "Um Daten von {name} in Vikunja zu importieren, klicke auf die Schaltfläche unten, um eine Datei auszuwählen.",
+    "upload": "Datei hochladen"
+  },
+  "label": {
+    "title": "Labels",
+    "manage": "Label verwalten",
+    "description": "Klicke auf ein Label um es zu editieren. Du kannst alle Labels, welche du erstellt hast, editieren. Du kannst alle Labels, welche mit einer Aufgabe, auf die du Zugriff hast, benutzen.",
+    "newCTA": "Du hast momentan keine Labels.",
+    "search": "Beginne zu schreiben, um nach einem Label zu suchen…",
+    "create": {
+      "header": "Neues Label",
+      "title": "Erstelle ein neues Label",
+      "titleRequired": "Bitte gebe einen Titel an.",
+      "success": "Das Label wurde erfolgreich erstellt."
+    },
+    "edit": {
+      "header": "Label bearbeiten",
+      "forbidden": "Du kannst dieses Label nicht bearbeiten, da es nicht dir gehört.",
+      "success": "Das Label wurde erfolgreich aktualisiert."
+    },
+    "deleteSuccess": "Das Label wurde erfolgreich gelöscht.",
+    "attributes": {
+      "title": "Titel",
+      "titlePlaceholder": "Gebe einen Labelnamen an…",
+      "description": "Beschreibung",
+      "descriptionPlaceholder": "Labelbeschreibung",
+      "color": "Farbe"
+    }
+  },
+  "sharing": {
+    "authenticating": "Authentifizierung …",
+    "passwordRequired": "Diese geteilte Liste benötigt ein Passwort. Bitte gebe es unten ein:",
+    "error": "Es ist ein Fehler aufgetreten.",
+    "invalidPassword": "Das Passwort ist ungültig."
+  },
+  "navigation": {
+    "overview": "Übersicht",
+    "upcoming": "Anstehend",
+    "settings": "Einstellungen",
+    "imprint": "Impressum",
+    "privacy": "Datenschutzerklärung"
+  },
+  "misc": {
+    "loading": "Wird geladen…",
+    "save": "Speichern",
+    "delete": "Löschen",
+    "confirm": "Bestätigen",
+    "cancel": "Abbrechen",
+    "refresh": "Neu laden",
+    "disable": "Deaktivieren",
+    "copy": "In Zwischenablage kopieren",
+    "search": "Suchen",
+    "searchPlaceholder": "Beginne zu schreiben, um zu suchen…",
+    "previous": "Vorherige",
+    "next": "Weiter",
+    "poweredBy": "Powered by Vikunja",
+    "info": "Info",
+    "create": "Erstellen",
+    "doit": "Tu es!",
+    "saving": "Speichern…",
+    "saved": "Gespeichert!",
+    "default": "Standard",
+    "close": "Schließen",
+    "download": "Herunterladen"
+  },
+  "input": {
+    "resetColor": "Farbe zurücksetzen",
+    "datepicker": {
+      "today": "Heute",
+      "tomorrow": "Morgen",
+      "nextMonday": "Nächsten Montag",
+      "thisWeekend": "Dieses Wochenende",
+      "laterThisWeek": "Später in dieser Woche",
+      "nextWeek": "Nächste Woche",
+      "chooseDate": "Wähle ein Datum"
+    },
+    "editor": {
+      "edit": "Bearbeiten",
+      "done": "Fertig",
+      "heading1": "Überschrift 1",
+      "heading2": "Überschrift 2",
+      "heading3": "Überschrift 3",
+      "headingSmaller": "Kleinere Überschrift",
+      "headingBigger": "Grössere Überschrift",
+      "bold": "Fett",
+      "italic": "Kursiv",
+      "strikethrough": "Durchgestrichen",
+      "code": "Code",
+      "quote": "Zitat",
+      "unorderedList": "Ungeordnete Liste",
+      "orderedList": "Geordnete Liste",
+      "cleanBlock": "Formatierung löschen",
+      "link": "Link",
+      "image": "Bild",
+      "table": "Tabelle",
+      "horizontalRule": "Horizontaler Strich",
+      "sideBySide": "Nebeneinander",
+      "guide": "Hilfslinie"
+    },
+    "multiselect": {
+      "createPlaceholder": "Neu erstellen",
+      "selectPlaceholder": "Klicken oder Enter drücken zum Auswählen"
+    }
+  },
+  "task": {
+    "task": "Aufgabe",
+    "new": "Eine neue Aufgabe erstellen",
+    "delete": "Diese Aufgabe löschen",
+    "createSuccess": "Die Aufgabe wurde erfolgreich erstellt.",
+    "addReminder": "Eine Erinnerung hinzufügen…",
+    "doneSuccess": "Die Aufgabe wurde erfolgreich als erledigt markiert.",
+    "undoneSuccess": "Die Aufgabe wurde erfolgreich als nicht-erledigt markiert.",
+    "openDetail": "Aufgabe in der Detailansicht anzeigen",
+    "show": {
+      "titleCurrent": "Aktuelle Aufgaben",
+      "titleDates": "Aufgaben von {from} bis {to}",
+      "noDates": "Aufgaben ohne Datum anzeigen",
+      "current": "Aktuelle Aufgaben",
+      "from": "Aufgaben von",
+      "until": "bis",
+      "today": "Heute",
+      "nextWeek": "Nächste Woche",
+      "nextMonth": "Nächster Monat",
+      "noTasks": "Nichts zu tun - Einen schönen Tag noch!"
+    },
+    "detail": {
+      "chooseDueDate": "Klicke hier, um ein Fälligkeitsdatum zu setzen",
+      "chooseStartDate": "Klicke hier, um ein Startdatum zu setzen",
+      "chooseEndDate": "Klicke hier, um ein Enddatum zu setzen",
+      "move": "Aufgabe in eine andere Liste verschieben",
+      "done": "Fertig!",
+      "undone": "Als nicht erledigt markieren",
+      "created": "Erstellt {0} von {1}",
+      "updated": "Aktualisiert {0}",
+      "doneAt": "Erledigt {0}",
+      "updateSuccess": "Die Aufgabe wurde erfolgreich gespeichert.",
+      "deleteSuccess": "Die Aufgabe wurde erfolgreich gelöscht.",
+      "belongsToList": "Diese Aufgabe gehört zur Liste „{list}“",
+      "due": "Fällig am {at}",
+      "delete": {
+        "header": "Diese Aufgabe löschen",
+        "text1": "Willst du diese Aufgabe wirklich löschen?",
+        "text2": "Dies wird auch alle Anhänge, Erinnerungen und Verknüpfungen, die zu dieser Aufgabe gehören löschen und kann nicht rückgängig gemacht werden!"
+      },
+      "actions": {
+        "assign": "Diese Aufgabe jemandem zuweisen",
+        "label": "Label hinzufügen",
+        "priority": "Priorität setzen",
+        "dueDate": "Fälligkeitsdatum setzen",
+        "startDate": "Startdatum setzen",
+        "endDate": "Enddatum setzen",
+        "reminders": "Erinnerungen setzen",
+        "repeatAfter": "Wiederholung setzen",
+        "percentDone": "Prozent erledigt setzen",
+        "attachments": "Anhänge hinzufügen",
+        "relatedTasks": "Aufgabenbeziehungen hinzufügen",
+        "moveList": "Aufgabe verschieben",
+        "color": "Taskfarbe setzen",
+        "delete": "Aufgabe löschen",
+        "favorite": "In Favoriten speichern",
+        "unfavorite": "Aus Favoriten entfernen"
+      }
+    },
+    "attributes": {
+      "assignees": "Zugewiesene",
+      "color": "Farbe",
+      "created": "Erstellt",
+      "createdBy": "Erstellt von",
+      "description": "Beschreibung",
+      "done": "Fertig",
+      "dueDate": "Fälligkeitsdatum",
+      "endDate": "Enddatum",
+      "labels": "Labels",
+      "percentDone": "% erledigt",
+      "priority": "Priorität",
+      "relatedTasks": "Verwandte Aufgaben",
+      "reminders": "Erinnerungen",
+      "repeat": "Wiederholen",
+      "startDate": "Anfangsdatum",
+      "title": "Titel",
+      "updated": "Aktualisiert"
+    },
+    "subscription": {
+      "subscribedThroughParent": "Du kannst hier nicht de-abonnieren, da du diese {entity} durch {parent} abonniert hast.",
+      "subscribed": "Du erhältst Benachrichtigungen zu dieser {entity}.",
+      "notSubscribed": "Du hast diese {entity} nicht abonniert und erhältst keine Benachrichtigungen über Änderungen.",
+      "subscribe": "Abonnieren",
+      "unsubscribe": "Abbestellen",
+      "subscribeSuccess": "Du hast jetzt diese {entity} abonniert",
+      "unsubscribeSuccess": "Du hast diese {entity} jetzt abbestellt"
+    },
+    "attachment": {
+      "title": "Anhänge",
+      "createdBy": "erstellt {0} von {1}",
+      "downloadTooltip": "Diesen Anhang herunterladen",
+      "upload": "Anhang hochladen",
+      "drop": "Ziehe Dateien hierher, um sie hochzuladen",
+      "delete": "Anhang löschen",
+      "deleteTooltip": "Diesen Anhang löschen",
+      "deleteText1": "Soll der Anhang {filename} gelöscht werden?",
+      "deleteText2": "Dies kann nicht rückgängig gemacht werden!",
+      "copyUrl": "URL kopieren",
+      "copyUrlTooltip": "Die URL dieses Anhangs zur Verwendung im Text kopieren"
+    },
+    "comment": {
+      "title": "Kommentare",
+      "loading": "Kommentare werden geladen …",
+      "edited": "bearbeitet {date}",
+      "creating": "Kommentar wird erstellt …",
+      "placeholder": "Füge deinen Kommentar hinzu …",
+      "comment": "Kommentar",
+      "delete": "Diesen Kommentar löschen",
+      "deleteText1": "Bist du sicher, dass du diesen Kommentar löschen willst?",
+      "deleteText2": "Dies kann nicht rückgängig gemacht werden!",
+      "addedSuccess": "Der Kommentar wurde erfolgreich hinzugefügt."
+    },
+    "deferDueDate": {
+      "title": "Fälligkeitsdatum verschieben",
+      "1day": "1 Tag",
+      "3days": "3 Tage",
+      "1week": "1 Woche"
+    },
+    "description": {
+      "placeholder": "Klicke hier, um eine Beschreibung einzugeben …",
+      "empty": "Noch keine Beschreibung vorhanden."
+    },
+    "assignee": {
+      "placeholder": "Tippe, um eine:n Benutzer:in zuzuweisen …",
+      "selectPlaceholder": "Diese:n Benutzer:in zuweisen",
+      "assignSuccess": "Der:die Benutzer:in wurde erfolgreich zugewiesen.",
+      "unassignSuccess": "Benutzer:innenzuweisung aufgehoben."
+    },
+    "label": {
+      "placeholder": "Tippen, um ein neues Label hinzuzufügen…",
+      "createPlaceholder": "Dies als neues Label hinzufügen",
+      "addSuccess": "Das Label wurde erfolgreich hinzugefügt.",
+      "createSuccess": "Das Label wurde erfolgreich erstellt.",
+      "removeSuccess": "Das Label wurde erfolgreich entfernt."
+    },
+    "priority": {
+      "unset": "Nicht eingestellt",
+      "low": "Niedrig",
+      "medium": "Mittel",
+      "high": "hoch",
+      "urgent": "Dringend",
+      "doNow": "JETZT TUN"
+    },
+    "relation": {
+      "add": "Neue Aufgabenbeziehung hinzufügen",
+      "new": "Neue Aufgabenbeziehung",
+      "searchPlaceholder": "Beginne zu schreiben, um eine Aufgabe zu suchen, die als Beziehung hinzugefügt werden soll…",
+      "createPlaceholder": "Füge diese Aufgabe als neue Aufgabenbeziehung hinzu",
+      "differentList": "Diese Aufgabe gehört zu einer anderen Liste.",
+      "noneYet": "Keine Aufgabenbeziehung vorhanden.",
+      "delete": "Aufgabenbeziehung entfernen",
+      "deleteText1": "Willst du diese Aufgabenbeziehung wirklich entfernen?",
+      "deleteText2": "Dies kann nicht rückgängig gemacht werden!"
+    },
+    "repeat": {
+      "everyDay": "Jeden Tag",
+      "everyWeek": "Jede Woche",
+      "everyMonth": "Jeden Monat",
+      "mode": "Wiederholungsmodus",
+      "monthly": "Monatlich",
+      "fromCurrentDate": "Ab dem aktuellen Datum",
+      "each": "Alle",
+      "specifyAmount": "Gib einen Anzahl an …",
+      "hours": "Stunden",
+      "days": "Tage",
+      "weeks": "Wochen",
+      "months": "Monate",
+      "years": "Jahre"
+    },
+    "quickAddMagic": {
+      "hint": "Du kannst Quick Add Magic verwenden",
+      "what": "Was?",
+      "title": "Qucik Add Magic",
+      "intro": "Beim Erstellen einer Aufgabe kannst du spezielle Schlüsselwörter verwenden, um Attribute direkt zu der neu erstellten Aufgabe hinzuzufügen. Dadurch können häufig verwendete Attribute schneller zu Aufgaben hinzugefügt werden.",
+      "multiple": "Du kannst das mehrmals benutzen.",
+      "label1": "Um ein Label hinzuzufügen, gibt einfach den Name mit einem vorangestellten {prefix} ein.",
+      "label2": "Vikunja prüft zuerst, ob das Label bereits vorhanden ist und erstellt es, falls nicht.",
+      "label3": "Um Leerzeichen zu verwenden, füge einfach ein \" um den Namen des Labels hinzu.",
+      "label4": "Zum Beispiel: {prefix}\"Label mit Leerzeichen\".",
+      "priority1": "Um die Priorität einer Aufgabe zu setzen, gibt eine Zahl zwischen 1 und 5 mit einem vorangestellten {prefix} ein.",
+      "priority2": "Je höher die Zahl, desto höher die Priorität.",
+      "assignees": "Um die Aufgabe direkt jemandem zuzuweisen, füge vor dem Anmeldenamen der Person ein @ Zeichen ein.",
+      "list1": "Um eine Liste zu erstellen, in der die Aufgabe erscheinen soll, gib ihren Namen vorangestellt mit einem {prefix} ein.",
+      "list2": "Dies gibt einen Fehler zurück, wenn die Liste nicht existiert.",
+      "dateAndTime": "Datum und Uhrzeit",
+      "date": "Jedes Datum wird als Enddatum der neuen Aufgabe verwendet. Du kannst Daten in jedem dieser Formate verwenden:",
+      "dateWeekday": "jeder Wochentag, wird das nächste Datum mit diesem Tag verwenden",
+      "dateCurrentYear": "wird das laufende Jahr nutzen",
+      "dateNth": "wird den {day}. des aktuellen Monats verwenden",
+      "dateTime": "Kombiniere eines der Datumsformate mit \"{time}\" (oder {timePM}), um eine Zeit festzulegen."
+    }
+  },
+  "team": {
+    "title": "Teams",
+    "noTeams": "Du bist derzeit in keinem Team.",
+    "create": {
+      "title": "Erstelle ein neues Team",
+      "success": "Das Team wurde erfolgreich erstellt."
+    },
+    "edit": {
+      "title": "Team „{team}“ bearbeiten",
+      "members": "Teammitglieder",
+      "search": "Beginne zu schreiben, um einen Benutzer zu suchen…",
+      "addUser": "Zum Team hinzufügen",
+      "makeMember": "Zum Mitglied machen",
+      "makeAdmin": "Zum Admin machen",
+      "success": "Das Team wurde erfolgreich aktualisiert.",
+      "userAddedSuccess": "Das Teammitglied wurde erfolgreich hinzugefügt.",
+      "madeMember": "Das Teammitglied ist nun ein normales Mitglied.",
+      "madeAdmin": "Das Teammitglied ist nun ein Admin.",
+      "delete": {
+        "header": "Team löschen",
+        "text1": "Bist du sicher, dass du dieses Team und alle seine Mitglieder löschen willst?",
+        "text2": "Alle Teammitglieder verlieren den Zugriff auf Listen und Namespaces, die mit diesem Team geteilt sind. Dies KANN NICHT Rückgängig gemacht werden!",
+        "success": "Das Team wurde erfolgreich gelöscht."
+      },
+      "deleteUser": {
+        "header": "Benutzer:innen aus dem Team entfernen",
+        "text1": "Bist du sicher, dass du diese:n Benutzer:in aus dem Team entfernen willst?",
+        "text2": "Diese:r Benutzer:in verliert den Zugriff auf alle Listen und Namespaces auf die dieses Team Zugriff hat. Dies kann nicht rückgängig gemacht werden!",
+        "success": "Der:die Benutzer:in wurde erfolgreich aus dem Team gelöscht."
+      }
+    },
+    "attributes": {
+      "name": "Teamname",
+      "namePlaceholder": "Teamname eingeben …",
+      "nameRequired": "Bitte gib einen Namen an.",
+      "description": "Beschreibung",
+      "descriptionPlaceholder": "Die Beschreibung des Teams steht hier …",
+      "admin": "Admin",
+      "member": "Mitglied"
+    }
+  },
+  "keyboardShortcuts": {
+    "title": "Tastenkürzel",
+    "allPages": "Diese Tastenkürzel funktionieren auf allen Seiten.",
+    "currentPageOnly": "Diese Tastenkürzel funktionieren nur auf der aktuellen Seite.",
+    "toggleMenu": "Das Menü umschalten",
+    "quickSearch": "Such-/Schnellaktionsleiste öffnen",
+    "task": {
+      "title": "Aufgabenseite",
+      "done": "Eine Aufgabe als erledigt markieren",
+      "assign": "Diese Aufgabe jemandem zuweisen",
+      "labels": "Dieser Aufgabe ein Label hinzufügen",
+      "dueDate": "Ändere das Fälligkeitsdatum dieser Aufgabe",
+      "attachment": "Einen Anhang dieser Aufgabe hinzufügen",
+      "related": "Ändere die Abhängigen Aufgaben dieser Aufgabe"
+    }
+  },
+  "update": {
+    "available": "Es ist ein Aktualisierung für Vikunja verfügbar!",
+    "do": "Jetzt aktualisieren"
+  },
+  "menu": {
+    "edit": "Bearbeiten",
+    "archive": "Archivieren",
+    "duplicate": "Duplizieren",
+    "delete": "Löschen",
+    "unarchive": "Archivierung aufheben",
+    "setBackground": "Hintergrund einstellen",
+    "share": "Teilen",
+    "newList": "Neue Liste"
+  },
+  "apiConfig": {
+    "url": "Vikunja-URL",
+    "urlPlaceholder": "z.B. https://localhost:3456",
+    "change": "ändern",
+    "signInOn": "Melde dich bei deinem Vikunja-Account auf {0} an",
+    "error": "Konnte keine Vikunja-Installation unter „{domain}“ finden oder verwenden.",
+    "success": "Verwende die Vikunja-Installation unter „{domain}“."
+  },
+  "loadingError": {
+    "failed": "Laden fehlgeschlagen, bitte {0}. Wenn der Fehler weiterhin besteht, {1} bitte.",
+    "tryAgain": "erneut versuchen",
+    "contact": "wende dich an uns"
+  },
+  "notification": {
+    "title": "Benachrichtigungen",
+    "none": "Du hast keine Benachrichtigungen. Einen schönen Tag noch!",
+    "explainer": "Benachrichtigungen werden hier angezeigt, wenn Aktionen für Namespaces, Listen oder Aufgaben, die du abonniert hast, ausgeführt werden."
+  },
+  "quickActions": {
+    "commands": "Befehle",
+    "placeholder": "Gib einen Befehl oder eine Suche ein …",
+    "hint": "Du kannst # verwenden, um nur nach Aufgaben zu suchen, *, um nur nach Listen zu suchen und @, um nur nach Teams zu suchen.",
+    "tasks": "Aufgaben",
+    "lists": "Listen",
+    "teams": "Teams",
+    "newList": "Gib den Titel der neuen Liste ein …",
+    "newTask": "Gib den Titel der neuen Aufgabe ein …",
+    "newNamespace": "Gib den Titel des neuen Namespaces ein…",
+    "newTeam": "Gib den Namen des neuen Teams ein …",
+    "createTask": "Eine Aufgabe in der aktuellen Liste erstellen ({title})",
+    "createList": "Eine Liste im aktuellen Namespace erstellen ({title})",
+    "cmds": {
+      "newTask": "Neue Aufgabe",
+      "newList": "Neue Liste",
+      "newNamespace": "Neuer Namespace",
+      "newTeam": "Neues Team"
+    }
+  },
+  "date": {
+    "locale": "de",
+    "in": "in {date}",
+    "ago": "vor {date}",
+    "altFormatLong": "j M Y H:i",
+    "altFormatShort": "j M Y"
+  },
+  "error": {
+    "error": "Fehler",
+    "success": "Erfolgreich",
+    "0001": "Das darfst du nicht tun.",
+    "1001": "Es existiert bereits ein Account mit diesem Anmeldenamen.",
+    "1002": "Es existiert bereits ein:e Benutzer:in mit dieser E-Mail-Adresse.",
+    "1004": "Kein Anmeldename und Passwort angegeben.",
+    "1005": "Der:die Benutzer:in existiert nicht.",
+    "1006": "Die User-ID konnte nicht ermittelt werden.",
+    "1008": "Es wurde kein Token zum Zurücksetzen des Passworts angegeben.",
+    "1009": "Das Token zum Zurücksetzen des Passworts ist ungültig.",
+    "1010": "Das E-Mail-Bestätigungs-Token ist ungültig.",
+    "1011": "Falscher Anmeldename oder falsches Passwort.",
+    "1012": "Die E-Mail-Adresse der:s Benutzer:in ist nicht bestätigt.",
+    "1013": "Das neue Passwort ist leer.",
+    "1014": "Das alte Passwort ist leer.",
+    "1015": "Dieser Benutzer verwendet TOTP bereits.",
+    "1016": "Dieser Benutzer verwendet TOTP nicht.",
+    "1017": "Falscher TOTP Code.",
+    "1018": "Die Avatareinstellungen sind falsch.",
+    "2001": "Die ID kann nicht leer oder 0 sein.",
+    "2002": "Ein Teil der Anfragedaten ist ungültig.",
+    "3001": "Die Liste existiert nicht.",
+    "3004": "Du musst Leseberechtigungen für diese Liste haben, um diese Aktion ausführen zu können.",
+    "3005": "Der Listentitel darf nicht leer sein.",
+    "3006": "Diese Linkfreigabe existiert nicht.",
+    "3007": "Eine Liste mit diesem Bezeichner existiert bereits.",
+    "3008": "Diese Liste ist archiviert und kann deshalb nur gelesen werden. Dies gilt auch für alle Aufgaben, die mit dieser Liste verbunden sind.",
+    "4001": "Der Aufgabentitel kann nicht leer sein.",
+    "4002": "Diese Aufgabe existiert nicht.",
+    "4003": "Alle Massenbearbeitungen an Aufgaben müssen zu derselben Liste gehören.",
+    "4004": "Es benötigt mindestens einen Task, um eine Massenänderung durchzuführen.",
+    "4005": "Du hast keine Berechtigungen, um diese Aufgabe anzuzeigen.",
+    "4006": "Du kannst die übergeordnete Aufgabe nicht auf sich selbst referenzieren.",
+    "4007": "Du kannst keine Aufgabenbeziehung mit einem ungültigen Typ erstellen.",
+    "4008": "Du kannst keine Aufgabenbeziehung erstellen, die schon existiert.",
+    "4009": "Diese Aufgabenbeziehung existiert nicht.",
+    "4010": "Du kannst eine Aufgabe nicht mit sich selbst verknüpfen.",
+    "4011": "Der Anhang existiert nicht.",
+    "4012": "Der Anhang ist zu gross.",
+    "4013": "Ungültiger Aufgabensortierungsparameter.",
+    "4014": "Die Aufgabensortierungsreihenfolge ist ungültig.",
+    "4015": "Dieser Aufgabenkommentar existiert nicht.",
+    "4016": "Ungültiges Aufgabenfeld.",
+    "4017": "Ungültiger Aufgabenfilter (Vergleichskriterium).",
+    "4018": "Ungültiger Aufgabenfilter (Kombination).",
+    "4019": "Ungültiger Aufgabenfilter (Wert).",
+    "5001": "Dieser Namespace existiert nicht.",
+    "5003": "Du hast keinen Zugriff auf den Namespace.",
+    "5006": "Der Namespace Titel kann nicht leer sein.",
+    "5009": "Du benötigst Leserechte in diesem Namespace, um diese Aktion durchzuführen.",
+    "5010": "Dieses Team hat keinen Zugriff auf diesen Namespace.",
+    "5011": "Diese:r Benutzer:in hat bereits Zugriff auf diesen Namespace.",
+    "5012": "Dieser Namespace ist archiviert und kann deshalb nur gelesen werden.",
+    "6001": "Der Teamname kann nicht leer sein.",
+    "6002": "Das Team existiert nicht.",
+    "6004": "Das Team hat bereits Zugriff auf diesen Namespace oder diese Liste.",
+    "6005": "Diese:r Benutzer:in ist bereits dem Team beigetreten.",
+    "6006": "Du kannst den:die letzten Benutzer:in dieses Teams nicht löschen.",
+    "6007": "Das Team hat keine Berechtigungen auf dieser Liste, um das durchzuführen.",
+    "7002": "Der:die Benutzer:in hat bereits Zugriff auf diese Liste.",
+    "7003": "Du hast keinen Zugriff auf diese Liste.",
+    "8001": "Dieses Label existiert bereits auf dieser Aufgabe.",
+    "8002": "Das Label existiert nicht.",
+    "8003": "Du hast keinen Zugriff auf dieses Label.",
+    "9001": "Das Recht ist ungültig.",
+    "10001": "Diese Spalte existiert nicht.",
+    "10002": "Diese Spalte gehört nicht zu dieser Liste.",
+    "10003": "Du kannst die letze Spalte in einer Liste nicht entfernen.",
+    "10004": "Du kannst die Aufgabe nicht in diese Spalte legen, da sie schon die maximale Anzahl an Aufgaben enthält.",
+    "10005": "Es kann nur eine Erledigt-Spalte pro Liste geben.",
+    "11001": "Der gespeicherte Filter existiert nicht.",
+    "11002": "Gespeicherte Ansichten sind für Linkfreigaben nicht verfügbar.",
+    "12001": "Der Abonnement-Typ ist ungültig.",
+    "12002": "Du bist bereits zu dieser oder einer übergeordneten Entität abonniert.",
+    "13001": "Das Passwort für diese Linkfreigabe wurde nicht angegeben.",
+    "13002": "Das Passwort für diese Linkfreigabe war ungültig."
+  },
+  "about": {
+    "title": "Über",
+    "frontendVersion": "Frontend-Version: {version}",
+    "apiVersion": "API-Version: {version}"
+  }
+}
