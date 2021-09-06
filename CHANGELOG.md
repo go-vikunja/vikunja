@@ -9,6 +9,43 @@ All releases can be found on https://code.vikunja.io/desktop/releases.
 
 The releases aim at the api and frontend versions which is why there are missing versions.
 
+## [0.18.0 - 2021-09-05]
+
+### Added 
+
+* Add drone pipeline for PR
+* Enable mac builds
+
+### Changed
+
+* Cleanup
+* Fix sed for macos
+* Install yarn on mac
+* Only upload .dmg files for macos builds
+* Sign drone config
+
+### Dependency Updates
+
+* Update dependency electron-builder to v22.11.7 (#45)
+* Update dependency electron to v13.0.1 (#41)
+* Update dependency electron to v13.1.0 (#42)
+* Update dependency electron to v13.1.1 (#43)
+* Update dependency electron to v13.1.2 (#44)
+* Update dependency electron to v13.1.3 (#46)
+* Update dependency electron to v13.1.4 (#47)
+* Update dependency electron to v13.1.5 (#48)
+* Update dependency electron to v13.1.6 (#49)
+* Update dependency electron to v13.1.7 (#50)
+* Update dependency electron to v13.1.8 (#51)
+* Update dependency electron to v13.1.9 (#52)
+* Update dependency electron to v13.2.0 (#53)
+* Update dependency electron to v13.2.1 (#54)
+* Update dependency electron to v13.2.2 (#55)
+* Update dependency electron to v13.2.3 (#56)
+* Update dependency electron to v13 (#39)
+* Update dependency electron to v14 (#57)
+
+
 ## [0.17.0 - 2021-05-20]
 
 For a list of changes in this release, see [the frontend changelog](https://kolaente.dev/vikunja/frontend/releases/tag/v0.17.0).
