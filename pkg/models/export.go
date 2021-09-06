@@ -185,6 +185,10 @@ func exportListsAndTasks(s *xorm.Session, u *user.User, wr *zip.Writer) (err err
 		taskMap[t.ID] = &TaskWithComments{
 			Task: *t,
 		}
+		if _, exists := listMap[t.ListID]; !exists {
+			log.Debugf("[User Data Export] List %d does not exist for task %d, ommitting", t.ListID, t.ID)
+			continue
+		}
 		listMap[t.ListID].Tasks = append(listMap[t.ListID].Tasks, taskMap[t.ID])
 	}
 
@@ -198,6 +202,10 @@ func exportListsAndTasks(s *xorm.Session, u *user.User, wr *zip.Writer) (err err
 	}
 
 	for _, c := range comments {
+		if _, exists := taskMap[c.TaskID]; !exists {
+			log.Debugf("[User Data Export] Task %d does not exist for comment %d, ommitting", c.TaskID, c.ID)
+			continue
+		}
 		taskMap[c.TaskID].Comments = append(taskMap[c.TaskID].Comments, c)
 	}
 
@@ -208,6 +216,10 @@ func exportListsAndTasks(s *xorm.Session, u *user.User, wr *zip.Writer) (err err
 	}
 
 	for _, b := range buckets {
+		if _, exists := listMap[b.ListID]; !exists {
+			log.Debugf("[User Data Export] List %d does not exist for bucket %d, ommitting", b.ListID, b.ID)
+			continue
+		}
 		listMap[b.ListID].Buckets = append(listMap[b.ListID].Buckets, b)
 	}
 
