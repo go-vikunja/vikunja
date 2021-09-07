@@ -8111,10 +8111,10 @@ vite-plugin-pwa@0.11.2:
     workbox-build "^6.2.2"
     workbox-window "^6.2.2"
 
-vite-plugin-vue2@1.8.1:
-  version "1.8.1"
-  resolved "https://registry.yarnpkg.com/vite-plugin-vue2/-/vite-plugin-vue2-1.8.1.tgz#51d8d3a09575d0d0b24328c9f73dd08c9ae4e504"
-  integrity sha512-arqvNRbo7pYlyflY9U2i7vWOhncLoR6DZQfhC0rf4hF+1riFtwX5n7nIGc6nqr819bpVQSnZ8+4J7aejbA9NfA==
+vite-plugin-vue2@1.8.2:
+  version "1.8.2"
+  resolved "https://registry.yarnpkg.com/vite-plugin-vue2/-/vite-plugin-vue2-1.8.2.tgz#7b5fd0f019cba4dc6f5413627c8b70139f09f3fe"
+  integrity sha512-qQXLH+yVn5o7cq+KJULyty4OxWKQ3lsvrYx8QkLO78LsM+/r1gEytfcXiqewnvgP7eTkJ5Pd/kHbfDce1Pim/w==
   dependencies:
     "@babel/core" "^7.11.6"
     "@babel/parser" "^7.13.10"
