@@ -130,7 +130,7 @@
 						<div :ref="`tasks-container${bucket.id}`" class="tasks">
 							<draggable
 								v-model="bucket.tasks"
-								@start="() => drag = true"
+								@start="() => dragstart(bucket)"
 								@end="updateTaskPosition"
 								:group="{name: 'tasks', put: shouldAcceptDrop(bucket) && !dragBucket}"
 								v-bind="dragOptions"
@@ -541,6 +541,10 @@ export default {
 			return bucket.id === this.sourceBucket || // When dragging from a bucket who has its limit reached, dragging should still be possible
 				bucket.limit === 0 || // If there is no limit set, dragging & dropping should always work
 				bucket.tasks.length < bucket.limit // Disallow dropping to buckets which have their limit reached
+		},
+		dragstart(bucket) {
+			this.drag = true
+			this.sourceBucket = bucket.id
 		},
 		toggleDoneBucket(bucket) {
 			bucket.isDoneBucket = !bucket.isDoneBucket
