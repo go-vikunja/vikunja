@@ -61,7 +61,6 @@ import TeamModel from '@/models/team'
 
 import {CURRENT_LIST, LOADING, LOADING_MODULE, QUICK_ACTIONS_ACTIVE} from '@/store/mutation-types'
 import ListModel from '@/models/list'
-import createTask from '@/components/tasks/mixins/createTask'
 import QuickAddMagic from '@/components/tasks/partials/quick-add-magic.vue'
 import {getHistory} from '../../modules/listHistory'
 
@@ -97,9 +96,6 @@ export default {
 			teamService: new TeamService(),
 		}
 	},
-	mixins: [
-		createTask,
-	],
 	computed: {
 		active() {
 			const active = this.$store.state[QUICK_ACTIONS_ACTIVE]
@@ -387,7 +383,10 @@ export default {
 				return
 			}
 
-			this.createNewTask(this.query, 0, this.currentList.id)
+			this.$store.dispatch('tasks/createNewTask', {
+				title: this.query,
+				listId: this.currentList.id,
+			})
 				.then(r => {
 					this.$message.success({message: this.$t('task.createSuccess')})
 					this.$router.push({name: 'task.detail', params: {id: r.id}})

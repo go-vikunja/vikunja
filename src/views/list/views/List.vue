@@ -150,7 +150,6 @@ import Rights from '../../../models/constants/rights.json'
 import FilterPopup from '@/components/list/partials/filter-popup.vue'
 import {HAS_TASKS} from '@/store/mutation-types'
 import Nothing from '@/components/misc/nothing.vue'
-import createTask from '@/components/tasks/mixins/createTask'
 import Pagination from '@/components/misc/pagination.vue'
 
 import {mapState} from 'vuex'
@@ -194,7 +193,6 @@ export default {
 	},
 	mixins: [
 		taskList,
-		createTask,
 	],
 	components: {
 		Nothing,

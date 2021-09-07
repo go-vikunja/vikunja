@@ -242,7 +242,6 @@ import Rights from '../../../models/constants/rights.json'
 import {LOADING, LOADING_MODULE} from '@/store/mutation-types'
 import FilterPopup from '@/components/list/partials/filter-popup.vue'
 import Dropdown from '@/components/misc/dropdown.vue'
-import createTask from '../../../components/tasks/mixins/createTask'
 import {getCollapsedBucketState, saveCollapsedBucketState} from '@/helpers/saveCollapsedBucketState'
 import {calculateItemPosition} from '../../../helpers/calculateItemPosition'
 import KanbanCard from '../../../components/tasks/partials/kanban-card'
@@ -298,9 +297,6 @@ export default {
 			filtersChanged: false, // To trigger a reload of the board
 		}
 	},
-	mixins: [
-		createTask,
-	],
 	created() {
 		this.loadBuckets()
 
@@ -426,7 +422,11 @@ export default {
 			}
 			this.newTaskError[bucketId] = false
 
-			this.createNewTask(this.newTaskText, bucketId)
+			this.$store.dispatch('tasks/createNewTask', {
+				title: this.newTaskText,
+				bucketId,
+				listId: this.$route.params.listId,
+			})
 				.then(r => {
 					this.newTaskText = ''
 					this.$store.commit('kanban/addTaskToBucket', r)

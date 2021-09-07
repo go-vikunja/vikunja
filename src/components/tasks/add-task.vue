@@ -38,7 +38,6 @@
 
 <script>
 import TaskService from '../../services/task'
-import createTask from '@/components/tasks/mixins/createTask'
 import QuickAddMagic from '@/components/tasks/partials/quick-add-magic.vue'
 
 const INITIAL_SCROLL_HEIGHT = 40
@@ -58,9 +57,6 @@ export default {
 			textAreaHeight: INITIAL_SCROLL_HEIGHT,
 		}
 	},
-	mixins: [
-		createTask,
-	],
 	components: {
 		QuickAddMagic,
 	},
@@ -100,7 +96,11 @@ export default {
 				}
 				
 				newTasks.push(
-					this.createNewTask(title, 0, this.$store.state.auth.settings.defaultListId, this.defaultPosition)
+					this.$store.dispatch('tasks/createNewTask', {
+						title: this.newTaskTitle,
+						listId: this.$store.state.auth.settings.defaultListId,
+						position: this.defaultPosition,
+					})
 						.then(task => {
 							this.$emit('taskAdded', task)
 							return task
