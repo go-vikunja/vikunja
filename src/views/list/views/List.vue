@@ -154,6 +154,24 @@ import {mapState} from 'vuex'
 import draggable from 'vuedraggable'
 import {calculateItemPosition} from '../../../helpers/calculateItemPosition'
 
+function sortTasks(tasks) {
+	if (tasks === null || tasks === []) {
+		return
+	}
+	return tasks.sort((a, b) => {
+		if (a.done < b.done)
+			return -1
+		if (a.done > b.done)
+			return 1
+
+		if (a.position < b.position)
+			return -1
+		if (a.position > b.position)
+			return 1
+		return 0
+	})
+}
+
 export default {
 	name: 'List',
 	data() {
@@ -162,6 +180,7 @@ export default {
 			isTaskEdit: false,
 			taskEditTask: TaskModel,
 			ctaVisible: false,
+			showTaskSearch: false,
 
 			drag: false,
 			dragOptions: {
@@ -205,6 +224,27 @@ export default {
 		this.$nextTick(() => (this.ctaVisible = true))
 	},
 	methods: {
+		searchTasks() {
+			// Only search if the search term changed
+			if (this.$route.query === this.searchTerm) {
+				return
+			}
+
+			this.$router.push({
+				name: 'list.list',
+				query: {search: this.searchTerm},
+			})
+		},
+		hideSearchBar() {
+			// This is a workaround.
+			// When clicking on the search button, @blur from the input is fired. If we
+			// would then directly hide the whole search bar directly, no click event
+			// from the button gets fired. To prevent this, we wait 200ms until we hide
+			// everything so the button has a chance of firering the search event.
+			setTimeout(() => {
+				this.showTaskSearch = false
+			}, 200)
+		},
 		// This function initializes the tasks page and loads the first page of tasks
 		initTasks(page, search = '') {
 			this.taskEditTask = null
@@ -243,7 +283,27 @@ export default {
 					break
 				}
 			}
-			this.sortTasks()
+			sortTasks(this.tasks)
+		},
+		saveTaskPosition(e) {
+			this.drag = false
+			
+			const task = this.tasks[e.newIndex]
+			const taskBefore = this.tasks[e.newIndex - 1] ?? null
+			const taskAfter = this.tasks[e.newIndex + 1] ??  null
+			
+			const newTask = {
+				...task,
+				position: calculateItemPosition(taskBefore !== null ? taskBefore.position : null, taskAfter !== null ? taskAfter.position : null),
+			}
+
+			this.$store.dispatch('tasks/update', newTask)
+				.then(r => {
+					this.$set(this.tasks, e.newIndex, r)
+				})
+				.catch(e => {
+					this.$message.error(e)
+				})
 		},
 	},
 }
