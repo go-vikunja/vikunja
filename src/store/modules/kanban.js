@@ -1,16 +1,36 @@
 import cloneDeep from 'lodash/cloneDeep'
 
+import {findById, findIndexById} from '@/helpers/find'
 import BucketService from '../../services/bucket'
-import {filterObject} from '@/helpers/filterObject'
 import {setLoading} from '../helper'
 import TaskCollectionService from '@/services/taskCollection'
 
 const TASKS_PER_BUCKET = 25
 
+function getTaskPosition(state, task) {
+	const bucketIndex = findIndexById(state.buckets, task.bucketId)
+
+	if (!bucketIndex) {
+		throw('Bucket not found')
+	}
+
+	const bucket = state.buckets[bucketIndex]
+	const taskIndex = findIndexById(bucket.tasks, task.id)
+
+	if (!bucketIndex) {
+		throw('Task not found')
+	}
+
+	return {
+		bucketIndex,
+		taskIndex,
+	}
+}
+
 const addTaskToBucketAndSort = (state, task) => {
-	const bi = filterObject(state.buckets, b => b.id === task.bucketId)
-	state.buckets[bi].tasks.push(task)
-	state.buckets[bi].tasks.sort((a, b) => a.kanbanPosition > b.kanbanPosition ? 1 : -1)
+	const bucketIndex = findIndexById(state.buckets, task.bucketId)
+	state.buckets[bucketIndex].tasks.push(task)
+	state.buckets[bucketIndex].tasks.sort((a, b) => a.kanbanPosition > b.kanbanPosition ? 1 : -1)
 }
 
 /**
@@ -19,6 +39,7 @@ const addTaskToBucketAndSort = (state, task) => {
  */
 export default {
 	namespaced: true,
+
 	state: () => ({
 		buckets: [],
 		listId: 0,
@@ -26,10 +47,12 @@ export default {
 		taskPagesPerBucket: {},
 		allTasksLoadedForBucket: {},
 	}),
+
 	mutations: {
 		setListId(state, listId) {
 			state.listId = parseInt(listId)
 		},
+
 		setBuckets(state, buckets) {
 			state.buckets = buckets
 			buckets.forEach(b => {
@@ -37,32 +60,39 @@ export default {
 				state.allTasksLoadedForBucket[b.id] = false
 			})
 		},
+
 		addBucket(state, bucket) {
 			state.buckets.push(bucket)
 		},
+
 		removeBucket(state, bucket) {
-			for (const b in state.buckets) {
-				if (state.buckets[b].id === bucket.id) {
-					state.buckets.splice(b, 1)
-				}
-			}
+			const bucketIndex = findIndexById(state.buckets, bucket.id)
+			state.buckets.splice(bucketIndex, 1)
 		},
+
 		setBucketById(state, bucket) {
-			for (const b in state.buckets) {
-				if (state.buckets[b].id === bucket.id) {
-					state.buckets[b] = bucket
-					return
-				}
-			}
+			const bucketIndex = findIndexById(state.buckets, bucket.id)
+			state.buckets[bucketIndex] = bucket
 		},
+
 		setBucketByIndex(state, {bucketIndex, bucket}) {
 			state.buckets[bucketIndex] = bucket
 		},
+
 		setTaskInBucketByIndex(state, {bucketIndex, taskIndex, task}) {
 			const bucket = state.buckets[bucketIndex]
 			bucket.tasks[taskIndex] = task
 			state.buckets[bucketIndex] = bucket
 		},
+
+		setTasksInBucketByBucketId(state, {bucketId, tasks}) {
+			const bucketIndex = findIndexById(state.buckets, bucketId)
+			state.buckets[bucketIndex] = {
+				...state.buckets[bucketIndex],
+				tasks,
+			}
+		},
+		
 		setTaskInBucket(state, task) {
 			// If this gets invoked without any tasks actually loaded, we can save the hassle of finding the task
 			if (state.buckets.length === 0) {
@@ -106,49 +136,61 @@ export default {
 				}
 			}
 		},
-		addTaskToBucket(state, task) {
-			const bi = filterObject(state.buckets, b => b.id === task.bucketId)
-			state.buckets[bi].tasks.push(task)
-		},
-		addTasksToBucket(state, {tasks, bucketId}) {
-			const bi = filterObject(state.buckets, b => b.id === bucketId)
 
-			tasks.forEach(t => {
-				state.buckets[bi].tasks.push(t)
-			})
+		addTaskToBucket(state, task) {
+			const bucketIndex = findIndexById(state.buckets, task.bucketId)
+			const oldBucket = state.buckets[bucketIndex]
+			const newBucket = {
+				...oldBucket,
+				tasks: [
+					...oldBucket.tasks,
+					task,
+				],
+			}
+			state.buckets[bucketIndex] = newBucket
 		},
+
+		addTasksToBucket(state, {tasks, bucketId}) {
+			const bucketIndex = findIndexById(state.buckets, bucketId)
+			const oldBucket = state.buckets[bucketIndex]
+			const newBucket = {
+				...oldBucket,
+				tasks: [
+					...oldBucket.tasks,
+					tasks,
+				],
+			}
+			state.buckets[bucketIndex] = newBucket
+		},
+
 		removeTaskInBucket(state, task) {
 			// If this gets invoked without any tasks actually loaded, we can save the hassle of finding the task
 			if (state.buckets.length === 0) {
 				return
 			}
 
-			for (const b in state.buckets) {
-				if (state.buckets[b].id === task.bucketId) {
-					for (const t in state.buckets[b].tasks) {
-						if (state.buckets[b].tasks[t].id === task.id) {
-							const bucket = state.buckets[b]
-							bucket.tasks.splice(t, 1)
-							state.buckets[b] = bucket
-							return
-						}
-					}
-					return
-				}
-			}
+			const { bucketIndex, taskIndex } = getTaskPosition(state, task)
+			
+			state.buckets[bucketIndex].tasks.splice(taskIndex, 1)
 		},
+
 		setBucketLoading(state, {bucketId, loading}) {
 			state.bucketLoading[bucketId] = loading
 		},
+
 		setTasksLoadedForBucketPage(state, {bucketId, page}) {
 			state.taskPagesPerBucket[bucketId] = page
-
 		},
+
 		setAllTasksLoadedForBucket(state, bucketId) {
 			state.allTasksLoadedForBucket[bucketId] = true
 		},
 	},
+
 	getters: {
+		getBucketById(state) {
+			return (bucketId) => findById(state.buckets, bucketId)
+		},
 		getTaskById: state => id => {
 			for (const b in state.buckets) {
 				for (const t in state.buckets[b].tasks) {
@@ -168,6 +210,7 @@ export default {
 			}
 		},
 	},
+
 	actions: {
 		loadBucketsForList(ctx, {listId, params}) {
 			const cancel = setLoading(ctx, 'kanban')
@@ -191,15 +234,18 @@ export default {
 					cancel()
 				})
 		},
+
 		loadNextTasksForBucket(ctx, {listId, ps = {}, bucketId}) {
-			const isLoading = ctx.state.bucketLoading[bucketId] ?? false
+			const bucketIndex = findIndexById(ctx.state.buckets, bucketId)
+
+			const isLoading = ctx.state.bucketLoading[bucketIndex] ?? false
 			if (isLoading) {
 				return Promise.resolve()
 			}
 
-			const page = (ctx.state.taskPagesPerBucket[bucketId] ?? 1) + 1
+			const page = (ctx.state.taskPagesPerBucket[bucketIndex] ?? 1) + 1
 
-			const alreadyLoaded = ctx.state.allTasksLoadedForBucket[bucketId] ?? false
+			const alreadyLoaded = ctx.state.allTasksLoadedForBucket[bucketIndex] ?? false
 			if (alreadyLoaded) {
 				return Promise.resolve()
 			}
@@ -289,7 +335,7 @@ export default {
 			const bucketService = new BucketService()
 			return bucketService.update(bucket)
 				.then(r => {
-					const bi = filterObject(ctx.state.buckets, b => b.id === r.id)
+					const bi = findById(ctx.state.buckets, r.id)
 					const bucket = r
 					bucket.tasks = ctx.state.buckets[bi].tasks
 					ctx.commit('setBucketByIndex', {bucketIndex: bi, bucket})

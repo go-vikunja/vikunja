@@ -235,7 +235,7 @@
 import draggable from 'vuedraggable'
 
 import BucketModel from '../../../models/bucket'
-import {filterObject} from '@/helpers/filterObject'
+import {findById} from '@/helpers/find'
 import {mapState} from 'vuex'
 import {saveListView} from '@/helpers/saveListView'
 import Rights from '../../../models/constants/rights.json'
@@ -503,7 +503,7 @@ export default {
 			// Because the contenteditable does not have a change event,
 			// we're building it ourselves here and only updating the bucket
 			// if the title changed.
-			const realBucket = this.buckets[filterObject(this.buckets, b => b.id === bucketId)]
+			const realBucket = findById(this.buckets, bucketId)
 			if (realBucket.title === bucketTitle) {
 				return
 			}
