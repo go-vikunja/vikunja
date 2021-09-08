@@ -5,7 +5,7 @@
 		</a>
 		<div
 			:class="{'has-background': background}"
-			:style="{'background-image': `url(${background})`}"
+			:style="{'background-image': background && `url(${background})`}"
 			class="app-container"
 		>
 			<navigation/>
@@ -62,7 +62,7 @@ export default {
 			return state.namespaces.namespaces.filter(n => !n.isArchived)
 		},
 		currentList: CURRENT_LIST,
-		background: 'background', // FIXME: Return the full thing or nothing at all to prevent calls to /null
+		background: 'background',
 		menuActive: MENU_ACTIVE,
 		userInfo: state => state.auth.info,
 		authenticated: state => state.auth.authenticated,
