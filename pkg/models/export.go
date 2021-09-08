@@ -130,6 +130,8 @@ func exportListsAndTasks(s *xorm.Session, u *user.User, wr *zip.Writer) (err err
 
 	namespaceIDs := []int64{}
 	namespaces := []*NamespaceWithListsAndTasks{}
+	listMap := make(map[int64]*ListWithTasksAndBuckets)
+	listIDs := []int64{}
 	for _, n := range namspaces.([]*NamespaceWithLists) {
 		if n.ID < 1 {
 			// Don't include filters
@@ -142,11 +144,14 @@ func exportListsAndTasks(s *xorm.Session, u *user.User, wr *zip.Writer) (err err
 		}
 
 		for _, l := range n.Lists {
-			nn.Lists = append(nn.Lists, &ListWithTasksAndBuckets{
+			ll := &ListWithTasksAndBuckets{
 				List:             *l,
 				BackgroundFileID: l.BackgroundFileID,
 				Tasks:            []*TaskWithComments{},
-			})
+			}
+			nn.Lists = append(nn.Lists, ll)
+			listMap[l.ID] = ll
+			listIDs = append(listIDs, l.ID)
 		}
 
 		namespaceIDs = append(namespaceIDs, n.ID)
@@ -169,15 +174,6 @@ func exportListsAndTasks(s *xorm.Session, u *user.User, wr *zip.Writer) (err err
 	})
 	if err != nil {
 		return err
-	}
-
-	listMap := make(map[int64]*ListWithTasksAndBuckets)
-	listIDs := []int64{}
-	for _, l := range lists {
-		listMap[l.ID] = &ListWithTasksAndBuckets{
-			List: *l,
-		}
-		listIDs = append(listIDs, l.ID)
 	}
 
 	taskMap := make(map[int64]*TaskWithComments, len(tasks))
