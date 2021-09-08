@@ -38,7 +38,7 @@ import (
 )
 
 func ExportUserData(s *xorm.Session, u *user.User) (err error) {
-	exportDir := config.ServiceRootpath.GetString() + "/files/user-export-tmp/"
+	exportDir := config.FilesBasePath.GetString() + "/user-export-tmp/"
 	err = os.MkdirAll(exportDir, 0700)
 	if err != nil {
 		return err
