@@ -36,14 +36,7 @@
 			<div class="migration-in-progress">
 				<img :alt="name" :src="`/images/migration/${identifier}.png`"/>
 				<div class="progress-dots">
-					<span></span>
-					<span></span>
-					<span></span>
-					<span></span>
-					<span></span>
-					<span></span>
-					<span></span>
-					<span></span>
+					<span v-for="i in progressDotsCount" :key="i" />
 				</div>
 				<img alt="Vikunja" src="/images/logo.svg">
 			</div>
@@ -74,15 +67,19 @@
 import AbstractMigrationService from '../../services/migrator/abstractMigration'
 import AbstractMigrationFileService from '../../services/migrator/abstractMigrationFile'
 
+const PROGRESS_DOTS_COUNT = 8
+
 export default {
 	name: 'migration',
 	data() {
 		return {
+			progressDotsCount: PROGRESS_DOTS_COUNT,
 			authUrl: '',
 			isMigrating: false,
 			lastMigrationDate: null,
 			message: '',
 			migratorAuthCode: '',
+			migrationService: null,
 		}
 	},
 	props: {
