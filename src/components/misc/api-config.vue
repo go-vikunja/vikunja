@@ -24,7 +24,7 @@
 		</div>
 		<div class="api-url-info" v-else>
 			<i18n path="apiConfig.signInOn">
-				<span class="url" v-tooltip="apiUrl"> {{ apiDomain() }} </span>
+				<span class="url" v-tooltip="apiUrl"> {{ apiDomain }} </span>
 			</i18n>
 			<br />
 			<a @click="() => (configureApi = true)">{{ $t('apiConfig.change') }}</a>
@@ -46,23 +46,24 @@
 </template>
 
 <script>
+const API_DEFAULT_PORT = 3456
+
 export default {
 	name: 'apiConfig',
 	data() {
 		return {
 			configureApi: false,
-			apiUrl: '',
+			apiUrl: window.API_URL,
 			errorMsg: '',
 			successMsg: '',
 		}
 	},
 	created() {
-		this.apiUrl = window.API_URL
 		if (this.apiUrl === '') {
 			this.configureApi = true
 		}
 	},
-	methods: {
+	computed: {
 		apiDomain() {
 			if (window.API_URL.startsWith('/api/v1')) {
 				return window.location.host
@@ -72,6 +73,8 @@ export default {
 				.split(/[/?#]/)
 			return urlParts[0]
 		},
+	},
+	methods: {
 		setApiUrl() {
 			if (this.apiUrl === '') {
 				return
@@ -131,17 +134,17 @@ export default {
 					return Promise.reject(e)
 				})
 				.catch((e) => {
-					// Check if it is reachable at port 3456 and https
-					if (urlToCheck.port !== 3456) {
+					// Check if it is reachable at port API_DEFAULT_PORT and https
+					if (urlToCheck.port !== API_DEFAULT_PORT) {
 						urlToCheck.protocol = 'https:'
-						urlToCheck.port = 3456
+						urlToCheck.port = API_DEFAULT_PORT
 						window.API_URL = urlToCheck.toString()
 						return this.$store.dispatch('config/update')
 					}
 					return Promise.reject(e)
 				})
 				.catch((e) => {
-					// Check if it is reachable at :3456 and /api/v1 and https
+					// Check if it is reachable at :API_DEFAULT_PORT and /api/v1 and https
 					urlToCheck.pathname = origUrlToCheck.pathname
 					if (
 						!urlToCheck.pathname.endsWith('/api/v1') &&
@@ -154,17 +157,17 @@ export default {
 					return Promise.reject(e)
 				})
 				.catch((e) => {
-					// Check if it is reachable at port 3456 and http
-					if (urlToCheck.port !== 3456) {
+					// Check if it is reachable at port API_DEFAULT_PORT and http
+					if (urlToCheck.port !== API_DEFAULT_PORT) {
 						urlToCheck.protocol = 'http:'
-						urlToCheck.port = 3456
+						urlToCheck.port = API_DEFAULT_PORT
 						window.API_URL = urlToCheck.toString()
 						return this.$store.dispatch('config/update')
 					}
 					return Promise.reject(e)
 				})
 				.catch((e) => {
-					// Check if it is reachable at :3456 and /api/v1 and http
+					// Check if it is reachable at :API_DEFAULT_PORT and /api/v1 and http
 					urlToCheck.pathname = origUrlToCheck.pathname
 					if (
 						!urlToCheck.pathname.endsWith('/api/v1') &&
@@ -179,14 +182,14 @@ export default {
 				.catch(() => {
 					// Still not found, url is still invalid
 					this.successMsg = ''
-					this.errorMsg = this.$t('apiConfig.error', {domain: this.apiDomain()})
+					this.errorMsg = this.$t('apiConfig.error', {domain: this.apiDomain})
 					window.API_URL = oldUrl
 				})
 				.then((r) => {
 					if (typeof r !== 'undefined') {
 						// Set it + save it to local storage to save us the hoops
 						this.errorMsg = ''
-						this.successMsg = this.$t('apiConfig.success', {domain: this.apiDomain()})
+						this.successMsg = this.$t('apiConfig.success', {domain: this.apiDomain})
 						localStorage.setItem('API_URL', window.API_URL)
 						this.configureApi = false
 						this.apiUrl = window.API_URL
