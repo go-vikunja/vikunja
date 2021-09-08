@@ -286,10 +286,26 @@ export default {
 	},
 	methods: {
 		initTasks(page, search = '') {
+			// This makes sure an id sort order is always sorted last.
+			// When tasks would be sorted first by id and then by whatever else was specified, the id sort takes
+			// precedence over everything else, making any other sort columns pretty useless.
+			const sortKeys = Object.keys(this.sortBy)
+			let hasIdFilter = false
+			for (const s of sortKeys) {
+				if (s === 'id') {
+					sortKeys.splice(s, 1)
+					hasIdFilter = true
+					break
+				}
+			}
+			if (hasIdFilter) {
+				sortKeys.push('id')
+			}
+			
 			const params = this.params
 			params.sort_by = []
 			params.order_by = []
-			Object.keys(this.sortBy).map(s => {
+			sortKeys.map(s => {
 				params.sort_by.push(s)
 				params.order_by.push(this.sortBy[s])
 			})
