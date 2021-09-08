@@ -68,12 +68,12 @@ export default {
 		},
 	},
 	watch: {
-		value(newVal) {
-			this.task = newVal
+		value: {
+			handler(value) {
+				this.task = value
+			},
+			immediate: true,
 		},
-	},
-	mounted() {
-		this.task = this.value
 	},
 	methods: {
 		save() {

@@ -30,7 +30,7 @@ export default {
 	name: 'task-subscription',
 	data() {
 		return {
-			subscriptionService: SubscriptionService,
+			subscriptionService: new SubscriptionService(),
 		}
 	},
 	props: {
@@ -48,9 +48,6 @@ export default {
 			type: Boolean,
 			default: true,
 		},
-	},
-	created() {
-		this.subscriptionService = new SubscriptionService()
 	},
 	computed: {
 		tooltipText() {

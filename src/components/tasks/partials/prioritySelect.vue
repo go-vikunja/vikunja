@@ -33,12 +33,12 @@ export default {
 	},
 	watch: {
 		// Set the priority to the :value every time it changes from the outside
-		value(newVal) {
-			this.priority = newVal
+		value: {
+			handler(value) {
+				this.priority = value
+			},
+			immediate: true,
 		},
-	},
-	mounted() {
-		this.priority = this.value
 	},
 	methods: {
 		updateData() {

@@ -151,15 +151,15 @@ export default {
 		},
 	},
 	mounted() {
-		this.setDateValue(this.value)
 		document.addEventListener('click', this.hideDatePopup)
 	},
 	beforeDestroy() {
 		document.removeEventListener('click', this.hideDatePopup)
 	},
 	watch: {
-		value(newVal) {
-			this.setDateValue(newVal)
+		value: {
+			handler: 'setDateValue',
+			immediate: true,
 		},
 		flatPickrDate(newVal) {
 			this.date = createDateFromString(newVal)

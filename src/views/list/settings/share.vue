@@ -34,7 +34,7 @@ export default {
 	data() {
 		return {
 			list: ListModel,
-			listService: ListService,
+			listService: new ListService(),
 			manageUsersComponent: '',
 			manageTeamsComponent: '',
 		}
@@ -53,7 +53,6 @@ export default {
 		},
 	},
 	created() {
-		this.listService = new ListService()
 		this.loadList()
 	},
 	methods: {

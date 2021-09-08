@@ -195,7 +195,7 @@ export default {
 	data() {
 		return {
 			linkShares: [],
-			linkShareService: LinkShareService,
+			linkShareService: new LinkShareService(),
 			rights: rights,
 			selectedRight: rights.READ,
 			name: '',
@@ -205,17 +205,10 @@ export default {
 			showNewForm: false,
 		}
 	},
-	beforeMount() {
-		this.linkShareService = new LinkShareService()
-	},
-	created() {
-		this.linkShareService = new LinkShareService()
-		this.load()
-	},
 	watch: {
-		listId() {
-			// watch it
-			this.load()
+		listId: {
+			handler: 'load',
+			immediate: true,
 		},
 	},
 	computed: mapState({

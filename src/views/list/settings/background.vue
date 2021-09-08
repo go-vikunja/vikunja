@@ -78,13 +78,13 @@ export default {
 		return {
 			backgroundSearchTerm: '',
 			backgroundSearchResult: [],
-			backgroundService: null,
+			backgroundService: new BackgroundUnsplashService(),
 			backgroundThumbs: {},
 			currentPage: 1,
 			backgroundSearchTimeout: null,
 
-			backgroundUploadService: null,
-			listService: null,
+			backgroundUploadService: new BackgroundUploadService(),
+			listService: new ListService(),
 		}
 	},
 	computed: mapState({
@@ -94,9 +94,6 @@ export default {
 		hasBackground: state => state.background !== null,
 	}),
 	created() {
-		this.backgroundService = new BackgroundUnsplashService()
-		this.backgroundUploadService = new BackgroundUploadService()
-		this.listService = new ListService()
 		this.setTitle(this.$t('list.background.title'))
 		// Show the default collection of backgrounds
 		this.newBackgroundSearch()

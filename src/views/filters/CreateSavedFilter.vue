@@ -80,8 +80,8 @@ export default {
 				filter_concat: 'and',
 				filter_include_nulls: true,
 			},
-			savedFilterService: SavedFilterService,
-			savedFilter: SavedFilterModel,
+			savedFilterService: new SavedFilterService(),
+			savedFilter: new SavedFilterModel(),
 		}
 	},
 	components: {
@@ -96,9 +96,6 @@ export default {
 	created() {
 		this.editorActive = false
 		this.$nextTick(() => this.editorActive = true)
-
-		this.savedFilterService = new SavedFilterService()
-		this.savedFilter = new SavedFilterModel()
 	},
 	methods: {
 		create() {

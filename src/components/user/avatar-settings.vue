@@ -74,14 +74,13 @@ export default {
 	data() {
 		return {
 			avatarProvider: '',
-			avatarService: AvatarService,
+			avatarService: new AvatarService(),
 			isCropAvatar: false,
 			avatarToCrop: null,
 			loading: false, // Seperate variable because some things we're doing in browser take a bit
 		}
 	},
 	created() {
-		this.avatarService = new AvatarService()
 		this.avatarStatus()
 	},
 	components: {

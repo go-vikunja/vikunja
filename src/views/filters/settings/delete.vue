@@ -20,11 +20,8 @@ export default {
 	name: 'filter-settings-delete',
 	data() {
 		return {
-			filterService: SavedFilterService,
+			filterService: new SavedFilterService(),
 		}
-	},
-	created() {
-		this.filterService = new SavedFilterService()
 	},
 	methods: {
 		deleteSavedFilter() {

@@ -16,14 +16,16 @@
 export default {
 	name: 'list-setting-delete',
 	created() {
-		const list = this.$store.getters['lists/getListById'](this.$route.params.listId)
-		this.setTitle(this.$t('list.delete.title', {list: list.title}))
+		this.setTitle(this.$t('list.delete.title', {list: this.list.title}))
+	},
+	computed: {
+		list() {
+			return this.$store.getters['lists/getListById'](this.$route.params.listId)
+		},
 	},
 	methods: {
 		deleteList() {
-			const list = this.$store.getters['lists/getListById'](this.$route.params.listId)
-
-			this.$store.dispatch('lists/deleteList', list)
+			this.$store.dispatch('lists/deleteList', this.list)
 				.then(() => {
 					this.$message.success({message: this.$t('list.delete.success')})
 					this.$router.push({name: 'home'})

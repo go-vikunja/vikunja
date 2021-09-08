@@ -37,17 +37,13 @@ export default {
 	name: 'NewTeam',
 	data() {
 		return {
-			teamService: TeamService,
-			team: TeamModel,
+			teamService: new TeamService(),
+			team: new TeamModel(),
 			showError: false,
 		}
 	},
 	components: {
 		CreateEdit,
-	},
-	created() {
-		this.teamService = new TeamService()
-		this.team = new TeamModel()
 	},
 	mounted() {
 		this.setTitle(this.$t('team.create.title'))

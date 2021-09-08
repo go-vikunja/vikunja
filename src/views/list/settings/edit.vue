@@ -80,7 +80,8 @@ export default {
 	data() {
 		return {
 			list: ListModel,
-			listService: ListService,
+			listService: new ListService(),
+			listDuplicateService: new ListDuplicateService(),
 		}
 	},
 	components: {
@@ -93,10 +94,11 @@ export default {
 			timeout: 60000,
 		}),
 	},
-	created() {
-		this.listService = new ListService()
-		this.listDuplicateService = new ListDuplicateService()
-		this.loadList()
+	watch: {
+		'$route.params.listId': {
+			handler: 'loadList',
+			immediate: true,
+		},
 	},
 	methods: {
 		loadList() {

@@ -97,7 +97,10 @@ export default {
 		setTimeout(() => this.showNothingToDo = true, 100)
 	},
 	watch: {
-		'$route': 'loadPendingTasks',
+		'$route': {
+			handler: 'loadPendingTasks',
+			deep: true,
+		},
 		startDate(newVal) {
 			this.cStartDate = newVal
 		},

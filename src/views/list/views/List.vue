@@ -158,7 +158,7 @@ export default {
 	name: 'List',
 	data() {
 		return {
-			taskService: TaskService,
+			taskService: new TaskService(),
 			isTaskEdit: false,
 			taskEditTask: TaskModel,
 			ctaVisible: false,
@@ -184,8 +184,6 @@ export default {
 		Pagination,
 	},
 	created() {
-		this.taskService = new TaskService()
-
 		// Save the current list view to local storage
 		// We use local storage and not vuex here to make it persistent across reloads.
 		saveListView(this.$route.params.listId, this.$route.name)

@@ -91,13 +91,10 @@ export default {
 	name: 'user-settings-deletion',
 	data() {
 		return {
-			accountDeleteService: AccountDeleteService,
+			accountDeleteService: new AccountDeleteService(),
 			password: '',
 			errPasswordRequired: false,
 		}
-	},
-	created() {
-		this.accountDeleteService = new AccountDeleteService()
 	},
 	computed: mapState({
 		userDeletionEnabled: state => state.config.userDeletionEnabled,

@@ -78,11 +78,8 @@ export default {
 	},
 	data() {
 		return {
-			showArchived: false,
+			showArchived: JSON.parse(localStorage.getItem('showArchived')) ?? false,
 		}
-	},
-	created() {
-		this.showArchived = JSON.parse(localStorage.getItem('showArchived')) ?? false
 	},
 	mounted() {
 		this.setTitle(this.$t('namespace.title'))

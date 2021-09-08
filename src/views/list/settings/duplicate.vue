@@ -23,7 +23,7 @@ export default {
 	name: 'list-setting-duplicate',
 	data() {
 		return {
-			listDuplicateService: ListDuplicateService,
+			listDuplicateService: new ListDuplicateService(),
 			selectedNamespace: null,
 		}
 	},
@@ -32,7 +32,6 @@ export default {
 		NamespaceSearch,
 	},
 	created() {
-		this.listDuplicateService = new ListDuplicateService()
 		this.setTitle(this.$t('list.duplicate.title'))
 	},
 	methods: {

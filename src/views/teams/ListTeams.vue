@@ -32,12 +32,11 @@ export default {
 	name: 'ListTeams',
 	data() {
 		return {
-			teamService: TeamService,
+			teamService: new TeamService(),
 			teams: [],
 		}
 	},
 	created() {
-		this.teamService = new TeamService()
 		this.loadTeams()
 	},
 	mounted() {

@@ -232,17 +232,17 @@ export default {
 			endDate: null,
 			theTasks: [], // Pretty much a copy of the prop, since we cant mutate the prop directly
 			tasksWithoutDates: [],
-			taskService: TaskService,
+			taskService: new TaskService(),
 			taskDragged: null, // Saves to currently dragged task to be able to update it
 			fullWidth: 0,
-			now: null,
+			now: new Date(),
 			dayOffsetUntilToday: 0,
 			isTaskEdit: false,
 			taskToEdit: null,
 			newTaskTitle: '',
 			newTaskFieldActive: false,
-			priorities: {},
-			taskCollectionService: TaskCollectionService,
+			priorities: priorities,
+			taskCollectionService: new TaskCollectionService(),
 			showTaskFilter: false,
 
 			params: {
@@ -259,12 +259,6 @@ export default {
 		dateFrom: 'buildTheGanttChart',
 		dateTo: 'buildTheGanttChart',
 		listId: 'parseTasks',
-	},
-	created() {
-		this.now = new Date()
-		this.taskCollectionService = new TaskCollectionService()
-		this.taskService = new TaskService()
-		this.priorities = priorities
 	},
 	mounted() {
 		this.buildTheGanttChart()

@@ -67,7 +67,7 @@ export default {
 	data() {
 		return {
 			filter: SavedFilterModel,
-			filterService: SavedFilterService,
+			filterService: new SavedFilterService(),
 			filters: {
 				sort_by: ['done', 'id'],
 				order_by: ['asc', 'desc'],
@@ -91,13 +91,13 @@ export default {
 			timeout: 60000,
 		}),
 	},
-	created() {
-		this.filterService = new SavedFilterService()
-		this.loadSavedFilter()
-	},
 	watch: {
 		// call again the method if the route changes
-		'$route': 'loadSavedFilter',
+		'$route': {
+			handler: 'loadSavedFilter',
+			deep: true,
+			immediate: true,
+		},
 	},
 	methods: {
 		loadSavedFilter() {

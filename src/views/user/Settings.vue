@@ -302,15 +302,15 @@ export default {
 	name: 'Settings',
 	data() {
 		return {
-			passwordUpdateService: PasswordUpdateService,
-			passwordUpdate: PasswordUpdateModel,
+			passwordUpdateService: new PasswordUpdateService(),
+			passwordUpdate: new PasswordUpdateModel(),
 			passwordConfirm: '',
 
-			emailUpdateService: EmailUpdateService,
-			emailUpdate: EmailUpdateModel,
+			emailUpdateService: new EmailUpdateService(),
+			emailUpdate: new EmailUpdateModel(),
 
-			totpService: TotpService,
-			totp: TotpModel,
+			totpService: new TotpService(),
+			totp: new TotpModel(),
 			totpQR: '',
 			totpEnrolled: false,
 			totpConfirmPasscode: '',
@@ -320,7 +320,7 @@ export default {
 			language: getCurrentLanguage(),
 
 			settings: UserSettingsModel,
-			userSettingsService: UserSettingsService,
+			userSettingsService: new UserSettingsService(),
 
 			defaultList: null,
 		}
@@ -332,16 +332,6 @@ export default {
 		DataExport,
 	},
 	created() {
-		this.passwordUpdateService = new PasswordUpdateService()
-		this.passwordUpdate = new PasswordUpdateModel()
-
-		this.emailUpdateService = new EmailUpdateService()
-		this.emailUpdate = new EmailUpdateModel()
-
-		this.totpService = new TotpService()
-		this.totp = new TotpModel()
-
-		this.userSettingsService = new UserSettingsService()
 		this.settings = this.$store.state.auth.settings
 
 		this.playSoundWhenDone = localStorage.getItem(playSoundWhenDoneKey) === 'true' || localStorage.getItem(playSoundWhenDoneKey) === null

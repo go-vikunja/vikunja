@@ -180,8 +180,8 @@ export default {
 	name: 'EditTeam',
 	data() {
 		return {
-			teamService: TeamService,
-			teamMemberService: TeamMemberService,
+			teamService: new TeamService(),
+			teamMemberService: new TeamMemberService(),
 			team: TeamModel,
 			teamId: this.$route.params.id,
 			member: TeamMemberModel,
@@ -191,7 +191,7 @@ export default {
 
 			newMember: UserModel,
 			foundUsers: [],
-			userService: UserService,
+			userService: new UserService(),
 
 			showError: false,
 			title: '',
@@ -206,15 +206,13 @@ export default {
 			timeout: 60000,
 		}),
 	},
-	created() {
-		this.teamService = new TeamService()
-		this.teamMemberService = new TeamMemberService()
-		this.userService = new UserService()
-		this.loadTeam()
-	},
 	watch: {
 		// call again the method if the route changes
-		$route: 'loadTeam',
+		'$route': {
+			handler: 'loadTeam',
+			deep: true,
+			immediate: true,
+		},
 	},
 	computed: {
 		userIsAdmin() {

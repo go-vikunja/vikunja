@@ -151,7 +151,7 @@ export default {
 	},
 	data() {
 		return {
-			attachmentService: AttachmentService,
+			attachmentService: new AttachmentService(),
 			showDropzone: false,
 
 			showDeleteModal: false,
@@ -172,9 +172,6 @@ export default {
 		editEnabled: {
 			default: true,
 		},
-	},
-	created() {
-		this.attachmentService = new AttachmentService()
 	},
 	computed: mapState({
 		attachments: (state) => state.attachments.attachments,

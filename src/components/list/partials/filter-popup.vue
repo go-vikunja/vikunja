@@ -25,15 +25,17 @@ export default {
 		Filters,
 	},
 	mounted() {
-		this.params = this.value
 		document.addEventListener('click', this.hidePopup)
 	},
 	beforeDestroy() {
 		document.removeEventListener('click', this.hidePopup)
 	},
 	watch: {
-		value(newVal) {
-			this.$set(this, 'params', newVal)
+		value: {
+			handler(value) {
+				this.params = value
+			},
+			immediate: true,
 		},
 		visible() {
 			this.visibleInternal = !this.visibleInternal

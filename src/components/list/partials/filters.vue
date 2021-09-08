@@ -234,31 +234,24 @@ export default {
 			params: DEFAULT_PARAMS,
 			filters: DEFAULT_FILTERS,
 
-			usersService: UserService,
+			usersService: new UserService(),
 			foundusers: [],
 			users: [],
 
 			labelQuery: '',
 			labels: [],
 
-			listsService: ListService,
+			listsService: new ListService(),
 			foundlists: [],
 			lists: [],
 
-			namespaceService: NamespaceService,
+			namespaceService: new NamespaceService(),
 			foundnamespace: [],
 			namespace: [],
 		}
 	},
-	created() {
-		this.usersService = new UserService()
-		this.listsService = new ListService()
-		this.namespaceService = new NamespaceService()
-	},
 	mounted() {
-		this.params = this.value
 		this.filters.requireAllFilters = this.params.filter_concat === 'and'
-		this.prepareFilters()
 	},
 	props: {
 		value: {
@@ -266,9 +259,12 @@ export default {
 		},
 	},
 	watch: {
-		value(newVal) {
-			this.$set(this, 'params', newVal)
-			this.prepareFilters()
+		value: {
+			handler(value) {
+				this.params = value
+				this.prepareFilters()
+			},
+			immediate: true,
 		},
 	},
 	computed: {

@@ -26,7 +26,7 @@ export default {
 	data() {
 		return {
 			checked: false,
-			checkBoxId: '',
+			checkBoxId: 'fancycheckbox' + Math.random(),
 		}
 	},
 	props: {
@@ -40,15 +40,13 @@ export default {
 		},
 	},
 	watch: {
-		value(newVal) {
-			this.checked = newVal
+		value: {
+			handler(value) {
+				this.checked = value
+
+			},
+			immediate: true,
 		},
-	},
-	mounted() {
-		this.checked = this.value
-	},
-	created() {
-		this.checkBoxId = 'fancycheckbox' + Math.random()
 	},
 	methods: {
 		updateData(checked) {

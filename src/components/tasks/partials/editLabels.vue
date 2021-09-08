@@ -64,7 +64,7 @@ export default {
 	},
 	data() {
 		return {
-			labelTaskService: LabelTaskService,
+			labelTaskService: new LabelTaskService(),
 			labelTimeout: null,
 			labels: [],
 			query: '',
@@ -74,13 +74,12 @@ export default {
 		Multiselect,
 	},
 	watch: {
-		value(newLabels) {
-			this.labels = newLabels
+		value: {
+			handler(value) {
+				this.labels = value
+			},
+			immediate: true,
 		},
-	},
-	created() {
-		this.labelTaskService = new LabelTaskService()
-		this.labels = this.value
 	},
 	computed: {
 		foundLabels() {

@@ -45,7 +45,7 @@ export default {
 	name: 'defer-task',
 	data() {
 		return {
-			taskService: TaskService,
+			taskService: new TaskService(),
 			task: null,
 			// We're saving the due date seperately to prevent null errors in very short periods where the task is null.
 			dueDate: null,
@@ -61,14 +61,17 @@ export default {
 			required: true,
 		},
 	},
-	created() {
-		this.taskService = new TaskService()
+	watch: {
+		value: {
+			handler(value) {
+				this.task = value
+				this.dueDate = value.dueDate
+				this.lastValue = value.dueDate
+			},
+			immediate: true,
+		},
 	},
 	mounted() {
-		this.task = this.value
-		this.dueDate = this.task.dueDate
-		this.lastValue = this.dueDate
-
 		// Because we don't really have other ways of handling change since if we let flatpickr
 		// change events trigger updates, it would trigger a flatpickr change event which would trigger
 		// an update which would trigger a change event and so on...
@@ -85,13 +88,6 @@ export default {
 			clearInterval(this.changeInterval)
 		}
 		this.updateDueDate()
-	},
-	watch: {
-		value(newVal) {
-			this.task = newVal
-			this.dueDate = this.task.dueDate
-			this.lastValue = this.dueDate
-		},
 	},
 	computed: {
 		flatPickerConfig() {

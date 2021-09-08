@@ -10,6 +10,10 @@
 <script>
 import ShowTasks from './ShowTasks'
 
+function getNextWeekDate() {
+	return new Date((new Date()).getTime() + 7 * 24 * 60 * 60 * 1000)
+}
+
 export default {
 	name: 'ShowTasksInRange',
 	components: {
@@ -17,18 +21,9 @@ export default {
 	},
 	data() {
 		return {
-			startDate: null,
-			endDate: null,
+			startDate: new Date(),
+			endDate: getNextWeekDate(),
 		}
-	},
-	created() {
-		this.setDatesToNextWeek()
-	},
-	methods: {
-		setDatesToNextWeek() {
-			this.startDate = new Date()
-			this.endDate = new Date((new Date()).getTime() + 7 * 24 * 60 * 60 * 1000)
-		},
 	},
 }
 </script>

@@ -76,7 +76,7 @@ export default {
 	},
 	data() {
 		return {
-			passwordResetService: PasswordResetService,
+			passwordResetService: new PasswordResetService(),
 			credentials: {
 				password: '',
 				password2: '',
@@ -84,9 +84,6 @@ export default {
 			errorMsg: '',
 			successMessage: '',
 		}
-	},
-	created() {
-		this.passwordResetService = new PasswordResetService()
 	},
 	mounted() {
 		this.setTitle(this.$t('user.auth.resetPassword'))

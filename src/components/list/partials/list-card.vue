@@ -50,12 +50,10 @@ export default {
 		},
 	},
 	watch: {
-		list() {
-			this.loadBackground()
+		list: {
+			handler: 'loadBackground',
+			immediate: true,
 		},
-	},
-	created() {
-		this.loadBackground()
 	},
 	methods: {
 		loadBackground() {

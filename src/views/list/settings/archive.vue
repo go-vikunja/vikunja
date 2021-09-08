@@ -18,21 +18,25 @@ export default {
 	name: 'list-setting-archive',
 	data() {
 		return {
-			listService: ListService,
-			list: null,
+			listService: new ListService(),
 		}
 	},
 	created() {
-		this.listService = new ListService()
-		this.list = this.$store.getters['lists/getListById'](this.$route.params.listId)
 		this.setTitle(this.$t('list.archive.title', {list: this.list.title}))
+	},
+	computed: {
+		list() {
+			return this.$store.getters['lists/getListById'](this.$route.params.listId)
+		},
 	},
 	methods: {
 		archiveList() {
+			const newList = {
+				...this.list,
+				isArchived: !this.list.isArchived,
+			}
 
-			this.list.isArchived = !this.list.isArchived
-
-			this.listService.update(this.list)
+			this.listService.update(newList)
 				.then(r => {
 					this.$store.commit('currentList', r)
 					this.$store.commit('namespaces/setListInNamespaceById', r)

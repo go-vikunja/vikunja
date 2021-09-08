@@ -51,17 +51,13 @@ export default {
 	data() {
 		return {
 			showError: false,
-			namespace: NamespaceModel,
-			namespaceService: NamespaceService,
+			namespace: new NamespaceModel(),
+			namespaceService: new NamespaceService(),
 		}
 	},
 	components: {
 		ColorPicker,
 		CreateEdit,
-	},
-	created() {
-		this.namespace = new NamespaceModel()
-		this.namespaceService = new NamespaceService()
 	},
 	mounted() {
 		this.setTitle(this.$t('namespace.create.title'))

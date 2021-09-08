@@ -42,17 +42,13 @@ export default {
 	data() {
 		return {
 			showError: false,
-			list: ListModel,
-			listService: ListService,
+			list: new ListModel(),
+			listService: new ListService(),
 		}
 	},
 	components: {
 		CreateEdit,
 		ColorPicker,
-	},
-	created() {
-		this.list = new ListModel()
-		this.listService = new ListService()
 	},
 	mounted() {
 		this.setTitle(this.$t('list.create.header'))

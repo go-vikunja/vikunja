@@ -468,8 +468,8 @@ export default {
 	data() {
 		return {
 			taskId: Number(this.$route.params.id),
-			taskService: TaskService,
-			task: TaskModel,
+			taskService: new TaskService(),
+			task: new TaskModel(),
 			relationKinds: relationKinds,
 			// We doubled the task color property here because verte does not have a real change property, leading
 			// to the color property change being triggered when the # is removed from it, leading to an update,
@@ -503,14 +503,11 @@ export default {
 		}
 	},
 	watch: {
-		'$route': 'loadTask',
-	},
-	created() {
-		this.taskService = new TaskService()
-		this.task = new TaskModel()
-	},
-	mounted() {
-		this.loadTask()
+		'$route': {
+			handler: 'loadTask',
+			deep: true,
+			immediate: true,
+		},
 	},
 	computed: {
 		currentList() {

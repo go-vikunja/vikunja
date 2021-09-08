@@ -83,8 +83,8 @@ export default {
 		return {
 			showTaskswithoutDates: false,
 			dayWidth: 35,
-			dateFrom: null,
-			dateTo: null,
+			dateFrom: new Date((new Date()).setDate((new Date()).getDate() - 15)),
+			dateTo: new Date((new Date()).setDate((new Date()).getDate() + 30)),
 		}
 	},
 	computed: {
@@ -99,10 +99,6 @@ export default {
 				},
 			}
 		},
-	},
-	beforeMount() {
-		this.dateFrom = new Date((new Date()).setDate((new Date()).getDate() - 15))
-		this.dateTo = new Date((new Date()).setDate((new Date()).getDate() + 30))
 	},
 }
 </script>

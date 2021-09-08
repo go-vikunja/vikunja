@@ -61,22 +61,19 @@ export default {
 	},
 	data() {
 		return {
-			newAssignee: UserModel,
-			listUserService: ListUserService,
+			newAssignee: new UserModel(),
+			listUserService: new ListUserService(),
 			foundUsers: [],
 			assignees: [],
-			taskAssigneeService: TaskAssigneeService,
+			taskAssigneeService: new TaskAssigneeService(),
 		}
 	},
-	created() {
-		this.assignees = this.value
-		this.listUserService = new ListUserService()
-		this.newAssignee = new UserModel()
-		this.taskAssigneeService = new TaskAssigneeService()
-	},
 	watch: {
-		value(newVal) {
-			this.assignees = newVal
+		value: {
+			handler(value) {
+				this.assignees = value
+			},
+			immediate: true,
 		},
 	},
 	methods: {

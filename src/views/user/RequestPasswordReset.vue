@@ -59,15 +59,11 @@ export default {
 	},
 	data() {
 		return {
-			passwordResetService: PasswordResetService,
-			passwordReset: PasswordResetModel,
+			passwordResetService: new PasswordResetService(),
+			passwordReset: new PasswordResetModel(),
 			errorMsg: '',
 			isSuccess: false,
 		}
-	},
-	created() {
-		this.passwordResetService = new PasswordResetService()
-		this.passwordReset = new PasswordResetModel()
 	},
 	mounted() {
 		this.setTitle(this.$t('user.auth.resetPassword'))

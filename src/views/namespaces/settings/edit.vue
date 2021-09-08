@@ -69,8 +69,8 @@ export default {
 	name: 'namespace-setting-edit',
 	data() {
 		return {
-			namespaceService: NamespaceService,
-			namespace: NamespaceModel,
+			namespaceService: new NamespaceService(),
+			namespace: new NamespaceModel(),
 			editorActive: false,
 			title: '',
 		}
@@ -89,14 +89,13 @@ export default {
 	beforeMount() {
 		this.namespace.id = this.$route.params.id
 	},
-	created() {
-		this.namespaceService = new NamespaceService()
-		this.namespace = new NamespaceModel()
-		this.loadNamespace()
-	},
 	watch: {
 		// call again the method if the route changes
-		'$route': 'loadNamespace',
+		'$route': {
+			handler: 'loadNamespace',
+			deep: true,
+			immediate: true,
+		},
 	},
 	methods: {
 		loadNamespace() {

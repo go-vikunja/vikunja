@@ -18,13 +18,12 @@ export default {
 	name: 'namespace-setting-archive',
 	data() {
 		return {
-			namespaceService: NamespaceService,
+			namespaceService: new NamespaceService(),
 			namespace: null,
 			title: '',
 		}
 	},
 	created() {
-		this.namespaceService = new NamespaceService()
 		this.namespace = this.$store.getters['namespaces/getNamespaceById'](this.$route.params.id)
 		this.title = this.namespace.isArchived ?
 			this.$t('namespace.archive.titleUnarchive', { namespace: this.namespace.title }) :

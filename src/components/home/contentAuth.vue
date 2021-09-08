@@ -49,7 +49,10 @@ export default {
 	name: 'contentAuth',
 	components: {QuickActions, Navigation},
 	watch: {
-		'$route': 'doStuffAfterRoute',
+		'$route': {
+			handler: 'doStuffAfterRoute',
+			deep: true,
+		},
 	},
 	created() {
 		this.renewTokenOnFocus()

@@ -190,14 +190,16 @@ export default {
 	},
 	mounted() {
 		document.addEventListener('click', this.hideSearchResultsHandler)
-		this.setSelectedObject(this.value)
 	},
 	beforeDestroy() {
 		document.removeEventListener('click', this.hideSearchResultsHandler)
 	},
 	watch: {
-		value(newVal) {
-			this.setSelectedObject(newVal)
+		value: {
+			handler(value) {
+				this.setSelectedObject(value)
+			},
+			immediate: true,
 		},
 	},
 	computed: {

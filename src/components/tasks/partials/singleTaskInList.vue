@@ -99,8 +99,8 @@ export default {
 	name: 'singleTaskInList',
 	data() {
 		return {
-			taskService: TaskService,
-			task: TaskModel,
+			taskService: new TaskService(),
+			task: new TaskModel(),
 			showDefer: false,
 		}
 	},
@@ -145,10 +145,6 @@ export default {
 	mounted() {
 		this.task = this.theTask
 		document.addEventListener('click', this.hideDeferDueDatePopup)
-	},
-	created() {
-		this.task = new TaskModel()
-		this.taskService = new TaskService()
 	},
 	beforeDestroy() {
 		document.removeEventListener('click', this.hideDeferDueDatePopup)

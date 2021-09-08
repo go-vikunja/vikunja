@@ -180,13 +180,13 @@ export default {
 			comments: [],
 
 			showDeleteModal: false,
-			commentToDelete: TaskCommentModel,
+			commentToDelete: new TaskCommentModel(),
 
 			isCommentEdit: false,
-			commentEdit: TaskCommentModel,
+			commentEdit: new TaskCommentModel(),
 
-			taskCommentService: TaskCommentService,
-			newComment: TaskCommentModel,
+			taskCommentService: new TaskCommentService(),
+			newComment: new TaskCommentModel(),
 			editorActive: true,
 			actions: {},
 
@@ -195,22 +195,15 @@ export default {
 			creating: false,
 		}
 	},
-	created() {
-		this.taskCommentService = new TaskCommentService()
-		this.newComment = new TaskCommentModel({taskId: this.taskId})
-		this.commentEdit = new TaskCommentModel({taskId: this.taskId})
-		this.commentToDelete = new TaskCommentModel({taskId: this.taskId})
-		this.comments = []
-	},
-	mounted() {
-		this.loadComments()
-	},
 	watch: {
-		taskId() {
-			this.loadComments()
-			this.newComment.taskId = this.taskId
-			this.commentEdit.taskId = this.taskId
-			this.commentToDelete.taskId = this.taskId
+		taskId: {
+			handler(taskId) {
+				this.loadComments()
+				this.newComment.taskId = taskId
+				this.commentEdit.taskId = taskId
+				this.commentToDelete.taskId = taskId
+			},
+			immediate: true,
 		},
 		canWrite() {
 			this.makeActions()

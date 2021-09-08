@@ -48,15 +48,15 @@ export default {
 		},
 	},
 	watch: {
-		value(newVal) {
-			this.color = newVal
+		value: {
+			handler(value) {
+				this.color = value
+			},
+			immediate: true,
 		},
 		color() {
 			this.update()
 		},
-	},
-	mounted() {
-		this.color = this.value
 	},
 	computed: {
 		empty() {

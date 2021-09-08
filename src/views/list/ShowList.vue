@@ -47,21 +47,20 @@ import {saveListToHistory} from '../../modules/listHistory'
 export default {
 	data() {
 		return {
-			listService: ListService,
-			list: ListModel,
+			listService: new ListService(),
+			list: new ListModel(),
 			listLoaded: 0,
 		}
-	},
-	created() {
-		this.listService = new ListService()
-		this.list = new ListModel()
 	},
 	mounted() {
 		this.loadList()
 	},
 	watch: {
 		// call again the method if the route changes
-		'$route.path': 'loadList',
+		'$route.path': {
+			handler: 'loadList',
+			immediate: true,
+		},
 	},
 	computed: {
 		// Computed property to let "listId" always have a value

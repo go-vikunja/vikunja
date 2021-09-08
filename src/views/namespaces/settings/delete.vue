@@ -19,13 +19,11 @@ export default {
 	name: 'namespace-setting-delete',
 	data() {
 		return {
-			namespaceService: NamespaceService,
+			namespaceService: new NamespaceService(),
 			title: '',
 		}
 	},
 	created() {
-		this.namespaceService = new NamespaceService()
-
 		const namespace = this.$store.getters['namespaces/getNamespaceById'](this.$route.params.id)
 		this.title = this.$t('namespace.delete.title', {namespace: namespace.title})
 		this.setTitle(this.title)

@@ -35,7 +35,6 @@
 </template>
 
 <script>
-import labelModel from '../../models/label'
 import LabelModel from '../../models/label'
 import CreateEdit from '@/components/misc/create-edit.vue'
 import ColorPicker from '../../components/input/colorPicker'
@@ -46,16 +45,13 @@ export default {
 	name: 'NewLabel',
 	data() {
 		return {
-			label: labelModel,
+			label: new LabelModel(),
 			showError: false,
 		}
 	},
 	components: {
 		CreateEdit,
 		ColorPicker,
-	},
-	created() {
-		this.label = new LabelModel()
 	},
 	mounted() {
 		this.setTitle(this.$t('label.create.title'))

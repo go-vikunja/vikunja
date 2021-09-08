@@ -84,13 +84,13 @@ export default {
 	data() {
 		return {
 			listId: this.$route.params.id,
-			listService: ListService,
-			taskService: TaskService,
+			listService: new ListService(),
+			taskService: new TaskService(),
 
 			priorities: priorities,
 			list: {},
 			editorActive: false,
-			newTask: TaskModel,
+			newTask: new TaskModel(),
 			isTaskEdit: false,
 			taskEditTask: TaskModel,
 		}
@@ -113,17 +113,13 @@ export default {
 		},
 	},
 	watch: {
-		task() {
-			this.taskEditTask = this.task
-			this.initTaskFields()
+		task: {
+			handler() {
+				this.taskEditTask = this.task
+				this.initTaskFields()
+			},
+			immediate: true,
 		},
-	},
-	created() {
-		this.listService = new ListService()
-		this.taskService = new TaskService()
-		this.newTask = new TaskModel()
-		this.taskEditTask = this.task
-		this.initTaskFields()
 	},
 	methods: {
 		initTaskFields() {

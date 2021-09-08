@@ -45,7 +45,7 @@ export default {
 	data() {
 		return {
 			newTaskTitle: '',
-			taskService: TaskService,
+			taskService: new TaskService(),
 			errorMessage: '',
 		}
 	},
@@ -54,9 +54,6 @@ export default {
 	],
 	components: {
 		QuickAddMagic,
-	},
-	created() {
-		this.taskService = new TaskService()
 	},
 	props: {
 		defaultPosition: {

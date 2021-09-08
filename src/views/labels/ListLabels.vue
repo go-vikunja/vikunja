@@ -118,13 +118,12 @@ export default {
 	},
 	data() {
 		return {
-			labelEditLabel: LabelModel,
+			labelEditLabel: new LabelModel(),
 			isLabelEdit: false,
 			editorActive: false,
 		}
 	},
 	created() {
-		this.labelEditLabel = new LabelModel()
 		this.loadLabels()
 	},
 	mounted() {

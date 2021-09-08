@@ -134,12 +134,12 @@ export default {
 	data() {
 		return {
 			relatedTasks: {},
-			taskService: TaskService,
+			taskService: new TaskService(),
 			foundTasks: [],
 			relationKinds: relationKinds,
-			newTaskRelationTask: TaskModel,
+			newTaskRelationTask: new TaskModel(),
 			newTaskRelationKind: 'related',
-			taskRelationService: TaskRelationService,
+			taskRelationService: new TaskRelationService(),
 			showDeleteModal: false,
 			relationToDelete: {},
 			saved: false,
@@ -171,18 +171,13 @@ export default {
 			default: true,
 		},
 	},
-	created() {
-		this.taskService = new TaskService()
-		this.taskRelationService = new TaskRelationService()
-		this.newTaskRelationTask = new TaskModel()
-	},
 	watch: {
-		initialRelatedTasks(newVal) {
-			this.relatedTasks = newVal
+		initialRelatedTasks: {
+			handler(value) {
+				this.relatedTasks = value
+			},
+			immediate: true,
 		},
-	},
-	mounted() {
-		this.relatedTasks = this.initialRelatedTasks
 	},
 	computed: {
 		showCreate() {

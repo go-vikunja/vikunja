@@ -61,14 +61,11 @@ export default {
 	components: {User},
 	data() {
 		return {
-			notificationService: NotificationService,
+			notificationService: new NotificationService(),
 			allNotifications: [],
 			showNotifications: false,
 			interval: null,
 		}
-	},
-	created() {
-		this.notificationService = new NotificationService()
 	},
 	mounted() {
 		this.loadNotifications()

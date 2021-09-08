@@ -90,11 +90,11 @@ export default {
 
 			foundTasks: [],
 			taskSearchTimeout: null,
-			taskService: null,
+			taskService: new TaskService(),
 
 			foundTeams: [],
 			teamSearchTimeout: null,
-			teamService: null,
+			teamService: new TeamService(),
 		}
 	},
 	mixins: [
@@ -260,10 +260,6 @@ export default {
 		isNewTaskCommand() {
 			return this.selectedCmd !== null && this.selectedCmd.action === CMD_NEW_TASK
 		},
-	},
-	created() {
-		this.taskService = new TaskService()
-		this.teamService = new TeamService()
 	},
 	methods: {
 		search() {

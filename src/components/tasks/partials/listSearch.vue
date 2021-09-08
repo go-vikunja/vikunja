@@ -26,8 +26,8 @@ export default {
 	name: 'listSearch',
 	data() {
 		return {
-			listSerivce: ListService,
-			list: ListModel,
+			listSerivce: new ListService(),
+			list: new ListModel(),
 			foundLists: [],
 		}
 	},
@@ -39,17 +39,13 @@ export default {
 	components: {
 		Multiselect,
 	},
-	beforeMount() {
-		this.listSerivce = new ListService()
-		this.list = new ListModel()
-	},
 	watch: {
-		value(newVal) {
-			this.list = newVal
+		value: {
+			handler(value) {
+				this.list = value
+			},
+			immeditate: true,
 		},
-	},
-	mounted() {
-		this.list = this.value
 	},
 	methods: {
 		findLists(query) {

@@ -75,18 +75,15 @@ export default {
 		},
 	},
 	watch: {
-		value(newVal) {
-			this.task = newVal
-			if (typeof newVal.repeatAfter !== 'undefined') {
-				this.repeatAfter = newVal.repeatAfter
-			}
+		value: {
+			handler(value) {
+				this.task = value
+				if (typeof value.repeatAfter !== 'undefined') {
+					this.repeatAfter = value.repeatAfter
+				}
+			},
+			immediate: true,
 		},
-	},
-	mounted() {
-		this.task = this.value
-		if (typeof this.value.repeatAfter !== 'undefined') {
-			this.repeatAfter = this.value.repeatAfter
-		}
 	},
 	methods: {
 		updateData() {
