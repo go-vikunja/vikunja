@@ -7,6 +7,19 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 All releases can be found on https://code.vikunja.io/api/releases.
 
+## [0.18.1] - 2021-09-08
+
+### Fixed
+
+* Docs: Add another third-party tutorial link
+* Don't try to export items which do not have a parent
+* fix(deps): update golang.org/x/sys commit hash to 6f6e228 (#970)
+* fix(deps): update golang.org/x/sys commit hash to c212e73 (#971)
+* Fix exporting tasks from archived lists
+* Fix lint
+* Fix tasks not exported
+* Fix tmp export file created in the wrong path
+
 ## [0.18.0] - 2021-09-05
 
 ### Added
