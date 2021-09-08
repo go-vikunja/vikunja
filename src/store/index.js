@@ -59,7 +59,7 @@ export const store = new Vuex.Store({
 			state.errorMessage = error
 		},
 		[ONLINE](state, online) {
-			state.online = online
+			state.online = import.meta.env.VITE_IS_ONLINE || online
 		},
 		[CURRENT_LIST](state, currentList) {
 
