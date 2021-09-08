@@ -132,7 +132,8 @@ export default {
 	},
 	computed: mapState({
 		userInfo: state => state.auth.info,
-		labels: state => Object.values(state.labels.labels).sort((f, s) => f.title > s.title ? 1 : -1), // Alphabetically sort the labels
+		// Alphabetically sort the labels
+		labels: state => Object.values(state.labels.labels).sort((f, s) => f.title > s.title ? 1 : -1),
 		loading: state => state[LOADING] && state[LOADING_MODULE] === 'labels',
 	}),
 	methods: {
@@ -167,10 +168,7 @@ export default {
 			// Duplicating the label to make sure it does not look like changes take effect immediatly as the label 
 			// object passed to this function here still has a reference to the store.
 			this.labelEditLabel = new LabelModel({
-				id: label.id,
-				title: label.title,
-				description: label.description,
-				hexColor: label.hexColor,
+				...label,
 			})
 			this.isLabelEdit = true
 

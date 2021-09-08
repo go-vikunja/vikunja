@@ -81,11 +81,11 @@
 					v-if="tasks && tasks.length > 0"
 				>
 					<draggable
+						v-bind="dragOptions"
 						v-model="tasks"
 						group="tasks"
 						@start="() => drag = true"
 						@end="saveTaskPosition"
-						v-bind="dragOptions"
 						handle=".handle"
 						:disabled="!canWrite"
 						:class="{'dragging-disabled': !canWrite}"

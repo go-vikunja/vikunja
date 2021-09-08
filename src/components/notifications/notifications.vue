@@ -54,6 +54,8 @@ import names from '@/models/constants/notificationNames.json'
 import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
 import {mapState} from 'vuex'
 
+const LOAD_NOTIFICATIONS_INTERVAL = 10000
+
 export default {
 	name: 'notifications',
 	components: {User},
@@ -71,7 +73,7 @@ export default {
 	mounted() {
 		this.loadNotifications()
 		document.addEventListener('click', this.hidePopup)
-		this.interval = setInterval(this.loadNotifications, 10000)
+		this.interval = setInterval(this.loadNotifications, LOAD_NOTIFICATIONS_INTERVAL)
 	},
 	beforeDestroy() {
 		document.removeEventListener('click', this.hidePopup)

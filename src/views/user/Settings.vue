@@ -379,6 +379,8 @@ export default {
 		}),
 	},
 	methods: {
+		copy,
+
 		updatePassword() {
 			if (this.passwordConfirm !== this.passwordUpdate.newPassword) {
 				this.error({message: this.$t('user.settings.passwordsDontMatch')})
@@ -461,9 +463,6 @@ export default {
 					this.success({message: this.$t('user.settings.general.savedSuccess')})
 				})
 				.catch(e => this.error(e))
-		},
-		copy(text) {
-			copy(text)
 		},
 		anchorHashCheck() {
 			if (window.location.hash === this.$route.hash) {

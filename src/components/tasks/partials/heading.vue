@@ -1,8 +1,6 @@
 <template>
 	<div class="heading">
-		<h1 class="title task-id">
-			{{ task.getTextIdentifier && task.getTextIdentifier() ? task.getTextIdentifier() : '' }}
-		</h1>
+		<h1 class="title task-id">{{ textIdentifier }}</h1>
 		<div class="is-done" v-if="task.done">Done</div>
 		<h1
 			class="title input"
@@ -11,13 +9,16 @@
 			@keydown.enter.prevent.stop="$event.target.blur()"
 			:contenteditable="canWrite ? 'true' : 'false'"
 			spellcheck="false"
-			ref="taskTitle">{{ task.title.trim() }}</h1>
+			ref="taskTitle"
+		>
+			{{ task.title.trim() }}
+		</h1>
 		<transition name="fade">
 			<span class="is-inline-flex is-align-items-center" v-if="loading && saving">
 				<span class="loader is-inline-block mr-2"></span>
 				{{ $t('misc.saving') }}
 			</span>
-			<span class="has-text-success is-inline-flex is-align-content-center" v-if="!loading && showSavedMessage">
+			<span class="has-text-success is-inline-flex is-align-content-center" v-else-if="!loading && showSavedMessage">
 				<icon icon="check" class="mr-2"/>
 				{{ $t('misc.saved') }}
 			</span>
@@ -40,6 +41,9 @@ export default {
 		...mapState(['loading']),
 		task() {
 			return this.value
+		},
+		textIdentifier() {
+			return this.task?.getTextIdentifier() || ''
 		},
 	},
 	props: {

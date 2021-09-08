@@ -19,7 +19,7 @@
 							<span class="loader is-inline-block mr-2"></span>
 							{{ $t('misc.saving') }}
 						</span>
-						<span class="has-text-success" v-if="!taskRelationService.loading && saved">
+						<span class="has-text-success" v-else-if="!taskRelationService.loading && saved">
 							{{ $t('misc.saved') }}
 						</span>
 					</transition>

@@ -196,7 +196,6 @@ export default {
 		return {
 			linkShares: [],
 			linkShareService: LinkShareService,
-			newLinkShare: LinkShareModel,
 			rights: rights,
 			selectedRight: rights.READ,
 			name: '',
@@ -277,9 +276,7 @@ export default {
 					this.showDeleteModal = false
 				})
 		},
-		copy(text) {
-			copy(text)
-		},
+		copy,
 		getShareLink(hash) {
 			return this.frontendUrl + 'share/' + hash + '/auth'
 		},

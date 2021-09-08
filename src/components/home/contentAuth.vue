@@ -11,9 +11,7 @@
 			<navigation/>
 			<div
 				:class="[
-					{
-						'is-menu-enabled': menuActive,
-					},
+					{ 'is-menu-enabled': menuActive },
 					$route.name,
 				]"
 				class="app-content"
@@ -58,10 +56,6 @@ export default {
 		this.loadLabels()
 	},
 	computed: mapState({
-		namespaces(state) {
-			return state.namespaces.namespaces.filter(n => !n.isArchived)
-		},
-		currentList: CURRENT_LIST,
 		background: 'background',
 		menuActive: MENU_ACTIVE,
 		userInfo: state => state.auth.info,

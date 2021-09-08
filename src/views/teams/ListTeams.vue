@@ -1,5 +1,5 @@
 <template>
-	<div class="content loader-container is-max-width-desktop" v-bind:class="{ 'is-loading': teamService.loading}">
+	<div class="content loader-container is-max-width-desktop" :class="{ 'is-loading': teamService.loading}">
 		<x-button
 			:to="{name:'teams.create'}"
 			class="is-pulled-right"

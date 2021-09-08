@@ -6,7 +6,7 @@ import {filterObject} from '@/helpers/filterObject'
 import {setLoading} from '../helper'
 import TaskCollectionService from '@/services/taskCollection'
 
-const tasksPerBucket = 25
+const TASKS_PER_BUCKET = 25
 
 const addTaskToBucketAndSort = (state, task) => {
 	const bi = filterObject(state.buckets, b => b.id === task.bucketId)
@@ -174,7 +174,7 @@ export default {
 			// Clear everything to prevent having old buckets in the list if loading the buckets from this list takes a few moments
 			ctx.commit('setBuckets', [])
 
-			params.per_page = tasksPerBucket
+			params.per_page = TASKS_PER_BUCKET
 
 			const bucketService = new BucketService()
 			return bucketService.getAll({listId: listId}, params)
@@ -228,7 +228,7 @@ export default {
 				params.filter_comparator = [...(params.filter_comparator ?? []), 'equals']
 			}
 
-			params.per_page = tasksPerBucket
+			params.per_page = TASKS_PER_BUCKET
 
 			const taskService = new TaskCollectionService()
 			return taskService.getAll({listId: listId}, params, page)

@@ -20,11 +20,11 @@
 			:class="{ 'is-loading': loading && !oneTaskUpdating}"
 			class="kanban kanban-bucket-container loader-container">
 			<draggable
+				v-bind="dragOptions"
 				v-model="buckets"
 				@start="() => dragBucket = true"
 				@end="updateBucketPosition"
 				group="buckets"
-				v-bind="dragOptions"
 				:disabled="!canWrite"
 				:class="{'dragging-disabled': !canWrite}"
 			>
@@ -129,11 +129,11 @@
 						</div>
 						<div :ref="`tasks-container${bucket.id}`" class="tasks">
 							<draggable
+								v-bind="dragOptions"
 								v-model="bucket.tasks"
 								@start="() => dragstart(bucket)"
 								@end="updateTaskPosition"
 								:group="{name: 'tasks', put: shouldAcceptDrop(bucket) && !dragBucket}"
-								v-bind="dragOptions"
 								:disabled="!canWrite"
 								:class="{'dragging-disabled': !canWrite}"
 								:data-bucket-index="k"

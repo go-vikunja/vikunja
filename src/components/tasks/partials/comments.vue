@@ -56,7 +56,7 @@
 							</span>
 							<span
 								class="has-text-success"
-								v-if="
+								v-else-if="
 									!taskCommentService.loading &&
 									saved === c.id
 								"

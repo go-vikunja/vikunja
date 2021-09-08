@@ -83,12 +83,12 @@
 						triggered by the change needs to have access to the current namespace
 					--> 
 					<draggable
+						v-bind="dragOptions"
 						:value="activeLists[nk]"
 						@input="(lists) => updateActiveLists(n, lists)"
 						:group="`namespace-${n.id}-lists`"
 						@start="() => drag = true"
 						@end="e => saveListPosition(e, nk)"
-						v-bind="dragOptions"
 						handle=".handle"
 						:disabled="n.id < 0"
 						:class="{'dragging-disabled': n.id < 0}"

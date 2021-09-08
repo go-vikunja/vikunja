@@ -47,8 +47,6 @@ export default {
 	}
 
 	img {
-		-webkit-border-radius: 100%;
-		-moz-border-radius: 100%;
 		border-radius: 100%;
 
 		vertical-align: middle;

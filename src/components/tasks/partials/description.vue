@@ -10,7 +10,7 @@
 					<span class="loader is-inline-block mr-2"></span>
 					{{ $t('misc.saving') }}
 				</span>
-				<span class="is-small has-text-success" v-if="!loading && saved">
+				<span class="is-small has-text-success" v-else-if="!loading && saved">
 					<icon icon="check"/>
 					{{ $t('misc.saved') }}
 				</span>
