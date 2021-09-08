@@ -38,7 +38,7 @@
     "workbox-precaching": "6.2.4"
   },
   "devDependencies": {
-    "@4tw/cypress-drag-drop": "1.8.1",
+    "@4tw/cypress-drag-drop": "2.0.0",
     "@fortawesome/fontawesome-svg-core": "1.2.36",
     "@fortawesome/free-regular-svg-icons": "5.15.4",
     "@fortawesome/free-solid-svg-icons": "5.15.4",
