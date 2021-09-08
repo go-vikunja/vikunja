@@ -123,7 +123,7 @@ func ExportUserData(s *xorm.Session, u *user.User) (err error) {
 
 func exportListsAndTasks(s *xorm.Session, u *user.User, wr *zip.Writer) (err error) {
 
-	namspaces, _, _, err := (&Namespace{}).ReadAll(s, u, "", -1, 0)
+	namspaces, _, _, err := (&Namespace{IsArchived: true}).ReadAll(s, u, "", -1, 0)
 	if err != nil {
 		return err
 	}
@@ -173,11 +173,11 @@ func exportListsAndTasks(s *xorm.Session, u *user.User, wr *zip.Writer) (err err
 
 	listMap := make(map[int64]*ListWithTasksAndBuckets)
 	listIDs := []int64{}
-	for _, n := range namespaces {
-		for _, l := range n.Lists {
-			listMap[l.ID] = l
-			listIDs = append(listIDs, l.ID)
+	for _, l := range lists {
+		listMap[l.ID] = &ListWithTasksAndBuckets{
+			List: *l,
 		}
+		listIDs = append(listIDs, l.ID)
 	}
 
 	taskMap := make(map[int64]*TaskWithComments, len(tasks))
