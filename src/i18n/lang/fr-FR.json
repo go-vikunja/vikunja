@@ -113,11 +113,12 @@
       "scheduledCancelSuccess": "We will not delete your account."
     },
     "export": {
-      "title": "Export your Vikunja Data",
+      "title": "Export your Vikunja data",
       "description": "You can request a copy of all your Vikunja data. This include Namespaces, Lists, Tasks and everything associated to them. You can import this data in any Vikunja instance through the migration function.",
       "descriptionPasswordRequired": "Please enter your password to proceed:",
       "request": "Request a copy of my Vikunja Data",
-      "success": "You've successfully requested your Vikunja Data! We will send you an email once it's ready to download."
+      "success": "You've successfully requested your Vikunja Data! We will send you an email once it's ready to download.",
+      "downloadTitle": "Download your exported Vikunja data"
     }
   },
   "list": {
