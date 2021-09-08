@@ -92,8 +92,10 @@ export default {
 	methods: {
 		markTaskAsDone(task) {
 			this.loadingInternal = true
-			task.done = !task.done
-			this.$store.dispatch('tasks/update', task)
+			this.$store.dispatch('tasks/update', {
+				...task,
+				done: !task.done,
+			})
 				.then(() => {
 					if (task.done) {
 						playPop()
