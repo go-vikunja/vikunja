@@ -9,6 +9,34 @@ All releases can be found on https://code.vikunja.io/frontend/releases.
 
 The releases aim at the api versions which is why there are missing versions.
 
+## [0.18.1] - 2021-09-08
+
+### Added
+
+* feat: make it possible to fake online state via dev env (#720)
+
+### Fixed
+
+* fix: call to /null from background image (#714)
+* Fix data export download progress
+* fix: kanban-card mutatation violation (#712)
+* Fix missing translation when creating a new task on the kanban board
+* Fix rearranging tasks in a kanban bucket when its limit was reached
+* Fix sort order for table view
+* Fix task attributes overridden when saving the task title with enter
+* Fix translation badge
+
+### Dependency Updates
+
+* Update dependency @4tw/cypress-drag-drop to v2 (#711)
+* Update dependency axios to v0.21.4 (#705)
+* Update dependency jest to v27.1.1 (#716)
+* Update dependency vite-plugin-vue2 to v1.8.2 (#707)
+* Update dependency vite to v2.5.4 (#708)
+* Update dependency vite to v2.5.5 (#709)
+* Update typescript-eslint monorepo to v4.31.0 (#706)
+
+
 ## [0.18.0] - 2021-09-05
 
 ### Added
