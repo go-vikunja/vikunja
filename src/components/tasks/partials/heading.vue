@@ -32,7 +32,7 @@ export default {
 	name: 'heading',
 	data() {
 		return {
-			task: {title: '', identifier: '', index:''},
+			task: {title: '', identifier: '', index: ''},
 			taskTitle: '',
 			saved: false,
 			saving: false, // Since loading is global state, this variable ensures we're only showing the saving icon when saving the description.
@@ -79,6 +79,13 @@ export default {
 			}
 		},
 		saveTask() {
+			// When only saving with enter, the focusout event is called as well. This then leads to the saveTask 
+			// method being called twice, overriding some task attributes in the second run.
+			// If we simply check if we're already in the process of saving, we can prevent that.
+			if (this.saving) {
+				return
+			}
+
 			this.saving = true
 
 			this.$store.dispatch('tasks/update', this.task)
