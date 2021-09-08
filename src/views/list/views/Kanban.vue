@@ -164,7 +164,7 @@
 									/>
 								</div>
 								<p class="help is-danger" v-if="newTaskError[bucket.id] && newTaskText === ''">
-									{{ $t('list.list.addTitleRequired') }}
+									{{ $t('list.create.addTitleRequired') }}
 								</p>
 							</div>
 							<x-button
