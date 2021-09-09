@@ -4,7 +4,7 @@
 			:checked="checked"
 			:disabled="disabled"
 			:id="checkBoxId"
-			@change="updateData"
+			@change="(event) => updateData(event.target.checked)"
 			style="display: none;"
 			type="checkbox"/>
 		<label :for="checkBoxId" class="check">
@@ -51,10 +51,10 @@ export default {
 		this.checkBoxId = 'fancycheckbox' + Math.random()
 	},
 	methods: {
-		updateData(e) {
-			this.checked = e.target.checked
-			this.$emit('input', this.checked)
-			this.$emit('change', e.target.checked)
+		updateData(checked) {
+			this.checked = checked
+			this.$emit('input', checked)
+			this.$emit('change', checked)
 		},
 	},
 }
