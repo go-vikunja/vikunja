@@ -2,6 +2,16 @@ import TaskCollectionService from '../../../services/taskCollection'
 import cloneDeep from 'lodash/cloneDeep'
 import {calculateItemPosition} from '../../../helpers/calculateItemPosition'
 
+// FIXME: merge with DEFAULT_PARAMS in filters.vue
+const DEFAULT_PARAMS = {
+	sort_by: ['position', 'id'],
+	order_by: ['asc', 'desc'],
+	filter_by: ['done'],
+	filter_value: ['false'],
+	filter_comparator: ['equals'],
+	filter_concat: 'and',
+}
+
 /**
  * This mixin provides a base set of methods and properties to get tasks on a list.
  */
@@ -20,14 +30,7 @@ export default {
 			searchTerm: '',
 
 			showTaskFilter: false,
-			params: {
-				sort_by: ['position', 'id'],
-				order_by: ['asc', 'desc'],
-				filter_by: ['done'],
-				filter_value: ['false'],
-				filter_comparator: ['equals'],
-				filter_concat: 'and',
-			},
+			params: DEFAULT_PARAMS,
 		}
 	},
 	watch: {

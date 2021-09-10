@@ -190,6 +190,35 @@ import ListService from '@/services/list'
 import NamespaceService from '@/services/namespace'
 import EditLabels from '@/components/tasks/partials/editLabels.vue'
 
+// FIXME: merge with DEFAULT_PARAMS in taskList.js
+const DEFAULT_PARAMS = {
+	sort_by: [],
+	order_by: [],
+	filter_by: [],
+	filter_value: [],
+	filter_comparator: [],
+	filter_include_nulls: true,
+	filter_concat: 'or',
+	s: '',
+}
+
+const DEFAULT_FILTERS = {
+	done: false,
+	dueDate: '',
+	requireAllFilters: false,
+	priority: 0,
+	usePriority: false,
+	startDate: '',
+	endDate: '',
+	percentDone: 0,
+	usePercentDone: false,
+	reminders: '',
+	assignees: '',
+	labels: '',
+	list_id: '',
+	namespace: '',
+}
+
 export default {
 	name: 'filters',
 	components: {
@@ -202,32 +231,8 @@ export default {
 	},
 	data() {
 		return {
-			params: {
-				sort_by: [],
-				order_by: [],
-				filter_by: [],
-				filter_value: [],
-				filter_comparator: [],
-				filter_include_nulls: true,
-				filter_concat: 'or',
-				s: '',
-			},
-			filters: {
-				done: false,
-				dueDate: '',
-				requireAllFilters: false,
-				priority: 0,
-				usePriority: false,
-				startDate: '',
-				endDate: '',
-				percentDone: 0,
-				usePercentDone: false,
-				reminders: '',
-				assignees: '',
-				labels: '',
-				list_id: '',
-				namespace: '',
-			},
+			params: DEFAULT_PARAMS,
+			filters: DEFAULT_FILTERS,
 
 			usersService: UserService,
 			foundusers: [],
