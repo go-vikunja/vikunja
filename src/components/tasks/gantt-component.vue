@@ -24,10 +24,7 @@
 						class="month"
 						v-for="(m, mk) in days[yk]"
 					>
-						{{
-							new Date(new Date(`${yk}-${parseInt(mk) + 1}-01`)).toLocaleString('en-us', {month: 'long'})
-						}},
-						{{ new Date(yk).getFullYear() }}
+						{{ formatYear(new Date(`${yk}-${parseInt(mk) + 1}-01`)) }}
 						<div class="days">
 							<div
 								:class="{ today: d.toDateString() === now.toDateString() }"
@@ -197,6 +194,7 @@ import TaskCollectionService from '../../services/taskCollection'
 import {mapState} from 'vuex'
 import Rights from '../../models/rights.json'
 import FilterPopup from '@/components/list/partials/filter-popup.vue'
+import {format} from 'date-fns'
 
 export default {
 	name: 'GanttChart',
@@ -480,6 +478,9 @@ export default {
 				.catch((e) => {
 					this.error(e)
 				})
+		},
+		formatYear(date) {
+			return format(date, 'MMMM, yyyy')
 		},
 	},
 }
