@@ -1,5 +1,7 @@
 import Vue from 'vue'
 
+import {findIndexById} from '@/helpers/find'
+
 export default {
 	namespaced: true,
 	state: () => ({
@@ -15,13 +17,9 @@ export default {
 			state.attachments.push(attachment)
 		},
 		removeById(state, id) {
-			for (const a in state.attachments) {
-				if (state.attachments[a].id === id) {
-					state.attachments.splice(a, 1)
-					console.debug('Remove attachement', id)
-					break
-				}
-			}
+			const attachmentIndex = findIndexById(state.attachments, id)
+			state.attachments.splice(attachmentIndex, 1)
+			console.debug('Remove attachement', id)
 		},
 	},
 }
