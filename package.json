@@ -35,7 +35,7 @@
     "vue-shortkey": "3.1.7",
     "vuedraggable": "2.24.3",
     "vuex": "3.6.2",
-    "workbox-precaching": "6.2.4"
+    "workbox-precaching": "6.3.0"
   },
   "devDependencies": {
     "@4tw/cypress-drag-drop": "2.0.0",
@@ -72,7 +72,7 @@
     "vue-router": "3.5.2",
     "vue-template-compiler": "2.6.14",
     "wait-on": "6.0.0",
-    "workbox-cli": "6.2.4"
+    "workbox-cli": "6.3.0"
   },
   "eslintConfig": {
     "root": true,
