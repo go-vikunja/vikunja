@@ -33,8 +33,7 @@
 </template>
 
 <script>
-import {mapState} from 'vuex'
-import authTypes from '@/models/authTypes.json'
+import {mapGetters} from 'vuex'
 
 export default {
 	name: 'LinkSharingAuth',
@@ -54,9 +53,9 @@ export default {
 	mounted() {
 		this.setTitle(this.$t('sharing.authenticating'))
 	},
-	computed: mapState({
-		authLinkShare: state => state.auth.authenticated && (state.auth.info && state.auth.info.type === authTypes.LINK_SHARE),
-	}),
+	computed: mapGetters('auth', [
+		'authLinkShare',
+	]),
 	methods: {
 		auth() {
 			this.errorMessage = ''

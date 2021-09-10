@@ -23,10 +23,8 @@
 </template>
 
 <script>
-import {mapState} from 'vuex'
+import {mapState, mapGetters} from 'vuex'
 import isTouchDevice from 'is-touch-device'
-
-import authTypes from './models/authTypes'
 
 import Notification from './components/misc/notification'
 import {KEYBOARD_SHORTCUTS_ACTIVE, ONLINE} from './store/mutation-types'
@@ -74,11 +72,13 @@ export default {
 			return isTouchDevice()
 		},
 		...mapState({
-			authUser: state => state.auth.authenticated && (state.auth.info && state.auth.info.type === authTypes.USER),
-			authLinkShare: state => state.auth.authenticated && (state.auth.info && state.auth.info.type === authTypes.LINK_SHARE),
 			online: ONLINE,
 			keyboardShortcutsActive: KEYBOARD_SHORTCUTS_ACTIVE,
 		}),
+		...mapGetters('auth', [
+			'authUser',
+			'authLinkShare',
+		]),
 	},
 	methods: {
 		setupOnlineStatus() {

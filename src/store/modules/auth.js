@@ -3,6 +3,12 @@ import {ERROR_MESSAGE, LOADING} from '../mutation-types'
 import UserModel from '../../models/user'
 import {getToken, refreshToken, removeToken, saveToken} from '@/helpers/auth'
 
+const AUTH_TYPES = {
+	'UNKNOWN': 0,
+	'USER': 1,
+	'LINK_SHARE': 2,
+}
+
 const defaultSettings = settings => {
 	if (typeof settings.weekStart === 'undefined' || settings.weekStart === '') {
 		settings.weekStart = 0
@@ -21,6 +27,20 @@ export default {
 		lastUserInfoRefresh: null,
 		settings: {},
 	}),
+	getters: {
+		authUser(state) {
+			return state.authenticated && (
+				state.info &&
+				state.info.type === AUTH_TYPES.USER
+			)
+		},
+		authLinkShare(state) {
+			return state.authenticated && (
+				state.info &&
+				state.info.type === AUTH_TYPES.LINK_SHARE
+			)
+		},
+	},
 	mutations: {
 		info(state, info) {
 			state.info = info
