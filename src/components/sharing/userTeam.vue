@@ -145,7 +145,7 @@ import TeamListService from '../../services/teamList'
 import TeamService from '../../services/team'
 import TeamModel from '../../models/team'
 
-import rights from '../../models/rights'
+import rights from '../../models/constants/rights.json'
 import Multiselect from '@/components/input/multiselect.vue'
 import Nothing from '@/components/misc/nothing.vue'
 

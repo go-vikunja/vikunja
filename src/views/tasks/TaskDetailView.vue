@@ -419,10 +419,10 @@
 <script>
 import TaskService from '../../services/task'
 import TaskModel from '../../models/task'
-import relationKinds from '../../models/relationKinds.json'
+import relationKinds from '../../models/constants/relationKinds.json'
 
-import priorites from '../../models/priorities.json'
-import rights from '../../models/rights.json'
+import priorites from '../../models/constants/priorities.json'
+import rights from '../../models/constants/rights.json'
 
 import PrioritySelect from '../../components/tasks/partials/prioritySelect'
 import PercentDoneSelect from '../../components/tasks/partials/percentDoneSelect'

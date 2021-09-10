@@ -97,7 +97,7 @@
 <script>
 import {mapState} from 'vuex'
 import {CURRENT_LIST, QUICK_ACTIONS_ACTIVE} from '@/store/mutation-types'
-import Rights from '@/models/rights.json'
+import Rights from '@/models/constants/rights.json'
 import Update from '@/components/home/update.vue'
 import ListSettingsDropdown from '@/components/list/list-settings-dropdown.vue'
 import Dropdown from '@/components/misc/dropdown.vue'

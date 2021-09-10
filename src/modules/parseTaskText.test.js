@@ -1,7 +1,7 @@
 import {parseTaskText} from './parseTaskText'
 import {getDateFromText, getDateFromTextIn} from '../helpers/time/parseDate'
 import {calculateDayInterval} from '../helpers/time/calculateDayInterval'
-import priorities from '../models/priorities.json'
+import priorities from '../models/constants/priorities.json'
 
 describe('Parse Task Text', () => {
 	it('should return text with no intents as is', () => {

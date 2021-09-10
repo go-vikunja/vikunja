@@ -2,7 +2,7 @@ import AbstractModel from './abstractModel'
 import UserModel from './user'
 import LabelModel from './label'
 import AttachmentModel from './attachment'
-import {REPEAT_MODE_DEFAULT} from './taskRepeatModes'
+import {REPEAT_MODE_DEFAULT} from './constants/taskRepeatModes'
 
 import SubscriptionModel from '@/models/subscription'
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'

@@ -12,7 +12,7 @@
 </template>
 
 <script>
-import priorites from '../../../models/priorities'
+import priorites from '../../../models/constants/priorities'
 
 export default {
 	name: 'prioritySelect',

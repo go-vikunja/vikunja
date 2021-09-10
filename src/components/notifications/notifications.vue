@@ -50,7 +50,7 @@
 <script>
 import NotificationService from '@/services/notification'
 import User from '@/components/misc/user.vue'
-import names from '@/models/notificationNames.json'
+import names from '@/models/constants/notificationNames.json'
 import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
 import {mapState} from 'vuex'
 

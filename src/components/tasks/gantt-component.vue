@@ -188,11 +188,11 @@ import EditTask from './edit-task'
 
 import TaskService from '../../services/task'
 import TaskModel from '../../models/task'
-import priorities from '../../models/priorities'
+import priorities from '../../models/constants/priorities'
 import PriorityLabel from './partials/priorityLabel'
 import TaskCollectionService from '../../services/taskCollection'
 import {mapState} from 'vuex'
-import Rights from '../../models/rights.json'
+import Rights from '../../models/constants/rights.json'
 import FilterPopup from '@/components/list/partials/filter-popup.vue'
 import {format} from 'date-fns'
 

@@ -5,7 +5,7 @@ import TaskModel from '@/models/task'
 import TaskCommentModel from '@/models/taskComment'
 import ListModel from '@/models/list'
 import TeamModel from '@/models/team'
-import names from './notificationNames.json'
+import names from './constants/notificationNames.json'
 
 export default class NotificationModel extends AbstractModel {
 	constructor(data) {

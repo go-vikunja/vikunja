@@ -51,7 +51,7 @@
 </template>
 
 <script>
-import repeatModes from '@/models/taskRepeatModes'
+import repeatModes from '@/models/constants/taskRepeatModes'
 
 export default {
 	name: 'repeatAfter',
@@ -62,7 +62,7 @@ export default {
 				amount: 0,
 				type: '',
 			},
-			repeatModes: repeatModes,
+			repeatModes,
 		}
 	},
 	props: {

@@ -167,7 +167,7 @@ import TeamMemberService from '../../services/teamMember'
 import TeamMemberModel from '../../models/teamMember'
 import UserModel from '../../models/user'
 import UserService from '../../services/user'
-import Rights from '../../models/rights.json'
+import Rights from '../../models/constants/rights.json'
 
 import LoadingComponent from '../../components/misc/loading'
 import ErrorComponent from '../../components/misc/error'

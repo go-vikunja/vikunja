@@ -173,7 +173,7 @@
 </template>
 
 <script>
-import rights from '../../models/rights'
+import rights from '../../models/constants/rights'
 
 import LinkShareService from '../../services/linkShare'
 import LinkShareModel from '../../models/linkShare'

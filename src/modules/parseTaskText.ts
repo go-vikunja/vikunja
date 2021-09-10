@@ -1,5 +1,5 @@
 import {parseDate} from '../helpers/time/parseDate'
-import _priorities from '../models/priorities.json'
+import _priorities from '../models/constants/priorities.json'
 
 const LABEL_PREFIX: string = '@'
 const LIST_PREFIX: string = '#'
