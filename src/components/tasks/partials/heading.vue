@@ -7,16 +7,17 @@
 		<h1
 			class="title input"
 			:class="{'disabled': !canWrite}"
-			@focusout="save()"
-			@keydown.enter.prevent.stop="save()"
+			@blur="save($event.target.textContent)"
+			@keydown.enter.prevent.stop="$event.target.blur()"
 			:contenteditable="canWrite ? 'true' : 'false'"
+			spellcheck="false"
 			ref="taskTitle">{{ task.title.trim() }}</h1>
 		<transition name="fade">
 			<span class="is-inline-flex is-align-items-center" v-if="loading && saving">
 				<span class="loader is-inline-block mr-2"></span>
 				{{ $t('misc.saving') }}
 			</span>
-			<span class="has-text-success is-inline-flex is-align-content-center" v-if="!loading && saved">
+			<span class="has-text-success is-inline-flex is-align-content-center" v-if="!loading && showSavedMessage">
 				<icon icon="check" class="mr-2"/>
 				{{ $t('misc.saved') }}
 			</span>
@@ -25,22 +26,22 @@
 </template>
 
 <script>
-import {LOADING} from '@/store/mutation-types'
 import {mapState} from 'vuex'
 
 export default {
 	name: 'heading',
 	data() {
 		return {
-			task: {title: '', identifier: '', index: ''},
-			taskTitle: '',
-			saved: false,
+			showSavedMessage: false,
 			saving: false, // Since loading is global state, this variable ensures we're only showing the saving icon when saving the description.
 		}
 	},
-	computed: mapState({
-		loading: LOADING,
-	}),
+	computed: {
+		...mapState(['loading']),
+		task() {
+			return this.value
+		},
+	},
 	props: {
 		value: {
 			required: true,
@@ -50,50 +51,29 @@ export default {
 			default: false,
 		},
 	},
-	watch: {
-		value(newVal) {
-			this.task = newVal
-			this.taskTitle = this.task.title
-		},
-	},
-	mounted() {
-		this.task = this.value
-		this.taskTitle = this.task.title
-	},
 	methods: {
-		save() {
-			this.$refs.taskTitle.spellcheck = false
-
-			// Pull the task title from the contenteditable
-			let taskTitle = this.$refs.taskTitle.textContent
-			this.task.title = taskTitle
-
-			// We only want to save if the title was actually change.
-			// Because the contenteditable does not have a change event,
-			// we're building it ourselves and only calling saveTask()
+		save(title) {
+			// We only want to save if the title was actually changed.
+			// Because the contenteditable does not have a change event
+			// we're building it ourselves and only continue
 			// if the task title changed.
-			if (this.task.title !== this.taskTitle) {
-				this.$refs.taskTitle.blur()
-				this.saveTask()
-				this.taskTitle = taskTitle
-			}
-		},
-		saveTask() {
-			// When only saving with enter, the focusout event is called as well. This then leads to the saveTask 
-			// method being called twice, overriding some task attributes in the second run.
-			// If we simply check if we're already in the process of saving, we can prevent that.
-			if (this.saving) {
+			if (title === this.task.title) {
 				return
 			}
 
 			this.saving = true
 
-			this.$store.dispatch('tasks/update', this.task)
-				.then(() => {
-					this.$emit('input', this.task)
-					this.saved = true
+			const newTask = {
+				...this.task,
+				title,
+			}
+
+			this.$store.dispatch('tasks/update', newTask)
+				.then((task) => {
+					this.$emit('input', task)
+					this.showSavedMessage = true
 					setTimeout(() => {
-						this.saved = false
+						this.showSavedMessage = false
 					}, 2000)
 				})
 				.catch(e => {

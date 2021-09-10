@@ -15,6 +15,7 @@ export default class TaskModel extends AbstractModel {
 		super(data)
 
 		this.id = Number(this.id)
+		this.title = this.title?.trim()
 		this.listId = Number(this.listId)
 
 		// Make date objects from timestamps

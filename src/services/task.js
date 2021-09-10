@@ -39,6 +39,8 @@ export default class TaskService extends AbstractService {
 
 	processModel(model) {
 
+		model.title = model.title?.trim()
+
 		// Ensure that listId is an int
 		model.listId = Number(model.listId)
 
