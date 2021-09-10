@@ -1,4 +1,4 @@
-import TaskCollectionService from '../../../services/taskCollection'
+import TaskCollectionService from '@/services/taskCollection'
 import cloneDeep from 'lodash/cloneDeep'
 import {calculateItemPosition} from '../../../helpers/calculateItemPosition'
 
@@ -12,16 +12,59 @@ const DEFAULT_PARAMS = {
 	filter_concat: 'and',
 }
 
+function createPagination(totalPages, currentPage) {
+	const pages = []
+	for (let i = 0; i < totalPages; i++) {
+
+		// Show ellipsis instead of all pages
+		if (
+			i > 0 && // Always at least the first page
+			(i + 1) < totalPages && // And the last page
+			(
+				// And the current with current + 1 and current - 1
+				(i + 1) > currentPage + 1 ||
+				(i + 1) < currentPage - 1
+			)
+		) {
+			// Only add an ellipsis if the last page isn't already one
+			if (pages[i - 1] && !pages[i - 1].isEllipsis) {
+				pages.push({
+					number: 0,
+					isEllipsis: true,
+				})
+			}
+			continue
+		}
+
+		pages.push({
+			number: i + 1,
+			isEllipsis: false,
+		})
+	}
+	return pages
+}
+
+export function getRouteForPagination(page = 1, type = 'list') {
+	return {
+		name: 'list.' + type,
+		params: {
+			type: type,
+		},
+		query: {
+			page: page,
+		},
+	}
+}
+
 /**
  * This mixin provides a base set of methods and properties to get tasks on a list.
  */
 export default {
 	data() {
 		return {
-			taskCollectionService: TaskCollectionService,
+			taskCollectionService: new TaskCollectionService(),
 			tasks: [],
 
-			pages: [],
 			currentPage: 0,
 
 			loadedList: null,
@@ -34,16 +77,17 @@ export default {
 		}
 	},
 	watch: {
-		'$route.query': 'loadTasksForPage', // Only listen for query path changes
+		// Only listen for query path changes
+		'$route.query': {
+			handler: 'loadTasksForPage',
+			immediate: true,
+		},
 		'$route.path': 'loadTasksOnSavedFilter',
 	},
-	beforeMount() {
-		// Triggering loading the tasks in beforeMount lets the component maintain the current page, therefore the page
-		// is not lost after navigating back from a task detail page for example.
-		this.loadTasksForPage(this.$route.query)
-	},
-	created() {
-		this.taskCollectionService = new TaskCollectionService()
+	computed: {
+		pages() {
+			return createPagination(this.taskCollectionService.totalPages, this.currentPage)
+		},
 	},
 	methods: {
 		loadTasks(
@@ -83,41 +127,12 @@ export default {
 				return
 			}
 
-			this.$set(this, 'tasks', [])
+			this.tasks = []
 
 			this.taskCollectionService.getAll(list, params, page)
 				.then(r => {
-					this.$set(this, 'tasks', r)
-					this.$set(this, 'pages', [])
+					this.tasks = r
 					this.currentPage = page
-
-					for (let i = 0; i < this.taskCollectionService.totalPages; i++) {
-
-						// Show ellipsis instead of all pages
-						if (
-							i > 0 && // Always at least the first page
-							(i + 1) < this.taskCollectionService.totalPages && // And the last page
-							(
-								// And the current with current + 1 and current - 1
-								(i + 1) > this.currentPage + 1 ||
-								(i + 1) < this.currentPage - 1
-							)
-						) {
-							// Only add an ellipsis if the last page isn't already one
-							if (this.pages[i - 1] && !this.pages[i - 1].isEllipsis) {
-								this.pages.push({
-									number: 0,
-									isEllipsis: true,
-								})
-							}
-							continue
-						}
-
-						this.pages.push({
-							number: i + 1,
-							isEllipsis: false,
-						})
-					}
 
 					this.loadedList = cloneDeep(currentList)
 				})
@@ -125,6 +140,7 @@ export default {
 					this.error(e)
 				})
 		},
+
 		loadTasksForPage(e) {
 			// The page parameter can be undefined, in the case where the user loads a new list from the side bar menu
 			let page = Number(e.page)
@@ -180,17 +196,6 @@ export default {
 				this.showTaskSearch = false
 			}, 200)
 		},
-		getRouteForPagination(page = 1, type = 'list') {
-			return {
-				name: 'list.' + type,
-				params: {
-					type: type,
-				},
-				query: {
-					page: page,
-				},
-			}
-		},
 		saveTaskPosition(e) {
 			this.drag = false
 			
@@ -208,5 +213,6 @@ export default {
 					this.error(e)
 				})
 		},
+		getRouteForPagination,
 	},
 }
