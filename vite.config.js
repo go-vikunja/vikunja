@@ -20,7 +20,7 @@ module.exports = {
 			template: {
 				compilerOptions: {
 					compatConfig: {
-						MODE: 2,
+						MODE: 3,
 					},
 				},
 			},

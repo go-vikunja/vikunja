@@ -1,11 +1,16 @@
+import cloneDeep from 'lodash.clonedeep'
+
 import {findById, findIndexById} from '@/helpers/utils'
+import {i18n} from '@/i18n'
+import {success} from '@/message'
+
 import BucketService from '../../services/bucket'
 import {setLoading} from '../helper'
 import TaskCollectionService from '@/services/taskCollection'
 
 const TASKS_PER_BUCKET = 25
 
-function getTaskPosition(state, task) {
+function getTaskIndices(state, task) {
 	const bucketIndex = findIndexById(state.buckets, task.bucketId)
 
 	if (!bucketIndex) {
@@ -167,7 +172,7 @@ export default {
 				return
 			}
 
-			const { bucketIndex, taskIndex } = getTaskPosition(state, task)
+			const { bucketIndex, taskIndex } = getTaskIndices(state, task)
 			
 			state.buckets[bucketIndex].tasks.splice(taskIndex, 1)
 		},
@@ -189,22 +194,20 @@ export default {
 		getBucketById(state) {
 			return (bucketId) => findById(state.buckets, bucketId)
 		},
-		getTaskById: state => id => {
-			for (const b in state.buckets) {
-				for (const t in state.buckets[b].tasks) {
-					if (state.buckets[b].tasks[t].id === id) {
-						return {
-							bucketIndex: b,
-							taskIndex: t,
-							task: state.buckets[b].tasks[t],
-						}
-					}
+
+		getTaskById(state) {
+			return (id) => {
+				let taskIndex
+				const bucketIndex = state.buckets.findIndex(({ tasks }) => {
+					taskIndex = findIndexById(tasks, id)
+					return taskIndex !== undefined
+				})
+		
+				return {
+					bucketIndex: taskIndex || null,
+					taskIndex: taskIndex || null,
+					task: state.buckets?.[bucketIndex].tasks?.[taskIndex] || null,
 				}
-			}
-			return {
-				bucketIndex: null,
-				taskIndex: null,
-				task: null,
 			}
 		},
 	},
@@ -256,6 +259,15 @@ export default {
 			params.sort_by = 'kanban_position'
 			params.order_by = 'asc'
 
+			// const hasBucketFilter = Object.entries(params.filter_by).some(([key, value]) => {
+			// 	const condition = value === 'bucket_id'
+			// 	if (condition) {
+			// 		if (value !== bucketId) {
+			// 			params.filter_value[key] = bucketId
+			// 		}
+			// 	}
+			// 	return condition
+			// })
 			let hasBucketFilter = false
 			for (const f in params.filter_by) {
 				if (params.filter_by[f] === 'bucket_id') {
@@ -293,6 +305,7 @@ export default {
 					ctx.commit('setBucketLoading', {bucketId: bucketId, loading: false})
 				})
 		},
+
 		createBucket(ctx, bucket) {
 			const cancel = setLoading(ctx, 'kanban')
 
@@ -309,6 +322,7 @@ export default {
 					cancel()
 				})
 		},
+
 		deleteBucket(ctx, {bucket, params}) {
 			const cancel = setLoading(ctx, 'kanban')
 
@@ -327,24 +341,96 @@ export default {
 					cancel()
 				})
 		},
-		updateBucket(ctx, bucket) {
+
+		updateBucket(ctx, updatedBucketData) {
 			const cancel = setLoading(ctx, 'kanban')
 
+			const bucketIndex = findIndexById(ctx.state.buckets, updatedBucketData.id)
+			const oldBucket = cloneDeep(ctx.state.buckets[bucketIndex])
+
+			const bucket = ctx.state.buckets[bucketIndex]
+
+			const requestData = {
+				id: updatedBucketData.id,
+				listId: updatedBucketData.listId || oldBucket.listId,
+				title: oldBucket.title, // can't be empty in request
+				// ...bucket,
+				...updatedBucketData,
+			}
+
+			const updatedBucket = {
+				...bucket,
+				...requestData,
+			}
+			ctx.commit('setBucketByIndex', {bucketIndex, bucket: updatedBucket})
+			
 			const bucketService = new BucketService()
-			return bucketService.update(bucket)
+			return bucketService.update(updatedBucket)
 				.then(r => {
-					const bi = findById(ctx.state.buckets, r.id)
-					const bucket = r
-					bucket.tasks = ctx.state.buckets[bi].tasks
-					ctx.commit('setBucketByIndex', {bucketIndex: bi, bucket})
-					return Promise.resolve(r)
+					Promise.resolve(r)
 				})
 				.catch(e => {
+					// restore original state
+					ctx.commit('setBucketByIndex', {bucketIndex, bucket: oldBucket})
+
 					return Promise.reject(e)
 				})
-				.finally(() => {
-					cancel()
+				.finally(() => cancel())
+		},
+
+		updateBuckets(ctx, updatedBucketsData) {
+			const cancel = setLoading(ctx, 'kanban')
+
+			const oldBuckets = []
+			const updatedBuckets = updatedBucketsData.map((updatedBucketData) => {
+				const bucketIndex = findIndexById(ctx.state.buckets, updatedBucketData.id)
+				const bucket = ctx.state.buckets[bucketIndex]
+
+				const oldBucket = cloneDeep(bucket)
+				oldBuckets.push(oldBucket)
+
+				const newBucket = {
+					// FIXME: maybe optional to set the original value as well
+					...bucket,
+					id: updatedBucketData.id,
+					listId: updatedBucketData.listId || oldBucket.listId,
+					...updatedBucketData,
+				}
+				ctx.commit('setBucketByIndex', {bucketIndex, bucket: newBucket})
+
+				const bucketService = new BucketService()
+				return bucketService.update(newBucket)
+			})
+
+			return Promise.all(updatedBuckets)
+				.then(r => {
+					Promise.resolve(r)
 				})
+				.catch(e => {
+					// restore original state
+					Object.values(updatedBuckets).forEach((oldBucket) => ctx.commit('setBucketById', oldBucket))
+
+					return Promise.reject(e)
+				})
+				.finally(() => cancel())
+		},
+
+		updateBucketTitle(ctx, { id, title }) {
+			const bucket = findById(ctx.state.buckets, id)
+
+			if (bucket.title === title) {
+				// bucket title has not changed
+				return
+			}
+
+			const updatedBucketData = {
+				id,
+				title,
+			}
+
+			ctx.dispatch('updateBucket', updatedBucketData).then(() => {
+				success({message: i18n.global.t('list.kanban.bucketTitleSavedSuccess')})
+			})
 		},
 	},
 }

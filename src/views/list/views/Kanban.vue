@@ -1,9 +1,9 @@
 <template>
 	<div class="kanban-view">
-		<div class="filter-container" v-if="list.isSavedFilter && !list.isSavedFilter()">
+		<div class="filter-container" v-if="isSavedFilter">
 			<div class="items">
 				<x-button
-					@click.prevent.stop="showFilters = !showFilters"
+					@click.prevent.stop="toggleFilterPopup"
 					icon="filter"
 					type="secondary"
 				>
@@ -11,19 +11,20 @@
 				</x-button>
 			</div>
 			<filter-popup
-				@update:modelValue="() => {filtersChanged = true; loadBuckets()}"
 				:visible="showFilters"
 				v-model="params"
 			/>
 		</div>
 		<div
 			:class="{ 'is-loading': loading && !oneTaskUpdating}"
-			class="kanban kanban-bucket-container loader-container">
+			class="kanban kanban-bucket-container loader-container"
+		>
+				<!-- @end="updateBucketPosition" -->
 			<draggable
 				v-bind="dragOptions"
-				v-model="buckets"
+				:modelValue="buckets"
+				@update:modelValue="updateBucketPositions"
 				@start="() => dragBucket = true"
-				@end="updateBucketPosition"
 				group="buckets"
 				:disabled="!canWrite"
 				tag="transition-group"
@@ -70,14 +71,14 @@
 									<div class="field has-addons" v-if="showSetLimitInput">
 										<div class="control">
 											<input
-												@change="() => setBucketLimit(bucket)"
-												@keyup.enter="() => setBucketLimit(bucket)"
 												@keyup.esc="() => showSetLimitInput = false"
+												@keyup.enter="() => showSetLimitInput = false"
+												:value="bucket.limit"
+												@input="(event) => setBucketLimit(bucket.id, parseInt(event.target.value))"
 												class="input"
 												type="number"
 												min="0"
 												v-focus.always
-												v-model="bucket.limit"
 											/>
 										</div>
 										<div class="control">
@@ -130,7 +131,8 @@
 						>
 							<draggable
 								v-bind="dragOptions"
-								v-model="bucket.tasks"
+								:modelValue="bucket.tasks"
+								@update:modelValue="(tasks) => updateTasks(bucket.id, tasks)"
 								@start="() => dragstart(bucket)"
 								@end="updateTaskPosition"
 								:group="{name: 'tasks', put: shouldAcceptDrop(bucket) && !dragBucket}"
@@ -236,7 +238,6 @@
 import draggable from 'vuedraggable'
 
 import BucketModel from '../../../models/bucket'
-import {findById} from '@/helpers/utils'
 import {mapState} from 'vuex'
 import {saveListView} from '@/helpers/saveListView'
 import Rights from '../../../models/constants/rights.json'
@@ -245,7 +246,7 @@ import FilterPopup from '@/components/list/partials/filter-popup.vue'
 import Dropdown from '@/components/misc/dropdown.vue'
 import {getCollapsedBucketState, saveCollapsedBucketState} from '@/helpers/saveCollapsedBucketState'
 import {calculateItemPosition} from '../../../helpers/calculateItemPosition'
-import KanbanCard from '../../../components/tasks/partials/kanban-card'
+import KanbanCard from '@/components/tasks/partials/kanban-card'
 
 const DRAG_OPTIONS = {
 	// sortable options
@@ -299,20 +300,29 @@ export default {
 				filter_concat: 'and',
 			},
 			showFilters: false,
-			filtersChanged: false, // To trigger a reload of the board
 		}
 	},
 	created() {
-		this.loadBuckets()
-
 		// Save the current list view to local storage
 		// We use local storage and not vuex here to make it persistent across reloads.
 		saveListView(this.$route.params.listId, this.$route.name)
 	},
 	watch: {
-		'$route.params.listId': 'loadBuckets',
+		loadBucketParameter: {
+			handler: 'loadBuckets',
+			immediate: true,
+		},
 	},
 	computed: {
+		isSavedFilter() {
+			return this.list.isSavedFilter && !this.list.isSavedFilter()
+		},
+		loadBucketParameter() {
+			return {
+				listId: this.$route.params.listId,
+				params: this.params,
+			}
+		},
 		bucketDraggableComponentData() {
 			return {
 				type: 'transition',
@@ -340,6 +350,7 @@ export default {
 				return this.$store.state.kanban.buckets
 			},
 			set(value) {
+				console.log('should not set buckets', value)
 				this.$store.commit('kanban/setBuckets', value)
 			},
 		},
@@ -351,29 +362,25 @@ export default {
 			list: state => state.currentList,
 		}),
 	},
+ 
 	methods: {
-		loadBuckets() {
+		toggleFilterPopup() {
+			this.showFilters = !this.showFilters
+		},
 
+		loadBuckets() {
 			// Prevent trying to load buckets if the task popup view is active
 			if (this.$route.name !== 'list.kanban') {
 				return
 			}
 
-			// Only load buckets if we don't already loaded them
-			if (
-				!this.filtersChanged && (
-				this.loadedListId === this.$route.params.listId ||
-				this.loadedListId === parseInt(this.$route.params.listId))
-			) {
-				return
-			}
+			const { listId, params } = this.loadBucketParameter
 
-			this.collapsedBuckets = getCollapsedBucketState(this.$route.params.listId)
+			this.collapsedBuckets = getCollapsedBucketState(listId)
 
 			console.debug(`Loading buckets, loadedListId = ${this.loadedListId}, $route.params =`, this.$route.params)
-			this.filtersChanged = false
 
-			this.$store.dispatch('kanban/loadBucketsForList', {listId: this.$route.params.listId, params: this.params})
+			this.$store.dispatch('kanban/loadBucketsForList', {listId, params})
 		},
 
 		setTaskContainerRef(id, el) {
@@ -394,6 +401,16 @@ export default {
 				bucketId: id,
 			})
 		},
+
+		updateTasks(bucketId, tasks) {
+			const newBucket = {
+				...this.$store.getters['kanban/getBucketById'](bucketId),
+				tasks,
+			}
+
+			this.$store.dispatch('kanban/updateBucket', newBucket)
+		},
+
 		updateTaskPosition(e) {
 			this.drag = false
 
@@ -407,20 +424,23 @@ export default {
 			const taskBefore = newBucket.tasks[e.newIndex - 1] ?? null
 			const taskAfter = newBucket.tasks[e.newIndex + 1] ?? null
 
-			task.kanbanPosition = calculateItemPosition(taskBefore !== null ? taskBefore.kanbanPosition : null, taskAfter !== null ? taskAfter.kanbanPosition : null)
-			task.bucketId = newBucket.id
+			// task.kanbanPosition = calculateItemPosition(taskBefore !== null ? taskBefore.kanbanPosition : null, taskAfter !== null ? taskAfter.kanbanPosition : null)
+			// task.bucketId = newBucket.id
 
-			this.$store.dispatch('tasks/update', task)
-				.catch(e => {
-					this.$message.error(e)
-				})
-				.finally(() => {
+			const newTask = {
+				...task,
+				bucketId: newBucket.id,
+				kanbanPosition: calculateItemPosition(taskBefore !== null ? taskBefore.kanbanPosition : null, taskAfter !== null ? taskAfter.kanbanPosition : null),
+			}
+
+			this.$store.dispatch('tasks/update', newTask)
+				// .finally(() => {
 					this.taskUpdating[task.id] = false
 					this.oneTaskUpdating = false
-				})
+				// })
 		},
-		toggleShowNewTaskInput(bucket) {
-			this.showNewTaskInput[bucket] = !this.showNewTaskInput[bucket]
+		toggleShowNewTaskInput(bucketId) {
+			this.showNewTaskInput[bucketId] = !this.showNewTaskInput[bucketId]
 		},
 		addTaskToBucket(bucketId) {
 
@@ -463,9 +483,6 @@ export default {
 					this.newBucketTitle = ''
 					this.showNewBucketInput = false
 				})
-				.catch(e => {
-					this.$message.error(e)
-				})
 		},
 		deleteBucketModal(bucketId) {
 			if (this.buckets.length <= 1) {
@@ -478,16 +495,10 @@ export default {
 		deleteBucket() {
 			const bucket = new BucketModel({
 				id: this.bucketToDelete,
-				listId: this.$route.params.listId,
 			})
 
 			this.$store.dispatch('kanban/deleteBucket', {bucket: bucket, params: this.params})
-				.then(() => {
-					this.$message.success({message: this.$t('list.kanban.deleteBucketSuccess')})
-				})
-				.catch(e => {
-					this.$message.error(e)
-				})
+				.then(() => this.$message.success({message: this.$t('list.kanban.deleteBucketSuccess')}))
 				.finally(() => {
 					this.showBucketDeleteModal = false
 				})
@@ -497,40 +508,22 @@ export default {
 			this.bucketTitleEditable = true
 			this.$nextTick(() => e.target.focus())
 		},
+
 		saveBucketTitle(bucketId, bucketTitle) {
-			this.bucketTitleEditable = false
-			const bucket = new BucketModel({
+			const updatedBucketData = {
 				id: bucketId,
 				title: bucketTitle,
-				listId: Number(this.$route.params.listId),
-			})
-
-			// Because the contenteditable does not have a change event,
-			// we're building it ourselves here and only updating the bucket
-			// if the title changed.
-			const realBucket = findById(this.buckets, bucketId)
-			if (realBucket.title === bucketTitle) {
-				return
 			}
 
-			this.$store.dispatch('kanban/updateBucket', bucket)
-				.then(r => {
-					realBucket.title = r.title
+			this.$store.dispatch('kanban/updateBucketTitle', updatedBucketData)
+				.then(() => {
+					this.bucketTitleEditable = false
 					this.$message.success({message: this.$t('list.kanban.bucketTitleSavedSuccess')})
 				})
-				.catch(e => {
-					this.$message.error(e)
-				})
 		},
-		updateBucket(bucket) {
-			bucket.limit = parseInt(bucket.limit)
-			this.$store.dispatch('kanban/updateBucket', bucket)
-				.then(() => {
-					this.$message.success({message: this.$t('list.kanban.bucketLimitSavedSuccess')})
-				})
-				.catch(e => {
-					this.$message.error(e)
-				})
+
+		updateBucketPositions(buckets) {
+			this.$store.dispatch('kanban/updateBuckets', buckets)
 		},
 		updateBucketPosition(e) {
 			this.dragBucket = false
@@ -539,19 +532,26 @@ export default {
 			const bucketBefore = this.buckets[e.newIndex - 1] ?? null
 			const bucketAfter = this.buckets[e.newIndex + 1] ?? null
 
-			bucket.position = calculateItemPosition(bucketBefore !== null ? bucketBefore.position : null, bucketAfter !== null ? bucketAfter.position : null)
+			const updatedData = {
+				id: bucket.id,
+				position: calculateItemPosition(bucketBefore !== null ? bucketBefore.position : null, bucketAfter !== null ? bucketAfter.position : null),
+			}
 
-			this.$store.dispatch('kanban/updateBucket', bucket)
-				.catch(e => {
-					this.$message.error(e)
-				})
+			this.$store.dispatch('kanban/updateBucket', updatedData)
 		},
-		setBucketLimit(bucket) {
-			if (bucket.limit < 0) {
+		setBucketLimit(bucketId, limit) {
+			if (limit < 0) {
 				return
 			}
 
-			this.updateBucket(bucket)
+			const newBucket = {
+				...this.$store.getters['kanban/getBucketById'](bucketId),
+				limit,
+			}
+
+			this.$store.dispatch('kanban/updateBucket', newBucket)
+				.then(() => this.$message.success({message: this.$t('list.kanban.bucketLimitSavedSuccess')}))
+			
 		},
 		shouldAcceptDrop(bucket) {
 			return bucket.id === this.sourceBucket || // When dragging from a bucket who has its limit reached, dragging should still be possible
@@ -563,15 +563,13 @@ export default {
 			this.sourceBucket = bucket.id
 		},
 		toggleDoneBucket(bucket) {
-			bucket.isDoneBucket = !bucket.isDoneBucket
-			this.$store.dispatch('kanban/updateBucket', bucket)
-				.then(() => {
-					this.$message.success({message: this.$t('list.kanban.doneBucketSavedSuccess')})
-				})
-				.catch(e => {
-					this.$message.error(e)
-					bucket.isDoneBucket = !bucket.isDoneBucket
-				})
+			const newBucket = {
+				...bucket,
+				isDoneBucket: !bucket.isDoneBucket,
+			}
+			this.$store.dispatch('kanban/updateBucket', newBucket)
+				.then(() => this.$message.success({message: this.$t('list.kanban.doneBucketSavedSuccess')}))
+				.catch(e => this.$message.error(e))
 		},
 		collapseBucket(bucket) {
 			this.collapsedBuckets[bucket.id] = true

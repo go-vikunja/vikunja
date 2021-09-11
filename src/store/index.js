@@ -56,7 +56,10 @@ export const store = createStore({
 			state.errorMessage = error
 		},
 		[ONLINE](state, online) {
-			state.online = import.meta.env.VITE_IS_ONLINE || online
+			if (import.meta.env.VITE_IS_ONLINE) {
+				console.log('Setting fake online state', import.meta.env.VITE_IS_ONLINE)
+			}
+			state.online = !!import.meta.env.VITE_IS_ONLINE || online
 		},
 		[CURRENT_LIST](state, currentList) {
 

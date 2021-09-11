@@ -93,7 +93,11 @@ app.mixin({
 })
 
 app.config.errorHandler = (err, vm, info) => {
-	error(err)
+	// if (import.meta.env.PROD) {
+		// error(err)
+	// } else {
+		console.error(err, vm, info)
+	// }
 }
 
 app.config.globalProperties.$message = {

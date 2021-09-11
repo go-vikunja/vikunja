@@ -18,7 +18,7 @@ export default class BucketService extends AbstractService {
 
 	beforeUpdate(model) {
 		const taskService = new TaskService()
-		model.tasks = model.tasks.map(t => taskService.processModel(t))
+		model.tasks = model.tasks?.map(t => taskService.processModel(t))
 		return model
 	}
 }

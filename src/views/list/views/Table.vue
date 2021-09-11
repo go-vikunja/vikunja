@@ -61,7 +61,7 @@
 			<filter-popup
 				:visible="showTaskFilter"
 				v-model="params"
-				@update:modelValue="loadTasks(1)"
+				@update:modelValue="loadTasks()"
 			/>
 		</div>
 

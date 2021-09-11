@@ -117,14 +117,24 @@ export default {
 		addTaskAttachment(ctx, {taskId, attachment}) {
 			const t = ctx.rootGetters['kanban/getTaskById'](taskId)
 			if (t.task !== null) {
-				const newTask = { ...t }
-				newTask.task.attachments.push(attachment)
+				const attachments = [
+					...t.task.attachments,
+					attachment,
+				]
+
+				const newTask = {
+					...t,
+					task: {
+						...t.task,
+						attachments,
+					},
+				}
 				ctx.commit('kanban/setTaskInBucketByIndex', newTask, {root: true})
 			}
 			ctx.commit('attachments/add', attachment, {root: true})
 		},
-		addAssignee(ctx, {user, taskId}) {
 
+		addAssignee(ctx, {user, taskId}) {
 			const taskAssignee = new TaskAssigneeModel({userId: user.id, taskId: taskId})
 
 			const taskAssigneeService = new TaskAssigneeService()
