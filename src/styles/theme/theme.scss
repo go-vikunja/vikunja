@@ -1,11 +1,12 @@
-// utilities are imported in variables.scss
-@import "../../../node_modules/bulma/sass/base/_all";
-@import "../../../node_modules/bulma/sass/elements/_all";
-@import "../../../node_modules/bulma/sass/form/_all";
-@import "../../../node_modules/bulma/sass/components/_all";
-@import "../../../node_modules/bulma/sass/grid/_all";
-@import "../../../node_modules/bulma/sass/helpers/_all";
-@import "../../../node_modules/bulma/sass/layout/_all";
+// bulma utilities are imported in variables.scss
+@import "bulma/sass/utilities/_all";
+@import "bulma/sass/base/_all";
+@import "bulma/sass/elements/_all";
+@import "bulma/sass/form/_all";
+@import "bulma/sass/components/_all";
+@import "bulma/sass/grid/_all";
+@import "bulma/sass/helpers/_all";
+@import "bulma/sass/layout/_all";
 
 
 @import "fonts";
