@@ -232,7 +232,6 @@
 </template>
 
 <script>
-import isTouchDevice from 'is-touch-device'
 import draggable from 'vuedraggable'
 
 import BucketModel from '../../../models/bucket'
@@ -315,10 +314,8 @@ export default {
 				animation: 150,
 				ghostClass: 'ghost',
 				dragClass: 'task-dragging',
-			}
-
-			if (isTouchDevice()) {
-				options.delay = 150
+				delay: 150,
+				delayOnTouchOnly: true,
 			}
 
 			return options
