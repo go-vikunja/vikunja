@@ -29,7 +29,7 @@ docker-compose up -d
 Then, once all containers are started, run
 
 ```
-docker-composer run cypress bash
+docker-compose run cypress bash
 ```
 
 to get a shell inside the cypress container.
