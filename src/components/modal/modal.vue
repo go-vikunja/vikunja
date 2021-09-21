@@ -1,7 +1,12 @@
 <template>
 	<transition name="modal">
 		<div class="modal-mask has-overflow" :class="{'has-overflow': overflow}">
-			<div class="modal-container" @mousedown.self.prevent.stop="$emit('close')" :class="{'has-overflow': overflow}">
+			<div class="modal-container"
+				@mousedown.self.prevent.stop="$emit('close')"
+				:class="{'has-overflow': overflow}"
+				@shortkey="$emit('close')"
+				v-shortkey="['esc']"
+			>
 				<div class="modal-content" :class="{'has-overflow': overflow, 'is-wide': wide}">
 					<slot>
 						<div class="header">
@@ -36,14 +41,6 @@
 <script>
 export default {
 	name: 'modal',
-	mounted: function () {
-		document.addEventListener('keydown', (e) => {
-			// Close the model when escape is pressed
-			if (e.keyCode === 27) {
-				this.$emit('close')
-			}
-		})
-	},
 	props: {
 		overflow: {
 			type: Boolean,

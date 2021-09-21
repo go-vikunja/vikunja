@@ -1,6 +1,11 @@
 <template>
 	<div class="modal-mask">
-		<div @mousedown.self="close()" class="modal-container">
+		<div
+			class="modal-container"
+			@mousedown.self="close()"
+			v-shortkey="['esc']"
+			@shortkey="close()"
+		>
 			<div class="scrolling-content">
 				<a @click="close()" class="close">
 					<icon icon="times"/>

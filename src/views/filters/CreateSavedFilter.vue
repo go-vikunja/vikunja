@@ -1,6 +1,11 @@
 <template>
 	<div class="modal-mask hint-modal">
-		<div @click.self="$router.back()" class="modal-container">
+		<div
+			class="modal-container"
+			@click.self="$router.back()"
+			@shortkey="$router.back()"
+			v-shortkey="['esc']"
+		>
 			<div class="modal-content">
 				<card class="has-background-white has-no-shadow" :title="$t('filters.create.title')">
 					<p>
