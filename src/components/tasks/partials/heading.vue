@@ -1,7 +1,7 @@
 <template>
 	<div class="heading">
 		<h1 class="title task-id">{{ textIdentifier }}</h1>
-		<div class="is-done" v-if="task.done">Done</div>
+		<Done class="heading__done" :is-done="task.done" />
 		<h1
 			class="title input"
 			:class="{'disabled': !canWrite}"
@@ -28,8 +28,13 @@
 <script>
 import {mapState} from 'vuex'
 
+import Done from '@/components/misc/Done.vue'
+
 export default {
 	name: 'heading',
+	components: {
+		Done,
+	},
 	data() {
 		return {
 			showSavedMessage: false,
@@ -90,3 +95,8 @@ export default {
 }
 </script>
 
+<style lang="scss" scoped>
+.heading__done {
+	margin-left: .5rem;
+}
+</style>

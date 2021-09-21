@@ -12,7 +12,7 @@
 		class="task loader-container draggable"
 	>
 		<span class="task-id">
-			<span class="is-done" v-if="task.done">Done</span>
+			<Done class="kanban-card__done" :is-done="task.done" variant="small" />
 			<template v-if="task.identifier === ''">
 				#{{ task.index }}
 			</template>
@@ -66,6 +66,7 @@
 import {playPop} from '../../../helpers/playPop'
 import PriorityLabel from '../../../components/tasks/partials/priorityLabel'
 import User from '../../../components/misc/user'
+import Done from '@/components/misc/Done.vue'
 import Labels from '../../../components/tasks/partials/labels'
 import ChecklistSummary from './checklist-summary'
 
@@ -73,6 +74,7 @@ export default {
 	name: 'kanban-card',
 	components: {
 		ChecklistSummary,
+		Done,
 		PriorityLabel,
 		User,
 		Labels,
@@ -230,12 +232,6 @@ $task-background: $white;
 		display: flex;
 	}
 
-	.is-done {
-		font-size: .75rem;
-		padding: .2rem .3rem;
-		margin: 0 .25rem 0 0;
-	}
-
 	&.is-moving {
 		opacity: .5;
 	}
@@ -263,5 +259,9 @@ $task-background: $white;
 			}
 		}
 	}
+}
+
+.kanban-card__done {
+	margin-right: .25rem;
 }
 </style>

@@ -134,7 +134,7 @@
 							</router-link>
 						</td>
 						<td v-if="activeColumns.done">
-							<div class="is-done" v-if="t.done">Done</div>
+							<Done :is-done="t.done" variant="small" />
 						</td>
 						<td v-if="activeColumns.title">
 							<router-link :to="{name: 'task.detail', params: { id: t.id }}">{{ t.title }}</router-link>
@@ -190,6 +190,7 @@
 
 <script>
 import taskList from '../../../components/tasks/mixins/taskList'
+import Done from '@/components/misc/Done.vue'
 import User from '../../../components/misc/user'
 import PriorityLabel from '../../../components/tasks/partials/priorityLabel'
 import Labels from '../../../components/tasks/partials/labels'
@@ -203,6 +204,7 @@ import Pagination from '@/components/misc/pagination.vue'
 export default {
 	name: 'Table',
 	components: {
+		Done,
 		FilterPopup,
 		Sort,
 		Fancycheckbox,
@@ -317,11 +319,6 @@ export default {
 		}
 
 		.user {
-			margin: 0;
-		}
-
-		.is-done {
-			font-size: .9rem;
 			margin: 0;
 		}
 	}
