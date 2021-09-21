@@ -121,44 +121,10 @@
 				</card>
 			</div>
 
-			<nav
-				aria-label="pagination"
-				class="pagination is-centered p-4"
-				role="navigation"
-				v-if="taskCollectionService.totalPages > 1"
-			>
-				<router-link
-					:disabled="currentPage === 1"
-					:to="getRouteForPagination(currentPage - 1)"
-					class="pagination-previous"
-					tag="button">
-					{{ $t('misc.previous') }}
-				</router-link>
-				<router-link
-					:disabled="currentPage === taskCollectionService.totalPages"
-					:to="getRouteForPagination(currentPage + 1)"
-					class="pagination-next"
-					tag="button">
-					{{ $t('misc.next') }}
-				</router-link>
-				<ul class="pagination-list">
-					<template v-for="(p, i) in pages">
-						<li :key="'page' + i" v-if="p.isEllipsis">
-							<span class="pagination-ellipsis">&hellip;</span>
-						</li>
-						<li :key="'page' + i" v-else>
-							<router-link
-								:aria-label="'Goto page ' + p.number"
-								:class="{ 'is-current': p.number === currentPage }"
-								:to="getRouteForPagination(p.number)"
-								class="pagination-link"
-							>
-								{{ p.number }}
-							</router-link>
-						</li>
-					</template>
-				</ul>
-			</nav>
+			<Pagination 
+				:total-pages="taskCollectionService.totalPages"
+				:current-page="currentPage"
+			/>
 		</card>
 
 		<!-- This router view is used to show the task popup while keeping the kanban board itself -->
@@ -182,6 +148,7 @@ import FilterPopup from '@/components/list/partials/filter-popup.vue'
 import {HAS_TASKS} from '@/store/mutation-types'
 import Nothing from '@/components/misc/nothing.vue'
 import createTask from '@/components/tasks/mixins/createTask'
+import Pagination from '@/components/misc/pagination.vue'
 
 import {mapState} from 'vuex'
 import draggable from 'vuedraggable'
@@ -214,6 +181,7 @@ export default {
 		EditTask,
 		AddTask,
 		draggable,
+		Pagination,
 	},
 	created() {
 		this.taskService = new TaskService()

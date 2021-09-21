@@ -12,50 +12,6 @@ const DEFAULT_PARAMS = {
 	filter_concat: 'and',
 }
 
-function createPagination(totalPages, currentPage) {
-	const pages = []
-	for (let i = 0; i < totalPages; i++) {
-
-		// Show ellipsis instead of all pages
-		if (
-			i > 0 && // Always at least the first page
-			(i + 1) < totalPages && // And the last page
-			(
-				// And the current with current + 1 and current - 1
-				(i + 1) > currentPage + 1 ||
-				(i + 1) < currentPage - 1
-			)
-		) {
-			// Only add an ellipsis if the last page isn't already one
-			if (pages[i - 1] && !pages[i - 1].isEllipsis) {
-				pages.push({
-					number: 0,
-					isEllipsis: true,
-				})
-			}
-			continue
-		}
-
-		pages.push({
-			number: i + 1,
-			isEllipsis: false,
-		})
-	}
-	return pages
-}
-
-export function getRouteForPagination(page = 1, type = 'list') {
-	return {
-		name: 'list.' + type,
-		params: {
-			type: type,
-		},
-		query: {
-			page: page,
-		},
-	}
-}
-
 /**
  * This mixin provides a base set of methods and properties to get tasks on a list.
  */
@@ -83,11 +39,6 @@ export default {
 			immediate: true,
 		},
 		'$route.path': 'loadTasksOnSavedFilter',
-	},
-	computed: {
-		pages() {
-			return createPagination(this.taskCollectionService.totalPages, this.currentPage)
-		},
 	},
 	methods: {
 		loadTasks(
@@ -213,6 +164,5 @@ export default {
 					this.error(e)
 				})
 		},
-		getRouteForPagination,
 	},
 }

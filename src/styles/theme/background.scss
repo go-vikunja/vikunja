@@ -5,6 +5,7 @@
   background-attachment: fixed;
   min-height: 100vh;
 
+	// FIXME: move to pagination component
   .pagination-link:not(.is-current) {
     background: $light-background;
   }

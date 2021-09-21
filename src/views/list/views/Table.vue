@@ -172,40 +172,10 @@
 				</table>
 			</div>
 
-			<nav
-				aria-label="pagination"
-				class="pagination is-centered p-4"
-				role="navigation"
-				v-if="taskCollectionService.totalPages > 1">
-				<router-link
-					:disabled="currentPage === 1"
-					:to="getRouteForPagination(currentPage - 1, 'table')"
-					class="pagination-previous"
-					tag="button">
-					{{ $t('misc.previous') }}
-				</router-link>
-				<router-link
-					:disabled="currentPage === taskCollectionService.totalPages"
-					:to="getRouteForPagination(currentPage + 1, 'table')"
-					class="pagination-next"
-					tag="button">
-					{{ $t('misc.next') }}
-				</router-link>
-				<ul class="pagination-list">
-					<template v-for="(p, i) in pages">
-						<li :key="'page'+i" v-if="p.isEllipsis"><span class="pagination-ellipsis">&hellip;</span></li>
-						<li :key="'page'+i" v-else>
-							<router-link
-								:aria-label="'Goto page ' + p.number"
-								:class="{'is-current': p.number === currentPage}"
-								:to="getRouteForPagination(p.number, 'table')"
-								class="pagination-link">
-								{{ p.number }}
-							</router-link>
-						</li>
-					</template>
-				</ul>
-			</nav>
+			<Pagination 
+				:total-pages="taskCollectionService.totalPages"
+				:current-page="currentPage"
+			/>
 		</card>
 
 		<!-- This router view is used to show the task popup while keeping the table view itself -->
@@ -226,6 +196,7 @@ import Fancycheckbox from '../../../components/input/fancycheckbox'
 import Sort from '../../../components/tasks/partials/sort'
 import {saveListView} from '@/helpers/saveListView'
 import FilterPopup from '@/components/list/partials/filter-popup.vue'
+import Pagination from '@/components/misc/pagination.vue'
 
 export default {
 	name: 'Table',
@@ -237,6 +208,7 @@ export default {
 		Labels,
 		PriorityLabel,
 		User,
+		Pagination,
 	},
 	mixins: [
 		taskList,
