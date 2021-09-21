@@ -19,72 +19,6 @@ import Modal from './components/modal/modal'
 import './styles/vikunja.scss'
 // Notifications
 import Notifications from 'vue-notification'
-// Icons
-import {library} from '@fortawesome/fontawesome-svg-core'
-import {
-	faAlignLeft,
-	faAngleRight,
-	faBars,
-	faCalendar,
-	faCalendarWeek,
-	faCheck,
-	faCheckDouble,
-	faChevronDown,
-	faCloudDownloadAlt,
-	faCloudUploadAlt,
-	faCog,
-	faEllipsisV,
-	faExclamation,
-	faFillDrip,
-	faFilter,
-	faHistory,
-	faKeyboard,
-	faLayerGroup,
-	faList,
-	faListOl,
-	faLock,
-	faPaperclip,
-	faPaste,
-	faPen,
-	faPencilAlt,
-	faPercent,
-	faPlus,
-	faPowerOff,
-	faSearch,
-	faSignOutAlt,
-	faSort,
-	faSortUp,
-	faStar as faStarSolid,
-	faTachometerAlt,
-	faTags,
-	faTasks,
-	faTh,
-	faTimes,
-	faTrashAlt,
-	faUser,
-	faUsers,
-	faForward,
-	faChessKnight,
-	faCoffee,
-	faCocktail,
-	faEllipsisH,
-	faArchive,
-	faShareAlt,
-	faImage,
-	faBell,
-	faGripLines,
-} from '@fortawesome/free-solid-svg-icons'
-import {
-	faCalendarAlt,
-	faClock,
-	faComments,
-	faSave,
-	faStar,
-	faTimesCircle,
-	faSun,
-	faBellSlash,
-} from '@fortawesome/free-regular-svg-icons'
-import {FontAwesomeIcon} from '@fortawesome/vue-fontawesome'
 // PWA
 import './registerServiceWorker'
 
@@ -122,66 +56,7 @@ Vue.config.productionTip = false
 
 Vue.use(Notifications)
 
-library.add(faSignOutAlt)
-library.add(faPlus)
-library.add(faListOl)
-library.add(faTasks)
-library.add(faCog)
-library.add(faAngleRight)
-library.add(faLayerGroup)
-library.add(faTrashAlt)
-library.add(faUsers)
-library.add(faUser)
-library.add(faLock)
-library.add(faPen)
-library.add(faTimes)
-library.add(faTachometerAlt)
-library.add(faCalendar)
-library.add(faTimesCircle)
-library.add(faBars)
-library.add(faPowerOff)
-library.add(faCalendarWeek)
-library.add(faCalendarAlt)
-library.add(faExclamation)
-library.add(faTags)
-library.add(faChevronDown)
-library.add(faCheck)
-library.add(faPaste)
-library.add(faPencilAlt)
-library.add(faCloudDownloadAlt)
-library.add(faCloudUploadAlt)
-library.add(faPercent)
-library.add(faStar)
-library.add(faAlignLeft)
-library.add(faPaperclip)
-library.add(faClock)
-library.add(faHistory)
-library.add(faSearch)
-library.add(faCheckDouble)
-library.add(faComments)
-library.add(faTh)
-library.add(faSort)
-library.add(faSortUp)
-library.add(faList)
-library.add(faEllipsisV)
-library.add(faFilter)
-library.add(faFillDrip)
-library.add(faKeyboard)
-library.add(faSave)
-library.add(faStarSolid)
-library.add(faForward)
-library.add(faSun)
-library.add(faChessKnight)
-library.add(faCoffee)
-library.add(faCocktail)
-library.add(faEllipsisH)
-library.add(faArchive)
-library.add(faShareAlt)
-library.add(faImage)
-library.add(faBell)
-library.add(faBellSlash)
-library.add(faGripLines)
-
+import FontAwesomeIcon from './icons'
 Vue.component('icon', FontAwesomeIcon)
 
 Vue.use(vueShortkey, {prevent: ['input', 'textarea', '.input']})
