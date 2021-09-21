@@ -7348,10 +7348,10 @@ vite-plugin-vue2@1.8.2:
     source-map "^0.7.3"
     vue-template-es2015-compiler "^1.9.1"
 
-vite@2.5.6:
-  version "2.5.6"
-  resolved "https://registry.yarnpkg.com/vite/-/vite-2.5.6.tgz#51431bb5b99b041289595300ba15947bad0f89aa"
-  integrity sha512-P++qzXuOPhTql8iDamsatlJfD7/yGi8NCNwzyqkB2p0jrNJC567WEdXiKn3hQ+ZV8amQmB2dTH6svo3Z2tJ6MQ==
+vite@2.5.10:
+  version "2.5.10"
+  resolved "https://registry.yarnpkg.com/vite/-/vite-2.5.10.tgz#c598e3b5a7e1956ffc52eb3b3420d177fc2ed2a5"
+  integrity sha512-0ObiHTi5AHyXdJcvZ67HMsDgVpjT5RehvVKv6+Q0jFZ7zDI28PF5zK9mYz2avxdA+4iJMdwCz6wnGNnn4WX5Gg==
   dependencies:
     esbuild "^0.12.17"
     postcss "^8.3.6"
