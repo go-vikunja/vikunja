@@ -13,10 +13,6 @@
     display: block;
     border-radius: $radius;
 
-    -webkit-transition: all 100ms;
-    -moz-transition: all 100ms;
-    -ms-transition: all 100ms;
-    -o-transition: all 100ms;
     transition: all 100ms;
 
     &:not(:last-child) {

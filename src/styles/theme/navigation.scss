@@ -268,8 +268,6 @@
 					padding: 0.75rem .5rem 0.75rem ($navbar-padding * 1.5 - 1.75rem);
 					transition: all 0.2s ease;
 
-					-webkit-border-radius: 0;
-					-moz-border-radius: 0;
 					border-radius: 0;
 					white-space: nowrap;
 					text-overflow: ellipsis;
@@ -380,8 +378,6 @@
 		}
 
 		.avatar {
-			-webkit-border-radius: 100%;
-			-moz-border-radius: 100%;
 			border-radius: 100%;
 			vertical-align: middle;
 			height: 40px;
@@ -400,8 +396,6 @@
 
 			&:focus:not(:active), &:active {
 				outline: none !important;
-				-webkit-box-shadow: none !important;
-				-moz-box-shadow: none !important;
 				box-shadow: none !important;
 			}
 		}
