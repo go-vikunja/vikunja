@@ -518,7 +518,7 @@
       "updateSuccess": "Die Aufgabe wurde erfolgreich gespeichert.",
       "deleteSuccess": "Die Aufgabe wurde erfolgreich gelöscht.",
       "belongsToList": "Diese Aufgabe gehört zur Liste „{list}“",
-      "due": "Fällig am {at}",
+      "due": "Fällig {at}",
       "delete": {
         "header": "Diese Aufgabe löschen",
         "text1": "Willst du diese Aufgabe wirklich löschen?",
