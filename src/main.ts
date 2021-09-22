@@ -59,7 +59,7 @@ Vue.use(Notifications)
 import FontAwesomeIcon from './icons'
 Vue.component('icon', FontAwesomeIcon)
 
-Vue.use(vueShortkey, {prevent: ['input', 'textarea', '.input']})
+Vue.use(vueShortkey, {prevent: ['input', 'textarea', '.input', '[contenteditable]']})
 
 import focus from './directives/focus'
 Vue.directive('focus', focus)
