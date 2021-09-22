@@ -113,12 +113,12 @@
       "scheduledCancelSuccess": "Wir werden deinen Account nicht löschen."
     },
     "export": {
-      "title": "Export your Vikunja data",
+      "title": "Exportiere deine Vikunja-Daten",
       "description": "Du kannst eine Kopie deiner Daten bei Vikunja anfordern. Dazu gehören Namespaces, Listen, Aufgaben und alles, was damit zusammenhängt. Du kannst diese Daten dann in jeder Vikunja-Instanz über die Migrationsfunktion importieren.",
       "descriptionPasswordRequired": "Bitte gib dein Passwort ein, um fortzufahren:",
       "request": "Eine Kopie meiner Vikunja Daten anfordern",
       "success": "Du hast deine Daten bei Vikunja erfolgreich angefordert! Wir schicken dir eine E-Mail, sobald sie zum Download bereitstehen.",
-      "downloadTitle": "Download your exported Vikunja data"
+      "downloadTitle": "Lade deine exportierten Vikunja-Daten herunter"
     }
   },
   "list": {

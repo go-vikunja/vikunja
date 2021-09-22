@@ -28,7 +28,7 @@
       "passwordPlaceholder": "p. ex. •••••••••••",
       "resetPassword": "Réinitialiser ton mot de passe",
       "resetPasswordAction": "M’envoyer un lien de réinitialisation du mot de passe",
-      "resetPasswordSuccess": "Check your inbox! You should have an e-mail with instructions on how to reset your password.",
+      "resetPasswordSuccess": "Vérifie ta boîte de réception ! Tu devrais avoir un courriel contenant les instructions sur la manière de réinitialiser ton mot de passe.",
       "passwordsDontMatch": "Les mots de passe ne correspondent pas",
       "confirmEmailSuccess": "Tu peux maintenant te connecter en utilisant ton adresse courriel.",
       "totpTitle": "Code d’authentification à deux facteurs",
@@ -38,7 +38,7 @@
       "loginWith": "Se connecter avec {provider}",
       "authenticating": "Authentification…",
       "openIdStateError": "L’état ne correspond pas, impossible de continuer !",
-      "openIdGeneralError": "An error occured while authenticating against the third party.",
+      "openIdGeneralError": "Une erreur s'est produite lors de l'authentification contre un tiers.",
       "logout": "Se déconnecter"
     },
     "settings": {
@@ -99,26 +99,26 @@
       }
     },
     "deletion": {
-      "title": "Delete your Vikunja Account",
-      "text1": "The deletion of your account is permanent and cannot be undone. We will delete all your namespaces, lists, tasks and everything associated with it.",
-      "text2": "To proceed, please enter your password. You will receive an email with further instructions.",
-      "confirm": "Delete my account",
-      "requestSuccess": "The request was successful. You'll receive an email with further instructions.",
-      "passwordRequired": "Please enter your password.",
-      "confirmSuccess": "You've successfully confirmed the deletion of your account. We will delete your account in three days.",
-      "scheduled": "We will delete your Vikunja account at {date} ({dateSince}).",
-      "scheduledCancel": "To cancel the deletion of your account, click here.",
-      "scheduledCancelText": "To cancel the deletion of your account, please enter your password below:",
-      "scheduledCancelConfirm": "Cancel the deletion of my account",
-      "scheduledCancelSuccess": "We will not delete your account."
+      "title": "Supprimer ton compte Vikunja",
+      "text1": "La suppression de ton compte est permanente et ne peut pas être annulée. Nous supprimerons tous tes espaces de noms, listes, tâches et tout ce qui y est associés.",
+      "text2": "Pour continuer, entre ton mot de passe. Tu recevras un courriel contenant les instructions suivantes.",
+      "confirm": "Supprimer mon compte",
+      "requestSuccess": "La demande a réussi. Tu recevras un courriel avec des instructions supplémentaires.",
+      "passwordRequired": "Entre ton mot de passe.",
+      "confirmSuccess": "Tu as confirmé avec succès la suppression de ton compte. Nous allons supprimer ton compte dans trois jours.",
+      "scheduled": "Nous allons supprimer ton compte Vikunja le {date} ({dateSince}).",
+      "scheduledCancel": "Pour annuler la suppression de ton compte, clique ici.",
+      "scheduledCancelText": "Pour annuler la suppression de ton compte, entre ton mot de passe ci-dessous :",
+      "scheduledCancelConfirm": "Annuler la suppression de mon compte",
+      "scheduledCancelSuccess": "Nous ne supprimerons pas ton compte."
     },
     "export": {
-      "title": "Export your Vikunja data",
-      "description": "You can request a copy of all your Vikunja data. This include Namespaces, Lists, Tasks and everything associated to them. You can import this data in any Vikunja instance through the migration function.",
-      "descriptionPasswordRequired": "Please enter your password to proceed:",
-      "request": "Request a copy of my Vikunja Data",
-      "success": "You've successfully requested your Vikunja Data! We will send you an email once it's ready to download.",
-      "downloadTitle": "Download your exported Vikunja data"
+      "title": "Exporter tes données Vikunja",
+      "description": "Tu peux demander une copie de toutes tes données de Vikunja. Ceci inclut les espaces de noms, les listes, les tâches et tout ce qui leur est associé. Tu peux importer ces données dans n'importe quelle instance de Vikunja par le biais de la fonction migration.",
+      "descriptionPasswordRequired": "Entre ton mot de passe pour continuer :",
+      "request": "Demander une copie de mes données Vikunja",
+      "success": "Tu as bien demandé tes données Vikunja ! Nous t'enverrons un courriel dès qu'elles seront prêtes à être téléchargées.",
+      "downloadTitle": "Télécharger tes données exportées de Vikunja"
     }
   },
   "list": {
@@ -380,8 +380,8 @@
     "alreadyMigrated1": "Il semble que tu aies déjà importé tes affaires de {name} le {date}.",
     "alreadyMigrated2": "Importer à nouveau est possible mais peut créer des doublons. Es-tu sûr·e ?",
     "confirm": "Je suis sûr·e, commencer à migrer maintenant !",
-    "importUpload": "To import data from {name} into Vikunja, click the button below to select a file.",
-    "upload": "Upload file"
+    "importUpload": "Pour importer les données de {name} dans Vikunja, clique sur le bouton ci-dessous pour sélectionner un fichier.",
+    "upload": "Téléverser le fichier"
   },
   "label": {
     "title": "Étiquettes",
@@ -443,7 +443,7 @@
     "saved": "Enregistré !",
     "default": "Par défaut",
     "close": "Fermer",
-    "download": "Download"
+    "download": "Télécharger"
   },
   "input": {
     "resetColor": "Réinitialiser la couleur",
@@ -539,8 +539,8 @@
         "moveList": "Déplacer la tâche",
         "color": "Définir la couleur de la tâche",
         "delete": "Supprimer la tâche",
-        "favorite": "Save as favorite",
-        "unfavorite": "Remove from favorites"
+        "favorite": "Enregistrer comme favori",
+        "unfavorite": "Retirer des favoris"
       }
     },
     "attributes": {
