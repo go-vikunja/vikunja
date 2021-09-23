@@ -46,6 +46,8 @@
 </template>
 
 <script>
+import { parseURL } from 'ufo'
+
 const API_DEFAULT_PORT = 3456
 
 export default {
@@ -65,13 +67,7 @@ export default {
 	},
 	computed: {
 		apiDomain() {
-			if (window.API_URL.startsWith('/api/v1')) {
-				return window.location.host
-			}
-			const urlParts = window.API_URL.replace('http://', '')
-				.replace('https://', '')
-				.split(/[/?#]/)
-			return urlParts[0]
+			return parseURL(this.apiUrl).host
 		},
 	},
 	methods: {
