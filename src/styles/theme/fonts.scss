@@ -1,14 +1,5 @@
 $font-files-path: '/fonts/';
 
-/* quicksand-300 - latin */
-@font-face {
-  font-family: 'Quicksand';
-  font-style: normal;
-  font-weight: 300;
-  font-display: swap;
-  src: url($font-files-path + 'quicksand-v7-latin-300.woff2') format('woff2');
-}
-
 /* quicksand-regular - latin */
 @font-face {
   font-family: 'Quicksand';
