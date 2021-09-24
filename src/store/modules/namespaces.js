@@ -14,11 +14,15 @@ export default {
 		},
 		setNamespaceById(state, namespace) {
 			const namespaceIndex = state.namespaces.findIndex(n => n.id === namespace.id)
-			
+
 			if (namespaceIndex === -1) {
 				return
 			}
-			
+
+			if (!namespace.lists || namespace.lists.length === 0) {
+				namespace.lists = state.namespaces[namespaceIndex].lists
+			}
+
 			Vue.set(state.namespaces, namespaceIndex, namespace)
 		},
 		setListInNamespaceById(state, list) {
