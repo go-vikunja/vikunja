@@ -107,6 +107,5 @@ export default {
 				this.loadTasks(1, '', null, true)
 			}
 		},
-		getRouteForPagination,
 	},
 }
