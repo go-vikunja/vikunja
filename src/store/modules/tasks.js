@@ -58,12 +58,11 @@ export default {
 		// This is an action to be able to commit other mutations
 		addTaskAttachment(ctx, {taskId, attachment}) {
 			const t = ctx.rootGetters['kanban/getTaskById'](taskId)
-			if (t.task === null) {
-				ctx.commit('attachments/add', attachment, {root: true})
-				return
+			if (t.task !== null) {
+				const newTask = { ...t }
+				newTask.task.attachments.push(attachment)
+				ctx.commit('kanban/setTaskInBucketByIndex', newTask, {root: true})
 			}
-			t.task.attachments.push(attachment)
-			ctx.commit('kanban/setTaskInBucketByIndex', t, {root: true})
 			ctx.commit('attachments/add', attachment, {root: true})
 		},
 		addAssignee(ctx, {user, taskId}) {

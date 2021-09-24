@@ -436,12 +436,13 @@ import Comments from '../../components/tasks/partials/comments'
 import ListSearch from '../../components/tasks/partials/listSearch'
 import description from '@/components/tasks/partials/description.vue'
 import ColorPicker from '../../components/input/colorPicker'
-import attachmentUpload from '../../components/tasks/mixins/attachmentUpload'
 import heading from '@/components/tasks/partials/heading.vue'
 import Datepicker from '@/components/input/datepicker.vue'
 import {playPop} from '@/helpers/playPop'
 import TaskSubscription from '@/components/misc/subscription.vue'
 import {CURRENT_LIST} from '@/store/mutation-types'
+
+import {uploadFile} from '@/helpers/attachments'
 
 export default {
 	name: 'TaskDetailView',
@@ -462,9 +463,6 @@ export default {
 		description,
 		heading,
 	},
-	mixins: [
-		attachmentUpload,
-	],
 	data() {
 		return {
 			taskId: Number(this.$route.params.id),
@@ -552,6 +550,10 @@ export default {
 		},
 	},
 	methods: {
+		attachmentUpload(...args) {
+			return uploadFile(this.taskId, ...args)
+		},
+
 		loadTask() {
 			this.taskId = Number(this.$route.params.id)
 			this.taskService.get({id: this.taskId})

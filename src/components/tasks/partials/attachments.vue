@@ -138,19 +138,16 @@
 import AttachmentService from '../../../services/attachment'
 import AttachmentModel from '../../../models/attachment'
 import User from '../../misc/user'
-import attachmentUpload from '@/components/tasks/mixins/attachmentUpload'
-import {generateAttachmentUrl} from '@/helpers/generateAttachmentUrl'
 import {mapState} from 'vuex'
 import copy from 'copy-to-clipboard'
+
+import { uploadFiles, generateAttachmentUrl } from '@/helpers/attachments'
 
 export default {
 	name: 'attachments',
 	components: {
 		User,
 	},
-	mixins: [
-		attachmentUpload,
-	],
 	data() {
 		return {
 			attachmentService: AttachmentService,
@@ -221,7 +218,7 @@ export default {
 			this.uploadFiles(this.$refs.files.files)
 		},
 		uploadFiles(files) {
-			this.createAttachment(this.attachmentService, files)
+			uploadFiles(this.attachmentService, this.taskId, files)
 		},
 		deleteAttachment() {
 			this.attachmentService

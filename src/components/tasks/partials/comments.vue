@@ -151,9 +151,9 @@
 <script>
 import TaskCommentService from '../../../services/taskComment'
 import TaskCommentModel from '../../../models/taskComment'
-import attachmentUpload from '../mixins/attachmentUpload'
 import LoadingComponent from '../../misc/loading'
 import ErrorComponent from '../../misc/error'
+import { uploadFile } from '@/helpers/attachments'
 
 export default {
 	name: 'comments',
@@ -165,7 +165,6 @@ export default {
 			timeout: 60000,
 		}),
 	},
-	mixins: [attachmentUpload],
 	props: {
 		taskId: {
 			type: Number,
@@ -222,6 +221,10 @@ export default {
 		},
 	},
 	methods: {
+		attachmentUpload(...args) {
+			return uploadFile(this.taskId, ...args)
+		},
+
 		loadComments() {
 			this.taskCommentService
 				.getAll({taskId: this.taskId})
