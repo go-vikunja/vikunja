@@ -665,7 +665,7 @@
       "label4": "Zum Beispiel: {prefix}\"Label mit Leerzeichen\".",
       "priority1": "Um die Priorität einer Aufgabe zu setzen, gibt eine Zahl zwischen 1 und 5 mit einem vorangestellten {prefix} ein.",
       "priority2": "Je höher die Zahl, desto höher die Priorität.",
-      "assignees": "Um die Aufgabe direkt jemandem zuzuweisen, füge vor dem Anmeldenamen der Person ein @ Zeichen ein.",
+      "assignees": "Um die Aufgabe direkt jemandem zuzuweisen, füge vor dem Anmeldenamen der Person ein {prefix} Zeichen ein.",
       "list1": "Um eine Liste zu erstellen, in der die Aufgabe erscheinen soll, gib ihren Namen vorangestellt mit einem {prefix} ein.",
       "list2": "Dies gibt einen Fehler zurück, wenn die Liste nicht existiert.",
       "dateAndTime": "Datum und Uhrzeit",

@@ -665,7 +665,7 @@
       "label4": "Par exemple : {prefix}\"Étiquette avec espaces\".",
       "priority1": "Pour définir la priorité d’une tâche, ajoutez un chiffre de 1 à 5, précédé d’un {prefix}.",
       "priority2": "Plus le numéro est élevé, plus la priorité est élevée.",
-      "assignees": "Pour attribuer directement la tâche à une personne, ajoutez son nom d’utilisateur préfixé par @ à la tâche.",
+      "assignees": "To directly assign the task to a user, add their username prefixed with {prefix} to the task.",
       "list1": "Pour définir une liste dans laquelle la tâche doit apparaître, entrez son nom précédé de {prefix}.",
       "list2": "Ceci renverra une erreur si la liste n’existe pas.",
       "dateAndTime": "Date et heure",

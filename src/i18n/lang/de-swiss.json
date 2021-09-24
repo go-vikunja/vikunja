@@ -665,7 +665,7 @@
       "label4": "Zum Blaistift: {prefix}\"Label mit Leerschlag\".",
       "priority1": "Um e Task Priorität z'setze: füeg e nummere zwüsched 1 und 5, mit em {prefix} als Prefix iih.",
       "priority2": "Je höher d'nummere, desto höher d'Priorität.",
-      "assignees": "To directly assign the task to a user, add their username prefixed with {prefix} to the task.",
+      "assignees": "Um die Aufgabe direkt jemandem zuzuweisen, füge vor dem Anmeldenamen der Person ein {prefix} Zeichen ein.",
       "list1": "Um e Liste ahzgeh, wo de Task drin erschiine set, gib de name vo de liste mit emne {prefix} ah.",
       "list2": "Das wird en Fehler werfe, wenn d'Liste nid existiert.",
       "dateAndTime": "Datum und Ziit",
