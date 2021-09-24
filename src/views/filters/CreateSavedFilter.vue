@@ -1,12 +1,8 @@
 <template>
-	<div class="modal-mask hint-modal">
-		<div
-			class="modal-container"
-			@click.self="$router.back()"
-			@shortkey="$router.back()"
-			v-shortkey="['esc']"
-		>
-			<div class="modal-content">
+	<modal
+		@close="$router.back()"
+		variant="hint-modal"
+	>
 				<card class="has-background-white has-no-shadow" :title="$t('filters.create.title')">
 					<p>
 						{{ $t('filters.create.description') }}
@@ -60,9 +56,7 @@
 						{{ $t('filters.create.action') }}
 					</x-button>
 				</card>
-			</div>
-		</div>
-	</div>
+	</modal>
 </template>
 
 <script>

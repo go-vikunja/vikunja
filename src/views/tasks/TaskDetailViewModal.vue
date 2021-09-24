@@ -1,19 +1,13 @@
 <template>
-	<div class="modal-mask">
-		<div
-			class="modal-container"
-			@mousedown.self="close()"
-			v-shortkey="['esc']"
-			@shortkey="close()"
-		>
-			<div class="scrolling-content">
+	<modal
+		@close="close()"
+		variant="scrolling"
+	>
 				<a @click="close()" class="close">
 					<icon icon="times"/>
 				</a>
 				<task-detail-view/>
-			</div>
-		</div>
-	</div>
+	</modal>
 </template>
 
 <script>
@@ -53,3 +47,17 @@ export default {
 	},
 }
 </script>
+
+<style lang="scss" scoped>
+.close {
+	position: fixed;
+	top: 5px;
+	right: 26px;
+	color: $white;
+	font-size: 2rem;
+
+	@media screen and (max-width: $desktop) {
+		display: none;
+	}
+}
+</style>

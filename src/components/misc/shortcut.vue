@@ -1,8 +1,8 @@
 <template>
 	<span class="shortcuts">
 		<template v-for="(k, i) in keys">
-			<span :key="i">{{ k }}</span>
-			<i v-if="i < keys.length - 1" :key="`plus${i}`">+</i>
+			<kbd :key="i">{{ k }}</kbd>
+			<span v-if="i < keys.length - 1" :key="`plus${i}`">+</span>
 		</template>
 	</span>
 </template>
@@ -18,3 +18,22 @@ export default {
 	},
 }
 </script>
+
+<style lang="scss" scoped>
+.shortcuts {
+	display: flex;
+	align-items: center;
+}
+
+kbd {
+	padding: .1rem .35rem;
+	border: 1px solid $grey-300;
+	background: $grey-100;
+	border-radius: 3px;
+	font-size: .75rem;
+}
+
+span {
+	padding: 0 .25rem;
+}
+</style>

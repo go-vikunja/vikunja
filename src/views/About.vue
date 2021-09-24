@@ -1,14 +1,10 @@
 <template>
-	<transition name="fade">
-		<div class="modal-mask hint-modal">
-			<div
-				class="modal-container"
-				@click.self="$router.back()"
-				@shortkey="$router.back()"
-				v-shortkey="['esc']"
-			>
-				<div class="modal-content">
-					<card
+	<modal
+		@close="$router.back()"
+		transition-name="fade"
+		variant="hint-modal"
+	>
+		<card
 						class="has-background-white has-no-shadow"
 						:title="$t('about.title')"
 						:has-close="true"
@@ -33,10 +29,8 @@
 							</x-button>
 						</footer>
 					</card>
-				</div>
-			</div>
-		</div>
-	</transition>
+	</modal>
+
 </template>
 
 <script>

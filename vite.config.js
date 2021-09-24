@@ -5,12 +5,14 @@ const {visualizer} = require('rollup-plugin-visualizer')
 
 const pathSrc = path.resolve(__dirname, './src')
 
+// the @use rules have to be the first in the compiled stylesheets
+const SCSS_IMPORT_PREFIX = `@use "sass:math";
+@import "${pathSrc}/styles/variables";`
+
 module.exports = {
 	css: {
 		preprocessorOptions: {
-			scss: {
-				additionalData: `@import "${pathSrc}/styles/variables/_all.scss";`,
-			},
+			scss: { additionalData: SCSS_IMPORT_PREFIX },
 		},
 	},
 	plugins: [

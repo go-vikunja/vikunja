@@ -1,4 +1,2 @@
-@use "sass:math";
-
 // Variables that are derived from bulma variables need to be included after them
 $mobile: math.div($tablet, 2);

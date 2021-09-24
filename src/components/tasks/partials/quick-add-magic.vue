@@ -4,10 +4,13 @@
 			{{ $t('task.quickAddMagic.hint') }}.
 			<a @click="() => visible = true">{{ $t('task.quickAddMagic.what') }}</a>
 		</p>
-		<transition name="fade">
-			<div class="modal-mask hint-modal" v-if="visible">
-				<div @click.self="() => visible = false" class="modal-container">
-					<div class="modal-content">
+		<modal
+			@close="() => visible = false"
+			:enabled="visible"
+			transition-name="fade"
+			:overflow="true"
+			variant="hint-modal"
+		>
 						<card class="has-background-white has-no-shadow" :title="$t('task.quickAddMagic.title')">
 							<p>{{ $t('task.quickAddMagic.intro') }}</p>
 
@@ -63,10 +66,7 @@
 							</ul>
 							<p>{{ $t('task.quickAddMagic.dateTime', {time: 'at 17:00', timePM: '5pm'}) }}</p>
 						</card>
-					</div>
-				</div>
-			</div>
-		</transition>
+		</modal>
 	</div>
 </template>
 

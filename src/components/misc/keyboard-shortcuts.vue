@@ -1,7 +1,5 @@
 <template>
-	<div class="modal-mask hint-modal">
-		<div @click.self="close()" class="modal-container">
-			<div class="modal-content">
+	<modal @close="close()">
 				<card class="has-background-white has-no-shadow" :title="$t('keyboardShortcuts.title')">
 					<div class="message is-primary">
 						<div class="message-body">
@@ -55,9 +53,7 @@
 						<shortcut :keys="['r']"/>
 					</p>
 				</card>
-			</div>
-		</div>
-	</div>
+	</modal>
 </template>
 
 <script>
