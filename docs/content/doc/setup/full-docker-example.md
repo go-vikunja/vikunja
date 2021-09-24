@@ -44,6 +44,55 @@ services:
     image: redis
 {{< /highlight >}}
 
+## Example without any proxy
+
+This example lets you host Vikunja without any reverse proxy in front of it. This is the absolute minimum configuration 
+you need to get something up and running. If you want to host Vikunja on one single port instead of two different ones 
+or need tls termination, check out one of the other examples.
+
+Not that you need to change the `VIKUNJA_API_URL` environment variable to the ip (the docker host you're running this on) 
+is reachable at. Because the browser you'll use to access the Vikunja frontend uses that url to make the requests, it 
+has to be able to reach that ip + port from the outside. Putting everything in a private network won't work.
+
+{{< highlight yaml >}}
+version: '3'
+
+services:
+  db:
+    image: mariadb:10
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_ROOT_PASSWORD: supersecret
+      MYSQL_USER: vikunja
+      MYSQL_PASSWORD: secret
+      MYSQL_DATABASE: vikunja
+    volumes:
+      - ./db:/var/lib/mysql
+    restart: unless-stopped
+  api:
+    image: vikunja/api
+    environment:
+      VIKUNJA_DATABASE_HOST: db
+      VIKUNJA_DATABASE_PASSWORD: secret
+      VIKUNJA_DATABASE_TYPE: mysql
+      VIKUNJA_DATABASE_USER: vikunja
+      VIKUNJA_DATABASE_DATABASE: vikunja
+    ports:
+      - 3456:3456
+    volumes:
+      - ./files:/app/vikunja/files
+    depends_on:
+      - db
+    restart: unless-stopped
+  frontend:
+    image: vikunja/frontend
+    ports:
+      - 80:80
+    environment:
+      VIKUNJA_API_URL: http://<your-ip-here>:3456/
+    restart: unless-stopped
+{{< /highlight >}}
+
 ## Example with traefik 2
 
 This example assumes [traefik](https://traefik.io) version 2 installed and configured to [use docker as a configuration provider](https://docs.traefik.io/providers/docker/).
