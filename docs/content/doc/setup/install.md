@@ -50,4 +50,4 @@ A third-party Helm Chart is available from the k8s-at-home project [here](https:
 * [Setup Vikunja using Docker Compose - Homelab Wiki](https://thehomelab.wiki/books/docker/page/setup-vikunja-using-docker-compose)
 * [A Closer look at Vikunja - Email Notifications - Enable or Disable Registrations - Allow Attachments](https://www.youtube.com/watch?v=47wj9pRT6Gw) (Youtube)
 * [Install Vikunja in Docker for self-hosted Task Tracking](https://smarthomepursuits.com/install-vikunja-in-docker-for-self-hosted-task-tracking/)
-
+* [Self-Hosted To-Do List with Vikunja in Docker](https://www.youtube.com/watch?v=DqyqDWpEvKI) (Youtube)
