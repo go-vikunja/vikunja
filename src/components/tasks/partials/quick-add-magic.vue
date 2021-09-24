@@ -30,7 +30,7 @@
 
 							<h3>{{ $t('task.attributes.assignees') }}</h3>
 							<p>
-								{{ $t('task.quickAddMagic.assignees') }}
+								{{ $t('task.quickAddMagic.assignees', {prefix: '+'}) }}
 								{{ $t('task.quickAddMagic.multiple') }}
 							</p>
 

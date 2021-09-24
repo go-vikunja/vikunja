@@ -665,7 +665,7 @@
       "label4": "For example: {prefix}\"Label with spaces\".",
       "priority1": "To set a task's priority, add a number 1-5, prefixed with a {prefix}.",
       "priority2": "The higher the number, the higher the priority.",
-      "assignees": "To directly assign the task to a user, add their username prefixed with @ to the task.",
+      "assignees": "To directly assign the task to a user, add their username prefixed with {prefix} to the task.",
       "list1": "To set a list for the task to appear in, enter its name prefixed with {prefix}.",
       "list2": "This will return an error if the list does not exist.",
       "dateAndTime": "Date and time",
