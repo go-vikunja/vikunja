@@ -74,9 +74,19 @@ var (
 	}
 )
 
+func runCmdWithOutput(name string, arg ...string) (output []byte, err error) {
+	cmd := exec.Command(name, arg...)
+	output, err = cmd.Output()
+	if err != nil {
+		ee := err.(*exec.ExitError)
+		return nil, fmt.Errorf("error running command: %s, %s", string(ee.Stderr), err)
+	}
+
+	return output, nil
+}
+
 func setVersion() {
-	versionCmd := exec.Command("git", "describe", "--tags", "--always", "--abbrev=10")
-	version, err := versionCmd.Output()
+	version, err := runCmdWithOutput("git", "describe", "--tags", "--always", "--abbrev=10")
 	if err != nil {
 		fmt.Printf("Error getting version: %s\n", err)
 		os.Exit(1)
@@ -117,8 +127,7 @@ func setExecutable() {
 }
 
 func setApiPackages() {
-	cmd := exec.Command("go", "list", "all")
-	pkgs, err := cmd.Output()
+	pkgs, err := runCmdWithOutput("go", "list", "all")
 	if err != nil {
 		fmt.Printf("Error getting packages: %s\n", err)
 		os.Exit(1)
@@ -145,8 +154,7 @@ func setRootPath() {
 
 func setGoFiles() {
 	// GOFILES := $(shell find . -name "*.go" -type f ! -path "*/bindata.go")
-	cmd := exec.Command("find", ".", "-name", "*.go", "-type", "f", "!", "-path", "*/bindata.go")
-	files, err := cmd.Output()
+	files, err := runCmdWithOutput("find", ".", "-name", "*.go", "-type", "f", "!", "-path", "*/bindata.go")
 	if err != nil {
 		fmt.Printf("Error getting go files: %s\n", err)
 		os.Exit(1)
