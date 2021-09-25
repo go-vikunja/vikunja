@@ -13,9 +13,10 @@
     "resolveJsonModule": true,
     "sourceMap": true,
     "baseUrl": ".",
+    "isolatedModules": true,
     "types": [
-      "webpack-env",
-      "jest"
+      "jest",
+      "vite/client"
     ],
     "paths": {
       "@/*": [
