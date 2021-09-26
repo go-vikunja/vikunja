@@ -417,6 +417,7 @@ export default {
 					for (const check of textCheckbox) {
 						check.removeEventListener('change', this.handleCheckboxClick)
 						check.addEventListener('change', this.handleCheckboxClick)
+						check.parentElement.classList.add('has-checkbox')
 					}
 				}
 			})
@@ -470,8 +471,15 @@ export default {
 	.preview.content {
 		margin-bottom: .5rem;
 
-		ul li input[type="checkbox"] {
-			margin-right: .5rem;
+		ul li {
+			input[type="checkbox"] {
+				margin-right: .5rem;
+			}
+			
+			&.has-checkbox {
+				margin-left: -2em;
+				list-style: none;
+			}
 		}
 	}
 }
