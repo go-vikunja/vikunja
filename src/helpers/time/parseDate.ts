@@ -222,7 +222,7 @@ export const getDateFromTextIn = (text: string, now: Date = new Date()) => {
 }
 
 const getDateFromWeekday = (text: string): dateFoundResult => {
-	const matcher: RegExp = / (mon|monday|tue|tuesday|wed|wednesday|thu|thursday|fri|friday|sat|saturday|sun|sunday)/ig
+	const matcher: RegExp = / (next )?(monday|mon|tuesday|tue|wednesday|wed|thursday|thu|friday|fri|saturday|sat|sunday|sun)/ig
 	const results: string[] | null = matcher.exec(text)
 	if (results === null) {
 		return {
@@ -235,7 +235,7 @@ const getDateFromWeekday = (text: string): dateFoundResult => {
 	const currentDay: number = date.getDay()
 	let day: number = 0
 
-	switch (results[1]) {
+	switch (results[2]) {
 		case 'mon':
 		case 'monday':
 			day = 1
@@ -275,7 +275,7 @@ const getDateFromWeekday = (text: string): dateFoundResult => {
 	date.setDate(date.getDate() + distance)
 
 	return {
-		foundText: results[1],
+		foundText: results[0],
 		date: date,
 	}
 }

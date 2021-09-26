@@ -207,6 +207,48 @@ describe('Parse Task Text', () => {
 			expect(result.date).toBeNull()
 		})
 
+		describe('Parse weekdays', () => {
+
+			const days = {
+				'mon': 1,
+				'monday': 1,
+				'tue': 2,
+				'tuesday': 2,
+				'wed': 3,
+				'wednesday': 3,
+				'thu': 4,
+				'thursday': 4,
+				'fri': 5,
+				'friday': 5,
+				'sat': 6,
+				'saturday': 6,
+				'sun': 7,
+				'sunday': 7,
+			}
+
+			const prefix = [
+				'next ',
+				'',
+			]
+
+			prefix.forEach(p => {
+				for (const d in days) {
+					it(`should recognize ${p}${d}`, () => {
+						const result = parseTaskText(`Lorem Ipsum ${p}${d}`)
+
+						const next = new Date()
+						const distance = (days[d] + 7 - next.getDay()) % 7
+						next.setDate(next.getDate() + distance)
+
+						expect(result.text).toBe('Lorem Ipsum')
+						expect(result.date.getFullYear()).toBe(next.getFullYear())
+						expect(result.date.getMonth()).toBe(next.getMonth())
+						expect(result.date.getDate()).toBe(next.getDate())
+					})
+				}
+			})
+		})
+
 		describe('Parse date from text', () => {
 			const now = new Date()
 			now.setFullYear(2021, 5, 24)
