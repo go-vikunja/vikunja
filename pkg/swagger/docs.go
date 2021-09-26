@@ -9020,6 +9020,9 @@ var doc = `{
                 "task_attachments_enabled": {
                     "type": "boolean"
                 },
+                "task_comments_enabled": {
+                    "type": "boolean"
+                },
                 "totp_enabled": {
                     "type": "boolean"
                 },
