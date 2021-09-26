@@ -354,6 +354,11 @@ export default {
 			}
 		},
 		doCmd() {
+			if (this.results.length === 1 && this.results[0].items.length === 1) {
+				this.doAction(this.results[0].type, this.results[0].items[0])
+				return
+			}
+			
 			if (this.selectedCmd === null) {
 				return
 			}
