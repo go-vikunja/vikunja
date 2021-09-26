@@ -41,7 +41,7 @@ require (
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/iancoleman/strcase v0.2.0
 	github.com/imdario/mergo v0.3.12
-	github.com/labstack/echo/v4 v4.6.0
+	github.com/labstack/echo/v4 v4.6.1
 	github.com/labstack/gommon v0.3.0
 	github.com/laurent22/ical-go v0.1.1-0.20181107184520-7e5d6ade8eef
 	github.com/lib/pq v1.10.3
