@@ -1,8 +1,8 @@
 import {createDateFromString} from '@/helpers/time/createDateFromString'
 import {format, formatDistance} from 'date-fns'
-import {enGB, de} from 'date-fns/locale'
+import {enGB, de, fr, ru} from 'date-fns/locale'
 
-const locales = {enGB, de}
+const locales = {en: enGB, de, ch: de, fr, ru}
 
 const dateIsValid = date => {
 	if (date === null) {
