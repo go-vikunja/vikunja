@@ -222,7 +222,7 @@ export const getDateFromTextIn = (text: string, now: Date = new Date()) => {
 }
 
 const getDateFromWeekday = (text: string): dateFoundResult => {
-	const matcher: RegExp = / (next )?(monday|mon|tuesday|tue|wednesday|wed|thursday|thu|friday|fri|saturday|sat|sunday|sun)/ig
+	const matcher: RegExp = / (next )?(monday|mon|tuesday|tue|wednesday|wed|thursday|thu|friday|fri|saturday|sat|sunday|sun)($| )/ig
 	const results: string[] | null = matcher.exec(text)
 	if (results === null) {
 		return {
@@ -274,8 +274,15 @@ const getDateFromWeekday = (text: string): dateFoundResult => {
 	const distance: number = (day + 7 - currentDay) % 7
 	date.setDate(date.getDate() + distance)
 
+	// This a space at the end of the found text to not break parsing suffix strings like "at 14:00" in cases where the 
+	// matched string comes with a space at the end (last part of the regex).
+	let foundText = results[0]
+	if (foundText.endsWith(' ')) {
+		foundText = foundText.substr(0, foundText.length - 1)
+	}
+	
 	return {
-		foundText: results[0],
+		foundText: foundText,
 		date: date,
 	}
 }

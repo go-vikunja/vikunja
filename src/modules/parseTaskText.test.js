@@ -247,6 +247,32 @@ describe('Parse Task Text', () => {
 					})
 				}
 			})
+
+			// This tests only standalone days are recognized and not things like "github", "monitor" or "renewed".
+			// We're not using real words here to generate tests for all days on the fly.
+			for (const d in days) {
+				it(`should not recognize ${d} with a space before it but none after it`, () => {
+					const text = `Lorem Ipsum ${d}ipsum`
+					const result = parseTaskText(text)
+
+					expect(result.text).toBe(text)
+					expect(result.date).toBeNull()
+				})
+				it(`should not recognize ${d} with a space after it but none before it`, () => {
+					const text = `Lorem ipsum${d} dolor`
+					const result = parseTaskText(text)
+
+					expect(result.text).toBe(text)
+					expect(result.date).toBeNull()
+				})
+				it(`should not recognize ${d} with no space before or after it`, () => {
+					const text = `Lorem Ipsum lorem${d}ipsum`
+					const result = parseTaskText(text)
+
+					expect(result.text).toBe(text)
+					expect(result.date).toBeNull()
+				})
+			}
 		})
 
 		describe('Parse date from text', () => {
