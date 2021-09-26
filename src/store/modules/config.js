@@ -25,6 +25,7 @@ export default {
 		},
 		caldavEnabled: false,
 		userDeletionEnabled: true,
+		taskCommentsEnabled: true,
 		auth: {
 			local: {
 				enabled: true,
@@ -52,6 +53,7 @@ export default {
 			state.legal.privacyPolicyUrl = config.legal.privacy_policy_url
 			state.caldavEnabled = config.caldav_enabled
 			state.userDeletionEnabled = config.user_deletion_enabled
+			state.taskCommentsEnabled = config.task_comments_enabled
 			const auth = objectToCamelCase(config.auth)
 			state.auth.local.enabled = auth.local.enabled
 			state.auth.openidConnect.enabled = auth.openidConnect.enabled

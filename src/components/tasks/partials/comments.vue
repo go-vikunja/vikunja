@@ -1,5 +1,5 @@
 <template>
-	<div class="content details">
+	<div class="content details" v-if="enabled">
 		<h3 v-if="canWrite || comments.length > 0">
 			<span class="icon is-grey">
 				<icon :icon="['far', 'comments']"/>
@@ -139,10 +139,12 @@
 				v-if="showDeleteModal"
 			>
 				<template #header><span>{{ $t('task.comment.delete') }}</span></template>
-				
+
 				<template #text>
-					<p>{{ $t('task.comment.deleteText1') }}<br/>
-					<strong>{{ $t('task.comment.deleteText2') }}</strong></p>
+					<p>
+						{{ $t('task.comment.deleteText1') }}<br/>
+						<strong>{{ $t('task.comment.deleteText2') }}</strong>
+					</p>
 				</template>
 			</modal>
 		</transition>
@@ -154,7 +156,8 @@ import TaskCommentService from '../../../services/taskComment'
 import TaskCommentModel from '../../../models/taskComment'
 import LoadingComponent from '../../misc/loading'
 import ErrorComponent from '../../misc/error'
-import { uploadFile } from '@/helpers/attachments'
+import {uploadFile} from '@/helpers/attachments'
+import {mapState} from 'vuex'
 
 export default {
 	name: 'comments',
@@ -198,6 +201,10 @@ export default {
 	watch: {
 		taskId: {
 			handler(taskId) {
+				if (!this.enabled) {
+					return
+				}
+
 				this.loadComments()
 				this.newComment.taskId = taskId
 				this.commentEdit.taskId = taskId
@@ -209,11 +216,10 @@ export default {
 			this.makeActions()
 		},
 	},
-	computed: {
-		userAvatar() {
-			return this.$store.state.auth.info.getAvatarUrl(48)
-		},
-	},
+	computed: mapState({
+		userAvatar: state => state.auth.info.getAvatarUrl(48),
+		enabled: state => state.config.taskCommentsEnabled,
+	}),
 	methods: {
 		attachmentUpload(...args) {
 			return uploadFile(this.taskId, ...args)
