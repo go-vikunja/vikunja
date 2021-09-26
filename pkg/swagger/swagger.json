@@ -7388,8 +7388,7 @@
                     "type": "string"
                 },
                 "info": {
-                    "description": "This can be used to supply extra information from an image provider to clients",
-                    "type": "object"
+                    "description": "This can be used to supply extra information from an image provider to clients"
                 },
                 "thumb": {
                     "type": "string"
@@ -7539,7 +7538,9 @@
                 "updated": {
                     "description": "A timestamp when this bucket was last updated. You cannot change this value.",
                     "type": "string"
-                }
+                },
+                "web.CRUDable": {},
+                "web.Rights": {}
             }
         },
         "models.BulkAssignees": {
@@ -7551,7 +7552,9 @@
                     "items": {
                         "$ref": "#/definitions/user.User"
                     }
-                }
+                },
+                "web.CRUDable": {},
+                "web.Rights": {}
             }
         },
         "models.BulkTask": {
@@ -7693,7 +7696,9 @@
                 "updated": {
                     "description": "A timestamp when this task was last updated. You cannot change this value.",
                     "type": "string"
-                }
+                },
+                "web.CRUDable": {},
+                "web.Rights": {}
             }
         },
         "models.DatabaseNotifications": {
@@ -7712,8 +7717,7 @@
                     "type": "string"
                 },
                 "notification": {
-                    "description": "The actual content of the notification.",
-                    "type": "object"
+                    "description": "The actual content of the notification."
                 },
                 "read": {
                     "description": "Whether or not to mark this notification as read or unread.\nTrue is read, false is unread.",
@@ -7722,7 +7726,9 @@
                 "read_at": {
                     "description": "When this notification is marked as read, this will be updated with the current timestamp.",
                     "type": "string"
-                }
+                },
+                "web.CRUDable": {},
+                "web.Rights": {}
             }
         },
         "models.Label": {
@@ -7758,7 +7764,9 @@
                 "updated": {
                     "description": "A timestamp when this label was last updated. You cannot change this value.",
                     "type": "string"
-                }
+                },
+                "web.CRUDable": {},
+                "web.Rights": {}
             }
         },
         "models.LabelTask": {
@@ -7771,7 +7779,9 @@
                 "label_id": {
                     "description": "The label id you want to associate with a task.",
                     "type": "integer"
-                }
+                },
+                "web.CRUDable": {},
+                "web.Rights": {}
             }
         },
         "models.LabelTaskBulk": {
@@ -7783,7 +7793,9 @@
                     "items": {
                         "$ref": "#/definitions/models.Label"
                     }
-                }
+                },
+                "web.CRUDable": {},
+                "web.Rights": {}
             }
         },
         "models.LinkSharing": {
@@ -7828,15 +7840,16 @@
                 "updated": {
                     "description": "A timestamp when this share was last updated. You cannot change this value.",
                     "type": "string"
-                }
+                },
+                "web.CRUDable": {},
+                "web.Rights": {}
             }
         },
         "models.List": {
             "type": "object",
             "properties": {
                 "background_information": {
-                    "description": "Holds extra information about the background set since some background providers require attribution or similar. If not null, the background can be accessed at /lists/{listID}/background",
-                    "type": "object"
+                    "description": "Holds extra information about the background set since some background providers require attribution or similar. If not null, the background can be accessed at /lists/{listID}/background"
                 },
                 "created": {
                     "description": "A timestamp when this list was created. You cannot change this value.",
@@ -7893,7 +7906,9 @@
                 "updated": {
                     "description": "A timestamp when this list was last updated. You cannot change this value.",
                     "type": "string"
-                }
+                },
+                "web.CRUDable": {},
+                "web.Rights": {}
             }
         },
         "models.ListDuplicate": {
@@ -7906,7 +7921,9 @@
                 "namespace_id": {
                     "description": "The target namespace ID",
                     "type": "integer"
-                }
+                },
+                "web.CRUDable": {},
+                "web.Rights": {}
             }
         },
         "models.ListUser": {
@@ -7933,7 +7950,9 @@
                 "user_id": {
                     "description": "The username.",
                     "type": "string"
-                }
+                },
+                "web.CRUDable": {},
+                "web.Rights": {}
             }
         },
         "models.Message": {
@@ -7986,7 +8005,9 @@
                 "updated": {
                     "description": "A timestamp when this namespace was last updated. You cannot change this value.",
                     "type": "string"
-                }
+                },
+                "web.CRUDable": {},
+                "web.Rights": {}
             }
         },
         "models.NamespaceUser": {
@@ -8013,7 +8034,9 @@
                 "user_id": {
                     "description": "The username.",
                     "type": "string"
-                }
+                },
+                "web.CRUDable": {},
+                "web.Rights": {}
             }
         },
         "models.NamespaceWithLists": {
@@ -8063,7 +8086,9 @@
                 "updated": {
                     "description": "A timestamp when this namespace was last updated. You cannot change this value.",
                     "type": "string"
-                }
+                },
+                "web.CRUDable": {},
+                "web.Rights": {}
             }
         },
         "models.RelatedTaskMap": {
@@ -8111,7 +8136,9 @@
                 "updated": {
                     "description": "A timestamp when this filter was last updated. You cannot change this value.",
                     "type": "string"
-                }
+                },
+                "web.CRUDable": {},
+                "web.Rights": {}
             }
         },
         "models.Subscription": {
@@ -8135,7 +8162,9 @@
                 "user": {
                     "description": "The user who made this subscription",
                     "$ref": "#/definitions/user.User"
-                }
+                },
+                "web.CRUDable": {},
+                "web.Rights": {}
             }
         },
         "models.Task": {
@@ -8270,7 +8299,9 @@
                 "updated": {
                     "description": "A timestamp when this task was last updated. You cannot change this value.",
                     "type": "string"
-                }
+                },
+                "web.CRUDable": {},
+                "web.Rights": {}
             }
         },
         "models.TaskAssginee": {
@@ -8281,7 +8312,9 @@
                 },
                 "user_id": {
                     "type": "integer"
-                }
+                },
+                "web.CRUDable": {},
+                "web.Rights": {}
             }
         },
         "models.TaskAttachment": {
@@ -8301,7 +8334,9 @@
                 },
                 "task_id": {
                     "type": "integer"
-                }
+                },
+                "web.CRUDable": {},
+                "web.Rights": {}
             }
         },
         "models.TaskCollection": {
@@ -8349,7 +8384,9 @@
                     "items": {
                         "type": "string"
                     }
-                }
+                },
+                "web.CRUDable": {},
+                "web.Rights": {}
             }
         },
         "models.TaskComment": {
@@ -8369,7 +8406,9 @@
                 },
                 "updated": {
                     "type": "string"
-                }
+                },
+                "web.CRUDable": {},
+                "web.Rights": {}
             }
         },
         "models.TaskRelation": {
@@ -8394,7 +8433,9 @@
                 "task_id": {
                     "description": "The ID of the \"base\" task, the task which has a relation to another.",
                     "type": "integer"
-                }
+                },
+                "web.CRUDable": {},
+                "web.Rights": {}
             }
         },
         "models.Team": {
@@ -8432,7 +8473,9 @@
                 "updated": {
                     "description": "A timestamp when this relation was last updated. You cannot change this value.",
                     "type": "string"
-                }
+                },
+                "web.CRUDable": {},
+                "web.Rights": {}
             }
         },
         "models.TeamList": {
@@ -8459,7 +8502,9 @@
                 "updated": {
                     "description": "A timestamp when this relation was last updated. You cannot change this value.",
                     "type": "string"
-                }
+                },
+                "web.CRUDable": {},
+                "web.Rights": {}
             }
         },
         "models.TeamMember": {
@@ -8480,7 +8525,9 @@
                 "username": {
                     "description": "The username of the member. We use this to prevent automated user id entering.",
                     "type": "string"
-                }
+                },
+                "web.CRUDable": {},
+                "web.Rights": {}
             }
         },
         "models.TeamNamespace": {
@@ -8507,7 +8554,9 @@
                 "updated": {
                     "description": "A timestamp when this relation was last updated. You cannot change this value.",
                     "type": "string"
-                }
+                },
+                "web.CRUDable": {},
+                "web.Rights": {}
             }
         },
         "models.TeamUser": {
@@ -8543,7 +8592,8 @@
                     "type": "string",
                     "maxLength": 250,
                     "minLength": 1
-                }
+                },
+                "web.Auth": {}
             }
         },
         "models.TeamWithRight": {
@@ -8584,7 +8634,9 @@
                 "updated": {
                     "description": "A timestamp when this relation was last updated. You cannot change this value.",
                     "type": "string"
-                }
+                },
+                "web.CRUDable": {},
+                "web.Rights": {}
             }
         },
         "models.UserWithRight": {
@@ -8619,7 +8671,8 @@
                     "type": "string",
                     "maxLength": 250,
                     "minLength": 1
-                }
+                },
+                "web.Auth": {}
             }
         },
         "notifications.DatabaseNotification": {
@@ -8638,8 +8691,7 @@
                     "type": "string"
                 },
                 "notification": {
-                    "description": "The actual content of the notification.",
-                    "type": "object"
+                    "description": "The actual content of the notification."
                 },
                 "read_at": {
                     "description": "When this notification is marked as read, this will be updated with the current timestamp.",
@@ -8831,7 +8883,8 @@
                     "type": "string",
                     "maxLength": 250,
                     "minLength": 1
-                }
+                },
+                "web.Auth": {}
             }
         },
         "v1.LinkShareAuth": {

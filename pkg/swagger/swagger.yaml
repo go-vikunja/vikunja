@@ -12,7 +12,6 @@ definitions:
       info:
         description: This can be used to supply extra information from an image provider
           to clients
-        type: object
       thumb:
         type: string
       url:
@@ -125,6 +124,8 @@ definitions:
         description: A timestamp when this bucket was last updated. You cannot change
           this value.
         type: string
+      web.CRUDable: {}
+      web.Rights: {}
     type: object
   models.BulkAssignees:
     properties:
@@ -133,6 +134,8 @@ definitions:
         items:
           $ref: '#/definitions/user.User'
         type: array
+      web.CRUDable: {}
+      web.Rights: {}
     type: object
   models.BulkTask:
     properties:
@@ -259,6 +262,8 @@ definitions:
         description: A timestamp when this task was last updated. You cannot change
           this value.
         type: string
+      web.CRUDable: {}
+      web.Rights: {}
     type: object
   models.DatabaseNotifications:
     properties:
@@ -274,7 +279,6 @@ definitions:
         type: string
       notification:
         description: The actual content of the notification.
-        type: object
       read:
         description: |-
           Whether or not to mark this notification as read or unread.
@@ -284,6 +288,8 @@ definitions:
         description: When this notification is marked as read, this will be updated
           with the current timestamp.
         type: string
+      web.CRUDable: {}
+      web.Rights: {}
     type: object
   models.Label:
     properties:
@@ -314,6 +320,8 @@ definitions:
         description: A timestamp when this label was last updated. You cannot change
           this value.
         type: string
+      web.CRUDable: {}
+      web.Rights: {}
     type: object
   models.LabelTask:
     properties:
@@ -324,6 +332,8 @@ definitions:
       label_id:
         description: The label id you want to associate with a task.
         type: integer
+      web.CRUDable: {}
+      web.Rights: {}
     type: object
   models.LabelTaskBulk:
     properties:
@@ -332,6 +342,8 @@ definitions:
         items:
           $ref: '#/definitions/models.Label'
         type: array
+      web.CRUDable: {}
+      web.Rights: {}
     type: object
   models.LinkSharing:
     properties:
@@ -372,6 +384,8 @@ definitions:
         description: A timestamp when this share was last updated. You cannot change
           this value.
         type: string
+      web.CRUDable: {}
+      web.Rights: {}
     type: object
   models.List:
     properties:
@@ -379,7 +393,6 @@ definitions:
         description: Holds extra information about the background set since some background
           providers require attribution or similar. If not null, the background can
           be accessed at /lists/{listID}/background
-        type: object
       created:
         description: A timestamp when this list was created. You cannot change this
           value.
@@ -429,6 +442,8 @@ definitions:
         description: A timestamp when this list was last updated. You cannot change
           this value.
         type: string
+      web.CRUDable: {}
+      web.Rights: {}
     type: object
   models.ListDuplicate:
     properties:
@@ -438,6 +453,8 @@ definitions:
       namespace_id:
         description: The target namespace ID
         type: integer
+      web.CRUDable: {}
+      web.Rights: {}
     type: object
   models.ListUser:
     properties:
@@ -461,6 +478,8 @@ definitions:
       user_id:
         description: The username.
         type: string
+      web.CRUDable: {}
+      web.Rights: {}
     type: object
   models.Message:
     properties:
@@ -504,6 +523,8 @@ definitions:
         description: A timestamp when this namespace was last updated. You cannot
           change this value.
         type: string
+      web.CRUDable: {}
+      web.Rights: {}
     type: object
   models.NamespaceUser:
     properties:
@@ -527,6 +548,8 @@ definitions:
       user_id:
         description: The username.
         type: string
+      web.CRUDable: {}
+      web.Rights: {}
     type: object
   models.NamespaceWithLists:
     properties:
@@ -568,6 +591,8 @@ definitions:
         description: A timestamp when this namespace was last updated. You cannot
           change this value.
         type: string
+      web.CRUDable: {}
+      web.Rights: {}
     type: object
   models.RelatedTaskMap:
     additionalProperties:
@@ -606,6 +631,8 @@ definitions:
         description: A timestamp when this filter was last updated. You cannot change
           this value.
         type: string
+      web.CRUDable: {}
+      web.Rights: {}
     type: object
   models.Subscription:
     properties:
@@ -624,6 +651,8 @@ definitions:
       user:
         $ref: '#/definitions/user.User'
         description: The user who made this subscription
+      web.CRUDable: {}
+      web.Rights: {}
     type: object
   models.Task:
     properties:
@@ -745,6 +774,8 @@ definitions:
         description: A timestamp when this task was last updated. You cannot change
           this value.
         type: string
+      web.CRUDable: {}
+      web.Rights: {}
     type: object
   models.TaskAssginee:
     properties:
@@ -752,6 +783,8 @@ definitions:
         type: string
       user_id:
         type: integer
+      web.CRUDable: {}
+      web.Rights: {}
     type: object
   models.TaskAttachment:
     properties:
@@ -765,6 +798,8 @@ definitions:
         type: integer
       task_id:
         type: integer
+      web.CRUDable: {}
+      web.Rights: {}
     type: object
   models.TaskCollection:
     properties:
@@ -802,6 +837,8 @@ definitions:
         items:
           type: string
         type: array
+      web.CRUDable: {}
+      web.Rights: {}
     type: object
   models.TaskComment:
     properties:
@@ -815,6 +852,8 @@ definitions:
         type: integer
       updated:
         type: string
+      web.CRUDable: {}
+      web.Rights: {}
     type: object
   models.TaskRelation:
     properties:
@@ -834,6 +873,8 @@ definitions:
       task_id:
         description: The ID of the "base" task, the task which has a relation to another.
         type: integer
+      web.CRUDable: {}
+      web.Rights: {}
     type: object
   models.Team:
     properties:
@@ -864,6 +905,8 @@ definitions:
         description: A timestamp when this relation was last updated. You cannot change
           this value.
         type: string
+      web.CRUDable: {}
+      web.Rights: {}
     type: object
   models.TeamList:
     properties:
@@ -887,6 +930,8 @@ definitions:
         description: A timestamp when this relation was last updated. You cannot change
           this value.
         type: string
+      web.CRUDable: {}
+      web.Rights: {}
     type: object
   models.TeamMember:
     properties:
@@ -905,6 +950,8 @@ definitions:
         description: The username of the member. We use this to prevent automated
           user id entering.
         type: string
+      web.CRUDable: {}
+      web.Rights: {}
     type: object
   models.TeamNamespace:
     properties:
@@ -928,6 +975,8 @@ definitions:
         description: A timestamp when this relation was last updated. You cannot change
           this value.
         type: string
+      web.CRUDable: {}
+      web.Rights: {}
     type: object
   models.TeamUser:
     properties:
@@ -958,6 +1007,7 @@ definitions:
         maxLength: 250
         minLength: 1
         type: string
+      web.Auth: {}
     type: object
   models.TeamWithRight:
     properties:
@@ -990,6 +1040,8 @@ definitions:
         description: A timestamp when this relation was last updated. You cannot change
           this value.
         type: string
+      web.CRUDable: {}
+      web.Rights: {}
     type: object
   models.UserWithRight:
     properties:
@@ -1018,6 +1070,7 @@ definitions:
         maxLength: 250
         minLength: 1
         type: string
+      web.Auth: {}
     type: object
   notifications.DatabaseNotification:
     properties:
@@ -1033,7 +1086,6 @@ definitions:
         type: string
       notification:
         description: The actual content of the notification.
-        type: object
       read_at:
         description: When this notification is marked as read, this will be updated
           with the current timestamp.
@@ -1172,6 +1224,7 @@ definitions:
         maxLength: 250
         minLength: 1
         type: string
+      web.Auth: {}
     type: object
   v1.LinkShareAuth:
     properties:
