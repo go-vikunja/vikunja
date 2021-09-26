@@ -304,8 +304,8 @@ export default {
 		},
 		findNthIndex(str, n) {
 
-			const searchChecked = '* [x] '
-			const searchUnchecked = '* [ ] '
+			const searchLength = 6
+			const listPrefixes = ['*', '-']
 
 			let inChecked, inUnchecked, startIndex = 0
 			// We're building an array with all checkboxes, checked or unchecked.
@@ -317,16 +317,18 @@ export default {
 			// Searching in two different loops for each search term since that is way easier and more predicatble
 			// More "intelligent" solutions sometimes don't have all values or duplicates.
 			// Because we're sorting and removing duplicates of them, we can safely put everything in one giant array.
-			while ((inChecked = str.indexOf(searchChecked, startIndex)) > -1) {
-				checkboxes.push(inChecked)
-				startIndex = startIndex + searchChecked.length
-			}
+			listPrefixes.forEach(pref => {
+				while ((inChecked = str.indexOf(`${pref} [x]`, startIndex)) > -1) {
+					checkboxes.push(inChecked)
+					startIndex = startIndex + searchLength
+				}
 
-			startIndex = 0
-			while ((inUnchecked = str.indexOf(searchUnchecked, startIndex)) > -1) {
-				checkboxes.push(inUnchecked)
-				startIndex = startIndex + searchUnchecked.length
-			}
+				startIndex = 0
+				while ((inUnchecked = str.indexOf(`${pref} [ ]`, startIndex)) > -1) {
+					checkboxes.push(inUnchecked)
+					startIndex = startIndex + searchLength
+				}
+			})
 
 			checkboxes.sort((a, b) => a - b)
 			checkboxes = checkboxes.filter((v, i, s) => s.indexOf(v) === i && v > -1)
@@ -431,10 +433,12 @@ export default {
 			}
 			console.debug(index, this.text.substr(index, 9))
 
+			const listPrefix = this.text.substr(index, 1)
+			
 			if (checked) {
-				this.text = this.replaceAt(this.text, index, '* [x] ')
+				this.text = this.replaceAt(this.text, index, `${listPrefix} [x] `)
 			} else {
-				this.text = this.replaceAt(this.text, index, '* [ ] ')
+				this.text = this.replaceAt(this.text, index, `${listPrefix} [ ] `)
 			}
 			this.bubble()
 			this.renderPreview()
