@@ -51,6 +51,7 @@ type vikunjaInfos struct {
 	AuthInfo                   authInfo  `json:"auth"`
 	EmailRemindersEnabled      bool      `json:"email_reminders_enabled"`
 	UserDeletionEnabled        bool      `json:"user_deletion_enabled"`
+	TaskCommentsEnabled        bool      `json:"task_comments_enabled"`
 }
 
 type authInfo struct {
@@ -93,6 +94,7 @@ func Info(c echo.Context) error {
 		CaldavEnabled:          config.ServiceEnableCaldav.GetBool(),
 		EmailRemindersEnabled:  config.ServiceEnableEmailReminders.GetBool(),
 		UserDeletionEnabled:    config.ServiceEnableUserDeletion.GetBool(),
+		TaskCommentsEnabled:    config.ServiceEnableTaskComments.GetBool(),
 		AvailableMigrators: []string{
 			(&vikunja_file.FileMigrator{}).Name(),
 		},
