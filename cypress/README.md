@@ -9,8 +9,8 @@
 
 ## Fixtures
 
-We're using the [test endpoint](https://vikunja.io/docs/config-options/#testingtoken) of the vikunja api to 
-seed the database with test data before running the tests. 
+We're using the [test endpoint](https://vikunja.io/docs/config-options/#testingtoken) of the vikunja api to
+seed the database with test data before running the tests.
 This ensures better reproducability of tests.
 
 ## Running The Tests Locally
@@ -22,20 +22,20 @@ It uses the same configuration as the CI.
 
 To use it, run
 
-```
+```shell
 docker-compose up -d
 ```
 
 Then, once all containers are started, run
 
-```
+```shell
 docker-compose run cypress bash
 ```
 
 to get a shell inside the cypress container.
 In that shell you can then execute the tests with
 
-```
+```shell
 yarn test:frontend
 ```
 
@@ -43,6 +43,6 @@ yarn test:frontend
 
 To open the Cypress Dashboard and run tests from there, run
 
-```
+```shell
 yarn cypress:open
 ```
