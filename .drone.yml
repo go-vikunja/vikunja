@@ -12,7 +12,7 @@ trigger:
 
 services:
   - name: api
-    image: vikunja/api
+    image: vikunja/api:unstable
     environment:
       VIKUNJA_SERVICE_TESTINGTOKEN: averyLongSecretToSe33dtheDB
       VIKUNJA_LOG_LEVEL: DEBUG
