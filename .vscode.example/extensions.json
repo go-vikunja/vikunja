@@ -1,0 +1,12 @@
+{
+  "recommendations": [
+    "codezombiech.gitignore",
+    "dbaeumer.vscode-eslint",
+    "editorconfig.editorconfig",
+    "johnsoncodehk.volar",
+    "lokalise.i18n-ally",
+    "mgmcdermott.vscode-language-babel",
+    "mikestead.dotenv",
+    "Syler.sass-indented"
+  ]
+}

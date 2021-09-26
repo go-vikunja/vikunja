@@ -36,7 +36,13 @@
   "include": [
     "src/**/*.ts",
     "src/**/*.tsx",
+    "src/**/*.vue",
     "tests/**/*.ts",
     "tests/**/*.tsx"
-  ]
+  ],
+
+  // https://github.com/johnsoncodehk/volar#using
+  "vueCompilerOptions": {
+    "experimentalCompatMode": 2
+  },
 }
