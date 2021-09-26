@@ -51,9 +51,6 @@ export default {
 			listLoaded: 0,
 		}
 	},
-	mounted() {
-		this.loadList()
-	},
 	watch: {
 		// call again the method if the route changes
 		'$route.path': {
