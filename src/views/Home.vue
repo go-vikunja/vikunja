@@ -40,7 +40,7 @@
 				{{ $t('home.list.import') }}
 			</x-button>
 		</template>
-		<div v-if="listHistory.length > 0" class="is-max-width-desktop has-text-left">
+		<div v-if="listHistory.length > 0" class="is-max-width-desktop has-text-left mt-4">
 			<h3>{{ $t('home.lastViewed') }}</h3>
 			<div class="is-flex list-cards-wrapper-2-rows">
 				<list-card
