@@ -59,6 +59,7 @@
 					<icon icon="align-left"/>
 				</span>
 			</span>
+			<checklist-summary :task="task"/>
 		</router-link>
 		<progress
 			class="progress is-small"
@@ -94,6 +95,7 @@ import Fancycheckbox from '../../input/fancycheckbox'
 import DeferTask from './defer-task'
 import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
 import {playPop} from '@/helpers/playPop'
+import ChecklistSummary from './checklist-summary'
 
 export default {
 	name: 'singleTaskInList',
@@ -105,6 +107,7 @@ export default {
 		}
 	},
 	components: {
+		ChecklistSummary,
 		DeferTask,
 		Fancycheckbox,
 		User,
@@ -172,10 +175,10 @@ export default {
 						this.task = t
 						this.$emit('task-updated', t)
 						this.$message.success({
-								message: this.task.done ?
-									this.$t('task.doneSuccess') :
-									this.$t('task.undoneSuccess'),
-							}, [{
+							message: this.task.done ?
+								this.$t('task.doneSuccess') :
+								this.$t('task.undoneSuccess'),
+						}, [{
 							title: 'Undo',
 							callback: () => {
 								this.task.done = !this.task.done

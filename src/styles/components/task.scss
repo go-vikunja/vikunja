@@ -10,6 +10,7 @@
 
   .subtitle {
     color: $grey-500;
+    margin-bottom: 1rem;
 
     a {
       color: $grey-800;
@@ -178,6 +179,10 @@
     color: $grey-500;
     text-align: right;
   }
+	
+  .checklist-summary {
+    margin-left: .25rem;
+  }	
 }
 
 .link-share-container:not(.has-background) .task-view {

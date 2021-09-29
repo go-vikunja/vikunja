@@ -53,6 +53,7 @@ import hljs from 'highlight.js/lib/common'
 
 import AttachmentModel from '../../models/attachment'
 import AttachmentService from '../../services/attachment'
+import {findCheckboxesInText} from '../../helpers/checklistFromText'
 
 export default {
 	name: 'editor',
@@ -303,36 +304,7 @@ export default {
 			return str.substr(0, index) + replacement + str.substr(index + replacement.length)
 		},
 		findNthIndex(str, n) {
-
-			const searchLength = 6
-			const listPrefixes = ['*', '-']
-
-			let inChecked, inUnchecked, startIndex = 0
-			// We're building an array with all checkboxes, checked or unchecked.
-			// I've found this to be the best way to always get the results I need.
-			// The difficulty without an index is that we need to get all checkboxes, checked and unchecked
-			// and calculate our index based off that to compare it and find the checkbox we need.
-			let checkboxes = []
-
-			// Searching in two different loops for each search term since that is way easier and more predicatble
-			// More "intelligent" solutions sometimes don't have all values or duplicates.
-			// Because we're sorting and removing duplicates of them, we can safely put everything in one giant array.
-			listPrefixes.forEach(pref => {
-				while ((inChecked = str.indexOf(`${pref} [x]`, startIndex)) > -1) {
-					checkboxes.push(inChecked)
-					startIndex = startIndex + searchLength
-				}
-
-				startIndex = 0
-				while ((inUnchecked = str.indexOf(`${pref} [ ]`, startIndex)) > -1) {
-					checkboxes.push(inUnchecked)
-					startIndex = startIndex + searchLength
-				}
-			})
-
-			checkboxes.sort((a, b) => a - b)
-			checkboxes = checkboxes.filter((v, i, s) => s.indexOf(v) === i && v > -1)
-
+			const checkboxes = findCheckboxesInText(str)
 			return checkboxes[n]
 		},
 		renderPreview() {
@@ -435,7 +407,7 @@ export default {
 			console.debug(index, this.text.substr(index, 9))
 
 			const listPrefix = this.text.substr(index, 1)
-			
+
 			if (checked) {
 				this.text = this.replaceAt(this.text, index, `${listPrefix} [x] `)
 			} else {
@@ -475,7 +447,7 @@ export default {
 			input[type="checkbox"] {
 				margin-right: .5rem;
 			}
-			
+
 			&.has-checkbox {
 				margin-left: -2em;
 				list-style: none;

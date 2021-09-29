@@ -8,9 +8,11 @@
 					{{ getListTitle(parent.list) }}
 				</router-link>
 			</h6>
+			
+			<checklist-summary :task="task"/>
 
 			<!-- Content and buttons -->
-			<div class="columns">
+			<div class="columns mt-2">
 				<!-- Content -->
 				<div :class="{'is-two-thirds': canWrite}" class="column">
 					<div class="columns details">
@@ -445,10 +447,12 @@ import TaskSubscription from '@/components/misc/subscription.vue'
 import {CURRENT_LIST} from '@/store/mutation-types'
 
 import {uploadFile} from '@/helpers/attachments'
+import ChecklistSummary from '../../components/tasks/partials/checklist-summary'
 
 export default {
 	name: 'TaskDetailView',
 	components: {
+		ChecklistSummary,
 		TaskSubscription,
 		Datepicker,
 		ColorPicker,
