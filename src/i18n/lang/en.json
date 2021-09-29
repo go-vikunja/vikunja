@@ -96,6 +96,12 @@
         "uploadAvatar": "Upload Avatar",
         "statusUpdateSuccess": "Avatar status was updated successfully!",
         "setSuccess": "The avatar has been set successfully!"
+      },
+      "quickAddMagic": {
+        "title": "Quick Add Magic Mode",
+        "disabled": "Disabled",
+        "todoist": "Todoist",
+        "vikunja": "Vikunja"
       }
     },
     "deletion": {

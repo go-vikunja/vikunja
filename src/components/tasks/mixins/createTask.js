@@ -7,6 +7,7 @@ import LabelTaskService from '@/services/labelTask'
 import {mapState} from 'vuex'
 import UserService from '@/services/user'
 import TaskService from '@/services/task'
+import {getQuickAddMagicMode} from '@/helpers/quickAddMagicMode'
 
 export default {
 	data() {
@@ -26,7 +27,7 @@ export default {
 	}),
 	methods: {
 		createNewTask(newTaskTitle, bucketId = 0, lId = 0, position = 0) {
-			const parsedTask = parseTaskText(newTaskTitle)
+			const parsedTask = parseTaskText(newTaskTitle, getQuickAddMagicMode())
 			const assignees = []
 
 			// Uses the following ways to get the list id of the new task:

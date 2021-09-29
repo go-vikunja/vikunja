@@ -7,6 +7,29 @@ describe('Parse Task Text', () => {
 	it('should return text with no intents as is', () => {
 		expect(parseTaskText('Lorem Ipsum').text).toBe('Lorem Ipsum')
 	})
+	
+	it('should not parse text when disabled', () => {
+		const text = 'Lorem Ipsum today *label +list !2 @user'
+		const result = parseTaskText(text, 'disabled')
+		
+		expect(result.text).toBe(text)
+	})
+	
+	it('should parse text in todoist mode when configured', () => {
+		const result = parseTaskText('Lorem Ipsum today @label #list !2 +user', 'todoist')
+
+		expect(result.text).toBe('Lorem Ipsum')
+		const now = new Date()
+		expect(result.date.getFullYear()).toBe(now.getFullYear())
+		expect(result.date.getMonth()).toBe(now.getMonth())
+		expect(result.date.getDate()).toBe(now.getDate())
+		expect(result.labels).toHaveLength(1)
+		expect(result.labels[0]).toBe('label')
+		expect(result.list).toBe('list')
+		expect(result.priority).toBe(2)
+		expect(result.assignees).toHaveLength(1)
+		expect(result.assignees[0]).toBe('user')
+	})
 
 	describe('Date Parsing', () => {
 		it('should not return any date if none was provided', () => {
@@ -47,8 +70,8 @@ describe('Parse Task Text', () => {
 			}
 
 			for (const c in cases) {
-				it('should recognize today with a time ' + c, () => {
-					const result = parseTaskText('Lorem Ipsum today ' + c)
+				it(`should recognize today with a time ${c}`, () => {
+					const result = parseTaskText(`Lorem Ipsum today ${c}`)
 
 					expect(result.text).toBe('Lorem Ipsum')
 					const now = new Date()
@@ -354,7 +377,7 @@ describe('Parse Task Text', () => {
 
 	describe('Labels', () => {
 		it('should parse labels', () => {
-			const result = parseTaskText('Lorem Ipsum @label1 @label2')
+			const result = parseTaskText('Lorem Ipsum *label1 *label2')
 
 			expect(result.text).toBe('Lorem Ipsum')
 			expect(result.labels).toHaveLength(2)
@@ -362,7 +385,7 @@ describe('Parse Task Text', () => {
 			expect(result.labels[1]).toBe('label2')
 		})
 		it('should parse labels from the start', () => {
-			const result = parseTaskText('@label1 Lorem Ipsum @label2')
+			const result = parseTaskText('*label1 Lorem Ipsum *label2')
 
 			expect(result.text).toBe('Lorem Ipsum')
 			expect(result.labels).toHaveLength(2)
@@ -370,7 +393,7 @@ describe('Parse Task Text', () => {
 			expect(result.labels[1]).toBe('label2')
 		})
 		it('should resolve duplicate labels', () => {
-			const result = parseTaskText('Lorem Ipsum @label1 @label1 @label2')
+			const result = parseTaskText('Lorem Ipsum *label1 *label1 *label2')
 
 			expect(result.text).toBe('Lorem Ipsum')
 			expect(result.labels).toHaveLength(2)
@@ -378,14 +401,14 @@ describe('Parse Task Text', () => {
 			expect(result.labels[1]).toBe('label2')
 		})
 		it('should correctly parse labels with spaces in them', () => {
-			const result = parseTaskText(`Lorem @'label with space' Ipsum`)
+			const result = parseTaskText(`Lorem *'label with space' Ipsum`)
 
 			expect(result.text).toBe('Lorem Ipsum')
 			expect(result.labels).toHaveLength(1)
 			expect(result.labels[0]).toBe('label with space')
 		})
 		it('should correctly parse labels with spaces in them and "', () => {
-			const result = parseTaskText('Lorem @"label with space" Ipsum')
+			const result = parseTaskText('Lorem *"label with space" Ipsum')
 
 			expect(result.text).toBe('Lorem Ipsum')
 			expect(result.labels).toHaveLength(1)
@@ -395,27 +418,27 @@ describe('Parse Task Text', () => {
 
 	describe('List', () => {
 		it('should parse a list', () => {
-			const result = parseTaskText('Lorem Ipsum #list')
+			const result = parseTaskText('Lorem Ipsum +list')
 
 			expect(result.text).toBe('Lorem Ipsum')
 			expect(result.list).toBe('list')
 		})
 		it('should parse a list with a space in it', () => {
-			const result = parseTaskText(`Lorem Ipsum #'list with long name'`)
+			const result = parseTaskText(`Lorem Ipsum +'list with long name'`)
 
 			expect(result.text).toBe('Lorem Ipsum')
 			expect(result.list).toBe('list with long name')
 		})
 		it('should parse a list with a space in it and "', () => {
-			const result = parseTaskText(`Lorem Ipsum #"list with long name"`)
+			const result = parseTaskText(`Lorem Ipsum +"list with long name"`)
 
 			expect(result.text).toBe('Lorem Ipsum')
 			expect(result.list).toBe('list with long name')
 		})
 		it('should parse only the first list', () => {
-			const result = parseTaskText(`Lorem Ipsum #list1 #list2 #list3`)
+			const result = parseTaskText(`Lorem Ipsum +list1 +list2 +list3`)
 
-			expect(result.text).toBe('Lorem Ipsum #list2 #list3')
+			expect(result.text).toBe('Lorem Ipsum +list2 +list3')
 			expect(result.list).toBe('list1')
 		})
 	})
@@ -445,14 +468,14 @@ describe('Parse Task Text', () => {
 
 	describe('Assignee', () => {
 		it('should parse an assignee', () => {
-			const result = parseTaskText('Lorem Ipsum +user')
+			const result = parseTaskText('Lorem Ipsum @user')
 
 			expect(result.text).toBe('Lorem Ipsum')
 			expect(result.assignees).toHaveLength(1)
 			expect(result.assignees[0]).toBe('user')
 		})
 		it('should parse multiple assignees', () => {
-			const result = parseTaskText('Lorem Ipsum +user1 +user2 +user3')
+			const result = parseTaskText('Lorem Ipsum @user1 @user2 @user3')
 
 			expect(result.text).toBe('Lorem Ipsum')
 			expect(result.assignees).toHaveLength(3)
@@ -461,7 +484,7 @@ describe('Parse Task Text', () => {
 			expect(result.assignees[2]).toBe('user3')
 		})
 		it('should parse avoid duplicate assignees', () => {
-			const result = parseTaskText('Lorem Ipsum +user1 +user1 +user2')
+			const result = parseTaskText('Lorem Ipsum @user1 @user1 @user2')
 
 			expect(result.text).toBe('Lorem Ipsum')
 			expect(result.assignees).toHaveLength(2)
@@ -469,14 +492,14 @@ describe('Parse Task Text', () => {
 			expect(result.assignees[1]).toBe('user2')
 		})
 		it('should parse an assignee with a space in it', () => {
-			const result = parseTaskText(`Lorem Ipsum +'user with long name'`)
+			const result = parseTaskText(`Lorem Ipsum @'user with long name'`)
 
 			expect(result.text).toBe('Lorem Ipsum')
 			expect(result.assignees).toHaveLength(1)
 			expect(result.assignees[0]).toBe('user with long name')
 		})
 		it('should parse an assignee with a space in it and "', () => {
-			const result = parseTaskText(`Lorem Ipsum +"user with long name"`)
+			const result = parseTaskText(`Lorem Ipsum @"user with long name"`)
 
 			expect(result.text).toBe('Lorem Ipsum')
 			expect(result.assignees).toHaveLength(1)

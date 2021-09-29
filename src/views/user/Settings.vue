@@ -77,6 +77,18 @@
 					</div>
 				</label>
 			</div>
+			<div class="field">
+				<label class="is-flex is-align-items-center">
+					<span>
+						{{ $t('user.settings.quickAddMagic.title') }}
+					</span>
+					<div class="select ml-2">
+						<select v-model="quickAddMagicMode">
+							<option v-for="set in quickAddMagicPrefixes" :key="set" :value="set">{{ $t(`user.settings.quickAddMagic.${set}`) }}</option>
+						</select>
+					</div>
+				</label>
+			</div>
 
 			<x-button
 				:loading="userSettingsService.loading"
@@ -289,6 +301,8 @@ import UserSettingsService from '../../services/userSettings'
 import UserSettingsModel from '../../models/userSettings'
 import {playSoundWhenDoneKey} from '@/helpers/playPop'
 import {availableLanguages, saveLanguage, getCurrentLanguage} from '../../i18n/setup'
+import {getQuickAddMagicMode, setQuickAddMagicMode} from '../../helpers/quickAddMagicMode'
+import {PrefixMode} from '../../modules/parseTaskText'
 
 import {mapState} from 'vuex'
 
@@ -318,6 +332,8 @@ export default {
 			totpDisablePassword: '',
 			playSoundWhenDone: false,
 			language: getCurrentLanguage(),
+			quickAddMagicMode: getQuickAddMagicMode(),
+			quickAddMagicPrefixes: PrefixMode,
 
 			settings: UserSettingsModel,
 			userSettingsService: new UserSettingsService(),
@@ -333,11 +349,8 @@ export default {
 	},
 	created() {
 		this.settings = this.$store.state.auth.settings
-
 		this.playSoundWhenDone = localStorage.getItem(playSoundWhenDoneKey) === 'true' || localStorage.getItem(playSoundWhenDoneKey) === null
-
 		this.defaultList = this.$store.getters['lists/getListById'](this.settings.defaultListId)
-
 		this.totpStatus()
 	},
 	mounted() {
@@ -445,6 +458,7 @@ export default {
 		updateSettings() {
 			localStorage.setItem(playSoundWhenDoneKey, this.playSoundWhenDone)
 			saveLanguage(this.language)
+			setQuickAddMagicMode(this.quickAddMagicMode)
 			this.settings.defaultListId = this.defaultList ? this.defaultList.id : 0
 
 			this.userSettingsService.update(this.settings)
