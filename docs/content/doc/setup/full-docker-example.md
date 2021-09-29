@@ -89,7 +89,7 @@ services:
     ports:
       - 80:80
     environment:
-      VIKUNJA_API_URL: http://<your-ip-here>:3456/
+      VIKUNJA_API_URL: http://<your-ip-here>:3456/api/v1
     restart: unless-stopped
 {{< /highlight >}}
 
