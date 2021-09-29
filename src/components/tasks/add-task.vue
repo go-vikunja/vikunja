@@ -93,8 +93,13 @@ export default {
 
 			const newTasks = []
 			this.newTaskTitle.split(/[\r\n]+/).forEach(t => {
+				const title = cleanupTitle(t)
+				if (title === '') {
+					return
+				}
+				
 				newTasks.push(
-					this.createNewTask(cleanupTitle(t), 0, this.$store.state.auth.settings.defaultListId, this.defaultPosition)
+					this.createNewTask(title, 0, this.$store.state.auth.settings.defaultListId, this.defaultPosition)
 						.then(task => {
 							this.$emit('taskAdded', task)
 							return task
