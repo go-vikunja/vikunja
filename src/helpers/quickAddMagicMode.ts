@@ -9,6 +9,12 @@ export const setQuickAddMagicMode = (mode: PrefixMode) => {
 export const getQuickAddMagicMode = (): PrefixMode => {
 	const mode = localStorage.getItem(key)
 
-	// @ts-ignore
-	return PrefixMode[mode] || PrefixMode.Disabled
+	switch (mode) {
+		case PrefixMode.Default:
+			return PrefixMode.Default
+		case PrefixMode.Todoist:
+			return PrefixMode.Todoist
+	}
+
+	return PrefixMode.Disabled
 }
