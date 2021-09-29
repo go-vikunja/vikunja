@@ -1,7 +1,7 @@
 <template>
 	<div class="editor">
 		<div class="clear"></div>
-
+		
 		<vue-easymde
 			:configs="config"
 			@change="bubble"
@@ -31,7 +31,7 @@
 				<a @click="action.action">{{ action.title }}</a>
 			</li>
 		</ul>
-		<template v-else-if="showSave">
+		<template v-else-if="isEditEnabled && showSave">
 			<ul v-if="!isEditActive" class="actions">
 				<li>
 					<a @click="toggleEdit">{{ $t('input.editor.edit') }}</a>
