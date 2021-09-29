@@ -18,23 +18,24 @@ services:
       VIKUNJA_LOG_LEVEL: DEBUG
 
 steps:
-  - name: restore-cache
-    image: meltwater/drone-cache:dev
-    pull: true
-    environment:
-      AWS_ACCESS_KEY_ID:
-        from_secret: cache_aws_access_key_id
-      AWS_SECRET_ACCESS_KEY:
-        from_secret: cache_aws_secret_access_key
-    settings:
-      restore: true
-      bucket: kolaente.dev-drone-dependency-cache
-      endpoint: https://s3.fr-par.scw.cloud
-      region: fr-par
-      path_style: true
-      cache_key: '{{ .Repo.Name }}_{{ checksum "yarn.lock" }}_{{ arch }}_{{ os }}'
-      mount:
-        - '.cache'
+# Disabled until we figure out why it is so slow
+#  - name: restore-cache
+#    image: meltwater/drone-cache:dev
+#    pull: true
+#    environment:
+#      AWS_ACCESS_KEY_ID:
+#        from_secret: cache_aws_access_key_id
+#      AWS_SECRET_ACCESS_KEY:
+#        from_secret: cache_aws_secret_access_key
+#    settings:
+#      restore: true
+#      bucket: kolaente.dev-drone-dependency-cache
+#      endpoint: https://s3.fr-par.scw.cloud
+#      region: fr-par
+#      path_style: true
+#      cache_key: '{{ .Repo.Name }}_{{ checksum "yarn.lock" }}_{{ arch }}_{{ os }}'
+#      mount:
+#        - '.cache'
 
   - name: dependencies
     image: node:16
@@ -44,28 +45,28 @@ steps:
       CYPRESS_CACHE_FOLDER: .cache/cypress/
     commands:
       - yarn --frozen-lockfile --network-timeout 100000
-    depends_on:
-      - restore-cache
+#    depends_on:
+#      - restore-cache
 
-  - name: rebuild-cache
-    image: meltwater/drone-cache:dev
-    pull: true
-    environment:
-      AWS_ACCESS_KEY_ID:
-        from_secret: cache_aws_access_key_id
-      AWS_SECRET_ACCESS_KEY:
-        from_secret: cache_aws_secret_access_key
-    settings:
-      rebuild: true
-      bucket: kolaente.dev-drone-dependency-cache
-      endpoint: https://s3.fr-par.scw.cloud
-      region: fr-par
-      path_style: true
-      cache_key: '{{ .Repo.Name }}_{{ checksum "yarn.lock" }}_{{ arch }}_{{ os }}'
-      mount:
-        - '.cache'
-    depends_on:
-      - dependencies
+#  - name: rebuild-cache
+#    image: meltwater/drone-cache:dev
+#    pull: true
+#    environment:
+#      AWS_ACCESS_KEY_ID:
+#        from_secret: cache_aws_access_key_id
+#      AWS_SECRET_ACCESS_KEY:
+#        from_secret: cache_aws_secret_access_key
+#    settings:
+#      rebuild: true
+#      bucket: kolaente.dev-drone-dependency-cache
+#      endpoint: https://s3.fr-par.scw.cloud
+#      region: fr-par
+#      path_style: true
+#      cache_key: '{{ .Repo.Name }}_{{ checksum "yarn.lock" }}_{{ arch }}_{{ os }}'
+#      mount:
+#        - '.cache'
+#    depends_on:
+#      - dependencies
 
   - name: lint
     image: node:16
@@ -166,23 +167,23 @@ steps:
     commands:
       - git fetch --tags
 
-  - name: restore-cache
-    image: meltwater/drone-cache:dev
-    pull: true
-    environment:
-      AWS_ACCESS_KEY_ID:
-        from_secret: cache_aws_access_key_id
-      AWS_SECRET_ACCESS_KEY:
-        from_secret: cache_aws_secret_access_key
-    settings:
-      restore: true
-      bucket: kolaente.dev-drone-dependency-cache
-      endpoint: https://s3.fr-par.scw.cloud
-      region: fr-par
-      path_style: true
-      cache_key: '{{ .Repo.Name }}_{{ checksum "yarn.lock" }}_{{ arch }}_{{ os }}'
-      mount:
-        - '.cache'
+#  - name: restore-cache
+#    image: meltwater/drone-cache:dev
+#    pull: true
+#    environment:
+#      AWS_ACCESS_KEY_ID:
+#        from_secret: cache_aws_access_key_id
+#      AWS_SECRET_ACCESS_KEY:
+#        from_secret: cache_aws_secret_access_key
+#    settings:
+#      restore: true
+#      bucket: kolaente.dev-drone-dependency-cache
+#      endpoint: https://s3.fr-par.scw.cloud
+#      region: fr-par
+#      path_style: true
+#      cache_key: '{{ .Repo.Name }}_{{ checksum "yarn.lock" }}_{{ arch }}_{{ os }}'
+#      mount:
+#        - '.cache'
 
   - name: build
     image: node:16
@@ -196,8 +197,8 @@ steps:
       - "echo '{\"VERSION\": \"'$(git describe --tags --always --abbrev=10 | sed 's/-/+/' | sed 's/^v//' | sed 's/-g/-/')'\"}' > src/version.json"
       - yarn run build
       - sed -i 's/http\:\\/\\/localhost\\:3456\\/api\\/v1/\\/api\\/v1/g' dist/index.html # Override the default api url used for developing
-    depends_on:
-      - restore-cache
+#    depends_on:
+#      - restore-cache
 
   - name: static
     image: kolaente/zip
@@ -241,23 +242,23 @@ steps:
     commands:
       - git fetch --tags
 
-  - name: restore-cache
-    image: meltwater/drone-cache:dev
-    pull: true
-    environment:
-      AWS_ACCESS_KEY_ID:
-        from_secret: cache_aws_access_key_id
-      AWS_SECRET_ACCESS_KEY:
-        from_secret: cache_aws_secret_access_key
-    settings:
-      restore: true
-      bucket: kolaente.dev-drone-dependency-cache
-      endpoint: https://s3.fr-par.scw.cloud
-      region: fr-par
-      path_style: true
-      cache_key: '{{ .Repo.Name }}_{{ checksum "yarn.lock" }}_{{ arch }}_{{ os }}'
-      mount:
-        - '.cache'
+#  - name: restore-cache
+#    image: meltwater/drone-cache:dev
+#    pull: true
+#    environment:
+#      AWS_ACCESS_KEY_ID:
+#        from_secret: cache_aws_access_key_id
+#      AWS_SECRET_ACCESS_KEY:
+#        from_secret: cache_aws_secret_access_key
+#    settings:
+#      restore: true
+#      bucket: kolaente.dev-drone-dependency-cache
+#      endpoint: https://s3.fr-par.scw.cloud
+#      region: fr-par
+#      path_style: true
+#      cache_key: '{{ .Repo.Name }}_{{ checksum "yarn.lock" }}_{{ arch }}_{{ os }}'
+#      mount:
+#        - '.cache'
 
   - name: build
     image: node:16
@@ -271,8 +272,8 @@ steps:
       - "echo '{\"VERSION\": \"'$(git describe --tags --always --abbrev=10 | sed 's/-/+/' | sed 's/^v//' | sed 's/-g/-/')'\"}' > src/version.json"
       - yarn run build
       - sed -i 's/http\:\\/\\/localhost\\:3456\\/api\\/v1/\\/api\\/v1/g' dist/index.html # Override the default api url used for developing
-    depends_on:
-      - restore-cache
+#    depends_on:
+#      - restore-cache
 
   - name: static
     image: kolaente/zip
