@@ -96,6 +96,12 @@
         "uploadAvatar": "Upload Avatar",
         "statusUpdateSuccess": "Avatar status was updated successfully!",
         "setSuccess": "The avatar has been set successfully!"
+      },
+      "quickAddMagic": {
+        "title": "Quick Add Magic Mode",
+        "disabled": "Disabled",
+        "todoist": "Todoist",
+        "vikunja": "Vikunja"
       }
     },
     "deletion": {
@@ -493,6 +499,8 @@
     "doneSuccess": "The task was successfully marked as done.",
     "undoneSuccess": "The task was successfully un-marked as done.",
     "openDetail": "Open task detail view",
+    "checklistTotal": "{checked} of {total} tasks",
+    "checklistAllDone": "{total} tasks",
     "show": {
       "titleCurrent": "Current Tasks",
       "titleDates": "Tasks from {from} until {to}",

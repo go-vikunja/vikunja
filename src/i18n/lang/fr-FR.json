@@ -96,6 +96,12 @@
         "uploadAvatar": "Téléverser l’avatar",
         "statusUpdateSuccess": "Statut de l’avatar mis à jour.",
         "setSuccess": "Avatar défini."
+      },
+      "quickAddMagic": {
+        "title": "Quick Add Magic Mode",
+        "disabled": "Disabled",
+        "todoist": "Todoist",
+        "vikunja": "Vikunja"
       }
     },
     "deletion": {
@@ -493,6 +499,8 @@
     "doneSuccess": "Tâche marquée comme terminée.",
     "undoneSuccess": "Tâche marquée comme non terminée.",
     "openDetail": "Ouvrir la vue détaillée de la tâche",
+    "checklistTotal": "{checked} of {total} tasks",
+    "checklistAllDone": "{total} tasks",
     "show": {
       "titleCurrent": "Tâches actuelles",
       "titleDates": "Tâches du {from} au {to}",

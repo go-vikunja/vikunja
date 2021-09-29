@@ -96,6 +96,12 @@
         "uploadAvatar": "Avatar hochladen",
         "statusUpdateSuccess": "Avatar-Status wurde erfolgreich aktualisiert.",
         "setSuccess": "Der Avatar wurde erfolgreich gesetzt!"
+      },
+      "quickAddMagic": {
+        "title": "Quick Add Magic Modus",
+        "disabled": "Deaktiviert",
+        "todoist": "Todoist",
+        "vikunja": "Vikunja"
       }
     },
     "deletion": {
@@ -493,6 +499,8 @@
     "doneSuccess": "Die Aufgabe wurde erfolgreich als erledigt markiert.",
     "undoneSuccess": "Die Aufgabe wurde erfolgreich als nicht-erledigt markiert.",
     "openDetail": "Aufgabe in der Detailansicht anzeigen",
+    "checklistTotal": "{checked} von {total} Aufgaben",
+    "checklistAllDone": "{total} Aufgaben",
     "show": {
       "titleCurrent": "Aktuelle Aufgaben",
       "titleDates": "Aufgaben von {from} bis {to}",
@@ -656,7 +664,7 @@
     "quickAddMagic": {
       "hint": "Du kannst Quick Add Magic verwenden",
       "what": "Was?",
-      "title": "Qucik Add Magic",
+      "title": "Quick Add Magic",
       "intro": "Beim Erstellen einer Aufgabe kannst du spezielle Schlüsselwörter verwenden, um Attribute direkt zu der neu erstellten Aufgabe hinzuzufügen. Dadurch können häufig verwendete Attribute schneller zu Aufgaben hinzugefügt werden.",
       "multiple": "Du kannst das mehrmals benutzen.",
       "label1": "Um ein Label hinzuzufügen, gibt einfach den Name mit einem vorangestellten {prefix} ein.",
