@@ -3,7 +3,7 @@
 		<p class="has-text-weight-bold">
 			{{ $t('list.share.links.title') }}
 			<span
-				class="is-size-7"
+				class="is-size-7 has-text-grey is-italic ml-3"
 				v-tooltip="$t('list.share.links.explanation')">
 				{{ $t('list.share.links.what') }}
 			</span>
