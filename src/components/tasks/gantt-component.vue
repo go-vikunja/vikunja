@@ -11,9 +11,9 @@
 				</x-button>
 			</div>
 			<filter-popup
-				@change="loadTasks()"
 				:visible="showTaskFilter"
 				v-model="params"
+				@update:modelValue="loadTasks()"
 			/>
 		</div>
 		<div class="dates">

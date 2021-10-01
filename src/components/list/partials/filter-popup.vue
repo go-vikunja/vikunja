@@ -1,9 +1,8 @@
 <template>
 	<transition name="fade">
 		<filters
-			@change="change"
 			v-if="visibleInternal"
-			v-model="params"
+			v-model="value"
 			ref="filters"
 		/>
 	</transition>
@@ -15,15 +14,33 @@ import Filters from '../../../components/list/partials/filters'
 
 export default {
 	name: 'filter-popup',
-	emits: ['update:modelValue', 'change'],
+	components: {
+		Filters,
+	},
+	props: {
+		modelValue: {
+			required: true,
+		},
+		visible: {
+			type: Boolean,
+			default: false,
+		},
+	},
+	emits: ['update:modelValue'],
 	data() {
 		return {
-			params: null,
 			visibleInternal: false,
 		}
 	},
-	components: {
-		Filters,
+	computed: {
+		value: {
+			get() {
+				return this.modelValue
+			},
+			set(value) {
+				this.$emit('update:modelValue', value)
+			},
+		},
 	},
 	mounted() {
 		document.addEventListener('click', this.hidePopup)
@@ -42,26 +59,15 @@ export default {
 			this.visibleInternal = !this.visibleInternal
 		},
 	},
-	props: {
-		modelValue: {
-			required: true,
-		},
-		visible: {
-			type: Boolean,
-			default: false,
-		},
-	},
 	methods: {
-		change() {
-			this.$emit('change', this.params)
-			this.$emit('update:modelValue', this.params)
-		},
 		hidePopup(e) {
-			if (this.visibleInternal) {
-				closeWhenClickedOutside(e, this.$refs.filters.$el, () => {
-					this.visibleInternal = false
-				})
+			if (!this.visibleInternal) {
+				return
 			}
+
+			closeWhenClickedOutside(e, this.$refs.filters.$el, () => {
+				this.visibleInternal = false
+			})
 		},
 	},
 }

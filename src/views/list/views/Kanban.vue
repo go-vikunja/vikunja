@@ -11,7 +11,7 @@
 				</x-button>
 			</div>
 			<filter-popup
-				@change="() => {filtersChanged = true; loadBuckets()}"
+				@update:modelValue="() => {filtersChanged = true; loadBuckets()}"
 				:visible="showFilters"
 				v-model="params"
 			/>

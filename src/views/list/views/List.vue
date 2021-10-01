@@ -50,9 +50,9 @@
 				</x-button>
 			</div>
 			<filter-popup
-				@change="loadTasks(1)"
 				:visible="showTaskFilter"
 				v-model="params"
+				@update:modelValue="loadTasks(1)"
 			/>
 		</div>
 
