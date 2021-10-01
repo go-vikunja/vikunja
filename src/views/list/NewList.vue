@@ -61,7 +61,7 @@ export default {
 			}
 			this.showError = false
 
-			this.list.namespaceId = this.$route.params.id
+			this.list.namespaceId = parseInt(this.$route.params.id)
 			this.$store
 				.dispatch('lists/createList', this.list)
 				.then((r) => {
