@@ -26,7 +26,6 @@
 				@end="updateBucketPosition"
 				group="buckets"
 				:disabled="!canWrite"
-				:class="{'dragging-disabled': !canWrite}"
 				tag="transition-group"
 				:item-key="({id}) => `bucket${id}`"
 				:component-data="bucketDraggableComponentData"
@@ -45,9 +44,9 @@
 								<icon icon="check-double"/>
 							</span>
 							<h2
-								:ref="`bucket${bucket.id}title`"
-								@focusout="() => saveBucketTitle(bucket.id)"
-								@keydown.enter.prevent.stop="() => saveBucketTitle(bucket.id)"
+								@keydown.enter.prevent.stop="$event.target.blur()"
+								@keydown.esc.prevent.stop="$event.target.blur()"
+								@blur="saveBucketTitle(bucket.id, $event.target.textContent)"
 								@click="focusBucketTitle"
 								class="title input"
 								:contenteditable="bucketTitleEditable && canWrite && !collapsedBuckets[bucket.id]"
@@ -124,7 +123,11 @@
 								</a>
 							</dropdown>
 						</div>
-						<div :ref="`tasks-container${bucket.id}`" class="tasks">
+						<div
+							:ref="(el) => setTaskContainerRef(bucket.id, el)"
+							@scroll="(el) => handleTaskContainerScroll(bucket.id, el)"
+							class="tasks"
+						>
 							<draggable
 								v-bind="dragOptions"
 								v-model="bucket.tasks"
@@ -132,9 +135,7 @@
 								@end="updateTaskPosition"
 								:group="{name: 'tasks', put: shouldAcceptDrop(bucket) && !dragBucket}"
 								:disabled="!canWrite"
-								:class="{'dragging-disabled': !canWrite}"
 								:data-bucket-index="bucketIndex"
-								class="dropper"
 								tag="transition-group"
 								:item-key="(task) => `bucket${bucket.id}-task${task.id}`"
 								:component-data="taskDraggableTaskComponentData"
@@ -184,9 +185,9 @@
 				<input
 					:class="{'is-loading': loading}"
 					:disabled="loading || null"
-					@focusout="() => showNewBucketInput = false"
+					@blur="() => showNewBucketInput = false"
 					@keyup.enter="createNewBucket"
-					@keyup.esc="() => showNewBucketInput = false"
+					@keyup.esc="$event.target.blur()"
 					class="input"
 					:placeholder="$t('list.kanban.addBucketPlaceholder')"
 					type="text"
@@ -198,7 +199,7 @@
 					@click="() => showNewBucketInput = true"
 					:shadow="false"
 					class="is-transparent is-fullwidth has-text-centered"
-					v-if="!showNewBucketInput"
+					v-else
 					type="secondary"
 					icon="plus"
 				>
@@ -255,6 +256,8 @@ const DRAG_OPTIONS = {
 	delay: 150,
 }
 
+const MIN_SCROLL_HEIGHT_PERCENT = 0.25
+
 export default {
 	name: 'Kanban',
 	components: {
@@ -265,6 +268,8 @@ export default {
 	},
 	data() {
 		return {
+			taskContainerRefs: {},
+
 			dragOptions: DRAG_OPTIONS,
 
 			drag: false,
@@ -313,7 +318,10 @@ export default {
 				type: 'transition',
 				tag: 'div',
 				name: !this.dragBucket ? 'move-bucket': null,
-				class: 'kanban-bucket-container',
+				class: [
+					'kanban-bucket-container',
+					{ 'dragging-disabled': !this.canWrite },
+				],
 			}
 		},
 		taskDraggableTaskComponentData() {
@@ -321,6 +329,10 @@ export default {
 				type: 'transition',
 				tag: 'div',
 				name: !this.drag ? 'move-card': null,
+				class: [
+					'dropper',
+					{ 'dragging-disabled': !this.canWrite },
+				],
 			}
 		},
 		buckets: {
@@ -361,30 +373,26 @@ export default {
 			console.debug(`Loading buckets, loadedListId = ${this.loadedListId}, $route.params =`, this.$route.params)
 			this.filtersChanged = false
 
-			const minScrollHeightPercent = 0.25
-
 			this.$store.dispatch('kanban/loadBucketsForList', {listId: this.$route.params.listId, params: this.params})
-				.then(bs => {
-					bs.forEach(b => {
-						const e = this.$refs[`tasks-container${b.id}`][0]
-						e.addEventListener('scroll', () => {
-							const scrollTopMax = e.scrollHeight - e.clientHeight
-							if (scrollTopMax <= e.scrollTop + e.scrollTop * minScrollHeightPercent) {
-								this.$store.dispatch('kanban/loadNextTasksForBucket', {
-									listId: this.$route.params.listId,
-									params: this.params,
-									bucketId: b.id,
-								})
-									.catch(e => {
-										this.$message.error(e)
-									})
-							}
-						})
-					})
-				})
-				.catch(e => {
-					this.$message.error(e)
-				})
+		},
+
+		setTaskContainerRef(id, el) {
+			if (!el) return
+			this.taskContainerRefs[id] = el
+		},
+
+		handleTaskContainerScroll(id, el) {
+			const scrollTopMax = el.scrollHeight - el.clientHeight
+			const threshold = el.scrollTop + el.scrollTop * MIN_SCROLL_HEIGHT_PERCENT
+			if (scrollTopMax > threshold) {
+				return
+			}
+
+			this.$store.dispatch('kanban/loadNextTasksForBucket', {
+				listId: this.$route.params.listId,
+				params: this.params,
+				bucketId: id,
+			})
 		},
 		updateTaskPosition(e) {
 			this.drag = false
@@ -392,7 +400,7 @@ export default {
 			// While we could just pass the bucket index in through the function call, this would not give us the 
 			// new bucket id when a task has been moved between buckets, only the new bucket. Using the data-bucket-id
 			// of the drop target works all the time.
-			const bucketIndex = parseInt(e.to.parentNode.dataset.bucketIndex)
+			const bucketIndex = parseInt(e.to.dataset.bucketIndex)
 
 			const newBucket = this.buckets[bucketIndex]
 			const task = newBucket.tasks[e.newIndex]
@@ -430,16 +438,15 @@ export default {
 				.then(r => {
 					this.newTaskText = ''
 					this.$store.commit('kanban/addTaskToBucket', r)
+					this.scrollTaskContainerToBottom(bucketId)
 				})
-				.catch(e => {
-					this.$message.error(e)
-				})
-				.finally(() => {
-					if (!this.$refs[`tasks-container${bucketId}`][0]) {
-						return
-					}
-					this.$refs[`tasks-container${bucketId}`][0].scrollTop = this.$refs[`tasks-container${bucketId}`][0].scrollHeight
-				})
+		},
+		scrollTaskContainerToBottom(bucketId) {
+			const bucketEl = this.taskContainerRefs[bucketId]
+			if (!bucketEl) {
+				return
+			}
+			bucketEl.scrollTop = bucketEl.scrollHeight
 		},
 		createNewBucket() {
 			if (this.newBucketTitle === '') {
@@ -490,10 +497,8 @@ export default {
 			this.bucketTitleEditable = true
 			this.$nextTick(() => e.target.focus())
 		},
-		saveBucketTitle(bucketId) {
+		saveBucketTitle(bucketId, bucketTitle) {
 			this.bucketTitleEditable = false
-			const bucketTitleElement = this.$refs[`bucket${bucketId}title`][0]
-			const bucketTitle = bucketTitleElement.textContent
 			const bucket = new BucketModel({
 				id: bucketId,
 				title: bucketTitle,
@@ -511,7 +516,6 @@ export default {
 			this.$store.dispatch('kanban/updateBucket', bucket)
 				.then(r => {
 					realBucket.title = r.title
-					bucketTitleElement.blur()
 					this.$message.success({message: this.$t('list.kanban.bucketTitleSavedSuccess')})
 				})
 				.catch(e => {
