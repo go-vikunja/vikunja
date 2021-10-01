@@ -471,7 +471,6 @@ export default {
 	},
 	data() {
 		return {
-			taskId: Number(this.$route.params.id),
 			taskService: new TaskService(),
 			task: new TaskModel(),
 			relationKinds: relationKinds,
@@ -507,13 +506,16 @@ export default {
 		}
 	},
 	watch: {
-		'$route': {
+		taskId: {
 			handler: 'loadTask',
-			deep: true,
 			immediate: true,
 		},
 	},
 	computed: {
+		taskId() {
+			const { id } = this.$route.params
+			return id === undefined ? id : Number(id)
+		},
 		currentList() {
 			return this.$store.state[CURRENT_LIST]
 		},
@@ -557,9 +559,12 @@ export default {
 			return uploadFile(this.taskId, ...args)
 		},
 
-		loadTask() {
-			this.taskId = Number(this.$route.params.id)
-			this.taskService.get({id: this.taskId})
+		loadTask(taskId) {
+			if (taskId === undefined) {
+				return
+			}
+
+			this.taskService.get({id: taskId})
 				.then(r => {
 					this.task = r
 					this.$store.commit('attachments/set', r.attachments)
