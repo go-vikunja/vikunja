@@ -151,7 +151,7 @@ steps:
       - build
 
   - name: release-latest
-    image: plugins/s3:1
+    image: plugins/s3
     pull: true
     settings:
       bucket: vikunja-releases
@@ -172,7 +172,7 @@ steps:
     depends_on: [ build ]
 
   - name: release-version
-    image: plugins/s3:1
+    image: plugins/s3
     pull: true
     settings:
       bucket: vikunja-releases
