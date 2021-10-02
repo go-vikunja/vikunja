@@ -68,7 +68,7 @@
 						/>
 					</div>
 				</div>
-				<x-button @click="add" icon="plus">
+				<x-button @click="add(listId)" icon="plus">
 					{{ $t('list.share.share') }}
 				</x-button>
 			</div>
@@ -160,7 +160,7 @@
 		<transition name="modal">
 			<modal
 				@close="showDeleteModal = false"
-				@submit="remove()"
+				@submit="remove(listId)"
 				v-if="showDeleteModal"
 			>
 				<template #header>
@@ -215,14 +215,14 @@ export default {
 		frontendUrl: (state) => state.config.frontendUrl,
 	}),
 	methods: {
-		load() {
+		load(listId) {
 			// If listId == 0 the list on the calling component wasn't already loaded, so we just bail out here
-			if (this.listId === 0) {
+			if (listId === 0) {
 				return
 			}
 
 			this.linkShareService
-				.getAll({listId: this.listId})
+				.getAll({listId})
 				.then((r) => {
 					this.linkShares = r
 				})
@@ -230,10 +230,10 @@ export default {
 					this.$message.error(e)
 				})
 		},
-		add() {
+		add(listId) {
 			const newLinkShare = new LinkShareModel({
 				right: this.selectedRight,
-				listId: this.listId,
+				listId,
 				name: this.name,
 				password: this.password,
 			})
@@ -245,22 +245,22 @@ export default {
 					this.password = ''
 					this.showNewForm = false
 					this.$message.success({message: this.$t('list.share.links.createSuccess')})
-					this.load()
+					this.load(listId)
 				})
 				.catch((e) => {
 					this.$message.error(e)
 				})
 		},
-		remove() {
+		remove(listId) {
 			const linkshare = new LinkShareModel({
 				id: this.linkIdToDelete,
-				listId: this.listId,
+				listId,
 			})
 			this.linkShareService
 				.delete(linkshare)
 				.then(() => {
 					this.$message.success({message: this.$t('list.share.links.deleteSuccess')})
-					this.load()
+					this.load(listId)
 				})
 				.catch((e) => {
 					this.$message.error(e)
