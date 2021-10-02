@@ -128,7 +128,7 @@
     }
   },
   "list": {
-    "archived": "Этот список архивирован. В нём нелья создавать или изменять задачи.",
+    "archived": "This list is archived. It is not possible to create new or edit tasks for it.",
     "title": "Название списка",
     "color": "Цвет",
     "lists": "Списки",
