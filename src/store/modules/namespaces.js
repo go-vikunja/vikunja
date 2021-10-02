@@ -90,12 +90,7 @@ export default {
 			return null
 		},
 		getNamespaceById: state => namespaceId => {
-			for (const n in state.namespaces) {
-				if (state.namespaces[n].id === namespaceId) {
-					return state.namespaces[n]
-				}
-			}
-			return null
+			return state.namespaces.find(({id}) => id == namespaceId) || null
 		},
 	},
 	actions: {
