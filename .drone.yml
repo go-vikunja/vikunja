@@ -459,7 +459,7 @@ steps:
 
   # Push the releases to our pseudo-s3-bucket
   - name: release-latest
-    image: plugins/s3:1
+    image: plugins/s3
     pull: true
     settings:
       bucket: vikunja-releases
@@ -481,7 +481,7 @@ steps:
     depends_on: [ sign-release ]
 
   - name: release-version
-    image: plugins/s3:1
+    image: plugins/s3
     pull: true
     settings:
       bucket: vikunja-releases
@@ -514,7 +514,7 @@ steps:
 
   # Push the os releases to our pseudo-s3-bucket
   - name: release-os-latest
-    image: plugins/s3:1
+    image: plugins/s3
     pull: true
     settings:
       bucket: vikunja-releases
@@ -536,7 +536,7 @@ steps:
     depends_on: [ build-os-packages ]
 
   - name: release-os-version
-    image: plugins/s3:1
+    image: plugins/s3
     pull: true
     settings:
       bucket: vikunja-releases
@@ -576,7 +576,7 @@ steps:
 
   # Push the releases to our pseudo-s3-bucket
   - name: release-deb
-    image: plugins/s3:1
+    image: plugins/s3
     pull: true
     settings:
       bucket: vikunja-releases
