@@ -21,21 +21,15 @@ export default {
     previewClass: String,
     autoinit: {
       type: Boolean,
-      default() {
-        return true
-      },
+      default: true,
     },
     highlight: {
       type: Boolean,
-      default() {
-        return false
-      },
+      default: false,
     },
     sanitize: {
       type: Boolean,
-      default() {
-        return false
-      },
+      default: false,
     },
     configs: {
       type: Object,
@@ -51,6 +45,7 @@ export default {
   data() {
     return {
       isValueUpdateFromInner: false,
+      easymde: null,
     }
   },
   mounted() {
@@ -63,10 +58,10 @@ export default {
     if (isFullScreen) editor.toggleFullScreen()
   },
 	beforeUnmount() {
-		if (this.easyMDE) {
-			this.easyMDE.toTextArea()
-			this.easyMDE.cleanup()
-			this.easyMDE = null
+		if (this.easymde) {
+			this.easymde.toTextArea()
+			this.easymde.cleanup()
+			this.easymde = null
 		}
 	},
   methods: {
