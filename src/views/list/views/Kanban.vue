@@ -19,11 +19,11 @@
 			:class="{ 'is-loading': loading && !oneTaskUpdating}"
 			class="kanban kanban-bucket-container loader-container"
 		>
-				<!-- @end="updateBucketPosition" -->
 			<draggable
 				v-bind="dragOptions"
 				:modelValue="buckets"
-				@update:modelValue="updateBucketPositions"
+				@update:modelValue="updateBuckets"
+				@end="updateBucketPosition"
 				@start="() => dragBucket = true"
 				group="buckets"
 				:disabled="!canWrite"
@@ -345,14 +345,8 @@ export default {
 				],
 			}
 		},
-		buckets: {
-			get() {
-				return this.$store.state.kanban.buckets
-			},
-			set(value) {
-				console.log('should not set buckets', value)
-				this.$store.commit('kanban/setBuckets', value)
-			},
+		buckets() {
+			return this.$store.state.kanban.buckets
 		},
 		...mapState({
 			loadedListId: state => state.kanban.listId,
@@ -423,9 +417,6 @@ export default {
 			const task = newBucket.tasks[e.newIndex]
 			const taskBefore = newBucket.tasks[e.newIndex - 1] ?? null
 			const taskAfter = newBucket.tasks[e.newIndex + 1] ?? null
-
-			// task.kanbanPosition = calculateItemPosition(taskBefore !== null ? taskBefore.kanbanPosition : null, taskAfter !== null ? taskAfter.kanbanPosition : null)
-			// task.bucketId = newBucket.id
 
 			const newTask = {
 				...task,
@@ -522,10 +513,13 @@ export default {
 				})
 		},
 
-		updateBucketPositions(buckets) {
-			this.$store.dispatch('kanban/updateBuckets', buckets)
+		updateBuckets(value) {
+			// (1) buckets get updated in store and tasks positions get invalidated
+			this.$store.commit('kanban/setBuckets', value)
 		},
+
 		updateBucketPosition(e) {
+			// (2) bucket positon is changed
 			this.dragBucket = false
 
 			const bucket = this.buckets[e.newIndex]

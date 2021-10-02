@@ -378,43 +378,6 @@ export default {
 				.finally(() => cancel())
 		},
 
-		updateBuckets(ctx, updatedBucketsData) {
-			const cancel = setLoading(ctx, 'kanban')
-
-			const oldBuckets = []
-			const updatedBuckets = updatedBucketsData.map((updatedBucketData) => {
-				const bucketIndex = findIndexById(ctx.state.buckets, updatedBucketData.id)
-				const bucket = ctx.state.buckets[bucketIndex]
-
-				const oldBucket = cloneDeep(bucket)
-				oldBuckets.push(oldBucket)
-
-				const newBucket = {
-					// FIXME: maybe optional to set the original value as well
-					...bucket,
-					id: updatedBucketData.id,
-					listId: updatedBucketData.listId || oldBucket.listId,
-					...updatedBucketData,
-				}
-				ctx.commit('setBucketByIndex', {bucketIndex, bucket: newBucket})
-
-				const bucketService = new BucketService()
-				return bucketService.update(newBucket)
-			})
-
-			return Promise.all(updatedBuckets)
-				.then(r => {
-					Promise.resolve(r)
-				})
-				.catch(e => {
-					// restore original state
-					Object.values(updatedBuckets).forEach((oldBucket) => ctx.commit('setBucketById', oldBucket))
-
-					return Promise.reject(e)
-				})
-				.finally(() => cancel())
-		},
-
 		updateBucketTitle(ctx, { id, title }) {
 			const bucket = findById(ctx.state.buckets, id)
 

@@ -446,7 +446,7 @@ describe('Lists', () => {
 			cy.get('.kanban .bucket .tasks .task')
 				.contains(tasks[0].title)
 				.first()
-				.drag('.kanban .bucket:nth-child(2) .tasks .dropper div')
+				.drag('.kanban .bucket:nth-child(2) .tasks .dropper')
 			
 			cy.get('.kanban .bucket:nth-child(2) .tasks')
 				.should('contain', tasks[0].title)
