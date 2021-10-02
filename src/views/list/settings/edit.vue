@@ -71,7 +71,6 @@ import ListService from '@/services/list'
 import ColorPicker from '@/components/input/colorPicker.vue'
 import LoadingComponent from '@/components/misc/loading.vue'
 import ErrorComponent from '@/components/misc/error.vue'
-import ListDuplicateService from '@/services/listDuplicateService'
 import {CURRENT_LIST} from '@/store/mutation-types'
 import CreateEdit from '@/components/misc/create-edit.vue'
 
@@ -81,7 +80,6 @@ export default {
 		return {
 			list: ListModel,
 			listService: new ListService(),
-			listDuplicateService: new ListDuplicateService(),
 		}
 	},
 	components: {
@@ -106,9 +104,7 @@ export default {
 
 			this.listService.get(list)
 				.then(r => {
-					this.$set(this, 'list', r)
-					this.$store.commit(CURRENT_LIST, r)
-					this.setTitle(this.$t('list.edit.title', {list: this.list.title}))
+					this.list = { ...r }
 				})
 				.catch(e => {
 					this.$message.error(e)
@@ -117,6 +113,8 @@ export default {
 		save() {
 			this.$store.dispatch('lists/updateList', this.list)
 				.then(() => {
+					this.$store.commit(CURRENT_LIST, this.list)
+					this.setTitle(this.$t('list.edit.title', {list: this.list.title}))
 					this.$message.success({message: this.$t('list.edit.success')})
 					this.$router.back()
 				})
