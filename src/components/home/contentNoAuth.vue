@@ -27,12 +27,23 @@ export default {
 			logoUrl,	
 		}
 	},
-	created() {
-		this.redirectToHome()
+	computed: {
+		routeName() {
+			return this.$route.name
+		},
+		...mapState({
+			motd: state => state.config.motd,
+		}),
 	},
-	computed: mapState({
-		motd: state => state.config.motd,
-	}),
+	watch: {
+		routeName: {
+			handler(routeName) {
+				if (!routeName) return
+				this.redirectToHome()
+			},
+			immediate: true,
+		},
+	},
 	methods: {
 		redirectToHome() {
 			// Check if the user is already logged in and redirect them to the home page if not
