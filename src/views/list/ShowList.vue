@@ -48,7 +48,6 @@ export default {
 	data() {
 		return {
 			listService: new ListService(),
-			list: new ListModel(),
 			listLoaded: 0,
 		}
 	},
@@ -142,7 +141,6 @@ export default {
 			const list = new ListModel(listData)
 			this.listService.get(list)
 				.then(r => {
-					this.list = r
 					this.$store.commit(CURRENT_LIST, r)
 					this.setTitle(this.getListTitle(r))
 				})
