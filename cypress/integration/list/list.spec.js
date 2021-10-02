@@ -38,8 +38,7 @@ describe('Lists', () => {
 			.contains('Create')
 			.click()
 
-		cy.wait(1000) // Waiting until the request to create the new list is done
-		cy.get('.global-notification')
+		cy.get('.global-notification', { timeout: 1000 }) // Waiting until the request to create the new list is done
 			.should('contain', 'Success')
 		cy.url()
 			.should('contain', '/lists/')
