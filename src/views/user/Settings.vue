@@ -298,7 +298,6 @@ import EmailUpdateModel from '../../models/emailUpdate'
 import TotpModel from '../../models/totp'
 import TotpService from '../../services/totp'
 import UserSettingsService from '../../services/userSettings'
-import UserSettingsModel from '../../models/userSettings'
 import {playSoundWhenDoneKey} from '@/helpers/playPop'
 import {availableLanguages, saveLanguage, getCurrentLanguage} from '@/i18n'
 import {getQuickAddMagicMode, setQuickAddMagicMode} from '../../helpers/quickAddMagicMode'
@@ -311,6 +310,10 @@ import copy from 'copy-to-clipboard'
 import ListSearch from '@/components/tasks/partials/listSearch.vue'
 import UserSettingsDeletion from '../../components/user/settings/deletion'
 import DataExport from '../../components/user/settings/data-export'
+
+function getPlaySoundWhenDoneSetting() {
+	return localStorage.getItem(playSoundWhenDoneKey) === 'true' || localStorage.getItem(playSoundWhenDoneKey) === null
+}
 
 export default {
 	name: 'Settings',
@@ -330,15 +333,13 @@ export default {
 			totpConfirmPasscode: '',
 			totpDisableForm: false,
 			totpDisablePassword: '',
-			playSoundWhenDone: false,
+			playSoundWhenDone: getPlaySoundWhenDoneSetting(),
 			language: getCurrentLanguage(),
 			quickAddMagicMode: getQuickAddMagicMode(),
 			quickAddMagicPrefixes: PrefixMode,
 
-			settings: UserSettingsModel,
+			settings: { ...this.$store.state.auth.settings },
 			userSettingsService: new UserSettingsService(),
-
-			defaultList: null,
 		}
 	},
 	components: {
@@ -348,9 +349,6 @@ export default {
 		DataExport,
 	},
 	created() {
-		this.settings = this.$store.state.auth.settings
-		this.playSoundWhenDone = localStorage.getItem(playSoundWhenDoneKey) === 'true' || localStorage.getItem(playSoundWhenDoneKey) === null
-		this.defaultList = this.$store.getters['lists/getListById'](this.settings.defaultListId)
 		this.totpStatus()
 	},
 	mounted() {
@@ -358,6 +356,9 @@ export default {
 		this.anchorHashCheck()
 	},
 	computed: {
+		defaultList() {
+			return this.$store.getters['lists/getListById'](this.settings.defaultListId)
+		},
 		caldavUrl() {
 			let apiBase = window.API_URL.replace('/api/v1', '')
 			if (apiBase === '') { // Frontend and api on the same host which means we need to prefix the frontend url
