@@ -178,7 +178,6 @@ func initVars() {
 	setVersion()
 	setBinLocation()
 	setPkgVersion()
-	setApiPackages()
 	setGoFiles()
 	Ldflags = `-X "` + PACKAGE + `/pkg/version.Version=` + VersionNumber + `" -X "main.Tags=` + Tags + `"`
 }
@@ -348,6 +347,7 @@ type Test mg.Namespace
 // Runs all tests except integration tests
 func (Test) Unit() {
 	mg.Deps(initVars)
+	setApiPackages()
 	// We run everything sequentially and not in parallel to prevent issues with real test databases
 	args := append([]string{"test", Goflags[0], "-p", "1", "-timeout", "20m"}, ApiPackages...)
 	runAndStreamOutput("go", args...)
