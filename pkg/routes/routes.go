@@ -198,6 +198,9 @@ func RegisterRoutes(e *echo.Echo) {
 		registerCalDavRoutes(c)
 	}
 
+	// healthcheck
+	e.GET("/health", HealthcheckHandler)
+
 	// CORS_SHIT
 	if config.CorsEnable.GetBool() {
 		e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
