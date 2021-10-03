@@ -204,18 +204,12 @@
 			</div>
 		</div>
 
-		<!-- This router view is used to show the task popup while keeping the kanban board itself -->
-		<router-view v-slot="{ Component }">
-			<transition name="modal">
-				<component :is="Component"/>
-			</transition>
-		</router-view>
-
 		<transition name="modal">
+			<task-detail-view-modal v-if="showTaskDetail" />
 			<modal
+				v-else-if="showBucketDeleteModal"
 				@close="showBucketDeleteModal = false"
 				@submit="deleteBucket()"
-				v-if="showBucketDeleteModal"
 			>
 				<template #header><span>{{ $t('list.kanban.deleteHeaderBucket') }}</span></template>
 
@@ -242,6 +236,7 @@ import Dropdown from '@/components/misc/dropdown.vue'
 import {getCollapsedBucketState, saveCollapsedBucketState} from '@/helpers/saveCollapsedBucketState'
 import {calculateItemPosition} from '../../../helpers/calculateItemPosition'
 import KanbanCard from '@/components/tasks/partials/kanban-card'
+import TaskDetailViewModal, { useShowModal } from '@/views/tasks/TaskDetailViewModal.vue'
 
 const DRAG_OPTIONS = {
 	// sortable options
@@ -261,6 +256,7 @@ export default {
 		Dropdown,
 		FilterPopup,
 		draggable,
+		TaskDetailViewModal,
 	},
 	data() {
 		return {
@@ -296,6 +292,13 @@ export default {
 			},
 		}
 	},
+
+	setup() {
+		return {
+			showTaskDetail: useShowModal(),
+		}
+	},
+
 	created() {
 		// Save the current list view to local storage
 		// We use local storage and not vuex here to make it persistent across reloads.

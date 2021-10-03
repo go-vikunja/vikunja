@@ -67,7 +67,7 @@
 
 		<router-link
 			class="mt-2 has-text-centered is-block"
-			:to="{name: 'task.detail', params: {id: taskEditTask.id}}"
+			:to="taskDetailRoute"
 		>
 			{{ $t('task.openDetail') }}
 		</router-link>
@@ -101,6 +101,15 @@ export default {
 			isTaskEdit: false,
 			taskEditTask: TaskModel,
 		}
+	},
+	computed: {
+		taskDetailRoute() {
+			return {
+				name: 'task.detail',
+				params: { id: this.taskEditTask.id },
+				state: { backgroundView: this.$router.currentRoute.value.fullPath },
+			}
+		},
 	},
 	components: {
 		ColorPicker,

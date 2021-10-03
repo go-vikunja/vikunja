@@ -5,7 +5,6 @@ const ctrl = isAppleDevice() ? '⌘' : 'ctrl'
 export const KEYBOARD_SHORTCUTS = [
 	{
 		title: 'keyboardShortcuts.general',
-		available: () => null,
 		shortcuts: [
 			{
 				title: 'keyboardShortcuts.toggleMenu',
@@ -55,13 +54,7 @@ export const KEYBOARD_SHORTCUTS = [
 	},
 	{
 		title: 'keyboardShortcuts.task.title',
-		available: (route) => [
-			'task.detail',
-			'task.list.detail',
-			'task.gantt.detail',
-			'task.kanban.detail',
-			'task.detail',
-		].includes(route.name),
+		available: (route) => route.name === 'task.detail',
 		shortcuts: [
 			{
 				title: 'keyboardShortcuts.task.assign',

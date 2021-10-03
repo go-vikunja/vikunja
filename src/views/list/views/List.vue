@@ -90,7 +90,6 @@
 								:disabled="!canWrite"
 								:the-task="t"
 								@taskUpdated="updateTasks"
-								task-detail-route="task.detail"
 							>
 								<template v-if="canWrite">
 									<span class="icon handle">
@@ -124,12 +123,9 @@
 			/>
 		</card>
 
-		<!-- This router view is used to show the task popup while keeping the kanban board itself -->
-		<router-view v-slot="{ Component }">
-			<transition name="modal">
-				<component :is="Component"/>
-			</transition>
-		</router-view>
+		<transition name="modal">
+			<task-detail-view-modal v-if="showTaskDetail" />
+		</transition>
 	</div>
 </template>
 
@@ -147,8 +143,8 @@ import FilterPopup from '@/components/list/partials/filter-popup.vue'
 import {HAS_TASKS} from '@/store/mutation-types'
 import Nothing from '@/components/misc/nothing.vue'
 import Pagination from '@/components/misc/pagination.vue'
-import Popup from '@/components/misc/popup'
-import { ALPHABETICAL_SORT } from '@/components/list/partials/filters'
+import {ALPHABETICAL_SORT} from '@/components/list/partials/filters.vue'
+import TaskDetailViewModal, { useShowModal } from '@/views/tasks/TaskDetailViewModal.vue'
 
 import draggable from 'vuedraggable'
 import {calculateItemPosition} from '../../../helpers/calculateItemPosition'
@@ -192,7 +188,6 @@ export default {
 		taskList,
 	],
 	components: {
-		Popup,
 		Nothing,
 		FilterPopup,
 		SingleTaskInList,
@@ -200,7 +195,15 @@ export default {
 		AddTask,
 		draggable,
 		Pagination,
+		TaskDetailViewModal,
 	},
+
+	setup() {
+		return {
+			showTaskDetail: useShowModal(),
+		}
+	},
+
 	created() {
 		// Save the current list view to local storage
 		// We use local storage and not vuex here to make it persistent across reloads.

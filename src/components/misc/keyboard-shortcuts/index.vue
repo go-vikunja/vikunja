@@ -6,7 +6,9 @@
 
 				<message>
 					{{
-						s.available($route) ? $t('keyboardShortcuts.currentPageOnly') : $t('keyboardShortcuts.allPages')
+						s?.available($route)
+							? $t('keyboardShortcuts.currentPageOnly')
+							: $t('keyboardShortcuts.allPages')
 					}}
 				</message>
 
@@ -17,7 +19,8 @@
 							class="shortcut-keys"
 							is="dd"
 							:keys="sc.keys"
-							:combination="typeof sc.combination !== 'undefined' ? $t(`keyboardShortcuts.${sc.combination}`) : null"/>
+							:combination="typeof sc.combination !== 'undefined' ? $t(`keyboardShortcuts.${sc.combination}`) : null"
+						/>
 					</template>
 				</dl>
 			</template>
@@ -25,28 +28,17 @@
 	</modal>
 </template>
 
-<script>
-import {KEYBOARD_SHORTCUTS_ACTIVE} from '@/store/mutation-types'
-import Shortcut from '@/components/misc/shortcut.vue'
-import Message from '@/components/misc/message'
-import {KEYBOARD_SHORTCUTS} from './shortcuts'
+<script lang="ts" setup>
+import {store} from '@/store'
 
-export default {
-	name: 'keyboard-shortcuts',
-	components: {
-		Message, 
-		Shortcut,
-	},
-	data() {
-		return {
-			shortcuts: KEYBOARD_SHORTCUTS,
-		}
-	},
-	methods: {
-		close() {
-			this.$store.commit(KEYBOARD_SHORTCUTS_ACTIVE, false)
-		},
-	},
+import Shortcut from '@/components/misc/shortcut.vue'
+import Message from '@/components/misc/message.vue'
+
+import {KEYBOARD_SHORTCUTS_ACTIVE} from '@/store/mutation-types'
+import {KEYBOARD_SHORTCUTS as shortcuts} from './shortcuts'
+
+function close() {
+	store.commit(KEYBOARD_SHORTCUTS_ACTIVE, false)
 }
 </script>
 

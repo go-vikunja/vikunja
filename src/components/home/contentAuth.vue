@@ -20,8 +20,9 @@
 
 				<quick-actions/>
 
-				<router-view/>
+				<router-view :route="routeWithModal"/>
 
+				<!-- TODO: is this still used? -->
 				<router-view name="popup" v-slot="{ Component }">
 					<transition name="modal">
 						<component :is="Component" />
@@ -49,6 +50,24 @@ import {useEventListener} from '@vueuse/core'
 import {CURRENT_LIST, KEYBOARD_SHORTCUTS_ACTIVE, MENU_ACTIVE} from '@/store/mutation-types'
 import Navigation from '@/components/home/navigation.vue'
 import QuickActions from '@/components/quick-actions/quick-actions.vue'
+
+function useRouteWithModal() {
+	const router = useRouter()
+	const route = useRoute()
+	const historyState = computed(() => route.fullPath && window.history.state)
+
+	const routeWithModal = computed(() => {
+		if (historyState.value.backgroundView) {
+			return router.resolve(historyState.value.backgroundView)
+		} else {
+			return route
+		}
+	})
+
+	return { routeWithModal }
+}
+
+useRouteWithModal()
 
 const store = useStore()
 

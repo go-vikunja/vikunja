@@ -52,13 +52,9 @@
 			:show-taskswithout-dates="showTaskswithoutDates"
 		/>
 
-		<!-- This router view is used to show the task popup while keeping the gantt chart itself -->
-		<router-view v-slot="{ Component }">
-			<transition name="modal">
-				<component :is="Component" />
-			</transition>
-		</router-view>
-
+		<transition name="modal">
+			<task-detail-view-modal v-if="showTaskDetail" />
+		</transition>
 		</card>
 	</div>
 </template>
@@ -69,12 +65,20 @@ import flatPickr from 'vue-flatpickr-component'
 import Fancycheckbox from '../../../components/input/fancycheckbox'
 import {saveListView} from '@/helpers/saveListView'
 
+import TaskDetailViewModal, { useShowModal } from '@/views/tasks/TaskDetailViewModal.vue'
+
 export default {
 	name: 'Gantt',
 	components: {
 		Fancycheckbox,
 		flatPickr,
 		GanttChart,
+		TaskDetailViewModal,
+	},
+	setup() {
+		return {
+			showTaskDetail: useShowModal(),
+		}
 	},
 	created() {
 		// Save the current list view to local storage

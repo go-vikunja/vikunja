@@ -7,8 +7,8 @@
 			'has-light-text': !colorIsDark(task.hexColor) && task.hexColor !== `#${task.defaultColor}` && task.hexColor !== task.defaultColor,
 		}"
 		:style="{'background-color': task.hexColor !== '#' && task.hexColor !== `#${task.defaultColor}` ? task.hexColor : false}"
-		@click.ctrl="() => toggleTaskDone(task)"
 		@click.exact="() => $router.push({ name: 'task.kanban.detail', params: { id: task.id } })"
+		@click.ctrl="() => toggleTaskDone(task)"
 		@click.meta="() => toggleTaskDone(task)"
 	>
 		<span class="task-id">
@@ -111,6 +111,13 @@ export default {
 			} finally {
 				this.loadingInternal = false
 			}
+		},
+		openTaskDetail() {
+			this.$router.push({
+				name: 'task.detail',
+				params: { id: this.task.id },
+				state: { backgroundView: this.$router.currentRoute.value.fullPath },
+			})
 		},
 	},
 }

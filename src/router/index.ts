@@ -13,7 +13,6 @@ import DataExportDownload from '../views/user/DataExportDownload'
 // Tasks
 import ShowTasksInRangeComponent from '../views/tasks/ShowTasksInRange'
 import LinkShareAuthComponent from '../views/sharing/LinkSharingAuth'
-import TaskDetailViewModal from '../views/tasks/TaskDetailViewModal'
 import TaskDetailView from '../views/tasks/TaskDetailView'
 import ListNamespaces from '../views/namespaces/ListNamespaces'
 // Team Handling
@@ -315,204 +314,21 @@ const router = createRouter({
 					path: '/lists/:listId/list',
 					name: 'list.list',
 					component: List,
-					children: [
-						{
-							path: '/tasks/:id',
-							name: 'task.list.detail',
-							component: TaskDetailViewModal,
-						},
-						{
-							path: '/lists/:listId/settings/edit',
-							name: 'list.list.settings.edit',
-							component: ListSettingEdit,
-						},
-						{
-							path: '/lists/:listId/settings/background',
-							name: 'list.list.settings.background',
-							component: ListSettingBackground,
-						},
-						{
-							path: '/lists/:listId/settings/duplicate',
-							name: 'list.list.settings.duplicate',
-							component: ListSettingDuplicate,
-						},
-						{
-							path: '/lists/:listId/settings/share',
-							name: 'list.list.settings.share',
-							component: ListSettingShare,
-						},
-						{
-							path: '/lists/:listId/settings/delete',
-							name: 'list.list.settings.delete',
-							component: ListSettingDelete,
-						},
-						{
-							path: '/lists/:listId/settings/archive',
-							name: 'list.list.settings.archive',
-							component: ListSettingArchive,
-						},
-						{
-							path: '/lists/:listId/settings/edit',
-							name: 'filter.list.settings.edit',
-							component: FilterEdit,
-						},
-						{
-							path: '/lists/:listId/settings/delete',
-							name: 'filter.list.settings.delete',
-							component: FilterDelete,
-						},
-					],
 				},
 				{
 					path: '/lists/:listId/gantt',
 					name: 'list.gantt',
 					component: Gantt,
-					children: [
-						{
-							path: '/tasks/:id',
-							name: 'task.gantt.detail',
-							component: TaskDetailViewModal,
-						},
-						{
-							path: '/lists/:listId/settings/edit',
-							name: 'list.gantt.settings.edit',
-							component: ListSettingEdit,
-						},
-						{
-							path: '/lists/:listId/settings/background',
-							name: 'list.gantt.settings.background',
-							component: ListSettingBackground,
-						},
-						{
-							path: '/lists/:listId/settings/duplicate',
-							name: 'list.gantt.settings.duplicate',
-							component: ListSettingDuplicate,
-						},
-						{
-							path: '/lists/:listId/settings/share',
-							name: 'list.gantt.settings.share',
-							component: ListSettingShare,
-						},
-						{
-							path: '/lists/:listId/settings/delete',
-							name: 'list.gantt.settings.delete',
-							component: ListSettingDelete,
-						},
-						{
-							path: '/lists/:listId/settings/archive',
-							name: 'list.gantt.settings.archive',
-							component: ListSettingArchive,
-						},
-						{
-							path: '/lists/:listId/settings/edit',
-							name: 'filter.gantt.settings.edit',
-							component: FilterEdit,
-						},
-						{
-							path: '/lists/:listId/settings/delete',
-							name: 'filter.gantt.settings.delete',
-							component: FilterDelete,
-						},
-					],
 				},
 				{
 					path: '/lists/:listId/table',
 					name: 'list.table',
 					component: Table,
-					children: [
-						{
-							path: '/lists/:listId/settings/edit',
-							name: 'list.table.settings.edit',
-							component: ListSettingEdit,
-						},
-						{
-							path: '/lists/:listId/settings/background',
-							name: 'list.table.settings.background',
-							component: ListSettingBackground,
-						},
-						{
-							path: '/lists/:listId/settings/duplicate',
-							name: 'list.table.settings.duplicate',
-							component: ListSettingDuplicate,
-						},
-						{
-							path: '/lists/:listId/settings/share',
-							name: 'list.table.settings.share',
-							component: ListSettingShare,
-						},
-						{
-							path: '/lists/:listId/settings/delete',
-							name: 'list.table.settings.delete',
-							component: ListSettingDelete,
-						},
-						{
-							path: '/lists/:listId/settings/archive',
-							name: 'list.table.settings.archive',
-							component: ListSettingArchive,
-						},
-						{
-							path: '/lists/:listId/settings/edit',
-							name: 'filter.table.settings.edit',
-							component: FilterEdit,
-						},
-						{
-							path: '/lists/:listId/settings/delete',
-							name: 'filter.table.settings.delete',
-							component: FilterDelete,
-						},
-					],
 				},
 				{
 					path: '/lists/:listId/kanban',
 					name: 'list.kanban',
 					component: Kanban,
-					children: [
-						{
-							path: '/tasks/:id',
-							name: 'task.kanban.detail',
-							component: TaskDetailViewModal,
-						},
-						{
-							path: '/lists/:listId/settings/edit',
-							name: 'list.kanban.settings.edit',
-							component: ListSettingEdit,
-						},
-						{
-							path: '/lists/:listId/settings/background',
-							name: 'list.kanban.settings.background',
-							component: ListSettingBackground,
-						},
-						{
-							path: '/lists/:listId/settings/duplicate',
-							name: 'list.kanban.settings.duplicate',
-							component: ListSettingDuplicate,
-						},
-						{
-							path: '/lists/:listId/settings/share',
-							name: 'list.kanban.settings.share',
-							component: ListSettingShare,
-						},
-						{
-							path: '/lists/:listId/settings/delete',
-							name: 'list.kanban.settings.delete',
-							component: ListSettingDelete,
-						},
-						{
-							path: '/lists/:listId/settings/archive',
-							name: 'list.kanban.settings.archive',
-							component: ListSettingArchive,
-						},
-						{
-							path: '/lists/:listId/settings/edit',
-							name: 'filter.kanban.settings.edit',
-							component: FilterEdit,
-						},
-						{
-							path: '/lists/:listId/settings/delete',
-							name: 'filter.kanban.settings.delete',
-							component: FilterDelete,
-						},
-					],
 				},
 			],
 		},

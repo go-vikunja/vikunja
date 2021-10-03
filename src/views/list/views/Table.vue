@@ -120,7 +120,7 @@
 					<tbody>
 					<tr :key="t.id" v-for="t in tasks">
 						<td v-if="activeColumns.id">
-							<router-link :to="{name: 'task.detail', params: { id: t.id }}">
+							<router-link :to="taskDetailRoutes[t.id]">
 								<template v-if="t.identifier === ''">
 									#{{ t.index }}
 								</template>
@@ -133,7 +133,7 @@
 							<Done :is-done="t.done" variant="small" />
 						</td>
 						<td v-if="activeColumns.title">
-							<router-link :to="{name: 'task.detail', params: { id: t.id }}">{{ t.title }}</router-link>
+							<router-link :to="taskDetailRoutes[t.id]">{{ t.title }}</router-link>
 						</td>
 						<td v-if="activeColumns.priority">
 							<priority-label :priority="t.priority" :done="t.done" :show-all="true"/>
@@ -185,6 +185,8 @@
 </template>
 
 <script>
+import {useRoute} from 'vue-router'
+
 import taskList from '@/components/tasks/mixins/taskList'
 import Done from '@/components/misc/Done.vue'
 import User from '@/components/misc/user'
@@ -237,6 +239,19 @@ export default {
 			},
 		}
 	},
+	computed: {
+		taskDetailRoutes() {
+			const taskDetailRoutes = {}
+			this.tasks.forEach(({id}) => {
+				taskDetailRoutes[id] = {
+					name: 'task.detail',
+					params: { id },
+					state: { backgroundView: this.$router.currentRoute.value.fullPath },
+				}
+			})
+			return taskDetailRoutes
+		},
+	},
 	created() {
 		const savedShowColumns = localStorage.getItem('tableViewColumns')
 		if (savedShowColumns !== null) {
@@ -253,9 +268,13 @@ export default {
 
 		this.initTasks(1)
 
+	},
+	setup() {
 		// Save the current list view to local storage
 		// We use local storage and not vuex here to make it persistent across reloads.
-		saveListView(this.$route.params.listId, this.$route.name)
+		const route = useRoute()
+		console.log(route.value)
+		saveListView(route.value.params.listId, route.value.name)
 	},
 	methods: {
 		initTasks(page, search = '') {

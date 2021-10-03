@@ -8,28 +8,28 @@
 				<router-link
 					v-shortcut="'g l'"
 					:title="$t('keyboardShortcuts.list.switchToListView')"
-					:class="{'is-active': $route.name.includes('list.list')}"
+					:class="{'is-active': currentListType === 'list'}"
 					:to="{ name: 'list.list',   params: { listId: listId } }">
 					{{ $t('list.list.title') }}
 				</router-link>
 				<router-link
 					v-shortcut="'g g'"
 					:title="$t('keyboardShortcuts.list.switchToGanttView')"
-					:class="{'is-active': $route.name.includes('list.gantt')}"
+					:class="{'is-active': currentListType === 'gantt'}"
 					:to="{ name: 'list.gantt',  params: { listId: listId } }">
 					{{ $t('list.gantt.title') }}
 				</router-link>
 				<router-link
 					v-shortcut="'g t'"
 					:title="$t('keyboardShortcuts.list.switchToTableView')"
-					:class="{'is-active': $route.name.includes('list.table')}"
+					:class="{'is-active': currentListType === 'table'}"
 					:to="{ name: 'list.table',  params: { listId: listId } }">
 					{{ $t('list.table.title') }}
 				</router-link>
 				<router-link
 					v-shortcut="'g k'"
 					:title="$t('keyboardShortcuts.list.switchToKanbanView')"
-					:class="{'is-active': $route.name.includes('list.kanban')}"
+					:class="{'is-active': currentListType === 'kanban'}"
 					:to="{ name: 'list.kanban', params: { listId: listId } }">
 					{{ $t('list.kanban.title') }}
 				</router-link>
@@ -69,6 +69,11 @@ export default {
 		},
 	},
 	computed: {
+		currentListType() {
+			// default: 'list',
+			return ''
+		},
+
 		// Computed property to let "listId" always have a value
 		listId() {
 			return typeof this.$route.params.listId === 'undefined' ? 0 : this.$route.params.listId
@@ -113,11 +118,11 @@ export default {
 				this.$store.commit('kanban/setListId', 0)
 			}
 
-			// When clicking again on a list in the menu, there would be no list view selected which means no list
-			// at all. Users will then have to click on the list view menu again which is quite confusing.
-			if (this.$route.name === 'list.index') {
-				return this.replaceListView()
-			}
+			// // When clicking again on a list in the menu, there would be no list view selected which means no list
+			// // at all. Users will then have to click on the list view menu again which is quite confusing.
+			// if (this.$route.name === 'list.index') {
+			// 	return this.replaceListView()
+			// }
 
 			// Don't load the list if we either already loaded it or aren't dealing with a list at all currently and
 			// the currently loaded list has the right set.

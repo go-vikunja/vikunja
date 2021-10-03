@@ -13,37 +13,24 @@
 
 <script>
 import TaskDetailView from './TaskDetailView'
+import {computed} from 'vue'
+import {useRoute} from 'vue-router'
+
+export function useShowModal() {
+	const route = useRoute()
+	const historyState = computed(() => route.fullPath && window.history.state)
+	const show = computed(() => historyState.value.backgroundView)
+	return show
+}
 
 export default {
 	name: 'TaskDetailViewModal',
 	components: {
 		TaskDetailView,
 	},
-	data() {
-		return {
-			lastRoute: null,
-		}
-	},
-	beforeRouteEnter(to, from, next) {
-		next(vm => {
-			vm.lastRoute = from
-		})
-	},
-	beforeRouteLeave(to, from, next) {
-		if (from.name === 'task.kanban.detail' && to.name === 'task.detail') {
-			this.$router.replace({name: 'task.kanban.detail', params: to.params})
-			return
-		}
-
-		next()
-	},
 	methods: {
 		close() {
-			if (this.lastRoute === null) {
-				this.$router.back()
-			} else {
-				this.$router.push(this.lastRoute)
-			}
+			this.$router.back()
 		},
 	},
 }
