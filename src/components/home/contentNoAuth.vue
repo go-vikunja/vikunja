@@ -1,7 +1,7 @@
 <template>
 	<div class="no-auth-wrapper">
 		<div class="noauth-container">
-			<img alt="Vikunja" src="/images/logo-full.svg" width="400" height="117"/>
+			<img alt="Vikunja" :src="logoUrl" width="400" height="117" />
 			<div class="message is-info" v-if="motd !== ''">
 				<div class="message-header">
 					<p>{{ $t('misc.info') }}</p>
@@ -18,8 +18,15 @@
 <script>
 import {mapState} from 'vuex'
 
+import logoUrl from '@/assets/logo-full.svg'
+
 export default {
 	name: 'contentNoAuth',
+	data() {
+		return {
+			logoUrl,	
+		}
+	},
 	created() {
 		this.redirectToHome()
 	},

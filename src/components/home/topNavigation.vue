@@ -7,8 +7,7 @@
 	>
 		<div class="navbar-brand">
 			<router-link :to="{name: 'home'}" class="navbar-item logo">
-				<img width="164" height="48" alt="Vikunja" src="/images/logo-full-pride.svg" v-if="(new Date()).getMonth() === 5"/>
-				<img width="164" height="48" alt="Vikunja" src="/images/logo-full.svg" v-else/>
+				<img width="164" height="48" alt="Vikunja" :src="logoUrl" />
 			</router-link>
 			<a
 				@click="$store.commit('toggleMenu')"
@@ -103,6 +102,9 @@ import ListSettingsDropdown from '@/components/list/list-settings-dropdown.vue'
 import Dropdown from '@/components/misc/dropdown.vue'
 import Notifications from '@/components/notifications/notifications.vue'
 
+import logoUrl from '@/assets/logo-full.svg'
+import logoFullPrideUrl from '@/assets/logo-full-pride.svg'
+
 export default {
 	name: 'topNavigation',
 	components: {
@@ -111,16 +113,21 @@ export default {
 		ListSettingsDropdown,
 		Update,
 	},
-	computed: mapState({
-		userInfo: state => state.auth.info,
-		userAvatar: state => state.auth.avatarUrl,
-		userAuthenticated: state => state.auth.authenticated,
-		currentList: CURRENT_LIST,
-		background: 'background',
-		imprintUrl: state => state.config.legal.imprintUrl,
-		privacyPolicyUrl: state => state.config.legal.privacyPolicyUrl,
-		canWriteCurrentList: state => state.currentList.maxRight > Rights.READ,
-	}),
+	computed: {
+		logoUrl() {
+			return (new Date()).getMonth() === 5 ? logoFullPrideUrl : logoUrl
+		},
+		...mapState({
+			userInfo: state => state.auth.info,
+			userAvatar: state => state.auth.avatarUrl,
+			userAuthenticated: state => state.auth.authenticated,
+			currentList: CURRENT_LIST,
+			background: 'background',
+			imprintUrl: state => state.config.legal.imprintUrl,
+			privacyPolicyUrl: state => state.config.legal.privacyPolicyUrl,
+			canWriteCurrentList: state => state.currentList.maxRight > Rights.READ,
+		}),
+	},
 	mounted() {
 		this.$nextTick(() => {
 			if (typeof this.$refs.usernameDropdown === 'undefined' || typeof this.$refs.listTitle === 'undefined') {

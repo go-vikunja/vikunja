@@ -34,11 +34,11 @@
 			class="migration-in-progress-container"
 			v-else-if="isMigrating === true && message === '' && lastMigrationDate === null">
 			<div class="migration-in-progress">
-				<img :alt="name" :src="`/images/migration/${identifier}.png`"/>
+				<img :alt="name" :src="serviceIconSource"/>
 				<div class="progress-dots">
 					<span v-for="i in progressDotsCount" :key="i" />
 				</div>
-				<img alt="Vikunja" src="/images/logo.svg">
+				<img alt="Vikunja" :src="logoUrl">
 			</div>
 			<p>{{ $t('migrate.inProgress') }}</p>
 		</div>
@@ -66,6 +66,9 @@
 <script>
 import AbstractMigrationService from '../../services/migrator/abstractMigration'
 import AbstractMigrationFileService from '../../services/migrator/abstractMigrationFile'
+import {SERVICE_ICONS} from '../../helpers/migrator'
+
+import logoUrl from '@/assets/logo.svg'
 
 const PROGRESS_DOTS_COUNT = 8
 
@@ -80,6 +83,7 @@ export default {
 			message: '',
 			migratorAuthCode: '',
 			migrationService: null,
+			logoUrl,
 		}
 	},
 	props: {
@@ -94,6 +98,11 @@ export default {
 		isFileMigrator: {
 			type: Boolean,
 			default: false,
+		},
+	},
+	computed: {
+		serviceIconSource() {
+			return SERVICE_ICONS[this.identifier]()
 		},
 	},
 	created() {

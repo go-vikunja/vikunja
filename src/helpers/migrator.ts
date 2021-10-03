@@ -36,3 +36,13 @@ export const getMigratorFromSlug = (slug: string): Migrator => {
 			throw Error('Unknown migrator slug ' + slug)
 	}
 }
+
+
+// NOTE: we list the imports individually for better build time optimisation
+export const SERVICE_ICONS = {
+	'vikunja-file': () => import('@/assets/migration/vikunja-file.png'),
+	'microsoft-todo': () => import('@/assets/migration/microsoft-todo.svg'),
+	'todoist': () => import('@/assets/migration/todoist.svg'),
+	'trello': () => import('@/assets/migration/trello.svg'),
+	'wunderlist': () => import('@/assets/migration/wunderlist.jpg'),
+}

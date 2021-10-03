@@ -6,6 +6,6 @@ export const playPop = () => {
 		return
 	}
 
-	const popSound = new Audio('/audio/pop.wav')
+	const popSound = new Audio('/audio/pop.mp3')
 	popSound.play()
 }

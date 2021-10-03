@@ -6,7 +6,7 @@
 	>
 		<div class="container has-text-centered link-share-view">
 			<div class="column is-10 is-offset-1">
-				<img alt="Vikunja" class="logo" src="/images/logo-full.svg"/>
+				<img alt="Vikunja" class="logo" :src="logoUrl" />
 				<h1
 					:style="{ 'opacity': currentList.title === '' ? '0': '1' }"
 					class="title">
@@ -27,8 +27,15 @@
 import {mapState} from 'vuex'
 import {CURRENT_LIST} from '@/store/mutation-types'
 
+import logoUrl from '@/assets/logo-full.svg'
+
 export default {
 	name: 'contentLinkShare',
+	data() {
+		return {
+			logoUrl,
+		}
+	},
 	computed: mapState({
 		currentList: CURRENT_LIST,
 		background: 'background',

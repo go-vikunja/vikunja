@@ -38,7 +38,7 @@
 		</div>
 		<template v-if="!loading && (!tasks || tasks.length === 0) && showNothingToDo">
 			<h3 class="nothing">{{ $t('task.show.noTasks') }}</h3>
-			<img alt="" src="/images/cool.svg"/>
+			<img alt="" :src="llamaCoolUrl" />
 		</template>
 		<div :class="{ 'is-loading': loading}" class="spinner"></div>
 
@@ -64,6 +64,8 @@ import 'flatpickr/dist/flatpickr.css'
 import Fancycheckbox from '../../components/input/fancycheckbox'
 import {LOADING, LOADING_MODULE} from '../../store/mutation-types'
 
+import llamaCoolUrl from '@/assets/llama-cool.svg'
+
 export default {
 	name: 'ShowTasks',
 	components: {
@@ -81,6 +83,7 @@ export default {
 			cEndDate: null,
 
 			showNothingToDo: false,
+			llamaCoolUrl,
 		}
 	},
 	props: {
