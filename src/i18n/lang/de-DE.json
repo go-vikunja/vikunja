@@ -128,7 +128,7 @@
     }
   },
   "list": {
-    "archived": "Diese Liste ist archiviert. Es ist nicht möglich, neue Aufgaben zu erstellen oder sie zu bearbeiten.",
+    "archived": "This list is archived. It is not possible to create new or edit tasks for it.",
     "title": "Listentitel",
     "color": "Farbe",
     "lists": "Listen",

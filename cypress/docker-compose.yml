@@ -2,10 +2,12 @@ version: '3'
 
 services:
   api:
-    image: vikunja/api
+    image: vikunja/api:unstable
     environment:
       VIKUNJA_LOG_LEVEL: DEBUG
       VIKUNJA_SERVICE_TESTINGTOKEN: averyLongSecretToSe33dtheDB
+    ports:
+      - 3456:3456
   cypress:
     image: cypress/browsers:node12.18.3-chrome87-ff82
     volumes:

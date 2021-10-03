@@ -98,8 +98,8 @@
         "setSuccess": "Avatar défini."
       },
       "quickAddMagic": {
-        "title": "Quick Add Magic Mode",
-        "disabled": "Disabled",
+        "title": "Ajout rapide en mode magique",
+        "disabled": "Désactivé",
         "todoist": "Todoist",
         "vikunja": "Vikunja"
       }
@@ -499,8 +499,8 @@
     "doneSuccess": "Tâche marquée comme terminée.",
     "undoneSuccess": "Tâche marquée comme non terminée.",
     "openDetail": "Ouvrir la vue détaillée de la tâche",
-    "checklistTotal": "{checked} of {total} tasks",
-    "checklistAllDone": "{total} tasks",
+    "checklistTotal": "{checked} sur {total} tâches",
+    "checklistAllDone": "{total} tâches",
     "show": {
       "titleCurrent": "Tâches actuelles",
       "titleDates": "Tâches du {from} au {to}",
@@ -673,7 +673,7 @@
       "label4": "Par exemple : {prefix}\"Étiquette avec espaces\".",
       "priority1": "Pour définir la priorité d’une tâche, ajoutez un chiffre de 1 à 5, précédé d’un {prefix}.",
       "priority2": "Plus le numéro est élevé, plus la priorité est élevée.",
-      "assignees": "To directly assign the task to a user, add their username prefixed with {prefix} to the task.",
+      "assignees": "Pour assigner directement la tâche à un utilisateur, ajoutez son nom d'utilisateur préfixé avec {prefix} à la tâche.",
       "list1": "Pour définir une liste dans laquelle la tâche doit apparaître, entrez son nom précédé de {prefix}.",
       "list2": "Ceci renverra une erreur si la liste n’existe pas.",
       "dateAndTime": "Date et heure",

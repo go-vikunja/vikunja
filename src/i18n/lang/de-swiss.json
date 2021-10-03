@@ -128,7 +128,7 @@
     }
   },
   "list": {
-    "archived": "Die Liste isch archiviert. Es isch nid möglich e neui Uufgab drin z'erstelle oder z'bearbeite.",
+    "archived": "This list is archived. It is not possible to create new or edit tasks for it.",
     "title": "Liste Titl",
     "color": "Farb",
     "lists": "Listene",
