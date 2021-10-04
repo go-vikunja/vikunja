@@ -625,7 +625,8 @@
       "createPlaceholder": "Добавить как новую метку",
       "addSuccess": "Метка добавлена.",
       "createSuccess": "Метка создана.",
-      "removeSuccess": "Метка удалена."
+      "removeSuccess": "Метка удалена.",
+      "addCreateSuccess": "The label has been created and added successfully."
     },
     "priority": {
       "unset": "Не указан",

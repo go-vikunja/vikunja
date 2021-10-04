@@ -625,7 +625,8 @@
       "createPlaceholder": "Dies als neues Label hinzufügen",
       "addSuccess": "Das Label wurde erfolgreich hinzugefügt.",
       "createSuccess": "Das Label wurde erfolgreich erstellt.",
-      "removeSuccess": "Das Label wurde erfolgreich entfernt."
+      "removeSuccess": "Das Label wurde erfolgreich entfernt.",
+      "addCreateSuccess": "The label has been created and added successfully."
     },
     "priority": {
       "unset": "Nicht eingestellt",

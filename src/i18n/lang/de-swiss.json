@@ -625,7 +625,8 @@
       "createPlaceholder": "Das als neues Label hinzuefüege",
       "addSuccess": "Das Label isch erfolgriich hinzuegfüegt worde.",
       "createSuccess": "Das Label isch erfolgriich erstellt worde.",
-      "removeSuccess": "Das Label isch erfolgriich glöscht."
+      "removeSuccess": "Das Label isch erfolgriich glöscht.",
+      "addCreateSuccess": "The label has been created and added successfully."
     },
     "priority": {
       "unset": "Nid iihgstellt",

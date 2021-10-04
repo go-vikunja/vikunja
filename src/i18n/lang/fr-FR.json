@@ -625,7 +625,8 @@
       "createPlaceholder": "Ajouter ceci comme nouvelle étiquette",
       "addSuccess": "Étiquette ajoutée.",
       "createSuccess": "Étiquette créée.",
-      "removeSuccess": "Étiquette retirée."
+      "removeSuccess": "Étiquette retirée.",
+      "addCreateSuccess": "The label has been created and added successfully."
     },
     "priority": {
       "unset": "Non définie",
