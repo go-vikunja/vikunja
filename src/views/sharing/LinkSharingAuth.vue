@@ -77,7 +77,7 @@ export default {
 					}
 
 					// TODO: Put this logic in a global errorMessage handler method which checks all auth codes
-					let errorMessage = this.$t('sharing.errorMessage')
+					let errorMessage = this.$t('sharing.error')
 					if (e.response && e.response.data && e.response.data.message) {
 						errorMessage = e.response.data.message
 					}
