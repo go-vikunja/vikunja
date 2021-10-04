@@ -13,7 +13,7 @@
 		<div class="preview content" v-html="preview" v-if="isPreviewActive && text !== ''">
 		</div>
 
-		<p class="has-text-centered has-text-grey is-italic" v-if="showPreviewText">
+		<p class="has-text-centered has-text-grey is-italic my-5" v-if="showPreviewText">
 			{{ emptyText }}
 			<template v-if="isEditEnabled">
 				<a @click="toggleEdit">{{ $t('input.editor.edit') }}</a>.
@@ -23,8 +23,8 @@
 		<ul class="actions" v-if="bottomActions.length > 0">
 			<template v-if="isEditEnabled && !showPreviewText && showSave">
 				<li>
-					<a v-if="!isEditActive" @click="toggleEdit">{{ $t('input.editor.edit') }}</a>
-					<a v-else @click="toggleEdit" class="done-edit">{{ $t('misc.save') }}</a>
+					<a v-if="showEditButton" @click="toggleEdit">{{ $t('input.editor.edit') }}</a>
+					<a v-else-if="isEditActive" @click="toggleEdit" class="done-edit">{{ $t('misc.save') }}</a>
 				</li>
 			</template>
 			<li v-for="(action, k) in bottomActions" :key="k">
@@ -32,12 +32,12 @@
 			</li>
 		</ul>
 		<template v-else-if="isEditEnabled && showSave">
-			<ul v-if="!isEditActive" class="actions">
+			<ul v-if="showEditButton" class="actions">
 				<li>
 					<a @click="toggleEdit">{{ $t('input.editor.edit') }}</a>
 				</li>
 			</ul>
-			<x-button v-else @click="toggleEdit" type="secondary" :shadow="false">
+			<x-button v-else-if="isEditActive" @click="toggleEdit" type="secondary" :shadow="false">
 				{{ $t('misc.save') }}
 			</x-button>
 		</template>
@@ -104,6 +104,9 @@ export default {
 	computed: {
 		showPreviewText() {
 			return this.isPreviewActive && this.text === '' && this.emptyText !== ''
+		},
+		showEditButton() {
+			return !this.isEditActive && this.text !== ''
 		},
 	},
 	data() {
