@@ -423,7 +423,6 @@
 <script>
 import TaskService from '../../services/task'
 import TaskModel from '../../models/task'
-import relationKinds from '../../models/constants/relationKinds.json'
 
 import priorites from '../../models/constants/priorities.json'
 import rights from '../../models/constants/rights.json'
@@ -473,7 +472,6 @@ export default {
 		return {
 			taskService: new TaskService(),
 			task: new TaskModel(),
-			relationKinds: relationKinds,
 			// We doubled the task color property here because verte does not have a real change property, leading
 			// to the color property change being triggered when the # is removed from it, leading to an update,
 			// which leads in turn to a change... This creates an infinite loop in which the task is updated, changed,
