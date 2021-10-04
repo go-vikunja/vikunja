@@ -796,8 +796,6 @@
   },
   "date": {
     "locale": "ch",
-    "in": "in {date}",
-    "ago": "vor {date}",
     "altFormatLong": "j M Y H:i",
     "altFormatShort": "j M Y"
   },

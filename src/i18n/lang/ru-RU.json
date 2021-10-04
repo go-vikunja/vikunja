@@ -796,8 +796,6 @@
   },
   "date": {
     "locale": "en",
-    "in": "в {date}",
-    "ago": "{date} назад",
     "altFormatLong": "j M Y H:i",
     "altFormatShort": "j M Y"
   },
