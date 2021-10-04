@@ -156,7 +156,7 @@ export default {
 				.then(r => {
 					this.addLabel(r, false)
 					this.labels.push(r)
-					this.$message.success({message: this.$t('task.label.removeSuccess')})
+					this.$message.success({message: this.$t('task.label.addCreateSuccess')})
 				})
 				.catch(e => {
 					this.$message.error(e)
