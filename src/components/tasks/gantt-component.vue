@@ -194,7 +194,6 @@ import TaskCollectionService from '../../services/taskCollection'
 import {mapState} from 'vuex'
 import Rights from '../../models/constants/rights.json'
 import FilterPopup from '@/components/list/partials/filter-popup.vue'
-import {format} from 'date-fns'
 
 export default {
 	name: 'GanttChart',
@@ -474,7 +473,7 @@ export default {
 				})
 		},
 		formatYear(date) {
-			return format(date, 'MMMM, yyyy')
+			return this.format(date, 'MMMM, yyyy')
 		},
 	},
 }

@@ -112,6 +112,9 @@ Vue.mixin({
 		formatDateShort(date) {
 			return formatDate(date, 'PPpp', this.$t('date.locale'))
 		},
+		format(date, f) {
+			return formatDate(date, f, this.$t('date.locale'))
+		},
 		getNamespaceTitle(n) {
 			return getNamespaceTitle(n, (p: VueI18n.Path) => this.$t(p))
 		},
