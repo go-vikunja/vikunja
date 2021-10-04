@@ -21,12 +21,14 @@
 </template>
 
 <script>
+import {createRandomID} from '@/helpers/randomId'
+
 export default {
 	name: 'fancycheckbox',
 	data() {
 		return {
 			checked: false,
-			checkBoxId: 'fancycheckbox' + Math.random(),
+			checkBoxId: `fancycheckbox_${createRandomID()}`,
 		}
 	},
 	props: {

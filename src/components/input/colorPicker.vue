@@ -28,6 +28,8 @@
 </template>
 
 <script>
+import {createRandomID} from '@/helpers/randomId'
+
 const DEFAULT_COLORS = [
 	'#1973ff',
 	'#7F23FF',
@@ -36,11 +38,6 @@ const DEFAULT_COLORS = [
 	'#ffeb10',
 	'#00db60',
 ]
-
-function createRandomID() {
-	const ID_LENGTH = 9
-	return Math.random().toString(36).substr(2, ID_LENGTH)
-}
 
 export default {
 	name: 'colorPicker',
