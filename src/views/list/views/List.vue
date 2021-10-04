@@ -99,7 +99,7 @@
 							task-detail-route="task.detail"
 							v-for="t in tasks"
 						>
-							<span class="icon handle">
+							<span class="icon handle" v-if="canWrite">
 								<icon icon="grip-lines"/>
 							</span>
 							<div
@@ -150,7 +150,6 @@ import Nothing from '@/components/misc/nothing.vue'
 import createTask from '@/components/tasks/mixins/createTask'
 import Pagination from '@/components/misc/pagination.vue'
 
-import {mapState} from 'vuex'
 import draggable from 'vuedraggable'
 import {calculateItemPosition} from '../../../helpers/calculateItemPosition'
 
@@ -215,10 +214,12 @@ export default {
 
 			return calculateItemPosition(null, this.tasks[0].position)
 		},
-		...mapState({
-			canWrite: state => state.currentList.maxRight > Rights.READ,
-			list: state => state.currentList,
-		}),
+		canWrite() {
+			return this.list.maxRight > Rights.READ && this.list.id > 0
+		},
+		list() {
+			return this.$store.state.currentList
+		},
 	},
 	mounted() {
 		this.$nextTick(() => (this.ctaVisible = true))
