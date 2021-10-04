@@ -117,10 +117,15 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 					display: flex;
 					flex-wrap: wrap;
 					align-items: center;
+					margin-top: .25rem;
 
-					.tag, .assignees, .icon, .priority-label {
-						margin-top: .25rem;
+					.tag, .assignees, .icon, .priority-label, .checklist-summary {
+						margin-top: 0;
 						margin-right: .25rem;
+					}
+					
+					.checklist-summary {
+						padding-left: 0;
 					}
 
 					.assignees {
@@ -142,7 +147,7 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 
 					.priority-label {
 						font-size: .75rem;
-						height: 2rem;
+						height: 1.5rem;
 
 						.icon {
 							height: 1rem;

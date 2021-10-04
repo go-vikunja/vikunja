@@ -51,6 +51,7 @@
 					v-for="u in task.assignees"
 				/>
 			</div>
+			<checklist-summary :task="task"/>
 			<span class="icon" v-if="task.attachments.length > 0">
 				<icon icon="paperclip"/>	
 			</span>
@@ -66,10 +67,12 @@ import {playPop} from '../../../helpers/playPop'
 import PriorityLabel from '../../../components/tasks/partials/priorityLabel'
 import User from '../../../components/misc/user'
 import Labels from '../../../components/tasks/partials/labels'
+import ChecklistSummary from './checklist-summary'
 
 export default {
 	name: 'kanban-card',
 	components: {
+		ChecklistSummary,
 		PriorityLabel,
 		User,
 		Labels,
