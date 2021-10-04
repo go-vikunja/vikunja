@@ -7,6 +7,8 @@ VIKUNJA_API_URL="${VIKUNJA_API_URL:-"/api/v1"}"
 VIKUNJA_HTTP_PORT="${VIKUNJA_HTTP_PORT:-80}"
 VIKUNJA_HTTPS_PORT="${VIKUNJA_HTTPS_PORT:-443}"
 
+echo "Using $VIKUNJA_API_URL as default api url"
+
 # Escape the variable to prevent sed from complaining
 VIKUNJA_API_URL=$(echo $VIKUNJA_API_URL |sed 's/\//\\\//g')
 
