@@ -2,7 +2,7 @@
 	<span
 		:class="{'not-so-high': priority === priorities.HIGH, 'high-priority': priority >= priorities.HIGH}"
 		class="priority-label"
-		v-if="showAll || priority >= priorities.HIGH">
+		v-if="!done && (showAll || priority >= priorities.HIGH)">
 		<span class="icon" v-if="priority >= priorities.HIGH">
 			<icon icon="exclamation"/>
 		</span>
@@ -36,6 +36,10 @@ export default {
 			type: Number,
 		},
 		showAll: {
+			type: Boolean,
+			default: false,
+		},
+		done: {
 			type: Boolean,
 			default: false,
 		},

@@ -50,7 +50,7 @@
 			<transition name="fade">
 				<defer-task v-if="+new Date(task.dueDate) > 0 && showDefer" v-model="task" ref="deferDueDate"/>
 			</transition>
-			<priority-label :priority="task.priority"/>
+			<priority-label :priority="task.priority" :done="task.done"/>
 			<span>
 				<span class="list-task-icon" v-if="task.attachments.length > 0">
 					<icon icon="paperclip"/>

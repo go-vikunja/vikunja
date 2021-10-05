@@ -103,7 +103,7 @@
 					>
 						{{ t.title }}
 					</span>
-					<priority-label :priority="t.priority"/>
+					<priority-label :priority="t.priority" :done="t.done"/>
 					<!-- using the key here forces vue to use the updated version model and not the response returned by the api -->
 					<a @click="editTask(theTasks[k])" class="edit-toggle">
 						<icon icon="pen"/>

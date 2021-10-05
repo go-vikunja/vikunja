@@ -41,7 +41,7 @@
 		</progress>
 		<div class="footer">
 			<labels :labels="task.labels"/>
-			<priority-label :priority="task.priority"/>
+			<priority-label :priority="task.priority" :done="task.done"/>
 			<div class="assignees" v-if="task.assignees.length > 0">
 				<user
 					:avatar-size="24"

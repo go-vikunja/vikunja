@@ -140,7 +140,7 @@
 							<router-link :to="{name: 'task.detail', params: { id: t.id }}">{{ t.title }}</router-link>
 						</td>
 						<td v-if="activeColumns.priority">
-							<priority-label :priority="t.priority" :show-all="true"/>
+							<priority-label :priority="t.priority" :done="t.done" :show-all="true"/>
 						</td>
 						<td v-if="activeColumns.labels">
 							<labels :labels="t.labels"/>
