@@ -72,7 +72,7 @@
       "totp": {
         "title": "Zwei-Faktor-Authentifizierung",
         "enroll": "Aktivieren",
-        "finishSetupPart1": "Um die Aktivierung zu vollenden, benutze diesen Token in deiner TOTP App (sowie OTP oder ähnlich):",
+        "finishSetupPart1": "Um die Aktivierung zu vollenden, benutze diesen Token in deiner TOTP App (Google Authenticator oder ähnlich):",
         "finishSetupPart2": "Gib anschließend unten einen Code aus deiner Anwendung ein.",
         "scanQR": "Alternativ kannst du auch diesen QR-Code scannen:",
         "passcode": "Code",
