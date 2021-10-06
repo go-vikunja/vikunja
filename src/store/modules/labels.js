@@ -2,10 +2,37 @@ import LabelService from '@/services/label'
 import Vue from 'vue'
 import {setLoading} from '@/store/helper'
 
+/**
+ * Returns the labels by id if found
+ * @param {Object} state 
+ * @param {Array} ids 
+ * @returns {Array}
+ */
+function getLabelsByIds(state, ids) {
+	return Object.values(state.labels).filter(({id}) => ids.includes(id))
+}
+
+/**
+ * Checks if a list of labels is available in the store and filters them then query
+ * @param {Object} state 
+ * @param {Array} labels 
+ * @param {String} query 
+ * @returns {Array}
+ */
+ function filterLabelsByQuery(state, labels, query) {
+	const labelIds = labels.map(({id}) => id)
+	const foundLabels = getLabelsByIds(state, labelIds)
+	const labelQuery = query.toLowerCase()
+
+	return foundLabels.filter(({title}) => {
+		return !title.toLowerCase().includes(labelQuery)
+	})
+}
+
 export default {
 	namespaced: true,
-	// The state is an object which has the label ids as keys.
 	state: () => ({
+		// The labels are stored as an object which has the label ids as keys.
 		labels: {},
 		loaded: false,
 	}),
@@ -23,6 +50,14 @@ export default {
 		},
 		setLoaded(state, loaded) {
 			state.loaded = loaded
+		},
+	},
+	getters: {
+		getLabelsByIds(state) {
+			return (ids) => getLabelsByIds(state, ids)
+		},
+		filterLabelsByQuery(state) {
+			return (...arr) => filterLabelsByQuery(state, ...arr)
 		},
 	},
 	actions: {

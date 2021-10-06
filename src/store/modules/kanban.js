@@ -1,5 +1,4 @@
 import Vue from 'vue'
-import cloneDeep from 'lodash/cloneDeep'
 
 import BucketService from '../../services/bucket'
 import {filterObject} from '@/helpers/filterObject'
@@ -206,7 +205,7 @@ export default {
 			const cancel = setLoading(ctx, 'kanban')
 			ctx.commit('setBucketLoading', {bucketId: bucketId, loading: true})
 
-			const params = cloneDeep(ps)
+			const params = JSON.parse(JSON.stringify(ps))
 
 			params.sort_by = 'kanban_position'
 			params.order_by = 'asc'

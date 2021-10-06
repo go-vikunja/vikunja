@@ -1,5 +1,4 @@
 import TaskCollectionService from '@/services/taskCollection'
-import cloneDeep from 'lodash/cloneDeep'
 
 // FIXME: merge with DEFAULT_PARAMS in filters.vue
 const DEFAULT_PARAMS = {
@@ -83,7 +82,7 @@ export default {
 					this.tasks = r
 					this.currentPage = page
 
-					this.loadedList = cloneDeep(currentList)
+					this.loadedList = JSON.parse(JSON.stringify(currentList))
 				})
 				.catch(e => {
 					this.$message.error(e)

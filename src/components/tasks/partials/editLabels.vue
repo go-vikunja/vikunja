@@ -38,8 +38,6 @@
 </template>
 
 <script>
-import differenceWith from 'lodash/differenceWith'
-
 import LabelModel from '../../../models/label'
 import LabelTaskService from '../../../services/labelTask'
 
@@ -83,13 +81,7 @@ export default {
 	},
 	computed: {
 		foundLabels() {
-			const labels = (Object.values(this.$store.state.labels.labels).filter(l => {
-				return l.title.toLowerCase().includes(this.query.toLowerCase())
-			}) ?? [])
-
-			return differenceWith(labels, this.labels, (first, second) => {
-				return first.id === second.id
-			})
+			return this.$store.getters['labels/filterLabelsByQuery'](this.labels, this.query)
 		},
 		loading() {
 			return this.labelTaskService.loading || (this.$store.state[LOADING] && this.$store.state[LOADING_MODULE] === 'labels')

@@ -353,7 +353,7 @@ describe('Task', () => {
 				.first()
 				.click()
 
-			cy.get('.global-notification')
+			cy.get('.global-notification', { timeout: 4000 })
 				.should('contain', 'Success')
 			cy.get('.task-view .details.labels-list .multiselect .input-wrapper span.tag')
 				.should('exist')

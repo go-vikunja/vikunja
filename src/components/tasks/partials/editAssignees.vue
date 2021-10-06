@@ -29,8 +29,7 @@
 </template>
 
 <script>
-import differenceWith from 'lodash/differenceWith'
-
+import {includesById} from '@/helpers/utils'
 import UserModel from '../../../models/user'
 import ListUserService from '../../../services/listUsers'
 import TaskAssigneeService from '../../../services/taskAssignee'
@@ -111,9 +110,9 @@ export default {
 			this.listUserService.getAll({listId: this.listId}, {s: query})
 				.then(response => {
 					// Filter the results to not include users who are already assigned
-					this.$set(this, 'foundUsers', differenceWith(response, this.assignees, (first, second) => {
-						return first.id === second.id
-					}))
+					const filteredResponse = response.filter(({id}) => !includesById(this.assignees, id))
+
+					this.$set(this, 'foundUsers', filteredResponse)
 				})
 				.catch(e => {
 					this.$message.error(e)

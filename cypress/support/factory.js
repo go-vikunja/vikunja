@@ -1,5 +1,4 @@
 import {seed} from './seed'
-import merge from 'lodash/merge'
 
 /**
  * A factory makes it easy to seed the database with data.
@@ -25,7 +24,10 @@ export class Factory {
 		const data = []
 
 		for (let i = 1; i <= count; i++) {
-			const entry = merge(this.factory(), override)
+			const entry = {
+				...this.factory(),
+				...override,
+			}
 			for (const e in entry) {
 				if(typeof entry[e] === 'function') {
 					entry[e] = entry[e](i)

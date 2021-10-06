@@ -22,7 +22,6 @@
     "dompurify": "2.3.3",
     "highlight.js": "11.2.0",
     "is-touch-device": "1.0.1",
-    "lodash": "4.17.21",
     "marked": "3.0.4",
     "register-service-worker": "1.7.2",
     "snake-case": "3.0.4",

@@ -1,6 +1,6 @@
 import Vue from 'vue'
 
-import {findIndexById} from '@/helpers/find'
+import {findIndexById} from '@/helpers/utils'
 
 export default {
 	namespaced: true,
