@@ -203,6 +203,7 @@ export default {
 				this.setSelectedObject(value)
 			},
 			immediate: true,
+			deep: true,
 		},
 	},
 	computed: {
