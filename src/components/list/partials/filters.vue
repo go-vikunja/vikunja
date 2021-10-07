@@ -178,9 +178,8 @@ import Fancycheckbox from '../../input/fancycheckbox'
 import flatPickr from 'vue-flatpickr-component'
 import 'flatpickr/dist/flatpickr.css'
 
+import {includesById} from '@/helpers/utils'
 import {formatISO} from 'date-fns'
-import differenceWith from 'lodash/differenceWith'
-
 import PrioritySelect from '@/components/tasks/partials/prioritySelect.vue'
 import PercentDoneSelect from '@/components/tasks/partials/percentDoneSelect.vue'
 import Multiselect from '@/components/input/multiselect.vue'
@@ -270,13 +269,7 @@ export default {
 	},
 	computed: {
 		foundLabels() {
-			const labels = (Object.values(this.$store.state.labels.labels).filter(l => {
-				return l.title.toLowerCase().includes(this.labelQuery.toLowerCase())
-			}) ?? [])
-
-			return differenceWith(labels, this.labels, (first, second) => {
-				return first.id === second.id
-			})
+			return this.$store.getters['labels/filterLabelsByQuery'](this.labels, this.query)
 		},
 		flatPickerConfig() {
 			return {
@@ -310,8 +303,13 @@ export default {
 			this.prepareRelatedObjectFilter('namespace')
 
 			this.prepareSingleValue('labels')
-			const labelIds = (typeof this.filters.labels === 'string' ? this.filters.labels : '').split(',').map(i => parseInt(i))
-			this.labels = (Object.values(this.$store.state.labels.labels).filter(l => labelIds.includes(l.id)) ?? [])
+
+			const labels = typeof this.filters.labels === 'string'
+				? this.filters.labels
+				: ''
+			const labelIds = labels.split(',').map(i => parseInt(i))
+
+			this.labels = this.$store.getters['labels/getLabelsByIds'](labelIds)
 		},
 		removePropertyFromFilter(propertyName) {
 			// Because of the way arrays work, we can only ever remove one element at once.
@@ -534,10 +532,8 @@ export default {
 
 			this[`${kind}Service`].getAll({}, {s: query})
 				.then(response => {
-					// Filter the results to not include users who are already assigneid
-					this[`found${kind}`] = differenceWith(response, this[kind], (first, second) => {
-						return first.id === second.id
-					})
+					// Filter users from the results who are already assigned
+					this[`found${kind}`] = response.filter(({id}) => !includesById(this[kind], id))
 				})
 				.catch(e => {
 					this.$message.error(e)

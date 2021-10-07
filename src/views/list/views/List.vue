@@ -99,16 +99,18 @@
 								@taskUpdated="updateTasks"
 								task-detail-route="task.detail"
 							>
-								<span class="icon handle">
-									<icon icon="grip-lines"/>
-								</span>
-								<div
-									@click="editTask(t.id)"
-									class="icon settings"
-									v-if="!list.isArchived && canWrite"
-								>
-									<icon icon="pencil-alt"/>
-								</div>
+								<template v-if="canWrite">
+									<span class="icon handle">
+										<icon icon="grip-lines"/>
+									</span>
+									<div
+										@click="editTask(t.id)"
+										class="icon settings"
+										v-if="!list.isArchived"
+									>
+										<icon icon="pencil-alt"/>
+									</div>
+								</template>
 							</single-task-in-list>
 						</template>
 					</draggable>
@@ -152,7 +154,6 @@ import {HAS_TASKS} from '@/store/mutation-types'
 import Nothing from '@/components/misc/nothing.vue'
 import Pagination from '@/components/misc/pagination.vue'
 
-import {mapState} from 'vuex'
 import draggable from 'vuedraggable'
 import {calculateItemPosition} from '../../../helpers/calculateItemPosition'
 
@@ -216,10 +217,12 @@ export default {
 
 			return calculateItemPosition(null, this.tasks[0].position)
 		},
-		...mapState({
-			canWrite: state => state.currentList.maxRight > Rights.READ,
-			list: state => state.currentList,
-		}),
+		canWrite() {
+			return this.list.maxRight > Rights.READ && this.list.id > 0
+		},
+		list() {
+			return this.$store.state.currentList
+		},
 	},
 	mounted() {
 		this.$nextTick(() => (this.ctaVisible = true))

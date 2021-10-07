@@ -4,18 +4,20 @@
 		<p>{{ $t('migrate.description') }}</p>
 		<div class="migration-services-overview">
 			<router-link
-				:key="m.identifier"
-				:to="{name: 'migrate.service', params: {service: m.identifier}}"
-				v-for="m in availableMigrators">
-				<img :alt="m.name" :src="`/images/migration/${m.identifier}.png`"/>
-				{{ m.name }}
+				v-for="{name, identifier} in availableMigrators"
+				:key="identifier"
+				:to="{name: 'migrate.service', params: {service: identifier}}"
+			>
+				<img :alt="name" :src="serviceIconSources[identifier]"/>
+				{{ name }}
 			</router-link>
 		</div>
 	</div>
 </template>
 
 <script>
-import {getMigratorFromSlug} from '../../helpers/migrator'
+import {getMigratorFromSlug, SERVICE_ICONS} from '../../helpers/migrator'
+
 
 export default {
 	name: 'migrate.service',
@@ -25,6 +27,9 @@ export default {
 	computed: {
 		availableMigrators() {
 			return this.$store.state.config.availableMigrators.map(getMigratorFromSlug)
+		},
+		serviceIconSources() {
+			return this.availableMigrators.map(({identifier}) => SERVICE_ICONS[identifier]())
 		},
 	},
 }

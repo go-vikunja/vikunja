@@ -625,7 +625,8 @@
       "createPlaceholder": "Добавить как новую метку",
       "addSuccess": "Метка добавлена.",
       "createSuccess": "Метка создана.",
-      "removeSuccess": "Метка удалена."
+      "removeSuccess": "Метка удалена.",
+      "addCreateSuccess": "The label has been created and added successfully."
     },
     "priority": {
       "unset": "Не указан",
@@ -644,7 +645,21 @@
       "noneYet": "Ещё нет связанных задач.",
       "delete": "Удалить связь",
       "deleteText1": "Удалить эту связь с задачей?",
-      "deleteText2": "Это действие отменить нельзя!"
+      "deleteText2": "Это действие отменить нельзя!",
+      "select": "Select a relation kind",
+      "kinds": {
+        "subtask": "Subtask | Subtasks",
+        "parenttask": "Parent Task | Parent Tasks",
+        "related": "Related Task | Related Tasks",
+        "duplicateof": "Duplicate Of | Duplicates Of",
+        "duplicates": "Duplicates | Duplicates",
+        "blocking": "Blocking | Blocking",
+        "blocked": "Blocked By | Blocked By",
+        "precedes": "Precedes | Precedes",
+        "follows": "Follows | Follows",
+        "copiedfrom": "Copied From | Copied From",
+        "copiedto": "Copied To | Copied To"
+      }
     },
     "repeat": {
       "everyDay": "Каждый день",
@@ -795,8 +810,6 @@
   },
   "date": {
     "locale": "en",
-    "in": "в {date}",
-    "ago": "{date} назад",
     "altFormatLong": "j M Y H:i",
     "altFormatShort": "j M Y"
   },

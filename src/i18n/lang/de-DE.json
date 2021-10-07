@@ -72,7 +72,7 @@
       "totp": {
         "title": "Zwei-Faktor-Authentifizierung",
         "enroll": "Aktivieren",
-        "finishSetupPart1": "Um die Aktivierung zu vollenden, benutze diesen Token in deiner TOTP App (sowie OTP oder ähnlich):",
+        "finishSetupPart1": "Um die Aktivierung zu vollenden, benutze diesen Token in deiner TOTP App (Google Authenticator oder ähnlich):",
         "finishSetupPart2": "Gib anschließend unten einen Code aus deiner Anwendung ein.",
         "scanQR": "Alternativ kannst du auch diesen QR-Code scannen:",
         "passcode": "Code",
@@ -625,7 +625,8 @@
       "createPlaceholder": "Dies als neues Label hinzufügen",
       "addSuccess": "Das Label wurde erfolgreich hinzugefügt.",
       "createSuccess": "Das Label wurde erfolgreich erstellt.",
-      "removeSuccess": "Das Label wurde erfolgreich entfernt."
+      "removeSuccess": "Das Label wurde erfolgreich entfernt.",
+      "addCreateSuccess": "The label has been created and added successfully."
     },
     "priority": {
       "unset": "Nicht eingestellt",
@@ -644,7 +645,21 @@
       "noneYet": "Keine Aufgabenbeziehung vorhanden.",
       "delete": "Aufgabenbeziehung entfernen",
       "deleteText1": "Willst du diese Aufgabenbeziehung wirklich entfernen?",
-      "deleteText2": "Dies kann nicht rückgängig gemacht werden!"
+      "deleteText2": "Dies kann nicht rückgängig gemacht werden!",
+      "select": "Select a relation kind",
+      "kinds": {
+        "subtask": "Subtask | Subtasks",
+        "parenttask": "Parent Task | Parent Tasks",
+        "related": "Related Task | Related Tasks",
+        "duplicateof": "Duplicate Of | Duplicates Of",
+        "duplicates": "Duplicates | Duplicates",
+        "blocking": "Blocking | Blocking",
+        "blocked": "Blocked By | Blocked By",
+        "precedes": "Precedes | Precedes",
+        "follows": "Follows | Follows",
+        "copiedfrom": "Copied From | Copied From",
+        "copiedto": "Copied To | Copied To"
+      }
     },
     "repeat": {
       "everyDay": "Jeden Tag",
@@ -795,8 +810,6 @@
   },
   "date": {
     "locale": "de",
-    "in": "in {date}",
-    "ago": "vor {date}",
     "altFormatLong": "j M Y H:i",
     "altFormatShort": "j M Y"
   },

@@ -1,6 +1,4 @@
-import cloneDeep from 'lodash/cloneDeep'
-
-import {findById, findIndexById} from '@/helpers/find'
+import {findById, findIndexById} from '@/helpers/utils'
 import BucketService from '../../services/bucket'
 import {setLoading} from '../helper'
 import TaskCollectionService from '@/services/taskCollection'
@@ -253,7 +251,7 @@ export default {
 			const cancel = setLoading(ctx, 'kanban')
 			ctx.commit('setBucketLoading', {bucketId: bucketId, loading: true})
 
-			const params = cloneDeep(ps)
+			const params = JSON.parse(JSON.stringify(ps))
 
 			params.sort_by = 'kanban_position'
 			params.order_by = 'asc'

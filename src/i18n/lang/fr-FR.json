@@ -625,7 +625,8 @@
       "createPlaceholder": "Ajouter ceci comme nouvelle étiquette",
       "addSuccess": "Étiquette ajoutée.",
       "createSuccess": "Étiquette créée.",
-      "removeSuccess": "Étiquette retirée."
+      "removeSuccess": "Étiquette retirée.",
+      "addCreateSuccess": "The label has been created and added successfully."
     },
     "priority": {
       "unset": "Non définie",
@@ -644,7 +645,21 @@
       "noneYet": "Pas encore de relations de tâches.",
       "delete": "Supprimer la relation de tâche",
       "deleteText1": "Supprimer cette relation de tâche ?",
-      "deleteText2": "Ceci ne peut pas être annulé !"
+      "deleteText2": "Ceci ne peut pas être annulé !",
+      "select": "Select a relation kind",
+      "kinds": {
+        "subtask": "Subtask | Subtasks",
+        "parenttask": "Parent Task | Parent Tasks",
+        "related": "Related Task | Related Tasks",
+        "duplicateof": "Duplicate Of | Duplicates Of",
+        "duplicates": "Duplicates | Duplicates",
+        "blocking": "Blocking | Blocking",
+        "blocked": "Blocked By | Blocked By",
+        "precedes": "Precedes | Precedes",
+        "follows": "Follows | Follows",
+        "copiedfrom": "Copied From | Copied From",
+        "copiedto": "Copied To | Copied To"
+      }
     },
     "repeat": {
       "everyDay": "Chaque jour",
@@ -795,8 +810,6 @@
   },
   "date": {
     "locale": "fr",
-    "in": "en {date}",
-    "ago": "il y a {date}",
     "altFormatLong": "j M Y H:i",
     "altFormatShort": "j M Y"
   },

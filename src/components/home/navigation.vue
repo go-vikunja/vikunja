@@ -2,7 +2,7 @@
 	<div :class="{'is-active': menuActive}" class="namespace-container">
 		<div class="menu top-menu">
 			<router-link :to="{name: 'home'}" class="logo">
-				<img alt="Vikunja" src="/images/logo-full.svg" width="164" height="48"/>
+				<img alt="Vikunja" :src="logoUrl" width="164" height="48"/>
 			</router-link>
 			<ul class="menu-list">
 				<li>
@@ -162,6 +162,8 @@ import NamespaceSettingsDropdown from '@/components/namespace/namespace-settings
 import draggable from 'vuedraggable'
 import {calculateItemPosition} from '@/helpers/calculateItemPosition'
 
+import logoUrl from '@/assets/logo-full.svg'
+
 export default {
 	name: 'navigation',
 	data() {
@@ -173,6 +175,7 @@ export default {
 				ghostClass: 'ghost',
 			},
 			listUpdating: {},
+			logoUrl,
 		}
 	},
 	components: {

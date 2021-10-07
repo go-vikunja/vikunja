@@ -236,7 +236,7 @@
 import draggable from 'vuedraggable'
 
 import BucketModel from '../../../models/bucket'
-import {findById} from '@/helpers/find'
+import {findById} from '@/helpers/utils'
 import {mapState} from 'vuex'
 import {saveListView} from '@/helpers/saveListView'
 import Rights from '../../../models/constants/rights.json'

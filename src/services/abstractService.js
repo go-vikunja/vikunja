@@ -1,6 +1,4 @@
 import axios from 'axios'
-import reduce from 'lodash/reduce'
-import replace from 'lodash/replace'
 import {objectToSnakeCase} from '@/helpers/case'
 import {getToken} from '@/helpers/auth'
 
@@ -157,9 +155,10 @@ export default class AbstractService {
 	 */
 	getReplacedRoute(path, pathparams) {
 		let replacements = this.getRouteReplacements(path, pathparams)
-		return reduce(replacements, function (result, value, parameter) {
-			return replace(result, parameter, value)
-		}, path)
+		return Object.entries(replacements).reduce(
+			(result, [parameter, value])  => result.replace(parameter, value),
+			path,
+		)
 	}
 
 	/**

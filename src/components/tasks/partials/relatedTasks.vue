@@ -56,9 +56,9 @@
 					<div class="control is-expanded">
 						<div class="select is-fullwidth has-defaults">
 							<select v-model="newTaskRelationKind">
-								<option value="unset">Select a relation kind</option>
-								<option :key="rk" :value="rk" v-for="(label, rk) in relationKinds">
-									{{ label[0] }}
+								<option value="unset">{{ $t('task.relation.select') }}</option>
+								<option :key="rk" :value="rk" v-for="rk in relationKinds">
+									{{ $tc(`task.relation.kinds.${rk}`, 1) }}
 								</option>
 							</select>
 						</div>
@@ -256,10 +256,7 @@ export default {
 				})
 		},
 		relationKindTitle(kind, length) {
-			if (length > 1) {
-				return relationKinds[kind][1]
-			}
-			return relationKinds[kind][0]
+			return this.$tc(`task.relation.kinds.${kind}`, length)
 		},
 	},
 }

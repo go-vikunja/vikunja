@@ -102,7 +102,7 @@
 					>
 						{{ t.title }}
 					</span>
-					<priority-label :priority="t.priority"/>
+					<priority-label :priority="t.priority" :done="t.done"/>
 					<!-- using the key here forces vue to use the updated version model and not the response returned by the api -->
 					<a @click="editTask(theTasks[k])" class="edit-toggle">
 						<icon icon="pen"/>
@@ -192,7 +192,6 @@ import TaskCollectionService from '../../services/taskCollection'
 import {mapState} from 'vuex'
 import Rights from '../../models/constants/rights.json'
 import FilterPopup from '@/components/list/partials/filter-popup.vue'
-import {format} from 'date-fns'
 
 export default {
 	name: 'GanttChart',
@@ -466,7 +465,7 @@ export default {
 				})
 		},
 		formatYear(date) {
-			return format(date, 'MMMM, yyyy')
+			return this.format(date, 'MMMM, yyyy')
 		},
 	},
 }

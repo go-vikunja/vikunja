@@ -112,7 +112,7 @@ export default {
 			this.filterService.update(this.filter)
 				.then(r => {
 					this.$store.dispatch('namespaces/loadNamespaces')
-					this.$message.success({message: this.$t('filters.attributes.edit.success')})
+					this.$message.success({message: this.$t('filters.edit.success')})
 					this.filter = r
 					this.filters = objectToSnakeCase(this.filter.filters)
 					this.$router.back()

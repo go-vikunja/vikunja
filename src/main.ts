@@ -18,7 +18,7 @@ declare global {
 	}
 }
 
-import {formatDateShort, formatDateLong, formatDateSince} from '@/helpers/time/formatDate'
+import {formatDate, formatDateShort, formatDateLong, formatDateSince} from '@/helpers/time/formatDate'
 // @ts-ignore
 import {VERSION} from './version.json'
 
@@ -82,6 +82,7 @@ import {setTitle} from './helpers/setTitle'
 app.mixin({
 	methods: {
 		formatDateSince,
+		format: formatDate,
 		formatDate: formatDateLong,
 		formatDateShort: formatDateShort,
 		getNamespaceTitle,

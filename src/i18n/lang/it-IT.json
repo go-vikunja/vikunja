@@ -625,7 +625,8 @@
       "createPlaceholder": "Add this as new label",
       "addSuccess": "The label has been added successfully.",
       "createSuccess": "The label has been created successfully.",
-      "removeSuccess": "The label has been removed successfully."
+      "removeSuccess": "The label has been removed successfully.",
+      "addCreateSuccess": "The label has been created and added successfully."
     },
     "priority": {
       "unset": "Unset",
@@ -644,7 +645,21 @@
       "noneYet": "No task relations yet.",
       "delete": "Delete Task Relation",
       "deleteText1": "Are you sure you want to delete this task relation?",
-      "deleteText2": "This cannot be undone!"
+      "deleteText2": "This cannot be undone!",
+      "select": "Select a relation kind",
+      "kinds": {
+        "subtask": "Subtask | Subtasks",
+        "parenttask": "Parent Task | Parent Tasks",
+        "related": "Related Task | Related Tasks",
+        "duplicateof": "Duplicate Of | Duplicates Of",
+        "duplicates": "Duplicates | Duplicates",
+        "blocking": "Blocking | Blocking",
+        "blocked": "Blocked By | Blocked By",
+        "precedes": "Precedes | Precedes",
+        "follows": "Follows | Follows",
+        "copiedfrom": "Copied From | Copied From",
+        "copiedto": "Copied To | Copied To"
+      }
     },
     "repeat": {
       "everyDay": "Every Day",
@@ -795,8 +810,6 @@
   },
   "date": {
     "locale": "en",
-    "in": "in {date}",
-    "ago": "{date} ago",
     "altFormatLong": "j M Y H:i",
     "altFormatShort": "j M Y"
   },
