@@ -78,6 +78,7 @@ export default {
 				this.labels = value
 			},
 			immediate: true,
+			deep: true,
 		},
 	},
 	computed: {

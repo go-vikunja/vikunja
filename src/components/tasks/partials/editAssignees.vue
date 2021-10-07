@@ -74,6 +74,7 @@ export default {
 				this.assignees = value
 			},
 			immediate: true,
+			deept: true,
 		},
 	},
 	methods: {
