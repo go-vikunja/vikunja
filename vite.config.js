@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite'
 const {createVuePlugin} = require('vite-plugin-vue2')
+import legacyFn from '@vitejs/plugin-legacy'
 const {VitePWA} = require('vite-plugin-pwa')
 const path = require('path')
 const {visualizer} = require('rollup-plugin-visualizer')
@@ -10,6 +11,20 @@ const pathSrc = path.resolve(__dirname, './src')
 const SCSS_IMPORT_PREFIX = `@use "sass:math";
 @import "${pathSrc}/styles/variables";`
 
+const isModernBuild = Boolean(process.env.BUILD_MODERN_ONLY)
+const legacy = isModernBuild
+	? undefined
+	: legacyFn({
+		// recommended by browserslist => https://github.com/vitejs/vite/tree/main/packages/plugin-legacy#targets
+		targets: ['defaults', 'not IE 11'],
+	})
+
+if (isModernBuild) {
+	console.log('Building "modern-only" build')
+} else {
+	console.log('Building "legacy" build with "@vitejs/plugin-legacy"')
+}
+
 export default defineConfig({
 	css: {
 		preprocessorOptions: {
@@ -18,6 +33,7 @@ export default defineConfig({
 	},
 	plugins: [
 		createVuePlugin(),
+		legacy,
 		VitePWA({
 			srcDir: 'src',
 			filename: 'sw.js',
@@ -92,7 +108,6 @@ export default defineConfig({
 		strictPort: true,
 	},
 	build: {
-		target: 'es2015',
 		rollupOptions: {
 			plugins: [
 				visualizer(),
