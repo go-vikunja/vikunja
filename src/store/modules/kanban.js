@@ -200,13 +200,13 @@ export default {
 				let taskIndex
 				const bucketIndex = state.buckets.findIndex(({ tasks }) => {
 					taskIndex = findIndexById(tasks, id)
-					return taskIndex !== undefined
+					return taskIndex !== -1
 				})
-		
+
 				return {
-					bucketIndex: taskIndex || null,
-					taskIndex: taskIndex || null,
-					task: state.buckets?.[bucketIndex].tasks?.[taskIndex] || null,
+					bucketIndex: bucketIndex !== -1 ? bucketIndex : null,
+					taskIndex: taskIndex !== -1 ? taskIndex : null,
+					task: state.buckets[bucketIndex]?.tasks?.[taskIndex] || null,
 				}
 			}
 		},
