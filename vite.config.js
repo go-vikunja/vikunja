@@ -1,3 +1,4 @@
+import { defineConfig } from 'vite'
 const {createVuePlugin} = require('vite-plugin-vue2')
 const {VitePWA} = require('vite-plugin-pwa')
 const path = require('path')
@@ -9,7 +10,7 @@ const pathSrc = path.resolve(__dirname, './src')
 const SCSS_IMPORT_PREFIX = `@use "sass:math";
 @import "${pathSrc}/styles/variables";`
 
-module.exports = {
+export default defineConfig({
 	css: {
 		preprocessorOptions: {
 			scss: { additionalData: SCSS_IMPORT_PREFIX },
@@ -116,4 +117,4 @@ module.exports = {
 			},
 		},
 	},
-}
+})
