@@ -1,6 +1,6 @@
-declare module '*.vue' {
-  import Vue from 'vue'
+declare module 'vue' {
   export default Vue
+  export * from '@vue/runtime-dom'
 }
 
 // https://next.vuex.vuejs.org/guide/migrating-to-4-0-from-3-x.html#typescript-support
