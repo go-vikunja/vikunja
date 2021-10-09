@@ -138,9 +138,6 @@ export default {
 					}
 					this.migrate()
 				})
-				.catch(e => {
-					this.$message.error(e)
-				})
 		}
 	},
 	methods: {
@@ -148,9 +145,6 @@ export default {
 			this.migrationService.getAuthUrl()
 				.then(r => {
 					this.authUrl = r.url
-				})
-				.catch(e => {
-					this.$message.error(e)
 				})
 		},
 		migrate() {
@@ -167,9 +161,6 @@ export default {
 					this.message = r.message
 					this.$store.dispatch('namespaces/loadNamespaces')
 				})
-				.catch(e => {
-					this.$message.error(e)
-				})
 				.finally(() => {
 					this.isMigrating = false
 				})
@@ -183,9 +174,6 @@ export default {
 				.then(r => {
 					this.message = r.message
 					this.$store.dispatch('namespaces/loadNamespaces')
-				})
-				.catch(e => {
-					this.$message.error(e)
 				})
 				.finally(() => {
 					this.isMigrating = false

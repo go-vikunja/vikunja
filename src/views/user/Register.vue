@@ -147,7 +147,6 @@ export default {
 			}
 
 			this.$store.dispatch('auth/register', credentials)
-				.catch(() => {})
 		},
 	},
 }

@@ -84,9 +84,6 @@ export default {
 					this.$emit('update:modelValue', this.assignees)
 					this.$message.success({message: this.$t('task.assignee.assignSuccess')})
 				})
-				.catch(e => {
-					this.$message.error(e)
-				})
 		},
 		removeAssignee(user) {
 			this.$store.dispatch('tasks/removeAssignee', {user: user, taskId: this.taskId})
@@ -99,9 +96,6 @@ export default {
 					}
 					this.$message.success({message: this.$t('task.assignee.unassignSuccess')})
 				})
-				.catch(e => {
-					this.$message.error(e)
-				})
 		},
 		findUser(query) {
 			if (query === '') {
@@ -113,9 +107,6 @@ export default {
 				.then(response => {
 					// Filter the results to not include users who are already assigned
 					this.foundUsers = response.filter(({id}) => !includesById(this.assignees, id))
-				})
-				.catch(e => {
-					this.$message.error(e)
 				})
 		},
 		clearAllFoundUsers() {

@@ -83,9 +83,6 @@ export default {
 						this.saved = false
 					}, 2000)
 				})
-				.catch(e => {
-					this.$message.error(e)
-				})
 				.finally(() => {
 					this.saving = false
 				})

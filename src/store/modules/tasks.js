@@ -45,7 +45,6 @@ function addLabelToTask(task, label) {
 			task.labels.push(label)
 			return Promise.resolve(result)
 		})
-		.catch(e => Promise.reject(e))
 }
 
 function findAssignees(parsedTaskAssignees) {
@@ -77,9 +76,6 @@ export default {
 					ctx.commit(HAS_TASKS, r.length > 0, {root: true})
 					return r
 				})
-				.catch(e => {
-					return Promise.reject(e)
-				})
 				.finally(() => {
 					cancel()
 				})
@@ -92,10 +88,7 @@ export default {
 			return taskService.update(task)
 				.then(t => {
 					ctx.commit('kanban/setTaskInBucket', t, {root: true})
-					return Promise.resolve(t)
-				})
-				.catch(e => {
-					return Promise.reject(e)
+					return t
 				})
 				.finally(() => {
 					cancel()
@@ -106,10 +99,7 @@ export default {
 			return taskService.delete(task)
 				.then(t => {
 					ctx.commit('kanban/removeTaskInBucket', task, {root: true})
-					return Promise.resolve(t)
-				})
-				.catch(e => {
-					return Promise.reject(e)
+					return t
 				})
 		},
 		// Adds a task attachment in store.
@@ -151,10 +141,7 @@ export default {
 					// FIXME: direct store manipulation (task)
 					t.task.assignees.push(user)
 					ctx.commit('kanban/setTaskInBucketByIndex', t, {root: true})
-					return Promise.resolve(r)
-				})
-				.catch(e => {
-					return Promise.reject(e)
+					return r
 				})
 		},
 		removeAssignee(ctx, {user, taskId}) {
@@ -182,10 +169,7 @@ export default {
 					}
 
 					ctx.commit('kanban/setTaskInBucketByIndex', t, {root: true})
-					return Promise.resolve(r)
-				})
-				.catch(e => {
-					return Promise.reject(e)
+					return r
 				})
 
 		},
@@ -208,10 +192,7 @@ export default {
 					t.task.labels.push(label)
 					ctx.commit('kanban/setTaskInBucketByIndex', t, {root: true})
 
-					return Promise.resolve(r)
-				})
-				.catch(e => {
-					return Promise.reject(e)
+					return r
 				})
 		},
 
@@ -241,10 +222,7 @@ export default {
 
 					ctx.commit('kanban/setTaskInBucketByIndex', t, {root: true})
 
-					return Promise.resolve(r)
-				})
-				.catch(e => {
-					return Promise.reject(e)
+					return r
 				})
 		},
 
@@ -296,7 +274,7 @@ export default {
 			
 			//  4. If none of the above worked, reject the promise with an error.
 			if (typeof foundListId === 'undefined' || listId === null) {
-				return Promise.reject('NO_LIST')
+				throw new Error('NO_LIST')
 			}
 		
 			return foundListId
@@ -336,7 +314,6 @@ export default {
 					task,
 					parsedLabels:parsedTask.labels,
 				}))
-				.catch(e => Promise.reject(e))
 		},
 	},
 }

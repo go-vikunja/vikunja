@@ -68,9 +68,6 @@ export default {
 				.then(b => {
 					this.background = b
 				})
-				.catch(e => {
-					this.$message.error(e)
-				})
 				.finally(() => this.backgroundLoading = false)
 		},
 		toggleFavoriteList(list) {
@@ -80,7 +77,6 @@ export default {
 				return
 			}
 			this.$store.dispatch('lists/toggleListFavorite', list)
-				.catch(e => this.$message.error(e))
 		},
 	},
 }

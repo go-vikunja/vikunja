@@ -211,9 +211,6 @@ export default {
 
 					this.tasks = tasks
 				})
-				.catch(e => {
-					this.$message.error(e)
-				})
 		},
 		updateTasks(updatedTask) {
 			for (const t in this.tasks) {

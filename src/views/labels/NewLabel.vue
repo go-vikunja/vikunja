@@ -75,9 +75,6 @@ export default {
 					})
 					this.$message.success({message: this.$t('label.create.success')})
 				})
-				.catch((e) => {
-					this.$message.error(e)
-				})
 		},
 	},
 }

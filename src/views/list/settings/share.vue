@@ -68,9 +68,6 @@ export default {
 					this.manageUsersComponent = 'userTeam'
 					this.setTitle(this.$t('list.share.title', {list: this.list.title}))
 				})
-				.catch(e => {
-					this.$message.error(e)
-				})
 		},
 	},
 }

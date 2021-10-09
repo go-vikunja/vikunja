@@ -187,9 +187,6 @@ export default {
 							},
 						}])
 					})
-					.catch(e => {
-						this.$message.error(e)
-					})
 			}
 
 			if (checked) {
@@ -205,9 +202,6 @@ export default {
 					this.task = t
 					this.$emit('task-updated', t)
 					this.$store.dispatch('namespaces/loadNamespacesIfFavoritesDontExist')
-				})
-				.catch(e => {
-					this.$message.error(e)
 				})
 		},
 		hideDeferDueDatePopup(e) {

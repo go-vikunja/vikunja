@@ -109,7 +109,6 @@ export default defineComponent({
 						this.$message.success({message: this.$t('user.deletion.confirmSuccess')})
 						this.$store.dispatch('auth/refreshUserInfo')
 					})
-					.catch(e => this.$message.error(e))
 			}
 		},
 	},

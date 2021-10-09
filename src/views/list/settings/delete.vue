@@ -30,9 +30,6 @@ export default {
 					this.$message.success({message: this.$t('list.delete.success')})
 					this.$router.push({name: 'home'})
 				})
-				.catch(e => {
-					this.$message.error(e)
-				})
 		},
 	},
 }

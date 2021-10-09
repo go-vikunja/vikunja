@@ -159,9 +159,6 @@ export default {
 					ctx.dispatch('checkAuth')
 					return Promise.resolve()
 				})
-				.catch(e => {
-					return Promise.reject(e)
-				})
 				.finally(() => {
 					ctx.commit(LOADING, false, {root: true})
 				})
@@ -174,9 +171,7 @@ export default {
 				.then(r => {
 					saveToken(r.data.token, false)
 					ctx.dispatch('checkAuth')
-					return Promise.resolve(r.data)
-				}).catch(e => {
-					return Promise.reject(e)
+					return r.data
 				})
 		},
 		// Populates user information from jwt token saved in local storage in store
@@ -238,7 +233,7 @@ export default {
 					ctx.commit('lastUserRefresh')
 				})
 				.catch(e => {
-					console.error('Error while refreshing user info:', e)
+					throw new Error('Error while refreshing user info:', { cause: e })
 				})
 		},
 		// Renews the api token and saves it to local storage

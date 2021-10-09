@@ -281,9 +281,6 @@ export default {
 						this.selectedRight[s.id] = s.right,
 					)
 				})
-				.catch((e) => {
-					this.$message.error(e)
-				})
 		},
 		deleteSharable() {
 			if (this.shareType === 'user') {
@@ -306,9 +303,6 @@ export default {
 					}
 					this.$message.success({message: this.$t('list.share.userTeam.removeSuccess', {type: this.shareTypeName, sharable: this.sharableName})})
 				})
-				.catch((e) => {
-					this.$message.error(e)
-				})
 		},
 		add(admin) {
 			if (admin === null) {
@@ -330,9 +324,6 @@ export default {
 				.then(() => {
 					this.$message.success({message: this.$t('list.share.userTeam.addedSuccess', {type: this.shareTypeName})})
 					this.load()
-				})
-				.catch((e) => {
-					this.$message.error(e)
 				})
 		},
 		toggleType(sharable) {
@@ -367,9 +358,6 @@ export default {
 					}
 					this.$message.success({message: this.$t('list.share.userTeam.updatedSuccess', {type: this.shareTypeName})})
 				})
-				.catch((e) => {
-					this.$message.error(e)
-				})
 		},
 		find(query) {
 			if (query === '') {
@@ -381,9 +369,6 @@ export default {
 				.getAll({}, {s: query})
 				.then((response) => {
 					this.found = response
-				})
-				.catch((e) => {
-					this.$message.error(e)
 				})
 		},
 		clearAll() {

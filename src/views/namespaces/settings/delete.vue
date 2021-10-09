@@ -41,9 +41,6 @@ export default {
 					this.$message.success({message: this.$t('namespace.delete.success')})
 					this.$router.push({name: 'home'})
 				})
-				.catch(e => {
-					this.$message.error(e)
-				})
 		},
 	},
 }

@@ -113,16 +113,16 @@ export default {
 				)
 			})
 
-			Promise.all(newTasks)
+			return Promise.all(newTasks)
 				.then(() => {
 					this.newTaskTitle = ''
 				})
 				.catch(e => {
-					if (e === 'NO_LIST') {
+					if (e.message === 'NO_LIST') {
 						this.errorMessage = this.$t('list.create.addListRequired')
 						return
 					}
-					this.$message.error(e)
+					throw e
 				})
 		},
 		handleEnter(e) {

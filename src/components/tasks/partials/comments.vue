@@ -227,9 +227,6 @@ export default {
 					this.comments = r
 					this.makeActions()
 				})
-				.catch((e) => {
-					this.$message.error(e)
-				})
 		},
 		addComment() {
 			if (this.newComment.comment === '') {
@@ -252,9 +249,6 @@ export default {
 					this.newComment.comment = ''
 					this.$message.success({message: this.$t('task.comment.addedSuccess')})
 					this.makeActions()
-				})
-				.catch((e) => {
-					this.$message.error(e)
 				})
 				.finally(() => {
 					this.creating = false
@@ -289,9 +283,6 @@ export default {
 						this.saved = null
 					}, 2000)
 				})
-				.catch((e) => {
-					this.$message.error(e)
-				})
 				.finally(() => {
 					this.isCommentEdit = false
 					this.saving = null
@@ -306,9 +297,6 @@ export default {
 							this.comments.splice(a, 1)
 						}
 					}
-				})
-				.catch((e) => {
-					this.$message.error(e)
 				})
 				.finally(() => {
 					this.showDeleteModal = false

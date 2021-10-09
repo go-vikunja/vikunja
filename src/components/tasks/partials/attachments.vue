@@ -228,9 +228,6 @@ export default {
 					)
 					this.$message.success(r)
 				})
-				.catch((e) => {
-					this.$message.error(e)
-				})
 				.finally(() => {
 					this.showDeleteModal = false
 				})

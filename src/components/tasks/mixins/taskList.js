@@ -84,9 +84,6 @@ export default {
 
 					this.loadedList = JSON.parse(JSON.stringify(currentList))
 				})
-				.catch(e => {
-					this.$message.error(e)
-				})
 		},
 
 		loadTasksForPage(e) {

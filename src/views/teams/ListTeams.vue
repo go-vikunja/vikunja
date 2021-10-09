@@ -48,9 +48,6 @@ export default {
 				.then(response => {
 					this.teams = response
 				})
-				.catch(e => {
-					this.$message.error(e)
-				})
 		},
 	},
 }

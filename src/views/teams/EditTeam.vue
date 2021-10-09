@@ -229,9 +229,6 @@ export default {
 					this.title = this.$t('team.edit.title', {team: this.team.name})
 					this.setTitle(this.title)
 				})
-				.catch((e) => {
-					this.$message.error(e)
-				})
 		},
 		save() {
 			if (this.team.name === '') {
@@ -246,9 +243,6 @@ export default {
 					this.team = response
 					this.$message.success({message: this.$t('team.edit.success')})
 				})
-				.catch((e) => {
-					this.$message.error(e)
-				})
 		},
 		deleteTeam() {
 			this.teamService
@@ -257,9 +251,6 @@ export default {
 					this.$message.success({message: this.$t('team.edit.delete.success')})
 					this.$router.push({name: 'teams.index'})
 				})
-				.catch((e) => {
-					this.$message.error(e)
-				})
 		},
 		deleteUser() {
 			this.teamMemberService
@@ -267,9 +258,6 @@ export default {
 				.then(() => {
 					this.$message.success({message: this.$t('team.edit.deleteUser.success')})
 					this.loadTeam()
-				})
-				.catch((e) => {
-					this.$message.error(e)
 				})
 				.finally(() => {
 					this.showUserDeleteModal = false
@@ -285,9 +273,6 @@ export default {
 				.then(() => {
 					this.loadTeam()
 					this.$message.success({message: this.$t('team.edit.userAddedSuccess')})
-				})
-				.catch((e) => {
-					this.$message.error(e)
 				})
 		},
 		toggleUserType(member) {
@@ -308,9 +293,6 @@ export default {
 							this.$t('team.edit.madeMember'),
 					})
 				})
-				.catch((e) => {
-					this.$message.error(e)
-				})
 		},
 		findUser(query) {
 			if (query === '') {
@@ -322,9 +304,6 @@ export default {
 				.getAll({}, {s: query})
 				.then((response) => {
 					this.foundUsers = response
-				})
-				.catch((e) => {
-					this.$message.error(e)
 				})
 		},
 		clearAll() {

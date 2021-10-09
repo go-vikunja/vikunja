@@ -565,7 +565,6 @@ export default {
 			}
 			this.$store.dispatch('kanban/updateBucket', newBucket)
 				.then(() => this.$message.success({message: this.$t('list.kanban.doneBucketSavedSuccess')}))
-				.catch(e => this.$message.error(e))
 		},
 		collapseBucket(bucket) {
 			this.collapsedBuckets[bucket.id] = true

@@ -50,9 +50,6 @@ export default {
 					this.$message.success({message: this.$t('list.duplicate.success')})
 					this.$router.push({name: 'list.index', params: {listId: r.list.id}})
 				})
-				.catch(e => {
-					this.$message.error(e)
-				})
 		},
 	},
 }

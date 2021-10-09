@@ -129,9 +129,6 @@ export default {
 					this.task = r
 					this.$emit('update:modelValue', r)
 				})
-				.catch((e) => {
-					this.$message.error(e)
-				})
 		},
 	},
 }

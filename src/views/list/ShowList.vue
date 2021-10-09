@@ -144,9 +144,6 @@ export default {
 					this.$store.dispatch(CURRENT_LIST, r)
 					this.setTitle(this.getListTitle(r))
 				})
-				.catch(e => {
-					this.$message.error(e)
-				})
 				.finally(() => {
 					this.listLoaded = this.$route.params.listId
 				})

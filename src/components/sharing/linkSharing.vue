@@ -226,9 +226,6 @@ export default {
 				.then((r) => {
 					this.linkShares = r
 				})
-				.catch((e) => {
-					this.$message.error(e)
-				})
 		},
 		add(listId) {
 			const newLinkShare = new LinkShareModel({
@@ -247,9 +244,6 @@ export default {
 					this.$message.success({message: this.$t('list.share.links.createSuccess')})
 					this.load(listId)
 				})
-				.catch((e) => {
-					this.$message.error(e)
-				})
 		},
 		remove(listId) {
 			const linkshare = new LinkShareModel({
@@ -261,9 +255,6 @@ export default {
 				.then(() => {
 					this.$message.success({message: this.$t('list.share.links.deleteSuccess')})
 					this.load(listId)
-				})
-				.catch((e) => {
-					this.$message.error(e)
 				})
 				.finally(() => {
 					this.showDeleteModal = false

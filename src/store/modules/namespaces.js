@@ -115,7 +115,6 @@ export default {
 
 					return Promise.resolve(r)
 				})
-				.catch(e => Promise.reject(e))
 				.finally(() => {
 					cancel()
 				})
@@ -141,7 +140,6 @@ export default {
 					ctx.commit('removeNamespaceById', namespace.id)
 					return Promise.resolve(r)
 				})
-				.catch(e => Promise.reject(e))
 				.finally(() => cancel())
 		},
 		createNamespace(ctx, namespace) {
@@ -153,7 +151,6 @@ export default {
 					ctx.commit('addNamespace', r)
 					return Promise.resolve(r)
 				})
-				.catch(e => Promise.reject(e))
 				.finally(() => cancel())
 		},
 	},

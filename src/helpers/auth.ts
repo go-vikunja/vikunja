@@ -53,9 +53,7 @@ export const refreshToken = (persist: boolean): Promise<AxiosResponse> => {
 			return Promise.resolve(r)
 		})
 		.catch(e => {
-			// eslint-disable-next-line
-			console.log('Error renewing token: ', e)
-			return Promise.reject(e)
+			throw new Error('Error renewing token: ', { cause: e })
 		})
 }
 

@@ -35,7 +35,6 @@ export default {
 					this.$message.success({message: this.$t('filters.delete.success')})
 					this.$router.push({name: 'namespaces.index'})
 				})
-				.catch(e => this.$message.error(e))
 		},
 	},
 }

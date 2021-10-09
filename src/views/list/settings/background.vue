@@ -128,9 +128,6 @@ export default {
 								})
 						})
 					})
-					.catch(e => {
-						this.$message.error(e)
-					})
 			}, 300)
 		},
 		setBackground(backgroundId) {
@@ -145,9 +142,6 @@ export default {
 					this.$store.commit('namespaces/setListInNamespaceById', l)
 					this.$message.success({message: this.$t('list.background.success')})
 				})
-				.catch(e => {
-					this.$message.error(e)
-				})
 		},
 		uploadBackground() {
 			if (this.$refs.backgroundUploadInput.files.length === 0) {
@@ -160,9 +154,6 @@ export default {
 					this.$store.commit('namespaces/setListInNamespaceById', l)
 					this.$message.success({message: this.$t('list.background.success')})
 				})
-				.catch(e => {
-					this.$message.error(e)
-				})
 		},
 		removeBackground() {
 			this.listService.removeBackground(this.currentList)
@@ -171,9 +162,6 @@ export default {
 					this.$store.commit('namespaces/setListInNamespaceById', l)
 					this.$message.success({message: this.$t('list.background.removeSuccess')})
 					this.$router.back()
-				})
-				.catch(e => {
-					this.$message.error(e)
 				})
 		},
 	},

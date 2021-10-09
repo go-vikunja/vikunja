@@ -27,8 +27,5 @@ export default class BackgroundUnsplashService extends AbstractService {
 			.then(response => {
 				return window.URL.createObjectURL(new Blob([response.data]))
 			})
-			.catch(e => {
-				return e
-			})
 	}
 }

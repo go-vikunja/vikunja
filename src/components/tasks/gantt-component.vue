@@ -317,9 +317,6 @@ export default {
 							return tasks
 						}
 					})
-					.catch((e) => {
-						return Promise.reject(e)
-					})
 			}
 
 			getAllTasks()
@@ -342,9 +339,6 @@ export default {
 							if (a.startDate > b.startDate) return 1
 							return 0
 						})
-				})
-				.catch((e) => {
-					this.$message.error(e)
 				})
 		},
 		addGantAttributes(t) {
@@ -423,9 +417,6 @@ export default {
 						}
 					}
 				})
-				.catch((e) => {
-					this.$message.error(e)
-				})
 		},
 		editTask(task) {
 			this.taskToEdit = task
@@ -459,9 +450,6 @@ export default {
 					this.tasksWithoutDates.push(this.addGantAttributes(r))
 					this.newTaskTitle = ''
 					this.hideCrateNewTask()
-				})
-				.catch((e) => {
-					this.$message.error(e)
 				})
 		},
 		formatYear(date) {

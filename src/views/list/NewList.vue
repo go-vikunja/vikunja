@@ -71,9 +71,6 @@ export default {
 						params: { listId: r.id },
 					})
 				})
-				.catch((e) => {
-					this.$message.error(e)
-				})
 		},
 	},
 }

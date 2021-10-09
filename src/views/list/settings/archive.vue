@@ -42,9 +42,6 @@ export default {
 					this.$store.commit('namespaces/setListInNamespaceById', r)
 					this.$message.success({message: this.$t('list.archive.success')})
 				})
-				.catch(e => {
-					this.$message.error(e)
-				})
 				.finally(() => {
 					this.$router.back()
 				})

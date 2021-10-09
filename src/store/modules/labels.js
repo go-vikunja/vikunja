@@ -91,7 +91,6 @@ export default {
 					ctx.commit('setLoaded', true)
 					return Promise.resolve(r)
 				})
-				.catch(e => Promise.reject(e))
 				.finally(() => cancel())
 		},
 		deleteLabel(ctx, label) {
@@ -103,7 +102,6 @@ export default {
 					ctx.commit('removeLabelById', label)
 					return Promise.resolve(r)
 				})
-				.catch(e => Promise.reject(e))
 				.finally(() => cancel())
 		},
 		updateLabel(ctx, label) {
@@ -115,7 +113,6 @@ export default {
 					ctx.commit('setLabel', r)
 					return Promise.resolve(r)
 				})
-				.catch(e => Promise.reject(e))
 				.finally(() => cancel())
 		},
 		createLabel(ctx, label) {
@@ -127,7 +124,6 @@ export default {
 					ctx.commit('setLabel', r)
 					return Promise.resolve(r)
 				})
-				.catch(e => Promise.reject(e))
 				.finally(() => cancel())
 		},
 	},

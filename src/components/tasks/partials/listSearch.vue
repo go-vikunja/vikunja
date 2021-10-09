@@ -60,9 +60,6 @@ export default {
 				.then(response => {
 					this.foundLists = response
 				})
-				.catch(e => {
-					this.$message.error(e)
-				})
 		},
 		clearAll() {
 			this.foundLists = []

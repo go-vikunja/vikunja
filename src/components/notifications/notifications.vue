@@ -98,9 +98,6 @@ export default {
 				.then(r => {
 					this.allNotifications = r
 				})
-				.catch(e => {
-					this.$message.error(e)
-				})
 		},
 		to(n, index) {
 			const to = {
@@ -137,7 +134,6 @@ export default {
 					.then(r => {
 						this.allNotifications[index] = r
 					})
-					.catch(e => this.$message.error(e))
 			}
 		},
 	},

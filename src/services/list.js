@@ -57,21 +57,13 @@ export default class ListService extends AbstractService {
 			.then(response => {
 				return window.URL.createObjectURL(new Blob([response.data]))
 			})
-			.catch(e => {
-				return e
-			})
 	}
 
 	removeBackground(list) {
 		const cancel = this.setLoading()
 
 		return this.http.delete(`/lists/${list.id}/background`, list)
-			.then(response => {
-				return Promise.resolve(response.data)
-			})
-			.catch(error => {
-				return this.errorHandler(error)
-			})
+			.then(response => response.data)
 			.finally(() => {
 				cancel()
 			})

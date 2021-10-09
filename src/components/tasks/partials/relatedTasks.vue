@@ -185,14 +185,8 @@ export default {
 		},
 	},
 	methods: {
-		findTasks(query) {
-			this.taskService.getAll({}, {s: query})
-				.then(response => {
-					this.foundTasks = response
-				})
-				.catch(e => {
-					this.$message.error(e)
-				})
+		async findTasks(query) {
+			this.foundTasks = await this.taskService.getAll({}, {s: query})
 		},
 		addTaskRelation() {
 			let rel = new TaskRelationModel({
@@ -212,9 +206,6 @@ export default {
 					setTimeout(() => {
 						this.saved = false
 					}, 2000)
-				})
-				.catch(e => {
-					this.$message.error(e)
 				})
 		},
 		removeTaskRelation() {
@@ -237,9 +228,6 @@ export default {
 						this.saved = false
 					}, 2000)
 				})
-				.catch(e => {
-					this.$message.error(e)
-				})
 				.finally(() => {
 					this.showDeleteModal = false
 				})
@@ -250,9 +238,6 @@ export default {
 				.then(r => {
 					this.newTaskRelationTask = r
 					this.addTaskRelation()
-				})
-				.catch(e => {
-					this.$message.error(e)
 				})
 		},
 		relationKindTitle(kind, length) {

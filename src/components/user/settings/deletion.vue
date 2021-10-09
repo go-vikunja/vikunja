@@ -113,7 +113,6 @@ export default {
 					this.$message.success({message: this.$t('user.deletion.requestSuccess')})
 					this.password = ''
 				})
-				.catch(e => this.$message.error(e))
 		},
 		cancelDeletion() {
 			if (this.password === '') {
@@ -128,7 +127,6 @@ export default {
 					this.$store.dispatch('auth/refreshUserInfo')
 					this.password = ''
 				})
-				.catch(e => this.$message.error(e))
 		},
 	},
 }

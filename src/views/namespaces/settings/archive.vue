@@ -40,9 +40,6 @@ export default {
 					this.$store.commit('namespaces/setNamespaceById', r)
 					this.$message.success({message: this.$t('namespace.archive.success')})
 				})
-				.catch(e => {
-					this.$message.error(e)
-				})
 				.finally(() => {
 					this.$router.back()
 				})

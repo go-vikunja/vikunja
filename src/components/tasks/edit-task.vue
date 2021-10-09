@@ -142,9 +142,6 @@ export default {
 					this.initTaskFields()
 					this.$message.success({message: this.$t('task.detail.updateSuccess')})
 				})
-				.catch((e) => {
-					this.$message.error(e)
-				})
 		},
 	},
 }

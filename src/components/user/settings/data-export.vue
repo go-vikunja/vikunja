@@ -64,7 +64,6 @@ export default {
 					this.$message.success({message: this.$t('user.export.success')})
 					this.password = ''
 				})
-				.catch(e => this.$message.error(e))
 		},
 	},
 }

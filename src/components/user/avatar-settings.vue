@@ -87,12 +87,9 @@ export default {
 		Cropper,
 	},
 	methods: {
-		avatarStatus() {
-			this.avatarService.get({})
-				.then(r => {
-					this.avatarProvider = r.avatarProvider
-				})
-				.catch(e => this.$message.error(e))
+		async avatarStatus() {
+			const { avatarProvider } = await this.avatarService.get({})
+			this.avatarProvider = avatarProvider
 		},
 		updateAvatarStatus() {
 			const avatarStatus = new AvatarModel({avatarProvider: this.avatarProvider})
@@ -101,7 +98,6 @@ export default {
 					this.$message.success({message: this.$t('user.settings.avatar.statusUpdateSuccess')})
 					this.$store.commit('auth/reloadAvatar')
 				})
-				.catch(e => this.$message.error(e))
 		},
 		uploadAvatar() {
 			this.loading = true
@@ -114,7 +110,6 @@ export default {
 							this.$message.success({message: this.$t('user.settings.avatar.setSuccess')})
 							this.$store.commit('auth/reloadAvatar')
 						})
-						.catch(e => this.$message.error(e))
 						.finally(() => {
 							this.loading = false
 							this.isCropAvatar = false

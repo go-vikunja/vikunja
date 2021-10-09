@@ -105,19 +105,6 @@ export default class AbstractService {
 		return true
 	}
 
-	/////////////////////
-	// Global error handler
-	///////////////////
-
-	/**
-	 * Handles the error and rejects the promise.
-	 * @param error
-	 * @returns {Promise<never>}
-	 */
-	errorHandler(error) {
-		return Promise.reject(error)
-	}
-
 	/////////////////
 	// Helper functions
 	///////////////
@@ -284,7 +271,7 @@ export default class AbstractService {
 	 */
 	get(model, params = {}) {
 		if (this.paths.get === '') {
-			return Promise.reject({message: 'This model is not able to get data.'})
+			throw new Error('This model is not able to get data.')
 		}
 
 		return this.getM(this.paths.get, model, params)
@@ -304,10 +291,7 @@ export default class AbstractService {
 		model = this.beforeGet(model)
 		const finalUrl = this.getReplacedRoute(url, model)
 
-		return this.http.get(finalUrl, {params: params})
-			.catch(error => {
-				return this.errorHandler(error)
-			})
+		return this.http.get(finalUrl, {params})
 			.then(response => {
 				const result = this.modelGetFactory(response.data)
 				result.maxRight = Number(response.headers['x-max-right'])
@@ -339,7 +323,7 @@ export default class AbstractService {
 	 */
 	getAll(model = {}, params = {}, page = 1) {
 		if (this.paths.getAll === '') {
-			return Promise.reject({message: 'This model is not able to get data.'})
+			throw new Error('This model is not able to get data.')
 		}
 
 		params.page = page
@@ -349,9 +333,6 @@ export default class AbstractService {
 		const finalUrl = this.getReplacedRoute(this.paths.getAll, model)
 
 		return this.http.get(finalUrl, {params: params})
-			.catch(error => {
-				return this.errorHandler(error)
-			})
 			.then(response => {
 				this.resultCount = Number(response.headers['x-pagination-result-count'])
 				this.totalPages = Number(response.headers['x-pagination-total-pages'])
@@ -378,16 +359,13 @@ export default class AbstractService {
 	 */
 	create(model) {
 		if (this.paths.create === '') {
-			return Promise.reject({message: 'This model is not able to create data.'})
+			throw new Error('This model is not able to create data.')
 		}
 
 		const cancel = this.setLoading()
 		const finalUrl = this.getReplacedRoute(this.paths.create, model)
 
 		return this.http.put(finalUrl, model)
-			.catch(error => {
-				return this.errorHandler(error)
-			})
 			.then(response => {
 				const result = this.modelCreateFactory(response.data)
 				if (typeof model.maxRight !== 'undefined') {
@@ -411,9 +389,6 @@ export default class AbstractService {
 		const cancel = this.setLoading()
 
 		return this.http.post(url, model)
-			.catch(error => {
-				return this.errorHandler(error)
-			})
 			.then(response => {
 				const result = this.modelUpdateFactory(response.data)
 				if (typeof model.maxRight !== 'undefined') {
@@ -433,7 +408,7 @@ export default class AbstractService {
 	 */
 	update(model) {
 		if (this.paths.update === '') {
-			return Promise.reject({message: 'This model is not able to update data.'})
+			throw new Error('This model is not able to update data.')
 		}
 
 		const finalUrl = this.getReplacedRoute(this.paths.update, model)
@@ -447,16 +422,13 @@ export default class AbstractService {
 	 */
 	delete(model) {
 		if (this.paths.delete === '') {
-			return Promise.reject({message: 'This model is not able to delete data.'})
+			throw new Error('This model is not able to delete data.')
 		}
 
 		const cancel = this.setLoading()
 		const finalUrl = this.getReplacedRoute(this.paths.delete, model)
 
 		return this.http.delete(finalUrl, model)
-			.catch(error => {
-				return this.errorHandler(error)
-			})
 			.then(response => {
 				return Promise.resolve(response.data)
 			})
@@ -513,9 +485,6 @@ export default class AbstractService {
 				},
 			},
 		)
-			.catch(error => {
-				return this.errorHandler(error)
-			})
 			.then(response => {
 				return Promise.resolve(this.modelCreateFactory(response.data))
 			})

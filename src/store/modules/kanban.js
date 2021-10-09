@@ -222,14 +222,9 @@ export default {
 				.then(r => {
 					ctx.commit('setBuckets', r)
 					ctx.commit('setListId', listId)
-					return Promise.resolve(r)
+					return r
 				})
-				.catch(e => {
-					return Promise.reject(e)
-				})
-				.finally(() => {
-					cancel()
-				})
+				.finally(() => cancel())
 		},
 
 		loadNextTasksForBucket(ctx, {listId, ps = {}, bucketId}) {
@@ -282,10 +277,7 @@ export default {
 					if (taskService.totalPages <= page) {
 						ctx.commit('setAllTasksLoadedForBucket', bucketId)
 					}
-					return Promise.resolve(r)
-				})
-				.catch(e => {
-					return Promise.reject(e)
+					return r
 				})
 				.finally(() => {
 					cancel()
@@ -300,14 +292,9 @@ export default {
 			return bucketService.create(bucket)
 				.then(r => {
 					ctx.commit('addBucket', r)
-					return Promise.resolve(r)
+					return r
 				})
-				.catch(e => {
-					return Promise.reject(e)
-				})
-				.finally(() => {
-					cancel()
-				})
+				.finally(() => cancel())
 		},
 
 		deleteBucket(ctx, {bucket, params}) {
@@ -319,14 +306,9 @@ export default {
 					ctx.commit('removeBucket', bucket)
 					// We reload all buckets because tasks are being moved from the deleted bucket
 					ctx.dispatch('loadBucketsForList', {listId: bucket.listId, params: params})
-					return Promise.resolve(r)
+					return r
 				})
-				.catch(e => {
-					return Promise.reject(e)
-				})
-				.finally(() => {
-					cancel()
-				})
+				.finally(() => cancel())
 		},
 
 		updateBucket(ctx, updatedBucketData) {

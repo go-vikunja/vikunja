@@ -18,9 +18,6 @@ export default class PasswordResetService extends AbstractService {
 	resetPassword(model) {
 		const cancel = this.setLoading()
 		return this.http.post(this.paths.reset, model)
-			.catch(error => {
-				return this.errorHandler(error)
-			})
 			.then(response => {
 				return Promise.resolve(this.modelFactory(response.data))
 			})
@@ -32,9 +29,6 @@ export default class PasswordResetService extends AbstractService {
 	requestResetPassword(model) {
 		const cancel = this.setLoading()
 		return this.http.post(this.paths.requestReset, model)
-			.catch(error => {
-				return this.errorHandler(error)
-			})
 			.then(response => {
 				return Promise.resolve(this.modelFactory(response.data))
 			})

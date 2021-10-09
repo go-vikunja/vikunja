@@ -99,9 +99,6 @@ export default {
 					this.$emit('change', subscription)
 					this.$message.success({message: this.$t('task.subscription.subscribeSuccess', {entity: this.entity})})
 				})
-				.catch(e => {
-					this.$message.error(e)
-				})
 		},
 		unsubscribe() {
 			const subscription = new SubscriptionModel({
@@ -112,9 +109,6 @@ export default {
 				.then(() => {
 					this.$emit('change', null)
 					this.$message.success({message: this.$t('task.subscription.unsubscribeSuccess', {entity: this.entity})})
-				})
-				.catch(e => {
-					this.$message.error(e)
 				})
 		},
 	},

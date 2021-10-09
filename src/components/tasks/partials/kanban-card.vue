@@ -104,9 +104,6 @@ export default {
 						playPop()
 					}
 				})
-				.catch(e => {
-					this.$message.error(e)
-				})
 				.finally(() => {
 					this.loadingInternal = false
 				})

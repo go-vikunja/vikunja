@@ -574,9 +574,6 @@ export default {
 					this.setActiveFields()
 					this.setTitle(this.task.title)
 				})
-				.catch(e => {
-					this.$message.error(e)
-				})
 				.finally(() => {
 					this.$nextTick(() => this.visible = true)
 					this.scrollToHeading()
@@ -620,25 +617,21 @@ export default {
 				this.task.endDate = this.task.dueDate
 			}
 
-			try {
-				this.task = await this.$store.dispatch('tasks/update', this.task)
-				this.setActiveFields()
+			this.task = await this.$store.dispatch('tasks/update', this.task)
+			this.setActiveFields()
 
-				if (!showNotification) {
-					return
-				}
-
-				let actions = []
-				if (undoCallback !== null) {
-					actions = [{
-						title: 'Undo',
-						callback: undoCallback,
-					}]
-				}
-				this.$message.success({message: this.$t('task.detail.updateSuccess')}, actions)
-			} catch(e) {
-				this.$message.error(e)
+			if (!showNotification) {
+				return
 			}
+
+			let actions = []
+			if (undoCallback !== null) {
+				actions = [{
+					title: 'Undo',
+					callback: undoCallback,
+				}]
+			}
+			this.$message.success({message: this.$t('task.detail.updateSuccess')}, actions)
 		},
 		setFieldActive(fieldName) {
 			this.activeFields[fieldName] = true
@@ -663,9 +656,6 @@ export default {
 				.then(() => {
 					this.$message.success({message: this.$t('task.detail.deleteSuccess')})
 					this.$router.push({name: 'list.index', params: {listId: this.task.listId}})
-				})
-				.catch(e => {
-					this.$message.error(e)
 				})
 		},
 		toggleTaskDone() {
@@ -704,9 +694,6 @@ export default {
 				.then(t => {
 					this.task = t
 					this.$store.dispatch('namespaces/loadNamespacesIfFavoritesDontExist')
-				})
-				.catch(e => {
-					this.$message.error(e)
 				})
 		},
 	},

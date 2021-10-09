@@ -68,7 +68,6 @@ export default {
 					ctx.commit(CONFIG, r.data)
 					return Promise.resolve(r)
 				})
-				.catch(e => Promise.reject(e))
 		},
 		redirectToProviderIfNothingElseIsEnabled(ctx) {
 			if (ctx.state.auth.local.enabled === false &&

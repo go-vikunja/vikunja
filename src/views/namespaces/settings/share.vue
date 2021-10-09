@@ -68,9 +68,6 @@ export default {
 					this.title = this.$t('namespace.share.title', { namespace: this.namespace.title })
 					this.setTitle(this.title)
 				})
-				.catch(e => {
-					this.$message.error(e)
-				})
 		},
 	},
 }

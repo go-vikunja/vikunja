@@ -65,9 +65,6 @@ export default {
 					})
 					this.$message.success({message: this.$t('team.create.success') })
 				})
-				.catch((e) => {
-					this.$message.error(e)
-				})
 		},
 	},
 }

@@ -111,9 +111,6 @@ export default {
 						this.$message.success({message: this.$t('task.label.addSuccess')})
 					}
 				})
-				.catch(e => {
-					this.$message.error(e)
-				})
 		},
 		removeLabel(label) {
 			const removeFromState = () => {
@@ -136,9 +133,6 @@ export default {
 					removeFromState()
 					this.$message.success({message: this.$t('task.label.removeSuccess')})
 				})
-				.catch(e => {
-					this.$message.error(e)
-				})
 		},
 		createAndAddLabel(title) {
 			if (this.taskId === 0) {
@@ -151,9 +145,6 @@ export default {
 					this.addLabel(r, false)
 					this.labels.push(r)
 					this.$message.success({message: this.$t('task.label.addCreateSuccess')})
-				})
-				.catch(e => {
-					this.$message.error(e)
 				})
 		},
 

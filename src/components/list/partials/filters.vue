@@ -483,7 +483,6 @@ export default {
 					.then(r => {
 						this[kind] = r
 					})
-					.catch(e => this.$message.error(e))
 			}
 		},
 		setDoneFilter() {
@@ -534,9 +533,6 @@ export default {
 				.then(response => {
 					// Filter users from the results who are already assigned
 					this[`found${kind}`] = response.filter(({id}) => !includesById(this[kind], id))
-				})
-				.catch(e => {
-					this.$message.error(e)
 				})
 		},
 		add(kind, filterName) {

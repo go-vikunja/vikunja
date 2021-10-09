@@ -307,9 +307,6 @@ export default {
 				.then(r => {
 					this.tasks[e.newIndex] = r
 				})
-				.catch(e => {
-					this.$message.error(e)
-				})
 		},
 	},
 }

@@ -105,7 +105,6 @@ export default {
 					this.filter = r
 					this.filters = objectToSnakeCase(this.filter.filters)
 				})
-				.catch(e => this.$message.error(e))
 		},
 		save() {
 			this.filter.filters = this.filters
@@ -117,7 +116,6 @@ export default {
 					this.filters = objectToSnakeCase(this.filter.filters)
 					this.$router.back()
 				})
-				.catch(e => this.$message.error(e))
 		},
 	},
 }

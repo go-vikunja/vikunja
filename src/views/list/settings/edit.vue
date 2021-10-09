@@ -101,9 +101,6 @@ export default {
 				.then(r => {
 					this.list = { ...r }
 				})
-				.catch(e => {
-					this.$message.error(e)
-				})
 		},
 		save() {
 			this.$store.dispatch('lists/updateList', this.list)
@@ -112,9 +109,6 @@ export default {
 					this.setTitle(this.$t('list.edit.title', {list: this.list.title}))
 					this.$message.success({message: this.$t('list.edit.success')})
 					this.$router.back()
-				})
-				.catch(e => {
-					this.$message.error(e)
 				})
 		},
 	},

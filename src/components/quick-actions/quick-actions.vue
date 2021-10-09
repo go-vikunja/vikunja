@@ -392,9 +392,6 @@ export default {
 					this.$router.push({name: 'task.detail', params: {id: r.id}})
 					this.closeQuickActions()
 				})
-				.catch((e) => {
-					this.$message.error(e)
-				})
 		},
 		newList() {
 			if (this.currentList === null) {
@@ -411,9 +408,6 @@ export default {
 					this.$router.push({name: 'list.index', params: {listId: r.id}})
 					this.closeQuickActions()
 				})
-				.catch((e) => {
-					this.$message.error(e)
-				})
 		},
 		newNamespace() {
 			const newNamespace = new NamespaceModel({title: this.query})
@@ -422,9 +416,6 @@ export default {
 				.then(() => {
 					this.$message.success({message: this.$t('namespace.create.success')})
 					this.closeQuickActions()
-				})
-				.catch((e) => {
-					this.$message.error(e)
 				})
 		},
 		newTeam() {
@@ -437,9 +428,6 @@ export default {
 					})
 					this.$message.success({message: this.$t('team.create.success')})
 					this.closeQuickActions()
-				})
-				.catch((e) => {
-					this.$message.error(e)
 				})
 		},
 		select(parentIndex, index) {

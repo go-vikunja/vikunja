@@ -53,7 +53,6 @@ export default {
 					ctx.commit('setList', r)
 					return Promise.resolve(r)
 				})
-				.catch(e => Promise.reject(e))
 				.finally(() => cancel())
 		},
 		updateList(ctx, list) {
@@ -99,10 +98,7 @@ export default {
 					ctx.commit('removeListById', list)
 					ctx.commit('namespaces/removeListFromNamespaceById', list, {root: true})
 					removeListFromHistory({id: list.id})
-					return Promise.resolve(r)
-				})
-				.catch(e => {
-					return Promise.reject(e)
+					return r
 				})
 				.finally(() => cancel())
 		},
