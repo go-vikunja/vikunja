@@ -54,13 +54,16 @@ func NewUserAuthTokenResponse(u *user.User, c echo.Context) error {
 func NewUserJWTAuthtoken(user *user.User) (token string, err error) {
 	t := jwt.New(jwt.SigningMethodHS256)
 
+	var ttl = time.Duration(config.ServiceJWTTTL.GetInt64())
+	var exp = time.Now().Add(time.Second * ttl).Unix()
+
 	// Set claims
 	claims := t.Claims.(jwt.MapClaims)
 	claims["type"] = AuthTypeUser
 	claims["id"] = user.ID
 	claims["username"] = user.Username
 	claims["email"] = user.Email
-	claims["exp"] = time.Now().Add(time.Hour * 72).Unix()
+	claims["exp"] = exp
 	claims["name"] = user.Name
 	claims["emailRemindersEnabled"] = user.EmailRemindersEnabled
 
@@ -72,6 +75,9 @@ func NewUserJWTAuthtoken(user *user.User) (token string, err error) {
 func NewLinkShareJWTAuthtoken(share *models.LinkSharing) (token string, err error) {
 	t := jwt.New(jwt.SigningMethodHS256)
 
+	var ttl = time.Duration(config.ServiceJWTTTL.GetInt64())
+	var exp = time.Now().Add(time.Second * ttl).Unix()
+
 	// Set claims
 	claims := t.Claims.(jwt.MapClaims)
 	claims["type"] = AuthTypeLinkShare
@@ -80,7 +86,7 @@ func NewLinkShareJWTAuthtoken(share *models.LinkSharing) (token string, err erro
 	claims["list_id"] = share.ListID
 	claims["right"] = share.Right
 	claims["sharedByID"] = share.SharedByID
-	claims["exp"] = time.Now().Add(time.Hour * 72).Unix()
+	claims["exp"] = exp
 
 	// Generate encoded token and send it as response.
 	return t.SignedString([]byte(config.ServiceJWTSecret.GetString()))

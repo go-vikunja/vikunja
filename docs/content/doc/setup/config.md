@@ -79,6 +79,18 @@ Full path: `service.JWTSecret`
 Environment path: `VIKUNJA_SERVICE_JWT_SECRET`
 
 
+### jwtttl
+
+The duration of the issed JWT tokens in seconds.
+The default is 259200 seconds (3 Days).
+
+Default: `259200`
+
+Full path: `service.jwtttl`
+
+Environment path: `VIKUNJA_SERVICE_JWTTTL`
+
+
 ### interface
 
 The interface on which to run the webserver

@@ -3,6 +3,9 @@ service:
   # Default is a random token which will be generated at each startup of vikunja.
   # (This means all already issued tokens will be invalid once you restart vikunja)
   JWTSecret: "<jwt-secret>"
+  # The duration of the issed JWT tokens in seconds.
+  # The default is 259200 seconds (3 Days).
+  jwtttl: 259200
   # The interface on which to run the webserver
   interface: ":3456"
   # Path to Unix socket. If set, it will be created and used instead of tcp

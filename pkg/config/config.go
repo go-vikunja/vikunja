@@ -37,6 +37,7 @@ type Key string
 const (
 	// #nosec
 	ServiceJWTSecret       Key = `service.JWTSecret`
+	ServiceJWTTTL          Key = `service.jwtttl`
 	ServiceInterface       Key = `service.interface`
 	ServiceUnixSocket      Key = `service.unixsocket`
 	ServiceUnixSocketMode  Key = `service.unixsocketmode`
@@ -226,6 +227,7 @@ func InitDefaultConfig() {
 
 	// Service
 	ServiceJWTSecret.setDefault(random)
+	ServiceJWTTTL.setDefault(259200)
 	ServiceInterface.setDefault(":3456")
 	ServiceUnixSocket.setDefault("")
 	ServiceFrontendurl.setDefault("")
