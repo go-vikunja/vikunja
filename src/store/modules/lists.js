@@ -51,7 +51,7 @@ export default {
 					r.namespaceId = list.namespaceId
 					ctx.commit('namespaces/addListToNamespace', r, {root: true})
 					ctx.commit('setList', r)
-					return Promise.resolve(r)
+					return r
 				})
 				.finally(() => cancel())
 		},
@@ -77,7 +77,7 @@ export default {
 					}
 					ctx.dispatch('namespaces/loadNamespacesIfFavoritesDontExist', null, {root: true})
 					ctx.dispatch('namespaces/removeFavoritesNamespaceIfEmpty', null, {root: true})
-					return Promise.resolve(newList)
+					return newList
 				})
 				.catch(e => {
 					// Reset the list state to the initial one to avoid confusion for the user
@@ -85,7 +85,7 @@ export default {
 						...list,
 						isFavorite: !list.isFavorite,
 					})
-					return Promise.reject(e)
+					throw e
 				})
 				.finally(() => cancel())
 		},

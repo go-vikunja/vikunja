@@ -101,17 +101,17 @@ export default {
 
 					// Tell others the user is autheticated
 					ctx.dispatch('checkAuth')
-					return Promise.resolve()
 				})
 				.catch(e => {
-					if (e.response) {
-						if (e.response.data.code === 1017 && !credentials.totpPasscode) {
-							ctx.commit('needsTotpPasscode', true)
-							return Promise.reject(e)
-						}
+					if (
+						e.response &&
+						e.response.data.code === 1017 &&
+						!credentials.totpPasscode
+					) {
+						ctx.commit('needsTotpPasscode', true)
 					}
 
-					return Promise.reject(e)
+					throw e
 				})
 				.finally(() => {
 					ctx.commit(LOADING, false, {root: true})
@@ -134,7 +134,7 @@ export default {
 						ctx.commit(ERROR_MESSAGE, e.response.data.message, {root: true})
 					}
 
-					return Promise.reject(e)
+					throw e
 				})
 				.finally(() => {
 					ctx.commit(LOADING, false, {root: true})
@@ -157,7 +157,6 @@ export default {
 
 					// Tell others the user is autheticated
 					ctx.dispatch('checkAuth')
-					return Promise.resolve()
 				})
 				.finally(() => {
 					ctx.commit(LOADING, false, {root: true})
@@ -180,7 +179,7 @@ export default {
 			// This function can be called from multiple places at the same time and shortly after one another.
 			// To prevent hitting the api too frequently or race conditions, we check at most once per minute.
 			if (ctx.state.lastUserInfoRefresh !== null && ctx.state.lastUserInfoRefresh > (new Date()).setMinutes((new Date()).getMinutes() + 1)) {
-				return Promise.resolve()
+				return
 			}
 
 			const jwt = getToken()
@@ -190,14 +189,13 @@ export default {
 					.split('.')[1]
 					.replace('-', '+')
 					.replace('_', '/')
-				const info = new UserModel(JSON.parse(window.atob(base64)))
+				const info = new UserModel(JSON.parse(atob(base64)))
 				const ts = Math.round((new Date()).getTime() / 1000)
 				authenticated = info.exp >= ts
 				ctx.commit('info', info)
 
 				if (authenticated) {
 					ctx.dispatch('refreshUserInfo')
-					ctx.commit('authenticated', authenticated)
 				}
 			}
 
@@ -206,8 +204,6 @@ export default {
 				ctx.commit('info', null)
 				ctx.dispatch('config/redirectToProviderIfNothingElseIsEnabled', null, {root: true})
 			}
-
-			return Promise.resolve()
 		},
 		refreshUserInfo(ctx) {
 			const jwt = getToken()

@@ -113,7 +113,7 @@ export default {
 
 					ctx.commit('lists/setLists', lists, {root: true})
 
-					return Promise.resolve(r)
+					return r
 				})
 				.finally(() => {
 					cancel()
@@ -128,7 +128,6 @@ export default {
 		removeFavoritesNamespaceIfEmpty(ctx) {
 			if (ctx.state.namespaces[0].id === -2 && ctx.state.namespaces[0].lists.length === 0) {
 				ctx.state.namespaces.splice(0, 1)
-				return Promise.resolve()
 			}
 		},
 		deleteNamespace(ctx, namespace) {
@@ -138,7 +137,7 @@ export default {
 			return namespaceService.delete(namespace)
 				.then(r => {
 					ctx.commit('removeNamespaceById', namespace.id)
-					return Promise.resolve(r)
+					return r
 				})
 				.finally(() => cancel())
 		},
@@ -149,7 +148,7 @@ export default {
 			return namespaceService.create(namespace)
 				.then(r => {
 					ctx.commit('addNamespace', r)
-					return Promise.resolve(r)
+					return r
 				})
 				.finally(() => cancel())
 		},

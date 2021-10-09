@@ -50,7 +50,7 @@ export const refreshToken = (persist: boolean): Promise<AxiosResponse> => {
 	})
 		.then(r => {
 			saveToken(r.data.token, persist)
-			return Promise.resolve(r)
+			return r
 		})
 		.catch(e => {
 			throw new Error('Error renewing token: ', { cause: e })

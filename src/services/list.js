@@ -46,7 +46,7 @@ export default class ListService extends AbstractService {
 
 	background(list) {
 		if (list.background === null) {
-			return Promise.resolve('')
+			return ''
 		}
 
 		return this.http({

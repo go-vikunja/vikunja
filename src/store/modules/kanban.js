@@ -227,19 +227,19 @@ export default {
 				.finally(() => cancel())
 		},
 
-		loadNextTasksForBucket(ctx, {listId, ps = {}, bucketId}) {
+		async loadNextTasksForBucket(ctx, {listId, ps = {}, bucketId}) {
 			const bucketIndex = findIndexById(ctx.state.buckets, bucketId)
 
 			const isLoading = ctx.state.bucketLoading[bucketIndex] ?? false
 			if (isLoading) {
-				return Promise.resolve()
+				return
 			}
 
 			const page = (ctx.state.taskPagesPerBucket[bucketIndex] ?? 1) + 1
 
 			const alreadyLoaded = ctx.state.allTasksLoadedForBucket[bucketIndex] ?? false
 			if (alreadyLoaded) {
-				return Promise.resolve()
+				return
 			}
 
 			const cancel = setLoading(ctx, 'kanban')
@@ -334,7 +334,7 @@ export default {
 					// restore original state
 					ctx.commit('setBucketByIndex', {bucketIndex, bucket: oldBucket})
 
-					return Promise.reject(e)
+					throw e
 				})
 				.finally(() => cancel())
 		},

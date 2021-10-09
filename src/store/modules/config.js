@@ -66,7 +66,7 @@ export default {
 			return HTTP.get('info')
 				.then(r => {
 					ctx.commit(CONFIG, r.data)
-					return Promise.resolve(r)
+					return r
 				})
 		},
 		redirectToProviderIfNothingElseIsEnabled(ctx) {

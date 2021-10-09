@@ -43,23 +43,23 @@ function addLabelToTask(task, label) {
 	return labelTaskService.create(labelTask)
 		.then(result => {
 			task.labels.push(label)
-			return Promise.resolve(result)
+			return result
 		})
 }
 
-function findAssignees(parsedTaskAssignees) {
+async function findAssignees(parsedTaskAssignees) {
 	if (parsedTaskAssignees.length <= 0) {
-		return Promise.resolve([])
+		return []
 	}
 
 	const userService = new UserService()
-	const assignees = parsedTaskAssignees.map(a => 
-		userService.getAll({}, {s: a})
-			.then(users => validateUsername(users, a)),
-		
-	)
+	const assignees = parsedTaskAssignees.map(async a => {
+		const users = await userService.getAll({}, {s: a})
+		return validateUsername(users, a)
+	})
 
-	return Promise.all(assignees).filter((item) => Boolean(item))
+	const validatedUsers = await Promise.all(assignees) 
+	return validatedUsers.filter((item) => Boolean(item))
 }
 
 
@@ -136,7 +136,7 @@ export default {
 						// Usually this means the kanban board hasn't been accessed until now.
 						// Vuex seems to have its difficulties with that, so we just log the error and fail silently.
 						console.debug('Could not add assignee to task in kanban, task not found', t)
-						return Promise.resolve(r)
+						return r
 					}
 					// FIXME: direct store manipulation (task)
 					t.task.assignees.push(user)
@@ -157,7 +157,7 @@ export default {
 						// Usually this means the kanban board hasn't been accessed until now.
 						// Vuex seems to have its difficulties with that, so we just log the error and fail silently.
 						console.debug('Could not remove assignee from task in kanban, task not found', t)
-						return Promise.resolve(r)
+						return r
 					}
 
 					for (const a in t.task.assignees) {
@@ -186,7 +186,7 @@ export default {
 						// Usually this means the kanban board hasn't been accessed until now.
 						// Vuex seems to have its difficulties with that, so we just log the error and fail silently.
 						console.debug('Could not add label to task in kanban, task not found', t)
-						return Promise.resolve(r)
+						return r
 					}
 					// FIXME: direct store manipulation (task)
 					t.task.labels.push(label)
@@ -208,7 +208,7 @@ export default {
 						// Usually this means the kanban board hasn't been accessed until now.
 						// Vuex seems to have its difficulties with that, so we just log the error and fail silently.
 						console.debug('Could not remove label from task in kanban, task not found', t)
-						return Promise.resolve(r)
+						return r
 					}
 
 					// Remove the label from the list
@@ -234,22 +234,21 @@ export default {
 
 			const {labels} = rootState.labels
 
-			const labelAddsToWaitFor = parsedLabels.map(labelTitle => new Promise((resolve) => {
+			const labelAddsToWaitFor = parsedLabels.map(async labelTitle => {
 				let label = validateLabel(labels, labelTitle)
 				if (typeof label !== 'undefined') {
-					return resolve(label)
+					return label
 				}
 
 				// label not found, create it
 				const labelModel = new LabelModel({title: labelTitle})
-				return dispatch('labels/createLabel', labelModel).then(() => resolve(label))
+				await dispatch('labels/createLabel', labelModel)
+				addLabelToTask(task, label)
 			})
-				.then((label) => addLabelToTask(task, label))
-				.catch(e => Promise.reject(e)),
-			)
 
 			// This waits until all labels are created and added to the task
-			return Promise.all(labelAddsToWaitFor).then(() => task)
+			await Promise.all(labelAddsToWaitFor)
+			return task
 		},
 
 		findListId({ rootGetters }, { list, listId }) {

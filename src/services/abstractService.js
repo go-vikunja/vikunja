@@ -295,7 +295,7 @@ export default class AbstractService {
 			.then(response => {
 				const result = this.modelGetFactory(response.data)
 				result.maxRight = Number(response.headers['x-max-right'])
-				return Promise.resolve(result)
+				return result
 			})
 			.finally(() => {
 				cancel()
@@ -338,14 +338,12 @@ export default class AbstractService {
 				this.totalPages = Number(response.headers['x-pagination-total-pages'])
 
 				if (Array.isArray(response.data)) {
-					return Promise.resolve(response.data.map(entry => {
-						return this.modelGetAllFactory(entry)
-					}))
+					return response.data.map(entry => this.modelGetAllFactory(entry))
 				}
 				if (response.data === null) {
-					return Promise.resolve([])
+					return []
 				}
-				return Promise.resolve(this.modelGetAllFactory(response.data))
+				return this.modelGetAllFactory(response.data)
 			})
 			.finally(() => {
 				cancel()
@@ -371,7 +369,7 @@ export default class AbstractService {
 				if (typeof model.maxRight !== 'undefined') {
 					result.maxRight = model.maxRight
 				}
-				return Promise.resolve(result)
+				return result
 			})
 			.finally(() => {
 				cancel()
@@ -394,7 +392,7 @@ export default class AbstractService {
 				if (typeof model.maxRight !== 'undefined') {
 					result.maxRight = model.maxRight
 				}
-				return Promise.resolve(result)
+				return result
 			})
 			.finally(() => {
 				cancel()
@@ -420,7 +418,7 @@ export default class AbstractService {
 	 * @param model
 	 * @returns {Q.Promise<any>}
 	 */
-	delete(model) {
+	async delete(model) {
 		if (this.paths.delete === '') {
 			throw new Error('This model is not able to delete data.')
 		}
@@ -428,13 +426,12 @@ export default class AbstractService {
 		const cancel = this.setLoading()
 		const finalUrl = this.getReplacedRoute(this.paths.delete, model)
 
-		return this.http.delete(finalUrl, model)
-			.then(response => {
-				return Promise.resolve(response.data)
-			})
-			.finally(() => {
-				cancel()
-			})
+		try {
+			const {data} = await this.http.delete(finalUrl, model)
+			return data
+		} finally {
+			cancel()
+		}
 	}
 
 	/**
@@ -485,9 +482,7 @@ export default class AbstractService {
 				},
 			},
 		)
-			.then(response => {
-				return Promise.resolve(this.modelCreateFactory(response.data))
-			})
+			.then(response => this.modelCreateFactory(response.data))
 			.finally(() => {
 				this.uploadProgress = 0
 				cancel()

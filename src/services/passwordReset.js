@@ -19,7 +19,7 @@ export default class PasswordResetService extends AbstractService {
 		const cancel = this.setLoading()
 		return this.http.post(this.paths.reset, model)
 			.then(response => {
-				return Promise.resolve(this.modelFactory(response.data))
+				return this.modelFactory(response.data)
 			})
 			.finally(() => {
 				cancel()
@@ -30,7 +30,7 @@ export default class PasswordResetService extends AbstractService {
 		const cancel = this.setLoading()
 		return this.http.post(this.paths.requestReset, model)
 			.then(response => {
-				return Promise.resolve(this.modelFactory(response.data))
+				return this.modelFactory(response.data)
 			})
 			.finally(() => {
 				cancel()

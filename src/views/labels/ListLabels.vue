@@ -119,7 +119,7 @@ export default {
 		}
 	},
 	created() {
-		this.loadLabels()
+		this.$store.dispatch('labels/loadAllLabels')
 	},
 	mounted() {
 		this.setTitle(this.$t('label.title'))
@@ -131,20 +131,11 @@ export default {
 		loading: state => state[LOADING] && state[LOADING_MODULE] === 'labels',
 	}),
 	methods: {
-		loadLabels() {
-			this.$store.dispatch('labels/loadAllLabels')
-		},
 		deleteLabel(label) {
-			this.$store.dispatch('labels/deleteLabel', label)
-				.then(() => {
-					this.$message.success({message: this.$t('label.deleteSuccess')})
-				})
+			return this.$store.dispatch('labels/deleteLabel', label)
 		},
 		editLabelSubmit() {
-			this.$store.dispatch('labels/updateLabel', this.labelEditLabel)
-				.then(() => {
-					this.$message.success({message: this.$t('label.edit.success')})
-				})
+			return this.$store.dispatch('labels/updateLabel', this.labelEditLabel)
 		},
 		editLabel(label) {
 			if (label.createdBy.id !== this.userInfo.id) {
