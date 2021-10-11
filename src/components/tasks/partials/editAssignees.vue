@@ -97,7 +97,7 @@ export default {
 							this.assignees.splice(a, 1)
 						}
 					}
-					this.$message.success({message: this.$t('task.assignee.assignSuccess')})
+					this.$message.success({message: this.$t('task.assignee.unassignSuccess')})
 				})
 				.catch(e => {
 					this.$message.error(e)
