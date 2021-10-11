@@ -46,6 +46,7 @@ export default {
 				this.list = value
 			},
 			immeditate: true,
+			deep: true,
 		},
 	},
 	methods: {
