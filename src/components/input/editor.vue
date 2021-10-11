@@ -53,6 +53,7 @@ import {createEasyMDEConfig} from './editorConfig'
 import AttachmentModel from '../../models/attachment'
 import AttachmentService from '../../services/attachment'
 import {findCheckboxesInText} from '../../helpers/checklistFromText'
+import {createRandomID} from '@/helpers/randomId'
 
 export default {
 	name: 'editor',
@@ -122,6 +123,7 @@ export default {
 				uploadImage: this.uploadEnabled,
 				imageUploadFunction: this.uploadCallback,
 			}),
+			checkboxId: createRandomID(),
 		}
 	},
 	watch: {
@@ -208,7 +210,7 @@ export default {
 						}
 
 						checkboxNum++
-						return `<input type="checkbox" data-checkbox-num="${checkboxNum}" ${checked} class="text-checkbox-${this._uid}"/>`
+						return `<input type="checkbox" data-checkbox-num="${checkboxNum}" ${checked} class="text-checkbox-${this.checkboxId}"/>`
 					},
 					link: (href, title, text) => {
 						const isLocal = href.startsWith(`${location.protocol}//${location.hostname}`)
@@ -260,7 +262,7 @@ export default {
 					}
 				}
 
-				const textCheckbox = document.getElementsByClassName(`text-checkbox-${this._uid}`)
+				const textCheckbox = document.getElementsByClassName(`text-checkbox-${this.checkboxId}`)
 				if (textCheckbox) {
 					for (const check of textCheckbox) {
 						check.removeEventListener('change', this.handleCheckboxClick)
