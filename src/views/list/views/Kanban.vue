@@ -126,7 +126,7 @@
 						</div>
 						<div
 							:ref="(el) => setTaskContainerRef(bucket.id, el)"
-							@scroll="(el) => handleTaskContainerScroll(bucket.id, el)"
+							@scroll="($event) => handleTaskContainerScroll(bucket.id, bucket.listId, $event.target)"
 							class="tasks"
 						>
 							<draggable
@@ -318,6 +318,7 @@ export default {
 			return this.list.isSavedFilter && !this.list.isSavedFilter()
 		},
 		loadBucketParameter() {
+			console.log('loadBucketParameter changed')
 			return {
 				listId: this.$route.params.listId,
 				params: this.params,
@@ -382,7 +383,10 @@ export default {
 			this.taskContainerRefs[id] = el
 		},
 
-		handleTaskContainerScroll(id, el) {
+		handleTaskContainerScroll(id, listId, el) {
+			if (!el) {
+				return
+			}
 			const scrollTopMax = el.scrollHeight - el.clientHeight
 			const threshold = el.scrollTop + el.scrollTop * MIN_SCROLL_HEIGHT_PERCENT
 			if (scrollTopMax > threshold) {
@@ -390,7 +394,7 @@ export default {
 			}
 
 			this.$store.dispatch('kanban/loadNextTasksForBucket', {
-				listId: this.$route.params.listId,
+				listId: listId,
 				params: this.params,
 				bucketId: id,
 			})
