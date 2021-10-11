@@ -694,9 +694,9 @@ export default {
 			}
 		},
 		async changeList(list) {
+			this.$store.commit('kanban/removeTaskInBucket', this.task)
 			this.task.listId = list.id
 			await this.saveTask()
-			this.$store.commit('kanban/removeTaskInBucket', this.task)
 		},
 		toggleFavorite() {
 			this.task.isFavorite = !this.task.isFavorite
