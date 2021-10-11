@@ -500,7 +500,7 @@ describe('Lists', () => {
 				.first()
 				.click()
 
-			cy.get('.global-notification')
+			cy.get('.global-notification', { timeout: 1000 })
 				.should('contain', 'Success')
 			cy.go('back')
 			cy.get('.kanban .bucket')
