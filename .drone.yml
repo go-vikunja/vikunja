@@ -5,6 +5,7 @@ trigger:
   branch:
     include:
       - main
+      - vue3
   event:
     include:
       - push
