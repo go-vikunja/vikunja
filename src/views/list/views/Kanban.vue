@@ -318,7 +318,6 @@ export default {
 			return this.list.isSavedFilter && !this.list.isSavedFilter()
 		},
 		loadBucketParameter() {
-			console.log('loadBucketParameter changed')
 			return {
 				listId: this.$route.params.listId,
 				params: this.params,
