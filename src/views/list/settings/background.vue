@@ -71,6 +71,10 @@ import ListService from '@/services/list'
 import {CURRENT_LIST} from '@/store/mutation-types'
 import CreateEdit from '@/components/misc/create-edit.vue'
 
+function timeout(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms))
+}
+
 export default {
 	name: 'list-setting-background',
 	components: {CreateEdit},
@@ -108,61 +112,53 @@ export default {
 			this.backgroundThumbs = {}
 			this.searchBackgrounds()
 		},
-		searchBackgrounds(page = 1) {
 
+		async searchBackgrounds(page = 1) {
 			if (this.backgroundSearchTimeout !== null) {
 				clearTimeout(this.backgroundSearchTimeout)
 			}
 
-			// We're using the timeout to not search on every keypress but with a 300ms delay.
+			// TODO: use throttle
+			// FIXME: We're using the timeout to not search on every keypress but with a 300ms delay.
 			// If another key is pressed within these 300ms, the last search request is dropped and a new one is scheduled.
-			this.backgroundSearchTimeout = setTimeout(() => {
-				this.currentPage = page
-				this.backgroundService.getAll({}, {s: this.backgroundSearchTerm, p: page})
-					.then(r => {
-						this.backgroundSearchResult = this.backgroundSearchResult.concat(r)
-						r.forEach(b => {
-							this.backgroundService.thumb(b)
-								.then(t => {
-									this.backgroundThumbs[b.id] = t
-								})
-						})
-					})
-			}, 300)
+			this.backgroundSearchTimeout = await timeout(300)
+			this.currentPage = page
+			const r = await this.backgroundService.getAll({}, {s: this.backgroundSearchTerm, p: page})
+			this.backgroundSearchResult = this.backgroundSearchResult.concat(r)
+			r.forEach(async b => {
+				this.backgroundThumbs[b.id] = await this.backgroundService.thumb(b)
+			})
 		},
-		setBackground(backgroundId) {
+
+		async setBackground(backgroundId) {
 			// Don't set a background if we're in the process of setting one
 			if (this.backgroundService.loading) {
 				return
 			}
 
-			this.backgroundService.update({id: backgroundId, listId: this.$route.params.listId})
-				.then(l => {
-					this.$store.commit(CURRENT_LIST, l)
-					this.$store.commit('namespaces/setListInNamespaceById', l)
-					this.$message.success({message: this.$t('list.background.success')})
-				})
+			const list = await this.backgroundService.update({id: backgroundId, listId: this.$route.params.listId})
+			this.$store.commit(CURRENT_LIST, list)
+			this.$store.commit('namespaces/setListInNamespaceById', list)
+			this.$message.success({message: this.$t('list.background.success')})
 		},
-		uploadBackground() {
+
+		async uploadBackground() {
 			if (this.$refs.backgroundUploadInput.files.length === 0) {
 				return
 			}
 
-			this.backgroundUploadService.create(this.$route.params.listId, this.$refs.backgroundUploadInput.files[0])
-				.then(l => {
-					this.$store.commit(CURRENT_LIST, l)
-					this.$store.commit('namespaces/setListInNamespaceById', l)
-					this.$message.success({message: this.$t('list.background.success')})
-				})
+			const list = await this.backgroundUploadService.create(this.$route.params.listId, this.$refs.backgroundUploadInput.files[0])
+			this.$store.commit(CURRENT_LIST, list)
+			this.$store.commit('namespaces/setListInNamespaceById', list)
+			this.$message.success({message: this.$t('list.background.success')})
 		},
-		removeBackground() {
-			this.listService.removeBackground(this.currentList)
-				.then(l => {
-					this.$store.commit(CURRENT_LIST, l)
-					this.$store.commit('namespaces/setListInNamespaceById', l)
-					this.$message.success({message: this.$t('list.background.removeSuccess')})
-					this.$router.back()
-				})
+
+		async removeBackground() {
+			const list = await this.listService.removeBackground(this.currentList)
+			this.$store.commit(CURRENT_LIST, list)
+			this.$store.commit('namespaces/setListInNamespaceById', list)
+			this.$message.success({message: this.$t('list.background.removeSuccess')})
+			this.$router.back()
 		},
 	},
 }

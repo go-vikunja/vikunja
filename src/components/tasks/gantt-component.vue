@@ -297,48 +297,41 @@ export default {
 			console.debug('prepareGanttDays; years:', years)
 			this.days = years
 		},
+
 		parseTasks() {
 			this.setDates()
 			this.loadTasks()
 		},
-		loadTasks() {
+
+		async loadTasks() {
 			this.theTasks = []
 			this.tasksWithoutDates = []
 
-			const getAllTasks = (page = 1) => {
-				return this.taskCollectionService
-					.getAll({listId: this.listId}, this.params, page)
-					.then((tasks) => {
-						if (page < this.taskCollectionService.totalPages) {
-							return getAllTasks(page + 1).then((nextTasks) => {
-								return tasks.concat(nextTasks)
-							})
-						} else {
-							return tasks
-						}
-					})
+			const getAllTasks = async (page = 1) => {
+				const tasks = await this.taskCollectionService.getAll({listId: this.listId}, this.params, page)
+				if (page < this.taskCollectionService.totalPages) {
+					const nextTasks = await getAllTasks(page + 1)
+					return tasks.concat(nextTasks)
+				}
+				return tasks
 			}
 
-			getAllTasks()
-				.then((tasks) => {
-					this.theTasks = tasks
-						.filter((t) => {
-							if (t.startDate === null && !t.done) {
-								this.tasksWithoutDates.push(t)
-							}
-							return (
-								t.startDate >= this.startDate &&
-								t.endDate <= this.endDate
-							)
-						})
-						.map((t) => {
-							return this.addGantAttributes(t)
-						})
-						.sort(function (a, b) {
-							if (a.startDate < b.startDate) return -1
-							if (a.startDate > b.startDate) return 1
-							return 0
-						})
+			const tasks = await getAllTasks()
+			this.theTasks = tasks
+				.filter((t) => {
+					if (t.startDate === null && !t.done) {
+						this.tasksWithoutDates.push(t)
+					}
+					return (
+						t.startDate >= this.startDate &&
+						t.endDate <= this.endDate
+					)
+				})
+				.map((t) => this.addGantAttributes(t))
+				.sort(function (a, b) {
+					if (a.startDate < b.startDate) return -1
+					if (a.startDate > b.startDate) return 1
+					return 0
 				})
 		},
 		addGantAttributes(t) {
@@ -351,7 +344,7 @@ export default {
 			t.offsetDays = Math.floor((t.startDate - this.startDate) / 1000 / 60 / 60 / 24)
 			return t
 		},
-		resizeTask(taskDragged, newRect) {
+		async resizeTask(taskDragged, newRect) {
 			if (this.isTaskEdit) {
 				return
 			}
@@ -392,31 +385,28 @@ export default {
 				offsetDays: newTask.offsetDays,
 			}
 
-			this.taskService
-				.update(newTask)
-				.then(r => {
-					r.endDate = ganttData.endDate
-					r.durationDays = ganttData.durationDays
-					r.offsetDays = ganttData.offsetDays
+			const r = await this.taskService.update(newTask)
+			r.endDate = ganttData.endDate
+			r.durationDays = ganttData.durationDays
+			r.offsetDays = ganttData.offsetDays
 
-					// If the task didn't have dates before, we'll update the list
-					if (didntHaveDates) {
-						for (const t in this.tasksWithoutDates) {
-							if (this.tasksWithoutDates[t].id === r.id) {
-								this.tasksWithoutDates.splice(t, 1)
-								break
-							}
-						}
-						this.theTasks.push(this.addGantAttributes(r))
-					} else {
-						for (const tt in this.theTasks) {
-							if (this.theTasks[tt].id === r.id) {
-								this.theTasks[tt] = this.addGantAttributes(r)
-								break
-							}
-						}
+			// If the task didn't have dates before, we'll update the list
+			if (didntHaveDates) {
+				for (const t in this.tasksWithoutDates) {
+					if (this.tasksWithoutDates[t].id === r.id) {
+						this.tasksWithoutDates.splice(t, 1)
+						break
 					}
-				})
+				}
+				this.theTasks.push(this.addGantAttributes(r))
+			} else {
+				for (const tt in this.theTasks) {
+					if (this.theTasks[tt].id === r.id) {
+						this.theTasks[tt] = this.addGantAttributes(r)
+						break
+					}
+				}
+			}
 		},
 		editTask(task) {
 			this.taskToEdit = task
@@ -436,7 +426,7 @@ export default {
 				this.$nextTick(() => (this.newTaskFieldActive = false))
 			}
 		},
-		addNewTask() {
+		async addNewTask() {
 			if (!this.newTaskFieldActive) {
 				return
 			}
@@ -444,13 +434,10 @@ export default {
 				title: this.newTaskTitle,
 				listId: this.listId,
 			})
-			this.taskService
-				.create(task)
-				.then((r) => {
-					this.tasksWithoutDates.push(this.addGantAttributes(r))
-					this.newTaskTitle = ''
-					this.hideCrateNewTask()
-				})
+			const r = await this.taskService.create(task)
+			this.tasksWithoutDates.push(this.addGantAttributes(r))
+			this.newTaskTitle = ''
+			this.hideCrateNewTask()
 		},
 		formatYear(date) {
 			return this.format(date, 'MMMM, yyyy')

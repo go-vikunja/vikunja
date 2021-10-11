@@ -94,22 +94,19 @@ export default {
 		},
 	},
 	methods: {
-		loadList() {
+		async loadList() {
 			const list = new ListModel({id: this.$route.params.listId})
 
-			this.listService.get(list)
-				.then(r => {
-					this.list = { ...r }
-				})
+			const loadedList = await this.listService.get(list)
+			this.list = { ...loadedList }
 		},
-		save() {
-			this.$store.dispatch('lists/updateList', this.list)
-				.then(() => {
-					this.$store.commit(CURRENT_LIST, this.list)
-					this.setTitle(this.$t('list.edit.title', {list: this.list.title}))
-					this.$message.success({message: this.$t('list.edit.success')})
-					this.$router.back()
-				})
+
+		async save() {
+			await this.$store.dispatch('lists/updateList', this.list)
+			this.$store.commit(CURRENT_LIST, this.list)
+			this.setTitle(this.$t('list.edit.title', {list: this.list.title}))
+			this.$message.success({message: this.$t('list.edit.success')})
+			this.$router.back()
 		},
 	},
 }

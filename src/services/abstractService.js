@@ -285,32 +285,30 @@ export default class AbstractService {
 	 * @param params
 	 * @returns {Q.Promise<unknown>}
 	 */
-	getM(url, model = {}, params = {}) {
+	async getM(url, model = {}, params = {}) {
 		const cancel = this.setLoading()
 
 		model = this.beforeGet(model)
 		const finalUrl = this.getReplacedRoute(url, model)
 
-		return this.http.get(finalUrl, {params})
-			.then(response => {
-				const result = this.modelGetFactory(response.data)
-				result.maxRight = Number(response.headers['x-max-right'])
-				return result
-			})
-			.finally(() => {
-				cancel()
-			})
+		try {
+			const response = await this.http.get(finalUrl, {params})
+			const result = this.modelGetFactory(response.data)
+			result.maxRight = Number(response.headers['x-max-right'])
+			return result
+		} finally {
+			cancel()
+		}
 	}
 
-	getBlobUrl(url, method = 'GET', data = {}) {
-		return this.http({
+	async getBlobUrl(url, method = 'GET', data = {}) {
+		const response = await this.http({
 			url: url,
 			method: method,
 			responseType: 'blob',
 			data: data,
-		}).then(response => {
-			return window.URL.createObjectURL(new Blob([response.data]))
 		})
+		return window.URL.createObjectURL(new Blob([response.data]))
 	}
 
 	/**
@@ -321,7 +319,7 @@ export default class AbstractService {
 	 * @param page The page to get
 	 * @returns {Q.Promise<any>}
 	 */
-	getAll(model = {}, params = {}, page = 1) {
+	async getAll(model = {}, params = {}, page = 1) {
 		if (this.paths.getAll === '') {
 			throw new Error('This model is not able to get data.')
 		}
@@ -332,22 +330,22 @@ export default class AbstractService {
 		model = this.beforeGet(model)
 		const finalUrl = this.getReplacedRoute(this.paths.getAll, model)
 
-		return this.http.get(finalUrl, {params: params})
-			.then(response => {
-				this.resultCount = Number(response.headers['x-pagination-result-count'])
-				this.totalPages = Number(response.headers['x-pagination-total-pages'])
+		try {
+			const response = await this.http.get(finalUrl, {params: params})
+			this.resultCount = Number(response.headers['x-pagination-result-count'])
+			this.totalPages = Number(response.headers['x-pagination-total-pages'])
+			
+			if (response.data === null) {
+				return []
+			}
 
-				if (Array.isArray(response.data)) {
-					return response.data.map(entry => this.modelGetAllFactory(entry))
-				}
-				if (response.data === null) {
-					return []
-				}
-				return this.modelGetAllFactory(response.data)
-			})
-			.finally(() => {
-				cancel()
-			})
+			if (Array.isArray(response.data)) {
+				return response.data.map(entry => this.modelGetAllFactory(entry))
+			}
+			return this.modelGetAllFactory(response.data)
+		} finally {
+			cancel()
+		}
 	}
 
 	/**
@@ -355,7 +353,7 @@ export default class AbstractService {
 	 * @param model
 	 * @returns {Promise<any | never>}
 	 */
-	create(model) {
+	async create(model) {
 		if (this.paths.create === '') {
 			throw new Error('This model is not able to create data.')
 		}
@@ -363,17 +361,16 @@ export default class AbstractService {
 		const cancel = this.setLoading()
 		const finalUrl = this.getReplacedRoute(this.paths.create, model)
 
-		return this.http.put(finalUrl, model)
-			.then(response => {
-				const result = this.modelCreateFactory(response.data)
-				if (typeof model.maxRight !== 'undefined') {
-					result.maxRight = model.maxRight
-				}
-				return result
-			})
-			.finally(() => {
-				cancel()
-			})
+		try {
+			const response = await this.http.put(finalUrl, model)
+			const result = this.modelCreateFactory(response.data)
+			if (typeof model.maxRight !== 'undefined') {
+				result.maxRight = model.maxRight
+			}
+			return result
+		} finally {
+			cancel()
+		}
 	}
 
 	/**
@@ -383,20 +380,19 @@ export default class AbstractService {
 	 * @param model
 	 * @returns {Q.Promise<unknown>}
 	 */
-	post(url, model) {
+    async post(url, model) {
 		const cancel = this.setLoading()
 
-		return this.http.post(url, model)
-			.then(response => {
-				const result = this.modelUpdateFactory(response.data)
-				if (typeof model.maxRight !== 'undefined') {
-					result.maxRight = model.maxRight
-				}
-				return result
-			})
-			.finally(() => {
-				cancel()
-			})
+		try {
+			const response = await this.http.post(url, model)
+			const result = this.modelUpdateFactory(response.data)
+			if (typeof model.maxRight !== 'undefined') {
+				result.maxRight = model.maxRight
+			}
+			return result
+		} finally {
+			cancel()
+		}
 	}
 
 	/**
@@ -465,27 +461,28 @@ export default class AbstractService {
 	 * @param formData
 	 * @returns {Q.Promise<unknown>}
 	 */
-	uploadFormData(url, formData) {
+	async uploadFormData(url, formData) {
 		console.log(formData, formData._boundary)
 
 		const cancel = this.setLoading()
-		return this.http.put(
-			url,
-			formData,
-			{
-				headers: {
-					'Content-Type':
+		try {
+			const response = await this.http.put(
+				url,
+				formData,
+				{
+					headers: {
+						'Content-Type':
 						'multipart/form-data; boundary=' + formData._boundary,
+					},
+					onUploadProgress: progressEvent => {
+						this.uploadProgress = Math.round((progressEvent.loaded * 100) / progressEvent.total)
+					},
 				},
-				onUploadProgress: progressEvent => {
-					this.uploadProgress = Math.round((progressEvent.loaded * 100) / progressEvent.total)
-				},
-			},
-		)
-			.then(response => this.modelCreateFactory(response.data))
-			.finally(() => {
-				this.uploadProgress = 0
-				cancel()
-			})
+			)
+			this.modelCreateFactory(response.data)
+		} finally {
+			this.uploadProgress = 0
+			cancel()
+		}
 	}
 }

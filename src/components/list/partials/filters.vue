@@ -468,7 +468,7 @@ export default {
 				this.filters.done = true
 			}
 		},
-		prepareRelatedObjectFilter(kind, filterName = null, servicePrefix = null) {
+		async prepareRelatedObjectFilter(kind, filterName = null, servicePrefix = null) {
 			if (filterName === null) {
 				filterName = kind
 			}
@@ -478,12 +478,11 @@ export default {
 			}
 
 			this.prepareSingleValue(filterName)
-			if (typeof this.filters[filterName] !== 'undefined' && this.filters[filterName] !== '') {
-				this[`${servicePrefix}Service`].getAll({}, {s: this.filters[filterName]})
-					.then(r => {
-						this[kind] = r
-					})
+			if (typeof this.filters[filterName] === 'undefined' || this.filters[filterName] === '') {
+				return
 			}
+
+			this[kind] = await this[`${servicePrefix}Service`].getAll({}, {s: this.filters[filterName]})
 		},
 		setDoneFilter() {
 			if (this.filters.done) {
@@ -523,17 +522,16 @@ export default {
 		clear(kind) {
 			this[`found${kind}`] = []
 		},
-		find(kind, query) {
+		async find(kind, query) {
 
 			if (query === '') {
 				this.clear(kind)
 			}
 
-			this[`${kind}Service`].getAll({}, {s: query})
-				.then(response => {
-					// Filter users from the results who are already assigned
-					this[`found${kind}`] = response.filter(({id}) => !includesById(this[kind], id))
-				})
+			const response = await this[`${kind}Service`].getAll({}, {s: query})
+
+			// Filter users from the results who are already assigned
+			this[`found${kind}`] = response.filter(({id}) => !includesById(this[kind], id))
 		},
 		add(kind, filterName) {
 			this.$nextTick(() => {

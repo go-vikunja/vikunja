@@ -54,7 +54,7 @@ export default {
 		this.setTitle(this.$t('list.create.header'))
 	},
 	methods: {
-		newList() {
+		async newList() {
 			if (this.list.title === '') {
 				this.showError = true
 				return
@@ -62,15 +62,12 @@ export default {
 			this.showError = false
 
 			this.list.namespaceId = parseInt(this.$route.params.id)
-			this.$store
-				.dispatch('lists/createList', this.list)
-				.then((r) => {
-					this.$message.success({message: this.$t('list.create.createdSuccess') })
-					this.$router.push({
-						name: 'list.index',
-						params: { listId: r.id },
-					})
-				})
+			const list = await this.$store.dispatch('lists/createList', this.list)
+			this.$message.success({message: this.$t('list.create.createdSuccess') })
+			this.$router.push({
+				name: 'list.index',
+				params: { listId: list.id },
+			})
 		},
 	},
 }

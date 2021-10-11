@@ -56,7 +56,7 @@ export default {
 		},
 	},
 	methods: {
-		loadBackground() {
+		async loadBackground() {
 			if (this.list === null || !this.list.backgroundInformation || this.backgroundLoading) {
 				return
 			}
@@ -64,11 +64,11 @@ export default {
 			this.backgroundLoading = true
 
 			const listService = new ListService()
-			listService.background(this.list)
-				.then(b => {
-					this.background = b
-				})
-				.finally(() => this.backgroundLoading = false)
+			try {
+				this.background = await listService.background(this.list)
+			} finally {
+				this.backgroundLoading = false
+			}
 		},
 		toggleFavoriteList(list) {
 			// The favorites pseudo list is always favorite

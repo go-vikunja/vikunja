@@ -134,9 +134,9 @@
 
 		<transition name="modal">
 			<modal
-				@close="showDeleteModal = false"
-				@submit="deleteComment()"
 				v-if="showDeleteModal"
+				@close="showDeleteModal = false"
+				@submit="() => deleteComment(commentToDelete)"
 			>
 				<template #header><span>{{ $t('task.comment.delete') }}</span></template>
 
@@ -186,7 +186,6 @@ export default {
 			taskCommentService: new TaskCommentService(),
 			newComment: new TaskCommentModel(),
 			editorActive: true,
-			actions: {},
 
 			saved: null,
 			saving: null,
@@ -195,40 +194,46 @@ export default {
 	},
 	watch: {
 		taskId: {
-			handler(taskId) {
-				if (!this.enabled) {
-					return
-				}
-
-				this.loadComments()
-				this.newComment.taskId = taskId
-				this.commentEdit.taskId = taskId
-				this.commentToDelete.taskId = taskId
-			},
+			handler: 'loadComments',
 			immediate: true,
 		},
-		canWrite() {
-			this.makeActions()
+	},
+	computed: {
+		...mapState({
+			userAvatar: state => state.auth.info.getAvatarUrl(48),
+			enabled: state => state.config.taskCommentsEnabled,
+		}),
+		actions() {
+			if (!this.canWrite) {
+				return {}
+			}
+			return Object.fromEntries(this.comments.map((c) => ([
+				c.id,
+				[{
+					action: () => this.toggleDelete(c.id),
+					title: this.$t('misc.delete'),
+				}],
+			])))
 		},
 	},
-	computed: mapState({
-		userAvatar: state => state.auth.info.getAvatarUrl(48),
-		enabled: state => state.config.taskCommentsEnabled,
-	}),
+
 	methods: {
 		attachmentUpload(...args) {
 			return uploadFile(this.taskId, ...args)
 		},
 
-		loadComments() {
-			this.taskCommentService
-				.getAll({taskId: this.taskId})
-				.then(r => {
-					this.comments = r
-					this.makeActions()
-				})
+		async loadComments(taskId) {
+			if (!this.enabled) {
+				return
+			}
+
+			this.newComment.taskId = taskId
+			this.commentEdit.taskId = taskId
+			this.commentToDelete.taskId = taskId
+			this.comments = await this.taskCommentService.getAll({taskId})
 		},
-		addComment() {
+
+		async addComment() {
 			if (this.newComment.comment === '') {
 				return
 			}
@@ -242,27 +247,27 @@ export default {
 			this.$nextTick(() => (this.editorActive = true))
 			this.creating = true
 
-			this.taskCommentService
-				.create(this.newComment)
-				.then((r) => {
-					this.comments.push(r)
-					this.newComment.comment = ''
-					this.$message.success({message: this.$t('task.comment.addedSuccess')})
-					this.makeActions()
-				})
-				.finally(() => {
-					this.creating = false
-				})
+			try {
+				const comment = await this.taskCommentService.create(this.newComment)
+				this.comments.push(comment)
+				this.newComment.comment = ''
+				this.$message.success({message: this.$t('task.comment.addedSuccess')})
+			} finally {
+				this.creating = false
+			}
 		},
+
 		toggleEdit(comment) {
 			this.isCommentEdit = !this.isCommentEdit
 			this.commentEdit = comment
 		},
+
 		toggleDelete(commentId) {
 			this.showDeleteModal = !this.showDeleteModal
 			this.commentToDelete.id = commentId
 		},
-		editComment() {
+
+		async editComment() {
 			if (this.commentEdit.comment === '') {
 				return
 			}
@@ -270,48 +275,30 @@ export default {
 			this.saving = this.commentEdit.id
 
 			this.commentEdit.taskId = this.taskId
-			this.taskCommentService
-				.update(this.commentEdit)
-				.then((r) => {
-					for (const c in this.comments) {
-						if (this.comments[c].id === this.commentEdit.id) {
-							this.comments[c] = r
-						}
+			try {
+				const comment = this.taskCommentService.update(this.commentEdit)
+				for (const c in this.comments) {
+					if (this.comments[c].id === this.commentEdit.id) {
+						this.comments[c] = comment
 					}
-					this.saved = this.commentEdit.id
-					setTimeout(() => {
-						this.saved = null
-					}, 2000)
-				})
-				.finally(() => {
-					this.isCommentEdit = false
-					this.saving = null
-				})
+				}
+				this.saved = this.commentEdit.id
+				setTimeout(() => {
+					this.saved = null
+				}, 2000)
+			} finally {
+				this.isCommentEdit = false
+				this.saving = null
+			}
 		},
-		deleteComment() {
-			this.taskCommentService
-				.delete(this.commentToDelete)
-				.then(() => {
-					for (const a in this.comments) {
-						if (this.comments[a].id === this.commentToDelete.id) {
-							this.comments.splice(a, 1)
-						}
-					}
-				})
-				.finally(() => {
-					this.showDeleteModal = false
-				})
-		},
-		makeActions() {
-			if (this.canWrite) {
-				this.comments.forEach((c) => {
-					this.actions[c.id] = [
-						{
-							action: () => this.toggleDelete(c.id),
-							title: this.$t('misc.delete'),
-						},
-					]
-				})
+
+		async deleteComment(commentToDelete) {
+			try {
+				await this.taskCommentService.delete(commentToDelete)
+				const index = this.comments.findIndex(({id}) => id === commentToDelete.id)
+				this.comments.splice(index, 1)
+			} finally {
+				this.showDeleteModal = false
 			}
 		},
 	},

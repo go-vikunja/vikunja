@@ -57,17 +57,14 @@ export default {
 		},
 	},
 	methods: {
-		loadNamespace() {
+		async loadNamespace() {
 			const namespace = new NamespaceModel({id: this.$route.params.id})
-			this.namespaceService.get(namespace)
-				.then(r => {
-					this.namespace = r
-					// This will trigger the dynamic loading of components once we actually have all the data to pass to them
-					this.manageTeamsComponent = 'manageSharing'
-					this.manageUsersComponent = 'manageSharing'
-					this.title = this.$t('namespace.share.title', { namespace: this.namespace.title })
-					this.setTitle(this.title)
-				})
+			this.namespace = await this.namespaceService.get(namespace)
+			// This will trigger the dynamic loading of components once we actually have all the data to pass to them
+			this.manageTeamsComponent = 'manageSharing'
+			this.manageUsersComponent = 'manageSharing'
+			this.title = this.$t('namespace.share.title', { namespace: this.namespace.title })
+			this.setTitle(this.title)
 		},
 	},
 }

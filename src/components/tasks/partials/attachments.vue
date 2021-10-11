@@ -218,21 +218,19 @@ export default {
 		uploadFiles(files) {
 			uploadFiles(this.attachmentService, this.taskId, files)
 		},
-		deleteAttachment() {
-			this.attachmentService
-				.delete(this.attachmentToDelete)
-				.then((r) => {
-					this.$store.commit(
-						'attachments/removeById',
-						this.attachmentToDelete.id,
-					)
-					this.$message.success(r)
-				})
-				.finally(() => {
-					this.showDeleteModal = false
-				})
+		async deleteAttachment() {
+			try {
+				const r = await this.attachmentService.delete(this.attachmentToDelete)
+				this.$store.commit(
+					'attachments/removeById',
+					this.attachmentToDelete.id,
+				)
+				this.$message.success(r)
+			} finally{
+				this.showDeleteModal = false
+			}
 		},
-		viewOrDownload(attachment) {
+		async viewOrDownload(attachment) {
 			if (
 				attachment.file.name.endsWith('.jpg') ||
 				attachment.file.name.endsWith('.png') ||
@@ -240,9 +238,7 @@ export default {
 				attachment.file.name.endsWith('.gif')
 			) {
 				this.showImageModal = true
-				this.attachmentService.getBlobUrl(attachment).then((url) => {
-					this.attachmentImageBlobUrl = url
-				})
+				this.attachmentImageBlobUrl = await this.attachmentService.getBlobUrl(attachment)
 			} else {
 				this.downloadAttachment(attachment)
 			}

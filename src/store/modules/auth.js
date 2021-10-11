@@ -78,7 +78,7 @@ export default {
 	},
 	actions: {
 		// Logs a user in with a set of credentials.
-		login(ctx, credentials) {
+		async login(ctx, credentials) {
 			const HTTP = HTTPFactory()
 			ctx.commit(LOADING, true, {root: true})
 
@@ -94,53 +94,51 @@ export default {
 				data.totp_passcode = credentials.totpPasscode
 			}
 
-			return HTTP.post('login', data)
-				.then(response => {
-					// Save the token to local storage for later use
-					saveToken(response.data.token, true)
+			try {
+				const response = await HTTP.post('login', data)
+				// Save the token to local storage for later use
+				saveToken(response.data.token, true)
+				
+				// Tell others the user is autheticated
+				ctx.dispatch('checkAuth')
+			} catch(e) {
+				if (
+					e.response &&
+					e.response.data.code === 1017 &&
+					!credentials.totpPasscode
+				) {
+					ctx.commit('needsTotpPasscode', true)
+				}
 
-					// Tell others the user is autheticated
-					ctx.dispatch('checkAuth')
-				})
-				.catch(e => {
-					if (
-						e.response &&
-						e.response.data.code === 1017 &&
-						!credentials.totpPasscode
-					) {
-						ctx.commit('needsTotpPasscode', true)
-					}
-
-					throw e
-				})
-				.finally(() => {
-					ctx.commit(LOADING, false, {root: true})
-				})
+				throw e
+			} finally {
+				ctx.commit(LOADING, false, {root: true})
+			}
 		},
+
 		// Registers a new user and logs them in.
 		// Not sure if this is the right place to put the logic in, maybe a seperate js component would be better suited.
-		register(ctx, credentials) {
+		async register(ctx, credentials) {
 			const HTTP = HTTPFactory()
-			return HTTP.post('register', {
-				username: credentials.username,
-				email: credentials.email,
-				password: credentials.password,
-			})
-				.then(() => {
-					return ctx.dispatch('login', credentials)
+			try {
+				await HTTP.post('register', {
+					username: credentials.username,
+					email: credentials.email,
+					password: credentials.password,
 				})
-				.catch(e => {
-					if (e.response && e.response.data && e.response.data.message) {
-						ctx.commit(ERROR_MESSAGE, e.response.data.message, {root: true})
-					}
+				return ctx.dispatch('login', credentials)
+			} catch(e) {
+				if (e.response && e.response.data && e.response.data.message) {
+					ctx.commit(ERROR_MESSAGE, e.response.data.message, {root: true})
+				}
 
-					throw e
-				})
-				.finally(() => {
-					ctx.commit(LOADING, false, {root: true})
-				})
+				throw e
+			} finally {
+				ctx.commit(LOADING, false, {root: true})
+			}
 		},
-		openIdAuth(ctx, {provider, code}) {
+
+		async openIdAuth(ctx, {provider, code}) {
 			const HTTP = HTTPFactory()
 			ctx.commit(LOADING, true, {root: true})
 
@@ -150,29 +148,28 @@ export default {
 
 			// Delete an eventually preexisting old token
 			removeToken()
-			return HTTP.post(`/auth/openid/${provider}/callback`, data)
-				.then(response => {
-					// Save the token to local storage for later use
-					saveToken(response.data.token, true)
-
-					// Tell others the user is autheticated
-					ctx.dispatch('checkAuth')
-				})
-				.finally(() => {
-					ctx.commit(LOADING, false, {root: true})
-				})
+			try {
+				const response = await HTTP.post(`/auth/openid/${provider}/callback`, data)
+				// Save the token to local storage for later use
+				saveToken(response.data.token, true)
+				
+				// Tell others the user is autheticated
+				ctx.dispatch('checkAuth')
+			} finally {
+				ctx.commit(LOADING, false, {root: true})
+			}
 		},
-		linkShareAuth(ctx, {hash, password}) {
+
+		async linkShareAuth(ctx, {hash, password}) {
 			const HTTP = HTTPFactory()
-			return HTTP.post('/shares/' + hash + '/auth', {
+			const response = await HTTP.post('/shares/' + hash + '/auth', {
 				password: password,
 			})
-				.then(r => {
-					saveToken(r.data.token, false)
-					ctx.dispatch('checkAuth')
-					return r.data
-				})
+			saveToken(response.data.token, false)
+			ctx.dispatch('checkAuth')
+			return response.data
 		},
+
 		// Populates user information from jwt token saved in local storage in store
 		checkAuth(ctx) {
 
@@ -205,54 +202,54 @@ export default {
 				ctx.dispatch('config/redirectToProviderIfNothingElseIsEnabled', null, {root: true})
 			}
 		},
-		refreshUserInfo(ctx) {
+
+		async refreshUserInfo(ctx) {
 			const jwt = getToken()
 			if (!jwt) {
 				return
 			}
 
 			const HTTP = HTTPFactory()
-			// We're not returning the promise here to prevent blocking the initial ui render if the user is
-			// accessing the site with a token in local storage
-			HTTP.get('user', {
-				headers: {
-					Authorization: `Bearer ${jwt}`,
-				},
-			})
-				.then(r => {
-					const info = new UserModel(r.data)
-					info.type = ctx.state.info.type
-					info.email = ctx.state.info.email
-					info.exp = ctx.state.info.exp
+			try {
 
-					ctx.commit('info', info)
-					ctx.commit('lastUserRefresh')
+				const response = await HTTP.get('user', {
+					headers: {
+						Authorization: `Bearer ${jwt}`,
+					},
 				})
-				.catch(e => {
-					throw new Error('Error while refreshing user info:', { cause: e })
-				})
+				const info = new UserModel(response.data)
+				info.type = ctx.state.info.type
+				info.email = ctx.state.info.email
+				info.exp = ctx.state.info.exp
+				
+				ctx.commit('info', info)
+				ctx.commit('lastUserRefresh')
+				return info
+			} catch(e) {
+				throw new Error('Error while refreshing user info:', { cause: e })
+			}
 		},
+
 		// Renews the api token and saves it to local storage
 		renewToken(ctx) {
-			// Timeout to avoid race conditions when authenticated as a user (=auth token in localStorage) and as a
+			// FIXME: Timeout to avoid race conditions when authenticated as a user (=auth token in localStorage) and as a
 			// link share in another tab. Without the timeout both the token renew and link share auth are executed at
 			// the same time and one might win over the other.
-			setTimeout(() => {
+			setTimeout(async () => {
 				if (!ctx.state.authenticated) {
 					return
 				}
 
-				refreshToken(!ctx.state.isLinkShareAuth)
-					.then(() => {
-						ctx.dispatch('checkAuth')
-					})
-					.catch(e => {
-						// Don't logout on network errors as the user would then get logged out if they don't have
-						// internet for a short period of time - such as when the laptop is still reconnecting
-						if (e.request.status) {
-							ctx.dispatch('logout')
-						}
-					})
+				try {
+					await refreshToken(!ctx.state.isLinkShareAuth)
+					ctx.dispatch('checkAuth')
+				} catch(e) {
+					// Don't logout on network errors as the user would then get logged out if they don't have
+					// internet for a short period of time - such as when the laptop is still reconnecting
+					if (e.request.status) {
+						ctx.dispatch('logout')
+					}
+				}
 			}, 5000)
 		},
 		logout(ctx) {

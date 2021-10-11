@@ -93,11 +93,8 @@ export default {
 				closeWhenClickedOutside(e, this.$refs.popup, () => this.showNotifications = false)
 			}
 		},
-		loadNotifications() {
-			this.notificationService.getAll()
-				.then(r => {
-					this.allNotifications = r
-				})
+		async loadNotifications() {
+			this.allNotifications = await this.notificationService.getAll()
 		},
 		to(n, index) {
 			const to = {
@@ -124,16 +121,13 @@ export default {
 					break
 			}
 
-			return () => {
+			return async () => {
 				if (to.name !== '') {
 					this.$router.push(to)
 				}
 
 				n.read = true
-				this.notificationService.update(n)
-					.then(r => {
-						this.allNotifications[index] = r
-					})
+				this.allNotifications[index] = await this.notificationService.update(n)
 			}
 		},
 	},

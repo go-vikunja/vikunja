@@ -63,20 +63,17 @@ export default {
 		this.setTitle(this.$t('namespace.create.title'))
 	},
 	methods: {
-		newNamespace() {
+		async newNamespace() {
 			if (this.namespace.title === '') {
 				this.showError = true
 				return
 			}
 			this.showError = false
 
-			this.namespaceService
-				.create(this.namespace)
-				.then((r) => {
-					this.$store.commit('namespaces/addNamespace', r)
-					this.$message.success({message: this.$t('namespace.create.success') })
-					this.$router.back()
-				})
+			const namespace = this.namespaceService.create(this.namespace)
+			this.$store.commit('namespaces/addNamespace', namespace)
+			this.$message.success({message: this.$t('namespace.create.success') })
+			this.$router.back()
 		},
 	},
 }

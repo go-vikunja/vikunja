@@ -18,14 +18,12 @@ export default class BackgroundUnsplashService extends AbstractService {
 		return new ListModel(data)
 	}
 
-	thumb(model) {
-		return this.http({
+	async thumb(model) {
+		const response = await this.http({
 			url: `/backgrounds/unsplash/images/${model.id}/thumb`,
 			method: 'GET',
 			responseType: 'blob',
 		})
-			.then(response => {
-				return window.URL.createObjectURL(new Blob([response.data]))
-			})
+		return window.URL.createObjectURL(new Blob([response.data]))
 	}
 }

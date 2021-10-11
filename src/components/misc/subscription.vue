@@ -89,27 +89,23 @@ export default {
 				this.unsubscribe()
 			}
 		},
-		subscribe() {
+		async subscribe() {
 			const subscription = new SubscriptionModel({
 				entity: this.entity,
 				entityId: this.entityId,
 			})
-			this.subscriptionService.create(subscription)
-				.then(() => {
-					this.$emit('change', subscription)
-					this.$message.success({message: this.$t('task.subscription.subscribeSuccess', {entity: this.entity})})
-				})
+			await this.subscriptionService.create(subscription)
+			this.$emit('change', subscription)
+			this.$message.success({message: this.$t('task.subscription.subscribeSuccess', {entity: this.entity})})
 		},
-		unsubscribe() {
+		async unsubscribe() {
 			const subscription = new SubscriptionModel({
 				entity: this.entity,
 				entityId: this.entityId,
 			})
-			this.subscriptionService.delete(subscription)
-				.then(() => {
-					this.$emit('change', null)
-					this.$message.success({message: this.$t('task.subscription.unsubscribeSuccess', {entity: this.entity})})
-				})
+			await this.subscriptionService.delete(subscription)
+			this.$emit('change', null)
+			this.$message.success({message: this.$t('task.subscription.unsubscribeSuccess', {entity: this.entity})})
 		},
 	},
 }

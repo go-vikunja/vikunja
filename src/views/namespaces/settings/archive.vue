@@ -23,6 +23,7 @@ export default {
 			title: '',
 		}
 	},
+
 	created() {
 		this.namespace = this.$store.getters['namespaces/getNamespaceById'](this.$route.params.id)
 		this.title = this.namespace.isArchived ?
@@ -30,19 +31,18 @@ export default {
 			this.$t('namespace.archive.titleArchive', { namespace: this.namespace.title })
 		this.setTitle(this.title)
 	},
-	methods: {
-		archiveNamespace() {
 
+	methods: {
+		async archiveNamespace() {
 			this.namespace.isArchived = !this.namespace.isArchived
 
-			this.namespaceService.update(this.namespace)
-				.then(r => {
-					this.$store.commit('namespaces/setNamespaceById', r)
-					this.$message.success({message: this.$t('namespace.archive.success')})
-				})
-				.finally(() => {
-					this.$router.back()
-				})
+			try {
+				const namespace = await this.namespaceService.update(this.namespace)
+				this.$store.commit('namespaces/setNamespaceById', namespace)
+				this.$message.success({message: this.$t('namespace.archive.success')})
+			} finally {
+				this.$router.back()
+			}
 		},
 	},
 }

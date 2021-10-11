@@ -30,21 +30,20 @@ export default {
 		},
 	},
 	methods: {
-		archiveList() {
+		async archiveList() {
 			const newList = {
 				...this.list,
 				isArchived: !this.list.isArchived,
 			}
 
-			this.listService.update(newList)
-				.then(r => {
-					this.$store.commit('currentList', r)
-					this.$store.commit('namespaces/setListInNamespaceById', r)
-					this.$message.success({message: this.$t('list.archive.success')})
-				})
-				.finally(() => {
-					this.$router.back()
-				})
+			try {
+				const list = await this.listService.update(newList)
+				this.$store.commit('currentList', list)
+				this.$store.commit('namespaces/setListInNamespaceById', list)
+				this.$message.success({message: this.$t('list.archive.success')})
+			} finally {
+				this.$router.back()
+			}
 		},
 	},
 }

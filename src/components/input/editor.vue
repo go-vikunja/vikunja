@@ -233,7 +233,7 @@ export default {
 			// dom tree. If we're calling this right after setting this.preview it could be the images were
 			// not already made available.
 			// Some docs at https://stackoverflow.com/q/62865160/10924593
-			this.$nextTick(() => {
+			this.$nextTick(async () => {
 				const attachmentImage = document.getElementsByClassName('attachment-image')
 				if (attachmentImage) {
 					for (const img of attachmentImage) {
@@ -254,11 +254,9 @@ export default {
 							this.attachmentService = new AttachmentService()
 						}
 
-						this.attachmentService.getBlobUrl(attachment)
-							.then(url => {
-								img.src = url
-								this.loadedAttachments[cacheKey] = url
-							})
+						const url = await this.attachmentService.getBlobUrl(attachment)
+						img.src = url
+						this.loadedAttachments[cacheKey] = url
 					}
 				}
 

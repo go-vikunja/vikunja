@@ -101,32 +101,29 @@ export default {
 		deletionScheduledAt: state => parseDateOrNull(state.auth.info.deletionScheduledAt),
 	}),
 	methods: {
-		deleteAccount() {
+		async deleteAccount() {
 			if (this.password === '') {
 				this.errPasswordRequired = true
 				this.$refs.passwordInput.focus()
 				return
 			}
 
-			this.accountDeleteService.request(this.password)
-				.then(() => {
-					this.$message.success({message: this.$t('user.deletion.requestSuccess')})
-					this.password = ''
-				})
+			await this.accountDeleteService.request(this.password)
+			this.$message.success({message: this.$t('user.deletion.requestSuccess')})
+			this.password = ''
 		},
-		cancelDeletion() {
+
+		async cancelDeletion() {
 			if (this.password === '') {
 				this.errPasswordRequired = true
 				this.$refs.passwordInput.focus()
 				return
 			}
 
-			this.accountDeleteService.cancel(this.password)
-				.then(() => {
-					this.$message.success({message: this.$t('user.deletion.scheduledCancelSuccess')})
-					this.$store.dispatch('auth/refreshUserInfo')
-					this.password = ''
-				})
+			await this.accountDeleteService.cancel(this.password)
+			this.$message.success({message: this.$t('user.deletion.scheduledCancelSuccess')})
+			this.$store.dispatch('auth/refreshUserInfo')
+			this.password = ''
 		},
 	},
 }

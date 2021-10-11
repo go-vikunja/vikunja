@@ -78,40 +78,40 @@ export default {
 		},
 	},
 	methods: {
-		addAssignee(user) {
-			this.$store.dispatch('tasks/addAssignee', {user: user, taskId: this.taskId})
-				.then(() => {
-					this.$emit('update:modelValue', this.assignees)
-					this.$message.success({message: this.$t('task.assignee.assignSuccess')})
-				})
+		async addAssignee(user) {
+			await this.$store.dispatch('tasks/addAssignee', {user: user, taskId: this.taskId})
+			this.$emit('update:modelValue', this.assignees)
+			this.$message.success({message: this.$t('task.assignee.assignSuccess')})
 		},
-		removeAssignee(user) {
-			this.$store.dispatch('tasks/removeAssignee', {user: user, taskId: this.taskId})
-				.then(() => {
-					// Remove the assignee from the list
-					for (const a in this.assignees) {
-						if (this.assignees[a].id === user.id) {
-							this.assignees.splice(a, 1)
-						}
-					}
-					this.$message.success({message: this.$t('task.assignee.unassignSuccess')})
-				})
+
+		async removeAssignee(user) {
+			await this.$store.dispatch('tasks/removeAssignee', {user: user, taskId: this.taskId})
+
+			// Remove the assignee from the list
+			for (const a in this.assignees) {
+				if (this.assignees[a].id === user.id) {
+					this.assignees.splice(a, 1)
+				}
+			}
+			this.$message.success({message: this.$t('task.assignee.unassignSuccess')})
 		},
-		findUser(query) {
+
+		async findUser(query) {
 			if (query === '') {
 				this.clearAllFoundUsers()
 				return
 			}
 
-			this.listUserService.getAll({listId: this.listId}, {s: query})
-				.then(response => {
-					// Filter the results to not include users who are already assigned
-					this.foundUsers = response.filter(({id}) => !includesById(this.assignees, id))
-				})
+			const response = await this.listUserService.getAll({listId: this.listId}, {s: query})
+
+			// Filter the results to not include users who are already assigned
+			this.foundUsers = response.filter(({id}) => !includesById(this.assignees, id))
 		},
+
 		clearAllFoundUsers() {
 			this.foundUsers = []
 		},
+
 		focus() {
 			this.$refs.multiselect.focus()
 		},

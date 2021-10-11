@@ -60,15 +60,14 @@ export default {
 		},
 	},
 	actions: {
-		update(ctx) {
+		async update(ctx) {
 			const HTTP = HTTPFactory()
 
-			return HTTP.get('info')
-				.then(r => {
-					ctx.commit(CONFIG, r.data)
-					return r
-				})
+			const { data: info } = await HTTP.get('info')
+			ctx.commit(CONFIG, info)
+			return info
 		},
+
 		redirectToProviderIfNothingElseIsEnabled(ctx) {
 			if (ctx.state.auth.local.enabled === false &&
 				ctx.state.auth.openidConnect.enabled &&

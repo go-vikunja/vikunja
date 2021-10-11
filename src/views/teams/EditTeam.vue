@@ -219,93 +219,79 @@ export default {
 			userInfo: (state) => state.auth.info,
 		}),
 	},
+
 	methods: {
-		loadTeam() {
+		async loadTeam() {
 			this.team = new TeamModel({id: this.teamId})
-			this.teamService
-				.get(this.team)
-				.then((response) => {
-					this.team = response
-					this.title = this.$t('team.edit.title', {team: this.team.name})
-					this.setTitle(this.title)
-				})
+			this.team = await this.teamService.get(this.team)
+			this.title = this.$t('team.edit.title', {team: this.team.name})
+			this.setTitle(this.title)
 		},
-		save() {
+
+		async save() {
 			if (this.team.name === '') {
 				this.showError = true
 				return
 			}
 			this.showError = false
 
-			this.teamService
-				.update(this.team)
-				.then((response) => {
-					this.team = response
-					this.$message.success({message: this.$t('team.edit.success')})
-				})
+			this.team = await this.teamService.update(this.team)
+			this.$message.success({message: this.$t('team.edit.success')})
 		},
-		deleteTeam() {
-			this.teamService
-				.delete(this.team)
-				.then(() => {
-					this.$message.success({message: this.$t('team.edit.delete.success')})
-					this.$router.push({name: 'teams.index'})
-				})
+
+		async deleteTeam() {
+			await this.teamService.delete(this.team)
+			this.$message.success({message: this.$t('team.edit.delete.success')})
+			this.$router.push({name: 'teams.index'})
 		},
-		deleteUser() {
-			this.teamMemberService
-				.delete(this.member)
-				.then(() => {
-					this.$message.success({message: this.$t('team.edit.deleteUser.success')})
-					this.loadTeam()
-				})
-				.finally(() => {
-					this.showUserDeleteModal = false
-				})
+
+		async deleteUser() {
+			try {
+				await this.teamMemberService.delete(this.member)
+				this.$message.success({message: this.$t('team.edit.deleteUser.success')})
+				this.loadTeam()
+			} finally {
+				this.showUserDeleteModal = false
+			}
 		},
-		addUser() {
+
+		async addUser() {
 			const newMember = new TeamMemberModel({
 				teamId: this.teamId,
 				username: this.newMember.username,
 			})
-			this.teamMemberService
-				.create(newMember)
-				.then(() => {
-					this.loadTeam()
-					this.$message.success({message: this.$t('team.edit.userAddedSuccess')})
-				})
+			await this.teamMemberService.create(newMember)
+			this.loadTeam()
+			this.$message.success({message: this.$t('team.edit.userAddedSuccess')})
 		},
-		toggleUserType(member) {
+
+		async toggleUserType(member) {
+			// FIXME: direct manipulation
 			member.admin = !member.admin
 			member.teamId = this.teamId
-			this.teamMemberService
-				.update(member)
-				.then((r) => {
-					for (const tm in this.team.members) {
-						if (this.team.members[tm].id === member.id) {
-							this.team.members[tm].admin = r.admin
-							break
-						}
-					}
-					this.$message.success({
-						message: member.admin ?
-							this.$t('team.edit.madeAdmin') :
-							this.$t('team.edit.madeMember'),
-					})
-				})
+			const r = await this.teamMemberService.update(member)
+			for (const tm in this.team.members) {
+				if (this.team.members[tm].id === member.id) {
+					this.team.members[tm].admin = r.admin
+					break
+				}
+			}
+			this.$message.success({
+				message: member.admin ?
+					this.$t('team.edit.madeAdmin') :
+					this.$t('team.edit.madeMember'),
+			})
 		},
-		findUser(query) {
+
+		async findUser(query) {
 			if (query === '') {
 				this.clearAll()
 				return
 			}
 
-			this.userService
-				.getAll({}, {s: query})
-				.then((response) => {
-					this.foundUsers = response
-				})
+			this.foundUsers = await this.userService.getAll({}, {s: query})
 		},
+
 		clearAll() {
 			this.foundUsers = []
 		},

@@ -141,7 +141,7 @@ export default {
 				},
 			})
 		},
-		loadPendingTasks() {
+		async loadPendingTasks() {
 			// Since this route is authentication only, users would get an error message if they access the page unauthenticated.
 			// Since this component is mounted as the home page before unauthenticated users get redirected
 			// to the login page, they will almost always see the error message.
@@ -163,7 +163,10 @@ export default {
 			if (this.showAll) {
 				this.setTitle(this.$t('task.show.titleCurrent'))
 			} else {
-				this.setTitle(this.$t('task.show.titleDates', { from: this.cStartDate.toLocaleDateString(), to: this.cEndDate.toLocaleDateString()}))
+				this.setTitle(this.$t('task.show.titleDates', {
+					from: this.cStartDate.toLocaleDateString(),
+					to: this.cEndDate.toLocaleDateString(),
+				}))
 			}
 
 			const params = {
@@ -197,21 +200,19 @@ export default {
 				}
 			}
 
-			this.$store.dispatch('tasks/loadTasks', params)
-				.then(r => {
+			const tasks = await this.$store.dispatch('tasks/loadTasks', params)
 
-					// Sort all tasks to put those with a due date before the ones without a due date, the
-					// soonest before the later ones.
-					// We can't use the api sorting here because that sorts tasks with a due date after
-					// ones without a due date.
-					r.sort((a, b) => {
-						return a.dueDate === null && b.dueDate === null ? -1 : 1
-					})
-					const tasks = r.filter(t => t.dueDate !== null).concat(r.filter(t => t.dueDate === null))
-
-					this.tasks = tasks
-				})
+			// FIXME: sort tasks in computed
+			// Sort all tasks to put those with a due date before the ones without a due date, the
+			// soonest before the later ones.
+			// We can't use the api sorting here because that sorts tasks with a due date after
+			// ones without a due date.
+			this.tasks = tasks.sort((a, b) => {
+				return Number(b.dueDate === null) - Number(a.dueDate === null)
+			})
 		},
+
+		// FIXME: this modification should happen in the store
 		updateTasks(updatedTask) {
 			for (const t in this.tasks) {
 				if (this.tasks[t].id === updatedTask.id) {
@@ -225,18 +226,21 @@ export default {
 				}
 			}
 		},
+
 		setDatesToNextWeek() {
 			this.cStartDate = new Date()
 			this.cEndDate = new Date((new Date()).getTime() + 7 * 24 * 60 * 60 * 1000)
 			this.showOverdue = false
 			this.setDate()
 		},
+
 		setDatesToNextMonth() {
 			this.cStartDate = new Date()
 			this.cEndDate = new Date((new Date()).setMonth((new Date()).getMonth() + 1))
 			this.showOverdue = false
 			this.setDate()
 		},
+
 		showTodaysTasks() {
 			const d = new Date()
 			this.cStartDate = new Date()

@@ -43,11 +43,8 @@ export default {
 		this.setTitle(this.$t('team.title'))
 	},
 	methods: {
-		loadTeams() {
-			this.teamService.getAll()
-				.then(response => {
-					this.teams = response
-				})
+		async loadTeams() {
+			this.teams = await this.teamService.getAll()
 		},
 	},
 }

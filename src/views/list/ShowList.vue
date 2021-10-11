@@ -83,7 +83,8 @@ export default {
 			this.$router.replace({name: savedListView, params: {id: this.$route.params.listId}})
 			console.debug('Replaced list view with', savedListView)
 		},
-		loadList() {
+
+		async loadList() {
 			if (this.$route.name.includes('.settings.')) {
 				return
 			}
@@ -139,14 +140,13 @@ export default {
 
 			// We create an extra list object instead of creating it in this.list because that would trigger a ui update which would result in bad ux.
 			const list = new ListModel(listData)
-			this.listService.get(list)
-				.then(r => {
-					this.$store.dispatch(CURRENT_LIST, r)
-					this.setTitle(this.getListTitle(r))
-				})
-				.finally(() => {
-					this.listLoaded = this.$route.params.listId
-				})
+			try {
+				const loadedList = await this.listService.get(list)
+				this.$store.commit(CURRENT_LIST, loadedList)
+				this.setTitle(this.getListTitle(loadedList))
+			} finally {
+				this.listLoaded = this.$route.params.listId
+			}
 		},
 	},
 }

@@ -408,7 +408,7 @@ export default {
 			this.$store.dispatch('kanban/updateBucket', newBucket)
 		},
 
-		updateTaskPosition(e) {
+		async updateTaskPosition(e) {
 			this.drag = false
 
 			// While we could just pass the bucket index in through the function call, this would not give us the 
@@ -427,34 +427,35 @@ export default {
 				kanbanPosition: calculateItemPosition(taskBefore !== null ? taskBefore.kanbanPosition : null, taskAfter !== null ? taskAfter.kanbanPosition : null),
 			}
 
-			this.$store.dispatch('tasks/update', newTask)
-				// .finally(() => {
-					this.taskUpdating[task.id] = false
-					this.oneTaskUpdating = false
-				// })
+			try {
+				await this.$store.dispatch('tasks/update', newTask)
+			} finally {
+				this.taskUpdating[task.id] = false
+				this.oneTaskUpdating = false
+			}
 		},
+
 		toggleShowNewTaskInput(bucketId) {
 			this.showNewTaskInput[bucketId] = !this.showNewTaskInput[bucketId]
 		},
-		addTaskToBucket(bucketId) {
 
+		async addTaskToBucket(bucketId) {
 			if (this.newTaskText === '') {
 				this.newTaskError[bucketId] = true
 				return
 			}
 			this.newTaskError[bucketId] = false
 
-			this.$store.dispatch('tasks/createNewTask', {
+			const task = await this.$store.dispatch('tasks/createNewTask', {
 				title: this.newTaskText,
 				bucketId,
 				listId: this.$route.params.listId,
 			})
-				.then(r => {
-					this.newTaskText = ''
-					this.$store.commit('kanban/addTaskToBucket', r)
-					this.scrollTaskContainerToBottom(bucketId)
-				})
+			this.newTaskText = ''
+			this.$store.commit('kanban/addTaskToBucket', task)
+			this.scrollTaskContainerToBottom(bucketId)
 		},
+
 		scrollTaskContainerToBottom(bucketId) {
 			const bucketEl = this.taskContainerRefs[bucketId]
 			if (!bucketEl) {
@@ -462,7 +463,8 @@ export default {
 			}
 			bucketEl.scrollTop = bucketEl.scrollHeight
 		},
-		createNewBucket() {
+
+		async createNewBucket() {
 			if (this.newBucketTitle === '') {
 				return
 			}
@@ -472,12 +474,11 @@ export default {
 				listId: parseInt(this.$route.params.listId),
 			})
 
-			this.$store.dispatch('kanban/createBucket', newBucket)
-				.then(() => {
-					this.newBucketTitle = ''
-					this.showNewBucketInput = false
-				})
+			await this.$store.dispatch('kanban/createBucket', newBucket)
+			this.newBucketTitle = ''
+			this.showNewBucketInput = false
 		},
+
 		deleteBucketModal(bucketId) {
 			if (this.buckets.length <= 1) {
 				return
@@ -486,33 +487,39 @@ export default {
 			this.bucketToDelete = bucketId
 			this.showBucketDeleteModal = true
 		},
-		deleteBucket() {
-			this.$store.dispatch('kanban/deleteBucket', {bucket: {
+
+		async deleteBucket() {
+			const bucket = new BucketModel({
 				id: this.bucketToDelete,
 				listId: parseInt(this.$route.params.listId),
-			}, params: this.params})
-				.then(() => this.$message.success({message: this.$t('list.kanban.deleteBucketSuccess')}))
-				.finally(() => {
-					this.showBucketDeleteModal = false
+			})
+
+			try {
+				await this.$store.dispatch('kanban/deleteBucket', {
+					bucket,
+					params: this.params,
 				})
+				this.$message.success({message: this.$t('list.kanban.deleteBucketSuccess')})
+			} finally {
+				this.showBucketDeleteModal = false
+			}
 		},
+
 		focusBucketTitle(e) {
 			// This little helper allows us to drag a bucket around at the title without focusing on it right away.
 			this.bucketTitleEditable = true
 			this.$nextTick(() => e.target.focus())
 		},
 
-		saveBucketTitle(bucketId, bucketTitle) {
+		async saveBucketTitle(bucketId, bucketTitle) {
 			const updatedBucketData = {
 				id: bucketId,
 				title: bucketTitle,
 			}
 
-			this.$store.dispatch('kanban/updateBucketTitle', updatedBucketData)
-				.then(() => {
-					this.bucketTitleEditable = false
-					this.$message.success({message: this.$t('list.kanban.bucketTitleSavedSuccess')})
-				})
+			await this.$store.dispatch('kanban/updateBucketTitle', updatedBucketData)
+			this.bucketTitleEditable = false
+			this.$message.success({message: this.$t('list.kanban.bucketTitleSavedSuccess')})
 		},
 
 		updateBuckets(value) {
@@ -535,7 +542,8 @@ export default {
 
 			this.$store.dispatch('kanban/updateBucket', updatedData)
 		},
-		setBucketLimit(bucketId, limit) {
+
+		async setBucketLimit(bucketId, limit) {
 			if (limit < 0) {
 				return
 			}
@@ -545,27 +553,30 @@ export default {
 				limit,
 			}
 
-			this.$store.dispatch('kanban/updateBucket', newBucket)
-				.then(() => this.$message.success({message: this.$t('list.kanban.bucketLimitSavedSuccess')}))
-			
+			await this.$store.dispatch('kanban/updateBucket', newBucket)
+			this.$message.success({message: this.$t('list.kanban.bucketLimitSavedSuccess')})
 		},
+
 		shouldAcceptDrop(bucket) {
 			return bucket.id === this.sourceBucket || // When dragging from a bucket who has its limit reached, dragging should still be possible
 				bucket.limit === 0 || // If there is no limit set, dragging & dropping should always work
 				bucket.tasks.length < bucket.limit // Disallow dropping to buckets which have their limit reached
 		},
+
 		dragstart(bucket) {
 			this.drag = true
 			this.sourceBucket = bucket.id
 		},
-		toggleDoneBucket(bucket) {
+
+		async toggleDoneBucket(bucket) {
 			const newBucket = {
 				...bucket,
 				isDoneBucket: !bucket.isDoneBucket,
 			}
-			this.$store.dispatch('kanban/updateBucket', newBucket)
-				.then(() => this.$message.success({message: this.$t('list.kanban.doneBucketSavedSuccess')}))
+			await this.$store.dispatch('kanban/updateBucket', newBucket)
+			this.$message.success({message: this.$t('list.kanban.doneBucketSavedSuccess')})
 		},
+
 		collapseBucket(bucket) {
 			this.collapsedBuckets[bucket.id] = true
 			saveCollapsedBucketState(this.$route.params.listId, this.collapsedBuckets)

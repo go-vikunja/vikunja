@@ -41,19 +41,19 @@ export const removeToken = () => {
  * Refreshes an auth token while ensuring it is updated everywhere.
  * @returns {Promise<AxiosResponse<any>>}
  */
-export const refreshToken = (persist: boolean): Promise<AxiosResponse> => {
+export async function refreshToken(persist: boolean): Promise<AxiosResponse> {
 	const HTTP = HTTPFactory()
-	return HTTP.post('user/token', null, {
-		headers: {
-			Authorization: `Bearer ${getToken()}`,
-		},
-	})
-		.then(r => {
-			saveToken(r.data.token, persist)
-			return r
+	try {
+		const response = await HTTP.post('user/token', null, {
+			headers: {
+				Authorization: `Bearer ${getToken()}`,
+			},
 		})
-		.catch(e => {
-			throw new Error('Error renewing token: ', { cause: e })
-		})
+		saveToken(response.data.token, persist)
+		return response
+
+	} catch(e) {
+		throw new Error('Error renewing token: ', { cause: e })
+	}
 }
 

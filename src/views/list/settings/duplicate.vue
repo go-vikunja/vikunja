@@ -38,18 +38,17 @@ export default {
 		selectNamespace(namespace) {
 			this.selectedNamespace = namespace
 		},
-		duplicateList() {
+
+		async duplicateList() {
 			const listDuplicate = new ListDuplicateModel({
 				listId: this.$route.params.listId,
 				namespaceId: this.selectedNamespace.id,
 			})
-			this.listDuplicateService.create(listDuplicate)
-				.then(r => {
-					this.$store.commit('namespaces/addListToNamespace', r.list)
-					this.$store.commit('lists/setList', r.list)
-					this.$message.success({message: this.$t('list.duplicate.success')})
-					this.$router.push({name: 'list.index', params: {listId: r.list.id}})
-				})
+			const duplicate = await this.listDuplicateService.create(listDuplicate)
+			this.$store.commit('namespaces/addListToNamespace', duplicate.list)
+			this.$store.commit('lists/setList', duplicate.list)
+			this.$message.success({message: this.$t('list.duplicate.success')})
+			this.$router.push({name: 'list.index', params: {listId: duplicate.list.id}})
 		},
 	},
 }

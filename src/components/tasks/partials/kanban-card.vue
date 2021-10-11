@@ -6,9 +6,9 @@
 			'has-light-text': !colorIsDark(task.hexColor) && task.hexColor !== `#${task.defaultColor}` && task.hexColor !== task.defaultColor,
 		}"
 		:style="{'background-color': task.hexColor !== '#' && task.hexColor !== `#${task.defaultColor}` ? task.hexColor : false}"
-		@click.ctrl="() => markTaskAsDone(task)"
+		@click.ctrl="() => toggleTaskDone(task)"
 		@click.exact="() => $router.push({ name: 'task.kanban.detail', params: { id: task.id } })"
-		@click.meta="() => markTaskAsDone(task)"
+		@click.meta="() => toggleTaskDone(task)"
 		class="task loader-container draggable"
 	>
 		<span class="task-id">
@@ -93,20 +93,19 @@ export default {
 		},
 	},
 	methods: {
-		markTaskAsDone(task) {
+		async toggleTaskDone(task) {
 			this.loadingInternal = true
-			this.$store.dispatch('tasks/update', {
-				...task,
-				done: !task.done,
-			})
-				.then(() => {
-					if (task.done) {
-						playPop()
-					}
+			try {
+				await this.$store.dispatch('tasks/update', {
+					...task,
+					done: !task.done,
 				})
-				.finally(() => {
-					this.loadingInternal = false
-				})
+				if (task.done) {
+					playPop()
+				}
+			} finally {
+				this.loadingInternal = false
+			}
 		},
 	},
 }

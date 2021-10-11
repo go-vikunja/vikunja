@@ -69,15 +69,14 @@ export default {
 		this.setTitle(this.$t('user.auth.resetPassword'))
 	},
 	methods: {
-		submit() {
+		async submit() {
 			this.errorMsg = ''
-			this.passwordResetService.requestResetPassword(this.passwordReset)
-				.then(() => {
-					this.isSuccess = true
-				})
-				.catch(e => {
-					this.errorMsg = e.response.data.message
-				})
+			try {
+				await this.passwordResetService.requestResetPassword(this.passwordReset)
+				this.isSuccess = true
+			} catch(e) {
+				this.errorMsg = e.response.data.message
+			}
 		},
 	},
 }

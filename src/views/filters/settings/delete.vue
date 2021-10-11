@@ -24,17 +24,15 @@ export default {
 		}
 	},
 	methods: {
-		deleteSavedFilter() {
+		async deleteSavedFilter() {
 			// We assume the listId in the route is the pseudolist
 			const list = new ListModel({id: this.$route.params.listId})
 			const filter = new SavedFilterModel({id: list.getSavedFilterId()})
 
-			this.filterService.delete(filter)
-				.then(() => {
-					this.$store.dispatch('namespaces/loadNamespaces')
-					this.$message.success({message: this.$t('filters.delete.success')})
-					this.$router.push({name: 'namespaces.index'})
-				})
+			await this.filterService.delete(filter)
+			await this.$store.dispatch('namespaces/loadNamespaces')
+			this.$message.success({message: this.$t('filters.delete.success')})
+			this.$router.push({name: 'namespaces.index'})
 		},
 	},
 }

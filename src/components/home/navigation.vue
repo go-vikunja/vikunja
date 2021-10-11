@@ -195,6 +195,7 @@ export default {
 		},
 	},
 	beforeCreate() {
+		// FIXME: async action in beforeCreate, might be unfinished when component mounts
 		this.$store.dispatch('namespaces/loadNamespaces')
 			.then(namespaces => {
 				namespaces.forEach(n => {
@@ -248,7 +249,8 @@ export default {
 
 			this.$store.commit('namespaces/setNamespaceById', newNamespace)
 		},
-		saveListPosition(e, namespaceIndex) {
+
+		async saveListPosition(e, namespaceIndex) {
 			const listsActive = this.activeLists[namespaceIndex]
 			const list = listsActive[e.newIndex]
 			const listBefore = listsActive[e.newIndex - 1] ?? null
@@ -257,14 +259,15 @@ export default {
 
 			const position = calculateItemPosition(listBefore !== null ? listBefore.position : null, listAfter !== null ? listAfter.position : null)
 
-			// create a copy of the list in order to not violate vuex mutations
-			this.$store.dispatch('lists/updateList', {
-				...list,
-				position,
-			})
-				.finally(() => {
-					this.listUpdating[list.id] = false
+			try {
+				// create a copy of the list in order to not violate vuex mutations
+				await this.$store.dispatch('lists/updateList', {
+					...list,
+					position,
 				})
+			} finally {
+				this.listUpdating[list.id] = false
+			}
 		},
 	},
 }

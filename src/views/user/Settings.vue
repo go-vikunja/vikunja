@@ -385,84 +385,75 @@ export default {
 	methods: {
 		copy,
 
-		updatePassword() {
+		async updatePassword() {
 			if (this.passwordConfirm !== this.passwordUpdate.newPassword) {
 				this.$message.error({message: this.$t('user.settings.passwordsDontMatch')})
 				return
 			}
 
-			this.passwordUpdateService.update(this.passwordUpdate)
-				.then(() => {
-					this.$message.success({message: this.$t('user.settings.passwordUpdateSuccess')})
-				})
+			await this.passwordUpdateService.update(this.passwordUpdate)
+			this.$message.success({message: this.$t('user.settings.passwordUpdateSuccess')})
 		},
-		updateEmail() {
-			this.emailUpdateService.update(this.emailUpdate)
-				.then(() => {
-					this.$message.success({message: this.$t('user.settings.updateEmailSuccess')})
-				})
+
+		async updateEmail() {
+			await this.emailUpdateService.update(this.emailUpdate)
+			this.$message.success({message: this.$t('user.settings.updateEmailSuccess')})
 		},
-		totpStatus() {
+
+		async totpStatus() {
 			if (!this.totpEnabled) {
 				return
 			}
-			this.totpService.get()
-				.then(r => {
-					this.totp = r
-					this.totpSetQrCode()
-				})
-				.catch(e => {
-					// Error code 1016 means totp is not enabled, we don't need an error in that case.
-					if (e.response && e.response.data && e.response.data.code && e.response.data.code === 1016) {
-						this.totpEnrolled = false
-						return
-					}
-
-					throw e
-				})
-		},
-		totpSetQrCode() {
-			this.totpService.qrcode()
-				.then(qr => {
-					const urlCreator = window.URL || window.webkitURL
-					this.totpQR = urlCreator.createObjectURL(qr)
-				})
-		},
-		totpEnroll() {
-			this.totpService.enroll()
-				.then(r => {
-					this.totpEnrolled = true
-					this.totp = r
-					this.totpSetQrCode()
-				})
-		},
-		totpConfirm() {
-			this.totpService.enable({passcode: this.totpConfirmPasscode})
-				.then(() => {
-					this.totp.enabled = true
-					this.$message.success({message: this.$t('user.settings.totp.confirmSuccess')})
-				})
-		},
-		totpDisable() {
-			this.totpService.disable({password: this.totpDisablePassword})
-				.then(() => {
+			try {
+				this.totp = await this.totpService.get()
+				this.totpSetQrCode()
+			} catch(e) {
+				// Error code 1016 means totp is not enabled, we don't need an error in that case.
+				if (e.response && e.response.data && e.response.data.code && e.response.data.code === 1016) {
 					this.totpEnrolled = false
-					this.totp = new TotpModel()
-					this.$message.success({message: this.$t('user.settings.totp.disableSuccess')})
-				})
+					return
+				}
+
+				throw e
+			}
 		},
-		updateSettings() {
+	
+		async totpSetQrCode() {
+			const qr = await this.totpService.qrcode()
+			const urlCreator = window.URL || window.webkitURL
+			this.totpQR = urlCreator.createObjectURL(qr)
+		},
+
+		async totpEnroll() {
+			this.totp = await this.totpService.enroll()
+			this.totpEnrolled = true
+			this.totpSetQrCode()
+		},
+	
+		async totpConfirm() {
+			await this.totpService.enable({passcode: this.totpConfirmPasscode})
+			this.totp.enabled = true
+			this.$message.success({message: this.$t('user.settings.totp.confirmSuccess')})
+		},
+
+		async totpDisable() {
+			await this.totpService.disable({password: this.totpDisablePassword})
+			this.totpEnrolled = false
+			this.totp = new TotpModel()
+			this.$message.success({message: this.$t('user.settings.totp.disableSuccess')})
+		},
+
+		async updateSettings() {
 			localStorage.setItem(playSoundWhenDoneKey, this.playSoundWhenDone)
 			saveLanguage(this.language)
 			setQuickAddMagicMode(this.quickAddMagicMode)
 			this.settings.defaultListId = this.defaultList ? this.defaultList.id : 0
 
-			this.userSettingsService.update(this.settings)
-				.then(() => {
-					this.$store.commit('auth/setUserSettings', this.settings)
-					this.$message.success({message: this.$t('user.settings.general.savedSuccess')})
-				})
+			await this.userSettingsService.update(this.settings)
+			this.$store.commit('auth/setUserSettings', this.settings)
+			this.$message.success({message: this.$t('user.settings.general.savedSuccess')})
 		},
+
 		anchorHashCheck() {
 			if (window.location.hash === this.$route.hash) {
 				const el = document.getElementById(this.$route.hash.slice(1))

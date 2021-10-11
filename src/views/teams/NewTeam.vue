@@ -49,22 +49,19 @@ export default {
 		this.setTitle(this.$t('team.create.title'))
 	},
 	methods: {
-		newTeam() {
+		async newTeam() {
 			if (this.team.name === '') {
 				this.showError = true
 				return
 			}
 			this.showError = false
 
-			this.teamService
-				.create(this.team)
-				.then((response) => {
-					this.$router.push({
-						name: 'teams.edit',
-						params: { id: response.id },
-					})
-					this.$message.success({message: this.$t('team.create.success') })
-				})
+			const response = await this.teamService.create(this.team)
+			this.$router.push({
+				name: 'teams.edit',
+				params: { id: response.id },
+			})
+			this.$message.success({message: this.$t('team.create.success') })
 		},
 	},
 }

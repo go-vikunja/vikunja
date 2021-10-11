@@ -38,7 +38,7 @@ export default {
 		'$route.path': 'loadTasksOnSavedFilter',
 	},
 	methods: {
-		loadTasks(
+		async loadTasks(
 			page,
 			search = '',
 			params = null,
@@ -76,14 +76,9 @@ export default {
 			}
 
 			this.tasks = []
-
-			this.taskCollectionService.getAll(list, params, page)
-				.then(r => {
-					this.tasks = r
-					this.currentPage = page
-
-					this.loadedList = JSON.parse(JSON.stringify(currentList))
-				})
+			this.tasks = await this.taskCollectionService.getAll(list, params, page)
+			this.currentPage = page
+			this.loadedList = JSON.parse(JSON.stringify(currentList))
 		},
 
 		loadTasksForPage(e) {

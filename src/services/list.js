@@ -44,28 +44,27 @@ export default class ListService extends AbstractService {
 		return super.update(newModel)
 	}
 
-	background(list) {
+	async background(list) {
 		if (list.background === null) {
 			return ''
 		}
 
-		return this.http({
+		const response = await this.http({
 			url: `/lists/${list.id}/background`,
 			method: 'GET',
 			responseType: 'blob',
 		})
-			.then(response => {
-				return window.URL.createObjectURL(new Blob([response.data]))
-			})
+		return window.URL.createObjectURL(new Blob([response.data]))
 	}
 
-	removeBackground(list) {
+	async removeBackground(list) {
 		const cancel = this.setLoading()
 
-		return this.http.delete(`/lists/${list.id}/background`, list)
-			.then(response => response.data)
-			.finally(() => {
-				cancel()
-			})
+		try {
+			const response = await this.http.delete(`/lists/${list.id}/background`, list)
+			return response.data
+		} finally {
+			cancel()
+		}
 	}
 }

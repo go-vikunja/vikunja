@@ -209,7 +209,7 @@ export default {
 	},
 
 	actions: {
-		loadBucketsForList(ctx, {listId, params}) {
+		async loadBucketsForList(ctx, {listId, params}) {
 			const cancel = setLoading(ctx, 'kanban')
 
 			// Clear everything to prevent having old buckets in the list if loading the buckets from this list takes a few moments
@@ -218,13 +218,14 @@ export default {
 			params.per_page = TASKS_PER_BUCKET
 
 			const bucketService = new BucketService()
-			return bucketService.getAll({listId: listId}, params)
-				.then(r => {
-					ctx.commit('setBuckets', r)
-					ctx.commit('setListId', listId)
-					return r
-				})
-				.finally(() => cancel())
+			try {
+				const response = await  bucketService.getAll({listId: listId}, params)
+				ctx.commit('setBuckets', response)
+				ctx.commit('setListId', listId)
+				return response
+			} finally {
+				cancel()
+			}
 		},
 
 		async loadNextTasksForBucket(ctx, {listId, ps = {}, bucketId}) {
@@ -270,48 +271,50 @@ export default {
 			params.per_page = TASKS_PER_BUCKET
 
 			const taskService = new TaskCollectionService()
-			return taskService.getAll({listId: listId}, params, page)
-				.then(r => {
-					ctx.commit('addTasksToBucket', {tasks: r, bucketId: bucketId})
-					ctx.commit('setTasksLoadedForBucketPage', {bucketId, page})
-					if (taskService.totalPages <= page) {
-						ctx.commit('setAllTasksLoadedForBucket', bucketId)
-					}
-					return r
-				})
-				.finally(() => {
-					cancel()
-					ctx.commit('setBucketLoading', {bucketId: bucketId, loading: false})
-				})
+			try {
+
+				const tasks = await taskService.getAll({listId: listId}, params, page)
+				ctx.commit('addTasksToBucket', {tasks, bucketId: bucketId})
+				ctx.commit('setTasksLoadedForBucketPage', {bucketId, page})
+				if (taskService.totalPages <= page) {
+					ctx.commit('setAllTasksLoadedForBucket', bucketId)
+				}
+				return tasks
+			} finally {
+				cancel()
+				ctx.commit('setBucketLoading', {bucketId: bucketId, loading: false})
+			}
 		},
 
-		createBucket(ctx, bucket) {
+		async createBucket(ctx, bucket) {
 			const cancel = setLoading(ctx, 'kanban')
 
 			const bucketService = new BucketService()
-			return bucketService.create(bucket)
-				.then(r => {
-					ctx.commit('addBucket', r)
-					return r
-				})
-				.finally(() => cancel())
+			try {
+				const createdBucket = await bucketService.create(bucket)
+				ctx.commit('addBucket', createdBucket)
+				return createdBucket
+			} finally {
+				cancel()
+			}
 		},
 
-		deleteBucket(ctx, {bucket, params}) {
+		async deleteBucket(ctx, {bucket, params}) {
 			const cancel = setLoading(ctx, 'kanban')
 
 			const bucketService = new BucketService()
-			return bucketService.delete(bucket)
-				.then(r => {
-					ctx.commit('removeBucket', bucket)
-					// We reload all buckets because tasks are being moved from the deleted bucket
-					ctx.dispatch('loadBucketsForList', {listId: bucket.listId, params: params})
-					return r
-				})
-				.finally(() => cancel())
+			try {
+				const response = await bucketService.delete(bucket)
+				ctx.commit('removeBucket', bucket)
+				// We reload all buckets because tasks are being moved from the deleted bucket
+				ctx.dispatch('loadBucketsForList', {listId: bucket.listId, params: params})
+				return response
+			} finally {
+				cancel()
+			}
 		},
 
-		updateBucket(ctx, updatedBucketData) {
+		async updateBucket(ctx, updatedBucketData) {
 			const cancel = setLoading(ctx, 'kanban')
 
 			const bucketIndex = findIndexById(ctx.state.buckets, updatedBucketData.id)
@@ -324,22 +327,22 @@ export default {
 
 			ctx.commit('setBucketByIndex', {bucketIndex, bucket: updatedBucket})
 			
-			const bucketService = new BucketService()			
-			return bucketService.update(updatedBucket)
-				.then(r => {
-					ctx.commit('setBucketByIndex', {bucketIndex, bucket: r})
-					Promise.resolve(r)
-				})
-				.catch(e => {
-					// restore original state
-					ctx.commit('setBucketByIndex', {bucketIndex, bucket: oldBucket})
+			const bucketService = new BucketService()
+			try {
+				const returnedBucket = await bucketService.update(updatedBucket)
+				ctx.commit('setBucketByIndex', {bucketIndex, bucket: returnedBucket})
+				return returnedBucket
+			} catch(e) {
+				// restore original state
+				ctx.commit('setBucketByIndex', {bucketIndex, bucket: oldBucket})
 
-					throw e
-				})
-				.finally(() => cancel())
+				throw e
+			} finally {
+				cancel()
+			}
 		},
 
-		updateBucketTitle(ctx, { id, title }) {
+		async updateBucketTitle(ctx, { id, title }) {
 			const bucket = findById(ctx.state.buckets, id)
 
 			if (bucket.title === title) {
@@ -352,9 +355,8 @@ export default {
 				title,
 			}
 
-			ctx.dispatch('updateBucket', updatedBucketData).then(() => {
-				success({message: i18n.global.t('list.kanban.bucketTitleSavedSuccess')})
-			})
+			await ctx.dispatch('updateBucket', updatedBucketData)
+			success({message: i18n.global.t('list.kanban.bucketTitleSavedSuccess')})
 		},
 	},
 }
