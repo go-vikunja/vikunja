@@ -508,6 +508,12 @@ export default {
 			handler: 'loadTask',
 			immediate: true,
 		},
+		parent: {
+			handler(parent) {
+				this.$store.commit(CURRENT_LIST, parent !== null ? parent.list : this.currentList)
+			},
+			immediate: true,
+		},
 	},
 	computed: {
 		taskId() {
@@ -529,9 +535,7 @@ export default {
 				return null
 			}
 
-			const list = this.$store.getters['namespaces/getListAndNamespaceById'](this.task.listId)
-			this.$store.commit(CURRENT_LIST, list !== null ? list.list : this.currentList)
-			return list
+			return this.$store.getters['namespaces/getListAndNamespaceById'](this.task.listId)
 		},
 		canWrite() {
 			return typeof this.task !== 'undefined' && typeof this.task.maxRight !== 'undefined' && this.task.maxRight > rights.READ
@@ -599,45 +603,42 @@ export default {
 			this.activeFields.attachments = this.task.attachments.length > 0
 			this.activeFields.relatedTasks = Object.keys(this.task.relatedTasks).length > 0
 		},
-		saveTask(showNotification = true, undoCallback = null) {
-
+		async saveTask(showNotification = true, undoCallback = null) {
 			if (!this.canWrite) {
 				return
 			}
 
 			// We're doing the whole update in a nextTick because sometimes race conditions can occur when
 			// setting the due date on mobile which leads to no due date change being saved.
-			this.$nextTick(() => {
-				this.task.hexColor = this.taskColor
+			await this.$nextTick()
 
-				// If no end date is being set, but a start date and due date,
-				// use the due date as the end date
-				if (this.task.endDate === null && this.task.startDate !== null && this.task.dueDate !== null) {
-					this.task.endDate = this.task.dueDate
+			this.task.hexColor = this.taskColor
+
+			// If no end date is being set, but a start date and due date,
+			// use the due date as the end date
+			if (this.task.endDate === null && this.task.startDate !== null && this.task.dueDate !== null) {
+				this.task.endDate = this.task.dueDate
+			}
+
+			try {
+				this.task = await this.$store.dispatch('tasks/update', this.task)
+				this.setActiveFields()
+
+				if (!showNotification) {
+					return
 				}
 
-				this.$store.dispatch('tasks/update', this.task)
-					.then(r => {
-						this.task = r
-						this.setActiveFields()
-
-						if (!showNotification) {
-							return
-						}
-
-						let actions = []
-						if (undoCallback !== null) {
-							actions = [{
-								title: 'Undo',
-								callback: undoCallback,
-							}]
-						}
-						this.$message.success({message: this.$t('task.detail.updateSuccess')}, actions)
-					})
-					.catch(e => {
-						this.$message.error(e)
-					})
-			})
+				let actions = []
+				if (undoCallback !== null) {
+					actions = [{
+						title: 'Undo',
+						callback: undoCallback,
+					}]
+				}
+				this.$message.success({message: this.$t('task.detail.updateSuccess')}, actions)
+			} catch(e) {
+				this.$message.error(e)
+			}
 		},
 		setFieldActive(fieldName) {
 			this.activeFields[fieldName] = true
@@ -692,9 +693,9 @@ export default {
 				this.saveTask()
 			}
 		},
-		changeList(list) {
+		async changeList(list) {
 			this.task.listId = list.id
-			this.saveTask()
+			await this.saveTask()
 			this.$store.commit('kanban/removeTaskInBucket', this.task)
 		},
 		toggleFavorite() {
