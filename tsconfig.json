@@ -40,9 +40,4 @@
     "tests/**/*.ts",
     "tests/**/*.tsx"
   ],
-
-  // https://github.com/johnsoncodehk/volar#using
-  "vueCompilerOptions": {
-    "experimentalCompatMode": 2
-  },
 }
