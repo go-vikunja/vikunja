@@ -484,11 +484,10 @@ export default {
 			this.showBucketDeleteModal = true
 		},
 		deleteBucket() {
-			const bucket = new BucketModel({
+			this.$store.dispatch('kanban/deleteBucket', {bucket: {
 				id: this.bucketToDelete,
-			})
-
-			this.$store.dispatch('kanban/deleteBucket', {bucket: bucket, params: this.params})
+				listId: parseInt(this.$route.params.listId),
+			}, params: this.params})
 				.then(() => this.$message.success({message: this.$t('list.kanban.deleteBucketSuccess')}))
 				.finally(() => {
 					this.showBucketDeleteModal = false
