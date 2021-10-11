@@ -10,26 +10,6 @@ import TaskCollectionService from '@/services/taskCollection'
 
 const TASKS_PER_BUCKET = 25
 
-function getTaskIndices(state, task) {
-	const bucketIndex = findIndexById(state.buckets, task.bucketId)
-
-	if (!bucketIndex) {
-		throw('Bucket not found')
-	}
-
-	const bucket = state.buckets[bucketIndex]
-	const taskIndex = findIndexById(bucket.tasks, task.id)
-
-	if (!bucketIndex) {
-		throw('Task not found')
-	}
-
-	return {
-		bucketIndex,
-		taskIndex,
-	}
-}
-
 const addTaskToBucketAndSort = (state, task) => {
 	const bucketIndex = findIndexById(state.buckets, task.bucketId)
 	state.buckets[bucketIndex].tasks.push(task)
@@ -172,9 +152,19 @@ export default {
 				return
 			}
 
-			const { bucketIndex, taskIndex } = getTaskIndices(state, task)
-			
-			state.buckets[bucketIndex].tasks.splice(taskIndex, 1)
+			for (const b in state.buckets) {
+				if (state.buckets[b].id === task.bucketId) {
+					for (const t in state.buckets[b].tasks) {
+						if (state.buckets[b].tasks[t].id === task.id) {
+							const bucket = state.buckets[b]
+							bucket.tasks.splice(t, 1)
+							state.buckets[b] = bucket
+							return
+						}
+					}
+					return
+				}
+			}
 		},
 
 		setBucketLoading(state, {bucketId, loading}) {
@@ -364,9 +354,10 @@ export default {
 			}
 			ctx.commit('setBucketByIndex', {bucketIndex, bucket: updatedBucket})
 			
-			const bucketService = new BucketService()
+			const bucketService = new BucketService()			
 			return bucketService.update(updatedBucket)
 				.then(r => {
+					ctx.commit('setBucketByIndex', {bucketIndex, bucket: r})
 					Promise.resolve(r)
 				})
 				.catch(e => {
