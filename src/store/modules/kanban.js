@@ -160,7 +160,7 @@ export default {
 				...oldBucket,
 				tasks: [
 					...oldBucket.tasks,
-					tasks,
+					...tasks,
 				],
 			}
 			state.buckets[bucketIndex] = newBucket
