@@ -10,6 +10,19 @@ import TaskCollectionService from '@/services/taskCollection'
 
 const TASKS_PER_BUCKET = 25
 
+function getTaskIndicesById(state, taskId) {
+	let taskIndex
+	const bucketIndex = state.buckets.findIndex(({ tasks }) => {
+		taskIndex = findIndexById(tasks, taskId)
+		return taskIndex !== -1
+	})
+
+	return {
+		bucketIndex: bucketIndex !== -1 ? bucketIndex : null,
+		taskIndex: taskIndex !== -1 ? taskIndex : null,
+	}	
+}
+
 const addTaskToBucketAndSort = (state, task) => {
 	const bucketIndex = findIndexById(state.buckets, task.bucketId)
 	state.buckets[bucketIndex].tasks.push(task)
@@ -152,19 +165,16 @@ export default {
 				return
 			}
 
-			for (const b in state.buckets) {
-				if (state.buckets[b].id === task.bucketId) {
-					for (const t in state.buckets[b].tasks) {
-						if (state.buckets[b].tasks[t].id === task.id) {
-							const bucket = state.buckets[b]
-							bucket.tasks.splice(t, 1)
-							state.buckets[b] = bucket
-							return
-						}
-					}
-					return
-				}
+			const { bucketIndex, taskIndex } = getTaskIndicesById(state, task.id)
+
+			if (
+				state.buckets[bucketIndex]?.id !== task.bucketId ||
+				state.buckets[bucketIndex]?.tasks[taskIndex]?.id !== task.id
+			) {
+				return
 			}
+			
+			state.buckets[bucketIndex].tasks.splice(taskIndex, 1)
 		},
 
 		setBucketLoading(state, {bucketId, loading}) {
@@ -187,15 +197,11 @@ export default {
 
 		getTaskById(state) {
 			return (id) => {
-				let taskIndex
-				const bucketIndex = state.buckets.findIndex(({ tasks }) => {
-					taskIndex = findIndexById(tasks, id)
-					return taskIndex !== -1
-				})
+				const { bucketIndex, taskIndex } = getTaskIndicesById(state, id)
 
 				return {
-					bucketIndex: bucketIndex !== -1 ? bucketIndex : null,
-					taskIndex: taskIndex !== -1 ? taskIndex : null,
+					bucketIndex,
+					taskIndex,
 					task: state.buckets[bucketIndex]?.tasks?.[taskIndex] || null,
 				}
 			}
@@ -249,15 +255,6 @@ export default {
 			params.sort_by = 'kanban_position'
 			params.order_by = 'asc'
 
-			// const hasBucketFilter = Object.entries(params.filter_by).some(([key, value]) => {
-			// 	const condition = value === 'bucket_id'
-			// 	if (condition) {
-			// 		if (value !== bucketId) {
-			// 			params.filter_value[key] = bucketId
-			// 		}
-			// 	}
-			// 	return condition
-			// })
 			let hasBucketFilter = false
 			for (const f in params.filter_by) {
 				if (params.filter_by[f] === 'bucket_id') {
@@ -338,20 +335,11 @@ export default {
 			const bucketIndex = findIndexById(ctx.state.buckets, updatedBucketData.id)
 			const oldBucket = cloneDeep(ctx.state.buckets[bucketIndex])
 
-			const bucket = ctx.state.buckets[bucketIndex]
-
-			const requestData = {
-				id: updatedBucketData.id,
-				listId: updatedBucketData.listId || oldBucket.listId,
-				title: oldBucket.title, // can't be empty in request
-				// ...bucket,
+			const updatedBucket = {
+				...ctx.state.buckets[bucketIndex],
 				...updatedBucketData,
 			}
 
-			const updatedBucket = {
-				...bucket,
-				...requestData,
-			}
 			ctx.commit('setBucketByIndex', {bucketIndex, bucket: updatedBucket})
 			
 			const bucketService = new BucketService()			
