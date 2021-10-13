@@ -104,13 +104,13 @@
 <script>
 import {mapState} from 'vuex'
 
-import router from '../../router'
 import {HTTPFactory} from '@/http-common'
 import {ERROR_MESSAGE, LOADING} from '@/store/mutation-types'
 import legal from '../../components/misc/legal'
 import ApiConfig from '@/components/misc/api-config.vue'
 import {getErrorText} from '@/message'
 import {redirectToProvider} from '../../helpers/redirectToProvider'
+import {getLastVisited, clearLastVisited} from '../../helpers/saveLastVisited'
 
 export default {
 	components: {
@@ -142,9 +142,18 @@ export default {
 				})
 		}
 
-		// Check if the user is already logged in, if so, redirect him to the homepage
+		// Check if the user is already logged in, if so, redirect them to the homepage
 		if (this.authenticated) {
-			router.push({name: 'home'})
+			const last = getLastVisited()
+			if (last !== null) {
+				this.$router.push({
+					name: last.name, 
+					params: last.params,
+				})
+				clearLastVisited()
+			} else {
+				this.$router.push({name: 'home'})
+			}
 		}
 	},
 	created() {

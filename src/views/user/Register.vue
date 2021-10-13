@@ -116,7 +116,7 @@ export default {
 		}
 	},
 	beforeMount() {
-		// Check if the user is already logged in, if so, redirect him to the homepage
+		// Check if the user is already logged in, if so, redirect them to the homepage
 		if (this.authenticated) {
 			router.push({name: 'home'})
 		}

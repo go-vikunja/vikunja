@@ -14,6 +14,7 @@ import {mapState} from 'vuex'
 
 import {ERROR_MESSAGE, LOADING} from '@/store/mutation-types'
 import {getErrorText} from '@/message'
+import {clearLastVisited, getLastVisited} from '../../helpers/saveLastVisited'
 
 export default {
 	name: 'Auth',
@@ -63,7 +64,16 @@ export default {
 				code: this.$route.query.code,
 			})
 				.then(() => {
-					this.$router.push({name: 'home'})
+					const last = getLastVisited()
+					if (last !== null) {
+						this.$router.push({
+							name: last.name,
+							params: last.params,
+						})
+						clearLastVisited()
+					} else {
+						this.$router.push({name: 'home'})
+					}
 				})
 				.catch(e => {
 					const err = getErrorText(e, p => this.$t(p))
