@@ -41,7 +41,7 @@ import TaskService from '../../services/task'
 import createTask from '@/components/tasks/mixins/createTask'
 import QuickAddMagic from '@/components/tasks/partials/quick-add-magic.vue'
 
-const INITIAL_SCROLL_HEIGHT = 40
+const INPUT_BORDER_PX = 2
 
 const cleanupTitle = title => {
 	return title.replace(/^((\* |\+ |- )(\[ \] )?)/g, '')
@@ -54,7 +54,8 @@ export default {
 			newTaskTitle: '',
 			taskService: new TaskService(),
 			errorMessage: '',
-			textAreaHeight: INITIAL_SCROLL_HEIGHT,
+			textAreaHeight: null,
+			initialTextAreaHeight: null,
 		}
 	},
 	mixins: [
@@ -71,13 +72,16 @@ export default {
 	},
 	watch: {
 		newTaskTitle(newVal) {
-			let scrollHeight = this.$refs.newTaskInput.scrollHeight
-			if (scrollHeight < INITIAL_SCROLL_HEIGHT || newVal === '') {
-				scrollHeight = INITIAL_SCROLL_HEIGHT
+			let scrollHeight = this.$refs.newTaskInput.scrollHeight + INPUT_BORDER_PX
+			if (scrollHeight < this.initialTextAreaHeight || newVal === '') {
+				scrollHeight = this.initialTextAreaHeight
 			}
 
 			this.textAreaHeight = scrollHeight
 		},
+	},
+	mounted() {
+		this.initialTextAreaHeight = this.$refs.newTaskInput.scrollHeight + INPUT_BORDER_PX
 	},
 	methods: {
 		addTask() {
