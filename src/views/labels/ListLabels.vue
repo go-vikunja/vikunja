@@ -168,6 +168,9 @@ export default {
 			// object passed to this function here still has a reference to the store.
 			this.labelEditLabel = new LabelModel({
 				...label,
+				// The model does not support passing dates into it directly so we need to convert them first				
+				created: +label.created,
+				updated: +label.updated,
 			})
 			this.isLabelEdit = true
 
