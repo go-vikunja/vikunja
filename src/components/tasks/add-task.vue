@@ -10,7 +10,7 @@
 					v-focus
 					v-model="newTaskTitle"
 					ref="newTaskInput"
-					:style="{'height': `${textAreaHeight}px`}"
+					:style="{'height': `calc(${textAreaHeight}px - 2px + 1rem)`}"
 					@keyup="errorMessage = ''"
 					@keydown.enter="handleEnter"
 				/>
@@ -42,6 +42,7 @@ import createTask from '@/components/tasks/mixins/createTask'
 import QuickAddMagic from '@/components/tasks/partials/quick-add-magic.vue'
 
 const INPUT_BORDER_PX = 2
+const LINE_HEIGHT = 1.5 // using getComputedStyles().lineHeight returns an (wrong) absolute pixel value, we need the factor to do calculations with it.
 
 const cleanupTitle = title => {
 	return title.replace(/^((\* |\+ |- )(\[ \] )?)/g, '')
@@ -72,12 +73,12 @@ export default {
 	},
 	watch: {
 		newTaskTitle(newVal) {
-			let scrollHeight = this.$refs.newTaskInput.scrollHeight + INPUT_BORDER_PX
-			if (scrollHeight < this.initialTextAreaHeight || newVal === '') {
-				scrollHeight = this.initialTextAreaHeight
-			}
+			// Calculating the textarea height based on lines of input in it. That is more reliable when removing a 
+			// line from the input.
+			const numberOfLines = newVal.split(/\r\n|\r|\n/).length
+			const fontSize =  parseInt(window.getComputedStyle(this.$refs.newTaskInput, null).getPropertyValue('font-size'))
 
-			this.textAreaHeight = scrollHeight
+			this.textAreaHeight = numberOfLines * fontSize * LINE_HEIGHT + INPUT_BORDER_PX
 		},
 	},
 	mounted() {
