@@ -1616,10 +1616,10 @@
     "@typescript-eslint/types" "4.32.0"
     eslint-visitor-keys "^2.0.0"
 
-"@vitejs/plugin-legacy@1.6.1":
-  version "1.6.1"
-  resolved "https://registry.yarnpkg.com/@vitejs/plugin-legacy/-/plugin-legacy-1.6.1.tgz#45f0e006de2d25758151b098b8dcb912c62a95dc"
-  integrity sha512-isBi2ti+AlCZUpfA1P6L8gseltBy/qi6Rsi92aDzeL2elpwXgN4Hv/xLS2UUSSj9F0mFmxXCYPWlBPaJnlYamQ==
+"@vitejs/plugin-legacy@1.6.2":
+  version "1.6.2"
+  resolved "https://registry.yarnpkg.com/@vitejs/plugin-legacy/-/plugin-legacy-1.6.2.tgz#638bfe74715bdba33a68b3de555f615e1b246cdb"
+  integrity sha512-p5Bv/827WUpVN2m95ZYXzmjE3AblFE4CHasVoZ7dIwOPlyNcpg70SehEi5AWqyC0E7C1rHD8Nju9rWoV9uBLiw==
   dependencies:
     "@babel/standalone" "^7.15.7"
     core-js "^3.18.1"
