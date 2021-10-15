@@ -128,7 +128,7 @@
     }
   },
   "list": {
-    "archived": "This list is archived. It is not possible to create new or edit tasks for it.",
+    "archived": "Diese Liste ist archiviert. Es ist nicht möglich, neue Aufgaben zu erstellen oder sie zu bearbeiten.",
     "title": "Listentitel",
     "color": "Farbe",
     "lists": "Listen",
@@ -626,7 +626,7 @@
       "addSuccess": "Das Label wurde erfolgreich hinzugefügt.",
       "createSuccess": "Das Label wurde erfolgreich erstellt.",
       "removeSuccess": "Das Label wurde erfolgreich entfernt.",
-      "addCreateSuccess": "The label has been created and added successfully."
+      "addCreateSuccess": "Das Label wurde erfolgreich erstellt und hinzugefügt."
     },
     "priority": {
       "unset": "Nicht eingestellt",
@@ -646,19 +646,19 @@
       "delete": "Aufgabenbeziehung entfernen",
       "deleteText1": "Willst du diese Aufgabenbeziehung wirklich entfernen?",
       "deleteText2": "Dies kann nicht rückgängig gemacht werden!",
-      "select": "Select a relation kind",
+      "select": "Beziehungsart auswählen",
       "kinds": {
-        "subtask": "Subtask | Subtasks",
-        "parenttask": "Parent Task | Parent Tasks",
-        "related": "Related Task | Related Tasks",
-        "duplicateof": "Duplicate Of | Duplicates Of",
-        "duplicates": "Duplicates | Duplicates",
-        "blocking": "Blocking | Blocking",
-        "blocked": "Blocked By | Blocked By",
-        "precedes": "Precedes | Precedes",
-        "follows": "Follows | Follows",
-        "copiedfrom": "Copied From | Copied From",
-        "copiedto": "Copied To | Copied To"
+        "subtask": "Unteraufgabe | Unteraufgaben",
+        "parenttask": "Übergeordnete Aufgabe | Übergeordnete Aufgaben",
+        "related": "Zugehörige Aufgabe | Zugehörige Aufgaben",
+        "duplicateof": "Duplikat von | Duplikate von",
+        "duplicates": "Dupliziert | Duplizierte",
+        "blocking": "Blockiert | Blockiert",
+        "blocked": "Blockiert von | Blockiert von",
+        "precedes": "Vorgänger | Vorgänger",
+        "follows": "Folgt | Folgen",
+        "copiedfrom": "Kopiert von | Kopiert von",
+        "copiedto": "Kopiert nach | Kopiert nach"
       }
     },
     "repeat": {

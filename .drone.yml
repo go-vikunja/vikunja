@@ -80,25 +80,13 @@ steps:
     depends_on:
       - dependencies
 
-  # Building in dev mode to avoid the service worker for testing
-  - name: build-dev
-    image: node:16
-    pull: true
-    environment:
-      YARN_CACHE_FOLDER: .cache/yarn/
-      CYPRESS_CACHE_FOLDER: .cache/cypress/
-    commands:
-      - yarn build:dev
-    depends_on:
-      - dependencies
-
   - name: build-prod
     image: node:16
     pull: true
     environment:
       YARN_CACHE_FOLDER: .cache/yarn/
     commands:
-      - yarn build --dest dist-prod
+      - yarn build
     depends_on:
       - dependencies
 
@@ -120,12 +108,12 @@ steps:
       CYPRESS_CACHE_FOLDER: .cache/cypress/
       CYPRESS_DEFAULT_COMMAND_TIMEOUT: 60000
     commands:
-      - sed -i 's/localhost/api/g' dist-dev/index.html
-      - yarn serve:dist-dev & npx wait-on http://localhost:5000
+      - sed -i 's/localhost/api/g' dist/index.html
+      - yarn serve:dist & npx wait-on http://localhost:5000
       - yarn test:frontend --browser chrome
     depends_on:
       - dependencies
-      - build-dev
+      - build-prod
 
   - name: upload-test-results
     image: plugins/s3

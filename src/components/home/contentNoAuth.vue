@@ -19,6 +19,7 @@
 import {mapState} from 'vuex'
 
 import logoUrl from '@/assets/logo-full.svg'
+import { saveLastVisited } from '@/helpers/saveLastVisited'
 
 export default {
 	name: 'contentNoAuth',
@@ -57,6 +58,7 @@ export default {
 				localStorage.getItem('passwordResetToken') === null &&
 				localStorage.getItem('emailConfirmToken') === null
 			) {
+				saveLastVisited(this.$route.name, this.$route.params)
 				this.$router.push({name: 'user.login'})
 			}
 		},

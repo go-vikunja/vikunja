@@ -626,7 +626,7 @@
       "addSuccess": "Étiquette ajoutée.",
       "createSuccess": "Étiquette créée.",
       "removeSuccess": "Étiquette retirée.",
-      "addCreateSuccess": "The label has been created and added successfully."
+      "addCreateSuccess": "L'étiquette a bien été créée et ajoutée."
     },
     "priority": {
       "unset": "Non définie",
@@ -646,19 +646,19 @@
       "delete": "Supprimer la relation de tâche",
       "deleteText1": "Supprimer cette relation de tâche ?",
       "deleteText2": "Ceci ne peut pas être annulé !",
-      "select": "Select a relation kind",
+      "select": "Sélectionnez un genre de relation",
       "kinds": {
-        "subtask": "Subtask | Subtasks",
-        "parenttask": "Parent Task | Parent Tasks",
-        "related": "Related Task | Related Tasks",
-        "duplicateof": "Duplicate Of | Duplicates Of",
-        "duplicates": "Duplicates | Duplicates",
-        "blocking": "Blocking | Blocking",
-        "blocked": "Blocked By | Blocked By",
-        "precedes": "Precedes | Precedes",
-        "follows": "Follows | Follows",
-        "copiedfrom": "Copied From | Copied From",
-        "copiedto": "Copied To | Copied To"
+        "subtask": "Sous-tâche | Sous-tâches",
+        "parenttask": "Tâche parente | Tâches parentes",
+        "related": "Tâche connexe | Tâches connexes",
+        "duplicateof": "Doublon de | Doublons de",
+        "duplicates": "Doublon | Doublons",
+        "blocking": "Blocage | Blocages",
+        "blocked": "Bloqué par | Bloqués par",
+        "precedes": "Précède | Précède",
+        "follows": "Suit | Suit",
+        "copiedfrom": "Copié depuis | Copiés depuis",
+        "copiedto": "Copié vers | Copiés vers"
       }
     },
     "repeat": {

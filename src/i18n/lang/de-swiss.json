@@ -128,7 +128,7 @@
     }
   },
   "list": {
-    "archived": "This list is archived. It is not possible to create new or edit tasks for it.",
+    "archived": "Diese Liste ist archiviert. Es ist nicht möglich, neue Aufgaben zu erstellen oder sie zu bearbeiten.",
     "title": "Liste Titl",
     "color": "Farb",
     "lists": "Listene",
@@ -626,7 +626,7 @@
       "addSuccess": "Das Label isch erfolgriich hinzuegfüegt worde.",
       "createSuccess": "Das Label isch erfolgriich erstellt worde.",
       "removeSuccess": "Das Label isch erfolgriich glöscht.",
-      "addCreateSuccess": "The label has been created and added successfully."
+      "addCreateSuccess": "Das Label wurde erfolgreich erstellt und hinzugefügt."
     },
     "priority": {
       "unset": "Nid iihgstellt",
@@ -646,19 +646,19 @@
       "delete": "Uufgabe Beziehig chüble",
       "deleteText1": "Bisch du dir sicher, dass du die Zueghörigkeit chüblä wetsch?",
       "deleteText2": "Das chan nid rückgängig gmacht werde!",
-      "select": "Select a relation kind",
+      "select": "Beziehungsart auswählen",
       "kinds": {
-        "subtask": "Subtask | Subtasks",
-        "parenttask": "Parent Task | Parent Tasks",
-        "related": "Related Task | Related Tasks",
-        "duplicateof": "Duplicate Of | Duplicates Of",
-        "duplicates": "Duplicates | Duplicates",
-        "blocking": "Blocking | Blocking",
-        "blocked": "Blocked By | Blocked By",
-        "precedes": "Precedes | Precedes",
-        "follows": "Follows | Follows",
-        "copiedfrom": "Copied From | Copied From",
-        "copiedto": "Copied To | Copied To"
+        "subtask": "Unteraufgabe | Unteraufgaben",
+        "parenttask": "Übergeordnete Aufgabe | Übergeordnete Aufgaben",
+        "related": "Zugehörige Aufgabe | Zugehörige Aufgaben",
+        "duplicateof": "Duplikat von | Duplikate von",
+        "duplicates": "Dupliziert | Duplizierte",
+        "blocking": "Blockiert | Blockiert",
+        "blocked": "Blockiert von | Blockiert von",
+        "precedes": "Vorgänger | Vorgänger",
+        "follows": "Folgt | Folgen",
+        "copiedfrom": "Kopiert von | Kopiert von",
+        "copiedto": "Kopiert nach | Kopiert nach"
       }
     },
     "repeat": {
@@ -720,13 +720,13 @@
       "delete": {
         "header": "Das Team chüble",
         "text1": "Bischder sicher, dasst wetsch da Team mit allne Mitglieder lösche?",
-        "text2": "Alli Teammitglider werded ihren Zuegang zu de Liste und Namensrüüm wo mit dem Team verbunde sind verlüüre. Das CHAN NID RÜCKGÄNIG gmacht werde!",
+        "text2": "All team members will lose access to lists and namespaces shared with this team. This CANNOT BE UNDONE!",
         "success": "Da Team isch erfolgriich g'chüblet wore."
       },
       "deleteUser": {
         "header": "Benutzer usem Team entferne",
         "text1": "Bisch du dir sicher, dass du de Benutzer usm Team werfe wetsch?",
-        "text2": "Er wird Zuegriff uf alli Liste und Namensrüüm verlüüre, wo da Team zuegriff druff het. Das CHAN NID RÜCKGÄNIG GMACHT WERDE!",
+        "text2": "They will lose access to all lists and namespaces this team has access to. This CANNOT BE UNDONE!",
         "success": "Benutzer erfolgriich usegworfe."
       }
     },
