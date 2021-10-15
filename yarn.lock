@@ -1026,10 +1026,10 @@
   dependencies:
     "@fortawesome/fontawesome-common-types" "^0.2.36"
 
-"@fortawesome/vue-fontawesome@2.0.4":
-  version "2.0.4"
-  resolved "https://registry.yarnpkg.com/@fortawesome/vue-fontawesome/-/vue-fontawesome-2.0.4.tgz#f3346ac92ac0fd078e17d4f634bd9e0fd43d369b"
-  integrity sha512-v3fNHstdVgxbPuSh/8K070LpWsTQboXsEaHoa+zkAxdfj8F/JJJLF/tpyJD8WXSuGx17nNEl8G4m/3MaxLez9w==
+"@fortawesome/vue-fontawesome@2.0.5":
+  version "2.0.5"
+  resolved "https://registry.yarnpkg.com/@fortawesome/vue-fontawesome/-/vue-fontawesome-2.0.5.tgz#147ed42f788f22bb44c2b1afd9e93e33add5798d"
+  integrity sha512-BktJiEuZhU+HxANJ37Pek6y+LRVVFgcU5CDd6b+t6XKj30QrYrh3ICsC5FQm5MuAdh3CPpYT99ywjk5v6nWteA==
 
 "@hapi/hoek@^9.0.0":
   version "9.2.0"
