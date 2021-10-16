@@ -72,6 +72,7 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 				margin: .5rem;
 				border-radius: $radius;
 				background: $task-background;
+				padding-bottom: .125rem;
 
 				&.loader-container.is-loading:after {
 					width: 1.5rem;
@@ -122,6 +123,7 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 					.tag, .assignees, .icon, .priority-label, .checklist-summary {
 						margin-top: 0;
 						margin-right: .25rem;
+						margin-bottom: .25rem;
 					}
 					
 					.checklist-summary {
