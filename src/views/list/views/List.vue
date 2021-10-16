@@ -88,8 +88,10 @@
 						@end="saveTaskPosition"
 						handle=".handle"
 						:disabled="!canWrite"
-						:class="{'dragging-disabled': !canWrite}"
 						item-key="id"
+						:component-data="{
+							class: { 'dragging-disabled': !canWrite },
+						}"
 					>
 						<template #item="{element: t}">
 							<single-task-in-list
