@@ -228,11 +228,7 @@ export default {
 		},
 		resize() {
 			// Hide the menu by default on mobile
-			if (window.innerWidth < 770) {
-				this.$store.commit(MENU_ACTIVE, false)
-			} else {
-				this.$store.commit(MENU_ACTIVE, true)
-			}
+			this.$store.commit(MENU_ACTIVE, window.innerWidth >= 770)
 		},
 		toggleLists(namespaceId) {
 			this.listsVisible[namespaceId] = !this.listsVisible[namespaceId]
