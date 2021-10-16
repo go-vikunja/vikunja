@@ -60,7 +60,7 @@ export default {
 			const list = new ListModel({id: this.$route.params.listId})
 
 			this.list = await this.listService.get(list)
-			this.$store.commit(CURRENT_LIST, this.list)
+			await this.$store.dispatch(CURRENT_LIST, this.list)
 			// This will trigger the dynamic loading of components once we actually have all the data to pass to them
 			this.manageTeamsComponent = 'userTeam'
 			this.manageUsersComponent = 'userTeam'

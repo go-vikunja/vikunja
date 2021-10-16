@@ -139,7 +139,7 @@ export default {
 			const list = new ListModel(listData)
 			try {
 				const loadedList = await this.listService.get(list)
-				this.$store.commit(CURRENT_LIST, loadedList)
+				await this.$store.dispatch(CURRENT_LIST, loadedList)
 				this.setTitle(this.getListTitle(loadedList))
 			} finally {
 				this.listLoaded = this.$route.params.listId

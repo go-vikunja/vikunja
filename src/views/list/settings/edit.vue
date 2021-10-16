@@ -103,7 +103,7 @@ export default {
 
 		async save() {
 			await this.$store.dispatch('lists/updateList', this.list)
-			this.$store.commit(CURRENT_LIST, this.list)
+			await this.$store.dispatch(CURRENT_LIST, this.list)
 			this.setTitle(this.$t('list.edit.title', {list: this.list.title}))
 			this.$message.success({message: this.$t('list.edit.success')})
 			this.$router.back()

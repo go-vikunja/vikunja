@@ -510,7 +510,7 @@ export default {
 		},
 		parent: {
 			handler(parent) {
-				this.$store.commit(CURRENT_LIST, parent !== null ? parent.list : this.currentList)
+				this.$store.dispatch(CURRENT_LIST, parent !== null ? parent.list : this.currentList)
 			},
 			immediate: true,
 		},
