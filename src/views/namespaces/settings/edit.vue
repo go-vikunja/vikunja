@@ -27,7 +27,6 @@
 				<div class="control">
 					<editor
 						:class="{ 'disabled': namespaceService.loading}"
-						:disabled="namespaceService.loading"
 						:preview-is-default="false"
 						id="namespacedescription"
 						:placeholder="$t('namespace.attributes.descriptionPlaceholder')"
