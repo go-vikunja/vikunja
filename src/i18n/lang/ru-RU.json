@@ -720,13 +720,13 @@
       "delete": {
         "header": "Удалить команду",
         "text1": "Удалить эту команду вместе с участниками?",
-        "text2": "Все участники команды потеряют доступ к спискам и пространствам имён, которыми поделились с этой командой. Это действие отменить НЕЛЬЗЯ!",
+        "text2": "All team members will lose access to lists and namespaces shared with this team. This CANNOT BE UNDONE!",
         "success": "Команда удалена."
       },
       "deleteUser": {
         "header": "Удалить пользователя из команды",
         "text1": "Удалить этого пользователя из команды?",
-        "text2": "Пользователь потеряет доступ ко всем спискам и пространствам имён, к котором есть доступ у команды. Это действие отменить нельзя!",
+        "text2": "They will lose access to all lists and namespaces this team has access to. This CANNOT BE UNDONE!",
         "success": "Пользователь удалён из команды."
       }
     },

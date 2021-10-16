@@ -720,13 +720,13 @@
       "delete": {
         "header": "Supprimer l’équipe",
         "text1": "Supprimer cette équipe et tous ses membres ?",
-        "text2": "Tous les membres de l’équipe perdront l’accès aux listes et aux espaces de noms partagés avec cette équipe. Ceci ne peut pas être annulé !",
+        "text2": "All team members will lose access to lists and namespaces shared with this team. This CANNOT BE UNDONE!",
         "success": "Équipe supprimée."
       },
       "deleteUser": {
         "header": "Retirer un·e utilisateur·rice de l’équipe",
         "text1": "Retirer cette personne de l’équipe ?",
-        "text2": "La personne perdra accès à toutes les listes et espaces de noms auxquels cette équipe a accès. Ceci ne peut pas être annulé !",
+        "text2": "They will lose access to all lists and namespaces this team has access to. This CANNOT BE UNDONE!",
         "success": "Utilisateur·rice retiré·e de l’équipe."
       }
     },

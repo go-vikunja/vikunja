@@ -720,13 +720,13 @@
       "delete": {
         "header": "Delete the team",
         "text1": "Are you sure you want to delete this team and all of its members?",
-        "text2": "All team members will loose access to lists and namespaces shared with this team. This CANNOT BE UNDONE!",
+        "text2": "All team members will lose access to lists and namespaces shared with this team. This CANNOT BE UNDONE!",
         "success": "The team was successfully deleted."
       },
       "deleteUser": {
         "header": "Remove a user from the team",
         "text1": "Are you sure you want to remove this user from the team?",
-        "text2": "They will loose access to all lists and namespaces this team has access to. This CANNOT BE UNDONE!",
+        "text2": "They will lose access to all lists and namespaces this team has access to. This CANNOT BE UNDONE!",
         "success": "The user was successfully deleted from the team."
       }
     },
