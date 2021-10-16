@@ -70,7 +70,7 @@ export default {
 			}
 			this.showError = false
 
-			const namespace = this.namespaceService.create(this.namespace)
+			const namespace = await this.namespaceService.create(this.namespace)
 			this.$store.commit('namespaces/addNamespace', namespace)
 			this.$message.success({message: this.$t('namespace.create.success') })
 			this.$router.back()
