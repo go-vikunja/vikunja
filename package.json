@@ -57,7 +57,7 @@
     "cypress": "8.6.0",
     "cypress-file-upload": "5.0.8",
     "esbuild": "0.13.4",
-    "eslint": "7.32.0",
+    "eslint": "8.0.1",
     "eslint-plugin-vue": "7.19.1",
     "express": "4.17.1",
     "faker": "5.5.3",
