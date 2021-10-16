@@ -116,9 +116,8 @@
 									<a
 										@click="navigate"
 										:href="href"
-										:active="isActive"
 										class="list-menu-link"
-										:class="{'router-link-exact-active': currentList.id === l.id}"
+										:class="{'router-link-exact-active': isActive || currentList.id === l.id}"
 									>
 										<span class="icon handle">
 											<icon icon="grip-lines"/>
