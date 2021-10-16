@@ -7855,10 +7855,10 @@ vue-flatpickr-component@8.1.7:
   dependencies:
     flatpickr "^4.6.6"
 
-vue-i18n@8.26.3:
-  version "8.26.3"
-  resolved "https://registry.yarnpkg.com/vue-i18n/-/vue-i18n-8.26.3.tgz#2609b66961df3c2d348ec606a059426a99c1710e"
-  integrity sha512-VQPG9bSoksimmETzaNvGa33waGr28cghvUBq8p1nT0volQcMR8Y3do08TY+MGmI1B/iokSdSPnxxj8nNxAS0Jw==
+vue-i18n@8.26.5:
+  version "8.26.5"
+  resolved "https://registry.yarnpkg.com/vue-i18n/-/vue-i18n-8.26.5.tgz#b61e994e7ae83564c6aebd004543156bbdc7c7e9"
+  integrity sha512-qYqfsFd8v2QFSLDAabqXXXpwjGvkuqJtTWqRpZPXpAFO6PArGH4A9vSplnA0HLmnB8km7OB5ZSdP8lkkX0rLew==
 
 vue-notification@1.3.20:
   version "1.3.20"
