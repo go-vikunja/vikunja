@@ -544,7 +544,7 @@ func (l *List) CheckIsArchived(s *xorm.Session) (err error) {
 func CreateOrUpdateList(s *xorm.Session, list *List, auth web.Auth) (err error) {
 
 	// Check if the namespace exists
-	if list.NamespaceID != 0 && list.NamespaceID != FavoritesPseudoNamespace.ID {
+	if list.NamespaceID > 0 {
 		_, err = GetNamespaceByID(s, list.NamespaceID)
 		if err != nil {
 			return err
@@ -618,10 +618,6 @@ func CreateOrUpdateList(s *xorm.Session, list *List, auth web.Auth) (err error) 
 		if err != nil {
 			return err
 		}
-	}
-
-	if err != nil {
-		return
 	}
 
 	l, err := GetListSimpleByID(s, list.ID)
