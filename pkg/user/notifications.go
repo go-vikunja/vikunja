@@ -227,11 +227,17 @@ type AccountDeletionNotification struct {
 
 // ToMail returns the mail notification for AccountDeletionNotification
 func (n *AccountDeletionNotification) ToMail() *notifications.Mail {
+	durationString := "in " + strconv.Itoa(n.NotificationNumber) + " days"
+
+	if n.NotificationNumber == 1 {
+		durationString = "tomorrow"
+	}
+
 	return notifications.NewMail().
-		Subject("Your Vikunja account will be deleted in "+strconv.Itoa(n.NotificationNumber)+" days").
+		Subject("Your Vikunja account will be deleted "+durationString).
 		Greeting("Hi "+n.User.GetName()+",").
 		Line("You recently requested the deletion of your Vikunja account.").
-		Line("We will delete your account in "+strconv.Itoa(n.NotificationNumber)+" days.").
+		Line("We will delete your account "+durationString+".").
 		Line("If you changed your mind, simply click the link below to cancel the deletion and follow the instructions there:").
 		Action("Abort the deletion", config.ServiceFrontendurl.GetString()).
 		Line("Have a nice day!")
