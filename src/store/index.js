@@ -1,5 +1,6 @@
-import { createStore } from 'vuex'
+import {createStore} from 'vuex'
 import {
+	BACKGROUND,
 	CURRENT_LIST,
 	ERROR_MESSAGE,
 	HAS_TASKS,
@@ -62,10 +63,33 @@ export const store = createStore({
 			state.online = !!import.meta.env.VITE_IS_ONLINE || online
 		},
 		[CURRENT_LIST](state, currentList) {
+			state.currentList = currentList
+		},
+		[HAS_TASKS](state, hasTasks) {
+			state.hasTasks = hasTasks
+		},
+		[MENU_ACTIVE](state, menuActive) {
+			state.menuActive = menuActive
+		},
+		toggleMenu(state) {
+			state.menuActive = !state.menuActive
+		},
+		[KEYBOARD_SHORTCUTS_ACTIVE](state, active) {
+			state.keyboardShortcutsActive = active
+		},
+		[QUICK_ACTIONS_ACTIVE](state, active) {
+			state.quickActionsActive = active
+		},
+		[BACKGROUND](state, background) {
+			state.background = background
+		},
+	},
+	actions: {
+		async [CURRENT_LIST]({state, commit}, currentList) {
 
 			if (currentList === null) {
-				state.currentList = {}
-				state.background = null
+				commit(CURRENT_LIST, {})
+				commit(BACKGROUND, null)
 				return
 			}
 
@@ -97,21 +121,18 @@ export const store = createStore({
 				)
 			) {
 				if (currentList.backgroundInformation) {
-					const listService = new ListService()
-					listService.background(currentList)
-						.then(b => {
-							state.background = b
-						})
-						.catch(e => {
-							console.error('Error getting background image for list', currentList.id, e)
-						})
-				} else {
-					state.background = null
+					try {
+						const listService = new ListService()
+						const background = await listService.background(currentList)
+						commit(BACKGROUND, background)
+					} catch(e) {
+						console.error('Error getting background image for list', currentList.id, e)
+					}
 				}
 			}
 
 			if (typeof currentList.backgroundInformation === 'undefined' || currentList.backgroundInformation === null) {
-				state.background = null
+				commit(BACKGROUND, null)
 			}
 
 			// Server updates don't return the right. Therefore the right is reset after updating the list which is
@@ -120,22 +141,7 @@ export const store = createStore({
 			if (typeof state.currentList.maxRight !== 'undefined' && (typeof currentList.maxRight === 'undefined' || currentList.maxRight === null)) {
 				currentList.maxRight = state.currentList.maxRight
 			}
-			state.currentList = currentList
-		},
-		[HAS_TASKS](state, hasTasks) {
-			state.hasTasks = hasTasks
-		},
-		[MENU_ACTIVE](state, menuActive) {
-			state.menuActive = menuActive
-		},
-		toggleMenu(state) {
-			state.menuActive = !state.menuActive
-		},
-		[KEYBOARD_SHORTCUTS_ACTIVE](state, active) {
-			state.keyboardShortcutsActive = active
-		},
-		[QUICK_ACTIONS_ACTIVE](state, active) {
-			state.quickActionsActive = active
+			commit(CURRENT_LIST, currentList)
 		},
 	},
 })

@@ -141,7 +141,7 @@ export default {
 			const list = new ListModel(listData)
 			this.listService.get(list)
 				.then(r => {
-					this.$store.commit(CURRENT_LIST, r)
+					this.$store.dispatch(CURRENT_LIST, r)
 					this.setTitle(this.getListTitle(r))
 				})
 				.catch(e => {
