@@ -1,42 +1,39 @@
 <template>
-    <nav
-        aria-label="pagination"
-        class="pagination is-centered p-4"
-        role="navigation"
-        v-if="totalPages > 1"
-    >
-        <router-link
-            :disabled="currentPage === 1"
-            :to="getRouteForPagination(currentPage - 1)"
-            class="pagination-previous"
-            tag="button">
-            {{ $t('misc.previous') }}
-        </router-link>
-        <router-link
-            :disabled="currentPage === totalPages"
-            :to="getRouteForPagination(currentPage + 1)"
-            class="pagination-next"
-            tag="button">
-            {{ $t('misc.next') }}
-        </router-link>
-        <ul class="pagination-list">
-            <template v-for="(p, i) in pages">
-                <li :key="'page' + i" v-if="p.isEllipsis">
-                    <span class="pagination-ellipsis">&hellip;</span>
-                </li>
-                <li :key="'page' + i" v-else>
-                    <router-link
-                        :aria-label="'Goto page ' + p.number"
-                        :class="{ 'is-current': p.number === currentPage }"
-                        :to="getRouteForPagination(p.number)"
-                        class="pagination-link"
-                    >
-                        {{ p.number }}
-                    </router-link>
-                </li>
-            </template>
-        </ul>
-    </nav>
+	<nav
+		aria-label="pagination"
+		class="pagination is-centered p-4"
+		role="navigation"
+		v-if="totalPages > 1"
+	>
+		<router-link
+			:disabled="currentPage === 1 ? true : null"
+			:to="getRouteForPagination(currentPage - 1)"
+			class="pagination-previous"
+			tag="button">
+			{{ $t('misc.previous') }}
+		</router-link>
+		<router-link
+			:disabled="currentPage === totalPages ? true : null"
+			:to="getRouteForPagination(currentPage + 1)"
+			class="pagination-next"
+			tag="button">
+			{{ $t('misc.next') }}
+		</router-link>
+		<ul class="pagination-list">
+			<li :key="`page-${i}`" v-for="(p, i) in pages">
+				<span class="pagination-ellipsis" v-if="p.isEllipsis">&hellip;</span>
+				<router-link
+					:aria-label="'Goto page ' + p.number"
+					:class="{ 'is-current': p.number === currentPage }"
+					:to="getRouteForPagination(p.number)"
+					class="pagination-link"
+					v-else
+				>
+					{{ p.number }}
+				</router-link>
+			</li>
+		</ul>
+	</nav>
 </template>
 
 <script>
@@ -112,14 +109,14 @@ export default {
 
 <style lang="scss" scoped>
 .pagination {
-  padding-bottom: 1rem;
+	padding-bottom: 1rem;
 
-  .pagination-previous,
-  .pagination-next {
-    &:not(:disabled):hover {
-      background: $scheme-main;
-      cursor: pointer;
-    }
-  }
+	.pagination-previous,
+	.pagination-next {
+		&:not(:disabled):hover {
+			background: $scheme-main;
+			cursor: pointer;
+		}
+	}
 }
 </style>
