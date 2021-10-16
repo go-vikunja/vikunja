@@ -103,7 +103,7 @@ func getUserFromArg(s *xorm.Session, arg string) *user.User {
 		log.Fatalf("Invalid user id: %s", err)
 	}
 
-	u, err := user.GetUserByID(s, id)
+	u, err := user.GetUserWithEmail(s, &user.User{ID: id})
 	if err != nil {
 		log.Fatalf("Could not get user: %s", err)
 	}

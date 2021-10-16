@@ -167,7 +167,9 @@ func DeleteUser(s *xorm.Session, u *user.User) (err error) {
 		return err
 	}
 
-	return notifications.Notify(u, &user.AccountDeletedNotification{})
+	return notifications.Notify(u, &user.AccountDeletedNotification{
+		User: u,
+	})
 }
 
 func ensureNamespaceAdminUser(s *xorm.Session, n *Namespace) (hadUsers bool, err error) {
