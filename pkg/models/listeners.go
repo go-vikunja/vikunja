@@ -247,6 +247,11 @@ func (s *SendTaskAssignedNotification) Handle(msg *message.Message) (err error) 
 
 	log.Debugf("Sending task assigned notifications to %d subscribers for task %d", len(subscribers), event.Task.ID)
 
+	task, err := GetTaskByIDSimple(sess, event.Task.ID)
+	if err != nil {
+		return err
+	}
+
 	for _, subscriber := range subscribers {
 		if subscriber.UserID == event.Doer.ID {
 			continue
@@ -254,7 +259,7 @@ func (s *SendTaskAssignedNotification) Handle(msg *message.Message) (err error) 
 
 		n := &TaskAssignedNotification{
 			Doer:     event.Doer,
-			Task:     event.Task,
+			Task:     &task,
 			Assignee: event.Assignee,
 		}
 		err = notifications.Notify(subscriber.User, n)

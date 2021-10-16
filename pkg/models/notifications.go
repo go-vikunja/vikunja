@@ -112,7 +112,7 @@ type TaskAssignedNotification struct {
 func (n *TaskAssignedNotification) ToMail() *notifications.Mail {
 	return notifications.NewMail().
 		Subject(n.Task.Title+"("+n.Task.GetFullIdentifier()+")"+" has been assigned to "+n.Assignee.GetName()).
-		Line(n.Doer.GetName()+" has assigned this task to "+n.Assignee.GetName()).
+		Line(n.Doer.GetName()+" has assigned this task to "+n.Assignee.GetName()+".").
 		Action("View Task", n.Task.GetFrontendURL())
 }
 
