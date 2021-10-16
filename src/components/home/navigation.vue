@@ -54,14 +54,14 @@
 					<span
 						@click="toggleLists(n.id)"
 						class="menu-label"
-						v-tooltip="getNamespaceTitle(n) + ' (' + n.lists.filter(l => !l.isArchived).length + ')'">
+						v-tooltip="namespaceTitles[nk]">
 						<span class="name">
 							<span
 								:style="{ backgroundColor: n.hexColor }"
 								class="color-bubble"
 								v-if="n.hexColor !== ''">
 							</span>
-							{{ getNamespaceTitle(n) }} ({{ n.lists.filter(l => !l.isArchived).length }})
+							{{ namespaceTitles[nk] }}
 						</span>
 					</span>
 					<a
@@ -191,7 +191,13 @@ export default {
 			loading: state => state[LOADING] && state[LOADING_MODULE] === 'namespaces',
 		}),
 		activeLists() {
-			return this.namespaces.map(({lists}) => lists.filter(item => !item.isArchived))
+			return this.namespaces.map(({lists}) => lists?.filter(item => !item.isArchived))
+		},
+		namespaceTitles() {
+			return this.namespaces.map((namespace, index) => {
+				const title = this.getNamespaceTitle(namespace)
+				return `${title} (${this.activeLists[index]?.length ?? 0})`
+			})
 		},
 	},
 	beforeCreate() {
@@ -229,7 +235,7 @@ export default {
 			}
 		},
 		toggleLists(namespaceId) {
-			this.listsVisible[namespaceId] = !this.listsVisible[namespaceId] ?? false
+			this.listsVisible[namespaceId] = !this.listsVisible[namespaceId]
 		},
 		updateActiveLists(namespace, activeLists) {
 			// this is a bit hacky: since we do have to filter out the archived items from the list
