@@ -2,7 +2,7 @@
 	<create-edit
 		:title="$t('label.create.title')"
 		@create="newLabel()"
-		:create-disabled="label.title === ''"
+		:primary-disabled="label.title === ''"
 	>
 		<div class="field">
 			<label class="label" for="labelTitle">{{ $t('label.attributes.title') }}</label>

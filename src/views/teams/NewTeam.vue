@@ -2,7 +2,7 @@
 	<create-edit
 		:title="$t('team.create.title')"
 		@create="newTeam()"
-		:create-disabled="team.name === ''"
+		:primary-disabled="team.name === ''"
 	>
 		<div class="field">
 			<label class="label" for="teamName">{{ $t('team.attributes.name') }}</label>

@@ -2,7 +2,7 @@
 	<create-edit
 		:title="$t('namespace.create.title')"
 		@create="newNamespace()"
-		:create-disabled="namespace.title === ''"
+		:primary-disabled="namespace.title === ''"
 	>
 		<div class="field">
 			<label class="label" for="namespaceTitle">{{ $t('namespace.attributes.title') }}</label>

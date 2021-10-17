@@ -1,5 +1,5 @@
 <template>
-	<create-edit :title="$t('list.create.header')" @create="newList()" :create-disabled="list.title === ''">
+	<create-edit :title="$t('list.create.header')" @create="newList()" :primary-disabled="list.title === ''">
 		<div class="field">
 			<label class="label" for="listTitle">{{ $t('list.title') }}</label>
 			<div
