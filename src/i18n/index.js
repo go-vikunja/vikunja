@@ -40,7 +40,7 @@ export const loadLanguageAsync = lang => {
 	// If the language hasn't been loaded yet
 	return import(`./lang/${lang}.json`).then(
 		messages => {
-			i18n.setLocaleMessage(lang, messages.default)
+			i18n.global.setLocaleMessage(lang, messages.default)
 			loadedLanguages.push(lang)
 			return setI18nLanguage(lang)
 		},
