@@ -22,7 +22,7 @@
       "usernameEmail": "Nom d’utilisateur·rice ou adresse courriel",
       "usernamePlaceholder": "p. ex. frederick",
       "email": "Adresse courriel",
-      "emailPlaceholder": "e.g. frederic{'@'}vikunja.io",
+      "emailPlaceholder": "p. ex. frederic{'@'}vikunja.io",
       "password": "Mot de passe",
       "passwordRepeat": "Retape ton mot de passe",
       "passwordPlaceholder": "p. ex. •••••••••••",
@@ -720,13 +720,13 @@
       "delete": {
         "header": "Supprimer l’équipe",
         "text1": "Supprimer cette équipe et tous ses membres ?",
-        "text2": "All team members will lose access to lists and namespaces shared with this team. This CANNOT BE UNDONE!",
+        "text2": "Tous les membres de l'équipe perdront l'accès aux listes et aux espaces de noms partagés avec cette équipe. Ceci NE PEUT PAS ÊTRE ANNULÉ !",
         "success": "Équipe supprimée."
       },
       "deleteUser": {
         "header": "Retirer un·e utilisateur·rice de l’équipe",
         "text1": "Retirer cette personne de l’équipe ?",
-        "text2": "They will lose access to all lists and namespaces this team has access to. This CANNOT BE UNDONE!",
+        "text2": "Ils perdront l'accès à toutes les listes et espaces de noms auxquels cette équipe a accès. Ceci NE PEUT PAS ÊTRE ANNULÉ !",
         "success": "Utilisateur·rice retiré·e de l’équipe."
       }
     },

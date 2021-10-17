@@ -22,7 +22,7 @@
       "usernameEmail": "Benutzernamä oder E-Mail Adrässe",
       "usernamePlaceholder": "z.B. Hansruedi",
       "email": "E-Mail Adrässe",
-      "emailPlaceholder": "e.g. frederic{'@'}vikunja.io",
+      "emailPlaceholder": "z.B. frederic{'@'}vikunja.io",
       "password": "Passwort",
       "passwordRepeat": "Gib dis Passwort nomal iih",
       "passwordPlaceholder": "z.B. •••••••••••",
