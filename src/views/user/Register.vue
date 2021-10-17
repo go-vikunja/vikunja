@@ -98,7 +98,7 @@
 <script>
 import router from '../../router'
 import {mapState} from 'vuex'
-import {ERROR_MESSAGE, LOADING} from '@/store/mutation-types'
+import {LOADING} from '@/store/mutation-types'
 import Legal from '../../components/misc/legal'
 
 export default {
@@ -113,6 +113,7 @@ export default {
 				password: '',
 				password2: '',
 			},
+			errorMessage: '',
 		}
 	},
 	beforeMount() {
@@ -127,15 +128,14 @@ export default {
 	computed: mapState({
 		authenticated: state => state.auth.authenticated,
 		loading: LOADING,
-		errorMessage: ERROR_MESSAGE,
 	}),
 	methods: {
-		submit() {
+		async submit() {
 			this.$store.commit(LOADING, true)
-			this.$store.commit(ERROR_MESSAGE, '')
+			this.errorMessage = ''
 
 			if (this.credentials.password2 !== this.credentials.password) {
-				this.$store.commit(ERROR_MESSAGE, this.$t('user.auth.passwordsDontMatch'))
+				this.errorMessage = this.$t('user.auth.passwordsDontMatch')
 				this.$store.commit(LOADING, false)
 				return
 			}
@@ -146,7 +146,11 @@ export default {
 				password: this.credentials.password,
 			}
 
-			this.$store.dispatch('auth/register', credentials)
+			try {
+				await this.$store.dispatch('auth/register', credentials)
+			} catch(e) {
+				this.errorMessage = e.message
+			}
 		},
 	},
 }

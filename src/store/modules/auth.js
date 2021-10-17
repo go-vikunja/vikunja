@@ -1,5 +1,5 @@
 import {HTTPFactory} from '@/http-common'
-import {ERROR_MESSAGE, LOADING} from '../mutation-types'
+import {LOADING} from '../mutation-types'
 import UserModel from '../../models/user'
 import {getToken, refreshToken, removeToken, saveToken} from '@/helpers/auth'
 
@@ -128,8 +128,8 @@ export default {
 				})
 				return ctx.dispatch('login', credentials)
 			} catch(e) {
-				if (e.response && e.response.data && e.response.data.message) {
-					ctx.commit(ERROR_MESSAGE, e.response.data.message, {root: true})
+				if (e.response?.data?.message) {
+					throw e.response.data
 				}
 
 				throw e

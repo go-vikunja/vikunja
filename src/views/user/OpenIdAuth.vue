@@ -12,14 +12,18 @@
 <script>
 import {mapState} from 'vuex'
 
-import {ERROR_MESSAGE, LOADING} from '@/store/mutation-types'
+import {LOADING} from '@/store/mutation-types'
 import {getErrorText} from '@/message'
 import {clearLastVisited, getLastVisited} from '../../helpers/saveLastVisited'
 
 export default {
 	name: 'Auth',
+	data() {
+		return {
+			errorMessage: '',
+		}
+	},
 	computed: mapState({
-		errorMessage: ERROR_MESSAGE,
 		loading: LOADING,
 	}),
 	mounted() {
@@ -40,24 +44,22 @@ export default {
 			}
 			localStorage.setItem('authenticating', true)
 
+			this.errorMessage = ''
+
 			if (typeof this.$route.query.error !== 'undefined') {
-				let error = this.$t('user.auth.openIdGeneralError')
-				if (typeof this.$route.query.message !== 'undefined') {
-					error = this.$route.query.message
-				}
 				localStorage.removeItem('authenticating')
-				this.$store.commit(ERROR_MESSAGE, error)
+				this.errorMessage = typeof this.$route.query.message !== 'undefined'
+					? this.$route.query.message
+					: this.$t('user.auth.openIdGeneralError')
 				return
 			}
 
 			const state = localStorage.getItem('state')
 			if (typeof this.$route.query.state === 'undefined' || this.$route.query.state !== state) {
 				localStorage.removeItem('authenticating')
-				this.$store.commit(ERROR_MESSAGE, this.$t('user.auth.openIdStateError'))
+				this.errorMessage = this.$t('user.auth.openIdStateError')
 				return
 			}
-
-			this.$store.commit(ERROR_MESSAGE, '')
 
 			try {
 				await this.$store.dispatch('auth/openIdAuth', {
@@ -76,12 +78,7 @@ export default {
 				}
 			} catch(e) {
 				const err = getErrorText(e)
-				if (typeof err[1] !== 'undefined') {
-					this.$store.commit(ERROR_MESSAGE, err[1])
-					return
-				}
-
-				this.$store.commit(ERROR_MESSAGE, err[0])
+				this.errorMessage = typeof err[1] !== 'undefined' ? err[1] : err[0]
 			} finally {
 				localStorage.removeItem('authenticating')
 			}

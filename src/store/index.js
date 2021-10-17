@@ -2,7 +2,6 @@ import {createStore} from 'vuex'
 import {
 	BACKGROUND,
 	CURRENT_LIST,
-	ERROR_MESSAGE,
 	HAS_TASKS,
 	KEYBOARD_SHORTCUTS_ACTIVE,
 	LOADING,
@@ -36,7 +35,6 @@ export const store = createStore({
 	state: {
 		loading: false,
 		loadingModule: null,
-		errorMessage: '',
 		online: true,
 		// This is used to highlight the current list in menu for all list related views
 		currentList: {id: 0},
@@ -52,9 +50,6 @@ export const store = createStore({
 		},
 		[LOADING_MODULE](state, module) {
 			state.loadingModule = module
-		},
-		[ERROR_MESSAGE](state, error) {
-			state.errorMessage = error
 		},
 		[ONLINE](state, online) {
 			if (import.meta.env.VITE_IS_ONLINE) {
