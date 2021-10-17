@@ -21,7 +21,6 @@ require (
 	gitea.com/xorm/xorm-redis-cache v0.2.0
 	github.com/ThreeDotsLabs/watermill v1.1.1
 	github.com/adlio/trello v1.9.0
-	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
 	github.com/asaskevich/govalidator v0.0.0-20200907205600-7a23bdc65eef
 	github.com/beevik/etree v1.1.0 // indirect
 	github.com/c2h5oh/datasize v0.0.0-20200825124411-48ed595a09d2
@@ -33,7 +32,7 @@ require (
 	github.com/gabriel-vasile/mimetype v1.4.0
 	github.com/getsentry/sentry-go v0.11.0
 	github.com/go-errors/errors v1.1.1 // indirect
-	github.com/go-redis/redis/v8 v8.11.3
+	github.com/go-redis/redis/v8 v8.11.4
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/go-testfixtures/testfixtures/v3 v3.6.1
 	github.com/golang-jwt/jwt/v4 v4.1.0
