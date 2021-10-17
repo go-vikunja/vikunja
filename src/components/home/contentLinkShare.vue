@@ -40,11 +40,5 @@ export default {
 		currentList: CURRENT_LIST,
 		background: 'background',
 	}),
-	methods: {
-		logout() {
-			this.$store.dispatch('auth/logout')
-			this.$router.push({name: 'user.login'})
-		},
-	},
 }
 </script>
