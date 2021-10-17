@@ -90,7 +90,7 @@
 						@start="() => drag = true"
 						@end="e => saveListPosition(e, nk)"
 						handle=".handle"
-						:disabled="n.id < 0"
+						:disabled="n.id < 0 || null"
 						tag="transition-group"
 						item-key="id"
 						:component-data="{

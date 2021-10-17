@@ -13,7 +13,7 @@
 				/>
 				<x-button
 					:loading="migrationService.loading"
-					:disabled="migrationService.loading"
+					:disabled="migrationService.loading || null"
 					@click="$refs.uploadInput.click()"
 				>
 					{{ $t('migrate.upload') }}
@@ -23,7 +23,7 @@
 				<p>{{ $t('migrate.authorize', {name: name}) }}</p>
 				<x-button
 					:loading="migrationService.loading"
-					:disabled="migrationService.loading"
+					:disabled="migrationService.loading || null"
 					:href="authUrl"
 				>
 					{{ $t('migrate.getStarted') }}

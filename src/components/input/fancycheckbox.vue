@@ -2,7 +2,7 @@
 	<div :class="{'is-disabled': disabled}" class="fancycheckbox">
 		<input
 			:checked="checked"
-			:disabled="disabled"
+			:disabled="disabled || null"
 			:id="checkBoxId"
 			@change="(event) => updateData(event.target.checked)"
 			style="display: none;"

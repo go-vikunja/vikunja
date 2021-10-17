@@ -32,7 +32,7 @@
 			<div class="control">
 				<input
 					:class="{ 'disabled': listService.loading}"
-					:disabled="listService.loading"
+					:disabled="listService.loading ? true : null"
 					@keyup.enter="save"
 					class="input"
 					id="identifier"
@@ -48,7 +48,7 @@
 				<editor
 					:class="{ 'disabled': listService.loading}"
 					:disabled="listService.loading"
-					:preview-is-default="false"
+					:previewIsDefault="false"
 					id="listdescription"
 					:placeholder="$t('list.edit.descriptionPlaceholder')"
 					v-model="list.description"
