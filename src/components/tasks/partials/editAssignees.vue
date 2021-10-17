@@ -6,7 +6,6 @@
 		<multiselect
 			:loading="listUserService.loading"
 			:placeholder="$t('task.assignee.placeholder')"
-			:disabled="disabled"
 			:multiple="true"
 			@search="findUser"
 			:search-results="foundUsers"
