@@ -22,7 +22,7 @@
       "usernameEmail": "Имя пользователя или Email",
       "usernamePlaceholder": "напр. frederick",
       "email": "E-mail адрес",
-      "emailPlaceholder": "напр. frederic{'@'}vikunja.io",
+      "emailPlaceholder": "e.g. frederic{'@'}vikunja.io",
       "password": "Пароль",
       "passwordRepeat": "Пароль ещё раз",
       "passwordPlaceholder": "напр. •••••••••••",
