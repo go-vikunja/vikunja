@@ -264,7 +264,7 @@ export default {
 
 				// label not found, create it
 				const labelModel = new LabelModel({title: labelTitle})
-				return dispatch('labels/createLabel', labelModel).then(() => resolve(label))
+				return dispatch('labels/createLabel', labelModel, {root: true}).then(() => resolve(label))
 			})
 				.then((label) => addLabelToTask(task, label))
 				.catch(e => Promise.reject(e)),
@@ -274,18 +274,18 @@ export default {
 			return Promise.all(labelAddsToWaitFor).then(() => task)
 		},
 
-		findListId({ rootGetters }, { list, listId }) {
+		findListId({ rootGetters }, { list: listName, listId }) {
 			let foundListId = null
 			
 			// Uses the following ways to get the list id of the new task:
 			//  1. If specified in quick add magic, look in store if it exists and use it if it does
-			if (list !== null) {
-				const list = rootGetters['lists/findListByExactname'](list)
+			if (listName !== null) {
+				const list = rootGetters['lists/findListByExactname'](listName)
 				foundListId = list === null ? null : list.id
 			}
 			
 			//  2. Else check if a list was passed as parameter
-			if (listId !== 0) {
+			if (foundListId === null && listId !== 0) {
 				foundListId = listId
 			}
 		
@@ -334,7 +334,7 @@ export default {
 			return taskService.create(task)
 				.then(task => dispatch('addLabelsToTask', {
 					task,
-					parsedLabels:parsedTask.labels,
+					parsedLabels: parsedTask.labels,
 				}))
 				.catch(e => Promise.reject(e))
 		},
