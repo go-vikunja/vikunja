@@ -50,7 +50,7 @@
 								@blur="saveBucketTitle(bucket.id, $event.target.textContent)"
 								@click="focusBucketTitle"
 								class="title input"
-								:contenteditable="bucketTitleEditable && canWrite && !collapsedBuckets[bucket.id]"
+								:contenteditable="(bucketTitleEditable && canWrite && !collapsedBuckets[bucket.id]) || null"
 								:spellcheck="false">{{ bucket.title }}</h2>
 							<span
 								:class="{'is-max': bucket.tasks.length >= bucket.limit}"

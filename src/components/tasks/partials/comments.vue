@@ -66,7 +66,7 @@
 						</transition>
 					</div>
 					<editor
-						:has-preview="true"
+						:hasPreview="true"
 						:is-edit-enabled="canWrite"
 						:upload-callback="attachmentUpload"
 						:upload-enabled="true"
@@ -110,7 +110,7 @@
 										taskCommentService.loading &&
 										!isCommentEdit,
 								}"
-								:has-preview="false"
+								:hasPreview="false"
 								:upload-callback="attachmentUpload"
 								:upload-enabled="true"
 								:placeholder="$t('task.comment.placeholder')"
