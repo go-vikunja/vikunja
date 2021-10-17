@@ -185,76 +185,62 @@ export default {
 		},
 	},
 	methods: {
-		findTasks(query) {
-			this.taskService.getAll({}, {s: query})
-				.then(response => {
-					this.foundTasks = response
-				})
-				.catch(e => {
-					this.$message.error(e)
-				})
+		async findTasks(query) {
+			this.foundTasks = await this.taskService.getAll({}, {s: query})
 		},
-		addTaskRelation() {
-			let rel = new TaskRelationModel({
+
+		async addTaskRelation() {
+			const rel = new TaskRelationModel({
 				taskId: this.taskId,
 				otherTaskId: this.newTaskRelationTask.id,
 				relationKind: this.newTaskRelationKind,
 			})
-			this.taskRelationService.create(rel)
-				.then(() => {
-					if (!this.relatedTasks[this.newTaskRelationKind]) {
-						this.relatedTasks[this.newTaskRelationKind] = []
-					}
-					this.relatedTasks[this.newTaskRelationKind].push(this.newTaskRelationTask)
-					this.newTaskRelationTask = null
-					this.saved = true
-					this.showNewRelationForm = false
-					setTimeout(() => {
-						this.saved = false
-					}, 2000)
-				})
-				.catch(e => {
-					this.$message.error(e)
-				})
+			await this.taskRelationService.create(rel)
+			if (!this.relatedTasks[this.newTaskRelationKind]) {
+				this.relatedTasks[this.newTaskRelationKind] = []
+			}
+			this.relatedTasks[this.newTaskRelationKind].push(this.newTaskRelationTask)
+			this.newTaskRelationTask = null
+			this.saved = true
+			this.showNewRelationForm = false
+			setTimeout(() => {
+				this.saved = false
+			}, 2000)
 		},
-		removeTaskRelation() {
+
+		async removeTaskRelation() {
 			const rel = new TaskRelationModel({
 				relationKind: this.relationToDelete.relationKind,
 				taskId: this.taskId,
 				otherTaskId: this.relationToDelete.otherTaskId,
 			})
-			this.taskRelationService.delete(rel)
-				.then(() => {
-					Object.keys(this.relatedTasks).forEach(relationKind => {
-						for (const t in this.relatedTasks[relationKind]) {
-							if (this.relatedTasks[relationKind][t].id === this.relationToDelete.otherTaskId && relationKind === this.relationToDelete.relationKind) {
-								this.relatedTasks[relationKind].splice(t, 1)
-							}
-						}
-					})
-					this.saved = true
-					setTimeout(() => {
-						this.saved = false
-					}, 2000)
+			try {
+				await this.taskRelationService.delete(rel)
+
+				Object.entries(this.relatedTasks).some(([relationKind, t]) => {
+					const found = this.relatedTasks[relationKind][t].id === this.relationToDelete.otherTaskId &&
+						relationKind === this.relationToDelete.relationKind
+					if (!found) return false
+
+					this.relatedTasks[relationKind].splice(t, 1)
+					return true
 				})
-				.catch(e => {
-					this.$message.error(e)
-				})
-				.finally(() => {
-					this.showDeleteModal = false
-				})
+
+				this.saved = true
+				setTimeout(() => {
+					this.saved = false
+				}, 2000)
+			} finally {
+				this.showDeleteModal = false
+			}
 		},
-		createAndRelateTask(title) {
+
+		async createAndRelateTask(title) {
 			const newTask = new TaskModel({title: title, listId: this.listId})
-			this.taskService.create(newTask)
-				.then(r => {
-					this.newTaskRelationTask = r
-					this.addTaskRelation()
-				})
-				.catch(e => {
-					this.$message.error(e)
-				})
+			this.newTaskRelationTask = await this.taskService.create(newTask)
+			await this.addTaskRelation()
 		},
+
 		relationKindTitle(kind, length) {
 			return this.$tc(`task.relation.kinds.${kind}`, length)
 		},

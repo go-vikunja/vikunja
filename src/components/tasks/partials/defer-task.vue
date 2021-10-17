@@ -112,7 +112,8 @@ export default {
 			this.dueDate = this.dueDate.setDate(this.dueDate.getDate() + days)
 			this.updateDueDate()
 		},
-		updateDueDate() {
+
+		async updateDueDate() {
 			if (!this.dueDate) {
 				return
 			}
@@ -122,16 +123,10 @@ export default {
 			}
 
 			this.task.dueDate = new Date(this.dueDate)
-			this.taskService
-				.update(this.task)
-				.then((r) => {
-					this.lastValue = r.dueDate
-					this.task = r
-					this.$emit('update:modelValue', r)
-				})
-				.catch((e) => {
-					this.$message.error(e)
-				})
+			const task = await this.taskService.update(this.task)
+			this.lastValue = task.dueDate
+			this.task = task
+			this.$emit('update:modelValue', task)
 		},
 	},
 }

@@ -87,43 +87,38 @@ export default {
 		Cropper,
 	},
 	methods: {
-		avatarStatus() {
-			this.avatarService.get({})
-				.then(r => {
-					this.avatarProvider = r.avatarProvider
-				})
-				.catch(e => this.$message.error(e))
+		async avatarStatus() {
+			const { avatarProvider } = await this.avatarService.get({})
+			this.avatarProvider = avatarProvider
 		},
-		updateAvatarStatus() {
+
+		async updateAvatarStatus() {
 			const avatarStatus = new AvatarModel({avatarProvider: this.avatarProvider})
-			this.avatarService.update(avatarStatus)
-				.then(() => {
-					this.$message.success({message: this.$t('user.settings.avatar.statusUpdateSuccess')})
-					this.$store.commit('auth/reloadAvatar')
-				})
-				.catch(e => this.$message.error(e))
+			await this.avatarService.update(avatarStatus)
+			this.$message.success({message: this.$t('user.settings.avatar.statusUpdateSuccess')})
+			this.$store.commit('auth/reloadAvatar')
 		},
-		uploadAvatar() {
+
+		async uploadAvatar() {
 			this.loading = true
 			const {canvas} = this.$refs.cropper.getResult()
 
-			if (canvas) {
-				canvas.toBlob(blob => {
-					this.avatarService.create(blob)
-						.then(() => {
-							this.$message.success({message: this.$t('user.settings.avatar.setSuccess')})
-							this.$store.commit('auth/reloadAvatar')
-						})
-						.catch(e => this.$message.error(e))
-						.finally(() => {
-							this.loading = false
-							this.isCropAvatar = false
-						})
-				})
-			} else {
+			if (!canvas) {
 				this.loading = false
+				return
+			}
+
+			try {
+				const blob = await new Promise(resolve => canvas.toBlob(blob => resolve(blob)))
+				await this.avatarService.create(blob)
+				this.$message.success({message: this.$t('user.settings.avatar.setSuccess')})
+				this.$store.commit('auth/reloadAvatar')
+			} finally {
+				this.loading = false
+				this.isCropAvatar = false
 			}
 		},
+
 		cropAvatar() {
 			const avatar = this.$refs.avatarUploadInput.files
 

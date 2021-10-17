@@ -35,15 +35,10 @@ export default {
 		},
 	},
 	methods: {
-		deleteNamespace() {
-			this.$store.dispatch('namespaces/deleteNamespace', this.namespace)
-				.then(() => {
-					this.$message.success({message: this.$t('namespace.delete.success')})
-					this.$router.push({name: 'home'})
-				})
-				.catch(e => {
-					this.$message.error(e)
-				})
+		async deleteNamespace() {
+			await this.$store.dispatch('namespaces/deleteNamespace', this.namespace)
+			this.$message.success({message: this.$t('namespace.delete.success')})
+			this.$router.push({name: 'home'})
 		},
 	},
 }

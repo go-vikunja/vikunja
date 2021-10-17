@@ -134,17 +134,10 @@ export default {
 			this.editorActive = false
 			this.$nextTick(() => (this.editorActive = true))
 		},
-		editTaskSubmit() {
-			this.taskService
-				.update(this.taskEditTask)
-				.then((r) => {
-					this.taskEditTask = r
-					this.initTaskFields()
-					this.$message.success({message: this.$t('task.detail.updateSuccess')})
-				})
-				.catch((e) => {
-					this.$message.error(e)
-				})
+		async editTaskSubmit() {
+			this.taskEditTask = await this.taskService.update(this.taskEditTask)
+			this.initTaskFields()
+			this.$message.success({message: this.$t('task.detail.updateSuccess')})
 		},
 	},
 }

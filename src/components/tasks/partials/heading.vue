@@ -58,7 +58,7 @@ export default {
 	emits: ['update:modelValue'],
 
 	methods: {
-		save(title) {
+		async save(title) {
 			// We only want to save if the title was actually changed.
 			// Because the contenteditable does not have a change event
 			// we're building it ourselves and only continue
@@ -74,20 +74,17 @@ export default {
 				title,
 			}
 
-			this.$store.dispatch('tasks/update', newTask)
-				.then((task) => {
-					this.$emit('update:modelValue', task)
-					this.showSavedMessage = true
-					setTimeout(() => {
-						this.showSavedMessage = false
-					}, 2000)
-				})
-				.catch(e => {
-					this.$message.error(e)
-				})
-				.finally(() => {
-					this.saving = false
-				})
+			try {
+				const task = await this.$store.dispatch('tasks/update', newTask)
+				this.$emit('update:modelValue', task)
+				this.showSavedMessage = true
+				setTimeout(() => {
+					this.showSavedMessage = false
+				}, 2000)
+			}
+			finally {
+				this.saving = false
+			}
 		},
 	},
 }

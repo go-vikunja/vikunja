@@ -56,21 +56,15 @@ export default {
 		this.loadList()
 	},
 	methods: {
-		loadList() {
+		async loadList() {
 			const list = new ListModel({id: this.$route.params.listId})
 
-			this.listService.get(list)
-				.then(r => {
-					this.list = r
-					this.$store.commit(CURRENT_LIST, r)
-					// This will trigger the dynamic loading of components once we actually have all the data to pass to them
-					this.manageTeamsComponent = 'userTeam'
-					this.manageUsersComponent = 'userTeam'
-					this.setTitle(this.$t('list.share.title', {list: this.list.title}))
-				})
-				.catch(e => {
-					this.$message.error(e)
-				})
+			this.list = await this.listService.get(list)
+			await this.$store.dispatch(CURRENT_LIST, this.list)
+			// This will trigger the dynamic loading of components once we actually have all the data to pass to them
+			this.manageTeamsComponent = 'userTeam'
+			this.manageUsersComponent = 'userTeam'
+			this.setTitle(this.$t('list.share.title', {list: this.list.title}))
 		},
 	},
 }

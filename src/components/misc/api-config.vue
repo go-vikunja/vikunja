@@ -106,7 +106,7 @@ export default {
 						window.API_URL = urlToCheck.toString()
 						return this.$store.dispatch('config/update')
 					}
-					return Promise.reject(e)
+					throw e
 				})
 				.catch((e) => {
 					// Check if it has a port and if not check if it is reachable at https
@@ -115,7 +115,7 @@ export default {
 						window.API_URL = urlToCheck.toString()
 						return this.$store.dispatch('config/update')
 					}
-					return Promise.reject(e)
+					throw e
 				})
 				.catch((e) => {
 					// Check if it is reachable at /api/v1 and https
@@ -128,7 +128,7 @@ export default {
 						window.API_URL = urlToCheck.toString()
 						return this.$store.dispatch('config/update')
 					}
-					return Promise.reject(e)
+					throw e
 				})
 				.catch((e) => {
 					// Check if it is reachable at port API_DEFAULT_PORT and https
@@ -138,7 +138,7 @@ export default {
 						window.API_URL = urlToCheck.toString()
 						return this.$store.dispatch('config/update')
 					}
-					return Promise.reject(e)
+					throw e
 				})
 				.catch((e) => {
 					// Check if it is reachable at :API_DEFAULT_PORT and /api/v1 and https
@@ -151,7 +151,7 @@ export default {
 						window.API_URL = urlToCheck.toString()
 						return this.$store.dispatch('config/update')
 					}
-					return Promise.reject(e)
+					throw e
 				})
 				.catch((e) => {
 					// Check if it is reachable at port API_DEFAULT_PORT and http
@@ -161,7 +161,7 @@ export default {
 						window.API_URL = urlToCheck.toString()
 						return this.$store.dispatch('config/update')
 					}
-					return Promise.reject(e)
+					throw e
 				})
 				.catch((e) => {
 					// Check if it is reachable at :API_DEFAULT_PORT and /api/v1 and http
@@ -174,7 +174,7 @@ export default {
 						window.API_URL = urlToCheck.toString()
 						return this.$store.dispatch('config/update')
 					}
-					return Promise.reject(e)
+					throw e
 				})
 				.catch(() => {
 					// Still not found, url is still invalid

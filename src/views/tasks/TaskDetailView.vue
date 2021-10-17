@@ -564,26 +564,22 @@ export default {
 			return uploadFile(this.taskId, ...args)
 		},
 
-		loadTask(taskId) {
+		async loadTask(taskId) {
 			if (taskId === undefined) {
 				return
 			}
 
-			this.taskService.get({id: taskId})
-				.then(r => {
-					this.task = r
-					this.$store.commit('attachments/set', r.attachments)
-					this.taskColor = this.task.hexColor
-					this.setActiveFields()
-					this.setTitle(this.task.title)
-				})
-				.catch(e => {
-					this.$message.error(e)
-				})
-				.finally(() => {
-					this.$nextTick(() => this.visible = true)
-					this.scrollToHeading()
-				})
+			try {
+				this.task = await this.taskService.get({id: taskId})
+				this.$store.commit('attachments/set', this.task.attachments)
+				this.taskColor = this.task.hexColor
+				this.setActiveFields()
+				this.setTitle(this.task.title)
+			} finally {
+				this.scrollToHeading()
+				await this.$nextTick()
+				this.visible = true
+			}
 		},
 		scrollToHeading() {
 			this.$refs.heading.$el.scrollIntoView({block: 'center'})
@@ -623,26 +619,23 @@ export default {
 				this.task.endDate = this.task.dueDate
 			}
 
-			try {
-				this.task = await this.$store.dispatch('tasks/update', this.task)
-				this.setActiveFields()
+			this.task = await this.$store.dispatch('tasks/update', this.task)
+			this.setActiveFields()
 
-				if (!showNotification) {
-					return
-				}
-
-				let actions = []
-				if (undoCallback !== null) {
-					actions = [{
-						title: 'Undo',
-						callback: undoCallback,
-					}]
-				}
-				this.$message.success({message: this.$t('task.detail.updateSuccess')}, actions)
-			} catch(e) {
-				this.$message.error(e)
+			if (!showNotification) {
+				return
 			}
+
+			let actions = []
+			if (undoCallback !== null) {
+				actions = [{
+					title: 'Undo',
+					callback: undoCallback,
+				}]
+			}
+			this.$message.success({message: this.$t('task.detail.updateSuccess')}, actions)
 		},
+
 		setFieldActive(fieldName) {
 			this.activeFields[fieldName] = true
 			this.$nextTick(() => {
@@ -661,16 +654,13 @@ export default {
 				}
 			})
 		},
-		deleteTask() {
-			this.$store.dispatch('tasks/delete', this.task)
-				.then(() => {
-					this.$message.success({message: this.$t('task.detail.deleteSuccess')})
-					this.$router.push({name: 'list.index', params: {listId: this.task.listId}})
-				})
-				.catch(e => {
-					this.$message.error(e)
-				})
+
+		async deleteTask() {
+			await this.$store.dispatch('tasks/delete', this.task)
+			this.$message.success({message: this.$t('task.detail.deleteSuccess')})
+			this.$router.push({name: 'list.index', params: {listId: this.task.listId}})
 		},
+
 		toggleTaskDone() {
 			this.task.done = !this.task.done
 
@@ -678,39 +668,26 @@ export default {
 				playPop()
 			}
 
-			this.saveTask(true, () => this.toggleTaskDone())
+			this.saveTask(true, this.toggleTaskDone)
 		},
+
 		setDescriptionChanged(e) {
 			if (e.key === 'Enter' || e.key === 'Control') {
 				return
 			}
 			this.descriptionChanged = true
 		},
-		saveTaskIfDescriptionChanged() {
-			// We want to only save the description if it was changed.
-			// Since we can either trigger this with ctrl+enter or @change, it would be possible to save a task first
-			// with ctrl+enter and then with @change although nothing changed since the last save when @change gets fired.
-			// To only save one time we added this method.
-			if (this.descriptionChanged) {
-				this.descriptionChanged = false
-				this.saveTask()
-			}
-		},
+
 		async changeList(list) {
 			this.$store.commit('kanban/removeTaskInBucket', this.task)
 			this.task.listId = list.id
 			await this.saveTask()
 		},
-		toggleFavorite() {
+
+		async toggleFavorite() {
 			this.task.isFavorite = !this.task.isFavorite
-			this.taskService.update(this.task)
-				.then(t => {
-					this.task = t
-					this.$store.dispatch('namespaces/loadNamespacesIfFavoritesDontExist')
-				})
-				.catch(e => {
-					this.$message.error(e)
-				})
+			this.task = await this.taskService.update(this.task)
+			this.$store.dispatch('namespaces/loadNamespacesIfFavoritesDontExist')
 		},
 	},
 }

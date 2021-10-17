@@ -50,28 +50,25 @@ export default {
 		},
 	},
 	methods: {
-		findLists(query) {
+		async findLists(query) {
 			if (query === '') {
 				this.clearAll()
 				return
 			}
 
-			this.listSerivce.getAll({}, {s: query})
-				.then(response => {
-					this.foundLists = response
-				})
-				.catch(e => {
-					this.$message.error(e)
-				})
+			this.foundLists = await this.listSerivce.getAll({}, {s: query})
 		},
+
 		clearAll() {
 			this.foundLists = []
 		},
+
 		select(list) {
 			this.list = list
 			this.$emit('selected', list)
 			this.$emit('update:modelValue', list)
 		},
+
 		namespace(namespaceId) {
 			const namespace = this.$store.getters['namespaces/getNamespaceById'](namespaceId)
 			if (namespace !== null) {

@@ -54,14 +54,14 @@
 					<span
 						@click="toggleLists(n.id)"
 						class="menu-label"
-						v-tooltip="getNamespaceTitle(n) + ' (' + n.lists.filter(l => !l.isArchived).length + ')'">
+						v-tooltip="namespaceTitles[nk]">
 						<span class="name">
 							<span
 								:style="{ backgroundColor: n.hexColor }"
 								class="color-bubble"
 								v-if="n.hexColor !== ''">
 							</span>
-							{{ getNamespaceTitle(n) }} ({{ n.lists.filter(l => !l.isArchived).length }})
+							{{ namespaceTitles[nk] }}
 						</span>
 					</span>
 					<a
@@ -117,7 +117,7 @@
 										@click="navigate"
 										:href="href"
 										class="list-menu-link"
-										:class="{'router-link-exact-active': isActive || currentList.id === l.id}"
+										:class="{'router-link-exact-active': isActive || currentList?.id === l.id}"
 									>
 										<span class="icon handle">
 											<icon icon="grip-lines"/>
@@ -191,10 +191,17 @@ export default {
 			loading: state => state[LOADING] && state[LOADING_MODULE] === 'namespaces',
 		}),
 		activeLists() {
-			return this.namespaces.map(({lists}) => lists.filter(item => !item.isArchived))
+			return this.namespaces.map(({lists}) => lists?.filter(item => !item.isArchived))
+		},
+		namespaceTitles() {
+			return this.namespaces.map((namespace, index) => {
+				const title = this.getNamespaceTitle(namespace)
+				return `${title} (${this.activeLists[index]?.length ?? 0})`
+			})
 		},
 	},
 	beforeCreate() {
+		// FIXME: async action in beforeCreate, might be unfinished when component mounts
 		this.$store.dispatch('namespaces/loadNamespaces')
 			.then(namespaces => {
 				namespaces.forEach(n => {
@@ -218,18 +225,13 @@ export default {
 				return
 			}
 			this.$store.dispatch('lists/toggleListFavorite', list)
-				.catch(e => this.$message.error(e))
 		},
 		resize() {
 			// Hide the menu by default on mobile
-			if (window.innerWidth < 770) {
-				this.$store.commit(MENU_ACTIVE, false)
-			} else {
-				this.$store.commit(MENU_ACTIVE, true)
-			}
+			this.$store.commit(MENU_ACTIVE, window.innerWidth >= 770)
 		},
 		toggleLists(namespaceId) {
-			this.listsVisible[namespaceId] = !this.listsVisible[namespaceId] ?? false
+			this.listsVisible[namespaceId] = !this.listsVisible[namespaceId]
 		},
 		updateActiveLists(namespace, activeLists) {
 			// this is a bit hacky: since we do have to filter out the archived items from the list
@@ -249,7 +251,8 @@ export default {
 
 			this.$store.commit('namespaces/setNamespaceById', newNamespace)
 		},
-		saveListPosition(e, namespaceIndex) {
+
+		async saveListPosition(e, namespaceIndex) {
 			const listsActive = this.activeLists[namespaceIndex]
 			const list = listsActive[e.newIndex]
 			const listBefore = listsActive[e.newIndex - 1] ?? null
@@ -258,17 +261,15 @@ export default {
 
 			const position = calculateItemPosition(listBefore !== null ? listBefore.position : null, listAfter !== null ? listAfter.position : null)
 
-			// create a copy of the list in order to not violate vuex mutations
-			this.$store.dispatch('lists/updateList', {
-				...list,
-				position,
-			})
-				.catch(e => {
-					this.$message.error(e)
+			try {
+				// create a copy of the list in order to not violate vuex mutations
+				await this.$store.dispatch('lists/updateList', {
+					...list,
+					position,
 				})
-				.finally(() => {
-					this.listUpdating[list.id] = false
-				})
+			} finally {
+				this.listUpdating[list.id] = false
+			}
 		},
 	},
 }

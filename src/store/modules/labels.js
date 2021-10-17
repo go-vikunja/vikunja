@@ -1,15 +1,18 @@
 import LabelService from '@/services/label'
 import {setLoading} from '@/store/helper'
-import {filterLabelsByQuery} from '@/helpers/labels'
+import { success } from '@/message'
+import {i18n} from '@/i18n'
+import {getLabelsByIds, filterLabelsByQuery} from '@/helpers/labels'
 
-/**
- * Returns the labels by id if found
- * @param {Object} state
- * @param {Array} ids
- * @returns {Array}
- */
-function getLabelsByIds(state, ids) {
-	return Object.values(state.labels).filter(({id}) => ids.includes(id))
+async function getAllLabels(page = 1) {
+	const labelService = new LabelService()
+	const labels = await labelService.getAll({}, {}, page)
+	if (page < labelService.totalPages) {
+		const nextLabels = await getAllLabels(page + 1)
+		return labels.concat(nextLabels)
+	} else {
+		return labels
+	}
 }
 
 export default {
@@ -44,75 +47,59 @@ export default {
 		},
 	},
 	actions: {
-		loadAllLabels(ctx, {forceLoad} = {}) {
+		async loadAllLabels(ctx, {forceLoad} = {}) {
 			if (ctx.state.loaded && !forceLoad) {
-				return Promise.resolve()
+				return
 			}
 
 			const cancel = setLoading(ctx, 'labels')
-			const labelService = new LabelService()
 
-			const getAllLabels = (page = 1) => {
-				return labelService.getAll({}, {}, page)
-					.then(labels => {
-						if (page < labelService.totalPages) {
-							return getAllLabels(page + 1)
-								.then(nextLabels => {
-									return labels.concat(nextLabels)
-								})
-						} else {
-							return labels
-						}
-					})
-					.catch(e => {
-						return Promise.reject(e)
-					})
+			try {
+				const labels = await getAllLabels()
+				ctx.commit('setLabels', labels)
+				ctx.commit('setLoaded', true)
+				return labels
+			} finally {
+				cancel()
 			}
-
-			return getAllLabels()
-				.then(r => {
-					ctx.commit('setLabels', r)
-					ctx.commit('setLoaded', true)
-					return Promise.resolve(r)
-				})
-				.catch(e => Promise.reject(e))
-				.finally(() => cancel())
 		},
-		deleteLabel(ctx, label) {
+		async deleteLabel(ctx, label) {
 			const cancel = setLoading(ctx, 'labels')
 			const labelService = new LabelService()
 
-			return labelService.delete(label)
-				.then(r => {
-					ctx.commit('removeLabelById', label)
-					return Promise.resolve(r)
-				})
-				.catch(e => Promise.reject(e))
-				.finally(() => cancel())
+			try {
+				const result = await labelService.delete(label)
+				ctx.commit('removeLabelById', label)
+				success({message: i18n.global.t('label.deleteSuccess')})
+				return result
+			} finally {
+				cancel()
+			}
 		},
-		updateLabel(ctx, label) {
+		async updateLabel(ctx, label) {
 			const cancel = setLoading(ctx, 'labels')
 			const labelService = new LabelService()
 
-			return labelService.update(label)
-				.then(r => {
-					ctx.commit('setLabel', r)
-					return Promise.resolve(r)
-				})
-				.catch(e => Promise.reject(e))
-				.finally(() => cancel())
+			try {
+				const newLabel = await labelService.update(label)
+				ctx.commit('setLabel', newLabel)
+				success({message: i18n.global.t('label.edit.success')})
+				return newLabel
+			} finally {
+				cancel()
+			}
 		},
-		createLabel(ctx, label) {
+		async createLabel(ctx, label) {
 			const cancel = setLoading(ctx, 'labels')
 			const labelService = new LabelService()
 
-			return labelService.create(label)
-				.then(r => {
-					ctx.commit('setLabel', r)
-					return Promise.resolve(r)
-				})
-				.catch(e => Promise.reject(e))
-				.finally(() => cancel())
+			try {
+				const newLabel = await labelService.create(label)
+				ctx.commit('setLabel', newLabel)
+				return newLabel
+			} finally {
+				cancel()
+			}
 		},
 	},
 }

@@ -93,14 +93,11 @@ export default {
 		this.$nextTick(() => this.editorActive = true)
 	},
 	methods: {
-		create() {
+		async create() {
 			this.savedFilter.filters = this.filters
-			this.savedFilterService.create(this.savedFilter)
-				.then(r => {
-					this.$store.dispatch('namespaces/loadNamespaces')
-					this.$router.push({name: 'list.index', params: {listId: r.getListId()}})
-				})
-				.catch(e => this.$message.error(e))
+			const savedFilter = await this.savedFilterService.create(this.savedFilter)
+			await this.$store.dispatch('namespaces/loadNamespaces')
+			this.$router.push({name: 'list.index', params: {listId: savedFilter.getListId()}})
 		},
 	},
 }

@@ -15,31 +15,23 @@ export default class PasswordResetService extends AbstractService {
 		return new PasswordResetModel(data)
 	}
 
-	resetPassword(model) {
+	async resetPassword(model) {
 		const cancel = this.setLoading()
-		return this.http.post(this.paths.reset, model)
-			.catch(error => {
-				return this.errorHandler(error)
-			})
-			.then(response => {
-				return Promise.resolve(this.modelFactory(response.data))
-			})
-			.finally(() => {
-				cancel()
-			})
+		try {
+			const response = await this.http.post(this.paths.reset, model)
+			return this.modelFactory(response.data)
+		} finally {
+			cancel()
+		}
 	}
 
-	requestResetPassword(model) {
+	async requestResetPassword(model) {
 		const cancel = this.setLoading()
-		return this.http.post(this.paths.requestReset, model)
-			.catch(error => {
-				return this.errorHandler(error)
-			})
-			.then(response => {
-				return Promise.resolve(this.modelFactory(response.data))
-			})
-			.finally(() => {
-				cancel()
-			})
+		try {
+			const response = await this.http.post(this.paths.requestReset, model)
+			return this.modelFactory(response.data)
+		} finally {
+			cancel()
+		}
 	}
 }

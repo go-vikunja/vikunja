@@ -94,67 +94,63 @@ export default {
 		},
 	},
 	actions: {
-		loadNamespaces(ctx) {
+		async loadNamespaces(ctx) {
 			const cancel = setLoading(ctx, 'namespaces')
 
 			const namespaceService = new NamespaceService()
-			// We always load all namespaces and filter them on the frontend
-			return namespaceService.getAll({}, {is_archived: true})
-				.then(r => {
-					ctx.commit('namespaces', r)
-
-					// Put all lists in the list state
-					const lists = []
-					r.forEach(n => {
-						n.lists.forEach(l => {
-							lists.push(l)
-						})
-					})
-
-					ctx.commit('lists/setLists', lists, {root: true})
-
-					return Promise.resolve(r)
-				})
-				.catch(e => Promise.reject(e))
-				.finally(() => {
-					cancel()
-				})
+			try {
+				// We always load all namespaces and filter them on the frontend
+				const namespaces = await namespaceService.getAll({}, {is_archived: true})
+				ctx.commit('namespaces', namespaces)
+				
+				// Put all lists in the list state
+				const lists = namespaces.flatMap(({lists}) => lists)
+				
+				ctx.commit('lists/setLists', lists, {root: true})
+				
+				return namespaces
+			} finally {
+				cancel()
+			}
 		},
+
 		loadNamespacesIfFavoritesDontExist(ctx) {
 			// The first namespace should be the one holding all favorites
 			if (ctx.state.namespaces[0].id !== -2) {
 				return ctx.dispatch('loadNamespaces')
 			}
 		},
+
 		removeFavoritesNamespaceIfEmpty(ctx) {
 			if (ctx.state.namespaces[0].id === -2 && ctx.state.namespaces[0].lists.length === 0) {
 				ctx.state.namespaces.splice(0, 1)
-				return Promise.resolve()
 			}
 		},
-		deleteNamespace(ctx, namespace) {
+
+		async deleteNamespace(ctx, namespace) {
 			const cancel = setLoading(ctx, 'namespaces')
 			const namespaceService = new NamespaceService()
 
-			return namespaceService.delete(namespace)
-				.then(r => {
-					ctx.commit('removeNamespaceById', namespace.id)
-					return Promise.resolve(r)
-				})
-				.catch(e => Promise.reject(e))
-				.finally(() => cancel())
+			try {
+				const response = await namespaceService.delete(namespace)
+				ctx.commit('removeNamespaceById', namespace.id)
+				return response
+			} finally {
+				cancel()
+			}
 		},
-		createNamespace(ctx, namespace) {
+
+		async createNamespace(ctx, namespace) {
 			const cancel = setLoading(ctx, 'namespaces')
 			const namespaceService = new NamespaceService()
 
-			return namespaceService.create(namespace)
-				.then(r => {
-					ctx.commit('addNamespace', r)
-					return Promise.resolve(r)
-				})
-				.catch(e => Promise.reject(e))
-				.finally(() => cancel())
+			try {
+				const createdNamespace = await namespaceService.create(namespace)
+				ctx.commit('addNamespace', createdNamespace)
+				return createdNamespace
+			} finally {
+				cancel()
+			}
 		},
 	},
 }

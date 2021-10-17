@@ -166,56 +166,47 @@ export default {
 		},
 	},
 	methods: {
-		markAsDone(checked) {
-			const updateFunc = () => {
-				this.taskService.update(this.task)
-					.then(t => {
-						if (this.task.done) {
-							playPop()
-						}
-						this.task = t
-						this.$emit('task-updated', t)
-						this.$message.success({
-							message: this.task.done ?
-								this.$t('task.doneSuccess') :
-								this.$t('task.undoneSuccess'),
-						}, [{
-							title: 'Undo',
-							callback: () => {
-								this.task.done = !this.task.done
-								this.markAsDone(!checked)
-							},
-						}])
-					})
-					.catch(e => {
-						this.$message.error(e)
-					})
+		async markAsDone(checked) {
+			const updateFunc = async () => {
+				const task = await this.taskService.update(this.task)
+				if (this.task.done) {
+					playPop()
+				}
+				this.task = task
+				this.$emit('task-updated', task)
+				this.$message.success({
+					message: this.task.done ?
+						this.$t('task.doneSuccess') :
+						this.$t('task.undoneSuccess'),
+				}, [{
+					title: 'Undo',
+					callback() {
+						this.task.done = !this.task.done
+						this.markAsDone(!checked)
+					},
+				}])
 			}
 
 			if (checked) {
 				setTimeout(updateFunc, 300) // Delay it to show the animation when marking a task as done
 			} else {
-				updateFunc() // Don't delay it when un-marking it as it doesn't have an animation the other way around
+				await updateFunc() // Don't delay it when un-marking it as it doesn't have an animation the other way around
 			}
 		},
-		toggleFavorite() {
+
+		async toggleFavorite() {
 			this.task.isFavorite = !this.task.isFavorite
-			this.taskService.update(this.task)
-				.then(t => {
-					this.task = t
-					this.$emit('task-updated', t)
-					this.$store.dispatch('namespaces/loadNamespacesIfFavoritesDontExist')
-				})
-				.catch(e => {
-					this.$message.error(e)
-				})
+			this.task = await this.taskService.update(this.task)
+			this.$emit('task-updated', this.task)
+			this.$store.dispatch('namespaces/loadNamespacesIfFavoritesDontExist')
 		},
 		hideDeferDueDatePopup(e) {
-			if (this.showDefer) {
-				closeWhenClickedOutside(e, this.$refs.deferDueDate.$el, () => {
-					this.showDefer = false
-				})
+			if (!this.showDefer) {
+				return
 			}
+			closeWhenClickedOutside(e, this.$refs.deferDueDate.$el, () => {
+				this.showDefer = false
+			})
 		},
 	},
 }

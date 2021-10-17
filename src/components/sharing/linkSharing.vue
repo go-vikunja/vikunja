@@ -215,59 +215,41 @@ export default {
 		frontendUrl: (state) => state.config.frontendUrl,
 	}),
 	methods: {
-		load(listId) {
+		async load(listId) {
 			// If listId == 0 the list on the calling component wasn't already loaded, so we just bail out here
 			if (listId === 0) {
 				return
 			}
 
-			this.linkShareService
-				.getAll({listId})
-				.then((r) => {
-					this.linkShares = r
-				})
-				.catch((e) => {
-					this.$message.error(e)
-				})
+			this.linkShares = await this.linkShareService.getAll({listId})
 		},
-		add(listId) {
+		async add(listId) {
 			const newLinkShare = new LinkShareModel({
 				right: this.selectedRight,
 				listId,
 				name: this.name,
 				password: this.password,
 			})
-			this.linkShareService
-				.create(newLinkShare)
-				.then(() => {
-					this.selectedRight = rights.READ
-					this.name = ''
-					this.password = ''
-					this.showNewForm = false
-					this.$message.success({message: this.$t('list.share.links.createSuccess')})
-					this.load(listId)
-				})
-				.catch((e) => {
-					this.$message.error(e)
-				})
+			await this.linkShareService.create(newLinkShare)
+			this.selectedRight = rights.READ
+			this.name = ''
+			this.password = ''
+			this.showNewForm = false
+			this.$message.success({message: this.$t('list.share.links.createSuccess')})
+			await this.load(listId)
 		},
-		remove(listId) {
+		async remove(listId) {
 			const linkshare = new LinkShareModel({
 				id: this.linkIdToDelete,
 				listId,
 			})
-			this.linkShareService
-				.delete(linkshare)
-				.then(() => {
-					this.$message.success({message: this.$t('list.share.links.deleteSuccess')})
-					this.load(listId)
-				})
-				.catch((e) => {
-					this.$message.error(e)
-				})
-				.finally(() => {
-					this.showDeleteModal = false
-				})
+			try {
+				await this.linkShareService.delete(linkshare)
+				this.$message.success({message: this.$t('list.share.links.deleteSuccess')})
+				await this.load(listId)
+			} finally {
+				this.showDeleteModal = false
+			}
 		},
 		copy,
 		getShareLink(hash) {

@@ -26,7 +26,7 @@ export default {
 		this.authenticateWithCode()
 	},
 	methods: {
-		authenticateWithCode() {
+		async authenticateWithCode() {
 			// This component gets mounted twice: The first time when the actual auth request hits the frontend,
 			// the second time after that auth request succeeded and the outer component "content-no-auth" isn't used
 			// but instead the "content-auth" component is used. Because this component is just a route and thus
@@ -59,34 +59,32 @@ export default {
 
 			this.$store.commit(ERROR_MESSAGE, '')
 
-			this.$store.dispatch('auth/openIdAuth', {
-				provider: this.$route.params.provider,
-				code: this.$route.query.code,
-			})
-				.then(() => {
-					const last = getLastVisited()
-					if (last !== null) {
-						this.$router.push({
-							name: last.name,
-							params: last.params,
-						})
-						clearLastVisited()
-					} else {
-						this.$router.push({name: 'home'})
-					}
+			try {
+				await this.$store.dispatch('auth/openIdAuth', {
+					provider: this.$route.params.provider,
+					code: this.$route.query.code,
 				})
-				.catch(e => {
-					const err = getErrorText(e)
-					if (typeof err[1] !== 'undefined') {
-						this.$store.commit(ERROR_MESSAGE, err[1])
-						return
-					}
+				const last = getLastVisited()
+				if (last !== null) {
+					this.$router.push({
+						name: last.name,
+						params: last.params,
+					})
+					clearLastVisited()
+				} else {
+					this.$router.push({name: 'home'})
+				}
+			} catch(e) {
+				const err = getErrorText(e)
+				if (typeof err[1] !== 'undefined') {
+					this.$store.commit(ERROR_MESSAGE, err[1])
+					return
+				}
 
-					this.$store.commit(ERROR_MESSAGE, err[0])
-				})
-				.finally(() => {
-					localStorage.removeItem('authenticating')
-				})
+				this.$store.commit(ERROR_MESSAGE, err[0])
+			} finally {
+				localStorage.removeItem('authenticating')
+			}
 		},
 	},
 }

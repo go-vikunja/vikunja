@@ -138,58 +138,35 @@ export default {
 					}
 					this.migrate()
 				})
-				.catch(e => {
-					this.$message.error(e)
-				})
 		}
 	},
 	methods: {
-		getAuthUrl() {
-			this.migrationService.getAuthUrl()
-				.then(r => {
-					this.authUrl = r.url
-				})
-				.catch(e => {
-					this.$message.error(e)
-				})
+		async getAuthUrl() {
+			const { url } = await this.migrationService.getAuthUrl()
+			this.authUrl = url
 		},
-		migrate() {
+
+		async migrate() {
 			this.isMigrating = true
 			this.lastMigrationDate = null
 			this.message = ''
 
+			let migrationConfig = { code: this.migratorAuthCode }
+
 			if (this.isFileMigrator) {
-				return this.migrateFile()
+				if (this.$refs.uploadInput.files.length === 0) {
+					return
+				}
+				migrationConfig = this.$refs.uploadInput.files[0]
 			}
 
-			this.migrationService.migrate({code: this.migratorAuthCode})
-				.then(r => {
-					this.message = r.message
-					this.$store.dispatch('namespaces/loadNamespaces')
-				})
-				.catch(e => {
-					this.$message.error(e)
-				})
-				.finally(() => {
-					this.isMigrating = false
-				})
-		},
-		migrateFile() {
-			if (this.$refs.uploadInput.files.length === 0) {
-				return
+			try {
+				const { message } = await this.migrationService.migrate(migrationConfig)
+				this.message = message
+				return this.$store.dispatch('namespaces/loadNamespaces')
+			} finally {
+				this.isMigrating = false
 			}
-
-			this.migrationService.migrate(this.$refs.uploadInput.files[0])
-				.then(r => {
-					this.message = r.message
-					this.$store.dispatch('namespaces/loadNamespaces')
-				})
-				.catch(e => {
-					this.$message.error(e)
-				})
-				.finally(() => {
-					this.isMigrating = false
-				})
 		},
 	},
 }

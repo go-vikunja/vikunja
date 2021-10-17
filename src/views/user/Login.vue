@@ -187,7 +187,8 @@ export default {
 				this.loading = false
 			}
 		},
-		submit() {
+
+		async submit() {
 			this.$store.commit(ERROR_MESSAGE, '')
 			// Some browsers prevent Vue bindings from working with autofilled values.
 			// To work around this, we're manually getting the values here instead of relying on vue bindings.
@@ -201,24 +202,24 @@ export default {
 				credentials.totpPasscode = this.$refs.totpPasscode.value
 			}
 
-			this.$store.dispatch('auth/login', credentials)
-				.then(() => {
-					this.$store.commit('auth/needsTotpPasscode', false)
-				})
-				.catch(e => {
-					if (e.response && e.response.data.code === 1017 && !credentials.totpPasscode) {
-						return
-					}
+			try {
+				await this.$store.dispatch('auth/login', credentials)
+				this.$store.commit('auth/needsTotpPasscode', false)
+			} catch(e) {
+				if (e.response && e.response.data.code === 1017 && !credentials.totpPasscode) {
+					return
+				}
 
-					const err = getErrorText(e)
-					if (typeof err[1] !== 'undefined') {
-						this.$store.commit(ERROR_MESSAGE, err[1])
-						return
-					}
+				const err = getErrorText(e)
+				if (typeof err[1] !== 'undefined') {
+					this.$store.commit(ERROR_MESSAGE, err[1])
+					return
+				}
 
-					this.$store.commit(ERROR_MESSAGE, err[0])
-				})
+				this.$store.commit(ERROR_MESSAGE, err[0])
+			}
 		},
+
 		redirectToProvider(provider) {
 			redirectToProvider(provider, this.openidConnect.redirectUrl)
 		},

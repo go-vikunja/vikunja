@@ -290,7 +290,8 @@ export default {
 			}
 			sortTasks(this.tasks)
 		},
-		saveTaskPosition(e) {
+
+		async saveTaskPosition(e) {
 			this.drag = false
 			
 			const task = this.tasks[e.newIndex]
@@ -302,13 +303,8 @@ export default {
 				position: calculateItemPosition(taskBefore !== null ? taskBefore.position : null, taskAfter !== null ? taskAfter.position : null),
 			}
 
-			this.$store.dispatch('tasks/update', newTask)
-				.then(r => {
-					this.tasks[e.newIndex] = r
-				})
-				.catch(e => {
-					this.$message.error(e)
-				})
+			const updatedTask = await this.$store.dispatch('tasks/update', newTask)
+			this.tasks[e.newIndex] = updatedTask
 		},
 	},
 }

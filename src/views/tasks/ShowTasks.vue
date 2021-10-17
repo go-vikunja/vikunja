@@ -33,15 +33,12 @@
 		</h3>
 		<div v-if="!showAll" class="mb-4">
 			<x-button type="secondary" @click="showTodaysTasks()" class="mr-2">{{ $t('task.show.today') }}</x-button>
-			<x-button type="secondary" @click="setDatesToNextWeek()" class="mr-2">{{
-					$t('task.show.nextWeek')
-				}}
-			</x-button>
+			<x-button type="secondary" @click="setDatesToNextWeek()" class="mr-2">{{ $t('task.show.nextWeek') }}</x-button>
 			<x-button type="secondary" @click="setDatesToNextMonth()">{{ $t('task.show.nextMonth') }}</x-button>
 		</div>
 		<template v-if="!loading && (!tasks || tasks.length === 0) && showNothingToDo">
 			<h3 class="nothing">{{ $t('task.show.noTasks') }}</h3>
-			<img alt="" :src="llamaCoolUrl"/>
+			<img alt="" :src="llamaCoolUrl" />
 		</template>
 		<div :class="{ 'is-loading': loading}" class="spinner"></div>
 
@@ -144,7 +141,7 @@ export default {
 				},
 			})
 		},
-		loadPendingTasks() {
+		async loadPendingTasks() {
 			// Since this route is authentication only, users would get an error message if they access the page unauthenticated.
 			// Since this component is mounted as the home page before unauthenticated users get redirected
 			// to the login page, they will almost always see the error message.
@@ -203,27 +200,22 @@ export default {
 				}
 			}
 
-			this.$store.dispatch('tasks/loadTasks', params)
-				.then(r => {
+			const tasks = await this.$store.dispatch('tasks/loadTasks', params)
 
-					// Sorting tasks with a due date so that the soonest or overdue are displayed at the top of the list.
-					const tasksWithDueDates = r
-						.filter(t => t.dueDate !== null)
-						.sort((a, b) => a.dueDate > b.dueDate ? 1 : -1)
-
-					const tasksWithoutDueDates = r.filter(t => t.dueDate === null)
-
-					const tasks = [
-						...tasksWithDueDates,
-						...tasksWithoutDueDates,
-					]
-
-					this.tasks = tasks
-				})
-				.catch(e => {
-					this.$message.error(e)
-				})
+			// FIXME: sort tasks in computed
+			// Sort all tasks to put those with a due date before the ones without a due date, the
+			// soonest before the later ones.
+			// We can't use the api sorting here because that sorts tasks with a due date after
+			// ones without a due date.
+			this.tasks = tasks.sort((a, b) => {
+				const sortByDueDate = b.dueDate - a.dueDate
+				return sortByDueDate === 0
+					? b.id - a.id
+					: sortByDueDate
+			})
 		},
+
+		// FIXME: this modification should happen in the store
 		updateTasks(updatedTask) {
 			for (const t in this.tasks) {
 				if (this.tasks[t].id === updatedTask.id) {
@@ -237,18 +229,21 @@ export default {
 				}
 			}
 		},
+
 		setDatesToNextWeek() {
 			this.cStartDate = new Date()
 			this.cEndDate = new Date((new Date()).getTime() + 7 * 24 * 60 * 60 * 1000)
 			this.showOverdue = false
 			this.setDate()
 		},
+
 		setDatesToNextMonth() {
 			this.cStartDate = new Date()
 			this.cEndDate = new Date((new Date()).setMonth((new Date()).getMonth() + 1))
 			this.showOverdue = false
 			this.setDate()
 		},
+
 		showTodaysTasks() {
 			const d = new Date()
 			this.cStartDate = new Date()

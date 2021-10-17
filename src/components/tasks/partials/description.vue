@@ -71,24 +71,19 @@ export default {
 		},
 	},
 	methods: {
-		save() {
+		async save() {
 			this.saving = true
 
-			this.$store.dispatch('tasks/update', this.task)
-				.then(t => {
-					this.task = t
-					this.$emit('update:modelValue', t)
-					this.saved = true
-					setTimeout(() => {
-						this.saved = false
-					}, 2000)
-				})
-				.catch(e => {
-					this.$message.error(e)
-				})
-				.finally(() => {
-					this.saving = false
-				})
+			try {
+				this.task = await this.$store.dispatch('tasks/update', this.task)
+				this.$emit('update:modelValue', this.task)
+				this.saved = true
+				setTimeout(() => {
+					this.saved = false
+				}, 2000)
+			} finally {
+				this.saving = false
+			}
 		},
 	},
 }

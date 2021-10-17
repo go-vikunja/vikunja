@@ -34,33 +34,30 @@ function validateLabel(labels, label) {
 	return findPropertyByValue(labels, 'title', label)
 }
 
-function addLabelToTask(task, label) {
+async function addLabelToTask(task, label) {
 	const labelTask = new LabelTask({
 		taskId: task.id,
 		labelId: label.id,
 	})
 	const labelTaskService = new LabelTaskService()
-	return labelTaskService.create(labelTask)
-		.then(result => {
-			task.labels.push(label)
-			return Promise.resolve(result)
-		})
-		.catch(e => Promise.reject(e))
+	const response = await labelTaskService.create(labelTask)
+	task.labels.push(label)
+	return response
 }
 
-function findAssignees(parsedTaskAssignees) {
+async function findAssignees(parsedTaskAssignees) {
 	if (parsedTaskAssignees.length <= 0) {
-		return Promise.resolve([])
+		return []
 	}
 
 	const userService = new UserService()
-	const assignees = parsedTaskAssignees.map(a => 
-		userService.getAll({}, {s: a})
-			.then(users => validateUsername(users, a)),
-		
-	)
+	const assignees = parsedTaskAssignees.map(async a => {
+		const users = await userService.getAll({}, {s: a})
+		return validateUsername(users, a)
+	})
 
-	return Promise.all(assignees).filter((item) => Boolean(item))
+	const validatedUsers = await Promise.all(assignees) 
+	return validatedUsers.filter((item) => Boolean(item))
 }
 
 
@@ -68,50 +65,39 @@ export default {
 	namespaced: true,
 	state: () => ({}),
 	actions: {
-		loadTasks(ctx, params) {
+		async loadTasks(ctx, params) {
 			const taskService = new TaskService()
 
 			const cancel = setLoading(ctx, 'tasks')
-			return taskService.getAll({}, params)
-				.then(r => {
-					ctx.commit(HAS_TASKS, r.length > 0, {root: true})
-					return r
-				})
-				.catch(e => {
-					return Promise.reject(e)
-				})
-				.finally(() => {
-					cancel()
-				})
-			
+			try {
+				const tasks = await taskService.getAll({}, params)
+				ctx.commit(HAS_TASKS, tasks.length > 0, {root: true})
+				return tasks
+			} finally {
+				cancel()
+			}
 		},
-		update(ctx, task) {
+
+		async update(ctx, task) {
 			const cancel = setLoading(ctx, 'tasks')
 
 			const taskService = new TaskService()
-			return taskService.update(task)
-				.then(t => {
-					ctx.commit('kanban/setTaskInBucket', t, {root: true})
-					return Promise.resolve(t)
-				})
-				.catch(e => {
-					return Promise.reject(e)
-				})
-				.finally(() => {
-					cancel()
-				})
+			try {
+				const updatedTask = await taskService.update(task)
+				ctx.commit('kanban/setTaskInBucket', updatedTask, {root: true})
+				return updatedTask
+			} finally {
+				cancel()
+			}
 		},
-		delete(ctx, task) {
+
+		async delete(ctx, task) {
 			const taskService = new TaskService()
-			return taskService.delete(task)
-				.then(t => {
-					ctx.commit('kanban/removeTaskInBucket', task, {root: true})
-					return Promise.resolve(t)
-				})
-				.catch(e => {
-					return Promise.reject(e)
-				})
+			const response = await taskService.delete(task)
+			ctx.commit('kanban/removeTaskInBucket', task, {root: true})
+			return response
 		},
+
 		// Adds a task attachment in store.
 		// This is an action to be able to commit other mutations
 		addTaskAttachment(ctx, {taskId, attachment}) {
@@ -134,118 +120,97 @@ export default {
 			ctx.commit('attachments/add', attachment, {root: true})
 		},
 
-		addAssignee(ctx, {user, taskId}) {
+		async addAssignee(ctx, {user, taskId}) {
 			const taskAssignee = new TaskAssigneeModel({userId: user.id, taskId: taskId})
 
 			const taskAssigneeService = new TaskAssigneeService()
-			return taskAssigneeService.create(taskAssignee)
-				.then(r => {
-					const t = ctx.rootGetters['kanban/getTaskById'](taskId)
-					if (t.task === null) {
-						// Don't try further adding a label if the task is not in kanban
-						// Usually this means the kanban board hasn't been accessed until now.
-						// Vuex seems to have its difficulties with that, so we just log the error and fail silently.
-						console.debug('Could not add assignee to task in kanban, task not found', t)
-						return Promise.resolve(r)
-					}
-					// FIXME: direct store manipulation (task)
-					t.task.assignees.push(user)
-					ctx.commit('kanban/setTaskInBucketByIndex', t, {root: true})
-					return Promise.resolve(r)
-				})
-				.catch(e => {
-					return Promise.reject(e)
-				})
+			const r = await taskAssigneeService.create(taskAssignee)
+			const t = ctx.rootGetters['kanban/getTaskById'](taskId)
+			if (t.task === null) {
+				// Don't try further adding a label if the task is not in kanban
+				// Usually this means the kanban board hasn't been accessed until now.
+				// Vuex seems to have its difficulties with that, so we just log the error and fail silently.
+				console.debug('Could not add assignee to task in kanban, task not found', t)
+				return r
+			}
+			// FIXME: direct store manipulation (task)
+			t.task.assignees.push(user)
+			ctx.commit('kanban/setTaskInBucketByIndex', t, { root: true })
+			return r
 		},
-		removeAssignee(ctx, {user, taskId}) {
 
+		async removeAssignee(ctx, {user, taskId}) {
 			const taskAssignee = new TaskAssigneeModel({userId: user.id, taskId: taskId})
 
 			const taskAssigneeService = new TaskAssigneeService()
-			return taskAssigneeService.delete(taskAssignee)
-				.then(r => {
-					const t = ctx.rootGetters['kanban/getTaskById'](taskId)
-					if (t.task === null) {
-						// Don't try further adding a label if the task is not in kanban
-						// Usually this means the kanban board hasn't been accessed until now.
-						// Vuex seems to have its difficulties with that, so we just log the error and fail silently.
-						console.debug('Could not remove assignee from task in kanban, task not found', t)
-						return Promise.resolve(r)
-					}
+			const response = await taskAssigneeService.delete(taskAssignee)
+			const t = ctx.rootGetters['kanban/getTaskById'](taskId)
+			if (t.task === null) {
+				// Don't try further adding a label if the task is not in kanban
+				// Usually this means the kanban board hasn't been accessed until now.
+				// Vuex seems to have its difficulties with that, so we just log the error and fail silently.
+				console.debug('Could not remove assignee from task in kanban, task not found', t)
+				return response
+			}
 
-					for (const a in t.task.assignees) {
-						if (t.task.assignees[a].id === user.id) {
-							// FIXME: direct store manipulation (task)
-							t.task.assignees.splice(a, 1)
-							break
-						}
-					}
-
-					ctx.commit('kanban/setTaskInBucketByIndex', t, {root: true})
-					return Promise.resolve(r)
-				})
-				.catch(e => {
-					return Promise.reject(e)
-				})
-
-		},
-
-		addLabel(ctx, {label, taskId}) {
-			const labelTask = new LabelTaskModel({taskId: taskId, labelId: label.id})
-
-			const labelTaskService = new LabelTaskService()
-			return labelTaskService.create(labelTask)
-				.then(r => {
-					const t = ctx.rootGetters['kanban/getTaskById'](taskId)
-					if (t.task === null) {
-						// Don't try further adding a label if the task is not in kanban
-						// Usually this means the kanban board hasn't been accessed until now.
-						// Vuex seems to have its difficulties with that, so we just log the error and fail silently.
-						console.debug('Could not add label to task in kanban, task not found', t)
-						return Promise.resolve(r)
-					}
+			for (const a in t.task.assignees) {
+				if (t.task.assignees[a].id === user.id) {
 					// FIXME: direct store manipulation (task)
-					t.task.labels.push(label)
-					ctx.commit('kanban/setTaskInBucketByIndex', t, {root: true})
+					t.task.assignees.splice(a, 1)
+					break
+				}
+			}
 
-					return Promise.resolve(r)
-				})
-				.catch(e => {
-					return Promise.reject(e)
-				})
+			ctx.commit('kanban/setTaskInBucketByIndex', t, {root: true})
+			return response
+
 		},
 
-		removeLabel(ctx, {label, taskId}) {
+		async addLabel(ctx, {label, taskId}) {
 			const labelTask = new LabelTaskModel({taskId: taskId, labelId: label.id})
 
 			const labelTaskService = new LabelTaskService()
-			return labelTaskService.delete(labelTask)
-				.then(r => {
-					const t = ctx.rootGetters['kanban/getTaskById'](taskId)
-					if (t.task === null) {
-						// Don't try further adding a label if the task is not in kanban
-						// Usually this means the kanban board hasn't been accessed until now.
-						// Vuex seems to have its difficulties with that, so we just log the error and fail silently.
-						console.debug('Could not remove label from task in kanban, task not found', t)
-						return Promise.resolve(r)
-					}
+			const r = await labelTaskService.create(labelTask)
+			const t = ctx.rootGetters['kanban/getTaskById'](taskId)
+			if (t.task === null) {
+				// Don't try further adding a label if the task is not in kanban
+				// Usually this means the kanban board hasn't been accessed until now.
+				// Vuex seems to have its difficulties with that, so we just log the error and fail silently.
+				console.debug('Could not add label to task in kanban, task not found', t)
+				return r
+			}
+			// FIXME: direct store manipulation (task)
+			t.task.labels.push(label)
+			ctx.commit('kanban/setTaskInBucketByIndex', t, { root: true })
+			return r
+		},
 
-					// Remove the label from the list
-					for (const l in t.task.labels) {
-						if (t.task.labels[l].id === label.id) {
-							// FIXME: direct store manipulation (task)
-							t.task.labels.splice(l, 1)
-							break
-						}
-					}
+		async removeLabel(ctx, {label, taskId}) {
+			const labelTask = new LabelTaskModel({taskId: taskId, labelId: label.id})
 
-					ctx.commit('kanban/setTaskInBucketByIndex', t, {root: true})
+			const labelTaskService = new LabelTaskService()
+			const response = await labelTaskService.delete(labelTask)
+			const t = ctx.rootGetters['kanban/getTaskById'](taskId)
+			if (t.task === null) {
+				// Don't try further adding a label if the task is not in kanban
+				// Usually this means the kanban board hasn't been accessed until now.
+				// Vuex seems to have its difficulties with that, so we just log the error and fail silently.
+				console.debug('Could not remove label from task in kanban, task not found', t)
+				return response
+			}
 
-					return Promise.resolve(r)
-				})
-				.catch(e => {
-					return Promise.reject(e)
-				})
+			// Remove the label from the list
+			for (const l in t.task.labels) {
+				if (t.task.labels[l].id === label.id) {
+					// FIXME: direct store manipulation (task)
+					t.task.labels.splice(l, 1)
+					break
+				}
+			}
+
+			ctx.commit('kanban/setTaskInBucketByIndex', t, {root: true})
+
+			return response
 		},
 
 		// Do everything that is involved in finding, creating and adding the label to the task
@@ -256,22 +221,21 @@ export default {
 
 			const {labels} = rootState.labels
 
-			const labelAddsToWaitFor = parsedLabels.map(labelTitle => new Promise((resolve) => {
+			const labelAddsToWaitFor = parsedLabels.map(async labelTitle => {
 				let label = validateLabel(labels, labelTitle)
 				if (typeof label !== 'undefined') {
-					return resolve(label)
+					return label
 				}
 
 				// label not found, create it
 				const labelModel = new LabelModel({title: labelTitle})
-				return dispatch('labels/createLabel', labelModel, {root: true}).then(() => resolve(label))
+				await dispatch('labels/createLabel', labelModel, {root: true})
+				return addLabelToTask(task, label)
 			})
-				.then((label) => addLabelToTask(task, label))
-				.catch(e => Promise.reject(e)),
-			)
 
 			// This waits until all labels are created and added to the task
-			return Promise.all(labelAddsToWaitFor).then(() => task)
+			await Promise.all(labelAddsToWaitFor)
+			return task
 		},
 
 		findListId({ rootGetters }, { list: listName, listId }) {
@@ -296,7 +260,7 @@ export default {
 			
 			//  4. If none of the above worked, reject the promise with an error.
 			if (typeof foundListId === 'undefined' || listId === null) {
-				return Promise.reject('NO_LIST')
+				throw new Error('NO_LIST')
 			}
 		
 			return foundListId
@@ -331,12 +295,11 @@ export default {
 			})
 		
 			const taskService = new TaskService()
-			return taskService.create(task)
-				.then(task => dispatch('addLabelsToTask', {
-					task,
-					parsedLabels: parsedTask.labels,
-				}))
-				.catch(e => Promise.reject(e))
+			const createdTask = await taskService.create(task)
+			return dispatch('addLabelsToTask', {
+				task: createdTask,
+				parsedLabels: parsedTask.labels,
+			})
 		},
 	},
 }
