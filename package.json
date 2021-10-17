@@ -22,7 +22,7 @@
     "date-fns": "2.25.0",
     "dompurify": "2.3.3",
     "flatpickr": "4.6.9",
-    "highlight.js": "11.2.0",
+    "highlight.js": "11.3.0",
     "is-touch-device": "1.0.1",
     "marked": "3.0.7",
     "register-service-worker": "1.7.2",
