@@ -40,10 +40,10 @@ export default {
 				const list = this.$store.getters['lists/findListByExactname'](parsedTask.list)
 				listId = list === null ? null : list.id
 			}
-			if (listId == null && lId !== 0) {
+			if (listId === null && lId !== 0) {
 				listId = lId
 			}
-			if (listId == null && typeof this.$route.params.listId !== 'undefined') {
+			if (typeof this.$route.params.listId !== 'undefined') {
 				listId = parseInt(this.$route.params.listId)
 			}
 			
