@@ -26,7 +26,7 @@
     "dompurify": "2.3.3",
     "easymde": "^2.15.0",
     "flatpickr": "^4.6.9",
-    "highlight.js": "11.2.0",
+    "highlight.js": "11.3.0",
     "is-touch-device": "1.0.1",
     "lodash.clonedeep": "^4.5.0",
     "lodash.debounce": "^4.0.8",
