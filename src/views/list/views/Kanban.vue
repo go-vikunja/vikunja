@@ -51,7 +51,7 @@
 								@click="focusBucketTitle"
 								class="title input"
 								:contenteditable="bucketTitleEditable && canWrite && !collapsedBuckets[bucket.id]"
-								spellcheck="false">{{ bucket.title }}</h2>
+								:spellcheck="false">{{ bucket.title }}</h2>
 							<span
 								:class="{'is-max': bucket.tasks.length >= bucket.limit}"
 								class="limit"

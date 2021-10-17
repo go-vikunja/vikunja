@@ -8,7 +8,7 @@
 			@blur="save($event.target.textContent)"
 			@keydown.enter.prevent.stop="$event.target.blur()"
 			:contenteditable="canWrite ? 'true' : 'false'"
-			spellcheck="false"
+			:spellcheck="false"
 		>
 			{{ task.title.trim() }}
 		</h1>
