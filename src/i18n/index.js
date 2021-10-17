@@ -21,14 +21,15 @@ export const availableLanguages = {
 const loadedLanguages = ['en'] // our default language that is preloaded
 
 const setI18nLanguage = lang => {
-	i18n.locale = lang
+	i18n.global.locale = lang
 	document.querySelector('html').setAttribute('lang', lang)
 	return lang
 }
 
 export const loadLanguageAsync = lang => {
+	console.log(lang, i18n.global.locale)
 	// If the same language
-	if (i18n.locale === lang) {
+	if (i18n.global.locale === lang) {
 		return Promise.resolve(setI18nLanguage(lang))
 	}
 
