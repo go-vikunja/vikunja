@@ -132,7 +132,7 @@
 										</span>
 										<span
 											:class="{'is-favorite': l.isFavorite}"
-											@click.stop="toggleFavoriteList(l)"
+											@click.prevent.stop="toggleFavoriteList(l)"
 											class="favorite">
 											<icon icon="star" v-if="l.isFavorite"/>
 											<icon :icon="['far', 'star']" v-else/>
