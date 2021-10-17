@@ -424,7 +424,7 @@ export default {
 
 			const newTask = cloneDeep(task) // cloning the task to avoid vuex store mutations
 			newTask.bucketId = newBucket.id,
-			newTask.kanbanPosition = calculateItemPosition(taskBefore !== null ? taskBefore.kanbanPosition : null, taskAfter !== null ? taskAfter.kanbanPosition : null),
+			newTask.kanbanPosition = calculateItemPosition(taskBefore !== null ? taskBefore.kanbanPosition : null, taskAfter !== null ? taskAfter.kanbanPosition : null)
 
 			try {
 				await this.$store.dispatch('tasks/update', newTask)
