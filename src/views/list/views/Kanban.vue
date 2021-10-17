@@ -405,7 +405,7 @@ export default {
 				tasks,
 			}
 
-			this.$store.dispatch('kanban/updateBucket', newBucket)
+			this.$store.commit('kanban/setBucketById', newBucket)
 		},
 
 		updateTaskPosition(e) {
@@ -428,10 +428,10 @@ export default {
 			}
 
 			this.$store.dispatch('tasks/update', newTask)
-				// .finally(() => {
+				.finally(() => {
 					this.taskUpdating[task.id] = false
 					this.oneTaskUpdating = false
-				// })
+				})
 		},
 		toggleShowNewTaskInput(bucketId) {
 			this.showNewTaskInput[bucketId] = !this.showNewTaskInput[bucketId]
