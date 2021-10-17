@@ -450,7 +450,9 @@ export default {
 			this.settings.defaultListId = this.defaultList ? this.defaultList.id : 0
 
 			await this.userSettingsService.update(this.settings)
-			this.$store.commit('auth/setUserSettings', this.settings)
+			this.$store.commit('auth/setUserSettings', {
+				...this.settings
+			})
 			this.$message.success({message: this.$t('user.settings.general.savedSuccess')})
 		},
 
