@@ -67,7 +67,7 @@ describe('Namepaces', () => {
 			.contains('Save')
 			.click()
 
-		cy.get('.global-notification')
+		cy.get('.global-notification', { timeout: 1000 })
 			.should('contain', 'Success')
 		cy.get('.namespace-container .menu.namespaces-lists')
 			.should('contain', newNamespaceName)

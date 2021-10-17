@@ -24,15 +24,10 @@ export default {
 		},
 	},
 	methods: {
-		deleteList() {
-			this.$store.dispatch('lists/deleteList', this.list)
-				.then(() => {
-					this.$message.success({message: this.$t('list.delete.success')})
-					this.$router.push({name: 'home'})
-				})
-				.catch(e => {
-					this.$message.error(e)
-				})
+		async deleteList() {
+			await this.$store.dispatch('lists/deleteList', this.list)
+			this.$message.success({message: this.$t('list.delete.success')})
+			this.$router.push({name: 'home'})
 		},
 	},
 }

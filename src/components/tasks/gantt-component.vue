@@ -11,14 +11,14 @@
 				</x-button>
 			</div>
 			<filter-popup
-				@change="loadTasks()"
 				:visible="showTaskFilter"
 				v-model="params"
+				@update:modelValue="loadTasks()"
 			/>
 		</div>
 		<div class="dates">
-			<template v-for="(y, yk) in days">
-				<div :key="yk + 'year'" class="months">
+			<template v-for="(y, yk) in days" :key="yk + 'year'">
+				<div class="months">
 					<div
 						:key="mk + 'month'"
 						class="month"
@@ -86,9 +86,8 @@
 					:w="t.durationDays * dayWidth"
 					:x="t.offsetDays * dayWidth - 6"
 					:y="0"
-					@clicked="setTaskDragged(t)"
-					@dragstop="resizeTask"
-					@resizestop="resizeTask"
+					@dragstop="(e) => resizeTask(t, e)"
+					@resizestop="(e) => resizeTask(t, e)"
 					axis="x"
 					class="task"
 				>
@@ -136,9 +135,8 @@
 						:sticks="['mr', 'ml']"
 						:x="dayOffsetUntilToday * dayWidth - 6"
 						:y="0"
-						@clicked="setTaskDragged(t)"
-						@dragstop="resizeTask"
-						@resizestop="resizeTask"
+						@dragstop="(e) => resizeTask(t, e)"
+						@resizestop="(e) => resizeTask(t, e)"
 						axis="x"
 						class="task nodate"
 						v-tooltip="$t('list.gantt.noDates')"
@@ -232,7 +230,6 @@ export default {
 			theTasks: [], // Pretty much a copy of the prop, since we cant mutate the prop directly
 			tasksWithoutDates: [],
 			taskService: new TaskService(),
-			taskDragged: null, // Saves to currently dragged task to be able to update it
 			fullWidth: 0,
 			now: new Date(),
 			dayOffsetUntilToday: 0,
@@ -298,56 +295,43 @@ export default {
 				this.fullWidth += this.dayWidth
 			}
 			console.debug('prepareGanttDays; years:', years)
-			this.$set(this, 'days', years)
+			this.days = years
 		},
+
 		parseTasks() {
 			this.setDates()
 			this.loadTasks()
 		},
-		loadTasks() {
-			this.$set(this, 'theTasks', [])
-			this.$set(this, 'tasksWithoutDates', [])
 
-			const getAllTasks = (page = 1) => {
-				return this.taskCollectionService
-					.getAll({listId: this.listId}, this.params, page)
-					.then((tasks) => {
-						if (page < this.taskCollectionService.totalPages) {
-							return getAllTasks(page + 1).then((nextTasks) => {
-								return tasks.concat(nextTasks)
-							})
-						} else {
-							return tasks
-						}
-					})
-					.catch((e) => {
-						return Promise.reject(e)
-					})
+		async loadTasks() {
+			this.theTasks = []
+			this.tasksWithoutDates = []
+
+			const getAllTasks = async (page = 1) => {
+				const tasks = await this.taskCollectionService.getAll({listId: this.listId}, this.params, page)
+				if (page < this.taskCollectionService.totalPages) {
+					const nextTasks = await getAllTasks(page + 1)
+					return tasks.concat(nextTasks)
+				}
+				return tasks
 			}
 
-			getAllTasks()
-				.then((tasks) => {
-					this.theTasks = tasks
-						.filter((t) => {
-							if (t.startDate === null && !t.done) {
-								this.tasksWithoutDates.push(t)
-							}
-							return (
-								t.startDate >= this.startDate &&
-								t.endDate <= this.endDate
-							)
-						})
-						.map((t) => {
-							return this.addGantAttributes(t)
-						})
-						.sort(function (a, b) {
-							if (a.startDate < b.startDate) return -1
-							if (a.startDate > b.startDate) return 1
-							return 0
-						})
+			const tasks = await getAllTasks()
+			this.theTasks = tasks
+				.filter((t) => {
+					if (t.startDate === null && !t.done) {
+						this.tasksWithoutDates.push(t)
+					}
+					return (
+						t.startDate >= this.startDate &&
+						t.endDate <= this.endDate
+					)
 				})
-				.catch((e) => {
-					this.$message.error(e)
+				.map((t) => this.addGantAttributes(t))
+				.sort(function (a, b) {
+					if (a.startDate < b.startDate) return -1
+					if (a.startDate > b.startDate) return 1
+					return 0
 				})
 		},
 		addGantAttributes(t) {
@@ -360,15 +344,14 @@ export default {
 			t.offsetDays = Math.floor((t.startDate - this.startDate) / 1000 / 60 / 60 / 24)
 			return t
 		},
-		setTaskDragged(t) {
-			this.taskDragged = t
-		},
-		resizeTask(newRect) {
+		async resizeTask(taskDragged, newRect) {
 			if (this.isTaskEdit) {
 				return
 			}
 
-			const didntHaveDates = this.taskDragged.startDate === null ? true : false
+			let newTask = { ...taskDragged }
+
+			const didntHaveDates = newTask.startDate === null ? true : false
 
 			let startDate = new Date(this.startDate)
 			startDate.setDate(
@@ -378,62 +361,52 @@ export default {
 			startDate.setUTCMinutes(0)
 			startDate.setUTCSeconds(0)
 			startDate.setUTCMilliseconds(0)
-			this.taskDragged.startDate = startDate
+			newTask.startDate = startDate
 			let endDate = new Date(startDate)
 			endDate.setDate(
 				startDate.getDate() + newRect.width / this.dayWidth,
 			)
-			this.taskDragged.startDate = startDate
-			this.taskDragged.endDate = endDate
+			newTask.startDate = startDate
+			newTask.endDate = endDate
 
 			// We take the task from the overall tasks array because the one in it has bad data after it was updated once.
 			// FIXME: This is a workaround. We should use a better mechanism to get the task or, even better,
 			// prevent it from containing outdated Data in the first place.
 			for (const tt in this.theTasks) {
-				if (this.theTasks[tt].id === this.taskDragged.id) {
-					this.$set(this, 'taskDragged', this.theTasks[tt])
+				if (this.theTasks[tt].id === newTask.id) {
+					newTask = this.theTasks[tt]
 					break
 				}
 			}
 
 			const ganttData = {
-				endDate: this.taskDragged.endDate,
-				durationDays: this.taskDragged.durationDays,
-				offsetDays: this.taskDragged.offsetDays,
+				endDate: newTask.endDate,
+				durationDays: newTask.durationDays,
+				offsetDays: newTask.offsetDays,
 			}
 
-			this.taskService
-				.update(this.taskDragged)
-				.then(r => {
-					r.endDate = ganttData.endDate
-					r.durationDays = ganttData.durationDays
-					r.offsetDays = ganttData.offsetDays
+			const r = await this.taskService.update(newTask)
+			r.endDate = ganttData.endDate
+			r.durationDays = ganttData.durationDays
+			r.offsetDays = ganttData.offsetDays
 
-					// If the task didn't have dates before, we'll update the list
-					if (didntHaveDates) {
-						for (const t in this.tasksWithoutDates) {
-							if (this.tasksWithoutDates[t].id === r.id) {
-								this.tasksWithoutDates.splice(t, 1)
-								break
-							}
-						}
-						this.theTasks.push(this.addGantAttributes(r))
-					} else {
-						for (const tt in this.theTasks) {
-							if (this.theTasks[tt].id === r.id) {
-								this.$set(
-									this.theTasks,
-									tt,
-									this.addGantAttributes(r),
-								)
-								break
-							}
-						}
+			// If the task didn't have dates before, we'll update the list
+			if (didntHaveDates) {
+				for (const t in this.tasksWithoutDates) {
+					if (this.tasksWithoutDates[t].id === r.id) {
+						this.tasksWithoutDates.splice(t, 1)
+						break
 					}
-				})
-				.catch((e) => {
-					this.$message.error(e)
-				})
+				}
+				this.theTasks.push(this.addGantAttributes(r))
+			} else {
+				for (const tt in this.theTasks) {
+					if (this.theTasks[tt].id === r.id) {
+						this.theTasks[tt] = this.addGantAttributes(r)
+						break
+					}
+				}
+			}
 		},
 		editTask(task) {
 			this.taskToEdit = task
@@ -453,7 +426,7 @@ export default {
 				this.$nextTick(() => (this.newTaskFieldActive = false))
 			}
 		},
-		addNewTask() {
+		async addNewTask() {
 			if (!this.newTaskFieldActive) {
 				return
 			}
@@ -461,16 +434,10 @@ export default {
 				title: this.newTaskTitle,
 				listId: this.listId,
 			})
-			this.taskService
-				.create(task)
-				.then((r) => {
-					this.tasksWithoutDates.push(this.addGantAttributes(r))
-					this.newTaskTitle = ''
-					this.hideCrateNewTask()
-				})
-				.catch((e) => {
-					this.$message.error(e)
-				})
+			const r = await this.taskService.create(task)
+			this.tasksWithoutDates.push(this.addGantAttributes(r))
+			this.newTaskTitle = ''
+			this.hideCrateNewTask()
 		},
 		formatYear(date) {
 			return this.format(date, 'MMMM, yyyy')

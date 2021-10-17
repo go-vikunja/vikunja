@@ -2,13 +2,13 @@
 	<dropdown>
 		<template v-if="isSavedFilter">
 			<dropdown-item
-				:to="{ name: `${listRoutePrefix}.settings.edit`, params: { listId: list.id } }"
+				:to="{ name: `${listRoutePrefix}.edit`, params: { listId: list.id } }"
 				icon="pen"
 			>
 				{{ $t('menu.edit') }}
 			</dropdown-item>
 			<dropdown-item
-				:to="{ name: `${listRoutePrefix}.settings.delete`, params: { listId: list.id } }"
+				:to="{ name: `${listRoutePrefix}.delete`, params: { listId: list.id } }"
 				icon="trash-alt"
 			>
 				{{ $t('misc.delete') }}
@@ -16,7 +16,7 @@
 		</template>
 		<template v-else-if="list.isArchived">
 			<dropdown-item
-				:to="{ name: `${listRoutePrefix}.settings.archive`, params: { listId: list.id } }"
+				:to="{ name: `${listRoutePrefix}.archive`, params: { listId: list.id } }"
 				icon="archive"
 			>
 				{{ $t('menu.unarchive') }}
@@ -24,32 +24,32 @@
 		</template>
 		<template v-else>
 			<dropdown-item
-				:to="{ name: `${listRoutePrefix}.settings.edit`, params: { listId: list.id } }"
+				:to="{ name: `${listRoutePrefix}.edit`, params: { listId: list.id } }"
 				icon="pen"
 			>
 				{{ $t('menu.edit') }}
 			</dropdown-item>
 			<dropdown-item
-				:to="{ name: `${listRoutePrefix}.settings.background`, params: { listId: list.id } }"
+				:to="{ name: `${listRoutePrefix}.background`, params: { listId: list.id } }"
 				v-if="backgroundsEnabled"
 				icon="image"
 			>
 				{{ $t('menu.setBackground') }}
 			</dropdown-item>
 			<dropdown-item
-				:to="{ name: `${listRoutePrefix}.settings.share`, params: { listId: list.id } }"
+				:to="{ name: `${listRoutePrefix}.share`, params: { listId: list.id } }"
 				icon="share-alt"
 			>
 				{{ $t('menu.share') }}
 			</dropdown-item>
 			<dropdown-item
-				:to="{ name: `${listRoutePrefix}.settings.duplicate`, params: { listId: list.id } }"
+				:to="{ name: `${listRoutePrefix}.duplicate`, params: { listId: list.id } }"
 				icon="paste"
 			>
 				{{ $t('menu.duplicate') }}
 			</dropdown-item>
 			<dropdown-item
-				:to="{ name: `${listRoutePrefix}.settings.archive`, params: { listId: list.id } }"
+				:to="{ name: `${listRoutePrefix}.archive`, params: { listId: list.id } }"
 				icon="archive"
 			>
 				{{ $t('menu.archive') }}
@@ -63,7 +63,7 @@
 				@change="sub => subscription = sub"
 			/>
 			<dropdown-item
-				:to="{ name: `${listRoutePrefix}.settings.delete`, params: { listId: list.id } }"
+				:to="{ name: `${listRoutePrefix}.delete`, params: { listId: list.id } }"
 				icon="trash-alt"
 				class="has-text-danger"
 			>
@@ -106,15 +106,19 @@ export default {
 		listRoutePrefix() {
 			let name = 'list'
 
+
 			if (this.$route.name !== null && this.$route.name.startsWith('list.')) {
-				name = this.$route.name
+				// HACK: we should implement a better routing for the modals
+				const settingsRoutes = ['edit', 'delete', 'archive', 'background', 'share', 'duplicate']
+				const suffix = settingsRoutes.find((route) => this.$route.name.endsWith(`.settings.${route}`))
+				name = this.$route.name.replace(`.settings.${suffix}`,'')
 			}
 
 			if (this.isSavedFilter) {
 				name = name.replace('list.', 'filter.')
 			}
 
-			return name
+			return `${name}.settings`
 		},
 		isSavedFilter() {
 			return getSavedFilterIdFromListId(this.list.id) > 0

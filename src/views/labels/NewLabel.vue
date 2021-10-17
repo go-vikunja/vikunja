@@ -2,7 +2,7 @@
 	<create-edit
 		:title="$t('label.create.title')"
 		@create="newLabel()"
-		:create-disabled="label.title === ''"
+		:primary-disabled="label.title === ''"
 	>
 		<div class="field">
 			<label class="label" for="labelTitle">{{ $t('label.attributes.title') }}</label>
@@ -60,24 +60,19 @@ export default {
 		loading: state => state[LOADING] && state[LOADING_MODULE] === 'labels',
 	}),
 	methods: {
-		newLabel() {
+		async newLabel() {
 			if (this.label.title === '') {
 				this.showError = true
 				return
 			}
 			this.showError = false
 
-			this.$store.dispatch('labels/createLabel', this.label)
-				.then(r => {
-					this.$router.push({
-						name: 'labels.index',
-						params: {id: r.id},
-					})
-					this.$message.success({message: this.$t('label.create.success')})
-				})
-				.catch((e) => {
-					this.$message.error(e)
-				})
+			const label = this.$store.dispatch('labels/createLabel', this.label)
+			this.$router.push({
+				name: 'labels.index',
+				params: {id: label.id},
+			})
+			this.$message.success({message: this.$t('label.create.success')})
 		},
 	},
 }

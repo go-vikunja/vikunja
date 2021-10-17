@@ -105,7 +105,7 @@
 import {mapState} from 'vuex'
 
 import {HTTPFactory} from '@/http-common'
-import {ERROR_MESSAGE, LOADING} from '@/store/mutation-types'
+import {LOADING} from '@/store/mutation-types'
 import legal from '../../components/misc/legal'
 import ApiConfig from '@/components/misc/api-config.vue'
 import {getErrorText} from '@/message'
@@ -121,6 +121,7 @@ export default {
 		return {
 			confirmedEmailSuccess: false,
 			hasApiUrl: false,
+			errorMessage: '',
 		}
 	},
 	beforeMount() {
@@ -138,7 +139,7 @@ export default {
 				})
 				.catch(e => {
 					cancel()
-					this.$store.commit(ERROR_MESSAGE, e.response.data.message)
+					this.errorMessage = e.response.data.message
 				})
 		}
 
@@ -170,7 +171,6 @@ export default {
 		...mapState({
 			registrationEnabled: state => state.config.registrationEnabled,
 			loading: LOADING,
-			errorMessage: ERROR_MESSAGE,
 			needsTotpPasscode: state => state.auth.needsTotpPasscode,
 			authenticated: state => state.auth.authenticated,
 			localAuthEnabled: state => state.config.auth.local.enabled,
@@ -187,8 +187,9 @@ export default {
 				this.loading = false
 			}
 		},
-		submit() {
-			this.$store.commit(ERROR_MESSAGE, '')
+
+		async submit() {
+			this.errorMessage = ''
 			// Some browsers prevent Vue bindings from working with autofilled values.
 			// To work around this, we're manually getting the values here instead of relying on vue bindings.
 			// For more info, see https://kolaente.dev/vikunja/frontend/issues/78
@@ -201,24 +202,19 @@ export default {
 				credentials.totpPasscode = this.$refs.totpPasscode.value
 			}
 
-			this.$store.dispatch('auth/login', credentials)
-				.then(() => {
-					this.$store.commit('auth/needsTotpPasscode', false)
-				})
-				.catch(e => {
-					if (e.response && e.response.data.code === 1017 && !credentials.totpPasscode) {
-						return
-					}
+			try {
+				await this.$store.dispatch('auth/login', credentials)
+				this.$store.commit('auth/needsTotpPasscode', false)
+			} catch(e) {
+				if (e.response && e.response.data.code === 1017 && !credentials.totpPasscode) {
+					return
+				}
 
-					const err = getErrorText(e, p => this.$t(p))
-					if (typeof err[1] !== 'undefined') {
-						this.$store.commit(ERROR_MESSAGE, err[1])
-						return
-					}
-
-					this.$store.commit(ERROR_MESSAGE, err[0])
-				})
+				const err = getErrorText(e)
+				this.errorMessage = typeof err[1] !== 'undefined' ? err[1] : err[0]
+			}
 		},
+
 		redirectToProvider(provider) {
 			redirectToProvider(provider, this.openidConnect.redirectUrl)
 		},

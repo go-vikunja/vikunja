@@ -105,19 +105,6 @@ export default class AbstractService {
 		return true
 	}
 
-	/////////////////////
-	// Global error handler
-	///////////////////
-
-	/**
-	 * Handles the error and rejects the promise.
-	 * @param error
-	 * @returns {Promise<never>}
-	 */
-	errorHandler(error) {
-		return Promise.reject(error)
-	}
-
 	/////////////////
 	// Helper functions
 	///////////////
@@ -156,7 +143,7 @@ export default class AbstractService {
 	getReplacedRoute(path, pathparams) {
 		let replacements = this.getRouteReplacements(path, pathparams)
 		return Object.entries(replacements).reduce(
-			(result, [parameter, value])  => result.replace(parameter, value),
+			(result, [parameter, value]) => result.replace(parameter, value),
 			path,
 		)
 	}
@@ -284,7 +271,7 @@ export default class AbstractService {
 	 */
 	get(model, params = {}) {
 		if (this.paths.get === '') {
-			return Promise.reject({message: 'This model is not able to get data.'})
+			throw new Error('This model is not able to get data.')
 		}
 
 		return this.getM(this.paths.get, model, params)
@@ -298,35 +285,30 @@ export default class AbstractService {
 	 * @param params
 	 * @returns {Q.Promise<unknown>}
 	 */
-	getM(url, model = {}, params = {}) {
+	async getM(url, model = {}, params = {}) {
 		const cancel = this.setLoading()
 
 		model = this.beforeGet(model)
 		const finalUrl = this.getReplacedRoute(url, model)
 
-		return this.http.get(finalUrl, {params: params})
-			.catch(error => {
-				return this.errorHandler(error)
-			})
-			.then(response => {
-				const result = this.modelGetFactory(response.data)
-				result.maxRight = Number(response.headers['x-max-right'])
-				return Promise.resolve(result)
-			})
-			.finally(() => {
-				cancel()
-			})
+		try {
+			const response = await this.http.get(finalUrl, {params})
+			const result = this.modelGetFactory(response.data)
+			result.maxRight = Number(response.headers['x-max-right'])
+			return result
+		} finally {
+			cancel()
+		}
 	}
 
-	getBlobUrl(url, method = 'GET', data = {}) {
-		return this.http({
+	async getBlobUrl(url, method = 'GET', data = {}) {
+		const response = await this.http({
 			url: url,
 			method: method,
 			responseType: 'blob',
 			data: data,
-		}).then(response => {
-			return window.URL.createObjectURL(new Blob([response.data]))
 		})
+		return window.URL.createObjectURL(new Blob([response.data]))
 	}
 
 	/**
@@ -337,9 +319,9 @@ export default class AbstractService {
 	 * @param page The page to get
 	 * @returns {Q.Promise<any>}
 	 */
-	getAll(model = {}, params = {}, page = 1) {
+	async getAll(model = {}, params = {}, page = 1) {
 		if (this.paths.getAll === '') {
-			return Promise.reject({message: 'This model is not able to get data.'})
+			throw new Error('This model is not able to get data.')
 		}
 
 		params.page = page
@@ -348,27 +330,22 @@ export default class AbstractService {
 		model = this.beforeGet(model)
 		const finalUrl = this.getReplacedRoute(this.paths.getAll, model)
 
-		return this.http.get(finalUrl, {params: params})
-			.catch(error => {
-				return this.errorHandler(error)
-			})
-			.then(response => {
-				this.resultCount = Number(response.headers['x-pagination-result-count'])
-				this.totalPages = Number(response.headers['x-pagination-total-pages'])
+		try {
+			const response = await this.http.get(finalUrl, {params: params})
+			this.resultCount = Number(response.headers['x-pagination-result-count'])
+			this.totalPages = Number(response.headers['x-pagination-total-pages'])
 
-				if (Array.isArray(response.data)) {
-					return Promise.resolve(response.data.map(entry => {
-						return this.modelGetAllFactory(entry)
-					}))
-				}
-				if (response.data === null) {
-					return Promise.resolve([])
-				}
-				return Promise.resolve(this.modelGetAllFactory(response.data))
-			})
-			.finally(() => {
-				cancel()
-			})
+			if (response.data === null) {
+				return []
+			}
+
+			if (Array.isArray(response.data)) {
+				return response.data.map(entry => this.modelGetAllFactory(entry))
+			}
+			return this.modelGetAllFactory(response.data)
+		} finally {
+			cancel()
+		}
 	}
 
 	/**
@@ -376,28 +353,24 @@ export default class AbstractService {
 	 * @param model
 	 * @returns {Promise<any | never>}
 	 */
-	create(model) {
+	async create(model) {
 		if (this.paths.create === '') {
-			return Promise.reject({message: 'This model is not able to create data.'})
+			throw new Error('This model is not able to create data.')
 		}
 
 		const cancel = this.setLoading()
 		const finalUrl = this.getReplacedRoute(this.paths.create, model)
 
-		return this.http.put(finalUrl, model)
-			.catch(error => {
-				return this.errorHandler(error)
-			})
-			.then(response => {
-				const result = this.modelCreateFactory(response.data)
-				if (typeof model.maxRight !== 'undefined') {
-					result.maxRight = model.maxRight
-				}
-				return Promise.resolve(result)
-			})
-			.finally(() => {
-				cancel()
-			})
+		try {
+			const response = await this.http.put(finalUrl, model)
+			const result = this.modelCreateFactory(response.data)
+			if (typeof model.maxRight !== 'undefined') {
+				result.maxRight = model.maxRight
+			}
+			return result
+		} finally {
+			cancel()
+		}
 	}
 
 	/**
@@ -407,23 +380,19 @@ export default class AbstractService {
 	 * @param model
 	 * @returns {Q.Promise<unknown>}
 	 */
-	post(url, model) {
+	async post(url, model) {
 		const cancel = this.setLoading()
 
-		return this.http.post(url, model)
-			.catch(error => {
-				return this.errorHandler(error)
-			})
-			.then(response => {
-				const result = this.modelUpdateFactory(response.data)
-				if (typeof model.maxRight !== 'undefined') {
-					result.maxRight = model.maxRight
-				}
-				return Promise.resolve(result)
-			})
-			.finally(() => {
-				cancel()
-			})
+		try {
+			const response = await this.http.post(url, model)
+			const result = this.modelUpdateFactory(response.data)
+			if (typeof model.maxRight !== 'undefined') {
+				result.maxRight = model.maxRight
+			}
+			return result
+		} finally {
+			cancel()
+		}
 	}
 
 	/**
@@ -433,7 +402,7 @@ export default class AbstractService {
 	 */
 	update(model) {
 		if (this.paths.update === '') {
-			return Promise.reject({message: 'This model is not able to update data.'})
+			throw new Error('This model is not able to update data.')
 		}
 
 		const finalUrl = this.getReplacedRoute(this.paths.update, model)
@@ -445,24 +414,20 @@ export default class AbstractService {
 	 * @param model
 	 * @returns {Q.Promise<any>}
 	 */
-	delete(model) {
+	async delete(model) {
 		if (this.paths.delete === '') {
-			return Promise.reject({message: 'This model is not able to delete data.'})
+			throw new Error('This model is not able to delete data.')
 		}
 
 		const cancel = this.setLoading()
 		const finalUrl = this.getReplacedRoute(this.paths.delete, model)
 
-		return this.http.delete(finalUrl, model)
-			.catch(error => {
-				return this.errorHandler(error)
-			})
-			.then(response => {
-				return Promise.resolve(response.data)
-			})
-			.finally(() => {
-				cancel()
-			})
+		try {
+			const {data} = await this.http.delete(finalUrl, model)
+			return data
+		} finally {
+			cancel()
+		}
 	}
 
 	/**
@@ -496,32 +461,26 @@ export default class AbstractService {
 	 * @param formData
 	 * @returns {Q.Promise<unknown>}
 	 */
-	uploadFormData(url, formData) {
-		console.log(formData, formData._boundary)
-
+	async uploadFormData(url, formData) {
 		const cancel = this.setLoading()
-		return this.http.put(
-			url,
-			formData,
-			{
-				headers: {
-					'Content-Type':
-						'multipart/form-data; boundary=' + formData._boundary,
+		try {
+			const response = await this.http.put(
+				url,
+				formData,
+				{
+					headers: {
+						'Content-Type':
+							'multipart/form-data; boundary=' + formData._boundary,
+					},
+					onUploadProgress: progressEvent => {
+						this.uploadProgress = Math.round((progressEvent.loaded * 100) / progressEvent.total)
+					},
 				},
-				onUploadProgress: progressEvent => {
-					this.uploadProgress = Math.round((progressEvent.loaded * 100) / progressEvent.total)
-				},
-			},
-		)
-			.catch(error => {
-				return this.errorHandler(error)
-			})
-			.then(response => {
-				return Promise.resolve(this.modelCreateFactory(response.data))
-			})
-			.finally(() => {
-				this.uploadProgress = 0
-				cancel()
-			})
+			)
+			return this.modelCreateFactory(response.data)
+		} finally {
+			this.uploadProgress = 0
+			cancel()
+		}
 	}
 }

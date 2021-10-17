@@ -37,7 +37,7 @@ export default {
 		}
 	},
 	props: {
-		value: {
+		modelValue: {
 			default: () => [],
 			validator: prop => {
 				// This allows arrays of Dates and strings
@@ -61,14 +61,15 @@ export default {
 			default: false,
 		},
 	},
+	emits: ['update:modelValue', 'change'],
 	components: {
 		datepicker,
 	},
 	mounted() {
-		this.reminders = this.value
+		this.reminders = this.modelValue
 	},
 	watch: {
-		value(newVal) {
+		modelValue(newVal) {
 			for (const i in newVal) {
 				if (typeof newVal[i] === 'string') {
 					newVal[i] = new Date(newVal[i])
@@ -79,7 +80,7 @@ export default {
 	},
 	methods: {
 		updateData() {
-			this.$emit('input', this.reminders)
+			this.$emit('update:modelValue', this.reminders)
 			this.$emit('change')
 		},
 		addReminderDate(index = null) {

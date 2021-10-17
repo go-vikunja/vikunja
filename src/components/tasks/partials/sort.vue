@@ -1,5 +1,5 @@
 <template>
-	<a @click="click">
+	<a @click="$emit('click')">
 		<icon icon="sort-up" v-if="order === 'asc'"/>
 		<icon icon="sort-up" rotation="180" v-else-if="order === 'desc'"/>
 		<icon icon="sort" v-else/>
@@ -15,10 +15,6 @@ export default {
 			default: 'none',
 		},
 	},
-	methods: {
-		click() {
-			this.$emit('click')
-		},
-	},
+	emits: ['click'],
 }
 </script>

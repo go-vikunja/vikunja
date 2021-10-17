@@ -37,7 +37,8 @@ export default class TaskService extends AbstractService {
 		return this.processModel(model)
 	}
 
-	processModel(model) {
+	processModel(updatedModel) {
+		const model = { ...updatedModel }
 
 		model.title = model.title?.trim()
 

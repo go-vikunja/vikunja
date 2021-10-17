@@ -22,7 +22,7 @@
       "usernameEmail": "Username Or Email Address",
       "usernamePlaceholder": "e.g. frederick",
       "email": "E-mail address",
-      "emailPlaceholder": "e.g. frederic@vikunja.io",
+      "emailPlaceholder": "e.g. frederic{'@'}vikunja.io",
       "password": "Password",
       "passwordRepeat": "Retype your password",
       "passwordPlaceholder": "e.g. •••••••••••",

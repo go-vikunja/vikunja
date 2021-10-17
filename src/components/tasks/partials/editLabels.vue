@@ -47,7 +47,7 @@ import {LOADING, LOADING_MODULE} from '@/store/mutation-types'
 export default {
 	name: 'edit-labels',
 	props: {
-		value: {
+		modelValue: {
 			default: () => [],
 			type: Array,
 		},
@@ -60,6 +60,7 @@ export default {
 			default: false,
 		},
 	},
+	emits: ['update:modelValue', 'change'],
 	data() {
 		return {
 			labelTaskService: new LabelTaskService(),
@@ -72,11 +73,12 @@ export default {
 		Multiselect,
 	},
 	watch: {
-		value: {
+		modelValue: {
 			handler(value) {
 				this.labels = value
 			},
 			immediate: true,
+			deep: true,
 		},
 	},
 	computed: {
@@ -91,9 +93,10 @@ export default {
 		findLabel(query) {
 			this.query = query
 		},
-		addLabel(label, showNotification = true) {
+
+		async addLabel(label, showNotification = true) {
 			const bubble = () => {
-				this.$emit('input', this.labels)
+				this.$emit('update:modelValue', this.labels)
 				this.$emit('change', this.labels)
 			}
 			
@@ -102,25 +105,21 @@ export default {
 				return
 			}
 
-			this.$store.dispatch('tasks/addLabel', {label: label, taskId: this.taskId})
-				.then(() => {
-					bubble()
-					if (showNotification) {
-						this.$message.success({message: this.$t('task.label.addSuccess')})
-					}
-				})
-				.catch(e => {
-					this.$message.error(e)
-				})
+			await this.$store.dispatch('tasks/addLabel', {label: label, taskId: this.taskId})
+			bubble()
+			if (showNotification) {
+				this.$message.success({message: this.$t('task.label.addSuccess')})
+			}
 		},
-		removeLabel(label) {
+
+		async removeLabel(label) {
 			const removeFromState = () => {
 				for (const l in this.labels) {
 					if (this.labels[l].id === label.id) {
 						this.labels.splice(l, 1)
 					}
 				}
-				this.$emit('input', this.labels)
+				this.$emit('update:modelValue', this.labels)
 				this.$emit('change', this.labels)
 			}
 
@@ -129,30 +128,21 @@ export default {
 				return
 			}
 
-			this.$store.dispatch('tasks/removeLabel', {label: label, taskId: this.taskId})
-				.then(() => {
-					removeFromState()
-					this.$message.success({message: this.$t('task.label.removeSuccess')})
-				})
-				.catch(e => {
-					this.$message.error(e)
-				})
+			await this.$store.dispatch('tasks/removeLabel', {label: label, taskId: this.taskId})
+			removeFromState()
+			this.$message.success({message: this.$t('task.label.removeSuccess')})
 		},
-		createAndAddLabel(title) {
+
+		async createAndAddLabel(title) {
 			if (this.taskId === 0) {
 				return
 			}
 
 			const newLabel = new LabelModel({title: title})
-			this.$store.dispatch('labels/createLabel', newLabel)
-				.then(r => {
-					this.addLabel(r, false)
-					this.labels.push(r)
-					this.$message.success({message: this.$t('task.label.addCreateSuccess')})
-				})
-				.catch(e => {
-					this.$message.error(e)
-				})
+			const label = await this.$store.dispatch('labels/createLabel', newLabel)
+			this.addLabel(label, false)
+			this.labels.push(label)
+			this.$message.success({message: this.$t('task.label.addCreateSuccess')})
 		},
 
 	},

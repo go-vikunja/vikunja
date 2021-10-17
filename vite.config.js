@@ -1,5 +1,5 @@
 import { defineConfig } from 'vite'
-const {createVuePlugin} = require('vite-plugin-vue2')
+import vue from '@vitejs/plugin-vue'
 import legacyFn from '@vitejs/plugin-legacy'
 const {VitePWA} = require('vite-plugin-pwa')
 const path = require('path')
@@ -32,7 +32,15 @@ export default defineConfig({
 		},
 	},
 	plugins: [
-		createVuePlugin(),
+		vue({
+			template: {
+				compilerOptions: {
+					compatConfig: {
+						MODE: 3,
+					},
+				},
+			},
+		}),
 		legacy,
 		VitePWA({
 			srcDir: 'src',
@@ -97,6 +105,10 @@ export default defineConfig({
 	resolve: {
 		alias: [
 			{
+				find: 'vue',
+				replacement: '@vue/compat',
+			},
+			{
 				find: '@',
 				replacement: path.resolve(__dirname, 'src'),
 			},
@@ -110,26 +122,10 @@ export default defineConfig({
 	build: {
 		rollupOptions: {
 			plugins: [
-				visualizer(),
+				visualizer({
+					filename: 'stats.html',
+				}),
 			],
-			output: {
-				manualChunks: {
-					'user-settings': [
-						'./src/views/user/PasswordReset',
-						'./src/views/user/RequestPasswordReset',
-						'./src/views/user/Settings',
-					],
-					'settings': [
-						'./src/views/list/NewList',
-						'./src/views/namespaces/NewNamespace',
-						'./src/views/teams/EditTeam',
-						'./src/views/teams/NewTeam',
-					],
-					'highlight': [
-						'highlight.js',
-					],
-				},
-			},
 		},
 	},
 })

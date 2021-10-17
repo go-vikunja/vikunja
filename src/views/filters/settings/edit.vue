@@ -52,8 +52,8 @@
 </template>
 
 <script>
-import ErrorComponent from '@/components/misc/error.vue'
-import LoadingComponent from '@/components/misc/loading.vue'
+import AsyncEditor from '@/components/input/AsyncEditor'
+
 import CreateEdit from '@/components/misc/create-edit.vue'
 
 import SavedFilterModel from '@/models/savedFilter'
@@ -84,12 +84,7 @@ export default {
 	components: {
 		CreateEdit,
 		Filters,
-		editor: () => ({
-			component: import('@/components/input/editor.vue'),
-			loading: LoadingComponent,
-			error: ErrorComponent,
-			timeout: 60000,
-		}),
+		editor: AsyncEditor,
 	},
 	watch: {
 		// call again the method if the route changes
@@ -100,29 +95,22 @@ export default {
 		},
 	},
 	methods: {
-		loadSavedFilter() {
+		async loadSavedFilter() {
 			// We assume the listId in the route is the pseudolist
 			const list = new ListModel({id: this.$route.params.listId})
 
 			this.filter = new SavedFilterModel({id: list.getSavedFilterId()})
-			this.filterService.get(this.filter)
-				.then(r => {
-					this.filter = r
-					this.filters = objectToSnakeCase(this.filter.filters)
-				})
-				.catch(e => this.$message.error(e))
+			this.filter = await this.filterService.get(this.filter)
+			this.filters = objectToSnakeCase(this.filter.filters)
 		},
-		save() {
+		async save() {
 			this.filter.filters = this.filters
-			this.filterService.update(this.filter)
-				.then(r => {
-					this.$store.dispatch('namespaces/loadNamespaces')
-					this.$message.success({message: this.$t('filters.edit.success')})
-					this.filter = r
-					this.filters = objectToSnakeCase(this.filter.filters)
-					this.$router.back()
-				})
-				.catch(e => this.$message.error(e))
+			const filter = await this.filterService.update(this.filter)
+			await this.$store.dispatch('namespaces/loadNamespaces')
+			this.$message.success({message: this.$t('filters.edit.success')})
+			this.filter = filter
+			this.filters = objectToSnakeCase(this.filter.filters)
+			this.$router.back()
 		},
 	},
 }

@@ -35,7 +35,7 @@
 			<label class="label">{{ $t('task.attributes.priority') }}</label>
 			<div class="control single-value-control">
 				<priority-select
-					:disabled="!filters.usePriority"
+					:disabled="!filters.usePriority || null"
 					v-model.number="filters.priority"
 					@change="setPriority"
 				/>
@@ -53,7 +53,7 @@
 				<percent-done-select
 					v-model.number="filters.percentDone"
 					@change="setPercentDoneFilter"
-					:disabled="!filters.usePercentDone"
+					:disabled="!filters.usePercentDone || null"
 				/>
 				<fancycheckbox
 					v-model="filters.usePercentDone"
@@ -253,12 +253,13 @@ export default {
 		this.filters.requireAllFilters = this.params.filter_concat === 'and'
 	},
 	props: {
-		value: {
+		modelValue: {
 			required: true,
 		},
 	},
+	emits: ['update:modelValue', 'change'],
 	watch: {
-		value: {
+		modelValue: {
 			handler(value) {
 				this.params = value
 				this.prepareFilters()
@@ -286,7 +287,7 @@ export default {
 	},
 	methods: {
 		change() {
-			this.$emit('input', this.params)
+			this.$emit('update:modelValue', this.params)
 			this.$emit('change', this.params)
 		},
 		prepareFilters() {
@@ -342,11 +343,11 @@ export default {
 				this.params.filter_by.forEach((f, i) => {
 					if (f === filterName && this.params.filter_comparator[i] === 'greater_equals') {
 						foundStart = true
-						this.$set(this.params.filter_value, i, formatISO(new Date(parts[0])))
+						this.params.filter_value[i] = formatISO(new Date(parts[0]))
 					}
 					if (f === filterName && this.params.filter_comparator[i] === 'less_equals') {
 						foundEnd = true
-						this.$set(this.params.filter_value, i, formatISO(new Date(parts[1])))
+						this.params.filter_value[i] = formatISO(new Date(parts[1]))
 					}
 				})
 
@@ -404,7 +405,7 @@ export default {
 			this.params.filter_by.forEach((f, i) => {
 				if (f === filterName) {
 					found = true
-					this.$set(this.params.filter_value, i, this.filters[variableName])
+					this.params.filter_value[i] = this.filters[variableName]
 				}
 			})
 
@@ -464,10 +465,10 @@ export default {
 				}
 			})
 			if (foundDone === false) {
-				this.$set(this.filters, 'done', true)
+				this.filters.done = true
 			}
 		},
-		prepareRelatedObjectFilter(kind, filterName = null, servicePrefix = null) {
+		async prepareRelatedObjectFilter(kind, filterName = null, servicePrefix = null) {
 			if (filterName === null) {
 				filterName = kind
 			}
@@ -477,13 +478,11 @@ export default {
 			}
 
 			this.prepareSingleValue(filterName)
-			if (typeof this.filters[filterName] !== 'undefined' && this.filters[filterName] !== '') {
-				this[`${servicePrefix}Service`].getAll({}, {s: this.filters[filterName]})
-					.then(r => {
-						this.$set(this, kind, r)
-					})
-					.catch(e => this.$message.error(e))
+			if (typeof this.filters[filterName] === 'undefined' || this.filters[filterName] === '') {
+				return
 			}
+
+			this[kind] = await this[`${servicePrefix}Service`].getAll({}, {s: this.filters[filterName]})
 		},
 		setDoneFilter() {
 			if (this.filters.done) {
@@ -521,24 +520,18 @@ export default {
 			this.setDateFilter('reminders')
 		},
 		clear(kind) {
-			this.$set(this, `found${kind}`, [])
+			this[`found${kind}`] = []
 		},
-		find(kind, query) {
+		async find(kind, query) {
 
 			if (query === '') {
 				this.clear(kind)
 			}
 
-			this[`${kind}Service`].getAll({}, {s: query})
-				.then(response => {
-					// Filter users from the results who are already assigned
-					const unassignedUsers = response.filter(({id}) => !includesById(this[kind], id))
+			const response = await this[`${kind}Service`].getAll({}, {s: query})
 
-					this.$set(this, `found${kind}`, unassignedUsers)
-				})
-				.catch(e => {
-					this.$message.error(e)
-				})
+			// Filter users from the results who are already assigned
+			this[`found${kind}`] = response.filter(({id}) => !includesById(this[kind], id))
 		},
 		add(kind, filterName) {
 			this.$nextTick(() => {
@@ -562,7 +555,7 @@ export default {
 				ids.push(u.id)
 			})
 
-			this.$set(this.filters, filterName, ids.join(','))
+			this.filters[filterName] = ids.join(',')
 			this.setSingleValueFilter(filterName, filterName, '', 'in')
 		},
 		findLabels(query) {
@@ -597,7 +590,7 @@ export default {
 				labelIDs.push(u.id)
 			})
 
-			this.$set(this.filters, 'labels', labelIDs.join(','))
+			this.filters.labels = labelIDs.join(',')
 			this.setSingleValueFilter('labels', 'labels', '', 'in')
 		},
 	},

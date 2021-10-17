@@ -1,14 +1,14 @@
 <template>
 	<div class="dropdown is-right is-active" ref="dropdown">
 		<div class="dropdown-trigger" @click="open = !open">
-			<slot name="trigger">
+			<slot name="trigger" :close="close">
 				<icon :icon="triggerIcon" class="icon"/>
 			</slot>
 		</div>
 		<transition name="fade">
 			<div class="dropdown-menu" v-if="open">
 				<div class="dropdown-content">
-					<slot></slot>
+					<slot :close="close"></slot>
 				</div>
 			</div>
 		</transition>
@@ -26,10 +26,10 @@ export default {
 		}
 	},
 	mounted() {
-		document.addEventListener('click', this.hide)
+		document.addEventListener('click', this.handleClickOutside)
 	},
-	beforeDestroy() {
-		document.removeEventListener('click', this.hide)
+	beforeUnmount() {
+		document.removeEventListener('click', this.handleClickOutside)
 	},
 	props: {
 		triggerIcon: {
@@ -37,14 +37,22 @@ export default {
 			default: 'ellipsis-h',
 		},
 	},
+	emits: ['close'],
 	methods: {
-		hide(e) {
-			if (this.open) {
-				closeWhenClickedOutside(e, this.$refs.dropdown, () => {
-					this.open = false
-					this.$emit('close', e)
-				})
+		close() {
+			this.open = false
+		},
+		toggleOpen() {
+			this.open = !this.open
+		},
+		handleClickOutside(e) {
+			if (!this.open) {
+				return
 			}
+			closeWhenClickedOutside(e, this.$refs.dropdown, () => {
+				this.open = false
+				this.$emit('close', e)
+			})
 		},
 	},
 }

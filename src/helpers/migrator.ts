@@ -33,7 +33,7 @@ export const getMigratorFromSlug = (slug: string): Migrator => {
 				isFileMigrator: true,
 			}
 		default:
-			throw Error('Unknown migrator slug ' + slug)
+			throw new Error('Unknown migrator slug ' + slug)
 	}
 }
 

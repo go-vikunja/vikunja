@@ -16,16 +16,16 @@
 					/>
 				</div>
 				<div class="control">
-					<x-button @click="setApiUrl" :disabled="apiUrl === ''">
+					<x-button @click="setApiUrl" :disabled="apiUrl === '' || null">
 						{{ $t('apiConfig.change') }}
 					</x-button>
 				</div>
 			</div>
 		</div>
 		<div class="api-url-info" v-else>
-			<i18n path="apiConfig.signInOn">
+			<i18n-t keypath="apiConfig.signInOn">
 				<span class="url" v-tooltip="apiUrl"> {{ apiDomain }} </span>
-			</i18n>
+			</i18n-t>
 			<br />
 			<a @click="() => (configureApi = true)">{{ $t('apiConfig.change') }}</a>
 		</div>
@@ -60,6 +60,7 @@ export default {
 			successMsg: '',
 		}
 	},
+	emits: ['foundApi'],
 	created() {
 		if (this.apiUrl === '') {
 			this.configureApi = true
@@ -105,7 +106,7 @@ export default {
 						window.API_URL = urlToCheck.toString()
 						return this.$store.dispatch('config/update')
 					}
-					return Promise.reject(e)
+					throw e
 				})
 				.catch((e) => {
 					// Check if it has a port and if not check if it is reachable at https
@@ -114,7 +115,7 @@ export default {
 						window.API_URL = urlToCheck.toString()
 						return this.$store.dispatch('config/update')
 					}
-					return Promise.reject(e)
+					throw e
 				})
 				.catch((e) => {
 					// Check if it is reachable at /api/v1 and https
@@ -127,7 +128,7 @@ export default {
 						window.API_URL = urlToCheck.toString()
 						return this.$store.dispatch('config/update')
 					}
-					return Promise.reject(e)
+					throw e
 				})
 				.catch((e) => {
 					// Check if it is reachable at port API_DEFAULT_PORT and https
@@ -137,7 +138,7 @@ export default {
 						window.API_URL = urlToCheck.toString()
 						return this.$store.dispatch('config/update')
 					}
-					return Promise.reject(e)
+					throw e
 				})
 				.catch((e) => {
 					// Check if it is reachable at :API_DEFAULT_PORT and /api/v1 and https
@@ -150,7 +151,7 @@ export default {
 						window.API_URL = urlToCheck.toString()
 						return this.$store.dispatch('config/update')
 					}
-					return Promise.reject(e)
+					throw e
 				})
 				.catch((e) => {
 					// Check if it is reachable at port API_DEFAULT_PORT and http
@@ -160,7 +161,7 @@ export default {
 						window.API_URL = urlToCheck.toString()
 						return this.$store.dispatch('config/update')
 					}
-					return Promise.reject(e)
+					throw e
 				})
 				.catch((e) => {
 					// Check if it is reachable at :API_DEFAULT_PORT and /api/v1 and http
@@ -173,7 +174,7 @@ export default {
 						window.API_URL = urlToCheck.toString()
 						return this.$store.dispatch('config/update')
 					}
-					return Promise.reject(e)
+					throw e
 				})
 				.catch(() => {
 					// Still not found, url is still invalid

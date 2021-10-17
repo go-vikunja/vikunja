@@ -52,6 +52,7 @@ export default {
 			default: false,
 		},
 	},
+	emits: ['click'],
 	computed: {
 		showIconOnly() {
 			return this.icon !== '' && typeof this.$slots.default === 'undefined'

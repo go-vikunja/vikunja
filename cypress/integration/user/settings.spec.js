@@ -12,7 +12,7 @@ describe('User Settings', () => {
 
 		cy.get('input[name=avatarProvider][value=upload]')
 			.click()
-		cy.get('input[type=file]')
+		cy.get('input[type=file]', { timeout: 1000 })
 			.attachFile('image.jpg')
 		cy.get('.vue-handler-wrapper.vue-handler-wrapper--south .vue-simple-handler.vue-simple-handler--south')
 			.trigger('mousedown', {which: 1})

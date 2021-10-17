@@ -1,5 +1,5 @@
 <template>
-	<create-edit :title="$t('list.create.header')" @create="newList()" :create-disabled="list.title === ''">
+	<create-edit :title="$t('list.create.header')" @create="newList()" :primary-disabled="list.title === ''">
 		<div class="field">
 			<label class="label" for="listTitle">{{ $t('list.title') }}</label>
 			<div
@@ -54,26 +54,20 @@ export default {
 		this.setTitle(this.$t('list.create.header'))
 	},
 	methods: {
-		newList() {
+		async newList() {
 			if (this.list.title === '') {
 				this.showError = true
 				return
 			}
 			this.showError = false
 
-			this.list.namespaceId = this.$route.params.id
-			this.$store
-				.dispatch('lists/createList', this.list)
-				.then((r) => {
-					this.$message.success({message: this.$t('list.create.createdSuccess') })
-					this.$router.push({
-						name: 'list.index',
-						params: { listId: r.id },
-					})
-				})
-				.catch((e) => {
-					this.$message.error(e)
-				})
+			this.list.namespaceId = parseInt(this.$route.params.id)
+			const list = await this.$store.dispatch('lists/createList', this.list)
+			this.$message.success({message: this.$t('list.create.createdSuccess') })
+			this.$router.push({
+				name: 'list.index',
+				params: { listId: list.id },
+			})
 		},
 	},
 }

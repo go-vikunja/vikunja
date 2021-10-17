@@ -32,44 +32,43 @@ export default {
 		}
 	},
 	props: {
-		value: {
+		modelValue: {
 			required: false,
 		},
 	},
+	emits: ['update:modelValue', 'selected'],
 	components: {
 		Multiselect,
 	},
 	watch: {
-		value: {
+		modelValue: {
 			handler(value) {
 				this.list = value
 			},
 			immeditate: true,
+			deep: true,
 		},
 	},
 	methods: {
-		findLists(query) {
+		async findLists(query) {
 			if (query === '') {
 				this.clearAll()
 				return
 			}
 
-			this.listSerivce.getAll({}, {s: query})
-				.then(response => {
-					this.$set(this, 'foundLists', response)
-				})
-				.catch(e => {
-					this.$message.error(e)
-				})
+			this.foundLists = await this.listSerivce.getAll({}, {s: query})
 		},
+
 		clearAll() {
-			this.$set(this, 'foundLists', [])
+			this.foundLists = []
 		},
+
 		select(list) {
 			this.list = list
 			this.$emit('selected', list)
-			this.$emit('input', list)
+			this.$emit('update:modelValue', list)
 		},
+
 		namespace(namespaceId) {
 			const namespace = this.$store.getters['namespaces/getNamespaceById'](namespaceId)
 			if (namespace !== null) {

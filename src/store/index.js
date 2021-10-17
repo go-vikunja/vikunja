@@ -1,8 +1,7 @@
-import Vue from 'vue'
-import Vuex from 'vuex'
+import {createStore} from 'vuex'
 import {
+	BACKGROUND,
 	CURRENT_LIST,
-	ERROR_MESSAGE,
 	HAS_TASKS,
 	KEYBOARD_SHORTCUTS_ACTIVE,
 	LOADING,
@@ -21,9 +20,7 @@ import labels from './modules/labels'
 
 import ListService from '../services/list'
 
-Vue.use(Vuex)
-
-export const store = new Vuex.Store({
+export const store = createStore({
 	strict: import.meta.env.DEV,
 	modules: {
 		config,
@@ -38,7 +35,6 @@ export const store = new Vuex.Store({
 	state: {
 		loading: false,
 		loadingModule: null,
-		errorMessage: '',
 		online: true,
 		// This is used to highlight the current list in menu for all list related views
 		currentList: {id: 0},
@@ -55,17 +51,46 @@ export const store = new Vuex.Store({
 		[LOADING_MODULE](state, module) {
 			state.loadingModule = module
 		},
-		[ERROR_MESSAGE](state, error) {
-			state.errorMessage = error
-		},
 		[ONLINE](state, online) {
-			state.online = import.meta.env.VITE_IS_ONLINE || online
+			if (import.meta.env.VITE_IS_ONLINE) {
+				console.log('Setting fake online state', import.meta.env.VITE_IS_ONLINE)
+			}
+			state.online = !!import.meta.env.VITE_IS_ONLINE || online
 		},
 		[CURRENT_LIST](state, currentList) {
+			// Server updates don't return the right. Therefore the right is reset after updating the list which is
+			// confusing because all the buttons will disappear in that case. To prevent this, we're keeping the right
+			// when updating the list in global state.
+			if (typeof state.currentList.maxRight !== 'undefined' && (typeof currentList.maxRight === 'undefined' || currentList.maxRight === null)) {
+				currentList.maxRight = state.currentList.maxRight
+			}
+			state.currentList = currentList
+		},
+		[HAS_TASKS](state, hasTasks) {
+			state.hasTasks = hasTasks
+		},
+		[MENU_ACTIVE](state, menuActive) {
+			state.menuActive = menuActive
+		},
+		toggleMenu(state) {
+			state.menuActive = !state.menuActive
+		},
+		[KEYBOARD_SHORTCUTS_ACTIVE](state, active) {
+			state.keyboardShortcutsActive = active
+		},
+		[QUICK_ACTIONS_ACTIVE](state, active) {
+			state.quickActionsActive = active
+		},
+		[BACKGROUND](state, background) {
+			state.background = background
+		},
+	},
+	actions: {
+		async [CURRENT_LIST]({state, commit}, currentList) {
 
 			if (currentList === null) {
-				state.currentList = {}
-				state.background = null
+				commit(CURRENT_LIST, {})
+				commit(BACKGROUND, null)
 				return
 			}
 
@@ -97,45 +122,21 @@ export const store = new Vuex.Store({
 				)
 			) {
 				if (currentList.backgroundInformation) {
-					const listService = new ListService()
-					listService.background(currentList)
-						.then(b => {
-							state.background = b
-						})
-						.catch(e => {
-							console.error('Error getting background image for list', currentList.id, e)
-						})
-				} else {
-					state.background = null
+					try {
+						const listService = new ListService()
+						const background = await listService.background(currentList)
+						commit(BACKGROUND, background)
+					} catch(e) {
+						console.error('Error getting background image for list', currentList.id, e)
+					}
 				}
 			}
 
 			if (typeof currentList.backgroundInformation === 'undefined' || currentList.backgroundInformation === null) {
-				state.background = null
+				commit(BACKGROUND, null)
 			}
 
-			// Server updates don't return the right. Therefore the right is reset after updating the list which is
-			// confusing because all the buttons will disappear in that case. To prevent this, we're keeping the right
-			// when updating the list in global state.
-			if (typeof state.currentList.maxRight !== 'undefined' && (typeof currentList.maxRight === 'undefined' || currentList.maxRight === null)) {
-				currentList.maxRight = state.currentList.maxRight
-			}
-			state.currentList = currentList
-		},
-		[HAS_TASKS](state, hasTasks) {
-			state.hasTasks = hasTasks
-		},
-		[MENU_ACTIVE](state, menuActive) {
-			state.menuActive = menuActive
-		},
-		toggleMenu(state) {
-			state.menuActive = !state.menuActive
-		},
-		[KEYBOARD_SHORTCUTS_ACTIVE](state, active) {
-			state.keyboardShortcutsActive = active
-		},
-		[QUICK_ACTIONS_ACTIVE](state, active) {
-			state.quickActionsActive = active
+			commit(CURRENT_LIST, currentList)
 		},
 	},
 })

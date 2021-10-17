@@ -1,31 +1,43 @@
 <template>
 	<div class="color-picker-container">
-		<verte
-			:showHistory="true"
-			:colorHistory="[
-				'#1973ff',
-				'#7F23FF',
-				'#ff4136',
-				'#ff851b',
-				'#ffeb10',
-				'#00db60',
-			]"
-			:enableAlpha="false"
-			:menuPosition="menuPosition"
-			:rgbSliders="true"
-			model="hex"
-			picker="square"
-			v-model="color"
-			:class="{'is-empty': empty}"
-		/>
-		<x-button @click="reset" class="is-small ml-2" :shadow="false" type="secondary">
+		<datalist :id="colorListID">
+			<option v-for="color in defaultColors" :key="color" :value="color" />
+		</datalist>
+		
+		<div class="picker">
+			<input
+				class="picker__input"
+				type="color"
+				v-model="color"
+				:list="colorListID"
+				:class="{'is-empty': isEmpty}"
+			/>
+			<svg class="picker__pattern" v-show="isEmpty" viewBox="0 0 22 22" fill="fff">
+				<pattern id="checker" width="11" height="11" patternUnits="userSpaceOnUse" fill="FFF">
+					<rect fill="#cccccc" x="0" width="5.5" height="5.5" y="0"></rect>
+					<rect fill="#cccccc" x="5.5" width="5.5" height="5.5" y="5.5"></rect>
+				</pattern>
+				<rect width="22" height="22" fill="url(#checker)"></rect>
+			</svg>
+		</div>
+
+		<x-button :disabled="isEmpty" @click="reset" class="is-small ml-2" :shadow="false" type="secondary">
 			{{ $t('input.resetColor') }}
 		</x-button>
 	</div>
 </template>
 
 <script>
-import verte from 'verte'
+import {createRandomID} from '@/helpers/randomId'
+
+const DEFAULT_COLORS = [
+	'#1973ff',
+	'#7F23FF',
+	'#ff4136',
+	'#ff851b',
+	'#ffeb10',
+	'#00db60',
+]
 
 export default {
 	name: 'colorPicker',
@@ -33,13 +45,12 @@ export default {
 		return {
 			color: '',
 			lastChangeTimeout: null,
+			defaultColors: DEFAULT_COLORS,
+			colorListID: createRandomID(),
 		}
 	},
-	components: {
-		verte,
-	},
 	props: {
-		value: {
+		modelValue: {
 			required: true,
 		},
 		menuPosition: {
@@ -47,10 +58,11 @@ export default {
 			default: 'top',
 		},
 	},
+	emits: ['update:modelValue', 'change'],
 	watch: {
-		value: {
-			handler(value) {
-				this.color = value
+		modelValue: {
+			handler(modelValue) {
+				this.color = modelValue
 			},
 			immediate: true,
 		},
@@ -59,14 +71,14 @@ export default {
 		},
 	},
 	computed: {
-		empty() {
+		isEmpty() {
 			return this.color === '#000000' || this.color === ''
 		},
 	},
 	methods: {
 		update(force = false) {
 
-			if(this.empty && !force) {
+			if(this.isEmpty && !force) {
 				return
 			}
 
@@ -75,7 +87,7 @@ export default {
 			}
 
 			this.lastChangeTimeout = setTimeout(() => {
-				this.$emit('input', this.color)
+				this.$emit('update:modelValue', this.color)
 				this.$emit('change')
 			}, 500)
 		},
@@ -88,17 +100,3 @@ export default {
 	},
 }
 </script>
-
-<style lang="scss">
-@import 'verte/dist/verte.css';
-
-.verte.is-empty {
-	.verte__icon {
-		opacity: 0;
-	}
-
-	.verte__guide {
-		background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAGklEQVQYlWM4c+bMf3TMgA0MBYWDzDkUKQQAlHCpV9ycHeMAAAAASUVORK5CYII=);
-	}
-}
-</style>

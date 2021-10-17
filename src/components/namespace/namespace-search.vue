@@ -14,6 +14,7 @@ import Multiselect from '@/components/input/multiselect.vue'
 
 export default {
 	name: 'namespace-search',
+	emits: ['selected'],
 	data() {
 		return {
 			query: '',

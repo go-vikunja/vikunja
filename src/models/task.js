@@ -24,16 +24,12 @@ export default class TaskModel extends AbstractModel {
 		this.endDate = parseDateOrNull(this.endDate)
 		this.doneAt = parseDateOrNull(this.doneAt)
 
+		this.reminderDates = this.reminderDates.map(d => new Date(d))
 		// Cancel all scheduled notifications for this task to be sure to only have available notifications
-		this.cancelScheduledNotifications()
-			.then(() => {
-				this.reminderDates = this.reminderDates.map(d => {
-					d = new Date(d)
-					// Every time we see a reminder, we schedule a notification for it
-					this.scheduleNotification(d)
-					return d
-				})
-			})
+		this.cancelScheduledNotifications().then(() => {
+			// Every time we see a reminder, we schedule a notification for it
+			this.reminderDates.forEach(d => this.scheduleNotification(d))
+		})
 
 		// Parse the repeat after into something usable
 		this.parseRepeatAfter()
@@ -218,27 +214,26 @@ export default class TaskModel extends AbstractModel {
 		}
 
 		// Register the actual notification
-		registration.showNotification('Vikunja Reminder', {
-			tag: `vikunja-task-${this.id}`, // Group notifications by task id so we're only showing one notification per task
-			body: this.title,
-			// eslint-disable-next-line no-undef
-			showTrigger: new TimestampTrigger(date),
-			badge: '/images/icons/badge-monochrome.png',
-			icon: '/images/icons/android-chrome-512x512.png',
-			data: {taskId: this.id},
-			actions: [
-				{
-					action: 'show-task',
-					title: 'Show task',
-				},
-			],
-		})
-			.then(() => {
-				console.debug('Notification scheduled for ' + date)
+		try {
+			registration.showNotification('Vikunja Reminder', {
+				tag: `vikunja-task-${this.id}`, // Group notifications by task id so we're only showing one notification per task
+				body: this.title,
+				// eslint-disable-next-line no-undef
+				showTrigger: new TimestampTrigger(date),
+				badge: '/images/icons/badge-monochrome.png',
+				icon: '/images/icons/android-chrome-512x512.png',
+				data: {taskId: this.id},
+				actions: [
+					{
+						action: 'show-task',
+						title: 'Show task',
+					},
+				],
 			})
-			.catch(e => {
-				console.debug('Error scheduling notification', e)
-			})
+			console.debug('Notification scheduled for ' + date)
+		} catch(e) {
+			throw new Error('Error scheduling notification', e)
+		}
 	}
 }
 

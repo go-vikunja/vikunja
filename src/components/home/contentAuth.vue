@@ -22,9 +22,11 @@
 
 				<router-view/>
 
-				<transition name="modal">
-					<router-view name="popup"/>
-				</transition>
+				<router-view name="popup" v-slot="{ Component }">
+					<transition name="modal">
+						<component :is="Component" />
+					</transition>
+				</router-view>
 
 				<a
 					class="keyboard-shortcuts-button"
@@ -84,7 +86,7 @@ export default {
 				this.$route.name === 'user.settings' ||
 				this.$route.name === 'namespaces.index'
 			) {
-				this.$store.commit(CURRENT_LIST, null)
+				return this.$store.dispatch(CURRENT_LIST, null)
 			}
 		},
 		renewTokenOnFocus() {
@@ -126,9 +128,6 @@ export default {
 		},
 		loadLabels() {
 			this.$store.dispatch('labels/loadAllLabels')
-				.catch(e => {
-					this.$message.error(e)
-				})
 		},
 	},
 }

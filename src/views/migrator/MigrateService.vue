@@ -32,7 +32,7 @@ export default {
 			this.identifier = identifier
 			this.isFileMigrator = isFileMigrator
 		} catch (e) {
-			this.$router.push({name: '404'})
+			this.$router.push({name: 'not-found'})
 		}
 	},
 }

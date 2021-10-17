@@ -1,12 +1,10 @@
-import Vue from 'vue'
-import VueI18n from 'vue-i18n'
+import { createI18n } from 'vue-i18n'
 import langEN from './lang/en.json'
 
-Vue.use(VueI18n)
-
-export const i18n = new VueI18n({
+export const i18n = createI18n({
 	locale: 'en', // set locale
 	fallbackLocale: 'en',
+	globalInjection: true,
 	messages: {
 		en: langEN,
 	},
@@ -23,26 +21,25 @@ export const availableLanguages = {
 const loadedLanguages = ['en'] // our default language that is preloaded
 
 const setI18nLanguage = lang => {
-	i18n.locale = lang
+	i18n.global.locale = lang
 	document.querySelector('html').setAttribute('lang', lang)
 	return lang
 }
 
 export const loadLanguageAsync = lang => {
-	// If the same language
-	if (i18n.locale === lang) {
-		return Promise.resolve(setI18nLanguage(lang))
-	}
-
-	// If the language was already loaded
-	if (loadedLanguages.includes(lang)) {
-		return Promise.resolve(setI18nLanguage(lang))
+	if (
+		// If the same language
+		i18n.global.locale === lang ||
+		// If the language was already loaded
+		loadedLanguages.includes(lang)
+	) {
+		return setI18nLanguage(lang)
 	}
 
 	// If the language hasn't been loaded yet
 	return import(`./lang/${lang}.json`).then(
 		messages => {
-			i18n.setLocaleMessage(lang, messages.default)
+			i18n.global.setLocaleMessage(lang, messages.default)
 			loadedLanguages.push(lang)
 			return setI18nLanguage(lang)
 		},

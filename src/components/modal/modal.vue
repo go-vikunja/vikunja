@@ -102,6 +102,7 @@ export default {
 			validator: validValue(VARIANTS),
 		},
 	},
+	emits: ['close', 'submit'],
 }
 </script>
 

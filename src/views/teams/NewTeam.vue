@@ -2,7 +2,7 @@
 	<create-edit
 		:title="$t('team.create.title')"
 		@create="newTeam()"
-		:create-disabled="team.name === ''"
+		:primary-disabled="team.name === ''"
 	>
 		<div class="field">
 			<label class="label" for="teamName">{{ $t('team.attributes.name') }}</label>
@@ -49,25 +49,19 @@ export default {
 		this.setTitle(this.$t('team.create.title'))
 	},
 	methods: {
-		newTeam() {
+		async newTeam() {
 			if (this.team.name === '') {
 				this.showError = true
 				return
 			}
 			this.showError = false
 
-			this.teamService
-				.create(this.team)
-				.then((response) => {
-					this.$router.push({
-						name: 'teams.edit',
-						params: { id: response.id },
-					})
-					this.$message.success({message: this.$t('team.create.success') })
-				})
-				.catch((e) => {
-					this.$message.error(e)
-				})
+			const response = await this.teamService.create(this.team)
+			this.$router.push({
+				name: 'teams.edit',
+				params: { id: response.id },
+			})
+			this.$message.success({message: this.$t('team.create.success') })
 		},
 	},
 }

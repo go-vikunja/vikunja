@@ -2,7 +2,7 @@
 	<div :class="{'is-disabled': disabled}" class="fancycheckbox">
 		<input
 			:checked="checked"
-			:disabled="disabled"
+			:disabled="disabled || null"
 			:id="checkBoxId"
 			@change="(event) => updateData(event.target.checked)"
 			style="display: none;"
@@ -21,16 +21,18 @@
 </template>
 
 <script>
+import {createRandomID} from '@/helpers/randomId'
+
 export default {
 	name: 'fancycheckbox',
 	data() {
 		return {
 			checked: false,
-			checkBoxId: 'fancycheckbox' + Math.random(),
+			checkBoxId: `fancycheckbox_${createRandomID()}`,
 		}
 	},
 	props: {
-		value: {
+		modelValue: {
 			required: false,
 		},
 		disabled: {
@@ -39,10 +41,11 @@ export default {
 			default: false,
 		},
 	},
+	emits: ['update:modelValue', 'change'],
 	watch: {
-		value: {
-			handler(value) {
-				this.checked = value
+		modelValue: {
+			handler(modelValue) {
+				this.checked = modelValue
 
 			},
 			immediate: true,
@@ -51,7 +54,7 @@ export default {
 	methods: {
 		updateData(checked) {
 			this.checked = checked
-			this.$emit('input', checked)
+			this.$emit('update:modelValue', checked)
 			this.$emit('change', checked)
 		},
 	},

@@ -50,9 +50,9 @@
 				</x-button>
 			</div>
 			<filter-popup
-				@change="loadTasks(1)"
 				:visible="showTaskFilter"
 				v-model="params"
+				@update:modelValue="loadTasks()"
 			/>
 		</div>
 
@@ -87,28 +87,33 @@
 						@end="saveTaskPosition"
 						handle=".handle"
 						:disabled="!canWrite"
-						:class="{'dragging-disabled': !canWrite}"
+						item-key="id"
+						:component-data="{
+							class: { 'dragging-disabled': !canWrite },
+						}"
 					>
-						<single-task-in-list
-							:show-list-color="false"
-							:disabled="!canWrite"
-							:key="t.id"
-							:the-task="t"
-							@taskUpdated="updateTasks"
-							task-detail-route="task.detail"
-							v-for="t in tasks"
-						>
-							<span class="icon handle" v-if="canWrite">
-								<icon icon="grip-lines"/>
-							</span>
-							<div
-								@click="editTask(t.id)"
-								class="icon settings"
-								v-if="!list.isArchived && canWrite"
+						<template #item="{element: t}">
+							<single-task-in-list
+								:show-list-color="false"
+								:disabled="!canWrite"
+								:the-task="t"
+								@taskUpdated="updateTasks"
+								task-detail-route="task.detail"
 							>
-								<icon icon="pencil-alt"/>
-							</div>
-						</single-task-in-list>
+								<template v-if="canWrite">
+									<span class="icon handle">
+										<icon icon="grip-lines"/>
+									</span>
+									<div
+										@click="editTask(t.id)"
+										class="icon settings"
+										v-if="!list.isArchived"
+									>
+										<icon icon="pencil-alt"/>
+									</div>
+								</template>
+							</single-task-in-list>
+						</template>
 					</draggable>
 				</div>
 				<card
@@ -127,9 +132,11 @@
 		</card>
 
 		<!-- This router view is used to show the task popup while keeping the kanban board itself -->
-		<transition name="modal">
-			<router-view/>
-		</transition>
+		<router-view v-slot="{ Component }">
+			<transition name="modal">
+				<component :is="Component" />
+			</transition>
+		</router-view>
 	</div>
 </template>
 
@@ -146,7 +153,6 @@ import Rights from '../../../models/constants/rights.json'
 import FilterPopup from '@/components/list/partials/filter-popup.vue'
 import {HAS_TASKS} from '@/store/mutation-types'
 import Nothing from '@/components/misc/nothing.vue'
-import createTask from '@/components/tasks/mixins/createTask'
 import Pagination from '@/components/misc/pagination.vue'
 
 import draggable from 'vuedraggable'
@@ -189,7 +195,6 @@ export default {
 	},
 	mixins: [
 		taskList,
-		createTask,
 	],
 	components: {
 		Nothing,
@@ -279,13 +284,14 @@ export default {
 		updateTasks(updatedTask) {
 			for (const t in this.tasks) {
 				if (this.tasks[t].id === updatedTask.id) {
-					this.$set(this.tasks, t, updatedTask)
+					this.tasks[t] = updatedTask
 					break
 				}
 			}
 			sortTasks(this.tasks)
 		},
-		saveTaskPosition(e) {
+
+		async saveTaskPosition(e) {
 			this.drag = false
 			
 			const task = this.tasks[e.newIndex]
@@ -297,13 +303,8 @@ export default {
 				position: calculateItemPosition(taskBefore !== null ? taskBefore.position : null, taskAfter !== null ? taskAfter.position : null),
 			}
 
-			this.$store.dispatch('tasks/update', newTask)
-				.then(r => {
-					this.$set(this.tasks, e.newIndex, r)
-				})
-				.catch(e => {
-					this.$message.error(e)
-				})
+			const updatedTask = await this.$store.dispatch('tasks/update', newTask)
+			this.tasks[e.newIndex] = updatedTask
 		},
 	},
 }

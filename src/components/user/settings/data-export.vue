@@ -43,28 +43,22 @@ export default {
 	name: 'data-export',
 	data() {
 		return {
-			dataExportService: DataExportService,
+			dataExportService: new DataExportService(),
 			password: '',
 			errPasswordRequired: false,
 		}
 	},
-	created() {
-		this.dataExportService = new DataExportService()
-	},
 	methods: {
-		requestDataExport() {
+		async requestDataExport() {
 			if (this.password === '') {
 				this.errPasswordRequired = true
 				this.$refs.passwordInput.focus()
 				return
 			}
 
-			this.dataExportService.request(this.password)
-				.then(() => {
-					this.$message.success({message: this.$t('user.export.success')})
-					this.password = ''
-				})
-				.catch(e => this.$message.error(e))
+			await this.dataExportService.request(this.password)
+			this.$message.success({message: this.$t('user.export.success')})
+			this.password = ''
 		},
 	},
 }

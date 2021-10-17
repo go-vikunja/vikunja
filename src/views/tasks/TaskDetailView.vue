@@ -265,7 +265,7 @@
 					/>
 					<x-button
 						@click="setFieldActive('assignees')"
-						@shortkey.native="setFieldActive('assignees')"
+						@shortkey="setFieldActive('assignees')"
 						type="secondary"
 						v-shortkey="['a']">
 						<span class="icon is-small"><icon icon="users"/></span>
@@ -273,7 +273,7 @@
 					</x-button>
 					<x-button
 						@click="setFieldActive('labels')"
-						@shortkey.native="setFieldActive('labels')"
+						@shortkey="setFieldActive('labels')"
 						type="secondary"
 						v-shortkey="['l']"
 						icon="tags"
@@ -289,7 +289,7 @@
 					</x-button>
 					<x-button
 						@click="setFieldActive('dueDate')"
-						@shortkey.native="setFieldActive('dueDate')"
+						@shortkey="setFieldActive('dueDate')"
 						type="secondary"
 						v-shortkey="['d']"
 						icon="calendar"
@@ -333,7 +333,7 @@
 					</x-button>
 					<x-button
 						@click="setFieldActive('attachments')"
-						@shortkey.native="setFieldActive('attachments')"
+						@shortkey="setFieldActive('attachments')"
 						type="secondary"
 						v-shortkey="['f']"
 						icon="paperclip"
@@ -342,7 +342,7 @@
 					</x-button>
 					<x-button
 						@click="setFieldActive('relatedTasks')"
-						@shortkey.native="setFieldActive('relatedTasks')"
+						@shortkey="setFieldActive('relatedTasks')"
 						type="secondary"
 						v-shortkey="['r']"
 						icon="tasks"
@@ -381,22 +381,22 @@
 
 					<!-- Created / Updated [by] -->
 					<p class="created">
-						<i18n path="task.detail.created">
+						<i18n-t keypath="task.detail.created">
 							<span v-tooltip="formatDate(task.created)">{{ formatDateSince(task.created) }}</span>
 							{{ task.createdBy.getDisplayName() }}
-						</i18n>
+						</i18n-t>
 						<template v-if="+new Date(task.created) !== +new Date(task.updated)">
 							<br/>
 							<!-- Computed properties to show the actual date every time it gets updated -->
-							<i18n path="task.detail.updated">
+							<i18n-t keypath="task.detail.updated">
 								<span v-tooltip="updatedFormatted">{{ updatedSince }}</span>
-							</i18n>
+							</i18n-t>
 						</template>
 						<template v-if="task.done">
 							<br/>
-							<i18n path="task.detail.doneAt">
+							<i18n-t keypath="task.detail.doneAt">
 								<span v-tooltip="doneFormatted">{{ doneSince }}</span>
-							</i18n>
+							</i18n-t>
 						</template>
 					</p>
 				</div>
@@ -508,6 +508,15 @@ export default {
 			handler: 'loadTask',
 			immediate: true,
 		},
+		parent: {
+			handler(parent) {
+				const parentList = parent !== null ? parent.list : null
+				if (parentList !== null) {
+					this.$store.commit(CURRENT_LIST, parentList)
+				}
+			},
+			immediate: true,
+		},
 	},
 	computed: {
 		taskId() {
@@ -529,9 +538,7 @@ export default {
 				return null
 			}
 
-			const list = this.$store.getters['namespaces/getListAndNamespaceById'](this.task.listId)
-			this.$store.commit(CURRENT_LIST, list !== null ? list.list : this.currentList)
-			return list
+			return this.$store.getters['namespaces/getListAndNamespaceById'](this.task.listId)
 		},
 		canWrite() {
 			return typeof this.task !== 'undefined' && typeof this.task.maxRight !== 'undefined' && this.task.maxRight > rights.READ
@@ -557,26 +564,22 @@ export default {
 			return uploadFile(this.taskId, ...args)
 		},
 
-		loadTask(taskId) {
+		async loadTask(taskId) {
 			if (taskId === undefined) {
 				return
 			}
 
-			this.taskService.get({id: taskId})
-				.then(r => {
-					this.$set(this, 'task', r)
-					this.$store.commit('attachments/set', r.attachments)
-					this.taskColor = this.task.hexColor
-					this.setActiveFields()
-					this.setTitle(this.task.title)
-				})
-				.catch(e => {
-					this.$message.error(e)
-				})
-				.finally(() => {
-					this.$nextTick(() => this.visible = true)
-					this.scrollToHeading()
-				})
+			try {
+				this.task = await this.taskService.get({id: taskId})
+				this.$store.commit('attachments/set', this.task.attachments)
+				this.taskColor = this.task.hexColor
+				this.setActiveFields()
+				this.setTitle(this.task.title)
+			} finally {
+				this.scrollToHeading()
+				await this.$nextTick()
+				this.visible = true
+			}
 		},
 		scrollToHeading() {
 			this.$refs.heading.$el.scrollIntoView({block: 'center'})
@@ -599,46 +602,40 @@ export default {
 			this.activeFields.attachments = this.task.attachments.length > 0
 			this.activeFields.relatedTasks = Object.keys(this.task.relatedTasks).length > 0
 		},
-		saveTask(showNotification = true, undoCallback = null) {
-
+		async saveTask(showNotification = true, undoCallback = null) {
 			if (!this.canWrite) {
 				return
 			}
 
 			// We're doing the whole update in a nextTick because sometimes race conditions can occur when
 			// setting the due date on mobile which leads to no due date change being saved.
-			this.$nextTick(() => {
-				this.task.hexColor = this.taskColor
+			await this.$nextTick()
 
-				// If no end date is being set, but a start date and due date,
-				// use the due date as the end date
-				if (this.task.endDate === null && this.task.startDate !== null && this.task.dueDate !== null) {
-					this.task.endDate = this.task.dueDate
-				}
+			this.task.hexColor = this.taskColor
 
-				this.$store.dispatch('tasks/update', this.task)
-					.then(r => {
-						this.task = r
-						this.setActiveFields()
+			// If no end date is being set, but a start date and due date,
+			// use the due date as the end date
+			if (this.task.endDate === null && this.task.startDate !== null && this.task.dueDate !== null) {
+				this.task.endDate = this.task.dueDate
+			}
 
-						if (!showNotification) {
-							return
-						}
+			this.task = await this.$store.dispatch('tasks/update', this.task)
+			this.setActiveFields()
 
-						let actions = []
-						if (undoCallback !== null) {
-							actions = [{
-								title: 'Undo',
-								callback: undoCallback,
-							}]
-						}
-						this.$message.success({message: this.$t('task.detail.updateSuccess')}, actions)
-					})
-					.catch(e => {
-						this.$message.error(e)
-					})
-			})
+			if (!showNotification) {
+				return
+			}
+
+			let actions = []
+			if (undoCallback !== null) {
+				actions = [{
+					title: 'Undo',
+					callback: undoCallback,
+				}]
+			}
+			this.$message.success({message: this.$t('task.detail.updateSuccess')}, actions)
 		},
+
 		setFieldActive(fieldName) {
 			this.activeFields[fieldName] = true
 			this.$nextTick(() => {
@@ -657,16 +654,13 @@ export default {
 				}
 			})
 		},
-		deleteTask() {
-			this.$store.dispatch('tasks/delete', this.task)
-				.then(() => {
-					this.$message.success({message: this.$t('task.detail.deleteSuccess')})
-					this.$router.push({name: 'list.index', params: {listId: this.task.listId}})
-				})
-				.catch(e => {
-					this.$message.error(e)
-				})
+
+		async deleteTask() {
+			await this.$store.dispatch('tasks/delete', this.task)
+			this.$message.success({message: this.$t('task.detail.deleteSuccess')})
+			this.$router.push({name: 'list.index', params: {listId: this.task.listId}})
 		},
+
 		toggleTaskDone() {
 			this.task.done = !this.task.done
 
@@ -674,39 +668,26 @@ export default {
 				playPop()
 			}
 
-			this.saveTask(true, () => this.toggleTaskDone())
+			this.saveTask(true, this.toggleTaskDone)
 		},
+
 		setDescriptionChanged(e) {
 			if (e.key === 'Enter' || e.key === 'Control') {
 				return
 			}
 			this.descriptionChanged = true
 		},
-		saveTaskIfDescriptionChanged() {
-			// We want to only save the description if it was changed.
-			// Since we can either trigger this with ctrl+enter or @change, it would be possible to save a task first
-			// with ctrl+enter and then with @change although nothing changed since the last save when @change gets fired.
-			// To only save one time we added this method.
-			if (this.descriptionChanged) {
-				this.descriptionChanged = false
-				this.saveTask()
-			}
-		},
-		changeList(list) {
-			this.task.listId = list.id
-			this.saveTask()
+
+		async changeList(list) {
 			this.$store.commit('kanban/removeTaskInBucket', this.task)
+			this.task.listId = list.id
+			await this.saveTask()
 		},
-		toggleFavorite() {
+
+		async toggleFavorite() {
 			this.task.isFavorite = !this.task.isFavorite
-			this.taskService.update(this.task)
-				.then(t => {
-					this.task = t
-					this.$store.dispatch('namespaces/loadNamespacesIfFavoritesDontExist')
-				})
-				.catch(e => {
-					this.$message.error(e)
-				})
+			this.task = await this.taskService.update(this.task)
+			this.$store.dispatch('namespaces/loadNamespacesIfFavoritesDontExist')
 		},
 	},
 }

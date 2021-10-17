@@ -27,7 +27,6 @@
 				<div class="control">
 					<editor
 						:class="{ 'disabled': namespaceService.loading}"
-						:disabled="namespaceService.loading"
 						:preview-is-default="false"
 						id="namespacedescription"
 						:placeholder="$t('namespace.attributes.descriptionPlaceholder')"
@@ -57,12 +56,12 @@
 </template>
 
 <script>
+import AsyncEditor from '@/components/input/AsyncEditor'
+
 import NamespaceService from '@/services/namespace'
 import NamespaceModel from '@/models/namespace'
 import Fancycheckbox from '@/components/input/fancycheckbox.vue'
 import ColorPicker from '@/components/input/colorPicker.vue'
-import LoadingComponent from '@/components/misc/loading.vue'
-import ErrorComponent from '@/components/misc/error.vue'
 import CreateEdit from '@/components/misc/create-edit.vue'
 
 export default {
@@ -79,12 +78,7 @@ export default {
 		CreateEdit,
 		ColorPicker,
 		Fancycheckbox,
-		editor: () => ({
-			component: import('@/components/input/editor.vue'),
-			loading: LoadingComponent,
-			error: ErrorComponent,
-			timeout: 60000,
-		}),
+		editor: AsyncEditor,
 	},
 	beforeMount() {
 		this.namespace.id = this.$route.params.id
@@ -98,8 +92,8 @@ export default {
 		},
 	},
 	methods: {
-		loadNamespace() {
-			// This makes the editor trigger its mounted function again which makes it forget every input
+		async loadNamespace() {
+			// HACK: This makes the editor trigger its mounted function again which makes it forget every input
 			// it currently has in its textarea. This is a counter-hack to a hack inside of vue-easymde
 			// which made it impossible to detect change from the outside. Therefore the component would
 			// not update if new content from the outside was made available.
@@ -108,30 +102,20 @@ export default {
 			this.$nextTick(() => this.editorActive = true)
 
 			const namespace = new NamespaceModel({id: this.$route.params.id})
-			this.namespaceService.get(namespace)
-				.then(r => {
-					this.$set(this, 'namespace', r)
-					// This will trigger the dynamic loading of components once we actually have all the data to pass to them
-					this.manageTeamsComponent = 'manageSharing'
-					this.manageUsersComponent = 'manageSharing'
-					this.title = this.$t('namespace.edit.title', {namespace: r.title})
-					this.setTitle(this.title)
-				})
-				.catch(e => {
-					this.$message.error(e)
-				})
+			this.namespace = await this.namespaceService.get(namespace)
+			// This will trigger the dynamic loading of components once we actually have all the data to pass to them
+			this.manageTeamsComponent = 'manageSharing'
+			this.manageUsersComponent = 'manageSharing'
+			this.title = this.$t('namespace.edit.title', {namespace: this.namespace.title})
+			this.setTitle(this.title)
 		},
-		save() {
-			this.namespaceService.update(this.namespace)
-				.then(r => {
-					// Update the namespace in the parent
-					this.$store.commit('namespaces/setNamespaceById', r)
-					this.$message.success({message: this.$t('namespace.edit.success')})
-					this.$router.back()
-				})
-				.catch(e => {
-					this.$message.error(e)
-				})
+
+		async save() {
+			const namespace = await this.namespaceService.update(this.namespace)
+			// Update the namespace in the parent
+			this.$store.commit('namespaces/setNamespaceById', namespace)
+			this.$message.success({message: this.$t('namespace.edit.success')})
+			this.$router.back()
 		},
 	},
 }

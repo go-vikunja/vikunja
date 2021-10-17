@@ -2,6 +2,8 @@ import {createDateFromString} from '@/helpers/time/createDateFromString'
 import {format, formatDistanceToNow} from 'date-fns'
 import {enGB, de, fr, ru} from 'date-fns/locale'
 
+import {i18n} from '@/i18n'
+
 const locales = {en: enGB, de, ch: de, fr, ru}
 
 const dateIsValid = date => {
@@ -12,7 +14,7 @@ const dateIsValid = date => {
 	return date instanceof Date && !isNaN(date)
 }
 
-export const formatDate = (date, f, locale) => {
+export const formatDate = (date, f, locale = i18n.global.t('date.locale')) => {
 	if (!dateIsValid(date)) {
 		return ''
 	}
@@ -22,7 +24,15 @@ export const formatDate = (date, f, locale) => {
 	return date ? format(date, f, {locale: locales[locale]}) : ''
 }
 
-export const formatDateSince = (date, $t) => {
+export function formatDateLong(date) {
+	return formatDate(date, 'PPPPpppp')
+}
+
+export function formatDateShort(date) {
+	return formatDate(date, 'PPpp')
+}
+
+export const formatDateSince = (date) => {
 	if (!dateIsValid(date)) {
 		return ''
 	}
@@ -30,7 +40,7 @@ export const formatDateSince = (date, $t) => {
 	date = createDateFromString(date)
 
 	return formatDistanceToNow(date, {
-		locale: locales[$t('date.locale')],
+		locale: locales[i18n.global.t('date.locale')],
 		addSuffix: true,
 	})
 }

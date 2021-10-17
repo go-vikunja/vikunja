@@ -61,7 +61,6 @@ import TeamModel from '@/models/team'
 
 import {CURRENT_LIST, LOADING, LOADING_MODULE, QUICK_ACTIONS_ACTIVE} from '@/store/mutation-types'
 import ListModel from '@/models/list'
-import createTask from '@/components/tasks/mixins/createTask'
 import QuickAddMagic from '@/components/tasks/partials/quick-add-magic.vue'
 import {getHistory} from '../../modules/listHistory'
 
@@ -97,9 +96,6 @@ export default {
 			teamService: new TeamService(),
 		}
 	},
-	mixins: [
-		createTask,
-	],
 	computed: {
 		active() {
 			const active = this.$store.state[QUICK_ACTIONS_ACTIVE]
@@ -286,20 +282,17 @@ export default {
 				this.taskSearchTimeout = null
 			}
 
-			this.taskSearchTimeout = setTimeout(() => {
-				this.taskService.getAll({}, {s: query})
-					.then(r => {
-						r = r.map(t => {
-							t.type = TYPE_TASK
-							const list = this.$store.getters['lists/getListById'](t.listId) === null ? null : this.$store.getters['lists/getListById'](t.listId)
-							if (list !== null) {
-								t.title = `${t.title} (${list.title})`
-							}
+			this.taskSearchTimeout = setTimeout(async () => {
+				const r = await this.taskService.getAll({}, {s: query})
+				this.foundTasks = r.map(t => {
+					t.type = TYPE_TASK
+					const list = this.$store.getters['lists/getListById'](t.listId)
+					if (list !== null) {
+						t.title = `${t.title} (${list.title})`
+					}
 
-							return t
-						})
-						this.$set(this, 'foundTasks', r)
-					})
+					return t
+				})
 			}, 150)
 		},
 		searchTeams() {
@@ -322,15 +315,12 @@ export default {
 				this.teamSearchTimeout = null
 			}
 
-			this.teamSearchTimeout = setTimeout(() => {
-				this.teamService.getAll({}, {s: query})
-					.then(r => {
-						r = r.map(t => {
-							t.title = t.name
-							return t
-						})
-						this.$set(this, 'foundTeams', r)
-					})
+			this.teamSearchTimeout = setTimeout(async () => {
+				const r = await this.teamService.getAll({}, {s: query})
+				this.foundTeams = r.map(t => {
+					t.title = t.name
+					return t
+				})
 			}, 150)
 		},
 		closeQuickActions() {
@@ -382,22 +372,20 @@ export default {
 					break
 			}
 		},
-		newTask() {
+		async newTask() {
 			if (this.currentList === null) {
 				return
 			}
 
-			this.createNewTask(this.query, 0, this.currentList.id)
-				.then(r => {
-					this.$message.success({message: this.$t('task.createSuccess')})
-					this.$router.push({name: 'task.detail', params: {id: r.id}})
-					this.closeQuickActions()
-				})
-				.catch((e) => {
-					this.$message.error(e)
-				})
+			const task = await this.$store.dispatch('tasks/createNewTask', {
+				title: this.query,
+				listId: this.currentList.id,
+			})
+			this.$message.success({message: this.$t('task.createSuccess')})
+			this.$router.push({name: 'task.detail', params: {id: task.id}})
+			this.closeQuickActions()
 		},
-		newList() {
+		async newList() {
 			if (this.currentList === null) {
 				return
 			}
@@ -406,42 +394,27 @@ export default {
 				title: this.query,
 				namespaceId: this.currentList.namespaceId,
 			})
-			this.$store.dispatch('lists/createList', newList)
-				.then(r => {
-					this.$message.success({message: this.$t('list.create.createdSuccess')})
-					this.$router.push({name: 'list.index', params: {listId: r.id}})
-					this.closeQuickActions()
-				})
-				.catch((e) => {
-					this.$message.error(e)
-				})
+			const list = await this.$store.dispatch('lists/createList', newList)
+			this.$message.success({message: this.$t('list.create.createdSuccess')})
+			this.$router.push({name: 'list.index', params: {listId: list.id}})
+			this.closeQuickActions()
 		},
-		newNamespace() {
+		async newNamespace() {
 			const newNamespace = new NamespaceModel({title: this.query})
 
-			this.$store.dispatch('namespaces/createNamespace', newNamespace)
-				.then(() => {
-					this.$message.success({message: this.$t('namespace.create.success')})
-					this.closeQuickActions()
-				})
-				.catch((e) => {
-					this.$message.error(e)
-				})
+			await this.$store.dispatch('namespaces/createNamespace', newNamespace)
+			this.$message.success({message: this.$t('namespace.create.success')})
+			this.closeQuickActions()
 		},
-		newTeam() {
+		async newTeam() {
 			const newTeam = new TeamModel({name: this.query})
-			this.teamService.create(newTeam)
-				.then(r => {
-					this.$router.push({
-						name: 'teams.edit',
-						params: {id: r.id},
-					})
-					this.$message.success({message: this.$t('team.create.success')})
-					this.closeQuickActions()
-				})
-				.catch((e) => {
-					this.$message.error(e)
-				})
+			const team = await this.teamService.create(newTeam)
+			this.$router.push({
+				name: 'teams.edit',
+				params: {id: team.id},
+			})
+			this.$message.success({message: this.$t('team.create.success')})
+			this.closeQuickActions()
 		},
 		select(parentIndex, index) {
 

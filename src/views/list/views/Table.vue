@@ -59,9 +59,9 @@
 				</card>
 			</transition>
 			<filter-popup
-				@change="loadTasks(1)"
 				:visible="showTaskFilter"
 				v-model="params"
+				@update:modelValue="loadTasks()"
 			/>
 		</div>
 
@@ -179,9 +179,11 @@
 		</card>
 
 		<!-- This router view is used to show the task popup while keeping the table view itself -->
-		<transition name="modal">
-			<router-view/>
-		</transition>
+		<router-view v-slot="{ Component }">
+			<transition name="modal">
+				<component :is="Component" />
+			</transition>
+		</router-view>
 
 	</div>
 </template>
@@ -239,16 +241,16 @@ export default {
 	created() {
 		const savedShowColumns = localStorage.getItem('tableViewColumns')
 		if (savedShowColumns !== null) {
-			this.$set(this, 'activeColumns', JSON.parse(savedShowColumns))
+			this.activeColumns = JSON.parse(savedShowColumns)
 		}
 		const savedSortBy = localStorage.getItem('tableViewSortBy')
 		if (savedSortBy !== null) {
-			this.$set(this, 'sortBy', JSON.parse(savedSortBy))
+			this.sortBy = JSON.parse(savedSortBy)
 		}
 
-		this.$set(this.params, 'filter_by', [])
-		this.$set(this.params, 'filter_value', [])
-		this.$set(this.params, 'filter_comparator', [])
+		this.params.filter_by = []
+		this.params.filter_value = []
+		this.params.filter_comparator = []
 
 		this.initTasks(1)
 
@@ -286,11 +288,11 @@ export default {
 		sort(property) {
 			const order = this.sortBy[property]
 			if (typeof order === 'undefined' || order === 'none') {
-				this.$set(this.sortBy, property, 'desc')
+				this.sortBy[property] = 'desc'
 			} else if (order === 'desc') {
-				this.$set(this.sortBy, property, 'asc')
+				this.sortBy[property] = 'asc'
 			} else {
-				this.$delete(this.sortBy, property)
+				delete this.sortBy[property]
 			}
 			this.initTasks(this.currentPage, this.searchTerm)
 			// Save the order to be able to retrieve them later

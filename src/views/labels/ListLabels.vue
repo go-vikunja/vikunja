@@ -100,21 +100,16 @@
 import {mapState} from 'vuex'
 
 import LabelModel from '../../models/label'
-import ColorPicker from '../../components/input/colorPicker'
-import LoadingComponent from '../../components/misc/loading'
-import ErrorComponent from '../../components/misc/error'
 import {LOADING, LOADING_MODULE} from '@/store/mutation-types'
+
+import AsyncEditor from '@/components/input/AsyncEditor'
+import ColorPicker from '@/components/input/colorPicker'
 
 export default {
 	name: 'ListLabels',
 	components: {
 		ColorPicker,
-		editor: () => ({
-			component: import('../../components/input/editor'),
-			loading: LoadingComponent,
-			error: ErrorComponent,
-			timeout: 60000,
-		}),
+		editor: AsyncEditor,
 	},
 	data() {
 		return {
@@ -124,7 +119,7 @@ export default {
 		}
 	},
 	created() {
-		this.loadLabels()
+		this.$store.dispatch('labels/loadAllLabels')
 	},
 	mounted() {
 		this.setTitle(this.$t('label.title'))
@@ -136,29 +131,11 @@ export default {
 		loading: state => state[LOADING] && state[LOADING_MODULE] === 'labels',
 	}),
 	methods: {
-		loadLabels() {
-			this.$store.dispatch('labels/loadAllLabels')
-				.catch(e => {
-					this.$message.error(e)
-				})
-		},
 		deleteLabel(label) {
-			this.$store.dispatch('labels/deleteLabel', label)
-				.then(() => {
-					this.$message.success({message: this.$t('label.deleteSuccess')})
-				})
-				.catch(e => {
-					this.$message.error(e)
-				})
+			return this.$store.dispatch('labels/deleteLabel', label)
 		},
 		editLabelSubmit() {
-			this.$store.dispatch('labels/updateLabel', this.labelEditLabel)
-				.then(() => {
-					this.$message.success({message: this.$t('label.edit.success')})
-				})
-				.catch(e => {
-					this.$message.error(e)
-				})
+			return this.$store.dispatch('labels/updateLabel', this.labelEditLabel)
 		},
 		editLabel(label) {
 			if (label.createdBy.id !== this.userInfo.id) {

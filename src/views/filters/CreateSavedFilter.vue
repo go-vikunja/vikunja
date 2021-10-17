@@ -60,8 +60,8 @@
 </template>
 
 <script>
-import LoadingComponent from '@/components/misc/loading.vue'
-import ErrorComponent from '@/components/misc/error.vue'
+import AsyncEditor from '@/components/input/AsyncEditor'
+
 import Filters from '@/components/list/partials/filters.vue'
 import SavedFilterService from '@/services/savedFilter'
 import SavedFilterModel from '@/models/savedFilter'
@@ -86,26 +86,18 @@ export default {
 	},
 	components: {
 		Filters,
-		editor: () => ({
-			component: import('../../components/input/editor'),
-			loading: LoadingComponent,
-			error: ErrorComponent,
-			timeout: 60000,
-		}),
+		editor: AsyncEditor,
 	},
 	created() {
 		this.editorActive = false
 		this.$nextTick(() => this.editorActive = true)
 	},
 	methods: {
-		create() {
+		async create() {
 			this.savedFilter.filters = this.filters
-			this.savedFilterService.create(this.savedFilter)
-				.then(r => {
-					this.$store.dispatch('namespaces/loadNamespaces')
-					this.$router.push({name: 'list.index', params: {listId: r.getListId()}})
-				})
-				.catch(e => this.$message.error(e))
+			const savedFilter = await this.savedFilterService.create(this.savedFilter)
+			await this.$store.dispatch('namespaces/loadNamespaces')
+			this.$router.push({name: 'list.index', params: {listId: savedFilter.getListId()}})
 		},
 	},
 }

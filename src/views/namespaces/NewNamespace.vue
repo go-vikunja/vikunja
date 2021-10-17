@@ -2,7 +2,7 @@
 	<create-edit
 		:title="$t('namespace.create.title')"
 		@create="newNamespace()"
-		:create-disabled="namespace.title === ''"
+		:primary-disabled="namespace.title === ''"
 	>
 		<div class="field">
 			<label class="label" for="namespaceTitle">{{ $t('namespace.attributes.title') }}</label>
@@ -63,23 +63,17 @@ export default {
 		this.setTitle(this.$t('namespace.create.title'))
 	},
 	methods: {
-		newNamespace() {
+		async newNamespace() {
 			if (this.namespace.title === '') {
 				this.showError = true
 				return
 			}
 			this.showError = false
 
-			this.namespaceService
-				.create(this.namespace)
-				.then((r) => {
-					this.$store.commit('namespaces/addNamespace', r)
-					this.$message.success({message: this.$t('namespace.create.success') })
-					this.$router.back()
-				})
-				.catch((e) => {
-					this.$message.error(e)
-				})
+			const namespace = await this.namespaceService.create(this.namespace)
+			this.$store.commit('namespaces/addNamespace', namespace)
+			this.$message.success({message: this.$t('namespace.create.success') })
+			this.$router.back()
 		},
 	},
 }

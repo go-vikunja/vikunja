@@ -23,6 +23,7 @@
 </template>
 
 <script>
+import {defineComponent} from 'vue'
 import {mapState, mapGetters} from 'vuex'
 import isTouchDevice from 'is-touch-device'
 
@@ -33,10 +34,10 @@ import TopNavigation from './components/home/topNavigation'
 import ContentAuth from './components/home/contentAuth'
 import ContentLinkShare from './components/home/contentLinkShare'
 import ContentNoAuth from './components/home/contentNoAuth'
-import {setLanguage} from './i18n/setup'
+import {setLanguage} from './i18n'
 import AccountDeleteService from '@/services/accountDelete'
 
-export default {
+export default defineComponent({
 	name: 'app',
 	components: {
 		ContentNoAuth,
@@ -53,6 +54,7 @@ export default {
 		this.setupAccountDeletionVerification()
 	},
 	beforeCreate() {
+		// FIXME: async action in beforeCreate, might be not finished when component mounts
 		this.$store.dispatch('config/update')
 			.then(() => {
 				this.$store.dispatch('auth/checkAuth')
@@ -87,30 +89,31 @@ export default {
 			window.addEventListener('offline', () => this.$store.commit(ONLINE, navigator.onLine))
 		},
 		setupPasswortResetRedirect() {
-			if (typeof this.$route.query.userPasswordReset !== 'undefined') {
-				localStorage.removeItem('passwordResetToken') // Delete an eventually preexisting old token
-				localStorage.setItem('passwordResetToken', this.$route.query.userPasswordReset)
-				this.$router.push({name: 'user.password-reset.reset'})
+			if (typeof this.$route.query.userPasswordReset === 'undefined') {
+				return
 			}
+
+			localStorage.setItem('passwordResetToken', this.$route.query.userPasswordReset)
+			this.$router.push({name: 'user.password-reset.reset'})
 		},
 		setupEmailVerificationRedirect() {
-			if (typeof this.$route.query.userEmailConfirm !== 'undefined') {
-				localStorage.removeItem('emailConfirmToken') // Delete an eventually preexisting old token
-				localStorage.setItem('emailConfirmToken', this.$route.query.userEmailConfirm)
-				this.$router.push({name: 'user.login'})
+			if (typeof this.$route.query.userEmailConfirm === 'undefined') {
+				return
 			}
+
+			localStorage.setItem('emailConfirmToken', this.$route.query.userEmailConfirm)
+			this.$router.push({name: 'user.login'})
 		},
-		setupAccountDeletionVerification() {
-			if (typeof this.$route.query.accountDeletionConfirm !== 'undefined') {
-				const accountDeletionService = new AccountDeleteService()
-				accountDeletionService.confirm(this.$route.query.accountDeletionConfirm)
-					.then(() => {
-						this.$message.success({message: this.$t('user.deletion.confirmSuccess')})
-						this.$store.dispatch('auth/refreshUserInfo')
-					})
-					.catch(e => this.$message.error(e))
+		async setupAccountDeletionVerification() {
+			if (typeof this.$route.query.accountDeletionConfirm === 'undefined') {
+				return
 			}
+
+			const accountDeletionService = new AccountDeleteService()
+			await accountDeletionService.confirm(this.$route.query.accountDeletionConfirm)
+			this.$message.success({message: this.$t('user.deletion.confirmSuccess')})
+			this.$store.dispatch('auth/refreshUserInfo')
 		},
 	},
-}
+})
 </script>

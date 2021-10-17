@@ -26,13 +26,12 @@ export default class TotpService extends AbstractService {
 		return this.post(`${this.urlPrefix}/disable`, model)
 	}
 
-	qrcode() {
-		return this.http({
+	async qrcode() {
+		const response = await this.http({
 			url: `${this.urlPrefix}/qrcode`,
 			method: 'GET',
 			responseType: 'blob',
-		}).then(response => {
-			return Promise.resolve(new Blob([response.data]))
 		})
+		return new Blob([response.data])
 	}
 }

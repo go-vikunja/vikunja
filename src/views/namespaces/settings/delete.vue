@@ -13,33 +13,32 @@
 </template>
 
 <script>
-import NamespaceService from '@/services/namespace'
-
 export default {
 	name: 'namespace-setting-delete',
-	data() {
-		return {
-			namespaceService: new NamespaceService(),
-			title: '',
-		}
+	computed: {
+		namespace() {
+			return this.$store.getters['namespaces/getNamespaceById'](this.$route.params.id)
+		},
+		title() {
+			if (!this.namespace) {
+				return
+			}
+			return this.$t('namespace.delete.title', {namespace: this.namespace.title})
+		},
 	},
-	created() {
-		const namespace = this.$store.getters['namespaces/getNamespaceById'](this.$route.params.id)
-		this.title = this.$t('namespace.delete.title', {namespace: namespace.title})
-		this.setTitle(this.title)
+	watch: {
+		title: {
+			handler(title) {
+				this.setTitle(title)
+			},
+			immediate: true,
+		},
 	},
 	methods: {
-		deleteNamespace() {
-			const namespace = this.$store.getters['namespaces/getNamespaceById'](this.$route.params.id)
-
-			this.$store.dispatch('namespaces/deleteNamespace', namespace)
-				.then(() => {
-					this.$message.success({message: this.$t('namespace.delete.success')})
-					this.$router.push({name: 'home'})
-				})
-				.catch(e => {
-					this.$message.error(e)
-				})
+		async deleteNamespace() {
+			await this.$store.dispatch('namespaces/deleteNamespace', this.namespace)
+			this.$message.success({message: this.$t('namespace.delete.success')})
+			this.$router.push({name: 'home'})
 		},
 	},
 }

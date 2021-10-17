@@ -66,7 +66,7 @@ export default {
 		}
 	},
 	props: {
-		value: {
+		modelValue: {
 			default: () => {},
 			required: true,
 		},
@@ -74,8 +74,9 @@ export default {
 			default: false,
 		},
 	},
+	emits: ['update:modelValue', 'change'],
 	watch: {
-		value: {
+		modelValue: {
 			handler(value) {
 				this.task = value
 				if (typeof value.repeatAfter !== 'undefined') {
@@ -92,7 +93,7 @@ export default {
 			}
 			
 			this.task.repeatAfter = this.repeatAfter
-			this.$emit('input', this.task)
+			this.$emit('update:modelValue', this.task)
 			this.$emit('change')
 		},
 		setRepeatAfter(amount, type) {

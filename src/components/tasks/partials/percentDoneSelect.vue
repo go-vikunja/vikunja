@@ -1,6 +1,6 @@
 <template>
 	<div class="select">
-		<select :disabled="disabled || null" @change="updateData" v-model.number="percentDone">
+		<select :disabled="disabled || null" v-model.number="percentDone">
 			<option value="0">0%</option>
 			<option value="0.1">10%</option>
 			<option value="0.2">20%</option>
@@ -19,13 +19,8 @@
 <script>
 export default {
 	name: 'percentDoneSelect',
-	data() {
-		return {
-			percentDone: 0,
-		}
-	},
 	props: {
-		value: {
+		modelValue: {
 			default: 0,
 			type: Number,
 		},
@@ -33,19 +28,16 @@ export default {
 			default: false,
 		},
 	},
-	watch: {
-		// Set the priority to the :value every time it changes from the outside
-		value(newVal) {
-			this.percentDone = newVal
-		},
-	},
-	mounted() {
-		this.percentDone = this.value
-	},
-	methods: {
-		updateData() {
-			this.$emit('input', this.percentDone)
-			this.$emit('change')
+	emits: ['update:modelValue', 'change'],
+	computed: {
+		percentDone: {
+			get() {
+				return this.modelValue
+			},
+			set(percentDone) {
+				this.$emit('update:modelValue', percentDone)
+				this.$emit('change')
+			},
 		},
 	},
 }

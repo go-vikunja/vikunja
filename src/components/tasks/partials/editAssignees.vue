@@ -6,7 +6,6 @@
 		<multiselect
 			:loading="listUserService.loading"
 			:placeholder="$t('task.assignee.placeholder')"
-			:disabled="disabled"
 			:multiple="true"
 			@search="findUser"
 			:search-results="foundUsers"
@@ -54,10 +53,11 @@ export default {
 		disabled: {
 			default: false,
 		},
-		value: {
+		modelValue: {
 			type: Array,
 		},
 	},
+	emits: ['update:modelValue'],
 	data() {
 		return {
 			newAssignee: new UserModel(),
@@ -68,59 +68,49 @@ export default {
 		}
 	},
 	watch: {
-		value: {
+		modelValue: {
 			handler(value) {
 				this.assignees = value
 			},
 			immediate: true,
+			deep: true,
 		},
 	},
 	methods: {
-		addAssignee(user) {
-			this.$store.dispatch('tasks/addAssignee', {user: user, taskId: this.taskId})
-				.then(() => {
-					this.$emit('input', this.assignees)
-					this.$message.success({message: this.$t('task.assignee.assignSuccess')})
-				})
-				.catch(e => {
-					this.$message.error(e)
-				})
+		async addAssignee(user) {
+			await this.$store.dispatch('tasks/addAssignee', {user: user, taskId: this.taskId})
+			this.$emit('update:modelValue', this.assignees)
+			this.$message.success({message: this.$t('task.assignee.assignSuccess')})
 		},
-		removeAssignee(user) {
-			this.$store.dispatch('tasks/removeAssignee', {user: user, taskId: this.taskId})
-				.then(() => {
-					// Remove the assignee from the list
-					for (const a in this.assignees) {
-						if (this.assignees[a].id === user.id) {
-							this.assignees.splice(a, 1)
-						}
-					}
-					this.$message.success({message: this.$t('task.assignee.unassignSuccess')})
-				})
-				.catch(e => {
-					this.$message.error(e)
-				})
+
+		async removeAssignee(user) {
+			await this.$store.dispatch('tasks/removeAssignee', {user: user, taskId: this.taskId})
+
+			// Remove the assignee from the list
+			for (const a in this.assignees) {
+				if (this.assignees[a].id === user.id) {
+					this.assignees.splice(a, 1)
+				}
+			}
+			this.$message.success({message: this.$t('task.assignee.unassignSuccess')})
 		},
-		findUser(query) {
+
+		async findUser(query) {
 			if (query === '') {
 				this.clearAllFoundUsers()
 				return
 			}
 
-			this.listUserService.getAll({listId: this.listId}, {s: query})
-				.then(response => {
-					// Filter the results to not include users who are already assigned
-					const filteredResponse = response.filter(({id}) => !includesById(this.assignees, id))
+			const response = await this.listUserService.getAll({listId: this.listId}, {s: query})
 
-					this.$set(this, 'foundUsers', filteredResponse)
-				})
-				.catch(e => {
-					this.$message.error(e)
-				})
+			// Filter the results to not include users who are already assigned
+			this.foundUsers = response.filter(({id}) => !includesById(this.assignees, id))
 		},
+
 		clearAllFoundUsers() {
-			this.$set(this, 'foundUsers', [])
+			this.foundUsers = []
 		},
+
 		focus() {
 			this.$refs.multiselect.focus()
 		},

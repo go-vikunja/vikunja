@@ -30,8 +30,7 @@
 </template>
 
 <script>
-import LoadingComponent from '@/components/misc/loading.vue'
-import ErrorComponent from '@/components/misc/error.vue'
+import AsyncEditor from '@/components/input/AsyncEditor'
 
 import {LOADING} from '@/store/mutation-types'
 import {mapState} from 'vuex'
@@ -39,12 +38,7 @@ import {mapState} from 'vuex'
 export default {
 	name: 'description',
 	components: {
-		editor: () => ({
-			component: import('@/components/input/editor.vue'),
-			loading: LoadingComponent,
-			error: ErrorComponent,
-			timeout: 60000,
-		}),
+		editor: AsyncEditor,
 	},
 	data() {
 		return {
@@ -57,7 +51,7 @@ export default {
 		loading: LOADING,
 	}),
 	props: {
-		value: {
+		modelValue: {
 			required: true,
 		},
 		attachmentUpload: {
@@ -67,8 +61,9 @@ export default {
 			required: true,
 		},
 	},
+	emits: ['update:modelValue'],
 	watch: {
-		value: {
+		modelValue: {
 			handler(value) {
 				this.task = value
 			},
@@ -76,24 +71,19 @@ export default {
 		},
 	},
 	methods: {
-		save() {
+		async save() {
 			this.saving = true
 
-			this.$store.dispatch('tasks/update', this.task)
-				.then(t => {
-					this.task = t
-					this.$emit('input', t)
-					this.saved = true
-					setTimeout(() => {
-						this.saved = false
-					}, 2000)
-				})
-				.catch(e => {
-					this.$message.error(e)
-				})
-				.finally(() => {
-					this.saving = false
-				})
+			try {
+				this.task = await this.$store.dispatch('tasks/update', this.task)
+				this.$emit('update:modelValue', this.task)
+				this.saved = true
+				setTimeout(() => {
+					this.saved = false
+				}, 2000)
+			} finally {
+				this.saving = false
+			}
 		},
 	},
 }

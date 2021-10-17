@@ -212,8 +212,12 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 					}
 				}
 
-				&.v-leave, &.v-leave-to, &.v-leave-active
-				&.move-card-leave, &.move-card-leave-to, &.move-card-leave-active {
+				&.v-leave-from,
+				&.v-leave-to,
+				&.v-leave-active
+				&.move-card-leave-from,
+				&.move-card-leave-to,
+				&.move-card-leave-active {
 					display: none;
 				}
 			}

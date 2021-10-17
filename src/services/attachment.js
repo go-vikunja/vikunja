@@ -37,9 +37,9 @@ export default class AttachmentService extends AbstractService {
 		return AbstractService.prototype.getBlobUrl.call(this, '/tasks/' + model.taskId + '/attachments/' + model.id)
 	}
 
-	download(model) {
-		this.getBlobUrl(model)
-			.then(url => downloadBlob(url, model.file.name))
+	async download(model) {
+		const url = await this.getBlobUrl(model)
+		return downloadBlob(url, model.file.name)
 	}
 
 	/**

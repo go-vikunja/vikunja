@@ -85,11 +85,13 @@ export default {
 			successMessage: '',
 		}
 	},
+
 	mounted() {
 		this.setTitle(this.$t('user.auth.resetPassword'))
 	},
+
 	methods: {
-		submit() {
+		async submit() {
 			this.errorMsg = ''
 
 			if (this.credentials.password2 !== this.credentials.password) {
@@ -98,14 +100,13 @@ export default {
 			}
 
 			let passwordReset = new PasswordResetModel({newPassword: this.credentials.password})
-			this.passwordResetService.resetPassword(passwordReset)
-				.then(response => {
-					this.successMessage = response.message
-					localStorage.removeItem('passwordResetToken')
-				})
-				.catch(e => {
-					this.errorMsg = e.response.data.message
-				})
+			try {
+				const { message } = this.passwordResetService.resetPassword(passwordReset)
+				this.successMessage = message
+				localStorage.removeItem('passwordResetToken')
+			} catch(e) {
+				this.errorMsg = e.response.data.message
+			}
 		},
 	},
 }

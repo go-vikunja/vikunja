@@ -272,45 +272,34 @@ export default {
 		this.load()
 	},
 	methods: {
-		load() {
-			this.stuffService
-				.getAll(this.stuffModel)
-				.then((r) => {
-					this.$set(this, 'sharables', r)
-					r.forEach((s) =>
-						this.$set(this.selectedRight, s.id, s.right),
-					)
-				})
-				.catch((e) => {
-					this.$message.error(e)
-				})
+		async load() {
+			this.sharables = await this.stuffService.getAll(this.stuffModel)
+			this.sharables.forEach((s) =>
+				this.selectedRight[s.id] = s.right,
+			)
 		},
-		deleteSharable() {
+
+		async deleteSharable() {
 			if (this.shareType === 'user') {
 				this.stuffModel.userId = this.sharable.username
 			} else if (this.shareType === 'team') {
 				this.stuffModel.teamId = this.sharable.id
 			}
 
-			this.stuffService
-				.delete(this.stuffModel)
-				.then(() => {
-					this.showDeleteModal = false
-					for (const i in this.sharables) {
-						if (
-							(this.sharables[i].username === this.stuffModel.userId && this.shareType === 'user') ||
-							(this.sharables[i].id === this.stuffModel.teamId && this.shareType === 'team')
-						) {
-							this.sharables.splice(i, 1)
-						}
-					}
-					this.$message.success({message: this.$t('list.share.userTeam.removeSuccess', {type: this.shareTypeName, sharable: this.sharableName})})
-				})
-				.catch((e) => {
-					this.$message.error(e)
-				})
+			await this.stuffService.delete(this.stuffModel)
+			this.showDeleteModal = false
+			for (const i in this.sharables) {
+				if (
+					(this.sharables[i].username === this.stuffModel.userId && this.shareType === 'user') ||
+					(this.sharables[i].id === this.stuffModel.teamId && this.shareType === 'team')
+				) {
+					this.sharables.splice(i, 1)
+				}
+			}
+			this.$message.success({message: this.$t('list.share.userTeam.removeSuccess', {type: this.shareTypeName, sharable: this.sharableName})})
 		},
-		add(admin) {
+
+		async add(admin) {
 			if (admin === null) {
 				admin = false
 			}
@@ -325,17 +314,12 @@ export default {
 				this.stuffModel.teamId = this.sharable.id
 			}
 
-			this.stuffService
-				.create(this.stuffModel)
-				.then(() => {
-					this.$message.success({message: this.$t('list.share.userTeam.addedSuccess', {type: this.shareTypeName})})
-					this.load()
-				})
-				.catch((e) => {
-					this.$message.error(e)
-				})
+			await this.stuffService.create(this.stuffModel)
+			this.$message.success({message: this.$t('list.share.userTeam.addedSuccess', {type: this.shareTypeName})})
+			await this.load()
 		},
-		toggleType(sharable) {
+
+		async toggleType(sharable) {
 			if (
 				this.selectedRight[sharable.id] !== rights.ADMIN &&
 				this.selectedRight[sharable.id] !== rights.READ &&
@@ -351,43 +335,32 @@ export default {
 				this.stuffModel.teamId = sharable.id
 			}
 
-			this.stuffService
-				.update(this.stuffModel)
-				.then((r) => {
-					for (const i in this.sharables) {
-						if (
-							(this.sharables[i].username ===
-								this.stuffModel.userId &&
-								this.shareType === 'user') ||
-							(this.sharables[i].id === this.stuffModel.teamId &&
-								this.shareType === 'team')
-						) {
-							this.$set(this.sharables[i], 'right', r.right)
-						}
-					}
-					this.$message.success({message: this.$t('list.share.userTeam.updatedSuccess', {type: this.shareTypeName})})
-				})
-				.catch((e) => {
-					this.$message.error(e)
-				})
+			const r = await this.stuffService.update(this.stuffModel)
+			for (const i in this.sharables) {
+				if (
+					(this.sharables[i].username ===
+						this.stuffModel.userId &&
+						this.shareType === 'user') ||
+					(this.sharables[i].id === this.stuffModel.teamId &&
+						this.shareType === 'team')
+				) {
+					this.sharables[i].right = r.right
+				}
+			}
+			this.$message.success({message: this.$t('list.share.userTeam.updatedSuccess', {type: this.shareTypeName})})
 		},
-		find(query) {
+
+		async find(query) {
 			if (query === '') {
-				this.$set(this, 'found', [])
+				this.clearAll()
 				return
 			}
 
-			this.searchService
-				.getAll({}, {s: query})
-				.then((response) => {
-					this.$set(this, 'found', response)
-				})
-				.catch((e) => {
-					this.$message.error(e)
-				})
+			this.found = await this.searchService.getAll({}, {s: query})
 		},
+
 		clearAll() {
-			this.$set(this, 'found', [])
+			this.found = []
 		},
 	},
 }

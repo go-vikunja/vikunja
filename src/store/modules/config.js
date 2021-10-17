@@ -1,5 +1,3 @@
-import Vue from 'vue'
-
 import {CONFIG} from '../mutation-types'
 import {HTTPFactory} from '@/http-common'
 import {objectToCamelCase} from '@/helpers/case'
@@ -58,20 +56,18 @@ export default {
 			state.auth.local.enabled = auth.local.enabled
 			state.auth.openidConnect.enabled = auth.openidConnect.enabled
 			state.auth.openidConnect.redirectUrl = auth.openidConnect.redirectUrl
-			Vue.set(state.auth.openidConnect, 'providers', auth.openidConnect.providers)
+			state.auth.openidConnect.providers = auth.openidConnect.providers
 		},
 	},
 	actions: {
-		update(ctx) {
+		async update(ctx) {
 			const HTTP = HTTPFactory()
 
-			return HTTP.get('info')
-				.then(r => {
-					ctx.commit(CONFIG, r.data)
-					return Promise.resolve(r)
-				})
-				.catch(e => Promise.reject(e))
+			const { data: info } = await HTTP.get('info')
+			ctx.commit(CONFIG, info)
+			return info
 		},
+
 		redirectToProviderIfNothingElseIsEnabled(ctx) {
 			if (ctx.state.auth.local.enabled === false &&
 				ctx.state.auth.openidConnect.enabled &&

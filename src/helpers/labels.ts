@@ -27,3 +27,14 @@ export function filterLabelsByQuery(state: labelState, labelsToHide: label[], qu
 			return !labelIds.includes(id) && title.toLowerCase().includes(labelQuery)
 		})
 }
+
+
+/**
+ * Returns the labels by id if found
+ * @param {Object} state
+ * @param {Array} ids
+ * @returns {Array}
+ */
+export function getLabelsByIds(state: labelState, ids: number[]) {
+	return Object.values(state.labels).filter(({id}) => ids.includes(id))
+}

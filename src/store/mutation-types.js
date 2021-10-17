@@ -1,12 +1,12 @@
 export const LOADING = 'loading'
 export const LOADING_MODULE = 'loadingModule'
-export const ERROR_MESSAGE = 'errorMessage'
 export const ONLINE = 'online'
 export const CURRENT_LIST = 'currentList'
 export const HAS_TASKS = 'hasTasks'
 export const MENU_ACTIVE = 'menuActive'
 export const KEYBOARD_SHORTCUTS_ACTIVE = 'keyboardShortcutsActive'
 export const QUICK_ACTIONS_ACTIVE = 'quickActionsActive'
+export const BACKGROUND = 'background'
 
 export const CONFIG = 'config'
 export const AUTH = 'auth'

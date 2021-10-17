@@ -49,19 +49,19 @@
 		</div>
 
 		<aside class="menu namespaces-lists loader-container" :class="{'is-loading': loading}">
-			<template v-for="(n, nk) in namespaces">
-				<div :key="n.id" class="namespace-title" :class="{'has-menu': n.id > 0}">
+			<template v-for="(n, nk) in namespaces" :key="n.id" >
+				<div class="namespace-title" :class="{'has-menu': n.id > 0}">
 					<span
 						@click="toggleLists(n.id)"
 						class="menu-label"
-						v-tooltip="getNamespaceTitle(n) + ' (' + n.lists.filter(l => !l.isArchived).length + ')'">
+						v-tooltip="namespaceTitles[nk]">
 						<span class="name">
 							<span
 								:style="{ backgroundColor: n.hexColor }"
 								class="color-bubble"
 								v-if="n.hexColor !== ''">
 							</span>
-							{{ getNamespaceTitle(n) }} ({{ n.lists.filter(l => !l.isArchived).length }})
+							{{ namespaceTitles[nk] }}
 						</span>
 					</span>
 					<a
@@ -84,56 +84,65 @@
 					--> 
 					<draggable
 						v-bind="dragOptions"
-						:value="activeLists[nk]"
-						@input="(lists) => updateActiveLists(n, lists)"
+						:modelValue="activeLists[nk]"
+						@update:modelValue="(lists) => updateActiveLists(n, lists)"
 						:group="`namespace-${n.id}-lists`"
 						@start="() => drag = true"
 						@end="e => saveListPosition(e, nk)"
 						handle=".handle"
-						:disabled="n.id < 0"
-						:class="{'dragging-disabled': n.id < 0}"
+						:disabled="n.id < 0 || null"
+						tag="transition-group"
+						item-key="id"
+						:component-data="{
+							type: 'transition',
+							tag: 'ul',
+							name: !drag ? 'flip-list' : null,
+							class: [
+								'menu-list can-be-hidden',
+								{ 'dragging-disabled': n.id < 0 }
+							]
+						}"
 					>
-						<transition-group
-							type="transition"
-							:name="!drag ? 'flip-list' : null"
-							tag="ul"
-							class="menu-list can-be-hidden"
-						>
+						<template #item="{element: l}">
 							<li
-								v-for="l in activeLists[nk]"
-								:key="l.id"
 								class="loader-container"
 								:class="{'is-loading': listUpdating[l.id]}"
 							>
 								<router-link
-									class="list-menu-link"
-									:class="{'router-link-exact-active': currentList.id === l.id}"
 									:to="{ name: 'list.index', params: { listId: l.id} }"
-									tag="span"
+									v-slot="{ href, navigate, isActive }"
+									custom
 								>
-									<span class="icon handle">
-										<icon icon="grip-lines"/>
-									</span>
-									<span
-										:style="{ backgroundColor: l.hexColor }"
-										class="color-bubble"
-										v-if="l.hexColor !== ''">
-									</span>
-									<span class="list-menu-title">
-										{{ getListTitle(l) }}
-									</span>
-									<span
-										:class="{'is-favorite': l.isFavorite}"
-										@click.stop="toggleFavoriteList(l)"
-										class="favorite">
-										<icon icon="star" v-if="l.isFavorite"/>
-										<icon :icon="['far', 'star']" v-else/>
-									</span>
+									<a
+										@click="navigate"
+										:href="href"
+										class="list-menu-link"
+										:class="{'router-link-exact-active': isActive || currentList?.id === l.id}"
+									>
+										<span class="icon handle">
+											<icon icon="grip-lines"/>
+										</span>
+										<span
+											:style="{ backgroundColor: l.hexColor }"
+											class="color-bubble"
+											v-if="l.hexColor !== ''">
+										</span>
+										<span class="list-menu-title">
+											{{ getListTitle(l) }}
+										</span>
+										<span
+											:class="{'is-favorite': l.isFavorite}"
+											@click.prevent.stop="toggleFavoriteList(l)"
+											class="favorite">
+											<icon icon="star" v-if="l.isFavorite"/>
+											<icon :icon="['far', 'star']" v-else/>
+										</span>
+									</a>
 								</router-link>
 								<list-settings-dropdown :list="l" v-if="l.id > 0"/>
 								<span class="list-setting-spacer" v-else></span>
 							</li>
-						</transition-group>
+						</template>
 					</draggable>
 				</div>
 			</template>
@@ -182,15 +191,22 @@ export default {
 			loading: state => state[LOADING] && state[LOADING_MODULE] === 'namespaces',
 		}),
 		activeLists() {
-			return this.namespaces.map(({lists}) => lists.filter(item => !item.isArchived))
+			return this.namespaces.map(({lists}) => lists?.filter(item => !item.isArchived))
+		},
+		namespaceTitles() {
+			return this.namespaces.map((namespace, index) => {
+				const title = this.getNamespaceTitle(namespace)
+				return `${title} (${this.activeLists[index]?.length ?? 0})`
+			})
 		},
 	},
 	beforeCreate() {
+		// FIXME: async action in beforeCreate, might be unfinished when component mounts
 		this.$store.dispatch('namespaces/loadNamespaces')
 			.then(namespaces => {
 				namespaces.forEach(n => {
 					if (typeof this.listsVisible[n.id] === 'undefined') {
-						this.$set(this.listsVisible, n.id, true)
+						this.listsVisible[n.id] = true
 					}
 				})
 			})
@@ -209,18 +225,13 @@ export default {
 				return
 			}
 			this.$store.dispatch('lists/toggleListFavorite', list)
-				.catch(e => this.$message.error(e))
 		},
 		resize() {
 			// Hide the menu by default on mobile
-			if (window.innerWidth < 770) {
-				this.$store.commit(MENU_ACTIVE, false)
-			} else {
-				this.$store.commit(MENU_ACTIVE, true)
-			}
+			this.$store.commit(MENU_ACTIVE, window.innerWidth >= 770)
 		},
 		toggleLists(namespaceId) {
-			this.$set(this.listsVisible, namespaceId, !this.listsVisible[namespaceId] ?? false)
+			this.listsVisible[namespaceId] = !this.listsVisible[namespaceId]
 		},
 		updateActiveLists(namespace, activeLists) {
 			// this is a bit hacky: since we do have to filter out the archived items from the list
@@ -240,26 +251,25 @@ export default {
 
 			this.$store.commit('namespaces/setNamespaceById', newNamespace)
 		},
-		saveListPosition(e, namespaceIndex) {
+
+		async saveListPosition(e, namespaceIndex) {
 			const listsActive = this.activeLists[namespaceIndex]
 			const list = listsActive[e.newIndex]
 			const listBefore = listsActive[e.newIndex - 1] ?? null
 			const listAfter = listsActive[e.newIndex + 1] ?? null
-			this.$set(this.listUpdating, list.id, true)
+			this.listUpdating[list.id] = true
 
 			const position = calculateItemPosition(listBefore !== null ? listBefore.position : null, listAfter !== null ? listAfter.position : null)
 
-			// create a copy of the list in order to not violate vuex mutations
-			this.$store.dispatch('lists/updateList', {
-				...list,
-				position,
-			})
-				.catch(e => {
-					this.$message.error(e)
+			try {
+				// create a copy of the list in order to not violate vuex mutations
+				await this.$store.dispatch('lists/updateList', {
+					...list,
+					position,
 				})
-				.finally(() => {
-					this.$set(this.listUpdating, list.id, false)
-				})
+			} finally {
+				this.listUpdating[list.id] = false
+			}
 		},
 	},
 }

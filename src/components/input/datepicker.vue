@@ -112,6 +112,7 @@
 <script>
 import flatPickr from 'vue-flatpickr-component'
 import 'flatpickr/dist/flatpickr.css'
+import { i18n } from '@/i18n'
 
 import {format} from 'date-fns'
 import {calculateDayInterval} from '@/helpers/time/calculateDayInterval'
@@ -136,13 +137,13 @@ export default {
 		flatPickr,
 	},
 	props: {
-		value: {
+		modelValue: {
 			validator: prop => prop instanceof Date || prop === null || typeof prop === 'string',
 		},
 		chooseDateLabel: {
 			type: String,
 			default() {
-				return this.$t('input.datepicker.chooseDate')
+				return i18n.global.t('input.datepicker.chooseDate')
 			},
 		},
 		disabled: {
@@ -150,14 +151,15 @@ export default {
 			default: false,
 		},
 	},
+	emits: ['update:modelValue', 'change', 'close', 'close-on-change'],
 	mounted() {
 		document.addEventListener('click', this.hideDatePopup)
 	},
-	beforeDestroy() {
+	beforeUnmount() {
 		document.removeEventListener('click', this.hideDatePopup)
 	},
 	watch: {
-		value: {
+		modelValue: {
 			handler: 'setDateValue',
 			immediate: true,
 		},
@@ -191,7 +193,7 @@ export default {
 		},
 		updateData() {
 			this.changed = true
-			this.$emit('input', this.date)
+			this.$emit('update:modelValue', this.date)
 			this.$emit('change', this.date)
 		},
 		toggleDatePopup() {

@@ -81,15 +81,8 @@
 </template>
 
 <script>
+import { i18n } from '@/i18n'
 import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
-
-/**
- * Available events:
- *   @search: Triggered every time the search query input changes
- *   @select: Triggered every time an option from the search results is selected. Also triggers a change in v-model.
- *   @create: If nothing or no exact match was found and `creatable` is true, this event is triggered with the current value of the search query.
- *   @remove: If `multiple` is enabled, this will be fired every time an item is removed from the array of selected items.
- */
 
 export default {
 	name: 'multiselect',
@@ -133,7 +126,7 @@ export default {
 			},
 		},
 		// The object with the value, updated every time an entry is selected.
-		value: {
+		modelValue: {
 			default() {
 				return null
 			},
@@ -149,14 +142,14 @@ export default {
 		createPlaceholder: {
 			type: String,
 			default() {
-				return this.$t('input.multiselect.createPlaceholder')
+				return i18n.global.t('input.multiselect.createPlaceholder')
 			},
 		},
 		// The text shown next to an option.
 		selectPlaceholder: {
 			type: String,
 			default() {
-				return this.$t('input.multiselect.selectPlaceholder')
+				return i18n.global.t('input.multiselect.selectPlaceholder')
 			},
 		},
 		// If true, allows for selecting multiple items. v-model will be an array with all selected values in that case.
@@ -188,18 +181,29 @@ export default {
 			},
 		},
 	},
+	
+	/**
+	 * Available events:
+	 *   @search: Triggered every time the search query input changes
+	 *   @select: Triggered every time an option from the search results is selected. Also triggers a change in v-model.
+	 *   @create: If nothing or no exact match was found and `creatable` is true, this event is triggered with the current value of the search query.
+	 *   @remove: If `multiple` is enabled, this will be fired every time an item is removed from the array of selected items.
+	 */
+	emits: ['update:modelValue', 'search', 'select', 'create', 'remove'],
+
 	mounted() {
 		document.addEventListener('click', this.hideSearchResultsHandler)
 	},
-	beforeDestroy() {
+	beforeUnmount() {
 		document.removeEventListener('click', this.hideSearchResultsHandler)
 	},
 	watch: {
-		value: {
+		modelValue: {
 			handler(value) {
 				this.setSelectedObject(value)
 			},
 			immediate: true,
+			deep: true,
 		},
 	},
 	computed: {
@@ -278,13 +282,13 @@ export default {
 				this.internalValue = object
 			}
 
-			this.$emit('input', this.internalValue)
+			this.$emit('update:modelValue', this.internalValue)
 			this.$emit('select', object)
 			this.setSelectedObject(object)
 			this.closeSearchResults()
 		},
 		setSelectedObject(object, resetOnly = false) {
-			this.$set(this, 'internalValue', object)
+			this.internalValue = object
 
 			// We assume we're getting an array when multiple is enabled and can therefore leave the query
 			// value etc as it is
@@ -352,7 +356,7 @@ export default {
 				}
 			}
 
-			this.$emit('input', this.internalValue)
+			this.$emit('update:modelValue', this.internalValue)
 			this.$emit('remove', item)
 		},
 		focus() {

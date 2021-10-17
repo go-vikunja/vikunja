@@ -298,9 +298,8 @@ import EmailUpdateModel from '../../models/emailUpdate'
 import TotpModel from '../../models/totp'
 import TotpService from '../../services/totp'
 import UserSettingsService from '../../services/userSettings'
-import UserSettingsModel from '../../models/userSettings'
 import {playSoundWhenDoneKey} from '@/helpers/playPop'
-import {availableLanguages, saveLanguage, getCurrentLanguage} from '../../i18n/setup'
+import {availableLanguages, saveLanguage, getCurrentLanguage} from '@/i18n'
 import {getQuickAddMagicMode, setQuickAddMagicMode} from '../../helpers/quickAddMagicMode'
 import {PrefixMode} from '../../modules/parseTaskText'
 
@@ -311,6 +310,10 @@ import copy from 'copy-to-clipboard'
 import ListSearch from '@/components/tasks/partials/listSearch.vue'
 import UserSettingsDeletion from '../../components/user/settings/deletion'
 import DataExport from '../../components/user/settings/data-export'
+
+function getPlaySoundWhenDoneSetting() {
+	return localStorage.getItem(playSoundWhenDoneKey) === 'true' || localStorage.getItem(playSoundWhenDoneKey) === null
+}
 
 export default {
 	name: 'Settings',
@@ -330,15 +333,13 @@ export default {
 			totpConfirmPasscode: '',
 			totpDisableForm: false,
 			totpDisablePassword: '',
-			playSoundWhenDone: false,
+			playSoundWhenDone: getPlaySoundWhenDoneSetting(),
 			language: getCurrentLanguage(),
 			quickAddMagicMode: getQuickAddMagicMode(),
 			quickAddMagicPrefixes: PrefixMode,
 
-			settings: UserSettingsModel,
+			settings: { ...this.$store.state.auth.settings },
 			userSettingsService: new UserSettingsService(),
-
-			defaultList: null,
 		}
 	},
 	components: {
@@ -348,9 +349,6 @@ export default {
 		DataExport,
 	},
 	created() {
-		this.settings = this.$store.state.auth.settings
-		this.playSoundWhenDone = localStorage.getItem(playSoundWhenDoneKey) === 'true' || localStorage.getItem(playSoundWhenDoneKey) === null
-		this.defaultList = this.$store.getters['lists/getListById'](this.settings.defaultListId)
 		this.totpStatus()
 	},
 	mounted() {
@@ -358,6 +356,9 @@ export default {
 		this.anchorHashCheck()
 	},
 	computed: {
+		defaultList() {
+			return this.$store.getters['lists/getListById'](this.settings.defaultListId)
+		},
 		caldavUrl() {
 			let apiBase = window.API_URL.replace('/api/v1', '')
 			if (apiBase === '') { // Frontend and api on the same host which means we need to prefix the frontend url
@@ -384,90 +385,77 @@ export default {
 	methods: {
 		copy,
 
-		updatePassword() {
+		async updatePassword() {
 			if (this.passwordConfirm !== this.passwordUpdate.newPassword) {
 				this.$message.error({message: this.$t('user.settings.passwordsDontMatch')})
 				return
 			}
 
-			this.passwordUpdateService.update(this.passwordUpdate)
-				.then(() => {
-					this.$message.success({message: this.$t('user.settings.passwordUpdateSuccess')})
-				})
-				.catch(e => this.$message.error(e))
+			await this.passwordUpdateService.update(this.passwordUpdate)
+			this.$message.success({message: this.$t('user.settings.passwordUpdateSuccess')})
 		},
-		updateEmail() {
-			this.emailUpdateService.update(this.emailUpdate)
-				.then(() => {
-					this.$message.success({message: this.$t('user.settings.updateEmailSuccess')})
-				})
-				.catch(e => this.$message.error(e))
+
+		async updateEmail() {
+			await this.emailUpdateService.update(this.emailUpdate)
+			this.$message.success({message: this.$t('user.settings.updateEmailSuccess')})
 		},
-		totpStatus() {
+
+		async totpStatus() {
 			if (!this.totpEnabled) {
 				return
 			}
-			this.totpService.get()
-				.then(r => {
-					this.$set(this, 'totp', r)
-					this.totpSetQrCode()
-				})
-				.catch(e => {
-					// Error code 1016 means totp is not enabled, we don't need an error in that case.
-					if (e.response && e.response.data && e.response.data.code && e.response.data.code === 1016) {
-						this.totpEnrolled = false
-						return
-					}
-
-					this.$message.error(e)
-				})
-		},
-		totpSetQrCode() {
-			this.totpService.qrcode()
-				.then(qr => {
-					const urlCreator = window.URL || window.webkitURL
-					this.totpQR = urlCreator.createObjectURL(qr)
-				})
-		},
-		totpEnroll() {
-			this.totpService.enroll()
-				.then(r => {
-					this.totpEnrolled = true
-					this.$set(this, 'totp', r)
-					this.totpSetQrCode()
-				})
-				.catch(e => this.$message.error(e))
-		},
-		totpConfirm() {
-			this.totpService.enable({passcode: this.totpConfirmPasscode})
-				.then(() => {
-					this.$set(this.totp, 'enabled', true)
-					this.$message.success({message: this.$t('user.settings.totp.confirmSuccess')})
-				})
-				.catch(e => this.$message.error(e))
-		},
-		totpDisable() {
-			this.totpService.disable({password: this.totpDisablePassword})
-				.then(() => {
+			try {
+				this.totp = await this.totpService.get()
+				this.totpSetQrCode()
+			} catch(e) {
+				// Error code 1016 means totp is not enabled, we don't need an error in that case.
+				if (e.response && e.response.data && e.response.data.code && e.response.data.code === 1016) {
 					this.totpEnrolled = false
-					this.$set(this, 'totp', new TotpModel())
-					this.$message.success({message: this.$t('user.settings.totp.disableSuccess')})
-				})
-				.catch(e => this.$message.error(e))
+					return
+				}
+
+				throw e
+			}
 		},
-		updateSettings() {
+	
+		async totpSetQrCode() {
+			const qr = await this.totpService.qrcode()
+			const urlCreator = window.URL || window.webkitURL
+			this.totpQR = urlCreator.createObjectURL(qr)
+		},
+
+		async totpEnroll() {
+			this.totp = await this.totpService.enroll()
+			this.totpEnrolled = true
+			this.totpSetQrCode()
+		},
+	
+		async totpConfirm() {
+			await this.totpService.enable({passcode: this.totpConfirmPasscode})
+			this.totp.enabled = true
+			this.$message.success({message: this.$t('user.settings.totp.confirmSuccess')})
+		},
+
+		async totpDisable() {
+			await this.totpService.disable({password: this.totpDisablePassword})
+			this.totpEnrolled = false
+			this.totp = new TotpModel()
+			this.$message.success({message: this.$t('user.settings.totp.disableSuccess')})
+		},
+
+		async updateSettings() {
 			localStorage.setItem(playSoundWhenDoneKey, this.playSoundWhenDone)
 			saveLanguage(this.language)
 			setQuickAddMagicMode(this.quickAddMagicMode)
 			this.settings.defaultListId = this.defaultList ? this.defaultList.id : 0
 
-			this.userSettingsService.update(this.settings)
-				.then(() => {
-					this.$store.commit('auth/setUserSettings', this.settings)
-					this.$message.success({message: this.$t('user.settings.general.savedSuccess')})
-				})
-				.catch(e => this.$message.error(e))
+			await this.userSettingsService.update(this.settings)
+			this.$store.commit('auth/setUserSettings', {
+				...this.settings,
+			})
+			this.$message.success({message: this.$t('user.settings.general.savedSuccess')})
 		},
+
 		anchorHashCheck() {
 			if (window.location.hash === this.$route.hash) {
 				const el = document.getElementById(this.$route.hash.slice(1))

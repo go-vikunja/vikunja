@@ -72,7 +72,7 @@ export default {
 		document.addEventListener('click', this.hidePopup)
 		this.interval = setInterval(this.loadNotifications, LOAD_NOTIFICATIONS_INTERVAL)
 	},
-	beforeDestroy() {
+	beforeUnmount() {
 		document.removeEventListener('click', this.hidePopup)
 		clearInterval(this.interval)
 	},
@@ -93,14 +93,8 @@ export default {
 				closeWhenClickedOutside(e, this.$refs.popup, () => this.showNotifications = false)
 			}
 		},
-		loadNotifications() {
-			this.notificationService.getAll()
-				.then(r => {
-					this.$set(this, 'allNotifications', r)
-				})
-				.catch(e => {
-					this.$message.error(e)
-				})
+		async loadNotifications() {
+			this.allNotifications = await this.notificationService.getAll()
 		},
 		to(n, index) {
 			const to = {
@@ -127,17 +121,13 @@ export default {
 					break
 			}
 
-			return () => {
+			return async () => {
 				if (to.name !== '') {
 					this.$router.push(to)
 				}
 
 				n.read = true
-				this.notificationService.update(n)
-					.then(r => {
-						this.$set(this.allNotifications, index, r)
-					})
-					.catch(e => this.$message.error(e))
+				this.allNotifications[index] = await this.notificationService.update(n)
 			}
 		},
 	},

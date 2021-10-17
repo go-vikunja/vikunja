@@ -57,7 +57,7 @@ export default {
 		'authLinkShare',
 	]),
 	methods: {
-		auth() {
+		async auth() {
 			this.errorMessage = ''
 
 			if (this.authLinkShare) {
@@ -66,29 +66,30 @@ export default {
 
 			this.loading = true
 
-			this.$store.dispatch('auth/linkShareAuth', {hash: this.$route.params.share, password: this.password})
-				.then((r) => {
-					this.$router.push({name: 'list.list', params: {listId: r.list_id}})
+			try {
+				const r = await this.$store.dispatch('auth/linkShareAuth', {
+					hash: this.$route.params.share,
+					password: this.password,
 				})
-				.catch(e => {
-					if (typeof e.response.data.code !== 'undefined' && e.response.data.code === 13001) {
-						this.authenticateWithPassword = true
-						return
-					}
+				this.$router.push({name: 'list.list', params: {listId: r.list_id}})
+			} catch(e) {
+				if (typeof e.response.data.code !== 'undefined' && e.response.data.code === 13001) {
+					this.authenticateWithPassword = true
+					return
+				}
 
-					// TODO: Put this logic in a global errorMessage handler method which checks all auth codes
-					let errorMessage = this.$t('sharing.error')
-					if (e.response && e.response.data && e.response.data.message) {
-						errorMessage = e.response.data.message
-					}
-					if (typeof e.response.data.code !== 'undefined' && e.response.data.code === 13002) {
-						errorMessage = this.$t('sharing.invalidPassword')
-					}
-					this.errorMessage = errorMessage
-				})
-				.finally(() => {
-					this.loading = false
-				})
+				// TODO: Put this logic in a global errorMessage handler method which checks all auth codes
+				let errorMessage = this.$t('sharing.error')
+				if (e.response && e.response.data && e.response.data.message) {
+					errorMessage = e.response.data.message
+				}
+				if (typeof e.response.data.code !== 'undefined' && e.response.data.code === 13002) {
+					errorMessage = this.$t('sharing.invalidPassword')
+				}
+				this.errorMessage = errorMessage
+			} finally {
+				this.loading = false
+			}
 		},
 	},
 }

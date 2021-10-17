@@ -38,7 +38,6 @@
 
 <script>
 import TaskService from '../../services/task'
-import createTask from '@/components/tasks/mixins/createTask'
 import QuickAddMagic from '@/components/tasks/partials/quick-add-magic.vue'
 
 const INPUT_BORDER_PX = 2
@@ -50,6 +49,7 @@ const cleanupTitle = title => {
 
 export default {
 	name: 'add-task',
+	emits: ['taskAdded'],
 	data() {
 		return {
 			newTaskTitle: '',
@@ -59,9 +59,6 @@ export default {
 			initialTextAreaHeight: null,
 		}
 	},
-	mixins: [
-		createTask,
-	],
 	components: {
 		QuickAddMagic,
 	},
@@ -85,7 +82,7 @@ export default {
 		this.initialTextAreaHeight = this.$refs.newTaskInput.scrollHeight + INPUT_BORDER_PX
 	},
 	methods: {
-		addTask() {
+		async addTask() {
 			if (this.newTaskTitle === '') {
 				this.errorMessage = this.$t('list.create.addTitleRequired')
 				return
@@ -96,33 +93,31 @@ export default {
 				return
 			}
 
-			const newTasks = []
-			this.newTaskTitle.split(/[\r\n]+/).forEach(t => {
+			const newTasks = this.newTaskTitle.split(/[\r\n]+/).map(async t => {
 				const title = cleanupTitle(t)
 				if (title === '') {
 					return
 				}
 				
-				newTasks.push(
-					this.createNewTask(title, 0, this.$store.state.auth.settings.defaultListId, this.defaultPosition)
-						.then(task => {
-							this.$emit('taskAdded', task)
-							return task
-						}),
-				)
+				const task = await this.$store.dispatch('tasks/createNewTask', {
+					title: this.newTaskTitle,
+					listId: this.$store.state.auth.settings.defaultListId,
+					position: this.defaultPosition,
+				})
+				this.$emit('taskAdded', task)
+				return task
 			})
 
-			Promise.all(newTasks)
-				.then(() => {
-					this.newTaskTitle = ''
-				})
-				.catch(e => {
-					if (e === 'NO_LIST') {
-						this.errorMessage = this.$t('list.create.addListRequired')
-						return
-					}
-					this.$message.error(e)
-				})
+			try {
+				await Promise.all(newTasks)
+				this.newTaskTitle = ''
+			} catch(e) {
+				if (e.message === 'NO_LIST') {
+					this.errorMessage = this.$t('list.create.addListRequired')
+					return
+				}
+				throw e
+			}
 		},
 		handleEnter(e) {
 			// when pressing shift + enter we want to continue as we normally would. Otherwise, we want to create 

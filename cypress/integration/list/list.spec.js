@@ -38,8 +38,7 @@ describe('Lists', () => {
 			.contains('Create')
 			.click()
 
-		cy.wait(1000) // Waiting until the request to create the new list is done
-		cy.get('.global-notification')
+		cy.get('.global-notification', { timeout: 1000 }) // Waiting until the request to create the new list is done
 			.should('contain', 'Success')
 		cy.url()
 			.should('contain', '/lists/')
@@ -446,7 +445,7 @@ describe('Lists', () => {
 			cy.get('.kanban .bucket .tasks .task')
 				.contains(tasks[0].title)
 				.first()
-				.drag('.kanban .bucket:nth-child(2) .tasks .dropper div')
+				.drag('.kanban .bucket:nth-child(2) .tasks .dropper')
 			
 			cy.get('.kanban .bucket:nth-child(2) .tasks')
 				.should('contain', tasks[0].title)
@@ -501,7 +500,7 @@ describe('Lists', () => {
 				.first()
 				.click()
 
-			cy.get('.global-notification')
+			cy.get('.global-notification', { timeout: 1000 })
 				.should('contain', 'Success')
 			cy.go('back')
 			cy.get('.kanban .bucket')
