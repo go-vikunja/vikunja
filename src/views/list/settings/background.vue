@@ -87,7 +87,6 @@ export default {
 
 			// We're using debounce to not search on every keypress but with a delay.
 			debounceNewBackgroundSearch: debounce(this.newBackgroundSearch, SEARCH_DEBOUNCE, {
-				leading: true,
 				trailing: true,
 			}),
 
