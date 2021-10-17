@@ -27,7 +27,6 @@ const setI18nLanguage = lang => {
 }
 
 export const loadLanguageAsync = lang => {
-	console.log(lang, i18n.global.locale)
 	// If the same language
 	if (i18n.global.locale === lang) {
 		return Promise.resolve(setI18nLanguage(lang))
