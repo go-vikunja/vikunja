@@ -106,20 +106,21 @@ if (import.meta.env.DEV) {
 	app.config.warnHandler = (msg, vm, info) => { 
 		error(msg)
 	}
+
+	// https://stackoverflow.com/a/52076738/15522256
+	window.addEventListener('error', (err) => {
+		error(err)
+		throw err
+	})
+	
+	
+	window.addEventListener('unhandledrejection', (err) => {
+		// event.promise contains the promise object
+		// event.reason contains the reason for the rejection
+		error(err)
+		throw err
+	})
 }
-
-
-// https://stackoverflow.com/a/52076738/15522256
-window.addEventListener('error', (err) => {
-	error(err)
-})
-
-
-window.addEventListener('unhandledrejection', (err) => {
-	// event.promise contains the promise object
-	// event.reason contains the reason for the rejection
-	error(err)
-})
 
 app.config.globalProperties.$message = {
 	error,
