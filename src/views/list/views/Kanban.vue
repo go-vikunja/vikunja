@@ -236,6 +236,7 @@
 
 <script>
 import draggable from 'vuedraggable'
+import cloneDeep from 'lodash.clonedeep'
 
 import BucketModel from '../../../models/bucket'
 import {mapState} from 'vuex'
@@ -421,11 +422,9 @@ export default {
 			const taskBefore = newBucket.tasks[e.newIndex - 1] ?? null
 			const taskAfter = newBucket.tasks[e.newIndex + 1] ?? null
 
-			const newTask = {
-				...task,
-				bucketId: newBucket.id,
-				kanbanPosition: calculateItemPosition(taskBefore !== null ? taskBefore.kanbanPosition : null, taskAfter !== null ? taskAfter.kanbanPosition : null),
-			}
+			const newTask = cloneDeep(task) // cloning the task to avoid vuex store mutations
+			newTask.bucketId = newBucket.id,
+			newTask.kanbanPosition = calculateItemPosition(taskBefore !== null ? taskBefore.kanbanPosition : null, taskAfter !== null ? taskAfter.kanbanPosition : null),
 
 			try {
 				await this.$store.dispatch('tasks/update', newTask)
