@@ -142,7 +142,7 @@ export default {
 	},
 	methods: {
 		async getAuthUrl() {
-			const { url } = this.migrationService.getAuthUrl()
+			const { url } = await this.migrationService.getAuthUrl()
 			this.authUrl = url
 		},
 
