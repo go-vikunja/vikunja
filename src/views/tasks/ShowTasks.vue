@@ -207,7 +207,12 @@ export default {
 			// soonest before the later ones.
 			// We can't use the api sorting here because that sorts tasks with a due date after
 			// ones without a due date.
-			this.tasks = tasks.sort((a, b) => a.dueDate - b.dueDate)
+			this.tasks = tasks.sort((a, b) => {
+				const sortByDueDate = b.dueDate - a.dueDate
+				return sortByDueDate === 0
+					? b.id - a.id
+					: sortByDueDate
+			})
 		},
 
 		// FIXME: this modification should happen in the store
