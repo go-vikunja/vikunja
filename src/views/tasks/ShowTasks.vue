@@ -33,12 +33,15 @@
 		</h3>
 		<div v-if="!showAll" class="mb-4">
 			<x-button type="secondary" @click="showTodaysTasks()" class="mr-2">{{ $t('task.show.today') }}</x-button>
-			<x-button type="secondary" @click="setDatesToNextWeek()" class="mr-2">{{ $t('task.show.nextWeek') }}</x-button>
+			<x-button type="secondary" @click="setDatesToNextWeek()" class="mr-2">{{
+					$t('task.show.nextWeek')
+				}}
+			</x-button>
 			<x-button type="secondary" @click="setDatesToNextMonth()">{{ $t('task.show.nextMonth') }}</x-button>
 		</div>
 		<template v-if="!loading && (!tasks || tasks.length === 0) && showNothingToDo">
 			<h3 class="nothing">{{ $t('task.show.noTasks') }}</h3>
-			<img alt="" :src="llamaCoolUrl" />
+			<img alt="" :src="llamaCoolUrl"/>
 		</template>
 		<div :class="{ 'is-loading': loading}" class="spinner"></div>
 
@@ -163,7 +166,10 @@ export default {
 			if (this.showAll) {
 				this.setTitle(this.$t('task.show.titleCurrent'))
 			} else {
-				this.setTitle(this.$t('task.show.titleDates', { from: this.cStartDate.toLocaleDateString(), to: this.cEndDate.toLocaleDateString()}))
+				this.setTitle(this.$t('task.show.titleDates', {
+					from: this.cStartDate.toLocaleDateString(),
+					to: this.cEndDate.toLocaleDateString(),
+				}))
 			}
 
 			const params = {
@@ -200,14 +206,17 @@ export default {
 			this.$store.dispatch('tasks/loadTasks', params)
 				.then(r => {
 
-					// Sort all tasks to put those with a due date before the ones without a due date, the
-					// soonest before the later ones.
-					// We can't use the api sorting here because that sorts tasks with a due date after
-					// ones without a due date.
-					r.sort((a, b) => {
-						return a.dueDate === null && b.dueDate === null ? -1 : 1
-					})
-					const tasks = r.filter(t => t.dueDate !== null).concat(r.filter(t => t.dueDate === null))
+					// Sorting tasks with a due date so that the soonest or overdue are displayed at the top of the list.
+					const tasksWithDueDates = r
+						.filter(t => t.dueDate !== null)
+						.sort((a, b) => a.dueDate > b.dueDate ? 1 : -1)
+
+					const tasksWithoutDueDates = r.filter(t => t.dueDate === null)
+
+					const tasks = [
+						...tasksWithDueDates,
+						...tasksWithoutDueDates,
+					]
 
 					this.tasks = tasks
 				})
