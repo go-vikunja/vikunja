@@ -229,8 +229,8 @@ export default {
 
 				// label not found, create it
 				const labelModel = new LabelModel({title: labelTitle})
-				await dispatch('labels/createLabel', labelModel)
-				addLabelToTask(task, label)
+				await dispatch('labels/createLabel', labelModel, {root: true})
+				return addLabelToTask(task, label)
 			})
 
 			// This waits until all labels are created and added to the task
@@ -238,18 +238,18 @@ export default {
 			return task
 		},
 
-		findListId({ rootGetters }, { list, listId }) {
+		findListId({ rootGetters }, { list: listName, listId }) {
 			let foundListId = null
 			
 			// Uses the following ways to get the list id of the new task:
 			//  1. If specified in quick add magic, look in store if it exists and use it if it does
-			if (list !== null) {
-				const list = rootGetters['lists/findListByExactname'](list)
+			if (listName !== null) {
+				const list = rootGetters['lists/findListByExactname'](listName)
 				foundListId = list === null ? null : list.id
 			}
 			
 			//  2. Else check if a list was passed as parameter
-			if (listId !== 0) {
+			if (foundListId === null && listId !== 0) {
 				foundListId = listId
 			}
 		
@@ -298,7 +298,7 @@ export default {
 			const createdTask = await taskService.create(task)
 			return dispatch('addLabelsToTask', {
 				task: createdTask,
-				parsedLabels:parsedTask.labels,
+				parsedLabels: parsedTask.labels,
 			})
 		},
 	},

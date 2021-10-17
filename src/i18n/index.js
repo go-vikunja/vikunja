@@ -21,7 +21,7 @@ export const availableLanguages = {
 const loadedLanguages = ['en'] // our default language that is preloaded
 
 const setI18nLanguage = lang => {
-	i18n.locale = lang
+	i18n.global.locale = lang
 	document.querySelector('html').setAttribute('lang', lang)
 	return lang
 }
@@ -29,7 +29,7 @@ const setI18nLanguage = lang => {
 export const loadLanguageAsync = lang => {
 	if (
 		// If the same language
-		i18n.locale === lang ||
+		i18n.global.locale === lang ||
 		// If the language was already loaded
 		loadedLanguages.includes(lang)
 	) {
@@ -39,7 +39,7 @@ export const loadLanguageAsync = lang => {
 	// If the language hasn't been loaded yet
 	return import(`./lang/${lang}.json`).then(
 		messages => {
-			i18n.setLocaleMessage(lang, messages.default)
+			i18n.global.setLocaleMessage(lang, messages.default)
 			loadedLanguages.push(lang)
 			return setI18nLanguage(lang)
 		},

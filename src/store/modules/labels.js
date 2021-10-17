@@ -2,37 +2,10 @@ import LabelService from '@/services/label'
 import {setLoading} from '@/store/helper'
 import { success } from '@/message'
 import {i18n} from '@/i18n'
-
-/**
- * Returns the labels by id if found
- * @param {Object} state 
- * @param {Array} ids 
- * @returns {Array}
- */
-function getLabelsByIds(state, ids) {
-	return Object.values(state.labels).filter(({id}) => ids.includes(id))
-}
-
-/**
- * Checks if a list of labels is available in the store and filters them then query
- * @param {Object} state 
- * @param {Array} labels 
- * @param {String} query 
- * @returns {Array}
- */
- function filterLabelsByQuery(state, labels, query) {
-	const labelIds = labels.map(({id}) => id)
-	const foundLabels = getLabelsByIds(state, labelIds)
-	const labelQuery = query.toLowerCase()
-
-	return foundLabels.filter(({title}) => {
-		return !title.toLowerCase().includes(labelQuery)
-	})
-}
+import {getLabelsByIds, filterLabelsByQuery} from '@/helpers/labels'
 
 const labelService = new LabelService()
-
-const getAllLabels = async (page = 1) => {
+async function getAllLabels(page = 1) {
 	const labels = await labelService.getAll({}, {}, page)
 	if (page < labelService.totalPages) {
 		const nextLabels = await getAllLabels(page + 1)
@@ -70,7 +43,7 @@ export default {
 			return (ids) => getLabelsByIds(state, ids)
 		},
 		filterLabelsByQuery(state) {
-			return (...arr) => filterLabelsByQuery(state, ...arr)
+			return (labelsToHide, query) => filterLabelsByQuery(state, labelsToHide, query)
 		},
 	},
 	actions: {

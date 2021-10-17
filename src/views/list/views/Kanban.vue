@@ -405,7 +405,7 @@ export default {
 				tasks,
 			}
 
-			this.$store.dispatch('kanban/updateBucket', newBucket)
+			this.$store.commit('kanban/setBucketById', newBucket)
 		},
 
 		async updateTaskPosition(e) {

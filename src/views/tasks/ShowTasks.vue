@@ -207,9 +207,7 @@ export default {
 			// soonest before the later ones.
 			// We can't use the api sorting here because that sorts tasks with a due date after
 			// ones without a due date.
-			this.tasks = tasks.sort((a, b) => {
-				return Number(b.dueDate === null) - Number(a.dueDate === null)
-			})
+			this.tasks = tasks.sort((a, b) => a.dueDate - b.dueDate)
 		},
 
 		// FIXME: this modification should happen in the store

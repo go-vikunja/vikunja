@@ -15,8 +15,31 @@
 		}
 	}
 
+	&.has-task-edit-open {
+		flex-direction: column;
+
+		@media screen and (min-width: $tablet) {
+			flex-direction: row;
+
+			.tasks {
+				width: 66%;
+			}
+		}
+	}
+
 	.taskedit {
-		width: 50%;
+		width: 33%;
+		margin-right: 1rem;
+		margin-left: .5rem;
+
+		@media screen and (max-width: $tablet) {
+			width: 100%;
+			border-radius: 0;
+			margin: 0;
+			border-left: 0;
+			border-right: 0;
+			border-bottom: 0;
+		}
 	}
 }
 
@@ -24,16 +47,6 @@
 	margin-top: 1rem;
 	padding: 0;
 	text-align: left;
-
-	@media screen and (min-width: $tablet) {
-		&.short {
-			max-width: 53vw;
-		}
-	}
-
-	@media screen and (max-width: $tablet) {
-		max-width: 100%;
-	}
 
 	&.noborder {
 		margin: 1rem -0.5rem;
@@ -195,7 +208,7 @@
 			border-bottom-color: $grey-300;
 		}
 	}
-	
+
 	.checklist-summary {
 		padding-left: .5rem;
 		font-size: .9rem;
@@ -235,9 +248,6 @@
 }
 
 .taskedit {
-	min-height: calc(100% - 1rem);
-	margin-top: 1rem;
-
 	.priority-select {
 		.select, select {
 			width: 100%;

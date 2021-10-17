@@ -63,6 +63,12 @@ export const store = createStore({
 			state.online = !!import.meta.env.VITE_IS_ONLINE || online
 		},
 		[CURRENT_LIST](state, currentList) {
+			// Server updates don't return the right. Therefore the right is reset after updating the list which is
+			// confusing because all the buttons will disappear in that case. To prevent this, we're keeping the right
+			// when updating the list in global state.
+			if (typeof state.currentList.maxRight !== 'undefined' && (typeof currentList.maxRight === 'undefined' || currentList.maxRight === null)) {
+				currentList.maxRight = state.currentList.maxRight
+			}
 			state.currentList = currentList
 		},
 		[HAS_TASKS](state, hasTasks) {
@@ -135,12 +141,6 @@ export const store = createStore({
 				commit(BACKGROUND, null)
 			}
 
-			// Server updates don't return the right. Therefore the right is reset after updating the list which is
-			// confusing because all the buttons will disappear in that case. To prevent this, we're keeping the right
-			// when updating the list in global state.
-			if (typeof state.currentList.maxRight !== 'undefined' && (typeof currentList.maxRight === 'undefined' || currentList.maxRight === null)) {
-				currentList.maxRight = state.currentList.maxRight
-			}
 			commit(CURRENT_LIST, currentList)
 		},
 	},

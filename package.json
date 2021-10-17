@@ -61,7 +61,7 @@
     "browserslist": "4.17.4",
     "cypress": "8.6.0",
     "cypress-file-upload": "5.0.8",
-    "esbuild": "0.13.7",
+    "esbuild": "0.13.8",
     "eslint": "8.0.1",
     "eslint-plugin-vue": "7.19.1",
     "express": "4.17.1",
