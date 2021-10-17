@@ -143,7 +143,7 @@ export default class AbstractService {
 	getReplacedRoute(path, pathparams) {
 		let replacements = this.getRouteReplacements(path, pathparams)
 		return Object.entries(replacements).reduce(
-			(result, [parameter, value])  => result.replace(parameter, value),
+			(result, [parameter, value]) => result.replace(parameter, value),
 			path,
 		)
 	}
@@ -334,7 +334,7 @@ export default class AbstractService {
 			const response = await this.http.get(finalUrl, {params: params})
 			this.resultCount = Number(response.headers['x-pagination-result-count'])
 			this.totalPages = Number(response.headers['x-pagination-total-pages'])
-			
+
 			if (response.data === null) {
 				return []
 			}
@@ -380,7 +380,7 @@ export default class AbstractService {
 	 * @param model
 	 * @returns {Q.Promise<unknown>}
 	 */
-    async post(url, model) {
+	async post(url, model) {
 		const cancel = this.setLoading()
 
 		try {
@@ -462,8 +462,6 @@ export default class AbstractService {
 	 * @returns {Q.Promise<unknown>}
 	 */
 	async uploadFormData(url, formData) {
-		console.log(formData, formData._boundary)
-
 		const cancel = this.setLoading()
 		try {
 			const response = await this.http.put(
@@ -472,14 +470,14 @@ export default class AbstractService {
 				{
 					headers: {
 						'Content-Type':
-						'multipart/form-data; boundary=' + formData._boundary,
+							'multipart/form-data; boundary=' + formData._boundary,
 					},
 					onUploadProgress: progressEvent => {
 						this.uploadProgress = Math.round((progressEvent.loaded * 100) / progressEvent.total)
 					},
 				},
 			)
-			this.modelCreateFactory(response.data)
+			return this.modelCreateFactory(response.data)
 		} finally {
 			this.uploadProgress = 0
 			cancel()
