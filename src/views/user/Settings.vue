@@ -451,7 +451,7 @@ export default {
 
 			await this.userSettingsService.update(this.settings)
 			this.$store.commit('auth/setUserSettings', {
-				...this.settings
+				...this.settings,
 			})
 			this.$message.success({message: this.$t('user.settings.general.savedSuccess')})
 		},
