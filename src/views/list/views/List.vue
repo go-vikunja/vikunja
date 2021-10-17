@@ -74,9 +74,8 @@
 				</a>
 			</nothing>
 
-			<div class="tasks-container">
+			<div class="tasks-container" :class="{ 'has-task-edit-open': isTaskEdit }">
 				<div
-					:class="{ short: isTaskEdit }"
 					class="tasks mt-0"
 					v-if="tasks && tasks.length > 0"
 				>
