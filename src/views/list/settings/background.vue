@@ -28,7 +28,7 @@
 		<template v-if="unsplashBackgroundEnabled">
 			<input
 				:class="{'is-loading': backgroundService.loading}"
-				@keyup="() => newBackgroundSearch()"
+				@keyup="() => debounceNewBackgroundSearch()"
 				class="input is-expanded"
 				:placeholder="$t('list.background.searchPlaceholder')"
 				type="text"
@@ -70,22 +70,26 @@ import BackgroundUploadService from '../../../services/backgroundUpload'
 import ListService from '@/services/list'
 import {CURRENT_LIST} from '@/store/mutation-types'
 import CreateEdit from '@/components/misc/create-edit.vue'
+import debounce from 'lodash.debounce'
 
-function timeout(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms))
-}
+const SEARCH_DEBOUNCE = 300
 
 export default {
 	name: 'list-setting-background',
 	components: {CreateEdit},
 	data() {
 		return {
+			backgroundService: new BackgroundUnsplashService(),
 			backgroundSearchTerm: '',
 			backgroundSearchResult: [],
-			backgroundService: new BackgroundUnsplashService(),
 			backgroundThumbs: {},
 			currentPage: 1,
-			backgroundSearchTimeout: null,
+
+			// We're using debounce to not search on every keypress but with a delay.
+			debounceNewBackgroundSearch: debounce(this.newBackgroundSearch, SEARCH_DEBOUNCE, {
+				leading: true,
+				trailing: true,
+			}),
 
 			backgroundUploadService: new BackgroundUploadService(),
 			listService: new ListService(),
@@ -114,19 +118,11 @@ export default {
 		},
 
 		async searchBackgrounds(page = 1) {
-			if (this.backgroundSearchTimeout !== null) {
-				clearTimeout(this.backgroundSearchTimeout)
-			}
-
-			// TODO: use throttle
-			// FIXME: We're using the timeout to not search on every keypress but with a 300ms delay.
-			// If another key is pressed within these 300ms, the last search request is dropped and a new one is scheduled.
-			this.backgroundSearchTimeout = await timeout(300)
 			this.currentPage = page
-			const r = await this.backgroundService.getAll({}, {s: this.backgroundSearchTerm, p: page})
-			this.backgroundSearchResult = this.backgroundSearchResult.concat(r)
-			r.forEach(async b => {
-				this.backgroundThumbs[b.id] = await this.backgroundService.thumb(b)
+			const result = await this.backgroundService.getAll({}, {s: this.backgroundSearchTerm, p: page})
+			this.backgroundSearchResult = this.backgroundSearchResult.concat(result)
+			result.forEach(async background => {
+				this.backgroundThumbs[background.id] = await this.backgroundService.thumb(background)
 			})
 		},
 
