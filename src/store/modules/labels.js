@@ -4,8 +4,8 @@ import { success } from '@/message'
 import {i18n} from '@/i18n'
 import {getLabelsByIds, filterLabelsByQuery} from '@/helpers/labels'
 
-const labelService = new LabelService()
 async function getAllLabels(page = 1) {
+	const labelService = new LabelService()
 	const labels = await labelService.getAll({}, {}, page)
 	if (page < labelService.totalPages) {
 		const nextLabels = await getAllLabels(page + 1)
