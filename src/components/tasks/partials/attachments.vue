@@ -249,3 +249,137 @@ export default {
 	},
 }
 </script>
+
+<style lang="scss" scoped>
+.attachments {
+  input[type=file] {
+    display: none;
+  }
+
+  .files {
+    margin-bottom: 1rem;
+
+    .attachment {
+      margin-bottom: .5rem;
+      display: block;
+      transition: background-color $transition;
+      border-radius: $radius;
+      padding: .5rem;
+
+      &:hover {
+        background-color: $grey-200;
+      }
+
+      .filename {
+        font-weight: bold;
+        margin-bottom: .25rem;
+        color: $text;
+      }
+
+      .info {
+        color: $grey-500;
+        font-size: .9rem;
+
+        p {
+          margin-bottom: 0;
+          display: flex;
+
+          > span:not(:last-child):after,
+          > a:not(:last-child):after {
+            content: '·';
+            padding: 0 .25rem;
+          }
+
+          @media screen and (max-width: $mobile) {
+            &.collapses {
+              flex-direction: column;
+
+              > span:not(:last-child):after,
+              > a:not(:last-child):after {
+                display: none;
+              }
+
+              .user .username {
+                display: none;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  @media screen and (max-width: $tablet) {
+    .button {
+      width: 100%;
+    }
+  }
+
+  .dropzone {
+    position: fixed;
+    background: rgba(250, 250, 250, 0.8);
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    z-index: 100;
+    text-align: center;
+
+    &.hidden {
+      display: none;
+    }
+
+    .drop-hint {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+
+      .icon {
+        width: 100%;
+        font-size: 5rem;
+        height: auto;
+        text-shadow: $shadow-md;
+        animation: bounce 2s infinite;
+      }
+
+      .hint {
+        margin: .5rem auto 2rem;
+        border-radius: 2px;
+        box-shadow: $shadow-md;
+        background: $primary;
+        padding: 1rem;
+        color: $white;
+        width: 100%;
+        max-width: 300px;
+      }
+    }
+  }
+}
+
+@keyframes bounce {
+  from,
+  20%,
+  53%,
+  80%,
+  to {
+    animation-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1);
+    transform: translate3d(0, 0, 0);
+  }
+
+  40%,
+  43% {
+    animation-timing-function: cubic-bezier(0.755, 0.05, 0.855, 0.06);
+    transform: translate3d(0, -30px, 0);
+  }
+
+  70% {
+    animation-timing-function: cubic-bezier(0.755, 0.05, 0.855, 0.06);
+    transform: translate3d(0, -15px, 0);
+  }
+
+  90% {
+    transform: translate3d(0, -4px, 0);
+  }
+}
+</style>
