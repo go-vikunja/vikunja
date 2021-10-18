@@ -304,3 +304,26 @@ export default {
 	},
 }
 </script>
+
+<style lang="scss" scoped>
+.table-view {
+	.table {
+		background: transparent;
+		overflow-x: auto;
+		overflow-y: hidden;
+
+		th {
+			white-space: nowrap;
+		}
+
+		.user {
+			margin: 0;
+		}
+
+		.is-done {
+			font-size: .9rem;
+			margin: 0;
+		}
+	}
+}
+</style>
