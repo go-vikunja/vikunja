@@ -248,7 +248,9 @@ export default {
 }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
+$remove-icon-width: 24px;
+
 .add-task-relation-button {
 	margin-top: -3rem;
 
@@ -259,5 +261,49 @@ export default {
 	&.is-active svg {
 		transform: rotate(45deg);
 	}
+}
+
+.task-relations {
+  &.is-narrow .columns {
+    display: block;
+
+    .column {
+      width: 100%;
+    }
+  }
+
+  .different-list {
+    color: $grey-500;
+    width: auto;
+  }
+
+  .related-tasks {
+    .title {
+      font-size: 1rem;
+      margin: 0;
+    }
+
+    .tasks {
+      margin: 0;
+
+      a:not(.remove) {
+        width: calc(100% - #{$remove-icon-width});
+      }
+
+      .task .tasktext {
+        width: calc(100% - .25rem); // Magic .25rem extra space
+      }
+
+      .remove {
+        width: $remove-icon-width;
+        text-align: center;
+      }
+    }
+  }
+
+  .none {
+    font-style: italic;
+    text-align: center;
+  }
 }
 </style>
