@@ -345,4 +345,8 @@ export default {
   }
 
 }
+
+.media-content {
+  width: calc(100% - 48px - 2rem);
+}
 </style>

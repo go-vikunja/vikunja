@@ -65,3 +65,17 @@ export default {
 	},
 }
 </script>
+
+<style lang="scss" scoped>
+.no-auth-wrapper {
+  background: url('@/assets/llama.svg') no-repeat bottom left fixed $light-background;
+  min-height: 100vh;
+}
+
+.noauth-container {
+  max-width: 450px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 1rem;
+}
+</style>

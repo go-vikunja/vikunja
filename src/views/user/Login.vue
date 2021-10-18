@@ -222,7 +222,17 @@ export default {
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
+.login-buttons {
+	@media screen and (max-width: 450px) {
+		flex-direction: column;
+
+		.control:first-child {
+			margin-bottom: 1rem;
+		}
+	}
+}
+
 .button {
 	margin: 0 0.4rem 0 0;
 }

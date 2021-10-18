@@ -1,73 +1,7 @@
-.app-container {
-  min-height: calc(100vh - 65px);
-  @media screen and (max-width: $tablet) {
-    padding-top: $navbar-height;
-  }
-
-  .app-content {
-    padding: $navbar-height + 1.5rem 1.5rem 1rem 1.5rem;
-    z-index: 2;
-
-    &.is-menu-enabled {
-      margin-left: $navbar-width;
-    }
-
-    @media screen and (max-width: $tablet) {
-      margin-left: 0;
-      padding-top: 1.5rem;
-      min-height: calc(100vh - 4rem);
-
-      &.is-menu-enabled {
-        min-width: 100%;
-        margin-left: 0;
-      }
-    }
-
-    .card {
-      background: $white;
-    }
-	  
-	&.task\.detail {
-		padding-left: 0;
-		padding-right: 0;
-	}
-  }
-}
-
-.no-auth-wrapper {
-  background: url('@/assets/llama.svg') no-repeat bottom left fixed $light-background;
-  min-height: 100vh;
-
-  .noauth-container {
-    max-width: 450px;
-    width: 100%;
-    margin: 0 auto;
-    padding: 1rem;
-
-    @media screen and (max-width: 450px) {
-      .login-buttons {
-        flex-direction: column;
-
-        .control:first-child {
-          margin-bottom: 1rem;
-        }
-      }
-    }
-  }
-}
-
-.media-content {
-  width: calc(100% - 48px - 2rem);
-}
-
 .content h3 {
   .icon, .is-small {
     font-size: 1rem;
   }
-}
-
-.underline-none {
-  text-decoration: none !important;
 }
 
 .table.has-actions {

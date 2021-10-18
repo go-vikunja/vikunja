@@ -73,3 +73,9 @@ export default {
 	},
 }
 </script>
+
+<style lang="scss" scoped>
+.underline-none {
+  text-decoration: none !important;
+}
+</style>

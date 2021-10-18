@@ -134,6 +134,43 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.app-container {
+  min-height: calc(100vh - 65px);
+
+  @media screen and (max-width: $tablet) {
+    padding-top: $navbar-height;
+  }
+
+  .app-content {
+    padding: $navbar-height + 1.5rem 1.5rem 1rem 1.5rem;
+    z-index: 2;
+
+    @media screen and (max-width: $tablet) {
+      margin-left: 0;
+      padding-top: 1.5rem;
+      min-height: calc(100vh - 4rem);
+    }
+
+    &.is-menu-enabled {
+      margin-left: $navbar-width;
+
+      @media screen and (max-width: $tablet) {
+        min-width: 100%;
+        margin-left: 0;
+      }
+    }
+
+	&.task\.detail {
+		padding-left: 0;
+		padding-right: 0;
+	}
+
+    .card {
+      background: $white;
+    }
+  }
+}
+
 .keyboard-shortcuts-button {
 	position: fixed;
 	bottom: calc(1rem - 4px);
