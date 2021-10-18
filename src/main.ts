@@ -23,8 +23,6 @@ import {formatDate, formatDateShort, formatDateLong, formatDateSince} from '@/he
 // @ts-ignore
 import {VERSION} from './version.json'
 
-// Add CSS
-import './styles/vikunja.scss'
 // Notifications
 import Notifications from '@kyvg/vue3-notification'
 
