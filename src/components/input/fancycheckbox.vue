@@ -5,7 +5,6 @@
 			:disabled="disabled || null"
 			:id="checkBoxId"
 			@change="(event) => updateData(event.target.checked)"
-			style="display: none;"
 			type="checkbox"/>
 		<label :for="checkBoxId" class="check">
 			<svg height="18px" viewBox="0 0 18 18" width="18px">
@@ -60,3 +59,84 @@ export default {
 	},
 }
 </script>
+
+
+<style lang="scss" scoped>
+.fancycheckbox {
+  display: inline-block;
+  padding-right: 5px;
+  padding-top: 3px;
+
+	// FIXME: should be a prop
+	&.is-block {
+		margin: .5rem .2rem;
+	}
+}
+
+input[type=checkbox] {
+	display: none;
+}
+
+.check {
+	cursor: pointer;
+	position: relative;
+	margin: auto;
+	width: 18px;
+	height: 18px;
+	-webkit-tap-highlight-color: transparent;
+	transform: translate3d(0, 0, 0);
+}
+
+span {
+	font-size: 0.8rem;
+	vertical-align: top;
+	padding-left: .5rem;
+}
+
+svg {
+	position: relative;
+	z-index: 1;
+	fill: none;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+	stroke: #c8ccd4;
+	stroke-width: 1.5;
+	transform: translate3d(0, 0, 0);
+	transition: all 0.2s ease;
+}
+
+.check:hover svg {
+	stroke: $primary;
+}
+
+.is-disabled .check:hover svg {
+	stroke: #c8ccd4;
+}
+
+path {
+	stroke-dasharray: 60;
+	stroke-dashoffset: 0;
+}
+
+polyline {
+	stroke-dasharray: 22;
+	stroke-dashoffset: 66;
+}
+
+input[type=checkbox]:checked + .check {
+	svg {
+		stroke: $primary;
+	}
+
+	path {
+		stroke-dashoffset: 60;
+		transition: all 0.3s linear;
+	}
+
+	polyline {
+		stroke-dashoffset: 42;
+		transition: all 0.2s linear;
+		transition-delay: 0.15s;
+	}
+}
+</style>
