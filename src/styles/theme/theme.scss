@@ -147,3 +147,8 @@ button.table {
 .dragging-disabled .handle {
 	opacity: 0 !important;
 }
+
+.box {
+  border: 1px solid $grey-200;
+  box-shadow: $shadow-sm;
+}
