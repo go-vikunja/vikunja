@@ -445,3 +445,198 @@ export default {
 	},
 }
 </script>
+
+<style lang="scss" scoped>
+$gantt-border: 1px solid $grey-200;
+$gantt-vertical-border-color: $grey-100;
+
+.gantt-chart {
+	overflow-x: auto;
+	border-top: 1px solid $grey-200;
+
+	.dates {
+		display: flex;
+		text-align: center;
+
+		.months {
+			display: flex;
+
+			.month {
+				padding: 0.5rem 0 0;
+				border-right: $gantt-border;
+				font-family: $vikunja-font;
+				font-weight: bold;
+
+				&:last-child {
+					border-right: none;
+				}
+
+				.days {
+					display: flex;
+
+					.day {
+						padding: 0.5rem 0;
+						font-weight: normal;
+
+						&.today {
+							background: $primary;
+							color: $white;
+							border-radius: 5px 5px 0 0;
+							font-weight: bold;
+						}
+
+						.theday {
+							padding: 0 .5rem;
+							width: 100%;
+							display: block;
+						}
+
+						.weekday {
+							font-size: 0.8rem;
+						}
+					}
+				}
+			}
+		}
+	}
+
+	.tasks {
+		max-width: unset !important;
+		margin: 0;
+		border-top: $gantt-border;
+
+		.row {
+			height: 45px;
+
+			.task {
+				display: inline-block;
+				border: 2px solid $primary;
+				font-size: 0.85rem;
+				margin: 0.5rem;
+				border-radius: 6px;
+				padding: 0.25rem 0.5rem;
+				cursor: grab;
+				position: relative;
+				height: 31px !important;
+
+				-webkit-touch-callout: none; // iOS Safari
+				user-select: none; // Non-prefixed version
+
+				&.is-current-edit {
+					border-color: $orange !important;
+				}
+
+				&.has-light-text {
+					color: $light;
+
+					&.done span:after {
+						border-top: 1px solid $light;
+					}
+
+					.edit-toggle {
+						color: $light;
+					}
+				}
+
+				&.has-dark-text {
+					color: $text;
+
+					&.done span:after {
+						border-top: 1px solid $dark;
+					}
+
+					.edit-toggle {
+						color: $text;
+					}
+				}
+
+				&.done span {
+					position: relative;
+
+					&::after {
+						content: '';
+						position: absolute;
+						right: 0;
+						left: 0;
+						top: 57%;
+					}
+				}
+
+				span:not(.high-priority) {
+					max-width: calc(100% - 20px);
+					display: inline-block;
+					white-space: nowrap;
+					text-overflow: ellipsis;
+					overflow: hidden;
+
+					&.has-high-priority {
+						max-width: calc(100% - 90px);
+					}
+
+					&.has-not-so-high-priority {
+						max-width: calc(100% - 70px);
+					}
+
+					&.has-super-high-priority {
+						max-width: calc(100% - 111px);
+					}
+
+					&.icon {
+						width: 10px;
+						text-align: center;
+					}
+				}
+
+				.high-priority {
+					margin: 0 0 0 .5rem;
+					vertical-align: bottom;
+				}
+
+				.edit-toggle {
+					float: right;
+					cursor: pointer;
+					margin-right: 4px;
+				}
+
+				&.nodate {
+					border: 2px dashed $grey-300;
+					background: $grey-100;
+				}
+
+				&:active {
+					cursor: grabbing;
+				}
+			}
+		}
+	}
+
+	.taskedit {
+		position: fixed;
+		min-height: 0;
+		top: 10vh;
+		right: 10vw;
+		z-index: 5;
+
+		// FIXME: should be an option of the card, e.g. overflow
+		::v-deep.card-content {
+			max-height: 60vh;
+			overflow-y: auto;
+		}
+	}
+
+	.add-new-task {
+		padding: 1rem .7rem .4rem .7rem;
+		display: flex;
+		max-width: 450px;
+
+		.input {
+			margin-right: .7rem;
+			font-size: .8rem;
+		}
+
+		.button {
+			font-size: .68rem;
+		}
+	}
+}
+</style>
