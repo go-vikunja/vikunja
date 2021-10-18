@@ -104,3 +104,25 @@ export default {
 	},
 }
 </script>
+
+<style lang="scss" scoped>
+.reminders {
+  .reminder-input {
+    display: flex;
+    align-items: center;
+
+    &.overdue ::v-deep.datepicker a.show {
+      color: $red;
+    }
+
+    &:last-child {
+      margin-bottom: 0.75rem;
+    }
+
+    a.remove {
+      color: $red;
+      padding-left: .5rem;
+    }
+  }
+}
+</style>
