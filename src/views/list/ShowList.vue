@@ -150,6 +150,51 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.switch-view-container {
+  @media screen and (max-width: $tablet) {
+    display: flex;
+    justify-content: center;
+  }
+}
+
+.switch-view {
+  background: $white;
+  display: inline-flex;
+  border-radius: $radius;
+  font-size: .75rem;
+  box-shadow: $shadow-sm;
+  height: $switch-view-height;
+  margin-bottom: 1rem;
+  padding: .5rem;
+
+  a {
+    padding: .25rem .5rem;
+    display: block;
+    border-radius: $radius;
+
+    transition: all 100ms;
+
+    &:not(:last-child) {
+      margin-right: .5rem;
+    }
+
+    &.is-active,
+	&:hover {
+      color: $white;
+    }
+
+    &.is-active {
+      background: $primary;
+      font-weight: bold;
+      box-shadow: $shadow-xs;
+    }
+
+    &:hover {
+      background: $primary;
+    }
+  }
+}
+
 .is-archived .notification.is-warning {
   margin-bottom: 1rem;
 }
