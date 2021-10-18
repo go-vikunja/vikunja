@@ -47,3 +47,42 @@ export default {
 	},
 }
 </script>
+
+<style lang="scss" scoped>
+.update-notification {
+	margin: 1rem;
+	display: flex;
+	align-items: center;
+	background: $warning;
+	padding: 0 0 0 .5rem;
+	border-radius: $radius;
+	font-size: .9rem;
+	color: $grey-900;
+	justify-content: space-between;
+
+	@media screen and (max-width: $desktop) {
+		position: fixed;
+		bottom: 1rem;
+		margin: 0;
+		width: 450px;
+		left: calc(50vw - 225px);
+	}
+
+	@media screen and (max-width: $tablet) {
+		position: fixed;
+		left: 1rem;
+		right: 1rem;
+		bottom: 1rem;
+		width: auto;
+	}
+
+	p {
+		text-align: center;
+		width: 100%;
+	}
+
+	> * + * {
+		margin-left: .5rem;
+	}
+}
+</style>
