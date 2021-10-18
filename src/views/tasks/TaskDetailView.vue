@@ -692,3 +692,236 @@ export default {
 	},
 }
 </script>
+
+<style lang="scss" scoped>
+$flash-background-duration: 750ms;
+
+.task-view {
+  // This is a workaround to hide the llama background from the top on the task detail page
+  margin-top: -1.5rem;
+  padding: 1rem;
+  background-color: $light-background;
+
+  @media screen and (max-width: $desktop) {
+    padding-bottom: 0;
+  }
+
+  .subtitle {
+    color: $grey-500;
+	margin-bottom: 1rem;
+
+    a {
+      color: $grey-800;
+    }
+  }
+
+  h3 .button {
+    vertical-align: middle;
+  }
+
+  .icon.is-grey {
+    color: $grey-400;
+  }
+
+  ::v-deep.heading {
+    display: flex;
+    justify-content: space-between;
+    text-transform: none;
+    align-items: center;
+
+    @media screen and (max-width: $tablet) {
+      flex-direction: column;
+      align-items: start;
+    }
+
+    .title {
+      margin-bottom: 0;
+	}
+
+   .title.input {
+		// 1.8rem is the font-size, 1.125 is the line-height, .3rem padding everywhere, 1px border around the whole thing.
+		min-height: calc(1.8rem * 1.125 + .6rem + 2px);
+
+		@media screen and (max-width: $tablet) {
+			margin: 0 -.3rem .5rem -.3rem; // the title has 0.3rem padding - this make the text inside of it align with the rest
+		}
+    }
+
+    .title.task-id {
+      color: $grey-400;
+      white-space: nowrap;
+    }
+
+  }
+
+  .date-input {
+    display: flex;
+    align-items: center;
+
+    a.remove {
+      color: $red;
+      vertical-align: middle;
+      padding-left: .5rem;
+      line-height: 1;
+    }
+  }
+
+  ::v-deep.datepicker {
+    width: 100%;
+
+    a.show {
+      color: $text;
+      padding: .25rem .5rem;
+      transition: background-color $transition;
+      border-radius: $radius;
+      display: block;
+      margin: .1rem 0;
+
+      &:hover {
+        background: $white;
+      }
+    }
+
+    &.disabled a.show:hover {
+      background: transparent;
+    }
+  }
+
+  .details {
+    padding-bottom: 0.75rem;
+    flex-flow: row wrap;
+    margin-bottom: 0;
+
+    .detail-title {
+      display: block;
+      color: $grey-400;
+    }
+
+    .none {
+      font-style: italic;
+    }
+
+    // Break after the 2nd element
+    .column:nth-child(2n) {
+      page-break-after: always; // CSS 2.1 syntax
+      break-after: always; // New syntax
+    }
+
+    &.labels-list,
+	.assignees {
+      ::v-deep.multiselect {
+        .input-wrapper {
+          &:not(:focus-within):not(:hover) {
+            background: transparent !important;
+            border-color: transparent !important;
+          }
+        }
+      }
+    }
+  }
+
+  ::v-deep.details,
+  ::v-deep.heading {
+    .input:not(.has-defaults),
+    .textarea,
+    .select:not(.has-defaults) select {
+      border-color: transparent;
+      background: transparent;
+      cursor: pointer;
+      transition: all $transition-duration;
+
+      &::placeholder {
+        color: $text-light;
+        opacity: 1;
+        font-style: italic;
+      }
+
+      &:not(:disabled) {
+        &:hover, &:active {
+          background: $input-background-color;
+          border-color: $input-border-color;
+          cursor: text;
+        }
+
+        &:focus {
+          background: $input-background-color;
+          border-color: $input-focus-border-color;
+        }
+      }
+    }
+
+    .select:not(.has-defaults):after {
+      opacity: 0;
+    }
+
+    .select:not(.has-defaults):hover:after {
+      opacity: 1;
+    }
+  }
+
+  .attachments {
+    margin-bottom: 0;
+
+    table tr:last-child td {
+      border-bottom: none;
+    }
+  }
+
+  .action-buttons {
+    a.button {
+      width: 100%;
+      margin-bottom: .5rem;
+      justify-content: left;
+    }
+  }
+
+  .created {
+    font-size: .75rem;
+    color: $grey-500;
+    text-align: right;
+  }
+
+  .checklist-summary {
+    margin-left: .25rem;
+  }	
+}
+
+.task-view-container {
+  padding-bottom: 1rem;
+	
+  @media screen and (max-width: $desktop) {
+	padding-bottom: 0;
+  }
+
+  .task-view * {
+    opacity: 0;
+    transition: opacity 50ms ease;
+  }
+
+  &.is-loading {
+    opacity: 1;
+
+    .task-view * {
+      opacity: 0;
+    }
+  }
+
+  &.visible:not(.is-loading) .task-view * {
+    opacity: 1;
+  }
+}
+
+.flash-background-enter-from,
+.flash-background-enter-active  {
+  animation: flash-background $flash-background-duration ease 1;
+}
+
+@keyframes flash-background {
+  0% {
+    background: lighten($primary, 30);
+  }
+  100% {
+    background: transparent;
+  }
+}
+</style>
