@@ -42,3 +42,14 @@ export default {
 	}),
 }
 </script>
+
+<style lang="scss" scoped>
+.link-share-container.has-background .view {
+  background: transparent;
+  border: none;
+
+  .logout .button {
+    box-shadow: none;
+  }
+}
+</style>
