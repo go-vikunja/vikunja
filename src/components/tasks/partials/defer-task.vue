@@ -131,3 +131,62 @@ export default {
 	},
 }
 </script>
+
+<style lang="scss" scoped>
+// 100px is roughly the size the pane is pulled to the right
+$defer-task-max-width: 350px + 100px;
+
+.defer-task {
+	position: absolute;
+	width: 100%;
+	max-width: $defer-task-max-width;
+	border-radius: $radius;
+	border: 1px solid $grey-200;
+	padding: 1rem;
+	margin: 1rem;
+	background: $white;
+	color: $text;
+	cursor: default;
+	z-index: 10;
+	box-shadow: $shadow-lg;
+
+	@media screen and (max-width: ($defer-task-max-width)) {
+		left: .5rem;
+		right: .5rem;
+		max-width: 100%;
+		width: calc(100vw - 1rem - 2rem);
+	}
+}
+
+.defer-days {
+	justify-content: space-between;
+	display: flex;
+	margin: .5rem 0;
+}
+
+::v-deep {
+	input.input {
+		display: none;
+	}
+
+	.flatpickr-calendar {
+		margin: 0 auto;
+		box-shadow: none;
+
+		@media screen and (max-width: ($defer-task-max-width)) {
+			max-width: 100%;
+		}
+
+		span {
+			width: auto !important;
+		}
+
+	}
+
+	.flatpickr-innerContainer {
+		@media screen and (max-width: ($defer-task-max-width)) {
+			overflow: scroll;
+		}
+	}
+}
+</style>

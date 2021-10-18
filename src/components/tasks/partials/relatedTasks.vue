@@ -299,6 +299,30 @@ $remove-icon-width: 24px;
         text-align: center;
       }
     }
+
+	.task {
+		display: flex;
+		flex-wrap: wrap;
+		padding: .4rem;
+		transition: background-color $transition;
+		align-items: center;
+		cursor: pointer;
+		border-radius: $radius;
+		border: 2px solid transparent;
+
+		a {
+			color: $text;
+			transition: color ease $transition-duration;
+
+			&:hover {
+				color: $grey-900;
+			}
+		}
+
+		.remove {
+			color: $red;
+		}
+	}
   }
 
   .none {

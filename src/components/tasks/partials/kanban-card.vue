@@ -110,3 +110,158 @@ export default {
 	},
 }
 </script>
+
+<style lang="scss" scoped>
+$task-background: $white;
+
+.task {
+	-webkit-touch-callout: none; // iOS Safari
+	user-select: none;
+	cursor: pointer;
+	box-shadow: $shadow-xs;
+	display: block;
+	border: 3px solid transparent;
+
+	font-size: .9rem;
+	margin: .5rem;
+	padding: .4rem;
+	border-radius: $radius;
+	background: $task-background;
+
+	&.loader-container.is-loading::after {
+		width: 1.5rem;
+		height: 1.5rem;
+		top: calc(50% - .75rem);
+		left: calc(50% - .75rem);
+		border-width: 2px;
+	}
+
+	h3 {
+		font-family: $family-sans-serif;
+		font-size: .85rem;
+		word-break: break-word;
+	}
+
+	.progress {
+		margin: 8px 0 0 0;
+		width: 100%;
+		height: 0.5rem;
+	}
+
+	.due-date {
+		float: right;
+		display: flex;
+		align-items: center;
+
+		.icon {
+			margin-right: .25rem;
+		}
+
+		&.overdue {
+			color: $red;
+		}
+	}
+
+	.label-wrapper .tag {
+		margin: .5rem .5rem 0 0;
+	}
+
+	.footer {
+		background: transparent;
+		padding: 0;
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+
+		::v-deep.tag,
+		.assignees,
+		.icon,
+		.priority-label {
+			margin-top: .25rem;
+			margin-right: .25rem;
+		}
+
+		.assignees {
+			display: flex;
+
+			.user {
+				display: inline;
+				margin: 0;
+
+				img {
+					margin: 0;
+				}
+			}
+		}
+
+		// FIXME: should be in labels.vue
+		::v-deep.tag {
+			margin-left: 0;
+		}
+
+		.priority-label {
+			font-size: .75rem;
+			height: 2rem;
+
+			.icon {
+				height: 1rem;
+				padding: 0 .25rem;
+				margin-top: 0;
+			}
+		}
+	}
+
+	.footer .icon,
+	.due-date,
+	.priority-label {
+		background: $grey-100;
+		border-radius: $radius;
+		padding: 0 .5rem;
+	}
+
+	.due-date {
+		padding: 0 .25rem;
+	}
+
+	.task-id {
+		color: $grey-500;
+		font-size: .8rem;
+		margin-bottom: .25rem;
+		display: flex;
+	}
+
+	.is-done {
+		font-size: .75rem;
+		padding: .2rem .3rem;
+		margin: 0 .25rem 0 0;
+	}
+
+	&.is-moving {
+		opacity: .5;
+	}
+
+	span {
+		width: auto;
+	}
+
+	&.has-light-text {
+		color: $white;
+
+		.task-id {
+			color: $grey-200;
+		}
+
+		.footer .icon,
+		.due-date,
+		.priority-label {
+			background: $grey-800;
+		}
+
+		.footer {
+			.icon svg {
+				fill: $white;
+			}
+		}
+	}
+}
+</style>

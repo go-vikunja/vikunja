@@ -211,3 +211,149 @@ export default {
 	},
 }
 </script>
+
+<style lang="scss" scoped>
+.task {
+	display: flex;
+	flex-wrap: wrap;
+	padding: .4rem;
+	transition: background-color $transition;
+	align-items: center;
+	cursor: pointer;
+	border-radius: $radius;
+	border: 2px solid transparent;
+
+	&:hover {
+		background-color: $grey-100;
+	}
+
+	.tasktext,
+	&.tasktext {
+		white-space: nowrap;
+		text-overflow: ellipsis;
+		overflow: hidden;
+		display: inline-block;
+		flex: 1 0 50%;
+
+		.overdue {
+			color: $red;
+		}
+	}
+
+	.task-list {
+		width: auto;
+		color: $grey-400;
+		font-size: .9rem;
+		white-space: nowrap;
+	}
+
+	.color-bubble {
+		height: 10px;
+		flex: 0 0 10px;
+	}
+
+	.tag {
+		margin: 0 0.5rem;
+	}
+
+	.avatar {
+		border-radius: 50%;
+		vertical-align: bottom;
+		margin-left: 5px;
+		height: 27px;
+		width: 27px;
+	}
+
+	.list-task-icon {
+		margin-left: 6px;
+
+		&:not(:first-of-type) {
+			margin-left: 8px;
+		}
+
+	}
+
+	a {
+		color: $text;
+		transition: color ease $transition-duration;
+
+		&:hover {
+			color: $grey-900;
+		}
+	}
+
+	.favorite {
+		opacity: 0;
+		text-align: center;
+		width: 27px;
+		transition: opacity $transition, color $transition;
+
+		&:hover {
+			color: $orange;
+		}
+
+		&.is-favorite {
+			opacity: 1;
+			color: $orange;
+		}
+	}
+
+	&:hover .favorite {
+		opacity: 1;
+	}
+
+	.handle {
+		opacity: 0;
+		transition: opacity $transition;
+		margin-right: .25rem;
+		cursor: grab;
+	}
+
+	&:hover .handle {
+		opacity: 1;
+	}
+
+	::v-deep.fancycheckbox {
+		height: 18px;
+		padding-top: 0;
+		padding-right: .5rem;
+
+		span {
+			display: none;
+		}
+	}
+
+	.tasktext.done {
+		text-decoration: line-through;
+		color: $grey-500;
+	}
+
+	span.parent-tasks {
+		color: $grey-500;
+		width: auto;
+	}
+
+	.remove {
+		color: $red;
+	}
+
+	input[type="checkbox"] {
+		vertical-align: middle;
+	}
+
+	.settings {
+		float: right;
+		width: 24px;
+		cursor: pointer;
+	}
+
+	&.loader-container.is-loading:after {
+		top: calc(50% - 1rem);
+		left: calc(50% - 1rem);
+		width: 2rem;
+		height: 2rem;
+		border-left-color: $grey-300;
+		border-bottom-color: $grey-300;
+	}
+}
+</style>

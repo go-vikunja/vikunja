@@ -142,3 +142,36 @@ export default {
 	},
 }
 </script>
+
+<style lang="scss" scoped>
+.priority-select {
+	.select,
+	select {
+		width: 100%;
+	}
+}
+
+ul.assingees {
+	list-style: none;
+	margin: 0;
+
+	li {
+		padding: 0.5rem 0.5rem 0;
+
+		a {
+			float: right;
+			color: $red;
+			transition: all $transition;
+		}
+	}
+}
+
+.tag {
+	margin-right: 0.5rem;
+	margin-bottom: 0.5rem;
+
+	&:last-child {
+		margin-right: 0;
+	}
+}
+</style>

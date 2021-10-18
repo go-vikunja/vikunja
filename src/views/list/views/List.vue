@@ -311,6 +311,51 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.tasks-container {
+	display: flex;
+
+	&.has-task-edit-open {
+		flex-direction: column;
+
+		@media screen and (min-width: $tablet) {
+			flex-direction: row;
+
+			.tasks {
+				width: 66%;
+			}
+		}
+	}
+
+	.tasks {
+		width: 100%;
+
+		.ghost {
+			border-radius: $radius;
+			background: $grey-100;
+			border: 2px dashed $grey-300;
+
+			* {
+				opacity: 0;
+			}
+		}
+	}
+
+	.taskedit {
+		width: 33%;
+		margin-right: 1rem;
+		margin-left: .5rem;
+
+		@media screen and (max-width: $tablet) {
+			width: 100%;
+			border-radius: 0;
+			margin: 0;
+			border-left: 0;
+			border-right: 0;
+			border-bottom: 0;
+		}
+	}
+}
+
 .list-view .task-add {
 	padding: 1rem 1rem 0;
 }

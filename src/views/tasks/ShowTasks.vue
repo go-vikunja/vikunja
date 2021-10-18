@@ -254,3 +254,30 @@ export default {
 	},
 }
 </script>
+
+<style lang="scss" scoped>
+.show-tasks {
+	h3 {
+		text-align: left;
+
+		&.nothing {
+			text-align: center;
+			margin-top: 3rem;
+		}
+
+		.input {
+			width: 190px;
+			vertical-align: middle;
+			margin: .5rem 0;
+		}
+	}
+
+	img {
+		margin-top: 2rem;
+	}
+
+	.user img {
+		margin: 0;
+	}
+}
+</style>
