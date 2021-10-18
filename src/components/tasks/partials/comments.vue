@@ -304,3 +304,45 @@ export default {
 	},
 }
 </script>
+
+<style lang="scss" scoped>
+.media.comment {
+  align-items: center;
+
+  .media-left {
+    margin: 0 1rem;
+  }
+
+  .comment-info {
+    display: flex;
+    align-items: center;
+
+    * {
+      padding-right: .5rem;
+    }
+
+    img {
+      display: none;
+
+		@media screen and (max-width: $tablet) {
+			display: block;
+			width: 20px;
+			height: 20px;
+			padding-right: 0;
+			margin-right: .5rem;
+		}
+    }
+
+
+    span {
+      font-size: .75rem;
+      line-height: 1;
+    }
+  }
+
+  .editor {
+    margin-top: .5rem;
+  }
+
+}
+</style>
