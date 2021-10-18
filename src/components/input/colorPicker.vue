@@ -100,3 +100,58 @@ export default {
 	},
 }
 </script>
+
+<style lang="scss" scoped>
+// FIXME: should be @use so that classes dont get imported twice 
+// needed for
+// - $card-shadow
+@import "bulma/sass/components/card.sass";
+.color-picker-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+	// reset / see https://stackoverflow.com/a/11471224/15522256
+	input[type="color"] {
+		-webkit-appearance: none;
+		border: none;
+	}
+	input[type="color"]::-webkit-color-swatch-wrapper {
+		padding: 0;
+	}
+	input[type="color"]::-webkit-color-swatch {
+		border: none;
+	}
+
+	$PICKER_SIZE: 24px;
+	$BORDER_WIDTH: 1px;
+	.picker {
+		display: grid;
+		width: $PICKER_SIZE;
+		height: $PICKER_SIZE;
+		overflow: hidden;
+		border-radius: 100%;
+		border: $BORDER_WIDTH solid $grey-300;
+		box-shadow: $card-shadow;
+
+		& > * {
+			grid-row: 1;
+			grid-column: 1;
+		}
+	}
+
+	input.picker__input {
+		padding: 0;
+		width: $PICKER_SIZE - 2 * $BORDER_WIDTH;
+		height: $PICKER_SIZE - 2 * $BORDER_WIDTH;
+	}
+
+	.picker__input.is-empty {
+		opacity: 0;
+	}
+	
+	.picker__pattern {
+		pointer-events: none;
+	}
+}
+</style>
