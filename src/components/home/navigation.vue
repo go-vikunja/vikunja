@@ -275,7 +275,293 @@ export default {
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
+$navbar-padding: 2rem;
+$vikunja-nav-background: $light-background;
+$vikunja-nav-color: $grey-700;
+$vikunja-nav-selected-width: 0.4rem;
+
+
+.namespace-container {
+	background: $vikunja-nav-background;
+	z-index: 6;
+	color: $vikunja-nav-color;
+	padding: 0;
+	transition: all $transition;
+	position: fixed;
+	bottom: 0;
+	top: $navbar-height;
+	overflow-x: auto;
+	width: $navbar-width;
+
+	padding: 0 0 1rem;
+	left: -147vw;
+	bottom: 0;
+
+	@media screen and (max-width: $tablet) {
+		top: 0;
+		width: 70vw;
+	}
+
+	&.is-active {
+		left: 0;
+	}
+
+	.menu {
+		.menu-label {
+			font-size: 1rem;
+			font-weight: 700;
+			font-weight: bold;
+			font-family: $vikunja-font;
+			color: $vikunja-nav-color;
+			font-weight: 500;
+			min-height: 2.5rem;
+			padding-top: 0;
+			padding-left: $navbar-padding;
+
+			overflow: hidden;
+		}
+
+		.menu-label,
+		.menu-list span.list-menu-link,
+		.menu-list a {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			cursor: pointer;
+
+			.list-menu-title {
+				overflow: hidden;
+				text-overflow: ellipsis;
+				width: 100%;
+			}
+
+			.color-bubble {
+				height: 12px;
+				flex: 0 0 12px;
+			}
+
+			.favorite {
+				margin-left: .25rem;
+				transition: opacity $transition, color $transition;
+				opacity: 0;
+
+				&:hover {
+					color: $orange;
+				}
+
+				&.is-favorite {
+					opacity: 1;
+					color: $orange;
+				}
+			}
+
+			&:hover .favorite {
+				opacity: 1;
+			}
+		}
+
+		.menu-label {
+			.color-bubble {
+				width: 14px !important;
+				height: 14px !important;
+			}
+
+			.is-archived {
+				min-width: 85px;
+			}
+		}
+
+		.namespace-title {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+
+			.menu-label {
+				margin-bottom: 0;
+				flex: 1 1 auto;
+
+				.name {
+					overflow: hidden;
+					text-overflow: ellipsis;
+					white-space: nowrap;
+				}
+			}
+
+			a:not(.dropdown-item) {
+				color: $vikunja-nav-color;
+				padding: 0 .25rem;
+			}
+
+			::v-deep.dropdown-trigger {
+				padding: .5rem;
+				cursor: pointer;
+			}
+
+			.toggle-lists-icon {
+				svg {
+					transition: all $transition;
+					transform: rotate(90deg);
+					opacity: 1;
+				}
+
+				&.active svg {
+					transform: rotate(0deg);
+					opacity: 0;
+				}
+			}
+
+			&:hover .toggle-lists-icon svg {
+				opacity: 1;
+			}
+
+			&:not(.has-menu) .toggle-lists-icon {
+				padding-right: 1rem;
+			}
+		}
+
+		.menu-label,
+		.nsettings,
+		.menu-list span.list-menu-link,
+		.menu-list a {
+			color: $vikunja-nav-color;
+		}
+
+		.menu-list {
+			li {
+				height: 44px;
+				display: flex;
+				align-items: center;
+
+				::v-deep.dropdown-trigger {
+					opacity: 0;
+					padding: .5rem;
+					cursor: pointer;
+					transition: $transition;
+				}
+
+				&:hover {
+					background: $white;
+
+					::v-deep.dropdown-trigger {
+						opacity: 1;
+					}
+				}
+
+				&.loader-container.is-loading:after {
+					width: 1.5rem;
+					height: 1.5rem;
+					top: calc(50% - .75rem);
+					left: calc(50% - .75rem);
+					border-width: 2px;
+				}
+			}
+
+			.flip-list-move {
+				transition: transform $transition-duration;
+			}
+
+			.ghost {
+				background: $grey-200;
+
+				* {
+					opacity: 0;
+				}
+			}
+
+			a:hover {
+				background: transparent;
+			}
+
+			span.list-menu-link, li > a {
+				padding: 0.75rem .5rem 0.75rem ($navbar-padding * 1.5 - 1.75rem);
+				transition: all 0.2s ease;
+
+				border-radius: 0;
+				white-space: nowrap;
+				text-overflow: ellipsis;
+				overflow: hidden;
+				width: 100%;
+				border-left: $vikunja-nav-selected-width solid transparent;
+
+				.icon {
+					height: 1rem;
+					vertical-align: middle;
+					padding-right: 0.5rem;
+					
+					&.handle {
+						opacity: 0;
+						transition: opacity $transition;
+						margin-right: .25rem;
+						cursor: grab;
+					}
+				}
+				
+				&:hover .icon.handle {
+					opacity: 1;
+				}
+
+				&.router-link-exact-active {
+					color: $primary;
+					border-left: $vikunja-nav-selected-width solid $primary;
+
+					.icon {
+						color: $primary;
+					}
+				}
+
+				&:hover {
+					border-left: $vikunja-nav-selected-width solid $primary;
+				}
+			}
+		}
+
+		.logo {
+			display: none;
+
+			@media screen and (max-width: $tablet) {
+				display: block;
+			}
+		}
+
+		&.namespaces-lists {
+			padding-top: math.div($navbar-padding, 2);
+		}
+
+		&.loader-container.is-loading:after {
+			width: 1.5rem;
+			height: 1.5rem;
+			top: calc(50% - .75rem);
+			left: calc(50% - .75rem);
+			border-width: 2px;
+		}
+
+		.icon {
+			color: $grey-400 !important;
+		}
+	}
+
+	.top-menu {
+		margin-top: math.div($navbar-padding, 2);
+
+		.menu-list {
+			li {
+				font-weight: 500;
+				font-family: $vikunja-font;
+			}
+
+			span.list-menu-link, li > a {
+				padding-left: 2rem;
+				display: inline-block;
+				
+				.icon {
+					padding-bottom: .25rem;
+				}
+			}
+		}
+	}
+}
+
 .list-setting-spacer {
 	width: 32px;
 	flex-shrink: 0;

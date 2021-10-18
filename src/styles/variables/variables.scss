@@ -12,18 +12,12 @@ $thickness: 1px;
 $pagination-current-border: $primary;
 $navbar-item-active-color: $primary;
 $dropdown-content-shadow: none;
-$navbar-dropdown-boxed-shadow: $dropdown-content-shadow;
 $bulmaswatch-import-font: false !default;
 $light-background: $grey-100;
 $transition-duration: 100ms;
 
 $vikunja-font: 'Quicksand', sans-serif;
 
-$navbar-padding: 2rem;
-$vikunja-nav-background: $light-background;
-$vikunja-nav-color: $grey-700;
-$vikunja-nav-selected-width: 0.4rem;
-$vikunja-nav-logo-full-width: 164px;
 
 $transition-duration: 150ms;
 $transition: $transition-duration ease;

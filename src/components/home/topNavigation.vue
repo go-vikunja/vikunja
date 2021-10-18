@@ -151,6 +151,122 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+$vikunja-nav-logo-full-width: 164px;
+
+.navbar {
+	z-index: 4 !important;
+
+	.navbar-brand {
+		display: flex;
+		align-items: center;
+
+		.logo img {
+			width: $vikunja-nav-logo-full-width;
+		}
+	}
+	&.is-dark .navbar-brand > .navbar-item {
+		@media screen and (max-width: $tablet) {
+			margin: 0 auto;
+		}
+	}
+}
+
+.navbar.main-theme {
+	background: $light-background;
+	z-index: 5 !important;
+	justify-content: space-between;
+	align-items: center;
+
+	@media screen and (max-width: $desktop) {
+		display: flex;
+		justify-content: space-between;
+	}
+
+	.title {
+		margin: 0;
+		font-size: 1.75rem;
+		text-overflow: ellipsis;
+		overflow: hidden;
+		white-space: nowrap;
+	}
+
+	.navbar-end {
+		margin-left: 0;
+		align-items: center;
+		display: flex;
+	}
+
+	@media screen and (max-width: $tablet) {
+		.navbar-brand {
+			display: none;
+		}
+
+		.user {
+			width: $user-dropdown-width-mobile;
+			display: flex;
+			align-items: center;
+
+			::v-deep.dropdown-trigger {
+				line-height: 1;
+
+				.button {
+					padding: 0 0.25rem;
+					height: 1rem;
+
+					.icon {
+						width: .5rem;
+					}
+				}
+			}
+
+			.username {
+				display: none;
+			}
+		}
+	}
+}
+
+.navbar {
+	// FIXME: notifications should provide a slot for the icon instead, so that we can style it as we want
+	::v-deep {
+		.trigger-button {
+			cursor: pointer;
+			color: $grey-400;
+			padding: .5rem;
+			font-size: 1.25rem;
+			position: relative;
+		}
+
+		> * > .trigger-button {
+			width: $navbar-icon-width;
+		}
+	}
+
+	.user {
+		display: flex;
+		align-items: center;
+
+		span {
+			font-family: $vikunja-font;
+		}
+
+		.avatar {
+			border-radius: 100%;
+			vertical-align: middle;
+			height: 40px;
+		}
+
+		::v-deep.dropdown-trigger .button {
+			background: none;
+
+			&:focus:not(:active), &:active {
+				outline: none !important;
+				box-shadow: none !important;
+			}
+		}
+	}
+}
+
 .list-title {
   display: flex;
   align-items: center;
