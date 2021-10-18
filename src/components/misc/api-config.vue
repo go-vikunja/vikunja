@@ -197,3 +197,18 @@ export default {
 	},
 }
 </script>
+
+<style lang="scss" scoped>
+.api-config {
+  margin-bottom: .75rem;
+}
+
+.api-url-info {
+  font-size: .9rem;
+  text-align: right;
+
+  span.url {
+    border-bottom: 1px dashed $primary;
+  }
+}
+</style>
