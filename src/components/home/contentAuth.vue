@@ -132,3 +132,19 @@ export default {
 	},
 }
 </script>
+
+<style lang="scss" scoped>
+.keyboard-shortcuts-button {
+	position: fixed;
+	bottom: calc(1rem - 4px);
+	right: 1rem;
+	z-index: 4500; // The modal has a z-index of 4000
+
+	color: $grey-500;
+	transition: color $transition;
+	
+	@media screen and (max-width: $tablet) {
+		display: none;
+	}
+}
+</style>
