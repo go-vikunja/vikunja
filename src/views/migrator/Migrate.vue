@@ -34,3 +34,20 @@ export default {
 	},
 }
 </script>
+
+<style lang="scss" scoped>
+.migration-services-overview {
+  text-align: center;
+
+  a {
+    display: inline-block;
+    width: 100px;
+    text-transform: capitalize;
+    margin-right: 1rem;
+
+    img {
+      display: block;
+    }
+  }
+}
+</style>

@@ -171,3 +171,85 @@ export default {
 	},
 }
 </script>
+
+<style lang="scss" scoped>
+.migration-in-progress-container {
+  max-width: 400px;
+  margin: 4rem auto 0;
+  text-align: center;
+}
+
+.migration-in-progress {
+  text-align: center;
+  display: flex;
+  max-width: 400px;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+
+  img {
+    display: block;
+    max-height: 100px;
+  }
+
+  .progress-dots {
+    height: 40px;
+    width: 140px;
+    overflow: visible;
+
+    span {
+      transition: all 500ms ease;
+      background: $grey-500;
+      height: 10px;
+      width: 10px;
+      display: inline-block;
+      border-radius: 10px;
+      animation: wave 2s ease infinite;
+      margin-right: 5px;
+
+      &:nth-child(1) {
+        animation-delay: 0;
+      }
+
+      &:nth-child(2) {
+        animation-delay: 100ms;
+      }
+
+      &:nth-child(3) {
+        animation-delay: 200ms;
+      }
+
+      &:nth-child(4) {
+        animation-delay: 300ms;
+      }
+
+      &:nth-child(5) {
+        animation-delay: 400ms;
+      }
+
+      &:nth-child(6) {
+        animation-delay: 500ms;
+      }
+
+      &:nth-child(7) {
+        animation-delay: 600ms;
+      }
+
+      &:nth-child(8) {
+        animation-delay: 700ms;
+      }
+    }
+  }
+
+  @keyframes wave {
+    0%, 40%, 100% {
+      transform: translate(0, 0);
+      background-color: $primary;
+    }
+    10% {
+      transform: translate(0, -15px);
+      background-color: $primary-dark;
+    }
+  }
+}
+</style>
