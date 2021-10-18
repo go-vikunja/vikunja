@@ -1,7 +1,14 @@
+// FIXME: should be in TaskDetailView.vue
 .link-share-container:not(.has-background) .task-view {
   background: transparent;
 }
 
+// FIXME: create <Done> component
+// used in
+// - heading.vue
+// - kanban-card.vue
+// - Kanban.vue
+// - Table.vue
 .is-done {
   background: $green;
   color: $white;
@@ -14,6 +21,7 @@
   text-align: center;
 }
 
+// FIXME: should be a prop of TaskDetailView.vue
 .modal-container .task-view {
   border-radius: $radius;
   padding: 1rem;

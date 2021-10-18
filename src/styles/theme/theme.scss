@@ -64,6 +64,7 @@ h6 {
 	}
 }
 
+// FIXME: these helpers should be mixins
 .has-no-border {
   border: none !important;
 }
@@ -81,6 +82,7 @@ h6 {
 	overflow-x: auto;
 }
 
+// FIXME: this should be moved in a Avatar component
 .image.is-avatar {
   border-radius: 100%;
 }
@@ -89,6 +91,8 @@ button.table {
   margin-bottom: 0 !important;
 }
 
+// FIXME: merge with dropdown-item.vue
+// for this to happen the component has to be used everywhere
 .dropdown-item {
   display: flex;
   align-items: center;

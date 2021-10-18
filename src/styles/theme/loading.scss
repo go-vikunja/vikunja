@@ -1,3 +1,4 @@
+// FIXME: move to loading.vue 
 .loader-container.is-loading {
 	position: relative;
 	pointer-events: none;
@@ -14,6 +15,7 @@
 	}
 }
 
+// FIXME: move to ShowTasks.vue 
 .spinner.is-loading {
 	pointer-events: none;
 

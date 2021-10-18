@@ -1,3 +1,6 @@
+// FIXME: These classes are used all over.
+// very hard to untangle
+// they have many overwrites at different positions
 .tasks {
 	margin-top: 1rem;
 	padding: 0;
@@ -43,6 +46,9 @@
 
 }
 
+// FIXME: seems only necessary for
+// - relatedTasks.vue
+// - singleTaskInList.vue
 .is-menu-enabled .tasks .task {
 	span:not(.tag), a {
 		.tasktext,
@@ -60,6 +66,10 @@
 	}
 }
 
+// FIXME: is only used where <edit-task> is used aswell:
+// - gantt-component.vue
+// - List.vue
+// -> Move the <card> wrapper including this class definition inside <edit-task>
 .is-max-width-desktop .tasks .task {
 	max-width: $desktop;
 }

@@ -1,3 +1,8 @@
+// FIXME:
+// this should be moved to button.vue
+// what prevents this currently is that the class is also used
+// on a <select> element in userTeam.vue
+// -> Maybe create a mixin and import in both components?
 .button {
   transition: all $transition;
   border: 0;
@@ -105,6 +110,9 @@
   margin-right: 0.05rem !important;
 }
 
+// FIXME: used for
+// - the <h1> in heading.vue
+// - the <h2> in Kanban.vue
 // Contenteditable form
 .input.title {
   font-size: 1.8rem;

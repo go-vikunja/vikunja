@@ -1,3 +1,4 @@
+// FIXME: adapt lables.vue so that it can be used for this aswell 
 .labels-list {
   a, a:hover {
     text-decoration: none;
@@ -7,6 +8,7 @@
     margin: .5rem 0 .5rem .5rem;
     background: $grey-200;
 
+    // FIXME: only used in ListLabels.vue
     &.disabled {
       opacity: 0.7;
 
