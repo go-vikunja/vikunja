@@ -243,3 +243,79 @@ export default {
 	},
 }
 </script>
+
+<style lang="scss" scoped>
+// FIXME: should be @use so that classes dont get imported twice 
+@import "bulma/sass/components/card.sass";
+// needed for
+// - $card-shadow
+
+.datepicker {
+	input.input {
+		display: none;
+	}
+
+	&.disabled a {
+		cursor: default;
+	}
+
+	.datepicker-popup {
+		position: absolute;
+		z-index: 99;
+		width: 320px;
+		background: $white;
+		border-radius: $radius;
+		box-shadow: $card-shadow;
+
+		@media screen and (max-width: ($tablet)) {
+			width: calc(100vw - 5rem);
+		}
+
+		a:not(.button) {
+			display: flex;
+			align-items: center;
+			padding: 0 .5rem;
+			width: 100%;
+			height: 2.25rem;
+			color: $text;
+			transition: all $transition;
+
+			&:first-child {
+				border-radius: $radius $radius 0 0;
+			}
+
+			&:hover {
+				background: $light;
+			}
+
+			.text {
+				width: 100%;
+				font-size: .85rem;
+				display: flex;
+				justify-content: space-between;
+				padding-right: .25rem;
+
+				.weekday {
+					color: $text-light;
+					text-transform: capitalize;
+				}
+			}
+
+			.icon {
+				width: 2rem;
+				text-align: center;
+			}
+		}
+			
+		a.button {
+			margin: 1rem;
+			width: calc(100% - 2rem);
+		}
+
+		::v-deep .flatpickr-calendar {
+			margin: 0 auto 8px;
+			box-shadow: none;
+		}
+	}
+}
+</style>
