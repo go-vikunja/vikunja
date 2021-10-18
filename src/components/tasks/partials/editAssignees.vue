@@ -117,3 +117,33 @@ export default {
 	},
 }
 </script>
+
+<style lang="scss" scoped>
+.assignee {
+	position: relative;
+
+	&:not(:first-child) {
+		margin-left: -1.5rem;
+	}
+
+	::v-deep.user img {
+		border: 2px solid $white;
+		margin-right: 0;
+	}
+
+	.remove-assignee {
+		position: absolute;
+		top: 4px;
+		left: 2px;
+		color: $red;
+		background: $white;
+		padding: 0 4px;
+		display: block;
+		border-radius: 100%;
+		font-size: .75rem;
+		width: 18px;
+		height: 18px;
+		z-index: 100;
+	}
+}
+</style>

@@ -365,3 +365,131 @@ export default {
 	},
 }
 </script>
+
+<style lang="scss" scoped>
+.multiselect {
+	width: 100%;
+	position: relative;
+
+	.control.is-loading::after {
+		top: .75rem;
+	}
+
+	&.has-search-results .input-wrapper {
+		border-radius: $radius $radius 0 0;
+		border-color: $primary !important;
+		background: $white !important;
+
+		&, &:focus-within {
+			border-bottom-color: $grey-200 !important;
+		}
+	}
+
+	.input-wrapper {
+		padding: 0;
+		background: $white !important;
+		border-color: $grey-200 !important;
+		flex-wrap: wrap;
+		height: auto;
+
+		&:hover {
+			border-color: $grey-300 !important;
+		}
+
+		.input {
+			display: flex;
+			max-width: 100%;
+			width: 100%;
+			align-items: center;
+			border: none !important;
+			background: transparent;
+			height: auto;
+
+			&::placeholder {
+				font-style: normal !important;
+			}
+		}
+
+		&.has-multiple .input {
+			max-width: 250px;
+
+			input {
+				padding-left: 0;
+			}
+		}
+
+		&:focus-within {
+			border-color: $primary !important;
+			background: $white !important;
+		}
+
+		.loader {
+			margin: 0 .5rem;
+		}
+	}
+
+	.search-results {
+		background: $white;
+		border-radius: 0 0 $radius $radius;
+		border: 1px solid $primary;
+		border-top: none;
+
+		max-height: 50vh;
+		overflow-x: auto;
+		position: absolute;
+		z-index: 100;
+		max-width: 100%;
+		min-width: 100%;
+
+		&-inline {
+			position: static;
+		}
+
+		button {
+			background: transparent;
+			display: block;
+			text-align: left;
+			box-shadow: none;
+			border-radius: 0;
+			text-transform: none;
+			font-family: $family-sans-serif;
+			font-weight: normal;
+			padding: .5rem 0;
+			border: none;
+			cursor: pointer;
+
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			overflow: hidden;
+
+			.search-result {
+				white-space: nowrap;
+				text-overflow: ellipsis;
+				overflow: hidden;
+				padding: .5rem .75rem;
+			}
+
+			.hint-text {
+				font-size: .75rem;
+				color: transparent;
+				transition: color $transition;
+				padding: 0 .5rem;
+			}
+
+			&:focus, &:hover {
+				background: $grey-100;
+				box-shadow: none !important;
+
+				.hint-text {
+					color: $text;
+				}
+			}
+
+			&:active {
+				background: $grey-200;
+			}
+		}
+	}
+}
+</style>
