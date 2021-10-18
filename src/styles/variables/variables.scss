@@ -6,18 +6,20 @@ $red: #ff4136;
 $blue: #1973ff;
 $primary: $blue;
 
-$info-invert: #fff;
+$info-invert: $white;
+
 $family-sans-serif: 'Open Sans', Helvetica, Arial, sans-serif;
+$vikunja-font: 'Quicksand', sans-serif;
+
 $thickness: 1px;
 $pagination-current-border: $primary;
 $navbar-item-active-color: $primary;
+
 $dropdown-content-shadow: none;
+$dropdown-item-hover-background-color: $grey-100;
+
 $bulmaswatch-import-font: false !default;
 $light-background: $grey-100;
-$transition-duration: 100ms;
-
-$vikunja-font: 'Quicksand', sans-serif;
-
 
 $transition-duration: 150ms;
 $transition: $transition-duration ease;
@@ -33,9 +35,7 @@ $navbar-height: 4rem;
 $navbar-width: 300px;
 $navbar-icon-width: 40px;
 
-$editor-border-color: #ddd;
 
-$dropdown-item-hover-background-color: $grey-100;
 $lists-per-row: 5;
 $list-height: 150px;
 $list-spacing: 1rem;

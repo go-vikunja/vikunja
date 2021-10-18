@@ -1,25 +1,24 @@
 .field.has-addons.no-input-mobile {
   .control:first-child {
     width: 100%;
+
+		@media screen and (max-width: $tablet) {
+				display: none;
+		}
   }
 
   .button {
     height: 40px;
-  }
 
-  @media screen and (max-width: $tablet) {
-    .control:first-child {
-      display: none;
-    }
-
-    .button {
-      border-radius: $radius !important;
-    }
+		@media screen and (max-width: $tablet) {
+			border-radius: $radius !important;
+		}
   }
 }
 
 .link-share-container {
-  &.has-background,&.list\.kanban-view {
+  &.has-background,
+	&.list\.kanban-view {
     .container {
       max-width: 100vw;
 
@@ -36,14 +35,12 @@
     max-width: 100%;
   }
 
-  .loader-container, .gantt-chart-container {
-    > .card {
-      box-shadow: none !important;
-      border: none;
+  .loader-container, .gantt-chart-container > .card {
+		box-shadow: none !important;
+		border: none;
 
-      .task-add {
-        padding: 1rem 0 0;
-      }
-    }
+		.task-add {
+			padding: 1rem 0 0;
+		}
   }
 }

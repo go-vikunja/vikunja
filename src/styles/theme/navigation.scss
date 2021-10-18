@@ -1,4 +1,5 @@
-.menu-hide-button, .menu-show-button {
+.menu-hide-button,
+.menu-show-button {
 	display: none;
 	z-index: 31;
 	font-weight: bold;
@@ -7,7 +8,8 @@
 	line-height: 1;
 	transition: all $transition;
 
-	&:hover, &:focus {
+	&:hover,
+	&:focus {
 		height: 1rem;
 		color: $grey-600;
 	}
@@ -17,7 +19,14 @@
 	height: .75rem;
 	width: 2rem;
 
-	&:before, &:after {
+	@media screen and (max-width: $tablet) {
+		display: block;
+		margin-left: $hamburger-menu-icon-spacing;
+	}
+
+	// menu line icon and animationanimation // START
+	&::before,
+	&::after {
 		display: block;
 		content: '';
 		border-top: 3px solid $grey-400;
@@ -25,31 +34,38 @@
 		transition: all $transition;
 	}
 
-	&:before {
+	&::before {
 		margin-bottom: .5rem;
 	}
 
-	&:after {
+	&::after {
 		margin-top: .5rem;
 	}
 
-	&:hover, &:focus {
-		color: $grey-600;
-
-		&:before {
+	&:hover,
+	&:focus {
+		&::before {
 			margin-bottom: .75rem;
 		}
 
-		&:after {
+		&::after {
 			margin-top: .75rem;
 		}
 	}
+	// menu line animation // END
 }
 
 .menu-hide-button {
 	position: fixed;
 
-	&:hover, &:focus {
+	@media screen and (max-width: $tablet) {
+		display: block;
+		top: $hamburger-menu-icon-spacing;
+		right: $hamburger-menu-icon-spacing;
+	}
+
+	&:hover,
+	&:focus {
 		color: $text;
 	}
 }
@@ -59,17 +75,6 @@
 }
 
 @media screen and (max-width: $tablet) {
-	.menu-hide-button {
-		display: block;
-		top: $hamburger-menu-icon-spacing;
-		right: $hamburger-menu-icon-spacing;
-	}
-
-	.menu-show-button {
-		display: block;
-		margin-left: $hamburger-menu-icon-spacing;
-	}
-
 	.navbar.is-dark .navbar-brand > .navbar-item {
 		margin: 0 auto;
 	}

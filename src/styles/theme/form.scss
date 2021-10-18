@@ -95,26 +95,14 @@
     height: 100%;
 }
 
-.control.has-icons-left .icon, .control.has-icons-right .icon {
-  z-index: 0;
+.control.has-icons-left .icon,
+.control.has-icons-right .icon {
+  z-index: 4;
 }
 
 // Buttons icons
 .button .icon.is-small {
   margin-right: 0.05rem !important;
-}
-
-// menu buttons
-.button-bottom {
-  margin-bottom: 1rem;
-}
-
-.button-right {
-  float: right;
-}
-
-.control.has-icons-left .icon, .control.has-icons-right .icon {
-  z-index: 4;
 }
 
 // Contenteditable form

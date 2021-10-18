@@ -312,6 +312,8 @@ export default {
 @import './vue-easymde/vue-easymde.css';
 @import 'highlight.js/scss/base16/equilibrium-gray-light';
 
+$editor-border-color: #ddd;
+
 .editor {
 	.clear {
 		clear: both;
@@ -371,7 +373,7 @@ export default {
 			}
 		}
 
-		&:after {
+		&::after {
 			position: absolute;
 			top: 24px;
 			margin-left: -3px;
@@ -396,7 +398,7 @@ ul.actions {
 	li {
 		display: inline-block;
 
-		&:after {
+		&::after {
 			content: '·';
 			padding: 0 .25rem;
 		}

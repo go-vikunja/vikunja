@@ -15,8 +15,6 @@
   }
 }
 
-.message {
-  .message-body {
-    border: $thickness solid;
-  }
+.message .message-body {
+	border: $thickness solid;
 }

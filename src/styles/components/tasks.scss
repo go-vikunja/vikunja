@@ -3,16 +3,17 @@
 	padding: 0;
 	text-align: left;
 
-	@media screen and (min-width: $tablet) {
-		&.short {
+	
+	@media screen and (max-width: $tablet) {
+		max-width: 100%;
+	}
+
+	&.short {
+		@media screen and (min-width: $tablet) {
 			max-width: 53vw;
 		}
 	}
 
-	@media screen and (max-width: $tablet) {
-		max-width: 100%;
-	}
-	
 	.progress {
 		// overwrite bulma
 		margin-bottom: 0;
@@ -44,7 +45,8 @@
 
 .is-menu-enabled .tasks .task {
 	span:not(.tag), a {
-		.tasktext, &.tasktext {
+		.tasktext,
+		&.tasktext {
 			@media screen and (max-width: $desktop) {
 				max-width: calc(100vw - 27px - 2rem - 1.5rem - 3rem - #{$navbar-width}); // 1.5rem is the padding of the tasks container, 3rem is the padding of .app-container
 			}
