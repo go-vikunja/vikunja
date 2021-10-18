@@ -158,3 +158,86 @@ export default {
 	},
 }
 </script>
+
+<style lang="scss" scoped>
+.list-background-setting {
+
+  .unsplash-link {
+    text-align: right;
+    font-size: .8rem;
+
+    a {
+      color: $grey-800;
+    }
+  }
+
+  .image-search-result {
+    margin-top: 1rem;
+    display: flex;
+    flex-flow: row wrap;
+
+    .image {
+      width: calc(100% / 5 - 1rem);
+      height: 120px;
+      margin: .5rem;
+      background-size: cover;
+      background-position: center;
+      display: flex;
+
+      @media screen and (min-width: $desktop) {
+        &:nth-child(5n) {
+          break-after: always;
+        }
+      }
+
+      @media screen and (max-width: $desktop) {
+        width: calc(100% / 4 - 1rem);
+
+        &:nth-child(4n) {
+          break-after: always;
+        }
+      }
+
+      @media screen and (max-width: $tablet) {
+        width: calc(100% / 2 - 1rem);
+
+        &:nth-child(2n) {
+          break-after: always;
+        }
+      }
+
+      @media screen and (max-width: ($mobile)) {
+        width: calc(100% - 1rem);
+
+        &:nth-child(1n) {
+          break-after: always;
+        }
+      }
+
+      .info {
+        align-self: flex-end;
+        display: block;
+        opacity: 0;
+        width: 100%;
+        padding: .25rem 0;
+        text-align: center;
+        background: rgba(0, 0, 0, 0.5);
+        font-size: .75rem;
+        font-weight: bold;
+        color: $white;
+        transition: opacity $transition;
+      }
+
+      &:hover .info {
+        opacity: 1;
+      }
+    }
+  }
+
+  .is-load-more-button {
+    margin: 1rem auto 0 !important;
+    display: block;
+    width: 200px;
+  }
+}
+</style>
