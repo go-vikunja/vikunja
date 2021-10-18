@@ -3,6 +3,21 @@
 	padding: 0;
 	text-align: left;
 
+	@media screen and (min-width: $tablet) {
+		&.short {
+			max-width: 53vw;
+		}
+	}
+
+	@media screen and (max-width: $tablet) {
+		max-width: 100%;
+	}
+	
+	.progress {
+		// overwrite bulma
+		margin-bottom: 0;
+	}
+
 	&.noborder {
 		margin: 1rem -0.5rem;
 	}
@@ -16,6 +31,7 @@
 	
 		&:last-child {
 			margin-bottom: .5rem;
+			border-bottom: none;
 		}
 	}
 
@@ -24,21 +40,6 @@
 		font-size: .9rem;
 	}
 
-	.progress {
-		width: 50px;
-		margin: 0 0.5rem 0 0;
-		flex: 3 1 auto;
-
-		@media screen and (max-width: $tablet) {
-			margin: 0.5rem 0 0 0;
-			order: 1;
-			width: 100%;
-		}
-	}
-
-	.task:last-child {
-		border-bottom: none;
-	}
 }
 
 .is-menu-enabled .tasks .task {
