@@ -467,6 +467,66 @@ export default {
 		top: 3rem;
 		transform: translate(-50%, 0);
 	}
+
+	.action-input {
+		display: flex;
+		align-items: center;
+
+		.input {
+			border: 0;
+			font-size: 1.5rem;
+		}
+
+		&.has-active-cmd .input {
+			padding-left: .5rem;
+		}
+
+		.active-cmd {
+			font-size: 1.25rem;
+			margin-left: .5rem;
+		}
+	}
+
+	.results {
+		text-align: left;
+		width: 100%;
+		color: $grey-800;
+
+		.result {
+			&-title {
+				background: $grey-50;
+				padding: .5rem;
+				display: block;
+				font-size: .75rem;
+			}
+
+			&-items {
+				button {
+					font-size: .9rem;
+					width: 100%;
+					background: transparent;
+					text-align: left;
+					box-shadow: none;
+					border-radius: 0;
+					text-transform: none;
+					font-family: $family-sans-serif;
+					font-weight: normal;
+					padding: .5rem .75rem;
+					border: none;
+					cursor: pointer;
+
+					&:focus, &:hover {
+						background: $grey-50;
+						box-shadow: none !important;
+					}
+
+					&:active {
+						background: $grey-100;
+					}
+				}
+			}
+		}
+	}
 }
 
 // HACK:
@@ -474,5 +534,4 @@ export default {
 .modal-container-smaller ::v-deep.hint-modal .modal-container {
 	height: calc(100vh - 5rem);
 }
-
 </style>
