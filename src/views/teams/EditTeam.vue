@@ -298,3 +298,13 @@ export default {
 	},
 }
 </script>
+
+<style lang="scss" scoped>
+.card.is-fullwidth {
+  margin-bottom: 1rem;
+
+  .content {
+    padding: 0;
+  }
+}
+</style>

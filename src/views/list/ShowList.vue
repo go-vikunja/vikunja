@@ -148,3 +148,9 @@ export default {
 	},
 }
 </script>
+
+<style lang="scss" scoped>
+.is-archived .notification.is-warning {
+  margin-bottom: 1rem;
+}
+</style>

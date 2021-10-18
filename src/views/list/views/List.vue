@@ -309,3 +309,9 @@ export default {
 	},
 }
 </script>
+
+<style lang="scss" scoped>
+.list-view .task-add {
+	padding: 1rem 1rem 0;
+}
+</style>

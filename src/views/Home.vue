@@ -141,3 +141,15 @@ export default {
 	},
 }
 </script>
+
+<style lang="scss" scoped>
+.list-cards-wrapper-2-rows {
+	flex-wrap: wrap;
+	max-height: calc(#{$list-height * 2} + #{$list-spacing * 2} - 4px);
+	overflow: hidden;
+	
+	@media screen and (max-width: $mobile) {
+		max-height: calc(#{$list-height * 4} + #{$list-spacing * 4} - 4px);
+	}
+}
+</style>

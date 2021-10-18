@@ -149,3 +149,36 @@ export default {
 	},
 }
 </script>
+
+<style lang="scss" scoped>
+.list-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  $edit-icon-width: 1rem;
+
+  @media screen and (min-width: $tablet) {
+    // We need a fixed width for overflowing ellipsis to work
+    --nav-username-width: 0;
+    width: calc(100vw - #{$user-dropdown-width-mobile} - #{2 * $hamburger-menu-icon-spacing} - #{$hamburger-menu-icon-width} - #{$edit-icon-width} - #{2 * $navbar-icon-width} - #{$vikunja-nav-logo-full-width} - var(--nav-username-width));
+  }
+
+  @media screen and (max-width: $tablet) {
+    // We need a fixed width for overflowing ellipsis to work
+    width: calc(100vw - #{$user-dropdown-width-mobile} - #{2 * $hamburger-menu-icon-spacing} - #{$hamburger-menu-icon-width} - #{$edit-icon-width} - #{2 * $navbar-icon-width});
+  }
+
+  h1 {
+    margin: 0;
+  }
+
+  ::v-deep.dropdown-trigger {
+    color: $grey-400;
+    margin-left: 1rem;
+    height: 1rem;
+    width: 1rem;
+    cursor: pointer;
+  }
+}
+</style>
