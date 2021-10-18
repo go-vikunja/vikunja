@@ -101,3 +101,49 @@ export default {
 	},
 }
 </script>
+
+<style lang="scss" scoped>
+.namespaces-list {
+  .button.new-namespace {
+    float: right;
+    margin-left: 1rem;
+
+    @media screen and (max-width: $mobile) {
+      float: none;
+      width: 100%;
+      margin-bottom: 1rem;
+    }
+  }
+
+  .show-archived-check {
+    margin-bottom: 1rem;
+  }
+
+  .namespace {
+    &:not(:last-child) {
+      margin-bottom: 1rem;
+    }
+
+    h1 {
+      display: flex;
+      align-items: center;
+    }
+
+    .is-archived {
+      font-size: 0.75rem;
+      border: 1px solid $grey-500;
+      color: $grey !important;
+      padding: 2px 4px;
+      border-radius: 3px;
+      font-family: $vikunja-font;
+      background: rgba($white, 0.75);
+      margin-left: .5rem;
+    }
+
+    .lists {
+      display: flex;
+      flex-flow: row wrap;
+    }
+  }
+}
+</style>
