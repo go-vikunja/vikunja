@@ -258,3 +258,10 @@ export default {
 	},
 }
 </script>
+
+<style lang="scss" scoped>
+// FIXME: I think this is not needed
+.sharables-list:not(.card-content) {
+  overflow-y: auto
+}
+</style>

@@ -52,4 +52,24 @@ export default {
     box-shadow: none;
   }
 }
+
+.link-share-view {
+  .logo {
+    max-width: 300px;
+    width: 90%;
+    margin: 2rem 0 1.5rem;
+  }
+
+  .column {
+    max-width: 100%;
+  }
+
+  .card {
+    background: $white;
+  }
+
+  .title {
+    text-shadow: 0 0 1rem $white;
+  }
+}
 </style>
