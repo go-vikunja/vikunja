@@ -312,7 +312,7 @@ export default {
 			width: calc(100% - 2rem);
 		}
 
-		::v-deep .flatpickr-calendar {
+		:deep(.flatpickr-calendar) {
 			margin: 0 auto 8px;
 			box-shadow: none;
 		}

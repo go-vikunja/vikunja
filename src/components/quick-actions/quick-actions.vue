@@ -463,7 +463,7 @@ export default {
 <style lang="scss" scoped>
 .quick-actions {
 	// FIXME: changed position should be an option of the modal
-	::v-deep.modal-content {
+	:deep(.modal-content) {
 		top: 3rem;
 		transform: translate(-50%, 0);
 	}
@@ -531,7 +531,7 @@ export default {
 
 // HACK:
 // FIXME:
-.modal-container-smaller ::v-deep.hint-modal .modal-container {
+.modal-container-smaller :deep(.hint-modal .modal-container) {
 	height: calc(100vh - 5rem);
 }
 </style>

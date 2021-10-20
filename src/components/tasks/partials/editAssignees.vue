@@ -126,7 +126,7 @@ export default {
 		margin-left: -1.5rem;
 	}
 
-	::v-deep.user img {
+	:deep(.user img) {
 		border: 2px solid $white;
 		margin-right: 0;
 	}

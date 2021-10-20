@@ -265,7 +265,7 @@ export default {
 			margin-top: 3rem;
 		}
 
-		.input {
+		:deep(.input) {
 			width: 190px;
 			vertical-align: middle;
 			margin: .5rem 0;

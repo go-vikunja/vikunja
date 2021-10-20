@@ -723,7 +723,7 @@ $flash-background-duration: 750ms;
     color: $grey-400;
   }
 
-  ::v-deep.heading {
+  :deep(.heading) {
     display: flex;
     justify-content: space-between;
     text-transform: none;
@@ -766,7 +766,7 @@ $flash-background-duration: 750ms;
     }
   }
 
-  ::v-deep.datepicker {
+  :deep(.datepicker) {
     width: 100%;
 
     a.show {
@@ -809,7 +809,7 @@ $flash-background-duration: 750ms;
 
     &.labels-list,
 	.assignees {
-      ::v-deep.multiselect {
+      :deep(.multiselect) {
         .input-wrapper {
           &:not(:focus-within):not(:hover) {
             background: transparent !important;
@@ -820,8 +820,8 @@ $flash-background-duration: 750ms;
     }
   }
 
-  ::v-deep.details,
-  ::v-deep.heading {
+  :deep(.details),
+  :deep(.heading) {
     .input:not(.has-defaults),
     .textarea,
     .select:not(.has-defaults) select {

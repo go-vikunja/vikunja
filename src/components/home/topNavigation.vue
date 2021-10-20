@@ -206,7 +206,7 @@ $vikunja-nav-logo-full-width: 164px;
 			display: flex;
 			align-items: center;
 
-			::v-deep.dropdown-trigger {
+			:deep(.dropdown-trigger) {
 				line-height: 1;
 
 				.button {
@@ -228,7 +228,7 @@ $vikunja-nav-logo-full-width: 164px;
 
 .navbar {
 	// FIXME: notifications should provide a slot for the icon instead, so that we can style it as we want
-	::v-deep {
+	:deep() {
 		.trigger-button {
 			cursor: pointer;
 			color: $grey-400;
@@ -256,7 +256,7 @@ $vikunja-nav-logo-full-width: 164px;
 			height: 40px;
 		}
 
-		::v-deep .dropdown-trigger .button {
+		:deep(.dropdown-trigger .button) {
 			background: none;
 
 			&:focus:not(:active), &:active {
@@ -289,7 +289,7 @@ $vikunja-nav-logo-full-width: 164px;
     margin: 0;
   }
 
-  ::v-deep.dropdown-trigger {
+  :deep(.dropdown-trigger) {
     color: $grey-400;
     margin-left: 1rem;
     height: 1rem;

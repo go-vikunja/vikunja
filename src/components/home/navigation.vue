@@ -393,7 +393,7 @@ $vikunja-nav-selected-width: 0.4rem;
 				padding: 0 .25rem;
 			}
 
-			::v-deep.dropdown-trigger {
+			:deep(.dropdown-trigger) {
 				padding: .5rem;
 				cursor: pointer;
 			}
@@ -433,19 +433,19 @@ $vikunja-nav-selected-width: 0.4rem;
 				display: flex;
 				align-items: center;
 
-				::v-deep.dropdown-trigger {
+				&:hover {
+					background: $white;
+				}
+
+				:deep(.dropdown-trigger) {
 					opacity: 0;
 					padding: .5rem;
 					cursor: pointer;
 					transition: $transition;
 				}
 
-				&:hover {
-					background: $white;
-
-					::v-deep.dropdown-trigger {
-						opacity: 1;
-					}
+				&:hover :deep(.dropdown-trigger) {
+					opacity: 1;
 				}
 
 				&.loader-container.is-loading:after {

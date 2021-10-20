@@ -730,7 +730,7 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 		}
 	}
 
-	::v-deep.dropdown-trigger {
+	:deep(.dropdown-trigger) {
 		cursor: pointer;
 		padding: .5rem;
 	}

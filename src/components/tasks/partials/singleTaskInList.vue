@@ -313,7 +313,7 @@ export default {
 		opacity: 1;
 	}
 
-	::v-deep.fancycheckbox {
+	:deep(.fancycheckbox) {
 		height: 18px;
 		padding-top: 0;
 		padding-right: .5rem;

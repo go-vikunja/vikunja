@@ -71,7 +71,7 @@ export default {
 }
 
 // FIXME: should maybe be merged somehow with modal
-::v-deep.modal-card-foot {
+:deep(.modal-card-foot) {
   background-color: $grey-50;
   border-top: 0;
 }

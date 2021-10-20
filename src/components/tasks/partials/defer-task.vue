@@ -164,7 +164,7 @@ $defer-task-max-width: 350px + 100px;
 	margin: .5rem 0;
 }
 
-::v-deep {
+:deep() {
 	input.input {
 		display: none;
 	}

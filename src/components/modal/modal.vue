@@ -181,7 +181,7 @@ export default {
 .hint-modal {
 	z-index: 4600;
 
-	::v-deep.card-content {
+	:deep(.card-content) {
 		text-align: left;
 
 		.info {

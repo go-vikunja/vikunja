@@ -618,7 +618,7 @@ $gantt-vertical-border-color: $grey-100;
 		z-index: 5;
 
 		// FIXME: should be an option of the card, e.g. overflow
-		::v-deep.card-content {
+		:deep(.card-content) {
 			max-height: 60vh;
 			overflow-y: auto;
 		}

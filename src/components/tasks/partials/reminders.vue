@@ -111,7 +111,7 @@ export default {
     display: flex;
     align-items: center;
 
-    &.overdue ::v-deep.datepicker a.show {
+    &.overdue :deep(.datepicker a.show) {
       color: $red;
     }
 

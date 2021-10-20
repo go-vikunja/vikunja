@@ -173,7 +173,7 @@ $task-background: $white;
 		flex-wrap: wrap;
 		align-items: center;
 
-		::v-deep.tag,
+		:deep(.tag),
 		.assignees,
 		.icon,
 		.priority-label {
@@ -195,7 +195,7 @@ $task-background: $white;
 		}
 
 		// FIXME: should be in labels.vue
-		::v-deep.tag {
+		:deep(.tag) {
 			margin-left: 0;
 		}
 
