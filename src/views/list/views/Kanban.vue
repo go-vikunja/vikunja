@@ -603,8 +603,9 @@ $crazy-height-calculation: '100vh - 4.5rem - 1.5rem - 1rem - 1.5rem - 11px';
 $crazy-height-calculation-tasks: '#{$crazy-height-calculation} - 1rem - 2.5rem - 2rem - #{$button-height} - 1rem';
 $filter-container-height: '1rem - #{$switch-view-height}';
 
+// FIXME:
 .app-content.list\.kanban {
-	padding-bottom: 0;
+	padding-bottom: 0 !important;
 }
 
 .kanban {
