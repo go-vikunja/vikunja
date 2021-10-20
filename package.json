@@ -67,7 +67,7 @@
     "express": "4.17.1",
     "faker": "5.5.3",
     "jest": "27.3.1",
-    "postcss": "8.3.9",
+    "postcss": "8.3.10",
     "rollup": "2.58.0",
     "rollup-plugin-visualizer": "5.5.2",
     "sass": "1.43.2",
