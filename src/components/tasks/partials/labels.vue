@@ -21,8 +21,14 @@ export default {
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .label-wrapper {
 	display: inline;
+}
+
+.tag {
+	& + & {
+		margin-left: 0.5rem;
+	}
 }
 </style>

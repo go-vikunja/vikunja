@@ -30,7 +30,7 @@
 				{{ task.title }}
 			</span>
 
-			<labels :labels="task.labels"/>
+			<labels class="labels" :labels="task.labels"/>
 			<user
 				:avatar-size="27"
 				:is-inline="true"
@@ -252,8 +252,9 @@ export default {
 		flex: 0 0 10px;
 	}
 
-	.tag {
-		margin: 0 0.5rem;
+	.labels {
+		padding-left: 0.5rem;
+		padding-right: 0.5rem;
 	}
 
 	.avatar {
