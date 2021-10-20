@@ -38,7 +38,7 @@ steps:
 #        - '.cache'
 
   - name: dependencies
-    image: node:16
+    image: node:17
     pull: true
     environment:
       YARN_CACHE_FOLDER: .cache/yarn/
@@ -69,7 +69,7 @@ steps:
 #      - dependencies
 
   - name: lint
-    image: node:16
+    image: node:17
     pull: true
     environment:
       YARN_CACHE_FOLDER: .cache/yarn/
@@ -80,7 +80,7 @@ steps:
       - dependencies
 
   - name: build-prod
-    image: node:16
+    image: node:17
     pull: true
     environment:
       YARN_CACHE_FOLDER: .cache/yarn/
@@ -90,7 +90,7 @@ steps:
       - dependencies
 
   - name: test-unit
-    image: node:16
+    image: node:17
     pull: true
     commands:
       - yarn test:unit
@@ -174,7 +174,7 @@ steps:
 #        - '.cache'
 
   - name: build
-    image: node:16
+    image: node:17
     pull: true
     group: build-static
     environment:
@@ -249,7 +249,7 @@ steps:
 #        - '.cache'
 
   - name: build
-    image: node:16
+    image: node:17
     pull: true
     group: build-static
     environment:
