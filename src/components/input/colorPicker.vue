@@ -102,10 +102,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-// FIXME: should be @use so that classes dont get imported twice 
-// needed for
-// - $card-shadow
-@import "bulma/sass/components/card.sass";
 .color-picker-container {
   display: flex;
   justify-content: center;
@@ -132,7 +128,7 @@ export default {
 		overflow: hidden;
 		border-radius: 100%;
 		border: $BORDER_WIDTH solid $grey-300;
-		box-shadow: $card-shadow;
+		box-shadow: $shadow;
 
 		& > * {
 			grid-row: 1;

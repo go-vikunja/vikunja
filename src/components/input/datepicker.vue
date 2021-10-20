@@ -245,11 +245,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-// FIXME: should be @use so that classes dont get imported twice 
-@import "bulma/sass/components/card.sass";
-// needed for
-// - $card-shadow
-
 .datepicker {
 	input.input {
 		display: none;
@@ -265,7 +260,7 @@ export default {
 		width: 320px;
 		background: $white;
 		border-radius: $radius;
-		box-shadow: $card-shadow;
+		box-shadow: $shadow;
 
 		@media screen and (max-width: ($tablet)) {
 			width: calc(100vw - 5rem);
