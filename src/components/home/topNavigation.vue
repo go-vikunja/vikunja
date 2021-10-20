@@ -256,7 +256,7 @@ $vikunja-nav-logo-full-width: 164px;
 			height: 40px;
 		}
 
-		::v-deep.dropdown-trigger .button {
+		::v-deep .dropdown-trigger .button {
 			background: none;
 
 			&:focus:not(:active), &:active {
