@@ -71,7 +71,7 @@
 					<div class="select">
 						<select
 							@change="toggleType(s)"
-							class="button mr-2"
+							class="mr-2"
 							v-model="selectedRight[s.id]"
 						>
 							<option

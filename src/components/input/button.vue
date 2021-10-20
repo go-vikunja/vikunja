@@ -75,6 +75,42 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.button {
+  transition: all $transition;
+  border: 0;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  font-weight: bold;
+  height: $button-height;
+  box-shadow: $shadow-sm;
+
+  &.is-hovered,
+  &:hover {
+    box-shadow: $shadow-md;
+  }
+
+  &.fullheight {
+    padding-right: 7px;
+    height: 100%;
+  }
+
+  &.is-active,
+  &.is-focused,
+  &:active,
+  &:focus,
+  &:focus:not(:active) {
+    box-shadow: $shadow-xs !important;
+  }
+
+  &.is-primary.is-outlined:hover {
+    color: $white;
+  }
+
+  &.is-small {
+    border-radius: $radius;
+  }
+}
+
 .underline-none {
   text-decoration: none !important;
 }
