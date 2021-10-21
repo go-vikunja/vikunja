@@ -57,7 +57,7 @@ export default {
 	font-size: 2rem;
 
 	@media screen and (max-width: $desktop) {
-		display: none;
+		color: $dark;
 	}
 }
 </style>

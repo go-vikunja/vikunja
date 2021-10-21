@@ -3,6 +3,7 @@ import {
 	faAlignLeft,
 	faAngleRight,
 	faArchive,
+	faArrowLeft,
 	faBars,
 	faBell,
 	faCalendar,
@@ -67,6 +68,7 @@ import {FontAwesomeIcon} from '@fortawesome/vue-fontawesome'
 library.add(faAlignLeft)
 library.add(faAngleRight)
 library.add(faArchive)
+library.add(faArrowLeft)
 library.add(faBars)
 library.add(faBell)
 library.add(faBellSlash)

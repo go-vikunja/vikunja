@@ -8,7 +8,7 @@
 					{{ getListTitle(parent.list) }}
 				</router-link>
 			</h6>
-			
+
 			<checklist-summary :task="task"/>
 
 			<!-- Content and buttons -->
@@ -246,138 +246,146 @@
 					<!-- Comments -->
 					<comments :can-write="canWrite" :task-id="taskId"/>
 				</div>
-				<div class="column is-one-third action-buttons" v-if="canWrite">
-					<x-button
-						:class="{'is-success': !task.done}"
-						:shadow="task.done"
-						@click="toggleTaskDone()"
-						class="is-outlined has-no-border"
-						icon="check-double"
-						type="secondary"
-					>
-						{{ task.done ? $t('task.detail.undone') : $t('task.detail.done') }}
-					</x-button>
-					<task-subscription
-						entity="task"
-						:entity-id="task.id"
-						:subscription="task.subscription"
-						@change="sub => task.subscription = sub"
-					/>
-					<x-button
-						@click="setFieldActive('assignees')"
-						@shortkey="setFieldActive('assignees')"
-						type="secondary"
-						v-shortkey="['a']">
-						<span class="icon is-small"><icon icon="users"/></span>
-						{{ $t('task.detail.actions.assign') }}
-					</x-button>
-					<x-button
-						@click="setFieldActive('labels')"
-						@shortkey="setFieldActive('labels')"
-						type="secondary"
-						v-shortkey="['l']"
-						icon="tags"
-					>
-						{{ $t('task.detail.actions.label') }}
-					</x-button>
-					<x-button
-						@click="setFieldActive('priority')"
-						type="secondary"
-						:icon="['far', 'star']"
-					>
-						{{ $t('task.detail.actions.priority') }}
-					</x-button>
-					<x-button
-						@click="setFieldActive('dueDate')"
-						@shortkey="setFieldActive('dueDate')"
-						type="secondary"
-						v-shortkey="['d']"
-						icon="calendar"
-					>
-						{{ $t('task.detail.actions.dueDate') }}
-					</x-button>
-					<x-button
-						@click="setFieldActive('startDate')"
-						type="secondary"
-						icon="calendar-week"
-					>
-						{{ $t('task.detail.actions.startDate') }}
-					</x-button>
-					<x-button
-						@click="setFieldActive('endDate')"
-						type="secondary"
-						icon="calendar-week"
-					>
-						{{ $t('task.detail.actions.endDate') }}
-					</x-button>
-					<x-button
-						@click="setFieldActive('reminders')"
-						type="secondary"
-						icon="history"
-					>
-						{{ $t('task.detail.actions.reminders') }}
-					</x-button>
-					<x-button
-						@click="setFieldActive('repeatAfter')"
-						type="secondary"
-						:icon="['far', 'clock']"
-					>
-						{{ $t('task.detail.actions.repeatAfter') }}
-					</x-button>
-					<x-button
-						@click="setFieldActive('percentDone')"
-						type="secondary"
-						icon="percent"
-					>
-						{{ $t('task.detail.actions.percentDone') }}
-					</x-button>
-					<x-button
-						@click="setFieldActive('attachments')"
-						@shortkey="setFieldActive('attachments')"
-						type="secondary"
-						v-shortkey="['f']"
-						icon="paperclip"
-					>
-						{{ $t('task.detail.actions.attachments') }}
-					</x-button>
-					<x-button
-						@click="setFieldActive('relatedTasks')"
-						@shortkey="setFieldActive('relatedTasks')"
-						type="secondary"
-						v-shortkey="['r']"
-						icon="tasks"
-					>
-						{{ $t('task.detail.actions.relatedTasks') }}
-					</x-button>
-					<x-button
-						@click="setFieldActive('moveList')"
-						type="secondary"
-						icon="list"
-					>
-						{{ $t('task.detail.actions.moveList') }}
-					</x-button>
-					<x-button
-						@click="setFieldActive('color')"
-						type="secondary"
-						icon="fill-drip"
-					>
-						{{ $t('task.detail.actions.color') }}
-					</x-button>
-					<x-button
-						@click="toggleFavorite"
-						type="secondary"
-						:icon="task.isFavorite ? 'star' : ['far', 'star']"
-					>
-						{{ task.isFavorite ? $t('task.detail.actions.unfavorite') : $t('task.detail.actions.favorite') }}
-					</x-button>
-					<x-button
-						@click="showDeleteModal = true"
-						icon="trash-alt"
-						:shadow="false"
-						class="is-danger is-outlined has-no-border"
-					>
-						{{ $t('task.detail.actions.delete') }}
-					</x-button>
+				<div class="column is-one-third action-buttons">
+					<a @click="$router.back()" class="is-fullwidth is-block has-text-centered mb-4" v-if="shouldShowClosePopup">
+						<icon icon="arrow-left"/>
+						{{ $t('task.detail.closePopup') }}
+					</a>
+					<template v-if="canWrite">
+						<x-button
+							:class="{'is-success': !task.done}"
+							:shadow="task.done"
+							@click="toggleTaskDone()"
+							class="is-outlined has-no-border"
+							icon="check-double"
+							type="secondary"
+						>
+							{{ task.done ? $t('task.detail.undone') : $t('task.detail.done') }}
+						</x-button>
+						<task-subscription
+							entity="task"
+							:entity-id="task.id"
+							:subscription="task.subscription"
+							@change="sub => task.subscription = sub"
+						/>
+						<x-button
+							@click="setFieldActive('assignees')"
+							@shortkey="setFieldActive('assignees')"
+							type="secondary"
+							v-shortkey="['a']">
+							<span class="icon is-small"><icon icon="users"/></span>
+							{{ $t('task.detail.actions.assign') }}
+						</x-button>
+						<x-button
+							@click="setFieldActive('labels')"
+							@shortkey="setFieldActive('labels')"
+							type="secondary"
+							v-shortkey="['l']"
+							icon="tags"
+						>
+							{{ $t('task.detail.actions.label') }}
+						</x-button>
+						<x-button
+							@click="setFieldActive('priority')"
+							type="secondary"
+							:icon="['far', 'star']"
+						>
+							{{ $t('task.detail.actions.priority') }}
+						</x-button>
+						<x-button
+							@click="setFieldActive('dueDate')"
+							@shortkey="setFieldActive('dueDate')"
+							type="secondary"
+							v-shortkey="['d']"
+							icon="calendar"
+						>
+							{{ $t('task.detail.actions.dueDate') }}
+						</x-button>
+						<x-button
+							@click="setFieldActive('startDate')"
+							type="secondary"
+							icon="calendar-week"
+						>
+							{{ $t('task.detail.actions.startDate') }}
+						</x-button>
+						<x-button
+							@click="setFieldActive('endDate')"
+							type="secondary"
+							icon="calendar-week"
+						>
+							{{ $t('task.detail.actions.endDate') }}
+						</x-button>
+						<x-button
+							@click="setFieldActive('reminders')"
+							type="secondary"
+							icon="history"
+						>
+							{{ $t('task.detail.actions.reminders') }}
+						</x-button>
+						<x-button
+							@click="setFieldActive('repeatAfter')"
+							type="secondary"
+							:icon="['far', 'clock']"
+						>
+							{{ $t('task.detail.actions.repeatAfter') }}
+						</x-button>
+						<x-button
+							@click="setFieldActive('percentDone')"
+							type="secondary"
+							icon="percent"
+						>
+							{{ $t('task.detail.actions.percentDone') }}
+						</x-button>
+						<x-button
+							@click="setFieldActive('attachments')"
+							@shortkey="setFieldActive('attachments')"
+							type="secondary"
+							v-shortkey="['f']"
+							icon="paperclip"
+						>
+							{{ $t('task.detail.actions.attachments') }}
+						</x-button>
+						<x-button
+							@click="setFieldActive('relatedTasks')"
+							@shortkey="setFieldActive('relatedTasks')"
+							type="secondary"
+							v-shortkey="['r']"
+							icon="tasks"
+						>
+							{{ $t('task.detail.actions.relatedTasks') }}
+						</x-button>
+						<x-button
+							@click="setFieldActive('moveList')"
+							type="secondary"
+							icon="list"
+						>
+							{{ $t('task.detail.actions.moveList') }}
+						</x-button>
+						<x-button
+							@click="setFieldActive('color')"
+							type="secondary"
+							icon="fill-drip"
+						>
+							{{ $t('task.detail.actions.color') }}
+						</x-button>
+						<x-button
+							@click="toggleFavorite"
+							type="secondary"
+							:icon="task.isFavorite ? 'star' : ['far', 'star']"
+						>
+							{{
+								task.isFavorite ? $t('task.detail.actions.unfavorite') : $t('task.detail.actions.favorite')
+							}}
+						</x-button>
+						<x-button
+							@click="showDeleteModal = true"
+							icon="trash-alt"
+							:shadow="false"
+							class="is-danger is-outlined has-no-border"
+						>
+							{{ $t('task.detail.actions.delete') }}
+						</x-button>
+					</template>
 
 					<!-- Created / Updated [by] -->
 					<p class="created">
@@ -410,10 +418,10 @@
 				v-if="showDeleteModal"
 			>
 				<template #header><span>{{ $t('task.detail.delete.header') }}</span></template>
-		
+
 				<template #text>
 					<p>{{ $t('task.detail.delete.text1') }}<br/>
-					{{ $t('task.detail.delete.text2') }}</p>
+						{{ $t('task.detail.delete.text2') }}</p>
 				</template>
 			</modal>
 		</transition>
@@ -520,7 +528,7 @@ export default {
 	},
 	computed: {
 		taskId() {
-			const { id } = this.$route.params
+			const {id} = this.$route.params
 			return id === undefined ? id : Number(id)
 		},
 		currentList() {
@@ -557,6 +565,9 @@ export default {
 		},
 		hasAttachments() {
 			return this.$store.state.attachments.attachments.length > 0
+		},
+		shouldShowClosePopup() {
+			return this.$route.name.includes('kanban')
 		},
 	},
 	methods: {
