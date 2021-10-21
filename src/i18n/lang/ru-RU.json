@@ -527,6 +527,7 @@
       "deleteSuccess": "Задача удалена.",
       "belongsToList": "Задача принадлежит списку «{list}»",
       "due": "Истекает {at}",
+      "closePopup": "Close popup",
       "delete": {
         "header": "Удалить задачу",
         "text1": "Удалить эту задачу?",

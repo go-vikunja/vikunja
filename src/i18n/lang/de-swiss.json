@@ -527,6 +527,7 @@
       "deleteSuccess": "Die Uufgab isch erfolgriich g'chüblet wore.",
       "belongsToList": "Die Uufgab ghlrt zu de \"{list}\" Liste",
       "due": "Fällig bis {at}",
+      "closePopup": "Popup schließen",
       "delete": {
         "header": "Die Uufgab chüble",
         "text1": "Bisch du dir sicher, dass du die Uufgab chüblä wetsch?",

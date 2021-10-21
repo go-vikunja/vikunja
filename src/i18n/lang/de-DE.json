@@ -527,6 +527,7 @@
       "deleteSuccess": "Die Aufgabe wurde erfolgreich gelöscht.",
       "belongsToList": "Diese Aufgabe gehört zur Liste „{list}“",
       "due": "Fällig {at}",
+      "closePopup": "Popup schließen",
       "delete": {
         "header": "Diese Aufgabe löschen",
         "text1": "Willst du diese Aufgabe wirklich löschen?",

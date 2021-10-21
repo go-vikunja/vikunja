@@ -527,6 +527,7 @@
       "deleteSuccess": "The task has been deleted successfully.",
       "belongsToList": "This task belongs to list '{list}'",
       "due": "Due {at}",
+      "closePopup": "Close popup",
       "delete": {
         "header": "Delete this task",
         "text1": "Are you sure you want to remove this task?",
