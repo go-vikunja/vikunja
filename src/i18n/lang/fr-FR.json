@@ -527,7 +527,7 @@
       "deleteSuccess": "Tâche supprimée.",
       "belongsToList": "Cette tâche appartient à la liste « {list} »",
       "due": "Échéance {at}",
-      "closePopup": "Close popup",
+      "closePopup": "Fermer la fenêtre",
       "delete": {
         "header": "Supprimer cette tâche",
         "text1": "Retirer cette tâche ?",
