@@ -1,5 +1,5 @@
 <template>
-	<div :class="{'is-loading': taskCollectionService.loading}" class="table-view loader-container">
+	<div :class="{'is-loading': loading}" class="table-view loader-container">
 		<div class="filter-container">
 			<div class="items">
 				<popup>
@@ -169,7 +169,7 @@
 			</div>
 
 			<Pagination 
-				:total-pages="taskCollectionService.totalPages"
+				:total-pages="totalPages"
 				:current-page="currentPage"
 			/>
 		</card>
@@ -185,9 +185,10 @@
 </template>
 
 <script>
-import {useRoute} from 'vue-router'
+import { defineComponent, ref, reactive, computed, toRaw } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 
-import taskList from '@/components/tasks/mixins/taskList'
+import { createTaskList } from '@/composables/taskList'
 import Done from '@/components/misc/Done.vue'
 import User from '@/components/misc/user'
 import PriorityLabel from '@/components/tasks/partials/priorityLabel'
@@ -200,7 +201,39 @@ import FilterPopup from '@/components/list/partials/filter-popup.vue'
 import Pagination from '@/components/misc/pagination.vue'
 import Popup from '@/components/misc/popup'
 
-export default {
+const ACTIVE_COLUMNS_DEFAULT = {
+	id: true,
+	done: true,
+	title: true,
+	priority: false,
+	labels: true,
+	assignees: true,
+	dueDate: true,
+	startDate: false,
+	endDate: false,
+	percentDone: false,
+	created: false,
+	updated: false,
+	createdBy: false,
+}
+
+const SORT_BY_DEFAULT = {
+	id: 'desc',
+}
+
+function useSavedView(activeColumns, sortBy) {
+	const savedShowColumns = localStorage.getItem('tableViewColumns')
+	if (savedShowColumns !== null) {
+		Object.assign(activeColumns, JSON.parse(savedShowColumns))
+	}
+
+	const savedSortBy = localStorage.getItem('tableViewSortBy')
+	if (savedSortBy !== null) {
+		sortBy.value = JSON.parse(savedSortBy)
+	}
+}
+
+export default defineComponent({
 	name: 'Table',
 	components: {
 		Popup,
@@ -214,75 +247,18 @@ export default {
 		User,
 		Pagination,
 	},
-	mixins: [
-		taskList,
-	],
-	data() {
-		return {
-			activeColumns: {
-				id: true,
-				done: true,
-				title: true,
-				priority: false,
-				labels: true,
-				assignees: true,
-				dueDate: true,
-				startDate: false,
-				endDate: false,
-				percentDone: false,
-				created: false,
-				updated: false,
-				createdBy: false,
-			},
-			sortBy: {
-				id: 'desc',
-			},
-		}
-	},
-	computed: {
-		taskDetailRoutes() {
-			const taskDetailRoutes = {}
-			this.tasks.forEach(({id}) => {
-				taskDetailRoutes[id] = {
-					name: 'task.detail',
-					params: { id },
-					state: { backgroundView: this.$router.currentRoute.value.fullPath },
-				}
-			})
-			return taskDetailRoutes
-		},
-	},
-	created() {
-		const savedShowColumns = localStorage.getItem('tableViewColumns')
-		if (savedShowColumns !== null) {
-			this.activeColumns = JSON.parse(savedShowColumns)
-		}
-		const savedSortBy = localStorage.getItem('tableViewSortBy')
-		if (savedSortBy !== null) {
-			this.sortBy = JSON.parse(savedSortBy)
-		}
-
-		this.params.filter_by = []
-		this.params.filter_value = []
-		this.params.filter_comparator = []
-
-		this.initTasks(1)
-
-	},
 	setup() {
-		// Save the current list view to local storage
-		// We use local storage and not vuex here to make it persistent across reloads.
-		const route = useRoute()
-		console.log(route.value)
-		saveListView(route.value.params.listId, route.value.name)
-	},
-	methods: {
-		initTasks(page, search = '') {
+		const activeColumns = reactive({ ...ACTIVE_COLUMNS_DEFAULT })
+		const sortBy = ref({ ...SORT_BY_DEFAULT })
+
+		useSavedView(activeColumns, sortBy)
+
+		function beforeLoad(params) {
 			// This makes sure an id sort order is always sorted last.
 			// When tasks would be sorted first by id and then by whatever else was specified, the id sort takes
 			// precedence over everything else, making any other sort columns pretty useless.
-			const sortKeys = Object.keys(this.sortBy)
 			let hasIdFilter = false
+			const sortKeys = Object.keys(sortBy.value)
 			for (const s of sortKeys) {
 				if (s === 'id') {
 					sortKeys.splice(s, 1)
@@ -293,50 +269,80 @@ export default {
 			if (hasIdFilter) {
 				sortKeys.push('id')
 			}
-			
-			const params = this.params
-			params.sort_by = []
-			params.order_by = []
-			sortKeys.map(s => {
-				params.sort_by.push(s)
-				params.order_by.push(this.sortBy[s])
-			})
-			this.loadTasks(page, search, params)
-		},
-		sort(property) {
-			const order = this.sortBy[property]
+			params.value.sort_by = sortKeys
+			params.value.order_by = sortKeys.map(s => sortBy.value[s])
+		}
+
+		const taskList = createTaskList(beforeLoad)
+
+		Object.assign(taskList.params.value, {
+			filter_by: [],
+			filter_value: [],
+			filter_comparator: [],
+		})
+
+		const router = useRouter()
+
+		const taskDetailRoutes = computed(() => Object.fromEntries(
+			taskList.tasks.value.map(({id}) => ([
+				id,
+				{
+					name: 'task.detail',
+					params: { id },
+					state: { backgroundView: router.currentRoute.value.fullPath },
+				},
+			])),
+		))
+
+		// Save the current list view to local storage
+		// We use local storage and not vuex here to make it persistent across reloads.
+		const route = useRoute()
+		saveListView(route.params.listId, route.name)
+
+		function sort(property) {
+			const order = sortBy.value[property]
 			if (typeof order === 'undefined' || order === 'none') {
-				this.sortBy[property] = 'desc'
+				sortBy.value[property] = 'desc'
 			} else if (order === 'desc') {
-				this.sortBy[property] = 'asc'
+				sortBy.value[property] = 'asc'
 			} else {
-				delete this.sortBy[property]
+				delete sortBy.value[property]
 			}
-			this.initTasks(this.currentPage, this.searchTerm)
+			beforeLoad(taskList.currentPage.value, taskList.searchTerm.value)
 			// Save the order to be able to retrieve them later
-			localStorage.setItem('tableViewSortBy', JSON.stringify(this.sortBy))
-		},
-		saveTaskColumns() {
-			localStorage.setItem('tableViewColumns', JSON.stringify(this.activeColumns))
-		},
+			localStorage.setItem('tableViewSortBy', JSON.stringify(sortBy.value))
+		}
+
+		function saveTaskColumns() {
+			localStorage.setItem('tableViewColumns', JSON.stringify(toRaw(activeColumns)))
+		}
+
+		taskList.initTaskList()
+
+		return {
+			...taskList,
+			sortBy,
+			activeColumns,
+			sort,
+			saveTaskColumns,
+			taskDetailRoutes,
+		}
 	},
-}
+})
 </script>
 
 <style lang="scss" scoped>
-.table-view {
-	.table {
-		background: transparent;
-		overflow-x: auto;
-		overflow-y: hidden;
+.table {
+	background: transparent;
+	overflow-x: auto;
+	overflow-y: hidden;
 
-		th {
-			white-space: nowrap;
-		}
+	th {
+		white-space: nowrap;
+	}
 
-		.user {
-			margin: 0;
-		}
+	.user {
+		margin: 0;
 	}
 }
 

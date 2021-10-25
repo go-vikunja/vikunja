@@ -8,28 +8,28 @@
 				<router-link
 					v-shortcut="'g l'"
 					:title="$t('keyboardShortcuts.list.switchToListView')"
-					:class="{'is-active': currentListType === 'list'}"
+					:class="{'is-active': $route.name === 'list.list'}"
 					:to="{ name: 'list.list',   params: { listId: listId } }">
 					{{ $t('list.list.title') }}
 				</router-link>
 				<router-link
 					v-shortcut="'g g'"
 					:title="$t('keyboardShortcuts.list.switchToGanttView')"
-					:class="{'is-active': currentListType === 'gantt'}"
+					:class="{'is-active': $route.name === 'list.gantt'}"
 					:to="{ name: 'list.gantt',  params: { listId: listId } }">
 					{{ $t('list.gantt.title') }}
 				</router-link>
 				<router-link
 					v-shortcut="'g t'"
 					:title="$t('keyboardShortcuts.list.switchToTableView')"
-					:class="{'is-active': currentListType === 'table'}"
+					:class="{'is-active': $route.name === 'list.table'}"
 					:to="{ name: 'list.table',  params: { listId: listId } }">
 					{{ $t('list.table.title') }}
 				</router-link>
 				<router-link
 					v-shortcut="'g k'"
 					:title="$t('keyboardShortcuts.list.switchToKanbanView')"
-					:class="{'is-active': currentListType === 'kanban'}"
+					:class="{'is-active': $route.name === 'list.kanban'}"
 					:to="{ name: 'list.kanban', params: { listId: listId } }">
 					{{ $t('list.kanban.title') }}
 				</router-link>
@@ -69,11 +69,6 @@ export default {
 		},
 	},
 	computed: {
-		currentListType() {
-			// default: 'list',
-			return ''
-		},
-
 		// Computed property to let "listId" always have a value
 		listId() {
 			return typeof this.$route.params.listId === 'undefined' ? 0 : this.$route.params.listId

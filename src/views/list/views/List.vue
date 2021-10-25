@@ -1,6 +1,6 @@
 <template>
 	<div
-		:class="{ 'is-loading': taskCollectionService.loading }"
+		:class="{ 'is-loading': loading }"
 		class="loader-container is-max-width-desktop list-view"
 	>
 		<div
@@ -26,7 +26,7 @@
 						</div>
 						<div class="control">
 							<x-button
-								:loading="taskCollectionService.loading"
+								:loading="loading"
 								@click="searchTasks"
 								:shadow="false"
 							>
@@ -59,7 +59,7 @@
 				/>
 			</template>
 
-			<nothing v-if="ctaVisible && tasks.length === 0 && !taskCollectionService.loading">
+			<nothing v-if="ctaVisible && tasks.length === 0 && !loading">
 				{{ $t('list.list.empty') }}
 				<a @click="focusNewTaskInput()">
 					{{ $t('list.list.newTaskCta') }}
@@ -117,8 +117,8 @@
 				/>
 			</div>
 
-			<Pagination
-				:total-pages="taskCollectionService.totalPages"
+			<Pagination 
+				:total-pages="totalPages"
 				:current-page="currentPage"
 			/>
 		</card>
@@ -130,13 +130,16 @@
 </template>
 
 <script>
+import { ref } from 'vue'
+import { useRoute } from 'vue-router'
+
 import TaskService from '../../../services/task'
 import TaskModel from '../../../models/task'
 
 import EditTask from '../../../components/tasks/edit-task'
 import AddTask from '../../../components/tasks/add-task'
 import SingleTaskInList from '../../../components/tasks/partials/singleTaskInList'
-import taskList from '../../../components/tasks/mixins/taskList'
+import { createTaskList } from '@/composables/taskList'
 import {saveListView} from '@/helpers/saveListView'
 import Rights from '../../../models/constants/rights.json'
 import FilterPopup from '@/components/list/partials/filter-popup.vue'
@@ -172,8 +175,6 @@ export default {
 	data() {
 		return {
 			taskService: new TaskService(),
-			isTaskEdit: false,
-			taskEditTask: TaskModel,
 			ctaVisible: false,
 			showTaskSearch: false,
 
@@ -184,9 +185,6 @@ export default {
 			},
 		}
 	},
-	mixins: [
-		taskList,
-	],
 	components: {
 		Nothing,
 		FilterPopup,
@@ -199,15 +197,28 @@ export default {
 	},
 
 	setup() {
-		return {
-			showTaskDetail: useShowModal(),
-		}
-	},
+		const taskEditTask = ref(TaskModel)
+		const isTaskEdit = ref(false)
 
-	created() {
+		// This function initializes the tasks page and loads the first page of tasks
+		function beforeLoad() {
+			taskEditTask.value = null
+			isTaskEdit.value = false
+		}
+
+		const taskList = createTaskList(beforeLoad)
+
 		// Save the current list view to local storage
 		// We use local storage and not vuex here to make it persistent across reloads.
-		saveListView(this.$route.params.listId, this.$route.name)
+		const route = useRoute()
+		saveListView(route.params.listId, route.name)
+
+		return {
+			taskEditTask,
+			isTaskEdit,
+			showTaskDetail: useShowModal(),
+			...taskList,
+		}
 	},
 	computed: {
 		isAlphabeticalSorting() {
@@ -247,16 +258,10 @@ export default {
 			// When clicking on the search button, @blur from the input is fired. If we
 			// would then directly hide the whole search bar directly, no click event
 			// from the button gets fired. To prevent this, we wait 200ms until we hide
-			// everything so the button has a chance of firering the search event.
+			// everything so the button has a chance of firing the search event.
 			setTimeout(() => {
 				this.showTaskSearch = false
 			}, 200)
-		},
-		// This function initializes the tasks page and loads the first page of tasks
-		initTasks(page, search = '') {
-			this.taskEditTask = null
-			this.isTaskEdit = false
-			this.loadTasks(page, search)
 		},
 		focusNewTaskInput() {
 			this.$refs.newTaskInput.$refs.newTaskInput.focus()

@@ -191,7 +191,7 @@ import NamespaceService from '@/services/namespace'
 import EditLabels from '@/components/tasks/partials/editLabels.vue'
 
 import {objectToSnakeCase} from '@/helpers/case'
-import {getDefaultParams} from '@/components/tasks/mixins/taskList'
+import {getDefaultParams} from '@/composables/taskList'
 
 // FIXME: merge with DEFAULT_PARAMS in taskList.js
 const DEFAULT_PARAMS = {
