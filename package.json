@@ -57,7 +57,7 @@
     "@vitejs/plugin-vue": "1.9.3",
     "@vue/eslint-config-typescript": "8.0.0",
     "autoprefixer": "10.3.7",
-    "axios": "0.23.0",
+    "axios": "0.24.0",
     "browserslist": "4.17.5",
     "cypress": "8.6.0",
     "cypress-file-upload": "5.0.8",
