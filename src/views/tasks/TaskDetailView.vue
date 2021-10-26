@@ -34,7 +34,7 @@
 							<div class="column" v-if="activeFields.priority">
 								<!-- Priority -->
 								<div class="detail-title">
-									<icon :icon="['far', 'star']"/>
+									<icon icon="exclamation"/>
 									{{ $t('task.attributes.priority') }}
 								</div>
 								<priority-select
@@ -88,7 +88,7 @@
 							<div class="column" v-if="activeFields.startDate">
 								<!-- Start Date -->
 								<div class="detail-title">
-									<icon icon="calendar-week"/>
+									<icon icon="play"/>
 									{{ $t('task.attributes.startDate') }}
 								</div>
 								<div class="date-input">
@@ -115,7 +115,7 @@
 							<div class="column" v-if="activeFields.endDate">
 								<!-- End Date -->
 								<div class="detail-title">
-									<icon icon="calendar-week"/>
+									<icon icon="stop"/>
 									{{ $t('task.attributes.endDate') }}
 								</div>
 								<div class="date-input">
@@ -141,7 +141,7 @@
 							<div class="column" v-if="activeFields.reminders">
 								<!-- Reminders -->
 								<div class="detail-title">
-									<icon icon="history"/>
+									<icon :icon="['far', 'clock']"/>
 									{{ $t('task.attributes.reminders') }}
 								</div>
 								<reminders
@@ -155,7 +155,7 @@
 							<div class="column" v-if="activeFields.repeatAfter">
 								<!-- Repeat after -->
 								<div class="detail-title">
-									<icon :icon="['far', 'clock']"/>
+									<icon icon="history"/>
 									{{ $t('task.attributes.repeat') }}
 								</div>
 								<repeat-after
@@ -214,7 +214,7 @@
 					<div class="content details mb-0" v-if="activeFields.relatedTasks">
 						<h3>
 							<span class="icon is-grey">
-								<icon icon="tasks"/>
+								<icon icon="sitemap"/>
 							</span>
 							{{ $t('task.attributes.relatedTasks') }}
 						</h3>
@@ -288,7 +288,7 @@
 						<x-button
 							@click="setFieldActive('priority')"
 							type="secondary"
-							:icon="['far', 'star']"
+							icon="exclamation"
 						>
 							{{ $t('task.detail.actions.priority') }}
 						</x-button>
@@ -304,28 +304,28 @@
 						<x-button
 							@click="setFieldActive('startDate')"
 							type="secondary"
-							icon="calendar-week"
+							icon="play"
 						>
 							{{ $t('task.detail.actions.startDate') }}
 						</x-button>
 						<x-button
 							@click="setFieldActive('endDate')"
 							type="secondary"
-							icon="calendar-week"
+							icon="stop"
 						>
 							{{ $t('task.detail.actions.endDate') }}
 						</x-button>
 						<x-button
 							@click="setFieldActive('reminders')"
 							type="secondary"
-							icon="history"
+							:icon="['far', 'clock']"
 						>
 							{{ $t('task.detail.actions.reminders') }}
 						</x-button>
 						<x-button
 							@click="setFieldActive('repeatAfter')"
 							type="secondary"
-							:icon="['far', 'clock']"
+							icon="history"
 						>
 							{{ $t('task.detail.actions.repeatAfter') }}
 						</x-button>
@@ -350,7 +350,7 @@
 							@shortkey="setFieldActive('relatedTasks')"
 							type="secondary"
 							v-shortkey="['r']"
-							icon="tasks"
+							icon="sitemap"
 						>
 							{{ $t('task.detail.actions.relatedTasks') }}
 						</x-button>

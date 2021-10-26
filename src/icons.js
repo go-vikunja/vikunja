@@ -7,7 +7,6 @@ import {
 	faBars,
 	faBell,
 	faCalendar,
-	faCalendarWeek,
 	faCheck,
 	faCheckDouble,
 	faChessKnight,
@@ -36,14 +35,17 @@ import {
 	faPen,
 	faPencilAlt,
 	faPercent,
+	faPlay,
 	faPlus,
 	faPowerOff,
 	faSearch,
 	faShareAlt,
 	faSignOutAlt,
+	faSitemap,
 	faSort,
 	faSortUp,
 	faStar as faStarSolid,
+	faStop,
 	faTachometerAlt,
 	faTags,
 	faTasks,
@@ -74,7 +76,6 @@ library.add(faBell)
 library.add(faBellSlash)
 library.add(faCalendar)
 library.add(faCalendarAlt)
-library.add(faCalendarWeek)
 library.add(faCheck)
 library.add(faCheckDouble)
 library.add(faChessKnight)
@@ -105,16 +106,19 @@ library.add(faPaste)
 library.add(faPen)
 library.add(faPencilAlt)
 library.add(faPercent)
+library.add(faPlay)
 library.add(faPlus)
 library.add(faPowerOff)
 library.add(faSave)
 library.add(faSearch)
 library.add(faShareAlt)
 library.add(faSignOutAlt)
+library.add(faSitemap)
 library.add(faSort)
 library.add(faSortUp)
 library.add(faStar)
 library.add(faStarSolid)
+library.add(faStop)
 library.add(faSun)
 library.add(faTachometerAlt)
 library.add(faTags)
