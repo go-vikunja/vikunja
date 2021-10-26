@@ -73,7 +73,7 @@ export default {
 			// Calculating the textarea height based on lines of input in it. That is more reliable when removing a 
 			// line from the input.
 			const numberOfLines = newVal.split(/\r\n|\r|\n/).length
-			const fontSize =  parseInt(window.getComputedStyle(this.$refs.newTaskInput, null).getPropertyValue('font-size'))
+			const fontSize = parseInt(window.getComputedStyle(this.$refs.newTaskInput, null).getPropertyValue('font-size'))
 
 			this.textAreaHeight = numberOfLines * fontSize * LINE_HEIGHT + INPUT_BORDER_PX
 		},
@@ -98,9 +98,9 @@ export default {
 				if (title === '') {
 					return
 				}
-				
+
 				const task = await this.$store.dispatch('tasks/createNewTask', {
-					title: this.newTaskTitle,
+					title,
 					listId: this.$store.state.auth.settings.defaultListId,
 					position: this.defaultPosition,
 				})
@@ -111,7 +111,7 @@ export default {
 			try {
 				await Promise.all(newTasks)
 				this.newTaskTitle = ''
-			} catch(e) {
+			} catch (e) {
 				if (e.message === 'NO_LIST') {
 					this.errorMessage = this.$t('list.create.addListRequired')
 					return
