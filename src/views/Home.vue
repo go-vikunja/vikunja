@@ -129,7 +129,7 @@ export default {
 				return state.namespaces.namespaces[0].lists.length > 0
 			},
 			loading: state => state[LOADING] && state[LOADING_MODULE] === 'tasks',
-			deletionScheduledAt: state => parseDateOrNull(state.auth.info.deletionScheduledAt),
+			deletionScheduledAt: state => parseDateOrNull(state.auth.info?.deletionScheduledAt),
 		}),
 	},
 	methods: {
