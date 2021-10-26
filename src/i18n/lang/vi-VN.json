@@ -504,7 +504,7 @@
     "show": {
       "titleCurrent": "Công việc hiện tại",
       "titleDates": "Công việc từ {from} cho đến {to}",
-      "noDates": "Hiển thị coogn việc không có ngày tháng",
+      "noDates": "Hiển thị công việc không có ngày tháng",
       "current": "Công việc hiện tại",
       "from": "Công việc từ",
       "until": "cho đến",
@@ -534,7 +534,7 @@
         "text2": "Thao tác này cũng sẽ xóa tất cả tệp đính kèm, lời nhắc và liên kết đến công việc này. Nó không thể hoàn tác!"
       },
       "actions": {
-        "assign": "Chỉ định người đảm nhiệm công việc này",
+        "assign": "Chỉ định người đảm nhiệm",
         "label": "Thêm nhãn",
         "priority": "Mức độ ưu tiên",
         "dueDate": "Đặt ngày đến hạn",
