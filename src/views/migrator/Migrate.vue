@@ -2,13 +2,18 @@
 	<div class="content">
 		<h1>{{ $t('migrate.title') }}</h1>
 		<p>{{ $t('migrate.description') }}</p>
-		<div class="migration-services-overview">
+		<div class="migration-services">
 			<router-link
-				v-for="{name, identifier} in availableMigrators"
-				:key="identifier"
-				:to="{name: 'migrate.service', params: {service: identifier}}"
+				v-for="{name, id, icon} in availableMigrators"
+				:key="id"
+				class="migration-service-link"
+				:to="{name: 'migrate.service', params: {service: id}}"
 			>
-				<img :alt="name" :src="serviceIconSources[identifier]"/>
+				<img
+					class="migration-service-image"
+					:alt="name"
+					:src="icon"
+				/>
 				{{ name }}
 			</router-link>
 		</div>
@@ -16,38 +21,37 @@
 </template>
 
 <script>
-import {getMigratorFromSlug, SERVICE_ICONS} from '../../helpers/migrator'
-
+import {MIGRATORS} from './migrators'
 
 export default {
-	name: 'migrate.service',
+	name: 'Migrate',
 	mounted() {
 		this.setTitle(this.$t('migrate.title'))
 	},
 	computed: {
 		availableMigrators() {
-			return this.$store.state.config.availableMigrators.map(getMigratorFromSlug)
-		},
-		serviceIconSources() {
-			return this.availableMigrators.map(({identifier}) => SERVICE_ICONS[identifier]())
+			return this.$store.state.config.availableMigrators
+				.map((id) => MIGRATORS[id])
+				.filter((item) => Boolean(item))
 		},
 	},
 }
 </script>
 
 <style lang="scss" scoped>
-.migration-services-overview {
+.migration-services {
   text-align: center;
+}
 
-  a {
+.migration-service-link {
     display: inline-block;
     width: 100px;
     text-transform: capitalize;
     margin-right: 1rem;
 
-    img {
-      display: block;
-    }
-  }
+}
+
+.migration-service-image {
+	display: block;
 }
 </style>
