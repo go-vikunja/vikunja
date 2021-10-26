@@ -43,6 +43,7 @@
 					<label class="label" for="totpPasscode">{{ $t('user.auth.totpTitle') }}</label>
 					<div class="control">
 						<input
+							autocomplete="one-time-code"
 							class="input"
 							id="totpPasscode"
 							:placeholder="$t('user.auth.totpPlaceholder')"

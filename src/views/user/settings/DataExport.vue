@@ -37,16 +37,19 @@
 </template>
 
 <script>
-import DataExportService from '../../../services/dataExport'
+import DataExportService from '@/services/dataExport'
 
 export default {
-	name: 'data-export',
+	name: 'user-settings-data-export',
 	data() {
 		return {
 			dataExportService: new DataExportService(),
 			password: '',
 			errPasswordRequired: false,
 		}
+	},
+	mounted() {
+		this.setTitle(`${this.$t('user.export.title')} - ${this.$t('user.settings.title')}`)
 	},
 	methods: {
 		async requestDataExport() {

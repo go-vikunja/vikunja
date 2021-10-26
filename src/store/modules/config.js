@@ -2,6 +2,7 @@ import {CONFIG} from '../mutation-types'
 import {HTTPFactory} from '@/http-common'
 import {objectToCamelCase} from '@/helpers/case'
 import {redirectToProvider} from '../../helpers/redirectToProvider'
+import {parseURL} from 'ufo'
 
 export default {
 	namespaced: true,
@@ -35,6 +36,13 @@ export default {
 			},
 		},
 	}),
+	getters: {
+		migratorsEnabled: state => state.availableMigrators?.length > 0,
+		apiBase() {
+			const {host, protocol} = parseURL(window.API_URL)
+			return protocol + '//' + host
+		},
+	},
 	mutations: {
 		[CONFIG](state, config) {
 			state.version = config.version
@@ -63,7 +71,7 @@ export default {
 		async update(ctx) {
 			const HTTP = HTTPFactory()
 
-			const { data: info } = await HTTP.get('info')
+			const {data: info} = await HTTP.get('info')
 			ctx.commit(CONFIG, info)
 			return info
 		},

@@ -66,11 +66,11 @@
 import {Cropper} from 'vue-advanced-cropper'
 import 'vue-advanced-cropper/dist/style.css'
 
-import AvatarService from '../../services/avatar'
-import AvatarModel from '../../models/avatar'
+import AvatarService from '@/services/avatar'
+import AvatarModel from '@/models/avatar'
 
 export default {
-	name: 'avatar-settings',
+	name: 'user-settings-avatar',
 	data() {
 		return {
 			avatarProvider: '',
@@ -85,6 +85,9 @@ export default {
 	},
 	components: {
 		Cropper,
+	},
+	mounted() {
+		this.setTitle(`${this.$t('user.settings.avatar.title')} - ${this.$t('user.settings.title')}`)
 	},
 	methods: {
 		async avatarStatus() {

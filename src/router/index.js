@@ -48,6 +48,14 @@ import CreateSavedFilter from '../views/filters/CreateSavedFilter'
 const PasswordResetComponent = () => import('../views/user/PasswordReset')
 const GetPasswordResetComponent = () => import('../views/user/RequestPasswordReset')
 const UserSettingsComponent = () => import('../views/user/Settings')
+const UserSettingsAvatarComponent = () => import('../views/user/settings/Avatar')
+const UserSettingsCaldavComponent = () => import('../views/user/settings/Caldav')
+const UserSettingsDataExportComponent = () => import('../views/user/settings/DataExport')
+const UserSettingsDeletionComponent = () => import('../views/user/settings/Deletion')
+const UserSettingsEmailUpdateComponent = () => import('../views/user/settings/EmailUpdate')
+const UserSettingsGeneralComponent = () => import('../views/user/settings/General')
+const UserSettingsPasswordUpdateComponent = () => import('../views/user/settings/PasswordUpdate')
+const UserSettingsTOTPComponent = () => import('../views/user/settings/TOTP')
 
 // List Handling
 const NewListComponent = () => import('../views/list/NewList')
@@ -115,6 +123,48 @@ const router = createRouter({
 			path: '/user/settings',
 			name: 'user.settings',
 			component: UserSettingsComponent,
+			children: [
+				{
+					path: '/user/settings/avatar',
+					name: 'user.settings.avatar',
+					component: UserSettingsAvatarComponent,
+				},
+				{
+					path: '/user/settings/caldav',
+					name: 'user.settings.caldav',
+					component: UserSettingsCaldavComponent,
+				},
+				{
+					path: '/user/settings/data-export',
+					name: 'user.settings.data-export',
+					component: UserSettingsDataExportComponent,
+				},
+				{
+					path: '/user/settings/deletion',
+					name: 'user.settings.deletion',
+					component: UserSettingsDeletionComponent,
+				},
+				{
+					path: '/user/settings/email-update',
+					name: 'user.settings.email-update',
+					component: UserSettingsEmailUpdateComponent,
+				},
+				{
+					path: '/user/settings/general',
+					name: 'user.settings.general',
+					component: UserSettingsGeneralComponent,
+				},
+				{
+					path: '/user/settings/password-update',
+					name: 'user.settings.password-update',
+					component: UserSettingsPasswordUpdateComponent,
+				},
+				{
+					path: '/user/settings/totp',
+					name: 'user.settings.totp',
+					component: UserSettingsTOTPComponent,
+				},
+			],
 		},
 		{
 			path: '/user/export/download',

@@ -1,20 +1,26 @@
 .content h3 {
-  .icon,
-  .is-small {
-    font-size: 1rem;
-  }
+	.icon,
+	.is-small {
+		font-size: 1rem;
+	}
 }
 
 .table.has-actions {
-  border-top: 1px solid $grey-100;
-  border-radius: 4px;
-  overflow: hidden;
+	border-top: 1px solid $grey-100;
+	border-radius: 4px;
+	overflow: hidden;
 
-  td {
-    vertical-align: middle;
-  }
+	td {
+		vertical-align: middle;
+	}
 
-  td.actions {
-    text-align: right;
-  }
+	td.actions {
+		text-align: right;
+	}
 }
+
+.content-widescreen {
+	margin: 0 auto;
+	max-width: $widescreen;
+}
+

@@ -83,9 +83,9 @@
 </template>
 
 <script>
-import AccountDeleteService from '../../../services/accountDelete'
+import AccountDeleteService from '@/services/accountDelete'
 import {mapState} from 'vuex'
-import {parseDateOrNull} from '../../../helpers/parseDateOrNull'
+import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 
 export default {
 	name: 'user-settings-deletion',
@@ -100,6 +100,9 @@ export default {
 		userDeletionEnabled: state => state.config.userDeletionEnabled,
 		deletionScheduledAt: state => parseDateOrNull(state.auth.info.deletionScheduledAt),
 	}),
+	mounted() {
+		this.setTitle(`${this.$t('user.deletion.title')} - ${this.$t('user.settings.title')}`)
+	},
 	methods: {
 		async deleteAccount() {
 			if (this.password === '') {

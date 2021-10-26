@@ -8,7 +8,7 @@ describe('User Settings', () => {
 	})
 
 	it('Changes the user avatar', () => {
-		cy.visit('/user/settings')
+		cy.visit('/user/settings/avatar')
 
 		cy.get('input[name=avatarProvider][value=upload]')
 			.click()
@@ -28,9 +28,10 @@ describe('User Settings', () => {
 	})
 
 	it('Updates the name', () => {
-		cy.visit('/user/settings')
+		cy.visit('/user/settings/general')
 
-		cy.get('input#newName')
+		cy.get('.general-settings .control input.input')
+			.first()
 			.type('Lorem Ipsum')
 		cy.get('.card.general-settings .button.is-primary')
 			.contains('Save')

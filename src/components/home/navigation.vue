@@ -147,7 +147,7 @@
 				</div>
 			</template>
 		</aside>
-		<a class="menu-bottom-link" href="https://vikunja.io" target="_blank" rel="noreferrer noopener nofollow">
+		<a class="menu-bottom-link" :href="poweredByUrl" target="_blank" rel="noreferrer noopener nofollow">
 			{{ $t('misc.poweredBy') }}
 		</a>
 	</div>
@@ -160,6 +160,7 @@ import ListSettingsDropdown from '@/components/list/list-settings-dropdown.vue'
 import NamespaceSettingsDropdown from '@/components/namespace/namespace-settings-dropdown.vue'
 import draggable from 'vuedraggable'
 import {calculateItemPosition} from '@/helpers/calculateItemPosition'
+import {POWERED_BY} from '@/urls'
 
 import logoUrl from '@/assets/logo-full.svg'
 
@@ -175,6 +176,7 @@ export default {
 			},
 			listUpdating: {},
 			logoUrl,
+			poweredByUrl: POWERED_BY,
 		}
 	},
 	components: {
