@@ -59,7 +59,7 @@
     "autoprefixer": "10.3.7",
     "axios": "0.24.0",
     "browserslist": "4.17.5",
-    "cypress": "8.6.0",
+    "cypress": "8.7.0",
     "cypress-file-upload": "5.0.8",
     "esbuild": "0.13.9",
     "eslint": "8.1.0",
