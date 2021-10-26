@@ -30,7 +30,10 @@
 	// It has to be the full url, including the last /api/v1 part and port.
 	// You can change this if your api is not reachable on the same port as the frontend.
 	window.API_URL = 'http://localhost:3456/api/v1'
-    //
+    // Enable error tracking with sentry. If this is set to true, will send anonymized data to 
+	// our sentry instance to notify us of potential problems.
+	window.SENTRY_ENABLED = false
+	window.SENTRY_DSN = 'https://85694a2d757547cbbc90cd4b55c5a18d@o1047380.ingest.sentry.io/6024480'
 </script>
 </body>
 </html>

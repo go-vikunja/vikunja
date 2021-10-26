@@ -1,4 +1,4 @@
-import { createApp, configureCompat } from 'vue'
+import {createApp, configureCompat} from 'vue'
 
 configureCompat({
 	COMPONENT_V_MODEL: false,
@@ -16,6 +16,8 @@ import {error, success} from './message'
 declare global {
 	interface Window {
 		API_URL: string;
+		SENTRY_ENABLED: boolean;
+		SENTRY_DSN: string,
 	}
 }
 
@@ -53,13 +55,12 @@ const app = createApp(App)
 
 app.use(Notifications)
 
-
-
 app.use(shortkey, {prevent: ['input', 'textarea', '.input', '[contenteditable]']})
 
 // directives
 import focus from './directives/focus'
 import tooltip from './directives/tooltip'
+
 app.directive('focus', focus)
 app.directive('tooltip', tooltip)
 
@@ -68,6 +69,7 @@ import FontAwesomeIcon from './icons'
 import Button from './components/input/button.vue'
 import Modal from './components/modal/modal.vue'
 import Card from './components/misc/card.vue'
+
 app.component('icon', FontAwesomeIcon)
 app.component('x-button', Button)
 app.component('modal', Modal)
@@ -78,6 +80,7 @@ import {getNamespaceTitle} from './helpers/getNamespaceTitle'
 import {getListTitle} from './helpers/getListTitle'
 import {colorIsDark} from './helpers/color/colorIsDark'
 import {setTitle} from './helpers/setTitle'
+
 app.mixin({
 	methods: {
 		formatDateSince,
@@ -93,15 +96,15 @@ app.mixin({
 
 app.config.errorHandler = (err, vm, info) => {
 	// if (import.meta.env.PROD) {
-		// error(err)
+	// error(err)
 	// } else {
-		// console.error(err, vm, info)
-		error(err)
+	// console.error(err, vm, info)
+	error(err)
 	// }
 }
 
 if (import.meta.env.DEV) {
-	app.config.warnHandler = (msg, vm, info) => { 
+	app.config.warnHandler = (msg, vm, info) => {
 		error(msg)
 	}
 
@@ -110,8 +113,8 @@ if (import.meta.env.DEV) {
 		error(err)
 		throw err
 	})
-	
-	
+
+
 	window.addEventListener('unhandledrejection', (err) => {
 		// event.promise contains the promise object
 		// event.reason contains the reason for the rejection
@@ -123,6 +126,10 @@ if (import.meta.env.DEV) {
 app.config.globalProperties.$message = {
 	error,
 	success,
+}
+
+if (window.SENTRY_ENABLED) {
+	import('./sentry').then(sentry => sentry.default(app, router))
 }
 
 app.use(router)
