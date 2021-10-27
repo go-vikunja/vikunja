@@ -18,6 +18,7 @@ export const availableLanguages = {
 	'fr-FR': 'Français',
 	'vi-VN': 'Tiếng Việt',
 	'it-IT': 'Italiano',
+	'cs-CZ': 'Čeština',
 }
 
 const loadedLanguages = ['en'] // our default language that is preloaded
