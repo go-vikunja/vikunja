@@ -49,7 +49,7 @@ func notifyUsersScheduledForDeletion() {
 		return
 	}
 
-	log.Debugf("Found %d users scheduled for deletion", len(users))
+	log.Debugf("Found %d users scheduled for deletion to notify", len(users))
 
 	for _, user := range users {
 		if time.Since(user.DeletionLastReminderSent) < time.Hour*24 {
@@ -63,6 +63,8 @@ func notifyUsersScheduledForDeletion() {
 		if user.DeletionScheduledAt.Sub(user.DeletionLastReminderSent) < time.Hour*24 {
 			number = 3
 		}
+
+		log.Debugf("Notifying user %d of the deletion of their account...", user.ID)
 
 		err = notifications.Notify(user, &AccountDeletionNotification{
 			User:               user,

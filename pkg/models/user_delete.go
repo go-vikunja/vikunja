@@ -54,9 +54,13 @@ func deleteUsers() {
 		return
 	}
 
+	log.Debugf("Found %d users scheduled for deletion", len(users))
+
+	now := time.Now()
+
 	for _, u := range users {
-		if u.DeletionScheduledAt.Before(time.Now()) {
-			log.Debugf("User %d is not yet scheduled for deletion.", u.ID)
+		if u.DeletionScheduledAt.Before(now) {
+			log.Debugf("User %d is not yet scheduled for deletion. Scheduled at %s, now is %s", u.ID, u.DeletionScheduledAt, now)
 			continue
 		}
 
@@ -72,6 +76,8 @@ func deleteUsers() {
 			log.Errorf("Could not delete u %d: %s", u.ID, err)
 			return
 		}
+
+		log.Debugf("Deleted user %d", u.ID)
 
 		err = s.Commit()
 		if err != nil {
