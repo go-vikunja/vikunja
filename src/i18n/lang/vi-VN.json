@@ -511,7 +511,7 @@
       "today": "Hôm nay",
       "nextWeek": "Tuần kế tiếp",
       "nextMonth": "Tháng kế tiếp",
-      "noTasks": "Nothing to do — Have a nice day!"
+      "noTasks": "Hôm nay thảnh thơi — Hãy tận hưởng ngày tuyệt vời!"
     },
     "detail": {
       "chooseDueDate": "Bấm vào đây để đặt ngày đến hạn",
@@ -542,7 +542,7 @@
         "endDate": "Chọn ngày kết thúc",
         "reminders": "Thiết lập nhắc nhở",
         "repeatAfter": "Đặt khoảng lặp lại",
-        "percentDone": "Chọn tỉ lệ % hoàn thành",
+        "percentDone": "Chọn tỉ lệ hoàn thành",
         "attachments": "Đính kèm tệp",
         "relatedTasks": "Thêm liên kết công việc",
         "moveList": "Di chuyển công việc",
@@ -679,7 +679,7 @@
     },
     "quickAddMagic": {
       "hint": "Bạn có thể sử dụng Quick Add Magic",
-      "what": "Cái gì vậy?",
+      "what": "Cụ thể là?",
       "title": "Quick Add Magic",
       "intro": "Khi tạo một tác vụ, bạn có thể sử dụng các từ khóa đặc biệt để thêm trực tiếp các thuộc tính cho tác vụ mới tạo. Điều này cho phép thêm các thuộc tính thường được sử dụng vào các tác vụ nhanh hơn nhiều.",
       "multiple": "Bạn có thể sử dụng tác vụ này nhiều lần.",
@@ -701,11 +701,11 @@
     }
   },
   "team": {
-    "title": "Đội nhóm",
-    "noTeams": "Bạn hiện đang không là thành viên của đội nhóm nào.",
+    "title": "Team",
+    "noTeams": "Bạn chưa thuộc bất kỳ Team nào.",
     "create": {
-      "title": "Tạo một đội nhóm mới",
-      "success": "Đội nhóm được tạo thành công."
+      "title": "Thêm một Team mới",
+      "success": "Team đã được tạo thành công."
     },
     "edit": {
       "title": "Chỉnh sửa Team \"{team}\"",
@@ -792,10 +792,10 @@
   "quickActions": {
     "commands": "Các lệnh",
     "placeholder": "Gõ một lệnh hoặc tìm kiếm…",
-    "hint": "Bạn có thể sử dụng # để chỉ tìm kiếm tác vụ, * để chỉ tìm kiếm danh sách và @ để chỉ tìm kiếm đội nhóm.",
+    "hint": "Bạn có thể dùng # để chỉ tìm kiếm công việc, * để chỉ tìm kiếm danh sách và @ để chỉ tìm kiếm Team.",
     "tasks": "Tác vụ",
     "lists": "Danh sách",
-    "teams": "Đội nhóm",
+    "teams": "Team",
     "newList": "Đặt tên cho danh sách mới…",
     "newTask": "Đặt tên cho tác vụ mới…",
     "newNamespace": "Nhập tên của Góc làm việc mới…",
