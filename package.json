@@ -56,7 +56,7 @@
     "@typescript-eslint/eslint-plugin": "5.2.0",
     "@typescript-eslint/parser": "5.2.0",
     "@vitejs/plugin-legacy": "1.6.2",
-    "@vitejs/plugin-vue": "1.9.3",
+    "@vitejs/plugin-vue": "1.9.4",
     "@vue/eslint-config-typescript": "8.0.0",
     "autoprefixer": "10.3.7",
     "axios": "0.24.0",
