@@ -60,7 +60,7 @@ require (
 	github.com/ulule/limiter/v3 v3.8.0
 	github.com/yuin/goldmark v1.4.2
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519
-	golang.org/x/image v0.0.0-20210628002857-a66eb6448b8d
+	golang.org/x/image v0.0.0-20211028202545-6944b10bf410
 	golang.org/x/oauth2 v0.0.0-20211028175245-ba495a64dcb5
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	golang.org/x/sys v0.0.0-20211025201205-69cdffdb9359
