@@ -134,7 +134,7 @@
     "lists": "Danh sách",
     "search": "Gõ để tìm kiếm danh sách…",
     "searchSelect": "Nhấp hoặc nhấn enter để chọn danh sách này",
-    "shared": "Danh sách được chia sẻ",
+    "shared": "Đang tham gia",
     "create": {
       "header": "Tạo một danh sách mới",
       "titlePlaceholder": "Tên danh sách ở đây…",
@@ -332,7 +332,7 @@
     },
     "pseudo": {
       "sharedLists": {
-        "title": "Danh sách được chia sẻ"
+        "title": "Đang tham gia"
       },
       "favorites": {
         "title": "Ưa thích"
