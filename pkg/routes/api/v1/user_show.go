@@ -35,6 +35,7 @@ type userWithSettings struct {
 	user.User
 	Settings            *UserSettings `json:"settings"`
 	DeletionScheduledAt time.Time     `json:"deletion_scheduled_at"`
+	IsLocalUser         bool          `json:"is_local_user"`
 }
 
 // UserShow gets all informations about the current user
@@ -74,6 +75,7 @@ func UserShow(c echo.Context) error {
 			WeekStart:                    u.WeekStart,
 		},
 		DeletionScheduledAt: u.DeletionScheduledAt,
+		IsLocalUser:         u.Issuer == user.IssuerLocal,
 	}
 
 	return c.JSON(http.StatusOK, us)
