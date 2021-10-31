@@ -101,7 +101,7 @@ export default class TaskModel extends AbstractModel {
 			index: 0,
 			isFavorite: false,
 			subscription: null,
-			
+
 			position: 0,
 			kanbanPosition: 0,
 
@@ -161,7 +161,7 @@ export default class TaskModel extends AbstractModel {
 	}
 
 	async cancelScheduledNotifications() {
-		if (!('showTrigger' in Notification.prototype)) {
+		if (!(Notification && 'showTrigger' in Notification.prototype)) {
 			console.debug('This browser does not support triggered notifications')
 			return
 		}
@@ -196,7 +196,7 @@ export default class TaskModel extends AbstractModel {
 			return
 		}
 
-		if (!('showTrigger' in Notification.prototype)) {
+		if (!(Notification && 'showTrigger' in Notification.prototype)) {
 			console.debug('This browser does not support triggered notifications')
 			return
 		}
@@ -231,7 +231,7 @@ export default class TaskModel extends AbstractModel {
 				],
 			})
 			console.debug('Notification scheduled for ' + date)
-		} catch(e) {
+		} catch (e) {
 			throw new Error('Error scheduling notification', e)
 		}
 	}
