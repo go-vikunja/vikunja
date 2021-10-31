@@ -229,16 +229,14 @@ export default {
 		},
 
 		async loadNextTasksForBucket(ctx, {listId, ps = {}, bucketId}) {
-			const bucketIndex = findIndexById(ctx.state.buckets, bucketId)
-
-			const isLoading = ctx.state.bucketLoading[bucketIndex] ?? false
+			const isLoading = ctx.state.bucketLoading[bucketId] ?? false
 			if (isLoading) {
 				return
 			}
 
-			const page = (ctx.state.taskPagesPerBucket[bucketIndex] ?? 1) + 1
+			const page = (ctx.state.taskPagesPerBucket[bucketId] ?? 1) + 1
 
-			const alreadyLoaded = ctx.state.allTasksLoadedForBucket[bucketIndex] ?? false
+			const alreadyLoaded = ctx.state.allTasksLoadedForBucket[bucketId] ?? false
 			if (alreadyLoaded) {
 				return
 			}
@@ -272,7 +270,6 @@ export default {
 
 			const taskService = new TaskCollectionService()
 			try {
-
 				const tasks = await taskService.getAll({listId: listId}, params, page)
 				ctx.commit('addTasksToBucket', {tasks, bucketId: bucketId})
 				ctx.commit('setTasksLoadedForBucketPage', {bucketId, page})
@@ -282,7 +279,7 @@ export default {
 				return tasks
 			} finally {
 				cancel()
-				ctx.commit('setBucketLoading', {bucketId: bucketId, loading: false})
+				ctx.commit('setBucketLoading', {bucketId, loading: false})
 			}
 		},
 
