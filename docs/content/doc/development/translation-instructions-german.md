@@ -73,4 +73,4 @@ Beispiel: „Benutzer:in“
 
 ## Weiterführende Links
 
-* http://docs.translatehouse.org/projects/localization-guide/en/latest/guide/translation_guidelines_german.html
+* https://docs.translatehouse.org/projects/localization-guide/en/latest/guide/translation_guidelines_german.html

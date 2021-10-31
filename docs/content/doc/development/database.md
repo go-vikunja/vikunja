@@ -10,8 +10,8 @@ menu:
 
 # Database
 
-Vikunja uses [xorm](http://xorm.io/) as an abstraction layer to handle the database connection.
-Please refer to [their](http://xorm.io/docs/) documentation on how to exactly use it.
+Vikunja uses [xorm](https://xorm.io/) as an abstraction layer to handle the database connection.
+Please refer to [their](https://xorm.io/docs/) documentation on how to exactly use it.
 
 {{< table_of_contents >}}
 
@@ -24,7 +24,7 @@ In other packages, use the `db.NewSession()` method to get a new database sessio
 
 To add a new table to the database, create the struct and [add a migration for it]({{< ref "db-migrations.md" >}}).
 
-To learn more about how to configure your struct to create "good" tables, refer to [the xorm documentaion](http://xorm.io/docs/).
+To learn more about how to configure your struct to create "good" tables, refer to [the xorm documentaion](https://xorm.io/docs/).
 
 In most cases you will also need to implement the `TableName() string` method on the new struct to make sure the table 
 name matches the rest of the tables - plural.
