@@ -1,5 +1,5 @@
 <template>
-	<card :title="$t('user.settings.newPasswordTitle')" :loading="passwordUpdateService.loading">
+	<card v-if="isLocalUser" :title="$t('user.settings.newPasswordTitle')" :loading="passwordUpdateService.loading">
 		<form @submit.prevent="updatePassword">
 			<div class="field">
 				<label class="label" for="newPassword">{{ $t('user.settings.newPassword') }}</label>
@@ -66,6 +66,11 @@ export default {
 	},
 	mounted() {
 		this.setTitle(`${this.$t('user.settings.newPasswordTitle')} - ${this.$t('user.settings.title')}`)
+	},
+	computed: {
+		isLocalUser() {
+			return this.$store.state.auth.info?.isLocalUser
+		},
 	},
 	methods: {
 		async updatePassword() {

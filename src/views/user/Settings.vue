@@ -8,12 +8,12 @@
 							{{ $t('user.settings.general.title') }}
 						</router-link>
 					</li>
-					<li>
+					<li v-if="isLocalUser">
 						<router-link :to="{name: 'user.settings.password-update'}">
 							{{ $t('user.settings.newPasswordTitle') }}
 						</router-link>
 					</li>
-					<li>
+					<li v-if="isLocalUser">
 						<router-link :to="{name: 'user.settings.email-update'}">
 							{{ $t('user.settings.updateEmailTitle') }}
 						</router-link>
@@ -69,6 +69,9 @@ export default {
 		...mapState('config', ['totpEnabled', 'caldavEnabled']),
 		migratorsEnabled() {
 			return this.$store.getters['config/migratorsEnabled']
+		},
+		isLocalUser() {
+			return this.$store.state.auth.info?.isLocalUser
 		},
 	},
 }

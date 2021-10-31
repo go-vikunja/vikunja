@@ -1,5 +1,5 @@
 <template>
-	<card :title="$t('user.settings.updateEmailTitle')">
+	<card v-if="isLocalUser" :title="$t('user.settings.updateEmailTitle')">
 		<form @submit.prevent="updateEmail">
 			<div class="field">
 				<label class="label" for="newEmail">{{ $t('user.settings.updateEmailNew') }}</label>
@@ -50,6 +50,11 @@ export default {
 	},
 	mounted() {
 		this.setTitle(`${this.$t('user.settings.updateEmailTitle')} - ${this.$t('user.settings.title')}`)
+	},
+	computed: {
+		isLocalUser() {
+			return this.$store.state.auth.info?.isLocalUser
+		},
 	},
 	methods: {
 		async updateEmail() {
