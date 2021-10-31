@@ -1,6 +1,8 @@
 kind: pipeline
 name: build
 
+# TODO: update translations only nightly
+
 trigger:
   branch:
     include:
@@ -328,6 +330,9 @@ trigger:
   ref:
     - refs/heads/main
     - "refs/tags/**"
+  event:
+    exclude:
+      - cron
 
 steps:
   - name: docker-unstable
@@ -425,6 +430,9 @@ trigger:
   ref:
     - refs/heads/main
     - "refs/tags/**"
+  event:
+    exclude:
+      - cron
 
 steps:
   - name: docker-unstable
@@ -471,6 +479,9 @@ trigger:
   ref:
     - refs/heads/main
     - "refs/tags/**"
+  event:
+    exclude:
+      - cron
 
 depends_on:
   - docker-amd64-release
@@ -532,6 +543,9 @@ trigger:
   ref:
     - refs/heads/main
     - "refs/tags/**"
+  event:
+    exclude:
+      - cron
 
 depends_on:
   - build
@@ -568,7 +582,9 @@ trigger:
   branch:
     - main
   event:
-    - push
+    - cron
+  cron:
+    - update_translations
 
 steps:
   - name: download
