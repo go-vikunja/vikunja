@@ -98,7 +98,7 @@ export default {
 	},
 	computed: mapState({
 		userDeletionEnabled: state => state.config.userDeletionEnabled,
-		deletionScheduledAt: state => parseDateOrNull(state.auth.info.deletionScheduledAt),
+		deletionScheduledAt: state => parseDateOrNull(state.auth.info?.deletionScheduledAt),
 	}),
 	mounted() {
 		this.setTitle(`${this.$t('user.deletion.title')} - ${this.$t('user.settings.title')}`)
