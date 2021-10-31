@@ -30,16 +30,6 @@ import (
 )
 
 func checkExportRequest(c echo.Context) (s *xorm.Session, u *user.User, err error) {
-	var pass UserPasswordConfirmation
-	if err := c.Bind(&pass); err != nil {
-		return nil, nil, echo.NewHTTPError(http.StatusBadRequest, "No password provided.")
-	}
-
-	err = c.Validate(pass)
-	if err != nil {
-		return nil, nil, echo.NewHTTPError(http.StatusBadRequest, err)
-	}
-
 	s = db.NewSession()
 	defer s.Close()
 
@@ -52,6 +42,21 @@ func checkExportRequest(c echo.Context) (s *xorm.Session, u *user.User, err erro
 	if err != nil {
 		_ = s.Rollback()
 		return nil, nil, handler.HandleHTTPError(err, c)
+	}
+
+	// Users authenticated with a third-party are unable to provide their password.
+	if u.Issuer != user.IssuerLocal {
+		return
+	}
+
+	var pass UserPasswordConfirmation
+	if err := c.Bind(&pass); err != nil {
+		return nil, nil, echo.NewHTTPError(http.StatusBadRequest, "No password provided.")
+	}
+
+	err = c.Validate(pass)
+	if err != nil {
+		return nil, nil, echo.NewHTTPError(http.StatusBadRequest, err)
 	}
 
 	err = user.CheckUserPassword(u, pass.Password)
