@@ -246,7 +246,7 @@ export default {
 				} catch(e) {
 					// Don't logout on network errors as the user would then get logged out if they don't have
 					// internet for a short period of time - such as when the laptop is still reconnecting
-					if (e.request.status) {
+					if (e?.request?.status) {
 						ctx.dispatch('logout')
 					}
 				}
