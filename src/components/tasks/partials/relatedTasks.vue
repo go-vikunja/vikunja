@@ -218,7 +218,8 @@ export default {
 				await this.taskRelationService.delete(rel)
 
 				Object.entries(this.relatedTasks).some(([relationKind, t]) => {
-					const found = this.relatedTasks[relationKind][t].id === this.relationToDelete.otherTaskId &&
+					const found = typeof this.relatedTasks[relationKind][t] !== 'undefined' &&
+						this.relatedTasks[relationKind][t].id === this.relationToDelete.otherTaskId &&
 						relationKind === this.relationToDelete.relationKind
 					if (!found) return false
 
