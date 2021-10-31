@@ -163,6 +163,7 @@
 <script>
 import AsyncEditor from '@/components/input/AsyncEditor'
 import {mapState} from 'vuex'
+import { i18n } from '@/i18n'
 
 import TeamService from '../../services/team'
 import TeamModel from '../../models/team'
@@ -224,7 +225,7 @@ export default {
 		async loadTeam() {
 			this.team = new TeamModel({id: this.teamId})
 			this.team = await this.teamService.get(this.team)
-			this.title = this.$t('team.edit.title', {team: this.team.name})
+			this.title = i18n.global.t('team.edit.title', {team: this.team.name})
 			this.setTitle(this.title)
 		},
 
