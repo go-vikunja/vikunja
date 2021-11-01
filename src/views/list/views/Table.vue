@@ -68,19 +68,19 @@
 					<tr>
 						<th v-if="activeColumns.id">
 							#
-							<sort :order="sortBy.id" @click="sort('id')"/>
+							<Sort :order="sortBy.id" @click="sort('id')"/>
 						</th>
 						<th v-if="activeColumns.done">
 							{{ $t('task.attributes.done') }}
-							<sort :order="sortBy.done" @click="sort('done')"/>
+							<Sort :order="sortBy.done" @click="sort('done')"/>
 						</th>
 						<th v-if="activeColumns.title">
 							{{ $t('task.attributes.title') }}
-							<sort :order="sortBy.title" @click="sort('title')"/>
+							<Sort :order="sortBy.title" @click="sort('title')"/>
 						</th>
 						<th v-if="activeColumns.priority">
 							{{ $t('task.attributes.priority') }}
-							<sort :order="sortBy.priority" @click="sort('priority')"/>
+							<Sort :order="sortBy.priority" @click="sort('priority')"/>
 						</th>
 						<th v-if="activeColumns.labels">
 							{{ $t('task.attributes.labels') }}
@@ -90,27 +90,27 @@
 						</th>
 						<th v-if="activeColumns.dueDate">
 							{{ $t('task.attributes.dueDate') }}
-							<sort :order="sortBy.due_date" @click="sort('due_date')"/>
+							<Sort :order="sortBy.due_date" @click="sort('due_date')"/>
 						</th>
 						<th v-if="activeColumns.startDate">
 							{{ $t('task.attributes.startDate') }}
-							<sort :order="sortBy.start_date" @click="sort('start_date')"/>
+							<Sort :order="sortBy.start_date" @click="sort('start_date')"/>
 						</th>
 						<th v-if="activeColumns.endDate">
 							{{ $t('task.attributes.endDate') }}
-							<sort :order="sortBy.end_date" @click="sort('end_date')"/>
+							<Sort :order="sortBy.end_date" @click="sort('end_date')"/>
 						</th>
 						<th v-if="activeColumns.percentDone">
 							{{ $t('task.attributes.percentDone') }}
-							<sort :order="sortBy.percent_done" @click="sort('percent_done')"/>
+							<Sort :order="sortBy.percent_done" @click="sort('percent_done')"/>
 						</th>
 						<th v-if="activeColumns.created">
 							{{ $t('task.attributes.created') }}
-							<sort :order="sortBy.created" @click="sort('created')"/>
+							<Sort :order="sortBy.created" @click="sort('created')"/>
 						</th>
 						<th v-if="activeColumns.updated">
 							{{ $t('task.attributes.updated') }}
-							<sort :order="sortBy.updated" @click="sort('updated')"/>
+							<Sort :order="sortBy.updated" @click="sort('updated')"/>
 						</th>
 						<th v-if="activeColumns.createdBy">
 							{{ $t('task.attributes.createdBy') }}
@@ -173,22 +173,13 @@
 				:current-page="currentPage"
 			/>
 		</card>
-
-		<!-- This router view is used to show the task popup while keeping the table view itself -->
-		<router-view v-slot="{ Component }">
-			<transition name="modal">
-				<component :is="Component" />
-			</transition>
-		</router-view>
-
 	</div>
 </template>
 
-<script>
-import { defineComponent, ref, reactive, computed, toRaw } from 'vue'
+<script setup>
+import { ref, reactive, computed, toRaw } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 
-import { createTaskList } from '@/composables/taskList'
 import Done from '@/components/misc/Done.vue'
 import User from '@/components/misc/user'
 import PriorityLabel from '@/components/tasks/partials/priorityLabel'
@@ -196,10 +187,12 @@ import Labels from '@/components/tasks/partials/labels'
 import DateTableCell from '@/components/tasks/partials/date-table-cell'
 import Fancycheckbox from '@/components/input/fancycheckbox'
 import Sort from '@/components/tasks/partials/sort'
-import {saveListView} from '@/helpers/saveListView'
 import FilterPopup from '@/components/list/partials/filter-popup.vue'
 import Pagination from '@/components/misc/pagination.vue'
 import Popup from '@/components/misc/popup'
+
+import { useTaskList } from '@/composables/taskList'
+import {saveListView} from '@/helpers/saveListView'
 
 const ACTIVE_COLUMNS_DEFAULT = {
 	id: true,
@@ -233,102 +226,86 @@ function useSavedView(activeColumns, sortBy) {
 	}
 }
 
-export default defineComponent({
-	name: 'Table',
-	components: {
-		Popup,
-		Done,
-		FilterPopup,
-		Sort,
-		Fancycheckbox,
-		DateTableCell,
-		Labels,
-		PriorityLabel,
-		User,
-		Pagination,
-	},
-	setup() {
-		const activeColumns = reactive({ ...ACTIVE_COLUMNS_DEFAULT })
-		const sortBy = ref({ ...SORT_BY_DEFAULT })
+const activeColumns = reactive({ ...ACTIVE_COLUMNS_DEFAULT })
+const sortBy = ref({ ...SORT_BY_DEFAULT })
 
-		useSavedView(activeColumns, sortBy)
+useSavedView(activeColumns, sortBy)
 
-		function beforeLoad(params) {
-			// This makes sure an id sort order is always sorted last.
-			// When tasks would be sorted first by id and then by whatever else was specified, the id sort takes
-			// precedence over everything else, making any other sort columns pretty useless.
-			let hasIdFilter = false
-			const sortKeys = Object.keys(sortBy.value)
-			for (const s of sortKeys) {
-				if (s === 'id') {
-					sortKeys.splice(s, 1)
-					hasIdFilter = true
-					break
-				}
-			}
-			if (hasIdFilter) {
-				sortKeys.push('id')
-			}
-			params.value.sort_by = sortKeys
-			params.value.order_by = sortKeys.map(s => sortBy.value[s])
+function beforeLoad(params) {
+	// This makes sure an id sort order is always sorted last.
+	// When tasks would be sorted first by id and then by whatever else was specified, the id sort takes
+	// precedence over everything else, making any other sort columns pretty useless.
+	let hasIdFilter = false
+	const sortKeys = Object.keys(sortBy.value)
+	for (const s of sortKeys) {
+		if (s === 'id') {
+			sortKeys.splice(s, 1)
+			hasIdFilter = true
+			break
 		}
+	}
+	if (hasIdFilter) {
+		sortKeys.push('id')
+	}
+	params.value.sort_by = sortKeys
+	params.value.order_by = sortKeys.map(s => sortBy.value[s])
+}
 
-		const taskList = createTaskList(beforeLoad)
+const {
+	tasks,
+	loading,
+	showTaskFilter,
+	params,
+	loadTasks,
+	totalPages,
+	currentPage,
+	searchTerm,
+	initTaskList,
+} = useTaskList(beforeLoad)
 
-		Object.assign(taskList.params.value, {
-			filter_by: [],
-			filter_value: [],
-			filter_comparator: [],
-		})
-
-		const router = useRouter()
-
-		const taskDetailRoutes = computed(() => Object.fromEntries(
-			taskList.tasks.value.map(({id}) => ([
-				id,
-				{
-					name: 'task.detail',
-					params: { id },
-					state: { backgroundView: router.currentRoute.value.fullPath },
-				},
-			])),
-		))
-
-		// Save the current list view to local storage
-		// We use local storage and not vuex here to make it persistent across reloads.
-		const route = useRoute()
-		saveListView(route.params.listId, route.name)
-
-		function sort(property) {
-			const order = sortBy.value[property]
-			if (typeof order === 'undefined' || order === 'none') {
-				sortBy.value[property] = 'desc'
-			} else if (order === 'desc') {
-				sortBy.value[property] = 'asc'
-			} else {
-				delete sortBy.value[property]
-			}
-			beforeLoad(taskList.currentPage.value, taskList.searchTerm.value)
-			// Save the order to be able to retrieve them later
-			localStorage.setItem('tableViewSortBy', JSON.stringify(sortBy.value))
-		}
-
-		function saveTaskColumns() {
-			localStorage.setItem('tableViewColumns', JSON.stringify(toRaw(activeColumns)))
-		}
-
-		taskList.initTaskList()
-
-		return {
-			...taskList,
-			sortBy,
-			activeColumns,
-			sort,
-			saveTaskColumns,
-			taskDetailRoutes,
-		}
-	},
+Object.assign(params.value, {
+	filter_by: [],
+	filter_value: [],
+	filter_comparator: [],
 })
+
+const router = useRouter()
+
+const taskDetailRoutes = computed(() => Object.fromEntries(
+	tasks.value.map(({id}) => ([
+		id,
+		{
+			name: 'task.detail',
+			params: { id },
+			state: { backgroundView: router.currentRoute.value.fullPath },
+		},
+	])),
+))
+
+// Save the current list view to local storage
+// We use local storage and not vuex here to make it persistent across reloads.
+const route = useRoute()
+saveListView(route.params.listId, route.name)
+
+function sort(property) {
+	const order = sortBy.value[property]
+	if (typeof order === 'undefined' || order === 'none') {
+		sortBy.value[property] = 'desc'
+	} else if (order === 'desc') {
+		sortBy.value[property] = 'asc'
+	} else {
+		delete sortBy.value[property]
+	}
+	beforeLoad(currentPage.value, searchTerm.value)
+	// Save the order to be able to retrieve them later
+	localStorage.setItem('tableViewSortBy', JSON.stringify(sortBy.value))
+}
+
+function saveTaskColumns() {
+	localStorage.setItem('tableViewColumns', JSON.stringify(toRaw(activeColumns)))
+}
+
+initTaskList()
 </script>
 
 <style lang="scss" scoped>

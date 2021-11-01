@@ -52,61 +52,43 @@
 			:show-taskswithout-dates="showTaskswithoutDates"
 		/>
 
-		<transition name="modal">
-			<task-detail-view-modal v-if="showTaskDetail" />
-		</transition>
 		</card>
 	</div>
 </template>
 
-<script>
-import GanttChart from '../../../components/tasks/gantt-component'
+<script setup>
+import { ref, computed } from 'vue'
+import { useRoute } from 'vue-router'
 import flatPickr from 'vue-flatpickr-component'
-import Fancycheckbox from '../../../components/input/fancycheckbox'
+
+import { i18n } from '@/i18n'
+import { store } from '@/store'
+
+import GanttChart from '@/components/tasks/gantt-component'
+import Fancycheckbox from '@/components/input/fancycheckbox'
+
 import {saveListView} from '@/helpers/saveListView'
 
-import TaskDetailViewModal, { useShowModal } from '@/views/tasks/TaskDetailViewModal.vue'
+const route = useRoute()
+// Save the current list view to local storage
+// We use local storage and not vuex here to make it persistent across reloads.
+saveListView(route.params.listId, route.name)
 
-export default {
-	name: 'Gantt',
-	components: {
-		Fancycheckbox,
-		flatPickr,
-		GanttChart,
-		TaskDetailViewModal,
+const showTaskswithoutDates = ref(false)
+const dayWidth = ref(35)
+const dateFrom = ref(new Date((new Date()).setDate((new Date()).getDate() - 15)))
+const dateTo = ref(new Date((new Date()).setDate((new Date()).getDate() + 30)))
+
+
+const flatPickerConfig = computed(() => ({
+	altFormat: i18n.global.t('date.altFormatShort'),
+	altInput: true,
+	dateFormat: 'Y-m-d',
+	enableTime: false,
+	locale: {
+		firstDayOfWeek: store.state.auth.settings.weekStart,
 	},
-	setup() {
-		return {
-			showTaskDetail: useShowModal(),
-		}
-	},
-	created() {
-		// Save the current list view to local storage
-		// We use local storage and not vuex here to make it persistent across reloads.
-		saveListView(this.$route.params.listId, this.$route.name)
-	},
-	data() {
-		return {
-			showTaskswithoutDates: false,
-			dayWidth: 35,
-			dateFrom: new Date((new Date()).setDate((new Date()).getDate() - 15)),
-			dateTo: new Date((new Date()).setDate((new Date()).getDate() + 30)),
-		}
-	},
-	computed: {
-		flatPickerConfig() {
-			return {
-				altFormat: this.$t('date.altFormatShort'),
-				altInput: true,
-				dateFormat: 'Y-m-d',
-				enableTime: false,
-				locale: {
-					firstDayOfWeek: this.$store.state.auth.settings.weekStart,
-				},
-			}
-		},
-	},
-}
+}))
 </script>
 
 <style lang="scss">

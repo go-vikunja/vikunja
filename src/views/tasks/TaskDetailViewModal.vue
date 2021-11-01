@@ -4,35 +4,19 @@
 		variant="scrolling"
 		class="task-detail-view-modal"
 	>
-				<a @click="close()" class="close">
-					<icon icon="times"/>
-				</a>
-				<task-detail-view/>
+		<a @click="close()" class="close">
+			<icon icon="times"/>
+		</a>
+		<task-detail-view/>
 	</modal>
 </template>
 
-<script>
+<script setup>
 import TaskDetailView from './TaskDetailView'
-import {computed} from 'vue'
-import {useRoute} from 'vue-router'
+import router from '@/router'
 
-export function useShowModal() {
-	const route = useRoute()
-	const historyState = computed(() => route.fullPath && window.history.state)
-	const show = computed(() => historyState.value.backgroundView)
-	return show
-}
-
-export default {
-	name: 'TaskDetailViewModal',
-	components: {
-		TaskDetailView,
-	},
-	methods: {
-		close() {
-			this.$router.back()
-		},
-	},
+function close() {
+	router.back()
 }
 </script>
 

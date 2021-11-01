@@ -13,8 +13,8 @@ import DataExportDownload from '../views/user/DataExportDownload'
 // Tasks
 import ShowTasksInRangeComponent from '../views/tasks/ShowTasksInRange'
 import LinkShareAuthComponent from '../views/sharing/LinkSharingAuth'
-import TaskDetailView from '../views/tasks/TaskDetailView'
 import ListNamespaces from '../views/namespaces/ListNamespaces'
+import TaskDetailViewModal from '../views/tasks/TaskDetailViewModal'
 // Team Handling
 import ListTeamsComponent from '../views/teams/ListTeams'
 // Label Handling
@@ -29,6 +29,7 @@ import Kanban from '../views/list/views/Kanban'
 import List from '../views/list/views/List'
 import Gantt from '../views/list/views/Gantt'
 import Table from '../views/list/views/Table'
+
 // List Settings
 import ListSettingEdit from '../views/list/settings/edit'
 import ListSettingBackground from '../views/list/settings/background'
@@ -200,49 +201,47 @@ const router = createRouter({
 		{
 			path: '/namespaces/new',
 			name: 'namespace.create',
-			components: {
-				popup: NewNamespaceComponent,
-			},
-		},
-		{
-			path: '/namespaces/:id/list',
-			name: 'list.create',
-			components: {
-				popup: NewListComponent,
+			component: NewNamespaceComponent,
+			meta: {
+				showAsModal: true,
 			},
 		},
 		{
 			path: '/namespaces/:id/settings/edit',
 			name: 'namespace.settings.edit',
-			components: {
-				popup: NamespaceSettingEdit,
+			component: NamespaceSettingEdit,
+			meta: {
+				showAsModal: true,
 			},
 		},
 		{
 			path: '/namespaces/:id/settings/share',
 			name: 'namespace.settings.share',
-			components: {
-				popup: NamespaceSettingShare,
+			component: NamespaceSettingShare,
+			meta: {
+				showAsModal: true,
 			},
 		},
 		{
 			path: '/namespaces/:id/settings/archive',
 			name: 'namespace.settings.archive',
-			components: {
-				popup: NamespaceSettingArchive,
+			component: NamespaceSettingArchive,
+			meta: {
+				showAsModal: true,
 			},
 		},
 		{
 			path: '/namespaces/:id/settings/delete',
 			name: 'namespace.settings.delete',
-			components: {
-				popup: NamespaceSettingDelete,
+			component: NamespaceSettingDelete,
+			meta: {
+				showAsModal: true,
 			},
 		},
 		{
 			path: '/tasks/:id',
 			name: 'task.detail',
-			component: TaskDetailView,
+			component: TaskDetailViewModal,
 		},
 		{
 			path: '/tasks/by/upcoming',
@@ -250,59 +249,75 @@ const router = createRouter({
 			component: ShowTasksInRangeComponent,
 		},
 		{
+			path: '/lists/:id/new',
+			name: 'list.create',
+			component: NewListComponent,
+			meta: {
+				showAsModal: true,
+			},
+		},
+		{
 			path: '/lists/:listId/settings/edit',
 			name: 'list.settings.edit',
-			components: {
-				popup: ListSettingEdit,
+			component: ListSettingEdit,
+			meta: {
+				showAsModal: true,
 			},
 		},
 		{
 			path: '/lists/:listId/settings/background',
 			name: 'list.settings.background',
-			components: {
-				popup: ListSettingBackground,
+			component: ListSettingBackground,
+			meta: {
+				showAsModal: true,
 			},
 		},
 		{
 			path: '/lists/:listId/settings/duplicate',
 			name: 'list.settings.duplicate',
-			components: {
-				popup: ListSettingDuplicate,
+			component: ListSettingDuplicate,
+			meta: {
+				showAsModal: true,
 			},
 		},
 		{
 			path: '/lists/:listId/settings/share',
 			name: 'list.settings.share',
-			components: {
-				popup: ListSettingShare,
+			component: ListSettingShare,
+			meta: {
+				showAsModal: true,
 			},
 		},
 		{
 			path: '/lists/:listId/settings/delete',
 			name: 'list.settings.delete',
-			components: {
-				popup: ListSettingDelete,
+			component: ListSettingDelete,
+			meta: {
+				showAsModal: true,
 			},
 		},
 		{
 			path: '/lists/:listId/settings/archive',
 			name: 'list.settings.archive',
-			components: {
-				popup: ListSettingArchive,
+			component: ListSettingArchive,
+			meta: {
+				showAsModal: true,
 			},
 		},
 		{
 			path: '/lists/:listId/settings/edit',
 			name: 'filter.settings.edit',
-			components: {
-				popup: FilterEdit,
+			component: FilterEdit,
+			meta: {
+				showAsModal: true,
 			},
 		},
 		{
 			path: '/lists/:listId/settings/delete',
 			name: 'filter.settings.delete',
-			components: {
-				popup: FilterDelete,
+			component: FilterDelete,
+			meta: {
+				showAsModal: true,
 			},
 		},
 		{
@@ -340,8 +355,9 @@ const router = createRouter({
 		{
 			path: '/teams/new',
 			name: 'teams.create',
-			components: {
-				popup: NewTeamComponent,
+			component: NewTeamComponent,
+			meta: {
+				showAsModal: true,
 			},
 		},
 		{
@@ -357,8 +373,9 @@ const router = createRouter({
 		{
 			path: '/labels/new',
 			name: 'labels.create',
-			components: {
-				popup: NewLabelComponent,
+			component: NewLabelComponent,
+			meta: {
+				showAsModal: true,
 			},
 		},
 		{
@@ -374,8 +391,9 @@ const router = createRouter({
 		{
 			path: '/filters/new',
 			name: 'filters.create',
-			components: {
-				popup: FilterNew,
+			component: FilterNew,
+			meta: {
+				showAsModal: true,
 			},
 		},
 		{

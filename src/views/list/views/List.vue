@@ -122,10 +122,6 @@
 				:current-page="currentPage"
 			/>
 		</card>
-
-		<transition name="modal">
-			<task-detail-view-modal v-if="showTaskDetail" />
-		</transition>
 	</div>
 </template>
 
@@ -133,13 +129,10 @@
 import { ref } from 'vue'
 import { useRoute } from 'vue-router'
 
-import TaskService from '../../../services/task'
-import TaskModel from '../../../models/task'
-
 import EditTask from '../../../components/tasks/edit-task'
 import AddTask from '../../../components/tasks/add-task'
 import SingleTaskInList from '../../../components/tasks/partials/singleTaskInList'
-import { createTaskList } from '@/composables/taskList'
+import { useTaskList } from '@/composables/taskList'
 import {saveListView} from '@/helpers/saveListView'
 import Rights from '../../../models/constants/rights.json'
 import FilterPopup from '@/components/list/partials/filter-popup.vue'
@@ -147,7 +140,6 @@ import {HAS_TASKS} from '@/store/mutation-types'
 import Nothing from '@/components/misc/nothing.vue'
 import Pagination from '@/components/misc/pagination.vue'
 import {ALPHABETICAL_SORT} from '@/components/list/partials/filters.vue'
-import TaskDetailViewModal, { useShowModal } from '@/views/tasks/TaskDetailViewModal.vue'
 
 import draggable from 'vuedraggable'
 import {calculateItemPosition} from '../../../helpers/calculateItemPosition'
@@ -174,7 +166,6 @@ export default {
 	name: 'List',
 	data() {
 		return {
-			taskService: new TaskService(),
 			ctaVisible: false,
 			showTaskSearch: false,
 
@@ -193,11 +184,10 @@ export default {
 		AddTask,
 		draggable,
 		Pagination,
-		TaskDetailViewModal,
 	},
 
 	setup() {
-		const taskEditTask = ref(TaskModel)
+		const taskEditTask = ref(null)
 		const isTaskEdit = ref(false)
 
 		// This function initializes the tasks page and loads the first page of tasks
@@ -206,17 +196,18 @@ export default {
 			isTaskEdit.value = false
 		}
 
-		const taskList = createTaskList(beforeLoad)
+		const taskList = useTaskList(beforeLoad)
 
 		// Save the current list view to local storage
 		// We use local storage and not vuex here to make it persistent across reloads.
 		const route = useRoute()
 		saveListView(route.params.listId, route.name)
 
+		taskList.initTaskList()
+
 		return {
 			taskEditTask,
 			isTaskEdit,
-			showTaskDetail: useShowModal(),
 			...taskList,
 		}
 	},

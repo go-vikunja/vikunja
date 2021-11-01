@@ -9,153 +9,128 @@
 					v-shortcut="'g l'"
 					:title="$t('keyboardShortcuts.list.switchToListView')"
 					:class="{'is-active': $route.name === 'list.list'}"
-					:to="{ name: 'list.list',   params: { listId: listId } }">
+					:to="{ name: 'list.list',   params: { listId } }">
 					{{ $t('list.list.title') }}
 				</router-link>
 				<router-link
 					v-shortcut="'g g'"
 					:title="$t('keyboardShortcuts.list.switchToGanttView')"
 					:class="{'is-active': $route.name === 'list.gantt'}"
-					:to="{ name: 'list.gantt',  params: { listId: listId } }">
+					:to="{ name: 'list.gantt',  params: { listId } }">
 					{{ $t('list.gantt.title') }}
 				</router-link>
 				<router-link
 					v-shortcut="'g t'"
 					:title="$t('keyboardShortcuts.list.switchToTableView')"
 					:class="{'is-active': $route.name === 'list.table'}"
-					:to="{ name: 'list.table',  params: { listId: listId } }">
+					:to="{ name: 'list.table',  params: { listId } }">
 					{{ $t('list.table.title') }}
 				</router-link>
 				<router-link
 					v-shortcut="'g k'"
 					:title="$t('keyboardShortcuts.list.switchToKanbanView')"
 					:class="{'is-active': $route.name === 'list.kanban'}"
-					:to="{ name: 'list.kanban', params: { listId: listId } }">
+					:to="{ name: 'list.kanban', params: { listId } }">
 					{{ $t('list.kanban.title') }}
 				</router-link>
 			</div>
 		</div>
 		<transition name="fade">
-			<message variant="warning" v-if="currentList.isArchived" class="mb-4">
+			<Message variant="warning" v-if="currentList.isArchived" class="mb-4">
 				{{ $t('list.archived') }}
-			</message>
+			</Message>
 		</transition>
 
 		<router-view/>
 	</div>
 </template>
 
-<script>
+<script setup>
+import {ref, shallowRef, computed, watchEffect} from 'vue'
+import {useRouter, useRoute} from 'vue-router'
+
 import Message from '@/components/misc/message'
-import ListModel from '../../models/list'
-import ListService from '../../services/list'
-import {CURRENT_LIST} from '../../store/mutation-types'
-import {getListView} from '../../helpers/saveListView'
-import {saveListToHistory} from '../../modules/listHistory'
 
-export default {
-	components: {Message},
-	data() {
-		return {
-			listService: new ListService(),
-			listLoaded: 0,
-		}
-	},
-	watch: {
-		// call again the method if the route changes
-		'$route.path': {
-			handler: 'loadList',
-			immediate: true,
-		},
-	},
-	computed: {
-		// Computed property to let "listId" always have a value
-		listId() {
-			return typeof this.$route.params.listId === 'undefined' ? 0 : this.$route.params.listId
-		},
-		background() {
-			return this.$store.state.background
-		},
-		currentList() {
-			return typeof this.$store.state.currentList === 'undefined' ? {
-				id: 0,
-				title: '',
-				isArchived: false,
-			} : this.$store.state.currentList
-		},
-	},
-	methods: {
-		replaceListView() {
-			const savedListView = getListView(this.$route.params.listId)
-			this.$router.replace({name: savedListView, params: {id: this.$route.params.listId}})
-			console.debug('Replaced list view with', savedListView)
-		},
+import ListModel from '@/models/list'
+import ListService from '@/services/list'
 
-		async loadList() {
-			if (this.$route.name.includes('.settings.')) {
-				return
-			}
+import {store} from '@/store'
+import {CURRENT_LIST} from '@/store/mutation-types'
 
-			const listData = {id: parseInt(this.$route.params.listId)}
+import {getListView} from '@/helpers/saveListView'
+import {getListTitle} from '@/helpers/getListTitle'
+import {saveListToHistory} from '@/modules/listHistory'
+import { useTitle } from '@/composables/useTitle'
 
-			saveListToHistory(listData)
+const route = useRoute()
+const router = useRouter()
 
-			this.setTitle(this.currentList.id ? this.getListTitle(this.currentList) : '')
+const listService = shallowRef(new ListService())
+const loadedListId = ref(0)
 
-			// This invalidates the loaded list at the kanban board which lets it reload its content when
-			// switched to it. This ensures updates done to tasks in the gantt or list views are consistently
-			// shown in all views while preventing reloads when closing a task popup.
-			// We don't do this for the table view because that does not change tasks.
-			if (
-				this.$route.name === 'list.list' ||
-				this.$route.name === 'list.gantt'
-			) {
-				this.$store.commit('kanban/setListId', 0)
-			}
+// beforeRouteEnter(to) {
+// Redirect the user to list view by default
+if (route.name !== 'list.index') {
+	const savedListView = getListView(route.params.listId)
+	console.debug('Replaced list view with', savedListView)
+	router.replace({name: 'list.list', params: {id: route.params.listId}})
+}
+// },
 
-			// // When clicking again on a list in the menu, there would be no list view selected which means no list
-			// // at all. Users will then have to click on the list view menu again which is quite confusing.
-			// if (this.$route.name === 'list.index') {
-			// 	return this.replaceListView()
-			// }
+const currentList = computed(() => {
+	return typeof store.state.currentList === 'undefined' ? {
+		id: 0,
+		title: '',
+		isArchived: false,
+	} : store.state.currentList
+})
 
-			// Don't load the list if we either already loaded it or aren't dealing with a list at all currently and
-			// the currently loaded list has the right set.
-			if (
-				(
-					this.$route.params.listId === this.listLoaded ||
-					typeof this.$route.params.listId === 'undefined' ||
-					this.$route.params.listId === this.currentList.id ||
-					parseInt(this.$route.params.listId) === this.currentList.id
-				)
-				&& typeof this.currentList !== 'undefined' && this.currentList.maxRight !== null
-			) {
-				return
-			}
+// Computed property to let "listId" always have a value
+const listId = computed(() => typeof route.params.listId === 'undefined' ? 0 : parseInt(route.params.listId))
+// call again the method if the listId changes
+watchEffect(() => loadList(listId.value))
 
-			// Redirect the user to list view by default
-			if (
-				this.$route.name !== 'list.list' &&
-				this.$route.name !== 'list.gantt' &&
-				this.$route.name !== 'list.table' &&
-				this.$route.name !== 'list.kanban'
-			) {
-				return this.replaceListView()
-			}
+useTitle(() => currentList.value.id ? getListTitle(currentList.value) : '')
 
-			console.debug(`Loading list, $route.name = ${this.$route.name}, $route.params =`, this.$route.params, `, listLoaded = ${this.listLoaded}, currentList = `, this.currentList)
+async function loadList(listId) {
+	const listData = {id: listId}
+	saveListToHistory(listData)
 
-			// We create an extra list object instead of creating it in this.list because that would trigger a ui update which would result in bad ux.
-			const list = new ListModel(listData)
-			try {
-				const loadedList = await this.listService.get(list)
-				await this.$store.dispatch(CURRENT_LIST, loadedList)
-				this.setTitle(this.getListTitle(loadedList))
-			} finally {
-				this.listLoaded = this.$route.params.listId
-			}
-		},
-	},
+	// This invalidates the loaded list at the kanban board which lets it reload its content when
+	// switched to it. This ensures updates done to tasks in the gantt or list views are consistently
+	// shown in all views while preventing reloads when closing a task popup.
+	// We don't do this for the table view because that does not change tasks.
+	// FIXME: remove this
+	if (
+		route.name === 'list.list' ||
+		route.name === 'list.gantt'
+	) {
+		store.commit('kanban/setListId', 0)
+	}
+
+	// Don't load the list if we either already loaded it or aren't dealing with a list at all currently and
+	// the currently loaded list has the right set.
+	if (
+		(
+			listId.value === loadedListId.value ||
+			typeof listId.value === 'undefined' ||
+			listId.value === currentList.value.id
+		)
+		&& typeof currentList.value !== 'undefined' && currentList.value.maxRight !== null
+	) {
+		return
+	}
+
+	console.debug(`Loading list, $route.name = ${route.name}, $route.params =`, route.params, `, loadedListId = ${loadedListId.value}, currentList = `, currentList.value)
+
+	// We create an extra list object instead of creating it in list.value because that would trigger a ui update which would result in bad ux.
+	const list = new ListModel(listData)
+	try {
+		const loadedList = await listService.value.get(list)
+		await store.dispatch(CURRENT_LIST, loadedList)
+	} finally {
+		loadedListId.value = listId
+	}
 }
 </script>
 

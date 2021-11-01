@@ -22,12 +22,9 @@
 
 				<router-view :route="routeWithModal"/>
 
-				<!-- TODO: is this still used? -->
-				<router-view name="popup" v-slot="{ Component }">
-					<transition name="modal">
-						<component :is="Component" />
-					</transition>
-				</router-view>
+				<transition name="modal">
+					<component v-if="currentModal" :is="currentModal" />
+				</transition>
 
 				<a
 					class="keyboard-shortcuts-button"
@@ -42,7 +39,7 @@
 </template>
 
 <script lang="ts" setup>
-import {watch, computed} from 'vue'
+import {watch, computed, shallowRef, watchEffect} from 'vue'
 import {useStore} from 'vuex'
 import {useRoute, useRouter} from 'vue-router'
 import {useEventListener} from '@vueuse/core'
@@ -64,7 +61,16 @@ function useRouteWithModal() {
 		}
 	})
 
-	return { routeWithModal }
+	
+
+	const currentModal = shallowRef(null)
+	watchEffect(() => {
+		currentModal.value = historyState.value.backgroundView
+			? route.matched[0]?.components.default
+			: null
+	})
+
+	return { routeWithModal, currentModal }
 }
 
 useRouteWithModal()

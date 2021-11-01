@@ -16,7 +16,7 @@ export const getDefaultParams = () => ({
 /**
  * This mixin provides a base set of methods and properties to get tasks on a list.
  */
-export function createTaskList(initTasks) {
+export function useTaskList(initTasks) {
 	const taskCollectionService = ref(new TaskCollectionService())
 	const loading = computed(() => taskCollectionService.value.loading)
 	const totalPages = computed(() => taskCollectionService.value.totalPages)
@@ -70,12 +70,14 @@ export function createTaskList(initTasks) {
 		tasks.value = await taskCollectionService.value.getAll(list, loadParams, page)
 		currentPage.value = page
 		loadedList.value = JSON.parse(JSON.stringify(currentList))
+
+		return tasks.value
 	}
 
 	async function loadTasksForPage(query) {
 		const { page, search } = query
 		initTasks(params)
-		await loadTasks(
+		return await loadTasks(
 			// The page parameter can be undefined, in the case where the user loads a new list from the side bar menu
 			typeof page === 'undefined' ? 1 : Number(page),
 			search,

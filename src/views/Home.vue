@@ -51,10 +51,6 @@
 			</div>
 		</div>
 		<ShowTasks class="mt-4" :show-all="true" v-if="hasLists" :key="showTasksKey"/>
-
-		<transition name="modal">
-			<task-detail-view-modal v-if="showTaskDetail" />
-		</transition>
 	</div>
 </template>
 
@@ -71,9 +67,6 @@ import {getHistory} from '@/modules/listHistory'
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 import {formatDateShort, formatDateSince} from '@/helpers/time/formatDate'
 import {useDateTimeSalutation} from '@/composables/useDateTimeSalutation'
-import TaskDetailViewModal, { useShowModal } from '@/views/tasks/TaskDetailViewModal.vue'
-
-const showTaskDetail = useShowModal()
 
 const welcome = useDateTimeSalutation()
 

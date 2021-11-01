@@ -205,9 +205,8 @@
 		</div>
 
 		<transition name="modal">
-			<task-detail-view-modal v-if="showTaskDetail" />
 			<modal
-				v-else-if="showBucketDeleteModal"
+				v-if="showBucketDeleteModal"
 				@close="showBucketDeleteModal = false"
 				@submit="deleteBucket()"
 			>
@@ -236,7 +235,6 @@ import Dropdown from '@/components/misc/dropdown.vue'
 import {getCollapsedBucketState, saveCollapsedBucketState} from '@/helpers/saveCollapsedBucketState'
 import {calculateItemPosition} from '../../../helpers/calculateItemPosition'
 import KanbanCard from '@/components/tasks/partials/kanban-card'
-import TaskDetailViewModal, { useShowModal } from '@/views/tasks/TaskDetailViewModal.vue'
 
 const DRAG_OPTIONS = {
 	// sortable options
@@ -256,7 +254,6 @@ export default {
 		Dropdown,
 		FilterPopup,
 		draggable,
-		TaskDetailViewModal,
 	},
 	data() {
 		return {
@@ -290,12 +287,6 @@ export default {
 				filter_comparator: [],
 				filter_concat: 'and',
 			},
-		}
-	},
-
-	setup() {
-		return {
-			showTaskDetail: useShowModal(),
 		}
 	},
 
