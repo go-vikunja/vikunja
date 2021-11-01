@@ -30,7 +30,7 @@
 				{{ task.title }}
 			</span>
 
-			<labels class="labels" :labels="task.labels"/>
+			<labels class="labels ml-2 mr-1" :labels="task.labels" v-if="task.labels.length > 0"/>
 			<user
 				:avatar-size="27"
 				:is-inline="true"
@@ -57,6 +57,9 @@
 				</span>
 				<span class="list-task-icon" v-if="task.description">
 					<icon icon="align-left"/>
+				</span>
+				<span class="list-task-icon" v-if="task.repeatAfter.amount > 0">
+					<icon icon="history"/>
 				</span>
 			</span>
 			<checklist-summary :task="task"/>
@@ -250,11 +253,6 @@ export default {
 	.color-bubble {
 		height: 10px;
 		flex: 0 0 10px;
-	}
-
-	.labels {
-		padding-left: 0.5rem;
-		padding-right: 0.5rem;
 	}
 
 	.avatar {

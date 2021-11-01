@@ -58,6 +58,9 @@
 			<span v-if="task.description" class="icon">
 				<icon icon="align-left"/>
 			</span>
+			<span class="icon" v-if="task.repeatAfter.amount > 0">
+				<icon icon="history"/>
+			</span>
 		</div>
 	</div>
 </template>
