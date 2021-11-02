@@ -44,7 +44,7 @@
 
 <script>
 import VueEasymde from './vue-easymde/vue-easymde.vue'
-import marked from 'marked'
+import {marked} from 'marked'
 import DOMPurify from 'dompurify'
 import hljs from 'highlight.js/lib/common'
 

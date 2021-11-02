@@ -11,7 +11,7 @@
 
 <script>
 import EasyMDE from 'easymde'
-import marked from 'marked'
+import {marked} from 'marked'
 
 export default {
   name: 'vue-easymde',
