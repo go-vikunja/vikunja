@@ -6,11 +6,14 @@
 					:disabled="taskService.loading || null"
 					class="input"
 					:placeholder="$t('list.list.addPlaceholder')"
-					type="text"
+					cols="1"
 					v-focus
 					v-model="newTaskTitle"
 					ref="newTaskInput"
-					:style="{'height': `calc(${textAreaHeight}px - 2px + 1rem)`}"
+					:style="{
+						'minHeight': `${initialTextAreaHeight}px`,
+						'height': `calc(${textAreaHeight}px - 2px + 1rem)`
+					}"
 					@keyup="errorMessage = ''"
 					@keydown.enter="handleEnter"
 				/>
@@ -70,10 +73,10 @@ export default {
 	},
 	watch: {
 		newTaskTitle(newVal) {
-			// Calculating the textarea height based on lines of input in it. That is more reliable when removing a 
-			// line from the input.
+			// Calculating the textarea height based on lines of input in it.
+			// That is more reliable when removing a line from the input.
 			const numberOfLines = newVal.split(/\r\n|\r|\n/).length
-			const fontSize = parseInt(window.getComputedStyle(this.$refs.newTaskInput, null).getPropertyValue('font-size'))
+			const fontSize = parseFloat(window.getComputedStyle(this.$refs.newTaskInput, null).getPropertyValue('font-size'))
 
 			this.textAreaHeight = numberOfLines * fontSize * LINE_HEIGHT + INPUT_BORDER_PX
 		},
@@ -144,5 +147,9 @@ export default {
 
 .input, .textarea {
 	transition: border-color $transition;
+}
+
+.input {
+	resize: vertical;
 }
 </style>
