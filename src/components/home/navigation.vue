@@ -74,9 +74,9 @@
 					<namespace-settings-dropdown :namespace="n" v-if="n.id > 0"/>
 				</div>
 				<div
+					v-if="listsVisible[n.id] ?? true"
 					:key="n.id + 'child'"
 					class="more-container"
-					v-if="typeof listsVisible[n.id] !== 'undefined' ? listsVisible[n.id] : true"
 				>
 					<!--
 						NOTE: a v-model / computed setter is not possible, since the updateActiveLists function
@@ -134,8 +134,7 @@
 											:class="{'is-favorite': l.isFavorite}"
 											@click.prevent.stop="toggleFavoriteList(l)"
 											class="favorite">
-											<icon icon="star" v-if="l.isFavorite"/>
-											<icon :icon="['far', 'star']" v-else/>
+											<icon :icon="l.isFavorite ? 'star' : ['far', 'star']" />
 										</span>
 									</a>
 								</router-link>
@@ -283,22 +282,20 @@ $vikunja-nav-background: $light-background;
 $vikunja-nav-color: $grey-700;
 $vikunja-nav-selected-width: 0.4rem;
 
-
 .namespace-container {
-	background: $vikunja-nav-background;
 	z-index: 6;
+	background: $vikunja-nav-background;
 	color: $vikunja-nav-color;
-	padding: 0;
-	transition: all $transition;
+	padding: 0 0 1rem;
+	transition: transform $transition-duration ease-in;
 	position: fixed;
-	bottom: 0;
 	top: $navbar-height;
+	bottom: 0;
+	left: 0;
+	transform: translateX(-100%);
 	overflow-x: auto;
 	width: $navbar-width;
 
-	padding: 0 0 1rem;
-	left: -147vw;
-	bottom: 0;
 
 	@media screen and (max-width: $tablet) {
 		top: 0;
@@ -306,7 +303,8 @@ $vikunja-nav-selected-width: 0.4rem;
 	}
 
 	&.is-active {
-		left: 0;
+		transform: translateX(0);
+		transition: transform $transition-duration ease-out;
 	}
 
 	.menu {
