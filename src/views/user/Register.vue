@@ -131,12 +131,10 @@ export default {
 	}),
 	methods: {
 		async submit() {
-			this.$store.commit(LOADING, true)
 			this.errorMessage = ''
 
 			if (this.credentials.password2 !== this.credentials.password) {
 				this.errorMessage = this.$t('user.auth.passwordsDontMatch')
-				this.$store.commit(LOADING, false)
 				return
 			}
 
