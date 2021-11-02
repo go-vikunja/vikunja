@@ -60,7 +60,7 @@
     "@vue/eslint-config-typescript": "9.0.0",
     "autoprefixer": "10.4.0",
     "axios": "0.24.0",
-    "browserslist": "4.17.5",
+    "browserslist": "4.17.6",
     "cypress": "8.7.0",
     "cypress-file-upload": "5.0.8",
     "esbuild": "0.13.12",
