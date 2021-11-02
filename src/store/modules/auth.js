@@ -120,12 +120,9 @@ export default {
 		// Not sure if this is the right place to put the logic in, maybe a seperate js component would be better suited.
 		async register(ctx, credentials) {
 			const HTTP = HTTPFactory()
+			ctx.commit(LOADING, true, {root: true})
 			try {
-				await HTTP.post('register', {
-					username: credentials.username,
-					email: credentials.email,
-					password: credentials.password,
-				})
+				await HTTP.post('register', credentials)
 				return ctx.dispatch('login', credentials)
 			} catch(e) {
 				if (e.response?.data?.message) {
