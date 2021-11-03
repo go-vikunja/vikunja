@@ -8,15 +8,13 @@
 		<router-link
 			:disabled="currentPage === 1 || null"
 			:to="getRouteForPagination(currentPage - 1)"
-			class="pagination-previous"
-			tag="button">
+			class="pagination-previous">
 			{{ $t('misc.previous') }}
 		</router-link>
 		<router-link
 			:disabled="currentPage === totalPages || null"
 			:to="getRouteForPagination(currentPage + 1)"
-			class="pagination-next"
-			tag="button">
+			class="pagination-next">
 			{{ $t('misc.next') }}
 		</router-link>
 		<ul class="pagination-list">

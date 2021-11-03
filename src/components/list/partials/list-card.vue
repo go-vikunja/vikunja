@@ -10,7 +10,6 @@
 		}"
 		:to="{ name: 'list.index', params: { listId: list.id} }"
 		class="list-card"
-		tag="span"
 		v-if="list !== null && (showArchived ? true : !list.isArchived)"
 	>
 		<div class="is-archived-container">

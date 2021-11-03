@@ -65,7 +65,7 @@
     "cypress-file-upload": "5.0.8",
     "esbuild": "0.13.12",
     "eslint": "8.1.0",
-    "eslint-plugin-vue": "7.20.0",
+    "eslint-plugin-vue": "8.0.3",
     "express": "4.17.1",
     "faker": "5.5.3",
     "jest": "27.3.1",
@@ -108,7 +108,8 @@
       "semi": [
         "error",
         "never"
-      ]
+      ],
+      "vue/multi-word-component-names": 0
     },
     "parser": "vue-eslint-parser",
     "parserOptions": {
