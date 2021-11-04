@@ -234,7 +234,7 @@
     "list": {
       "title": "Danh sách",
       "add": "Thêm",
-      "addPlaceholder": "Thêm một công việc mới…",
+      "addPlaceholder": "Thêm việc cần làm…",
       "empty": "Danh sách này đang trống trơn.",
       "newTaskCta": "Thêm một công việc mới.",
       "editTask": "Chỉnh sửa Công việc"
@@ -459,7 +459,7 @@
       "nextMonday": "Thứ Hai tới",
       "thisWeekend": "Cuối tuần này",
       "laterThisWeek": "Cuối tuần này",
-      "nextWeek": "Tuần kế tiếp",
+      "nextWeek": "Tuần tới",
       "chooseDate": "Chọn một ngày"
     },
     "editor": {
@@ -509,8 +509,8 @@
       "from": "Công việc từ",
       "until": "cho đến",
       "today": "Hôm nay",
-      "nextWeek": "Tuần kế tiếp",
-      "nextMonth": "Tháng kế tiếp",
+      "nextWeek": "Tuần tới",
+      "nextMonth": "Tháng tới",
       "noTasks": "Hôm nay thảnh thơi — Hãy tận hưởng ngày tuyệt vời!"
     },
     "detail": {
