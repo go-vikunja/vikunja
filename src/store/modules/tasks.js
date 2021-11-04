@@ -223,13 +223,12 @@ export default {
 
 			const labelAddsToWaitFor = parsedLabels.map(async labelTitle => {
 				let label = validateLabel(labels, labelTitle)
-				if (typeof label !== 'undefined') {
-					return label
+				if (typeof label === 'undefined') {
+					// label not found, create it
+					const labelModel = new LabelModel({title: labelTitle})
+					label = await dispatch('labels/createLabel', labelModel, {root: true})
 				}
 
-				// label not found, create it
-				const labelModel = new LabelModel({title: labelTitle})
-				await dispatch('labels/createLabel', labelModel, {root: true})
 				return addLabelToTask(task, label)
 			})
 
