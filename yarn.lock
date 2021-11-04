@@ -7531,7 +7531,7 @@ vue-router@4.0.12:
   dependencies:
     "@vue/devtools-api" "^6.0.0-beta.18"
 
-vue-tsc@^0.28.10:
+vue-tsc@0.28.10:
   version "0.28.10"
   resolved "https://registry.yarnpkg.com/vue-tsc/-/vue-tsc-0.28.10.tgz#2fc0154537bef5004e86002b117758af4b2b066c"
   integrity sha512-tGD7eC74MHqKH2/F66AYkC1zNiLrgnhMzeYWou3p/wApMaUEM4h29HqYoKN6uE+pq87uvq/penYqUSBXhIwLiA==
