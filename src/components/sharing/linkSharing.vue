@@ -264,4 +264,6 @@ export default {
 .sharables-list:not(.card-content) {
   overflow-y: auto
 }
+
+@include modal-transition();
 </style>

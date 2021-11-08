@@ -740,4 +740,6 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 .move-card-leave-active {
 	display: none;
 }
+
+@include modal-transition();
 </style>

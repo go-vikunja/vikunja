@@ -364,4 +364,6 @@ export default {
 :deep(.multiselect .search-results button) {
 	padding: 0.5rem;
 }
+
+@include modal-transition();
 </style>

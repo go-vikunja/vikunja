@@ -932,4 +932,6 @@ $flash-background-duration: 750ms;
     background: transparent;
   }
 }
+
+@include modal-transition();
 </style>

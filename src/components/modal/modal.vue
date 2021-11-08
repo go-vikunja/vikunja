@@ -1,4 +1,5 @@
 <template>
+	<!-- FIXME: transition should not be included in the modal -->
 	<transition name="modal">
 		<section
 			v-if="enabled"
@@ -195,19 +196,5 @@ export default {
 
 		}
 	}
-}
-
-
-
-/* Transitions */
-
-.modal-enter,
-.modal-leave-active {
-  opacity: 0;
-}
-
-.modal-enter .modal-container,
-.modal-leave-active .modal-container {
-  transform: scale(0.9);
 }
 </style>

@@ -382,4 +382,6 @@ export default {
     transform: translate3d(0, -4px, 0);
   }
 }
+
+@include modal-transition();
 </style>

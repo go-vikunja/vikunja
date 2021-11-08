@@ -248,4 +248,6 @@ store.dispatch('labels/loadAllLabels')
 		display: none;
 	}
 }
+
+@include modal-transition();
 </style>
