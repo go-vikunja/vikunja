@@ -21,7 +21,14 @@
 			</svg>
 		</div>
 
-		<x-button :disabled="isEmpty" @click="reset" class="is-small ml-2" :shadow="false" type="secondary">
+		<x-button
+			v-if="!isEmpty"
+			:disabled="isEmpty"
+			@click="reset"
+			class="is-small ml-2"
+			:shadow="false"
+			type="secondary"
+		>
 			{{ $t('input.resetColor') }}
 		</x-button>
 	</div>
