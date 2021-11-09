@@ -12,6 +12,7 @@
 		:create-placeholder="$t('task.label.createPlaceholder')"
 		v-model="labels"
 		:search-delay="10"
+		:close-after-select="false"
 	>
 		<template #tag="props">
 			<span

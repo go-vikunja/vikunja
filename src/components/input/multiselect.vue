@@ -7,7 +7,9 @@
 		@focus="focus"
 	>
 		<div class="control" :class="{'is-loading': loading || localLoading}">
-			<div class="input-wrapper input" :class="{'has-multiple': multiple && Array.isArray(internalValue) && internalValue.length > 0}">
+			<div
+				class="input-wrapper input"
+				:class="{'has-multiple': hasMultiple}">
 				<template v-if="Array.isArray(internalValue)">
 					<template v-for="(item, key) in internalValue">
 						<slot name="tag" :item="item">
@@ -81,7 +83,7 @@
 </template>
 
 <script>
-import { i18n } from '@/i18n'
+import {i18n} from '@/i18n'
 import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
 
 export default {
@@ -134,9 +136,7 @@ export default {
 		// If true, will provide an "add this as a new value" entry which fires an @create event when clicking on it.
 		creatable: {
 			type: Boolean,
-			default() {
-				return false
-			},
+			default: false,
 		},
 		// The text shown next to the new value option.
 		createPlaceholder: {
@@ -155,23 +155,17 @@ export default {
 		// If true, allows for selecting multiple items. v-model will be an array with all selected values in that case.
 		multiple: {
 			type: Boolean,
-			default() {
-				return false
-			},
+			default: false,
 		},
 		// If true, displays the search results inline instead of using a dropdown.
 		inline: {
 			type: Boolean,
-			default() {
-				return false
-			},
+			default: false,
 		},
 		// If true, shows search results when no query is specified.
 		showEmpty: {
 			type: Boolean,
-			default() {
-				return true
-			},
+			default: true,
 		},
 		// The delay in ms after which the search event will be fired. Used to avoid hitting the network on every keystroke.
 		searchDelay: {
@@ -180,8 +174,12 @@ export default {
 				return 200
 			},
 		},
+		closeAfterSelect: {
+			type: Boolean,
+			default: true,
+		},
 	},
-	
+
 	/**
 	 * Available events:
 	 *   @search: Triggered every time the search query input changes
@@ -234,6 +232,9 @@ export default {
 
 			return this.searchResults
 		},
+		hasMultiple() {
+			return this.multiple && Array.isArray(this.internalValue) && this.internalValue.length > 0
+		},
 	},
 	methods: {
 		// Searching will be triggered with a 200ms delay to avoid searching on every keyup event.
@@ -285,7 +286,9 @@ export default {
 			this.$emit('update:modelValue', this.internalValue)
 			this.$emit('select', object)
 			this.setSelectedObject(object)
-			this.closeSearchResults()
+			if (this.closeAfterSelect && this.filteredSearchResults.length > 0 && !this.creatableAvailable) {
+				this.closeSearchResults()
+			}
 		},
 		setSelectedObject(object, resetOnly = false) {
 			this.internalValue = object
