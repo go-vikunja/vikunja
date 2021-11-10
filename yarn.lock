@@ -9847,7 +9847,7 @@ nested-error-stacks@^2.0.0, nested-error-stacks@^2.1.0:
   resolved "https://registry.yarnpkg.com/nested-error-stacks/-/nested-error-stacks-2.1.0.tgz#0fbdcf3e13fe4994781280524f8b96b0cdff9c61"
   integrity sha512-AO81vsIO1k1sM4Zrd6Hu7regmJN1NSiAja10gc4bX3F0wd+9rQmcuHQaHVQCYIEC8iFXnE+mavh23GOt7wBgug==
 
-netlify-cli@^6.14.19:
+netlify-cli@6.14.19:
   version "6.14.19"
   resolved "https://registry.yarnpkg.com/netlify-cli/-/netlify-cli-6.14.19.tgz#c54f8cfb1a0cfef2873f0a88d7ae2185051f835c"
   integrity sha512-qYAmed565k26pOkB2gwRjlsOkfsq+9wCmlBvsQPqI6vEvHS2e1KWQNrjPOrgO+nNns6eskuMpl4Vz507nTghMQ==
@@ -11849,7 +11849,7 @@ slice-ansi@^4.0.0:
     astral-regex "^2.0.0"
     is-fullwidth-code-point "^3.0.0"
 
-slugify@^1.6.2:
+slugify@1.6.2:
   version "1.6.2"
   resolved "https://registry.yarnpkg.com/slugify/-/slugify-1.6.2.tgz#4cb97220a2278e1b86fb017c6da668e6a865354c"
   integrity sha512-XMtI8qD84LwCpthLMBHlIhcrj10cgA+U/Ot8G6FD6uFuWZtMfKK75JO7l81nzpFJsPlsW6LT+VKqWQJW3+6New==
