@@ -792,7 +792,7 @@
   "quickActions": {
     "commands": "Befehl",
     "placeholder": "Schriib en Befehl oder suech…",
-    "hint": "Du chasch en # benutze, um nur nach Uufgabe zsueche, * um nur nach Liste zsueche und @ um nur Teams z'sueche.",
+    "hint": "You can use # to only search for tasks, * to only search for lists and @ to only search for teams.",
     "tasks": "Uufgabe",
     "lists": "Listene",
     "teams": "Teams",

@@ -792,7 +792,7 @@
   "quickActions": {
     "commands": "Các lệnh",
     "placeholder": "Gõ một lệnh hoặc tìm kiếm…",
-    "hint": "Bạn có thể dùng # để chỉ tìm kiếm công việc, * để chỉ tìm kiếm danh sách và @ để chỉ tìm kiếm Team.",
+    "hint": "You can use # to only search for tasks, * to only search for lists and @ to only search for teams.",
     "tasks": "Tác vụ",
     "lists": "Danh sách",
     "teams": "Team",

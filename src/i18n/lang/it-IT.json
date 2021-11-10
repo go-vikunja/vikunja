@@ -105,7 +105,7 @@
       }
     },
     "deletion": {
-      "title": "Elimina il tuo account Vikunja",
+      "title": "Delete your Vikunja Account",
       "text1": "The deletion of your account is permanent and cannot be undone. We will delete all your namespaces, lists, tasks and everything associated with it.",
       "text2": "Per continuare, inserisci la tua password. Riceverai un'e-mail con ulteriori istruzioni.",
       "confirm": "Elimina il mio profilo",
@@ -506,7 +506,7 @@
       "titleDates": "Attività dal {from} al {to}",
       "noDates": "Mostra attività senza date",
       "current": "Attività attuali",
-      "from": "Attività da",
+      "from": "Tasks from",
       "until": "until",
       "today": "Oggi",
       "nextWeek": "Settimana Prossima",
@@ -534,14 +534,14 @@
         "text2": "Questo rimuoverà anche tutti gli allegati, i promemoria e le relazioni associati a questa attività e non può essere ripristinato!"
       },
       "actions": {
-        "assign": "Assegna questa attività a un utente",
+        "assign": "Assign this task to a user",
         "label": "Aggiungi etichette",
         "priority": "Imposta Priorità",
         "dueDate": "Imposta data di scadenza",
         "startDate": "Imposta una data di inizio",
         "endDate": "Imposta una data di fine",
         "reminders": "Imposta promemoria",
-        "repeatAfter": "Imposta un intervallo di ripetizione",
+        "repeatAfter": "Set a repeating interval",
         "percentDone": "Imposta Percentuale Completata",
         "attachments": "Aggiungi allegati",
         "relatedTasks": "Aggiungi attività collegate",

@@ -792,7 +792,7 @@
   "quickActions": {
     "commands": "Команды",
     "placeholder": "Введи команду или поисковый запрос…",
-    "hint": "Используй # для поиска только задач, * для поиска только списков и @ для поиска только команд.",
+    "hint": "You can use # to only search for tasks, * to only search for lists and @ to only search for teams.",
     "tasks": "Задачи",
     "lists": "Списки",
     "teams": "Команды",
