@@ -792,7 +792,7 @@
   "quickActions": {
     "commands": "Commandes",
     "placeholder": "Écris une commande ou une recherche…",
-    "hint": "Tu peux utiliser # pour rechercher uniquement les tâches, * pour rechercher uniquement les listes et @ pour rechercher uniquement les équipes.",
+    "hint": "You can use # to only search for tasks, * to only search for lists and @ to only search for teams.",
     "tasks": "Tâches",
     "lists": "Listes",
     "teams": "Équipes",

@@ -792,7 +792,7 @@
   "quickActions": {
     "commands": "Příkazy",
     "placeholder": "Napište příkaz nebo vyhledávání…",
-    "hint": "Můžete použít # pro hledání úkolů, * pro hledání seznamů a @ pro hledání týmů.",
+    "hint": "You can use # to only search for tasks, * to only search for lists and @ to only search for teams.",
     "tasks": "Úkoly",
     "lists": "Seznamy",
     "teams": "Týmy",

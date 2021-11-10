@@ -792,7 +792,7 @@
   "quickActions": {
     "commands": "Befehle",
     "placeholder": "Gib einen Befehl oder eine Suche ein …",
-    "hint": "Du kannst # verwenden, um nur nach Aufgaben zu suchen, *, um nur nach Listen zu suchen und @, um nur nach Teams zu suchen.",
+    "hint": "You can use # to only search for tasks, * to only search for lists and @ to only search for teams.",
     "tasks": "Aufgaben",
     "lists": "Listen",
     "teams": "Teams",
