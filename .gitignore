@@ -26,3 +26,6 @@ stats.html
 # Test files
 cypress/screenshots
 cypress/videos
+
+# Local Netlify folder
+.netlify

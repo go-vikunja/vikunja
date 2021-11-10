@@ -1,7 +1,6 @@
+---
 kind: pipeline
 name: build
-
-# TODO: update translations only nightly
 
 trigger:
   branch:
@@ -137,6 +136,21 @@ steps:
       status:
         - failure
         - success
+
+  - name: deploy-preview
+    image: node:16
+    pull: true
+    environment:
+      NETLIFY_AUTH_TOKEN:
+        from_secret: netlify_auth_token
+      NETLIFY_SITE_ID:
+        from_secret: netlify_site_id
+      GITEA_TOKEN:
+        from_secret: gitea_token
+    commands:
+      - node ./scripts/deploy-preview-netlify.js
+    depends_on:
+      - build-prod
 
 ---
 kind: pipeline
@@ -635,3 +649,8 @@ steps:
     environment:
       CROWDIN_KEY:
         from_secret: crowdin_key
+---
+kind: signature
+hmac: b343ca4448b29bcd26ba9888fa67926040b2f420d891b62e2e74ce487557c58c
+
+...
