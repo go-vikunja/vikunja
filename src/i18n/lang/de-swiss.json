@@ -16,6 +16,16 @@
     "title": "Nid gfunde",
     "text": "Dini gsuechti Siite giz nid."
   },
+  "ready": {
+    "loading": "Vikunja wird geladen…",
+    "errorOccured": "Es ist ein Fehler aufgetreten:",
+    "checkApiUrl": "Bitte überprüfe, ob die API-Url stimmt.",
+    "noApiUrlConfigured": "Es wurde keine API-Url konfiguriert. Bitte stelle unten eine ein:"
+  },
+  "offline": {
+    "title": "Du bist offline.",
+    "text": "Bitte überprüfe die Netzwerkverbindung und versuche es erneut."
+  },
   "user": {
     "auth": {
       "username": "Benutzernamä",
@@ -344,6 +354,7 @@
   },
   "filters": {
     "title": "Filter",
+    "clear": "Filter zurücksetzen",
     "attributes": {
       "title": "Titl",
       "titlePlaceholder": "De Name für de g'speicheret Filter chunt da ahne…",
@@ -450,8 +461,8 @@
     "default": "Standard",
     "close": "Schlüüse",
     "download": "Herunterladen",
-    "showMenu": "Show the menu",
-    "hideMenu": "Hide the menu"
+    "showMenu": "Menü anzeigen",
+    "hideMenu": "Menü ausblenden"
   },
   "input": {
     "resetColor": "Farb zruggsetze",
@@ -645,6 +656,7 @@
       "searchPlaceholder": "Schriib, um e neui Uufgab als Zueghörigkeit hinzuezfüege…",
       "createPlaceholder": "Das als en neui Zueghörigkeit hinzuefüege",
       "differentList": "Die Uufgab ghöört zu ere andere Liste.",
+      "differentNamespace": "This task belongs to a different namespace.",
       "noneYet": "S'git kei Uufgabe Beziehige.",
       "delete": "Uufgabe Beziehig chüble",
       "deleteText1": "Bisch du dir sicher, dass du die Zueghörigkeit chüblä wetsch?",
@@ -745,10 +757,12 @@
   },
   "keyboardShortcuts": {
     "title": "Tastatuurchürzl",
+    "general": "General",
     "allPages": "Die Chürzl funktioniered uf allne Siitene.",
     "currentPageOnly": "Die Chürzl funktioniered nur uf de momentane Siite.",
     "toggleMenu": "Menü umschalte",
     "quickSearch": "Suechi und Schnellaktionsliste öffne",
+    "then": "then",
     "task": {
       "title": "Uufgabesiite",
       "done": "Uufgab als erledigt markiere",
@@ -757,6 +771,13 @@
       "dueDate": "S'Fälligkeitsdatum für die Uufgab ändere",
       "attachment": "En Aahang dere Uufgab hinzuefüege",
       "related": "Beziehige vo dere Uufgab bearbeite"
+    },
+    "list": {
+      "title": "List Views",
+      "switchToListView": "Switch to list view",
+      "switchToGanttView": "Switch to gantt view",
+      "switchToKanbanView": "Switch to kanban view",
+      "switchToTableView": "Switch to table view"
     }
   },
   "update": {
@@ -778,8 +799,9 @@
     "urlPlaceholder": "z.B. https://localhost:3456",
     "change": "ändere",
     "signInOn": "Dich i diin Vikunja-Account Iihloge uf {0}",
-    "error": "Es het kei Vikunja Installation uf \"{domain}\".",
-    "success": "Benutze d'Vikunja Installation uf \"{domain}\"."
+    "error": "Konnte keine Vikunja-Installation unter „{domain}“ finden oder verwenden. Bitte probiere eine andere Url.",
+    "success": "Benutze d'Vikunja Installation uf \"{domain}\".",
+    "urlRequired": "Eine Url ist erforderlich."
   },
   "loadingError": {
     "failed": "Ladä isch fählgschlage, bitte {0}. Wenn de Fähler bestaht, denn {1}.",
@@ -794,7 +816,7 @@
   "quickActions": {
     "commands": "Befehl",
     "placeholder": "Schriib en Befehl oder suech…",
-    "hint": "You can use # to only search for tasks, * to only search for lists and @ to only search for teams.",
+    "hint": "You can use {list} to limit the search to a list. Combine {list} or {label} (labels) with a search query to search for a task with these labels or on that list. Use {assignee} to only search for teams.",
     "tasks": "Uufgabe",
     "lists": "Listene",
     "teams": "Teams",

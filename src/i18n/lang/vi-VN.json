@@ -16,6 +16,16 @@
     "title": "Không tìm thấy gì cả",
     "text": "Trang bạn yêu cầu không tồn tại."
   },
+  "ready": {
+    "loading": "Vikunja is loading…",
+    "errorOccured": "An error occured:",
+    "checkApiUrl": "Please check if the api url is correct.",
+    "noApiUrlConfigured": "No API url was configured. Please set one below:"
+  },
+  "offline": {
+    "title": "You are offline.",
+    "text": "Please check your network connection and try again."
+  },
   "user": {
     "auth": {
       "username": "Tên người dùng",
@@ -344,6 +354,7 @@
   },
   "filters": {
     "title": "Bộ lọc",
+    "clear": "Clear Filters",
     "attributes": {
       "title": "Tiêu đề",
       "titlePlaceholder": "Tiêu đề bộ lọc đã lưu ở đây…",
@@ -645,6 +656,7 @@
       "searchPlaceholder": "Gõ tìm kiếm một công việc để thêm dưới dạng liên quan…",
       "createPlaceholder": "Thêm điều này làm công việc liên quan mới",
       "differentList": "Công việc này thuộc về một danh sách khác.",
+      "differentNamespace": "This task belongs to a different namespace.",
       "noneYet": "Không có công việc liên quan nào.",
       "delete": "Xóa công việc liên quan",
       "deleteText1": "Bạn có chắc muốn xóa công việc liên quan này không?",
@@ -745,10 +757,12 @@
   },
   "keyboardShortcuts": {
     "title": "Phím tắt",
+    "general": "General",
     "allPages": "Các phím tắt này hoạt động ở mọi nơi.",
     "currentPageOnly": "Các phím tắt này chỉ hoạt động ở trang hiện tại.",
     "toggleMenu": "Bật/tắt Menu",
     "quickSearch": "Mở thanh tìm kiếm/thao tác nhanh",
+    "then": "then",
     "task": {
       "title": "Trang công việc",
       "done": "Đánh dấu hoàn thành",
@@ -757,6 +771,13 @@
       "dueDate": "Thay đổi ngày hết hạn của công việc này",
       "attachment": "Thêm tệp đính kèm cho công việc này",
       "related": "Sửa đổi các công việc liên kết"
+    },
+    "list": {
+      "title": "List Views",
+      "switchToListView": "Switch to list view",
+      "switchToGanttView": "Switch to gantt view",
+      "switchToKanbanView": "Switch to kanban view",
+      "switchToTableView": "Switch to table view"
     }
   },
   "update": {
@@ -778,8 +799,9 @@
     "urlPlaceholder": "ví dụ: https://localhost:3456",
     "change": "thay đổi",
     "signInOn": "Đăng nhập vào tài khoản Vikunia tại {0}",
-    "error": "Không thể tìm kiếm hay sử dụng cài đặt Vukunja tại \"{domain}\".",
-    "success": "Sử dụng cài đặt Vikunja tại \"{domain}\"."
+    "error": "Could not find or use Vikunja installation at \"{domain}\". Please try a different url.",
+    "success": "Sử dụng cài đặt Vikunja tại \"{domain}\".",
+    "urlRequired": "A url is required."
   },
   "loadingError": {
     "failed": "Tải thất bại, vui lòng {0}. Nếu lỗi vẫn xảy ra, vui lòng {1}.",
@@ -794,7 +816,7 @@
   "quickActions": {
     "commands": "Các lệnh",
     "placeholder": "Gõ một lệnh hoặc tìm kiếm…",
-    "hint": "You can use # to only search for tasks, * to only search for lists and @ to only search for teams.",
+    "hint": "You can use {list} to limit the search to a list. Combine {list} or {label} (labels) with a search query to search for a task with these labels or on that list. Use {assignee} to only search for teams.",
     "tasks": "Tác vụ",
     "lists": "Danh sách",
     "teams": "Team",

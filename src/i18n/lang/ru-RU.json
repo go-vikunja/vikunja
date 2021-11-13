@@ -16,6 +16,16 @@
     "title": "Не найдено",
     "text": "Запрашиваемая страница не существует."
   },
+  "ready": {
+    "loading": "Vikunja is loading…",
+    "errorOccured": "An error occured:",
+    "checkApiUrl": "Please check if the api url is correct.",
+    "noApiUrlConfigured": "No API url was configured. Please set one below:"
+  },
+  "offline": {
+    "title": "You are offline.",
+    "text": "Please check your network connection and try again."
+  },
   "user": {
     "auth": {
       "username": "Имя пользователя",
@@ -344,6 +354,7 @@
   },
   "filters": {
     "title": "Фильтры",
+    "clear": "Clear Filters",
     "attributes": {
       "title": "Название",
       "titlePlaceholder": "Введи название сохранённого фильтра…",
@@ -645,6 +656,7 @@
       "searchPlaceholder": "Введи запрос для поиска задачи, чтобы добавить связь…",
       "createPlaceholder": "Добавить как связанную задачу",
       "differentList": "Эта задача принадлежит другому списку.",
+      "differentNamespace": "This task belongs to a different namespace.",
       "noneYet": "Ещё нет связанных задач.",
       "delete": "Удалить связь",
       "deleteText1": "Удалить эту связь с задачей?",
@@ -745,10 +757,12 @@
   },
   "keyboardShortcuts": {
     "title": "Сочетания клавиш",
+    "general": "General",
     "allPages": "Работают на всех страницах.",
     "currentPageOnly": "Работают только на текущей странице.",
     "toggleMenu": "Переключить меню",
     "quickSearch": "Открыть панель поиска/быстрых действий",
+    "then": "then",
     "task": {
       "title": "Страница задачи",
       "done": "Пометить задачу завершённой",
@@ -757,6 +771,13 @@
       "dueDate": "Изменить срок этой задачи",
       "attachment": "Добавить вложение к задаче",
       "related": "Изменить связанные задачи"
+    },
+    "list": {
+      "title": "List Views",
+      "switchToListView": "Switch to list view",
+      "switchToGanttView": "Switch to gantt view",
+      "switchToKanbanView": "Switch to kanban view",
+      "switchToTableView": "Switch to table view"
     }
   },
   "update": {
@@ -778,8 +799,9 @@
     "urlPlaceholder": "напр. https://localhost:3456",
     "change": "изменить",
     "signInOn": "Войди в свой аккаунт Vikunja на {0}",
-    "error": "Не удалось найти или использовать Vikunja на \"{domain}\".",
-    "success": "Используется Vikunja на \"{domain}\"."
+    "error": "Could not find or use Vikunja installation at \"{domain}\". Please try a different url.",
+    "success": "Используется Vikunja на \"{domain}\".",
+    "urlRequired": "A url is required."
   },
   "loadingError": {
     "failed": "Не удалось загрузить, пожалуйста, {0}. Если ошибка повторится, {1}.",
@@ -794,7 +816,7 @@
   "quickActions": {
     "commands": "Команды",
     "placeholder": "Введи команду или поисковый запрос…",
-    "hint": "You can use # to only search for tasks, * to only search for lists and @ to only search for teams.",
+    "hint": "You can use {list} to limit the search to a list. Combine {list} or {label} (labels) with a search query to search for a task with these labels or on that list. Use {assignee} to only search for teams.",
     "tasks": "Задачи",
     "lists": "Списки",
     "teams": "Команды",

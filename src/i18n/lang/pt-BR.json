@@ -16,6 +16,16 @@
     "title": "Not found",
     "text": "The page you requested does not exist."
   },
+  "ready": {
+    "loading": "Vikunja is loading…",
+    "errorOccured": "An error occured:",
+    "checkApiUrl": "Please check if the api url is correct.",
+    "noApiUrlConfigured": "No API url was configured. Please set one below:"
+  },
+  "offline": {
+    "title": "You are offline.",
+    "text": "Please check your network connection and try again."
+  },
   "user": {
     "auth": {
       "username": "Username",
@@ -344,6 +354,7 @@
   },
   "filters": {
     "title": "Filters",
+    "clear": "Clear Filters",
     "attributes": {
       "title": "Title",
       "titlePlaceholder": "The saved filter title goes here…",
@@ -645,6 +656,7 @@
       "searchPlaceholder": "Type search for a new task to add as related…",
       "createPlaceholder": "Add this as new related task",
       "differentList": "This task belongs to a different list.",
+      "differentNamespace": "This task belongs to a different namespace.",
       "noneYet": "No task relations yet.",
       "delete": "Delete Task Relation",
       "deleteText1": "Are you sure you want to delete this task relation?",
@@ -745,10 +757,12 @@
   },
   "keyboardShortcuts": {
     "title": "Keyboard Shortcuts",
+    "general": "General",
     "allPages": "These shortcuts work on all pages.",
     "currentPageOnly": "These shortcuts work only on the current page.",
     "toggleMenu": "Toggle The Menu",
     "quickSearch": "Open the search/quick action bar",
+    "then": "then",
     "task": {
       "title": "Task Page",
       "done": "Mark a task as done",
@@ -757,6 +771,13 @@
       "dueDate": "Change the due date of this task",
       "attachment": "Add an attachment to this task",
       "related": "Modify related tasks of this task"
+    },
+    "list": {
+      "title": "List Views",
+      "switchToListView": "Switch to list view",
+      "switchToGanttView": "Switch to gantt view",
+      "switchToKanbanView": "Switch to kanban view",
+      "switchToTableView": "Switch to table view"
     }
   },
   "update": {
@@ -778,8 +799,9 @@
     "urlPlaceholder": "eg. https://localhost:3456",
     "change": "change",
     "signInOn": "Sign in to your Vikunja account on {0}",
-    "error": "Could not find or use Vikunja installation at \"{domain}\".",
-    "success": "Using Vikunja installation at \"{domain}\"."
+    "error": "Could not find or use Vikunja installation at \"{domain}\". Please try a different url.",
+    "success": "Using Vikunja installation at \"{domain}\".",
+    "urlRequired": "A url is required."
   },
   "loadingError": {
     "failed": "Loading failed, please {0}. If the error persists, please {1}.",
@@ -794,7 +816,7 @@
   "quickActions": {
     "commands": "Commands",
     "placeholder": "Type a command or search…",
-    "hint": "You can use # to only search for tasks, * to only search for lists and @ to only search for teams.",
+    "hint": "You can use {list} to limit the search to a list. Combine {list} or {label} (labels) with a search query to search for a task with these labels or on that list. Use {assignee} to only search for teams.",
     "tasks": "Tasks",
     "lists": "Lists",
     "teams": "Teams",

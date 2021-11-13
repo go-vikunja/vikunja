@@ -16,6 +16,16 @@
     "title": "Non trouvé",
     "text": "La page que tu as demandée n’existe pas."
   },
+  "ready": {
+    "loading": "Vikunja is loading…",
+    "errorOccured": "An error occured:",
+    "checkApiUrl": "Please check if the api url is correct.",
+    "noApiUrlConfigured": "No API url was configured. Please set one below:"
+  },
+  "offline": {
+    "title": "You are offline.",
+    "text": "Please check your network connection and try again."
+  },
   "user": {
     "auth": {
       "username": "Nom d’utilisateur·rice",
@@ -344,6 +354,7 @@
   },
   "filters": {
     "title": "Filtres",
+    "clear": "Clear Filters",
     "attributes": {
       "title": "Nom",
       "titlePlaceholder": "Entre un nom de filtre enregistré…",
@@ -513,7 +524,7 @@
       "today": "Aujourd’hui",
       "nextWeek": "La semaine prochaine",
       "nextMonth": "Le mois prochain",
-      "noTasks": "Nothing to do — Have a nice day!"
+      "noTasks": "Rien à faire — Passe une bonne journée !"
     },
     "detail": {
       "chooseDueDate": "Clique ici pour définir une date d’échéance",
@@ -778,8 +789,9 @@
     "urlPlaceholder": "Par exemple : https://localhost:3456",
     "change": "changer",
     "signInOn": "Se connecter à ton compte Vikunja sur {0}",
-    "error": "Impossible de trouver ou d’utiliser l’installation Vikunja à « {domain} ».",
-    "success": "Utilisation de l’installation Vikunja à « {domain} »."
+    "error": "Could not find or use Vikunja installation at \"{domain}\". Please try a different url.",
+    "success": "Utilisation de l’installation Vikunja à « {domain} ».",
+    "urlRequired": "A url is required."
   },
   "loadingError": {
     "failed": "Le chargement a échoué, {0}. Si l’erreur persiste, {1}.",
@@ -794,7 +806,7 @@
   "quickActions": {
     "commands": "Commandes",
     "placeholder": "Écris une commande ou une recherche…",
-    "hint": "You can use # to only search for tasks, * to only search for lists and @ to only search for teams.",
+    "hint": "Tu peux utiliser # pour rechercher uniquement des tâches, * pour rechercher uniquement des listes et @ pour rechercher uniquement des équipes.",
     "tasks": "Tâches",
     "lists": "Listes",
     "teams": "Équipes",

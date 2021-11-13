@@ -16,6 +16,16 @@
     "title": "Nicht gefunden",
     "text": "Die angeforderte Seite existiert nicht."
   },
+  "ready": {
+    "loading": "Vikunja wird geladen…",
+    "errorOccured": "Es ist ein Fehler aufgetreten:",
+    "checkApiUrl": "Bitte überprüfe, ob die API-Url stimmt.",
+    "noApiUrlConfigured": "Es wurde keine API-Url konfiguriert. Bitte stelle unten eine ein:"
+  },
+  "offline": {
+    "title": "Du bist offline.",
+    "text": "Bitte überprüfe die Netzwerkverbindung und versuche es erneut."
+  },
   "user": {
     "auth": {
       "username": "Anmeldename",
@@ -344,6 +354,7 @@
   },
   "filters": {
     "title": "Filter",
+    "clear": "Filter zurücksetzen",
     "attributes": {
       "title": "Titel",
       "titlePlaceholder": "Einen gespeicherten Filternamen eingeben …",
@@ -450,8 +461,8 @@
     "default": "Standard",
     "close": "Schließen",
     "download": "Herunterladen",
-    "showMenu": "Show the menu",
-    "hideMenu": "Hide the menu"
+    "showMenu": "Menü anzeigen",
+    "hideMenu": "Menü ausblenden"
   },
   "input": {
     "resetColor": "Farbe zurücksetzen",
@@ -778,8 +789,9 @@
     "urlPlaceholder": "z.B. https://localhost:3456",
     "change": "ändern",
     "signInOn": "Melde dich bei deinem Vikunja-Account auf {0} an",
-    "error": "Konnte keine Vikunja-Installation unter „{domain}“ finden oder verwenden.",
-    "success": "Verwende die Vikunja-Installation unter „{domain}“."
+    "error": "Konnte keine Vikunja-Installation unter „{domain}“ finden oder verwenden. Bitte probiere eine andere Url.",
+    "success": "Verwende die Vikunja-Installation unter „{domain}“.",
+    "urlRequired": "Eine Url ist erforderlich."
   },
   "loadingError": {
     "failed": "Laden fehlgeschlagen, bitte {0}. Wenn der Fehler weiterhin besteht, {1} bitte.",
@@ -794,7 +806,7 @@
   "quickActions": {
     "commands": "Befehle",
     "placeholder": "Gib einen Befehl oder eine Suche ein …",
-    "hint": "You can use # to only search for tasks, * to only search for lists and @ to only search for teams.",
+    "hint": "Du kannst # verwenden, um nur nach Aufgaben zu suchen, *, um nur nach Listen zu suchen und @, um nur nach Teams zu suchen.",
     "tasks": "Aufgaben",
     "lists": "Listen",
     "teams": "Teams",

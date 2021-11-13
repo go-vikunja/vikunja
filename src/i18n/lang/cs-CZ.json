@@ -16,6 +16,16 @@
     "title": "Nenalezeno",
     "text": "Požadovaná stránka neexistuje."
   },
+  "ready": {
+    "loading": "Vikunja is loading…",
+    "errorOccured": "An error occured:",
+    "checkApiUrl": "Please check if the api url is correct.",
+    "noApiUrlConfigured": "No API url was configured. Please set one below:"
+  },
+  "offline": {
+    "title": "You are offline.",
+    "text": "Please check your network connection and try again."
+  },
   "user": {
     "auth": {
       "username": "Uživatelské jméno",
@@ -344,6 +354,7 @@
   },
   "filters": {
     "title": "Filtry",
+    "clear": "Clear Filters",
     "attributes": {
       "title": "Název",
       "titlePlaceholder": "Název uloženého filtru přijde sem…",
@@ -778,8 +789,9 @@
     "urlPlaceholder": "např. https://localhost:3456",
     "change": "změnit",
     "signInOn": "Přihlaste se ke svému účtu Vikunja na {0}",
-    "error": "Nelze najít nebo použít instalaci Vikunja na \"{domain}\".",
-    "success": "Pomocí instalace Vikunja na \"{domain}\"."
+    "error": "Could not find or use Vikunja installation at \"{domain}\". Please try a different url.",
+    "success": "Pomocí instalace Vikunja na \"{domain}\".",
+    "urlRequired": "A url is required."
   },
   "loadingError": {
     "failed": "Načítání selhalo, prosím {0}. Pokud chyba přetrvává, {1}.",
