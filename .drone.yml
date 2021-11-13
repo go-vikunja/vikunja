@@ -152,9 +152,9 @@ steps:
     depends_on:
       - build-prod
     when:
-      branch:
-        exclude:
-          - main
+      event:
+        include:
+          - pull_request
 
 ---
 kind: pipeline
@@ -655,6 +655,6 @@ steps:
         from_secret: crowdin_key
 ---
 kind: signature
-hmac: 255ff4485be7c8577e82b2bb0c1736800b78470ca674e2fe380317e8c7098c06
+hmac: 15df446c7e93a881249d46273485183386157229ee6a37b1ed0fcb2a0b32bbe2
 
 ...
