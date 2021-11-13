@@ -270,18 +270,16 @@
 						/>
 						<x-button
 							@click="setFieldActive('assignees')"
-							@shortkey="setFieldActive('assignees')"
 							type="secondary"
-							v-shortkey="['a']">
+							v-shortcut="'a'">
 							<span class="icon is-small"><icon icon="users"/></span>
 							{{ $t('task.detail.actions.assign') }}
 						</x-button>
 						<x-button
 							@click="setFieldActive('labels')"
-							@shortkey="setFieldActive('labels')"
 							type="secondary"
-							v-shortkey="['l']"
 							icon="tags"
+							v-shortcut="'l'"
 						>
 							{{ $t('task.detail.actions.label') }}
 						</x-button>
@@ -294,10 +292,9 @@
 						</x-button>
 						<x-button
 							@click="setFieldActive('dueDate')"
-							@shortkey="setFieldActive('dueDate')"
 							type="secondary"
-							v-shortkey="['d']"
 							icon="calendar"
+							v-shortcut="'d'"
 						>
 							{{ $t('task.detail.actions.dueDate') }}
 						</x-button>
@@ -338,19 +335,17 @@
 						</x-button>
 						<x-button
 							@click="setFieldActive('attachments')"
-							@shortkey="setFieldActive('attachments')"
 							type="secondary"
-							v-shortkey="['f']"
 							icon="paperclip"
+							v-shortcut="'f'"
 						>
 							{{ $t('task.detail.actions.attachments') }}
 						</x-button>
 						<x-button
 							@click="setFieldActive('relatedTasks')"
-							@shortkey="setFieldActive('relatedTasks')"
 							type="secondary"
-							v-shortkey="['r']"
 							icon="sitemap"
+							v-shortcut="'r'"
 						>
 							{{ $t('task.detail.actions.relatedTasks') }}
 						</x-button>

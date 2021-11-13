@@ -12,8 +12,7 @@
 				class="modal-container"
 				:class="{'has-overflow': overflow}"
 				@click.self.prevent.stop="$emit('close')"
-				@shortkey="$emit('close')"
-				v-shortkey="['esc']"
+				v-shortcut="'Escape'"
 			>
 				<div
 					class="modal-content"

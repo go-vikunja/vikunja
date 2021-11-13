@@ -5,10 +5,10 @@
 		class="navbar main-theme is-fixed-top"
 		role="navigation"
 	>
-		<router-link :to="{name: 'home'}" class="logo">
-			<Logo width="164" height="48" />
+		<router-link :to="{name: 'home'}" class="navbar-item logo">
+			<Logo width="164" height="48"/>
 		</router-link>
-		<MenuButton class="menu-button" />
+		<MenuButton class="menu-button"/>
 		<div class="list-title" ref="listTitle" v-show="currentList.id">
 			<template v-if="currentList.id">
 				<h1
@@ -26,8 +26,8 @@
 			<a
 				@click="openQuickActions"
 				class="trigger-button pr-0"
-				@shortkey="openQuickActions"
-				v-shortkey="['ctrl', 'k']"
+				v-shortcut="'Control+k'"
+				:title="$t('keyboardShortcuts.quickSearch')"
 			>
 				<icon icon="search"/>
 			</a>
@@ -256,33 +256,33 @@ $vikunja-nav-logo-full-width: 164px;
 }
 
 .list-title {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 
-  $edit-icon-width: 1rem;
+	$edit-icon-width: 1rem;
 
-  @media screen and (min-width: $tablet) {
-    // We need a fixed width for overflowing ellipsis to work
-    --nav-username-width: 0;
-    width: calc(100vw - #{$user-dropdown-width-mobile} - #{2 * $hamburger-menu-icon-spacing} - #{$hamburger-menu-icon-width} - #{$edit-icon-width} - #{2 * $navbar-icon-width} - #{$vikunja-nav-logo-full-width} - var(--nav-username-width));
-  }
+	@media screen and (min-width: $tablet) {
+		// We need a fixed width for overflowing ellipsis to work
+		--nav-username-width: 0;
+		width: calc(100vw - #{$user-dropdown-width-mobile} - #{2 * $hamburger-menu-icon-spacing} - #{$hamburger-menu-icon-width} - #{$edit-icon-width} - #{2 * $navbar-icon-width} - #{$vikunja-nav-logo-full-width} - var(--nav-username-width));
+	}
 
-  @media screen and (max-width: $tablet) {
-    // We need a fixed width for overflowing ellipsis to work
-    width: calc(100vw - #{$user-dropdown-width-mobile} - #{2 * $hamburger-menu-icon-spacing} - #{$hamburger-menu-icon-width} - #{$edit-icon-width} - #{2 * $navbar-icon-width});
-  }
+	@media screen and (max-width: $tablet) {
+		// We need a fixed width for overflowing ellipsis to work
+		width: calc(100vw - #{$user-dropdown-width-mobile} - #{2 * $hamburger-menu-icon-spacing} - #{$hamburger-menu-icon-width} - #{$edit-icon-width} - #{2 * $navbar-icon-width});
+	}
 
-  h1 {
-    margin: 0;
-  }
+	h1 {
+		margin: 0;
+	}
 
-  :deep(.dropdown-trigger) {
-    color: $grey-400;
-    margin-left: 1rem;
-    height: 1rem;
-    width: 1rem;
-    cursor: pointer;
-  }
+	:deep(.dropdown-trigger) {
+		color: $grey-400;
+		margin-left: 1rem;
+		height: 1rem;
+		width: 1rem;
+		cursor: pointer;
+	}
 }
 </style>

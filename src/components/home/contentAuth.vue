@@ -31,8 +31,7 @@
 				<a
 					class="keyboard-shortcuts-button"
 					@click="showKeyboardShortcuts()"
-					@shortkey="showKeyboardShortcuts()"
-					v-shortkey="['?']"
+					v-shortcut="'?'"
 				>
 					<icon icon="keyboard"/>
 				</a>

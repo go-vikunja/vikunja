@@ -1,16 +1,17 @@
 <template>
-    <button
-        type="button"
-        @click="$store.commit('toggleMenu')"
-        class="menu-show-button"
-        @shortkey="() => $store.commit('toggleMenu')"
-        v-shortkey="['ctrl', 'e']"
-        :aria-label="menuActive ? $t('misc.hideMenu') : $t('misc.showMenu')"
-    />
+	<button
+		type="button"
+		@click="$store.commit('toggleMenu')"
+		class="menu-show-button"
+		@shortkey="() => $store.commit('toggleMenu')"
+		v-shortcut="'Control+e'"
+		:title="$t('keyboardShortcuts.toggleMenu')"
+		:aria-label="menuActive ? $t('misc.hideMenu') : $t('misc.showMenu')"
+	/>
 </template>
 
 <script setup>
-import { computed} from 'vue'
+import {computed} from 'vue'
 import {store} from '@/store'
 
 const menuActive = computed(() => store.menuActive)
@@ -32,6 +33,7 @@ $size: $lineWidth + 1rem;
 	position: relative;
 
 	$transformX: translateX(-50%);
+
 	&::before,
 	&::after {
 		content: '';

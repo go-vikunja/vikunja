@@ -31,8 +31,6 @@ import Notifications from '@kyvg/vue3-notification'
 // PWA
 import './registerServiceWorker'
 
-// Shortcuts
-import shortkey from '@/plugins/shortkey'
 // Vuex
 import {store} from './store'
 // i18n
@@ -55,14 +53,14 @@ const app = createApp(App)
 
 app.use(Notifications)
 
-app.use(shortkey, {prevent: ['input', 'textarea', '.input', '[contenteditable]']})
-
 // directives
 import focus from './directives/focus'
 import tooltip from './directives/tooltip'
+import shortcut from '@/directives/shortcut'
 
 app.directive('focus', focus)
 app.directive('tooltip', tooltip)
+app.directive('shortcut', shortcut)
 
 // global components
 import FontAwesomeIcon from './icons'

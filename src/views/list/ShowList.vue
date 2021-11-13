@@ -6,21 +6,29 @@
 		<div class="switch-view-container">
 			<div class="switch-view">
 				<router-link
+					v-shortcut="'g l'"
+					:title="$t('keyboardShortcuts.list.switchToListView')"
 					:class="{'is-active': $route.name.includes('list.list')}"
 					:to="{ name: 'list.list',   params: { listId: listId } }">
 					{{ $t('list.list.title') }}
 				</router-link>
 				<router-link
+					v-shortcut="'g g'"
+					:title="$t('keyboardShortcuts.list.switchToGanttView')"
 					:class="{'is-active': $route.name.includes('list.gantt')}"
 					:to="{ name: 'list.gantt',  params: { listId: listId } }">
 					{{ $t('list.gantt.title') }}
 				</router-link>
 				<router-link
+					v-shortcut="'g t'"
+					:title="$t('keyboardShortcuts.list.switchToTableView')"
 					:class="{'is-active': $route.name.includes('list.table')}"
 					:to="{ name: 'list.table',  params: { listId: listId } }">
 					{{ $t('list.table.title') }}
 				</router-link>
 				<router-link
+					v-shortcut="'g k'"
+					:title="$t('keyboardShortcuts.list.switchToKanbanView')"
 					:class="{'is-active': $route.name.includes('list.kanban')}"
 					:to="{ name: 'list.kanban', params: { listId: listId } }">
 					{{ $t('list.kanban.title') }}

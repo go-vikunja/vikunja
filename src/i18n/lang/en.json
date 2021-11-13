@@ -757,10 +757,12 @@
   },
   "keyboardShortcuts": {
     "title": "Keyboard Shortcuts",
+    "general": "General",
     "allPages": "These shortcuts work on all pages.",
     "currentPageOnly": "These shortcuts work only on the current page.",
     "toggleMenu": "Toggle The Menu",
     "quickSearch": "Open the search/quick action bar",
+    "then": "then",
     "task": {
       "title": "Task Page",
       "done": "Mark a task as done",
@@ -769,6 +771,13 @@
       "dueDate": "Change the due date of this task",
       "attachment": "Add an attachment to this task",
       "related": "Modify related tasks of this task"
+    },
+    "list": {
+      "title": "List Views",
+      "switchToListView": "Switch to list view",
+      "switchToGanttView": "Switch to gantt view",
+      "switchToKanbanView": "Switch to kanban view",
+      "switchToTableView": "Switch to table view"
     }
   },
   "update": {

@@ -1,10 +1,10 @@
 <template>
-	<span class="shortcuts">
+	<component :is="is" class="shortcuts">
 		<template v-for="(k, i) in keys" :key="i">
 			<kbd>{{ k }}</kbd>
-			<span v-if="i < keys.length - 1">+</span>
+			<span v-if="i < keys.length - 1">{{ combination }}</span>
 		</template>
-	</span>
+	</component>
 </template>
 
 <script>
@@ -14,6 +14,14 @@ export default {
 		keys: {
 			type: Array,
 			required: true,
+		},
+		combination: {
+			type: String,
+			default: '+',
+		},
+		is: {
+			type: String,
+			default: 'div',
 		},
 	},
 }
