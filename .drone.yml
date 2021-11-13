@@ -151,6 +151,10 @@ steps:
       - node ./scripts/deploy-preview-netlify.js
     depends_on:
       - build-prod
+    when:
+      branch:
+        exclude:
+          - main
 
 ---
 kind: pipeline
@@ -651,6 +655,6 @@ steps:
         from_secret: crowdin_key
 ---
 kind: signature
-hmac: b343ca4448b29bcd26ba9888fa67926040b2f420d891b62e2e74ce487557c58c
+hmac: 255ff4485be7c8577e82b2bb0c1736800b78470ca674e2fe380317e8c7098c06
 
 ...
