@@ -25,6 +25,9 @@ All examples on this page already reflect this and do not require additional wor
 
 ## Redis
 
+While Vikunja has support to use redis as a caching backend, you'll probably not need it unless you're using Vikunja 
+with more than a handful of users.
+
 To use redis, you'll need to add this to the config examples below:
 
 {{< highlight yaml >}}
@@ -43,6 +46,29 @@ services:
   redis:
     image: redis
 {{< /highlight >}}
+
+## PostgreSQL
+
+Vikunja supports postgres, mysql and sqlite as a database backend. The examples on this page use mysql with a mariadb container.
+To use postgres as a database backend, change the `db` section of the examples to this:
+
+{{< highlight yaml >}}
+db:
+  image: postgres:13
+  environment:
+    POSTGRES_PASSWORD: secret
+    POSTGRES_USER: vikunja
+  volumes:
+    - ./db:/var/lib/postgresql/data
+  restart: unless-stopped
+{{< /highlight >}}
+
+You'll also need to change the `VIKUNJA_DATABASE_TYPE` to `postgres` on the api container declaration.
+
+<div class="notification is-warning">
+<b>NOTE:</b> The mariadb container can sometimes take a while to initialize, especially on the first run. 
+During this time, the api container will fail to start at all. It will automatically restart every few seconds.
+</div>
 
 ## Example without any proxy
 
