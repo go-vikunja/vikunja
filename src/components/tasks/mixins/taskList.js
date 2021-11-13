@@ -1,14 +1,14 @@
 import TaskCollectionService from '@/services/taskCollection'
 
 // FIXME: merge with DEFAULT_PARAMS in filters.vue
-const DEFAULT_PARAMS = {
+export const getDefaultParams = () => ({
 	sort_by: ['position', 'id'],
 	order_by: ['asc', 'desc'],
 	filter_by: ['done'],
 	filter_value: ['false'],
 	filter_comparator: ['equals'],
 	filter_concat: 'and',
-}
+})
 
 /**
  * This mixin provides a base set of methods and properties to get tasks on a list.
@@ -26,7 +26,7 @@ export default {
 			searchTerm: '',
 
 			showTaskFilter: false,
-			params: DEFAULT_PARAMS,
+			params: {...getDefaultParams()},
 		}
 	},
 	watch: {
@@ -94,7 +94,7 @@ export default {
 			this.initTasks(page, search)
 		},
 		loadTasksOnSavedFilter() {
-			if(typeof this.$route.params.listId !== 'undefined' && parseInt(this.$route.params.listId) < 0) {
+			if (typeof this.$route.params.listId !== 'undefined' && parseInt(this.$route.params.listId) < 0) {
 				this.loadTasks(1, '', null, true)
 			}
 		},

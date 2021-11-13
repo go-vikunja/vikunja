@@ -9,12 +9,12 @@
 				>
 					{{ $t('filters.title') }}
 				</x-button>
+				<filter-popup
+					:visible="showTaskFilter"
+					v-model="params"
+					@update:modelValue="loadTasks()"
+				/>
 			</div>
-			<filter-popup
-				:visible="showTaskFilter"
-				v-model="params"
-				@update:modelValue="loadTasks()"
-			/>
 		</div>
 		<div class="dates">
 			<template v-for="(y, yk) in days" :key="yk + 'year'">
@@ -347,7 +347,7 @@ export default {
 				return
 			}
 
-			let newTask = { ...taskDragged }
+			let newTask = {...taskDragged}
 
 			const didntHaveDates = newTask.startDate === null ? true : false
 

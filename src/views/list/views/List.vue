@@ -41,19 +41,11 @@
 						v-if="!showTaskSearch"
 					/>
 				</div>
-				<x-button
-					@click.prevent.stop="showTaskFilter = !showTaskFilter"
-					type="secondary"
-					icon="filter"
-				>
-					{{ $t('filters.title') }}
-				</x-button>
+				<filter-popup
+					v-model="params"
+					@update:modelValue="loadTasks()"
+				/>
 			</div>
-			<filter-popup
-				:visible="showTaskFilter"
-				v-model="params"
-				@update:modelValue="loadTasks()"
-			/>
 		</div>
 
 		<card :padding="false" :has-content="false" class="has-overflow">
@@ -126,7 +118,7 @@
 				/>
 			</div>
 
-			<Pagination 
+			<Pagination
 				:total-pages="taskCollectionService.totalPages"
 				:current-page="currentPage"
 			/>
@@ -135,7 +127,7 @@
 		<!-- This router view is used to show the task popup while keeping the kanban board itself -->
 		<router-view v-slot="{ Component }">
 			<transition name="modal">
-				<component :is="Component" />
+				<component :is="Component"/>
 			</transition>
 		</router-view>
 	</div>
@@ -155,6 +147,7 @@ import FilterPopup from '@/components/list/partials/filter-popup.vue'
 import {HAS_TASKS} from '@/store/mutation-types'
 import Nothing from '@/components/misc/nothing.vue'
 import Pagination from '@/components/misc/pagination.vue'
+import Popup from '@/components/misc/popup'
 
 import draggable from 'vuedraggable'
 import {calculateItemPosition} from '../../../helpers/calculateItemPosition'
@@ -198,6 +191,7 @@ export default {
 		taskList,
 	],
 	components: {
+		Popup,
 		Nothing,
 		FilterPopup,
 		SingleTaskInList,
@@ -294,11 +288,11 @@ export default {
 
 		async saveTaskPosition(e) {
 			this.drag = false
-			
+
 			const task = this.tasks[e.newIndex]
 			const taskBefore = this.tasks[e.newIndex - 1] ?? null
-			const taskAfter = this.tasks[e.newIndex + 1] ??  null
-			
+			const taskAfter = this.tasks[e.newIndex + 1] ?? null
+
 			const newTask = {
 				...task,
 				position: calculateItemPosition(taskBefore !== null ? taskBefore.position : null, taskAfter !== null ? taskAfter.position : null),

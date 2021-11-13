@@ -34,7 +34,6 @@ $filter-container-top-link-share-list: -47px;
 
   .card {
     text-align: left;
-    margin-top: calc(1rem - 1px);
   }
 
   .fancycheckbox {
@@ -46,10 +45,6 @@ $filter-container-top-link-share-list: -47px;
     align-items: center;
     justify-content: space-between;
     margin-right: .5rem;
-
-    .button, .input {
-      height: $switch-view-height;
-    }
 
     .field {
       transition: width $transition;

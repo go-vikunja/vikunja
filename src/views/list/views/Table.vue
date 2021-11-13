@@ -2,67 +2,63 @@
 	<div :class="{'is-loading': taskCollectionService.loading}" class="table-view loader-container">
 		<div class="filter-container">
 			<div class="items">
-				<x-button
-					@click.prevent.stop="() => {showActiveColumnsFilter = !showActiveColumnsFilter; showTaskFilter = false}"
-					icon="th"
-					type="secondary"
-				>
-					{{ $t('list.table.columns') }}
-				</x-button>
-				<x-button
-					@click.prevent.stop="() => {showTaskFilter = !showTaskFilter; showActiveColumnsFilter = false}"
-					icon="filter"
-					type="secondary"
-				>
-					{{ $t('filters.title') }}
-				</x-button>
+				<popup>
+					<template #trigger="{toggle}">
+						<x-button
+							@click.prevent.stop="toggle()"
+							icon="th"
+							type="secondary"
+						>
+							{{ $t('list.table.columns') }}
+						</x-button>
+					</template>
+					<template #content="{isOpen}">
+						<card class="columns-filter" :class="{'is-open': isOpen}">
+							<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.id">#</fancycheckbox>
+							<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.done">
+								{{ $t('task.attributes.done') }}
+							</fancycheckbox>
+							<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.title">
+								{{ $t('task.attributes.title') }}
+							</fancycheckbox>
+							<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.priority">
+								{{ $t('task.attributes.priority') }}
+							</fancycheckbox>
+							<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.labels">
+								{{ $t('task.attributes.labels') }}
+							</fancycheckbox>
+							<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.assignees">
+								{{ $t('task.attributes.assignees') }}
+							</fancycheckbox>
+							<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.dueDate">
+								{{ $t('task.attributes.dueDate') }}
+							</fancycheckbox>
+							<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.startDate">
+								{{ $t('task.attributes.startDate') }}
+							</fancycheckbox>
+							<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.endDate">
+								{{ $t('task.attributes.endDate') }}
+							</fancycheckbox>
+							<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.percentDone">
+								{{ $t('task.attributes.percentDone') }}
+							</fancycheckbox>
+							<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.created">
+								{{ $t('task.attributes.created') }}
+							</fancycheckbox>
+							<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.updated">
+								{{ $t('task.attributes.updated') }}
+							</fancycheckbox>
+							<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.createdBy">
+								{{ $t('task.attributes.createdBy') }}
+							</fancycheckbox>
+						</card>
+					</template>
+				</popup>
+				<filter-popup
+					v-model="params"
+					@update:modelValue="loadTasks()"
+				/>
 			</div>
-			<transition name="fade">
-				<card v-if="showActiveColumnsFilter">
-					<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.id">#</fancycheckbox>
-					<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.done">
-						{{ $t('task.attributes.done') }}
-					</fancycheckbox>
-					<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.title">
-						{{ $t('task.attributes.title') }}
-					</fancycheckbox>
-					<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.priority">
-						{{ $t('task.attributes.priority') }}
-					</fancycheckbox>
-					<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.labels">
-						{{ $t('task.attributes.labels') }}
-					</fancycheckbox>
-					<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.assignees">
-						{{ $t('task.attributes.assignees') }}
-					</fancycheckbox>
-					<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.dueDate">
-						{{ $t('task.attributes.dueDate') }}
-					</fancycheckbox>
-					<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.startDate">
-						{{ $t('task.attributes.startDate') }}
-					</fancycheckbox>
-					<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.endDate">
-						{{ $t('task.attributes.endDate') }}
-					</fancycheckbox>
-					<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.percentDone">
-						{{ $t('task.attributes.percentDone') }}
-					</fancycheckbox>
-					<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.created">
-						{{ $t('task.attributes.created') }}
-					</fancycheckbox>
-					<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.updated">
-						{{ $t('task.attributes.updated') }}
-					</fancycheckbox>
-					<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.createdBy">
-						{{ $t('task.attributes.createdBy') }}
-					</fancycheckbox>
-				</card>
-			</transition>
-			<filter-popup
-				:visible="showTaskFilter"
-				v-model="params"
-				@update:modelValue="loadTasks()"
-			/>
 		</div>
 
 		<card :padding="false" :has-content="false">
@@ -189,21 +185,23 @@
 </template>
 
 <script>
-import taskList from '../../../components/tasks/mixins/taskList'
+import taskList from '@/components/tasks/mixins/taskList'
 import Done from '@/components/misc/Done.vue'
-import User from '../../../components/misc/user'
-import PriorityLabel from '../../../components/tasks/partials/priorityLabel'
-import Labels from '../../../components/tasks/partials/labels'
-import DateTableCell from '../../../components/tasks/partials/date-table-cell'
-import Fancycheckbox from '../../../components/input/fancycheckbox'
-import Sort from '../../../components/tasks/partials/sort'
+import User from '@/components/misc/user'
+import PriorityLabel from '@/components/tasks/partials/priorityLabel'
+import Labels from '@/components/tasks/partials/labels'
+import DateTableCell from '@/components/tasks/partials/date-table-cell'
+import Fancycheckbox from '@/components/input/fancycheckbox'
+import Sort from '@/components/tasks/partials/sort'
 import {saveListView} from '@/helpers/saveListView'
 import FilterPopup from '@/components/list/partials/filter-popup.vue'
 import Pagination from '@/components/misc/pagination.vue'
+import Popup from '@/components/misc/popup'
 
 export default {
 	name: 'Table',
 	components: {
+		Popup,
 		Done,
 		FilterPopup,
 		Sort,
@@ -219,7 +217,6 @@ export default {
 	],
 	data() {
 		return {
-			showActiveColumnsFilter: false,
 			activeColumns: {
 				id: true,
 				done: true,
@@ -321,6 +318,14 @@ export default {
 		.user {
 			margin: 0;
 		}
+	}
+}
+
+.columns-filter {
+	margin: 0;
+
+	&.is-open {
+		margin: 2rem 0 1rem;
 	}
 }
 </style>

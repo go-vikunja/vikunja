@@ -458,15 +458,7 @@ export default {
 				return
 			}
 
-			let foundDone = false
-			this.params.filter_by.forEach((f, i) => {
-				if (f === 'done') {
-					foundDone = i
-				}
-			})
-			if (foundDone === false) {
-				this.filters.done = true
-			}
+			this.filters.done = this.params.filter_by.some((f) => f === 'done') === false
 		},
 		async prepareRelatedObjectFilter(kind, filterName = null, servicePrefix = null) {
 			if (filterName === null) {

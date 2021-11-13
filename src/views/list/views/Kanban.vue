@@ -2,18 +2,11 @@
 	<div class="kanban-view">
 		<div class="filter-container" v-if="isSavedFilter">
 			<div class="items">
-				<x-button
-					@click.prevent.stop="toggleFilterPopup"
-					icon="filter"
-					type="secondary"
-				>
-					{{ $t('filters.title') }}
-				</x-button>
+				<filter-popup
+					v-model="params"
+					@update:modelValue="loadBuckets"
+				/>
 			</div>
-			<filter-popup
-				:visible="showFilters"
-				v-model="params"
-			/>
 		</div>
 		<div
 			:class="{ 'is-loading': loading && !oneTaskUpdating}"
@@ -143,7 +136,7 @@
 								:component-data="taskDraggableTaskComponentData"
 							>
 								<template #item="{element: task}">
-									<kanban-card :task="task" />
+									<kanban-card :task="task"/>
 								</template>
 							</draggable>
 						</div>
@@ -213,7 +206,7 @@
 		<!-- This router view is used to show the task popup while keeping the kanban board itself -->
 		<router-view v-slot="{ Component }">
 			<transition name="modal">
-				<component :is="Component" />
+				<component :is="Component"/>
 			</transition>
 		</router-view>
 
@@ -224,10 +217,10 @@
 				v-if="showBucketDeleteModal"
 			>
 				<template #header><span>{{ $t('list.kanban.deleteHeaderBucket') }}</span></template>
-		
+
 				<template #text>
 					<p>{{ $t('list.kanban.deleteBucketText1') }}<br/>
-					{{ $t('list.kanban.deleteBucketText2') }}</p>
+						{{ $t('list.kanban.deleteBucketText2') }}</p>
 				</template>
 			</modal>
 		</transition>
@@ -300,7 +293,6 @@ export default {
 				filter_comparator: [],
 				filter_concat: 'and',
 			},
-			showFilters: false,
 		}
 	},
 	created() {
@@ -328,10 +320,10 @@ export default {
 			return {
 				type: 'transition',
 				tag: 'div',
-				name: !this.dragBucket ? 'move-bucket': null,
+				name: !this.dragBucket ? 'move-bucket' : null,
 				class: [
 					'kanban-bucket-container',
-					{ 'dragging-disabled': !this.canWrite },
+					{'dragging-disabled': !this.canWrite},
 				],
 			}
 		},
@@ -339,10 +331,10 @@ export default {
 			return {
 				type: 'transition',
 				tag: 'div',
-				name: !this.drag ? 'move-card': null,
+				name: !this.drag ? 'move-card' : null,
 				class: [
 					'dropper',
-					{ 'dragging-disabled': !this.canWrite },
+					{'dragging-disabled': !this.canWrite},
 				],
 			}
 		},
@@ -357,19 +349,15 @@ export default {
 			list: state => state.currentList,
 		}),
 	},
- 
-	methods: {
-		toggleFilterPopup() {
-			this.showFilters = !this.showFilters
-		},
 
+	methods: {
 		loadBuckets() {
 			// Prevent trying to load buckets if the task popup view is active
 			if (this.$route.name !== 'list.kanban') {
 				return
 			}
 
-			const { listId, params } = this.loadBucketParameter
+			const {listId, params} = this.loadBucketParameter
 
 			this.collapsedBuckets = getCollapsedBucketState(listId)
 
@@ -424,7 +412,7 @@ export default {
 
 			const newTask = cloneDeep(task) // cloning the task to avoid vuex store mutations
 			newTask.bucketId = newBucket.id,
-			newTask.kanbanPosition = calculateItemPosition(taskBefore !== null ? taskBefore.kanbanPosition : null, taskAfter !== null ? taskAfter.kanbanPosition : null)
+				newTask.kanbanPosition = calculateItemPosition(taskBefore !== null ? taskBefore.kanbanPosition : null, taskAfter !== null ? taskAfter.kanbanPosition : null)
 
 			try {
 				await this.$store.dispatch('tasks/update', newTask)

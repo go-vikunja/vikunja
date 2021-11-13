@@ -219,10 +219,10 @@ describe('Lists', () => {
 			cy.get('.table-view .filter-container .items .button')
 				.contains('Columns')
 				.click()
-			cy.get('.table-view .filter-container .card .card-content .fancycheckbox .check')
+			cy.get('.table-view .filter-container .card.columns-filter .card-content .fancycheckbox .check')
 				.contains('Priority')
 				.click()
-			cy.get('.table-view .filter-container .card .card-content .fancycheckbox .check')
+			cy.get('.table-view .filter-container .card.columns-filter .card-content .fancycheckbox .check')
 				.contains('Done')
 				.click()
 
