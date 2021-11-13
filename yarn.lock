@@ -13244,7 +13244,7 @@ vite-plugin-pwa@0.11.3:
     workbox-build "^6.3.0"
     workbox-window "^6.3.0"
 
-vite-svg-loader@^3.1.0:
+vite-svg-loader@3.1.0:
   version "3.1.0"
   resolved "https://registry.yarnpkg.com/vite-svg-loader/-/vite-svg-loader-3.1.0.tgz#58d4ed5785583afce10059125467f8bf803e3183"
   integrity sha512-dcxLJPQXC3e2/HYrKjOi0fEIzP+Wcny1PhOTsYhnZcqLIhyjAHkMeZwWl9jXC3u+QpUZy4TyLgVnBPuiok3BUA==
