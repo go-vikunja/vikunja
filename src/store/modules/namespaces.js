@@ -76,8 +76,13 @@ export default {
 		},
 	},
 	getters: {
-		getListAndNamespaceById: state => listId => {
+		getListAndNamespaceById: state => (listId, ignorePseudoNamespaces = false) => {
 			for (const n in state.namespaces) {
+				
+				if(ignorePseudoNamespaces && state.namespaces[n].id < 0) {
+					continue
+				}
+				
 				for (const l in state.namespaces[n].lists) {
 					if (state.namespaces[n].lists[l].id === listId) {
 						return {

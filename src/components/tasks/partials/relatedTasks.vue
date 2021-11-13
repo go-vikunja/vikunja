@@ -29,7 +29,7 @@
 						:placeholder="$t('task.relation.searchPlaceholder')"
 						@search="findTasks"
 						:loading="taskService.loading"
-						:search-results="foundTasks"
+						:search-results="mappedFoundTasks"
 						label="title"
 						v-model="newTaskRelationTask"
 						:creatable="true"
@@ -41,8 +41,17 @@
 								<span
 									class="different-list"
 									v-if="props.option.listId !== listId"
-									v-tooltip="$t('task.relation.differentList')">
-									{{ $store.getters['lists/getListById'](props.option.listId) === null ? '' : $store.getters['lists/getListById'](props.option.listId).title }} >
+								>
+									<span
+										v-if="props.option.differentNamespace !== null"
+										v-tooltip="$t('task.relation.differentNamespace')">
+										{{ props.option.differentNamespace }} >
+									</span>
+									<span
+										v-if="props.option.differentList !== null"
+										v-tooltip="$t('task.relation.differentList')">
+										{{ props.option.differentList }} >
+									</span>
 								</span>
 								{{ props.option.title }}
 							</span>
@@ -70,33 +79,36 @@
 			</template>
 		</transition-group>
 
-		<div :key="kind" class="related-tasks" v-for="(rts, kind ) in relatedTasks">
-			<template v-if="rts.length > 0">
-				<span class="title">{{ relationKindTitle(kind, rts.length) }}</span>
-				<div class="tasks noborder">
-					<div :key="t.id" class="task" v-for="t in rts.filter(t => t)">
-						<router-link :to="{ name: $route.name, params: { id: t.id } }">
-							<span :class="{ 'done': t.done}" class="tasktext">
-								<span
-									class="different-list"
-									v-if="t.listId !== listId"
-									v-tooltip="$t('task.relation.differentList')">
-									{{
-										$store.getters['lists/getListById'](t.listId) === null ? '' : $store.getters['lists/getListById'](t.listId).title
-									}} >
-								</span>
-								{{ t.title }}
+		<div :key="rts.kind" class="related-tasks" v-for="rts in mappedRelatedTasks">
+			<span class="title">{{ rts.title }}</span>
+			<div class="tasks">
+				<div :key="t.id" class="task" v-for="t in rts.tasks">
+					<router-link :to="{ name: $route.name, params: { id: t.id } }" :class="{ 'done': t.done}">
+						<span
+							class="different-list"
+							v-if="t.listId !== listId"
+						>
+							<span
+								v-if="t.differentNamespace !== null"
+								v-tooltip="$t('task.relation.differentNamespace')">
+								{{ t.differentNamespace }} >
 							</span>
-						</router-link>
-						<a
-							@click="() => {showDeleteModal = true; relationToDelete = {relationKind: kind, otherTaskId: t.id}}"
-							class="remove"
-							v-if="editEnabled">
-							<icon icon="trash-alt"/>
-						</a>
-					</div>
+							<span
+								v-if="t.differentList !== null"
+								v-tooltip="$t('task.relation.differentList')">
+								{{ t.differentList }} >
+							</span>
+						</span>
+						{{ t.title }}
+					</router-link>
+					<a
+						@click="() => {showDeleteModal = true; relationToDelete = {relationKind: rts.kind, otherTaskId: t.id}}"
+						class="remove"
+						v-if="editEnabled">
+						<icon icon="trash-alt"/>
+					</a>
 				</div>
-			</template>
+			</div>
 		</div>
 		<p class="none" v-if="showNoRelationsNotice && Object.keys(relatedTasks).length === 0">
 			{{ $t('task.relation.noneYet') }}
@@ -110,10 +122,10 @@
 				v-if="showDeleteModal"
 			>
 				<template #header><span>{{ $t('task.relation.delete') }}</span></template>
-				
+
 				<template #text>
 					<p>{{ $t('task.relation.deleteText1') }}<br/>
-					<strong>{{ $t('task.relation.deleteText2') }}</strong></p>
+						<strong>{{ $t('task.relation.deleteText2') }}</strong></p>
 				</template>
 			</modal>
 		</transition>
@@ -183,6 +195,19 @@ export default {
 		showCreate() {
 			return Object.keys(this.relatedTasks).length === 0 || this.showNewRelationForm
 		},
+		namespace() {
+			return this.$store.getters['namespaces/getListAndNamespaceById'](this.listId, true)?.namespace
+		},
+		mappedRelatedTasks() {
+			return Object.entries(this.relatedTasks).map(([kind, tasks]) => ({
+				title: this.$tc(`task.relation.kinds.${kind}`, tasks.length),
+				tasks: this.mapRelatedTasks(tasks),
+				kind,
+			}))
+		},
+		mappedFoundTasks() {
+			return this.mapRelatedTasks(this.foundTasks.filter(t => t.id !== this.taskId))
+		},
 	},
 	methods: {
 		async findTasks(query) {
@@ -217,15 +242,14 @@ export default {
 			try {
 				await this.taskRelationService.delete(rel)
 
-				Object.entries(this.relatedTasks).some(([relationKind, t]) => {
-					const found = typeof this.relatedTasks[relationKind][t] !== 'undefined' &&
-						this.relatedTasks[relationKind][t].id === this.relationToDelete.otherTaskId &&
-						relationKind === this.relationToDelete.relationKind
-					if (!found) return false
+				const kind = this.relationToDelete.relationKind
+				for (const t in this.relatedTasks[kind]) {
+					if (this.relatedTasks[kind][t].id === this.relationToDelete.otherTaskId) {
+						this.relatedTasks[kind].splice(t, 1)
 
-					this.relatedTasks[relationKind].splice(t, 1)
-					return true
-				})
+						break
+					}
+				}
 
 				this.saved = true
 				setTimeout(() => {
@@ -245,13 +269,34 @@ export default {
 		relationKindTitle(kind, length) {
 			return this.$tc(`task.relation.kinds.${kind}`, length)
 		},
+
+		mapRelatedTasks(tasks) {
+			return tasks
+				.map(task => {
+					// by doing this here once we can save a lot of duplicate calls in the template
+					const {
+						list,
+						namespace,
+					} = this.$store.getters['namespaces/getListAndNamespaceById'](task.listId, true)
+
+					return {
+						...task,
+						differentNamespace:
+							(namespace !== null &&
+								namespace.id !== this.namespace.id &&
+								namespace?.title) || null,
+						differentList:
+							(list !== null &&
+								task.listId !== this.listId &&
+								list?.title) || null,
+					}
+				})
+		},
 	},
 }
 </script>
 
 <style lang="scss" scoped>
-$remove-icon-width: 24px;
-
 .add-task-relation-button {
 	margin-top: -3rem;
 
@@ -264,71 +309,55 @@ $remove-icon-width: 24px;
 	}
 }
 
-.task-relations {
-  &.is-narrow .columns {
-    display: block;
+.different-list {
+	color: $grey-500;
+	width: auto;
+}
 
-    .column {
-      width: 100%;
-    }
-  }
+.title {
+	font-size: 1rem;
+	margin: 0;
+}
 
-  .different-list {
-    color: $grey-500;
-    width: auto;
-  }
+.task {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: space-between;
+	padding: .75rem;
+	transition: background-color $transition;
+	border-radius: $radius;
 
-  .related-tasks {
-    .title {
-      font-size: 1rem;
-      margin: 0;
-    }
+	&:hover {
+		background-color: $grey-200;
+	}
 
-    .tasks {
-      margin: 0;
+	a {
+		color: $text;
+		transition: color ease $transition-duration;
 
-      a:not(.remove) {
-        width: calc(100% - #{$remove-icon-width});
-      }
-
-      .task .tasktext {
-        width: calc(100% - .25rem); // Magic .25rem extra space
-      }
-
-      .remove {
-        width: $remove-icon-width;
-        text-align: center;
-      }
-    }
-
-	.task {
-		display: flex;
-		flex-wrap: wrap;
-		padding: .4rem;
-		transition: background-color $transition;
-		align-items: center;
-		cursor: pointer;
-		border-radius: $radius;
-		border: 2px solid transparent;
-
-		a {
-			color: $text;
-			transition: color ease $transition-duration;
-
-			&:hover {
-				color: $grey-900;
-			}
-		}
-
-		.remove {
-			color: $red;
+		&:hover {
+			color: $grey-900;
 		}
 	}
-  }
 
-  .none {
-    font-style: italic;
-    text-align: center;
-  }
+	.remove {
+		text-align: center;
+		color: $red;
+		opacity: 0;
+		transition: opacity $transition;
+	}
+}
+
+.related-tasks:hover .tasks .task .remove {
+	opacity: 1;
+}
+
+.none {
+	font-style: italic;
+	text-align: center;
+}
+
+:deep(.multiselect .search-results button) {
+	padding: 0.5rem;
 }
 </style>
