@@ -26,7 +26,7 @@
 			<i18n-t keypath="apiConfig.signInOn">
 				<span class="url" v-tooltip="apiUrl"> {{ apiDomain }} </span>
 			</i18n-t>
-			<br />
+			<br/>
 			<a @click="() => (configureApi = true)">{{ $t('apiConfig.change') }}</a>
 		</div>
 
@@ -46,9 +46,8 @@
 </template>
 
 <script>
-import { parseURL } from 'ufo'
-
-const API_DEFAULT_PORT = 3456
+import {parseURL} from 'ufo'
+import {checkAndSetApiUrl} from '@/helpers/checkAndSetApiUrl'
 
 export default {
 	name: 'apiConfig',
@@ -71,128 +70,48 @@ export default {
 			return parseURL(this.apiUrl).host
 		},
 	},
+	props: {
+		configureOpen: {
+			type: Boolean,
+			required: false,
+			default: false,
+		},
+	},
+	watch: {
+		configureOpen: {
+			handler(value) {
+				this.configureApi = value
+			},
+			immediate: true,
+		},
+	},
 	methods: {
-		setApiUrl() {
+		async setApiUrl() {
 			if (this.apiUrl === '') {
+				// Don't try to check and set an empty url
+				this.errorMsg = this.$t('apiConfig.urlRequired')
 				return
 			}
 
-			let urlToCheck = this.apiUrl
+			try {
+				const url = await checkAndSetApiUrl(this.apiUrl)
 
-			// Check if the url has an http prefix
-			if (
-				!urlToCheck.startsWith('http://') &&
-				!urlToCheck.startsWith('https://')
-			) {
-				urlToCheck = `http://${urlToCheck}`
+				if (url === '') {
+					// If the config setter function could not figure out a url					
+					throw new Error('URL cannot be empty.')
+				}
+
+				// Set it + save it to local storage to save us the hoops
+				this.errorMsg = ''
+				this.successMsg = this.$t('apiConfig.success', {domain: this.apiDomain})
+				this.configureApi = false
+				this.apiUrl = url
+				this.$emit('foundApi', this.apiUrl)
+			} catch (e) {
+				// Still not found, url is still invalid
+				this.successMsg = ''
+				this.errorMsg = this.$t('apiConfig.error', {domain: this.apiDomain})
 			}
-
-			urlToCheck = new URL(urlToCheck)
-			const origUrlToCheck = urlToCheck
-
-			const oldUrl = window.API_URL
-			window.API_URL = urlToCheck.toString()
-
-			// Check if the api is reachable at the provided url
-			this.$store
-				.dispatch('config/update')
-				.catch((e) => {
-					// Check if it is reachable at /api/v1 and http
-					if (
-						!urlToCheck.pathname.endsWith('/api/v1') &&
-						!urlToCheck.pathname.endsWith('/api/v1/')
-					) {
-						urlToCheck.pathname = `${urlToCheck.pathname}api/v1`
-						window.API_URL = urlToCheck.toString()
-						return this.$store.dispatch('config/update')
-					}
-					throw e
-				})
-				.catch((e) => {
-					// Check if it has a port and if not check if it is reachable at https
-					if (urlToCheck.protocol === 'http:') {
-						urlToCheck.protocol = 'https:'
-						window.API_URL = urlToCheck.toString()
-						return this.$store.dispatch('config/update')
-					}
-					throw e
-				})
-				.catch((e) => {
-					// Check if it is reachable at /api/v1 and https
-					urlToCheck.pathname = origUrlToCheck.pathname
-					if (
-						!urlToCheck.pathname.endsWith('/api/v1') &&
-						!urlToCheck.pathname.endsWith('/api/v1/')
-					) {
-						urlToCheck.pathname = `${urlToCheck.pathname}api/v1`
-						window.API_URL = urlToCheck.toString()
-						return this.$store.dispatch('config/update')
-					}
-					throw e
-				})
-				.catch((e) => {
-					// Check if it is reachable at port API_DEFAULT_PORT and https
-					if (urlToCheck.port !== API_DEFAULT_PORT) {
-						urlToCheck.protocol = 'https:'
-						urlToCheck.port = API_DEFAULT_PORT
-						window.API_URL = urlToCheck.toString()
-						return this.$store.dispatch('config/update')
-					}
-					throw e
-				})
-				.catch((e) => {
-					// Check if it is reachable at :API_DEFAULT_PORT and /api/v1 and https
-					urlToCheck.pathname = origUrlToCheck.pathname
-					if (
-						!urlToCheck.pathname.endsWith('/api/v1') &&
-						!urlToCheck.pathname.endsWith('/api/v1/')
-					) {
-						urlToCheck.pathname = `${urlToCheck.pathname}api/v1`
-						window.API_URL = urlToCheck.toString()
-						return this.$store.dispatch('config/update')
-					}
-					throw e
-				})
-				.catch((e) => {
-					// Check if it is reachable at port API_DEFAULT_PORT and http
-					if (urlToCheck.port !== API_DEFAULT_PORT) {
-						urlToCheck.protocol = 'http:'
-						urlToCheck.port = API_DEFAULT_PORT
-						window.API_URL = urlToCheck.toString()
-						return this.$store.dispatch('config/update')
-					}
-					throw e
-				})
-				.catch((e) => {
-					// Check if it is reachable at :API_DEFAULT_PORT and /api/v1 and http
-					urlToCheck.pathname = origUrlToCheck.pathname
-					if (
-						!urlToCheck.pathname.endsWith('/api/v1') &&
-						!urlToCheck.pathname.endsWith('/api/v1/')
-					) {
-						urlToCheck.pathname = `${urlToCheck.pathname}api/v1`
-						window.API_URL = urlToCheck.toString()
-						return this.$store.dispatch('config/update')
-					}
-					throw e
-				})
-				.catch(() => {
-					// Still not found, url is still invalid
-					this.successMsg = ''
-					this.errorMsg = this.$t('apiConfig.error', {domain: this.apiDomain})
-					window.API_URL = oldUrl
-				})
-				.then((r) => {
-					if (typeof r !== 'undefined') {
-						// Set it + save it to local storage to save us the hoops
-						this.errorMsg = ''
-						this.successMsg = this.$t('apiConfig.success', {domain: this.apiDomain})
-						localStorage.setItem('API_URL', window.API_URL)
-						this.configureApi = false
-						this.apiUrl = window.API_URL
-						this.$emit('foundApi', this.apiUrl)
-					}
-				})
 		},
 	},
 }
@@ -200,15 +119,15 @@ export default {
 
 <style lang="scss" scoped>
 .api-config {
-  margin-bottom: .75rem;
+	margin-bottom: .75rem;
 }
 
 .api-url-info {
-  font-size: .9rem;
-  text-align: right;
+	font-size: .9rem;
+	text-align: right;
+}
 
-  span.url {
-    border-bottom: 1px dashed $primary;
-  }
+.url {
+	border-bottom: 1px dashed $primary;
 }
 </style>

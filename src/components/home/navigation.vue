@@ -48,7 +48,7 @@
 			</ul>
 		</div>
 
-		<aside class="menu namespaces-lists loader-container" :class="{'is-loading': loading}">
+		<aside class="menu namespaces-lists loader-container is-loading-small" :class="{'is-loading': loading}">
 			<template v-for="(n, nk) in namespaces" :key="n.id" >
 				<div class="namespace-title" :class="{'has-menu': n.id > 0}">
 					<span
@@ -105,7 +105,7 @@
 					>
 						<template #item="{element: l}">
 							<li
-								class="loader-container"
+								class="loader-container is-loading-small"
 								:class="{'is-loading': listUpdating[l.id]}"
 							>
 								<router-link
@@ -449,14 +449,6 @@ $vikunja-nav-selected-width: 0.4rem;
 				&:hover :deep(.dropdown-trigger) {
 					opacity: 1;
 				}
-
-				&.loader-container.is-loading:after {
-					width: 1.5rem;
-					height: 1.5rem;
-					top: calc(50% - .75rem);
-					left: calc(50% - .75rem);
-					border-width: 2px;
-				}
 			}
 
 			.flip-list-move {
@@ -531,14 +523,6 @@ $vikunja-nav-selected-width: 0.4rem;
 
 		&.namespaces-lists {
 			padding-top: math.div($navbar-padding, 2);
-		}
-
-		&.loader-container.is-loading:after {
-			width: 1.5rem;
-			height: 1.5rem;
-			top: calc(50% - .75rem);
-			left: calc(50% - .75rem);
-			border-width: 2px;
 		}
 
 		.icon {

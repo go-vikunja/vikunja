@@ -16,6 +16,16 @@
     "title": "Not found",
     "text": "The page you requested does not exist."
   },
+  "ready": {
+    "loading": "Vikunja is loading…",
+    "errorOccured": "An error occured:",
+    "checkApiUrl": "Please check if the api url is correct.",
+    "noApiUrlConfigured": "No API url was configured. Please set one below:"
+  },
+  "offline": {
+    "title": "You are offline.",
+    "text": "Please check your network connection and try again."
+  },
   "user": {
     "auth": {
       "username": "Username",
@@ -779,8 +789,9 @@
     "urlPlaceholder": "eg. https://localhost:3456",
     "change": "change",
     "signInOn": "Sign in to your Vikunja account on {0}",
-    "error": "Could not find or use Vikunja installation at \"{domain}\".",
-    "success": "Using Vikunja installation at \"{domain}\"."
+    "error": "Could not find or use Vikunja installation at \"{domain}\". Please try a different url.",
+    "success": "Using Vikunja installation at \"{domain}\".",
+    "urlRequired": "A url is required."
   },
   "loadingError": {
     "failed": "Loading failed, please {0}. If the error persists, please {1}.",

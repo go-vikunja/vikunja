@@ -1,25 +1,21 @@
 <template>
-	<div :class="{'is-touch': isTouch}">
-		<div :class="{'is-hidden': !online}">
-			<!-- This is a workaround to get the sw to "see" the to-be-cached version of the offline background image -->
-			<div class="offline" style="height: 0;width: 0;"></div>
-			<top-navigation v-if="authUser"/>
-			<content-auth v-if="authUser"/>
-			<content-link-share v-else-if="authLinkShare"/>
-			<content-no-auth v-else/>
-			<notification/>
-		</div>
-		<div class="app offline" v-if="!online">
-			<div class="offline-message">
-				<h1>You are offline.</h1>
-				<p>Please check your network connection and try again.</p>
+	<ready>
+		<div :class="{'is-touch': isTouch}">
+			<div :class="{'is-hidden': !online}">
+				<template v-if="authUser">
+					<top-navigation/>
+					<content-auth/>
+				</template>
+				<content-link-share v-else-if="authLinkShare"/>
+				<content-no-auth v-else/>
+				<notification/>
 			</div>
-		</div>
 
-		<transition name="fade">
-			<keyboard-shortcuts v-if="keyboardShortcutsActive"/>
-		</transition>
-	</div>
+			<transition name="fade">
+				<keyboard-shortcuts v-if="keyboardShortcutsActive"/>
+			</transition>
+		</div>
+	</ready>
 </template>
 
 <script>
@@ -36,6 +32,7 @@ import ContentLinkShare from './components/home/contentLinkShare'
 import ContentNoAuth from './components/home/contentNoAuth'
 import {setLanguage} from './i18n'
 import AccountDeleteService from '@/services/accountDelete'
+import Ready from '@/components/misc/ready'
 
 export default defineComponent({
 	name: 'app',
@@ -46,6 +43,7 @@ export default defineComponent({
 		TopNavigation,
 		KeyboardShortcuts,
 		Notification,
+		Ready,
 	},
 	beforeMount() {
 		this.setupOnlineStatus()
@@ -54,13 +52,6 @@ export default defineComponent({
 		this.setupAccountDeletionVerification()
 	},
 	beforeCreate() {
-		// FIXME: async action in beforeCreate, might be not finished when component mounts
-		this.$store.dispatch('config/update')
-			.then(() => {
-				this.$store.dispatch('auth/checkAuth')
-			})
-		this.$store.dispatch('auth/checkAuth')
-
 		setLanguage()
 	},
 	created() {
@@ -120,30 +111,4 @@ export default defineComponent({
 
 <style lang="scss">
 @import '@/styles/global.scss';
-</style>
-
-<style lang="scss" scoped>
-.offline {
-  background: url('@/assets/llama-nightscape.jpg') no-repeat center;
-  background-size: cover;
-  height: 100vh;
-
-  .offline-message {
-    text-align: center;
-    position: absolute;
-    width: 100vw;
-    bottom: 5vh;
-    color: $white;
-    padding: 0 1rem;
-
-    h1 {
-      font-weight: bold;
-      font-size: 1.5rem;
-      text-align: center;
-      color: $white;
-      font-weight: 700 !important;
-      font-size: 1.5rem;
-    }
-  }
-}
 </style>

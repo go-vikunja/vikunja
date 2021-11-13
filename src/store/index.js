@@ -19,6 +19,7 @@ import attachments from './modules/attachments'
 import labels from './modules/labels'
 
 import ListService from '../services/list'
+import {checkAndSetApiUrl} from '@/helpers/checkAndSetApiUrl'
 
 export const store = createStore({
 	strict: import.meta.env.DEV,
@@ -43,6 +44,7 @@ export const store = createStore({
 		menuActive: true,
 		keyboardShortcutsActive: false,
 		quickActionsActive: false,
+		vikunjaReady: false,
 	},
 	mutations: {
 		[LOADING](state, loading) {
@@ -83,6 +85,9 @@ export const store = createStore({
 		},
 		[BACKGROUND](state, background) {
 			state.background = background
+		},
+		vikunjaReady(state, ready) {
+			state.vikunjaReady = ready
 		},
 	},
 	actions: {
@@ -137,6 +142,11 @@ export const store = createStore({
 			}
 
 			commit(CURRENT_LIST, currentList)
+		},
+		async loadApp({commit, dispatch}) {
+			await checkAndSetApiUrl(window.API_URL)
+			await dispatch('auth/checkAuth')
+			commit('vikunjaReady', true)
 		},
 	},
 })
