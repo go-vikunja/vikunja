@@ -51,7 +51,7 @@
 				/>
 			</div>
 		</div>
-		<ShowTasks :show-all="true" v-if="hasLists" :key="showTasksKey"/>
+		<ShowTasks class="mt-4" :show-all="true" v-if="hasLists" :key="showTasksKey"/>
 	</div>
 </template>
 
