@@ -816,7 +816,7 @@
   "quickActions": {
     "commands": "Commands",
     "placeholder": "Type a command or search…",
-    "hint": "You can use # to only search for tasks, * to only search for lists and @ to only search for teams.",
+    "hint": "You can use {list} to limit the search to a list. Combine {list} or {label} (labels) with a search query to search for a task with these labels or on that list. Use {assignee} to only search for teams.",
     "tasks": "Tasks",
     "lists": "Liste",
     "teams": "Teams",

@@ -17,14 +17,14 @@
     "text": "La page que tu as demandée n’existe pas."
   },
   "ready": {
-    "loading": "Vikunja is loading…",
-    "errorOccured": "An error occured:",
-    "checkApiUrl": "Please check if the api url is correct.",
-    "noApiUrlConfigured": "No API url was configured. Please set one below:"
+    "loading": "Chargement de Vikunja en cours…",
+    "errorOccured": "Une erreur s'est produite :",
+    "checkApiUrl": "Veuillez vérifier que l'URL de l'API est valide.",
+    "noApiUrlConfigured": "Aucune URL API n'a été configurée. Veuillez en définir une ci-dessous :"
   },
   "offline": {
-    "title": "You are offline.",
-    "text": "Please check your network connection and try again."
+    "title": "Vous êtes hors ligne.",
+    "text": "Veuillez vérifier votre connexion réseau et réessayer."
   },
   "user": {
     "auth": {
@@ -354,7 +354,7 @@
   },
   "filters": {
     "title": "Filtres",
-    "clear": "Clear Filters",
+    "clear": "Effacer les filtres",
     "attributes": {
       "title": "Nom",
       "titlePlaceholder": "Entre un nom de filtre enregistré…",
@@ -461,8 +461,8 @@
     "default": "Par défaut",
     "close": "Fermer",
     "download": "Télécharger",
-    "showMenu": "Show the menu",
-    "hideMenu": "Hide the menu"
+    "showMenu": "Afficher le menu",
+    "hideMenu": "Masquer le menu"
   },
   "input": {
     "resetColor": "Réinitialiser la couleur",
@@ -656,6 +656,7 @@
       "searchPlaceholder": "Écris la recherche d’une nouvelle tâche à ajouter comme connexe…",
       "createPlaceholder": "Ajouter cette tâche comme nouvelle tâche connexe",
       "differentList": "Cette tâche appartient à une autre liste.",
+      "differentNamespace": "Cette tâche fait partie d'un espace de noms différent.",
       "noneYet": "Pas encore de relations de tâches.",
       "delete": "Supprimer la relation de tâche",
       "deleteText1": "Supprimer cette relation de tâche ?",
@@ -756,10 +757,12 @@
   },
   "keyboardShortcuts": {
     "title": "Raccourcis clavier",
+    "general": "Général",
     "allPages": "Fonctionne sur toutes les pages.",
     "currentPageOnly": "Fonctionnent uniquement sur la page en cours.",
     "toggleMenu": "Basculer le menu",
     "quickSearch": "Ouvrir la barre de recherche/action rapide",
+    "then": "puis",
     "task": {
       "title": "Page de tâche",
       "done": "Marquer une tâche comme terminée",
@@ -768,6 +771,13 @@
       "dueDate": "Modifier la date d’échéance de cette tâche",
       "attachment": "Ajouter une pièce jointe à cette tâche",
       "related": "Modifier les tâches connexes de cette tâche"
+    },
+    "list": {
+      "title": "Vues en liste",
+      "switchToListView": "Passer en vue liste",
+      "switchToGanttView": "Passer en vue Gantt",
+      "switchToKanbanView": "Passer en vue kanban",
+      "switchToTableView": "Passer en vue tableau"
     }
   },
   "update": {
@@ -789,9 +799,9 @@
     "urlPlaceholder": "Par exemple : https://localhost:3456",
     "change": "changer",
     "signInOn": "Se connecter à ton compte Vikunja sur {0}",
-    "error": "Could not find or use Vikunja installation at \"{domain}\". Please try a different url.",
+    "error": "Impossible de trouver ou d'utiliser l'installation de Vikunja sur « {domain} ». Veuillez essayer une autre URL.",
     "success": "Utilisation de l’installation Vikunja à « {domain} ».",
-    "urlRequired": "A url is required."
+    "urlRequired": "Une URL est requise."
   },
   "loadingError": {
     "failed": "Le chargement a échoué, {0}. Si l’erreur persiste, {1}.",
@@ -806,7 +816,7 @@
   "quickActions": {
     "commands": "Commandes",
     "placeholder": "Écris une commande ou une recherche…",
-    "hint": "Tu peux utiliser # pour rechercher uniquement des tâches, * pour rechercher uniquement des listes et @ pour rechercher uniquement des équipes.",
+    "hint": "Vous pouvez utiliser {list} pour limiter la recherche à une liste. Combiner {list} ou {label} (étiquettes) avec une requête de recherche pour rechercher une tâche avec ces étiquettes ou sur cette liste. Utilisez {assignee} pour rechercher uniquement des équipes.",
     "tasks": "Tâches",
     "lists": "Listes",
     "teams": "Équipes",

@@ -656,6 +656,7 @@
       "searchPlaceholder": "Beginne zu schreiben, um eine Aufgabe zu suchen, die als Beziehung hinzugefügt werden soll…",
       "createPlaceholder": "Füge diese Aufgabe als neue Aufgabenbeziehung hinzu",
       "differentList": "Diese Aufgabe gehört zu einer anderen Liste.",
+      "differentNamespace": "Diese Aufgabe gehört zu einem anderen Namespace.",
       "noneYet": "Keine Aufgabenbeziehung vorhanden.",
       "delete": "Aufgabenbeziehung entfernen",
       "deleteText1": "Willst du diese Aufgabenbeziehung wirklich entfernen?",
@@ -756,10 +757,12 @@
   },
   "keyboardShortcuts": {
     "title": "Tastenkürzel",
+    "general": "Allgemein",
     "allPages": "Diese Tastenkürzel funktionieren auf allen Seiten.",
     "currentPageOnly": "Diese Tastenkürzel funktionieren nur auf der aktuellen Seite.",
     "toggleMenu": "Das Menü umschalten",
     "quickSearch": "Such-/Schnellaktionsleiste öffnen",
+    "then": "dann",
     "task": {
       "title": "Aufgabenseite",
       "done": "Eine Aufgabe als erledigt markieren",
@@ -768,6 +771,13 @@
       "dueDate": "Ändere das Fälligkeitsdatum dieser Aufgabe",
       "attachment": "Einen Anhang dieser Aufgabe hinzufügen",
       "related": "Ändere die Abhängigen Aufgaben dieser Aufgabe"
+    },
+    "list": {
+      "title": "Listenansicht",
+      "switchToListView": "Zur Listenansicht wechseln",
+      "switchToGanttView": "Zur Ganttansicht wechseln",
+      "switchToKanbanView": "Zur Kanbanansicht wechseln",
+      "switchToTableView": "Zur Tabellenansicht wechseln"
     }
   },
   "update": {
@@ -806,7 +816,7 @@
   "quickActions": {
     "commands": "Befehle",
     "placeholder": "Gib einen Befehl oder eine Suche ein …",
-    "hint": "Du kannst # verwenden, um nur nach Aufgaben zu suchen, *, um nur nach Listen zu suchen und @, um nur nach Teams zu suchen.",
+    "hint": "Du kannst {list} verwenden, um die Suche auf eine Liste zu beschränken. Kombiniere {list} oder {label} (Labels) mit einer Suchabfrage, um eine Aufgabe mit diesen Labels oder auf dieser Liste zu suchen. Verwende {assignee}, um nur nach Teams zu suchen.",
     "tasks": "Aufgaben",
     "lists": "Listen",
     "teams": "Teams",

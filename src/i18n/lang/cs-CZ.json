@@ -656,6 +656,7 @@
       "searchPlaceholder": "Hledejte nový úkol, který chcete přidat jako související…",
       "createPlaceholder": "Přidat toto jako nový související úkol",
       "differentList": "Tento úkol patří do jiného seznamu.",
+      "differentNamespace": "This task belongs to a different namespace.",
       "noneYet": "Zatím žádné vztahy mezi úkoly.",
       "delete": "Odstranit vztah k úloze",
       "deleteText1": "Jste si jisti, že chcete odstranit tento vztah úkolu?",
@@ -756,10 +757,12 @@
   },
   "keyboardShortcuts": {
     "title": "Klávesové zkratky",
+    "general": "General",
     "allPages": "Tyto zkratky fungují na všech stránkách.",
     "currentPageOnly": "Tyto zkratky fungují pouze na aktuální stránce.",
     "toggleMenu": "Přepnout nabídku",
     "quickSearch": "Otevřít vyhledávání / panel rychlých akcí",
+    "then": "then",
     "task": {
       "title": "Stránka úkolů",
       "done": "Označit úkol jako hotový",
@@ -768,6 +771,13 @@
       "dueDate": "Změnit termín tohoto úkolu",
       "attachment": "Přidat přílohu k tomuto úkolu",
       "related": "Upravit související úkoly tohoto úkolu"
+    },
+    "list": {
+      "title": "List Views",
+      "switchToListView": "Switch to list view",
+      "switchToGanttView": "Switch to gantt view",
+      "switchToKanbanView": "Switch to kanban view",
+      "switchToTableView": "Switch to table view"
     }
   },
   "update": {
@@ -806,7 +816,7 @@
   "quickActions": {
     "commands": "Příkazy",
     "placeholder": "Napište příkaz nebo vyhledávání…",
-    "hint": "You can use # to only search for tasks, * to only search for lists and @ to only search for teams.",
+    "hint": "You can use {list} to limit the search to a list. Combine {list} or {label} (labels) with a search query to search for a task with these labels or on that list. Use {assignee} to only search for teams.",
     "tasks": "Úkoly",
     "lists": "Seznamy",
     "teams": "Týmy",

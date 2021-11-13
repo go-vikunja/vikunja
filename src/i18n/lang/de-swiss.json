@@ -656,7 +656,7 @@
       "searchPlaceholder": "Schriib, um e neui Uufgab als Zueghörigkeit hinzuezfüege…",
       "createPlaceholder": "Das als en neui Zueghörigkeit hinzuefüege",
       "differentList": "Die Uufgab ghöört zu ere andere Liste.",
-      "differentNamespace": "This task belongs to a different namespace.",
+      "differentNamespace": "Diese Aufgabe gehört zu einem anderen Namespace.",
       "noneYet": "S'git kei Uufgabe Beziehige.",
       "delete": "Uufgabe Beziehig chüble",
       "deleteText1": "Bisch du dir sicher, dass du die Zueghörigkeit chüblä wetsch?",
@@ -757,12 +757,12 @@
   },
   "keyboardShortcuts": {
     "title": "Tastatuurchürzl",
-    "general": "General",
+    "general": "Allgemein",
     "allPages": "Die Chürzl funktioniered uf allne Siitene.",
     "currentPageOnly": "Die Chürzl funktioniered nur uf de momentane Siite.",
     "toggleMenu": "Menü umschalte",
     "quickSearch": "Suechi und Schnellaktionsliste öffne",
-    "then": "then",
+    "then": "dann",
     "task": {
       "title": "Uufgabesiite",
       "done": "Uufgab als erledigt markiere",
@@ -773,11 +773,11 @@
       "related": "Beziehige vo dere Uufgab bearbeite"
     },
     "list": {
-      "title": "List Views",
-      "switchToListView": "Switch to list view",
-      "switchToGanttView": "Switch to gantt view",
-      "switchToKanbanView": "Switch to kanban view",
-      "switchToTableView": "Switch to table view"
+      "title": "Listenansicht",
+      "switchToListView": "Zur Listenansicht wechseln",
+      "switchToGanttView": "Zur Ganttansicht wechseln",
+      "switchToKanbanView": "Zur Kanbanansicht wechseln",
+      "switchToTableView": "Zur Tabellenansicht wechseln"
     }
   },
   "update": {
@@ -816,7 +816,7 @@
   "quickActions": {
     "commands": "Befehl",
     "placeholder": "Schriib en Befehl oder suech…",
-    "hint": "You can use {list} to limit the search to a list. Combine {list} or {label} (labels) with a search query to search for a task with these labels or on that list. Use {assignee} to only search for teams.",
+    "hint": "Du kannst {list} verwenden, um die Suche auf eine Liste zu beschränken. Kombiniere {list} oder {label} (Labels) mit einer Suchabfrage, um eine Aufgabe mit diesen Labels oder auf dieser Liste zu suchen. Verwende {assignee}, um nur nach Teams zu suchen.",
     "tasks": "Uufgabe",
     "lists": "Listene",
     "teams": "Teams",
