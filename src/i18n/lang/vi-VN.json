@@ -449,7 +449,9 @@
     "saved": "Đã lưu!",
     "default": "Mặc định",
     "close": "Đóng",
-    "download": "Tải về"
+    "download": "Tải về",
+    "showMenu": "Show the menu",
+    "hideMenu": "Hide the menu"
   },
   "input": {
     "resetColor": "Đặt lại màu",

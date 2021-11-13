@@ -449,7 +449,9 @@
     "saved": "Gspeicheret!",
     "default": "Standard",
     "close": "Schlüüse",
-    "download": "Herunterladen"
+    "download": "Herunterladen",
+    "showMenu": "Show the menu",
+    "hideMenu": "Hide the menu"
   },
   "input": {
     "resetColor": "Farb zruggsetze",

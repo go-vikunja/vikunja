@@ -449,7 +449,9 @@
     "saved": "Uloženo!",
     "default": "Výchozí",
     "close": "Zavřít",
-    "download": "Stáhnout"
+    "download": "Stáhnout",
+    "showMenu": "Show the menu",
+    "hideMenu": "Hide the menu"
   },
   "input": {
     "resetColor": "Obnovit barvu",

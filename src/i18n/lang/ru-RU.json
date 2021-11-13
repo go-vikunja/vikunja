@@ -449,7 +449,9 @@
     "saved": "Сохранено!",
     "default": "По умолчанию",
     "close": "Закрыть",
-    "download": "Скачать"
+    "download": "Скачать",
+    "showMenu": "Show the menu",
+    "hideMenu": "Hide the menu"
   },
   "input": {
     "resetColor": "Сбросить цвет",

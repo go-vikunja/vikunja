@@ -449,7 +449,9 @@
     "saved": "Salvato!",
     "default": "Predefinito",
     "close": "Chiudi",
-    "download": "Scarica"
+    "download": "Scarica",
+    "showMenu": "Show the menu",
+    "hideMenu": "Hide the menu"
   },
   "input": {
     "resetColor": "Ripristina Colore",

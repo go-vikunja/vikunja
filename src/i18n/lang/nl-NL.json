@@ -449,7 +449,9 @@
     "saved": "Saved!",
     "default": "Default",
     "close": "Close",
-    "download": "Download"
+    "download": "Download",
+    "showMenu": "Show the menu",
+    "hideMenu": "Hide the menu"
   },
   "input": {
     "resetColor": "Reset Color",
