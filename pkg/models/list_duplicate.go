@@ -75,7 +75,7 @@ func (ld *ListDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
 	ld.List.Identifier = "" // Reset the identifier to trigger regenerating a new one
 	// Set the owner to the current user
 	ld.List.OwnerID = doer.GetID()
-	if err := CreateOrUpdateList(s, ld.List, doer); err != nil {
+	if err := CreateList(s, ld.List, doer); err != nil {
 		// If there is no available unique list identifier, just reset it.
 		if IsErrListIdentifierIsNotUnique(err) {
 			ld.List.Identifier = ""

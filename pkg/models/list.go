@@ -540,12 +540,10 @@ func (l *List) CheckIsArchived(s *xorm.Session) (err error) {
 	return nil
 }
 
-// CreateOrUpdateList updates a list or creates it if it doesn't exist
-func CreateOrUpdateList(s *xorm.Session, list *List, auth web.Auth) (err error) {
-
+func checkListBeforeUpdateOrDelete(s *xorm.Session, list *List) error {
 	// Check if the namespace exists
 	if list.NamespaceID > 0 {
-		_, err = GetNamespaceByID(s, list.NamespaceID)
+		_, err := GetNamespaceByID(s, list.NamespaceID)
 		if err != nil {
 			return err
 		}
@@ -565,59 +563,113 @@ func CreateOrUpdateList(s *xorm.Session, list *List, auth web.Auth) (err error) 
 		}
 	}
 
-	if list.ID == 0 {
-		_, err = s.Insert(list)
-		if err != nil {
-			return
-		}
+	return nil
+}
 
-		list.Position = calculateDefaultPosition(list.ID, list.Position)
-		_, err = s.Where("id = ?", list.ID).Update(list)
-		if err != nil {
-			return
-		}
-		if list.IsFavorite {
-			if err := addToFavorites(s, list.ID, auth, FavoriteKindList); err != nil {
-				return err
-			}
-		}
-	} else {
-		// We need to specify the cols we want to update here to be able to un-archive lists
-		colsToUpdate := []string{
-			"title",
-			"is_archived",
-			"identifier",
-			"hex_color",
-			"background_file_id",
-			"position",
-		}
-		if list.Description != "" {
-			colsToUpdate = append(colsToUpdate, "description")
-		}
+func CreateList(s *xorm.Session, list *List, auth web.Auth) (err error) {
+	err = list.CheckIsArchived(s)
+	if err != nil {
+		return err
+	}
 
-		wasFavorite, err := isFavorite(s, list.ID, auth, FavoriteKindList)
-		if err != nil {
+	doer, err := user.GetFromAuth(auth)
+	if err != nil {
+		return err
+	}
+
+	list.OwnerID = doer.ID
+	list.Owner = doer
+	list.ID = 0 // Otherwise only the first time a new list would be created
+
+	err = checkListBeforeUpdateOrDelete(s, list)
+	if err != nil {
+		return
+	}
+
+	_, err = s.Insert(list)
+	if err != nil {
+		return
+	}
+
+	list.Position = calculateDefaultPosition(list.ID, list.Position)
+	_, err = s.Where("id = ?", list.ID).Update(list)
+	if err != nil {
+		return
+	}
+	if list.IsFavorite {
+		if err := addToFavorites(s, list.ID, auth, FavoriteKindList); err != nil {
 			return err
 		}
-		if list.IsFavorite && !wasFavorite {
-			if err := addToFavorites(s, list.ID, auth, FavoriteKindList); err != nil {
-				return err
-			}
-		}
+	}
 
-		if !list.IsFavorite && wasFavorite {
-			if err := removeFromFavorite(s, list.ID, auth, FavoriteKindList); err != nil {
-				return err
-			}
-		}
+	// Create a new first bucket for this list
+	b := &Bucket{
+		ListID: list.ID,
+		Title:  "Backlog",
+	}
+	err = b.Create(s, auth)
+	if err != nil {
+		return
+	}
 
-		_, err = s.
-			ID(list.ID).
-			Cols(colsToUpdate...).
-			Update(list)
-		if err != nil {
+	return events.Dispatch(&ListCreatedEvent{
+		List: list,
+		Doer: doer,
+	})
+}
+
+func UpdateList(s *xorm.Session, list *List, auth web.Auth, updateListBackground bool) (err error) {
+	err = checkListBeforeUpdateOrDelete(s, list)
+	if err != nil {
+		return
+	}
+
+	// We need to specify the cols we want to update here to be able to un-archive lists
+	colsToUpdate := []string{
+		"title",
+		"is_archived",
+		"identifier",
+		"hex_color",
+		"position",
+	}
+	if list.Description != "" {
+		colsToUpdate = append(colsToUpdate, "description")
+	}
+
+	if updateListBackground {
+		colsToUpdate = append(colsToUpdate, "background_file_id")
+	}
+
+	wasFavorite, err := isFavorite(s, list.ID, auth, FavoriteKindList)
+	if err != nil {
+		return err
+	}
+	if list.IsFavorite && !wasFavorite {
+		if err := addToFavorites(s, list.ID, auth, FavoriteKindList); err != nil {
 			return err
 		}
+	}
+
+	if !list.IsFavorite && wasFavorite {
+		if err := removeFromFavorite(s, list.ID, auth, FavoriteKindList); err != nil {
+			return err
+		}
+	}
+
+	_, err = s.
+		ID(list.ID).
+		Cols(colsToUpdate...).
+		Update(list)
+	if err != nil {
+		return err
+	}
+
+	err = events.Dispatch(&ListUpdatedEvent{
+		List: list,
+		Doer: auth,
+	})
+	if err != nil {
+		return err
 	}
 
 	l, err := GetListSimpleByID(s, list.ID)
@@ -664,15 +716,7 @@ func (l *List) Update(s *xorm.Session, a web.Auth) (err error) {
 		return nil
 	}
 
-	err = CreateOrUpdateList(s, l, a)
-	if err != nil {
-		return err
-	}
-
-	return events.Dispatch(&ListUpdatedEvent{
-		List: l,
-		Doer: a,
-	})
+	return UpdateList(s, l, a, false)
 }
 
 func updateListLastUpdated(s *xorm.Session, list *List) error {
@@ -705,39 +749,12 @@ func updateListByTaskID(s *xorm.Session, taskID int64) (err error) {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces/{namespaceID}/lists [put]
 func (l *List) Create(s *xorm.Session, a web.Auth) (err error) {
-	err = l.CheckIsArchived(s)
-	if err != nil {
-		return err
-	}
-
-	doer, err := user.GetFromAuth(a)
-	if err != nil {
-		return err
-	}
-
-	l.OwnerID = doer.ID
-	l.Owner = doer
-	l.ID = 0 // Otherwise only the first time a new list would be created
-
-	err = CreateOrUpdateList(s, l, a)
+	err = CreateList(s, l, a)
 	if err != nil {
 		return
 	}
 
-	// Create a new first bucket for this list
-	b := &Bucket{
-		ListID: l.ID,
-		Title:  "Backlog",
-	}
-	err = b.Create(s, a)
-	if err != nil {
-		return
-	}
-
-	return events.Dispatch(&ListCreatedEvent{
-		List: l,
-		Doer: doer,
-	})
+	return l.ReadOne(s, a)
 }
 
 // Delete implements the delete method of CRUDable

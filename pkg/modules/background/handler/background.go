@@ -300,7 +300,7 @@ func RemoveListBackground(c echo.Context) error {
 
 	list.BackgroundFileID = 0
 	list.BackgroundInformation = nil
-	err = list.Update(s, auth)
+	err = models.UpdateList(s, list, auth, true)
 	if err != nil {
 		return err
 	}
