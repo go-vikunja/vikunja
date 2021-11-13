@@ -1,8 +1,8 @@
 import wunderlistIcon from './icons/wunderlist.jpg'
-import todoistIcon from './icons/todoist.svg'
-import trelloIcon from './icons/trello.svg'
-import microsoftTodoIcon from './icons/microsoft-todo.svg'
-import vikunjaFileIcon from './icons/vikunja-file.png'
+import todoistIcon from './icons/todoist.svg?url'
+import trelloIcon from './icons/trello.svg?url'
+import microsoftTodoIcon from './icons/microsoft-todo.svg?url'
+import vikunjaFileIcon from './icons/vikunja-file.png?url'
 
 export interface Migrator {
 	id: string

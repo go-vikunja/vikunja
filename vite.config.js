@@ -4,6 +4,7 @@ import legacyFn from '@vitejs/plugin-legacy'
 const {VitePWA} = require('vite-plugin-pwa')
 const path = require('path')
 const {visualizer} = require('rollup-plugin-visualizer')
+import svgLoader from 'vite-svg-loader'
 
 const pathSrc = path.resolve(__dirname, './src')
 
@@ -42,6 +43,11 @@ export default defineConfig({
 			},
 		}),
 		legacy,
+		svgLoader({
+			// Since the svgs are already manually optimized via https://jakearchibald.github.io/svgomg/
+			// we don't need to optimize them again.
+			svgo: false,
+		}),
 		VitePWA({
 			srcDir: 'src',
 			filename: 'sw.js',

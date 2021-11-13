@@ -1,7 +1,7 @@
 <template>
 	<div>
 		<a @click="$store.commit('menuActive', false)" class="menu-hide-button" v-if="menuActive">
-			<icon icon="times"></icon>
+			<icon icon="times" />
 		</a>
 		<div
 			:class="{'has-background': background}"
@@ -134,6 +134,32 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.menu-hide-button {
+	position: fixed;
+	top: 0.5rem;
+	right: 0.5rem;
+	z-index: 31;
+	width: 3rem;
+	height: 3rem;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	font-size: 2rem;
+	color: $grey-400;
+	line-height: 1;
+	transition: all $transition;
+
+	@media screen and (min-width: $tablet) {
+		display: none;
+	}
+
+	&:hover,
+	&:focus {
+		height: 1rem;
+		color: $grey-600;
+	}
+}
+
 .app-container {
   min-height: calc(100vh - 65px);
 

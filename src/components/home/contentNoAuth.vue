@@ -1,7 +1,7 @@
 <template>
 	<div class="no-auth-wrapper">
 		<div class="noauth-container">
-			<img alt="Vikunja" :src="logoUrl" width="400" height="117" />
+			<Logo width="400" height="117" />
 			<div class="message is-info" v-if="motd !== ''">
 				<div class="message-header">
 					<p>{{ $t('misc.info') }}</p>
@@ -18,16 +18,13 @@
 <script>
 import {mapState} from 'vuex'
 
-import logoUrl from '@/assets/logo-full.svg'
+import Logo from '@/components/home/Logo.vue'
+
 import { saveLastVisited } from '@/helpers/saveLastVisited'
 
 export default {
 	name: 'contentNoAuth',
-	data() {
-		return {
-			logoUrl,	
-		}
-	},
+	components: { Logo },
 	computed: {
 		routeName() {
 			return this.$route.name
@@ -68,7 +65,7 @@ export default {
 
 <style lang="scss" scoped>
 .no-auth-wrapper {
-  background: url('@/assets/llama.svg') no-repeat bottom left fixed $light-background;
+  background: url('@/assets/llama.svg?url') no-repeat bottom left fixed $light-background;
   min-height: 100vh;
 }
 

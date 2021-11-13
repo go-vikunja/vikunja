@@ -2,7 +2,7 @@
 	<div :class="{'is-active': menuActive}" class="namespace-container">
 		<div class="menu top-menu">
 			<router-link :to="{name: 'home'}" class="logo">
-				<img alt="Vikunja" :src="logoUrl" width="164" height="48"/>
+				<Logo width="164" height="48" />
 			</router-link>
 			<ul class="menu-list">
 				<li>
@@ -146,25 +146,34 @@
 				</div>
 			</template>
 		</aside>
-		<a class="menu-bottom-link" :href="poweredByUrl" target="_blank" rel="noreferrer noopener nofollow">
-			{{ $t('misc.poweredBy') }}
-		</a>
+		<PoweredByLink />
 	</div>
 </template>
 
 <script>
 import {mapState} from 'vuex'
-import {CURRENT_LIST, MENU_ACTIVE, LOADING, LOADING_MODULE} from '@/store/mutation-types'
+import draggable from 'vuedraggable'
+
 import ListSettingsDropdown from '@/components/list/list-settings-dropdown.vue'
 import NamespaceSettingsDropdown from '@/components/namespace/namespace-settings-dropdown.vue'
-import draggable from 'vuedraggable'
-import {calculateItemPosition} from '@/helpers/calculateItemPosition'
-import {POWERED_BY} from '@/urls'
+import PoweredByLink from '@/components/home/PoweredByLink.vue'
+import Logo from '@/components/home/Logo.vue'
 
-import logoUrl from '@/assets/logo-full.svg'
+import {CURRENT_LIST, MENU_ACTIVE, LOADING, LOADING_MODULE} from '@/store/mutation-types'
+import {calculateItemPosition} from '@/helpers/calculateItemPosition'
+
 
 export default {
 	name: 'navigation',
+
+	components: {
+		ListSettingsDropdown,
+		NamespaceSettingsDropdown,
+		draggable,
+		Logo,
+		PoweredByLink,
+	},
+
 	data() {
 		return {
 			listsVisible: {},
@@ -174,14 +183,7 @@ export default {
 				ghostClass: 'ghost',
 			},
 			listUpdating: {},
-			logoUrl,
-			poweredByUrl: POWERED_BY,
 		}
-	},
-	components: {
-		ListSettingsDropdown,
-		NamespaceSettingsDropdown,
-		draggable,
 	},
 	computed: {
 		...mapState({
@@ -517,10 +519,13 @@ $vikunja-nav-selected-width: 0.4rem;
 		}
 
 		.logo {
-			display: none;
+			display: block;
 
-			@media screen and (max-width: $tablet) {
-				display: block;
+			padding-left: 2rem;
+			margin-right: 1rem;
+
+			@media screen and (min-width: $tablet) {
+				display: none;
 			}
 		}
 

@@ -41,7 +41,7 @@
 					<div class="progress-dots">
 						<span v-for="i in progressDotsCount" :key="i" />
 					</div>
-					<img alt="Vikunja" :src="logoUrl" />
+					<Logo alt="Vikunja" />
 				</div>
 				<p>{{ $t('migrate.inProgress') }}</p>
 			</div>
@@ -70,14 +70,17 @@
 <script>
 import AbstractMigrationService from '@/services/migrator/abstractMigration'
 import AbstractMigrationFileService from '@/services/migrator/abstractMigrationFile'
-import {MIGRATORS} from './migrators'
+import Logo from '@/assets/logo.svg?component'
 
-import logoUrl from '@/assets/logo.svg'
+import {MIGRATORS} from './migrators'
 
 const PROGRESS_DOTS_COUNT = 8
 
 export default {
 	name: 'MigrateService',
+
+	components: { Logo },
+
 	data() {
 		return {
 			progressDotsCount: PROGRESS_DOTS_COUNT,
@@ -87,7 +90,6 @@ export default {
 			message: '',
 			migratorAuthCode: '',
 			migrationService: null,
-			logoUrl,
 		}
 	},
 

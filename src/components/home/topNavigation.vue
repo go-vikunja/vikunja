@@ -5,24 +5,11 @@
 		class="navbar main-theme is-fixed-top"
 		role="navigation"
 	>
-		<div class="navbar-brand">
-			<router-link :to="{name: 'home'}" class="navbar-item logo">
-				<img width="164" height="48" alt="Vikunja" :src="logoUrl" />
-			</router-link>
-			<a
-				@click="$store.commit('toggleMenu')"
-				class="menu-show-button"
-				@shortkey="() => $store.commit('toggleMenu')"
-				v-shortkey="['ctrl', 'e']"
-			>
-			</a>
-		</div>
-		<a
-			@click="$store.commit('toggleMenu')"
-			class="menu-show-button"
-		>
-		</a>
-		<div class="list-title" ref="listTitle" :style="{'display': currentList.id ? '': 'none'}">
+		<router-link :to="{name: 'home'}" class="logo">
+			<Logo width="164" height="48" />
+		</router-link>
+		<MenuButton class="menu-button" />
+		<div class="list-title" ref="listTitle" v-show="currentList.id">
 			<template v-if="currentList.id">
 				<h1
 					:style="{ 'opacity': currentList.title === '' ? '0': '1' }"
@@ -101,9 +88,8 @@ import Update from '@/components/home/update.vue'
 import ListSettingsDropdown from '@/components/list/list-settings-dropdown.vue'
 import Dropdown from '@/components/misc/dropdown.vue'
 import Notifications from '@/components/notifications/notifications.vue'
-
-import logoUrl from '@/assets/logo-full.svg'
-import logoFullPrideUrl from '@/assets/logo-full-pride.svg'
+import Logo from '@/components/home/Logo.vue'
+import MenuButton from '@/components/home/MenuButton.vue'
 
 export default {
 	name: 'topNavigation',
@@ -112,11 +98,10 @@ export default {
 		Dropdown,
 		ListSettingsDropdown,
 		Update,
+		Logo,
+		MenuButton,
 	},
 	computed: {
-		logoUrl() {
-			return (new Date()).getMonth() === 5 ? logoFullPrideUrl : logoUrl
-		},
 		...mapState({
 			userInfo: state => state.auth.info,
 			userAvatar: state => state.auth.avatarUrl,
@@ -155,19 +140,26 @@ $vikunja-nav-logo-full-width: 164px;
 
 .navbar {
 	z-index: 4 !important;
+}
 
-	.navbar-brand {
+.logo {
+	display: none;
+
+	@media screen and (min-width: $tablet) {
+		align-self: stretch;
 		display: flex;
 		align-items: center;
-
-		.logo img {
-			width: $vikunja-nav-logo-full-width;
-		}
+		padding-left: 2rem;
+		margin-right: 1.5rem;
 	}
-	&.is-dark .navbar-brand > .navbar-item {
-		@media screen and (max-width: $tablet) {
-			margin: 0 auto;
-		}
+}
+
+.menu-button {
+	align-self: stretch;
+	margin-right: auto;
+
+	@media screen and (max-width: $tablet) {
+		margin-left: $hamburger-menu-icon-spacing;
 	}
 }
 
@@ -197,10 +189,6 @@ $vikunja-nav-logo-full-width: 164px;
 	}
 
 	@media screen and (max-width: $tablet) {
-		.navbar-brand {
-			display: none;
-		}
-
 		.user {
 			width: $user-dropdown-width-mobile;
 			display: flex;

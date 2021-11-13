@@ -38,7 +38,7 @@
 		</div>
 		<template v-if="!loading && (!tasks || tasks.length === 0) && showNothingToDo">
 			<h3 class="nothing">{{ $t('task.show.noTasks') }}</h3>
-			<img alt="" :src="llamaCoolUrl" />
+			<LlamaCool class="llama-cool" />
 		</template>
 		<div :class="{ 'is-loading': loading}" class="spinner"></div>
 
@@ -64,7 +64,7 @@ import 'flatpickr/dist/flatpickr.css'
 import Fancycheckbox from '../../components/input/fancycheckbox'
 import {LOADING, LOADING_MODULE} from '../../store/mutation-types'
 
-import llamaCoolUrl from '@/assets/llama-cool.svg'
+import LlamaCool from '@/assets/llama-cool.svg?component'
 
 export default {
 	name: 'ShowTasks',
@@ -72,6 +72,7 @@ export default {
 		Fancycheckbox,
 		SingleTaskInList,
 		flatPickr,
+		LlamaCool,
 	},
 	data() {
 		return {
@@ -83,7 +84,6 @@ export default {
 			cEndDate: null,
 
 			showNothingToDo: false,
-			llamaCoolUrl,
 		}
 	},
 	props: {
@@ -256,28 +256,22 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.show-tasks {
-	h3 {
-		text-align: left;
+h3 {
+	text-align: left;
 
-		&.nothing {
-			text-align: center;
-			margin-top: 3rem;
-		}
-
-		:deep(.input) {
-			width: 190px;
-			vertical-align: middle;
-			margin: .5rem 0;
-		}
+	&.nothing {
+		text-align: center;
+		margin-top: 3rem;
 	}
 
-	img {
-		margin-top: 2rem;
+	:deep(.input) {
+		width: 190px;
+		vertical-align: middle;
+		margin: .5rem 0;
 	}
+}
 
-	.user img {
-		margin: 0;
-	}
+.llama-cool {
+	margin-top: 2rem;
 }
 </style>

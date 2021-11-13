@@ -6,7 +6,7 @@
 	>
 		<div class="container has-text-centered link-share-view">
 			<div class="column is-10 is-offset-1">
-				<img alt="Vikunja" class="logo" :src="logoUrl" />
+				<Logo class="logo" />
 				<h1
 					:style="{ 'opacity': currentList.title === '' ? '0': '1' }"
 					class="title">
@@ -14,9 +14,7 @@
 				</h1>
 				<div class="box has-text-left view">
 					<router-view/>
-					<a class="menu-bottom-link" href="https://vikunja.io" target="_blank" rel="noreferrer noopener nofollow">
-						{{ $t('misc.poweredBy') }}
-					</a>
+					<PoweredByLink />
 				</div>
 			</div>
 		</div>
@@ -25,51 +23,45 @@
 
 <script>
 import {mapState} from 'vuex'
-import {CURRENT_LIST} from '@/store/mutation-types'
 
-import logoUrl from '@/assets/logo-full.svg'
+import Logo from '@/components/home/Logo.vue'
+import PoweredByLink from './PoweredByLink.vue'
 
 export default {
 	name: 'contentLinkShare',
-	data() {
-		return {
-			logoUrl,
-		}
+	components: {
+		Logo,
+		PoweredByLink,
 	},
-	computed: mapState({
-		currentList: CURRENT_LIST,
-		background: 'background',
-	}),
+	computed: mapState([
+		'currentList',
+		'background',
+	]),
 }
 </script>
 
 <style lang="scss" scoped>
 .link-share-container.has-background .view {
-  background: transparent;
+  background-color: transparent;
   border: none;
-
-  .logout .button {
-    box-shadow: none;
-  }
 }
 
-.link-share-view {
-  .logo {
-    max-width: 300px;
-    width: 90%;
-    margin: 2rem 0 1.5rem;
-  }
+.logo {
+	max-width: 300px;
+	width: 90%;
+	margin: 2rem 0 1.5rem;
+}
 
-  .column {
-    max-width: 100%;
-  }
+.column {
+	max-width: 100%;
+}
 
-  .card {
-    background: $white;
-  }
-
-  .title {
+.title {
     text-shadow: 0 0 1rem $white;
-  }
+}
+
+// FIXME: this should be defined somewhere deep
+.link-share-view .card {
+    background-color: $white;
 }
 </style>
