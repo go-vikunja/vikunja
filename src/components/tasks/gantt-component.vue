@@ -167,15 +167,13 @@
 			</x-button>
 		</form>
 		<transition name="fade">
-			<card
+			<edit-task 
 				v-if="isTaskEdit"
 				class="taskedit"
 				:title="$t('list.list.editTask')"
 				@close="() => {isTaskEdit = false;taskToEdit = null}"
-				:has-close="true"
-			>
-				<edit-task :task="taskToEdit"/>
-			</card>
+				:task="taskToEdit"
+			/>
 		</transition>
 	</div>
 </template>
@@ -612,7 +610,6 @@ $gantt-vertical-border-color: $grey-100;
 
 	.taskedit {
 		position: fixed;
-		min-height: 0;
 		top: 10vh;
 		right: 10vw;
 		z-index: 5;

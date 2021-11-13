@@ -3,7 +3,7 @@
 		@close="$router.back()"
 		variant="hint-modal"
 	>
-				<card class="has-background-white has-no-shadow" :title="$t('filters.create.title')">
+				<card class="has-no-shadow" :title="$t('filters.create.title')">
 					<p>
 						{{ $t('filters.create.description') }}
 					</p>

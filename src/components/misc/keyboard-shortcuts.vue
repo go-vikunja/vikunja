@@ -1,6 +1,6 @@
 <template>
 	<modal @close="close()">
-				<card class="has-background-white has-no-shadow" :title="$t('keyboardShortcuts.title')">
+				<card class="has-no-shadow" :title="$t('keyboardShortcuts.title')">
 					<div class="message is-primary">
 						<div class="message-body">
 							{{ $t('keyboardShortcuts.allPages') }}

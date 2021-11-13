@@ -11,7 +11,7 @@
 			:overflow="true"
 			variant="hint-modal"
 		>
-			<card class="has-background-white has-no-shadow" :title="$t('task.quickAddMagic.title')">
+			<card class="has-no-shadow" :title="$t('task.quickAddMagic.title')">
 				<p>{{ $t('task.quickAddMagic.intro') }}</p>
 
 				<h3>{{ $t('task.attributes.labels') }}</h3>

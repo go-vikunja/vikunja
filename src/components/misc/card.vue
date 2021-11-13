@@ -4,7 +4,13 @@
 			<p class="card-header-title">
 				{{ title }}
 			</p>
-			<a @click="$emit('close')" class="card-header-icon" v-if="hasClose">
+			<a
+				v-if="hasClose"
+				class="card-header-icon"
+				:aria-label="$t('misc.close')"
+				@click="$emit('close')"
+				v-tooltip="$t('misc.close')"
+			>	
 				<span class="icon">
 					<icon :icon="closeIcon"/>
 				</span>
@@ -36,7 +42,7 @@ export default {
 		},
 		closeIcon: {
 			type: String,
-			default: 'angle-right',
+			default: 'times',
 		},
 		shadow: {
 			type: Boolean,

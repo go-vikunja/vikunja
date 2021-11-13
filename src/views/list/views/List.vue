@@ -116,13 +116,14 @@
 						</template>
 					</draggable>
 				</div>
-				<card
+				<edit-task 
 					v-if="isTaskEdit"
-					class="taskedit mt-0" :title="$t('list.list.editTask')" :has-close="true"
+					class="taskedit mt-0"
+					:title="$t('list.list.editTask')"
 					@close="() => isTaskEdit = false"
-					:shadow="false">
-					<edit-task :task="taskEditTask"/>
-				</card>
+					:shadow="false"
+					:task="taskEditTask"
+				/>
 			</div>
 
 			<Pagination 
@@ -344,6 +345,7 @@ export default {
 		width: 33%;
 		margin-right: 1rem;
 		margin-left: .5rem;
+		min-height: calc(100% - 1rem);
 
 		@media screen and (max-width: $tablet) {
 			width: 100%;

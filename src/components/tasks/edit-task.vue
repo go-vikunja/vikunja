@@ -1,4 +1,10 @@
 <template>
+	<card
+		class="taskedit"
+		:title="$t('list.list.editTask')"
+		@close="$emit('close')"
+		:has-close="true"
+	>
 	<form @submit.prevent="editTaskSubmit()">
 		<div class="field">
 			<label class="label" for="tasktext">{{ $t('task.attributes.title') }}</label>
@@ -66,6 +72,7 @@
 			{{ $t('task.openDetail') }}
 		</router-link>
 	</form>
+	</card>
 </template>
 
 <script>

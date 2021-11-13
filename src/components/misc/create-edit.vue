@@ -6,7 +6,6 @@
 			:padding="false"
 			class="has-text-left has-overflow"
 			:has-close="true"
-			close-icon="times"
 			@close="$router.back()"
 			:loading="loading"
 		>
