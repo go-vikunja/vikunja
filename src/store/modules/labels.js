@@ -1,6 +1,6 @@
 import LabelService from '@/services/label'
 import {setLoading} from '@/store/helper'
-import { success } from '@/message'
+import {success} from '@/message'
 import {i18n} from '@/i18n'
 import {getLabelsByIds, filterLabelsByQuery} from '@/helpers/labels'
 
@@ -44,6 +44,11 @@ export default {
 		},
 		filterLabelsByQuery(state) {
 			return (labelsToHide, query) => filterLabelsByQuery(state, labelsToHide, query)
+		},
+		getLabelsByExactTitles(state) {
+			return labelTitles => Object
+				.values(state.labels)
+				.filter(({title}) => labelTitles.some(l => l.toLowerCase() === title.toLowerCase()))
 		},
 	},
 	actions: {

@@ -62,7 +62,10 @@ import TeamModel from '@/models/team'
 import {CURRENT_LIST, LOADING, LOADING_MODULE, QUICK_ACTIONS_ACTIVE} from '@/store/mutation-types'
 import ListModel from '@/models/list'
 import QuickAddMagic from '@/components/tasks/partials/quick-add-magic.vue'
-import {getHistory} from '../../modules/listHistory'
+import {getHistory} from '@/modules/listHistory'
+import {parseTaskText, PrefixMode} from '@/modules/parseTaskText'
+import {getQuickAddMagicMode} from '@/helpers/quickAddMagicMode'
+import {PREFIXES} from '@/modules/parseTaskText'
 
 const TYPE_LIST = 'list'
 const TYPE_TASK = 'task'
@@ -107,11 +110,6 @@ export default {
 		results() {
 			let lists = []
 			if (this.searchMode === SEARCH_MODE_ALL || this.searchMode === SEARCH_MODE_LISTS) {
-				let query = this.query
-				if (this.searchMode === SEARCH_MODE_LISTS) {
-					query = query.substr(1)
-				}
-
 				const ncache = {}
 
 				const history = getHistory()
@@ -122,25 +120,31 @@ export default {
 					}),
 					...Object.values(this.$store.state.lists)])]
 
-				lists = (allLists.filter(l => {
-					if (typeof l === 'undefined' || l === null) {
-						return false
-					}
+				const {list} = this.parsedQuery
 
-					if (l.isArchived) {
-						return false
-					}
+				if (list === null) {
+					lists = []
+				} else {
+					lists = allLists.filter(l => {
+						if (typeof l === 'undefined' || l === null) {
+							return false
+						}
 
-					if (typeof ncache[l.namespaceId] === 'undefined') {
-						ncache[l.namespaceId] = this.$store.getters['namespaces/getNamespaceById'](l.namespaceId)
-					}
+						if (l.isArchived) {
+							return false
+						}
 
-					if (ncache[l.namespaceId].isArchived) {
-						return false
-					}
+						if (typeof ncache[l.namespaceId] === 'undefined') {
+							ncache[l.namespaceId] = this.$store.getters['namespaces/getNamespaceById'](l.namespaceId)
+						}
 
-					return l.title.toLowerCase().includes(query.toLowerCase())
-				}) ?? [])
+						if (ncache[l.namespaceId].isArchived) {
+							return false
+						}
+
+						return l.title.toLowerCase().includes(list.toLowerCase())
+					}) ?? []
+				}
 			}
 
 			const cmds = this.availableCmds
@@ -207,7 +211,9 @@ export default {
 				}
 			}
 
-			return this.$t('quickActions.hint')
+			const prefixes = PREFIXES[getQuickAddMagicMode()] ?? PREFIXES[PrefixMode.Default]
+
+			return this.$t('quickActions.hint', prefixes)
 		},
 		currentList() {
 			return Object.keys(this.$store.state[CURRENT_LIST]).length === 0 ? null : this.$store.state[CURRENT_LIST]
@@ -236,18 +242,23 @@ export default {
 
 			return cmds
 		},
+		parsedQuery() {
+			return parseTaskText(this.query, getQuickAddMagicMode())
+		},
 		searchMode() {
 			if (this.query === '') {
 				return SEARCH_MODE_ALL
 			}
 
-			if (this.query.startsWith('#')) {
+			const {text, list, labels, assignees} = this.parsedQuery
+
+			if (assignees.length === 0 && text !== '') {
 				return SEARCH_MODE_TASKS
 			}
-			if (this.query.startsWith('*')) {
+			if (assignees.length === 0 && list !== null && text === '' && labels.length === 0) {
 				return SEARCH_MODE_LISTS
 			}
-			if (this.query.startsWith('@')) {
+			if (assignees.length > 0 && list === null && text === '' && labels.length === 0) {
 				return SEARCH_MODE_TEAMS
 			}
 
@@ -268,12 +279,7 @@ export default {
 				return
 			}
 
-			let query = this.query
-			if (this.searchMode === SEARCH_MODE_TASKS) {
-				query = query.substr(1)
-			}
-
-			if (query === '' || this.selectedCmd !== null) {
+			if (this.selectedCmd !== null) {
 				return
 			}
 
@@ -282,8 +288,35 @@ export default {
 				this.taskSearchTimeout = null
 			}
 
+			const {text, list, labels} = this.parsedQuery
+
+			const params = {
+				s: text,
+				filter_by: [],
+				filter_value: [],
+				filter_comparator: [],
+			}
+
+			if (list !== null) {
+				const l = this.$store.getters['lists/findListByExactname'](list)
+				if (l !== null) {
+					params.filter_by.push('list_id')
+					params.filter_value.push(l.id)
+					params.filter_comparator.push('equals')
+				}
+			}
+
+			if (labels.length > 0) {
+				const labelIds = this.$store.getters['labels/getLabelsByExactTitles'](labels).map(l => l.id)
+				if (labelIds.length > 0) {
+					params.filter_by.push('labels')
+					params.filter_value.push(labelIds.join())
+					params.filter_comparator.push('in')
+				}
+			}
+
 			this.taskSearchTimeout = setTimeout(async () => {
-				const r = await this.taskService.getAll({}, {s: query})
+				const r = await this.taskService.getAll({}, params)
 				this.foundTasks = r.map(t => {
 					t.type = TYPE_TASK
 					const list = this.$store.getters['lists/getListById'](t.listId)
@@ -301,12 +334,7 @@ export default {
 				return
 			}
 
-			let query = this.query
-			if (this.searchMode === SEARCH_MODE_TEAMS) {
-				query = query.substr(1)
-			}
-
-			if (query === '' || this.selectedCmd !== null) {
+			if (this.query === '' || this.selectedCmd !== null) {
 				return
 			}
 
@@ -315,11 +343,14 @@ export default {
 				this.teamSearchTimeout = null
 			}
 
+			const {assignees} = this.parsedQuery
+
 			this.teamSearchTimeout = setTimeout(async () => {
-				const r = await this.teamService.getAll({}, {s: query})
-				this.foundTeams = r.map(t => {
-					t.title = t.name
-					return t
+				const teamSearchPromises = assignees.map((t) => this.teamService.getAll({}, {s: t}))
+				const teamsResult = await Promise.all(teamSearchPromises)
+				this.foundTeams = teamsResult.flatMap(team => {
+					team.title = team.name
+					return team
 				})
 			}, 150)
 		},
@@ -348,7 +379,7 @@ export default {
 				this.doAction(this.results[0].type, this.results[0].items[0])
 				return
 			}
-			
+
 			if (this.selectedCmd === null) {
 				return
 			}
