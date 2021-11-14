@@ -17,14 +17,14 @@
     "text": "Požadovaná stránka neexistuje."
   },
   "ready": {
-    "loading": "Vikunja is loading…",
-    "errorOccured": "An error occured:",
-    "checkApiUrl": "Please check if the api url is correct.",
-    "noApiUrlConfigured": "No API url was configured. Please set one below:"
+    "loading": "Vikunja se načítá…",
+    "errorOccured": "Došlo k chybě:",
+    "checkApiUrl": "Zkontrolujte, zda je adresa URL API správná.",
+    "noApiUrlConfigured": "Nebyla nakonfigurována žádná adresa API. Prosím nastavte jednu níže:"
   },
   "offline": {
-    "title": "You are offline.",
-    "text": "Please check your network connection and try again."
+    "title": "Jste offline.",
+    "text": "Zkontrolujte své internetové připojení a zkuste to znovu."
   },
   "user": {
     "auth": {
@@ -354,7 +354,7 @@
   },
   "filters": {
     "title": "Filtry",
-    "clear": "Clear Filters",
+    "clear": "Vymazat filtry",
     "attributes": {
       "title": "Název",
       "titlePlaceholder": "Název uloženého filtru přijde sem…",
@@ -461,8 +461,8 @@
     "default": "Výchozí",
     "close": "Zavřít",
     "download": "Stáhnout",
-    "showMenu": "Show the menu",
-    "hideMenu": "Hide the menu"
+    "showMenu": "Zobrazit nabídku",
+    "hideMenu": "Skrýt nabídku"
   },
   "input": {
     "resetColor": "Obnovit barvu",
@@ -656,7 +656,7 @@
       "searchPlaceholder": "Hledejte nový úkol, který chcete přidat jako související…",
       "createPlaceholder": "Přidat toto jako nový související úkol",
       "differentList": "Tento úkol patří do jiného seznamu.",
-      "differentNamespace": "This task belongs to a different namespace.",
+      "differentNamespace": "Tento úkol patří do jiného prostoru.",
       "noneYet": "Zatím žádné vztahy mezi úkoly.",
       "delete": "Odstranit vztah k úloze",
       "deleteText1": "Jste si jisti, že chcete odstranit tento vztah úkolu?",
@@ -757,12 +757,12 @@
   },
   "keyboardShortcuts": {
     "title": "Klávesové zkratky",
-    "general": "General",
+    "general": "Obecné",
     "allPages": "Tyto zkratky fungují na všech stránkách.",
     "currentPageOnly": "Tyto zkratky fungují pouze na aktuální stránce.",
     "toggleMenu": "Přepnout nabídku",
     "quickSearch": "Otevřít vyhledávání / panel rychlých akcí",
-    "then": "then",
+    "then": "potom",
     "task": {
       "title": "Stránka úkolů",
       "done": "Označit úkol jako hotový",
@@ -773,11 +773,11 @@
       "related": "Upravit související úkoly tohoto úkolu"
     },
     "list": {
-      "title": "List Views",
-      "switchToListView": "Switch to list view",
-      "switchToGanttView": "Switch to gantt view",
-      "switchToKanbanView": "Switch to kanban view",
-      "switchToTableView": "Switch to table view"
+      "title": "Zobrazení seznamů",
+      "switchToListView": "Přepnout na zobrazení seznamu",
+      "switchToGanttView": "Přepnout na zobrazení gantt",
+      "switchToKanbanView": "Přepnout na zobrazení kanbanu",
+      "switchToTableView": "Přepnout na zobrazení tabulky"
     }
   },
   "update": {
@@ -799,9 +799,9 @@
     "urlPlaceholder": "např. https://localhost:3456",
     "change": "změnit",
     "signInOn": "Přihlaste se ke svému účtu Vikunja na {0}",
-    "error": "Could not find or use Vikunja installation at \"{domain}\". Please try a different url.",
+    "error": "Nelze najít nebo použít instalaci Vikunja na \"{domain}\". Zkuste prosím jinou url.",
     "success": "Pomocí instalace Vikunja na \"{domain}\".",
-    "urlRequired": "A url is required."
+    "urlRequired": "Je vyžadována adresa URL."
   },
   "loadingError": {
     "failed": "Načítání selhalo, prosím {0}. Pokud chyba přetrvává, {1}.",
@@ -816,7 +816,7 @@
   "quickActions": {
     "commands": "Příkazy",
     "placeholder": "Napište příkaz nebo vyhledávání…",
-    "hint": "You can use {list} to limit the search to a list. Combine {list} or {label} (labels) with a search query to search for a task with these labels or on that list. Use {assignee} to only search for teams.",
+    "hint": "Můžete použít {list} k omezení hledání na seznam. Kombinujte {list} nebo {label} (štítky) s vyhledávacím dotazem pro hledání úkolu s těmito štítky nebo na tomto seznamu. Použijte {assignee} pouze pro hledání týmů.",
     "tasks": "Úkoly",
     "lists": "Seznamy",
     "teams": "Týmy",
