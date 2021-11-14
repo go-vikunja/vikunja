@@ -52,6 +52,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ulule/limiter/v3"
+
 	vikunja_file "code.vikunja.io/api/pkg/modules/migration/vikunja-file"
 
 	"code.vikunja.io/api/pkg/config"
@@ -235,17 +237,26 @@ func registerAPIRoutes(a *echo.Group) {
 	// Prometheus endpoint
 	setupMetrics(n)
 
+	// Separate route for unauthenticated routes to enable rate limits for it
+	ur := a.Group("")
+	rate := limiter.Rate{
+		Period: 60 * time.Second,
+		Limit:  10,
+	}
+	rateLimiter := createRateLimiter(rate)
+	ur.Use(RateLimit(rateLimiter, "ip"))
+
 	if config.AuthLocalEnabled.GetBool() {
 		// User stuff
-		n.POST("/login", apiv1.Login)
-		n.POST("/register", apiv1.RegisterUser)
-		n.POST("/user/password/token", apiv1.UserRequestResetPasswordToken)
-		n.POST("/user/password/reset", apiv1.UserResetPassword)
-		n.POST("/user/confirm", apiv1.UserConfirmEmail)
+		ur.POST("/login", apiv1.Login)
+		ur.POST("/register", apiv1.RegisterUser)
+		ur.POST("/user/password/token", apiv1.UserRequestResetPasswordToken)
+		ur.POST("/user/password/reset", apiv1.UserResetPassword)
+		ur.POST("/user/confirm", apiv1.UserConfirmEmail)
 	}
 
 	if config.AuthOpenIDEnabled.GetBool() {
-		n.POST("/auth/openid/:provider/callback", openid.HandleCallback)
+		ur.POST("/auth/openid/:provider/callback", openid.HandleCallback)
 	}
 
 	// Testing
@@ -261,7 +272,7 @@ func registerAPIRoutes(a *echo.Group) {
 
 	// Link share auth
 	if config.ServiceEnableLinkSharing.GetBool() {
-		n.POST("/shares/:share/auth", apiv1.AuthenticateLinkShare)
+		ur.POST("/shares/:share/auth", apiv1.AuthenticateLinkShare)
 	}
 
 	// ===== Routes with Authetication =====

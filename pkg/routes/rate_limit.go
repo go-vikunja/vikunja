@@ -74,29 +74,33 @@ func RateLimit(rateLimiter *limiter.Limiter, rateLimitKind string) echo.Middlewa
 	}
 }
 
+func createRateLimiter(rate limiter.Rate) *limiter.Limiter {
+	var store limiter.Store
+	var err error
+	switch config.RateLimitStore.GetString() {
+	case "memory":
+		store = memory.NewStore()
+	case "redis":
+		if !config.RedisEnabled.GetBool() {
+			log.Fatal("Redis is configured for rate limiting, but not enabled!")
+		}
+		store, err = redis.NewStore(red.GetRedis())
+		if err != nil {
+			log.Fatalf("Error while creating rate limit redis store: %s", err)
+		}
+	default:
+		log.Fatalf("Unknown Rate limit store \"%s\"", config.RateLimitStore.GetString())
+	}
+	return limiter.New(store, rate)
+}
+
 func setupRateLimit(a *echo.Group, rateLimitKind string) {
 	if config.RateLimitEnabled.GetBool() {
 		rate := limiter.Rate{
 			Period: config.RateLimitPeriod.GetDuration() * time.Second,
 			Limit:  config.RateLimitLimit.GetInt64(),
 		}
-		var store limiter.Store
-		var err error
-		switch config.RateLimitStore.GetString() {
-		case "memory":
-			store = memory.NewStore()
-		case "redis":
-			if !config.RedisEnabled.GetBool() {
-				log.Fatal("Redis is configured for rate limiting, but not enabled!")
-			}
-			store, err = redis.NewStore(red.GetRedis())
-			if err != nil {
-				log.Fatalf("Error while creating rate limit redis store: %s", err)
-			}
-		default:
-			log.Fatalf("Unknown Rate limit store \"%s\"", config.RateLimitStore.GetString())
-		}
-		rateLimiter := limiter.New(store, rate)
+		rateLimiter := createRateLimiter(rate)
 		log.Debugf("Rate limit configured with %s and %v requests per %v", config.RateLimitStore.GetString(), rate.Limit, rate.Period)
 		a.Use(RateLimit(rateLimiter, rateLimitKind))
 	}
