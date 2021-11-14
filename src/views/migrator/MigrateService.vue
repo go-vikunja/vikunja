@@ -41,7 +41,7 @@
 					<div class="progress-dots">
 						<span v-for="i in progressDotsCount" :key="i" />
 					</div>
-					<Logo alt="Vikunja" />
+					<Logo/>
 				</div>
 				<p>{{ $t('migrate.inProgress') }}</p>
 			</div>
@@ -186,9 +186,10 @@ export default {
   align-items: center;
   margin-bottom: 2rem;
 
-  img {
+  img, svg {
     display: block;
     max-height: 100px;
+	max-width: 100px;
   }
 }
 
