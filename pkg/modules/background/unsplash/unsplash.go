@@ -163,14 +163,14 @@ func (p *Provider) Search(s *xorm.Session, search string, page int64) (result []
 		}
 
 		if existsForPage {
-			log.Debugf("Serving initial unsplash collection for page %d from cache, last updated at %v", page, emptySearchResult.lastCached)
+			log.Debugf("Serving initial wallpaper topic from unsplash for page %d from cache, last updated at %v", page, emptySearchResult.lastCached)
 			return emptySearchResult.images[page], nil
 		}
 
-		log.Debugf("Retrieving initial unsplash collection for page %d from unsplash api", page)
+		log.Debugf("Retrieving initial wallpaper topic from unsplash for page %d from unsplash api", page)
 
 		collectionResult := []*Photo{}
-		err = doGet("collections/317099/photos?page="+strconv.FormatInt(page, 10)+"&per_page=25&order_by=latest", &collectionResult)
+		err = doGet("topics/wallpapers/photos?page="+strconv.FormatInt(page, 10)+"&per_page=25&order_by=latest", &collectionResult)
 		if err != nil {
 			return
 		}
