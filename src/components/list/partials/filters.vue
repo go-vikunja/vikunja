@@ -189,6 +189,8 @@ import ListService from '@/services/list'
 import NamespaceService from '@/services/namespace'
 import EditLabels from '@/components/tasks/partials/editLabels.vue'
 
+import {objectToSnakeCase} from '@/helpers/case'
+
 // FIXME: merge with DEFAULT_PARAMS in taskList.js
 const DEFAULT_PARAMS = {
 	sort_by: [],
@@ -261,7 +263,9 @@ export default {
 	watch: {
 		modelValue: {
 			handler(value) {
-				this.params = value
+				// FIXME: filters should only be converted to snake case in
+				// the last moment
+				this.params = objectToSnakeCase(value)
 				this.prepareFilters()
 			},
 			immediate: true,

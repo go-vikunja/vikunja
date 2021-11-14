@@ -35,15 +35,17 @@ import ListSettingDuplicate from '../views/list/settings/duplicate'
 import ListSettingShare from '../views/list/settings/share'
 import ListSettingDelete from '../views/list/settings/delete'
 import ListSettingArchive from '../views/list/settings/archive'
-import FilterSettingEdit from '../views/filters/settings/edit'
-import FilterSettingDelete from '../views/filters/settings/delete'
+
 // Namespace Settings
 import NamespaceSettingEdit from '../views/namespaces/settings/edit'
 import NamespaceSettingShare from '../views/namespaces/settings/share'
 import NamespaceSettingArchive from '../views/namespaces/settings/archive'
 import NamespaceSettingDelete from '../views/namespaces/settings/delete'
+
 // Saved Filters
-import CreateSavedFilter from '../views/filters/CreateSavedFilter'
+import FilterNew from '@/views/filters/FilterNew'
+import FilterEdit from '@/views/filters/FilterEdit'
+import FilterDelete from '@/views/filters/FilterDelete'
 
 const PasswordResetComponent = () => import('../views/user/PasswordReset')
 const GetPasswordResetComponent = () => import('../views/user/RequestPasswordReset')
@@ -279,14 +281,14 @@ const router = createRouter({
 			path: '/lists/:listId/settings/edit',
 			name: 'filter.settings.edit',
 			components: {
-				popup: FilterSettingEdit,
+				popup: FilterEdit,
 			},
 		},
 		{
 			path: '/lists/:listId/settings/delete',
 			name: 'filter.settings.delete',
 			components: {
-				popup: FilterSettingDelete,
+				popup: FilterDelete,
 			},
 		},
 		{
@@ -337,12 +339,12 @@ const router = createRouter({
 						{
 							path: '/lists/:listId/settings/edit',
 							name: 'filter.list.settings.edit',
-							component: FilterSettingEdit,
+							component: FilterEdit,
 						},
 						{
 							path: '/lists/:listId/settings/delete',
 							name: 'filter.list.settings.delete',
-							component: FilterSettingDelete,
+							component: FilterDelete,
 						},
 					],
 				},
@@ -389,12 +391,12 @@ const router = createRouter({
 						{
 							path: '/lists/:listId/settings/edit',
 							name: 'filter.gantt.settings.edit',
-							component: FilterSettingEdit,
+							component: FilterEdit,
 						},
 						{
 							path: '/lists/:listId/settings/delete',
 							name: 'filter.gantt.settings.delete',
-							component: FilterSettingDelete,
+							component: FilterDelete,
 						},
 					],
 				},
@@ -436,12 +438,12 @@ const router = createRouter({
 						{
 							path: '/lists/:listId/settings/edit',
 							name: 'filter.table.settings.edit',
-							component: FilterSettingEdit,
+							component: FilterEdit,
 						},
 						{
 							path: '/lists/:listId/settings/delete',
 							name: 'filter.table.settings.delete',
-							component: FilterSettingDelete,
+							component: FilterDelete,
 						},
 					],
 				},
@@ -488,12 +490,12 @@ const router = createRouter({
 						{
 							path: '/lists/:listId/settings/edit',
 							name: 'filter.kanban.settings.edit',
-							component: FilterSettingEdit,
+							component: FilterEdit,
 						},
 						{
 							path: '/lists/:listId/settings/delete',
 							name: 'filter.kanban.settings.delete',
-							component: FilterSettingDelete,
+							component: FilterDelete,
 						},
 					],
 				},
@@ -542,7 +544,7 @@ const router = createRouter({
 			path: '/filters/new',
 			name: 'filters.create',
 			components: {
-				popup: CreateSavedFilter,
+				popup: FilterNew,
 			},
 		},
 		{
