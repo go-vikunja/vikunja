@@ -67,7 +67,7 @@ export default {
 	},
 	computed: {
 		apiDomain() {
-			return parseURL(this.apiUrl).host
+			return parseURL(this.apiUrl).host || parseURL(window.location.href).host
 		},
 	},
 	props: {
