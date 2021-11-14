@@ -1,19 +1,24 @@
 import {filterLabelsByQuery} from './labels'
+import {createNewIndexer} from '../indexes'
+
+const {add} = createNewIndexer('labels', ['title', 'description'])
 
 describe('filter labels', () => {
 	const state = {
-		labels: [
-			{id: 1, title: 'label1'},
-			{id: 2, title: 'label2'},
-			{id: 3, title: 'label3'},
-			{id: 4, title: 'label4'},
-			{id: 5, title: 'label5'},
-			{id: 6, title: 'label6'},
-			{id: 7, title: 'label7'},
-			{id: 8, title: 'label8'},
-			{id: 9, title: 'label9'},
-		],
+		labels: {
+			1: {id: 1, title: 'label1'},
+			2: {id: 2, title: 'label2'},
+			3: {id: 3, title: 'label3'},
+			4: {id: 4, title: 'label4'},
+			5: {id: 5, title: 'label5'},
+			6: {id: 6, title: 'label6'},
+			7: {id: 7, title: 'label7'},
+			8: {id: 8, title: 'label8'},
+			9: {id: 9, title: 'label9'},
+		},
 	}
+
+	Object.values(state.labels).forEach(add)
 
 	it('should return an empty array for an empty query', () => {
 		const labels = filterLabelsByQuery(state, [], '')
@@ -31,7 +36,7 @@ describe('filter labels', () => {
 			id: number,
 			title: string,
 		}
-		
+
 		const labelsToHide: label[] = [{id: 1, title: 'label1'}]
 		const labels = filterLabelsByQuery(state, labelsToHide, 'label1')
 

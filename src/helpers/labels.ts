@@ -1,10 +1,16 @@
-interface label {
+import {createNewIndexer} from '../indexes'
+
+const {search} = createNewIndexer('labels', ['title', 'description'])
+
+export interface label {
 	id: number,
 	title: string,
 }
 
 interface labelState {
-	labels: label[],
+	labels: {
+		[k: number]: label,
+	},
 }
 
 /**
@@ -15,17 +21,12 @@ interface labelState {
  * @returns {Array}
  */
 export function filterLabelsByQuery(state: labelState, labelsToHide: label[], query: string) {
-	if (query === '') {
-		return []
-	}
+	const labelIdsToHide: number[] = labelsToHide.map(({id}) => id)
 
-	const labelQuery = query.toLowerCase()
-	const labelIds = labelsToHide.map(({id}) => id)
-	return Object
-		.values(state.labels)
-		.filter(({id, title}) => {
-			return !labelIds.includes(id) && title.toLowerCase().includes(labelQuery)
-		})
+	return search(query)
+			?.filter(value => !labelIdsToHide.includes(value))
+			.map(id => state.labels[id])
+		|| []
 }
 
 

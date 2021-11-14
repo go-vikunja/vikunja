@@ -1,5 +1,8 @@
 import NamespaceService from '../../services/namespace'
 import {setLoading} from '@/store/helper'
+import {createNewIndexer} from '@/indexes'
+
+const {add, remove, search, update} = createNewIndexer('namespaces', ['title', 'description'])
 
 export default {
 	namespaced: true,
@@ -9,6 +12,9 @@ export default {
 	mutations: {
 		namespaces(state, namespaces) {
 			state.namespaces = namespaces
+			namespaces.forEach(n => {
+				add(n)
+			})
 		},
 		setNamespaceById(state, namespace) {
 			const namespaceIndex = state.namespaces.findIndex(n => n.id === namespace.id)
@@ -22,8 +28,9 @@ export default {
 			if (!namespace.lists || namespace.lists.length === 0) {
 				namespace.lists = state.namespaces[namespaceIndex].lists
 			}
-			
+
 			state.namespaces[namespaceIndex] = namespace
+			update(namespace)
 		},
 		setListInNamespaceById(state, list) {
 			for (const n in state.namespaces) {
@@ -43,11 +50,13 @@ export default {
 		},
 		addNamespace(state, namespace) {
 			state.namespaces.push(namespace)
+			add(namespace)
 		},
 		removeNamespaceById(state, namespaceId) {
 			for (const n in state.namespaces) {
 				if (state.namespaces[n].id === namespaceId) {
 					state.namespaces.splice(n, 1)
+					remove(state.namespaces[n])
 					return
 				}
 			}
@@ -78,11 +87,11 @@ export default {
 	getters: {
 		getListAndNamespaceById: state => (listId, ignorePseudoNamespaces = false) => {
 			for (const n in state.namespaces) {
-				
-				if(ignorePseudoNamespaces && state.namespaces[n].id < 0) {
+
+				if (ignorePseudoNamespaces && state.namespaces[n].id < 0) {
 					continue
 				}
-				
+
 				for (const l in state.namespaces[n].lists) {
 					if (state.namespaces[n].lists[l].id === listId) {
 						return {
@@ -97,6 +106,13 @@ export default {
 		getNamespaceById: state => namespaceId => {
 			return state.namespaces.find(({id}) => id == namespaceId) || null
 		},
+		searchNamespace: (state, getters) => query => {
+			return search(query)
+					?.filter(value => value > 0)
+					.map(getters.getNamespaceById)
+					.filter(n => n !== null)
+				|| []
+		},
 	},
 	actions: {
 		async loadNamespaces(ctx) {
@@ -107,12 +123,12 @@ export default {
 				// We always load all namespaces and filter them on the frontend
 				const namespaces = await namespaceService.getAll({}, {is_archived: true})
 				ctx.commit('namespaces', namespaces)
-				
+
 				// Put all lists in the list state
 				const lists = namespaces.flatMap(({lists}) => lists)
-				
+
 				ctx.commit('lists/setLists', lists, {root: true})
-				
+
 				return namespaces
 			} finally {
 				cancel()

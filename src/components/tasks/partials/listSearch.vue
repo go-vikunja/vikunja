@@ -1,7 +1,6 @@
 <template>
 	<multiselect
 		class="control is-expanded"
-		:loading="listSerivce.loading"
 		:placeholder="$t('list.search')"
 		@search="findLists"
 		:search-results="foundLists"
@@ -18,7 +17,6 @@
 </template>
 
 <script>
-import ListService from '../../../services/list'
 import ListModel from '../../../models/list'
 import Multiselect from '@/components/input/multiselect.vue'
 
@@ -26,7 +24,6 @@ export default {
 	name: 'listSearch',
 	data() {
 		return {
-			listSerivce: new ListService(),
 			list: new ListModel(),
 			foundLists: [],
 		}
@@ -50,17 +47,8 @@ export default {
 		},
 	},
 	methods: {
-		async findLists(query) {
-			if (query === '') {
-				this.clearAll()
-				return
-			}
-
-			this.foundLists = await this.listSerivce.getAll({}, {s: query})
-		},
-
-		clearAll() {
-			this.foundLists = []
+		findLists(query) {
+			this.foundLists = this.$store.getters['lists/searchList'](query)
 		},
 
 		select(list) {
@@ -82,6 +70,6 @@ export default {
 
 <style lang="scss" scoped>
 .list-namespace-title {
-  color: $grey-500;
+	color: $grey-500;
 }
 </style>

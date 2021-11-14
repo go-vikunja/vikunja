@@ -1,6 +1,9 @@
 import ListService from '@/services/list'
 import {setLoading} from '@/store/helper'
 import {removeListFromHistory} from '@/modules/listHistory.ts'
+import {createNewIndexer} from '@/indexes'
+
+const {add, remove, search, update} = createNewIndexer('lists', ['title', 'description'])
 
 const FavoriteListsNamespace = -2
 
@@ -11,14 +14,17 @@ export default {
 	mutations: {
 		setList(state, list) {
 			state[list.id] = list
+			update(list)
 		},
 		setLists(state, lists) {
 			lists.forEach(l => {
 				state[l.id] = l
+				add(l)
 			})
 		},
 		removeListById(state, list) {
 			delete state[list.id]
+			remove(list)
 		},
 	},
 	getters: {
@@ -33,6 +39,13 @@ export default {
 				return l.title.toLowerCase() === name.toLowerCase()
 			})
 			return typeof list === 'undefined' ? null : list
+		},
+		searchList: state => (query, includeArchived = false) => {
+			return search(query)
+					?.filter(value => value > 0)
+					.map(id => state[id])
+					.filter(list => list.isArchived === includeArchived)
+				|| []
 		},
 	},
 	actions: {
@@ -66,7 +79,7 @@ export default {
 				await listService.update(list)
 				ctx.commit('setList', list)
 				ctx.commit('namespaces/setListInNamespaceById', list, {root: true})
-				
+
 				// the returned list from listService.update is the same!
 				// in order to not validate vuex mutations we have to create a new copy
 				const newList = {
@@ -81,7 +94,7 @@ export default {
 				ctx.dispatch('namespaces/loadNamespacesIfFavoritesDontExist', null, {root: true})
 				ctx.dispatch('namespaces/removeFavoritesNamespaceIfEmpty', null, {root: true})
 				return newList
-			} catch(e) {
+			} catch (e) {
 				// Reset the list state to the initial one to avoid confusion for the user
 				ctx.commit('setList', {
 					...list,
@@ -97,13 +110,13 @@ export default {
 			const cancel = setLoading(ctx, 'lists')
 			const listService = new ListService()
 
-			try {	
+			try {
 				const response = await listService.delete(list)
 				ctx.commit('removeListById', list)
 				ctx.commit('namespaces/removeListFromNamespaceById', list, {root: true})
 				removeListFromHistory({id: list.id})
 				return response
-			} finally{
+			} finally {
 				cancel()
 			}
 		},

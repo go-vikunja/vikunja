@@ -3,6 +3,9 @@ import {setLoading} from '@/store/helper'
 import {success} from '@/message'
 import {i18n} from '@/i18n'
 import {getLabelsByIds, filterLabelsByQuery} from '@/helpers/labels'
+import {createNewIndexer} from '@/indexes'
+
+const {add, remove, update} = createNewIndexer('labels', ['title', 'description'])
 
 async function getAllLabels(page = 1) {
 	const labelService = new LabelService()
@@ -26,13 +29,16 @@ export default {
 		setLabels(state, labels) {
 			labels.forEach(l => {
 				state.labels[l.id] = l
+				add(l)
 			})
 		},
 		setLabel(state, label) {
 			state.labels[label.id] = label
+			update(label)
 		},
 		removeLabelById(state, label) {
 			delete state.labels[label.id]
+			remove(label)
 		},
 		setLoaded(state, loaded) {
 			state.loaded = loaded

@@ -110,27 +110,23 @@ export default {
 		results() {
 			let lists = []
 			if (this.searchMode === SEARCH_MODE_ALL || this.searchMode === SEARCH_MODE_LISTS) {
-				const ncache = {}
-
-				const history = getHistory()
-				// Puts recently visited lists at the top
-				const allLists = [...new Set([
-					...history.map(l => {
-						return this.$store.getters['lists/getListById'](l.id)
-					}),
-					...Object.values(this.$store.state.lists)])]
-
 				const {list} = this.parsedQuery
 
 				if (list === null) {
 					lists = []
 				} else {
+					const ncache = {}
+					const history = getHistory()
+					// Puts recently visited lists at the top
+					const allLists = [...new Set([
+						...history.map(l => {
+							return this.$store.getters['lists/getListById'](l.id)
+						}),
+						...this.$store.getters['lists/searchList'](list),
+					])]
+
 					lists = allLists.filter(l => {
 						if (typeof l === 'undefined' || l === null) {
-							return false
-						}
-
-						if (l.isArchived) {
 							return false
 						}
 
@@ -138,12 +134,8 @@ export default {
 							ncache[l.namespaceId] = this.$store.getters['namespaces/getNamespaceById'](l.namespaceId)
 						}
 
-						if (ncache[l.namespaceId].isArchived) {
-							return false
-						}
-
-						return l.title.toLowerCase().includes(list.toLowerCase())
-					}) ?? []
+						return !ncache[l.namespaceId].isArchived
+					})
 				}
 			}
 

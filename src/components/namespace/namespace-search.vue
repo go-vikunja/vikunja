@@ -25,15 +25,7 @@ export default {
 	},
 	computed: {
 		namespaces() {
-			if (this.query === '') {
-				return []
-			}
-			
-			return this.$store.state.namespaces.namespaces.filter(n => {
-				return !n.isArchived && 
-					n.id > 0 &&
-					n.title.toLowerCase().includes(this.query.toLowerCase())
-			})
+			return this.$store.getters['namespaces/searchNamespace'](this.query)
 		},
 	},
 	methods: {
