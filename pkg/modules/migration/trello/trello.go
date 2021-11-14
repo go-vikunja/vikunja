@@ -144,7 +144,7 @@ func getTrelloData(token string) (trelloData []*trello.Board, err error) {
 
 // Converts all previously obtained data from trello into the vikunja format.
 // `trelloData` should contain all boards with their lists and cards respectively.
-func convertTrelloDataToVikunja(trelloData []*trello.Board) (fullVikunjaHierachie []*models.NamespaceWithListsAndTasks, err error) {
+func convertTrelloDataToVikunja(trelloData []*trello.Board, token string) (fullVikunjaHierachie []*models.NamespaceWithListsAndTasks, err error) {
 
 	log.Debugf("[Trello Migration] ")
 
@@ -254,7 +254,9 @@ func convertTrelloDataToVikunja(trelloData []*trello.Board) (fullVikunjaHierachi
 
 					log.Debugf("[Trello Migration] Downloading card attachment %s", attachment.ID)
 
-					buf, err := migration.DownloadFile(attachment.URL)
+					buf, err := migration.DownloadFileWithHeaders(attachment.URL, map[string][]string{
+						"Authorization": {`OAuth oauth_consumer_key="` + config.MigrationTrelloKey.GetString() + `", oauth_token="` + token + `"`},
+					})
 					if err != nil {
 						return nil, err
 					}
@@ -309,7 +311,7 @@ func (m *Migration) Migrate(u *user.User) (err error) {
 	log.Debugf("[Trello Migration] Got all trello data for user %d", u.ID)
 	log.Debugf("[Trello Migration] Start converting trello data for user %d", u.ID)
 
-	fullVikunjaHierachie, err := convertTrelloDataToVikunja(trelloData)
+	fullVikunjaHierachie, err := convertTrelloDataToVikunja(trelloData, m.Token)
 	if err != nil {
 		return
 	}

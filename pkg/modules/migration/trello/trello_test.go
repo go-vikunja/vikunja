@@ -359,7 +359,7 @@ func TestConvertTrelloToVikunja(t *testing.T) {
 		},
 	}
 
-	hierachie, err := convertTrelloDataToVikunja(trelloData)
+	hierachie, err := convertTrelloDataToVikunja(trelloData, "")
 	assert.NoError(t, err)
 	assert.NotNil(t, hierachie)
 	if diff, equal := messagediff.PrettyDiff(hierachie, expectedHierachie); !equal {

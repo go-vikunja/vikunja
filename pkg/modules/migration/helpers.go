@@ -26,10 +26,24 @@ import (
 
 // DownloadFile downloads a file and returns its contents
 func DownloadFile(url string) (buf *bytes.Buffer, err error) {
+	return DownloadFileWithHeaders(url, nil)
+}
+
+// DownloadFileWithHeaders downloads a file and allows you to pass in headers
+func DownloadFileWithHeaders(url string, headers http.Header) (buf *bytes.Buffer, err error) {
 	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}
+
+	if headers != nil {
+		for key, h := range headers {
+			for _, hh := range h {
+				req.Header.Add(key, hh)
+			}
+		}
+	}
+
 	hc := http.Client{}
 	resp, err := hc.Do(req)
 	if err != nil {
@@ -38,6 +52,7 @@ func DownloadFile(url string) (buf *bytes.Buffer, err error) {
 	defer resp.Body.Close()
 	buf = &bytes.Buffer{}
 	_, err = buf.ReadFrom(resp.Body)
+
 	return
 }
 
