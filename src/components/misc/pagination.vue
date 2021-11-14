@@ -89,7 +89,7 @@ export default {
 		},
 		currentPage: {
 			type: Number,
-			required: true,
+			default: 0,
 		},
 	},
 
