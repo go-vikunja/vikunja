@@ -148,6 +148,7 @@ steps:
       GITEA_TOKEN:
         from_secret: gitea_token
     commands:
+      - shasum -a 384 -c ./scripts/deploy-preview-netlify.js.sha384
       - node ./scripts/deploy-preview-netlify.js
     depends_on:
       - build-prod
@@ -655,6 +656,6 @@ steps:
         from_secret: crowdin_key
 ---
 kind: signature
-hmac: 15df446c7e93a881249d46273485183386157229ee6a37b1ed0fcb2a0b32bbe2
+hmac: 188ee90100c5fc5922a445e531e7a47453121edddb2a64a182eb23ed2bf602de
 
 ...
