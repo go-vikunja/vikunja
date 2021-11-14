@@ -31,7 +31,7 @@
 	</section>
 	<transition name="fade">
 		<section class="vikunja-loading" v-if="showLoading">
-			<img alt="Vikunja" :src="logoUrl" width="100" height="100"/>
+			<Logo class="logo"/>
 			<p>
 				<span class="loader-container is-loading-small is-loading"></span>
 				{{ $t('ready.loading') }}
@@ -41,7 +41,7 @@
 </template>
 
 <script>
-import logoUrl from '@/assets/logo.svg'
+import Logo from '@/assets/logo.svg?component'
 import ApiConfig from '@/components/misc/api-config'
 import NoAuthWrapper from '@/components/misc/no-auth-wrapper'
 import {mapState} from 'vuex'
@@ -50,12 +50,12 @@ import {ERROR_NO_API_URL} from '@/helpers/checkAndSetApiUrl'
 export default {
 	name: 'ready',
 	components: {
+		Logo,
 		NoAuthWrapper,
 		ApiConfig,
 	},
 	data() {
 		return {
-			logoUrl,
 			error: '',
 			errorNoApiUrl: ERROR_NO_API_URL,
 		}
@@ -100,10 +100,12 @@ export default {
 	right: 0;
 	background: $grey-100;
 	z-index: 99;
+}
 
-	img {
-		margin-bottom: 1rem;
-	}
+.logo {
+	margin-bottom: 1rem;
+	width: 100px;
+	height: 100px;
 }
 
 .loader-container {
