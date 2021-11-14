@@ -1,17 +1,22 @@
 <template>
-	<div class="kanban-view">
-		<div class="filter-container" v-if="isSavedFilter">
+	<ListWrapper>
+		<template #header>
+			<div class="filter-container" v-if="isSavedFilter">
 			<div class="items">
 				<filter-popup
 					v-model="params"
 					@update:modelValue="loadBuckets"
 				/>
 			</div>
-		</div>
-		<div
-			:class="{ 'is-loading': loading && !oneTaskUpdating}"
-			class="kanban kanban-bucket-container loader-container"
-		>
+			</div>
+		</template>
+
+		<template #default>
+			<div class="kanban-view">
+			<div
+				:class="{ 'is-loading': loading && !oneTaskUpdating}"
+				class="kanban kanban-bucket-container loader-container"
+			>
 			<draggable
 				v-bind="dragOptions"
 				:modelValue="buckets"
@@ -218,22 +223,25 @@
 				</template>
 			</modal>
 		</transition>
-	</div>
+		</div>
+		</template>
+	</ListWrapper>
 </template>
 
 <script>
 import draggable from 'vuedraggable'
 import cloneDeep from 'lodash.clonedeep'
 
-import BucketModel from '../../../models/bucket'
+import BucketModel from '../../models/bucket'
 import {mapState} from 'vuex'
 import {saveListView} from '@/helpers/saveListView'
-import Rights from '../../../models/constants/rights.json'
+import Rights from '../../models/constants/rights.json'
 import {LOADING, LOADING_MODULE} from '@/store/mutation-types'
+import ListWrapper from './ListWrapper'
 import FilterPopup from '@/components/list/partials/filter-popup.vue'
 import Dropdown from '@/components/misc/dropdown.vue'
 import {getCollapsedBucketState, saveCollapsedBucketState} from '@/helpers/saveCollapsedBucketState'
-import {calculateItemPosition} from '../../../helpers/calculateItemPosition'
+import {calculateItemPosition} from '../../helpers/calculateItemPosition'
 import KanbanCard from '@/components/tasks/partials/kanban-card'
 
 const DRAG_OPTIONS = {
@@ -250,6 +258,7 @@ const MIN_SCROLL_HEIGHT_PERCENT = 0.25
 export default {
 	name: 'Kanban',
 	components: {
+		ListWrapper,
 		KanbanCard,
 		Dropdown,
 		FilterPopup,

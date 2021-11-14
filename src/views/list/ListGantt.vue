@@ -1,6 +1,6 @@
 <template>
-	<div class="gantt-chart-container">
-		<card :padding="false" class="has-overflow">
+	<ListWrapper>
+		<template #header>
 		<div class="gantt-options p-4">
 			<fancycheckbox class="is-block" v-model="showTaskswithoutDates">
 				{{ $t('list.gantt.showTasksWithoutDates') }}
@@ -44,6 +44,12 @@
 				</div>
 			</div>
 		</div>
+		</template>
+		
+		<template #default>
+		<div class="gantt-chart-container">
+		<card :padding="false" class="has-overflow">
+
 		<gantt-chart
 			:date-from="dateFrom"
 			:date-to="dateTo"
@@ -53,7 +59,9 @@
 		/>
 
 		</card>
-	</div>
+		</div>
+		</template>
+	</ListWrapper>
 </template>
 
 <script setup>
@@ -64,6 +72,7 @@ import flatPickr from 'vue-flatpickr-component'
 import { i18n } from '@/i18n'
 import { store } from '@/store'
 
+import ListWrapper from './ListWrapper'
 import GanttChart from '@/components/tasks/gantt-component'
 import Fancycheckbox from '@/components/input/fancycheckbox'
 

@@ -2,6 +2,8 @@ import { createRouter, createWebHistory, RouteLocation } from 'vue-router'
 import {saveLastVisited} from '@/helpers/saveLastVisited'
 import {store} from '@/store'
 
+import {getListView} from '@/helpers/saveListView'
+
 import HomeComponent from '../views/Home'
 import NotFoundComponent from '../views/404'
 import About from '../views/About'
@@ -23,12 +25,12 @@ import NewLabelComponent from '../views/labels/NewLabel'
 // Migration
 import MigrationComponent from '../views/migrator/Migrate'
 import MigrateServiceComponent from '../views/migrator/MigrateService'
+
 // List Views
-import ShowListComponent from '../views/list/ShowList'
-import Kanban from '../views/list/views/Kanban'
-import List from '../views/list/views/List'
-import Gantt from '../views/list/views/Gantt'
-import Table from '../views/list/views/Table'
+import ListList from '../views/list/ListList'
+import ListGantt from '../views/list/ListGantt'
+import ListTable from '../views/list/ListTable'
+import ListKanban from '../views/list/ListKanban'
 
 // List Settings
 import ListSettingEdit from '../views/list/settings/edit'
@@ -323,29 +325,37 @@ const router = createRouter({
 		{
 			path: '/lists/:listId',
 			name: 'list.index',
-			component: ShowListComponent,
-			children: [
-				{
-					path: '/lists/:listId/list',
-					name: 'list.list',
-					component: List,
-				},
-				{
-					path: '/lists/:listId/gantt',
-					name: 'list.gantt',
-					component: Gantt,
-				},
-				{
-					path: '/lists/:listId/table',
-					name: 'list.table',
-					component: Table,
-				},
-				{
-					path: '/lists/:listId/kanban',
-					name: 'list.kanban',
-					component: Kanban,
-				},
-			],
+			beforeEnter(to) {
+				// Redirect the user to list view by default
+
+				const savedListView = getListView(to.params.listId)
+				console.debug('Replaced list view with', savedListView)
+
+				return {
+					name: savedListView,
+					params: {listId: to.params.listId},
+				}
+			},
+		},
+		{
+			path: '/lists/:listId/list',
+			name: 'list.list',
+			component: ListList,
+		},
+		{
+			path: '/lists/:listId/gantt',
+			name: 'list.gantt',
+			component: ListGantt,
+		},
+		{
+			path: '/lists/:listId/table',
+			name: 'list.table',
+			component: ListTable,
+		},
+		{
+			path: '/lists/:listId/kanban',
+			name: 'list.kanban',
+			component: ListKanban,
 		},
 		{
 			path: '/teams',

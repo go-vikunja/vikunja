@@ -1,8 +1,6 @@
 <template>
-	<div
-		:class="{ 'is-loading': loading }"
-		class="loader-container is-max-width-desktop list-view"
-	>
+	<ListWrapper>
+		<template #header>
 		<div
 			class="filter-container"
 			v-if="list.isSavedFilter && !list.isSavedFilter()"
@@ -47,7 +45,13 @@
 				/>
 			</div>
 		</div>
+		</template>
 
+		<template #default>
+		<div
+			:class="{ 'is-loading': loading }"
+			class="loader-container is-max-width-desktop list-view"
+		>
 		<card :padding="false" :has-content="false" class="has-overflow">
 			<template
 				v-if="!list.isArchived && canWrite && list.id > 0"
@@ -122,19 +126,22 @@
 				:current-page="currentPage"
 			/>
 		</card>
-	</div>
+		</div>
+		</template>
+	</ListWrapper>
 </template>
 
 <script>
 import { ref } from 'vue'
 import { useRoute } from 'vue-router'
 
-import EditTask from '../../../components/tasks/edit-task'
-import AddTask from '../../../components/tasks/add-task'
-import SingleTaskInList from '../../../components/tasks/partials/singleTaskInList'
+import ListWrapper from './ListWrapper'
+import EditTask from '@/components/tasks/edit-task'
+import AddTask from '@/components/tasks/add-task'
+import SingleTaskInList from '@/components/tasks/partials/singleTaskInList'
 import { useTaskList } from '@/composables/taskList'
 import {saveListView} from '@/helpers/saveListView'
-import Rights from '../../../models/constants/rights.json'
+import Rights from '../../models/constants/rights.json'
 import FilterPopup from '@/components/list/partials/filter-popup.vue'
 import {HAS_TASKS} from '@/store/mutation-types'
 import Nothing from '@/components/misc/nothing.vue'
@@ -142,7 +149,7 @@ import Pagination from '@/components/misc/pagination.vue'
 import {ALPHABETICAL_SORT} from '@/components/list/partials/filters.vue'
 
 import draggable from 'vuedraggable'
-import {calculateItemPosition} from '../../../helpers/calculateItemPosition'
+import {calculateItemPosition} from '../../helpers/calculateItemPosition'
 
 function sortTasks(tasks) {
 	if (tasks === null || tasks === []) {
@@ -177,6 +184,7 @@ export default {
 		}
 	},
 	components: {
+		ListWrapper,
 		Nothing,
 		FilterPopup,
 		SingleTaskInList,

@@ -1,6 +1,7 @@
 <template>
-	<div :class="{'is-loading': loading}" class="table-view loader-container">
-		<div class="filter-container">
+	<ListWrapper>
+		<template #header>
+			<div class="filter-container">
 			<div class="items">
 				<popup>
 					<template #trigger="{toggle}">
@@ -59,9 +60,12 @@
 					@update:modelValue="loadTasks()"
 				/>
 			</div>
-		</div>
+			</div>
+		</template>
 
-		<card :padding="false" :has-content="false">
+		<template #default>
+			<div :class="{'is-loading': loading}" class="table-view loader-container">
+			<card :padding="false" :has-content="false">
 			<div class="has-horizontal-overflow">
 				<table class="table has-actions is-hoverable is-fullwidth mb-0">
 					<thead>
@@ -172,14 +176,17 @@
 				:total-pages="totalPages"
 				:current-page="currentPage"
 			/>
-		</card>
-	</div>
+			</card>
+			</div>
+		</template>
+	</ListWrapper>
 </template>
 
 <script setup>
 import { ref, reactive, computed, toRaw } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 
+import ListWrapper from './ListWrapper'
 import Done from '@/components/misc/Done.vue'
 import User from '@/components/misc/user'
 import PriorityLabel from '@/components/tasks/partials/priorityLabel'
@@ -254,7 +261,6 @@ function beforeLoad(params) {
 const {
 	tasks,
 	loading,
-	showTaskFilter,
 	params,
 	loadTasks,
 	totalPages,

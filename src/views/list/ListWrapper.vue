@@ -34,6 +34,7 @@
 					{{ $t('list.kanban.title') }}
 				</router-link>
 			</div>
+			<slot name="header" />
 		</div>
 		<transition name="fade">
 			<Message variant="warning" v-if="currentList.isArchived" class="mb-4">
@@ -41,13 +42,13 @@
 			</Message>
 		</transition>
 
-		<router-view/>
+		<slot />
 	</div>
 </template>
 
 <script setup>
 import {ref, shallowRef, computed, watchEffect} from 'vue'
-import {useRouter, useRoute} from 'vue-router'
+import {useRoute} from 'vue-router'
 
 import Message from '@/components/misc/message'
 
@@ -57,25 +58,14 @@ import ListService from '@/services/list'
 import {store} from '@/store'
 import {CURRENT_LIST} from '@/store/mutation-types'
 
-import {getListView} from '@/helpers/saveListView'
 import {getListTitle} from '@/helpers/getListTitle'
 import {saveListToHistory} from '@/modules/listHistory'
 import { useTitle } from '@/composables/useTitle'
 
 const route = useRoute()
-const router = useRouter()
 
 const listService = shallowRef(new ListService())
 const loadedListId = ref(0)
-
-// beforeRouteEnter(to) {
-// Redirect the user to list view by default
-if (route.name !== 'list.index') {
-	const savedListView = getListView(route.params.listId)
-	console.debug('Replaced list view with', savedListView)
-	router.replace({name: 'list.list', params: {id: route.params.listId}})
-}
-// },
 
 const currentList = computed(() => {
 	return typeof store.state.currentList === 'undefined' ? {
