@@ -66,7 +66,6 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import { useRoute } from 'vue-router'
 import flatPickr from 'vue-flatpickr-component'
 
 import { i18n } from '@/i18n'
@@ -75,13 +74,6 @@ import { store } from '@/store'
 import ListWrapper from './ListWrapper'
 import GanttChart from '@/components/tasks/gantt-component'
 import Fancycheckbox from '@/components/input/fancycheckbox'
-
-import {saveListView} from '@/helpers/saveListView'
-
-const route = useRoute()
-// Save the current list view to local storage
-// We use local storage and not vuex here to make it persistent across reloads.
-saveListView(route.params.listId, route.name)
 
 const showTaskswithoutDates = ref(false)
 const dayWidth = ref(35)

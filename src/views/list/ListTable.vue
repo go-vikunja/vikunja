@@ -184,7 +184,7 @@
 
 <script setup>
 import { ref, reactive, computed, toRaw } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { useRouter } from 'vue-router'
 
 import ListWrapper from './ListWrapper'
 import Done from '@/components/misc/Done.vue'
@@ -199,7 +199,6 @@ import Pagination from '@/components/misc/pagination.vue'
 import Popup from '@/components/misc/popup'
 
 import { useTaskList } from '@/composables/taskList'
-import {saveListView} from '@/helpers/saveListView'
 
 const ACTIVE_COLUMNS_DEFAULT = {
 	id: true,
@@ -287,11 +286,6 @@ const taskDetailRoutes = computed(() => Object.fromEntries(
 		},
 	])),
 ))
-
-// Save the current list view to local storage
-// We use local storage and not vuex here to make it persistent across reloads.
-const route = useRoute()
-saveListView(route.params.listId, route.name)
 
 function sort(property) {
 	const order = sortBy.value[property]

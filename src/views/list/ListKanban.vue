@@ -234,7 +234,6 @@ import cloneDeep from 'lodash.clonedeep'
 
 import BucketModel from '../../models/bucket'
 import {mapState} from 'vuex'
-import {saveListView} from '@/helpers/saveListView'
 import Rights from '../../models/constants/rights.json'
 import {LOADING, LOADING_MODULE} from '@/store/mutation-types'
 import ListWrapper from './ListWrapper'
@@ -299,11 +298,6 @@ export default {
 		}
 	},
 
-	created() {
-		// Save the current list view to local storage
-		// We use local storage and not vuex here to make it persistent across reloads.
-		saveListView(this.$route.params.listId, this.$route.name)
-	},
 	watch: {
 		loadBucketParameter: {
 			handler: 'loadBuckets',

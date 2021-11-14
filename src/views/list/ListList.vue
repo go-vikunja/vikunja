@@ -133,14 +133,12 @@
 
 <script>
 import { ref } from 'vue'
-import { useRoute } from 'vue-router'
 
 import ListWrapper from './ListWrapper'
 import EditTask from '@/components/tasks/edit-task'
 import AddTask from '@/components/tasks/add-task'
 import SingleTaskInList from '@/components/tasks/partials/singleTaskInList'
 import { useTaskList } from '@/composables/taskList'
-import {saveListView} from '@/helpers/saveListView'
 import Rights from '../../models/constants/rights.json'
 import FilterPopup from '@/components/list/partials/filter-popup.vue'
 import {HAS_TASKS} from '@/store/mutation-types'
@@ -205,11 +203,6 @@ export default {
 		}
 
 		const taskList = useTaskList(beforeLoad)
-
-		// Save the current list view to local storage
-		// We use local storage and not vuex here to make it persistent across reloads.
-		const route = useRoute()
-		saveListView(route.params.listId, route.name)
 
 		taskList.initTaskList()
 
