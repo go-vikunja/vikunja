@@ -125,6 +125,7 @@ const router = createRouter({
 			path: '/user/settings',
 			name: 'user.settings',
 			component: UserSettingsComponent,
+			redirect: {name: 'user.settings.general'},
 			children: [
 				{
 					path: '/user/settings/avatar',
