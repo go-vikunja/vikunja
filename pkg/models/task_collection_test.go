@@ -1081,6 +1081,24 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task2,
 			},
 		},
+		{
+			name: "saved filter with sort order",
+			fields: fields{
+				ListID:  -2,
+				SortBy:  []string{"title", "id"},
+				OrderBy: []string{"desc", "asc"},
+			},
+			args: args{
+				a: &user.User{ID: 1},
+			},
+			want: []*Task{
+				task9,
+				task8,
+				task7,
+				task6,
+				task5,
+			},
+		},
 	}
 
 	for _, tt := range tests {
