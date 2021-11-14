@@ -60,55 +60,49 @@
 					{{ $t('user.auth.login') }}
 				</x-button>
 			</div>
-			<legal/>
+			<Legal />
 		</div>
 	</div>
 </template>
 
-<script>
-import PasswordResetModel from '../../models/passwordReset'
-import PasswordResetService from '../../services/passwordReset'
-import Legal from '../../components/misc/legal'
+<script setup>
+import {ref, reactive} from 'vue'
+import { useI18n } from 'vue-i18n'
 
-export default {
-	components: {
-		Legal,
-	},
-	data() {
-		return {
-			passwordResetService: new PasswordResetService(),
-			credentials: {
-				password: '',
-				password2: '',
-			},
-			errorMsg: '',
-			successMessage: '',
-		}
-	},
+import Legal from '@/components/misc/legal'
 
-	mounted() {
-		this.setTitle(this.$t('user.auth.resetPassword'))
-	},
+import PasswordResetModel from '@/models/passwordReset'
+import PasswordResetService from '@/services/passwordReset'
+import { useTitle } from '@/composables/useTitle'
 
-	methods: {
-		async submit() {
-			this.errorMsg = ''
+const { t } = useI18n()
+useTitle(() => t('user.auth.resetPassword'))
 
-			if (this.credentials.password2 !== this.credentials.password) {
-				this.errorMsg = this.$t('user.auth.passwordsDontMatch')
-				return
-			}
+const credentials = reactive({
+	password: '',
+	password2: '',
+})
 
-			let passwordReset = new PasswordResetModel({newPassword: this.credentials.password})
-			try {
-				const { message } = this.passwordResetService.resetPassword(passwordReset)
-				this.successMessage = message
-				localStorage.removeItem('passwordResetToken')
-			} catch(e) {
-				this.errorMsg = e.response.data.message
-			}
-		},
-	},
+const passwordResetService = reactive(new PasswordResetService())
+const errorMsg = ref('')
+const successMessage = ref('')
+
+async function submit() {
+	errorMsg.value = ''
+
+	if (credentials.password2 !== credentials.password) {
+		errorMsg.value = t('user.auth.passwordsDontMatch')
+		return
+	}
+
+	const passwordReset = new PasswordResetModel({newPassword: credentials.password})
+	try {
+		const { message } = passwordResetService.resetPassword(passwordReset)
+		successMessage.value = message
+		localStorage.removeItem('passwordResetToken')
+	} catch(e) {
+		errorMsg.value = e.response.data.message
+	}
 }
 </script>
 

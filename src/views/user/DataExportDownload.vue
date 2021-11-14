@@ -35,36 +35,25 @@
 	</div>
 </template>
 
-<script>
-import DataExportService from '../../services/dataExport'
+<script setup>
+import {ref, computed, reactive} from 'vue'
+import DataExportService from '@/services/dataExport'
+import {store} from '@/store'
 
-export default {
-	name: 'data-export-download',
-	data() {
-		return {
-			dataExportService: DataExportService,
-			password: '',
-			errPasswordRequired: false,
-		}
-	},
-	created() {
-		this.dataExportService = new DataExportService()
-	},
-	computed: {
-		isLocalUser() {
-			return this.$store.state.auth.info?.isLocalUser
-		},
-	},
-	methods: {
-		download() {
-			if (this.password === '' && this.isLocalUser) {
-				this.errPasswordRequired = true
-				this.$refs.passwordInput.focus()
-				return
-			}
+const dataExportService = reactive(new DataExportService())
+const password = ref('')
+const errPasswordRequired = ref(false)
+const passwordInput = ref(null)
 
-			this.dataExportService.download(this.password)
-		},
-	},
+const isLocalUser = computed(() => store.state.auth.info?.isLocalUser)
+
+function download() {
+	if (password.value === '' && isLocalUser.value) {
+		errPasswordRequired.value = true
+		passwordInput.value.focus()
+		return
+	}
+
+	dataExportService.download(password.value)
 }
 </script>

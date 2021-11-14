@@ -13,10 +13,10 @@
 		>
 			<div class="p-4">
 				<p>
-					{{ $t('about.frontendVersion', {version: this.frontendVersion}) }}
+					{{ $t('about.frontendVersion', {version: frontendVersion}) }}
 				</p>
 				<p>
-					{{ $t('about.apiVersion', {version: this.apiVersion}) }}
+					{{ $t('about.apiVersion', {version: apiVersion}) }}
 				</p>
 			</div>
 			<footer class="modal-card-foot is-flex is-justify-content-flex-end">
@@ -32,18 +32,11 @@
 
 </template>
 
-<script>
-import {VERSION} from '../version.json'
+<script setup>
+import {computed} from 'vue'
 
-export default {
-	name: 'About',
-	computed: {
-		frontendVersion() {
-			return VERSION
-		},
-		apiVersion() {
-			return this.$store.state.config.version
-		},
-	},
-}
+import { store } from '@/store'
+import {VERSION as frontendVersion} from '@/version.json'
+
+const apiVersion = computed(() => store.state.config.version)
 </script>

@@ -36,12 +36,12 @@
 					</div>
 				</div>
 				<div class="field">
-					<label class="label" for="password1">{{ $t('user.auth.password') }}</label>
+					<label class="label" for="password">{{ $t('user.auth.password') }}</label>
 					<div class="control">
 						<input
 							class="input"
-							id="password1"
-							name="password1"
+							id="password"
+							name="password"
 							:placeholder="$t('user.auth.passwordPlaceholder')"
 							required
 							type="password"
@@ -52,17 +52,17 @@
 					</div>
 				</div>
 				<div class="field">
-					<label class="label" for="password2">{{ $t('user.auth.passwordRepeat') }}</label>
+					<label class="label" for="passwordValidation">{{ $t('user.auth.passwordRepeat') }}</label>
 					<div class="control">
 						<input
 							class="input"
-							id="password2"
-							name="password2"
+							id="passwordValidation"
+							name="passwordValidation"
 							:placeholder="$t('user.auth.passwordPlaceholder')"
 							required
 							type="password"
 							autocomplete="new-password"
-							v-model="credentials.password2"
+							v-model="passwordValidation"
 							@keyup.enter="submit"
 						/>
 					</div>
@@ -95,61 +95,50 @@
 	</div>
 </template>
 
-<script>
-import router from '../../router'
-import {mapState} from 'vuex'
-import {LOADING} from '@/store/mutation-types'
-import Legal from '../../components/misc/legal'
+<script setup>
+import {ref, reactive, toRaw, computed, onBeforeMount} from 'vue'
+import { useI18n } from 'vue-i18n'
 
-export default {
-	components: {
-		Legal,
-	},
-	data() {
-		return {
-			credentials: {
-				username: '',
-				email: '',
-				password: '',
-				password2: '',
-			},
-			errorMessage: '',
-		}
-	},
-	beforeMount() {
-		// Check if the user is already logged in, if so, redirect them to the homepage
-		if (this.authenticated) {
-			router.push({name: 'home'})
-		}
-	},
-	mounted() {
-		this.setTitle(this.$t('user.auth.register'))
-	},
-	computed: mapState({
-		authenticated: state => state.auth.authenticated,
-		loading: LOADING,
-	}),
-	methods: {
-		async submit() {
-			this.errorMessage = ''
+import router from '@/router'
+import { store } from '@/store'
+import { useTitle } from '@/composables/useTitle'
 
-			if (this.credentials.password2 !== this.credentials.password) {
-				this.errorMessage = this.$t('user.auth.passwordsDontMatch')
-				return
-			}
+import Legal from '@/components/misc/legal'
 
-			const credentials = {
-				username: this.credentials.username,
-				email: this.credentials.email,
-				password: this.credentials.password,
-			}
+// FIXME: use the `beforeEnter` hook of vue-router
+// Check if the user is already logged in, if so, redirect them to the homepage
+onBeforeMount(() => {
+	if (store.state.auth.authenticated) {
+		router.push({name: 'home'})
+	}
+})
 
-			try {
-				await this.$store.dispatch('auth/register', credentials)
-			} catch(e) {
-				this.errorMessage = e.message
-			}
-		},
-	},
+const { t } = useI18n()
+useTitle(() => t('user.auth.register'))
+
+const credentials = reactive({
+	username: '',
+	email: '',
+	password: '',
+})
+const passwordValidation = ref('')
+
+const loading = computed(() => store.state.loading)
+const errorMessage = ref('')
+
+async function submit() {
+	errorMessage.value = ''
+
+	if (credentials.password !== passwordValidation.value) {
+		errorMessage.value = t('user.auth.passwordsDontMatch')
+		return
+	}
+
+
+	try {
+		await store.dispatch('auth/register', toRaw(credentials))
+	} catch(e) {
+		errorMessage.value = e.message
+	}
 }
 </script>

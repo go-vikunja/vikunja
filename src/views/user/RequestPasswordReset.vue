@@ -43,42 +43,38 @@
 					{{ $t('user.auth.login') }}
 				</x-button>
 			</div>
-			<legal/>
+			<Legal />
 		</div>
 	</div>
 </template>
 
-<script>
-import PasswordResetModel from '../../models/passwordReset'
-import PasswordResetService from '../../services/passwordReset'
-import Legal from '../../components/misc/legal'
+<script setup>
+import {ref, reactive} from 'vue'
+import { useI18n } from 'vue-i18n'
 
-export default {
-	components: {
-		Legal,
-	},
-	data() {
-		return {
-			passwordResetService: new PasswordResetService(),
-			passwordReset: new PasswordResetModel(),
-			errorMsg: '',
-			isSuccess: false,
-		}
-	},
-	mounted() {
-		this.setTitle(this.$t('user.auth.resetPassword'))
-	},
-	methods: {
-		async submit() {
-			this.errorMsg = ''
-			try {
-				await this.passwordResetService.requestResetPassword(this.passwordReset)
-				this.isSuccess = true
-			} catch(e) {
-				this.errorMsg = e.response.data.message
-			}
-		},
-	},
+import Legal from '@/components/misc/legal'
+
+import PasswordResetModel from '@/models/passwordReset'
+import PasswordResetService from '@/services/passwordReset'
+import { useTitle } from '@/composables/useTitle'
+
+const { t } = useI18n()
+useTitle(() => t('user.auth.resetPassword'))
+
+// Not sure if this instance needs a shalloRef at all
+const passwordResetService = reactive(new PasswordResetService())
+const passwordReset = ref(new PasswordResetModel())
+const errorMsg = ref('')
+const isSuccess = ref(false)
+
+async function submit() {
+	errorMsg.value = ''
+	try {
+		await passwordResetService.requestResetPassword(passwordReset.value)
+		isSuccess.value = true
+	} catch(e) {
+		errorMsg.value = e.response.data.message
+	}
 }
 </script>
 

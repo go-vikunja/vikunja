@@ -57,24 +57,19 @@
 	</div>
 </template>
 
-<script>
-import {mapState} from 'vuex'
+<script setup>
+import {computed} from 'vue'
+import { store } from '@/store'
+import { useI18n } from 'vue-i18n'
+import { useTitle } from '@/composables/useTitle'
 
-export default {
-	name: 'Settings',
-	mounted() {
-		this.setTitle(this.$t('user.settings.title'))
-	},
-	computed: {
-		...mapState('config', ['totpEnabled', 'caldavEnabled']),
-		migratorsEnabled() {
-			return this.$store.getters['config/migratorsEnabled']
-		},
-		isLocalUser() {
-			return this.$store.state.auth.info?.isLocalUser
-		},
-	},
-}
+const { t } = useI18n()
+useTitle(() => t('user.settings.title'))
+
+const totpEnabled = computed(() => store.state.config.totpEnabled)
+const caldavEnabled = computed(() => store.state.config.caldavEnabled)
+const migratorsEnabled = computed(() => store.getters['config/migratorsEnabled'])
+const isLocalUser = computed(() => store.state.auth.info?.isLocalUser)
 </script>
 
 <style lang="scss" scoped>
