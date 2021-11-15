@@ -17,14 +17,14 @@
     "text": "Trang bạn yêu cầu không tồn tại."
   },
   "ready": {
-    "loading": "Vikunja is loading…",
-    "errorOccured": "An error occured:",
-    "checkApiUrl": "Please check if the api url is correct.",
-    "noApiUrlConfigured": "No API url was configured. Please set one below:"
+    "loading": "Vikunja đang tải…",
+    "errorOccured": "Đã xảy ra lỗi:",
+    "checkApiUrl": "Vui lòng kiểm tra lại url api.",
+    "noApiUrlConfigured": "Không có url API nào được cấu hình. Hãy đặt một cái:"
   },
   "offline": {
-    "title": "You are offline.",
-    "text": "Please check your network connection and try again."
+    "title": "Bạn đang offline.",
+    "text": "Vui lòng kiểm tra kết nối mạng của bạn và thử lại."
   },
   "user": {
     "auth": {
@@ -354,7 +354,7 @@
   },
   "filters": {
     "title": "Bộ lọc",
-    "clear": "Clear Filters",
+    "clear": "Xoá các bộ lọc",
     "attributes": {
       "title": "Tiêu đề",
       "titlePlaceholder": "Tiêu đề bộ lọc đã lưu ở đây…",
@@ -461,8 +461,8 @@
     "default": "Mặc định",
     "close": "Đóng",
     "download": "Tải về",
-    "showMenu": "Show the menu",
-    "hideMenu": "Hide the menu"
+    "showMenu": "Hiển thị menu",
+    "hideMenu": "Ẩn menu"
   },
   "input": {
     "resetColor": "Đặt lại màu",
@@ -656,7 +656,7 @@
       "searchPlaceholder": "Gõ tìm kiếm một công việc để thêm dưới dạng liên quan…",
       "createPlaceholder": "Thêm điều này làm công việc liên quan mới",
       "differentList": "Công việc này thuộc về một danh sách khác.",
-      "differentNamespace": "This task belongs to a different namespace.",
+      "differentNamespace": "Công việc này thuộc về một Góc làm việc khác.",
       "noneYet": "Không có công việc liên quan nào.",
       "delete": "Xóa công việc liên quan",
       "deleteText1": "Bạn có chắc muốn xóa công việc liên quan này không?",
@@ -757,12 +757,12 @@
   },
   "keyboardShortcuts": {
     "title": "Phím tắt",
-    "general": "General",
+    "general": "Tổng quan",
     "allPages": "Các phím tắt này hoạt động ở mọi nơi.",
     "currentPageOnly": "Các phím tắt này chỉ hoạt động ở trang hiện tại.",
     "toggleMenu": "Bật/tắt Menu",
     "quickSearch": "Mở thanh tìm kiếm/thao tác nhanh",
-    "then": "then",
+    "then": "sau đó",
     "task": {
       "title": "Trang công việc",
       "done": "Đánh dấu hoàn thành",
@@ -773,11 +773,11 @@
       "related": "Sửa đổi các công việc liên kết"
     },
     "list": {
-      "title": "List Views",
-      "switchToListView": "Switch to list view",
-      "switchToGanttView": "Switch to gantt view",
-      "switchToKanbanView": "Switch to kanban view",
-      "switchToTableView": "Switch to table view"
+      "title": "Xem danh sách",
+      "switchToListView": "Chuyển sang chế độ danh sách",
+      "switchToGanttView": "Chuyển sang biểu đồ Gantt",
+      "switchToKanbanView": "Chuyển sang Kanban",
+      "switchToTableView": "Chuyển qua xem Bảng"
     }
   },
   "update": {
@@ -799,9 +799,9 @@
     "urlPlaceholder": "ví dụ: https://localhost:3456",
     "change": "thay đổi",
     "signInOn": "Đăng nhập vào tài khoản Vikunia tại {0}",
-    "error": "Could not find or use Vikunja installation at \"{domain}\". Please try a different url.",
+    "error": "Không thể tìm thấy hoặc sử dụng cài đặt Vikunja tại \"{domain}\". Vui lòng thử một url khác.",
     "success": "Sử dụng cài đặt Vikunja tại \"{domain}\".",
-    "urlRequired": "A url is required."
+    "urlRequired": "Cần có một url."
   },
   "loadingError": {
     "failed": "Tải thất bại, vui lòng {0}. Nếu lỗi vẫn xảy ra, vui lòng {1}.",
@@ -816,7 +816,7 @@
   "quickActions": {
     "commands": "Các lệnh",
     "placeholder": "Gõ một lệnh hoặc tìm kiếm…",
-    "hint": "You can use {list} to limit the search to a list. Combine {list} or {label} (labels) with a search query to search for a task with these labels or on that list. Use {assignee} to only search for teams.",
+    "hint": "Bạn có thể dùng {list} để giới hạn tìm kiếm trong một danh sách. Kết hợp {list} hoặc {label} (các nhãn) với một truy vấn để tìm kiếm một công việc được gắn các nhãn này hoặc trên danh sách đó. Sử dụng {assignee} để chỉ tìm kiếm các Team.",
     "tasks": "Tác vụ",
     "lists": "Danh sách",
     "teams": "Team",
