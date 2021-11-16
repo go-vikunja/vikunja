@@ -21,6 +21,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
@@ -64,7 +65,7 @@ func (g *Provider) GetAvatar(user *user.User, size int64) ([]byte, string, error
 	}
 	if !exists || needsRefetch {
 		log.Debugf("Gravatar for user %d with size %d not cached, requesting from gravatar...", user.ID, size)
-		req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "https://www.gravatar.com/avatar/"+utils.Md5String(user.Email)+"?s="+sizeString+"&d=mp", nil)
+		req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "https://www.gravatar.com/avatar/"+utils.Md5String(strings.ToLower(user.Email))+"?s="+sizeString+"&d=mp", nil)
 		if err != nil {
 			return nil, "", err
 		}
