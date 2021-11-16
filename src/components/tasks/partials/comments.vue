@@ -306,24 +306,16 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.media.comment {
-  align-items: center;
+.media-left {
+	margin: 0 1rem;
+}
 
-  .media-left {
-    margin: 0 1rem;
-  }
+.comment-info {
+	display: flex;
+	align-items: center;
+	gap: .5rem;
 
-  .comment-info {
-    display: flex;
-    align-items: center;
-
-    * {
-      padding-right: .5rem;
-    }
-
-    img {
-      display: none;
-
+	img {
 		@media screen and (max-width: $tablet) {
 			display: block;
 			width: 20px;
@@ -331,22 +323,20 @@ export default {
 			padding-right: 0;
 			margin-right: .5rem;
 		}
-    }
+
+		@media screen and (min-width: $tablet) {
+			display: none;
+		}
+	}
 
 
-    span {
-      font-size: .75rem;
-      line-height: 1;
-    }
-  }
-
-  .editor {
-    margin-top: .5rem;
-  }
-
+	span {
+		font-size: .75rem;
+		line-height: 1;
+	}
 }
 
 .media-content {
-  width: calc(100% - 48px - 2rem);
+	width: calc(100% - 48px - 2rem);
 }
 </style>
