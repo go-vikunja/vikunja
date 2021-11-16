@@ -7,6 +7,10 @@ export const ERROR_NO_API_URL = 'noApiUrlProvided'
 const updateConfig = () => store.dispatch('config/update') 
 
 export const checkAndSetApiUrl = (url: string): Promise<string> => {
+	if(url.startsWith('/')) {
+		url = window.location.host + url
+	}
+	
 	// Check if the url has an http prefix
 	if (
 		!url.startsWith('http://') &&
