@@ -36,11 +36,9 @@ func DownloadFileWithHeaders(url string, headers http.Header) (buf *bytes.Buffer
 		return nil, err
 	}
 
-	if headers != nil {
-		for key, h := range headers {
-			for _, hh := range h {
-				req.Header.Add(key, hh)
-			}
+	for key, h := range headers {
+		for _, hh := range h {
+			req.Header.Add(key, hh)
 		}
 	}
 
