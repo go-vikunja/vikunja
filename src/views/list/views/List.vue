@@ -323,6 +323,7 @@ export default {
 
 	.tasks {
 		width: 100%;
+		padding: .5rem;
 
 		.ghost {
 			border-radius: $radius;

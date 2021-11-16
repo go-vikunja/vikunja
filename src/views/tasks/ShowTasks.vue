@@ -271,6 +271,10 @@ h3 {
 	}
 }
 
+.tasks {
+	padding: .5rem;
+}
+
 .llama-cool {
 	margin-top: 2rem;
 }

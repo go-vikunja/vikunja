@@ -319,6 +319,10 @@ export default {
 	margin: 0;
 }
 
+.tasks {
+	padding: .5rem;
+}
+
 .task {
 	display: flex;
 	flex-wrap: wrap;

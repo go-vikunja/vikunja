@@ -636,7 +636,6 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 		.tasks {
 			max-height: calc(#{$crazy-height-calculation-tasks});
 			overflow: auto;
-			margin-top: 0;
 
 			@media screen and (max-width: $tablet) {
 				max-height: calc(#{$crazy-height-calculation-tasks} - #{$filter-container-height});

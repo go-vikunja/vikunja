@@ -2,8 +2,6 @@
 // very hard to untangle
 // they have many overwrites at different positions
 .tasks {
-	margin-top: 1rem;
-	padding: 0;
 	text-align: left;
 
 	
@@ -24,19 +22,6 @@
 
 	&.noborder {
 		margin: 1rem -0.5rem;
-	}
-
-	.task {
-		margin: 0 .5rem;
-	
-		&:first-child {
-			margin-top: .5rem;
-		}
-	
-		&:last-child {
-			margin-bottom: .5rem;
-			border-bottom: none;
-		}
 	}
 
 	.checklist-summary {

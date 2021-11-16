@@ -1,5 +1,6 @@
 <template>
 	<div
+		class="task loader-container draggable"
 		:class="{
 			'is-loading': loadingInternal || loading,
 			'draggable': !(loadingInternal || loading),
@@ -9,7 +10,6 @@
 		@click.ctrl="() => toggleTaskDone(task)"
 		@click.exact="() => $router.push({ name: 'task.kanban.detail', params: { id: task.id } })"
 		@click.meta="() => toggleTaskDone(task)"
-		class="task loader-container draggable"
 	>
 		<span class="task-id">
 			<Done class="kanban-card__done" :is-done="task.done" variant="small" />

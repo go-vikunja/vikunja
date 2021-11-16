@@ -500,7 +500,6 @@ $gantt-vertical-border-color: $grey-100;
 
 	.tasks {
 		max-width: unset !important;
-		margin: 0;
 		border-top: $gantt-border;
 
 		.row {
