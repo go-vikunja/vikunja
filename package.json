@@ -47,7 +47,7 @@
     "vue-router": "4.0.12",
     "vuedraggable": "4.1.0",
     "vuex": "4.0.2",
-    "workbox-precaching": "6.3.0"
+    "workbox-precaching": "6.4.1"
   },
   "devDependencies": {
     "@4tw/cypress-drag-drop": "2.0.0",
@@ -86,7 +86,7 @@
     "vite-svg-loader": "3.1.0",
     "vue-tsc": "0.29.5",
     "wait-on": "6.0.0",
-    "workbox-cli": "6.3.0"
+    "workbox-cli": "6.4.1"
   },
   "eslintConfig": {
     "root": true,
