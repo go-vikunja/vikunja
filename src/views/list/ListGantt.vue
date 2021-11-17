@@ -1,5 +1,5 @@
 <template>
-	<ListWrapper>
+	<ListWrapper class="list-gantt">
 		<template #header>
 		<div class="gantt-options p-4">
 			<fancycheckbox class="is-block" v-model="showTaskswithoutDates">

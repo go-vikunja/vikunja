@@ -1,5 +1,5 @@
 <template>
-	<ListWrapper>
+	<ListWrapper class="list-list">
 		<template #header>
 		<div
 			class="filter-container"

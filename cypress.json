@@ -7,5 +7,9 @@
   "video": false,
   "retries": {
     "runMode": 2
-  }
+  },
+  "testFiles": [
+    "list/list.spec.js",
+    "**/*.spec.js"
+  ]
 }

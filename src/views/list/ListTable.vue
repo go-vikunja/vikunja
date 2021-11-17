@@ -1,5 +1,5 @@
 <template>
-	<ListWrapper>
+	<ListWrapper class="list-table">
 		<template #header>
 			<div class="filter-container">
 			<div class="items">
@@ -64,7 +64,7 @@
 		</template>
 
 		<template #default>
-			<div :class="{'is-loading': loading}" class="table-view loader-container">
+			<div :class="{'is-loading': loading}" class="loader-container">
 			<card :padding="false" :has-content="false">
 			<div class="has-horizontal-overflow">
 				<table class="table has-actions is-hoverable is-fullwidth mb-0">

@@ -1,5 +1,5 @@
 <template>
-	<ListWrapper>
+	<ListWrapper class="list-kanban">
 		<template #header>
 			<div class="filter-container" v-if="isSavedFilter">
 			<div class="items">
