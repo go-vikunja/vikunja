@@ -38,7 +38,7 @@ describe('List View Kanban', () => {
 		})
 		cy.visit('/lists/1/kanban')
 
-		cy.get('.kanban .bucket')
+		cy.getSettled('.kanban .bucket')
 			.contains(buckets[0].title)
 			.get('.bucket-footer .button')
 			.contains('Add another task')
@@ -70,7 +70,7 @@ describe('List View Kanban', () => {
 	it('Can set a bucket limit', () => {
 		cy.visit('/lists/1/kanban')
 
-		cy.get('.kanban .bucket .bucket-header .dropdown.options .dropdown-trigger')
+		cy.getSettled('.kanban .bucket .bucket-header .dropdown.options .dropdown-trigger')
 			.first()
 			.click()
 		cy.get('.kanban .bucket .bucket-header .dropdown.options .dropdown-menu .dropdown-item')
@@ -91,7 +91,7 @@ describe('List View Kanban', () => {
 	it('Can rename a bucket', () => {
 		cy.visit('/lists/1/kanban')
 
-		cy.get('.kanban .bucket .bucket-header .title')
+		cy.getSettled('.kanban .bucket .bucket-header .title')
 			.first()
 			.type('{selectall}New Bucket Title{enter}')
 		cy.get('.kanban .bucket .bucket-header .title')
@@ -102,7 +102,7 @@ describe('List View Kanban', () => {
 	it('Can delete a bucket', () => {
 		cy.visit('/lists/1/kanban')
 
-		cy.get('.kanban .bucket .bucket-header .dropdown.options .dropdown-trigger')
+		cy.getSettled('.kanban .bucket .bucket-header .dropdown.options .dropdown-trigger')
 			.first()
 			.click()
 		cy.get('.kanban .bucket .bucket-header .dropdown.options .dropdown-menu .dropdown-item')
@@ -129,7 +129,7 @@ describe('List View Kanban', () => {
 		})
 		cy.visit('/lists/1/kanban')
 
-		cy.get('.kanban .bucket .tasks .task')
+		cy.getSettled('.kanban .bucket .tasks .task')
 			.contains(tasks[0].title)
 			.first()
 			.drag('.kanban .bucket:nth-child(2) .tasks .dropper')
