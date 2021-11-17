@@ -87,8 +87,8 @@ watchEffect(() => loadList(listId.value))
 
 useTitle(() => currentList.value.id ? getListTitle(currentList.value) : '')
 
-async function loadList(listId) {
-	const listData = {id: listId}
+async function loadList(listIdToLoad) {
+	const listData = {id: listIdToLoad}
 	saveListToHistory(listData)
 
 	// This invalidates the loaded list at the kanban board which lets it reload its content when
@@ -107,9 +107,9 @@ async function loadList(listId) {
 	// the currently loaded list has the right set.
 	if (
 		(
-			listId.value === loadedListId.value ||
-			typeof listId.value === 'undefined' ||
-			listId.value === currentList.value.id
+			listIdToLoad === loadedListId.value ||
+			typeof listIdToLoad === 'undefined' ||
+			listIdToLoad === currentList.value.id
 		)
 		&& typeof currentList.value !== 'undefined' && currentList.value.maxRight !== null
 	) {

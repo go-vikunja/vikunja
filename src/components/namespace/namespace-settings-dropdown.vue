@@ -22,7 +22,7 @@
 				{{ $t('menu.share') }}
 			</dropdown-item>
 			<dropdown-item
-				:to="{ name: 'list.create', params: { id: namespace.id } }"
+				:to="{ name: 'list.create', params: { namespaceId: namespace.id } }"
 				icon="plus"
 			>
 				{{ $t('menu.newList') }}

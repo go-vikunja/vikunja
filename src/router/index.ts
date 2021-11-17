@@ -251,7 +251,7 @@ const router = createRouter({
 			component: ShowTasksInRangeComponent,
 		},
 		{
-			path: '/lists/:id/new',
+			path: '/lists/new/:namespaceId/',
 			name: 'list.create',
 			component: NewListComponent,
 			meta: {

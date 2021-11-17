@@ -29,7 +29,7 @@ describe('Lists', () => {
 			.contains('New list')
 			.click()
 		cy.url()
-			.should('contain', '/namespaces/1/list')
+			.should('contain', '/lists/new/1')
 		cy.get('.card-header-title')
 			.contains('Create a new list')
 		cy.get('input.input')

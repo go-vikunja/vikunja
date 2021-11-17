@@ -61,7 +61,7 @@ export default {
 			}
 			this.showError = false
 
-			this.list.namespaceId = parseInt(this.$route.params.id)
+			this.list.namespaceId = parseInt(this.$route.params.namespaceId)
 			const list = await this.$store.dispatch('lists/createList', this.list)
 			this.$message.success({message: this.$t('list.create.createdSuccess') })
 			this.$router.push({
